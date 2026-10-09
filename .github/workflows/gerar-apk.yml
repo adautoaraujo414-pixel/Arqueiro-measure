@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
 permissions:
-  contents: read
+  contents: write
   issues: write
 jobs:
   compilar:
@@ -17,10 +17,19 @@ jobs:
           set -euxo pipefail
           ls -lah
           test -f Arque_Measure_v0.8_GitHub_Actions_Pronto.zip
-          unzip -o Arque_Measure_v0.8_GitHub_Actions_Pronto.zip -d .
+          if [ ! -f settings.gradle ]; then unzip -o Arque_Measure_v0.8_GitHub_Actions_Pronto.zip -d .; fi
           test -f settings.gradle
           test -f app/build.gradle
           test -f app/src/main/AndroidManifest.xml
+      - name: Versionar fontes do aplicativo
+        run: |
+          if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add settings.gradle app build.gradle gradle.properties gradlew gradlew.bat gradle 2>/dev/null || git add settings.gradle app
+            git commit -m "Versionar fontes do Arque Measure para evolucao do aplicativo"
+            git push
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

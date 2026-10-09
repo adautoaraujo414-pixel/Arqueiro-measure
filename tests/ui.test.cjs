@@ -165,7 +165,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.getElementById('photoZoomSurface').style.transform.includes('scale(1.25)'),'zoom scales image and arrows together');
  click(doc,'photoZoomOut');assert(doc.getElementById('photoZoomReadout').textContent==='100%','zoom out returns to 100%');
  click(doc,'photoZoomMode');assert(doc.body.textContent.includes('Sair do zoom'),'pan and pinch mode is available');click(doc,'photoZoomMode');
- assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label rect'),'unmeasured arrow shows one small central yellow box');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
+ assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-hit')?.getAttribute('stroke')==='transparent','interaction hitbox is invisible');assert(doc.querySelector('#photoOverlay .measure-label rect'),'unmeasured arrow shows one small central yellow box');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');assert(doc.querySelector('#photoOverlay .measure-label rect')?.getAttribute('fill')==='#ffe000','measured label is yellow');
  // Central box opens the piece specifications directly, even with pen selected.

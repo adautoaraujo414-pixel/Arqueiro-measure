@@ -105,4 +105,17 @@ eq(mixed({width:400,height:800,pieces:[{name:'Livre',w:750,h:350,qty:1,grain:fal
 throws(()=>mixed({width:300,height:200,pieces:[{name:'Inválida',w:250,h:200,qty:-2}]}));
 ok(app.includes("case'mixedSimulate'"),'mixed interface workflow');
 
+
+const moveStock=mixed({width:1200,height:700,kerf:3,pieces:[{id:'a',name:'A',w:300,h:250,qty:1},{id:'b',name:'B',w:150,h:150,qty:1}]});
+const p0=moveStock.placed.find(p=>p.id==='a');
+const p1=moveStock.placed.find(p=>p.id==='b');
+const shiftX=moveStock.width-p0.w;
+if(shiftX>p0.x&&shiftX!==p1.x){
+ try{const changed=ctx.ArqueCut.positionMixed(moveStock,{'a:1':{x:shiftX,y:0}});ok(changed.placed.some(p=>p.id==='a'&&p.x===shiftX),'manual position is applied');}
+ catch(e){ok(e.message.includes('Peças sobrepostas'),'manual safety catches conflicts');}
+}
+throws(()=>ctx.ArqueCut.positionMixed(moveStock,{'a:1':{x:-1,y:0}}));
+throws(()=>ctx.ArqueCut.positionMixed(moveStock,{'a:1':{x:p1.x,y:p1.y}}));
+ok(app.includes("case'mixedMove'")&&app.includes("case'mixedReset'"),'manual placement UI actions');
+
 console.log('AUDITORIA OK: '+checks+' verificações. Medições, geometrias, corte, cliente/contratos, arquivos, backup e sintaxe.');

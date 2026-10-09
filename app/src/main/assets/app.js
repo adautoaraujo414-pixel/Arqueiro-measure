@@ -236,7 +236,7 @@ function photoMeasureView(){
  return '<div class="card photo-workspace"><div class="photo-workspace-head"><strong>Medidas na foto</strong><span class="muted">Desenhe ou meça direto na imagem</span></div><div class="photo-context">'+select('measurePhoto','Fotografia',p.photos.map(x=>({id:x.id,name:x.name})),photo.id)+(choices.length?select('photoRoom','Ambiente',[{id:'',name:'Sem ambiente'},...choices],photo.roomId||''):'')+'</div>'+
  '<div class="photo-workbar"><div class="photo-primary-tools">'+btn(photoInk?'✎ Caneta ativa':'✎ Caneta','photoInkToggle','',''+(photoInk?'primary':''))+btn(photoPlacement?'✕ Cancelar seta':'↔ Desenhar medida','photoAddDistance','',''+(photoPlacement?'primary':''))+btn('↔ Editar setas','photoInkSelect')+btn('↶ Desfazer risco','photoInkUndo')+'</div>'+
  '<div class="photo-ink-tools"><span class="photo-tool-label">Cor</span>'+['#197da5','#171717','#ffe000','#e23d3d','#288047','#ffffff'].map(c=>'<button type="button" class="photo-ink-swatch '+(photoInkColor===c?'selected':'')+'" data-action="photoInkColor" data-arg="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'"></button>').join('')+'<span class="photo-tool-label">Traço</span>'+btn('−','photoInkThinner')+'<b>'+photoInkWidth+' px</b>'+btn('+','photoInkThicker')+'</div>'+
- '<div class="photo-secondary-tools">'+btn('▣ Área','photoAddRect')+btn('+ Texto','photoNoteAdd')+btn('Conectar Bosch','bleScan')+btn('Aplicar leitura','photoDimensionApply')+'<div class="photo-zoom-tools">'+btn('−','photoZoomOut')+'<span id="photoZoomReadout">'+Math.round(photoZoom*100)+'%</span>'+btn('+','photoZoomIn')+btn('100%','photoZoomReset')+btn(photoZoomMode?'✓ Sair do zoom':'✥ Mover / zoom','photoZoomMode')+'</div></div></div>'+
+ '<div class="photo-secondary-tools">'+btn('▣ Área','photoAddRect')+btn('+ Texto','photoNoteAdd')+btn('Conectar Bosch','bleScan')+btn('Aplicar leitura','photoDimensionApply')+'<div class="photo-zoom-tools">'+btn('−','photoZoomOut')+'<span id="photoZoomReadout">'+Math.round(photoZoom*100)+'%</span>'+btn('+','photoZoomIn')+btn('100%','photoZoomReset')+btn(photoZoomMode?'🔓 Zoom livre':'🔒 Zoom travado','photoZoomMode')+'</div></div></div>'+
  '<div class="photo-measure-stage" id="photoMeasureStage"><div class="photo-zoom-surface" id="photoZoomSurface" style="transform:translate('+photoPanX+'px,'+photoPanY+'px) scale('+photoZoom+')"><img src="'+photo.data+'" alt="Foto do ambiente">'+svg+'</div></div><p class="muted">Leitura atual: <b id="photoBleLive">'+(lastBLE===null?'Aguardando trena':fmt(lastBLE)+' mm')+'</b>. Selecione a seta ou o quadrado e associe a leitura.</p>'+
  dims.map(d=>'<div class="item"><div><strong>'+escape(d.label||'Medida')+' — '+(d.value?fmt(d.value)+' mm':'Aguardando medida')+'</strong><small>'+escape(d.note||'')+' '+escape(d.source||'manual')+'</small></div><div class="actions">'+btn('Selecionar','photoDimensionSelect',d.id,'small')+btn('Excluir','photoDimensionDelete',d.id,'small danger')+'</div></div>').join('')+
  (photoMeasureSelected?'<div id="photoMeasureDetails" class="photo-measure-details"><h4>Especificações da medida selecionada</h4><p class="muted">Toque no quadrado amarelo de outra seta para consultar ou editar.</p><div class="fields">'+field('photoMeasureValue','Distância (mm)','number',dims.find(x=>x.id===photoMeasureSelected)?.value||'','min="0" step="0.01"')+field('photoMeasureLabel','Identificação',dims.find(x=>x.id===photoMeasureSelected)?.label||'')+field('photoMeasureNote','Observação','text',dims.find(x=>x.id===photoMeasureSelected)?.note||'')+field('photoMeasureThickness','Espessura da linha','number',dims.find(x=>x.id===photoMeasureSelected)?.thickness||5,'min="2" max="14" step="1"')+'</div>'+btn('Salvar medida e observações','photoDimensionManual','','primary')+'</div>':'<p class="muted" id="photoMeasureHint">Toque no quadrado amarelo de uma seta para ver suas especificações.</p>')+
@@ -400,7 +400,7 @@ case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(ph
 case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
 case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
 case'photoZoomReset':photoZoomSet(1);break;
-case'photoZoomMode':photoZoomMode=!photoZoomMode;if(photoZoomMode){photoPlacement=false;photoInk=false;}render();break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;}photoLastTap=null;render();break;
 case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
 case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
 case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
@@ -502,6 +502,34 @@ document.addEventListener('pointerup',e=>{
  e.preventDefault();
 });
 document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoZoomPreviousInk=true;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};
+ if(!doubleTap)return;
+ photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now()};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
 // Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
 const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
 document.addEventListener('pointerdown',e=>{

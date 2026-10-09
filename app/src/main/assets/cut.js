@@ -109,5 +109,24 @@ function mixedStock(input){
  return {...stock,placed,unplaced,reusable,requested,placedCount:placed.length,usedArea:pieceArea,wasteArea:width*height-pieceArea,utilization:Math.round(10000*pieceArea/(width*height))/100,cutCountEstimate:placed.length?placed.length*2:0,note:'Estimativa de disposição por cortes guilhotinados. Confira sequência de cortes, sentido do veio e peças antes de fabricar.'};
 }
 
-root.ArqueCut={calculate,manualGrid,mixedStock};
+
+/* Apply optional user positions. Reject every out-of-bounds and overlapping placement. */
+function positionMixed(stock,moves){
+ const pieces=stock.placed.map(p=>({...p}));
+ const attempted=moves||{};
+ for(const p of pieces){
+  const key=p.id+':'+p.ordinal,override=attempted[key];
+  if(!override)continue;
+  const x=Number(override.x),y=Number(override.y);
+  if(!Number.isFinite(x)||!Number.isFinite(y)||x<stock.trim||y<stock.trim||x+p.w>stock.width-stock.trim||y+p.h>stock.height-stock.trim)throw Error('Posição fora da chapa: '+p.name);
+  p.x=x;p.y=y;
+ }
+ for(let i=0;i<pieces.length;i++)for(let j=i+1;j<pieces.length;j++){
+  const a=pieces[i],b=pieces[j],k=stock.kerf;
+  if(!(a.x+a.w+k<=b.x||b.x+b.w+k<=a.x||a.y+a.h+k<=b.y||b.y+b.h+k<=a.y))throw Error('Peças sobrepostas ou sem espaço de serra: '+a.name+' / '+b.name);
+ }
+ return {...stock,placed:pieces,manuallyPositioned:true,reusable:[],note:'Posições editadas manualmente: verifique as sobras, pois a lista de sobras automáticas não se aplica após mover peças.'};
+}
+
+root.ArqueCut={calculate,manualGrid,mixedStock,positionMixed};
 })(typeof window!=='undefined'?window:globalThis);

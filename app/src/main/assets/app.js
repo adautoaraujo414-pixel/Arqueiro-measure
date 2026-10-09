@@ -508,14 +508,14 @@ document.addEventListener('pointerdown',e=>{
  if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
  const now=Date.now();
  const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
- photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false};
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
  if(!doubleTap)return;
  photoLastTap=null;photoTapDown=null;
  const wasZoom=photoZoomMode;
  if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomMode=true;photoInk=false;photoPlacement=false;}
  else{photoZoomMode=false;photoInk=photoZoomPreviousInk;}
  // The first tap must not leave a small ink dot on the photograph.
- if(!wasZoom){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ if(!wasZoom&&photoLastTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
  render();applyPhotoZoom();
  e.preventDefault();e.stopImmediatePropagation();
@@ -525,7 +525,7 @@ document.addEventListener('pointermove',e=>{
 },true);
 document.addEventListener('pointerup',e=>{
  if(photoTapDown?.id!==e.pointerId)return;
- if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now()};
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
  else photoLastTap=null;
  photoTapDown=null;
 },true);

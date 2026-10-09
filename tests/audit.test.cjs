@@ -89,4 +89,20 @@ ok(link.includes('AES/GCM/NoPadding')&&link.includes('freshSecret()'),'transfer 
 ok(link.includes('MAX_BYTES = 24 * 1024 * 1024'),'large backup transfer size guard');
 ok(app.includes("confirm('O outro Arque Measure enviou um BACKUP COMPLETO"),'explicit confirmation before remote overwrite');
 
+
+/* Single-stock mixed-cut scenario tests, including grain and bounding boxes. */
+const mixed=ctx.ArqueCut.mixedStock;
+const stockA=mixed({width:1200,height:700,kerf:3,trim:0,pieces:[{id:'A',name:'Lateral',w:500,h:300,qty:2,grain:true},{id:'B',name:'Prateleira',w:180,h:200,qty:2}]});
+eq(stockA.requested,4);eq(stockA.placedCount+stockA.unplaced.length,4);
+ok(stockA.placedCount>=2,'mixed parts packed');
+for(const piece of stockA.placed)ok(piece.x>=0&&piece.y>=0&&piece.x+piece.w<=1200&&piece.y+piece.h<=700,'mixed within stock');
+for(let i=0;i<stockA.placed.length;i++)for(let j=i+1;j<stockA.placed.length;j++){
+ const a=stockA.placed[i],b=stockA.placed[j],k=3;
+ ok(a.x+a.w+k<=b.x||b.x+b.w+k<=a.x||a.y+a.h+k<=b.y||b.y+b.h+k<=a.y,'mixed no overlap plus kerf');
+}
+eq(mixed({width:400,height:800,pieces:[{name:'Veio fixo',w:750,h:350,qty:1,grain:true}]}).placedCount,0);
+eq(mixed({width:400,height:800,pieces:[{name:'Livre',w:750,h:350,qty:1,grain:false}]}).placedCount,1);
+throws(()=>mixed({width:300,height:200,pieces:[{name:'Inválida',w:250,h:200,qty:-2}]}));
+ok(app.includes("case'mixedSimulate'"),'mixed interface workflow');
+
 console.log('AUDITORIA OK: '+checks+' verificações. Medições, geometrias, corte, cliente/contratos, arquivos, backup e sintaxe.');

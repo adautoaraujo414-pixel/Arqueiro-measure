@@ -58,16 +58,37 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ -s ui-test.log ]; then gh issue create --title "Falha da interface - $GITHUB_RUN_ID" --body-file ui-test.log || true; fi
+      - name: Preparar assinatura privada opcional
+        env:
+          ARQUE_KEYSTORE_B64: ${{ secrets.ARQUE_KEYSTORE_BASE64 }}
+          ARQUE_KEYSTORE_PASSWORD: ${{ secrets.ARQUE_KEYSTORE_PASSWORD }}
+          ARQUE_KEY_ALIAS: ${{ secrets.ARQUE_KEY_ALIAS }}
+          ARQUE_KEY_PASSWORD: ${{ secrets.ARQUE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ARQUE_KEYSTORE_B64" ]; then
+            test -n "$ARQUE_KEYSTORE_PASSWORD" && test -n "$ARQUE_KEY_ALIAS" && test -n "$ARQUE_KEY_PASSWORD"
+            printf '%s' "$ARQUE_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/arque-release.jks"
+            chmod 600 "$RUNNER_TEMP/arque-release.jks"
+            echo "ARQUE_KEYSTORE_PATH=$RUNNER_TEMP/arque-release.jks" >> "$GITHUB_ENV"
+            echo "ARQUE_KEYSTORE_PASSWORD=$ARQUE_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "ARQUE_KEY_ALIAS=$ARQUE_KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "ARQUE_KEY_PASSWORD=$ARQUE_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "ARQUE_BUILD_TASK=assembleRelease" >> "$GITHUB_ENV"
+          else
+            echo "ARQUE_BUILD_TASK=assembleDebug" >> "$GITHUB_ENV"
+            echo "Assinatura release ainda nao configurada; usando APK debug."
+          fi
       - name: Compilar e salvar log
         run: |
           set -o pipefail
-          gradle --no-daemon --stacktrace assembleDebug 2>&1 | tee arque-build.log
+          gradle --no-daemon --stacktrace "$ARQUE_BUILD_TASK" 2>&1 | tee arque-build.log
       - name: Publicar APK
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Arque-Measure-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
       - name: Relatorio de erro
         if: failure()

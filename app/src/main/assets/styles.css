@@ -161,3 +161,12 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-fullscreen .studio-actions{flex-shrink:0;margin:8px 0}
 .studio-fullscreen .field,.studio-fullscreen .field+button{display:none}
 @media(max-width:650px){.studio-fullscreen .studio-tools{gap:5px;padding:6px}.studio-fullscreen .studio-tools label{font-size:10px}.studio-fullscreen .studio-paper-head strong{font-size:16px}.studio-fullscreen .studio-canvas-shell{padding:5px}.studio-fullscreen .studio-canvas-shell canvas{max-height:calc(100dvh - 220px)}}
+
+/* Foto: criar medida desenhando na imagem, sem seta pré-posicionada */
+.photo-measure-stage.photo-placement-mode,
+.photo-measure-stage.photo-placement-mode #photoOverlay,
+.photo-measure-stage.photo-placement-mode #photoOverlay *{cursor:crosshair!important;touch-action:none!important}
+.photo-measure-stage.photo-placement-mode #photoOverlay{pointer-events:all}
+.photo-measure-stage.photo-placement-mode #photoOverlay [data-dimension]{pointer-events:none!important}
+.photo-measure-stage #photoOverlay{display:block;user-select:none;-webkit-user-select:none}
+.photo-measure-stage>img{max-width:100%;width:100%;height:auto;max-height:76vh;object-fit:contain}

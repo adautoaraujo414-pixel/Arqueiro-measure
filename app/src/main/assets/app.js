@@ -263,6 +263,7 @@ function setupStudio(){
   if(stroke.points.length===1)ctx.lineTo(stroke.points[0][0]+.1,stroke.points[0][1]);ctx.stroke();
  };
  function paint(){
+  canvas.dataset.strokeCount=String((page.strokes||[]).length);
   ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · ESBOÇO',22,27);
   ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;

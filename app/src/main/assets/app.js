@@ -570,7 +570,9 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
  if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
  const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
- photoPlacementStart=null;photoPlacementPreview=null;photoPlacement=false;photoInk=true;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
  const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
  if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
   const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};

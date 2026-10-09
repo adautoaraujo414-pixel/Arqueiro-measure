@@ -176,7 +176,22 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'photoAddRect');await sleep(70);
  assert(doc.querySelector('#photoOverlay rect'),'rectangle overlay appears');
  w.prompt=()=> 'Tomada atrás do armário';click(doc,'photoNoteAdd');await sleep(50);assert(doc.body.textContent.includes('Tomada atrás do armário'),'annotation saved');
- // prompt may be unavailable in jsdom: no-op possible here.
+ // Automatic freehand: one pointer contact is one saved stroke, no Concluir button.
+ click(doc,'photoInkToggle');assert(!doc.body.textContent.includes('Concluir desenho'),'drawing needs no finish button');
+ click(doc,'photoInkColor','#e23d3d');click(doc,'photoInkThinner');
+ const drawStroke=(x1,y1,x2,y2)=>{
+  const svg=doc.getElementById('photoOverlay');svg.getBoundingClientRect=()=>({left:0,top:0,width:1000,height:650});
+  svg.setPointerCapture=()=>{};
+  for(const [type,x,y] of [['pointerdown',x1,y1],['pointermove',x2,y2],['pointerup',x2,y2]]){
+   const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:7},clientX:{value:x},clientY:{value:y}});
+   svg.dispatchEvent(ev);
+  }
+ };
+ drawStroke(50,50,120,130);drawStroke(150,160,260,270);await sleep(80);
+ assert.equal(doc.querySelectorAll('#photoOverlay polyline[stroke="#e23d3d"]').length,2,'each lift and new contact creates separate persistent red stroke');
+ click(doc,'photoInkUndo');await sleep(80);
+ assert.equal(doc.querySelectorAll('#photoOverlay polyline[stroke="#e23d3d"]').length,1,'undo removes only last stroke');
+  // prompt may be unavailable in jsdom: no-op possible here.
  const roomSelector=doc.getElementById('photoRoom');
  assert(roomSelector,'room association selector exists');
  w.HTMLCanvasElement.prototype.getContext=oldCanvas;

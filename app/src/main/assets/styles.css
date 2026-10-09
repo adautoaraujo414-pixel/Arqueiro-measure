@@ -183,3 +183,14 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 #photoOverlay .dim-selected line:not(.measure-hit){stroke:#ffe000!important}
 #photoOverlay .measure-label rect{stroke:none!important}
 #photoOverlay .measure-label text{fill:#171717!important}
+
+/* MeasureOn: zoom aplicado ao conjunto foto + sobreposição, sem desalinhamento */
+.photo-measure-stage{position:relative;display:block;overflow:hidden;touch-action:none;max-width:100%;background:#111}
+.photo-zoom-surface{position:relative;width:100%;transform-origin:center center;will-change:transform}
+.photo-zoom-surface>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:fill!important}
+.photo-zoom-surface>#photoOverlay{position:absolute;inset:0;width:100%;height:100%;z-index:2;touch-action:none}
+.photo-zoom-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0}
+.photo-zoom-tools #photoZoomReadout{font-size:13px;font-weight:700;min-width:45px;text-align:center}
+.photo-zoom-tools .btn{min-width:42px}
+#photoOverlay .dim-group>line:not(.measure-hit){stroke-width:3!important;stroke-linecap:butt}
+#photoOverlay .measure-label rect{stroke:none!important}

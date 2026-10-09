@@ -63,6 +63,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
+ click(doc,'photoAddFree');await sleep(70);
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'free arrow appears');
+ const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
+ assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);
+ assert(doc.querySelector('#photoOverlay line[stroke-width="3"]'),'adjustable width saved');
  click(doc,'photoAddRect');await sleep(70);
  assert(doc.querySelector('#photoOverlay rect'),'rectangle overlay appears');
  w.prompt=()=> 'Tomada atrás do armário';click(doc,'photoNoteAdd');await sleep(50);assert(doc.body.textContent.includes('Tomada atrás do armário'),'annotation saved');

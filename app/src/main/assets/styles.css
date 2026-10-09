@@ -112,3 +112,11 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .cut-entry .cut-draft{background:#ecf7fd}
 .cut-entry .btn{padding:7px 9px}
 .cut-extra{margin-top:14px}
+
+/* Foto: SVG sobre a imagem de verdade, com contato direto pela S Pen */
+#photoMeasureStage{position:relative;display:block;overflow:hidden}
+#photoMeasureStage>img{width:100%;display:block;height:auto;max-height:none;object-fit:contain}
+#photoOverlay{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;z-index:2}
+#photoOverlay .dim-group{pointer-events:all;cursor:pointer}
+#photoOverlay .dim-group circle{cursor:grab}
+#photoOverlay .dim-selected line,#photoOverlay .dim-selected rect{stroke:#ff9500}

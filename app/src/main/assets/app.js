@@ -511,13 +511,22 @@ document.addEventListener('pointerup',e=>{
 });
 document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
 // Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
-let photoTapDown=null,photoLastTap=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
 document.addEventListener('pointerdown',e=>{
  if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
  const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
  const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
  photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
  if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
  const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
  const wasZoom=photoZoomMode;
  if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}

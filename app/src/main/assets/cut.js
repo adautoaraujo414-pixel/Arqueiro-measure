@@ -71,5 +71,43 @@ function manualGrid(input){
  return {width,height,kerf,trim,cols:best.cols,rows:best.rows,capacity:best.capacity,rotated:best.rotated,placed,pending:Math.max(0,qty-placed),pieces,usedArea,unusedArea:width*height-usedArea,utilization:Math.round(10000*usedArea/(width*height))/100,estimatedCuts:cutCount,estimatedCutsNote:'Estimativa de cortes retos em tiras; depende da sequência e do esquadrejamento.'};
 }
 
-root.ArqueCut={calculate,manualGrid};
+
+/* A single real stock sheet shared by different modules.  No invented extra sheets. */
+function mixedStock(input){
+ const width=positive(input.width,'Comprimento disponível'),height=positive(input.height,'Largura disponível');
+ const kerf=Number(input.kerf??3),trim=Number(input.trim??0);
+ if(!Number.isFinite(kerf)||kerf<0||kerf>20||!Number.isFinite(trim)||trim<0||trim>100||width<=trim*2||height<=trim*2)throw Error('Serra, refilo ou chapa inválidos.');
+ const stock={width,height,kerf,trim};
+ const rows=(input.pieces||[]).map((p,i)=>({id:String(p.id??i),name:String(p.name||'Peça '+(i+1)),w:positive(p.w,'Comprimento'),h:positive(p.h,'Largura'),qty:Number(p.qty),grain:!!p.grain,rotate:p.rotate!==false}));
+ let requested=0,parts=[];
+ for(const p of rows){
+  if(!Number.isInteger(p.qty)||p.qty<1||p.qty>1000||requested+p.qty>5000)throw Error('Quantidade inválida ou excessiva.');
+  requested+=p.qty;
+  for(let i=0;i<p.qty;i++)parts.push({...p,ordinal:i+1});
+ }
+ parts.sort((a,b)=>b.w*b.h-a.w*a.h||Math.max(b.w,b.h)-Math.max(a.w,a.h));
+ const free=[{x:trim,y:trim,w:width-2*trim,h:height-2*trim}],placed=[],unplaced=[];
+ for(const p of parts){
+  let candidate=null;
+  for(let i=0;i<free.length;i++){
+   const f=free[i],options=[{w:p.w,h:p.h,rotated:false}];
+   if(!p.grain&&p.rotate&&p.w!==p.h)options.push({w:p.h,h:p.w,rotated:true});
+   for(const o of options)if(o.w<=f.w&&o.h<=f.h){
+    const waste=f.w*f.h-o.w*o.h;
+    if(!candidate||waste<candidate.waste)candidate={i,o,waste};
+   }
+  }
+  if(!candidate){unplaced.push({id:p.id,name:p.name,w:p.w,h:p.h,ordinal:p.ordinal});continue;}
+  const f=free.splice(candidate.i,1)[0],o=candidate.o;
+  placed.push({id:p.id,name:p.name,ordinal:p.ordinal,x:f.x,y:f.y,w:o.w,h:o.h,rotated:o.rotated});
+  const right=f.w-o.w-kerf,bottom=f.h-o.h-kerf;
+  if(right>0.0001)free.push({x:f.x+o.w+kerf,y:f.y,w:right,h:o.h});
+  if(bottom>0.0001)free.push({x:f.x,y:f.y+o.h+kerf,w:f.w,h:bottom});
+ }
+ const pieceArea=placed.reduce((sum,p)=>sum+p.w*p.h,0);
+ const reusable=free.filter(r=>r.w>=50&&r.h>=50).sort((a,b)=>b.w*b.h-a.w*a.h);
+ return {...stock,placed,unplaced,reusable,requested,placedCount:placed.length,usedArea:pieceArea,wasteArea:width*height-pieceArea,utilization:Math.round(10000*pieceArea/(width*height))/100,cutCountEstimate:placed.length?placed.length*2:0,note:'Estimativa de disposição por cortes guilhotinados. Confira sequência de cortes, sentido do veio e peças antes de fabricar.'};
+}
+
+root.ArqueCut={calculate,manualGrid,mixedStock};
 })(typeof window!=='undefined'?window:globalThis);

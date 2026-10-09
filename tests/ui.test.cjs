@@ -42,6 +42,35 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','corte');
  assert(doc.getElementById('cutName').value==='Frente','draft survives reload');
  assert(doc.getElementById('cutW').value==='700','draft dimensions survive reload');
+ 
+ // Photo overlay integration: manual yellow arrows, rectangle and room association.
+ click(doc,'openWorkspace','medidas');assign(doc,'roomname','Cozinha do teste');click(doc,'addRoom');await sleep(60);
+ click(doc,'openWorkspace','fotos');
+ // Insert test photo in saved model through project persistence via normal photo-file chooser.
+ const fileInput=doc.getElementById('photoFile');
+ const photoFile=new w.File([new Uint8Array([137,80,78,71])],'referencia.png',{type:'image/png'});
+ // The file input path depends on createImageBitmap; simulate supported file decode/canvas.
+ w.createImageBitmap=async()=>({width:100,height:100});
+ const oldCanvas=w.HTMLCanvasElement.prototype.getContext;
+ w.HTMLCanvasElement.prototype.getContext=function(){return {drawImage:()=>{}};};
+ w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/jpeg;base64,AA==';
+ Object.defineProperty(fileInput,'files',{value:[photoFile],configurable:true});
+ fileInput.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(80);
+ click(doc,'openWorkspace','fotomedidas');
+ assert(doc.getElementById('photoOverlay'),'overlay rendered');
+ click(doc,'photoAddHorizontal');await sleep(60);
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
+ assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');
+ assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
+ assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
+ click(doc,'photoAddRect');await sleep(70);
+ assert(doc.querySelector('#photoOverlay rect'),'rectangle overlay appears');
+ click(doc,'photoNoteAdd');await sleep(50);
+ // prompt may be unavailable in jsdom: no-op possible here.
+ const roomSelector=doc.getElementById('photoRoom');
+ assert(roomSelector,'room association selector exists');
+ w.HTMLCanvasElement.prototype.getContext=oldCanvas;
+
  console.log('UI INTEGRAÇÃO OK: cliente, obra, chapa, edição e rascunho persistiram após recriar a tela.');
  x.dom.window.close();
 })().catch(err=>{console.error(err);process.exitCode=1;});

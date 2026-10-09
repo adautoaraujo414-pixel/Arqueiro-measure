@@ -73,4 +73,20 @@ ok(html.indexOf('src="core.js"')<html.indexOf('src="cut.js"')&&html.indexOf('src
 ok(app.includes('async function exportBackup')&&app.includes('async function receiveImport'),'backup support');
 ok(app.includes('indexedDB.open')&&app.includes('persist()'),'local persistence');
 ok(app.includes('const escape=')&&app.includes('escape(c.name)'),'HTML escaping');
+
+/* Integration regressions: row editor, Android assets, backup and authorized transfer. */
+const activity=fs.readFileSync('app/src/main/java/com/arque/measure/MainActivity.java','utf8');
+const link=fs.readFileSync('app/src/main/java/com/arque/measure/ArqueLink.java','utf8');
+ok(activity.includes('!name.equals("cut.js")'),'Android WebView must actually serve cut.js');
+ok(app.includes('data-cut-field="w"')&&app.includes('data-cut-field="qty"'),'row editor exists');
+ok(app.includes("case'cutAdd'")&&app.includes("case'cutRemove'"),'add/remove rows exist');
+ok(app.includes("dataset.cutDraft")&&app.includes("persist().catch"),'draft autosaves to IndexedDB');
+ok(activity.includes('Intent.ACTION_CREATE_DOCUMENT')&&activity.includes('Intent.ACTION_OPEN_DOCUMENT'),'SAF for SD/Drive backup');
+ok(app.includes("val('linkMode')==='full'"),'full transfer option');
+ok(app.includes("received?.format==='arque-measure'"),'full transfer reception');
+ok(app.includes('state=previous;throw e;'),'rollback on persistence failure');
+ok(link.includes('AES/GCM/NoPadding')&&link.includes('freshSecret()'),'transfer encryption and one-time pairing secret');
+ok(link.includes('MAX_BYTES = 24 * 1024 * 1024'),'large backup transfer size guard');
+ok(app.includes("confirm('O outro Arque Measure enviou um BACKUP COMPLETO"),'explicit confirmation before remote overwrite');
+
 console.log('AUDITORIA OK: '+checks+' verificações. Medições, geometrias, corte, cliente/contratos, arquivos, backup e sintaxe.');

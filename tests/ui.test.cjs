@@ -36,6 +36,14 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'openClient');assert(doc.body.textContent.includes('Cozinha teste'),'project survives reload');
  click(doc,'openProject');click(doc,'openWorkspace','corte');
  assert(doc.querySelector('[data-cut-field="w"]').value==='850','cut piece survives reload');
+ // Mixed stock from two different modules, persisted per client/project.
+ assign(doc,'cutName','Prateleira');assign(doc,'cutW','220');assign(doc,'cutH','300');assign(doc,'cutQty','3');
+ click(doc,'cutAdd');await sleep(85);
+ assert(doc.querySelectorAll('[data-cut-field="w"]').length===2,'two different pieces saved');
+ assign(doc,'mixedW','1200');assign(doc,'mixedH','700');
+ click(doc,'mixedSimulate');await sleep(85);
+ assert(doc.body.textContent.includes('Peças colocadas'),'mixed plan calculated');
+
  assign(doc,'cutName','Frente');assign(doc,'cutW','700');assign(doc,'cutH','300');await sleep(70);
  x.dom.window.close();
  x=await launch();doc=x.doc;w=x.w;

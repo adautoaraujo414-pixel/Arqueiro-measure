@@ -11,7 +11,7 @@ async function launch(){
  w.eval(core);w.eval(cut);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
-function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')],b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));assert(b,'Action not found: '+act);b.click();}
+function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
 function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not found: '+id);x.value=value;x.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));}
 (async()=>{
  let {dom,w,doc}=await launch();
@@ -65,7 +65,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
  click(doc,'photoAddRect');await sleep(70);
  assert(doc.querySelector('#photoOverlay rect'),'rectangle overlay appears');
- click(doc,'photoNoteAdd');await sleep(50);
+ w.prompt=()=> 'Tomada atrás do armário';click(doc,'photoNoteAdd');await sleep(50);assert(doc.body.textContent.includes('Tomada atrás do armário'),'annotation saved');
  // prompt may be unavailable in jsdom: no-op possible here.
  const roomSelector=doc.getElementById('photoRoom');
  assert(roomSelector,'room association selector exists');

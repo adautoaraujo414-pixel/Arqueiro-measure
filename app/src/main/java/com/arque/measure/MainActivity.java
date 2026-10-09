@@ -21,6 +21,9 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.print.PrintManager;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
 import android.content.ContentValues;
 import android.os.Build;
 import android.os.Bundle;
@@ -228,6 +231,14 @@ public final class MainActivity extends Activity {
     }
     @SuppressLint("MissingPermission") private void disconnect(){stopScan();if(gatt!=null){try{gatt.disconnect();gatt.close();}catch(Exception ignored){}gatt=null;}characteristic=null;status("● Offline");}
     public final class Bridge{
+        @JavascriptInterface public void printCutPlan(){handler.post(()->{
+            try{
+                PrintManager printer=(PrintManager)getSystemService(Context.PRINT_SERVICE);
+                if(printer==null)throw new IllegalStateException("Serviço de impressão indisponível");
+                PrintDocumentAdapter adapter=web.createPrintDocumentAdapter("Arque-Measure-Plano-de-Corte");
+                printer.print("Arque Measure - Plano de corte",adapter,new PrintAttributes.Builder().build());
+            }catch(Exception e){status("Não foi possível abrir PDF: "+e.getMessage());}
+        });}
         @JavascriptInterface public void linkStart(String json){handler.post(()->{try{String code=link.start(json);JSONObject info=new JSONObject();info.put("ip",ArqueLink.localIp());info.put("code",code);js("window.ArqueLinkReady("+JSONObject.quote(info.toString())+")");
                 if(linkBlePermissions(true))discovery.advertise(info.optString("ip"));}catch(Exception e){js("window.ArqueLinkEvent(\"error\","+JSONObject.quote(e.getMessage())+")");}});}
         @JavascriptInterface public void linkStop(){handler.post(()->{link.stop();discovery.stopAdvertising();js("window.ArqueLinkEvent(\"status\",\"Compartilhamento encerrado\")");});}

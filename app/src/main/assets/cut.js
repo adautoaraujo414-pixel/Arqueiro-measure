@@ -51,7 +51,7 @@ function manualGrid(input){
  const usableW=width-2*trim,usableH=height-2*trim;
  if(usableW<=0||usableH<=0)throw Error('O refilo supera a chapa.');
  const qty=Number(input.qty??0);
- if(!Number.isInteger(qty)||qty<0||qty>5000)throw Error('Quantidade solicitada inválida.');
+ if(!Number.isInteger(qty)||qty<1||qty>5000)throw Error('Quantidade solicitada inválida.');
  const allowRotation=input.rotate!==false&&!input.grain;
  const orientations=[{w:partW,h:partH,rotated:false}];
  if(allowRotation&&partW!==partH)orientations.push({w:partH,h:partW,rotated:true});
@@ -61,7 +61,7 @@ function manualGrid(input){
   return {...o,cols,rows,capacity:cols*rows};
  });
  const best=configurations.sort((a,b)=>b.capacity-a.capacity || Number(a.rotated)-Number(b.rotated))[0];
- const placed=Math.min(qty||best.capacity,best.capacity),pieces=[];
+ const placed=Math.min(qty,best.capacity),pieces=[];
  for(let n=0;n<placed;n++){const col=n%best.cols,row=Math.floor(n/best.cols);pieces.push({x:trim+col*(best.w+kerf),y:trim+row*(best.h+kerf),w:best.w,h:best.h});}
  // Strip-first guillotine workflow: one rip per strip (if separation from a remnant),
  // then crosscuts dividing pieces in that strip. These are indicative, not machine instructions.

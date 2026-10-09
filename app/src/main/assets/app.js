@@ -9,7 +9,9 @@ let navigationHistory=[];let pendingPhotoRoom='';let pendingPhotoCategory='Levan
 let photoPlacement=false, photoPlacementStart=null, photoPlacementPreview=null;
 let photoZoom=1,photoPanX=0,photoPanY=0,photoZoomMode=false;
 const photoZoomClamp=n=>Math.max(1,Math.min(5,n));
-function applyPhotoZoom(){const surface=$('#photoZoomSurface');if(surface){surface.style.transform='translate('+photoPanX+'px,'+photoPanY+'px) scale('+photoZoom+')';}const readout=$('#photoZoomReadout');if(readout)readout.textContent=Math.round(photoZoom*100)+'%';// All photo annotations zoom with the image at the same scale.}
+function applyPhotoZoom(){const surface=$('#photoZoomSurface');if(surface){surface.style.transform='translate('+photoPanX+'px,'+photoPanY+'px) scale('+photoZoom+')';}const readout=$('#photoZoomReadout');if(readout)readout.textContent=Math.round(photoZoom*100)+'%';
+ // All photo annotations zoom with the image at the same scale.
+}
 function photoZoomSet(n){photoZoom=photoZoomClamp(n);if(photoZoom===1){photoPanX=0;photoPanY=0;}applyPhotoZoom();}
 
 let studioPageId=null, studioFullscreen=false, studioInk='#176f9d', studioWidth=3, studioTool='pen', studioGrid='dots', studioActive=false, studioPoints=[];

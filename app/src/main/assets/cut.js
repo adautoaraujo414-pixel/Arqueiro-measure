@@ -16,7 +16,7 @@ function calculate(input){
   const perimeter=2*(p.w+p.h);edge2+=p.qty*perimeter*p.edge2/4;edge04+=p.qty*perimeter*p.edge04/4;
   for(let k=0;k<p.qty;k++)parts.push({...p,ordinal:k+1});
  }
- parts.sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)||(b.w*b.h-a.w*a.h));
+ parts.sort((a,b)=>b.w*b.h-a.w*a.h || Math.max(b.w,b.h)-Math.max(a.w,a.h));
  const sheets=[],unfit=[];
  function options(p,free){const out=[{w:p.w,h:p.h,rotated:false}];if(p.rotate&&!p.grain&&p.w!==p.h)out.push({w:p.h,h:p.w,rotated:true});return out.filter(o=>o.w<=free.w+1e-7&&o.h<=free.h+1e-7);}
  for(const p of parts){

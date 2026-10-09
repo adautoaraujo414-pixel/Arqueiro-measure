@@ -83,6 +83,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'openWorkspace','fotomedidas');await sleep(30);
  assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');
  assert(!doc.body.textContent.includes('Seta livre'),'free-arrow option removed');
+ assert(doc.body.textContent.includes('Adicione uma foto')||doc.body.textContent.includes('Zoom')||doc.body.textContent.includes('100%'),'photo zoom controls or empty state available');
  assert(doc.body.textContent.includes('Nova medida')||doc.body.textContent.includes('Adicione uma foto'),'distance workflow available when photo exists');
  click(doc,'openWorkspace','corte');await sleep();
  assign(doc,'cutName','Lateral');assign(doc,'cutW','800');assign(doc,'cutH','550');assign(doc,'cutQty','2');

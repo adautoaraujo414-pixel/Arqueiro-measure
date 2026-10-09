@@ -37,7 +37,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  // Test all primary project tabs without any crash or blank screen.
  for(const section of ['resumo','medidas','fotos','fotomedidas','desenho','atelier','corte','financeiro']){
    click(doc,'openWorkspace',section);await sleep(35);
-   assert(!doc.querySelector('#main .notice'),'tab '+section+' must not throw');
+   assert(!doc.querySelector('#main .notice'),'tab '+section+' must not throw: '+(doc.querySelector('#main .notice')?.textContent||''));
    assert(doc.querySelector('#main').textContent.trim().length>40,'tab '+section+' must render');
  }
  click(doc,'openWorkspace','corte');await sleep();

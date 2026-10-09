@@ -40,6 +40,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
    assert(![...doc.querySelectorAll('#main .notice')].some(x=>x.textContent.startsWith('Falha ao exibir:')),'tab '+section+' must not throw: '+[...doc.querySelectorAll('#main .notice')].map(x=>x.textContent).join(' / '));
    assert(doc.querySelector('#main').textContent.trim().length>40,'tab '+section+' must render');
  }
+ // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
+ click(doc,'openWorkspace','fotomedidas');await sleep(30);
+ assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');
+ assert(!doc.body.textContent.includes('Seta livre'),'free-arrow option removed');
+ assert(doc.body.textContent.includes('Nova medida')||doc.body.textContent.includes('Adicione uma foto'),'distance workflow available when photo exists');
  click(doc,'openWorkspace','corte');await sleep();
  assign(doc,'cutName','Lateral');assign(doc,'cutW','800');assign(doc,'cutH','550');assign(doc,'cutQty','2');
  click(doc,'cutAdd');await sleep(90);

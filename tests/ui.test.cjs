@@ -20,8 +20,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assign(doc,'cname','Cliente persistência');click(doc,'addClient');await sleep(80);
  assert(doc.body.textContent.includes('Cliente persistência'),'client visible after save');
  click(doc,'openClient');click(doc,'clientProject');
- assign(doc,'pname','Cozinha teste');click(doc,'addProject');await sleep(80);
- assert(doc.body.textContent.includes('Cozinha teste'),'project created');
+ assert(doc.body.textContent.includes('Ambiente (ex.: Cozinha, Quarto, Sala)'),'form asks for ambiente');assert(!doc.getElementById('paddr'),'address is not asked twice');assign(doc,'pname','Cozinha teste');click(doc,'addProject');await sleep(80);
+ assert(doc.body.textContent.includes('Cozinha teste'),'project created');click(doc,'openWorkspace','medidas');await sleep(30);assert(doc.body.textContent.includes('Cozinha teste'),'initial environment created');click(doc,'openWorkspace','resumo');
 
  // Regression: clicking the Projetos navigation must open the project list, not bounce to Clientes.
  doc.querySelector('[data-tab="projects"]').click();await sleep(40);

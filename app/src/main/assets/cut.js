@@ -41,5 +41,35 @@ function calculate(input){
  const area=sheetW*sheetH,allocated=sheets.length*area;
  return {sheets,unfit,sheetWidth:sheetW,sheetHeight:sheetH,kerf,trim,totalPieces:parts.length,placedPieces:parts.length-unfit.length,sheetCount:sheets.length,usedArea:used,allocatedArea:allocated,wasteArea:Math.max(0,allocated-used),utilization:allocated?100*used/allocated:0,edge2mm:edge2,edge04mm:edge04,cutLengthEstimate:sheets.reduce((sum,s)=>sum+s.pieces.reduce((n,p)=>n+p.w+p.h,0),0)};
 }
-root.ArqueCut={calculate};
+
+/* Manual stock-sheet simulator for repeated identical parts. Counts strip/rip cuts as an estimate. */
+function manualGrid(input){
+ const width=positive(input.width,'Comprimento disponível'),height=positive(input.height,'Largura disponível');
+ const partW=positive(input.partW,'Comprimento da peça'),partH=positive(input.partH,'Largura da peça');
+ const kerf=Number(input.kerf??3),trim=Number(input.trim??0);
+ if(!Number.isFinite(kerf)||kerf<0||kerf>20||!Number.isFinite(trim)||trim<0||trim>100)throw Error('Serra ou refilo inválidos.');
+ const usableW=width-2*trim,usableH=height-2*trim;
+ if(usableW<=0||usableH<=0)throw Error('O refilo supera a chapa.');
+ const qty=Number(input.qty??0);
+ if(!Number.isInteger(qty)||qty<0||qty>5000)throw Error('Quantidade solicitada inválida.');
+ const allowRotation=input.rotate!==false&&!input.grain;
+ const orientations=[{w:partW,h:partH,rotated:false}];
+ if(allowRotation&&partW!==partH)orientations.push({w:partH,h:partW,rotated:true});
+ const configurations=orientations.map(o=>{
+  const cols=Math.max(0,Math.floor((usableW+kerf)/(o.w+kerf)));
+  const rows=Math.max(0,Math.floor((usableH+kerf)/(o.h+kerf)));
+  return {...o,cols,rows,capacity:cols*rows};
+ });
+ const best=configurations.sort((a,b)=>b.capacity-a.capacity || Number(a.rotated)-Number(b.rotated))[0];
+ const placed=Math.min(qty||best.capacity,best.capacity),pieces=[];
+ for(let n=0;n<placed;n++){const col=n%best.cols,row=Math.floor(n/best.cols);pieces.push({x:trim+col*(best.w+kerf),y:trim+row*(best.h+kerf),w:best.w,h:best.h});}
+ // Strip-first guillotine workflow: one rip per strip (if separation from a remnant),
+ // then crosscuts dividing pieces in that strip. These are indicative, not machine instructions.
+ const usedRows=placed?Math.ceil(placed/best.cols):0;
+ const cutCount=placed?usedRows+placed:0;
+ const usedArea=placed*partW*partH;
+ return {width,height,kerf,trim,cols:best.cols,rows:best.rows,capacity:best.capacity,rotated:best.rotated,placed,pending:Math.max(0,qty-placed),pieces,usedArea,unusedArea:width*height-usedArea,utilization:Math.round(10000*usedArea/(width*height))/100,estimatedCuts:cutCount,estimatedCutsNote:'Estimativa de cortes retos em tiras; depende da sequência e do esquadrejamento.'};
+}
+
+root.ArqueCut={calculate,manualGrid};
 })(typeof window!=='undefined'?window:globalThis);

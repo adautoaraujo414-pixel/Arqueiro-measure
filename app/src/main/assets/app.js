@@ -284,7 +284,7 @@ document.addEventListener('pointerdown',e=>{
  if(!svg||!photo)return;
  if(!photo.inkStrokes)photo.inkStrokes=[];
  const points=[photoOverlayCoords(e,svg)];photo.inkStrokes.push(points);photoStrokeActive=points;
- svg.setPointerCapture(e.pointerId);e.preventDefault();
+ svg.setPointerCapture(e.pointerId);e.preventDefault();e.stopImmediatePropagation();
 },true);
 document.addEventListener('pointermove',e=>{
  if(!photoStrokeActive)return;

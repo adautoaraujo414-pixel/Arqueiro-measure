@@ -8,7 +8,7 @@ async function launch(){
  const w=dom.window;
  Object.defineProperty(w,'indexedDB',{value:storage,configurable:true});
  w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
- w.HTMLCanvasElement.prototype.getContext=function(){return {fillRect(){},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){},drawImage(){}}};
+ w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.eval(core);w.eval(cut);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
@@ -65,6 +65,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  sketch.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  sketchEvent('pointerdown',30,30);sketchEvent('pointermove',130,150);sketchEvent('pointercancel',130,150);
  sketchEvent('pointerdown',230,300);sketchEvent('pointermove',360,450);sketchEvent('pointerup',360,450);
+ assert.equal(sketch.__paintedStrokes,2,'second stroke does not erase first stroke on the same sheet');
  await sleep(100);
  click(doc,'studioUndo');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'stroke remains editable after pointercancel');
@@ -157,7 +158,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'photoAddDistance');await sleep(30);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===0,'no unwanted pre-positioned arrow');dragMeasure(doc);await sleep(75);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
- assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label'),'yellow measurement label appears');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
+ assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label'),'yellow measurement label appears');assert(doc.querySelector('#photoOverlay .measure-label rect')?.getAttribute('fill')==='#ffe000','MeasureOn video uses yellow, not purple');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
  click(doc,'photoAddDistance');await sleep(30);dragMeasure(doc,110,360,800,450);await sleep(70);

@@ -184,14 +184,14 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');assert(doc.querySelector('#photoOverlay .measure-label rect')?.getAttribute('fill')==='#ffe000','measured label is yellow');
  // Central box opens the piece specifications directly, even with pen selected.
  click(doc,'photoInkToggle');
- const box=doc.querySelector('#photoOverlay [data-measure-label] rect');assert(box,'measurement center box is tappable');
+ const boxes=doc.querySelectorAll('#photoOverlay [data-measure-label] rect');const box=boxes[boxes.length-1];assert(box,'measurement center box is tappable');
  const ev=new w.Event('pointerdown',{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:88},clientX:{value:250},clientY:{value:150}});
  box.dispatchEvent(ev);
  assert(doc.querySelector('#photoMeasureDetails'),'tapping yellow box opens specifications');
  assert(doc.getElementById('photoMeasureValue').value==='2780','selected piece value shown in details');
 
  click(doc,'photoAddDistance');await sleep(30);dragMeasure(doc,110,360,800,450);await sleep(70);
- assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'second distance arrow appears');
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===3,'third distance arrow appears');
  const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
  assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);
  assert(doc.querySelector('#photoOverlay line[stroke-width="3"]'),'adjustable width saved');

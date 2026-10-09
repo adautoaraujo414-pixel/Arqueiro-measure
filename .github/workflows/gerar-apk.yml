@@ -47,6 +47,10 @@ jobs:
         run: node tests/cut.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
+      - name: Testar interface e persistencia em navegador simulado
+        run: |
+          npm install --prefix /tmp/arque-ui-test --no-audit --no-fund jsdom@26 fake-indexeddb@6
+          NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs
       - name: Compilar e salvar log
         run: |
           set -o pipefail

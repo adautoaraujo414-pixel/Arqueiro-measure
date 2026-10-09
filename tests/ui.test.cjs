@@ -62,7 +62,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.body.textContent.includes('Parede da pia'),'named sheet created');
  const sketch=doc.getElementById('studioCanvas');
  assert.equal(typeof sketch.onpointerdown,'function','S Pen drawing listeners are attached');
- function sketchEvent(type,x,y){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:8},clientX:{value:x},clientY:{value:y}});sketch.dispatchEvent(ev);}
+ function sketchEvent(type,x,y){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:8},clientX:{value:x},clientY:{value:y}});if(typeof sketch['on'+type]==='function')sketch['on'+type](ev);else sketch.dispatchEvent(ev);}
  sketch.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  sketchEvent('pointerdown',30,30);sketchEvent('pointermove',130,150);sketchEvent('pointercancel',130,150);
  sketchEvent('pointerdown',230,300);sketchEvent('pointermove',360,450);sketchEvent('pointerup',360,450);

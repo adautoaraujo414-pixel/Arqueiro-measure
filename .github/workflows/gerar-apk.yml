@@ -50,7 +50,14 @@ jobs:
       - name: Testar interface e persistencia em navegador simulado
         run: |
           npm install --prefix /tmp/arque-ui-test --no-audit --no-fund jsdom@26 fake-indexeddb@6
-          NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs
+          set -o pipefail
+          NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs 2>&1 | tee ui-test.log
+      - name: Registrar falhas da interface
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -s ui-test.log ]; then gh issue create --title "Falha da interface - $GITHUB_RUN_ID" --body-file ui-test.log || true; fi
       - name: Compilar e salvar log
         run: |
           set -o pipefail

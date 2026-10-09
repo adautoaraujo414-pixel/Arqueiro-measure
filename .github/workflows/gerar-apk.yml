@@ -43,6 +43,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Testar Arque Link criptografado entre duas instancias
+        run: |
+          mkdir -p /tmp/arque-link-test
+          javac -d /tmp/arque-link-test app/src/main/java/com/arque/measure/ArqueLink.java tests/ArqueLinkSmoke.java
+          java -cp /tmp/arque-link-test com.arque.measure.ArqueLinkSmoke
       - name: Testar plano de corte
         run: node tests/cut.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo

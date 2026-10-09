@@ -202,3 +202,12 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-ink-swatch{width:29px;height:29px;border-radius:50%;border:2px solid #c5cdd5;cursor:pointer;box-shadow:0 0 0 1px #fff inset}
 .photo-ink-swatch.selected{outline:3px solid #177caa;outline-offset:2px}
 .photo-zoom-surface #photoOverlay{touch-action:none!important}
+
+/* Medidas limpas: a linha invisível de toque NUNCA pode virar laranja ao selecionar. */
+#photoOverlay .dim-group .measure-hit,
+#photoOverlay .dim-selected .measure-hit,
+#photoOverlay .dim-group line.measure-hit{stroke:transparent!important;stroke-opacity:0!important;fill:none!important;stroke-width:30!important;pointer-events:stroke}
+#photoOverlay .dim-selected>line:not(.measure-hit),
+#photoOverlay .dim-selected>rect{stroke:#ffe000!important;stroke-width:3!important}
+#photoOverlay .dim-group circle[data-handle]{opacity:0!important;fill:transparent!important;stroke:none!important;pointer-events:all}
+#photoOverlay .dim-group:not(.dim-selected) circle[data-handle]{pointer-events:none}

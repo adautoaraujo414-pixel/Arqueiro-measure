@@ -97,7 +97,7 @@ function projectsView(){
  if(selectedClient){
   const c=state.clients.find(x=>x.id===selectedClient);
   if(!c){selectedClient=null;return projectsView();}
-  return header('Nova obra de '+escape(c.name),'O projeto sempre pertence ao cliente selecionado.')+'<div class="card"><h3>Criar projeto</h3><div class="fields">'+select('pclient','Cliente',[c],c.id)+field('pname','Nome da obra')+field('paddr','Endereço da obra')+'</div>'+btn('Criar projeto','addProject','','primary')+btn('← Voltar aos projetos','closeProject','','small')+'</div>';
+  return header('Nova obra de '+escape(c.name),'O projeto sempre pertence ao cliente selecionado.')+'<div class="card"><h3>Criar projeto</h3><div class="fields">'+select('pclient','Cliente',[c],c.id)+field('pname','Ambiente (ex.: Cozinha, Quarto, Sala)')+'</div>'+btn('Criar projeto','addProject','','primary')+btn('← Voltar aos projetos','closeProject','','small')+'</div>';
  }
  return header('Projetos','Abra uma obra existente ou selecione um cliente para criar uma nova. Cada obra continua vinculada ao seu cliente.')+
  '<div class="card"><h3>Nova obra</h3><p class="muted">Escolha primeiro o cliente.</p>'+
@@ -188,7 +188,7 @@ function projectOverview(){
 }
 function detailView(){
  const p=project();
- return '<div class="row"><div><h1>'+escape(p.name)+'</h1><p class="intro">'+escape(clientName(p.clientId))+' · '+escape(p.address)+'</p></div>'+btn('← Cliente','closeProject','','small')+'</div>'+
+ return '<div class="row"><div><h1>'+escape(p.name)+'</h1><p class="intro">'+escape(clientName(p.clientId))+(p.address?' · '+escape(p.address):'')+'</p></div>'+btn('← Cliente','closeProject','','small')+'</div>'+
  '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+'</div>'+btn('Salvar informações da obra','saveProject','','primary')+'</div>'+
  '<div class="tabs">'+[['resumo','▦ Visão geral'],['medidas','📏 Ambientes'],['fotos','📷 Fotos'],['fotomedidas','↔ Setas na foto'],['desenho','✎ Esboço'],['atelier','✦ Desenho livre'],['corte','▦ Plano de corte'],['financeiro','R$ Financeiro']].map(([key,label])=>'<button data-subtab="'+key+'" class="'+(subtab===key?'selected':'')+'">'+label+'</button>').join('')+'</div>'+
  ({resumo:projectOverview,medidas:measureView,fotos:photoView,fotomedidas:photoMeasureView,desenho:drawView,atelier:studioView,corte:cuttingView,financeiro:financeView})[subtab]();
@@ -272,7 +272,7 @@ case'openWorkspace':subtab=arg;tab='projects';render();break;
 case'addClient':{let c=C.client(val('cname'),val('cphone'),val('caddr'));state.clients.push(c);update();toast('Cliente salvo no aparelho.');break;}
 case'clientProject':selectedClient=arg;tab='projects';selectedProject=null;render();break;
 case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
-case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');let x=C.project(selectedClient,val('pname'),val('paddr'));state.projects.push(x);selectedProject=x.id;selectedClient=x.clientId;selectedRoom=null;subtab='resumo';update();toast('Projeto criado.');break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';update();toast('Ambiente criado e vinculado ao cliente.');break;}
 case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
 case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
 case'saveProject':{p.status=val('pstatus');p.value=C.money(val('pvalue'));p.discount=C.money(val('pdiscount'));C.finance(p);p.updatedAt=new Date().toISOString();p.revision++;update();toast('Projeto atualizado.');break;}

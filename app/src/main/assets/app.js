@@ -210,18 +210,23 @@ function photoMeasureView(){
  photoMeasurePhoto=photo.id;const dims=overlayFor(photo);
  const strokes=(photo.inkStrokes||[]).map(points=>'<polyline points="'+points.map(point=>point.x+','+point.y).join(' ')+'" fill="none" stroke="#197da5" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>').join('');
  const shapes=dims.map(d=>{
- const selected=d.id===photoMeasureSelected,shape=d.shape||'arrow',value=d.value?fmt(d.value)+' mm':'— mm';
- const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2,vertical=Math.abs(d.y2-d.y1)>Math.abs(d.x2-d.x1)*1.7;
- const thick=Math.max(2,Math.min(14,Number(d.thickness)||5)),color=escape(d.color||'#ffe000');
- const mark=shape==='rect'?'<rect x="'+Math.min(d.x1,d.x2)+'" y="'+Math.min(d.y1,d.y2)+'" width="'+Math.abs(d.x2-d.x1)+'" height="'+Math.abs(d.y2-d.y1)+'" fill="none" stroke="'+color+'" stroke-width="'+thick+'"/>':'<line x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="'+color+'" stroke-width="'+thick+'" marker-start="url(#arqueArrowStart)" marker-end="url(#arqueArrowEnd)"/>';
- const label='<g class="measure-label" transform="translate('+mx+' '+my+')'+(vertical?' rotate(-90)':'')+'"><rect x="-66" y="-19" width="132" height="38" rx="3" fill="'+color+'"/><text x="0" y="8" text-anchor="middle" fill="#191919" font-size="24" font-weight="700">'+escape(value)+'</text></g>';
- return '<g data-dimension="'+escape(d.id)+'" class="dim-group'+(selected?' dim-selected':'')+'">'+mark+
- '<line class="measure-hit" x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="transparent" stroke-width="36"/>'+
- '<circle data-handle="a" cx="'+d.x1+'" cy="'+d.y1+'" r="'+(selected?16:9)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
- '<circle data-handle="b" cx="'+d.x2+'" cy="'+d.y2+'" r="'+(selected?16:9)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+label+'</g>';
+  const selected=d.id===photoMeasureSelected,shape=d.shape||'arrow',value=d.value?fmt(d.value)+' mm':'—';
+  const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2,angle=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;
+  const rotation=angle>90?angle-180:angle< -90?angle+180:angle;
+  const color=escape(d.color||'#ba36c5'),thick=Math.max(2,Math.min(8,Number(d.thickness)||4));
+  const length=Math.hypot(d.x2-d.x1,d.y2-d.y1);
+  const labelWidth=Math.min(140,Math.max(52,36+value.length*12));
+  const label='<g class="measure-label" transform="translate('+mx+' '+my+') rotate('+rotation+')"><rect x="'+(-labelWidth/2)+'" y="-17" width="'+labelWidth+'" height="34" rx="2" fill="'+color+'"/><text x="0" y="7" text-anchor="middle" fill="#fff" font-size="20" font-weight="600">'+escape(value)+'</text></g>';
+  const markerStart=shape==='rect'?'':' marker-start="url(#arqueArrowStart)" marker-end="url(#arqueArrowEnd)"';
+  const mark=shape==='rect'?'<rect x="'+Math.min(d.x1,d.x2)+'" y="'+Math.min(d.y1,d.y2)+'" width="'+Math.abs(d.x2-d.x1)+'" height="'+Math.abs(d.y2-d.y1)+'" fill="none" stroke="'+color+'" stroke-width="'+thick+'"/>':'<line x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="'+color+'" stroke-width="'+thick+'"'+markerStart+'/>';
+  return '<g data-dimension="'+escape(d.id)+'" class="dim-group'+(selected?' dim-selected':'')+'">'+mark+
+  '<line class="measure-hit" x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="transparent" stroke-width="30"/>'+
+  '<circle data-handle="a" cx="'+d.x1+'" cy="'+d.y1+'" r="'+(selected?12:7)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
+  '<circle data-handle="b" cx="'+d.x2+'" cy="'+d.y2+'" r="'+(selected?12:7)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
+  (shape==='rect'?'':label)+'</g>';
  }).join('');
  const notes=(photo.notes||[]).map(n=>'<g data-photo-note="'+escape(n.id)+'"><rect x="'+n.x+'" y="'+n.y+'" rx="9" width="240" height="72" fill="#fff6b5" stroke="#b38b16" stroke-width="3"/><text x="'+(n.x+12)+'" y="'+(n.y+28)+'" font-size="22" fill="#232323">'+escape(n.text.slice(0,16))+'</text><text x="'+(n.x+12)+'" y="'+(n.y+53)+'" font-size="17" fill="#4f4115">Nota</text></g>').join('');
- const svg='<svg id="photoOverlay" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-label="Medidas sobre a fotografia"><defs><marker id="arqueArrowStart" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto"><path d="M0 3 L7 0 L7 6 Z" fill="#ffe000"/></marker><marker id="arqueArrowEnd" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" fill="#ffe000"/></marker></defs>'+strokes+shapes+notes+'<line id="photoPlacementPreview" x1="0" y1="0" x2="0" y2="0" stroke="#ffe000" stroke-width="5" stroke-dasharray="12 8" visibility="hidden" pointer-events="none"/></svg>';
+ const svg='<svg id="photoOverlay" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-label="Medidas sobre a fotografia"><defs><marker id="arqueArrowStart" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto"><path d="M0 3 L7 0 L7 6 Z" fill="#ba36c5"/></marker><marker id="arqueArrowEnd" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" fill="#ba36c5"/></marker></defs>'+strokes+shapes+notes+'<line id="photoPlacementPreview" x1="0" y1="0" x2="0" y2="0" stroke="#ba36c5" stroke-width="5" stroke-dasharray="12 8" visibility="hidden" pointer-events="none"/></svg>';
  const choices=p.rooms.map(r=>({id:r.id,name:r.name}));
  return '<div class="card"><h3>Medir e anotar sobre a foto</h3><p class="muted">Toque em Desenhar medida e arraste diretamente sobre a foto, do início ao fim da distância. Solte para criar a seta. Depois, selecione e informe a medida ou use a trena Bosch.</p><div class="fields">'+select('measurePhoto','Fotografia',p.photos.map(x=>({id:x.id,name:x.name})),photo.id)+(choices.length?select('photoRoom','Ambiente da foto',[{id:'',name:'Sem ambiente'},...choices],photo.roomId||''):'<p class="muted">Crie um ambiente em Medições para associar esta foto.</p>')+'</div><div class="actions">'+btn(photoPlacement?'✕ Cancelar':'↔ Desenhar medida','photoAddDistance','','primary')+btn('▣ Área','photoAddRect')+btn('+ Texto','photoNoteAdd')+'</div><div class="actions">'+btn('Conectar Bosch','bleScan')+btn('Aplicar última leitura','photoDimensionApply')+btn(photoInk?'✓ Concluir desenho':'✎ Desenhar livre','photoInkToggle')+btn('Desfazer traço','photoInkUndo')+'</div><div class="photo-measure-stage" id="photoMeasureStage"><img src="'+photo.data+'" alt="Foto do ambiente">'+svg+'</div><p class="muted">Leitura atual: <b id="photoBleLive">'+(lastBLE===null?'Aguardando trena':fmt(lastBLE)+' mm')+'</b>. Selecione a seta ou o quadrado e associe a leitura.</p>'+
  dims.map(d=>'<div class="item"><div><strong>'+escape(d.label||'Medida')+' — '+(d.value?fmt(d.value)+' mm':'Aguardando medida')+'</strong><small>'+escape(d.note||'')+' '+escape(d.source||'manual')+'</small></div><div class="actions">'+btn('Selecionar','photoDimensionSelect',d.id,'small')+btn('Excluir','photoDimensionDelete',d.id,'small danger')+'</div></div>').join('')+
@@ -247,23 +252,57 @@ function studioView(){
  <div class="field"><label for="studioText">Anotações desta folha</label><textarea id="studioText" placeholder="Medidas, cortes, ferragens e referências...">${escape(page.text||'')}</textarea></div>${btn('Salvar anotação','studioSaveText','','primary')}
  `:'<div class="empty">Escolha um nome e adicione uma folha A4 para começar.</div>'}</div></div>`;
 }
-function setupStudio(){const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;const page=studioCurrent(p);if(!page)return;const ctx=canvas.getContext('2d');if(!ctx)return;function paint(){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · ESBOÇO',22,27);ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;if(studioGrid==='dots'){for(let y=22;y<canvas.height;y+=25)for(let x=22;x<canvas.width;x+=25){ctx.beginPath();ctx.arc(x,y,0.8,0,7);ctx.fill();}}else if(studioGrid==='lines'){for(let y=25;y<canvas.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}}const all=[...(page.strokes||[]),...(studioActive?[{points:studioPoints,color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth}]:[])];ctx.lineCap='round';ctx.lineJoin='round';for(const stroke of all){if(!stroke.points?.length)continue;ctx.beginPath();ctx.strokeStyle=stroke.color||'#151515';ctx.lineWidth=stroke.width||3;stroke.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));if(stroke.points.length===1)ctx.lineTo(stroke.points[0][0]+0.1,stroke.points[0][1]);ctx.stroke();}}
- const coords=e=>{const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height]};
- let pointerId=null,saveQueue=Promise.resolve();
- const saveInk=()=>{saveQueue=saveQueue.catch(()=>{}).then(()=>persist()).catch(x=>toast('Erro ao salvar esboço: '+x.message));};
- const finishStroke=(e,cancelled=false)=>{
-  if(!studioActive||pointerId!==e.pointerId)return;
-  if(!cancelled)studioPoints.push(coords(e));
-  studioActive=false;pointerId=null;
-  if(studioPoints.length){(page.strokes||(page.strokes=[])).push({points:studioPoints.slice(),color:studioTool==='eraser'?'#fffdf7':studioInk,width:studioTool==='eraser'?28:studioWidth});page.undone=[];saveInk();}
-  studioPoints=[];paint();
+function setupStudio(){
+ const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;
+ const page=studioCurrent(p);if(!page)return;
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ const drawStroke=(stroke)=>{
+  if(!stroke?.points?.length)return;
+  ctx.beginPath();ctx.strokeStyle=stroke.color||'#151515';ctx.lineWidth=stroke.width||3;ctx.lineCap='round';ctx.lineJoin='round';
+  stroke.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  if(stroke.points.length===1)ctx.lineTo(stroke.points[0][0]+.1,stroke.points[0][1]);ctx.stroke();
  };
- canvas.onpointerdown=e=>{if(studioActive)return;e.preventDefault();pointerId=e.pointerId;studioActive=true;studioPoints=[coords(e)];try{canvas.setPointerCapture(e.pointerId)}catch(_){}paint();};
- canvas.onpointermove=e=>{if(!studioActive||e.pointerId!==pointerId)return;e.preventDefault();studioPoints.push(coords(e));paint();};
- canvas.onpointerup=e=>finishStroke(e);
- canvas.onpointercancel=e=>finishStroke(e,true);
- canvas.onlostpointercapture=e=>{if(studioActive&&e.pointerId===pointerId)finishStroke(e,true)};
-  $('#studioTool').onchange=e=>studioTool=e.target.value;$('#studioColor').onchange=e=>studioInk=e.target.value;$('#studioWidth').oninput=e=>studioWidth=+e.target.value;$('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint()};paint();}
+ function paint(){
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · ESBOÇO',22,27);
+  ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;
+  if(studioGrid==='dots'){for(let y=22;y<canvas.height;y+=25)for(let x=22;x<canvas.width;x+=25){ctx.beginPath();ctx.arc(x,y,.8,0,7);ctx.fill();}}
+  else if(studioGrid==='lines'){for(let y=25;y<canvas.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}}
+  for(const stroke of page.strokes||[])drawStroke(stroke);
+ }
+ const coords=e=>{const b=canvas.getBoundingClientRect();return [Math.max(0,Math.min(canvas.width,(e.clientX-b.left)*canvas.width/(b.width||1))),Math.max(0,Math.min(canvas.height,(e.clientY-b.top)*canvas.height/(b.height||1)))]};
+ let active=null,activePointer=null,saveQueue=Promise.resolve();
+ const save=()=>{saveQueue=saveQueue.catch(()=>{}).then(()=>persist()).catch(x=>toast('Erro ao salvar esboço: '+x.message));};
+ const finish=e=>{
+  if(!active||e.pointerId!==activePointer)return;
+  active=null;activePointer=null;studioActive=false;studioPoints=[];save();
+ };
+ canvas.style.touchAction='none';
+ canvas.onpointerdown=e=>{
+  if(active)return;
+  e.preventDefault();
+  const stroke={points:[coords(e)],color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth};
+  (page.strokes||(page.strokes=[])).push(stroke);page.undone=[];
+  active=stroke;activePointer=e.pointerId;studioActive=true;
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+  paint();
+ };
+ canvas.onpointermove=e=>{
+  if(!active||e.pointerId!==activePointer)return;
+  e.preventDefault();
+  const events=typeof e.getCoalescedEvents==='function'?e.getCoalescedEvents():[];
+  for(const sample of events.length?events:[e])active.points.push(coords(sample));
+  paint();
+ };
+ canvas.onpointerup=e=>{if(active&&e.pointerId===activePointer){active.points.push(coords(e));finish(e);paint();}};
+ canvas.onpointercancel=e=>{finish(e);paint();};
+ canvas.onlostpointercapture=e=>{if(active&&e.pointerId===activePointer){finish(e);paint();}};
+ $('#studioTool').onchange=e=>studioTool=e.target.value;
+ $('#studioColor').onchange=e=>studioInk=e.target.value;
+ $('#studioWidth').oninput=e=>studioWidth=+e.target.value;
+ $('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint()};
+ paint();
+}
 
 function financeView(){const p=project(),f=C.finance(p);return `<div class="grid"><div class="card"><small class="muted">Contrato líquido</small><div class="stat">${money(f.net)}</div></div><div class="card"><small class="muted">Recebido</small><div class="stat">${money(f.paid)}</div></div><div class="card"><small class="muted">Saldo a receber</small><div class="stat">${money(f.balance)}</div></div></div><div class="card"><h3>Registrar pagamento</h3><div class="fields">${field('payamount','Valor (R$)','number','','min="0.01" step="0.01"')}${select('paymethod','Forma',['Pix','Dinheiro','Cartão','Transferência','Cheque','Boleto','Outro'])}${field('paydate','Data','date',new Date().toISOString().slice(0,10))}</div>${btn('Registrar recebimento','addPayment','','primary')}${p.payments.map(x=>`<div class="item"><div><strong>${money(x.amount)}</strong><small>${escape(x.method)} · ${escape(x.date)}</small></div>${btn('Excluir','deletePayment',x.id,'small danger')}</div>`).join('')}</div>`;}
 function toolsView(){const p=project();if(!p)return header('Cálculos por obra','Escolha primeiro o cliente e a obra para que os cálculos sejam associados ao projeto.')+btn('Abrir clientes','go','clients','primary');return header('Cálculos da obra · '+escape(p.name),'Confira as medições do ambiente antes de usar os resultados na produção.')+`<div class="grid"><div class="card"><h3>Tomada por referências</h3><div class="fields">${field('tw','Largura parede (mm)','number',3500)}${field('tl','Esquerda → caixa (mm)','number',1210)}${field('tc','Largura caixa (mm)','number',80)}${field('tr','Caixa → direita (mm)','number',2210)}${field('tt','Tolerância fechamento (mm)','number',state.settings.tolerance)}</div>${btn('Calcular tomada','calcSocket','','primary')}<div id="socketResult"></div></div><div class="card"><h3>Alturas e desníveis</h3><div class="fields">${field('h1','Altura esquerda (mm)','number',2710)}${field('h2','Altura central (mm)','number',2706)}${field('h3','Altura direita (mm)','number',2702)}</div>${btn('Comparar alturas','calcHeights','','primary')}<div id="heightsResult"></div></div><div class="card"><h3>Carcaça abaixo da pedra</h3><div class="fields">${field('ct','Topo pedra (mm)','number',900)}${field('cs','Espessura pedra (mm)','number',30)}${field('cb','Rodapé/base (mm)','number',100)}${field('cc','Folga instalação (mm)','number',5)}</div>${btn('Calcular carcaça','calcCarcass','','primary')}<div id="carcassResult"></div></div><div class="card"><h3>Vão com paredes irregulares</h3><div class="fields">${field('v1','Largura baixa (mm)','number',2735)}${field('v2','Largura média (mm)','number',2728)}${field('v3','Largura alta (mm)','number',2731)}${field('vl','Folga esquerda (mm)','number',5)}${field('vr','Folga direita (mm)','number',5)}</div>${btn('Calcular vão','calcOpening','','primary')}<div id="openingResult"></div></div></div><div class="notice">A variação entre alturas piso-teto não identifica isoladamente se o desnível está no piso ou no teto. É preciso medir com uma referência de nível.</div>`;}
@@ -345,7 +384,7 @@ case'photoGoto':subtab='fotos';render();break;
 case'photoInkToggle':photoInk=!photoInk;render();break;
 case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
 case'photoAddDistance':{photoPlacement=true;photoPlacementStart=null;photoPlacementPreview=null;render();toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
-case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ba36c5',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
 case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
 case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
 case'photoDimensionSelect':photoMeasureSelected=arg;render();break;
@@ -466,7 +505,7 @@ document.addEventListener('pointerup',e=>{
  photoPlacementStart=null;photoPlacementPreview=null;photoPlacement=false;
  const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
  if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
-  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ba36c5',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
   overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
  }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
  e.preventDefault();e.stopImmediatePropagation();
@@ -490,12 +529,12 @@ document.addEventListener('pointermove',e=>{
  e.preventDefault();
 },true);
 document.addEventListener('pointerup',()=>{if(photoStrokeActive){photoStrokeActive=null;persist().catch(e=>toast(e.message));}},true);
-document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(!g||!e.target.closest('#photoOverlay')||photoInk)return;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('opacity',active?'1':'0');c.setAttribute('r',active?'16':'9');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';const thick=$('#photoMeasureThickness');if(thick)thick.value=d.thickness||5;}}e.preventDefault();});
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(!g||!e.target.closest('#photoOverlay')||photoInk)return;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('opacity',active?'1':'0');c.setAttribute('r',active?'12':'7');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';const thick=$('#photoMeasureThickness');if(thick)thick.value=d.thickness||5;}}e.preventDefault();});
 document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=g.querySelector('rect:not(.measure-label rect)'),circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
  if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
  if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
  if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
- if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+(Math.abs(d.y2-d.y1)>Math.abs(d.x2-d.x1)*1.7?' rotate(-90)':''));
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+')'})()));
  }e.preventDefault();});
 document.addEventListener('pointerup',()=>{if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}});
 document.addEventListener('change',e=>{

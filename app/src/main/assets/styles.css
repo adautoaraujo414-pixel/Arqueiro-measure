@@ -194,3 +194,11 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-zoom-tools .btn{min-width:42px}
 #photoOverlay .dim-group>line:not(.measure-hit){stroke-width:3!important;stroke-linecap:butt}
 #photoOverlay .measure-label rect{stroke:none!important}
+
+/* Paleta de desenho permanente inspirada no caderno StarNote */
+.photo-ink-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 8px;margin:8px 0;border:1px solid #d9e0e7;border-radius:10px;background:#f8fafc}
+.photo-ink-tools span{font-size:13px;font-weight:600;color:#344054;margin-left:5px}
+.photo-ink-tools b{min-width:32px;text-align:center;font-size:13px}
+.photo-ink-swatch{width:29px;height:29px;border-radius:50%;border:2px solid #c5cdd5;cursor:pointer;box-shadow:0 0 0 1px #fff inset}
+.photo-ink-swatch.selected{outline:3px solid #177caa;outline-offset:2px}
+.photo-zoom-surface #photoOverlay{touch-action:none!important}

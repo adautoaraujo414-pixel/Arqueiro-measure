@@ -16,7 +16,12 @@ function calculate(input){
   const perimeter=2*(p.w+p.h);edge2+=p.qty*perimeter*p.edge2/4;edge04+=p.qty*perimeter*p.edge04/4;
   for(let k=0;k<p.qty;k++)parts.push({...p,ordinal:k+1});
  }
- parts.sort((a,b)=>b.w*b.h-a.w*a.h || Math.max(b.w,b.h)-Math.max(a.w,a.h));
+ const ordering=input.strategy||'area';
+ const byArea=(a,b)=>b.w*b.h-a.w*a.h || Math.max(b.w,b.h)-Math.max(a.w,a.h);
+ if(ordering==='longest')parts.sort((a,b)=>Math.max(b.w,b.h)-Math.max(a.w,a.h)||byArea(a,b));
+ else if(ordering==='width')parts.sort((a,b)=>b.w-a.w||byArea(a,b));
+ else if(ordering==='height')parts.sort((a,b)=>b.h-a.h||byArea(a,b));
+ else parts.sort(byArea);
  const sheets=[],unfit=[];
  function options(p,free){const out=[{w:p.w,h:p.h,rotated:false}];if(p.rotate&&!p.grain&&p.w!==p.h)out.push({w:p.h,h:p.w,rotated:true});return out.filter(o=>o.w<=free.w+1e-7&&o.h<=free.h+1e-7);}
  for(const p of parts){
@@ -128,5 +133,11 @@ function positionMixed(stock,moves){
  return {...stock,placed:pieces,manuallyPositioned:true,reusable:[],note:'Posições editadas manualmente: verifique as sobras, pois a lista de sobras automáticas não se aplica após mover peças.'};
 }
 
-root.ArqueCut={calculate,manualGrid,mixedStock,positionMixed};
+function optimize(input){
+ const approaches=['area','longest','width','height'];
+ const trials=approaches.map(strategy=>({...calculate({...input,strategy}),strategy}));
+ trials.sort((a,b)=>a.unfit.length-b.unfit.length||a.sheetCount-b.sheetCount||b.utilization-a.utilization);
+ return {...trials[0],testedStrategies:approaches.length,optimizationNote:'Melhor resultado entre quatro heurísticas. Não garante o mínimo global de chapas.'};
+}
+root.ArqueCut={calculate,manualGrid,mixedStock,positionMixed,optimize};
 })(typeof window!=='undefined'?window:globalThis);

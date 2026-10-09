@@ -159,6 +159,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'photoAddDistance');await sleep(30);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===0,'no unwanted pre-positioned arrow');dragMeasure(doc);await sleep(75);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
+ assert(doc.querySelector('#photoZoomSurface'),'photo and overlay share a zoom surface');
+ click(doc,'photoZoomIn');assert(doc.getElementById('photoZoomReadout').textContent==='125%','zoom in increases to 125%');
+ assert(doc.getElementById('photoZoomSurface').style.transform.includes('scale(1.25)'),'zoom scales image and arrows together');
+ click(doc,'photoZoomOut');assert(doc.getElementById('photoZoomReadout').textContent==='100%','zoom out returns to 100%');
+ click(doc,'photoZoomMode');assert(doc.body.textContent.includes('Sair do zoom'),'pan and pinch mode is available');click(doc,'photoZoomMode');
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label'),'yellow measurement label appears');assert(doc.querySelector('#photoOverlay .measure-label rect')?.getAttribute('fill')==='#ffe000','MeasureOn video uses yellow, not purple');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');

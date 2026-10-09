@@ -63,6 +63,20 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('.cut-finished').length===1,'finished unit saved after restart');
  assert(doc.querySelectorAll('.cut-status-line').length===5,'all units retained after restart');
 
+ // Preserve the completed cut in a versioned audit history on dimensional edits.
+ const dimension=doc.querySelector('[data-cut-field="w"]');
+ dimension.value='875';dimension.dispatchEvent(new w.Event('change',{bubbles:true}));
+ await sleep(110);
+ assert(doc.querySelectorAll('.cut-finished').length===0,'changed geometry requires new cut approval');
+ const history=doc.querySelector('.cut-history');
+ assert(history&&history.textContent.includes('850 × 550 mm'),'historical dimensions archived');
+ assert(history.textContent.includes('1 concluída(s)'),'completed unit retained in prior revision');
+ x.dom.window.close();
+ x=await launch();doc=x.doc;w=x.w;
+ click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','corte');
+ assert(doc.querySelector('.cut-history').textContent.includes('850 × 550 mm'),'revision persists after restart');
+
+
  
  // Photo overlay integration: manual yellow arrows, rectangle and room association.
  click(doc,'openWorkspace','medidas');assign(doc,'roomname','Cozinha do teste');click(doc,'addRoom');await sleep(60);

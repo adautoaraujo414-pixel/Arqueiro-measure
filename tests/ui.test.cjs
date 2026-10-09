@@ -35,11 +35,28 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'openProject');await sleep(40);
 
  // Test all primary project tabs without any crash or blank screen.
- for(const section of ['resumo','medidas','fotos','fotomedidas','desenho','atelier','corte','financeiro']){
+ for(const section of ['resumo','medidas','fotos','fotomedidas','atelier','corte','financeiro']){
    click(doc,'openWorkspace',section);await sleep(35);
    assert(![...doc.querySelectorAll('#main .notice')].some(x=>x.textContent.startsWith('Falha ao exibir:')),'tab '+section+' must not throw: '+[...doc.querySelectorAll('#main .notice')].map(x=>x.textContent).join(' / '));
    assert(doc.querySelector('#main').textContent.trim().length>40,'tab '+section+' must render');
  }
+ // One Esboço tab: named A4 pages, immersive open/close, and persistence.
+ click(doc,'openWorkspace','resumo');await sleep(30);
+ assert(!doc.body.textContent.includes('Desenho livre'),'old drawing tab removed');
+ assert(doc.body.textContent.includes('Esboço'),'single sketch workspace exists');
+ click(doc,'openWorkspace','atelier');await sleep(30);
+ assign(doc,'studioNewName','Parede da pia');click(doc,'studioNew');await sleep(75);
+ assert(doc.querySelector('#studioCanvas')?.getAttribute('width')==='840','new sheet uses A4 width');
+ assert(doc.querySelector('#studioCanvas')?.getAttribute('height')==='1188','new sheet uses A4 portrait height');
+ assert(doc.body.textContent.includes('Parede da pia'),'named sheet created');
+ click(doc,'studioOpenFull');await sleep(45);
+ assert(doc.querySelector('#studioWork.studio-fullscreen'),'sheet expands to full screen');
+ click(doc,'studioCloseFull');await sleep(45);
+ assert(!doc.querySelector('#studioWork.studio-fullscreen'),'sheet closes full screen');
+ assign(doc,'studioNewName','Armário superior');click(doc,'studioNew');await sleep(65);
+ assert(doc.querySelectorAll('.studio-page').length===2,'multiple named sheets');
+ click(doc,'studioSelect',doc.querySelector('.studio-page').dataset.arg);await sleep(40);
+ assert(doc.querySelector('.studio-paper-head').textContent.includes('Parede da pia'),'can reopen first sheet');
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);
  assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');
@@ -56,6 +73,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  let x=await launch();doc=x.doc;w=x.w;
  click(doc,'go','clients');await sleep(30);
  assert(doc.body.textContent.includes('Cliente persistência'),'client survives WebView reload');
+ click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','atelier');await sleep(40);assert(doc.querySelectorAll('.studio-page').length===2,'A4 pages survive reload');
  click(doc,'openClient');assert(doc.body.textContent.includes('Cozinha teste'),'project survives reload');
  click(doc,'openProject');click(doc,'openWorkspace','corte');
  assert(doc.querySelector('[data-cut-field="w"]').value==='850','cut piece survives reload');

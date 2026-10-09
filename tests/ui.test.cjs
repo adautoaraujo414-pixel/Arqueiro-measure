@@ -40,6 +40,16 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assign(doc,'cutName','Prateleira');assign(doc,'cutW','220');assign(doc,'cutH','300');assign(doc,'cutQty','3');
  click(doc,'cutAdd');await sleep(85);
  assert(doc.querySelectorAll('[data-cut-field="w"]').length===2,'two different pieces saved');
+ // Production queue: units sorted by area, individual completion and persistent colors.
+ const rowsBefore=[...doc.querySelectorAll('.cut-status-line')];assert(rowsBefore.length===5,'one status per physical piece');
+ assert(rowsBefore.every(row=>row.classList.contains('cut-pending')),'new units are red');
+ assert(rowsBefore[0].textContent.includes('Lateral'),'larger piece first');
+ const firstKey=rowsBefore[0].querySelector('[data-action="cutToggle"]').dataset.arg;
+ click(doc,'cutToggle',firstKey);await sleep(80);
+ assert(doc.querySelectorAll('.cut-finished').length===1,'one finished becomes green');
+ assert(doc.querySelectorAll('.cut-pending').length===4,'remaining pieces stay red');
+ assert(doc.querySelectorAll('.cut-status-line').length===5,'finished row remains visible');
+
  assign(doc,'mixedW','1200');assign(doc,'mixedH','700');
  click(doc,'mixedSimulate');await sleep(85);
  assert(doc.body.textContent.includes('Peças colocadas'),'mixed plan calculated');
@@ -50,6 +60,9 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','corte');
  assert(doc.getElementById('cutName').value==='Frente','draft survives reload');
  assert(doc.getElementById('cutW').value==='700','draft dimensions survive reload');
+ assert(doc.querySelectorAll('.cut-finished').length===1,'finished unit saved after restart');
+ assert(doc.querySelectorAll('.cut-status-line').length===5,'all units retained after restart');
+
  
  // Photo overlay integration: manual yellow arrows, rectangle and room association.
  click(doc,'openWorkspace','medidas');assign(doc,'roomname','Cozinha do teste');click(doc,'addRoom');await sleep(60);

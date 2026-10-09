@@ -81,3 +81,18 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .workspace-icon{font-size:25px;color:#1578a7}
 .workspace-tile strong{font-size:15px}.workspace-tile small{font-size:12px;color:#69818e}
 @media(max-width:580px){.project-workspace{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace-tile{padding:12px 9px;min-height:135px}}
+
+/* Separação simples das obras por status, sem duplicar clientes */
+.project-group{margin:12px 0;border:1px solid #dbe4e9;border-radius:7px;background:#fff;padding:0 12px}
+.project-group summary{display:flex;justify-content:space-between;cursor:pointer;align-items:center;list-style:none;font-weight:750;color:#304958;padding:13px 3px}
+.project-group summary::-webkit-details-marker{display:none}
+.project-group summary::before{content:"▸";color:#137bad;margin-right:8px}
+.project-group[open] summary::before{content:"▾"}
+.group-count{margin-left:auto;background:#e9f3f9;border-radius:99px;color:#1d769f;padding:1px 10px}
+.project-row{margin-bottom:8px}
+.project-row-end{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.project-status{display:inline-flex;white-space:nowrap;padding:4px 9px;border-radius:5px;background:#e5edf2;color:#355365;font-size:11px;font-weight:750}
+.status-andamento{background:#dff2e4;color:#23734b}.status-orcamentos{background:#fff3d7;color:#80580a}
+.status-finalizados{background:#e0e8f0;color:#496778}.status-cancelados{background:#f9e3e3;color:#933d3d}
+.status-levantamento{background:#e3f2fc;color:#206e9b}
+@media(max-width:560px){.project-row{align-items:flex-start;flex-direction:column}.project-row-end{width:100%;justify-content:space-between}}

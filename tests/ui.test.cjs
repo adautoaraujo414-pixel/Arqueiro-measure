@@ -38,7 +38,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('[data-cut-field="w"]').value==='850','cut piece survives reload');
  assign(doc,'cutName','Frente');assign(doc,'cutW','700');assign(doc,'cutH','300');await sleep(70);
  x.dom.window.close();
- x=await launch();doc=x.doc;
+ x=await launch();doc=x.doc;w=x.w;
  click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','corte');
  assert(doc.getElementById('cutName').value==='Frente','draft survives reload');
  assert(doc.getElementById('cutW').value==='700','draft dimensions survive reload');

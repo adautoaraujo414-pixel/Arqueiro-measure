@@ -207,7 +207,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  w.prompt=()=> 'Tomada atrás do armário';click(doc,'photoNoteAdd');await sleep(50);assert(doc.body.textContent.includes('Tomada atrás do armário'),'annotation saved');
  // Automatic freehand: one pointer contact is one saved stroke, no Concluir button.
  click(doc,'photoInkToggle');assert(!doc.body.textContent.includes('Concluir desenho'),'drawing needs no finish button');
- click(doc,'photoInkColor','#e23d3d');click(doc,'photoInkThinner');
+ click(doc,'photoInkColor','#e23d3d');
+ assert(!doc.querySelector('[data-action="photoInkThinner"]'),'writing thickness control removed from toolbar');
  const drawStroke=(x1,y1,x2,y2)=>{
   const svg=doc.getElementById('photoOverlay');svg.getBoundingClientRect=()=>({left:0,top:0,width:1000,height:650});
   svg.setPointerCapture=()=>{};

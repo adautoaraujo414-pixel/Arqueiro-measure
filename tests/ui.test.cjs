@@ -73,9 +73,9 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  let x=await launch();doc=x.doc;w=x.w;
  click(doc,'go','clients');await sleep(30);
  assert(doc.body.textContent.includes('Cliente persistência'),'client survives WebView reload');
- click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','atelier');await sleep(40);assert(doc.querySelectorAll('.studio-page').length===2,'A4 pages survive reload');
+
  click(doc,'openClient');assert(doc.body.textContent.includes('Cozinha teste'),'project survives reload');
- click(doc,'openProject');click(doc,'openWorkspace','corte');
+ click(doc,'openProject');click(doc,'openWorkspace','atelier');await sleep(40);assert(doc.querySelectorAll('.studio-page').length===2,'A4 pages survive reload');click(doc,'openWorkspace','corte');
  assert(doc.querySelector('[data-cut-field="w"]').value==='850','cut piece survives reload');
  // Mixed stock from two different modules, persisted per client/project.
  assign(doc,'cutName','Prateleira');assign(doc,'cutW','220');assign(doc,'cutH','300');assign(doc,'cutQty','3');

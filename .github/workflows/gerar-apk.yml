@@ -5,18 +5,22 @@ on:
     branches: [main]
 permissions:
   contents: read
+  issues: write
 jobs:
   compilar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
-      - name: Extrair pacote do projeto
+      - name: Verificar e extrair fontes
         run: |
-          if [ -f "Arque_Measure_v0.8_GitHub_Actions_Pronto.zip" ]; then
-            unzip -o "Arque_Measure_v0.8_GitHub_Actions_Pronto.zip" -d .
-          fi
-          test -f settings.gradle || (echo "ERRO: envie o ZIP Arque_Measure_v0.8_GitHub_Actions_Pronto.zip para a raiz do repositório" && exit 1)
+          set -euxo pipefail
+          ls -lah
+          test -f Arque_Measure_v0.8_GitHub_Actions_Pronto.zip
+          unzip -o Arque_Measure_v0.8_GitHub_Actions_Pronto.zip -d .
+          test -f settings.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -27,11 +31,31 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Compilar APK
-        run: gradle --no-daemon assembleDebug
+      - name: Compilar e salvar log
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace assembleDebug 2>&1 | tee arque-build.log
       - name: Publicar APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Arque-Measure-APK
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+      - name: Relatorio de erro
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arque-Measure-Erros
+          path: arque-build.log
+          if-no-files-found: ignore
+      - name: Criar issue com erro
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Falha na compilacao GitHub Actions: $GITHUB_RUN_ID" > /tmp/erro.md
+          echo '\x60\x60\x60' >> /tmp/erro.md
+          if [ -f arque-build.log ]; then tail -c 15000 arque-build.log >> /tmp/erro.md; else echo "Falha anterior ao Gradle; conferir etapa de extracao ou instalacao do SDK." >> /tmp/erro.md; fi
+          echo '\x60\x60\x60' >> /tmp/erro.md
+          gh issue create --title "Falha APK - run $GITHUB_RUN_ID" --body-file /tmp/erro.md || true

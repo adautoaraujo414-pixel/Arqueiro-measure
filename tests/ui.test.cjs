@@ -160,6 +160,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'photoAddDistance');await sleep(30);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===0,'no unwanted pre-positioned arrow');dragMeasure(doc);await sleep(75);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
+ assert(doc.querySelector('.photo-floating-dock [data-action="photoAddDistance"].active'),'arrow tool stays active after first drag');
+ dragMeasure(doc);await sleep(75);
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'second drag adds arrow without tapping the icon again');
+ assert(doc.querySelector('.photo-floating-dock [data-action="photoAddDistance"].active'),'arrow tool stays active after second drag');
+
  assert(doc.querySelector('#photoZoomSurface'),'photo and overlay share a zoom surface');
  assert(doc.querySelector('.photo-floating-dock [data-action="photoInkToggle"]'),'pen is in floating photo dock');
  assert(doc.querySelector('.photo-floating-dock [data-action="photoAddDistance"]'),'arrow is in floating photo dock');

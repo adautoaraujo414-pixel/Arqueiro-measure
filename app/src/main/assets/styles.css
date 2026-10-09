@@ -53,3 +53,13 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 @media(max-width:599px){header{padding:12px!important}.brand b{font-size:15px!important}nav{scrollbar-width:thin}main{padding:16px 12px 70px!important}.grid,.fields,.studio-layout{grid-template-columns:minmax(0,1fr)!important}.studio-sidebar{grid-template-columns:repeat(2,minmax(0,1fr))!important}.studio-sidebar>.studio-tip{grid-column:1/-1}.studio-tools{padding:8px!important}.studio-hero{padding:14px!important}.studio-work{padding:9px!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 .studio-hero p{color:#526e7c!important}.studio-hero::after{color:#19688b09!important}.studio-star{color:#1684b4!important}.studio-hero h2{letter-spacing:-1.5px!important}.studio-hero .eyebrow{color:#417a97!important}
+
+/* Plano de corte integrado à obra */
+.cut-table{overflow-x:auto;max-width:100%;margin-top:12px}
+.cut-table table{border-collapse:collapse;width:100%;min-width:540px;font-size:13px}
+.cut-table th,.cut-table td{padding:10px 8px;text-align:left;border-bottom:1px solid #dce3e9}
+.cut-table th{background:#edf5fa;color:#30566c}
+.cut-sheet{position:relative;width:100%;background:#e9e4da;border:2px solid #6c7e87;margin:14px 0;overflow:hidden}
+.cut-piece{position:absolute;border:1px solid #4c6575;display:flex;flex-direction:column;justify-content:center;align-items:center;overflow:hidden;font-size:clamp(9px,1.3vw,13px);color:#192e38;text-align:center;padding:2px;line-height:1.15}
+.cut-piece small{display:block;font-size:.85em}
+@media print{header,nav,.tabs,.btn,.fields,#toast{display:none!important}body,main{display:block!important;width:100%!important;background:white!important}.card{break-inside:avoid;box-shadow:none!important}.cut-sheet{print-color-adjust:exact;-webkit-print-color-adjust:exact}}

@@ -211,3 +211,27 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 #photoOverlay .dim-selected>rect{stroke:#ffe000!important;stroke-width:3!important}
 #photoOverlay .dim-group circle[data-handle]{opacity:0!important;fill:transparent!important;stroke:none!important;pointer-events:all}
 #photoOverlay .dim-group:not(.dim-selected) circle[data-handle]{pointer-events:none}
+
+/* Fluxo de trabalho compacto: ações primeiro, foto logo abaixo */
+.photo-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.photo-workspace-head strong{font-size:16px}
+.photo-workspace-head .muted{font-size:12px}
+.photo-context{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.photo-context .field{margin:0}
+.photo-workbar{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.photo-primary-tools,.photo-secondary-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.photo-primary-tools .btn{font-weight:700}
+.photo-workspace .photo-ink-tools{order:0;display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:6px 8px;margin:0;border-radius:8px}
+.photo-workspace .photo-ink-swatch{width:27px;height:27px}
+.photo-workspace .photo-tool-label{font-size:12px;margin:0 2px 0 6px}
+.photo-workspace .photo-secondary-tools{border-top:1px solid #dce3ea;padding-top:6px}
+.photo-workspace .photo-zoom-tools{margin:0 0 0 auto;gap:5px}
+.photo-workspace .photo-zoom-tools .btn{min-width:34px}
+.studio-hero.studio-hero-compact{padding:10px 12px;margin:0 0 10px;border-radius:10px}
+.studio-hero-compact .studio-hero-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.studio-compact-title{font-size:16px;font-weight:750;margin-right:auto}
+.studio-compact-title small{font-size:12px;font-weight:500;opacity:.75}
+.studio-hero-compact input{min-width:160px;flex:1;max-width:320px}
+.studio-hero-compact .btn{white-space:nowrap}
+.studio-sidebar .studio-tip{display:none}
+@media(max-width:700px){.photo-context{grid-template-columns:1fr}.photo-workspace-head .muted{display:none}.photo-workspace .photo-zoom-tools{margin-left:0}.studio-compact-title{width:100%}}

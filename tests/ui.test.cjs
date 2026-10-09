@@ -8,6 +8,8 @@ async function launch(){
  const w=dom.window;
  Object.defineProperty(w,'indexedDB',{value:storage,configurable:true});
  w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
+ w.HTMLCanvasElement.prototype.getContext=function(){return {fillRect(){},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){},drawImage(){}}};
+ w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.eval(core);w.eval(cut);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
@@ -58,6 +60,14 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#studioCanvas')?.getAttribute('width')==='840','new sheet uses A4 width');
  assert(doc.querySelector('#studioCanvas')?.getAttribute('height')==='1188','new sheet uses A4 portrait height');
  assert(doc.body.textContent.includes('Parede da pia'),'named sheet created');
+ const sketch=doc.getElementById('studioCanvas');
+ function sketchEvent(type,x,y){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:8},clientX:{value:x},clientY:{value:y}});sketch.dispatchEvent(ev);}
+ sketch.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
+ sketchEvent('pointerdown',30,30);sketchEvent('pointermove',130,150);sketchEvent('pointercancel',130,150);
+ await sleep(80);
+ click(doc,'studioUndo');await sleep(40);
+ assert(doc.querySelector('#studioCanvas'),'stroke remains editable after pointercancel');
+ click(doc,'studioRedo');await sleep(50);
  click(doc,'studioOpenFull');await sleep(45);
  assert(doc.querySelector('#studioWork.studio-fullscreen'),'sheet expands to full screen');
  click(doc,'studioCloseFull');await sleep(45);

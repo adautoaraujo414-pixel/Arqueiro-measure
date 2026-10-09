@@ -22,6 +22,24 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'openClient');click(doc,'clientProject');
  assign(doc,'pname','Cozinha teste');click(doc,'addProject');await sleep(80);
  assert(doc.body.textContent.includes('Cozinha teste'),'project created');
+
+ // Regression: clicking the Projetos navigation must open the project list, not bounce to Clientes.
+ doc.querySelector('[data-tab="projects"]').click();await sleep(40);
+ assert(doc.querySelector('h1')?.textContent==='Projetos','Projetos tab opens project index');
+ assert(doc.body.textContent.includes('Cozinha teste'),'existing project listed in Projetos');
+ click(doc,'openProject');await sleep(40);
+ assert(doc.querySelector('h1')?.textContent==='Cozinha teste','project opens from Projetos');
+ assert(doc.body.textContent.includes('Área de trabalho'),'project workspace opens');
+ click(doc,'closeProject');await sleep(40);
+ assert(doc.querySelector('h1')?.textContent==='Projetos','back from project returns to Projetos');
+ click(doc,'openProject');await sleep(40);
+
+ // Test all primary project tabs without any crash or blank screen.
+ for(const section of ['resumo','medidas','fotos','fotomedidas','desenho','atelier','corte','financeiro']){
+   click(doc,'openWorkspace',section);await sleep(35);
+   assert(!doc.querySelector('#main .notice'),'tab '+section+' must not throw');
+   assert(doc.querySelector('#main').textContent.trim().length>40,'tab '+section+' must render');
+ }
  click(doc,'openWorkspace','corte');await sleep();
  assign(doc,'cutName','Lateral');assign(doc,'cutW','800');assign(doc,'cutH','550');assign(doc,'cutQty','2');
  click(doc,'cutAdd');await sleep(90);

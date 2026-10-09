@@ -39,22 +39,55 @@ function editLastMeasureView(p){
 function clientName(id){return state.clients.find(c=>c.id===id)?.name||'Cliente desconhecido'}
 function header(title,description=''){return `<h1>${title}</h1>${description?`<p class="intro">${description}</p>`:''}`}
 function render(){const main=$('#main');try{main.innerHTML=({home:homeView,clients:clientsView,projects:projectsView,tools:toolsView,transfer:transferView,diagnostics:diagnosticsView})[tab]();}catch(e){main.innerHTML=`<div class="notice">Falha ao exibir: ${escape(e.message)}</div>`;}document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); if(tab==='projects'&&project()&&subtab==='desenho')setTimeout(()=>{setupDrawing();const dc=$('#drawColor');if(dc)dc.value=drawColor;},0);if(tab==='projects'&&project()&&subtab==='atelier')setTimeout(setupStudio,0);}
-function homeView(){let active=state.projects.filter(p=>!['Finalizado','Cancelado'].includes(p.status));return header('Seu trabalho, organizado','Tudo salvo neste aparelho. Nenhuma conta ou internet necessária.')+`<div class="grid"><div class="card"><small class="muted">Clientes cadastrados</small><div class="stat">${state.clients.length}</div>${btn('Adicionar cliente','go','clients','primary')}</div><div class="card"><small class="muted">Projetos em andamento</small><div class="stat">${active.length}</div>${btn('Ver projetos','go','projects','primary')}</div><div class="card"><small class="muted">Projetos em produção</small><div class="stat">${state.projects.filter(p=>p.status==='Produção').length}</div>${btn('Abrir produção','go','projects')}</div></div><div class="card"><h3>Últimos projetos</h3>${state.projects.slice().reverse().slice(0,5).map(p=>`<div class="item"><div><strong>${escape(p.name)}</strong><small>${escape(clientName(p.clientId))} · ${escape(p.status)}</small></div>${btn('Abrir','openProject',p.id,'small')}</div>`).join('')||'<div class="empty">Crie um cliente para iniciar seu primeiro levantamento.</div>'}</div><div class="notice">As medições críticas precisam ser conferidas na obra. O aplicativo não substitui nível, esquadro e validação física.</div>`;}
+function workGroup(status){
+ if(status==='Finalizado')return 'finalizados';
+ if(status==='Cancelado')return 'cancelados';
+ if(status==='Orçamento')return 'orcamentos';
+ if(status==='Aprovado'||status==='Produção'||status==='Montagem')return 'andamento';
+ return 'levantamento';
+}
+const groupNames={andamento:'Em andamento',orcamentos:'Orçamentos',levantamento:'Levantamentos e projetos',finalizados:'Finalizados',cancelados:'Cancelados'};
+function statusBadge(status){return '<span class="project-status status-'+workGroup(status)+'">'+escape(status||'Levantamento')+'</span>';}
+function projectRow(p){return '<div class="item project-row"><div><strong>'+escape(clientName(p.clientId))+' · '+escape(p.name)+'</strong><small>'+escape(p.address||'')+' · '+(p.rooms||[]).length+' ambientes</small></div><div class="project-row-end">'+statusBadge(p.status)+btn('Abrir','openProject',p.id,'small')+'</div></div>';}
+function groupedProjects(projects){
+ return Object.keys(groupNames).map(k=>{
+ const entries=projects.filter(p=>workGroup(p.status)===k);
+ return '<details class="project-group" '+(k==='andamento'||k==='orcamentos'||k==='levantamento'?'open':'')+'><summary>'+groupNames[k]+' <span class="group-count">'+entries.length+'</span></summary>'+
+ (entries.map(projectRow).join('')||'<p class="muted">Nenhum projeto nesta categoria.</p>')+'</details>';
+ }).join('');
+}
+function homeView(){
+ const active=state.projects.filter(p=>!['Finalizado','Cancelado'].includes(p.status));
+ return header('Painel de clientes e obras','Cada obra tem seus próprios ambientes, medidas, desenhos, corte e contratos.')+
+ '<div class="grid"><div class="card"><small class="muted">Clientes</small><div class="stat">'+state.clients.length+'</div>'+btn('Abrir clientes','go','clients','primary')+'</div>'+
+ '<div class="card"><small class="muted">Obras ativas</small><div class="stat">'+active.length+'</div></div>'+
+ '<div class="card"><small class="muted">Obras finalizadas</small><div class="stat">'+state.projects.filter(p=>p.status==='Finalizado').length+'</div></div></div>'+
+ '<div class="card"><h3>Projetos por situação</h3>'+groupedProjects(state.projects)+'</div>';
+}
+function contractsView(c){
+ if(!Array.isArray(c.contracts))c.contracts=[];
+ const related=state.projects.filter(p=>p.clientId===c.id);
+ return '<div class="card"><h3>Contratos e documentos do cliente</h3><p class="muted">Anexe PDF ou imagem. Os arquivos ficam neste aparelho e são incluídos no backup Arque.</p>'+
+ '<div class="fields">'+select('contractProject','Vincular à obra',[{id:'',name:'Geral do cliente'},...related.map(p=>({id:p.id,name:p.name}))])+'</div>'+
+ btn('Anexar contrato (PDF ou imagem)','contractAttach','','primary')+
+ c.contracts.map(doc=>'<div class="item"><div><strong>'+escape(doc.name)+'</strong><small>'+escape(related.find(p=>p.id===doc.projectId)?.name||'Documento geral')+' · '+escape(doc.date||'')+'</small></div><div class="actions">'+btn('Abrir','contractOpen',doc.id,'small')+btn('Excluir','contractRemove',doc.id,'small danger')+'</div></div>').join('')+
+ (c.contracts.length?'':'<div class="empty">Nenhum contrato anexado ainda.</div>')+'</div>';
+}
 function clientsView(){
  if(selectedClient){
   const c=state.clients.find(x=>x.id===selectedClient);
   if(!c){selectedClient=null;return clientsView();}
   const projects=state.projects.filter(p=>p.clientId===c.id);
   return '<div class="row"><div>'+header(escape(c.name),'Cliente · '+escape(c.phone||'Sem telefone')+' · '+escape(c.address||'Sem endereço'))+'</div>'+btn('← Clientes','closeClient','','small')+'</div>'+
-  '<div class="card"><h3>Obras e ambientes</h3><p class="muted">Abra uma obra para acessar todos os levantamentos, setas sobre fotos, desenhos, cálculos, chapas e financeiro. Tudo ficará vinculado a este cliente.</p>'+
-  projects.map(p=>'<div class="item"><div><strong>'+escape(p.name)+'</strong><small>'+escape(p.status)+' · '+(p.rooms||[]).length+' ambientes · '+(p.photos||[]).length+' fotos</small></div>'+btn('Abrir obra','openProject',p.id,'primary')+'</div>').join('')+
-  (projects.length?'':'<div class="empty">Este cliente ainda não possui uma obra.</div>')+
-  '<div class="actions">'+btn('+ Criar obra para este cliente','clientProject',c.id,'primary')+'</div></div>';
+   '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Projetos agrupados por etapa, sem misturar finalizados e orçamentos.</p>'+groupedProjects(projects)+
+   '<div class="actions">'+btn('+ Nova obra','clientProject',c.id,'primary')+'</div></div>'+contractsView(c);
  }
- return header('Clientes','Abra o cliente para acessar suas obras, ambientes, medições, desenhos e planos de corte.')+
+ return header('Clientes','Abra o cliente para acessar projetos e contratos.')+
  '<div class="card"><h3>Novo cliente</h3><div class="fields">'+field('cname','Nome completo')+field('cphone','Telefone','tel')+field('caddr','Endereço')+'</div>'+btn('Salvar cliente','addClient','','primary')+'</div>'+
- '<div class="card"><h3>Clientes ('+state.clients.length+')</h3>'+state.clients.map(c=>'<div class="item"><div><strong>'+escape(c.name)+'</strong><small>'+state.projects.filter(p=>p.clientId===c.id).length+' obra(s) · '+escape(c.phone||'')+'</small></div>'+btn('Abrir cliente','openClient',c.id,'primary')+'</div>').join('')+
- (state.clients.length?'':'<div class="empty">Cadastre seu primeiro cliente.</div>')+'</div>';
+ '<div class="card"><h3>Todos os clientes ('+state.clients.length+')</h3>'+
+ state.clients.map(c=>{const ps=state.projects.filter(p=>p.clientId===c.id);
+ return '<div class="item project-row"><div><strong>'+escape(c.name)+'</strong><small>'+escape(c.phone||'')+' · '+ps.length+' obra(s)</small></div><div class="project-row-end">'+(ps.length?statusBadge(ps.slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0].status):'<span class="project-status">Sem obras</span>')+btn('Abrir','openClient',c.id,'small')+'</div></div>';}).join('')+
+ (state.clients.length?'':'<div class="empty">Nenhum cliente cadastrado.</div>')+'</div>';
 }
 function projectsView(){if(project())return detailView();return header('Projetos','Levantamento, produção, entrega e financeiro em um só lugar.')+`<div class="card"><h3>Novo projeto</h3>${state.clients.length?`<div class="fields">${select('pclient','Cliente',state.clients)}${field('pname','Nome da obra')}${field('paddr','Endereço da obra')}</div>${btn('Criar projeto','addProject','','primary')}`:'<p>Cadastre primeiro um cliente na aba Clientes.</p>'}</div><div class="card"><h3>Todos os projetos</h3>${state.projects.map(p=>`<div class="item"><div><strong>${escape(p.name)}</strong><small>${escape(clientName(p.clientId))} · ${escape(p.status)} · ${p.rooms.length} ambientes</small></div>${btn('Abrir','openProject',p.id,'small')}</div>`).join('')||'<div class="empty">Nenhum projeto ainda.</div>'}</div>`;}
 
@@ -174,6 +207,9 @@ function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
 case'go':tab=arg;selectedProject=null;selectedClient=null;render();break;
+case'contractAttach':{if(!selectedClient)throw Error('Abra um cliente.');const inp=$('#contractFile');inp.dataset.clientId=selectedClient;inp.dataset.projectId=val('contractProject');inp.click();break;}
+case'contractOpen':{const c=state.clients.find(x=>x.id===selectedClient);const doc=c?.contracts?.find(x=>x.id===arg);if(!doc)throw Error('Documento não encontrado.');const link=document.createElement('a');link.href=doc.data;link.download=doc.name;document.body.append(link);link.click();link.remove();break;}
+case'contractRemove':{const c=state.clients.find(x=>x.id===selectedClient);if(c?.contracts&&confirm('Excluir este contrato do cadastro?')){c.contracts=c.contracts.filter(x=>x.id!==arg);update();}break;}
 case'openClient':selectedClient=arg;selectedProject=null;tab='clients';render();break;
 case'closeClient':selectedClient=null;selectedProject=null;tab='clients';render();break;
 case'projectCalc':tab='tools';render();break;
@@ -272,6 +308,7 @@ window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na imp
 window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
 window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
 window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR')});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
 $('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
 for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);project().photos.push({id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory});await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
 $('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});

@@ -177,6 +177,13 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  // Two rapid taps toggle free zoom, then lock it again.
  const tap=(x,y)=>{const stage=doc.getElementById('photoMeasureStage');for(const type of ['pointerdown','pointerup']){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:91},pointerType:{value:'touch'},clientX:{value:x},clientY:{value:y}});stage.dispatchEvent(ev);}};
  tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Travar zoom"]'),'double tap unlocks navigation');
+ // A third tap restores original framing and locks navigation.
+ click(doc,'photoZoomIn');assert(doc.getElementById('photoZoomReadout').textContent==='125%','zoom before triple tap');
+ tap(80,90);assert(doc.getElementById('photoZoomReadout').textContent==='100%','triple tap resets zoom');
+ assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Mover e ampliar"]'),'triple tap locks navigation');
+ await sleep(470);
+ tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Travar zoom"]'),'double tap still unlocks after triple tap');
+ await sleep(470);
  tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Mover e ampliar"]'),'second double tap locks navigation');
 
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-hit')?.getAttribute('stroke')==='transparent','interaction hitbox is invisible');assert(doc.querySelector('#photoOverlay .measure-label rect'),'unmeasured arrow shows one small central yellow box');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');

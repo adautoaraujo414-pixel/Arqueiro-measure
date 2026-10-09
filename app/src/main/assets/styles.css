@@ -177,3 +177,9 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 #photoOverlay .dim-selected line:not(.measure-hit){stroke:#ba36c5!important}
 #photoOverlay .measure-label text{font-family:Arial,Roboto,sans-serif}
 #photoOverlay .measure-label{pointer-events:all}
+
+/* Correção visual baseada no vídeo real do MeasureOn: amarelo vivo e foto sem corte */
+#photoMeasureStage>img{display:block!important;width:100%!important;height:auto!important;max-height:none!important;object-fit:fill!important}
+#photoOverlay .dim-selected line:not(.measure-hit){stroke:#ffe000!important}
+#photoOverlay .measure-label rect{stroke:none!important}
+#photoOverlay .measure-label text{fill:#171717!important}

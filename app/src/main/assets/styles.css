@@ -170,3 +170,10 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-measure-stage.photo-placement-mode #photoOverlay [data-dimension]{pointer-events:none!important}
 .photo-measure-stage #photoOverlay{display:block;user-select:none;-webkit-user-select:none}
 .photo-measure-stage>img{max-width:100%;width:100%;height:auto;max-height:76vh;object-fit:contain}
+
+/* Escrita contínua: impedir que o navegador interprete a S Pen como rolagem */
+#studioCanvas{touch-action:none!important;user-select:none!important;-webkit-user-select:none!important;-webkit-touch-callout:none!important;overscroll-behavior:contain}
+.studio-canvas-shell{touch-action:pan-x pan-y}
+#photoOverlay .dim-selected line:not(.measure-hit){stroke:#ba36c5!important}
+#photoOverlay .measure-label text{font-family:Arial,Roboto,sans-serif}
+#photoOverlay .measure-label{pointer-events:all}

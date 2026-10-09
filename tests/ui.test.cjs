@@ -66,7 +66,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  sketch.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  sketchEvent('pointerdown',30,30);sketchEvent('pointermove',130,150);sketchEvent('pointercancel',130,150);
  sketchEvent('pointerdown',230,300);sketchEvent('pointermove',360,450);sketchEvent('pointerup',360,450);
- assert.equal(w.eval('studioCurrent(project()).strokes.length'),2,'second stroke is stored alongside the first stroke');
+ assert.equal(sketch.dataset.strokeCount,'2','second stroke remains alongside first stroke on canvas');
  await sleep(100);
  click(doc,'studioUndo');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'stroke remains editable after pointercancel');

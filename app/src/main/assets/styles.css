@@ -235,3 +235,18 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-hero-compact .btn{white-space:nowrap}
 .studio-sidebar .studio-tip{display:none}
 @media(max-width:700px){.photo-context{grid-template-columns:1fr}.photo-workspace-head .muted{display:none}.photo-workspace .photo-zoom-tools{margin-left:0}.studio-compact-title{width:100%}}
+
+/* Barra de ações da foto: ícones próximos da imagem, como ferramenta de medição. */
+.photo-workspace .photo-workbar{gap:4px;margin-bottom:4px}
+.photo-workspace .photo-ink-tools{border:0;background:transparent;padding:4px 2px;gap:6px}
+.photo-workspace .photo-secondary-tools{padding:4px 2px;border:0}
+.photo-workspace .photo-zoom-tools{margin-left:auto}
+.photo-icon-button,.photo-apply-reading,.photo-dock-tool{font:inherit;cursor:pointer;border:1px solid #d8e2eb;background:#fff;color:#1b526f;border-radius:9px;min-width:39px;min-height:38px;display:inline-flex;align-items:center;justify-content:center}
+.photo-icon-button{font-size:22px}
+.photo-icon-button.active,.photo-dock-tool.active{background:#0675ad;color:#fff;border-color:#0675ad}
+.photo-apply-reading{padding:0 12px;font-size:13px;font-weight:700;margin-left:auto;white-space:nowrap}
+.photo-floating-dock{position:absolute;z-index:8;bottom:12px;left:12px;display:flex;gap:5px;padding:5px;background:rgba(16,27,39,.83);border-radius:13px;line-height:normal;box-shadow:0 3px 15px #0004;touch-action:manipulation}
+.photo-dock-tool{min-width:46px;min-height:46px;border:0;border-radius:9px;background:transparent;color:#f6faff;font-size:27px;line-height:1}
+.photo-dock-tool.active{background:#087cb8;color:#fff}
+.photo-dock-tool:focus-visible,.photo-icon-button:focus-visible,.photo-apply-reading:focus-visible{outline:3px solid #ffce33;outline-offset:2px}
+@media(max-width:700px){.photo-floating-dock{bottom:8px;left:8px;gap:2px;padding:3px}.photo-dock-tool{min-width:40px;min-height:42px;font-size:24px}.photo-apply-reading{margin-left:0}}

@@ -64,7 +64,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  function sketchEvent(type,x,y){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:8},clientX:{value:x},clientY:{value:y}});sketch.dispatchEvent(ev);}
  sketch.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  sketchEvent('pointerdown',30,30);sketchEvent('pointermove',130,150);sketchEvent('pointercancel',130,150);
- await sleep(80);
+ sketchEvent('pointerdown',230,300);sketchEvent('pointermove',360,450);sketchEvent('pointerup',360,450);
+ await sleep(100);
  click(doc,'studioUndo');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'stroke remains editable after pointercancel');
  click(doc,'studioRedo');await sleep(50);

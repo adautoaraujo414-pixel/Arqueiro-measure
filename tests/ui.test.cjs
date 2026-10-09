@@ -12,6 +12,15 @@ async function launch(){
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
+function dragMeasure(doc,x1=80,y1=80,x2=450,y2=230){
+ const svg=doc.getElementById('photoOverlay');assert(svg,'photo overlay');
+ svg.getBoundingClientRect=()=>({left:0,top:0,width:1000,height:650,right:1000,bottom:650});
+ svg.setPointerCapture=()=>{};
+ for(const [type,x,y] of [['pointerdown',x1,y1],['pointermove',x2,y2],['pointerup',x2,y2]]){
+  const ev=new doc.defaultView.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:1},clientX:{value:x},clientY:{value:y}});
+  svg.dispatchEvent(ev);
+ }
+}
 function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not found: '+id);x.value=value;x.dispatchEvent(new doc.defaultView.Event('input',{bubbles:true}));}
 (async()=>{
  let {dom,w,doc}=await launch();
@@ -134,12 +143,13 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  fileInput.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(80);
  click(doc,'openWorkspace','fotomedidas');
  assert(doc.getElementById('photoOverlay'),'overlay rendered. Screen: '+doc.getElementById('main')?.textContent.slice(0,1200)+' Toast: '+doc.getElementById('toast')?.textContent);
- click(doc,'photoAddDistance');await sleep(60);
+ click(doc,'photoAddDistance');await sleep(30);
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===0,'no unwanted pre-positioned arrow');dragMeasure(doc);await sleep(75);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label'),'yellow measurement label appears');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
- click(doc,'photoAddDistance');await sleep(70);
+ click(doc,'photoAddDistance');await sleep(30);dragMeasure(doc,110,360,800,450);await sleep(70);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'second distance arrow appears');
  const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
  assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);

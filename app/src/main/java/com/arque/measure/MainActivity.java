@@ -89,7 +89,7 @@ public final class MainActivity extends Activity {
                 String path=uri.getPath();
                 if(path==null)return denied();
                 String name=path.startsWith("/")?path.substring(1):path;
-                if(!name.equals("index.html")&&!name.equals("core.js")&&!name.equals("app.js")&&!name.equals("styles.css"))return denied();
+                if(!name.equals("index.html")&&!name.equals("core.js")&&!name.equals("app.js")&&!name.equals("cut.js")&&!name.equals("styles.css"))return denied();
                 String mime=name.endsWith(".js")?"text/javascript":name.endsWith(".css")?"text/css":"text/html";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open(name));}catch(Exception e){return denied();}
             }

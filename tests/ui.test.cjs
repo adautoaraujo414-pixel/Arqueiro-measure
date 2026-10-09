@@ -161,14 +161,18 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===0,'no unwanted pre-positioned arrow');dragMeasure(doc);await sleep(75);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
  assert(doc.querySelector('#photoZoomSurface'),'photo and overlay share a zoom surface');
+ assert(doc.querySelector('.photo-floating-dock [data-action="photoInkToggle"]'),'pen is in floating photo dock');
+ assert(doc.querySelector('.photo-floating-dock [data-action="photoAddDistance"]'),'arrow is in floating photo dock');
+ assert(doc.querySelector('.photo-ink-tools [data-action="photoDimensionApply"]'),'apply Bosch reading is alongside colors above image');
+
  click(doc,'photoZoomIn');assert(doc.getElementById('photoZoomReadout').textContent==='125%','zoom in increases to 125%');
  assert(doc.getElementById('photoZoomSurface').style.transform.includes('scale(1.25)'),'zoom scales image and arrows together');
  click(doc,'photoZoomOut');assert(doc.getElementById('photoZoomReadout').textContent==='100%','zoom out returns to 100%');
- click(doc,'photoZoomMode');assert(doc.body.textContent.includes('Zoom livre'),'pan and pinch mode is available');click(doc,'photoZoomMode');
+ click(doc,'photoZoomMode');assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Travar zoom"]'),'pan and pinch mode is available');click(doc,'photoZoomMode');
  // Two rapid taps toggle free zoom, then lock it again.
  const tap=(x,y)=>{const stage=doc.getElementById('photoMeasureStage');for(const type of ['pointerdown','pointerup']){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:91},pointerType:{value:'touch'},clientX:{value:x},clientY:{value:y}});stage.dispatchEvent(ev);}};
- tap(80,90);tap(80,90);assert(doc.body.textContent.includes('Zoom livre'),'double tap unlocks navigation');
- tap(80,90);tap(80,90);assert(doc.body.textContent.includes('Zoom travado'),'second double tap locks navigation');
+ tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Travar zoom"]'),'double tap unlocks navigation');
+ tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Mover e ampliar"]'),'second double tap locks navigation');
 
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-hit')?.getAttribute('stroke')==='transparent','interaction hitbox is invisible');assert(doc.querySelector('#photoOverlay .measure-label rect'),'unmeasured arrow shows one small central yellow box');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);

@@ -118,11 +118,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.getElementById('photoOverlay'),'overlay rendered. Screen: '+doc.getElementById('main')?.textContent.slice(0,1200)+' Toast: '+doc.getElementById('toast')?.textContent);
  click(doc,'photoAddDistance');await sleep(60);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
- assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');
+ assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-label'),'yellow measurement label appears');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
  assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');
- click(doc,'photoAddFree');await sleep(70);
- assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'free arrow appears');
+ click(doc,'photoAddDistance');await sleep(70);
+ assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===2,'second distance arrow appears');
  const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
  assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);
  assert(doc.querySelector('#photoOverlay line[stroke-width="3"]'),'adjustable width saved');

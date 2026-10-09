@@ -7,6 +7,11 @@ const fmt=v=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
 const statuses=['Levantamento','Projeto','Orçamento','Aprovado','Produção','Montagem','Finalizado','Cancelado'];
 let navigationHistory=[];let pendingPhotoRoom='';let pendingPhotoCategory='Levantamento',drawColor='#ffd329';
 let photoPlacement=false, photoPlacementStart=null, photoPlacementPreview=null;
+let photoZoom=1,photoPanX=0,photoPanY=0,photoZoomMode=false;
+const photoZoomClamp=n=>Math.max(1,Math.min(5,n));
+function applyPhotoZoom(){const surface=$('#photoZoomSurface');if(surface){surface.style.transform='translate('+photoPanX+'px,'+photoPanY+'px) scale('+photoZoom+')';}const readout=$('#photoZoomReadout');if(readout)readout.textContent=Math.round(photoZoom*100)+'%';}
+function photoZoomSet(n){photoZoom=photoZoomClamp(n);if(photoZoom===1){photoPanX=0;photoPanY=0;}applyPhotoZoom();}
+
 let studioPageId=null, studioFullscreen=false, studioInk='#176f9d', studioWidth=3, studioTool='pen', studioGrid='dots', studioActive=false, studioPoints=[];
 let linkPeers=[];
 let linkInfo=null,linkNotice='';
@@ -213,22 +218,22 @@ function photoMeasureView(){
   const selected=d.id===photoMeasureSelected,shape=d.shape||'arrow',value=d.value?fmt(d.value)+' mm':'—';
   const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2,angle=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;
   const rotation=angle>90?angle-180:angle< -90?angle+180:angle;
-  const color=escape(d.color||'#ffe000'),thick=Math.max(2,Math.min(8,Number(d.thickness)||4));
+  const color=escape(d.color||'#ffe000'),thick=3;
   const length=Math.hypot(d.x2-d.x1,d.y2-d.y1);
-  const labelWidth=Math.min(190,Math.max(48,20+value.length*13));
-  const label='<g class="measure-label" transform="translate('+mx+' '+my+') rotate('+rotation+')"><rect x="'+(-labelWidth/2)+'" y="-17" width="'+labelWidth+'" height="34" rx="2" fill="'+color+'"/><text x="0" y="7" text-anchor="middle" fill="#1c1c1c" font-size="20" font-weight="700">'+escape(value)+'</text></g>';
+  const labelWidth=Math.min(170,Math.max(42,16+value.length*11));
+  const label='<g class="measure-label" transform="translate('+mx+' '+my+') rotate('+rotation+')"><rect x="'+(-labelWidth/2)+'" y="-14" width="'+labelWidth+'" height="28" rx="2" fill="'+color+'"/><text x="0" y="5" text-anchor="middle" fill="#1c1c1c" font-size="16" font-weight="700">'+escape(value)+'</text></g>';
   const markerStart=shape==='rect'?'':' marker-start="url(#arqueArrowStart)" marker-end="url(#arqueArrowEnd)"';
   const mark=shape==='rect'?'<rect x="'+Math.min(d.x1,d.x2)+'" y="'+Math.min(d.y1,d.y2)+'" width="'+Math.abs(d.x2-d.x1)+'" height="'+Math.abs(d.y2-d.y1)+'" fill="none" stroke="'+color+'" stroke-width="'+thick+'"/>':'<line x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="'+color+'" stroke-width="'+thick+'"'+markerStart+'/>';
   return '<g data-dimension="'+escape(d.id)+'" class="dim-group'+(selected?' dim-selected':'')+'">'+mark+
   '<line class="measure-hit" x1="'+d.x1+'" y1="'+d.y1+'" x2="'+d.x2+'" y2="'+d.y2+'" stroke="transparent" stroke-width="30"/>'+
-  '<circle data-handle="a" cx="'+d.x1+'" cy="'+d.y1+'" r="'+(selected?12:7)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
+  '<circle data-handle="a" cx="'+d.x1+'" cy="'+d.y1+'" r="'+(selected?7:5)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
   '<circle data-handle="b" cx="'+d.x2+'" cy="'+d.y2+'" r="'+(selected?12:7)+'" fill="'+color+'" opacity="'+(selected?1:0)+'"/>'+
   (shape==='rect'?'':label)+'</g>';
  }).join('');
  const notes=(photo.notes||[]).map(n=>'<g data-photo-note="'+escape(n.id)+'"><rect x="'+n.x+'" y="'+n.y+'" rx="9" width="240" height="72" fill="#fff6b5" stroke="#b38b16" stroke-width="3"/><text x="'+(n.x+12)+'" y="'+(n.y+28)+'" font-size="22" fill="#232323">'+escape(n.text.slice(0,16))+'</text><text x="'+(n.x+12)+'" y="'+(n.y+53)+'" font-size="17" fill="#4f4115">Nota</text></g>').join('');
- const svg='<svg id="photoOverlay" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-label="Medidas sobre a fotografia"><defs><marker id="arqueArrowStart" markerWidth="7" markerHeight="7" refX="1" refY="3" orient="auto"><path d="M0 3 L7 0 L7 6 Z" fill="#ffe000"/></marker><marker id="arqueArrowEnd" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0 0 L7 3 L0 6 Z" fill="#ffe000"/></marker></defs>'+strokes+shapes+notes+'<line id="photoPlacementPreview" x1="0" y1="0" x2="0" y2="0" stroke="#ffe000" stroke-width="5" stroke-dasharray="12 8" visibility="hidden" pointer-events="none"/></svg>';
+ const svg='<svg id="photoOverlay" viewBox="0 0 1000 650" preserveAspectRatio="none" aria-label="Medidas sobre a fotografia"><defs><marker id="arqueArrowStart" markerUnits="userSpaceOnUse" markerWidth="19" markerHeight="17" refX="1" refY="8.5" orient="auto"><path d="M0 8.5 L18 0 L18 17 Z" fill="#ffe000"/></marker><marker id="arqueArrowEnd" markerUnits="userSpaceOnUse" markerWidth="19" markerHeight="17" refX="18" refY="8.5" orient="auto"><path d="M0 0 L18 8.5 L0 17 Z" fill="#ffe000"/></marker></defs>'+strokes+shapes+notes+'<line id="photoPlacementPreview" x1="0" y1="0" x2="0" y2="0" stroke="#ffe000" stroke-width="5" stroke-dasharray="12 8" visibility="hidden" pointer-events="none"/></svg>';
  const choices=p.rooms.map(r=>({id:r.id,name:r.name}));
- return '<div class="card"><h3>Medir e anotar sobre a foto</h3><p class="muted">Toque em Desenhar medida e arraste diretamente sobre a foto, do início ao fim da distância. Solte para criar a seta. Depois, selecione e informe a medida ou use a trena Bosch.</p><div class="fields">'+select('measurePhoto','Fotografia',p.photos.map(x=>({id:x.id,name:x.name})),photo.id)+(choices.length?select('photoRoom','Ambiente da foto',[{id:'',name:'Sem ambiente'},...choices],photo.roomId||''):'<p class="muted">Crie um ambiente em Medições para associar esta foto.</p>')+'</div><div class="actions">'+btn(photoPlacement?'✕ Cancelar':'↔ Desenhar medida','photoAddDistance','','primary')+btn('▣ Área','photoAddRect')+btn('+ Texto','photoNoteAdd')+'</div><div class="actions">'+btn('Conectar Bosch','bleScan')+btn('Aplicar última leitura','photoDimensionApply')+btn(photoInk?'✓ Concluir desenho':'✎ Desenhar livre','photoInkToggle')+btn('Desfazer traço','photoInkUndo')+'</div><div class="photo-measure-stage" id="photoMeasureStage"><img src="'+photo.data+'" alt="Foto do ambiente">'+svg+'</div><p class="muted">Leitura atual: <b id="photoBleLive">'+(lastBLE===null?'Aguardando trena':fmt(lastBLE)+' mm')+'</b>. Selecione a seta ou o quadrado e associe a leitura.</p>'+
+ return '<div class="card"><h3>Medir e anotar sobre a foto</h3><p class="muted">Toque em Desenhar medida e arraste diretamente sobre a foto, do início ao fim da distância. Solte para criar a seta. Depois, selecione e informe a medida ou use a trena Bosch.</p><div class="fields">'+select('measurePhoto','Fotografia',p.photos.map(x=>({id:x.id,name:x.name})),photo.id)+(choices.length?select('photoRoom','Ambiente da foto',[{id:'',name:'Sem ambiente'},...choices],photo.roomId||''):'<p class="muted">Crie um ambiente em Medições para associar esta foto.</p>')+'</div><div class="actions">'+btn(photoPlacement?'✕ Cancelar':'↔ Desenhar medida','photoAddDistance','','primary')+btn('▣ Área','photoAddRect')+btn('+ Texto','photoNoteAdd')+'</div><div class="actions">'+btn('Conectar Bosch','bleScan')+btn('Aplicar última leitura','photoDimensionApply')+btn(photoInk?'✓ Concluir desenho':'✎ Desenhar livre','photoInkToggle')+btn('Desfazer traço','photoInkUndo')+'</div><div class="photo-zoom-tools">'+btn('−','photoZoomOut')+'<span id="photoZoomReadout">'+Math.round(photoZoom*100)+'%</span>'+btn('+','photoZoomIn')+btn('100%','photoZoomReset')+btn(photoZoomMode?'✓ Sair do zoom':'✥ Mover / zoom','photoZoomMode')+'</div><div class="photo-measure-stage" id="photoMeasureStage"><div class="photo-zoom-surface" id="photoZoomSurface" style="transform:translate('+photoPanX+'px,'+photoPanY+'px) scale('+photoZoom+')"><img src="'+photo.data+'" alt="Foto do ambiente">'+svg+'</div></div><p class="muted">Leitura atual: <b id="photoBleLive">'+(lastBLE===null?'Aguardando trena':fmt(lastBLE)+' mm')+'</b>. Selecione a seta ou o quadrado e associe a leitura.</p>'+
  dims.map(d=>'<div class="item"><div><strong>'+escape(d.label||'Medida')+' — '+(d.value?fmt(d.value)+' mm':'Aguardando medida')+'</strong><small>'+escape(d.note||'')+' '+escape(d.source||'manual')+'</small></div><div class="actions">'+btn('Selecionar','photoDimensionSelect',d.id,'small')+btn('Excluir','photoDimensionDelete',d.id,'small danger')+'</div></div>').join('')+
  '<div class="fields">'+field('photoMeasureValue','Distância (mm)','number',dims.find(x=>x.id===photoMeasureSelected)?.value||'','min="0" step="0.01"')+field('photoMeasureLabel','Identificação',dims.find(x=>x.id===photoMeasureSelected)?.label||'')+field('photoMeasureNote','Observação','text',dims.find(x=>x.id===photoMeasureSelected)?.note||'')+field('photoMeasureThickness','Espessura da linha','number',dims.find(x=>x.id===photoMeasureSelected)?.thickness||5,'min="2" max="14" step="1"')+'</div>'+btn('Salvar medida e observações','photoDimensionManual','','primary')+
  '<h4>Leituras disponíveis da Bosch</h4><p class="muted">Selecione a seta ou quadrado antes de vincular uma leitura. Os valores são exibidos em mm.</p>'+bleReadings.slice(-15).reverse().map(reading=>'<div class="item"><strong>'+fmt(reading.value)+' mm</strong>'+btn('Aplicar à seleção','photoReadingApply',reading.id,'small')+'</div>').join('')+'<h4>Anotações da foto</h4>'+(photo.notes||[]).map(n=>'<div class="item"><span>'+escape(n.text)+'</span>'+btn('Excluir','photoNoteDelete',n.id,'small danger')+'</div>').join('')+'</div>';
@@ -384,7 +389,11 @@ case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;subtab='foto
 case'photoGoto':subtab='fotos';render();break;
 case'photoInkToggle':photoInk=!photoInk;render();break;
 case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
-case'photoAddDistance':{photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':photoZoomMode=!photoZoomMode;if(photoZoomMode){photoPlacement=false;photoInk=false;}render();break;
+case'photoAddDistance':{photoZoomMode=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
 case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
 case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
 case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
@@ -485,8 +494,30 @@ document.addEventListener('pointerup',e=>{
  e.preventDefault();
 });
 document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
 document.addEventListener('pointerdown',e=>{
- if(!photoPlacement||!e.target.closest('#photoOverlay'))return;
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay'))return;
  const svg=$('#photoOverlay');if(!svg)return;
  photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
  try{svg.setPointerCapture(e.pointerId)}catch(_){}
@@ -513,7 +544,7 @@ document.addEventListener('pointerup',e=>{
 },true);
 document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
 document.addEventListener('pointerdown',e=>{
- if(!photoInk || !e.target.closest('#photoOverlay'))return;
+ if(photoZoomMode||!photoInk || !e.target.closest('#photoOverlay'))return;
  const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
  if(!svg||!photo)return;
  if(!photo.inkStrokes)photo.inkStrokes=[];

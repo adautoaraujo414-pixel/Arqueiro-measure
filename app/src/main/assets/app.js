@@ -400,7 +400,7 @@ case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(ph
 case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
 case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
 case'photoZoomReset':photoZoomSet(1);break;
-case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;}photoLastTap=null;render();break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
 case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
 case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
 case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
@@ -503,7 +503,7 @@ document.addEventListener('pointerup',e=>{
 });
 document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
 // Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
-let photoTapDown=null,photoLastTap=null,photoZoomPreviousInk=true;
+let photoTapDown=null,photoLastTap=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
 document.addEventListener('pointerdown',e=>{
  if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
  const now=Date.now();
@@ -512,8 +512,8 @@ document.addEventListener('pointerdown',e=>{
  if(!doubleTap)return;
  const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
  const wasZoom=photoZoomMode;
- if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomMode=true;photoInk=false;photoPlacement=false;}
- else{photoZoomMode=false;photoInk=photoZoomPreviousInk;}
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
  // The first tap must not leave a small ink dot on the photograph.
  if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;

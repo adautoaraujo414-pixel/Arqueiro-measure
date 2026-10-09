@@ -118,4 +118,9 @@ throws(()=>ctx.ArqueCut.positionMixed(moveStock,{'a:1':{x:-1,y:0}}));
 throws(()=>ctx.ArqueCut.positionMixed(moveStock,{'a:1':{x:p1.x,y:p1.y}}));
 ok(app.includes("case'mixedMove'")&&app.includes("case'mixedReset'"),'manual placement UI actions');
 
+const candidates={width:2750,height:1830,kerf:3,pieces:[{name:'Lateral',w:1700,h:510,qty:4},{name:'Prateleira',w:900,h:490,qty:3}]};
+const optimized=ctx.ArqueCut.optimize(candidates);
+eq(optimized.testedStrategies,4,'four strategies evaluated');
+ok(optimized.sheetCount<=ctx.ArqueCut.calculate(candidates).sheetCount,'optimization never worse than area baseline');
+ok(['area','longest','width','height'].includes(optimized.strategy),'strategy labelled');
 console.log('AUDITORIA OK: '+checks+' verificações. Medições, geometrias, corte, cliente/contratos, arquivos, backup e sintaxe.');

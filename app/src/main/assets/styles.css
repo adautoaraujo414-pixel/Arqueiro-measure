@@ -96,3 +96,19 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .status-finalizados{background:#e0e8f0;color:#496778}.status-cancelados{background:#f9e3e3;color:#933d3d}
 .status-levantamento{background:#e3f2fc;color:#206e9b}
 @media(max-width:560px){.project-row{align-items:flex-start;flex-direction:column}.project-row-end{width:100%;justify-content:space-between}}
+
+/* Edição em sequência, compatível com tablet e teclado numérico */
+.cut-entry{min-width:900px;table-layout:fixed}
+.cut-entry th,.cut-entry td{padding:5px 4px;text-align:center}
+.cut-entry td:first-child,.cut-entry th:first-child{width:36px}
+.cut-entry td:nth-child(4),.cut-entry th:nth-child(4){width:125px}
+.cut-entry td:nth-child(3),.cut-entry th:nth-child(3){width:23px}
+.cut-entry td:nth-child(2),.cut-entry th:nth-child(2){width:125px}
+.cut-entry td:nth-child(5),.cut-entry th:nth-child(5){width:95px}
+.cut-entry td:nth-child(6),.cut-entry th:nth-child(6){width:95px}
+.cut-entry td:nth-child(7),.cut-entry th:nth-child(7){width:150px}
+.cut-entry td:nth-child(8),.cut-entry th:nth-child(8){width:95px}
+.cut-entry td input,.cut-entry td select{min-width:0;width:100%;padding:9px 6px;font-size:14px}
+.cut-entry .cut-draft{background:#ecf7fd}
+.cut-entry .btn{padding:7px 9px}
+.cut-extra{margin-top:14px}

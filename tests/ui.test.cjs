@@ -57,7 +57,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  Object.defineProperty(fileInput,'files',{value:[photoFile],configurable:true});
  fileInput.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(80);
  click(doc,'openWorkspace','fotomedidas');
- assert(doc.getElementById('photoOverlay'),'overlay rendered');
+ assert(doc.getElementById('photoOverlay'),'overlay rendered. Screen: '+doc.getElementById('main')?.textContent.slice(0,1200)+' Toast: '+doc.getElementById('toast')?.textContent);
  click(doc,'photoAddHorizontal');await sleep(60);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===1,'yellow arrow appears above image');
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');

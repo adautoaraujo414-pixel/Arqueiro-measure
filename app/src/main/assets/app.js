@@ -79,18 +79,25 @@ function clientsView(){
   if(!c){selectedClient=null;return clientsView();}
   const projects=state.projects.filter(p=>p.clientId===c.id);
   return '<div class="row"><div>'+header(escape(c.name),'Cliente · '+escape(c.phone||'Sem telefone')+' · '+escape(c.address||'Sem endereço'))+'</div>'+btn('← Clientes','closeClient','','small')+'</div>'+
-   '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Projetos agrupados por etapa, sem misturar finalizados e orçamentos.</p>'+groupedProjects(projects)+
+   '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Abra a obra para acessar suas ferramentas.</p>'+(projects.length?projects.map(pr=>'<div class="item"><div><strong>'+escape(pr.name)+'</strong><small>'+escape(pr.status)+' · '+(pr.rooms||[]).length+' ambientes</small></div>'+btn('Abrir','openProject',pr.id,'small primary')+'</div>').join(''):'<p class="muted">Nenhuma obra ainda.</p>')+
    '<div class="actions">'+btn('+ Nova obra','clientProject',c.id,'primary')+'</div></div>'+contractsView(c);
  }
  return header('Clientes','Abra o cliente para acessar projetos e contratos.')+
  '<div class="card"><h3>Novo cliente</h3><div class="fields">'+field('cname','Nome completo')+field('cphone','Telefone','tel')+field('caddr','Endereço')+'</div>'+btn('Salvar cliente','addClient','','primary')+'</div>'+
- '<div class="card"><h3>Todos os clientes ('+state.clients.length+')</h3>'+
- state.clients.map(c=>{const ps=state.projects.filter(p=>p.clientId===c.id);
- return '<div class="item project-row"><div><strong>'+escape(c.name)+'</strong><small>'+escape(c.phone||'')+' · '+ps.length+' obra(s)</small></div><div class="project-row-end">'+(ps.length?statusBadge(ps.slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0].status):'<span class="project-status">Sem obras</span>')+btn('Abrir','openClient',c.id,'small')+'</div></div>';}).join('')+
+ '<div class="card"><h3>Clientes por nome ('+state.clients.length+')</h3>'+
+ state.clients.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(c=>{
+ const ps=state.projects.filter(p=>p.clientId===c.id);
+ const dates=[c.createdAt,...ps.map(p=>p.updatedAt||p.createdAt),...(c.contracts||[]).map(d=>d.createdAt)].filter(Boolean).sort();
+ const fmtDate=v=>v?new Date(v).toLocaleDateString('pt-BR'):'—';
+ return '<div class="item project-row"><div><strong>'+escape(c.name)+'</strong><small>'+escape(c.phone||'')+' · '+ps.length+' obra(s)</small><small class="client-dates">Cadastro: '+fmtDate(c.createdAt)+' · Última movimentação: '+fmtDate(dates[dates.length-1])+'</small></div><div class="project-row-end">'+btn('Abrir','openClient',c.id,'small')+'</div></div>';}).join('')+
  (state.clients.length?'':'<div class="empty">Nenhum cliente cadastrado.</div>')+'</div>';
 }
-function projectsView(){if(project())return detailView();return header('Projetos','Levantamento, produção, entrega e financeiro em um só lugar.')+`<div class="card"><h3>Novo projeto</h3>${state.clients.length?`<div class="fields">${select('pclient','Cliente',state.clients)}${field('pname','Nome da obra')}${field('paddr','Endereço da obra')}</div>${btn('Criar projeto','addProject','','primary')}`:'<p>Cadastre primeiro um cliente na aba Clientes.</p>'}</div><div class="card"><h3>Todos os projetos</h3>${state.projects.map(p=>`<div class="item"><div><strong>${escape(p.name)}</strong><small>${escape(clientName(p.clientId))} · ${escape(p.status)} · ${p.rooms.length} ambientes</small></div>${btn('Abrir','openProject',p.id,'small')}</div>`).join('')||'<div class="empty">Nenhum projeto ainda.</div>'}</div>`;}
-
+function projectsView(){if(project())return detailView();
+ if(!selectedClient){tab='clients';return clientsView();}
+ const c=state.clients.find(x=>x.id===selectedClient);
+ if(!c){tab='clients';return clientsView();}
+ return header('Nova obra de '+escape(c.name),'O projeto sempre pertence ao cliente selecionado.')+'<div class="card"><h3>Criar projeto</h3><div class="fields">'+select('pclient','Cliente',[c])+field('pname','Nome da obra')+field('paddr','Endereço da obra')+'</div>'+btn('Criar projeto','addProject','','primary')+btn('← Voltar','closeProject','','small')+'</div>';
+}
 function cuttingPlan(p){if(!p.cutPlan)p.cutPlan={width:2750,height:1830,kerf:3,trim:0,pieces:[]};return p.cutPlan;}
 
 function manualCutView(p,plan){
@@ -227,8 +234,8 @@ case'closeClient':selectedClient=null;selectedProject=null;tab='clients';render(
 case'projectCalc':tab='tools';render();break;
 case'openWorkspace':subtab=arg;tab='projects';render();break;
 case'addClient':{let c=C.client(val('cname'),val('cphone'),val('caddr'));state.clients.push(c);update();toast('Cliente salvo no aparelho.');break;}
-case'clientProject':tab='projects';selectedProject=null;render();$('#pclient').value=arg;break;
-case'addProject':{let x=C.project(val('pclient'),val('pname'),val('paddr'));state.projects.push(x);selectedProject=x.id;selectedClient=x.clientId;selectedRoom=null;subtab='resumo';update();toast('Projeto criado.');break;}
+case'clientProject':selectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');let x=C.project(selectedClient,val('pname'),val('paddr'));state.projects.push(x);selectedProject=x.id;selectedClient=x.clientId;selectedRoom=null;subtab='resumo';update();toast('Projeto criado.');break;}
 case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
 case'closeProject':selectedProject=null;selectedRoom=null;tab='clients';render();break;
 case'saveProject':{p.status=val('pstatus');p.value=C.money(val('pvalue'));p.discount=C.money(val('pdiscount'));C.finance(p);p.updatedAt=new Date().toISOString();p.revision++;update();toast('Projeto atualizado.');break;}

@@ -157,3 +157,15 @@
 .lab-visual [data-lab-part]{cursor:crosshair}
 .lab-visual [data-lab-part]:focus{stroke:#087aac;stroke-width:3}
 @media(max-width:620px){.lab-nudge-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Etapa 8 — revisão de ferragens e guias de montagem sem comandos CNC. */
+.lab-hardware-panel{border:1px solid #b8d4e1;background:#f5f9fc;border-radius:9px;padding:10px;margin:12px 0}
+.lab-hardware-panel summary{font-size:13px;font-weight:700;color:#285f7e;cursor:pointer}
+.lab-hardware-panel h4{font-size:12px;margin:12px 0 4px;color:#345d70}
+.lab-hardware-panel label{display:block;font-size:11px;margin:6px 0;min-width:0}
+.lab-hardware-panel input,.lab-hardware-panel select{display:block;width:100%;min-width:0}
+.lab-hardware-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.lab-hardware-panel button{display:inline-block;margin:8px 5px 4px 0;font-size:11px;min-height:36px;background:#e8f3f8;color:#205f82}
+.lab-hardware-holes{display:grid;gap:4px;max-height:180px;overflow:auto;padding:6px;background:white;border-radius:6px}
+.lab-hardware-holes small{font-size:10px;color:#667c88}
+@media(max-width:550px){.lab-hardware-grid{grid-template-columns:1fr}}

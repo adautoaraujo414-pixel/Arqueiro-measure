@@ -70,5 +70,22 @@ function proposed(layout,obj,selectedId='',side='right',gap=3){
  }
  throw Error('Não há espaço livre para inserir este módulo. Ajuste o ambiente ou os móveis existentes.');
 }
-return {categories,templates,catalogHTML,proposed,check,rect,sketch};
+const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+function cameraDrag(state,tool,dx,dy){
+ const next={...state},horizontal=Number(dx)||0,vertical=Number(dy)||0;
+ if(tool==='orbit'){next.angle=(Number(next.angle||0)+horizontal*.32+3600)%360;next.tilt=clamp(Number(next.tilt??32)-vertical*.22,10,80);}
+ else if(tool==='pan'){next.panX=clamp(Number(next.panX||0)+horizontal,-1600,1600);next.panY=clamp(Number(next.panY||0)+vertical,-1400,1400);}
+ else if(tool==='zoom')next.zoom=clamp(Number(next.zoom||1)*Math.exp(-vertical*.008),.65,3.5);
+ else throw Error('Ferramenta de câmera inválida.');
+ return next;
+}
+function pinch(state,oldDistance,newDistance,dx=0,dy=0){
+ const next=cameraDrag(state,'pan',dx,dy);
+ const ratio=Number(newDistance)/Number(oldDistance);
+ if(!Number.isFinite(ratio)||ratio<=0)throw Error('Pinça de zoom inválida.');
+ next.zoom=clamp(Number(next.zoom||1)*ratio,.65,3.5);
+ return next;
+}
+function resetCamera(){return {angle:40,tilt:32,zoom:1,panX:0,panY:0};}
+return {categories,templates,catalogHTML,proposed,check,rect,sketch,cameraDrag,pinch,resetCamera};
 });

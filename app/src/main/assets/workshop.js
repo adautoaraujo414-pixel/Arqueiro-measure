@@ -46,13 +46,15 @@ function roomAudit(layout){
   if(m.x<0||m.y<0||m.x+width>layout.width+0.01||m.y+depth>layout.depth+0.01){
    issues.push({severity:'error',code:'OUTSIDE',moduleId:m.id,message:m.label+' ultrapassa a parede ou a profundidade do ambiente.'});
   }
-  if(Number(m.height)>Number(layout.height)+0.01)issues.push({severity:'error',code:'HEIGHT',moduleId:m.id,message:m.label+' ultrapassa a altura registrada do ambiente.'});
+  const z=Number(m.z||0);
+  if(!Number.isFinite(z)||z<0||z+Number(m.height)>Number(layout.height)+0.01)issues.push({severity:'error',code:'HEIGHT',moduleId:m.id,message:m.label+' ultrapassa a altura registrada: Z '+z+' mm + corpo '+m.height+' mm.'});
  }
  for(let i=0;i<modules.length;i++)for(let j=i+1;j<modules.length;j++){
   const a=modules[i],b=modules[j];
   const aw=Number(a.w)+Number(a.moduleSpec.leftFiller||0)+Number(a.moduleSpec.rightFiller||0),bw=Number(b.w)+Number(b.moduleSpec.leftFiller||0)+Number(b.moduleSpec.rightFiller||0);
   const ad=Number(a.d)+(a.moduleSpec.back==='overlay'?Number(a.moduleSpec.backThickness||0):0),bd=Number(b.d)+(b.moduleSpec.back==='overlay'?Number(b.moduleSpec.backThickness||0):0);
-  if(a.x<b.x+bw&&b.x<a.x+aw&&a.y<b.y+bd&&b.y<a.y+ad)issues.push({severity:'error',code:'OVERLAP',moduleId:a.id,message:a.label+' e '+b.label+' se sobrepõem na planta.'});
+  const az=Number(a.z||0),bz=Number(b.z||0),ah=Number(a.height||0),bh=Number(b.height||0);
+  if(a.x<b.x+bw&&b.x<a.x+aw&&a.y<b.y+bd&&b.y<a.y+ad&&az<bz+bh&&bz<az+ah)issues.push({severity:'error',code:'OVERLAP',moduleId:a.id,message:a.label+' e '+b.label+' se sobrepõem na planta.'});
  }
  return {issues,errors:issues.filter(i=>i.severity==='error'),warnings:issues.filter(i=>i.severity!=='error'),productionReady:issues.length===0,checkedModules:modules.length};
 }

@@ -39,7 +39,7 @@ function attach(l,room,measureId,target,itemId){
  const m=(room.measurements||[]).find(x=>x.id===measureId);if(!m)throw Error('Leitura não encontrada no ambiente.');
  const value=numeric(m.value,0.1);
  if(!['width','depth','height','w','d'].includes(target))throw Error('Destino inválido.');
- if(itemId){const item=l.items.find(x=>x.id===itemId);if(!item)throw Error('Peça não encontrada.');if(!['w','d','height'].includes(target))throw Error('Selecione uma dimensão da peça.');remember(l);item[target]=value;item.refs[target]={id:m.id,recorded:value};}
+ if(itemId){const item=l.items.find(x=>x.id===itemId);if(!item)throw Error('Peça não encontrada.');if(!['w','d','height'].includes(target))throw Error('Selecione uma dimensão da peça.');if(item.kind==='module'&&root.ArqueModules){const k={w:'width',d:'depth',height:'height'}[target],update={[k]:value};root.ArqueModules.parts({...item.moduleSpec,...update});remember(l);root.ArqueModules.regenerate(item,update);}else{remember(l);item[target]=value;}item.refs[target]={id:m.id,recorded:value};}
  else{if(!['width','depth','height'].includes(target))throw Error('Selecione largura, profundidade ou altura do ambiente.');remember(l);l[target]=value;l.confirmed=true;l.roomRefs[target]={id:m.id,recorded:value};}
  return value;
 }
@@ -65,12 +65,29 @@ function shape(item,selected){
  if(k==='cava')out+='<path d="M '+(x+8)+' '+(y+d*.25)+' L '+(x+w-8)+' '+(y+d*.25)+' L '+(x+w-8)+' '+(y+d*.55)+'" fill="none" stroke="#176f9d" stroke-width="5"/>';
  return out;
 }
+function moduleShape(item,view,selected,l){
+ const spec=item.moduleSpec||{},t=Number(spec.thickness)||18,W=item.w,depth=item.d,H=item.height;
+ const x=item.x,y=view==='front'?(item.frontY??Math.max(0,l.height-H-100)):item.y;
+ const shownH=view==='front'?H:depth;
+ let res='<rect x="'+x+'" y="'+y+'" width="'+W+'" height="'+shownH+'" fill="'+(selected?'#cbe9f6':'#dfedf5')+'" stroke="'+(selected?'#117caf':'#477b95')+'" stroke-width="7" vector-effect="non-scaling-stroke"/>';
+ if(view==='front'){
+  res+='<path d="M '+(x+t)+' '+y+' V '+(y+H)+' M '+(x+W-t)+' '+y+' V '+(y+H)+' M '+x+' '+(y+t)+' H '+(x+W)+' M '+x+' '+(y+H-t)+' H '+(x+W)+'" stroke="#577e90" stroke-width="4" vector-effect="non-scaling-stroke" fill="none"/>';
+  const inner=W-2*t;
+  for(const pos of spec.vertical||[]){let cx=x+t+inner*pos;res+='<rect x="'+(cx-t/2)+'" y="'+(y+t)+'" width="'+t+'" height="'+Math.max(1,H-2*t)+'" fill="#8db9ce" stroke="#456b81" stroke-width="2"/>';}
+  for(let j=1;j<=(spec.shelfCount||0);j++){let sy=y+t+(H-2*t)*j/((spec.shelfCount||0)+1);res+='<line x1="'+(x+t)+'" x2="'+(x+W-t)+'" y1="'+sy+'" y2="'+sy+'" stroke="#7194a8" stroke-width="7" vector-effect="non-scaling-stroke"/>';}
+  if(spec.doorCount){for(let j=1;j<spec.doorCount;j++){let dx=x+W*j/spec.doorCount;res+='<path d="M '+dx+' '+(y+12)+' V '+(y+H-12)+'" stroke="#317ca3" stroke-width="3" stroke-dasharray="14 12"/>';}
+   if(spec.frontType==='cava')res+='<path d="M '+(x+30)+' '+(y+60)+' H '+(x+W-30)+'" stroke="#0f729c" stroke-width="6" vector-effect="non-scaling-stroke"/>';}
+ }else{
+  res+='<line x1="'+x+'" x2="'+(x+W)+'" y1="'+(y+depth*.14)+'" y2="'+(y+depth*.14)+'" stroke="#8bb6cc" stroke-width="5" vector-effect="non-scaling-stroke"/>';
+ }
+ return res;
+}
 function svg(l,view,selectedId){
  const W=l.width||3500,H=view==='front'?(l.height||2600):(l.depth||2800);
  const ticks=Math.max(W,H)>10000?500:100;
  let a='<svg id="labBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="100%" style="aspect-ratio:'+W+'/'+H+';touch-action:none" role="img" aria-label="Ambiente em milímetros, '+esc(modes[view])+'"><defs><pattern id="labGrid" width="'+ticks+'" height="'+ticks+'" patternUnits="userSpaceOnUse"><path d="M '+ticks+' 0 L 0 0 0 '+ticks+'" fill="none" stroke="#d9e6ed" stroke-width="3"/></pattern></defs><rect width="'+W+'" height="'+H+'" fill="#fff"/><rect width="'+W+'" height="'+H+'" fill="url(#labGrid)"/><rect x="7" y="7" width="'+Math.max(1,W-14)+'" height="'+Math.max(1,H-14)+'" fill="none" stroke="#526570" stroke-width="14" vector-effect="non-scaling-stroke"/>';
- for(const item of l.items.filter(x=>x.view===view)){const sel=item.id===selectedId;
-  a+='<g data-lab-object="'+esc(item.id)+'" class="'+(sel?'lab-selected':'')+'">'+shape(item,sel)+'</g>';
+ for(const item of l.items.filter(x=>x.view===view||x.kind==='module')){const sel=item.id===selectedId;
+  a+='<g data-lab-object="'+esc(item.id)+'" class="'+(sel?'lab-selected':'')+'">'+(item.kind==='module'?moduleShape(item,view,sel,l):shape(item,sel))+'</g>';
   if(item.kind!=='pen'&&item.kind!=='wall')a+='<text x="'+(item.x+item.w/2)+'" y="'+Math.max(38,item.y-22)+'" font-size="'+Math.max(34,Math.min(70,W/75))+'" text-anchor="middle" fill="'+(sel?'#0c6899':'#667e89')+'" pointer-events="none">'+esc(item.label)+' · '+fmt(item.w)+' × '+fmt(item.d)+'</text>';
  }
  return a+'</svg>';
@@ -78,7 +95,7 @@ function svg(l,view,selectedId){
 let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null;
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
-function screen(p){
+function screen(p,state){
  const rooms=p.rooms||[];if(!rooms.length)return '<div class="notice">Cadastre um ambiente em Ambientes e medições para iniciar o Laboratório.</div>';
  const r=rooms.find(x=>x.id===activeRoom)||rooms[0];activeRoom=r.id;const l=layout(p,r.id);
  const photos=(p.photos||[]).filter(ph=>!ph.roomId||ph.roomId===r.id);
@@ -103,13 +120,13 @@ function screen(p){
   out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
- out+='</aside></div></section>';return out;
+ out+='</aside></div>'+(root.ArqueModuleUI&&state?root.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;
  const save=()=>Promise.resolve(ops.persist()).catch(e=>ops.toast('Erro ao salvar Laboratório: '+e.message));
  const alertError=e=>ops.toast(e.message||String(e));
- const refresh=()=>{root.innerHTML=screen(p);};
+ const refresh=()=>{root.innerHTML=screen(p,ops.state);};
  refresh();
  root.addEventListener('change',e=>{
   try{
@@ -121,6 +138,7 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a.startsWith('module')){if(!root.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=root.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined)selected=res.selected;if(!res.skipRefresh){save();refresh();}return;}}
    if(a==='view'){view=arg;selected='';refresh();return;}
    if(a==='tool'){tool=arg;refresh();return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
@@ -140,7 +158,7 @@ function mount(p,ops){
     const item=l.items.find(x=>x.id===selected);if(!item)throw Error('Selecione uma peça.');
     const props={label:root.querySelector('#labName').value};
     for(const input of root.querySelectorAll('[data-lab-prop]'))props[input.dataset.labProp]=numeric(input.value,(item.kind==='wall'&&['w','d'].includes(input.dataset.labProp))?-50000:0);
-    remember(l);place(item,props);
+    if(item.kind==='module'&&root.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};root.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);root.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;}else{remember(l);place(item,props);}
     for(const key of ['w','d','height'])delete item.refs[key];
     save();refresh();return;
    }
@@ -169,7 +187,7 @@ function mount(p,ops){
     if(!hit){selected='';refresh();return;}
     selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);
     if(!item)return;
-    drag={mode:'move',id:item.id,start:pt,x:item.x,y:item.y,pointer:e.pointerId};
+    drag={mode:'move',id:item.id,start:pt,x:item.x,y:(item.kind==='module'&&view==='front'?(item.frontY??Math.max(0,l.height-item.height-100)):item.y),pointer:e.pointerId};
    }else{
     const k=tool;
     const item=add(l,k,pt.x,pt.y,view);selected=item.id;
@@ -195,11 +213,11 @@ function mount(p,ops){
    if(drag.mode==='move'){
     if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
     item.x=Math.max(0,Math.min(l.width,drag.x+pt.x-drag.start.x));
-    item.y=Math.max(0,Math.min(view==='front'?l.height:l.depth,drag.y+pt.y-drag.start.y));
+    if(item.kind==='module'&&view==='front')item.frontY=Math.max(0,Math.min(l.height-item.height,drag.y+pt.y-drag.start.y));else item.y=Math.max(0,Math.min(view==='front'?l.height:l.depth,drag.y+pt.y-drag.start.y));
    }else if(drag.mode==='wall'){item.w=pt.x-drag.start.x;item.d=pt.y-drag.start.y;}
    else if(drag.mode==='pen'){item.points.push([pt.x,pt.y]);}
    // SVG geometry updates in place without interrupting the captured pointer.
-   const group=root.querySelector('[data-lab-object="'+drag.id+'"]');if(group)group.innerHTML=shape(item,true);
+   const group=root.querySelector('[data-lab-object="'+drag.id+'"]');if(group)group.innerHTML=item.kind==='module'?moduleShape(item,view,true,l):shape(item,true);
    e.preventDefault();
   }catch(err){alertError(err);}
  });
@@ -209,5 +227,5 @@ function mount(p,ops){
  };
  root.addEventListener('pointerup',finish);root.addEventListener('pointercancel',finish);
 }
-return {layout,add,place,attach,linkStatus,snapshot,undo,redo,svg,screen,mount};
+return {layout,add,place,attach,linkStatus,snapshot,remember,undo,redo,svg,screen,mount};
 });

@@ -116,10 +116,10 @@ function orthogonal(points,threshold=90){
  }
  return result.length>1?result:points;
 }
-function automaticSketch(layout,selectedId='',options={}){
+function automaticSketch(layout,selectedId='',options={},activeView='plan'){
  const tol=n(options.tolerance??80,'Tolerância para unir pontos',0,500);
  const epsilon=n(options.smoothness??35,'Correção do rabisco',1,500);
- const all=(layout.items||[]).filter(i=>(i.view==='plan'||i.view==='front')&&(i.kind==='pen'||i.kind==='wall'));
+ const all=(layout.items||[]).filter(i=>i.view===activeView&&(i.kind==='pen'||i.kind==='wall'));
  const targets=selectedId?all.filter(i=>i.id===selectedId):all;
  if(!targets.length)throw Error('Desenhe uma linha ou rabisco no Esboço antes do alinhamento.');
  const nodes=[];
@@ -132,7 +132,13 @@ function automaticSketch(layout,selectedId='',options={}){
  for(const it of targets){
   const raw=it.kind==='pen'?it.points||[]:[[it.x,it.y],[it.x+it.w,it.y+it.d]];
   if(raw.length<2)continue;
-  let points=it.kind==='pen'?orthogonal(simplify(raw,epsilon),tol):orthogonal(clonePts(raw),tol);
+  let points;
+  if(it.kind==='pen'){
+   const chord=dist(raw[0],raw[raw.length-1]),A=raw[0],B=raw[raw.length-1];
+   const maximum=chord>3?Math.max(...raw.slice(1,-1).map(p=>Math.abs((B[1]-A[1])*p[0]-(B[0]-A[0])*p[1]+B[0]*A[1]-B[1]*A[0])/chord),0):Infinity;
+   // Mesmo desenho irregular vira reta quando todos os pontos seguem uma única linha.
+   points=orthogonal(maximum<=tol?[A.slice(),B.slice()]:simplify(raw,epsilon),tol);
+  }else points=orthogonal(clonePts(raw),tol);
   if(points.length<2||dist(points[0],points[points.length-1])<4)continue;
   update.push({id:it.id,kind:it.kind,view:it.view,points});
  }

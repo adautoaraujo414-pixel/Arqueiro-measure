@@ -51,7 +51,9 @@ function segmentRect(a,b,xmin,ymin,xmax,ymax){
 function hingePlan(moduleItem,values={},engine=globalThis.ArqueModules){
  if(!engine)throw Error('Motor de peças indisponível.');
  if(moduleItem?.kind!=='module')throw Error('Selecione um módulo.');
- const s=engine.check(moduleItem.moduleSpec),parts=engine.parts(s).parts,doors=parts.filter(p=>p.key==='front'||p.key.startsWith('bay-door-'));
+ const s=engine.check(moduleItem.moduleSpec);
+ if(s.corner45?.enabled)throw Error('Porta diagonal 45° exige ferragem e gabarito próprios. Plano de canecas retas não se aplica.');
+ const parts=engine.parts(s).parts,doors=parts.filter(p=>p.key==='front'||p.key.startsWith('bay-door-'));
  if(!doors.length)throw Error('O módulo não possui portas para configurar dobradiças.');
  const diameter=number(values.diameter??35,'Diâmetro da caneca',10,45),edgeDistance=number(values.edgeDistance??22,'Centro à borda',10,90);
  const top=number(values.top??100,'Distância do topo',40,250),bottom=number(values.bottom??100,'Distância da base',40,250);
@@ -98,6 +100,7 @@ function slidesPlan(moduleItem,values={},engine=globalThis.ArqueModules){
 function hardwareWarnings(moduleItem,engine=globalThis.ArqueModules){
  if(moduleItem?.kind!=='module')return [];
  const s=engine.check(moduleItem.moduleSpec),out=[];
+ if(s.corner45?.enabled)return ['Dobradica e furação de porta diagonal 45° requerem gabarito do fabricante, teste de abertura e aprovação física.'];
  const doors=s.doorMode==='global'?s.doorCount:Object.values(s.bayDoors).reduce((a,b)=>a+b,0);
  if(doors){
   if(!moduleItem.hingePlan)out.push('Falta plano de dobradiças.');

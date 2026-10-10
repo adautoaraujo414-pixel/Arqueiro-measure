@@ -18,7 +18,7 @@ function standard(){
  return {name:'Armário base 2 portas',width:800,height:730,depth:560,thickness:18,backThickness:6,
   caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',
   construction:'between',back:'overlay',doorCount:2,doorGap:3,doorReveal:2,
-  frontType:'cava',vertical:[],shelfCount:1,shelfInset:20,shelfClearance:2,
+  frontType:'cava',vertical:[],bayLayoutMode:'manual',bayCount:1,bayRules:[],shelvesByBay:{},shelfCount:1,shelfInset:20,shelfRearInset:0,shelfClearance:2,dividerFrontInset:0,dividerRearInset:0,
   leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],revision:1};
 }
 function check(spec){
@@ -31,7 +31,10 @@ function check(spec){
  s.doorReveal=n(s.doorReveal,'Folga externa das portas',0,25);
  s.doorTopDiscount=n(s.doorTopDiscount,'Desconto adicional superior da porta',0,150);
  s.doorBottomDiscount=n(s.doorBottomDiscount,'Desconto adicional inferior da porta',0,150);
- s.shelfInset=n(s.shelfInset,'Recuo da prateleira',0,100);
+ s.shelfInset=n(s.shelfInset,'Recuo frontal da prateleira',0,150);
+ s.shelfRearInset=n(s.shelfRearInset,'Recuo traseiro da prateleira',0,150);
+ s.dividerFrontInset=n(s.dividerFrontInset,'Recuo frontal da divisória',0,150);
+ s.dividerRearInset=n(s.dividerRearInset,'Recuo traseiro da divisória',0,150);
  s.shelfClearance=n(s.shelfClearance,'Folga lateral da prateleira',0,15);
  s.leftFiller=n(s.leftFiller,'Tamponamento esquerdo',0,100);
  s.rightFiller=n(s.rightFiller,'Tamponamento direito',0,100);
@@ -42,13 +45,34 @@ function check(spec){
  if(!['between','over'].includes(s.construction))throw Error('Montagem da carcaça inválida.');
  if(!['overlay','none'].includes(s.back))throw Error('Tipo de fundo inválido.');
  if(!['cava','concha','sem'].includes(s.frontType))throw Error('Modelo de puxador inválido.');
+ if(!['manual','equal','custom'].includes(s.bayLayoutMode))throw Error('Modo de divisão de vãos inválido.');
+ if(!Array.isArray(s.bayRules))throw Error('Regras de largura inválidas.');
+ if(s.bayLayoutMode==='equal'){
+  s.bayCount=integer(s.bayCount,'Quantidade de vãos',1,11);
+  const inner=s.width-2*s.thickness,t=s.thickness;
+  if((inner-(s.bayCount-1)*t)/s.bayCount<100)throw Error('Quantidade de vãos não cabe na largura útil com MDF e divisórias.');
+  const opening=(inner-(s.bayCount-1)*t)/s.bayCount;
+  s.vertical=Array.from({length:s.bayCount-1},(_,j)=>round(((j+1)*opening+(j+0.5)*t)/inner)/1);
+ }
+ if(s.bayLayoutMode==='custom'){
+  s.bayCount=integer(s.bayCount,'Quantidade de vãos',1,11);
+  if(s.bayRules.length!==s.bayCount)throw Error('Regras de largura não correspondem à quantidade de vãos.');
+  const result=allocateBayWidths(s,s.bayRules);
+  s.vertical=result.centers;
+ }
+ if(!s.shelvesByBay||typeof s.shelvesByBay!=='object'||Array.isArray(s.shelvesByBay))throw Error('Prateleiras por vão inválidas.');
+ for(const [bay,value] of Object.entries(s.shelvesByBay)){
+  if(!/^\d+$/.test(bay)||Number(bay)>10)throw Error('Identificador de vão inválido.');
+  s.shelvesByBay[bay]=integer(value,'Prateleiras do vão '+bay,0,12);
+ }
  if(!Array.isArray(s.vertical))throw Error('Lista de divisórias inválida.');
  s.vertical=s.vertical.map((r,i)=>n(r,'Posição da divisória '+(i+1),0.001,0.999));
  s.vertical.sort((a,b)=>a-b);
  if(s.vertical.length>10)throw Error('No máximo 10 divisórias verticais.');
  if(s.width<=2*s.thickness+120)throw Error('Largura insuficiente para duas laterais e vão interno.');
  if(s.height<=2*s.thickness+100)throw Error('Altura insuficiente para tampo e base.');
- if(s.depth<=s.shelfInset+60)throw Error('Profundidade insuficiente com o recuo configurado.');
+ if(s.depth<=s.shelfInset+s.shelfRearInset+60)throw Error('Profundidade insuficiente para prateleiras com esses recuos.');
+ if(s.depth<=s.dividerFrontInset+s.dividerRearInset+60)throw Error('Profundidade insuficiente para divisórias com esses recuos.');
  if(s.shelfCount&&s.height-2*s.thickness-s.shelfCount*s.thickness<100*(s.shelfCount+1))throw Error('Prateleiras demais para a altura: os espaços ficam menores que 100 mm.');
  if(s.doorCount&&((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount)<80)throw Error('Portas estreitas demais para as folgas configuradas.');
  if(s.doorCount&&s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount<80)throw Error('Descontos superior e inferior deixam porta inviável.');
@@ -69,6 +93,50 @@ function check(spec){
 
  return s;
 }
+/* Repartição exata: remove espessuras antes de distribuir as larguras livres.
+   bayRules: null/'' => flexível, número => largura fixa em milímetros. */
+function allocateBayWidths(spec,rules){
+ const inner=round(spec.width-2*spec.thickness),t=spec.thickness;
+ const count=rules.length;
+ if(count<1||count>11)throw Error('Quantidade de vãos inválida.');
+ const desired=rules.map((value,i)=>(value===null||value===undefined||String(value).trim()==='')?null:n(value,'Largura fixa do vão '+(i+1),100));
+ const free=desired.filter(x=>x===null).length,used=desired.reduce((a,b)=>a+(b||0),0),available=round(inner-(count-1)*t-used);
+ if(free===0&&Math.abs(available)>0.11)throw Error('As larguras informadas precisam somar o vão útil de '+round(inner-(count-1)*t)+' mm, descontadas as divisórias.');
+ if(free>0&&available/free<100-0.0001)throw Error('Vãos flexíveis ficariam menores que 100 mm. Revise as larguras fixas.');
+ const widthFlex=free?available/free:0;
+ const widths=desired.map(x=>round(x===null?widthFlex:x));
+ // Preservar 0,1 mm e distribuir erro de arredondamento no último flexível.
+ const discrepancy=round(inner-(count-1)*t-widths.reduce((a,b)=>a+b,0));
+ if(Math.abs(discrepancy)>0.0001){
+  const index=desired.lastIndexOf(null);
+  if(index<0)throw Error('Vãos informados não fecham na precisão de 0,1 mm.');
+  widths[index]=round(widths[index]+discrepancy);
+ }
+ if(widths.some(x=>x<100))throw Error('Vão menor que 100 mm após dividir.');
+ let position=0;const centers=[];
+ for(let i=0;i<count-1;i++){position=round(position+widths[i]+t/2);centers.push(round(position/inner*1000000)/1000000);position=round(position+t/2);}
+ return {widths,centers,inner,dividerCount:count-1,usable:round(inner-(count-1)*t)};
+}
+function equalBays(spec,count){
+ const s=check({...spec,bayLayoutMode:'equal',bayCount:count,bayRules:[],vertical:[]});
+ parts(s);return s;
+}
+function customBays(spec,rules){
+ const s=check({...spec,bayLayoutMode:'custom',bayCount:rules.length,bayRules:clone(rules),vertical:[]});
+ parts(s);return s;
+}
+function setBayShelves(spec,bay,count){
+ const s=check(spec);const bays=bayBounds(s);
+ if(!bays[bay])throw Error('Escolha um vão existente.');
+ const shelvesByBay={...s.shelvesByBay,[bay]:integer(count,'Prateleiras móveis',0,12)};
+ const changed=check({...s,shelvesByBay});parts(changed);return changed;
+}
+function equalHorizontal(spec,bay,sections){
+ const s=check(spec);if(!bayBounds(s)[bay])throw Error('Escolha um vão existente.');
+ const count=integer(sections,'Quantidade de espaços na altura',1,12)-1;
+ const next=[...s.fixedShelves.filter(x=>x.bay!==bay),...Array.from({length:count},(_,i)=>({bay,at:(i+1)/(count+1)}))];
+ const changed=check({...s,fixedShelves:next});parts(changed);return changed;
+}
 function bayBounds(s){
  const inner=s.width-2*s.thickness,starts=[0],ends=[];
  for(const frac of s.vertical){
@@ -80,7 +148,7 @@ function bayBounds(s){
  for(const b of bays)if(b.width<100)throw Error('Divisórias muito próximas ou vão menor que 100 mm. Reposicione antes do corte.');
  return bays;
 }
-function addDivider(spec,at=0.5){const s=check(spec);s.vertical.push(n(at,'Posição proporcional',0.001,0.999));return check(s),s;}
+function addDivider(spec,at=0.5){const s=check({...spec,bayLayoutMode:'manual',bayRules:[]});s.vertical.push(n(at,'Posição proporcional',0.001,0.999));const changed=check(s);parts(changed);return changed;}
 function parts(spec){
  const s=check(spec),bays=bayBounds(s),t=s.thickness,innerWidth=round(s.width-2*t),innerHeight=round(s.height-2*t);
  const out=[],warnings=[];
@@ -91,12 +159,13 @@ function parts(spec){
  }
  panel('side','Lateral',s.construction==='over'?innerHeight:s.height,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Tampo e base sobrepõem as laterais':'Laterais inteiras: tampo e base entre elas');
  panel('topbottom','Tampo / base',s.construction==='over'?s.width:innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Sobre e sob as laterais':'Entre as duas laterais');
- for(const [i,fraction] of s.vertical.entries())panel('divider-'+i,'Divisória vertical '+(i+1),innerHeight,s.depth,1,t,s.caseMaterial,s.grainCase,0,1,'Eixo em '+Math.round(1000*fraction)/10+'% do vão interno');
- for(let j=0;j<s.shelfCount;j++)for(let i=0;i<bays.length;i++){
-  const at=(j+1)/(s.shelfCount+1);
+ for(const [i,fraction] of s.vertical.entries())panel('divider-'+i,'Divisória vertical '+(i+1),innerHeight,s.depth-s.dividerFrontInset-s.dividerRearInset,1,t,s.caseMaterial,s.grainCase,0,1,'Eixo em '+Math.round(1000*fraction)/10+'% do vão interno');
+ for(let i=0;i<bays.length;i++)for(let j=0;j<(s.shelvesByBay[i]??s.shelfCount);j++){
+  const count=s.shelvesByBay[i]??s.shelfCount;
+  const at=(j+1)/(count+1);
   // Se uma prateleira fixa ocupa exatamente o mesmo plano, gerar apenas a peça fixa.
   if(s.fixedShelves.some(f=>f.bay===i&&Math.abs(f.at-at)*innerHeight<t))continue;
-  panel('shelf-'+j+'-'+i,'Prateleira '+(j+1)+' / vão '+(i+1),bays[i].width-2*s.shelfClearance,s.depth-s.shelfInset,1,t,s.caseMaterial,s.grainCase,0,1,'Conferir ferragens e recuo traseiro');
+  panel('shelf-'+j+'-'+i,'Prateleira '+(j+1)+' / vão '+(i+1),bays[i].width-2*s.shelfClearance,s.depth-s.shelfInset-s.shelfRearInset,1,t,s.caseMaterial,s.grainCase,0,1,'Conferir ferragens e recuo traseiro');
  }
  for(let i=0;i<s.fixedShelves.length;i++)for(let j=i+1;j<s.fixedShelves.length;j++){
   const a=s.fixedShelves[i],b=s.fixedShelves[j];
@@ -107,7 +176,7 @@ function parts(spec){
   if(!bay)throw Error('Divisória fixa '+(i+1)+' aponta para um vão inexistente.');
   const heightAt=round(o.at*innerHeight);
   if(heightAt<t+30||heightAt>innerHeight-t-30)throw Error('Divisória fixa muito próxima ao tampo ou à base.');
-  panel('fixed-'+i,'Divisória horizontal fixa '+(i+1)+' / vão '+(o.bay+1),bay.width-2*s.shelfClearance,s.depth-s.shelfInset,1,t,s.caseMaterial,s.grainCase,0,1,'Fixa a '+heightAt+' mm sobre o piso interno; confirmar prateleiras no mesmo vão.');
+  panel('fixed-'+i,'Divisória horizontal fixa '+(i+1)+' / vão '+(o.bay+1),bay.width-2*s.shelfClearance,s.depth-s.shelfInset-s.shelfRearInset,1,t,s.caseMaterial,s.grainCase,0,1,'Fixa a '+heightAt+' mm sobre o piso interno; confirmar prateleiras no mesmo vão.');
  }
  for(const [i,o] of s.accessories.entries()){
   const bay=bays[o.bay];if(!bay)throw Error('Acessório '+(i+1)+' aponta para um vão inexistente.');
@@ -191,5 +260,5 @@ function groupedCutRows(project,roomId){
  }
  return out;
 }
-return {standard,check,bayBounds,addDivider,parts,templateLibrary,saveTemplate,instantiate,regenerate,cutRows,groupedCutRows};
+return {standard,check,bayBounds,allocateBayWidths,equalBays,customBays,setBayShelves,equalHorizontal,addDivider,parts,templateLibrary,saveTemplate,instantiate,regenerate,cutRows,groupedCutRows};
 });

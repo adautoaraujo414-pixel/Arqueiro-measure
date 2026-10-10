@@ -226,7 +226,9 @@ function screen(p,state){
    button(magnetEnabled?'Ímã ativo · desligar':'Ímã desligado · ativar','advMagnet')+'</details>';
   out+='<details><summary>④ MDF e iluminação</summary><p class="lab-fine">Selecione um módulo para editar estrutura/frentes e um LED para editar a cor e o estado da luz.</p>'+
    button('Ver acabamentos','visualMode','fronts')+button('Ver estrutura','visualMode','structure')+'</details>';
-  const report=Adv.production(l,globalThis.ArqueModules);
+  let report;
+  try{report=Adv.production(l,globalThis.ArqueModules);}
+  catch(err){report={lines:[],warnings:[],errors:['Conferência parcial: '+(err?.message||String(err))]};}
   out+='<details><summary>⑤ Etiquetas e conferência de produção</summary><p class="lab-fine">'+report.lines.length+' referências de peças · '+report.errors.length+' erros · '+report.warnings.length+' pendências.</p>'+
    report.errors.slice(0,3).map(v=>'<p class="lab-warning">'+esc(v)+'</p>').join('')+
    report.warnings.slice(0,4).map(v=>'<p class="lab-fine">'+esc(v)+'</p>').join('')+
@@ -247,9 +249,11 @@ function screen(p,state){
   out+='</div></div>';
  }
  const visual=globalThis.ArqueVisual;
+ const recovery=(part,error)=>'<div class="notice lab-recovery" role="alert"><b>'+esc(part)+' não pôde ser carregado.</b><p>'+esc(error?.message||String(error))+'</p><small>O projeto original permanece salvo; confira os dados desta peça em Ambientes.</small></div>';
  out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
  if(view==='iso'){
-  const entries=visual?.catalog(l)||[];
+  let entries=[];
+  try{entries=visual?.catalog(l)||[];}catch(error){out+=recovery('Biblioteca visual',error);}
   out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente · referências de eletros exigem medidas do fabricante</p><div class="lab-catalog-add">'+
    button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
    button('＋ Torre','catalogAdd','tower')+button('＋ Canto 45° pentagonal','cornerCreate')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
@@ -261,7 +265,10 @@ function screen(p,state){
  }
  out+='<div class="lab-work">';
  if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+button('⌁ Linha por pontos','tool','pointline',tool==='pointline')+(tool==='pointline'?button('Finalizar linha','finishPointLine'):'')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
- out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode,showDimensions,partKey:selectedPartKey}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
+ let board='';
+ try{board=view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode,showDimensions,partKey:selectedPartKey}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected);}
+ catch(error){board=recovery('Desenho técnico',error)+'<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="Ambiente técnico indisponível"><rect width="900" height="420" fill="#f6f9fb"/><text x="450" y="210" text-anchor="middle" fill="#436679" font-size="20">Confira o módulo indicado na mensagem acima</text></svg>';}
+ out+='<div class="lab-board-wrap">'+board+'</div>';
  out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
@@ -416,10 +423,14 @@ function screen(p,state){
   out+='<div class="lab-module-panel"><h3>Conferência do ambiente</h3><p class="lab-fine">'+audit.checkedModules+' módulos verificados · '+audit.errors.length+' possíveis conflitos · '+audit.warnings.length+' pendências</p>';
   out+=audit.issues.map(i=>'<p class="'+(i.severity==='error'?'lab-warning':'lab-fine')+'">'+esc(i.message)+'</p>').join('')||'<p class="lab-link">Nenhum conflito geométrico simples detectado. Confira ferragens e condições reais.</p>';
   out+='</div>';
-  const groups=globalThis.ArqueModules?.groupedCutRows(p,r.id)||{};
+  let groups={};
+  try{groups=globalThis.ArqueModules?.groupedCutRows(p,r.id)||{};}
+  catch(error){out+=recovery('Plano de corte deste ambiente',error);}
   if(Object.keys(groups).length)out+='<div class="lab-module-panel"><h3>Peças calculadas para corte</h3><p class="lab-fine">Escolha um lote de mesmo material e espessura. Peças avulsas retangulares e módulos são separados automaticamente.</p><label>Material<select id="labAllMaterial">'+Object.keys(groups).map(k=>'<option value="'+esc(k)+'">'+esc(k)+' · '+groups[k].reduce((acc,part)=>acc+part.qty,0)+' peças</option>').join('')+'</select></label>'+button('Enviar lote de peças para conferência','labAllCut')+'</div>';
  }
- out+=(globalThis.ArqueModuleUI&&state&&!item?.moduleSpec?.corner45?.enabled?globalThis.ArqueModuleUI.panel(p,state,l,selected,focusedModule===selected?focusedBay:0):'')+'</section>';return out;
+ try{out+=(globalThis.ArqueModuleUI&&state&&!item?.moduleSpec?.corner45?.enabled?globalThis.ArqueModuleUI.panel(p,state,l,selected,focusedModule===selected?focusedBay:0):'');}
+ catch(error){out+=recovery('Editor das peças',error);}
+ return out+'</section>';
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;

@@ -62,6 +62,8 @@ jobs:
         run: node tests/visual.test.cjs
       - name: Testar catálogo de cozinha e eletrodomésticos
         run: node tests/kitchen.test.cjs
+      - name: Testar biblioteca CAD, filtros, miniaturas e encaixe
+        run: node tests/construction-studio.test.cjs
       - name: Testar alinhamento de móveis e linhas do esboço
         run: node tests/align.test.cjs
       - name: 'Testar oficina avançada: L, ímã, cava, paredes e produção'
@@ -85,6 +87,8 @@ jobs:
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/laboratory-legacy.test.cjs
       - name: Testar laboratório inicial, toque e correção do esboço
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/alignment-ui.test.cjs
+      - name: Testar novo modo de construção no tablet simulado
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/construction-studio-ui.test.cjs
       - name: Testar seis ferramentas integradas do Laboratório
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/advanced-ui.test.cjs
       - name: Testar cotas e ajuste fino no laboratório real

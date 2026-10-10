@@ -282,7 +282,48 @@ function mount(p,ops){
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
     if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';refresh();return;}
     if(a==='partSelect'){selectedPartKey=arg;refresh();return;}
-   if(a==='catalogAdd'){
+   if(a==='catalogPreset'||a==='catalogSaved'){
+    const K=globalThis.ArqueKitchen,M=globalThis.ArqueModules;
+    if(!K||!M)throw Error('Biblioteca de cozinha indisponível.');
+    let item;
+    if(a==='catalogSaved'){
+     const tpl=(ops.state.moduleTemplates||[]).find(t=>t.id===arg);
+     if(!tpl)throw Error('Modelo salvo não encontrado.');
+     item=M.instantiate(tpl,100,80);item.z=100;
+    }else item=K.create(arg,M);
+    const peers=l.items.filter(it=>it.kind==='module'&&Number(it.y)<950);
+    const end=peers.length?Math.max(...peers.map(it=>Number(it.x)+Number(it.w)+40)):100;
+    item.x=Math.min(end,Math.max(0,l.width-item.w));item.y=80;
+    if(item.z+item.height>l.height)ops.toast('Altura ultrapassa o ambiente. Confira Z e dimensão real.');
+    remember(l);l.items.push(item);ensureModuleCodes(l);
+    selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';
+    save();refresh();ops.toast('Inserido '+item.label+'. Edite as medidas na lateral.');
+    return;
+   }
+   if(a==='catalogEditModule'){
+    const item=l.items.find(i=>i.id===selected);
+    if(item?.kind!=='module')throw Error('Selecione um armário para editar.');
+    const spec={...item.moduleSpec,doorCount:Number(root.querySelector('#labQuickDoors')?.value),
+     shelfCount:Number(root.querySelector('#labQuickShelves')?.value),caseMaterial:String(root.querySelector('#labQuickMaterial')?.value||'').trim(),
+     frontType:root.querySelector('#labQuickFront')?.value};
+    globalThis.ArqueModules.parts(spec);remember(l);globalThis.ArqueModules.regenerate(item,spec);
+    save();refresh();ops.toast('Módulo recalculado com peças e materiais atualizados.');return;
+   }
+   if(a==='catalogSaveOwn'){
+    const item=l.items.find(i=>i.id===selected);
+    if(item?.kind!=='module')throw Error('Selecione um módulo para salvar.');
+    globalThis.ArqueModules.saveTemplate(ops.state,item.moduleSpec,item.label);
+    save();refresh();ops.toast('Modelo salvo na sua biblioteca para outras obras.');return;
+   }
+   if(a==='catalogSaveReference'){
+    const item=l.items.find(i=>i.id===selected);
+    if(!item||!['appliance','led','fridge','stove','cooktop'].includes(item.kind))throw Error('Selecione um eletrodoméstico ou LED.');
+    remember(l);
+    if(item.kind==='led'){item.lightColor=root.querySelector('#labLightColor')?.value||'#ffd292';item.lightOn=root.querySelector('#labLightOn')?.value==='on';}
+    else item.deviceModel=String(root.querySelector('#labDeviceModel')?.value||'').trim().slice(0,90);
+    save();refresh();ops.toast('Referência visual atualizada.');return;
+   }
+      if(a==='catalogAdd'){
      let item;
      const freeX=Math.max(80,...l.items.filter(it=>it.kind==='module'&&num(it.y,0)<900).map(it=>Number(it.x||0)+Number(it.w||0)+50));
      const x=Math.min(Math.max(50,freeX===80?100:freeX),Math.max(50,l.width-800));
@@ -320,7 +361,9 @@ function mount(p,ops){
     const item=l.items.find(x=>x.id===selected);if(!item)throw Error('Selecione uma peça.');
     const props={label:root.querySelector('#labName').value};
     for(const input of root.querySelectorAll('[data-lab-prop]'))props[input.dataset.labProp]=numeric(input.value,(item.kind==='wall'&&['w','d'].includes(input.dataset.labProp))?-50000:0);
-    if(item.kind==='module'&&globalThis.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};globalThis.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);globalThis.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;item.z=props.z;}else{remember(l);place(item,props);item.z=props.z;}
+    const rotation=root.querySelector('#labRotation')?Number(root.querySelector('#labRotation').value):Number(item.rotation||0);
+    if(![0,90,180,270].includes(rotation))throw Error('Rotação inválida.');
+    if(item.kind==='module'&&globalThis.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};globalThis.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);globalThis.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;item.z=props.z;item.rotation=rotation;}else{remember(l);place(item,props);item.z=props.z;item.rotation=rotation;}
     for(const key of ['w','d','height'])delete item.refs[key];
     save();refresh();return;
    }

@@ -162,9 +162,22 @@ function cutRows(item,roomName){
 function groupedCutRows(project,roomId){
  const room=(project.rooms||[]).find(r=>r.id===roomId);if(!room)throw Error('Ambiente desconhecido.');
  const l=project.labLayouts?.[roomId],out={};
- for(const item of l?.items||[])if(item.kind==='module'&&item.moduleSpec){
-  for(const piece of cutRows(item,room.name)){
-   piece.sourceRoomId=roomId;
+ for(const item of l?.items||[]){
+  if(item.kind==='module'&&item.moduleSpec){
+   for(const piece of cutRows(item,room.name)){
+    piece.sourceRoomId=roomId;
+    const key=piece.material+' · '+piece.thickness+' mm';
+    (out[key]||(out[key]=[])).push(piece);
+   }
+  }else if(item.kind==='panel'){
+   const w=n(item.w,'Comprimento da peça avulsa',40),h=n(item.d,'Largura da peça avulsa',20);
+   const thickness=n(item.thickness,'Espessura da peça avulsa',1,50);
+   const material=clean(item.material);
+   if(!material)throw Error('Material não informado na peça retangular '+item.label);
+   const piece={id:'panel-'+item.id,sourceRoomId:roomId,sourcePanelId:item.id,sourceRoom:room.name,
+    name:room.name+' · '+(clean(item.label)||'Peça avulsa'),w,h,qty:1,grain:!!item.grain,rotate:!item.grain,
+    edge2:Number(item.edge2)||0,edge04:Number(item.edge04)||0,material,thickness,
+    notes:'Peça retangular manual em mm: verificar ângulo, fita e corte de borda.',generated:true};
    const key=piece.material+' · '+piece.thickness+' mm';
    (out[key]||(out[key]=[])).push(piece);
   }

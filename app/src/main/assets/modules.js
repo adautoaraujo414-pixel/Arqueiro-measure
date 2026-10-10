@@ -357,11 +357,11 @@ function regenerate(item,updates){
 }
 function cutRows(item,roomName){
  const generated=parts(item.moduleSpec);
- return generated.parts.map(part=>({
-  id:'mod-'+item.id+'-'+part.key,sourceModuleId:item.id,modulePartKey:part.key,sourceRoom:roomName||'',
+ return generated.parts.map((part,index)=>({
+  id:'mod-'+item.id+'-'+part.key,sourceModuleId:item.id,modulePartKey:part.key,moduleCode:item.code||'',pieceCode:item.code?(item.code+'-P'+String(index+1).padStart(2,'0')):'',sourceRoom:roomName||'',
   name:(roomName?roomName+' · ':'')+item.label+' · '+part.name,w:part.w,h:part.h,qty:part.qty,
   grain:part.grain,rotate:part.rotate,edge2:part.edge2,edge04:part.edge04,
-  material:part.material,thickness:part.thickness,notes:part.notes,generated:true
+  material:part.material,thickness:part.thickness,notes:(item.code?'Identificação '+item.code+'-P'+String(index+1).padStart(2,'0')+'. ':'')+part.notes,generated:true
  }));
 }
 function groupedCutRows(project,roomId){

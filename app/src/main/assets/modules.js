@@ -258,6 +258,15 @@ function parts(spec){
   const a=s.fixedShelves[i],b=s.fixedShelves[j];
   if(a.bay===b.bay&&Math.abs(a.at-b.at)*innerHeight<t+5)throw Error('Divisórias horizontais sobrepostas no mesmo vão.');
  }
+ // Travessas, reguas e perfis nao podem ocupar o mesmo volume dentro do vao.
+ for(let i=0;i<s.assemblyPieces.length;i++)for(let j=i+1;j<s.assemblyPieces.length;j++){
+  const a=s.assemblyPieces[i],b=s.assemblyPieces[j];
+  if(a.bay!==b.bay||a.type==='backPanel'||b.type==='backPanel')continue;
+  const ay=a.at*innerHeight,by=b.at*innerHeight;
+  const overlapVertical=Math.abs(ay-by)<=(a.height+b.height)/2;
+  const overlapDepth=a.frontInset<b.frontInset+t&&b.frontInset<a.frontInset+t;
+  if(overlapVertical&&overlapDepth)throw Error('Travessas/réguas sobrepostas no mesmo vão. Ajuste a altura ou recuo frontal.');
+ }
  for(const entry of s.assemblyPieces){
   const bay=bays[entry.bay];if(!bay)throw Error('Peça '+entry.label+' aponta para vão inexistente.');
   if(entry.type==='backPanel'){

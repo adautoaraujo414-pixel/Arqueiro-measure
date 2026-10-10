@@ -3,7 +3,7 @@ const A=require('node:assert/strict'),Align=require('../app/src/main/assets/lab-
 const room={width:3600,depth:3000,height:2600,confirmed:true,items:[]};
 const stone={id:'stone',kind:'countertop',label:'Pedra',x:100,y:100,z:865,w:1800,d:600,height:35};
 const cooker={id:'cook',kind:'appliance',type:'cooktop',label:'Cooktop',x:150,y:150,z:700,w:600,d:510,height:45};
-const oven={id:'oven',kind:'appliance',type:'oven',label:'Forno',x:10,y:200,z:100,w:540,d:480,height:520};
+const oven={id:'oven',kind:'appliance',type:'oven',label:'Forno',x:200,y:200,z:100,w:540,d:480,height:520};
 const mod={...Mods.instantiate({id:'m',spec:Mods.standard()},100,100),z:100};
 const mod2={...Mods.instantiate({id:'m2',spec:Mods.standard()},1400,150),z:100};
 room.items.push(stone,cooker,oven,mod,mod2);

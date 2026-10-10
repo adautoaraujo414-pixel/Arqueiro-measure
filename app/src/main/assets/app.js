@@ -197,7 +197,7 @@ function projectOverview(){
  ['medidas','▱','Ambientes e medições',(p.rooms||[]).length+' ambientes'],
  ['fotos','▣','Fotografias',(p.photos||[]).length+' fotos'],
  ['fotomedidas','↔','Setas e medidas','Anotar diretamente sobre fotos'],
- ['atelier','✎','Esboço + Laboratório','Plantas, móveis e folhas A4 com S Pen'],
+ ['atelier','✎','Esboço e planta','Desenhos, plantas e folhas A4 com S Pen'],
  ['corte','▦','Plano de corte','Peças, chapas e sobras'],
  ['calculo','⌗','Cálculos da obra','Conferência baseada no projeto'],
  ['financeiro','R$','Financeiro','Contrato e pagamentos']];
@@ -298,7 +298,7 @@ function photoView(){const p=project();return `<div class="card"><h3>Fotos e ref
 function drawView(){const r=room();return `<div class="card"><h3>Caderno técnico</h3><p class="muted">Desenhe com o dedo ou caneta do tablet. Os traços ficam associados ao ambiente.</p><div class="field"><label>Ambiente</label><select id="drawRoom">${project().rooms.map(x=>`<option value="${x.id}" ${x.id===selectedRoom?'selected':''}>${escape(x.name)}</option>`).join('')}</select></div>${r?`<div class="field"><label for="drawColor">Cor da caneta</label><select id="drawColor"><option value="#ffd329">Amarelo</option><option value="#171717">Preto</option><option value="#e23d3d">Vermelho</option><option value="#235ed7">Azul</option><option value="#288047">Verde</option></select></div><div class="canvas-wrap"><canvas class="draw" id="drawing" width="900" height="500"></canvas></div><div class="actions">${btn('Desfazer traço','undoStroke')}${btn('Limpar desenho','clearDrawing','','danger')}</div><div class="field"><label>Observação / referência</label><textarea id="noteText" placeholder="Ex.: tomada atrás da torre quente; conferir altura do sifão"></textarea></div>${btn('Salvar anotação','addNote','','primary')}${r.annotations.map(n=>`<div class="item"><div>${escape(n.text)}<small>${escape(n.date)}</small></div>${btn('Excluir','deleteNote',n.id,'small danger')}</div>`).join('')}`:'<div class="empty">Crie um ambiente na aba Medições antes de desenhar.</div>'}</div>`;}
 function studioPages(p){ if(!Array.isArray(p.studioPages))p.studioPages=[];return p.studioPages; }
 function studioCurrent(p){const pages=studioPages(p);if(!pages.length)return null;return pages.find(x=>x.id===studioPageId)||pages[0];}
-function studioModeTitle(mode){return mode==='planta'?'Planta':mode==='laboratorio'?'Laboratório':'Esboço';}
+function studioModeTitle(mode){return mode==='planta'?'Planta':'Esboço';}
 function studioObjectPaths(kind,x1,y1,x2,y2){
  const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
  if(kind==='wall')return [[[x1,y1],[x2,y2]]];
@@ -311,15 +311,16 @@ function studioObjectPaths(kind,x1,y1,x2,y2){
 }
 
 function studioView(){
- if(studioMode==='laboratorio')return '<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><strong class="studio-compact-title">Esboço + Laboratório</strong></div><div class="studio-mode-tabs">'+['esboco','planta','laboratorio'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')+'</div></div><div id="arqueLab" aria-label="Editor técnico do laboratório 2D"></div>';
+ // O Laboratório está suspenso; os dados e módulos anteriores permanecem nos projetos.
+ if(studioMode!=='esboco'&&studioMode!=='planta')studioMode='esboco';
  const p=project(),pages=studioPages(p),page=studioCurrent(p);if(page)studioPageId=page.id;
- return `<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><label for="studioNewName" class="studio-compact-title">Esboço + Laboratório <small>· ${pages.length} folhas</small></label><input id="studioNewName" aria-label="Nome da nova folha" placeholder="Nome da folha" maxlength="100">${btn('+ Nova folha','studioNew','','primary')}</div><div class="studio-mode-tabs">${['esboco','planta','laboratorio'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')}</div></div>
+ return `<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><label for="studioNewName" class="studio-compact-title">Esboço e planta <small>· ${pages.length} folhas</small></label><input id="studioNewName" aria-label="Nome da nova folha" placeholder="Nome da folha" maxlength="100">${btn('+ Nova folha','studioNew','','primary')}</div><div class="studio-mode-tabs">${['esboco','planta'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')}</div></div>
  <div class="studio-layout"><aside class="studio-sidebar"><div class="eyebrow">FOLHAS · ${pages.length}</div>${pages.map((x,i)=>`<button class="studio-page ${page&&page.id===x.id?'on':''}" data-action="studioSelect" data-arg="${escape(x.id)}"><span class="studio-page-num">${String(i+1).padStart(2,'0')}</span><span>${escape(x.name)}</span><span>↗</span></button>`).join('')||'<div class="empty">Adicione sua primeira folha A4.</div>'}</aside>
  <div class="studio-work ${studioFullscreen?'studio-fullscreen':''}" id="studioWork">${page?`
  <div class="studio-paper-head"><div><div class="eyebrow">FOLHA ${page.width===1000?'ANTIGA':'A4'} · ${pages.findIndex(x=>x.id===page.id)+1}/${pages.length}</div><strong>${escape(page.name)}</strong></div><div class="studio-head-actions">${studioFullscreen?btn('✕ Fechar tela cheia','studioCloseFull','','primary'):btn('⛶ Abrir em tela cheia','studioOpenFull','','primary')}</div></div>
  <div class="studio-tools"><label>Ambiente <select id="studioRoom"><option value="">Sem ambiente</option>${p.rooms.map(r=>`<option value="${escape(r.id)}" ${r.id===page.roomId?'selected':''}>${escape(r.name)}</option>`).join('')}</select></label><label>Ferramenta <select id="studioTool"><option value="pen" ${studioTool==='pen'?'selected':''}>Caneta</option><option value="eraser" ${studioTool==='eraser'?'selected':''}>Borracha</option><option value="cabinet" ${studioTool==='cabinet'?'selected':''}>Armário 2 portas</option><option value="drawers" ${studioTool==='drawers'?'selected':''}>Gaveteiro</option><option value="room" ${studioTool==='room'?'selected':''}>Retângulo / ambiente</option><option value="wall" ${studioTool==='wall'?'selected':''}>Parede / linha reta</option><option value="door" ${studioTool==='door'?'selected':''}>Porta</option></select></label><label>Cor <input type="color" id="studioColor" value="${studioInk}" aria-label="Cor da caneta"></label><label>Espessura <input type="range" min="1" max="16" id="studioWidth" value="${studioWidth}"></label><label>Fundo <select id="studioGrid"><option value="dots" ${studioGrid==='dots'?'selected':''}>Pontilhado</option><option value="lines" ${studioGrid==='lines'?'selected':''}>Linhas</option><option value="blank" ${studioGrid==='blank'?'selected':''}>Liso</option></select></label></div>
 
- <div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida','studioSetMeasure')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Planta e Laboratório são estudos 2D; não são escaneamento 3D.</small></div>
+ <div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida','studioSetMeasure')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Esboço e planta são desenhos 2D; não são escaneamento 3D.</small></div>
  ${page.referencePhotoId&&p.photos.some(x=>x.id===page.referencePhotoId)?'<div class="studio-photo-reference"><img alt="Foto de referência da obra" src="'+p.photos.find(x=>x.id===page.referencePhotoId).data+'"></div>':''}
  <div class="studio-canvas-shell"><canvas id="studioCanvas" width="${page.width||1000}" height="${page.height||690}" aria-label="Folha de esboço ${escape(page.name)}"></canvas></div>
  <div class="studio-actions">${btn('↶ Desfazer','studioUndo')}${btn('↷ Refazer','studioRedo')}${btn('Renomear folha','studioRename')}${btn('Exportar PNG','studioExport')}${btn('Excluir folha','studioDelete','','danger')}</div>
@@ -327,42 +328,7 @@ function studioView(){
  `:'<div class="empty">Escolha um nome e adicione uma folha A4 para começar.</div>'}</div></div>`;
 }
 function setupStudio(){
- if(studioMode==='laboratorio'){
-  const container=document.getElementById('arqueLab');
-  if(!container)return;
-  container.innerHTML='<div class="notice" role="status">Preparando Laboratório da obra…</div>';
-  if(!project()||!window.ArqueLab?.mount){
-   container.innerHTML='<div class="notice lab-load-error" role="alert"><h3>Laboratório indisponível</h3><p>O editor não foi carregado nesta instalação. Reabra o aplicativo ou instale a atualização sem apagar os dados.</p></div>';
-   return;
-  }
-  try{
-   window.ArqueLab.mount(project(),{persist,toast,state,exportCutMaterial:(roomId,material)=>{
-   if(!window.ArqueModules)throw Error('Motor de módulos indisponível.');
-   const p=project(),group=window.ArqueModules.groupedCutRows(p,roomId),rows=group[material];
-   if(!rows?.length)throw Error('Nenhuma peça para o material selecionado.');
-   if(!p.materialCutPlans)p.materialCutPlans={};
-   const previous=p.materialCutPlans[material]||{width:2750,height:1830,kerf:3,trim:0,material,pieces:[],cutDone:{},cutHistory:[]};
-   const existing=(previous.pieces||[]).filter(x=>x.generated&&x.sourceRoomId===roomId);
-   const next=rows.map(x=>({...x}));
-   const changed=JSON.stringify(existing.map(x=>[x.id,x.w,x.h,x.qty,x.grain,x.material]))!==JSON.stringify(next.map(x=>[x.id,x.w,x.h,x.qty,x.grain,x.material]));
-   if(changed&&existing.some(x=>Array.from({length:x.qty},(_,i)=>previous.cutDone?.[x.id+':'+(i+1)]).some(Boolean)))
-    throw Error('Há peças deste ambiente marcadas como cortadas. Não posso sobrescrever a lista: preserve o histórico de produção e crie uma revisão manual.');
-   if(changed){
-    if(existing.length){for(const piece of existing)archiveCutRevision(previous,piece,'Atualização paramétrica do Laboratório');}
-    previous.pieces=[...(previous.pieces||[]).filter(x=>!(x.generated&&x.sourceRoomId===roomId)),...next];
-    previous.mixedStock=null;previous.manualStock=null;
-   }
-   p.materialCutPlans[material]=previous;p.activeCutMaterial=material;subtab='corte';
-   update();toast('Lote técnico enviado para revisão no plano de corte.');
-   }});
-   if(!container.textContent.trim()&&!container.querySelector('#labBoard'))throw Error('Editor não apresentou conteúdo.');
-  }catch(err){
-   console.error('Arque Measure: falha ao montar Laboratório',err);
-   container.innerHTML='<div class="notice lab-load-error" role="alert"><h3>Não foi possível abrir o Laboratório</h3><p>Seus projetos e medições estão preservados. Abra Ambientes para conferir a obra, ou tente novamente.</p><p class="lab-technical-error">'+escape(err?.message||'Erro desconhecido')+'</p><div class="actions">'+btn('Tentar novamente','studioMode','laboratorio','primary')+btn('Abrir ambientes','openWorkspace','medidas')+'</div></div>';
-   toast('Falha no Laboratório: '+String(err?.message||err).slice(0,160));
-  }
-  return;
- }
+ // Esboço e Planta mantidos: nenhuma montagem do Laboratório nesta versão.
 
  const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;
  const page=studioCurrent(p);if(!page)return;
@@ -527,7 +493,7 @@ case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a a
 case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
 case'undoStroke':r.strokes.pop();update();break;
 case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
-case'studioMode':studioMode=['esboco','planta','laboratorio'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
 case'studioGotoPhotos':subtab='fotos';render();break;
 case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
 case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}

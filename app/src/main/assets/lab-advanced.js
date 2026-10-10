@@ -125,9 +125,11 @@ function production(layout,engine=globalThis.ArqueModules){
    for(let k=0;k<output.parts.length;k++){
     const p=output.parts[k],code=(obj.code||obj.id)+'-P'+String(k+1).padStart(2,'0');
     lines.push({code,module:obj.code||obj.id,name:p.name,length:p.w,width:p.h,qty:p.qty,material:p.material,thickness:p.thickness,
-     grain:p.grain,edge2:p.edge2,edge04:p.edge04,notes:p.notes});
+     grain:p.grain,edge2:p.edge2,edge04:p.edge04,shape:p.shape||'rect',cutStatus:p.needsContour?'CONTORNO ESPECIAL / NÃO ENVIAR AO CORTE RETANGULAR':'CONFERIR',
+     outline:p.outline?.map(point=>point.join(',')).join(' ')||'',notes:p.notes});
    }
    for(const warning of output.warnings||[])warnings.push((obj.code||obj.label)+': '+warning);
+   if(obj.moduleSpec.corner45?.enabled)warnings.push((obj.code||obj.label)+': canto 45° pentagonal: contorno de tampo/base não vai ao otimizador de retângulos; aprovar juntas e ferragens na bancada.');
    if(obj.moduleSpec.frontType==='cava'&&!obj.moduleSpec.cavaProfile?.verified)warnings.push((obj.code||obj.label)+': fresagem da cava não aprovada.');
    if(obj.moduleSpec.doorCount||Object.values(obj.moduleSpec.bayDoors||{}).some(Boolean))warnings.push((obj.code||obj.label)+': conferir dobradiças, batentes e furação.');
    if(obj.moduleSpec.accessories?.length)warnings.push((obj.code||obj.label)+': confirmar referência e comprimento das corrediças.');
@@ -140,7 +142,7 @@ function production(layout,engine=globalThis.ArqueModules){
   message:'Relatório preliminar em milímetros. Não contém furação CNC ou operação de cava pronta.'};
 }
 function csv(report){
- const cols=['code','module','name','length','width','qty','material','thickness','grain','edge2','edge04','notes'];
+ const cols=['code','module','name','length','width','qty','material','thickness','grain','edge2','edge04','shape','cutStatus','outline','notes'];
  const esc=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
  return '\ufeff'+[cols.join(';'),...report.lines.map(row=>cols.map(k=>esc(row[k])).join(';'))].join('\r\n');
 }

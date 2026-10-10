@@ -100,3 +100,18 @@
 .lab-selected-part{padding:8px;border:1px solid #c3dbe9;border-left:3px solid #2175a3;margin-top:8px;border-radius:6px;background:white}
 .lab-selected-part b{font-size:12px;color:#285875}
 .lab-selected-part p{font-size:11px;margin:5px 0;overflow-wrap:anywhere}
+
+/* Biblioteca de Cozinha: famílias, aparelhos e componentes editáveis no tablet. */
+.lab-kitchen-presets{margin:12px 0;padding:10px 0;border-top:1px solid #dce6ec;border-bottom:1px solid #dce6ec}
+.lab-kitchen-presets h4{margin:0 0 5px;font-size:13px;color:#225a78}
+.lab-kitchen-presets details{margin:6px 0;border:1px solid #dce8ef;border-radius:7px;background:#fbfdfe;overflow:hidden}
+.lab-kitchen-presets summary{padding:9px 8px;font-size:12px;font-weight:700;color:#28617e;background:#f3f8fb;cursor:pointer}
+.lab-preset-list{display:grid;gap:4px;padding:6px}
+.lab-preset-list button{text-align:left;font-size:11px;min-height:32px;padding:7px 8px;white-space:normal;line-height:1.35;background:#fff}
+.lab-quick-edit{padding:10px;margin:10px 0;border:1px solid #d1e4ee;background:#f8fbfd;border-radius:9px}
+.lab-quick-edit h4{margin:0 0 8px}
+.lab-quick-edit .lab-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.lab-quick-edit .lab-module-grid label{min-width:0}
+.lab-quick-edit input,.lab-quick-edit select{max-width:100%;min-width:0}
+.lab-quick-edit button{margin:7px 5px 4px 0;background:#eff6fb}
+@media(max-width:540px){.lab-quick-edit .lab-module-grid{grid-template-columns:1fr}}

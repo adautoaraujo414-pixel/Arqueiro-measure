@@ -52,6 +52,8 @@ jobs:
         run: node tests/cut.test.cjs
       - name: Testar Laboratorio 2D e origem das medidas
         run: node tests/lab.test.cjs
+      - name: Testar engenharia de módulos paramétricos
+        run: node tests/modules.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado

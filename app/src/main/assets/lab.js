@@ -2,7 +2,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ArqueLab=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const kinds={wall:['Parede / linha',1500,0],countertop:['Bancada / pedra',1600,600],sink:['Cuba',500,400],base:['Armário base',800,560],upper:['Armário aéreo',800,350],door:['Porta',450,20],drawers:['Gaveteiro',450,560],filler:['Tamponamento',30,560],cava:['Puxador cava',450,35],outlet:['Tomada / ponto',80,80],drain:['Esgoto / água',80,80],panel:['Peça avulsa retangular',600,300]};
-const modes={plan:'Planta baixa 2D',front:'Vista frontal 2D'};
+const modes={plan:'Planta baixa 2D',front:'Vista frontal 2D',iso:'Ambiente espacial 3D'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const uid=()=>String(Date.now())+'-'+Math.random().toString(36).slice(2);
@@ -143,7 +143,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='';
+let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',visualAngle=40,visualZoom=1,visualMode='fronts';
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -152,12 +152,26 @@ function screen(p,state){
  const photos=(p.photos||[]).filter(ph=>!ph.roomId||ph.roomId===r.id);
  const measurements=(r.measurements||[]).filter(m=>Number.isFinite(Number(m.value))&&Number(m.value)>0);
  const item=l.items.find(x=>x.id===selected);
- let out='<section class="lab"><div class="lab-heading"><div><h3>Laboratório · ambiente real em 2D</h3><small>Medidas em milímetros. Planta e vista frontal. Offline e salvo na obra.</small></div><label>Ambiente<select id="labRoom">'+rooms.map(x=>option(x.id,x.name,r.id)).join('')+'</select></label></div>';
- out+='<div class="lab-views">'+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
+ let out='<section class="lab"><div class="lab-heading"><div><h3>Laboratório · ambiente visual e montagem</h3><small>Ambiente espacial, planta e elevação ligados à mesma engenharia em milímetros. Funciona offline.</small></div><label>Ambiente<select id="labRoom">'+rooms.map(x=>option(x.id,x.name,r.id)).join('')+'</select></label></div>';
+ out+='<div class="lab-views">'+button('▧ Ambiente 3D','view','iso',view==='iso')+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
  out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
  if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
- out+='<div class="lab-actions">'+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
- out+='<div class="lab-main"><div class="lab-work"><div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div><div class="lab-board-wrap">'+svg(l,view,selected)+'</div><div class="lab-hint">Toque para posicionar a peça. Use Selecionar para mover. Desenhe a parede arrastando. As dimensões são editadas abaixo.</div></div>';
+ out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ const visual=globalThis.ArqueVisual;
+ out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
+ if(view==='iso'){
+  const entries=visual?.catalog(l)||[];
+  out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente real</p><div class="lab-catalog-add">'+
+   button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
+   button('＋ Torre','catalogAdd','tower')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+
+   '</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
+   (entries.map(e=>'<button type="button" data-lab="catalogSelect" data-arg="'+esc(e.id)+'" class="'+(e.id===selected?'lab-active':'')+'"><b>'+esc(e.code)+'</b><span>'+esc(e.name)+'<small>'+esc(e.dims)+' · Z '+fmt(e.z)+' mm</small></span></button>').join('')||'<p>Adicione um módulo para começar.</p>')+
+   '</div><p class="lab-fine">Seleção, dimensões e peças são ligadas ao mesmo projeto. Nenhuma medida é deduzida da foto.</p></aside>';
+ }
+ out+='<div class="lab-work">';
+ if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
+ out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
+ out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo. Use Girar, Zoom e Ver estrutura. Posição e medidas são editadas na lateral.':'Toque para posicionar e mover. Use Selecionar e confirme as dimensões abaixo.')+'</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
  for(const k of ['width','depth','height']){const status=linkStatus(l.roomRefs[k],r);if(status)out+='<p class="lab-link '+(status.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(status)+'</p>';}
@@ -166,9 +180,10 @@ function screen(p,state){
  out+='<p class="lab-fine">Fotos reais são referência visual, não escala automática.</p>';
  out+='<h4>Peça selecionada</h4>';
  if(item){
-  out+='<div class="lab-item-title">'+esc(item.label)+' <small>'+esc(modes[item.view])+'</small></div>';
+  out+='<div class="lab-item-title">'+(visual?esc(visual.identifier(item,l.items.indexOf(item)))+' · ':'')+esc(item.label)+' <small>'+esc(item.kind==='module'?'Módulo construtivo paramétrico':modes[item.view]||'Peça avulsa')+'</small></div>';
+   if(item.kind==='module'&&globalThis.ArqueModules){const gen=globalThis.ArqueModules.parts(item.moduleSpec);out+='<div class="lab-selected-summary"><b>'+fmt(item.w)+' × '+fmt(item.height)+' × '+fmt(item.d)+' mm</b><small>'+gen.parts.reduce((total,p)=>total+p.qty,0)+' peças · '+gen.bays.length+' vãos · '+esc(item.moduleSpec.frontType||'Sem puxador')+'</small></div>';}
   out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
-  out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
+  out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça'],['z','Altura do piso (Z)']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
   if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
   if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
@@ -190,7 +205,8 @@ function screen(p,state){
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;
- const save=()=>Promise.resolve(ops.persist()).catch(e=>ops.toast('Erro ao salvar Laboratório: '+e.message));
+ const num=(v,f=0)=>Number.isFinite(Number(v))?Number(v):f;
+  const save=()=>Promise.resolve(ops.persist()).catch(e=>ops.toast('Erro ao salvar Laboratório: '+e.message));
  const alertError=e=>ops.toast(e.message||String(e));
  const refresh=()=>{root.innerHTML=screen(p,ops.state);};
  refresh();
@@ -214,8 +230,33 @@ function mount(p,ops){
    if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);
     if(!t)throw Error('Escolha uma moldura salva.');const item=globalThis.ArqueWorkshop.insertProfile(t,100,100,view);remember(l);l.items.push(item);selected=item.id;save();refresh();return;}
    if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
-   if(a==='view'){view=arg;if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
-   if(a==='tool'){tool=arg;refresh();return;}
+   if(a==='view'){view=arg;tool='select';if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
+    if(a==='visualRotate'){visualAngle=(visualAngle+Number(arg)+360)%360;refresh();return;}
+    if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
+    if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
+    if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;refresh();return;}
+   if(a==='catalogAdd'){
+     let item;
+     const freeX=Math.max(80,...l.items.filter(it=>it.kind==='module'&&num(it.y,0)<900).map(it=>Number(it.x||0)+Number(it.w||0)+50));
+     const x=Math.min(Math.max(50,freeX===80?100:freeX),Math.max(50,l.width-800));
+     if(['base','upper','tower'].includes(arg)){
+      const M=globalThis.ArqueModules;if(!M)throw Error('Motor de módulos indisponível.');
+      const spec=M.standard();
+      if(arg==='upper')Object.assign(spec,{name:'Aéreo 2 portas',height:700,depth:350,shelfCount:1});
+      if(arg==='tower')Object.assign(spec,{name:'Torre alta',height:2000,depth:560,shelfCount:3});
+      M.parts(spec);
+      item=M.instantiate({id:null,version:1,spec},x,80);
+      item.z=arg==='upper'?Math.max(0,l.height-950):arg==='base'?100:0;
+      if(item.z+item.height>l.height)throw Error('O módulo ultrapassa a altura do ambiente. Confira as medidas.');
+     }else if(['countertop','sink'].includes(arg)){
+      item=add(l,arg,x,80,'plan');l.items.pop();l.history.pop();
+      item.height=arg==='countertop'?35:180;item.z=arg==='countertop'?900:720;
+     }else throw Error('Item não disponível no catálogo.');
+     remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;tool='select';
+     if(item.x+item.w>l.width)ops.toast('Peça incluída, mas ultrapassa a largura da parede: revise a posição.');
+     save();refresh();return;
+    }
+    if(a==='tool'){tool=arg;refresh();return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
    if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){selected='';save();refresh();}return;}
    if(a==='roomSize'){
@@ -233,7 +274,7 @@ function mount(p,ops){
     const item=l.items.find(x=>x.id===selected);if(!item)throw Error('Selecione uma peça.');
     const props={label:root.querySelector('#labName').value};
     for(const input of root.querySelectorAll('[data-lab-prop]'))props[input.dataset.labProp]=numeric(input.value,(item.kind==='wall'&&['w','d'].includes(input.dataset.labProp))?-50000:0);
-    if(item.kind==='module'&&globalThis.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};globalThis.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);globalThis.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;}else{remember(l);place(item,props);}
+    if(item.kind==='module'&&globalThis.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};globalThis.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);globalThis.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;item.z=props.z;}else{remember(l);place(item,props);item.z=props.z;}
     for(const key of ['w','d','height'])delete item.refs[key];
     save();refresh();return;
    }
@@ -257,7 +298,9 @@ function mount(p,ops){
  root.addEventListener('pointerdown',e=>{
   const board=e.target.closest?.('#labBoard');if(!board||e.isPrimary===false)return;
   try{
-   const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]'),pt=point(e);
+   const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]');
+   if(view==='iso'){selected=hit?.dataset.labObject||'';focusedModule=selected;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
+   const pt=point(e);
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}
     selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);
@@ -284,7 +327,7 @@ function mount(p,ops){
   }catch(err){alertError(err);}
  });
  root.addEventListener('pointermove',e=>{
-  if(!drag||drag.pointer!==e.pointerId)return;
+  if(view==='iso'||!drag||drag.pointer!==e.pointerId)return;
   try{
    const l=layout(p,activeRoom),item=l.items.find(x=>x.id===drag.id);if(!item)return;
    const pt=point(e);

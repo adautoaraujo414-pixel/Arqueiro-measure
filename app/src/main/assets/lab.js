@@ -330,6 +330,38 @@ function screen(p,state){
    if(item.alignment)out+='<p class="lab-link">Referência: '+esc(item.alignment.targetId)+' · '+esc(item.alignment.mode)+'</p>';
    out+='</section>';
   }
+  if(item.kind==='module'&&globalThis.ArqueFabrication){
+   const F=globalThis.ArqueFabrication,spec=item.moduleSpec,hasDoors=spec.doorMode==='global'?spec.doorCount>0:Object.values(spec.bayDoors||{}).some(q=>q>0);
+   out+='<section class="lab-hardware-panel"><details><summary>Ferragens e furação · revisão</summary><p class="lab-warning">Somente conferência dimensional. Verifique ferragem, posição de caneca, fixação na lateral e profundidade de furação antes de produzir.</p>';
+   if(hasDoors){
+    const hp=item.hingePlan||{},stale=hp.holes&&F.hingesStale(item,hp,globalThis.ArqueModules);
+    out+='<h4>Dobradiças</h4>'+
+     '<label>Marca<input id="fabHingeBrand" value="'+esc(hp.brand==='Não informado'?'':hp.brand||'')+'" maxlength="90"></label>'+
+     '<label>Modelo<input id="fabHingeModel" value="'+esc(hp.model==='Não informado'?'':hp.model||'')+'" maxlength="90"></label>'+
+     '<div class="lab-hardware-grid">'+
+     '<label>Caneca Ø (mm)<input id="fabHingeDiameter" type="number" min="10" max="45" value="'+(hp.diameter??35)+'"></label>'+
+     '<label>Centro até borda (mm)<input id="fabHingeEdge" type="number" min="10" max="90" value="'+(hp.edgeDistance??22)+'"></label>'+
+     '<label>Distância do topo (mm)<input id="fabHingeTop" type="number" min="40" max="250" value="'+(hp.top??100)+'"></label>'+
+     '<label>Distância da base (mm)<input id="fabHingeBottom" type="number" min="40" max="250" value="'+(hp.bottom??100)+'"></label>'+
+     '<label>Por porta<select id="fabHingeCount">'+[2,3,4,5,6].map(n=>option(String(n),n+' dobradiças',String(hp.perDoor||2))).join('')+'</select></label></div>'+
+     button('Calcular centros de caneca','fabHinges')+
+     (hp.holes?'<p class="lab-fine">'+hp.doorLeaves+' porta(s), '+hp.holes.length+' centros calculados'+(stale?' · desatualizados':' · não aprovados')+'</p>'+
+      '<div class="lab-hardware-holes">'+hp.holes.slice(0,12).map(p=>'<small>'+esc(p.door)+' · '+esc(p.side)+' · X '+fmt(p.x)+' / Y '+fmt(p.y)+' mm</small>').join('')+'</div>':'');
+   }
+   if(spec.accessories?.length){
+    const slide=item.slideConfiguration||{};
+    out+='<h4>Corrediças</h4><label>Marca<input id="fabSlideBrand" value="'+esc(slide.brand==='Não informado'?'':slide.brand||'')+'"></label>'+
+     '<label>Modelo<input id="fabSlideModel" value="'+esc(slide.model==='Não informado'?'':slide.model||'')+'"></label>'+
+     '<div class="lab-hardware-grid">'+
+     '<label>Folga por lado (mm)<input id="fabSlideSide" type="number" min="1" max="40" step=".1" value="'+(slide.side??12.7)+'"></label>'+
+     '<label>Comprimento (mm)<input id="fabSlideLength" type="number" min="100" max="1000" value="'+(slide.length??400)+'"></label>'+
+     '<label>Frente (mm)<input id="fabSlideFront" type="number" min="0" max="150" value="'+(slide.front??20)+'"></label>'+
+     '<label>Traseira (mm)<input id="fabSlideRear" type="number" min="0" max="150" value="'+(slide.rear??20)+'"></label></div>'+
+     button('Aplicar corrediças e recalcular','fabSlides')+
+     (slide.drawerCount?'<p class="lab-fine">'+slide.drawerCount+' gaveta(s) com dimensão informada · aprovação pendente.</p>':'');
+   }
+   out+=button('Exportar centros de caneca CSV','fabHardwareCsv')+'</details></section>';
+  }
   if(item.kind==='module'&&selectedPartKey?.startsWith('extra-')){
    const id=selectedPartKey.slice(6),piece=item.moduleSpec.assemblyPieces?.find(p=>p.id===id);
    if(piece)out+='<div class="lab-adv-part"><h4>③ Editar peça · '+esc(piece.label)+'</h4>'+

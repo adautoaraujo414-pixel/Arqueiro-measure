@@ -52,7 +52,7 @@ function surfaces(x,y,z,w,d,h,project,colors,selected){
 function scene(layout,selectedId='',opts={}){
  const cam=camera(layout,opts),project=cam.project,roomW=num(layout.width,3500),roomD=num(layout.depth,2800),roomH=num(layout.height,2600);
  const mode=opts.mode==='structure'?'structure':'fronts';
- const items=(layout.items||[]).filter(i=>i.kind==='module'||(i.view==='plan'&&['base','upper','drawers','countertop','sink','filler','panel','outlet','drain','door'].includes(i.kind)));
+ const items=(layout.items||[]).filter(i=>i.kind==='module'||(i.view==='plan'&&['base','upper','drawers','countertop','sink','fridge','stove','cooktop','led','filler','panel','outlet','drain','door'].includes(i.kind)));
  let out='<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 650" role="img" aria-label="Ambiente técnico 3D, medidas em milímetros" style="touch-action:manipulation;user-select:none"><defs>'+
   '<linearGradient id="arqueVisualFloor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5f5f1"/><stop offset="1" stop-color="#dfebe9"/></linearGradient>'+
   '<linearGradient id="arqueWall" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#fdfefd"/><stop offset="1" stop-color="#e6ebec"/></linearGradient>'+
@@ -71,10 +71,17 @@ function scene(layout,selectedId='',opts={}){
   const sel=item.id===selectedId,x=num(item.x),y=num(item.y),z=num(item.z,0),w=Math.max(1,num(item.w,600)),d=Math.max(1,num(item.d,450)),h=Math.max(1,num(item.height,item.kind==='countertop'?40:600));
   const spec=item.moduleSpec||{},t=num(spec.thickness,18),code=identifier(item,items.indexOf(item));
   const body=finishColor(spec.caseMaterial||item.material||'branco'),front=finishColor(spec.frontMaterial||spec.caseMaterial||'branco');
-  const special=item.kind==='sink'?'#8a9fa7':item.kind==='countertop'?'#b4aea0':null;
+  const special=['sink','fridge','stove','cooktop'].includes(item.kind)?'#8a9fa7':item.kind==='led'?'#f4d696':item.kind==='countertop'?'#b4aea0':null;
   let content='<g data-lab-object="'+esc(item.id)+'" data-lab-code="'+esc(code)+'" class="'+(sel?'lab-selected':'')+'" tabindex="0" role="button" aria-label="'+esc(code+' '+item.label)+'">';
   if(mode==='fronts'||item.kind!=='module'){
    content+=surfaces(x,y,z,w,d,h,project,special?[special,'#8d8e87','#d2d2cb']:body,sel);
+   if(item.kind==='sink'||item.kind==='cooktop'||item.kind==='stove'){
+    const c=project(x+w/2,y+d/2,z+h+1);
+    content+='<ellipse cx="'+c[0]+'" cy="'+c[1]+'" rx="'+(item.kind==='sink'?21:34)+'" ry="'+(item.kind==='sink'?10:15)+'" fill="'+(item.kind==='sink'?'#e3e8e9':'#272d31')+'" stroke="#697980" stroke-width="1.5"/>';
+    if(item.kind!=='sink')for(const shift of [-15,15])content+='<circle cx="'+(c[0]+shift)+'" cy="'+c[1]+'" r="7" fill="none" stroke="#b7bec1" stroke-width="1.5"/>';
+   }
+   if(item.kind==='fridge')content+=line([x+w*.5,y+d+2,z+50],[x+w*.5,y+d+2,z+h-50],project,'#cbd1d4',2.5);
+   if(item.kind==='led')content+=line([x,y+d+2,z+h/2],[x+w,y+d+2,z+h/2],project,'#ffc75e',5);
    if(item.kind==='module'){
     const fy=y+d+Math.max(1,t/8),z1=z+Math.min(t,h/3),z2=z+h-Math.min(t,h/3);
     // Frentes reais: numero e dimensoes seguem porta global ou por vao.
@@ -133,7 +140,7 @@ function scene(layout,selectedId='',opts={}){
  return out;
 }
 function catalog(layout){
- const list=(layout.items||[]).filter(i=>i.kind==='module'||i.kind==='countertop'||i.kind==='sink');
+ const list=(layout.items||[]).filter(i=>i.kind==='module'||['countertop','sink','fridge','stove','cooktop','led'].includes(i.kind));
  return list.map((item,i)=>({id:item.id,code:identifier(item,i),name:item.label,
   dims:fmt(item.w)+' × '+fmt(item.height)+' × '+fmt(item.d)+' mm',z:num(item.z,0),kind:item.kind}));
 }

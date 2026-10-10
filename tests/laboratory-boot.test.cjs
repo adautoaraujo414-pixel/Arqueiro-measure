@@ -1,6 +1,5 @@
 'use strict';
-/* Reproduz inicialização REAL do APK: carrega TODOS os scripts do index.html na ordem exata.
- * Falhas no setTimeout(setupStudio) devem falhar CI, jamais deixar #arqueLab vazio. */
+/* Abre o APK real e garante que Esboço e Planta funcionam com Laboratório desativado. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM,VirtualConsole}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const index=fs.readFileSync('app/src/main/assets/index.html','utf8');
 const paths=[...index.matchAll(/<script\s+src="([^"]+\.js)"/g)].map(x=>x[1]);
@@ -31,13 +30,20 @@ const input=(id,value)=>{const el=d.getElementById(id);assert(el,'Campo '+id+' i
  await sleep(85);
  fire('openWorkspace','atelier');
  await sleep(70);
- fire('studioMode','laboratorio');
- await sleep(110);
- const lab=d.getElementById('arqueLab');
- assert(lab,'Aba laboratório não existe');
- assert(lab.textContent.trim().length>80,'BUG: Laboratório vazio. Erros: '+issues.join('\n').slice(0,2000));
- assert(d.querySelector('#labBoard'),'Laboratório não apresentou planta ou ambiente 3D. Erros: '+issues.join('\n').slice(0,2000));
- assert(d.querySelector('[data-lab="cornerCreate"]'),'Catálogo do canto 45 indisponível');
- assert(issues.length===0,'Erros não capturados ao abrir Laboratório:\n'+issues.join('\n').slice(0,2500));
- console.log('BOOT COMPLETO: todos os '+paths.length+' scripts, obra nova e Laboratório carregados corretamente.');
+ assert(!d.querySelector('[data-action="studioMode"][data-arg="laboratorio"]'),'aba suspensa não pode aparecer');
+ assert(!d.getElementById('arqueLab'),'Laboratório não pode montar conteúdo');
+ assert(d.querySelector('[data-action="studioMode"][data-arg="esboco"]'),'Esboço permanece disponível');
+ assert(d.querySelector('[data-action="studioMode"][data-arg="planta"]'),'Planta permanece disponível');
+ input('studioNewName','Folha salva');
+ fire('studioNew');
+ await sleep(100);
+ assert(d.getElementById('studioCanvas'),'Folha do Esboço abre normalmente');
+ fire('studioMode','planta');
+ await sleep(80);
+ assert(d.getElementById('studioCanvas'),'Planta abre sem Laboratório');
+ fire('studioMode','esboco');
+ await sleep(80);
+ assert(d.body.textContent.includes('Folha salva'),'Folha mantém nome ao alternar modo');
+ assert(issues.length===0,'Erros não capturados na interface sem Laboratório:\\n'+issues.join('\\n').slice(0,2500));
+ console.log('BOOT: '+paths.length+' scripts ativos, obra nova, Esboço e Planta funcionando sem Laboratório.');
 })().catch(e=>{console.error(e.stack||e);process.exitCode=1;});

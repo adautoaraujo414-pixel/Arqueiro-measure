@@ -3,6 +3,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require
 const html=fs.readFileSync('app/src/main/assets/index.html','utf8');
 const visual=fs.readFileSync('app/src/main/assets/lab-visual.js','utf8');
 const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),modules=fs.readFileSync('app/src/main/assets/modules.js','utf8'),workshop=fs.readFileSync('app/src/main/assets/workshop.js','utf8'),moduleUI=fs.readFileSync('app/src/main/assets/module-ui.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
+const kitchen=fs.readFileSync('app/src/main/assets/kitchen-catalog.js','utf8');
 const storage=new IDBFactory();const sleep=(ms=40)=>new Promise(r=>setTimeout(r,ms));
 async function launch(){
  const dom=new JSDOM(html,{url:'https://appassets.arque.invalid/index.html',runScripts:'outside-only',pretendToBeVisual:true});
@@ -12,7 +13,7 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(modules);w.eval(workshop);w.eval(moduleUI);w.eval(visual);w.eval(lab);w.eval(app);
+ w.eval(core);w.eval(cut);w.eval(modules);w.eval(kitchen);w.eval(workshop);w.eval(moduleUI);w.eval(visual);w.eval(lab);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
@@ -147,6 +148,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
  const originalAssemblyModuleId=doc.querySelector('#labBoard .lab-selected')?.dataset.labObject;
+ assert(doc.body.textContent.includes('Catálogo Arque Cozinha'),'biblioteca de cozinha integrada ao laboratório');
  labClick('view','iso');await sleep(65);
  assert(doc.querySelector('#labBoard.lab-visual'),'vista espacial do ambiente inserida');
  assert(doc.body.textContent.includes('Biblioteca de construção'),'catalogo lateral como ferramenta CAD');
@@ -165,7 +167,26 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  Object.defineProperties(isoTap,{pointerId:{value:98},isPrimary:{value:true},clientX:{value:180},clientY:{value:80}});
  sceneModule.dispatchEvent(isoTap);await sleep(60);
  assert(doc.querySelector('#labName'),'toque na cena abre propriedades reais do módulo');
- labClick('catalogAdd','upper');await sleep(65);
+ labClick('catalogPreset','upper-microwave');await sleep(65);
+ assert(doc.body.textContent.includes('Nicho de micro-ondas aéreo'),'nicho paramétrico no catálogo');
+ const kitchenCode=doc.querySelector('#labBoard .lab-selected')?.dataset.labCode;
+ assert(kitchenCode&&kitchenCode.startsWith('M'),'nicho de micro-ondas recebe identificação de módulo');
+ assign(doc,'labQuickMaterial','MDF Greige');
+ labClick('catalogEditModule');await sleep(65);
+ assert(doc.querySelector('#labQuickMaterial').value==='MDF Greige','módulo editável e material salvo');
+ labClick('catalogSaveOwn');await sleep(65);
+ assert(doc.body.textContent.includes('Meus modelos salvos'),'reutilização personalizada presente');
+ labClick('catalogPreset','microwave');await sleep(65);
+ assert(doc.querySelector('#labDeviceModel'),'campo de modelo de micro-ondas');
+ assign(doc,'labDeviceModel','Modelo fornecido pelo cliente');
+ labClick('catalogSaveReference');await sleep(65);
+ assert(doc.querySelector('#labDeviceModel').value==='Modelo fornecido pelo cliente','referência técnica persistida');
+ labClick('catalogPreset','led-strip');await sleep(65);
+ assert(doc.querySelector('#labLightColor'),'luz ajustável');
+ const light=doc.querySelector('#labLightColor');light.value='#ffdd99';
+ labClick('catalogSaveReference');await sleep(65);
+ assert(doc.querySelector('#labLightColor').value==='#ffdd99','cor LED preservada no projeto');
+  labClick('catalogAdd','upper');await sleep(65);
  assert(doc.body.textContent.includes('Aéreo 2 portas'),'aéreo paramétrico inserido no ambiente');
  assert(doc.querySelector('#labBoard [data-lab-object]'),'cena se atualiza com o aéreo');
  assert(Number(doc.querySelector('[data-lab-prop="z"]').value)>0,'aéreo possui altura de instalação real');

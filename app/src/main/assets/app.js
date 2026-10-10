@@ -437,8 +437,8 @@ case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhot
 case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();d.thickness=Math.max(2,Math.min(14,Number(val('photoMeasureThickness'))||5));applyPhotoValue(val('photoMeasureValue'),'manual');break;}
 case'photoReadingApply':{const reading=bleReadings.find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
 case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
-case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
-case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'addPhoto':studioCapturePending=null;pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':studioCapturePending=null;pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
 case'testCamera':$('#diagCameraFile').click();break;
 case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
 case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;

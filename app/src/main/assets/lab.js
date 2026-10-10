@@ -277,10 +277,10 @@ function screen(p,state){
    out+='<div class="lab-quick-edit"><h4>Editar módulo selecionado</h4><div class="lab-module-grid">'+
     '<label>Portas padrão<input id="labQuickDoors" type="number" min="0" max="8" value="'+s.doorCount+'"></label>'+
     '<label>Prateleiras padrão<input id="labQuickShelves" type="number" min="0" max="12" value="'+s.shelfCount+'"></label>'+
-    '<label>Material da estrutura<input id="labQuickMaterial" maxlength="90" value="'+esc(s.caseMaterial)+'"></label>'+
-    '<label>Material das frentes<input id="labQuickFrontMaterial" maxlength="90" value="'+esc(s.frontMaterial)+'"></label>'+
+    '<label>Material da estrutura<input id="labQuickMaterial" list="labFinishSamples" maxlength="90" value="'+esc(s.caseMaterial)+'"></label>'+
+    '<label>Material das frentes<input id="labQuickFrontMaterial" list="labFinishSamples" maxlength="90" value="'+esc(s.frontMaterial)+'"></label>'+
     '<label>Puxador<select id="labQuickFront">'+[['cava','Cava'],['concha','Concha'],['sem','Sem puxador']].map(k=>option(k[0],k[1],s.frontType)).join('')+'</select></label>'+
-    '</div>'+button('Aplicar edição','catalogEditModule')+button('Salvar como meu modelo','catalogSaveOwn')+
+    '</div><datalist id="labFinishSamples">'+['MDF Branco TX','MDF Greige','MDF Grafite','MDF Louro Freijó','MDF Castanha Caju','MDF Cascais','MDF Verde Jade','MDF Gianduia'].map(v=>'<option value="'+esc(v)+'"></option>').join('')+'</datalist>'+button('Aplicar edição','catalogEditModule')+button('Salvar como meu modelo','catalogSaveOwn')+
     '<p class="lab-fine">Para alterar portas e prateleiras por vão, utilize a Montagem por Peça.</p></div>';
   }else if(item.kind==='appliance'||item.kind==='led'||['fridge','cooktop','stove'].includes(item.kind)){
    out+='<div class="lab-quick-edit"><h4>Objeto de referência</h4><p class="lab-fine">'+esc(item.notice||'Confirmar medidas reais antes de fabricar qualquer nicho.')+'</p>';

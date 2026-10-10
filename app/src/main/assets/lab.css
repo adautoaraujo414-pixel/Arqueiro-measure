@@ -124,3 +124,20 @@
 .lab-align-box button,.lab-auto-sketch button{background:#edf6fa;color:#1b6286;font-weight:600;margin:6px 6px 2px 0}
 .lab-auto-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:7px 0}
 @media(max-width:590px){.lab-auto-controls{grid-template-columns:1fr}}
+
+/* Seis ferramentas de oficina — retraídas por padrão para não ocupar o tablet. */
+.lab-adv-panel{border:1px solid #bcd6e5;border-radius:11px;padding:11px;margin:10px 0;background:#f5f9fc}
+.lab-adv-panel>h4{margin:0 0 9px;font-size:14px;color:#236182}
+.lab-adv-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lab-adv-grid details{background:#fff;border:1px solid #d8e5eb;border-radius:9px;padding:9px;min-width:0}
+.lab-adv-grid summary{font-size:12px;font-weight:700;color:#2c617d;cursor:pointer;line-height:1.4}
+.lab-adv-grid label{display:block;font-size:11px;margin:8px 0;min-width:0}
+.lab-adv-grid input,.lab-adv-grid select{display:block;width:100%;min-width:0;max-width:100%;margin-top:4px}
+.lab-adv-grid button{display:inline-block;margin:6px 4px 4px 0;padding:8px 10px;background:#eaf4fa;font-size:12px;font-weight:600}
+.lab-adv-grid small{display:block;margin:8px 0;color:#708b99;font-size:10px}
+.lab-adv-part{border:1px solid #d0e1e9;background:#f5fafc;padding:10px;margin:10px 0;border-radius:8px}
+.lab-adv-part>h4{margin:2px 0 8px;font-size:13px;color:#235879}
+.lab-adv-part>label{display:block;font-size:12px;margin:7px 0}
+.lab-adv-part input{width:100%}
+@media(max-width:1050px){.lab-adv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.lab-adv-grid{grid-template-columns:1fr}}

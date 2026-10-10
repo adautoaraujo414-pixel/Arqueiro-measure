@@ -9,7 +9,7 @@ for(const file of ['modules.js','kitchen-catalog.js','lab-alignment.js','lab-vis
  w.eval(fs.readFileSync(P+file,'utf8'));
 }
 const M=w.ArqueModules;
-const base=M.instantiate({id:'base',spec:M.standard()},100,200);base.z=100;
+const base=M.instantiate({id:'base',spec:M.standard()},100,500);base.z=100;
 const second=M.instantiate({id:'second',spec:M.standard()},1200,200);second.z=100;
 const stone={id:'stone',kind:'countertop',label:'Pedra',x:100,y:100,w:1600,d:600,height:35,z:865,view:'plan',refs:{}};
 const cook={id:'cooker',kind:'appliance',type:'cooktop',label:'Cooktop',x:400,y:150,w:600,d:510,height:45,z:900,view:'plan',refs:{}};
@@ -38,7 +38,7 @@ assert.equal(cook.y,145);
 assert.equal(cook.z,900);
 assert.equal(cook.alignment.targetId,'stone');
 assert.equal(cook.w,600,'a largura real do cooktop não é alterada');
-click('undo');assert.equal(cook.x,400,'desfazer restaura posição');
+click('undo');assert.equal(l.items.find(i=>i.id==='cooker').x,400,'desfazer restaura posição');
 click('redo');assert.equal(l.items.find(i=>i.id==='cooker').x,600,'refazer restaura centralização');
 selectObject('second');
 assert(doc.getElementById('labWallSide'),'encaixe em paredes disponível');

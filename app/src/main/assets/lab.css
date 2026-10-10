@@ -241,3 +241,14 @@
  .studio-room-drawer>.lab-sizes{grid-template-columns:repeat(2,minmax(0,1fr))}
  .studio-room-drawer .lab-sizes button{grid-column:1/-1}
 }
+
+/* Ferramentas de navegação CAD no tablet: orbitar, pan, pinça e enquadrar. */
+.studio-camera-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;border:1px solid #d5e2e9;background:#fff;padding:6px 8px;margin-bottom:6px;border-radius:8px}
+.studio-camera-toolbar button{min-height:39px;padding:8px;font-size:11px;white-space:nowrap}
+.studio-camera-toolbar button.lab-active{background:#227b9e;color:white;border-color:#227b9e}
+.studio-camera-toolbar .studio-cam-angle{font-size:11px;font-weight:650;color:#6e8694;margin-left:auto;font-variant-numeric:tabular-nums}
+.studio-construction .lab-board-wrap,.studio-construction .lab-board-wrap svg{touch-action:none}
+.studio-construction .lab-work:has(.studio-camera-toolbar button[data-arg="orbit"].lab-active) .lab-board-wrap svg{cursor:grab}
+.studio-construction .lab-work:has(.studio-camera-toolbar button[data-arg="pan"].lab-active) .lab-board-wrap svg{cursor:move}
+.studio-construction .lab-work:has(.studio-camera-toolbar button[data-arg="zoom"].lab-active) .lab-board-wrap svg{cursor:ns-resize}
+@media(max-width:850px){.studio-camera-toolbar .studio-cam-angle{flex:1 0 100%;text-align:left;order:2}.studio-camera-toolbar button{min-height:42px}}

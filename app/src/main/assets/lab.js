@@ -97,7 +97,27 @@ function moduleShape(item,view,selected,l){
    for(const slot of spec.fixedShelves||[]){const bay=bays[slot.bay];if(!bay)continue;const yy=y+t+(H-2*t)*slot.at;res+='<line x1="'+(x+bay.start)+'" x2="'+(x+bay.end)+'" y1="'+yy+'" y2="'+yy+'" stroke="#327d9d" stroke-width="8" vector-effect="non-scaling-stroke"/>';}
    for(const acc of spec.accessories||[]){const bay=bays[acc.bay];if(!bay)continue;for(let i=0;i<Math.min(6,acc.count||1);i++){const ay=y+H-t-(i+1)*(acc.height+8);res+='<rect x="'+(x+bay.start+acc.slideSide)+'" y="'+ay+'" width="'+Math.max(1,bay.width-2*acc.slideSide)+'" height="'+Math.max(1,acc.height)+'" fill="none" stroke="#d08332" stroke-width="5" vector-effect="non-scaling-stroke"/>';}}
   }catch(_){/* Falha visual não altera geometria ou peças. */}
-  if(spec.doorCount){for(let j=1;j<spec.doorCount;j++){let dx=x+W*j/spec.doorCount;res+='<path d="M '+dx+' '+(y+12)+' V '+(y+H-12)+'" stroke="#317ca3" stroke-width="3" stroke-dasharray="14 12"/>';}
+  try{
+   const bays=globalThis.ArqueModules?.bayBounds(globalThis.ArqueModules.check(spec))||[];
+   for(const p of spec.assemblyPieces||[]){
+    const b=bays[p.bay];if(!b)continue;
+    const bx=x+b.start+p.widthClearance,bw=Math.max(1,b.width-2*p.widthClearance);
+    if(p.type==='backPanel')res+='<rect x="'+bx+'" y="'+(y+t)+'" width="'+bw+'" height="'+Math.max(1,H-2*t)+'" fill="#819faf" fill-opacity=".11" stroke="#738e9f" stroke-dasharray="9 9" stroke-width="2" vector-effect="non-scaling-stroke"/>';
+    else{
+     const py=y+t+(H-2*t)*p.at-p.height/2;
+     res+='<rect x="'+bx+'" y="'+py+'" width="'+bw+'" height="'+p.height+'" fill="'+(p.type==='cavaRail'?'#87bbd4':'#a7bbc4')+'" fill-opacity=".75" stroke="#3c738d" stroke-width="3" vector-effect="non-scaling-stroke"/>';
+     if(p.type==='cavaRail')res+='<path d="M '+(bx+10)+' '+(py+8)+' H '+(bx+bw-10)+'" stroke="#11618d" stroke-width="4" vector-effect="non-scaling-stroke"/>';
+    }
+   }
+   if(spec.doorMode==='byBay'){
+    for(const [i,b] of bays.entries()){
+     const qty=spec.bayDoors?.[i]||0;
+     for(let j=1;j<qty;j++){const dx=x+b.start+b.width*j/qty;res+='<line x1="'+dx+'" x2="'+dx+'" y1="'+(y+12)+'" y2="'+(y+H-12)+'" stroke="#317ca3" stroke-width="4" stroke-dasharray="14 12" vector-effect="non-scaling-stroke"/>';}
+     if(qty===1)res+='<rect x="'+(x+b.start+5)+'" y="'+(y+5)+'" width="'+Math.max(1,b.width-10)+'" height="'+Math.max(1,H-10)+'" fill="none" stroke="#3a83a8" stroke-dasharray="12 12" stroke-width="3" vector-effect="non-scaling-stroke"/>';
+    }
+   }
+  }catch(_){/* Desenho de referência não altera a lista técnica. */}
+  if(spec.doorMode!=='byBay'&&spec.doorCount){for(let j=1;j<spec.doorCount;j++){let dx=x+W*j/spec.doorCount;res+='<path d="M '+dx+' '+(y+12)+' V '+(y+H-12)+'" stroke="#317ca3" stroke-width="3" stroke-dasharray="14 12"/>';}
    if(spec.frontType==='cava')res+='<path d="M '+(x+30)+' '+(y+60)+' H '+(x+W-30)+'" stroke="#0f729c" stroke-width="6" vector-effect="non-scaling-stroke"/>';}
  }else{
   res+='<line x1="'+x+'" x2="'+(x+W)+'" y1="'+(y+depth*.14)+'" y2="'+(y+depth*.14)+'" stroke="#8bb6cc" stroke-width="5" vector-effect="non-scaling-stroke"/>';

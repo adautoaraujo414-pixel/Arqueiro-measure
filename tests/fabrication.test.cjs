@@ -15,7 +15,7 @@ A.equal(guide.verified,false);
 A.deepEqual(guide.start,[581,981]);A.deepEqual(guide.end,[981,581]);
 A(!JSON.stringify(room).includes('corner45'),'guias não devem ser instalados sem confirmação');
 const placed={...room,cornerGuides:[guide]};
-A(V.scene(placed).includes('45° · 565.7 mm'),'frente diagonal na representação espacial');
+A(V.scene(placed).includes('45° · 565,7 mm'),'frente diagonal na representação espacial');
 const report=Adv.production(placed,M);
 A(report.warnings.some(x=>x.includes('carcaça')),'canto visual bloqueia fabricação automática');
 A.equal(report.ready,false);

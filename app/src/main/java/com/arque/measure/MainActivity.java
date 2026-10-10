@@ -48,10 +48,21 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 import java.util.UUID;
 
 /** Offline WebView shell; no INTERNET permission; Android BLE bridge. Alpha: physical device validation required. */
 public final class MainActivity extends Activity {
+    // Every local HTML/CSS/JS dependency must be explicitly granted here.
+    // Refuse unknown URLs; never grant general access to arbitrary assets or internet resources.
+    private static final Set<String> LOCAL_WEB_ASSETS = new HashSet<>(Arrays.asList(
+        "index.html", "styles.css", "lab.css", "module-ui.css",
+        "core.js", "cut.js", "modules.js", "corner45.js", "kitchen-catalog.js",
+        "workshop.js", "module-ui.js", "lab-alignment.js", "lab-precision.js",
+        "lab-advanced.js", "lab-fabrication.js", "lab-visual.js", "lab.js", "app.js"
+    ));
     private static final int REQUEST_BLE = 301, REQUEST_EXPORT = 302, REQUEST_IMPORT = 303, REQUEST_PICK = 304;
     private static final UUID BOSCH_CHAR = UUID.fromString("02a6c0d1-0451-4000-b000-fb3210111989");
     private static final UUID CCCD = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -92,7 +103,7 @@ public final class MainActivity extends Activity {
                 String path=uri.getPath();
                 if(path==null)return denied();
                 String name=path.startsWith("/")?path.substring(1):path;
-                if(!name.equals("index.html")&&!name.equals("core.js")&&!name.equals("app.js")&&!name.equals("cut.js")&&!name.equals("styles.css"))return denied();
+                if(!LOCAL_WEB_ASSETS.contains(name))return denied();
                 String mime=name.endsWith(".js")?"text/javascript":name.endsWith(".css")?"text/css":"text/html";
                 try{return new WebResourceResponse(mime,"UTF-8",getAssets().open(name));}catch(Exception e){return denied();}
             }

@@ -148,8 +148,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
  const originalAssemblyModuleId=doc.querySelector('#labBoard .lab-selected')?.dataset.labObject;
- assert(doc.body.textContent.includes('Catálogo Arque Cozinha'),'biblioteca de cozinha integrada ao laboratório');
  labClick('view','iso');await sleep(65);
+ assert(doc.body.textContent.includes('Catálogo Arque Cozinha'),'biblioteca de cozinha integrada ao laboratório');
  assert(doc.querySelector('#labBoard.lab-visual'),'vista espacial do ambiente inserida');
  assert(doc.body.textContent.includes('Biblioteca de construção'),'catalogo lateral como ferramenta CAD');
  assert(doc.body.textContent.includes('Árvore dos módulos'),'identificação construtiva em arvore');

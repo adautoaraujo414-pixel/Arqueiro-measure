@@ -51,3 +51,41 @@
  .lab-side>label{grid-column:1/-1}
  .lab-board-wrap{padding:5px}
 }
+
+/* Laboratório construtivo: catálogo à esquerda, ambiente no centro, propriedades à direita.
+   Vista espacial offline com projeção geométrica em mm. */
+.lab-main.lab-with-catalog{grid-template-columns:minmax(180px,220px) minmax(0,1fr) minmax(245px,275px);gap:10px}
+.lab-with-catalog .lab-board-wrap{background:#eef4f7;border:1px solid #dae4ea;padding:4px;min-height:315px}
+.lab-with-catalog .lab-board-wrap svg.lab-visual{background:#f3f7fa;box-shadow:0 7px 28px #142e491f;border:1px solid #dce6e9;border-radius:6px;cursor:pointer}
+.lab-with-catalog .lab-hint{background:#f4f8fb;border:1px solid #e3ebf0;padding:7px 10px;border-radius:7px}
+.lab-with-catalog .lab-side{position:relative}
+.lab-catalog{background:#fff;border:1px solid #dce6eb;border-radius:9px;padding:10px;min-width:0}
+.lab-catalog h4{margin:3px 0 8px;font-size:13px;color:#27546a}
+.lab-catalog p{font-size:11px;color:#6b8492;margin:5px 0 11px}
+.lab-catalog-add{display:grid;grid-template-columns:1fr;gap:6px}
+.lab-catalog-add button{text-align:left;min-height:37px;font-size:12px;background:#f7fafc}
+.lab-tree{display:flex;flex-direction:column;gap:6px;margin:7px 0;max-height:350px;overflow:auto}
+.lab-tree>button{display:flex;gap:9px;align-items:flex-start;text-align:left;padding:9px 6px;background:#f7fafc;color:#244f64;border-radius:8px;min-width:0}
+.lab-tree>button>b{padding:4px 5px;color:#fff;border-radius:5px;background:#638598;min-width:35px;text-align:center}
+.lab-tree>button.lab-active>b{background:#236788}
+.lab-tree>button span{display:block;min-width:0;font-size:12px;font-weight:600;line-height:1.4}
+.lab-tree>button small{display:block;font-weight:400;color:#688191;font-size:10px;overflow-wrap:anywhere}
+.lab-selected-summary{background:#f3f7fa;border:1px solid #dae7ee;border-radius:8px;padding:9px;margin:8px 0}
+.lab-selected-summary b{display:block;font-size:13px;color:#1d526b}
+.lab-selected-summary small{display:block;margin-top:5px;color:#627c89;font-size:11px}
+.lab-views>button[data-arg="iso"]{background:#e9f2f7;border-color:#c2dce8}
+.lab-views>button[data-arg="iso"].lab-active{background:#226d95;color:white;border-color:#226d95}
+@media(max-width:1180px){
+ .lab-main.lab-with-catalog{grid-template-columns:minmax(170px,210px) minmax(0,1fr)}
+ .lab-main.lab-with-catalog>.lab-side{grid-column:1 / -1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .lab-main.lab-with-catalog>.lab-side h4,.lab-main.lab-with-catalog>.lab-side .lab-item-title,.lab-main.lab-with-catalog>.lab-side .lab-selected-summary,.lab-main.lab-with-catalog>.lab-side .lab-props{grid-column:1/-1}
+}
+@media(max-width:720px){
+ .lab-main.lab-with-catalog{grid-template-columns:1fr}
+ .lab-main.lab-with-catalog>.lab-catalog{order:2}
+ .lab-main.lab-with-catalog>.lab-work{order:1}
+ .lab-main.lab-with-catalog>.lab-side{order:3}
+ .lab-catalog-add{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .lab-tree{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}
+ .lab-main.lab-with-catalog>.lab-side{display:block}
+}

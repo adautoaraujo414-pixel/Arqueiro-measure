@@ -279,3 +279,8 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-measure-stage .photo-selected-actions{position:absolute;z-index:14;right:12px;bottom:12px;display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:12px;background:rgba(20,33,44,.88);color:#fff;font-size:12px}
 .photo-selected-actions button{border:0;background:#fff;color:#116b93;border-radius:8px;min-width:40px;min-height:38px;font-size:23px}
 .photo-workspace .photo-ink-tools .photo-palette-popover{position:absolute;top:46px;right:0;background:white;z-index:16}
+
+/* Direct manipulation: handles are easy to touch with a finger or S Pen. */
+.photo-measure-stage #photoOverlay [data-dimension]{cursor:move;touch-action:none}
+.photo-measure-stage #photoOverlay [data-handle]{cursor:grab;touch-action:none}
+.photo-measure-stage #photoOverlay .measure-hit{pointer-events:stroke}

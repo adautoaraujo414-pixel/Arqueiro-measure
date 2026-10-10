@@ -56,6 +56,8 @@ jobs:
         run: node tests/modules.test.cjs
       - name: Testar montagem por vão e peças especiais
         run: node tests/assembly.test.cjs
+      - name: Testar ambiente visual espacial em milímetros
+        run: node tests/visual.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado

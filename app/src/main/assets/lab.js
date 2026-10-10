@@ -451,8 +451,17 @@ function mount(p,ops){
  const alertError=e=>ops.toast(e.message||String(e));
  const refresh=()=>{root.innerHTML=screen(p,ops.state);};
  refresh();
+ root.addEventListener('input',e=>{
+  if(e.target.id!=='studioCatalogSearch')return;
+  studioSearch=e.target.value;
+  const list=root.querySelector('.studio-preset-results');
+  if(list&&globalThis.ArqueStudio)list.innerHTML=globalThis.ArqueStudio.catalogHTML(
+   globalThis.ArqueStudio.templates(globalThis.ArqueKitchen?.catalog()||[],ops.state?.moduleTemplates||[]),
+   studioCategory,studioSearch,ops.state?.constructionFavorites||[]);
+ });
  root.addEventListener('change',e=>{
   try{
+   if(e.target.id==='studioInsertSide')studioInsertSide=e.target.value;
    if(e.target.id==='labRoom'){activeRoom=e.target.value;selected='';focusedModule='';focusedBay=0;refresh();}
    if(e.target.id==='modWorkbenchBay'){focusedBay=Number(e.target.value)||0;focusedModule=selected;refresh();}
    if(e.target.id==='labPhoto'){const l=layout(p,activeRoom);remember(l);l.photoId=e.target.value;save();refresh();}
@@ -462,6 +471,14 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='studioCategory'){studioCategory=arg;refresh();return;}
+   if(a==='studioInspectorToggle'){studioInspectorOpen=!studioInspectorOpen;refresh();return;}
+   if(a==='studioFavorite'){
+    if(!ops.state)throw Error('Não foi possível salvar favoritos.');
+    const favorites=ops.state.constructionFavorites||[];
+    ops.state.constructionFavorites=favorites.includes(arg)?favorites.filter(id=>id!==arg):favorites.concat(arg);
+    save();refresh();return;
+   }
    if(a==='precisionToggle'){showDimensions=!showDimensions;refresh();return;}
    if(a==='precisionMove'){
     const selectedItem=l.items.find(i=>i.id===selected);
@@ -602,7 +619,7 @@ function mount(p,ops){
     if(a==='visualRotate'){visualAngle=(visualAngle+Number(arg)+360)%360;refresh();return;}
     if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
-    if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';refresh();return;}
+    if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';studioInspectorOpen=true;refresh();return;}
     if(a==='partSelect'){selectedPartKey=arg;refresh();return;}
    if(a==='catalogPreset'||a==='catalogSaved'){
     const K=globalThis.ArqueKitchen,M=globalThis.ArqueModules;
@@ -613,13 +630,18 @@ function mount(p,ops){
      if(!tpl)throw Error('Modelo salvo não encontrado.');
      item=M.instantiate(tpl,100,80);item.z=100;
     }else item=K.create(arg,M);
-    const peers=l.items.filter(it=>it.kind==='module'&&Number(it.y)<950);
-    const end=peers.length?Math.max(...peers.map(it=>Number(it.x)+Number(it.w)+40)):100;
-    item.x=Math.min(end,Math.max(0,l.width-item.w));item.y=80;
+    if(globalThis.ArqueStudio){
+     const pos=globalThis.ArqueStudio.proposed(l,item,selected,studioInsertSide,3);
+     item.x=pos.x;item.y=pos.y;
+    }else{
+     const peers=l.items.filter(it=>it.kind==='module'&&Number(it.y)<950);
+     const end=peers.length?Math.max(...peers.map(it=>Number(it.x)+Number(it.w)+40)):100;
+     item.x=Math.min(end,Math.max(0,l.width-item.w));item.y=80;
+    }
     if(item.z+item.height>l.height)ops.toast('Altura ultrapassa o ambiente. Confira Z e dimensão real.');
     remember(l);l.items.push(item);ensureModuleCodes(l);
-    selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';
-    save();refresh();ops.toast('Inserido '+item.label+'. Edite as medidas na lateral.');
+    selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';studioInspectorOpen=true;
+    save();refresh();ops.toast('Inserido '+item.label+'. As dimensões continuam editáveis.');
     return;
    }
    if(a==='catalogEditModule'){

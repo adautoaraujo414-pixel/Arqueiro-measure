@@ -1,7 +1,7 @@
 /* Arque Measure | Laboratorio 2D em milimetros. Sem inferencia automatica de medidas. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ArqueLab=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-const kinds={wall:['Parede / linha',1500,0],countertop:['Bancada / pedra',1600,600],sink:['Cuba',500,400],base:['Armário base',800,560],upper:['Armário aéreo',800,350],door:['Porta',450,20],drawers:['Gaveteiro',450,560],filler:['Tamponamento',30,560],cava:['Puxador cava',450,35],outlet:['Tomada / ponto',80,80],drain:['Esgoto / água',80,80],panel:['Peça avulsa retangular',600,300]};
+const kinds={wall:['Parede / linha',1500,0],countertop:['Bancada / pedra',1600,600],sink:['Cuba',500,400],base:['Armário base',800,560],upper:['Armário aéreo',800,350],door:['Porta',450,20],drawers:['Gaveteiro',450,560],filler:['Tamponamento',30,560],cava:['Puxador cava',450,35],outlet:['Tomada / ponto',80,80],drain:['Esgoto / água',80,80],fridge:['Geladeira · referência',760,720],stove:['Fogão/forno · referência',600,600],cooktop:['Cooktop · referência',600,510],led:['Fita LED · referência',900,25],panel:['Peça avulsa retangular',600,300]};
 const modes={plan:'Planta baixa 2D',front:'Vista frontal 2D',iso:'Ambiente espacial 3D'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
@@ -44,7 +44,7 @@ function add(l,kind,x,y,view='plan'){
  if(!kinds[kind]&&kind!=='pen')throw Error('Elemento desconhecido');
  if(!modes[view])throw Error('Vista desconhecida');
  const dims=kinds[kind]||['Rabisco',0,0];
- const item={id:uid(),kind,label:dims[0],x:numeric(x),y:numeric(y),w:dims[1],d:dims[2],height:kind==='base'?730:kind==='upper'?700:0,view,refs:{}};
+ const item={id:uid(),kind,label:dims[0],x:numeric(x),y:numeric(y),w:dims[1],d:dims[2],height:({base:730,upper:700,fridge:1850,stove:850,cooktop:45,led:12,countertop:35,sink:170})[kind]||0,z:({fridge:0,stove:0,cooktop:900,led:1450,countertop:900,sink:720})[kind]||0,view,refs:{}};
  if(kind==='panel'){item.material='MDF 18 mm';item.thickness=18;item.grain=false;item.edge2=0;item.edge04=0;}
  remember(l);l.items.push(item);return item;
 }
@@ -178,9 +178,9 @@ function screen(p,state){
  out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
  if(view==='iso'){
   const entries=visual?.catalog(l)||[];
-  out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente real</p><div class="lab-catalog-add">'+
+  out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente · referências de eletros exigem medidas do fabricante</p><div class="lab-catalog-add">'+
    button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
-   button('＋ Torre','catalogAdd','tower')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+
+   button('＋ Torre','catalogAdd','tower')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
    '</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
    (entries.map(e=>'<button type="button" data-lab="catalogSelect" data-arg="'+esc(e.id)+'" class="'+(e.id===selected?'lab-active':'')+'"><b>'+esc(e.code)+'</b><span>'+esc(e.name)+'<small>'+esc(e.dims)+' · Z '+fmt(e.z)+' mm</small></span></button>').join('')||'<p>Adicione um módulo para começar.</p>')+
    '</div><p class="lab-fine">Seleção, dimensões e peças são ligadas ao mesmo projeto. Nenhuma medida é deduzida da foto.</p></aside>';
@@ -275,9 +275,8 @@ function mount(p,ops){
       item=M.instantiate({id:null,version:1,spec},x,80);
       item.z=arg==='upper'?Math.max(0,l.height-950):arg==='base'?100:0;
       if(item.z+item.height>l.height)throw Error('O módulo ultrapassa a altura do ambiente. Confira as medidas.');
-     }else if(['countertop','sink'].includes(arg)){
+     }else if(['countertop','sink','stove','fridge','cooktop','led'].includes(arg)){
       item=add(l,arg,x,80,'plan');l.items.pop();l.history.pop();
-      item.height=arg==='countertop'?35:180;item.z=arg==='countertop'?900:720;
      }else throw Error('Item não disponível no catálogo.');
      remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';
      if(item.x+item.w>l.width)ops.toast('Peça incluída, mas ultrapassa a largura da parede: revise a posição.');

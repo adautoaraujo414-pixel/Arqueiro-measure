@@ -49,3 +49,25 @@
 .lab-bay-two .lab-divider-add{gap:6px}
 .lab-bay-two .lab-divider-add label{min-width:120px;flex:1}
 @media(max-width:700px){.lab-bay-two{grid-template-columns:1fr}.lab-bay-tool{padding:9px}}
+
+/* Editor de montagem por compartimento — foco nas ações, avançado recolhido. */
+.lab-piece-editor{background:#f3f9fc;border:1px solid #c7dee9;border-radius:12px;padding:12px;margin:12px 0}
+.lab-piece-editor-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.lab-piece-editor-header h4{margin:0;color:#245d7c;font-size:16px}
+.lab-piece-editor-header small{display:block;margin-top:3px;color:#688295;max-width:470px}
+.lab-piece-editor-header button{background:#1e759f;color:#fff;border-color:#1e759f}
+.lab-piece-editor-options{margin:10px 0;max-width:320px}
+.lab-piece-editor-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lab-piece-editor-tools button{min-width:0;font-weight:600;white-space:normal;min-height:45px;border:1px solid #bcd3df;border-radius:8px;background:#fff;color:#225e7b}
+.lab-piece-editor-tools button:active{background:#d9eef8}
+.lab-piece-options,.lab-module-advanced{margin:10px 0;border:1px solid #dae8ee;border-radius:9px;padding:9px;background:#fff}
+.lab-piece-options summary,.lab-module-advanced summary{font-weight:600;font-size:13px;cursor:pointer;color:#236a8b}
+.lab-piece-options .lab-module-grid,.lab-module-advanced .lab-module-grid{margin-top:9px}
+.lab-drawer-options>button{background:#237da4;color:#fff;border-color:#237da4}
+.lab-piece-items{border-top:1px solid #d5e5ec;padding-top:9px}
+.lab-piece-items>strong{font-size:13px;color:#366981}
+.lab-module-core{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:12px 0}
+.lab-module-core label{min-width:0}
+.lab-module-core input{width:100%}
+@media(max-width:800px){.lab-piece-editor-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-module-core{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:450px){.lab-piece-editor{padding:9px}.lab-piece-editor-tools button{font-size:12px;padding:8px 5px}.lab-piece-editor-header button{width:100%}}

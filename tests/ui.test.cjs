@@ -1,6 +1,7 @@
 /* Browser-like UI/persistence smoke test (jsdom + fake-indexeddb). */
 const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const html=fs.readFileSync('app/src/main/assets/index.html','utf8');
+const visual=fs.readFileSync('app/src/main/assets/lab-visual.js','utf8');
 const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),modules=fs.readFileSync('app/src/main/assets/modules.js','utf8'),workshop=fs.readFileSync('app/src/main/assets/workshop.js','utf8'),moduleUI=fs.readFileSync('app/src/main/assets/module-ui.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
 const storage=new IDBFactory();const sleep=(ms=40)=>new Promise(r=>setTimeout(r,ms));
 async function launch(){
@@ -11,7 +12,7 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(modules);w.eval(workshop);w.eval(moduleUI);w.eval(lab);w.eval(app);
+ w.eval(core);w.eval(cut);w.eval(modules);w.eval(workshop);w.eval(moduleUI);w.eval(visual);w.eval(lab);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
@@ -143,6 +144,30 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('moduleInsert');await sleep(50);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
+ labClick('view','iso');await sleep(65);
+ assert(doc.querySelector('#labBoard.lab-visual'),'vista espacial do ambiente inserida');
+ assert(doc.body.textContent.includes('Biblioteca de construção'),'catalogo lateral como ferramenta CAD');
+ assert(doc.body.textContent.includes('Árvore dos módulos'),'identificação construtiva em arvore');
+ assert(doc.body.textContent.includes('M01'),'módulo identificado M01');
+ assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=2,'mesmos módulos aparecem na cena 3D');
+ labClick('visualMode','structure');await sleep(50);
+ assert(doc.querySelector('#labBoard .lab-selected'),'estrutura mantém seleção original');
+ labClick('visualRotate','25');await sleep(50);
+ assert(doc.querySelector('#labBoard'),'girar câmera sem perder projeto');
+ labClick('visualZoom','.2');await sleep(50);
+ assert(doc.querySelector('#labBoard'),'zoom preserva o ambiente');
+ const sceneModule=doc.querySelector('#labBoard [data-lab-object]');
+ assert(sceneModule,'módulo selecionável na cena');
+ const isoTap=new w.Event('pointerdown',{bubbles:true,cancelable:true});
+ Object.defineProperties(isoTap,{pointerId:{value:98},isPrimary:{value:true},clientX:{value:180},clientY:{value:80}});
+ sceneModule.dispatchEvent(isoTap);await sleep(60);
+ assert(doc.querySelector('#labName'),'toque na cena abre propriedades reais do módulo');
+ labClick('catalogAdd','upper');await sleep(65);
+ assert(doc.body.textContent.includes('Aéreo 2 portas'),'aéreo paramétrico inserido no ambiente');
+ assert(doc.querySelector('#labBoard [data-lab-object]'),'cena se atualiza com o aéreo');
+ assert(Number(doc.querySelector('[data-lab-prop="z"]').value)>0,'aéreo possui altura de instalação real');
+ labClick('view','plan');await sleep(55);
+
  // Montagem interativa sobre um vao selecionado na elevacao, com geometria e corte.
  labClick('moduleFrontView');await sleep(55);
  assert(doc.getElementById('labBoard').getAttribute('aria-label').includes('Vista frontal'),'troca direta para elevacao');

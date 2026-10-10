@@ -296,6 +296,26 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='autoSketch'||a==='autoSketchOne'){
+    const A=globalThis.ArqueAlign;if(!A)throw Error('Alinhamento indisponível.');
+    const result=A.automaticSketch(l,a==='autoSketchOne'?selected:'',{
+     tolerance:root.querySelector('#labAutoTolerance')?.value??80,
+     smoothness:root.querySelector('#labAutoSmooth')?.value??35
+    },view);
+    remember(l);
+    for(const update of result.updates){const part=l.items.find(i=>i.id===update.id);if(part)Object.assign(part,update);}
+    pointLineId='';tool='select';save();refresh();ops.toast(result.count+' linhas corrigidas; '+result.connected+' conexões.');return;
+   }
+   if(['alignTarget','alignBeside','alignWall'].includes(a)){
+    const A=globalThis.ArqueAlign;if(!A)throw Error('Motor de alinhamento indisponível.');
+    const item=l.items.find(i=>i.id===selected);if(!item)throw Error('Selecione um móvel ou eletrodoméstico.');
+    const gap=root.querySelector('#labAlignGap')?.value??0;
+    const result=a==='alignWall'?A.alongWall(l,selected,root.querySelector('#labWallSide')?.value,root.querySelector('#labWallGap')?.value):
+     a==='alignBeside'?A.beside(l,selected,root.querySelector('#labAlignTarget')?.value,root.querySelector('#labJoinMode')?.value,gap):
+     A.center(l,selected,root.querySelector('#labAlignTarget')?.value,root.querySelector('#labAlignMode')?.value,gap);
+    remember(l);Object.assign(item,result);delete item.hostModuleId;
+    save();refresh();ops.toast('Alinhado sem alterar medidas. Confira folgas na obra.');return;
+   }
    if(a==='panelMaterial'){const item=l.items.find(x=>x.id===selected);if(item?.kind!=='panel')throw Error('Selecione uma peça retangular.');
     const material=String(root.querySelector('#labPanelMaterial')?.value||'').trim().slice(0,90),thickness=numeric(root.querySelector('#labPanelThickness')?.value,1,50);
     if(!material)throw Error('Informe o material da peça.');remember(l);item.material=material;item.thickness=thickness;item.grain=root.querySelector('#labPanelGrain')?.value==='true';save();refresh();return;}
@@ -305,7 +325,7 @@ function mount(p,ops){
    if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);
     if(!t)throw Error('Escolha uma moldura salva.');const item=globalThis.ArqueWorkshop.insertProfile(t,100,100,view);remember(l);l.items.push(item);selected=item.id;save();refresh();return;}
    if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;selectedPartKey='';}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
-   if(a==='view'){view=arg;tool='select';if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
+   if(a==='view'){view=arg;tool='select';pointLineId='';if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
     if(a==='visualRotate'){visualAngle=(visualAngle+Number(arg)+360)%360;refresh();return;}
     if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
@@ -383,9 +403,10 @@ function mount(p,ops){
      if(item.x+item.w>l.width)ops.toast('Peça incluída, mas ultrapassa a largura da parede: revise a posição.');
      save();refresh();return;
     }
-    if(a==='tool'){tool=arg;refresh();return;}
+    if(a==='tool'){tool=arg;pointLineId='';refresh();return;}
+   if(a==='finishPointLine'){pointLineId='';tool='select';save();refresh();ops.toast('Linha finalizada.');return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
-   if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){selected='';save();refresh();}return;}
+   if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){selected='';pointLineId='';save();refresh();}return;}
    if(a==='roomSize'){
     const w=numeric(root.querySelector('#labWidth').value,100),d=numeric(root.querySelector('#labDepth').value,100),h=numeric(root.querySelector('#labHeight').value,100);
     remember(l);l.width=w;l.depth=d;l.height=h;l.confirmed=true;l.roomRefs={};save();refresh();return;

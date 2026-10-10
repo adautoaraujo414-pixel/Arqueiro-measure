@@ -102,6 +102,15 @@ function moduleShape(item,view,selected,l){
  }else{
   res+='<line x1="'+x+'" x2="'+(x+W)+'" y1="'+(y+depth*.14)+'" y2="'+(y+depth*.14)+'" stroke="#8bb6cc" stroke-width="5" vector-effect="non-scaling-stroke"/>';
  }
+ if(view==='front'){
+  try{
+   const bays=globalThis.ArqueModules?.bayBounds(globalThis.ArqueModules.check(spec))||[];
+   for(const [i,b] of bays.entries()){
+    const active=selected&&focusedModule===item.id&&focusedBay===i;
+    res+='<rect data-lab-bay="'+i+'" x="'+(x+b.start)+'" y="'+(y+t)+'" width="'+b.width+'" height="'+Math.max(1,H-2*t)+'" fill="'+(active?'#36a4db':'transparent')+'" fill-opacity="'+(active?'.10':'0')+'" stroke="'+(active?'#087fb7':'transparent')+'" stroke-width="'+(active?7:0)+'" stroke-dasharray="18 12" vector-effect="non-scaling-stroke" pointer-events="all"/>';
+   }
+  }catch(_){/* Não altera medida de fábrica. */}
+ }
  return res;
 }
 function svg(l,view,selectedId){
@@ -114,7 +123,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null;
+let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='';
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -157,7 +166,7 @@ function screen(p,state){
   const groups=globalThis.ArqueModules?.groupedCutRows(p,r.id)||{};
   if(Object.keys(groups).length)out+='<div class="lab-module-panel"><h3>Peças calculadas para corte</h3><p class="lab-fine">Escolha um lote de mesmo material e espessura. Peças avulsas retangulares e módulos são separados automaticamente.</p><label>Material<select id="labAllMaterial">'+Object.keys(groups).map(k=>'<option value="'+esc(k)+'">'+esc(k)+' · '+groups[k].reduce((acc,part)=>acc+part.qty,0)+' peças</option>').join('')+'</select></label>'+button('Enviar lote de peças para conferência','labAllCut')+'</div>';
  }
- out+=(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
+ out+=(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected,focusedModule===selected?focusedBay:0):'')+'</section>';return out;
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;
@@ -167,7 +176,8 @@ function mount(p,ops){
  refresh();
  root.addEventListener('change',e=>{
   try{
-   if(e.target.id==='labRoom'){activeRoom=e.target.value;selected='';refresh();}
+   if(e.target.id==='labRoom'){activeRoom=e.target.value;selected='';focusedModule='';focusedBay=0;refresh();}
+   if(e.target.id==='modWorkbenchBay'){focusedBay=Number(e.target.value)||0;focusedModule=selected;refresh();}
    if(e.target.id==='labPhoto'){const l=layout(p,activeRoom);remember(l);l.photoId=e.target.value;save();refresh();}
   }catch(err){alertError(err);}
  });
@@ -183,8 +193,8 @@ function mount(p,ops){
     const profile=globalThis.ArqueWorkshop.saveProfile(ops.state,item,nm);save();refresh();ops.toast('Moldura '+profile.name+' guardada na biblioteca geral.');return;}
    if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);
     if(!t)throw Error('Escolha uma moldura salva.');const item=globalThis.ArqueWorkshop.insertProfile(t,100,100,view);remember(l);l.items.push(item);selected=item.id;save();refresh();return;}
-   if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined)selected=res.selected;if(!res.skipRefresh){save();refresh();}return;}}
-   if(a==='view'){view=arg;selected='';refresh();return;}
+   if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
+   if(a==='view'){view=arg;if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
    if(a==='tool'){tool=arg;refresh();return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
    if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){selected='';save();refresh();}return;}
@@ -232,6 +242,9 @@ function mount(p,ops){
     if(!hit){selected='';refresh();return;}
     selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);
     if(!item)return;
+    if(item.kind==='module'&&focusedModule!==item.id){focusedModule=item.id;focusedBay=0;}
+    const tappedBay=e.target.closest('[data-lab-bay]');
+    if(view==='front'&&item.kind==='module'&&tappedBay){focusedBay=Number(tappedBay.dataset.labBay)||0;e.preventDefault();refresh();return;}
     drag={mode:'move',id:item.id,start:pt,x:item.x,y:(item.kind==='module'&&view==='front'?(item.frontY??Math.max(0,l.height-item.height-100)):item.y),pointer:e.pointerId};
    }else{
     const k=tool;

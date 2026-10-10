@@ -493,7 +493,8 @@ function mount(p,ops){
    if(a==='cornerCreate'){
     const item=globalThis.ArqueCorner45.create(globalThis.ArqueModules);
     if(item.w>l.width||item.d>l.depth||item.z+item.height>l.height)throw Error('Ambiente pequeno para o canto de 800 × 800 × 730 mm. Confirme as medidas.');
-    item.x=Math.max(0,Math.min(l.width-item.w,100));item.y=Math.max(0,Math.min(l.depth-item.d,100));
+    const pos=globalThis.ArqueStudio?.proposed(l,item,selected,studioInsertSide,3)||{x:100,y:100};
+    item.x=pos.x;item.y=pos.y;
     remember(l);l.items.push(item);ensureModuleCodes(l);selected=item.id;selectedPartKey='';focusedModule=item.id;
     save();refresh();ops.toast('Canto 45° inserido. Ajuste chanfro, porta e cotas no editor.');return;
    }
@@ -620,7 +621,7 @@ function mount(p,ops){
     if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
     if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';studioInspectorOpen=true;refresh();return;}
-    if(a==='partSelect'){selectedPartKey=arg;refresh();return;}
+    if(a==='partSelect'){selectedPartKey=arg;studioInspectorOpen=true;refresh();return;}
    if(a==='catalogPreset'||a==='catalogSaved'){
     const K=globalThis.ArqueKitchen,M=globalThis.ArqueModules;
     if(!K||!M)throw Error('Biblioteca de cozinha indisponível.');
@@ -694,7 +695,8 @@ function mount(p,ops){
      }else if(['countertop','sink','stove','fridge','cooktop','led'].includes(arg)){
       item=add(l,arg,x,80,'plan');l.items.pop();l.history.pop();
      }else throw Error('Item não disponível no catálogo.');
-     remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';
+     if(globalThis.ArqueStudio){const pos=globalThis.ArqueStudio.proposed(l,item,selected,studioInsertSide,3);item.x=pos.x;item.y=pos.y;}
+    remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';studioInspectorOpen=true;
      if(item.x+item.w>l.width)ops.toast('Peça incluída, mas ultrapassa a largura da parede: revise a posição.');
      save();refresh();return;
     }
@@ -747,8 +749,8 @@ function mount(p,ops){
    if(view==='iso'){
     const tappedPart=e.target.closest?.('[data-lab-part]');
     const id=hit?.dataset.labObject||'';
-    if(tappedPart&&id){selected=id;focusedModule=id;selectedPartKey=tappedPart.dataset.labPart;tool='select';e.preventDefault();refresh();return;}
-    if(id!==selected){selectedPartKey='';selected=id;focusedModule=id;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
+    if(tappedPart&&id){selected=id;focusedModule=id;selectedPartKey=tappedPart.dataset.labPart;studioInspectorOpen=true;tool='select';e.preventDefault();refresh();return;}
+    if(id!==selected){selectedPartKey='';selected=id;focusedModule=id;focusedBay=0;studioInspectorOpen=!!id;tool='select';e.preventDefault();refresh();return;}
     if(id){
      const item=l.items.find(it=>it.id===id);if(!item)return;
      drag={mode:'iso-move',id,pointer:e.pointerId,startX:e.clientX,startY:e.clientY,
@@ -770,7 +772,7 @@ function mount(p,ops){
    }
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}
-    selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);
+    selected=hit.dataset.labObject;studioInspectorOpen=true;const item=l.items.find(x=>x.id===selected);
     if(!item)return;
     if(item.kind==='module'&&focusedModule!==item.id){focusedModule=item.id;focusedBay=0;}
     const tappedBay=e.target.closest('[data-lab-bay]');

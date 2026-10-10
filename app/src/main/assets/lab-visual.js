@@ -179,6 +179,48 @@ function scene(layout,selectedId='',opts={}){
      content+=poly([[x+b.start,y+d,zz],[x+b.end,y+d,zz],[x+b.end,y+d,zz+t],[x+b.start,y+d,zz+t]],proj,'#b9a892','#6d8fa0',.8);}
    }
   }
+  // Áreas selecionáveis de peças geradas pelo mesmo motor do plano de corte.
+  if(item.kind==='module'&&mode==='structure'&&globalThis.ArqueModules){
+   try{
+    const M=globalThis.ArqueModules,g=M.parts(spec),keys=new Set(g.parts.map(p=>p.key)),inner=h-2*t,fy=y+d+3;
+    const zone=(key,a,b,lower,upper)=>{
+     if(!keys.has(key)||b<=a||upper<=lower)return;
+     const chosen=sel&&opts.partKey===key;
+     content+=poly([[a,fy,z+lower],[b,fy,z+lower],[b,fy,z+upper],[a,fy,z+upper]],proj,chosen?'#61bce8':'#ffffff',
+      chosen?'#096e9f':'#7498ac',chosen?2.6:.7,'data-lab-part="'+esc(key)+'" fill-opacity="'+(chosen?'.5':'.09')+'" pointer-events="all" role="button" tabindex="0" aria-label="Peça '+esc(key)+'"');
+    };
+    zone('side',x,x+t,0,h);zone('side',x+w-t,x+w,0,h);
+    zone('topbottom',x+t,x+w-t,0,t);zone('topbottom',x+t,x+w-t,h-t,h);
+    for(const [j,b] of g.bays.entries()){
+     if(j<g.bays.length-1)zone('divider-'+j,x+b.end,x+b.end+t,t,h-t);
+     const count=spec.shelvesByBay?.[j]??spec.shelfCount??0;
+     for(let k=0;k<count;k++){const level=t+inner*(k+1)/(count+1);zone('shelf-'+k+'-'+j,x+b.start,x+b.end,level,level+t);}
+     for(const [k,fs] of (spec.fixedShelves||[]).entries())if(fs.bay===j){const level=t+inner*fs.at;zone('fixed-'+k,x+b.start,x+b.end,level,level+t);}
+    }
+    for(const a of spec.assemblyPieces||[]){
+     const b=g.bays[a.bay];if(!b)continue;
+     const key='extra-'+a.id,level=t+inner*a.at;
+     if(a.type==='backPanel')zone(key,x+b.start,x+b.end,t,h-t);
+     else zone(key,x+b.start+a.widthClearance,x+b.end-a.widthClearance,level-a.height/2,level+a.height/2);
+    }
+   }catch(_){/* Somente elementos de fabricação válidos geram zonas interativas. */}
+  }
+  if(sel&&opts.showDimensions){
+   try{
+    const prec=globalThis.ArquePrecision;
+    if(prec){
+     const m=prec.metrics(layout,item.id);
+     const edges=[{a:[x,y+d,z],b:[x+w,y+d,z],label:'L '+fmt(m.w)+' mm'},
+      {a:[x+w,y,z],b:[x+w,y+d,z],label:'P '+fmt(m.d)+' mm'},
+      {a:[x+w,y+d,z],b:[x+w,y+d,z+h],label:'A '+fmt(m.height)+' mm'}];
+     for(const edge of edges){
+      content+=line(edge.a,edge.b,proj,'#1576aa',2.8,'stroke-dasharray="6 3"');
+      const mid=proj((edge.a[0]+edge.b[0])/2,(edge.a[1]+edge.b[1])/2,(edge.a[2]+edge.b[2])/2);
+      content+='<text x="'+mid[0]+'" y="'+(mid[1]-9)+'" font-size="13" fill="#126286" font-weight="700" paint-order="stroke" stroke="#fff" stroke-width="4" text-anchor="middle" pointer-events="none">'+esc(edge.label)+'</text>';
+     }
+    }
+   }catch(_){/* Cota exibida é referência visual, sem alteração dimensional. */}
+  }
   content+=text([x+w/2,y+d/2,z+h+Math.max(110,roomH*.035)],proj,code,17,sel?'#075b8d':'#415d70','paint-order="stroke" stroke="#fff" stroke-width="3"');
   content+='</g>';
   out+=content;

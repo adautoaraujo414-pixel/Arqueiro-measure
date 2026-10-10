@@ -522,7 +522,7 @@ function mount(p,ops){
     if(a==='tool'){tool=arg;pointLineId='';refresh();return;}
    if(a==='finishPointLine'){pointLineId='';tool='select';save();refresh();ops.toast('Linha finalizada.');return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
-   if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){selected='';pointLineId='';save();refresh();}return;}
+   if(a==='undo'||a==='redo'){if(a==='undo'?undo(l):redo(l)){if(!l.items.some(i=>i.id===selected)){selected='';selectedPartKey='';}pointLineId='';save();refresh();}return;}
    if(a==='roomSize'){
     const w=numeric(root.querySelector('#labWidth').value,100),d=numeric(root.querySelector('#labDepth').value,100),h=numeric(root.querySelector('#labHeight').value,100);
     remember(l);l.width=w;l.depth=d;l.height=h;l.confirmed=true;l.roomRefs={};save();refresh();return;

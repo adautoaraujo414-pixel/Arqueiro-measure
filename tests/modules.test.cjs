@@ -153,7 +153,7 @@ const withRecess=M.parts({...model,shelfRearInset:10,dividerFrontInset:5,divider
 A.equal(withRecess.parts.find(p=>p.key==='shelf-0-0').h,530);
 const withOneDivider=M.parts({...model,vertical:[0.5],dividerFrontInset:5,dividerRearInset:10});
 A.equal(withOneDivider.parts.find(p=>p.key==='divider-0').h,545);
-A.throws(()=>M.parts({...model,shelfRearInset:550}),/insuficiente/);
+A.throws(()=>M.parts({...model,shelfRearInset:550}),/deve estar entre/);
 
 const splitTop=M.parts({...equal3,baseArrangement:'byBay'});
 A.equal(splitTop.parts.filter(p=>p.key.startsWith('topbottom-bay-')).length,3);

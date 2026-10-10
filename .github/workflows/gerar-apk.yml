@@ -60,6 +60,8 @@ jobs:
         run: node tests/visual.test.cjs
       - name: Testar catálogo de cozinha e eletrodomésticos
         run: node tests/kitchen.test.cjs
+      - name: Testar alinhamento de móveis e linhas do esboço
+        run: node tests/align.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado

@@ -78,6 +78,15 @@ function scene(layout,selectedId='',opts={}){
    '#d3d8dc','#a08768',1,'fill-opacity=".22" stroke-dasharray="6 3"');
   out+=line([a[0],a[1],0],[b[0],b[1],0],project,'#bd8953',3);
  }
+ // Guia de canto 45° permanece externo às peças fabricáveis do móvel.
+ for(const guide of layout.cornerGuides||[]){
+  const a=guide.start,b=guide.end;
+  if(!a||!b)continue;
+  out+=poly([[a[0],a[1],100],[b[0],b[1],100],[b[0],b[1],850],[a[0],a[1],850]],project,
+   '#dfb389','#bc8151',2,'fill-opacity=".28" stroke-dasharray="8 4" pointer-events="none"');
+  const m=project((a[0]+b[0])/2,(a[1]+b[1])/2,900);
+  out+='<text x="'+m[0]+'" y="'+m[1]+'" fill="#a0643c" stroke="#fff" stroke-width="4" paint-order="stroke" font-size="12" text-anchor="middle" pointer-events="none">45° · '+esc(fmt(guide.diagonalLength))+' mm</text>';
+ }
  out+=line([0,roomD,0],[roomW,roomD,0],project,'#7998a6',2);
  out+=line([roomW,0,0],[roomW,roomD,0],project,'#7998a6',2);
  const positions=items.map((item,i)=>({item,i,sort:num(item.x)+num(item.y)})).sort((a,b)=>a.sort-b.sort);

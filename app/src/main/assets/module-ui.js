@@ -43,20 +43,32 @@ function panel(p,state,l,selected,focusBay=0){
  fld('modPieceDoorCount','Portas do vão',1,'number','min="0" max="8" step="1"')+
  fld('modPieceSplitPct','Dividir vão em (%)',50,'number','min="10" max="90" step="0.1"')+
  '</div><p class="lab-fine">A trava impede medidas que não caibam. Fundo individual substitui o fundo contínuo do módulo. Régua de cava requer fresagem separada.</p></details>';
+ h+='<details class="lab-piece-options lab-drawer-options"><summary>＋ Gaveteiro / porta-temperos · informar corrediças</summary>';
+ h+='<p class="lab-fine">Informe os descontos e o comprimento conforme a corrediça comprada. Sem esses dados o Laboratório não gera cortes.</p><div class="lab-module-grid">'+
+ choice('modQuickAccessoryType','Modelo','drawer',[['drawer','Gaveteiro'],['spice','Porta-temperos extraível']])+
+ fld('modQuickDrawerCount','Gavetas / bandejas',4,'number','min="1" max="6" step="1"')+
+ fld('modQuickDrawerHeight','Altura da caixa (mm)',120,'number','min="60" max="400" step="0.1"')+
+ fld('modQuickSlideSide','Folga da corrediça por lado (mm)','','number','min="0.1" max="50" step="0.1" placeholder="Obrigatório"')+
+ fld('modQuickSlideLength','Comprimento da corrediça (mm)','','number','min="100" max="1000" step="0.1" placeholder="Obrigatório"')+
+ fld('modQuickDrawerFront','Folga frontal (mm)',20,'number','min="0" max="150" step="0.1"')+
+ fld('modQuickDrawerRear','Folga traseira (mm)',20,'number','min="0" max="150" step="0.1"')+
+ '</div>'+btn('Gerar gaveteiro no vão selecionado','modulePieceDrawer')+'</details>';
  h+='<div class="lab-piece-items"><strong>Peças especiais adicionadas</strong>';
  h+=(s.assemblyPieces||[]).map(x=>'<div class="lab-divider-line"><span>'+esc(x.label)+' · vão '+(x.bay+1)+'</span>'+btn('Excluir','modulePieceRemove',x.id)+'</div>').join('')||'<p class="lab-fine">Nenhuma peça adicional. Laterais, base e tampo continuam automáticos.</p>';
  if(s.doorMode==='byBay')h+='<p class="lab-fine">Portas por vão: '+Object.entries(s.bayDoors||{}).map(([k,q])=>'vão '+(+k+1)+': '+q).join(' · ')+' '+btn('Voltar a portas globais','moduleGlobalDoors')+'</p>';
- h+='<p class="lab-fine">Para gavetas e porta-temperos, use as configurações de corrediças na seção de montagem interna abaixo. O vão selecionado será mantido.</p></div></section>';
- h+='<div class="lab-module-grid">';
- h+=fld('modName','Nome do módulo',s.name,'text','maxlength="90"');
- for(const [key,label,min] of values)h+=fld('mod_'+key,label+' (mm)',s[key],'number','min="'+min+'" max="50000" step="0.1"');
+ h+='<p class="lab-fine">Os cortes das peças especiais entram no lote de MDF correspondente. Usinagem de cava e furações não são geradas automaticamente.</p></div></section>';
+ h+='<div class="lab-module-core">'+fld('modName','Nome do móvel',s.name,'text','maxlength="90"')+
+ values.filter(x=>['width','height','depth'].includes(x[0])).map(([key,label,min])=>fld('mod_'+key,label+' (mm)',s[key],'number','min="'+min+'" max="50000" step="0.1"')).join('')+'</div>';
+ h+='<details class="lab-module-advanced"><summary>Material, espessuras, portas e montagem · opções avançadas</summary><div class="lab-module-grid">';
+ for(const [key,label,min] of values.filter(x=>!['width','height','depth'].includes(x[0])))h+=fld('mod_'+key,label+' (mm)',s[key],'number','min="'+min+'" max="50000" step="0.1"');
  for(const [key,label,min,max] of integers)h+=fld('mod_'+key,label,s[key],'number','min="'+min+'" max="'+max+'" step="1"');
  for(const key of ['caseMaterial','frontMaterial','backMaterial'])h+=fld('mod_'+key,{caseMaterial:'Material do corpo',frontMaterial:'Material das portas',backMaterial:'Material do fundo'}[key],s[key],'text','maxlength="90"');
  h+=choice('mod_construction','Montagem do tampo e base',s.construction,[['between','Tampo e base entre laterais'],['over','Tampo e base sobre laterais']]);
  h+=choice('mod_baseArrangement','Como dividir tampo e base',s.baseArrangement||'continuous',[['continuous','Peças inteiras, passando por todos os vãos'],['byBay','Tampo e base separados por vão']]);
+ h+=choice('mod_back','Fundo do armário',s.back,[['overlay','Fundo contínuo aplicado'],['none','Sem fundo contínuo · usar fundos individuais']]);
  h+=choice('mod_frontType','Puxador',s.frontType,[['cava','Cava (usinagem)'],['concha','Concha (ferragem)'],['sem','Sem puxador']]);
  h+=choice('mod_grainFront','Sentido do veio nas portas',String(!!s.grainFront),[['true','Fixo na altura'],['false','Livre para girar']]);
- h+='</div><p class="lab-fine">Largura e profundidade acima são da CARCAÇA. Os tamponamentos aumentam a largura instalada. Fundo aplicado aumenta a profundidade.</p>';
+ h+='</div><p class="lab-fine">Largura e profundidade são da carcaça. Tamponamentos e fundo aplicado aumentam a dimensão instalada.</p></details>';
  h+='<div class="lab-module-buttons">'+btn('Aplicar medidas e recalcular','moduleApply')+btn('Duplicar nesta obra','moduleDuplicate')+btn('Salvar como modelo','moduleSaveTemplate')+'</div>';
  h+='<div class="lab-module-dividers"><h4>Ajustar ao vão real</h4><p>Use somente com a largura do ambiente conferida. O aplicativo desconta folgas laterais e tamponamentos antes de recalcular o corpo.</p>';
  h+='<div class="lab-module-grid">'+fld('modOpeningW','Vão registrado (mm)',l.width,'number','min="150" step="0.1"')+fld('modOpeningLeft','Folga de instalação esquerda',5,'number','min="0" step="0.1"')+fld('modOpeningRight','Folga de instalação direita',5,'number','min="0" step="0.1"')+'</div>'+btn('Ajustar módulo ao vão','moduleFit')+'</div>';
@@ -131,6 +143,16 @@ function act(action,ctx){
   notify((kind==='cavaRail'?'Régua de cava':kind==='rail'?'Travessa':'Fundo individual')+' gerado no vão '+(bay+1)+'.');
   return result(selected);
  }
+ if(action==='modulePieceDrawer'){
+  const bay=Number(val('modWorkbenchBay'));
+  const accessory={type:val('modQuickAccessoryType'),bay,count:val('modQuickDrawerCount'),
+   slideSide:val('modQuickSlideSide'),slideLength:val('modQuickSlideLength'),
+   frontClearance:val('modQuickDrawerFront'),rearClearance:val('modQuickDrawerRear'),height:val('modQuickDrawerHeight')};
+  const next=M().parts({...item.moduleSpec,accessories:[...item.moduleSpec.accessories,accessory]});
+  L.remember(l);M().regenerate(item,{accessories:next.spec.accessories});
+  notify((accessory.type==='spice'?'Porta-temperos':'Gaveteiro')+' criado no vão '+(bay+1)+' com folgas informadas.');
+  return result(selected);
+ }
  if(action==='modulePieceRemove'){
   const next=M().removeAssembly(item.moduleSpec,ctx.arg);
   L.remember(l);M().regenerate(item,{assemblyPieces:next.assemblyPieces});
@@ -156,7 +178,7 @@ function act(action,ctx){
   for(const [key] of values)updates[key]=val('mod_'+key);
   for(const [key] of integers)updates[key]=val('mod_'+key);
   for(const key of ['caseMaterial','frontMaterial','backMaterial'])updates[key]=val('mod_'+key);
-  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';updates.construction=val('mod_construction');updates.baseArrangement=val('mod_baseArrangement');
+  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';updates.construction=val('mod_construction');updates.baseArrangement=val('mod_baseArrangement');updates.back=val('mod_back');
   // Check every derived panel BEFORE mutating project state.
   M().parts({...item.moduleSpec,...updates});
   L.remember(l);M().regenerate(item,updates);

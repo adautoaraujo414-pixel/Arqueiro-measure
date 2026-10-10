@@ -33,10 +33,11 @@ function layout(p,roomId){
  if(!Array.isArray(l.history))l.history=[];
  if(!Array.isArray(l.future))l.future=[];
  if(!l.roomRefs)l.roomRefs={};
+ if(!Array.isArray(l.cornerGuides))l.cornerGuides=[];
  ensureModuleCodes(l);
  return l;
 }
-function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId,moduleSerial:l.moduleSerial,wallTrace:l.wallTrace});}
+function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId,moduleSerial:l.moduleSerial,wallTrace:l.wallTrace,cornerGuides:l.cornerGuides});}
 function remember(l){l.history.push(snapshot(l));if(l.history.length>25)l.history.shift();l.future=[];}
 function undo(l){if(!l.history.length)return false;l.future.push(snapshot(l));Object.assign(l,l.history.pop());return true;}
 function redo(l){if(!l.future.length)return false;l.history.push(snapshot(l));Object.assign(l,l.future.pop());return true;}
@@ -220,7 +221,16 @@ function screen(p,state){
    '<label>Tolerância (mm)<input id="advWallTolerance" type="number" min="0" max="300" value="40"></label>'+
    button('Criar paredes do desenho','advTraceWalls')+
    (l.wallTrace?'<p class="lab-fine">'+l.wallTrace.segments.length+' segmentos · '+(l.wallTrace.verified?'conferido':'pendente de medição')+'</p>':'')+
-   '<small>Não presume escala fotográfica nem confirma a obra automaticamente.</small></details></div></div>';
+   '<small>Não presume escala fotográfica nem confirma a obra automaticamente.</small></details>';
+  if(globalThis.ArqueFabrication)out+='<details><summary>⑦ Canto de 45° · guia dimensional</summary><p class="lab-fine">Monte o L de 90° primeiro. A frente diagonal é referência, não uma caixa pronta para corte.</p>'+
+   '<label>Módulo de fundo<select id="fabCornerBack">'+opts+'</select></label>'+
+   '<label>Módulo lateral<select id="fabCornerSide">'+modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,modules[1]?.id||'')).join('')+'</select></label>'+
+   '<label>Avanço por lado (mm)<input id="fabCornerReach" type="number" min="150" max="1200" value="400"></label>'+
+   '<label>Folga (mm)<input id="fabCornerClearance" type="number" min="0" max="150" value="15"></label>'+
+   button('Desenhar frente diagonal 45°','fabCorner45')+
+   (l.cornerGuides?.length?'<p class="lab-fine">Guias: '+l.cornerGuides.length+' · comprimento '+fmt(l.cornerGuides[l.cornerGuides.length-1].diagonalLength)+' mm</p>':'')+
+   '<small>Sem carcaça trapezoidal nem usinagem calculada.</small></details>';
+  out+='</div></div>';
  }
  const visual=globalThis.ArqueVisual;
  out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';

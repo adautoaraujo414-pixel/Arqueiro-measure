@@ -16,7 +16,7 @@ const values=[
  ['doorTopDiscount','Desconto superior das portas',0],['doorBottomDiscount','Desconto inferior das portas',0]
 ];
 const integers=[['doorCount','Quantidade de portas',0,8],['shelfCount','Prateleiras por vão',0,12]];
-function panel(p,state,l,selected){
+function panel(p,state,l,selected,focusBay=0){
  if(!M())return '<p>Motor de módulos não carregado.</p>';
  const templates=M().templateLibrary(state||{});
  const item=l.items.find(i=>i.id===selected&&i.kind==='module'),groups=M().groupedCutRows(p,p.rooms.find(r=>p.labLayouts?.[r.id]===l)?.id||'');
@@ -29,6 +29,24 @@ function panel(p,state,l,selected){
  try{generated=M().parts(item.moduleSpec);}catch(e){error=e.message;}
  const s=item.moduleSpec;
  h+='<div class="lab-module-subtitle"><strong>'+esc(item.label)+'</strong><span>Peça no projeto · '+mm(item.w)+' × '+mm(item.height)+' × '+mm(item.d)+' mm</span></div>';
+ const validBay=generated?.bays?.[focusBay]?focusBay:0;
+ h+='<section class="lab-piece-editor"><div class="lab-piece-editor-header"><div><h4>Montar móvel por peça</h4><small>Toque no compartimento da vista frontal e escolha a peça. As dimensões serão recalculadas em mm.</small></div>'+btn('▥ Vista frontal · selecionar vão','moduleFrontView')+'</div>';
+ h+='<div class="lab-piece-editor-options">'+choice('modWorkbenchBay','Vão selecionado',String(validBay),(generated?.bays||[]).map((b,i)=>[String(i),'Vão '+(i+1)+' · '+mm(b.width)+' mm']))+'</div>';
+ h+='<div class="lab-piece-editor-tools">'+btn('＋ Prateleira','moduleQuickShelf')+btn('＋ Travessa','modulePieceRail')+btn('＋ Régua de cava','modulePieceCavaRail')+btn('＋ Fundo do vão','modulePieceBack')+btn('＋ Porta','modulePieceDoor')+btn('＋ Lateral / divisória','modulePieceSplit')+'</div>';
+ h+='<details class="lab-piece-options"><summary>Ajustes antes de criar a peça</summary><div class="lab-module-grid">'+
+ fld('modPieceHeight','Altura da travessa/régua (mm)',70,'number','min="20" max="350" step="0.1"')+
+ fld('modPieceAt','Posição vertical (%)',50,'number','min="2" max="98" step="0.1"')+
+ fld('modPieceClearance','Folga lateral por lado (mm)',0,'number','min="0" max="30" step="0.1"')+
+ fld('modPieceFrontInset','Recuo frontal de instalação (mm)',0,'number','min="0" max="150" step="0.1"')+
+ fld('modPieceRearInset','Recuo traseiro de instalação (mm)',0,'number','min="0" max="150" step="0.1"')+
+ fld('modPieceShelfCount','Prateleiras móveis no vão',1,'number','min="0" max="12" step="1"')+
+ fld('modPieceDoorCount','Portas do vão',1,'number','min="0" max="8" step="1"')+
+ fld('modPieceSplitPct','Dividir vão em (%)',50,'number','min="10" max="90" step="0.1"')+
+ '</div><p class="lab-fine">A trava impede medidas que não caibam. Fundo individual substitui o fundo contínuo do módulo. Régua de cava requer fresagem separada.</p></details>';
+ h+='<div class="lab-piece-items"><strong>Peças especiais adicionadas</strong>';
+ h+=(s.assemblyPieces||[]).map(x=>'<div class="lab-divider-line"><span>'+esc(x.label)+' · vão '+(x.bay+1)+'</span>'+btn('Excluir','modulePieceRemove',x.id)+'</div>').join('')||'<p class="lab-fine">Nenhuma peça adicional. Laterais, base e tampo continuam automáticos.</p>';
+ if(s.doorMode==='byBay')h+='<p class="lab-fine">Portas por vão: '+Object.entries(s.bayDoors||{}).map(([k,q])=>'vão '+(+k+1)+': '+q).join(' · ')+' '+btn('Voltar a portas globais','moduleGlobalDoors')+'</p>';
+ h+='<p class="lab-fine">Para gavetas e porta-temperos, use as configurações de corrediças na seção de montagem interna abaixo. O vão selecionado será mantido.</p></div></section>';
  h+='<div class="lab-module-grid">';
  h+=fld('modName','Nome do módulo',s.name,'text','maxlength="90"');
  for(const [key,label,min] of values)h+=fld('mod_'+key,label+' (mm)',s[key],'number','min="'+min+'" max="50000" step="0.1"');
@@ -61,7 +79,7 @@ function panel(p,state,l,selected){
  h+='<div class="lab-module-grid">'+choice('modFixedBay','Vão',bayItems[0][0],bayItems)+fld('modFixedAt','Altura proporcional (%)',50,'number','min="1" max="99" step="0.1"')+'</div>'+btn('＋ Divisória horizontal fixa','moduleFixedAdd');
  h+=(s.fixedShelves||[]).map((o,i)=>'<div class="lab-divider-line"><strong>Horizontal '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+mm(o.at*100)+'%</span>'+btn('Retirar','moduleFixedRemove',String(i))+'</div>').join('');
  h+='<div class="lab-module-grid">'+choice('modAccessoryType','Acessório interno','drawer',[['drawer','Gaveta com corrediça'],['spice','Porta-temperos extraível']])+
- choice('modAccessoryBay','Usar no vão','0',bayItems)+fld('modAccessoryCount','Gavetas / bandejas',1,'number','min="1" max="6" step="1"')+
+ choice('modAccessoryBay','Usar no vão',String(validBay),bayItems)+fld('modAccessoryCount','Gavetas / bandejas',1,'number','min="1" max="6" step="1"')+
  fld('modSlideSide','Desconto CORREDIÇA por lado (mm)','', 'number','min="0.1" max="50" step="0.1" placeholder="Informar da ferragem"')+
  fld('modRearClearance','Desconto traseiro (mm)',20,'number','min="0" max="150" step="0.1"')+
  fld('modFrontClearance','Desconto frontal (mm)',20,'number','min="0" max="150" step="0.1"')+
@@ -97,6 +115,42 @@ function act(action,ctx){
   return result(instance.id);
  }
  if(!item||item.kind!=='module')throw Error('Selecione um módulo na planta para editar.');
+ if(action==='moduleFrontView')return {...result(selected),view:'front'};
+ if(action==='moduleQuickShelf'){
+  const bay=Number(val('modWorkbenchBay'));
+  const next=M().setBayShelves(item.moduleSpec,bay,val('modPieceShelfCount'));
+  L.remember(l);M().regenerate(item,{shelvesByBay:next.shelvesByBay});
+  notify('Prateleiras do vão '+(bay+1)+' salvas e distribuídas por igual.');return result(selected);
+ }
+ if(['modulePieceRail','modulePieceCavaRail','modulePieceBack'].includes(action)){
+  const kind={modulePieceRail:'rail',modulePieceCavaRail:'cavaRail',modulePieceBack:'backPanel'}[action];
+  const bay=Number(val('modWorkbenchBay')),options={at:Number(val('modPieceAt'))/100,
+   height:val('modPieceHeight'),widthClearance:val('modPieceClearance'),frontInset:val('modPieceFrontInset'),rearInset:val('modPieceRearInset')};
+  const next=M().insertAssembly(item.moduleSpec,kind,bay,options);
+  L.remember(l);M().regenerate(item,{assemblyPieces:next.assemblyPieces,back:next.back});
+  notify((kind==='cavaRail'?'Régua de cava':kind==='rail'?'Travessa':'Fundo individual')+' gerado no vão '+(bay+1)+'.');
+  return result(selected);
+ }
+ if(action==='modulePieceRemove'){
+  const next=M().removeAssembly(item.moduleSpec,ctx.arg);
+  L.remember(l);M().regenerate(item,{assemblyPieces:next.assemblyPieces});
+  notify('Peça excluída; lista de corte recalculada.');return result(selected);
+ }
+ if(action==='modulePieceDoor'){
+  const bay=Number(val('modWorkbenchBay')),next=M().setDoorsInBay(item.moduleSpec,bay,val('modPieceDoorCount'));
+  L.remember(l);M().regenerate(item,{doorMode:next.doorMode,bayDoors:next.bayDoors});
+  notify('Portas configuradas no vão '+(bay+1)+'. Portas globais não são duplicadas.');return result(selected);
+ }
+ if(action==='moduleGlobalDoors'){
+  const next=M().restoreGlobalDoors(item.moduleSpec);
+  L.remember(l);M().regenerate(item,{doorMode:next.doorMode});
+  notify('Portas globais restauradas sem somar as portas por vão.');return result(selected);
+ }
+ if(action==='modulePieceSplit'){
+  const bay=Number(val('modWorkbenchBay')),next=M().splitBay(item.moduleSpec,bay,Number(val('modPieceSplitPct'))/100);
+  L.remember(l);M().regenerate(item,{...next});
+  notify('Nova lateral estrutural criada; compartimentos recalculados.');return {...result(selected),focusBay:bay};
+ }
  if(action==='moduleApply'){
   const updates={name:val('modName')};
   for(const [key] of values)updates[key]=val('mod_'+key);

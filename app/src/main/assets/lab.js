@@ -8,6 +8,22 @@ const fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
 const uid=()=>String(Date.now())+'-'+Math.random().toString(36).slice(2);
 const copy=o=>JSON.parse(JSON.stringify(o));
 const numeric=(value,min=0,max=50000)=>{const n=Number(String(value).replace(',','.'));if(!Number.isFinite(n)||n<min||n>max)throw Error('Medida inválida: informe um valor entre '+min+' e '+max+' mm.');return Math.round(n*10)/10;};
+function ensureModuleCodes(layout){
+ if(!Number.isInteger(layout.moduleSerial)||layout.moduleSerial<0)layout.moduleSerial=0;
+ const used=new Set();
+ for(const item of layout.items||[]){
+  if(item.kind==='module'&&/^M\d{2,}$/.test(item.code||'')&&!used.has(item.code)){
+   used.add(item.code);layout.moduleSerial=Math.max(layout.moduleSerial,Number(item.code.slice(1)));
+  }else if(item.kind==='module')item.code='';
+ }
+ for(const item of layout.items||[]){
+  if(item.kind!=='module'||item.code)continue;
+  let code;
+  do{code='M'+String(++layout.moduleSerial).padStart(2,'0');}while(used.has(code));
+  item.code=code;used.add(code);
+ }
+ return layout;
+}
 function layout(p,roomId){
  if(!p||!Array.isArray(p.rooms)||!p.rooms.some(r=>r.id===roomId))throw Error('Selecione um ambiente cadastrado.');
  if(!p.labLayouts||typeof p.labLayouts!=='object')p.labLayouts={};
@@ -17,9 +33,10 @@ function layout(p,roomId){
  if(!Array.isArray(l.history))l.history=[];
  if(!Array.isArray(l.future))l.future=[];
  if(!l.roomRefs)l.roomRefs={};
+ ensureModuleCodes(l);
  return l;
 }
-function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId});}
+function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId,moduleSerial:l.moduleSerial});}
 function remember(l){l.history.push(snapshot(l));if(l.history.length>25)l.history.shift();l.future=[];}
 function undo(l){if(!l.history.length)return false;l.future.push(snapshot(l));Object.assign(l,l.history.pop());return true;}
 function redo(l){if(!l.future.length)return false;l.history.push(snapshot(l));Object.assign(l,l.future.pop());return true;}
@@ -391,5 +408,5 @@ function mount(p,ops){
  };
  root.addEventListener('pointerup',finish);root.addEventListener('pointercancel',finish);
 }
-return {layout,add,place,attach,linkStatus,snapshot,remember,undo,redo,svg,screen,mount};
+return {layout,ensureModuleCodes,add,place,attach,linkStatus,snapshot,remember,undo,redo,svg,screen,mount};
 });

@@ -68,6 +68,8 @@ jobs:
         run: node tests/precision.test.cjs
       - name: Testar ferragens e guia de canto de 45 graus
         run: node tests/fabrication.test.cjs
+      - name: Testar novo módulo pentagonal e isolamento do corte CNC
+        run: node tests/corner45.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado
@@ -83,6 +85,8 @@ jobs:
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/precision-ui.test.cjs
       - name: Testar ferragens e canto 45 no laboratório
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/fabrication-ui.test.cjs
+      - name: Testar editor de canto pentagonal no tablet simulado
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/corner45-ui.test.cjs
       - name: Registrar falhas da interface
         if: failure()
         env:

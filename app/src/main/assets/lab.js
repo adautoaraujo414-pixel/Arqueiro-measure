@@ -181,7 +181,9 @@ function screen(p,state){
   out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente · referências de eletros exigem medidas do fabricante</p><div class="lab-catalog-add">'+
    button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
    button('＋ Torre','catalogAdd','tower')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
-   '</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
+   '</div><div class="lab-kitchen-presets"><h4>Catálogo Arque Cozinha · editável</h4><p>Modelos de referência: ajuste as medidas antes de fabricar.</p>'+
+  (globalThis.ArqueKitchen?.groupIds()||[]).map(group=>'<details '+(['Inferiores','Eletrodomésticos'].includes(group)?'open':'')+'><summary>'+esc(group)+'</summary><div class="lab-preset-list">'+globalThis.ArqueKitchen.catalog().filter(p=>p.group===group).map(p=>button('＋ '+esc(p.label),'catalogPreset',p.id)).join('')+'</div></details>').join('')+
+  (state?.moduleTemplates?.length?'<details><summary>Meus modelos salvos</summary><div class="lab-preset-list">'+state.moduleTemplates.map(t=>button('＋ '+esc(t.name),'catalogSaved',t.id)).join('')+'</div></details>':'')+'</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
    (entries.map(e=>'<button type="button" data-lab="catalogSelect" data-arg="'+esc(e.id)+'" class="'+(e.id===selected?'lab-active':'')+'"><b>'+esc(e.code)+'</b><span>'+esc(e.name)+'<small>'+esc(e.dims)+' · Z '+fmt(e.z)+' mm</small></span></button>').join('')||'<p>Adicione um módulo para começar.</p>')+
    '</div><p class="lab-fine">Seleção, dimensões e peças são ligadas ao mesmo projeto. Nenhuma medida é deduzida da foto.</p></aside>';
  }
@@ -209,8 +211,26 @@ function screen(p,state){
     out+='</div>';
    }
    out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
-  out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça'],['z','Altura do piso (Z)']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
-  for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
+  if(item.kind==='module'&&globalThis.ArqueModules){
+   const s=item.moduleSpec;
+   out+='<div class="lab-quick-edit"><h4>Editar módulo selecionado</h4><div class="lab-module-grid">'+
+    '<label>Portas padrão<input id="labQuickDoors" type="number" min="0" max="8" value="'+s.doorCount+'"></label>'+
+    '<label>Prateleiras padrão<input id="labQuickShelves" type="number" min="0" max="12" value="'+s.shelfCount+'"></label>'+
+    '<label>Material da estrutura<input id="labQuickMaterial" maxlength="90" value="'+esc(s.caseMaterial)+'"></label>'+
+    '<label>Puxador<select id="labQuickFront">'+[['cava','Cava'],['concha','Concha'],['sem','Sem puxador']].map(k=>option(k[0],k[1],s.frontType)).join('')+'</select></label>'+
+    '</div>'+button('Aplicar edição','catalogEditModule')+button('Salvar como meu modelo','catalogSaveOwn')+
+    '<p class="lab-fine">Para alterar portas e prateleiras por vão, utilize a Montagem por Peça.</p></div>';
+  }else if(item.kind==='appliance'||item.kind==='led'||['fridge','cooktop','stove'].includes(item.kind)){
+   out+='<div class="lab-quick-edit"><h4>Objeto de referência</h4><p class="lab-fine">'+esc(item.notice||'Confirmar medidas reais antes de fabricar qualquer nicho.')+'</p>';
+   if(item.kind==='led')out+='<label>Cor da luz<input id="labLightColor" type="color" value="'+(/^#[0-9a-f]{6}$/i.test(item.lightColor||'')?item.lightColor:'#ffd292')+'"></label>'+
+    '<label>LED<select id="labLightOn">'+option('on','Ligado',item.lightOn===false?'off':'on')+option('off','Desligado',item.lightOn===false?'off':'on')+'</select></label>';
+   else out+='<label>Modelo / referência técnica<input id="labDeviceModel" maxlength="90" value="'+esc(item.deviceModel||'')+'" placeholder="Marca e modelo do fabricante"></label>';
+   out+=button('Salvar referência','catalogSaveReference')+'</div>';
+  }
+    out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça'],['z','Altura do piso (Z)']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
+  if(item.kind==='module'||item.kind==='appliance'||item.kind==='led'||['fridge','stove','cooktop'].includes(item.kind))
+   out+='<label>Rotação<select id="labRotation">'+[0,90,180,270].map(deg=>option(String(deg),deg+'°',String(item.rotation||0))).join('')+'</select></label>';
+    for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
   if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
   if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';

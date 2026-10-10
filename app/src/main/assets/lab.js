@@ -39,7 +39,7 @@ function attach(l,room,measureId,target,itemId){
  const m=(room.measurements||[]).find(x=>x.id===measureId);if(!m)throw Error('Leitura não encontrada no ambiente.');
  const value=numeric(m.value,0.1);
  if(!['width','depth','height','w','d'].includes(target))throw Error('Destino inválido.');
- if(itemId){const item=l.items.find(x=>x.id===itemId);if(!item)throw Error('Peça não encontrada.');if(!['w','d','height'].includes(target))throw Error('Selecione uma dimensão da peça.');if(item.kind==='module'&&root.ArqueModules){const k={w:'width',d:'depth',height:'height'}[target],update={[k]:value};root.ArqueModules.parts({...item.moduleSpec,...update});remember(l);root.ArqueModules.regenerate(item,update);}else{remember(l);item[target]=value;}item.refs[target]={id:m.id,recorded:value};}
+ if(itemId){const item=l.items.find(x=>x.id===itemId);if(!item)throw Error('Peça não encontrada.');if(!['w','d','height'].includes(target))throw Error('Selecione uma dimensão da peça.');if(item.kind==='module'&&globalThis.ArqueModules){const k={w:'width',d:'depth',height:'height'}[target],update={[k]:value};globalThis.ArqueModules.parts({...item.moduleSpec,...update});remember(l);globalThis.ArqueModules.regenerate(item,update);}else{remember(l);item[target]=value;}item.refs[target]={id:m.id,recorded:value};}
  else{if(!['width','depth','height'].includes(target))throw Error('Selecione largura, profundidade ou altura do ambiente.');remember(l);l[target]=value;l.confirmed=true;l.roomRefs[target]={id:m.id,recorded:value};}
  return value;
 }
@@ -120,7 +120,7 @@ function screen(p,state){
   out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
- out+='</aside></div>'+(root.ArqueModuleUI&&state?root.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
+ out+='</aside></div>'+(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;
@@ -138,7 +138,7 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
-   if(a.startsWith('module')){if(!root.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=root.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined)selected=res.selected;if(!res.skipRefresh){save();refresh();}return;}}
+   if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined)selected=res.selected;if(!res.skipRefresh){save();refresh();}return;}}
    if(a==='view'){view=arg;selected='';refresh();return;}
    if(a==='tool'){tool=arg;refresh();return;}
    if(a==='snap'){gridSnap=!gridSnap;refresh();return;}
@@ -158,7 +158,7 @@ function mount(p,ops){
     const item=l.items.find(x=>x.id===selected);if(!item)throw Error('Selecione uma peça.');
     const props={label:root.querySelector('#labName').value};
     for(const input of root.querySelectorAll('[data-lab-prop]'))props[input.dataset.labProp]=numeric(input.value,(item.kind==='wall'&&['w','d'].includes(input.dataset.labProp))?-50000:0);
-    if(item.kind==='module'&&root.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};root.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);root.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;}else{remember(l);place(item,props);}
+    if(item.kind==='module'&&globalThis.ArqueModules){const updates={width:props.w,depth:props.d,height:props.height,name:props.label};globalThis.ArqueModules.parts({...item.moduleSpec,...updates});remember(l);globalThis.ArqueModules.regenerate(item,updates);item.x=props.x;item.y=props.y;}else{remember(l);place(item,props);}
     for(const key of ['w','d','height'])delete item.refs[key];
     save();refresh();return;
    }

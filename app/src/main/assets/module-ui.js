@@ -51,12 +51,12 @@ function panel(p,state,l,selected){
  h+=(s.fixedShelves||[]).map((o,i)=>'<div class="lab-divider-line"><strong>Horizontal '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+mm(o.at*100)+'%</span>'+btn('Retirar','moduleFixedRemove',String(i))+'</div>').join('');
  h+='<div class="lab-module-grid">'+choice('modAccessoryType','Acessório interno','drawer',[['drawer','Gaveta com corrediça'],['spice','Porta-temperos extraível']])+
  choice('modAccessoryBay','Usar no vão','0',bayItems)+fld('modAccessoryCount','Gavetas / bandejas',1,'number','min="1" max="6" step="1"')+
- fld('modSlideSide','Desconto CORREDIÇA por lado (mm)',0,'number','min="0" max="50" step="0.1"')+
+ fld('modSlideSide','Desconto CORREDIÇA por lado (mm)','', 'number','min="0.1" max="50" step="0.1" placeholder="Informar da ferragem"')+
  fld('modRearClearance','Desconto traseiro (mm)',20,'number','min="0" max="150" step="0.1"')+
  fld('modFrontClearance','Desconto frontal (mm)',20,'number','min="0" max="150" step="0.1"')+
  fld('modDrawerHeight','Altura da caixa (mm)',120,'number','min="60" max="400" step="0.1"')+
- fld('modSlideLength','Comprimento da corrediça (mm)',0,'number','min="0" max="1000" step="0.1"')+'</div>';
- h+='<p class="lab-fine">Desconto por lado e comprimento de corrediça NÃO são universais. Informe os valores do modelo real, não use os exemplos para fabricação.</p>';
+ fld('modSlideLength','Comprimento da corrediça (mm)','', 'number','min="100" max="1000" step="0.1" placeholder="Medida do fabricante"')+'</div>';
+ h+='<p class="lab-fine">Desconto lateral e comprimento são obrigatórios, definidos pelo modelo de corrediça comprado. Não há valores universais.</p>';
  h+=btn('＋ Adicionar gaveta / porta-temperos','moduleAccessoryAdd');
  h+=(s.accessories||[]).map((o,i)=>'<div class="lab-divider-line"><strong>'+esc(o.type==='spice'?'Porta-temperos':'Gavetas')+' '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+o.count+' un. · folga '+mm(o.slideSide)+' mm/lado</span>'+btn('Retirar','moduleAccessoryRemove',String(i))+'</div>').join('');
  h+='</div>';

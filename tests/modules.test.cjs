@@ -155,4 +155,10 @@ const withOneDivider=M.parts({...model,vertical:[0.5],dividerFrontInset:5,divide
 A.equal(withOneDivider.parts.find(p=>p.key==='divider-0').h,545);
 A.throws(()=>M.parts({...model,shelfRearInset:550}),/insuficiente/);
 
+const splitTop=M.parts({...equal3,baseArrangement:'byBay'});
+A.equal(splitTop.parts.filter(p=>p.key.startsWith('topbottom-bay-')).length,3);
+A.equal(splitTop.parts.filter(p=>p.key.startsWith('topbottom-bay-')).every(p=>p.qty===2),true);
+A.equal(splitTop.parts.some(p=>p.key==='topbottom'),false);
+A(Math.abs(splitTop.parts.filter(p=>p.key.startsWith('topbottom-bay-')).reduce((sum,p)=>sum+p.w,0)+(3-1)*18-(800-36))<=0.1);
+A.throws(()=>M.parts({...model,construction:'over',baseArrangement:'byBay'}),/exigem/);
 console.log('Motor de módulos: montagem, corrediças, molduras e peças avulsas no corte OK.');

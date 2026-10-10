@@ -170,6 +170,21 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#labBoard [data-lab-object]'),'cena se atualiza com o aéreo');
  assert(Number(doc.querySelector('[data-lab-prop="z"]').value)>0,'aéreo possui altura de instalação real');
  labClick('catalogSelect',originalAssemblyModuleId);await sleep(45);
+ const constructionButton=doc.querySelector('[data-lab="partSelect"]');assert(constructionButton,'arvore de pecas tecnicas disponivel');
+ labClick('partSelect',constructionButton.dataset.arg);await sleep(55);
+ assert(doc.querySelector('.lab-selected-part')?.textContent.includes('mm'),'ficha da peca com medidas reais');
+ const moving=doc.querySelector('#labBoard .lab-selected');
+ assert(moving,'modelo selecionado para arraste espacial');
+ doc.querySelector('#labBoard').getBoundingClientRect=()=>({left:0,top:0,width:1000,height:650});
+ const originX=Number(doc.querySelector('[data-lab-prop="x"]').value);
+ function spatialPointer(type,x,y){
+  const ev=new w.Event(type,{bubbles:true,cancelable:true});
+  Object.defineProperties(ev,{pointerId:{value:151},isPrimary:{value:true},clientX:{value:x},clientY:{value:y}});
+  (type==='pointerdown'?moving:doc.querySelector('#labBoard')).dispatchEvent(ev);
+ }
+ spatialPointer('pointerdown',220,210);spatialPointer('pointermove',275,210);spatialPointer('pointerup',275,210);
+ await sleep(80);
+ assert(Number(doc.querySelector('[data-lab-prop="x"]').value)!==originX,'arraste espacial altera X real em mm');
  labClick('view','plan');await sleep(55);
 
  // Montagem interativa sobre um vao selecionado na elevacao, com geometria e corte.

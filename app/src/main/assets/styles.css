@@ -250,3 +250,13 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-dock-tool.active{background:#087cb8;color:#fff}
 .photo-dock-tool:focus-visible,.photo-icon-button:focus-visible,.photo-apply-reading:focus-visible{outline:3px solid #ffce33;outline-offset:2px}
 @media(max-width:700px){.photo-floating-dock{bottom:8px;left:8px;gap:2px;padding:3px}.photo-dock-tool{min-width:40px;min-height:42px;font-size:24px}.photo-apply-reading{margin-left:0}}
+
+/* Esboço, planta e laboratório compartilham o mesmo projeto e as folhas existentes. */
+.studio-mode-tabs{display:flex;flex-wrap:wrap;gap:7px;padding:8px 0}
+.studio-mode-tabs button{min-width:95px}
+.studio-lab-panel{display:flex;flex-wrap:wrap;align-items:end;gap:8px;padding:10px 8px;background:var(--surface,#f7fafc);border:1px solid #e0e7ec;border-radius:10px;margin:8px 0}
+.studio-lab-panel label{font-size:12px;display:flex;flex-direction:column;gap:4px;max-width:260px}
+.studio-lab-panel select,.studio-lab-panel input{min-height:37px;max-width:260px}
+.studio-lab-panel small{flex-basis:100%}
+.studio-photo-reference{max-height:200px;overflow:hidden;border:1px solid #d8e2eb;border-radius:9px;margin:8px 0;background:#111;display:flex;justify-content:center}
+.studio-photo-reference img{max-width:100%;max-height:200px;object-fit:contain}

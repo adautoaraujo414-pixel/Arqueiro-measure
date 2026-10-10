@@ -36,7 +36,7 @@ function layout(p,roomId){
  ensureModuleCodes(l);
  return l;
 }
-function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId,moduleSerial:l.moduleSerial});}
+function snapshot(l){return copy({width:l.width,depth:l.depth,height:l.height,confirmed:l.confirmed,roomRefs:l.roomRefs,items:l.items,photoId:l.photoId,moduleSerial:l.moduleSerial,wallTrace:l.wallTrace});}
 function remember(l){l.history.push(snapshot(l));if(l.history.length>25)l.history.shift();l.future=[];}
 function undo(l){if(!l.history.length)return false;l.future.push(snapshot(l));Object.assign(l,l.history.pop());return true;}
 function redo(l){if(!l.future.length)return false;l.history.push(snapshot(l));Object.assign(l,l.future.pop());return true;}
@@ -158,6 +158,10 @@ function svg(l,view,selectedId){
  for(const item of l.items.filter(x=>x.view===view||x.kind==='module')){const sel=item.id===selectedId;
   a+='<g data-lab-object="'+esc(item.id)+'" class="'+(sel?'lab-selected':'')+'">'+(item.kind==='module'?moduleShape(item,view,sel,l):shape(item,sel))+'</g>';
   if(item.kind!=='pen'&&item.kind!=='wall')a+='<text x="'+(item.x+((view==='plan'&&Number(item.rotation||0)%180===90)?item.d:item.w)/2)+'" y="'+Math.max(38,item.y-22)+'" font-size="'+Math.max(34,Math.min(70,W/75))+'" text-anchor="middle" fill="'+(sel?'#0c6899':'#667e89')+'" pointer-events="none">'+esc(item.label)+' · '+fmt(item.w)+' × '+fmt(item.d)+'</text>';
+ }
+ if(view==='plan'&&l.wallTrace?.segments)for(const seg of l.wallTrace.segments){
+  a+='<line x1="'+seg.start[0]+'" y1="'+seg.start[1]+'" x2="'+seg.end[0]+'" y2="'+seg.end[1]+'" stroke="#a06838" stroke-width="14" vector-effect="non-scaling-stroke" opacity=".7" pointer-events="none"/>';
+  a+='<text x="'+(seg.start[0]+seg.end[0])/2+'" y="'+((seg.start[1]+seg.end[1])/2-24)+'" text-anchor="middle" fill="#975721" font-size="35" pointer-events="none">'+fmt(seg.length)+' mm</text>';
  }
  return a+'</svg>';
 }
@@ -589,8 +593,10 @@ function mount(p,ops){
     if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
     const snap=x=>gridSnap?Math.round(x/5)*5:Math.round(x*10)/10;
     const rotated=Number(item.rotation||0)%180===90,fw=rotated?item.d:item.w,fd=rotated?item.w:item.d;
-    item.x=snap(Math.max(0,Math.min(l.width-fw,drag.originalX+dx)));
-    item.y=snap(Math.max(0,Math.min(l.depth-fd,drag.originalY+dy)));
+    const draftX=snap(Math.max(0,Math.min(l.width-fw,drag.originalX+dx))),draftY=snap(Math.max(0,Math.min(l.depth-fd,drag.originalY+dy)));
+    let placement={x:draftX,y:draftY};
+    if(magnetEnabled&&globalThis.ArqueAdvanced)try{placement=globalThis.ArqueAdvanced.magnetic(l,item.id,draftX,draftY,45);}catch(_){/* Encaixe impossível não move a caixa. */}
+    item.x=placement.x;item.y=placement.y;
     const group=board.querySelector('[data-lab-object="'+drag.id+'"]');
     if(group){
      const p0=camera.project(drag.originalX,drag.originalY,0),p1=camera.project(item.x,item.y,0);
@@ -605,8 +611,13 @@ function mount(p,ops){
    const pt=point(e);
    if(drag.mode==='move'){
     if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
-    item.x=Math.max(0,Math.min(l.width,drag.x+pt.x-drag.start.x));
-    if(item.kind==='module'&&view==='front')item.frontY=Math.max(0,Math.min(l.height-item.height,drag.y+pt.y-drag.start.y));else item.y=Math.max(0,Math.min(view==='front'?l.height:l.depth,drag.y+pt.y-drag.start.y));
+    const draftX=Math.max(0,Math.min(l.width,drag.x+pt.x-drag.start.x)),draftY=Math.max(0,Math.min(view==='front'?l.height:l.depth,drag.y+pt.y-drag.start.y));
+    if(item.kind==='module'&&view==='front'){item.x=draftX;item.frontY=Math.max(0,Math.min(l.height-item.height,draftY));}
+    else{
+     let p={x:draftX,y:draftY};
+     if(view==='plan'&&magnetEnabled&&globalThis.ArqueAdvanced)try{p=globalThis.ArqueAdvanced.magnetic(l,item.id,draftX,draftY,45);}catch(_){/* Conservar o gesto para ajuste fino. */}
+     item.x=p.x;item.y=p.y;
+    }
    }else if(drag.mode==='wall'){item.w=pt.x-drag.start.x;item.d=pt.y-drag.start.y;}
    else if(drag.mode==='pen'){item.points.push([pt.x,pt.y]);}
    // SVG geometry updates in place without interrupting the captured pointer.

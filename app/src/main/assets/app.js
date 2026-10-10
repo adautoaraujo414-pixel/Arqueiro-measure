@@ -14,7 +14,7 @@ function applyPhotoZoom(){const surface=$('#photoZoomSurface');if(surface){surfa
 }
 function photoZoomSet(n){photoZoom=photoZoomClamp(n);if(photoZoom===1){photoPanX=0;photoPanY=0;}applyPhotoZoom();}
 
-let studioPageId=null, studioFullscreen=false, studioInk='#176f9d', studioWidth=3, studioTool='pen', studioGrid='dots', studioActive=false, studioPoints=[];
+let studioPageId=null, studioFullscreen=false, studioMode='esboco', studioInk='#176f9d', studioWidth=3, studioTool='pen', studioGrid='dots', studioActive=false, studioPoints=[];
 let linkPeers=[];
 let linkInfo=null,linkNotice='';
 let db, state={clients:[],projects:[],settings:{tolerance:5}},tab='home',selectedClient=null,selectedProject=null,selectedRoom=null,subtab='medidas',lastBLE=null,lastBleReceipt=null,bleReadings=[],bleDevice=null,diagnostics=null,cameraCheck='Não testada',drawActive=false,drawPoints=[];
@@ -187,7 +187,7 @@ function projectOverview(){
  ['medidas','▱','Ambientes e medições',(p.rooms||[]).length+' ambientes'],
  ['fotos','▣','Fotografias',(p.photos||[]).length+' fotos'],
  ['fotomedidas','↔','Setas e medidas','Anotar diretamente sobre fotos'],
- ['atelier','✎','Esboço','Folhas A4 com nome e S Pen'],
+ ['atelier','✎','Esboço + Laboratório','Plantas, móveis e folhas A4 com S Pen'],
  ['corte','▦','Plano de corte','Peças, chapas e sobras'],
  ['calculo','⌗','Cálculos da obra','Conferência baseada no projeto'],
  ['financeiro','R$','Financeiro','Contrato e pagamentos']];
@@ -259,13 +259,27 @@ function photoView(){const p=project();return `<div class="card"><h3>Fotos e ref
 function drawView(){const r=room();return `<div class="card"><h3>Caderno técnico</h3><p class="muted">Desenhe com o dedo ou caneta do tablet. Os traços ficam associados ao ambiente.</p><div class="field"><label>Ambiente</label><select id="drawRoom">${project().rooms.map(x=>`<option value="${x.id}" ${x.id===selectedRoom?'selected':''}>${escape(x.name)}</option>`).join('')}</select></div>${r?`<div class="field"><label for="drawColor">Cor da caneta</label><select id="drawColor"><option value="#ffd329">Amarelo</option><option value="#171717">Preto</option><option value="#e23d3d">Vermelho</option><option value="#235ed7">Azul</option><option value="#288047">Verde</option></select></div><div class="canvas-wrap"><canvas class="draw" id="drawing" width="900" height="500"></canvas></div><div class="actions">${btn('Desfazer traço','undoStroke')}${btn('Limpar desenho','clearDrawing','','danger')}</div><div class="field"><label>Observação / referência</label><textarea id="noteText" placeholder="Ex.: tomada atrás da torre quente; conferir altura do sifão"></textarea></div>${btn('Salvar anotação','addNote','','primary')}${r.annotations.map(n=>`<div class="item"><div>${escape(n.text)}<small>${escape(n.date)}</small></div>${btn('Excluir','deleteNote',n.id,'small danger')}</div>`).join('')}`:'<div class="empty">Crie um ambiente na aba Medições antes de desenhar.</div>'}</div>`;}
 function studioPages(p){ if(!Array.isArray(p.studioPages))p.studioPages=[];return p.studioPages; }
 function studioCurrent(p){const pages=studioPages(p);if(!pages.length)return null;return pages.find(x=>x.id===studioPageId)||pages[0];}
+function studioModeTitle(mode){return mode==='planta'?'Planta':mode==='laboratorio'?'Laboratório':'Esboço';}
+function studioObjectPaths(kind,x1,y1,x2,y2){
+ const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
+ if(kind==='wall')return [[[x1,y1],[x2,y2]]];
+ const rect=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];
+ const paths=[rect];
+ if(kind==='cabinet'){paths.push([[x+w/2,y],[x+w/2,y+h]]);paths.push([[x+w*.44,y+h*.5],[x+w*.44,y+h*.65]]);paths.push([[x+w*.56,y+h*.5],[x+w*.56,y+h*.65]]);}
+ if(kind==='drawers'){for(let i=1;i<4;i++)paths.push([[x,y+h*i/4],[x+w,y+h*i/4]]);}
+ if(kind==='door'){paths.push([[x,y+h],[x+w,y]]);}
+ return paths;
+}
+
 function studioView(){
  const p=project(),pages=studioPages(p),page=studioCurrent(p);if(page)studioPageId=page.id;
- return `<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><label for="studioNewName" class="studio-compact-title">Esboços <small>· ${pages.length} folhas A4</small></label><input id="studioNewName" aria-label="Nome da nova folha" placeholder="Nome da folha" maxlength="100">${btn('+ Nova folha','studioNew','','primary')}</div></div>
+ return `<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><label for="studioNewName" class="studio-compact-title">Esboço + Laboratório <small>· ${pages.length} folhas</small></label><input id="studioNewName" aria-label="Nome da nova folha" placeholder="Nome da folha" maxlength="100">${btn('+ Nova folha','studioNew','','primary')}</div><div class="studio-mode-tabs">${['esboco','planta','laboratorio'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')}</div></div>
  <div class="studio-layout"><aside class="studio-sidebar"><div class="eyebrow">FOLHAS · ${pages.length}</div>${pages.map((x,i)=>`<button class="studio-page ${page&&page.id===x.id?'on':''}" data-action="studioSelect" data-arg="${escape(x.id)}"><span class="studio-page-num">${String(i+1).padStart(2,'0')}</span><span>${escape(x.name)}</span><span>↗</span></button>`).join('')||'<div class="empty">Adicione sua primeira folha A4.</div>'}</aside>
  <div class="studio-work ${studioFullscreen?'studio-fullscreen':''}" id="studioWork">${page?`
  <div class="studio-paper-head"><div><div class="eyebrow">FOLHA ${page.width===1000?'ANTIGA':'A4'} · ${pages.findIndex(x=>x.id===page.id)+1}/${pages.length}</div><strong>${escape(page.name)}</strong></div><div class="studio-head-actions">${studioFullscreen?btn('✕ Fechar tela cheia','studioCloseFull','','primary'):btn('⛶ Abrir em tela cheia','studioOpenFull','','primary')}</div></div>
- <div class="studio-tools"><label>Ambiente <select id="studioRoom"><option value="">Sem ambiente</option>${p.rooms.map(r=>`<option value="${escape(r.id)}" ${r.id===page.roomId?'selected':''}>${escape(r.name)}</option>`).join('')}</select></label><label>Ferramenta <select id="studioTool"><option value="pen" ${studioTool==='pen'?'selected':''}>Caneta</option><option value="eraser" ${studioTool==='eraser'?'selected':''}>Borracha</option></select></label><label>Cor <input type="color" id="studioColor" value="${studioInk}" aria-label="Cor da caneta"></label><label>Espessura <input type="range" min="1" max="16" id="studioWidth" value="${studioWidth}"></label><label>Fundo <select id="studioGrid"><option value="dots" ${studioGrid==='dots'?'selected':''}>Pontilhado</option><option value="lines" ${studioGrid==='lines'?'selected':''}>Linhas</option><option value="blank" ${studioGrid==='blank'?'selected':''}>Liso</option></select></label></div>
+ <div class="studio-tools"><label>Ambiente <select id="studioRoom"><option value="">Sem ambiente</option>${p.rooms.map(r=>`<option value="${escape(r.id)}" ${r.id===page.roomId?'selected':''}>${escape(r.name)}</option>`).join('')}</select></label><label>Ferramenta <select id="studioTool"><option value="pen" ${studioTool==='pen'?'selected':''}>Caneta</option><option value="eraser" ${studioTool==='eraser'?'selected':''}>Borracha</option><option value="cabinet" ${studioTool==='cabinet'?'selected':''}>Armário 2 portas</option><option value="drawers" ${studioTool==='drawers'?'selected':''}>Gaveteiro</option><option value="room" ${studioTool==='room'?'selected':''}>Retângulo / ambiente</option><option value="wall" ${studioTool==='wall'?'selected':''}>Parede / linha reta</option><option value="door" ${studioTool==='door'?'selected':''}>Porta</option></select></label><label>Cor <input type="color" id="studioColor" value="${studioInk}" aria-label="Cor da caneta"></label><label>Espessura <input type="range" min="1" max="16" id="studioWidth" value="${studioWidth}"></label><label>Fundo <select id="studioGrid"><option value="dots" ${studioGrid==='dots'?'selected':''}>Pontilhado</option><option value="lines" ${studioGrid==='lines'?'selected':''}>Linhas</option><option value="blank" ${studioGrid==='blank'?'selected':''}>Liso</option></select></label></div>
+ <div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida','studioSetMeasure')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Planta e Laboratório são estudos 2D; não são escaneamento 3D.</small></div>
+ ${page.referencePhotoId&&p.photos.some(x=>x.id===page.referencePhotoId)?'<div class="studio-photo-reference"><img alt="Foto de referência da obra" src="'+p.photos.find(x=>x.id===page.referencePhotoId).data+'"></div>':''}
  <div class="studio-canvas-shell"><canvas id="studioCanvas" width="${page.width||1000}" height="${page.height||690}" aria-label="Folha de esboço ${escape(page.name)}"></canvas></div>
  <div class="studio-actions">${btn('↶ Desfazer','studioUndo')}${btn('↷ Refazer','studioRedo')}${btn('Renomear folha','studioRename')}${btn('Exportar PNG','studioExport')}${btn('Excluir folha','studioDelete','','danger')}</div>
  <div class="field"><label for="studioText">Anotações desta folha</label><textarea id="studioText" placeholder="Medidas, cortes, ferragens e referências...">${escape(page.text||'')}</textarea></div>${btn('Salvar anotação','studioSaveText','','primary')}
@@ -278,13 +292,14 @@ function setupStudio(){
  const drawStroke=(stroke)=>{
   if(!stroke?.points?.length)return;
   ctx.beginPath();ctx.strokeStyle=stroke.color||'#151515';ctx.lineWidth=stroke.width||3;ctx.lineCap='round';ctx.lineJoin='round';
-  stroke.points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
-  if(stroke.points.length===1)ctx.lineTo(stroke.points[0][0]+.1,stroke.points[0][1]);ctx.stroke();
+  const paths=stroke.kind?studioObjectPaths(stroke.kind,...stroke.points[0],...stroke.points[stroke.points.length-1]):[stroke.points];
+  for(const points of paths){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));if(points.length===1)ctx.lineTo(points[0][0]+.1,points[0][1]);ctx.stroke();}
+  if(stroke.mm){const p1=stroke.points[0],p2=stroke.points[stroke.points.length-1];ctx.fillStyle='#066a9b';ctx.font='bold 16px Arial';ctx.fillText(String(stroke.mm)+' mm',(p1[0]+p2[0])/2,(p1[1]+p2[1])/2-9);}
  };
  function paint(){
   canvas.dataset.strokeCount=String((page.strokes||[]).length);
   ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · ESBOÇO',22,27);
+  ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · '+studioModeTitle(studioMode).toUpperCase(),22,27);
   ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;
   if(studioGrid==='dots'){for(let y=22;y<canvas.height;y+=25)for(let x=22;x<canvas.width;x+=25){ctx.beginPath();ctx.arc(x,y,.8,0,7);ctx.fill();}}
   else if(studioGrid==='lines'){for(let y=25;y<canvas.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}}
@@ -301,7 +316,7 @@ function setupStudio(){
  canvas.onpointerdown=e=>{
   if(active)return;
   e.preventDefault();
-  const stroke={points:[coords(e)],color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth};
+  const stroke={points:[coords(e)],color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth};if(!['pen','eraser'].includes(studioTool))stroke.kind=studioTool;
   (page.strokes||(page.strokes=[])).push(stroke);page.undone=[];
   active=stroke;activePointer=e.pointerId;studioActive=true;
   try{canvas.setPointerCapture(e.pointerId)}catch(_){}
@@ -311,7 +326,7 @@ function setupStudio(){
   if(!active||e.pointerId!==activePointer)return;
   e.preventDefault();
   const events=typeof e.getCoalescedEvents==='function'?e.getCoalescedEvents():[];
-  for(const sample of events.length?events:[e])active.points.push(coords(sample));
+  for(const sample of events.length?events:[e]){if(active.kind)active.points=[active.points[0],coords(sample)];else active.points.push(coords(sample));}
   paint();
  };
  canvas.onpointerup=e=>{if(active&&e.pointerId===activePointer){active.points.push(coords(e));finish(e);paint();}};
@@ -321,6 +336,7 @@ function setupStudio(){
  $('#studioColor').onchange=e=>studioInk=e.target.value;
  $('#studioWidth').oninput=e=>studioWidth=+e.target.value;
  $('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint()};
+ $('#studioReferencePhoto').onchange=e=>{page.referencePhotoId=e.target.value;save();render();};
  paint();
 }
 
@@ -429,6 +445,9 @@ case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a a
 case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
 case'undoStroke':r.strokes.pop();update();break;
 case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioMode':studioMode=['esboco','planta','laboratorio'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
 case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
 case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
 case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;

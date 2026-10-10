@@ -14,7 +14,7 @@ const types=[
  {id:'upper-lift',group:'Aéreos',label:'Aéreo basculante · ferragem pendente',kind:'module',w:800,d:350,h:400,doors:1,shelves:0,z:1800,warning:'Frente calculada; basculante e pistões exigem especificação e furação próprios.'},
  {id:'upper-microwave',group:'Aéreos',label:'Nicho de micro-ondas aéreo',kind:'module',w:700,d:450,h:500,doors:0,shelves:0,z:1500,warning:'Conferir ventilação e folgas do micro-ondas específico antes de fabricar.'},
  {id:'fridge-overhead',group:'Aéreos',label:'Aéreo sobre geladeira',kind:'module',w:1050,d:600,h:420,doors:2,shelves:0,z:2000},
- {id:'tower-oven',group:'Torres',label:'Torre quente com nichos',kind:'module',w:700,d:560,h:2100,doors:0,shelves:0,z:100,fixed:[.28,.68],warning:'Nichos de forno/micro-ondas são referenciais: verificar ficha do aparelho e ventilação.'},
+ {id:'tower-oven',group:'Torres',label:'Torre quente com nichos',kind:'module',w:700,d:560,h:2100,doors:0,shelves:0,z:100,back:'none',fixed:[.28,.68],warning:'Torre sem fundo contínuo: dimensionar nichos pela ficha do forno/micro-ondas e ventilação.'},
  {id:'tower-pantry',group:'Torres',label:'Despenseiro com portas',kind:'module',w:600,d:560,h:2100,doors:2,shelves:4,z:100},
  {id:'tower-open',group:'Torres',label:'Estante torre com prateleiras',kind:'module',w:500,d:400,h:2100,doors:0,shelves:5,z:100},
  {id:'microwave',group:'Eletrodomésticos',label:'Micro-ondas · referência',kind:'appliance',w:520,d:400,h:300,z:1100},

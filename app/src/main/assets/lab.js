@@ -175,6 +175,38 @@ function screen(p,state){
  out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
  if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
  out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ const Adv=globalThis.ArqueAdvanced;
+ if(Adv){
+  const modules=l.items.filter(i=>i.kind==='module');
+  const opts=modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,i.id===selected?selected:'')).join('');
+  out+='<div class="lab-adv-panel"><h4>Oficina Arque · construção inteligente</h4><div class="lab-adv-grid">';
+  out+='<details><summary>① Cozinha em L · encaixe</summary><p class="lab-fine">Posiciona dois móveis nas paredes de fundo e esquerda, considerando o fundo aplicado.</p>'+
+   '<label>Móvel da parede de fundo<select id="advCornerBack">'+opts+'</select></label>'+
+   '<label>Móvel da parede esquerda<select id="advCornerSide">'+modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,modules[1]?.id||'')).join('')+'</select></label>'+
+   '<label>Folga do canto em mm<input id="advCornerGap" type="number" min="0" max="300" step=".1" value="30"></label>'+
+   button('Montar canto 90°','advCorner')+'<small>Canto 45° ainda requer desenho técnico específico e conferência.</small></details>';
+  out+='<details><summary>② Cava entre módulos</summary><p class="lab-fine">Alinha a régua de cava no mesmo nível absoluto (Z), sem presumir usinagem pronta.</p>'+
+   '<label>Referência<select id="advCavaOrigin">'+opts+'</select></label>'+
+   '<label>Segundo módulo<select id="advCavaTarget">'+modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,modules[1]?.id||'')).join('')+'</select></label>'+
+   '<label>Nível a partir do piso (mm)<input id="advCavaLevel" type="number" value="680" step=".1"></label>'+
+   '<label>Altura da régua (mm)<input id="advCavaHeight" type="number" min="30" max="200" value="70"></label>'+
+   '<label>Folga lateral (mm)<input id="advCavaGap" type="number" min="0" max="20" value="3"></label>'+
+   button('Alinhar e gerar réguas','advCava')+'</details>';
+  out+='<details><summary>③ Ímã de encaixe</summary><p class="lab-fine">Arrastar módulos com encaixe de bordas e verificação de colisões.</p>'+
+   button(magnetEnabled?'Ímã ativo · desligar':'Ímã desligado · ativar','advMagnet')+'</details>';
+  out+='<details><summary>④ MDF e iluminação</summary><p class="lab-fine">Selecione um módulo para editar estrutura/frentes e um LED para editar a cor e o estado da luz.</p>'+
+   button('Ver acabamentos','visualMode','fronts')+button('Ver estrutura','visualMode','structure')+'</details>';
+  const report=Adv.production(l,globalThis.ArqueModules);
+  out+='<details><summary>⑤ Etiquetas e conferência de produção</summary><p class="lab-fine">'+report.lines.length+' referências de peças · '+report.errors.length+' erros · '+report.warnings.length+' pendências.</p>'+
+   report.errors.slice(0,3).map(v=>'<p class="lab-warning">'+esc(v)+'</p>').join('')+
+   report.warnings.slice(0,4).map(v=>'<p class="lab-fine">'+esc(v)+'</p>').join('')+
+   button('Exportar CSV de peças','advExportCsv')+'<small>Pré-lista dimensional, não libera CNC.</small></details>';
+  out+='<details><summary>⑥ Paredes do esboço</summary><p class="lab-fine">Corrige o traçado na planta e gera segmentos de parede com medidas preliminares.</p>'+
+   '<label>Tolerância (mm)<input id="advWallTolerance" type="number" min="0" max="300" value="40"></label>'+
+   button('Criar paredes do desenho','advTraceWalls')+
+   (l.wallTrace?'<p class="lab-fine">'+l.wallTrace.segments.length+' segmentos · '+(l.wallTrace.verified?'conferido':'pendente de medição')+'</p>':'')+
+   '<small>Não presume escala fotográfica nem confirma a obra automaticamente.</small></details></div></div>';
+ }
  const visual=globalThis.ArqueVisual;
  out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
  if(view==='iso'){
@@ -218,6 +250,7 @@ function screen(p,state){
     '<label>Portas padrão<input id="labQuickDoors" type="number" min="0" max="8" value="'+s.doorCount+'"></label>'+
     '<label>Prateleiras padrão<input id="labQuickShelves" type="number" min="0" max="12" value="'+s.shelfCount+'"></label>'+
     '<label>Material da estrutura<input id="labQuickMaterial" maxlength="90" value="'+esc(s.caseMaterial)+'"></label>'+
+    '<label>Material das frentes<input id="labQuickFrontMaterial" maxlength="90" value="'+esc(s.frontMaterial)+'"></label>'+
     '<label>Puxador<select id="labQuickFront">'+[['cava','Cava'],['concha','Concha'],['sem','Sem puxador']].map(k=>option(k[0],k[1],s.frontType)).join('')+'</select></label>'+
     '</div>'+button('Aplicar edição','catalogEditModule')+button('Salvar como meu modelo','catalogSaveOwn')+
     '<p class="lab-fine">Para alterar portas e prateleiras por vão, utilize a Montagem por Peça.</p></div>';
@@ -353,7 +386,7 @@ function mount(p,ops){
     const item=l.items.find(i=>i.id===selected);
     if(item?.kind!=='module')throw Error('Selecione um armário para editar.');
     const spec={...item.moduleSpec,doorCount:Number(root.querySelector('#labQuickDoors')?.value),
-     shelfCount:Number(root.querySelector('#labQuickShelves')?.value),caseMaterial:String(root.querySelector('#labQuickMaterial')?.value||'').trim(),
+     shelfCount:Number(root.querySelector('#labQuickShelves')?.value),caseMaterial:String(root.querySelector('#labQuickMaterial')?.value||'').trim(),frontMaterial:String(root.querySelector('#labQuickFrontMaterial')?.value||'').trim(),
      frontType:root.querySelector('#labQuickFront')?.value};
     globalThis.ArqueModules.parts(spec);remember(l);globalThis.ArqueModules.regenerate(item,spec);
     save();refresh();ops.toast('Módulo recalculado com peças e materiais atualizados.');return;

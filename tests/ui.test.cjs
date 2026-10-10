@@ -181,6 +181,10 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assign(doc,'labDeviceModel','Modelo fornecido pelo cliente');
  labClick('catalogSaveReference');await sleep(65);
  assert(doc.querySelector('#labDeviceModel').value==='Modelo fornecido pelo cliente','referência técnica persistida');
+ assert(doc.querySelector('#labFitNiche'),'seleção de nicho disponível no micro-ondas');
+ labClick('catalogFitNiche');await sleep(65);
+ assert(doc.body.textContent.includes('encaixado por dimensão de referência'),'posicionamento validado na ficha do aparelho');
+
  labClick('catalogPreset','led-strip');await sleep(65);
  assert(doc.querySelector('#labLightColor'),'luz ajustável');
  const light=doc.querySelector('#labLightColor');light.value='#ffdd99';

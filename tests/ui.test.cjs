@@ -143,6 +143,33 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('moduleInsert');await sleep(50);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
+ // Montagem interativa sobre um vao selecionado na elevacao, com geometria e corte.
+ labClick('moduleFrontView');await sleep(55);
+ assert(doc.getElementById('labBoard').getAttribute('aria-label').includes('Vista frontal'),'troca direta para elevacao');
+ const tapped=doc.querySelector('#labBoard .lab-selected [data-lab-bay="1"]');
+ assert(tapped,'vao selecionavel por toque na vista frontal');
+ const press=new w.Event('pointerdown',{bubbles:true,cancelable:true});
+ Object.defineProperties(press,{pointerId:{value:77},isPrimary:{value:true},clientX:{value:50},clientY:{value:50}});
+ tapped.dispatchEvent(press);await sleep(55);
+ assert.equal(doc.querySelector('#modWorkbenchBay').value,'1','toque vincula o vao correto');
+ labClick('modulePieceRail');await sleep(65);
+ assert(doc.body.textContent.includes('Travessa / vão 2'),'travessa adicionada ao vao tocado');
+ assign(doc,'modPieceAt','80');
+ labClick('modulePieceCavaRail');await sleep(65);
+ assert(doc.body.textContent.includes('Régua de cava / vão 2'),'regua de cava gerada como peca');
+ assert(doc.body.textContent.includes('USINAGEM'),'cava nao confundida com usinagem concluida');
+ labClick('modulePieceDoor');await sleep(65);
+ assert(doc.body.textContent.includes('Porta do vão 2'),'portas vinculadas a um unico vao');
+ assert(doc.body.textContent.includes('Voltar a portas globais'),'opcao de reverter sem duplicar frentes');
+ labClick('modulePieceBack');await sleep(70);
+ assert(doc.body.textContent.includes('Fundo individual / vão 2'),'fundo especifico substitui fundo continuo');
+ assert.equal(doc.getElementById('mod_back').value,'none','fundo continuo removido da instancia');
+ assign(doc,'modQuickSlideSide','12.5');
+ assign(doc,'modQuickSlideLength','500');
+ labClick('modulePieceDrawer');await sleep(75);
+ assert(doc.body.textContent.includes('Gaveta · laterais'),'gaveteiro calculado no vao selecionado');
+ assert(doc.querySelectorAll('[data-lab="modulePieceRemove"]').length>=3,'pecas extras editaveis individualmente');
+
  const partSelect=doc.querySelector('#modCutMaterial');
  assert(partSelect&&partSelect.options.length===2,'front/case and back segregated');
  labClick('moduleCut');await sleep(110);

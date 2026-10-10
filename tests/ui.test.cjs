@@ -242,7 +242,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('[data-cut-id]').length>0,'generated pieces sent to cut plan');
  click(doc,'openWorkspace','atelier');await sleep(40);
  click(doc,'studioMode','laboratorio');await sleep(60);
- assert(doc.querySelectorAll('#moduleLibrary option').length===2,'global module library still available');
+ assert(doc.querySelectorAll('#moduleLibrary option').length>=3,'modelos pessoais preservados após sair e reabrir laboratório');
  click(doc,'studioMode','planta');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'floor plan mode reuses same drawing');
 click(doc,'studioMode','esboco');await sleep(40);

@@ -372,7 +372,7 @@ function cutRows(item,roomName){
   grain:part.grain,rotate:part.rotate,edge2:part.edge2,edge04:part.edge04,
   material:part.material,thickness:part.thickness,shape:part.shape||'rect',requiresContour:!!part.needsContour,
   cutStatus:part.cutStatus||'review',notes:(item.code?'Identificação '+item.code+'-P'+String(index+1).padStart(2,'0')+'. ':'')+part.notes,generated:true
- }));
+ })).filter(row=>!row.requiresContour);
 }
 function groupedCutRows(project,roomId){
  const room=(project.rooms||[]).find(r=>r.id===roomId);if(!room)throw Error('Ambiente desconhecido.');

@@ -144,6 +144,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('moduleInsert');await sleep(50);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
+ const originalAssemblyModuleId=doc.querySelector('#labBoard .lab-selected')?.dataset.labObject;
  labClick('view','iso');await sleep(65);
  assert(doc.querySelector('#labBoard.lab-visual'),'vista espacial do ambiente inserida');
  assert(doc.body.textContent.includes('Biblioteca de construção'),'catalogo lateral como ferramenta CAD');
@@ -166,6 +167,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.body.textContent.includes('Aéreo 2 portas'),'aéreo paramétrico inserido no ambiente');
  assert(doc.querySelector('#labBoard [data-lab-object]'),'cena se atualiza com o aéreo');
  assert(Number(doc.querySelector('[data-lab-prop="z"]').value)>0,'aéreo possui altura de instalação real');
+ labClick('catalogSelect',originalAssemblyModuleId);await sleep(45);
  labClick('view','plan');await sleep(55);
 
  // Montagem interativa sobre um vao selecionado na elevacao, com geometria e corte.

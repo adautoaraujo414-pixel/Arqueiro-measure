@@ -29,7 +29,7 @@ for(const item of cava.changes){
  assert.equal(item.spec.assemblyPieces.some(p=>p.type==='cavaRail'),true);
  assert(M.parts(item.spec).parts.some(p=>p.name.includes('Régua cava alinhada')));
 }
-assert.throws(()=>A.cavaAlign(layout,back.id,[left.id],{levelZ:200},M),/fora da carcaça/);
+assert.throws(()=>A.cavaAlign(layout,back.id,[left.id],{levelZ:170},M),/fora da carcaça/);
 const s=cava.changes[0].spec;
 const part=s.assemblyPieces.find(x=>x.type==='cavaRail');
 const edited=A.editPart(s,part.id,{height:60,at:55,widthClearance:4},M);

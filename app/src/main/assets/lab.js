@@ -461,6 +461,16 @@ function mount(p,ops){
     e.preventDefault();return;
    }
    const pt=point(e);
+   if(tool==='pointline'){
+    let line=pointLineId?l.items.find(i=>i.id===pointLineId&&i.kind==='pen'):null;
+    if(!line){line=add(l,'pen',pt.x,pt.y,view);line.label='Linha por pontos';line.points=[[pt.x,pt.y]];pointLineId=line.id;}
+    else{
+     const last=line.points[line.points.length-1];
+     if(Math.hypot(last[0]-pt.x,last[1]-pt.y)<3)throw Error('O novo ponto deve estar pelo menos 3 mm afastado.');
+     remember(l);line.points.push([pt.x,pt.y]);
+    }
+    selected=line.id;e.preventDefault();save();refresh();return;
+   }
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}
     selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);

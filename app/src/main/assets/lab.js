@@ -255,14 +255,25 @@ function screen(p,state){
  if(view==='iso'){
   let entries=[];
   try{entries=visual?.catalog(l)||[];}catch(error){out+=recovery('Biblioteca visual',error);}
-  out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente · referências de eletros exigem medidas do fabricante</p><div class="lab-catalog-add">'+
+  const Studio=globalThis.ArqueStudio,models=Studio?.templates(globalThis.ArqueKitchen?.catalog()||[],state?.moduleTemplates||[])||[];
+  const favorites=state?.constructionFavorites||[];
+  out+='<aside class="lab-catalog studio-catalog"><div class="studio-catalog-heading"><h4>Biblioteca de módulos</h4><small>'+models.length+' modelos editáveis</small></div>'+
+   '<label class="studio-search">Localizar módulo<input id="studioCatalogSearch" type="search" autocomplete="off" placeholder="Portas, gaveteiro, canto, micro-ondas…" value="'+esc(studioSearch)+'"></label>'+
+   '<div class="studio-categories">'+(Studio?.categories||[]).map(cat=>button(cat,'studioCategory',cat,cat===studioCategory)).join('')+'</div>'+
+   '<label class="studio-insert-side">Inserir em relação ao módulo escolhido<select id="studioInsertSide">'+
+   [['right','À direita · alinhar frentes'],['left','À esquerda'],['front','À frente'],['back','Atrás']].map(a=>option(a[0],a[1],studioInsertSide)).join('')+'</select></label>'+
+   '<div class="studio-list-heading"><b>'+esc(studioCategory)+'</b><small>Toque para inserir</small></div>'+
+   '<div class="studio-preset-results">'+(Studio?Studio.catalogHTML(models,studioCategory,studioSearch,favorites):'<p>Biblioteca não disponível.</p>')+'</div>'+
+   '<details class="studio-more-tools"><summary>Peças avulsas e inserção rápida</summary><div class="lab-catalog-add">'+
    button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
-   button('＋ Torre','catalogAdd','tower')+button('＋ Canto 45° pentagonal','cornerCreate')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
-   '</div><div class="lab-kitchen-presets"><h4>Catálogo Arque Cozinha · editável</h4><p>Modelos de referência: ajuste as medidas antes de fabricar.</p>'+
-  (globalThis.ArqueKitchen?.groupIds()||[]).map(group=>'<details '+(['Inferiores','Eletrodomésticos'].includes(group)?'open':'')+'><summary>'+esc(group)+'</summary><div class="lab-preset-list">'+globalThis.ArqueKitchen.catalog().filter(p=>p.group===group).map(p=>button('＋ '+esc(p.label),'catalogPreset',p.id)).join('')+'</div></details>').join('')+
-  (state?.moduleTemplates?.length?'<details><summary>Meus modelos salvos</summary><div class="lab-preset-list">'+state.moduleTemplates.map(t=>button('＋ '+esc(t.name),'catalogSaved',t.id)).join('')+'</div></details>':'')+'</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
-   (entries.map(e=>'<button type="button" data-lab="catalogSelect" data-arg="'+esc(e.id)+'" class="'+(e.id===selected?'lab-active':'')+'"><b>'+esc(e.code)+'</b><span>'+esc(e.name)+'<small>'+esc(e.dims)+' · Z '+fmt(e.z)+' mm</small></span></button>').join('')||'<p>Adicione um módulo para começar.</p>')+
-   '</div><p class="lab-fine">Seleção, dimensões e peças são ligadas ao mesmo projeto. Nenhuma medida é deduzida da foto.</p></aside>';
+   button('＋ Torre','catalogAdd','tower')+button('＋ Canto 45° pentagonal','cornerCreate')+
+   button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+
+   button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+
+   button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+'</div></details>'+
+   '<details class="studio-object-tree"><summary>Árvore da obra · '+entries.length+' itens</summary><div class="lab-tree">'+
+   (entries.map(e=>'<button type="button" data-lab="catalogSelect" data-arg="'+esc(e.id)+'" class="'+(e.id===selected?'lab-active':'')+'"><b>'+esc(e.code)+'</b><span>'+esc(e.name)+'<small>'+esc(e.dims)+' · Z '+fmt(e.z)+' mm</small></span></button>').join('')||'<p>Adicione seu primeiro módulo.</p>')+
+   '</div></details><p class="lab-fine">Módulos são editáveis em milímetros. Os eletrodomésticos são modelos de referência.</p></aside>';
+
  }
  out+='<div class="lab-work">';
  if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+button('⌁ Linha por pontos','tool','pointline',tool==='pointline')+(tool==='pointline'?button('Finalizar linha','finishPointLine'):'')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';

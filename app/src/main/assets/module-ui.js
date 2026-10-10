@@ -12,7 +12,8 @@ const values=[
  ['thickness','Espessura MDF estrutura',6],['backThickness','Espessura fundo',0],
  ['doorGap','Folga entre portas',0],['doorReveal','Folga externa portas',0],
  ['shelfInset','Recuo das prateleiras',0],['shelfClearance','Folga lateral prateleira',0],
- ['leftFiller','Tamponamento esquerdo',0],['rightFiller','Tamponamento direito',0]
+ ['leftFiller','Tamponamento esquerdo',0],['rightFiller','Tamponamento direito',0],
+ ['doorTopDiscount','Desconto superior das portas',0],['doorBottomDiscount','Desconto inferior das portas',0]
 ];
 const integers=[['doorCount','Quantidade de portas',0,8],['shelfCount','Prateleiras por vão',0,12]];
 function panel(p,state,l,selected){
@@ -33,13 +34,31 @@ function panel(p,state,l,selected){
  for(const [key,label,min] of values)h+=fld('mod_'+key,label+' (mm)',s[key],'number','min="'+min+'" max="50000" step="0.1"');
  for(const [key,label,min,max] of integers)h+=fld('mod_'+key,label,s[key],'number','min="'+min+'" max="'+max+'" step="1"');
  for(const key of ['caseMaterial','frontMaterial','backMaterial'])h+=fld('mod_'+key,{caseMaterial:'Material do corpo',frontMaterial:'Material das portas',backMaterial:'Material do fundo'}[key],s[key],'text','maxlength="90"');
+ h+=choice('mod_construction','Montagem do tampo e base',s.construction,[['between','Tampo e base entre laterais'],['over','Tampo e base sobre laterais']]);
  h+=choice('mod_frontType','Puxador',s.frontType,[['cava','Cava (usinagem)'],['concha','Concha (ferragem)'],['sem','Sem puxador']]);
  h+=choice('mod_grainFront','Sentido do veio nas portas',String(!!s.grainFront),[['true','Fixo na altura'],['false','Livre para girar']]);
  h+='</div><p class="lab-fine">Largura e profundidade acima são da CARCAÇA. Os tamponamentos aumentam a largura instalada. Fundo aplicado aumenta a profundidade.</p>';
  h+='<div class="lab-module-buttons">'+btn('Aplicar medidas e recalcular','moduleApply')+btn('Duplicar nesta obra','moduleDuplicate')+btn('Salvar como modelo','moduleSaveTemplate')+'</div>';
+ h+='<div class="lab-module-dividers"><h4>Ajustar ao vão real</h4><p>Use somente com a largura do ambiente conferida. O aplicativo desconta folgas laterais e tamponamentos antes de recalcular o corpo.</p>';
+ h+='<div class="lab-module-grid">'+fld('modOpeningW','Vão registrado (mm)',l.width,'number','min="150" step="0.1"')+fld('modOpeningLeft','Folga de instalação esquerda',5,'number','min="0" step="0.1"')+fld('modOpeningRight','Folga de instalação direita',5,'number','min="0" step="0.1"')+'</div>'+btn('Ajustar módulo ao vão','moduleFit')+'</div>';
  h+='<div class="lab-module-dividers"><h4>Divisórias verticais</h4><p>Posicionadas em porcentagem do vão interno. Ao alterar largura, mantêm a proporção; a espessura continua fixa.</p>';
  h+='<div class="lab-divider-add">'+fld('modDividerPct','Posição da divisória (%)',50,'number','min="1" max="99" step="0.1"')+btn('＋ Divisória','moduleAddDivider')+'</div>';
  h+=(s.vertical||[]).map((fraction,i)=>'<div class="lab-divider-line"><strong>Divisória '+(i+1)+'</strong><span>'+mm(fraction*100)+'% do vão</span>'+btn('Retirar','moduleRemoveDivider',String(i))+'</div>').join('')||'<p class="lab-fine">Sem divisórias internas; adicione uma central ou na posição que preferir.</p>';
+ h+='</div>';
+ const bayItems=generated?.bays?.map((b,i)=>[String(i),'Vão '+(i+1)+' · '+mm(b.width)+' mm'])||[['0','Vão 1']];
+ h+='<div class="lab-module-dividers"><h4>Montagem interna por vão</h4><p>Posicione divisórias horizontais fixas, gavetas ou porta-temperos. Dimensões geradas pelo vão útil, não pelo tamanho total do móvel.</p>';
+ h+='<div class="lab-module-grid">'+choice('modFixedBay','Vão',[bayItems[0][0]],bayItems)+fld('modFixedAt','Altura proporcional (%)',50,'number','min="1" max="99" step="0.1"')+'</div>'+btn('＋ Divisória horizontal fixa','moduleFixedAdd');
+ h+=(s.fixedShelves||[]).map((o,i)=>'<div class="lab-divider-line"><strong>Horizontal '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+mm(o.at*100)+'%</span>'+btn('Retirar','moduleFixedRemove',String(i))+'</div>').join('');
+ h+='<div class="lab-module-grid">'+choice('modAccessoryType','Acessório interno','drawer',[['drawer','Gaveta com corrediça'],['spice','Porta-temperos extraível']])+
+ choice('modAccessoryBay','Usar no vão','0',bayItems)+fld('modAccessoryCount','Gavetas / bandejas',1,'number','min="1" max="6" step="1"')+
+ fld('modSlideSide','Desconto CORREDIÇA por lado (mm)',0,'number','min="0" max="50" step="0.1"')+
+ fld('modRearClearance','Desconto traseiro (mm)',20,'number','min="0" max="150" step="0.1"')+
+ fld('modFrontClearance','Desconto frontal (mm)',20,'number','min="0" max="150" step="0.1"')+
+ fld('modDrawerHeight','Altura da caixa (mm)',120,'number','min="60" max="400" step="0.1"')+
+ fld('modSlideLength','Comprimento da corrediça (mm)',0,'number','min="0" max="1000" step="0.1"')+'</div>';
+ h+='<p class="lab-fine">Desconto por lado e comprimento de corrediça NÃO são universais. Informe os valores do modelo real, não use os exemplos para fabricação.</p>';
+ h+=btn('＋ Adicionar gaveta / porta-temperos','moduleAccessoryAdd');
+ h+=(s.accessories||[]).map((o,i)=>'<div class="lab-divider-line"><strong>'+esc(o.type==='spice'?'Porta-temperos':'Gavetas')+' '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+o.count+' un. · folga '+mm(o.slideSide)+' mm/lado</span>'+btn('Retirar','moduleAccessoryRemove',String(i))+'</div>').join('');
  h+='</div>';
  if(error)h+='<p class="lab-warning">'+esc(error)+'</p>';
  if(generated){
@@ -72,7 +91,7 @@ function act(action,ctx){
   for(const [key] of values)updates[key]=val('mod_'+key);
   for(const [key] of integers)updates[key]=val('mod_'+key);
   for(const key of ['caseMaterial','frontMaterial','backMaterial'])updates[key]=val('mod_'+key);
-  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';
+  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';updates.construction=val('mod_construction');
   // Check every derived panel BEFORE mutating project state.
   M().parts({...item.moduleSpec,...updates});
   L.remember(l);M().regenerate(item,updates);
@@ -92,6 +111,36 @@ function act(action,ctx){
   if(!Number.isInteger(index)||index<0||index>=vertical.length)throw Error('Divisória não encontrada.');
   vertical.splice(index,1);M().parts({...item.moduleSpec,vertical});L.remember(l);
   M().regenerate(item,{vertical});return result(selected);
+ }
+ if(action==='moduleFit'){
+  if(!l.confirmed)throw Error('Confirme primeiro as dimensões reais do ambiente antes do encaixe.');
+  const resultFit=globalThis.ArqueWorkshop.fit(item.moduleSpec,val('modOpeningW'),val('modOpeningLeft'),val('modOpeningRight'),M());
+  L.remember(l);M().regenerate(item,{width:resultFit.spec.width});item.x=Number(val('modOpeningLeft'));
+  notify('Corpo ajustado. Largura instalada '+resultFit.installed+' mm; folga total '+resultFit.remaining+' mm.');
+  return result(selected);
+ }
+ if(action==='moduleFixedAdd'){
+  const fixed=[...(item.moduleSpec.fixedShelves||[]),{bay:Number(val('modFixedBay')),at:Number(val('modFixedAt'))/100}];
+  M().parts({...item.moduleSpec,fixedShelves:fixed});L.remember(l);M().regenerate(item,{fixedShelves:fixed});
+  notify('Divisória horizontal adicionada e lista recalculada.');return result(selected);
+ }
+ if(action==='moduleFixedRemove'){
+  const fixed=[...(item.moduleSpec.fixedShelves||[])],i=Number(ctx.arg);
+  if(!Number.isInteger(i)||i<0||i>=fixed.length)throw Error('Divisória não encontrada.');
+  fixed.splice(i,1);M().parts({...item.moduleSpec,fixedShelves:fixed});L.remember(l);M().regenerate(item,{fixedShelves:fixed});return result(selected);
+ }
+ if(action==='moduleAccessoryAdd'){
+  const accessory={type:val('modAccessoryType'),bay:Number(val('modAccessoryBay')),count:Number(val('modAccessoryCount')),
+   slideSide:val('modSlideSide'),rearClearance:val('modRearClearance'),frontClearance:val('modFrontClearance'),
+   height:val('modDrawerHeight'),slideLength:val('modSlideLength')};
+  const accessories=[...(item.moduleSpec.accessories||[]),accessory];
+  M().parts({...item.moduleSpec,accessories});L.remember(l);M().regenerate(item,{accessories});
+  notify('Acessório interno criado com os descontos informados.');return result(selected);
+ }
+ if(action==='moduleAccessoryRemove'){
+  const accessories=[...(item.moduleSpec.accessories||[])],i=Number(ctx.arg);
+  if(!Number.isInteger(i)||i<0||i>=accessories.length)throw Error('Acessório não encontrado.');
+  accessories.splice(i,1);M().parts({...item.moduleSpec,accessories});L.remember(l);M().regenerate(item,{accessories});return result(selected);
  }
  if(action==='moduleSaveTemplate'){
   const proposed=val('modName').trim();if(!proposed)throw Error('Informe o nome do modelo.');

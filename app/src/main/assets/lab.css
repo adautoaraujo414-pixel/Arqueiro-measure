@@ -1,0 +1,53 @@
+/* Laboratorio Arque - paleta neutra, foco na planta e uso com S Pen. */
+.lab{color:#233745;background:#f8fafc;border:1px solid #dce5eb;border-radius:12px;padding:12px;margin-top:8px}
+.lab *{box-sizing:border-box}
+.lab h3{font-size:18px;margin:0 0 5px;color:#214254}
+.lab h4{margin:17px 0 8px;font-size:14px;color:#27546a}
+.lab-heading{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.lab-heading small,.lab-fine{font-size:12px;color:#6a7f8a}
+.lab label{display:flex;flex-direction:column;gap:4px;color:#46606f;font-size:12px}
+.lab label select,.lab label input,.lab-side>select{width:100%;min-width:0;min-height:37px;background:#fff;border:1px solid #bfcdd6;border-radius:8px;padding:7px;color:#243744;font-size:14px}
+.lab-heading label{min-width:180px}
+.lab button{background:#fff;border:1px solid #cbdbe5;border-radius:8px;padding:9px 10px;min-height:38px;color:#25536b;font-size:13px;font-weight:600;cursor:pointer}
+.lab button.lab-active{background:#237da9;color:#fff;border-color:#237da9}
+.lab button:focus-visible,.lab select:focus-visible,.lab input:focus-visible{outline:2px solid #247fbe;outline-offset:2px}
+.lab-views,.lab-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.lab-views span{margin-left:auto;font-size:12px;font-weight:650;color:#617987}
+.lab-sizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:8px;align-items:end;margin:10px 0}
+.lab-warning{color:#926320!important;background:#fff9e9;padding:8px;border-radius:7px;border:1px solid #f0dfb8;font-size:12px}
+.lab-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(245px,290px);gap:12px;align-items:start}
+.lab-work{min-width:0}
+.lab-palette{display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-height:120px;overflow:auto;margin-bottom:8px}
+.lab-palette button{white-space:nowrap;padding:8px;min-height:35px}
+.lab-board-wrap{background:#eaf0f5;padding:10px;border:1px solid #d7e1e9;border-radius:9px;overflow:hidden;min-width:0}
+.lab-board-wrap svg{display:block;width:100%;height:auto;background:white;user-select:none;cursor:crosshair;border-radius:2px;box-shadow:0 3px 10px #19394919}
+.lab-board-wrap svg g[data-lab-object]{cursor:grab}
+.lab-board-wrap svg g.lab-selected{filter:drop-shadow(0 0 3px #5bc0ec)}
+.lab-hint{font-size:11px;color:#6e8390;margin-top:8px}
+.lab-side{background:#fff;border:1px solid #dde7ee;border-radius:9px;padding:12px;min-width:0}
+.lab-side p{font-size:12px;color:#617b8a;margin:8px 0}
+.lab-side label{margin-bottom:8px}
+.lab-side button{margin:4px 4px 6px 0}
+.lab-photo{display:block;width:100%;max-height:175px;object-fit:contain;background:#edf1f3;margin:7px 0;border-radius:7px;border:1px solid #d7e3ea}
+.lab-link{font-size:11px!important;padding:5px 7px;border-left:3px solid #77b2cc;background:#f4f9fc;overflow-wrap:anywhere}
+.lab-item-title{font-weight:700;border-bottom:1px solid #e1eaf0;padding-bottom:7px;margin:7px 0}
+.lab-item-title small{display:block;font-weight:400;color:#738993}
+.lab-props{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.lab-side .lab-warning{background:#fff9ed}
+@media(max-width:900px){
+ .lab-main{grid-template-columns:1fr}
+ .lab-side{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px}
+ .lab-side h4,.lab-side p,.lab-side .lab-photo,.lab-side .lab-link,.lab-item-title,.lab-props{grid-column:1/-1}
+ .lab-side>label{min-width:0}
+}
+@media(max-width:550px){
+ .lab{padding:7px}
+ .lab-heading label{width:100%}
+ .lab-sizes{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .lab-sizes button{grid-column:1/-1}
+ .lab-views span{width:100%;margin:2px}
+ .lab-palette{max-height:105px}
+ .lab-side{grid-template-columns:1fr}
+ .lab-side>label{grid-column:1/-1}
+ .lab-board-wrap{padding:5px}
+}

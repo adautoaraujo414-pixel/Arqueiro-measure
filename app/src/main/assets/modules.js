@@ -16,7 +16,7 @@ const round=v=>Math.round(v*10)/10;
 const clean=s=>String(s||'').trim().slice(0,90);
 function standard(){
  return {name:'Armário base 2 portas',width:800,height:730,depth:560,thickness:18,backThickness:6,
-  caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',
+  caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',baseArrangement:'continuous',
   construction:'between',back:'overlay',doorCount:2,doorGap:3,doorReveal:2,
   frontType:'cava',vertical:[],bayLayoutMode:'manual',bayCount:1,bayRules:[],shelvesByBay:{},shelfCount:1,shelfInset:20,shelfRearInset:0,shelfClearance:2,dividerFrontInset:0,dividerRearInset:0,
   leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],revision:1};
@@ -43,6 +43,8 @@ function check(spec){
  s.caseMaterial=clean(s.caseMaterial);s.frontMaterial=clean(s.frontMaterial);s.backMaterial=clean(s.backMaterial);
  if(!s.caseMaterial||s.doorCount&&!s.frontMaterial||s.backThickness&&!s.backMaterial)throw Error('Informe os materiais de cada parte.');
  if(!['between','over'].includes(s.construction))throw Error('Montagem da carcaça inválida.');
+ if(!['continuous','byBay'].includes(s.baseArrangement))throw Error('Modo do tampo e base inválido.');
+ if(s.baseArrangement==='byBay'&&s.construction!=='between')throw Error('Bases por vão exigem tampo/base entre as laterais nesta versão.');
  if(!['overlay','none'].includes(s.back))throw Error('Tipo de fundo inválido.');
  if(!['cava','concha','sem'].includes(s.frontType))throw Error('Modelo de puxador inválido.');
  if(!['manual','equal','custom'].includes(s.bayLayoutMode))throw Error('Modo de divisão de vãos inválido.');
@@ -158,7 +160,11 @@ function parts(spec){
   out.push({key,name,w:len,h:wid,qty,thickness,material,grain,rotate:!grain,edge2,edge04,notes});
  }
  panel('side','Lateral',s.construction==='over'?innerHeight:s.height,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Tampo e base sobrepõem as laterais':'Laterais inteiras: tampo e base entre elas');
- panel('topbottom','Tampo / base',s.construction==='over'?s.width:innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Sobre e sob as laterais':'Entre as duas laterais');
+ if(s.baseArrangement==='byBay'){
+  for(const [i,b] of bays.entries())panel('topbottom-bay-'+i,'Tampo/base vão '+(i+1),b.width,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,'Tampo e base segmentados entre laterais e divisórias, não são peças contínuas.');
+ }else{
+  panel('topbottom','Tampo / base',s.construction==='over'?s.width:innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Sobre e sob as laterais':'Entre as duas laterais');
+ }
  for(const [i,fraction] of s.vertical.entries())panel('divider-'+i,'Divisória vertical '+(i+1),innerHeight,s.depth-s.dividerFrontInset-s.dividerRearInset,1,t,s.caseMaterial,s.grainCase,0,1,'Eixo em '+Math.round(1000*fraction)/10+'% do vão interno');
  for(let i=0;i<bays.length;i++)for(let j=0;j<(s.shelvesByBay[i]??s.shelfCount);j++){
   const count=s.shelvesByBay[i]??s.shelfCount;

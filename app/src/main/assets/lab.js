@@ -79,7 +79,19 @@ function moduleShape(item,view,selected,l){
   res+='<path d="M '+(x+t)+' '+y+' V '+(y+H)+' M '+(x+W-t)+' '+y+' V '+(y+H)+' M '+x+' '+(y+t)+' H '+(x+W)+' M '+x+' '+(y+H-t)+' H '+(x+W)+'" stroke="#577e90" stroke-width="4" vector-effect="non-scaling-stroke" fill="none"/>';
   const inner=W-2*t;
   for(const pos of spec.vertical||[]){let cx=x+t+inner*pos;res+='<rect x="'+(cx-t/2)+'" y="'+(y+t)+'" width="'+t+'" height="'+Math.max(1,H-2*t)+'" fill="#8db9ce" stroke="#456b81" stroke-width="2"/>';}
-  for(let j=1;j<=(spec.shelfCount||0);j++){let sy=y+t+(H-2*t)*j/((spec.shelfCount||0)+1);res+='<line x1="'+(x+t)+'" x2="'+(x+W-t)+'" y1="'+sy+'" y2="'+sy+'" stroke="#7194a8" stroke-width="7" vector-effect="non-scaling-stroke"/>';}
+  try{
+   const bays=globalThis.ArqueModules?.bayBounds(spec)||[];
+   for(let i=0;i<bays.length;i++){
+    const b=bays[i],count=spec.shelvesByBay?.[i]??spec.shelfCount??0;
+    for(let j=0;j<count;j++){
+     const at=(j+1)/(count+1),covered=(spec.fixedShelves||[]).some(f=>f.bay===i&&Math.abs(f.at-at)*(H-2*t)<t);
+     if(covered)continue;
+     const sy=y+t+(H-2*t)*at;
+     res+='<line x1="'+(x+b.start)+'" x2="'+(x+b.end)+'" y1="'+sy+'" y2="'+sy+'" stroke="#7194a8" stroke-width="7" vector-effect="non-scaling-stroke"/>';
+    }
+    if(b.width>=100&&H>=280)res+='<text x="'+(x+(b.start+b.end)/2)+'" y="'+(y+H-t-18)+'" font-size="'+Math.max(14,Math.min(30,b.width/5))+'" fill="#235b77" text-anchor="middle" pointer-events="none">'+fmt(b.width)+' mm</text>';
+   }
+  }catch(_){/* Vista desenhada não muda os cálculos de montagem. */}
   try{
    const bays=globalThis.ArqueModules?.bayBounds(spec)||[];
    for(const slot of spec.fixedShelves||[]){const bay=bays[slot.bay];if(!bay)continue;const yy=y+t+(H-2*t)*slot.at;res+='<line x1="'+(x+bay.start)+'" x2="'+(x+bay.end)+'" y1="'+yy+'" y2="'+yy+'" stroke="#327d9d" stroke-width="8" vector-effect="non-scaling-stroke"/>';}

@@ -227,6 +227,7 @@ function screen(p,state){
     '<label>LED<select id="labLightOn">'+option('on','Ligado',item.lightOn===false?'off':'on')+option('off','Desligado',item.lightOn===false?'off':'on')+'</select></label>';
    else out+='<label>Modelo / referência técnica<input id="labDeviceModel" maxlength="90" value="'+esc(item.deviceModel||'')+'" placeholder="Marca e modelo do fabricante"></label>';
    if(item.kind==='appliance'){
+    if(item.hostModuleId)out+='<p class="lab-link">'+esc(item.note||'Aparelho encaixado por dimensão de referência. Conferir fabricante.')+'</p>';
     const niches=l.items.filter(x=>x.kind==='module'&&x.moduleSpec?.doorCount===0);
     out+='<div class="lab-niche-fit"><h4>Encaixe assistido no nicho</h4><p class="lab-fine">Não redimensiona o aparelho. Informe folgas conforme o fabricante.</p>'+
      '<label>Nicho do projeto<select id="labFitNiche">'+niches.map(n=>option(n.id,(n.code||'M')+' · '+n.label,'')).join('')+'</select></label>'+

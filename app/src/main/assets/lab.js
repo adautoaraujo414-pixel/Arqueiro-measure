@@ -171,7 +171,7 @@ function screen(p,state){
  out+='<div class="lab-work">';
  if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
  out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
- out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo. Use Girar, Zoom e Ver estrutura. Posição e medidas são editadas na lateral.':'Toque para posicionar e mover. Use Selecionar e confirme as dimensões abaixo.')+'</div></div>';
+ out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.':'Toque para posicionar e mover. Use Selecionar e confirme as dimensões abaixo.')+'</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
  for(const k of ['width','depth','height']){const status=linkStatus(l.roomRefs[k],r);if(status)out+='<p class="lab-link '+(status.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(status)+'</p>';}
@@ -309,7 +309,17 @@ function mount(p,ops){
   const board=e.target.closest?.('#labBoard');if(!board||e.isPrimary===false)return;
   try{
    const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]');
-   if(view==='iso'){const id=hit?.dataset.labObject||'';if(id!==selected)selectedPartKey='';selected=id;focusedModule=selected;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
+   if(view==='iso'){
+    const id=hit?.dataset.labObject||'';
+    if(id!==selected){selectedPartKey='';selected=id;focusedModule=id;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
+    if(id){
+     const item=l.items.find(it=>it.id===id);if(!item)return;
+     drag={mode:'iso-move',id,pointer:e.pointerId,startX:e.clientX,startY:e.clientY,
+      originalX:Number(item.x||0),originalY:Number(item.y||0),snapshotted:false};
+     try{board.setPointerCapture(e.pointerId);}catch(_){}
+    }else{selected='';refresh();}
+    e.preventDefault();return;
+   }
    const pt=point(e);
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}
@@ -337,7 +347,30 @@ function mount(p,ops){
   }catch(err){alertError(err);}
  });
  root.addEventListener('pointermove',e=>{
-  if(view==='iso'||!drag||drag.pointer!==e.pointerId)return;
+  if(!drag||drag.pointer!==e.pointerId)return;
+  if(view==='iso'&&drag.mode==='iso-move'){
+   try{
+    const l=layout(p,activeRoom),item=l.items.find(it=>it.id===drag.id),board=root.querySelector('#labBoard');
+    if(!item||!board)return;
+    const box=board.getBoundingClientRect(),camera=globalThis.ArqueVisual.camera(l,{angle:visualAngle,zoom:visualZoom});
+    const du=(e.clientX-drag.startX)*1000/(box.width||1000)/camera.scale;
+    const dv=(e.clientY-drag.startY)*650/(box.height||650)/camera.scale/Math.sin(camera.elevation);
+    const cos=Math.cos(camera.angle),sin=Math.sin(camera.angle);
+    const dx=cos*du+sin*dv,dy=-sin*du+cos*dv;
+    if(Math.abs(e.clientX-drag.startX)+Math.abs(e.clientY-drag.startY)<4)return;
+    if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
+    const snap=x=>gridSnap?Math.round(x/5)*5:Math.round(x*10)/10;
+    item.x=snap(Math.max(0,Math.min(l.width-item.w,drag.originalX+dx)));
+    item.y=snap(Math.max(0,Math.min(l.depth-item.d,drag.originalY+dy)));
+    const group=board.querySelector('[data-lab-object="'+drag.id+'"]');
+    if(group){
+     const p0=camera.project(drag.originalX,drag.originalY,0),p1=camera.project(item.x,item.y,0);
+     group.setAttribute('transform','translate('+(p1[0]-p0[0])+' '+(p1[1]-p0[1])+')');
+    }
+    e.preventDefault();
+   }catch(err){alertError(err);}
+   return;
+  }
   try{
    const l=layout(p,activeRoom),item=l.items.find(x=>x.id===drag.id);if(!item)return;
    const pt=point(e);

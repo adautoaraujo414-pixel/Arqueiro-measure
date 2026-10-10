@@ -167,6 +167,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  Object.defineProperties(isoTap,{pointerId:{value:98},isPrimary:{value:true},clientX:{value:180},clientY:{value:80}});
  sceneModule.dispatchEvent(isoTap);await sleep(60);
  assert(doc.querySelector('#labName'),'toque na cena abre propriedades reais do módulo');
+ labClick('studioCategory','Aéreos');await sleep(35);
  labClick('catalogPreset','upper-microwave');await sleep(65);
  assert(doc.body.textContent.includes('Nicho de micro-ondas aéreo'),'nicho paramétrico no catálogo');
  const kitchenCode=doc.querySelector('#labBoard .lab-selected')?.dataset.labCode;
@@ -175,7 +176,9 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('catalogEditModule');await sleep(65);
  assert(doc.querySelector('#labQuickMaterial').value==='MDF Greige','módulo editável e material salvo');
  labClick('catalogSaveOwn');await sleep(65);
- assert(doc.body.textContent.includes('Meus modelos salvos'),'reutilização personalizada presente');
+ labClick('studioCategory','Meus modelos');await sleep(35);
+ assert(doc.querySelector('[data-lab="catalogSaved"]'),'reutilização personalizada presente');
+ labClick('studioCategory','Eletrodomésticos');await sleep(35);
  labClick('catalogPreset','microwave');await sleep(65);
  assert(doc.querySelector('#labDeviceModel'),'campo de modelo de micro-ondas');
  assign(doc,'labDeviceModel','Modelo fornecido pelo cliente');
@@ -185,6 +188,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('catalogFitNiche');await sleep(65);
  assert(doc.body.textContent.includes('encaixado por dimensão de referência'),'posicionamento validado na ficha do aparelho');
 
+ labClick('studioCategory','Iluminação');await sleep(35);
  labClick('catalogPreset','led-strip');await sleep(65);
  assert(doc.querySelector('#labLightColor'),'luz ajustável');
  const light=doc.querySelector('#labLightColor');light.value='#ffdd99';

@@ -141,3 +141,19 @@
 .lab-adv-part input{width:100%}
 @media(max-width:1050px){.lab-adv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.lab-adv-grid{grid-template-columns:1fr}}
+
+/* Etapa 7: inspetor CAD com cotas e movimento milimétrico amigável à S Pen. */
+.lab-precision-panel{background:#f5f9fc;border:1px solid #c9e0eb;border-radius:11px;margin:10px 0;padding:11px}
+.lab-precision-panel h4{margin:0 0 9px;color:#205b7b;font-size:13px}
+.lab-precision-cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.lab-precision-cells span{padding:7px;background:white;border:1px solid #dfebf0;border-radius:7px;min-width:0}
+.lab-precision-cells small{display:block;font-size:10px;color:#628092}
+.lab-precision-cells b{display:block;margin-top:3px;font-size:12px;color:#24586f}
+.lab-precision-move{margin:10px 0 4px}
+.lab-precision-move label{font-size:12px;max-width:140px}
+.lab-precision-move select{display:block;width:100%;margin:4px 0 9px}
+.lab-nudge-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.lab-nudge-buttons button{min-height:43px;padding:8px 3px;font-size:12px;font-weight:700;color:#176c91;background:#edf6fb;border:1px solid #c3dce9;touch-action:manipulation}
+.lab-visual [data-lab-part]{cursor:crosshair}
+.lab-visual [data-lab-part]:focus{stroke:#087aac;stroke-width:3}
+@media(max-width:620px){.lab-nudge-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}}

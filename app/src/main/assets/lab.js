@@ -90,8 +90,8 @@ function shape(item,selected){
 function moduleShape(item,view,selected,l){
  const spec=item.moduleSpec||{},t=Number(spec.thickness)||18,W=item.w,depth=item.d,H=item.height;
  const x=item.x,y=view==='front'?(item.frontY??Math.max(0,l.height-H-100)):item.y;
- const shownH=view==='front'?H:depth;
- let res='<rect x="'+x+'" y="'+y+'" width="'+W+'" height="'+shownH+'" fill="'+(selected?'#cbe9f6':'#dfedf5')+'" stroke="'+(selected?'#117caf':'#477b95')+'" stroke-width="7" vector-effect="non-scaling-stroke"/>';
+ const rotated=Number(item.rotation||0)%180===90,shownW=view==='front'?W:(rotated?depth:W),shownH=view==='front'?H:(rotated?W:depth);
+ let res='<rect x="'+x+'" y="'+y+'" width="'+shownW+'" height="'+shownH+'" fill="'+(selected?'#cbe9f6':'#dfedf5')+'" stroke="'+(selected?'#117caf':'#477b95')+'" stroke-width="7" vector-effect="non-scaling-stroke"/>';
  if(view==='front'){
   res+='<path d="M '+(x+t)+' '+y+' V '+(y+H)+' M '+(x+W-t)+' '+y+' V '+(y+H)+' M '+x+' '+(y+t)+' H '+(x+W)+' M '+x+' '+(y+H-t)+' H '+(x+W)+'" stroke="#577e90" stroke-width="4" vector-effect="non-scaling-stroke" fill="none"/>';
   const inner=W-2*t;
@@ -137,7 +137,8 @@ function moduleShape(item,view,selected,l){
   if(spec.doorMode!=='byBay'&&spec.doorCount){for(let j=1;j<spec.doorCount;j++){let dx=x+W*j/spec.doorCount;res+='<path d="M '+dx+' '+(y+12)+' V '+(y+H-12)+'" stroke="#317ca3" stroke-width="3" stroke-dasharray="14 12"/>';}
    if(spec.frontType==='cava')res+='<path d="M '+(x+30)+' '+(y+60)+' H '+(x+W-30)+'" stroke="#0f729c" stroke-width="6" vector-effect="non-scaling-stroke"/>';}
  }else{
-  res+='<line x1="'+x+'" x2="'+(x+W)+'" y1="'+(y+depth*.14)+'" y2="'+(y+depth*.14)+'" stroke="#8bb6cc" stroke-width="5" vector-effect="non-scaling-stroke"/>';
+  res+='<line x1="'+x+'" x2="'+(x+shownW)+'" y1="'+(y+shownH*.14)+'" y2="'+(y+shownH*.14)+'" stroke="#8bb6cc" stroke-width="5" vector-effect="non-scaling-stroke"/>';
+  if(rotated)res+='<text x="'+(x+shownW/2)+'" y="'+(y+shownH/2)+'" text-anchor="middle" font-size="30" fill="#2b6587">90°</text>'; 
  }
  if(view==='front'){
   try{
@@ -156,7 +157,7 @@ function svg(l,view,selectedId){
  let a='<svg id="labBoard" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="100%" style="aspect-ratio:'+W+'/'+H+';touch-action:none" role="img" aria-label="Ambiente em milímetros, '+esc(modes[view])+'"><defs><pattern id="labGrid" width="'+ticks+'" height="'+ticks+'" patternUnits="userSpaceOnUse"><path d="M '+ticks+' 0 L 0 0 0 '+ticks+'" fill="none" stroke="#d9e6ed" stroke-width="3"/></pattern></defs><rect width="'+W+'" height="'+H+'" fill="#fff"/><rect width="'+W+'" height="'+H+'" fill="url(#labGrid)"/><rect x="7" y="7" width="'+Math.max(1,W-14)+'" height="'+Math.max(1,H-14)+'" fill="none" stroke="#526570" stroke-width="14" vector-effect="non-scaling-stroke"/>';
  for(const item of l.items.filter(x=>x.view===view||x.kind==='module')){const sel=item.id===selectedId;
   a+='<g data-lab-object="'+esc(item.id)+'" class="'+(sel?'lab-selected':'')+'">'+(item.kind==='module'?moduleShape(item,view,sel,l):shape(item,sel))+'</g>';
-  if(item.kind!=='pen'&&item.kind!=='wall')a+='<text x="'+(item.x+item.w/2)+'" y="'+Math.max(38,item.y-22)+'" font-size="'+Math.max(34,Math.min(70,W/75))+'" text-anchor="middle" fill="'+(sel?'#0c6899':'#667e89')+'" pointer-events="none">'+esc(item.label)+' · '+fmt(item.w)+' × '+fmt(item.d)+'</text>';
+  if(item.kind!=='pen'&&item.kind!=='wall')a+='<text x="'+(item.x+((view==='plan'&&Number(item.rotation||0)%180===90)?item.d:item.w)/2)+'" y="'+Math.max(38,item.y-22)+'" font-size="'+Math.max(34,Math.min(70,W/75))+'" text-anchor="middle" fill="'+(sel?'#0c6899':'#667e89')+'" pointer-events="none">'+esc(item.label)+' · '+fmt(item.w)+' × '+fmt(item.d)+'</text>';
  }
  return a+'</svg>';
 }
@@ -439,8 +440,9 @@ function mount(p,ops){
     if(Math.abs(e.clientX-drag.startX)+Math.abs(e.clientY-drag.startY)<4)return;
     if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
     const snap=x=>gridSnap?Math.round(x/5)*5:Math.round(x*10)/10;
-    item.x=snap(Math.max(0,Math.min(l.width-item.w,drag.originalX+dx)));
-    item.y=snap(Math.max(0,Math.min(l.depth-item.d,drag.originalY+dy)));
+    const rotated=Number(item.rotation||0)%180===90,fw=rotated?item.d:item.w,fd=rotated?item.w:item.d;
+    item.x=snap(Math.max(0,Math.min(l.width-fw,drag.originalX+dx)));
+    item.y=snap(Math.max(0,Math.min(l.depth-fd,drag.originalY+dy)));
     const group=board.querySelector('[data-lab-object="'+drag.id+'"]');
     if(group){
      const p0=camera.project(drag.originalX,drag.originalY,0),p1=camera.project(item.x,item.y,0);

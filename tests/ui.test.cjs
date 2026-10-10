@@ -10,6 +10,7 @@ async function launch(){
  w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
+ w.SVGElement.prototype.setPointerCapture=function(){};
  w.eval(core);w.eval(cut);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
@@ -222,11 +223,37 @@ click(doc,'studioMode','esboco');await sleep(40);
  const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
  assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);
  assert(doc.querySelector('#photoOverlay line[stroke-width="3"]'),'adjustable width saved');
+ // Existing arrows take priority over drawing tools: endpoints resize, body moves.
+ const editArrow=async(target,x1,y1,x2,y2)=>{
+  const svg=doc.getElementById('photoOverlay');
+  svg.getBoundingClientRect=()=>({left:0,top:0,width:1000,height:650});
+  for(const [type,x,y] of [['pointerdown',x1,y1],['pointermove',x2,y2],['pointerup',x2,y2]]){
+   const ev=new w.Event(type,{bubbles:true,cancelable:true});
+   Object.defineProperties(ev,{pointerId:{value:42},clientX:{value:x},clientY:{value:y}});
+   (type==='pointerdown'?target:svg).dispatchEvent(ev);
+  }
+  await sleep(80);
+ };
+ const selectedArrow=()=>doc.querySelector('#photoOverlay .dim-selected');
+ const strokeCount=doc.querySelectorAll('#photoOverlay polyline').length;
+ click(doc,'photoInkToggle');
+ await editArrow(selectedArrow().querySelector('[data-handle="b"]'),800,450,900,480);
+ assert.equal(selectedArrow().querySelector('.measure-hit').getAttribute('x2'),'900','endpoint expands arrow with pen active');
+ assert.equal(doc.querySelectorAll('#photoOverlay polyline').length,strokeCount,'editing does not add ink');
+ await editArrow(selectedArrow().querySelector('[data-handle="b"]'),900,480,700,420);
+ assert.equal(selectedArrow().querySelector('.measure-hit').getAttribute('x2'),'700','endpoint contracts arrow');
+ click(doc,'photoAddDistance');
+ await editArrow(selectedArrow().querySelector('.measure-hit'),350,390,370,400);
+ assert.equal(selectedArrow().querySelector('.measure-hit').getAttribute('x1'),'130','body drag moves first endpoint');
+ assert.equal(selectedArrow().querySelector('.measure-hit').getAttribute('x2'),'720','body drag moves second endpoint');
+ assert.equal(doc.querySelectorAll('#photoOverlay [data-dimension]').length,3,'body edit does not create another arrow');
  click(doc,'photoAddRect');await sleep(70);
  assert(doc.querySelector('#photoOverlay rect'),'rectangle overlay appears');
  w.prompt=()=> 'Tomada atrás do armário';click(doc,'photoNoteAdd');await sleep(50);assert(doc.body.textContent.includes('Tomada atrás do armário'),'annotation saved');
  // Automatic freehand: one pointer contact is one saved stroke, no Concluir button.
  click(doc,'photoInkToggle');assert(!doc.body.textContent.includes('Concluir desenho'),'drawing needs no finish button');
+ assert(!doc.querySelector('[data-action="photoInkColor"]'),'color palette starts collapsed');
+ click(doc,'photoPaletteToggle');
  click(doc,'photoInkColor','#e23d3d');
  assert(!doc.querySelector('[data-action="photoInkThinner"]'),'writing thickness control removed from toolbar');
  const drawStroke=(x1,y1,x2,y2)=>{

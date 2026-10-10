@@ -921,7 +921,16 @@ function mount(p,ops){
    e.preventDefault();
   }catch(err){alertError(err);}
  });
- const finish=e=>{if(!drag||drag.pointer!==e.pointerId)return;const l=layout(p,activeRoom);
+ const finish=e=>{
+  if(navPointers.has(e.pointerId)){
+   navPointers.delete(e.pointerId);
+   if(navDrag?.mode==='pinch'&&navPointers.size===1){
+    const [id,p]=[...navPointers.entries()][0];
+    navDrag={mode:'pan',pointer:id,lastX:p.x,lastY:p.y};
+   }else if(!navPointers.size)navDrag=null;
+  }
+  if(!drag||drag.pointer!==e.pointerId)return;
+  const l=layout(p,activeRoom);
   const item=l.items.find(x=>x.id===drag.id);if(item&&item.kind==='wall'&&Math.hypot(item.w,item.d)<10){l.items=l.items.filter(x=>x.id!==item.id);selected='';}
   drag=null;save();refresh();
  };

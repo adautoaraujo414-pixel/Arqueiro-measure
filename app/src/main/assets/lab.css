@@ -180,3 +180,64 @@
 .lab-corner-controls input,.lab-corner-controls select{display:block;min-width:0;width:100%;max-width:100%;margin:4px 0}
 .lab-corner-editor button{margin:6px 6px 8px 0;padding:9px 10px;font-weight:600;background:#e8f3f8}
 @media(max-width:590px){.lab-corner-controls{grid-template-columns:1fr}}
+
+
+/* Arque Studio Construção: fluxo CAD adaptado ao tablet, desenho primeiro. */
+.studio-room-drawer,.studio-advanced-drawer{border:1px solid #d9e3e9;background:#fff;border-radius:9px;margin:7px 0 10px;min-width:0}
+.studio-room-drawer>summary,.studio-advanced-drawer>summary{cursor:pointer;list-style:none;padding:11px 13px;font-weight:650;font-size:12px;color:#385f74}
+.studio-room-drawer>summary::before,.studio-advanced-drawer>summary::before{content:"▸";display:inline-block;margin-right:8px;color:#297d9f}
+.studio-room-drawer[open]>summary::before,.studio-advanced-drawer[open]>summary::before{content:"▾"}
+.studio-room-drawer>.lab-sizes,.studio-room-drawer>.lab-warning{margin:9px 12px}
+.studio-advanced-drawer>.lab-adv-panel{margin:0;border:0;border-top:1px solid #e1e9ed;border-radius:0}
+.lab-main.lab-with-catalog.studio-construction{grid-template-columns:minmax(195px,232px) minmax(0,1fr)!important;gap:10px;align-items:start;position:relative}
+.studio-construction>.lab-work{grid-column:2;min-width:0;order:2}
+.studio-construction>.studio-catalog{grid-column:1;order:1}
+.studio-construction>.studio-inspector{order:3}
+.lab-main.studio-construction>.studio-inspector[hidden]{display:none!important}
+.lab-main.studio-construction>.studio-inspector:not([hidden]){position:absolute;z-index:4;right:0;top:0;width:min(350px,53%);max-height:min(82vh,980px);overflow-y:auto;box-shadow:-6px 8px 30px #25455735;border-color:#b2d0df;background:#fff}
+.studio-construction .lab-board-wrap{padding:5px;background:#ecf1f4;min-height:365px}
+.studio-construction .lab-board-wrap svg.lab-visual{width:100%;height:auto;box-shadow:none;border:1px solid #d6e3ea}
+.studio-catalog{padding:9px!important;background:#fbfcfd!important;max-height:min(82vh,940px);overflow-y:auto;overscroll-behavior:contain;position:sticky;top:7px}
+.studio-catalog-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:9px}
+.studio-catalog-heading h4{margin:0!important;color:#1d4b65!important;font-size:14px!important}
+.studio-catalog-heading small,.studio-list-heading small{color:#708692;font-size:10px}
+.studio-search{font-size:11px!important;gap:4px!important;margin-bottom:10px}
+.studio-search input{border-radius:7px!important;font-size:12px!important;min-height:38px!important;background:#fff}
+.studio-categories{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 11px}
+.studio-categories button{padding:5px 8px!important;font-size:10px!important;font-weight:650!important;min-height:30px!important;border-radius:7px!important;flex:0 0 auto}
+.studio-insert-side{font-size:10px!important;margin:3px 0 12px;gap:5px}
+.studio-insert-side select{min-height:34px!important;font-size:11px!important;padding:4px!important}
+.studio-list-heading{display:flex;align-items:baseline;justify-content:space-between;margin:10px 0 6px;gap:6px}
+.studio-list-heading b{font-size:12px}
+.studio-preset-results{display:grid;gap:6px;max-height:490px;overflow-y:auto;padding:2px 3px 4px 0}
+.studio-preset{position:relative;display:flex;align-items:stretch;border:1px solid #dbe5eb;border-radius:8px;background:#fff;overflow:hidden}
+.studio-preset:hover{border-color:#8fb9cc}
+.studio-preset .studio-preset-insert{width:100%;text-align:left;display:flex;align-items:center;gap:7px;padding:5px 31px 5px 6px;min-height:70px;background:transparent;border:0;border-radius:0;min-width:0}
+.studio-preset-graphic{background:#f2f6f8;border-radius:6px;display:block;width:52px;height:53px;flex:0 0 52px}
+.studio-preset-graphic svg{width:52px;height:53px}
+.studio-preset-info{display:block;min-width:0}
+.studio-preset-info b{display:block;font-weight:650;font-size:11px;line-height:1.35;color:#2b5368;overflow-wrap:anywhere}
+.studio-preset-info small{display:block;color:#788b95;font-weight:400;font-size:10px;line-height:1.4;margin-top:5px}
+.studio-plus{position:absolute;right:9px;top:29px;color:#2582a7;font-size:16px}
+.studio-preset .studio-fav{position:absolute;right:4px;top:2px;background:transparent;border:0;min-height:22px;width:25px;padding:0;color:#9daeb5;font-size:20px}
+.studio-preset .studio-fav.on{color:#c58d2d}
+.studio-empty{background:#f3f7fa;border:1px dashed #bccfd9;border-radius:6px;padding:12px;font-size:11px;color:#617988}
+.studio-more-tools,.studio-object-tree{border-top:1px solid #e0e9ed;margin-top:12px;padding-top:7px}
+.studio-more-tools summary,.studio-object-tree summary{font-weight:650;font-size:12px;color:#39667b;cursor:pointer;padding:7px 2px}
+.studio-more-tools .lab-catalog-add{margin-top:6px}
+.studio-object-tree .lab-tree{max-height:260px}
+.studio-construction .lab-hint{background:#f6f8fa;color:#607987}
+@media(min-width:1350px){
+ .lab-main.lab-with-catalog.studio-construction.studio-inspector-open{grid-template-columns:230px minmax(0,1fr) 292px!important}
+ .studio-construction.studio-inspector-open>.studio-inspector:not([hidden]){position:sticky;grid-column:3;width:100%;max-height:82vh;box-shadow:none}
+}
+@media(max-width:720px){
+ .lab-main.lab-with-catalog.studio-construction{grid-template-columns:minmax(0,1fr)!important}
+ .studio-construction>.lab-work{grid-column:1;order:1}
+ .studio-construction>.studio-catalog{grid-column:1;order:2;position:static;max-height:none}
+ .studio-catalog .studio-preset-results{grid-template-columns:repeat(2,minmax(0,1fr));max-height:410px}
+ .studio-catalog .studio-preset-insert{flex-direction:column;text-align:center;min-height:117px}
+ .studio-construction>.studio-inspector:not([hidden]){position:relative!important;grid-column:1;order:3;width:100%!important;max-height:none!important;box-shadow:none!important}
+ .studio-room-drawer>.lab-sizes{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .studio-room-drawer .lab-sizes button{grid-column:1/-1}
+}

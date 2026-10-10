@@ -79,6 +79,26 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('.studio-page').length===2,'multiple named sheets');
  click(doc,'studioSelect',doc.querySelector('.studio-page').dataset.arg);await sleep(40);
  assert(doc.querySelector('.studio-paper-head').textContent.includes('Parede da pia'),'can reopen first sheet');
+ // Unified 2D lab: drawing tools, real dimensions and modes share the same sheet.
+ click(doc,'studioMode','laboratorio');await sleep(40);
+ assert(doc.querySelector('#studioTool option[value="cabinet"]'),'cabinet tool available');
+ assert(doc.querySelector('#studioTool option[value="drawers"]'),'drawer tool available');
+ assert(doc.querySelector('#studioReferencePhoto'),'photo reference selector available');
+ const labCanvas=doc.getElementById('studioCanvas');
+ labCanvas.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
+ const tool=doc.getElementById('studioTool');tool.value='cabinet';tool.dispatchEvent(new w.Event('change',{bubbles:true}));
+ for(const [type,x,y] of [['pointerdown',50,100],['pointermove',240,320],['pointerup',240,320]]){
+  const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:18},clientX:{value:x},clientY:{value:y}});
+  labCanvas.dispatchEvent(ev);
+ }
+ await sleep(65);
+ assert.equal(labCanvas.dataset.strokeCount,'3','lab furniture is stored alongside original sketch strokes');
+ assign(doc,'studioElementMm','2400');click(doc,'studioSetMeasure');await sleep(65);
+ assert(doc.querySelector('#studioElementMm').value==='2400','dimension attached to last drawn cabinet');
+ click(doc,'studioMode','planta');await sleep(40);
+ assert(doc.querySelector('#studioCanvas'),'floor plan mode reuses same drawing');
+ click(doc,'studioMode','esboco');await sleep(40);
+
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);
  assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');

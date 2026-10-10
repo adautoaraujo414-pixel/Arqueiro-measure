@@ -292,6 +292,15 @@ function screen(p,state){
    if(item.alignment)out+='<p class="lab-link">Referência: '+esc(item.alignment.targetId)+' · '+esc(item.alignment.mode)+'</p>';
    out+='</section>';
   }
+  if(item.kind==='module'&&selectedPartKey?.startsWith('extra-')){
+   const id=selectedPartKey.slice(6),piece=item.moduleSpec.assemblyPieces?.find(p=>p.id===id);
+   if(piece)out+='<div class="lab-adv-part"><h4>③ Editar peça · '+esc(piece.label)+'</h4>'+
+     '<label>Altura (mm)<input id="advPartHeight" type="number" min="20" max="350" value="'+piece.height+'"></label>'+
+     '<label>Posição (%)<input id="advPartAt" type="number" min="2" max="98" step=".1" value="'+Math.round(piece.at*1000)/10+'"></label>'+
+     '<label>Folga lateral (mm)<input id="advPartClearance" type="number" min="0" max="30" value="'+piece.widthClearance+'"></label>'+
+     button('Recalcular peça','advEditPart')+'</div>';
+  }
+  if(item.kind==='module')out+=button(item.productionApproval?'Conferência registrada ✓':'Marcar conferência do módulo','advApprove');
   if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
   if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
@@ -329,6 +338,42 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='advMagnet'){magnetEnabled=!magnetEnabled;refresh();return;}
+   if(a==='advCorner'){
+    const result=globalThis.ArqueAdvanced.kitchenCorner(l,root.querySelector('#advCornerBack').value,root.querySelector('#advCornerSide').value,{clearance:root.querySelector('#advCornerGap').value});
+    remember(l);
+    for(const change of result.changes){const ob=l.items.find(i=>i.id===change.id);Object.assign(ob,{x:change.x,y:change.y,rotation:change.rotation,corner:result.corner});ob.productionApproval=false;}
+    save();refresh();ops.toast('Cozinha em L posicionada. Conferir encontro e tamponamentos.');return;
+   }
+   if(a==='advCava'){
+    const result=globalThis.ArqueAdvanced.cavaAlign(l,root.querySelector('#advCavaOrigin').value,[root.querySelector('#advCavaTarget').value],
+      {levelZ:root.querySelector('#advCavaLevel').value,railHeight:root.querySelector('#advCavaHeight').value,clearance:root.querySelector('#advCavaGap').value},globalThis.ArqueModules);
+    remember(l);
+    for(const change of result.changes){const ob=l.items.find(i=>i.id===change.id);globalThis.ArqueModules.regenerate(ob,change.spec);ob.productionApproval=false;}
+    save();refresh();ops.toast('Réguas de cava alinhadas; fresagem precisa de conferência.');return;
+   }
+   if(a==='advEditPart'){
+    const ob=l.items.find(i=>i.id===selected);if(ob?.kind!=='module'||!selectedPartKey?.startsWith('extra-'))throw Error('Selecione uma peça adicional.');
+    const changed=globalThis.ArqueAdvanced.editPart(ob.moduleSpec,selectedPartKey.slice(6),
+      {height:root.querySelector('#advPartHeight').value,at:root.querySelector('#advPartAt').value,widthClearance:root.querySelector('#advPartClearance').value},globalThis.ArqueModules);
+    remember(l);globalThis.ArqueModules.regenerate(ob,changed);ob.productionApproval=false;
+    save();refresh();ops.toast('Peça redimensionada e corte recalculado.');return;
+   }
+   if(a==='advApprove'){
+    const ob=l.items.find(i=>i.id===selected);if(ob?.kind!=='module')throw Error('Selecione um módulo.');
+    remember(l);ob.productionApproval=!ob.productionApproval;save();refresh();return;
+   }
+   if(a==='advTraceWalls'){
+    const traced=globalThis.ArqueAdvanced.traceWalls(l,[],root.querySelector('#advWallTolerance')?.value??40);
+    remember(l);l.wallTrace=traced;save();refresh();ops.toast(traced.segments.length+' segmentos; ainda precisam ser medidos na obra.');return;
+   }
+   if(a==='advExportCsv'){
+    const report=globalThis.ArqueAdvanced.production(l,globalThis.ArqueModules);
+    if(!report.lines.length)throw Error('Não há peças dimensionadas.');
+    const blob=new Blob([globalThis.ArqueAdvanced.csv(report)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='arque-pecas-conferencia.csv';document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);ops.toast('CSV preliminar gerado, não é programa CNC.');return;
+   }
    if(a==='autoSketch'||a==='autoSketchOne'){
     const A=globalThis.ArqueAlign;if(!A)throw Error('Alinhamento indisponível.');
     const result=A.automaticSketch(l,a==='autoSketchOne'?selected:'',{

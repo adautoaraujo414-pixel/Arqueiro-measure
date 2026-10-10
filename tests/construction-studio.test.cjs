@@ -30,7 +30,7 @@ A.equal(p.x,903);
 A.equal(p.y,100);
 A.equal(p.side,'right');
 A(S.check(room,second,p.x,p.y));
-A.equal(S.proposed(room,second,first.id,'left',3).side,'livre','sem espaço à esquerda, usar outra posição sem invadir');
+const fallback=S.proposed(room,second,first.id,'left',3);A.equal(fallback.side,'right','sem espaço à esquerda, preferir outro encaixe válido');A(S.check(room,second,fallback.x,fallback.y));
 A.throws(()=>S.proposed({...room,width:700},second,first.id,'right',3),/Não há espaço livre/);
 const placed={...second,x:p.x,y:p.y};
 A(!S.check({...room,items:[first,placed]},second,first.x,first.y),'evitar colisão física dos módulos');

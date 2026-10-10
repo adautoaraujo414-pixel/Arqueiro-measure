@@ -61,6 +61,8 @@ A.equal(find(over.parts,'topbottom').w,800);
 A.equal(find(M.parts({...model,doorTopDiscount:12,doorBottomDiscount:6}).parts,'front').w,708);
 const fixed=M.parts({...model,fixedShelves:[{bay:0,at:0.5}]});
 A.equal(find(fixed.parts,'fixed-0').w,760);
+A.equal(fixed.parts.some(x=>x.key==='shelf-0-0'),false,'prateleira solta substituída pela fixa no mesmo plano');
+A.throws(()=>M.parts({...model,fixedShelves:[{bay:0,at:0.5},{bay:0,at:0.501}]}),/sobrepostas/);
 A.throws(()=>M.parts({...model,fixedShelves:[{bay:2,at:0.5}]}),/inexistente/);
 const drawer=M.parts({...model,accessories:[{
  type:'drawer',bay:0,count:1,slideSide:12.5,rearClearance:20,frontClearance:10,height:140,slideLength:500

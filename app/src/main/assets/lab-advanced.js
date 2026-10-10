@@ -116,6 +116,7 @@ function production(layout,engine=globalThis.ArqueModules){
  const lines=[],warnings=[],errors=[];
  if(!layout.confirmed)errors.push('Ambiente não confirmado por medição.');
  if(layout.wallTrace&&!layout.wallTrace.verified)warnings.push('Paredes do esboço não verificadas em obra.');
+ if(layout.cornerGuides?.length)warnings.push('Canto de 45° é apenas frente diagonal visual; falta projetar e conferir carcaça, portas e recortes angulares.');
  for(const obj of layout.items||[]){
   if(obj.kind!=='module'||!obj.moduleSpec)continue;
   try{
@@ -130,6 +131,7 @@ function production(layout,engine=globalThis.ArqueModules){
    if(obj.moduleSpec.frontType==='cava'&&!obj.moduleSpec.cavaProfile?.verified)warnings.push((obj.code||obj.label)+': fresagem da cava não aprovada.');
    if(obj.moduleSpec.doorCount||Object.values(obj.moduleSpec.bayDoors||{}).some(Boolean))warnings.push((obj.code||obj.label)+': conferir dobradiças, batentes e furação.');
    if(obj.moduleSpec.accessories?.length)warnings.push((obj.code||obj.label)+': confirmar referência e comprimento das corrediças.');
+   if(globalThis.ArqueFabrication)for(const warning of globalThis.ArqueFabrication.hardwareWarnings(obj,engine))warnings.push((obj.code||obj.label)+': '+warning);
    if(!obj.productionApproval)warnings.push((obj.code||obj.label)+': módulo ainda não conferido e aprovado para produção.');
   }catch(err){errors.push((obj.code||obj.label)+': '+err.message);}
  }

@@ -126,6 +126,7 @@ function groupedCutRows(project,roomId){
  const l=project.labLayouts?.[roomId],out={};
  for(const item of l?.items||[])if(item.kind==='module'&&item.moduleSpec){
   for(const piece of cutRows(item,room.name)){
+   piece.sourceRoomId=roomId;
    const key=piece.material+' · '+piece.thickness+' mm';
    (out[key]||(out[key]=[])).push(piece);
   }

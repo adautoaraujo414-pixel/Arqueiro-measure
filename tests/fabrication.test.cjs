@@ -39,7 +39,7 @@ A(F.hardwareWarnings(back,M).some(x=>x.includes('não conferidas')));
 A(F.hardwareCsv([back]).includes('M01'));
 const doorless=make('M04',100,1200);doorless.moduleSpec=M.check({...doorless.moduleSpec,doorCount:0});
 A.throws(()=>F.hingePlan(doorless,{},M),/não possui portas/);
-A.throws(()=>F.hingePlan(back,{diameter:45,edgeDistance:90,top:250,bottom:250,count:6},M),/Porta/);
+A.throws(()=>F.hingePlan({...back,moduleSpec:{...back.moduleSpec,doorCount:8}},{diameter:45,edgeDistance:90,top:250,bottom:250,count:6},M),/Porta/);
 const drawer=make('M05',1100,1200);
 drawer.moduleSpec=M.check({...drawer.moduleSpec,accessories:[{type:'drawer',bay:0,count:3,slideSide:12.7,frontClearance:20,rearClearance:20,height:150,slideLength:400}]});
 const slides=F.slidesPlan(drawer,{brand:'Ferragem real',model:'Guia 400',side:13,length:400,front:20,rear:25},M);

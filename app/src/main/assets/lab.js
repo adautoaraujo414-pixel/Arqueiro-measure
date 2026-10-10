@@ -191,7 +191,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true,precisionStep=5,studioCategory='Inferiores',studioSearch='',studioInsertSide='right',studioInspectorOpen=false;
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true,precisionStep=5,studioCategory='Inferiores',studioSearch='',studioInsertSide='right',studioInspectorOpen=false,studioNav='select',visualTilt=32,visualPanX=0,visualPanY=0,navDrag=null,navPointers=new Map();
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -276,12 +276,22 @@ function screen(p,state){
 
  }
  out+='<div class="lab-work">';
+ if(view==='iso')out+='<div class="studio-camera-toolbar" role="toolbar" aria-label="Navegação do ambiente 3D">'+
+   button('↖ Selecionar','studioNav','select',studioNav==='select')+
+   button('⟳ Girar','studioNav','orbit',studioNav==='orbit')+
+   button('✥ Mover vista','studioNav','pan',studioNav==='pan')+
+   button('⌕ Zoom','studioNav','zoom',studioNav==='zoom')+
+   button('−','visualZoom','-.2')+button('+','visualZoom','.2')+
+   button('⊞ Enquadrar','studioFit')+
+   '<span class="studio-cam-angle">'+Math.round(visualAngle)+'° · '+Math.round(visualTilt)+'° · '+Math.round(visualZoom*100)+'%</span>'+
+   button('Iso','studioCameraPreset','iso')+button('Frente','studioCameraPreset','front')+button('Topo','studioCameraPreset','top')+
+   '</div>';
  if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+button('⌁ Linha por pontos','tool','pointline',tool==='pointline')+(tool==='pointline'?button('Finalizar linha','finishPointLine'):'')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
  let board='';
- try{board=view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode,showDimensions,partKey:selectedPartKey}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected);}
+ try{board=view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,tilt:visualTilt,panX:visualPanX,panY:visualPanY,zoom:visualZoom,mode:visualMode,showDimensions,partKey:selectedPartKey}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected);}
  catch(error){board=recovery('Desenho técnico',error)+'<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="Ambiente técnico indisponível"><rect width="900" height="420" fill="#f6f9fb"/><text x="450" y="210" text-anchor="middle" fill="#436679" font-size="20">Confira o módulo indicado na mensagem acima</text></svg>';}
  out+='<div class="lab-board-wrap">'+board+'</div>';
- out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
+ out+='<div class="lab-hint">'+(view==='iso'?'Toque no módulo para selecionar. Use ⟳ Girar e arraste com um dedo ou S Pen; ✥ Mover vista para deslocar; pinça com dois dedos para zoom e pan. Enquadrar retorna à vista geral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
  out+='<aside class="lab-side studio-inspector"'+(view==='iso'&&!studioInspectorOpen?' hidden':'')+'><h4>Propriedades e medidas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
  for(const k of ['width','depth','height']){const status=linkStatus(l.roomRefs[k],r);if(status)out+='<p class="lab-link '+(status.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(status)+'</p>';}
@@ -472,6 +482,19 @@ function mount(p,ops){
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
    if(a==='studioCategory'){studioCategory=arg;refresh();return;}
+   if(a==='studioNav'){studioNav=arg;drag=null;navDrag=null;navPointers.clear();refresh();return;}
+   if(a==='studioFit'){
+    const defaults=globalThis.ArqueStudio.resetCamera();
+    visualAngle=defaults.angle;visualTilt=defaults.tilt;visualZoom=defaults.zoom;
+    visualPanX=defaults.panX;visualPanY=defaults.panY;studioNav='select';
+    drag=null;navDrag=null;navPointers.clear();view='iso';refresh();return;
+   }
+   if(a==='studioCameraPreset'){
+    if(arg==='front'){view='front';}
+    else if(arg==='top'){view='plan';}
+    else{view='iso';visualAngle=40;visualTilt=32;visualPanX=0;visualPanY=0;}
+    navDrag=null;navPointers.clear();drag=null;refresh();return;
+   }
    if(a==='studioInspectorToggle'){studioInspectorOpen=!studioInspectorOpen;refresh();return;}
    if(a==='studioFavorite'){
     if(!ops.state)throw Error('Não foi possível salvar favoritos.');
@@ -618,7 +641,7 @@ function mount(p,ops){
    if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;selectedPartKey='';}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
    if(a==='view'){view=arg;tool='select';pointLineId='';if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
     if(a==='visualRotate'){visualAngle=(visualAngle+Number(arg)+360)%360;refresh();return;}
-    if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
+    if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(3.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
     if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';studioInspectorOpen=true;refresh();return;}
     if(a==='partSelect'){selectedPartKey=arg;studioInspectorOpen=true;refresh();return;}
@@ -742,8 +765,44 @@ function mount(p,ops){
   if(gridSnap&&tool!=='pen'){x=Math.round(x/5)*5;y=Math.round(y/5)*5;}
   return {x,y};
  };
+ const cameraState=()=>({angle:visualAngle,tilt:visualTilt,zoom:visualZoom,panX:visualPanX,panY:visualPanY});
+ const applyCamera=next=>{visualAngle=next.angle;visualTilt=next.tilt;visualZoom=next.zoom;visualPanX=next.panX;visualPanY=next.panY;};
+ const rerenderCamera=()=>{
+  const board=root.querySelector('#labBoard');
+  if(!board||view!=='iso'||!globalThis.ArqueVisual)return;
+  const l=layout(p,activeRoom);
+  board.outerHTML=globalThis.ArqueVisual.scene(l,selected,{angle:visualAngle,tilt:visualTilt,zoom:visualZoom,panX:visualPanX,panY:visualPanY,mode:visualMode,showDimensions,partKey:selectedPartKey});
+  const label=root.querySelector('.studio-cam-angle');
+  if(label)label.textContent=Math.round(visualAngle)+'° · '+Math.round(visualTilt)+'° · '+Math.round(visualZoom*100)+'%';
+ };
+ const pinchData=()=>{
+  const a=[...navPointers.values()];if(a.length<2)return null;
+  return {midX:(a[0].x+a[1].x)/2,midY:(a[0].y+a[1].y)/2,distance:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y))};
+ };
+ root.addEventListener('wheel',e=>{
+  if(view!=='iso'||!e.target.closest('#labBoard'))return;
+  e.preventDefault();
+  const ratio=e.deltaY>0?-.14:.14;
+  visualZoom=Math.max(.65,Math.min(3.5,Math.round((visualZoom+ratio)*100)/100));
+  rerenderCamera();
+ },{passive:false});
  root.addEventListener('pointerdown',e=>{
-  const board=e.target.closest?.('#labBoard');if(!board||e.isPrimary===false)return;
+  const board=e.target.closest?.('#labBoard');if(!board)return;
+  if(view==='iso'){
+   navPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(navPointers.size>=2){
+    drag=null;navDrag={mode:'pinch',prev:pinchData()};
+    const wrap=board.closest('.lab-board-wrap');
+    try{wrap.setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();return;
+   }
+   if(studioNav!=='select'){
+    navDrag={mode:studioNav,pointer:e.pointerId,lastX:e.clientX,lastY:e.clientY};
+    try{board.closest('.lab-board-wrap').setPointerCapture(e.pointerId);}catch(_){}
+    e.preventDefault();return;
+   }
+  }
+  if(e.isPrimary===false)return;
   try{
    const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]');
    if(view==='iso'){
@@ -796,6 +855,26 @@ function mount(p,ops){
   }catch(err){alertError(err);}
  });
  root.addEventListener('pointermove',e=>{
+  if(view==='iso'&&navPointers.has(e.pointerId)){
+   navPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(navDrag?.mode==='pinch'&&navPointers.size>=2){
+    const next=pinchData(),prev=navDrag.prev;
+    if(next&&prev&&globalThis.ArqueStudio){
+     applyCamera(globalThis.ArqueStudio.pinch(cameraState(),prev.distance,next.distance,
+      (next.midX-prev.midX)*1000/(root.querySelector('.lab-board-wrap')?.clientWidth||1000),
+      (next.midY-prev.midY)*650/(root.querySelector('.lab-board-wrap')?.clientHeight||650)));
+     navDrag.prev=next;rerenderCamera();
+    }
+    e.preventDefault();return;
+   }
+   if(navDrag&&navDrag.pointer===e.pointerId&&navDrag.mode!=='pinch'){
+    const box=root.querySelector('.lab-board-wrap')?.getBoundingClientRect()||{width:1000,height:650};
+    const dx=(e.clientX-navDrag.lastX)*1000/(box.width||1000),dy=(e.clientY-navDrag.lastY)*650/(box.height||650);
+    if(globalThis.ArqueStudio){applyCamera(globalThis.ArqueStudio.cameraDrag(cameraState(),navDrag.mode,dx,dy));rerenderCamera();}
+    navDrag.lastX=e.clientX;navDrag.lastY=e.clientY;
+    e.preventDefault();return;
+   }
+  }
   if(!drag||drag.pointer!==e.pointerId)return;
   if(view==='iso'&&drag.mode==='iso-move'){
    try{

@@ -162,25 +162,29 @@ function mount(p,ops){
   return {x,y};
  };
  root.addEventListener('pointerdown',e=>{
-  const board=e.target.closest?.('#labBoard');if(!board||!e.isPrimary)return;
+  const board=e.target.closest?.('#labBoard');if(!board||e.isPrimary===false)return;
   try{
    const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]'),pt=point(e);
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}
     selected=hit.dataset.labObject;const item=l.items.find(x=>x.id===selected);
-    if(!item)return;remember(l);drag={mode:'move',id:item.id,start:pt,x:item.x,y:item.y,pointer:e.pointerId};refresh();
+    if(!item)return;
+    drag={mode:'move',id:item.id,start:pt,x:item.x,y:item.y,pointer:e.pointerId};
    }else{
     const k=tool;
     const item=add(l,k,pt.x,pt.y,view);selected=item.id;
     if(k==='pen'){item.points=[[pt.x,pt.y]];}
     else if(k==='wall'){item.w=0;item.d=0;}
-    else {item.x=Math.max(0,pt.x-item.w/2);item.y=Math.max(0,pt.y-item.d/2);}
+    else{item.x=Math.max(0,pt.x-item.w/2);item.y=Math.max(0,pt.y-item.d/2);}
     drag=k==='pen'||k==='wall'?{mode:k,id:item.id,start:pt,pointer:e.pointerId}:null;
     tool=k==='pen'||k==='wall'?k:'select';
-    refresh();if(!drag)save();
+    if(!drag){save();refresh();return;}
+    const group=document.createElementNS('http://www.w3.org/2000/svg','g');
+    group.setAttribute('data-lab-object',item.id);group.innerHTML=shape(item,true);board.appendChild(group);
    }
    e.preventDefault();
-   const newBoard=root.querySelector('#labBoard');if(drag&&newBoard){try{newBoard.setPointerCapture(e.pointerId);}catch(_){}}
+   // Capture on the ORIGINAL SVG: swapping it mid-gesture loses real tablet touches.
+   try{board.setPointerCapture(e.pointerId);}catch(_){}
   }catch(err){alertError(err);}
  });
  root.addEventListener('pointermove',e=>{
@@ -189,6 +193,7 @@ function mount(p,ops){
    const l=layout(p,activeRoom),item=l.items.find(x=>x.id===drag.id);if(!item)return;
    const pt=point(e);
    if(drag.mode==='move'){
+    if(!drag.snapshotted){remember(l);drag.snapshotted=true;}
     item.x=Math.max(0,Math.min(l.width,drag.x+pt.x-drag.start.x));
     item.y=Math.max(0,Math.min(view==='front'?l.height:l.depth,drag.y+pt.y-drag.start.y));
    }else if(drag.mode==='wall'){item.w=pt.x-drag.start.x;item.d=pt.y-drag.start.y;}

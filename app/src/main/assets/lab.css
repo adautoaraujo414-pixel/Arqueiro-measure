@@ -89,3 +89,14 @@
  .lab-tree{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-height:none}
  .lab-main.lab-with-catalog>.lab-side{display:block}
 }
+
+.lab-construction-tree{border:1px solid #dce8ee;border-radius:9px;margin:10px 0;padding:9px;background:#fafcfd}
+.lab-construction-tree summary{font-weight:700;color:#226083;font-size:12px;cursor:pointer}
+.lab-components{display:grid;gap:5px;max-height:275px;overflow:auto;margin-top:9px}
+.lab-components button{display:flex;gap:7px;align-items:center;text-align:left;width:100%;padding:7px;min-width:0;min-height:37px}
+.lab-components button b{font-size:11px;color:#52778b;padding:4px;background:#e3edf3;border-radius:4px;min-width:33px}
+.lab-components button span{min-width:0;font-size:11px;line-height:1.35}
+.lab-components button small{display:block;font-size:10px;font-weight:400;color:#708896}
+.lab-selected-part{padding:8px;border:1px solid #c3dbe9;border-left:3px solid #2175a3;margin-top:8px;border-radius:6px;background:white}
+.lab-selected-part b{font-size:12px;color:#285875}
+.lab-selected-part p{font-size:11px;margin:5px 0;overflow-wrap:anywhere}

@@ -92,6 +92,15 @@ function moduleShape(item,view,selected,l){
  const spec=item.moduleSpec||{},t=Number(spec.thickness)||18,W=item.w,depth=item.d,H=item.height;
  const x=item.x,y=view==='front'?(item.frontY??Math.max(0,l.height-H-100)):item.y;
  const rotated=Number(item.rotation||0)%180===90,shownW=view==='front'?W:(rotated?depth:W),shownH=view==='front'?H:(rotated?W:depth);
+ if(spec.corner45?.enabled&&view==='plan'&&globalThis.ArqueCorner45){
+  const g=globalThis.ArqueCorner45.geometry(spec),rotation=Number(item.rotation||0);
+  const xy=([u,v])=>rotation===90?[x+depth-v,y+u]:rotation===180?[x+W-u,y+depth-v]:rotation===270?[x+v,y+W-u]:[x+u,y+v];
+  const outer=g.outline.map(xy),inner=g.inner.map(xy),a=xy(g.diagonal[0]),b=xy(g.diagonal[1]);
+  return '<polygon points="'+outer.map(p=>p.join(',')).join(' ')+'" fill="'+(selected?'#cbe9f6':'#dfedf5')+'" stroke="'+(selected?'#087caf':'#477b95')+'" stroke-width="7" pointer-events="all"/>'+
+   '<polygon points="'+inner.map(p=>p.join(',')).join(' ')+'" fill="none" stroke="#8aa2b0" stroke-dasharray="12 8" stroke-width="3" pointer-events="none"/>'+
+   '<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="#aa754c" stroke-width="9" pointer-events="none"/>'+
+   '<text x="'+((a[0]+b[0])/2)+'" y="'+((a[1]+b[1])/2-30)+'" text-anchor="middle" font-size="28" fill="#915c35" pointer-events="none">45° · '+fmt(g.diagonalLength)+' mm</text>';
+ }
  let res='<rect x="'+x+'" y="'+y+'" width="'+shownW+'" height="'+shownH+'" fill="'+(selected?'#cbe9f6':'#dfedf5')+'" stroke="'+(selected?'#117caf':'#477b95')+'" stroke-width="7" vector-effect="non-scaling-stroke"/>';
  if(view==='front'){
   res+='<path d="M '+(x+t)+' '+y+' V '+(y+H)+' M '+(x+W-t)+' '+y+' V '+(y+H)+' M '+x+' '+(y+t)+' H '+(x+W)+' M '+x+' '+(y+H-t)+' H '+(x+W)+'" stroke="#577e90" stroke-width="4" vector-effect="non-scaling-stroke" fill="none"/>';

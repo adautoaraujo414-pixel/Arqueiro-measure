@@ -419,6 +419,38 @@ function mount(p,ops){
     remember(l);Object.assign(selectedItem,next);selectedItem.productionApproval=false;
     save();refresh();ops.toast('Posição '+axis.toUpperCase()+' = '+fmt(next[axis])+' mm.');return;
    }
+   if(a==='fabCorner45'){
+    const F=globalThis.ArqueFabrication,guide=F.create45(l,root.querySelector('#fabCornerBack')?.value,root.querySelector('#fabCornerSide')?.value,
+     {reach:root.querySelector('#fabCornerReach')?.value,clearance:root.querySelector('#fabCornerClearance')?.value});
+    remember(l);l.cornerGuides=l.cornerGuides.filter(x=>x.id!==guide.id);l.cornerGuides.push(guide);
+    save();refresh();ops.toast('Frente diagonal '+fmt(guide.diagonalLength)+' mm · 45°. Referência técnica.');return;
+   }
+   if(a==='fabHinges'){
+    const obj=l.items.find(i=>i.id===selected);
+    const plan=globalThis.ArqueFabrication.hingePlan(obj,{
+     brand:root.querySelector('#fabHingeBrand')?.value,model:root.querySelector('#fabHingeModel')?.value,
+     diameter:root.querySelector('#fabHingeDiameter')?.value,edgeDistance:root.querySelector('#fabHingeEdge')?.value,
+     top:root.querySelector('#fabHingeTop')?.value,bottom:root.querySelector('#fabHingeBottom')?.value,
+     count:root.querySelector('#fabHingeCount')?.value},globalThis.ArqueModules);
+    remember(l);obj.hingePlan=plan;obj.productionApproval=false;
+    save();refresh();ops.toast(plan.holes.length+' centros previstos; conferir dobradiça real.');return;
+   }
+   if(a==='fabSlides'){
+    const obj=l.items.find(i=>i.id===selected);
+    const next=globalThis.ArqueFabrication.slidesPlan(obj,{
+     brand:root.querySelector('#fabSlideBrand')?.value,model:root.querySelector('#fabSlideModel')?.value,
+     side:root.querySelector('#fabSlideSide')?.value,length:root.querySelector('#fabSlideLength')?.value,
+     front:root.querySelector('#fabSlideFront')?.value,rear:root.querySelector('#fabSlideRear')?.value},globalThis.ArqueModules);
+    remember(l);globalThis.ArqueModules.regenerate(obj,next.spec);obj.slideConfiguration=next.configuration;obj.productionApproval=false;
+    save();refresh();ops.toast('Gaveteiro recalculado conforme corrediça informada. Revisão pendente.');return;
+   }
+   if(a==='fabHardwareCsv'){
+    const mods=l.items.filter(i=>i.kind==='module'&&i.hingePlan);if(!mods.length)throw Error('Calcule as dobradiças primeiro.');
+    const csv=globalThis.ArqueFabrication.hardwareCsv(mods),blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='arque-dobradicas-conferencia.csv';
+    document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    ops.toast('Planilha de conferência criada, sem furação CNC.');return;
+   }
    if(a==='advMagnet'){magnetEnabled=!magnetEnabled;refresh();return;}
    if(a==='advCorner'){
     const result=globalThis.ArqueAdvanced.kitchenCorner(l,root.querySelector('#advCornerBack').value,root.querySelector('#advCornerSide').value,{clearance:root.querySelector('#advCornerGap').value});

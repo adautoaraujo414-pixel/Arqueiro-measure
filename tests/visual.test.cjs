@@ -16,7 +16,7 @@ const html=V.scene(room,base.id,{angle:40,mode:'fronts'});
 assert(html.includes('viewBox="0 0 1000 650"'),'prancheta SVG');
 assert(html.includes('data-lab-object="'+base.id+'"'),'módulo selecionável');
 assert(html.includes('data-lab-code="M01"'),'identificador técnico visível');
-assert(html.includes('3200 × 2400 × 2600 mm'),'dimensão real do ambiente');
+assert(html.includes('3.200 × 2.400 × 2.600 mm'),'dimensão real do ambiente');
 assert(html.includes('MEDIDAS CONFIRMADAS'),'diferenciar medidas verificadas');
 assert(html.includes('lab-selected'),'seleção destacada');
 assert(html.includes('Ambiente técnico 3D'),'acessibilidade da cena');

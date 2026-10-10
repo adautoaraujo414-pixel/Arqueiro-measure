@@ -62,7 +62,7 @@ jobs:
         run: node tests/kitchen.test.cjs
       - name: Testar alinhamento de móveis e linhas do esboço
         run: node tests/align.test.cjs
-      - name: Testar oficina avançada: L, ímã, cava, paredes e produção
+      - name: 'Testar oficina avançada: L, ímã, cava, paredes e produção'
         run: node tests/advanced.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs

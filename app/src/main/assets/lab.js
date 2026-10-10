@@ -165,7 +165,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='';
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true;
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){

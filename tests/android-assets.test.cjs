@@ -1,6 +1,5 @@
 'use strict';
-/* Regressão WebView Android: o APK NÃO pode bloquear scripts do Laboratório.
- * Verifica dependências reais do index.html contra allowlist exata da classe nativa. */
+/* A interface ativa inclui somente Esboço, Planta, Fotos e Corte. Lab temporariamente suspenso. */
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const index=fs.readFileSync('app/src/main/assets/index.html','utf8');
 const java=fs.readFileSync('app/src/main/java/com/arque/measure/MainActivity.java','utf8');
@@ -11,7 +10,7 @@ assert.equal(new Set(allowed).size,allowed.length,'assets sem duplicação');
 const expected=new Set(['index.html']);
 for(const match of index.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)="([^"]+)"[^>]*>/g))
  if(/\.(js|css)$/.test(match[1]))expected.add(match[1]);
-assert(expected.size>=17,'o Laboratório carrega scripts e estilos diversos');
+assert.equal(expected.size,5,'apenas index, estilos, core, corte e app são carregados');
 for(const file of expected){
  assert(allowed.includes(file),'Android WebView está bloqueando '+file+' -> Laboratório ficará indisponível.');
  assert(fs.existsSync('app/src/main/assets/'+file),'Recurso permitido mas ausente no APK: '+file);
@@ -22,5 +21,6 @@ assert(java.includes('setCacheMode(WebSettings.LOAD_NO_CACHE)'),'WebView deve us
 assert(java.includes('"https".equals(uri.getScheme())')&&java.includes('"appassets.arque.invalid".equals(uri.getHost())'),'origem segura restrita');
 assert(!/if\(!name\.equals\("index\.html"\)/.test(java),'allowlist antiga do WebView não pode retornar');
 for(const name of ['lab.js','modules.js','lab-visual.js','lab-fabrication.js','corner45.js','lab.css','module-ui.css'])
- assert(allowed.includes(name),'Arquivo essencial do Laboratório inacessível: '+name);
-console.log('WebView Android: '+expected.size+' arquivos HTML/CSS/JS autorizados e presentes; recursos estranhos bloqueados.');
+ assert(!allowed.includes(name),'Laboratório suspenso não deve ser servido pelo WebView: '+name);
+assert(fs.existsSync('app/src/main/assets/lab.js'),'código do Laboratório permanece no repositório para retomada futura');
+console.log('WebView Android: somente os '+expected.size+' arquivos ativos são servidos; Laboratório suspenso.');

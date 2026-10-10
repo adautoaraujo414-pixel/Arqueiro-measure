@@ -20,7 +20,7 @@ function standard(){
   caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',baseArrangement:'continuous',
   construction:'between',back:'overlay',doorCount:2,doorGap:3,doorReveal:2,
   frontType:'cava',vertical:[],bayLayoutMode:'manual',bayCount:1,bayRules:[],shelvesByBay:{},shelfCount:1,shelfInset:20,shelfRearInset:0,shelfClearance:2,dividerFrontInset:0,dividerRearInset:0,
-  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],revision:1};
+  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],assemblyPieces:[],doorMode:'global',bayDoors:{},revision:1};
 }
 function check(spec){
  const s={...standard(),...clone(spec||{})};
@@ -79,6 +79,12 @@ function check(spec){
  if(s.shelfCount&&s.height-2*s.thickness-s.shelfCount*s.thickness<100*(s.shelfCount+1))throw Error('Prateleiras demais para a altura: os espaços ficam menores que 100 mm.');
  if(s.doorCount&&((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount)<80)throw Error('Portas estreitas demais para as folgas configuradas.');
  if(s.doorCount&&s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount<80)throw Error('Descontos superior e inferior deixam porta inviável.');
+ if(!['global','byBay'].includes(s.doorMode))throw Error('Montagem das portas inválida.');
+ if(!s.bayDoors||typeof s.bayDoors!=='object'||Array.isArray(s.bayDoors))throw Error('Portas por vão inválidas.');
+ for(const [key,amount] of Object.entries(s.bayDoors)){
+  if(!/^(0|[1-9][0-9]*)$/.test(key)||Number(key)>10)throw Error('Vão de porta inválido.');
+  s.bayDoors[key]=integer(amount,'Portas do vão '+(Number(key)+1),0,8);
+ }
  if(!Array.isArray(s.fixedShelves)||s.fixedShelves.length>20)throw Error('Divisórias horizontais inválidas.');
  s.fixedShelves=s.fixedShelves.map((o,i)=>({bay:integer(o.bay,'Vão da divisória fixa '+(i+1),0,10),at:ratio(o.at,'Altura proporcional divisória '+(i+1),0.01,0.99)}));
  if(!Array.isArray(s.accessories)||s.accessories.length>20)throw Error('Acessórios internos inválidos.');
@@ -92,8 +98,26 @@ function check(spec){
   height:n(o.height,'Altura da caixa ou bandeja',60,400),
   slideLength:n(o.slideLength,'Comprimento informado da corrediça',100,1000)
  }));
- // A origem desses descontos é a ferragem escolhida: não presumir 12,5 mm para qualquer modelo.
-
+ // Peças de montagem adicionais são dimensões paramétricas, nunca um traçado em pixel.
+ if(!Array.isArray(s.assemblyPieces)||s.assemblyPieces.length>50)throw Error('Excesso de peças especiais neste módulo.');
+ const seen=new Set();
+ s.assemblyPieces=s.assemblyPieces.map((p,i)=>{
+  if(!p||typeof p!=='object')throw Error('Peça adicional inválida.');
+  const id=String(p.id||'').trim();
+  if(!/^[A-Za-z0-9_-]{1,90}$/.test(id)||seen.has(id))throw Error('Identificador de peça repetido ou inválido.');
+  seen.add(id);
+  if(!['rail','cavaRail','backPanel'].includes(p.type))throw Error('Tipo de peça especial não suportado.');
+  const entry={id,type:p.type,bay:integer(p.bay,'Vão da peça adicional '+(i+1),0,10),
+    at:ratio(p.at??0.5,'Posição na altura da peça',0.02,0.98),
+    widthClearance:n(p.widthClearance??0,'Folga lateral da peça',0,30),
+    frontInset:n(p.frontInset??0,'Recuo dianteiro da peça',0,150),
+    rearInset:n(p.rearInset??0,'Recuo traseiro da peça',0,150),
+    height:n(p.height??70,'Altura da travessa/régua',20,350),
+    label:clean(p.label)||{rail:'Travessa',cavaRail:'Régua de cava',backPanel:'Fundo por vão'}[p.type]
+  };
+  return entry;
+ });
+ // A origem dos descontos das corrediças é a ferragem escolhida.
  return s;
 }
 /* Repartição exata: remove espessuras antes de distribuir as larguras livres.
@@ -127,6 +151,53 @@ function equalBays(spec,count){
 function customBays(spec,rules){
  const s=check({...spec,bayLayoutMode:'custom',bayCount:rules.length,bayRules:clone(rules),vertical:[]});
  parts(s);return s;
+}
+/* Editor de montagem: cada ação cria uma peça vinculada a um vão, não uma duplicata
+   da estrutura preexistente. Tudo é calculado de novo ao redimensionar o módulo. */
+function insertAssembly(spec,kind,bay,options={}){
+ const original=check(spec),bays=bayBounds(original);
+ const index=integer(bay,'Vão selecionado',0,bays.length-1);
+ if(!['rail','cavaRail','backPanel'].includes(kind))throw Error('Tipo de peça não disponível.');
+ if(kind==='backPanel'&&original.assemblyPieces.some(p=>p.type==='backPanel'&&p.bay===index))throw Error('Esse vão já tem um fundo segmentado.');
+ const entry={id:uid(),type:kind,bay:index,at:options.at??(kind==='cavaRail'?0.9:0.5),
+  height:options.height??70,widthClearance:options.widthClearance??0,
+  frontInset:options.frontInset??0,rearInset:options.rearInset??0,
+  label:options.label||{rail:'Travessa',cavaRail:'Régua de cava',backPanel:'Fundo por vão'}[kind]};
+ let update={assemblyPieces:[...original.assemblyPieces,entry]};
+ if(kind==='backPanel'&&original.back==='overlay')update.back='none';
+ const s=check({...original,...update});parts(s);return s;
+}
+function removeAssembly(spec,id){
+ const original=check(spec),items=original.assemblyPieces.filter(p=>p.id!==id);
+ if(items.length===original.assemblyPieces.length)throw Error('Peça não encontrada.');
+ const s=check({...original,assemblyPieces:items});parts(s);return s;
+}
+function setDoorsInBay(spec,bay,count){
+ const original=check(spec),bays=bayBounds(original),index=integer(bay,'Vão de portas',0,bays.length-1);
+ const doors={...original.bayDoors,[index]:integer(count,'Portas do vão',0,8)};
+ const next=check({...original,doorMode:'byBay',bayDoors:doors});parts(next);return next;
+}
+function restoreGlobalDoors(spec){
+ const next=check({...spec,doorMode:'global'});parts(next);return next;
+}
+function splitBay(spec,bay,at=0.5){
+ const s=check(spec),bays=bayBounds(s),index=integer(bay,'Vão selecionado',0,bays.length-1);
+ const frac=ratio(at,'Posição da nova lateral',0.1,0.9),b=bays[index],t=s.thickness;
+ const newLeft=(b.width-t)*frac,newRight=(b.width-t)*(1-frac);
+ if(newLeft<100||newRight<100)throw Error('A divisória deixaria um vão menor que 100 mm.');
+ if(s.assemblyPieces.some(p=>p.bay===index)||s.accessories.some(p=>p.bay===index)||s.fixedShelves.some(p=>p.bay===index)||
+    (s.bayDoors[index]||0)>0||(s.shelvesByBay[index]??s.shelfCount)>0)
+  throw Error('Este vão já contém peças. Retire-as antes de dividi-lo para evitar deslocar ferragens.');
+ const inner=s.width-2*t,center=b.start-t+b.width*frac+(1-frac)*t/2;
+ const vertical=[...s.vertical,Math.round((center/inner)*1000000)/1000000].sort((a,b)=>a-b);
+ const move=(idx)=>idx>index?idx+1:idx;
+ const shelvesByBay=Object.fromEntries(Object.entries(s.shelvesByBay).map(([i,n])=>[move(Number(i)),n]));
+ const bayDoors=Object.fromEntries(Object.entries(s.bayDoors).map(([i,n])=>[move(Number(i)),n]));
+ const fixedShelves=s.fixedShelves.map(p=>({...p,bay:move(p.bay)}));
+ const accessories=s.accessories.map(p=>({...p,bay:move(p.bay)}));
+ const assemblyPieces=s.assemblyPieces.map(p=>({...p,bay:move(p.bay)}));
+ const next=check({...s,bayLayoutMode:'manual',bayCount:vertical.length+1,bayRules:[],vertical,shelvesByBay,bayDoors,fixedShelves,accessories,assemblyPieces});
+ parts(next);return next;
 }
 function setBayShelves(spec,bay,count){
  const s=check(spec);const bays=bayBounds(s);
@@ -178,6 +249,25 @@ function parts(spec){
   const a=s.fixedShelves[i],b=s.fixedShelves[j];
   if(a.bay===b.bay&&Math.abs(a.at-b.at)*innerHeight<t+5)throw Error('Divisórias horizontais sobrepostas no mesmo vão.');
  }
+ for(const entry of s.assemblyPieces){
+  const bay=bays[entry.bay];if(!bay)throw Error('Peça '+entry.label+' aponta para vão inexistente.');
+  if(entry.type==='backPanel'){
+   if(s.back==='overlay')throw Error('Não coloque fundo individual sobre fundo inteiro. Escolha fundo segmentado.');
+   const usable=round(bay.width-2*entry.widthClearance);
+   if(s.backThickness<=0)throw Error('Fundo segmentado exige espessura de fundo cadastrada.');
+   panel('extra-'+entry.id,'Fundo individual / vão '+(entry.bay+1),innerHeight,usable,1,s.backThickness,s.backMaterial,false,0,0,
+    'Fundo interior por vão, montagem e fixação precisam de conferência.');
+  }else{
+   const usable=round(bay.width-2*entry.widthClearance);
+   const depth=round(s.depth-entry.frontInset-entry.rearInset);
+   const axial=round(entry.at*innerHeight);
+   if(usable<40||depth<20)throw Error('Dimensões inviáveis para '+entry.label+'.');
+   if(axial-entry.height/2<0||axial+entry.height/2>innerHeight)throw Error(entry.label+' invade tampo ou base; altere altura/posição.');
+   panel('extra-'+entry.id,entry.label+' / vão '+(entry.bay+1),usable,entry.height,1,t,s.caseMaterial,s.grainCase,0,1,
+    'Fixação no vão; altura do painel '+entry.height+' mm, profundidade de instalação disponível '+depth+' mm'+(entry.type==='cavaRail'?'; USINAGEM da cava deve ser programada separadamente':'')+'.');
+   if(entry.type==='cavaRail')warnings.push('Régua de cava: recorte/perfil não foi gerado automaticamente; definir fresagem, batente e folgas na produção.');
+  }
+ }
  for(const [i,o] of s.fixedShelves.entries()){
   const bay=bays[o.bay];
   if(!bay)throw Error('Divisória fixa '+(i+1)+' aponta para um vão inexistente.');
@@ -199,7 +289,18 @@ function parts(spec){
   warnings.push(kind+' no vão '+(o.bay+1)+': conferir especificação, fixação e folga real da corrediça ('+o.slideSide+' mm/lado).');
  }
  if(s.back==='overlay'&&s.backThickness>0)panel('back','Fundo aplicado',s.width,s.height,1,s.backThickness,s.backMaterial,false,0,0,'Fundo externo: confirmar encaixe, fixação e vão disponível');
- if(s.doorCount){
+ if(s.doorMode==='byBay'){
+  if(s.doorCount>0)warnings.push('Portas por vão ativadas: as '+s.doorCount+' portas globais foram substituídas nesta instância, sem duplicação.');
+  for(const [idx,bay] of bays.entries()){
+   const qty=s.bayDoors[idx]||0;if(!qty)continue;
+   const h=round(s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount);
+   const leaf=round((bay.width-2*s.doorReveal-(qty-1)*s.doorGap)/qty);
+   if(leaf<80||h<80)throw Error('Portas do vão '+(idx+1)+' não cabem com as folgas configuradas.');
+   panel('bay-door-'+idx,'Porta do vão '+(idx+1),h,leaf,qty,t,s.frontMaterial,s.grainFront,2,2,'Frente dimensionada pelo vão livre; revisar recobrimento, dobradiças, sentido e posição de cava.');
+   if(leaf>550)warnings.push('Porta do vão '+(idx+1)+' excede 550 mm de largura; revisar dobradiças e estabilidade.');
+  }
+ }
+ if(s.doorMode==='global'&&s.doorCount){
   const leaf=round((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount),height=round(s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount);
   panel('front','Porta',height,leaf,s.doorCount,t,s.frontMaterial,s.grainFront,2,2,'Frente externa. Puxador '+s.frontType+'; verificar dobradiças, sobreposição e folgas.');
   if(leaf>550)warnings.push('Porta de '+leaf+' mm: conferir limite usual de largura e dobradiças.');
@@ -267,5 +368,5 @@ function groupedCutRows(project,roomId){
  }
  return out;
 }
-return {standard,check,bayBounds,allocateBayWidths,equalBays,customBays,setBayShelves,equalHorizontal,addDivider,parts,templateLibrary,saveTemplate,instantiate,regenerate,cutRows,groupedCutRows};
+return {standard,check,bayBounds,allocateBayWidths,equalBays,customBays,setBayShelves,equalHorizontal,addDivider,insertAssembly,removeAssembly,setDoorsInBay,restoreGlobalDoors,splitBay,parts,templateLibrary,saveTemplate,instantiate,regenerate,cutRows,groupedCutRows};
 });

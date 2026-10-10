@@ -91,9 +91,9 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('tool','base');
  let labBoard=doc.getElementById('labBoard');
  labBoard.getBoundingClientRect=()=>({left:0,top:0,width:350,height:280});
- const ev=new w.Event('pointerdown',{bubbles:true,cancelable:true});
- Object.defineProperties(ev,{pointerId:{value:18},isPrimary:{value:true},clientX:{value:80},clientY:{value:80}});
- labBoard.dispatchEvent(ev);
+ const labDown=new w.Event('pointerdown',{bubbles:true,cancelable:true});
+ Object.defineProperties(labDown,{pointerId:{value:18},isPrimary:{value:true},clientX:{value:80},clientY:{value:80}});
+ labBoard.dispatchEvent(labDown);
  await sleep(70);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length===1,'base posicionada em milimetros');
  assert(doc.querySelector('#labName'),'painel de edicao da peca');

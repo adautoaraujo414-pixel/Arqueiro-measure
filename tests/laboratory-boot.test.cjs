@@ -1,0 +1,43 @@
+'use strict';
+/* Reproduz inicialização REAL do APK: carrega TODOS os scripts do index.html na ordem exata.
+ * Falhas no setTimeout(setupStudio) devem falhar CI, jamais deixar #arqueLab vazio. */
+const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM,VirtualConsole}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
+const index=fs.readFileSync('app/src/main/assets/index.html','utf8');
+const paths=[...index.matchAll(/<script\s+src="([^"]+\.js)"/g)].map(x=>x[1]);
+const issues=[],consoleProxy=new VirtualConsole();
+consoleProxy.on('jsdomError',err=>issues.push(String(err?.stack||err)));
+const dom=new JSDOM(index,{url:'https://appassets.arque.invalid/index.html',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:consoleProxy});
+const w=dom.window,d=w.document;
+Object.defineProperty(w,'indexedDB',{value:new IDBFactory(),configurable:true});
+w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
+w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){},drawImage(){}});
+w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};w.SVGElement.prototype.setPointerCapture=()=>{};
+for(const path of paths)w.eval(fs.readFileSync('app/src/main/assets/'+path,'utf8'));
+const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
+const fire=(action,arg)=>{let el=[...d.querySelectorAll('[data-action]')].find(x=>x.dataset.action===action&&(arg===undefined||x.dataset.arg===arg));
+ if(!el&&action==='openWorkspace')el=d.querySelector('[data-subtab="'+arg+'"]');
+ assert(el,'Botão indisponível '+action+' '+arg);el.click();};
+const input=(id,value)=>{const el=d.getElementById(id);assert(el,'Campo '+id+' indisponível');el.value=value;};
+(async()=>{
+ await sleep(110);
+ fire('go','clients');
+ input('cname','Cliente laboratório real');
+ fire('addClient');
+ await sleep(85);
+ fire('openClient');
+ fire('clientProject');
+ input('pname','Ambiente vazio inicial');
+ fire('addProject');
+ await sleep(85);
+ fire('openWorkspace','atelier');
+ await sleep(70);
+ fire('studioMode','laboratorio');
+ await sleep(110);
+ const lab=d.getElementById('arqueLab');
+ assert(lab,'Aba laboratório não existe');
+ assert(lab.textContent.trim().length>80,'BUG: Laboratório vazio. Erros: '+issues.join('\n').slice(0,2000));
+ assert(d.querySelector('#labBoard'),'Laboratório não apresentou planta ou ambiente 3D. Erros: '+issues.join('\n').slice(0,2000));
+ assert(d.querySelector('[data-lab="cornerCreate"]'),'Catálogo do canto 45 indisponível');
+ assert(issues.length===0,'Erros não capturados ao abrir Laboratório:\n'+issues.join('\n').slice(0,2500));
+ console.log('BOOT COMPLETO: todos os '+paths.length+' scripts, obra nova e Laboratório carregados corretamente.');
+})().catch(e=>{console.error(e.stack||e);process.exitCode=1;});

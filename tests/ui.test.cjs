@@ -1,7 +1,7 @@
 /* Browser-like UI/persistence smoke test (jsdom + fake-indexeddb). */
 const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const html=fs.readFileSync('app/src/main/assets/index.html','utf8');
-const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
+const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),modules=fs.readFileSync('app/src/main/assets/modules.js','utf8'),moduleUI=fs.readFileSync('app/src/main/assets/module-ui.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
 const storage=new IDBFactory();const sleep=(ms=40)=>new Promise(r=>setTimeout(r,ms));
 async function launch(){
  const dom=new JSDOM(html,{url:'https://appassets.arque.invalid/index.html',runScripts:'outside-only',pretendToBeVisual:true});
@@ -11,7 +11,7 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(lab);w.eval(app);
+ w.eval(core);w.eval(cut);w.eval(modules);w.eval(moduleUI);w.eval(lab);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
@@ -104,6 +104,31 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.getElementById('labBoard').getAttribute('aria-label').includes('Vista frontal'),'vista frontal separada');
  labClick('view','plan');await sleep(40);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length===1,'planta retorna com a base salva');
+ // Create a reusable parametric base cabinet; save to the global catalogue.
+ labClick('moduleNew');await sleep(60);
+ assert(doc.querySelector('#mod_width'),'parametric fields visible');
+ assert(doc.getElementById('mod_frontType'),'cava options visible');
+ assign(doc,'mod_width','1200');
+ assign(doc,'modName','Base da cozinha');
+ labClick('moduleApply');await sleep(75);
+ assert(doc.querySelector('.lab-module-summary').textContent.includes('Vãos'),'piece calculation shown');
+ assign(doc,'modDividerPct','50');
+ labClick('moduleAddDivider');await sleep(55);
+ assert(doc.querySelectorAll('.lab-divider-line').length===1,'divider added');
+ assert(doc.body.textContent.includes('Prateleira 1 / vão 2'),'shelves distributed over bays');
+ labClick('moduleSaveTemplate');await sleep(60);
+ assert(doc.querySelectorAll('#moduleLibrary option').length===2,'model saved into global catalog');
+ labClick('moduleInsert');await sleep(50);
+ assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
+ assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');
+ const partSelect=doc.querySelector('#modCutMaterial');
+ assert(partSelect&&partSelect.options.length===2,'front/case and back segregated');
+ labClick('moduleCut');await sleep(110);
+ assert(doc.querySelector('#cutMaterial'),'cut page has independent material batches');
+ assert(doc.querySelectorAll('[data-cut-id]').length>0,'generated pieces sent to cut plan');
+ click(doc,'openWorkspace','atelier');await sleep(40);
+ click(doc,'studioMode','laboratorio');await sleep(60);
+ assert(doc.querySelectorAll('#moduleLibrary option').length===2,'global module library still available');
  click(doc,'studioMode','planta');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'floor plan mode reuses same drawing');
 click(doc,'studioMode','esboco');await sleep(40);

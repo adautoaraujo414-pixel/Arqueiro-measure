@@ -52,7 +52,7 @@ function check(spec){
   const inner=s.width-2*s.thickness,t=s.thickness;
   if((inner-(s.bayCount-1)*t)/s.bayCount<100)throw Error('Quantidade de vãos não cabe na largura útil com MDF e divisórias.');
   const opening=(inner-(s.bayCount-1)*t)/s.bayCount;
-  s.vertical=Array.from({length:s.bayCount-1},(_,j)=>Math.round(((j+1)*opening+(j+0.5)*t)/inner)*1000000)/1000000);
+  s.vertical=Array.from({length:s.bayCount-1},(_,j)=>Math.round((((j+1)*opening+(j+0.5)*t)/inner)*1000000)/1000000);
  }
  if(s.bayLayoutMode==='custom'){
   s.bayCount=integer(s.bayCount,'Quantidade de vãos',1,11);

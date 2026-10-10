@@ -176,7 +176,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true;
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true,precisionStep=5;
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -265,7 +265,7 @@ function screen(p,state){
       [['Esquerda',measures.left],['Direita',measures.right],['Fundo',measures.back],['Frente',measures.front],['Piso (Z)',measures.z],['Teto livre',measures.top]].map(([k,v])=>'<span><small>'+k+'</small><b>'+fmt(v)+' mm</b></span>').join('')+
       '</div>'+(!measures.confirmed?'<p class="lab-warning">Medidas do ambiente ainda não confirmadas em obra.</p>':'')+
       (around.length?'<p class="lab-fine">Distâncias entre módulos: '+around.slice(0,3).map(x=>esc(x.name)+' · '+x.axis.toUpperCase()+' '+fmt(x.gap)+' mm').join(' | ')+'</p>':'')+
-      '<div class="lab-precision-move"><label>Passo<select id="labPrecisionStep">'+[['1','1 mm'],['5','5 mm'],['10','10 mm'],['50','50 mm']].map(x=>option(x[0],x[1],'5')).join('')+'</select></label>'+
+      '<div class="lab-precision-move"><label>Passo<select id="labPrecisionStep">'+[['1','1 mm'],['5','5 mm'],['10','10 mm'],['50','50 mm']].map(x=>option(x[0],x[1],String(precisionStep))).join('')+'</select></label>'+
       '<div class="lab-nudge-buttons">'+button('← X','precisionMove','x:-')+button('X →','precisionMove','x:+')+button('↑ Y','precisionMove','y:-')+button('Y ↓','precisionMove','y:+')+
       button('Z −','precisionMove','z:-')+button('Z ＋','precisionMove','z:+')+'</div></div>'+
       '<p class="lab-fine">Move sem redimensionar peças. Confere limites da obra e colisões dos armários.</p></section>';
@@ -372,6 +372,7 @@ function mount(p,ops){
     if(!selectedItem)throw Error('Selecione um módulo, bancada ou eletrodoméstico.');
     const [axis,sign]=String(arg).split(':'),step=Number(root.querySelector('#labPrecisionStep')?.value);
     if(![1,5,10,50].includes(step)||!['+','-'].includes(sign))throw Error('Passo inválido.');
+    precisionStep=step;
     const next=globalThis.ArquePrecision.nudge(l,selected,axis,step*(sign==='+'?1:-1));
     remember(l);Object.assign(selectedItem,next);selectedItem.productionApproval=false;
     save();refresh();ops.toast('Posição '+axis.toUpperCase()+' = '+fmt(next[axis])+' mm.');return;

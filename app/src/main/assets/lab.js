@@ -243,7 +243,7 @@ function screen(p,state){
   const entries=visual?.catalog(l)||[];
   out+='<aside class="lab-catalog"><h4>Biblioteca de construção</h4><p>Inserir no ambiente · referências de eletros exigem medidas do fabricante</p><div class="lab-catalog-add">'+
    button('＋ Armário inferior','catalogAdd','base')+button('＋ Armário aéreo','catalogAdd','upper')+
-   button('＋ Torre','catalogAdd','tower')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
+   button('＋ Torre','catalogAdd','tower')+button('＋ Canto 45° pentagonal','cornerCreate')+button('＋ Bancada','catalogAdd','countertop')+button('＋ Cuba','catalogAdd','sink')+button('＋ Fogão','catalogAdd','stove')+button('＋ Geladeira','catalogAdd','fridge')+button('＋ Cooktop','catalogAdd','cooktop')+button('＋ LED linear','catalogAdd','led')+
    '</div><div class="lab-kitchen-presets"><h4>Catálogo Arque Cozinha · editável</h4><p>Modelos de referência: ajuste as medidas antes de fabricar.</p>'+
   (globalThis.ArqueKitchen?.groupIds()||[]).map(group=>'<details '+(['Inferiores','Eletrodomésticos'].includes(group)?'open':'')+'><summary>'+esc(group)+'</summary><div class="lab-preset-list">'+globalThis.ArqueKitchen.catalog().filter(p=>p.group===group).map(p=>button('＋ '+esc(p.label),'catalogPreset',p.id)).join('')+'</div></details>').join('')+
   (state?.moduleTemplates?.length?'<details><summary>Meus modelos salvos</summary><div class="lab-preset-list">'+state.moduleTemplates.map(t=>button('＋ '+esc(t.name),'catalogSaved',t.id)).join('')+'</div></details>':'')+'</div><h4>Árvore dos módulos</h4><p>Toque para selecionar e editar</p><div class="lab-tree">'+
@@ -270,7 +270,7 @@ function screen(p,state){
      const pc='P'+String(i+1).padStart(2,'0');
      return '<button type="button" data-lab="partSelect" data-arg="'+esc(p.key)+'" class="'+(p.key===selectedPartKey?'lab-active':'')+'"><b>'+pc+'</b><span>'+esc(p.name)+'<small>'+fmt(p.w)+' × '+fmt(p.h)+' mm · '+p.qty+'x</small></span></button>';
     }).join('')+'</div></details>';
-    if(selectedPart){const index=parts.indexOf(selectedPart)+1;out+='<div class="lab-selected-part"><b>'+esc((visual?visual.identifier(item,l.items.indexOf(item)):'M')+'-P'+String(index).padStart(2,'0'))+' · '+esc(selectedPart.name)+'</b><p>'+fmt(selectedPart.w)+' × '+fmt(selectedPart.h)+' mm · '+selectedPart.qty+' unidade(s)</p><p>'+esc(selectedPart.material)+' · espessura '+fmt(selectedPart.thickness)+' mm</p><p>Veio: '+(selectedPart.grain?'fixo no comprimento':'giro permitido')+' · bordas 2 mm: '+selectedPart.edge2+' · bordas 0,4 mm: '+selectedPart.edge04+'</p><p>'+esc(selectedPart.notes||'Conferir montagem e ferragens antes do corte.')+'</p></div>';}
+    if(selectedPart){const index=parts.indexOf(selectedPart)+1;out+='<div class="lab-selected-part"><b>'+esc((visual?visual.identifier(item,l.items.indexOf(item)):'M')+'-P'+String(index).padStart(2,'0'))+' · '+esc(selectedPart.name)+'</b><p>'+fmt(selectedPart.w)+' × '+fmt(selectedPart.h)+' mm · '+selectedPart.qty+' unidade(s)</p><p>'+esc(selectedPart.material)+' · espessura '+fmt(selectedPart.thickness)+' mm</p><p>Veio: '+(selectedPart.grain?'fixo no comprimento':'giro permitido')+' · bordas 2 mm: '+selectedPart.edge2+' · bordas 0,4 mm: '+selectedPart.edge04+'</p><p>'+esc(selectedPart.notes||'Conferir montagem e ferragens antes do corte.')+'</p>'+(selectedPart.needsContour?'<p class="lab-warning">CONTORNO PENTAGONAL: usar ficha técnica; não enviar como retângulo ao otimizador.</p>':'')+'</div>';}
     out+='</div>';
    }
    if(globalThis.ArquePrecision&&item.kind!=='pen'&&item.kind!=='wall'){
@@ -287,7 +287,24 @@ function screen(p,state){
     }catch(_){/* A auditoria informa dimensões inconsistentes. */}
    }
    out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
-  if(item.kind==='module'&&globalThis.ArqueModules){
+  if(item.kind==='module'&&item.moduleSpec.corner45?.enabled&&globalThis.ArqueCorner45){
+   const generated=globalThis.ArqueModules.parts(item.moduleSpec),geo=generated.geometry,profile=item.moduleSpec;
+   out+='<section class="lab-corner-editor"><h4>Canto 45° · módulo pentagonal</h4>'+
+    '<p class="lab-fine">Planta real: '+fmt(profile.width)+' × '+fmt(profile.depth)+' mm · porta diagonal '+fmt(geo.doorWidth)+' mm.</p>'+
+    '<div class="lab-corner-sketch">'+globalThis.ArqueCorner45.svgTechnical(profile)+'</div>'+
+    '<div class="lab-corner-controls">'+
+    '<label>Chanfro por lado (mm)<input id="cornerChamfer" type="number" min="150" step=".1" value="'+profile.corner45.chamfer+'"></label>'+
+    '<label>Prateleiras pentagonais<select id="cornerShelves">'+[0,1,2,3,4,5,6].map(n=>option(String(n),n+' prateleira(s)',String(profile.corner45.shelves))).join('')+'</select></label>'+
+    '<label>Porta diagonal<select id="cornerDoor">'+option('1','Com porta',String(profile.doorCount))+option('0','Sem porta',String(profile.doorCount))+'</select></label>'+
+    '<label>Material da caixa<input id="cornerMaterial" maxlength="90" value="'+esc(profile.caseMaterial)+'"></label>'+
+    '<label>Material da porta<input id="cornerFrontMaterial" maxlength="90" value="'+esc(profile.frontMaterial)+'"></label>'+
+    '<label>Tamponamento esquerdo (mm)<input id="cornerFillerLeft" type="number" min="0" max="100" value="'+profile.leftFiller+'"></label>'+
+    '<label>Tamponamento direito (mm)<input id="cornerFillerRight" type="number" min="0" max="100" value="'+profile.rightFiller+'"></label>'+
+    '</div>'+button('Recalcular canto e peças','cornerUpdate')+button('Exportar contornos SVG','cornerExport')+
+    '<p class="lab-warning">Peças com cinco lados: '+generated.parts.filter(p=>p.needsContour).reduce((n,p)=>n+p.qty,0)+'. Não entram no otimizador retangular.</p>'+
+    '<p class="lab-fine">O desenho ainda exige confirmação de juntas, ferragem da porta diagonal e operação angular de fabricação.</p></section>';
+  }
+  if(item.kind==='module'&&!item.moduleSpec.corner45?.enabled&&globalThis.ArqueModules){
    const s=item.moduleSpec;
    out+='<div class="lab-quick-edit"><h4>Editar módulo selecionado</h4><div class="lab-module-grid">'+
     '<label>Portas padrão<input id="labQuickDoors" type="number" min="0" max="8" value="'+s.doorCount+'"></label>'+
@@ -335,7 +352,7 @@ function screen(p,state){
    if(item.alignment)out+='<p class="lab-link">Referência: '+esc(item.alignment.targetId)+' · '+esc(item.alignment.mode)+'</p>';
    out+='</section>';
   }
-  if(item.kind==='module'&&globalThis.ArqueFabrication){
+  if(item.kind==='module'&&!item.moduleSpec.corner45?.enabled&&globalThis.ArqueFabrication){
    const F=globalThis.ArqueFabrication,spec=item.moduleSpec,hasDoors=spec.doorMode==='global'?spec.doorCount>0:Object.values(spec.bayDoors||{}).some(q=>q>0);
    out+='<section class="lab-hardware-panel"><details><summary>Ferragens e furação · revisão</summary><p class="lab-warning">Somente conferência dimensional. Verifique ferragem, posição de caneca, fixação na lateral e profundidade de furação antes de produzir.</p>';
    if(hasDoors){
@@ -393,7 +410,7 @@ function screen(p,state){
   const groups=globalThis.ArqueModules?.groupedCutRows(p,r.id)||{};
   if(Object.keys(groups).length)out+='<div class="lab-module-panel"><h3>Peças calculadas para corte</h3><p class="lab-fine">Escolha um lote de mesmo material e espessura. Peças avulsas retangulares e módulos são separados automaticamente.</p><label>Material<select id="labAllMaterial">'+Object.keys(groups).map(k=>'<option value="'+esc(k)+'">'+esc(k)+' · '+groups[k].reduce((acc,part)=>acc+part.qty,0)+' peças</option>').join('')+'</select></label>'+button('Enviar lote de peças para conferência','labAllCut')+'</div>';
  }
- out+=(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected,focusedModule===selected?focusedBay:0):'')+'</section>';return out;
+ out+=(globalThis.ArqueModuleUI&&state&&!item?.moduleSpec?.corner45?.enabled?globalThis.ArqueModuleUI.panel(p,state,l,selected,focusedModule===selected?focusedBay:0):'')+'</section>';return out;
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;

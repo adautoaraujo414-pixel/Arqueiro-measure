@@ -60,7 +60,7 @@ public final class MainActivity extends Activity {
     private static final Set<String> LOCAL_WEB_ASSETS = new HashSet<>(Arrays.asList(
         "index.html", "styles.css", "lab.css", "module-ui.css",
         "core.js", "cut.js", "modules.js", "corner45.js", "kitchen-catalog.js",
-        "workshop.js", "module-ui.js", "lab-alignment.js", "lab-precision.js",
+        "workshop.js", "module-ui.js", "construction-studio.js", "lab-alignment.js", "lab-precision.js",
         "lab-advanced.js", "lab-fabrication.js", "lab-visual.js", "lab.js", "app.js"
     ));
     private static final int REQUEST_BLE = 301, REQUEST_EXPORT = 302, REQUEST_IMPORT = 303, REQUEST_PICK = 304;

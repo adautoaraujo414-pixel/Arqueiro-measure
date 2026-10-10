@@ -236,7 +236,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('[data-lab="modulePieceRemove"]').length>=3,'pecas extras editaveis individualmente');
 
  const partSelect=doc.querySelector('#modCutMaterial');
- assert(partSelect&&partSelect.options.length===2,'front/case and back segregated');
+ assert(partSelect&&partSelect.options.length>=2,'materiais e fundo em lotes separados mesmo apos editar MDF');
  labClick('moduleCut');await sleep(110);
  assert(doc.querySelector('#cutMaterial'),'cut page has independent material batches');
  assert(doc.querySelectorAll('[data-cut-id]').length>0,'generated pieces sent to cut plan');

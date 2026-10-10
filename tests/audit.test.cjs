@@ -77,7 +77,7 @@ ok(app.includes('const escape=')&&app.includes('escape(c.name)'),'HTML escaping'
 /* Integration regressions: row editor, Android assets, backup and authorized transfer. */
 const activity=fs.readFileSync('app/src/main/java/com/arque/measure/MainActivity.java','utf8');
 const link=fs.readFileSync('app/src/main/java/com/arque/measure/ArqueLink.java','utf8');
-ok(activity.includes('"cut.js"')&&activity.includes('"lab.js"')&&activity.includes('LOCAL_WEB_ASSETS.contains(name)'),'Android WebView deve liberar corte e laboratório pela lista de arquivos autorizados');
+ok(activity.includes('"cut.js"')&&!activity.includes('"lab.js"')&&activity.includes('LOCAL_WEB_ASSETS.contains(name)'),'WebView deve servir o corte e manter Laboratório suspenso');
 ok(app.includes('data-cut-field="w"')&&app.includes('data-cut-field="qty"'),'row editor exists');
 ok(app.includes("case'cutAdd'")&&app.includes("case'cutRemove'"),'add/remove rows exist');
 ok(app.includes("dataset.cutDraft")&&app.includes("persist().catch"),'draft autosaves to IndexedDB');

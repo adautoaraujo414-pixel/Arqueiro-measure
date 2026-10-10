@@ -196,7 +196,7 @@ function splitBay(spec,bay,at=0.5){
  if(s.assemblyPieces.some(p=>p.bay===index)||s.accessories.some(p=>p.bay===index)||s.fixedShelves.some(p=>p.bay===index)||
     (s.doorMode==='byBay'&&(s.bayDoors[index]||0)>0))
   throw Error('Este vão já contém peças. Retire-as antes de dividi-lo para evitar deslocar ferragens.');
- const inner=s.width-2*t,center=b.start-t+b.width*frac+(1-frac)*t/2;
+ const inner=s.width-2*t,center=(b.start-t)+(b.width-t)*frac+t/2;
  const vertical=[...s.vertical,Math.round((center/inner)*1000000)/1000000].sort((a,b)=>a-b);
  const move=(idx)=>idx>index?idx+1:idx;
  const shelvesByBay=Object.fromEntries(Object.entries(s.shelvesByBay).map(([i,n])=>[move(Number(i)),n]));

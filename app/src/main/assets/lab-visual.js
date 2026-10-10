@@ -107,7 +107,32 @@ function scene(layout,selectedId='',opts={}){
   const caseFace=materialFill(spec.caseMaterial,body[0]),frontFace=materialFill(spec.frontMaterial,front[0]);
   const special=['sink','fridge','stove','cooktop','appliance'].includes(item.kind)?'#8a9fa7':item.kind==='led'?(item.lightOn===false?'#a2aeb3':'#f4d696'):item.kind==='countertop'?'#b4aea0':null;
   let content='<g data-lab-object="'+esc(item.id)+'" data-lab-code="'+esc(code)+'" class="'+(sel?'lab-selected':'')+'" tabindex="0" role="button" aria-label="'+esc(code+' '+item.label)+'">';
-  if(mode==='fronts'||item.kind!=='module'){
+  if(item.kind==='module'&&spec.corner45?.enabled&&globalThis.ArqueCorner45){
+   const g=globalThis.ArqueCorner45.geometry(spec),outer=g.outline,inner=g.inner,point=(p,zz)=>[x+p[0],y+p[1],zz];
+   const horizontal=(pts,zz,key,fill)=>poly(pts.map(p=>point(p,zz)),proj,fill,sel&&opts.partKey===key?'#087caf':'#7496a6',
+    sel&&opts.partKey===key?3:1.2,'data-lab-part="'+key+'" pointer-events="all" role="button" tabindex="0"');
+   const wall=(p1,p2,key,fill)=>poly([point(p1,z),point(p2,z),point(p2,z+h),point(p1,z+h)],proj,fill,
+    sel&&opts.partKey===key?'#087caf':'#7192a4',sel&&opts.partKey===key?3:1.2,
+    'data-lab-part="'+key+'" pointer-events="all" role="button" tabindex="0" aria-label="'+esc(key)+'"');
+   for(const [key,a,b] of [
+    ['corner-back',outer[0],outer[1]],['corner-right',outer[1],outer[2]],
+    ['corner-return',outer[3],outer[4]],['corner-left',outer[4],outer[0]]])
+    content+=wall(a,b,key,caseFace);
+   for(const zz of [z+t,z+h-t])content+=horizontal(inner,zz,'corner-deck',caseFace);
+   if(mode==='structure'){
+    for(let j=0;j<g.shelves;j++)content+=horizontal(inner,z+t+(h-2*t)*(j+1)/(g.shelves+1),'corner-shelf-'+j,caseFace);
+    content+=line(point(g.diagonal[0],z+40),point(g.diagonal[1],z+40),proj,'#b98259',2,'stroke-dasharray="8 4"');
+   }else if(spec.doorCount){
+    const a=g.diagonal[0],b=g.diagonal[1],fraction=spec.doorReveal/g.diagonalLength;
+    const p=[a[0]+(b[0]-a[0])*fraction,a[1]+(b[1]-a[1])*fraction];
+    const q=[b[0]-(b[0]-a[0])*fraction,b[1]-(b[1]-a[1])*fraction];
+    content+=poly([point(p,z+spec.doorReveal),point(q,z+spec.doorReveal),point(q,z+h-spec.doorReveal),point(p,z+h-spec.doorReveal)],
+     proj,frontFace,sel&&opts.partKey==='corner-front'?'#087caf':'#647e8d',1.7,
+     'data-lab-part="corner-front" pointer-events="all" role="button" tabindex="0" aria-label="Porta diagonal 45 graus"');
+   }
+   content+=text(point([(g.diagonal[0][0]+g.diagonal[1][0])/2,(g.diagonal[0][1]+g.diagonal[1][1])/2],z+h+95),
+    proj,'45° · '+fmt(g.diagonalLength)+' mm',12,'#a46739');
+  }else if(mode==='fronts'||item.kind!=='module'){
    content+=surfaces(x,y,z,w,d,h,proj,special?[special,'#8d8e87','#d2d2cb']:[caseFace,body[1],body[2]],sel);
    if(item.kind==='sink'||item.kind==='cooktop'||item.kind==='stove'){
     const c=proj(x+w/2,y+d/2,z+h+1);

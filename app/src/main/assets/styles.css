@@ -263,3 +263,10 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 
 
 .photo-ink-tools{position:relative;display:flex;align-items:center;gap:7px}.photo-palette-popover{position:absolute;z-index:30;top:calc(100% + 5px);left:0;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #dce5eb;border-radius:12px;padding:10px;box-shadow:0 8px 24px #0002;max-width:calc(100vw - 48px)}.photo-palette-popover .photo-ink-swatch{flex-shrink:0}
+
+.photo-floating-dock:not(.expanded) .photo-dock-tool:not(.photo-dock-menu):not(.active){display:none}
+.photo-floating-dock .photo-dock-menu{display:inline-flex}
+.photo-floating-dock{max-width:calc(100% - 20px);flex-wrap:wrap}
+.photo-workbar-compact{gap:4px}
+.photo-resize-actions{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 12px}
+.photo-resize-actions button{min-height:38px}

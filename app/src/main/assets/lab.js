@@ -163,6 +163,17 @@ function svg(l,view,selectedId){
   a+='<line x1="'+seg.start[0]+'" y1="'+seg.start[1]+'" x2="'+seg.end[0]+'" y2="'+seg.end[1]+'" stroke="#a06838" stroke-width="14" vector-effect="non-scaling-stroke" opacity=".7" pointer-events="none"/>';
   a+='<text x="'+(seg.start[0]+seg.end[0])/2+'" y="'+((seg.start[1]+seg.end[1])/2-24)+'" text-anchor="middle" fill="#975721" font-size="35" pointer-events="none">'+fmt(seg.length)+' mm</text>';
  }
+ if(showDimensions&&selectedId&&view==='plan'&&globalThis.ArquePrecision){
+  try{
+   const m=globalThis.ArquePrecision.metrics(l,selectedId),size=Math.max(29,Math.min(58,W/80));
+   const tag=(x,y,n)=>{a+='<text x="'+x+'" y="'+y+'" font-size="'+size+'" font-weight="700" fill="#176a94" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="12" pointer-events="none">'+esc(fmt(n)+' mm')+'</text>';};
+   const bX=m.x+m.w/2,bY=m.y+m.d/2;
+   if(m.left>=0){a+='<line x1="0" y1="'+bY+'" x2="'+m.x+'" y2="'+bY+'" stroke="#2684ae" stroke-width="5" stroke-dasharray="12 9" pointer-events="none"/>';tag(m.x/2,Math.max(size,bY-15),m.left);}
+   if(m.right>=0){a+='<line x1="'+(m.x+m.w)+'" y1="'+bY+'" x2="'+W+'" y2="'+bY+'" stroke="#2684ae" stroke-width="5" stroke-dasharray="12 9" pointer-events="none"/>';tag((m.x+m.w+W)/2,Math.max(size,bY-15),m.right);}
+   if(m.back>=0){a+='<line x1="'+bX+'" y1="0" x2="'+bX+'" y2="'+m.y+'" stroke="#2684ae" stroke-width="5" stroke-dasharray="12 9" pointer-events="none"/>';tag(bX,Math.max(size,m.y/2),m.back);}
+   if(m.front>=0){a+='<line x1="'+bX+'" y1="'+(m.y+m.d)+'" x2="'+bX+'" y2="'+H+'" stroke="#2684ae" stroke-width="5" stroke-dasharray="12 9" pointer-events="none"/>';tag(bX,(m.y+m.d+H)/2,m.front);}
+  }catch(_){/* Cotas não alteram a geometria de produção. */}
+ }
  return a+'</svg>';
 }
 let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true;

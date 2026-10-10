@@ -66,6 +66,8 @@ jobs:
         run: node tests/advanced.test.cjs
       - name: Testar cotas e seleção direta de peças 3D
         run: node tests/precision.test.cjs
+      - name: Testar ferragens e guia de canto de 45 graus
+        run: node tests/fabrication.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado
@@ -79,6 +81,8 @@ jobs:
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/advanced-ui.test.cjs
       - name: Testar cotas e ajuste fino no laboratório real
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/precision-ui.test.cjs
+      - name: Testar ferragens e canto 45 no laboratório
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/fabrication-ui.test.cjs
       - name: Registrar falhas da interface
         if: failure()
         env:

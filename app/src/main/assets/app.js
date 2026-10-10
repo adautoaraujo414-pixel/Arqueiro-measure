@@ -112,7 +112,15 @@ function projectsView(){
  (state.clients.length?'<div class="fields">'+select('projectClientPick','Cliente',state.clients.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')))+'</div>'+btn('Criar obra para este cliente','chooseProjectClient','','primary'):btn('Cadastrar primeiro cliente','go','clients','primary'))+'</div>'+
  '<div class="card"><h3>Obras cadastradas ('+state.projects.length+')</h3>'+groupedProjects(state.projects)+'</div>';
 }
-function cuttingPlan(p){if(!p.cutPlan)p.cutPlan={width:2750,height:1830,kerf:3,trim:0,pieces:[]};return p.cutPlan;}
+function cuttingPlan(p){
+ if(p.activeCutMaterial){
+  if(!p.materialCutPlans)p.materialCutPlans={};
+  if(!p.materialCutPlans[p.activeCutMaterial])p.materialCutPlans[p.activeCutMaterial]={width:2750,height:1830,kerf:3,trim:0,pieces:[],material:p.activeCutMaterial};
+  return p.materialCutPlans[p.activeCutMaterial];
+ }
+ if(!p.cutPlan)p.cutPlan={width:2750,height:1830,kerf:3,trim:0,pieces:[]};
+ return p.cutPlan;
+}
 
 function archiveCutRevision(plan,piece,reason){
  if(!plan.cutHistory)plan.cutHistory=[];
@@ -166,6 +174,8 @@ function cuttingView(){
  const met=(title,value)=>'<div class="metric"><span>'+title+'</span><b>'+value+'</b></div>';
  const num=(v)=>Number(v||0).toLocaleString('pt-BR',{maximumFractionDigits:2});
  let html='<div class="card"><h3>Plano de corte · '+escape(clientName(p.clientId))+'</h3><p class="muted">Peças e chapas vinculadas a esta obra. Valores em milímetros; cálculo de aproveitamento com cortes guilhotinados.</p><div class="fields">'+field('cutWidth','Comprimento chapa (mm)','number',plan.width,'min="1"')+field('cutHeight','Largura chapa (mm)','number',plan.height,'min="1"')+field('cutKerf','Espessura serra (mm)','number',plan.kerf,'min="0" step="0.1"')+field('cutTrim','Refilo em cada borda (mm)','number',plan.trim,'min="0" step="0.1"')+'</div>'+btn('Salvar configuração','cutSettings','','primary')+'</div>';
+ const materialNames=Object.keys(p.materialCutPlans||{});
+ if(materialNames.length)html='<div class="card"><h3>Lotes separados por material</h3>'+select('cutMaterial','Material e espessura',[{id:'',name:'Manual / não classificado'},...materialNames.map(x=>({id:x,name:x}))],p.activeCutMaterial||'')+btn('Abrir lote','cutChooseMaterial','','primary')+'<p class="muted">Nunca misture materiais ou espessuras diferentes no mesmo aproveitamento. A lista é uma previsão dimensional e precisa de conferência antes de fabricar.</p></div>'+html;
  const draft=plan.draft||{name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};
  html+='<div class="card"><div class="row"><div><h3>Peças · entrada em sequência</h3><p class="muted">Preencha uma linha por vez, como no SketchCut. Ao tocar em Adicionar linha, a próxima já fica pronta. As peças salvas podem ser editadas na própria tabela.</p></div>'+btn('+ Adicionar linha','cutAdd','','primary')+'</div>'+
  '<div class="cut-table"><table class="cut-entry"><thead><tr><th>#</th><th>Compr. (mm)</th><th>×</th><th>Largura (mm)</th><th>Quant.</th><th>Girar</th><th>Nome</th><th>Veio</th><th></th></tr></thead><tbody>'+
@@ -317,7 +327,29 @@ function studioView(){
  `:'<div class="empty">Escolha um nome e adicione uma folha A4 para começar.</div>'}</div></div>`;
 }
 function setupStudio(){
- if(studioMode==='laboratorio'){if(project()&&window.ArqueLab)window.ArqueLab.mount(project(),{persist,toast});return;}
+ if(studioMode==='laboratorio'){
+  if(project()&&window.ArqueLab)window.ArqueLab.mount(project(),{persist,toast,state,exportCutMaterial:(roomId,material)=>{
+   if(!window.ArqueModules)throw Error('Motor de módulos indisponível.');
+   const p=project(),group=window.ArqueModules.groupedCutRows(p,roomId),rows=group[material];
+   if(!rows?.length)throw Error('Nenhuma peça para o material selecionado.');
+   if(!p.materialCutPlans)p.materialCutPlans={};
+   const previous=p.materialCutPlans[material]||{width:2750,height:1830,kerf:3,trim:0,material,pieces:[],cutDone:{},cutHistory:[]};
+   const existing=(previous.pieces||[]).filter(x=>x.generated&&x.sourceRoomId===roomId);
+   const next=rows.map(x=>({...x}));
+   const changed=JSON.stringify(existing.map(x=>[x.id,x.w,x.h,x.qty,x.grain,x.material]))!==JSON.stringify(next.map(x=>[x.id,x.w,x.h,x.qty,x.grain,x.material]));
+   if(changed&&existing.some(x=>Array.from({length:x.qty},(_,i)=>previous.cutDone?.[x.id+':'+(i+1)]).some(Boolean)))
+    throw Error('Há peças deste ambiente marcadas como cortadas. Não posso sobrescrever a lista: preserve o histórico de produção e crie uma revisão manual.');
+   if(changed){
+    if(existing.length){for(const piece of existing)archiveCutRevision(previous,piece,'Atualização paramétrica do Laboratório');}
+    previous.pieces=[...(previous.pieces||[]).filter(x=>!(x.generated&&x.sourceRoomId===roomId)),...next];
+    previous.mixedStock=null;previous.manualStock=null;
+   }
+   p.materialCutPlans[material]=previous;p.activeCutMaterial=material;subtab='corte';
+   update();toast('Lote técnico enviado para revisão no plano de corte.');
+  }});
+  return;
+ }
+
  const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;
  const page=studioCurrent(p);if(!page)return;
  const ctx=canvas.getContext('2d');if(!ctx)return;
@@ -416,7 +448,8 @@ case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw
 case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
 case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
 case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
-case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
 case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
 case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
 case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}

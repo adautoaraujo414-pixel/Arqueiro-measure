@@ -19,7 +19,7 @@ function standard(){
   caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',
   construction:'between',back:'overlay',doorCount:2,doorGap:3,doorReveal:2,
   frontType:'cava',vertical:[],shelfCount:1,shelfInset:20,shelfClearance:2,
-  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,revision:1};
+  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],revision:1};
 }
 function check(spec){
  const s={...standard(),...clone(spec||{})};
@@ -29,6 +29,8 @@ function check(spec){
  s.backThickness=n(s.backThickness,'Espessura do fundo',0,30);
  s.doorGap=n(s.doorGap,'Folga entre portas',0,25);
  s.doorReveal=n(s.doorReveal,'Folga externa das portas',0,25);
+ s.doorTopDiscount=n(s.doorTopDiscount,'Desconto adicional superior da porta',0,150);
+ s.doorBottomDiscount=n(s.doorBottomDiscount,'Desconto adicional inferior da porta',0,150);
  s.shelfInset=n(s.shelfInset,'Recuo da prateleira',0,100);
  s.shelfClearance=n(s.shelfClearance,'Folga lateral da prateleira',0,15);
  s.leftFiller=n(s.leftFiller,'Tamponamento esquerdo',0,100);
@@ -37,7 +39,7 @@ function check(spec){
  s.shelfCount=integer(s.shelfCount,'Prateleiras por vão',0,12);
  s.caseMaterial=clean(s.caseMaterial);s.frontMaterial=clean(s.frontMaterial);s.backMaterial=clean(s.backMaterial);
  if(!s.caseMaterial||s.doorCount&&!s.frontMaterial||s.backThickness&&!s.backMaterial)throw Error('Informe os materiais de cada parte.');
- if(s.construction!=='between')throw Error('Esta versão fabrica tampo e base ENTRE laterais.');
+ if(!['between','over'].includes(s.construction))throw Error('Montagem da carcaça inválida.');
  if(!['overlay','none'].includes(s.back))throw Error('Tipo de fundo inválido.');
  if(!['cava','concha','sem'].includes(s.frontType))throw Error('Modelo de puxador inválido.');
  if(!Array.isArray(s.vertical))throw Error('Lista de divisórias inválida.');
@@ -49,6 +51,22 @@ function check(spec){
  if(s.depth<=s.shelfInset+60)throw Error('Profundidade insuficiente com o recuo configurado.');
  if(s.shelfCount&&s.height-2*s.thickness-s.shelfCount*s.thickness<100*(s.shelfCount+1))throw Error('Prateleiras demais para a altura: os espaços ficam menores que 100 mm.');
  if(s.doorCount&&((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount)<80)throw Error('Portas estreitas demais para as folgas configuradas.');
+ if(s.doorCount&&s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount<80)throw Error('Descontos superior e inferior deixam porta inviável.');
+ if(!Array.isArray(s.fixedShelves)||s.fixedShelves.length>20)throw Error('Divisórias horizontais inválidas.');
+ s.fixedShelves=s.fixedShelves.map((o,i)=>({bay:integer(o.bay,'Vão da divisória fixa '+(i+1),0,10),at:n(o.at,'Altura proporcional divisória '+(i+1),0.01,0.99)}));
+ if(!Array.isArray(s.accessories)||s.accessories.length>20)throw Error('Acessórios internos inválidos.');
+ s.accessories=s.accessories.map((o,i)=>({
+  type:(o.type==='spice'?'spice':o.type==='drawer'?'drawer':(()=>{throw Error('Tipo de acessório '+(i+1)+' inválido.');})()),
+  bay:integer(o.bay,'Vão do acessório '+(i+1),0,10),
+  count:integer(o.count,'Quantidade de bandejas/gavetas',1,6),
+  slideSide:n(o.slideSide,'Desconto lateral de cada corrediça',0,50),
+  rearClearance:n(o.rearClearance,'Desconto traseiro',0,150),
+  frontClearance:n(o.frontClearance,'Desconto frontal',0,150),
+  height:n(o.height,'Altura da caixa ou bandeja',60,400),
+  slideLength:n(o.slideLength,'Comprimento informado da corrediça',0,1000)
+ }));
+ // A origem desses descontos é a ferragem escolhida: não presumir 12,5 mm para qualquer modelo.
+
  return s;
 }
 function bayBounds(s){
@@ -71,15 +89,35 @@ function parts(spec){
   if(!Number.isFinite(len)||!Number.isFinite(wid)||len<40||wid<20)throw Error('Peça inviável: '+name+' ('+len+' × '+wid+' mm).');
   out.push({key,name,w:len,h:wid,qty,thickness,material,grain,rotate:!grain,edge2,edge04,notes});
  }
- panel('side','Lateral',s.height,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,'Estrutura: peças laterais inteiras');
- panel('topbottom','Tampo / base',innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,'Entre as duas laterais');
+ panel('side','Lateral',s.construction==='over'?innerHeight:s.height,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Tampo e base sobrepõem as laterais':'Laterais inteiras: tampo e base entre elas');
+ panel('topbottom','Tampo / base',s.construction==='over'?s.width:innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Sobre e sob as laterais':'Entre as duas laterais');
  for(const [i,fraction] of s.vertical.entries())panel('divider-'+i,'Divisória vertical '+(i+1),innerHeight,s.depth,1,t,s.caseMaterial,s.grainCase,0,1,'Eixo em '+Math.round(1000*fraction)/10+'% do vão interno');
  for(let j=0;j<s.shelfCount;j++)for(let i=0;i<bays.length;i++){
   panel('shelf-'+j+'-'+i,'Prateleira '+(j+1)+' / vão '+(i+1),bays[i].width-2*s.shelfClearance,s.depth-s.shelfInset,1,t,s.caseMaterial,s.grainCase,0,1,'Conferir ferragens e recuo traseiro');
  }
+ for(const [i,o] of s.fixedShelves.entries()){
+  const bay=bays[o.bay];
+  if(!bay)throw Error('Divisória fixa '+(i+1)+' aponta para um vão inexistente.');
+  const heightAt=round(o.at*innerHeight);
+  if(heightAt<t+30||heightAt>innerHeight-t-30)throw Error('Divisória fixa muito próxima ao tampo ou à base.');
+  panel('fixed-'+i,'Divisória horizontal fixa '+(i+1)+' / vão '+(o.bay+1),bay.width-2*s.shelfClearance,s.depth-s.shelfInset,1,t,s.caseMaterial,s.grainCase,0,1,'Fixa a '+heightAt+' mm sobre o piso interno; confirmar prateleiras no mesmo vão.');
+ }
+ for(const [i,o] of s.accessories.entries()){
+  const bay=bays[o.bay];if(!bay)throw Error('Acessório '+(i+1)+' aponta para um vão inexistente.');
+  const outside=round(bay.width-2*o.slideSide),availableDepth=round(s.depth-o.frontClearance-o.rearClearance);
+  if(outside<100||outside<=2*t+80)throw Error('Sem largura útil para gaveta/porta-tempero com as corrediças configuradas.');
+  if(availableDepth<100)throw Error('Descontos frontal/traseiro deixam profundidade insuficiente.');
+  if(o.slideLength>0&&availableDepth<o.slideLength)throw Error('Comprimento da corrediça maior que a profundidade útil disponível.');
+  if(o.count*o.height+(o.count+1)*5>innerHeight)throw Error('Acessórios empilhados ultrapassam a altura útil.');
+  const kind=o.type==='spice'?'Porta-temperos':'Gaveta';
+  panel('acc-'+i+'-sides',kind+' · laterais',availableDepth,o.height,2*o.count,t,s.caseMaterial,false,0,0,'Comprimento da corrediça informado: '+o.slideLength+' mm; confirmar ferragem.');
+  panel('acc-'+i+'-ends',kind+' · frente/traseira da caixa',outside-2*t,o.height,2*o.count,t,s.caseMaterial,false,0,0,'Largura externa '+outside+' mm = vão '+bay.width+' - 2 × '+o.slideSide+' mm.');
+  panel('acc-'+i+'-bottom',kind+' · fundo',outside,availableDepth,o.count,s.backThickness||6,s.backMaterial,false,0,0,'Fundo de bandeja aplicado. Conferir modelo de montagem.');
+  warnings.push(kind+' no vão '+(o.bay+1)+': conferir especificação, fixação e folga real da corrediça ('+o.slideSide+' mm/lado).');
+ }
  if(s.back==='overlay'&&s.backThickness>0)panel('back','Fundo aplicado',s.width,s.height,1,s.backThickness,s.backMaterial,false,0,0,'Fundo externo: confirmar encaixe, fixação e vão disponível');
  if(s.doorCount){
-  const leaf=round((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount),height=round(s.height-2*s.doorReveal);
+  const leaf=round((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount),height=round(s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount);
   panel('front','Porta',height,leaf,s.doorCount,t,s.frontMaterial,s.grainFront,2,2,'Frente externa. Puxador '+s.frontType+'; verificar dobradiças, sobreposição e folgas.');
   if(leaf>550)warnings.push('Porta de '+leaf+' mm: conferir limite usual de largura e dobradiças.');
   if(s.frontType==='cava')warnings.push('Cava é operação de usinagem, não peça do plano de corte. Conferir régua, batente e posição da cava.');

@@ -1,7 +1,7 @@
 /* Arque Measure | Laboratorio 2D em milimetros. Sem inferencia automatica de medidas. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.ArqueLab=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-const kinds={wall:['Parede / linha',1500,0],countertop:['Bancada / pedra',1600,600],sink:['Cuba',500,400],base:['Armário base',800,560],upper:['Armário aéreo',800,350],door:['Porta',450,20],drawers:['Gaveteiro',450,560],filler:['Tamponamento',30,560],cava:['Puxador cava',450,35],outlet:['Tomada / ponto',80,80],drain:['Esgoto / água',80,80]};
+const kinds={wall:['Parede / linha',1500,0],countertop:['Bancada / pedra',1600,600],sink:['Cuba',500,400],base:['Armário base',800,560],upper:['Armário aéreo',800,350],door:['Porta',450,20],drawers:['Gaveteiro',450,560],filler:['Tamponamento',30,560],cava:['Puxador cava',450,35],outlet:['Tomada / ponto',80,80],drain:['Esgoto / água',80,80],panel:['Peça avulsa retangular',600,300]};
 const modes={plan:'Planta baixa 2D',front:'Vista frontal 2D'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1});
@@ -28,6 +28,7 @@ function add(l,kind,x,y,view='plan'){
  if(!modes[view])throw Error('Vista desconhecida');
  const dims=kinds[kind]||['Rabisco',0,0];
  const item={id:uid(),kind,label:dims[0],x:numeric(x),y:numeric(y),w:dims[1],d:dims[2],height:kind==='base'?730:kind==='upper'?700:0,view,refs:{}};
+ if(kind==='panel'){item.material='MDF 18 mm';item.thickness=18;item.grain=false;item.edge2=0;item.edge04=0;}
  remember(l);l.items.push(item);return item;
 }
 function place(item,values){
@@ -128,6 +129,7 @@ function screen(p,state){
   out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
   out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
+  if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
   if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
  out+='</aside></div>';
@@ -140,6 +142,8 @@ function screen(p,state){
   out+='<div class="lab-module-panel"><h3>Conferência do ambiente</h3><p class="lab-fine">'+audit.checkedModules+' módulos verificados · '+audit.errors.length+' possíveis conflitos · '+audit.warnings.length+' pendências</p>';
   out+=audit.issues.map(i=>'<p class="'+(i.severity==='error'?'lab-warning':'lab-fine')+'">'+esc(i.message)+'</p>').join('')||'<p class="lab-link">Nenhum conflito geométrico simples detectado. Confira ferragens e condições reais.</p>';
   out+='</div>';
+  const groups=globalThis.ArqueModules?.groupedCutRows(p,r.id)||{};
+  if(Object.keys(groups).length)out+='<div class="lab-module-panel"><h3>Peças calculadas para corte</h3><p class="lab-fine">Escolha um lote de mesmo material e espessura. Peças avulsas retangulares e módulos são separados automaticamente.</p><label>Material<select id="labAllMaterial">'+Object.keys(groups).map(k=>'<option value="'+esc(k)+'">'+esc(k)+' · '+groups[k].reduce((acc,part)=>acc+part.qty,0)+' peças</option>').join('')+'</select></label>'+button('Enviar lote de peças para conferência','labAllCut')+'</div>';
  }
  out+=(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
 }
@@ -159,6 +163,10 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='panelMaterial'){const item=l.items.find(x=>x.id===selected);if(item?.kind!=='panel')throw Error('Selecione uma peça retangular.');
+    const material=String(root.querySelector('#labPanelMaterial')?.value||'').trim().slice(0,90),thickness=numeric(root.querySelector('#labPanelThickness')?.value,1,50);
+    if(!material)throw Error('Informe o material da peça.');remember(l);item.material=material;item.thickness=thickness;item.grain=root.querySelector('#labPanelGrain')?.value==='true';save();refresh();return;}
+   if(a==='labAllCut'){const key=root.querySelector('#labAllMaterial')?.value;if(!key)throw Error('Selecione um material.');ops.exportCutMaterial(r.id,key);return;}
    if(a==='profileSave'){const item=l.items.find(x=>x.id===selected),nm=root.querySelector('#labProfileName')?.value;
     const profile=globalThis.ArqueWorkshop.saveProfile(ops.state,item,nm);save();refresh();ops.toast('Moldura '+profile.name+' guardada na biblioteca geral.');return;}
    if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);

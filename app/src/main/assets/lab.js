@@ -54,6 +54,10 @@ function shape(item,selected){
  const x=item.x,y=item.y,w=item.w,d=item.d,k=item.kind,sw=selected?15:8,fill=selected?'#d8eef9':'#e7f1f6';
  const attrs='stroke="#246681" stroke-width="'+sw+'" vector-effect="non-scaling-stroke"';
  if(k==='pen'){const pts=(item.points||[]).map(p=>p[0]+','+p[1]).join(' ');return '<polyline points="'+pts+'" fill="none" stroke="#277da8" stroke-width="9" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>';}
+ if(k==='profile'){
+  const pts=(item.points||[]).map(p=>(x+p[0]*w)+','+(y+p[1]*d)).join(' ');
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+d+'" fill="none" stroke="#a4c5d5" stroke-dasharray="9 9" stroke-width="3" vector-effect="non-scaling-stroke"/><polyline points="'+pts+'" fill="none" stroke="'+(selected?'#187cae':'#486b82')+'" stroke-width="7" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>';
+ }
  if(k==='wall')return '<line x1="'+x+'" y1="'+y+'" x2="'+(x+w)+'" y2="'+(y+d)+'" stroke="#263b45" stroke-width="15" vector-effect="non-scaling-stroke"/>';
  if(k==='outlet'||k==='drain')return '<circle cx="'+(x+w/2)+'" cy="'+(y+d/2)+'" r="'+Math.max(15,Math.min(w,d)/2)+'" fill="'+fill+'" '+attrs+'/>'+'<text x="'+(x+w/2)+'" y="'+(y+d/2)+'" text-anchor="middle" dominant-baseline="middle" font-size="40" fill="#165274">'+(k==='outlet'?'T':'H')+'</text>';
  let out='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+d+'" rx="5" fill="'+(k==='filler'?'#aab8bf':fill)+'" '+attrs+'/>';
@@ -75,6 +79,11 @@ function moduleShape(item,view,selected,l){
   const inner=W-2*t;
   for(const pos of spec.vertical||[]){let cx=x+t+inner*pos;res+='<rect x="'+(cx-t/2)+'" y="'+(y+t)+'" width="'+t+'" height="'+Math.max(1,H-2*t)+'" fill="#8db9ce" stroke="#456b81" stroke-width="2"/>';}
   for(let j=1;j<=(spec.shelfCount||0);j++){let sy=y+t+(H-2*t)*j/((spec.shelfCount||0)+1);res+='<line x1="'+(x+t)+'" x2="'+(x+W-t)+'" y1="'+sy+'" y2="'+sy+'" stroke="#7194a8" stroke-width="7" vector-effect="non-scaling-stroke"/>';}
+  try{
+   const bays=globalThis.ArqueModules?.bayBounds(spec)||[];
+   for(const slot of spec.fixedShelves||[]){const bay=bays[slot.bay];if(!bay)continue;const yy=y+t+(H-2*t)*slot.at;res+='<line x1="'+(x+bay.start)+'" x2="'+(x+bay.end)+'" y1="'+yy+'" y2="'+yy+'" stroke="#327d9d" stroke-width="8" vector-effect="non-scaling-stroke"/>';}
+   for(const acc of spec.accessories||[]){const bay=bays[acc.bay];if(!bay)continue;for(let i=0;i<Math.min(6,acc.count||1);i++){const ay=y+H-t-(i+1)*(acc.height+8);res+='<rect x="'+(x+bay.start+acc.slideSide)+'" y="'+ay+'" width="'+Math.max(1,bay.width-2*acc.slideSide)+'" height="'+Math.max(1,acc.height)+'" fill="none" stroke="#d08332" stroke-width="5" vector-effect="non-scaling-stroke"/>';}}
+  }catch(_){/* Falha visual não altera geometria ou peças. */}
   if(spec.doorCount){for(let j=1;j<spec.doorCount;j++){let dx=x+W*j/spec.doorCount;res+='<path d="M '+dx+' '+(y+12)+' V '+(y+H-12)+'" stroke="#317ca3" stroke-width="3" stroke-dasharray="14 12"/>';}
    if(spec.frontType==='cava')res+='<path d="M '+(x+30)+' '+(y+60)+' H '+(x+W-30)+'" stroke="#0f729c" stroke-width="6" vector-effect="non-scaling-stroke"/>';}
  }else{
@@ -105,7 +114,7 @@ function screen(p,state){
  out+='<div class="lab-views">'+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
  out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
  if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
- out+='<div class="lab-actions">'+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('▦ Grade 50 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ out+='<div class="lab-actions">'+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
  out+='<div class="lab-main"><div class="lab-work"><div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div><div class="lab-board-wrap">'+svg(l,view,selected)+'</div><div class="lab-hint">Toque para posicionar a peça. Use Selecionar para mover. Desenhe a parede arrastando. As dimensões são editadas abaixo.</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
@@ -119,8 +128,20 @@ function screen(p,state){
   out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
   out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
+  if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
- out+='</aside></div>'+(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
+ out+='</aside></div>';
+ if(globalThis.ArqueWorkshop&&state){
+  const savedProfiles=globalThis.ArqueWorkshop.library(state);
+  out+='<section class="lab-module-panel"><h3>Perfis e molduras desenhados à mão</h3><p class="lab-fine">Desenhe com Rabisco, selecione o traço e salve como perfil. Reaproveite em outras obras, com dimensões ajustáveis em mm.</p>';
+  out+='<div class="lab-module-pick"><label>Perfis salvos<select id="labProfileLibrary"><option value="">Escolha um perfil</option>'+savedProfiles.map(prof=>'<option value="'+esc(prof.id)+'">'+esc(prof.name)+' · '+fmt(prof.width)+' × '+fmt(prof.height)+' mm</option>').join('')+'</select></label>'+button('Inserir perfil','profileInsert')+'</div>';
+  out+='<p class="lab-warning">Moldura livre é referência geométrica: NÃO vai automaticamente ao plano de corte/CNC. Exige fechamento do contorno, material e validação para fabricação.</p></section>';
+  const audit=globalThis.ArqueWorkshop.roomAudit(l);
+  out+='<div class="lab-module-panel"><h3>Conferência do ambiente</h3><p class="lab-fine">'+audit.checkedModules+' módulos verificados · '+audit.errors.length+' possíveis conflitos · '+audit.warnings.length+' pendências</p>';
+  out+=audit.issues.map(i=>'<p class="'+(i.severity==='error'?'lab-warning':'lab-fine')+'">'+esc(i.message)+'</p>').join('')||'<p class="lab-link">Nenhum conflito geométrico simples detectado. Confira ferragens e condições reais.</p>';
+  out+='</div>';
+ }
+ out+=(globalThis.ArqueModuleUI&&state?globalThis.ArqueModuleUI.panel(p,state,l,selected):'')+'</section>';return out;
 }
 function mount(p,ops){
  const root=document.getElementById('arqueLab');if(!root)return;
@@ -138,6 +159,10 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='profileSave'){const item=l.items.find(x=>x.id===selected),nm=root.querySelector('#labProfileName')?.value;
+    const profile=globalThis.ArqueWorkshop.saveProfile(ops.state,item,nm);save();refresh();ops.toast('Moldura '+profile.name+' guardada na biblioteca geral.');return;}
+   if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);
+    if(!t)throw Error('Escolha uma moldura salva.');const item=globalThis.ArqueWorkshop.insertProfile(t,100,100,view);remember(l);l.items.push(item);selected=item.id;save();refresh();return;}
    if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined)selected=res.selected;if(!res.skipRefresh){save();refresh();}return;}}
    if(a==='view'){view=arg;selected='';refresh();return;}
    if(a==='tool'){tool=arg;refresh();return;}
@@ -176,7 +201,7 @@ function mount(p,ops){
   const l=layout(p,activeRoom),W=l.width,H=view==='front'?l.height:l.depth;
   // The board is rendered with the exact viewBox aspect ratio (no letterboxing).
   let x=Math.max(0,Math.min(W,(e.clientX-box.left)*W/(box.width||1))),y=Math.max(0,Math.min(H,(e.clientY-box.top)*H/(box.height||1)));
-  if(gridSnap){x=Math.round(x/50)*50;y=Math.round(y/50)*50;}
+  if(gridSnap&&tool!=='pen'){x=Math.round(x/5)*5;y=Math.round(y/5)*5;}
   return {x,y};
  };
  root.addEventListener('pointerdown',e=>{

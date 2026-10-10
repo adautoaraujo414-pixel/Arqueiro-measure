@@ -20,7 +20,7 @@ function standard(){
   caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',baseArrangement:'continuous',
   construction:'between',back:'overlay',doorCount:2,doorGap:3,doorReveal:2,
   frontType:'cava',vertical:[],bayLayoutMode:'manual',bayCount:1,bayRules:[],shelvesByBay:{},shelfCount:1,shelfInset:20,shelfRearInset:0,shelfClearance:2,dividerFrontInset:0,dividerRearInset:0,
-  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],assemblyPieces:[],doorMode:'global',bayDoors:{},revision:1};
+  leftFiller:0,rightFiller:0,grainCase:false,grainFront:true,doorTopDiscount:0,doorBottomDiscount:0,construction:'between',accessories:[],fixedShelves:[],assemblyPieces:[],doorMode:'global',bayDoors:{},corner45:null,revision:1};
 }
 function check(spec){
  const s={...standard(),...clone(spec||{})};
@@ -117,6 +117,11 @@ function check(spec){
   };
   return entry;
  });
+ if(s.corner45?.enabled){
+  if(!globalThis.ArqueCorner45)throw Error('Biblioteca de canto 45° ainda não carregada.');
+  const validated=globalThis.ArqueCorner45.validate(s);
+  s.corner45={enabled:true,chamfer:validated.chamfer,shelves:validated.shelves};
+ }
  // A origem dos descontos das corrediças é a ferragem escolhida.
  return s;
 }
@@ -233,7 +238,9 @@ function bayBounds(s){
 }
 function addDivider(spec,at=0.5){validateRepartition(check(spec),bayBounds(check(spec)).length+1);const s=check({...spec,bayLayoutMode:'manual',bayRules:[]});s.vertical.push(ratio(at,'Posição proporcional',0.001,0.999));const changed=check(s);parts(changed);return changed;}
 function parts(spec){
- const s=check(spec),bays=bayBounds(s),t=s.thickness,innerWidth=round(s.width-2*t),innerHeight=round(s.height-2*t);
+ const s=check(spec);
+ if(s.corner45?.enabled)return globalThis.ArqueCorner45.parts(s);
+ const bays=bayBounds(s),t=s.thickness,innerWidth=round(s.width-2*t),innerHeight=round(s.height-2*t);
  const out=[],warnings=[];
  function panel(key,name,len,wid,qty,thickness,material,grain=false,edge2=0,edge04=0,notes=''){
   len=round(len);wid=round(wid);
@@ -357,11 +364,14 @@ function regenerate(item,updates){
 }
 function cutRows(item,roomName){
  const generated=parts(item.moduleSpec);
+ // Contornos de cinco lados NÃO cabem em otimizadores retangulares de chapa.
+ // Ficam disponíveis somente na ficha técnica e na revisão da fabricação.
  return generated.parts.map((part,index)=>({
   id:'mod-'+item.id+'-'+part.key,sourceModuleId:item.id,modulePartKey:part.key,moduleCode:item.code||'',pieceCode:item.code?(item.code+'-P'+String(index+1).padStart(2,'0')):'',sourceRoom:roomName||'',
   name:(roomName?roomName+' · ':'')+item.label+' · '+part.name,w:part.w,h:part.h,qty:part.qty,
   grain:part.grain,rotate:part.rotate,edge2:part.edge2,edge04:part.edge04,
-  material:part.material,thickness:part.thickness,notes:(item.code?'Identificação '+item.code+'-P'+String(index+1).padStart(2,'0')+'. ':'')+part.notes,generated:true
+  material:part.material,thickness:part.thickness,shape:part.shape||'rect',requiresContour:!!part.needsContour,
+  cutStatus:part.cutStatus||'review',notes:(item.code?'Identificação '+item.code+'-P'+String(index+1).padStart(2,'0')+'. ':'')+part.notes,generated:true
  }));
 }
 function groupedCutRows(project,roomId){

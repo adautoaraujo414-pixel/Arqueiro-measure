@@ -1,7 +1,7 @@
 /* Browser-like UI/persistence smoke test (jsdom + fake-indexeddb). */
 const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const html=fs.readFileSync('app/src/main/assets/index.html','utf8');
-const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),modules=fs.readFileSync('app/src/main/assets/modules.js','utf8'),moduleUI=fs.readFileSync('app/src/main/assets/module-ui.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
+const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),modules=fs.readFileSync('app/src/main/assets/modules.js','utf8'),workshop=fs.readFileSync('app/src/main/assets/workshop.js','utf8'),moduleUI=fs.readFileSync('app/src/main/assets/module-ui.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
 const storage=new IDBFactory();const sleep=(ms=40)=>new Promise(r=>setTimeout(r,ms));
 async function launch(){
  const dom=new JSDOM(html,{url:'https://appassets.arque.invalid/index.html',runScripts:'outside-only',pretendToBeVisual:true});
@@ -11,7 +11,7 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(modules);w.eval(moduleUI);w.eval(lab);w.eval(app);
+ w.eval(core);w.eval(cut);w.eval(modules);w.eval(workshop);w.eval(moduleUI);w.eval(lab);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
@@ -108,6 +108,10 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('moduleNew');await sleep(60);
  assert(doc.querySelector('#mod_width'),'parametric fields visible');
  assert(doc.getElementById('mod_frontType'),'cava options visible');
+ assert(doc.getElementById('mod_construction'),'montagem do tampo editável');
+ assert(doc.getElementById('modSlideSide'),'desconto de corrediça configurável');
+ assert(doc.getElementById('modOpeningW'),'vão medido disponível');
+ assert(doc.getElementById('labProfileLibrary'),'biblioteca de molduras disponível');
  assign(doc,'mod_width','1200');
  assign(doc,'modName','Base da cozinha');
  labClick('moduleApply');await sleep(75);

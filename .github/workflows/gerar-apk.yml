@@ -21,6 +21,8 @@ jobs:
           test -f settings.gradle
           test -f app/build.gradle
           test -f app/src/main/AndroidManifest.xml
+      - name: Conferir que Android WebView entrega todos os arquivos do Laboratório
+        run: node tests/android-assets.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

@@ -70,6 +70,7 @@ function dimensions(item,values){
 function fitInNiche(appliance,module,options={},engine=globalThis.ArqueModules){
  if(!appliance||appliance.kind!=='appliance')throw Error('Selecione um eletrodoméstico para encaixar.');
  if(!module||module.kind!=='module'||!engine)throw Error('Escolha um nicho construtivo válido.');
+ if(Number(module.rotation||0)!==0||Number(appliance.rotation||0)!==0)throw Error('Encaixe automático requer nicho e aparelho sem rotação; use posicionamento manual para canto girado.');
  const spec=engine.check(module.moduleSpec),sides=mm(options.side??5,'Folga lateral',0,100),
   top=mm(options.top??10,'Folga superior',0,150),bottom=mm(options.bottom??5,'Folga inferior',0,150),
   rear=mm(options.rear??20,'Folga traseira',0,200);

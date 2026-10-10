@@ -165,7 +165,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true;
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true;
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -178,7 +178,7 @@ function screen(p,state){
  out+='<div class="lab-views">'+button('▧ Ambiente 3D','view','iso',view==='iso')+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
  out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
  if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
- out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button(showDimensions?'Cotas visíveis':'Mostrar cotas','precisionToggle')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
  const Adv=globalThis.ArqueAdvanced;
  if(Adv){
   const modules=l.items.filter(i=>i.kind==='module');
@@ -226,7 +226,7 @@ function screen(p,state){
  }
  out+='<div class="lab-work">';
  if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+button('⌁ Linha por pontos','tool','pointline',tool==='pointline')+(tool==='pointline'?button('Finalizar linha','finishPointLine'):'')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
- out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
+ out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode,showDimensions,partKey:selectedPartKey}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
  out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
@@ -246,6 +246,19 @@ function screen(p,state){
     }).join('')+'</div></details>';
     if(selectedPart){const index=parts.indexOf(selectedPart)+1;out+='<div class="lab-selected-part"><b>'+esc((visual?visual.identifier(item,l.items.indexOf(item)):'M')+'-P'+String(index).padStart(2,'0'))+' · '+esc(selectedPart.name)+'</b><p>'+fmt(selectedPart.w)+' × '+fmt(selectedPart.h)+' mm · '+selectedPart.qty+' unidade(s)</p><p>'+esc(selectedPart.material)+' · espessura '+fmt(selectedPart.thickness)+' mm</p><p>Veio: '+(selectedPart.grain?'fixo no comprimento':'giro permitido')+' · bordas 2 mm: '+selectedPart.edge2+' · bordas 0,4 mm: '+selectedPart.edge04+'</p><p>'+esc(selectedPart.notes||'Conferir montagem e ferragens antes do corte.')+'</p></div>';}
     out+='</div>';
+   }
+   if(globalThis.ArquePrecision&&item.kind!=='pen'&&item.kind!=='wall'){
+    try{
+     const measures=globalThis.ArquePrecision.metrics(l,item.id),around=globalThis.ArquePrecision.clearances(l,item.id);
+     out+='<section class="lab-precision-panel"><h4>Cotas e distâncias em milímetros</h4><div class="lab-precision-cells">'+
+      [['Esquerda',measures.left],['Direita',measures.right],['Fundo',measures.back],['Frente',measures.front],['Piso (Z)',measures.z],['Teto livre',measures.top]].map(([k,v])=>'<span><small>'+k+'</small><b>'+fmt(v)+' mm</b></span>').join('')+
+      '</div>'+(!measures.confirmed?'<p class="lab-warning">Medidas do ambiente ainda não confirmadas em obra.</p>':'')+
+      (around.length?'<p class="lab-fine">Distâncias entre módulos: '+around.slice(0,3).map(x=>esc(x.name)+' · '+x.axis.toUpperCase()+' '+fmt(x.gap)+' mm').join(' | ')+'</p>':'')+
+      '<div class="lab-precision-move"><label>Passo<select id="labPrecisionStep">'+[['1','1 mm'],['5','5 mm'],['10','10 mm'],['50','50 mm']].map(x=>option(x[0],x[1],'5')).join('')+'</select></label>'+
+      '<div class="lab-nudge-buttons">'+button('← X','precisionMove','x:-')+button('X →','precisionMove','x:+')+button('↑ Y','precisionMove','y:-')+button('Y ↓','precisionMove','y:+')+
+      button('Z −','precisionMove','z:-')+button('Z ＋','precisionMove','z:+')+'</div></div>'+
+      '<p class="lab-fine">Move sem redimensionar peças. Confere limites da obra e colisões dos armários.</p></section>';
+    }catch(_){/* A auditoria informa dimensões inconsistentes. */}
    }
    out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
   if(item.kind==='module'&&globalThis.ArqueModules){
@@ -342,6 +355,16 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
+   if(a==='precisionToggle'){showDimensions=!showDimensions;refresh();return;}
+   if(a==='precisionMove'){
+    const selectedItem=l.items.find(i=>i.id===selected);
+    if(!selectedItem)throw Error('Selecione um módulo, bancada ou eletrodoméstico.');
+    const [axis,sign]=String(arg).split(':'),step=Number(root.querySelector('#labPrecisionStep')?.value);
+    if(![1,5,10,50].includes(step)||!['+','-'].includes(sign))throw Error('Passo inválido.');
+    const next=globalThis.ArquePrecision.nudge(l,selected,axis,step*(sign==='+'?1:-1));
+    remember(l);Object.assign(selectedItem,next);selectedItem.productionApproval=false;
+    save();refresh();ops.toast('Posição '+axis.toUpperCase()+' = '+fmt(next[axis])+' mm.');return;
+   }
    if(a==='advMagnet'){magnetEnabled=!magnetEnabled;refresh();return;}
    if(a==='advCorner'){
     const result=globalThis.ArqueAdvanced.kitchenCorner(l,root.querySelector('#advCornerBack').value,root.querySelector('#advCornerSide').value,{clearance:root.querySelector('#advCornerGap').value});
@@ -532,7 +555,9 @@ function mount(p,ops){
   try{
    const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]');
    if(view==='iso'){
+    const tappedPart=e.target.closest?.('[data-lab-part]');
     const id=hit?.dataset.labObject||'';
+    if(tappedPart&&id){selected=id;focusedModule=id;selectedPartKey=tappedPart.dataset.labPart;tool='select';e.preventDefault();refresh();return;}
     if(id!==selected){selectedPartKey='';selected=id;focusedModule=id;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
     if(id){
      const item=l.items.find(it=>it.id===id);if(!item)return;

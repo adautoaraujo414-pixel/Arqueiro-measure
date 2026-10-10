@@ -459,7 +459,7 @@ function mount(p,ops){
  const num=(v,f=0)=>Number.isFinite(Number(v))?Number(v):f;
   const save=()=>Promise.resolve(ops.persist()).catch(e=>ops.toast('Erro ao salvar Laboratório: '+e.message));
  const alertError=e=>ops.toast(e.message||String(e));
- const refresh=()=>{root.innerHTML=screen(p,ops.state);};
+ const refresh=()=>{navDrag=null;navPointers.clear();root.innerHTML=screen(p,ops.state);};
  refresh();
  root.addEventListener('input',e=>{
   if(e.target.id!=='studioCatalogSearch')return;

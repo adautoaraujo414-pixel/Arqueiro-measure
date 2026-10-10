@@ -65,6 +65,31 @@ function dimensions(item,values){
  if(values.label!==undefined)p.label=String(values.label).trim().slice(0,70)||item.label;
  return p;
 }
+/* Posicionamento técnico: usa o vão livre da carcaça e as prateleiras fixas.
+   Não inventa folga de fabricante e não ajusta dimensão do eletrodoméstico. */
+function fitInNiche(appliance,module,options={},engine=globalThis.ArqueModules){
+ if(!appliance||appliance.kind!=='appliance')throw Error('Selecione um eletrodoméstico para encaixar.');
+ if(!module||module.kind!=='module'||!engine)throw Error('Escolha um nicho construtivo válido.');
+ const spec=engine.check(module.moduleSpec),sides=mm(options.side??5,'Folga lateral',0,100),
+  top=mm(options.top??10,'Folga superior',0,150),bottom=mm(options.bottom??5,'Folga inferior',0,150),
+  rear=mm(options.rear??20,'Folga traseira',0,200);
+ if(spec.doorCount||spec.doorMode==='byBay'&&Object.values(spec.bayDoors).some(Boolean))throw Error('Abra o vão ou retire as portas antes de encaixar o aparelho.');
+ if(spec.vertical.length>0)throw Error('Nicho com divisórias verticais exige escolher o vão: verifique manualmente.');
+ const t=spec.thickness,freeWidth=spec.width-2*t,freeDepth=spec.depth-(spec.back==='overlay'?spec.backThickness:0);
+ if(appliance.w+2*sides>freeWidth)throw Error('O aparelho não cabe na largura interna com as folgas laterais.');
+ if(appliance.d+rear>freeDepth)throw Error('O aparelho não cabe em profundidade com a ventilação traseira indicada.');
+ const inner=spec.height-2*t,fixed=spec.fixedShelves.filter(p=>p.bay===0).sort((a,b)=>a.at-b.at);
+ if((spec.shelvesByBay[0]??spec.shelfCount)>0)throw Error('Retire prateleiras móveis desse nicho antes de encaixar um eletrodoméstico.');
+ const sections=[],planes=[t,...fixed.map(p=>t+inner*p.at),spec.height-t];
+ for(let i=1;i<planes.length;i++){const start=planes[i-1]+(i===1?0:t),stop=planes[i];if(stop>start)sections.push({start,stop,clear:stop-start});}
+ const slot=sections.find(p=>p.clear>=appliance.height+top+bottom);
+ if(!slot)throw Error('Não existe altura livre suficiente entre as prateleiras fixas e as folgas informadas.');
+ const x=Math.round((module.x+(spec.width-appliance.w)/2)*10)/10;
+ const y=Math.round((module.y+spec.depth-appliance.d)*10)/10;
+ const z=Math.round(((module.z||0)+slot.start+bottom)*10)/10;
+ return {x,y,z,hostModuleId:module.id,clearance:{side:sides,top,bottom,rear},
+   note:'Aparelho encaixado por dimensão de referência. Confirmar ventilação, tomada, porta e ficha do fabricante.'};
+}
 function groupIds(){return [...new Set(types.map(t=>t.group))];}
-return {catalog,definition,create,dimensions,groupIds};
+return {catalog,definition,create,dimensions,fitInNiche,groupIds};
 });

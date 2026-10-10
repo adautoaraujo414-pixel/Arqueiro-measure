@@ -1,5 +1,7 @@
 /* Laboratorio 2D: geometria em mm, medidas de origem e historico por obra. */
 const assert=require('node:assert/strict');
+globalThis.ArqueModules=require('../app/src/main/assets/modules.js');
+globalThis.ArqueVisual=require('../app/src/main/assets/lab-visual.js');
 const L=require('../app/src/main/assets/lab.js');
 const p={rooms:[
  {id:'cozinha',name:'Cozinha',measurements:[{id:'m1',value:3170,kind:'Parede',target:'parede pia',source:'Bluetooth'},{id:'m2',value:580,kind:'Profundidade',source:'manual'}]},
@@ -38,6 +40,7 @@ assert.equal(other.items.length,0,'outro ambiente preservado');
 assert.equal(old.confirmed,false,'historico anterior mantido');
 const html=L.screen(p);
 assert(html.includes('labBoard')&&html.includes('labMeasure'),'editor e lista de medidas presentes');
+assert(html.includes('Ambiente técnico 3D'),'laboratorio abre em vista construtiva espacial');
 assert(html.includes('Foto de referência')&&html.includes('Vista frontal'),'fotografia e vista frontal presentes');
 const saved=JSON.parse(JSON.stringify(p));
 assert.equal(saved.labLayouts.cozinha.width,3170,'layout pronto para armazenamento local e backup');

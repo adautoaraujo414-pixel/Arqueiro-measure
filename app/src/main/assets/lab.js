@@ -481,7 +481,7 @@ function mount(p,ops){
   const el=e.target.closest('[data-lab]');if(!el)return;
   const a=el.dataset.lab,arg=el.dataset.arg,r=p.rooms.find(x=>x.id===activeRoom),l=layout(p,activeRoom);
   try{
-   if(a==='studioCategory'){studioCategory=arg;refresh();return;}
+   if(a==='studioCategory'){studioCategory=arg;studioSearch='';refresh();return;}
    if(a==='studioNav'){studioNav=arg;drag=null;navDrag=null;navPointers.clear();refresh();return;}
    if(a==='studioFit'){
     const defaults=globalThis.ArqueStudio.resetCamera();

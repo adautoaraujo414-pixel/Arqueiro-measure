@@ -143,7 +143,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',visualAngle=40,visualZoom=1,visualMode='fronts';
+let activeRoom='',view='plan',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts';
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -182,7 +182,16 @@ function screen(p,state){
  if(item){
   out+='<div class="lab-item-title">'+(visual?esc(visual.identifier(item,l.items.indexOf(item)))+' · ':'')+esc(item.label)+' <small>'+esc(item.kind==='module'?'Módulo construtivo paramétrico':modes[item.view]||'Peça avulsa')+'</small></div>';
    if(item.kind==='module'&&globalThis.ArqueModules){const gen=globalThis.ArqueModules.parts(item.moduleSpec);out+='<div class="lab-selected-summary"><b>'+fmt(item.w)+' × '+fmt(item.height)+' × '+fmt(item.d)+' mm</b><small>'+gen.parts.reduce((total,p)=>total+p.qty,0)+' peças · '+gen.bays.length+' vãos · '+esc(item.moduleSpec.frontType||'Sem puxador')+'</small></div>';}
-  out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
+  if(item.kind==='module'&&globalThis.ArqueModules){
+    const computed=globalThis.ArqueModules.parts(item.moduleSpec),parts=computed.parts,selectedPart=parts.find(p=>p.key===selectedPartKey);
+    out+='<div class="lab-construction-tree"><details '+(selectedPart?'open':'')+'><summary>Identificação construtiva · '+parts.reduce((sum,p)=>sum+p.qty,0)+' peças</summary><p class="lab-fine">Identifique a peça pelo módulo, código, material e dimensões de corte.</p><div class="lab-components">'+parts.map((p,i)=>{
+     const pc='P'+String(i+1).padStart(2,'0');
+     return '<button type="button" data-lab="partSelect" data-arg="'+esc(p.key)+'" class="'+(p.key===selectedPartKey?'lab-active':'')+'"><b>'+pc+'</b><span>'+esc(p.name)+'<small>'+fmt(p.w)+' × '+fmt(p.h)+' mm · '+p.qty+'x</small></span></button>';
+    }).join('')+'</div></details>';
+    if(selectedPart){const index=parts.indexOf(selectedPart)+1;out+='<div class="lab-selected-part"><b>'+esc((visual?visual.identifier(item,l.items.indexOf(item)):'M')+'-P'+String(index).padStart(2,'0'))+' · '+esc(selectedPart.name)+'</b><p>'+fmt(selectedPart.w)+' × '+fmt(selectedPart.h)+' mm · '+selectedPart.qty+' unidade(s)</p><p>'+esc(selectedPart.material)+' · espessura '+fmt(selectedPart.thickness)+' mm</p><p>Veio: '+(selectedPart.grain?'fixo no comprimento':'giro permitido')+' · bordas 2 mm: '+selectedPart.edge2+' · bordas 0,4 mm: '+selectedPart.edge04+'</p><p>'+esc(selectedPart.notes||'Conferir montagem e ferragens antes do corte.')+'</p></div>';}
+    out+='</div>';
+   }
+   out+='<label>Nome<input id="labName" maxlength="70" value="'+esc(item.label)+'"></label>';
   out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça'],['z','Altura do piso (Z)']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
   for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
   if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
@@ -229,12 +238,13 @@ function mount(p,ops){
     const profile=globalThis.ArqueWorkshop.saveProfile(ops.state,item,nm);save();refresh();ops.toast('Moldura '+profile.name+' guardada na biblioteca geral.');return;}
    if(a==='profileInsert'){const id=root.querySelector('#labProfileLibrary')?.value,t=globalThis.ArqueWorkshop.library(ops.state).find(x=>x.id===id);
     if(!t)throw Error('Escolha uma moldura salva.');const item=globalThis.ArqueWorkshop.insertProfile(t,100,100,view);remember(l);l.items.push(item);selected=item.id;save();refresh();return;}
-   if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
+   if(a.startsWith('module')){if(!globalThis.ArqueModuleUI)throw Error('Módulos ainda não disponíveis.');const res=globalThis.ArqueModuleUI.act(a,{p,room:r,l,state:ops.state,selected,arg,get:id=>root.querySelector('#'+id),notify:ops.toast,onCut:ops.exportCutMaterial});if(res.handled){if(res.selected!==undefined){if(res.selected!==selected){focusedBay=0;focusedModule=res.selected;selectedPartKey='';}selected=res.selected;}if(res.focusBay!==undefined)focusedBay=res.focusBay;if(res.view)view=res.view;if(!res.skipRefresh){save();refresh();}return;}}
    if(a==='view'){view=arg;tool='select';if(!l.items.some(it=>it.id===selected&&it.kind==='module'))selected='';refresh();return;}
     if(a==='visualRotate'){visualAngle=(visualAngle+Number(arg)+360)%360;refresh();return;}
     if(a==='visualZoom'){visualZoom=Math.max(.65,Math.min(2.5,Math.round((visualZoom+Number(arg))*100)/100));refresh();return;}
     if(a==='visualMode'){visualMode=arg==='structure'?'structure':'fronts';refresh();return;}
-    if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;refresh();return;}
+    if(a==='catalogSelect'){selected=arg;focusedModule=arg;focusedBay=0;selectedPartKey='';refresh();return;}
+    if(a==='partSelect'){selectedPartKey=arg;refresh();return;}
    if(a==='catalogAdd'){
      let item;
      const freeX=Math.max(80,...l.items.filter(it=>it.kind==='module'&&num(it.y,0)<900).map(it=>Number(it.x||0)+Number(it.w||0)+50));
@@ -252,7 +262,7 @@ function mount(p,ops){
       item=add(l,arg,x,80,'plan');l.items.pop();l.history.pop();
       item.height=arg==='countertop'?35:180;item.z=arg==='countertop'?900:720;
      }else throw Error('Item não disponível no catálogo.');
-     remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;tool='select';
+     remember(l);l.items.push(item);selected=item.id;focusedModule=item.id;focusedBay=0;selectedPartKey='';tool='select';
      if(item.x+item.w>l.width)ops.toast('Peça incluída, mas ultrapassa a largura da parede: revise a posição.');
      save();refresh();return;
     }
@@ -299,7 +309,7 @@ function mount(p,ops){
   const board=e.target.closest?.('#labBoard');if(!board||e.isPrimary===false)return;
   try{
    const l=layout(p,activeRoom),hit=e.target.closest('[data-lab-object]');
-   if(view==='iso'){selected=hit?.dataset.labObject||'';focusedModule=selected;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
+   if(view==='iso'){const id=hit?.dataset.labObject||'';if(id!==selected)selectedPartKey='';selected=id;focusedModule=selected;focusedBay=0;tool='select';e.preventDefault();refresh();return;}
    const pt=point(e);
    if(tool==='select'){
     if(!hit){selected='';refresh();return;}

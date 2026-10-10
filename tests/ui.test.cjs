@@ -13,7 +13,8 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(modules);w.eval(kitchen);w.eval(workshop);w.eval(moduleUI);w.eval(visual);w.eval(lab);w.eval(app);
+ // Usar a lista REAL do index.html: simula a ordem exata dos scripts do APK Android.
+ for(const match of html.matchAll(/<script\s+src="([^"]+\.js)"/g))w.eval(fs.readFileSync('app/src/main/assets/'+match[1],'utf8'));
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}

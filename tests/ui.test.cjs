@@ -120,6 +120,19 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  labClick('moduleAddDivider');await sleep(55);
  assert(doc.querySelectorAll('.lab-divider-line').length===1,'divider added');
  assert(doc.body.textContent.includes('Prateleira 1 / vão 2'),'shelves distributed over bays');
+ assert(doc.querySelector('#modEqualBays'),'botão simples para divisão igual');
+ assign(doc,'modEqualBays','3');labClick('moduleEqualBays');await sleep(70);
+ assert(doc.querySelectorAll('.lab-divider-line').length===1||doc.querySelectorAll('.lab-divider-line').length===2,'divisórias geradas');
+ assert(doc.querySelector('#modEqualBays').value==='3','três vãos iguais salvos');
+ const fixedInput=doc.querySelector('[data-mod-bay="0"]');assert(fixedInput,'largura livre por vão');
+ fixedInput.value='300';labClick('moduleCustomBays');await sleep(70);
+ assert(doc.body.textContent.includes('larguras fixas + flexíveis'),'modo custom persistente');
+ assign(doc,'modShelfCount','2');labClick('moduleBayShelves');await sleep(70);
+ assert(doc.body.textContent.includes('Prateleira 2 / vão 1'),'prateleiras móveis por compartimento');
+ assign(doc,'modHorizontalSpaces','3');labClick('moduleEqualHorizontal');await sleep(70);
+ assert(doc.querySelectorAll('.lab-divider-line').length>=4,'divisões horizontais iguais criadas');
+ assert(doc.getElementById('mod_baseArrangement'),'montagem de tampo/base por vão disponível');
+
  labClick('moduleSaveTemplate');await sleep(60);
  assert(doc.querySelectorAll('#moduleLibrary option').length===2,'model saved into global catalog');
  const chosenTemplate=doc.querySelector('#moduleLibrary');chosenTemplate.value=chosenTemplate.options[1].value;

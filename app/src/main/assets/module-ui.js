@@ -35,6 +35,7 @@ function panel(p,state,l,selected){
  for(const [key,label,min,max] of integers)h+=fld('mod_'+key,label,s[key],'number','min="'+min+'" max="'+max+'" step="1"');
  for(const key of ['caseMaterial','frontMaterial','backMaterial'])h+=fld('mod_'+key,{caseMaterial:'Material do corpo',frontMaterial:'Material das portas',backMaterial:'Material do fundo'}[key],s[key],'text','maxlength="90"');
  h+=choice('mod_construction','Montagem do tampo e base',s.construction,[['between','Tampo e base entre laterais'],['over','Tampo e base sobre laterais']]);
+ h+=choice('mod_baseArrangement','Como dividir tampo e base',s.baseArrangement||'continuous',[['continuous','Peças inteiras, passando por todos os vãos'],['byBay','Tampo e base separados por vão']]);
  h+=choice('mod_frontType','Puxador',s.frontType,[['cava','Cava (usinagem)'],['concha','Concha (ferragem)'],['sem','Sem puxador']]);
  h+=choice('mod_grainFront','Sentido do veio nas portas',String(!!s.grainFront),[['true','Fixo na altura'],['false','Livre para girar']]);
  h+='</div><p class="lab-fine">Largura e profundidade acima são da CARCAÇA. Os tamponamentos aumentam a largura instalada. Fundo aplicado aumenta a profundidade.</p>';
@@ -101,7 +102,7 @@ function act(action,ctx){
   for(const [key] of values)updates[key]=val('mod_'+key);
   for(const [key] of integers)updates[key]=val('mod_'+key);
   for(const key of ['caseMaterial','frontMaterial','backMaterial'])updates[key]=val('mod_'+key);
-  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';updates.construction=val('mod_construction');
+  updates.frontType=val('mod_frontType');updates.grainFront=val('mod_grainFront')==='true';updates.construction=val('mod_construction');updates.baseArrangement=val('mod_baseArrangement');
   // Check every derived panel BEFORE mutating project state.
   M().parts({...item.moduleSpec,...updates});
   L.remember(l);M().regenerate(item,updates);

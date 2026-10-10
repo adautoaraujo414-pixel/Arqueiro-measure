@@ -64,6 +64,12 @@ function scene(layout,selectedId='',opts={}){
  const step=roomW>7000||roomD>7000?1000:500;
  for(let x=step;x<roomW;x+=step)out+=line([x,0,1],[x,roomD,1],project,'#d4dfdf',.65);
  for(let y=step;y<roomD;y+=step)out+=line([0,y,1],[roomW,y,1],project,'#d4dfdf',.65);
+ if(layout.wallTrace?.segments)for(const segment of layout.wallTrace.segments){
+  const a=segment.start,b=segment.end,height=Math.min(roomH,2350);
+  out+=poly([[a[0],a[1],0],[b[0],b[1],0],[b[0],b[1],height],[a[0],a[1],height]],project,
+   '#d3d8dc','#a08768',1,'fill-opacity=".22" stroke-dasharray="6 3"');
+  out+=line([a[0],a[1],0],[b[0],b[1],0],project,'#bd8953',3);
+ }
  out+=line([0,roomD,0],[roomW,roomD,0],project,'#7998a6',2);
  out+=line([roomW,0,0],[roomW,roomD,0],project,'#7998a6',2);
  const positions=items.map((item,i)=>({item,i,sort:num(item.x)+num(item.y)})).sort((a,b)=>a.sort-b.sort);
@@ -106,8 +112,13 @@ function scene(layout,selectedId='',opts={}){
     const color=/^#[0-9a-fA-F]{6}$/.test(item.lightColor||'')?item.lightColor:'#ffc75e';
     content+=line([x,y+d+4,z+h/2],[x+w,y+d+4,z+h/2],proj,color,9,'stroke-opacity=".19"');
     content+=line([x,y+d+5,z+h/2],[x+w,y+d+5,z+h/2],proj,color,3,'stroke-linecap="round"');
+    content+=line([x,y+d+6,z+h/2-15],[x+w,y+d+6,z+h/2-15],proj,color,14,'stroke-opacity=".075"');
    }
 
+   if(item.kind==='module'&&spec.cavaProfile){
+    const zc=Number(spec.cavaProfile.levelZ);
+    if(Number.isFinite(zc)&&zc>=z&&zc<=z+h)content+=line([x+10,y+d+4,zc],[x+w-10,y+d+4,zc],proj,'#76604d',4,'stroke-dasharray="9 3"');
+   }
    if(item.kind==='module'){
     const fy=y+d+Math.max(1,t/8),z1=z+Math.min(t,h/3),z2=z+h-Math.min(t,h/3);
     // Frentes reais: numero e dimensoes seguem porta global ou por vao.

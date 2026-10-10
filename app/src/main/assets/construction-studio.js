@@ -17,7 +17,7 @@ function sketch(p){
  return '<svg viewBox="0 0 100 94" aria-hidden="true"><path d="M18 20H80V78H18Z" fill="'+(isModule?'#e1e8e5':'#f0f4f6')+'" stroke="#6f93a5" stroke-width="2"/>'+lines+'<path d="M17 79H80" stroke="#4a829d" stroke-width="2.5"/></svg>';
 }
 function templates(kitchen=[],saved=[]){
- const a=kitchen.map(p=>({...p,action:p.kind==='corner45'?'cornerCreate':'catalogPreset',arg:p.id}));
+ const a=kitchen.map(p=>({...p,action:'catalogPreset',arg:p.id}));
  const b=saved.map(t=>({id:t.id,label:t.name||'Meu módulo',group:'Meus modelos',kind:'module',
   w:t.spec?.width||0,d:t.spec?.depth||0,h:t.spec?.height||0,doors:t.spec?.doorCount||0,shelves:t.spec?.shelfCount||0,
   action:'catalogSaved',arg:t.id}));

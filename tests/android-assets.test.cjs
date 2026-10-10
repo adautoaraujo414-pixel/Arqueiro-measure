@@ -18,6 +18,7 @@ for(const file of expected){
 }
 for(const file of allowed)assert(expected.has(file),'Recurso indevido ou obsoleto liberado em WebView: '+file);
 assert(java.includes('if(!LOCAL_WEB_ASSETS.contains(name))return denied();'),'interceptador não utiliza allowlist para negar desconhecidos');
+assert(java.includes('setCacheMode(WebSettings.LOAD_NO_CACHE)'),'WebView deve usar scripts da versão instalada, nunca resposta 403 antiga');
 assert(java.includes('"https".equals(uri.getScheme())')&&java.includes('"appassets.arque.invalid".equals(uri.getHost())'),'origem segura restrita');
 assert(!/if\(!name\.equals\("index\.html"\)/.test(java),'allowlist antiga do WebView não pode retornar');
 for(const name of ['lab.js','modules.js','lab-visual.js','lab-fabrication.js','corner45.js','lab.css','module-ui.css'])

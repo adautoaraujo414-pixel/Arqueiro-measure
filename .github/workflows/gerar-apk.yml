@@ -62,8 +62,6 @@ jobs:
         run: node tests/kitchen.test.cjs
       - name: Testar alinhamento de móveis e linhas do esboço
         run: node tests/align.test.cjs
-      - name: Testar laboratório inicial, toque e correção do esboço
-        run: node tests/alignment-ui.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado
@@ -71,6 +69,8 @@ jobs:
           npm install --prefix /tmp/arque-ui-test --no-audit --no-fund jsdom@26 fake-indexeddb@6
           set -o pipefail
           NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs 2>&1 | tee ui-test.log
+      - name: Testar laboratório inicial, toque e correção do esboço
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/alignment-ui.test.cjs
       - name: Registrar falhas da interface
         if: failure()
         env:

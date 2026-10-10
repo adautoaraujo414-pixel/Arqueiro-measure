@@ -91,6 +91,8 @@ public final class MainActivity extends Activity {
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        // Script updates must not reuse cached 403 responses from an older APK.
+        s.setCacheMode(WebSettings.LOAD_NO_CACHE);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(true);
         s.setAllowFileAccessFromFileURLs(false);

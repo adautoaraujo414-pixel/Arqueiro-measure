@@ -226,6 +226,17 @@ function screen(p,state){
    if(item.kind==='led')out+='<label>Cor da luz<input id="labLightColor" type="color" value="'+(/^#[0-9a-f]{6}$/i.test(item.lightColor||'')?item.lightColor:'#ffd292')+'"></label>'+
     '<label>LED<select id="labLightOn">'+option('on','Ligado',item.lightOn===false?'off':'on')+option('off','Desligado',item.lightOn===false?'off':'on')+'</select></label>';
    else out+='<label>Modelo / referência técnica<input id="labDeviceModel" maxlength="90" value="'+esc(item.deviceModel||'')+'" placeholder="Marca e modelo do fabricante"></label>';
+   if(item.kind==='appliance'){
+    const niches=l.items.filter(x=>x.kind==='module'&&x.moduleSpec?.doorCount===0);
+    out+='<div class="lab-niche-fit"><h4>Encaixe assistido no nicho</h4><p class="lab-fine">Não redimensiona o aparelho. Informe folgas conforme o fabricante.</p>'+
+     '<label>Nicho do projeto<select id="labFitNiche">'+niches.map(n=>option(n.id,(n.code||'M')+' · '+n.label,'')).join('')+'</select></label>'+
+     '<div class="lab-props">'+
+     '<label>Folga lateral/lado (mm)<input id="labFitSide" type="number" min="0" value="5"></label>'+
+     '<label>Folga superior (mm)<input id="labFitTop" type="number" min="0" value="10"></label>'+
+     '<label>Folga inferior (mm)<input id="labFitBottom" type="number" min="0" value="5"></label>'+
+     '<label>Folga traseira (mm)<input id="labFitRear" type="number" min="0" value="20"></label></div>'+
+     (niches.length?button('Verificar e encaixar','catalogFitNiche'):'<p class="lab-warning">Adicione um nicho aberto antes de encaixar.</p>')+'</div>';
+   }
    out+=button('Salvar referência','catalogSaveReference')+'</div>';
   }
     out+='<div class="lab-props">'+[['x','X'],['y','Y'],['w',item.kind==='wall'?'Delta X':'Largura'],['d',item.kind==='wall'?'Delta Y':'Profundidade'],['height','Altura da peça'],['z','Altura do piso (Z)']].map(k=>'<label>'+k[1]+' (mm)<input type="number" step="1" data-lab-prop="'+k[0]+'" value="'+esc(item[k[0]]||0)+'"></label>').join('')+'</div>'+button('Salvar ajustes','properties')+button('Excluir peça','delete');
@@ -315,6 +326,17 @@ function mount(p,ops){
     if(item?.kind!=='module')throw Error('Selecione um módulo para salvar.');
     globalThis.ArqueModules.saveTemplate(ops.state,item.moduleSpec,item.label);
     save();refresh();ops.toast('Modelo salvo na sua biblioteca para outras obras.');return;
+   }
+   if(a==='catalogFitNiche'){
+    const item=l.items.find(it=>it.id===selected);
+    if(item?.kind!=='appliance')throw Error('Selecione um eletrodoméstico.');
+    const module=l.items.find(it=>it.id===root.querySelector('#labFitNiche')?.value);
+    const next=globalThis.ArqueKitchen.fitInNiche(item,module,{
+     side:root.querySelector('#labFitSide')?.value,top:root.querySelector('#labFitTop')?.value,
+     bottom:root.querySelector('#labFitBottom')?.value,rear:root.querySelector('#labFitRear')?.value
+    },globalThis.ArqueModules);
+    remember(l);Object.assign(item,next);save();refresh();
+    ops.toast('Aparelho posicionado no nicho. Verificar ventilação e ficha do fabricante.');return;
    }
    if(a==='catalogSaveReference'){
     const item=l.items.find(i=>i.id===selected);

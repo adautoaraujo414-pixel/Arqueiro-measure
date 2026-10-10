@@ -118,6 +118,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.body.textContent.includes('Prateleira 1 / vão 2'),'shelves distributed over bays');
  labClick('moduleSaveTemplate');await sleep(60);
  assert(doc.querySelectorAll('#moduleLibrary option').length===2,'model saved into global catalog');
+ const chosenTemplate=doc.querySelector('#moduleLibrary');chosenTemplate.value=chosenTemplate.options[1].value;
  labClick('moduleInsert');await sleep(50);
  assert(doc.querySelectorAll('#labBoard [data-lab-object]').length>=3,'model reused as second instance');
  assert(doc.querySelector('#mod_width').value==='1200','reused module keeps original dimensions');

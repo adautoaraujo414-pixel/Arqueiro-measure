@@ -47,7 +47,7 @@ function panel(p,state,l,selected){
  h+='</div>';
  const bayItems=generated?.bays?.map((b,i)=>[String(i),'Vão '+(i+1)+' · '+mm(b.width)+' mm'])||[['0','Vão 1']];
  h+='<div class="lab-module-dividers"><h4>Montagem interna por vão</h4><p>Posicione divisórias horizontais fixas, gavetas ou porta-temperos. Dimensões geradas pelo vão útil, não pelo tamanho total do móvel.</p>';
- h+='<div class="lab-module-grid">'+choice('modFixedBay','Vão',[bayItems[0][0]],bayItems)+fld('modFixedAt','Altura proporcional (%)',50,'number','min="1" max="99" step="0.1"')+'</div>'+btn('＋ Divisória horizontal fixa','moduleFixedAdd');
+ h+='<div class="lab-module-grid">'+choice('modFixedBay','Vão',bayItems[0][0],bayItems)+fld('modFixedAt','Altura proporcional (%)',50,'number','min="1" max="99" step="0.1"')+'</div>'+btn('＋ Divisória horizontal fixa','moduleFixedAdd');
  h+=(s.fixedShelves||[]).map((o,i)=>'<div class="lab-divider-line"><strong>Horizontal '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+mm(o.at*100)+'%</span>'+btn('Retirar','moduleFixedRemove',String(i))+'</div>').join('');
  h+='<div class="lab-module-grid">'+choice('modAccessoryType','Acessório interno','drawer',[['drawer','Gaveta com corrediça'],['spice','Porta-temperos extraível']])+
  choice('modAccessoryBay','Usar no vão','0',bayItems)+fld('modAccessoryCount','Gavetas / bandejas',1,'number','min="1" max="6" step="1"')+

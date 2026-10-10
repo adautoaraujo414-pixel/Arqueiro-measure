@@ -13,7 +13,7 @@ const guide=F.create45(room,back.id,side.id,{reach:400,clearance:15});
 A.equal(guide.angle,45);A.equal(guide.diagonalLength,565.7);
 A.equal(guide.verified,false);
 A.deepEqual(guide.start,[581,981]);A.deepEqual(guide.end,[981,581]);
-A(!JSON.stringify(room).includes('corner45'),'guias não devem ser instalados sem confirmação');
+A.equal(room.cornerGuides.length,0,'guia só é instalado após confirmação da ação');
 const placed={...room,cornerGuides:[guide]};
 A(V.scene(placed).includes('45° · 565,7 mm'),'frente diagonal na representação espacial');
 const report=Adv.production(placed,M);

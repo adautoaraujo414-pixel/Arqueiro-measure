@@ -11,7 +11,7 @@ const values=[
  ['width','Largura',150],['height','Altura do corpo',150],['depth','Profundidade do corpo',150],
  ['thickness','Espessura MDF estrutura',6],['backThickness','Espessura fundo',0],
  ['doorGap','Folga entre portas',0],['doorReveal','Folga externa portas',0],
- ['shelfInset','Recuo das prateleiras',0],['shelfClearance','Folga lateral prateleira',0],
+ ['shelfInset','Recuo frontal das prateleiras',0],['shelfRearInset','Recuo traseiro das prateleiras',0],['shelfClearance','Folga lateral prateleira',0],['dividerFrontInset','Recuo frontal das divisórias',0],['dividerRearInset','Recuo traseiro das divisórias',0],
  ['leftFiller','Tamponamento esquerdo',0],['rightFiller','Tamponamento direito',0],
  ['doorTopDiscount','Desconto superior das portas',0],['doorBottomDiscount','Desconto inferior das portas',0]
 ];
@@ -41,12 +41,22 @@ function panel(p,state,l,selected){
  h+='<div class="lab-module-buttons">'+btn('Aplicar medidas e recalcular','moduleApply')+btn('Duplicar nesta obra','moduleDuplicate')+btn('Salvar como modelo','moduleSaveTemplate')+'</div>';
  h+='<div class="lab-module-dividers"><h4>Ajustar ao vão real</h4><p>Use somente com a largura do ambiente conferida. O aplicativo desconta folgas laterais e tamponamentos antes de recalcular o corpo.</p>';
  h+='<div class="lab-module-grid">'+fld('modOpeningW','Vão registrado (mm)',l.width,'number','min="150" step="0.1"')+fld('modOpeningLeft','Folga de instalação esquerda',5,'number','min="0" step="0.1"')+fld('modOpeningRight','Folga de instalação direita',5,'number','min="0" step="0.1"')+'</div>'+btn('Ajustar módulo ao vão','moduleFit')+'</div>';
+ h+='<div class="lab-bay-tool"><h4>▤ Dividir vãos com precisão</h4><p class="lab-fine">Largura ÚTIL desconta as laterais e a espessura de cada divisória. O próprio laboratório faz a conta e distribui o espaço.</p>';
+ h+='<div class="lab-divider-add">'+fld('modEqualBays','Quantidade de vãos iguais',generated?.bays?.length||1,'number','min="1" max="11" step="1"')+btn('Dividir igualmente','moduleEqualBays')+'</div>';
+ if(generated?.bays?.length){
+  h+='<details class="lab-bay-custom"><summary>Medidas livres por vão · fixe algumas e distribua o restante</summary><p class="lab-fine">Informe a largura livre em mm para os vãos que quer fixar. Deixe vazio para dividir igualmente o espaço restante. A soma considera as espessuras das divisórias.</p>';
+  h+='<div class="lab-bay-cells">'+generated.bays.map((bay,i)=>'<label>Vão '+(i+1)+' · '+mm(bay.width)+' mm<input type="number" step="0.1" min="100" max="50000" data-mod-bay="'+i+'" placeholder="Flexível" value="'+esc(s.bayLayoutMode==='custom'&&s.bayRules[i]!=null?s.bayRules[i]:'')+'"></label>').join('')+'</div>';
+  h+=btn('Aplicar larguras escolhidas','moduleCustomBays')+'</details>';
+ }
+ h+='<p class="lab-fine">Modo atual: '+esc(s.bayLayoutMode==='equal'?'vãos iguais (se recalculam ao redimensionar)':s.bayLayoutMode==='custom'?'larguras fixas + flexíveis':'posições manuais')+'.</p></div>';
  h+='<div class="lab-module-dividers"><h4>Divisórias verticais</h4><p>Posicionadas em porcentagem do vão interno. Ao alterar largura, mantêm a proporção; a espessura continua fixa.</p>';
  h+='<div class="lab-divider-add">'+fld('modDividerPct','Posição da divisória (%)',50,'number','min="1" max="99" step="0.1"')+btn('＋ Divisória','moduleAddDivider')+'</div>';
  h+=(s.vertical||[]).map((fraction,i)=>'<div class="lab-divider-line"><strong>Divisória '+(i+1)+'</strong><span>'+mm(fraction*100)+'% do vão</span>'+btn('Retirar','moduleRemoveDivider',String(i))+'</div>').join('')||'<p class="lab-fine">Sem divisórias internas; adicione uma central ou na posição que preferir.</p>';
  h+='</div>';
  const bayItems=generated?.bays?.map((b,i)=>[String(i),'Vão '+(i+1)+' · '+mm(b.width)+' mm'])||[['0','Vão 1']];
  h+='<div class="lab-module-dividers"><h4>Montagem interna por vão</h4><p>Posicione divisórias horizontais fixas, gavetas ou porta-temperos. Dimensões geradas pelo vão útil, não pelo tamanho total do móvel.</p>';
+ h+='<div class="lab-bay-two"><div><strong>Prateleiras móveis por vão</strong><div class="lab-divider-add">'+choice('modShelfBay','Escolher vão',bayItems[0][0],bayItems)+fld('modShelfCount','Quantidade de prateleiras',s.shelvesByBay?.[0]??s.shelfCount,'number','min="0" max="12" step="1"')+btn('Distribuir prateleiras iguais','moduleBayShelves')+'</div><small>Prateleiras distribuídas igualmente dentro do vão selecionado.</small></div>';
+ h+='<div><strong>Divisórias horizontais fixas iguais</strong><div class="lab-divider-add">'+choice('modHorizontalBay','Escolher vão',bayItems[0][0],bayItems)+fld('modHorizontalSpaces','Quantidade de espaços',2,'number','min="1" max="12" step="1"')+btn('Dividir altura igualmente','moduleEqualHorizontal')+'</div><small>Ex.: 4 espaços = 3 prateleiras fixas, respeitando a altura interna.</small></div></div>';
  h+='<div class="lab-module-grid">'+choice('modFixedBay','Vão',bayItems[0][0],bayItems)+fld('modFixedAt','Altura proporcional (%)',50,'number','min="1" max="99" step="0.1"')+'</div>'+btn('＋ Divisória horizontal fixa','moduleFixedAdd');
  h+=(s.fixedShelves||[]).map((o,i)=>'<div class="lab-divider-line"><strong>Horizontal '+(i+1)+'</strong><span>Vão '+(o.bay+1)+' · '+mm(o.at*100)+'%</span>'+btn('Retirar','moduleFixedRemove',String(i))+'</div>').join('');
  h+='<div class="lab-module-grid">'+choice('modAccessoryType','Acessório interno','drawer',[['drawer','Gaveta com corrediça'],['spice','Porta-temperos extraível']])+
@@ -98,19 +108,47 @@ function act(action,ctx){
   item.refs={};notify('Todas as peças foram recalculadas e salvas.');
   return result(selected);
  }
+ if(action==='moduleEqualBays'){
+  const candidate=M().equalBays(item.moduleSpec,val('modEqualBays'));
+  L.remember(l);M().regenerate(item,{bayLayoutMode:candidate.bayLayoutMode,bayCount:candidate.bayCount,bayRules:[],vertical:candidate.vertical});
+  notify(candidate.bayCount+' vãos iguais calculados com as espessuras das divisórias.');
+  return result(selected);
+ }
+ if(action==='moduleCustomBays'){
+  const rules=Array.from(ctx.get('modEqualBays')?.closest('.lab-module-panel')?.querySelectorAll('[data-mod-bay]')||[]).map(e=>e.value.trim()===''?null:e.value);
+  if(!rules.length)throw Error('Não há vãos para dimensionar.');
+  const candidate=M().customBays(item.moduleSpec,rules);
+  L.remember(l);M().regenerate(item,{bayLayoutMode:candidate.bayLayoutMode,bayCount:candidate.bayCount,bayRules:candidate.bayRules,vertical:candidate.vertical});
+  notify('Medidas fixas e flexíveis recalculadas dentro da largura útil.');
+  return result(selected);
+ }
+ if(action==='moduleBayShelves'){
+  const bay=Number(val('modShelfBay')),count=val('modShelfCount');
+  const candidate=M().setBayShelves(item.moduleSpec,bay,count);
+  L.remember(l);M().regenerate(item,{shelvesByBay:candidate.shelvesByBay});
+  notify('Prateleiras do vão '+(bay+1)+' distribuídas igualmente.');
+  return result(selected);
+ }
+ if(action==='moduleEqualHorizontal'){
+  const bay=Number(val('modHorizontalBay')),count=val('modHorizontalSpaces');
+  const candidate=M().equalHorizontal(item.moduleSpec,bay,count);
+  L.remember(l);M().regenerate(item,{fixedShelves:candidate.fixedShelves});
+  notify('Altura do vão '+(bay+1)+' dividida em '+count+' espaços iguais.');
+  return result(selected);
+ }
  if(action==='moduleAddDivider'){
   const pct=Number(String(val('modDividerPct')).replace(',','.'));
   if(!Number.isFinite(pct)||pct<=0||pct>=100)throw Error('Informe uma posição entre 0 e 100%.');
   const candidate=M().addDivider(item.moduleSpec,pct/100);
   M().parts(candidate);
-  L.remember(l);M().regenerate(item,{vertical:candidate.vertical});
+  L.remember(l);M().regenerate(item,{bayLayoutMode:'manual',bayRules:[],vertical:candidate.vertical});
   return result(selected);
  }
  if(action==='moduleRemoveDivider'){
   const index=Number(ctx.arg);const vertical=[...(item.moduleSpec.vertical||[])];
   if(!Number.isInteger(index)||index<0||index>=vertical.length)throw Error('Divisória não encontrada.');
-  vertical.splice(index,1);M().parts({...item.moduleSpec,vertical});L.remember(l);
-  M().regenerate(item,{vertical});return result(selected);
+  vertical.splice(index,1);M().parts({...item.moduleSpec,bayLayoutMode:'manual',bayRules:[],vertical});L.remember(l);
+  M().regenerate(item,{bayLayoutMode:'manual',bayRules:[],vertical});return result(selected);
  }
  if(action==='moduleFit'){
   if(!l.confirmed)throw Error('Confirme primeiro as dimensões reais do ambiente antes do encaixe.');

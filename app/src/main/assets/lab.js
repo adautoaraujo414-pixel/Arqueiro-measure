@@ -441,6 +441,34 @@ function mount(p,ops){
     remember(l);Object.assign(selectedItem,next);selectedItem.productionApproval=false;
     save();refresh();ops.toast('Posição '+axis.toUpperCase()+' = '+fmt(next[axis])+' mm.');return;
    }
+   if(a==='cornerCreate'){
+    const item=globalThis.ArqueCorner45.create(globalThis.ArqueModules);
+    if(item.w>l.width||item.d>l.depth||item.z+item.height>l.height)throw Error('Ambiente pequeno para o canto de 800 × 800 × 730 mm. Confirme as medidas.');
+    item.x=Math.max(0,Math.min(l.width-item.w,100));item.y=Math.max(0,Math.min(l.depth-item.d,100));
+    remember(l);l.items.push(item);ensureModuleCodes(l);selected=item.id;selectedPartKey='';focusedModule=item.id;
+    save();refresh();ops.toast('Canto 45° inserido. Ajuste chanfro, porta e cotas no editor.');return;
+   }
+   if(a==='cornerUpdate'){
+    const obj=l.items.find(i=>i.id===selected);
+    if(obj?.kind!=='module'||!obj.moduleSpec.corner45?.enabled)throw Error('Selecione um módulo de canto 45°.');
+    const s={...obj.moduleSpec,corner45:{...obj.moduleSpec.corner45,chamfer:root.querySelector('#cornerChamfer')?.value,
+      shelves:root.querySelector('#cornerShelves')?.value},doorCount:Number(root.querySelector('#cornerDoor')?.value),
+      caseMaterial:String(root.querySelector('#cornerMaterial')?.value||'').trim(),frontMaterial:String(root.querySelector('#cornerFrontMaterial')?.value||'').trim(),
+      leftFiller:root.querySelector('#cornerFillerLeft')?.value,rightFiller:root.querySelector('#cornerFillerRight')?.value};
+    const checked=globalThis.ArqueModules.check(s);
+    globalThis.ArqueModules.parts(checked);
+    remember(l);globalThis.ArqueModules.regenerate(obj,checked);obj.productionApproval=false;obj.hingePlan=null;
+    selectedPartKey='';save();refresh();ops.toast('Contornos e peças do canto recalculados. Conferir montagem angular.');return;
+   }
+   if(a==='cornerExport'){
+    const obj=l.items.find(i=>i.id===selected);
+    if(obj?.kind!=='module'||!obj.moduleSpec.corner45?.enabled)throw Error('Selecione um canto 45°.');
+    const xml=globalThis.ArqueCorner45.svgTechnical(obj.moduleSpec);
+    const url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml;charset=utf-8'})),link=document.createElement('a');
+    link.href=url;link.download=(obj.code||'arque-canto')+'-contorno-45.svg';document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    ops.toast('Desenho técnico SVG exportado. Não representa programação CNC.');return;
+   }
    if(a==='fabCorner45'){
     const F=globalThis.ArqueFabrication,guide=F.create45(l,root.querySelector('#fabCornerBack')?.value,root.querySelector('#fabCornerSide')?.value,
      {reach:root.querySelector('#fabCornerReach')?.value,clearance:root.querySelector('#fabCornerClearance')?.value});

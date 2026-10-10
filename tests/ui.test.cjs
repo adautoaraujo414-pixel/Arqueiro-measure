@@ -1,7 +1,7 @@
 /* Browser-like UI/persistence smoke test (jsdom + fake-indexeddb). */
 const fs=require('node:fs'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const html=fs.readFileSync('app/src/main/assets/index.html','utf8');
-const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
+const core=fs.readFileSync('app/src/main/assets/core.js','utf8'),cut=fs.readFileSync('app/src/main/assets/cut.js','utf8'),lab=fs.readFileSync('app/src/main/assets/lab.js','utf8'),app=fs.readFileSync('app/src/main/assets/app.js','utf8');
 const storage=new IDBFactory();const sleep=(ms=40)=>new Promise(r=>setTimeout(r,ms));
 async function launch(){
  const dom=new JSDOM(html,{url:'https://appassets.arque.invalid/index.html',runScripts:'outside-only',pretendToBeVisual:true});
@@ -11,7 +11,7 @@ async function launch(){
  w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
- w.eval(core);w.eval(cut);w.eval(app);
+ w.eval(core);w.eval(cut);w.eval(lab);w.eval(app);
  await sleep(90);return {dom,w,doc:w.document};
 }
 function click(doc,act,arg){const nodes=[...doc.querySelectorAll('[data-action]')];let b=nodes.find(x=>x.dataset.action===act&&(arg===undefined||x.dataset.arg===arg));if(!b&&act==='openWorkspace')b=doc.querySelector('[data-subtab="'+arg+'"]');assert(b,'Action not found: '+act+' '+arg);b.click();}
@@ -80,22 +80,30 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('.studio-page').length===2,'multiple named sheets');
  click(doc,'studioSelect',doc.querySelector('.studio-page').dataset.arg);await sleep(40);
  assert(doc.querySelector('.studio-paper-head').textContent.includes('Parede da pia'),'can reopen first sheet');
- // Unified 2D lab: drawing tools, real dimensions and modes share the same sheet.
- click(doc,'studioMode','laboratorio');await sleep(40);
- assert(doc.querySelector('#studioTool option[value="cabinet"]'),'cabinet tool available');
- assert(doc.querySelector('#studioTool option[value="drawers"]'),'drawer tool available');
- assert(doc.querySelector('#studioReferencePhoto'),'photo reference selector available');
- const labCanvas=doc.getElementById('studioCanvas');
- labCanvas.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
- const tool=doc.getElementById('studioTool');tool.value='cabinet';tool.dispatchEvent(new w.Event('change',{bubbles:true}));
- for(const [type,x,y] of [['pointerdown',50,100],['pointermove',240,320],['pointerup',240,320]]){
-  const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:18},clientX:{value:x},clientY:{value:y}});
-  if(typeof labCanvas['on'+type]==='function')labCanvas['on'+type](ev);else labCanvas.dispatchEvent(ev);
- }
- await sleep(65);
- assert.equal(labCanvas.dataset.strokeCount,'3','lab furniture is stored alongside original sketch strokes');
- assign(doc,'studioElementMm','2400');click(doc,'studioSetMeasure');await sleep(65);
- assert(doc.querySelector('#studioElementMm').value==='2400','dimension attached to last drawn cabinet');
+ // Laboratorio geometrico e uma area 2D propria ligada a um ambiente.
+ click(doc,'studioMode','laboratorio');await sleep(60);
+ assert(doc.querySelector('#labBoard'),'Laboratorio exibe planta dimensional');
+ assert(doc.querySelector('[data-lab="tool"][data-arg="base"]'),'modulo de armario base');
+ assert(doc.querySelector('[data-lab="tool"][data-arg="sink"]'),'cuba posicionavel');
+ assert(doc.querySelector('[data-lab="tool"][data-arg="filler"]'),'tamponamento posicionavel');
+ assert(doc.querySelector('[data-lab="tool"][data-arg="cava"]'),'puxador cava em 2D');
+ const labClick=(action,arg)=>{const el=[...doc.querySelectorAll('[data-lab="'+action+'"]')].find(x=>arg===undefined||x.dataset.arg===arg);assert(el,'Lab action '+action+' '+arg);el.click();};
+ labClick('tool','base');
+ let labBoard=doc.getElementById('labBoard');
+ labBoard.getBoundingClientRect=()=>({left:0,top:0,width:350,height:280});
+ const ev=new w.Event('pointerdown',{bubbles:true,cancelable:true});
+ Object.defineProperties(ev,{pointerId:{value:18},isPrimary:{value:true},clientX:{value:80},clientY:{value:80}});
+ labBoard.dispatchEvent(ev);
+ await sleep(70);
+ assert(doc.querySelectorAll('#labBoard [data-lab-object]').length===1,'base posicionada em milimetros');
+ assert(doc.querySelector('#labName'),'painel de edicao da peca');
+ assign(doc,'labName','Base sob a pia');
+ labClick('properties');await sleep(65);
+ assert(doc.body.textContent.includes('Base sob a pia'),'nome da peca editado');
+ labClick('view','front');await sleep(40);
+ assert(doc.getElementById('labBoard').getAttribute('aria-label').includes('Vista frontal'),'vista frontal separada');
+ labClick('view','plan');await sleep(40);
+ assert(doc.querySelectorAll('#labBoard [data-lab-object]').length===1,'planta retorna com a base salva');
  click(doc,'studioMode','planta');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'floor plan mode reuses same drawing');
 click(doc,'studioMode','esboco');await sleep(40);

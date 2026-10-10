@@ -283,7 +283,7 @@ function parts(spec){
    if(axial-entry.height/2<0||axial+entry.height/2>innerHeight)throw Error(entry.label+' invade tampo ou base; altere altura/posição.');
    panel('extra-'+entry.id,entry.label+' / vão '+(entry.bay+1),usable,entry.height,1,t,s.caseMaterial,s.grainCase,0,1,
     'Fixação no vão; altura do painel '+entry.height+' mm, profundidade de instalação disponível '+depth+' mm'+(entry.type==='cavaRail'?'; USINAGEM da cava deve ser programada separadamente':'')+'.');
-   if(entry.type==='cavaRail')warnings.push('Régua de cava: recorte/perfil não foi gerado automaticamente; definir fresagem, batente e folgas na produção.');
+   if(entry.type==='cavaRail')warnings.push('USINAGEM DA CAVA PENDENTE: recorte/perfil não foi gerado automaticamente; definir fresagem, batente e folgas na produção.');
   }
  }
  for(const [i,o] of s.fixedShelves.entries()){

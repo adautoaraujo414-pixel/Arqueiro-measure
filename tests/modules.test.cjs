@@ -54,4 +54,55 @@ A.notEqual(groups['MDF 18 mm · 18 mm'][0].id,groups['MDF 18 mm · 18 mm'][6].id
 const old=JSON.stringify(project);
 A.equal(M.groupedCutRows(project,'sala')['MDF 18 mm · 18 mm'],undefined);
 A.equal(JSON.stringify(project),old,'geração de peças não altera as medidas de projeto');
-console.log('Motor de módulos: dimensões, divisórias, reuso e grupos por material OK.');
+// Novos métodos de montagem e folgas registradas pelo profissional.
+const over=M.parts({...model,construction:'over'});
+A.equal(find(over.parts,'side').w,694);
+A.equal(find(over.parts,'topbottom').w,800);
+A.equal(find(M.parts({...model,doorTopDiscount:12,doorBottomDiscount:6}).parts,'front').w,708);
+const fixed=M.parts({...model,fixedShelves:[{bay:0,at:0.5}]});
+A.equal(find(fixed.parts,'fixed-0').w,760);
+A.throws(()=>M.parts({...model,fixedShelves:[{bay:2,at:0.5}]}),/inexistente/);
+const drawer=M.parts({...model,accessories:[{
+ type:'drawer',bay:0,count:1,slideSide:12.5,rearClearance:20,frontClearance:10,height:140,slideLength:500
+}]});
+A.equal(find(drawer.parts,'acc-0-sides').w,530);
+A.equal(find(drawer.parts,'acc-0-sides').qty,2);
+A.equal(find(drawer.parts,'acc-0-ends').w,703);
+A.equal(find(drawer.parts,'acc-0-bottom').w,739);
+A.equal(find(drawer.parts,'acc-0-bottom').thickness,6);
+const tempero=M.parts({...model,accessories:[{
+ type:'spice',bay:0,count:2,slideSide:10,rearClearance:15,frontClearance:10,height:120,slideLength:450
+}]});
+A.equal(find(tempero.parts,'acc-0-sides').qty,4);
+A.match(find(tempero.parts,'acc-0-bottom').name,/Porta-temperos/);
+A.throws(()=>M.parts({...model,accessories:[{type:'drawer',bay:0,count:1,slideSide:12.5,rearClearance:20,frontClearance:10,height:140,slideLength:700}]}),/corrediça maior/);
+A.throws(()=>M.parts({...model,accessories:[{type:'drawer',bay:0,count:6,slideSide:12.5,rearClearance:20,frontClearance:10,height:220,slideLength:500}]}),/ultrapassam/);
+A.equal(M.saveTemplate(state,{...model,construction:'over',fixedShelves:[{bay:0,at:0.5}]},'Base com tampo sobreposto').spec.fixedShelves.length,1);
+// Perfis livres só são referências geométricas: não entram em corte nem CNC.
+const W=require('../app/src/main/assets/workshop.js');
+const profileState={};
+const original={kind:'pen',points:[[12,20],[112,20],[112,70]]};
+const prof=W.saveProfile(profileState,original,'Moldura lisa personalizada');
+A.equal(prof.width,100);A.equal(prof.height,50);
+A.equal(prof.manufacturable,false);
+A.equal(original.points[0][0],12,'traçado original preservado');
+const instProf=W.insertProfile(prof,300,150,'front');
+A.equal(instProf.w,100);A.equal(instProf.d,50);
+instProf.w=140;
+A.equal(prof.width,100,'salvar um perfil não muda o molde base');
+A.throws(()=>W.saveProfile(profileState,{kind:'pen',points:[[0,0],[1,1]]},'Pequena'),/pequena/);
+const fitted=W.fit({...model,leftFiller:30,rightFiller:30},1000,5,5,M);
+A.equal(fitted.spec.width,930);
+A.equal(fitted.installed,990);
+A.equal(fitted.remaining,10);
+A.throws(()=>W.fit(model,200,80,80,M),/insuficiente/);
+const sampleLayout={width:1200,depth:850,height:2600,confirmed:true,items:[{...M.instantiate({id:'tmp',spec:model},0,0),x:30,y:30}]};
+A.equal(W.roomAudit(sampleLayout).errors.length,0);
+sampleLayout.items.push({...M.instantiate({id:'tmp',spec:model},200,100)});
+A(W.roomAudit(sampleLayout).errors.some(x=>x.code==='OVERLAP'));
+sampleLayout.items.pop();
+sampleLayout.items[0].x=500;
+A(W.roomAudit(sampleLayout).errors.some(x=>x.code==='OUTSIDE'));
+sampleLayout.confirmed=false;
+A(W.roomAudit(sampleLayout).warnings.some(x=>x.code==='UNCONFIRMED'));
+console.log('Motor de módulos: montagem, desconto de corrediças, perfis livres e auditoria de ambiente OK.');

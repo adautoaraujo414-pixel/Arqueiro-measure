@@ -132,6 +132,10 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assign(doc,'modHorizontalSpaces','3');labClick('moduleEqualHorizontal');await sleep(70);
  assert(doc.querySelectorAll('.lab-divider-line').length>=4,'divisões horizontais iguais criadas');
  assert(doc.getElementById('mod_baseArrangement'),'montagem de tampo/base por vão disponível');
+ const baseSelect=doc.getElementById('mod_baseArrangement');baseSelect.value='byBay';
+ labClick('moduleApply');await sleep(80);
+ assert(doc.body.textContent.includes('Tampo/base vão 1'),'tampo/base cortados por compartimento aparecem no cálculo');
+
 
  labClick('moduleSaveTemplate');await sleep(60);
  assert(doc.querySelectorAll('#moduleLibrary option').length===2,'model saved into global catalog');

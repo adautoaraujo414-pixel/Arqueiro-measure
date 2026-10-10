@@ -1,9 +1,10 @@
 'use strict';
 const A=require('node:assert/strict'),M=require('../app/src/main/assets/modules.js'),K=require('../app/src/main/assets/kitchen-catalog.js');
 const V=require('../app/src/main/assets/lab-visual.js'),W=require('../app/src/main/assets/workshop.js');
+const Corner=require('../app/src/main/assets/corner45.js');globalThis.ArqueCorner45=Corner;
 globalThis.ArqueModules=M;
 const all=K.catalog();
-A.equal(all.length,24,'24 presets originais de cozinha');
+A.equal(all.length,48,'48 famílias de referência editável Arque');
 A(all.some(x=>x.group==='Aéreos'&&x.id==='upper-microwave'));
 A(all.some(x=>x.group==='Torres'&&x.id==='tower-oven'));
 A(all.some(x=>x.group==='Eletrodomésticos'&&x.id==='microwave'));
@@ -13,7 +14,7 @@ for(const p of all){
  A.equal(item.presetId,p.id);
  A.equal(item.w,p.w);A.equal(item.d,p.d);A.equal(item.height,p.h);
  A.equal(item.z,p.z);
- if(p.kind==='module'){
+ if(p.kind==='module'||p.kind==='corner45'){
   A.equal(item.kind,'module');
   A(M.parts(item.moduleSpec).parts.length>2);
   A.equal(item.moduleSpec.width,p.w);
@@ -22,6 +23,10 @@ for(const p of all){
   A.equal(item.manufacturerVerified,false);
  }
 }
+A(K.create('base-4drawers',M).moduleSpec.accessories.some(a=>a.type==='drawer'&&a.count===4));
+A(K.create('base-spice',M).moduleSpec.accessories.some(a=>a.type==='spice'&&a.count===3));
+A(K.create('corner-pentagonal',M).moduleSpec.corner45.enabled);
+A.equal(K.create('corner-pentagonal-open',M).moduleSpec.doorCount,0);
 A.throws(()=>K.create('fake-model',M),/não encontrado/);
 const microwave=K.create('microwave',M);
 A.equal(microwave.kind,'appliance');
@@ -75,4 +80,4 @@ const flat=Object.values(cut).flat();
 A(flat.some(x=>x.sourceModuleId===upper.id),'corte do móvel incluído');
 A(!flat.some(x=>x.sourceModuleId===microwave.id),'micro-ondas não vira MDF no corte');
 A(!flat.some(x=>x.sourceModuleId===led.id),'LED não vira MDF no corte');
-console.log('Catálogo: 23 presets, modelos independentes, eletros, luz, giro e corte seguro OK.');
+console.log('Catálogo: 48 presets, gavetas reais, cantos, banheiros, salas, eletros, luz e corte seguro OK.');

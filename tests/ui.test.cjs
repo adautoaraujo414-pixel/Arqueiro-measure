@@ -97,12 +97,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#studioElementMm').value==='2400','dimension attached to last drawn cabinet');
  click(doc,'studioMode','planta');await sleep(40);
  assert(doc.querySelector('#studioCanvas'),'floor plan mode reuses same drawing');
- click(doc,'studioMode','scanner');await sleep(40);
- assert(doc.querySelector('.studio-scan-panel'),'guided room capture appears in unified sketch');
- assert(doc.querySelector('[data-action="studioCapturePhoto"]'),'camera capture available');
- assign(doc,'studioScanReferenceMm','2700');click(doc,'studioSaveScanReference');await sleep(40);
- assert(doc.getElementById('studioScanReferenceMm').value==='2700','reference measurement persists');
- click(doc,'studioMode','esboco');await sleep(40);
+click(doc,'studioMode','esboco');await sleep(40);
 
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);

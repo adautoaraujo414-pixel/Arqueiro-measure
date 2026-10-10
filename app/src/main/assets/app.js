@@ -301,6 +301,7 @@ function studioObjectPaths(kind,x1,y1,x2,y2){
 }
 
 function studioView(){
+ if(studioMode==='laboratorio')return '<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><strong class="studio-compact-title">Esboço + Laboratório</strong></div><div class="studio-mode-tabs">'+['esboco','planta','laboratorio'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')+'</div></div><div id="arqueLab" aria-label="Editor técnico do laboratório 2D"></div>';
  const p=project(),pages=studioPages(p),page=studioCurrent(p);if(page)studioPageId=page.id;
  return `<div class="studio-hero studio-hero-compact"><div class="studio-hero-actions"><label for="studioNewName" class="studio-compact-title">Esboço + Laboratório <small>· ${pages.length} folhas</small></label><input id="studioNewName" aria-label="Nome da nova folha" placeholder="Nome da folha" maxlength="100">${btn('+ Nova folha','studioNew','','primary')}</div><div class="studio-mode-tabs">${['esboco','planta','laboratorio'].map(mode=>btn(studioModeTitle(mode),'studioMode',mode,studioMode===mode?'primary':'')).join('')}</div></div>
  <div class="studio-layout"><aside class="studio-sidebar"><div class="eyebrow">FOLHAS · ${pages.length}</div>${pages.map((x,i)=>`<button class="studio-page ${page&&page.id===x.id?'on':''}" data-action="studioSelect" data-arg="${escape(x.id)}"><span class="studio-page-num">${String(i+1).padStart(2,'0')}</span><span>${escape(x.name)}</span><span>↗</span></button>`).join('')||'<div class="empty">Adicione sua primeira folha A4.</div>'}</aside>
@@ -316,6 +317,7 @@ function studioView(){
  `:'<div class="empty">Escolha um nome e adicione uma folha A4 para começar.</div>'}</div></div>`;
 }
 function setupStudio(){
+ if(studioMode==='laboratorio'){if(project()&&window.ArqueLab)window.ArqueLab.mount(project(),{persist,toast});return;}
  const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;
  const page=studioCurrent(p);if(!page)return;
  const ctx=canvas.getContext('2d');if(!ctx)return;

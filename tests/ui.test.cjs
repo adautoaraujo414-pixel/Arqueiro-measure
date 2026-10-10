@@ -89,7 +89,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  const tool=doc.getElementById('studioTool');tool.value='cabinet';tool.dispatchEvent(new w.Event('change',{bubbles:true}));
  for(const [type,x,y] of [['pointerdown',50,100],['pointermove',240,320],['pointerup',240,320]]){
   const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:18},clientX:{value:x},clientY:{value:y}});
-  labCanvas.dispatchEvent(ev);
+  if(typeof labCanvas['on'+type]==='function')labCanvas['on'+type](ev);else labCanvas.dispatchEvent(ev);
  }
  await sleep(65);
  assert.equal(labCanvas.dataset.strokeCount,'3','lab furniture is stored alongside original sketch strokes');

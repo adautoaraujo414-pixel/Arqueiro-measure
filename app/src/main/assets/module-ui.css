@@ -31,3 +31,21 @@
 .lab-module-export label{max-width:460px}
 @media(max-width:900px){.lab-module-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.lab-module-panel{padding:9px}.lab-module-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.lab-module-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Ferramentas de vãos: primeiro o comando rápido, depois as opções de precisão. */
+.lab-bay-tool{border:1px solid #c7dce8;background:#f2f8fc;border-radius:10px;padding:12px;margin-top:15px}
+.lab-bay-tool h4{margin:0 0 5px;color:#1e637f}
+.lab-bay-tool .lab-divider-add{align-items:end}
+.lab-bay-tool button[data-lab="moduleEqualBays"]{background:#277da5;color:#fff;border-color:#277da5}
+.lab-bay-custom{margin-top:10px;border-top:1px solid #d8e8f0;padding-top:8px}
+.lab-bay-custom summary{font-size:13px;font-weight:650;color:#23678b;cursor:pointer}
+.lab-bay-cells{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin:10px 0}
+.lab-bay-cells label{font-size:12px;min-width:0}
+.lab-bay-cells input{width:100%}
+.lab-bay-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 0}
+.lab-bay-two>div{padding:10px;border:1px solid #dae9f1;border-radius:8px;background:#f9fcfe;min-width:0}
+.lab-bay-two strong{display:block;font-size:13px;margin-bottom:6px;color:#2d607d}
+.lab-bay-two small{color:#6a8796;font-size:11px}
+.lab-bay-two .lab-divider-add{gap:6px}
+.lab-bay-two .lab-divider-add label{min-width:120px;flex:1}
+@media(max-width:700px){.lab-bay-two{grid-template-columns:1fr}.lab-bay-tool{padding:9px}}

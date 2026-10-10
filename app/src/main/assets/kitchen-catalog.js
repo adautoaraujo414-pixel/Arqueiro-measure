@@ -29,18 +29,51 @@ const types=[
  {id:'countertop',group:'Bancadas',label:'Bancada de pedra · referência',kind:'countertop',w:1600,d:600,h:35,z:865},
  {id:'led-strip',group:'Iluminação',label:'Fita LED linear',kind:'led',w:900,d:20,h:10,z:1450,color:'#ffd292'},
  {id:'led-profile',group:'Iluminação',label:'Perfil LED embutido',kind:'led',w:1200,d:35,h:18,z:1450,color:'#fff1ca'},
- {id:'led-shelf',group:'Iluminação',label:'LED sob prateleira',kind:'led',w:600,d:18,h:10,z:1200,color:'#ffe3ad'}
+ {id:'led-shelf',group:'Iluminação',label:'LED sob prateleira',kind:'led',w:600,d:18,h:10,z:1200,color:'#ffe3ad'},
+ // Famílias de modulação autoral Arque; tamanhos iniciais, editáveis conforme obra.
+ {id:'base-1door',group:'Inferiores',label:'Balcão 1 porta · estreito',kind:'module',w:450,d:560,h:730,doors:1,shelves:1,z:100},
+ {id:'base-3doors',group:'Inferiores',label:'Balcão 3 portas',kind:'module',w:1200,d:560,h:730,doors:3,shelves:1,z:100},
+ {id:'base-4doors',group:'Inferiores',label:'Balcão 4 portas',kind:'module',w:1600,d:560,h:730,doors:4,shelves:1,z:100},
+ {id:'base-3drawers',group:'Inferiores',label:'Gaveteiro 3 gavetas',kind:'module',w:550,d:560,h:730,doors:0,shelves:0,z:100,drawers:3},
+ {id:'base-4drawers',group:'Inferiores',label:'Gaveteiro 4 gavetas',kind:'module',w:550,d:560,h:730,doors:0,shelves:0,z:100,drawers:4},
+ {id:'base-spice',group:'Inferiores',label:'Porta-temperos extraível',kind:'module',w:350,d:560,h:730,doors:0,shelves:0,z:100,spice:3},
+ {id:'base-cooktop',group:'Inferiores',label:'Balcão sob cooktop',kind:'module',w:900,d:560,h:730,doors:2,shelves:0,z:100,warning:'Recorte do cooktop e ventilação não são criados automaticamente. Confirmar manual do aparelho e pedra.'},
+ {id:'base-corner-90',group:'Cantos',label:'Encontro de balcões a 90° · ajustar canto',kind:'module',w:800,d:560,h:730,doors:1,shelves:1,z:100,warning:'É um armário reto para compor encontro a 90°, NÃO é gabinete cego/canto fabricável sem definir junção.'},
+ {id:'corner-pentagonal',group:'Cantos',label:'Canto 45° pentagonal · 1 porta',kind:'corner45',w:800,d:800,h:730,doors:1,shelves:0,z:100},
+ {id:'corner-pentagonal-open',group:'Cantos',label:'Canto 45° pentagonal · aberto',kind:'corner45',w:800,d:800,h:730,doors:0,shelves:2,z:100},
+ {id:'upper-1door',group:'Aéreos',label:'Aéreo 1 porta',kind:'module',w:450,d:350,h:700,doors:1,shelves:1,z:1500},
+ {id:'upper-3doors',group:'Aéreos',label:'Aéreo 3 portas',kind:'module',w:1200,d:350,h:700,doors:3,shelves:1,z:1500},
+ {id:'upper-open',group:'Aéreos',label:'Nicho aéreo aberto · prateleiras',kind:'module',w:800,d:350,h:700,doors:0,shelves:2,z:1500},
+ {id:'upper-shelf',group:'Aéreos',label:'Aéreo horizontal aberto',kind:'module',w:1000,d:350,h:350,doors:0,shelves:1,z:1850},
+ {id:'upper-hood',group:'Aéreos',label:'Módulo sob coifa · nicho aberto',kind:'module',w:900,d:350,h:450,doors:0,shelves:0,z:1600,warning:'Verificar distância ao cooktop, calor e manual da coifa.'},
+ {id:'tower-2niches',group:'Torres',label:'Torre com dois nichos técnicos',kind:'module',w:700,d:560,h:2200,doors:0,shelves:0,z:0,fixed:[.35,.68],warning:'Aparelhos devem ser encaixados com ventilação e medidas de fabricante.'},
+ {id:'tower-cupboard',group:'Torres',label:'Torre armário 4 portas',kind:'module',w:800,d:560,h:2200,doors:4,shelves:3,z:0},
+ {id:'bath-vanity',group:'Banheiros',label:'Gabinete banheiro 2 portas',kind:'module',w:800,d:480,h:600,doors:2,shelves:0,z:220,back:'none'},
+ {id:'bath-drawers',group:'Banheiros',label:'Gabinete banheiro 2 gavetas',kind:'module',w:800,d:480,h:600,doors:0,shelves:0,z:220,drawers:2,back:'none'},
+ {id:'bath-upper',group:'Banheiros',label:'Armário espelheira · referência',kind:'module',w:700,d:180,h:700,doors:2,shelves:2,z:1300,warning:'Espelho e fixação exigem material/ferragens específicos.'},
+ {id:'living-low',group:'Salas e painéis',label:'Home slim baixo · 2 portas',kind:'module',w:1600,d:350,h:300,doors:2,shelves:0,z:150},
+ {id:'living-niche',group:'Salas e painéis',label:'Nicho decorativo aberto',kind:'module',w:600,d:300,h:600,doors:0,shelves:2,z:1100},
+ {id:'living-panel',group:'Salas e painéis',label:'Painel decorativo liso',kind:'panel',w:1600,d:18,h:2000,z:0},
+ {id:'led-niche',group:'Iluminação',label:'LED de nicho',kind:'led',w:450,d:18,h:10,z:1200,color:'#ffe6b4'}
 ];
 const catalog=()=>copy(types);
 function definition(id){return types.find(x=>x.id===id)||null;}
 function create(id,engine=globalThis.ArqueModules){
  const p=definition(id);
  if(!p)throw Error('Modelo não encontrado no catálogo Arque.');
+ if(p.kind==='corner45'){
+  if(!globalThis.ArqueCorner45)throw Error('Módulo pentagonal de canto indisponível.');
+  const item=globalThis.ArqueCorner45.create(engine);
+  const config=engine.check({...item.moduleSpec,doorCount:p.doors,corner45:{enabled:true,chamfer:380,shelves:p.shelves}});
+  engine.regenerate(item,config);item.presetId=p.id;item.catalogGroup=p.group;return item;
+ }
  if(p.kind==='module'){
   if(!engine||!engine.parts)throw Error('Motor paramétrico indisponível.');
   const s=engine.standard();
   Object.assign(s,{name:p.label,width:p.w,depth:p.d,height:p.h,doorCount:p.doors,shelfCount:p.shelves,back:p.back||s.back,
-   fixedShelves:(p.fixed||[]).map(at=>({bay:0,at}))});
+   fixedShelves:(p.fixed||[]).map(at=>({bay:0,at})),
+   accessories:p.drawers?[{type:'drawer',bay:0,count:p.drawers,slideSide:12.7,rearClearance:20,frontClearance:20,height:120,slideLength:400}]:
+    p.spice?[{type:'spice',bay:0,count:p.spice,slideSide:12.7,rearClearance:20,frontClearance:20,height:100,slideLength:400}]:[]});
   const result=engine.parts(s);
   const item=engine.instantiate({id:'arque-'+p.id,version:1,spec:result.spec},100,100);
   item.z=p.z;item.presetId=p.id;item.catalogGroup=p.group;

@@ -118,5 +118,5 @@ A.equal(avulso.grain,true);A.equal(avulso.sourceRoomId,'cozinha');
 panel.material='MDF 25 mm';panel.thickness=25;
 A(M.groupedCutRows(project,'cozinha')['MDF 25 mm · 25 mm'][0].sourcePanelId==='painel-avulso');
 panel.w=10;
-A.throws(()=>M.groupedCutRows(project,'cozinha'),/inválido/);
+A.throws(()=>M.groupedCutRows(project,'cozinha'),/deve estar entre/);
 console.log('Motor de módulos: montagem, corrediças, molduras e peças avulsas no corte OK.');

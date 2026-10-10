@@ -115,3 +115,12 @@
 .lab-quick-edit input,.lab-quick-edit select{max-width:100%;min-width:0}
 .lab-quick-edit button{margin:7px 5px 4px 0;background:#eff6fb}
 @media(max-width:540px){.lab-quick-edit .lab-module-grid{grid-template-columns:1fr}}
+
+/* Posição de aparelhos e alinhamento do esboço: controles compactos na lateral. */
+.lab-align-box,.lab-auto-sketch{border:1px solid #cbdfeb;background:#f7fbfe;border-radius:10px;padding:11px;margin:13px 0}
+.lab-align-box h4,.lab-auto-sketch h4{margin:0 0 6px;color:#235f80;font-size:14px}
+.lab-align-box label,.lab-auto-sketch label{display:block;min-width:0;font-size:12px}
+.lab-align-box select,.lab-align-box input,.lab-auto-sketch input{width:100%;max-width:100%;min-width:0}
+.lab-align-box button,.lab-auto-sketch button{background:#edf6fa;color:#1b6286;font-weight:600;margin:6px 6px 2px 0}
+.lab-auto-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:7px 0}
+@media(max-width:590px){.lab-auto-controls{grid-template-columns:1fr}}

@@ -81,7 +81,7 @@ function scene(layout,selectedId='',opts={}){
   };
   const applianceType=item.type||item.kind;
   const body=finishColor(spec.caseMaterial||item.material||'branco'),front=finishColor(spec.frontMaterial||spec.caseMaterial||'branco');
-  const special=['sink','fridge','stove','cooktop','appliance'].includes(item.kind)?'#8a9fa7':item.kind==='led'?'#f4d696':item.kind==='countertop'?'#b4aea0':null;
+  const special=['sink','fridge','stove','cooktop','appliance'].includes(item.kind)?'#8a9fa7':item.kind==='led'?(item.lightOn===false?'#a2aeb3':'#f4d696'):item.kind==='countertop'?'#b4aea0':null;
   let content='<g data-lab-object="'+esc(item.id)+'" data-lab-code="'+esc(code)+'" class="'+(sel?'lab-selected':'')+'" tabindex="0" role="button" aria-label="'+esc(code+' '+item.label)+'">';
   if(mode==='fronts'||item.kind!=='module'){
    content+=surfaces(x,y,z,w,d,h,proj,special?[special,'#8d8e87','#d2d2cb']:body,sel);
@@ -112,6 +112,20 @@ function scene(layout,selectedId='',opts={}){
     const fy=y+d+Math.max(1,t/8),z1=z+Math.min(t,h/3),z2=z+h-Math.min(t,h/3);
     // Frentes reais: numero e dimensoes seguem porta global ou por vao.
     const A=globalThis.ArqueModules,checked=A?.check(spec),bays=checked?A.bayBounds(checked):[];
+    // Módulos sem portas exibem o nicho aberto e a distribuição interna:
+    // o espaço vazado continua vinculado às mesmas divisórias do cálculo de MDF.
+    if(checked&&!checked.doorCount&&checked.doorMode!=='byBay'){
+     for(const [j,b] of bays.entries()){
+      const left=x+b.start+Math.max(2,t/2),right=x+b.end-Math.max(2,t/2),frontY=fy+2;
+      content+=poly([[left,frontY,z1],[right,frontY,z1],[right,frontY,z2],[left,frontY,z2]],proj,'#c5cbc9','#91a6a8',1);
+      const n=checked.shelvesByBay?.[j]??checked.shelfCount??0;
+      const levels=[...Array.from({length:n},(_,k)=>(k+1)/(n+1)),...(checked.fixedShelves||[]).filter(f=>f.bay===j).map(f=>f.at)];
+      for(const at of levels){
+       const heightAt=z1+(z2-z1)*at;
+       content+=line([left,frontY+2,heightAt],[right,frontY+2,heightAt],proj,front[1],Math.max(2,t/8));
+      }
+     }
+    }
     if(checked?.doorMode==='byBay'){
      for(const [j,b] of bays.entries()){
       const qty=checked.bayDoors[j]||0;

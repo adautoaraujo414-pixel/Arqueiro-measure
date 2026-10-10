@@ -64,6 +64,8 @@ jobs:
         run: node tests/align.test.cjs
       - name: 'Testar oficina avançada: L, ímã, cava, paredes e produção'
         run: node tests/advanced.test.cjs
+      - name: Testar cotas e seleção direta de peças 3D
+        run: node tests/precision.test.cjs
       - name: Auditoria dos quatro blocos do aplicativo
         run: node tests/audit.test.cjs
       - name: Testar interface e persistencia em navegador simulado
@@ -75,6 +77,8 @@ jobs:
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/alignment-ui.test.cjs
       - name: Testar seis ferramentas integradas do Laboratório
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/advanced-ui.test.cjs
+      - name: Testar cotas e ajuste fino no laboratório real
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/precision-ui.test.cjs
       - name: Registrar falhas da interface
         if: failure()
         env:

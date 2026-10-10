@@ -270,3 +270,12 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-workbar-compact{gap:4px}
 .photo-resize-actions{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0 12px}
 .photo-resize-actions button{min-height:38px}
+
+/* Photo annotation: tools and selected arrow controls float above the image. */
+.photo-workbar-compact .photo-ink-tools{position:absolute;z-index:12;right:12px;top:12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.94);padding:5px;border-radius:12px;box-shadow:0 2px 9px #0002}
+.photo-workbar-compact{position:relative;min-height:8px;padding:0!important;border:0!important}
+.photo-workbar-compact .photo-secondary-tools{display:none}
+.photo-workspace .photo-measure-stage{position:relative}
+.photo-measure-stage .photo-selected-actions{position:absolute;z-index:14;right:12px;bottom:12px;display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:12px;background:rgba(20,33,44,.88);color:#fff;font-size:12px}
+.photo-selected-actions button{border:0;background:#fff;color:#116b93;border-radius:8px;min-width:40px;min-height:38px;font-size:23px}
+.photo-workspace .photo-ink-tools .photo-palette-popover{position:absolute;top:46px;right:0;background:white;z-index:16}

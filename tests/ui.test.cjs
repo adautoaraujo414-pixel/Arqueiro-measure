@@ -141,6 +141,7 @@ click(doc,'studioMode','esboco');await sleep(40);
  assert(doc.body.textContent.includes('Adicione uma foto')||doc.body.textContent.includes('Zoom')||doc.body.textContent.includes('100%'),'photo zoom controls or empty state available');
  assert(doc.body.textContent.includes('Nova medida')||doc.body.textContent.includes('Adicione uma foto'),'distance workflow available when photo exists');
  click(doc,'openWorkspace','corte');await sleep();
+ const legacyBatch=doc.querySelector('#cutMaterial');legacyBatch.value='';click(doc,'cutChooseMaterial');await sleep(40);
  assign(doc,'cutName','Lateral');assign(doc,'cutW','800');assign(doc,'cutH','550');assign(doc,'cutQty','2');
  click(doc,'cutAdd');await sleep(90);
  assert(doc.body.textContent.includes('Lista')===false||doc.body.textContent.includes('Lateral'),'piece visible');
@@ -153,7 +154,7 @@ click(doc,'studioMode','esboco');await sleep(40);
  assert(doc.body.textContent.includes('Cliente persistência'),'client survives WebView reload');
 
  click(doc,'openClient');assert(doc.body.textContent.includes('Cozinha teste'),'project survives reload');
- click(doc,'openProject');click(doc,'openWorkspace','atelier');await sleep(40);assert(doc.querySelectorAll('.studio-page').length===2,'A4 pages survive reload');click(doc,'openWorkspace','corte');
+ click(doc,'openProject');click(doc,'openWorkspace','atelier');await sleep(40);assert(doc.querySelectorAll('.studio-page').length===2,'A4 pages survive reload');click(doc,'openWorkspace','corte');await sleep(35);assert(doc.querySelector('#cutMaterial'),'material batches survive reload');
  assert(doc.querySelector('[data-cut-field="w"]').value==='850','cut piece survives reload');
  // Mixed stock from two different modules, persisted per client/project.
  assign(doc,'cutName','Prateleira');assign(doc,'cutW','220');assign(doc,'cutH','300');assign(doc,'cutQty','3');

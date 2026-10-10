@@ -328,7 +328,15 @@ function studioView(){
 }
 function setupStudio(){
  if(studioMode==='laboratorio'){
-  if(project()&&window.ArqueLab)window.ArqueLab.mount(project(),{persist,toast,state,exportCutMaterial:(roomId,material)=>{
+  const container=document.getElementById('arqueLab');
+  if(!container)return;
+  container.innerHTML='<div class="notice" role="status">Preparando Laboratório da obra…</div>';
+  if(!project()||!window.ArqueLab?.mount){
+   container.innerHTML='<div class="notice lab-load-error" role="alert"><h3>Laboratório indisponível</h3><p>O editor não foi carregado nesta instalação. Reabra o aplicativo ou instale a atualização sem apagar os dados.</p></div>';
+   return;
+  }
+  try{
+   window.ArqueLab.mount(project(),{persist,toast,state,exportCutMaterial:(roomId,material)=>{
    if(!window.ArqueModules)throw Error('Motor de módulos indisponível.');
    const p=project(),group=window.ArqueModules.groupedCutRows(p,roomId),rows=group[material];
    if(!rows?.length)throw Error('Nenhuma peça para o material selecionado.');
@@ -346,7 +354,13 @@ function setupStudio(){
    }
    p.materialCutPlans[material]=previous;p.activeCutMaterial=material;subtab='corte';
    update();toast('Lote técnico enviado para revisão no plano de corte.');
-  }});
+   }});
+   if(!container.textContent.trim()&&!container.querySelector('#labBoard'))throw Error('Editor não apresentou conteúdo.');
+  }catch(err){
+   console.error('Arque Measure: falha ao montar Laboratório',err);
+   container.innerHTML='<div class="notice lab-load-error" role="alert"><h3>Não foi possível abrir o Laboratório</h3><p>Seus projetos e medições estão preservados. Abra Ambientes para conferir a obra, ou tente novamente.</p><p class="lab-technical-error">'+escape(err?.message||'Erro desconhecido')+'</p><div class="actions">'+btn('Tentar novamente','studioMode','laboratorio','primary')+btn('Abrir ambientes','openWorkspace','medidas')+'</div></div>';
+   toast('Falha no Laboratório: '+String(err?.message||err).slice(0,160));
+  }
   return;
  }
 

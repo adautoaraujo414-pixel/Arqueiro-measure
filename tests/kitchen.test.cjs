@@ -1,0 +1,66 @@
+'use strict';
+const A=require('node:assert/strict'),M=require('../app/src/main/assets/modules.js'),K=require('../app/src/main/assets/kitchen-catalog.js');
+const V=require('../app/src/main/assets/lab-visual.js'),W=require('../app/src/main/assets/workshop.js');
+globalThis.ArqueModules=M;
+const all=K.catalog();
+A.equal(all.length,23,'23 presets originais de cozinha');
+A(all.some(x=>x.group==='Aéreos'&&x.id==='upper-microwave'));
+A(all.some(x=>x.group==='Torres'&&x.id==='tower-oven'));
+A(all.some(x=>x.group==='Eletrodomésticos'&&x.id==='microwave'));
+A(all.some(x=>x.group==='Iluminação'&&x.id==='led-profile'));
+for(const p of all){
+ const item=K.create(p.id,M);
+ A.equal(item.presetId,p.id);
+ A.equal(item.w,p.w);A.equal(item.d,p.d);A.equal(item.height,p.h);
+ A.equal(item.z,p.z);
+ if(p.kind==='module'){
+  A.equal(item.kind,'module');
+  A(M.parts(item.moduleSpec).parts.length>2);
+  A.equal(item.moduleSpec.width,p.w);
+ }else{
+  A(item.visualReference,'eletrônico ou iluminação deve ser referência visual');
+  A.equal(item.manufacturerVerified,false);
+ }
+}
+A.throws(()=>K.create('fake-model',M),/não encontrado/);
+const microwave=K.create('microwave',M);
+A.equal(microwave.kind,'appliance');
+const reference=K.dimensions(microwave,{w:620,d:450,height:390,x:200,y:320,z:1200});
+A.equal(reference.w,620);A.equal(reference.height,390);
+A.equal(microwave.w,520,'editar referência não altera o template');
+A.throws(()=>K.dimensions(microwave,{w:0,d:450,height:390}),/Largura/);
+const upper=K.create('upper-microwave',M);
+A.equal(upper.moduleSpec.doorCount,0);
+A(upper.presetWarning.includes('ventilação'));
+const saved=M.saveTemplate({moduleTemplates:[]},upper.moduleSpec,'Micro com moldura');
+const again=M.instantiate(saved,200,100);
+M.regenerate(again,{width:900,depth:500});
+A.equal(upper.w,700,'modelos criados são instâncias independentes');
+A.equal(again.w,900);
+const fridge=K.create('fridge',M),led=K.create('led-strip',M);
+led.lightOn=false;
+const layout={width:3800,depth:3400,height:2700,confirmed:true,items:[upper,microwave,fridge,led]};
+const render=V.scene(layout,fridge.id,{angle:40,mode:'fronts'});
+A(render.includes('data-lab-object="'+microwave.id+'"'),'micro-ondas na cena espacial');
+A(render.includes('data-lab-object="'+led.id+'"'),'LED na cena espacial');
+A(render.includes('data-lab-object="'+fridge.id+'"'),'geladeira na cena espacial');
+A(!render.includes('NaN'),'dimensões numéricas');
+const on={...led,lightOn:true,lightColor:'#bbee77'};
+const viewOn=V.scene({...layout,items:[on]},on.id,{});
+A(viewOn.includes('#bbee77'),'cor LED efetivamente no SVG');
+const viewOff=V.scene({...layout,items:[led]},led.id,{});
+A(!viewOff.includes('#bbee77'),'LED desligado não aplica cor antiga');
+const other={...upper,rotation:90,x:100,y:100,z:100};
+const rect=V.scene({...layout,items:[other]},other.id,{});
+A.notEqual(rect,V.scene({...layout,items:[{...other,rotation:0}]},other.id,{}),'módulo gira no espaço');
+const audit={width:600,depth:1200,height:2600,confirmed:true,items:[{...M.instantiate({id:'test',spec:M.standard()},100,100),rotation:90}]};
+A.equal(W.roomAudit(audit).errors.length,1,'largura rotacionada considera profundidade externa');
+audit.width=1200;audit.depth=1200;
+A.equal(W.roomAudit(audit).errors.length,0,'cabe após aumentar o ambiente');
+const p={rooms:[{id:'r',name:'Cozinha'}],labLayouts:{r:{items:[upper,microwave,led]}}};
+const cut=M.groupedCutRows(p,'r');
+const flat=Object.values(cut).flat();
+A(flat.some(x=>x.sourceModuleId===upper.id),'corte do móvel incluído');
+A(!flat.some(x=>x.sourceModuleId===microwave.id),'micro-ondas não vira MDF no corte');
+A(!flat.some(x=>x.sourceModuleId===led.id),'LED não vira MDF no corte');
+console.log('Catálogo: 23 presets, modelos independentes, eletros, luz, giro e corte seguro OK.');

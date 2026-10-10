@@ -3,7 +3,7 @@ const A=require('node:assert/strict'),M=require('../app/src/main/assets/modules.
 const V=require('../app/src/main/assets/lab-visual.js'),W=require('../app/src/main/assets/workshop.js');
 globalThis.ArqueModules=M;
 const all=K.catalog();
-A.equal(all.length,23,'23 presets originais de cozinha');
+A.equal(all.length,24,'24 presets originais de cozinha');
 A(all.some(x=>x.group==='Aéreos'&&x.id==='upper-microwave'));
 A(all.some(x=>x.group==='Torres'&&x.id==='tower-oven'));
 A(all.some(x=>x.group==='Eletrodomésticos'&&x.id==='microwave'));

@@ -77,6 +77,8 @@ jobs:
           npm install --prefix /tmp/arque-ui-test --no-audit --no-fund jsdom@26 fake-indexeddb@6
           set -o pipefail
           NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs 2>&1 | tee ui-test.log
+      - name: Impedir tela branca ao carregar todos scripts no projeto novo
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/laboratory-boot.test.cjs
       - name: Testar laboratório inicial, toque e correção do esboço
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/alignment-ui.test.cjs
       - name: Testar seis ferramentas integradas do Laboratório

@@ -161,7 +161,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts';
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='';
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -174,7 +174,7 @@ function screen(p,state){
  out+='<div class="lab-views">'+button('▧ Ambiente 3D','view','iso',view==='iso')+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
  out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
  if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
- out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
  const visual=globalThis.ArqueVisual;
  out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
  if(view==='iso'){
@@ -189,9 +189,9 @@ function screen(p,state){
    '</div><p class="lab-fine">Seleção, dimensões e peças são ligadas ao mesmo projeto. Nenhuma medida é deduzida da foto.</p></aside>';
  }
  out+='<div class="lab-work">';
- if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
+ if(view!=='iso')out+='<div class="lab-palette">'+button('↖ Selecionar / mover','tool','select',tool==='select')+button('✎ Rabisco','tool','pen',tool==='pen')+button('⌁ Linha por pontos','tool','pointline',tool==='pointline')+(tool==='pointline'?button('Finalizar linha','finishPointLine'):'')+Object.entries(kinds).map(([key,item])=>button(item[0],'tool',key,tool===key)).join('')+'</div>';
  out+='<div class="lab-board-wrap">'+(view==='iso'?(visual?visual.scene(l,selected,{angle:visualAngle,zoom:visualZoom,mode:visualMode}):'<p>Visualizador não carregado.</p>'):svg(l,view,selected))+'</div>';
- out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.':'Toque para posicionar e mover. Use Selecionar e confirme as dimensões abaixo.')+'</div></div>';
+ out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
  out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
  for(const k of ['width','depth','height']){const status=linkStatus(l.roomRefs[k],r);if(status)out+='<p class="lab-link '+(status.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(status)+'</p>';}
@@ -244,10 +244,26 @@ function screen(p,state){
   if(item.kind==='module'||item.kind==='appliance'||item.kind==='led'||['fridge','stove','cooktop'].includes(item.kind))
    out+='<label>Rotação<select id="labRotation">'+[0,90,180,270].map(deg=>option(String(deg),deg+'°',String(item.rotation||0))).join('')+'</select></label>';
     for(const k of ['w','d','height']){const st=linkStatus(item.refs?.[k],r);if(st)out+='<p class="lab-link '+(st.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(st)+'</p>';}
+  if(globalThis.ArqueAlign&&item.kind!=='pen'&&item.kind!=='wall'&&item.kind!=='profile'){
+   const targets=l.items.filter(other=>other.id!==item.id&&['countertop','module','panel','base','upper'].includes(other.kind));
+   out+='<section class="lab-align-box"><h4>Alinhar e centralizar</h4><p class="lab-fine">Reposicionar sem alterar largura, profundidade ou altura.</p>';
+   if(targets.length){
+    const cooktop=item.kind==='cooktop'||item.type==='cooktop';
+    out+='<label>Referência<select id="labAlignTarget">'+targets.map(other=>option(other.id,(other.code||'')+' '+other.label,'')).join('')+'</select></label>'+
+      '<label>Posição<select id="labAlignMode">'+[['both','Centralizar X e Y'],['x','Centralizar largura'],['y','Centralizar profundidade'],['left','Encostar à esquerda'],['right','Encostar à direita'],['front','Alinhar frente'],['back','Alinhar fundo']].concat(cooktop?[['cooktop','Centralizar cooktop na bancada']]:[]).map(a=>option(a[0],a[1],cooktop?'cooktop':'both')).join('')+'</select></label>'+
+      '<label>Afastamento (mm)<input id="labAlignGap" type="number" min="0" max="500" step="0.1" value="0"></label>'+button('✓ Alinhar à referência','alignTarget');
+    if(item.kind==='module')out+='<label>Encaixe entre móveis<select id="labJoinMode">'+[['right','À direita · frentes alinhadas'],['left','À esquerda · frentes alinhadas'],['frontFlush','Igualar face frontal'],['front','À frente'],['back','Atrás']].map(a=>option(a[0],a[1],'right')).join('')+'</select></label>'+button('✓ Encostar módulo','alignBeside');
+   }
+   if(item.kind==='module')out+='<label>Parede<select id="labWallSide">'+[['back','Fundo'],['front','Frente'],['left','Esquerda · giro 90°'],['right','Direita · giro 270°']].map(a=>option(a[0],a[1],'back')).join('')+'</select></label>'+
+    '<label>Folga da parede (mm)<input id="labWallGap" type="number" min="0" max="500" step="0.1" value="0"></label>'+button('✓ Encaixar na parede','alignWall');
+   if(item.alignment)out+='<p class="lab-link">Referência: '+esc(item.alignment.targetId)+' · '+esc(item.alignment.mode)+'</p>';
+   out+='</section>';
+  }
   if(item.kind==='panel')out+='<div class="lab-profile-actions"><h4>Peça retangular para corte</h4><p class="lab-fine">Comprimento e largura usam as dimensões do desenho. Configure material, espessura e veio antes do corte.</p><label>Material<input id="labPanelMaterial" maxlength="90" value="'+esc(item.material||'MDF 18 mm')+'"></label><label>Espessura (mm)<input id="labPanelThickness" type="number" step="0.1" min="1" max="50" value="'+esc(item.thickness||18)+'"></label><label>Veio<select id="labPanelGrain"><option value="false" '+(!item.grain?'selected':'')+'>Livre</option><option value="true" '+(item.grain?'selected':'')+'>Fixo no comprimento</option></select></label>'+button('Salvar material da peça','panelMaterial')+'</div>';
   if(item.kind==='pen')out+='<div class="lab-profile-actions"><label>Nome da moldura/perfil<input id="labProfileName" placeholder="Ex.: moldura da porta" maxlength="90"></label>'+button('Salvar traço como perfil reutilizável','profileSave')+'</div>';
  }else out+='<p class="lab-fine">Selecione uma peça na planta para editar dimensões e posição com precisão.</p>';
  out+='</aside></div>';
+ if(view!=='iso')out+='<section class="lab-auto-sketch"><h4>Alinhamento automático do esboço</h4><p class="lab-fine">Transforma linhas tortas em segmentos e conecta pontas próximas. Não muda registros de trena.</p><div class="lab-auto-controls"><label>Conectar a até (mm)<input id="labAutoTolerance" type="number" min="0" max="500" value="80"></label><label>Suavização (mm)<input id="labAutoSmooth" type="number" min="1" max="500" value="35"></label></div>'+button('✓ Alinhar todas as linhas','autoSketch')+((item?.kind==='pen'||item?.kind==='wall')?button('Só linha selecionada','autoSketchOne'):'')+'</section>';
  if(globalThis.ArqueWorkshop&&state){
   const savedProfiles=globalThis.ArqueWorkshop.library(state);
   out+='<section class="lab-module-panel"><h3>Perfis e molduras desenhados à mão</h3><p class="lab-fine">Desenhe com Rabisco, selecione o traço e salve como perfil. Reaproveite em outras obras, com dimensões ajustáveis em mm.</p>';

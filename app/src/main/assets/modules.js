@@ -59,11 +59,11 @@ function check(spec){
   type:(o.type==='spice'?'spice':o.type==='drawer'?'drawer':(()=>{throw Error('Tipo de acessório '+(i+1)+' inválido.');})()),
   bay:integer(o.bay,'Vão do acessório '+(i+1),0,10),
   count:integer(o.count,'Quantidade de bandejas/gavetas',1,6),
-  slideSide:n(o.slideSide,'Desconto lateral de cada corrediça',0,50),
+  slideSide:n(o.slideSide,'Desconto lateral de cada corrediça',0.1,50),
   rearClearance:n(o.rearClearance,'Desconto traseiro',0,150),
   frontClearance:n(o.frontClearance,'Desconto frontal',0,150),
   height:n(o.height,'Altura da caixa ou bandeja',60,400),
-  slideLength:n(o.slideLength,'Comprimento informado da corrediça',0,1000)
+  slideLength:n(o.slideLength,'Comprimento informado da corrediça',100,1000)
  }));
  // A origem desses descontos é a ferragem escolhida: não presumir 12,5 mm para qualquer modelo.
 

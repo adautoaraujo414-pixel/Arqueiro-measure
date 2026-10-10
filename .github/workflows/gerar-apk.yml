@@ -73,6 +73,8 @@ jobs:
           NODE_PATH=/tmp/arque-ui-test/node_modules node tests/ui.test.cjs 2>&1 | tee ui-test.log
       - name: Testar laboratório inicial, toque e correção do esboço
         run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/alignment-ui.test.cjs
+      - name: Testar seis ferramentas integradas do Laboratório
+        run: NODE_PATH=/tmp/arque-ui-test/node_modules node tests/advanced-ui.test.cjs
       - name: Registrar falhas da interface
         if: failure()
         env:

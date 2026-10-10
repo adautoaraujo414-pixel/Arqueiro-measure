@@ -35,7 +35,7 @@ function materialFill(name,flat){
 function identifier(item,index){return item.code||((item.kind==='module'?'M':item.kind==='countertop'?'P':'E')+String(index+1).padStart(2,'0'));}
 function camera(layout,opt={}){
  const W=Math.max(100,num(layout.width,3500)),D=Math.max(100,num(layout.depth,2800)),H=Math.max(100,num(layout.height,2600));
- const angle=num(opt.angle,40)*Math.PI/180,elev=32*Math.PI/180,zoom=clamp(num(opt.zoom,1),.65,2.5);
+ const angle=num(opt.angle,40)*Math.PI/180,elev=clamp(num(opt.tilt,32),10,80)*Math.PI/180,zoom=clamp(num(opt.zoom,1),.65,3.5);
  const c=Math.cos(angle),si=Math.sin(angle),ev=Math.sin(elev),cv=Math.cos(elev);
  const raw=(x,y,z)=>[c*x-si*y,si*ev*x+c*ev*y-cv*z];
  const corners=[];for(const x of [0,W])for(const y of [0,D])for(const z of [0,H])corners.push(raw(x,y,z));
@@ -59,13 +59,14 @@ function scene(layout,selectedId='',opts={}){
  const cam=camera(layout,opts),project=cam.project,roomW=num(layout.width,3500),roomD=num(layout.depth,2800),roomH=num(layout.height,2600);
  const mode=opts.mode==='structure'?'structure':'fronts';
  const items=(layout.items||[]).filter(i=>i.kind==='module'||(i.view==='plan'&&['appliance','base','upper','drawers','countertop','sink','fridge','stove','cooktop','led','filler','panel','outlet','drain','door'].includes(i.kind)));
- let out='<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 650" role="img" aria-label="Ambiente técnico 3D, medidas em milímetros" style="touch-action:manipulation;user-select:none"><defs>'+
+ let out='<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="0 0 1000 650" role="img" aria-label="Ambiente técnico 3D, medidas em milímetros" style="touch-action:none;user-select:none"><defs>'+
   '<linearGradient id="arqueVisualFloor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f5f5f1"/><stop offset="1" stop-color="#dfebe9"/></linearGradient>'+
   '<linearGradient id="arqueWall" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#fdfefd"/><stop offset="1" stop-color="#e6ebec"/></linearGradient>'+
   '<pattern id="arqueWoodLight" width="46" height="64" patternUnits="userSpaceOnUse"><rect width="46" height="64" fill="#c29a72"/><path d="M 6 0 Q 22 20 9 40 T 8 64 M 23 0 Q 9 23 25 48 T 27 64 M 38 0 Q 44 35 39 64" stroke="#9f7a54" stroke-opacity=".3" stroke-width="1.3" fill="none"/></pattern>'+
   '<pattern id="arqueWoodWarm" width="42" height="66" patternUnits="userSpaceOnUse"><rect width="42" height="66" fill="#aa8a6c"/><path d="M 7 0 Q 26 14 8 42 T 10 66 M 25 0 Q 7 29 27 58 M 38 0 Q 29 40 39 66" stroke="#756049" stroke-opacity=".28" stroke-width="1.2" fill="none"/></pattern>'+
   '</defs><rect width="1000" height="650" fill="#f3f7fa"/>';
- out+=poly([[0,0,0],[roomW,0,0],[roomW,roomD,0],[0,roomD,0]],project,'url(#arqueVisualFloor)','#bacad3',1.4);
+ out+='<g class="studio-camera-world" transform="translate('+clamp(num(opts.panX,0),-1600,1600)+' '+clamp(num(opts.panY,0),-1400,1400)+')">';
+  out+=poly([[0,0,0],[roomW,0,0],[roomW,roomD,0],[0,roomD,0]],project,'url(#arqueVisualFloor)','#bacad3',1.4);
  // Duas paredes e piso em angulo de ambiente, como referencia arquitetonica.
  out+=poly([[0,0,0],[roomW,0,0],[roomW,0,roomH],[0,0,roomH]],project,'url(#arqueWall)','#bdcbd3',1.3);
  out+=poly([[0,0,0],[0,roomD,0],[0,roomD,roomH],[0,0,roomH]],project,'#e8edf0','#bdcbd3',1.3);
@@ -269,7 +270,8 @@ function scene(layout,selectedId='',opts={}){
   out+=content;
  }
  const p1=project(0,roomD,0),p2=project(roomW,roomD,0);
- out+='<text x="18" y="27" font-size="14" fill="#325873" font-weight="700">ARQUE · AMBIENTE CONSTRUTIVO</text>';
+ out+='</g>';
+  out+='<text x="18" y="27" font-size="14" fill="#325873" font-weight="700">ARQUE · AMBIENTE CONSTRUTIVO</text>';
  out+='<text x="18" y="47" font-size="11" fill="#688294">'+esc(fmt(roomW)+' × '+fmt(roomD)+' × '+fmt(roomH)+' mm')+(layout.confirmed?' · MEDIDAS CONFIRMADAS':' · RASCUNHO NÃO CONFERIDO')+'</text>';
  out+='<text x="982" y="632" font-size="10" text-anchor="end" fill="#698291">Vista espacial técnica · não é foto real</text>';
  out+='</svg>';

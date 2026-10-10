@@ -208,7 +208,14 @@ click(doc,'studioMode','esboco');await sleep(40);
  tap(80,90);tap(80,90);assert(!!doc.querySelector('[data-action="photoZoomMode"][title="Mover e ampliar"]'),'second double tap locks navigation');
 
  assert(doc.querySelector('#photoOverlay [data-handle="a"]'),'arrow handle exists');assert(doc.querySelector('#photoOverlay .measure-hit')?.getAttribute('stroke')==='transparent','interaction hitbox is invisible');assert(doc.querySelector('#photoOverlay .measure-label rect'),'unmeasured arrow shows one small central yellow box');assert(!doc.querySelector('[data-action="photoAddHorizontal"]'),'no directional arrow menu');
- assign(doc,'photoMeasureValue','2780');click(doc,'photoDimensionManual');await sleep(60);
+ const quickValue=async value=>{
+  const target=doc.querySelector('#photoOverlay .dim-selected [data-measure-label] rect');
+  const e=new w.Event('pointerdown',{bubbles:true,cancelable:true});Object.defineProperties(e,{pointerId:{value:88},clientX:{value:250},clientY:{value:150}});target.dispatchEvent(e);
+  assign(doc,'photoQuickValue',value);doc.getElementById('photoQuickSave').click();await sleep(80);
+ };
+ assert(!doc.getElementById('photoMeasureValue'),'lower measurement fields removed');
+ assert(!doc.getElementById('photoMeasureDetails'),'lower editor removed');
+ await quickValue('2780');
  assert(doc.body.textContent.includes('2.780 mm'),'manual value appears in photo');assert(doc.querySelector('#photoOverlay .measure-label rect')?.getAttribute('fill')==='#ffe000','measured label is yellow');
  // Central box opens the piece specifications directly, even with pen selected.
  click(doc,'photoInkToggle');
@@ -218,18 +225,27 @@ click(doc,'studioMode','esboco');await sleep(40);
  assert(doc.querySelector('#photoQuickMeasure [role="dialog"]'),'tapping yellow box opens quick manual dialog');
  assign(doc,'photoQuickValue','0');doc.getElementById('photoQuickSave').click();await sleep(30);assert(doc.getElementById('photoQuickMeasure'),'invalid value keeps dialog open');
  assign(doc,'photoQuickValue','2780,5');doc.getElementById('photoQuickSave').click();await sleep(80);assert(!doc.getElementById('photoQuickMeasure'),'OK saves and closes quick dialog');
- assert(doc.getElementById('photoMeasureValue').value==='2780.5','manual decimal value saved');
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='2.780,5 mm','manual decimal value saved');
  const savedBox=doc.querySelector('#photoOverlay .dim-selected [data-measure-label] rect');savedBox.dispatchEvent(ev);
  assign(doc,'photoQuickValue','9999');doc.getElementById('photoQuickCancel').click();
  assert(!doc.getElementById('photoQuickMeasure'),'cancel closes quick dialog');
- assert(doc.getElementById('photoMeasureValue').value==='2780.5','cancel preserves saved value');
- assert(doc.getElementById('photoMeasureValue').value==='2780.5','selected piece value shown in details');
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='2.780,5 mm','cancel preserves saved value');
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='2.780,5 mm','selected piece value shown in details');
 
  click(doc,'photoAddDistance');await sleep(30);dragMeasure(doc,110,360,800,450);await sleep(70);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===3,'third distance arrow appears');
  const thick=doc.getElementById('photoMeasureThickness');assert(!thick,'thickness control removed');
- assign(doc,'photoMeasureValue','1100');click(doc,'photoDimensionManual');await sleep(70);
+ await quickValue('1100');
  assert(doc.body.textContent.includes('1.100 mm'),'manual value saved');
+ // Incoming Bosch readings append immediately without rebuilding the photo or applying automatically.
+ const overlayBefore=doc.getElementById('photoOverlay');
+ w.ArqueBleMeasure(1234);w.ArqueBleMeasure(4567);await sleep(80);
+ assert.equal(doc.querySelectorAll('.photo-bosch-reading').length,2,'every Bosch reading appears immediately');
+ assert.equal(doc.getElementById('photoOverlay'),overlayBefore,'incoming readings preserve active photo surface');
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='1.100 mm','receiving does not overwrite arrow');
+ click(doc,'photoReadingApply',doc.querySelectorAll('.photo-bosch-reading')[1].dataset.readingId);await sleep(80);
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='1.234 mm','chosen reading binds to selected arrow');
+ assert(doc.body.textContent.includes('Vinculada à foto'),'bound reading shows status');
  // Existing arrows take priority over drawing tools: endpoints resize, body moves.
  const editArrow=async(target,x1,y1,x2,y2)=>{
   const svg=doc.getElementById('photoOverlay');
@@ -284,5 +300,9 @@ click(doc,'studioMode','esboco');await sleep(40);
  x.dom.window.close();
  x=await launch();doc=x.doc;w=x.w;click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','fotomedidas');
  assert(doc.body.textContent.includes('2.780,5 mm'),'quick manual measure survives reload');
+ assert.equal(doc.querySelectorAll('.photo-bosch-reading').length,2,'Bosch reading list survives reload');
+ const selectEvent=new w.Event('pointerdown',{bubbles:true,cancelable:true});Object.defineProperties(selectEvent,{pointerId:{value:89},clientX:{value:200},clientY:{value:100}});doc.querySelector('#photoOverlay [data-measure-label] rect').dispatchEvent(selectEvent);doc.getElementById('photoQuickCancel').click();
+ click(doc,'photoReadingApply',doc.querySelector('.photo-bosch-reading').dataset.readingId);await sleep(80);
+ assert(doc.querySelector('#photoOverlay .dim-selected .measure-label text').textContent==='4.567 mm','persisted reading can be linked after reload');
  x.dom.window.close();
 })().catch(err=>{console.error(err);process.exitCode=1;});

@@ -191,7 +191,7 @@ function svg(l,view,selectedId){
  }
  return a+'</svg>';
 }
-let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true,precisionStep=5;
+let activeRoom='',view='iso',tool='select',selected='',gridSnap=true,drag=null,focusedBay=0,focusedModule='',selectedPartKey='',visualAngle=40,visualZoom=1,visualMode='fronts',pointLineId='',magnetEnabled=true,showDimensions=true,precisionStep=5,studioCategory='Inferiores',studioSearch='',studioInsertSide='right',studioInspectorOpen=false;
 const option=(value,label,current)=>'<option value="'+esc(value)+'" '+(value===current?'selected':'')+'>'+esc(label)+'</option>';
 const button=(label,action,arg='',active=false)=>'<button type="button" data-lab="'+action+'" data-arg="'+esc(arg)+'" class="'+(active?'lab-active':'')+'">'+label+'</button>';
 function screen(p,state){
@@ -202,14 +202,15 @@ function screen(p,state){
  const item=l.items.find(x=>x.id===selected);
  let out='<section class="lab"><div class="lab-heading"><div><h3>Laboratório · ambiente visual e montagem</h3><small>Ambiente espacial, planta e elevação ligados à mesma engenharia em milímetros. Funciona offline.</small></div><label>Ambiente<select id="labRoom">'+rooms.map(x=>option(x.id,x.name,r.id)).join('')+'</select></label></div>';
  out+='<div class="lab-views">'+button('▧ Ambiente 3D','view','iso',view==='iso')+button('▱ Planta', 'view','plan',view==='plan')+button('▥ Vista frontal','view','front',view==='front')+'<span>'+fmt(l.width)+' × '+fmt(view==='front'?l.height:l.depth)+' mm'+(l.confirmed?' · informado':' · rascunho')+'</span></div>';
- out+='<div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
- if(!l.confirmed)out+='<p class="lab-warning">As dimensões exibidas são apenas um rascunho inicial. Confirme com medidas feitas na obra.</p>';
- out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button(showDimensions?'Cotas visíveis':'Mostrar cotas','precisionToggle')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
+ out+='<details class="studio-room-drawer"><summary>Medidas do ambiente · '+fmt(l.width)+' × '+fmt(l.depth)+' × '+fmt(l.height)+' mm</summary><div class="lab-sizes"><label>Largura da parede (mm)<input id="labWidth" type="number" min="100" max="50000" value="'+esc(l.width)+'"></label><label>Profundidade (mm)<input id="labDepth" type="number" min="100" max="50000" value="'+esc(l.depth)+'"></label><label>Altura (mm)<input id="labHeight" type="number" min="100" max="50000" value="'+esc(l.height)+'"></label>'+button('Aplicar dimensões','roomSize')+'</div>';
+ if(!l.confirmed)out+='<p class="lab-warning">Medidas ainda em rascunho. Confira o ambiente na obra antes de fabricar.</p>';
+ out+='</details>';
+ out+='<div class="lab-actions">'+(view==='iso'?button('↶ Girar','visualRotate','-25')+button('Girar ↷','visualRotate','25')+button('− Zoom','visualZoom','-.2')+button('＋ Zoom','visualZoom','.2')+button('Ver frentes','visualMode','fronts',visualMode==='fronts')+button('Ver estrutura','visualMode','structure',visualMode==='structure'):'')+(view!=='iso'?button('✓ Alinhamento automático','autoSketch'):'')+button(studioInspectorOpen?'Ocultar propriedades':'Propriedades da peça','studioInspectorToggle')+button(showDimensions?'Cotas visíveis':'Mostrar cotas','precisionToggle')+button('↶ Desfazer','undo')+button('↷ Refazer','redo')+button('⌗ Ajuste 5 mm','snap','',gridSnap)+button('Salvar desenho SVG','export')+'</div>';
  const Adv=globalThis.ArqueAdvanced;
  if(Adv){
   const modules=l.items.filter(i=>i.kind==='module');
   const opts=modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,i.id===selected?selected:'')).join('');
-  out+='<div class="lab-adv-panel"><h4>Oficina Arque · construção inteligente</h4><div class="lab-adv-grid">';
+  out+='<details class="studio-advanced-drawer"><summary>Ferramentas de montagem · L, cava, canto, materiais e produção</summary><div class="lab-adv-panel"><h4>Oficina Arque · construção inteligente</h4><div class="lab-adv-grid">';
   out+='<details><summary>① Cozinha em L · encaixe</summary><p class="lab-fine">Posiciona dois móveis nas paredes de fundo e esquerda, considerando o fundo aplicado.</p>'+
    '<label>Móvel da parede de fundo<select id="advCornerBack">'+opts+'</select></label>'+
    '<label>Móvel da parede esquerda<select id="advCornerSide">'+modules.map(i=>option(i.id,(i.code||'M')+' · '+i.label,modules[1]?.id||'')).join('')+'</select></label>'+
@@ -246,11 +247,11 @@ function screen(p,state){
    button('Desenhar frente diagonal 45°','fabCorner45')+
    (l.cornerGuides?.length?'<p class="lab-fine">Guias: '+l.cornerGuides.length+' · comprimento '+fmt(l.cornerGuides[l.cornerGuides.length-1].diagonalLength)+' mm</p>':'')+
    '<small>Sem carcaça trapezoidal nem usinagem calculada.</small></details>';
-  out+='</div></div>';
+  out+='</div></div></details>';
  }
  const visual=globalThis.ArqueVisual;
  const recovery=(part,error)=>'<div class="notice lab-recovery" role="alert"><b>'+esc(part)+' não pôde ser carregado.</b><p>'+esc(error?.message||String(error))+'</p><small>O projeto original permanece salvo; confira os dados desta peça em Ambientes.</small></div>';
- out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog':'')+'">';
+ out+='<div class="lab-main '+(view==='iso'?'lab-with-catalog studio-construction '+(studioInspectorOpen?'studio-inspector-open':'studio-inspector-closed'):'')+'">';
  if(view==='iso'){
   let entries=[];
   try{entries=visual?.catalog(l)||[];}catch(error){out+=recovery('Biblioteca visual',error);}
@@ -270,7 +271,7 @@ function screen(p,state){
  catch(error){board=recovery('Desenho técnico',error)+'<svg id="labBoard" class="lab-visual" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" width="100%" role="img" aria-label="Ambiente técnico indisponível"><rect width="900" height="420" fill="#f6f9fb"/><text x="450" y="210" text-anchor="middle" fill="#436679" font-size="20">Confira o módulo indicado na mensagem acima</text></svg>';}
  out+='<div class="lab-board-wrap">'+board+'</div>';
  out+='<div class="lab-hint">'+(view==='iso'?'Toque no móvel para identificá-lo; arraste o móvel selecionado para reposicionar em X/Y. Use Girar, Zoom e Ver estrutura. Ajuste as medidas numéricas na lateral.' :tool==='pointline'?'Toque para adicionar pontos à linha; use Finalizar linha e Alinhamento automático.':'Rabisco ou Linha por pontos: o alinhamento automático corrige linhas e conecta extremidades.')+'</div></div>';
- out+='<aside class="lab-side"><h4>Medidas salvas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
+ out+='<aside class="lab-side studio-inspector"'+(view==='iso'&&!studioInspectorOpen?' hidden':'')+'><h4>Propriedades e medidas</h4><p>Escolha a medição real e onde aplicar, sem mudar o registro original.</p><label>Medição<select id="labMeasure">'+option('','Selecionar medida','')+measurements.map(m=>option(m.id,fmt(m.value)+' mm · '+m.kind+' · '+(m.target||'sem posição'), '')).join('')+'</select></label>';
  out+='<label>Aplicar em<select id="labTarget">'+[['width','Largura do ambiente'],['depth','Profundidade do ambiente'],['height','Altura do ambiente'],['w','Largura da peça selecionada'],['d','Profundidade da peça selecionada'],['itemHeight','Altura da peça selecionada']].map(a=>option(a[0],a[1],'')).join('')+'</select></label>'+button('Vincular medição','attach');
  for(const k of ['width','depth','height']){const status=linkStatus(l.roomRefs[k],r);if(status)out+='<p class="lab-link '+(status.includes('conferir')?'lab-warning':'')+'">'+esc(k)+' · '+esc(status)+'</p>';}
  out+='<h4>Foto de referência</h4><select id="labPhoto">'+option('','Sem fotografia',l.photoId||'')+photos.map(ph=>option(ph.id,ph.name||'Foto',l.photoId||'')).join('')+'</select>';

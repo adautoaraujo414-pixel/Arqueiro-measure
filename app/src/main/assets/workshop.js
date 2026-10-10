@@ -35,13 +35,17 @@ function fit(spec,opening,left=0,right=0,engine){
  const derived=engine.parts(candidate);
  return {spec:derived.spec,opening:w,clearance:discount,installed:derived.installedWidth,remaining:Math.round((w-derived.installedWidth)*10)/10};
 }
+function footprint(item){
+ const w=Number(item.w)+Number(item.moduleSpec?.leftFiller||0)+Number(item.moduleSpec?.rightFiller||0);
+ const d=Number(item.d)+(item.moduleSpec?.back==='overlay'?Number(item.moduleSpec.backThickness||0):0);
+ return Number(item.rotation||0)%180===90?{w:d,d:w}:{w,d};
+}
 function roomAudit(layout){
  const issues=[],modules=(layout.items||[]).filter(x=>x.kind==='module'&&x.moduleSpec);
  if(!layout.confirmed)issues.push({severity:'warning',code:'UNCONFIRMED',message:'Dimensões do ambiente ainda não confirmadas por medição.'});
  for(const m of modules){
   const s=m.moduleSpec;
-  const width=Number(m.w)+Number(s.leftFiller||0)+Number(s.rightFiller||0);
-  const depth=Number(m.d)+(s.back==='overlay'?Number(s.backThickness||0):0);
+  const {w:width,d:depth}=footprint(m);
   if([m.x,m.y,width,depth].some(v=>!Number.isFinite(Number(v)))){issues.push({severity:'error',code:'INVALID',moduleId:m.id,message:'Geometria inválida: '+m.label});continue;}
   if(m.x<0||m.y<0||m.x+width>layout.width+0.01||m.y+depth>layout.depth+0.01){
    issues.push({severity:'error',code:'OUTSIDE',moduleId:m.id,message:m.label+' ultrapassa a parede ou a profundidade do ambiente.'});
@@ -51,8 +55,7 @@ function roomAudit(layout){
  }
  for(let i=0;i<modules.length;i++)for(let j=i+1;j<modules.length;j++){
   const a=modules[i],b=modules[j];
-  const aw=Number(a.w)+Number(a.moduleSpec.leftFiller||0)+Number(a.moduleSpec.rightFiller||0),bw=Number(b.w)+Number(b.moduleSpec.leftFiller||0)+Number(b.moduleSpec.rightFiller||0);
-  const ad=Number(a.d)+(a.moduleSpec.back==='overlay'?Number(a.moduleSpec.backThickness||0):0),bd=Number(b.d)+(b.moduleSpec.back==='overlay'?Number(b.moduleSpec.backThickness||0):0);
+  const {w:aw,d:ad}=footprint(a),{w:bw,d:bd}=footprint(b);
   const az=Number(a.z||0),bz=Number(b.z||0),ah=Number(a.height||0),bh=Number(b.height||0);
   if(a.x<b.x+bw&&b.x<a.x+aw&&a.y<b.y+bd&&b.y<a.y+ad&&az<bz+bh&&bz<az+ah)issues.push({severity:'error',code:'OVERLAP',moduleId:a.id,message:a.label+' e '+b.label+' se sobrepõem na planta.'});
  }

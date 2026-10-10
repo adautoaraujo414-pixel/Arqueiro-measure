@@ -83,6 +83,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('.studio-paper-head').textContent.includes('Parede da pia'),'can reopen first sheet');
  // Laboratorio geometrico e uma area 2D propria ligada a um ambiente.
  click(doc,'studioMode','laboratorio');await sleep(60);
+ assert(doc.querySelector('#labBoard.lab-visual'),'Laboratório inicia no ambiente espacial');
+ doc.querySelector('[data-lab="view"][data-arg="plan"]').click();await sleep(45);
  assert(doc.querySelector('#labBoard'),'Laboratorio exibe planta dimensional');
  assert(doc.querySelector('[data-lab="tool"][data-arg="base"]'),'modulo de armario base');
  assert(doc.querySelector('[data-lab="tool"][data-arg="sink"]'),'cuba posicionavel');

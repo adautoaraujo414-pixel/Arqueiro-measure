@@ -11,6 +11,7 @@ const n=(x,name,min=0,max=50000)=>{
  if(!Number.isFinite(v)||v<min||v>max)throw Error(name+' deve estar entre '+min+' e '+max+' mm.');
  return Math.round(v*10)/10;
 };
+const ratio=(value,label,min=0.001,max=0.999)=>{const v=Number(String(value).replace(',','.'));if(!Number.isFinite(v)||v<min||v>max)throw Error(label+' deve ficar entre '+min+' e '+max+'.');return Math.round(v*1000000)/1000000;};
 const integer=(x,name,min,max)=>{const v=Number(x);if(!Number.isInteger(v)||v<min||v>max)throw Error(name+' deve estar entre '+min+' e '+max+'.');return v;};
 const round=v=>Math.round(v*10)/10;
 const clean=s=>String(s||'').trim().slice(0,90);
@@ -68,7 +69,7 @@ function check(spec){
   s.shelvesByBay[bay]=integer(value,'Prateleiras do vão '+bay,0,12);
  }
  if(!Array.isArray(s.vertical))throw Error('Lista de divisórias inválida.');
- s.vertical=s.vertical.map((r,i)=>n(r,'Posição da divisória '+(i+1),0.001,0.999));
+ s.vertical=s.vertical.map((r,i)=>ratio(r,'Posição da divisória '+(i+1),0.001,0.999));
  s.vertical.sort((a,b)=>a-b);
  if(s.vertical.length>10)throw Error('No máximo 10 divisórias verticais.');
  if(s.width<=2*s.thickness+120)throw Error('Largura insuficiente para duas laterais e vão interno.');
@@ -79,7 +80,7 @@ function check(spec){
  if(s.doorCount&&((s.width-2*s.doorReveal-(s.doorCount-1)*s.doorGap)/s.doorCount)<80)throw Error('Portas estreitas demais para as folgas configuradas.');
  if(s.doorCount&&s.height-2*s.doorReveal-s.doorTopDiscount-s.doorBottomDiscount<80)throw Error('Descontos superior e inferior deixam porta inviável.');
  if(!Array.isArray(s.fixedShelves)||s.fixedShelves.length>20)throw Error('Divisórias horizontais inválidas.');
- s.fixedShelves=s.fixedShelves.map((o,i)=>({bay:integer(o.bay,'Vão da divisória fixa '+(i+1),0,10),at:n(o.at,'Altura proporcional divisória '+(i+1),0.01,0.99)}));
+ s.fixedShelves=s.fixedShelves.map((o,i)=>({bay:integer(o.bay,'Vão da divisória fixa '+(i+1),0,10),at:ratio(o.at,'Altura proporcional divisória '+(i+1),0.01,0.99)}));
  if(!Array.isArray(s.accessories)||s.accessories.length>20)throw Error('Acessórios internos inválidos.');
  s.accessories=s.accessories.map((o,i)=>({
   type:(o.type==='spice'?'spice':o.type==='drawer'?'drawer':(()=>{throw Error('Tipo de acessório '+(i+1)+' inválido.');})()),
@@ -150,7 +151,7 @@ function bayBounds(s){
  for(const b of bays)if(b.width<100)throw Error('Divisórias muito próximas ou vão menor que 100 mm. Reposicione antes do corte.');
  return bays;
 }
-function addDivider(spec,at=0.5){const s=check({...spec,bayLayoutMode:'manual',bayRules:[]});s.vertical.push(n(at,'Posição proporcional',0.001,0.999));const changed=check(s);parts(changed);return changed;}
+function addDivider(spec,at=0.5){const s=check({...spec,bayLayoutMode:'manual',bayRules:[]});s.vertical.push(ratio(at,'Posição proporcional',0.001,0.999));const changed=check(s);parts(changed);return changed;}
 function parts(spec){
  const s=check(spec),bays=bayBounds(s),t=s.thickness,innerWidth=round(s.width-2*t),innerHeight=round(s.height-2*t);
  const out=[],warnings=[];

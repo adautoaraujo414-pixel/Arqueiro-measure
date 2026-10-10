@@ -93,7 +93,14 @@ function parts(spec){
  panel('topbottom','Tampo / base',s.construction==='over'?s.width:innerWidth,s.depth,2,t,s.caseMaterial,s.grainCase,0,1,s.construction==='over'?'Sobre e sob as laterais':'Entre as duas laterais');
  for(const [i,fraction] of s.vertical.entries())panel('divider-'+i,'Divisória vertical '+(i+1),innerHeight,s.depth,1,t,s.caseMaterial,s.grainCase,0,1,'Eixo em '+Math.round(1000*fraction)/10+'% do vão interno');
  for(let j=0;j<s.shelfCount;j++)for(let i=0;i<bays.length;i++){
+  const at=(j+1)/(s.shelfCount+1);
+  // Se uma prateleira fixa ocupa exatamente o mesmo plano, gerar apenas a peça fixa.
+  if(s.fixedShelves.some(f=>f.bay===i&&Math.abs(f.at-at)*innerHeight<t))continue;
   panel('shelf-'+j+'-'+i,'Prateleira '+(j+1)+' / vão '+(i+1),bays[i].width-2*s.shelfClearance,s.depth-s.shelfInset,1,t,s.caseMaterial,s.grainCase,0,1,'Conferir ferragens e recuo traseiro');
+ }
+ for(let i=0;i<s.fixedShelves.length;i++)for(let j=i+1;j<s.fixedShelves.length;j++){
+  const a=s.fixedShelves[i],b=s.fixedShelves[j];
+  if(a.bay===b.bay&&Math.abs(a.at-b.at)*innerHeight<t+5)throw Error('Divisórias horizontais sobrepostas no mesmo vão.');
  }
  for(const [i,o] of s.fixedShelves.entries()){
   const bay=bays[o.bay];

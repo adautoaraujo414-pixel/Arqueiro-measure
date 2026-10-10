@@ -284,3 +284,9 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-measure-stage #photoOverlay [data-dimension]{cursor:move;touch-action:none}
 .photo-measure-stage #photoOverlay [data-handle]{cursor:grab;touch-action:none}
 .photo-measure-stage #photoOverlay .measure-hit{pointer-events:stroke}
+
+.photo-dock-reading{font-size:14px;white-space:nowrap;color:#fff}
+.photo-floating-dock:not(.expanded) .photo-dock-reading{display:inline-flex!important}
+.photo-quick-backdrop{position:fixed;inset:0;z-index:1000;background:#101b2780;display:flex;align-items:center;justify-content:center;padding:18px}
+.photo-quick-dialog{width:100%;max-width:340px;background:#fff;color:#172b3a;border-radius:16px;padding:20px;box-shadow:0 12px 40px #0004;max-height:90dvh;overflow:auto}
+.photo-quick-dialog h3{margin:0 0 14px}.photo-quick-dialog input{width:100%;font-size:24px;margin-top:8px;box-sizing:border-box}.photo-quick-dialog .actions{justify-content:flex-end}.photo-quick-dialog button{min-height:48px;min-width:82px}.photo-quick-dialog [role=alert]{color:#b42318;font-size:14px;min-height:18px}

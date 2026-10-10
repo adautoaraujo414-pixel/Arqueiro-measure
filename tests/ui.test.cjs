@@ -189,7 +189,7 @@ click(doc,'studioMode','esboco');await sleep(40);
  assert(doc.querySelector('#photoZoomSurface'),'photo and overlay share a zoom surface');
  assert(doc.querySelector('.photo-floating-dock [data-action="photoInkToggle"]'),'pen is in floating photo dock');
  assert(doc.querySelector('.photo-floating-dock [data-action="photoAddDistance"]'),'arrow is in floating photo dock');
- assert(doc.querySelector('.photo-ink-tools [data-action="photoDimensionApply"]'),'apply Bosch reading is alongside colors above image');
+ assert(doc.querySelector('.photo-floating-dock [data-action="photoDimensionApply"]'),'apply Bosch reading is alongside colors above image');
 
  click(doc,'photoZoomIn');assert(doc.getElementById('photoZoomReadout').textContent==='125%','zoom in increases to 125%');
  assert(doc.getElementById('photoZoomSurface').style.transform.includes('scale(1.25)'),'zoom scales image and arrows together');
@@ -215,14 +215,21 @@ click(doc,'studioMode','esboco');await sleep(40);
  const boxes=doc.querySelectorAll('#photoOverlay [data-measure-label] rect');const box=boxes[boxes.length-1];assert(box,'measurement center box is tappable');
  const ev=new w.Event('pointerdown',{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:88},clientX:{value:250},clientY:{value:150}});
  box.dispatchEvent(ev);
- assert(doc.querySelector('#photoMeasureDetails'),'tapping yellow box opens specifications');
- assert(doc.getElementById('photoMeasureValue').value==='2780','selected piece value shown in details');
+ assert(doc.querySelector('#photoQuickMeasure [role="dialog"]'),'tapping yellow box opens quick manual dialog');
+ assign(doc,'photoQuickValue','0');doc.getElementById('photoQuickSave').click();await sleep(30);assert(doc.getElementById('photoQuickMeasure'),'invalid value keeps dialog open');
+ assign(doc,'photoQuickValue','2780,5');doc.getElementById('photoQuickSave').click();await sleep(80);assert(!doc.getElementById('photoQuickMeasure'),'OK saves and closes quick dialog');
+ assert(doc.getElementById('photoMeasureValue').value==='2780.5','manual decimal value saved');
+ const savedBox=doc.querySelector('#photoOverlay .dim-selected [data-measure-label] rect');savedBox.dispatchEvent(ev);
+ assign(doc,'photoQuickValue','9999');doc.getElementById('photoQuickCancel').click();
+ assert(!doc.getElementById('photoQuickMeasure'),'cancel closes quick dialog');
+ assert(doc.getElementById('photoMeasureValue').value==='2780.5','cancel preserves saved value');
+ assert(doc.getElementById('photoMeasureValue').value==='2780.5','selected piece value shown in details');
 
  click(doc,'photoAddDistance');await sleep(30);dragMeasure(doc,110,360,800,450);await sleep(70);
  assert(doc.querySelectorAll('#photoOverlay [data-dimension]').length===3,'third distance arrow appears');
- const thick=doc.getElementById('photoMeasureThickness');assert(thick,'thickness control exists');
- assign(doc,'photoMeasureValue','1100');assign(doc,'photoMeasureThickness','3');click(doc,'photoDimensionManual');await sleep(70);
- assert(doc.querySelector('#photoOverlay line[stroke-width="3"]'),'adjustable width saved');
+ const thick=doc.getElementById('photoMeasureThickness');assert(!thick,'thickness control removed');
+ assign(doc,'photoMeasureValue','1100');click(doc,'photoDimensionManual');await sleep(70);
+ assert(doc.body.textContent.includes('1.100 mm'),'manual value saved');
  // Existing arrows take priority over drawing tools: endpoints resize, body moves.
  const editArrow=async(target,x1,y1,x2,y2)=>{
   const svg=doc.getElementById('photoOverlay');
@@ -274,5 +281,8 @@ click(doc,'studioMode','esboco');await sleep(40);
  w.HTMLCanvasElement.prototype.getContext=oldCanvas;
 
  console.log('UI INTEGRAÇÃO OK: cliente, obra, chapa, edição e rascunho persistiram após recriar a tela.');
+ x.dom.window.close();
+ x=await launch();doc=x.doc;w=x.w;click(doc,'go','clients');click(doc,'openClient');click(doc,'openProject');click(doc,'openWorkspace','fotomedidas');
+ assert(doc.body.textContent.includes('2.780,5 mm'),'quick manual measure survives reload');
  x.dom.window.close();
 })().catch(err=>{console.error(err);process.exitCode=1;});

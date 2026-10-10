@@ -260,3 +260,13 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-lab-panel small{flex-basis:100%}
 .studio-photo-reference{max-height:200px;overflow:hidden;border:1px solid #d8e2eb;border-radius:9px;margin:8px 0;background:#111;display:flex;justify-content:center}
 .studio-photo-reference img{max-width:100%;max-height:200px;object-fit:contain}
+
+.studio-scan-panel{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0;padding:12px;border:1px solid #b8d5e6;background:#eef7fc;border-radius:11px}
+.studio-scan-panel>strong,.studio-scan-panel>p,.studio-scan-panel>small,.studio-scan-frames{flex-basis:100%}
+.studio-scan-panel p{margin:0;font-size:13px;color:#34576b}
+.studio-scan-panel label{display:flex;align-items:center;gap:5px;font-size:12px}
+.studio-scan-panel input{max-width:110px;min-height:36px}
+.studio-scan-frames{display:flex;gap:7px;overflow-x:auto}
+.studio-scan-frames figure{margin:0;min-width:115px;width:115px}
+.studio-scan-frames img{width:115px;height:78px;object-fit:cover;border-radius:7px}
+.studio-scan-frames figcaption{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -368,3 +368,18 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .agenda-entry{background:#fff!important;border-color:#dae6ed!important;border-left-color:#0b8fbc!important}
 .agenda-entry strong,.agenda-entry b{color:#087da3!important}
 .agenda-entry small{color:#46606e!important}
+
+/* Arque Studio notebook: two-finger zoom, photo underneath strokes, typed notes. */
+.studio-media-bar,.studio-zoom-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 12px;margin-bottom:9px;background:#f1f5f8;border:1px solid #d8e5ec;border-radius:8px}
+.studio-media-bar label{flex:1 1 180px;min-width:0;color:#3e6478;font-size:12px;font-weight:700}
+.studio-media-bar label select,.studio-media-bar label input{margin-top:3px;max-width:100%;background:white;color:#173d51;border-color:#b9cdda}
+.studio-media-bar small,.studio-zoom-bar small{font-size:12px;color:#52768a;flex:1 1 100%;line-height:1.4}
+.studio-edit-bar{background:#f9fbfc}
+.studio-edit-bar strong{font-size:12px;color:#275c76}
+.studio-zoom-bar{position:relative;background:#e5f2f8}
+.studio-zoom-bar strong{font-variant-numeric:tabular-nums;min-width:52px;text-align:center;color:#16688c}
+.studio-canvas-shell{height:min(77vh,920px);min-height:320px;display:block!important;position:relative;overflow:hidden!important;touch-action:none!important;overscroll-behavior:contain;padding:12px!important}
+.studio-canvas-shell canvas{display:block!important;position:relative!important;max-height:calc(77vh - 24px)!important;width:auto!important;height:auto!important;max-width:100%!important;transform-origin:top left;touch-action:none!important}
+.studio-fullscreen .studio-canvas-shell{height:auto;flex:1}
+.studio-fullscreen .studio-canvas-shell canvas{max-height:calc(100dvh - 215px)!important}
+@media(max-width:600px){.studio-media-bar,.studio-zoom-bar{padding:7px;gap:6px}.studio-media-bar .btn{padding:8px 10px}.studio-canvas-shell{height:65vh;min-height:280px}.studio-canvas-shell canvas{max-height:calc(65vh - 16px)!important}}

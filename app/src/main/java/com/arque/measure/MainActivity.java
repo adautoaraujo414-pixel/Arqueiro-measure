@@ -75,6 +75,7 @@ public final class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private Uri cameraUri;
     private String pendingBackup;
+    private boolean pendingIsCsv = false;
     private boolean scanning = false;
     private ArqueLink link;
     private ArqueLinkDiscovery discovery;
@@ -289,9 +290,17 @@ public final class MainActivity extends Activity {
         @JavascriptInterface public void connectBle(String address){handler.post(()->connect(address));}
         @JavascriptInterface public void disconnectBle(){handler.post(()->disconnect());}
         @JavascriptInterface public void exportBackup(String data){handler.post(()->{
-            pendingBackup=data;
+            pendingBackup=data;pendingIsCsv=false;
             Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.setType("application/json");i.addCategory(Intent.CATEGORY_OPENABLE);
             i.putExtra(Intent.EXTRA_TITLE,"arque-measure-"+System.currentTimeMillis()+".arque");startActivityForResult(i,REQUEST_EXPORT);
+        });}
+        @JavascriptInterface public void exportCsv(String filename,String data){handler.post(()->{
+            if(data==null||data.length()>2_000_000){status("Arquivo CSV muito grande");return;}
+            pendingBackup=data;pendingIsCsv=true;
+            String safe=(filename==null?"relatorio":filename).replaceAll("[^a-zA-Z0-9_.-]","-");
+            if(!safe.endsWith(".csv"))safe=safe+".csv";
+            Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.setType("text/csv");i.addCategory(Intent.CATEGORY_OPENABLE);
+            i.putExtra(Intent.EXTRA_TITLE,safe);startActivityForResult(i,REQUEST_EXPORT);
         });}
         @JavascriptInterface public void importBackup(){handler.post(()->{
             Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("*/*");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,REQUEST_IMPORT);
@@ -307,8 +316,8 @@ public final class MainActivity extends Activity {
         if(res!=RESULT_OK||data==null||data.getData()==null)return;
         Uri uri=data.getData();
         if(req==REQUEST_EXPORT&&pendingBackup!=null){try(OutputStream out=getContentResolver().openOutputStream(uri)){
-            if(out==null)throw new Exception("Arquivo indisponível");out.write(pendingBackup.getBytes(StandardCharsets.UTF_8));status("Backup exportado");
-        }catch(Exception e){status("Erro ao exportar: "+e.getMessage());}finally{pendingBackup=null;}}
+            if(out==null)throw new Exception("Arquivo indisponível");out.write(pendingBackup.getBytes(StandardCharsets.UTF_8));status(pendingIsCsv?"Relatório CSV exportado":"Backup exportado");
+        }catch(Exception e){status("Erro ao exportar: "+e.getMessage());}finally{pendingBackup=null;pendingIsCsv=false;}}
         if(req==REQUEST_IMPORT){try(InputStream in=getContentResolver().openInputStream(uri)){
             if(in==null)throw new Exception("Arquivo indisponível");ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] buf=new byte[8192];int n;
             while((n=in.read(buf))!=-1){out.write(buf,0,n);if(out.size()>60_000_000)throw new Exception("Backup maior que 60 MB nesta versão");}

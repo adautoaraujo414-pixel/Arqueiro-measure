@@ -41,5 +41,44 @@ function nativeReminders(items,now=Date.now()){
  return (items||[]).filter(x=>x.status==='Pendente'&&parse(x.startAt)>now&&parse(x.startAt)<now+366*24*60*MINUTE)
  .map(x=>({id:x.id,title:x.title,type:x.type,notes:x.notes||'',at:parse(x.startAt),reminderMinutes:Number(x.reminderMinutes||0)}));
 }
-return {types,reminderOptions,parse,dayOf,validate,conflicts,dayEvents,freeSlots,nativeReminders};
+
+/* Single source of truth for a client's delivery: a project owns one automatic agenda entry. */
+const requiresDelivery=status=>status==='Aprovado'||status==='Produção';
+const projectDeliverySource='project-delivery';
+const pad2=n=>String(n).padStart(2,'0');
+function localDateTime(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());}
+function deliveryStamp(project){
+ const date=String(project.deliveryDate||''),hour=String(project.deliveryTime||'');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!/^\d{2}:\d{2}$/.test(hour))
+  throw Error('Informe a data e o horário da entrega para aprovar ou produzir a obra.');
+ const stamp=date+'T'+hour,t=new Date(stamp);
+ if(!Number.isFinite(t.getTime())||localDateTime(t)!==stamp)
+  throw Error('Data ou horário de entrega inválidos.');
+ const duration=Number(project.deliveryDurationMinutes??60);
+ if(![30,60,90,120,180,240,480].includes(duration))
+  throw Error('Selecione uma duração válida para a entrega.');
+ return {startAt:stamp,endAt:localDateTime(new Date(t.getTime()+duration*MINUTE)),duration};
+}
+function syncProjectDelivery(existing,project,clientLabel=''){
+ const entries=Array.isArray(existing)?existing:[];
+ if(!project||!project.id)throw Error('Projeto de entrega inválido.');
+ const belongs=e=>e?.source===projectDeliverySource&&e.projectId===project.id;
+ const saved=entries.find(belongs);
+ const rest=entries.filter(e=>!belongs(e));
+ const baseId=saved?.id||'delivery-'+project.id;
+ const closing=project.status==='Finalizado'?'Concluído':'Cancelado';
+ if(!['Aprovado','Produção','Montagem'].includes(project.status)||project.status==='Montagem'&&!project.deliveryDate){
+   if(!saved)return rest;
+   return [...rest,{...saved,status:closing}];
+ }
+ const {startAt,endAt}=deliveryStamp(project);
+ const title=('Entrega: '+String(project.name||'Obra')+' · '+String(clientLabel||'Cliente')).slice(0,120);
+ const fields={id:baseId,title,type:'Entrega',startAt,endAt,reminderMinutes:60,projectId:project.id,
+    notes:('Entrega vinculada à obra. '+String(project.address||'')).slice(0,1500),status:'Pendente'};
+ // Validate against every OTHER commitment; do not create duplicate auto-deliveries.
+ const checked=validate(fields,rest);
+ return [...rest,{...checked,source:projectDeliverySource}];
+}
+
+return {types,reminderOptions,parse,dayOf,validate,conflicts,dayEvents,freeSlots,nativeReminders,requiresDelivery,deliveryStamp,syncProjectDelivery};
 });

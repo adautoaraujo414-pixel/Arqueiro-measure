@@ -292,3 +292,28 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .photo-quick-dialog h3{margin:0 0 14px}.photo-quick-dialog input{width:100%;font-size:24px;margin-top:8px;box-sizing:border-box}.photo-quick-dialog .actions{justify-content:flex-end}.photo-quick-dialog button{min-height:48px;min-width:82px}.photo-quick-dialog [role=alert]{color:#b42318;font-size:14px;min-height:18px}
 
 .photo-floating-dock .photo-palette-popover{top:auto;bottom:calc(100% + 8px);left:0;right:auto}
+
+
+/* Agenda Arque — tablet / celular, leitura rápida no canteiro. */
+.agenda-heading{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.agenda-heading input{width:230px;max-width:100%}
+.agenda-heading p{margin:0 0 12px}
+.agenda-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.agenda-summary>div{padding:12px;background:#242729;border:1px solid #42474a;border-left:3px solid var(--yellow);display:flex;flex-direction:column;gap:3px}
+.agenda-summary small{font-size:11px;color:var(--muted)}
+.agenda-summary strong{font-size:25px;color:var(--yellow)}
+.agenda-free{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 20px}
+.agenda-free span{padding:8px 10px;border:1px solid #53735c;background:#182e20;border-radius:6px;color:#c7f6d0;font-weight:650}
+.agenda-free small{font-size:11px;opacity:.8}
+.agenda-entry{border:1px solid #414b50;border-left:4px solid var(--yellow);padding:11px;margin-bottom:8px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;background:#202629}
+.agenda-entry>div:first-child{min-width:170px;flex:1}
+.agenda-entry b{display:inline-block;color:var(--yellow);font-size:13px;margin-bottom:2px}
+.agenda-entry strong,.agenda-entry small{display:block}
+.agenda-entry small{font-size:12px;color:var(--muted);margin-top:2px}
+.agenda-entry.agenda-done{opacity:.65;border-left-color:#677e72}
+.agenda-buttons{display:flex;flex-wrap:wrap;gap:5px}
+.agenda-buttons .btn{min-height:38px}
+.agenda-next{display:flex;align-items:center;gap:12px;border-bottom:1px solid #3e4549;padding:12px 0}
+.agenda-next b{color:var(--yellow);min-width:87px}.agenda-next span{flex:1;overflow-wrap:anywhere}
+.agenda-disclaimer{font-size:12px;line-height:1.5}
+@media(max-width:650px){.agenda-summary{grid-template-columns:1fr 1fr}.agenda-next{flex-wrap:wrap}.agenda-heading input{width:100%}}

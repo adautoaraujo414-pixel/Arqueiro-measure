@@ -88,7 +88,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  noteCanvas.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  for(const type of ['pointerdown','pointerup']){
   const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:201},clientX:{value:145},clientY:{value:290},pointerType:{value:'pen'}});
-  noteCanvas.dispatchEvent(ev);
+  if(typeof noteCanvas['on'+type]==='function')noteCanvas['on'+type](ev);else noteCanvas.dispatchEvent(ev);
  }
  await sleep(60);
  click(doc,'studioNoteLarger');await sleep(45);
@@ -103,12 +103,11 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  swipe.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
  const send=(kind,id,x,y)=>{
   const ev=new w.Event(kind,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:id},clientX:{value:x},clientY:{value:y},pointerType:{value:'touch'}});
-  swipe.dispatchEvent(ev);
+  if(typeof swipe['on'+kind]==='function')swipe['on'+kind](ev);else swipe.dispatchEvent(ev);
  };
  const beforeCount=swipe.dataset.strokeCount;
  send('pointerdown',31,100,100);send('pointerdown',32,200,100);
  send('pointermove',32,310,100);
- console.log('PINCH DIAGNOSTIC',doc.getElementById('studioZoomValue').textContent,swipe.style.transform,swipe.dataset.strokeCount);
  assert(Number.parseInt(doc.getElementById('studioZoomValue').textContent)>150,'pinça amplia a folha');
  send('pointerup',32,310,100);send('pointerup',31,100,100);
  assert.equal(swipe.dataset.strokeCount,beforeCount,'gesto com dois dedos não cria traço');

@@ -46,7 +46,7 @@ function editLastMeasureView(p){
 
 function clientName(id){return state.clients.find(c=>c.id===id)?.name||'Cliente desconhecido'}
 function header(title,description=''){return `<h1>${title}</h1>${description?`<p class="intro">${description}</p>`:''}`}
-function render(){const main=$('#main');try{main.innerHTML=({home:homeView,clients:clientsView,projects:projectsView,tools:toolsView,transfer:transferView,diagnostics:diagnosticsView})[tab]();}catch(e){main.innerHTML=`<div class="notice">Falha ao exibir: ${escape(e.message)}</div>`;}document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); if(tab==='projects'&&project()&&subtab==='desenho')setTimeout(()=>{setupDrawing();const dc=$('#drawColor');if(dc)dc.value=drawColor;},0);if(tab==='projects'&&project()&&subtab==='atelier')setTimeout(setupStudio,0);}
+function render(){const main=$('#main');try{main.innerHTML=({home:homeView,clients:clientsView,projects:projectsView,agenda:agendaView,tools:toolsView,transfer:transferView,diagnostics:diagnosticsView})[tab]();}catch(e){main.innerHTML=`<div class="notice">Falha ao exibir: ${escape(e.message)}</div>`;}document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab)); if(tab==='projects'&&project()&&subtab==='desenho')setTimeout(()=>{setupDrawing();const dc=$('#drawColor');if(dc)dc.value=drawColor;},0);if(tab==='projects'&&project()&&subtab==='atelier')setTimeout(setupStudio,0);}
 function workGroup(status){
  if(status==='Finalizado')return 'finalizados';
  if(status==='Cancelado')return 'cancelados';
@@ -386,6 +386,45 @@ function setupStudio(){
 
 function financeView(){const p=project(),f=C.finance(p);return `<div class="grid"><div class="card"><small class="muted">Contrato líquido</small><div class="stat">${money(f.net)}</div></div><div class="card"><small class="muted">Recebido</small><div class="stat">${money(f.paid)}</div></div><div class="card"><small class="muted">Saldo a receber</small><div class="stat">${money(f.balance)}</div></div></div><div class="card"><h3>Registrar pagamento</h3><div class="fields">${field('payamount','Valor (R$)','number','','min="0.01" step="0.01"')}${select('paymethod','Forma',['Pix','Dinheiro','Cartão','Transferência','Cheque','Boleto','Outro'])}${field('paydate','Data','date',new Date().toISOString().slice(0,10))}</div>${btn('Registrar recebimento','addPayment','','primary')}${p.payments.map(x=>`<div class="item"><div><strong>${money(x.amount)}</strong><small>${escape(x.method)} · ${escape(x.date)}</small></div>${btn('Excluir','deletePayment',x.id,'small danger')}</div>`).join('')}</div>`;}
 function toolsView(){const p=project();if(!p)return header('Cálculos por obra','Escolha primeiro o cliente e a obra para que os cálculos sejam associados ao projeto.')+btn('Abrir clientes','go','clients','primary');return header('Cálculos da obra · '+escape(p.name),'Confira as medições do ambiente antes de usar os resultados na produção.')+`<div class="grid"><div class="card"><h3>Tomada por referências</h3><div class="fields">${field('tw','Largura parede (mm)','number',3500)}${field('tl','Esquerda → caixa (mm)','number',1210)}${field('tc','Largura caixa (mm)','number',80)}${field('tr','Caixa → direita (mm)','number',2210)}${field('tt','Tolerância fechamento (mm)','number',state.settings.tolerance)}</div>${btn('Calcular tomada','calcSocket','','primary')}<div id="socketResult"></div></div><div class="card"><h3>Alturas e desníveis</h3><div class="fields">${field('h1','Altura esquerda (mm)','number',2710)}${field('h2','Altura central (mm)','number',2706)}${field('h3','Altura direita (mm)','number',2702)}</div>${btn('Comparar alturas','calcHeights','','primary')}<div id="heightsResult"></div></div><div class="card"><h3>Carcaça abaixo da pedra</h3><div class="fields">${field('ct','Topo pedra (mm)','number',900)}${field('cs','Espessura pedra (mm)','number',30)}${field('cb','Rodapé/base (mm)','number',100)}${field('cc','Folga instalação (mm)','number',5)}</div>${btn('Calcular carcaça','calcCarcass','','primary')}<div id="carcassResult"></div></div><div class="card"><h3>Vão com paredes irregulares</h3><div class="fields">${field('v1','Largura baixa (mm)','number',2735)}${field('v2','Largura média (mm)','number',2728)}${field('v3','Largura alta (mm)','number',2731)}${field('vl','Folga esquerda (mm)','number',5)}${field('vr','Folga direita (mm)','number',5)}</div>${btn('Calcular vão','calcOpening','','primary')}<div id="openingResult"></div></div></div><div class="notice">A variação entre alturas piso-teto não identifica isoladamente se o desnível está no piso ou no teto. É preciso medir com uma referência de nível.</div>`;}
+
+let agendaDay='',agendaEditId=null;
+const agendaClock=d=>new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const agendaDateLabel=d=>new Date(d).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+function agendaLocalDay(date=new Date()){const pad=x=>String(x).padStart(2,'0');return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate());}
+function agendaSync(){
+ if(!window.ArqueNative?.syncAgenda)return;
+ try{window.ArqueNative.syncAgenda(JSON.stringify(window.ArqueAgenda.nativeReminders(state.agenda||[])));}
+ catch(err){toast('Não foi possível sincronizar lembretes: '+err.message);}
+}
+function agendaSaveAndRender(){return persist().then(()=>{agendaSync();render();}).catch(err=>toast('Falha ao salvar agenda: '+err.message));}
+function agendaView(){
+ const A=window.ArqueAgenda,day=agendaDay||agendaLocalDay();agendaDay=day;
+ const all=state.agenda||[],daily=A.dayEvents(all,day),free=A.freeSlots(all,day);
+ const edit=all.find(x=>x.id===agendaEditId)||null;
+ const startAt=edit?.startAt||day+'T09:00',endAt=edit?.endAt||day+'T10:00';
+ const projectOptions=[{id:'',name:'Sem obra vinculada'},...state.projects.map(p=>({id:p.id,name:clientName(p.clientId)+' · '+p.name}))];
+ const reminderOptions=[{id:'0',name:'Somente no horário'},{id:'10',name:'10 minutos antes + no horário'},{id:'30',name:'30 minutos antes + no horário'},{id:'60',name:'1 hora antes + no horário'},{id:'120',name:'2 horas antes + no horário'},{id:'1440',name:'1 dia antes + no horário'}];
+ const kinds=A.types.map(name=>({id:name,name}));
+ const status=x=>x.status==='Concluído'?'Concluído':x.status==='Cancelado'?'Cancelado':'Pendente';
+ const rowEvent=x=>{
+  const linked=state.projects.find(p=>p.id===x.projectId);
+  const projectText=linked?' · '+clientName(linked.clientId)+' / '+linked.name:'';
+  return '<div class="agenda-entry '+(x.status!=='Pendente'?'agenda-done':'')+'"><div><b>'+escape(agendaClock(x.startAt)+'–'+agendaClock(x.endAt))+'</b><strong>'+escape(x.title)+'</strong><small>'+escape(x.type+projectText)+' · '+status(x)+'</small>'+(x.notes?'<small>'+escape(x.notes)+'</small>':'')+'</div><div class="agenda-buttons">'+btn('Editar','agendaEdit',x.id,'small')+btn(x.status==='Pendente'?'✓ Concluir':'Reabrir','agendaToggle',x.id,'small')+btn('Excluir','agendaDelete',x.id,'small danger')+'</div></div>';
+ };
+ const today=agendaLocalDay();
+ const next=all.filter(x=>x.status==='Pendente'&&A.parse(x.endAt)>=Date.now()).slice().sort((a,b)=>A.parse(a.startAt)-A.parse(b.startAt)).slice(0,10);
+ return header('Agenda Arque','Entregas, medições, montagem, reuniões e tempo livre num único lugar. Os compromissos são guardados neste aparelho e incluídos no backup.')+
+ '<div class="card"><div class="agenda-heading"><div><h3>Dia selecionado</h3><p class="muted">Defina a data para visualizar compromissos e horários disponíveis.</p></div><input aria-label="Dia da agenda" id="agendaDay" type="date" value="'+escape(day)+'"></div>'+
+ '<div class="agenda-summary"><div><small>Compromissos</small><strong>'+daily.filter(x=>x.status!=='Cancelado').length+'</strong></div><div><small>Horários livres · 8h às 19h</small><strong>'+free.filter(x=>x.minutes>=30).length+'</strong></div><div><small>Entregas pendentes</small><strong>'+all.filter(x=>x.type==='Entrega'&&x.status==='Pendente').length+'</strong></div></div>'+
+ '<h3>Horários livres</h3><div class="agenda-free">'+(free.filter(x=>x.minutes>=30).map(x=>'<span>'+agendaClock(x.start)+'–'+agendaClock(x.end)+' <small>('+Math.floor(x.minutes/60)+'h'+String(x.minutes%60).padStart(2,'0')+')</small></span>').join('')||'<p class="muted">Sem intervalos de pelo menos 30 minutos no expediente.</p>')+'</div>'+
+ '<h3>Compromissos deste dia</h3>'+(daily.map(rowEvent).join('')||'<div class="empty">Dia livre. Você pode agendar uma entrega ou compromisso.</div>')+'</div>'+
+ '<div class="card"><h3>'+(edit?'Editar compromisso':'Novo compromisso')+'</h3><div class="fields">'+field('agendaTitle','O que vai fazer?','text',edit?.title||'','maxlength="120"')+select('agendaType','Tipo',kinds,edit?.type||'Entrega')+select('agendaProject','Obra / cliente',projectOptions,edit?.projectId||'')+field('agendaStart','Início','datetime-local',startAt)+field('agendaEnd','Término','datetime-local',endAt)+select('agendaReminder','Me avisar',reminderOptions,String(edit?.reminderMinutes??60))+'</div>'+
+ '<div class="field"><label for="agendaNotes">Endereço, detalhes e observações</label><textarea id="agendaNotes" maxlength="1500" placeholder="Ex.: entregar cozinha, conferir ferragens, endereço e contato...">'+escape(edit?.notes||'')+'</textarea></div>'+
+ '<div class="actions">'+btn(edit?'Salvar alterações':'Agendar compromisso','agendaSave','','primary')+(edit?btn('Cancelar edição','agendaCancel'):'')+btn('Autorizar notificações Android','agendaPermission')+'</div>'+
+ '<p class="muted agenda-disclaimer">No APK Android, a Agenda Arque programa avisos locais no horário do compromisso e na antecedência escolhida. O Android pode atrasá-los por economia de bateria. No navegador, os compromissos são salvos, mas não há notificações em segundo plano.</p></div>'+
+ '<div class="card"><h3>Próximos compromissos</h3>'+(next.map(x=>'<div class="agenda-next"><b>'+escape(agendaDateLabel(x.startAt))+'</b><span>'+escape(agendaClock(x.startAt))+' · '+escape(x.type)+' · '+escape(x.title)+'</span>'+btn('Ver dia','agendaShowDay',x.id,'small')+'</div>').join('')||'<p class="muted">Nenhum compromisso futuro pendente.</p>')+'</div>';
+}
+
 function transferView(){return header('Arque Link','Encontre um Arque Measure por Bluetooth e transfira uma obra ou cópia completa pela mesma rede Wi-Fi/hotspot, com código de autorização.')+
  `<div class="card"><h3>Enviar projeto</h3><p>Abra o Arque Measure nos dois aparelhos. Ative um ponto de acesso ou conecte ambos ao mesmo Wi-Fi.</p>${select('linkMode','O que compartilhar',['Uma obra','Backup completo'],'Uma obra')}${state.projects.length?select('linkProject','Projeto para enviar',state.projects):'<p>Cadastre um projeto primeiro.</p>'}
  ${btn('Compartilhar projeto','linkShare','','primary')}${btn('Ativar anúncio Bluetooth','linkAdvertise')}${btn('Parar compartilhamento','linkStop')}
@@ -409,6 +448,19 @@ async function update(){await persist();render()}
 function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
+case'agendaSave':{
+ const A=window.ArqueAgenda,previous=(state.agenda||[]).find(x=>x.id===agendaEditId);
+ const item=A.validate({id:previous?.id||C.uid(),title:val('agendaTitle'),type:val('agendaType'),startAt:val('agendaStart'),endAt:val('agendaEnd'),projectId:val('agendaProject'),notes:val('agendaNotes'),reminderMinutes:Number(val('agendaReminder')),status:previous?.status||'Pendente'},state.agenda||[]);
+ if(!Array.isArray(state.agenda))state.agenda=[];
+ if(previous){Object.assign(previous,item);}else state.agenda.push(item);
+ agendaDay=item.startAt.slice(0,10);agendaEditId=null;agendaSaveAndRender();toast('Compromisso salvo na Agenda Arque.');break;
+}
+case'agendaEdit':{const item=(state.agenda||[]).find(x=>x.id===arg);if(!item)throw Error('Compromisso não encontrado.');agendaEditId=item.id;agendaDay=item.startAt.slice(0,10);render();break;}
+case'agendaCancel':agendaEditId=null;render();break;
+case'agendaShowDay':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){agendaDay=item.startAt.slice(0,10);agendaEditId=null;render();}break;}
+case'agendaDelete':{if(!confirm('Excluir este compromisso e seus avisos?'))break;state.agenda=(state.agenda||[]).filter(x=>x.id!==arg);if(agendaEditId===arg)agendaEditId=null;agendaSaveAndRender();break;}
+case'agendaToggle':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){item.status=item.status==='Pendente'?'Concluído':'Pendente';agendaSaveAndRender();}break;}
+case'agendaPermission':{if(window.ArqueNative?.requestAgendaNotifications){window.ArqueNative.requestAgendaNotifications();toast('Confira o pedido de autorização do Android.');}else toast('Avisos em segundo plano exigem o APK Android.');break;}
 case'go':tab=arg;selectedProject=null;selectedClient=null;selectedRoom=null;subtab='resumo';render();break;
 case'contractAttach':{if(!selectedClient)throw Error('Abra um cliente.');const inp=$('#contractFile');inp.dataset.clientId=selectedClient;inp.dataset.projectId=val('contractProject');inp.click();break;}
 case'contractOpen':{const c=state.clients.find(x=>x.id===selectedClient);const doc=c?.contracts?.find(x=>x.id===arg);if(!doc)throw Error('Documento não encontrado.');const link=document.createElement('a');link.href=doc.data;link.download=doc.name;document.body.append(link);link.click();link.remove();break;}
@@ -729,11 +781,13 @@ document.addEventListener('change',e=>{
  try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
  return;
  }
-if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
 if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
 if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
-(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
 
+window.ArqueAgendaStatus=message=>toast(message);
 window.ArqueAppBack=()=>{
  const previous=navigationHistory.pop();
  if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}

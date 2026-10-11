@@ -108,7 +108,7 @@ function clientProfileFields(c={}){
  '<p class="muted">Confira os dados antes de compartilhar. O aplicativo não envia dados automaticamente.</p></div>';
 }
 function csvCell(x){return '"'+String(x??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';}
-function exportCsv(name,rows){const csv='\uFEFF'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),a=document.createElement('a'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.href=url;a.download=name+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function exportCsv(name,rows){const csv='\uFEFF'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n');if(window.ArqueNative?.exportCsv){window.ArqueNative.exportCsv(name+'.csv',csv);return;}const a=document.createElement('a'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.href=url;a.download=name+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
 function clientIsComplete(c){return Boolean((c.fullName||'').trim().includes(' ')&&/^\d{11}$/.test(String(c.cpf||'').replace(/\D/g,''))&&(c.address||'').trim()&&(c.city||'').trim()&&(c.uf||'').trim());}
 function clientsView(){
  if(selectedClient){

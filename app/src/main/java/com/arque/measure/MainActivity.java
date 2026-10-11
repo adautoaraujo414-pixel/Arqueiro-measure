@@ -78,11 +78,12 @@ public final class MainActivity extends Activity {
     private boolean scanning = false;
     private ArqueLink link;
     private ArqueLinkDiscovery discovery;
-    private static final int REQUEST_LINK_BLE = 305;
+    private static final int REQUEST_LINK_BLE = 305, REQUEST_AGENDA_NOTIFICATIONS = 306;
 
     @SuppressLint({"SetJavaScriptEnabled", "JavascriptInterface"})
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
+        AgendaNotifications.ensureChannel(this);
         web = new WebView(this);
         setContentView(web);
         WebSettings s = web.getSettings();
@@ -241,6 +242,15 @@ public final class MainActivity extends Activity {
     }
     @SuppressLint("MissingPermission") private void disconnect(){stopScan();if(gatt!=null){try{gatt.disconnect();gatt.close();}catch(Exception ignored){}gatt=null;}characteristic=null;status("● Offline");}
     public final class Bridge{
+        @JavascriptInterface public void syncAgenda(String json){handler.post(()->{
+            try{AgendaNotifications.sync(MainActivity.this,json);}catch(Exception err){js("window.ArqueAgendaStatus("+JSONObject.quote("Falha ao programar lembretes: "+err.getMessage())+")");}
+        });}
+        @JavascriptInterface public void requestAgendaNotifications(){handler.post(()->{
+            if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},REQUEST_AGENDA_NOTIFICATIONS);
+            }else{js("window.ArqueAgendaStatus("+JSONObject.quote("Notificações habilitadas no Android.")+")");}
+        });}
+
         @JavascriptInterface public void printCutPlan(){handler.post(()->{
             try{
                 PrintManager printer=(PrintManager)getSystemService(Context.PRINT_SERVICE);

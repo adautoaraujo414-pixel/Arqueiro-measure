@@ -119,6 +119,38 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  doc.querySelector('[data-tab="projects"]').click();await sleep(40);
  click(doc,'openProject');await sleep(40);
 
+
+ // Approving an existing client project requires a delivery deadline.
+ assert(doc.querySelector('#pDeliveryFields'),'obra oferece data de entrega');
+ const stage=doc.getElementById('pstatus');
+ stage.value='Aprovado';stage.dispatchEvent(new w.Event('change',{bubbles:true}));
+ assert(!doc.getElementById('pDeliveryFields').hidden,'Aprovado mostra campos de entrega');
+ click(doc,'saveProject');await sleep(40);
+ assert(doc.getElementById('toast').textContent.includes('data e o horário'),'aprovação não pode avançar sem data');
+ assign(doc,'pDeliveryDate','2030-05-12');assign(doc,'pDeliveryTime','13:00');
+ const duration=doc.getElementById('pDeliveryDuration');duration.value='120';
+ click(doc,'saveProject');await sleep(90);
+ assert(doc.getElementById('pstatus').value==='Aprovado','aprovação com prazo foi salva');
+ doc.querySelector('[data-tab="agenda"]').click();await sleep(40);
+ assign(doc,'agendaDay','2030-05-12');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
+ assert(doc.querySelectorAll('.agenda-entry').length===2,'entrega sincronizada com agenda sem substituir compromisso manual');
+ assert(doc.body.textContent.includes('Entrega: Cozinha teste'),'entrega tem cliente e obra identificados');
+ assert(doc.querySelector('[data-action="agendaOpenProject"]'),'agenda retorna à obra de origem');
+ click(doc,'agendaOpenProject');await sleep(50);
+ assert(doc.getElementById('pstatus').value==='Aprovado','abrir entrega leva ao projeto certo');
+ const stage2=doc.getElementById('pstatus');stage2.value='Produção';stage2.dispatchEvent(new w.Event('change',{bubbles:true}));
+ assign(doc,'pDeliveryDate','2030-05-13');assign(doc,'pDeliveryTime','14:30');
+ doc.getElementById('pDeliveryDuration').value='60';
+ click(doc,'saveProject');await sleep(90);
+ assert(doc.getElementById('pstatus').value==='Produção','fase produção salva');
+ doc.querySelector('[data-tab="agenda"]').click();await sleep(40);
+ assign(doc,'agendaDay','2030-05-13');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
+ assert(doc.querySelectorAll('.agenda-entry').length===1,'nova data mostra uma única entrega');
+ assert(doc.body.textContent.includes('14:30–15:30'),'hora alterada aparece na agenda');
+ assign(doc,'agendaDay','2030-05-12');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
+ assert(doc.querySelectorAll('.agenda-entry').length===1,'data anterior mantém apenas compromisso manual');
+ doc.querySelector('[data-tab="projects"]').click();await sleep(40);click(doc,'openProject');await sleep(40);
+
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);
  assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');

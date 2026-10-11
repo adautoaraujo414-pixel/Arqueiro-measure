@@ -330,3 +330,23 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .project-delivery-fields h3{margin:0 0 4px}
 .project-delivery-fields .muted{font-size:12px}
 .project-delivery-fields .fields{margin-top:10px}
+
+
+/* Calendar with explicit weekdays instead of Android's weekday-less spinner. */
+.arq-date-field{min-width:0}.arq-date-trigger{display:flex;align-items:center;gap:9px;width:100%;min-height:49px;padding:10px 12px;border:1px solid #8a7734;background:#24200f;color:#ffdf75;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;text-align:left}
+.arq-date-trigger span:nth-child(2){flex:1;overflow-wrap:anywhere}.arq-date-trigger:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.agenda-heading>.arq-date-field{width:min(100%,355px);flex:0 1 355px}.agenda-heading .arq-date-field label{color:#dfc968}
+.arq-cal-overlay{position:fixed;inset:0;z-index:100;background:#000c;display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
+.arq-cal-dialog{width:min(100%,470px);background:#171717;border:1px solid #746330;color:#f8e09a;border-radius:15px;box-shadow:0 18px 65px #000c;padding:18px;max-height:min(92vh,800px);overflow-y:auto}
+.arq-cal-top{display:flex;flex-direction:column;gap:4px;background:#27210e;border-left:4px solid var(--yellow);border-radius:8px;padding:11px 13px}.arq-cal-top small{font-weight:600;color:#d8c886}.arq-cal-top strong{font-size:19px;color:#ffdf53;line-height:1.4}
+.arq-cal-month{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0}.arq-cal-month h3{margin:0;font-size:17px;text-transform:capitalize;text-align:center}.arq-cal-arrow{min-width:44px;min-height:44px;border-radius:10px;border:1px solid #60501e;background:#2b250f;color:var(--yellow);font-size:27px;cursor:pointer}
+.arq-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;align-items:center;text-align:center}
+.arq-cal-weekday{padding:8px 0;font-size:11px;color:#ffcf58;font-weight:800;text-transform:uppercase}
+.arq-cal-pad{min-height:43px}
+.arq-cal-day{min-height:43px;width:100%;border:1px solid transparent;border-radius:10px;background:#242424;color:#f5e5b4;font:700 15px/1 system-ui;cursor:pointer;touch-action:manipulation}
+.arq-cal-day.today{border-color:#ba9531}.arq-cal-day.chosen{background:var(--yellow);color:#16110c;border-color:var(--yellow)}
+.arq-cal-day:focus-visible,.arq-cal-arrow:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.arq-cal-time{display:flex;align-items:center;gap:15px;justify-content:space-between;padding:15px 0 5px}
+.arq-cal-time label{font-weight:700}.arq-cal-time input{width:min(180px,60%);border-color:#ac9030;min-height:46px;color:#ffdf72}
+.arq-cal-footer{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}.arq-cal-footer span{flex:1}.arq-cal-footer .btn{min-height:42px}
+@media(max-width:420px){.arq-cal-overlay{padding:7px}.arq-cal-dialog{padding:12px}.arq-cal-day,.arq-cal-pad{min-height:40px}.arq-cal-weekday{font-size:10px}.arq-cal-top strong{font-size:17px}}

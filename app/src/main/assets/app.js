@@ -67,7 +67,7 @@ function deliveryInputs(prefix,p={},status='Levantamento'){
  const durations=[30,60,90,120,180,240,480].map(n=>({id:String(n),name:n<60?n+' minutos':n/60+' hora'+(n>60?'s':'')}));
  return '<div id="'+prefix+'DeliveryFields" class="project-delivery-fields" '+(visible?'':'hidden')+'>'+
  '<h3>Entrega prevista</h3><p class="muted">Aprovado e Produção exigem data e horário. Ao salvar, a entrega aparece automaticamente na Agenda Arque.</p>'+
- '<div class="fields">'+field(prefix+'DeliveryDate','Data da entrega','date',p.deliveryDate||'')+
+ '<div class="fields">'+calendarField(prefix+'DeliveryDate','Data da entrega',p.deliveryDate||'')+
  field(prefix+'DeliveryTime','Horário da entrega','time',p.deliveryTime||'')+
  select(prefix+'DeliveryDuration','Tempo reservado na agenda',durations,String(p.deliveryDurationMinutes||60))+'</div>'+
  '<p class="muted">Lembrete automático 1 hora antes e no horário previsto. Você pode alterar o prazo posteriormente neste projeto.</p></div>';
@@ -429,6 +429,65 @@ function financeView(){const p=project(),f=C.finance(p);return `<div class="grid
 function toolsView(){const p=project();if(!p)return header('Cálculos por obra','Escolha primeiro o cliente e a obra para que os cálculos sejam associados ao projeto.')+btn('Abrir clientes','go','clients','primary');return header('Cálculos da obra · '+escape(p.name),'Confira as medições do ambiente antes de usar os resultados na produção.')+`<div class="grid"><div class="card"><h3>Tomada por referências</h3><div class="fields">${field('tw','Largura parede (mm)','number',3500)}${field('tl','Esquerda → caixa (mm)','number',1210)}${field('tc','Largura caixa (mm)','number',80)}${field('tr','Caixa → direita (mm)','number',2210)}${field('tt','Tolerância fechamento (mm)','number',state.settings.tolerance)}</div>${btn('Calcular tomada','calcSocket','','primary')}<div id="socketResult"></div></div><div class="card"><h3>Alturas e desníveis</h3><div class="fields">${field('h1','Altura esquerda (mm)','number',2710)}${field('h2','Altura central (mm)','number',2706)}${field('h3','Altura direita (mm)','number',2702)}</div>${btn('Comparar alturas','calcHeights','','primary')}<div id="heightsResult"></div></div><div class="card"><h3>Carcaça abaixo da pedra</h3><div class="fields">${field('ct','Topo pedra (mm)','number',900)}${field('cs','Espessura pedra (mm)','number',30)}${field('cb','Rodapé/base (mm)','number',100)}${field('cc','Folga instalação (mm)','number',5)}</div>${btn('Calcular carcaça','calcCarcass','','primary')}<div id="carcassResult"></div></div><div class="card"><h3>Vão com paredes irregulares</h3><div class="fields">${field('v1','Largura baixa (mm)','number',2735)}${field('v2','Largura média (mm)','number',2728)}${field('v3','Largura alta (mm)','number',2731)}${field('vl','Folga esquerda (mm)','number',5)}${field('vr','Folga direita (mm)','number',5)}</div>${btn('Calcular vão','calcOpening','','primary')}<div id="openingResult"></div></div></div><div class="notice">A variação entre alturas piso-teto não identifica isoladamente se o desnível está no piso ou no teto. É preciso medir com uma referência de nível.</div>`;}
 
 let agendaDay='',agendaEditId=null;
+
+let arqueCalendar=null;
+const agendaWeekday=v=>window.ArqueAgenda.weekdayLabel(v);
+function calendarField(id,label,value,includeTime=false){
+ const weekday=value?agendaWeekday(value):'Escolher a data';
+ const time=includeTime&&value?' às '+String(value).slice(11,16):'';
+ return '<div class="field arq-date-field"><label for="'+id+'Open">'+escape(label)+'</label>'+
+ '<input id="'+id+'" type="hidden" value="'+escape(value||'')+'">'+
+ '<button type="button" id="'+id+'Open" class="arq-date-trigger" data-action="calendarOpen" data-arg="'+id+'">'+
+ '<span aria-hidden="true">▦</span><span id="'+id+'Label">'+escape(weekday+time)+'</span><span aria-hidden="true">⌄</span></button></div>';
+}
+function closeArqueCalendar(){
+ const overlay=document.getElementById('arqueCalendarOverlay');if(overlay)overlay.remove();
+ arqueCalendar=null;
+}
+function showArqueCalendar(){
+ if(!arqueCalendar)return;
+ const A=window.ArqueAgenda,c=arqueCalendar,days=A.calendarMonthCells(c.month+'-01');
+ const month=A.weekdayLabel(c.month+'-01',{month:'long',year:'numeric'});
+ const selectedLabel=A.weekdayLabel(c.day);
+ const daysHtml=days.map(item=>item?
+   '<button type="button" data-action="calendarPick" data-arg="'+item.date+'" class="arq-cal-day '+(item.date===c.day?'chosen ':'')+(item.date===A.localDay(new Date())?'today':'')+'" aria-label="'+escape(A.weekdayLabel(item.date))+'" aria-pressed="'+(item.date===c.day)+'">'+item.day+'</button>'
+   :'<span class="arq-cal-pad" aria-hidden="true"></span>').join('');
+ const title=c.withTime?'Escolher data e hora':'Escolher data';
+ let overlay=document.getElementById('arqueCalendarOverlay');
+ if(!overlay){overlay=document.createElement('div');overlay.id='arqueCalendarOverlay';overlay.className='arq-cal-overlay';document.body.appendChild(overlay);}
+ const oldTime=overlay.querySelector('#arqCalTime')?.value;if(oldTime)c.time=oldTime;
+ overlay.innerHTML='<div class="arq-cal-dialog" role="dialog" aria-modal="true" aria-label="'+title+'">'+
+ '<div class="arq-cal-top"><small>'+title+'</small><strong id="arqCalSelected">'+escape(selectedLabel)+'</strong></div>'+
+ '<div class="arq-cal-month"><button type="button" class="arq-cal-arrow" data-action="calendarPrev" aria-label="Mês anterior">‹</button>'+
+ '<h3>'+escape(month)+'</h3><button type="button" class="arq-cal-arrow" data-action="calendarNext" aria-label="Próximo mês">›</button></div>'+
+ '<div class="arq-cal-grid">'+['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].map(label=>'<span class="arq-cal-weekday">'+label+'</span>').join('')+daysHtml+'</div>'+
+ (c.withTime?'<div class="arq-cal-time"><label for="arqCalTime">Horário</label><input id="arqCalTime" type="time" value="'+escape(c.time)+'"></div>':'')+
+ '<div class="arq-cal-footer">'+btn('Hoje','calendarToday','','small')+
+ '<span></span>'+btn('Cancelar','calendarCancel','','small')+btn('Definir','calendarConfirm','','primary')+'</div></div>';
+}
+function beginArqueCalendar(id){
+ const allowed=['agendaDay','agendaStart','agendaEnd','pDeliveryDate','pnewDeliveryDate'];
+ if(!allowed.includes(id))throw Error('Campo de calendário inválido.');
+ const input=document.getElementById(id);if(!input)throw Error('Campo de data indisponível.');
+ const withTime=id==='agendaStart'||id==='agendaEnd';
+ const raw=input.value;const day=raw&&/^\d{4}-\d{2}-\d{2}/.test(raw)?raw.slice(0,10):window.ArqueAgenda.localDay(new Date());
+ window.ArqueAgenda.weekdayLabel(day);
+ arqueCalendar={id,withTime,day,month:day.slice(0,7),time:withTime?raw.slice(11,16)||'09:00':''};
+ showArqueCalendar();
+}
+function confirmArqueCalendar(){
+ if(!arqueCalendar)return;
+ const c=arqueCalendar,el=document.getElementById(c.id);
+ if(!el){closeArqueCalendar();throw Error('O cadastro foi fechado.');}
+ const time=c.withTime?(document.getElementById('arqCalTime')?.value||''):'';
+ if(c.withTime&&!/^\d{2}:\d{2}$/.test(time))throw Error('Informe o horário.');
+ el.value=c.day+(c.withTime?'T'+time:'');
+ const label=document.getElementById(c.id+'Label');
+ if(label)label.textContent=agendaWeekday(c.day)+(c.withTime?' às '+time:'');
+ closeArqueCalendar();
+ el.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
 const agendaClock=d=>new Date(d).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 const agendaDateLabel=d=>new Date(d).toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
 function agendaLocalDay(date=new Date()){const pad=x=>String(x).padStart(2,'0');return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate());}
@@ -461,11 +520,11 @@ function agendaView(){
  const today=agendaLocalDay();
  const next=all.filter(x=>x.status==='Pendente'&&A.parse(x.endAt)>=Date.now()).slice().sort((a,b)=>A.parse(a.startAt)-A.parse(b.startAt)).slice(0,10);
  return header('Agenda Arque','Entregas, medições, montagem, reuniões e tempo livre num único lugar. Os compromissos são guardados neste aparelho e incluídos no backup.')+
- '<div class="card"><div class="agenda-heading"><div><h3>Dia selecionado</h3><p class="muted">Defina a data para visualizar compromissos e horários disponíveis.</p></div><input aria-label="Dia da agenda" id="agendaDay" type="date" value="'+escape(day)+'"></div>'+
+ '<div class="card"><div class="agenda-heading"><div><h3>Dia selecionado</h3><p class="muted">Escolha o dia pelo calendário, com o dia da semana.</p></div>'+calendarField('agendaDay','Dia da agenda',day)+'</div>'+
  '<div class="agenda-summary"><div><small>Compromissos</small><strong>'+daily.filter(x=>x.status!=='Cancelado').length+'</strong></div><div><small>Horários livres · 8h às 19h</small><strong>'+free.filter(x=>x.minutes>=30).length+'</strong></div><div><small>Entregas pendentes</small><strong>'+all.filter(x=>x.type==='Entrega'&&x.status==='Pendente').length+'</strong></div></div>'+
  '<h3>Horários livres</h3><div class="agenda-free">'+(free.filter(x=>x.minutes>=30).map(x=>'<span>'+agendaClock(x.start)+'–'+agendaClock(x.end)+' <small>('+Math.floor(x.minutes/60)+'h'+String(x.minutes%60).padStart(2,'0')+')</small></span>').join('')||'<p class="muted">Sem intervalos de pelo menos 30 minutos no expediente.</p>')+'</div>'+
  '<h3>Compromissos deste dia</h3>'+(daily.map(rowEvent).join('')||'<div class="empty">Dia livre. Você pode agendar uma entrega ou compromisso.</div>')+'</div>'+
- '<div class="card"><h3>'+(edit?'Editar compromisso':'Novo compromisso')+'</h3><div class="fields">'+field('agendaTitle','O que vai fazer?','text',edit?.title||'','maxlength="120"')+select('agendaType','Tipo',kinds,edit?.type||'Entrega')+select('agendaProject','Obra / cliente',projectOptions,edit?.projectId||'')+field('agendaStart','Início','datetime-local',startAt)+field('agendaEnd','Término','datetime-local',endAt)+select('agendaReminder','Me avisar',reminderOptions,String(edit?.reminderMinutes??60))+'</div>'+
+ '<div class="card"><h3>'+(edit?'Editar compromisso':'Novo compromisso')+'</h3><div class="fields">'+field('agendaTitle','O que vai fazer?','text',edit?.title||'','maxlength="120"')+select('agendaType','Tipo',kinds,edit?.type||'Entrega')+select('agendaProject','Obra / cliente',projectOptions,edit?.projectId||'')+calendarField('agendaStart','Início',startAt,true)+calendarField('agendaEnd','Término',endAt,true)+select('agendaReminder','Me avisar',reminderOptions,String(edit?.reminderMinutes??60))+'</div>'+
  '<div class="field"><label for="agendaNotes">Endereço, detalhes e observações</label><textarea id="agendaNotes" maxlength="1500" placeholder="Ex.: entregar cozinha, conferir ferragens, endereço e contato...">'+escape(edit?.notes||'')+'</textarea></div>'+
  '<div class="actions">'+btn(edit?'Salvar alterações':'Agendar compromisso','agendaSave','','primary')+(edit?btn('Cancelar edição','agendaCancel'):'')+btn('Autorizar notificações Android','agendaPermission')+'</div>'+
  '<p class="muted agenda-disclaimer">No APK Android, a Agenda Arque programa avisos locais no horário do compromisso e na antecedência escolhida. O Android pode atrasá-los por economia de bateria. No navegador, os compromissos são salvos, mas não há notificações em segundo plano.</p></div>'+
@@ -495,6 +554,13 @@ async function update(){await persist();render()}
 function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
+case'calendarOpen':beginArqueCalendar(arg);break;
+case'calendarCancel':closeArqueCalendar();break;
+case'calendarPrev':if(arqueCalendar){arqueCalendar.month=window.ArqueAgenda.adjacentMonth(arqueCalendar.month,-1);showArqueCalendar();}break;
+case'calendarNext':if(arqueCalendar){arqueCalendar.month=window.ArqueAgenda.adjacentMonth(arqueCalendar.month,1);showArqueCalendar();}break;
+case'calendarPick':if(arqueCalendar){window.ArqueAgenda.weekdayLabel(arg);arqueCalendar.day=arg;showArqueCalendar();}break;
+case'calendarToday':if(arqueCalendar){arqueCalendar.day=window.ArqueAgenda.localDay(new Date());arqueCalendar.month=arqueCalendar.day.slice(0,7);showArqueCalendar();}break;
+case'calendarConfirm':confirmArqueCalendar();break;
 case'agendaSave':{
  if((state.agenda||[]).some(x=>x.id===agendaEditId&&x.source==='project-delivery'))throw Error('Para alterar entregas automáticas, abra o projeto.');
  const A=window.ArqueAgenda,previous=(state.agenda||[]).find(x=>x.id===agendaEditId);
@@ -659,7 +725,8 @@ $('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0]
 for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
 $('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
 function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
-document.addEventListener('click',e=>{let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
 document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
 let mixedDrag=null;
 document.addEventListener('pointerdown',e=>{
@@ -846,6 +913,7 @@ if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id
 
 window.ArqueAgendaStatus=message=>toast(message);
 window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
  const previous=navigationHistory.pop();
  if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
  if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}

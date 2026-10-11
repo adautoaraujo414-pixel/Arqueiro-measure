@@ -112,6 +112,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  send('pointerup',32,310,100);send('pointerup',31,100,100);
  assert.equal(swipe.dataset.strokeCount,beforeCount,'gesto com dois dedos não cria traço');
  click(doc,'studioZoomReset');
+ const restoredPen=doc.getElementById('studioTool');restoredPen.value='pen';restoredPen.dispatchEvent(new w.Event('change',{bubbles:true}));
 
  const sketch=doc.getElementById('studioCanvas');
  assert.equal(typeof sketch.onpointerdown,'function','S Pen drawing listeners are attached');

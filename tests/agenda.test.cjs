@@ -56,9 +56,9 @@ assert.equal(mounted.find(x=>x.source==='project-delivery').status,'Pendente','m
 const finished=A.syncProjectDelivery(mounted,{...obra,status:'Finalizado'},'Cliente Maria');
 assert.equal(finished.find(x=>x.source==='project-delivery').status,'Concluído','finalizar obra encerra aviso');
 assert.equal(A.nativeReminders(finished,new Date('2029-06-01').getTime()).length,1,'concluído não notifica');
-const canceled=A.syncProjectDelivery(mounted,{...obra,status:'Cancelado'},'Cliente Maria');
-assert.equal(canceled.find(x=>x.source==='project-delivery').status,'Cancelado');
-const reactivated=A.syncProjectDelivery(canceled,{...obra,status:'Aprovado'},'Cliente Maria');
+const deliveryCanceled=A.syncProjectDelivery(mounted,{...obra,status:'Cancelado'},'Cliente Maria');
+assert.equal(deliveryCanceled.find(x=>x.source==='project-delivery').status,'Cancelado');
+const reactivated=A.syncProjectDelivery(deliveryCanceled,{...obra,status:'Aprovado'},'Cliente Maria');
 assert.equal(reactivated.find(x=>x.source==='project-delivery').id,assigned.id,'reativar não cria segundo registro');
 
 console.log('AGENDA: agendamento, conflito, horários livres, edição, avisos e virada de dia OK.');

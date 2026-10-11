@@ -169,6 +169,23 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('.agenda-entry').length===1,'data anterior mantém apenas compromisso manual');
  doc.querySelector('[data-tab="projects"]').click();await sleep(40);click(doc,'openProject');await sleep(40);
 
+
+ // Room editor and photographic precision lens controls are available within the project.
+ click(doc,'openWorkspace','medidas');await sleep(40);
+ assert(doc.querySelector('#roomPlanSvg'),'room floor plan visible in Ambientes');
+ assert.equal(doc.querySelectorAll('[data-room-handle]').length,4,'room shows four editable corners');
+ click(doc,'roomPlanRect');await sleep(45);
+ assert.equal(doc.querySelectorAll('[data-room-handle]').length,4);
+ click(doc,'roomPlanAdd');await sleep(45);
+ assert.equal(doc.querySelectorAll('[data-room-handle]').length,5,'adding a corner expands room polygon');
+ click(doc,'roomPlanRemove');await sleep(45);
+ assert.equal(doc.querySelectorAll('[data-room-handle]').length,4,'removing a corner preserves room');
+ click(doc,'openWorkspace','atelier');await sleep(45);
+ assert(doc.querySelector('#studioTool option[value="arrow"]'),'sketch measurement arrow available');
+ assert.equal(doc.querySelectorAll('.studio-swatch').length,6,'six drawing colors');
+ click(doc,'studioInkColor','#df4848');
+ assert.equal(doc.getElementById('studioColor').value,'#df4848','quick swatch updates ink color');
+
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);
  assert(!doc.body.textContent.includes('Nova seta horizontal'),'old arrow options removed');

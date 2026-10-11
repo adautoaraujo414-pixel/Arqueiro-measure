@@ -1,5 +1,5 @@
 'use strict';
-/* Abre o APK real e garante que Esboço e Planta funcionam com Laboratório desativado. */
+/* Abre os assets do APK e verifica o caderno manual com Laboratório desativado. */
 const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM,VirtualConsole}=require('jsdom'),{IDBFactory}=require('fake-indexeddb');
 const index=fs.readFileSync('app/src/main/assets/index.html','utf8');
 const paths=[...index.matchAll(/<script\s+src="([^"]+\.js)"/g)].map(x=>x[1]);
@@ -32,18 +32,15 @@ const input=(id,value)=>{const el=d.getElementById(id);assert(el,'Campo '+id+' i
  await sleep(70);
  assert(!d.querySelector('[data-action="studioMode"][data-arg="laboratorio"]'),'aba suspensa não pode aparecer');
  assert(!d.getElementById('arqueLab'),'Laboratório não pode montar conteúdo');
- assert(d.querySelector('[data-action="studioMode"][data-arg="esboco"]'),'Esboço permanece disponível');
- assert(d.querySelector('[data-action="studioMode"][data-arg="planta"]'),'Planta permanece disponível');
+ assert(d.body.textContent.includes('Caderno de esboço manual'),'caderno manual está disponível');
+ assert(!d.querySelector('[data-action="studioMode"][data-arg="planta"]'),'planta CAD desativada');
  input('studioNewName','Folha salva');
  fire('studioNew');
  await sleep(100);
- assert(d.getElementById('studioCanvas'),'Folha do Esboço abre normalmente');
- fire('studioMode','planta');
- await sleep(80);
- assert(d.getElementById('studioCanvas'),'Planta abre sem Laboratório');
- fire('studioMode','esboco');
- await sleep(80);
- assert(d.body.textContent.includes('Folha salva'),'Folha mantém nome ao alternar modo');
+ assert(d.getElementById('studioCanvas'),'folha do caderno abre normalmente');
+ assert(d.querySelector('#studioTool option[value="line"]'),'modo de linha reta disponível');
+ assert(d.querySelector('[data-action="studioSnapToggle"]'),'encaixe de pontos disponível');
+ assert(d.body.textContent.includes('Folha salva'),'folha permanece nomeada');
  assert(issues.length===0,'Erros não capturados na interface sem Laboratório:\\n'+issues.join('\\n').slice(0,2500));
- console.log('BOOT: '+paths.length+' scripts ativos, obra nova, Esboço e Planta funcionando sem Laboratório.');
+ console.log('BOOT: '+paths.length+' scripts ativos, obra nova e caderno manual funcionando sem Laboratório.');
 })().catch(e=>{console.error(e.stack||e);process.exitCode=1;});

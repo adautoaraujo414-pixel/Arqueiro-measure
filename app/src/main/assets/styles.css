@@ -360,3 +360,11 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .room-plan-board svg{width:100%;display:block;max-height:65vh;touch-action:none}.room-plan-board circle{cursor:grab;touch-action:none}
 .room-plan-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .room-plan-actions .btn{min-height:40px}
+
+/* Formulários de agenda e clientes mantêm a paleta Arque azul / branco. */
+.agenda-observations textarea{background:#fff8e2!important;color:#183d4b!important;border:2px solid #087da7!important;font-weight:650;min-height:92px}
+.agenda-observations label{color:#076a90!important;font-weight:800!important}
+.agenda-note{color:#075c7b!important;font-weight:800!important;background:#e9f5fb!important;border-left:3px solid #078cbb;padding:5px 8px;margin-top:6px}
+.agenda-entry{background:#fff!important;border-color:#dae6ed!important;border-left-color:#0b8fbc!important}
+.agenda-entry strong,.agenda-entry b{color:#087da3!important}
+.agenda-entry small{color:#46606e!important}

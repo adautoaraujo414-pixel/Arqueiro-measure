@@ -10,7 +10,7 @@ assert.equal(new Set(allowed).size,allowed.length,'assets sem duplicação');
 const expected=new Set(['index.html']);
 for(const match of index.matchAll(/<(?:script|link)\b[^>]*?\b(?:src|href)="([^"]+)"[^>]*>/g))
  if(/\.(js|css)$/.test(match[1]))expected.add(match[1]);
-assert.equal(expected.size,5,'apenas index, estilos, core, corte e app são carregados');
+assert.equal(expected.size,6,'apenas index, estilos, core, corte e app são carregados');
 for(const file of expected){
  assert(allowed.includes(file),'Android WebView está bloqueando '+file+' -> Laboratório ficará indisponível.');
  assert(fs.existsSync('app/src/main/assets/'+file),'Recurso permitido mas ausente no APK: '+file);

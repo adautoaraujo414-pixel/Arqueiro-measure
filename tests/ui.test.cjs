@@ -107,6 +107,24 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#agendaTitle'),'agenda abre pela navegação');
  assert(doc.body.textContent.includes('Horários livres'),'agenda mostra intervalos livres');
  assign(doc,'agendaDay','2030-05-12');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
+
+ // Custom calendar shows the weekday while choosing, instead of opening the Android spinner.
+ assert(doc.querySelector('[data-action="calendarOpen"][data-arg="agendaDay"]'),'dia da agenda abre calendário próprio');
+ assert(doc.querySelector('[data-action="calendarOpen"][data-arg="agendaStart"]'),'início usa calendário próprio');
+ click(doc,'calendarOpen','agendaStart');await sleep(20);
+ assert(doc.querySelector('#arqueCalendarOverlay [role="dialog"]'),'abre modal de data');
+ assert.equal(doc.querySelectorAll('.arq-cal-weekday').length,7,'mostra segunda a domingo');
+ assert(doc.querySelector('#arqCalSelected').textContent.includes(w.ArqueAgenda.weekdayLabel('2030-05-12')),'identifica dia da semana da data marcada');
+ click(doc,'calendarNext');assert(doc.querySelector('.arq-cal-month h3').textContent.includes('junho'),'mês seguinte');
+ click(doc,'calendarPrev');assert(doc.querySelector('.arq-cal-month h3').textContent.includes('maio'),'volta ao mês');
+ click(doc,'calendarPick','2030-05-13');
+ assert(doc.querySelector('#arqCalSelected').textContent.includes(w.ArqueAgenda.weekdayLabel('2030-05-13')),'dia da semana muda antes de definir');
+ doc.getElementById('arqCalTime').value='09:30';
+ click(doc,'calendarConfirm');
+ assert(!doc.querySelector('#arqueCalendarOverlay'),'fecha janela ao definir');
+ assert.equal(doc.getElementById('agendaStart').value,'2030-05-13T09:30','atualiza início escolhido');
+ assert(doc.getElementById('agendaStartLabel').textContent.includes('09:30'),'mostra horário e dia da semana no formulário');
+
  assign(doc,'agendaTitle','Entrega da cozinha');
  assign(doc,'agendaStart','2030-05-12T09:00');assign(doc,'agendaEnd','2030-05-12T11:00');
  click(doc,'agendaSave');await sleep(90);

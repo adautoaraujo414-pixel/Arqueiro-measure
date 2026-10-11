@@ -413,61 +413,157 @@ function studioView(){
  `:'<div class="empty">Escolha um nome e adicione uma folha A4 para começar.</div>'}</div></div>`;
 }
 function setupStudio(){
- // Esboço e Planta mantidos: nenhuma montagem do Laboratório nesta versão.
-
  const canvas=$('#studioCanvas'),p=project();if(!canvas||!p)return;
- const page=studioCurrent(p);if(!page)return;
+ const page=studioCurrent(p),shell=$('#studioCanvasShell');if(!page||!shell)return;
+ if(!Array.isArray(page.images))page.images=[];
+ if(!Array.isArray(page.labels))page.labels=[];
  const ctx=canvas.getContext('2d');if(!ctx)return;
- const drawStroke=(stroke)=>{
+ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+ const save=()=>persist().catch(x=>toast('Falha ao salvar esboço: '+x.message));
+ const transform=()=>{
+  canvas.style.transformOrigin='top left';
+  canvas.style.transform='translate('+studioViewport.x+'px,'+studioViewport.y+'px) scale('+studioViewport.zoom+')';
+  const readout=$('#studioZoomValue');if(readout)readout.textContent=Math.round(studioViewport.zoom*100)+'%';
+ };
+ const drawStroke=stroke=>{
   if(!stroke?.points?.length)return;
-  ctx.beginPath();ctx.strokeStyle=stroke.color||'#151515';ctx.lineWidth=stroke.width||3;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=stroke.color||'#151515';ctx.lineWidth=stroke.width||3;ctx.lineCap='round';ctx.lineJoin='round';
   const paths=stroke.kind?studioObjectPaths(stroke.kind,...stroke.points[0],...stroke.points[stroke.points.length-1]):[stroke.points];
   for(const points of paths){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));if(points.length===1)ctx.lineTo(points[0][0]+.1,points[0][1]);ctx.stroke();}
   if(stroke.mm){const p1=stroke.points[0],p2=stroke.points[stroke.points.length-1];ctx.fillStyle='#066a9b';ctx.font='bold 16px Arial';ctx.fillText(String(stroke.mm)+' mm',(p1[0]+p2[0])/2,(p1[1]+p2[1])/2-9);}
  };
- function paint(){
+ const paint=()=>{
   canvas.dataset.strokeCount=String((page.strokes||[]).length);
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='rgba(14,106,154,0.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · '+studioModeTitle(studioMode).toUpperCase(),22,27);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='rgba(14,106,154,.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · '+studioModeTitle(studioMode).toUpperCase(),22,27);
   ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;
   if(studioGrid==='dots'){for(let y=22;y<canvas.height;y+=25)for(let x=22;x<canvas.width;x+=25){ctx.beginPath();ctx.arc(x,y,.8,0,7);ctx.fill();}}
   else if(studioGrid==='lines'){for(let y=25;y<canvas.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}}
+  // Reference photos are always below handwriting and typed notes.
+  for(const layer of page.images||[]){
+   if(!layer.src)continue;
+   let cached=studioImageCache.get(layer.src);
+   if(!cached){
+    const img=new Image();cached={img,ready:false,error:false};
+    studioImageCache.set(layer.src,cached);
+    img.onload=()=>{cached.ready=true;if($('#studioCanvas')===canvas)paint();};
+    img.onerror=()=>{cached.error=true;};
+    img.src=layer.src;
+   }
+   if(!cached.ready)continue;
+   ctx.save();ctx.globalAlpha=clamp(Number(layer.opacity??1),.2,1);
+   ctx.drawImage(cached.img,layer.x,layer.y,layer.width,layer.height);ctx.restore();
+   if(studioSelectedImage===layer.id){
+    ctx.save();ctx.strokeStyle='#087fa8';ctx.lineWidth=3;ctx.setLineDash([9,5]);
+    ctx.strokeRect(layer.x,layer.y,layer.width,layer.height);ctx.restore();
+   }
+  }
   for(const stroke of page.strokes||[])drawStroke(stroke);
- }
- const coords=e=>{const b=canvas.getBoundingClientRect();return [Math.max(0,Math.min(canvas.width,(e.clientX-b.left)*canvas.width/(b.width||1))),Math.max(0,Math.min(canvas.height,(e.clientY-b.top)*canvas.height/(b.height||1)))]};
- let active=null,activePointer=null,saveQueue=Promise.resolve();
- const save=()=>{saveQueue=saveQueue.catch(()=>{}).then(()=>persist()).catch(x=>toast('Erro ao salvar esboço: '+x.message));};
- const finish=e=>{
+  for(const note of page.labels||[]){
+   const size=clamp(Number(note.size)||24,12,64),lines=String(note.text||'').split('\n').slice(0,12);
+   ctx.font='600 '+size+'px Arial';const widest=Math.max(70,...lines.map(l=>ctx.measureText(l).width))+18;
+   ctx.fillStyle='rgba(232,244,250,.94)';ctx.fillRect(note.x-6,note.y-size-5,widest,lines.length*size*1.3+10);
+   ctx.strokeStyle=studioSelectedNote===note.id?'#087fa8':'#9fc5d7';ctx.lineWidth=studioSelectedNote===note.id?3:1;
+   ctx.strokeRect(note.x-6,note.y-size-5,widest,lines.length*size*1.3+10);
+   ctx.fillStyle='#12546f';lines.forEach((line,i)=>ctx.fillText(line,note.x,note.y+i*size*1.3));
+  }
+ };
+ studioCanvasPaint=paint;
+ const coords=e=>{const b=canvas.getBoundingClientRect();return [clamp((e.clientX-b.left)*canvas.width/(b.width||1),0,canvas.width),clamp((e.clientY-b.top)*canvas.height/(b.height||1),0,canvas.height)];};
+ const inside=(pos,item)=>pos[0]>=item.x-10&&pos[0]<=item.x+item.width+10&&pos[1]>=item.y-10&&pos[1]<=item.y+item.height+10;
+ const hitNote=pos=>(page.labels||[]).slice().reverse().find(n=>{
+  const size=clamp(Number(n.size)||24,12,64),lines=String(n.text).split('\n').slice(0,12);
+  ctx.font='600 '+size+'px Arial';
+  return inside(pos,{x:n.x-6,y:n.y-size-5,width:Math.max(70,...lines.map(l=>ctx.measureText(l).width))+18,height:lines.length*size*1.3+10});
+ });
+ const hitImage=pos=>(page.images||[]).slice().reverse().find(x=>inside(pos,x));
+ let active=null,activePointer=null,drag=null,gesture=null,gestureUsed=false;
+ const pointers=new Map();
+ const cancelInk=()=>{
+  if(active){const list=page.strokes||[],index=list.indexOf(active);if(index>=0)list.splice(index,1);active=null;activePointer=null;studioActive=false;paint();}
+ };
+ const finishInk=e=>{
   if(!active||e.pointerId!==activePointer)return;
   if(active.kind==='line'||active.kind==='arrow'){const kind=active.kind;studioAlignedLine(active,page);active.kind=kind;}
-  active=null;activePointer=null;studioActive=false;studioPoints=[];save();
+  active=null;activePointer=null;studioActive=false;studioPoints=[];save();paint();
+ };
+ const gestureBegin=()=>{
+  const points=[...pointers.values()];if(points.length<2)return;
+  cancelInk();drag=null;gestureUsed=true;
+  const midX=(points[0].x+points[1].x)/2,midY=(points[0].y+points[1].y)/2,b=shell.getBoundingClientRect();
+  gesture={distance:Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)||1,
+   zoom:studioViewport.zoom,anchorX:(midX-b.left-studioViewport.x)/studioViewport.zoom,
+   anchorY:(midY-b.top-studioViewport.y)/studioViewport.zoom};
  };
  canvas.style.touchAction='none';
  canvas.onpointerdown=e=>{
-  if(active)return;
-  e.preventDefault();
-  const stroke={points:[coords(e)],color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth};if(!['pen','eraser'].includes(studioTool))stroke.kind=studioTool;
-  (page.strokes||(page.strokes=[])).push(stroke);page.undone=[];
-  active=stroke;activePointer=e.pointerId;studioActive=true;
-  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
-  paint();
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+  if(pointers.size>=2){gestureBegin();e.preventDefault();return;}
+  if(gestureUsed){e.preventDefault();return;}
+  const pos=coords(e);
+  if(studioTool==='select'){
+   const note=hitNote(pos),image=note?null:hitImage(pos);
+   studioSelectedNote=note?.id||null;studioSelectedImage=image?.id||null;
+   if(note){$('#studioNoteInput').value=note.text;drag={item:note,x:pos[0]-note.x,y:pos[1]-note.y};}
+   else if(image&&!image.locked){drag={item:image,x:pos[0]-image.x,y:pos[1]-image.y};}
+   paint();e.preventDefault();return;
+  }
+  if(studioTool==='note'){
+   const note=hitNote(pos);
+   if(note){studioSelectedNote=note.id;$('#studioNoteInput').value=note.text;paint();}
+   else {
+    const text=$('#studioNoteInput')?.value?.trim();
+    if(!text){toast('Digite a nota no campo acima e toque onde deseja colocá-la.');}
+    else{const n={id:C.uid(),text:text.slice(0,300),x:Math.round(pos[0]),y:Math.round(pos[1]),size:24};page.labels.push(n);studioSelectedNote=n.id;page.undone=[];save();paint();}
+   }
+   e.preventDefault();return;
+  }
+  const stroke={points:[pos],color:studioTool==='eraser'?'#ffffff':studioInk,width:studioTool==='eraser'?28:studioWidth};
+  if(!['pen','eraser'].includes(studioTool))stroke.kind=studioTool;
+  (page.strokes||(page.strokes=[])).push(stroke);page.undone=[];active=stroke;activePointer=e.pointerId;studioActive=true;
+  paint();e.preventDefault();
  };
  canvas.onpointermove=e=>{
+  if(!pointers.has(e.pointerId))return;
+  pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size>=2&&gesture){
+   const arr=[...pointers.values()],midX=(arr[0].x+arr[1].x)/2,midY=(arr[0].y+arr[1].y)/2;
+   const zoom=clamp(gesture.zoom*Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y)/gesture.distance,1,5);
+   const b=shell.getBoundingClientRect();
+   studioViewport={zoom,x:midX-b.left-gesture.anchorX*zoom,y:midY-b.top-gesture.anchorY*zoom};
+   transform();e.preventDefault();return;
+  }
+  if(gestureUsed)return;
+  if(drag){const pos=coords(e),item=drag.item;item.x=Math.round(clamp(pos[0]-drag.x,0,canvas.width-25));item.y=Math.round(clamp(pos[1]-drag.y,0,canvas.height-25));paint();e.preventDefault();return;}
   if(!active||e.pointerId!==activePointer)return;
   e.preventDefault();
-  const events=typeof e.getCoalescedEvents==='function'?e.getCoalescedEvents():[];
-  for(const sample of events.length?events:[e]){if(active.kind)active.points=[active.points[0],coords(sample)];else active.points.push(coords(sample));}
+  const samples=typeof e.getCoalescedEvents==='function'?e.getCoalescedEvents():[];
+  for(const sample of samples.length?samples:[e]){if(active.kind)active.points=[active.points[0],coords(sample)];else active.points.push(coords(sample));}
   paint();
  };
- canvas.onpointerup=e=>{if(active&&e.pointerId===activePointer){active.points.push(coords(e));finish(e);paint();}};
- canvas.onpointercancel=e=>{finish(e);paint();};
- canvas.onlostpointercapture=e=>{if(active&&e.pointerId===activePointer){finish(e);paint();}};
- $('#studioTool').onchange=e=>studioTool=e.target.value;
+ const pointerFinish=(e,cancel=false)=>{
+  if(!pointers.has(e.pointerId))return;
+  if(pointers.size<2&&!gestureUsed&&active&&activePointer===e.pointerId){
+   if(!cancel){const pt=coords(e);if(active.kind)active.points=[active.points[0],pt];else active.points.push(pt);}
+   finishInk(e);
+  }
+  if(drag&&!gestureUsed){drag=null;save();}
+  pointers.delete(e.pointerId);
+  if(pointers.size<2)gesture=null;
+  if(!pointers.size)gestureUsed=false;
+  paint();
+ };
+ canvas.onpointerup=e=>pointerFinish(e);
+ canvas.onpointercancel=e=>pointerFinish(e,true);
+ canvas.onlostpointercapture=e=>pointerFinish(e,true);
+ $('#studioTool').onchange=e=>{studioTool=e.target.value;};
  $('#studioColor').onchange=e=>studioInk=e.target.value;
  $('#studioWidth').oninput=e=>studioWidth=+e.target.value;
- $('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint()};
+ $('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint();};
  $('#studioReferencePhoto').onchange=e=>{page.referencePhotoId=e.target.value;save();render();};
- paint();
+ transform();paint();
 }
 
 function financeView(){const p=project(),f=C.finance(p);return `${btn('Exportar financeiro CSV','exportFinanceCsv','','primary')}<div class="grid"><div class="card"><small class="muted">Contrato líquido</small><div class="stat">${money(f.net)}</div></div><div class="card"><small class="muted">Recebido</small><div class="stat">${money(f.paid)}</div></div><div class="card"><small class="muted">Saldo a receber</small><div class="stat">${money(f.balance)}</div></div></div><div class="card"><h3>Registrar pagamento</h3><div class="fields">${field('payamount','Valor (R$)','number','','min="0.01" step="0.01"')}${select('paymethod','Forma',['Pix','Dinheiro','Cartão','Transferência','Cheque','Boleto','Outro'])}${field('paydate','Data','date',new Date().toISOString().slice(0,10))}</div>${btn('Registrar recebimento','addPayment','','primary')}${p.payments.map(x=>`<div class="item"><div><strong>${money(x.amount)}</strong><small>${escape(x.method)} · ${escape(x.date)}</small></div>${btn('Excluir','deletePayment',x.id,'small danger')}</div>`).join('')}</div>`;}

@@ -80,5 +80,32 @@ function syncProjectDelivery(existing,project,clientLabel=''){
  return [...rest,{...checked,source:projectDeliverySource}];
 }
 
-return {types,reminderOptions,parse,dayOf,validate,conflicts,dayEvents,freeSlots,nativeReminders,requiresDelivery,deliveryStamp,syncProjectDelivery};
+
+/* Weekday-aware dates for the Arque calendar: use local noon to avoid UTC date shifts. */
+const two=n=>String(n).padStart(2,'0');
+function localDay(date){return date.getFullYear()+'-'+two(date.getMonth()+1)+'-'+two(date.getDate());}
+function calendarDate(value){
+ const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value||'').slice(0,10));
+ if(!match)throw Error('Data inválida.');
+ const y=Number(match[1]),m=Number(match[2]),d=Number(match[3]);
+ const date=new Date(y,m-1,d,12,0,0);
+ if(date.getFullYear()!==y||date.getMonth()!==m-1||date.getDate()!==d)throw Error('Data inválida.');
+ return date;
+}
+function weekdayLabel(value,options={weekday:'long',day:'numeric',month:'long',year:'numeric'}){
+ return calendarDate(value).toLocaleDateString('pt-BR',options);
+}
+function calendarMonthCells(value){
+ const first=calendarDate(String(value).slice(0,7)+'-01'),y=first.getFullYear(),m=first.getMonth();
+ const offset=(first.getDay()+6)%7; // Monday first
+ const days=new Date(y,m+1,0,12).getDate(),cells=Array(offset).fill(null);
+ for(let d=1;d<=days;d++)cells.push({day:d,date:localDay(new Date(y,m,d,12))});
+ return cells;
+}
+function adjacentMonth(value,delta){
+ const day=calendarDate(String(value).slice(0,7)+'-01');
+ return localDay(new Date(day.getFullYear(),day.getMonth()+Number(delta),1,12)).slice(0,7);
+}
+
+return {types,reminderOptions,parse,dayOf,validate,conflicts,dayEvents,freeSlots,nativeReminders,requiresDelivery,deliveryStamp,syncProjectDelivery,localDay,weekdayLabel,calendarMonthCells,adjacentMonth};
 });

@@ -315,7 +315,7 @@ public final class MainActivity extends Activity {
             String content=out.toString("UTF-8");js("window.ArqueReceiveBackup("+JSONObject.quote(content)+")");
         }catch(Exception e){status("Erro ao importar: "+e.getMessage());}}
     }
-    @Override public void onRequestPermissionsResult(int req,String[] permissions,int[] results){super.onRequestPermissionsResult(req,permissions,results);if(req==REQUEST_BLE){boolean ok=true;for(int x:results)if(x!=PackageManager.PERMISSION_GRANTED)ok=false;status(ok?"Permissão concedida; toque em Buscar trena":"Permissão Bluetooth negada");}}
+    @Override public void onRequestPermissionsResult(int req,String[] permissions,int[] results){super.onRequestPermissionsResult(req,permissions,results);if(req==REQUEST_BLE){boolean ok=true;for(int x:results)if(x!=PackageManager.PERMISSION_GRANTED)ok=false;status(ok?"Permissão concedida; toque em Buscar trena":"Permissão Bluetooth negada");}if(req==REQUEST_AGENDA_NOTIFICATIONS){boolean granted=results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED;js("window.ArqueAgendaStatus("+JSONObject.quote(granted?"Notificações autorizadas.":"Permissão negada: libere notificações nas configurações do Android.")+")");}}
     @Override public void onBackPressed(){
         if(web==null){super.onBackPressed();return;}
         web.evaluateJavascript("window.ArqueAppBack && window.ArqueAppBack()", result -> {

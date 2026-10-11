@@ -58,7 +58,7 @@ public final class MainActivity extends Activity {
     // Every local HTML/CSS/JS dependency must be explicitly granted here.
     // Refuse unknown URLs; never grant general access to arbitrary assets or internet resources.
     private static final Set<String> LOCAL_WEB_ASSETS = new HashSet<>(Arrays.asList(
-        "index.html", "styles.css", "core.js", "cut.js", "app.js"
+        "index.html", "styles.css", "core.js", "cut.js", "agenda.js", "app.js"
     ));
     private static final int REQUEST_BLE = 301, REQUEST_EXPORT = 302, REQUEST_IMPORT = 303, REQUEST_PICK = 304;
     private static final UUID BOSCH_CHAR = UUID.fromString("02a6c0d1-0451-4000-b000-fb3210111989");

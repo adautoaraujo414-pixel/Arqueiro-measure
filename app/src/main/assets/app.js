@@ -14,7 +14,7 @@ function applyPhotoZoom(){const surface=$('#photoZoomSurface');if(surface){surfa
 }
 function photoZoomSet(n){photoZoom=photoZoomClamp(n);if(photoZoom===1){photoPanX=0;photoPanY=0;}applyPhotoZoom();}
 
-let studioPageId=null, studioFullscreen=false, studioMode='esboco', studioInk='#176f9d', studioWidth=3, studioTool='pen', studioGrid='dots', studioActive=false, studioPoints=[];
+let studioPageId=null, studioFullscreen=false, studioMode='esboco', studioInk='#176f9d', studioWidth=3, studioTool='pen', studioSnap=true, studioGrid='dots', studioActive=false, studioPoints=[];
 let linkPeers=[];
 let linkInfo=null,linkNotice='';
 let db, state={clients:[],projects:[],settings:{tolerance:5}},tab='home',selectedClient=null,selectedProject=null,selectedRoom=null,subtab='medidas',lastBLE=null,lastBleReceipt=null,bleReadings=[],bleDevice=null,diagnostics=null,cameraCheck='Não testada',drawActive=false,drawPoints=[];
@@ -301,7 +301,7 @@ function studioCurrent(p){const pages=studioPages(p);if(!pages.length)return nul
 function studioModeTitle(mode){return mode==='planta'?'Planta':'Esboço';}
 function studioObjectPaths(kind,x1,y1,x2,y2){
  const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1);
- if(kind==='wall')return [[[x1,y1],[x2,y2]]];
+ if(kind==='wall'||kind==='line')return [[[x1,y1],[x2,y2]]];
  const rect=[[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]];
  const paths=[rect];
  if(kind==='cabinet'){paths.push([[x+w/2,y],[x+w/2,y+h]]);paths.push([[x+w*.44,y+h*.5],[x+w*.44,y+h*.65]]);paths.push([[x+w*.56,y+h*.5],[x+w*.56,y+h*.65]]);}
@@ -310,6 +310,29 @@ function studioObjectPaths(kind,x1,y1,x2,y2){
  return paths;
 }
 
+function studioAlignedLine(stroke,page){
+ if(!stroke||!stroke.points?.length)return;
+ let start=stroke.points[0].slice(),end=stroke.points[stroke.points.length-1].slice();
+ const anchors=[];
+ for(const other of page.strokes||[]){
+  if(other===stroke||!other.points?.length||!['line','wall'].includes(other.kind))continue;
+  anchors.push(other.points[0],other.points[other.points.length-1]);
+ }
+ function nearest(pos){
+  let best=pos,dist=22;
+  for(const p of anchors){const d=Math.hypot(pos[0]-p[0],pos[1]-p[1]);if(d<dist){dist=d;best=p;}}
+  return best.slice();
+ }
+ if(studioSnap){start=nearest(start);end=nearest(end);}
+ const dx=end[0]-start[0],dy=end[1]-start[1];
+ if(studioSnap){
+  if(Math.abs(dy)<=Math.abs(dx)*.17)end[1]=start[1];
+  else if(Math.abs(dx)<=Math.abs(dy)*.17)end[0]=start[0];
+  end=nearest(end);
+ }
+ if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)end=[start[0]+1,start[1]];
+ stroke.kind='line';stroke.points=[start,end];
+}
 function studioView(){
  // O Laboratório está suspenso; os dados e módulos anteriores permanecem nos projetos.
  if(studioMode!=='esboco'&&studioMode!=='planta')studioMode='esboco';
@@ -354,6 +377,7 @@ function setupStudio(){
  const save=()=>{saveQueue=saveQueue.catch(()=>{}).then(()=>persist()).catch(x=>toast('Erro ao salvar esboço: '+x.message));};
  const finish=e=>{
   if(!active||e.pointerId!==activePointer)return;
+  if(active.kind==='line')studioAlignedLine(active,page);
   active=null;activePointer=null;studioActive=false;studioPoints=[];save();
  };
  canvas.style.touchAction='none';
@@ -546,6 +570,13 @@ case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();brea
 case'undoStroke':r.strokes.pop();update();break;
 case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
 case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
 case'studioGotoPhotos':subtab='fotos';render();break;
 case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
 case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}

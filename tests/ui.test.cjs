@@ -34,7 +34,18 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'go','clients');
  assign(doc,'cname','Cliente persistência');click(doc,'addClient');await sleep(80);
  assert(doc.body.textContent.includes('Cliente persistência'),'client visible after save');
- click(doc,'openClient');click(doc,'clientProject');
+ click(doc,'openClient');
+ assert(doc.getElementById('clientCPF'),'cliente tem CPF editável depois do cadastro inicial');
+ assert(doc.getElementById('clientCity'),'cadastro permite cidade');
+ assign(doc,'clientFullName','Cliente Persistência Silva');
+ assign(doc,'clientCPF','12345678909');
+ assign(doc,'clientPhone','17999990000');
+ assign(doc,'clientAddress','Rua Principal, 123');
+ assign(doc,'clientCity','Frutal');
+ assign(doc,'clientState','MG');
+ click(doc,'saveClientProfile');await sleep(55);
+ assert(doc.getElementById('clientCity').value==='Frutal','cidade salva no cliente');
+ click(doc,'clientProject');
  assert(doc.body.textContent.includes('Ambiente (ex.: Cozinha, Quarto, Sala)'),'form asks for ambiente');assert(!doc.getElementById('paddr'),'address is not asked twice');assign(doc,'pname','Cozinha teste');click(doc,'addProject');await sleep(80);
  assert(doc.body.textContent.includes('Cozinha teste'),'project created');click(doc,'openWorkspace','medidas');await sleep(30);assert(doc.body.textContent.includes('Cozinha teste'),'initial environment created');click(doc,'openWorkspace','resumo');
 
@@ -105,6 +116,8 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  // Agenda independente da obra: aviso de entregas, horários livres e conflitos.
  doc.querySelector('[data-tab="agenda"]').click();await sleep(35);
  assert(doc.querySelector('#agendaTitle'),'agenda abre pela navegação');
+ assert(doc.getElementById('agendaAddress'),'agenda apresenta campo de endereço');
+ assert(doc.getElementById('agendaCity'),'agenda apresenta campo de cidade');
  assert(doc.body.textContent.includes('Horários livres'),'agenda mostra intervalos livres');
  assign(doc,'agendaDay','2030-05-12');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
 

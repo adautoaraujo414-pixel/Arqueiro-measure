@@ -37,7 +37,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  click(doc,'openClient');
  assert(doc.getElementById('clientCPF'),'cliente tem CPF editável depois do cadastro inicial');
  assert(doc.getElementById('clientCity'),'cadastro permite cidade');
- assign(doc,'clientFullName','Cliente Persistência Silva');
+ assign(doc,'clientFullName','Cliente persistência Silva');
  assign(doc,'clientCPF','12345678909');
  assign(doc,'clientPhone','17999990000');
  assign(doc,'clientAddress','Rua Principal, 123');

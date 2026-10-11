@@ -350,3 +350,13 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .arq-cal-time label{font-weight:700}.arq-cal-time input{width:min(180px,60%);border-color:#ac9030;min-height:46px;color:#ffdf72}
 .arq-cal-footer{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}.arq-cal-footer span{flex:1}.arq-cal-footer .btn{min-height:42px}
 @media(max-width:420px){.arq-cal-overlay{padding:7px}.arq-cal-dialog{padding:12px}.arq-cal-day,.arq-cal-pad{min-height:40px}.arq-cal-weekday{font-size:10px}.arq-cal-top strong{font-size:17px}}
+
+/* Magnifier appears only while resizing a photographed measurement. */
+.photo-precision-lens{position:absolute;width:130px;height:130px;z-index:100;border-radius:50%;border:4px solid #ffd329;background:#fff;overflow:hidden;pointer-events:none;box-shadow:0 5px 22px #0009}
+.photo-lens-surface{position:absolute;inset:0;background-repeat:no-repeat}
+.photo-lens-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:34px;color:#e9b300;text-shadow:1px 1px #222;line-height:1}
+.studio-swatches{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.studio-swatch{height:29px;width:29px;border:2px solid #d2dde1;border-radius:50%;padding:0;cursor:pointer;box-shadow:0 1px 5px #0004}.studio-swatch:focus-visible{outline:2px solid #0880af;outline-offset:2px}
+.room-plan-board{position:relative;width:100%;max-width:800px;margin:15px auto;background:#f4f7f9;border:1px solid #d4e0e4;touch-action:none}
+.room-plan-board svg{width:100%;display:block;max-height:65vh;touch-action:none}.room-plan-board circle{cursor:grab;touch-action:none}
+.room-plan-actions{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.room-plan-actions .btn{min-height:40px}

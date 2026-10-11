@@ -56,7 +56,22 @@ function workGroup(status){
 }
 const groupNames={andamento:'Em andamento',orcamentos:'Orçamentos',levantamento:'Levantamentos e projetos',finalizados:'Finalizados',cancelados:'Cancelados'};
 function statusBadge(status){return '<span class="project-status status-'+workGroup(status)+'">'+escape(status||'Levantamento')+'</span>';}
-function projectRow(p){return '<div class="item project-row"><div><strong>'+escape(clientName(p.clientId))+' · '+escape(p.name)+'</strong><small>'+escape(p.address||'')+' · '+(p.rooms||[]).length+' ambientes</small></div><div class="project-row-end">'+statusBadge(p.status)+btn('Abrir','openProject',p.id,'small')+'</div></div>';}
+function projectRow(p){return '<div class="item project-row"><div><strong>'+escape(clientName(p.clientId))+' · '+escape(p.name)+'</strong><small>'+escape(p.address||'')+' · '+(p.rooms||[]).length+' ambientes</small>'+(p.deliveryDate?'<small>'+escape(deliverySummary(p))+'</small>':'')+'</div><div class="project-row-end">'+statusBadge(p.status)+btn('Abrir','openProject',p.id,'small')+'</div></div>';}
+function deliverySummary(p){
+ if(!p.deliveryDate)return '';
+ const [y,m,d]=String(p.deliveryDate).split('-');
+ return 'Entrega: '+d+'/'+m+'/'+y+(p.deliveryTime?' às '+p.deliveryTime:'');
+}
+function deliveryInputs(prefix,p={},status='Levantamento'){
+ const visible=['Aprovado','Produção','Montagem'].includes(status);
+ const durations=[30,60,90,120,180,240,480].map(n=>({id:String(n),name:n<60?n+' minutos':n/60+' hora'+(n>60?'s':'')}));
+ return '<div id="'+prefix+'DeliveryFields" class="project-delivery-fields" '+(visible?'':'hidden')+'>'+
+ '<h3>Entrega prevista</h3><p class="muted">Aprovado e Produção exigem data e horário. Ao salvar, a entrega aparece automaticamente na Agenda Arque.</p>'+
+ '<div class="fields">'+field(prefix+'DeliveryDate','Data da entrega','date',p.deliveryDate||'')+
+ field(prefix+'DeliveryTime','Horário da entrega','time',p.deliveryTime||'')+
+ select(prefix+'DeliveryDuration','Tempo reservado na agenda',durations,String(p.deliveryDurationMinutes||60))+'</div>'+
+ '<p class="muted">Lembrete automático 1 hora antes e no horário previsto. Você pode alterar o prazo posteriormente neste projeto.</p></div>';
+}
 function groupedProjects(projects){
  return Object.keys(groupNames).map(k=>{
  const entries=projects.filter(p=>workGroup(p.status)===k);
@@ -89,7 +104,7 @@ function clientsView(){
   if(!c){selectedClient=null;return clientsView();}
   const projects=state.projects.filter(p=>p.clientId===c.id);
   return '<div class="row"><div>'+header(escape(c.name),'Cliente · '+escape(c.phone||'Sem telefone')+' · '+escape(c.address||'Sem endereço'))+'</div>'+btn('← Clientes','closeClient','','small')+'</div>'+
-   '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Abra a obra para acessar suas ferramentas.</p>'+(projects.length?projects.map(pr=>'<div class="item"><div><strong>'+escape(pr.name)+'</strong><small>'+escape(pr.status)+' · '+(pr.rooms||[]).length+' ambientes</small></div>'+btn('Abrir','openProject',pr.id,'small primary')+'</div>').join(''):'<p class="muted">Nenhuma obra ainda.</p>')+
+   '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Abra a obra para acessar suas ferramentas.</p>'+(projects.length?projects.map(pr=>'<div class="item"><div><strong>'+escape(pr.name)+'</strong><small>'+escape(pr.status)+' · '+(pr.rooms||[]).length+' ambientes</small>'+(pr.deliveryDate?'<small>'+escape(deliverySummary(pr))+'</small>':'')+'</div>'+btn('Abrir','openProject',pr.id,'small primary')+'</div>').join(''):'<p class="muted">Nenhuma obra ainda.</p>')+
    '<div class="actions">'+btn('+ Nova obra','clientProject',c.id,'primary')+'</div></div>'+contractsView(c);
  }
  return header('Clientes','Abra o cliente para acessar projetos e contratos.')+
@@ -107,7 +122,7 @@ function projectsView(){
  if(selectedClient){
   const c=state.clients.find(x=>x.id===selectedClient);
   if(!c){selectedClient=null;return projectsView();}
-  return header('Nova obra de '+escape(c.name),'O projeto sempre pertence ao cliente selecionado.')+'<div class="card"><h3>Criar projeto</h3><div class="fields">'+select('pclient','Cliente',[c],c.id)+field('pname','Ambiente (ex.: Cozinha, Quarto, Sala)')+'</div>'+btn('Criar projeto','addProject','','primary')+btn('← Voltar aos projetos','closeProject','','small')+'</div>';
+  return header('Nova obra de '+escape(c.name),'O projeto sempre pertence ao cliente selecionado.')+'<div class="card"><h3>Criar projeto</h3><div class="fields">'+select('pclient','Cliente',[c],c.id)+field('pname','Ambiente (ex.: Cozinha, Quarto, Sala)')+select('pnewstatus','Situação inicial',statuses,'Levantamento')+'</div>'+deliveryInputs('pnew',{},'Levantamento')+btn('Criar projeto','addProject','','primary')+btn('← Voltar aos projetos','closeProject','','small')+'</div>';
  }
  return header('Projetos','Abra uma obra existente ou selecione um cliente para criar uma nova. Cada obra continua vinculada ao seu cliente.')+
  '<div class="card"><h3>Nova obra</h3><p class="muted">Escolha primeiro o cliente.</p>'+
@@ -208,7 +223,7 @@ function projectOverview(){
 function detailView(){
  const p=project();
  return '<div class="row"><div><h1>'+escape(p.name)+'</h1><p class="intro">'+escape(clientName(p.clientId))+(p.address?' · '+escape(p.address):'')+'</p></div>'+btn('← Cliente','closeProject','','small')+'</div>'+
- '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+'</div>'+btn('Salvar informações da obra','saveProject','','primary')+'</div>'+
+ '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+'</div>'+deliveryInputs('p',p,p.status)+btn('Salvar informações da obra','saveProject','','primary')+'</div>'
  '<div class="tabs">'+[['resumo','▦ Visão geral'],['medidas','📏 Ambientes'],['fotos','📷 Fotos'],['fotomedidas','↔ Setas na foto'],['atelier','✎ Esboço'],['corte','▦ Plano de corte'],['financeiro','R$ Financeiro']].map(([key,label])=>'<button data-subtab="'+key+'" class="'+(subtab===key?'selected':'')+'">'+label+'</button>').join('')+'</div>'+
  ({resumo:projectOverview,medidas:measureView,fotos:photoView,fotomedidas:photoMeasureView,desenho:drawView,atelier:studioView,corte:cuttingView,financeiro:financeView})[subtab]();
 }
@@ -422,6 +437,12 @@ function agendaSync(){
  try{window.ArqueNative.syncAgenda(JSON.stringify(window.ArqueAgenda.nativeReminders(state.agenda||[])));}
  catch(err){toast('Não foi possível sincronizar lembretes: '+err.message);}
 }
+async function saveProjectWithDelivery(p,draft,agenda){
+ const oldProject={...p},oldAgenda=state.agenda;
+ Object.assign(p,draft);state.agenda=agenda;p.updatedAt=new Date().toISOString();p.revision=(p.revision||0)+1;
+ try{await persist();agendaSync();render();toast('Projeto e data de entrega atualizados.');}
+ catch(err){Object.assign(p,oldProject);state.agenda=oldAgenda;render();throw err;}
+}
 function agendaSaveAndRender(message='Compromisso atualizado.'){return persist().then(()=>{agendaSync();render();toast(message);}).catch(err=>toast('Falha ao salvar agenda: '+err.message));}
 function agendaView(){
  const A=window.ArqueAgenda,day=agendaDay||agendaLocalDay();agendaDay=day;
@@ -435,7 +456,7 @@ function agendaView(){
  const rowEvent=x=>{
   const linked=state.projects.find(p=>p.id===x.projectId);
   const projectText=linked?' · '+clientName(linked.clientId)+' / '+linked.name:'';
-  return '<div class="agenda-entry '+(x.status!=='Pendente'?'agenda-done':'')+'"><div><b>'+escape(agendaClock(x.startAt)+'–'+agendaClock(x.endAt))+'</b><strong>'+escape(x.title)+'</strong><small>'+escape(x.type+projectText)+' · '+status(x)+'</small>'+(x.notes?'<small>'+escape(x.notes)+'</small>':'')+'</div><div class="agenda-buttons">'+btn('Editar','agendaEdit',x.id,'small')+btn(x.status==='Pendente'?'✓ Concluir':'Reabrir','agendaToggle',x.id,'small')+btn('Excluir','agendaDelete',x.id,'small danger')+'</div></div>';
+  return '<div class="agenda-entry '+(x.status!=='Pendente'?'agenda-done':'')+'"><div><b>'+escape(agendaClock(x.startAt)+'–'+agendaClock(x.endAt))+'</b><strong>'+escape(x.title)+'</strong><small>'+escape(x.type+projectText)+' · '+status(x)+'</small>'+(x.notes?'<small>'+escape(x.notes)+'</small>':'')+'</div><div class="agenda-buttons">'+(x.source==='project-delivery'?btn('Abrir obra','agendaOpenProject',x.projectId,'small primary'):(btn('Editar','agendaEdit',x.id,'small')+btn(x.status==='Pendente'?'✓ Concluir':'Reabrir','agendaToggle',x.id,'small')+btn('Excluir','agendaDelete',x.id,'small danger')))+'</div></div>';
  };
  const today=agendaLocalDay();
  const next=all.filter(x=>x.status==='Pendente'&&A.parse(x.endAt)>=Date.now()).slice().sort((a,b)=>A.parse(a.startAt)-A.parse(b.startAt)).slice(0,10);
@@ -475,17 +496,19 @@ function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
 case'agendaSave':{
+ if((state.agenda||[]).some(x=>x.id===agendaEditId&&x.source==='project-delivery'))throw Error('Para alterar entregas automáticas, abra o projeto.');
  const A=window.ArqueAgenda,previous=(state.agenda||[]).find(x=>x.id===agendaEditId);
  const item=A.validate({id:previous?.id||C.uid(),title:val('agendaTitle'),type:val('agendaType'),startAt:val('agendaStart'),endAt:val('agendaEnd'),projectId:val('agendaProject'),notes:val('agendaNotes'),reminderMinutes:Number(val('agendaReminder')),status:previous?.status||'Pendente'},state.agenda||[]);
  if(!Array.isArray(state.agenda))state.agenda=[];
  if(previous){Object.assign(previous,item);}else state.agenda.push(item);
  agendaDay=item.startAt.slice(0,10);agendaEditId=null;agendaSaveAndRender('Compromisso salvo na Agenda Arque.');break;
 }
-case'agendaEdit':{const item=(state.agenda||[]).find(x=>x.id===arg);if(!item)throw Error('Compromisso não encontrado.');agendaEditId=item.id;agendaDay=item.startAt.slice(0,10);render();break;}
+case'agendaEdit':{const item=(state.agenda||[]).find(x=>x.id===arg);if(!item)throw Error('Compromisso não encontrado.');if(item.source==='project-delivery')throw Error('Altere a entrega no cadastro da obra.');agendaEditId=item.id;agendaDay=item.startAt.slice(0,10);render();break;}
 case'agendaCancel':agendaEditId=null;render();break;
 case'agendaShowDay':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){agendaDay=item.startAt.slice(0,10);agendaEditId=null;render();}break;}
-case'agendaDelete':{if(!confirm('Excluir este compromisso e seus avisos?'))break;state.agenda=(state.agenda||[]).filter(x=>x.id!==arg);if(agendaEditId===arg)agendaEditId=null;agendaSaveAndRender('Compromisso excluído da agenda.');break;}
-case'agendaToggle':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){item.status=item.status==='Pendente'?'Concluído':'Pendente';agendaSaveAndRender('Status do compromisso atualizado.');}break;}
+case'agendaDelete':{if((state.agenda||[]).some(x=>x.id===arg&&x.source==='project-delivery'))throw Error('A entrega automática é controlada pelo projeto.');if(!confirm('Excluir este compromisso e seus avisos?'))break;state.agenda=(state.agenda||[]).filter(x=>x.id!==arg);if(agendaEditId===arg)agendaEditId=null;agendaSaveAndRender('Compromisso excluído da agenda.');break;}
+case'agendaToggle':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item?.source==='project-delivery')throw Error('A entrega automática é controlada pela situação do projeto.');if(item){item.status=item.status==='Pendente'?'Concluído':'Pendente';agendaSaveAndRender('Status do compromisso atualizado.');}break;}
+case'agendaOpenProject':{const linked=state.projects.find(x=>x.id===arg);if(!linked)throw Error('Obra não localizada.');selectedProject=linked.id;selectedClient=linked.clientId;selectedRoom=linked.rooms?.[0]?.id||null;tab='projects';subtab='resumo';render();break;}
 case'agendaPermission':{if(window.ArqueNative?.requestAgendaNotifications){window.ArqueNative.requestAgendaNotifications();toast('Confira o pedido de autorização do Android.');}else toast('Avisos em segundo plano exigem o APK Android.');break;}
 case'go':tab=arg;selectedProject=null;selectedClient=null;selectedRoom=null;subtab='resumo';render();break;
 case'contractAttach':{if(!selectedClient)throw Error('Abra um cliente.');const inp=$('#contractFile');inp.dataset.clientId=selectedClient;inp.dataset.projectId=val('contractProject');inp.click();break;}
@@ -498,10 +521,10 @@ case'openWorkspace':subtab=arg;tab='projects';render();break;
 case'addClient':{let c=C.client(val('cname'),val('cphone'),val('caddr'));state.clients.push(c);update();toast('Cliente salvo no aparelho.');break;}
 case'clientProject':selectedClient=arg;tab='projects';selectedProject=null;render();break;
 case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
-case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';update();toast('Ambiente criado e vinculado ao cliente.');break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
 case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
 case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
-case'saveProject':{p.status=val('pstatus');p.value=C.money(val('pvalue'));p.discount=C.money(val('pdiscount'));C.finance(p);p.updatedAt=new Date().toISOString();p.revision++;update();toast('Projeto atualizado.');break;}
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
 case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
 case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
 case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
@@ -814,7 +837,8 @@ document.addEventListener('change',e=>{
  try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
  return;
  }
-if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
  if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
 if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
 if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});

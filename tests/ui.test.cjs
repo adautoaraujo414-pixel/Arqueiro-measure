@@ -10,7 +10,7 @@ async function launch(){
  const w=dom.window;
  Object.defineProperty(w,'indexedDB',{value:storage,configurable:true});
  w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
- w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){}};}return this.__mockCtx;};
+ w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){},save(){},restore(){},strokeRect(){},setLineDash(){},measureText(text){return {width:String(text).length*12}}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
  // Usar a lista REAL do index.html: simula a ordem exata dos scripts do APK Android.
@@ -75,6 +75,44 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#studioCanvas')?.getAttribute('width')==='840','new sheet uses A4 width');
  assert(doc.querySelector('#studioCanvas')?.getAttribute('height')==='1188','new sheet uses A4 portrait height');
  assert(doc.body.textContent.includes('Parede da pia'),'named sheet created');
+
+ assert(doc.querySelector('#studioPhotoFile'),'esboço permite foto da galeria');
+ assert(doc.querySelector('[data-action="studioInsertProjectPhoto"]'),'esboço aceita foto salva do projeto');
+ assert(doc.querySelector('#studioNoteInput'),'campo de nota digitada aparece');
+ assert(doc.querySelector('[data-action="studioZoomReset"]'),'zoom 100 por cento disponível');
+ assert(doc.querySelector('[data-action="studioImageOpacity"]'),'controle de transparência disponível');
+ // Notas são posicionadas na própria folha e editadas sem apagar os traços.
+ assign(doc,'studioNoteInput','Tomada atrás do armário');
+ const noteTool=doc.getElementById('studioTool');noteTool.value='note';noteTool.dispatchEvent(new w.Event('change',{bubbles:true}));
+ const noteCanvas=doc.getElementById('studioCanvas');
+ noteCanvas.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
+ for(const type of ['pointerdown','pointerup']){
+  const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:201},clientX:{value:145},clientY:{value:290},pointerType:{value:'pen'}});
+  noteCanvas.dispatchEvent(ev);
+ }
+ await sleep(60);
+ click(doc,'studioNoteLarger');await sleep(45);
+ assert.equal(doc.getElementById('studioNoteInput').value,'Tomada atrás do armário','nota continua editável');
+ click(doc,'studioNoteDuplicate');await sleep(40);
+ assert(doc.querySelector('[data-action="studioNoteDelete"]'),'nota pode ser removida');
+ click(doc,'studioNoteDelete');await sleep(45);
+ // Zoom via botões e pan por gesto de dois dedos.
+ click(doc,'studioZoomIn');assert(doc.getElementById('studioZoomValue').textContent.includes('125'),'zoom aumenta');
+ click(doc,'studioZoomReset');assert(doc.getElementById('studioZoomValue').textContent.includes('100'),'zoom restaura');
+ const swipe=doc.getElementById('studioCanvas');
+ swipe.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
+ const send=(kind,id,x,y)=>{
+  const ev=new w.Event(kind,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:id},clientX:{value:x},clientY:{value:y},pointerType:{value:'touch'}});
+  swipe.dispatchEvent(ev);
+ };
+ const beforeCount=swipe.dataset.strokeCount;
+ send('pointerdown',31,100,100);send('pointerdown',32,200,100);
+ send('pointermove',32,310,100);
+ assert(Number.parseInt(doc.getElementById('studioZoomValue').textContent)>150,'pinça amplia a folha');
+ send('pointerup',32,310,100);send('pointerup',31,100,100);
+ assert.equal(swipe.dataset.strokeCount,beforeCount,'gesto com dois dedos não cria traço');
+ click(doc,'studioZoomReset');
+
  const sketch=doc.getElementById('studioCanvas');
  assert.equal(typeof sketch.onpointerdown,'function','S Pen drawing listeners are attached');
  function sketchEvent(type,x,y){const ev=new w.Event(type,{bubbles:true,cancelable:true});Object.defineProperties(ev,{pointerId:{value:8},clientX:{value:x},clientY:{value:y}});if(typeof sketch['on'+type]==='function')sketch['on'+type](ev);else sketch.dispatchEvent(ev);}

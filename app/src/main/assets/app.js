@@ -98,6 +98,18 @@ function contractsView(c){
  c.contracts.map(doc=>'<div class="item"><div><strong>'+escape(doc.name)+'</strong><small>'+escape(related.find(p=>p.id===doc.projectId)?.name||'Documento geral')+' · '+escape(doc.date||'')+'</small></div><div class="actions">'+btn('Abrir','contractOpen',doc.id,'small')+btn('Excluir','contractRemove',doc.id,'small danger')+'</div></div>').join('')+
  (c.contracts.length?'':'<div class="empty">Nenhum contrato anexado ainda.</div>')+'</div>';
 }
+
+function clientProfileFields(c={}){
+ return '<div class="card"><h3>Dados do cliente</h3><p class="muted">Inicialmente basta o nome. Complete os dados antes da produção e para sua contadora.</p><div class="fields">'+
+ field('clientFullName','Nome completo','text',c.fullName||c.name)+field('clientCPF','CPF (11 números)','text',c.cpf||'','inputmode="numeric" maxlength="14"')+field('clientPhone','Telefone','tel',c.phone||'')+
+ field('clientAddress','Endereço e número','text',c.address||'')+field('clientCity','Cidade','text',c.city||'')+
+ field('clientState','UF','text',c.uf||'','maxlength="2"')+field('clientPostal','CEP','text',c.cep||'')+'</div>'+
+ btn('Salvar cadastro','saveClientProfile','','primary')+btn('Exportar ficha para contadora','exportClientProfile','','small')+
+ '<p class="muted">Confira os dados antes de compartilhar. O aplicativo não envia dados automaticamente.</p></div>';
+}
+function csvCell(x){return '"'+String(x??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"';}
+function exportCsv(name,rows){const csv='\uFEFF'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n'),a=document.createElement('a'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.href=url;a.download=name+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);}
+function clientIsComplete(c){return Boolean((c.fullName||'').trim().includes(' ')&&/^\d{11}$/.test(String(c.cpf||'').replace(/\D/g,''))&&(c.address||'').trim()&&(c.city||'').trim()&&(c.uf||'').trim());}
 function clientsView(){
  if(selectedClient){
   const c=state.clients.find(x=>x.id===selectedClient);
@@ -105,10 +117,10 @@ function clientsView(){
   const projects=state.projects.filter(p=>p.clientId===c.id);
   return '<div class="row"><div>'+header(escape(c.name),'Cliente · '+escape(c.phone||'Sem telefone')+' · '+escape(c.address||'Sem endereço'))+'</div>'+btn('← Clientes','closeClient','','small')+'</div>'+
    '<div class="card"><h3>Obras de '+escape(c.name)+'</h3><p class="muted">Abra a obra para acessar suas ferramentas.</p>'+(projects.length?projects.map(pr=>'<div class="item"><div><strong>'+escape(pr.name)+'</strong><small>'+escape(pr.status)+' · '+(pr.rooms||[]).length+' ambientes</small>'+(pr.deliveryDate?'<small>'+escape(deliverySummary(pr))+'</small>':'')+'</div>'+btn('Abrir','openProject',pr.id,'small primary')+'</div>').join(''):'<p class="muted">Nenhuma obra ainda.</p>')+
-   '<div class="actions">'+btn('+ Nova obra','clientProject',c.id,'primary')+'</div></div>'+contractsView(c);
+   '<div class="actions">'+btn('+ Nova obra','clientProject',c.id,'primary')+'</div></div>'+clientProfileFields(c)+contractsView(c);
  }
  return header('Clientes','Abra o cliente para acessar projetos e contratos.')+
- '<div class="card"><h3>Novo cliente</h3><div class="fields">'+field('cname','Nome completo')+field('cphone','Telefone','tel')+field('caddr','Endereço')+'</div>'+btn('Salvar cliente','addClient','','primary')+'</div>'+
+ '<div class="card"><h3>Novo cliente</h3><div class="fields">'+field('cname','Nome (obrigatório)')+'</div>'+btn('Salvar cliente','addClient','','primary')+'</div>'+
  '<div class="card"><h3>Clientes por nome ('+state.clients.length+')</h3>'+
  state.clients.slice().sort((a,b)=>a.name.localeCompare(b.name,'pt-BR')).map(c=>{
  const ps=state.projects.filter(p=>p.clientId===c.id);
@@ -223,7 +235,7 @@ function projectOverview(){
 function detailView(){
  const p=project();
  return '<div class="row"><div><h1>'+escape(p.name)+'</h1><p class="intro">'+escape(clientName(p.clientId))+(p.address?' · '+escape(p.address):'')+'</p></div>'+btn('← Cliente','closeProject','','small')+'</div>'+
- '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+'</div>'+deliveryInputs('p',p,p.status)+btn('Salvar informações da obra','saveProject','','primary')+'</div>'+
+ '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+calendarField('pClosedAt','Data do fechamento',p.closedAt||'')+'</div>'+deliveryInputs('p',p,p.status)+btn('Salvar informações da obra','saveProject','','primary')+'</div>'+
  '<div class="tabs">'+[['resumo','▦ Visão geral'],['medidas','📏 Ambientes'],['fotos','📷 Fotos'],['fotomedidas','↔ Setas na foto'],['atelier','✎ Esboço'],['corte','▦ Plano de corte'],['financeiro','R$ Financeiro']].map(([key,label])=>'<button data-subtab="'+key+'" class="'+(subtab===key?'selected':'')+'">'+label+'</button>').join('')+'</div>'+
  ({resumo:projectOverview,medidas:measureView,fotos:photoView,fotomedidas:photoMeasureView,desenho:drawView,atelier:studioView,corte:cuttingView,financeiro:financeView})[subtab]();
 }
@@ -453,7 +465,7 @@ function setupStudio(){
  paint();
 }
 
-function financeView(){const p=project(),f=C.finance(p);return `<div class="grid"><div class="card"><small class="muted">Contrato líquido</small><div class="stat">${money(f.net)}</div></div><div class="card"><small class="muted">Recebido</small><div class="stat">${money(f.paid)}</div></div><div class="card"><small class="muted">Saldo a receber</small><div class="stat">${money(f.balance)}</div></div></div><div class="card"><h3>Registrar pagamento</h3><div class="fields">${field('payamount','Valor (R$)','number','','min="0.01" step="0.01"')}${select('paymethod','Forma',['Pix','Dinheiro','Cartão','Transferência','Cheque','Boleto','Outro'])}${field('paydate','Data','date',new Date().toISOString().slice(0,10))}</div>${btn('Registrar recebimento','addPayment','','primary')}${p.payments.map(x=>`<div class="item"><div><strong>${money(x.amount)}</strong><small>${escape(x.method)} · ${escape(x.date)}</small></div>${btn('Excluir','deletePayment',x.id,'small danger')}</div>`).join('')}</div>`;}
+function financeView(){const p=project(),f=C.finance(p);return `${btn('Exportar financeiro CSV','exportFinanceCsv','','primary')}<div class="grid"><div class="card"><small class="muted">Contrato líquido</small><div class="stat">${money(f.net)}</div></div><div class="card"><small class="muted">Recebido</small><div class="stat">${money(f.paid)}</div></div><div class="card"><small class="muted">Saldo a receber</small><div class="stat">${money(f.balance)}</div></div></div><div class="card"><h3>Registrar pagamento</h3><div class="fields">${field('payamount','Valor (R$)','number','','min="0.01" step="0.01"')}${select('paymethod','Forma',['Pix','Dinheiro','Cartão','Transferência','Cheque','Boleto','Outro'])}${field('paydate','Data','date',new Date().toISOString().slice(0,10))}</div>${btn('Registrar recebimento','addPayment','','primary')}${p.payments.map(x=>`<div class="item"><div><strong>${money(x.amount)}</strong><small>${escape(x.method)} · ${escape(x.date)}</small></div>${btn('Excluir','deletePayment',x.id,'small danger')}</div>`).join('')}</div>`;}
 function toolsView(){const p=project();if(!p)return header('Cálculos por obra','Escolha primeiro o cliente e a obra para que os cálculos sejam associados ao projeto.')+btn('Abrir clientes','go','clients','primary');return header('Cálculos da obra · '+escape(p.name),'Confira as medições do ambiente antes de usar os resultados na produção.')+`<div class="grid"><div class="card"><h3>Tomada por referências</h3><div class="fields">${field('tw','Largura parede (mm)','number',3500)}${field('tl','Esquerda → caixa (mm)','number',1210)}${field('tc','Largura caixa (mm)','number',80)}${field('tr','Caixa → direita (mm)','number',2210)}${field('tt','Tolerância fechamento (mm)','number',state.settings.tolerance)}</div>${btn('Calcular tomada','calcSocket','','primary')}<div id="socketResult"></div></div><div class="card"><h3>Alturas e desníveis</h3><div class="fields">${field('h1','Altura esquerda (mm)','number',2710)}${field('h2','Altura central (mm)','number',2706)}${field('h3','Altura direita (mm)','number',2702)}</div>${btn('Comparar alturas','calcHeights','','primary')}<div id="heightsResult"></div></div><div class="card"><h3>Carcaça abaixo da pedra</h3><div class="fields">${field('ct','Topo pedra (mm)','number',900)}${field('cs','Espessura pedra (mm)','number',30)}${field('cb','Rodapé/base (mm)','number',100)}${field('cc','Folga instalação (mm)','number',5)}</div>${btn('Calcular carcaça','calcCarcass','','primary')}<div id="carcassResult"></div></div><div class="card"><h3>Vão com paredes irregulares</h3><div class="fields">${field('v1','Largura baixa (mm)','number',2735)}${field('v2','Largura média (mm)','number',2728)}${field('v3','Largura alta (mm)','number',2731)}${field('vl','Folga esquerda (mm)','number',5)}${field('vr','Folga direita (mm)','number',5)}</div>${btn('Calcular vão','calcOpening','','primary')}<div id="openingResult"></div></div></div><div class="notice">A variação entre alturas piso-teto não identifica isoladamente se o desnível está no piso ou no teto. É preciso medir com uma referência de nível.</div>`;}
 
 let agendaDay='',agendaEditId=null;
@@ -494,7 +506,7 @@ function showArqueCalendar(){
  '<span></span>'+btn('Cancelar','calendarCancel','','small')+btn('Definir','calendarConfirm','','primary')+'</div></div>';
 }
 function beginArqueCalendar(id){
- const allowed=['agendaDay','agendaStart','agendaEnd','pDeliveryDate','pnewDeliveryDate'];
+ const allowed=['agendaDay','agendaStart','agendaEnd','pDeliveryDate','pnewDeliveryDate','pClosedAt'];
  if(!allowed.includes(id))throw Error('Campo de calendário inválido.');
  const input=document.getElementById(id);if(!input)throw Error('Campo de data indisponível.');
  const withTime=id==='agendaStart'||id==='agendaEnd';
@@ -543,7 +555,7 @@ function agendaView(){
  const rowEvent=x=>{
   const linked=state.projects.find(p=>p.id===x.projectId);
   const projectText=linked?' · '+clientName(linked.clientId)+' / '+linked.name:'';
-  return '<div class="agenda-entry '+(x.status!=='Pendente'?'agenda-done':'')+'"><div><b>'+escape(agendaClock(x.startAt)+'–'+agendaClock(x.endAt))+'</b><strong>'+escape(x.title)+'</strong><small>'+escape(x.type+projectText)+' · '+status(x)+'</small>'+(x.notes?'<small>'+escape(x.notes)+'</small>':'')+'</div><div class="agenda-buttons">'+(x.source==='project-delivery'?btn('Abrir obra','agendaOpenProject',x.projectId,'small primary'):(btn('Editar','agendaEdit',x.id,'small')+btn(x.status==='Pendente'?'✓ Concluir':'Reabrir','agendaToggle',x.id,'small')+btn('Excluir','agendaDelete',x.id,'small danger')))+'</div></div>';
+  return '<div class="agenda-entry '+(x.status!=='Pendente'?'agenda-done':'')+'"><div><b>'+escape(agendaClock(x.startAt)+'–'+agendaClock(x.endAt))+'</b><strong>'+escape(x.title)+'</strong><small>'+escape(x.type+projectText)+' · '+status(x)+'</small>'+(x.address||x.city?'<small>'+escape([x.address,x.city].filter(Boolean).join(' · '))+'</small>':'')+(x.notes?'<small class="agenda-note">'+escape(x.notes)+'</small>':'')+'</div><div class="agenda-buttons">'+(x.source==='project-delivery'?btn('Abrir obra','agendaOpenProject',x.projectId,'small primary'):(btn('Editar','agendaEdit',x.id,'small')+btn(x.status==='Pendente'?'✓ Concluir':'Reabrir','agendaToggle',x.id,'small')+btn('Excluir','agendaDelete',x.id,'small danger')))+'</div></div>';
  };
  const today=agendaLocalDay();
  const next=all.filter(x=>x.status==='Pendente'&&A.parse(x.endAt)>=Date.now()).slice().sort((a,b)=>A.parse(a.startAt)-A.parse(b.startAt)).slice(0,10);
@@ -552,8 +564,8 @@ function agendaView(){
  '<div class="agenda-summary"><div><small>Compromissos</small><strong>'+daily.filter(x=>x.status!=='Cancelado').length+'</strong></div><div><small>Horários livres · 8h às 19h</small><strong>'+free.filter(x=>x.minutes>=30).length+'</strong></div><div><small>Entregas pendentes</small><strong>'+all.filter(x=>x.type==='Entrega'&&x.status==='Pendente').length+'</strong></div></div>'+
  '<h3>Horários livres</h3><div class="agenda-free">'+(free.filter(x=>x.minutes>=30).map(x=>'<span>'+agendaClock(x.start)+'–'+agendaClock(x.end)+' <small>('+Math.floor(x.minutes/60)+'h'+String(x.minutes%60).padStart(2,'0')+')</small></span>').join('')||'<p class="muted">Sem intervalos de pelo menos 30 minutos no expediente.</p>')+'</div>'+
  '<h3>Compromissos deste dia</h3>'+(daily.map(rowEvent).join('')||'<div class="empty">Dia livre. Você pode agendar uma entrega ou compromisso.</div>')+'</div>'+
- '<div class="card"><h3>'+(edit?'Editar compromisso':'Novo compromisso')+'</h3><div class="fields">'+field('agendaTitle','O que vai fazer?','text',edit?.title||'','maxlength="120"')+select('agendaType','Tipo',kinds,edit?.type||'Entrega')+select('agendaProject','Obra / cliente',projectOptions,edit?.projectId||'')+calendarField('agendaStart','Início',startAt,true)+calendarField('agendaEnd','Término',endAt,true)+select('agendaReminder','Me avisar',reminderOptions,String(edit?.reminderMinutes??60))+'</div>'+
- '<div class="field"><label for="agendaNotes">Endereço, detalhes e observações</label><textarea id="agendaNotes" maxlength="1500" placeholder="Ex.: entregar cozinha, conferir ferragens, endereço e contato...">'+escape(edit?.notes||'')+'</textarea></div>'+
+ '<div class="card"><h3>'+(edit?'Editar compromisso':'Novo compromisso')+'</h3><div class="fields">'+field('agendaTitle','Nome / compromisso','text',edit?.title||'','maxlength="120"')+field('agendaAddress','Endereço','text',edit?.address||'')+field('agendaCity','Cidade','text',edit?.city||'')+select('agendaType','Tipo',kinds,edit?.type||'Entrega')+select('agendaProject','Obra / cliente',projectOptions,edit?.projectId||'')+calendarField('agendaStart','Início',startAt,true)+calendarField('agendaEnd','Término',endAt,true)+select('agendaReminder','Me avisar',reminderOptions,String(edit?.reminderMinutes??60))+'</div>'+
+ '<div class="field agenda-observations"><label for="agendaNotes">Observações importantes</label><textarea id="agendaNotes" maxlength="1500" placeholder="Ex.: entregar cozinha, conferir ferragens, endereço e contato...">'+escape(edit?.notes||'')+'</textarea></div>'+
  '<div class="actions">'+btn(edit?'Salvar alterações':'Agendar compromisso','agendaSave','','primary')+(edit?btn('Cancelar edição','agendaCancel'):'')+btn('Autorizar notificações Android','agendaPermission')+'</div>'+
  '<p class="muted agenda-disclaimer">No APK Android, a Agenda Arque programa avisos locais no horário do compromisso e na antecedência escolhida. O Android pode atrasá-los por economia de bateria. No navegador, os compromissos são salvos, mas não há notificações em segundo plano.</p></div>'+
  '<div class="card"><h3>Próximos compromissos</h3>'+(next.map(x=>'<div class="agenda-next"><b>'+escape(agendaDateLabel(x.startAt))+'</b><span>'+escape(agendaClock(x.startAt))+' · '+escape(x.type)+' · '+escape(x.title)+'</span>'+btn('Ver dia','agendaShowDay',x.id,'small')+'</div>').join('')||'<p class="muted">Nenhum compromisso futuro pendente.</p>')+'</div>';
@@ -594,7 +606,7 @@ case'agendaSave':{
  const A=window.ArqueAgenda,previous=(state.agenda||[]).find(x=>x.id===agendaEditId);
  const item=A.validate({id:previous?.id||C.uid(),title:val('agendaTitle'),type:val('agendaType'),startAt:val('agendaStart'),endAt:val('agendaEnd'),projectId:val('agendaProject'),notes:val('agendaNotes'),reminderMinutes:Number(val('agendaReminder')),status:previous?.status||'Pendente'},state.agenda||[]);
  if(!Array.isArray(state.agenda))state.agenda=[];
- if(previous){Object.assign(previous,item);}else state.agenda.push(item);
+ item.address=val('agendaAddress').trim();item.city=val('agendaCity').trim();if(previous){Object.assign(previous,item);}else state.agenda.push(item);
  agendaDay=item.startAt.slice(0,10);agendaEditId=null;agendaSaveAndRender('Compromisso salvo na Agenda Arque.');break;
 }
 case'agendaEdit':{const item=(state.agenda||[]).find(x=>x.id===arg);if(!item)throw Error('Compromisso não encontrado.');if(item.source==='project-delivery')throw Error('Altere a entrega no cadastro da obra.');agendaEditId=item.id;agendaDay=item.startAt.slice(0,10);render();break;}
@@ -612,7 +624,2495 @@ case'openClient':selectedClient=arg;selectedProject=null;tab='clients';render();
 case'closeClient':selectedClient=null;selectedProject=null;tab='clients';render();break;
 case'projectCalc':tab='tools';render();break;
 case'openWorkspace':subtab=arg;tab='projects';render();break;
-case'addClient':{let c=C.client(val('cname'),val('cphone'),val('caddr'));state.clients.push(c);update();toast('Cliente salvo no aparelho.');break;}
+case'addClient':{let c=C.client(val('cname'));state.clients.push(c);update();toast('Cliente salvo.');break;}
+case'saveClientProfile':{const c=state.clients.find(x=>x.id===selectedClient);if(!c)throw Error('Abra um cliente.');const fullName=val('clientFullName').trim(),cpf=val('clientCPF').replace(/\D/g,''),uf=val('clientState').trim().toUpperCase();if(!fullName)throw Error('Informe o nome.');if(cpf&&cpf.length!==11)throw Error('CPF precisa ter 11 números.');if(uf&&uf.length!==2)throw Error('UF precisa ter duas letras.');Object.assign(c,{name:fullName,fullName,cpf,phone:val('clientPhone').trim(),address:val('clientAddress').trim(),city:val('clientCity').trim(),uf,cep:val('clientPostal').trim()});update();toast('Cadastro do cliente atualizado.');break;}
+case'exportClientProfile':{const c=state.clients.find(x=>x.id===selectedClient);if(!c)throw Error('Cliente não encontrado.');const ps=state.projects.filter(p=>p.clientId===c.id);exportCsv('arque-cliente-'+String(c.name).replace(/[^a-z0-9]/gi,'-'),[['Cliente','CPF','Telefone','Endereço','Cidade','UF','CEP','Obra','Etapa','Data fechamento','Contrato RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.closedAt=x.status==='Aprovado'||x.status==='Produção'?window.ArqueAgenda.localDay(new Date()):'';if(x.status==='Produção'&&!clientIsComplete(client))throw Error('Complete os dados do cliente antes de iniciar a produção.');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),closedAt:val('pClosedAt')||(val('pstatus')==='Aprovado'&&!p.closedAt?window.ArqueAgenda.localDay(new Date()):p.closedAt||''),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);if(draft.status==='Produção'&&!clientIsComplete(state.clients.find(c=>c.id===p.clientId)||{}))throw Error('Antes da produção, complete nome, CPF, endereço, cidade e UF na ficha do cliente.');const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+,'Desconto RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+,'Saldo RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+],...ps.map(p=>[c.fullName||c.name,c.cpf,c.phone,c.address,c.city,c.uf,c.cep,p.name,p.status,p.closedAt||'',p.value,p.discount,C.finance(p).balance])]);toast('Ficha CSV preparada para envio à contadora.');break;}
+case'exportFinanceCsv':{exportCsv('arque-financeiro-'+new Date().toISOString().slice(0,10),[['Cliente','CPF','Cidade','Obra','Etapa','Fechamento','Entrega','Contrato RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+,'Desconto RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+,'Pago RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+,'Saldo RselectedClient=arg;tab='projects';selectedProject=null;render();break;
+case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
+case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}
+case'openProject':selectedProject=arg;selectedClient=project()?.clientId||null;tab='projects';selectedRoom=project()?.rooms[0]?.id||null;subtab='resumo';render();break;
+case'closeProject':selectedProject=null;selectedRoom=null;selectedClient=null;tab='projects';render();break;
+case'saveProject':{if(!p)throw Error('Abra a obra.');const draft={...p,status:val('pstatus'),value:C.money(val('pvalue')),discount:C.money(val('pdiscount')),deliveryDate:val('pDeliveryDate'),deliveryTime:val('pDeliveryTime'),deliveryDurationMinutes:Number(val('pDeliveryDuration'))};C.finance(draft);const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],draft,clientName(p.clientId));return saveProjectWithDelivery(p,draft,agenda);}
+case'mixedMove':{const plan=cuttingPlan(p),stock=plan.mixedStock;if(!stock)throw Error('Simule a chapa antes.');const [id,ordinal]=arg.split(':');const x=Number(val('mx_'+id+'_'+ordinal)),y=Number(val('my_'+id+'_'+ordinal));const moves={...(stock.moves||{}),[arg]:{x,y}};const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(q=>stock.ids?.includes(q.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;update();toast('Posição salva.');break;}
+case'mixedReset':{const plan=cuttingPlan(p);if(plan.mixedStock){plan.mixedStock.moves={};update();toast('Arranjo automático restaurado.');}break;}
+case'mixedSimulate':{const plan=cuttingPlan(p);const stock={width:Number(val('mixedW')),height:Number(val('mixedH')),kerf:Number(val('mixedKerf')),trim:Number(val('mixedTrim')),ids:[...document.querySelectorAll('[data-mixed-piece]:checked')].map(x=>x.dataset.mixedPiece),moves:{}};if(!stock.ids.length)throw Error('Selecione uma ou mais peças.');window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(x=>stock.ids.includes(x.id))});plan.mixedStock=stock;update();toast('Plano misto salvo.');break;}
+case'manualSimulate':{const plan=cuttingPlan(p);const chosen=plan.pieces.find(x=>x.id===val('manualPart'));if(!chosen)throw Error('Selecione uma peça.');const stock={width:Number(val('manualSheetW')),height:Number(val('manualSheetH')),kerf:Number(val('manualKerf')),trim:Number(val('manualTrim')),partId:chosen.id,qty:Number(val('manualQty'))};window.ArqueCut.manualGrid({...stock,partW:chosen.w,partH:chosen.h,grain:chosen.grain,rotate:chosen.rotate});plan.manualStock=stock;update();toast('Simulação manual atualizada.');break;}
+case'cutChooseMaterial':{const key=val('cutMaterial');if(key&&!p.materialCutPlans?.[key])throw Error('Lote não encontrado.');p.activeCutMaterial=key;update();break;}
+case'cutSettings':{const plan=cuttingPlan(p);const updated={...plan,width:Number(val('cutWidth')),height:Number(val('cutHeight')),kerf:Number(val('cutKerf')),trim:Number(val('cutTrim'))};window.ArqueCut.calculate({...updated,pieces:[]});if(p.activeCutMaterial)p.materialCutPlans[p.activeCutMaterial]=updated;else p.cutPlan=updated;update();toast('Chapa e serra configuradas.');break;}
+case'cutAdd':{const plan=cuttingPlan(p);const piece={id:C.uid(),name:val('cutName').trim(),w:Number(val('cutW')),h:Number(val('cutH')),qty:Number(val('cutQty')),grain:val('cutGrain')==='Fixo',rotate:val('cutRotate')==='Sim',edge2:Number(val('cutEdge2')),edge04:Number(val('cutEdge04'))};if(!piece.name)throw Error('Informe o nome da peça.');window.ArqueCut.calculate({...plan,pieces:[piece]});plan.pieces.push(piece);plan.draft={name:'',w:'',h:'',qty:1,grain:false,rotate:true,edge2:0,edge04:0};update();toast('Linha adicionada e salva.');break;}
+case'cutToggle':{const plan=cuttingPlan(p),parts=arg.split(':'),id=parts[0],index=Number(parts[1]);const piece=plan.pieces.find(x=>x.id===id);if(!piece||!Number.isInteger(index)||index<1||index>piece.qty)throw Error('Esta peça não existe mais.');if(!plan.cutDone)plan.cutDone={};if(plan.cutDone[arg])delete plan.cutDone[arg];else plan.cutDone[arg]=new Date().toISOString();update();toast('Lista de corte atualizada e salva.');break;}
+case'cutRemove':{const plan=cuttingPlan(p),piece=plan.pieces.find(x=>x.id===arg);if(!piece)break;if(!confirm('Retirar esta peça do plano atual? A versão e os cortes concluídos ficarão guardados no histórico.'))break;archiveCutRevision(plan,piece,'Retirada do plano atual');plan.pieces=plan.pieces.filter(x=>x.id!==arg);for(const key of Object.keys(plan.cutDone||{}))if(key.startsWith(arg+':'))delete plan.cutDone[key];update();toast('Peça retirada; histórico preservado.');break;}
+case'cutPrint':{if(window.ArqueNative?.printCutPlan)window.ArqueNative.printCutPlan();else window.print();break;}
+case'roomPlanRect':{if(!r)throw Error('Selecione um cômodo.');r.planPoints=[[120,160],[410,160],[410,350],[120,350]];update();break;}
+case'roomPlanAdd':{if(!r)throw Error('Selecione um cômodo.');if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];if(r.planPoints.length>=12)throw Error('Limite de 12 cantos.');const a=r.planPoints[r.planPoints.length-1],b=r.planPoints[0];r.planPoints.push([Math.max(20,Math.min(580,(a[0]+b[0])/2+30)),Math.max(20,Math.min(460,(a[1]+b[1])/2-30))]);update();break;}
+case'roomPlanRemove':{if(!r?.planPoints||r.planPoints.length<=3)throw Error('A planta precisa de pelo menos três cantos.');r.planPoints.pop();update();break;}
+case'roomPlanClear':{if(!r||!confirm('Apagar somente o desenho da planta deste cômodo?'))break;r.planPoints=[];update();break;}
+case'roomPlanInfo':toast('Selecione um canto azul para ajustar. Registre medidas reais no formulário abaixo.');break;
+case'addRoom':{let x=C.room(val('roomname'));p.rooms.push(x);selectedRoom=x.id;update();toast('Ambiente criado.');break;}
+case'addMeasure':{if(!r)throw Error('Selecione um ambiente.');const input=$('#mvalue');const receiptId=input?.dataset.readingId;const stored=(p.bleReadings||[]).find(x=>x.id===receiptId&&x.roomId===selectedRoom);const alreadyAssigned=p.rooms.some(room=>room.measurements.some(m=>m.readingId===receiptId||m.originalReadingId===receiptId));const receipt=stored&&!alreadyAssigned&&Number(val('mvalue'))===stored.value?stored:null;const item=C.measurement(val('mvalue'),val('mkind'),receipt?'Bluetooth':'manual',val('mtarget'),val('mreference'));if(receipt){if(!String(item.target).trim()||!String(item.reference).trim())throw Error('Identifique posição e referência antes de salvar uma leitura Bluetooth.');item.readingId=receipt.id;item.rawValue=receipt.value;item.deviceProtocol='Bosch BLE (não validado fisicamente)';}r.measurements.push(item);if(input)delete input.dataset.readingId;update();toast('Medida salva com origem identificada.');break;}
+case'useReading':{if(!r)throw Error('Selecione um ambiente.');const receipt=(p.bleReadings||[]).find(x=>x.id===arg&&x.roomId===selectedRoom);if(!receipt)throw Error('Leitura não encontrada neste ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===arg||m.originalReadingId===arg)))throw Error('Esta leitura já foi associada a uma medição.');const input=$('#mvalue');if(!input)throw Error('Campo de medição indisponível.');input.value=receipt.value;input.dataset.readingId=receipt.id;toast('Leitura selecionada. Confira tipo, posição e referência antes de salvar.');break;}
+case'useBLE':if(!lastBleReceipt)throw Error('Nenhuma medida Bluetooth recebida.');if(!(p.bleReadings||[]).some(x=>x.id===lastBleReceipt.id&&x.roomId===selectedRoom))throw Error('A última leitura não pertence a este ambiente.');if(p.rooms.some(room=>room.measurements.some(m=>m.readingId===lastBleReceipt.id||m.originalReadingId===lastBleReceipt.id)))throw Error('Esta leitura já foi utilizada.');$('#mvalue').value=lastBleReceipt.value;$('#mvalue').dataset.readingId=lastBleReceipt.id;break;
+case'editLastMeasure':{
+ const latest=latestProjectMeasurement(p);
+ if(!latest||latest.measurement.id!==arg)throw Error('A última medição mudou. Abra novamente o projeto.');
+ const m=latest.measurement;
+ const corrected=C.mm(val('editLastValue'));
+ const kind=val('editLastKind').trim(), target=val('editLastTarget').trim(), reference=val('editLastReference').trim();
+ if(!kind)throw Error('Informe o tipo da medida.');
+ if(corrected===m.value&&kind===m.kind&&target===(m.target||'')&&reference===(m.reference||'')){toast('Nenhuma alteração encontrada.');break;}
+ const old={value:m.value,kind:m.kind,target:m.target||'',reference:m.reference||'',source:m.source,readingId:m.readingId||null,editedAt:new Date().toISOString()};
+ if(!Array.isArray(m.revisions))m.revisions=[];
+ m.revisions.push(old);
+ m.value=corrected;m.kind=kind;m.target=target;m.reference=reference;
+ m.source='manual (corrigida)';m.lastEditedAt=old.editedAt;
+ // The source reading is kept in the history, never used to authenticate the corrected number.
+ m.originalReadingId=m.originalReadingId||m.readingId||null;
+ delete m.readingId;
+ p.updatedAt=old.editedAt;p.revision=(p.revision||0)+1;
+ update();toast('Correção salva e valor anterior preservado no histórico.');break;
+ }
+ case'deleteMeasure':if(confirm('Excluir esta medição?')){r.measurements=r.measurements.filter(x=>x.id!==arg);update();}break;
+case'addElement':r.elements.push({id:C.uid(),kind:val('ekind'),label:val('elabel'),x:num('ex'),z:num('ez'),width:num('ew')});update();toast('Elemento marcado.');break;
+case'deleteElement':if(confirm('Excluir elemento?')){r.elements=r.elements.filter(x=>x.id!==arg);update();}break;
+case'photoAnnotate':photoMeasurePhoto=arg;photoMeasureSelected=null;photoInk=true;subtab='fotomedidas';render();break;
+case'photoGoto':subtab='fotos';render();break;
+case'photoInkToggle':photoInk=true;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoDockToggle':photoDockExpanded=!photoDockExpanded;if(!photoDockExpanded)photoPaletteOpen=false;render();break;
+case'photoInkSelect':photoInk=false;photoPlacement=false;photoZoomMode=false;render();break;
+case'photoInkThinner':photoInkWidth=Math.max(1,photoInkWidth-1);photoInk=true;render();break;
+case'photoInkThicker':photoInkWidth=Math.min(14,photoInkWidth+1);photoInk=true;render();break;
+case'photoPaletteToggle':photoPaletteOpen=!photoPaletteOpen;render();break;
+case'photoInkColor':if(/^#[0-9a-f]{6}$/i.test(arg)){photoInkColor=arg;photoInk=true;render();}break;
+case'photoInkUndo':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo&&photo.inkStrokes?.length){photo.inkStrokes.pop();update();}break;}
+case'photoZoomIn':photoZoomSet(photoZoom*1.25);break;
+case'photoZoomOut':photoZoomSet(photoZoom/1.25);break;
+case'photoZoomReset':photoZoomSet(1);break;
+case'photoZoomMode':if(!photoZoomMode){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoPlacement=false;photoInk=false;}else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}photoLastTap=null;render();break;
+case'photoAddDistance':{photoZoomMode=false;photoInk=false;photoPlacement=!photoPlacement;photoPlacementStart=null;photoPlacementPreview=null;render();if(photoPlacement)toast('Arraste o dedo ou a S Pen sobre a foto para criar a medida.');break;}
+case'photoAddHorizontal':case'photoAddVertical':case'photoAddFree':case'photoAddRect':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const vert=a==='photoAddVertical',d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:a==='photoAddRect'?'rect':'arrow',thickness:5,color:'#ffe000',x1:vert?500:200,y1:vert?140:330,x2:vert?500:800,y2:vert?500:a==='photoAddFree'?470:330,value:null,source:'manual'};photo.dimensions.push(d);photoMeasureSelected=d.id;update();break;}
+case'photoNoteAdd':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(!photo)throw Error('Selecione uma foto.');const text=prompt('Anotação importante da foto');if(!text?.trim())break;if(!photo.notes)photo.notes=[];photo.notes.push({id:C.uid(),text:text.trim().slice(0,400),x:30+photo.notes.length%3*260,y:25+photo.notes.length%5*90});update();break;}
+case'photoNoteDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.notes=(photo.notes||[]).filter(x=>x.id!==arg);update();}break;}
+case'photoDimensionSelect':photoMeasureSelected=arg;photoInk=false;photoPlacement=false;render();break;
+case'photoDimensionResize':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)break;const scale=arg==='grow'?1.12:.88;const mx=(d.x1+d.x2)/2,my=(d.y1+d.y2)/2;d.x1=Math.max(0,Math.min(1000,mx+(d.x1-mx)*scale));d.x2=Math.max(0,Math.min(1000,mx+(d.x2-mx)*scale));d.y1=Math.max(0,Math.min(650,my+(d.y1-my)*scale));d.y2=Math.max(0,Math.min(650,my+(d.y2-my)*scale));update();break;}
+case'photoDimensionDelete':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.dimensions=overlayFor(photo).filter(x=>x.id!==arg);if(photoMeasureSelected===arg)photoMeasureSelected=null;update();}break;}
+case'photoDimensionManual':{const photo=p.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!d)throw Error('Selecione uma seta ou quadrado.');d.label=val('photoMeasureLabel').trim()||d.label;d.note=val('photoMeasureNote').trim();applyPhotoValue(val('photoMeasureValue'),'manual');break;}
+case'photoReadingApply':{const reading=(p.bleReadings||[]).find(x=>x.id===arg);if(!reading)throw Error('Leitura não encontrada.');applyPhotoValue(reading.value,'Bluetooth',reading.id);break;}
+case'photoDimensionApply':{if(!lastBleReceipt)throw Error('Nenhuma leitura da trena disponível.');applyPhotoValue(lastBleReceipt.value,'Bluetooth',lastBleReceipt.id);break;}
+case'addPhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#photoFile').click();break;
+case'takePhoto':pendingPhotoRoom=val('photoRoomNext');pendingPhotoCategory=val('photoCategory')||'Levantamento';$('#cameraFile').click();break;
+case'testCamera':$('#diagCameraFile').click();break;
+case'checkDevice':if(window.ArqueNative?.checkDevice){window.ArqueNative.checkDevice();}else{diagnostics={platform:'Navegador (simulação)',sdk:'—',cameraHardware:false,bleHardware:false,bluetoothEnabled:false,bluetoothPermission:false,freeMegabytes:'—'};render();toast('Diagnóstico nativo disponível no APK Android.');}break;
+case'deletePhoto':if(confirm('Excluir foto?')){p.photos=p.photos.filter(x=>x.id!==arg);update();}break;
+case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a anotação.');r.annotations.push({id:C.uid(),text,date:new Date().toLocaleString('pt-BR')});update();break;}
+case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
+case'undoStroke':r.strokes.pop();update();break;
+case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
+case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
+case'studioSnapToggle':studioSnap=!studioSnap;render();break;
+case'studioAlignLast':{const pg=studioCurrent(p),last=pg?.strokes?.[pg.strokes.length-1];if(!last||last.kind==='eraser')throw Error('Desenhe um traço primeiro.');studioAlignedLine(last,pg);update();toast('Traço alinhado e encaixado.');break;}
+case'studioUseMeasure':{const pg=studioCurrent(p),rm=p.rooms.find(x=>x.id===pg?.roomId),m=rm?.measurements?.find(x=>x.id===arg);
+ if(!pg?.strokes?.length)throw Error('Desenhe um traço antes de vincular medida.');
+ if(!m)throw Error('Medida não encontrada neste ambiente.');
+ pg.strokes[pg.strokes.length-1].mm=m.value;pg.strokes[pg.strokes.length-1].measurementId=m.id;pg.lastMeasureMm=m.value;
+ update();toast('Medida vinculada ao traço.');break;}
+case'studioGotoPhotos':subtab='fotos';render();break;
+case'studioSetMeasure':{const pg=studioCurrent(p);const mm=Number(val('studioElementMm'));if(!pg?.strokes?.length)throw Error('Desenhe um elemento primeiro.');if(!Number.isFinite(mm)||mm<1||mm>50000)throw Error('Informe uma medida entre 1 e 50000 mm.');pg.strokes[pg.strokes.length-1].mm=mm;pg.lastMeasureMm=mm;update();toast('Medida vinculada ao último elemento.');break;}
+case'studioNew':{const name=val('studioNewName').trim()||'Folha '+(studioPages(p).length+1);const pg={id:C.uid(),name:name.slice(0,100),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;update();break;}
+case'studioSelect':studioPageId=arg;studioFullscreen=false;render();break;
+case'studioOpenFull':if(!studioCurrent(p))throw Error('Crie uma folha primeiro.');studioFullscreen=true;render();break;
+case'studioCloseFull':studioFullscreen=false;render();break;
+case'studioRename':{const pg=studioCurrent(p);if(!pg)break;const name=prompt('Nome da página',pg.name);if(name===null)break;pg.name=name.trim()||pg.name;update();break;}
+case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta folha e seus desenhos?'))break;p.studioPages=p.studioPages.filter(x=>x.id!==pg.id);studioPageId=null;studioFullscreen=false;update();break;}
+case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
+case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
+case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
+case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
+case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
+case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
+case'calcHeights':{let x=C.variations([num('h1'),num('h2'),num('h3')]);$('#heightsResult').innerHTML=`<div class="metric">Menor altura <b>${fmt(x.min)} mm</b></div><div class="metric">Maior altura <b>${fmt(x.max)} mm</b></div><div class="metric">Diferença <b>${fmt(x.difference)} mm</b></div>`;break;}
+case'calcCarcass':{let x=C.carcass(num('ct'),num('cs'),num('cb'),num('cc'));$('#carcassResult').innerHTML=`<div class="metric">Face inferior da pedra <b>${fmt(x.underside)} mm</b></div><div class="metric">Altura teórica da carcaça <b>${fmt(x.height)} mm</b></div><p class="warn">Conferir cuba, sifão e travessas.</p>`;break;}
+case'calcOpening':{let x=C.usableOpening([num('v1'),num('v2'),num('v3')],num('vl'),num('vr'));$('#openingResult').innerHTML=`<div class="metric">Menor vão <b>${fmt(x.minimum)} mm</b></div><div class="metric">Vão teórico útil <b>${fmt(x.usable)} mm</b></div><div class="metric">Variação <b>${fmt(x.variation)} mm</b></div>`;break;}
+case'linkShare':{if(!window.ArqueNative?.linkStart)throw Error('Arque Link requer APK Android.');const full=val('linkMode')==='full';if(full&&!confirm('Compartilhar todos os clientes, contratos, fotos e obras com outro dispositivo autorizado?'))break;const payload=full?{format:'arque-measure',version:1,createdAt:new Date().toISOString(),state}:C.exportProject(state,val('linkProject'));window.ArqueNative.linkStart(JSON.stringify(payload));linkNotice='Iniciando compartilhamento…';render();break;}
+case'linkAdvertise':{if(!window.ArqueNative?.linkAdvertise)throw Error('Anúncio BLE exige APK Android.');window.ArqueNative.linkAdvertise();break;}
+case'linkDiscover':{if(!window.ArqueNative?.linkDiscover)throw Error('Busca Bluetooth exige APK Android.');linkPeers=[];window.ArqueNative.linkDiscover();linkNotice='Buscando aparelhos próximos por Bluetooth…';render();break;}
+case'linkUsePeer':{const fieldIP=$('#linkIP');if(fieldIP)fieldIP.value=String(arg);linkNotice='Aparelho selecionado. Informe o código mostrado no aparelho de origem.';const notice=$('#linkNotice');if(notice)notice.textContent=linkNotice;break;}
+case'linkStop':window.ArqueNative?.linkStop?.();linkInfo=null;linkNotice='Compartilhamento encerrado';render();break;
+case'linkFetch':{if(!window.ArqueNative?.linkReceive)throw Error('Arque Link requer APK Android.');const ip=val('linkIP').trim(),code=val('linkCode').trim();if(!confirm('Importar uma cópia do projeto enviado por '+ip+'?'))break;window.ArqueNative.linkReceive(ip,code);linkNotice='Recebendo projeto…';render();break;}
+case'export':exportBackup();break;
+case'import':if(window.ArqueNative?.importBackup)window.ArqueNative.importBackup();else $('#importFile').click();break;
+case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast('Procurando trenas próximas…');}else toast('A conexão Bluetooth requer o aplicativo Android.');break;
+case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
+}}
+async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
+window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
+window.ArqueLinkReceive=async raw=>{try{
+ const received=JSON.parse(raw);
+ if(received?.format==='arque-measure'){
+   const incoming=C.validateImport(received);
+   if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
+   const previous=state;state=incoming;
+   try{await persist();}catch(e){state=previous;throw e;}
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
+ }
+ if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
+ const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;
+ try{await persist();}catch(e){state=oldState;throw e;}
+ linkNotice='Projeto recebido, validado e salvo localmente.';selectedProject=merged.projectId;selectedRoom=null;tab='projects';render();toast('Projeto recebido com sucesso.');
+ }catch(e){linkNotice='Falha ao importar: '+e.message;render();toast(linkNotice);}};
+window.ArqueDiagnostics=raw=>{try{diagnostics=typeof raw==='string'?JSON.parse(raw):raw;render();}catch(e){toast('Diagnóstico inválido: '+e.message)}};
+window.ArqueReceiveBackup=text=>receiveImport(text).catch(e=>toast('Falha na importação: '+e.message));
+window.ArqueBleMeasure=millimeters=>{let n=Number(millimeters);if(!Number.isInteger(n)||n<50||n>50000)return;lastBLE=n;lastBleReceipt={id:C.uid(),value:n,date:new Date().toISOString()};bleReadings.push(lastBleReceipt);if(bleReadings.length>200)bleReadings.shift();const activeProject=project();if(activeProject){if(!Array.isArray(activeProject.bleReadings))activeProject.bleReadings=[];activeProject.bleReadings.push({...lastBleReceipt,roomId:selectedRoom});persist().catch(e=>toast('Falha ao salvar leitura da trena: '+e.message));}const el=$('#bleValue');if(el)el.textContent=fmt(n)+' mm';const inp=$('#mvalue');if(inp){inp.value=n;inp.dataset.readingId=lastBleReceipt.id;}const live=$('#photoBleLive');if(live)live.textContent=fmt(n)+' mm';const readingsPanel=$('#photoBoschReadings');if(readingsPanel&&activeProject)readingsPanel.innerHTML=photoBoschReadingsView(activeProject);toast('Leitura recebida: '+fmt(n)+' mm. Confira a referência.');};
+window.ArqueBleStatus=status=>{const el=$('#connection');if(el)el.textContent=String(status).slice(0,70)};
+window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.length)return;let msg=list.map((x,i)=>`${i+1}: ${x.name||'Trena BLE'} (${x.address})`).join('\n');let n=prompt('Selecione a trena:\n'+msg);let d=list[Number(n)-1];if(d)window.ArqueNative.connectBle(d.address);}catch(e){toast('Erro ao listar trenas: '+e.message)}};
+$('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
+$('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
+for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+$('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
+function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});
+document.addEventListener('click',e=>{if(e.target.id==='arqueCalendarOverlay'){closeArqueCalendar();return;}let b=e.target.closest('[data-action]');if(b){try{const out=action(b.dataset.action,b.dataset.arg);if(out?.catch)out.catch(x=>toast(x.message));}catch(err){toast(err.message)}return;}let t=e.target.closest('[data-tab]');if(t){if(tab!==t.dataset.tab)navigationHistory.push({tab,selectedClient,selectedProject,selectedRoom,subtab});tab=t.dataset.tab;selectedProject=null;selectedRoom=null;selectedClient=null;subtab='resumo';render();window.scrollTo(0,0);return;}let s=e.target.closest('[data-subtab]');if(s){if(subtab!==s.dataset.subtab)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});subtab=s.dataset.subtab;render();window.scrollTo(0,0);return;}let r=e.target.closest('[data-room]');if(r){if(selectedRoom!==r.dataset.room)navigationHistory.push({tab,selectedProject,selectedRoom,subtab});selectedRoom=r.dataset.room;render();window.scrollTo(0,0);return;}});
+document.addEventListener('input',e=>{if(e.target.dataset.cutDraft&&project()){const plan=cuttingPlan(project());if(!plan.draft)plan.draft={};plan.draft[e.target.dataset.cutDraft]=e.target.dataset.cutDraft==='rotate'?e.target.value==='Sim':e.target.dataset.cutDraft==='grain'?e.target.value==='Fixo':e.target.value;persist().catch(err=>toast('Rascunho não salvo: '+err.message));}if(e.target.id==='mvalue')delete e.target.dataset.readingId;});
+let mixedDrag=null;
+document.addEventListener('pointerdown',e=>{
+ const piece=e.target.closest('.mixed-movable');
+ if(!piece||tab!=='projects'||subtab!=='corte')return;
+ const sheet=piece.closest('.mixed-drag-sheet');if(!sheet)return;
+ mixedDrag={piece,sheet,key:piece.dataset.mixedKey,x:Number(piece.dataset.mixedX),y:Number(piece.dataset.mixedY),px:e.clientX,py:e.clientY};
+ piece.setPointerCapture(e.pointerId);e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+ if(!mixedDrag)return;
+ mixedDrag.piece.style.transform='translate('+(e.clientX-mixedDrag.px)+'px,'+(e.clientY-mixedDrag.py)+'px)';
+ e.preventDefault();
+});
+document.addEventListener('pointerup',e=>{
+ if(!mixedDrag)return;
+ const drag=mixedDrag;mixedDrag=null;const plan=project()?.cutPlan,stock=plan?.mixedStock;
+ if(!stock){render();return;}
+ const box=drag.sheet.getBoundingClientRect();
+ const x=Math.round(drag.x+(e.clientX-drag.px)*stock.width/box.width);
+ const y=Math.round(drag.y+(e.clientY-drag.py)*stock.height/box.height);
+ const moves={...(stock.moves||{}),[drag.key]:{x,y}};
+ try{const layout=window.ArqueCut.mixedStock({...stock,pieces:plan.pieces.filter(p=>stock.ids.includes(p.id))});window.ArqueCut.positionMixed(layout,moves);stock.moves=moves;persist().then(()=>render()).catch(err=>{render();toast('Erro ao salvar: '+err.message);});}
+ catch(err){render();toast('Não é possível mover: '+err.message);}
+ e.preventDefault();
+});
+document.addEventListener('pointercancel',()=>{if(mixedDrag){mixedDrag=null;render();}});
+// Double tap on the photograph toggles free navigation; a normal stroke is not a double tap.
+let photoTapDown=null,photoLastTap=null,photoTriplePending=null,photoZoomPreviousInk=true,photoZoomPreviousPlacement=false;
+document.addEventListener('pointerdown',e=>{
+ if(!e.target.closest('#photoMeasureStage')||e.pointerType==='mouse'&&e.button!==0)return;
+ const now=Date.now();
+ if(photoTriplePending&&now-photoTriplePending.time<420&&Math.hypot(e.clientX-photoTriplePending.x,e.clientY-photoTriplePending.y)<38){
+  photoTriplePending=null;photoLastTap=null;photoTapDown=null;
+  photoZoom=1;photoPanX=0;photoPanY=0;
+  if(photoZoomMode){photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+  photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+  render();applyPhotoZoom();
+  e.preventDefault();e.stopImmediatePropagation();return;
+ }
+ const doubleTap=photoLastTap&&now-photoLastTap.time<360&&Math.hypot(e.clientX-photoLastTap.x,e.clientY-photoLastTap.y)<38;
+ photoTapDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:false,ink:photoInk&&!photoZoomMode&&!photoPlacement};
+ if(!doubleTap)return;
+ photoTriplePending={x:e.clientX,y:e.clientY,time:now};
+ const firstTap=photoLastTap;photoLastTap=null;photoTapDown=null;
+ const wasZoom=photoZoomMode;
+ if(!wasZoom){photoZoomPreviousInk=photoInk;photoZoomPreviousPlacement=photoPlacement;photoZoomMode=true;photoInk=false;photoPlacement=false;}
+ else{photoZoomMode=false;photoInk=photoZoomPreviousInk;photoPlacement=photoZoomPreviousPlacement;}
+ // The first tap must not leave a small ink dot on the photograph.
+ if(!wasZoom&&firstTap?.ink){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const strokes=photo?.inkStrokes;if(strokes?.length){const last=strokes[strokes.length-1];const points=Array.isArray(last)?last:last.points||[];if(points.length<=2){strokes.pop();persist().catch(()=>{});}}}
+ photoZoomPointers.clear();photoZoomPinch=null;photoZoomPan=null;
+ render();applyPhotoZoom();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(photoTapDown?.id===e.pointerId&&Math.hypot(e.clientX-photoTapDown.x,e.clientY-photoTapDown.y)>12)photoTapDown.moved=true;
+},true);
+document.addEventListener('pointerup',e=>{
+ if(photoTapDown?.id!==e.pointerId)return;
+ if(!photoTapDown.moved)photoLastTap={x:e.clientX,y:e.clientY,time:Date.now(),ink:photoTapDown.ink};
+ else photoLastTap=null;
+ photoTapDown=null;
+},true);
+document.addEventListener('pointercancel',e=>{if(photoTapDown?.id===e.pointerId){photoTapDown=null;photoLastTap=null;}},true);
+// Photo zoom: pan with one finger or S Pen; pinch with two fingers in move/zoom mode.
+const photoZoomPointers=new Map();let photoZoomPinch=null,photoZoomPan=null;
+document.addEventListener('pointerdown',e=>{
+ if(!photoZoomMode||!e.target.closest('#photoMeasureStage'))return;
+ const stage=$('#photoMeasureStage');if(!stage)return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size===1)photoZoomPan={x:e.clientX,y:e.clientY,panX:photoPanX,panY:photoPanY};
+ if(photoZoomPointers.size===2){const pts=[...photoZoomPointers.values()];photoZoomPinch={distance:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)||1,zoom:photoZoom};photoZoomPan=null;}
+ try{stage.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoZoomPointers.has(e.pointerId))return;
+ photoZoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(photoZoomPointers.size>=2&&photoZoomPinch){const pts=[...photoZoomPointers.values()];photoZoomSet(photoZoomPinch.zoom*Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y)/photoZoomPinch.distance);}
+ else if(photoZoomPan){photoPanX=photoZoomPan.panX+e.clientX-photoZoomPan.x;photoPanY=photoZoomPan.panY+e.clientY-photoZoomPan.y;applyPhotoZoom();}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const photoZoomEnd=e=>{if(!photoZoomPointers.has(e.pointerId))return;photoZoomPointers.delete(e.pointerId);photoZoomPinch=null;photoZoomPan=null;e.preventDefault();e.stopImmediatePropagation();};
+document.addEventListener('pointerup',photoZoomEnd,true);
+document.addEventListener('pointercancel',photoZoomEnd,true);
+document.addEventListener('wheel',e=>{if(!e.target.closest('#photoMeasureStage'))return;if(!e.ctrlKey&&!photoZoomMode)return;e.preventDefault();photoZoomSet(photoZoom*(e.deltaY<0?1.12:1/1.12));},{passive:false});
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||!photoPlacement||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoPlacementStart={...photoOverlayCoords(e,svg),pointerId:e.pointerId};photoPlacementPreview={...photoPlacementStart};
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ const point=photoOverlayCoords(e,svg);photoPlacementPreview=point;
+ const line=svg.querySelector('#photoPlacementPreview');
+ if(line){line.setAttribute('x1',photoPlacementStart.x);line.setAttribute('y1',photoPlacementStart.y);line.setAttribute('x2',point.x);line.setAttribute('y2',point.y);line.setAttribute('visibility','visible');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!photoPlacementStart||photoPlacementStart.pointerId!==e.pointerId)return;
+ const svg=$('#photoOverlay'),start=photoPlacementStart,end=svg?photoOverlayCoords(e,svg):photoPlacementPreview;
+ photoPlacementStart=null;photoPlacementPreview=null;
+ // Keep arrow tool selected after finishing: next drag creates another arrow.
+ photoPlacement=true;photoInk=false;
+ const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(photo&&end&&Math.hypot(end.x-start.x,end.y-start.y)>12){
+  const d={id:C.uid(),label:'Medida '+(overlayFor(photo).length+1),shape:'arrow',thickness:4,color:'#ffe000',x1:start.x,y1:start.y,x2:end.x,y2:end.y,value:null,source:'manual'};
+  overlayFor(photo).push(d);photoMeasureSelected=d.id;update();
+ }else{render();toast('Arraste sobre a foto para desenhar a seta.');}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointercancel',e=>{if(photoPlacementStart?.pointerId===e.pointerId){photoPlacementStart=null;photoPlacementPreview=null;render();}},true);
+// Each pen contact creates one independent, immediately visible stroke.
+// A measurement's central yellow box is always tappable, even when the pen is active.
+document.addEventListener('pointerdown',e=>{
+ const label=e.target.closest('[data-measure-label]');
+ if(!label||!e.target.closest('#photoOverlay')||photoZoomMode)return;
+ photoMeasureSelected=label.dataset.measureLabel;
+ photoInk=false;photoStrokeActive=null;photoInkPointer=null;
+ render();
+ openPhotoQuickMeasure();
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(photoZoomMode||photoPlacement||!photoInk||!e.target.closest('#photoOverlay')||e.target.closest('[data-dimension]'))return;
+ if(photoInkPointer!==null)return;
+ const svg=$('#photoOverlay'),photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);
+ if(!svg||!photo)return;
+ if(!photo.inkStrokes)photo.inkStrokes=[];
+ const stroke={points:[photoOverlayCoords(e,svg)],color:photoInkColor,width:photoInkWidth};
+ photo.inkStrokes.push(stroke);photoStrokeActive=stroke;photoInkPointer=e.pointerId;
+ try{svg.setPointerCapture(e.pointerId)}catch(_){}
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+document.addEventListener('pointermove',e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ const svg=$('#photoOverlay');if(!svg)return;
+ photoStrokeActive.points.push(photoOverlayCoords(e,svg));
+ let line=svg.querySelector('#livePhotoInk');
+ if(!line){line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.id='livePhotoInk';line.setAttribute('fill','none');line.setAttribute('stroke-linecap','round');line.setAttribute('stroke-linejoin','round');svg.append(line);}
+ line.setAttribute('stroke',photoStrokeActive.color);line.setAttribute('stroke-width',photoStrokeActive.width);
+ line.setAttribute('points',photoStrokeActive.points.map(p=>p.x+','+p.y).join(' '));
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+const finishPhotoInk=e=>{
+ if(!photoStrokeActive||photoInkPointer!==e.pointerId)return;
+ photoStrokeActive=null;photoInkPointer=null;
+ const svg=$('#photoOverlay'),live=svg?.querySelector('#livePhotoInk');
+ if(live){live.removeAttribute('id');}
+ persist().catch(err=>toast(err.message));
+};
+document.addEventListener('pointerup',finishPhotoInk,true);
+document.addEventListener('pointercancel',finishPhotoInk,true);
+document.addEventListener('lostpointercapture',finishPhotoInk,true);
+document.addEventListener('pointerdown',e=>{const h=e.target.closest('[data-handle]');const g=e.target.closest('[data-dimension]');if(photoZoomMode||!g||!e.target.closest('#photoOverlay'))return;if(photoInk){photoInk=false;}photoPlacement=false;photoMeasureSelected=g.dataset.dimension;document.querySelectorAll('#photoOverlay [data-dimension]').forEach(node=>{const active=node===g;node.classList.toggle('dim-selected',active);node.querySelectorAll('circle').forEach(c=>{c.setAttribute('fill-opacity',active?'.85':'0');c.setAttribute('r',active?'13':'10');});});if(h){photoDrag=h.dataset.handle;h.setPointerCapture(e.pointerId);photoPrecisionLens(photoOverlayCoords(e,$('#photoOverlay')));}else{const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto),d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(d){photoDrag='move';const start=photoOverlayCoords(e,$('#photoOverlay'));photoMoveAnchor={start,x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2};g.setPointerCapture(e.pointerId);const input=$('#photoMeasureValue'),name=$('#photoMeasureLabel'),note=$('#photoMeasureNote');if(input)input.value=d.value||'';if(name)name.value=d.label||'';if(note)note.value=d.note||'';}}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!photoDrag)return;const svg=$('#photoOverlay');const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);const d=photo&&overlayFor(photo).find(x=>x.id===photoMeasureSelected);if(!svg||!d)return;const point=photoOverlayCoords(e,svg);if(photoDrag==='a'||photoDrag==='b')photoPrecisionLens(point);if(photoDrag==='a'){d.x1=point.x;d.y1=point.y;}else if(photoDrag==='b'){d.x2=point.x;d.y2=point.y;}else if(photoDrag==='move'&&photoMoveAnchor){const dx=point.x-photoMoveAnchor.start.x,dy=point.y-photoMoveAnchor.start.y;const nx1=photoMoveAnchor.x1+dx,nx2=photoMoveAnchor.x2+dx,ny1=photoMoveAnchor.y1+dy,ny2=photoMoveAnchor.y2+dy;if(Math.min(nx1,nx2)>=0&&Math.max(nx1,nx2)<=1000&&Math.min(ny1,ny2)>=0&&Math.max(ny1,ny2)<=650){d.x1=nx1;d.x2=nx2;d.y1=ny1;d.y2=ny2;}}const g=[...svg.querySelectorAll('[data-dimension]')].find(x=>x.dataset.dimension===d.id);if(g){const line=g.querySelector('line:not(.measure-hit)'),hit=g.querySelector('.measure-hit'),rect=d.shape==='rect'?g.querySelector(':scope > rect'):null,circles=g.querySelectorAll('circle'),label=g.querySelector('.measure-label');
+ if(line){for(const l of [line,hit]){if(!l)continue;l.setAttribute('x1',d.x1);l.setAttribute('y1',d.y1);l.setAttribute('x2',d.x2);l.setAttribute('y2',d.y2);}}
+ const length=Math.hypot(d.x2-d.x1,d.y2-d.y1),ratio=Math.max(.38,Math.min(1.3,length/240)),head=Math.min(length*.23,Math.max(5,14*ratio)),wing=Math.max(2.5,head*.45),ux=length?(d.x2-d.x1)/length:1,uy=length?(d.y2-d.y1)/length:0;
+ const tip=(x,y,dx,dy)=>[x+dx*head-dy*wing,y+dy*head+dx*wing,x,y,x+dx*head+dy*wing,y+dy*head-dx*wing].join(',');
+ const heads=g.querySelectorAll('polygon');if(heads.length===2){heads[0].setAttribute('points',tip(d.x1,d.y1,ux,uy));heads[1].setAttribute('points',tip(d.x2,d.y2,-ux,-uy));}
+ if(rect){rect.setAttribute('x',Math.min(d.x1,d.x2));rect.setAttribute('y',Math.min(d.y1,d.y2));rect.setAttribute('width',Math.abs(d.x2-d.x1));rect.setAttribute('height',Math.abs(d.y2-d.y1));}
+ if(circles.length===2){circles[0].setAttribute('cx',d.x1);circles[0].setAttribute('cy',d.y1);circles[1].setAttribute('cx',d.x2);circles[1].setAttribute('cy',d.y2);}
+ if(label)label.setAttribute('transform','translate('+((d.x1+d.x2)/2)+' '+((d.y1+d.y2)/2)+')'+((function(){const a=Math.atan2(d.y2-d.y1,d.x2-d.x1)*180/Math.PI;return ' rotate('+(a>90?a-180:a< -90?a+180:a)+') scale('+Math.max(.45,Math.min(1,length/155))+')'})()));
+ }e.preventDefault();});
+const finishPhotoDimensionDrag=()=>{clearPhotoPrecisionLens();if(photoDrag){photoDrag=null;photoMoveAnchor=null;persist().then(()=>{if(tab==='projects'&&subtab==='fotomedidas')render();}).catch(e=>toast(e.message));}};document.addEventListener('pointerup',finishPhotoDimensionDrag);document.addEventListener('pointercancel',finishPhotoDimensionDrag);
+
+document.addEventListener('pointerdown',e=>{const handle=e.target.closest('[data-room-handle]');if(!handle)return;const svg=document.getElementById('roomPlanSvg');const r=room();if(!svg||!r)return;if(!r.planPoints?.length)r.planPoints=[[120,160],[410,160],[410,350],[120,350]];roomPointDrag={index:Number(handle.dataset.roomHandle),pointer:e.pointerId};try{handle.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault();});
+document.addEventListener('pointermove',e=>{if(!roomPointDrag||roomPointDrag.pointer!==e.pointerId)return;const svg=document.getElementById('roomPlanSvg'),r=room();if(!svg||!r?.planPoints)return;const b=svg.getBoundingClientRect();const x=Math.max(20,Math.min(580,(e.clientX-b.left)*600/(b.width||1))),y=Math.max(20,Math.min(460,(e.clientY-b.top)*480/(b.height||1)));r.planPoints[roomPointDrag.index]=[Math.round(x),Math.round(y)];const points=r.planPoints;svg.querySelector('polygon')?.setAttribute('points',points.map(p=>p.join(',')).join(' '));svg.querySelectorAll('[data-room-handle]').forEach(h=>{const p=points[Number(h.dataset.roomHandle)];if(p){h.setAttribute('cx',p[0]);h.setAttribute('cy',p[1]);}});svg.querySelectorAll('g').forEach((g,i)=>{const p=points[i],q=points[(i+1)%points.length];if(!p||!q)return;const l=g.querySelector('line'),t=g.querySelector('text');if(l){l.setAttribute('x1',p[0]);l.setAttribute('y1',p[1]);l.setAttribute('x2',q[0]);l.setAttribute('y2',q[1]);}if(t){t.setAttribute('x',(p[0]+q[0])/2);t.setAttribute('y',(p[1]+q[1])/2-13);t.textContent=Math.round(Math.hypot(q[0]-p[0],q[1]-p[1])*10)+' mm';}});e.preventDefault();});
+const finishRoomPoint=()=>{if(!roomPointDrag)return;roomPointDrag=null;persist().catch(x=>toast(x.message));};
+document.addEventListener('pointerup',finishRoomPoint);document.addEventListener('pointercancel',finishRoomPoint);
+document.addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.cutId&&tab==='projects'&&subtab==='corte'){
+ const plan=cuttingPlan(project()),piece=plan.pieces.find(x=>x.id===el.dataset.cutId);if(!piece)return;
+ const key=el.dataset.cutField;const value=key==='rotate'||key==='grain'?el.value==='true':(['w','h','qty'].includes(key)?Number(el.value):el.value.trim());
+ const changed={...piece,[key]:value};
+ try{window.ArqueCut.calculate({...plan,pieces:[changed]});if(JSON.stringify(changed)!==JSON.stringify(piece)){archiveCutRevision(plan,piece,'Alteração de '+key);Object.assign(piece,changed);if(['w','h','qty'].includes(key)){for(const record of Object.keys(plan.cutDone||{}))if(record.startsWith(piece.id+':'))delete plan.cutDone[record];}}persist().then(()=>render()).catch(err=>toast('Erro ao salvar: '+err.message));}catch(err){toast('Valor inválido: '+err.message);render();}
+ return;
+ }
+if(e.target.id==='pstatus'||e.target.id==='pnewstatus'){const prefix=e.target.id==='pstatus'?'p':'pnew',fields=document.getElementById(prefix+'DeliveryFields');if(fields)fields.hidden=!['Aprovado','Produção','Montagem'].includes(e.target.value);return;}
+ if(e.target.id==='agendaDay'){agendaDay=e.target.value;agendaEditId=null;render();return;}
+ if(e.target.id==='photoRoom'){const photo=project()?.photos.find(x=>x.id===photoMeasurePhoto);if(photo){photo.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='measurePhoto'){photoMeasurePhoto=e.target.value;photoMeasureSelected=null;render();}if(e.target.id==='studioRoom'){const pg=studioCurrent(project());if(pg){pg.roomId=e.target.value;persist().catch(err=>toast(err.message));}}
+if(e.target.id==='drawRoom'){selectedRoom=e.target.value;render()}if(e.target.id==='drawColor')drawColor=e.target.value});
+(async()=>{try{db=await openDb();let saved=await readState();if(saved)state=saved;if(!Array.isArray(state.agenda))state.agenda=[];agendaSync();render();}catch(e){$('#main').innerHTML=`<div class="notice">Não foi possível iniciar o armazenamento local: ${escape(e.message)}. Use um navegador compatível ou o APK.</div>`}})();
+
+window.ArqueAgendaStatus=message=>toast(message);
+window.ArqueAppBack=()=>{
+ if(arqueCalendar){closeArqueCalendar();return true;}
+ const previous=navigationHistory.pop();
+ if(previous){({tab,selectedClient,selectedProject,selectedRoom,subtab}=previous);render();window.scrollTo(0,0);return true;}
+ if(tab!=='home'){tab='home';selectedProject=null;selectedRoom=null;render();window.scrollTo(0,0);return true;}
+ return false;
+};
+window.ArqueLinkDiscoveryEvent=(kind,value)=>{
+ if(kind==='discovery_peers'){
+   try{linkPeers=JSON.parse(value).filter(x=>x&&typeof x.ip==='string'&&/^(\d{1,3}\.){3}\d{1,3}$/.test(x.ip));
+     linkNotice=linkPeers.length?linkPeers.length+' aparelho(s) localizado(s). Selecione um.':'Nenhum Arque Measure foi encontrado por Bluetooth.';
+   }catch(e){linkPeers=[];linkNotice='Erro ao interpretar resultado da busca BLE.';}
+ }else{linkNotice=String(value).slice(0,240);}
+ if(tab==='transfer')render();
+};
+
+})();
+],...state.projects.map(p=>{const c=state.clients.find(c=>c.id===p.clientId)||{},f=C.finance(p);return [c.fullName||c.name,c.cpf,c.city,p.name,p.status,p.closedAt,p.deliveryDate,f.contract,f.discount,f.paid,f.balance];})]);toast('Relatório financeiro exportado.');break;}
 case'clientProject':selectedClient=arg;tab='projects';selectedProject=null;render();break;
 case'chooseProjectClient':{const id=val('projectClientPick');if(!state.clients.some(c=>c.id===id))throw Error('Escolha um cliente válido.');selectedClient=id;selectedProject=null;tab='projects';render();break;}
 case'addProject':{if(!selectedClient||val('pclient')!==selectedClient)throw Error('Selecione primeiro um cliente existente.');const client=state.clients.find(c=>c.id===selectedClient);const environment=val('pname').trim();if(!environment)throw Error('Informe o ambiente.');let x=C.project(selectedClient,environment,client?.address||'');x.status=val('pnewstatus');x.deliveryDate=val('pnewDeliveryDate');x.deliveryTime=val('pnewDeliveryTime');x.deliveryDurationMinutes=Number(val('pnewDeliveryDuration'));const agenda=window.ArqueAgenda.syncProjectDelivery(state.agenda||[],x,client?.name||'');const initialRoom=C.room(environment);x.rooms.push(initialRoom);state.projects.push(x);state.agenda=agenda;selectedProject=x.id;selectedClient=x.clientId;selectedRoom=initialRoom.id;subtab='resumo';return update().then(()=>{agendaSync();toast('Obra criada e entrega sincronizada.');});}

@@ -323,3 +323,10 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-readings strong{font-size:12px;color:var(--yellow);width:100%}
 .studio-readings button{font:inherit;font-size:12px;border:1px solid #827344;border-radius:5px;background:#353122;color:#f6e3ab;padding:7px 9px;cursor:pointer}
 .studio-readings button:focus-visible{outline:2px solid var(--yellow)}
+
+/* Datas de entrega fazem parte do cadastro do projeto e da ficha do cliente. */
+.project-delivery-fields{margin:10px 0 16px;padding:14px;border:1px solid #6b5c30;border-left:4px solid var(--yellow);background:#28261d;border-radius:6px}
+.project-delivery-fields[hidden]{display:none!important}
+.project-delivery-fields h3{margin:0 0 4px}
+.project-delivery-fields .muted{font-size:12px}
+.project-delivery-fields .fields{margin-top:10px}

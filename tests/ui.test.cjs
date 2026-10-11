@@ -83,16 +83,41 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelectorAll('.studio-page').length===2,'multiple named sheets');
  click(doc,'studioSelect',doc.querySelector('.studio-page').dataset.arg);await sleep(40);
  assert(doc.querySelector('.studio-paper-head').textContent.includes('Parede da pia'),'can reopen first sheet');
- // Laboratório suspenso: Esboço e Planta continuam sem o editor de módulos.
- assert(!doc.querySelector('[data-action="studioMode"][data-arg="laboratorio"]'),'Aba Laboratório não aparece');
+ // O caderno manual substitui menus de 3D/construção; mantém a S Pen e medidas.
+ assert(!doc.querySelector('[data-action="studioMode"][data-arg="laboratorio"]'),'Laboratório não aparece');
  assert(!doc.getElementById('arqueLab'),'Laboratório não é montado');
- assert(doc.body.textContent.includes('Esboço e planta'),'área de desenho mantida');
- click(doc,'studioMode','planta');await sleep(40);
- assert(doc.querySelector('#studioCanvas'),'Planta utiliza a mesma folha');
- assert(doc.body.textContent.includes('Parede da pia'),'folhas preservadas');
- click(doc,'studioMode','esboco');await sleep(40);
- assert(doc.querySelector('#studioCanvas'),'Esboço ativo');
- assert(!doc.querySelector('#labBoard'),'Visualizador desativado');
+ assert(doc.body.textContent.includes('Caderno de esboço manual'),'caderno manual está disponível');
+ assert(!doc.querySelector('[data-action="studioMode"][data-arg="planta"]'),'modos antigos removidos');
+ const tool=doc.getElementById('studioTool');assert(tool&&tool.querySelector('option[value="line"]'),'ferramenta de linha reta disponível');
+ assert(!tool.querySelector('option[value="cabinet"]'),'sem editor de móveis no caderno');
+ tool.value='line';tool.dispatchEvent(new w.Event('change',{bubbles:true}));
+ const straight=doc.getElementById('studioCanvas');straight.getBoundingClientRect=()=>({left:0,top:0,width:840,height:1188});
+ for(const [kind,x,y] of [['pointerdown',150,600],['pointermove',430,606],['pointerup',430,606]]){
+  const ev=new w.Event(kind,{bubbles:true,cancelable:true});
+  Object.defineProperties(ev,{pointerId:{value:83},clientX:{value:x},clientY:{value:y}});
+  straight.dispatchEvent(ev);
+ }
+ await sleep(65);
+ assert(doc.getElementById('studioCanvas'),'linha reta salva sem travar a tela');
+ assert(doc.querySelector('[data-action="studioSnapToggle"]'),'encaixe automático disponível');
+ assert(!doc.querySelector('#labBoard'),'Visualizador 3D suspenso');
+
+ // Agenda independente da obra: aviso de entregas, horários livres e conflitos.
+ doc.querySelector('[data-tab="agenda"]').click();await sleep(35);
+ assert(doc.querySelector('#agendaTitle'),'agenda abre pela navegação');
+ assert(doc.body.textContent.includes('Horários livres'),'agenda mostra intervalos livres');
+ assign(doc,'agendaDay','2030-05-12');doc.getElementById('agendaDay').dispatchEvent(new w.Event('change',{bubbles:true}));
+ assign(doc,'agendaTitle','Entrega da cozinha');
+ assign(doc,'agendaStart','2030-05-12T09:00');assign(doc,'agendaEnd','2030-05-12T11:00');
+ click(doc,'agendaSave');await sleep(90);
+ assert(doc.body.textContent.includes('Entrega da cozinha'),'entrega salva');
+ assert(doc.querySelector('.agenda-entry'),'compromisso visível no dia');
+ assert(doc.body.textContent.includes('11:00–19:00'),'horário livre calculado após entrega');
+ click(doc,'agendaEdit');await sleep(25);
+ assert(doc.getElementById('agendaTitle').value==='Entrega da cozinha','editar recupera informações');
+ click(doc,'agendaCancel');
+ doc.querySelector('[data-tab="projects"]').click();await sleep(40);
+ click(doc,'openProject');await sleep(40);
 
  // MeasureOn-inspired single distance tool: no horizontal/vertical/free arrow choices.
  click(doc,'openWorkspace','fotomedidas');await sleep(30);

@@ -317,3 +317,9 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .agenda-next b{color:var(--yellow);min-width:87px}.agenda-next span{flex:1;overflow-wrap:anywhere}
 .agenda-disclaimer{font-size:12px;line-height:1.5}
 @media(max-width:650px){.agenda-summary{grid-template-columns:1fr 1fr}.agenda-next{flex-wrap:wrap}.agenda-heading input{width:100%}}
+
+/* Esboço manual: mostrar medidas da obra na mesma página, sem painéis CAD. */
+.studio-readings{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:10px 0;padding:9px;border:1px solid #4a4634;background:#27261f}
+.studio-readings strong{font-size:12px;color:var(--yellow);width:100%}
+.studio-readings button{font:inherit;font-size:12px;border:1px solid #827344;border-radius:5px;background:#353122;color:#f6e3ab;padding:7px 9px;cursor:pointer}
+.studio-readings button:focus-visible{outline:2px solid var(--yellow)}

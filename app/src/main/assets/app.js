@@ -391,6 +391,24 @@ function studioAlignedLine(stroke,page){
  if(Math.hypot(end[0]-start[0],end[1]-start[1])<3)end=[start[0]+1,start[1]];
  stroke.kind='line';stroke.points=[start,end];
 }
+function studioApplyZoom(){
+ const canvas=$('#studioCanvas');if(!canvas)return;
+ canvas.style.transformOrigin='top left';
+ canvas.style.transform='translate('+studioViewport.x+'px,'+studioViewport.y+'px) scale('+studioViewport.zoom+')';
+ const label=$('#studioZoomValue');if(label)label.textContent=Math.round(studioViewport.zoom*100)+'%';
+}
+function studioNoteSelected(p){const note=studioCurrent(p)?.labels?.find(x=>x.id===studioSelectedNote);if(!note)throw Error('Selecione uma nota na folha usando a ferramenta Selecionar.');return note;}
+function studioImageSelected(p){const layer=studioCurrent(p)?.images?.find(x=>x.id===studioSelectedImage);if(!layer)throw Error('Selecione uma foto na folha usando a ferramenta Selecionar.');return layer;}
+function studioInsertImage(src,ratio=1.5){
+ const pg=studioCurrent(project());if(!pg)throw Error('Crie uma folha primeiro.');
+ if(!/^data:image\/(jpeg|png|webp);base64,/i.test(src))throw Error('Formato da foto não aceito.');
+ if(src.length>8_000_000)throw Error('Foto grande demais para a folha. Reduza antes de importar.');
+ if(!Array.isArray(pg.images))pg.images=[];
+ const width=Math.min(560,(pg.width||840)-80),height=Math.min(680,width/Math.max(.25,Math.min(4,ratio)));
+ const layer={id:C.uid(),src,x:40,y:100,width:Math.round(width),height:Math.round(height),opacity:1,locked:false};
+ pg.images.push(layer);studioSelectedImage=layer.id;studioSelectedNote=null;studioTool='select';
+ return update().then(()=>toast('Foto adicionada na folha. Selecione e mova com a S Pen.'));
+}
 function studioView(){
  // O Laboratório está suspenso; os dados e módulos anteriores permanecem nos projetos.
  if(studioMode!=='esboco'&&studioMode!=='planta')studioMode='esboco';
@@ -404,7 +422,7 @@ function studioView(){
  <div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida digitada','studioSetMeasure')}${btn(studioSnap?'✓ Encaixe ligado':'Encaixe desligado','studioSnapToggle','','small')}${btn('Alinhar último traço','studioAlignLast','','small')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Linhas retas se encaixam em pontas próximas e se alinham automaticamente. Nenhum móvel 3D é gerado.</small></div>
  ${page.roomId&&p.rooms.some(x=>x.id===page.roomId)?'<div class="studio-readings"><strong>Medidas do ambiente</strong>'+((p.rooms.find(x=>x.id===page.roomId).measurements||[]).slice(-20).reverse().map(m=>'<button type="button" data-action="studioUseMeasure" data-arg="'+escape(m.id)+'">'+escape(m.kind||'Medida')+' · '+fmt(m.value)+' mm</button>').join('')||'<small class="muted">Cadastre medidas na aba Ambientes para puxá-las ao desenho.</small>')+'</div>':''}${page.referencePhotoId&&p.photos.some(x=>x.id===page.referencePhotoId)?'<div class="studio-photo-reference"><img alt="Foto de referência da obra" src="'+p.photos.find(x=>x.id===page.referencePhotoId).data+'"></div>':''}
  <div class="studio-media-bar"><label>Foto do projeto <select id="studioInsertPhoto"><option value="">Escolher foto</option>${(p.photos||[]).map(x=>'<option value="'+escape(x.id)+'">'+escape(x.name)+'</option>').join('')}</select></label>${btn('Inserir foto do projeto','studioInsertProjectPhoto')}${btn('Adicionar foto da galeria','studioInsertGalleryPhoto')}<small>Selecione a ferramenta Mover para arrastar a foto. Os traços ficam por cima dela.</small></div>
- <div class="studio-media-bar studio-edit-bar"><label>Nota <input id="studioNoteInput" type="text" maxlength="300" placeholder="Digite e toque na folha para posicionar"></label>${btn('Atualizar nota','studioNoteUpdate')}${btn('A−','studioNoteSmaller','','small')}${btn('A+','studioNoteLarger','','small')}${btn('Duplicar nota','studioNoteDuplicate','','small')}${btn('Excluir nota','studioNoteDelete','','small danger')}</div>
+ <div class="studio-media-bar studio-edit-bar"><label>Nota <input id="studioNoteInput" type="text" maxlength="300" value="${escape((page.labels||[]).find(n=>n.id===studioSelectedNote)?.text||'')}" placeholder="Digite e toque na folha para posicionar"></label>${btn('Atualizar nota','studioNoteUpdate')}${btn('A−','studioNoteSmaller','','small')}${btn('A+','studioNoteLarger','','small')}${btn('Duplicar nota','studioNoteDuplicate','','small')}${btn('Excluir nota','studioNoteDelete','','small danger')}</div>
  <div class="studio-media-bar studio-edit-bar"><strong>Foto selecionada</strong>${btn('− Tamanho','studioImageSmaller','','small')}${btn('+ Tamanho','studioImageLarger','','small')}${btn('Travar / destravar','studioImageLock','','small')}${btn('Opacidade','studioImageOpacity','','small')}${btn('Excluir foto','studioImageDelete','','small danger')}</div>
  <div class="studio-zoom-bar">${btn('−','studioZoomOut','','small')}<strong id="studioZoomValue">100%</strong>${btn('+','studioZoomIn','','small')}${btn('100% · Centralizar','studioZoomReset','','small')}<small>Um dedo / S Pen: desenhar. Dois dedos: ampliar e mover a folha.</small></div>
  <div class="studio-canvas-shell" id="studioCanvasShell"><canvas id="studioCanvas" width="${page.width||1000}" height="${page.height||690}" aria-label="Folha de esboço ${escape(page.name)}"></canvas></div>
@@ -809,6 +827,20 @@ case'addNote':{let text=val('noteText').trim();if(!text)throw Error('Escreva a a
 case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();break;
 case'undoStroke':r.strokes.pop();update();break;
 case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
+case'studioZoomIn':studioViewport.zoom=Math.min(5,studioViewport.zoom*1.25);studioApplyZoom();break;
+case'studioZoomOut':studioViewport.zoom=Math.max(1,studioViewport.zoom/1.25);studioApplyZoom();break;
+case'studioZoomReset':studioViewport={zoom:1,x:0,y:0};studioApplyZoom();break;
+case'studioNoteUpdate':{const note=studioNoteSelected(p),text=val('studioNoteInput').trim();if(!text)throw Error('Digite o texto da nota.');note.text=text.slice(0,300);update();break;}
+case'studioNoteLarger':{const n=studioNoteSelected(p);n.size=Math.min(64,(n.size||24)+4);update();break;}
+case'studioNoteSmaller':{const n=studioNoteSelected(p);n.size=Math.max(12,(n.size||24)-4);update();break;}
+case'studioNoteDuplicate':{const pg=studioCurrent(p),n=studioNoteSelected(p),copy={...n,id:C.uid(),x:n.x+25,y:n.y+35};pg.labels.push(copy);studioSelectedNote=copy.id;update();break;}
+case'studioNoteDelete':{const pg=studioCurrent(p);studioNoteSelected(p);pg.labels=pg.labels.filter(x=>x.id!==studioSelectedNote);studioSelectedNote=null;update();break;}
+case'studioImageLarger':case'studioImageSmaller':{const image=studioImageSelected(p);if(image.locked)throw Error('Destrave a foto para redimensioná-la.');const scale=a==='studioImageLarger'?1.15:1/1.15;image.width=Math.round(Math.max(60,Math.min(900,image.width*scale)));image.height=Math.round(Math.max(60,Math.min(1000,image.height*scale)));update();break;}
+case'studioImageLock':{const image=studioImageSelected(p);image.locked=!image.locked;update();toast(image.locked?'Foto travada.':'Foto destravada.');break;}
+case'studioImageOpacity':{const image=studioImageSelected(p);image.opacity=Number(image.opacity??1)<.4?1:Math.max(.3,Number((image.opacity-.3).toFixed(1)));update();break;}
+case'studioImageDelete':{const pg=studioCurrent(p);studioImageSelected(p);pg.images=pg.images.filter(x=>x.id!==studioSelectedImage);studioSelectedImage=null;update();break;}
+case'studioInsertProjectPhoto':{const photo=p.photos.find(f=>f.id===val('studioInsertPhoto'));if(!photo)throw Error('Escolha uma foto já salva no projeto.');return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(studioInsertImage(photo.data,img.naturalWidth/Math.max(1,img.naturalHeight)));img.onerror=()=>reject(Error('Não foi possível abrir esta foto.'));img.src=photo.data;});}
+case'studioInsertGalleryPhoto':$('#studioPhotoFile').click();break;
 case'studioInkColor':{studioInk=arg;const input=$('#studioColor');if(input)input.value=arg;break;}
 case'studioMode':studioMode=['esboco','planta'].includes(arg)?arg:'esboco';if(studioMode==='planta')studioGrid='lines';render();break;
 case'studioSnapToggle':studioSnap=!studioSnap;render();break;
@@ -829,7 +861,7 @@ case'studioDelete':{const pg=studioCurrent(p);if(!pg||!confirm('Excluir esta fol
 case'studioSaveText':{const pg=studioCurrent(p);if(!pg)break;pg.text=val('studioText');update();toast('Anotação salva.');break;}
 case'studioUndo':{const pg=studioCurrent(p);if(!pg||!pg.strokes?.length)break;(pg.undone||(pg.undone=[])).push(pg.strokes.pop());update();break;}
 case'studioRedo':{const pg=studioCurrent(p);if(!pg||!pg.undone?.length)break;pg.strokes.push(pg.undone.pop());update();break;}
-case'studioExport':{const canvas=$('#studioCanvas');if(!canvas)throw Error('Crie uma página primeiro.');const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
+case'studioExport':{const canvas=$('#studioCanvas'),pg=studioCurrent(p);if(!canvas)throw Error('Crie uma página primeiro.');if((pg?.images||[]).some(layer=>!studioImageCache.get(layer.src)?.ready))throw Error('Aguarde a foto aparecer na folha antes de exportar.');studioCanvasPaint?.();const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='arque-rascunho.png';document.body.appendChild(a);a.click();a.remove();break;}
 case'addPayment':{let amount=C.money(val('payamount'));if(amount<=0)throw Error('Pagamento deve ser positivo.');p.payments.push({id:C.uid(),amount,method:val('paymethod'),date:val('paydate')});update();toast('Recebimento registrado.');break;}
 case'deletePayment':if(confirm('Excluir recebimento?')){p.payments=p.payments.filter(x=>x.id!==arg);update();}break;
 case'calcSocket':{let x=C.socket(num('tw'),num('tl'),num('tc'),num('tr'),num('tt'));state.settings.tolerance=num('tt');$('#socketResult').innerHTML=`<div class="metric">Centro da tomada <b>${fmt(x.center)} mm</b></div><div class="metric">Erro de fechamento <b>${fmt(x.closureError)} mm</b></div><p class="${x.withinTolerance?'':'warn'}">${x.withinTolerance?'Dentro da tolerância configurada.':'⚠ Conferir medidas antes de fabricar.'}</p>`;persist();break;}
@@ -873,6 +905,20 @@ window.ArqueBleDevices=devices=>{try{const list=JSON.parse(devices);if(!list.len
 $('#contractFile').addEventListener('change',async e=>{const file=e.target.files[0];const c=state.clients.find(x=>x.id===e.target.dataset.clientId);try{if(!file||!c)return;if(file.size>6*1024*1024)throw Error('Arquivo muito grande. Máximo de 6 MB por contrato.');if(!(['application/pdf','image/jpeg','image/png','image/webp'].includes(file.type)))throw Error('Aceita apenas PDF, JPG, PNG ou WebP.');const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Erro na leitura'));r.readAsDataURL(file);});if(!Array.isArray(c.contracts))c.contracts=[];c.contracts.push({id:C.uid(),name:file.name.slice(0,120),type:file.type,size:file.size,data,projectId:e.target.dataset.projectId||'',date:new Date().toLocaleDateString('pt-BR'),createdAt:new Date().toISOString()});await persist();render();toast('Contrato anexado ao cliente.');}catch(err){toast('Não foi possível anexar: '+err.message);}finally{e.target.value='';}});
 $('#importFile').addEventListener('change',async e=>{try{let f=e.target.files[0];if(f)await receiveImport(await f.text());}catch(err){toast('Erro no backup: '+err.message)}e.target.value='';});
 for(const fileInput of ['#photoFile','#cameraFile'])$(fileInput).addEventListener('change',async e=>{try{const f=e.target.files[0];if(!f)return;const img=await createImageBitmap(f);let ratio=Math.min(1,1600/Math.max(img.width,img.height)),can=document.createElement('canvas');can.width=Math.round(img.width*ratio);can.height=Math.round(img.height*ratio);can.getContext('2d').drawImage(img,0,0,can.width,can.height);const photo={id:C.uid(),name:f.name.slice(0,100),data:can.toDataURL('image/jpeg',0.72),createdAt:new Date().toISOString(),category:pendingPhotoCategory,roomId:pendingPhotoRoom};project().photos.push(photo);await update();toast('Foto salva no projeto.');}catch(err){toast('Falha ao salvar foto: '+err.message)}e.target.value='';});
+
+$('#studioPhotoFile').addEventListener('change',async e=>{
+ const f=e.target.files?.[0];e.target.value='';if(!f)return;
+ try{
+  if(!['image/jpeg','image/png','image/webp'].includes(f.type))throw Error('Selecione JPG, PNG ou WebP.');
+  if(f.size>8*1024*1024)throw Error('Foto acima de 8 MB.');
+  const image=await createImageBitmap(f),ratio=image.width/Math.max(image.height,1);
+  const shrink=Math.min(1,1600/Math.max(image.width,image.height));
+  const temp=document.createElement('canvas');temp.width=Math.max(1,Math.round(image.width*shrink));temp.height=Math.max(1,Math.round(image.height*shrink));
+  temp.getContext('2d').drawImage(image,0,0,temp.width,temp.height);
+  if(image.close)image.close();
+  await studioInsertImage(temp.toDataURL('image/jpeg',.78),ratio);
+ }catch(error){toast('Não foi possível inserir foto: '+error.message);}
+});
 $('#diagCameraFile').addEventListener('change',async e=>{const file=e.target.files[0];if(file){cameraCheck='Imagem recebida ('+Math.round(file.size/1024)+' KB)';render();toast('Imagem de teste recebida.');}e.target.value='';});
 function setupDrawing(){const canvas=$('#drawing'),r=room();if(!canvas||!r)return;const ctx=canvas.getContext('2d');function repaint(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle='#dae6dc';ctx.lineWidth=1;for(let x=0;x<canvas.width;x+=50){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke()}for(let y=0;y<canvas.height;y+=50){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke()}ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';for(const stored of [...r.strokes,...(drawActive?[{points:drawPoints,color:drawColor}]:[])]){const stroke=Array.isArray(stored)?stored:stored.points;if(!stroke?.length)continue;ctx.strokeStyle=stored.color||'#1c563b';ctx.beginPath();ctx.moveTo(stroke[0][0],stroke[0][1]);for(let i=1;i<stroke.length;i++)ctx.lineTo(stroke[i][0],stroke[i][1]);if(stroke.length===1)ctx.lineTo(stroke[0][0]+.01,stroke[0][1]);ctx.stroke()}}function point(e){const b=canvas.getBoundingClientRect();return [(e.clientX-b.left)*canvas.width/b.width,(e.clientY-b.top)*canvas.height/b.height].map(n=>Math.round(n*10)/10)}canvas.onpointerdown=e=>{drawActive=true;drawPoints=[point(e)];canvas.setPointerCapture(e.pointerId);repaint()};canvas.onpointermove=e=>{if(drawActive){drawPoints.push(point(e));repaint()}};canvas.onpointerup=async()=>{if(!drawActive)return;drawActive=false;if(drawPoints.length)r.strokes.push({points:drawPoints,color:drawColor});drawPoints=[];await persist();repaint()};canvas.onpointercancel=()=>{drawActive=false;drawPoints=[];repaint()};repaint();}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&arqueCalendar){closeArqueCalendar();e.preventDefault();}});

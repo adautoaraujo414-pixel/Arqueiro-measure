@@ -108,6 +108,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  const beforeCount=swipe.dataset.strokeCount;
  send('pointerdown',31,100,100);send('pointerdown',32,200,100);
  send('pointermove',32,310,100);
+ console.log('PINCH DIAGNOSTIC',doc.getElementById('studioZoomValue').textContent,swipe.style.transform,swipe.dataset.strokeCount);
  assert(Number.parseInt(doc.getElementById('studioZoomValue').textContent)>150,'pinça amplia a folha');
  send('pointerup',32,310,100);send('pointerup',31,100,100);
  assert.equal(swipe.dataset.strokeCount,beforeCount,'gesto com dois dedos não cria traço');

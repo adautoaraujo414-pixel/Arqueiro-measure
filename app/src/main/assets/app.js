@@ -66,10 +66,12 @@ function groupedProjects(projects){
 }
 function homeView(){
  const active=state.projects.filter(p=>!['Finalizado','Cancelado'].includes(p.status));
+ const upcoming=(state.agenda||[]).filter(x=>x.status==='Pendente'&&new Date(x.endAt).getTime()>=Date.now()).sort((a,b)=>new Date(a.startAt)-new Date(b.startAt)).slice(0,4);
  return header('Painel de clientes e obras','Cada obra tem seus próprios ambientes, medidas, desenhos, corte e contratos.')+
  '<div class="grid"><div class="card"><small class="muted">Clientes</small><div class="stat">'+state.clients.length+'</div>'+btn('Abrir clientes','go','clients','primary')+'</div>'+
  '<div class="card"><small class="muted">Obras ativas</small><div class="stat">'+active.length+'</div></div>'+
  '<div class="card"><small class="muted">Obras finalizadas</small><div class="stat">'+state.projects.filter(p=>p.status==='Finalizado').length+'</div></div></div>'+
+ '<div class="card"><h3>Próximos compromissos</h3>'+(upcoming.map(x=>'<div class="agenda-next"><b>'+escape(new Date(x.startAt).toLocaleDateString('pt-BR'))+'</b><span>'+escape(new Date(x.startAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))+' · '+escape(x.type)+' · '+escape(x.title)+'</span></div>').join('')||'<p class="muted">Nenhuma entrega ou compromisso agendado.</p>')+btn('Abrir Agenda Arque','go','agenda','primary')+'</div>'+
  '<div class="card"><h3>Projetos por situação</h3>'+groupedProjects(state.projects)+'</div>';
 }
 function contractsView(c){
@@ -420,7 +422,7 @@ function agendaSync(){
  try{window.ArqueNative.syncAgenda(JSON.stringify(window.ArqueAgenda.nativeReminders(state.agenda||[])));}
  catch(err){toast('Não foi possível sincronizar lembretes: '+err.message);}
 }
-function agendaSaveAndRender(){return persist().then(()=>{agendaSync();render();}).catch(err=>toast('Falha ao salvar agenda: '+err.message));}
+function agendaSaveAndRender(message='Compromisso atualizado.'){return persist().then(()=>{agendaSync();render();toast(message);}).catch(err=>toast('Falha ao salvar agenda: '+err.message));}
 function agendaView(){
  const A=window.ArqueAgenda,day=agendaDay||agendaLocalDay();agendaDay=day;
  const all=state.agenda||[],daily=A.dayEvents(all,day),free=A.freeSlots(all,day);
@@ -477,13 +479,13 @@ case'agendaSave':{
  const item=A.validate({id:previous?.id||C.uid(),title:val('agendaTitle'),type:val('agendaType'),startAt:val('agendaStart'),endAt:val('agendaEnd'),projectId:val('agendaProject'),notes:val('agendaNotes'),reminderMinutes:Number(val('agendaReminder')),status:previous?.status||'Pendente'},state.agenda||[]);
  if(!Array.isArray(state.agenda))state.agenda=[];
  if(previous){Object.assign(previous,item);}else state.agenda.push(item);
- agendaDay=item.startAt.slice(0,10);agendaEditId=null;agendaSaveAndRender();toast('Compromisso salvo na Agenda Arque.');break;
+ agendaDay=item.startAt.slice(0,10);agendaEditId=null;agendaSaveAndRender('Compromisso salvo na Agenda Arque.');break;
 }
 case'agendaEdit':{const item=(state.agenda||[]).find(x=>x.id===arg);if(!item)throw Error('Compromisso não encontrado.');agendaEditId=item.id;agendaDay=item.startAt.slice(0,10);render();break;}
 case'agendaCancel':agendaEditId=null;render();break;
 case'agendaShowDay':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){agendaDay=item.startAt.slice(0,10);agendaEditId=null;render();}break;}
-case'agendaDelete':{if(!confirm('Excluir este compromisso e seus avisos?'))break;state.agenda=(state.agenda||[]).filter(x=>x.id!==arg);if(agendaEditId===arg)agendaEditId=null;agendaSaveAndRender();break;}
-case'agendaToggle':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){item.status=item.status==='Pendente'?'Concluído':'Pendente';agendaSaveAndRender();}break;}
+case'agendaDelete':{if(!confirm('Excluir este compromisso e seus avisos?'))break;state.agenda=(state.agenda||[]).filter(x=>x.id!==arg);if(agendaEditId===arg)agendaEditId=null;agendaSaveAndRender('Compromisso excluído da agenda.');break;}
+case'agendaToggle':{const item=(state.agenda||[]).find(x=>x.id===arg);if(item){item.status=item.status==='Pendente'?'Concluído':'Pendente';agendaSaveAndRender('Status do compromisso atualizado.');}break;}
 case'agendaPermission':{if(window.ArqueNative?.requestAgendaNotifications){window.ArqueNative.requestAgendaNotifications();toast('Confira o pedido de autorização do Android.');}else toast('Avisos em segundo plano exigem o APK Android.');break;}
 case'go':tab=arg;selectedProject=null;selectedClient=null;selectedRoom=null;subtab='resumo';render();break;
 case'contractAttach':{if(!selectedClient)throw Error('Abra um cliente.');const inp=$('#contractFile');inp.dataset.clientId=selectedClient;inp.dataset.projectId=val('contractProject');inp.click();break;}
@@ -607,7 +609,7 @@ case'bleScan':if(window.ArqueNative?.scanBle){window.ArqueNative.scanBle();toast
 case'bleDisconnect':window.ArqueNative?.disconnectBle?.();lastBLE=null;lastBleReceipt=null;render();break;
 }}
 async function exportBackup(){const payload=JSON.stringify({format:'arque-measure',version:1,createdAt:new Date().toISOString(),state});if(window.ArqueNative?.exportBackup){window.ArqueNative.exportBackup(payload);return;}const blob=new Blob([payload],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='arque-measure-'+new Date().toISOString().slice(0,10)+'.arque';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup exportado.');}
-async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
+async function receiveImport(text){const parsed=JSON.parse(text),newState=C.validateImport(parsed);if(!confirm('Substituir TODOS os clientes, projetos e contratos deste aparelho? Faça backup dos dados atuais antes.'))return;const previous=state;state=newState;try{await persist();agendaSync();render();toast('Backup restaurado com sucesso.');}catch(e){state=previous;render();throw e;}}
 window.ArqueLinkReady=raw=>{try{linkInfo=JSON.parse(raw);linkNotice='Compartilhamento ativado. Informe o endereço e o código no outro Android.';render();}catch(e){toast('Erro na autorização');}};
 window.ArqueLinkEvent=(kind,value)=>{linkNotice=String(value).slice(0,250);if(tab==='transfer')render();if(kind==='error')toast('Arque Link: '+linkNotice);};
 window.ArqueLinkReceive=async raw=>{try{
@@ -617,7 +619,7 @@ window.ArqueLinkReceive=async raw=>{try{
    if(!confirm('O outro Arque Measure enviou um BACKUP COMPLETO com '+incoming.clients.length+' clientes e '+incoming.projects.length+' obras. SUBSTITUIR todos os dados locais? Exporte seu backup primeiro.'))return;
    const previous=state;state=incoming;
    try{await persist();}catch(e){state=previous;throw e;}
-   selectedProject=null;selectedClient=null;tab='home';render();toast('Dados completos recebidos e salvos.');return;
+   selectedProject=null;selectedClient=null;tab='home';agendaSync();render();toast('Dados completos recebidos e salvos.');return;
  }
  if(!confirm('Receber projeto "'+String(received.project?.name||'').slice(0,100)+'" de "'+String(received.client?.name||'').slice(0,100)+'"? Será salva uma cópia independente.'))return;
  const merged=C.mergeProject(state,received);const oldState=state;state=merged.state;

@@ -61,4 +61,17 @@ assert.equal(deliveryCanceled.find(x=>x.source==='project-delivery').status,'Can
 const reactivated=A.syncProjectDelivery(deliveryCanceled,{...obra,status:'Aprovado'},'Cliente Maria');
 assert.equal(reactivated.find(x=>x.source==='project-delivery').id,assigned.id,'reativar não cria segundo registro');
 
+
+assert(A.weekdayLabel('2026-10-11').toLowerCase().includes('domingo'),'11 de outubro de 2026 é domingo');
+assert(A.weekdayLabel('2026-10-12').toLowerCase().includes('segunda'),'12 de outubro de 2026 é segunda-feira');
+assert.throws(()=>A.weekdayLabel('2026-02-30'),/Data inválida/,'não aceitar data inexistente');
+const october=A.calendarMonthCells('2026-10-11');
+assert.equal(october.length,34,'calendário de outubro com três espaços antes de quinta-feira');
+assert(october.slice(0,3).every(x=>x===null),'semana inicia na segunda');
+assert.equal(october[3].date,'2026-10-01','dia 1 fica abaixo de quinta-feira');
+assert.equal(october[13].date,'2026-10-11','dia 11 fica na coluna domingo');
+assert.equal(A.adjacentMonth('2026-12',1),'2027-01','mudar ano para frente');
+assert.equal(A.adjacentMonth('2027-01',-1),'2026-12','mudar ano para trás');
+assert.equal(A.localDay(new Date(2026,9,11,12)),'2026-10-11','formata data local sem deslocamento UTC');
+
 console.log('AGENDA: agendamento, conflito, horários livres, edição, avisos e virada de dia OK.');

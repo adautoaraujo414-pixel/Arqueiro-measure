@@ -404,8 +404,9 @@ function studioInsertImage(src,ratio=1.5){
  if(!/^data:image\/(jpeg|png|webp);base64,/i.test(src))throw Error('Formato da foto não aceito.');
  if(src.length>8_000_000)throw Error('Foto grande demais para a folha. Reduza antes de importar.');
  if(!Array.isArray(pg.images))pg.images=[];
- const width=Math.min(560,(pg.width||840)-80),height=Math.min(680,width/Math.max(.25,Math.min(4,ratio)));
- const layer={id:C.uid(),src,x:40,y:100,width:Math.round(width),height:Math.round(height),opacity:1,locked:false};
+ const count=pg.images.length,col=count%2,row=Math.floor(count/2)%3;
+ const width=Math.min(310,(pg.width||840)/2-55),height=Math.min(310,width/Math.max(.25,Math.min(4,ratio)));
+ const layer={id:C.uid(),src,x:42+col*Math.round((pg.width||840)/2),y:270+row*205,width:Math.round(width),height:Math.round(height),opacity:1,locked:false};
  pg.images.push(layer);studioSelectedImage=layer.id;studioSelectedNote=null;studioTool='select';
  return update().then(()=>toast('Foto adicionada na folha. Selecione e mova com a S Pen.'));
 }
@@ -429,12 +430,9 @@ function studioView(){
 
  <details class="studio-tool-drawer studio-advanced-drawer"><summary>Medidas e opções avançadas</summary><div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida digitada','studioSetMeasure')}${btn(studioSnap?'✓ Encaixe ligado':'Encaixe desligado','studioSnapToggle','','small')}${btn('Alinhar último traço','studioAlignLast','','small')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Linhas retas se encaixam em pontas próximas e se alinham automaticamente. Nenhum móvel 3D é gerado.</small></div></details>
  ${page.roomId&&p.rooms.some(x=>x.id===page.roomId)?'<div class="studio-readings"><strong>Medidas do ambiente</strong>'+((p.rooms.find(x=>x.id===page.roomId).measurements||[]).slice(-20).reverse().map(m=>'<button type="button" data-action="studioUseMeasure" data-arg="'+escape(m.id)+'">'+escape(m.kind||'Medida')+' · '+fmt(m.value)+' mm</button>').join('')||'<small class="muted">Cadastre medidas na aba Ambientes para puxá-las ao desenho.</small>')+'</div>':''}${page.referencePhotoId&&p.photos.some(x=>x.id===page.referencePhotoId)?'<div class="studio-photo-reference"><img alt="Foto de referência da obra" src="'+p.photos.find(x=>x.id===page.referencePhotoId).data+'"></div>':''}
- <details id="studioPhotoDetails" class="studio-tool-drawer studio-photo-drawer"><summary>Adicionar fotos à folha</summary><div class="studio-media-bar"><label>Foto do projeto <select id="studioInsertPhoto"><option value="">Escolher foto</option>${(p.photos||[]).map(x=>'<option value="'+escape(x.id)+'">'+escape(x.name)+'</option>').join('')}</select></label>${btn('Inserir foto do projeto','studioInsertProjectPhoto')}${btn('Adicionar foto da galeria','studioInsertGalleryPhoto')}<small>Selecione a ferramenta Mover para arrastar a foto. Os traços ficam por cima dela.</small></div>
- </div></details>
- <details id="studioNotesDetails" class="studio-tool-drawer studio-note-drawer" open><summary>Notas digitadas</summary><div class="studio-media-bar studio-edit-bar"><label>Nota <input id="studioNoteInput" type="text" maxlength="300" value="${escape((page.labels||[]).find(n=>n.id===studioSelectedNote)?.text||'')}" placeholder="Digite e toque na folha para posicionar"></label>${btn('Atualizar nota','studioNoteUpdate')}${btn('A−','studioNoteSmaller','','small')}${btn('A+','studioNoteLarger','','small')}${btn('Duplicar nota','studioNoteDuplicate','','small')}${btn('Excluir nota','studioNoteDelete','','small danger')}</div>
- </div></details>
- <details id="studioImageDetails" class="studio-tool-drawer studio-image-drawer"><summary>Editar foto selecionada</summary><div class="studio-media-bar studio-edit-bar"><strong>Foto selecionada</strong>${btn('− Tamanho','studioImageSmaller','','small')}${btn('+ Tamanho','studioImageLarger','','small')}${btn('Travar / destravar','studioImageLock','','small')}${btn('Opacidade','studioImageOpacity','','small')}${btn('Excluir foto','studioImageDelete','','small danger')}</div>
- </div></details>
+ <details id="studioPhotoDetails" class="studio-tool-drawer studio-photo-drawer"><summary>Adicionar fotos à folha</summary><div class="studio-media-bar"><label>Foto do projeto <select id="studioInsertPhoto"><option value="">Escolher foto</option>${(p.photos||[]).map(x=>'<option value="'+escape(x.id)+'">'+escape(x.name)+'</option>').join('')}</select></label>${btn('Inserir foto do projeto','studioInsertProjectPhoto')}${btn('Adicionar foto da galeria','studioInsertGalleryPhoto')}<small>Selecione a ferramenta Mover para arrastar a foto. Os traços ficam por cima dela.</small></div></details>
+ <details id="studioNotesDetails" class="studio-tool-drawer studio-note-drawer" open><summary>Notas digitadas</summary><div class="studio-media-bar studio-edit-bar"><label>Nota <input id="studioNoteInput" type="text" maxlength="300" value="${escape((page.labels||[]).find(n=>n.id===studioSelectedNote)?.text||'')}" placeholder="Digite e toque na folha para posicionar"></label>${btn('Atualizar nota','studioNoteUpdate')}${btn('A−','studioNoteSmaller','','small')}${btn('A+','studioNoteLarger','','small')}${btn('Duplicar nota','studioNoteDuplicate','','small')}${btn('Excluir nota','studioNoteDelete','','small danger')}</div></details>
+ <details id="studioImageDetails" class="studio-tool-drawer studio-image-drawer"><summary>Editar foto selecionada</summary><div class="studio-media-bar studio-edit-bar"><strong>Foto selecionada</strong>${btn('− Tamanho','studioImageSmaller','','small')}${btn('+ Tamanho','studioImageLarger','','small')}${btn('Travar / destravar','studioImageLock','','small')}${btn('Opacidade','studioImageOpacity','','small')}${btn('Excluir foto','studioImageDelete','','small danger')}</div></details>
  <div class="studio-zoom-bar">${btn('−','studioZoomOut','','small')}<strong id="studioZoomValue">100%</strong>${btn('+','studioZoomIn','','small')}${btn('100% · Centralizar','studioZoomReset','','small')}<small>Um dedo / S Pen: desenhar. Dois dedos: ampliar e mover a folha.</small></div>
  <div class="studio-canvas-shell" id="studioCanvasShell"><canvas id="studioCanvas" width="${page.width||1000}" height="${page.height||690}" aria-label="Folha de esboço ${escape(page.name)}"></canvas></div>
  <div class="studio-actions studio-notebook-bottom">${btn('↶ Desfazer','studioUndo')}${btn('↷ Refazer','studioRedo')}${btn('Renomear folha','studioRename')}${btn('Exportar PNG','studioExport')}${btn('Excluir folha','studioDelete','','danger')}</div>
@@ -464,10 +462,50 @@ function setupStudio(){
  const paint=()=>{
   canvas.dataset.strokeCount=String((page.strokes||[]).length);
   ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle='rgba(14,106,154,.12)';ctx.font='600 18px Arial';ctx.fillText('ARQUE MEASURE · '+studioModeTitle(studioMode).toUpperCase(),22,27);
-  ctx.strokeStyle='#dfdcd3';ctx.fillStyle='#d5cfc3';ctx.lineWidth=1;
-  if(studioGrid==='dots'){for(let y=22;y<canvas.height;y+=25)for(let x=22;x<canvas.width;x+=25){ctx.beginPath();ctx.arc(x,y,.8,0,7);ctx.fill();}}
-  else if(studioGrid==='lines'){for(let y=25;y<canvas.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}}
+  // Araújo Planejados technical sheet, following the page structure used in the owner's notebook.
+  const W=canvas.width,H=canvas.height,k=W/840,gold='#c39a62',dark='#141414';
+  const x=v=>v*k, y=v=>v*H/1188;
+  ctx.fillStyle=dark;ctx.fillRect(0,0,W,y(100));
+  ctx.fillStyle=gold;ctx.font='bold '+Math.round(48*k)+'px Arial';ctx.fillText('A',x(27),y(68));
+  ctx.font='bold '+Math.round(30*k)+'px Arial';ctx.fillText('ARAÚJO',x(101),y(52));
+  ctx.font='bold '+Math.round(14*k)+'px Arial';ctx.fillText('P L A N E J A D O S',x(105),y(77));
+  ctx.fillStyle='#bd9b72';ctx.fillRect(x(510),y(23),x(2),y(53));
+  ctx.font='bold '+Math.round(18*k)+'px Arial';ctx.fillText('ÁREA DE DESENHO',x(533),y(58));
+  ctx.fillStyle=dark;ctx.font='bold '+Math.round(14*k)+'px Arial';
+  const client=String(clientName(p.clientId)||'').slice(0,35);
+  const r=(p.rooms||[]).find(r=>r.id===page.roomId);
+  const day=page.createdAt?new Date(page.createdAt):new Date();
+  const date=Number.isFinite(day.getTime())?day.toLocaleDateString('pt-BR'):new Date().toLocaleDateString('pt-BR');
+  ctx.fillText('CLIENTE: '+client,x(31),y(137));
+  ctx.fillText('AMBIENTE: '+String(r?.name||page.name||'').slice(0,23),x(350),y(137));
+  ctx.fillText('DATA: '+date,x(31),y(173));
+  ctx.fillText('MEDIDAS:',x(350),y(173));
+  ctx.strokeStyle='#aaa';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(x(30),y(192));ctx.lineTo(x(810),y(192));ctx.stroke();
+  // Large free-form photo and drawing space, overlaid with a fine technical grid.
+  const left=x(24),top=y(237),right=x(816),bottom=y(943);
+  ctx.strokeStyle='#444';ctx.lineWidth=Math.max(1,k);
+  ctx.strokeRect(left,top,right-left,bottom-top);
+  if(studioGrid!=='blank'){
+   ctx.strokeStyle=studioGrid==='lines'?'#e4e4e4':'#eaeaea';ctx.fillStyle='#e2e2e2';ctx.lineWidth=.6;
+   const step=x(20);
+   for(let i=left+step;i<right;i+=step){
+    if(studioGrid==='lines'){ctx.beginPath();ctx.moveTo(i,top);ctx.lineTo(i,bottom);ctx.stroke();}
+    else for(let j=top+step;j<bottom;j+=step){ctx.beginPath();ctx.arc(i,j,.55,0,7);ctx.fill();}
+   }
+   if(studioGrid==='lines')for(let j=top+step;j<bottom;j+=step){ctx.beginPath();ctx.moveTo(left,j);ctx.lineTo(right,j);ctx.stroke();}
+  }
+  const banner=(label,cx,cy,ww)=>{
+   ctx.fillStyle=dark;ctx.fillRect(x(cx-ww/2),y(cy-16),x(ww),y(32));
+   ctx.fillStyle=gold;ctx.font='bold '+Math.round(15*k)+'px Arial';ctx.fillText(label,x(cx-ww/2+11),y(cy+5));
+  };
+  banner('DESENHO E MEDIDAS',420,237,245);
+  ctx.strokeStyle='#555';ctx.strokeRect(x(24),y(971),x(792),y(178));
+  banner('OBSERVAÇÕES / MEDIDAS',420,971,296);
+  ctx.strokeStyle='#aaa';
+  for(let j=1012;j<=1130;j+=36){ctx.beginPath();ctx.moveTo(x(39),y(j));ctx.lineTo(x(800),y(j));ctx.stroke();}
+  ctx.fillStyle='#1c1c1c';ctx.font=''+Math.round(17*k)+'px Arial';
+  String(page.text||'').split(/\r?\n/).slice(0,4).forEach((line,i)=>ctx.fillText(line.slice(0,85),x(42),y(1005+i*36)));
   // Reference photos are always below handwriting and typed notes.
   for(const layer of page.images||[]){
    if(!layer.src)continue;

@@ -427,6 +427,7 @@ function studioView(){
  ${btn('↷','studioRedo','','small')}
  ${btn('⋯','studioOpenAdvanced','','small')}
  </div>
+ <div id="studioQuickNoteBar" class="studio-quick-note" ${studioTool==='note'?'':'hidden'}><label for="studioQuickNoteInput">Texto da nota</label><input id="studioQuickNoteInput" type="text" maxlength="300" value="${escape((page.labels||[]).find(n=>n.id===studioSelectedNote)?.text||'')}" placeholder="Digite a nota e toque na folha"><span>Toque na folha para posicionar</span></div>
  <details id="studioToolsDetails" class="studio-tool-drawer"><summary>Canetas, cores e fundo</summary><div class="studio-tools"><label>Ambiente <select id="studioRoom"><option value="">Sem ambiente</option>${p.rooms.map(r=>`<option value="${escape(r.id)}" ${r.id===page.roomId?'selected':''}>${escape(r.name)}</option>`).join('')}</select></label><label>Ferramenta <select id="studioTool"><option value="pen" ${studioTool==='pen'?'selected':''}>Caneta livre</option><option value="line" ${studioTool==='line'?'selected':''}>Linha reta</option><option value="eraser" ${studioTool==='eraser'?'selected':''}>Borracha</option><option value="arrow" ${studioTool==='arrow'?'selected':''}>Seta de medida</option><option value="select" ${studioTool==='select'?'selected':''}>Selecionar / mover</option><option value="note" ${studioTool==='note'?'selected':''}>Inserir nota digitada</option></select></label><label>Cor <input type="color" id="studioColor" value="${studioInk}" aria-label="Cor da caneta"></label><div class="studio-swatches"><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#197da5" style="background:#197da5" aria-label="Cor #197da5"></button><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#e6b800" style="background:#e6b800" aria-label="Cor #e6b800"></button><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#df4848" style="background:#df4848" aria-label="Cor #df4848"></button><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#26824d" style="background:#26824d" aria-label="Cor #26824d"></button><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#20242b" style="background:#20242b" aria-label="Cor #20242b"></button><button type="button" class="studio-swatch" data-action="studioInkColor" data-arg="#ffffff" style="background:#ffffff" aria-label="Cor #ffffff"></button></div><label>Espessura <input type="range" min="1" max="16" id="studioWidth" value="${studioWidth}"></label><label>Fundo <select id="studioGrid"><option value="dots" ${studioGrid==='dots'?'selected':''}>Pontilhado</option><option value="lines" ${studioGrid==='lines'?'selected':''}>Linhas</option><option value="blank" ${studioGrid==='blank'?'selected':''}>Liso</option></select></label></div></details>
 
  <details class="studio-tool-drawer studio-advanced-drawer"><summary>Medidas e opções avançadas</summary><div class="studio-lab-panel"><label>Foto de referência <select id="studioReferencePhoto"><option value="">Sem foto</option>${(p.photos||[]).map(photo=>'<option value="'+escape(photo.id)+'" '+(photo.id===page.referencePhotoId?'selected':'')+'>'+escape(photo.name)+'</option>').join('')}</select></label>${btn('📷 Fotos do ambiente','studioGotoPhotos')}<label>Medida real do último elemento (mm) <input type="number" id="studioElementMm" min="1" max="50000" placeholder="Ex.: 2400" value="${escape(page.lastMeasureMm||'')}"></label>${btn('Vincular medida digitada','studioSetMeasure')}${btn(studioSnap?'✓ Encaixe ligado':'Encaixe desligado','studioSnapToggle','','small')}${btn('Alinhar último traço','studioAlignLast','','small')}<small class="muted">Desenhe um móvel com a S Pen e informe sua medida real. Linhas retas se encaixam em pontas próximas e se alinham automaticamente. Nenhum móvel 3D é gerado.</small></div></details>
@@ -574,15 +575,15 @@ function setupStudio(){
   if(studioTool==='select'){
    const note=hitNote(pos),image=note?null:hitImage(pos);
    studioSelectedNote=note?.id||null;studioSelectedImage=image?.id||null;
-   if(note){$('#studioNoteInput').value=note.text;drag={item:note,x:pos[0]-note.x,y:pos[1]-note.y};}
+   if(note){$('#studioNoteInput').value=note.text;if($('#studioQuickNoteInput'))$('#studioQuickNoteInput').value=note.text;drag={item:note,x:pos[0]-note.x,y:pos[1]-note.y};}
    else if(image&&!image.locked){drag={item:image,x:pos[0]-image.x,y:pos[1]-image.y};}
    paint();e.preventDefault();return;
   }
   if(studioTool==='note'){
    const note=hitNote(pos);
-   if(note){studioSelectedNote=note.id;$('#studioNoteInput').value=note.text;paint();}
+   if(note){studioSelectedNote=note.id;$('#studioNoteInput').value=note.text;if($('#studioQuickNoteInput'))$('#studioQuickNoteInput').value=note.text;paint();}
    else {
-    const text=$('#studioNoteInput')?.value?.trim();
+    const text=($('#studioQuickNoteInput')?.value||$('#studioNoteInput')?.value||'').trim();
     if(!text){toast('Digite a nota no campo acima e toque onde deseja colocá-la.');}
     else{const n={id:C.uid(),text:text.slice(0,300),x:Math.round(pos[0]),y:Math.round(pos[1]),size:24};page.labels.push(n);studioSelectedNote=n.id;page.undone=[];save();paint();}
    }
@@ -626,7 +627,8 @@ function setupStudio(){
  canvas.onpointerup=e=>pointerFinish(e);
  canvas.onpointercancel=e=>pointerFinish(e,true);
  canvas.onlostpointercapture=e=>pointerFinish(e,true);
- $('#studioTool').onchange=e=>{studioTool=e.target.value;};
+ $('#studioTool').onchange=e=>{studioTool=e.target.value;const quick=$('#studioQuickNoteBar');if(quick)quick.hidden=studioTool!=='note';};
+ const noteQuick=$('#studioQuickNoteInput');if(noteQuick)noteQuick.oninput=e=>{const other=$('#studioNoteInput');if(other)other.value=e.target.value;};
  $('#studioColor').onchange=e=>studioInk=e.target.value;
  $('#studioWidth').oninput=e=>studioWidth=+e.target.value;
  $('#studioGrid').onchange=e=>{studioGrid=e.target.value;paint();};
@@ -878,7 +880,7 @@ case'deleteNote':r.annotations=r.annotations.filter(x=>x.id!==arg);update();brea
 case'undoStroke':r.strokes.pop();update();break;
 case'clearDrawing':if(confirm('Limpar todos os traços deste ambiente?')){r.strokes=[];update();}break;
 case'studioQuickNew':{const pg={id:C.uid(),name:'Folha '+(studioPages(p).length+1),width:840,height:1188,strokes:[],undone:[],text:'',roomId:selectedRoom||'',template:'araujo',createdAt:new Date().toISOString()};studioPages(p).push(pg);studioPageId=pg.id;studioViewport={zoom:1,x:0,y:0};studioSelectedNote=null;studioSelectedImage=null;update();break;}
-case'studioToolSet':studioTool=arg;{const select=$('#studioTool');if(select)select.value=arg;document.querySelectorAll('.studio-top-ribbon [data-action="studioToolSet"]').forEach(b=>b.classList.toggle('is-active',b.dataset.arg===arg));if(arg==='note')$('#studioNotesDetails')?.setAttribute('open','');if(arg==='select')$('#studioImageDetails')?.setAttribute('open','');}break;
+case'studioToolSet':studioTool=arg;{const select=$('#studioTool');if(select)select.value=arg;document.querySelectorAll('.studio-top-ribbon [data-action="studioToolSet"]').forEach(b=>b.classList.toggle('is-active',b.dataset.arg===arg));if(arg==='note'){$('#studioQuickNoteBar')?.removeAttribute('hidden');$('#studioQuickNoteInput')?.focus();}else $('#studioQuickNoteBar')?.setAttribute('hidden','');if(arg==='select')$('#studioImageDetails')?.setAttribute('open','');}break;
 case'studioOpenPhotoOptions':$('#studioPhotoDetails')?.setAttribute('open','');$('#studioPhotoDetails')?.scrollIntoView?.({block:'nearest',behavior:'smooth'});break;
 case'studioOpenObservations':$('#studioObservationsDetails')?.setAttribute('open','');$('#studioObservationsDetails')?.scrollIntoView?.({block:'nearest',behavior:'smooth'});break;
 case'studioOpenAdvanced':$('#studioToolsDetails')?.setAttribute('open','');document.querySelector('.studio-advanced-drawer')?.setAttribute('open','');break;

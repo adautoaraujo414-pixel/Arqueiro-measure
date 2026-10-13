@@ -10,7 +10,7 @@ async function launch(){
  const w=dom.window;
  Object.defineProperty(w,'indexedDB',{value:storage,configurable:true});
  w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
- w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){},save(){},restore(){},strokeRect(){},setLineDash(){},measureText(text){return {width:String(text).length*12}}};}return this.__mockCtx;};
+ w.HTMLCanvasElement.prototype.getContext=function(){if(!this.__mockCtx){const canvas=this;this.__mockCtx={fillRect(){canvas.__paintedStrokes=0},fillText(t){(canvas.__textDrawn||(canvas.__textDrawn=[])).push(String(t))},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){if(this.lineWidth>1)canvas.__paintedStrokes=(canvas.__paintedStrokes||0)+1},drawImage(){},save(){},restore(){},strokeRect(){},setLineDash(){},measureText(text){return {width:String(text).length*12}}};}return this.__mockCtx;};
  w.HTMLCanvasElement.prototype.setPointerCapture=function(){};
  w.SVGElement.prototype.setPointerCapture=function(){};
  // Usar a lista REAL do index.html: simula a ordem exata dos scripts do APK Android.
@@ -75,6 +75,20 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#studioCanvas')?.getAttribute('width')==='840','new sheet uses A4 width');
  assert(doc.querySelector('#studioCanvas')?.getAttribute('height')==='1188','new sheet uses A4 portrait height');
  assert(doc.body.textContent.includes('Parede da pia'),'named sheet created');
+
+ assert(doc.querySelector('.studio-notebook-pages'),'notebook displays compact page tabs');
+ assert(doc.querySelector('.studio-top-ribbon [role="toolbar"]')||doc.querySelector('.studio-top-ribbon[role="toolbar"]'),'notebook top toolbar available');
+ assert.equal(doc.querySelector('#studioToolsDetails')?.open,false,'complex sketch settings start closed');
+ assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('ARAÚJO')),'branded technical page is painted');
+ assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('CLIENTE:')),'page is identified by client');
+ assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('AMBIENTE:')),'page is identified by room');
+ assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('DESENHO E MEDIDAS')),'large drawing area is labelled');
+ assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('OBSERVAÇÕES / MEDIDAS')),'written observation area is present');
+ click(doc,'studioToolSet','note');
+ assert(doc.getElementById('studioQuickNoteBar')&&!doc.getElementById('studioQuickNoteBar').hidden,'note toolbar shows inline text input');
+ click(doc,'studioToolSet','pen');
+ assert(doc.getElementById('studioQuickNoteBar').hidden,'note input hides when pen is selected');
+
 
  assert(doc.querySelector('#studioPhotoFile'),'esboço permite foto da galeria');
  assert(doc.querySelector('[data-action="studioInsertProjectPhoto"]'),'esboço aceita foto salva do projeto');

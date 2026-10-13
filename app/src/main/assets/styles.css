@@ -437,3 +437,10 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-notebook-pages button{max-width:125px}
 .studio-paper-head strong{font-size:15px!important}
 }
+
+/* Quick typing stays immediately below the ribbon rather than below a long page. */
+.studio-quick-note{order:2;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:9px 12px;background:#3a3027;color:#f1d4b1}
+.studio-quick-note[hidden]{display:none!important}
+.studio-quick-note label{font-size:12px;font-weight:750}
+.studio-quick-note input{flex:1 1 160px;width:auto!important;min-width:120px;min-height:38px;background:#fff!important;color:#263d4f!important;border:2px solid #b48755}
+.studio-quick-note span{font-size:11px;color:#e6c59d}

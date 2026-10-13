@@ -383,3 +383,57 @@ input,select,textarea{background:#fff!important;color:#22323e!important;border:1
 .studio-fullscreen .studio-canvas-shell{height:auto;flex:1}
 .studio-fullscreen .studio-canvas-shell canvas{max-height:calc(100dvh - 215px)!important}
 @media(max-width:600px){.studio-media-bar,.studio-zoom-bar{padding:7px;gap:6px}.studio-media-bar .btn{padding:8px 10px}.studio-canvas-shell{height:65vh;min-height:280px}.studio-canvas-shell canvas{max-height:calc(65vh - 16px)!important}}
+
+/* Notebook mode: fast, pen-first interface modeled on a professional paper sketchbook. */
+.studio-old-header{display:none!important}
+.studio-notebook-pages{display:flex;gap:5px;align-items:center;overflow-x:auto;background:#1d1d1f;padding:9px;border-radius:10px 10px 0 0;white-space:nowrap;scrollbar-width:thin}
+.studio-notebook-pages button{flex-shrink:0;min-height:40px;max-width:190px;overflow:hidden;text-overflow:ellipsis;padding:7px 13px;border:1px solid #393938;border-radius:6px;background:#2b2b2d;color:#f5f1eb;font-size:13px;cursor:pointer}
+.studio-notebook-pages button.on{border-color:#c39a62;background:#49382a;color:#ffdab1;font-weight:750}
+.studio-notebook-pages .btn{border:1px solid #c39a62;background:#262626;color:#eac08c}
+.studio-layout{display:block!important;max-width:1200px;margin:auto;background:#242425!important;padding:0!important;border-radius:0 0 10px 10px}
+.studio-sidebar{display:none!important}
+.studio-work:not(.studio-fullscreen){display:flex!important;flex-direction:column!important;gap:0!important;border:0!important;box-shadow:none!important;background:#2e2e30!important;padding:0 9px 12px!important;width:100%!important;max-width:100%!important;min-width:0!important}
+.studio-paper-head{order:0!important;background:#272729;color:#fff;border:0;padding:8px 12px!important;border-radius:0!important;min-height:45px;align-items:center}
+.studio-paper-head strong{color:#d7aa74!important}
+.studio-paper-head .eyebrow{color:#a2a2a2!important;font-size:10px!important}
+.studio-paper-head .btn{padding:7px 10px!important;min-height:35px!important;background:#363638!important;color:#eed2a7!important;border:1px solid #6b5e4f!important}
+.studio-top-ribbon{order:1;display:flex;gap:3px;overflow-x:auto;align-items:center;scrollbar-width:thin;flex-wrap:nowrap;background:#222225;padding:8px 5px;position:sticky;top:0;z-index:16;border-bottom:2px solid #9b784a}
+.studio-top-ribbon button{flex-shrink:0;border:none;border-radius:7px;background:transparent;color:#eee!important;min-width:44px;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:21px;line-height:1.1;cursor:pointer;padding:4px 7px;gap:2px}
+.studio-top-ribbon button span{font-size:9px;max-width:74px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.studio-top-ribbon button.is-active{color:#f2c58b!important;background:#483629;outline:1px solid #b88c56}
+.studio-top-ribbon button:hover,.studio-top-ribbon button:focus-visible{background:#47413a}
+.studio-top-ribbon button.btn{background:#38383b;color:#ebd5b7!important;font-size:13px;min-width:46px}
+.studio-work .studio-zoom-bar{order:2!important;justify-content:flex-end;background:#252528!important;border:0!important;border-radius:0!important;margin:0!important;padding:5px 8px!important;color:#fff}
+.studio-zoom-bar strong{color:#f2c58b!important}
+.studio-zoom-bar button{background:#39383b!important;color:#fff!important;border:1px solid #68605b!important}
+.studio-zoom-bar small{display:none!important}
+.studio-work #studioCanvasShell{order:3!important;margin:0 auto 5px!important;padding:12px!important;width:100%!important;max-width:100%!important;min-height:600px!important;height:auto!important;max-height:none!important;display:flex!important;justify-content:center!important;align-items:flex-start!important;overflow:auto!important;background:#343435!important}
+.studio-work #studioCanvas{box-shadow:0 6px 24px #0009!important;border:1px solid #eee4da;background:#fff;max-height:none!important;height:auto!important;max-width:100%!important;min-width:0!important}
+.studio-work>.studio-notebook-bottom{order:4!important;background:#252528;padding:9px;margin:0!important;display:flex;gap:7px;flex-wrap:wrap}
+.studio-work .studio-tool-drawer{order:5!important;border:1px solid #4e4e50;border-radius:7px;margin:5px 0!important;background:#2d2d30!important;color:#e8e7e4}
+.studio-work .studio-tool-drawer>summary{cursor:pointer;padding:10px 14px;font-weight:700;color:#e4b987;background:#333335;border-radius:6px;min-height:43px;list-style:inside}
+.studio-work .studio-tool-drawer[open]>summary{border-bottom:1px solid #63605e}
+.studio-work .studio-tool-drawer .studio-tools,.studio-work .studio-tool-drawer .studio-lab-panel,.studio-work .studio-tool-drawer .studio-media-bar{background:#f1f5f7!important;color:#244659!important;margin:5px!important}
+.studio-work .studio-tool-drawer .studio-tools label{color:#345e71!important}
+.studio-work .studio-paper-notes{margin:7px!important;padding:10px!important;background:#f1f5f7;color:#235875}
+.studio-work>.studio-readings,.studio-work>.studio-photo-reference{order:7!important}
+.studio-work .studio-tool-drawer.studio-observations-drawer{order:6!important}
+.studio-work .studio-tool-drawer+.btn{order:6;align-self:flex-start;margin:5px 9px!important}
+.studio-notebook-pages ~ .studio-layout .studio-paper-head{position:static}
+.studio-fullscreen .studio-top-ribbon{top:0}
+.studio-fullscreen .studio-paper-head{flex-shrink:0}
+.studio-fullscreen #studioCanvasShell{max-height:calc(100dvh - 177px)!important;overflow:auto!important;min-height:270px!important;flex:1}
+.studio-fullscreen #studioCanvas{max-height:none!important;height:auto!important}
+.studio-fullscreen .studio-tool-drawer{display:none!important}
+.studio-fullscreen .studio-zoom-bar{display:flex!important;flex-shrink:0}
+.studio-fullscreen .studio-notebook-bottom{display:flex!important;flex-shrink:0}
+@media(max-width:650px){
+.studio-layout{padding:0!important}
+.studio-work:not(.studio-fullscreen){padding:0 3px 10px!important}
+.studio-top-ribbon button{height:44px;min-width:40px;font-size:19px}
+.studio-top-ribbon button span{display:none}
+.studio-work #studioCanvasShell{padding:5px!important;min-height:440px!important}
+.studio-notebook-pages{padding:6px}
+.studio-notebook-pages button{max-width:125px}
+.studio-paper-head strong{font-size:15px!important}
+}

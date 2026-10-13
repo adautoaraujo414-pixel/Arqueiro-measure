@@ -9,7 +9,7 @@ const dom=new JSDOM(index,{url:'https://appassets.arque.invalid/index.html',runS
 const w=dom.window,d=w.document;
 Object.defineProperty(w,'indexedDB',{value:new IDBFactory(),configurable:true});
 w.confirm=()=>true;w.scrollTo=()=>{};w.alert=()=>{};
-w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){},drawImage(){}});
+w.HTMLCanvasElement.prototype.getContext=()=>({fillRect(){},fillText(){},beginPath(){},arc(){},fill(){},moveTo(){},lineTo(){},stroke(){},strokeRect(){},drawImage(){},save(){},restore(){},setLineDash(){},measureText(t){return {width:String(t).length*12}}});
 w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};w.SVGElement.prototype.setPointerCapture=()=>{};
 for(const path of paths)w.eval(fs.readFileSync('app/src/main/assets/'+path,'utf8'));
 const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));

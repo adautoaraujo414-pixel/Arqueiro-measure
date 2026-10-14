@@ -394,7 +394,7 @@ function studioAlignedLine(stroke,page){
 function studioApplyZoom(){
  const canvas=$('#studioCanvas');if(!canvas)return;
  canvas.style.transformOrigin='top left';
- canvas.style.transform='translate('+studioViewport.x+'px,'+studioViewport.y+'px) scale('+studioViewport.zoom+')';
+ canvas.style.transform='scale('+studioViewport.zoom+')';
  const label=$('#studioZoomValue');if(label)label.textContent=Math.round(studioViewport.zoom*100)+'%';
 }
 function studioNoteSelected(p){const note=studioCurrent(p)?.labels?.find(x=>x.id===studioSelectedNote);if(!note)throw Error('Selecione uma nota na folha usando a ferramenta Selecionar.');return note;}
@@ -435,7 +435,7 @@ function studioView(){
  <details id="studioPhotoDetails" class="studio-tool-drawer studio-photo-drawer"><summary>Adicionar fotos à folha</summary><div class="studio-media-bar"><label>Foto do projeto <select id="studioInsertPhoto"><option value="">Escolher foto</option>${(p.photos||[]).map(x=>'<option value="'+escape(x.id)+'">'+escape(x.name)+'</option>').join('')}</select></label>${btn('Inserir foto do projeto','studioInsertProjectPhoto')}${btn('Adicionar foto da galeria','studioInsertGalleryPhoto')}<small>Selecione a ferramenta Mover para arrastar a foto. Os traços ficam por cima dela.</small></div></details>
  <details id="studioNotesDetails" class="studio-tool-drawer studio-note-drawer"><summary>Notas digitadas</summary><div class="studio-media-bar studio-edit-bar"><label>Nota <input id="studioNoteInput" type="text" maxlength="300" value="${escape((page.labels||[]).find(n=>n.id===studioSelectedNote)?.text||'')}" placeholder="Digite e toque na folha para posicionar"></label>${btn('Atualizar nota','studioNoteUpdate')}${btn('A−','studioNoteSmaller','','small')}${btn('A+','studioNoteLarger','','small')}${btn('Duplicar nota','studioNoteDuplicate','','small')}${btn('Excluir nota','studioNoteDelete','','small danger')}</div></details>
  <details id="studioImageDetails" class="studio-tool-drawer studio-image-drawer"><summary>Editar foto selecionada</summary><div class="studio-media-bar studio-edit-bar"><strong>Foto selecionada</strong>${btn('− Tamanho','studioImageSmaller','','small')}${btn('+ Tamanho','studioImageLarger','','small')}${btn('Travar / destravar','studioImageLock','','small')}${btn('Opacidade','studioImageOpacity','','small')}${btn('Excluir foto','studioImageDelete','','small danger')}</div></details>
- <div class="studio-zoom-bar">${btn('−','studioZoomOut','','small')}<strong id="studioZoomValue">100%</strong>${btn('+','studioZoomIn','','small')}${btn('100% · Centralizar','studioZoomReset','','small')}<small>Um dedo / S Pen: desenhar. Dois dedos: ampliar e mover a folha.</small></div>
+ <div class="studio-zoom-bar">${btn('−','studioZoomOut','','small')}<strong id="studioZoomValue">100%</strong>${btn('+','studioZoomIn','','small')}${btn('100% · Centralizar','studioZoomReset','','small')}<small>Um dedo / S Pen: desenhar. Dois dedos: ampliar a folha sem deslocá-la.</small></div>
  <div class="studio-canvas-shell" id="studioCanvasShell"><canvas id="studioCanvas" width="${page.width||1000}" height="${page.height||690}" aria-label="Folha de esboço ${escape(page.name)}"></canvas></div>
  <div class="studio-actions studio-notebook-bottom">${btn('↶ Desfazer','studioUndo')}${btn('↷ Refazer','studioRedo')}${btn('Renomear folha','studioRename')}${btn('Exportar PNG','studioExport')}${btn('Excluir folha','studioDelete','','danger')}</div>
  <details id="studioObservationsDetails" class="studio-tool-drawer studio-observations-drawer"><summary>Escrever observações da folha</summary><div class="field studio-paper-notes"><label for="studioText">Observações / medidas desta folha</label><textarea id="studioText" placeholder="Escreva as observações que devem aparecer na folha impressa...">${escape(page.text||'')}</textarea></div>${btn('Salvar anotação','studioSaveText','','primary')}</details>
@@ -485,7 +485,7 @@ function setupStudio(){
   ctx.strokeStyle='#aaa';ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(x(30),y(192));ctx.lineTo(x(810),y(192));ctx.stroke();
   // Large free-form photo and drawing space, overlaid with a fine technical grid.
-  const left=x(24),top=y(237),right=x(816),bottom=y(943);
+  const left=x(24),top=y(237),right=x(816),bottom=y(1155);
   ctx.strokeStyle='#444';ctx.lineWidth=Math.max(1,k);
   ctx.strokeRect(left,top,right-left,bottom-top);
   if(studioGrid!=='blank'){
@@ -502,12 +502,6 @@ function setupStudio(){
    ctx.fillStyle=gold;ctx.font='bold '+Math.round(15*k)+'px Arial';ctx.fillText(label,x(cx-ww/2+11),y(cy+5));
   };
   banner('DESENHO E MEDIDAS',420,237,245);
-  ctx.strokeStyle='#555';ctx.strokeRect(x(24),y(971),x(792),y(178));
-  banner('OBSERVAÇÕES / MEDIDAS',420,971,296);
-  ctx.strokeStyle='#aaa';
-  for(let j=1012;j<=1130;j+=36){ctx.beginPath();ctx.moveTo(x(39),y(j));ctx.lineTo(x(800),y(j));ctx.stroke();}
-  ctx.fillStyle='#1c1c1c';ctx.font=''+Math.round(17*k)+'px Arial';
-  String(page.text||'').split(/\r?\n/).slice(0,4).forEach((line,i)=>ctx.fillText(line.slice(0,85),x(42),y(1005+i*36)));
   // Reference photos are always below handwriting and typed notes.
   for(const layer of page.images||[]){
    if(!layer.src)continue;
@@ -601,7 +595,7 @@ function setupStudio(){
    const arr=[...pointers.values()],midX=(arr[0].x+arr[1].x)/2,midY=(arr[0].y+arr[1].y)/2;
    const zoom=clamp(gesture.zoom*Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y)/gesture.distance,1,5);
    const b=shell.getBoundingClientRect();
-   studioViewport={zoom,x:midX-b.left-gesture.anchorX*zoom,y:midY-b.top-gesture.anchorY*zoom};
+   studioViewport={zoom,x:0,y:0};
    transform();e.preventDefault();return;
   }
   if(gestureUsed)return;

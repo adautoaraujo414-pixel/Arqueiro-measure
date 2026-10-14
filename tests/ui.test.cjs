@@ -83,7 +83,7 @@ function assign(doc,id,value){const x=doc.getElementById(id);assert(x,'Input not
  assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('CLIENTE:')),'page is identified by client');
  assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('AMBIENTE:')),'page is identified by room');
  assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('DESENHO E MEDIDAS')),'large drawing area is labelled');
- assert(doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('OBSERVAÇÕES / MEDIDAS')),'written observation area is present');
+ assert(!doc.querySelector('#studioCanvas').__textDrawn.some(t=>t.includes('OBSERVAÇÕES / MEDIDAS')),'observations footer is removed');
  click(doc,'studioToolSet','note');
  assert(doc.getElementById('studioQuickNoteBar')&&!doc.getElementById('studioQuickNoteBar').hidden,'note toolbar shows inline text input');
  click(doc,'studioToolSet','pen');

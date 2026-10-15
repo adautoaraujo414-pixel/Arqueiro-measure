@@ -761,7 +761,8 @@ function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
 case'openArqueMob':{
- const current=p,selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
+ const current=p;if(!current){tab='projects';selectedClient=null;selectedRoom=null;render();toast('Abra uma obra para construir os móveis no Arque Mob.');break;}
+ const selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
  if(current)try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
  location.href='arque-mob.html'+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;
 }

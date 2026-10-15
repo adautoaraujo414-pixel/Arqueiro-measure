@@ -761,10 +761,25 @@ function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
 case'openArqueMob':{
- const current=p;if(!current){tab='projects';selectedClient=null;selectedRoom=null;render();toast('Abra uma obra para construir os móveis no Arque Mob.');break;}
- const selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
- if(current)try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
- location.href='arque-mob.html'+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;
+ let current=p;
+ if(!current){
+  const raw=prompt('Nome do cliente para abrir o Arque Mob:','');
+  if(raw===null)break;
+  const name=raw.trim();
+  if(!name||name.length>100){toast('Digite apenas o nome do cliente para começar.');break;}
+  let c=state.clients.find(x=>String(x.name||'').toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'));
+  if(!c){c=C.client(name);state.clients.push(c);}
+  current=state.projects.find(x=>x.clientId===c.id&&x.name==='Arque Mob');
+  if(!current){current=C.project(c.id,'Arque Mob',c.address||'');current.rooms.push(C.room('Folha 1'));state.projects.push(current);}
+  if(!current.rooms?.length)current.rooms=[C.room('Folha 1')];
+  selectedClient=c.id;selectedProject=current.id;selectedRoom=current.rooms[0].id;tab='projects';subtab='resumo';
+  const goto='arque-mob.html?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(selectedRoom);
+  persist().then(()=>{location.href=goto}).catch(()=>toast('Não foi possível salvar o cliente. Tente novamente.'));
+  break;
+ }
+ const selected=r||current.rooms?.[0],roomId=selected?.id||'principal';
+ try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
+ location.href='arque-mob.html?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId);break;
 }
 
 case'calendarOpen':beginArqueCalendar(arg);break;

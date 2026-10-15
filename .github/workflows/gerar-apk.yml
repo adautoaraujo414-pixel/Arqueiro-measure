@@ -2,7 +2,7 @@ name: Gerar APK Arque Measure
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, 'feature/arque-mob-construtor-v05']
 permissions:
   contents: write
   issues: write

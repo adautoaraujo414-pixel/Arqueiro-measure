@@ -2,7 +2,7 @@
 const fs=require('node:fs'),a=require('node:assert/strict');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [token,name] of [
- ["version:'0.29'",'versão'],
+ ["version:'0.30'",'versão'],
  ['function sheetPageInit(){','criar primeira folha'],
  ['function sheetPageAdd(){','múltiplas folhas'],
  ['function sheetPageOpen(','alternar folhas'],
@@ -31,4 +31,4 @@ for(const [token,name] of [
 a(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'3D precisa continuar oculto');
 const start=s.indexOf('<script>')+8,end=s.lastIndexOf('</script>');
 a(start>=8&&end>start);new Function(s.slice(start,end));
-console.log('Arque Mob v0.29: linhas arrastáveis com cota, fotos, páginas, menu e legado OK');
+console.log('Arque Mob v0.30: linhas arrastáveis com cota, fotos, páginas, menu e legado OK');

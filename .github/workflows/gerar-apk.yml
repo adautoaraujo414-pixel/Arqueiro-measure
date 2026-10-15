@@ -2,7 +2,7 @@ name: Gerar APK Arque Measure
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/arque-mob-construtor-v05', 'feature/arque-mob-folha-zoom-v027', 'feature/arque-mob-folha-v028', 'feature/arque-mob-cotas-ao-vivo-v029', 'feature/arque-mob-caneta-magica-v030', 'feature/arque-mob-folha-a4-v031', 'feature/arque-mob-folha-calculadora-v032', 'feature/arque-mob-encontros-limpos-v033']
+    branches: [main, 'feature/arque-mob-construtor-v05', 'feature/arque-mob-folha-zoom-v027', 'feature/arque-mob-folha-v028', 'feature/arque-mob-cotas-ao-vivo-v029', 'feature/arque-mob-caneta-magica-v030', 'feature/arque-mob-folha-a4-v031', 'feature/arque-mob-folha-calculadora-v032', 'feature/arque-mob-encontros-limpos-v033', 'feature/arque-mob-escrita-magica-v034']
 permissions:
   contents: write
   issues: write
@@ -51,6 +51,8 @@ jobs:
         run: node tests/arque-mob-v032.test.cjs
       - name: Testar encontros L e T sem círculos ou lupa
         run: node tests/arque-mob-v033.test.cjs
+      - name: Testar escrita livre, destaque e X da Caneta Magica
+        run: node tests/arque-mob-v034.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

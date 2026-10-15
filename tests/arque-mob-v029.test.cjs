@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [token,why] of [
- ["version:'0.33'",'v0.33'],
+ ["version:'0.34'",'v0.34'],
  ["function sheetLabel(a,b,label,selected=false,preview=false,lineId=null){",'etiqueta com ID'],
  ["const x=(a.x+b.x)/2,y=(a.y+b.y)/2",'etiqueta centralizada sobre linha'],
  ["data-line-id=", 'editar medida tocando na etiqueta'],
@@ -37,4 +37,4 @@ for(const [a,b] of [[{x:100,y:100},{x:420,y:100}],[{x:420,y:100},{x:420,y:510}]]
  assert(Math.abs(Number(m[1])+Number(m[3])/2-cx)<.01,'cota fora do eixo horizontal');
  assert(Math.abs(Number(m[2])+Number(m[4])/2-cy)<.01,'cota fora do eixo vertical');
 }
-console.log('Arque Mob v0.33: etiqueta horizontal central, edição e medida ao vivo OK');
+console.log('Arque Mob v0.34: etiqueta horizontal central, edição e medida ao vivo OK');

@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [key,label] of [
- ["version:'0.33'",'Versão 0.33'],
+ ["version:'0.34'",'Versão 0.34'],
  ['sheet2dEndZoom:false','Lupa desativada de início'],
  ["st.sheet2dEndZoom=false;st.view='sheet2d';sheetPageInit()",'Desligar lupa em projetos anteriores'],
  ['Pontas invisíveis','Área sensível sem desenhos'],
@@ -39,4 +39,4 @@ st.sheet2dFuse=false;
 const separate=engine.sheetSplitAt({lineId:1,at:.4},{x:260,y:200});
 assert.equal(separate,false,'Encostar sem dividir');
 assert.equal(st.sheet2dLines.length,2);
-console.log('Arque Mob 0.33: encontros limpos, T, desativação da lupa e compatibilidade OK');
+console.log('Arque Mob 0.34: encontros limpos, T, desativação da lupa e compatibilidade OK');

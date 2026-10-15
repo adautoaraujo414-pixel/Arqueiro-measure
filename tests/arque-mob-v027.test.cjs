@@ -8,7 +8,7 @@ for(const [key,label] of [
  ["st.pinch.anchor.x",'âncora estável'],
  ["function sheetScreenPoint(e)",'coordenadas da tela'],
  ["function sheetLabel(",'rótulos horizontais'],
- ["const vertical=Math.abs(b.y-a.y)>",'detecção de linha vertical'],
+ ["vertical=Math.abs(b.y-a.y)>",'detecção de linha vertical'],
  ["function sheet2dRedo(){",'refazer'],
  ["function sheet2dUndo(){",'desfazer'],
  ['data-sheet-tool="free"','mão livre'],

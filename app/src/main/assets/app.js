@@ -237,7 +237,7 @@ function detailView(){
  const p=project();
  return '<div class="row"><div><h1>'+escape(p.name)+'</h1><p class="intro">'+escape(clientName(p.clientId))+(p.address?' · '+escape(p.address):'')+'</p></div>'+btn('← Cliente','closeProject','','small')+'</div>'+
  '<div class="card"><div class="fields">'+select('pstatus','Etapa do serviço',statuses,p.status)+field('pvalue','Contrato (R$)','number',p.value,'min="0" step="0.01"')+field('pdiscount','Desconto (R$)','number',p.discount,'min="0" step="0.01"')+calendarField('pClosedAt','Data do fechamento',p.closedAt||'')+'</div>'+deliveryInputs('p',p,p.status)+btn('Salvar informações da obra','saveProject','','primary')+'</div>'+
- '<div class="tabs">'+[['resumo','▦ Visão geral'],['medidas','📏 Ambientes'],['fotos','📷 Fotos'],['fotomedidas','↔ Setas na foto'],['atelier','✎ Esboço'],['corte','▦ Plano de corte'],['financeiro','R$ Financeiro']].map(([key,label])=>'<button data-subtab="'+key+'" class="'+(subtab===key?'selected':'')+'">'+label+'</button>').join('')+'</div>'+
+ '<div class="actions">'+btn('▣ Abrir Arque Mob neste projeto','openArqueMob','','primary')+'</div>'+\n '<div class="tabs">'+[['resumo','▦ Visão geral'],['medidas','📏 Ambientes'],['fotos','📷 Fotos'],['fotomedidas','↔ Setas na foto'],['atelier','✎ Esboço'],['corte','▦ Plano de corte'],['financeiro','R$ Financeiro']].map(([key,label])=>'<button data-subtab="'+key+'" class="'+(subtab===key?'selected':'')+'">'+label+'</button>').join('')+'</div>'+
  ({resumo:projectOverview,medidas:measureView,fotos:photoView,fotomedidas:photoMeasureView,desenho:drawView,atelier:studioView,corte:cuttingView,financeiro:financeView})[subtab]();
 }
 function auditRoomView(r){
@@ -759,6 +759,12 @@ async function update(){await persist();render()}
 function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
+case'openArqueMob':{
+ const current=p,selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
+ if(current)try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
+ location.href='arque-mob.html'+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;
+}
+
 case'calendarOpen':beginArqueCalendar(arg);break;
 case'calendarCancel':closeArqueCalendar();break;
 case'calendarPrev':if(arqueCalendar){arqueCalendar.month=window.ArqueAgenda.adjacentMonth(arqueCalendar.month,-1);showArqueCalendar();}break;

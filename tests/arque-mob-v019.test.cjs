@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const src=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
+assert(src.includes('function scene3d(){'),'Cena 3D não presente');
+assert(src.includes("st.pitch=clamp("),'Giro vertical não disponível');
+assert(src.includes("st.panX=st.pinch.panX"),'Pinça deve deslocar câmera');
+assert(src.includes("st.zoom=clamp("),'Zoom ausente');
+for(const type of ['sink','fridge','cooktop'])assert(src.includes("type==='"+type+"'"),type+' ausente');
+assert(src.includes('function equipmentEditor(){'),'Editor de equipamentos ausente');
+assert(src.includes('function saveEquipment(){'),'Salvar equipamentos ausente');
+assert(src.includes('appliances:st.appliances'),'Equipamentos não persistidos');
+assert(src.includes('function loadFromMeasure(){'),'Vínculo com projeto não encontrado');
+assert(src.includes('planAll(){'),'Lista de corte não encontrada');
+assert(src.includes('Equipamentos de referência visual'),'Equipamentos misturados com a produção');
+assert(src.includes('st.applianceSeq=1'),'Novo projeto não limpa equipamentos');
+assert(src.includes("saveKey=linkedProject"),'Armazenamento não isolado por projeto');
+console.log('Arque Mob 0.19: câmera 3D, equipamentos, projeto e produção isolada: OK');

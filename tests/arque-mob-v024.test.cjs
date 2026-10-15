@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
-const required=["version:'0.28'","sheet2dFuse:true","sheet2dSquare:true","sheet2dFuse:st.sheet2dFuse","sheet2dSquare:st.sheet2dSquare","function sheetProjection(","function sheetCross(","function sheetSnapTarget(","function sheetSplitAt(","sheetSplitAt(snap.target,end)",'data-action="sheetFuse"','data-action="sheetSquare"',"if(st.sheet2dFuse)for(const linked of st.sheet2dLines)"];
+const required=["version:'0.28'","sheet2dFuse:true","sheet2dSquare:true","sheet2dFuse:st.sheet2dFuse","sheet2dSquare:st.sheet2dSquare","function sheetProjection(","function sheetCross(","function sheetSnapTarget(","function sheetSplitAt(","sheetSplitAt(snap.target,end)",'data-ribbon="fuse"','data-ribbon="square"',"if(st.sheet2dFuse)for(const linked of st.sheet2dLines)"];
 for(const name of required)assert(s.includes(name),'Ausente: '+name);
 assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'3D deve permanecer oculto');
 assert(s.includes('function scene3d(){'),'O código 3D não pode ser apagado');

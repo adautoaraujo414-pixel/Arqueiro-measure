@@ -24,12 +24,12 @@ const js=s.slice(start,end);new Function(js);
 const i=js.indexOf('function sheetLabel('),j=js.indexOf('function sheetScreenPoint(',i);
 assert(i>=0&&j>i);const R=(x,y,w,h,fill,stroke,extra)=>({kind:'rect',x,y,w,h,fill,stroke,extra});
 const T=(x,y,text,size,color,anchor,extra)=>({kind:'text',x,y,text,size,color,anchor,extra});
-const fn=new Function('R','T',js.slice(i,j)+';return sheetLabel;')(R,T);
+const fn=new Function('R','T','st','clamp',js.slice(i,j)+';return sheetLabel;')(R,T,{sheet2dLabelSize:10},(x,min,max)=>Math.max(min,Math.min(max,x)));
 for(const [a,b] of [[{x:100,y:100},{x:420,y:100}],[{x:420,y:100},{x:420,y:510}]]){
  // Actual implementation returns SVG markup, so evaluate with SVG helpers as in app.
  const RR=(x,y,w,h,fill,stroke,extra)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" '+extra+'/>';
  const TT=(x,y,val,size,color,anchor,extra)=>'<text x="'+x+'" y="'+y+'" '+extra+'>'+val+'</text>';
- const label=new Function('R','T',js.slice(i,j)+';return sheetLabel;')(RR,TT)(a,b,'210,7 cm',true,false,17);
+ const label=new Function('R','T','st','clamp',js.slice(i,j)+';return sheetLabel;')(RR,TT,{sheet2dLabelSize:10},(x,min,max)=>Math.max(min,Math.min(max,x)))(a,b,'210,7 cm',true,false,17);
  const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2;
  assert(label.includes('data-line-id="17"'),'etiqueta editável');
  const m=label.match(/<rect x="([^"]+)" y="([^"]+)" width="([^"]+)" height="([^"]+)"/);

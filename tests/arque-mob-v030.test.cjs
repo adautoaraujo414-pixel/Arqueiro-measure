@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const token of [
- "version:'0.31'","function sheetMagicLayout(","function sheetPieceSvg(","function sheetPieceEditor(",
+ "version:'0.32'","function sheetMagicLayout(","function sheetPieceSvg(","function sheetPieceEditor(",
  "function sheetPieceCenter(","function sheetMeasureU(","function sheetTripleTap(","data-sheet-tool=\"magic\"",
  "data-sheet-tool=\"rect\"","data-sheet-tool=\"gap\"","sheet2dPieces:st.sheet2dPieces",
  "pieces:st.sheet2dPieces","function sheet2dRedo(){","function sheetPinchMove(){",
@@ -36,4 +36,4 @@ st.sheet2dLines=[
 const u=geom.sheetMeasureU({x:175,y:200});
 assert.equal(u.widthCm,35);assert.equal(u.leftCm,77);assert.equal(u.rightCm,77);
 assert(Math.abs(u.insideCm-33.5)<1e-6);
-console.log('Arque Mob 0.31: peças, divisões válidas, cm/mm, vãos U e preservação 2D/3D: OK');
+console.log('Arque Mob 0.32: peças, divisões válidas, cm/mm, vãos U e preservação 2D/3D: OK');

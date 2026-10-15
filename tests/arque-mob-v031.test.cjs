@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const src=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 const checks=[
- ["version:'0.31'","versão e salvamento"],
+ ["version:'0.32'","versão e salvamento"],
  ["function sheetBounds(){return {xmin:160,xmax:840,ymin:-161,ymax:801};}","folha A4 fixa"],
  ["sheetRectFit(g.x,g.y,g.w,g.h)","validar peça dentro da folha"],
  ['clip-path="url(#arqueA4clip)"',"não desenhar fora do A4"],
@@ -42,4 +42,4 @@ const list=groupFn(st)();
 assert.equal(list.length,2);assert.equal(list[0].qty,3);assert.equal(list[0].cut,1);assert.equal(list[0].name,'Lateral');
 const bounds={xmin:160,xmax:840,ymin:-161,ymax:801};
 assert.equal(bounds.xmax-bounds.xmin,680);assert.equal(bounds.ymax-bounds.ymin,962);
-console.log('Arque Mob 0.31: folha A4, corte, borracha, régua e salvamento verificados');
+console.log('Arque Mob 0.32: folha A4, corte, borracha, régua e salvamento verificados');

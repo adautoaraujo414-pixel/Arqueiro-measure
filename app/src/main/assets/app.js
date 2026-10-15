@@ -760,7 +760,7 @@ async function update(){await persist();render()}
 function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
-case'openArqueMob':{
+case'openArquePlanta':\ncase'openArqueMob':{\n const destination=a==='openArquePlanta'?'arque-planta.html':'arque-mob.html';
  let current=p;
  if(!current){
   const raw=window.prompt('Nome do cliente para abrir o Arque Mob:','');
@@ -773,13 +773,13 @@ case'openArqueMob':{
   if(!current){current=C.project(person.id,'Arque Mob',person.address||'');current.rooms.push(C.room('Folha 1'));state.projects.push(current);}
   if(!current.rooms?.length)current.rooms=[C.room('Folha 1')];
   selectedClient=person.id;selectedProject=current.id;selectedRoom=current.rooms[0].id;
-  const target='arque-mob.html?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(selectedRoom);
+  const target=destination+'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(selectedRoom);
   persist().then(()=>{location.href=target}).catch(err=>toast('Não foi possível salvar: '+err.message));
   break;
  }
  const selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
  if(current)try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
- location.href='arque-mob.html'+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;
+ location.href=destination+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;
 }
 
 case'calendarOpen':beginArqueCalendar(arg);break;

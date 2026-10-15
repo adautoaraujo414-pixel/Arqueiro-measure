@@ -9,7 +9,7 @@ const checks=[
  ['function sheetZoomTo(','zoom na ponta da medida'],
  ['function sheetCenterTripleTap(','toque triplo para centralizar'],
  ['function sheetPieceCenter(){','centralização pelas peças'],
- ['function sheetErase(','borracha"],
+ ['function sheetErase(','borracha'],
  ['data-sheet-tool="erase"','borracha visível no cabeçalho'],
  ['function sheetMagicOnlyThickness(','quantidade de riscos define vãos'],
  ['function sheetCutGroups(){','agrupar peças iguais'],

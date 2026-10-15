@@ -62,7 +62,7 @@ function ambientCheckpoint(){syncCurrent();st.ambientHistory.push(JSON.stringify
 function persist(){try{ensureModule();syncCurrent();const json=JSON.stringify({version:'0.20',appliances:st.appliances,applianceSeq:st.applianceSeq,room:st.room,stone:st.stone,base:st.base,walls:st.walls,divs:st.divs,shelves:st.shelves,fills:st.fills,th:st.th,height:st.height,seq:st.seq,client:st.client,project:st.project,sheetL:st.sheetL,sheetW:st.sheetW,offsetW:st.offsetW,offsetD:st.offsetD,railHeight:st.railHeight,railRecess:st.railRecess,modules:st.modules,activeId:st.activeId,moduleSelection:st.moduleSelection,moduleSeq:st.moduleSeq,orbit:st.orbit,pitch:st.pitch,panX:st.panX,panY:st.panY});localStorage.setItem(saveKey,json);if(linkedProject)linkedWrite=linkedWrite.then(()=>saveToMeasure(json)).catch(e=>console.warn('Arque Mob: erro salvando projeto',e))}catch(e){}}
 // Camera 3D técnica: projeção ortográfica de peças reais (em cm), não imagem estática.
 function scene3d(){
- syncCurrent();const mods=st.modules.filter(m=>m.base).slice().sort((a,b)=>a.x-b.x);
+ if(st.drag?.kind!=='part3d')syncCurrent();const mods=st.modules.filter(m=>m.base).slice().sort((a,b)=>a.x-b.x);
  const objects=Array.isArray(st.appliances)?st.appliances:[];
  const room=st.room||{width:450,depth:300,height:270,windows:[],walls:[]};
  const maxW=room.width,maxH=room.height;

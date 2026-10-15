@@ -2,7 +2,7 @@ name: Gerar APK Arque Measure
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'feature/arque-mob-construtor-v05', 'feature/arque-mob-folha-zoom-v027']
+    branches: [main, 'feature/arque-mob-construtor-v05', 'feature/arque-mob-folha-zoom-v027', 'feature/arque-mob-folha-v028']
 permissions:
   contents: write
   issues: write
@@ -39,6 +39,8 @@ jobs:
         run: node tests/arque-mob-v026.test.cjs
       - name: Testar nova pinça suave e cotas horizontais
         run: node tests/arque-mob-v027.test.cjs
+      - name: Testar folhas múltiplas, fotos e edição de linhas
+        run: node tests/arque-mob-v028.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

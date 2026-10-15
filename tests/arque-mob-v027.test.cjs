@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [key,label] of [
- ["version:'0.27'",'estado 0.27'],
+ ["version:'0.28'",'estado 0.28'],
  ["function sheetPinchStart(){",'pinça de dois dedos'],
  ["function sheetPinchMove(){",'zoom com âncora'],
  ["st.pinch.anchor.x",'âncora estável'],
@@ -29,4 +29,4 @@ const vw=950,vh=650,zoom=2.1,mid={x:250,y:310},anchor={x:555,y:345},w=1000/zoom,
 const panX=500-w/2-(anchor.x-mid.x/vw*w),panY=320-h/2-(anchor.y-mid.y/vh*h);
 assert(Math.abs((500-w/2-panX+mid.x/vw*w)-anchor.x)<.000001);
 assert(Math.abs((320-h/2-panY+mid.y/vh*h)-anchor.y)<.000001);
-console.log('Arque Mob 0.27: zoom ancorado, cotas horizontais e recursos preservados: OK');
+console.log('Arque Mob 0.28: zoom ancorado, cotas horizontais e recursos preservados: OK');

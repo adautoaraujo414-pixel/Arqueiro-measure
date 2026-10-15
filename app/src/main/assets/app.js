@@ -761,7 +761,22 @@ function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
 case'openArqueMob':{
- const current=p;if(!current){tab='projects';selectedClient=null;selectedRoom=null;render();toast('Abra uma obra para construir os móveis no Arque Mob.');break;}
+ let current=p;
+ if(!current){
+  const raw=window.prompt('Nome do cliente para abrir o Arque Mob:','');
+  if(raw===null)break;
+  const name=raw.trim();
+  if(!name||name.length>100){toast('Informe somente o nome do cliente (até 100 caracteres).');break;}
+  let person=state.clients.find(c=>c.name?.trim().toLocaleLowerCase('pt-BR')===name.toLocaleLowerCase('pt-BR'));
+  if(!person){person=C.client(name);state.clients.push(person);}
+  current=state.projects.find(x=>x.clientId===person.id&&x.name==='Arque Mob');
+  if(!current){current=C.project(person.id,'Arque Mob',person.address||'');current.rooms.push(C.room('Folha 1'));state.projects.push(current);}
+  if(!current.rooms?.length)current.rooms=[C.room('Folha 1')];
+  selectedClient=person.id;selectedProject=current.id;selectedRoom=current.rooms[0].id;
+  const target='arque-mob.html?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(selectedRoom);
+  persist().then(()=>{location.href=target}).catch(err=>toast('Não foi possível salvar: '+err.message));
+  break;
+ }
  const selected=r||current?.rooms?.[0],roomId=selected?.id||'principal';
  if(current)try{localStorage.setItem('arque-mob-launch',JSON.stringify({project:current.id,room:roomId,client:clientName(current.clientId),name:current.name}));}catch(e){}
  location.href='arque-mob.html'+(current?'?project='+encodeURIComponent(current.id)+'&room='+encodeURIComponent(roomId):'');break;

@@ -33,6 +33,8 @@ jobs:
         run: node tests/arque-mob-v022.test.cjs
       - name: Testar Folha 2D e calculadora flutuante no Arque Mob
         run: node tests/arque-mob-v023.test.cjs
+      - name: Testar cantos 90° e modos de união na Folha 2D
+        run: node tests/arque-mob-v024.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

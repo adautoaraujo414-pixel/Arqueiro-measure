@@ -21,7 +21,7 @@ for(const [token,name] of [
  ['function sheetSplitAt(','modo fundir'],
  ["cmSource:inferred?.source??'estimado'",'medida visual preservada'],
  ["line.cmSource!=='estimado'",'não deduzir medidas a partir de prévias'],
- ["if(d.moved){sheetAddSegment(d.start,p)",'linhas apenas arrastando'],
+ ["if(d.moved){sheetAddSegment(d.start,p,d.startTarget||null)",'linhas apenas arrastando'],
  ['function sheetLabel(','etiqueta de cm sobre a linha'],
  ['st.sheet2dStrokeWidth','controle de espessura'],
  ['function sheetNoteEditor(){','nota redimensionável'],

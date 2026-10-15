@@ -6,7 +6,7 @@ def releasePass = System.getenv('ARQUE_KEY_PASSWORD')
 android {
     namespace 'com.arque.measure'
     compileSdk 35
-    defaultConfig { applicationId 'com.arque.measure'; minSdk 26; targetSdk 35; versionCode 19; versionName '0.19.0-alpha' }
+    defaultConfig { applicationId 'com.arque.measure'; minSdk 26; targetSdk 35; versionCode 20; versionName '0.20.0-alpha' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
     signingConfigs {
         arqueRelease {

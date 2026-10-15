@@ -1,0 +1,17 @@
+'use strict';
+const fs=require('fs'),assert=require('node:assert/strict');
+const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
+assert(s.includes('function roomEditor(){'),'Edição de medidas reais do ambiente ausente');
+assert(s.includes('function roomSave(){'),'Redimensionamento de ambiente ausente');
+assert(s.includes('function wallBands('),'Abertura real de janelas na parede ausente');
+assert(s.includes('function windowAdd(){')&&s.includes('function windowSave('),'Criar ou editar janelas ausente');
+assert(s.includes('function wallAdd(){')&&s.includes('function wallSave('),'Criar ou editar paredes ausente');
+assert(s.includes('function part3dEditor(){')&&s.includes('function savePart3d(){'),'Edição de peças pelo 3D ausente');
+for(const kind of ['divider','shelf','rail','base'])assert(s.includes('part(\''+kind+'\''),'Seleção da peça '+kind+' ausente');
+assert(s.includes('function projectedX(')&&s.includes('function projectedY('),'Arraste dependente da câmera ausente');
+assert(s.includes('room:st.room'),'Persistência do ambiente no projeto ausente');
+assert(s.includes('m.x+m.base.w>w'),'Validação de módulo fora da parede ausente');
+assert(s.includes('Equipamentos de referência visual'),'Equipamentos não devem entrar no corte de MDF');
+assert(s.includes("version:'0.20'"),'Versão errada');
+new Function(s.match(/<script>([\\s\\S]*?)<\\/script>/)[1]);
+console.log('Arque Mob 0.20: ambiente real, janelas, paredes, peças 3D e persistência: OK');

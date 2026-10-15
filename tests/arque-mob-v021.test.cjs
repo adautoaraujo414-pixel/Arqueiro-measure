@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 const need=[
- ['version:\'0.26\'','Versionamento de dados'],
+ ['version:\'0.27\'','Versionamento de dados'],
  ['function usableModulePosition(','Validação de colisão entre móveis'],
  ['function snappedModulePosition(','Encaixe ao arrastar módulo'],
  ['function withinApplianceSpace(','Verificação da posição dos eletrodomésticos'],

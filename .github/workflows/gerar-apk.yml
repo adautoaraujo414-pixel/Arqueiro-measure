@@ -27,6 +27,8 @@ jobs:
         run: node tests/arque-mob-v019.test.cjs
       - name: Testar Arque Mob 0.20, paredes, janelas e peças 3D
         run: node tests/arque-mob-v020.test.cjs
+      - name: Testar Arque Mob v0.21, materiais, módulos e equipamentos
+        run: node tests/arque-mob-v021.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

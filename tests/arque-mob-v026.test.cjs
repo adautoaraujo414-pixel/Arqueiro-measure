@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 const inline=s.slice(s.indexOf('<script>')+8,s.lastIndexOf('</script>'));
 new Function(inline);
-for(const item of ["version:'0.28'","function sheetInferClosure(","function sheet2dRedo()","function sheetFreeMarkup(","function sheetNoteMarkup(","function sheetThicknessPolygon(","data-action=\"sheetRedo\"","data-action=\"sheetAppearance\"","line.cmSource='manual'","const inferred=sheetInferClosure(a,end)","source:'calculado'"])assert(s.includes(item),'Recurso ausente: '+item);
+for(const item of ["version:'0.28'","function sheetInferClosure(","function sheet2dRedo()","function sheetFreeMarkup(","function sheetNoteMarkup(","function sheetThicknessPolygon(","id=\"ribbonRedo\"","data-ribbon=\"appearance\"","line.cmSource='manual'","const inferred=sheetInferClosure(a,end)","source:'calculado'"])assert(s.includes(item),'Recurso ausente: '+item);
 assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'3D deve continuar oculto');
 assert(s.includes('function scene3d(){'),'Não remover motor 3D');
 const a=inline.indexOf('function sheetInferClosure('),b=inline.indexOf('function sheetHitLine(',a);

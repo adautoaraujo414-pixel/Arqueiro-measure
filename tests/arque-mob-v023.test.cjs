@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
+assert(s.includes("version:'0.23'"),'Estado persistente da Folha v0.23 ausente');
+assert(s.includes('data-view="sheet2d"'),'A aba única Folha 2D não existe');
+assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'A navegação 3D deve estar oculta');
+assert(s.includes('function scene3d(){'),'Código 3D não deve ser excluído do projeto');
+for(const k of ['function sheetSnap(','function sheetPointerDown(','function sheetPointerMove(','function sheetPointerUp(','function sheet2dEdit(','function sheet2dUndo(','function initializeSheet2dCalculator(','function sheet2dSettings(']) assert(s.includes(k),k+' ausente');
+assert(s.includes('saved.sheet2dLines?.length'),'Projeto contendo somente linhas deve ser restaurado');
+assert(s.includes('sheet2dLines:st.sheet2dLines'),'Linhas não serão persistidas no projeto');
+assert(s.includes('st.sheet2dSnapCm*sheetCmScale'),'Alinhamento por tolerância em cm ausente');
+assert(s.includes('const sheetCmScale=2'),'Escala virtual da folha ausente');
+assert(s.includes('line.cm=null'),'Medida real precisa de confirmação ao arrastar');
+assert(s.includes('data-calc="+"')&&s.includes('data-calc="="'),'Calculadora não tem operações básicas');
+assert(s.includes('calcGrip')&&s.includes("box.style.left="),'Calculadora não pode ser movida');
+assert(s.includes("data-sheet-modal=\"applyCm\""),'Edição de medida numérica ausente');
+const a=s.indexOf('<script>')+8,b=s.lastIndexOf('</script>');assert(a>8&&b>a);new Function(s.slice(a,b));
+console.log('Arque Mob 0.23: 2D, cotas manuais, conexões por pontos, calculadora e preservação 3D: OK');

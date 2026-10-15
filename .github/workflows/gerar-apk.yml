@@ -31,6 +31,8 @@ jobs:
         run: node tests/arque-mob-v021.test.cjs
       - name: Testar Arque Mob 0.22 e simulação de chapas por material
         run: node tests/arque-mob-v022.test.cjs
+      - name: Testar Folha 2D e calculadora flutuante no Arque Mob
+        run: node tests/arque-mob-v023.test.cjs
       - name: Versionar fontes do aplicativo
         run: |
           if ! git ls-files --error-unmatch settings.gradle >/dev/null 2>&1; then

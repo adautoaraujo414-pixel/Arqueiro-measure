@@ -1,4 +1,4 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1"><meta name="theme-color" content="#f8fafc"><title>ARQUE MOB 0.23 • Folha 2D e Calculadora</title>
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1"><meta name="theme-color" content="#f8fafc"><title>ARQUE MOB 0.24 • Folha 2D, Encontros e Calculadora</title>
 <style>
 :root{--blue:#186d96;--ink:#243947;--muted:#718692;--line:#dce5eb;--light:#f6f9fb;--white:#fff;--wood:#d2b997;--orange:#edb76d}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#edf3f6}button,input{font:inherit}button{cursor:pointer;touch-action:manipulation}button:focus-visible,input:focus-visible{outline:3px solid #81c9e9;outline-offset:1px}
@@ -63,8 +63,8 @@ let linkedWrite=Promise.resolve();
 function linkedDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open('arque_measure_local',1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('store'))req.result.createObjectStore('store')};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 async function saveToMeasure(json){if(!linkedProject)return;const db=await linkedDb();try{await new Promise((resolve,reject)=>{const tx=db.transaction('store','readwrite'),store=tx.objectStore('store');const q=store.get('state');q.onsuccess=()=>{const state=q.result;if(!state?.projects)return;const project=state.projects.find(x=>x.id===linkedProject);if(!project)return;if(!project.arqueMobByRoom)project.arqueMobByRoom={};project.arqueMobByRoom[linkedRoom]=JSON.parse(json);store.put(state,'state')};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}finally{db.close()}}
 async function loadFromMeasure(){if(!linkedProject)return;try{const db=await linkedDb();const state=await new Promise((resolve,reject)=>{const tx=db.transaction('store','readonly');const r=tx.objectStore('store').get('state');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});db.close();const project=state?.projects?.find(p=>p.id===linkedProject);if(!project)return;const data=project.arqueMobByRoom?.[linkedRoom];if(data){restoreMob(data);persist();render()}else if(!st.modules.length){st.client=state.clients?.find(x=>x.id===project.clientId)?.name||st.client;st.project=project.name+(project.rooms?.find(x=>x.id===linkedRoom)?.name?' / '+project.rooms.find(x=>x.id===linkedRoom).name:'');render()}}catch(e){console.warn('Arque Mob: não foi possível recuperar dados do projeto',e)}}
-function restoreMob(saved){if(!saved||!Array.isArray(saved.modules))return;['stone','base','walls','divs','shelves','fills','th','height','seq','client','project','sheetL','sheetW','offsetW','offsetD','railHeight','railRecess','modules','activeId','moduleSelection','moduleSeq','orbit','pitch','panX','panY','appliances','applianceSeq','selectedAppliance','room','caseMaterial','frontMaterial','backMaterial','sheetKerf','sheetTrim','sheet2dLines','sheet2dNextId','sheet2dAutoAlign','sheet2dSnapCm','sheet2dPanX','sheet2dPanY'].forEach(k=>{if(saved[k]!==undefined)st[k]=saved[k]});st.view='sheet2d'}
-const st={room:{width:450,depth:300,height:270,windows:[],walls:[],seq:1},selectedPart:null,selectedRoomItem:null,view:'sheet2d',sheet2dLines:[],sheet2dNextId:1,sheet2dAutoAlign:true,sheet2dSnapCm:8,sheet2dSelected:null,sheet2dAnchor:null,sheet2dTool:'draw',sheet2dHistory:[],sheet2dPanX:0,sheet2dPanY:0,tool:'draw',stone:null,base:null,walls:[],divs:[],shelves:[],fills:{},th:1.8,height:77,sheetL:270,sheetW:180,sheetKerf:.32,sheetTrim:3,offsetW:7,offsetD:4,railHeight:7,railRecess:1.5,modules:[],activeId:null,moduleSelection:null,moduleSeq:1,caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',orbit:.33,pitch:.52,panX:0,panY:0,appliances:[],applianceSeq:1,selectedAppliance:null,gesture:false,pinch:null,ambientHistory:[],client:'Cliente demonstração',project:'Cozinha',seq:1,selected:null,bay:null,draw:null,drag:null,zoom:1,pointers:new Map(),history:[]};
+function restoreMob(saved){if(!saved||!Array.isArray(saved.modules))return;['stone','base','walls','divs','shelves','fills','th','height','seq','client','project','sheetL','sheetW','offsetW','offsetD','railHeight','railRecess','modules','activeId','moduleSelection','moduleSeq','orbit','pitch','panX','panY','appliances','applianceSeq','selectedAppliance','room','caseMaterial','frontMaterial','backMaterial','sheetKerf','sheetTrim','sheet2dLines','sheet2dNextId','sheet2dAutoAlign','sheet2dSnapCm','sheet2dPanX','sheet2dPanY','sheet2dFuse','sheet2dSquare'].forEach(k=>{if(saved[k]!==undefined)st[k]=saved[k]});st.view='sheet2d'}
+const st={room:{width:450,depth:300,height:270,windows:[],walls:[],seq:1},selectedPart:null,selectedRoomItem:null,view:'sheet2d',sheet2dLines:[],sheet2dNextId:1,sheet2dAutoAlign:true,sheet2dFuse:true,sheet2dSquare:true,sheet2dSnapCm:8,sheet2dSelected:null,sheet2dAnchor:null,sheet2dTool:'draw',sheet2dHistory:[],sheet2dPanX:0,sheet2dPanY:0,tool:'draw',stone:null,base:null,walls:[],divs:[],shelves:[],fills:{},th:1.8,height:77,sheetL:270,sheetW:180,sheetKerf:.32,sheetTrim:3,offsetW:7,offsetD:4,railHeight:7,railRecess:1.5,modules:[],activeId:null,moduleSelection:null,moduleSeq:1,caseMaterial:'MDF 18 mm',frontMaterial:'MDF 18 mm',backMaterial:'MDF 6 mm',orbit:.33,pitch:.52,panX:0,panY:0,appliances:[],applianceSeq:1,selectedAppliance:null,gesture:false,pinch:null,ambientHistory:[],client:'Cliente demonstração',project:'Cozinha',seq:1,selected:null,bay:null,draw:null,drag:null,zoom:1,pointers:new Map(),history:[]};
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 const R=(x,y,w,h,fill='#fff',stroke='#b2c9d5',extra='')=>`<rect x="${x}" y="${y}" width="${Math.max(0,w)}" height="${Math.max(0,h)}" rx="2" fill="${fill}" stroke="${stroke}" ${extra}/>`;
 const L=(x,y,X,Y,color='#bbd0da',sw=1,extra='')=>`<line x1="${x}" y1="${y}" x2="${X}" y2="${Y}" stroke="${color}" stroke-width="${sw}" ${extra}/>`;
@@ -80,7 +80,7 @@ function syncCurrent(){if(!st.activeId)return;const m=st.modules.find(x=>x.id===
 function loadModule(id){const m=st.modules.find(m=>m.id===id);if(!m)return false;syncCurrent();for(const k of moduleKeys)st[k]=clone(m[k]);st.activeId=id;st.moduleSelection=id;st.selected=null;st.bay=null;st.history=[];return true}
 function ensureModule(){if(st.activeId||!st.base)return;const id='m'+st.moduleSeq++;st.activeId=id;st.moduleSelection=id;st.modules.push({id,label:'Armário '+(st.moduleSeq-1),x:0,...Object.fromEntries(moduleKeys.map(k=>[k,clone(st[k])]))})}
 function ambientCheckpoint(){syncCurrent();st.ambientHistory.push(JSON.stringify({modules:st.modules,appliances:st.appliances,room:st.room}));if(st.ambientHistory.length>30)st.ambientHistory.shift()}
-function persist(){try{ensureModule();syncCurrent();const json=JSON.stringify({version:'0.23',sheet2dLines:st.sheet2dLines,sheet2dNextId:st.sheet2dNextId,sheet2dAutoAlign:st.sheet2dAutoAlign,sheet2dSnapCm:st.sheet2dSnapCm,sheet2dPanX:st.sheet2dPanX,sheet2dPanY:st.sheet2dPanY,appliances:st.appliances,applianceSeq:st.applianceSeq,room:st.room,stone:st.stone,base:st.base,walls:st.walls,divs:st.divs,shelves:st.shelves,fills:st.fills,th:st.th,height:st.height,seq:st.seq,client:st.client,project:st.project,sheetL:st.sheetL,sheetW:st.sheetW,sheetKerf:st.sheetKerf,sheetTrim:st.sheetTrim,offsetW:st.offsetW,offsetD:st.offsetD,railHeight:st.railHeight,railRecess:st.railRecess,caseMaterial:st.caseMaterial,frontMaterial:st.frontMaterial,backMaterial:st.backMaterial,modules:st.modules,activeId:st.activeId,moduleSelection:st.moduleSelection,moduleSeq:st.moduleSeq,orbit:st.orbit,pitch:st.pitch,panX:st.panX,panY:st.panY});localStorage.setItem(saveKey,json);if(linkedProject)linkedWrite=linkedWrite.then(()=>saveToMeasure(json)).catch(e=>console.warn('Arque Mob: erro salvando projeto',e))}catch(e){}}
+function persist(){try{ensureModule();syncCurrent();const json=JSON.stringify({version:'0.24',sheet2dLines:st.sheet2dLines,sheet2dNextId:st.sheet2dNextId,sheet2dAutoAlign:st.sheet2dAutoAlign,sheet2dSnapCm:st.sheet2dSnapCm,sheet2dPanX:st.sheet2dPanX,sheet2dPanY:st.sheet2dPanY,sheet2dFuse:st.sheet2dFuse,sheet2dSquare:st.sheet2dSquare,appliances:st.appliances,applianceSeq:st.applianceSeq,room:st.room,stone:st.stone,base:st.base,walls:st.walls,divs:st.divs,shelves:st.shelves,fills:st.fills,th:st.th,height:st.height,seq:st.seq,client:st.client,project:st.project,sheetL:st.sheetL,sheetW:st.sheetW,sheetKerf:st.sheetKerf,sheetTrim:st.sheetTrim,offsetW:st.offsetW,offsetD:st.offsetD,railHeight:st.railHeight,railRecess:st.railRecess,caseMaterial:st.caseMaterial,frontMaterial:st.frontMaterial,backMaterial:st.backMaterial,modules:st.modules,activeId:st.activeId,moduleSelection:st.moduleSelection,moduleSeq:st.moduleSeq,orbit:st.orbit,pitch:st.pitch,panX:st.panX,panY:st.panY});localStorage.setItem(saveKey,json);if(linkedProject)linkedWrite=linkedWrite.then(()=>saveToMeasure(json)).catch(e=>console.warn('Arque Mob: erro salvando projeto',e))}catch(e){}}
 // Camera 3D técnica: projeção ortográfica de peças reais (em cm), não imagem estática.
 function scene3d(){
  if(st.drag?.kind!=='part3d')syncCurrent();const mods=st.modules.filter(m=>m.base).slice().sort((a,b)=>a.x-b.x);
@@ -307,15 +307,74 @@ const sheetLength=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const sheetDist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function sheetCheckpoint(){st.sheet2dHistory.push(JSON.stringify({lines:st.sheet2dLines,nextId:st.sheet2dNextId}));if(st.sheet2dHistory.length>40)st.sheet2dHistory.shift()}
 function sheet2dUndo(){const last=st.sheet2dHistory.pop();if(!last)return toast('Nada para desfazer na folha.');const d=JSON.parse(last);st.sheet2dLines=d.lines;st.sheet2dNextId=d.nextId;st.sheet2dSelected=null;st.sheet2dAnchor=null;render();persist()}
-function sheetSnap(a,b){const p=sheetPoint(b);if(!st.sheet2dAutoAlign)return p;
- const radius=st.sheet2dSnapCm*sheetCmScale;
- let near=null,best=radius;
- for(const line of st.sheet2dLines)for(const pt of [line.a,line.b]){const d=sheetDist(pt,p);if(d<best&&sheetDist(pt,a)>1){near=pt;best=d}}
- if(near)return {...near};
- const dx=p.x-a.x,dy=p.y-a.y;
- if(Math.abs(dx)<radius&&Math.abs(dy)>2)return {x:a.x,y:p.y};
- if(Math.abs(dy)<radius&&Math.abs(dx)>2)return {x:p.x,y:a.y};
- return p;
+// A geometria usa o eixo da linha, não a borda grossa do traço SVG.
+// Fundir: cria nó compartilhado e divide o segmento alvo no encontro em T.
+// Sem fundir: a ponta encosta na linha (não ultrapassa), mas os segmentos ficam independentes.
+function sheetProjection(p,line){const dx=line.b.x-line.a.x,dy=line.b.y-line.a.y,len2=dx*dx+dy*dy;
+ if(len2<.0001)return null;const t=clamp(((p.x-line.a.x)*dx+(p.y-line.a.y)*dy)/len2,0,1);
+ const point={x:rd(line.a.x+t*dx),y:rd(line.a.y+t*dy)};
+ return {point,t,dist:sheetDist(p,point),lineId:line.id};
+}
+function sheetCross(a,b,skipId=null){let best=null;const rx=b.x-a.x,ry=b.y-a.y;
+ for(const line of st.sheet2dLines){if(line.id===skipId)continue;
+ const sx=line.b.x-line.a.x,sy=line.b.y-line.a.y,den=rx*sy-ry*sx;
+ if(Math.abs(den)<.000001)continue;const qx=line.a.x-a.x,qy=line.a.y-a.y;
+ const t=(qx*sy-qy*sx)/den,u=(qx*ry-qy*rx)/den;
+ if(t>.0001&&t<=1.00001&&u>=-.00001&&u<=1.00001&&(!best||t<best.t))
+  best={point:{x:rd(a.x+rx*t),y:rd(a.y+ry*t)},lineId:line.id,t,at:u};
+ }
+ return best;
+}
+function sheetSnapTarget(a,b,{excludeId=null}={}){
+ const raw=sheetPoint(b),radius=st.sheet2dAutoAlign?st.sheet2dSnapCm*sheetCmScale:0;
+ let p={...raw};
+ if(st.sheet2dAutoAlign){
+  const dx=p.x-a.x,dy=p.y-a.y;
+  if(st.sheet2dSquare&&Math.hypot(dx,dy)>2){
+   // Régua ortogonal por padrão: cantos retos em 90 graus sem segmentos tortos.
+   if(Math.abs(dx)>=Math.abs(dy)){
+    p.y=a.y;let gap=radius;
+    for(const ln of st.sheet2dLines)for(const q of [ln.a,ln.b]){
+     const diff=Math.abs(p.x-q.x);if(diff<gap&&sheetDist(q,a)>radius){gap=diff;p.x=q.x}
+    }
+   }else{
+    p.x=a.x;let gap=radius;
+    for(const ln of st.sheet2dLines)for(const q of [ln.a,ln.b]){
+     const diff=Math.abs(p.y-q.y);if(diff<gap&&sheetDist(q,a)>radius){gap=diff;p.y=q.y}
+    }
+   }
+  }else if(Math.abs(dx)<radius&&Math.abs(dy)>2)p.x=a.x;
+  else if(Math.abs(dy)<radius&&Math.abs(dx)>2)p.y=a.y;
+ }
+ // A interseção limita o traço exatamente na superfície; não entra no quadrado.
+ const crossing=sheetCross(a,p,excludeId);
+ if(crossing)return {point:crossing.point,target:crossing,kind:'surface'};
+ if(!st.sheet2dAutoAlign||radius<=0)return {point:sheetPoint(p),target:null,kind:'free'};
+ let best=null;
+ const offer=(point,target,kind,dist)=>{
+  if(dist>radius+.0001||sheetDist(point,a)<1||best&&dist>=best.dist-.00001)return;
+  best={point:{...point},target,kind,dist};
+ };
+ // Prioridade para pontas já existentes; o encaixe de esquina fica exato.
+ for(const line of st.sheet2dLines){if(line.id===excludeId)continue;
+  for(const end of ['a','b']){const q=line[end];offer(q,{lineId:line.id,at:end},'vertex',sheetDist(p,q))}
+ }
+ // Permite encostar/fundir numa parte do meio da linha, não apenas na ponta.
+ for(const line of st.sheet2dLines){if(line.id===excludeId)continue;
+  const projected=sheetProjection(p,line);if(!projected)continue;
+  offer(projected.point,{lineId:line.id,at:projected.t},'surface',projected.dist);
+ }
+ return best?{point:best.point,target:best.target,kind:best.kind}:{point:sheetPoint(p),target:null,kind:'free'};
+}
+function sheetSnap(a,b,opts){return sheetSnapTarget(a,b,opts).point}
+function sheetSplitAt(target,point){
+ if(!st.sheet2dFuse||!target)return false;
+ const line=st.sheet2dLines.find(x=>x.id===target.lineId);if(!line)return false;
+ const projected=sheetProjection(point,line);if(!projected||projected.dist>.65||projected.t<=.0005||projected.t>=.9995)return false;
+ if(sheetDist(line.a,point)<5||sheetDist(line.b,point)<5)return false;
+ const previous={...line.b};line.b={...point};line.cm=null;
+ st.sheet2dLines.push({id:st.sheet2dNextId++,a:{...point},b:previous,cm:null});
+ return true;
 }
 function sheetHitLine(id){return st.sheet2dLines.find(l=>l.id===Number(id))}
 function renderSheet2d(){const w=1000/st.zoom,ratio=($('sheetArea').clientHeight||640)/Math.max(1,$('sheetArea').clientWidth||1000),h=w*ratio,vx=500-w/2-st.sheet2dPanX,vy=320-h/2-st.sheet2dPanY;sc.setAttribute('viewBox',`${vx} ${vy} ${w} ${h}`);sc.innerHTML=sheet2dSvg();
@@ -323,26 +382,28 @@ function renderSheet2d(){const w=1000/st.zoom,ratio=($('sheetArea').clientHeight
  const chosen=sheetHitLine(st.sheet2dSelected);$('steps').innerHTML='<strong>Folha 2D</strong> · linhas conectadas por pontos';
  $('hint').innerHTML='<span>'+(st.sheet2dTool==='select'?'Toque numa linha para <b>editar centímetros</b> ou arraste sua ponta.':st.sheet2dAnchor?'Toque no próximo ponto para <b>continuar a linha</b>.':'Toque em dois pontos ou arraste para fazer uma <b>linha reta</b>.')+'</span>';
  $('liveTitle').textContent='Medida informada';$('liveMeasure').textContent=chosen?.cm!==null&&chosen?.cm!==undefined?fmt(chosen.cm)+' cm':'— cm';$('liveSubtitle').textContent='medidas manuais, sem leitura automática';
- $('sceneHelp').textContent='Linha reta por pontos • alinhamento '+(st.sheet2dAutoAlign?'ligado':'desligado')+' • toque na linha para editar cm';
- $('actionstrip').innerHTML=`<button class="action primary" data-action="sheetNew">＋ Nova linha</button><button class="action" data-action="sheetSelect">${st.sheet2dTool==='select'?'✓ Selecionar':'⌖ Selecionar'}</button><button class="action ${st.sheet2dAutoAlign?'selected':''}" data-action="sheetAlign">⇔ Alinhamento ${st.sheet2dAutoAlign?'ligado':'desligado'}</button>${chosen?'<button class="action" data-action="sheetEdit">✎ Editar cm</button><button class="action danger" data-action="sheetDelete">× Apagar linha</button>':''}<button class="action" data-action="sheetHelp">? Como usar</button>`;
+ $('sceneHelp').textContent='Linha reta por pontos • '+(st.sheet2dFuse?'fundir ligado':'encostar sem fundir')+' • '+(st.sheet2dSquare?'cantos 90°':'ângulos livres')+' • toque na linha para editar cm';
+ $('actionstrip').innerHTML=`<button class="action primary" data-action="sheetNew">＋ Nova linha</button><button class="action" data-action="sheetSelect">${st.sheet2dTool==='select'?'✓ Selecionar':'⌖ Selecionar'}</button><button class="action ${st.sheet2dAutoAlign?'selected':''}" data-action="sheetAlign">⇔ Alinhamento ${st.sheet2dAutoAlign?'ligado':'desligado'}</button><button class="action ${st.sheet2dFuse?'selected':''}" data-action="sheetFuse">${st.sheet2dFuse?'⊞ Fundir ligado':'⊟ Fundir desligado'}</button><button class="action ${st.sheet2dSquare?'selected':''}" data-action="sheetSquare">∟ Cantos 90° ${st.sheet2dSquare?'ligados':'livres'}</button>${chosen?'<button class="action" data-action="sheetEdit">✎ Editar cm</button><button class="action danger" data-action="sheetDelete">× Apagar linha</button>':''}<button class="action" data-action="sheetHelp">? Como usar</button>`;
 }
 function sheet2dSvg(){let out=R(-2000,-2000,5000,5000,'#fff','#fff');
  for(let y=-1984;y<3000;y+=32)out+=L(-2000,y,3000,y,'#eef4f7',.9);
  out+=L(42,-2000,42,3000,'#f3d4d9',1.2);
  if(!st.sheet2dLines.length&&!st.sheet2dAnchor)out+=T(510,260,'Toque em dois pontos para formar uma linha reta',17,'#8aa3b0')+T(510,293,'As medidas em centímetros são digitadas por você',14,'#9cb0bb');
  for(const line of st.sheet2dLines){let sel=line.id===st.sheet2dSelected,mx=(line.a.x+line.b.x)/2,my=(line.a.y+line.b.y)/2;
- out+=L(line.a.x,line.a.y,line.b.x,line.b.y,sel?'#0a82be':'#27789c',sel?4.2:2.8,`data-line-id="${line.id}" stroke-linecap="round"`);
+ out+=L(line.a.x,line.a.y,line.b.x,line.b.y,sel?'#0a82be':'#27789c',sel?4.2:2.8,`data-line-id="${line.id}" stroke-linecap="butt" stroke-linejoin="miter"`);
  out+=L(line.a.x,line.a.y,line.b.x,line.b.y,'transparent',22,`data-line-id="${line.id}"`);
  const label=line.cm!==null&&line.cm!==undefined?fmt(line.cm)+' cm':'Definir cm';
  out+=R(mx-47,my-27,94,22,'#fff',sel?'#1382b8':'#d9e7ef',`data-line-id="${line.id}"`)+T(mx,my-11,label,13,sel?'#0b75ac':'#376d88');
- if(sel){for(const end of ['a','b']){const p=line[end];out+=`<circle cx="${p.x}" cy="${p.y}" r="9" class="sheet-handle" data-line-id="${line.id}" data-line-end="${end}"/>`}}
+ if(sel){for(const end of ['a','b']){const p=line[end];out+=`<rect x="${p.x-9}" y="${p.y-9}" width="18" height="18" rx="0" class="sheet-handle" data-line-id="${line.id}" data-line-end="${end}"/>`}}
  }
- if(st.sheet2dAnchor)out+=`<circle cx="${st.sheet2dAnchor.x}" cy="${st.sheet2dAnchor.y}" r="5" fill="#138cbe" stroke="white" stroke-width="2"/>`;
- if(st.sheet2dDraft){const d=st.sheet2dDraft;out+=L(d.a.x,d.a.y,d.b.x,d.b.y,'#2594be',2.4,'stroke-dasharray="7 4"');}
+ if(st.sheet2dAnchor)out+=`<rect x="${st.sheet2dAnchor.x-5}" y="${st.sheet2dAnchor.y-5}" width="10" height="10" fill="#138cbe" stroke="white" stroke-width="2"/>`;
+ if(st.sheet2dDraft){const d=st.sheet2dDraft;out+=L(d.a.x,d.a.y,d.b.x,d.b.y,'#2594be',2.4,'stroke-dasharray="7 4" stroke-linecap="butt"');out+=R(d.b.x-5,d.b.y-5,10,10,st.sheet2dFuse?'#0eaa8a':'#efa64c','#fff');}
  return out;
 }
-function sheetAddSegment(a,b){if(sheetLength(a,b)<5){return false}sheetCheckpoint();const id=st.sheet2dNextId++;
- st.sheet2dLines.push({id,a:sheetPoint(a),b:sheetPoint(b),cm:null});st.sheet2dSelected=id;st.sheet2dAnchor=sheetPoint(b);persist();return true}
+function sheetAddSegment(a,b){const snap=sheetSnapTarget(a,b),end=snap.point;if(sheetLength(a,end)<5)return false;
+ sheetCheckpoint();sheetSplitAt(snap.target,end);
+ const id=st.sheet2dNextId++;st.sheet2dLines.push({id,a:sheetPoint(a),b:sheetPoint(end),cm:null});
+ st.sheet2dSelected=id;st.sheet2dAnchor=sheetPoint(end);persist();return true}
 function sheetPointerDown(e){e.preventDefault();st.pointers.set(e.pointerId,coord(e));sc.setPointerCapture(e.pointerId);
  if(st.pointers.size===2){const vals=[...st.pointers.values()];st.pinch={distance:sheetDist(vals[0],vals[1]),mid:{x:(vals[0].x+vals[1].x)/2,y:(vals[0].y+vals[1].y)/2},zoom:st.zoom,panX:st.sheet2dPanX,panY:st.sheet2dPanY};st.sheet2dDraft=null;st.sheet2dStroke=null;st.sheet2dHandle=null;return}
  const id=e.target.closest('[data-line-id]')?.getAttribute('data-line-id'),end=e.target.closest('[data-line-end]')?.getAttribute('data-line-end');
@@ -353,11 +414,15 @@ function sheetPointerMove(e){if(!st.pointers.has(e.pointerId))return;e.preventDe
  if(st.pointers.size===2&&st.pinch){const vals=[...st.pointers.values()],dist=sheetDist(vals[0],vals[1]),mid={x:(vals[0].x+vals[1].x)/2,y:(vals[0].y+vals[1].y)/2};st.zoom=clamp(st.pinch.zoom*dist/Math.max(st.pinch.distance,1),.65,4);st.sheet2dPanX=st.pinch.panX+(mid.x-st.pinch.mid.x);st.sheet2dPanY=st.pinch.panY+(mid.y-st.pinch.mid.y);render();return}
  if(st.pointers.size!==1)return;
  const p=sheetPoint(coord(e));
- if(st.sheet2dHandle){const h=st.sheet2dHandle,line=sheetHitLine(h.id);if(!line)return;const snapped=sheetSnap(line[h.end==='a'?'b':'a'],p);if(sheetDist(line[h.end],snapped)>1){h.moved=true;const before={...line[h.end]};line[h.end]=snapped;line.cm=null;for(const linked of st.sheet2dLines){if(linked.id===line.id)continue;for(const end of ['a','b'])if(sheetDist(linked[end],before)<.6){linked[end]={...snapped};linked.cm=null}}}render();return}
+ if(st.sheet2dHandle){const h=st.sheet2dHandle,line=sheetHitLine(h.id);if(!line)return;const snapped=sheetSnap(line[h.end==='a'?'b':'a'],p,{excludeId:line.id});if(sheetDist(line[h.end],snapped)>1){h.moved=true;const before={...line[h.end]};line[h.end]=snapped;line.cm=null;if(st.sheet2dFuse)for(const linked of st.sheet2dLines){if(linked.id===line.id)continue;for(const end of ['a','b'])if(sheetDist(linked[end],before)<.6){linked[end]={...snapped};linked.cm=null}}}render();return}
  if(st.sheet2dStroke){const d=st.sheet2dStroke;d.moved=sheetDist(p,d.start)>7;st.sheet2dDraft=d.moved?{a:d.from,b:sheetSnap(d.from,p)}:null;render()}}
 function sheetPointerUp(e){if(!st.pointers.has(e.pointerId))return;st.pointers.delete(e.pointerId);if(st.pointers.size>0)return;
  if(st.pinch){st.pinch=null;st.sheet2dStroke=null;st.sheet2dDraft=null;render();persist();return}
- if(st.sheet2dHandle){const was=st.sheet2dHandle;st.sheet2dHandle=null;if(!was.moved)st.sheet2dHistory.pop();else{persist();toast('Linha ajustada. Confira novamente a medida em cm.')}render();return}
+ if(st.sheet2dHandle){const was=st.sheet2dHandle;st.sheet2dHandle=null;if(!was.moved)st.sheet2dHistory.pop();else{
+  const line=sheetHitLine(was.id);if(line&&st.sheet2dFuse){const endpoint=line[was.end],other=line[was.end==='a'?'b':'a'];
+   const snap=sheetSnapTarget(other,endpoint,{excludeId:line.id});if(snap.target&&sheetDist(snap.point,endpoint)<.7)sheetSplitAt(snap.target,endpoint);
+  }
+  persist();toast('Linha ajustada. Confira novamente a medida em cm.')}render();return}
  if(st.sheet2dHit){const id=st.sheet2dHit;st.sheet2dHit=null;st.sheet2dSelected=id;render();sheet2dEdit();return}
  const d=st.sheet2dStroke;st.sheet2dStroke=null;st.sheet2dDraft=null;if(!d){render();return}const p=sheetSnap(d.from,sheetPoint(coord(e)));
  if(d.moved||st.sheet2dAnchor){if(!sheetAddSegment(d.from,p)&&!st.sheet2dAnchor)st.sheet2dAnchor=d.from;}else st.sheet2dAnchor=sheetPoint(d.start);
@@ -365,16 +430,20 @@ function sheetPointerUp(e){if(!st.pointers.has(e.pointerId))return;st.pointers.d
 function sheet2dAction(act){if(act==='sheetNew'){st.sheet2dAnchor=null;st.sheet2dSelected=null;st.sheet2dTool='draw';render();toast('Toque no início de uma nova linha.');}
  else if(act==='sheetSelect'){st.sheet2dTool=st.sheet2dTool==='select'?'draw':'select';st.sheet2dAnchor=null;render()}
  else if(act==='sheetAlign'){st.sheet2dAutoAlign=!st.sheet2dAutoAlign;render();persist()}
+ else if(act==='sheetFuse'){st.sheet2dFuse=!st.sheet2dFuse;st.sheet2dAnchor=null;render();persist();toast(st.sheet2dFuse?'Fundir ligado: encontros viram pontos unidos.':'Fundir desligado: as pontas encostam sem união.')}
+ else if(act==='sheetSquare'){st.sheet2dSquare=!st.sheet2dSquare;render();persist();toast(st.sheet2dSquare?'Cantos em 90° ligados.':'Ângulos livres ligados.')}
  else if(act==='sheetEdit')sheet2dEdit();else if(act==='sheetDelete'){if(!st.sheet2dSelected)return;sheetCheckpoint();st.sheet2dLines=st.sheet2dLines.filter(x=>x.id!==st.sheet2dSelected);st.sheet2dSelected=null;st.sheet2dAnchor=null;render();persist()}
- else if(act==='sheetHelp')sheet(`<h3>Linhas retas com centímetros</h3><p>Toque para marcar o início e toque de novo para finalizar a linha; o ponto seguinte continua ligado ao anterior. Também é possível arrastar para traçar.</p><p>O alinhamento corrige traços quase horizontais ou verticais e conecta pontas próximas (padrão 8 cm). Toque numa linha para digitar o comprimento real em centímetros. Arraste uma ponta para corrigir o desenho.</p><p><b>A folha não mede o ambiente automaticamente:</b> informe a medida conferida. A calculadora pode ser movida pelo título.</p><button class="action primary" data-sheet-modal="close">Entendi</button>`);
+ else if(act==='sheetHelp')sheet(`<h3>Linhas retas com centímetros</h3><p>Toque para marcar o início e toque de novo para finalizar a linha; o ponto seguinte continua ligado ao anterior. Também é possível arrastar para traçar.</p><p><b>Cantos 90°:</b> traça horizontal ou vertical para formar quadrados perfeitos. <b>Fundir ligado:</b> uma ponta próxima de outra linha se une a ela, inclusive no meio. <b>Fundir desligado:</b> a ponta encosta na superfície sem atravessar e sem vincular as peças. Use a tolerância para ajustar a proximidade.</p><p>Toque numa linha para digitar o comprimento em centímetros. Arraste a ponta quadrada para corrigir o desenho.</p><p><b>A folha não mede o ambiente automaticamente:</b> informe a medida conferida. A calculadora pode ser movida pelo título.</p><button class="action primary" data-sheet-modal="close">Entendi</button>`);
 }
 function sheet2dEdit(){const line=sheetHitLine(st.sheet2dSelected);if(!line)return toast('Selecione uma linha.');sheet(`<h3>Medida da linha (cm)</h3><p>Digite a medida que você conferiu. A linha será ajustada na escala virtual da folha, sem alterar medidas de outros projetos.</p><div class="sheetrow"><label>Comprimento em centímetros<input id="sheetCm" type="number" inputmode="decimal" step="0.1" min="0.1" max="450" value="${line.cm??''}" placeholder="Ex.: 150"></label><button class="action primary" data-sheet-modal="applyCm">Aplicar</button><button class="action" data-sheet-modal="close">Cancelar</button></div>`);$('sheetCm').focus()}
 function sheet2dModal(e){const act=e.target.closest('[data-sheet-modal]')?.dataset.sheetModal;if(!act)return;if(act==='close')return closeSheet();if(act==='setSnap'){const n=Number($('sheetSnap')?.value);if(!Number.isFinite(n)||n<0||n>30)return toast('Use tolerância entre 0 e 30 cm.');st.sheet2dSnapCm=n;persist();render();return closeSheet()}
  if(act==='applyCm'){const line=sheetHitLine(st.sheet2dSelected);if(!line)return;const cm=Number(String($('sheetCm')?.value||'').replace(',','.'));if(!Number.isFinite(cm)||cm<=0||cm>450)return toast('Informe uma medida entre 0,1 e 450 cm.');const old={...line.b},diff=sheetLength(line.a,line.b),vx=diff>1?(line.b.x-line.a.x)/diff:1,vy=diff>1?(line.b.y-line.a.y)/diff:0,newEnd={x:rd(line.a.x+vx*cm*sheetCmScale),y:rd(line.a.y+vy*cm*sheetCmScale)};
- if(newEnd.x<sheetBounds().xmin||newEnd.x>sheetBounds().xmax||newEnd.y<sheetBounds().ymin||newEnd.y>sheetBounds().ymax)return toast('Medida ultrapassa a folha. Reposicione o início da linha.');sheetCheckpoint();line.b=newEnd;line.cm=rd(cm);for(const linked of st.sheet2dLines){if(linked.id===line.id)continue;for(const end of ['a','b'])if(sheetDist(linked[end],old)<.6){linked[end]={...newEnd};linked.cm=null}}
+ if(newEnd.x<sheetBounds().xmin||newEnd.x>sheetBounds().xmax||newEnd.y<sheetBounds().ymin||newEnd.y>sheetBounds().ymax)return toast('Medida ultrapassa a folha. Reposicione o início da linha.');
+ const cross=sheetCross(line.a,newEnd,line.id);if(cross&&sheetDist(cross.point,newEnd)>1)return toast('Esta medida atravessa outra linha. Ajuste o comprimento para encostar na superfície.');
+ sheetCheckpoint();line.b=newEnd;line.cm=rd(cm);if(st.sheet2dFuse)for(const linked of st.sheet2dLines){if(linked.id===line.id)continue;for(const end of ['a','b'])if(sheetDist(linked[end],old)<.6){linked[end]={...newEnd};linked.cm=null}}
  st.sheet2dAnchor={...newEnd};persist();render();closeSheet();toast('Medida aplicada em centímetros.')}
 }
-function sheet2dSettings(){sheet(`<h3>Alinhamento na folha</h3><p>O alinhamento ajusta linhas próximas da horizontal/vertical e conecta extremos próximos. Não mede distâncias reais.</p><div class="sheetrow"><label>Tolerância (cm)<input type="number" min="0" max="30" step="0.5" value="${st.sheet2dSnapCm}" id="sheetSnap"></label><button class="action primary" data-sheet-modal="setSnap">Salvar</button><button class="action" data-sheet-modal="close">Fechar</button></div>`)}
+function sheet2dSettings(){sheet(`<h3>Encontro das linhas</h3><p><b>Fundir ligado:</b> une pontos e divide a linha no encontro. <b>Desligado:</b> encosta sem atravessar a borda, sem ligar as peças. Cantos 90° facilitam desenhar quadrados.</p><div class="sheetrow"><label>Tolerância para aproximar (cm)<input type="number" min="0" max="30" step="0.5" value="${st.sheet2dSnapCm}" id="sheetSnap"></label><button class="action primary" data-sheet-modal="setSnap">Salvar</button><button class="action" data-sheet-modal="close">Fechar</button></div>`)}
 function sheet2dClear(){if(!st.sheet2dLines.length){st.sheet2dAnchor=null;render();return}if(!confirm('Limpar apenas as linhas desta folha? Os dados antigos dos móveis serão preservados.'))return;sheetCheckpoint();st.sheet2dLines=[];st.sheet2dAnchor=null;st.sheet2dSelected=null;persist();render()}
 // Calculadora simples sem eval e sem alterar medições sem confirmação do usuário.
 function initializeSheet2dCalculator(){document.body.classList.add('sheet-only');const box=$('calcFloat'),area=$('sheetArea'),display=$('calcDisplay');
@@ -643,7 +712,7 @@ sc.addEventListener('wheel',e=>{e.preventDefault();if(e.shiftKey){if(st.view==='
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>b.dataset.view==='sheet2d'?(st.view='sheet2d',render()):setView(b.dataset.view)));document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));document.querySelectorAll('[data-sheet-tool]').forEach(b=>b.addEventListener('click',()=>{st.sheet2dTool=b.dataset.sheetTool;st.sheet2dAnchor=null;render()}));$('sheetNewStroke').onclick=()=>sheet2dAction('sheetNew');
 $('actionstrip').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.action){if(st.view==='sheet2d')sheet2dAction(b.dataset.action);else handleAction(b.dataset.action);}if(b.dataset.fill)fill(b.dataset.fill)});$('sheet').addEventListener('click',e=>{if(st.view==='sheet2d'&&e.target.closest('[data-sheet-modal]')){sheet2dModal(e);return;}modalClick(e)});$('undo').onclick=undo;$('options').onclick=()=>st.view==='sheet2d'?sheet2dSettings():showSettings();$('pieces').onclick=showPieces;$('newProject').onclick=()=>st.view==='sheet2d'?sheet2dClear():handleAction('empty');$('zoomIn').onclick=()=>{st.zoom=clamp(st.zoom*1.2,.55,4);render()};$('zoomOut').onclick=()=>{st.zoom=clamp(st.zoom/1.2,.55,4);render()};$('fit').onclick=()=>{st.zoom=1;if(st.view==='sheet2d'){st.sheet2dPanX=st.sheet2dPanY=0;render();persist();return;}st.orbit=.33;st.pitch=.52;st.panX=0;st.panY=0;render();persist()};
 initializeSheet2dCalculator();document.body.classList.add('sheet-only');if(new URLSearchParams(location.search).has('qa'))window.ArqueMobQA={st,render,plan,planAll,cutAudit,cutCsv,simulateSheets,validModuleWidth,withinApplianceSpace,usableModulePosition,snappedModulePosition,addEquipment,divide,fill,saveEquipment,sample,ambientCheckpoint,restoreMob,roomSave,windowAdd};
-try{const saved=JSON.parse(localStorage.getItem(saveKey)||(linkedProject?'null':localStorage.getItem('arque-mob-v04'))||'null');if(saved&&(saved.stone||saved.modules?.length||saved.sheet2dLines?.length)){['stone','base','walls','divs','shelves','fills','th','height','seq','client','project','sheetL','sheetW','offsetW','offsetD','railHeight','railRecess','modules','activeId','moduleSelection','moduleSeq','orbit','pitch','panX','panY','appliances','applianceSeq','selectedAppliance','room','caseMaterial','frontMaterial','backMaterial','sheetKerf','sheetTrim','sheet2dLines','sheet2dNextId','sheet2dAutoAlign','sheet2dSnapCm','sheet2dPanX','sheet2dPanY'].forEach(k=>{if(saved[k]!==undefined)st[k]=saved[k]});st.view='sheet2d';if(!st.modules.length)ensureModule()}}catch(err){}st.view='sheet2d';render();loadFromMeasure();
+try{const saved=JSON.parse(localStorage.getItem(saveKey)||(linkedProject?'null':localStorage.getItem('arque-mob-v04'))||'null');if(saved&&(saved.stone||saved.modules?.length||saved.sheet2dLines?.length)){['stone','base','walls','divs','shelves','fills','th','height','seq','client','project','sheetL','sheetW','offsetW','offsetD','railHeight','railRecess','modules','activeId','moduleSelection','moduleSeq','orbit','pitch','panX','panY','appliances','applianceSeq','selectedAppliance','room','caseMaterial','frontMaterial','backMaterial','sheetKerf','sheetTrim','sheet2dLines','sheet2dNextId','sheet2dAutoAlign','sheet2dSnapCm','sheet2dPanX','sheet2dPanY','sheet2dFuse','sheet2dSquare'].forEach(k=>{if(saved[k]!==undefined)st[k]=saved[k]});st.view='sheet2d';if(!st.modules.length)ensureModule()}}catch(err){}st.view='sheet2d';render();loadFromMeasure();
 $('backMeasure').onclick=async()=>{await linkedWrite;location.href='index.html'};window.ArqueAppBack=()=>{linkedWrite.then(()=>location.href='index.html');return true};
 })();
 </script></body></html>

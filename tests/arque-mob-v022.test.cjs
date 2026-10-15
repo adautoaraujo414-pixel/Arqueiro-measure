@@ -2,7 +2,7 @@
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [token,label] of [
- ["version:'0.34'",'Versão persistente'],['function validModuleWidth(', 'Validação de redimensionamento'],
+ ["version:'0.35'",'Versão persistente'],['function validModuleWidth(', 'Validação de redimensionamento'],
  ['data-resize-module=', 'Alça 3D'],["kind:'moduleResize'",'Arraste de largura'],
  ['function simulateSheets(', 'Simulação de faixas'],['function showCutSimulation(', 'Tela de simulação'],
  ['st.sheetKerf=kerf;st.sheetTrim=trim','Parâmetros de refilo/serra'],

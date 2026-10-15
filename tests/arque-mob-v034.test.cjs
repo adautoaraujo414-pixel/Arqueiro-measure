@@ -2,8 +2,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 const required=[
- ["version:'0.34'",'versão e persistência'],
- ['Folha 2D • versão 0.34','identificação na tela'],
+ ["version:'0.35'",'versão e persistência'],
+ ['Folha 2D • versão 0.35','identificação na tela'],
  ['data-sheet-tool="free"','mão livre'],
  ['data-sheet-tool="highlight"','destaque tipo marcador'],
  ["st.sheet2dTool==='free'||st.sheet2dTool==='highlight'",'escrever sem selecionar'],
@@ -47,4 +47,4 @@ assert.equal(st.sheet2dPieces.length,1,'não apagar peça sem necessidade');
 assert.equal(functions.sheetMagicEraseAt({x:999,y:999}),false,'X fora da folha não remove nada');
 assert.equal(checkpoint,2,'cada exclusão pode ser desfeita');
 assert.equal(calls,2,'cada exclusão é salva');
-console.log('Arque Mob 0.34: escrita sobreposta, marcador e X seguro preservando divisões OK');
+console.log('Arque Mob 0.35: escrita sobreposta, marcador e X seguro preservando divisões OK');

@@ -12,6 +12,6 @@ assert(s.includes('function projectedX(')&&s.includes('function projectedY('),'A
 assert(s.includes('room:st.room'),'Persistência do ambiente no projeto ausente');
 assert(s.includes('m.x+m.base.w>w'),'Validação de módulo fora da parede ausente');
 assert(s.includes('Equipamentos de referência visual'),'Equipamentos não devem entrar no corte de MDF');
-assert(s.includes("version:'0.21'")||s.includes("version:'0.20'"),'Versão incompatível');
+assert(s.includes("version:'0.22'")||s.includes("version:'0.20'"),'Versão incompatível');
 const open=s.indexOf('<script>')+8,close=s.lastIndexOf('</script>');assert(open>8&&close>open,'Script embutido não encontrado');new Function(s.slice(open,close));
 console.log('Arque Mob 0.20: ambiente real, janelas, paredes, peças 3D e persistência: OK');

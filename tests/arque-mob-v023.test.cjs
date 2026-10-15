@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
-assert(s.includes("version:'0.28'"),'Estado persistente da Folha v0.28 ausente');
+assert(s.includes("version:'0.29'"),'Estado persistente da Folha v0.29 ausente');
 assert(s.includes('data-view="sheet2d"'),'A aba única Folha 2D não existe');
 assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'A navegação 3D deve estar oculta');
 assert(s.includes('function scene3d(){'),'Código 3D não deve ser excluído do projeto');
@@ -15,4 +15,4 @@ assert(s.includes('data-calc="+"')&&s.includes('data-calc="="'),'Calculadora nã
 assert(s.includes('calcGrip')&&s.includes("box.style.left="),'Calculadora não pode ser movida');
 assert(s.includes("data-sheet-modal=\"applyCm\""),'Edição de medida numérica ausente');
 const a=s.indexOf('<script>')+8,b=s.lastIndexOf('</script>');assert(a>8&&b>a);new Function(s.slice(a,b));
-console.log('Arque Mob 0.28: 2D, cotas manuais, conexões por pontos, calculadora e preservação 3D: OK');
+console.log('Arque Mob 0.29: 2D, cotas manuais, conexões por pontos, calculadora e preservação 3D: OK');

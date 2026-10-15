@@ -1,0 +1,26 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
+const required=["version:'0.24'","sheet2dFuse:true","sheet2dSquare:true","sheet2dFuse:st.sheet2dFuse","sheet2dSquare:st.sheet2dSquare","function sheetProjection(","function sheetCross(","function sheetSnapTarget(","function sheetSplitAt(","sheetSplitAt(snap.target,end)",'data-action="sheetFuse"','data-action="sheetSquare"',"if(st.sheet2dFuse)for(const linked of st.sheet2dLines)"];
+for(const name of required)assert(s.includes(name),'Ausente: '+name);
+assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'3D deve permanecer oculto');
+assert(s.includes('function scene3d(){'),'O código 3D não pode ser apagado');
+const start=s.indexOf('<script>')+8,end=s.lastIndexOf('</script>');assert(start>8&&end>start);new Function(s.slice(start,end));
+const a=s.indexOf('function sheetProjection('),b=s.indexOf('function sheetHitLine(',a);assert(a>0&&b>a);
+let st={sheet2dLines:[],sheet2dAutoAlign:true,sheet2dSquare:true,sheet2dFuse:true,sheet2dSnapCm:8,sheet2dNextId:1};
+const clamp=(n,a,b)=>Math.max(a,Math.min(n,b)),rd=n=>Math.round(n*10)/10;
+const sheetDist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const engine=new Function('st','clamp','rd','sheetDist','sheetPoint','sheetCmScale',s.slice(a,b)+';return {sheetSnapTarget,sheetSplitAt,sheetCross};')(st,clamp,rd,sheetDist,p=>({...p}),2);
+function add(a,b){const next=engine.sheetSnapTarget(a,b);engine.sheetSplitAt(next.target,next.point);st.sheet2dLines.push({id:st.sheet2dNextId++,a:{...a},b:next.point,cm:null});return next.point}
+let p={x:170,y:170};for(const [x,y] of [[370,174],[367,350],[171,353],[169,167]])p=add(p,{x,y});
+assert.equal(st.sheet2dLines.length,4,'Retângulo deve ter quatro linhas');
+assert.deepEqual(st.sheet2dLines[0].a,st.sheet2dLines[3].b,'Retângulo deve fechar sem folgas');
+for(const l of st.sheet2dLines)assert(l.a.x===l.b.x||l.a.y===l.b.y,'Cantos precisam ser ortogonais');
+st.sheet2dLines=[];st.sheet2dNextId=1;st.sheet2dFuse=true;
+add({x:150,y:150},{x:450,y:150});add({x:300,y:290},{x:302,y:100});
+assert.equal(st.sheet2dLines.length,3,'Fundir um T deve dividir o segmento');assert.deepEqual(st.sheet2dLines[2].b,{x:300,y:150});
+st.sheet2dLines=[];st.sheet2dNextId=1;st.sheet2dFuse=false;
+add({x:150,y:150},{x:450,y:150});add({x:300,y:290},{x:302,y:100});
+assert.equal(st.sheet2dLines.length,2,'Não fundir não deve dividir segmento');
+assert.deepEqual(st.sheet2dLines[1].b,{x:300,y:150},'Sem fundir, encostar sem atravessar');
+console.log('Arque Mob v0.24: ângulos 90°, união e contato na superfície passaram.');

@@ -760,7 +760,9 @@ async function update(){await persist();render()}
 function val(id){return document.getElementById(id)?.value??''}
 function num(id){return C.mm(val(id))}
 function action(a,arg){let p=project(),r=room();switch(a){
-case'openArquePlanta':\ncase'openArqueMob':{\n const destination=a==='openArquePlanta'?'arque-planta.html':'arque-mob.html';
+case'openArquePlanta':
+case'openArqueMob':{
+ const destination=a==='openArquePlanta'?'arque-planta.html':'arque-mob.html';
  let current=p;
  if(!current){
   const raw=window.prompt('Nome do cliente para abrir o Arque Mob:','');

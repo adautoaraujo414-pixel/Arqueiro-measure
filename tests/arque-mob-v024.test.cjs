@@ -1,7 +1,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
-const required=["version:'0.27'","sheet2dFuse:true","sheet2dSquare:true","sheet2dFuse:st.sheet2dFuse","sheet2dSquare:st.sheet2dSquare","function sheetProjection(","function sheetCross(","function sheetSnapTarget(","function sheetSplitAt(","sheetSplitAt(snap.target,end)",'data-action="sheetFuse"','data-action="sheetSquare"',"if(st.sheet2dFuse)for(const linked of st.sheet2dLines)"];
+const required=["version:'0.28'","sheet2dFuse:true","sheet2dSquare:true","sheet2dFuse:st.sheet2dFuse","sheet2dSquare:st.sheet2dSquare","function sheetProjection(","function sheetCross(","function sheetSnapTarget(","function sheetSplitAt(","sheetSplitAt(snap.target,end)",'data-action="sheetFuse"','data-action="sheetSquare"',"if(st.sheet2dFuse)for(const linked of st.sheet2dLines)"];
 for(const name of required)assert(s.includes(name),'Ausente: '+name);
 assert(!s.includes('data-view="ambient"')&&!s.includes('data-view="iso"'),'3D deve permanecer oculto');
 assert(s.includes('function scene3d(){'),'O código 3D não pode ser apagado');
@@ -23,4 +23,4 @@ st.sheet2dLines=[];st.sheet2dNextId=1;st.sheet2dFuse=false;
 add({x:150,y:150},{x:450,y:150});add({x:300,y:290},{x:302,y:100});
 assert.equal(st.sheet2dLines.length,2,'Não fundir não deve dividir segmento');
 assert.deepEqual(st.sheet2dLines[1].b,{x:300,y:150},'Sem fundir, encostar sem atravessar');
-console.log('Arque Mob v0.27: ângulos 90°, união e contato na superfície passaram.');
+console.log('Arque Mob v0.28: ângulos 90°, união e contato na superfície passaram.');

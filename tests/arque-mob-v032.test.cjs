@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const s=fs.readFileSync('app/src/main/assets/arque-mob.html','utf8');
 for(const [token,meaning] of [
- ["version:'0.32'",'versão de armazenamento'],
+ ["version:'0.33'",'versão de armazenamento'],
  ['function sheetFitA4(){','ajuste automático do A4'],
  ['sheetFitA4();render();loadFromMeasure();','enquadrar ao iniciar'],
  ["$('fit').onclick=()=>{if(st.view==='sheet2d'){sheetFitA4();",'enquadramento manual'],
@@ -40,4 +40,4 @@ assert.equal(l.positionsCm.length,3);
 assert(Math.abs(l.gapCm-l.lastGapCm)<1e-6);
 assert(Math.abs(2*l.edgeCm+4*l.gapCm+3*l.dividerCm-l.spanCm)<1e-6);
 assert.throws(()=>layout({w:20,h:20,edgeCm:3},9,8,'vertical'));
-console.log('Arque Mob v0.32: A4 maximizado, lançamentos pelo OK, 4 vãos e preservação OK.');
+console.log('Arque Mob v0.33: A4 maximizado, lançamentos pelo OK, 4 vãos e preservação OK.');

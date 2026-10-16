@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f8fa"><title>ARQUE MOB — Planta Livre v0.43</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f8fa"><title>ARQUE MOB — Planta Livre v0.44</title>
 <style>
 :root{--blue:#1878a5;--ink:#243b4a;--muted:#677d8a;--line:#d7e1e8;--bg:#f3f6f8;--selected:#eea845}
 *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;color:var(--ink);background:var(--bg);font:14px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}button[disabled]{opacity:.42;cursor:default}
@@ -11,15 +11,102 @@ header{height:57px;background:white;border-bottom:1px solid var(--line);display:
 .sheet{position:absolute;bottom:58px;left:50%;transform:translateX(-50%);width:min(440px,calc(100% - 24px));background:white;border:1px solid #c9dce6;border-radius:14px;box-shadow:0 8px 35px #18384d25;padding:14px;z-index:10;display:none}.sheet.show{display:block}.sheet h3{margin:0 0 4px;font-size:15px}.sheet .sub{font-size:12px;color:var(--muted);margin-bottom:12px}.sheet label{font-size:12px;display:block;margin-bottom:4px}.sheet input{width:100%;border:1px solid #bfcfda;border-radius:9px;padding:11px;color:var(--ink);background:#fff;font-size:17px}.sheet .row{display:flex;gap:8px;justify-content:flex-end;margin-top:13px}.sheet .row .btn{flex:1}.sheet .row .strong{flex:2}.sheet .meta{color:#718692;font-size:11px;margin-top:7px}.pillbar{position:absolute;bottom:16px;left:12px;background:#ffffffef;border:1px solid #cfdfe6;border-radius:20px;display:flex;align-items:center;gap:7px;padding:7px 10px;box-shadow:0 2px 10px #29455410;font-size:11px;color:#567280}.pillbar input{accent-color:#1878a5}
 .help{display:none;position:absolute;inset:0;z-index:15;background:#122e41bd;align-items:center;justify-content:center;padding:24px}.help.show{display:flex}.help .content{max-width:490px;background:#fff;border-radius:15px;padding:22px;line-height:1.65;box-shadow:0 12px 40px #08161f44}.help .content h2{margin:0 0 8px}.help .content p{margin:6px 0}.help .content .btn{width:100%;margin-top:14px}.sinkpath{stroke:#2387b2;fill:#d5f2fd88;stroke-width:3;stroke-linejoin:miter}.cookpath{stroke:#575f65;fill:#e3e5e888;stroke-width:3;stroke-linejoin:miter}.ghostline{stroke:#eeaa43;stroke-dasharray:6 5;stroke-width:3;fill:none;pointer-events:none}.wallpath{stroke:#486e83;stroke-width:8;stroke-linecap:square;stroke-linejoin:miter;fill:none}.stonepath{stroke:#b28d64;stroke-width:4;stroke-linejoin:miter;fill:#e8d5b248}.wallpath.selected,.stonepath.selected{stroke:#f29e33}.dim{fill:#1d7299;font-size:12px;font-weight:700;paint-order:stroke;stroke:white;stroke-width:4;stroke-linejoin:round;pointer-events:none}.node{fill:#fff;stroke:#ef9d34;stroke-width:3;cursor:move}.hit{fill:none;stroke:#0000;stroke-width:32;stroke-linecap:square;stroke-linejoin:miter;cursor:pointer}.closedShade{fill:#e2eef388;stroke:none;pointer-events:none}.previewFloor{fill:#e7f0f5;stroke:#8ba9bb;stroke-width:1.5}.previewWall{fill:#b4cfdc;stroke:#638ca4;stroke-width:1.3}.previewWallSide{fill:#90b4c7;stroke:#638ca4;stroke-width:1.2}.previewStone{fill:#d9c4a0;stroke:#ad916d;stroke-width:2}.photodock{position:absolute;left:10px;top:9px;z-index:5;width:min(362px,calc(100% - 64px));background:#fffffff5;border:1px solid #cadde6;border-radius:12px;padding:9px;box-shadow:0 5px 18px #12304820}.photodock[hidden]{display:none}.phototitle{font-size:12px;font-weight:750;color:#236b8d;margin-bottom:6px}.photorow{display:flex;gap:5px;flex-wrap:wrap}.photorow button{border:1px solid #d1e1e9;border-radius:8px;background:#fff;color:#276482;font-weight:650;padding:8px;min-width:34px;min-height:37px}.photorow button.danger{color:#a74940}.photohint{font-size:11px;color:#5b7180;margin-top:5px}.photorange{display:flex;gap:6px;align-items:center;font-size:11px;color:#526e7c;margin:5px 0}.photorange input{flex:1;min-width:20px;accent-color:#1878a5}.photoHandle{stroke:#ffb54b;stroke-width:2;stroke-dasharray:9 5;fill:none;pointer-events:none}.photoActive{stroke:#ffaf38;stroke-width:2;fill:#fff}.photoHit{cursor:move}.photoLocked{stroke:#789;stroke-dasharray:5 5}
 @media(max-width:620px){header{height:53px;padding:5px 8px;gap:6px}.brand strong{font-size:13px}.brand small{font-size:9px}.btn{padding:8px}.app{grid-template-columns:57px minmax(0,1fr);height:calc(100dvh - 53px)}.tools{padding:7px 4px}.tool{min-height:63px;font-size:9px}.tool .symbol{font-size:22px}.topline{min-height:44px;padding:5px 8px}.topline .steps{font-size:12px;min-width:100px}.segments button{padding:7px}.status{min-height:47px}.status span:last-child{display:none}.hint{top:8px;left:7px;font-size:11px;padding:7px 9px}.zoom{right:7px;top:8px}.zoom button{width:34px;height:34px}.live{right:8px;bottom:10px;padding:7px 10px;min-width:82px}.live b{font-size:16px}.pillbar{left:6px;bottom:10px;padding:6px 8px}.sheet{bottom:55px}.photodock{left:6px;top:6px;width:min(302px,calc(100% - 45px))}.photohint{font-size:10px}.photorow button{padding:5px 7px;min-height:34px}}
+
+/* Arque Mob 0.44 — organização por tarefa, semelhante a ferramentas CAD de bancada */
+body{display:flex;flex-direction:column}
+header.mainheader{height:auto;min-height:57px;flex-shrink:0;flex-wrap:wrap;row-gap:5px;padding:7px 12px}
+.app{height:auto;flex:1;min-height:0;grid-template-columns:86px minmax(0,1fr)}
+.projecttag{border-left:1px solid var(--line);padding-left:12px;color:#627e8c;font-size:12px;font-weight:650;max-width:175px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.headgroup{display:flex;align-items:center;gap:3px;border:1px solid #e3eaf0;background:#f6f9fb;padding:3px;border-radius:11px}
+.headbtn{display:flex;gap:6px;align-items:center;justify-content:center;border:0;border-radius:8px;padding:8px 10px;background:transparent;color:#32586d;font-weight:700;min-height:35px;white-space:nowrap}
+.headbtn:hover,.headbtn[aria-expanded="true"]{background:#ddecf5;color:#116e99}
+.headbtn.icononly{min-width:36px;font-size:20px;padding:5px 9px}
+.headbtn:disabled{opacity:.4}
+.primary3d{min-height:39px}
+.tools{overflow-y:auto;overflow-x:hidden;gap:4px;padding:7px 5px}
+.toolgroup{border-bottom:1px solid #edf1f4;padding-bottom:7px;display:grid;gap:3px}
+.groupname{font-size:9px;text-transform:uppercase;letter-spacing:.35px;color:#7993a1;font-weight:850;text-align:center;padding:5px 0 1px}
+.tool{min-height:54px;font-size:10px;gap:1px}
+.tool .symbol{font-size:21px}
+.tool.helpTool{flex-shrink:0}
+.utilitypanel{position:absolute;top:65px;right:12px;z-index:40;width:min(365px,calc(100vw - 20px));max-height:min(76vh,600px);overflow:auto;background:white;border:1px solid #cbdfe8;border-radius:14px;box-shadow:0 15px 42px #16344830;padding:14px}
+.utilitypanel[hidden]{display:none}
+.paneltitle{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#244d63;margin-bottom:11px;font-size:14px}
+.panelclose{background:#f0f5f8;border:0;border-radius:7px;width:32px;height:32px;font-size:23px;color:#516b7a}
+.utilitypanel input{width:100%;border:1px solid #c9d9e3;border-radius:10px;padding:11px;font-size:16px;color:#243b4a}
+.panelnote{font-size:11px;color:#78909d;margin:8px 0}
+.searchresults{display:grid;gap:5px;max-height:45vh;overflow:auto}
+.searchresult{display:flex;justify-content:space-between;gap:8px;align-items:center;text-align:left;border:1px solid #e2ebf0;border-radius:10px;background:#f9fbfc;padding:10px;color:#2b5266}
+.searchresult b{font-size:13px}.searchresult small{font-size:11px;color:#6d8591}
+.searchresult:active{background:#d9edf7}
+.calcLabel{font-size:11px;color:#647f8e}
+#calcOutput{display:block;text-align:right;font-size:27px;font-weight:800;color:#116f9a;min-height:40px;padding:4px 0}
+.calcgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.calcgrid button{height:43px;border:1px solid #d7e4ea;border-radius:9px;background:#f7fafb;color:#2c586d;font-size:18px}
+.calcgrid button.operator{background:#e9f4fa;color:#13749f;font-weight:750}
+.calcactions{display:flex;gap:7px;margin-top:10px}
+.calcactions button{flex:1;min-height:42px;border-radius:9px;border:1px solid #d7e4ea;background:#f7fafb;color:#315e72;font-weight:700}
+.calcactions button.strong{background:var(--blue);color:white;border-color:var(--blue)}
+.calcactions button:disabled{opacity:.45}
+@media(max-width:620px){
+ header.mainheader{height:auto;min-height:55px;gap:5px;padding:5px 7px}
+ header.mainheader .brand small{display:none}
+ .projecttag{display:none}
+ .headbtn{padding:7px 8px;min-height:33px;font-size:12px}
+ .headbtn span{display:none}
+ .primary3d{padding:8px 9px;min-height:35px}
+ .primary3d span{display:inline}
+ .app{height:auto;grid-template-columns:64px minmax(0,1fr)}
+ .tools{padding:5px 3px;gap:2px}
+ .tool{min-height:49px;font-size:9px}
+ .tool .symbol{font-size:19px}
+ .groupname{font-size:8px}
+ .utilitypanel{top:98px;right:6px;width:min(350px,calc(100vw - 12px))}
+}
+@media(max-height:600px){.tools .tool{min-height:44px}.tools .groupname{padding:2px 0}}
 </style></head><body>
-<header><div class="mark">A</div><div class="brand"><strong>ARQUE MOB</strong><small>Planta livre · v0.43</small></div><div class="grow"></div><button class="btn" id="undo" aria-label="Desfazer" title="Desfazer">↶</button><button class="btn" id="redo" aria-label="Refazer" title="Refazer">↷</button><button class="btn" id="openMenu" aria-label="Menu do projeto">☰</button><button class="btn strong" id="make3d">Gerar 3D</button></header>
-<div class="app"><nav class="tools" aria-label="Ferramentas de desenho"><button class="tool on" data-tool="wall"><span class="symbol">✎</span>Parede</button><button class="tool" data-tool="stone"><span class="symbol">▱</span>Pedra</button><button class="tool" data-tool="sink"><span class="symbol">▣</span>Cuba</button><button class="tool" data-tool="cooktop"><span class="symbol">▦</span>Cooktop</button><button class="tool" data-tool="photo"><span class="symbol">▧</span>Foto</button><button class="tool" data-tool="select"><span class="symbol">⌖</span>Editar</button><button class="tool" data-tool="erase"><span class="symbol">⌫</span>Apagar</button><div class="push"></div><button class="tool" id="helpBtn"><span class="symbol">?</span>Ajuda</button></nav>
+<header class="mainheader">
+ <div class="mark">A</div><div class="brand"><strong>ARQUE MOB</strong><small>Planta técnica · v0.44</small></div>
+ <div class="projecttag" title="Ambiente em edição">▤ <span id="projectName">Ambiente</span></div><div class="grow"></div>
+ <div class="headgroup" aria-label="Localizar e calcular">
+ <button class="headbtn" id="openSearch" aria-label="Buscar elementos" title="Buscar elementos">⌕ <span>Buscar</span></button>
+ <button class="headbtn" id="openCalc" aria-label="Abrir calculadora" title="Calculadora">▦ <span>Calculadora</span></button></div>
+ <div class="headgroup" aria-label="Histórico"><button class="headbtn icononly" id="undo" aria-label="Desfazer" title="Desfazer">↶</button><button class="headbtn icononly" id="redo" aria-label="Refazer" title="Refazer">↷</button></div>
+ <button class="headbtn" id="openMenu" aria-label="Opções do projeto" title="Projeto">☰ <span>Projeto</span></button>
+ <button class="btn strong primary3d" id="make3d">▣ <span>Gerar 3D</span></button>
+</header>
+<div class="utilitypanel" id="searchPanel" hidden role="dialog" aria-label="Buscar no ambiente">
+ <div class="paneltitle"><strong>⌕ Buscar no projeto</strong><button class="panelclose" data-closepanel aria-label="Fechar busca">×</button></div>
+ <input id="searchInput" type="search" placeholder="Parede, pedra, cuba, cooktop, foto…" autocomplete="off">
+ <div class="panelnote">Toque no resultado para localizar na planta.</div>
+ <div id="searchResults" class="searchresults" aria-live="polite"></div></div>
+ <div class="utilitypanel" id="calcPanel" hidden role="dialog" aria-label="Calculadora de medidas">
+ <div class="paneltitle"><strong>▦ Calculadora de medidas</strong><button class="panelclose" data-closepanel aria-label="Fechar calculadora">×</button></div>
+ <label class="calcLabel" for="calcInput">Conta em centímetros</label>
+ <input id="calcInput" inputmode="decimal" type="text" placeholder="Ex.: (200 - 7) / 2" autocomplete="off">
+ <output id="calcOutput">—</output>
+ <div class="calcgrid" id="calcKeys"></div>
+ <div class="calcactions"><button id="calcClear">Limpar</button><button id="calcApply" class="strong" disabled>Usar na medida</button></div>
+ <div class="panelnote">Use +, −, ×, ÷ e parênteses. Resultado em cm.</div></div><div class="app"><nav class="tools" aria-label="Ferramentas organizadas por área">
+ <div class="toolgroup"><div class="groupname">Estrutura</div>
+ <button class="tool on" data-tool="wall"><span class="symbol">▥</span>Parede</button>
+ <button class="tool" data-tool="stone"><span class="symbol">▱</span>Pedra</button></div>
+ <div class="toolgroup"><div class="groupname">Equipamentos</div>
+ <button class="tool" data-tool="sink"><span class="symbol">▣</span>Cuba</button>
+ <button class="tool" data-tool="cooktop"><span class="symbol">▦</span>Cooktop</button></div>
+ <div class="toolgroup"><div class="groupname">Folha</div>
+ <button class="tool" data-tool="photo"><span class="symbol">▧</span>Foto</button></div>
+ <div class="toolgroup"><div class="groupname">Edição</div>
+ <button class="tool" data-tool="select"><span class="symbol">⌖</span>Editar</button>
+ <button class="tool" data-tool="erase"><span class="symbol">⌫</span>Apagar</button></div>
+ <div class="push"></div><button class="tool helpTool" id="helpBtn"><span class="symbol">?</span>Ajuda</button>
+ </nav>
 <main class="work"><div class="topline"><span class="steps" id="step">1. Desenhe as paredes como quiser</span><div class="segments"><button data-view="plan" class="on">Planta 2D</button><button data-view="iso">3D</button></div></div><div class="board" id="board"><svg id="drawing" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prancheta em branco para desenhar paredes ou bancada em qualquer formato"></svg><div class="hint" id="hint"><strong>Toque e arraste</strong> com o dedo ou a S Pen. A planta começa vazia.</div><div class="photodock" id="photoDock" hidden><div class="phototitle">Foto na folha · sem reduzir arquivo</div><div class="photorow"><button type="button" id="choosePhoto">＋ Foto</button><button type="button" id="photoMinus" title="Diminuir foto">−</button><button type="button" id="photoPlus" title="Aumentar foto">＋</button><button type="button" id="photoLock">🔓</button><button type="button" id="photoDelete" class="danger">Excluir</button></div><div class="photohint">Toque e arraste para mover. Pinça com dois dedos na foto para redimensionar.</div><label class="photorange">Transparência <input type="range" id="photoOpacity" min="20" max="100" value="80" step="5"></label><div class="photorow"><button type="button" id="photoOriginal">Salvar original</button><button type="button" id="photoSize">Largura em cm</button><button type="button" id="checkGeometry">Conferir cantos</button></div></div><input id="photoFile" type="file" accept="image/*" hidden><div class="zoom"><button id="zoomIn" aria-label="Ampliar">+</button><button id="zoomOut" aria-label="Diminuir">−</button><button id="fit" aria-label="Enquadrar desenho">⌗</button></div><div class="pillbar" id="snapWrap"><label><input type="checkbox" id="snap" checked disabled> Linhas retas obrigatórias (90°)</label></div><div class="live"><small id="liveLabel">Comprimento</small><b id="liveNumber">—</b></div><div class="sheet" id="sheet"><h3 id="sheetTitle">Editar</h3><div class="sub" id="sheetSubtitle">Toque na medida ou em um trecho.</div><label id="measureLabel" for="measure">Medida em centímetros</label><input id="measure" type="number" min="1" max="5000" step="0.1" inputmode="decimal"><div class="meta" id="sheetMeta"></div><div class="row"><button class="btn warn" id="deleteElement">Excluir</button><button class="btn" id="closeSheet">Cancelar</button><button class="btn strong" id="applyMeasure">Aplicar</button></div></div><div class="help" id="help"><div class="content"><h2>Você desenha. O Arque acompanha.</h2><p><b>1.</b> Escolha Parede e faça um traço contínuo, de qualquer formato. Pode ser L, U ou outro contorno com cantos de 90°. Não há curvas.</p><p><b>2.</b> Risque outra parede se desejar. Toque em <b>Editar</b> e num segmento para definir a medida exata.</p><p><b>3.</b> Toque em <b>Gerar 3D</b>. Só aparecem as paredes que você desenhou.</p><p><b>4.</b> Para a bancada, toque em <b>Pedra</b> e desenhe o contorno. Use Cuba ou Cooktop para inserir sobre a planta. Para colocar uma foto, toque em Foto, escolha a imagem e arraste ou use dois dedos para redimensionar. A foto original fica salva sem compressão. Não existem ambientes ou móveis pré-montados.</p><p><b>5.</b> Se necessário, toque em ⌗ para enquadrar. O projeto é salvo automaticamente neste navegador.</p><button class="btn strong" id="closeHelp">Entendi</button></div></div></div><div class="status"><span id="statusText">Folha vazia. Puxe o dedo para desenhar sua primeira parede.</span><strong id="counter">0 paredes · 0 pedras</strong></div></main></div>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),svgns='http://www.w3.org/2000/svg';
-const params=new URLSearchParams(location.search),projectId=params.get('project')||'',roomId=params.get('room')||'principal',saveKey='arque-planta-livre-v043:'+(projectId||'local')+':'+roomId,legacyKeys=[41,40,39,38,37,36].map(n=>'arque-planta-livre-v0'+n+':'+(projectId||'local')+':'+roomId),scopeKey=(projectId||'local')+':'+roomId;
-const initial=()=>({version:43,paths:[],photos:[],seq:1,wallHeight:260});
+const params=new URLSearchParams(location.search),projectId=params.get('project')||'',roomId=params.get('room')||'principal',saveKey='arque-planta-livre-v044:'+(projectId||'local')+':'+roomId,legacyKeys=[43,42,41,40,39,38,37,36].map(n=>'arque-planta-livre-v0'+n+':'+(projectId||'local')+':'+roomId),scopeKey=(projectId||'local')+':'+roomId;
+const initial=()=>({version:44,paths:[],photos:[],seq:1,wallHeight:260});
 let photoURLs=new Map(),selectedPhoto=null,photoPointer=null,st=initial(),mode='wall',view='plan',active=null,pointer=null,edit=null,selected=null,undoStack=[],redoStack=[],camera={x:0,y:0,w:680,h:420},touches=new Map(),gesture=null,dbWrite=Promise.resolve();
 const fmt=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:1}),rnd=n=>Math.round(n*10)/10,dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const nsvg=(tag,attrs={},text)=>{const el=document.createElementNS(svgns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,String(v));if(text!==undefined)el.textContent=text;return el};
@@ -151,7 +238,7 @@ for(const {path,walls} of sorted){const pts=path.pts;if(path.closed&&path.type==
 function render(){const svg=$('drawing');svg.innerHTML='';const b=$('board'),ratio=b.clientHeight/Math.max(1,b.clientWidth);camera.h=camera.w*ratio;svg.setAttribute('viewBox',view==='plan'?`${camera.x} ${camera.y} ${camera.w} ${camera.h}`:'0 0 1000 650');svg.setAttribute('preserveAspectRatio','none');if(view==='plan')renderPlan(svg);else renderIso(svg);
 const walls=st.paths.filter(x=>x.type==='wall').length,stones=st.paths.filter(x=>x.type==='stone').length,extras=st.paths.filter(x=>x.type==='sink'||x.type==='cooktop').length;$('counter').textContent=walls+' parede'+(walls===1?'':'s')+' · '+stones+' pedra'+(stones===1?'':'s')+' · '+extras+' equipamento'+(extras===1?'':'s');$('step').textContent=view==='iso'?'Ambiente 3D construído a partir do seu desenho':walls?'Desenhe as paredes, edite as medidas e exporte no menu':'1. Desenhe as paredes como quiser';$('hint').style.display=view==='iso'||mode==='photo'?'none':'block';$('photoDock').hidden=view!=='plan'||mode!=='photo';const cp=currentPhoto();$('photoOpacity').disabled=!cp||cp.locked;$('photoOpacity').value=Math.round((cp?.opacity??.8)*100);for(const name of ['photoMinus','photoPlus','photoLock','photoDelete','photoOriginal','photoSize'])$(name).disabled=!cp;$('photoLock').textContent=cp?.locked?'🔒':'🔓';$('snapWrap').style.display=view==='plan'?'flex':'none';$('liveLabel').textContent=active?'Desenhando agora':view==='iso'?'Altura das paredes':'Comprimento';$('liveNumber').textContent=active&&active.pts.length>=2?fmt(active.pts.slice(1).reduce((n,p,i)=>n+dist(p,active.pts[i]),0))+' cm':view==='iso'?fmt(st.wallHeight)+' cm':'—';document.querySelectorAll('[data-view]').forEach(e=>e.classList.toggle('on',e.dataset.view===view));document.querySelectorAll('[data-tool]').forEach(e=>e.classList.toggle('on',e.dataset.tool===mode));updateHistory()}
 function persist(){try{localStorage.setItem(saveKey,JSON.stringify(st))}catch(e){sendStatus('Não foi possível salvar no navegador. Exporte seu desenho.')};if(projectId){dbWrite=dbWrite.then(async()=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('arque_measure_local',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('store'))r.result.createObjectStore('store')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});const snap=clone();await new Promise((resolve,reject)=>{const tx=db.transaction('store','readwrite');const store=tx.objectStore('store');const q=store.get('state');q.onsuccess=()=>{const data=q.result;if(data?.projects){const project=data.projects.find(p=>p.id===projectId);if(project){project.arquePlantaLivreByRoom??={};project.arquePlantaLivreByRoom[roomId]=snap;store.put(data,'state')}}};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});db.close()}).catch(()=>{sendStatus('Desenho salvo neste navegador. Sincronização com o cliente indisponível.')})}}
-async function restore(){try{let raw=localStorage.getItem(saveKey)||legacyKeys.map(k=>localStorage.getItem(k)).find(Boolean);if(raw){let obj=JSON.parse(raw);if([36,37,38,39,40,41,42,43].includes(obj?.version)&&Array.isArray(obj.paths)){st={...initial(),...obj,version:43,photos:Array.isArray(obj.photos)?obj.photos:[]};sendStatus('Desenho salvo carregado.');cameraFit()}}}catch(e){}if(projectId){try{const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('arque_measure_local',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('store'))q.result.createObjectStore('store')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});const s=await new Promise(resolve=>{const q=db.transaction('store','readonly').objectStore('store').get('state');q.onsuccess=()=>resolve(q.result);q.onerror=()=>resolve(null)});db.close();const saved=s?.projects?.find(p=>p.id===projectId)?.arquePlantaLivreByRoom?.[roomId];if([36,37,38,39,40,41,42,43].includes(saved?.version)){st={...initial(),...saved,version:43,photos:Array.isArray(saved.photos)?saved.photos:[]};cameraFit()}}catch(e){}}for(const p of st.photos||[])await loadPhotoBlob(p.id);render()}
+async function restore(){try{let raw=localStorage.getItem(saveKey)||legacyKeys.map(k=>localStorage.getItem(k)).find(Boolean);if(raw){let obj=JSON.parse(raw);if([36,37,38,39,40,41,42,43,44].includes(obj?.version)&&Array.isArray(obj.paths)){st={...initial(),...obj,version:44,photos:Array.isArray(obj.photos)?obj.photos:[]};sendStatus('Desenho salvo carregado.');cameraFit()}}}catch(e){}if(projectId){try{const db=await new Promise((resolve,reject)=>{const q=indexedDB.open('arque_measure_local',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('store'))q.result.createObjectStore('store')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});const s=await new Promise(resolve=>{const q=db.transaction('store','readonly').objectStore('store').get('state');q.onsuccess=()=>resolve(q.result);q.onerror=()=>resolve(null)});db.close();const saved=s?.projects?.find(p=>p.id===projectId)?.arquePlantaLivreByRoom?.[roomId];if([36,37,38,39,40,41,42,43,44].includes(saved?.version)){st={...initial(),...saved,version:44,photos:Array.isArray(saved.photos)?saved.photos:[]};cameraFit()}}catch(e){}}for(const p of st.photos||[])await loadPhotoBlob(p.id);render()}
 // A single closed polygon has one logical vertex per corner. No duplicated
 // endpoint or hanging finishing segment is accepted.
 function cleanContour(input,closed){
@@ -250,6 +337,72 @@ function pointerMove(ev){if(touches.has(ev.pointerId))touches.set(ev.pointerId,{
 function pointerUp(ev){touches.delete(ev.pointerId);if(gesture){if(touches.size<2){if(gesture.photo&&gesture.saved)persist();gesture=null}pointer=null;render();return}if(!pointer||pointer.id!==ev.pointerId)return;if(pointer.origin?.kind==='photo'){const cp=currentPhoto();if(cp){const start=pointer.origin;const after={x:cp.x,y:cp.y};cp.x=start.x;cp.y=start.y;checkpoint();cp.x=after.x;cp.y=after.y;persist();sendStatus('Foto reposicionada sem alterar seus pixels.');render()}}else if(active){const end=pos(ev);if(dist(active.raw.at(-1),end)>1)active.raw.push(end);active.pts=['sink','cooktop'].includes(active.type)?accessoryBox(active.raw):orthogonal(active.raw);addCompleted()}else if(pointer.origin?.kind==='maybeSegment'&&!pointer.origin.moved&&mode==='select')openMeasure(pointer.origin.id,pointer.origin.index);else if(pointer.origin?.kind==='maybeSegment'&&pointer.origin.moved){if(checkpointRollback(pointer.origin)){persist();sendStatus('Peça movida.');}render()}else if(pointer.origin?.kind==='node'){if(checkpointRollback(pointer.origin)){persist();sendStatus('Ponto ajustado.');}render()}pointer=null}
 function checkpointRollback(info){if(!info?.pts)return false;const x=st.paths.find(x=>x.id===info.id);if(!x)return false;const after=x.pts.map(p=>({...p}));const issues=geometryIssues();if(issues.length){x.pts=info.pts.map(p=>({...p}));sendStatus('Encontro inválido, alteração cancelada: '+issues[0]);return false}x.pts=info.pts.map(p=>({...p}));checkpoint();x.pts=after;return true}
 function zoom(factor){const cx=camera.x+camera.w/2,cy=camera.y+camera.h/2;camera.w=clamp(camera.w*factor,90,4000);camera.h=camera.w*$('board').clientHeight/Math.max($('board').clientWidth,1);camera.x=cx-camera.w/2;camera.y=cy-camera.h/2;render()}
+
+// Busca, calculadora e agrupamento do cabeçalho. Não alteram a geometria.
+const panelIds=['searchPanel','calcPanel'];
+function closeUtilities(){for(const id of panelIds)$(id).hidden=true;for(const id of ['openSearch','openCalc'])$(id).setAttribute('aria-expanded','false')}
+function toggleUtility(id,trigger){const opening=$(id).hidden;closeUtilities();$(id).hidden=!opening;$(trigger).setAttribute('aria-expanded',String(opening));if(opening){if(id==='searchPanel'){updateSearch();$('searchInput').focus()}else{$('calcInput').focus();updateCalc()}}}
+$('openSearch').onclick=()=>toggleUtility('searchPanel','openSearch');
+$('openCalc').onclick=()=>toggleUtility('calcPanel','openCalc');
+document.querySelectorAll('[data-closepanel]').forEach(b=>b.onclick=closeUtilities);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeUtilities()});
+$('projectName').textContent=roomId==='principal'?'Ambiente principal':roomId.slice(0,25);
+const typeLabels={wall:'Parede',stone:'Pedra',sink:'Cuba',cooktop:'Cooktop'};
+function centerItem(pts){if(!pts.length)return;const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);const mx=(Math.min(...xs)+Math.max(...xs))/2,my=(Math.min(...ys)+Math.max(...ys))/2;camera.x=mx-camera.w/2;camera.y=my-camera.h/2}
+function updateSearch(){
+ const q=$('searchInput').value.trim().toLocaleLowerCase('pt-BR'),root=$('searchResults');root.replaceChildren();
+ const items=st.paths.map((p,i)=>({kind:'path',id:p.id,label:(typeLabels[p.type]||'Elemento')+' '+(i+1),detail:p.pts?.length+' pontos',pts:p.pts||[]}));
+ for(const [i,p] of (st.photos||[]).entries())items.push({kind:'photo',id:p.id,label:'Foto '+(i+1),detail:'Imagem original',pts:[{x:p.x,y:p.y},{x:p.x+p.width,y:p.y+p.height}]});
+ const results=items.filter(p=>(p.label+' '+p.detail).toLocaleLowerCase('pt-BR').includes(q));
+ if(!results.length){const empty=document.createElement('div');empty.className='panelnote';empty.textContent='Nenhum elemento encontrado nesta folha.';root.appendChild(empty);return}
+ for(const item of results){
+ const b=document.createElement('button');b.className='searchresult';b.type='button';
+ const label=document.createElement('b');label.textContent=item.label;const detail=document.createElement('small');detail.textContent=item.detail;
+ b.append(label,detail);
+ b.onclick=()=>{
+   closeUtilities();if(view!=='plan')newView('plan');
+   if(item.kind==='photo'){mode='photo';selectedPhoto=item.id}else{mode='select';selected=item.id}
+   centerItem(item.pts);render();sendStatus(item.label+' localizado. Use Editar para alterar a medida.');
+ };
+ root.appendChild(b)
+ }
+}
+$('searchInput').addEventListener('input',updateSearch);
+function calculate(input){
+ const str=input.replaceAll(',','.').replaceAll('×','*').replaceAll('÷','/').replace(/\s+/g,'');
+ if(!str||str.length>100||/[^0-9.+\-*/()]/.test(str))return null;
+ const tokens=str.match(/(?:\d+(?:\.\d*)?|\.\d+|[()+\-*/])/g);
+ if(!tokens||tokens.join('')!==str)return null;
+ let i=0;
+ function atom(){
+  const t=tokens[i++];
+  if(t==='+'||t==='-'){const v=atom();return t==='-'?-v:v}
+  if(t==='('){const v=sum();if(tokens[i++]!==')')throw Error('parêntese');return v}
+  if(!t||!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(t))throw Error('número');
+  return Number(t)
+ }
+ function mul(){let v=atom();while(tokens[i]==='*'||tokens[i]==='/'){const op=tokens[i++],b=atom();v=op==='*'?v*b:v/b}return v}
+ function sum(){let v=mul();while(tokens[i]==='+'||tokens[i]==='-'){const op=tokens[i++],b=mul();v=op==='+'?v+b:v-b}return v}
+ try{const result=sum();return i===tokens.length&&Number.isFinite(result)&&Math.abs(result)<=1e8?result:null}catch(e){return null}
+}
+let calcValue=null;
+function updateCalc(){calcValue=calculate($('calcInput').value);$('calcOutput').textContent=calcValue===null?'—':fmt(Math.round(calcValue*1000)/1000)+' cm';$('calcApply').disabled=calcValue===null||calcValue<1||calcValue>5000}
+const keys=['7','8','9','÷','4','5','6','×','1','2','3','−','(', '0',')','+','.','⌫','=','C'];
+for(const key of keys){
+ const b=document.createElement('button');b.type='button';b.textContent=key;if('÷×−+'.includes(key))b.className='operator';
+ b.onclick=()=>{const inp=$('calcInput');if(key==='C')inp.value='';else if(key==='⌫')inp.value=inp.value.slice(0,-1);else if(key!=='=')inp.value+=key;updateCalc()};
+ $('calcKeys').appendChild(b)
+}
+$('calcInput').addEventListener('input',updateCalc);
+$('calcClear').onclick=()=>{$('calcInput').value='';updateCalc()};
+$('calcApply').onclick=()=>{
+ if(calcValue===null)return;
+ const measure=$('measure');measure.value=String(Math.round(calcValue*100)/100);
+ if(edit&&$('sheet').classList.contains('show')){closeUtilities();sendStatus('Resultado enviado à medida. Toque em Aplicar para alterar a geometria.')}
+ else{closeUtilities();mode='select';newView('plan');render();sendStatus('Resultado '+fmt(calcValue)+' cm. Selecione um trecho em Editar para aplicar a medida.')}
+};
+window.ArqueToolsV044={calculate,updateSearch,closeUtilities};
+
 $('drawing').addEventListener('pointerdown',ev=>{try{$('drawing').setPointerCapture(ev.pointerId)}catch(e){}pointerDown(ev)});$('drawing').addEventListener('pointermove',pointerMove);$('drawing').addEventListener('pointerup',pointerUp);$('drawing').addEventListener('pointercancel',ev=>{touches.delete(ev.pointerId);active=null;pointer=null;gesture=null;render()});
 document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{mode=b.dataset.tool;newView('plan');sendStatus(mode==='photo'?'Toque em + Foto, posicione e aumente ou diminua sem comprimir o original.':mode==='wall'?'Desenhe uma parede livremente.':mode==='stone'?'Desenhe a bancada com cantos de 90°.' : mode==='sink'?'Arraste para desenhar a cuba retangular.':mode==='cooktop'?'Arraste para posicionar o cooktop retangular.':mode==='select'?'Toque na parede para medir, ou arraste para mover.':'Toque no traço que deseja apagar.');render()});document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>newView(b.dataset.view));$('make3d').onclick=()=>newView('iso');$('undo').onclick=()=>{if(!undoStack.length)return;redoStack.push(clone());st=undoStack.pop();selected=null;persist();render()};$('redo').onclick=()=>{if(!redoStack.length)return;undoStack.push(clone());st=redoStack.pop();selected=null;persist();render()};$('zoomIn').onclick=()=>zoom(.75);$('zoomOut').onclick=()=>zoom(1.35);$('fit').onclick=cameraFit;$('closeSheet').onclick=()=>{$('sheet').classList.remove('show');edit=null};$('applyMeasure').onclick=applyMeasurement;$('deleteElement').onclick=()=>{if(!edit)return;checkpoint();st.paths=st.paths.filter(p=>p.id!==edit.id);$('sheet').classList.remove('show');edit=null;selected=null;persist();render()};$('helpBtn').onclick=()=>$('help').classList.add('show');$('closeHelp').onclick=()=>$('help').classList.remove('show');
 

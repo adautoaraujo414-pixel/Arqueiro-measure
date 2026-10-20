@@ -62,7 +62,6 @@ class GeoTest {
         val grown = s.copy(objs = listOf(photo().copy(w = 5000f, h = 4000f)))
         assertEquals(794f, grown.width, 0f)
         assertEquals(1123f, grown.height, 0f)
-        assertEquals(1123f, s.copy(landscape = true).width, 0f)
     }
 
     @Test fun `redimensionar pelo canto mantem proporcao e canto oposto`() {

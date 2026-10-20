@@ -132,6 +132,43 @@ object Straighten {
                 }
             }
         }
+
+        // 4) une segmentos que ficaram na mesma linha (ponta solta): uma reta = uma medida só
+        var merged = true
+        while (merged) {
+            merged = false
+            val m = pts.size
+            if (m <= (if (closed) 3 else 2)) break
+            val range = if (closed) 0 until m else 1 until m - 1
+            for (i in range) {
+                val p0 = pts[(i - 1 + m) % m]
+                val p1 = pts[i]
+                val p2 = pts[(i + 1) % m]
+                val a1 = axisOf(p0, p1, snapDeg)
+                val a2 = axisOf(p1, p2, snapDeg)
+                val sameAxis = a1 != null && a1 == a2
+                val d1 = atan2((p1.y - p0.y).toDouble(), (p1.x - p0.x).toDouble())
+                val d2 = atan2((p2.y - p1.y).toDouble(), (p2.x - p1.x).toDouble())
+                var turn = Math.toDegrees(abs(d2 - d1))
+                if (turn > 180.0) turn = 360.0 - turn
+                val straight = turn < snapDeg || perpDist(p1, p0, p2) < eps
+                if (sameAxis || straight) {
+                    pts.removeAt(i)
+                    merged = true
+                    break
+                }
+            }
+        }
+        // encaixa a reta unida exatamente na horizontal/vertical
+        for (i in 0 until pts.size) {
+            val j = (i + 1) % pts.size
+            if (j == 0) break
+            when (axisOf(pts[i], pts[j], snapDeg)) {
+                Axis.H -> pts[j] = Pt(pts[j].x, pts[i].y)
+                Axis.V -> pts[j] = Pt(pts[i].x, pts[j].y)
+                null -> {}
+            }
+        }
         return Result(pts.toList(), closed)
     }
 }

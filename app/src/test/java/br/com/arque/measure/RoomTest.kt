@@ -31,6 +31,22 @@ class RoomTest {
         assertEquals(4, r.pts.size)
     }
 
+    @Test fun mergesCollinearPointInClosedL() {
+        // L fechado; o lado de cima tem uma "ponta solta" com leve quebra no fim
+        val raw = mutableListOf<Pt>()
+        for (i in 0..14) raw += Pt(100f + i * 20f, 100f)          // topo até x=380
+        for (i in 1..4) raw += Pt(380f + i * 10f, 100f + i * 1f)  // continua quase reto
+        for (i in 1..8) raw += Pt(420f, 104f + i * 12f)           // desce
+        for (i in 1..12) raw += Pt(420f - i * 15f, 200f)          // volta
+        for (i in 1..8) raw += Pt(240f, 200f + i * 12f)           // desce
+        for (i in 1..7) raw += Pt(240f - i * 20f, 296f)           // volta
+        for (i in 1..9) raw += Pt(100f, 296f - i * 21.7f)         // sobe
+        raw += Pt(101f, 101f)
+        val r = Straighten.run(raw)!!
+        assertTrue(r.closed)
+        assertEquals(6, r.pts.size)
+    }
+
     @Test fun tinyStrokeIgnored() {
         assertNull(Straighten.run(listOf(Pt(0f, 0f), Pt(3f, 3f))))
     }

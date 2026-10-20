@@ -34,6 +34,14 @@ import kotlin.math.sin
  * Desenha a folha em um android.graphics.Canvas. Usado na tela e na exportação (PDF/PNG),
  * então o que se vê é exatamente o que se exporta. Coordenadas: unidades de folha.
  */
+/** Cor de cada tipo de segmento (parede usa a cor do cômodo). */
+fun roomSegColor(o: RoomObj, kind: SegKind): Int = when (kind) {
+    SegKind.WALL -> o.color
+    SegKind.PANEL -> 0xFF8E44AD.toInt()
+    SegKind.SINK -> 0xFF1E88E5.toInt()
+    SegKind.BASIN -> 0xFF00A88F.toInt()
+}
+
 class SheetRenderer(private val images: (String) -> Bitmap?) {
     private val paperFill = Paint().apply { color = 0xFFFFFFFF.toInt() }
     private val paperShadow = Paint().apply { color = 0x33000000 }
@@ -310,14 +318,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
     }
 
     /** Cor de cada tipo de segmento (parede usa a cor do cômodo). */
-    fun segColorOf(o: RoomObj, kind: SegKind): Int = segColor(o, kind)
-
-    fun segColor(o: RoomObj, kind: SegKind): Int = when (kind) {
-        SegKind.WALL -> o.color
-        SegKind.PANEL -> 0xFF8E44AD.toInt()
-        SegKind.SINK -> 0xFF1E88E5.toInt()
-        SegKind.BASIN -> 0xFF00A88F.toInt()
-    }
+    fun segColor(o: RoomObj, kind: SegKind): Int = roomSegColor(o, kind)
 
     /**
      * Contorno de cômodo. Parede: linha cheia. Painel: tracejada. Pia: faixa larga translúcida

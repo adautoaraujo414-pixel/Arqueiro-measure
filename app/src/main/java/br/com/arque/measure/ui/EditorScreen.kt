@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.CropSquare
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitScreen
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NearMe
@@ -680,7 +681,7 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                     kinds.forEach { kd ->
                         val on = seg.kind == kd
-                        val col = Color(SheetRenderer.segColorOf(r, kd))
+                        val col = Color(roomSegColor(r, kd))
                         Box(
                             Modifier.clip(RoundedCornerShape(16.dp))
                                 .background(if (on) col else Color(0xFFEFEFEF))

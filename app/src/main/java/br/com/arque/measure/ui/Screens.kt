@@ -336,10 +336,15 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta) {
             .clickable(enabled = !trash) { vm.openNote(n.id) }.padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val thumb = remember(n.id, vm.thumbVersion, n.pageCount, n.dimCount) { vm.loadThumb(n.id) }
         Box(
             Modifier.size(width = 56.dp, height = 76.dp).clip(RoundedCornerShape(4.dp)).background(Color.White)
                 .border(BorderStroke(1.dp, Ui.line), RoundedCornerShape(4.dp)),
-        )
+        ) {
+            if (thumb != null) {
+                androidx.compose.foundation.Image(thumb, null, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+            }
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

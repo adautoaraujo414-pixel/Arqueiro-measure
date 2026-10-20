@@ -183,6 +183,20 @@ class EditorState(
         select(dupId)
     }
 
+    /** Cola objetos copiados (foto leva suas anotações) na folha ativa, com novos ids e deslocamento. */
+    fun pasteObjs(src: List<Obj>) {
+        if (src.isEmpty()) return
+        val idMap = src.associate { it.id to newId() }
+        val copies = src.map { o ->
+            val n = o.withId(idMap.getValue(o.id)).withLocked(false)
+            val moved = if (n is PhotoObj) n.copy(cx = n.cx + 24f, cy = n.cy + 24f) else n
+            val pid = (moved as? Ann)?.photoId
+            if (moved is Ann && pid != null && idMap.containsKey(pid)) moved.withPhotoId(idMap.getValue(pid)) else moved
+        }
+        commit(sheet.copy(objs = sheet.objs + copies))
+        select(copies.first().id)
+    }
+
     /** Camadas: sobe/desce uma posição na ordem de desenho. */
     fun reorder(id: String, up: Boolean) {
         val i = sheet.objs.indexOfFirst { it.id == id }

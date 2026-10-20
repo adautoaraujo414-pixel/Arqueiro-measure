@@ -10,9 +10,13 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothStatusCodes
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -112,11 +116,16 @@ class BoschBle(private val context: Context) {
 
     // ---- varredura ----
 
+    private var scanAll = false
+
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val name = result.scanRecord?.deviceName ?: result.device.name ?: return
-            val hasService = result.scanRecord?.serviceUuids?.contains(ParcelUuid.fromString(BoschProtocol.SERVICE_UUID)) == true
-            if (!hasService && !BoschProtocol.NAME_REGEX.containsMatchIn(name)) return
+            val rawName = result.scanRecord?.deviceName ?: result.device.name
+            val uuids = result.scanRecord?.serviceUuids.orEmpty().map { it.uuid.toString() }
+            val hasService = uuids.any { BoschProtocol.isBoschService(it) }
+            val nameMatch = rawName != null && BoschProtocol.NAME_REGEX.containsMatchIn(rawName)
+            if (!scanAll && !hasService && !nameMatch) return
+            val name = rawName ?: "Bosch (${result.device.address.takeLast(5)})"
             val d = FoundDevice(name, result.device.address, result.rssi)
             _found.value = (_found.value.filter { it.address != d.address } + d).sortedByDescending { it.rssi }
         }
@@ -127,8 +136,9 @@ class BoschBle(private val context: Context) {
         }
     }
 
-    fun startScan() {
+    fun startScan(all: Boolean = false) {
         if (!checkAvailability()) return
+        scanAll = all
         val scanner = adapter?.bluetoothLeScanner ?: run {
             setState(BleState.ERROR, "Scanner Bluetooth indisponível")
             return
@@ -136,7 +146,7 @@ class BoschBle(private val context: Context) {
         if (scanning) return
         _found.value = emptyList()
         scanning = true
-        setState(BleState.SCANNING, "Procurando trena Bosch…")
+        setState(BleState.SCANNING, if (all) "Procurando todos os dispositivos BLE…" else "Procurando trena Bosch…")
         scanner.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback)
         main.postDelayed({ stopScan() }, SCAN_TIMEOUT_MS)
     }
@@ -152,6 +162,43 @@ class BoschBle(private val context: Context) {
 
     // ---- conexão ----
 
+    private var pendingAddress: String? = null
+    private val ops = ArrayDeque<(BluetoothGatt) -> Boolean>()
+    private var notifyEnabled = 0
+    private var bondRequested = false
+
+    private fun addLog(line: String) {
+        main.post { _log.value = (listOf(line) + _log.value).take(LOG_SIZE) }
+    }
+
+    private val bondReceiver = object : BroadcastReceiver() {
+        override fun onReceive(c: Context, i: Intent) {
+            val dev = if (Build.VERSION.SDK_INT >= 33) {
+                i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+            } else {
+                @Suppress("DEPRECATION") i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+            } ?: return
+            if (dev.address != pendingAddress) return
+            val st = i.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)
+            if (st == BluetoothDevice.BOND_BONDED) {
+                addLog("Pareamento concluído; reconectando")
+                pendingAddress?.let { main.postDelayed({ connect(it, _deviceName.value) }, 800) }
+            } else if (st == BluetoothDevice.BOND_NONE && bondRequested) {
+                bondRequested = false
+                setState(BleState.ERROR, "Pareamento recusado ou cancelado")
+            }
+        }
+    }
+    private var receiverRegistered = false
+
+    private fun registerBondReceiver() {
+        if (receiverRegistered) return
+        ContextCompat.registerReceiver(
+            context, bondReceiver, IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+        receiverRegistered = true
+    }
+
     fun connect(address: String, name: String? = null) {
         if (!checkAvailability()) return
         stopScan()
@@ -159,10 +206,14 @@ class BoschBle(private val context: Context) {
             setState(BleState.ERROR, "Endereço inválido")
             return
         }
+        registerBondReceiver()
         userDisconnected = false
+        pendingAddress = address
         closeGatt()
         _deviceName.value = name ?: device.name
+        prefs.edit().putString("last_address", address).putString("last_name", _deviceName.value).apply()
         setState(BleState.CONNECTING, "Conectando…")
+        addLog("Conectando a $address")
         gatt = if (Build.VERSION.SDK_INT >= 23) {
             device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
         } else {
@@ -177,6 +228,7 @@ class BoschBle(private val context: Context) {
     fun disconnect() {
         userDisconnected = true
         main.removeCallbacksAndMessages(null)
+        ops.clear()
         closeGatt()
         _deviceName.value = null
         setState(BleState.IDLE, "")
@@ -188,22 +240,56 @@ class BoschBle(private val context: Context) {
         gatt = null
     }
 
+    private fun propsText(p: Int): String = buildList {
+        if (p and BluetoothGattCharacteristic.PROPERTY_READ != 0) add("ler")
+        if (p and BluetoothGattCharacteristic.PROPERTY_WRITE != 0) add("escrever")
+        if (p and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0) add("escrever-sem-resp")
+        if (p and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0) add("notificar")
+        if (p and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0) add("indicar")
+    }.joinToString(",")
+
+    /** Executa a próxima operação da fila (ligar indicações, enviar comando) ou conclui a conexão. */
+    private fun nextOp(g: BluetoothGatt) {
+        while (ops.isNotEmpty()) {
+            val op = ops.removeFirst()
+            if (op(g)) return // operação iniciada: o callback chama nextOp de novo
+        }
+        if (notifyEnabled > 0) {
+            setState(BleState.CONNECTED, "Conectada. Meça com a trena.")
+        } else {
+            setState(BleState.ERROR, "Conectou, mas não foi possível ativar o recebimento de medidas")
+        }
+    }
+
+    private fun needsBond(status: Int) = status == 5 || status == 15 || status == 137
+
+    private fun requestBond(g: BluetoothGatt) {
+        if (bondRequested) return
+        bondRequested = true
+        addLog("A trena pediu pareamento; confirme na tela do celular")
+        setState(BleState.CONNECTING, "Pareando… confirme no celular e, se pedir, na trena")
+        g.device.createBond()
+    }
+
     private val callback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
             main.post {
                 if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                     reconnectAttempts = 0
                     setState(BleState.CONNECTING, "Descobrindo serviços…")
-                    g.discoverServices()
+                    addLog("Conectado ao GATT; descobrindo serviços")
+                    main.postDelayed({ if (gatt === g) g.discoverServices() }, 600)
                 } else {
+                    addLog("Desconectado (status $status)")
                     runCatching { g.close() }
                     if (gatt === g) gatt = null
-                    if (!userDisconnected && reconnectAttempts < MAX_RECONNECTS && lastAddress != null) {
+                    val addr = pendingAddress
+                    if (!userDisconnected && reconnectAttempts < MAX_RECONNECTS && addr != null && !bondRequested) {
                         reconnectAttempts++
-                        setState(BleState.CONNECTING, "Reconectando ($reconnectAttempts/$MAX_RECONNECTS)…")
-                        main.postDelayed({ if (!userDisconnected) reconnectLast() }, RECONNECT_DELAY_MS)
-                    } else if (!userDisconnected) {
-                        setState(BleState.ERROR, "Conexão perdida")
+                        setState(BleState.CONNECTING, "Tentando de novo ($reconnectAttempts/$MAX_RECONNECTS)… status $status")
+                        main.postDelayed({ if (!userDisconnected) connect(addr, _deviceName.value) }, RECONNECT_DELAY_MS)
+                    } else if (!userDisconnected && !bondRequested) {
+                        setState(BleState.ERROR, "Não conectou (status $status). Ligue a trena, ative o Bluetooth nela e chegue perto.")
                     }
                 }
             }
@@ -211,38 +297,65 @@ class BoschBle(private val context: Context) {
 
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
             main.post {
-                val ch = g.getService(UUID.fromString(BoschProtocol.SERVICE_UUID))
-                    ?.getCharacteristic(UUID.fromString(BoschProtocol.CHARACTERISTIC_UUID))
-                if (status != BluetoothGatt.GATT_SUCCESS || ch == null) {
-                    setState(BleState.ERROR, "Serviço Bosch não encontrado neste dispositivo")
+                if (status != BluetoothGatt.GATT_SUCCESS) {
+                    setState(BleState.ERROR, "Falha ao ler serviços (status $status)")
                     return@post
                 }
-                prefs.edit()
-                    .putString("last_address", g.device.address)
-                    .putString("last_name", _deviceName.value ?: g.device.name)
-                    .apply()
-                enableIndications(g, ch)
+                // diagnóstico: tudo que o aparelho expõe
+                val cands = mutableListOf<BluetoothGattCharacteristic>()
+                g.services.forEach { svc ->
+                    val sid = svc.uuid.toString()
+                    addLog("SERVIÇO $sid")
+                    svc.characteristics.forEach { ch ->
+                        addLog("  char ${ch.uuid} [${propsText(ch.properties)}]")
+                        if (BoschProtocol.isBoschService(sid) || BoschProtocol.isBoschCharacteristic(ch.uuid.toString())) cands += ch
+                    }
+                }
+                if (cands.isEmpty()) {
+                    setState(BleState.ERROR, "Serviço Bosch não encontrado neste aparelho (veja o diagnóstico)")
+                    return@post
+                }
+                prefs.edit().putString("last_address", g.device.address).putString("last_name", _deviceName.value ?: g.device.name).apply()
+                notifyEnabled = 0
+                ops.clear()
+                val notifiers = cands.filter {
+                    it.properties and (BluetoothGattCharacteristic.PROPERTY_INDICATE or BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0
+                }
+                val writers = cands.filter {
+                    it.properties and (BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) != 0
+                }
+                notifiers.forEach { ch -> ops += { gg -> enableIndications(gg, ch) } }
+                writers.forEach { ch -> ops += { gg -> writeCommand(gg, ch, BoschProtocol.ENABLE_AUTOSYNC) } }
+                nextOp(g)
             }
         }
 
         override fun onDescriptorWrite(g: BluetoothGatt, d: BluetoothGattDescriptor, status: Int) {
             main.post {
-                if (status != BluetoothGatt.GATT_SUCCESS) {
-                    setState(BleState.ERROR, "Não foi possível ativar notificações (status $status)")
-                    return@post
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    notifyEnabled++
+                    addLog("Recebimento ligado em ${d.characteristic.uuid}")
+                } else {
+                    addLog("Falha ao ligar recebimento em ${d.characteristic.uuid} (status $status)")
+                    if (needsBond(status) && g.device.bondState == BluetoothDevice.BOND_NONE) {
+                        ops.clear()
+                        requestBond(g)
+                        return@post
+                    }
                 }
-                val ch = d.characteristic
-                writeCommand(g, ch, BoschProtocol.ENABLE_AUTOSYNC)
+                nextOp(g)
             }
         }
 
         override fun onCharacteristicWrite(g: BluetoothGatt, c: BluetoothGattCharacteristic, status: Int) {
             main.post {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    setState(BleState.CONNECTED, "Conectada. Meça com a trena.")
-                } else {
-                    setState(BleState.ERROR, "Falha ao ativar envio automático (status $status)")
+                addLog(if (status == BluetoothGatt.GATT_SUCCESS) "Comando enviado em ${c.uuid}" else "Falha ao enviar comando em ${c.uuid} (status $status)")
+                if (status != BluetoothGatt.GATT_SUCCESS && needsBond(status) && g.device.bondState == BluetoothDevice.BOND_NONE) {
+                    ops.clear()
+                    requestBond(g)
+                    return@post
                 }
+                nextOp(g)
             }
         }
 
@@ -258,18 +371,15 @@ class BoschBle(private val context: Context) {
         }
     }
 
-    private fun enableIndications(g: BluetoothGatt, ch: BluetoothGattCharacteristic) {
+    /** Liga indicação/notificação. Retorna true se a escrita foi iniciada (o callback continua a fila). */
+    private fun enableIndications(g: BluetoothGatt, ch: BluetoothGattCharacteristic): Boolean {
         g.setCharacteristicNotification(ch, true)
-        val cccd = ch.getDescriptor(UUID.fromString(BoschProtocol.CCCD_UUID))
-        if (cccd == null) {
-            setState(BleState.ERROR, "Descritor de notificação ausente")
-            return
-        }
+        val cccd = ch.getDescriptor(UUID.fromString(BoschProtocol.CCCD_UUID)) ?: return false
         val useIndicate = ch.properties and BluetoothGattCharacteristic.PROPERTY_INDICATE != 0
         val value = if (useIndicate) BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
         else BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-        if (Build.VERSION.SDK_INT >= 33) {
-            g.writeDescriptor(cccd, value)
+        return if (Build.VERSION.SDK_INT >= 33) {
+            g.writeDescriptor(cccd, value) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run {
@@ -279,13 +389,18 @@ class BoschBle(private val context: Context) {
         }
     }
 
-    private fun writeCommand(g: BluetoothGatt, ch: BluetoothGattCharacteristic, cmd: ByteArray) {
-        if (Build.VERSION.SDK_INT >= 33) {
-            g.writeCharacteristic(ch, cmd, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+    private fun writeCommand(g: BluetoothGatt, ch: BluetoothGattCharacteristic, cmd: ByteArray): Boolean {
+        val type = if (ch.properties and BluetoothGattCharacteristic.PROPERTY_WRITE != 0) {
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        } else {
+            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+        }
+        return if (Build.VERSION.SDK_INT >= 33) {
+            g.writeCharacteristic(ch, cmd, type) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run {
-                ch.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                ch.writeType = type
                 ch.value = cmd
                 g.writeCharacteristic(ch)
             }
@@ -315,6 +430,6 @@ class BoschBle(private val context: Context) {
         private const val SCAN_TIMEOUT_MS = 20_000L
         private const val MAX_RECONNECTS = 5
         private const val RECONNECT_DELAY_MS = 3_000L
-        private const val LOG_SIZE = 20
+        private const val LOG_SIZE = 60
     }
 }

@@ -441,9 +441,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                     Text(mmText(session.width), fontSize = 13.sp)
                                     IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, "Mais grosso") }
                                 }
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    PALETTE.forEach { c -> ColorDot(c, session.color == c) { applyColor(session, c) } }
-                                }
+                                ColorRow(session.color) { applyColor(session, it) }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("Preenchimento", modifier = Modifier.weight(1f), fontSize = 13.sp)
                                     Switch(checked = session.fill, onCheckedChange = { session.fill = it })
@@ -452,7 +450,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         }
                     }
                     Spacer(Modifier.width(8.dp))
-                    PALETTE.forEach { c -> ColorDot(c, session.color == c) { applyColor(session, c) }; Spacer(Modifier.width(6.dp)) }
+                    ColorRow(session.color) { applyColor(session, it) }
                     Text(mmText(session.width), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp))
                 }
             }
@@ -542,6 +540,35 @@ private fun ColorDot(c: Int, on: Boolean, onClick: () -> Unit) {
     )
 }
 
+@Composable
+private fun ColorRow(current: Int, onPick: (Int) -> Unit) {
+    var more by remember { mutableStateOf(false) }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        PALETTE.forEach { c -> ColorDot(c, current == c) { onPick(c) } }
+        if (current !in PALETTE) ColorDot(current, true) { more = true }
+        Box(
+            Modifier.size(24.dp).clip(CircleShape).clickable { more = true }.background(
+                Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)),
+            ),
+        )
+    }
+    if (more) {
+        Dialog(onDismissRequest = { more = false }) {
+            Surface(shape = RoundedCornerShape(16.dp), color = Ui.panel) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Cores", color = Ui.text, fontSize = 16.sp)
+                    EXTRA_COLORS.chunked(7).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { c -> Box(Modifier.size(32.dp)) { ColorDot(c, current == c) { onPick(c); more = false } } }
+                        }
+                    }
+                    TextButton(onClick = { more = false }) { Text("Fechar") }
+                }
+            }
+        }
+    }
+}
+
 // ------------------------------------------------------------------ Menu de contexto da seleção
 
 @Composable
@@ -551,7 +578,10 @@ private fun ContextBar(session: EditorSession, modifier: Modifier) {
     Surface(modifier = modifier, shape = RoundedCornerShape(12.dp), color = Color(0xEE111111)) {
         Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             CtxBtn("Eliminar", !o.locked) { st.delete(o.id) }
-            CtxBtn("Copiar") { st.duplicate(o.id) }
+            CtxBtn("Cortar", !o.locked) { session.copySelection(cut = true) }
+            CtxBtn("Copiar") { session.copySelection() }
+            CtxBtn("Colar", session.clipboard.isNotEmpty()) { session.paste() }
+            CtxBtn("Duplicar") { st.duplicate(o.id) }
             if (o is PhotoObj) CtxBtn("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) }
             CtxBtn(if (o.locked) "Desbloquear" else "Bloqueio") { st.setLocked(o.id, !o.locked) }
             CtxBtn("Para frente") { st.reorder(o.id, up = true) }
@@ -598,7 +628,7 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
             HorizontalDivider(color = Color(0xFFDDDDDD))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Cor", color = Color(0xFF111111), fontSize = 13.sp)
-                PALETTE.forEach { c -> ColorDot(c, d.color == c) { applyColor(session, c) } }
+                ColorRow(d.color) { applyColor(session, it) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Espessura da linha", color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.weight(1f))
@@ -822,6 +852,7 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextButton(onClick = { search() }) { Text("Procurar de novo") }
+                        TextButton(onClick = { if (ble.hasPermissions()) ble.startScan(all = true) else permLauncher.launch(ble.requiredPermissions()) }) { Text("Mostrar todos") }
                         if (ble.lastAddress != null) {
                             TextButton(onClick = { if (ble.hasPermissions()) ble.reconnectLast() else permLauncher.launch(ble.requiredPermissions()) }) { Text("Última trena") }
                         }

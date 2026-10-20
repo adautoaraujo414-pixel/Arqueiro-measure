@@ -1,12 +1,19 @@
 package br.com.arque.measure
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Color
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,6 +24,7 @@ import br.com.arque.measure.model.Folder
 import br.com.arque.measure.model.Index
 import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.Reading
+import br.com.arque.measure.model.Sheet
 import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.newId
 import br.com.arque.measure.ui.EditorSession
@@ -60,6 +68,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Notas abertas (abas do editor), na ordem de abertura. */
     val tabs = mutableStateListOf<String>()
     var toast by mutableStateOf<String?>(null)
+    var thumbVersion by mutableIntStateOf(0)
 
     /** Leituras recebidas da trena que ainda não foram vinculadas a uma cota (mais nova primeiro). */
     val recent = mutableStateListOf<Reading>().also { it.addAll(store.loadReadings()) }
@@ -100,6 +109,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val n = Note(name = "Nota ${index.notes.count { !it.trash } + 1}", folderId = folder)
         viewModelScope.launch(io) { store.saveNote(n) }
         upsertMeta(n)
+        writeThumb(n)
         return n.id
     }
 
@@ -186,8 +196,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             delay(600)
             withContext(io) { store.saveNote(note) }
             upsertMeta(note)
+            writeThumb(note)
         }
     }
+
+    // ---------- miniaturas da biblioteca (primeira folha) ----------
+
+    private val thumbRenderer by lazy { renderer() }
+    private fun thumbFile(id: String) = File(store.root, "thumbs/$id.png")
+
+    private fun writeThumb(note: Note) {
+        val w = 240
+        val h = (w * Sheet.H / Sheet.W).toInt()
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp)
+        c.drawColor(Color.WHITE)
+        val k = w / Sheet.W
+        c.scale(k, k)
+        thumbRenderer.draw(c, note.pages.first(), note.unit, null, 1f, withPaper = false)
+        viewModelScope.launch(io) {
+            runCatching {
+                val f = thumbFile(note.id)
+                f.parentFile?.mkdirs()
+                f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 90, it) }
+            }
+            bmp.recycle()
+            withContext(Dispatchers.Main) { thumbVersion++ }
+        }
+    }
+
+    fun loadThumb(id: String): ImageBitmap? =
+        thumbFile(id).takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
 
     /** Grava agora (ao sair da nota ou do app). */
     fun flush() {
@@ -196,6 +235,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val n = s.state.note
         store.saveNote(n)
         upsertMeta(n)
+        writeThumb(n)
     }
 
     fun renderer(): SheetRenderer = SheetRenderer { images.get(it) }

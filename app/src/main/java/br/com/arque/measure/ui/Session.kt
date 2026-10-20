@@ -61,6 +61,15 @@ val PALETTE = listOf(
     0xFF111111.toInt(), 0xFFE53935.toInt(), 0xFF1E5BD8.toInt(), 0xFF2E9E57.toInt(), 0xFFF5B400.toInt(),
 )
 
+/** Mais cores (escolhidas pelo botão arco-íris ao lado das 5 principais). */
+val EXTRA_COLORS = listOf(
+    0xFF000000, 0xFF424242, 0xFF757575, 0xFFBDBDBD, 0xFF795548, 0xFF8D6E63,
+    0xFFB71C1C, 0xFFE53935, 0xFFFF5252, 0xFFFF6F00, 0xFFFF9800, 0xFFFFC107,
+    0xFFFFEB3B, 0xFFCDDC39, 0xFF8BC34A, 0xFF2E9E57, 0xFF1B5E20, 0xFF009688,
+    0xFF00BCD4, 0xFF03A9F4, 0xFF1E5BD8, 0xFF0D2A8C, 0xFF3F51B5, 0xFF673AB7,
+    0xFF9C27B0, 0xFFE91E63, 0xFFF48FB1, 0xFFFFFFFF,
+).map { it.toInt() }
+
 const val MM_PER_UNIT = 0.2645833f // 1 unidade de folha = 1/96 pol
 const val UNITS_PER_MM = 3.7795277f
 
@@ -233,6 +242,24 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
             state.addObj(TextObj(photoId = photoId, at = local, text = trimmed, size = 18f, color = color))
         }
         textEdit = null
+    }
+
+    /** Área de transferência (cortar/copiar/colar) entre folhas da mesma nota. */
+    var clipboard by mutableStateOf<List<br.com.arque.measure.model.Obj>>(emptyList())
+
+    fun copySelection(cut: Boolean = false) {
+        val o = state.selected ?: return
+        val objs = buildList {
+            add(o)
+            if (o is PhotoObj) addAll(state.sheet.objs.filterIsInstance<br.com.arque.measure.model.Ann>().filter { it.photoId == o.id })
+        }
+        clipboard = objs
+        if (cut) state.delete(o.id)
+    }
+
+    fun paste() {
+        if (clipboard.isEmpty()) return
+        state.pasteObjs(clipboard)
     }
 
     fun widthMm(): Float = width * MM_PER_UNIT

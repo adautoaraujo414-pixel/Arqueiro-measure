@@ -47,4 +47,23 @@ class BoschProtocolTest {
         assertArrayEquals(byteArrayOf(0xC0.toByte(), 0x55, 0x02, 0x01, 0x00, 0x1A), BoschProtocol.ENABLE_AUTOSYNC)
         assertEquals("C0 55 02 01 00 1A", BoschProtocol.toHex(BoschProtocol.ENABLE_AUTOSYNC))
     }
+
+    private fun hex(h: String) = h.split(" ").map { it.toInt(16).toByte() }.toByteArray()
+
+    @Test fun `quadro real da comunidade C0 55 10 06 le o float no byte 7`() {
+        val f = hex("c0 55 10 06 08 54 05 6f 81 04 3f 00 00 00 00 00 00 00 00 ec")
+        assertEquals(518.0, BoschProtocol.parseMm(f)!!, 1.0)
+    }
+
+    @Test fun `leitura invalida byte 3 igual a 02 nao gera medida`() {
+        val f = hex("c0 55 10 02 08 54 05 6f 81 04 3f 00 00 00 00 00 00 00 00 ec")
+        assertNull(BoschProtocol.parseMm(f))
+    }
+
+    @Test fun `reconhece os UUIDs Bosch conhecidos`() {
+        assertEquals(true, BoschProtocol.isBoschService("0000FDE8-0000-1000-8000-00805F9B34FB"))
+        assertEquals(true, BoschProtocol.isBoschService("02a6c0d0-0451-4000-b000-fb3210111989"))
+        assertEquals(true, BoschProtocol.isBoschCharacteristic("02a6c0d2-0451-4000-b000-fb3210111989"))
+        assertEquals(false, BoschProtocol.isBoschService("0000180a-0000-1000-8000-00805f9b34fb"))
+    }
 }

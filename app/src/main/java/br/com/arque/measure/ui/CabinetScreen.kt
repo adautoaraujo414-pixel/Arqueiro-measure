@@ -547,7 +547,7 @@ private fun CabinetPanel(
         NumField("Largura do módulo", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
         NumField("Profundidade do módulo", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
         NumField("Altura (chão até a pedra)", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
-        Text("A pedra manda: largura do módulo = pedra − 40 mm (− 70 mm com tamponamento nos dois lados); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
+        Text("A pedra manda: largura do módulo = pedra (− 35 mm por lado com tamponamento); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
         HorizontalDivider(color = Ui.line)
 
         if (selDivider in dx.indices) {

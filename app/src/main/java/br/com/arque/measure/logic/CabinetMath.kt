@@ -23,7 +23,7 @@ object CabinetMath {
     private fun cavaNote(v: Vao) = if (v.cava) " · cava: corte a 30° na peça" else ""
 
     /** Folga por lado até a pedra: 20 mm sem tamponamento, 35 mm com (20 + 15 da chapa). */
-    fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 20.0) + (if (c.tampDir) 35.0 else 20.0)
+    fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 0.0) + (if (c.tampDir) 35.0 else 0.0)
 
     /** y da face de baixo da base (onde começa o pedestal). */
     /** Altura efetiva do pedestal e espessura efetiva da chapa da base (0 quando tirados). */

@@ -108,7 +108,7 @@ class CabinetTest {
         val c = base.copy(tampEsq = true, tampDir = true)
         assertEquals(70.0, CabinetMath.descontoPedra(c), 0.0)
         assertEquals(1930.0, 2000.0 - CabinetMath.descontoPedra(c), 0.0)
-        assertEquals(40.0, CabinetMath.descontoPedra(base), 0.0)
+        assertEquals(0.0, CabinetMath.descontoPedra(base), 0.0)
     }
 
     @Test fun tamponamentoSizeAndDrawerBox() {

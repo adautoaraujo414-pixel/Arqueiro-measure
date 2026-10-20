@@ -15,7 +15,7 @@ enum class MeasureSource { MANUAL, BLUETOOTH }
 
 enum class LengthUnit(val label: String) { MM("mm"), CM("cm"), M("m") }
 
-enum class ShapeKind { LINE, DASHED, ARROW, RECT, RRECT, ELLIPSE, TRIANGLE }
+enum class ShapeKind { LINE, DASHED, ARROW, RECT, RRECT, ELLIPSE, TRIANGLE, DARROW, CURVE, ELBOW, RTRI, DIAMOND, TRAP }
 
 enum class StrokeKind { PEN, PENCIL, HIGHLIGHTER }
 

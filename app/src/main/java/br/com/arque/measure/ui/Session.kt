@@ -33,6 +33,12 @@ enum class Tool(val label: String, val drawing: Boolean) {
     RRECT("Retângulo arredondado", true),
     ELLIPSE("Oval", true),
     TRIANGLE("Triângulo", true),
+    DARROW("Seta dupla", true),
+    CURVE("Curva", true),
+    ELBOW("Linha em L", true),
+    RTRI("Triângulo retângulo", true),
+    DIAMOND("Losango", true),
+    TRAP("Trapézio", true),
     TEXT("Texto", false),
 }
 

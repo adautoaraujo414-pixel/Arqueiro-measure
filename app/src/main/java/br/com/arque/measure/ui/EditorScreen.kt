@@ -143,9 +143,14 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.ELLIPSE -> Icons.Filled.RadioButtonUnchecked
     Tool.TRIANGLE -> Icons.Filled.ChangeHistory
     Tool.TEXT -> Icons.Filled.TextFields
+    else -> Icons.Filled.CropSquare
 }
 
-private val shapeTools = listOf(Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DIM, Tool.ROOM, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE)
+private val shapeTools = listOf(
+    Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DARROW, Tool.CURVE,
+    Tool.ELBOW, Tool.DIM, Tool.ROOM, Tool.RECT, Tool.RRECT,
+    Tool.ELLIPSE, Tool.TRIANGLE, Tool.RTRI, Tool.DIAMOND, Tool.TRAP,
+)
 
 private fun mmText(units: Float): String = String.format(Locale("pt", "BR"), "%.2f mm", units * MM_PER_UNIT)
 
@@ -459,16 +464,20 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         Box {
                             val inShapes = session.tool in shapeTools
                             Box(Modifier.clip(CircleShape).background(if (inShapes) Ui.accent.copy(alpha = 0.3f) else Color.Transparent)) {
-                                BarIcon(if (inShapes) session.tool.icon() else Icons.Filled.CropSquare, "Formas", tint = if (inShapes) Ui.accent else Ui.text) { shapesMenu = true }
+                                IconButton(onClick = { shapesMenu = true }, modifier = Modifier.size(40.dp)) {
+                                    ShapeGlyph(if (inShapes) session.tool else Tool.RECT, if (inShapes) Ui.accent else Ui.text, 22.dp)
+                                }
                             }
                             DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
                                 Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
-                                    Row(Modifier.horizontalScroll(rememberScrollState())) {
-                                        shapeTools.forEach { t ->
-                                            IconButton(
-                                                onClick = { session.chooseTool(t); shapesMenu = false },
-                                                modifier = Modifier.clip(CircleShape).background(if (session.tool == t) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                                            ) { Icon(t.icon(), t.label) }
+                                    shapeTools.chunked(5).forEach { rowTools ->
+                                        Row {
+                                            rowTools.forEach { t ->
+                                                IconButton(
+                                                    onClick = { session.chooseTool(t); shapesMenu = false },
+                                                    modifier = Modifier.size(48.dp).clip(CircleShape).background(if (session.tool == t) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                                                ) { ShapeGlyph(t, if (session.tool == t) Ui.accent else Ui.text, 24.dp) }
+                                            }
                                         }
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -561,6 +570,53 @@ private fun applyWidth(session: EditorSession, deltaMm: Float) {
     val w = (session.width + deltaMm * UNITS_PER_MM).coerceIn(0.1f * UNITS_PER_MM, 6f * UNITS_PER_MM)
     session.width = w
     session.state.selected?.let { if (it !is PhotoObj && it !is TextObj) session.state.setStyle(it.id, width = w) }
+}
+
+/** Ícone desenhado de cada forma (grade do painel de Formas). */
+@Composable
+private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) {
+    Canvas(Modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val sw = 2.2f * density
+        val st = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        fun P(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(x * w, y * h)
+        fun poly(vararg p: androidx.compose.ui.geometry.Offset, close: Boolean) {
+            val path = androidx.compose.ui.graphics.Path()
+            path.moveTo(p[0].x, p[0].y)
+            for (i in 1 until p.size) path.lineTo(p[i].x, p[i].y)
+            if (close) path.close()
+            drawPath(path, tint, style = st)
+        }
+        fun head(tip: androidx.compose.ui.geometry.Offset, from: androidx.compose.ui.geometry.Offset) {
+            val ang = Math.atan2((tip.y - from.y).toDouble(), (tip.x - from.x).toDouble())
+            val s = 0.26f * w
+            fun q(d: Double) = androidx.compose.ui.geometry.Offset(tip.x - s * Math.cos(ang + d).toFloat(), tip.y - s * Math.sin(ang + d).toFloat())
+            poly(q(-0.45), tip, q(0.45), close = false)
+        }
+        when (t) {
+            Tool.LINE -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
+            Tool.DASHED -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round, androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(5f * density, 4f * density)))
+            Tool.ARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)) }
+            Tool.DARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)); head(P(0.12f, 0.88f), P(0.88f, 0.12f)) }
+            Tool.DIM -> { drawLine(tint, P(0.1f, 0.5f), P(0.9f, 0.5f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.9f, 0.5f), P(0.1f, 0.5f)); head(P(0.1f, 0.5f), P(0.9f, 0.5f)); drawLine(tint, P(0.1f, 0.25f), P(0.1f, 0.75f), sw); drawLine(tint, P(0.9f, 0.25f), P(0.9f, 0.75f), sw) }
+            Tool.CURVE -> {
+                val path = androidx.compose.ui.graphics.Path()
+                path.moveTo(0.12f * w, 0.85f * h); path.quadraticBezierTo(0.15f * w, 0.1f * h, 0.88f * w, 0.15f * h)
+                drawPath(path, tint, style = st)
+            }
+            Tool.ELBOW -> poly(P(0.12f, 0.85f), P(0.12f, 0.15f), P(0.88f, 0.15f), close = false)
+            Tool.ROOM -> poly(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f), close = true)
+            Tool.RECT -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
+            Tool.RRECT -> drawRoundRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), androidx.compose.ui.geometry.CornerRadius(0.16f * w), style = st)
+            Tool.ELLIPSE -> drawOval(tint, P(0.12f, 0.2f), androidx.compose.ui.geometry.Size(0.76f * w, 0.6f * h), style = st)
+            Tool.TRIANGLE -> poly(P(0.5f, 0.14f), P(0.88f, 0.84f), P(0.12f, 0.84f), close = true)
+            Tool.RTRI -> poly(P(0.16f, 0.14f), P(0.86f, 0.84f), P(0.16f, 0.84f), close = true)
+            Tool.DIAMOND -> poly(P(0.5f, 0.1f), P(0.9f, 0.5f), P(0.5f, 0.9f), P(0.1f, 0.5f), close = true)
+            Tool.TRAP -> poly(P(0.3f, 0.2f), P(0.7f, 0.2f), P(0.9f, 0.8f), P(0.1f, 0.8f), close = true)
+            else -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
+        }
+    }
 }
 
 /** Grupo de botões da barra, em cápsula. */

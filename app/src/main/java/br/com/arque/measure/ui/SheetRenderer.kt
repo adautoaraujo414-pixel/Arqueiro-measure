@@ -251,6 +251,33 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 if (o.fill) c.drawOval(rect, fillPaint)
                 c.drawOval(rect, strokePaint)
             }
+            ShapeKind.DARROW -> {
+                c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                arrowHead(c, b, a, max(10f, o.width * 4f), o.color)
+                arrowHead(c, a, b, max(10f, o.width * 4f), o.color)
+            }
+            ShapeKind.CURVE -> {
+                val pts = Geo.curvePoints(a, b)
+                path.reset(); path.moveTo(pts[0].x, pts[0].y)
+                for (i in 1 until pts.size) path.lineTo(pts[i].x, pts[i].y)
+                c.drawPath(path, strokePaint)
+            }
+            ShapeKind.ELBOW -> {
+                val pts = Geo.polyPoints(o.kind, a, b)!!
+                path.reset(); path.moveTo(pts[0].x, pts[0].y)
+                for (i in 1 until pts.size) path.lineTo(pts[i].x, pts[i].y)
+                strokePaint.strokeJoin = Paint.Join.ROUND
+                c.drawPath(path, strokePaint)
+            }
+            ShapeKind.RTRI, ShapeKind.DIAMOND, ShapeKind.TRAP -> {
+                val pts = Geo.polyPoints(o.kind, a, b)!!
+                path.reset(); path.moveTo(pts[0].x, pts[0].y)
+                for (i in 1 until pts.size) path.lineTo(pts[i].x, pts[i].y)
+                path.close()
+                strokePaint.strokeJoin = Paint.Join.ROUND
+                if (o.fill) c.drawPath(path, fillPaint)
+                c.drawPath(path, strokePaint)
+            }
             ShapeKind.TRIANGLE -> {
                 path.reset()
                 path.moveTo((l + r) / 2f, t); path.lineTo(r, bt); path.lineTo(l, bt); path.close()

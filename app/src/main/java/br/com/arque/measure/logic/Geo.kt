@@ -146,6 +146,30 @@ object Geo {
 
     // ---- distâncias e testes de toque ----
 
+    /** Pontos de formas poligonais (RTRI, DIAMOND, TRAP) ou do "L" (ELBOW); null para as demais. */
+    fun polyPoints(kind: br.com.arque.measure.model.ShapeKind, a: Pt, b: Pt): List<Pt>? {
+        val l = min(a.x, b.x); val r = max(a.x, b.x); val t = min(a.y, b.y); val bt = max(a.y, b.y)
+        val w = r - l
+        return when (kind) {
+            br.com.arque.measure.model.ShapeKind.RTRI -> listOf(Pt(l, t), Pt(r, bt), Pt(l, bt))
+            br.com.arque.measure.model.ShapeKind.DIAMOND -> listOf(Pt((l + r) / 2f, t), Pt(r, (t + bt) / 2f), Pt((l + r) / 2f, bt), Pt(l, (t + bt) / 2f))
+            br.com.arque.measure.model.ShapeKind.TRAP -> listOf(Pt(l + w * 0.2f, t), Pt(r - w * 0.2f, t), Pt(r, bt), Pt(l, bt))
+            br.com.arque.measure.model.ShapeKind.ELBOW -> listOf(a, Pt(b.x, a.y), b)
+            else -> null
+        }
+    }
+
+    /** Curva (arco): quadrática de a a b com o ponto de controle deslocado 25% do comprimento. */
+    fun curvePoints(a: Pt, b: Pt, n: Int = 24): List<Pt> {
+        val mx = (a.x + b.x) / 2f; val my = (a.y + b.y) / 2f
+        val dx = b.x - a.x; val dy = b.y - a.y
+        val c = Pt(mx - dy * 0.25f, my + dx * 0.25f)
+        return (0..n).map {
+            val t = it / n.toFloat(); val u = 1f - t
+            Pt(u * u * a.x + 2f * u * t * c.x + t * t * b.x, u * u * a.y + 2f * u * t * c.y + t * t * b.y)
+        }
+    }
+
     fun distToSegment(p: Pt, a: Pt, b: Pt): Float {
         val dx = b.x - a.x
         val dy = b.y - a.y
@@ -196,7 +220,13 @@ object Geo {
                 val (a, b) = annPoints(photos, o)
                 val r = tol + o.width / 2f
                 when (o.kind) {
-                    ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW -> distToSegment(s, a, b) <= r
+                    ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW, ShapeKind.DARROW -> distToSegment(s, a, b) <= r
+                    ShapeKind.CURVE -> curvePoints(a, b).zipWithNext().any { (p, q) -> distToSegment(s, p, q) <= r }
+                    ShapeKind.ELBOW -> polyPoints(o.kind, a, b)!!.zipWithNext().any { (p, q) -> distToSegment(s, p, q) <= r }
+                    ShapeKind.RTRI, ShapeKind.DIAMOND, ShapeKind.TRAP -> {
+                        val c = polyPoints(o.kind, a, b)!!
+                        (c + c.first()).zipWithNext().any { (p, q) -> distToSegment(s, p, q) <= r }
+                    }
                     ShapeKind.TRIANGLE -> {
                         val l = min(a.x, b.x); val rr = max(a.x, b.x)
                         val t = min(a.y, b.y); val bb = max(a.y, b.y)

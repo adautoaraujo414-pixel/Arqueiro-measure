@@ -67,7 +67,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     private val st get() = s.state
     private val slop get() = 8f * density
     private fun tol() = 22f * density / s.view.scale
-    private val straightKinds = setOf(ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW)
+    private val straightKinds = setOf(ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW, ShapeKind.DARROW)
 
     private fun replace(o: Obj): Sheet = st.sheet.copy(objs = st.sheet.objs.map { if (it.id == o.id) o else it })
 
@@ -103,7 +103,8 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.beginGesture()
                 erase(p)
             }
-            Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE -> startShape(p, tool)
+            Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE,
+            Tool.DARROW, Tool.CURVE, Tool.ELBOW, Tool.RTRI, Tool.DIAMOND, Tool.TRAP -> startShape(p, tool)
             Tool.TEXT -> mode = Mode.NONE
         }
     }
@@ -220,6 +221,12 @@ class GestureController(private val s: EditorSession, private val density: Float
             Tool.RRECT -> ShapeKind.RRECT
             Tool.ELLIPSE -> ShapeKind.ELLIPSE
             Tool.TRIANGLE -> ShapeKind.TRIANGLE
+            Tool.DARROW -> ShapeKind.DARROW
+            Tool.CURVE -> ShapeKind.CURVE
+            Tool.ELBOW -> ShapeKind.ELBOW
+            Tool.RTRI -> ShapeKind.RTRI
+            Tool.DIAMOND -> ShapeKind.DIAMOND
+            Tool.TRAP -> ShapeKind.TRAP
             else -> ShapeKind.LINE
         }
         startShapeLike(p, dim = false, kind = kind)
@@ -272,7 +279,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                     val straight = o is DimObj || (o is ShapeObj && o.kind in straightKinds)
                     val target = if (straight) Geo.snapAxis(anchor, p) else p
                     st.live(replace(Geo.withEndpoint(st.sheet, o, true, target)))
-                    if (o is DimObj || (o is ShapeObj && o.kind == ShapeKind.ARROW)) s.loupe = screen
+                    if (o is DimObj || (o is ShapeObj && (o.kind == ShapeKind.ARROW || o.kind == ShapeKind.DARROW))) s.loupe = screen
                 }
             }
             Mode.ERASE -> erase(p)

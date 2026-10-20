@@ -79,6 +79,35 @@ object CabinetMath {
         return (areaH - c.bordaSupMm - c.bordaInfMm - c.folgaGavetaMm * (k - 1)) / k
     }
 
+    /** Coloca uma divisória na posição x (mm) dentro do vão que a contém; o vão da esquerda mantém o conteúdo. */
+    fun addDividerAt(c0: Cabinet, x: Double): Cabinet {
+        val c = normalized(c0)
+        val e = c.espMm
+        val rg = vaoRanges(c)
+        val i = rg.indexOfFirst { x >= it.first && x <= it.second }
+        if (i < 0) return c
+        val (x0, x1) = rg[i]
+        if (x1 - x0 < e + 60.0) return c
+        val left = Math.round(x - e / 2).toDouble().coerceIn(x0 + 30.0, x1 - 30.0 - e)
+        val ratio = ((left + e / 2 - e) / innerW(c)).toFloat()
+        val ds = c.dividers.sorted()
+        return c.copy(dividers = ds.take(i) + ratio + ds.drop(i), vaos = c.vaos.take(i + 1) + Vao() + c.vaos.drop(i + 1))
+    }
+
+    /** Divide o vão [i] em [n] partes iguais (cada parte herda o conteúdo do vão). */
+    fun splitVao(c0: Cabinet, i: Int, n: Int): Cabinet {
+        val c = normalized(c0)
+        if (n < 2 || i !in c.vaos.indices) return c
+        val e = c.espMm
+        val (x0, x1) = vaoRanges(c)[i]
+        val w = (x1 - x0 - (n - 1) * e) / n
+        if (w < 30.0) return c
+        val iw = innerW(c)
+        val novos = (1 until n).map { k -> ((x0 + k * w + (k - 1) * e + e / 2 - e) / iw).toFloat() }
+        val ds = c.dividers.sorted()
+        return c.copy(dividers = ds.take(i) + novos + ds.drop(i), vaos = c.vaos.take(i) + List(n) { c.vaos[i] } + c.vaos.drop(i + 1))
+    }
+
     /** Altura da área das gavetas do vão: o vão todo, ou o gaveteiro (padrão 300) quando há prateleiras em cima. */
     fun gaveteiroH(c: Cabinet, v: Vao): Double =
         if (v.shelvesAbove > 0) (if (v.gaveteiroMm > 0) v.gaveteiroMm else 300.0).coerceIn(50.0, vaoH(c) - 50.0) else vaoH(c)

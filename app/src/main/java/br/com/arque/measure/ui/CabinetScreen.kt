@@ -90,6 +90,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
     var selVao by remember { mutableIntStateOf(0) }
     var tapMm by remember { mutableStateOf(Offset.Zero) }
     var shelfMode by remember { mutableStateOf(false) }
+    var divMode by remember { mutableStateOf(false) }
     var listOpen by remember { mutableStateOf(false) }
     var renameOpen by remember { mutableStateOf(false) }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
@@ -129,6 +130,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         onPickDivider = { selDivider = it },
                         onPickVao = { v, mx, my ->
                             selVao = v; selDivider = -1; tapMm = Offset(mx.toFloat(), my.toFloat())
+                            if (divMode) edit { c -> CabinetMath.addDividerAt(c, mx) }
                             if (shelfMode) {
                                 val y = Math.round(my).toDouble()
                                 if (y > CabinetMath.vaoTop(cab) + cab.espMm && y < CabinetMath.vaoBottom(cab) - cab.espMm) {
@@ -144,11 +146,12 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     Row(Modifier.align(Alignment.TopStart).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
                         QuickBtn("↷ Refazer", st.canRedo) { st.redo() }
-                        QuickBtn(if (shelfMode) "✓ Pronto" else "+ Prateleiras", true) { shelfMode = !shelfMode }
+                        QuickBtn(if (shelfMode) "✓ Pronto" else "+ Prateleiras", true) { shelfMode = !shelfMode; divMode = false }
+                        QuickBtn(if (divMode) "✓ Pronto" else "+ Divisórias", true) { divMode = !divMode; shelfMode = false }
                     }
-                    if (shelfMode) {
+                    if (shelfMode || divMode) {
                         Text(
-                            "Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto.",
+                            if (divMode) "Toque no vão, onde quer cada divisória. Quando terminar, toque em Pronto." else "Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto.",
                             color = Ui.text, fontSize = 14.sp,
                             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xE63B82F6)).padding(horizontal = 14.dp, vertical = 10.dp),
                         )
@@ -602,6 +605,10 @@ private fun CabinetPanel(
                         }
                     }
                 }
+            }
+            Label("Dividir este vão em partes iguais")
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                (2..5).forEach { n -> Chip("÷$n", false) { edit { c -> CabinetMath.splitVao(c, selVao, n) } } }
             }
             PillBtn("+ Divisória no meio deste vão") {
                 val mid = (ranges[selVao].first + ranges[selVao].second) / 2

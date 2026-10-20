@@ -157,6 +157,16 @@ class EditorState(
         commit(mapObj(id) { (it as CabObj).copy(name = name.trim()) })
     }
 
+    /** Se o móvel passa da folha na escala atual, escolhe a menor escala que o faz caber (nunca aumenta). */
+    fun fitCabToPage(id: String, maxW: Float = 700f, maxH: Float = 880f) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        if (o.locked) return
+        val need = maxOf(o.cab.wMm * 3.7795277 / maxW, o.cab.hMm * 3.7795277 / maxH)
+        val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+        val den = steps.firstOrNull { it >= need } ?: 100
+        if (den > o.scaleDen) setCabScale(id, den)
+    }
+
     fun setCabScale(id: String, den: Int) {
         val o = sheet.obj(id) as? CabObj ?: return
         if (o.locked) return

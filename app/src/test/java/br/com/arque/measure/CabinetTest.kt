@@ -183,4 +183,33 @@ class CabinetTest {
         val b = (back.pages[0].objs[0] as CabObj).cab
         assertFalse(b.hasBase); assertFalse(b.hasRodape)
     }
+
+    @Test fun splitVaoIntoEqualParts() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao()))
+        val s = CabinetMath.splitVao(c, 0, 4)
+        assertEquals(3, s.dividers.size)
+        val w = CabinetMath.vaoRanges(s).map { it.second - it.first }
+        assertEquals(4, w.size)
+        assertTrue(w.all { Math.abs(it - w[0]) < 1.0 })
+    }
+
+    @Test fun addDividerAtTap() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao()))
+        val a = CabinetMath.addDividerAt(c, 300.0)
+        val b = CabinetMath.addDividerAt(a, 600.0)
+        assertEquals(2, b.dividers.size)
+        assertEquals(3, b.vaos.size)
+        assertEquals(300.0 - 7.5, CabinetMath.dividerX(b)[0], 1.5)
+    }
+
+    @Test fun fitCabToPageShrinksOnlyWhenTooBig() {
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet())))
+        val id = st.addCab(Pt(10f, 10f), Cabinet(wMm = 2627.0), "Base")
+        st.fitCabToPage(id)
+        val o = st.sheet.obj(id) as CabObj
+        assertTrue(o.widthUnits() <= 700f)
+        st.setCabScale(id, 100)
+        st.fitCabToPage(id)
+        assertEquals(100, (st.sheet.obj(id) as CabObj).scaleDen)
+    }
 }

@@ -668,7 +668,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     }
 
     if (btOpen) BluetoothScreen(vm) { btOpen = false }
-    session.cabEditId?.let { cid -> CabinetScreen(vm, session, cid) { session.cabEditId = null } }
+    session.cabEditId?.let { cid -> CabinetScreen(vm, session, cid) { st.fitCabToPage(cid); session.cabEditId = null } }
     if (overview) OverviewDialog(session, vm, onDismiss = { overview = false })
 }
 
@@ -819,10 +819,14 @@ private fun ContextBar(session: EditorSession, modifier: Modifier) {
             if (o is PhotoObj) CtxBtn("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) }
             if (o is br.com.arque.measure.model.CabObj) {
                 CtxBtn("Editar móvel") { session.cabEditId = o.id }
-                CtxBtn("Escala 1:${o.scaleDen}", !o.locked) {
-                    val steps = listOf(5, 10, 20, 25, 50)
-                    st.setCabScale(o.id, steps[(steps.indexOf(o.scaleDen) + 1).mod(steps.size)])
+                val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+                CtxBtn("Menor", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
+                CtxBtn("Maior", !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
+                CtxBtn("Caber na folha", !o.locked) {
+                    val need = maxOf(o.cab.wMm * 3.7795277 / 700.0, o.cab.hMm * 3.7795277 / 880.0)
+                    st.setCabScale(o.id, steps.firstOrNull { it >= need } ?: 100)
                 }
+                CtxBtn("Escala 1:${o.scaleDen}", false) { }
             }
             CtxBtn(if (o.locked) "Desbloquear" else "Bloqueio") { st.setLocked(o.id, !o.locked) }
             CtxBtn("Para frente") { st.reorder(o.id, up = true) }

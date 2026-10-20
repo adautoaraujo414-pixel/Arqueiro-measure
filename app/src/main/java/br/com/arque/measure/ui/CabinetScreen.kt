@@ -596,15 +596,25 @@ private fun CabinetPanel(
                     Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
                 }
             }
-            if (v.shelfYs.isNotEmpty()) {
-                Label("Prateleiras soltas (toque para remover)")
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                    v.shelfYs.sorted().forEach { y ->
-                        Chip("✕ ${Units.formatNumber(y - CabinetMath.vaoTop(cab), LengthUnit.MM)} da travessa", false) {
-                            setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y }) }
-                        }
+            run {
+                val vt = CabinetMath.vaoTop(cab)
+                val vb = CabinetMath.vaoBottom(cab)
+                val sorted = v.shelfYs.sorted()
+                Label("Prateleiras soltas")
+                sorted.forEachIndexed { n, y ->
+                    NumField("Prateleira ${n + 1} · distância da travessa", y - vt, vm) { d ->
+                        setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y } + (vt + d).coerceIn(vt + cab.espMm + 5.0, vb - cab.espMm - 5.0)) }
                     }
+                    PillBtn("Remover a prateleira ${n + 1}", danger = true) { setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y }) } }
                 }
+                PillBtn(if (sorted.isEmpty()) "+ Prateleira (no meio do vão)" else "+ Prateleira (mesma distância da última)") {
+                    val last = sorted.lastOrNull()
+                    val prev = if (sorted.size >= 2) sorted[sorted.size - 2] else vt
+                    val gap = if (last == null) (vb - vt) / 2 else last - prev
+                    val ny = if (last == null) vt + gap else last + gap
+                    if (ny < vb - cab.espMm - 5.0) setVao { o -> o.copy(shelfYs = o.shelfYs + ny) }
+                }
+                if (sorted.isNotEmpty()) Text("Cada prateleira tem a sua medida: toque no número para digitar a distância exata a partir da travessa.", color = Ui.dim, fontSize = 12.sp)
             }
             Label("Dividir este vão em partes iguais")
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

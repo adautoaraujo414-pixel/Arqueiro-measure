@@ -422,6 +422,23 @@ private fun CabinetCanvas(
                 drawLine(WoodDark, Offset(tl.x + sz.width - 12f, tl.y + sz.height * 0.4f), Offset(tl.x + sz.width - 12f, tl.y + sz.height * 0.6f), 4f)
             }
         }
+        // gavetas do vão selecionado: altura de cada frente e de cada batente em cima do desenho
+        run {
+            val nc0 = drawContext.canvas.nativeCanvas
+            val pt = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = 0xFF0B2A3D.toInt(); textSize = 26f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER
+            }
+            for (p in parts) {
+                if (p.vao != selVao) continue
+                if (p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.BATENTE) {
+                    val t = Units.formatNumber(p.h, LengthUnit.MM)
+                    val cx = X(p.x) + (p.w * k).toFloat() / 2f
+                    val cy = Y(p.y) + (p.h * k).toFloat() / 2f
+                    val hh = (p.h * k).toFloat()
+                    if (hh > 30f) nc0.drawText(t, cx, cy + 9f, pt)
+                }
+            }
+        }
         // divisória selecionada
         if (selDivider in dx.indices) {
             val x = dx[selDivider]
@@ -564,18 +581,36 @@ private fun CabinetPanel(
             when (v.kind) {
                 VaoKind.SHELVES -> Stepper("Prateleiras", v.shelves, 1, 8) { n -> setVao { it.copy(shelves = n) } }
                 VaoKind.DRAWERS -> {
-                    Stepper("Quantidade de gavetas", v.drawers, 1, 8) { n -> setVao { it.copy(drawers = n) } }
+                    // 1º o batente (cava), 2º a quantidade de gavetas
+                    Label("1 · Batente de cava")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Usar batente entre as gavetas (cava a 30° na peça)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
+                    }
+                    if (v.cava) NumField("Altura de cada batente", v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
+                    Label("2 · Gavetas")
+                    Stepper("Quantidade (gavetas, gavetões)", v.drawers, 1, 8) { n -> setVao { it.copy(drawers = n) } }
                     Stepper("Prateleiras em cima das gavetas", v.shelvesAbove, 0, 6) { n -> setVao { it.copy(shelvesAbove = n) } }
                     if (v.shelvesAbove > 0) NumField("Altura do gaveteiro", CabinetMath.gaveteiroH(cab, v), vm) { g -> setVao { it.copy(gaveteiroMm = g) } }
-                    NumField("Borda superior", cab.bordaSupMm, vm) { x -> edit { it.copy(bordaSupMm = x.coerceIn(0.0, 50.0)) } }
-                    NumField("Borda inferior", cab.bordaInfMm, vm) { x -> edit { it.copy(bordaInfMm = x.coerceIn(0.0, 50.0)) } }
-                    NumField("Folga entre frentes", cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
-                        Text("Altura de cada frente", color = Ui.dim, fontSize = 12.sp)
-                        Text(Units.format(CabinetMath.drawerFrontH(cab, v.drawers, CabinetMath.gaveteiroH(cab, v), v), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                        Text(if (v.cava) "(área − ${v.drawers - 1} batente(s) de ${Units.formatNumber(v.batenteMm, LengthUnit.MM)}) ÷ ${v.drawers}" else "(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                    if (!v.cava) {
+                        NumField("Borda superior", cab.bordaSupMm, vm) { x -> edit { it.copy(bordaSupMm = x.coerceIn(0.0, 50.0)) } }
+                        NumField("Borda inferior", cab.bordaInfMm, vm) { x -> edit { it.copy(bordaInfMm = x.coerceIn(0.0, 50.0)) } }
+                        NumField("Folga entre frentes", cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
                     }
-                    if (v.cava) NumField("Altura do batente de cava", v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
+                    val area = CabinetMath.gaveteiroH(cab, v)
+                    val fh = CabinetMath.drawerFrontH(cab, v.drawers, area, v)
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
+                        Text("Resultado", color = Ui.dim, fontSize = 12.sp)
+                        Text("${v.drawers} × ${Units.format(fh, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                        if (v.cava && v.drawers > 1) {
+                            val bt = v.batenteMm * (v.drawers - 1)
+                            Text("+ ${v.drawers - 1} batente(s) × ${Units.formatNumber(v.batenteMm, LengthUnit.MM)} = ${Units.formatNumber(bt, LengthUnit.MM)} mm", color = Color(0xFFBFD6FF), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                            Text("(${Units.formatNumber(area, LengthUnit.MM)} − ${Units.formatNumber(bt, LengthUnit.MM)}) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        } else if (!v.cava) {
+                            Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        }
+                        if (v.shelvesAbove > 0) Text("Área acima das gavetas: ${Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)} mm", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                    }
                     Text("Caixa da gaveta: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
                 }
                 VaoKind.OVEN -> {
@@ -606,7 +641,7 @@ private fun CabinetPanel(
                 }
                 VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = Ui.dim, fontSize = 12.sp)
             }
-            if (v.kind == VaoKind.DRAWERS || v.kind == VaoKind.DOOR) {
+            if (v.kind == VaoKind.DOOR) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Cava (puxador a 30° na peça)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })

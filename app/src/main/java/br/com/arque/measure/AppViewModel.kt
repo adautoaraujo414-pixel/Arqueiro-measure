@@ -330,7 +330,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Leitura nova: se há uma cota selecionada, grava nela e avança; senão vira um "chip" na barra. */
+    /** Campo esperando a próxima leitura da trena (editor do móvel). */
+    var measureArmed by mutableStateOf<String?>(null)
+        private set
+    private var measureCb: ((Double) -> Unit)? = null
+
+    /** Preenche o campo com a leitura mais nova da fila; sem leitura, fica esperando a próxima. */
+    fun armMeasure(key: String, cb: (Double) -> Unit) {
+        val r = recent.firstOrNull()
+        if (r != null) {
+            recent.remove(r)
+            persistRecent()
+            cb(r.mm)
+            return
+        }
+        measureArmed = key
+        measureCb = cb
+    }
+
+    fun cancelMeasure() {
+        measureArmed = null
+        measureCb = null
+    }
+
     private fun onReading(r: Reading) {
+        val cb = measureCb
+        if (cb != null) {
+            measureCb = null
+            measureArmed = null
+            cb(r.mm)
+            return
+        }
         val s = session
         if (s != null && screen == Screen.Editor && s.state.assignReading(r) != null) return
         recent.add(0, r)

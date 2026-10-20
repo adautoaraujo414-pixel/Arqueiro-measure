@@ -106,6 +106,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
 
     var textEdit by mutableStateOf<TextEdit?>(null)
 
+    /** Móvel aberto no editor (id) ou null. */
+    var cabEditId by mutableStateOf<String?>(null)
+
     /** Calculadora flutuante aberta? */
     var calcOpen by mutableStateOf(false)
 

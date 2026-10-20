@@ -520,6 +520,13 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         ToolBtn(Tool.SELECT, session)
                         IconButton(
+                            onClick = {
+                                val at = br.com.arque.measure.model.Pt(80f, 160f)
+                                session.cabEditId = st.addCab(at)
+                            },
+                            modifier = Modifier.size(40.dp),
+                        ) { ShapeGlyph(Tool.RECT, Ui.text, 22.dp, cabinet = true) }
+                        IconButton(
                             onClick = { session.calcOpen = !session.calcOpen },
                             modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.calcOpen) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
                         ) { Text("÷×", color = if (session.calcOpen) Ui.accent else Ui.text, fontSize = 15.sp) }
@@ -661,6 +668,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     }
 
     if (btOpen) BluetoothScreen(vm) { btOpen = false }
+    session.cabEditId?.let { cid -> CabinetScreen(vm, session, cid) { session.cabEditId = null } }
     if (overview) OverviewDialog(session, vm, onDismiss = { overview = false })
 }
 
@@ -677,7 +685,7 @@ private fun applyWidth(session: EditorSession, deltaMm: Float) {
 
 /** Ícone desenhado de cada forma (grade do painel de Formas). */
 @Composable
-private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) {
+private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp, cabinet: Boolean = false) {
     Canvas(Modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
@@ -696,6 +704,13 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) 
             val s = 0.26f * w
             fun q(d: Double) = androidx.compose.ui.geometry.Offset(tip.x - s * Math.cos(ang + d).toFloat(), tip.y - s * Math.sin(ang + d).toFloat())
             poly(listOf(q(-0.45), tip, q(0.45)), false)
+        }
+        if (cabinet) {
+            drawRect(tint, P(0.14f, 0.12f), androidx.compose.ui.geometry.Size(0.72f * w, 0.76f * h), style = st)
+            drawLine(tint, P(0.5f, 0.12f), P(0.5f, 0.88f), sw)
+            drawLine(tint, P(0.5f, 0.4f), P(0.86f, 0.4f), sw)
+            drawLine(tint, P(0.5f, 0.64f), P(0.86f, 0.64f), sw)
+            return@Canvas
         }
         when (t) {
             Tool.LINE -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
@@ -802,6 +817,13 @@ private fun ContextBar(session: EditorSession, modifier: Modifier) {
             CtxBtn("Colar", session.clipboard.isNotEmpty()) { session.paste() }
             CtxBtn("Duplicar") { st.duplicate(o.id) }
             if (o is PhotoObj) CtxBtn("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) }
+            if (o is br.com.arque.measure.model.CabObj) {
+                CtxBtn("Editar móvel") { session.cabEditId = o.id }
+                CtxBtn("Escala 1:${o.scaleDen}", !o.locked) {
+                    val steps = listOf(5, 10, 20, 25, 50)
+                    st.setCabScale(o.id, steps[(steps.indexOf(o.scaleDen) + 1).mod(steps.size)])
+                }
+            }
             CtxBtn(if (o.locked) "Desbloquear" else "Bloqueio") { st.setLocked(o.id, !o.locked) }
             CtxBtn("Para frente") { st.reorder(o.id, up = true) }
             CtxBtn("Para trás") { st.reorder(o.id, up = false) }

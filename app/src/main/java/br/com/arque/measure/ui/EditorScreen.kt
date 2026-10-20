@@ -333,59 +333,86 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp).clip(CircleShape).background(Color(0x99000000)),
             ) { Icon(Icons.Filled.Close, "Sair da tela cheia", tint = Color.White) }
         } else {
-            Column(Modifier.align(Alignment.TopCenter).statusBarsPadding().fillMaxWidth().background(Ui.panel)) {
-                // ---- abas das notas abertas ----
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 6.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    vm.tabs.forEach { id ->
-                        val on = id == note.id
-                        Row(
-                            Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) Ui.panel2 else Color.Transparent)
-                                .clickable { if (!on) { vm.flush(); vm.openNote(id) } }.padding(start = 12.dp, end = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(if (on) note.name else vm.tabName(id), color = if (on) Ui.text else Ui.dim, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 140.dp))
-                            IconButton(onClick = { vm.closeTab(id) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Filled.Close, "Fechar aba", tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+            Surface(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                color = Ui.panel, shadowElevation = 6.dp,
+                shape = RoundedCornerShape(bottomStart = 18.dp, bottomEnd = 18.dp),
+            ) {
+            Column(Modifier.statusBarsPadding().padding(bottom = 6.dp)) {
+                // ---- abas (só aparecem com mais de uma nota aberta) ----
+                if (vm.tabs.size > 1) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        vm.tabs.forEach { id ->
+                            val on = id == note.id
+                            Row(
+                                Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) Ui.panel2 else Color.Transparent)
+                                    .clickable { if (!on) { vm.flush(); vm.openNote(id) } }.padding(start = 12.dp, end = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(if (on) note.name else vm.tabName(id), color = if (on) Ui.text else Ui.dim, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 140.dp))
+                                IconButton(onClick = { vm.closeTab(id) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Filled.Close, "Fechar aba", tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+                            }
                         }
                     }
                 }
-                // ---- linha 1 ----
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { vm.closeEditor() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text) }
-                    IconButton(onClick = { vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) }) { Icon(Icons.Filled.PhotoCamera, "Câmera", tint = Ui.text) }
-                    IconButton(onClick = { st.undo() }, enabled = st.canUndo) { Icon(Icons.AutoMirrored.Filled.Undo, "Desfazer", tint = if (st.canUndo) Ui.text else Ui.line) }
-                    IconButton(onClick = { st.redo() }, enabled = st.canRedo) { Icon(Icons.AutoMirrored.Filled.Redo, "Refazer", tint = if (st.canRedo) Ui.text else Ui.line) }
+                // ---- linha 1: nota · folhas · medida ----
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    BarPill {
+                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") { vm.closeEditor() }
+                        BarIcon(Icons.AutoMirrored.Filled.Undo, "Desfazer", st.canUndo) { st.undo() }
+                        BarIcon(Icons.AutoMirrored.Filled.Redo, "Refazer", st.canRedo) { st.redo() }
+                    }
                     val vp = session.visiblePage()
-                    IconButton(onClick = { session.goToPage(vp - 1) }, enabled = vp > 0) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Folha anterior", tint = Ui.text) }
-                    Text("${vp + 1}/${note.pages.size}", color = Ui.text, fontSize = 14.sp, modifier = Modifier.clickable { overview = true }.padding(4.dp))
-                    IconButton(onClick = { session.goToPage(vp + 1) }, enabled = vp < note.pages.lastIndex) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Próxima folha", tint = Ui.text) }
-                    Box {
-                        TextButton(onClick = { pageMenu = true }) { Icon(Icons.Filled.Add, null, Modifier.size(16.dp)); Text(" Folha") }
-                        DropdownMenu(expanded = pageMenu, onDismissRequest = { pageMenu = false }) {
-                            DropdownMenuItem(text = { Text("Antes da folha atual") }, onClick = { addPage(st.pageIdx) })
-                            DropdownMenuItem(text = { Text("Após a folha atual") }, onClick = { addPage(st.pageIdx + 1) })
-                            DropdownMenuItem(text = { Text("Última página") }, onClick = { addPage(note.pages.size) })
-                            HorizontalDivider()
-                            Template.entries.forEach { t ->
-                                DropdownMenuItem(
-                                    text = { Text((if (tpl == t) "● " else "○ ") + t.label) },
-                                    onClick = { tpl = t },
-                                )
+                    BarPill {
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Folha anterior", vp > 0) { session.goToPage(vp - 1) }
+                        Text("${vp + 1}/${note.pages.size}", color = Ui.text, fontSize = 14.sp, modifier = Modifier.clickable { overview = true }.padding(horizontal = 2.dp, vertical = 8.dp))
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Próxima folha", vp < note.pages.lastIndex) { session.goToPage(vp + 1) }
+                        Box {
+                            Row(
+                                Modifier.clip(RoundedCornerShape(16.dp)).clickable { pageMenu = true }.padding(horizontal = 10.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Filled.Add, null, Modifier.size(16.dp), tint = Ui.accent)
+                                Text(" Folha", color = Ui.accent, fontSize = 14.sp)
                             }
-                            HorizontalDivider()
-                            DropdownMenuItem(text = { Text("Adicionar outras páginas de nota (em breve)") }, enabled = false, onClick = {})
-                            DropdownMenuItem(text = { Text("Importar ficheiros (em breve)") }, enabled = false, onClick = {})
-                            DropdownMenuItem(text = { Text("Importar imagem") }, onClick = { pageMenu = false; vm.photoToNewPage = true; pickPhotos.launch("image/*") })
-                            DropdownMenuItem(text = { Text("Tirar fotografia") }, onClick = { pageMenu = false; vm.photoToNewPage = true; camera.launch(vm.newCameraUri()) })
+                            DropdownMenu(expanded = pageMenu, onDismissRequest = { pageMenu = false }) {
+                                DropdownMenuItem(text = { Text("Antes da folha atual") }, onClick = { addPage(st.pageIdx) })
+                                DropdownMenuItem(text = { Text("Após a folha atual") }, onClick = { addPage(st.pageIdx + 1) })
+                                DropdownMenuItem(text = { Text("Última página") }, onClick = { addPage(note.pages.size) })
+                                HorizontalDivider()
+                                Template.entries.forEach { t ->
+                                    DropdownMenuItem(
+                                        text = { Text((if (tpl == t) "● " else "○ ") + t.label) },
+                                        onClick = { tpl = t },
+                                    )
+                                }
+                                HorizontalDivider()
+                                DropdownMenuItem(text = { Text("Adicionar outras páginas de nota (em breve)") }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text("Importar ficheiros (em breve)") }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text("Importar imagem") }, onClick = { pageMenu = false; vm.photoToNewPage = true; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text("Tirar fotografia") }, onClick = { pageMenu = false; vm.photoToNewPage = true; camera.launch(vm.newCameraUri()) })
+                            }
                         }
                     }
-                    TextButton(onClick = { st.setUnit(nextUnit(note.unit)) }) { Text(note.unit.label, color = Ui.text) }
                     val connected = bleState == BleState.CONNECTED
-                    TextButton(onClick = { btOpen = true }) {
-                        Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, null, Modifier.size(18.dp), tint = if (connected) Ui.accent else Ui.text)
-                        Text(if (connected) " Bosch conectada" else " Conectar trena", color = if (connected) Ui.accent else Ui.text)
+                    BarPill {
+                        Text(
+                            note.unit.label, color = Ui.text, fontSize = 14.sp,
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)).clickable { st.setUnit(nextUnit(note.unit)) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                        )
+                        Row(
+                            Modifier.clip(RoundedCornerShape(16.dp)).clickable { btOpen = true }.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, "Trena", Modifier.size(18.dp), tint = if (connected) Ui.accent else Ui.text)
+                            Text(if (connected) " Bosch" else " Conectar", color = if (connected) Ui.accent else Ui.text, fontSize = 14.sp)
+                        }
                     }
                     Box {
-                        IconButton(onClick = { menuOpen = true }) { Icon(Icons.Filled.MoreVert, "Mais opções", tint = Ui.text) }
+                        BarPill { BarIcon(Icons.Filled.MoreVert, "Mais opções") { menuOpen = true } }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(text = { Text("Zoom em tela cheia") }, onClick = { menuOpen = false; session.fullscreen = true })
                             DropdownMenuItem(text = { Text("Visão geral da nota") }, onClick = { menuOpen = false; overview = true })
@@ -405,55 +432,63 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         }
                     }
                 }
-                HorizontalDivider(color = Ui.line)
-                // ---- linha 2: ferramentas ----
-                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ToolBtn(Tool.PEN, session)
-                    ToolBtn(Tool.PENCIL, session)
-                    ToolBtn(Tool.ERASER, session)
-                    ToolBtn(Tool.SELECT, session)
-                    Box {
-                        IconButton(onClick = { imageMenu = true }) { Icon(Icons.Filled.Image, "Imagem", tint = Ui.text) }
-                        DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
-                            DropdownMenuItem(text = { Text("Álbum") }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
-                            DropdownMenuItem(text = { Text("Câmera") }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
-                        }
+                Spacer(Modifier.height(6.dp))
+                // ---- linha 2: desenho · objetos · cor e espessura ----
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    BarPill {
+                        ToolBtn(Tool.PEN, session)
+                        ToolBtn(Tool.PENCIL, session)
+                        ToolBtn(Tool.ERASER, session)
                     }
-                    ToolBtn(Tool.TEXT, session)
-                    Box {
-                        val inShapes = session.tool in shapeTools
-                        IconButton(
-                            onClick = { shapesMenu = true },
-                            modifier = Modifier.clip(CircleShape).background(if (inShapes) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                        ) { Icon(if (inShapes) session.tool.icon() else Icons.Filled.CropSquare, "Formas", tint = Ui.text) }
-                        DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
-                            Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
-                                Row(Modifier.horizontalScroll(rememberScrollState())) {
-                                    shapeTools.forEach { t ->
-                                        IconButton(
-                                            onClick = { session.chooseTool(t); shapesMenu = false },
-                                            modifier = Modifier.clip(CircleShape).background(if (session.tool == t) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                                        ) { Icon(t.icon(), t.label) }
+                    BarPill {
+                        ToolBtn(Tool.SELECT, session)
+                        Box {
+                            BarIcon(Icons.Filled.Image, "Imagem") { imageMenu = true }
+                            DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
+                                DropdownMenuItem(text = { Text("Álbum") }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text("Câmera") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
+                            }
+                        }
+                        ToolBtn(Tool.TEXT, session)
+                        Box {
+                            val inShapes = session.tool in shapeTools
+                            Box(Modifier.clip(CircleShape).background(if (inShapes) Ui.accent.copy(alpha = 0.3f) else Color.Transparent)) {
+                                BarIcon(if (inShapes) session.tool.icon() else Icons.Filled.CropSquare, "Formas", tint = if (inShapes) Ui.accent else Ui.text) { shapesMenu = true }
+                            }
+                            DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
+                                Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
+                                    Row(Modifier.horizontalScroll(rememberScrollState())) {
+                                        shapeTools.forEach { t ->
+                                            IconButton(
+                                                onClick = { session.chooseTool(t); shapesMenu = false },
+                                                modifier = Modifier.clip(CircleShape).background(if (session.tool == t) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                                            ) { Icon(t.icon(), t.label) }
+                                        }
                                     }
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Espessura", modifier = Modifier.weight(1f), fontSize = 13.sp)
-                                    IconButton(onClick = { applyWidth(session, -0.1f) }) { Icon(Icons.Filled.Remove, "Mais fino") }
-                                    Text(mmText(session.width), fontSize = 13.sp)
-                                    IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, "Mais grosso") }
-                                }
-                                ColorRow(session.color) { applyColor(session, it) }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("Preenchimento", modifier = Modifier.weight(1f), fontSize = 13.sp)
-                                    Switch(checked = session.fill, onCheckedChange = { session.fill = it })
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Espessura", modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        IconButton(onClick = { applyWidth(session, -0.1f) }) { Icon(Icons.Filled.Remove, "Mais fino") }
+                                        Text(mmText(session.width), fontSize = 13.sp)
+                                        IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, "Mais grosso") }
+                                    }
+                                    ColorRow(session.color) { applyColor(session, it) }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Preenchimento", modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        Switch(checked = session.fill, onCheckedChange = { session.fill = it })
+                                    }
                                 }
                             }
                         }
                     }
-                    Spacer(Modifier.width(8.dp))
-                    ColorRow(session.color) { applyColor(session, it) }
-                    Text(mmText(session.width), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp))
+                    BarPill {
+                        Box(Modifier.padding(start = 10.dp)) { ColorRow(session.color) { applyColor(session, it) } }
+                        Text(mmText(session.width), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 10.dp))
+                    }
                 }
+            }
             }
 
             // ---- menu de contexto acima do objeto selecionado ----
@@ -524,13 +559,29 @@ private fun applyWidth(session: EditorSession, deltaMm: Float) {
     session.state.selected?.let { if (it !is PhotoObj && it !is TextObj) session.state.setStyle(it.id, width = w) }
 }
 
+/** Grupo de botões da barra, em cápsula. */
+@Composable
+private fun BarPill(content: @Composable () -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(20.dp)).background(Ui.panel2).padding(horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) { content() }
+}
+
+@Composable
+private fun BarIcon(icon: ImageVector, desc: String, enabled: Boolean = true, tint: Color = Ui.text, onClick: () -> Unit) {
+    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(40.dp)) {
+        Icon(icon, desc, tint = if (enabled) tint else Ui.line, modifier = Modifier.size(22.dp))
+    }
+}
+
 @Composable
 private fun ToolBtn(t: Tool, session: EditorSession) {
     val on = session.tool == t
     IconButton(
         onClick = { session.chooseTool(t) },
-        modifier = Modifier.clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-    ) { Icon(t.icon(), t.label, tint = if (on) Ui.accent else Ui.text) }
+        modifier = Modifier.size(40.dp).clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+    ) { Icon(t.icon(), t.label, tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
 }
 
 @Composable
@@ -850,11 +901,11 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
     LaunchedEffect(Unit) { if (state != BleState.CONNECTED && state != BleState.CONNECTING) search() }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize(), color = Color.White) {
+        Surface(Modifier.fillMaxSize(), color = Ui.bg) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Color(0xFF111111)) }
-                    Text("Ferramentas Bluetooth®", color = Color(0xFF111111), fontSize = 20.sp)
+                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text) }
+                    Text("Ferramentas Bluetooth®", color = Ui.text, fontSize = 20.sp)
                 }
                 val ready = state == BleState.CONNECTED
                 val status = when (state) {
@@ -867,28 +918,28 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                     BleState.UNAVAILABLE -> "Bluetooth LE indisponível"
                     BleState.ERROR -> "Erro"
                 }
-                Text(status, color = Color(0xFF111111), fontSize = 16.sp)
+                Text(status, color = Ui.text, fontSize = 16.sp)
                 Box(
                     Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(
                         Brush.horizontalGradient(listOf(Color(0xFFE53935), Color(0xFFF5B400), Color(0xFF2E9E57), Color(0xFF1E5BD8), Color(0xFF8E24AA))),
                     ),
                 )
-                if (message.isNotBlank()) Text(message, color = Color(0xFF555555), fontSize = 13.sp)
+                if (message.isNotBlank()) Text(message, color = Ui.dim, fontSize = 13.sp)
                 Text(
                     "Aviso: o protocolo Bluetooth ainda não foi validado com uma trena real. Confira cada valor recebido com o visor da trena.",
-                    color = Color(0xFFB3261E), fontSize = 13.sp,
+                    color = Color(0xFFFF8A80), fontSize = 13.sp,
                 )
                 if (ready) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(name ?: "Bosch", color = Color(0xFF111111), fontSize = 16.sp, modifier = Modifier.weight(1f))
+                        Text(name ?: "Bosch", color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
                         TextButton(onClick = { ble.disconnect() }) { Text("Desconectar") }
                     }
                 } else {
-                    Text("Outras ferramentas", color = Color(0xFF555555), fontSize = 14.sp)
+                    Text("Outras ferramentas", color = Ui.dim, fontSize = 14.sp)
                     found.forEach { d ->
-                        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Bluetooth, null, tint = Ui.distBlue, modifier = Modifier.size(20.dp))
-                            Text(d.name, color = Color(0xFF111111), fontSize = 16.sp, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                            Text(d.name, color = Ui.text, fontSize = 16.sp, modifier = Modifier.padding(start = 10.dp).weight(1f))
                             TextButton(onClick = { ble.connect(d.address, d.name) }) { Text("Conectar") }
                         }
                     }
@@ -902,8 +953,8 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                 }
                 if (log.isNotEmpty()) {
                     HorizontalDivider()
-                    Text("Diagnóstico: últimos quadros recebidos", color = Color(0xFF555555), fontSize = 13.sp)
-                    log.forEach { Text(it, color = Color(0xFF333333), fontFamily = FontFamily.Monospace, fontSize = 11.sp) }
+                    Text("Diagnóstico: últimos quadros recebidos", color = Ui.dim, fontSize = 13.sp)
+                    log.forEach { Text(it, color = Ui.dim, fontFamily = FontFamily.Monospace, fontSize = 11.sp) }
                 }
             }
         }

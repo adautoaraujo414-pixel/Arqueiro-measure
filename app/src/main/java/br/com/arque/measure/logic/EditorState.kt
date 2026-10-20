@@ -217,6 +217,36 @@ class EditorState(
         if (selectedSeg >= segs.size) selectedSeg = segs.lastIndex
     }
 
+    /**
+     * Tira os pontos soltos no meio das retas: uma reta = uma medida só.
+     * Se todos os pedaços tinham medida, a reta unida fica com a soma; senão fica sem medida.
+     */
+    fun mergeRoomStray(id: String): Boolean {
+        val r = sheet.obj(id) as? RoomObj ?: return false
+        if (r.locked) return false
+        val keep = br.com.arque.measure.logic.Straighten.strayFreeIndices(r.pts, r.closed)
+        if (keep.size == r.pts.size) return false
+        val n = r.pts.size
+        val segs = ArrayList<br.com.arque.measure.model.Seg>()
+        val pairs = if (r.closed) keep.indices.map { keep[it] to keep[(it + 1) % keep.size] } else keep.zipWithNext()
+        for ((a, b) in pairs) {
+            val group = ArrayList<br.com.arque.measure.model.Seg>()
+            var idx = a
+            do { r.segs.getOrNull(idx)?.let { group += it }; idx = (idx + 1) % n } while (idx != b)
+            val first = group.firstOrNull() ?: br.com.arque.measure.model.Seg()
+            val all = group.isNotEmpty() && group.all { it.valueMm != null }
+            segs += if (group.size <= 1) first else first.copy(
+                valueMm = if (all) group.sumOf { it.valueMm!! } else null,
+                source = if (all) first.source else null,
+                history = emptyList(),
+            )
+        }
+        val next = mapObj(id) { (it as RoomObj).copy(pts = keep.map { i -> r.pts[i] }, segs = segs) }
+        commit(next)
+        if (selectedSeg >= segs.size) selectedSeg = segs.lastIndex
+        return true
+    }
+
     fun setRoomLabelScale(id: String, scale: Float, live: Boolean = false) {
         val r = sheet.obj(id) as? RoomObj ?: return
         if (r.locked) return

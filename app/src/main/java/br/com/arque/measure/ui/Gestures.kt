@@ -213,6 +213,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         )
         st.live(st.sheet.copy(objs = st.sheet.objs.filter { it.id != prev.id } + room))
         st.endGesture()
+        st.mergeRoomStray(room.id)
         st.selectSeg(room.id, 0)
     }
 
@@ -383,7 +384,11 @@ class GestureController(private val s: EditorSession, private val density: Float
                 s.lasso = emptyList()
                 st.deleteIds(ids)
             }
-            Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> st.endGesture()
+            Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> {
+                val roomHandle = mode == Mode.HANDLE && st.sheet.obj(activeId) is RoomObj
+                st.endGesture()
+                if (roomHandle) activeId?.let { st.mergeRoomStray(it) }
+            }
             else -> {}
         }
         s.loupe = null

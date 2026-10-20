@@ -996,6 +996,9 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                 )
                 if (seg.valueMm != null) TextButton(onClick = { st.clearValue(r.id) }) { Text("Limpar medida") }
             }
+            if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
+                TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text("Unir pontos soltos (reta = 1 medida)") }
+            }
             if (r.pts.size >= 3) {
                 TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) "Abrir contorno" else "Fechar contorno") }
             }

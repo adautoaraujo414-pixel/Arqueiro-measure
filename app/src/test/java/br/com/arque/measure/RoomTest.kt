@@ -134,4 +134,18 @@ class AllKindsTest {
             assertEquals("seed $seed amp $amp pts=${r.pts}", 6, r.pts.size)
         }
     }
+
+    @Test fun mergeStrayKeepsCornersAndSumsMeasures() {
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet())))
+        val pts = listOf(Pt(0f, 0f), Pt(100f, 3f), Pt(200f, 0f), Pt(200f, 100f), Pt(0f, 100f))
+        val room = RoomObj(photoId = null, pts = pts, closed = true,
+            segs = listOf(Seg(valueMm = 1000.0), Seg(valueMm = 1500.0), Seg(valueMm = 800.0), Seg(valueMm = 2500.0), Seg(valueMm = 800.0)),
+            color = 0, width = 2f)
+        st.addRoom(room)
+        assertTrue(st.mergeRoomStray(room.id))
+        val r = st.sheet.obj(room.id) as RoomObj
+        assertEquals(4, r.pts.size)
+        assertEquals(4, r.segs.size)
+        assertEquals(2500.0, r.segs[0].valueMm!!, 0.0)
+    }
 }

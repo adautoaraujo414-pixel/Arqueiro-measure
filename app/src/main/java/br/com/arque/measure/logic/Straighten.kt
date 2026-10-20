@@ -171,4 +171,30 @@ object Straighten {
         }
         return Result(pts.toList(), closed)
     }
+
+    /**
+     * Índices dos vértices que ficam depois de tirar os que estão no meio de uma reta
+     * (pontas soltas). Cantos de verdade (viradas grandes) nunca saem.
+     */
+    fun strayFreeIndices(pts: List<Pt>, closed: Boolean, tolDeg: Double = 18.0): List<Int> {
+        val keep = pts.indices.toMutableList()
+        var changed = true
+        while (changed) {
+            changed = false
+            val m = keep.size
+            if (m <= (if (closed) 3 else 2)) break
+            val range = if (closed) 0 until m else 1 until m - 1
+            for (i in range) {
+                val p0 = pts[keep[(i - 1 + m) % m]]
+                val p1 = pts[keep[i]]
+                val p2 = pts[keep[(i + 1) % m]]
+                val d1 = atan2((p1.y - p0.y).toDouble(), (p1.x - p0.x).toDouble())
+                val d2 = atan2((p2.y - p1.y).toDouble(), (p2.x - p1.x).toDouble())
+                var turn = Math.toDegrees(abs(d2 - d1))
+                if (turn > 180.0) turn = 360.0 - turn
+                if (turn < tolDeg) { keep.removeAt(i); changed = true; break }
+            }
+        }
+        return keep
+    }
 }

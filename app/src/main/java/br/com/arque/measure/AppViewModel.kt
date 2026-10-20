@@ -56,6 +56,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val images = ImageCache(store, viewModelScope)
     val ble = BoschBle(app)
 
+    // painel da trena na folha: pode ocultar e mudar o tamanho (guardado no aparelho)
+    private val uiPrefs = app.getSharedPreferences("arque_ui", android.content.Context.MODE_PRIVATE)
+    var trenaHidden by mutableStateOf(uiPrefs.getBoolean("trenaHidden", false))
+        private set
+    var trenaScale by mutableStateOf(uiPrefs.getFloat("trenaScale", 0.8f).coerceIn(0.5f, 1.3f))
+        private set
+
+    fun setTrenaHidden(v: Boolean) {
+        trenaHidden = v
+        uiPrefs.edit().putBoolean("trenaHidden", v).apply()
+    }
+
+    fun setTrenaScale(s: Float) {
+        trenaScale = s.coerceIn(0.5f, 1.3f)
+        uiPrefs.edit().putFloat("trenaScale", trenaScale).apply()
+    }
+
     /** Uma única thread para toda escrita em disco: mantém a ordem dos salvamentos. */
     private val io = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 

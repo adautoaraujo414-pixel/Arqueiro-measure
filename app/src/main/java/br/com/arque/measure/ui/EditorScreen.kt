@@ -321,7 +321,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     var imageMenu by remember { mutableStateOf(false) }
     var overview by remember { mutableStateOf(false) }
     var tpl by remember { mutableStateOf(Template.ARAUJO) }
-    var miniOpen by remember { mutableStateOf(true) }
+    var miniOpen by remember { mutableStateOf(false) }
 
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         if (uris.isEmpty()) vm.photoToNewPage = false
@@ -640,7 +640,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
             ) {
                 (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
                 (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
-                if (bleState == BleState.CONNECTED) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
+                if (bleState == BleState.CONNECTED && !vm.trenaHidden) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
                 ChipsBar(vm, bleState == BleState.CONNECTED) { btOpen = true }
             }
         }
@@ -1060,15 +1060,20 @@ private fun LabelSlider(
 @Composable
 private fun MiniTelemeter(vm: AppViewModel, open: Boolean, toggle: () -> Unit) {
     val name by vm.ble.deviceName.collectAsStateWithLifecycle()
-    Surface(shape = RoundedCornerShape(14.dp), color = Ui.panel) {
-        Column(Modifier.padding(12.dp)) {
+    val k = vm.trenaScale
+    Surface(shape = RoundedCornerShape((12 * k).dp), color = Ui.panel) {
+        Column(Modifier.padding((8 * k).dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Telémetro laser", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                Text(if (open) "Pronto ▾" else "Pronto ▸", color = Ui.accent, fontSize = 13.sp, modifier = Modifier.clickable(onClick = toggle))
+                Text("Trena", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.padding(end = (10 * k).dp))
+                Text(if (open) "Pronto ▾" else "Pronto ▸", color = Ui.accent, fontSize = (12 * k).sp, modifier = Modifier.clickable(onClick = toggle))
+                Box(Modifier.weight(1f))
+                Text("A−", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.setTrenaScale(vm.trenaScale - 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("A+", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.setTrenaScale(vm.trenaScale + 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("✕", color = Ui.dim, fontSize = (14 * k).sp, modifier = Modifier.clickable { vm.setTrenaHidden(true) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
             }
             if (open) {
-                Text(name ?: "Bosch", color = Ui.dim, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
-                TextButton(onClick = { vm.ble.disconnect() }) { Text("Desconectar") }
+                Text(name ?: "Bosch", color = Ui.dim, fontSize = (12 * k).sp, modifier = Modifier.padding(top = (2 * k).dp))
+                TextButton(onClick = { vm.ble.disconnect() }) { Text("Desconectar", fontSize = (12 * k).sp) }
             }
         }
     }
@@ -1079,8 +1084,8 @@ private fun ChipsBar(vm: AppViewModel, connected: Boolean, onBt: () -> Unit) {
     if (!connected && vm.recent.isEmpty()) return
     val unit = vm.session?.state?.unit ?: LengthUnit.M
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Ui.distBlue).clickable(onClick = onBt), contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.Bluetooth, "Bluetooth", tint = Color.White)
+        if (!vm.trenaHidden) Box(Modifier.size((44 * vm.trenaScale).dp).clip(CircleShape).background(Ui.distBlue).clickable(onClick = onBt), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Bluetooth, "Bluetooth", tint = Color.White, modifier = Modifier.size((24 * vm.trenaScale).dp))
         }
         vm.recent.forEach { r ->
             Row(
@@ -1247,7 +1252,7 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                 )
                 if (message.isNotBlank()) Text(message, color = Ui.dim, fontSize = 13.sp)
                 Text(
-                    "Aviso: o protocolo Bluetooth ainda não foi validado com uma trena real. Confira cada valor recebido com o visor da trena.",
+                    "Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena.",
                     color = Color(0xFFFF8A80), fontSize = 13.sp,
                 )
                 if (ready) {
@@ -1272,6 +1277,16 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                         }
                     }
                 }
+                HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Mostrar painel da trena na folha", color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    Switch(checked = !vm.trenaHidden, onCheckedChange = { vm.setTrenaHidden(!it) })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Tamanho do painel", color = Ui.text, fontSize = 15.sp, modifier = Modifier.width(150.dp))
+                    androidx.compose.material3.Slider(value = vm.trenaScale, onValueChange = { vm.setTrenaScale(it) }, valueRange = 0.5f..1.3f, modifier = Modifier.weight(1f))
+                }
+                Text("Com o painel oculto, a medida continua indo direto para a cota ou o segmento selecionado.", color = Ui.dim, fontSize = 12.sp)
                 if (log.isNotEmpty()) {
                     HorizontalDivider()
                     Text("Diagnóstico: últimos quadros recebidos", color = Ui.dim, fontSize = 13.sp)

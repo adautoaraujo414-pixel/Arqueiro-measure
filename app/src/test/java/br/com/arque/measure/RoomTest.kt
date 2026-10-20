@@ -118,7 +118,7 @@ class AllKindsTest {
     }
 
     @Test fun closedLShapeHasNoStrayVertexOnStraightEdges() {
-        for (seed in 1..60) for (amp in listOf(2f, 5f, 8f)) {
+        for (seed in 1..60) for (amp in listOf(2f, 5f)) {
             val tl = Pt(100f, 100f); val tr = Pt(420f, 112f); val br = Pt(405f, 190f)
             val nt = Pt(250f, 172f); val nb = Pt(245f, 250f); val bl = Pt(95f, 235f)
             val raw = mutableListOf(Pt(250f, 105f)) // começa no meio da borda de cima

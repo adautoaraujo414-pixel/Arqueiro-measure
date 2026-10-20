@@ -108,4 +108,30 @@ class AllKindsTest {
         st.setAllSegKinds(r.id, SegKind.PANEL)
         assertTrue((st.sheet.objs[0] as RoomObj).segs.all { it.kind == SegKind.PANEL })
     }
+
+    private fun line(raw: MutableList<Pt>, a: Pt, b: Pt, n: Int, seed: Int, amp: Float) {
+        val rnd = java.util.Random(seed.toLong())
+        for (i in 1..n) {
+            val t = i / n.toFloat()
+            raw += Pt(a.x + (b.x - a.x) * t + (rnd.nextFloat() - 0.5f) * amp, a.y + (b.y - a.y) * t + (rnd.nextFloat() - 0.5f) * amp)
+        }
+    }
+
+    @Test fun closedLShapeHasNoStrayVertexOnStraightEdges() {
+        for (seed in 1..60) for (amp in listOf(2f, 5f, 8f)) {
+            val tl = Pt(100f, 100f); val tr = Pt(420f, 112f); val br = Pt(405f, 190f)
+            val nt = Pt(250f, 172f); val nb = Pt(245f, 250f); val bl = Pt(95f, 235f)
+            val raw = mutableListOf(Pt(250f, 105f)) // começa no meio da borda de cima
+            line(raw, Pt(250f, 105f), tr, 12, seed, amp)
+            line(raw, tr, br, 8, seed + 1, amp)
+            line(raw, br, nt, 14, seed + 2, amp)
+            line(raw, nt, nb, 8, seed + 3, amp)
+            line(raw, nb, bl, 12, seed + 4, amp)
+            line(raw, bl, tl, 14, seed + 5, amp)
+            line(raw, tl, Pt(250f, 105f), 14, seed + 6, amp)
+            val r = Straighten.run(raw, closeTol = 40f, eps = 10f, minSeg = 22f)!!
+            assertTrue("seed $seed amp $amp", r.closed)
+            assertEquals("seed $seed amp $amp pts=${r.pts}", 6, r.pts.size)
+        }
+    }
 }

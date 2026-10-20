@@ -212,4 +212,11 @@ class CabinetTest {
         st.fitCabToPage(id)
         assertEquals(100, (st.sheet.obj(id) as CabObj).scaleDen)
     }
+
+    @Test fun tamponamentoAlignedAtTopAndEndsAtBase() {
+        val c = base.copy(tampEsq = true)
+        val t = CabinetMath.parts(c).single { it.kind == PartKind.TAMPONAMENTO }
+        assertEquals(0.0, t.y, 0.0)
+        assertEquals(CabinetMath.baseBottom(c), t.y + t.h, 1e-9)
+    }
 }

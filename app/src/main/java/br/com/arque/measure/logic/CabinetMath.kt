@@ -223,8 +223,9 @@ object CabinetMath {
         val tampH = latH + c.tampAltExtraMm
         val tampD = c.dMm + c.tampProfExtraMm
         val tn = "por fora; +${fmt(c.tampProfExtraMm)} na profundidade e +${fmt(c.tampAltExtraMm)} na altura"
-        if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, top, e, tampH, tampH, tampD, e, note = tn)
-        if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, top, e, tampH, tampH, tampD, e, note = tn)
+        // alinhado em cima com a moldura (y = 0), sem "dente"; engrossa a lateral (lateral + tamponamento = 2 × espessura)
+        if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
+        if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
         if (c.hasMoldura) {
             out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = "acabamento, cobre a folga do topo")
         }

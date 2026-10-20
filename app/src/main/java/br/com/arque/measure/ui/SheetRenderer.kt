@@ -20,6 +20,7 @@ import br.com.arque.measure.model.Sheet
 import br.com.arque.measure.model.StrokeKind
 import br.com.arque.measure.model.StrokeObj
 import br.com.arque.measure.model.TextObj
+import br.com.arque.measure.model.Template
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.hypot
@@ -44,15 +45,53 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
     private val path = Path()
     private val rect = RectF()
 
-    fun draw(c: Canvas, sheet: Sheet, selectedId: String?, viewScale: Float, withPaper: Boolean = true) {
+    private val tplPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private fun paintTemplate(c: Canvas, tpl: Template, w: Float, h: Float) {
+        when (tpl) {
+            Template.BLANK -> {}
+            Template.LINES -> {
+                tplPaint.style = Paint.Style.STROKE
+                tplPaint.strokeWidth = 0.8f
+                tplPaint.color = 0xFFD7DCE3.toInt()
+                var y = 70f
+                while (y < h - 30f) { c.drawLine(36f, y, w - 36f, y, tplPaint); y += 30f }
+            }
+            Template.ARAUJO -> {
+                tplPaint.style = Paint.Style.STROKE
+                tplPaint.strokeWidth = 1.5f
+                tplPaint.color = 0xFF2B2B2B.toInt()
+                c.drawRect(24f, 24f, w - 24f, h - 24f, tplPaint)
+                c.drawLine(24f, 96f, w - 24f, 96f, tplPaint)
+                tplPaint.style = Paint.Style.FILL
+                tplPaint.color = 0xFF111111.toInt()
+                tplPaint.typeface = Typeface.DEFAULT_BOLD
+                tplPaint.textSize = 24f
+                tplPaint.textAlign = Paint.Align.LEFT
+                c.drawText("ARAÚJO PLANEJADOS", 40f, 62f, tplPaint)
+                tplPaint.typeface = Typeface.DEFAULT
+                tplPaint.textSize = 11f
+                tplPaint.color = 0xFF555555.toInt()
+                tplPaint.textAlign = Paint.Align.RIGHT
+                c.drawText("CROQUI DE MEDIDAS", w - 40f, 50f, tplPaint)
+                c.drawText("Cliente: ____________________   Data: ___/___/_____", w - 40f, 72f, tplPaint)
+                tplPaint.color = 0xFF999999.toInt()
+                tplPaint.textAlign = Paint.Align.CENTER
+                c.drawText("medidas em metros", w / 2f, h - 32f, tplPaint)
+            }
+        }
+    }
+
+    fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true) {
         if (withPaper) {
             c.drawRect(5f, 6f, sheet.width + 5f, sheet.height + 6f, paperShadow)
-            c.drawRect(0f, 0f, sheet.width, sheet.height, paperFill)
         }
+        c.drawRect(0f, 0f, sheet.width, sheet.height, paperFill)
+        paintTemplate(c, sheet.tpl, sheet.width, sheet.height)
         c.save()
         c.clipRect(0f, 0f, sheet.width, sheet.height)
         val photos = sheet.photos()
-        for (o in sheet.objs) drawObj(c, o, photos, sheet.unit, selectedId == o.id)
+        for (o in sheet.objs) drawObj(c, o, photos, unit, selectedId == o.id)
         c.restore()
         if (withPaper) c.drawRect(0f, 0f, sheet.width, sheet.height, paperBorder)
         sheet.obj(selectedId)?.let { drawSelection(c, sheet, it, viewScale) }
@@ -129,18 +168,36 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         strokePaint.color = o.color
         strokePaint.strokeWidth = o.width
         strokePaint.strokeCap = Paint.Cap.ROUND
+        fillPaint.color = withAlpha(o.color, 70)
+        strokePaint.pathEffect = if (o.kind == ShapeKind.DASHED) DashPathEffect(floatArrayOf(o.width * 4f + 6f, o.width * 3f + 5f), 0f) else null
+        val l = min(a.x, b.x); val r = max(a.x, b.x); val t = min(a.y, b.y); val bt = max(a.y, b.y)
         when (o.kind) {
-            ShapeKind.LINE -> c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+            ShapeKind.LINE, ShapeKind.DASHED -> c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
             ShapeKind.ARROW -> {
                 c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
-                arrowHead(c, b, a, max(12f, o.width * 4f), o.color)
+                arrowHead(c, b, a, max(10f, o.width * 4f), o.color)
             }
-            ShapeKind.RECT -> c.drawRect(min(a.x, b.x), min(a.y, b.y), max(a.x, b.x), max(a.y, b.y), strokePaint)
+            ShapeKind.RECT -> {
+                if (o.fill) c.drawRect(l, t, r, bt, fillPaint)
+                c.drawRect(l, t, r, bt, strokePaint)
+            }
+            ShapeKind.RRECT -> {
+                if (o.fill) c.drawRoundRect(l, t, r, bt, 14f, 14f, fillPaint)
+                c.drawRoundRect(l, t, r, bt, 14f, 14f, strokePaint)
+            }
             ShapeKind.ELLIPSE -> {
-                rect.set(min(a.x, b.x), min(a.y, b.y), max(a.x, b.x), max(a.y, b.y))
+                rect.set(l, t, r, bt)
+                if (o.fill) c.drawOval(rect, fillPaint)
                 c.drawOval(rect, strokePaint)
             }
+            ShapeKind.TRIANGLE -> {
+                path.reset()
+                path.moveTo((l + r) / 2f, t); path.lineTo(r, bt); path.lineTo(l, bt); path.close()
+                if (o.fill) c.drawPath(path, fillPaint)
+                c.drawPath(path, strokePaint)
+            }
         }
+        strokePaint.pathEffect = null
     }
 
     private fun drawText(c: Canvas, o: TextObj, photos: Map<String, PhotoObj>) {
@@ -154,31 +211,30 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         }
     }
 
+    private fun luminance(color: Int): Float {
+        val r = (color shr 16 and 0xFF) / 255f
+        val g = (color shr 8 and 0xFF) / 255f
+        val b = (color and 0xFF) / 255f
+        return 0.299f * r + 0.587f * g + 0.114f * b
+    }
+
+    /** Seta de cota: linha fina, pontas pequenas; só mostra o número depois que a trena mediu. */
     private fun drawDim(c: Canvas, o: DimObj, photos: Map<String, PhotoObj>, unit: LengthUnit) {
         val (a, b) = Geo.annPoints(photos, o)
         strokePaint.color = o.color
         strokePaint.strokeWidth = o.width
         strokePaint.strokeCap = Paint.Cap.BUTT
         c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
-        val head = max(12f, o.width * 4f)
+        val head = max(8f, o.width * 3.2f)
         arrowHead(c, a, b, head, o.color)
         arrowHead(c, b, a, head, o.color)
-        // traço perpendicular nas pontas, como nas cotas de projeto
-        val len = hypot(b.x - a.x, b.y - a.y)
-        if (len > 1f) {
-            val nx = -(b.y - a.y) / len * head * 0.6f
-            val ny = (b.x - a.x) / len * head * 0.6f
-            c.drawLine(a.x - nx, a.y - ny, a.x + nx, a.y + ny, strokePaint)
-            c.drawLine(b.x - nx, b.y - ny, b.x + nx, b.y + ny, strokePaint)
-        }
+        if (o.valueMm == null) return
         val label = Units.label(o, unit)
         val box = Geo.dimLabelBox(a, b, label)
         rect.set(box.l, box.t, box.r, box.b)
-        fillPaint.color = if (o.valueMm == null) 0xFFFFF1BF.toInt() else 0xEEFFFFFF.toInt()
-        c.drawRoundRect(rect, 6f, 6f, fillPaint)
-        strokePaint.strokeWidth = 1.5f
-        c.drawRoundRect(rect, 6f, 6f, strokePaint)
-        textPaint.color = if (o.valueMm == null) 0xFF8A6D00.toInt() else o.color
+        fillPaint.color = o.color
+        c.drawRoundRect(rect, 3f, 3f, fillPaint)
+        textPaint.color = if (luminance(o.color) > 0.6f) 0xFF111111.toInt() else 0xFFFFFFFF.toInt()
         textPaint.textSize = Geo.DIM_TEXT_SIZE
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT_BOLD
@@ -219,12 +275,16 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             }
             is DimObj, is ShapeObj -> {
                 val pts = Geo.annPoints(photos, o as br.com.arque.measure.model.Ann)
-                val width = if (o is DimObj) o.width else (o as ShapeObj).width
-                strokePaint.color = withAlpha(color, 90)
-                strokePaint.strokeWidth = width + 10f / viewScale
-                c.drawLine(pts[0].x, pts[0].y, pts[1].x, pts[1].y, strokePaint)
-                strokePaint.color = color
-                if (!o.locked) pts.forEach(::handle)
+                                if (!o.locked) {
+                    val ring = if (o is DimObj) o.color else (o as ShapeObj).color
+                    pts.forEach { p ->
+                        fillPaint.color = 0xFFFFFFFF.toInt()
+                        c.drawCircle(p.x, p.y, 7f / viewScale, fillPaint)
+                        strokePaint.color = ring
+                        strokePaint.strokeWidth = 2f / viewScale
+                        c.drawCircle(p.x, p.y, 7f / viewScale, strokePaint)
+                    }
+                }
             }
             is StrokeObj, is TextObj -> {
                 val ann = o as br.com.arque.measure.model.Ann

@@ -15,17 +15,9 @@ enum class MeasureSource { MANUAL, BLUETOOTH }
 
 enum class LengthUnit(val label: String) { MM("mm"), CM("cm"), M("m") }
 
-enum class ShapeKind { LINE, ARROW, RECT, ELLIPSE }
+enum class ShapeKind { LINE, DASHED, ARROW, RECT, RRECT, ELLIPSE, TRIANGLE }
 
 enum class StrokeKind { PEN, PENCIL, HIGHLIGHTER }
-
-/** Dimensões da folha em unidades de folha (96 dpi). A folha nunca muda de tamanho ao mexer em fotos. */
-enum class Paper(val label: String, val w: Float, val h: Float) {
-    A4("A4", 794f, 1123f),
-    A3("A3", 1123f, 1587f),
-    A5("A5", 559f, 794f),
-    LETTER("Carta", 816f, 1056f),
-}
 
 /** Uma leitura de medida. Sempre em milímetros, independente da escala visual. */
 data class Reading(
@@ -83,6 +75,7 @@ data class ShapeObj(
     val b: Pt,
     val color: Int,
     val width: Float,
+    val fill: Boolean = false,
     override val locked: Boolean = false,
 ) : Ann()
 
@@ -110,41 +103,68 @@ data class DimObj(
     override val locked: Boolean = false,
 ) : Ann()
 
+/** Modelos de folha. */
+enum class Template(val label: String) {
+    ARAUJO("Araújo croqui"),
+    BLANK("Em branco"),
+    LINES("Linha fina"),
+}
+
+/** Uma folha A4 de uma nota. Tamanho fixo: a folha nunca muda ao mexer em fotos. */
 data class Sheet(
     val id: String = newId(),
-    val roomId: String,
-    val name: String,
-    val paper: Paper = Paper.A4,
-    val landscape: Boolean = false,
-    val unit: LengthUnit = LengthUnit.MM,
+    val tpl: Template = Template.ARAUJO,
     val objs: List<Obj> = emptyList(),
 ) {
-    val width: Float get() = if (landscape) paper.h else paper.w
-    val height: Float get() = if (landscape) paper.w else paper.h
+    val width: Float get() = W
+    val height: Float get() = H
 
     fun photos(): Map<String, PhotoObj> =
         objs.filterIsInstance<PhotoObj>().associateBy { it.id }
 
     fun obj(id: String?): Obj? = if (id == null) null else objs.firstOrNull { it.id == id }
+
+    companion object {
+        const val W = 794f
+        const val H = 1123f
+        const val GAP = 28f
+        const val MAX_PAGES = 30
+    }
 }
 
-data class Client(
+/** Uma nota = um projeto com várias folhas A4 empilhadas. */
+data class Note(
     val id: String = newId(),
     val name: String,
-    val city: String,
-    val address: String = "",
-    val phone: String = "",
-    val notes: String = "",
+    val folderId: String? = null,
+    val createdMs: Long = System.currentTimeMillis(),
+    val pinned: Boolean = false,
+    val locked: Boolean = false,
+    val trash: Boolean = false,
+    val unit: LengthUnit = LengthUnit.M,
+    val pages: List<Sheet> = listOf(Sheet()),
+) {
+    fun dimCount(): Int = pages.sumOf { p -> p.objs.count { it is DimObj } }
+    fun meta() = NoteMeta(id, name, folderId, createdMs, pinned, locked, trash, pages.size, dimCount())
+}
+
+data class Folder(val id: String = newId(), val name: String)
+
+data class NoteMeta(
+    val id: String,
+    val name: String,
+    val folderId: String?,
+    val createdMs: Long,
+    val pinned: Boolean,
+    val locked: Boolean,
+    val trash: Boolean,
+    val pageCount: Int,
+    val dimCount: Int,
 )
 
-data class Room(val id: String = newId(), val clientId: String, val name: String)
-
-data class SheetMeta(val id: String, val roomId: String, val name: String)
-
 data class Index(
-    val clients: List<Client> = emptyList(),
-    val rooms: List<Room> = emptyList(),
-    val sheets: List<SheetMeta> = emptyList(),
+    val folders: List<Folder> = emptyList(),
+    val notes: List<NoteMeta> = emptyList(),
 )
 
 fun Obj.withLocked(v: Boolean): Obj = when (this) {

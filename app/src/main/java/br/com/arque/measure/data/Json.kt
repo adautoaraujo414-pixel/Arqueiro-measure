@@ -1,20 +1,20 @@
 package br.com.arque.measure.data
 
-import br.com.arque.measure.model.Client
+import br.com.arque.measure.model.Folder
+import br.com.arque.measure.model.Note
+import br.com.arque.measure.model.NoteMeta
+import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.Index
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.MeasureSource
 import br.com.arque.measure.model.Obj
-import br.com.arque.measure.model.Paper
 import br.com.arque.measure.model.PhotoObj
 import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Reading
-import br.com.arque.measure.model.Room
 import br.com.arque.measure.model.ShapeKind
 import br.com.arque.measure.model.ShapeObj
 import br.com.arque.measure.model.Sheet
-import br.com.arque.measure.model.SheetMeta
 import br.com.arque.measure.model.StrokeKind
 import br.com.arque.measure.model.StrokeObj
 import br.com.arque.measure.model.TextObj
@@ -23,7 +23,7 @@ import org.json.JSONObject
 
 /** Serialização JSON (org.json) do modelo. Valores de medida são sempre em milímetros. */
 object Json {
-    const val VERSION = 1
+    const val VERSION = 2
 
     private inline fun <T> JSONArray.mapObjects(f: (JSONObject) -> T): List<T> =
         (0 until length()).map { f(getJSONObject(it)) }
@@ -75,7 +75,7 @@ object Json {
                 .put("width", o.width.toDouble()).put("kind", o.kind.name)
             is ShapeObj -> j.put("type", "shape").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("kind", o.kind.name).put("a", ptToJson(o.a)).put("b", ptToJson(o.b))
-                .put("color", o.color).put("width", o.width.toDouble())
+                .put("color", o.color).put("width", o.width.toDouble()).put("fill", o.fill)
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
             is DimObj -> j.put("type", "dim").put("photoId", o.photoId ?: JSONObject.NULL)
@@ -108,7 +108,8 @@ object Json {
                 id = id, photoId = j.optStringOrNull("photoId"),
                 kind = ShapeKind.valueOf(j.getString("kind")),
                 a = ptFromJson(j.getJSONArray("a")), b = ptFromJson(j.getJSONArray("b")),
-                color = j.getInt("color"), width = j.getDouble("width").toFloat(), locked = locked,
+                color = j.getInt("color"), width = j.getDouble("width").toFloat(),
+                fill = j.optBoolean("fill", false), locked = locked,
             )
             "text" -> TextObj(
                 id = id, photoId = j.optStringOrNull("photoId"),
@@ -127,54 +128,69 @@ object Json {
         }
     }
 
-    // ---- Folha ----
+    // ---- Nota ----
 
-    fun sheetToJson(s: Sheet): String = JSONObject()
+    fun noteToJson(n: Note): String = JSONObject()
         .put("v", VERSION)
-        .put("id", s.id).put("roomId", s.roomId).put("name", s.name)
-        .put("paper", s.paper.name).put("landscape", s.landscape).put("unit", s.unit.name)
-        .put("objs", JSONArray(s.objs.map(::objToJson)))
-        .toString()
-
-    fun sheetFromJson(text: String): Sheet {
-        val j = JSONObject(text)
-        return Sheet(
-            id = j.getString("id"), roomId = j.getString("roomId"), name = j.getString("name"),
-            paper = Paper.valueOf(j.optString("paper", "A4")),
-            landscape = j.optBoolean("landscape", false),
-            unit = LengthUnit.valueOf(j.optString("unit", "MM")),
-            objs = j.getJSONArray("objs").mapObjects(::objFromJson),
-        )
-    }
-
-    // ---- Índice (clientes, ambientes, folhas) ----
-
-    fun indexToJson(i: Index): String = JSONObject()
-        .put("v", VERSION)
+        .put("id", n.id).put("name", n.name).put("folderId", n.folderId ?: JSONObject.NULL)
+        .put("createdMs", n.createdMs).put("pinned", n.pinned).put("locked", n.locked)
+        .put("trash", n.trash).put("unit", n.unit.name)
         .put(
-            "clients",
+            "pages",
             JSONArray(
-                i.clients.map {
-                    JSONObject().put("id", it.id).put("name", it.name).put("city", it.city)
-                        .put("address", it.address).put("phone", it.phone).put("notes", it.notes)
+                n.pages.map { p ->
+                    JSONObject().put("id", p.id).put("tpl", p.tpl.name).put("objs", JSONArray(p.objs.map(::objToJson)))
                 },
             ),
         )
-        .put("rooms", JSONArray(i.rooms.map { JSONObject().put("id", it.id).put("clientId", it.clientId).put("name", it.name) }))
-        .put("sheets", JSONArray(i.sheets.map { JSONObject().put("id", it.id).put("roomId", it.roomId).put("name", it.name) }))
+        .toString()
+
+    fun noteFromJson(text: String): Note {
+        val j = JSONObject(text)
+        val pages = j.getJSONArray("pages").mapObjects { p ->
+            Sheet(
+                id = p.getString("id"),
+                tpl = Template.valueOf(p.optString("tpl", "ARAUJO")),
+                objs = p.getJSONArray("objs").mapObjects(::objFromJson),
+            )
+        }.ifEmpty { listOf(Sheet()) }
+        return Note(
+            id = j.getString("id"), name = j.getString("name"), folderId = j.optStringOrNull("folderId"),
+            createdMs = j.optLong("createdMs", 0L), pinned = j.optBoolean("pinned", false),
+            locked = j.optBoolean("locked", false), trash = j.optBoolean("trash", false),
+            unit = LengthUnit.valueOf(j.optString("unit", "M")), pages = pages,
+        )
+    }
+
+    // ---- Índice (pastas e notas) ----
+
+    fun indexToJson(i: Index): String = JSONObject()
+        .put("v", VERSION)
+        .put("folders", JSONArray(i.folders.map { JSONObject().put("id", it.id).put("name", it.name) }))
+        .put(
+            "notes",
+            JSONArray(
+                i.notes.map {
+                    JSONObject().put("id", it.id).put("name", it.name).put("folderId", it.folderId ?: JSONObject.NULL)
+                        .put("createdMs", it.createdMs).put("pinned", it.pinned).put("locked", it.locked)
+                        .put("trash", it.trash).put("pageCount", it.pageCount).put("dimCount", it.dimCount)
+                },
+            ),
+        )
         .toString()
 
     fun indexFromJson(text: String): Index {
         val j = JSONObject(text)
         return Index(
-            clients = j.getJSONArray("clients").mapObjects {
-                Client(
-                    it.getString("id"), it.getString("name"), it.getString("city"),
-                    it.optString("address", ""), it.optString("phone", ""), it.optString("notes", ""),
+            folders = j.getJSONArray("folders").mapObjects { Folder(it.getString("id"), it.getString("name")) },
+            notes = j.getJSONArray("notes").mapObjects {
+                NoteMeta(
+                    id = it.getString("id"), name = it.getString("name"), folderId = it.optStringOrNull("folderId"),
+                    createdMs = it.optLong("createdMs", 0L), pinned = it.optBoolean("pinned", false),
+                    locked = it.optBoolean("locked", false), trash = it.optBoolean("trash", false),
+                    pageCount = it.optInt("pageCount", 1), dimCount = it.optInt("dimCount", 0),
                 )
             },
-            rooms = j.getJSONArray("rooms").mapObjects { Room(it.getString("id"), it.getString("clientId"), it.getString("name")) },
-            sheets = j.getJSONArray("sheets").mapObjects { SheetMeta(it.getString("id"), it.getString("roomId"), it.getString("name")) },
         )
     }
 }

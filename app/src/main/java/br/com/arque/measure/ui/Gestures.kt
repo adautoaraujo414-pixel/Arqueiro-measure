@@ -23,7 +23,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 sealed interface GestureAction {
-    data class EditDim(val id: String) : GestureAction
+    /** Toque numa cota: se houver leitura da trena esperando, ela é atribuída. */
+    data class TapDim(val id: String) : GestureAction
     data class EditText(val id: String?, val at: Pt) : GestureAction
 }
 
@@ -60,6 +61,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     private val st get() = s.state
     private val slop get() = 8f * density
     private fun tol() = 22f * density / s.view.scale
+    private val straightKinds = setOf(ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW)
 
     private fun replace(o: Obj): Sheet = st.sheet.copy(objs = st.sheet.objs.map { if (it.id == o.id) o else it })
 
@@ -68,6 +70,8 @@ class GestureController(private val s: EditorSession, private val density: Float
     fun down(screen: Offset, isTouch: Boolean) {
         downScreen = screen
         lastScreen = screen
+        s.pickPage(screen)
+        s.loupe = null
         val p = s.view.toSheet(screen)
         lastSheet = p
         moved = false
@@ -90,7 +94,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.beginGesture()
                 erase(p)
             }
-            Tool.LINE, Tool.ARROW, Tool.RECT, Tool.ELLIPSE -> startShape(p, tool)
+            Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE -> startShape(p, tool)
             Tool.TEXT -> mode = Mode.NONE
         }
     }
@@ -109,7 +113,7 @@ class GestureController(private val s: EditorSession, private val density: Float
             }
         }
         val prevSelected = st.selectedId
-        val hit = st.sheet.obj(Geo.hit(st.sheet, p, tol()))
+        val hit = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit))
         if (hit != null && (tool == Tool.SELECT || hit is DimObj)) {
             if (hit is TextObj && prevSelected == hit.id) tapTextId = hit.id
             if (hit is DimObj) tapDimId = hit.id
@@ -152,8 +156,11 @@ class GestureController(private val s: EditorSession, private val density: Float
     private fun startShape(p: Pt, tool: Tool) {
         val kind = when (tool) {
             Tool.ARROW -> ShapeKind.ARROW
+            Tool.DASHED -> ShapeKind.DASHED
             Tool.RECT -> ShapeKind.RECT
+            Tool.RRECT -> ShapeKind.RRECT
             Tool.ELLIPSE -> ShapeKind.ELLIPSE
+            Tool.TRIANGLE -> ShapeKind.TRIANGLE
             else -> ShapeKind.LINE
         }
         startShapeLike(p, dim = false, kind = kind)
@@ -166,7 +173,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val o: Obj = if (dim) {
             DimObj(photoId = photoId, a = local, b = local, color = s.color, width = s.width)
         } else {
-            ShapeObj(photoId = photoId, kind = kind!!, a = local, b = local, color = s.color, width = s.width)
+            ShapeObj(photoId = photoId, kind = kind!!, a = local, b = local, color = s.color, width = s.width, fill = s.fill)
         }
         st.live(st.sheet.copy(objs = st.sheet.objs + o))
         createdId = o.id
@@ -177,10 +184,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val p = s.view.toSheet(screen)
         if (!moved && (screen - downScreen).getDistance() > slop) moved = true
         when (mode) {
-            Mode.PAN -> {
-                s.view.ox += screen.x - lastScreen.x
-                s.view.oy += screen.y - lastScreen.y
-            }
+            Mode.PAN -> s.panBy(screen.x - lastScreen.x, screen.y - lastScreen.y)
             Mode.MOVE -> if (moved) {
                 val o = st.sheet.obj(activeId)
                 if (o != null) {
@@ -206,9 +210,10 @@ class GestureController(private val s: EditorSession, private val density: Float
                 val o = st.sheet.obj(createdId)
                 if (o is Ann) {
                     val anchor = Geo.annPoints(st.sheet.photos(), o)[0]
-                    val straight = o is DimObj || (o is ShapeObj && (o.kind == ShapeKind.LINE || o.kind == ShapeKind.ARROW))
+                    val straight = o is DimObj || (o is ShapeObj && o.kind in straightKinds)
                     val target = if (straight) Geo.snapAxis(anchor, p) else p
                     st.live(replace(Geo.withEndpoint(st.sheet, o, true, target)))
+                    if (o is DimObj || (o is ShapeObj && o.kind == ShapeKind.ARROW)) s.loupe = screen
                 }
             }
             Mode.ERASE -> erase(p)
@@ -221,7 +226,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     private fun erase(p: Pt) {
         val sh = st.sheet
         val r = 12f * density / s.view.scale
-        val gone = sh.objs.filter { it is Ann && it !is DimObj && !it.locked && Geo.hitObj(sh, it, p, r, sh.unit) }.map { it.id }.toSet()
+        val gone = sh.objs.filter { it is Ann && it !is DimObj && !it.locked && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
         if (gone.isNotEmpty()) st.live(sh.copy(objs = sh.objs.filter { it.id !in gone }))
     }
 
@@ -229,6 +234,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     fun up(screen: Offset): GestureAction? {
         val p = s.view.toSheet(screen)
         when (mode) {
+            Mode.PAN -> { s.settle() }
             Mode.SHAPE -> if (!moved) {
                 st.cancelGesture()
             } else {
@@ -238,19 +244,20 @@ class GestureController(private val s: EditorSession, private val density: Float
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> st.endGesture()
             else -> {}
         }
+        s.loupe = null
         var action: GestureAction? = null
         if (!moved) {
             val tool = s.tool
             when {
                 (tool == Tool.SELECT || tool == Tool.DIM) && tapDimId != null -> {
                     val d = st.sheet.obj(tapDimId) as? DimObj
-                    if (d != null && !d.locked && Geo.inDimLabel(st.sheet, d, p)) action = GestureAction.EditDim(d.id)
+                    if (d != null && !d.locked) action = GestureAction.TapDim(d.id)
                 }
                 tool == Tool.SELECT && tapTextId != null -> {
                     action = GestureAction.EditText(tapTextId, p)
                 }
                 tool == Tool.TEXT -> {
-                    val t = st.sheet.obj(Geo.hit(st.sheet, p, tol())) as? TextObj
+                    val t = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit)) as? TextObj
                     action = if (t != null) GestureAction.EditText(t.id, p) else GestureAction.EditText(null, p)
                 }
             }
@@ -261,6 +268,7 @@ class GestureController(private val s: EditorSession, private val density: Float
 
     /** Um segundo dedo apareceu: descarta desenho em andamento, mantém movimento de foto. */
     fun cancelSingle() {
+        s.loupe = null
         if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE) st.cancelGesture()
         mode = Mode.NONE
     }
@@ -310,9 +318,10 @@ class GestureController(private val s: EditorSession, private val density: Float
             is DimObj, is ShapeObj -> {
                 val pts = Geo.annPoints(st.sheet.photos(), o as Ann)
                 val other = if (handle == H.B) pts[0] else pts[1]
-                val straight = o is DimObj || (o is ShapeObj && (o.kind == ShapeKind.LINE || o.kind == ShapeKind.ARROW))
+                val straight = o is DimObj || (o is ShapeObj && o.kind in straightKinds)
                 val target = if (straight) Geo.snapAxis(other, p) else p
                 st.live(replace(Geo.withEndpoint(st.sheet, o, handle == H.B, target)))
+                s.loupe = s.view.toScreen(target)
             }
             else -> {}
         }
@@ -370,11 +379,9 @@ class GestureController(private val s: EditorSession, private val density: Float
             st.live(replace(ph.copy(cx = nx, cy = ny, w = ph.w * k, h = ph.h * k, rot = ph.rot + applyAng)))
         } else {
             // Sem foto selecionada: zoom/pan da visualização.
-            val newScale = (s.view.scale * zoom).coerceIn(0.1f, 12f)
-            val real = newScale / s.view.scale
-            s.view.ox = c.x - (prevC.x - s.view.ox) * real
-            s.view.oy = c.y - (prevC.y - s.view.oy) * real
-            s.view.scale = newScale
+            s.view.ox += c.x - prevC.x
+            s.view.oy += c.y - prevC.y
+            s.zoomAround(zoom, c.x, c.y)
         }
         prevC = c
         prevSpan = span

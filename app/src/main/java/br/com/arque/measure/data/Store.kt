@@ -2,7 +2,7 @@ package br.com.arque.measure.data
 
 import br.com.arque.measure.model.Index
 import br.com.arque.measure.model.Reading
-import br.com.arque.measure.model.Sheet
+import br.com.arque.measure.model.Note
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -17,7 +17,7 @@ import java.util.zip.ZipOutputStream
  */
 class Store(val root: File) {
     private val imagesDir = File(root, "images")
-    private val sheetsDir = File(root, "sheets")
+    private val sheetsDir = File(root, "notes")
     private val indexFile = File(root, "index.json")
     private val readingsFile = File(root, "readings.json")
     private val lock = Any()
@@ -64,16 +64,16 @@ class Store(val root: File) {
 
     fun saveIndex(index: Index) = writeAtomic(indexFile, Json.indexToJson(index))
 
-    // ---- folhas ----
+    // ---- notas ----
 
-    private fun sheetFile(id: String) = File(sheetsDir, "$id.json")
+    private fun noteFile(id: String) = File(sheetsDir, "$id.json")
 
-    fun loadSheet(id: String): Sheet? = readWithRecovery(sheetFile(id), Json::sheetFromJson)
+    fun loadNote(id: String): Note? = readWithRecovery(noteFile(id), Json::noteFromJson)
 
-    fun saveSheet(sheet: Sheet) = writeAtomic(sheetFile(sheet.id), Json.sheetToJson(sheet))
+    fun saveNote(note: Note) = writeAtomic(noteFile(note.id), Json.noteToJson(note))
 
-    fun deleteSheet(id: String) = synchronized(lock) {
-        val f = sheetFile(id)
+    fun deleteNote(id: String) = synchronized(lock) {
+        val f = noteFile(id)
         f.delete(); File(f.path + ".bak").delete(); File(f.path + ".tmp").delete()
     }
 
@@ -92,11 +92,11 @@ class Store(val root: File) {
         return name
     }
 
-    /** Fotos que nenhuma folha referencia mais podem ser limpas por aqui. */
+    /** Fotos que nenhuma nota referencia mais podem ser limpas por aqui. */
     fun referencedImages(): Set<String> = synchronized(lock) {
         sheetsDir.listFiles { f -> f.name.endsWith(".json") }.orEmpty().mapNotNull { f ->
-            runCatching { Json.sheetFromJson(f.readText()) }.getOrNull()
-        }.flatMap { s -> s.objs.filterIsInstance<br.com.arque.measure.model.PhotoObj>().map { it.file } }.toSet()
+            runCatching { Json.noteFromJson(f.readText()) }.getOrNull()
+        }.flatMap { n -> n.pages.flatMap { p -> p.objs.filterIsInstance<br.com.arque.measure.model.PhotoObj>().map { it.file } } }.toSet()
     }
 
     // ---- backup / restauração ----

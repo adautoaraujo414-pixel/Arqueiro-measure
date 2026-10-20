@@ -13,13 +13,12 @@ import androidx.lifecycle.viewModelScope
 import br.com.arque.measure.ble.BoschBle
 import br.com.arque.measure.data.Store
 import br.com.arque.measure.logic.Units
-import br.com.arque.measure.model.Client
+import br.com.arque.measure.model.Folder
 import br.com.arque.measure.model.Index
-import br.com.arque.measure.model.Paper
+import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.Reading
-import br.com.arque.measure.model.Room
-import br.com.arque.measure.model.Sheet
-import br.com.arque.measure.model.SheetMeta
+import br.com.arque.measure.model.Template
+import br.com.arque.measure.model.newId
 import br.com.arque.measure.ui.EditorSession
 import br.com.arque.measure.ui.ImageCache
 import br.com.arque.measure.ui.SheetRenderer
@@ -33,10 +32,15 @@ import java.io.File
 import java.util.concurrent.Executors
 
 sealed interface Screen {
-    data object Home : Screen
-    data class ClientDetail(val clientId: String) : Screen
-    data class RoomDetail(val roomId: String) : Screen
-    data class Editor(val sheetId: String) : Screen
+    data object Library : Screen
+    data object Editor : Screen
+}
+
+/** Filtro da biblioteca: todas, uma pasta ou o lixo. */
+sealed interface LibFilter {
+    data object All : LibFilter
+    data object Trash : LibFilter
+    data class InFolder(val id: String) : LibFilter
 }
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -49,13 +53,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     var index by mutableStateOf(store.loadIndex())
         private set
-    var screen by mutableStateOf<Screen>(Screen.Home)
+    var screen by mutableStateOf<Screen>(Screen.Library)
+    var filter by mutableStateOf<LibFilter>(LibFilter.All)
     var session by mutableStateOf<EditorSession?>(null)
         private set
+    /** Notas abertas (abas do editor), na ordem de abertura. */
+    val tabs = mutableStateListOf<String>()
     var toast by mutableStateOf<String?>(null)
 
-    /** Leituras recebidas da trena que ainda não foram vinculadas a uma cota. */
+    /** Leituras recebidas da trena que ainda não foram vinculadas a uma cota (mais nova primeiro). */
     val recent = mutableStateListOf<Reading>().also { it.addAll(store.loadReadings()) }
+
+    /** Quando true, a próxima foto adicionada vai para uma folha nova no fim da nota. */
+    var photoToNewPage = false
+
+    /** Importação pedida na biblioteca ("gallery" ou "camera"): o editor executa ao abrir. */
+    var pendingImport by mutableStateOf<String?>(null)
 
     private var saveJob: Job? = null
     private var pendingCameraFile: File? = null
@@ -64,64 +77,66 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { ble.readings.collect { onReading(it) } }
     }
 
-    // ---------- cadastro ----------
+    // ---------- biblioteca ----------
 
     private fun updateIndex(newIndex: Index) {
         index = newIndex
         viewModelScope.launch(io) { store.saveIndex(newIndex) }
     }
 
-    fun addClient(name: String, city: String, address: String): String? {
-        if (name.isBlank()) return null
-        val c = Client(name = name.trim(), city = city.trim(), address = address.trim())
-        updateIndex(index.copy(clients = index.clients + c))
-        return c.id
-    }
-
-    fun updateClient(c: Client) {
-        updateIndex(index.copy(clients = index.clients.map { if (it.id == c.id) c else it }))
-    }
-
-    fun deleteClient(id: String) {
-        val roomIds = index.rooms.filter { it.clientId == id }.map { it.id }.toSet()
-        val sheetIds = index.sheets.filter { it.roomId in roomIds }.map { it.id }
-        updateIndex(
-            Index(
-                clients = index.clients.filter { it.id != id },
-                rooms = index.rooms.filter { it.id !in roomIds },
-                sheets = index.sheets.filter { it.roomId !in roomIds },
-            ),
-        )
-        viewModelScope.launch(io) { sheetIds.forEach(store::deleteSheet); cleanupImages() }
-    }
-
-    fun addRoom(clientId: String, name: String) {
+    fun addFolder(name: String) {
         if (name.isBlank()) return
-        updateIndex(index.copy(rooms = index.rooms + Room(clientId = clientId, name = name.trim())))
+        updateIndex(index.copy(folders = index.folders + Folder(name = name.trim())))
     }
 
-    fun deleteRoom(id: String) {
-        val sheetIds = index.sheets.filter { it.roomId == id }.map { it.id }
-        updateIndex(index.copy(rooms = index.rooms.filter { it.id != id }, sheets = index.sheets.filter { it.roomId != id }))
-        viewModelScope.launch(io) { sheetIds.forEach(store::deleteSheet); cleanupImages() }
+    private fun upsertMeta(n: Note) {
+        val metas = index.notes
+        val m = n.meta()
+        updateIndex(index.copy(notes = if (metas.any { it.id == n.id }) metas.map { if (it.id == n.id) m else it } else metas + m))
     }
 
-    fun addSheet(roomId: String, name: String, paper: Paper, landscape: Boolean): Sheet {
-        val sheet = Sheet(roomId = roomId, name = name.trim().ifBlank { "Folha" }, paper = paper, landscape = landscape)
-        updateIndex(index.copy(sheets = index.sheets + SheetMeta(sheet.id, roomId, sheet.name)))
-        viewModelScope.launch(io) { store.saveSheet(sheet) }
-        return sheet
+    fun createNote(): String {
+        val folder = (filter as? LibFilter.InFolder)?.id
+        val n = Note(name = "Nota ${index.notes.count { !it.trash } + 1}", folderId = folder)
+        viewModelScope.launch(io) { store.saveNote(n) }
+        upsertMeta(n)
+        return n.id
     }
 
-    fun renameSheet(id: String, name: String) {
-        if (name.isBlank()) return
-        updateIndex(index.copy(sheets = index.sheets.map { if (it.id == id) it.copy(name = name.trim()) else it }))
-        viewModelScope.launch(io) { store.loadSheet(id)?.let { store.saveSheet(it.copy(name = name.trim())) } }
+    /** Fecha a sessão aberta desta nota (se houver) gravando antes. */
+    private fun closeIfOpen(id: String) {
+        if (session?.state?.note?.id == id) {
+            flush()
+            session = null
+        }
+        tabs.remove(id)
     }
 
-    fun deleteSheet(id: String) {
-        updateIndex(index.copy(sheets = index.sheets.filter { it.id != id }))
-        viewModelScope.launch(io) { store.deleteSheet(id); cleanupImages() }
+    private fun mutateNote(id: String, f: (Note) -> Note) {
+        closeIfOpen(id)
+        if (tabs.isEmpty() && screen == Screen.Editor) screen = Screen.Library
+        viewModelScope.launch {
+            val n = withContext(io) { store.loadNote(id)?.also { store.saveNote(f(it)) } }
+            if (n != null) upsertMeta(f(n))
+        }
+    }
+
+    fun renameNote(id: String, name: String) { if (name.isNotBlank()) mutateNote(id) { it.copy(name = name.trim()) } }
+    fun pinNote(id: String, v: Boolean) = mutateNote(id) { it.copy(pinned = v) }
+    fun lockNote(id: String, v: Boolean) = mutateNote(id) { it.copy(locked = v) }
+    fun moveNote(id: String, folderId: String?) = mutateNote(id) { it.copy(folderId = folderId) }
+    fun trashNote(id: String, v: Boolean) = mutateNote(id) { it.copy(trash = v) }
+
+    fun copyNote(id: String) {
+        viewModelScope.launch {
+            val c = withContext(io) {
+                store.loadNote(id)?.let { src ->
+                    src.copy(id = newId(), name = src.name + " (cópia)", createdMs = System.currentTimeMillis(), pinned = false, trash = false)
+                        .also { store.saveNote(it) }
+                }
+            }
+            if (c != null) upsertMeta(c)
+        }
     }
 
     private fun cleanupImages() {
@@ -129,61 +144,58 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         store.root.resolve("images").listFiles().orEmpty().filter { it.name !in keep }.forEach { it.delete() }
     }
 
-    fun roomName(roomId: String) = index.rooms.firstOrNull { it.id == roomId }?.name ?: ""
-    fun clientOfRoom(roomId: String) = index.rooms.firstOrNull { it.id == roomId }?.let { r -> index.clients.firstOrNull { it.id == r.clientId } }
-    fun sheetsOfRoom(roomId: String) = index.sheets.filter { it.roomId == roomId }
-
     // ---------- editor ----------
 
-    fun openSheet(id: String) {
+    fun openNote(id: String) {
+        val meta = index.notes.firstOrNull { it.id == id } ?: return
+        if (meta.locked) {
+            toast = "Nota bloqueada. Remova o bloqueio no menu da nota."
+            return
+        }
+        if (session?.state?.note?.id == id) { screen = Screen.Editor; return }
         viewModelScope.launch {
-            val sheet = withContext(io) { store.loadSheet(id) }
-            if (sheet == null) {
-                toast = "Não foi possível abrir a folha"
+            val note = withContext(io) { store.loadNote(id) }
+            if (note == null) {
+                toast = "Não foi possível abrir a nota"
                 return@launch
             }
             flush()
-            session = EditorSession(sheet) { scheduleSave(it) }
-            screen = Screen.Editor(id)
+            session = EditorSession(note) { scheduleSave(it) }
+            if (id !in tabs) tabs.add(id)
+            screen = Screen.Editor
         }
     }
 
-    fun openRelative(delta: Int) {
-        val cur = session?.state?.sheet ?: return
-        val list = sheetsOfRoom(cur.roomId)
-        val i = list.indexOfFirst { it.id == cur.id }
-        val target = list.getOrNull(i + delta) ?: return
-        openSheet(target.id)
-    }
-
-    fun addSheetAfterCurrent() {
-        val cur = session?.state?.sheet ?: return
-        val n = sheetsOfRoom(cur.roomId).size + 1
-        val s = addSheet(cur.roomId, "Folha $n", cur.paper, cur.landscape)
-        openSheet(s.id)
+    fun closeTab(id: String) {
+        closeIfOpen(id)
+        val next = tabs.lastOrNull()
+        if (next != null) openNote(next) else screen = Screen.Library
     }
 
     fun closeEditor() {
-        val roomId = session?.state?.sheet?.roomId
         flush()
-        session = null
-        screen = if (roomId != null) Screen.RoomDetail(roomId) else Screen.Home
+        screen = Screen.Library
     }
 
-    /** Salvamento automático: espera uma pausa nas edições e grava a folha. */
-    private fun scheduleSave(sheet: Sheet) {
+    fun tabName(id: String) = index.notes.firstOrNull { it.id == id }?.name ?: "Nota"
+
+    /** Salvamento automático: espera uma pausa nas edições e grava a nota. */
+    private fun scheduleSave(note: Note) {
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(600)
-            withContext(io) { store.saveSheet(sheet) }
+            withContext(io) { store.saveNote(note) }
+            upsertMeta(note)
         }
     }
 
-    /** Grava agora (ao sair da folha ou do app). */
+    /** Grava agora (ao sair da nota ou do app). */
     fun flush() {
         val s = session ?: return
         saveJob?.cancel()
-        store.saveSheet(s.state.sheet)
+        val n = s.state.note
+        store.saveNote(n)
+        upsertMeta(n)
     }
 
     fun renderer(): SheetRenderer = SheetRenderer { images.get(it) }
@@ -194,6 +206,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         val mime = app.contentResolver.getType(uri)
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(mime) ?: "jpg"
+    }
+
+    private fun placePhoto(s: EditorSession, name: String, w: Int, h: Int) {
+        if (photoToNewPage) {
+            photoToNewPage = false
+            s.state.addPage(s.state.note.pages.size, Template.BLANK)
+            s.goToPage(s.state.pageIdx)
+        }
+        s.addPhoto(name, w, h)
     }
 
     fun addPhotoFromUri(uri: Uri) {
@@ -208,7 +229,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     Triple(name, size.first, size.second)
                 }
             }
-            result.onSuccess { (name, w, h) -> s.addPhoto(name, w, h) }
+            result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h) }
                 .onFailure { toast = "Não foi possível adicionar a foto" }
         }
     }
@@ -226,6 +247,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         pendingCameraFile = null
         if (!ok || !f.exists() || f.length() == 0L) {
             f.delete()
+            photoToNewPage = false
             return
         }
         val s = session ?: return
@@ -238,41 +260,47 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     Triple(name, size.first, size.second)
                 }
             }
-            result.onSuccess { (name, w, h) -> s.addPhoto(name, w, h) }
+            result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h) }
                 .onFailure { toast = "Não foi possível adicionar a foto" }
         }
     }
 
-    // ---------- leituras da trena ----------
+    // ---------- leituras da trena (única origem de medidas) ----------
 
     private fun persistRecent() {
         val snapshot = recent.toList()
         viewModelScope.launch(io) { store.saveReadings(snapshot) }
     }
 
+    /** Leitura nova: se há uma cota selecionada, grava nela e avança; senão vira um "chip" na barra. */
     private fun onReading(r: Reading) {
         val s = session
-        if (s != null) {
-            val unit = s.state.sheet.unit
-            if (s.state.assignReading(r) != null) {
-                toast = "Medida ${Units.format(r.mm, unit)} aplicada na cota"
-                return
-            }
-        }
+        if (s != null && screen == Screen.Editor && s.state.assignReading(r) != null) return
         recent.add(0, r)
         while (recent.size > MAX_RECENT) recent.removeAt(recent.lastIndex)
         persistRecent()
-        toast = "Leitura ${Units.format(r.mm, s?.state?.sheet?.unit ?: br.com.arque.measure.model.LengthUnit.MM)} guardada. Selecione uma cota."
     }
 
+    /** Toque num chip: aplica à cota selecionada. */
     fun applyRecent(r: Reading) {
         val s = session ?: return
         if (s.state.assignReading(r) != null) {
             recent.remove(r)
             persistRecent()
-            toast = "Medida ${Units.format(r.mm, s.state.sheet.unit)} aplicada na cota"
         } else {
-            toast = "Selecione uma cota primeiro"
+            toast = "Toque numa seta de cota primeiro"
+        }
+    }
+
+    /** Toque numa seta de cota sem valor com leituras esperando: recebe a leitura mais nova. */
+    fun onDimTap(id: String) {
+        val s = session ?: return
+        val d = s.state.selected as? br.com.arque.measure.model.DimObj ?: return
+        if (d.id != id || d.locked || d.valueMm != null) return
+        val r = recent.firstOrNull() ?: return
+        if (s.state.assignReading(r) != null) {
+            recent.remove(r)
+            persistRecent()
         }
     }
 
@@ -295,36 +323,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun contextSheet(): Triple<Sheet, String, String>? {
-        val s = session?.state?.sheet ?: return null
-        flush()
-        return Triple(s, clientOfRoom(s.roomId)?.name ?: "", roomName(s.roomId))
-    }
-
     fun exportPdf(uri: Uri) {
-        val (sheet, _, _) = contextSheet() ?: return
+        val s = session ?: return
+        flush()
+        val note = s.state.note
         val app = getApplication<Application>()
         val renderer = SheetRenderer { images.getBlocking(it) }
         runIo("PDF exportado") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.pdf(sheet, renderer, it) }
+            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.pdf(note, renderer, it) }
         }
     }
 
     fun exportPng(uri: Uri) {
-        val (sheet, _, _) = contextSheet() ?: return
+        val s = session ?: return
+        flush()
+        val note = s.state.note
+        val page = s.state.pageIdx
         val app = getApplication<Application>()
         val renderer = SheetRenderer { images.getBlocking(it) }
         runIo("Imagem exportada") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.png(sheet, renderer, it) }
+            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.png(note, page, renderer, it) }
         }
     }
 
     fun exportCsv(uri: Uri) {
-        val (sheet, client, room) = contextSheet() ?: return
+        val s = session ?: return
+        flush()
+        val note = s.state.note
         val app = getApplication<Application>()
         runIo("Medidas exportadas (CSV)") {
             (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use {
-                it.write(Export.csv(client, room, sheet).toByteArray(Charsets.UTF_8))
+                it.write(Export.csv(note).toByteArray(Charsets.UTF_8))
             }
         }
     }
@@ -346,9 +375,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (ok) {
                 session = null
+                tabs.clear()
                 index = store.loadIndex()
                 recent.clear(); recent.addAll(store.loadReadings())
-                screen = Screen.Home
+                screen = Screen.Library
                 toast = "Backup restaurado"
             } else {
                 toast = "Backup inválido: nada foi alterado"

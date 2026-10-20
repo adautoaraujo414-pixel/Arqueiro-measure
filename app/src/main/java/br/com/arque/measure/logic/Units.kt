@@ -32,7 +32,7 @@ object Units {
         val pattern = when (u) {
             LengthUnit.MM -> if (abs(mm - mm.roundToLong()) < 0.05) "0" else "0.0"
             LengthUnit.CM -> "0.0"
-            LengthUnit.M -> "0.000"
+            LengthUnit.M -> "0.00"
         }
         val df = DecimalFormat(pattern, symbols)
         df.roundingMode = RoundingMode.HALF_UP
@@ -41,8 +41,9 @@ object Units {
 
     fun format(mm: Double, u: LengthUnit): String = formatNumber(mm, u) + " " + u.label
 
+    /** Texto da cota. Vazio enquanto a cota aguarda medida (nada é mostrado na seta). */
     fun label(dim: DimObj, u: LengthUnit): String =
-        dim.valueMm?.let { format(it, u) } ?: PENDING_LABEL
+        dim.valueMm?.let { format(it, u) } ?: ""
 
     /**
      * Interpreta o que o usuário digitou. Aceita vírgula ou ponto e um sufixo opcional

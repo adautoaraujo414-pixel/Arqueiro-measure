@@ -28,7 +28,7 @@ data class Box(val l: Float, val t: Float, val r: Float, val b: Float) {
 
 /** Geometria pura (sem Android) para foto livre, anotações vinculadas e testes de toque. */
 object Geo {
-    const val DIM_TEXT_SIZE = 16f
+    const val DIM_TEXT_SIZE = 14f
     const val MIN_PHOTO_SIDE = 40f
 
     private fun rad(deg: Float): Double = deg * PI / 180.0
@@ -162,8 +162,8 @@ object Geo {
 
     fun dimLabelBox(a: Pt, b: Pt, label: String): Box {
         val c = dimLabelCenter(a, b)
-        val w = label.length * DIM_TEXT_SIZE * 0.58f + 16f
-        val h = DIM_TEXT_SIZE + 12f
+        val w = label.length * DIM_TEXT_SIZE * 0.58f + 12f
+        val h = DIM_TEXT_SIZE + 8f
         return Box(c.x - w / 2, c.y - h / 2, c.x + w / 2, c.y + h / 2)
     }
 
@@ -181,8 +181,14 @@ object Geo {
                 val (a, b) = annPoints(photos, o)
                 val r = tol + o.width / 2f
                 when (o.kind) {
-                    ShapeKind.LINE, ShapeKind.ARROW -> distToSegment(s, a, b) <= r
-                    ShapeKind.RECT -> {
+                    ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW -> distToSegment(s, a, b) <= r
+                    ShapeKind.TRIANGLE -> {
+                        val l = min(a.x, b.x); val rr = max(a.x, b.x)
+                        val t = min(a.y, b.y); val bb = max(a.y, b.y)
+                        val c = listOf(Pt((l + rr) / 2f, t), Pt(rr, bb), Pt(l, bb))
+                        (c + c.first()).zipWithNext().any { (p, q) -> distToSegment(s, p, q) <= r }
+                    }
+                    ShapeKind.RECT, ShapeKind.RRECT -> {
                         val l = min(a.x, b.x); val rr = max(a.x, b.x)
                         val t = min(a.y, b.y); val bb = max(a.y, b.y)
                         val c = listOf(Pt(l, t), Pt(rr, t), Pt(rr, bb), Pt(l, bb))
@@ -203,18 +209,19 @@ object Geo {
             is DimObj -> {
                 val (a, b) = annPoints(photos, o)
                 distToSegment(s, a, b) <= tol + o.width / 2f ||
-                    dimLabelBox(a, b, Units.label(o, unit)).contains(s, tol / 2f)
+                    (o.valueMm != null && dimLabelBox(a, b, Units.label(o, unit)).contains(s, tol / 2f))
             }
         }
     }
 
     /** Id do objeto mais acima sob o ponto, ou null. */
-    fun hit(sheet: Sheet, s: Pt, tol: Float): String? =
-        sheet.objs.asReversed().firstOrNull { hitObj(sheet, it, s, tol, sheet.unit) }?.id
+    fun hit(sheet: Sheet, s: Pt, tol: Float, unit: LengthUnit): String? =
+        sheet.objs.asReversed().firstOrNull { hitObj(sheet, it, s, tol, unit) }?.id
 
-    fun inDimLabel(sheet: Sheet, d: DimObj, s: Pt, pad: Float = 6f): Boolean {
+    fun inDimLabel(sheet: Sheet, d: DimObj, s: Pt, unit: LengthUnit, pad: Float = 6f): Boolean {
+        if (d.valueMm == null) return false
         val (a, b) = annPoints(sheet.photos(), d)
-        return dimLabelBox(a, b, Units.label(d, sheet.unit)).contains(s, pad)
+        return dimLabelBox(a, b, Units.label(d, unit)).contains(s, pad)
     }
 
     /** Alinha [p] na horizontal/vertical em relação a [anchor] se estiver a menos de [tolDeg] graus. */

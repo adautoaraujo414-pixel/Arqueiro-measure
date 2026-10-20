@@ -17,6 +17,9 @@ object CabinetMath {
     /** A largura e a profundidade do módulo são as da pedra menos 4 cm. */
     const val DESCONTO_PEDRA_MM = 40.0
 
+    /** Folga por lado até a pedra: 20 mm sem tamponamento, 35 mm com (20 + 15 da chapa). */
+    fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 20.0) + (if (c.tampDir) 35.0 else 20.0)
+
     /** y da face de baixo da base (onde começa o pedestal). */
     fun baseBottom(c: Cabinet) = (c.hMm - c.rodapeMm).coerceAtLeast(c.folgaTopoMm + c.travessaMm + c.espMm * 2 + 10.0)
 
@@ -116,9 +119,10 @@ object CabinetMath {
                 VaoKind.DRAWERS -> {
                     val fh = drawerFrontH(c, v.drawers)
                     val fw = vw - c.folgaMm
+                    val caixaW = vw - c.corredicaMm
                     for (k in 0 until v.drawers) {
                         val y = vTop + c.bordaSupMm + k * (fh + c.folgaGavetaMm)
-                        out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i)
+                        out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i, note = "caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)")
                     }
                 }
                 VaoKind.DOOR -> {
@@ -133,6 +137,12 @@ object CabinetMath {
                 else -> {}
             }
         }
+        // tamponamento: encostado por fora, do fundo da pedra até a base (cobre lateral + base + folga)
+        val tampH = latH + c.tampAltExtraMm
+        val tampD = c.dMm + c.tampProfExtraMm
+        val tn = "por fora; +${fmt(c.tampProfExtraMm)} na profundidade e +${fmt(c.tampAltExtraMm)} na altura"
+        if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, top, e, tampH, tampH, tampD, e, note = tn)
+        if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, top, e, tampH, tampH, tampD, e, note = tn)
         if (c.hasMoldura) {
             out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = "acabamento, cobre a folga do topo")
         }

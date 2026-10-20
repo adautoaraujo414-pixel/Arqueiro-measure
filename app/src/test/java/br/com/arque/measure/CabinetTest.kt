@@ -103,4 +103,21 @@ class CabinetTest {
         assertEquals(2700.0, back.pedraWMm!!, 0.0)
         assertNull(back.pedraDMm)
     }
+
+    @Test fun tamponamentoBothSidesDiscounts70() {
+        val c = base.copy(tampEsq = true, tampDir = true)
+        assertEquals(70.0, CabinetMath.descontoPedra(c), 0.0)
+        assertEquals(1930.0, 2000.0 - CabinetMath.descontoPedra(c), 0.0)
+        assertEquals(40.0, CabinetMath.descontoPedra(base), 0.0)
+    }
+
+    @Test fun tamponamentoSizeAndDrawerBox() {
+        val c = base.copy(tampEsq = true, tampDir = true)
+        val t = CabinetMath.parts(c).filter { it.kind == PartKind.TAMPONAMENTO }
+        assertEquals(2, t.size)
+        assertEquals(CabinetMath.lateralH(c) + 30.0, t[0].cutL, 1e-9)
+        assertEquals(585.0, t[0].cutW, 1e-9)
+        val vw = CabinetMath.vaoRanges(c)[1].let { it.second - it.first }
+        assertTrue(CabinetMath.parts(c).first { it.kind == PartKind.FRENTE_GAVETA }.note.contains(CabinetMath.vaoRanges(c)[1].let { "%.0f".format(vw - 26.0) }.take(2)))
+    }
 }

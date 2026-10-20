@@ -263,6 +263,7 @@ private fun CabinetCanvas(
             val col = when {
                 p.kind == PartKind.RODAPE -> WoodDark
                 p.kind == PartKind.MOLDURA -> WoodFront
+                p.kind == PartKind.TAMPONAMENTO -> WoodDark
                 p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.PORTA -> WoodFront
                 else -> Wood
             }
@@ -347,16 +348,20 @@ private fun CabinetPanel(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Label("Módulo")
-        NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.DESCONTO_PEDRA_MM), vm) { v ->
-            edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.DESCONTO_PEDRA_MM).coerceIn(150.0, 6000.0)) }
+        NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.descontoPedra(cab)), vm) { v ->
+            edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.descontoPedra(it)).coerceIn(150.0, 6000.0)) }
         }
-        NumField("Profundidade da pedra", cab.pedraDMm ?: (cab.dMm + CabinetMath.DESCONTO_PEDRA_MM), vm) { v ->
-            edit { it.copy(pedraDMm = v, dMm = (v - CabinetMath.DESCONTO_PEDRA_MM).coerceIn(100.0, 1500.0)) }
+        NumField("Profundidade da pedra", cab.pedraDMm ?: (cab.dMm + 40.0), vm) { v ->
+            edit { it.copy(pedraDMm = v, dMm = (v - 40.0).coerceIn(100.0, 1500.0)) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Chip("Tamponamento esq.", cab.tampEsq) { edit { c -> val n = c.copy(tampEsq = !c.tampEsq); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
+            Chip("Tamponamento dir.", cab.tampDir) { edit { c -> val n = c.copy(tampDir = !c.tampDir); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
         }
         NumField("Largura do módulo", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
         NumField("Profundidade do módulo", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
         NumField("Altura (chão até a pedra)", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
-        Text("A pedra manda: o módulo fica 40 mm menor na largura e na profundidade. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
+        Text("A pedra manda: largura do módulo = pedra − 40 mm (− 70 mm com tamponamento nos dois lados); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
         HorizontalDivider(color = Ui.line)
 
         if (selDivider in dx.indices) {

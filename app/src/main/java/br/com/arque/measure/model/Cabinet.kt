@@ -32,6 +32,13 @@ data class Cabinet(
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,
     val hasMoldura: Boolean = true,
+    /** Tamponamento (chapa de fora de cada lado): 15 de espessura, 25 a mais na profundidade e 30 a mais na altura. */
+    val tampEsq: Boolean = false,
+    val tampDir: Boolean = false,
+    val tampProfExtraMm: Double = 25.0,
+    val tampAltExtraMm: Double = 30.0,
+    /** Desconto da largura da caixa da gaveta pelas corrediças (os dois lados juntos). */
+    val corredicaMm: Double = 26.0,
     /** Medidas da pedra (opcionais): largura e profundidade do módulo saem delas menos [DESCONTO_PEDRA_MM]. */
     val pedraWMm: Double? = null,
     val pedraDMm: Double? = null,
@@ -48,7 +55,7 @@ data class Cabinet(
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
     LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), DIVISORIA("Divisória"),
-    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"),
 }
 
 /**

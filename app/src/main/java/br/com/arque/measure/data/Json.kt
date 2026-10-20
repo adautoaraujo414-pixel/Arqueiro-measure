@@ -119,7 +119,7 @@ object Json {
         .put("travessa", c.travessaMm).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
         .put("bordaSup", c.bordaSupMm).put("bordaInf", c.bordaInfMm).put("recuoFundo", c.recuoFundoMm)
         .put("back", c.hasBack)
-        .put("folgaTopo", c.folgaTopoMm).put("moldura", c.molduraMm).put("hasMoldura", c.hasMoldura)
+        .put("folgaTopo", c.folgaTopoMm).put("moldura", c.molduraMm).put("hasMoldura", c.hasMoldura).put("tampEsq", c.tampEsq).put("tampDir", c.tampDir)
         .put("pedraW", c.pedraWMm ?: JSONObject.NULL).put("pedraD", c.pedraDMm ?: JSONObject.NULL)
         .put("dividers", JSONArray(c.dividers.map { it.toDouble() }))
         .put(
@@ -141,7 +141,7 @@ object Json {
             bordaSupMm = j.optDouble("bordaSup", d.bordaSupMm), bordaInfMm = j.optDouble("bordaInf", d.bordaInfMm),
             recuoFundoMm = j.optDouble("recuoFundo", d.recuoFundoMm), hasBack = j.optBoolean("back", true),
             folgaTopoMm = j.optDouble("folgaTopo", d.folgaTopoMm), molduraMm = j.optDouble("moldura", d.molduraMm),
-            hasMoldura = j.optBoolean("hasMoldura", true),
+            hasMoldura = j.optBoolean("hasMoldura", true), tampEsq = j.optBoolean("tampEsq", false), tampDir = j.optBoolean("tampDir", false),
             pedraWMm = j.optDoubleOrNull("pedraW"), pedraDMm = j.optDoubleOrNull("pedraD"),
             dividers = j.optJSONArray("dividers")?.let { a -> (0 until a.length()).map { a.getDouble(it).toFloat() } } ?: emptyList(),
             vaos = j.optJSONArray("vaos")?.mapObjects { v ->

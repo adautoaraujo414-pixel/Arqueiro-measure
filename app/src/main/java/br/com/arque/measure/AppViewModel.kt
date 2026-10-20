@@ -63,12 +63,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var trenaScale by mutableStateOf(uiPrefs.getFloat("trenaScale", 0.8f).coerceIn(0.5f, 1.3f))
         private set
 
-    fun setTrenaHidden(v: Boolean) {
+    fun changeTrenaHidden(v: Boolean) {
         trenaHidden = v
         uiPrefs.edit().putBoolean("trenaHidden", v).apply()
     }
 
-    fun setTrenaScale(s: Float) {
+    fun changeTrenaScale(s: Float) {
         trenaScale = s.coerceIn(0.5f, 1.3f)
         uiPrefs.edit().putFloat("trenaScale", trenaScale).apply()
     }

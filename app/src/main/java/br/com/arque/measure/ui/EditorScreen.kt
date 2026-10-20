@@ -1067,9 +1067,9 @@ private fun MiniTelemeter(vm: AppViewModel, open: Boolean, toggle: () -> Unit) {
                 Text("Trena", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.padding(end = (10 * k).dp))
                 Text(if (open) "Pronto ▾" else "Pronto ▸", color = Ui.accent, fontSize = (12 * k).sp, modifier = Modifier.clickable(onClick = toggle))
                 Box(Modifier.weight(1f))
-                Text("A−", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.setTrenaScale(vm.trenaScale - 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
-                Text("A+", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.setTrenaScale(vm.trenaScale + 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
-                Text("✕", color = Ui.dim, fontSize = (14 * k).sp, modifier = Modifier.clickable { vm.setTrenaHidden(true) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("A−", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale - 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("A+", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale + 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("✕", color = Ui.dim, fontSize = (14 * k).sp, modifier = Modifier.clickable { vm.changeTrenaHidden(true) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
             }
             if (open) {
                 Text(name ?: "Bosch", color = Ui.dim, fontSize = (12 * k).sp, modifier = Modifier.padding(top = (2 * k).dp))
@@ -1280,11 +1280,11 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                 HorizontalDivider()
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Mostrar painel da trena na folha", color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                    Switch(checked = !vm.trenaHidden, onCheckedChange = { vm.setTrenaHidden(!it) })
+                    Switch(checked = !vm.trenaHidden, onCheckedChange = { vm.changeTrenaHidden(!it) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Tamanho do painel", color = Ui.text, fontSize = 15.sp, modifier = Modifier.width(150.dp))
-                    androidx.compose.material3.Slider(value = vm.trenaScale, onValueChange = { vm.setTrenaScale(it) }, valueRange = 0.5f..1.3f, modifier = Modifier.weight(1f))
+                    androidx.compose.material3.Slider(value = vm.trenaScale, onValueChange = { vm.changeTrenaScale(it) }, valueRange = 0.5f..1.3f, modifier = Modifier.weight(1f))
                 }
                 Text("Com o painel oculto, a medida continua indo direto para a cota ou o segmento selecionado.", color = Ui.dim, fontSize = 12.sp)
                 if (log.isNotEmpty()) {

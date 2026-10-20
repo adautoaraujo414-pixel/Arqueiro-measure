@@ -128,6 +128,11 @@ object CabinetMath {
                 }
             }
         }
+        ranges.forEachIndexed { i, (x0, x1) ->
+            c.vaos[i].shelfYs.sorted().filter { it > vTop + e && it < vaoBottom(c) - e }.forEach { y ->
+                out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - 20.0, e, vao = i, note = "na posição escolhida (${fmt(y - vTop)} abaixo da travessa)")
+            }
+        }
         out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
         ranges.forEachIndexed { i, (x0, x1) ->
             val vw = x1 - x0

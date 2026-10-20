@@ -152,4 +152,12 @@ class CabinetTest {
         val sum = p.filter { it.kind == PartKind.FRENTE_GAVETA }.sumOf { it.h } + p.filter { it.kind == PartKind.BATENTE }.sumOf { it.h }
         assertEquals(CabinetMath.vaoH(c), sum, 1e-9)
     }
+
+    @Test fun looseShelfAtChosenHeight() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(shelfYs = listOf(400.0))))
+        val s = CabinetMath.parts(c).single { it.kind == PartKind.PRATELEIRA }
+        assertEquals(400.0 - 7.5, s.y, 1e-9)
+        val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(Sheet(objs = listOf(CabObj(id = "a", at = Pt(1f, 1f), cab = c)))))))
+        assertEquals(listOf(400.0), (back.pages[0].objs[0] as CabObj).cab.vaos[0].shelfYs)
+    }
 }

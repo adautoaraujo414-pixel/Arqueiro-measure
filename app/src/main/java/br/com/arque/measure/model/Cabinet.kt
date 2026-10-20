@@ -19,6 +19,8 @@ data class Vao(
     val cava: Boolean = false,
     /** Altura de cada batente de cava entre as gavetas (cor do móvel, largura do vão). */
     val batenteMm: Double = 50.0,
+    /** Prateleiras soltas em posições escolhidas (y em mm, medido da parte de baixo da pedra). */
+    val shelfYs: List<Double> = emptyList(),
 )
 
 /**

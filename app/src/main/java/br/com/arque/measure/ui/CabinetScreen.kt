@@ -85,6 +85,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
     val cab = CabinetMath.normalized(obj.cab)
     var selDivider by remember { mutableIntStateOf(-1) }
     var selVao by remember { mutableIntStateOf(0) }
+    var tapMm by remember { mutableStateOf(Offset.Zero) }
     var listOpen by remember { mutableStateOf(false) }
     var renameOpen by remember { mutableStateOf(false) }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
@@ -112,14 +113,50 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     TextButton(onClick = { listOpen = true }) { Text("Lista de peças", color = Ui.accent) }
                 }
                 val canvasPart: @Composable (Modifier) -> Unit = { mod ->
+                    Box(mod) {
                     CabinetCanvas(
-                        cab = cab, selDivider = selDivider, selVao = selVao, modifier = mod,
+                        cab = cab, selDivider = selDivider, selVao = selVao, modifier = Modifier.fillMaxSize(),
                         onPickDivider = { selDivider = it },
-                        onPickVao = { selVao = it; selDivider = -1 },
+                        onPickVao = { v, mx, my -> selVao = v; selDivider = -1; tapMm = Offset(mx.toFloat(), my.toFloat()) },
                         onBegin = { st.beginGesture() },
                         onLive = { f -> st.liveCab(id, f) },
                         onEnd = { st.endGesture() },
                     )
+                    Row(Modifier.align(Alignment.TopStart).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
+                        QuickBtn("↷ Refazer", st.canRedo) { st.redo() }
+                    }
+                    if (selDivider < 0 && selVao in cab.vaos.indices) {
+                        val rg = CabinetMath.vaoRanges(cab)
+                        val e0 = cab.espMm
+                        val iw0 = CabinetMath.innerW(cab)
+                        Row(
+                            Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(8.dp).horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            fun setV(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
+                            QuickBtn("+ Gaveta", true) { setV { if (it.kind == VaoKind.DRAWERS) it.copy(drawers = (it.drawers + 1).coerceAtMost(8)) else it.copy(kind = VaoKind.DRAWERS, drawers = 3) } }
+                            QuickBtn("+ Prateleira aqui", true) {
+                                val y = Math.round(tapMm.y.toDouble()).toDouble()
+                                setV { it.copy(shelfYs = it.shelfYs + y) }
+                            }
+                            QuickBtn("Porta", true) { setV { it.copy(kind = VaoKind.DOOR, doors = 1) } }
+                            QuickBtn("2 portas", true) { setV { it.copy(kind = VaoKind.DOOR, doors = 2) } }
+                            QuickBtn("Divisória aqui", true) {
+                                val x0 = rg[selVao].first; val x1 = rg[selVao].second
+                                val cx = tapMm.x.toDouble().coerceIn(x0 + 40.0, x1 - 40.0 - e0)
+                                val ratio = ((Math.round(cx - e0 / 2) + e0 / 2 - e0) / iw0).toFloat()
+                                val i = selVao
+                                edit { c -> c.copy(dividers = c.dividers.sorted().take(i) + ratio + c.dividers.sorted().drop(i), vaos = c.vaos.take(i + 1) + Vao() + c.vaos.drop(i + 1)) }
+                            }
+                            QuickBtn("Igualar vãos", cab.dividers.isNotEmpty()) {
+                                val n = cab.dividers.size
+                                edit { c -> c.copy(dividers = List(n) { k -> ((k + 1).toFloat() / (n + 1)) }) }
+                            }
+                            QuickBtn("Limpar vão", true) { setV { Vao() } }
+                        }
+                    }
+                    }
                 }
                 val panelPart: @Composable (Modifier) -> Unit = { mod ->
                     CabinetPanel(
@@ -166,7 +203,7 @@ private fun CabinetCanvas(
     selVao: Int,
     modifier: Modifier,
     onPickDivider: (Int) -> Unit,
-    onPickVao: (Int) -> Unit,
+    onPickVao: (Int, Double, Double) -> Unit,
     onBegin: () -> Unit,
     onLive: ((Cabinet) -> Cabinet) -> Unit,
     onEnd: () -> Unit,
@@ -278,7 +315,7 @@ private fun CabinetCanvas(
                 val di = dx.indexOfFirst { mx >= it - tol / 2 && mx <= it + e + tol / 2 && my in vTop..vBot }
                 if (di >= 0) { onPickDivider(di); return@detectTapGestures }
                 val vi = ranges.indexOfFirst { mx >= it.first && mx <= it.second }
-                if (vi >= 0 && my in vTop..vBot) onPickVao(vi)
+                if (vi >= 0 && my in vTop..vBot) onPickVao(vi, mx.toDouble(), my.toDouble())
             }
         },
     ) {
@@ -479,6 +516,16 @@ private fun CabinetPanel(
                     Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
                 }
             }
+            if (v.shelfYs.isNotEmpty()) {
+                Label("Prateleiras soltas (toque para remover)")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    v.shelfYs.sorted().forEach { y ->
+                        Chip("✕ ${Units.formatNumber(y - CabinetMath.vaoTop(cab), LengthUnit.MM)} da travessa", false) {
+                            setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y }) }
+                        }
+                    }
+                }
+            }
             PillBtn("+ Divisória no meio deste vão") {
                 val mid = (ranges[selVao].first + ranges[selVao].second) / 2
                 val r = ((mid - e) / iw).toFloat()
@@ -503,6 +550,14 @@ private fun CabinetPanel(
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })
         }
     }
+}
+
+@Composable
+private fun QuickBtn(text: String, enabled: Boolean, onClick: () -> Unit) {
+    Text(
+        text, color = if (enabled) Ui.text else Ui.dim, fontSize = 14.sp,
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xE62E3136)).clickable(enabled = enabled) { onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
+    )
 }
 
 @Composable private fun Label(t: String) = Text(t.uppercase(), color = Ui.dim, fontSize = 11.sp, letterSpacing = 1.sp)

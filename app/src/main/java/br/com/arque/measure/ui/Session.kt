@@ -17,6 +17,8 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
+enum class EraserMode(val label: String) { PIXEL("Pixels"), STROKE("Traços"), LASSO("Laço") }
+
 enum class Tool(val label: String, val drawing: Boolean) {
     NAVIGATE("Navegar", false),
     SELECT("Selecionar", false),
@@ -95,6 +97,11 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     var width by mutableFloatStateOf(0.55f * UNITS_PER_MM)
     var fill by mutableStateOf(false)
     var stylusOnly by mutableStateOf(false)
+
+    // borracha
+    var eraserMode by mutableStateOf(EraserMode.STROKE)
+    var eraserSize by mutableStateOf(12f)
+    var eraserOnlyHighlighter by mutableStateOf(false)
     var fullscreen by mutableStateOf(false)
 
     var textEdit by mutableStateOf<TextEdit?>(null)

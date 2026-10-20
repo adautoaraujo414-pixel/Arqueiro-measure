@@ -317,6 +317,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     var menuOpen by remember { mutableStateOf(false) }
     var pageMenu by remember { mutableStateOf(false) }
     var shapesMenu by remember { mutableStateOf(false) }
+    var eraserMenu by remember { mutableStateOf(false) }
     var imageMenu by remember { mutableStateOf(false) }
     var overview by remember { mutableStateOf(false) }
     var tpl by remember { mutableStateOf(Template.ARAUJO) }
@@ -473,7 +474,48 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         ToolBtn(Tool.PEN, session)
                         ToolBtn(Tool.PENCIL, session)
-                        ToolBtn(Tool.ERASER, session)
+                        Box {
+                            val on = session.tool == Tool.ERASER
+                            IconButton(
+                                onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) },
+                                modifier = Modifier.size(40.dp).clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                            ) { Icon(Icons.AutoMirrored.Filled.Backspace, "Borracha", tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
+                            DropdownMenu(expanded = eraserMenu, onDismissRequest = { eraserMenu = false }) {
+                                Column(Modifier.padding(horizontal = 14.dp).widthIn(min = 260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("Borracha", fontSize = 15.sp)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        br.com.arque.measure.ui.EraserMode.values().forEach { m ->
+                                            val sel = session.eraserMode == m
+                                            Box(
+                                                Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                                                    .background(if (sel) Ui.accent.copy(alpha = 0.35f) else Color(0x22FFFFFF))
+                                                    .clickable { session.eraserMode = m }.padding(vertical = 10.dp),
+                                                contentAlignment = Alignment.Center,
+                                            ) { Text(m.label, fontSize = 13.sp, color = if (sel) Ui.accent else Ui.text) }
+                                        }
+                                    }
+                                    Text(
+                                        when (session.eraserMode) {
+                                            br.com.arque.measure.ui.EraserMode.PIXEL -> "Apaga só o pedaço que você passa por cima."
+                                            br.com.arque.measure.ui.EraserMode.STROKE -> "Apaga o traço ou a forma inteira que você tocar."
+                                            br.com.arque.measure.ui.EraserMode.LASSO -> "Contorne com a caneta para apagar o que ficar dentro."
+                                        },
+                                        fontSize = 12.sp, color = Ui.dim,
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Tamanho", fontSize = 13.sp, modifier = Modifier.width(80.dp))
+                                        androidx.compose.material3.Slider(value = session.eraserSize, onValueChange = { session.eraserSize = it }, valueRange = 4f..60f, modifier = Modifier.weight(1f))
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Apenas apagar marca-texto", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                        Switch(checked = session.eraserOnlyHighlighter, onCheckedChange = { session.eraserOnlyHighlighter = it })
+                                    }
+                                    TextButton(onClick = { st.clearPageDrawings(); eraserMenu = false }) {
+                                        Text("Limpar a página atual", color = Color(0xFFFF5A5A))
+                                    }
+                                }
+                            }
+                        }
                     }
                     BarPill {
                         ToolBtn(Tool.SELECT, session)

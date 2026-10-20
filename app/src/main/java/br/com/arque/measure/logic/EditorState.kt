@@ -81,6 +81,24 @@ class EditorState(
         return sheet.objs.filter { it.id in groupIds || (it is Ann && it.photoId != null && it.photoId in photoIds) }
     }
 
+    /** Apaga vários objetos de uma vez (laço da borracha). */
+    fun deleteIds(ids: Set<String>) {
+        val gone = sheet.objs.filter { it.id in ids && !it.locked }.map { it.id }.toSet()
+        if (gone.isEmpty()) return
+        commit(sheet.copy(objs = sheet.objs.filter { it.id !in gone }))
+        fixSelection()
+        onChange()
+    }
+
+    /** Limpa a folha: traços, formas e textos (fotos, cotas e cômodos ficam). Dá para desfazer. */
+    fun clearPageDrawings() {
+        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it.locked }
+        if (keep.size == sheet.objs.size) return
+        commit(sheet.copy(objs = keep))
+        fixSelection()
+        onChange()
+    }
+
     fun deleteGroup() {
         val gone = groupWithLinked().filter { !it.locked }.map { it.id }.toSet()
         if (gone.isEmpty()) return

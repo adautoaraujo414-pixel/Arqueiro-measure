@@ -39,7 +39,7 @@ sealed interface GestureAction {
  * a pinça só dá zoom na visualização. A folha mantém sempre o tamanho do papel.
  */
 class GestureController(private val s: EditorSession, private val density: Float) {
-    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ROOM, LASSO, GROUP }
+    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ERASE_LASSO, ROOM, LASSO, GROUP }
     private enum class H { CORNER, ROTATE, A, B, VERTEX }
 
     private var mode = Mode.NONE
@@ -99,7 +99,10 @@ class GestureController(private val s: EditorSession, private val density: Float
             Tool.ROOM -> downRoom(screen, p)
             Tool.LASSO -> downLasso(p)
             Tool.PEN, Tool.PENCIL, Tool.HIGHLIGHTER -> startStroke(p, tool)
-            Tool.ERASER -> {
+            Tool.ERASER -> if (s.eraserMode == EraserMode.LASSO) {
+                s.lasso = listOf(p)
+                mode = Mode.ERASE_LASSO
+            } else {
                 mode = Mode.ERASE
                 st.beginGesture()
                 erase(p)
@@ -303,7 +306,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 }
             }
             Mode.ERASE -> erase(p)
-            Mode.LASSO -> {
+            Mode.LASSO, Mode.ERASE_LASSO -> {
                 val last = s.lasso.lastOrNull()
                 if (last == null || hypot(p.x - last.x, p.y - last.y) >= 3f) s.lasso = s.lasso + p
             }
@@ -316,8 +319,33 @@ class GestureController(private val s: EditorSession, private val density: Float
 
     private fun erase(p: Pt) {
         val sh = st.sheet
-        val r = 12f * density / s.view.scale
-        val gone = sh.objs.filter { it is Ann && it !is DimObj && it !is RoomObj && !it.locked && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
+        val r = s.eraserSize * density / s.view.scale
+        val onlyHl = s.eraserOnlyHighlighter
+        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is RoomObj && !o.locked &&
+            (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
+        if (s.eraserMode == EraserMode.PIXEL) {
+            val photos = sh.photos()
+            var changed = false
+            val out = ArrayList<Obj>(sh.objs.size)
+            for (o in sh.objs) {
+                if (!erasable(o)) { out += o; continue }
+                if (o is StrokeObj) {
+                    val sp = Geo.annPoints(photos, o)
+                    val pieces = br.com.arque.measure.logic.Eraser.erasePieces(sp, p, r + o.width / 2f)
+                    if (pieces == null) { out += o; continue }
+                    changed = true
+                    pieces.forEachIndexed { k, pc ->
+                        val local = pc.map { Geo.fromSheet(photos, o.photoId, it) }
+                        out += if (k == 0) o.copy(pts = local) else o.copy(id = br.com.arque.measure.model.newId(), pts = local)
+                    }
+                } else if (Geo.hitObj(sh, o, p, r, st.unit)) {
+                    changed = true
+                } else out += o
+            }
+            if (changed) st.live(sh.copy(objs = out))
+            return
+        }
+        val gone = sh.objs.filter { erasable(it) && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
         if (gone.isNotEmpty()) st.live(sh.copy(objs = sh.objs.filter { it.id !in gone }))
     }
 
@@ -346,6 +374,15 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.selectGroup(ids)
             }
             Mode.GROUP -> if (moved) st.endGesture() else st.cancelGesture()
+            Mode.ERASE_LASSO -> {
+                val onlyHl = s.eraserOnlyHighlighter
+                val ids = Geo.lassoPick(st.sheet, s.lasso).filter { id ->
+                    val o = st.sheet.obj(id)
+                    o is Ann && o !is DimObj && o !is RoomObj && (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
+                }.toSet()
+                s.lasso = emptyList()
+                st.deleteIds(ids)
+            }
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> st.endGesture()
             else -> {}
         }
@@ -382,7 +419,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     fun cancelSingle() {
         s.loupe = null
         if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM || mode == Mode.GROUP) st.cancelGesture()
-        if (mode == Mode.LASSO) s.lasso = emptyList()
+        if (mode == Mode.LASSO || mode == Mode.ERASE_LASSO) s.lasso = emptyList()
         mode = Mode.NONE
     }
 

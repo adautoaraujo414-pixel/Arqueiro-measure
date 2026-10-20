@@ -458,16 +458,19 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
             }
 
             // ---- menu de contexto acima do objeto selecionado ----
-            if (selected != null) {
-                val pts = Geo.annPoints(st.sheet.photos(), selected as? br.com.arque.measure.model.Ann ?: return@Box).takeIf { selected !is PhotoObj }
-                val ptsSheet = if (selected is PhotoObj) Geo.corners(selected) else pts ?: emptyList()
-                if (ptsSheet.isNotEmpty() && selected !is DimObj) {
-                    val topY = ptsSheet.minOf { session.view.toScreen(it).y }
-                    val cx = ptsSheet.map { session.view.toScreen(it).x }.average().toFloat()
+            if (selected != null && selected !is DimObj) {
+                val ptsSheet = if (selected is PhotoObj) Geo.corners(selected)
+                else Geo.annPoints(st.sheet.photos(), selected as br.com.arque.measure.model.Ann)
+                if (ptsSheet.isNotEmpty()) {
+                    val screenPts = ptsSheet.map { session.view.toScreen(it) }
+                    val topY = screenPts.minOf { it.y }
+                    val cx = screenPts.map { it.x }.average().toFloat()
+                    val dx = with(density) { 160.dp.toPx() }
+                    val minY = with(density) { 190.dp.toPx() }
                     val py = with(density) { 56.dp.toPx() }
                     ContextBar(
                         session = session,
-                        modifier = Modifier.offset { IntOffset((cx - with(density) { 160.dp.toPx() }).roundToInt().coerceAtLeast(8), (topY - py).roundToInt().coerceAtLeast(with(density) { 190.dp.toPx() }.roundToInt())) },
+                        modifier = Modifier.offset { IntOffset((cx - dx).roundToInt().coerceAtLeast(8), (topY - py).roundToInt().coerceAtLeast(minY.roundToInt())) },
                     )
                 }
             }

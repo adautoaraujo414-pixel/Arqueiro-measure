@@ -651,11 +651,24 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
 
             // ---- painel inferior: Distância, Telémetro, leituras ----
             Column(
-                Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(10.dp).widthIn(max = 440.dp),
+                Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(10.dp).widthIn(max = 360.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
-                (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
+                val hasPanel = selected is DimObj || selected is br.com.arque.measure.model.RoomObj
+                var panelMin by remember(selected?.id) { mutableStateOf(false) }
+                if (hasPanel) {
+                    // minimizado: a medida da trena continua entrando no segmento selecionado, só some o painel
+                    Text(
+                        if (panelMin) "▲ Medida (toque para abrir)" else "▼ Minimizar",
+                        color = Color.White, fontSize = 12.sp,
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xB31B1C20))
+                            .clickable { panelMin = !panelMin }.padding(horizontal = 12.dp, vertical = 7.dp),
+                    )
+                }
+                if (!panelMin) {
+                    (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
+                }
                 if (bleState == BleState.CONNECTED && !vm.trenaHidden) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
                 ChipsBar(vm, bleState == BleState.CONNECTED) { btOpen = true }
             }
@@ -952,7 +965,7 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
     val dark = Color(0xFF111111)
     Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
         Column(
-            Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1026,7 +1039,7 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
     }
     Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
         Column(
-            Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Distância", color = Color(0xFF111111), fontSize = 16.sp)

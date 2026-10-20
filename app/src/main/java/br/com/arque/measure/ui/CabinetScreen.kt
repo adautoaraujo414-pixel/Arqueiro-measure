@@ -13,6 +13,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -75,6 +77,7 @@ private val WoodDark = Color(0xFF8B7B5C)
 private fun mmStr(v: Double) = Units.formatNumber(v, LengthUnit.MM) + " mm"
 
 /** Editor do móvel: vista frontal paramétrica, na medida real. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose: () -> Unit) {
     @Suppress("UNUSED_VARIABLE")
@@ -137,9 +140,10 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         val rg = CabinetMath.vaoRanges(cab)
                         val e0 = cab.espMm
                         val iw0 = CabinetMath.innerW(cab)
-                        Row(
-                            Modifier.align(Alignment.BottomStart).fillMaxWidth().padding(8.dp).horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        FlowRow(
+                            Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(start = 8.dp, end = 8.dp, bottom = 40.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             fun setV(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
                             QuickBtn("+ Gaveta", true) { setV { if (it.kind == VaoKind.DRAWERS) it.copy(drawers = (it.drawers + 1).coerceAtMost(8)) else it.copy(kind = VaoKind.DRAWERS, drawers = 3) } }
@@ -446,7 +450,7 @@ private fun fitRef(w: Double, h: Double, sz: Size, zoom: Float = 1f, pan: Offset
     // área útil: sem os botões do topo e sem a barra de ações de baixo; só sobra espaço para as cotas
     val m = 72f
     val topM = 78f
-    val botM = 118f
+    val botM = 270f
     val availH = (sz.height - topM - botM).coerceAtLeast(50f)
     val k = minOf((sz.width - 2 * m) / w.toFloat(), availH / h.toFloat()).coerceAtLeast(0.01f) * zoom
     val ox = (sz.width - w.toFloat() * k) / 2f + pan.x

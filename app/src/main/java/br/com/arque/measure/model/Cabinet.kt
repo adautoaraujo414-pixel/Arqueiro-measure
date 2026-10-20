@@ -11,6 +11,12 @@ data class Vao(
     val shelves: Int = 1,
     val drawers: Int = 3,
     val doors: Int = 1,
+    /** Prateleiras acima do gaveteiro (só vale com gavetas). */
+    val shelvesAbove: Int = 0,
+    /** Altura do gaveteiro quando há prateleiras em cima (0 = 300 mm). */
+    val gaveteiroMm: Double = 0.0,
+    /** Cava (puxador cortado a 30° na própria peça) nas frentes/portas deste vão. */
+    val cava: Boolean = false,
 )
 
 /**

@@ -3,6 +3,10 @@ package br.com.arque.measure.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -166,18 +171,35 @@ private fun CabinetCanvas(
     onEnd: () -> Unit,
 ) {
     val cabNow by rememberUpdatedState(cab)
+    var zoomS by remember { mutableFloatStateOf(1f) }
+    var panS by remember { mutableStateOf(Offset.Zero) }
+    val zoomNow by rememberUpdatedState(zoomS)
+    val panNow by rememberUpdatedState(panS)
     var dragging by remember { mutableIntStateOf(-2) } // -2 nada, -1 lateral dir., 0.. divisória
     val e = cab.espMm
     val parts = CabinetMath.parts(cab)
     val ranges = CabinetMath.vaoRanges(cab)
     val dx = CabinetMath.dividerX(cab)
-    fun fit(sz: Size) = fitOf(cab, sz)
+    fun fit(sz: Size) = fitOf(cab, sz, zoomS, panS)
+    Box(modifier) {
     Canvas(
-        modifier = modifier.background(Color(0xFF17181B)).pointerInput(Unit) {
+        modifier = Modifier.fillMaxSize().background(Color(0xFF17181B)).pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(requireUnconsumed = false)
+                do {
+                    val ev = awaitPointerEvent()
+                    if (ev.changes.size >= 2 && ev.changes.none { it.isConsumed }) {
+                        zoomS = (zoomNow * ev.calculateZoom()).coerceIn(0.5f, 6f)
+                        panS = panNow + ev.calculatePan()
+                        ev.changes.forEach { it.consume() }
+                    }
+                } while (ev.changes.any { it.pressed })
+            }
+        }.pointerInput(Unit) {
             detectDragGestures(
                 onDragStart = { pos ->
                     val c = cabNow
-                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()))
+                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
                     val mx = (pos.x - ox) / k
                     val my = (pos.y - oy) / k
                     val tol = 22f / k
@@ -195,7 +217,7 @@ private fun CabinetCanvas(
                 },
                 onDrag = { change, _ ->
                     val c = cabNow
-                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()))
+                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
                     val mx = ((change.position.x - ox) / k).toDouble()
                     val ee = c.espMm
                     if (dragging >= 0) {
@@ -228,7 +250,7 @@ private fun CabinetCanvas(
                 val ranges = CabinetMath.vaoRanges(cab)
                 val dx = CabinetMath.dividerX(cab)
                 val e = cab.espMm
-                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()))
+                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
                 val mx = (pos.x - ox) / k
                 val my = (pos.y - oy) / k
                 val tol = 14f / k
@@ -313,14 +335,20 @@ private fun CabinetCanvas(
         val bottom = Y(cab.hMm) + 44f
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
+    Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("−" to { zoomS = (zoomS / 1.25f).coerceAtLeast(0.5f) }, "+" to { zoomS = (zoomS * 1.25f).coerceAtMost(6f) }, "Ajustar" to { zoomS = 1f; panS = Offset.Zero }).forEach { (t, f) ->
+            Text(t, color = Ui.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Ui.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
+        }
+    }
+    }
 }
 
 /** Transformação mm → tela (escala, origem x, origem y), recalculada com o tamanho atual do canvas. */
-private fun fitOf(cab: Cabinet, sz: Size): Triple<Float, Float, Float> {
+private fun fitOf(cab: Cabinet, sz: Size, zoom: Float = 1f, pan: Offset = Offset.Zero): Triple<Float, Float, Float> {
     val m = 90f
-    val k = minOf((sz.width - 2 * m) / cab.wMm.toFloat(), (sz.height - 2 * m) / cab.hMm.toFloat()).coerceAtLeast(0.01f)
-    val ox = (sz.width - cab.wMm.toFloat() * k) / 2f
-    val oy = (sz.height - cab.hMm.toFloat() * k) / 2f
+    val k = minOf((sz.width - 2 * m) / cab.wMm.toFloat(), (sz.height - 2 * m) / cab.hMm.toFloat()).coerceAtLeast(0.01f) * zoom
+    val ox = (sz.width - cab.wMm.toFloat() * k) / 2f + pan.x
+    val oy = (sz.height - cab.hMm.toFloat() * k) / 2f + pan.y
     return Triple(k, ox, oy)
 }
 
@@ -396,23 +424,39 @@ private fun CabinetPanel(
                 VaoKind.SHELVES -> Stepper("Prateleiras", v.shelves, 1, 8) { n -> setVao { it.copy(shelves = n) } }
                 VaoKind.DRAWERS -> {
                     Stepper("Quantidade de gavetas", v.drawers, 1, 8) { n -> setVao { it.copy(drawers = n) } }
+                    Stepper("Prateleiras em cima das gavetas", v.shelvesAbove, 0, 6) { n -> setVao { it.copy(shelvesAbove = n) } }
+                    if (v.shelvesAbove > 0) NumField("Altura do gaveteiro", CabinetMath.gaveteiroH(cab, v), vm) { g -> setVao { it.copy(gaveteiroMm = g) } }
                     NumField("Borda superior", cab.bordaSupMm, vm) { x -> edit { it.copy(bordaSupMm = x.coerceIn(0.0, 50.0)) } }
                     NumField("Borda inferior", cab.bordaInfMm, vm) { x -> edit { it.copy(bordaInfMm = x.coerceIn(0.0, 50.0)) } }
                     NumField("Folga entre frentes", cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
                         Text("Altura de cada frente", color = Ui.dim, fontSize = 12.sp)
-                        Text(Units.format(CabinetMath.drawerFrontH(cab, v.drawers), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                        Text("(vão − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        Text(Units.format(CabinetMath.drawerFrontH(cab, v.drawers, CabinetMath.gaveteiroH(cab, v)), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                        Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
+                    Text("Caixa da gaveta: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
                 }
                 VaoKind.DOOR -> {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip("1 folha", v.doors < 2) { setVao { it.copy(doors = 1) } }
                         Chip("2 folhas", v.doors >= 2) { setVao { it.copy(doors = 2) } }
                     }
-                    NumField("Folga da porta", cab.folgaMm, vm) { x -> edit { it.copy(folgaMm = x.coerceIn(0.0, 10.0)) } }
+                    if (v.doors >= 2) {
+                        val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / 2
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
+                            Text("Cada folha", color = Ui.dim, fontSize = 12.sp)
+                            Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                            Text("(vão + 12) ÷ 2 · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    } else NumField("Folga da porta", cab.folgaMm, vm) { x -> edit { it.copy(folgaMm = x.coerceIn(0.0, 10.0)) } }
                 }
                 VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = Ui.dim, fontSize = 12.sp)
+            }
+            if (v.kind == VaoKind.DRAWERS || v.kind == VaoKind.DOOR) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Cava (puxador a 30° na peça)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
+                }
             }
             PillBtn("+ Divisória no meio deste vão") {
                 val mid = (ranges[selVao].first + ranges[selVao].second) / 2

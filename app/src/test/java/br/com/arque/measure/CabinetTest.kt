@@ -120,4 +120,26 @@ class CabinetTest {
         val vw = CabinetMath.vaoRanges(c)[1].let { it.second - it.first }
         assertTrue(CabinetMath.parts(c).first { it.kind == PartKind.FRENTE_GAVETA }.note.contains(CabinetMath.vaoRanges(c)[1].let { "%.0f".format(vw - 26.0) }.take(2)))
     }
+
+    @Test fun twoDoorsOverlapFormula() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.DOOR, doors = 2, cava = true)))
+        val vw = CabinetMath.vaoRanges(c)[0].let { it.second - it.first }
+        val doors = CabinetMath.parts(c).filter { it.kind == PartKind.PORTA }
+        assertEquals(2, doors.size)
+        assertEquals((vw + 12.0) / 2, doors[0].cutL, 1e-9)
+        assertEquals(CabinetMath.vaoH(c) + 30.0, doors[0].cutW, 1e-9)
+        assertTrue(doors[0].note.contains("30°"))
+    }
+
+    @Test fun drawersWithShelvesAbove() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.DRAWERS, drawers = 2, shelvesAbove = 1, gaveteiroMm = 300.0)))
+        val p = CabinetMath.parts(c)
+        assertEquals(1, p.count { it.kind == PartKind.PRATELEIRA })
+        val f = p.filter { it.kind == PartKind.FRENTE_GAVETA }
+        assertEquals((300.0 - 4 - 3) / 2, f[0].cutW, 1e-9)
+        val vb = CabinetMath.vaoBottom(c)
+        assertTrue(f.last().y + f.last().h <= vb)
+        val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(Sheet(objs = listOf(CabObj(id = "a", at = Pt(1f, 1f), cab = c)))))))
+        assertEquals(c.vaos, (back.pages[0].objs[0] as CabObj).cab.vaos)
+    }
 }

@@ -17,6 +17,11 @@ object CabinetMath {
     /** A largura e a profundidade do módulo são as da pedra menos 4 cm. */
     const val DESCONTO_PEDRA_MM = 40.0
 
+    /** Porta de 2 folhas: soma de 12 mm na largura do vão (÷ 2) e 30 mm na altura. */
+    const val PORTA_SOBRE_L_MM = 12.0
+    const val PORTA_SOBRE_H_MM = 30.0
+    private fun cavaNote(v: Vao) = if (v.cava) " · cava: corte a 30° na peça" else ""
+
     /** Folga por lado até a pedra: 20 mm sem tamponamento, 35 mm com (20 + 15 da chapa). */
     fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 20.0) + (if (c.tampDir) 35.0 else 20.0)
 
@@ -63,10 +68,14 @@ object CabinetMath {
     }
 
     /** Altura de cada frente de gaveta: (vão − bordas − folgas entre frentes) ÷ quantidade. */
-    fun drawerFrontH(c: Cabinet, n: Int): Double {
+    fun drawerFrontH(c: Cabinet, n: Int, areaH: Double = vaoH(c)): Double {
         val k = max(1, n)
-        return (vaoH(c) - c.bordaSupMm - c.bordaInfMm - c.folgaGavetaMm * (k - 1)) / k
+        return (areaH - c.bordaSupMm - c.bordaInfMm - c.folgaGavetaMm * (k - 1)) / k
     }
+
+    /** Altura da área das gavetas do vão: o vão todo, ou o gaveteiro (padrão 300) quando há prateleiras em cima. */
+    fun gaveteiroH(c: Cabinet, v: Vao): Double =
+        if (v.shelvesAbove > 0) (if (v.gaveteiroMm > 0) v.gaveteiroMm else 300.0).coerceIn(50.0, vaoH(c) - 50.0) else vaoH(c)
 
     /** Garante que há exatamente (divisórias + 1) vãos, preenchendo ou cortando. */
     fun normalized(c: Cabinet): Cabinet {
@@ -109,6 +118,12 @@ object CabinetMath {
                     val y = vTop + vh * k / (v.shelves + 1) - e / 2
                     out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - 20.0, e, vao = i)
                 }
+            } else if (v.kind == VaoKind.DRAWERS && v.shelvesAbove > 0) {
+                val area = vh - gaveteiroH(c, v)
+                for (k in 1..v.shelvesAbove) {
+                    val y = vTop + area * k / (v.shelvesAbove + 1) - e / 2
+                    out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - 20.0, e, vao = i)
+                }
             }
         }
         out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
@@ -117,21 +132,30 @@ object CabinetMath {
             val v = c.vaos[i]
             when (v.kind) {
                 VaoKind.DRAWERS -> {
-                    val fh = drawerFrontH(c, v.drawers)
+                    val gh = gaveteiroH(c, v)
+                    val fh = drawerFrontH(c, v.drawers, gh)
+                    val y0 = vTop + vh - gh
                     val fw = vw - c.folgaMm
                     val caixaW = vw - c.corredicaMm
                     for (k in 0 until v.drawers) {
-                        val y = vTop + c.bordaSupMm + k * (fh + c.folgaGavetaMm)
-                        out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i, note = "caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)")
+                        val y = y0 + c.bordaSupMm + k * (fh + c.folgaGavetaMm)
+                        out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i, note = "caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)" + cavaNote(v))
                     }
                 }
                 VaoKind.DOOR -> {
-                    val n = if (v.doors >= 2) 2 else 1
-                    val dw = (vw - c.folgaMm * n) / n
-                    val dh = vh - c.folgaMm
-                    for (k in 0 until n) {
-                        val x = x0 + c.folgaMm / 2 + k * (dw + c.folgaMm)
-                        out += Part(PartKind.PORTA, x, vTop + c.folgaMm / 2, dw, dh, dw, dh, e, vao = i)
+                    if (v.doors >= 2) {
+                        // duas folhas sobrepostas: (vão + 12) ÷ 2 de largura e vão + 30 de altura
+                        val dw = (vw + PORTA_SOBRE_L_MM) / 2
+                        val dh = vh + PORTA_SOBRE_H_MM
+                        for (k in 0 until 2) {
+                            val x = x0 - PORTA_SOBRE_L_MM / 2 + k * dw
+                            out += Part(PartKind.PORTA, x, vTop - PORTA_SOBRE_H_MM / 2, dw, dh, dw, dh, e, vao = i,
+                                note = "(vão + ${fmt(PORTA_SOBRE_L_MM)}) ÷ 2 · altura do vão + ${fmt(PORTA_SOBRE_H_MM)}" + cavaNote(v))
+                        }
+                    } else {
+                        val dw = vw - c.folgaMm
+                        val dh = vh - c.folgaMm
+                        out += Part(PartKind.PORTA, x0 + c.folgaMm / 2, vTop + c.folgaMm / 2, dw, dh, dw, dh, e, vao = i, note = cavaNote(v).removePrefix(" · "))
                     }
                 }
                 else -> {}

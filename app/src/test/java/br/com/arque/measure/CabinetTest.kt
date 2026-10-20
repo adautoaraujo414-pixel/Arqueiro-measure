@@ -219,4 +219,15 @@ class CabinetTest {
         assertEquals(0.0, t.y, 0.0)
         assertEquals(CabinetMath.baseBottom(c), t.y + t.h, 1e-9)
     }
+
+    @Test fun oneDoorAndDrawerFrontOverlap() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.DOOR, doors = 1)))
+        val vw = CabinetMath.vaoRanges(c)[0].let { it.second - it.first }
+        val d = CabinetMath.parts(c).first { it.kind == PartKind.PORTA }
+        assertEquals(vw + 14.0, d.cutL, 1e-9)
+        assertEquals(CabinetMath.vaoH(c) + 30.0, d.cutW, 1e-9)
+        val g = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.DRAWERS, drawers = 2)))
+        val f = CabinetMath.parts(g).first { it.kind == PartKind.FRENTE_GAVETA }
+        assertEquals(CabinetMath.vaoRanges(g)[0].let { it.second - it.first } + 15.0, f.cutL, 1e-9)
+    }
 }

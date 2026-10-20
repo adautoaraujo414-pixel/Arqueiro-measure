@@ -611,7 +611,7 @@ private fun CabinetPanel(
                         }
                         if (v.shelvesAbove > 0) Text("Área acima das gavetas: ${Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)} mm", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
-                    Text("Caixa da gaveta: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
+                    Text("Frente da gaveta: vão + 15 (7,5 por lado). Caixa: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
                 }
                 VaoKind.OVEN -> {
                     val vwO = ranges[selVao].second - ranges[selVao].first
@@ -637,7 +637,14 @@ private fun CabinetPanel(
                             Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
                             Text("(vão + 12) ÷ 2 · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
-                    } else NumField("Folga da porta", cab.folgaMm, vm) { x -> edit { it.copy(folgaMm = x.coerceIn(0.0, 10.0)) } }
+                    } else {
+                        val dw1 = vw + CabinetMath.PORTA1_SOBRE_L_MM
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
+                            Text("Porta", color = Ui.dim, fontSize = 12.sp)
+                            Text("${Units.formatNumber(dw1, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                            Text("vão + 14 · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    }
                 }
                 VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = Ui.dim, fontSize = 12.sp)
             }

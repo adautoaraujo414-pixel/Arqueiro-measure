@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -173,8 +174,7 @@ private fun CabinetCanvas(
     val cabNow by rememberUpdatedState(cab)
     var zoomS by remember { mutableFloatStateOf(1f) }
     var panS by remember { mutableStateOf(Offset.Zero) }
-    val zoomNow by rememberUpdatedState(zoomS)
-    val panNow by rememberUpdatedState(panS)
+    var pinching by remember { mutableStateOf(false) }
     var dragging by remember { mutableIntStateOf(-2) } // -2 nada, -1 lateral dir., 0.. divisória
     val e = cab.espMm
     val parts = CabinetMath.parts(cab)
@@ -188,18 +188,32 @@ private fun CabinetCanvas(
                 awaitFirstDown(requireUnconsumed = false)
                 do {
                     val ev = awaitPointerEvent()
-                    if (ev.changes.size >= 2 && ev.changes.none { it.isConsumed }) {
-                        zoomS = (zoomNow * ev.calculateZoom()).coerceIn(0.5f, 6f)
-                        panS = panNow + ev.calculatePan()
+                    if (ev.changes.size >= 2) {
+                        // câmera: zoom em volta do ponto entre os dedos; o móvel não muda
+                        if (dragging != -2) { onEnd(); dragging = -2 }
+                        pinching = true
+                        val c = cabNow
+                        val sz = Size(size.width.toFloat(), size.height.toFloat())
+                        val (_, oxOld, oyOld) = fitOf(c, sz, zoomS, panS)
+                        val zNew = (zoomS * ev.calculateZoom()).coerceIn(0.5f, 6f)
+                        val rr = zNew / zoomS
+                        val cen = ev.calculateCentroid(useCurrent = true)
+                        val pn = ev.calculatePan()
+                        val (_, oxB, oyB) = fitOf(c, sz, zNew, Offset.Zero)
+                        val oxN = cen.x - (cen.x - oxOld) * rr + pn.x
+                        val oyN = cen.y - (cen.y - oyOld) * rr + pn.y
+                        zoomS = zNew
+                        panS = Offset(oxN - oxB, oyN - oyB)
                         ev.changes.forEach { it.consume() }
                     }
                 } while (ev.changes.any { it.pressed })
+                pinching = false
             }
         }.pointerInput(Unit) {
             detectDragGestures(
                 onDragStart = { pos ->
                     val c = cabNow
-                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
+                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
                     val mx = (pos.x - ox) / k
                     val my = (pos.y - oy) / k
                     val tol = 22f / k
@@ -215,9 +229,14 @@ private fun CabinetCanvas(
                     }
                     if (dragging != -2) { onBegin(); if (dragging >= 0) onPickDivider(dragging) }
                 },
-                onDrag = { change, _ ->
+                onDrag = { change, dragAmount ->
+                    if (dragging == -2) {
+                        // arrastar no vazio move só a câmera
+                        if (!pinching) { change.consume(); panS = panS + dragAmount }
+                        return@detectDragGestures
+                    }
                     val c = cabNow
-                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
+                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
                     val mx = ((change.position.x - ox) / k).toDouble()
                     val ee = c.espMm
                     if (dragging >= 0) {
@@ -250,7 +269,7 @@ private fun CabinetCanvas(
                 val ranges = CabinetMath.vaoRanges(cab)
                 val dx = CabinetMath.dividerX(cab)
                 val e = cab.espMm
-                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()), zoomNow, panNow)
+                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
                 val mx = (pos.x - ox) / k
                 val my = (pos.y - oy) / k
                 val tol = 14f / k
@@ -337,7 +356,7 @@ private fun CabinetCanvas(
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
     Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("−" to { zoomS = (zoomS / 1.25f).coerceAtLeast(0.5f) }, "+" to { zoomS = (zoomS * 1.25f).coerceAtMost(6f) }, "Ajustar" to { zoomS = 1f; panS = Offset.Zero }).forEach { (t, f) ->
+        listOf("Centralizar" to { zoomS = 1f; panS = Offset.Zero }).forEach { (t, f) ->
             Text(t, color = Ui.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Ui.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
     }

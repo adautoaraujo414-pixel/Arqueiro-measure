@@ -268,6 +268,16 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         return 0.299f * r + 0.587f * g + 0.114f * b
     }
 
+    /** Mistura [color] com o fundo [bg]; t = quanto da cor (1 = cor cheia). */
+    private fun mix(color: Int, bg: Int, t: Float): Int {
+        fun ch(shift: Int): Int {
+            val c = (color shr shift) and 0xFF
+            val b = (bg shr shift) and 0xFF
+            return (b + (c - b) * t).toInt().coerceIn(0, 255)
+        }
+        return (0xFF shl 24) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+    }
+
     /** Seta de cota: linha fina, pontas pequenas; só mostra o número depois que a trena mediu. */
     private fun drawDim(c: Canvas, o: DimObj, photos: Map<String, PhotoObj>, unit: LengthUnit) {
         val (a, b) = Geo.annPoints(photos, o)
@@ -280,15 +290,20 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         arrowHead(c, b, a, head, o.color)
         if (o.valueMm == null) return
         val label = Units.label(o, unit)
-        val box = Geo.dimLabelBox(a, b, label)
+        val k = Geo.labelScale(o, photos)
+        val box = Geo.dimLabelBox(a, b, label, k)
         rect.set(box.l, box.t, box.r, box.b)
-        fillPaint.color = o.color
-        c.drawRoundRect(rect, 3f, 3f, fillPaint)
-        textPaint.color = if (luminance(o.color) > 0.6f) 0xFF111111.toInt() else 0xFFFFFFFF.toInt()
-        textPaint.textSize = Geo.DIM_TEXT_SIZE
+        val tint = mix(o.color, 0xFFFFFFFF.toInt(), o.labelIntensity.coerceIn(0f, 1f))
+        val alpha = o.labelAlpha.coerceIn(0f, 1f)
+        fillPaint.color = withAlpha(tint, (alpha * 255).toInt())
+        c.drawRoundRect(rect, 3f * k, 3f * k, fillPaint)
+        // cor do texto pela luminância do que realmente aparece (cor sobre o papel branco)
+        val shown = mix(tint, 0xFFFFFFFF.toInt(), alpha)
+        textPaint.color = if (luminance(shown) > 0.6f) 0xFF111111.toInt() else 0xFFFFFFFF.toInt()
+        textPaint.textSize = Geo.DIM_TEXT_SIZE * k
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT_BOLD
-        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * 0.35f, textPaint)
+        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * k * 0.35f, textPaint)
     }
 
     // ---- seleção e alças (só na tela) ----

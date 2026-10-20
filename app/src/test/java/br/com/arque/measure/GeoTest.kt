@@ -91,3 +91,22 @@ class GeoTest {
         assertEquals(60f, Geo.snapAxis(a, Pt(100f, 60f)).y, 0f)
     }
 }
+
+class DimLabelScaleTest {
+    private fun photo(w: Float) = PhotoObj(id = "p", file = "a.jpg", pxW = 4000, pxH = 3000, cx = 400f, cy = 500f, w = w, h = w * 0.75f)
+
+    @org.junit.Test fun `quadradinho acompanha o tamanho da foto`() {
+        val d = DimObj(id = "d", photoId = "p", a = Pt(0.1f, 0.5f), b = Pt(0.9f, 0.5f), valueMm = 1000.0, color = 0, width = 2f, refSize = 400f)
+        val big = Geo.labelScale(d, mapOf("p" to photo(400f)))
+        val small = Geo.labelScale(d, mapOf("p" to photo(200f)))
+        org.junit.Assert.assertEquals(1f, big, 1e-4f)
+        org.junit.Assert.assertEquals(0.5f, small, 1e-4f)
+        val manual = Geo.labelScale(d.copy(labelScale = 2f), mapOf("p" to photo(200f)))
+        org.junit.Assert.assertEquals(1f, manual, 1e-4f)
+    }
+
+    @org.junit.Test fun `seta livre sem referencia usa so o ajuste manual`() {
+        val d = DimObj(id = "d", photoId = null, a = Pt(0f, 0f), b = Pt(100f, 0f), valueMm = 1000.0, color = 0, width = 2f, labelScale = 1.5f)
+        org.junit.Assert.assertEquals(1.5f, Geo.labelScale(d, emptyMap()), 1e-4f)
+    }
+}

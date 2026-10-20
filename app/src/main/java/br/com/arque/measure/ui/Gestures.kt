@@ -171,7 +171,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val photoId = Geo.photoAt(st.sheet, p)?.id
         val local = Geo.fromSheet(photos, photoId, p)
         val o: Obj = if (dim) {
-            DimObj(photoId = photoId, a = local, b = local, color = s.color, width = s.width)
+            DimObj(photoId = photoId, a = local, b = local, color = s.color, width = s.width, refSize = photoId?.let { st.sheet.photos()[it]?.w } ?: 0f)
         } else {
             ShapeObj(photoId = photoId, kind = kind!!, a = local, b = local, color = s.color, width = s.width, fill = s.fill)
         }
@@ -238,6 +238,13 @@ class GestureController(private val s: EditorSession, private val density: Float
             Mode.SHAPE -> if (!moved) {
                 st.cancelGesture()
             } else {
+                // seta livre: o comprimento ao soltar vira a referência do tamanho do quadradinho
+                (st.sheet.obj(createdId) as? DimObj)?.let { d ->
+                    if (d.refSize <= 0f) {
+                        val (pa, pb) = Geo.annPoints(st.sheet.photos(), d)
+                        st.live(replace(d.copy(refSize = hypot(pb.x - pa.x, pb.y - pa.y))))
+                    }
+                }
                 st.endGesture()
                 createdId?.let { if (st.sheet.obj(it) != null) st.select(it) }
             }

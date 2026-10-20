@@ -84,6 +84,8 @@ object Json {
                 .put("source", o.source?.name ?: JSONObject.NULL)
                 .put("history", JSONArray(o.history.map(::readingToJson)))
                 .put("color", o.color).put("width", o.width.toDouble())
+                .put("labelScale", o.labelScale.toDouble()).put("labelAlpha", o.labelAlpha.toDouble())
+                .put("labelIntensity", o.labelIntensity.toDouble()).put("refSize", o.refSize.toDouble())
         }
         return j
     }
@@ -122,7 +124,11 @@ object Json {
                 valueMm = j.optDoubleOrNull("valueMm"),
                 source = j.optStringOrNull("source")?.let { MeasureSource.valueOf(it) },
                 history = j.optJSONArray("history")?.mapObjects(::readingFromJson) ?: emptyList(),
-                color = j.getInt("color"), width = j.getDouble("width").toFloat(), locked = locked,
+                color = j.getInt("color"), width = j.getDouble("width").toFloat(),
+                labelScale = j.optDouble("labelScale", 1.0).toFloat(),
+                labelAlpha = j.optDouble("labelAlpha", 1.0).toFloat(),
+                labelIntensity = j.optDouble("labelIntensity", 1.0).toFloat(),
+                refSize = j.optDouble("refSize", 0.0).toFloat(), locked = locked,
             )
             else -> throw IllegalArgumentException("tipo de objeto desconhecido: $type")
         }

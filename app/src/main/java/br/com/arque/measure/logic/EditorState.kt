@@ -228,6 +228,40 @@ class EditorState(
         )
     }
 
+    /** Ajusta o quadradinho da medida: tamanho, opacidade e intensidade da cor (null = não muda). */
+    fun setDimLabel(id: String, scale: Float? = null, alpha: Float? = null, intensity: Float? = null, live: Boolean = false) {
+        val d = sheet.obj(id) as? DimObj ?: return
+        if (d.locked) return
+        val next = (
+            mapObj(id) {
+                (it as DimObj).copy(
+                    labelScale = scale?.coerceIn(0.4f, 4f) ?: it.labelScale,
+                    labelAlpha = alpha?.coerceIn(0f, 1f) ?: it.labelAlpha,
+                    labelIntensity = intensity?.coerceIn(0f, 1f) ?: it.labelIntensity,
+                )
+            }
+            )
+        if (live) live(next) else commit(next)
+    }
+
+    /** Copia o estilo do quadradinho de [id] para todas as cotas da nota (não travadas). */
+    fun applyDimLabelToAll(id: String) {
+        val src = sheet.obj(id) as? DimObj ?: return
+        commitNote(
+            note.copy(
+                pages = note.pages.map { p ->
+                    p.copy(
+                        objs = p.objs.map {
+                            if (it is DimObj && !it.locked) {
+                                it.copy(labelScale = src.labelScale, labelAlpha = src.labelAlpha, labelIntensity = src.labelIntensity)
+                            } else it
+                        },
+                    )
+                },
+            ),
+        )
+    }
+
     fun rotatePhoto90(id: String) {
         val o = sheet.obj(id) as? PhotoObj ?: return
         if (o.locked) return

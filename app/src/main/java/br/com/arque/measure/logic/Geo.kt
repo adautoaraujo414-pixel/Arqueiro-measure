@@ -160,10 +160,21 @@ object Geo {
 
     fun dimLabelCenter(a: Pt, b: Pt): Pt = Pt((a.x + b.x) / 2f, (a.y + b.y) / 2f)
 
-    fun dimLabelBox(a: Pt, b: Pt, label: String): Box {
+    /**
+     * Escala do quadradinho: ajuste manual × proporção automática. Se a foto (ou a seta livre)
+     * diminui ou aumenta em relação ao tamanho de referência, o quadradinho acompanha.
+     */
+    fun labelScale(d: DimObj, photos: Map<String, PhotoObj>): Float {
+        val (a, b) = annPoints(photos, d)
+        val cur = d.photoId?.let { photos[it]?.w } ?: hypot(b.x - a.x, b.y - a.y)
+        val auto = if (d.refSize > 1f && cur > 1f) (cur / d.refSize).coerceIn(0.3f, 4f) else 1f
+        return (d.labelScale * auto).coerceIn(0.2f, 8f)
+    }
+
+    fun dimLabelBox(a: Pt, b: Pt, label: String, scale: Float = 1f): Box {
         val c = dimLabelCenter(a, b)
-        val w = label.length * DIM_TEXT_SIZE * 0.58f + 12f
-        val h = DIM_TEXT_SIZE + 8f
+        val w = (label.length * DIM_TEXT_SIZE * 0.58f + 12f) * scale
+        val h = (DIM_TEXT_SIZE + 8f) * scale
         return Box(c.x - w / 2, c.y - h / 2, c.x + w / 2, c.y + h / 2)
     }
 
@@ -209,7 +220,7 @@ object Geo {
             is DimObj -> {
                 val (a, b) = annPoints(photos, o)
                 distToSegment(s, a, b) <= tol + o.width / 2f ||
-                    (o.valueMm != null && dimLabelBox(a, b, Units.label(o, unit)).contains(s, tol / 2f))
+                    (o.valueMm != null && dimLabelBox(a, b, Units.label(o, unit), labelScale(o, photos)).contains(s, tol / 2f))
             }
         }
     }
@@ -221,7 +232,7 @@ object Geo {
     fun inDimLabel(sheet: Sheet, d: DimObj, s: Pt, unit: LengthUnit, pad: Float = 6f): Boolean {
         if (d.valueMm == null) return false
         val (a, b) = annPoints(sheet.photos(), d)
-        return dimLabelBox(a, b, Units.label(d, unit)).contains(s, pad)
+        return dimLabelBox(a, b, Units.label(d, unit), labelScale(d, sheet.photos())).contains(s, pad)
     }
 
     /** Alinha [p] na horizontal/vertical em relação a [anchor] se estiver a menos de [tolDeg] graus. */

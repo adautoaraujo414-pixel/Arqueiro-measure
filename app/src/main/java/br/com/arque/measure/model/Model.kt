@@ -100,6 +100,14 @@ data class DimObj(
     val history: List<Reading> = emptyList(),
     val color: Int,
     val width: Float,
+    /** Tamanho manual do quadradinho da medida (multiplicador). */
+    val labelScale: Float = 1f,
+    /** Opacidade do quadradinho (0..1). */
+    val labelAlpha: Float = 1f,
+    /** Intensidade da cor do quadradinho (0 = bem clara, 1 = cor cheia). */
+    val labelIntensity: Float = 1f,
+    /** Tamanho de referência (largura da foto, ou comprimento da seta livre) quando a cota foi criada. */
+    val refSize: Float = 0f,
     override val locked: Boolean = false,
 ) : Ann()
 

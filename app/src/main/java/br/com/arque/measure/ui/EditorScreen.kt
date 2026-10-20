@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -611,7 +612,10 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
         else -> "Aguardando a medida da trena…"
     }
     Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Text("Distância", color = Color(0xFF111111), fontSize = 16.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -636,12 +640,50 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
                 Text(mmText(d.width), color = Color(0xFF111111), fontSize = 13.sp)
                 IconButton(onClick = { applyWidth(session, 0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Add, "Mais grossa", tint = Color(0xFF111111)) }
             }
-            TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir", color = Color(0xFFD32F2F)) }
+            HorizontalDivider(color = Color(0xFFDDDDDD))
+            Text("Quadradinho da medida", color = Color(0xFF111111), fontSize = 14.sp)
+            LabelSlider("Tamanho", d.labelScale, 0.5f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
+            LabelSlider("Opacidade", d.labelAlpha, 0.1f, 1f, "${(d.labelAlpha * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, alpha = v, live = true) }
+            LabelSlider("Intensidade da cor", d.labelIntensity, 0.15f, 1f, "${(d.labelIntensity * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, intensity = v, live = true) }
+            Text(
+                "O quadradinho acompanha o tamanho da foto e da seta automaticamente.",
+                color = Color(0xFF777777), fontSize = 11.sp,
+            )
+            Row {
+                TextButton(onClick = { st.applyDimLabelToAll(d.id) }, enabled = !d.locked) { Text("Aplicar a todas as cotas") }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir", color = Color(0xFFD32F2F)) }
+            }
         }
     }
 }
 
 // ------------------------------------------------------------------ Telémetro e leituras
+
+@Composable
+private fun LabelSlider(
+    label: String,
+    value: Float,
+    min: Float,
+    max: Float,
+    shown: String,
+    enabled: Boolean,
+    st: br.com.arque.measure.logic.EditorState,
+    onChange: (Float) -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.width(120.dp))
+        androidx.compose.material3.Slider(
+            value = value.coerceIn(min, max),
+            onValueChange = { st.beginGesture(); onChange(it) },
+            onValueChangeFinished = { st.endGesture() },
+            valueRange = min..max,
+            enabled = enabled,
+            modifier = Modifier.weight(1f).height(32.dp),
+        )
+        Text(shown, color = Color(0xFF555555), fontSize = 12.sp, modifier = Modifier.width(44.dp))
+    }
+}
 
 @Composable
 private fun MiniTelemeter(vm: AppViewModel, open: Boolean, toggle: () -> Unit) {

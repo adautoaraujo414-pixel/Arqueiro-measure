@@ -439,10 +439,26 @@ private fun CabinetCanvas(
             color = 0xFF111111.toInt(); textSize = 28f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER
         }
         val line = android.graphics.Paint().apply { color = Gold.toArgb(); strokeWidth = 2f }
-        fun chip(text: String, cx: Float, cy: Float) {
+        val cyanPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF4FC3F7.toInt() }
+        val cyanLine = android.graphics.Paint().apply { color = 0xFF4FC3F7.toInt(); strokeWidth = 2f }
+        fun chip(text: String, cx: Float, cy: Float, paint: android.graphics.Paint = chipPaint) {
             val w = txtPaint.measureText(text) + 24f
-            nc.drawRoundRect(cx - w / 2, cy - 20f, cx + w / 2, cy + 20f, 8f, 8f, chipPaint)
+            nc.drawRoundRect(cx - w / 2, cy - 20f, cx + w / 2, cy + 20f, 8f, 8f, paint)
             nc.drawText(text, cx, cy + 9f, txtPaint)
+        }
+        // divisória selecionada: medida do começo até ela, dela até o final e o comprimento dela
+        if (selDivider in dx.indices) {
+            val xd = dx[selDivider]
+            val t2 = Y(0.0) - 84f
+            val a = xd
+            val b = cab.wMm - (xd + e)
+            nc.drawLine(X(0.0), t2, X(xd), t2, cyanLine)
+            chip(Units.formatNumber(a, LengthUnit.MM), (X(0.0) + X(xd)) / 2, t2, cyanPaint)
+            nc.drawLine(X(xd + e), t2, X(cab.wMm), t2, cyanLine)
+            chip(Units.formatNumber(b, LengthUnit.MM), (X(xd + e) + X(cab.wMm)) / 2, t2, cyanPaint)
+            val vx = X(xd) + (e * k).toFloat() / 2f
+            nc.drawLine(vx, Y(CabinetMath.vaoTop(cab)), vx, Y(CabinetMath.vaoBottom(cab)), cyanLine)
+            chip(Units.formatNumber(CabinetMath.vaoH(cab), LengthUnit.MM), vx, (Y(CabinetMath.vaoTop(cab)) + Y(CabinetMath.vaoBottom(cab))) / 2, cyanPaint)
         }
         val top = Y(0.0) - 40f
         nc.drawLine(X(0.0), top, X(cab.wMm), top, line)
@@ -468,7 +484,7 @@ private fun CabinetCanvas(
 private fun fitRef(w: Double, h: Double, sz: Size, zoom: Float = 1f, pan: Offset = Offset.Zero): Triple<Float, Float, Float> {
     // área útil: sem os botões do topo e sem a barra de ações de baixo; só sobra espaço para as cotas
     val m = 72f
-    val topM = 78f
+    val topM = 124f
     val botM = 270f
     val availH = (sz.height - topM - botM).coerceAtLeast(50f)
     val k = minOf((sz.width - 2 * m) / w.toFloat(), availH / h.toFloat()).coerceAtLeast(0.01f) * zoom

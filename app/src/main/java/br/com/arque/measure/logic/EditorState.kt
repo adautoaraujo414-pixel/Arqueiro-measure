@@ -2,6 +2,9 @@ package br.com.arque.measure.logic
 
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.Seg
+import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.Obj
@@ -36,6 +39,10 @@ class EditorState(
     var selectedId: String? = null
         private set
 
+    /** Segmento selecionado quando o objeto selecionado é um cômodo (-1 = nenhum). */
+    var selectedSeg: Int = -1
+        private set
+
     private val undoStack = ArrayDeque<Note>()
     private val redoStack = ArrayDeque<Note>()
     private var gestureBase: Note? = null
@@ -49,8 +56,53 @@ class EditorState(
     fun select(id: String?) {
         if (selectedId != id) {
             selectedId = id
+            selectedSeg = -1
             onChange()
         }
+    }
+
+    /** Seleciona o cômodo [id] e o segmento [k]. */
+    fun selectSeg(id: String, k: Int) {
+        selectedId = id
+        selectedSeg = k
+        onChange()
+    }
+
+    /** Anda para o segmento anterior/seguinte do cômodo selecionado. */
+    fun stepSeg(delta: Int) {
+        val r = selected as? RoomObj ?: return
+        val n = r.segCount()
+        if (n == 0) return
+        selectedSeg = ((if (selectedSeg < 0) 0 else selectedSeg) + delta + n) % n
+        onChange()
+    }
+
+    /** Insere um cômodo recém-criado e seleciona o primeiro segmento. */
+    fun addRoom(room: RoomObj) {
+        commit(sheet.copy(objs = sheet.objs + room))
+        selectSeg(room.id, 0)
+    }
+
+    fun setSegKind(id: String, k: Int, kind: SegKind) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked || k !in r.segs.indices) return
+        commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(kind = kind) else sg }) })
+    }
+
+    /** Fecha o contorno (liga o último vértice ao primeiro, novo segmento de parede) ou reabre. */
+    fun setRoomClosed(id: String, closed: Boolean) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked || r.closed == closed || r.pts.size < 3) return
+        val segs = if (closed) r.segs + Seg() else r.segs.dropLast(1)
+        commit(mapObj(id) { (it as RoomObj).copy(closed = closed, segs = segs) })
+        if (selectedSeg >= segs.size) selectedSeg = segs.lastIndex
+    }
+
+    fun setRoomLabelScale(id: String, scale: Float, live: Boolean = false) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked) return
+        val next = mapObj(id) { (it as RoomObj).copy(labelScale = scale.coerceIn(0.1f, 4f)) }
+        if (live) live(next) else commit(next)
     }
 
     /** Troca a folha ativa (limpa a seleção). */
@@ -221,6 +273,7 @@ class EditorState(
                     is StrokeObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is ShapeObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is DimObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
+                    is RoomObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is TextObj -> it.copy(color = color ?: it.color, size = width?.let { w -> w * 6f } ?: it.size)
                     is PhotoObj -> it
                 }
@@ -235,7 +288,7 @@ class EditorState(
         val next = (
             mapObj(id) {
                 (it as DimObj).copy(
-                    labelScale = scale?.coerceIn(0.4f, 4f) ?: it.labelScale,
+                    labelScale = scale?.coerceIn(0.1f, 4f) ?: it.labelScale,
                     labelAlpha = alpha?.coerceIn(0f, 1f) ?: it.labelAlpha,
                     labelIntensity = intensity?.coerceIn(0f, 1f) ?: it.labelIntensity,
                 )
@@ -330,6 +383,13 @@ class EditorState(
     // ---- medidas (única origem: trena Bosch) ----
 
     fun clearValue(id: String) {
+        val room = sheet.obj(id) as? RoomObj
+        if (room != null) {
+            val k = selectedSeg
+            if (room.locked || k !in room.segs.indices) return
+            commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(valueMm = null, source = null) else sg }) })
+            return
+        }
         val d = sheet.obj(id) as? DimObj ?: return
         if (d.locked) return
         commit(mapObj(id) { (it as DimObj).copy(valueMm = null, source = null) })
@@ -340,6 +400,25 @@ class EditorState(
      * cota sem valor. Retorna o id da cota atualizada, ou null se não havia cota selecionável.
      */
     fun assignReading(r: Reading): String? {
+        val room = selected as? RoomObj
+        if (room != null) {
+            val k = selectedSeg
+            if (room.locked || k !in room.segs.indices) return null
+            commit(
+                mapObj(room.id) {
+                    (it as RoomObj).copy(
+                        segs = it.segs.mapIndexed { i, sg ->
+                            if (i == k) sg.copy(valueMm = r.mm, source = r.source, history = sg.history + r) else sg
+                        },
+                    )
+                },
+            )
+            nextPendingTarget(room.id, k)?.let { (pg, id, seg) ->
+                setPage(pg)
+                if (seg >= 0) selectSeg(id, seg) else select(id)
+            }
+            return room.id
+        }
         val d = selected as? DimObj ?: return null
         if (d.locked) return null
         commit(
@@ -347,19 +426,31 @@ class EditorState(
                 (it as DimObj).copy(valueMm = r.mm, source = r.source, history = it.history + r)
             },
         )
-        nextPending(d.id)?.let { (pg, id) ->
+        nextPendingTarget(d.id, -1)?.let { (pg, id, seg) ->
             setPage(pg)
-            select(id)
+            if (seg >= 0) selectSeg(id, seg) else select(id)
         }
         return d.id
     }
 
     /** Próxima cota sem valor (e destravada) depois de [id], nesta ou nas outras folhas. */
-    fun nextPending(id: String): Pair<Int, String>? {
-        val all = note.pages.flatMapIndexed { pi, p -> p.objs.filterIsInstance<DimObj>().map { pi to it } }
-        val idx = all.indexOfFirst { it.second.id == id }
+    fun nextPending(id: String): Pair<Int, String>? = nextPendingTarget(id, -1)?.let { it.first to it.second }
+
+    /** Como [nextPending], mas também percorre os segmentos dos cômodos: (folha, id, segmento ou -1). */
+    fun nextPendingTarget(id: String, seg: Int): Triple<Int, String, Int>? {
+        data class Item(val page: Int, val id: String, val seg: Int, val pending: Boolean)
+        val all = note.pages.flatMapIndexed { pi, p ->
+            p.objs.flatMap { o ->
+                when {
+                    o is DimObj -> listOf(Item(pi, o.id, -1, o.valueMm == null && !o.locked))
+                    o is RoomObj -> o.segs.mapIndexed { k, sg -> Item(pi, o.id, k, sg.valueMm == null && !o.locked) }
+                    else -> emptyList()
+                }
+            }
+        }
+        val idx = all.indexOfFirst { it.id == id && it.seg == seg }
         val ordered = if (idx < 0) all else all.drop(idx + 1) + all.take(idx)
-        return ordered.firstOrNull { it.second.valueMm == null && !it.second.locked }?.let { it.first to it.second.id }
+        return ordered.firstOrNull { it.pending }?.let { Triple(it.page, it.id, it.seg) }
     }
 
     companion object {

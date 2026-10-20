@@ -80,6 +80,23 @@ object Export {
                     ).joinToString(";"),
                 ).append('\n')
             }
+            sheet.objs.filterIsInstance<br.com.arque.measure.model.RoomObj>().forEach { o ->
+                o.segs.forEachIndexed { k, sg ->
+                    sb.append(
+                        listOf(
+                            csv(note.name), (pi + 1).toString(), "comodo-${k + 1}",
+                            sg.valueMm?.let { "%.1f".format(Locale.US, it) } ?: "",
+                            csv(sg.kind.label + " " + Units.labelSeg(sg, note.unit)),
+                            when (sg.source) {
+                                MeasureSource.BLUETOOTH -> "bluetooth"
+                                MeasureSource.MANUAL -> "manual"
+                                null -> ""
+                            },
+                            sg.history.lastOrNull()?.let { h -> fmt.format(Date(h.timeMs)) } ?: "",
+                        ).joinToString(";"),
+                    ).append('\n')
+                }
+            }
         }
         return sb.toString()
     }

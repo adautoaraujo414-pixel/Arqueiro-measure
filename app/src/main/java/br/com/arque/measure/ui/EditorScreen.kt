@@ -136,6 +136,7 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.DASHED -> Icons.Filled.ShapeLine
     Tool.ARROW -> Icons.AutoMirrored.Filled.ArrowRightAlt
     Tool.DIM -> Icons.Filled.Straighten
+    Tool.ROOM -> Icons.Filled.Home
     Tool.RECT -> Icons.Filled.CropSquare
     Tool.RRECT -> Icons.Filled.RoundedCorner
     Tool.ELLIPSE -> Icons.Filled.RadioButtonUnchecked
@@ -143,7 +144,7 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.TEXT -> Icons.Filled.TextFields
 }
 
-private val shapeTools = listOf(Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DIM, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE)
+private val shapeTools = listOf(Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DIM, Tool.ROOM, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE)
 
 private fun mmText(units: Float): String = String.format(Locale("pt", "BR"), "%.2f mm", units * MM_PER_UNIT)
 
@@ -167,7 +168,7 @@ private fun drawScene(
     st.note.pages.forEachIndexed { i, page ->
         nc.save()
         nc.translate(0f, i * step)
-        renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale)
+        renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg)
         nc.restore()
     }
 }
@@ -216,6 +217,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                     } else {
                         when (val a = controller.up(last)) {
                             is GestureAction.TapDim -> vm.onDimTap(a.id)
+                            is GestureAction.TapSeg -> vm.onSegTap(a.id, a.seg)
                             is GestureAction.EditText -> session.textEdit = TextEdit(a.id, a.at)
                             null -> {}
                         }
@@ -524,6 +526,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
+                (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
                 if (bleState == BleState.CONNECTED) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
                 ChipsBar(vm, bleState == BleState.CONNECTED) { btOpen = true }
             }
@@ -650,6 +653,72 @@ private fun CtxBtn(label: String, enabled: Boolean = true, onClick: () -> Unit) 
     )
 }
 
+// ------------------------------------------------------------------ Cômodo
+
+@Composable
+private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.measure.model.RoomObj) {
+    val st = session.state
+    val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
+    val k = st.selectedSeg
+    val seg = r.segs.getOrNull(k)
+    val kinds = br.com.arque.measure.model.SegKind.values()
+    val dark = Color(0xFF111111)
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 380.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (seg != null) "Cômodo · segmento ${k + 1} de ${r.segCount()}" else "Cômodo · toque num segmento",
+                    color = dark, fontSize = 16.sp, modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = { st.stepSeg(-1) }) { Text("‹") }
+                TextButton(onClick = { st.stepSeg(1) }) { Text("›") }
+            }
+            if (seg != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    kinds.forEach { kd ->
+                        val on = seg.kind == kd
+                        val col = Color(SheetRenderer.segColorOf(r, kd))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(16.dp))
+                                .background(if (on) col else Color(0xFFEFEFEF))
+                                .clickable(enabled = !r.locked) { st.setSegKind(r.id, k, kd) }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 14.sp) }
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+                        Text(seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", color = Ui.distBlue, fontSize = 22.sp)
+                    }
+                    TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
+                }
+                Text(
+                    when {
+                        seg.valueMm != null && connected -> "Meça de novo para substituir"
+                        seg.valueMm != null -> "Medido pela trena Bosch"
+                        !connected -> "Conecte a trena Bosch (botão no topo)"
+                        else -> "Aguardando a medida da trena…"
+                    },
+                    color = Color(0xFF555555), fontSize = 13.sp,
+                )
+                if (seg.valueMm != null) TextButton(onClick = { st.clearValue(r.id) }) { Text("Limpar medida") }
+            }
+            if (r.pts.size >= 3) {
+                TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) "Abrir contorno" else "Fechar contorno") }
+            }
+            HorizontalDivider(color = Color(0xFFDDDDDD))
+            LabelSlider("Quadradinho", r.labelScale, 0.1f, 3f, "${(r.labelScale * 100).roundToInt()}%", !r.locked, st) { v -> st.setRoomLabelScale(r.id, v, live = true) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Cor da parede", color = dark, fontSize = 13.sp)
+                ColorRow(r.color) { applyColor(session, it) }
+            }
+        }
+    }
+}
+
 // ------------------------------------------------------------------ Distância (estilo Bosch, só leitura)
 
 @Composable
@@ -693,7 +762,7 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
             }
             HorizontalDivider(color = Color(0xFFDDDDDD))
             Text("Quadradinho da medida", color = Color(0xFF111111), fontSize = 14.sp)
-            LabelSlider("Tamanho", d.labelScale, 0.5f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
+            LabelSlider("Tamanho", d.labelScale, 0.1f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
             LabelSlider("Opacidade", d.labelAlpha, 0.1f, 1f, "${(d.labelAlpha * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, alpha = v, live = true) }
             LabelSlider("Intensidade da cor", d.labelIntensity, 0.15f, 1f, "${(d.labelIntensity * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, intensity = v, live = true) }
             Text(

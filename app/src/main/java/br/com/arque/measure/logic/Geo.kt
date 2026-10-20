@@ -2,6 +2,7 @@ package br.com.arque.measure.logic
 
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.RoomObj
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Obj
 import br.com.arque.measure.model.PhotoObj
@@ -98,6 +99,7 @@ object Geo {
         is ShapeObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is DimObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is TextObj -> listOf(toSheet(photos, a.photoId, a.at))
+        is RoomObj -> a.pts.map { toSheet(photos, a.photoId, it) }
     }
 
     /** Move o objeto por (dx,dy) em unidades de folha. */
@@ -114,6 +116,7 @@ object Geo {
             is ShapeObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is DimObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is TextObj -> ann.copy(at = mv(ann.at))
+            is RoomObj -> ann.copy(pts = ann.pts.map(::mv))
         }
     }
 
@@ -137,6 +140,7 @@ object Geo {
             is ShapeObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
             is DimObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
             is TextObj -> a.copy(at = conv(a.at)).withPhotoId(newPhotoId)
+            is RoomObj -> a.copy(pts = a.pts.map(::conv)).withPhotoId(newPhotoId)
         }
     }
 
@@ -167,8 +171,8 @@ object Geo {
     fun labelScale(d: DimObj, photos: Map<String, PhotoObj>): Float {
         val (a, b) = annPoints(photos, d)
         val cur = d.photoId?.let { photos[it]?.w } ?: hypot(b.x - a.x, b.y - a.y)
-        val auto = if (d.refSize > 1f && cur > 1f) (cur / d.refSize).coerceIn(0.3f, 4f) else 1f
-        return (d.labelScale * auto).coerceIn(0.2f, 8f)
+        val auto = if (d.refSize > 1f && cur > 1f) (cur / d.refSize).coerceIn(0.1f, 4f) else 1f
+        return (d.labelScale * auto).coerceIn(0.05f, 8f)
     }
 
     fun dimLabelBox(a: Pt, b: Pt, label: String, scale: Float = 1f): Box {
@@ -217,12 +221,38 @@ object Geo {
                 }
             }
             is TextObj -> textBox(o, annPoints(photos, o)[0]).contains(s, tol)
+            is RoomObj -> hitSeg(sheet, o, s, tol, unit) >= 0
             is DimObj -> {
                 val (a, b) = annPoints(photos, o)
                 distToSegment(s, a, b) <= tol + o.width / 2f ||
                     (o.valueMm != null && dimLabelBox(a, b, Units.label(o, unit), labelScale(o, photos)).contains(s, tol / 2f))
             }
         }
+    }
+
+    /** Extremidades do segmento [k] do cômodo, em coordenadas da folha. */
+    fun segEnds(photos: Map<String, PhotoObj>, o: RoomObj, k: Int): Pair<Pt, Pt> {
+        val pts = annPoints(photos, o)
+        return pts[k] to pts[(k + 1) % pts.size]
+    }
+
+    fun segLabelBox(photos: Map<String, PhotoObj>, o: RoomObj, k: Int, unit: LengthUnit): Box {
+        val (a, b) = segEnds(photos, o, k)
+        return dimLabelBox(a, b, Units.labelSeg(o.segs[k], unit), o.labelScale)
+    }
+
+    /** Segmento do cômodo sob o ponto (linha ou quadradinho), ou -1. O mais próximo ganha. */
+    fun hitSeg(sheet: Sheet, o: RoomObj, s: Pt, tol: Float, unit: LengthUnit): Int {
+        val photos = sheet.photos()
+        var best = -1
+        var bestD = Float.MAX_VALUE
+        for (k in 0 until o.segCount()) {
+            val (a, b) = segEnds(photos, o, k)
+            var d = distToSegment(s, a, b) - o.width / 2f
+            if (o.segs[k].valueMm != null && segLabelBox(photos, o, k, unit).contains(s, tol / 2f)) d = -1f
+            if (d <= tol && d < bestD) { bestD = d; best = k }
+        }
+        return best
     }
 
     /** Id do objeto mais acima sob o ponto, ou null. */

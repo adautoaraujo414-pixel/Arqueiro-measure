@@ -119,6 +119,40 @@ enum class Template(val label: String) {
 }
 
 /** Uma folha A4 de uma nota. Tamanho fixo: a folha nunca muda ao mexer em fotos. */
+/** Tipo de um segmento do cômodo: parede, painel, pia ou cuba. */
+enum class SegKind(val label: String) {
+    WALL("Parede"), PANEL("Painel"), SINK("Pia"), BASIN("Cuba"),
+}
+
+/** Um segmento do contorno: tipo e medida (única origem: trena). */
+data class Seg(
+    val kind: SegKind = SegKind.WALL,
+    val valueMm: Double? = null,
+    val source: MeasureSource? = null,
+    val history: List<Reading> = emptyList(),
+)
+
+/**
+ * Contorno de cômodo: vértices ligados por segmentos retos. Cada segmento tem tipo e medida.
+ * Com [closed], há um segmento extra do último vértice de volta ao primeiro.
+ */
+data class RoomObj(
+    override val id: String = newId(),
+    override val photoId: String?,
+    val pts: List<Pt>,
+    val closed: Boolean,
+    val segs: List<Seg>,
+    val color: Int,
+    val width: Float,
+    val labelScale: Float = 1f,
+    val labelAlpha: Float = 1f,
+    val labelIntensity: Float = 1f,
+    override val locked: Boolean = false,
+) : Ann() {
+    fun segCount(): Int = if (closed) pts.size else pts.size - 1
+    fun segEnds(k: Int): Pair<Pt, Pt> = pts[k] to pts[(k + 1) % pts.size]
+}
+
 data class Sheet(
     val id: String = newId(),
     val tpl: Template = Template.ARAUJO,
@@ -152,7 +186,7 @@ data class Note(
     val unit: LengthUnit = LengthUnit.M,
     val pages: List<Sheet> = listOf(Sheet()),
 ) {
-    fun dimCount(): Int = pages.sumOf { p -> p.objs.count { it is DimObj } }
+    fun dimCount(): Int = pages.sumOf { p -> p.objs.sumOf { o -> when (o) { is DimObj -> 1; is RoomObj -> o.segs.size; else -> 0 } } }
     fun meta() = NoteMeta(id, name, folderId, createdMs, pinned, locked, trash, pages.size, dimCount())
 }
 
@@ -181,6 +215,7 @@ fun Obj.withLocked(v: Boolean): Obj = when (this) {
     is ShapeObj -> copy(locked = v)
     is TextObj -> copy(locked = v)
     is DimObj -> copy(locked = v)
+    is RoomObj -> copy(locked = v)
 }
 
 fun Obj.withId(newId: String): Obj = when (this) {
@@ -189,6 +224,7 @@ fun Obj.withId(newId: String): Obj = when (this) {
     is ShapeObj -> copy(id = newId)
     is TextObj -> copy(id = newId)
     is DimObj -> copy(id = newId)
+    is RoomObj -> copy(id = newId)
 }
 
 fun Ann.withPhotoId(pid: String?): Ann = when (this) {
@@ -196,4 +232,5 @@ fun Ann.withPhotoId(pid: String?): Ann = when (this) {
     is ShapeObj -> copy(photoId = pid)
     is TextObj -> copy(photoId = pid)
     is DimObj -> copy(photoId = pid)
+    is RoomObj -> copy(photoId = pid)
 }

@@ -42,6 +42,9 @@ object Units {
     fun format(mm: Double, u: LengthUnit): String = formatNumber(mm, u) + " " + u.label
 
     /** Texto da cota. Vazio enquanto a cota aguarda medida (nada é mostrado na seta). */
+    fun labelSeg(seg: br.com.arque.measure.model.Seg, u: LengthUnit): String =
+        seg.valueMm?.let { format(it, u) } ?: PENDING_LABEL
+
     fun label(dim: DimObj, u: LengthUnit): String =
         dim.valueMm?.let { format(it, u) } ?: ""
 

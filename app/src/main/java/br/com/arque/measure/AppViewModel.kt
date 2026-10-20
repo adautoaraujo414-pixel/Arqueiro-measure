@@ -344,6 +344,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Toque num segmento de cômodo sem valor com leituras esperando: recebe a leitura mais nova. */
+    fun onSegTap(id: String, seg: Int) {
+        val s = session ?: return
+        val r = s.state.selected as? br.com.arque.measure.model.RoomObj ?: return
+        val sg = r.segs.getOrNull(seg) ?: return
+        if (r.id != id || r.locked || sg.valueMm != null) return
+        val rd = recent.firstOrNull() ?: return
+        if (s.state.assignReading(rd) != null) {
+            recent.remove(rd)
+            persistRecent()
+        }
+    }
+
     fun discardRecent(r: Reading) {
         recent.remove(r)
         persistRecent()

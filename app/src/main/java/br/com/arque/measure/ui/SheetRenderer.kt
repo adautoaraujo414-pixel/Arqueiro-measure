@@ -10,6 +10,8 @@ import android.graphics.Typeface
 import br.com.arque.measure.logic.Geo
 import br.com.arque.measure.logic.Units
 import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Obj
 import br.com.arque.measure.model.PhotoObj
@@ -132,7 +134,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         p.reset()
     }
 
-    fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true) {
+    fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true, selectedSeg: Int = -1) {
         if (withPaper) {
             c.drawRect(5f, 6f, sheet.width + 5f, sheet.height + 6f, paperShadow)
         }
@@ -144,7 +146,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         for (o in sheet.objs) drawObj(c, o, photos, unit, selectedId == o.id)
         c.restore()
         if (withPaper) c.drawRect(0f, 0f, sheet.width, sheet.height, paperBorder)
-        sheet.obj(selectedId)?.let { drawSelection(c, sheet, it, viewScale) }
+        sheet.obj(selectedId)?.let { drawSelection(c, sheet, it, viewScale, selectedSeg) }
     }
 
     private fun drawObj(c: Canvas, o: Obj, photos: Map<String, PhotoObj>, unit: LengthUnit, selected: Boolean) {
@@ -154,6 +156,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             is ShapeObj -> drawShape(c, o, photos)
             is TextObj -> drawText(c, o, photos)
             is DimObj -> drawDim(c, o, photos, unit)
+            is RoomObj -> drawRoom(c, o, photos, unit)
         }
     }
 
@@ -306,9 +309,107 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * k * 0.35f, textPaint)
     }
 
+    /** Cor de cada tipo de segmento (parede usa a cor do cômodo). */
+    fun segColorOf(o: RoomObj, kind: SegKind): Int = segColor(o, kind)
+
+    fun segColor(o: RoomObj, kind: SegKind): Int = when (kind) {
+        SegKind.WALL -> o.color
+        SegKind.PANEL -> 0xFF8E44AD.toInt()
+        SegKind.SINK -> 0xFF1E88E5.toInt()
+        SegKind.BASIN -> 0xFF00A88F.toInt()
+    }
+
+    /**
+     * Contorno de cômodo. Parede: linha cheia. Painel: tracejada. Pia: faixa larga translúcida
+     * com fio no centro. Cuba: pontilhada e grossa. Pendente mostra o nome do tipo; medido mostra a medida.
+     */
+    private fun drawRoom(c: Canvas, o: RoomObj, photos: Map<String, PhotoObj>, unit: LengthUnit) {
+        val pts = Geo.annPoints(photos, o)
+        if (pts.size < 2) return
+        if (o.closed) {
+            path.reset()
+            path.moveTo(pts[0].x, pts[0].y)
+            for (i in 1 until pts.size) path.lineTo(pts[i].x, pts[i].y)
+            path.close()
+            fillPaint.color = withAlpha(o.color, 18)
+            c.drawPath(path, fillPaint)
+        }
+        val w = o.width
+        for (k in 0 until o.segCount()) {
+            val a = pts[k]
+            val b = pts[(k + 1) % pts.size]
+            val kind = o.segs[k].kind
+            val col = segColor(o, kind)
+            strokePaint.strokeCap = Paint.Cap.ROUND
+            strokePaint.pathEffect = null
+            when (kind) {
+                SegKind.WALL -> {
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 1.6f
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                }
+                SegKind.PANEL -> {
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 1.6f
+                    strokePaint.strokeCap = Paint.Cap.BUTT
+                    strokePaint.pathEffect = DashPathEffect(floatArrayOf(w * 6f, w * 4f), 0f)
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                    strokePaint.pathEffect = null
+                }
+                SegKind.SINK -> {
+                    strokePaint.color = withAlpha(col, 70); strokePaint.strokeWidth = w * 6f
+                    strokePaint.strokeCap = Paint.Cap.BUTT
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 1.4f
+                    strokePaint.strokeCap = Paint.Cap.ROUND
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                }
+                SegKind.BASIN -> {
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 3f
+                    strokePaint.strokeCap = Paint.Cap.ROUND
+                    strokePaint.pathEffect = DashPathEffect(floatArrayOf(0.1f, w * 4.5f), 0f)
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                    strokePaint.pathEffect = null
+                }
+            }
+            drawSegLabel(c, o, k, a, b, col, unit)
+        }
+        strokePaint.pathEffect = null
+        // vértices
+        for (p in pts) {
+            fillPaint.color = o.color
+            c.drawCircle(p.x, p.y, w * 1.1f, fillPaint)
+        }
+    }
+
+    private fun drawSegLabel(c: Canvas, o: RoomObj, k: Int, a: Pt, b: Pt, col: Int, unit: LengthUnit) {
+        val seg = o.segs[k]
+        val measured = seg.valueMm != null
+        val label = if (measured) Units.labelSeg(seg, unit) else seg.kind.label
+        val sc = o.labelScale
+        val box = Geo.dimLabelBox(a, b, label, sc)
+        rect.set(box.l, box.t, box.r, box.b)
+        if (measured) {
+            val tint = mix(col, 0xFFFFFFFF.toInt(), o.labelIntensity.coerceIn(0f, 1f))
+            val alpha = o.labelAlpha.coerceIn(0f, 1f)
+            fillPaint.color = withAlpha(tint, (alpha * 255).toInt())
+            c.drawRoundRect(rect, 3f * sc, 3f * sc, fillPaint)
+            val shown = mix(tint, 0xFFFFFFFF.toInt(), alpha)
+            textPaint.color = if (luminance(shown) > 0.6f) 0xFF111111.toInt() else 0xFFFFFFFF.toInt()
+        } else {
+            fillPaint.color = 0xE6FFFFFF.toInt()
+            c.drawRoundRect(rect, 3f * sc, 3f * sc, fillPaint)
+            strokePaint.color = col; strokePaint.strokeWidth = 1.2f; strokePaint.pathEffect = null
+            c.drawRoundRect(rect, 3f * sc, 3f * sc, strokePaint)
+            textPaint.color = col
+        }
+        textPaint.textSize = Geo.DIM_TEXT_SIZE * sc
+        textPaint.textAlign = Paint.Align.CENTER
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * sc * 0.35f, textPaint)
+    }
+
     // ---- seleção e alças (só na tela) ----
 
-    private fun drawSelection(c: Canvas, sheet: Sheet, o: Obj, viewScale: Float) {
+    private fun drawSelection(c: Canvas, sheet: Sheet, o: Obj, viewScale: Float, selectedSeg: Int) {
         val photos = sheet.photos()
         val color = if (o.locked) 0xFF888888.toInt() else 0xFF2F80ED.toInt()
         val lw = 2f / viewScale
@@ -346,6 +447,26 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                         fillPaint.color = 0xFFFFFFFF.toInt()
                         c.drawCircle(p.x, p.y, 7f / viewScale, fillPaint)
                         strokePaint.color = ring
+                        strokePaint.strokeWidth = 2f / viewScale
+                        c.drawCircle(p.x, p.y, 7f / viewScale, strokePaint)
+                    }
+                }
+            }
+            is RoomObj -> {
+                val pts = Geo.annPoints(photos, o)
+                if (selectedSeg in 0 until o.segCount()) {
+                    val a = pts[selectedSeg]
+                    val b = pts[(selectedSeg + 1) % pts.size]
+                    strokePaint.color = 0x802F80ED.toInt()
+                    strokePaint.strokeWidth = o.width + 10f / viewScale
+                    strokePaint.strokeCap = Paint.Cap.ROUND
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                }
+                if (!o.locked) {
+                    pts.forEach { p ->
+                        fillPaint.color = 0xFFFFFFFF.toInt()
+                        c.drawCircle(p.x, p.y, 7f / viewScale, fillPaint)
+                        strokePaint.color = 0xFF2F80ED.toInt()
                         strokePaint.strokeWidth = 2f / viewScale
                         c.drawCircle(p.x, p.y, 7f / viewScale, strokePaint)
                     }

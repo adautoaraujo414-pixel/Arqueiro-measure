@@ -4,6 +4,8 @@ import androidx.compose.ui.geometry.Offset
 import br.com.arque.measure.logic.Geo
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.Seg
 import br.com.arque.measure.model.Obj
 import br.com.arque.measure.model.PhotoObj
 import br.com.arque.measure.model.Pt
@@ -25,6 +27,8 @@ import kotlin.math.sin
 sealed interface GestureAction {
     /** Toque numa cota: se houver leitura da trena esperando, ela é atribuída. */
     data class TapDim(val id: String) : GestureAction
+    /** Toque num segmento de cômodo: se houver leitura esperando, ela é atribuída. */
+    data class TapSeg(val id: String, val seg: Int) : GestureAction
     data class EditText(val id: String?, val at: Pt) : GestureAction
 }
 
@@ -35,8 +39,8 @@ sealed interface GestureAction {
  * a pinça só dá zoom na visualização. A folha mantém sempre o tamanho do papel.
  */
 class GestureController(private val s: EditorSession, private val density: Float) {
-    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE }
-    private enum class H { CORNER, ROTATE, A, B }
+    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ROOM }
+    private enum class H { CORNER, ROTATE, A, B, VERTEX }
 
     private var mode = Mode.NONE
     private var handle = H.A
@@ -44,6 +48,8 @@ class GestureController(private val s: EditorSession, private val density: Float
     private var activeId: String? = null
     private var createdId: String? = null
     private var tapDimId: String? = null
+    private var tapRoomId: String? = null
+    private var tapSegIdx = -1
     private var tapTextId: String? = null
     private var downScreen = Offset.Zero
     private var lastScreen = Offset.Zero
@@ -79,6 +85,8 @@ class GestureController(private val s: EditorSession, private val density: Float
         activeId = null
         createdId = null
         tapDimId = null
+        tapRoomId = null
+        tapSegIdx = -1
         tapTextId = null
         val tool = s.tool
         if (isTouch && s.stylusOnly && tool.drawing) {
@@ -88,6 +96,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         when (tool) {
             Tool.NAVIGATE -> mode = Mode.PAN
             Tool.SELECT, Tool.DIM -> downSelectOrDim(screen, p, tool)
+            Tool.ROOM -> downRoom(screen, p)
             Tool.PEN, Tool.PENCIL, Tool.HIGHLIGHTER -> startStroke(p, tool)
             Tool.ERASER -> {
                 mode = Mode.ERASE
@@ -118,6 +127,10 @@ class GestureController(private val s: EditorSession, private val density: Float
             if (hit is TextObj && prevSelected == hit.id) tapTextId = hit.id
             if (hit is DimObj) tapDimId = hit.id
             st.select(hit.id)
+            if (hit is RoomObj) {
+                val k = Geo.hitSeg(st.sheet, hit, p, tol(), st.unit)
+                if (k >= 0) { st.selectSeg(hit.id, k); tapRoomId = hit.id; tapSegIdx = k }
+            }
             activeId = hit.id
             if (!hit.locked) {
                 mode = Mode.MOVE
@@ -131,6 +144,52 @@ class GestureController(private val s: EditorSession, private val density: Float
         } else {
             startShapeLike(p, dim = true, kind = null)
         }
+    }
+
+    /** Ferramenta Cômodo: arrastar desenha o contorno; tocar num segmento existente o seleciona. */
+    private fun downRoom(screen: Offset, p: Pt) {
+        val sel = st.selected
+        if (sel is RoomObj && !sel.locked) {
+            val h = hitHandle(screen, sel)
+            if (h != null) {
+                handle = h.first
+                handleIdx = h.second
+                activeId = sel.id
+                mode = Mode.HANDLE
+                st.beginGesture()
+                return
+            }
+        }
+        val hit = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit)) as? RoomObj
+        if (hit != null) {
+            val k = Geo.hitSeg(st.sheet, hit, p, tol(), st.unit)
+            if (k >= 0) { tapRoomId = hit.id; tapSegIdx = k }
+        }
+        val o = StrokeObj(photoId = null, pts = listOf(p), color = 0xFF2F80ED.toInt(), width = 2.5f, kind = StrokeKind.PENCIL)
+        st.live(st.sheet.copy(objs = st.sheet.objs + o))
+        createdId = o.id
+        mode = Mode.ROOM
+    }
+
+    private fun finishRoom() {
+        val prev = st.sheet.obj(createdId) as? StrokeObj
+        if (prev == null) { st.cancelGesture(); return }
+        val k = 1f / s.view.scale
+        val res = br.com.arque.measure.logic.Straighten.run(
+            prev.pts,
+            closeTol = (36f * density * k).coerceIn(20f, 60f),
+            eps = (10f * density * k).coerceIn(5f, 16f),
+            minSeg = (22f * density * k).coerceIn(14f, 36f),
+        )
+        if (res == null) { st.cancelGesture(); return }
+        val n = if (res.closed) res.pts.size else res.pts.size - 1
+        val room = RoomObj(
+            photoId = null, pts = res.pts, closed = res.closed, segs = List(n) { Seg() },
+            color = s.color, width = s.width,
+        )
+        st.live(st.sheet.copy(objs = st.sheet.objs.filter { it.id != prev.id } + room))
+        st.endGesture()
+        st.selectSeg(room.id, 0)
     }
 
     private fun startStroke(p: Pt, tool: Tool) {
@@ -196,7 +255,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 }
             } else return
             Mode.HANDLE -> applyHandle(p)
-            Mode.STROKE -> {
+            Mode.STROKE, Mode.ROOM -> {
                 val o = st.sheet.obj(createdId) as? StrokeObj
                 if (o != null) {
                     val photos = st.sheet.photos()
@@ -226,7 +285,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     private fun erase(p: Pt) {
         val sh = st.sheet
         val r = 12f * density / s.view.scale
-        val gone = sh.objs.filter { it is Ann && it !is DimObj && !it.locked && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
+        val gone = sh.objs.filter { it is Ann && it !is DimObj && it !is RoomObj && !it.locked && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
         if (gone.isNotEmpty()) st.live(sh.copy(objs = sh.objs.filter { it.id !in gone }))
     }
 
@@ -248,6 +307,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.endGesture()
                 createdId?.let { if (st.sheet.obj(it) != null) st.select(it) }
             }
+            Mode.ROOM -> if (!moved) st.cancelGesture() else finishRoom()
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> st.endGesture()
             else -> {}
         }
@@ -259,6 +319,13 @@ class GestureController(private val s: EditorSession, private val density: Float
                 (tool == Tool.SELECT || tool == Tool.DIM) && tapDimId != null -> {
                     val d = st.sheet.obj(tapDimId) as? DimObj
                     if (d != null && !d.locked) action = GestureAction.TapDim(d.id)
+                }
+                (tool == Tool.SELECT || tool == Tool.ROOM) && tapRoomId != null -> {
+                    val r = st.sheet.obj(tapRoomId) as? RoomObj
+                    if (r != null) {
+                        if (st.selectedId != r.id || st.selectedSeg != tapSegIdx) st.selectSeg(r.id, tapSegIdx)
+                        if (!r.locked) action = GestureAction.TapSeg(r.id, tapSegIdx)
+                    }
                 }
                 tool == Tool.SELECT && tapTextId != null -> {
                     action = GestureAction.EditText(tapTextId, p)
@@ -276,7 +343,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     /** Um segundo dedo apareceu: descarta desenho em andamento, mantém movimento de foto. */
     fun cancelSingle() {
         s.loupe = null
-        if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE) st.cancelGesture()
+        if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM) st.cancelGesture()
         mode = Mode.NONE
     }
 
@@ -298,6 +365,11 @@ class GestureController(private val s: EditorSession, private val density: Float
             is DimObj, is ShapeObj -> {
                 val pts = Geo.annPoints(photos, o as Ann)
                 if (near(pts[1])) H.B to 0 else if (near(pts[0])) H.A to 0 else null
+            }
+            is RoomObj -> {
+                val pts = Geo.annPoints(photos, o)
+                pts.forEachIndexed { i, p -> if (near(p)) return H.VERTEX to i }
+                null
             }
             else -> null
         }
@@ -329,6 +401,20 @@ class GestureController(private val s: EditorSession, private val density: Float
                 val target = if (straight) Geo.snapAxis(other, p) else p
                 st.live(replace(Geo.withEndpoint(st.sheet, o, handle == H.B, target)))
                 s.loupe = s.view.toScreen(target)
+            }
+            is RoomObj -> {
+                val pts = o.pts
+                val i = handleIdx
+                // alinha o vértice na horizontal/vertical com o vizinho anterior (ou seguinte)
+                val neighbour = Geo.annPoints(st.sheet.photos(), o).let { sp ->
+                    if (i > 0) sp[i - 1] else if (sp.size > 1) sp[1] else null
+                }
+                val target = if (neighbour != null) Geo.snapAxis(neighbour, p) else p
+                if (i in pts.indices) {
+                    val local = Geo.fromSheet(st.sheet.photos(), o.photoId, target)
+                    st.live(replace(o.copy(pts = pts.mapIndexed { j, q -> if (j == i) local else q })))
+                    s.loupe = s.view.toScreen(target)
+                }
             }
             else -> {}
         }

@@ -5,6 +5,9 @@ import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.NoteMeta
 import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.Seg
+import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.Index
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.MeasureSource
@@ -78,6 +81,21 @@ object Json {
                 .put("color", o.color).put("width", o.width.toDouble()).put("fill", o.fill)
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
+            is RoomObj -> j.put("type", "room").put("photoId", o.photoId ?: JSONObject.NULL)
+                .put("pts", JSONArray(o.pts.map(::ptToJson))).put("closed", o.closed)
+                .put(
+                    "segs",
+                    JSONArray(
+                        o.segs.map { sg ->
+                            JSONObject().put("kind", sg.kind.name).put("valueMm", sg.valueMm ?: JSONObject.NULL)
+                                .put("source", sg.source?.name ?: JSONObject.NULL)
+                                .put("history", JSONArray(sg.history.map(::readingToJson)))
+                        },
+                    ),
+                )
+                .put("color", o.color).put("width", o.width.toDouble())
+                .put("labelScale", o.labelScale.toDouble()).put("labelAlpha", o.labelAlpha.toDouble())
+                .put("labelIntensity", o.labelIntensity.toDouble())
             is DimObj -> j.put("type", "dim").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("a", ptToJson(o.a)).put("b", ptToJson(o.b))
                 .put("valueMm", o.valueMm ?: JSONObject.NULL)
@@ -117,6 +135,24 @@ object Json {
                 id = id, photoId = j.optStringOrNull("photoId"),
                 at = ptFromJson(j.getJSONArray("at")), text = j.getString("text"),
                 size = j.getDouble("size").toFloat(), color = j.getInt("color"), locked = locked,
+            )
+            "room" -> RoomObj(
+                id = id, photoId = j.optStringOrNull("photoId"),
+                pts = j.getJSONArray("pts").let { a -> (0 until a.length()).map { ptFromJson(a.getJSONArray(it)) } },
+                closed = j.optBoolean("closed", false),
+                segs = j.getJSONArray("segs").mapObjects { sj ->
+                    Seg(
+                        kind = SegKind.valueOf(sj.optString("kind", "WALL")),
+                        valueMm = sj.optDoubleOrNull("valueMm"),
+                        source = sj.optStringOrNull("source")?.let { MeasureSource.valueOf(it) },
+                        history = sj.optJSONArray("history")?.mapObjects(::readingFromJson) ?: emptyList(),
+                    )
+                },
+                color = j.getInt("color"), width = j.getDouble("width").toFloat(),
+                labelScale = j.optDouble("labelScale", 1.0).toFloat(),
+                labelAlpha = j.optDouble("labelAlpha", 1.0).toFloat(),
+                labelIntensity = j.optDouble("labelIntensity", 1.0).toFloat(),
+                locked = locked,
             )
             "dim" -> DimObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

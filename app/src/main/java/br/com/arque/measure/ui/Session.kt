@@ -28,6 +28,7 @@ enum class Tool(val label: String, val drawing: Boolean) {
     DASHED("Tracejada", true),
     ARROW("Seta", true),
     DIM("Seta de cota", true),
+    ROOM("Cômodo", true),
     RECT("Retângulo", true),
     RRECT("Retângulo arredondado", true),
     ELLIPSE("Oval", true),

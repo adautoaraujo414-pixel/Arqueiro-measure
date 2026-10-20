@@ -14,9 +14,9 @@ class CabinetTest {
     )
 
     @Test fun drawerFrontMatchesPromobFormula() {
-        // vão = 720-100-80-18 = 522; (522 - 2 - 2 - 3*2) / 3
-        assertEquals(522.0, CabinetMath.vaoH(base), 1e-9)
-        assertEquals((522.0 - 4 - 6) / 3, CabinetMath.drawerFrontH(base, 3), 1e-9)
+        // base sob as laterais: vão = (850-100-15) - (15+70) = 650; (650 - 2 - 2 - 3*2) / 3
+        assertEquals(650.0, CabinetMath.vaoH(base), 1e-9)
+        assertEquals((650.0 - 4 - 6) / 3, CabinetMath.drawerFrontH(base, 3), 1e-9)
     }
 
     @Test fun changingWidthRecentersDivider() {
@@ -24,7 +24,7 @@ class CabinetTest {
         val r = CabinetMath.vaoRanges(wide)
         assertEquals(2, r.size)
         assertEquals(r[0].second - r[0].first, r[1].second - r[1].first - 0.0, 20.0)
-        assertTrue(r[1].second == 1000.0 - 18.0)
+        assertTrue(r[1].second == 1000.0 - 15.0)
     }
 
     @Test fun partsAndCutList() {
@@ -55,5 +55,52 @@ class CabinetTest {
         assertEquals("Base 800", b.name)
         st.undo()
         assertEquals(800.0, (st.sheet.obj(id) as CabObj).cab.wMm, 0.0)
+    }
+
+    @Test fun baseIsOnePieceFullWidthUnderLaterals() {
+        val parts = CabinetMath.parts(base)
+        val b = parts.single { it.kind == PartKind.BASE }
+        assertEquals(base.wMm, b.w, 1e-9)
+        val lat = parts.first { it.kind == PartKind.LATERAL }
+        assertEquals(b.y, lat.y + lat.h, 1e-9) // lateral apoiada em cima da base
+        assertEquals(750.0 - 15.0 - 15.0, lat.h, 1e-9) // 720
+    }
+
+    @Test fun frontCrossbarSameWidthAs70mm() {
+        val t = CabinetMath.parts(base).single { it.kind == PartKind.TRAVESSA }
+        assertEquals(base.wMm, t.w, 1e-9)
+        assertEquals(70.0, t.h, 1e-9)
+        assertTrue(CabinetMath.parts(base).filter { it.kind == PartKind.LATERAL }.all { it.note.contains("rebaixo") })
+    }
+
+    @Test fun moldingIsWidthBy30AndOptional() {
+        val m = CabinetMath.parts(base).single { it.kind == PartKind.MOLDURA }
+        assertEquals(base.wMm, m.w, 1e-9); assertEquals(30.0, m.h, 1e-9)
+        assertTrue(CabinetMath.parts(base.copy(hasMoldura = false)).none { it.kind == PartKind.MOLDURA })
+    }
+
+    @Test fun stoneWidthMinus40() {
+        assertEquals(2660.0, 2700.0 - CabinetMath.DESCONTO_PEDRA_MM, 0.0)
+    }
+
+    @Test fun liveDragMovesDividerAsOneUndoStep() {
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet())))
+        val id = st.addCab(Pt(50f, 50f), base, "Base")
+        st.beginGesture()
+        st.liveCab(id) { it.copy(dividers = listOf(0.3f)) }
+        st.liveCab(id) { it.copy(dividers = listOf(0.4f)) }
+        st.endGesture()
+        assertEquals(0.4f, (st.sheet.obj(id) as CabObj).cab.dividers[0], 0f)
+        st.undo()
+        assertEquals(0.5f, (st.sheet.obj(id) as CabObj).cab.dividers[0], 0f)
+    }
+
+    @Test fun oldJsonWithoutNewFieldsStillLoads() {
+        val c = base.copy(pedraWMm = 2700.0)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet())))
+        st.addCab(Pt(1f, 1f), c, "x")
+        val back = (Json.noteFromJson(Json.noteToJson(st.note)).pages[0].objs[0] as CabObj).cab
+        assertEquals(2700.0, back.pedraWMm!!, 0.0)
+        assertNull(back.pedraDMm)
     }
 }

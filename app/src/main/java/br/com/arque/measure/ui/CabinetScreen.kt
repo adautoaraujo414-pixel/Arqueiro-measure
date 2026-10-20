@@ -3,6 +3,7 @@ package br.com.arque.measure.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,6 +110,9 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         cab = cab, selDivider = selDivider, selVao = selVao, modifier = mod,
                         onPickDivider = { selDivider = it },
                         onPickVao = { selVao = it; selDivider = -1 },
+                        onBegin = { st.beginGesture() },
+                        onLive = { f -> st.liveCab(id, f) },
+                        onEnd = { st.endGesture() },
                     )
                 }
                 val panelPart: @Composable (Modifier) -> Unit = { mod ->
@@ -156,33 +161,83 @@ private fun CabinetCanvas(
     modifier: Modifier,
     onPickDivider: (Int) -> Unit,
     onPickVao: (Int) -> Unit,
+    onBegin: () -> Unit,
+    onLive: ((Cabinet) -> Cabinet) -> Unit,
+    onEnd: () -> Unit,
 ) {
+    val cabNow by rememberUpdatedState(cab)
+    var dragging by remember { mutableIntStateOf(-2) } // -2 nada, -1 lateral dir., 0.. divisória
     val e = cab.espMm
     val parts = CabinetMath.parts(cab)
     val ranges = CabinetMath.vaoRanges(cab)
     val dx = CabinetMath.dividerX(cab)
-    val bh = CabinetMath.bodyH(cab)
-    // transformação mm → tela (recalculada a cada toque com o tamanho atual do canvas)
-    fun fit(sz: Size): Triple<Float, Float, Float> {
-        val m = 90f
-        val k = minOf((sz.width - 2 * m) / cab.wMm.toFloat(), (sz.height - 2 * m) / cab.hMm.toFloat()).coerceAtLeast(0.01f)
-        val ox = (sz.width - cab.wMm.toFloat() * k) / 2f
-        val oy = (sz.height - cab.hMm.toFloat() * k) / 2f
-        return Triple(k, ox, oy)
-    }
+    fun fit(sz: Size) = fitOf(cab, sz)
     Canvas(
-        modifier = modifier.background(Color(0xFF17181B)).pointerInput(cab) {
+        modifier = modifier.background(Color(0xFF17181B)).pointerInput(Unit) {
+            detectDragGestures(
+                onDragStart = { pos ->
+                    val c = cabNow
+                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()))
+                    val mx = (pos.x - ox) / k
+                    val my = (pos.y - oy) / k
+                    val tol = 22f / k
+                    val ee = c.espMm
+                    val d = CabinetMath.dividerX(c)
+                    val vt = CabinetMath.vaoTop(c)
+                    val vb = CabinetMath.vaoBottom(c)
+                    val di = d.indexOfFirst { mx >= it - tol && mx <= it + ee + tol && my in vt..vb }
+                    dragging = when {
+                        di >= 0 -> di
+                        mx >= c.wMm - ee - tol && mx <= c.wMm + tol -> -1
+                        else -> -2
+                    }
+                    if (dragging != -2) { onBegin(); if (dragging >= 0) onPickDivider(dragging) }
+                },
+                onDrag = { change, _ ->
+                    val c = cabNow
+                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()))
+                    val mx = ((change.position.x - ox) / k).toDouble()
+                    val ee = c.espMm
+                    if (dragging >= 0) {
+                        change.consume()
+                        val i = dragging
+                        val d = CabinetMath.dividerX(c)
+                        val lo = (if (i == 0) ee else d[i - 1] + ee) + 10.0
+                        val hi = (if (i == d.lastIndex) c.wMm - ee else d[i + 1]) - ee - 10.0
+                        val x = Math.round(mx - ee / 2).toDouble().coerceIn(lo, hi.coerceAtLeast(lo))
+                        val iwn = CabinetMath.innerW(c)
+                        val r = ((x + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f)
+                        onLive { cc -> cc.copy(dividers = cc.dividers.sorted().mapIndexed { j, o -> if (j == i) r else o }) }
+                    } else if (dragging == -1) {
+                        change.consume()
+                        val nw = Math.round(mx).toDouble().coerceIn(150.0, 6000.0)
+                        // mantém a posição absoluta das divisórias (mm) ao mexer na largura
+                        onLive { cc ->
+                            val dxs = CabinetMath.dividerX(cc)
+                            val iwn = (nw - 2 * ee).coerceAtLeast(10.0)
+                            cc.copy(wMm = nw, dividers = dxs.map { x -> ((x + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f) })
+                        }
+                    }
+                },
+                onDragEnd = { if (dragging != -2) onEnd(); dragging = -2 },
+                onDragCancel = { if (dragging != -2) onEnd(); dragging = -2 },
+            )
+        }.pointerInput(Unit) {
             detectTapGestures { pos ->
-                val (k, ox, oy) = fit(Size(size.width.toFloat(), size.height.toFloat()))
+                val cab = cabNow
+                val ranges = CabinetMath.vaoRanges(cab)
+                val dx = CabinetMath.dividerX(cab)
+                val e = cab.espMm
+                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()))
                 val mx = (pos.x - ox) / k
                 val my = (pos.y - oy) / k
                 val tol = 14f / k
-                val vTop = cab.travessaMm
-                val vBot = bh - e
+                val vTop = CabinetMath.vaoTop(cab)
+                val vBot = CabinetMath.vaoBottom(cab)
                 val di = dx.indexOfFirst { mx >= it - tol / 2 && mx <= it + e + tol / 2 && my in vTop..vBot }
                 if (di >= 0) { onPickDivider(di); return@detectTapGestures }
                 val vi = ranges.indexOfFirst { mx >= it.first && mx <= it.second }
-                if (vi >= 0 && my in 0.0..bh) onPickVao(vi)
+                if (vi >= 0 && my in vTop..vBot) onPickVao(vi)
             }
         },
     ) {
@@ -201,12 +256,13 @@ private fun CabinetCanvas(
         }
         // seleção de vão (fundo azul claro)
         ranges.getOrNull(selVao)?.let { (x0, x1) ->
-            if (selDivider < 0) drawRect(Color(0x333B82F6), Offset(X(x0), Y(cab.travessaMm)), Size(((x1 - x0) * k).toFloat(), (CabinetMath.vaoH(cab) * k).toFloat()))
+            if (selDivider < 0) drawRect(Color(0x333B82F6), Offset(X(x0), Y(CabinetMath.vaoTop(cab))), Size(((x1 - x0) * k).toFloat(), (CabinetMath.vaoH(cab) * k).toFloat()))
         }
         // peças
         for (p in parts) {
             val col = when {
                 p.kind == PartKind.RODAPE -> WoodDark
+                p.kind == PartKind.MOLDURA -> WoodFront
                 p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.PORTA -> WoodFront
                 else -> Wood
             }
@@ -226,10 +282,12 @@ private fun CabinetCanvas(
         if (selDivider in dx.indices) {
             val x = dx[selDivider]
             drawRect(
-                Color(0xFF3B82F6), Offset(X(x) - 3f, Y(cab.travessaMm) - 3f),
+                Color(0xFF3B82F6), Offset(X(x) - 3f, Y(CabinetMath.vaoTop(cab)) - 3f),
                 Size((e * k).toFloat() + 6f, (CabinetMath.vaoH(cab) * k).toFloat() + 6f), style = Stroke(3f),
             )
         }
+        // pedra (referência): acima do móvel
+        drawRect(Color(0xFF3A3D44), Offset(X(-20.0), Y(-14.0)), Size(((cab.wMm + 40) * k).toFloat(), (14 * k).toFloat().coerceAtLeast(6f)))
         // cotas
         val nc = drawContext.canvas.nativeCanvas
         val chipPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = Gold.toArgb() }
@@ -248,9 +306,21 @@ private fun CabinetCanvas(
         val left = X(0.0) - 44f
         nc.drawLine(left, Y(0.0), left, Y(cab.hMm), line)
         chip(Units.formatNumber(cab.hMm, LengthUnit.MM), left, (Y(0.0) + Y(cab.hMm)) / 2)
+        val vl = X(cab.wMm) + 44f
+        nc.drawLine(vl, Y(CabinetMath.vaoTop(cab)), vl, Y(CabinetMath.vaoBottom(cab)), line)
+        chip(Units.formatNumber(CabinetMath.vaoH(cab), LengthUnit.MM), vl, (Y(CabinetMath.vaoTop(cab)) + Y(CabinetMath.vaoBottom(cab))) / 2)
         val bottom = Y(cab.hMm) + 44f
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
+}
+
+/** Transformação mm → tela (escala, origem x, origem y), recalculada com o tamanho atual do canvas. */
+private fun fitOf(cab: Cabinet, sz: Size): Triple<Float, Float, Float> {
+    val m = 90f
+    val k = minOf((sz.width - 2 * m) / cab.wMm.toFloat(), (sz.height - 2 * m) / cab.hMm.toFloat()).coerceAtLeast(0.01f)
+    val ox = (sz.width - cab.wMm.toFloat() * k) / 2f
+    val oy = (sz.height - cab.hMm.toFloat() * k) / 2f
+    return Triple(k, ox, oy)
 }
 
 private fun Color.toArgb(): Int = android.graphics.Color.argb((alpha * 255).toInt(), (red * 255).toInt(), (green * 255).toInt(), (blue * 255).toInt())
@@ -277,10 +347,16 @@ private fun CabinetPanel(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Label("Módulo")
-        NumField("Largura", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0)) } }
-        NumField("Altura", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(150.0, 3000.0)) } }
-        NumField("Profundidade", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0)) } }
-        Text("Mudou o módulo? As peças ligadas se reajustam sozinhas.", color = Ui.dim, fontSize = 12.sp)
+        NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.DESCONTO_PEDRA_MM), vm) { v ->
+            edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.DESCONTO_PEDRA_MM).coerceIn(150.0, 6000.0)) }
+        }
+        NumField("Profundidade da pedra", cab.pedraDMm ?: (cab.dMm + CabinetMath.DESCONTO_PEDRA_MM), vm) { v ->
+            edit { it.copy(pedraDMm = v, dMm = (v - CabinetMath.DESCONTO_PEDRA_MM).coerceIn(100.0, 1500.0)) }
+        }
+        NumField("Largura do módulo", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
+        NumField("Profundidade do módulo", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
+        NumField("Altura (chão até a pedra)", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
+        Text("A pedra manda: o módulo fica 40 mm menor na largura e na profundidade. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
         HorizontalDivider(color = Ui.line)
 
         if (selDivider in dx.indices) {
@@ -344,9 +420,14 @@ private fun CabinetPanel(
         }
         HorizontalDivider(color = Ui.line)
         Label("Regras do módulo")
-        NumField("Espessura padrão", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
-        NumField("Altura do rodapé", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
-        NumField("Altura da travessa", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
+        NumField("Espessura das chapas", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
+        NumField("Altura do pedestal (rodapé)", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
+        NumField("Folga do topo (sob a pedra)", cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Moldura de acabamento (${Units.formatNumber(cab.molduraMm, LengthUnit.MM)} mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasMoldura, onCheckedChange = { b -> edit { it.copy(hasMoldura = b) } })
+        }
+        NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })

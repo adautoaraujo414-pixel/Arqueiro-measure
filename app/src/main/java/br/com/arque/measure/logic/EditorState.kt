@@ -142,6 +142,15 @@ class EditorState(
         commit(mapObj(id) { (it as CabObj).copy(cab = next) })
     }
 
+    /** Igual a [updateCab], mas ao vivo (arrastar): um gesto inteiro vira um passo de desfazer. */
+    fun liveCab(id: String, f: (Cabinet) -> Cabinet) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        if (o.locked) return
+        val next = br.com.arque.measure.logic.CabinetMath.normalized(f(o.cab))
+        if (next == o.cab) return
+        live(mapObj(id) { (it as CabObj).copy(cab = next) })
+    }
+
     fun renameCab(id: String, name: String) {
         val o = sheet.obj(id) as? CabObj ?: return
         if (o.locked || name.isBlank()) return

@@ -20,11 +20,21 @@ data class Vao(
  */
 data class Cabinet(
     val wMm: Double = 800.0,
-    val hMm: Double = 720.0,
+    /** Altura livre: do chão até a parte de baixo da pedra. */
+    val hMm: Double = 850.0,
     val dMm: Double = 560.0,
-    val espMm: Double = 18.0,
+    val espMm: Double = 15.0,
+    /** Pedestal (base de 10 cm) no chão. */
     val rodapeMm: Double = 100.0,
-    val travessaMm: Double = 80.0,
+    /** Travessa frontal (barra de fora a fora, com o puxador cava), embutida no rebaixo das laterais. */
+    val travessaMm: Double = 70.0,
+    /** Folga de montagem entre o topo do móvel e a pedra. */
+    val folgaTopoMm: Double = 15.0,
+    val molduraMm: Double = 30.0,
+    val hasMoldura: Boolean = true,
+    /** Medidas da pedra (opcionais): largura e profundidade do módulo saem delas menos [DESCONTO_PEDRA_MM]. */
+    val pedraWMm: Double? = null,
+    val pedraDMm: Double? = null,
     val folgaMm: Double = 2.0,
     val folgaGavetaMm: Double = 3.0,
     val bordaSupMm: Double = 2.0,
@@ -37,8 +47,8 @@ data class Cabinet(
 
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
-    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa superior"), DIVISORIA("Divisória"),
-    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé"), FUNDO("Fundo"),
+    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), DIVISORIA("Divisória"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"),
 }
 
 /**
@@ -51,6 +61,7 @@ data class Part(
     val cutL: Double, val cutW: Double, val esp: Double,
     val vao: Int = -1,
     val divider: Int = -1,
+    val note: String = "",
 )
 
 /** Módulo colocado numa folha. [at] = canto superior esquerdo; [scaleDen] = escala (10 → 1:10). */

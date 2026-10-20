@@ -4,6 +4,7 @@ import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
 import br.com.arque.measure.model.CabObj
+import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Cabinet
 import br.com.arque.measure.model.Seg
 import br.com.arque.measure.model.SegKind

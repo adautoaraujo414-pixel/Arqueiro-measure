@@ -89,6 +89,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
     var selDivider by remember { mutableIntStateOf(-1) }
     var selVao by remember { mutableIntStateOf(0) }
     var tapMm by remember { mutableStateOf(Offset.Zero) }
+    var shelfMode by remember { mutableStateOf(false) }
     var listOpen by remember { mutableStateOf(false) }
     var renameOpen by remember { mutableStateOf(false) }
     val wide = LocalConfiguration.current.screenWidthDp >= 720
@@ -126,7 +127,15 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     CabinetCanvas(
                         cab = cab, selDivider = selDivider, selVao = selVao, modifier = Modifier.fillMaxSize(),
                         onPickDivider = { selDivider = it },
-                        onPickVao = { v, mx, my -> selVao = v; selDivider = -1; tapMm = Offset(mx.toFloat(), my.toFloat()) },
+                        onPickVao = { v, mx, my ->
+                            selVao = v; selDivider = -1; tapMm = Offset(mx.toFloat(), my.toFloat())
+                            if (shelfMode) {
+                                val y = Math.round(my).toDouble()
+                                if (y > CabinetMath.vaoTop(cab) + cab.espMm && y < CabinetMath.vaoBottom(cab) - cab.espMm) {
+                                    edit { c -> c.copy(vaos = c.vaos.mapIndexed { k, o -> if (k == v && o.shelfYs.none { Math.abs(it - y) < 20.0 }) o.copy(shelfYs = o.shelfYs + y) else o }) }
+                                }
+                            }
+                        },
                         onBegin = { st.beginGesture() },
                         onLive = { f -> st.liveCab(id, f) },
                         onEnd = { st.endGesture() },
@@ -135,8 +144,15 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     Row(Modifier.align(Alignment.TopStart).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
                         QuickBtn("↷ Refazer", st.canRedo) { st.redo() }
+                        QuickBtn(if (shelfMode) "✓ Pronto" else "+ Prateleiras", true) { shelfMode = !shelfMode }
                     }
-                    if (selDivider < 0 && selVao in cab.vaos.indices) {
+                    if (shelfMode) {
+                        Text(
+                            "Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto.",
+                            color = Ui.text, fontSize = 14.sp,
+                            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xE63B82F6)).padding(horizontal = 14.dp, vertical = 10.dp),
+                        )
+                    } else if (selDivider < 0 && selVao in cab.vaos.indices) {
                         val rg = CabinetMath.vaoRanges(cab)
                         val e0 = cab.espMm
                         val iw0 = CabinetMath.innerW(cab)

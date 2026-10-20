@@ -2,7 +2,7 @@ package br.com.arque.measure.model
 
 /** O que vai dentro de um vão do móvel. */
 enum class VaoKind(val label: String) {
-    FREE("Livre"), SHELVES("Prateleiras"), DRAWERS("Gavetas"), DOOR("Porta"),
+    FREE("Livre"), SHELVES("Prateleiras"), DRAWERS("Gavetas"), DOOR("Porta"), OVEN("Forno"),
 }
 
 /** Um vão (espaço entre laterais/divisórias). Só os campos do tipo escolhido valem. */
@@ -21,6 +21,10 @@ data class Vao(
     val batenteMm: Double = 50.0,
     /** Prateleiras soltas em posições escolhidas (y em mm, medido da parte de baixo da pedra). */
     val shelfYs: List<Double> = emptyList(),
+    /** Forno embutido: largura e altura do corte (centralizado no vão) e a distância da travessa até o topo do corte. */
+    val ovenW: Double = 560.0,
+    val ovenH: Double = 595.0,
+    val ovenTop: Double = 0.0,
 )
 
 /**
@@ -65,7 +69,7 @@ data class Cabinet(
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
     LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), DIVISORIA("Divisória"),
-    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"), FORNO("Forno (corte)"),
 }
 
 /**

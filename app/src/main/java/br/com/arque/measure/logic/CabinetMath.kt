@@ -154,6 +154,19 @@ object CabinetMath {
                         out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i, note = "caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)" + cavaNote(v))
                     }
                 }
+                VaoKind.OVEN -> {
+                    val ow = v.ovenW.coerceIn(50.0, vw)
+                    val oh = v.ovenH.coerceIn(50.0, vh - e)
+                    val ox0 = x0 + (vw - ow) / 2 // centralizado no vão
+                    val oy = vTop + v.ovenTop.coerceIn(0.0, vh - oh - e)
+                    out += Part(PartKind.FORNO, ox0, oy, ow, oh, ow, oh, 0.0, vao = i, note = "corte centralizado · sobra ${fmt((vw - ow) / 2)} de cada lado")
+                    if (oy > vTop + 0.5) out += Part(PartKind.PRATELEIRA, x0, oy - e, vw, e, vw, dep - 20.0, e, vao = i, note = "acima do forno")
+                    out += Part(PartKind.PRATELEIRA, x0, oy + oh, vw, e, vw, dep - 20.0, e, vao = i, note = "apoio do forno")
+                    if ((vw - ow) / 2 > 0.5) for (side in 0..1) {
+                        val fx = if (side == 0) x0 else ox0 + ow
+                        out += Part(PartKind.DIVISORIA, fx, oy, (vw - ow) / 2, oh, oh, (vw - ow) / 2, e, vao = i, note = "fechamento ao lado do forno (peça em pé, ${fmt((vw - ow) / 2)} de largura)")
+                    }
+                }
                 VaoKind.DOOR -> {
                     if (v.doors >= 2) {
                         // duas folhas sobrepostas: (vão + 12) ÷ 2 de largura e vão + 30 de altura
@@ -197,7 +210,7 @@ object CabinetMath {
 
     /** Lista de peças agrupada (mesma peça e mesma medida = quantidade). */
     fun cutList(c: Cabinet): List<Line> {
-        val all = parts(c) + listOfNotNull(backPart(c))
+        val all = parts(c).filter { it.kind != PartKind.FORNO } + listOfNotNull(backPart(c))
         val order = PartKind.values().toList()
         return all.groupBy { Triple(it.kind, Math.round(it.cutL * 10), Math.round(it.cutW * 10) * 1000L + Math.round(it.esp)) }
             .map { (_, g) -> Line(g[0].kind, g.size, g[0].cutL, g[0].cutW, g[0].esp, g[0].note) }

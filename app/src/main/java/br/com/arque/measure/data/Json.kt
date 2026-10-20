@@ -126,7 +126,7 @@ object Json {
             "vaos",
             JSONArray(
                 c.vaos.map { v ->
-                    JSONObject().put("kind", v.kind.name).put("shelves", v.shelves).put("drawers", v.drawers).put("doors", v.doors).put("shelvesAbove", v.shelvesAbove).put("gaveteiro", v.gaveteiroMm).put("cava", v.cava).put("batente", v.batenteMm).put("shelfYs", JSONArray(v.shelfYs))
+                    JSONObject().put("kind", v.kind.name).put("shelves", v.shelves).put("drawers", v.drawers).put("doors", v.doors).put("shelvesAbove", v.shelvesAbove).put("gaveteiro", v.gaveteiroMm).put("cava", v.cava).put("batente", v.batenteMm).put("shelfYs", JSONArray(v.shelfYs)).put("ovenW", v.ovenW).put("ovenH", v.ovenH).put("ovenTop", v.ovenTop)
                 },
             ),
         )
@@ -149,6 +149,7 @@ object Json {
                     kind = VaoKind.valueOf(v.optString("kind", "FREE")), shelves = v.optInt("shelves", 1),
                     drawers = v.optInt("drawers", 3), doors = v.optInt("doors", 1),
                     shelvesAbove = v.optInt("shelvesAbove", 0), gaveteiroMm = v.optDouble("gaveteiro", 0.0), cava = v.optBoolean("cava", false), batenteMm = v.optDouble("batente", 50.0),
+                    ovenW = v.optDouble("ovenW", 560.0), ovenH = v.optDouble("ovenH", 595.0), ovenTop = v.optDouble("ovenTop", 0.0),
                     shelfYs = v.optJSONArray("shelfYs")?.let { a -> (0 until a.length()).map { a.getDouble(it) } } ?: emptyList(),
                 )
             } ?: listOf(Vao()),

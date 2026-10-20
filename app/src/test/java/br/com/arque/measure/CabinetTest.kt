@@ -160,4 +160,14 @@ class CabinetTest {
         val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(Sheet(objs = listOf(CabObj(id = "a", at = Pt(1f, 1f), cab = c)))))))
         assertEquals(listOf(400.0), (back.pages[0].objs[0] as CabObj).cab.vaos[0].shelfYs)
     }
+
+    @Test fun ovenCutoutCentered() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.OVEN, ovenW = 560.0, ovenH = 595.0)))
+        val (x0, x1) = CabinetMath.vaoRanges(c)[0]
+        val o = CabinetMath.parts(c).single { it.kind == PartKind.FORNO }
+        assertEquals(560.0, o.w, 0.0)
+        assertEquals(o.x - x0, x1 - (o.x + o.w), 1e-9)
+        assertTrue(CabinetMath.cutList(c).none { it.kind == PartKind.FORNO })
+        assertEquals(1, CabinetMath.parts(c).count { it.kind == PartKind.PRATELEIRA })
+    }
 }

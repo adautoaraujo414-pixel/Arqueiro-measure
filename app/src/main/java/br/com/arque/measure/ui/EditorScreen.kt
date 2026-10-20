@@ -581,7 +581,7 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) 
         val sw = 2.2f * density
         val st = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
         fun P(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(x * w, y * h)
-        fun poly(vararg p: androidx.compose.ui.geometry.Offset, close: Boolean) {
+        fun poly(p: List<androidx.compose.ui.geometry.Offset>, close: Boolean) {
             val path = androidx.compose.ui.graphics.Path()
             path.moveTo(p[0].x, p[0].y)
             for (i in 1 until p.size) path.lineTo(p[i].x, p[i].y)
@@ -592,7 +592,7 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) 
             val ang = Math.atan2((tip.y - from.y).toDouble(), (tip.x - from.x).toDouble())
             val s = 0.26f * w
             fun q(d: Double) = androidx.compose.ui.geometry.Offset(tip.x - s * Math.cos(ang + d).toFloat(), tip.y - s * Math.sin(ang + d).toFloat())
-            poly(q(-0.45), tip, q(0.45), close = false)
+            poly(listOf(q(-0.45), tip, q(0.45)), false)
         }
         when (t) {
             Tool.LINE -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
@@ -605,15 +605,15 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) 
                 path.moveTo(0.12f * w, 0.85f * h); path.quadraticBezierTo(0.15f * w, 0.1f * h, 0.88f * w, 0.15f * h)
                 drawPath(path, tint, style = st)
             }
-            Tool.ELBOW -> poly(P(0.12f, 0.85f), P(0.12f, 0.15f), P(0.88f, 0.15f), close = false)
-            Tool.ROOM -> poly(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f), close = true)
+            Tool.ELBOW -> poly(listOf(P(0.12f, 0.85f), P(0.12f, 0.15f), P(0.88f, 0.15f)), false)
+            Tool.ROOM -> poly(listOf(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f)), true)
             Tool.RECT -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
             Tool.RRECT -> drawRoundRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), androidx.compose.ui.geometry.CornerRadius(0.16f * w), style = st)
             Tool.ELLIPSE -> drawOval(tint, P(0.12f, 0.2f), androidx.compose.ui.geometry.Size(0.76f * w, 0.6f * h), style = st)
-            Tool.TRIANGLE -> poly(P(0.5f, 0.14f), P(0.88f, 0.84f), P(0.12f, 0.84f), close = true)
-            Tool.RTRI -> poly(P(0.16f, 0.14f), P(0.86f, 0.84f), P(0.16f, 0.84f), close = true)
-            Tool.DIAMOND -> poly(P(0.5f, 0.1f), P(0.9f, 0.5f), P(0.5f, 0.9f), P(0.1f, 0.5f), close = true)
-            Tool.TRAP -> poly(P(0.3f, 0.2f), P(0.7f, 0.2f), P(0.9f, 0.8f), P(0.1f, 0.8f), close = true)
+            Tool.TRIANGLE -> poly(listOf(P(0.5f, 0.14f), P(0.88f, 0.84f), P(0.12f, 0.84f)), true)
+            Tool.RTRI -> poly(listOf(P(0.16f, 0.14f), P(0.86f, 0.84f), P(0.16f, 0.84f)), true)
+            Tool.DIAMOND -> poly(listOf(P(0.5f, 0.1f), P(0.9f, 0.5f), P(0.5f, 0.9f), P(0.1f, 0.5f)), true)
+            Tool.TRAP -> poly(listOf(P(0.3f, 0.2f), P(0.7f, 0.2f), P(0.9f, 0.8f), P(0.1f, 0.8f)), true)
             else -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
         }
     }

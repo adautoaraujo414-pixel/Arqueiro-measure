@@ -84,7 +84,7 @@ class StoreTest {
     }
 
     @Test fun `folha inexistente retorna null`() {
-        assertNull(Store(tmp.newFolder("p")).loadSheet("nao-existe"))
+        assertNull(Store(tmp.newFolder("p")).loadNote("nao-existe"))
     }
 
     @Test fun `importar foto copia os bytes originais sem alterar`() {

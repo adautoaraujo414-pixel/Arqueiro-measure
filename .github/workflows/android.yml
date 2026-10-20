@@ -42,12 +42,6 @@ jobs:
           set -o pipefail
           ./gradlew --no-daemon assembleDebug 2>&1 | tee build.log
 
-      - name: Resumo dos erros
-        if: failure()
-        run: |
-          M=$( (grep -E '^e: |What went wrong|error:|Execution failed' -A1 build.log | head -80) | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
-          echo "::error title=Erros do build::$M"
-
       - name: Salvar log de erro
         if: failure()
         uses: actions/upload-artifact@v4
@@ -57,10 +51,14 @@ jobs:
           if-no-files-found: ignore
 
       - name: Testes automatizados (JVM)
-        run: ./gradlew --no-daemon testDebugUnitTest
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon testDebugUnitTest 2>&1 | tee -a build.log
 
       - name: Verificar código (lint)
-        run: ./gradlew --no-daemon lintDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon lintDebug 2>&1 | tee -a build.log
 
       - name: Verificar APK gerado
         run: |
@@ -88,6 +86,12 @@ jobs:
           gh release create "$TAG" ArqueMeasure-debug.apk --target "$GITHUB_SHA" --prerelease \
             --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
             --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
+
+      - name: Resumo dos erros
+        if: failure()
+        run: |
+          M=$( (grep -E '^e: |What went wrong|error:|Execution failed|FAILED|AssertionError|Exception' -A2 build.log | head -120) | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::error title=Erros do build::$M"
 
       - name: Publicar relatórios de lint e testes
         if: always()

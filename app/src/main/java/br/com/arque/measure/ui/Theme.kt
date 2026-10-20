@@ -13,7 +13,7 @@ object Ui {
     val text = Color(0xFFF2F3F5)
     val dim = Color(0xFF9AA0A8)
     val accent = Color(0xFF3B82F6)
-    val paperBg = Color(0xFF3A3C40)
+    val paperBg = Color(0xFF1E2025)
     val distBlue = Color(0xFF1E5BD8)
 }
 

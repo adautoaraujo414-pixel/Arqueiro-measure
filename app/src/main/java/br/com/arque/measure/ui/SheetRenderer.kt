@@ -57,29 +57,79 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 var y = 70f
                 while (y < h - 30f) { c.drawLine(36f, y, w - 36f, y, tplPaint); y += 30f }
             }
-            Template.ARAUJO -> {
-                tplPaint.style = Paint.Style.STROKE
-                tplPaint.strokeWidth = 1.5f
-                tplPaint.color = 0xFF2B2B2B.toInt()
-                c.drawRect(24f, 24f, w - 24f, h - 24f, tplPaint)
-                c.drawLine(24f, 96f, w - 24f, 96f, tplPaint)
-                tplPaint.style = Paint.Style.FILL
-                tplPaint.color = 0xFF111111.toInt()
-                tplPaint.typeface = Typeface.DEFAULT_BOLD
-                tplPaint.textSize = 24f
-                tplPaint.textAlign = Paint.Align.LEFT
-                c.drawText("ARAÚJO PLANEJADOS", 40f, 62f, tplPaint)
-                tplPaint.typeface = Typeface.DEFAULT
-                tplPaint.textSize = 11f
-                tplPaint.color = 0xFF555555.toInt()
-                tplPaint.textAlign = Paint.Align.RIGHT
-                c.drawText("CROQUI DE MEDIDAS", w - 40f, 50f, tplPaint)
-                c.drawText("Cliente: ____________________   Data: ___/___/_____", w - 40f, 72f, tplPaint)
-                tplPaint.color = 0xFF999999.toInt()
-                tplPaint.textAlign = Paint.Align.CENTER
-                c.drawText("medidas em metros", w / 2f, h - 32f, tplPaint)
-            }
+            Template.ARAUJO -> paintAraujo(c, w, h)
         }
+    }
+
+    // Identidade da folha "Araújo Planejados": faixa preta, ouro, contatos e moldura arredondada.
+    private val gold = 0xFFD9A93E.toInt()
+    private val goldDeep = 0xFFC9972F.toInt()
+    private val frameGold = 0xFFD9A441.toInt()
+
+    private fun paintAraujo(c: Canvas, w: Float, h: Float) {
+        val p = tplPaint
+        p.reset(); p.isAntiAlias = true
+        // fundo do papel
+        p.style = Paint.Style.FILL; p.color = 0xFFF6F6F3.toInt()
+        c.drawRect(0f, 0f, w, h, p)
+        // faixa preta do topo + filete dourado
+        p.color = 0xFF121118.toInt()
+        c.drawRect(0f, 0f, w, 100f, p)
+        p.color = goldDeep
+        c.drawRect(0f, 100f, w, 103f, p)
+        // marca "A"
+        p.color = gold
+        path.reset()
+        path.moveTo(62f, 20f); path.lineTo(88f, 78f); path.lineTo(76f, 78f); path.lineTo(62f, 46f)
+        path.lineTo(48f, 78f); path.lineTo(36f, 78f); path.close()
+        c.drawPath(path, p)
+        p.color = goldDeep
+        path.reset()
+        path.moveTo(50f, 68f); path.lineTo(74f, 68f); path.lineTo(80f, 80f); path.lineTo(44f, 80f); path.close()
+        c.drawPath(path, p)
+        // ARAUJO / PLANEJADOS
+        p.color = gold; p.typeface = Typeface.DEFAULT_BOLD; p.textAlign = Paint.Align.LEFT
+        p.textSize = 38f; p.letterSpacing = 0.02f
+        c.drawText("ARAUJO", 98f, 56f, p)
+        p.color = goldDeep; p.typeface = Typeface.DEFAULT; p.textSize = 13f; p.letterSpacing = 0.45f
+        c.drawText("PLANEJADOS", 100f, 77f, p)
+        p.letterSpacing = 0f
+        // divisória vertical
+        p.style = Paint.Style.STROKE; p.strokeWidth = 1.2f; p.color = 0xFF8A6A25.toInt()
+        c.drawLine(318f, 28f, 318f, 78f, p)
+        // título
+        p.style = Paint.Style.FILL; p.color = gold; p.typeface = Typeface.DEFAULT_BOLD
+        p.textSize = 23f; p.textAlign = Paint.Align.CENTER; p.textScaleX = 0.92f
+        c.drawText("ESPAÇO PARA DESENHAR / CROQUI", 568f, 58f, p)
+        p.textScaleX = 1f
+        // contatos
+        p.color = 0xFF2F2F33.toInt(); p.typeface = Typeface.DEFAULT; p.textSize = 12.5f; p.textAlign = Paint.Align.LEFT
+        c.drawText("34 99644-5518", 90f, 141f, p)
+        c.drawText("@marcenariaaraujo401", 334f, 141f, p)
+        c.drawText("marcenariaaraujo415@gmail.com", 591f, 141f, p)
+        // ícones (ouro, traço fino)
+        p.style = Paint.Style.STROKE; p.strokeWidth = 1.4f; p.color = goldDeep; p.strokeCap = Paint.Cap.ROUND
+        // telefone
+        path.reset()
+        path.moveTo(62f, 131f); path.quadTo(60f, 138f, 68f, 144f); path.quadTo(72f, 146f, 74f, 143f)
+        path.lineTo(71f, 140f); path.lineTo(68f, 141f); path.quadTo(65f, 138f, 65f, 135f); path.lineTo(66f, 133f)
+        path.lineTo(63f, 130f); path.close()
+        c.drawPath(path, p)
+        // instagram
+        rect.set(305f, 130f, 321f, 146f); c.drawRoundRect(rect, 4f, 4f, p)
+        c.drawCircle(313f, 138f, 3.6f, p)
+        p.style = Paint.Style.FILL; c.drawCircle(318f, 133f, 0.9f, p); p.style = Paint.Style.STROKE
+        // envelope
+        rect.set(560f, 131f, 577f, 144f); c.drawRect(rect, p)
+        path.reset(); path.moveTo(560f, 131f); path.lineTo(568.5f, 138f); path.lineTo(577f, 131f)
+        c.drawPath(path, p)
+        // moldura arredondada dourada
+        p.strokeWidth = 1.5f; p.color = frameGold
+        p.style = Paint.Style.FILL; p.color = 0xFFFCFCFB.toInt()
+        rect.set(18f, 160f, w - 18f, h - 14f); c.drawRoundRect(rect, 12f, 12f, p)
+        p.style = Paint.Style.STROKE; p.color = frameGold
+        c.drawRoundRect(rect, 12f, 12f, p)
+        p.reset()
     }
 
     fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true) {

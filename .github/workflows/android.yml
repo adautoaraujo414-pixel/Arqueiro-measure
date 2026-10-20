@@ -35,7 +35,17 @@ jobs:
         run: chmod +x gradlew
 
       - name: Compilar APK debug
-        run: ./gradlew --no-daemon assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon assembleDebug 2>&1 | tee build.log
+
+      - name: Salvar log de erro
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
 
       - name: Testes automatizados (JVM)
         run: ./gradlew --no-daemon testDebugUnitTest

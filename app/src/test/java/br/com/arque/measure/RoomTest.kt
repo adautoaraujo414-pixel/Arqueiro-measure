@@ -84,3 +84,12 @@ class LassoTest {
         assertTrue(st.sheet.objs.isEmpty())
     }
 }
+
+class AllKindsTest {
+    @Test fun appliesKindToEverySegment() {
+        val r = RoomObj(photoId = null, pts = listOf(Pt(0f, 0f), Pt(10f, 0f), Pt(10f, 10f)), closed = false, segs = List(2) { Seg() }, color = 0, width = 2f)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(r)))))
+        st.setAllSegKinds(r.id, SegKind.PANEL)
+        assertTrue((st.sheet.objs[0] as RoomObj).segs.all { it.kind == SegKind.PANEL })
+    }
+}

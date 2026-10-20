@@ -803,6 +803,9 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                         ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 14.sp) }
                     }
                 }
+                TextButton(onClick = { st.setAllSegKinds(r.id, seg.kind) }, enabled = !r.locked) {
+                    Text("Aplicar \"${seg.kind.label}\" a todo o contorno")
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF)).padding(horizontal = 12.dp, vertical = 10.dp)) {
                         Text(seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", color = Ui.distBlue, fontSize = 22.sp)

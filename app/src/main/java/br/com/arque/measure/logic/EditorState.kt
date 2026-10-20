@@ -132,6 +132,13 @@ class EditorState(
         commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(kind = kind) else sg }) })
     }
 
+    /** Marca todos os segmentos do cômodo com o mesmo tipo (medidas ficam como estão). */
+    fun setAllSegKinds(id: String, kind: SegKind) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked) return
+        commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.map { sg -> sg.copy(kind = kind) }) })
+    }
+
     /** Fecha o contorno (liga o último vértice ao primeiro, novo segmento de parede) ou reabre. */
     fun setRoomClosed(id: String, closed: Boolean) {
         val r = sheet.obj(id) as? RoomObj ?: return

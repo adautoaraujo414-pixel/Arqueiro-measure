@@ -146,6 +146,40 @@ object Geo {
 
     // ---- distâncias e testes de toque ----
 
+    /** Ponto dentro do polígono (regra par-ímpar). */
+    fun inPolygon(poly: List<Pt>, p: Pt): Boolean {
+        var inside = false
+        var j = poly.lastIndex
+        for (i in poly.indices) {
+            val a = poly[i]; val b = poly[j]
+            if ((a.y > p.y) != (b.y > p.y) && p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x) inside = !inside
+            j = i
+        }
+        return inside
+    }
+
+    /** Caixa do objeto em coordenadas da folha. */
+    fun bounds(sheet: Sheet, o: Obj): Box {
+        if (o is PhotoObj) {
+            val cs = corners(o)
+            return Box(cs.minOf { it.x }, cs.minOf { it.y }, cs.maxOf { it.x }, cs.maxOf { it.y })
+        }
+        val ann = o as Ann
+        val pts = annPoints(sheet.photos(), ann)
+        if (ann is TextObj) return textBox(ann, pts[0])
+        return Box(pts.minOf { it.x }, pts.minOf { it.y }, pts.maxOf { it.x }, pts.maxOf { it.y })
+    }
+
+    /** Objetos (não travados) contornados pelo laço: pelo menos 60% dos pontos dentro. */
+    fun lassoPick(sheet: Sheet, poly: List<Pt>): Set<String> {
+        if (poly.size < 3) return emptySet()
+        val photos = sheet.photos()
+        return sheet.objs.filter { !it.locked }.filter { o ->
+            val pts = if (o is PhotoObj) listOf(Pt(o.cx, o.cy)) + corners(o) else annPoints(photos, o as Ann)
+            pts.isNotEmpty() && pts.count { inPolygon(poly, it) } >= pts.size * 0.6
+        }.map { it.id }.toSet()
+    }
+
     /** Pontos de formas poligonais (RTRI, DIAMOND, TRAP) ou do "L" (ELBOW); null para as demais. */
     fun polyPoints(kind: br.com.arque.measure.model.ShapeKind, a: Pt, b: Pt): List<Pt>? {
         val l = min(a.x, b.x); val r = max(a.x, b.x); val t = min(a.y, b.y); val bt = max(a.y, b.y)

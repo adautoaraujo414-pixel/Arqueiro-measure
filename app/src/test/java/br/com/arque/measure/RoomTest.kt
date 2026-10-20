@@ -65,3 +65,22 @@ class RoomTest {
         assertEquals(r.pts, b.pts)
     }
 }
+
+class LassoTest {
+    @Test fun picksOnlyObjectsInsideLoop() {
+        val inside = ShapeObj(photoId = null, kind = ShapeKind.LINE, a = Pt(110f, 110f), b = Pt(190f, 190f), color = 0, width = 2f)
+        val outside = ShapeObj(photoId = null, kind = ShapeKind.LINE, a = Pt(400f, 400f), b = Pt(500f, 500f), color = 0, width = 2f)
+        val sheet = Sheet(objs = listOf(inside, outside))
+        val loop = listOf(Pt(100f, 100f), Pt(200f, 100f), Pt(200f, 200f), Pt(100f, 200f))
+        assertEquals(setOf(inside.id), br.com.arque.measure.logic.Geo.lassoPick(sheet, loop))
+    }
+
+    @Test fun deleteGroupRemovesAll() {
+        val a = ShapeObj(photoId = null, kind = ShapeKind.LINE, a = Pt(1f, 1f), b = Pt(5f, 5f), color = 0, width = 2f)
+        val b = ShapeObj(photoId = null, kind = ShapeKind.RECT, a = Pt(1f, 1f), b = Pt(5f, 5f), color = 0, width = 2f)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(a, b)))))
+        st.selectGroup(setOf(a.id, b.id))
+        st.deleteGroup()
+        assertTrue(st.sheet.objs.isEmpty())
+    }
+}

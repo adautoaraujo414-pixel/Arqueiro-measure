@@ -39,6 +39,7 @@ enum class Tool(val label: String, val drawing: Boolean) {
     RTRI("Triângulo retângulo", true),
     DIAMOND("Losango", true),
     TRAP("Trapézio", true),
+    LASSO("Laço", true),
     TEXT("Texto", false),
 }
 
@@ -101,6 +102,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     /** Ponto da tela onde o dedo está ao posicionar a ponta de uma cota/seta (lupa). */
     var loupe by mutableStateOf<Offset?>(null)
 
+    /** Traço do laço em andamento (coordenadas da folha ativa). */
+    var lasso by mutableStateOf<List<br.com.arque.measure.model.Pt>>(emptyList())
+
     /** Quanto o usuário puxou além do fim da última folha (px). */
     var pull by mutableFloatStateOf(0f)
 
@@ -112,6 +116,7 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     fun chooseTool(t: Tool) {
         tool = t
         if (t == Tool.NAVIGATE || (t.drawing && t != Tool.DIM)) state.select(null)
+        if (t != Tool.LASSO) lasso = emptyList()
         textEdit = null
     }
 
@@ -253,6 +258,13 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
 
     /** Área de transferência (cortar/copiar/colar) entre folhas da mesma nota. */
     var clipboard by mutableStateOf<List<br.com.arque.measure.model.Obj>>(emptyList())
+
+    fun copyGroup(cut: Boolean = false) {
+        val objs = state.groupWithLinked()
+        if (objs.isEmpty()) return
+        clipboard = objs
+        if (cut) state.deleteGroup()
+    }
 
     fun copySelection(cut: Boolean = false) {
         val o = state.selected ?: return

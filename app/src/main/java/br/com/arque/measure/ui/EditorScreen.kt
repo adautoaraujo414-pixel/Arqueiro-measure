@@ -162,6 +162,12 @@ private fun nextUnit(u: LengthUnit) = when (u) {
 
 // ------------------------------------------------------------------ Cena (todas as folhas)
 
+private val overlayPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+    style = android.graphics.Paint.Style.STROKE
+    color = 0xFF2F80ED.toInt()
+}
+private val overlayPath = android.graphics.Path()
+
 private fun drawScene(
     nc: android.graphics.Canvas,
     session: EditorSession,
@@ -175,6 +181,23 @@ private fun drawScene(
         nc.save()
         nc.translate(0f, i * step)
         renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg)
+        if (i == st.pageIdx) {
+            overlayPaint.strokeWidth = 2f / scale
+            overlayPaint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f / scale, 6f / scale), 0f)
+            for (o in st.groupObjs()) {
+                val b = Geo.bounds(page, o)
+                val pad = 4f / scale
+                nc.drawRect(b.l - pad, b.t - pad, b.r + pad, b.b + pad, overlayPaint)
+            }
+            val lp = session.lasso
+            if (lp.size > 1) {
+                overlayPath.reset()
+                overlayPath.moveTo(lp[0].x, lp[0].y)
+                for (k in 1 until lp.size) overlayPath.lineTo(lp[k].x, lp[k].y)
+                nc.drawPath(overlayPath, overlayPaint)
+            }
+            overlayPaint.pathEffect = null
+        }
         nc.restore()
     }
 }
@@ -453,6 +476,10 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     }
                     BarPill {
                         ToolBtn(Tool.SELECT, session)
+                        IconButton(
+                            onClick = { session.chooseTool(Tool.LASSO) },
+                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.tool == Tool.LASSO) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                        ) { ShapeGlyph(Tool.LASSO, if (session.tool == Tool.LASSO) Ui.accent else Ui.text, 22.dp) }
                         Box {
                             BarIcon(Icons.Filled.Image, "Imagem") { imageMenu = true }
                             DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
@@ -501,6 +528,32 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     }
                 }
             }
+            }
+
+            // ---- barra do grupo (laço) ----
+            if (st.groupIds.isNotEmpty()) {
+                val boxes = st.groupObjs().map { Geo.bounds(st.sheet, it) }
+                if (boxes.isNotEmpty()) {
+                    val tl = session.view.toScreen(br.com.arque.measure.model.Pt(boxes.minOf { it.l }, boxes.minOf { it.t }))
+                    val br2 = session.view.toScreen(br.com.arque.measure.model.Pt(boxes.maxOf { it.r }, boxes.minOf { it.t }))
+                    val cx = (tl.x + br2.x) / 2f
+                    val dx = with(density) { 130.dp.toPx() }
+                    val minY = with(density) { 190.dp.toPx() }
+                    val py = with(density) { 56.dp.toPx() }
+                    Surface(
+                        modifier = Modifier.offset { IntOffset((cx - dx).roundToInt().coerceAtLeast(8), (tl.y - py).roundToInt().coerceAtLeast(minY.roundToInt())) },
+                        shape = RoundedCornerShape(12.dp), color = Color(0xEE111111),
+                    ) {
+                        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("${st.groupIds.size} itens", color = Color(0xFFAAAAAA), fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
+                            CtxBtn("Eliminar") { st.deleteGroup() }
+                            CtxBtn("Cortar") { session.copyGroup(cut = true) }
+                            CtxBtn("Copiar") { session.copyGroup() }
+                            CtxBtn("Duplicar") { st.pasteObjs(st.groupWithLinked()) }
+                            CtxBtn("Colar", session.clipboard.isNotEmpty()) { session.paste() }
+                        }
+                    }
+                }
             }
 
             // ---- menu de contexto acima do objeto selecionado ----
@@ -606,6 +659,10 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp) 
                 drawPath(path, tint, style = st)
             }
             Tool.ELBOW -> poly(listOf(P(0.12f, 0.85f), P(0.12f, 0.15f), P(0.88f, 0.15f)), false)
+            Tool.LASSO -> {
+                drawOval(tint, P(0.1f, 0.14f), androidx.compose.ui.geometry.Size(0.8f * w, 0.55f * h), style = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f * density, 3f * density))))
+                drawLine(tint, P(0.4f, 0.69f), P(0.3f, 0.9f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
+            }
             Tool.ROOM -> poly(listOf(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f)), true)
             Tool.RECT -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
             Tool.RRECT -> drawRoundRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), androidx.compose.ui.geometry.CornerRadius(0.16f * w), style = st)

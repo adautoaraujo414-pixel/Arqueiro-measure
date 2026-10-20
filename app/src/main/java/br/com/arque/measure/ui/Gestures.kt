@@ -39,7 +39,7 @@ sealed interface GestureAction {
  * a pinça só dá zoom na visualização. A folha mantém sempre o tamanho do papel.
  */
 class GestureController(private val s: EditorSession, private val density: Float) {
-    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ROOM }
+    private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ROOM, LASSO, GROUP }
     private enum class H { CORNER, ROTATE, A, B, VERTEX }
 
     private var mode = Mode.NONE
@@ -97,6 +97,7 @@ class GestureController(private val s: EditorSession, private val density: Float
             Tool.NAVIGATE -> mode = Mode.PAN
             Tool.SELECT, Tool.DIM -> downSelectOrDim(screen, p, tool)
             Tool.ROOM -> downRoom(screen, p)
+            Tool.LASSO -> downLasso(p)
             Tool.PEN, Tool.PENCIL, Tool.HIGHLIGHTER -> startStroke(p, tool)
             Tool.ERASER -> {
                 mode = Mode.ERASE
@@ -171,6 +172,25 @@ class GestureController(private val s: EditorSession, private val density: Float
         createdId = o.id
         mode = Mode.ROOM
     }
+
+    private fun downLasso(p: Pt) {
+        if (st.groupIds.isNotEmpty()) {
+            val inside = st.groupObjs().any { Geo.bounds(st.sheet, it).contains(p, tol()) }
+            if (inside) {
+                mode = Mode.GROUP
+                groupBase = st.sheet
+                groupStart = p
+                st.beginGesture()
+                return
+            }
+            st.selectGroup(emptySet())
+        }
+        s.lasso = listOf(p)
+        mode = Mode.LASSO
+    }
+
+    private var groupBase: br.com.arque.measure.model.Sheet? = null
+    private var groupStart = Pt(0f, 0f)
 
     private fun finishRoom() {
         val prev = st.sheet.obj(createdId) as? StrokeObj
@@ -283,6 +303,11 @@ class GestureController(private val s: EditorSession, private val density: Float
                 }
             }
             Mode.ERASE -> erase(p)
+            Mode.LASSO -> {
+                val last = s.lasso.lastOrNull()
+                if (last == null || hypot(p.x - last.x, p.y - last.y) >= 3f) s.lasso = s.lasso + p
+            }
+            Mode.GROUP -> if (moved) groupBase?.let { st.moveGroupLive(it, p.x - groupStart.x, p.y - groupStart.y) }
             Mode.NONE -> {}
         }
         lastScreen = screen
@@ -315,6 +340,12 @@ class GestureController(private val s: EditorSession, private val density: Float
                 createdId?.let { if (st.sheet.obj(it) != null) st.select(it) }
             }
             Mode.ROOM -> if (!moved) st.cancelGesture() else finishRoom()
+            Mode.LASSO -> {
+                val ids = Geo.lassoPick(st.sheet, s.lasso)
+                s.lasso = emptyList()
+                st.selectGroup(ids)
+            }
+            Mode.GROUP -> if (moved) st.endGesture() else st.cancelGesture()
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> st.endGesture()
             else -> {}
         }
@@ -350,7 +381,8 @@ class GestureController(private val s: EditorSession, private val density: Float
     /** Um segundo dedo apareceu: descarta desenho em andamento, mantém movimento de foto. */
     fun cancelSingle() {
         s.loupe = null
-        if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM) st.cancelGesture()
+        if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM || mode == Mode.GROUP) st.cancelGesture()
+        if (mode == Mode.LASSO) s.lasso = emptyList()
         mode = Mode.NONE
     }
 

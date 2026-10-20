@@ -54,11 +54,54 @@ class EditorState(
     val selected: Obj? get() = sheet.obj(selectedId)
 
     fun select(id: String?) {
-        if (selectedId != id) {
+        if (selectedId != id || groupIds.isNotEmpty()) {
             selectedId = id
             selectedSeg = -1
+            groupIds = emptySet()
             onChange()
         }
+    }
+
+    /** Seleção em grupo (laço). Vazia = sem grupo. */
+    var groupIds: Set<String> = emptySet()
+        private set
+
+    fun selectGroup(ids: Set<String>) {
+        selectedId = null
+        selectedSeg = -1
+        groupIds = ids
+        onChange()
+    }
+
+    fun groupObjs(): List<Obj> = sheet.objs.filter { it.id in groupIds }
+
+    /** Objetos do grupo mais as anotações coladas nas fotos do grupo (para copiar/apagar). */
+    fun groupWithLinked(): List<Obj> {
+        val photoIds = groupObjs().filterIsInstance<PhotoObj>().map { it.id }.toSet()
+        return sheet.objs.filter { it.id in groupIds || (it is Ann && it.photoId != null && it.photoId in photoIds) }
+    }
+
+    fun deleteGroup() {
+        val gone = groupWithLinked().filter { !it.locked }.map { it.id }.toSet()
+        if (gone.isEmpty()) return
+        commit(sheet.copy(objs = sheet.objs.filter { it.id !in gone }))
+        selectGroup(emptySet())
+    }
+
+    /** Move o grupo (ao vivo). Anotações coladas numa foto do grupo acompanham a foto. */
+    fun moveGroupLive(base: Sheet, dx: Float, dy: Float) {
+        val photoIds = base.objs.filter { it.id in groupIds }.filterIsInstance<PhotoObj>().map { it.id }.toSet()
+        live(
+            base.copy(
+                objs = base.objs.map { o ->
+                    when {
+                        o.id !in groupIds -> o
+                        o is Ann && o.photoId != null && o.photoId in photoIds -> o
+                        else -> Geo.translate(base, o, dx, dy)
+                    }
+                },
+            ),
+        )
     }
 
     /** Seleciona o cômodo [id] e o segmento [k]. */
@@ -111,6 +154,7 @@ class EditorState(
         if (n != pageIdx) {
             pageIdx = n
             selectedId = null
+            groupIds = emptySet()
             onChange()
         }
     }
@@ -246,7 +290,7 @@ class EditorState(
             if (moved is Ann && pid != null && idMap.containsKey(pid)) moved.withPhotoId(idMap.getValue(pid)) else moved
         }
         commit(sheet.copy(objs = sheet.objs + copies))
-        select(copies.first().id)
+        if (copies.size > 1) selectGroup(copies.map { it.id }.toSet()) else select(copies.first().id)
     }
 
     /** Camadas: sobe/desce uma posição na ordem de desenho. */

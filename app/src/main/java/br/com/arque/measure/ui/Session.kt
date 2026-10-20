@@ -74,7 +74,7 @@ class EditorSession(initial: Sheet, onCommit: (Sheet) -> Unit) {
     var canvasH = 0f
     private var fitted = false
 
-    fun setTool(t: Tool) {
+    fun chooseTool(t: Tool) {
         tool = t
         if (t == Tool.NAVIGATE || (t.drawing && t != Tool.DIM)) state.select(null)
         dimEditId = null
@@ -106,7 +106,7 @@ class EditorSession(initial: Sheet, onCommit: (Sheet) -> Unit) {
         val cx = (c.x + cascade).coerceIn(0f, s.width)
         val cy = (c.y + cascade).coerceIn(0f, s.height)
         state.addObj(PhotoObj(file = file, pxW = pxW, pxH = pxH, cx = cx, cy = cy, w = w, h = h))
-        setTool(Tool.SELECT)
+        chooseTool(Tool.SELECT)
         state.select(state.sheet.objs.last().id)
     }
 

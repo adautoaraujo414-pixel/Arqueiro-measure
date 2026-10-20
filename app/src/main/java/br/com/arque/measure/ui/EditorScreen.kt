@@ -314,7 +314,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 Tool.entries.forEach { t ->
                     val on = session.tool == t
                     IconButton(
-                        onClick = { session.setTool(t) },
+                        onClick = { session.chooseTool(t) },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = if (on) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                             contentColor = if (on) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,

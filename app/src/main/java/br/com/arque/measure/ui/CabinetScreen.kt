@@ -702,6 +702,9 @@ private fun CabinetPanel(
             Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })
         }
+        HorizontalDivider(color = Ui.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
+        Text("LISTA DE PEÇAS (ao vivo)", color = Ui.dim, fontSize = 12.sp)
+        CutListBody(CabinetMath.cutList(cab))
     }
 }
 
@@ -787,28 +790,30 @@ private fun NumField(label: String, mm: Double, vm: AppViewModel, onSet: (Double
 
 @Composable
 private fun CutListDialog(cab: Cabinet, name: String, onDismiss: () -> Unit) {
-    val lines = CabinetMath.cutList(cab)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Lista de peças · $name") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                lines.forEach { l ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("${l.qty}×", fontFamily = FontFamily.Monospace, modifier = Modifier.width(36.dp))
-                        Text(l.kind.label, modifier = Modifier.weight(1f), fontSize = 14.sp)
-                        Text(
-                            "${Units.formatNumber(l.cutL, LengthUnit.MM)} × ${Units.formatNumber(l.cutW, LengthUnit.MM)} × ${Units.formatNumber(l.esp, LengthUnit.MM)}",
-                            fontFamily = FontFamily.Monospace, fontSize = 13.sp,
-                        )
-                    }
-                }
-                Text(
-                    "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura). Sem plano de corte.",
-                    fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
-                )
-            }
-        },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { CutListBody(CabinetMath.cutList(cab)) } },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
     )
+}
+
+@Composable
+private fun CutListBody(lines: List<CabinetMath.Line>) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        lines.forEach { l ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("${l.qty}×", fontFamily = FontFamily.Monospace, color = Ui.text, modifier = Modifier.width(36.dp))
+                Text(l.kind.label, color = Ui.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                Text(
+                    "${Units.formatNumber(l.cutL, LengthUnit.MM)} × ${Units.formatNumber(l.cutW, LengthUnit.MM)} × ${Units.formatNumber(l.esp, LengthUnit.MM)}",
+                    fontFamily = FontFamily.Monospace, color = Ui.text, fontSize = 13.sp,
+                )
+            }
+        }
+        Text(
+            "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura). Sem plano de corte.",
+            color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
+        )
+    }
 }

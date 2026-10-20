@@ -92,7 +92,13 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
     if (selVao > cab.vaos.lastIndex) selVao = cab.vaos.lastIndex
     if (selDivider > cab.dividers.lastIndex) selDivider = -1
 
-    fun edit(f: (Cabinet) -> Cabinet) = st.updateCab(id, f)
+    var refitTick by remember { mutableIntStateOf(0) }
+    fun edit(f: (Cabinet) -> Cabinet) {
+        val before = (st.sheet.obj(id) as? CabObj)?.cab
+        st.updateCab(id, f)
+        val after = (st.sheet.obj(id) as? CabObj)?.cab
+        if (before != null && after != null && (before.wMm != after.wMm || before.hMm != after.hMm)) refitTick++
+    }
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = Ui.bg) {
@@ -121,6 +127,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         onBegin = { st.beginGesture() },
                         onLive = { f -> st.liveCab(id, f) },
                         onEnd = { st.endGesture() },
+                        refitTick = refitTick,
                     )
                     Row(Modifier.align(Alignment.TopStart).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
@@ -207,106 +214,138 @@ private fun CabinetCanvas(
     onBegin: () -> Unit,
     onLive: ((Cabinet) -> Cabinet) -> Unit,
     onEnd: () -> Unit,
+    refitTick: Int,
 ) {
     val cabNow by rememberUpdatedState(cab)
     var zoomS by remember { mutableFloatStateOf(1f) }
     var panS by remember { mutableStateOf(Offset.Zero) }
     var pinching by remember { mutableStateOf(false) }
-    var dragging by remember { mutableIntStateOf(-2) } // -2 nada, -1 lateral dir., 0.. divisória
+    // -2 nada, -1 lateral direita, -3 lateral esquerda, 0.. divisória
+    var dragging by remember { mutableIntStateOf(-2) }
+    // a câmera é fixa: a escala e a posição só mudam pelos gestos de câmera (2 dedos) ou em "Centralizar",
+    // nunca porque o móvel mudou de tamanho. Só reenquadra quando não há gesto em andamento.
+    val ref = remember { doubleArrayOf(cab.wMm, cab.hMm) }
+    var camRev by remember { mutableIntStateOf(0) }
+    @Suppress("UNUSED_VARIABLE") val camRevRead = camRev
+    val lastTick = remember { intArrayOf(refitTick) }
+    if (refitTick != lastTick[0]) {
+        // o tamanho do módulo foi mudado pelos campos (não pelo desenho): reenquadra uma vez
+        lastTick[0] = refitTick
+        ref[0] = cab.wMm; ref[1] = cab.hMm
+        zoomS = 1f; panS = Offset.Zero
+    }
     val e = cab.espMm
     val parts = CabinetMath.parts(cab)
     val ranges = CabinetMath.vaoRanges(cab)
     val dx = CabinetMath.dividerX(cab)
-    fun fit(sz: Size) = fitOf(cab, sz, zoomS, panS)
+    fun fx(sz: Size, z: Float = zoomS, p: Offset = panS) = fitRef(ref[0], ref[1], sz, z, p)
+    fun fit(sz: Size) = fx(sz)
     Box(modifier) {
     Canvas(
         modifier = Modifier.fillMaxSize().background(Color(0xFF17181B)).pointerInput(Unit) {
+            val slop = viewConfiguration.touchSlop
             awaitEachGesture {
-                awaitFirstDown(requireUnconsumed = false)
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val sz0 = Size(size.width.toFloat(), size.height.toFloat())
+                // o que está sob o dedo, decidido no instante do toque
+                val c0 = cabNow
+                val (k0, ox0, oy0) = fx(sz0)
+                val mx0 = (down.position.x - ox0) / k0
+                val my0 = (down.position.y - oy0) / k0
+                val tol = 30f / k0 // ~30 px de área de pegada, em mm
+                val ee0 = c0.espMm
+                val d0 = CabinetMath.dividerX(c0)
+                val vt0 = CabinetMath.vaoTop(c0)
+                val vb0 = CabinetMath.vaoBottom(c0)
+                val top0 = c0.folgaTopoMm
+                val bot0 = CabinetMath.baseBottom(c0)
+                val di = d0.indexOfFirst { mx0 >= it - tol && mx0 <= it + ee0 + tol && my0 in vt0..vb0 }
+                val grab = when {
+                    di >= 0 -> di
+                    mx0 >= c0.wMm - ee0 - tol && mx0 <= c0.wMm + tol && my0 in top0..bot0 -> -1
+                    mx0 >= -tol && mx0 <= ee0 + tol && my0 in top0..bot0 -> -3
+                    else -> -2
+                }
+                val wStart = c0.wMm
+                var began = false
+                var moved = false
                 do {
                     val ev = awaitPointerEvent()
                     if (ev.changes.size >= 2) {
                         // câmera: zoom em volta do ponto entre os dedos; o móvel não muda
-                        if (dragging != -2) { onEnd(); dragging = -2 }
+                        if (began) { onEnd(); began = false; dragging = -2 }
                         pinching = true
-                        val c = cabNow
                         val sz = Size(size.width.toFloat(), size.height.toFloat())
-                        val (_, oxOld, oyOld) = fitOf(c, sz, zoomS, panS)
+                        val (_, oxOld, oyOld) = fx(sz)
                         val zNew = (zoomS * ev.calculateZoom()).coerceIn(0.5f, 6f)
                         val rr = zNew / zoomS
                         val cen = ev.calculateCentroid(useCurrent = true)
                         val pn = ev.calculatePan()
-                        val (_, oxB, oyB) = fitOf(c, sz, zNew, Offset.Zero)
-                        val oxN = cen.x - (cen.x - oxOld) * rr + pn.x
-                        val oyN = cen.y - (cen.y - oyOld) * rr + pn.y
+                        val (_, oxB, oyB) = fx(sz, zNew, Offset.Zero)
                         zoomS = zNew
-                        panS = Offset(oxN - oxB, oyN - oyB)
+                        panS = Offset(cen.x - (cen.x - oxOld) * rr + pn.x - oxB, cen.y - (cen.y - oyOld) * rr + pn.y - oyB)
                         ev.changes.forEach { it.consume() }
-                    }
-                } while (ev.changes.any { it.pressed })
-                pinching = false
-            }
-        }.pointerInput(Unit) {
-            detectDragGestures(
-                onDragStart = { pos ->
-                    val c = cabNow
-                    val (k, ox, oy) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
-                    val mx = (pos.x - ox) / k
-                    val my = (pos.y - oy) / k
-                    val tol = 22f / k
-                    val ee = c.espMm
-                    val d = CabinetMath.dividerX(c)
-                    val vt = CabinetMath.vaoTop(c)
-                    val vb = CabinetMath.vaoBottom(c)
-                    val di = d.indexOfFirst { mx >= it - tol && mx <= it + ee + tol && my in vt..vb }
-                    dragging = when {
-                        di >= 0 -> di
-                        mx >= c.wMm - ee - tol && mx <= c.wMm + tol -> -1
-                        else -> -2
-                    }
-                    if (dragging != -2) { onBegin(); if (dragging >= 0) onPickDivider(dragging) }
-                },
-                onDrag = { change, dragAmount ->
-                    if (dragging == -2) {
-                        // arrastar no vazio move só a câmera
-                        if (!pinching) { change.consume(); panS = panS + dragAmount }
-                        return@detectDragGestures
-                    }
-                    val c = cabNow
-                    val (k, ox, _) = fitOf(c, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
-                    val mx = ((change.position.x - ox) / k).toDouble()
-                    val ee = c.espMm
-                    if (dragging >= 0) {
-                        change.consume()
-                        val i = dragging
-                        val d = CabinetMath.dividerX(c)
-                        val lo = (if (i == 0) ee else d[i - 1] + ee) + 10.0
-                        val hi = (if (i == d.lastIndex) c.wMm - ee else d[i + 1]) - ee - 10.0
-                        val x = Math.round(mx - ee / 2).toDouble().coerceIn(lo, hi.coerceAtLeast(lo))
-                        val iwn = CabinetMath.innerW(c)
-                        val r = ((x + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f)
-                        onLive { cc -> cc.copy(dividers = cc.dividers.sorted().mapIndexed { j, o -> if (j == i) r else o }) }
-                    } else if (dragging == -1) {
-                        change.consume()
-                        val nw = Math.round(mx).toDouble().coerceIn(150.0, 6000.0)
-                        // mantém a posição absoluta das divisórias (mm) ao mexer na largura
-                        onLive { cc ->
-                            val dxs = CabinetMath.dividerX(cc)
-                            val iwn = (nw - 2 * ee).coerceAtLeast(10.0)
-                            cc.copy(wMm = nw, dividers = dxs.map { x -> ((x + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f) })
+                    } else if (!pinching && grab != -2) {
+                        val ch = ev.changes[0]
+                        if (!began && (ch.position - down.position).getDistance() > slop) {
+                            began = true; moved = true
+                            dragging = grab
+                            onBegin()
+                            if (grab >= 0) onPickDivider(grab)
+                        }
+                        if (began) {
+                            ch.consume()
+                            val sz = Size(size.width.toFloat(), size.height.toFloat())
+                            val (k, ox, _) = fx(sz)
+                            val mx = ((ch.position.x - ox) / k).toDouble()
+                            if (grab >= 0) {
+                                onLive { cc ->
+                                    val ee = cc.espMm
+                                    val d = CabinetMath.dividerX(cc)
+                                    val i = grab.coerceAtMost(d.lastIndex)
+                                    if (i < 0) cc else {
+                                        val lo = (if (i == 0) ee else d[i - 1] + ee) + 10.0
+                                        val hi = (if (i == d.lastIndex) cc.wMm - ee else d[i + 1]) - ee - 10.0
+                                        val xx = Math.round(mx - ee / 2).toDouble().coerceIn(lo, hi.coerceAtLeast(lo))
+                                        val r = ((xx + ee / 2 - ee) / CabinetMath.innerW(cc)).toFloat().coerceIn(0.01f, 0.99f)
+                                        cc.copy(dividers = cc.dividers.sorted().mapIndexed { j, o -> if (j == i) r else o })
+                                    }
+                                }
+                            } else if (grab == -1) {
+                                val nw = Math.round(mx).toDouble().coerceIn(150.0, 6000.0)
+                                onLive { cc ->
+                                    val ee = cc.espMm
+                                    val dxs = CabinetMath.dividerX(cc)
+                                    val iwn = (nw - 2 * ee).coerceAtLeast(10.0)
+                                    // as divisórias ficam onde estão (mm a partir da lateral esquerda)
+                                    cc.copy(wMm = nw, pedraWMm = null, dividers = dxs.map { xx -> ((xx + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f) })
+                                }
+                            } else if (grab == -3) {
+                                // a lateral esquerda anda; a direita fica parada na tela
+                                val nw = Math.round(wStart - mx).toDouble().coerceIn(150.0, 6000.0)
+                                onLive { cc ->
+                                    val ee = cc.espMm
+                                    val dxs = CabinetMath.dividerX(cc)
+                                    val iwn = (nw - 2 * ee).coerceAtLeast(10.0)
+                                    val shift = nw - cc.wMm
+                                    cc.copy(wMm = nw, pedraWMm = null, dividers = dxs.map { xx -> ((xx + shift + ee / 2 - ee) / iwn).toFloat().coerceIn(0.01f, 0.99f) })
+                                }
+                            }
                         }
                     }
-                },
-                onDragEnd = { if (dragging != -2) onEnd(); dragging = -2 },
-                onDragCancel = { if (dragging != -2) onEnd(); dragging = -2 },
-            )
+                } while (ev.changes.any { it.pressed })
+                if (began) onEnd()
+                dragging = -2
+                pinching = false
+                if (moved) { /* o toque simples fica com o detector abaixo */ }
+            }
         }.pointerInput(Unit) {
             detectTapGestures { pos ->
                 val cab = cabNow
                 val ranges = CabinetMath.vaoRanges(cab)
                 val dx = CabinetMath.dividerX(cab)
                 val e = cab.espMm
-                val (k, ox, oy) = fitOf(cab, Size(size.width.toFloat(), size.height.toFloat()), zoomS, panS)
+                val (k, ox, oy) = fx(Size(size.width.toFloat(), size.height.toFloat()))
                 val mx = (pos.x - ox) / k
                 val my = (pos.y - oy) / k
                 val tol = 14f / k
@@ -393,7 +432,7 @@ private fun CabinetCanvas(
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
     Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("Centralizar" to { zoomS = 1f; panS = Offset.Zero }).forEach { (t, f) ->
+        listOf("Centralizar" to { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }).forEach { (t, f) ->
             Text(t, color = Ui.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Ui.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
     }
@@ -401,11 +440,11 @@ private fun CabinetCanvas(
 }
 
 /** Transformação mm → tela (escala, origem x, origem y), recalculada com o tamanho atual do canvas. */
-private fun fitOf(cab: Cabinet, sz: Size, zoom: Float = 1f, pan: Offset = Offset.Zero): Triple<Float, Float, Float> {
+private fun fitRef(w: Double, h: Double, sz: Size, zoom: Float = 1f, pan: Offset = Offset.Zero): Triple<Float, Float, Float> {
     val m = 90f
-    val k = minOf((sz.width - 2 * m) / cab.wMm.toFloat(), (sz.height - 2 * m) / cab.hMm.toFloat()).coerceAtLeast(0.01f) * zoom
-    val ox = (sz.width - cab.wMm.toFloat() * k) / 2f + pan.x
-    val oy = (sz.height - cab.hMm.toFloat() * k) / 2f + pan.y
+    val k = minOf((sz.width - 2 * m) / w.toFloat(), (sz.height - 2 * m) / h.toFloat()).coerceAtLeast(0.01f) * zoom
+    val ox = (sz.width - w.toFloat() * k) / 2f + pan.x
+    val oy = (sz.height - h.toFloat() * k) / 2f + pan.y
     return Triple(k, ox, oy)
 }
 

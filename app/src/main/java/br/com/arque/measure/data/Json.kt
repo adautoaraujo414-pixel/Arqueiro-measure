@@ -6,6 +6,10 @@ import br.com.arque.measure.model.NoteMeta
 import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.CabObj
+import br.com.arque.measure.model.Cabinet
+import br.com.arque.measure.model.Vao
+import br.com.arque.measure.model.VaoKind
 import br.com.arque.measure.model.Seg
 import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.Index
@@ -81,6 +85,8 @@ object Json {
                 .put("color", o.color).put("width", o.width.toDouble()).put("fill", o.fill)
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
+            is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
+                .put("cab", cabToJson(o.cab))
             is RoomObj -> j.put("type", "room").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("pts", JSONArray(o.pts.map(::ptToJson))).put("closed", o.closed)
                 .put(
@@ -106,6 +112,40 @@ object Json {
                 .put("labelIntensity", o.labelIntensity.toDouble()).put("refSize", o.refSize.toDouble())
         }
         return j
+    }
+
+    private fun cabToJson(c: Cabinet): JSONObject = JSONObject()
+        .put("w", c.wMm).put("h", c.hMm).put("d", c.dMm).put("esp", c.espMm).put("rodape", c.rodapeMm)
+        .put("travessa", c.travessaMm).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
+        .put("bordaSup", c.bordaSupMm).put("bordaInf", c.bordaInfMm).put("recuoFundo", c.recuoFundoMm)
+        .put("back", c.hasBack)
+        .put("dividers", JSONArray(c.dividers.map { it.toDouble() }))
+        .put(
+            "vaos",
+            JSONArray(
+                c.vaos.map { v ->
+                    JSONObject().put("kind", v.kind.name).put("shelves", v.shelves).put("drawers", v.drawers).put("doors", v.doors)
+                },
+            ),
+        )
+
+    private fun cabFromJson(j: JSONObject): Cabinet {
+        val d = Cabinet()
+        return Cabinet(
+            wMm = j.optDouble("w", d.wMm), hMm = j.optDouble("h", d.hMm), dMm = j.optDouble("d", d.dMm),
+            espMm = j.optDouble("esp", d.espMm), rodapeMm = j.optDouble("rodape", d.rodapeMm),
+            travessaMm = j.optDouble("travessa", d.travessaMm), folgaMm = j.optDouble("folga", d.folgaMm),
+            folgaGavetaMm = j.optDouble("folgaGaveta", d.folgaGavetaMm),
+            bordaSupMm = j.optDouble("bordaSup", d.bordaSupMm), bordaInfMm = j.optDouble("bordaInf", d.bordaInfMm),
+            recuoFundoMm = j.optDouble("recuoFundo", d.recuoFundoMm), hasBack = j.optBoolean("back", true),
+            dividers = j.optJSONArray("dividers")?.let { a -> (0 until a.length()).map { a.getDouble(it).toFloat() } } ?: emptyList(),
+            vaos = j.optJSONArray("vaos")?.mapObjects { v ->
+                Vao(
+                    kind = VaoKind.valueOf(v.optString("kind", "FREE")), shelves = v.optInt("shelves", 1),
+                    drawers = v.optInt("drawers", 3), doors = v.optInt("doors", 1),
+                )
+            } ?: listOf(Vao()),
+        )
     }
 
     private fun objFromJson(j: JSONObject): Obj {
@@ -135,6 +175,10 @@ object Json {
                 id = id, photoId = j.optStringOrNull("photoId"),
                 at = ptFromJson(j.getJSONArray("at")), text = j.getString("text"),
                 size = j.getDouble("size").toFloat(), color = j.getInt("color"), locked = locked,
+            )
+            "cab" -> CabObj(
+                id = id, at = ptFromJson(j.getJSONArray("at")), name = j.optString("name", "Móvel"),
+                scaleDen = j.optInt("scaleDen", 10), cab = cabFromJson(j.getJSONObject("cab")), locked = locked,
             )
             "room" -> RoomObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

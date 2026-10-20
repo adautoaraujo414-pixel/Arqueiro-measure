@@ -80,6 +80,17 @@ object Export {
                     ).joinToString(";"),
                 ).append('\n')
             }
+            sheet.objs.filterIsInstance<br.com.arque.measure.model.CabObj>().forEach { cb ->
+                br.com.arque.measure.logic.CabinetMath.cutList(cb.cab).forEach { ln ->
+                    sb.append(
+                        listOf(
+                            csv(note.name), (pi + 1).toString(), csv("${cb.name} · ${ln.kind.label}"),
+                            "", csv("${ln.qty} × ${Units.formatNumber(ln.cutL, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(ln.cutW, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(ln.esp, br.com.arque.measure.model.LengthUnit.MM)} mm"),
+                            "peca", "",
+                        ).joinToString(";"),
+                    ).append('\n')
+                }
+            }
             sheet.objs.filterIsInstance<br.com.arque.measure.model.RoomObj>().forEach { o ->
                 o.segs.forEachIndexed { k, sg ->
                     sb.append(

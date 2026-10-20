@@ -3,6 +3,8 @@ package br.com.arque.measure.logic
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.CabObj
+import br.com.arque.measure.model.Cabinet
 import br.com.arque.measure.model.Seg
 import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.LengthUnit
@@ -92,7 +94,7 @@ class EditorState(
 
     /** Limpa a folha: traços, formas e textos (fotos, cotas e cômodos ficam). Dá para desfazer. */
     fun clearPageDrawings() {
-        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it.locked }
+        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it is CabObj || it.locked }
         if (keep.size == sheet.objs.size) return
         commit(sheet.copy(objs = keep))
         fixSelection()
@@ -120,6 +122,35 @@ class EditorState(
                 },
             ),
         )
+    }
+
+    /** Coloca um móvel novo na folha ativa e o seleciona. */
+    fun addCab(at: Pt, cab: Cabinet = Cabinet(), name: String = "Armário base"): String {
+        val o = CabObj(at = at, cab = br.com.arque.measure.logic.CabinetMath.normalized(cab), name = name)
+        commit(sheet.copy(objs = sheet.objs + o))
+        select(o.id)
+        return o.id
+    }
+
+    /** Edita o módulo [id] (cada chamada é um passo de desfazer). */
+    fun updateCab(id: String, f: (Cabinet) -> Cabinet) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        if (o.locked) return
+        val next = br.com.arque.measure.logic.CabinetMath.normalized(f(o.cab))
+        if (next == o.cab) return
+        commit(mapObj(id) { (it as CabObj).copy(cab = next) })
+    }
+
+    fun renameCab(id: String, name: String) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        if (o.locked || name.isBlank()) return
+        commit(mapObj(id) { (it as CabObj).copy(name = name.trim()) })
+    }
+
+    fun setCabScale(id: String, den: Int) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        if (o.locked) return
+        commit(mapObj(id) { (it as CabObj).copy(scaleDen = den.coerceIn(2, 100)) })
     }
 
     /** Seleciona o cômodo [id] e o segmento [k]. */
@@ -343,6 +374,7 @@ class EditorState(
                     is ShapeObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is DimObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is RoomObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
+                    is CabObj -> it
                     is TextObj -> it.copy(color = color ?: it.color, size = width?.let { w -> w * 6f } ?: it.size)
                     is PhotoObj -> it
                 }

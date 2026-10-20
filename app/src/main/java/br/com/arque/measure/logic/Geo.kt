@@ -3,6 +3,7 @@ package br.com.arque.measure.logic
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.CabObj
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Obj
 import br.com.arque.measure.model.PhotoObj
@@ -100,6 +101,7 @@ object Geo {
         is DimObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is TextObj -> listOf(toSheet(photos, a.photoId, a.at))
         is RoomObj -> a.pts.map { toSheet(photos, a.photoId, it) }
+        is CabObj -> listOf(a.at, Pt(a.at.x + a.widthUnits(), a.at.y + a.heightUnits()))
     }
 
     /** Move o objeto por (dx,dy) em unidades de folha. */
@@ -117,6 +119,7 @@ object Geo {
             is DimObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is TextObj -> ann.copy(at = mv(ann.at))
             is RoomObj -> ann.copy(pts = ann.pts.map(::mv))
+            is CabObj -> ann.copy(at = Pt(ann.at.x + dx, ann.at.y + dy))
         }
     }
 
@@ -141,6 +144,7 @@ object Geo {
             is DimObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
             is TextObj -> a.copy(at = conv(a.at)).withPhotoId(newPhotoId)
             is RoomObj -> a.copy(pts = a.pts.map(::conv)).withPhotoId(newPhotoId)
+            is CabObj -> a
         }
     }
 
@@ -286,6 +290,10 @@ object Geo {
             }
             is TextObj -> textBox(o, annPoints(photos, o)[0]).contains(s, tol)
             is RoomObj -> hitSeg(sheet, o, s, tol, unit) >= 0
+            is CabObj -> {
+                val p = annPoints(photos, o)
+                Box(p[0].x, p[0].y, p[1].x, p[1].y).contains(s, tol / 2f)
+            }
             is DimObj -> {
                 val (a, b) = annPoints(photos, o)
                 distToSegment(s, a, b) <= tol + o.width / 2f ||

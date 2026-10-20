@@ -11,6 +11,8 @@ import br.com.arque.measure.logic.Geo
 import br.com.arque.measure.logic.Units
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
+import br.com.arque.measure.model.CabObj
+import br.com.arque.measure.model.PartKind
 import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Obj
@@ -165,6 +167,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             is TextObj -> drawText(c, o, photos)
             is DimObj -> drawDim(c, o, photos, unit)
             is RoomObj -> drawRoom(c, o, photos, unit)
+            is CabObj -> drawCab(c, o)
         }
     }
 
@@ -344,6 +347,52 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * k * 0.35f, textPaint)
     }
 
+    /** Móvel: vista frontal na escala da folha, com largura e altura. */
+    private fun drawCab(c: Canvas, o: CabObj) {
+        val k = o.unitsPerMm.toFloat()
+        val parts = br.com.arque.measure.logic.CabinetMath.parts(o.cab)
+        for (p in parts) {
+            val l = o.at.x + p.x.toFloat() * k
+            val t = o.at.y + p.y.toFloat() * k
+            val rr = l + p.w.toFloat() * k
+            val bb = t + p.h.toFloat() * k
+            val front = p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.PORTA
+            fillPaint.color = when {
+                p.kind == PartKind.RODAPE -> 0xFF8B7B5C.toInt()
+                front -> 0xFFE6D9BE.toInt()
+                else -> 0xFFCDB98F.toInt()
+            }
+            c.drawRect(l, t, rr, bb, fillPaint)
+            strokePaint.color = 0xFF6F5F40.toInt()
+            strokePaint.strokeWidth = 0.7f
+            strokePaint.strokeCap = Paint.Cap.BUTT
+            strokePaint.pathEffect = null
+            c.drawRect(l, t, rr, bb, strokePaint)
+            if (front) {
+                strokePaint.color = 0xFF8B7B5C.toInt()
+                strokePaint.strokeWidth = 1.6f
+                if (p.kind == PartKind.FRENTE_GAVETA) {
+                    val cx = (l + rr) / 2f
+                    c.drawLine(cx - 9f, t + 6f, cx + 9f, t + 6f, strokePaint)
+                } else {
+                    c.drawLine(rr - 5f, t + (bb - t) * 0.4f, rr - 5f, t + (bb - t) * 0.6f, strokePaint)
+                }
+            }
+        }
+        val w = o.widthUnits()
+        val h = o.heightUnits()
+        textPaint.color = 0xFF333333.toInt()
+        textPaint.textSize = 10f
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.textAlign = Paint.Align.CENTER
+        c.drawText("${o.cab.wMm.toLong()} mm", o.at.x + w / 2f, o.at.y - 6f, textPaint)
+        textPaint.textAlign = Paint.Align.RIGHT
+        c.drawText("${o.cab.hMm.toLong()}", o.at.x - 5f, o.at.y + h / 2f, textPaint)
+        textPaint.textAlign = Paint.Align.CENTER
+        textPaint.typeface = Typeface.DEFAULT
+        c.drawText("${o.name} · 1:${o.scaleDen}", o.at.x + w / 2f, o.at.y + h + 14f, textPaint)
+    }
+
     /** Cor de cada tipo de segmento (parede usa a cor do cômodo). */
     fun segColor(o: RoomObj, kind: SegKind): Int = roomSegColor(o, kind)
 
@@ -499,6 +548,13 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                         c.drawCircle(p.x, p.y, 7f / viewScale, strokePaint)
                     }
                 }
+            }
+            is CabObj -> {
+                val pts = Geo.annPoints(photos, o)
+                val pad = 8f / viewScale
+                strokePaint.pathEffect = DashPathEffect(floatArrayOf(8f / viewScale, 6f / viewScale), 0f)
+                c.drawRect(pts[0].x - pad, pts[0].y - pad, pts[1].x + pad, pts[1].y + pad, strokePaint)
+                strokePaint.pathEffect = null
             }
             is StrokeObj, is TextObj -> {
                 val ann = o as br.com.arque.measure.model.Ann

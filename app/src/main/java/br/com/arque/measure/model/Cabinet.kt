@@ -1,0 +1,70 @@
+package br.com.arque.measure.model
+
+/** O que vai dentro de um vão do móvel. */
+enum class VaoKind(val label: String) {
+    FREE("Livre"), SHELVES("Prateleiras"), DRAWERS("Gavetas"), DOOR("Porta"),
+}
+
+/** Um vão (espaço entre laterais/divisórias). Só os campos do tipo escolhido valem. */
+data class Vao(
+    val kind: VaoKind = VaoKind.FREE,
+    val shelves: Int = 1,
+    val drawers: Int = 3,
+    val doors: Int = 1,
+)
+
+/**
+ * Módulo (armário) paramétrico, em mm, visto de frente. Tudo é calculado a partir destes números:
+ * mudou a largura, as divisórias reposicionam e as frentes das gavetas recalculam.
+ * [dividers] são as posições das divisórias como fração (0..1) da largura interna.
+ */
+data class Cabinet(
+    val wMm: Double = 800.0,
+    val hMm: Double = 720.0,
+    val dMm: Double = 560.0,
+    val espMm: Double = 18.0,
+    val rodapeMm: Double = 100.0,
+    val travessaMm: Double = 80.0,
+    val folgaMm: Double = 2.0,
+    val folgaGavetaMm: Double = 3.0,
+    val bordaSupMm: Double = 2.0,
+    val bordaInfMm: Double = 2.0,
+    val recuoFundoMm: Double = 20.0,
+    val hasBack: Boolean = true,
+    val dividers: List<Float> = emptyList(),
+    val vaos: List<Vao> = listOf(Vao()),
+)
+
+/** Tipos de peça (nomes mostrados na lista). */
+enum class PartKind(val label: String) {
+    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa superior"), DIVISORIA("Divisória"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé"), FUNDO("Fundo"),
+}
+
+/**
+ * Uma peça na vista frontal: retângulo (x, y, w, h em mm, origem no canto superior esquerdo do módulo)
+ * e as medidas de corte (comprimento × largura × espessura). [vao] e [divider] dizem a quem pertence (-1 = ninguém).
+ */
+data class Part(
+    val kind: PartKind,
+    val x: Double, val y: Double, val w: Double, val h: Double,
+    val cutL: Double, val cutW: Double, val esp: Double,
+    val vao: Int = -1,
+    val divider: Int = -1,
+)
+
+/** Módulo colocado numa folha. [at] = canto superior esquerdo; [scaleDen] = escala (10 → 1:10). */
+data class CabObj(
+    override val id: String = newId(),
+    override val photoId: String? = null,
+    val at: Pt,
+    val cab: Cabinet = Cabinet(),
+    val name: String = "Armário base",
+    val scaleDen: Int = 10,
+    override val locked: Boolean = false,
+) : Ann() {
+    /** Unidades de folha por mm real, na escala da folha (1 unidade = 1/96 pol). */
+    val unitsPerMm: Double get() = 3.7795277 / scaleDen
+    fun widthUnits(): Float = (cab.wMm * unitsPerMm).toFloat()
+    fun heightUnits(): Float = (cab.hMm * unitsPerMm).toFloat()
+}

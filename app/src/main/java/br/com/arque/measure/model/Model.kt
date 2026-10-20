@@ -216,6 +216,7 @@ fun Obj.withLocked(v: Boolean): Obj = when (this) {
     is TextObj -> copy(locked = v)
     is DimObj -> copy(locked = v)
     is RoomObj -> copy(locked = v)
+    is CabObj -> copy(locked = v)
 }
 
 fun Obj.withId(newId: String): Obj = when (this) {
@@ -225,6 +226,7 @@ fun Obj.withId(newId: String): Obj = when (this) {
     is TextObj -> copy(id = newId)
     is DimObj -> copy(id = newId)
     is RoomObj -> copy(id = newId)
+    is CabObj -> copy(id = newId)
 }
 
 fun Ann.withPhotoId(pid: String?): Ann = when (this) {
@@ -233,4 +235,5 @@ fun Ann.withPhotoId(pid: String?): Ann = when (this) {
     is TextObj -> copy(photoId = pid)
     is DimObj -> copy(photoId = pid)
     is RoomObj -> copy(photoId = pid)
+    is CabObj -> copy(photoId = pid)
 }

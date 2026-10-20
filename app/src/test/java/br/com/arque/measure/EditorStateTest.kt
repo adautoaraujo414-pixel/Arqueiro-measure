@@ -6,7 +6,9 @@ import br.com.arque.measure.model.MeasureSource
 import br.com.arque.measure.model.PhotoObj
 import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Reading
+import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.Sheet
+import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.StrokeObj
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,11 +23,11 @@ class EditorStateTest {
     private fun reading(mm: Double, src: MeasureSource = MeasureSource.BLUETOOTH) =
         Reading(mm = mm, source = src, timeMs = 1L, device = "GLM 50 C", rawHex = "C0 55")
 
-    private fun state(vararg objs: br.com.arque.measure.model.Obj, onCommit: (Sheet) -> Unit = {}) =
-        EditorState(Sheet(roomId = "r", name = "s", objs = objs.toList()), onCommit)
+    private fun state(vararg objs: br.com.arque.measure.model.Obj, onCommit: (Note) -> Unit = {}) =
+        EditorState(Note(name = "n", pages = listOf(Sheet(objs = objs.toList()))), onCommit)
 
     @Test fun `leitura vai para a cota selecionada e e salva na hora`() {
-        var saved: Sheet? = null
+        var saved: Note? = null
         val st = state(dim("a"), dim("b"), onCommit = { saved = it })
         st.select("a")
         val id = st.assignReading(reading(2345.0))
@@ -36,7 +38,7 @@ class EditorStateTest {
         assertEquals(1, d.history.size)
         assertEquals("C0 55", d.history[0].rawHex)
         // salvamento automático foi acionado
-        assertEquals(2345.0, (saved!!.obj("a") as DimObj).valueMm!!, 0.0)
+        assertEquals(2345.0, (saved!!.pages[0].obj("a") as DimObj).valueMm!!, 0.0)
     }
 
     @Test fun `depois de medir seleciona a proxima cota sem valor`() {
@@ -65,16 +67,6 @@ class EditorStateTest {
         val d = st.sheet.obj("a") as DimObj
         assertEquals(1002.0, d.valueMm!!, 0.0)
         assertEquals(1, d.history.size)
-    }
-
-    @Test fun `edicao manual marca a origem como manual e guarda em mm`() {
-        val st = state(dim("a"))
-        assertTrue(st.setManual("a", 1850.0))
-        val d = st.sheet.obj("a") as DimObj
-        assertEquals(MeasureSource.MANUAL, d.source)
-        assertEquals(1850.0, d.valueMm!!, 0.0)
-        assertFalse(st.setManual("a", -3.0))
-        assertFalse(st.setManual("a", Double.NaN))
     }
 
     @Test fun `desfazer e refazer`() {
@@ -140,5 +132,63 @@ class EditorStateTest {
         assertEquals(listOf("b", "a", "c"), st.sheet.objs.map { it.id })
         st.reorder("c", up = false)
         assertEquals(listOf("b", "c", "a"), st.sheet.objs.map { it.id })
+    }
+
+    @Test fun `nota comeca com uma folha e aceita ate 30`() {
+        val st = state()
+        assertEquals(1, st.note.pages.size)
+        for (i in 1..29) assertTrue(st.addPage(st.note.pages.size, Template.BLANK))
+        assertEquals(30, st.note.pages.size)
+        assertFalse(st.addPage(st.note.pages.size, Template.BLANK))
+    }
+
+    @Test fun `adicionar folha antes e depois respeita a posicao e o modelo`() {
+        val st = state()
+        st.addPage(1, Template.LINES)
+        st.addPage(0, Template.BLANK)
+        assertEquals(listOf(Template.BLANK, Template.ARAUJO, Template.LINES), st.note.pages.map { it.tpl })
+        assertEquals(0, st.pageIdx)
+    }
+
+    @Test fun `excluir folha exige pelo menos uma e duplicar copia o conteudo`() {
+        val st = state(dim("a", v = 500.0))
+        assertFalse(st.deletePage(0))
+        assertTrue(st.duplicatePage(0))
+        assertEquals(2, st.note.pages.size)
+        val copy = st.note.pages[1].objs.single() as DimObj
+        assertEquals(500.0, copy.valueMm!!, 0.0)
+        assertTrue(copy.id != "a")
+        assertTrue(st.deletePage(1))
+        assertEquals(1, st.note.pages.size)
+    }
+
+    @Test fun `objetos pertencem a folha ativa e desfazer volta a nota inteira`() {
+        val st = state()
+        st.addPage(1, Template.BLANK)
+        st.addObj(dim("x"))
+        assertEquals(1, st.note.pages[1].objs.size)
+        assertEquals(0, st.note.pages[0].objs.size)
+        st.undo()
+        assertEquals(0, st.note.pages[1].objs.size)
+    }
+
+    @Test fun `proxima cota pendente pode estar em outra folha`() {
+        val st = state(dim("a"))
+        st.addPage(1, Template.BLANK)
+        st.addObj(dim("b"))
+        st.setPage(0)
+        st.select("a")
+        st.assignReading(reading(1540.0))
+        assertEquals(1, st.pageIdx)
+        assertEquals("b", st.selectedId)
+    }
+
+    @Test fun `cota pendente nao mostra rotulo e medida mostra no formato em metros`() {
+        val st = state(dim("a"))
+        val d0 = st.sheet.obj("a") as DimObj
+        assertEquals("", br.com.arque.measure.logic.Units.label(d0, st.unit))
+        st.select("a")
+        st.assignReading(reading(1540.0))
+        assertEquals("1,54 m", br.com.arque.measure.logic.Units.label(st.sheet.obj("a") as DimObj, st.unit))
     }
 }

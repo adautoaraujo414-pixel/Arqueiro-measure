@@ -16,7 +16,8 @@ class UnitsTest {
     @Test fun `formata com virgula decimal e sufixo`() {
         assertEquals("2345 mm", Units.format(2345.0, LengthUnit.MM))
         assertEquals("234,5 cm", Units.format(2345.0, LengthUnit.CM))
-        assertEquals("2,345 m", Units.format(2345.0, LengthUnit.M))
+        assertEquals("2,35 m", Units.format(2345.0, LengthUnit.M))
+        assertEquals("1,54 m", Units.format(1540.0, LengthUnit.M))
     }
 
     @Test fun `interpreta texto digitado`() {

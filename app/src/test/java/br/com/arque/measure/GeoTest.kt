@@ -2,7 +2,7 @@ package br.com.arque.measure
 
 import br.com.arque.measure.logic.Geo
 import br.com.arque.measure.model.DimObj
-import br.com.arque.measure.model.Paper
+import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.PhotoObj
 import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Sheet
@@ -39,7 +39,7 @@ class GeoTest {
     @Test fun `cota vinculada acompanha mover redimensionar e girar a foto`() {
         val p = photo()
         val dim = DimObj(id = "d", photoId = "p", a = Pt(0.1f, 0.5f), b = Pt(0.9f, 0.5f), valueMm = 2345.0, color = 0, width = 3f)
-        val sheet = Sheet(roomId = "r", name = "s", objs = listOf(p, dim))
+        val sheet = Sheet(objs = listOf(p, dim))
         val before = Geo.annPoints(sheet.photos(), dim)
 
         val moved = Geo.translate(sheet, p, 50f, -20f) as PhotoObj
@@ -56,7 +56,7 @@ class GeoTest {
     }
 
     @Test fun `folha mantem o tamanho do papel`() {
-        val s = Sheet(roomId = "r", name = "s", paper = Paper.A4)
+        val s = Sheet()
         assertEquals(794f, s.width, 0f)
         assertEquals(1123f, s.height, 0f)
         val grown = s.copy(objs = listOf(photo().copy(w = 5000f, h = 4000f)))
@@ -78,10 +78,10 @@ class GeoTest {
     @Test fun `teste de toque acha a cota e respeita a ordem de camadas`() {
         val p = photo()
         val dim = DimObj(id = "d", photoId = null, a = Pt(100f, 100f), b = Pt(300f, 100f), color = 0, width = 3f)
-        val sheet = Sheet(roomId = "r", name = "s", objs = listOf(p.copy(cx = 200f, cy = 100f), dim))
-        assertEquals("d", Geo.hit(sheet, Pt(200f, 102f), 10f))
-        assertEquals("p", Geo.hit(sheet, Pt(200f, 180f), 10f))
-        assertNull(Geo.hit(sheet, Pt(700f, 1000f), 10f))
+        val sheet = Sheet(objs = listOf(p.copy(cx = 200f, cy = 100f), dim))
+        assertEquals("d", Geo.hit(sheet, Pt(200f, 102f), 10f, LengthUnit.M))
+        assertEquals("p", Geo.hit(sheet, Pt(200f, 180f), 10f, LengthUnit.M))
+        assertNull(Geo.hit(sheet, Pt(700f, 1000f), 10f, LengthUnit.M))
     }
 
     @Test fun `alinha na horizontal e vertical perto do eixo`() {

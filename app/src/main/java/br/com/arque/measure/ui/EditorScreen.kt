@@ -477,6 +477,10 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         ToolBtn(Tool.SELECT, session)
                         IconButton(
+                            onClick = { session.calcOpen = !session.calcOpen },
+                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.calcOpen) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                        ) { Text("÷×", color = if (session.calcOpen) Ui.accent else Ui.text, fontSize = 15.sp) }
+                        IconButton(
                             onClick = { session.chooseTool(Tool.LASSO) },
                             modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.tool == Tool.LASSO) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
                         ) { ShapeGlyph(Tool.LASSO, if (session.tool == Tool.LASSO) Ui.accent else Ui.text, 22.dp) }
@@ -529,6 +533,9 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 }
             }
             }
+
+            // ---- calculadora flutuante ----
+            if (session.calcOpen) FloatingCalc(vm, session)
 
             // ---- barra do grupo (laço) ----
             if (st.groupIds.isNotEmpty()) {
@@ -765,6 +772,91 @@ private fun CtxBtn(label: String, enabled: Boolean = true, onClick: () -> Unit) 
         label, color = if (enabled) Color.White else Color(0xFF777777), fontSize = 13.sp,
         modifier = Modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 10.dp),
     )
+}
+
+// ------------------------------------------------------------------ Calculadora flutuante
+
+@Composable
+private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
+    var ox by remember { mutableStateOf(40f) }
+    var oy by remember { mutableStateOf(220f) }
+    var expr by remember { mutableStateOf("") }
+    var collapsed by remember { mutableStateOf(false) }
+    val st = session.state
+    val result = br.com.arque.measure.logic.Calc.eval(expr)
+    val preview = if (expr.isEmpty()) "" else result?.let { br.com.arque.measure.logic.Calc.format(it) } ?: ""
+    val lastMm = vm.recent.firstOrNull()?.mm
+    fun press(k: String) {
+        when (k) {
+            "C" -> expr = ""
+            "⌫" -> expr = expr.dropLast(1)
+            "=" -> result?.let { expr = br.com.arque.measure.logic.Calc.format(it) }
+            "Medida" -> lastMm?.let { expr += br.com.arque.measure.logic.Units.formatNumber(it, st.unit) }
+            else -> expr += k
+        }
+    }
+    Surface(
+        modifier = Modifier.offset { IntOffset(ox.roundToInt(), oy.roundToInt()) }.width(236.dp),
+        shape = RoundedCornerShape(16.dp), color = Color(0xF2202226), shadowElevation = 10.dp,
+    ) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier.fillMaxWidth().pointerInput(Unit) {
+                    androidx.compose.foundation.gestures.detectDragGestures { change, drag ->
+                        change.consume()
+                        ox += drag.x
+                        oy += drag.y
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("⠿  Calculadora", color = Color(0xFFAAAAAA), fontSize = 13.sp, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
+                Text("–", color = Color.White, fontSize = 20.sp, modifier = Modifier.clickable { collapsed = !collapsed }.padding(horizontal = 12.dp))
+                Text("✕", color = Color.White, fontSize = 16.sp, modifier = Modifier.clickable { session.calcOpen = false }.padding(horizontal = 8.dp))
+            }
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF111214)).padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.End,
+            ) {
+                Text(if (expr.isEmpty()) "0" else expr, color = Color.White, fontSize = 24.sp, maxLines = 1)
+                Text(if (preview.isNotEmpty() && preview != expr) "= $preview" else " ", color = Color(0xFF7FB0FF), fontSize = 14.sp, maxLines = 1)
+            }
+            if (!collapsed) {
+                val rows = listOf(
+                    listOf("C", "⌫", "%", "÷"),
+                    listOf("7", "8", "9", "×"),
+                    listOf("4", "5", "6", "−"),
+                    listOf("1", "2", "3", "+"),
+                    listOf("0", ",", "(", ")"),
+                )
+                rows.forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                        row.forEach { k ->
+                            val op = k in listOf("÷", "×", "−", "+")
+                            Box(
+                                Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp))
+                                    .background(if (op) Ui.accent else Color(0xFF33363C))
+                                    .clickable { press(k) },
+                                contentAlignment = Alignment.Center,
+                            ) { Text(k, color = Color.White, fontSize = 18.sp) }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp))
+                            .background(if (lastMm != null) Color(0xFF2E6B4F) else Color(0xFF2A2C30))
+                            .clickable(enabled = lastMm != null) { press("Medida") },
+                        contentAlignment = Alignment.Center,
+                    ) { Text("Última medida", color = if (lastMm != null) Color.White else Color(0xFF777777), fontSize = 13.sp) }
+                    Box(
+                        Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp)).background(Ui.accent).clickable { press("=") },
+                        contentAlignment = Alignment.Center,
+                    ) { Text("=", color = Color.White, fontSize = 22.sp) }
+                }
+            }
+        }
+    }
 }
 
 // ------------------------------------------------------------------ Cômodo

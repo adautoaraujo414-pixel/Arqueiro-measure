@@ -99,6 +99,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
 
     var textEdit by mutableStateOf<TextEdit?>(null)
 
+    /** Calculadora flutuante aberta? */
+    var calcOpen by mutableStateOf(false)
+
     /** Ponto da tela onde o dedo está ao posicionar a ponta de uma cota/seta (lupa). */
     var loupe by mutableStateOf<Offset?>(null)
 

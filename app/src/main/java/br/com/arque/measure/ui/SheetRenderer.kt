@@ -42,6 +42,7 @@ fun roomSegColor(o: RoomObj, kind: SegKind): Int = when (kind) {
     SegKind.PANEL -> 0xFF8E44AD.toInt()
     SegKind.SINK -> 0xFF1E88E5.toInt()
     SegKind.BASIN -> 0xFF00A88F.toInt()
+    SegKind.DOOR -> 0xFFD35400.toInt()
 }
 
 class SheetRenderer(private val images: (String) -> Bitmap?) {
@@ -438,6 +439,26 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                     strokePaint.color = col; strokePaint.strokeWidth = w * 1.4f
                     strokePaint.strokeCap = Paint.Cap.ROUND
                     c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                }
+                SegKind.DOOR -> {
+                    // vão da porta: linha fina tracejada + folha aberta (arco de 90°) para dentro do cômodo
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 0.9f
+                    strokePaint.strokeCap = Paint.Cap.BUTT
+                    strokePaint.pathEffect = DashPathEffect(floatArrayOf(w * 3f, w * 2.5f), 0f)
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                    strokePaint.pathEffect = null
+                    val len = kotlin.math.hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble()).toFloat()
+                    if (len > 1f) {
+                        val ang = Math.toDegrees(kotlin.math.atan2((b.y - a.y).toDouble(), (b.x - a.x).toDouble())).toFloat()
+                        val rad = Math.toRadians((ang + 90f).toDouble())
+                        val lx = a.x + len * kotlin.math.cos(rad).toFloat()
+                        val ly = a.y + len * kotlin.math.sin(rad).toFloat()
+                        strokePaint.strokeWidth = w * 1.2f
+                        c.drawLine(a.x, a.y, lx, ly, strokePaint)
+                        strokePaint.strokeWidth = w * 0.7f
+                        rect.set(a.x - len, a.y - len, a.x + len, a.y + len)
+                        c.drawArc(rect, ang, 90f, false, strokePaint)
+                    }
                 }
                 SegKind.BASIN -> {
                     strokePaint.color = col; strokePaint.strokeWidth = w * 3f

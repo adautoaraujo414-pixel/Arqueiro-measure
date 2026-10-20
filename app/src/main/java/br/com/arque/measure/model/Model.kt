@@ -121,7 +121,7 @@ enum class Template(val label: String) {
 /** Uma folha A4 de uma nota. Tamanho fixo: a folha nunca muda ao mexer em fotos. */
 /** Tipo de um segmento do cômodo: parede, painel, pia ou cuba. */
 enum class SegKind(val label: String) {
-    WALL("Parede"), PANEL("Painel"), SINK("Pia"), BASIN("Cuba"),
+    WALL("Parede"), PANEL("Painel"), SINK("Pia"), BASIN("Cuba"), DOOR("Porta"),
 }
 
 /** Um segmento do contorno: tipo e medida (única origem: trena). */

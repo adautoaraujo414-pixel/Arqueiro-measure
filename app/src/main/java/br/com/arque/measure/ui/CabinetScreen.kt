@@ -285,6 +285,7 @@ private fun CabinetCanvas(
             val col = when {
                 p.kind == PartKind.RODAPE -> WoodDark
                 p.kind == PartKind.MOLDURA -> WoodFront
+                p.kind == PartKind.BATENTE -> WoodFront
                 p.kind == PartKind.TAMPONAMENTO -> WoodDark
                 p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.PORTA -> WoodFront
                 else -> Wood
@@ -431,9 +432,10 @@ private fun CabinetPanel(
                     NumField("Folga entre frentes", cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
                         Text("Altura de cada frente", color = Ui.dim, fontSize = 12.sp)
-                        Text(Units.format(CabinetMath.drawerFrontH(cab, v.drawers, CabinetMath.gaveteiroH(cab, v)), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                        Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        Text(Units.format(CabinetMath.drawerFrontH(cab, v.drawers, CabinetMath.gaveteiroH(cab, v), v), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                        Text(if (v.cava) "(área − ${v.drawers - 1} batente(s) de ${Units.formatNumber(v.batenteMm, LengthUnit.MM)}) ÷ ${v.drawers}" else "(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
+                    if (v.cava) NumField("Altura do batente de cava", v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
                     Text("Caixa da gaveta: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
                 }
                 VaoKind.DOOR -> {

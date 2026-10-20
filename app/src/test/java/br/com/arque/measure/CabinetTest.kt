@@ -142,4 +142,14 @@ class CabinetTest {
         val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(Sheet(objs = listOf(CabObj(id = "a", at = Pt(1f, 1f), cab = c)))))))
         assertEquals(c.vaos, (back.pages[0].objs[0] as CabObj).cab.vaos)
     }
+
+    @Test fun cavaBatentesBetweenDrawers() {
+        val c = Cabinet(dividers = emptyList(), vaos = listOf(Vao(VaoKind.DRAWERS, drawers = 4, cava = true, batenteMm = 50.0)))
+        val p = CabinetMath.parts(c)
+        assertEquals(3, p.count { it.kind == PartKind.BATENTE })
+        val fh = (CabinetMath.vaoH(c) - 150.0) / 4
+        assertEquals(fh, p.first { it.kind == PartKind.FRENTE_GAVETA }.cutW, 1e-9)
+        val sum = p.filter { it.kind == PartKind.FRENTE_GAVETA }.sumOf { it.h } + p.filter { it.kind == PartKind.BATENTE }.sumOf { it.h }
+        assertEquals(CabinetMath.vaoH(c), sum, 1e-9)
+    }
 }

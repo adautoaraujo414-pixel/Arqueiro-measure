@@ -68,8 +68,10 @@ object CabinetMath {
     }
 
     /** Altura de cada frente de gaveta: (vão − bordas − folgas entre frentes) ÷ quantidade. */
-    fun drawerFrontH(c: Cabinet, n: Int, areaH: Double = vaoH(c)): Double {
+    fun drawerFrontH(c: Cabinet, n: Int, areaH: Double = vaoH(c), v: Vao? = null): Double {
         val k = max(1, n)
+        // com cava: (área − (n−1) batentes) ÷ n, sem bordas nem folga entre frentes
+        if (v != null && v.cava) return (areaH - v.batenteMm * (k - 1)) / k
         return (areaH - c.bordaSupMm - c.bordaInfMm - c.folgaGavetaMm * (k - 1)) / k
     }
 
@@ -133,12 +135,17 @@ object CabinetMath {
             when (v.kind) {
                 VaoKind.DRAWERS -> {
                     val gh = gaveteiroH(c, v)
-                    val fh = drawerFrontH(c, v.drawers, gh)
+                    val fh = drawerFrontH(c, v.drawers, gh, v)
+                    val gap = if (v.cava) v.batenteMm else c.folgaGavetaMm
+                    val top0 = if (v.cava) 0.0 else c.bordaSupMm
+                    if (v.cava) for (k in 0 until v.drawers - 1) {
+                        out += Part(PartKind.BATENTE, x0, y0 + (k + 1) * fh + k * gap, vw, gap, vw, gap, e, vao = i, note = "cor do móvel · ${v.drawers - 1} batente(s) entre ${v.drawers} gavetas")
+                    }
                     val y0 = vTop + vh - gh
                     val fw = vw - c.folgaMm
                     val caixaW = vw - c.corredicaMm
                     for (k in 0 until v.drawers) {
-                        val y = y0 + c.bordaSupMm + k * (fh + c.folgaGavetaMm)
+                        val y = y0 + top0 + k * (fh + gap)
                         out += Part(PartKind.FRENTE_GAVETA, x0 + c.folgaMm / 2, y, fw, fh, fw, fh, e, vao = i, note = "caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)" + cavaNote(v))
                     }
                 }

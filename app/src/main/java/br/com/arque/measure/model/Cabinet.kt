@@ -17,6 +17,8 @@ data class Vao(
     val gaveteiroMm: Double = 0.0,
     /** Cava (puxador cortado a 30° na própria peça) nas frentes/portas deste vão. */
     val cava: Boolean = false,
+    /** Altura de cada batente de cava entre as gavetas (cor do móvel, largura do vão). */
+    val batenteMm: Double = 50.0,
 )
 
 /**
@@ -61,7 +63,7 @@ data class Cabinet(
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
     LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), DIVISORIA("Divisória"),
-    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"),
 }
 
 /**

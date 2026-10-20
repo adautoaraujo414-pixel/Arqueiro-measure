@@ -126,7 +126,7 @@ object Json {
             "vaos",
             JSONArray(
                 c.vaos.map { v ->
-                    JSONObject().put("kind", v.kind.name).put("shelves", v.shelves).put("drawers", v.drawers).put("doors", v.doors).put("shelvesAbove", v.shelvesAbove).put("gaveteiro", v.gaveteiroMm).put("cava", v.cava)
+                    JSONObject().put("kind", v.kind.name).put("shelves", v.shelves).put("drawers", v.drawers).put("doors", v.doors).put("shelvesAbove", v.shelvesAbove).put("gaveteiro", v.gaveteiroMm).put("cava", v.cava).put("batente", v.batenteMm)
                 },
             ),
         )
@@ -148,7 +148,7 @@ object Json {
                 Vao(
                     kind = VaoKind.valueOf(v.optString("kind", "FREE")), shelves = v.optInt("shelves", 1),
                     drawers = v.optInt("drawers", 3), doors = v.optInt("doors", 1),
-                    shelvesAbove = v.optInt("shelvesAbove", 0), gaveteiroMm = v.optDouble("gaveteiro", 0.0), cava = v.optBoolean("cava", false),
+                    shelvesAbove = v.optInt("shelvesAbove", 0), gaveteiroMm = v.optDouble("gaveteiro", 0.0), cava = v.optBoolean("cava", false), batenteMm = v.optDouble("batente", 50.0),
                 )
             } ?: listOf(Vao()),
         )

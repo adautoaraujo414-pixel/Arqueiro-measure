@@ -993,16 +993,15 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                     Text("Aplicar \"${seg.kind.label}\" a todo o contorno")
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF)).padding(horizontal = 12.dp, vertical = 10.dp)) {
-                        Text(seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", color = Ui.distBlue, fontSize = 22.sp)
-                    }
+                    ManualValueBox(Modifier.weight(1f), seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !r.locked) { mm -> st.setManualValue(mm) }
                     TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
                 }
                 Text(
                     when {
                         seg.valueMm != null && connected -> "Meça de novo para substituir"
+                        seg.valueMm != null && seg.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
                         seg.valueMm != null -> "Medido pela trena Bosch"
-                        !connected -> "Conecte a trena Bosch (botão no topo)"
+                        !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
                         else -> "Aguardando a medida da trena…"
                     },
                     color = Color(0xFF555555), fontSize = 13.sp,
@@ -1033,8 +1032,9 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
     val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
     val status = when {
         d.valueMm != null && connected -> "Meça de novo para substituir"
+        d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
         d.valueMm != null -> "Medido pela trena Bosch"
-        !connected -> "Conecte a trena Bosch (botão no topo)"
+        !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
         else -> "Aguardando a medida da trena…"
     }
     Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
@@ -1044,14 +1044,7 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
         ) {
             Text("Distância", color = Color(0xFF111111), fontSize = 16.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    Modifier.weight(1f).clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF)).padding(horizontal = 12.dp, vertical = 10.dp),
-                ) {
-                    Text(
-                        d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–",
-                        color = Ui.distBlue, fontSize = 22.sp,
-                    )
-                }
+                ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
                 TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
             }
             Text(status, color = Color(0xFF555555), fontSize = 13.sp)
@@ -1348,5 +1341,39 @@ private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** Caixa da medida: toque para digitar à mão (quando a trena não está conectada). */
+@Composable
+private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, enabled: Boolean, onSet: (Double) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    var input by remember { mutableStateOf("") }
+    val unit = br.com.arque.measure.model.LengthUnit.values().firstOrNull { it.label == unitLabel }
+    Box(
+        modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF))
+            .clickable(enabled = enabled) { input = if (text == "–") "" else text; open = true }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Text(if (text == "–" && enabled) "– toque p/ digitar" else text, color = Ui.distBlue, fontSize = if (text == "–" && enabled) 15.sp else 22.sp)
+    }
+    if (open) {
+        val parsed = Units.parseToMm(input, unit ?: br.com.arque.measure.model.LengthUnit.MM)
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { open = false },
+            title = { Text("Digitar medida") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    OutlinedTextField(
+                        value = input, onValueChange = { input = it }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                        label = { Text("Medida em $unitLabel") },
+                    )
+                    Text("Aceita vírgula ou ponto; pode escrever 2,5m ou 850mm. Fica marcada como digitada à mão.", fontSize = 12.sp, color = Color(0xFF555555))
+                }
+            },
+            confirmButton = { TextButton(enabled = parsed != null, onClick = { parsed?.let(onSet); open = false }) { Text("OK") } },
+            dismissButton = { TextButton(onClick = { open = false }) { Text("Cancelar") } },
+        )
     }
 }

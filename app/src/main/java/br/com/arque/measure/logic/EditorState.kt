@@ -584,6 +584,12 @@ class EditorState(
         return d.id
     }
 
+    /** Medida digitada à mão (trena desconectada): fica marcada como MANUAL, nunca como Bluetooth. */
+    fun setManualValue(mm: Double): String? {
+        if (!mm.isFinite() || mm <= 0.0) return null
+        return assignReading(Reading(mm = mm, source = br.com.arque.measure.model.MeasureSource.MANUAL, timeMs = System.currentTimeMillis()))
+    }
+
     /** Próxima cota sem valor (e destravada) depois de [id], nesta ou nas outras folhas. */
     fun nextPending(id: String): Pair<Int, String>? = nextPendingTarget(id, -1)?.let { it.first to it.second }
 

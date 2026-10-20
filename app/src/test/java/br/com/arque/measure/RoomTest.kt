@@ -148,4 +148,14 @@ class AllKindsTest {
         assertEquals(4, r.segs.size)
         assertEquals(2500.0, r.segs[0].valueMm!!, 0.0)
     }
+
+    @Test fun manualValueIsMarkedManual() {
+        val d = DimObj(photoId = null, a = Pt(0f, 0f), b = Pt(100f, 0f), color = 0, width = 2f)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(d)))))
+        st.select(d.id)
+        assertNotNull(st.setManualValue(2500.0))
+        val r = st.sheet.obj(d.id) as DimObj
+        assertEquals(2500.0, r.valueMm!!, 0.0)
+        assertEquals(MeasureSource.MANUAL, r.source)
+    }
 }

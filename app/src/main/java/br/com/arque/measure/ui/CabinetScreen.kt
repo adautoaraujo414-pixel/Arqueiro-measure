@@ -341,7 +341,7 @@ private fun CabinetCanvas(
                 if (moved) { /* o toque simples fica com o detector abaixo */ }
             }
         }.pointerInput(Unit) {
-            detectTapGestures { pos ->
+            detectTapGestures(onDoubleTap = { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }) { pos ->
                 val cab = cabNow
                 val ranges = CabinetMath.vaoRanges(cab)
                 val dx = CabinetMath.dividerX(cab)
@@ -421,16 +421,16 @@ private fun CabinetCanvas(
             nc.drawRoundRect(cx - w / 2, cy - 20f, cx + w / 2, cy + 20f, 8f, 8f, chipPaint)
             nc.drawText(text, cx, cy + 9f, txtPaint)
         }
-        val top = Y(0.0) - 44f
+        val top = Y(0.0) - 40f
         nc.drawLine(X(0.0), top, X(cab.wMm), top, line)
         chip(mmStr(cab.wMm), (X(0.0) + X(cab.wMm)) / 2, top)
-        val left = X(0.0) - 44f
+        val left = X(0.0) - 40f
         nc.drawLine(left, Y(0.0), left, Y(cab.hMm), line)
         chip(Units.formatNumber(cab.hMm, LengthUnit.MM), left, (Y(0.0) + Y(cab.hMm)) / 2)
-        val vl = X(cab.wMm) + 44f
+        val vl = X(cab.wMm) + 40f
         nc.drawLine(vl, Y(CabinetMath.vaoTop(cab)), vl, Y(CabinetMath.vaoBottom(cab)), line)
         chip(Units.formatNumber(CabinetMath.vaoH(cab), LengthUnit.MM), vl, (Y(CabinetMath.vaoTop(cab)) + Y(CabinetMath.vaoBottom(cab))) / 2)
-        val bottom = Y(cab.hMm) + 44f
+        val bottom = Y(cab.hMm) + 40f
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
     Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -443,10 +443,14 @@ private fun CabinetCanvas(
 
 /** Transformação mm → tela (escala, origem x, origem y), recalculada com o tamanho atual do canvas. */
 private fun fitRef(w: Double, h: Double, sz: Size, zoom: Float = 1f, pan: Offset = Offset.Zero): Triple<Float, Float, Float> {
-    val m = 90f
-    val k = minOf((sz.width - 2 * m) / w.toFloat(), (sz.height - 2 * m) / h.toFloat()).coerceAtLeast(0.01f) * zoom
+    // área útil: sem os botões do topo e sem a barra de ações de baixo; só sobra espaço para as cotas
+    val m = 72f
+    val topM = 78f
+    val botM = 118f
+    val availH = (sz.height - topM - botM).coerceAtLeast(50f)
+    val k = minOf((sz.width - 2 * m) / w.toFloat(), availH / h.toFloat()).coerceAtLeast(0.01f) * zoom
     val ox = (sz.width - w.toFloat() * k) / 2f + pan.x
-    val oy = (sz.height - h.toFloat() * k) / 2f + pan.y
+    val oy = topM + (availH - h.toFloat() * k) / 2f + pan.y
     return Triple(k, ox, oy)
 }
 

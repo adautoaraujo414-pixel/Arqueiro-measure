@@ -46,6 +46,9 @@ data class Cabinet(
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,
     val hasMoldura: Boolean = true,
+    /** Pedestal (rodapé) no chão e chapa da base: cada um pode ser tirado. */
+    val hasRodape: Boolean = true,
+    val hasBase: Boolean = true,
     /** Tamponamento (chapa de fora de cada lado): 15 de espessura, 25 a mais na profundidade e 30 a mais na altura. */
     val tampEsq: Boolean = false,
     val tampDir: Boolean = false,

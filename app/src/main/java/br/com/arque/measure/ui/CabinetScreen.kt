@@ -599,6 +599,14 @@ private fun CabinetPanel(
         HorizontalDivider(color = Ui.line)
         Label("Regras do módulo")
         NumField("Espessura das chapas", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Pedestal no chão (rodapé)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasRodape, onCheckedChange = { b -> edit { it.copy(hasRodape = b) } })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Chapa da base (sob as laterais)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasBase, onCheckedChange = { b -> edit { it.copy(hasBase = b) } })
+        }
         NumField("Altura do pedestal (rodapé)", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
         NumField("Folga do topo (sob a pedra)", cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {

@@ -26,16 +26,20 @@ object CabinetMath {
     fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 20.0) + (if (c.tampDir) 35.0 else 20.0)
 
     /** y da face de baixo da base (onde começa o pedestal). */
-    fun baseBottom(c: Cabinet) = (c.hMm - c.rodapeMm).coerceAtLeast(c.folgaTopoMm + c.travessaMm + c.espMm * 2 + 10.0)
+    /** Altura efetiva do pedestal e espessura efetiva da chapa da base (0 quando tirados). */
+    fun rodapeH(c: Cabinet) = if (c.hasRodape) c.rodapeMm else 0.0
+    fun baseT(c: Cabinet) = if (c.hasBase) c.espMm else 0.0
+
+    fun baseBottom(c: Cabinet) = (c.hMm - rodapeH(c)).coerceAtLeast(c.folgaTopoMm + c.travessaMm + c.espMm * 2 + 10.0)
 
     /** Altura de cada lateral: apoiada em cima da base, começa depois da folga do topo. */
-    fun lateralH(c: Cabinet) = baseBottom(c) - c.espMm - c.folgaTopoMm
+    fun lateralH(c: Cabinet) = baseBottom(c) - baseT(c) - c.folgaTopoMm
 
     fun innerW(c: Cabinet) = (c.wMm - 2 * c.espMm).coerceAtLeast(10.0)
 
     /** Onde começam e terminam, na vertical, os vãos (abaixo da travessa frontal, acima da base). */
     fun vaoTop(c: Cabinet) = c.folgaTopoMm + c.travessaMm
-    fun vaoBottom(c: Cabinet) = baseBottom(c) - c.espMm
+    fun vaoBottom(c: Cabinet) = baseBottom(c) - baseT(c)
 
     /** Altura livre dos vãos. */
     fun vaoH(c: Cabinet) = (vaoBottom(c) - vaoTop(c)).coerceAtLeast(10.0)
@@ -103,7 +107,7 @@ object CabinetMath {
         val vh = vaoH(c)
         val reb = "rebaixo ${fmt(e)} × ${fmt(c.travessaMm)} na frente, em cima"
         val out = ArrayList<Part>()
-        out += Part(PartKind.BASE, 0.0, bb - e, c.wMm, e, c.wMm, dep, e, note = "inteiriça, sob as laterais")
+        if (c.hasBase) out += Part(PartKind.BASE, 0.0, bb - e, c.wMm, e, c.wMm, dep, e, note = "inteiriça, sob as laterais")
         out += Part(PartKind.LATERAL, 0.0, top, e, latH, latH, dep, e, note = reb)
         out += Part(PartKind.LATERAL, c.wMm - e, top, e, latH, latH, dep, e, note = reb)
         out += Part(PartKind.TRAVESSA, 0.0, top, c.wMm, c.travessaMm, c.wMm, c.travessaMm, e, note = "embute ${fmt(e)} no rebaixo das laterais")
@@ -133,7 +137,7 @@ object CabinetMath {
                 out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - 20.0, e, vao = i, note = "na posição escolhida (${fmt(y - vTop)} abaixo da travessa)")
             }
         }
-        out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
+        if (c.hasRodape && c.rodapeMm > 0) out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
         ranges.forEachIndexed { i, (x0, x1) ->
             val vw = x1 - x0
             val v = c.vaos[i]

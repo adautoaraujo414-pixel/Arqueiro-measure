@@ -170,4 +170,17 @@ class CabinetTest {
         assertTrue(CabinetMath.cutList(c).none { it.kind == PartKind.FORNO })
         assertEquals(1, CabinetMath.parts(c).count { it.kind == PartKind.PRATELEIRA })
     }
+
+    @Test fun baseAndPedestalAreOptional() {
+        val noRod = base.copy(hasRodape = false)
+        assertTrue(CabinetMath.parts(noRod).none { it.kind == PartKind.RODAPE })
+        assertEquals(850.0 - 15.0 - 15.0, CabinetMath.lateralH(noRod), 1e-9)
+        val noBase = base.copy(hasBase = false)
+        assertTrue(CabinetMath.parts(noBase).none { it.kind == PartKind.BASE })
+        assertEquals(750.0 - 15.0, CabinetMath.lateralH(noBase), 1e-9)
+        assertEquals(CabinetMath.baseBottom(noBase), CabinetMath.vaoBottom(noBase), 1e-9)
+        val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(Sheet(objs = listOf(CabObj(id = "a", at = Pt(1f, 1f), cab = noBase.copy(hasRodape = false))))))))
+        val b = (back.pages[0].objs[0] as CabObj).cab
+        assertFalse(b.hasBase); assertFalse(b.hasRodape)
+    }
 }

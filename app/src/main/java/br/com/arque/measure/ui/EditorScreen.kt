@@ -624,9 +624,18 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     val dx = with(density) { 160.dp.toPx() }
                     val minY = with(density) { 190.dp.toPx() }
                     val py = with(density) { 56.dp.toPx() }
+                    val botY = screenPts.maxOf { it.y }
+                    val scrH = with(density) { androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp.toPx() }
+                    val scrW = with(density) { androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp.toPx() }
+                    val barH = with(density) { 48.dp.toPx() }
+                    // acima do objeto se couber; senão embaixo dele, nunca por cima do desenho
+                    val yPos = if (topY - py >= minY) topY - py else (botY + with(density) { 10.dp.toPx() }).coerceAtMost(scrH - barH - with(density) { 24.dp.toPx() })
+                    val maxBarW = (scrW - with(density) { 24.dp.toPx() }).coerceAtLeast(200f)
+                    val xPos = (cx - dx).coerceIn(with(density) { 8.dp.toPx() }, (scrW - maxBarW).coerceAtLeast(8f))
                     ContextBar(
                         session = session,
-                        modifier = Modifier.offset { IntOffset((cx - dx).roundToInt().coerceAtLeast(8), (topY - py).roundToInt().coerceAtLeast(minY.roundToInt())) },
+                        maxWidthPx = maxBarW,
+                        modifier = Modifier.offset { IntOffset(xPos.roundToInt(), yPos.roundToInt()) },
                     )
                 }
             }
@@ -806,11 +815,13 @@ private fun ColorRow(current: Int, onPick: (Int) -> Unit) {
 // ------------------------------------------------------------------ Menu de contexto da seleção
 
 @Composable
-private fun ContextBar(session: EditorSession, modifier: Modifier) {
+private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modifier) {
     val st = session.state
     val o = st.selected ?: return
-    Surface(modifier = modifier, shape = RoundedCornerShape(12.dp), color = Color(0xEE111111)) {
-        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    val maxW = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidthPx.toDp() }
+    // barra pequena e suave: uma linha só, rola para o lado se não couber, e não cobre o desenho
+    Surface(modifier = modifier.widthIn(max = maxW), shape = RoundedCornerShape(10.dp), color = Color(0xB31B1C20)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             CtxBtn("Eliminar", !o.locked) { st.delete(o.id) }
             CtxBtn("Cortar", !o.locked) { session.copySelection(cut = true) }
             CtxBtn("Copiar") { session.copySelection() }
@@ -820,8 +831,8 @@ private fun ContextBar(session: EditorSession, modifier: Modifier) {
             if (o is br.com.arque.measure.model.CabObj) {
                 CtxBtn("Editar móvel") { session.cabEditId = o.id }
                 val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
-                CtxBtn("Menor", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
-                CtxBtn("Maior", !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
+                CtxBtn("− Diminuir", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
+                CtxBtn("+ Aumentar", !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
                 CtxBtn("Caber na folha", !o.locked) {
                     val need = maxOf(o.cab.wMm * 3.7795277 / 700.0, o.cab.hMm * 3.7795277 / 880.0)
                     st.setCabScale(o.id, steps.firstOrNull { it >= need } ?: 100)
@@ -838,8 +849,9 @@ private fun ContextBar(session: EditorSession, modifier: Modifier) {
 @Composable
 private fun CtxBtn(label: String, enabled: Boolean = true, onClick: () -> Unit) {
     Text(
-        label, color = if (enabled) Color.White else Color(0xFF777777), fontSize = 13.sp,
-        modifier = Modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 10.dp, vertical = 10.dp),
+        label, color = if (enabled) Color.White else Color(0xFF777777), fontSize = 12.sp,
+        maxLines = 1, softWrap = false,
+        modifier = Modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 9.dp, vertical = 9.dp),
     )
 }
 

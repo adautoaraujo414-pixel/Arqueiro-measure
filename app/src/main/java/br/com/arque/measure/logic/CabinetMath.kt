@@ -136,12 +136,12 @@ object CabinetMath {
                 VaoKind.DRAWERS -> {
                     val gh = gaveteiroH(c, v)
                     val fh = drawerFrontH(c, v.drawers, gh, v)
+                    val y0 = vTop + vh - gh
                     val gap = if (v.cava) v.batenteMm else c.folgaGavetaMm
                     val top0 = if (v.cava) 0.0 else c.bordaSupMm
                     if (v.cava) for (k in 0 until v.drawers - 1) {
                         out += Part(PartKind.BATENTE, x0, y0 + (k + 1) * fh + k * gap, vw, gap, vw, gap, e, vao = i, note = "cor do móvel · ${v.drawers - 1} batente(s) entre ${v.drawers} gavetas")
                     }
-                    val y0 = vTop + vh - gh
                     val fw = vw - c.folgaMm
                     val caixaW = vw - c.corredicaMm
                     for (k in 0 until v.drawers) {

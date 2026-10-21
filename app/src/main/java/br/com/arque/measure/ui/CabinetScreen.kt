@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +51,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -61,6 +64,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import br.com.arque.measure.AppViewModel
 import br.com.arque.measure.logic.CabinetMath
+import br.com.arque.measure.logic.CutOptimizer
 import br.com.arque.measure.logic.Units
 import br.com.arque.measure.model.CabObj
 import br.com.arque.measure.model.Cabinet
@@ -800,13 +804,13 @@ private fun CutListDialog(cab: Cabinet, name: String, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Lista de peças · $name") },
-        text = { Column(Modifier.verticalScroll(rememberScrollState())) { CutListBody(CabinetMath.cutList(cab)) } },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { CutListBody(CabinetMath.cutList(cab), name) } },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
     )
 }
 
 @Composable
-private fun CutListBody(lines: List<CabinetMath.Line>) {
+private fun CutListBody(lines: List<CabinetMath.Line>, name: String = "Móvel") {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         lines.forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -819,8 +823,82 @@ private fun CutListBody(lines: List<CabinetMath.Line>) {
             }
         }
         Text(
-            "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura). Sem plano de corte.",
+            "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura).",
             color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
         )
+        CutPlan(lines, name)
     }
+}
+
+private data class SheetPreset(val label: String, val w: Double, val h: Double)
+
+private val SHEET_PRESETS = listOf(SheetPreset("2750 × 1840", 2750.0, 1840.0), SheetPreset("2440 × 1220", 2440.0, 1220.0))
+
+/** Plano de corte compacto para esquadrejadeira (guilhotina), logo abaixo da lista de peças. */
+@Composable
+private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
+    var presetIdx by rememberSaveable { mutableIntStateOf(0) }
+    var kerf by rememberSaveable { mutableIntStateOf(4) }
+    var rotate by rememberSaveable { mutableStateOf(false) }
+    var showSteps by rememberSaveable { mutableStateOf(false) }
+    val preset = SHEET_PRESETS[presetIdx.coerceIn(0, SHEET_PRESETS.lastIndex)]
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // uma entrada por peça física, agrupadas por espessura (15 mm e fundo 3 mm não dividem chapa)
+    val groups = lines.filter { it.cutL > 0.0 && it.cutW > 0.0 }.groupBy { it.esp }.toSortedMap(compareByDescending { it })
+    val results = groups.map { (esp, ls) ->
+        val pieces = ls.flatMap { l -> List(l.qty) { CutOptimizer.Piece("${l.kind.label}", l.cutL, l.cutW) } }
+        esp to CutOptimizer.run(pieces, preset.w, preset.h, kerf.toDouble(), rotate)
+    }
+    fun f(v: Double) = Units.formatNumber(v, LengthUnit.MM)
+    HorizontalDivider(color = Ui.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
+    Label("Plano de corte · esquadrejadeira")
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+        SHEET_PRESETS.forEachIndexed { i, sp -> Chip(sp.label, presetIdx == i) { presetIdx = i } }
+        listOf(3, 4, 5).forEach { k -> Chip("serra $k mm", kerf == k) { kerf = k } }
+        Chip(if (rotate) "pode girar" else "veio fixo", rotate) { rotate = !rotate }
+    }
+    results.forEach { (esp, res) ->
+        val usage = (CutOptimizer.totalUsage(res) * 100).toInt()
+        Text("Chapa de ${f(esp)} mm: ${res.sheets.size} chapa(s) · aproveitamento $usage%", color = Ui.text, fontSize = 13.sp)
+        if (res.tooBig.isNotEmpty()) Text("Não cabe na chapa: " + res.tooBig.joinToString { "${it.label} ${f(it.w)}×${f(it.h)}" }, color = Color(0xFFFF7A7A), fontSize = 12.sp)
+        res.sheets.forEachIndexed { si, sh ->
+            Text("Chapa ${si + 1} · ${(sh.usage * 100).toInt()}% usada", color = Ui.dim, fontSize = 11.sp)
+            val ratio = (sh.h / sh.w).toFloat().coerceIn(0.3f, 1.2f)
+            Canvas(Modifier.fillMaxWidth().aspectRatio(1f / ratio).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2A2D33))) {
+                val sc = size.width / sh.w.toFloat()
+                val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; textSize = 9.dp.toPx(); textAlign = android.graphics.Paint.Align.CENTER }
+                sh.placed.forEach { pc ->
+                    val l = pc.x.toFloat() * sc; val t = pc.y.toFloat() * sc; val w = pc.w.toFloat() * sc; val h = pc.h.toFloat() * sc
+                    drawRect(Color(0xFF3B82F6).copy(alpha = 0.55f), androidx.compose.ui.geometry.Offset(l, t), Size(w, h))
+                    drawRect(Color.White.copy(alpha = 0.8f), androidx.compose.ui.geometry.Offset(l, t), Size(w, h), style = Stroke(1.2f))
+                    if (w > 60.dp.toPx() && h > 22.dp.toPx()) drawIntoCanvas { c -> c.nativeCanvas.drawText("${f(pc.w)}×${f(pc.h)}", l + w / 2, t + h / 2 + paint.textSize / 3, paint) }
+                }
+            }
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        PillBtn(if (showSteps) "Esconder passo a passo" else "Passo a passo dos cortes") { showSteps = !showSteps }
+        PillBtn("Compartilhar") {
+            val sb = StringBuilder("$name\n\nLISTA DE PEÇAS (mm)\n")
+            lines.forEach { l -> sb.append("${l.qty}× ${l.kind.label}  ${f(l.cutL)} × ${f(l.cutW)} × ${f(l.esp)}\n") }
+            sb.append("\nPLANO DE CORTE · chapa ${preset.label} · serra $kerf mm · ${if (rotate) "pode girar" else "veio fixo"}\n")
+            results.forEach { (esp, res) ->
+                sb.append("\nChapa de ${f(esp)} mm: ${res.sheets.size} chapa(s)\n")
+                res.sheets.forEachIndexed { si, sh ->
+                    sb.append("Chapa ${si + 1}:\n")
+                    sh.cuts.forEach { sb.append("  " + CutOptimizer.describeCut(it, ::f) + "\n") }
+                }
+            }
+            sb.append("\nConfira as medidas antes de cortar.")
+            val i = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, sb.toString()) }
+            ctx.startActivity(android.content.Intent.createChooser(i, "Compartilhar").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+    }
+    if (showSteps) results.forEach { (esp, res) ->
+        res.sheets.forEachIndexed { si, sh ->
+            Text("Chapa ${si + 1} (${f(esp)} mm)", color = Ui.text, fontSize = 12.sp)
+            sh.cuts.forEach { Text(CutOptimizer.describeCut(it, ::f), color = Ui.dim, fontSize = 12.sp) }
+        }
+    }
+    Text("Só cortes retos de ponta a ponta (guilhotina). Confira as medidas antes de cortar.", color = Ui.dim, fontSize = 11.sp)
 }

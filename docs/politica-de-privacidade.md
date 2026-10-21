@@ -2,7 +2,7 @@
 
 Última atualização: 20/10/2026
 
-**Responsável:** Marcenaria Araújo (CNPJ 45.395.666/0001-24) — contato: [SEU E-MAIL AQUI]
+**Responsável:** Adauto (desenvolvedor, pessoa física) — contato: marcenariaaraujo415@gmail.com
 
 ## Resumo
 O Arquemetre funciona **sem internet**. O aplicativo não envia suas notas, fotos, medidas ou projetos para nenhum servidor nosso nem de terceiros. Tudo fica guardado no seu aparelho.
@@ -27,7 +27,7 @@ Não coletamos dados pessoais, não usamos publicidade, não usamos ferramentas 
 O aparelho pode incluir os dados do aplicativo no backup do Android/Google do seu próprio dispositivo, conforme as configurações do seu aparelho. Esse backup é controlado por você e pelo sistema, não por nós.
 
 ## Seus direitos (LGPD)
-Como os dados ficam no seu aparelho, você controla tudo: pode apagar notas dentro do aplicativo ou desinstalar o aplicativo para remover todos os dados. Dúvidas: [SEU E-MAIL AQUI].
+Como os dados ficam no seu aparelho, você controla tudo: pode apagar notas dentro do aplicativo ou desinstalar o aplicativo para remover todos os dados. Dúvidas: marcenariaaraujo415@gmail.com.
 
 ## Crianças
 O aplicativo é uma ferramenta de trabalho e não é direcionado a crianças.

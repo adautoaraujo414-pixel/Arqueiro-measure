@@ -176,7 +176,7 @@ fun LibraryScreen(vm: AppViewModel) {
         Row(Modifier.fillMaxSize()) {
             if (wide) {
                 Column(Modifier.width(230.dp).fillMaxHeight().background(Ui.panel).verticalScroll(rememberScrollState()).padding(12.dp)) {
-                    Text("ARQUE MEASURE", color = Ui.text, fontSize = 15.sp, modifier = Modifier.padding(8.dp))
+                    Text("ARQUEMESTRE", color = Ui.text, fontSize = 15.sp, modifier = Modifier.padding(8.dp))
                     SideItem("Todas as notas", Icons.Filled.AllInbox, filter == LibFilter.All) { vm.filter = LibFilter.All }
                     Text("Pastas", color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp))
                     vm.index.folders.forEach { f ->

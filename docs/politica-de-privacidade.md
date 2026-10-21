@@ -1,11 +1,11 @@
-# Política de Privacidade — Arquemetre
+# Política de Privacidade — Arquemestre
 
 Última atualização: 20/10/2026
 
 **Responsável:** Adauto (desenvolvedor, pessoa física) — contato: marcenariaaraujo415@gmail.com
 
 ## Resumo
-O Arquemetre funciona **sem internet**. O aplicativo não envia suas notas, fotos, medidas ou projetos para nenhum servidor nosso nem de terceiros. Tudo fica guardado no seu aparelho.
+O Arquemestre funciona **sem internet**. O aplicativo não envia suas notas, fotos, medidas ou projetos para nenhum servidor nosso nem de terceiros. Tudo fica guardado no seu aparelho.
 
 ## O que o aplicativo guarda (somente no seu aparelho)
 - Notas, folhas, desenhos, medidas e projetos de móveis que você cria.

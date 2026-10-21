@@ -1,15 +1,15 @@
 # Ficha da loja (rascunho) — Google Play
 
-**Nome do app (até 30 caracteres):** Arquemetre
+**Nome do app (até 30 caracteres):** Arquemestre
 **Descrição curta (até 80):** Caderno digital de marcenaria: desenhe, meça e monte seus móveis.
 
 ## Descrição completa
-Arquemetre é o caderno digital para quem trabalha com marcenaria e móveis planejados. Desenhe à mão, cole fotos da obra e anote as medidas direto na folha.
+Arquemestre é o caderno digital para quem trabalha com marcenaria e móveis planejados. Desenhe à mão, cole fotos da obra e anote as medidas direto na folha.
 
 **Caderno com folhas A4**
 - Caneta, lápis, marca-texto, formas, texto e borracha.
 - Fotos da obra na folha, com cotas por cima.
-- Folha com cabeçalho Arquemetre ou em branco.
+- Folha com cabeçalho Arquemestre ou em branco.
 
 **Cotas com trena Bluetooth**
 - Conecte uma trena a laser Bluetooth e a medida cai direto na cota selecionada, na ordem.
@@ -27,7 +27,7 @@ Arquemetre é o caderno digital para quem trabalha com marcenaria e móveis plan
 **Seus dados ficam com você**
 - Funciona sem internet e não envia suas notas para nenhum servidor.
 
-Arquemetre não é afiliado à Bosch nem a outros fabricantes de trenas.
+Arquemestre não é afiliado à Bosch nem a outros fabricantes de trenas.
 
 ## Textos para os formulários
 - **Categoria:** Produtividade (ou Ferramentas).

@@ -143,11 +143,12 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         onEnd = { st.endGesture() },
                         refitTick = refitTick,
                     )
-                    Row(Modifier.align(Alignment.TopStart).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(Modifier.align(Alignment.TopStart).fillMaxWidth().horizontalScroll(rememberScrollState()).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
                         QuickBtn("↷ Refazer", st.canRedo) { st.redo() }
                         QuickBtn(if (shelfMode) "✓ Pronto" else "+ Prateleiras", true) { shelfMode = !shelfMode; divMode = false }
                         QuickBtn(if (divMode) "✓ Pronto" else "+ Divisórias", true) { divMode = !divMode; shelfMode = false }
+                        QuickBtn("Centralizar", true) { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }
                     }
                     if (shelfMode || divMode) {
                         Text(
@@ -489,11 +490,6 @@ private fun CabinetCanvas(
         val bottom = Y(cab.hMm) + 40f
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
-    Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("Centralizar" to { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }).forEach { (t, f) ->
-            Text(t, color = Ui.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Ui.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
-        }
-    }
     }
 }
 
@@ -718,7 +714,7 @@ private fun CabinetPanel(
 @Composable
 private fun QuickBtn(text: String, enabled: Boolean, onClick: () -> Unit) {
     Text(
-        text, color = if (enabled) Ui.text else Ui.dim, fontSize = 14.sp,
+        text, color = if (enabled) Ui.text else Ui.dim, fontSize = 14.sp, maxLines = 1, softWrap = false,
         modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xE62E3136)).clickable(enabled = enabled) { onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
     )
 }

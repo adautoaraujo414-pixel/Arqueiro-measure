@@ -90,6 +90,7 @@ jobs:
       - name: Gerar AAB assinado para o Google Play (se a chave estiver configurada)
         if: success() && github.event_name == 'push'
         env:
+          GH_TOKEN: ${{ github.token }}
           KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
           KS_PASS: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
@@ -102,7 +103,16 @@ jobs:
             -Pandroid.injected.signing.store.password="$KS_PASS" \
             -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
             -Pandroid.injected.signing.key.password="$KEY_PASS"
+          # APK de instalação assinado com a MESMA chave (estável): é este que se registra no Google
+          ./gradlew --no-daemon assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
+            -Pandroid.injected.signing.store.password="$KS_PASS" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASS"
           rm -f "$RUNNER_TEMP/upload.jks"
+          APKR=$(ls app/build/outputs/apk/release/*.apk | head -n1)
+          cp "$APKR" ArqueMeasure.apk
+          gh release upload "apk-${GITHUB_RUN_NUMBER}" ArqueMeasure.apk --clobber
 
       - name: Publicar AAB (só quem tem acesso ao repositório baixa)
         if: success() && github.event_name == 'push'

@@ -88,6 +88,17 @@ data class Part(
     val note: String = "",
 )
 
+/**
+ * Móvel encaixado numa parede da planta: [ax],[ay] = início da parede (folha), [ux],[uy] = direção unitária da parede,
+ * [nx],[ny] = normal para dentro do cômodo, [upm] = unidades de folha por mm real (escala medida),
+ * [lenMm] = medida da parede, [offMm] = distância do início da parede até o móvel.
+ */
+data class WallFit(
+    val roomId: String, val seg: Int,
+    val ax: Float, val ay: Float, val ux: Float, val uy: Float, val nx: Float, val ny: Float,
+    val upm: Double, val lenMm: Double, val offMm: Double,
+)
+
 /** Módulo colocado numa folha. [at] = canto superior esquerdo; [scaleDen] = escala (10 → 1:10). */
 data class CabObj(
     override val id: String = newId(),
@@ -97,9 +108,47 @@ data class CabObj(
     val name: String = "Armário base",
     val scaleDen: Int = 10,
     override val locked: Boolean = false,
+    val wall: WallFit? = null,
 ) : Ann() {
     /** Unidades de folha por mm real, na escala da folha (1 unidade = 1/96 pol). */
-    val unitsPerMm: Double get() = 3.7795277 / scaleDen
-    fun widthUnits(): Float = (cab.wMm * unitsPerMm).toFloat()
-    fun heightUnits(): Float = (cab.hMm * unitsPerMm).toFloat()
+    val unitsPerMm: Double get() = wall?.upm ?: (3.7795277 / scaleDen)
+
+    /** Cantos da planta (vista de cima) quando encaixado na parede: início/fim na parede e fundo do móvel. */
+    fun corners(): List<Pt> {
+        val w = wall ?: return emptyList()
+        val k = w.upm.toFloat()
+        val x0 = w.ax + w.ux * (w.offMm.toFloat() * k)
+        val y0 = w.ay + w.uy * (w.offMm.toFloat() * k)
+        val lw = cab.wMm.toFloat() * k
+        val dd = cab.dMm.toFloat() * k
+        return listOf(
+            Pt(x0, y0), Pt(x0 + w.ux * lw, y0 + w.uy * lw),
+            Pt(x0 + w.ux * lw + w.nx * dd, y0 + w.uy * lw + w.ny * dd), Pt(x0 + w.nx * dd, y0 + w.ny * dd),
+        )
+    }
+
+    /** Canto superior esquerdo da caixa que envolve o móvel. */
+    fun origin(): Pt {
+        if (wall == null) return at
+        val c = corners()
+        return Pt(c.minOf { it.x }, c.minOf { it.y })
+    }
+    fun widthUnits(): Float {
+        if (wall == null) return (cab.wMm * unitsPerMm).toFloat()
+        val c = corners(); return c.maxOf { it.x } - c.minOf { it.x }
+    }
+    fun heightUnits(): Float {
+        if (wall == null) return (cab.hMm * unitsPerMm).toFloat()
+        val c = corners(); return c.maxOf { it.y } - c.minOf { it.y }
+    }
+    /** Passa do comprimento da parede? */
+    fun overflowsWall(): Boolean = wall != null && wall.offMm + cab.wMm > wall.lenMm + 0.5
+
+    /** Desliza ao longo da parede (ímã): [dxu],[dyu] = deslocamento na folha. */
+    fun slide(dxu: Float, dyu: Float): CabObj {
+        val w = wall ?: return copy(at = Pt(at.x + dxu, at.y + dyu))
+        val dMm = (dxu * w.ux + dyu * w.uy) / w.upm
+        val maxOff = maxOf(0.0, w.lenMm - cab.wMm)
+        return copy(wall = w.copy(offMm = (w.offMm + dMm).coerceIn(0.0, maxOff)))
+    }
 }

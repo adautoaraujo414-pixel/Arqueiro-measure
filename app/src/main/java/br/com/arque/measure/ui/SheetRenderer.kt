@@ -343,6 +343,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
 
     /** Móvel: vista frontal na escala da folha, com largura e altura. */
     private fun drawCab(c: Canvas, o: CabObj) {
+        if (o.wall != null) { drawCabOnWall(c, o); return }
         val k = o.unitsPerMm.toFloat()
         val parts = br.com.arque.measure.logic.CabinetMath.parts(o.cab)
         for (p in parts) {
@@ -385,6 +386,34 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT
         c.drawText("${o.name} · 1:${o.scaleDen}", o.at.x + w / 2f, o.at.y + h + 14f, textPaint)
+    }
+
+    /** Móvel encaixado na parede: planta (vista de cima) na escala medida do cômodo. */
+    private fun drawCabOnWall(c: Canvas, o: CabObj) {
+        val q = o.corners()
+        val bad = o.overflowsWall()
+        val path = android.graphics.Path().apply {
+            moveTo(q[0].x, q[0].y); lineTo(q[1].x, q[1].y); lineTo(q[2].x, q[2].y); lineTo(q[3].x, q[3].y); close()
+        }
+        fillPaint.style = Paint.Style.FILL
+        fillPaint.color = if (bad) 0x55E74C3C else 0x66C8A96A
+        c.drawPath(path, fillPaint)
+        strokePaint.pathEffect = null
+        strokePaint.color = if (bad) 0xFFC0392B.toInt() else 0xFF6F5F40.toInt()
+        strokePaint.strokeWidth = 1.4f
+        c.drawPath(path, strokePaint)
+        // frente do móvel (lado de dentro do cômodo) em traço mais grosso
+        strokePaint.strokeWidth = 2.6f
+        c.drawLine(q[3].x, q[3].y, q[2].x, q[2].y, strokePaint)
+        val cx = (q[0].x + q[2].x) / 2f
+        val cy = (q[0].y + q[2].y) / 2f
+        textPaint.color = if (bad) 0xFFC0392B.toInt() else 0xFF333333.toInt()
+        textPaint.textSize = 9f
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.textAlign = Paint.Align.CENTER
+        c.drawText(o.name, cx, cy - 2f, textPaint)
+        textPaint.typeface = Typeface.DEFAULT
+        c.drawText(if (bad) "passa da parede!" else "${o.cab.wMm.toLong()} × ${o.cab.dMm.toLong()} mm", cx, cy + 9f, textPaint)
     }
 
     /** Cor de cada tipo de segmento (parede usa a cor do cômodo). */

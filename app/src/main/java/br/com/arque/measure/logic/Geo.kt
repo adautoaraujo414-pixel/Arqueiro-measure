@@ -101,7 +101,7 @@ object Geo {
         is DimObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is TextObj -> listOf(toSheet(photos, a.photoId, a.at))
         is RoomObj -> a.pts.map { toSheet(photos, a.photoId, it) }
-        is CabObj -> listOf(a.at, Pt(a.at.x + a.widthUnits(), a.at.y + a.heightUnits()))
+        is CabObj -> a.origin().let { o -> listOf(o, Pt(o.x + a.widthUnits(), o.y + a.heightUnits())) }
     }
 
     /** Move o objeto por (dx,dy) em unidades de folha. */
@@ -119,7 +119,7 @@ object Geo {
             is DimObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is TextObj -> ann.copy(at = mv(ann.at))
             is RoomObj -> ann.copy(pts = ann.pts.map(::mv))
-            is CabObj -> ann.copy(at = Pt(ann.at.x + dx, ann.at.y + dy))
+            is CabObj -> ann.slide(dx, dy)
         }
     }
 

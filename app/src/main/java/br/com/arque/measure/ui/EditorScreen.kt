@@ -880,6 +880,9 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
             if (o is br.com.arque.measure.model.CabObj) {
                 CtxBtn("Editar móvel") { session.cabEditId = o.id }
                 val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+                if (o.wall != null) {
+                    CtxBtn(if (o.overflowsWall()) "⚠ Passa da parede" else "Na parede (desliza)", false) { }
+                } else {
                 CtxBtn("− Diminuir", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
                 CtxBtn("+ Aumentar", !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
                 CtxBtn("Caber na folha", !o.locked) {
@@ -887,6 +890,7 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
                     st.setCabScale(o.id, steps.firstOrNull { it >= need } ?: 100)
                 }
                 CtxBtn("Escala 1:${o.scaleDen}", false) { }
+                }
             }
             CtxBtn(if (o.locked) "Desbloquear" else "Bloqueio") { st.setLocked(o.id, !o.locked) }
             CtxBtn("Para frente") { st.reorder(o.id, up = true) }
@@ -1046,6 +1050,11 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
             }
             if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
                 TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text("Unir pontos soltos (reta = 1 medida)") }
+            }
+            if (r.closed && seg != null) {
+                var warn by remember { mutableStateOf<String?>(null) }
+                TextButton(onClick = { warn = st.addCabOnWall(r.id, k) }, enabled = !r.locked) { Text("Encaixar móvel nesta parede") }
+                warn?.let { Text(it, color = Color(0xFFC0392B), fontSize = 13.sp) }
             }
             if (r.pts.size >= 3) {
                 TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) "Abrir contorno" else "Fechar contorno") }

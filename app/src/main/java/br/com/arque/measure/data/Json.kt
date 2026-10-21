@@ -86,7 +86,7 @@ object Json {
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
             is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
-                .put("cab", cabToJson(o.cab))
+                .put("cab", cabToJson(o.cab)).also { jj -> o.wall?.let { jj.put("wall", wallToJson(it)) } }
             is RoomObj -> j.put("type", "room").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("pts", JSONArray(o.pts.map(::ptToJson))).put("closed", o.closed)
                 .put(
@@ -187,6 +187,7 @@ object Json {
             "cab" -> CabObj(
                 id = id, at = ptFromJson(j.getJSONArray("at")), name = j.optString("name", "Móvel"),
                 scaleDen = j.optInt("scaleDen", 10), cab = cabFromJson(j.getJSONObject("cab")), locked = locked,
+                wall = j.optJSONObject("wall")?.let(::wallFromJson),
             )
             "room" -> RoomObj(
                 id = id, photoId = j.optStringOrNull("photoId"),
@@ -288,3 +289,16 @@ object Json {
         )
     }
 }
+
+private fun wallToJson(w: br.com.arque.measure.model.WallFit): JSONObject = JSONObject()
+    .put("roomId", w.roomId).put("seg", w.seg).put("ax", w.ax.toDouble()).put("ay", w.ay.toDouble())
+    .put("ux", w.ux.toDouble()).put("uy", w.uy.toDouble()).put("nx", w.nx.toDouble()).put("ny", w.ny.toDouble())
+    .put("upm", w.upm).put("lenMm", w.lenMm).put("offMm", w.offMm)
+
+private fun wallFromJson(j: JSONObject) = br.com.arque.measure.model.WallFit(
+    roomId = j.optString("roomId"), seg = j.optInt("seg"),
+    ax = j.optDouble("ax").toFloat(), ay = j.optDouble("ay").toFloat(),
+    ux = j.optDouble("ux").toFloat(), uy = j.optDouble("uy").toFloat(),
+    nx = j.optDouble("nx").toFloat(), ny = j.optDouble("ny").toFloat(),
+    upm = j.optDouble("upm", 0.2), lenMm = j.optDouble("lenMm"), offMm = j.optDouble("offMm"),
+)

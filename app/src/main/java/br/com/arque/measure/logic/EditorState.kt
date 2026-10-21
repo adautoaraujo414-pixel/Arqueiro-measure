@@ -133,6 +133,49 @@ class EditorState(
         return o.id
     }
 
+    /**
+     * Encaixa um móvel novo na parede [k] do cômodo [roomId]: a escala vem da medida da parede
+     * (traço desenhado ÷ mm medidos). Devolve um aviso (ou null se tudo certo).
+     */
+    fun addCabOnWall(roomId: String, k: Int): String? {
+        val room = sheet.obj(roomId) as? br.com.arque.measure.model.RoomObj ?: return "Cômodo não encontrado"
+        val mm = room.segs.getOrNull(k)?.valueMm ?: return "Meça (ou digite) esta parede antes de encaixar o móvel"
+        if (mm <= 0.0) return "Medida da parede inválida"
+        val photos = sheet.photos()
+        val (a, b) = Geo.segEnds(photos, room, k)
+        val dx = b.x - a.x
+        val dy = b.y - a.y
+        val len = kotlin.math.hypot(dx, dy)
+        if (len < 1f) return "Parede curta demais no desenho"
+        val ux = dx / len
+        val uy = dy / len
+        val poly = Geo.annPoints(photos, room)
+        fun inside(p: Pt): Boolean {
+            var c = false
+            var j = poly.size - 1
+            for (i in poly.indices) {
+                val pi = poly[i]; val pj = poly[j]
+                if ((pi.y > p.y) != (pj.y > p.y) && p.x < (pj.x - pi.x) * (p.y - pi.y) / (pj.y - pi.y) + pi.x) c = !c
+                j = i
+            }
+            return c
+        }
+        val mid = Pt((a.x + b.x) / 2f, (a.y + b.y) / 2f)
+        val probe = 6f
+        var nx = -uy
+        var ny = ux
+        if (!inside(Pt(mid.x + nx * probe, mid.y + ny * probe)) && inside(Pt(mid.x - nx * probe, mid.y - ny * probe))) { nx = -nx; ny = -ny }
+        val upm = len.toDouble() / mm
+        val base = br.com.arque.measure.logic.CabinetMath.normalized(Cabinet())
+        val w = minOf(base.wMm, mm)
+        val cab = br.com.arque.measure.logic.CabinetMath.normalized(base.copy(wMm = w))
+        val wf = br.com.arque.measure.model.WallFit(roomId, k, a.x, a.y, ux, uy, nx, ny, upm, mm, 0.0)
+        val o = CabObj(at = a, cab = cab, name = "Armário base", wall = wf)
+        commit(sheet.copy(objs = sheet.objs + o))
+        select(o.id)
+        return if (base.wMm > mm) "Parede de ${mm.toLong()} mm: o móvel foi ajustado para caber" else null
+    }
+
     /** Edita o módulo [id] (cada chamada é um passo de desfazer). */
     fun updateCab(id: String, f: (Cabinet) -> Cabinet) {
         val o = sheet.obj(id) as? CabObj ?: return

@@ -217,9 +217,26 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
             .pointerInput(session) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
+                    if (session.screenLocked) {
+                        // travada: ignora tudo, só conta 3 toques seguidos para destravar
+                        var moved = false
+                        var upT = down.uptimeMillis
+                        do {
+                            val ev = awaitPointerEvent()
+                            ev.changes.forEach {
+                                if ((it.position - down.position).getDistance() > 24f * density) moved = true
+                                upT = it.uptimeMillis
+                                it.consume()
+                            }
+                        } while (ev.changes.any { it.pressed })
+                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) session.toggleLock()
+                    } else {
+                    session.tapDown(down.uptimeMillis)
                     session.textEdit = null
                     controller.down(down.position, down.type == PointerType.Touch)
                     var multi = false
+                    var moved = false
+                    var upT = down.uptimeMillis
                     var last = down.position
                     do {
                         val ev = awaitPointerEvent()
@@ -235,6 +252,8 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                         } else if (!multi && pressed.size == 1) {
                             val ch = pressed[0]
                             last = ch.position
+                            upT = ch.uptimeMillis
+                            if ((ch.position - down.position).getDistance() > 24f * density) moved = true
                             if (ch.positionChanged()) {
                                 controller.move(ch.position)
                                 ch.consume()
@@ -251,6 +270,8 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                             is GestureAction.EditText -> session.textEdit = TextEdit(a.id, a.at)
                             null -> {}
                         }
+                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) session.toggleLock()
+                    }
                     }
                 }
             },
@@ -348,6 +369,21 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
 
     Box(Modifier.fillMaxSize()) {
         SheetCanvas(vm, session, Modifier.fillMaxSize())
+        session.lockMsg?.let { msg ->
+            LaunchedEffect(msg, session.screenLocked) { kotlinx.coroutines.delay(1600); session.lockMsg = null }
+            Text(
+                (if (session.screenLocked) "🔒 " else "🔓 ") + msg,
+                color = Color.White, fontSize = 22.sp,
+                modifier = Modifier.align(Alignment.Center).clip(RoundedCornerShape(16.dp)).background(Color(0xCC111111)).padding(horizontal = 22.dp, vertical = 14.dp),
+            )
+        }
+        if (session.screenLocked) {
+            Text(
+                "🔒 Tela travada · 3 toques para destravar",
+                color = Color.White, fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xB31B1C20)).padding(horizontal = 12.dp, vertical = 6.dp),
+            )
+        }
 
         // dica de puxar para criar folha
         if (session.pull > 20f) {

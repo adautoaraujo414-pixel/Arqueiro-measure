@@ -109,6 +109,41 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     /** Móvel aberto no editor (id) ou null. */
     var cabEditId by mutableStateOf<String?>(null)
 
+    /** Tela travada: toques e gestos na folha são ignorados (3 toques seguidos alternam). */
+    var screenLocked by mutableStateOf(false)
+    /** Aviso curto ("Tela travada" / "Tela destravada"). */
+    var lockMsg by mutableStateOf<String?>(null)
+    private val tapTimes = ArrayList<Long>()
+    private val tapPos = ArrayList<Offset>()
+    private var tapSelId: String? = null
+    private var tapSelSeg = -1
+
+    /** Chamado ao pousar o dedo (destravado): guarda a seleção da primeira batida da sequência. */
+    fun tapDown(t: Long) {
+        if (tapTimes.isEmpty() || t - tapTimes.last() > 900L) {
+            tapSelId = state.selected?.id
+            tapSelSeg = state.selectedSeg
+        }
+    }
+
+    /** Registra um toque curto. Devolve true no 3º toque seguido (perto um do outro, em < 1,2 s). */
+    fun registerTap(t: Long, pos: Offset): Boolean {
+        if (tapTimes.isNotEmpty() && (t - tapTimes.last() > 700L || (pos - tapPos.last()).getDistance() > 90f * density)) { tapTimes.clear(); tapPos.clear() }
+        tapTimes += t; tapPos += pos
+        if (tapTimes.size >= 3 && t - tapTimes[tapTimes.size - 3] < 1200L) { tapTimes.clear(); tapPos.clear(); return true }
+        return false
+    }
+
+    /** Alterna a trava; devolve a seleção que existia antes dos toques (pra não perder a medida em foco). */
+    fun toggleLock() {
+        val id = tapSelId
+        if (!screenLocked && id != null) {
+            if (state.sheet.obj(id) is br.com.arque.measure.model.RoomObj && tapSelSeg >= 0) state.selectSeg(id, tapSelSeg) else state.select(id)
+        }
+        screenLocked = !screenLocked
+        lockMsg = if (screenLocked) "Tela travada" else "Tela destravada"
+    }
+
     /** Calculadora flutuante aberta? */
     var calcOpen by mutableStateOf(false)
 

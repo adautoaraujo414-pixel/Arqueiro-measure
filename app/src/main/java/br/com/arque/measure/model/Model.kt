@@ -113,7 +113,7 @@ data class DimObj(
 
 /** Modelos de folha. */
 enum class Template(val label: String) {
-    ARAUJO("Arquimestre croqui"),
+    ARAUJO("Arquemetre croqui"),
     BLANK("Em branco"),
     LINES("Linha fina"),
 }

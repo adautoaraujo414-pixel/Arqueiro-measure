@@ -87,6 +87,31 @@ jobs:
             --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
             --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
 
+      - name: Gerar AAB assinado para o Google Play (se a chave estiver configurada)
+        if: success() && github.event_name == 'push'
+        env:
+          KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "Sem chave de upload configurada: AAB não gerado."; exit 0; fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          ./gradlew --no-daemon bundleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
+            -Pandroid.injected.signing.store.password="$KS_PASS" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASS"
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Publicar AAB (só quem tem acesso ao repositório baixa)
+        if: success() && github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ArqueMeasure-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: ignore
+
       - name: Resumo dos erros
         if: failure()
         run: |

@@ -74,7 +74,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         }
     }
 
-    // Identidade da folha "Arquimestre": faixa preta, ouro, contatos e moldura arredondada.
+    // Identidade da folha "Arquemetre": faixa preta, ouro, contatos e moldura arredondada.
     private val gold = 0xFFD9A93E.toInt()
     private val goldDeep = 0xFFC9972F.toInt()
     private val frameGold = 0xFFD9A441.toInt()
@@ -93,7 +93,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         // ARQUIMESTRE + frase
         p.color = gold; p.typeface = Typeface.DEFAULT_BOLD; p.textAlign = Paint.Align.LEFT
         p.textSize = 30f; p.letterSpacing = 0.06f
-        c.drawText("ARQUIMESTRE", 36f, 38f, p)
+        c.drawText("ARQUEMETRE", 36f, 38f, p)
         p.color = goldDeep; p.typeface = Typeface.DEFAULT; p.textSize = 9.5f; p.letterSpacing = 0.14f
         c.drawText("SOLUÇÕES DE MARCENARIA E ARQUITETURA", 37f, 54f, p)
         p.letterSpacing = 0f

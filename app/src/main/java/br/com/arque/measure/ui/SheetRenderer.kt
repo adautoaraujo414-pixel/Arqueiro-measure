@@ -74,7 +74,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         }
     }
 
-    // Identidade da folha "Araújo Planejados": faixa preta, ouro, contatos e moldura arredondada.
+    // Identidade da folha "Arquimestre": faixa preta, ouro, contatos e moldura arredondada.
     private val gold = 0xFFD9A93E.toInt()
     private val goldDeep = 0xFFC9972F.toInt()
     private val frameGold = 0xFFD9A441.toInt()
@@ -85,36 +85,28 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         // fundo do papel
         p.style = Paint.Style.FILL; p.color = 0xFFF6F6F3.toInt()
         c.drawRect(0f, 0f, w, h, p)
-        // faixa preta do topo + filete dourado
+        // faixa preta do topo (baixa) + filete dourado
         p.color = 0xFF121118.toInt()
-        c.drawRect(0f, 0f, w, 100f, p)
+        c.drawRect(0f, 0f, w, 64f, p)
         p.color = goldDeep
-        c.drawRect(0f, 100f, w, 103f, p)
-        // marca "A"
-        p.color = gold
-        path.reset()
-        path.moveTo(62f, 20f); path.lineTo(88f, 78f); path.lineTo(76f, 78f); path.lineTo(62f, 46f)
-        path.lineTo(48f, 78f); path.lineTo(36f, 78f); path.close()
-        c.drawPath(path, p)
-        p.color = goldDeep
-        path.reset()
-        path.moveTo(50f, 68f); path.lineTo(74f, 68f); path.lineTo(80f, 80f); path.lineTo(44f, 80f); path.close()
-        c.drawPath(path, p)
-        // ARAUJO / PLANEJADOS
+        c.drawRect(0f, 64f, w, 67f, p)
+        // ARQUIMESTRE + frase
         p.color = gold; p.typeface = Typeface.DEFAULT_BOLD; p.textAlign = Paint.Align.LEFT
-        p.textSize = 38f; p.letterSpacing = 0.02f
-        c.drawText("ARAUJO", 98f, 56f, p)
-        p.color = goldDeep; p.typeface = Typeface.DEFAULT; p.textSize = 13f; p.letterSpacing = 0.45f
-        c.drawText("PLANEJADOS", 100f, 77f, p)
+        p.textSize = 30f; p.letterSpacing = 0.06f
+        c.drawText("ARQUIMESTRE", 36f, 38f, p)
+        p.color = goldDeep; p.typeface = Typeface.DEFAULT; p.textSize = 9.5f; p.letterSpacing = 0.14f
+        c.drawText("SOLUÇÕES DE MARCENARIA E ARQUITETURA", 37f, 54f, p)
         p.letterSpacing = 0f
         // divisória vertical
         p.style = Paint.Style.STROKE; p.strokeWidth = 1.2f; p.color = 0xFF8A6A25.toInt()
-        c.drawLine(318f, 28f, 318f, 78f, p)
+        c.drawLine(372f, 16f, 372f, 50f, p)
         // título
         p.style = Paint.Style.FILL; p.color = gold; p.typeface = Typeface.DEFAULT_BOLD
-        p.textSize = 23f; p.textAlign = Paint.Align.CENTER; p.textScaleX = 0.92f
-        c.drawText("ESPAÇO PARA DESENHAR / CROQUI", 568f, 58f, p)
+        p.textSize = 17f; p.textAlign = Paint.Align.CENTER; p.textScaleX = 0.92f
+        c.drawText("ESPAÇO PARA DESENHAR / CROQUI", 584f, 44f, p)
         p.textScaleX = 1f
+        c.save()
+        c.translate(0f, -47f)
         // contatos
         p.color = 0xFF2F2F33.toInt(); p.typeface = Typeface.DEFAULT; p.textSize = 12.5f; p.textAlign = Paint.Align.LEFT
         c.drawText("34 99644-5518", 90f, 141f, p)
@@ -136,10 +128,11 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         rect.set(560f, 131f, 577f, 144f); c.drawRect(rect, p)
         path.reset(); path.moveTo(560f, 131f); path.lineTo(568.5f, 138f); path.lineTo(577f, 131f)
         c.drawPath(path, p)
+        c.restore()
         // moldura arredondada dourada
         p.strokeWidth = 1.5f; p.color = frameGold
         p.style = Paint.Style.FILL; p.color = 0xFFFCFCFB.toInt()
-        rect.set(18f, 160f, w - 18f, h - 14f); c.drawRoundRect(rect, 12f, 12f, p)
+        rect.set(18f, 113f, w - 18f, h - 14f); c.drawRoundRect(rect, 12f, 12f, p)
         p.style = Paint.Style.STROKE; p.color = frameGold
         c.drawRoundRect(rect, 12f, 12f, p)
         p.reset()

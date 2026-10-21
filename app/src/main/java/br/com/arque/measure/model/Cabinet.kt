@@ -42,6 +42,8 @@ data class Cabinet(
     val rodapeMm: Double = 100.0,
     /** Travessa frontal (barra de fora a fora, com o puxador cava), embutida no rebaixo das laterais. */
     val travessaMm: Double = 70.0,
+    /** Travessa frontal (régua de 7). Desligada: entra um tampo igual à base, parafusado por cima das laterais. */
+    val hasTravessa: Boolean = true,
     /** Folga de montagem entre o topo do móvel e a pedra. */
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,
@@ -71,7 +73,7 @@ data class Cabinet(
 
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
-    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), DIVISORIA("Divisória"),
+    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), TOPO("Tampo superior"), DIVISORIA("Divisória"),
     PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"), FORNO("Forno (corte)"),
 }
 

@@ -116,7 +116,7 @@ object Json {
 
     private fun cabToJson(c: Cabinet): JSONObject = JSONObject()
         .put("w", c.wMm).put("h", c.hMm).put("d", c.dMm).put("esp", c.espMm).put("rodape", c.rodapeMm)
-        .put("travessa", c.travessaMm).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
+        .put("travessa", c.travessaMm).put("hasTravessa", c.hasTravessa).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
         .put("bordaSup", c.bordaSupMm).put("bordaInf", c.bordaInfMm).put("recuoFundo", c.recuoFundoMm)
         .put("back", c.hasBack)
         .put("folgaTopo", c.folgaTopoMm).put("moldura", c.molduraMm).put("hasMoldura", c.hasMoldura).put("hasRodape", c.hasRodape).put("hasBase", c.hasBase).put("tampEsq", c.tampEsq).put("tampDir", c.tampDir)
@@ -136,7 +136,7 @@ object Json {
         return Cabinet(
             wMm = j.optDouble("w", d.wMm), hMm = j.optDouble("h", d.hMm), dMm = j.optDouble("d", d.dMm),
             espMm = j.optDouble("esp", d.espMm), rodapeMm = j.optDouble("rodape", d.rodapeMm),
-            travessaMm = j.optDouble("travessa", d.travessaMm), folgaMm = j.optDouble("folga", d.folgaMm),
+            travessaMm = j.optDouble("travessa", d.travessaMm), hasTravessa = j.optBoolean("hasTravessa", true), folgaMm = j.optDouble("folga", d.folgaMm),
             folgaGavetaMm = j.optDouble("folgaGaveta", d.folgaGavetaMm),
             bordaSupMm = j.optDouble("bordaSup", d.bordaSupMm), bordaInfMm = j.optDouble("bordaInf", d.bordaInfMm),
             recuoFundoMm = j.optDouble("recuoFundo", d.recuoFundoMm), hasBack = j.optBoolean("back", true),

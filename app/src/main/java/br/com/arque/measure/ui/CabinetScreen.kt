@@ -708,7 +708,15 @@ private fun CabinetPanel(
             Text("Moldura de acabamento (${Units.formatNumber(cab.molduraMm, LengthUnit.MM)} mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasMoldura, onCheckedChange = { b -> edit { it.copy(hasMoldura = b) } })
         }
-        NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Travessa frontal (régua)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasTravessa, onCheckedChange = { b -> edit { it.copy(hasTravessa = b) } })
+        }
+        if (cab.hasTravessa) {
+            NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
+        } else {
+            Text("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais.", color = Ui.dim, fontSize = 12.sp)
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })

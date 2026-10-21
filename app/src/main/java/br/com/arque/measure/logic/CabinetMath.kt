@@ -34,15 +34,18 @@ object CabinetMath {
     fun rodapeH(c: Cabinet) = if (c.hasRodape) c.rodapeMm else 0.0
     fun baseT(c: Cabinet) = if (c.hasBase) c.espMm else 0.0
 
-    fun baseBottom(c: Cabinet) = (c.hMm - rodapeH(c)).coerceAtLeast(c.folgaTopoMm + c.travessaMm + c.espMm * 2 + 10.0)
+    /** Altura ocupada em cima: a travessa frontal ou, sem ela, o tampo (chapa igual à base) por cima das laterais. */
+    fun topoH(c: Cabinet) = if (c.hasTravessa) c.travessaMm else c.espMm
+
+    fun baseBottom(c: Cabinet) = (c.hMm - rodapeH(c)).coerceAtLeast(c.folgaTopoMm + topoH(c) + c.espMm * 2 + 10.0)
 
     /** Altura de cada lateral: apoiada em cima da base, começa depois da folga do topo. */
-    fun lateralH(c: Cabinet) = baseBottom(c) - baseT(c) - c.folgaTopoMm
+    fun lateralH(c: Cabinet) = baseBottom(c) - baseT(c) - c.folgaTopoMm - (if (c.hasTravessa) 0.0 else c.espMm)
 
     fun innerW(c: Cabinet) = (c.wMm - 2 * c.espMm).coerceAtLeast(10.0)
 
     /** Onde começam e terminam, na vertical, os vãos (abaixo da travessa frontal, acima da base). */
-    fun vaoTop(c: Cabinet) = c.folgaTopoMm + c.travessaMm
+    fun vaoTop(c: Cabinet) = c.folgaTopoMm + topoH(c)
     fun vaoBottom(c: Cabinet) = baseBottom(c) - baseT(c)
 
     /** Altura livre dos vãos. */
@@ -141,9 +144,15 @@ object CabinetMath {
         val reb = "rebaixo ${fmt(e)} × ${fmt(c.travessaMm)} na frente, em cima"
         val out = ArrayList<Part>()
         if (c.hasBase) out += Part(PartKind.BASE, 0.0, bb - e, c.wMm, e, c.wMm, dep, e, note = "inteiriça, sob as laterais")
-        out += Part(PartKind.LATERAL, 0.0, top, e, latH, latH, dep, e, note = reb)
-        out += Part(PartKind.LATERAL, c.wMm - e, top, e, latH, latH, dep, e, note = reb)
-        out += Part(PartKind.TRAVESSA, 0.0, top, c.wMm, c.travessaMm, c.wMm, c.travessaMm, e, note = "embute ${fmt(e)} no rebaixo das laterais")
+        if (c.hasTravessa) {
+            out += Part(PartKind.LATERAL, 0.0, top, e, latH, latH, dep, e, note = reb)
+            out += Part(PartKind.LATERAL, c.wMm - e, top, e, latH, latH, dep, e, note = reb)
+            out += Part(PartKind.TRAVESSA, 0.0, top, c.wMm, c.travessaMm, c.wMm, c.travessaMm, e, note = "embute ${fmt(e)} no rebaixo das laterais")
+        } else {
+            out += Part(PartKind.LATERAL, 0.0, top + e, e, latH, latH, dep, e)
+            out += Part(PartKind.LATERAL, c.wMm - e, top + e, e, latH, latH, dep, e)
+            out += Part(PartKind.TOPO, 0.0, top, c.wMm, e, c.wMm, dep, e, note = "igual à base, parafusada por cima das laterais")
+        }
         val dx = dividerX(c)
         dx.forEachIndexed { i, x ->
             out += Part(PartKind.DIVISORIA, x, vTop, e, vh, vh, dep, e, divider = i)

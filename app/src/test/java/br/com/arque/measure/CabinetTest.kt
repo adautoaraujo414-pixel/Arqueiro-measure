@@ -231,3 +231,17 @@ class CabinetTest {
         assertEquals(CabinetMath.vaoRanges(g)[0].let { it.second - it.first } + 15.0, f.cutL, 1e-9)
     }
 }
+
+class CabinetNoTravessaTest {
+    @org.junit.Test fun topPlateReplacesTravessa() {
+        val c = br.com.arque.measure.model.Cabinet(hasTravessa = false)
+        val l = br.com.arque.measure.logic.CabinetMath.cutList(c)
+        org.junit.Assert.assertTrue(l.none { it.kind == br.com.arque.measure.model.PartKind.TRAVESSA })
+        val topo = l.first { it.kind == br.com.arque.measure.model.PartKind.TOPO }
+        val base = l.first { it.kind == br.com.arque.measure.model.PartKind.BASE }
+        org.junit.Assert.assertEquals(base.cutL, topo.cutL, 0.01)
+        org.junit.Assert.assertEquals(base.cutW, topo.cutW, 0.01)
+        val withT = br.com.arque.measure.logic.CabinetMath.cutList(br.com.arque.measure.model.Cabinet()).first { it.kind == br.com.arque.measure.model.PartKind.LATERAL }
+        org.junit.Assert.assertEquals(withT.cutL - 15.0, l.first { it.kind == br.com.arque.measure.model.PartKind.LATERAL }.cutL, 0.01)
+    }
+}

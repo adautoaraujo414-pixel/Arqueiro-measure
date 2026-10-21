@@ -105,34 +105,10 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         p.textSize = 17f; p.textAlign = Paint.Align.CENTER; p.textScaleX = 0.92f
         c.drawText("ESPAÇO PARA DESENHAR / CROQUI", 584f, 44f, p)
         p.textScaleX = 1f
-        c.save()
-        c.translate(0f, -47f)
-        // contatos
-        p.color = 0xFF2F2F33.toInt(); p.typeface = Typeface.DEFAULT; p.textSize = 12.5f; p.textAlign = Paint.Align.LEFT
-        c.drawText("34 99644-5518", 90f, 141f, p)
-        c.drawText("@marcenariaaraujo401", 334f, 141f, p)
-        c.drawText("marcenariaaraujo415@gmail.com", 591f, 141f, p)
-        // ícones (ouro, traço fino)
-        p.style = Paint.Style.STROKE; p.strokeWidth = 1.4f; p.color = goldDeep; p.strokeCap = Paint.Cap.ROUND
-        // telefone
-        path.reset()
-        path.moveTo(62f, 131f); path.quadTo(60f, 138f, 68f, 144f); path.quadTo(72f, 146f, 74f, 143f)
-        path.lineTo(71f, 140f); path.lineTo(68f, 141f); path.quadTo(65f, 138f, 65f, 135f); path.lineTo(66f, 133f)
-        path.lineTo(63f, 130f); path.close()
-        c.drawPath(path, p)
-        // instagram
-        rect.set(305f, 130f, 321f, 146f); c.drawRoundRect(rect, 4f, 4f, p)
-        c.drawCircle(313f, 138f, 3.6f, p)
-        p.style = Paint.Style.FILL; c.drawCircle(318f, 133f, 0.9f, p); p.style = Paint.Style.STROKE
-        // envelope
-        rect.set(560f, 131f, 577f, 144f); c.drawRect(rect, p)
-        path.reset(); path.moveTo(560f, 131f); path.lineTo(568.5f, 138f); path.lineTo(577f, 131f)
-        c.drawPath(path, p)
-        c.restore()
         // moldura arredondada dourada
         p.strokeWidth = 1.5f; p.color = frameGold
         p.style = Paint.Style.FILL; p.color = 0xFFFCFCFB.toInt()
-        rect.set(18f, 113f, w - 18f, h - 14f); c.drawRoundRect(rect, 12f, 12f, p)
+        rect.set(18f, 84f, w - 18f, h - 14f); c.drawRoundRect(rect, 12f, 12f, p)
         p.style = Paint.Style.STROKE; p.color = frameGold
         c.drawRoundRect(rect, 12f, 12f, p)
         p.reset()

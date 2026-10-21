@@ -77,6 +77,16 @@ class Store(val root: File) {
         f.delete(); File(f.path + ".bak").delete(); File(f.path + ".tmp").delete()
     }
 
+    // ---- orçamentos e dados da empresa ----
+
+    private val quotesFile = File(root, "quotes.json")
+    private val companyFile = File(root, "company.json")
+
+    fun loadQuotes(): List<br.com.arque.measure.model.Quote> = readWithRecovery(quotesFile, QuoteJson::quotesFromJson) ?: emptyList()
+    fun saveQuotes(list: List<br.com.arque.measure.model.Quote>) = writeAtomic(quotesFile, QuoteJson.quotesToJson(list))
+    fun loadCompany(): br.com.arque.measure.model.Company = readWithRecovery(companyFile, QuoteJson::companyFromJson) ?: br.com.arque.measure.model.Company()
+    fun saveCompany(c: br.com.arque.measure.model.Company) = writeAtomic(companyFile, QuoteJson.companyToJson(c))
+
     // ---- leituras Bluetooth ainda não vinculadas ----
 
     fun loadReadings(): List<Reading> = readWithRecovery(readingsFile, Json::readingsFromJson) ?: emptyList()

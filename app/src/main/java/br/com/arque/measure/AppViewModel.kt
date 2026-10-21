@@ -42,6 +42,7 @@ import java.util.concurrent.Executors
 sealed interface Screen {
     data object Library : Screen
     data object Editor : Screen
+    data object Quotes : Screen
 }
 
 /** Filtro da biblioteca: todas, uma pasta ou o lixo. */
@@ -420,6 +421,53 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val r = withContext(io) { runCatching(block) }
             toast = if (r.isSuccess) okMsg else "Falhou: ${r.exceptionOrNull()?.message ?: "erro"}"
+        }
+    }
+
+    // ---------- orçamentos ----------
+
+    var company by mutableStateOf(store.loadCompany())
+        private set
+    var quotes by mutableStateOf(store.loadQuotes())
+        private set
+
+    fun saveCompany(c: br.com.arque.measure.model.Company) {
+        company = c
+        viewModelScope.launch(io) { store.saveCompany(c) }
+    }
+
+    /** Cria ou atualiza o orçamento (grava na hora). */
+    fun saveQuote(q: br.com.arque.measure.model.Quote) {
+        quotes = if (quotes.any { it.id == q.id }) quotes.map { if (it.id == q.id) q else it } else listOf(q) + quotes
+        val snap = quotes
+        viewModelScope.launch(io) { store.saveQuotes(snap) }
+    }
+
+    fun deleteQuote(id: String) {
+        quotes = quotes.filter { it.id != id }
+        val snap = quotes
+        viewModelScope.launch(io) { store.saveQuotes(snap) }
+    }
+
+    /** Gera o PDF do orçamento na pasta temporária e devolve o Uri para compartilhar. */
+    fun buildQuotePdf(q: br.com.arque.measure.model.Quote, onReady: (Uri) -> Unit) {
+        if (q.includeDrawing) flush()
+        val app = getApplication<Application>()
+        val comp = company
+        val renderer = SheetRenderer { images.getBlocking(it) }
+        viewModelScope.launch {
+            val r = withContext(io) {
+                runCatching {
+                    val note = if (q.includeDrawing && q.noteId != null) store.loadNote(q.noteId) else null
+                    val dir = File(app.cacheDir, "quotes").apply { mkdirs() }
+                    dir.listFiles()?.forEach { it.delete() }
+                    val safe = q.clientName.ifBlank { "cliente" }.replace(Regex("[^A-Za-z0-9À-ÿ]+"), "_").take(30)
+                    val f = File(dir, "Orcamento_$safe.pdf")
+                    f.outputStream().use { QuotePdf.write(comp, q, note, renderer, it) }
+                    FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", f)
+                }
+            }
+            r.onSuccess(onReady).onFailure { toast = "Falhou: ${it.message ?: "erro ao gerar o PDF"}" }
         }
     }
 

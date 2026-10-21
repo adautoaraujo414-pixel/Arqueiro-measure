@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AllInbox
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -88,6 +89,7 @@ import java.util.Locale
 @Composable
 fun App(vm: AppViewModel) {
     BackHandler(enabled = vm.screen == Screen.Editor) { vm.closeEditor() }
+    BackHandler(enabled = vm.screen == Screen.Quotes) { vm.screen = Screen.Library }
 
     LaunchedEffect(vm.toast) {
         if (vm.toast != null) {
@@ -100,6 +102,7 @@ fun App(vm: AppViewModel) {
         when (vm.screen) {
             Screen.Library -> LibraryScreen(vm)
             Screen.Editor -> vm.session?.let { EditorScreen(vm, it) }
+            Screen.Quotes -> QuotesScreen(vm)
         }
         vm.toast?.let { msg ->
             Surface(
@@ -184,6 +187,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     }
                     SideItem("Nova pasta", Icons.Filled.CreateNewFolder, false) { newFolder = true }
                     Spacer(Modifier.height(12.dp))
+                    SideItem("Orçamentos", Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
                     SideItem("Lixo", Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
                 }
             }
@@ -209,6 +213,9 @@ fun LibraryScreen(vm: AppViewModel) {
                     Box {
                         IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, "Menu", tint = Ui.text) }
                         DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
+                            DropdownMenuItem(text = { Text("Orçamentos") }, onClick = {
+                                topMenu = false; vm.screen = Screen.Quotes
+                            })
                             DropdownMenuItem(text = { Text("Fazer backup (ZIP)") }, onClick = {
                                 topMenu = false; backupLauncher.launch("arque-measure-backup.zip")
                             })
@@ -228,6 +235,7 @@ fun LibraryScreen(vm: AppViewModel) {
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })
                         }
                         FilterChip(selected = filter == LibFilter.Trash, onClick = { vm.filter = LibFilter.Trash }, label = { Text("Lixo") })
+                        FilterChip(selected = false, onClick = { vm.screen = Screen.Quotes }, label = { Text("Orçamentos") })
                     }
                 }
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {

@@ -826,7 +826,6 @@ private fun CutListBody(lines: List<CabinetMath.Line>, name: String = "Móvel") 
             "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura).",
             color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
         )
-        CutPlan(lines, name)
     }
 }
 

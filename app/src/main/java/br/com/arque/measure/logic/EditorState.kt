@@ -475,6 +475,17 @@ class EditorState(
     /** Duplica o objeto com deslocamento. Foto duplicada leva suas anotações junto. */
     fun duplicate(id: String) {
         val o = sheet.obj(id) ?: return
+        val fit = (o as? CabObj)?.layout
+        if (o is CabObj && fit != null) {
+            // módulo da parede: a cópia entra logo ao lado (mesma fileira), com as mesmas medidas
+            val row = WallLayout.members(sheet, fit.wallId, o.cab.superior)
+            val copy = o.copy(id = newId(), name = o.name + " (cópia)", locked = false, layout = fit.copy(order = fit.order + 1))
+            commit(sheet.copy(objs = sheet.objs.map {
+                if (it is CabObj && it.layout?.wallId == fit.wallId && it.cab.superior == o.cab.superior && it.layout.order > fit.order) it.copy(layout = it.layout.copy(order = it.layout.order + 1)) else it
+            } + copy))
+            select(copy.id)
+            return
+        }
         val off = 24f
         val newObjs = mutableListOf<Obj>()
         val dupId: String

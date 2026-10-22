@@ -888,6 +888,7 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
                 if (o.layout != null) {
                     CtxBtn("◀ Mover", !o.locked) { st.moveModule(o.id, -1) }
                     CtxBtn("Mover ▶", !o.locked) { st.moveModule(o.id, 1) }
+                    CtxBtn("Copiar ao lado", !o.locked) { st.duplicate(o.id) }
                     CtxBtn("Parede") { st.select(o.layout.wallId) }
                 } else if (o.wall != null) {
                     CtxBtn(if (o.overflowsWall()) "⚠ Passa da parede" else "Na parede (desliza)", false) { }

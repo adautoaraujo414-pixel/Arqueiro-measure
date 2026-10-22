@@ -245,3 +245,16 @@ class CabinetNoTravessaTest {
         org.junit.Assert.assertEquals(withT.cutL - 15.0, l.first { it.kind == br.com.arque.measure.model.PartKind.LATERAL }.cutL, 0.01)
     }
 }
+
+class CabinetTampBaixoTest {
+    @org.junit.Test fun sidesDieOnBottomStripWhenItPassesStraight() {
+        val k = br.com.arque.measure.model.PartKind.TAMPONAMENTO
+        val base = br.com.arque.measure.model.Cabinet(tampEsq = true, tampDir = true, tampBaixo = true, hasRodape = false)
+        val a = br.com.arque.measure.logic.CabinetMath.parts(base)
+        val b = br.com.arque.measure.logic.CabinetMath.parts(base.copy(tampBaixoPassa = true))
+        org.junit.Assert.assertEquals(30.0, a.first { it.kind == k }.cutL - b.first { it.kind == k }.cutL, 0.01)
+        val sa = a.first { it.kind == br.com.arque.measure.model.PartKind.TAMP_BAIXO }.cutL
+        val sb = b.first { it.kind == br.com.arque.measure.model.PartKind.TAMP_BAIXO }.cutL
+        org.junit.Assert.assertEquals(base.espMm * 2, sb - sa, 0.01)
+    }
+}

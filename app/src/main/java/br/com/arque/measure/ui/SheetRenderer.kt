@@ -394,7 +394,44 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.drawText("${o.wMm.toLong()} mm", (l + r) / 2f, t - 6f, textPaint)
         textPaint.textAlign = Paint.Align.RIGHT
         c.drawText("${o.hMm.toLong()}", l - 5f, (t + b) / 2f, textPaint)
+        // alturas reais na lateral direita: chão → pia → superior → teto
+        val lowH = WallLayout.members(sheet, o.id, false).maxOfOrNull { it.cab.hMm }
+        val upMods = WallLayout.members(sheet, o.id, true)
+        val upTop = upMods.maxOfOrNull { o.upperBottomMm + it.cab.hMm }
+        val marks = ArrayList<Triple<Double, Double, Boolean>>() // de, até (mm do chão), alerta
+        if (lowH != null) marks += Triple(0.0, lowH, false)
+        if (upTop != null) {
+            if (lowH != null) marks += Triple(lowH, o.upperBottomMm, o.upperBottomMm < lowH)
+            marks += Triple(o.upperBottomMm, upTop, false)
+            marks += Triple(upTop, o.hMm, upTop > o.hMm + 0.5)
+        } else if (lowH != null) {
+            marks += Triple(lowH, o.hMm, false)
+        }
+        val dx = r + 10f
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.textSize = 9.5f
+        textPaint.textAlign = Paint.Align.LEFT
+        for ((a, bb, bad) in marks) {
+            val ya = b - (a * k).toFloat()
+            val yb = b - (bb * k).toFloat()
+            val col = if (bad) 0xFFC0392B.toInt() else 0xFF2F80ED.toInt()
+            strokePaint.color = col
+            strokePaint.strokeWidth = 1f
+            c.drawLine(dx, ya, dx, yb, strokePaint)
+            c.drawLine(dx - 3f, ya, dx + 3f, ya, strokePaint)
+            c.drawLine(dx - 3f, yb, dx + 3f, yb, strokePaint)
+            val v = bb - a
+            if (kotlin.math.abs(ya - yb) > 9f) {
+                textPaint.color = col
+                c.drawText("${v.toLong()}", dx + 5f, (ya + yb) / 2f + 3f, textPaint)
+            }
+        }
         val lines = ArrayList<Pair<String, Boolean>>()
+        if (lowH != null) {
+            val topRef = upMods.takeIf { it.isNotEmpty() }?.let { o.upperBottomMm }
+            lines += ("Pia (${lowH.toLong()}) até " + (if (topRef != null) "o superior: ${(topRef - lowH).toLong()} mm" else "o teto: ${(o.hMm - lowH).toLong()} mm")) to (topRef != null && topRef < lowH)
+        }
+        if (upTop != null) lines += "Superior até o teto: ${(o.hMm - upTop).toLong()} mm" to (upTop > o.hMm + 0.5)
         for (upper in listOf(false, true)) {
             val mods = WallLayout.members(sheet, o.id, upper)
             if (mods.isEmpty()) continue

@@ -43,6 +43,8 @@ sealed interface Screen {
     data object Library : Screen
     data object Editor : Screen
     data object Quotes : Screen
+    /** Editor de móveis (ambiente, módulos, pedra, eletrodomésticos, ripado, clientes). */
+    data object Moveis : Screen
 }
 
 /** Filtro da biblioteca: todas, uma pasta ou o lixo. */
@@ -354,7 +356,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         measureCb = null
     }
 
+    /** Quem recebe as leituras da trena enquanto o editor de móveis está aberto. */
+    var moveisSink: ((Double) -> Unit)? = null
+
     private fun onReading(r: Reading) {
+        val sink = moveisSink
+        if (sink != null && screen == Screen.Moveis) {
+            sink(r.mm)
+            return
+        }
         val cb = measureCb
         if (cb != null) {
             measureCb = null

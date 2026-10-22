@@ -1317,7 +1317,7 @@ private fun FloatingField(
 // ------------------------------------------------------------------ Tela Bluetooth ("Ferramentas Bluetooth®")
 
 @Composable
-private fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
+internal fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
     val ble = vm.ble
     val state by ble.state.collectAsStateWithLifecycle()
     val message by ble.message.collectAsStateWithLifecycle()

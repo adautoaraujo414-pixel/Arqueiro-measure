@@ -1,0 +1,236 @@
+package br.com.arque.measure.ui
+
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Base64
+import android.view.ViewGroup
+import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.webkit.WebViewAssetLoader
+import br.com.arque.measure.AppViewModel
+import br.com.arque.measure.Screen
+import br.com.arque.measure.ble.BleState
+import java.io.File
+
+/**
+ * Editor de móveis: a tela completa (ambiente com folga, módulos, pedra em reta/L/U com cuba e cooktop,
+ * eletrodomésticos, ripado, tamponamentos, lista de corte, clientes com fotos/vídeos, trena laser)
+ * rodando dentro do app. A trena Bosch (Bluetooth) entrega as leituras pela ponte abaixo.
+ */
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun MoveisScreen(vm: AppViewModel) {
+    val ctx = LocalContext.current
+    var web by remember { mutableStateOf<WebView?>(null) }
+    var showBle by remember { mutableStateOf(false) }
+    val bleState by vm.ble.state.collectAsStateWithLifecycle()
+    val bleName by vm.ble.deviceName.collectAsStateWithLifecycle()
+
+    // ---- escolha de arquivo (galeria, câmera de foto e de vídeo) ----
+    var chooserCb by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    var camUri by remember { mutableStateOf<Uri?>(null) }
+    val chooser = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val cb = chooserCb
+        chooserCb = null
+        if (cb == null) return@rememberLauncherForActivityResult
+        if (res.resultCode != Activity.RESULT_OK) {
+            cb.onReceiveValue(null)
+            return@rememberLauncherForActivityResult
+        }
+        val list = mutableListOf<Uri>()
+        val data = res.data
+        data?.clipData?.let { c -> for (i in 0 until c.itemCount) list.add(c.getItemAt(i).uri) }
+        data?.data?.let { if (!list.contains(it)) list.add(it) }
+        if (list.isEmpty()) camUri?.let { list.add(it) }
+        cb.onReceiveValue(if (list.isEmpty()) null else list.toTypedArray())
+    }
+
+    fun newCamFile(ext: String): Uri {
+        val dir = File(ctx.cacheDir, "camera").apply { mkdirs() }
+        val f = File(dir, "m_${System.currentTimeMillis()}.$ext")
+        return FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
+    }
+
+    val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
+    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }) }
+
+    DisposableEffect(web) {
+        val w = web
+        vm.moveisSink = { mm ->
+            w?.post { w.evaluateJavascript("window.arqueLaser&&window.arqueLaser(${mm.toLong()})", null) }
+        }
+        onDispose { vm.moveisSink = null }
+    }
+
+    BackHandler {
+        val w = web
+        if (w == null) {
+            vm.screen = Screen.Library
+        } else {
+            w.evaluateJavascript("(window.arqueBack&&window.arqueBack())?'1':'0'") { r ->
+                if (r == null || !r.contains("1")) vm.screen = Screen.Library
+            }
+        }
+    }
+
+    Box(Modifier.fillMaxSize().background(Color.White).statusBarsPadding().navigationBarsPadding().imePadding()) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { c ->
+                val loader = WebViewAssetLoader.Builder()
+                    .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(c))
+                    .build()
+                WebView(c).apply {
+                    layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                    setBackgroundColor(android.graphics.Color.WHITE)
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        databaseEnabled = true
+                        allowFileAccess = false
+                        allowContentAccess = true
+                        mediaPlaybackRequiresUserGesture = false
+                        cacheMode = WebSettings.LOAD_DEFAULT
+                        setSupportZoom(false)
+                        builtInZoomControls = false
+                    }
+                    addJavascriptInterface(bridge, "ArqueApp")
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
+                            loader.shouldInterceptRequest(request.url)
+
+                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                            val u = request.url
+                            if (u.host == WebViewAssetLoader.DEFAULT_DOMAIN) return false
+                            // tel:, WhatsApp (wa.me), e-mail e links de fora abrem nos apps do telefone
+                            try {
+                                val it = Intent(Intent.ACTION_VIEW, u)
+                                if (u.host == "wa.me") it.setPackage(null)
+                                ctx.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                            } catch (_: ActivityNotFoundException) {
+                                vm.toast = "Nenhum app encontrado pra abrir isso"
+                            }
+                            return true
+                        }
+                    }
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onShowFileChooser(
+                            view: WebView, cb: ValueCallback<Array<Uri>>, params: WebChromeClient.FileChooserParams,
+                        ): Boolean {
+                            chooserCb?.onReceiveValue(null)
+                            chooserCb = cb
+                            val wantsVideo = params.acceptTypes.any { it.startsWith("video") }
+                            val camIntent: Intent
+                            if (wantsVideo) {
+                                val u = newCamFile("mp4"); camUri = u
+                                camIntent = Intent(MediaStore.ACTION_VIDEO_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, u)
+                            } else {
+                                val u = newCamFile("jpg"); camUri = u
+                                camIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).putExtra(MediaStore.EXTRA_OUTPUT, u)
+                            }
+                            camIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            val cam = camIntent
+                            val intent = if (params.isCaptureEnabled) cam else {
+                                val pick = Intent(Intent.ACTION_GET_CONTENT).apply {
+                                    addCategory(Intent.CATEGORY_OPENABLE)
+                                    type = if (wantsVideo) "video/*" else "image/*"
+                                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE)
+                                }
+                                Intent.createChooser(pick, if (wantsVideo) "Vídeo" else "Foto").putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cam))
+                            }
+                            return try {
+                                chooser.launch(intent); true
+                            } catch (e: Exception) {
+                                chooserCb = null; cb.onReceiveValue(null); false
+                            }
+                        }
+                    }
+                    loadUrl("https://${WebViewAssetLoader.DEFAULT_DOMAIN}/assets/editor.html")
+                    web = this
+                }
+            },
+            onRelease = { it.removeJavascriptInterface("ArqueApp"); it.destroy(); web = null },
+        )
+
+        // Estado da trena Bosch + atalho pra conectar
+        val connected = bleState == BleState.CONNECTED
+        Row(
+            Modifier.align(Alignment.BottomEnd).padding(12.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(if (connected) Color(0xFF1F9D55) else Color(0xFF2F6BE0))
+                .clickable { showBle = true }
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(if (connected) "📡 Trena: ${bleName ?: "Bosch"}" else "📡 Conectar trena", color = Color.White, fontSize = 13.sp)
+        }
+    }
+    if (showBle) BluetoothScreen(vm) { showBle = false }
+}
+
+/** Ponte que o editor (JavaScript) usa pra falar com o Android: fechar a tela e guardar cópias em arquivo. */
+class MoveisBridge(
+    private val dir: File,
+    private val web: () -> WebView?,
+    private val onClose: () -> Unit,
+) {
+    private fun safe(name: String) = name.replace(Regex("[^A-Za-z0-9_.-]"), "_")
+
+    @JavascriptInterface fun isApp(): Boolean = true
+
+    @JavascriptInterface fun close() { web()?.post { onClose() } }
+
+    @JavascriptInterface fun putFile(name: String, b64: String) {
+        runCatching { File(dir, safe(name)).writeBytes(Base64.decode(b64, Base64.DEFAULT)) }
+    }
+
+    @JavascriptInterface fun getFile(name: String): String = runCatching {
+        val f = File(dir, safe(name))
+        if (f.exists()) Base64.encodeToString(f.readBytes(), Base64.NO_WRAP) else ""
+    }.getOrDefault("")
+
+    @JavascriptInterface fun delFile(name: String) { runCatching { File(dir, safe(name)).delete() } }
+
+    @JavascriptInterface fun listFiles(): String =
+        (dir.list() ?: emptyArray()).joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
+}

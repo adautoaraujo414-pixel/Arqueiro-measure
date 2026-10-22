@@ -35,6 +35,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AllInbox
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
@@ -103,6 +104,7 @@ fun App(vm: AppViewModel) {
             Screen.Library -> LibraryScreen(vm)
             Screen.Editor -> vm.session?.let { EditorScreen(vm, it) }
             Screen.Quotes -> QuotesScreen(vm)
+            Screen.Moveis -> MoveisScreen(vm)
         }
         vm.toast?.let { msg ->
             Surface(
@@ -187,6 +189,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     }
                     SideItem("Nova pasta", Icons.Filled.CreateNewFolder, false) { newFolder = true }
                     Spacer(Modifier.height(12.dp))
+                    SideItem("Editor de móveis", Icons.Filled.Build, false) { vm.screen = Screen.Moveis }
                     SideItem("Orçamentos", Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
                     SideItem("Lixo", Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
                 }
@@ -213,6 +216,9 @@ fun LibraryScreen(vm: AppViewModel) {
                     Box {
                         IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, "Menu", tint = Ui.text) }
                         DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
+                            DropdownMenuItem(text = { Text("Editor de móveis") }, onClick = {
+                                topMenu = false; vm.screen = Screen.Moveis
+                            })
                             DropdownMenuItem(text = { Text("Orçamentos") }, onClick = {
                                 topMenu = false; vm.screen = Screen.Quotes
                             })
@@ -230,6 +236,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        FilterChip(selected = false, onClick = { vm.screen = Screen.Moveis }, label = { Text("Editor de móveis") })
                         FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text("Todas as notas") })
                         vm.index.folders.forEach { f ->
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })

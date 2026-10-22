@@ -718,6 +718,21 @@ private fun CabinetPanel(
             Text("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais.", color = Ui.dim, fontSize = 12.sp)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Armário superior (caixote)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.superior, onCheckedChange = { b -> edit { it.copy(superior = b) } })
+        }
+        NumField("Prateleira menor que a base (profundidade)", cab.prateleiraMenorMm, vm) { x -> edit { it.copy(prateleiraMenorMm = x.coerceIn(0.0, 200.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Réguas nas bordas (engrossa frente e trás)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.reguas, onCheckedChange = { b -> edit { it.copy(reguas = b) } })
+        }
+        if (cab.reguas) NumField("Largura da régua", cab.reguaMm, vm) { x -> edit { it.copy(reguaMm = x.coerceIn(10.0, 300.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Tamponamento de baixo (batente da cava)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.tampBaixo, onCheckedChange = { b -> edit { it.copy(tampBaixo = b) } })
+        }
+        if (cab.tampBaixo) NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })
         }

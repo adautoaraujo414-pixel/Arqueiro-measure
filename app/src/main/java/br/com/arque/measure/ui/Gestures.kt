@@ -322,7 +322,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val sh = st.sheet
         val r = s.eraserSize * density / s.view.scale
         val onlyHl = s.eraserOnlyHighlighter
-        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && !o.locked &&
+        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
             (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
         if (s.eraserMode == EraserMode.PIXEL) {
             val photos = sh.photos()
@@ -379,7 +379,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 val onlyHl = s.eraserOnlyHighlighter
                 val ids = Geo.lassoPick(st.sheet, s.lasso).filter { id ->
                     val o = st.sheet.obj(id)
-                    o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
+                    o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
                 }.toSet()
                 s.lasso = emptyList()
                 st.deleteIds(ids)

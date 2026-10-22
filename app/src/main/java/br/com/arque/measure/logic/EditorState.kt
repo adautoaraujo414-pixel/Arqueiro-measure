@@ -95,7 +95,7 @@ class EditorState(
 
     /** Limpa a folha: traços, formas e textos (fotos, cotas e cômodos ficam). Dá para desfazer. */
     fun clearPageDrawings() {
-        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it is CabObj || it.locked }
+        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it is CabObj || it is br.com.arque.measure.model.WallObj || it.locked }
         if (keep.size == sheet.objs.size) return
         commit(sheet.copy(objs = keep))
         fixSelection()
@@ -174,6 +174,72 @@ class EditorState(
         commit(sheet.copy(objs = sheet.objs + o))
         select(o.id)
         return if (base.wMm > mm) "Parede de ${mm.toLong()} mm: o móvel foi ajustado para caber" else null
+    }
+
+    // ---- parede do projeto ----
+
+    private val wallSteps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+
+    fun addWall(at: Pt, wMm: Double = 3000.0, hMm: Double = 2600.0): String {
+        val need = maxOf(wMm * 3.7795277 / 680.0, hMm * 3.7795277 / 800.0)
+        val den = wallSteps.firstOrNull { it >= need } ?: 100
+        val o = br.com.arque.measure.model.WallObj(at = at, wMm = wMm, hMm = hMm, scaleDen = den)
+        commit(sheet.copy(objs = sheet.objs + o))
+        select(o.id)
+        return o.id
+    }
+
+    fun setWall(id: String, wMm: Double? = null, hMm: Double? = null, upperBottomMm: Double? = null, scaleDen: Int? = null) {
+        val o = sheet.obj(id) as? br.com.arque.measure.model.WallObj ?: return
+        if (o.locked) return
+        commit(mapObj(id) {
+            (it as br.com.arque.measure.model.WallObj).copy(
+                wMm = (wMm ?: it.wMm).coerceIn(300.0, 20000.0), hMm = (hMm ?: it.hMm).coerceIn(300.0, 6000.0),
+                upperBottomMm = (upperBottomMm ?: it.upperBottomMm).coerceIn(0.0, 6000.0),
+                scaleDen = (scaleDen ?: it.scaleDen).coerceIn(2, 100),
+            )
+        })
+    }
+
+    /** Novo módulo ao lado do último da fileira (baixa ou de cima). Devolve o id. */
+    fun addWallModule(wallId: String, upper: Boolean): String? {
+        val w = sheet.obj(wallId) as? br.com.arque.measure.model.WallObj ?: return null
+        if (w.locked) return null
+        val row = WallLayout.members(sheet, wallId, upper)
+        val left = w.wMm - row.sumOf { it.cab.wMm }
+        val width = if (left >= 300.0) minOf(800.0, left) else 800.0
+        val base = if (upper) {
+            Cabinet(
+                wMm = width, hMm = 700.0, dMm = 350.0, superior = true, hasRodape = false, hasTravessa = false,
+                hasMoldura = false, folgaTopoMm = 0.0, prateleiraMenorMm = 30.0,
+            )
+        } else Cabinet(wMm = width)
+        val o = CabObj(
+            at = w.at, cab = br.com.arque.measure.logic.CabinetMath.normalized(base),
+            name = (if (upper) "Superior " else "Base ") + (row.size + 1),
+            scaleDen = w.scaleDen, layout = br.com.arque.measure.model.LayoutFit(wallId, (row.maxOfOrNull { it.layout!!.order } ?: -1) + 1),
+        )
+        commit(sheet.copy(objs = sheet.objs + o))
+        select(o.id)
+        return o.id
+    }
+
+    /** Troca de lugar com o vizinho da fileira ([dir] = -1 esquerda, +1 direita). */
+    fun moveModule(id: String, dir: Int) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        val fit = o.layout ?: return
+        val row = WallLayout.members(sheet, fit.wallId, o.cab.superior)
+        val i = row.indexOfFirst { it.id == id }
+        val j = i + dir
+        if (i < 0 || j !in row.indices) return
+        val other = row[j]
+        commit(sheet.copy(objs = sheet.objs.map {
+            when (it.id) {
+                o.id -> (it as CabObj).copy(layout = fit.copy(order = other.layout!!.order))
+                other.id -> (it as CabObj).copy(layout = other.layout!!.copy(order = fit.order))
+                else -> it
+            }
+        }))
     }
 
     /** Edita o módulo [id] (cada chamada é um passo de desfazer). */
@@ -309,7 +375,7 @@ class EditorState(
     }
 
     private fun withSheet(s: Sheet): Note =
-        note.copy(pages = note.pages.mapIndexed { i, p -> if (i == pageIdx) s else p })
+        note.copy(pages = note.pages.mapIndexed { i, p -> if (i == pageIdx) WallLayout.sync(s) else p })
 
     // ---- gestos contínuos ----
 
@@ -468,6 +534,7 @@ class EditorState(
                     is DimObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is RoomObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is CabObj -> it
+                    is br.com.arque.measure.model.WallObj -> it
                     is TextObj -> it.copy(color = color ?: it.color, size = width?.let { w -> w * 6f } ?: it.size)
                     is PhotoObj -> it
                 }

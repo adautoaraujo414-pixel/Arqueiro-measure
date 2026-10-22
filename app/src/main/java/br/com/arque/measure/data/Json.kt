@@ -86,7 +86,12 @@ object Json {
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
             is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
-                .put("cab", cabToJson(o.cab)).also { jj -> o.wall?.let { jj.put("wall", wallToJson(it)) } }
+                .put("cab", cabToJson(o.cab)).also { jj ->
+                    o.wall?.let { jj.put("wall", wallToJson(it)) }
+                    o.layout?.let { jj.put("layout", JSONObject().put("wallId", it.wallId).put("order", it.order)) }
+                }
+            is br.com.arque.measure.model.WallObj -> j.put("type", "wallplan").put("at", ptToJson(o.at)).put("wMm", o.wMm).put("hMm", o.hMm)
+                .put("upperBottom", o.upperBottomMm).put("scaleDen", o.scaleDen)
             is RoomObj -> j.put("type", "room").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("pts", JSONArray(o.pts.map(::ptToJson))).put("closed", o.closed)
                 .put(
@@ -116,7 +121,8 @@ object Json {
 
     private fun cabToJson(c: Cabinet): JSONObject = JSONObject()
         .put("w", c.wMm).put("h", c.hMm).put("d", c.dMm).put("esp", c.espMm).put("rodape", c.rodapeMm)
-        .put("travessa", c.travessaMm).put("hasTravessa", c.hasTravessa).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
+        .put("travessa", c.travessaMm).put("hasTravessa", c.hasTravessa)
+        .put("superior", c.superior).put("prateleiraMenor", c.prateleiraMenorMm).put("reguas", c.reguas).put("reguaMm", c.reguaMm).put("tampBaixo", c.tampBaixo).put("tampBaixoMm", c.tampBaixoMm).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
         .put("bordaSup", c.bordaSupMm).put("bordaInf", c.bordaInfMm).put("recuoFundo", c.recuoFundoMm)
         .put("back", c.hasBack)
         .put("folgaTopo", c.folgaTopoMm).put("moldura", c.molduraMm).put("hasMoldura", c.hasMoldura).put("hasRodape", c.hasRodape).put("hasBase", c.hasBase).put("tampEsq", c.tampEsq).put("tampDir", c.tampDir)
@@ -136,7 +142,8 @@ object Json {
         return Cabinet(
             wMm = j.optDouble("w", d.wMm), hMm = j.optDouble("h", d.hMm), dMm = j.optDouble("d", d.dMm),
             espMm = j.optDouble("esp", d.espMm), rodapeMm = j.optDouble("rodape", d.rodapeMm),
-            travessaMm = j.optDouble("travessa", d.travessaMm), hasTravessa = j.optBoolean("hasTravessa", true), folgaMm = j.optDouble("folga", d.folgaMm),
+            travessaMm = j.optDouble("travessa", d.travessaMm), hasTravessa = j.optBoolean("hasTravessa", true),
+            superior = j.optBoolean("superior", false), prateleiraMenorMm = j.optDouble("prateleiraMenor", 20.0), reguas = j.optBoolean("reguas", false), reguaMm = j.optDouble("reguaMm", 70.0), tampBaixo = j.optBoolean("tampBaixo", false), tampBaixoMm = j.optDouble("tampBaixoMm", 30.0), folgaMm = j.optDouble("folga", d.folgaMm),
             folgaGavetaMm = j.optDouble("folgaGaveta", d.folgaGavetaMm),
             bordaSupMm = j.optDouble("bordaSup", d.bordaSupMm), bordaInfMm = j.optDouble("bordaInf", d.bordaInfMm),
             recuoFundoMm = j.optDouble("recuoFundo", d.recuoFundoMm), hasBack = j.optBoolean("back", true),
@@ -188,6 +195,11 @@ object Json {
                 id = id, at = ptFromJson(j.getJSONArray("at")), name = j.optString("name", "Móvel"),
                 scaleDen = j.optInt("scaleDen", 10), cab = cabFromJson(j.getJSONObject("cab")), locked = locked,
                 wall = j.optJSONObject("wall")?.let(::wallFromJson),
+                layout = j.optJSONObject("layout")?.let { br.com.arque.measure.model.LayoutFit(it.optString("wallId"), it.optInt("order")) },
+            )
+            "wallplan" -> br.com.arque.measure.model.WallObj(
+                id = id, at = ptFromJson(j.getJSONArray("at")), wMm = j.optDouble("wMm", 3000.0), hMm = j.optDouble("hMm", 2600.0),
+                upperBottomMm = j.optDouble("upperBottom", 1400.0), scaleDen = j.optInt("scaleDen", 20), locked = locked,
             )
             "room" -> RoomObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

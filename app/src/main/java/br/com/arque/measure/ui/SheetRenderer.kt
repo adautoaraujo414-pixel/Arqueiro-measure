@@ -12,6 +12,7 @@ import br.com.arque.measure.logic.Units
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
 import br.com.arque.measure.model.CabObj
+import br.com.arque.measure.logic.WallLayout
 import br.com.arque.measure.model.PartKind
 import br.com.arque.measure.model.SegKind
 import br.com.arque.measure.model.LengthUnit
@@ -123,7 +124,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.save()
         c.clipRect(0f, 0f, sheet.width, sheet.height)
         val photos = sheet.photos()
-        for (o in sheet.objs) drawObj(c, o, photos, unit, selectedId == o.id)
+        for (o in sheet.objs) { if (o is br.com.arque.measure.model.WallObj) drawWall(c, o, sheet) else drawObj(c, o, photos, unit, selectedId == o.id) }
         c.restore()
         if (withPaper) c.drawRect(0f, 0f, sheet.width, sheet.height, paperBorder)
         sheet.obj(selectedId)?.let { drawSelection(c, sheet, it, viewScale, selectedSeg) }
@@ -138,6 +139,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             is DimObj -> drawDim(c, o, photos, unit)
             is RoomObj -> drawRoom(c, o, photos, unit)
             is CabObj -> drawCab(c, o)
+            is br.com.arque.measure.model.WallObj -> Unit
         }
     }
 
@@ -364,6 +366,55 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.drawText("${o.name} · 1:${o.scaleDen}", o.at.x + w / 2f, o.at.y + h + 14f, textPaint)
     }
 
+    /** Parede do projeto: linha do topo, alturas, chão e o quanto cada fileira ocupa. */
+    private fun drawWall(c: Canvas, o: br.com.arque.measure.model.WallObj, sheet: Sheet) {
+        val l = o.at.x
+        val t = o.at.y
+        val r = l + o.widthUnits()
+        val b = t + o.heightUnits()
+        val k = o.upm.toFloat()
+        strokePaint.pathEffect = null
+        strokePaint.color = 0xFF3A4A66.toInt()
+        strokePaint.strokeWidth = 2.2f
+        c.drawLine(l, t, r, t, strokePaint)
+        c.drawLine(l, t, l, b, strokePaint)
+        c.drawLine(r, t, r, b, strokePaint)
+        strokePaint.strokeWidth = 1.4f
+        c.drawLine(l - 6f, b, r + 6f, b, strokePaint)
+        strokePaint.pathEffect = DashPathEffect(floatArrayOf(6f, 5f), 0f)
+        strokePaint.strokeWidth = 0.8f
+        strokePaint.color = 0xFF8895AD.toInt()
+        val yu = b - (o.upperBottomMm * k).toFloat()
+        c.drawLine(l, yu, r, yu, strokePaint)
+        strokePaint.pathEffect = null
+        textPaint.color = 0xFF3A4A66.toInt()
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        textPaint.textSize = 11f
+        textPaint.textAlign = Paint.Align.CENTER
+        c.drawText("${o.wMm.toLong()} mm", (l + r) / 2f, t - 6f, textPaint)
+        textPaint.textAlign = Paint.Align.RIGHT
+        c.drawText("${o.hMm.toLong()}", l - 5f, (t + b) / 2f, textPaint)
+        val lines = ArrayList<Pair<String, Boolean>>()
+        for (upper in listOf(false, true)) {
+            val mods = WallLayout.members(sheet, o.id, upper)
+            if (mods.isEmpty()) continue
+            val used = mods.sumOf { it.cab.wMm }
+            val left = o.wMm - used
+            val topOver = upper && (o.upperBottomMm + (mods.maxOfOrNull { it.cab.hMm } ?: 0.0) > o.hMm + 0.5)
+            val txt = (if (upper) "Superiores" else "Baixos") + ": ${used.toLong()} de ${o.wMm.toLong()} mm · " +
+                (if (left < -0.5) "passa ${(-left).toLong()} mm da parede" else "sobra ${left.toLong()} mm") +
+                (if (topOver) " · passa do teto" else "")
+            lines += txt to (left < -0.5 || topOver)
+        }
+        textPaint.typeface = Typeface.DEFAULT
+        textPaint.textSize = 10f
+        textPaint.textAlign = Paint.Align.LEFT
+        lines.forEachIndexed { i, (txt, bad) ->
+            textPaint.color = if (bad) 0xFFC0392B.toInt() else 0xFF555555.toInt()
+            c.drawText(txt, l, b + 16f + i * 13f, textPaint)
+        }
+    }
+
     /** Móvel encaixado na parede: planta (vista de cima) na escala medida do cômodo. */
     private fun drawCabOnWall(c: Canvas, o: CabObj) {
         val q = o.corners()
@@ -568,8 +619,8 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                     }
                 }
             }
-            is CabObj -> {
-                val pts = Geo.annPoints(photos, o)
+            is CabObj, is br.com.arque.measure.model.WallObj -> {
+                val pts = Geo.annPoints(photos, o as br.com.arque.measure.model.Ann)
                 val pad = 8f / viewScale
                 strokePaint.pathEffect = DashPathEffect(floatArrayOf(8f / viewScale, 6f / viewScale), 0f)
                 c.drawRect(pts[0].x - pad, pts[0].y - pad, pts[1].x + pad, pts[1].y + pad, strokePaint)

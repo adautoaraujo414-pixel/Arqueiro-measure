@@ -44,6 +44,16 @@ data class Cabinet(
     val travessaMm: Double = 70.0,
     /** Travessa frontal (régua de 7). Desligada: entra um tampo igual à base, parafusado por cima das laterais. */
     val hasTravessa: Boolean = true,
+    /** Armário superior ("caixote"): fica na fileira de cima da parede. */
+    val superior: Boolean = false,
+    /** A prateleira é sempre menor que a base: tanto a menos na profundidade (3 cm). */
+    val prateleiraMenorMm: Double = 30.0,
+    /** Réguas que engrossam as bordas da frente e de trás da base e do tampo (7 cm × comprimento da base). */
+    val reguas: Boolean = false,
+    val reguaMm: Double = 70.0,
+    /** Tamponamento de baixo (batente da cava): tira abaixo da base, do tamanho da base. */
+    val tampBaixo: Boolean = false,
+    val tampBaixoMm: Double = 30.0,
     /** Folga de montagem entre o topo do móvel e a pedra. */
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,
@@ -73,7 +83,7 @@ data class Cabinet(
 
 /** Tipos de peça (nomes mostrados na lista). */
 enum class PartKind(val label: String) {
-    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), TOPO("Tampo superior"), DIVISORIA("Divisória"),
+    LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), TOPO("Tampo superior"), REGUA("Régua (engrossa a borda)"), TAMP_BAIXO("Tamponamento de baixo"), DIVISORIA("Divisória"),
     PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"), FORNO("Forno (corte)"),
 }
 
@@ -111,6 +121,7 @@ data class CabObj(
     val scaleDen: Int = 10,
     override val locked: Boolean = false,
     val wall: WallFit? = null,
+    val layout: LayoutFit? = null,
 ) : Ann() {
     /** Unidades de folha por mm real, na escala da folha (1 unidade = 1/96 pol). */
     val unitsPerMm: Double get() = wall?.upm ?: (3.7795277 / scaleDen)
@@ -153,4 +164,27 @@ data class CabObj(
         val maxOff = maxOf(0.0, w.lenMm - cab.wMm)
         return copy(wall = w.copy(offMm = (w.offMm + dMm).coerceIn(0.0, maxOff)))
     }
+}
+
+/** Módulo preso a uma parede da folha: [order] = posição na fileira (de baixo ou de cima, conforme [Cabinet.superior]). */
+data class LayoutFit(val wallId: String, val order: Int)
+
+/**
+ * Parede do projeto: linha do topo (largura máxima) e linha da altura, na escala [scaleDen].
+ * Os módulos presos a ela (CabObj com layout) ficam um ao lado do outro: os de baixo no chão,
+ * os superiores a [upperBottomMm] do chão.
+ */
+data class WallObj(
+    override val id: String = newId(),
+    override val photoId: String? = null,
+    val at: Pt,
+    val wMm: Double = 3000.0,
+    val hMm: Double = 2600.0,
+    val upperBottomMm: Double = 1400.0,
+    val scaleDen: Int = 20,
+    override val locked: Boolean = false,
+) : Ann() {
+    val upm: Double get() = 3.7795277 / scaleDen
+    fun widthUnits(): Float = (wMm * upm).toFloat()
+    fun heightUnits(): Float = (hMm * upm).toFloat()
 }

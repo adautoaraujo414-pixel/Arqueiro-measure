@@ -164,19 +164,19 @@ object CabinetMath {
             if (v.kind == VaoKind.SHELVES) {
                 for (k in 1..v.shelves) {
                     val y = vTop + vh * k / (v.shelves + 1) - e / 2
-                    out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - 20.0, e, vao = i)
+                    out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i)
                 }
             } else if (v.kind == VaoKind.DRAWERS && v.shelvesAbove > 0) {
                 val area = vh - gaveteiroH(c, v)
                 for (k in 1..v.shelvesAbove) {
                     val y = vTop + area * k / (v.shelvesAbove + 1) - e / 2
-                    out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - 20.0, e, vao = i)
+                    out += Part(PartKind.PRATELEIRA, x0, y, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i)
                 }
             }
         }
         ranges.forEachIndexed { i, (x0, x1) ->
             c.vaos[i].shelfYs.sorted().filter { it > vTop + e && it < vaoBottom(c) - e }.forEach { y ->
-                out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - 20.0, e, vao = i, note = "na posição escolhida (${fmt(y - vTop)} abaixo da travessa)")
+                out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - c.prateleiraMenorMm, e, vao = i, note = "na posição escolhida (${fmt(y - vTop)} abaixo da travessa)")
             }
         }
         if (c.hasRodape && c.rodapeMm > 0) out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
@@ -206,8 +206,8 @@ object CabinetMath {
                     val ox0 = x0 + (vw - ow) / 2 // centralizado no vão
                     val oy = vTop + v.ovenTop.coerceIn(0.0, vh - oh - e)
                     out += Part(PartKind.FORNO, ox0, oy, ow, oh, ow, oh, 0.0, vao = i, note = "corte centralizado · sobra ${fmt((vw - ow) / 2)} de cada lado")
-                    if (oy > vTop + 0.5) out += Part(PartKind.PRATELEIRA, x0, oy - e, vw, e, vw, dep - 20.0, e, vao = i, note = "acima do forno")
-                    out += Part(PartKind.PRATELEIRA, x0, oy + oh, vw, e, vw, dep - 20.0, e, vao = i, note = "apoio do forno")
+                    if (oy > vTop + 0.5) out += Part(PartKind.PRATELEIRA, x0, oy - e, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = "acima do forno")
+                    out += Part(PartKind.PRATELEIRA, x0, oy + oh, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = "apoio do forno")
                     if ((vw - ow) / 2 > 0.5) for (side in 0..1) {
                         val fx = if (side == 0) x0 else ox0 + ow
                         out += Part(PartKind.DIVISORIA, fx, oy, (vw - ow) / 2, oh, oh, (vw - ow) / 2, e, vao = i, note = "fechamento ao lado do forno (peça em pé, ${fmt((vw - ow) / 2)} de largura)")
@@ -240,6 +240,9 @@ object CabinetMath {
         // alinhado em cima com a moldura (y = 0), sem "dente"; engrossa a lateral (lateral + tamponamento = 2 × espessura)
         if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
         if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
+        if (c.tampBaixo) {
+            out += Part(PartKind.TAMP_BAIXO, 0.0, bb, c.wMm, c.tampBaixoMm, c.wMm, c.tampBaixoMm, e, note = "abaixo da base, do tamanho da base (batente da cava)")
+        }
         if (c.hasMoldura) {
             out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = "acabamento, cobre a folga do topo")
         }
@@ -254,11 +257,20 @@ object CabinetMath {
         return Part(PartKind.FUNDO, 0.0, 0.0, 0.0, 0.0, innerW(c), lateralH(c), 3.0)
     }
 
+    /** Peças que não aparecem na vista de frente (só na lista): as réguas que engrossam a base e o tampo. */
+    fun extraParts(c: Cabinet): List<Part> {
+        if (!c.reguas) return emptyList()
+        val painel = (if (c.hasBase) 1 else 0) + (if (!c.hasTravessa) 1 else 0)
+        return List(painel * 2) {
+            Part(PartKind.REGUA, 0.0, 0.0, 0.0, 0.0, c.wMm, c.reguaMm, c.espMm, note = "colada na borda da frente / de trás da base e do tampo")
+        }
+    }
+
     data class Line(val kind: PartKind, val qty: Int, val cutL: Double, val cutW: Double, val esp: Double, val note: String = "")
 
     /** Lista de peças agrupada (mesma peça e mesma medida = quantidade). */
     fun cutList(c: Cabinet): List<Line> {
-        val all = parts(c).filter { it.kind != PartKind.FORNO } + listOfNotNull(backPart(c))
+        val all = parts(c).filter { it.kind != PartKind.FORNO } + listOfNotNull(backPart(c)) + extraParts(c)
         val order = PartKind.values().toList()
         return all.groupBy { Triple(it.kind, Math.round(it.cutL * 10), Math.round(it.cutW * 10) * 1000L + Math.round(it.esp)) }
             .map { (_, g) -> Line(g[0].kind, g.size, g[0].cutL, g[0].cutW, g[0].esp, g[0].note) }

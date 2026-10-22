@@ -563,6 +563,10 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                             modifier = Modifier.size(40.dp),
                         ) { ShapeGlyph(Tool.RECT, Ui.text, 22.dp, cabinet = true) }
                         IconButton(
+                            onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) },
+                            modifier = Modifier.size(40.dp),
+                        ) { Text("▭", color = Ui.text, fontSize = 20.sp) }
+                        IconButton(
                             onClick = { session.calcOpen = !session.calcOpen },
                             modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.calcOpen) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
                         ) { Text("÷×", color = if (session.calcOpen) Ui.accent else Ui.text, fontSize = 15.sp) }
@@ -704,6 +708,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 if (!panelMin) {
                     (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
                     (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.WallObj)?.let { WallPanel(session, it) }
                 }
                 if (bleState == BleState.CONNECTED && !vm.trenaHidden) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
                 ChipsBar(vm, bleState == BleState.CONNECTED) { btOpen = true }
@@ -880,7 +885,11 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
             if (o is br.com.arque.measure.model.CabObj) {
                 CtxBtn("Editar móvel") { session.cabEditId = o.id }
                 val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
-                if (o.wall != null) {
+                if (o.layout != null) {
+                    CtxBtn("◀ Mover", !o.locked) { st.moveModule(o.id, -1) }
+                    CtxBtn("Mover ▶", !o.locked) { st.moveModule(o.id, 1) }
+                    CtxBtn("Parede") { st.select(o.layout.wallId) }
+                } else if (o.wall != null) {
                     CtxBtn(if (o.overflowsWall()) "⚠ Passa da parede" else "Na parede (desliza)", false) { }
                 } else {
                 CtxBtn("− Diminuir", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
@@ -1420,5 +1429,56 @@ private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, 
             confirmButton = { TextButton(enabled = parsed != null, onClick = { parsed?.let(onSet); open = false }) { Text("OK") } },
             dismissButton = { TextButton(onClick = { open = false }) { Text("Cancelar") } },
         )
+    }
+}
+
+
+/** Painel da parede do projeto: medidas máximas e módulos (de baixo e superiores) lado a lado. */
+@Composable
+private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.WallObj) {
+    val st = session.state
+    val dark = Color(0xFF111111)
+    val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+    val mods = st.sheet.objs.filterIsInstance<br.com.arque.measure.model.CabObj>().filter { it.layout?.wallId == w.id }
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Parede · ${w.wMm.toLong()} × ${w.hMm.toLong()} mm · escala 1:${w.scaleDen}", color = dark, fontSize = 16.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Largura (linha do topo)", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.wMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, wMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("Altura", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.hMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, hMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("Superior a (do chão)", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.upperBottomMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, upperBottomMm = mm) }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                TextButton(onClick = { session.cabEditId = st.addWallModule(w.id, false) }, enabled = !w.locked) { Text("+ Módulo de baixo") }
+                TextButton(onClick = { session.cabEditId = st.addWallModule(w.id, true) }, enabled = !w.locked) { Text("+ Módulo superior") }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.firstOrNull { it > w.scaleDen } ?: 100) }, enabled = !w.locked && w.scaleDen < 100) { Text("− Diminuir") }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.lastOrNull { it < w.scaleDen } ?: 5) }, enabled = !w.locked && w.scaleDen > 5) { Text("+ Aumentar") }
+            }
+            if (mods.isNotEmpty()) {
+                Text("Toque num módulo para escolher; depois “Editar móvel”.", color = Color(0xFF555555), fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    mods.sortedWith(compareBy({ it.cab.superior }, { it.layout!!.order })).forEach { m ->
+                        Box(
+                            Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xFFEFEFEF))
+                                .clickable { st.select(m.id) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text((if (m.cab.superior) "↑ " else "") + "${m.name} · ${m.cab.wMm.toLong()}×${m.cab.hMm.toLong()}", color = dark, fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

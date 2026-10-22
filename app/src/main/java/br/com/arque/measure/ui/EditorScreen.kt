@@ -1543,10 +1543,21 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                             ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 13.sp) }
                         }
                     }
+                    val vh = br.com.arque.measure.logic.CabinetMath.vaoH(cab)
+                    val vw0 = br.com.arque.measure.logic.CabinetMath.vaoRanges(cab).firstOrNull()?.let { it.second - it.first } ?: cab.wMm
                     when (first.kind) {
-                        br.com.arque.measure.model.VaoKind.SHELVES -> QuickStep("Prateleiras", first.shelves, 1, 8) { n -> setAll { it.copy(shelves = n) } }
-                        br.com.arque.measure.model.VaoKind.DRAWERS -> QuickStep("Gavetas", first.drawers, 1, 8) { n -> setAll { it.copy(drawers = n) } }
-                        br.com.arque.measure.model.VaoKind.DOOR -> QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
+                        br.com.arque.measure.model.VaoKind.SHELVES -> {
+                            QuickStep("Prateleiras", first.shelves, 1, 20) { n -> setAll { it.copy(shelves = n) } }
+                            Text("Espaço livre entre elas: ${Units.formatNumber((vh - first.shelves * cab.espMm) / (first.shelves + 1), br.com.arque.measure.model.LengthUnit.MM)} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                        }
+                        br.com.arque.measure.model.VaoKind.DRAWERS -> {
+                            QuickStep("Gavetas", first.drawers, 1, 20) { n -> setAll { it.copy(drawers = n) } }
+                            Text("Cada frente de gaveta: ~${Units.formatNumber(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, first.drawers, vh, first), br.com.arque.measure.model.LengthUnit.MM)} mm de altura", color = Color(0xFF555555), fontSize = 12.sp)
+                        }
+                        br.com.arque.measure.model.VaoKind.DOOR -> {
+                            QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
+                            Text("Cada porta: ${Units.formatNumber((vw0 + 12.0) / first.doors, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(vh + 30.0, br.com.arque.measure.model.LengthUnit.MM)} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                        }
                         else -> {}
                     }
                     if (first.kind == br.com.arque.measure.model.VaoKind.DRAWERS || first.kind == br.com.arque.measure.model.VaoKind.DOOR) {

@@ -559,13 +559,6 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         ToolBtn(Tool.SELECT, session)
                         IconButton(
-                            onClick = {
-                                val at = br.com.arque.measure.model.Pt(80f, 160f)
-                                session.cabEditId = st.addCab(at)
-                            },
-                            modifier = Modifier.size(40.dp),
-                        ) { ShapeGlyph(Tool.RECT, Ui.text, 22.dp, cabinet = true) }
-                        IconButton(
                             onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) },
                             modifier = Modifier.size(40.dp),
                         ) { Text("▭", color = Ui.text, fontSize = 20.sp) }
@@ -887,7 +880,6 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
             CtxBtn("Duplicar") { st.duplicate(o.id) }
             if (o is PhotoObj) CtxBtn("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) }
             if (o is br.com.arque.measure.model.CabObj) {
-                CtxBtn("Editar móvel") { session.cabEditId = o.id }
                 val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
                 if (o.layout != null) {
                     CtxBtn("◀ Mover", !o.locked) { st.moveModule(o.id, -1) }
@@ -1065,11 +1057,6 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
             }
             if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
                 TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text("Unir pontos soltos (reta = 1 medida)") }
-            }
-            if (r.closed && seg != null) {
-                var warn by remember { mutableStateOf<String?>(null) }
-                TextButton(onClick = { warn = st.addCabOnWall(r.id, k) }, enabled = !r.locked) { Text("Encaixar móvel nesta parede") }
-                warn?.let { Text(it, color = Color(0xFFC0392B), fontSize = 13.sp) }
             }
             if (r.pts.size >= 3) {
                 TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) "Abrir contorno" else "Fechar contorno") }

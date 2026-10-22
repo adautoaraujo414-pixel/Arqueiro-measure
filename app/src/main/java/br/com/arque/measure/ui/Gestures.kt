@@ -40,7 +40,7 @@ sealed interface GestureAction {
  */
 class GestureController(private val s: EditorSession, private val density: Float) {
     private enum class Mode { NONE, PAN, MOVE, HANDLE, STROKE, SHAPE, ERASE, ERASE_LASSO, ROOM, LASSO, GROUP }
-    private enum class H { CORNER, ROTATE, A, B, VERTEX }
+    private enum class H { CORNER, ROTATE, A, B, VERTEX, CAB_W, CAB_H }
 
     private var mode = Mode.NONE
     private var handle = H.A
@@ -452,6 +452,11 @@ class GestureController(private val s: EditorSession, private val density: Float
                 pts.forEachIndexed { i, p -> if (near(p)) return H.VERTEX to i }
                 null
             }
+            is br.com.arque.measure.model.CabObj -> {
+                if (o.layout == null) return null
+                val (w, h) = Geo.cabHandles(o)
+                if (near(w)) H.CAB_W to 0 else if (near(h)) H.CAB_H to 0 else null
+            }
             else -> null
         }
     }
@@ -495,6 +500,33 @@ class GestureController(private val s: EditorSession, private val density: Float
                     val local = Geo.fromSheet(st.sheet.photos(), o.photoId, target)
                     st.live(replace(o.copy(pts = pts.mapIndexed { j, q -> if (j == i) local else q })))
                     s.loupe = s.view.toScreen(target)
+                }
+            }
+            is br.com.arque.measure.model.CabObj -> {
+                val fit = o.layout ?: return
+                val wall = st.sheet.obj(fit.wallId) as? br.com.arque.measure.model.WallObj ?: return
+                val k = wall.upm.toFloat()
+                val snapMm = 12f * density / s.view.scale / k
+                val others = st.sheet.objs.filterIsInstance<br.com.arque.measure.model.CabObj>().filter { it.layout?.wallId == wall.id && it.id != o.id }
+                val org = o.origin()
+                if (handle == H.CAB_W) {
+                    var mm = ((p.x - org.x) / k).toDouble()
+                    val cand = ArrayList<Double>()
+                    others.forEach { cand += it.cab.wMm }
+                    val rowOthers = others.filter { it.cab.superior == o.cab.superior }.sumOf { it.cab.wMm }
+                    cand += wall.wMm - rowOthers // fecha a parede
+                    cand.minByOrNull { kotlin.math.abs(it - mm) }?.let { if (kotlin.math.abs(it - mm) <= snapMm) mm = it }
+                    val v = kotlin.math.round(mm).coerceIn(150.0, 6000.0)
+                    st.liveCab(o.id) { it.copy(wMm = v) }
+                } else {
+                    val bottomY = org.y + o.heightUnits()
+                    var mm = ((bottomY - p.y) / k).toDouble()
+                    val cand = ArrayList<Double>()
+                    others.forEach { cand += it.cab.hMm }
+                    if (o.cab.superior) cand += wall.hMm - wall.upperBottomMm // até o teto
+                    cand.minByOrNull { kotlin.math.abs(it - mm) }?.let { if (kotlin.math.abs(it - mm) <= snapMm) mm = it }
+                    val v = kotlin.math.round(mm).coerceIn(150.0, 3000.0)
+                    st.liveCab(o.id) { it.copy(hMm = v) }
                 }
             }
             else -> {}

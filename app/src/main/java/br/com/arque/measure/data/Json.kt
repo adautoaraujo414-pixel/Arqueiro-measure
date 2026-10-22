@@ -122,7 +122,7 @@ object Json {
     private fun cabToJson(c: Cabinet): JSONObject = JSONObject()
         .put("w", c.wMm).put("h", c.hMm).put("d", c.dMm).put("esp", c.espMm).put("rodape", c.rodapeMm)
         .put("travessa", c.travessaMm).put("hasTravessa", c.hasTravessa)
-        .put("superior", c.superior).put("prateleiraMenor", c.prateleiraMenorMm).put("reguas", c.reguas).put("reguaMm", c.reguaMm).put("tampBaixo", c.tampBaixo).put("tampBaixoMm", c.tampBaixoMm).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
+        .put("superior", c.superior).put("prateleiraMenor", c.prateleiraMenorMm).put("reguas", c.reguas).put("reguaMm", c.reguaMm).put("tampBaixo", c.tampBaixo).put("tampBaixoMm", c.tampBaixoMm).put("tampBaixoPassa", c.tampBaixoPassa).put("folga", c.folgaMm).put("folgaGaveta", c.folgaGavetaMm)
         .put("bordaSup", c.bordaSupMm).put("bordaInf", c.bordaInfMm).put("recuoFundo", c.recuoFundoMm)
         .put("back", c.hasBack)
         .put("folgaTopo", c.folgaTopoMm).put("moldura", c.molduraMm).put("hasMoldura", c.hasMoldura).put("hasRodape", c.hasRodape).put("hasBase", c.hasBase).put("tampEsq", c.tampEsq).put("tampDir", c.tampDir)
@@ -143,7 +143,7 @@ object Json {
             wMm = j.optDouble("w", d.wMm), hMm = j.optDouble("h", d.hMm), dMm = j.optDouble("d", d.dMm),
             espMm = j.optDouble("esp", d.espMm), rodapeMm = j.optDouble("rodape", d.rodapeMm),
             travessaMm = j.optDouble("travessa", d.travessaMm), hasTravessa = j.optBoolean("hasTravessa", true),
-            superior = j.optBoolean("superior", false), prateleiraMenorMm = j.optDouble("prateleiraMenor", 20.0), reguas = j.optBoolean("reguas", false), reguaMm = j.optDouble("reguaMm", 70.0), tampBaixo = j.optBoolean("tampBaixo", false), tampBaixoMm = j.optDouble("tampBaixoMm", 30.0), folgaMm = j.optDouble("folga", d.folgaMm),
+            superior = j.optBoolean("superior", false), prateleiraMenorMm = j.optDouble("prateleiraMenor", 20.0), reguas = j.optBoolean("reguas", false), reguaMm = j.optDouble("reguaMm", 70.0), tampBaixo = j.optBoolean("tampBaixo", false), tampBaixoMm = j.optDouble("tampBaixoMm", 30.0), tampBaixoPassa = j.optBoolean("tampBaixoPassa", false), folgaMm = j.optDouble("folga", d.folgaMm),
             folgaGavetaMm = j.optDouble("folgaGaveta", d.folgaGavetaMm),
             bordaSupMm = j.optDouble("bordaSup", d.bordaSupMm), bordaInfMm = j.optDouble("bordaInf", d.bordaInfMm),
             recuoFundoMm = j.optDouble("recuoFundo", d.recuoFundoMm), hasBack = j.optBoolean("back", true),

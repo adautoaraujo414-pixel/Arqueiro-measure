@@ -657,6 +657,14 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 }
             }
             is CabObj, is br.com.arque.measure.model.WallObj -> {
+                if (o is CabObj && o.layout != null && !o.locked) {
+                    val (hw, hh) = Geo.cabHandles(o)
+                    for (p in listOf(hw, hh)) {
+                        fillPaint.color = 0xFFFFFFFF.toInt()
+                        c.drawCircle(p.x, p.y, r, fillPaint)
+                        c.drawCircle(p.x, p.y, r, strokePaint)
+                    }
+                }
                 val pts = Geo.annPoints(photos, o as br.com.arque.measure.model.Ann)
                 val pad = 8f / viewScale
                 strokePaint.pathEffect = DashPathEffect(floatArrayOf(8f / viewScale, 6f / viewScale), 0f)

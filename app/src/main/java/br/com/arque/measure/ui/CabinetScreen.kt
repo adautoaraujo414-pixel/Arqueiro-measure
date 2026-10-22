@@ -731,7 +731,13 @@ private fun CabinetPanel(
             Text("Tamponamento de baixo (batente da cava)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.tampBaixo, onCheckedChange = { b -> edit { it.copy(tampBaixo = b) } })
         }
-        if (cab.tampBaixo) NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
+        if (cab.tampBaixo) {
+            NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("De baixo passa reto (laterais morrem nele)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Switch(checked = cab.tampBaixoPassa, onCheckedChange = { b -> edit { it.copy(tampBaixoPassa = b) } })
+            }
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })

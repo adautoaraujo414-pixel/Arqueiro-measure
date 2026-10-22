@@ -234,14 +234,20 @@ object CabinetMath {
             }
         }
         // tamponamento: encostado por fora, do fundo da pedra até a base (cobre lateral + base + folga)
-        val tampH = latH + c.tampAltExtraMm
+        // com tamponamento de baixo: lateral = todas as peças somadas (até o fim da base) + 30 mm do batente, ou só até a base se o de baixo passa reto
+        val tampH = if (c.tampBaixo) bb + (if (c.tampBaixoPassa) 0.0 else c.tampBaixoMm) else latH + c.tampAltExtraMm
         val tampD = c.dMm + c.tampProfExtraMm
         val tn = "por fora; +${fmt(c.tampProfExtraMm)} na profundidade e +${fmt(c.tampAltExtraMm)} na altura"
         // alinhado em cima com a moldura (y = 0), sem "dente"; engrossa a lateral (lateral + tamponamento = 2 × espessura)
         if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
         if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
         if (c.tampBaixo) {
-            out += Part(PartKind.TAMP_BAIXO, 0.0, bb, c.wMm, c.tampBaixoMm, c.wMm, c.tampBaixoMm, e, note = "abaixo da base, do tamanho da base (batente da cava)")
+            val sx = if (c.tampBaixoPassa && c.tampEsq) -e else 0.0
+            val sw = c.wMm + (if (c.tampBaixoPassa && c.tampEsq) e else 0.0) + (if (c.tampBaixoPassa && c.tampDir) e else 0.0)
+            out += Part(
+                PartKind.TAMP_BAIXO, sx, bb, sw, c.tampBaixoMm, sw, c.tampBaixoMm, e,
+                note = if (c.tampBaixoPassa) "passa reto por baixo; as laterais morrem nele" else "abaixo da base, do tamanho da base (batente da cava)",
+            )
         }
         if (c.hasMoldura) {
             out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = "acabamento, cobre a folga do topo")

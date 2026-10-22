@@ -105,6 +105,14 @@ object Geo {
         is br.com.arque.measure.model.WallObj -> listOf(a.at, Pt(a.at.x + a.widthUnits(), a.at.y + a.heightUnits()))
     }
 
+    /** Alças de arrastar de um módulo da parede: largura (meio da lateral direita) e altura (meio do topo). */
+    fun cabHandles(o: CabObj): Pair<Pt, Pt> {
+        val org = o.origin()
+        val w = o.widthUnits()
+        val h = o.heightUnits()
+        return Pt(org.x + w, org.y + h / 2f) to Pt(org.x + w / 2f, org.y)
+    }
+
     /** Move o objeto por (dx,dy) em unidades de folha. */
     fun translate(sheet: Sheet, o: Obj, dx: Float, dy: Float): Obj {
         if (o is PhotoObj) return o.copy(cx = o.cx + dx, cy = o.cy + dy)

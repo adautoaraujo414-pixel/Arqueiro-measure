@@ -54,6 +54,8 @@ data class Cabinet(
     /** Tamponamento de baixo (batente da cava): tira abaixo da base, do tamanho da base. */
     val tampBaixo: Boolean = false,
     val tampBaixoMm: Double = 30.0,
+    /** Tamponamento de baixo passa reto (por baixo das laterais); as laterais morrem nele, 30 mm mais curtas. */
+    val tampBaixoPassa: Boolean = false,
     /** Folga de montagem entre o topo do móvel e a pedra. */
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,

@@ -225,6 +225,16 @@ class EditorState(
         return o.id
     }
 
+    /** Alinha o módulo pelo topo (ao diminuir, a base sobe) ou volta a alinhar por baixo. */
+    fun setAnchorTop(id: String, on: Boolean) {
+        val o = sheet.obj(id) as? CabObj ?: return
+        val fit = o.layout ?: return
+        val w = sheet.obj(fit.wallId) as? br.com.arque.measure.model.WallObj ?: return
+        if (o.locked) return
+        val top = WallLayout.topMm(w, o)
+        commit(mapObj(id) { (it as CabObj).copy(layout = fit.copy(anchorTop = on, topMm = if (on) top else 0.0)) })
+    }
+
     /** Troca de lugar com o vizinho da fileira ([dir] = -1 esquerda, +1 direita). */
     fun moveModule(id: String, dir: Int) {
         val o = sheet.obj(id) as? CabObj ?: return

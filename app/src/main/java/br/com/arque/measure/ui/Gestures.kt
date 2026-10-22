@@ -527,13 +527,13 @@ class GestureController(private val s: EditorSession, private val density: Float
                     val v = kotlin.math.round(mm).coerceIn(150.0, cap)
                     st.liveCab(o.id) { it.copy(wMm = v) }
                 } else {
-                    val bottomY = org.y + o.heightUnits()
-                    var mm = ((bottomY - p.y) / k).toDouble()
+                    val anchored = fit.anchorTop
+                    var mm = if (anchored) ((p.y - org.y) / k).toDouble() else (((org.y + o.heightUnits()) - p.y) / k).toDouble()
                     val cand = ArrayList<Double>()
                     others.forEach { cand += it.cab.hMm }
                     if (o.cab.superior) cand += wall.hMm - wall.upperBottomMm // até o teto
                     cand.minByOrNull { kotlin.math.abs(it - mm) }?.let { if (kotlin.math.abs(it - mm) <= snapMm) mm = it }
-                    val capH = if (o.cab.superior) wall.hMm - wall.upperBottomMm else wall.hMm
+                    val capH = if (anchored) fit.topMm else if (o.cab.superior) wall.hMm - wall.upperBottomMm else wall.hMm
                     val v = kotlin.math.round(mm).coerceIn(150.0, capH.coerceAtLeast(150.0))
                     st.liveCab(o.id) { it.copy(hMm = v) }
                 }

@@ -395,14 +395,15 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         textPaint.textAlign = Paint.Align.RIGHT
         c.drawText("${o.hMm.toLong()}", l - 5f, (t + b) / 2f, textPaint)
         // alturas reais na lateral direita: chão → pia → superior → teto
-        val lowH = WallLayout.members(sheet, o.id, false).maxOfOrNull { it.cab.hMm }
+        val lowH = WallLayout.members(sheet, o.id, false).maxOfOrNull { WallLayout.topMm(o, it) }
         val upMods = WallLayout.members(sheet, o.id, true)
-        val upTop = upMods.maxOfOrNull { o.upperBottomMm + it.cab.hMm }
+        val upTop = upMods.maxOfOrNull { WallLayout.topMm(o, it) }
+        val upBot = upMods.minOfOrNull { WallLayout.topMm(o, it) - it.cab.hMm } ?: o.upperBottomMm
         val marks = ArrayList<Triple<Double, Double, Boolean>>() // de, até (mm do chão), alerta
         if (lowH != null) marks += Triple(0.0, lowH, false)
         if (upTop != null) {
-            if (lowH != null) marks += Triple(lowH, o.upperBottomMm, o.upperBottomMm < lowH)
-            marks += Triple(o.upperBottomMm, upTop, false)
+            if (lowH != null) marks += Triple(lowH, upBot, upBot < lowH)
+            marks += Triple(upBot, upTop, false)
             marks += Triple(upTop, o.hMm, upTop > o.hMm + 0.5)
         } else if (lowH != null) {
             marks += Triple(lowH, o.hMm, false)
@@ -429,8 +430,8 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         // sobra em cima de cada módulo (até o superior ou o teto), na própria medida
         val upBottomAny = upMods.isNotEmpty()
         for (m in sheet.objs.filterIsInstance<br.com.arque.measure.model.CabObj>().filter { it.layout?.wallId == o.id }) {
-            val topMm = if (m.cab.superior) o.upperBottomMm + m.cab.hMm else m.cab.hMm
-            val limit = if (!m.cab.superior && upBottomAny) o.upperBottomMm else o.hMm
+            val topMm = WallLayout.topMm(o, m)
+            val limit = if (!m.cab.superior && upBottomAny) upBot else o.hMm
             val gap = limit - topMm
             val org = m.origin()
             val cx = org.x + m.widthUnits() / 2f
@@ -449,7 +450,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         }
         val lines = ArrayList<Pair<String, Boolean>>()
         if (lowH != null) {
-            val topRef = upMods.takeIf { it.isNotEmpty() }?.let { o.upperBottomMm }
+            val topRef = upMods.takeIf { it.isNotEmpty() }?.let { upBot }
             lines += ("Pia (${lowH.toLong()}) até " + (if (topRef != null) "o superior: ${(topRef - lowH).toLong()} mm" else "o teto: ${(o.hMm - lowH).toLong()} mm")) to (topRef != null && topRef < lowH)
         }
         if (upTop != null) lines += "Superior até o teto: ${(o.hMm - upTop).toLong()} mm" to (upTop > o.hMm + 0.5)
@@ -458,7 +459,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             if (mods.isEmpty()) continue
             val used = mods.sumOf { WallLayout.occ(it) }
             val left = o.usableMm - used
-            val topOver = upper && (o.upperBottomMm + (mods.maxOfOrNull { it.cab.hMm } ?: 0.0) > o.hMm + 0.5)
+            val topOver = upper && ((mods.maxOfOrNull { WallLayout.topMm(o, it) } ?: 0.0) > o.hMm + 0.5)
             val txt = (if (upper) "Superiores" else "Baixos") + ": ${used.toLong()} de ${o.usableMm.toLong()} mm úteis (folga ${o.folgaMm.toLong()}) · " +
                 (if (left < -0.5) "passa ${(-left).toLong()} mm da parede" else "sobra ${left.toLong()} mm") +
                 (if (topOver) " · passa do teto" else "")

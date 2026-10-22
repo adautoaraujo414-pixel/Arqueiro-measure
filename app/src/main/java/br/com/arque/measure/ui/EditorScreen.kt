@@ -1545,6 +1545,7 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                         br.com.arque.measure.model.VaoKind.DOOR -> QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
                         else -> {}
                     }
+                    QuickSwitch("Alinhar pelo topo (ao diminuir, a base sobe)", o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
                     QuickSwitch("Fundo (3 mm)", cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
                     QuickSwitch("Tamponamento esquerdo", cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
                     QuickSwitch("Tamponamento direito", cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }

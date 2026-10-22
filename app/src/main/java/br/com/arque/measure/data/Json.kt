@@ -88,7 +88,7 @@ object Json {
             is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
                 .put("cab", cabToJson(o.cab)).also { jj ->
                     o.wall?.let { jj.put("wall", wallToJson(it)) }
-                    o.layout?.let { jj.put("layout", JSONObject().put("wallId", it.wallId).put("order", it.order)) }
+                    o.layout?.let { jj.put("layout", JSONObject().put("wallId", it.wallId).put("order", it.order).put("anchorTop", it.anchorTop).put("topMm", it.topMm)) }
                 }
             is br.com.arque.measure.model.WallObj -> j.put("type", "wallplan").put("at", ptToJson(o.at)).put("wMm", o.wMm).put("hMm", o.hMm)
                 .put("upperBottom", o.upperBottomMm).put("folga", o.folgaMm).put("scaleDen", o.scaleDen)
@@ -195,7 +195,7 @@ object Json {
                 id = id, at = ptFromJson(j.getJSONArray("at")), name = j.optString("name", "Móvel"),
                 scaleDen = j.optInt("scaleDen", 10), cab = cabFromJson(j.getJSONObject("cab")), locked = locked,
                 wall = j.optJSONObject("wall")?.let(::wallFromJson),
-                layout = j.optJSONObject("layout")?.let { br.com.arque.measure.model.LayoutFit(it.optString("wallId"), it.optInt("order")) },
+                layout = j.optJSONObject("layout")?.let { br.com.arque.measure.model.LayoutFit(it.optString("wallId"), it.optInt("order"), it.optBoolean("anchorTop", false), it.optDouble("topMm", 0.0)) },
             )
             "wallplan" -> br.com.arque.measure.model.WallObj(
                 id = id, at = ptFromJson(j.getJSONArray("at")), wMm = j.optDouble("wMm", 3000.0), hMm = j.optDouble("hMm", 2600.0),

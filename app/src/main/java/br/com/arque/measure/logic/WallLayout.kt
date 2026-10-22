@@ -16,6 +16,10 @@ object WallLayout {
     fun padR(m: CabObj) = if (m.cab.tampDir) m.cab.espMm else 0.0
     fun occ(m: CabObj) = padL(m) + m.cab.wMm + padR(m)
 
+    /** Altura do topo do módulo (mm do chão): fixa no topo se estiver alinhado por cima, senão sobe da base. */
+    fun topMm(w: WallObj, m: CabObj): Double =
+        if (m.layout?.anchorTop == true) m.layout.topMm else (if (m.cab.superior) w.upperBottomMm else 0.0) + m.cab.hMm
+
     fun members(sheet: Sheet, wallId: String, upper: Boolean): List<CabObj> =
         sheet.objs.filterIsInstance<CabObj>()
             .filter { it.layout?.wallId == wallId && it.cab.superior == upper }
@@ -32,8 +36,7 @@ object WallLayout {
                 var x = 0.0
                 members(s, w.id, upper).forEachIndexed { i, m ->
                     val k = w.upm
-                    val bottom = if (upper) w.upperBottomMm else 0.0
-                    val at = Pt((w.at.x + (x + padL(m)) * k).toFloat(), (w.at.y + (w.hMm - bottom - m.cab.hMm) * k).toFloat())
+                    val at = Pt((w.at.x + (x + padL(m)) * k).toFloat(), (w.at.y + (w.hMm - topMm(w, m)) * k).toFloat())
                     upd[m.id] = m.copy(at = at, scaleDen = w.scaleDen, layout = m.layout!!.copy(order = i))
                     x += occ(m)
                 }

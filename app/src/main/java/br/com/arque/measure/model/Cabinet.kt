@@ -169,7 +169,7 @@ data class CabObj(
 }
 
 /** Módulo preso a uma parede da folha: [order] = posição na fileira (de baixo ou de cima, conforme [Cabinet.superior]). */
-data class LayoutFit(val wallId: String, val order: Int)
+data class LayoutFit(val wallId: String, val order: Int, val anchorTop: Boolean = false, val topMm: Double = 0.0)
 
 /**
  * Parede do projeto: linha do topo (largura máxima) e linha da altura, na escala [scaleDen].

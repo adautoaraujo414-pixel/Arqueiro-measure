@@ -110,7 +110,8 @@ object Geo {
         val org = o.origin()
         val w = o.widthUnits()
         val h = o.heightUnits()
-        return Pt(org.x + w, org.y + h / 2f) to Pt(org.x + w / 2f, org.y)
+        val anchored = o.layout?.anchorTop == true
+        return Pt(org.x + w, org.y + h / 2f) to Pt(org.x + w / 2f, if (anchored) org.y + h else org.y)
     }
 
     /** Move o objeto por (dx,dy) em unidades de folha. */

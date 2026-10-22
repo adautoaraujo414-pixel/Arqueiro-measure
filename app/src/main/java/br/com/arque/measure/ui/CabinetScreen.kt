@@ -803,6 +803,7 @@ private fun CabinetPanel(
         Text("LISTA DE PEÇAS (ao vivo)", color = L.dim, fontSize = 12.sp)
         CutListBody(CabinetMath.cutList(cab))
         }
+    }
 }
 
 @Composable

@@ -195,7 +195,7 @@ function draw(){try{regDet()}catch(e){}
  // cotas azuis do módulo
  s+=ln(x0,y1-14,x0+ww,y1-14,'var(--acc)',1.5)+qtx('mw',x0+ww/2,y1-20,m.w,'var(--fg)','middle',13,1);
  s+=ln(x0-14,y1,x0-14,y1+hh,'var(--acc)',1.5)+qtx('mh',x0-20,y1+hh/2,m.h,'var(--fg)','middle',13,1,1);
- vaoRanges(m).forEach(function(g){var a=x0+g[0]*k,b=x0+g[1]*k;s+=ln(a,y1+hh+14,b,y1+hh+14,'var(--acc)',1.5)+tx((a+b)/2,y1+hh+30,Math.round(g[1]-g[0]),'var(--fg)','middle',12,1)});
+ vaoRanges(m).forEach(function(g,gi){var a=x0+g[0]*k,b=x0+g[1]*k;s+=ln(a,y1+hh+14,b,y1+hh+14,'var(--acc)',1.5)+qtx('vao|'+gi,(a+b)/2,y1+hh+30,Math.round(g[1]-g[0]),'var(--fg)','middle',12,1)});
  // cotas vermelhas: chão→módulo e módulo→teto
  var mx=x0+ww+30;s+=ln(mx,y1+hh,mx,B,'#2f2fd6',1)+qtx('mb',mx+6,(y1+hh+B)/2,m.b,'var(--red)','start',13,1);
  // alças
@@ -676,16 +676,23 @@ box.style.cssText='position:fixed;z-index:99998;left:50%;bottom:340px;transform:
 box.innerHTML='<span id="qelab"></span><input id="qein" type="text" inputmode="none" data-calc="1" style="width:110px;padding:8px;border:1px solid #b9c2d0;border-radius:8px;font:600 18px system-ui;text-align:right;background:#fff;color:#1b1f27"><span style="opacity:.6;font-weight:500">mm</span>';
 document.body.appendChild(box);
 var inp=box.querySelector('input'),last={k:'',t:0};
+function vaoW(j){var g=vaoRanges(S.m)[j];return g?Math.round(g[1]-g[0]):0}
+function setVao(j,v){var m=S.m,e=m.esp,iw=m.w-2*e,n=m.div.length;if(!n||j<0||j>n||isNaN(v))return;
+ var idx=m.div.map(function(r,i){return i}).sort(function(a,b){return m.div[a]-m.div[b]}),dx=idx.map(function(i){return e+iw*m.div[i]-e/2}),MIN=20,nd;
+ if(j<n){var left=j===0?e:dx[j-1]+e,hi=(j+1<n?dx[j+1]:m.w-e)-e-MIN;nd=Math.max(left+MIN,Math.min(hi,left+v));m.div[idx[j]]=(nd-e/2)/iw}
+ else{var pl=n-1>0?dx[n-2]+e:e,nd2=(m.w-e-v)-e;nd2=Math.max(pl+MIN,Math.min(m.w-2*e-MIN,nd2));m.div[idx[n-1]]=(nd2-e/2)/iw}
+ draw()}
 function val0(k){return {W:S.W,H:S.H,w:S.m.w,h:S.m.h,b:S.m.b}[k]}
 function openQ(kind,idx){var lab='',val=0,ds={};
  if(kind==='ix'||kind==='iy'){var it=S.items.filter(function(a){return a.id===S.selI})[0];if(!it)return;ds.it=kind==='ix'?'x':'y';val=it[ds.it];lab=kind==='ix'?'Da esquerda da pedra':'Do fundo da pedra (parede)'}
+ else if(kind==='vao'){if(!S.m.div.length)return;ds.vao=String(idx);val=vaoW(+idx);lab='V\u00e3o '+(+idx+1)+' (mm)';snap()}
  else if(kind==='W'||kind==='H'||kind==='mw'||kind==='mh'||kind==='mb'){var kk={W:'W',H:'H',mw:'w',mh:'h',mb:'b'}[kind];ds.k=kk;val=val0(kk);lab={W:'Largura do ambiente',H:'Altura da parede',mw:'Largura do m\u00f3dulo',mh:'Altura do m\u00f3dulo',mb:'Do ch\u00e3o at\u00e9 o m\u00f3dulo'}[kind]}
  else if(kind==='sW'||kind==='sT'||kind==='sL'||kind==='sR'){var st3=S.stones.filter(function(q){return q.id==idx})[0];if(!st3)return;S.st=st3;if(kind==='sR'){ds.sr='1';val=Math.max(0,S.W-st3.x-st3.w);lab='Sobra \u00e0 direita da pedra'}else{ds.sk={sW:'w',sT:'t',sL:'x'}[kind];val=st3[ds.sk];lab={sW:'Largura da pedra',sT:'Altura da pedra (do ch\u00e3o)',sL:'Recuo da esquerda da pedra'}[kind]}}
  else if(kind==='ir'||kind==='ib'){var it2=S.items.filter(function(a){return a.id===S.selI})[0];if(!it2)return;var st2=S.stones.filter(function(q){return q.items.indexOf(it2)>=0})[0];if(!st2)return;ds[kind]='1';val=kind==='ir'?st2.w-it2.x-it2.w:st2.d-it2.y-it2.d;lab=kind==='ir'?'Sobra à direita da pedra':'Sobra na frente da pedra'}
  else if(kind==='sx'){var st=S.stones.filter(function(q){return q.id==idx})[0];if(!st)return;S.st=st;ds.sk='x';val=st.x;lab='Recuo da esquerda da pedra'}
  else if(kind==='ed'){if(!S.st)return;var E=stEdges(S.st)[+idx];if(!E)return;ds.edge=String(idx);val=E.val;lab='Lado '+(+idx+1)+' · '+E.lab}
  else return;
- ['it','sk','edge','ir','ib','k','sr'].forEach(function(k){delete inp.dataset[k]});
+ ['it','sk','edge','ir','ib','k','sr','vao'].forEach(function(k){delete inp.dataset[k]});
  for(var k in ds)inp.dataset[k]=ds[k];
  inp.dataset.lab=lab;$('qelab').textContent=lab;
  inp.value=String(Math.round(val));box.hidden=false;inp.focus();
@@ -694,7 +701,7 @@ var tapR=null;
 document.addEventListener('pointerdown',function(e){var el=e.target.closest&&e.target.closest('[data-q]');if(!el||box.contains(e.target)){tapR=null;return}tapR={el:el,x:e.clientX,y:e.clientY,id:e.pointerId};e.stopPropagation();e.preventDefault()},true);
 document.addEventListener('pointerup',function(e){if(!tapR||e.pointerId!==tapR.id)return;var r=tapR;tapR=null;if(Math.hypot(e.clientX-r.x,e.clientY-r.y)>12)return;var a=r.el.dataset.q.split('|');openQ(a[0],a[1])},true);
 document.addEventListener('pointercancel',function(){tapR=null},true);
-inp.addEventListener('input',function(){var d=inp.dataset;if(d.sr!==undefined){var vs=+inp.value;if(!isNaN(vs)&&S.st){S.st.w=Math.max(10,S.W-S.st.x-vs);draw()}return}if(d.ir===undefined&&d.ib===undefined)return;var v=+inp.value;if(isNaN(v))return;var it=S.items.filter(function(a){return a.id===S.selI})[0];if(!it)return;var st=S.stones.filter(function(q){return q.items.indexOf(it)>=0})[0];if(!st)return;if(d.ir!==undefined)it.x=Math.max(0,st.w-it.w-v);else it.y=Math.max(0,st.d-it.d-v);draw()});
+inp.addEventListener('input',function(){var d=inp.dataset;if(d.vao!==undefined){var vv=+inp.value;if(!isNaN(vv))setVao(+d.vao,vv);return}if(d.sr!==undefined){var vs=+inp.value;if(!isNaN(vs)&&S.st){S.st.w=Math.max(10,S.W-S.st.x-vs);draw()}return}if(d.ir===undefined&&d.ib===undefined)return;var v=+inp.value;if(isNaN(v))return;var it=S.items.filter(function(a){return a.id===S.selI})[0];if(!it)return;var st=S.stones.filter(function(q){return q.items.indexOf(it)>=0})[0];if(!st)return;if(d.ir!==undefined)it.x=Math.max(0,st.w-it.w-v);else it.y=Math.max(0,st.d-it.d-v);draw()});
 document.addEventListener('pointerdown',function(e){var el=e.target.closest&&e.target.closest('[data-qe],[data-ed]');if(!el||box.contains(e.target))return;
  var q=el.dataset.qe,kind,idx;if(q){var a=q.split('|');kind=a[0];idx=a[1]}else{kind='ed';idx=el.dataset.ed}
  var key=kind+'|'+idx,now=Date.now();

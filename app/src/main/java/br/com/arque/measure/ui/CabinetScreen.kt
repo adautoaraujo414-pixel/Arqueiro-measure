@@ -666,6 +666,7 @@ private fun CabinetPanel(
                     edit { c -> c.copy(dividers = c.dividers.sorted().filterIndexed { i, _ -> i != j }, vaos = c.vaos.filterIndexed { i, _ -> i != j + 1 }) }
                     pickDivider(-1)
                 }
+                }
             } else if (tab != 4 && tab != 0) Text("Divisória selecionada: veja a aba Divisões. Toque num vão para ver Internos/Portas.", color = L.dim, fontSize = 12.sp)
         } else if (selVao in ranges.indices) {
             val v = cab.vaos[selVao]

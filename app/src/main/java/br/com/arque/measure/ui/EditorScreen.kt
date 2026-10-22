@@ -1545,24 +1545,51 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                     }
                     val vh = br.com.arque.measure.logic.CabinetMath.vaoH(cab)
                     val vw0 = br.com.arque.measure.logic.CabinetMath.vaoRanges(cab).firstOrNull()?.let { it.second - it.first } ?: cab.wMm
-                    when (first.kind) {
+                    val committed = when (first.kind) {
+                        br.com.arque.measure.model.VaoKind.SHELVES -> first.shelves
+                        br.com.arque.measure.model.VaoKind.DRAWERS -> first.drawers
+                        br.com.arque.measure.model.VaoKind.DOOR -> first.doors
+                        else -> 1
+                    }
+                    var dKind by remember(id, first.kind) { mutableStateOf(first.kind) }
+                    var dCnt by remember(id, first.kind, committed) { mutableStateOf(committed) }
+                    var dCava by remember(id, first.cava) { mutableStateOf(first.cava) }
+                    Text("Dentro do vão (todos os vãos) — escolha e toque OK", color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        br.com.arque.measure.model.VaoKind.values().forEach { kd ->
+                            val on = dKind == kd
+                            Box(
+                                Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Ui.accent else Color(0xFFEFEFEF))
+                                    .clickable(enabled = !o.locked) { dKind = kd; if (kd == br.com.arque.measure.model.VaoKind.DOOR) dCnt = dCnt.coerceIn(1, 4) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                            ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 13.sp) }
+                        }
+                    }
+                    val mmF = { v: Double -> Units.formatNumber(v, br.com.arque.measure.model.LengthUnit.MM) }
+                    when (dKind) {
                         br.com.arque.measure.model.VaoKind.SHELVES -> {
-                            QuickStep("Prateleiras", first.shelves, 1, 20) { n -> setAll { it.copy(shelves = n) } }
-                            Text("Espaço livre entre elas: ${Units.formatNumber((vh - first.shelves * cab.espMm) / (first.shelves + 1), br.com.arque.measure.model.LengthUnit.MM)} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                            QuickStep("Prateleiras", dCnt, 1, 20) { dCnt = it }
+                            Text("Espaço livre entre elas: ${mmF((vh - dCnt * cab.espMm) / (dCnt + 1))} mm", color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         br.com.arque.measure.model.VaoKind.DRAWERS -> {
-                            QuickStep("Gavetas", first.drawers, 1, 20) { n -> setAll { it.copy(drawers = n) } }
-                            Text("Cada frente de gaveta: ~${Units.formatNumber(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, first.drawers, vh, first), br.com.arque.measure.model.LengthUnit.MM)} mm de altura", color = Color(0xFF555555), fontSize = 12.sp)
+                            QuickStep("Gavetas", dCnt, 1, 20) { dCnt = it }
+                            Text("Cada frente de gaveta: ~${mmF(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, dCnt, vh, first))} mm de altura", color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         br.com.arque.measure.model.VaoKind.DOOR -> {
-                            QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
-                            Text("Cada porta: ${Units.formatNumber((vw0 + 12.0) / first.doors, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(vh + 30.0, br.com.arque.measure.model.LengthUnit.MM)} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                            QuickStep("Portas", dCnt, 1, 4) { dCnt = it }
+                            val dw = if (dCnt >= 2) (vw0 + 12.0) / dCnt else vw0 + 14.0
+                            Text("Cada porta: ${mmF(dw)} × ${mmF(vh + 30.0)} mm", color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         else -> {}
                     }
-                    if (first.kind == br.com.arque.measure.model.VaoKind.DRAWERS || first.kind == br.com.arque.measure.model.VaoKind.DOOR) {
-                        QuickSwitch("Cava (puxador cortado a 30°)", first.cava) { b -> setAll { it.copy(cava = b) } }
+                    if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS || dKind == br.com.arque.measure.model.VaoKind.DOOR) {
+                        QuickSwitch("Cava (puxador cortado a 30°)", dCava) { dCava = it }
                     }
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            setAll { it.copy(kind = dKind, cava = dCava, shelves = if (dKind == br.com.arque.measure.model.VaoKind.SHELVES) dCnt else it.shelves, drawers = if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS) dCnt else it.drawers, doors = if (dKind == br.com.arque.measure.model.VaoKind.DOOR) dCnt else it.doors) }
+                        },
+                        enabled = !o.locked, modifier = Modifier.fillMaxWidth(),
+                    ) { Text("OK · incluir") }
                     QuickSwitch("Alinhar pelo topo (ao diminuir, a base sobe)", o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
                     QuickSwitch("Fundo (3 mm)", cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
                     QuickSwitch("Tamponamento esquerdo", cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }

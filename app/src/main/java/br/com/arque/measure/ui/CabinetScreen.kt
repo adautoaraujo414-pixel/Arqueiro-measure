@@ -635,11 +635,11 @@ private fun CabinetPanel(
                         Chip("2 folhas", v.doors >= 2) { setVao { it.copy(doors = 2) } }
                     }
                     if (v.doors >= 2) {
-                        val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / 2
+                        val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / v.doors.coerceIn(2, 6)
                         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
                             Text("Cada folha", color = Ui.dim, fontSize = 12.sp)
                             Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                            Text("(vão + 12) ÷ 2 · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text("(vão + 12) ÷ ${v.doors.coerceIn(2, 6)} · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
                     } else {
                         val dw1 = vw + CabinetMath.PORTA1_SOBRE_L_MM

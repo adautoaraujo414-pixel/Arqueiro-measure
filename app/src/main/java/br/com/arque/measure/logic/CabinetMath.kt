@@ -216,12 +216,13 @@ object CabinetMath {
                 VaoKind.DOOR -> {
                     if (v.doors >= 2) {
                         // duas folhas sobrepostas: (vão + 12) ÷ 2 de largura e vão + 30 de altura
-                        val dw = (vw + PORTA_SOBRE_L_MM) / 2
+                        val nd = v.doors.coerceIn(2, 6)
+                        val dw = (vw + PORTA_SOBRE_L_MM) / nd
                         val dh = vh + PORTA_SOBRE_H_MM
-                        for (k in 0 until 2) {
+                        for (k in 0 until nd) {
                             val x = x0 - PORTA_SOBRE_L_MM / 2 + k * dw
                             out += Part(PartKind.PORTA, x, vTop - PORTA_SOBRE_H_MM / 2, dw, dh, dw, dh, e, vao = i,
-                                note = "(vão + ${fmt(PORTA_SOBRE_L_MM)}) ÷ 2 · altura do vão + ${fmt(PORTA_SOBRE_H_MM)}" + cavaNote(v))
+                                note = "(vão + ${fmt(PORTA_SOBRE_L_MM)}) ÷ $nd · altura do vão + ${fmt(PORTA_SOBRE_H_MM)}" + cavaNote(v))
                         }
                     } else {
                         val dw = vw + PORTA1_SOBRE_L_MM

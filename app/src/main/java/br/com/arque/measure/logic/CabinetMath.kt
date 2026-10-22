@@ -241,7 +241,7 @@ object CabinetMath {
         // alinhado em cima com a moldura (y = 0), sem "dente"; engrossa a lateral (lateral + tamponamento = 2 × espessura)
         if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
         if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
-        if (c.tampBaixo) {
+        if (c.tampBaixo && !c.tampBaixoJunto) {
             val sx = if (c.tampBaixoPassa && c.tampEsq) -e else 0.0
             val sw = c.wMm + (if (c.tampBaixoPassa && c.tampEsq) e else 0.0) + (if (c.tampBaixoPassa && c.tampDir) e else 0.0)
             out += Part(

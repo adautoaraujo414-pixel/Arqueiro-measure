@@ -1557,6 +1557,7 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                     QuickSwitch("Tamponamento esquerdo", cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
                     QuickSwitch("Tamponamento direito", cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }
                     QuickSwitch("Tamponamento de baixo (30)", cab.tampBaixo) { b -> st.updateCab(id) { it.copy(tampBaixo = b) } }
+                    QuickSwitch("Juntar tamp. de baixo com o do lado (peça única)", cab.tampBaixoJunto) { b -> st.joinBottom(id, b) }
                     if (cab.tampBaixo) QuickSwitch("De baixo passa reto", cab.tampBaixoPassa) { b -> st.updateCab(id) { it.copy(tampBaixoPassa = b) } }
                     QuickSwitch("Réguas nas bordas", cab.reguas) { b -> st.updateCab(id) { it.copy(reguas = b) } }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {

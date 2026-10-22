@@ -448,6 +448,22 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 c.drawText(if (bad) "passa ${(-gap).toLong()}" else "${gap.toLong()}", cx + 5f, (yTop + yLim) / 2f + 3f, textPaint)
             }
         }
+        // tamponamento de baixo contínuo (uma peça só juntando módulos vizinhos)
+        for (upper in listOf(false, true)) {
+            for (run in WallLayout.joinedRuns(sheet, o.id, upper)) {
+                val f = run.first(); val la = run.last()
+                val fo = f.origin()
+                val x1 = fo.x - (WallLayout.padL(f) * k).toFloat()
+                val x2 = la.origin().x + la.widthUnits() + (WallLayout.padR(la) * k).toFloat()
+                val y1 = fo.y + f.heightUnits()
+                val th = maxOf((f.cab.tampBaixoMm * k).toFloat(), 3f)
+                fillPaint.style = Paint.Style.FILL
+                fillPaint.color = 0xCCD9A93E.toInt()
+                c.drawRect(x1, y1, x2, y1 + th, fillPaint)
+                textPaint.color = 0xFF8A6A25.toInt(); textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9f; textPaint.textAlign = Paint.Align.CENTER
+                c.drawText("tamp. contínuo ${WallLayout.runLength(run).toLong()} × ${f.cab.tampBaixoMm.toLong()}", (x1 + x2) / 2f, y1 + th + 10f, textPaint)
+            }
+        }
         // sobra dos dois lados de cada fileira: da parede até o primeiro módulo e do último até a parede
         for (upper in listOf(false, true)) {
             val mods = WallLayout.members(sheet, o.id, upper)

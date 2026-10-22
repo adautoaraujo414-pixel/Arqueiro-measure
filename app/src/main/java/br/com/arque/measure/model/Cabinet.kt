@@ -56,6 +56,8 @@ data class Cabinet(
     val tampBaixoMm: Double = 30.0,
     /** Tamponamento de baixo passa reto (por baixo das laterais); as laterais morrem nele, 30 mm mais curtas. */
     val tampBaixoPassa: Boolean = false,
+    /** O tamponamento de baixo deste módulo é uma peça só com o do módulo do lado (corta-se junto na parede). */
+    val tampBaixoJunto: Boolean = false,
     /** Folga de montagem entre o topo do móvel e a pedra. */
     val folgaTopoMm: Double = 15.0,
     val molduraMm: Double = 30.0,

@@ -236,6 +236,21 @@ class EditorState(
         commit(mapObj(id) { (it as CabObj).copy(layout = fit.copy(anchorTop = on, topMm = if (on) top else 0.0)) })
     }
 
+    /** Junta (ou separa) o tamponamento de baixo deste módulo com o do módulo seguinte da fileira. */
+    fun joinBottom(id: String, on: Boolean): Boolean {
+        val o = sheet.obj(id) as? CabObj ?: return false
+        val fit = o.layout ?: return false
+        if (o.locked) return false
+        val row = WallLayout.members(sheet, fit.wallId, o.cab.superior)
+        val i = row.indexOfFirst { it.id == id }
+        val next = row.getOrNull(i + 1) ?: return false
+        val ids = setOf(o.id, next.id)
+        commit(sheet.copy(objs = sheet.objs.map {
+            if (it is CabObj && it.id in ids) it.copy(cab = it.cab.copy(tampBaixo = if (on) true else it.cab.tampBaixo, tampBaixoJunto = on)) else it
+        }))
+        return true
+    }
+
     /** Troca de lugar com o vizinho da fileira ([dir] = -1 esquerda, +1 direita). */
     fun moveModule(id: String, dir: Int) {
         val o = sheet.obj(id) as? CabObj ?: return

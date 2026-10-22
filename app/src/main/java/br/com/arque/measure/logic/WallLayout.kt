@@ -20,6 +20,20 @@ object WallLayout {
     fun topMm(w: WallObj, m: CabObj): Double =
         if (m.layout?.anchorTop == true) m.layout.topMm else (if (m.cab.superior) w.upperBottomMm else 0.0) + m.cab.hMm
 
+    /** Trechos de módulos vizinhos cujo tamponamento de baixo é uma peça só (2 ou mais seguidos). */
+    fun joinedRuns(sheet: Sheet, wallId: String, upper: Boolean): List<List<CabObj>> {
+        val out = ArrayList<List<CabObj>>()
+        var cur = ArrayList<CabObj>()
+        for (m in members(sheet, wallId, upper)) {
+            if (m.cab.tampBaixo && m.cab.tampBaixoJunto) cur.add(m) else { if (cur.size >= 2) out.add(cur); cur = ArrayList() }
+        }
+        if (cur.size >= 2) out.add(cur)
+        return out
+    }
+
+    /** Comprimento (mm) da peça contínua: soma do que cada módulo ocupa. */
+    fun runLength(run: List<CabObj>): Double = run.sumOf { occ(it) }
+
     fun members(sheet: Sheet, wallId: String, upper: Boolean): List<CabObj> =
         sheet.objs.filterIsInstance<CabObj>()
             .filter { it.layout?.wallId == wallId && it.cab.superior == upper }

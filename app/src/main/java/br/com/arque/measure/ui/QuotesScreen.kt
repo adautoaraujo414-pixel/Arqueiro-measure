@@ -65,7 +65,8 @@ fun QuotesScreen(vm: AppViewModel) {
     var confirmDel by remember { mutableStateOf<Quote?>(null) }
     BackHandler(enabled = editingId != null) { editingId = null }
 
-    Column(Modifier.fillMaxSize().background(Ui.bg).statusBarsPadding().navigationBarsPadding()) {
+    Box(Modifier.fillMaxSize().background(Ui.bg).statusBarsPadding().navigationBarsPadding()) {
+    Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (editingId != null) editingId = null else vm.screen = Screen.Library }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text)
@@ -102,6 +103,8 @@ fun QuotesScreen(vm: AppViewModel) {
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+    FloatingCalculator()
     }
     if (companyDlg) CompanyDialog(vm.company, { companyDlg = false }) { vm.saveCompany(it); companyDlg = false }
     confirmDel?.let { d ->

@@ -190,6 +190,11 @@ data class WallObj(
     /** Onde fica a sobra da fileira: 0 esquerda, 1 repartida nos dois lados, 2 direita. */
     val alignRow: Int = 1,
     val scaleDen: Int = 20,
+    /** Pedra (tampo): largura real (0 = sem pedra), recuo da parede esquerda, altura do topo do chão (0 = altura dos módulos de baixo) e espessura. */
+    val stoneWMm: Double = 0.0,
+    val stoneXMm: Double = 0.0,
+    val stoneTopMm: Double = 0.0,
+    val stoneEspMm: Double = 40.0,
     override val locked: Boolean = false,
 ) : Ann() {
     val upm: Double get() = 3.7795277 / scaleDen

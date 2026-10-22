@@ -586,7 +586,12 @@ private fun CabinetPanel(
         }
         HorizontalDivider(color = L.line)
         if (tab == 0) {
-        Label("Módulo")
+        Label("Dimensões do móvel")
+        NumField("Largura", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
+        NumField("Altura", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
+        NumField("Profundidade", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
+        HorizontalDivider(color = L.line)
+        Label("Pedra")
         NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.descontoPedra(cab)), vm) { v ->
             edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.descontoPedra(it)).coerceIn(150.0, 6000.0)) }
         }

@@ -387,6 +387,25 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         val yu = b - (o.upperBottomMm * k).toFloat()
         c.drawLine(l, yu, r, yu, strokePaint)
         strokePaint.pathEffect = null
+        // pedra (tampo) na medida real, com recuo da parede esquerda
+        if (o.stoneWMm > 0.0) {
+            val lowTop = WallLayout.members(sheet, o.id, false).maxOfOrNull { WallLayout.topMm(o, it) } ?: 900.0
+            val topMm = if (o.stoneTopMm > 0.0) o.stoneTopMm else lowTop
+            val sx1 = l + (o.stoneXMm * k).toFloat()
+            val sx2 = sx1 + (o.stoneWMm * k).toFloat()
+            val sy2 = b - (topMm * k).toFloat()
+            val sy1 = sy2 - maxOf((o.stoneEspMm * k).toFloat(), 3f)
+            fillPaint.style = Paint.Style.FILL
+            fillPaint.color = 0xFFB9B2A4.toInt()
+            c.drawRect(sx1, sy1, sx2, sy2, fillPaint)
+            strokePaint.color = 0xFF6F685A.toInt(); strokePaint.strokeWidth = 1f
+            c.drawRect(sx1, sy1, sx2, sy2, strokePaint)
+            textPaint.color = 0xFF6F685A.toInt(); textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9.5f; textPaint.textAlign = Paint.Align.CENTER
+            c.drawText("pedra ${o.stoneWMm.toLong()}", (sx1 + sx2) / 2f, sy1 - 3f, textPaint)
+            if (o.stoneXMm > 0.0) c.drawText("${o.stoneXMm.toLong()}", (l + sx1) / 2f, sy1 - 3f, textPaint)
+            val rest = o.wMm - o.stoneXMm - o.stoneWMm
+            if (rest > 0.5) c.drawText("${rest.toLong()}", (sx2 + r) / 2f, sy1 - 3f, textPaint)
+        }
         textPaint.color = 0xFF3A4A66.toInt()
         textPaint.typeface = Typeface.DEFAULT_BOLD
         textPaint.textSize = 11f

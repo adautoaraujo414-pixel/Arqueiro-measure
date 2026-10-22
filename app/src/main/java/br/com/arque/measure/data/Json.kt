@@ -91,7 +91,7 @@ object Json {
                     o.layout?.let { jj.put("layout", JSONObject().put("wallId", it.wallId).put("order", it.order).put("anchorTop", it.anchorTop).put("topMm", it.topMm)) }
                 }
             is br.com.arque.measure.model.WallObj -> j.put("type", "wallplan").put("at", ptToJson(o.at)).put("wMm", o.wMm).put("hMm", o.hMm)
-                .put("upperBottom", o.upperBottomMm).put("folga", o.folgaMm).put("align", o.alignRow).put("scaleDen", o.scaleDen)
+                .put("upperBottom", o.upperBottomMm).put("folga", o.folgaMm).put("align", o.alignRow).put("scaleDen", o.scaleDen).put("stoneW", o.stoneWMm).put("stoneX", o.stoneXMm).put("stoneTop", o.stoneTopMm)
             is RoomObj -> j.put("type", "room").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("pts", JSONArray(o.pts.map(::ptToJson))).put("closed", o.closed)
                 .put(
@@ -199,7 +199,7 @@ object Json {
             )
             "wallplan" -> br.com.arque.measure.model.WallObj(
                 id = id, at = ptFromJson(j.getJSONArray("at")), wMm = j.optDouble("wMm", 3000.0), hMm = j.optDouble("hMm", 2600.0),
-                upperBottomMm = j.optDouble("upperBottom", 1400.0), folgaMm = j.optDouble("folga", 10.0), alignRow = j.optInt("align", 1), scaleDen = j.optInt("scaleDen", 20), locked = locked,
+                upperBottomMm = j.optDouble("upperBottom", 1400.0), folgaMm = j.optDouble("folga", 10.0), alignRow = j.optInt("align", 1), scaleDen = j.optInt("scaleDen", 20), stoneWMm = j.optDouble("stoneW", 0.0), stoneXMm = j.optDouble("stoneX", 0.0), stoneTopMm = j.optDouble("stoneTop", 0.0), locked = locked,
             )
             "room" -> RoomObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

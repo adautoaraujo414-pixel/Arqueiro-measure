@@ -189,7 +189,8 @@ class EditorState(
         return o.id
     }
 
-    fun setWall(id: String, wMm: Double? = null, hMm: Double? = null, upperBottomMm: Double? = null, scaleDen: Int? = null, folgaMm: Double? = null, alignRow: Int? = null) {
+    fun setWall(id: String, wMm: Double? = null, hMm: Double? = null, upperBottomMm: Double? = null, scaleDen: Int? = null, folgaMm: Double? = null, alignRow: Int? = null,
+        stoneWMm: Double? = null, stoneXMm: Double? = null, stoneTopMm: Double? = null) {
         val o = sheet.obj(id) as? br.com.arque.measure.model.WallObj ?: return
         if (o.locked) return
         commit(mapObj(id) {
@@ -199,6 +200,9 @@ class EditorState(
                 scaleDen = (scaleDen ?: it.scaleDen).coerceIn(2, 100),
                 folgaMm = (folgaMm ?: it.folgaMm).coerceIn(0.0, 200.0),
                 alignRow = (alignRow ?: it.alignRow).coerceIn(0, 2),
+                stoneWMm = (stoneWMm ?: it.stoneWMm).coerceIn(0.0, 20000.0),
+                stoneXMm = (stoneXMm ?: it.stoneXMm).coerceIn(0.0, 20000.0),
+                stoneTopMm = (stoneTopMm ?: it.stoneTopMm).coerceIn(0.0, 6000.0),
             )
         })
     }

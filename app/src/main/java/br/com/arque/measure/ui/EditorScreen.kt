@@ -1469,6 +1469,20 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.upperBottomMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, upperBottomMm = mm) }
                 }
             }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("Pedra · largura (0 = sem)", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneWMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneWMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("Pedra · recuo da esq.", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneXMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneXMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("Pedra · altura do chão (0 = auto)", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneTopMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneTopMm = mm) }
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 TextButton(onClick = { st.addWallModule(w.id, false) }, enabled = !w.locked) { Text("+ Módulo de baixo") }
                 TextButton(onClick = { st.addWallModule(w.id, true) }, enabled = !w.locked) { Text("+ Módulo superior") }

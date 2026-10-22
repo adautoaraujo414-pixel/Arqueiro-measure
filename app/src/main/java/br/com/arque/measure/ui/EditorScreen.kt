@@ -892,6 +892,7 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
                 if (o.layout != null) {
                     CtxBtn("◀ Mover", !o.locked) { st.moveModule(o.id, -1) }
                     CtxBtn("Mover ▶", !o.locked) { st.moveModule(o.id, 1) }
+                    CtxBtn("⚙ Configurar") { session.cabQuickId = o.id }
                     CtxBtn("Copiar ao lado", !o.locked) { st.duplicate(o.id) }
                     CtxBtn("Parede") { st.select(o.layout.wallId) }
                 } else if (o.wall != null) {
@@ -1547,6 +1548,9 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                         br.com.arque.measure.model.VaoKind.DRAWERS -> QuickStep("Gavetas", first.drawers, 1, 8) { n -> setAll { it.copy(drawers = n) } }
                         br.com.arque.measure.model.VaoKind.DOOR -> QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
                         else -> {}
+                    }
+                    if (first.kind == br.com.arque.measure.model.VaoKind.DRAWERS || first.kind == br.com.arque.measure.model.VaoKind.DOOR) {
+                        QuickSwitch("Cava (puxador cortado a 30°)", first.cava) { b -> setAll { it.copy(cava = b) } }
                     }
                     QuickSwitch("Alinhar pelo topo (ao diminuir, a base sobe)", o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
                     QuickSwitch("Fundo (3 mm)", cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }

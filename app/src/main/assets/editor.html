@@ -429,6 +429,7 @@ $('delMod').onclick=function(){
  S.mods=S.mods.filter(function(a){return a!==S.m});S.m=S.mods[0];$('tipo').textContent=S.m.sup?'Superior':'Base';draw();panel()};
 function addStone(){var last=S.stones[S.stones.length-1],nx=last?Math.min(S.W-300,last.x+last.w):0;var st={id:SID++,x:Math.max(0,nx),w:Math.max(300,Math.min(1500,S.W-Math.max(0,nx))),d:600,t:820,e:40,items:[]};S.stones.push(st);S.st=st;S.selI=0;LAST='stone';showBox();draw();panel()}
 var ES=-1;
+function qeL(x1,y1,x2,y2,q){return '<line data-qe="'+q+'" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="transparent" stroke-width="28" stroke-linecap="round" style="cursor:pointer"/>'}
 function drawPlan(){var d6=function(v){return v===undefined?600:v},ext=function(st){var sh=st.shape||'reta',la=(sh==='Le'||sh==='U')?d6(st.lenA):0,lb=(sh==='Ld'||sh==='U')?d6(st.lenB):0;return st.d+Math.max(la,lb)};
  var Dmax=600;S.stones.forEach(function(st){Dmax=Math.max(Dmax,ext(st))});S.mods.forEach(function(m){Dmax=Math.max(Dmax,m.d)});S.fr.forEach(function(f){Dmax=Math.max(Dmax,f.d)});Dmax=Math.max(Dmax,S.m.d);
  var WW=S.W,k=Math.min(780/WW,300/Dmax),L=60,T=34,PH=Math.round(T+Dmax*k+46),s='';$('plan').setAttribute('viewBox','0 0 900 '+PH);
@@ -441,13 +442,13 @@ function drawPlan(){var d6=function(v){return v===undefined?600:v},ext=function(
   if(cur){stEdges(st).forEach(function(e,i){var a=PT[i],b=PT[(i+1)%PT.length],mx=L+(st.x+(a[0]+b[0])/2)*k,my=T+(a[1]+b[1])/2*k,hor=Math.abs(b[0]-a[0])>Math.abs(b[1]-a[1]);
     if(hor){s+=tx(mx,my+12,(i+1)+': '+e.val,'var(--red)','middle',10,1)}else{var right=(a[0]+b[0])/2>=st.w/2;s+=tx(mx+(right?5:-5),my,(i+1)+': '+e.val,'var(--red)',right?'start':'end',10,1)}});
    PT.forEach(function(a,i){var b=PT[(i+1)%PT.length];s+='<line data-ed="'+i+'" x1="'+(L+(st.x+a[0])*k)+'" y1="'+(T+a[1]*k)+'" x2="'+(L+(st.x+b[0])*k)+'" y2="'+(T+b[1]*k)+'" stroke="'+(ES===i?'#e0a100':'transparent')+'" stroke-width="'+(ES===i?4:14)+'" stroke-linecap="round" style="cursor:pointer"/>'});
-   if(st.x>0)s+=ln(L,T+8,L+st.x*k,T+8,'#2f2fd6',1)+tx(L+st.x*k/2,T+20,st.x,'var(--red)','middle',10,1)}});
+   if(st.x>0)s+=ln(L,T+8,L+st.x*k,T+8,'#2f2fd6',1)+tx(L+st.x*k/2,T+20,st.x,'var(--red)','middle',10,1)+qeL(L,T+8,L+st.x*k,T+8,'sx|'+st.id)}});
  S.mods.forEach(function(m,mi){var bx=L+m.x*k,cur=m===S.m;s+='<rect x="'+bx+'" y="'+T+'" width="'+(m.w*k)+'" height="'+(m.d*k)+'" fill="'+(m.sup?'#2f6fe0':'#fff')+'" fill-opacity="'+(m.sup?.08:.3)+'" stroke="'+(cur?'var(--red)':'#6f685a')+'" stroke-dasharray="'+(m.sup?'2 3':'6 4')+'" stroke-width="1.3" pointer-events="none"/>'+tx(bx+4,T+(m.sup?24:12),(m.sup?'superior ':'base ')+m.w+' × '+m.d,'#6f685a','start',10,1)});
  S.stones.forEach(function(st){st.items.forEach(function(it){var x=L+(st.x+it.x)*k,y=T+it.y*k,w=it.w*k,h=it.d*k,on=it.id===S.selI;
   s+='<g data-i="'+it.id+'" style="cursor:move"><rect data-i="'+it.id+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(it.k==='cuba'?8:3)+'" fill="'+(it.k==='cuba'?'#fff':'#2a2d33')+'" stroke="'+(on?'var(--acc)':'#444')+'" stroke-width="'+(on?3:1.5)+'"/>';
   if(it.k==='cook'){[[.27,.3],[.73,.3],[.27,.72],[.73,.72]].forEach(function(c){s+='<circle data-i="'+it.id+'" cx="'+(x+w*c[0])+'" cy="'+(y+h*c[1])+'" r="'+Math.min(w,h)*.16+'" fill="none" stroke="#bbb"/>'})}else{s+='<circle data-i="'+it.id+'" cx="'+(x+w/2)+'" cy="'+(y+h/2)+'" r="5" fill="#aaa"/>'}
   s+='</g>';
-  if(on){s+=ln(L+st.x*k,y+h/2,x,y+h/2,'#2f2fd6',1)+tx((L+st.x*k+x)/2,y+h/2-4,Math.round(it.x),'var(--red)','middle',11,1)+ln(x+w/2,T,x+w/2,y,'#2f2fd6',1)+tx(x+w/2+4,(T+y)/2,Math.round(it.y),'var(--red)','start',11,1)+tx(x+w/2,y+h+13,Math.round(it.w)+' × '+Math.round(it.d),'var(--fg)','middle',11,1)}})});
+  if(on){s+=ln(L+st.x*k,y+h/2,x,y+h/2,'#2f2fd6',1)+tx((L+st.x*k+x)/2,y+h/2-4,Math.round(it.x),'var(--red)','middle',11,1)+ln(x+w/2,T,x+w/2,y,'#2f2fd6',1)+tx(x+w/2+4,(T+y)/2,Math.round(it.y),'var(--red)','start',11,1)+tx(x+w/2,y+h+13,Math.round(it.w)+' × '+Math.round(it.d),'var(--fg)','middle',11,1)+qeL(L+st.x*k,y+h/2,x,y+h/2,'ix')+qeL(x+w/2,T,x+w/2,y,'iy')+(function(){var gr=Math.round(st.w-it.x-it.w),gf=Math.round(st.d-it.y-it.d),o='';if(gr>0){var xr=L+(st.x+it.x+it.w)*k,xe=L+(st.x+st.w)*k;o+=ln(xr,y+h/2,xe,y+h/2,'#2f2fd6',1)+tx((xr+xe)/2,y+h/2-4,gr,'var(--red)','middle',11,1)+qeL(xr,y+h/2,xe,y+h/2,'ir')}if(gf>0){var ye=T+st.d*k;o+=ln(x+w/2,y+h,x+w/2,ye,'#2f2fd6',1)+tx(x+w/2+4,(y+h+ye)/2+4,gf,'var(--red)','start',11,1)+qeL(x+w/2,y+h,x+w/2,ye,'ib')}return o})()}})});
  if(!S.stones.length)s+=tx(L+10,T+30,'Sem pedra. Use "+ Pedra" na aba Pedra.','#5b6472','start',12);
  $('plan').innerHTML=s;$('plan').dataset.k=k;$('plan').dataset.L=L;$('plan').dataset.T=T}
 var _draw=draw;draw=function(){_draw();drawPlan()};
@@ -647,9 +648,9 @@ function fmt(v){return String(v).replace('.',',').replace(/-/g,'−')}
 function show(){var v=cur?cur.value:'';$('calcres').textContent=v===''?'0':(hasOp(v)?((ex(v.replace(/[+\-−]\s*$/,''))!==null)?fmt(v)+' = '+fmt(ex(v.replace(/[+\-−]\s*$/,''))):fmt(v)):fmt(v))}
 function fire(t,n){t.dispatchEvent(new Event(n,{bubbles:true}))}
 function commit(t,keep){var v=t.value.replace(/[+\-−]\s*$/,''),r=ex(v);if(r===null)return false;var sel=null;for(var k in t.dataset){if(k!=='calc'){sel='[data-'+k.replace(/[A-Z]/g,function(c){return '-'+c.toLowerCase()})+'="'+t.dataset[k]+'"]';break}}t.value=String(r);fire(t,'input');fire(t,'change');if(keep&&sel&&!document.body.contains(t)){var n=document.querySelector(sel+'[data-calc]');if(n){cur=n;n.focus()}}return true}
-function lab(t){var l=t.closest('label'),r=t.closest('tr,.row,div');var s=(l&&l.textContent)||'';if(!s&&t.parentNode&&t.parentNode.previousElementSibling)s=t.parentNode.previousElementSibling.textContent;if(!s){var p=t.parentNode;s=(p&&p.firstChild&&p.firstChild.textContent)||''}return s.replace(/\d+/g,'').replace(/[^A-Za-z\u00C0-\u00FF() ]/g,'').trim().slice(0,40)}
+function lab(t){if(t.dataset.lab)return t.dataset.lab;var l=t.closest('label'),r=t.closest('tr,.row,div');var s=(l&&l.textContent)||'';if(!s&&t.parentNode&&t.parentNode.previousElementSibling)s=t.parentNode.previousElementSibling.textContent;if(!s){var p=t.parentNode;s=(p&&p.firstChild&&p.firstChild.textContent)||''}return s.replace(/\d+/g,'').replace(/[^A-Za-z\u00C0-\u00FF() ]/g,'').trim().slice(0,40)}
 function open(t){cur=t;fresh=1;kp.hidden=false;document.body.classList.add('kp');$('kplab').textContent=lab(t);show();setTimeout(function(){try{t.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},50)}
-function close(){kp.hidden=true;cur=null;document.body.classList.remove('kp')}
+function close(){var qb=document.getElementById('qebox');if(qb)qb.hidden=true;kp.hidden=true;cur=null;document.body.classList.remove('kp')}
 document.addEventListener('focusin',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(t!==cur)open(t);else{fresh=1}}else if(!kp.contains(t)){close()}});
 document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(t.value)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}});
 document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.calc)return;var v=t.value;if(hasOp(v)){e.stopImmediatePropagation();if(t===cur)show();return}if(v.indexOf(',')>=0)t.value=v.replace(/,/g,'.')},true);
@@ -665,6 +666,32 @@ function press(e){var b=e.target.closest('button');if(!b||!cur)return;var c=b.da
  t.value=v+c;fire(t,'input');show()}
 kp.addEventListener('pointerdown',function(e){e.preventDefault();press(e)});
 kp.addEventListener('click',function(e){e.preventDefault()});
+})();
+</script>
+<script>
+(function(){
+var box=document.createElement('div');box.id='qebox';box.hidden=true;
+box.style.cssText='position:fixed;z-index:99998;left:50%;bottom:340px;transform:translateX(-50%);background:#fff;color:#1b1f27;border:2px solid #3b82f6;border-radius:12px;padding:8px 12px;box-shadow:0 6px 20px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center;font:600 14px system-ui,sans-serif';
+box.innerHTML='<span id="qelab"></span><input id="qein" type="text" inputmode="none" data-calc="1" style="width:110px;padding:8px;border:1px solid #b9c2d0;border-radius:8px;font:600 18px system-ui;text-align:right;background:#fff;color:#1b1f27"><span style="opacity:.6;font-weight:500">mm</span>';
+document.body.appendChild(box);
+var inp=box.querySelector('input'),last={k:'',t:0};
+function openQ(kind,idx){var lab='',val=0,ds={};
+ if(kind==='ix'||kind==='iy'){var it=S.items.filter(function(a){return a.id===S.selI})[0];if(!it)return;ds.it=kind==='ix'?'x':'y';val=it[ds.it];lab=kind==='ix'?'Da esquerda da pedra':'Do fundo da pedra (parede)'}
+ else if(kind==='ir'||kind==='ib'){var it2=S.items.filter(function(a){return a.id===S.selI})[0];if(!it2)return;var st2=S.stones.filter(function(q){return q.items.indexOf(it2)>=0})[0];if(!st2)return;ds[kind]='1';val=kind==='ir'?st2.w-it2.x-it2.w:st2.d-it2.y-it2.d;lab=kind==='ir'?'Sobra à direita da pedra':'Sobra na frente da pedra'}
+ else if(kind==='sx'){var st=S.stones.filter(function(q){return q.id==idx})[0];if(!st)return;S.st=st;ds.sk='x';val=st.x;lab='Recuo da esquerda da pedra'}
+ else if(kind==='ed'){if(!S.st)return;var E=stEdges(S.st)[+idx];if(!E)return;ds.edge=String(idx);val=E.val;lab='Lado '+(+idx+1)+' · '+E.lab}
+ else return;
+ ['it','sk','edge','ir','ib'].forEach(function(k){delete inp.dataset[k]});
+ for(var k in ds)inp.dataset[k]=ds[k];
+ inp.dataset.lab=lab;$('qelab').textContent=lab;
+ inp.value=String(Math.round(val));box.hidden=false;inp.focus();
+}
+inp.addEventListener('input',function(){var d=inp.dataset;if(d.ir===undefined&&d.ib===undefined)return;var v=+inp.value;if(isNaN(v))return;var it=S.items.filter(function(a){return a.id===S.selI})[0];if(!it)return;var st=S.stones.filter(function(q){return q.items.indexOf(it)>=0})[0];if(!st)return;if(d.ir!==undefined)it.x=Math.max(0,st.w-it.w-v);else it.y=Math.max(0,st.d-it.d-v);draw()});
+document.addEventListener('pointerdown',function(e){var el=e.target.closest&&e.target.closest('[data-qe],[data-ed]');if(!el||box.contains(e.target))return;
+ var q=el.dataset.qe,kind,idx;if(q){var a=q.split('|');kind=a[0];idx=a[1]}else{kind='ed';idx=el.dataset.ed}
+ var key=kind+'|'+idx,now=Date.now();
+ if(last.k===key&&now-last.t<450){e.stopPropagation();e.preventDefault();last={k:'',t:0};openQ(kind,idx);return}
+ last={k:key,t:now};if(q)e.stopPropagation()},true);
 })();
 </script>
 

@@ -33,8 +33,10 @@ object WallLayout {
         val upd = HashMap<String, CabObj>()
         for (w in walls.values) {
             for (upper in listOf(false, true)) {
-                var x = 0.0
-                members(s, w.id, upper).forEachIndexed { i, m ->
+                val row = members(s, w.id, upper)
+                val slack = w.wMm - row.sumOf { occ(it) }
+                var x = when (w.alignRow) { 0 -> 0.0; 2 -> slack.coerceAtLeast(0.0); else -> (slack / 2.0).coerceAtLeast(0.0) }
+                row.forEachIndexed { i, m ->
                     val k = w.upm
                     val at = Pt((w.at.x + (x + padL(m)) * k).toFloat(), (w.at.y + (w.hMm - topMm(w, m)) * k).toFloat())
                     upd[m.id] = m.copy(at = at, scaleDen = w.scaleDen, layout = m.layout!!.copy(order = i))

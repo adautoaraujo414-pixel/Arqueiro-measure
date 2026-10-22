@@ -185,6 +185,8 @@ data class WallObj(
     val upperBottomMm: Double = 1400.0,
     /** Folga total (mm) na largura da parede para encaixar os armários sem erro; tamponamentos já entram na medida final. */
     val folgaMm: Double = 10.0,
+    /** Onde fica a sobra da fileira: 0 esquerda, 1 repartida nos dois lados, 2 direita. */
+    val alignRow: Int = 1,
     val scaleDen: Int = 20,
     override val locked: Boolean = false,
 ) : Ann() {

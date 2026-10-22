@@ -448,6 +448,34 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 c.drawText(if (bad) "passa ${(-gap).toLong()}" else "${gap.toLong()}", cx + 5f, (yTop + yLim) / 2f + 3f, textPaint)
             }
         }
+        // sobra dos dois lados de cada fileira: da parede até o primeiro módulo e do último até a parede
+        for (upper in listOf(false, true)) {
+            val mods = WallLayout.members(sheet, o.id, upper)
+            if (mods.isEmpty()) continue
+            val first = mods.first()
+            val last = mods.last()
+            val fo = first.origin()
+            val lo = last.origin()
+            val firstL = fo.x - (WallLayout.padL(first) * k).toFloat()
+            val lastR = lo.x + last.widthUnits() + (WallLayout.padR(last) * k).toFloat()
+            val ym = fo.y + first.heightUnits() / 2f
+            val ym2 = lo.y + last.heightUnits() / 2f
+            fun gap(x1: Float, x2: Float, y: Float, left: Boolean) {
+                val mm = (x2 - x1) / k
+                if (mm < 0.5f) return
+                strokePaint.color = 0xFF2F80ED.toInt(); strokePaint.strokeWidth = 0.9f; strokePaint.pathEffect = null
+                c.drawLine(x1, y, x2, y, strokePaint)
+                c.drawLine(x1, y - 3f, x1, y + 3f, strokePaint)
+                c.drawLine(x2, y - 3f, x2, y + 3f, strokePaint)
+                textPaint.color = 0xFF2F80ED.toInt(); textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9.5f
+                val small = (x2 - x1) < 26f
+                textPaint.textAlign = if (small && left) Paint.Align.RIGHT else if (small) Paint.Align.LEFT else Paint.Align.CENTER
+                val tx = if (small && left) x1 - 3f else if (small) x2 + 3f else (x1 + x2) / 2f
+                c.drawText("${mm.toLong()}", tx, y - 4f, textPaint)
+            }
+            gap(l, firstL, ym, true)
+            gap(lastR, r, ym2, false)
+        }
         val lines = ArrayList<Pair<String, Boolean>>()
         if (lowH != null) {
             val topRef = upMods.takeIf { it.isNotEmpty() }?.let { upBot }

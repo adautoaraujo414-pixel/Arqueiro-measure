@@ -1471,6 +1471,9 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 TextButton(onClick = { st.addWallModule(w.id, false) }, enabled = !w.locked) { Text("+ Módulo de baixo") }
                 TextButton(onClick = { st.addWallModule(w.id, true) }, enabled = !w.locked) { Text("+ Módulo superior") }
+                listOf("Sobra à esq." to 0, "Sobra nos 2 lados" to 1, "Sobra à dir." to 2).forEach { (lb, v) ->
+                    TextButton(onClick = { st.setWall(w.id, alignRow = v) }, enabled = !w.locked && w.alignRow != v) { Text(lb) }
+                }
                 TextButton(onClick = { st.setWall(w.id, scaleDen = steps.firstOrNull { it > w.scaleDen } ?: 100) }, enabled = !w.locked && w.scaleDen < 100) { Text("− Diminuir") }
                 TextButton(onClick = { st.setWall(w.id, scaleDen = steps.lastOrNull { it < w.scaleDen } ?: 5) }, enabled = !w.locked && w.scaleDen > 5) { Text("+ Aumentar") }
             }

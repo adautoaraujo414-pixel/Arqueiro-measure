@@ -426,6 +426,27 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 c.drawText("${v.toLong()}", dx + 5f, (ya + yb) / 2f + 3f, textPaint)
             }
         }
+        // sobra em cima de cada módulo (até o superior ou o teto), na própria medida
+        val upBottomAny = upMods.isNotEmpty()
+        for (m in sheet.objs.filterIsInstance<br.com.arque.measure.model.CabObj>().filter { it.layout?.wallId == o.id }) {
+            val topMm = if (m.cab.superior) o.upperBottomMm + m.cab.hMm else m.cab.hMm
+            val limit = if (!m.cab.superior && upBottomAny) o.upperBottomMm else o.hMm
+            val gap = limit - topMm
+            val org = m.origin()
+            val cx = org.x + m.widthUnits() / 2f
+            val yTop = org.y
+            val yLim = b - (limit * k).toFloat()
+            val bad = gap < -0.5
+            val col = if (bad) 0xFFC0392B.toInt() else 0xFF2F80ED.toInt()
+            if (kotlin.math.abs(yTop - yLim) > 10f || bad) {
+                strokePaint.color = col; strokePaint.strokeWidth = 0.9f; strokePaint.pathEffect = null
+                c.drawLine(cx, yTop, cx, yLim, strokePaint)
+                c.drawLine(cx - 3f, yLim, cx + 3f, yLim, strokePaint)
+                c.drawLine(cx - 3f, yTop, cx + 3f, yTop, strokePaint)
+                textPaint.color = col; textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9.5f; textPaint.textAlign = Paint.Align.LEFT
+                c.drawText(if (bad) "passa ${(-gap).toLong()}" else "${gap.toLong()}", cx + 5f, (yTop + yLim) / 2f + 3f, textPaint)
+            }
+        }
         val lines = ArrayList<Pair<String, Boolean>>()
         if (lowH != null) {
             val topRef = upMods.takeIf { it.isNotEmpty() }?.let { o.upperBottomMm }

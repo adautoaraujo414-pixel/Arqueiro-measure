@@ -231,7 +231,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                         } while (ev.changes.any { it.pressed })
                         if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) {
                             val cid = if (session.screenLocked) null else controller.cabAt(down.position)
-                            if (cid != null) { st.select(cid); session.cabQuickId = cid } else session.toggleLock()
+                            if (cid != null) { session.state.select(cid); session.cabQuickId = cid } else session.toggleLock()
                         }
                     } else {
                     session.tapDown(down.uptimeMillis)

@@ -30,6 +30,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -73,7 +75,16 @@ import br.com.arque.measure.model.PartKind
 import br.com.arque.measure.model.Vao
 import br.com.arque.measure.model.VaoKind
 
-private val Gold = Color(0xFFF2C230)
+private object L {
+    val bg = Color(0xFFFFFFFF)
+    val panel = Color(0xFFF4F5F7)
+    val panel2 = Color(0xFFE6E9EE)
+    val line = Color(0xFFCBD0D8)
+    val text = Color(0xFF1B1F27)
+    val dim = Color(0xFF5E6672)
+    val accent = Color(0xFF2F6BE0)
+}
+private val Gold = Color(0xFF2F6BE0)
 private val Wood = Color(0xFFCDB98F)
 private val WoodFront = Color(0xFFE6D9BE)
 private val WoodDark = Color(0xFF8B7B5C)
@@ -110,22 +121,23 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
     }
 
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(Modifier.fillMaxSize(), color = Ui.bg) {
+        MaterialTheme(colorScheme = lightColorScheme(primary = L.accent, onPrimary = Color.White, surface = Color.White, onSurface = L.text, background = Color.White)) {
+        Surface(Modifier.fillMaxSize(), color = L.bg) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
                 // barra superior
                 Row(
-                    Modifier.fillMaxWidth().background(Ui.panel).padding(horizontal = 8.dp, vertical = 6.dp),
+                    Modifier.fillMaxWidth().background(L.panel).padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    TextButton(onClick = onClose) { Text("‹ Folha", color = Ui.text) }
+                    TextButton(onClick = onClose) { Text("‹ Folha", color = L.text) }
                     Column(Modifier.weight(1f).clickable { renameOpen = true }) {
-                        Text(obj.name, color = Ui.text, fontSize = 16.sp)
-                        Text("Vista frontal · ${mmStr(cab.wMm)} × ${mmStr(cab.hMm)} × ${mmStr(cab.dMm)}", color = Ui.dim, fontSize = 12.sp)
+                        Text(obj.name, color = L.text, fontSize = 16.sp)
+                        Text("Vista frontal · ${mmStr(cab.wMm)} × ${mmStr(cab.hMm)} × ${mmStr(cab.dMm)}", color = L.dim, fontSize = 12.sp)
                     }
                     TextButton(onClick = { st.undo() }, enabled = st.canUndo) { Text("Desfazer") }
                     TextButton(onClick = { st.redo() }, enabled = st.canRedo) { Text("Refazer") }
-                    TextButton(onClick = { listOpen = true }) { Text("Lista de peças", color = Ui.accent) }
+                    TextButton(onClick = { listOpen = true }) { Text("Lista de peças", color = L.accent) }
                 }
                 val canvasPart: @Composable (Modifier) -> Unit = { mod ->
                     Box(mod) {
@@ -156,7 +168,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     if (shelfMode || divMode) {
                         Text(
                             if (divMode) "Toque no vão, onde quer cada divisória. Quando terminar, toque em Pronto." else "Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto.",
-                            color = Ui.text, fontSize = 14.sp,
+                            color = Color.White, fontSize = 14.sp,
                             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xE63B82F6)).padding(horizontal = 14.dp, vertical = 10.dp),
                         )
                     } else if (selDivider < 0 && selVao in cab.vaos.indices) {
@@ -214,6 +226,7 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                 }
             }
         }
+        }
     }
 
     if (renameOpen) {
@@ -270,7 +283,7 @@ private fun CabinetCanvas(
     fun fit(sz: Size) = fx(sz)
     Box(modifier) {
     Canvas(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF17181B)).pointerInput(Unit) {
+        modifier = Modifier.fillMaxSize().background(Color.White).pointerInput(Unit) {
             val slop = viewConfiguration.touchSlop
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)
@@ -288,8 +301,14 @@ private fun CabinetCanvas(
                 val top0 = c0.folgaTopoMm
                 val bot0 = CabinetMath.baseBottom(c0)
                 val di = d0.indexOfFirst { mx0 >= it - tol && mx0 <= it + ee0 + tol && my0 in vt0..vb0 }
+                var shV = -1
+                var shY = 0.0
+                CabinetMath.vaoRanges(c0).forEachIndexed { vi2, (a2, b2) ->
+                    c0.vaos.getOrNull(vi2)?.shelfYs?.forEach { y -> if (shV < 0 && mx0 >= a2 && mx0 <= b2 && Math.abs(my0 - y) < tol) { shV = vi2; shY = y } }
+                }
                 val grab = when {
                     di >= 0 -> di
+                    shV >= 0 -> -4
                     mx0 >= c0.wMm - ee0 - tol && mx0 <= c0.wMm + tol && my0 in top0..bot0 -> -1
                     mx0 >= -tol && mx0 <= ee0 + tol && my0 in top0..bot0 -> -3
                     else -> -2
@@ -324,8 +343,9 @@ private fun CabinetCanvas(
                         if (began) {
                             ch.consume()
                             val sz = Size(size.width.toFloat(), size.height.toFloat())
-                            val (k, ox, _) = fx(sz)
+                            val (k, ox, oy) = fx(sz)
                             val mx = ((ch.position.x - ox) / k).toDouble()
+                            val myy = ((ch.position.y - oy) / k).toDouble()
                             if (grab >= 0) {
                                 onLive { cc ->
                                     val ee = cc.espMm
@@ -339,6 +359,11 @@ private fun CabinetCanvas(
                                         cc.copy(dividers = cc.dividers.sorted().mapIndexed { j, o -> if (j == i) r else o })
                                     }
                                 }
+                            } else if (grab == -4) {
+                                val ny = Math.round(myy).toDouble().coerceIn(vt0 + ee0 + 5.0, vb0 - ee0 - 5.0)
+                                val oldY = shY
+                                onLive { cc -> cc.copy(vaos = cc.vaos.mapIndexed { i, o -> if (i == shV) o.copy(shelfYs = o.shelfYs.map { y -> if (y == oldY) ny else y }) else o }) }
+                                shY = ny
                             } else if (grab == -1) {
                                 val nw = Math.round(mx).toDouble().coerceIn(150.0, 6000.0)
                                 onLive { cc ->
@@ -391,7 +416,7 @@ private fun CabinetCanvas(
         fun Y(mm: Double) = oy + mm.toFloat() * k
         // grade de 50 mm
         var gx = 0.0
-        val gridColor = Color(0xFF212329)
+        val gridColor = Color(0xFFEEF0F3)
         while (gx <= cab.wMm + 200) {
             drawLine(gridColor, Offset(X(gx), 0f), Offset(X(gx), size.height), 1f); gx += 50.0
         }
@@ -408,7 +433,7 @@ private fun CabinetCanvas(
             val col = when {
                 p.kind == PartKind.RODAPE -> WoodDark
                 p.kind == PartKind.MOLDURA -> WoodFront
-                p.kind == PartKind.FORNO -> Color(0xFF2A2C31)
+                p.kind == PartKind.FORNO -> Color(0xFF7A8088)
                 p.kind == PartKind.BATENTE -> WoodFront
                 p.kind == PartKind.TAMPONAMENTO -> WoodDark
                 p.kind == PartKind.FRENTE_GAVETA || p.kind == PartKind.PORTA -> WoodFront
@@ -451,8 +476,21 @@ private fun CabinetCanvas(
                 Size((e * k).toFloat() + 6f, (CabinetMath.vaoH(cab) * k).toFloat() + 6f), style = Stroke(3f),
             )
         }
+        // alças de arrastar, grandes e visíveis
+        run {
+            val hb = Color(0xFF2F6BE0)
+            fun handle(cx: Float, cy: Float) {
+                drawCircle(Color.White, 17f, Offset(cx, cy)); drawCircle(hb, 13f, Offset(cx, cy))
+            }
+            handle(X(cab.wMm), Y(cab.hMm / 2))
+            handle(X(0.0), Y(cab.hMm / 2))
+            dx.forEach { x -> handle(X(x + e / 2), (Y(CabinetMath.vaoTop(cab)) + Y(CabinetMath.vaoBottom(cab))) / 2) }
+            ranges.forEachIndexed { vi3, (a3, b3) ->
+                cab.vaos.getOrNull(vi3)?.shelfYs?.forEach { y -> handle((X(a3) + X(b3)) / 2, Y(y)) }
+            }
+        }
         // pedra (referência): acima do móvel
-        drawRect(Color(0xFF3A3D44), Offset(X(-20.0), Y(-14.0)), Size(((cab.wMm + 40) * k).toFloat(), (14 * k).toFloat().coerceAtLeast(6f)))
+        drawRect(Color(0xFFBFC4CC), Offset(X(-20.0), Y(-14.0)), Size(((cab.wMm + 40) * k).toFloat(), (14 * k).toFloat().coerceAtLeast(6f)))
         // cotas
         val nc = drawContext.canvas.nativeCanvas
         val chipPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = Gold.toArgb() }
@@ -495,7 +533,7 @@ private fun CabinetCanvas(
     }
     Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf("Centralizar" to { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }).forEach { (t, f) ->
-            Text(t, color = Ui.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Ui.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
+            Text(t, color = L.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(L.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
     }
     }
@@ -529,14 +567,25 @@ private fun CabinetPanel(
     pickVao: (Int) -> Unit,
     pickDivider: (Int) -> Unit,
 ) {
+    var tab by remember { mutableIntStateOf(0) }
     val e = cab.espMm
     val iw = CabinetMath.innerW(cab)
     val ranges = CabinetMath.vaoRanges(cab)
     val dx = CabinetMath.dividerX(cab)
     Column(
-        modifier.background(Ui.panel).verticalScroll(rememberScrollState()).padding(16.dp),
+        modifier.background(L.panel).verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            listOf("Estrutura","Divisões","Internos","Portas","Fundos").forEachIndexed { i, t ->
+                Column(Modifier.clickable { tab = i }.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(t, color = if (tab == i) L.accent else L.text, fontSize = 14.sp)
+                    Box(Modifier.padding(top = 4.dp).height(2.dp).width(30.dp).background(if (tab == i) L.accent else Color.Transparent))
+                }
+            }
+        }
+        HorizontalDivider(color = L.line)
+        if (tab == 0) {
         Label("Módulo")
         NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.descontoPedra(cab)), vm) { v ->
             edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.descontoPedra(it)).coerceIn(150.0, 6000.0)) }
@@ -551,10 +600,56 @@ private fun CabinetPanel(
         NumField("Largura do módulo", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
         NumField("Profundidade do módulo", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
         NumField("Altura (chão até a pedra)", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
-        Text("A pedra manda: largura do módulo = pedra (− 35 mm por lado com tamponamento); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = Ui.dim, fontSize = 12.sp)
-        HorizontalDivider(color = Ui.line)
-
+        Text("A pedra manda: largura do módulo = pedra (− 35 mm por lado com tamponamento); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = L.dim, fontSize = 12.sp)
+        Label("Regras do módulo")
+        NumField("Espessura das chapas", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Pedestal no chão (rodapé)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasRodape, onCheckedChange = { b -> edit { it.copy(hasRodape = b) } })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Chapa da base (sob as laterais)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasBase, onCheckedChange = { b -> edit { it.copy(hasBase = b) } })
+        }
+        NumField("Altura do pedestal (rodapé)", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
+        NumField("Folga do topo (sob a pedra)", cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Moldura de acabamento (${Units.formatNumber(cab.molduraMm, LengthUnit.MM)} mm)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasMoldura, onCheckedChange = { b -> edit { it.copy(hasMoldura = b) } })
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Travessa frontal (régua)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.hasTravessa, onCheckedChange = { b -> edit { it.copy(hasTravessa = b) } })
+        }
+        if (cab.hasTravessa) {
+            NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
+        } else {
+            Text("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais.", color = L.dim, fontSize = 12.sp)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Armário superior (caixote)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.superior, onCheckedChange = { b -> edit { it.copy(superior = b) } })
+        }
+        NumField("Prateleira menor que a base (profundidade)", cab.prateleiraMenorMm, vm) { x -> edit { it.copy(prateleiraMenorMm = x.coerceIn(0.0, 200.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Réguas nas bordas (engrossa frente e trás)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.reguas, onCheckedChange = { b -> edit { it.copy(reguas = b) } })
+        }
+        if (cab.reguas) NumField("Largura da régua", cab.reguaMm, vm) { x -> edit { it.copy(reguaMm = x.coerceIn(10.0, 300.0)) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Tamponamento de baixo (batente da cava)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Switch(checked = cab.tampBaixo, onCheckedChange = { b -> edit { it.copy(tampBaixo = b) } })
+        }
+        if (cab.tampBaixo) {
+            NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("De baixo passa reto (laterais morrem nele)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Switch(checked = cab.tampBaixoPassa, onCheckedChange = { b -> edit { it.copy(tampBaixoPassa = b) } })
+            }
+        }
+        }
         if (selDivider in dx.indices) {
+            if (tab == 1) {
             Label("Divisória ${selDivider + 1} · MDF ${Units.formatNumber(e, LengthUnit.MM)} mm")
             NumField("Distância da lateral esq.", dx[selDivider] - e, vm) { d ->
                 edit { c -> c.copy(dividers = c.dividers.sorted().mapIndexed { i, r -> if (i == selDivider) (((d + e / 2) / iw).toFloat()).coerceIn(0.02f, 0.98f) else r }) }
@@ -571,24 +666,39 @@ private fun CabinetPanel(
                     edit { c -> c.copy(dividers = c.dividers.sorted().filterIndexed { i, _ -> i != j }, vaos = c.vaos.filterIndexed { i, _ -> i != j + 1 }) }
                     pickDivider(-1)
                 }
-            }
+            } else if (tab != 4 && tab != 0) Text("Divisória selecionada: veja a aba Divisões. Toque num vão para ver Internos/Portas.", color = L.dim, fontSize = 12.sp)
         } else if (selVao in ranges.indices) {
             val v = cab.vaos[selVao]
             val vw = ranges[selVao].second - ranges[selVao].first
             Label("Vão ${selVao + 1} · ${mmStr(vw)}")
+            fun setVao(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
+            if (tab == 1) {
+            Label("Dividir este vão em partes iguais")
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                (2..5).forEach { n -> Chip("÷$n", false) { edit { c -> CabinetMath.splitVao(c, selVao, n) } } }
+            }
+            PillBtn("+ Divisória no meio deste vão") {
+                val mid = (ranges[selVao].first + ranges[selVao].second) / 2
+                val r = ((mid - e) / iw).toFloat()
+                edit { c ->
+                    val i = selVao
+                    c.copy(dividers = (c.dividers.sorted().take(i) + r + c.dividers.sorted().drop(i)), vaos = c.vaos.take(i + 1) + Vao() + c.vaos.drop(i + 1))
+                }
+            }
+            }
+            if (tab == 2) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 VaoKind.values().forEach { kd ->
                     Chip(kd.label, v.kind == kd) { edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) o.copy(kind = kd) else o }) } }
                 }
             }
-            fun setVao(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
-            when (v.kind) {
+                when (v.kind) {
                 VaoKind.SHELVES -> Stepper("Prateleiras", v.shelves, 1, 8) { n -> setVao { it.copy(shelves = n) } }
                 VaoKind.DRAWERS -> {
                     // 1º o batente (cava), 2º a quantidade de gavetas
                     Label("1 · Batente de cava")
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Usar batente entre as gavetas (cava a 30° na peça)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Text("Usar batente entre as gavetas (cava a 30° na peça)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
                         Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
                     }
                     if (v.cava) NumField("Altura de cada batente", v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
@@ -603,61 +713,35 @@ private fun CabinetPanel(
                     }
                     val area = CabinetMath.gaveteiroH(cab, v)
                     val fh = CabinetMath.drawerFrontH(cab, v.drawers, area, v)
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
-                        Text("Resultado", color = Ui.dim, fontSize = 12.sp)
-                        Text("${v.drawers} × ${Units.format(fh, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
+                        Text("Resultado", color = L.dim, fontSize = 12.sp)
+                        Text("${v.drawers} × ${Units.format(fh, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
                         if (v.cava && v.drawers > 1) {
                             val bt = v.batenteMm * (v.drawers - 1)
-                            Text("+ ${v.drawers - 1} batente(s) × ${Units.formatNumber(v.batenteMm, LengthUnit.MM)} = ${Units.formatNumber(bt, LengthUnit.MM)} mm", color = Color(0xFFBFD6FF), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-                            Text("(${Units.formatNumber(area, LengthUnit.MM)} − ${Units.formatNumber(bt, LengthUnit.MM)}) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text("+ ${v.drawers - 1} batente(s) × ${Units.formatNumber(v.batenteMm, LengthUnit.MM)} = ${Units.formatNumber(bt, LengthUnit.MM)} mm", color = Color(0xFF3B5B85), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                            Text("(${Units.formatNumber(area, LengthUnit.MM)} − ${Units.formatNumber(bt, LengthUnit.MM)}) ÷ ${v.drawers}", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         } else if (!v.cava) {
-                            Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
-                        if (v.shelvesAbove > 0) Text("Área acima das gavetas: ${Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)} mm", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        if (v.shelvesAbove > 0) Text("Área acima das gavetas: ${Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)} mm", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
-                    Text("Frente da gaveta: vão + 15 (7,5 por lado). Caixa: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = Ui.dim, fontSize = 12.sp)
+                    Text("Frente da gaveta: vão + 15 (7,5 por lado). Caixa: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = L.dim, fontSize = 12.sp)
                 }
                 VaoKind.OVEN -> {
                     val vwO = ranges[selVao].second - ranges[selVao].first
                     NumField("Largura do corte (centralizado)", v.ovenW, vm) { w -> setVao { it.copy(ovenW = w.coerceIn(100.0, vwO)) } }
                     NumField("Altura do corte", v.ovenH, vm) { h -> setVao { it.copy(ovenH = h.coerceIn(100.0, CabinetMath.vaoH(cab) - cab.espMm)) } }
                     NumField("Da travessa até o corte", v.ovenTop, vm) { t -> setVao { it.copy(ovenTop = t.coerceAtLeast(0.0)) } }
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
-                        Text("Sobra de cada lado", color = Ui.dim, fontSize = 12.sp)
-                        Text(Units.format(((vwO - v.ovenW) / 2).coerceAtLeast(0.0), LengthUnit.MM), color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                        Text("(vão ${Units.formatNumber(vwO, LengthUnit.MM)} − corte ${Units.formatNumber(v.ovenW, LengthUnit.MM)}) ÷ 2", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
+                        Text("Sobra de cada lado", color = L.dim, fontSize = 12.sp)
+                        Text(Units.format(((vwO - v.ovenW) / 2).coerceAtLeast(0.0), LengthUnit.MM), color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                        Text("(vão ${Units.formatNumber(vwO, LengthUnit.MM)} − corte ${Units.formatNumber(v.ovenW, LengthUnit.MM)}) ÷ 2", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
-                    Text("560 × 595 é um valor de partida. Confira a medida do nicho no manual do seu forno.", color = Ui.dim, fontSize = 12.sp)
+                    Text("560 × 595 é um valor de partida. Confira a medida do nicho no manual do seu forno.", color = L.dim, fontSize = 12.sp)
                 }
-                VaoKind.DOOR -> {
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Chip("1 folha", v.doors < 2) { setVao { it.copy(doors = 1) } }
-                        Chip("2 folhas", v.doors >= 2) { setVao { it.copy(doors = 2) } }
-                    }
-                    if (v.doors >= 2) {
-                        val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / v.doors.coerceIn(2, 6)
-                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
-                            Text("Cada folha", color = Ui.dim, fontSize = 12.sp)
-                            Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                            Text("(vão + 12) ÷ ${v.doors.coerceIn(2, 6)} · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                        }
-                    } else {
-                        val dw1 = vw + CabinetMath.PORTA1_SOBRE_L_MM
-                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF16273F)).padding(12.dp)) {
-                            Text("Porta", color = Ui.dim, fontSize = 12.sp)
-                            Text("${Units.formatNumber(dw1, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color.White, fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                            Text("vão + 14 · altura do vão + 30", color = Color(0xFFBFD6FF), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                        }
-                    }
+                    VaoKind.DOOR -> Text("Esse vão usa porta: veja a aba Portas.", color = L.dim, fontSize = 12.sp)
+                VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = L.dim, fontSize = 12.sp)
                 }
-                VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = Ui.dim, fontSize = 12.sp)
-            }
-            if (v.kind == VaoKind.DOOR) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Cava (puxador a 30° na peça)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                    Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
-                }
-            }
             run {
                 val vt = CabinetMath.vaoTop(cab)
                 val vb = CabinetMath.vaoBottom(cab)
@@ -676,112 +760,85 @@ private fun CabinetPanel(
                     val ny = if (last == null) vt + gap else last + gap
                     if (ny < vb - cab.espMm - 5.0) setVao { o -> o.copy(shelfYs = o.shelfYs + ny) }
                 }
-                if (sorted.isNotEmpty()) Text("Cada prateleira tem a sua medida: toque no número para digitar a distância exata a partir da travessa.", color = Ui.dim, fontSize = 12.sp)
+                if (sorted.isNotEmpty()) Text("Cada prateleira tem a sua medida: toque no número para digitar a distância exata a partir da travessa.", color = L.dim, fontSize = 12.sp)
             }
-            Label("Dividir este vão em partes iguais")
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                (2..5).forEach { n -> Chip("÷$n", false) { edit { c -> CabinetMath.splitVao(c, selVao, n) } } }
             }
-            PillBtn("+ Divisória no meio deste vão") {
-                val mid = (ranges[selVao].first + ranges[selVao].second) / 2
-                val r = ((mid - e) / iw).toFloat()
-                edit { c ->
-                    val i = selVao
-                    c.copy(dividers = (c.dividers.sorted().take(i) + r + c.dividers.sorted().drop(i)), vaos = c.vaos.take(i + 1) + Vao() + c.vaos.drop(i + 1))
+            if (tab == 3) {
+                Label("Folhas de porta neste vão")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (1..4).forEach { n -> Chip("$n", v.kind == VaoKind.DOOR && (if (n == 1) v.doors < 2 else v.doors == n)) { setVao { it.copy(kind = VaoKind.DOOR, doors = n) } } }
+                    Chip("Sem porta", v.kind != VaoKind.DOOR) { setVao { it.copy(kind = VaoKind.FREE) } }
+                }
+                if (v.kind == VaoKind.DOOR) {
+                    if (v.doors >= 2) {
+                        val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / v.doors.coerceIn(2, 6)
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
+                            Text("Cada folha", color = L.dim, fontSize = 12.sp)
+                            Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                            Text("(vão + 12) ÷ ${v.doors.coerceIn(2, 6)} · altura do vão + 30", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    } else {
+                        val dw1 = vw + CabinetMath.PORTA1_SOBRE_L_MM
+                        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
+                            Text("Porta", color = L.dim, fontSize = 12.sp)
+                            Text("${Units.formatNumber(dw1, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
+                            Text("vão + 14 · altura do vão + 30", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    }
+            if (v.kind == VaoKind.DOOR) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Cava (puxador a 30° na peça)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
+                }
+            }
                 }
             }
         }
-        HorizontalDivider(color = Ui.line)
-        Label("Regras do módulo")
-        NumField("Espessura das chapas", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
+        if (tab == 4) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Pedestal no chão (rodapé)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.hasRodape, onCheckedChange = { b -> edit { it.copy(hasRodape = b) } })
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Chapa da base (sob as laterais)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.hasBase, onCheckedChange = { b -> edit { it.copy(hasBase = b) } })
-        }
-        NumField("Altura do pedestal (rodapé)", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
-        NumField("Folga do topo (sob a pedra)", cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Moldura de acabamento (${Units.formatNumber(cab.molduraMm, LengthUnit.MM)} mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.hasMoldura, onCheckedChange = { b -> edit { it.copy(hasMoldura = b) } })
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Travessa frontal (régua)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.hasTravessa, onCheckedChange = { b -> edit { it.copy(hasTravessa = b) } })
-        }
-        if (cab.hasTravessa) {
-            NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
-        } else {
-            Text("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais.", color = Ui.dim, fontSize = 12.sp)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Armário superior (caixote)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.superior, onCheckedChange = { b -> edit { it.copy(superior = b) } })
-        }
-        NumField("Prateleira menor que a base (profundidade)", cab.prateleiraMenorMm, vm) { x -> edit { it.copy(prateleiraMenorMm = x.coerceIn(0.0, 200.0)) } }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Réguas nas bordas (engrossa frente e trás)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.reguas, onCheckedChange = { b -> edit { it.copy(reguas = b) } })
-        }
-        if (cab.reguas) NumField("Largura da régua", cab.reguaMm, vm) { x -> edit { it.copy(reguaMm = x.coerceIn(10.0, 300.0)) } }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Tamponamento de baixo (batente da cava)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-            Switch(checked = cab.tampBaixo, onCheckedChange = { b -> edit { it.copy(tampBaixo = b) } })
-        }
-        if (cab.tampBaixo) {
-            NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("De baixo passa reto (laterais morrem nele)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
-                Switch(checked = cab.tampBaixoPassa, onCheckedChange = { b -> edit { it.copy(tampBaixoPassa = b) } })
-            }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Fundo (3 mm)", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text("Fundo (3 mm)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })
         }
-        HorizontalDivider(color = Ui.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
-        Text("LISTA DE PEÇAS (ao vivo)", color = Ui.dim, fontSize = 12.sp)
+        HorizontalDivider(color = L.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
+        Text("LISTA DE PEÇAS (ao vivo)", color = L.dim, fontSize = 12.sp)
         CutListBody(CabinetMath.cutList(cab))
-    }
+        }
 }
 
 @Composable
 private fun QuickBtn(text: String, enabled: Boolean, onClick: () -> Unit) {
     Text(
-        text, color = if (enabled) Ui.text else Ui.dim, fontSize = 14.sp, maxLines = 1, softWrap = false,
-        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xE62E3136)).clickable(enabled = enabled) { onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
+        text, color = if (enabled) L.text else L.dim, fontSize = 14.sp, maxLines = 1, softWrap = false,
+        modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xF0E6E9EE)).clickable(enabled = enabled) { onClick() }.padding(horizontal = 14.dp, vertical = 10.dp),
     )
 }
 
-@Composable private fun Label(t: String) = Text(t.uppercase(), color = Ui.dim, fontSize = 11.sp, letterSpacing = 1.sp)
+@Composable private fun Label(t: String) = Text(t.uppercase(), color = L.dim, fontSize = 11.sp, letterSpacing = 1.sp)
 
 @Composable
 private fun PillBtn(text: String, danger: Boolean = false, onClick: () -> Unit) {
     Box(
-        Modifier.clip(RoundedCornerShape(10.dp)).background(Ui.panel2).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
-    ) { Text(text, color = if (danger) Color(0xFFFF7A7A) else Ui.text, fontSize = 13.sp) }
+        Modifier.clip(RoundedCornerShape(10.dp)).background(L.panel2).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+    ) { Text(text, color = if (danger) Color(0xFFFF7A7A) else L.text, fontSize = 13.sp) }
 }
 
 @Composable
 private fun Chip(text: String, on: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Ui.accent else Ui.panel2).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 8.dp),
-    ) { Text(text, color = if (on) Color.White else Ui.text, fontSize = 13.sp) }
+        Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) L.accent else L.panel2).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 8.dp),
+    ) { Text(text, color = if (on) Color.White else L.text, fontSize = 13.sp) }
 }
 
 @Composable
 private fun Stepper(label: String, value: Int, min: Int, max: Int, onSet: (Int) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Ui.panel2).padding(horizontal = 12.dp, vertical = 6.dp),
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(L.panel2).padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = Ui.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
-        Text("−", color = Color.White, fontSize = 22.sp, modifier = Modifier.clickable { onSet((value - 1).coerceAtLeast(min)) }.padding(horizontal = 14.dp))
-        Text("$value", color = Color.White, fontSize = 16.sp, fontFamily = FontFamily.Monospace)
-        Text("+", color = Color.White, fontSize = 22.sp, modifier = Modifier.clickable { onSet((value + 1).coerceAtMost(max)) }.padding(horizontal = 14.dp))
+        Text(label, color = L.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Text("−", color = Color(0xFF0B2A3D), fontSize = 22.sp, modifier = Modifier.clickable { onSet((value - 1).coerceAtLeast(min)) }.padding(horizontal = 14.dp))
+        Text("$value", color = L.text, fontSize = 16.sp, fontFamily = FontFamily.Monospace)
+        Text("+", color = Color(0xFF0B2A3D), fontSize = 22.sp, modifier = Modifier.clickable { onSet((value + 1).coerceAtMost(max)) }.padding(horizontal = 14.dp))
     }
 }
 
@@ -791,17 +848,17 @@ private fun NumField(label: String, mm: Double, vm: AppViewModel, onSet: (Double
     var dialog by remember { mutableStateOf(false) }
     val armed = vm.measureArmed == label
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (armed) Color(0xFF16273F) else Ui.panel2)
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(if (armed) Color(0xFFE6EEFB) else L.panel2)
             .clickable { dialog = true }.padding(start = 12.dp, top = 4.dp, bottom = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = Ui.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
-        Text(if (armed) "aguardando a trena…" else mmStr(mm), color = if (armed) Color(0xFF7FB0FF) else Color.White, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
+        Text(label, color = L.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Text(if (armed) "aguardando a trena…" else mmStr(mm), color = if (armed) Color(0xFF2F6BE0) else L.text, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
         Box(
-            Modifier.padding(start = 8.dp).size(36.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF1E3A6B))
+            Modifier.padding(start = 8.dp).size(36.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFCFE0FA))
                 .clickable { if (armed) vm.cancelMeasure() else vm.armMeasure(label) { v -> onSet(Math.round(v * 10.0) / 10.0) } },
             contentAlignment = Alignment.Center,
-        ) { Text("⟷", color = Color(0xFFBFD6FF), fontSize = 18.sp) }
+        ) { Text("⟷", color = Color(0xFF3B5B85), fontSize = 18.sp) }
     }
     if (dialog) {
         var text by remember { mutableStateOf(Units.formatNumber(mm, LengthUnit.MM)) }
@@ -843,17 +900,17 @@ private fun CutListBody(lines: List<CabinetMath.Line>, name: String = "Móvel") 
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         lines.forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${l.qty}×", fontFamily = FontFamily.Monospace, color = Ui.text, modifier = Modifier.width(36.dp))
-                Text(l.kind.label, color = Ui.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
+                Text("${l.qty}×", fontFamily = FontFamily.Monospace, color = L.text, modifier = Modifier.width(36.dp))
+                Text(l.kind.label, color = L.text, modifier = Modifier.weight(1f), fontSize = 14.sp)
                 Text(
                     "${Units.formatNumber(l.cutL, LengthUnit.MM)} × ${Units.formatNumber(l.cutW, LengthUnit.MM)} × ${Units.formatNumber(l.esp, LengthUnit.MM)}",
-                    fontFamily = FontFamily.Monospace, color = Ui.text, fontSize = 13.sp,
+                    fontFamily = FontFamily.Monospace, color = L.text, fontSize = 13.sp,
                 )
             }
         }
         Text(
             "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura).",
-            color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
+            color = L.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
         )
     }
 }
@@ -878,7 +935,7 @@ private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
         esp to CutOptimizer.run(pieces, preset.w, preset.h, kerf.toDouble(), rotate)
     }
     fun f(v: Double) = Units.formatNumber(v, LengthUnit.MM)
-    HorizontalDivider(color = Ui.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
+    HorizontalDivider(color = L.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
     Label("Plano de corte · esquadrejadeira")
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
         SHEET_PRESETS.forEachIndexed { i, sp -> Chip(sp.label, presetIdx == i) { presetIdx = i } }
@@ -887,18 +944,18 @@ private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
     }
     results.forEach { (esp, res) ->
         val usage = (CutOptimizer.totalUsage(res) * 100).toInt()
-        Text("Chapa de ${f(esp)} mm: ${res.sheets.size} chapa(s) · aproveitamento $usage%", color = Ui.text, fontSize = 13.sp)
+        Text("Chapa de ${f(esp)} mm: ${res.sheets.size} chapa(s) · aproveitamento $usage%", color = L.text, fontSize = 13.sp)
         if (res.tooBig.isNotEmpty()) Text("Não cabe na chapa: " + res.tooBig.joinToString { "${it.label} ${f(it.w)}×${f(it.h)}" }, color = Color(0xFFFF7A7A), fontSize = 12.sp)
         res.sheets.forEachIndexed { si, sh ->
-            Text("Chapa ${si + 1} · ${(sh.usage * 100).toInt()}% usada", color = Ui.dim, fontSize = 11.sp)
+            Text("Chapa ${si + 1} · ${(sh.usage * 100).toInt()}% usada", color = L.dim, fontSize = 11.sp)
             val ratio = (sh.h / sh.w).toFloat().coerceIn(0.3f, 1.2f)
-            Canvas(Modifier.fillMaxWidth().aspectRatio(1f / ratio).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2A2D33))) {
+            Canvas(Modifier.fillMaxWidth().aspectRatio(1f / ratio).clip(RoundedCornerShape(4.dp)).background(Color(0xFFE6E9EE))) {
                 val sc = size.width / sh.w.toFloat()
                 val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; textSize = 9.dp.toPx(); textAlign = android.graphics.Paint.Align.CENTER }
                 sh.placed.forEach { pc ->
                     val l = pc.x.toFloat() * sc; val t = pc.y.toFloat() * sc; val w = pc.w.toFloat() * sc; val h = pc.h.toFloat() * sc
                     drawRect(Color(0xFF3B82F6).copy(alpha = 0.55f), androidx.compose.ui.geometry.Offset(l, t), Size(w, h))
-                    drawRect(Color.White.copy(alpha = 0.8f), androidx.compose.ui.geometry.Offset(l, t), Size(w, h), style = Stroke(1.2f))
+                    drawRect(Color(0xFF1B1F27).copy(alpha = 0.5f), androidx.compose.ui.geometry.Offset(l, t), Size(w, h), style = Stroke(1.2f))
                     if (w > 60.dp.toPx() && h > 22.dp.toPx()) drawIntoCanvas { c -> c.nativeCanvas.drawText("${f(pc.w)}×${f(pc.h)}", l + w / 2, t + h / 2 + paint.textSize / 3, paint) }
                 }
             }
@@ -924,9 +981,9 @@ private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
     }
     if (showSteps) results.forEach { (esp, res) ->
         res.sheets.forEachIndexed { si, sh ->
-            Text("Chapa ${si + 1} (${f(esp)} mm)", color = Ui.text, fontSize = 12.sp)
-            sh.cuts.forEach { Text(CutOptimizer.describeCut(it, ::f), color = Ui.dim, fontSize = 12.sp) }
+            Text("Chapa ${si + 1} (${f(esp)} mm)", color = L.text, fontSize = 12.sp)
+            sh.cuts.forEach { Text(CutOptimizer.describeCut(it, ::f), color = L.dim, fontSize = 12.sp) }
         }
     }
-    Text("Só cortes retos de ponta a ponta (guilhotina). Confira as medidas antes de cortar.", color = Ui.dim, fontSize = 11.sp)
+    Text("Só cortes retos de ponta a ponta (guilhotina). Confira as medidas antes de cortar.", color = L.dim, fontSize = 11.sp)
 }

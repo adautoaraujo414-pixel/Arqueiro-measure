@@ -183,10 +183,14 @@ data class WallObj(
     val wMm: Double = 3000.0,
     val hMm: Double = 2600.0,
     val upperBottomMm: Double = 1400.0,
+    /** Folga total (mm) na largura da parede para encaixar os armários sem erro; tamponamentos já entram na medida final. */
+    val folgaMm: Double = 10.0,
     val scaleDen: Int = 20,
     override val locked: Boolean = false,
 ) : Ann() {
     val upm: Double get() = 3.7795277 / scaleDen
     fun widthUnits(): Float = (wMm * upm).toFloat()
     fun heightUnits(): Float = (hMm * upm).toFloat()
+    /** Largura aproveitável pelos módulos. */
+    val usableMm: Double get() = (wMm - folgaMm).coerceAtLeast(0.0)
 }

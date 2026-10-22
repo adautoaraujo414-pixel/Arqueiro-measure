@@ -351,6 +351,13 @@ class GestureController(private val s: EditorSession, private val density: Float
     }
 
     /** Fim do gesto de um dedo. Retorna uma ação de UI (editar número da cota, editar texto) se foi um toque. */
+    /** Id do módulo de parede sob o ponto da tela (para o triplo toque). */
+    fun cabAt(screen: Offset): String? {
+        val id = Geo.hit(st.sheet, s.view.toSheet(screen), tol(), st.unit) ?: return null
+        val o = st.sheet.obj(id) as? br.com.arque.measure.model.CabObj ?: return null
+        return if (o.layout != null) id else null
+    }
+
     fun up(screen: Offset): GestureAction? {
         val p = s.view.toSheet(screen)
         when (mode) {
@@ -513,10 +520,11 @@ class GestureController(private val s: EditorSession, private val density: Float
                     var mm = ((p.x - org.x) / k).toDouble()
                     val cand = ArrayList<Double>()
                     others.forEach { cand += it.cab.wMm }
-                    val rowOthers = others.filter { it.cab.superior == o.cab.superior }.sumOf { it.cab.wMm }
-                    cand += wall.wMm - rowOthers // fecha a parede
+                    val rowOthers = others.filter { it.cab.superior == o.cab.superior }.sumOf { br.com.arque.measure.logic.WallLayout.occ(it) }
+                    val cap = (wall.usableMm - rowOthers - br.com.arque.measure.logic.WallLayout.padL(o) - br.com.arque.measure.logic.WallLayout.padR(o)).coerceAtLeast(150.0)
+                    cand += cap // fecha a parede (já com a folga)
                     cand.minByOrNull { kotlin.math.abs(it - mm) }?.let { if (kotlin.math.abs(it - mm) <= snapMm) mm = it }
-                    val v = kotlin.math.round(mm).coerceIn(150.0, 6000.0)
+                    val v = kotlin.math.round(mm).coerceIn(150.0, cap)
                     st.liveCab(o.id) { it.copy(wMm = v) }
                 } else {
                     val bottomY = org.y + o.heightUnits()
@@ -525,7 +533,8 @@ class GestureController(private val s: EditorSession, private val density: Float
                     others.forEach { cand += it.cab.hMm }
                     if (o.cab.superior) cand += wall.hMm - wall.upperBottomMm // até o teto
                     cand.minByOrNull { kotlin.math.abs(it - mm) }?.let { if (kotlin.math.abs(it - mm) <= snapMm) mm = it }
-                    val v = kotlin.math.round(mm).coerceIn(150.0, 3000.0)
+                    val capH = if (o.cab.superior) wall.hMm - wall.upperBottomMm else wall.hMm
+                    val v = kotlin.math.round(mm).coerceIn(150.0, capH.coerceAtLeast(150.0))
                     st.liveCab(o.id) { it.copy(hMm = v) }
                 }
             }

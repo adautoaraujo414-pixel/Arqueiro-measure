@@ -229,7 +229,10 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                                 it.consume()
                             }
                         } while (ev.changes.any { it.pressed })
-                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) session.toggleLock()
+                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) {
+                            val cid = if (session.screenLocked) null else controller.cabAt(down.position)
+                            if (cid != null) { st.select(cid); session.cabQuickId = cid } else session.toggleLock()
+                        }
                     } else {
                     session.tapDown(down.uptimeMillis)
                     session.textEdit = null
@@ -731,6 +734,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     }
 
     if (btOpen) BluetoothScreen(vm) { btOpen = false }
+    session.cabQuickId?.let { cid -> CabQuickDialog(session, cid) }
     session.cabEditId?.let { cid -> CabinetScreen(vm, session, cid) { st.fitCabToPage(cid); session.cabEditId = null } }
     if (overview) OverviewDialog(session, vm, onDismiss = { overview = false })
 }
@@ -1453,6 +1457,10 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.wMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, wMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
+                    Text("Folga total", color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.folgaMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, folgaMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
                     Text("Altura", color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.hMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, hMm = mm) }
                 }
@@ -1481,5 +1489,85 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
                 }
             }
         }
+    }
+}
+
+
+/** Configurações rápidas do módulo (3 toques): medidas, tipo do vão, fundo e tamponamentos. */
+@Composable
+private fun CabQuickDialog(session: EditorSession, id: String) {
+    val st = session.state
+    @Suppress("UNUSED_VARIABLE") val rev = session.rev
+    val o = st.sheet.obj(id) as? br.com.arque.measure.model.CabObj
+    if (o == null) { session.cabQuickId = null; return }
+    val cab = o.cab
+    val dark = Color(0xFF111111)
+    val first = cab.vaos.firstOrNull() ?: br.com.arque.measure.model.Vao()
+    fun setAll(f: (br.com.arque.measure.model.Vao) -> br.com.arque.measure.model.Vao) = st.updateCab(id) { c -> c.copy(vaos = c.vaos.map(f)) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { session.cabQuickId = null },
+        title = { Text(o.name) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Medidas", color = Color(0xFF555555), fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Largura", fontSize = 12.sp)
+                        ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.wMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(wMm = mm.coerceIn(150.0, 6000.0)) } }
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text("Altura", fontSize = 12.sp)
+                        ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.hMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(hMm = mm.coerceIn(150.0, 3000.0)) } }
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text("Prof.", fontSize = 12.sp)
+                        ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.dMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(dMm = mm.coerceIn(100.0, 1500.0)) } }
+                    }
+                }
+                Text("Dentro do vão", color = Color(0xFF555555), fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    br.com.arque.measure.model.VaoKind.values().forEach { kd ->
+                        val on = first.kind == kd
+                        Box(
+                            Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Ui.accent else Color(0xFFEFEFEF))
+                                .clickable(enabled = !o.locked) { setAll { it.copy(kind = kd) } }.padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 13.sp) }
+                    }
+                }
+                when (first.kind) {
+                    br.com.arque.measure.model.VaoKind.SHELVES -> QuickStep("Prateleiras", first.shelves, 1, 8) { n -> setAll { it.copy(shelves = n) } }
+                    br.com.arque.measure.model.VaoKind.DRAWERS -> QuickStep("Gavetas", first.drawers, 1, 8) { n -> setAll { it.copy(drawers = n) } }
+                    br.com.arque.measure.model.VaoKind.DOOR -> QuickStep("Portas", first.doors, 1, 2) { n -> setAll { it.copy(doors = n) } }
+                    else -> {}
+                }
+                Text("Vale para todos os vãos do módulo. Para dividir ou escolher cada vão, use o editor completo.", color = Color(0xFF777777), fontSize = 12.sp)
+                QuickSwitch("Fundo (3 mm)", cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
+                QuickSwitch("Tamponamento esquerdo", cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
+                QuickSwitch("Tamponamento direito", cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }
+                QuickSwitch("Tamponamento de baixo (30)", cab.tampBaixo) { b -> st.updateCab(id) { it.copy(tampBaixo = b) } }
+                if (cab.tampBaixo) QuickSwitch("De baixo passa reto", cab.tampBaixoPassa) { b -> st.updateCab(id) { it.copy(tampBaixoPassa = b) } }
+                QuickSwitch("Réguas nas bordas", cab.reguas) { b -> st.updateCab(id) { it.copy(reguas = b) } }
+            }
+        },
+        confirmButton = { TextButton(onClick = { session.cabQuickId = null; session.cabEditId = id }) { Text("Editor completo") } },
+        dismissButton = { TextButton(onClick = { session.cabQuickId = null }) { Text("Fechar") } },
+    )
+}
+
+@Composable
+private fun QuickStep(label: String, value: Int, min: Int, max: Int, onSet: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f))
+        TextButton(onClick = { onSet((value - 1).coerceAtLeast(min)) }, enabled = value > min) { Text("−", fontSize = 20.sp) }
+        Text("$value", fontSize = 18.sp)
+        TextButton(onClick = { onSet((value + 1).coerceAtMost(max)) }, enabled = value < max) { Text("+", fontSize = 20.sp) }
+    }
+}
+
+@Composable
+private fun QuickSwitch(label: String, on: Boolean, onSet: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f))
+        Switch(checked = on, onCheckedChange = onSet)
     }
 }

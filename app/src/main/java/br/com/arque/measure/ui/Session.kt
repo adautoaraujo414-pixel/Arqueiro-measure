@@ -109,6 +109,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     /** Móvel aberto no editor (id) ou null. */
     var cabEditId by mutableStateOf<String?>(null)
 
+    /** Configurações rápidas do módulo (triplo toque). */
+    var cabQuickId by mutableStateOf<String?>(null)
+
     /** Tela travada: toques e gestos na folha são ignorados (3 toques seguidos alternam). */
     var screenLocked by mutableStateOf(false)
     /** Aviso curto ("Tela travada" / "Tela destravada"). */

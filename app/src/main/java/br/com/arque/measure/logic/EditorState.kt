@@ -189,7 +189,7 @@ class EditorState(
         return o.id
     }
 
-    fun setWall(id: String, wMm: Double? = null, hMm: Double? = null, upperBottomMm: Double? = null, scaleDen: Int? = null) {
+    fun setWall(id: String, wMm: Double? = null, hMm: Double? = null, upperBottomMm: Double? = null, scaleDen: Int? = null, folgaMm: Double? = null) {
         val o = sheet.obj(id) as? br.com.arque.measure.model.WallObj ?: return
         if (o.locked) return
         commit(mapObj(id) {
@@ -197,6 +197,7 @@ class EditorState(
                 wMm = (wMm ?: it.wMm).coerceIn(300.0, 20000.0), hMm = (hMm ?: it.hMm).coerceIn(300.0, 6000.0),
                 upperBottomMm = (upperBottomMm ?: it.upperBottomMm).coerceIn(0.0, 6000.0),
                 scaleDen = (scaleDen ?: it.scaleDen).coerceIn(2, 100),
+                folgaMm = (folgaMm ?: it.folgaMm).coerceIn(0.0, 200.0),
             )
         })
     }
@@ -206,7 +207,7 @@ class EditorState(
         val w = sheet.obj(wallId) as? br.com.arque.measure.model.WallObj ?: return null
         if (w.locked) return null
         val row = WallLayout.members(sheet, wallId, upper)
-        val left = w.wMm - row.sumOf { it.cab.wMm }
+        val left = w.usableMm - row.sumOf { WallLayout.occ(it) }
         val width = if (left >= 300.0) minOf(800.0, left) else 800.0
         val base = if (upper) {
             Cabinet(

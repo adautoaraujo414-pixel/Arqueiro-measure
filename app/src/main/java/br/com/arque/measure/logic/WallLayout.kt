@@ -11,6 +11,11 @@ import br.com.arque.measure.model.WallObj
  * então mudar a largura de um módulo empurra os vizinhos.
  */
 object WallLayout {
+    /** Largura que o módulo ocupa na parede: a dele mais os tamponamentos laterais (medida final). */
+    fun padL(m: CabObj) = if (m.cab.tampEsq) m.cab.espMm else 0.0
+    fun padR(m: CabObj) = if (m.cab.tampDir) m.cab.espMm else 0.0
+    fun occ(m: CabObj) = padL(m) + m.cab.wMm + padR(m)
+
     fun members(sheet: Sheet, wallId: String, upper: Boolean): List<CabObj> =
         sheet.objs.filterIsInstance<CabObj>()
             .filter { it.layout?.wallId == wallId && it.cab.superior == upper }
@@ -28,9 +33,9 @@ object WallLayout {
                 members(s, w.id, upper).forEachIndexed { i, m ->
                     val k = w.upm
                     val bottom = if (upper) w.upperBottomMm else 0.0
-                    val at = Pt((w.at.x + x * k).toFloat(), (w.at.y + (w.hMm - bottom - m.cab.hMm) * k).toFloat())
+                    val at = Pt((w.at.x + (x + padL(m)) * k).toFloat(), (w.at.y + (w.hMm - bottom - m.cab.hMm) * k).toFloat())
                     upd[m.id] = m.copy(at = at, scaleDen = w.scaleDen, layout = m.layout!!.copy(order = i))
-                    x += m.cab.wMm
+                    x += occ(m)
                 }
             }
         }

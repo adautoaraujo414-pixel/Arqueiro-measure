@@ -435,10 +435,10 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         for (upper in listOf(false, true)) {
             val mods = WallLayout.members(sheet, o.id, upper)
             if (mods.isEmpty()) continue
-            val used = mods.sumOf { it.cab.wMm }
-            val left = o.wMm - used
+            val used = mods.sumOf { WallLayout.occ(it) }
+            val left = o.usableMm - used
             val topOver = upper && (o.upperBottomMm + (mods.maxOfOrNull { it.cab.hMm } ?: 0.0) > o.hMm + 0.5)
-            val txt = (if (upper) "Superiores" else "Baixos") + ": ${used.toLong()} de ${o.wMm.toLong()} mm · " +
+            val txt = (if (upper) "Superiores" else "Baixos") + ": ${used.toLong()} de ${o.usableMm.toLong()} mm úteis (folga ${o.folgaMm.toLong()}) · " +
                 (if (left < -0.5) "passa ${(-left).toLong()} mm da parede" else "sobra ${left.toLong()} mm") +
                 (if (topOver) " · passa do teto" else "")
             lines += txt to (left < -0.5 || topOver)

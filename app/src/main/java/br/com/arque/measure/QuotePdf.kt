@@ -70,7 +70,7 @@ object QuotePdf {
         fun finish() { if (no > 0) doc.finishPage(page) }
     }
 
-    fun write(company: Company, q: Quote, note: Note?, renderer: SheetRenderer?, out: OutputStream) {
+    fun write(company: Company, q: Quote, note: Note?, renderer: SheetRenderer?, out: OutputStream, logo: android.graphics.Bitmap? = null) {
         val doc = PdfDocument()
         try {
             val pg = Pager(doc)
@@ -79,15 +79,25 @@ object QuotePdf {
             val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
 
             // cabeçalho com os dados da empresa
-            c0.drawText(company.name.ifBlank { "Minha empresa" }.uppercase(), M, pg.y + 18f, paint(18f, true))
+            val top = pg.y
+            var tx = M
+            var logoH = 0f
+            if (logo != null && logo.width > 0 && logo.height > 0) {
+                val k = minOf(64f / logo.height, 150f / logo.width)
+                val lw = logo.width * k; logoH = logo.height * k
+                c0.drawBitmap(logo, null, android.graphics.RectF(M, top, M + lw, top + logoH), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+                tx = M + lw + 14f
+            }
+            c0.drawText(company.name.ifBlank { "Minha empresa" }.uppercase(), tx, pg.y + 18f, paint(18f, true))
             pg.y += 26f
             val sub = listOfNotNull(
                 company.cnpj.takeIf { it.isNotBlank() }?.let { "CNPJ $it" },
                 company.phone.takeIf { it.isNotBlank() },
             ).joinToString("  ·  ")
-            if (sub.isNotEmpty()) { c0.drawText(sub, M, pg.y + 10f, paint(10f, color = GRAY)); pg.y += 14f }
+            if (sub.isNotEmpty()) { c0.drawText(sub, tx, pg.y + 10f, paint(10f, color = GRAY)); pg.y += 14f }
             val addr = listOf(company.address, company.city).filter { it.isNotBlank() }.joinToString(" - ")
-            if (addr.isNotEmpty()) { c0.drawText(addr, M, pg.y + 10f, paint(10f, color = GRAY)); pg.y += 14f }
+            if (addr.isNotEmpty()) { c0.drawText(addr, tx, pg.y + 10f, paint(10f, color = GRAY)); pg.y += 14f }
+            if (pg.y < top + logoH) pg.y = top + logoH
             pg.y += 6f
             val gold = Paint().apply { color = GOLD; strokeWidth = 2f }
             c0.drawLine(M, pg.y, W - M, pg.y, gold)

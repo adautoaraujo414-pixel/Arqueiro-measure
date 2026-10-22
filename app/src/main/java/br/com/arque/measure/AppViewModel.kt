@@ -441,6 +441,37 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var quotes by mutableStateOf(store.loadQuotes())
         private set
 
+    /** Logo da empresa (sai no cabeçalho do orçamento). */
+    var logoBmp by mutableStateOf<Bitmap?>(runCatching { BitmapFactory.decodeFile(store.logoFile.path) }.getOrNull())
+        private set
+
+    fun setLogo(uri: Uri) {
+        val app = getApplication<Application>()
+        viewModelScope.launch {
+            val bmp = withContext(io) {
+                runCatching {
+                    val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                    app.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) }
+                    var sample = 1
+                    while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 800) sample *= 2
+                    val raw = app.contentResolver.openInputStream(uri)?.use {
+                        BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
+                    } ?: error("imagem inválida")
+                    val k = 800f / maxOf(raw.width, raw.height)
+                    val b = if (k < 1f) Bitmap.createScaledBitmap(raw, (raw.width * k).toInt().coerceAtLeast(1), (raw.height * k).toInt().coerceAtLeast(1), true) else raw
+                    store.logoFile.outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                    b
+                }
+            }
+            bmp.onSuccess { logoBmp = it }.onFailure { toast = "Não consegui abrir a imagem" }
+        }
+    }
+
+    fun clearLogo() {
+        logoBmp = null
+        viewModelScope.launch(io) { store.logoFile.delete() }
+    }
+
     fun saveCompany(c: br.com.arque.measure.model.Company) {
         company = c
         viewModelScope.launch(io) { store.saveCompany(c) }
@@ -464,6 +495,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (q.includeDrawing) flush()
         val app = getApplication<Application>()
         val comp = company
+        val logo = logoBmp
         val renderer = SheetRenderer { images.getBlocking(it) }
         viewModelScope.launch {
             val r = withContext(io) {
@@ -473,7 +505,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     dir.listFiles()?.forEach { it.delete() }
                     val safe = q.clientName.ifBlank { "cliente" }.replace(Regex("[^A-Za-z0-9À-ÿ]+"), "_").take(30)
                     val f = File(dir, "Orcamento_$safe.pdf")
-                    f.outputStream().use { QuotePdf.write(comp, q, note, renderer, it) }
+                    f.outputStream().use { QuotePdf.write(comp, q, note, renderer, it, logo) }
                     FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", f)
                 }
             }

@@ -81,6 +81,7 @@ class Store(val root: File) {
 
     private val quotesFile = File(root, "quotes.json")
     private val companyFile = File(root, "company.json")
+    val logoFile = File(root, "company_logo.png")
 
     fun loadQuotes(): List<br.com.arque.measure.model.Quote> = readWithRecovery(quotesFile, QuoteJson::quotesFromJson) ?: emptyList()
     fun saveQuotes(list: List<br.com.arque.measure.model.Quote>) = writeAtomic(quotesFile, QuoteJson.quotesToJson(list))

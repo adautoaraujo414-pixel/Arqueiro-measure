@@ -42,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -106,7 +108,7 @@ fun QuotesScreen(vm: AppViewModel) {
     }
     FloatingCalculator()
     }
-    if (companyDlg) CompanyDialog(vm.company, { companyDlg = false }) { vm.saveCompany(it); companyDlg = false }
+    if (companyDlg) CompanyDialog(vm, vm.company, { companyDlg = false }) { vm.saveCompany(it); companyDlg = false }
     confirmDel?.let { d ->
         ConfirmDialog("Apagar orçamento", "Apagar o orçamento de ${d.clientName.ifBlank { "(sem cliente)" }}?", "Apagar", { confirmDel = null }) {
             vm.deleteQuote(d.id); confirmDel = null
@@ -115,17 +117,32 @@ fun QuotesScreen(vm: AppViewModel) {
 }
 
 @Composable
-private fun CompanyDialog(c: Company, onDismiss: () -> Unit, onOk: (Company) -> Unit) {
+private fun CompanyDialog(vm: AppViewModel, c: Company, onDismiss: () -> Unit, onOk: (Company) -> Unit) {
     var name by remember { mutableStateOf(c.name) }
     var cnpj by remember { mutableStateOf(c.cnpj) }
     var addr by remember { mutableStateOf(c.address) }
     var city by remember { mutableStateOf(c.city) }
     var phone by remember { mutableStateOf(c.phone) }
+    val pick = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent(),
+    ) { uri -> if (uri != null) vm.setLogo(uri) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Dados da empresa") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Logo (sai no topo do orçamento)", color = Ui.dim, fontSize = 13.sp)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val lb = vm.logoBmp
+                    Box(Modifier.width(96.dp).height(64.dp).clip(RoundedCornerShape(8.dp)).background(Color.White), contentAlignment = Alignment.Center) {
+                        if (lb != null) androidx.compose.foundation.Image(lb.asImageBitmap(), "Logo", Modifier.fillMaxSize().padding(4.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                        else Text("sem logo", color = Color.Gray, fontSize = 12.sp)
+                    }
+                    Column {
+                        TextButton(onClick = { pick.launch("image/*") }) { Text(if (lb == null) "Carregar logo" else "Trocar logo") }
+                        if (lb != null) TextButton(onClick = { vm.clearLogo() }) { Text("Remover") }
+                    }
+                }
                 Field(name, "Nome da empresa") { name = it }
                 Field(cnpj, "CNPJ") { cnpj = it }
                 Field(addr, "Endereço") { addr = it }

@@ -329,6 +329,16 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
         return placed
     }
 
+    /** Escreve um texto no meio do que está visível na folha (ex.: resultado da calculadora). */
+    fun addTextCenter(text: String) {
+        val vp = visiblePage()
+        state.setPage(vp)
+        updateActivePage()
+        val c = view.toSheet(Offset(canvasW / 2f, canvasH / 3f))
+        val n = state.sheet.objs.count { it is br.com.arque.measure.model.TextObj } % 6
+        commitText(TextEdit(null, br.com.arque.measure.model.Pt(c.x, c.y + n * 26f)), text)
+    }
+
     fun commitText(edit: TextEdit, text: String) {
         val trimmed = text.trim()
         if (edit.id != null) {

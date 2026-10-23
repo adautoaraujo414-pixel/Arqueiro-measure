@@ -1013,6 +1013,16 @@ private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
                         contentAlignment = Alignment.Center,
                     ) { Text("=", color = Color.White, fontSize = 22.sp) }
                 }
+                // escreve a conta e o resultado na folha (no meio do que está na tela)
+                Box(
+                    Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
+                        .background(if (result != null) Color(0xFF3B4D7A) else Color(0xFF2A2C30))
+                        .clickable(enabled = result != null) {
+                            val r = br.com.arque.measure.logic.Calc.format(result!!)
+                            session.addTextCenter(if (expr.isNotEmpty() && expr != r) "$expr = $r" else r)
+                        },
+                    contentAlignment = Alignment.Center,
+                ) { Text("📝 Escrever na folha", color = if (result != null) Color.White else Color(0xFF777777), fontSize = 14.sp) }
             }
         }
     }

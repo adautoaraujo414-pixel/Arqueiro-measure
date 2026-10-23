@@ -94,6 +94,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
@@ -215,54 +216,79 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
         modifier = modifier
             .onSizeChanged { session.onCanvasSize(it.width.toFloat(), it.height.toFloat()) }
             .pointerInput(session) {
-                awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
+                // loop próprio (não espera todos os dedos saírem): com a mão apoiada, a caneta continua escrevendo
+                awaitPointerEventScope {
+                  while (true) {
+                    val first = awaitFirstDown(requireUnconsumed = false)
                     if (session.screenLocked) {
                         // travada: ignora tudo, só conta 3 toques seguidos para destravar
                         var moved = false
-                        var upT = down.uptimeMillis
+                        var upT = first.uptimeMillis
                         do {
                             val ev = awaitPointerEvent()
                             ev.changes.forEach {
-                                if ((it.position - down.position).getDistance() > 24f * density) moved = true
+                                if ((it.position - first.position).getDistance() > 24f * density) moved = true
                                 upT = it.uptimeMillis
                                 it.consume()
                             }
                         } while (ev.changes.any { it.pressed })
-                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) {
-                            val cid = if (session.screenLocked) null else controller.cabAt(down.position)
-                            if (cid != null) { session.state.select(cid); session.cabQuickId = cid } else session.toggleLock()
-                        }
-                    } else {
-                    session.tapDown(down.uptimeMillis)
+                        if (!moved && upT - first.uptimeMillis < 400L && session.registerTap(upT, first.position)) session.toggleLock()
+                        continue
+                    }
+                    var downId = first.id
+                    var downPos = first.position
+                    var downT = first.uptimeMillis
+                    var pen = first.type == PointerType.Stylus
+                    session.tapDown(downT)
                     session.textEdit = null
-                    controller.down(down.position, down.type == PointerType.Touch)
+                    controller.down(downPos, first.type == PointerType.Touch)
                     var multi = false
                     var moved = false
-                    var upT = down.uptimeMillis
-                    var last = down.position
-                    do {
-                        val ev = awaitPointerEvent()
-                        val pressed = ev.changes.filter { it.pressed }
-                        if (pressed.size >= 2) {
-                            if (!multi) {
-                                multi = true
-                                controller.cancelSingle()
-                                controller.pinchBegin(pressed[0].position, pressed[1].position)
+                    var upT = downT
+                    var last = downPos
+                    try {
+                        do {
+                            val ev = awaitPointerEvent()
+                            // caneta encostou depois da mão: descarta o toque da mão e passa a seguir a caneta
+                            if (!pen) {
+                                val sty = ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.type == PointerType.Stylus }
+                                if (sty != null) {
+                                    if (multi) controller.pinchEnd() else controller.cancelSingle()
+                                    multi = false; moved = false; pen = true
+                                    downId = sty.id; downPos = sty.position; downT = sty.uptimeMillis; upT = downT; last = downPos
+                                    session.tapDown(downT)
+                                    controller.down(downPos, false)
+                                }
                             }
-                            controller.pinch(pressed[0].position, pressed[1].position)
-                            ev.changes.forEach { it.consume() }
-                        } else if (!multi && pressed.size == 1) {
-                            val ch = pressed[0]
-                            last = ch.position
-                            upT = ch.uptimeMillis
-                            if ((ch.position - down.position).getDistance() > 24f * density) moved = true
-                            if (ch.positionChanged()) {
-                                controller.move(ch.position)
-                                ch.consume()
+                            if (pen) ev.changes.forEach { if (it.id != downId) it.consume() }
+                            val pressed = ev.changes.filter { it.pressed && (!pen || it.id == downId) }
+                            if (pressed.size >= 2) {
+                                if (!multi) {
+                                    multi = true
+                                    controller.cancelSingle()
+                                    controller.pinchBegin(pressed[0].position, pressed[1].position)
+                                }
+                                controller.pinch(pressed[0].position, pressed[1].position)
+                                ev.changes.forEach { it.consume() }
+                            } else if (!multi && pressed.size == 1) {
+                                val ch = pressed[0]
+                                last = ch.position
+                                upT = ch.uptimeMillis
+                                if ((ch.position - downPos).getDistance() > 24f * density) moved = true
+                                if (ch.positionChanged()) {
+                                    controller.move(ch.position)
+                                    ch.consume()
+                                }
+                            } else if (!pen && pressed.isEmpty()) {
+                                ev.changes.firstOrNull { it.id == downId }?.let { upT = it.uptimeMillis }
                             }
-                        }
-                    } while (ev.changes.any { it.pressed })
+                        } while (ev.changes.any { it.pressed && (!pen || it.id == downId) })
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        // gesto interrompido pelo sistema: não deixa traço/arrasto pendurado
+                        if (multi) controller.pinchEnd() else controller.cancelSingle()
+                        session.settle()
+                        throw e
+                    }
                     if (multi) {
                         controller.pinchEnd()
                         session.settle()
@@ -273,9 +299,10 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                             is GestureAction.EditText -> session.textEdit = TextEdit(a.id, a.at)
                             null -> {}
                         }
-                        if (!moved && upT - down.uptimeMillis < 400L && session.registerTap(upT, down.position)) session.toggleLock()
+                        // 3 toques rápidos travam a tela só na ferramenta de seleção (escrevendo, pontos e acentos não travam mais)
+                        if (!moved && upT - downT < 400L && session.tool == Tool.SELECT && session.registerTap(upT, downPos)) session.toggleLock()
                     }
-                    }
+                  }
                 }
             },
     ) {
@@ -391,9 +418,9 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
         }
         if (session.screenLocked) {
             Text(
-                "🔒 Tela travada · 3 toques para destravar",
-                color = Color.White, fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xB31B1C20)).padding(horizontal = 12.dp, vertical = 6.dp),
+                "🔒 Tela travada · toque aqui para destravar",
+                color = Color.White, fontSize = 14.sp,
+                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xE61B1C20)).clickable { session.toggleLock() }.padding(horizontal = 16.dp, vertical = 10.dp),
             )
         }
 

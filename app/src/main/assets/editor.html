@@ -125,7 +125,7 @@ function vaoRanges(m){var e=m.esp,d=dividersX(m),o=[],x=e*(1+(m.egL||0));d.forEa
 function r1(v){return Math.round(v*10)/10}
 /* ===== Regra de acabamento: por dentro tudo branco, por fora (topo, tamponamentos, engrossos, frentes) na cor ===== */
 var WHITE='#f4f2ee';
-function finOf(n){if(/^(Frente\/costa|Lateral de gaveta|Fundo de gaveta|Fundo)/.test(n))return 'b';if(/^(Porta|Frente de gaveta|Gaveta|Forno|Tampa|Frente \(porta tempero|Batente|Moldura|Tamponamento|Engrosso|Travessa|Base superior)/.test(n))return 'c';return 'b'}
+function finOf(n){if(/^(Frente\/costa|Lateral de gaveta|Fundo de gaveta|Fundo)/.test(n))return 'b';if(/^(Porta|Frente de gaveta|Gaveta|Forno|Tampa|Frente \(porta tempero|Batente|Moldura|Tamponamento|Engrosso|Travessa)/.test(n))return 'c';return 'b'}
 function paintCol(m,p){if(p.glass||p.oven||/^(Corte do forno|Rodapé)/.test(p.name))return;if(finOf(p.name)==='b'){p.col=WHITE;return}if(/^(Porta|Frente|Gaveta|Forno|Tampa|Batente)/.test(p.name)){if(m.corF)p.col=m.corF}else if(m.cor)p.col=m.cor}
 /* ===== Preços de material (configurações) ===== */
 var PRK='arque.prices.v1',PRD={mult:2.5,perda:15,mdfB:0,mdfC:0,fundo:0,fitaB:0,fitaC:0,dob:0,cor:0,dobQ:2,tmp:0,sheetW:2750,sheetH:1840};
@@ -134,19 +134,26 @@ function prSave(){try{localStorage.setItem(PRK,JSON.stringify(PR))}catch(e){}try
 function brl(v){return 'R$ '+(Math.round(v*100)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function edgeMm(p){var n=p.name;if(/^(Frente\/costa|Lateral de gaveta)/.test(n))return p.cl;if(/^Fundo/.test(n))return 0;if(/^(Porta|Frente de gaveta|Gaveta|Tampa|Tamponamento|Moldura|Batente|Engrosso|Travessa|Base superior|Frente \(porta tempero)/.test(n))return 2*(p.cl+p.cw);return p.cl}
 function mCost(m){var r={aB:0,aC:0,aF:0,tB:0,tC:0,doors:0,drw:0},ps=[];try{ps=partsOf(m)}catch(e){}
- ps.forEach(function(p){if(p.name==='Porta')r.doors++;if(p.name==='Frente de gaveta'||p.name==='Frente (porta tempero)')r.drw++;if(p.noCut)return;var a=p.cl*p.cw/1e6,f=finOf(p.name);if(/^Fundo de gaveta/.test(p.name)){r.aF+=a;return}if(f==='c')r.aC+=a;else r.aB+=a;var e=edgeMm(p)/1000;if(f==='c')r.tC+=e;else r.tB+=e});
+ ps.forEach(function(p){if(p.name==='Porta')r.doors++;if(p.name==='Frente de gaveta'||p.name==='Frente (porta tempero)')r.drw++;if(p.noCut)return;var a=p.cl*p.cw/1e6,f=finOf(p.name);if(/^Fundo de gaveta/.test(p.name)){r.aF+=a;return}if(/^Moldura/.test(p.name)&&moldRunOf(m))return;if(f==='c')r.aC+=a;else r.aB+=a;var e=edgeMm(p)/1000;if(f==='c'||(capot(m)&&/^(Lateral esquerda|Lateral direita|Base inferior|Base superior|Divisória)/.test(p.name)))r.tC+=e;else r.tB+=e});
  if(m.regua&&m.sup){r.aC+=2*m.w*m.regMm/1e6;r.tC+=2*(2*(m.w+m.regMm))/1000}
  if(m.fundo)r.aF+=m.w*m.h/1e6;return r}
 function budget(){var A=(PR.sheetW*PR.sheetH)/1e6,k=1+(PR.perda||0)/100,T={aB:0,aC:0,aF:0,tB:0,tC:0,doors:0,drw:0},rows=[];
+ var mrs=moldRuns().filter(function(q){return q.idx.length>1}),mrc=0;mrs.forEach(function(q){var Lm=(q.x1-q.x0),a=Lm*q.mm/1e6;mrc+=a/A*k*PR.mdfC+2*(Lm+q.mm)/1000*PR.fitaC;T.aC+=a;T.tC+=2*(Lm+q.mm)/1000});
  S.mods.forEach(function(m,i){var r=mCost(m),c=r.aB/A*k*PR.mdfB+r.aC/A*k*PR.mdfC+r.aF/A*k*PR.fundo+r.tB*PR.fitaB+r.tC*PR.fitaC+r.doors*PR.dobQ*PR.dob+r.drw*PR.cor;rows.push({m:m,i:i,r:r,c:c});for(var q in T)T[q]+=r[q]});
- var tot=rows.reduce(function(s,x){return s+x.c},0);return {A:A,k:k,T:T,rows:rows,tot:tot,sale:tot*PR.mult}}
+ var tot=rows.reduce(function(s,x){return s+x.c},0)+mrc;return {A:A,k:k,T:T,rows:rows,tot:tot,sale:tot*PR.mult,mrs:mrs}}
 function budgetHtml(){var b=budget(),T=b.T,L=[['MDF branco (interno)',T.aB/b.A*b.k,'chapas',T.aB/b.A*b.k*PR.mdfB],['MDF na cor (externo)',T.aC/b.A*b.k,'chapas',T.aC/b.A*b.k*PR.mdfC],['Fundo 6 mm',T.aF/b.A*b.k,'chapas',T.aF/b.A*b.k*PR.fundo],['Fita branca',T.tB,'m',T.tB*PR.fitaB],['Fita na cor',T.tC,'m',T.tC*PR.fitaC],['Dobradiças ('+PR.dobQ+' por porta)',T.doors*PR.dobQ,'un',T.doors*PR.dobQ*PR.dob],['Corrediças (1 par por gaveta)',T.drw,'par',T.drw*PR.cor]];
  var rows=L.map(function(x){return '<tr style="border-top:1px solid var(--line)"><td style="padding:4px 2px">'+x[0]+'</td><td>'+(Math.round(x[1]*100)/100)+' '+x[2]+'</td><td style="text-align:right">'+brl(x[3])+'</td></tr>'}).join('');
  var perMod=b.rows.map(function(x){return '<tr><td style="padding:2px">'+(x.m.sup?'Superior':'Base')+' '+(x.i+1)+' · '+x.m.w+'×'+x.m.h+'</td><td style="text-align:right">'+brl(x.c)+'</td><td style="text-align:right"><b>'+brl(x.c*PR.mult)+'</b></td></tr>'}).join('');
- var warn=(PR.mdfB||PR.mdfC)?'':'<div class="note" style="color:#b35">Preencha os preços em ⚙ Configurações pra o valor sair certo.</div>';
+ var runTxt=b.mrs.length?'<div class="note">Moldura e fita contínuas (fita no local): '+b.mrs.map(function(q){return 'módulos '+q.idx.map(function(i){return i+1}).join('+')+' = '+(q.x1-q.x0)+' mm'}).join(' · ')+'</div>':'';var warn=runTxt+(PR.mdfB||PR.mdfC)?'':'<div class="note" style="color:#b35">Preencha os preços em ⚙ Configurações pra o valor sair certo.</div>';
  return '<h3 style="margin:6px 0 4px">Material e preço sugerido</h3>'+warn+'<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="text-align:left;color:var(--dim)"><th>Item</th><th>Qtd</th><th style="text-align:right">Custo</th></tr>'+rows+'<tr style="border-top:2px solid var(--line)"><td colspan="2"><b>Custo do material</b></td><td style="text-align:right"><b>'+brl(b.tot)+'</b></td></tr><tr><td colspan="2"><b>Preço sugerido (× '+String(PR.mult).replace('.',',')+')</b></td><td style="text-align:right;font-size:15px"><b>'+brl(b.sale)+'</b></td></tr></table><table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px"><tr style="text-align:left;color:var(--dim)"><th>Módulo</th><th style="text-align:right">Custo</th><th style="text-align:right">Sugerido</th></tr>'+perMod+'</table><div class="note">Perda de corte '+PR.perda+'% · chapa '+PR.sheetW+'×'+PR.sheetH+' · fita 35 mm: portas, frentes, tamponamentos e topo nos 4 lados; laterais, bases, divisórias, prateleiras e gaveta só na borda aparente.</div>'}
 function prRender(){var F=[['mult','Multiplicador de venda (× material)'],['perda','Perda de corte (%)'],['mdfB','MDF branco 15 mm · R$ por chapa'],['mdfC','MDF na cor 15 mm · R$ por chapa'],['fundo','Fundo 6 mm · R$ por chapa'],['sheetW','Chapa · comprimento (mm)'],['sheetH','Chapa · largura (mm)'],['fitaB','Fita branca 35 mm · R$ por metro'],['fitaC','Fita na cor 35 mm · R$ por metro'],['dob','Dobradiça · R$ cada'],['dobQ','Dobradiças por porta'],['cor','Corrediça · R$ por par (1 por gaveta)']];
  $('prbody').innerHTML='<div class="note">Regra de acabamento: por dentro tudo branco (laterais, bases, divisórias, prateleiras, fundo, gaveta). Por fora na cor: topo, tamponamentos, engrossos, portas e frentes. Fita 35 mm acompanha a cor da peça.</div>'+F.map(function(f){return '<div class="g"><label>'+f[1]+'</label><input data-pr="'+f[0]+'" type="text" inputmode="decimal" style="text-align:right" value="'+String(PR[f[0]]).replace('.',',')+'"></div>'}).join('')+'<div id="prsum" style="margin-top:10px"></div>';$('prsum').innerHTML=budgetHtml()}
+/* Moldura e fita contínuas: módulos de base encostados, até 2500 mm, viram uma peça só (fita no local) */
+function moldRuns(){var L=[],runs=[];S.mods.forEach(function(m,i){if(!m.sup&&!m.wing&&m.mold)L.push(i)});L.sort(function(a,b){return S.mods[a].x-S.mods[b].x});var cur=null;
+ L.forEach(function(i){var m=S.mods[i];if(cur){var p=S.mods[cur.idx[cur.idx.length-1]];var gap=(m.x-lt(m))-(p.x+p.w+rt(p));if(Math.abs(gap)<=1&&!rt(p)&&!lt(m)&&m.moldMm===p.moldMm&&m.d===p.d&&m.b===p.b&&m.h===p.h&&(m.x+m.w-cur.x0)<=2500){cur.idx.push(i);cur.x1=m.x+m.w;return}}
+  cur={idx:[i],x0:m.x,x1:m.x+m.w,mm:m.moldMm};runs.push(cur)});return runs}
+function moldRunOf(m){var i=S.mods.indexOf(m),r=moldRuns().filter(function(q){return q.idx.indexOf(i)>=0})[0];return r&&r.idx.length>1?r:null}
+function capot(m){return !!(m.tl||m.tr||m.tb)}
 var CURM=null;
 function partsOf(m){if(!ENGROSSO_ON){m.egL=0;m.egR=0}var pm0=CURM;CURM=m;try{return partsOf0(m)}finally{CURM=pm0}}
 function partsOf0(m){
@@ -197,7 +204,7 @@ function partsOf0(m){
   }
  return o}
 function cutLines(m){var map={},ord=[];function put(n,qty,L,Wd,note,mat){mat=mat||m.esp;var fn=finOf(n),k=L+'|'+Wd+'|'+mat+'|'+fn;if(!map[k]){map[k]={names:[],qty:0,L:L,W:Wd,notes:[],mat:mat,fin:fn};ord.push(k)}var g=map[k];if(g.names.indexOf(n)<0)g.names.push(n);if(note&&g.notes.indexOf(note)<0)g.notes.push(note);g.qty+=qty}
- partsOf(m).forEach(function(p){if(p.noCut)return;put(p.name,1,p.cl,p.cw,p.note,p.mat)});
+ var rn=moldRunOf(m);partsOf(m).forEach(function(p){if(p.noCut)return;if(rn&&/^Moldura/.test(p.name))return;put(p.name,1,p.cl,p.cw,p.note,p.mat)});
  if(m.regua&&m.sup)put('Engrosso cava (régua)',2,m.w,m.regMm,'colada na frente e atrás da base inferior');
  if(m.fundo)put('Fundo',1,m.w,m.h,m.fundoMm+' mm',m.fundoMm);
  return ord.map(function(k){var g=map[k];g.name=g.names.join(' + ')+(g.mat!==m.esp?' ('+g.mat+' mm)':'')+(g.fin==='c'?' · NA COR':' · BRANCO');g.note=g.notes.join(' · ');return g})}
@@ -205,6 +212,7 @@ function cutLines(m){var map={},ord=[];function put(n,qty,L,Wd,note,mat){mat=mat
 function cutTable(m){var L=cutLines(m),tot=0,area=0;L.forEach(function(l){tot+=l.qty;area+=l.qty*l.L*l.W/1e6});
  return '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="text-align:left;color:var(--dim)"><th>Peça</th><th>Qtd</th><th>Comp × Larg</th></tr>'+L.map(function(l){return '<tr style="border-top:1px solid var(--line)" title="'+l.note+'"><td style="padding:4px 2px">'+l.name+(l.note?'<br><small style="color:var(--dim)">'+l.note+'</small>':'')+'</td><td>'+l.qty+'</td><td style="font-family:ui-monospace,monospace;white-space:nowrap">'+l.L+' × '+l.W+'</td></tr>'}).join('')+'</table><div class="note">'+tot+' peças · '+(Math.round(area*100)/100)+' m² (MDF '+m.esp+' mm, fundo '+m.fundoMm+' mm)</div>'}
 function cutAll(){var map={},ord=[];S.mods.forEach(function(m,i){var tag=(m.sup?'Superior ':'Base ')+(S.mods.filter(function(o,j){return j<=i&&o.sup===m.sup}).length);cutLines(m).forEach(function(l){var k=l.L+'|'+l.W+'|'+l.mat+'|'+l.fin;if(!map[k]){map[k]={names:[],qty:0,L:l.L,W:l.W,mat:l.mat,fin:l.fin,where:{}};ord.push(k)}var g=map[k];l.names.forEach(function(n){var nn=n;if(g.names.indexOf(nn)<0)g.names.push(nn)});g.qty+=l.qty;g.where[tag]=(g.where[tag]||0)+l.qty})});
+ moldRuns().forEach(function(q){if(q.idx.length<2)return;var Lm=q.x1-q.x0,k=Lm+'|'+q.mm+'|'+S.mods[q.idx[0]].esp+'|c|mr'+q.idx.join('_');map[k]={names:['Moldura de acabamento (contínua, fita no local)'],qty:1,L:Lm,W:q.mm,mat:S.mods[q.idx[0]].esp,fin:'c',where:{}};map[k].where['Base '+q.idx.map(function(i){return i+1}).join('+')]=1;ord.push(k)});
  var tot=0;var rows=ord.map(function(k){var g=map[k];tot+=g.qty;return '<tr style="border-top:1px solid var(--line)"><td style="padding:4px 2px">'+g.names.join(' + ')+'<br><small style="color:var(--dim)">'+Object.keys(g.where).map(function(t){return t+' ×'+g.where[t]}).join(' · ')+'</small></td><td><b>'+g.qty+'</b></td><td style="font-family:ui-monospace,monospace;white-space:nowrap">'+g.L+' × '+g.W+'<br><small>MDF '+g.mat+' · '+(g.fin==='c'?'na cor':'branco')+'</small></td></tr>'}).join('');
  return '<h3 style="margin:6px 0 4px">Resumo geral · medidas iguais agrupadas</h3><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="text-align:left;color:var(--dim)"><th>Descrição / onde</th><th>Qtd</th><th>Comp × Larg</th></tr>'+rows+'</table><div class="note">'+tot+' peças no total</div>'}
 function openCut(){var h=budgetHtml()+cutAll();S.mods.forEach(function(m,i){h+='<h3 style="margin:14px 0 4px">'+(m.sup?'Superior':'Base')+' '+(S.mods.filter(function(o,j){return j<=i&&o.sup===m.sup}).length)+' · '+m.w+' × '+m.h+' × '+m.d+'</h3>'+cutTable(m)});
@@ -869,7 +877,7 @@ function build(){gDirty=true;boxes=[];bg=[];var W=S.W,H=S.H,D=2600,livre=S.env==
    else if(/Travessa frontal/.test(n)){B(boxes,x0,x1,y0,y1,dep-15,dep,p.col)}
    else if(/Rodapé/.test(n)){B(boxes,x0,x1,y0,y1,dep-30-m.esp,dep-30,p.col)}
    else if(/^Engrosso lateral/.test(n)){var ed_=m.egD||70;if(m.trav){B(boxes,x0,x1,y0,y1-m.travMm,dep-ed_,dep,p.col);B(boxes,x0,x1,y1-m.travMm,y1,dep-ed_,dep-15,p.col)}else B(boxes,x0,x1,y0,y1,dep-ed_,dep,p.col)}
-   else if(/^Moldura/.test(n)){B(boxes,x0,x1,y0,y1,dep,dep+15,m.corF||p.col,1,'f')}
+   else if(/^Moldura/.test(n)){var mr_=moldRunOf(m);if(mr_){if(S.mods.indexOf(m)===mr_.idx[0])B(boxes,m.x,mr_.x1,y0,y1,dep,dep+15,m.corF||p.col,1,'f')}else B(boxes,x0,x1,y0,y1,dep,dep+15,m.corF||p.col,1,'f')}
    else if(/^Tamponamento/.test(n)){B(boxes,x0,x1,y0,y1,dep+25-Math.min(p.cw,dep+25),dep+25,bc)}
    else if(/Engrosso/.test(n)){B(boxes,x0,x1,y0,y1,0,dep,p.col)}
    else if(/^Lateral (esquerda|direita)/.test(n)&&m.trav){B(boxes,x0,x1,y0,y1-m.travMm,0,dep,p.col);B(boxes,x0,x1,y1-m.travMm,y1,0,dep-15,p.col)}

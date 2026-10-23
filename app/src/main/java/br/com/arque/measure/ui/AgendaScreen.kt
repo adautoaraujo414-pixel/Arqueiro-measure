@@ -164,14 +164,16 @@ fun AgendaScreen(vm: AppViewModel) {
                     FilterChip(selected = selDay == null && mode == 1, onClick = { selDay = null; mode = 1 }, label = { Text("Concluídos / passados") })
                     if (selDay != null) FilterChip(selected = true, onClick = { selDay = null }, label = { Text(fmtDate.format(Date(selDay!!)) + "  ✕") })
                 }
-                if (shown.isEmpty()) {
+                if (selDay != null) {
+                    DayHours(vm, selDay!!, shown, onNew = { ms -> isNew = true; editing = Appointment(startMs = ms) }, onEdit = { isNew = false; editing = it })
+                } else if (shown.isEmpty()) {
                     Text(
                         if (selDay != null) "Nada marcado nesse dia." else if (mode == 0) "Nenhum compromisso por vir. Toque em “+ Novo” pra marcar uma entrega ou visita." else "Nada por aqui ainda.",
                         color = Ui.dim, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp),
                     )
                 }
                 var lastDay = -1L
-                shown.forEach { a ->
+                if (selDay == null) shown.forEach { a ->
                     val ds = dayStart(a.startMs)
                     if (ds != lastDay) {
                         lastDay = ds
@@ -185,6 +187,35 @@ fun AgendaScreen(vm: AppViewModel) {
     }
     editing?.let { cur ->
         ApptEditor(vm, cur, isNew, onClose = { editing = null })
+    }
+}
+
+/** Dia em horas: 06h às 22h (ou mais, se houver compromisso fora disso). Toque numa hora livre pra marcar. */
+@Composable
+private fun DayHours(vm: AppViewModel, day: Long, list: List<Appointment>, onNew: (Long) -> Unit, onEdit: (Appointment) -> Unit) {
+    val hourOf = { a: Appointment -> Calendar.getInstance().apply { timeInMillis = a.startMs }.get(Calendar.HOUR_OF_DAY) }
+    val first = minOf(6, list.minOfOrNull(hourOf) ?: 6)
+    val last = maxOf(22, list.maxOfOrNull(hourOf) ?: 22)
+    val nowCal = Calendar.getInstance()
+    val isToday = dayStart(nowCal.timeInMillis) == day
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        for (h in first..last) {
+            val inHour = list.filter { hourOf(it) == h }.sortedBy { it.startMs }
+            val current = isToday && nowCal.get(Calendar.HOUR_OF_DAY) == h
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
+                    .background(if (current) Color(0x223B82F6) else Color(0x0FFFFFFF))
+                    .clickable { onNew(day + h * 3600_000L) }
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Text("%02d:00".format(h), color = if (current) Color(0xFF7FB2FF) else Ui.dim, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp).padding(top = 2.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (inHour.isEmpty()) Text("livre · toque pra marcar", color = Color(0x55FFFFFF), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    inHour.forEach { a -> ApptCard(vm, a, onEdit = { onEdit(a) }) }
+                }
+            }
+        }
     }
 }
 

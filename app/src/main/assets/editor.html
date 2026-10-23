@@ -821,7 +821,9 @@ function build(){gDirty=true;boxes=[];bg=[];var W=S.W,H=S.H,D=2600,livre=S.env==
    if(/^Régua \(porta tempero/.test(n)){var low=tpF?(p.y>tpF.y+tpF.h/2):true,ry0=low?y1:y1-te-p.h,ry1=low?y1+p.h:y1-te;B(boxes,x0,x1,ry0,ry1,dep-te-te,dep-te,bc);B(boxes,x0,x1,ry0,ry1,dep-tpd+te,dep-tpd+te+te,bc);return}
    if(ec){B(boxes,x0,x1,y0,y1,/de trás/.test(n)?dep-30:dep-15,/de trás/.test(n)?dep-15:dep,p.col);return}
    if(/^Base superior/.test(n)&&!m.sup&&!m.wing&&S.stones.some(function(q){return (q.items||[]).some(function(i){return i.k==='cuba'&&q.x+i.x<m.x+m.w&&q.x+i.x+i.w>m.x})}))return;
-   if(/^(Frente|Porta|Batente)/.test(n)){if(!showD)return;if(p.open)return;B(boxes,x0,x1,y0,y1,dep,dep+15,p.glass?'#9fb8c6':(p.col||'#e6d9be'),p.glass?.4:1,'f')}
+   if(/^Batente/.test(n)){B(boxes,x0,x1,y0,y1,dep-15,dep,bc);return}
+   if(/^(Frente|Porta)/.test(n)){if(!showD)return;if(p.open)return;var fc=p.glass?'#9fb8c6':(p.col||'#e6d9be');B(boxes,x0,x1,y0,y1,dep,dep+15,fc,p.glass?.4:1,'f');
+    if(/^Frente de gaveta/.test(n)&&/cava usinada/.test(p.note||'')){var cr=hex(fc);[[0,.62],[8,.76],[16,.9]].forEach(function(q,qi){var cc='#'+cr.map(function(v){return ('0'+Math.round(v*q[1]).toString(16)).slice(-2)}).join('');B(boxes,x0,x1,y1-q[0]-8,y1-q[0],dep+15,dep+15.4,cc,1,'f')})}}
    else if(/Corte do forno/.test(n)){B(boxes,x0,x1,y0,y1,dep,dep+14,'#22252b',1,'f')}
    else if(/Prateleira/.test(n)){var rr=/recuo (\d+) mm/.exec(p.note||'');B(boxes,x0,x1,y0,y1,0,dep-(rr?+rr[1]:(n==='Prateleira'?(m.pm||0):0)),p.col)}
    else if(/Travessa frontal/.test(n)){B(boxes,x0,x1,y0,y1,dep-15,dep,p.col)}

@@ -11,6 +11,7 @@ import androidx.exifinterface.media.ExifInterface
 import br.com.arque.measure.data.Store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -26,23 +27,30 @@ class ImageCache(private val store: Store, private val scope: CoroutineScope) {
         private set
 
     private val cache = object : LruCache<String, Bitmap>(
-        (Runtime.getRuntime().maxMemory() / 5).toInt().coerceAtLeast(32 * 1024 * 1024),
+        (Runtime.getRuntime().maxMemory() / 4).toInt().coerceAtLeast(48 * 1024 * 1024),
     ) {
         override fun sizeOf(key: String, value: Bitmap): Int = value.byteCount
     }
     private val loading = HashSet<String>()
-    private val failed = HashSet<String>()
+    /** Falhas: chave -> (tentativas, hora da última). Tenta de novo depois de um tempo. */
+    private val failed = HashMap<String, Pair<Int, Long>>()
+
+    /** No máximo 2 fotos decodificando ao mesmo tempo: não trava o resto do app. */
+    private val decoder = java.util.concurrent.Executors.newFixedThreadPool(2).asCoroutineDispatcher()
 
     /** Retorna a imagem já carregada, ou null (e agenda o carregamento em segundo plano). */
     fun get(file: String, maxSide: Int = DISPLAY_MAX_SIDE): Bitmap? {
         val key = "$file@$maxSide"
         cache.get(key)?.let { return it }
-        if (key in failed) return null
+        failed[key]?.let { (n, t) ->
+            if (n >= 3 || android.os.SystemClock.uptimeMillis() - t < 2000L) return null
+        }
         if (loading.add(key)) {
-            scope.launch(Dispatchers.IO) {
+            scope.launch(decoder) {
                 val bmp = decode(store.imageFile(file), maxSide)
                 withContext(Dispatchers.Main) {
-                    if (bmp != null) cache.put(key, bmp) else failed.add(key)
+                    if (bmp != null) { cache.put(key, bmp); failed.remove(key) }
+                    else { val n = (failed[key]?.first ?: 0) + 1; failed[key] = n to android.os.SystemClock.uptimeMillis() }
                     loading.remove(key)
                     version++
                 }
@@ -51,12 +59,16 @@ class ImageCache(private val store: Store, private val scope: CoroutineScope) {
         return null
     }
 
+    /** Só o que já está na memória (sem carregar): seguro fora da thread principal. */
+    fun peek(file: String, maxSide: Int = DISPLAY_MAX_SIDE): Bitmap? = cache.get("$file@$maxSide")
+
     /** Leitura síncrona em alta resolução para exportação (não entra no cache). */
     fun getBlocking(file: String, maxSide: Int = EXPORT_MAX_SIDE): Bitmap? =
-        decode(store.imageFile(file), maxSide)
+        decode(store.imageFile(file), maxSide, forDisplay = false)
 
     companion object {
-        const val DISPLAY_MAX_SIDE = 2560
+        /** Na tela basta 1600 px: leve na memória e rápido de desenhar (o arquivo original fica intacto). */
+        const val DISPLAY_MAX_SIDE = 1600
         const val EXPORT_MAX_SIDE = 3500
 
         private fun orientation(f: File): Int = try {
@@ -65,15 +77,28 @@ class ImageCache(private val store: Store, private val scope: CoroutineScope) {
             ExifInterface.ORIENTATION_NORMAL
         }
 
-        fun decode(f: File, maxSide: Int): Bitmap? {
+        fun decode(f: File, maxSide: Int, forDisplay: Boolean = true): Bitmap? {
             if (!f.exists()) return null
             return try {
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
                 BitmapFactory.decodeFile(f.absolutePath, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
                 var sample = 1
                 while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxSide) sample *= 2
-                val opts = BitmapFactory.Options().apply { inSampleSize = sample }
-                val bmp = BitmapFactory.decodeFile(f.absolutePath, opts) ?: return null
+                val png = bounds.outMimeType == "image/png" || bounds.outMimeType == "image/webp"
+                val opts = BitmapFactory.Options().apply {
+                    inSampleSize = sample
+                    // foto sem transparência na tela: metade da memória
+                    if (forDisplay && !png) inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                var bmp = BitmapFactory.decodeFile(f.absolutePath, opts) ?: return null
+                val big = max(bmp.width, bmp.height)
+                if (big > maxSide) {
+                    val k = maxSide.toFloat() / big
+                    val sc = Bitmap.createScaledBitmap(bmp, (bmp.width * k).toInt().coerceAtLeast(1), (bmp.height * k).toInt().coerceAtLeast(1), true)
+                    if (sc != bmp) bmp.recycle()
+                    bmp = sc
+                }
                 val m = Matrix()
                 when (orientation(f)) {
                     ExifInterface.ORIENTATION_ROTATE_90 -> m.postRotate(90f)
@@ -84,7 +109,7 @@ class ImageCache(private val store: Store, private val scope: CoroutineScope) {
                     ExifInterface.ORIENTATION_TRANSPOSE -> { m.postRotate(90f); m.postScale(-1f, 1f) }
                     ExifInterface.ORIENTATION_TRANSVERSE -> { m.postRotate(270f); m.postScale(-1f, 1f) }
                 }
-                if (m.isIdentity) bmp else Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+                if (m.isIdentity) bmp else Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true).also { if (it != bmp) bmp.recycle() }
             } catch (_: Throwable) {
                 null
             }

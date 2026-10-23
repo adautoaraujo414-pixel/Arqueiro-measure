@@ -223,19 +223,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---------- miniaturas da biblioteca (primeira folha) ----------
 
-    private val thumbRenderer by lazy { renderer() }
+    private val thumbRenderer by lazy { SheetRenderer { images.peek(it) } }
     private fun thumbFile(id: String) = File(store.root, "thumbs/$id.png")
 
     private fun writeThumb(note: Note) {
         val w = 240
         val h = (w * Sheet.H / Sheet.W).toInt()
-        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val c = Canvas(bmp)
-        c.drawColor(Color.WHITE)
-        val k = w / Sheet.W
-        c.scale(k, k)
-        thumbRenderer.draw(c, note.pages.first(), note.unit, null, 1f, withPaper = false)
+        // desenha a miniatura fora da thread principal (não trava a digitação nem o traço)
         viewModelScope.launch(io) {
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            runCatching {
+                val c = Canvas(bmp)
+                c.drawColor(Color.WHITE)
+                val k = w / Sheet.W
+                c.scale(k, k)
+                thumbRenderer.draw(c, note.pages.first(), note.unit, null, 1f, withPaper = false)
+            }
             runCatching {
                 val f = thumbFile(note.id)
                 f.parentFile?.mkdirs()
@@ -254,7 +257,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val s = session ?: return
         saveJob?.cancel()
         val n = s.state.note
-        store.saveNote(n)
+        // grava em segundo plano (fila única: a ordem das gravações é mantida) — fechar a nota não trava
+        viewModelScope.launch(io + kotlinx.coroutines.NonCancellable) { runCatching { store.saveNote(n) } }
         upsertMeta(n)
         writeThumb(n)
     }

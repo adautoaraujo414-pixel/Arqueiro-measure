@@ -170,7 +170,7 @@ data class Sheet(
         const val W = 794f
         const val H = 1123f
         const val GAP = 28f
-        const val MAX_PAGES = 30
+        const val MAX_PAGES = 100
     }
 }
 

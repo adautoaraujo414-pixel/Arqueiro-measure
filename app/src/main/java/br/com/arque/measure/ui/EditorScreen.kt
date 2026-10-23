@@ -348,10 +348,18 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     var miniOpen by remember { mutableStateOf(false) }
 
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        if (uris.isEmpty()) vm.photoToNewPage = false
-        uris.forEach { vm.addPhotoFromUri(it) }
+        vm.addPhotosFromUris(uris)
     }
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> vm.onCameraResult(ok) }
+    if (vm.askAnotherPhoto) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { vm.askAnotherPhoto = false },
+            title = { Text("Foto adicionada") },
+            text = { Text("Também ficou salva na galeria do telefone (Imagens/ArqueMeasure).") },
+            confirmButton = { TextButton(onClick = { vm.askAnotherPhoto = false; camera.launch(vm.newCameraUri()) }) { Text("Tirar outra") } },
+            dismissButton = { TextButton(onClick = { vm.askAnotherPhoto = false }) { Text("Pronto") } },
+        )
+    }
     val pdfOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { it?.let(vm::exportPdf) }
     val pngOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { it?.let(vm::exportPng) }
     val csvOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { it?.let(vm::exportCsv) }

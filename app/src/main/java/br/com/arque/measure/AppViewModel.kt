@@ -299,6 +299,53 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Várias fotos de uma vez: importa todas (uma por vez, sem travar) e distribui 2 por folha. */
+    fun addPhotosFromUris(uris: List<Uri>) {
+        val s = session ?: return
+        if (uris.isEmpty()) { photoToNewPage = false; return }
+        if (uris.size == 1) { addPhotoFromUri(uris[0]); return }
+        val app = getApplication<Application>()
+        val newPage = photoToNewPage
+        photoToNewPage = false
+        toast = "Adicionando ${uris.size} fotos…"
+        viewModelScope.launch {
+            val ok = mutableListOf<Triple<String, Int, Int>>()
+            var fail = 0
+            for (u in uris) {
+                val r = withContext(io) {
+                    runCatching {
+                        val input = app.contentResolver.openInputStream(u) ?: error("sem acesso à foto")
+                        val name = store.importImage(input, extFor(u))
+                        val size = ImageCache.orientedSize(store.imageFile(name)) ?: error("imagem inválida")
+                        Triple(name, size.first, size.second)
+                    }
+                }
+                r.onSuccess { ok += it }.onFailure { fail++ }
+            }
+            val placed = s.addPhotos(ok, newPage)
+            toast = "$placed fotos adicionadas" + (if (fail > 0) " · $fail não abriram" else "") +
+                (if (placed < ok.size) " · limite de folhas atingido" else "")
+        }
+    }
+
+    /** Pergunta depois de cada foto da câmera: tirar outra ou terminar. */
+    var askAnotherPhoto by mutableStateOf(false)
+
+    /** Guarda a foto da câmera também na galeria do telefone (Imagens/ArqueMeasure): não se perde nunca. */
+    private fun saveToGallery(f: File) {
+        if (android.os.Build.VERSION.SDK_INT < 29) return
+        val app = getApplication<Application>()
+        runCatching {
+            val cv = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, f.name)
+                put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/ArqueMeasure")
+            }
+            val uri = app.contentResolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv) ?: return
+            app.contentResolver.openOutputStream(uri)?.use { o -> f.inputStream().use { it.copyTo(o) } }
+        }
+    }
+
     fun newCameraUri(): Uri {
         val app = getApplication<Application>()
         val dir = File(app.cacheDir, "camera").apply { mkdirs() }
@@ -319,13 +366,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val result = withContext(io) {
                 runCatching {
+                    saveToGallery(f)
                     val name = store.importImage(f.inputStream(), "jpg")
                     f.delete()
                     val size = ImageCache.orientedSize(store.imageFile(name)) ?: error("imagem inválida")
                     Triple(name, size.first, size.second)
                 }
             }
-            result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h) }
+            result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h); askAnotherPhoto = true }
                 .onFailure { toast = "Não foi possível adicionar a foto" }
         }
     }

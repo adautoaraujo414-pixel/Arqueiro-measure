@@ -46,6 +46,9 @@ object DataBackup {
                 if (skip(rel)) return@forEach
                 runCatching {
                     f.inputStream().use { inp ->
+                        // fotos já são comprimidas: guardar sem recomprimir é muito mais rápido
+                        val ext = rel.substringAfterLast('.', "").lowercase()
+                        zip.setLevel(if (ext in setOf("jpg", "jpeg", "png", "webp", "heic", "apk", "zip")) java.util.zip.Deflater.NO_COMPRESSION else java.util.zip.Deflater.DEFAULT_COMPRESSION)
                         zip.putNextEntry(ZipEntry(rel))
                         inp.copyTo(zip)
                         zip.closeEntry()
@@ -119,13 +122,13 @@ object DataBackup {
 
     /**
      * Cópia automática em Downloads/ArqueMeasure (fica no celular mesmo se o app for desinstalado).
-     * No máximo a cada 3 horas, sempre sobrescrevendo o mesmo arquivo.
+     * No máximo a cada 12 horas, sempre sobrescrevendo o mesmo arquivo.
      */
     fun autoBackup(ctx: Context, force: Boolean = false): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
         val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
-        if (!force && now - sp.getLong("last", 0) < 3 * 3600_000L) return false
+        if (!force && now - sp.getLong("last", 0) < 12 * 3600_000L) return false
         val cr = ctx.contentResolver
         val coll = MediaStore.Downloads.EXTERNAL_CONTENT_URI
         return runCatching {

@@ -10,6 +10,7 @@ import br.com.arque.measure.logic.EditorState
 import br.com.arque.measure.logic.Geo
 import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.PhotoObj
+import br.com.arque.measure.model.Template
 import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Sheet
 import br.com.arque.measure.model.TextObj
@@ -293,6 +294,39 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
         state.addObj(PhotoObj(file = file, pxW = pxW, pxH = pxH, cx = cx, cy = cy, w = w, h = h))
         chooseTool(Tool.SELECT)
         state.select(state.sheet.objs.last().id)
+    }
+
+    /**
+     * Várias fotos de uma vez: 2 por folha (metade de cima / metade de baixo), sem sobrepor.
+     * Começa na folha visível se ela tiver espaço; senão cria folhas novas logo depois.
+     */
+    fun addPhotos(list: List<Triple<String, Int, Int>>, newPage: Boolean): Int {
+        if (list.isEmpty()) return 0
+        if (list.size == 1 && !newPage) { addPhoto(list[0].first, list[0].second, list[0].third); return 1 }
+        var page = visiblePage()
+        state.setPage(page)
+        var used = if (newPage) 2 else state.sheet.objs.count { it is PhotoObj }
+        var placed = 0
+        for ((file, pxW, pxH) in list) {
+            if (used >= 2) {
+                if (!state.addPage(page + 1, Template.BLANK)) break
+                page += 1; used = 0
+            }
+            val s = state.sheet
+            val top = s.height * 0.08f
+            val slotH = (s.height - top - s.height * 0.04f) / 2f
+            val aspect = pxW.toFloat() / pxH.toFloat()
+            var w = s.width * 0.86f
+            var h = w / aspect
+            if (h > slotH * 0.94f) { h = slotH * 0.94f; w = h * aspect }
+            val cx = s.width / 2f
+            val cy = top + slotH * used + slotH / 2f
+            state.addObj(PhotoObj(file = file, pxW = pxW, pxH = pxH, cx = cx, cy = cy, w = w, h = h), select = false)
+            used++; placed++
+        }
+        goToPage(state.pageIdx)
+        chooseTool(Tool.SELECT)
+        return placed
     }
 
     fun commitText(edit: TextEdit, text: String) {

@@ -16,7 +16,21 @@ android {
         versionName = "0.1.0"
     }
 
+    // Chave FIXA do APK de teste: sem ela cada build sai com uma assinatura diferente e o Android
+    // obriga a desinstalar (apagando os dados). Com ela, a versão nova instala por cima e mantém tudo.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("arque-debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
         }

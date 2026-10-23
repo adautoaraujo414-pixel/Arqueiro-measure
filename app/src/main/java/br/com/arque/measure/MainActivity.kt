@@ -12,6 +12,8 @@ class MainActivity : ComponentActivity() {
     private val vm: AppViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // restauração de backup pendente: aplica antes de abrir qualquer tela
+        br.com.arque.measure.data.DataBackup.applyPending(applicationContext)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
@@ -33,6 +35,9 @@ class MainActivity : ComponentActivity() {
     /** Garante que nada fique sem gravar ao sair do app. */
     override fun onStop() {
         vm.flush()
+        // cópia automática dos dados em Downloads/ArqueMeasure (sobrevive a desinstalação)
+        val ctx = applicationContext
+        Thread { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(ctx) } }.start()
         super.onStop()
     }
 }

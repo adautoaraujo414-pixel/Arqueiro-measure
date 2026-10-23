@@ -228,11 +228,14 @@ fun LibraryScreen(vm: AppViewModel) {
                             DropdownMenuItem(text = { Text("Orçamentos") }, onClick = {
                                 topMenu = false; vm.screen = Screen.Quotes
                             })
-                            DropdownMenuItem(text = { Text("Fazer backup (ZIP)") }, onClick = {
+                            DropdownMenuItem(text = { Text("Fazer backup completo (ZIP)") }, onClick = {
                                 topMenu = false; backupLauncher.launch("arque-measure-backup.zip")
                             })
                             DropdownMenuItem(text = { Text("Restaurar backup") }, onClick = {
                                 topMenu = false; restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
+                            })
+                            DropdownMenuItem(text = { Text("Atualizar o app (sem perder dados)") }, onClick = {
+                                topMenu = false; vm.checkUpdate()
                             })
                         }
                     }
@@ -304,10 +307,21 @@ fun LibraryScreen(vm: AppViewModel) {
     }
 
     if (newFolder) NameDialog("Nova pasta", "Nome da pasta", "", { newFolder = false }) { newFolder = false; vm.addFolder(it) }
+    vm.updateState?.let { msg ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { vm.updateState = null },
+            title = { Text("Atualizar o app") },
+            text = { Text(msg) },
+            confirmButton = {
+                if (vm.updateReady != null) androidx.compose.material3.TextButton(onClick = { vm.installUpdate() }) { Text("Instalar") }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { vm.updateState = null }) { Text("Fechar") } },
+        )
+    }
     confirmRestore?.let { uri ->
         ConfirmDialog(
             title = "Restaurar backup?",
-            message = "Isto substitui todas as notas e pastas atuais pelas do backup.",
+            message = "Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. O app reinicia.",
             confirm = "Restaurar",
             onDismiss = { confirmRestore = null },
             onOk = { confirmRestore = null; vm.restore(uri) },

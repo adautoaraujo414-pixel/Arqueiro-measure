@@ -10,3 +10,5 @@
 app/build/
 *.keystore
 *.jks
+
+!app/arque-debug.keystore

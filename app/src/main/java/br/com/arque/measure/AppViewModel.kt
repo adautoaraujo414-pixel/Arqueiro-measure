@@ -604,13 +604,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         flush()
         val app = getApplication<Application>()
         runIo("Backup salvo") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { store.backupTo(it) }
+            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { br.com.arque.measure.data.DataBackup.fullBackup(app, it) }
         }
     }
 
     fun restore(uri: Uri) {
         val app = getApplication<Application>()
         viewModelScope.launch {
+            // backup completo (formato novo): aplica no próximo início e reinicia o app
+            val full = withContext(io) {
+                runCatching {
+                    val inp = app.contentResolver.openInputStream(uri) ?: return@runCatching false
+                    br.com.arque.measure.data.DataBackup.stage(app, inp)
+                }.getOrDefault(false)
+            }
+            if (full) {
+                flush()
+                toast = "Restaurando… o app vai reiniciar"
+                kotlinx.coroutines.delay(600)
+                br.com.arque.measure.data.DataBackup.restart(app)
+                return@launch
+            }
             val ok = withContext(io) {
                 val input = app.contentResolver.openInputStream(uri) ?: return@withContext false
                 store.restoreFrom(input)
@@ -626,6 +640,45 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 toast = "Backup inválido: nada foi alterado"
             }
         }
+    }
+
+    // ---- atualização do app sem perder dados ----
+    var updateState by mutableStateOf<String?>(null)
+    var updateReady by mutableStateOf<java.io.File?>(null)
+
+    fun checkUpdate() {
+        val app = getApplication<Application>()
+        updateReady = null
+        updateState = "Procurando versão nova…"
+        viewModelScope.launch {
+            val r = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() } }
+            val rel = r.getOrNull()
+            if (rel == null) { updateState = "Não consegui verificar agora (sem internet?)."; return@launch }
+            val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
+            if (rel.number <= mine) { updateState = "Você já está na versão mais nova (apk-$mine)."; return@launch }
+            flush()
+            updateState = "Salvando seus dados antes de atualizar…"
+            withContext(io) { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(app, force = true) } }
+            updateState = "Baixando apk-${rel.number}…"
+            val f = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> updateState = "Baixando apk-${rel.number}… $p%" } }
+            }
+            val apk = f.getOrNull()
+            if (apk == null) { updateState = "Falhou o download: ${f.exceptionOrNull()?.message}"; return@launch }
+            updateReady = apk
+            updateState = "apk-${rel.number} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure)."
+        }
+    }
+
+    fun installUpdate() {
+        val app = getApplication<Application>()
+        val apk = updateReady ?: return
+        if (!br.com.arque.measure.data.AppUpdater.canInstall(app)) {
+            updateState = "Libere \"instalar apps desta fonte\" pro Arque Measure e toque em Instalar de novo."
+            br.com.arque.measure.data.AppUpdater.askInstallPermission(app)
+            return
+        }
+        br.com.arque.measure.data.AppUpdater.install(app, apk)
     }
 
     override fun onCleared() {

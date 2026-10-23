@@ -30,9 +30,10 @@ object Units {
     /** Número sem sufixo, no formato do app (vírgula decimal). */
     fun formatNumber(mm: Double, u: LengthUnit): String {
         val pattern = when (u) {
-            LengthUnit.MM -> if (abs(mm - mm.roundToLong()) < 0.05) "0" else "0.0"
-            LengthUnit.CM -> "0.0"
-            LengthUnit.M -> "0.00"
+            // nunca esconde os milímetros (nem décimos): 245,8 mm continua 245,8
+            LengthUnit.MM -> "0.#"
+            LengthUnit.CM -> "0.0#"
+            LengthUnit.M -> "0.00##"
         }
         val df = DecimalFormat(pattern, symbols)
         df.roundingMode = RoundingMode.HALF_UP

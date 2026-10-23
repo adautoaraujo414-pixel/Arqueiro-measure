@@ -97,7 +97,7 @@ fun MoveisScreen(vm: AppViewModel) {
     DisposableEffect(web) {
         val w = web
         vm.moveisSink = { mm ->
-            w?.post { w.evaluateJavascript("window.arqueLaser&&window.arqueLaser(${mm.toLong()})", null) }
+            w?.post { w.evaluateJavascript("window.arqueLaser&&window.arqueLaser(${String.format(java.util.Locale.US, "%.1f", mm)})", null) }
         }
         onDispose { vm.moveisSink = null }
     }

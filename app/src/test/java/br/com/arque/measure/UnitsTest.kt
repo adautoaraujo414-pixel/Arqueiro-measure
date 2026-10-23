@@ -16,8 +16,17 @@ class UnitsTest {
     @Test fun `formata com virgula decimal e sufixo`() {
         assertEquals("2345 mm", Units.format(2345.0, LengthUnit.MM))
         assertEquals("234,5 cm", Units.format(2345.0, LengthUnit.CM))
-        assertEquals("2,35 m", Units.format(2345.0, LengthUnit.M))
+        assertEquals("2,345 m", Units.format(2345.0, LengthUnit.M))
         assertEquals("1,54 m", Units.format(1540.0, LengthUnit.M))
+    }
+
+    @Test fun `medida da trena nao arredonda os milimetros`() {
+        val mm = br.com.arque.measure.ble.BoschProtocol.metersToMm(0.2458f)
+        assertEquals(245.8, mm, 1e-9)
+        assertEquals("245,8 mm", Units.format(mm, LengthUnit.MM))
+        assertEquals("24,58 cm", Units.format(mm, LengthUnit.CM))
+        assertEquals("0,2458 m", Units.format(mm, LengthUnit.M))
+        assertEquals("2458 mm", Units.format(2458.0, LengthUnit.MM))
     }
 
     @Test fun `interpreta texto digitado`() {

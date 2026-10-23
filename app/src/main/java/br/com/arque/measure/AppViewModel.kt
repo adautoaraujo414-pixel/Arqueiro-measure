@@ -713,7 +713,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             withContext(io) { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(app, force = true) } }
             updateState = "Baixando apk-${rel.number}…"
             val f = withContext(kotlinx.coroutines.Dispatchers.IO) {
-                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> updateState = "Baixando apk-${rel.number}… $p%" } }
+                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = "Baixando apk-${rel.number}… $p%" } } }
             }
             val apk = f.getOrNull()
             if (apk == null) { updateState = "Falhou o download: ${f.exceptionOrNull()?.message}"; return@launch }

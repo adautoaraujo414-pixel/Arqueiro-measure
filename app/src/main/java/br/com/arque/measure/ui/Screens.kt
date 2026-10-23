@@ -100,6 +100,10 @@ fun App(vm: AppViewModel) {
         }
     }
 
+    if (vm.licLocked) {
+        LockScreen(vm)
+        return
+    }
     Box(Modifier.fillMaxSize().background(Ui.bg)) {
         when (vm.screen) {
             Screen.Library -> LibraryScreen(vm)
@@ -108,6 +112,11 @@ fun App(vm: AppViewModel) {
             Screen.Agenda -> AgendaScreen(vm)
             Screen.Moveis -> MoveisScreen(vm)
         }
+        if (!vm.licUnlocked && vm.trialLeft.isNotEmpty() && vm.screen == Screen.Library) {
+            TrialChip(vm, Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(10.dp))
+        }
+        if (vm.showWelcome) WelcomeDialog(vm)
+        UpdateOfferDialog(vm)
         vm.toast?.let { msg ->
             Surface(
                 modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 64.dp, start = 16.dp, end = 16.dp),

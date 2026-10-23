@@ -698,7 +698,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var updateState by mutableStateOf<String?>(null)
     var updateReady by mutableStateOf<java.io.File?>(null)
 
-    fun checkUpdate() {
+    /** Versão nova encontrada sozinha (pergunta se quer atualizar). */
+    var updateOffer by mutableStateOf<br.com.arque.measure.data.AppUpdater.Release?>(null)
+    private var lastAutoCheck = 0L
+
+    /** Verifica em silêncio (ao abrir o app e ao voltar pra ele, no máximo a cada 30 min). */
+    fun autoCheckUpdate() {
+        val now = System.currentTimeMillis()
+        if (now - lastAutoCheck < 30 * 60_000L || updateState != null) return
+        lastAutoCheck = now
+        val app = getApplication<Application>()
+        viewModelScope.launch {
+            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: return@launch
+            val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
+            val skipped = app.getSharedPreferences("arque.upd", android.content.Context.MODE_PRIVATE).getInt("skip", 0)
+            if (rel.number > mine && rel.number != skipped) updateOffer = rel
+        }
+    }
+
+    fun skipUpdate() {
+        val r = updateOffer ?: return
+        getApplication<Application>().getSharedPreferences("arque.upd", android.content.Context.MODE_PRIVATE).edit().putInt("skip", r.number).apply()
+        updateOffer = null
+    }
+
+    /** Aceitou a versão nova: baixa e abre o instalador direto. */
+    fun acceptUpdate() { updateOffer = null; checkUpdate(autoInstall = true) }
+
+    fun checkUpdate(autoInstall: Boolean = false) {
         val app = getApplication<Application>()
         updateReady = null
         updateState = "Procurando versão nova…"
@@ -719,7 +746,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             if (apk == null) { updateState = "Falhou o download: ${f.exceptionOrNull()?.message}"; return@launch }
             updateReady = apk
             updateState = "apk-${rel.number} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure)."
+            if (autoInstall) installUpdate()
         }
+    }
+
+    // ---- teste de 2 dias / desbloqueio ----
+    var licLocked by mutableStateOf(false)
+    var showWelcome by mutableStateOf(false)
+    var trialLeft by mutableStateOf("")
+    var licUnlocked by mutableStateOf(false)
+
+    fun checkLicense() {
+        val app = getApplication<Application>()
+        if (br.com.arque.measure.license.License.firstRun(app)) showWelcome = true
+        licUnlocked = br.com.arque.measure.license.License.isUnlocked(app)
+        licLocked = br.com.arque.measure.license.License.isLocked(app)
+        trialLeft = if (licUnlocked) "" else br.com.arque.measure.license.License.leftLabel(app)
+        if (licLocked) flush()
+    }
+
+    fun unlock(code: String): Boolean {
+        val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)
+        if (ok) { licLocked = false; licUnlocked = true; trialLeft = ""; toast = "App desbloqueado. Obrigado!" }
+        return ok
     }
 
     fun installUpdate() {

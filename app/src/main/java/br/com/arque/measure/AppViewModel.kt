@@ -750,6 +750,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Editor de móveis aberto só pra ver o projeto de outro celular (Bluetooth). */
+    var moveisView by mutableStateOf(false)
+
     // ---- teste de 2 dias / desbloqueio ----
     var licLocked by mutableStateOf(false)
     var showWelcome by mutableStateOf(false)

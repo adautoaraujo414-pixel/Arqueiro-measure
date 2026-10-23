@@ -32,6 +32,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,7 +93,17 @@ fun MoveisScreen(vm: AppViewModel) {
     }
 
     val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
-    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }) }
+    var showShare by remember { mutableStateOf(false) }
+    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }) }
+    val viewing = vm.moveisView
+    val vState by br.com.arque.measure.share.BtShare.viewState.collectAsStateWithLifecycle()
+    val vFrame by br.com.arque.measure.share.BtShare.frame.collectAsStateWithLifecycle()
+    fun leaveView() { br.com.arque.measure.share.BtShare.disconnect(); vm.moveisView = false; vm.screen = Screen.Library }
+    LaunchedEffect(vFrame, web) {
+        val f = vFrame ?: return@LaunchedEffect
+        val w = web ?: return@LaunchedEffect
+        if (viewing) w.evaluateJavascript("window.arqueView&&window.arqueView($f)", null)
+    }
 
     DisposableEffect(web) {
         val w = web
@@ -103,6 +114,7 @@ fun MoveisScreen(vm: AppViewModel) {
     }
 
     BackHandler {
+        if (viewing) { leaveView(); return@BackHandler }
         val w = web
         if (w == null) {
             vm.screen = Screen.Library
@@ -137,6 +149,10 @@ fun MoveisScreen(vm: AppViewModel) {
                     addJavascriptInterface(bridge, "ArqueApp")
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView, url: String?) {
+                            if (vm.moveisView) {
+                                view.evaluateJavascript("window.arqueViewMode&&window.arqueViewMode()", null)
+                                br.com.arque.measure.share.BtShare.frame.value?.let { f -> view.evaluateJavascript("window.arqueView&&window.arqueView($f)", null) }
+                            }
                             vm.pendingProject?.let { id ->
                                 vm.pendingProject = null
                                 view.evaluateJavascript("window.arqueOpenClient&&window.arqueOpenClient('${id.replace("'", "")}')", null)
@@ -199,20 +215,28 @@ fun MoveisScreen(vm: AppViewModel) {
             onRelease = { it.removeJavascriptInterface("ArqueApp"); it.destroy(); web = null },
         )
 
-        // Estado da trena Bosch + atalho pra conectar
-        val connected = bleState == BleState.CONNECTED
-        Row(
-            Modifier.align(Alignment.BottomEnd).padding(12.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(if (connected) Color(0xFF1F9D55) else Color(0xFF2F6BE0))
-                .clickable { showBle = true }
-                .padding(horizontal = 14.dp, vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(if (connected) "📡 Trena: ${bleName ?: "Bosch"}" else "📡 Conectar trena", color = Color.White, fontSize = 13.sp)
+        // Vendo projeto de outro celular (só visualização)
+        if (viewing) {
+            Row(
+                Modifier.align(Alignment.TopCenter).padding(6.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xE61B1F27))
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    when (vState) {
+                        "connecting" -> "📡 Conectando em ${br.com.arque.measure.share.BtShare.viewFrom}…"
+                        "connected" -> "👁 Ao vivo · ${br.com.arque.measure.share.BtShare.viewFrom} · só visualização"
+                        "error" -> "Não conectou. O outro celular está compartilhando?"
+                        else -> "Conexão encerrada"
+                    },
+                    color = Color.White, fontSize = 12.sp,
+                )
+                Text("  ✕ Sair", color = Color(0xFFF5B400), fontSize = 12.sp, modifier = Modifier.clickable { leaveView() })
+            }
         }
     }
     if (showBle) BluetoothScreen(vm) { showBle = false }
+    if (showShare) ShareHostDialog(onPush = { web?.post { web?.evaluateJavascript("window.arqueShareNow&&window.arqueShareNow()", null) } }) { showShare = false }
 }
 
 /** Ponte que o editor (JavaScript) usa pra falar com o Android: fechar a tela e guardar cópias em arquivo. */
@@ -220,7 +244,16 @@ class MoveisBridge(
     private val dir: File,
     private val web: () -> WebView?,
     private val onClose: () -> Unit,
+    private val onTrena: () -> Unit = {},
+    private val onShare: () -> Unit = {},
+    private val viewing: () -> Boolean = { false },
 ) {
+    @JavascriptInterface fun openTrena() { web()?.post { onTrena() } }
+    @JavascriptInterface fun shareStart() { web()?.post { onShare() } }
+    @JavascriptInterface fun isSharing(): Boolean = br.com.arque.measure.share.BtShare.hosting.value
+    @JavascriptInterface fun isViewer(): Boolean = viewing()
+    @JavascriptInterface fun shareUpdate(json: String) { br.com.arque.measure.share.BtShare.update(json) }
+
     private fun safe(name: String) = name.replace(Regex("[^A-Za-z0-9_.-]"), "_")
 
     @JavascriptInterface fun isApp(): Boolean = true

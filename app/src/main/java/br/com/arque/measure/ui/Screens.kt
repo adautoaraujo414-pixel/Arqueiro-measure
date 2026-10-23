@@ -166,6 +166,7 @@ fun LibraryScreen(vm: AppViewModel) {
     var topMenu by remember { mutableStateOf(false) }
     var newFolder by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf<Uri?>(null) }
+    var btView by remember { mutableStateOf(false) }
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) vm.backup(uri)
@@ -246,6 +247,9 @@ fun LibraryScreen(vm: AppViewModel) {
                             DropdownMenuItem(text = { Text("Atualizar o app (sem perder dados)") }, onClick = {
                                 topMenu = false; vm.checkUpdate()
                             })
+                            DropdownMenuItem(text = { Text("Ver projeto por Bluetooth") }, onClick = {
+                                topMenu = false; btView = true
+                            })
                         }
                     }
                 }
@@ -316,6 +320,7 @@ fun LibraryScreen(vm: AppViewModel) {
     }
 
     if (newFolder) NameDialog("Nova pasta", "Nome da pasta", "", { newFolder = false }) { newFolder = false; vm.addFolder(it) }
+    if (btView) ShareViewPicker(vm) { btView = false }
     vm.updateState?.let { msg ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { vm.updateState = null },

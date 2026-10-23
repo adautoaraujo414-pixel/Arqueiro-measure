@@ -139,7 +139,7 @@ function edgeMm(p){var n=p.name;if(/^(Frente\/costa|Lateral de gaveta)/.test(n))
 function mCost(m){var r={aB:0,aC:0,aF:0,tB:0,tC:0,doors:0,drw:0},ps=[];try{ps=partsOf(m)}catch(e){}
  ps.forEach(function(p){if(p.name==='Porta')r.doors++;if(p.name==='Frente de gaveta'||p.name==='Frente (porta tempero)')r.drw++;if(p.noCut)return;var a=p.cl*p.cw/1e6,f=finOf(p.name);if(/^Fundo de gaveta/.test(p.name)){r.aF+=a;return}if(/^Moldura/.test(p.name)&&moldRunOf(m))return;if(p.name==='Base inferior'&&baseRunOf(m))return;if(rodSkip(m,p))return;if(f==='c')r.aC+=a;else r.aB+=a;var e=edgeMm(p)/1000;if(f==='c'||(capot(m)&&/^(Lateral esquerda|Lateral direita|Base inferior|Base superior|Divisória)/.test(p.name)))r.tC+=e;else r.tB+=e});
  if(m.regua&&m.sup){r.aC+=2*m.w*m.regMm/1e6;r.tC+=2*(2*(m.w+m.regMm))/1000}
- if(m.fundo)r.aF+=m.w*m.h/1e6;return r}
+ if(m.fundo){var fe3=fE(m);r.aF+=(m.w+(fe3.er||0)-(fe3.el||0))*(m.h+(fe3.et||0)-(fe3.eb||0))/1e6};return r}
 function budget(){var A=(PR.sheetW*PR.sheetH)/1e6,k=1+(PR.perda||0)/100,T={aB:0,aC:0,aF:0,tB:0,tC:0,doors:0,drw:0},rows=[];
  var mrs=moldRuns().filter(function(q){return q.idx.length>1});mrs.forEach(function(q){var Lm=(q.x1-q.x0),a=Lm*q.mm/1e6;T.aC+=a;T.tC+=2*(Lm+q.mm)/1000});
  moldRuns('rod').filter(function(q){return q.idx.length>1}).forEach(function(q){var m0=S.mods[q.idx[0]],Lm=q.x1-q.x0-2*m0.esp;T.aB+=2*Lm*m0.rodMm/1e6});
@@ -169,6 +169,7 @@ function capot(m){return !!(m.tl||m.tr||m.tb||m.tt)}
 var CURM=null;
 function partsOf(m){if(!ENGROSSO_ON){m.egL=0;m.egR=0}var pm0=CURM;CURM=m;try{return partsOf0(m)}finally{CURM=pm0}}
 /* ajuste livre de peça no 3D: deslocamento de cada face (mm). x esq/dir, y baixo/cima, z trás/frente */
+function fE(m){return poEdges((m.po&&m.po['Fundo#1'])||{v2:1})}
 function poEdges(o){if(!o||o.v2)return o;var n={v2:1,el:0,er:0,eb:0,et:0,ek:0,ef:0};if(o.dw){if(o.aw==='r')n.el=-o.dw;else n.er=o.dw}if(o.dh){if(o.ah==='t')n.eb=-o.dh;else n.et=o.dh}if(o.dd)n.ef+=o.dd;if(o.dx){n.el+=o.dx;n.er+=o.dx}if(o.dy){n.eb+=o.dy;n.et+=o.dy}if(o.dz){n.ek+=o.dz;n.ef+=o.dz}return n}
 function partsOf0(m){if(!m.cv30){m.cv30=1;(m.v||[]).forEach(function(v){if((v.k==='door'&&!v.vidro)||v.k==='drawers')v.cava=true})}
  var e=m.esp,top=m.folga,bb=m.h-rodH(m),bt=baseT(m),iw=m.w-2*e,dep=m.d,latH=bb-bt-top-(m.trav?0:e),vT=vTop(m),vH=vhm(m),o=[];
@@ -223,7 +224,7 @@ function partsOf0(m){if(!m.cv30){m.cv30=1;(m.v||[]).forEach(function(v){if((v.k=
 function cutLines(m){var map={},ord=[];function put(n,qty,L,Wd,note,mat){mat=mat||m.esp;var fn=finOf(n),k=L+'|'+Wd+'|'+mat+'|'+fn;if(!map[k]){map[k]={names:[],qty:0,L:L,W:Wd,notes:[],mat:mat,fin:fn};ord.push(k)}var g=map[k];if(g.names.indexOf(n)<0)g.names.push(n);if(note&&g.notes.indexOf(note)<0)g.notes.push(note);g.qty+=qty}
  var rn=moldRunOf(m),bn=baseRunOf(m),rdn=rodRunOf(m);partsOf(m).forEach(function(p){if(p.noCut)return;if(rn&&/^Moldura/.test(p.name))return;if(bn&&p.name==='Base inferior')return;if(rodSkip(m,p))return;put(p.name,1,p.cl,p.cw,p.note,p.mat)});
  if(m.regua&&m.sup)put('Engrosso cava (régua)',2,m.w,m.regMm,'colada na frente e atrás da base inferior');
- if(m.fundo)put('Fundo',1,m.w,m.h,m.fundoMm+' mm',m.fundoMm);
+ if(m.fundo){var fe2=fE(m);put('Fundo',1,m.w+(fe2.er||0)-(fe2.el||0),m.h+(fe2.et||0)-(fe2.eb||0),m.fundoMm+' mm'+((fe2.el||fe2.er||fe2.eb||fe2.et)?' · ajustado no 3D':''),m.fundoMm)};
  return ord.map(function(k){var g=map[k];g.name=g.names.join(' + ')+(g.mat!==m.esp?' ('+g.mat+' mm)':'')+(g.fin==='c'?' · NA COR':' · BRANCO');g.note=g.notes.join(' · ');return g})}
 
 function cutTable(m){var L=cutLines(m),tot=0,area=0;L.forEach(function(l){tot+=l.qty;area+=l.qty*l.L*l.W/1e6});
@@ -925,7 +926,7 @@ function build(){window.CURN=null;window.CURV=undefined;window.CURK=null;window.
    else if(n==='Base inferior'&&baseRunOf(m)){var bq=baseRunOf(m);if(S.mods.indexOf(m)===bq.idx[0])B(boxes,m.x,bq.x1,y0,y1,0,dep,p.col)}
    else B(boxes,x0,x1,y0,y1,0,dep,p.col)});
   var mi0_=S.mods.indexOf(m);boxes.forEach(function(q){if(!q.pk||q.po_||!q.nm||String(q.nm).indexOf(mi0_+':')!==0)return;q.po_=1;var o=m.po&&m.po[q.pk];if(o&&(o.ek||o.ef)){var zm=(q.z0+q.z1)/2;if(q.poly)q.poly=q.poly.map(function(pt){return [pt[0]+(pt[0]<zm?(o.ek||0):(o.ef||0)),pt[1]]});q.z0+=o.ek||0;q.z1+=o.ef||0}if(window.SEL3&&SEL3.mi===mi0_&&SEL3.pk===q.pk){q.c=hex('#ff9f1a');q.a=1}});
-  var mi_=S.mods.indexOf(m),fm_=m.fundo?(m.fundoMm||6):0;if(fm_)boxes.forEach(function(q){if(q.nm&&String(q.nm).indexOf(mi_+':')===0&&!q.fs){q.fs=1;var tp_=String(q.nm).indexOf('Tamponamento')>0;q.z1+=fm_;if(!(tp_&&q.z0<0.01))q.z0+=fm_}});window.CURN=mi_+':Fundo';if(m.fundo)B(boxes,m.x,m.x+m.w,m.b,top,0,m.fundoMm||6,WHITE);mz=Math.max(mz,m.wing?m.x+m.w:dep);if(m.wing)wingX(m,n0)});
+  var mi_=S.mods.indexOf(m),fm_=m.fundo?(m.fundoMm||6):0;if(fm_)boxes.forEach(function(q){if(q.nm&&String(q.nm).indexOf(mi_+':')===0&&!q.fs){q.fs=1;var tp_=String(q.nm).indexOf('Tamponamento')>0;q.z1+=fm_;if(!(tp_&&q.z0<0.01))q.z0+=fm_}});window.CURN=mi_+':Fundo';window.CURK='Fundo#1';window.CURQ=undefined;window.CURV=undefined;if(m.fundo){var fe_=fE(m);B(boxes,m.x+(fe_.el||0),m.x+m.w+(fe_.er||0),m.b+(fe_.eb||0),top+(fe_.et||0),(fe_.ek||0),(m.fundoMm||6)+(fe_.ef||0),(window.SEL3&&SEL3.mi===mi_&&SEL3.pk==='Fundo#1')?'#ff9f1a':WHITE)}window.CURK=null;mz=Math.max(mz,m.wing?m.x+m.w:dep);if(m.wing)wingX(m,n0)});
 (S.ops||[]).forEach(function(o){var x0=o.x,x1=o.x+o.w,y0=o.b,y1=o.b+o.h,fr=60;if(o.t==='janela'){B(boxes,x0,x1,y0,y1,0,6,'#cfe3ee',.4);B(boxes,x0-fr,x0,y0-fr,y1+fr,0,14,'#f4f2ee');B(boxes,x1,x1+fr,y0-fr,y1+fr,0,14,'#f4f2ee');B(boxes,x0,x1,y0-fr,y0,0,14,'#f4f2ee');B(boxes,x0,x1,y1,y1+fr,0,14,'#f4f2ee');B(boxes,(x0+x1)/2-15,(x0+x1)/2+15,y0,y1,0,14,'#f4f2ee');B(boxes,x0,x1,(y0+y1)/2-15,(y0+y1)/2+15,0,14,'#f4f2ee')}else{B(boxes,x0,x1,y0,y1,0,40,'#a97c50');B(boxes,x0-fr,x0,y0,y1+fr,0,50,'#6b4a2f');B(boxes,x1,x1+fr,y0,y1+fr,0,50,'#6b4a2f');B(boxes,x0,x1,y1,y1+fr,0,50,'#6b4a2f');B(boxes,x1-90,x1-60,y0+1000,y0+1060,40,90,'#2b2b2b')}});
  S.fr.forEach(function(f){var t=f.t||'geladeira',c={geladeira:'#b9c0c9',forno:'#2b2f36',microondas:'#2b2f36',tv:'#111418',depurador:'#aeb4bb',coifa:'#aeb4bb',torneira:'#9aa3ad'}[t]||'#9aa3ad',b=f.b||0;if(t==='torneira'){var cm=f.x+f.w/2,hh=Math.max(150,f.h*.8);B(boxes,cm-30,cm+30,b,b+25,60,120,'#c9d0d6');B(boxes,cm-11,cm+11,b+25,b+hh,80,102,'#c9d0d6');B(boxes,cm-11,cm+11,b+hh-22,b+hh,80,300,'#c9d0d6');return}B(boxes,f.x,f.x+f.w,b,b+f.h,0,f.d||500,c)});
  S.rp.forEach(function(a){var q=null;try{q=rpStats(a)}catch(e){}B(boxes,a.x,a.x+a.w,a.b,a.b+a.h,0,6,'#4a3420');if(q&&q.L&&q.L.c)q.L.c.forEach(function(c){var w=+S.rs.w||40;B(boxes,a.x+c-w/2,a.x+c+w/2,a.b,a.b+a.h,6,28,'#b98d5b')});else B(boxes,a.x,a.x+a.w,a.b,a.b+a.h,0,22,'#6b4a2f')});ext={x:W,y:H,z:Math.max(mz,600)}}
@@ -1002,7 +1003,7 @@ function openAct(a,m,sl){var full=function(mm){return Math.max(150,Math.min(450,
  function setDrw(v,q,mm){if(!v.dop)v.dop={};if(mm>0)v.dop[q]=mm;else delete v.dop[q]}
  if(a==='one'&&p){var v=m.v[p.vi];if(!v)return;if(/^Porta/.test(p.name))setDoor(v,p.dq,!(v.od&&v.od[p.dq]));else setDrw(v,p.dq,(v.dop&&v.dop[p.dq])?0:full(m));return}
  S.mods.forEach(function(mm){(mm.v||[]).forEach(function(v){if(a==='close'){v.od={};v.dop={};v.open=false;return}if(v.k==='door'){for(var q=0;q<v.n;q++)setDoor(v,q,true)}else if(v.k==='drawers'||v.k==='tempero'){for(var q2=0;q2<v.n;q2++)setDrw(v,q2,a==='cascade'?Math.round(full(mm)*(q2+1)/v.n):full(mm))}})})}
-function e3Part(){var m=S.mods[SEL3.mi];if(!m)return null;return partsOf(m).filter(function(q){return q.pk===SEL3.pk})[0]||null}
+function e3Part(){var m=S.mods[SEL3.mi];if(!m)return null;if(SEL3.pk==='Fundo#1')return m.fundo?{name:'Fundo ('+(m.fundoMm||6)+' mm)',pk:'Fundo#1'}:null;return partsOf(m).filter(function(q){return q.pk===SEL3.pk})[0]||null}
 function e3Render(){var E=e3Box();var m=S.mods[SEL3.mi],p=e3Part();if(!m||!p){E.hidden=true;H3.innerHTML='';return}var bx=e3Bounds(),f=function(v){return String(Math.round(v*10)/10).replace('.',',')};
  var dr=/^Frente de gaveta|^Frente \(porta/.test(p.name),dor=/^Porta/.test(p.name),v=m.v[p.vi]||{},isOpen=dor?!!(v.od&&v.od[p.dq]):dr?!!(v.dop&&v.dop[p.dq]):false;
  E.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b>'+p.name+'</b><span style="color:#666">'+(bx?f(bx.x1-bx.x0)+' × '+f(bx.y1-bx.y0)+' × '+f(bx.z1-bx.z0)+' mm':'')+'</span><button data-e3r="1" style="padding:3px 8px">Original</button><button data-e3x="1" style="padding:3px 8px">✕</button></div>'

@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
@@ -295,12 +296,22 @@ fun LibraryScreen(vm: AppViewModel) {
                     if (filter != LibFilter.Trash && tab != LibTab.PDF && query.isBlank()) {
                         item(key = "criar") { CreateTile { vm.openNote(vm.createNote()) } }
                     }
+                    // mesmo cliente: nota e projeto juntos no mesmo quadro (nota de um lado, projeto do outro)
+                    val pairs = if (tab == LibTab.ALL && filter != LibFilter.Trash) {
+                        projList.mapNotNull { pj ->
+                            val ns = notes.filter { n -> vm.linkedProject(n.id) == pj.id || (!pj.auto && n.name.trim().equals(pj.name.trim(), ignoreCase = true)) }
+                            if (ns.isEmpty() || (query.isNotBlank() && !pj.name.contains(query, ignoreCase = true) && ns.none { it.name.contains(query, ignoreCase = true) })) null else pj to ns
+                        }
+                    } else emptyList()
+                    val paired = pairs.flatMap { pr -> pr.second.map { it.id } }.toSet()
+                    items(pairs, key = { "par-" + it.first.id }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { (pj, ns) -> ClientPair(vm, pj, ns) }
                     if (filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)) {
                         if (tab == LibTab.MOVEIS && query.isBlank()) item(key = "novo-proj") { CreateTile(label = "Novo projeto de móveis") { vm.newMoveisProject() } }
-                        val projs = projList.filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                        val inPair = pairs.map { it.first.id }.toSet()
+                        val projs = projList.filter { it.id !in inPair && (query.isBlank() || it.name.contains(query, ignoreCase = true)) }
                         items(projs, key = { "proj-" + it.id }) { pj -> ProjRow(vm, pj) }
                     }
-                    items(notes, key = { it.id }) { n -> NoteRow(vm, n) }
+                    items(notes.filter { it.id !in paired }, key = { it.id }) { n -> NoteRow(vm, n) }
                 }
             }
         }
@@ -390,24 +401,24 @@ private fun CreateTile(label: String = "Criar", onClick: () -> Unit) {
 }
 
 @Composable
-private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProjects.P) {
+private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProjects.P, mod: Modifier = Modifier.fillMaxWidth(), bare: Boolean = false) {
     var menu by remember { mutableStateOf(false) }
     var rename by remember { mutableStateOf(false) }
     var del by remember { mutableStateOf(false) }
     val linked = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).size }
     Row(
-        Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(14.dp)).background(Ui.panel)
-            .clickable { vm.openProject(p.id) }.padding(10.dp),
+        mod.height(96.dp).clip(RoundedCornerShape(14.dp)).background(if (bare) Color.Transparent else Ui.panel)
+            .clickable { vm.openProject(p.id) }.padding(if (bare) 8.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(width = 56.dp, height = 76.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2B2416)), contentAlignment = Alignment.Center) {
-            Text("🪚", fontSize = 26.sp)
+        Box(Modifier.size(width = if (bare) 44.dp else 56.dp, height = if (bare) 64.dp else 76.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2B2416)), contentAlignment = Alignment.Center) {
+            Text("🪚", fontSize = if (bare) 20.sp else 26.sp)
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(if (bare) 8.dp else 12.dp))
         Column(Modifier.weight(1f)) {
-            Text(p.name, color = Ui.text, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("Projeto de móveis · " + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp)
-            Text("${p.mods} ${if (p.mods == 1) "módulo" else "módulos"}" + (if (linked > 0) " · $linked ${if (linked == 1) "nota" else "notas"}" else ""), color = Ui.dim, fontSize = 12.sp)
+            Text(if (bare) "Projeto de móveis" else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text((if (bare) "" else "Projeto de móveis · ") + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
+            Text("${p.mods} ${if (p.mods == 1) "módulo" else "módulos"}" + (if (linked > 0 && !bare) " · $linked ${if (linked == 1) "nota" else "notas"}" else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
             IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, "Menu do projeto", tint = Ui.text) }
@@ -426,37 +437,50 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
     )
 }
 
+/** Quadro do cliente: nome em cima, nota(s) à esquerda e o projeto de móveis à direita. */
 @Composable
-private fun NoteRow(vm: AppViewModel, n: NoteMeta) {
+private fun ClientPair(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProjects.P, ns: List<NoteMeta>) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ui.panel).padding(top = 8.dp)) {
+        Text("👤 " + p.name, color = Ui.text, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 12.dp))
+        Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+            Column(Modifier.weight(1f)) { ns.forEach { n -> NoteRow(vm, n, Modifier.fillMaxWidth(), bare = true) } }
+            Box(Modifier.padding(vertical = 10.dp).width(1.dp).fillMaxHeight().background(Ui.line))
+            Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) { ProjRow(vm, p, Modifier.fillMaxWidth(), bare = true) }
+        }
+    }
+}
+
+@Composable
+private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fillMaxWidth(), bare: Boolean = false) {
     var menu by remember { mutableStateOf(false) }
     var rename by remember { mutableStateOf(false) }
     var move by remember { mutableStateOf(false) }
     val trash = n.trash
     Row(
-        Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(14.dp)).background(Ui.panel)
-            .clickable(enabled = !trash) { vm.openNote(n.id) }.padding(10.dp),
+        mod.height(96.dp).clip(RoundedCornerShape(14.dp)).background(if (bare) Color.Transparent else Ui.panel)
+            .clickable(enabled = !trash) { vm.openNote(n.id) }.padding(if (bare) 8.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val thumb = remember(n.id, vm.thumbVersion, n.pageCount, n.dimCount) { vm.loadThumb(n.id) }
         Box(
-            Modifier.size(width = 56.dp, height = 76.dp).clip(RoundedCornerShape(4.dp)).background(Color.White)
+            Modifier.size(width = if (bare) 44.dp else 56.dp, height = if (bare) 64.dp else 76.dp).clip(RoundedCornerShape(4.dp)).background(Color.White)
                 .border(BorderStroke(1.dp, Ui.line), RoundedCornerShape(4.dp)),
         ) {
             if (thumb != null) {
                 androidx.compose.foundation.Image(thumb, null, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
             }
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(if (bare) 8.dp else 12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(n.name, color = Ui.text, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Text(n.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 if (n.pinned) Icon(Icons.Filled.PushPin, null, tint = Ui.accent, modifier = Modifier.padding(start = 6.dp).size(14.dp))
                 if (n.locked) Icon(Icons.Filled.Lock, null, tint = Ui.dim, modifier = Modifier.padding(start = 6.dp).size(14.dp))
             }
             Text(dateFmt.format(Date(n.createdMs)), color = Ui.dim, fontSize = 12.sp)
             Text(
                 "${n.pageCount} ${if (n.pageCount == 1) "folha" else "folhas"} · ${n.dimCount} ${if (n.dimCount == 1) "cota" else "cotas"}",
-                color = Ui.dim, fontSize = 12.sp,
+                color = Ui.dim, fontSize = 12.sp, maxLines = 1,
             )
         }
         Box {

@@ -100,6 +100,14 @@ fun App(vm: AppViewModel) {
         }
     }
 
+    // pede permissão de notificação uma vez (avisos da agenda e de versão nova do app)
+    val ctxN = androidx.compose.ui.platform.LocalContext.current
+    val notifPermApp = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            androidx.core.content.ContextCompat.checkSelfPermission(ctxN, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) notifPermApp.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+    }
     if (vm.licLocked) {
         LockScreen(vm)
         return

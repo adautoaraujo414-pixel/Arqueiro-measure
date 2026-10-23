@@ -134,11 +134,11 @@ class EditorStateTest {
         assertEquals(listOf("b", "c", "a"), st.sheet.objs.map { it.id })
     }
 
-    @Test fun `nota comeca com uma folha e aceita ate 30`() {
+    @Test fun `nota comeca com uma folha e aceita ate 100`() {
         val st = state()
         assertEquals(1, st.note.pages.size)
-        for (i in 1..29) assertTrue(st.addPage(st.note.pages.size, Template.BLANK))
-        assertEquals(30, st.note.pages.size)
+        for (i in 1..99) assertTrue(st.addPage(st.note.pages.size, Template.BLANK))
+        assertEquals(100, st.note.pages.size)
         assertFalse(st.addPage(st.note.pages.size, Template.BLANK))
     }
 

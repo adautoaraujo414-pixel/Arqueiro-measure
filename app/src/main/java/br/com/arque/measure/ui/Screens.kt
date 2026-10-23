@@ -162,7 +162,7 @@ fun ConfirmDialog(title: String, message: String, confirm: String, onDismiss: ()
 
 private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
 
-private enum class LibTab(val label: String) { ALL("TUDO"), NOTE("NOTA"), PDF("PDF") }
+private enum class LibTab(val label: String) { ALL("TUDO"), NOTE("NOTA"), MOVEIS("MÓVEIS"), PDF("PDF") }
 
 // ---------------------------------------------------------------- Biblioteca (estilo Star Note, escura)
 
@@ -193,9 +193,10 @@ fun LibraryScreen(vm: AppViewModel) {
             }
         }
         .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-        .filter { tab != LibTab.PDF }
+        .filter { tab != LibTab.PDF && tab != LibTab.MOVEIS }
         .sortedWith(compareByDescending<NoteMeta> { it.pinned }.thenByDescending { it.createdMs })
 
+    val projList = remember(vm.projVersion, vm.screen) { vm.moveisProjects() }
     BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
         val wide = maxWidth >= 700.dp
         Row(Modifier.fillMaxSize()) {
@@ -209,7 +210,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     }
                     SideItem("Nova pasta", Icons.Filled.CreateNewFolder, false) { newFolder = true }
                     Spacer(Modifier.height(12.dp))
-                    SideItem("Editor de móveis", Icons.Filled.Build, false) { vm.screen = Screen.Moveis }
+                    SideItem("Novo projeto de móveis", Icons.Filled.Build, false) { vm.newMoveisProject() }
                     SideItem("Agenda", Icons.Filled.Event, false) { vm.screen = Screen.Agenda }
                     SideItem("Orçamentos", Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
                     SideItem("Lixo", Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
@@ -238,7 +239,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, "Menu", tint = Ui.text) }
                         DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
                             DropdownMenuItem(text = { Text("Editor de móveis") }, onClick = {
-                                topMenu = false; vm.screen = Screen.Moveis
+                                topMenu = false; vm.newMoveisProject()
                             })
                             DropdownMenuItem(text = { Text("Agenda") }, onClick = {
                                 topMenu = false; vm.screen = Screen.Agenda
@@ -267,7 +268,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         FilterChip(selected = false, onClick = { vm.screen = Screen.Agenda }, label = { Text("📅 Agenda") })
-                        FilterChip(selected = false, onClick = { vm.screen = Screen.Moveis }, label = { Text("Editor de móveis") })
+                        FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text("+ Projeto de móveis") })
                         FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text("Todas as notas") })
                         vm.index.folders.forEach { f ->
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })
@@ -293,6 +294,11 @@ fun LibraryScreen(vm: AppViewModel) {
                 ) {
                     if (filter != LibFilter.Trash && tab != LibTab.PDF && query.isBlank()) {
                         item(key = "criar") { CreateTile { vm.openNote(vm.createNote()) } }
+                    }
+                    if (filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)) {
+                        if (tab == LibTab.MOVEIS && query.isBlank()) item(key = "novo-proj") { CreateTile(label = "Novo projeto de móveis") { vm.newMoveisProject() } }
+                        val projs = projList.filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                        items(projs, key = { "proj-" + it.id }) { pj -> ProjRow(vm, pj) }
                     }
                     items(notes, key = { it.id }) { n -> NoteRow(vm, n) }
                 }
@@ -365,7 +371,7 @@ private fun SideItem(label: String, icon: ImageVector, selected: Boolean, onClic
 }
 
 @Composable
-private fun CreateTile(onClick: () -> Unit) {
+private fun CreateTile(label: String = "Criar", onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).drawBehind {
             drawRoundRect(
@@ -378,9 +384,46 @@ private fun CreateTile(onClick: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.Add, null, tint = Ui.dim)
             Spacer(Modifier.width(6.dp))
-            Text("Criar", color = Ui.dim, fontSize = 16.sp)
+            Text(label, color = Ui.dim, fontSize = 16.sp)
         }
     }
+}
+
+@Composable
+private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProjects.P) {
+    var menu by remember { mutableStateOf(false) }
+    var rename by remember { mutableStateOf(false) }
+    var del by remember { mutableStateOf(false) }
+    val linked = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).size }
+    Row(
+        Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(14.dp)).background(Ui.panel)
+            .clickable { vm.openProject(p.id) }.padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(width = 56.dp, height = 76.dp).clip(RoundedCornerShape(4.dp)).background(Color(0xFF2B2416)), contentAlignment = Alignment.Center) {
+            Text("🪚", fontSize = 26.sp)
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(p.name, color = Ui.text, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Projeto de móveis · " + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp)
+            Text("${p.mods} ${if (p.mods == 1) "módulo" else "módulos"}" + (if (linked > 0) " · $linked ${if (linked == 1) "nota" else "notas"}" else ""), color = Ui.dim, fontSize = 12.sp)
+        }
+        Box {
+            IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, "Menu do projeto", tint = Ui.text) }
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(text = { Text("Abrir") }, onClick = { menu = false; vm.openProject(p.id) })
+                DropdownMenuItem(text = { Text("Renomear (nome do cliente)") }, onClick = { menu = false; rename = true })
+                DropdownMenuItem(text = { Text("Nova nota ligada a este projeto") }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
+                DropdownMenuItem(text = { Text("Apagar projeto") }, onClick = { menu = false; del = true })
+            }
+        }
+    }
+    if (rename) NameDialog("Nome do projeto", "Cliente / projeto", if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
+    if (del) ConfirmDialog(
+        title = "Apagar este projeto?", message = "\"${p.name}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.",
+        confirm = "Apagar", onDismiss = { del = false }, onOk = { del = false; vm.deleteMoveisProject(p.id) },
+    )
 }
 
 @Composable

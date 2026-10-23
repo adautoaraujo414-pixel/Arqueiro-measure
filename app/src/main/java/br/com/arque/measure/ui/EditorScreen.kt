@@ -346,6 +346,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     var overview by remember { mutableStateOf(false) }
     var tpl by remember { mutableStateOf(Template.ARAUJO) }
     var miniOpen by remember { mutableStateOf(false) }
+    var projLinkOpen by remember { mutableStateOf(false) }
 
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
         vm.addPhotosFromUris(uris)
@@ -477,6 +478,15 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                             }
                         }
                     }
+                    val linkedId = remember(vm.projVersion, note.id) { vm.linkedProject(note.id) }
+                    val linkedName = remember(vm.projVersion, linkedId) { linkedId?.let { id -> vm.moveisProjects().firstOrNull { it.id == id }?.name } }
+                    BarPill {
+                        Text(
+                            if (linkedName != null) "🪚 $linkedName" else "🪚", color = if (linkedName != null) Ui.accent else Ui.text, fontSize = 14.sp, maxLines = 1,
+                            modifier = Modifier.clip(RoundedCornerShape(16.dp)).clickable { projLinkOpen = true }.padding(horizontal = 10.dp, vertical = 8.dp).widthIn(max = 160.dp),
+                        )
+                    }
+                    if (projLinkOpen) ProjectLinkDialog(vm, note.id, linkedId) { projLinkOpen = false }
                     val connected = bleState == BleState.CONNECTED
                     BarPill {
                         Text(
@@ -1638,4 +1648,33 @@ private fun QuickSwitch(label: String, on: Boolean, onSet: (Boolean) -> Unit) {
         Text(label, modifier = Modifier.weight(1f))
         Switch(checked = on, onCheckedChange = onSet)
     }
+}
+
+
+/** Projeto de móveis ligado a esta nota: abrir, trocar ou desligar. */
+@Composable
+internal fun ProjectLinkDialog(vm: AppViewModel, noteId: String, linkedId: String?, onDismiss: () -> Unit) {
+    val list = remember(vm.projVersion) { vm.moveisProjects() }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Projeto de móveis desta nota") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val cur = list.firstOrNull { it.id == linkedId }
+                if (cur != null) {
+                    Text("Ligada a: ${cur.name}", fontSize = 15.sp)
+                    TextButton(onClick = { onDismiss(); vm.flush(); vm.openProject(cur.id) }) { Text("🪚 Abrir o projeto") }
+                    TextButton(onClick = { vm.linkProject(noteId, null); onDismiss() }) { Text("Desligar desta nota") }
+                    Text("Ou trocar por:", fontSize = 13.sp, color = Color(0xFF666666))
+                } else Text(if (list.isEmpty()) "Ainda não tem projeto de móveis. Crie um no editor de móveis e ele fica salvo na biblioteca." else "Escolha o projeto pra ligar a esta nota:", fontSize = 13.sp)
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 300.dp)) {
+                    items(list.filter { it.id != linkedId }.size) { i ->
+                        val p = list.filter { it.id != linkedId }[i]
+                        Text("🪚 ${p.name}", fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { vm.linkProject(noteId, p.id); onDismiss() }.padding(vertical = 10.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
+    )
 }

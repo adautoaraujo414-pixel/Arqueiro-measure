@@ -94,7 +94,8 @@ fun MoveisScreen(vm: AppViewModel) {
 
     val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
     var showShare by remember { mutableStateOf(false) }
-    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }) }
+    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.lastProjectId = id; vm.projVersion++ }) }
+    DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
     val viewing = vm.moveisView
     val vState by br.com.arque.measure.share.BtShare.viewState.collectAsStateWithLifecycle()
     val vFrame by br.com.arque.measure.share.BtShare.frame.collectAsStateWithLifecycle()
@@ -152,6 +153,10 @@ fun MoveisScreen(vm: AppViewModel) {
                             if (vm.moveisView) {
                                 view.evaluateJavascript("window.arqueViewMode&&window.arqueViewMode()", null)
                                 br.com.arque.measure.share.BtShare.frame.value?.let { f -> view.evaluateJavascript("window.arqueView&&window.arqueView($f)", null) }
+                            }
+                            if (vm.pendingNewProject && !vm.moveisView) {
+                                vm.pendingNewProject = false
+                                view.evaluateJavascript("window.arqueNewProject&&window.arqueNewProject()", null)
                             }
                             vm.pendingProject?.let { id ->
                                 vm.pendingProject = null
@@ -247,7 +252,9 @@ class MoveisBridge(
     private val onTrena: () -> Unit = {},
     private val onShare: () -> Unit = {},
     private val viewing: () -> Boolean = { false },
+    private val onCurrent: (String) -> Unit = {},
 ) {
+    @JavascriptInterface fun setCurrent(id: String) { web()?.post { onCurrent(id) } }
     @JavascriptInterface fun openTrena() { web()?.post { onTrena() } }
     @JavascriptInterface fun shareStart() { web()?.post { onShare() } }
     @JavascriptInterface fun isSharing(): Boolean = br.com.arque.measure.share.BtShare.hosting.value

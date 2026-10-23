@@ -128,6 +128,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun createNote(): String {
         val folder = (filter as? LibFilter.InFolder)?.id
         val n = Note(name = "Nota ${index.notes.count { !it.trash } + 1}", folderId = folder)
+        lastProjectId?.let { linkProject(n.id, it) }
         viewModelScope.launch(io) { store.saveNote(n) }
         upsertMeta(n)
         writeThumb(n)
@@ -526,6 +527,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             .map { br.com.arque.measure.model.ClientRef(it) }
         return (proj + fromQuotes).sortedBy { it.name.lowercase() }
     }
+
+    // ---------- projetos do editor de móveis (ficam salvos, como as notas) ----------
+    var projVersion by mutableIntStateOf(0)
+    /** Último projeto aberto no editor nesta sessão (nota nova criada depois se vincula a ele). */
+    var lastProjectId: String? = null
+    var pendingNewProject by mutableStateOf(false)
+    private val links by lazy { getApplication<Application>().getSharedPreferences("arque.links", android.content.Context.MODE_PRIVATE) }
+
+    fun moveisProjects(): List<br.com.arque.measure.data.MoveisProjects.P> = br.com.arque.measure.data.MoveisProjects.list(getApplication())
+    fun newMoveisProject() { pendingProject = null; pendingNewProject = true; screen = Screen.Moveis }
+    fun deleteMoveisProject(id: String) { br.com.arque.measure.data.MoveisProjects.delete(getApplication(), id); if (lastProjectId == id) lastProjectId = null; projVersion++ }
+    fun renameMoveisProject(id: String, name: String) { br.com.arque.measure.data.MoveisProjects.rename(getApplication(), id, name); projVersion++ }
+    fun linkedProject(noteId: String): String? = links.getString(noteId, null)
+    fun linkProject(noteId: String, projectId: String?) {
+        links.edit().apply { if (projectId == null) remove(noteId) else putString(noteId, projectId) }.apply(); projVersion++
+    }
+    fun notesOfProject(projectId: String): List<String> = links.all.filter { it.value == projectId }.keys.toList()
 
     /** Abre o projeto do cliente no editor de móveis. */
     fun openProject(projectId: String) {

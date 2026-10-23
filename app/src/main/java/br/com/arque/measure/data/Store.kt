@@ -88,6 +88,12 @@ class Store(val root: File) {
     fun loadCompany(): br.com.arque.measure.model.Company = readWithRecovery(companyFile, QuoteJson::companyFromJson) ?: br.com.arque.measure.model.Company()
     fun saveCompany(c: br.com.arque.measure.model.Company) = writeAtomic(companyFile, QuoteJson.companyToJson(c))
 
+    // ---- agenda ----
+
+    private val agendaFile = File(root, "agenda.json")
+    fun loadAgenda(): List<br.com.arque.measure.model.Appointment> = readWithRecovery(agendaFile, AgendaJson::fromJson) ?: emptyList()
+    fun saveAgenda(list: List<br.com.arque.measure.model.Appointment>) = writeAtomic(agendaFile, AgendaJson.toJson(list))
+
     // ---- leituras Bluetooth ainda não vinculadas ----
 
     fun loadReadings(): List<Reading> = readWithRecovery(readingsFile, Json::readingsFromJson) ?: emptyList()

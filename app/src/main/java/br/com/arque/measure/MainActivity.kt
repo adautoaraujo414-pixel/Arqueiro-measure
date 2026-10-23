@@ -14,9 +14,20 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleIntent(intent)
         setContent {
             ArqueTheme { App(vm) }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    /** Toque numa notificação da agenda: abre direto o compromisso. */
+    private fun handleIntent(i: android.content.Intent?) {
+        i?.getStringExtra(br.com.arque.measure.agenda.AgendaReminders.EXTRA_APPT)?.let { vm.openAppointment(it) }
     }
 
     /** Garante que nada fique sem gravar ao sair do app. */

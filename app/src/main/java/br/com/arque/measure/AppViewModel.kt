@@ -43,6 +43,7 @@ sealed interface Screen {
     data object Library : Screen
     data object Editor : Screen
     data object Quotes : Screen
+    data object Agenda : Screen
     /** Editor de móveis (ambiente, módulos, pedra, eletrodomésticos, ripado, clientes). */
     data object Moveis : Screen
 }
@@ -432,6 +433,57 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val r = withContext(io) { runCatching(block) }
             toast = if (r.isSuccess) okMsg else "Falhou: ${r.exceptionOrNull()?.message ?: "erro"}"
         }
+    }
+
+    // ---------- agenda ----------
+
+    var appointments by mutableStateOf(store.loadAgenda().sortedBy { it.startMs })
+        private set
+    /** Compromisso a mostrar aberto ao entrar na tela da agenda (toque na notificação ou no atalho). */
+    var agendaOpenId by mutableStateOf<String?>(null)
+    /** Projeto de cliente a abrir assim que o editor de móveis carregar. */
+    var pendingProject by mutableStateOf<String?>(null)
+
+    fun saveAppt(a: br.com.arque.measure.model.Appointment) {
+        appointments = (if (appointments.any { it.id == a.id }) appointments.map { if (it.id == a.id) a else it } else appointments + a).sortedBy { it.startMs }
+        val snap = appointments
+        viewModelScope.launch(io) { store.saveAgenda(snap) }
+        br.com.arque.measure.agenda.AgendaReminders.schedule(getApplication(), a)
+    }
+
+    fun deleteAppt(id: String) {
+        appointments.firstOrNull { it.id == id }?.let { br.com.arque.measure.agenda.AgendaReminders.cancel(getApplication(), it) }
+        appointments = appointments.filter { it.id != id }
+        val snap = appointments
+        viewModelScope.launch(io) { store.saveAgenda(snap) }
+    }
+
+    fun openAppointment(id: String) {
+        agendaOpenId = id
+        screen = Screen.Agenda
+    }
+
+    /** Clientes conhecidos: projetos salvos no editor de móveis + nomes dos orçamentos. */
+    fun knownClients(): List<br.com.arque.measure.model.ClientRef> {
+        val proj = runCatching {
+            val f = File(getApplication<Application>().filesDir, "moveis/projects.json")
+            if (f.exists()) br.com.arque.measure.data.AgendaJson.clientsFromProjects(f.readText()) else emptyList()
+        }.getOrDefault(emptyList())
+        val have = proj.map { it.name.lowercase() }.toSet()
+        val fromQuotes = quotes.map { it.clientName.trim() }.filter { it.isNotBlank() && it.lowercase() !in have }.distinct()
+            .map { br.com.arque.measure.model.ClientRef(it) }
+        return (proj + fromQuotes).sortedBy { it.name.lowercase() }
+    }
+
+    /** Abre o projeto do cliente no editor de móveis. */
+    fun openProject(projectId: String) {
+        pendingProject = projectId
+        screen = Screen.Moveis
+    }
+
+    init {
+        br.com.arque.measure.agenda.AgendaReminders.ensureChannel(app)
+        br.com.arque.measure.agenda.AgendaReminders.scheduleAll(app, appointments)
     }
 
     // ---------- orçamentos ----------

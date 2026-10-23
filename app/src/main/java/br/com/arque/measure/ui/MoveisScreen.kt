@@ -136,6 +136,13 @@ fun MoveisScreen(vm: AppViewModel) {
                     }
                     addJavascriptInterface(bridge, "ArqueApp")
                     webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView, url: String?) {
+                            vm.pendingProject?.let { id ->
+                                vm.pendingProject = null
+                                view.evaluateJavascript("window.arqueOpenClient&&window.arqueOpenClient('${id.replace("'", "")}')", null)
+                            }
+                        }
+
                         override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? =
                             loader.shouldInterceptRequest(request.url)
 

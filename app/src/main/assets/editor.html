@@ -700,6 +700,7 @@ $('clm').addEventListener('click',function(ev){var t=ev.target;if(t.dataset&&t.d
  function b64(t){return btoa(unescape(encodeURIComponent(t)))}function unb64(t){return decodeURIComponent(escape(atob(t)))}
  $('ok').onclick=function(){try{A.close()}catch(e){}};$('cx').onclick=function(){try{A.close()}catch(e){}};
  window.arqueLaser=function(mm){LZ.pend=Math.round(mm);lzRender('Leitura da trena: '+Math.round(mm)+' mm. Escolha onde ela vai.');$('lzm').hidden=false};
+ window.arqueOpenClient=function(id){var p=pLoadAll().filter(function(q){return q.id===id})[0];if(!p){toast('Projeto do cliente não encontrado');return false}CUR=p.id;loadState(p.current);toast('Projeto aberto: '+p.client.nome);return true};
  window.arqueBack=function(){var ids=['phm','lzm','clm','cutm'];for(var i=0;i<ids.length;i++){var e=$(ids[i]);if(e&&!e.hidden){if(ids[i]==='phm'&&PH.view){PH.view=null;PH.pin=null;phRender();return true}e.hidden=true;return true}}return false};
  /* cópia de segurança em arquivo (o app guarda fora do navegador) */
  var _ps=pSaveAll;pSaveAll=function(a){var r=_ps(a);try{A.putFile('projects.json',b64(JSON.stringify(a)))}catch(e){}return r};

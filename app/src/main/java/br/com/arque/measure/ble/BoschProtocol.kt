@@ -74,9 +74,8 @@ object BoschProtocol {
         return null
     }
 
-    /** Converte para milímetros inteiros (resolução de exibição da trena é 1 mm). */
-    /** Medida real da trena, sem arredondar pro milímetro: guarda até 0,1 mm (só limpa o ruído do float). */
-    fun metersToMm(m: Float): Double = (m.toDouble() * 10000.0).roundToLong() / 10.0
+    /** Igual ao visor da trena: arredonda pro milímetro (0,5477 m -> 548 mm, como a Bosch mostra 0.548 m). */
+    fun metersToMm(m: Float): Double = (m.toDouble() * 10000.0).roundToLong().let { t -> Math.floorDiv(t + 5, 10L).toDouble() }
 
     /** Retorna a medida em mm se o quadro parecer uma leitura, senão null. */
     fun parseMm(frame: ByteArray): Double? = parseMeasurementMeters(frame)?.let(::metersToMm)

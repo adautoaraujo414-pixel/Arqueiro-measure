@@ -17,16 +17,21 @@ class UnitsTest {
         assertEquals("2345 mm", Units.format(2345.0, LengthUnit.MM))
         assertEquals("234,5 cm", Units.format(2345.0, LengthUnit.CM))
         assertEquals("2,345 m", Units.format(2345.0, LengthUnit.M))
-        assertEquals("1,54 m", Units.format(1540.0, LengthUnit.M))
+        assertEquals("1,540 m", Units.format(1540.0, LengthUnit.M))
     }
 
-    @Test fun `medida da trena nao arredonda os milimetros`() {
-        val mm = br.com.arque.measure.ble.BoschProtocol.metersToMm(0.2458f)
-        assertEquals(245.8, mm, 1e-9)
-        assertEquals("245,8 mm", Units.format(mm, LengthUnit.MM))
-        assertEquals("24,58 cm", Units.format(mm, LengthUnit.CM))
-        assertEquals("0,2458 m", Units.format(mm, LengthUnit.M))
-        assertEquals("2458 mm", Units.format(2458.0, LengthUnit.MM))
+    @Test fun `medida da trena sai igual ao visor`() {
+        val P = br.com.arque.measure.ble.BoschProtocol
+        assertEquals(548.0, P.metersToMm(0.5477f), 1e-9)
+        assertEquals("0,548 m", Units.format(P.metersToMm(0.5477f), LengthUnit.M))
+        assertEquals("2,829 m", Units.format(P.metersToMm(2.8291f), LengthUnit.M))
+        assertEquals("1,142 m", Units.format(P.metersToMm(1.1418f), LengthUnit.M))
+        assertEquals("802 mm", Units.format(P.metersToMm(0.802f), LengthUnit.MM))
+        assertEquals("54,8 cm", Units.format(P.metersToMm(0.5477f), LengthUnit.CM))
+        // digitado à mão continua com décimo
+        assertEquals("245,8 mm", Units.format(245.8, LengthUnit.MM))
+        assertEquals("0,246 m", Units.format(245.8, LengthUnit.M))
+        assertEquals("0,548 m", Units.format(547.7, LengthUnit.M)) // medida antiga salva com décimo
     }
 
     @Test fun `interpreta texto digitado`() {

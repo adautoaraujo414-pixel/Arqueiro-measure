@@ -33,7 +33,7 @@ object Units {
             // nunca esconde os milímetros (nem décimos): 245,8 mm continua 245,8
             LengthUnit.MM -> "0.#"
             LengthUnit.CM -> "0.0#"
-            LengthUnit.M -> "0.00##"
+            LengthUnit.M -> "0.000" // 3 casas igual ao visor da trena (0,548 m · 1,540 m)
         }
         val df = DecimalFormat(pattern, symbols)
         df.roundingMode = RoundingMode.HALF_UP

@@ -18,8 +18,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         handleIntent(intent)
         vm.checkLicense()
+        vm.startStore()
         vm.autoCheckUpdate()
-        runCatching { br.com.arque.measure.update.UpdateWorker.schedule(applicationContext) }
+        if (!BuildConfig.PLAY) runCatching { br.com.arque.measure.update.UpdateWorker.schedule(applicationContext) }
         setContent {
             ArqueTheme { App(vm) }
         }
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(i: android.content.Intent?) {
         i?.getStringExtra(br.com.arque.measure.agenda.AgendaReminders.EXTRA_APPT)?.let { vm.openAppointment(it) }
         // toque na notificação de versão nova: já baixa e abre o instalador
-        if (i?.getBooleanExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE, false) == true) {
+        if (!BuildConfig.PLAY && i?.getBooleanExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE, false) == true) {
             i.removeExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE)
             vm.acceptUpdate()
         }

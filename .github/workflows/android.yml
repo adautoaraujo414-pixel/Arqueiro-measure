@@ -37,10 +37,10 @@ jobs:
       - name: Dar permissão ao gradlew
         run: chmod +x gradlew
 
-      - name: Compilar APK debug
+      - name: Compilar APK debug (site) e conferir a versão Google Play
         run: |
           set -o pipefail
-          ./gradlew --no-daemon assembleDebug 2>&1 | tee build.log
+          ./gradlew --no-daemon assembleSiteDebug compilePlayReleaseKotlin 2>&1 | tee build.log
 
       - name: Salvar log de erro
         if: failure()
@@ -53,16 +53,16 @@ jobs:
       - name: Testes automatizados (JVM)
         run: |
           set -o pipefail
-          ./gradlew --no-daemon testDebugUnitTest 2>&1 | tee -a build.log
+          ./gradlew --no-daemon testSiteDebugUnitTest 2>&1 | tee -a build.log
 
       - name: Verificar código (lint)
         run: |
           set -o pipefail
-          ./gradlew --no-daemon lintDebug 2>&1 | tee -a build.log
+          ./gradlew --no-daemon lintSiteDebug 2>&1 | tee -a build.log
 
       - name: Verificar APK gerado
         run: |
-          APK=$(ls app/build/outputs/apk/debug/*.apk | head -n1)
+          APK=$(ls app/build/outputs/apk/site/debug/*.apk | head -n1)
           echo "APK: $APK"
           test -s "$APK"
           unzip -l "$APK" | grep -q "classes.dex"
@@ -73,7 +73,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ArqueMeasure-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/site/debug/*.apk
           if-no-files-found: error
 
       - name: Publicar APK na Release
@@ -82,45 +82,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="apk-${GITHUB_RUN_NUMBER}"
-          cp app/build/outputs/apk/debug/*.apk ArqueMeasure-debug.apk
+          cp app/build/outputs/apk/site/debug/*.apk ArqueMeasure-debug.apk
           gh release create "$TAG" ArqueMeasure-debug.apk --target "$GITHUB_SHA" --prerelease \
             --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
             --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
 
-      - name: Gerar AAB assinado para o Google Play (se a chave estiver configurada)
+      - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
         if: success() && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-          KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_B64 }}
-          KS_PASS: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           KEY_PASS: ${{ secrets.UPLOAD_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEYSTORE_B64" ]; then echo "Sem chave de upload configurada: AAB não gerado."; exit 0; fi
-          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
-          ./gradlew --no-daemon bundleRelease \
+          if [ -z "$KEY_PASS" ]; then echo "::warning title=Google Play::Falta o segredo UPLOAD_KEY_PASSWORD: AAB não gerado."; exit 0; fi
+          # a chave de upload fica no repositório criptografada; só abre com a senha do segredo
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in app/upload-key.jks.enc -out "$RUNNER_TEMP/upload.jks" -pass env:KEY_PASS || { echo "::warning title=Google Play::A senha UPLOAD_KEY_PASSWORD não abre a chave: AAB não gerado."; exit 0; }
+          set -o pipefail
+          ./gradlew --no-daemon bundlePlayRelease \
             -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
-            -Pandroid.injected.signing.store.password="$KS_PASS" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASS"
-          # APK de instalação assinado com a MESMA chave (estável): é este que se registra no Google
-          ./gradlew --no-daemon assembleRelease \
-            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.jks" \
-            -Pandroid.injected.signing.store.password="$KS_PASS" \
-            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
-            -Pandroid.injected.signing.key.password="$KEY_PASS"
+            -Pandroid.injected.signing.store.password="$KEY_PASS" \
+            -Pandroid.injected.signing.key.alias=arquemestre \
+            -Pandroid.injected.signing.key.password="$KEY_PASS" 2>&1 | tee -a build.log
           rm -f "$RUNNER_TEMP/upload.jks"
-          APKR=$(ls app/build/outputs/apk/release/*.apk | head -n1)
-          cp "$APKR" ArqueMeasure.apk
-          gh release upload "apk-${GITHUB_RUN_NUMBER}" ArqueMeasure.apk --clobber
-
-      - name: Publicar AAB (só quem tem acesso ao repositório baixa)
-        if: success() && github.event_name == 'push'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ArqueMeasure-release-aab
-          path: app/build/outputs/bundle/release/*.aab
-          if-no-files-found: ignore
+          AAB=$(ls app/build/outputs/bundle/playRelease/*.aab | head -n1)
+          cp "$AAB" Arquemestre-GooglePlay.aab
+          gh release upload "apk-${GITHUB_RUN_NUMBER}" Arquemestre-GooglePlay.aab --clobber
 
       - name: Resumo dos erros
         if: failure()
@@ -134,6 +119,6 @@ jobs:
         with:
           name: relatorios
           path: |
-            app/build/reports/lint-results-debug.html
-            app/build/reports/tests/testDebugUnitTest/
+            app/build/reports/lint-results-siteDebug.html
+            app/build/reports/tests/testSiteDebugUnitTest/
           if-no-files-found: ignore

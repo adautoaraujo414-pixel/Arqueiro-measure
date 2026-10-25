@@ -254,7 +254,7 @@ fun LibraryScreen(vm: AppViewModel) {
                             DropdownMenuItem(text = { Text("Restaurar backup") }, onClick = {
                                 topMenu = false; restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
                             })
-                            DropdownMenuItem(text = { Text("Atualizar o app (sem perder dados)") }, onClick = {
+                            if (!br.com.arque.measure.BuildConfig.PLAY) DropdownMenuItem(text = { Text("Atualizar o app (sem perder dados)") }, onClick = {
                                 topMenu = false; vm.checkUpdate()
                             })
                             DropdownMenuItem(text = { Text("Ver projeto por Bluetooth") }, onClick = {

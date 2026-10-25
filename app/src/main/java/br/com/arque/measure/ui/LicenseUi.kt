@@ -57,19 +57,45 @@ private fun openWhats(ctx: android.content.Context) {
     runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
 
+private fun android.content.Context.activity(): android.app.Activity? {
+    var c: android.content.Context? = this
+    while (c is android.content.ContextWrapper) { if (c is android.app.Activity) return c; c = c.baseContext }
+    return null
+}
+
+/** Versão do Google Play: comprar e restaurar a compra. */
+@Composable
+private fun StoreButtons(vm: AppViewModel, dark: Boolean) {
+    val ctx = LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(
+            onClick = { ctx.activity()?.let { vm.buyStore(it) } }, modifier = Modifier.fillMaxWidth().height(52.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF01875F), contentColor = Color.White),
+        ) { Text("Desbloquear pela Google Play" + (vm.storePrice?.let { " · $it" } ?: ""), fontSize = 15.sp) }
+        OutlinedButton(onClick = { vm.restoreStore() }, modifier = Modifier.fillMaxWidth()) {
+            Text("Já comprei · restaurar compra", color = if (dark) Color(0xFFCBD5E1) else Color(0xFF334155))
+        }
+    }
+}
+
+private fun priceOf(vm: AppViewModel) = if (br.com.arque.measure.BuildConfig.PLAY) (vm.storePrice ?: "valor único") else License.PRICE
+
 /** Campo de senha + botão. */
 @Composable
 private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
     var code by remember { mutableStateOf("") }
     var err by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedTextField(
-            value = code, onValueChange = { code = it.filter { c -> c.isDigit() }.take(12); err = false },
-            label = { Text("Senha de desbloqueio") }, singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            isError = err, modifier = Modifier.fillMaxWidth(),
-        )
+        // teclado do próprio app (o do celular não abre); a senha aparece como •••
+        Text("Senha de desbloqueio: " + "•".repeat(code.length).ifEmpty { "–" }, color = Color(0xFF111111), fontSize = 15.sp)
+        AppNumPad("•".repeat(code.length), { t ->
+            code = when {
+                t.isEmpty() -> ""
+                t.length < code.length -> code.dropLast(1)
+                else -> (code + t.last().takeIf { it.isDigit() }.let { it?.toString() ?: "" }).take(12)
+            }
+            err = false
+        }, allowOps = false)
         if (err) Text("Senha incorreta. Confira com quem te passou.", color = Color(0xFFE5484D), fontSize = 13.sp)
         Button(onClick = { if (vm.unlock(code)) onDone() else err = true }, enabled = code.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
             Text("Desbloquear")
@@ -77,7 +103,7 @@ private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
     }
 }
 
-/** Tela de bloqueio depois dos 2 dias. Os dados ficam guardados; dá pra fazer backup mesmo bloqueado. */
+/** Tela de bloqueio depois do teste. Os dados ficam guardados; dá pra fazer backup mesmo bloqueado. */
 @Composable
 fun LockScreen(vm: AppViewModel) {
     val ctx = LocalContext.current
@@ -91,20 +117,25 @@ fun LockScreen(vm: AppViewModel) {
             Text("Você chegou ao fim do período de teste", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Text(
                 "Pra continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), " +
-                    "o acesso completo é por pagamento único de ${License.PRICE}.",
+                    "o acesso completo é por pagamento único de ${priceOf(vm)}.",
                 color = Color(0xFFCBD5E1), fontSize = 15.sp, textAlign = TextAlign.Center,
             )
             Text("Quer prosseguir?", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Button(
-                onClick = { openWhats(ctx) }, modifier = Modifier.fillMaxWidth().height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = Color.White),
-            ) { Text("Sim, quero prosseguir · falar no WhatsApp", fontSize = 15.sp) }
-            Text("Depois do pagamento você recebe a senha. É só digitar aqui:", color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
-            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp)) { UnlockBox(vm) }
+            if (br.com.arque.measure.BuildConfig.PLAY) {
+                StoreButtons(vm, dark = true)
+                vm.toast?.let { Text(it, color = Gold, fontSize = 14.sp, textAlign = TextAlign.Center) }
+            } else {
+                Button(
+                    onClick = { openWhats(ctx) }, modifier = Modifier.fillMaxWidth().height(52.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = Color.White),
+                ) { Text("Sim, quero prosseguir · falar no WhatsApp", fontSize = 15.sp) }
+                Text("Depois do pagamento você recebe a senha. É só digitar aqui:", color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp)) { UnlockBox(vm) }
+            }
             OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
                 Text("Salvar uma cópia dos meus dados (backup)", color = Color(0xFFCBD5E1))
             }
-            Text("Atualizações futuras instalam por cima, sem perder nada.", color = Color(0xFF64748B), fontSize = 12.sp)
+            Text(if (br.com.arque.measure.BuildConfig.PLAY) "As atualizações chegam pela Google Play, sem perder nada." else "Atualizações futuras instalam por cima, sem perder nada.", color = Color(0xFF64748B), fontSize = 12.sp)
         }
     }
 }
@@ -124,7 +155,7 @@ fun WelcomeDialog(vm: AppViewModel) {
         title = { Text(if (page == 0) "Seja bem-vindo ao Arquemestre!" else guide[page - 1].first) },
         text = {
             Text(
-                if (page == 0) "Você está na versão de teste por 2 dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?"
+                if (page == 0) "Você está na versão de teste por ${License.TRIAL_DAYS} dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?"
                 else guide[page - 1].second + "\n\n${page}/${guide.size}",
             )
         },
@@ -137,7 +168,7 @@ fun WelcomeDialog(vm: AppViewModel) {
     )
 }
 
-/** Selo "Teste · falta X" — toque pra digitar a senha antes do fim. */
+/** Selo "Teste · falta X" — toque pra desbloquear antes do fim. */
 @Composable
 fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
@@ -151,10 +182,12 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
         title = { Text("Versão de teste") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Falta ${vm.trialLeft} de teste. Acesso completo: pagamento único de ${License.PRICE}.")
-                Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text("Falar no WhatsApp") }
-                Spacer(Modifier.height(2.dp))
-                UnlockBox(vm) { open = false }
+                Text("Falta ${vm.trialLeft} de teste. Acesso completo: pagamento único de ${priceOf(vm)}.")
+                if (br.com.arque.measure.BuildConfig.PLAY) StoreButtons(vm, dark = false) else {
+                    Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text("Falar no WhatsApp") }
+                    Spacer(Modifier.height(2.dp))
+                    UnlockBox(vm) { open = false }
+                }
             }
         },
         confirmButton = { TextButton(onClick = { open = false }) { Text("Fechar") } },

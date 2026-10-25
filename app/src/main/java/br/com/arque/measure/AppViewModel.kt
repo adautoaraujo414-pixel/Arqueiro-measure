@@ -722,6 +722,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Verifica em silêncio (ao abrir o app e ao voltar pra ele, no máximo a cada 30 min). */
     fun autoCheckUpdate() {
+        if (br.com.arque.measure.BuildConfig.PLAY) return // no Google Play quem atualiza é a loja
         val now = System.currentTimeMillis()
         if (now - lastAutoCheck < 30 * 60_000L || updateState != null) return
         lastAutoCheck = now
@@ -744,6 +745,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun acceptUpdate() { updateOffer = null; checkUpdate(autoInstall = true) }
 
     fun checkUpdate(autoInstall: Boolean = false) {
+        if (br.com.arque.measure.BuildConfig.PLAY) return
         val app = getApplication<Application>()
         updateReady = null
         updateState = "Procurando versão nova…"
@@ -785,6 +787,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         trialLeft = if (licUnlocked) "" else br.com.arque.measure.license.License.leftLabel(app)
         if (licLocked) flush()
     }
+
+    /** Preço da compra no Google Play (some até a loja responder). */
+    var storePrice by mutableStateOf<String?>(null)
+    private var storeStarted = false
+
+    fun startStore() {
+        if (!br.com.arque.measure.license.StoreBilling.AVAILABLE || storeStarted) return
+        storeStarted = true
+        br.com.arque.measure.license.StoreBilling.start(getApplication()) {
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                storePrice = br.com.arque.measure.license.StoreBilling.price()
+                checkLicense()
+            }
+        }
+    }
+
+    private val storeMsg: (String) -> Unit = { m -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { toast = m; checkLicense() } }
+    fun buyStore(a: android.app.Activity) = br.com.arque.measure.license.StoreBilling.buy(a, storeMsg)
+    fun restoreStore() = br.com.arque.measure.license.StoreBilling.restore(getApplication(), storeMsg)
 
     fun unlock(code: String): Boolean {
         val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)

@@ -4,12 +4,14 @@ import android.content.Context
 import java.security.MessageDigest
 
 /**
- * Período de teste de 2 dias e desbloqueio por senha.
+ * Período de teste (2 dias no APK do site, 3 dias no Google Play) e desbloqueio
+ * por senha (site) ou pela compra no Google Play (play).
  * Fica nas preferências do app: atualizar o APK por cima mantém tudo (teste, desbloqueio e dados).
  * Voltar o relógio do celular não estende o teste (vale a maior data já vista).
  */
 object License {
-    const val TRIAL_MS = 2L * 24 * 3600 * 1000
+    val TRIAL_DAYS: Int = br.com.arque.measure.BuildConfig.TRIAL_DAYS
+    val TRIAL_MS: Long = TRIAL_DAYS * 24L * 3600 * 1000
     const val PRICE = "R$ 149,90"
     const val WHATS = "5534984039955"
 
@@ -58,6 +60,17 @@ object License {
         val ok = sha(c) == CODE_SHA
         if (ok) sp(ctx).edit().putBoolean("ok", true).apply()
         return ok
+    }
+
+    /** Compra confirmada pelo Google Play. */
+    fun grantStore(ctx: Context) {
+        sp(ctx).edit().putBoolean("ok", true).putBoolean("store", true).apply()
+    }
+
+    /** O Google Play diz que não há compra (reembolso): tira só o desbloqueio que veio da loja. */
+    fun revokeStore(ctx: Context) {
+        val p = sp(ctx)
+        if (p.getBoolean("store", false)) p.edit().putBoolean("ok", false).putBoolean("store", false).apply()
     }
 
     fun sha(s: String): String =

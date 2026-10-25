@@ -13,7 +13,23 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1)
-        versionName = "0.1.0"
+        versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+    }
+
+    // site = APK do GitHub (atualiza sozinho, desbloqueio por senha)
+    // play = Google Play (sem atualizador próprio, desbloqueio pela compra no Google Play)
+    flavorDimensions += "loja"
+    productFlavors {
+        create("site") {
+            dimension = "loja"
+            buildConfigField("boolean", "PLAY", "false")
+            buildConfigField("int", "TRIAL_DAYS", "2")
+        }
+        create("play") {
+            dimension = "loja"
+            buildConfigField("boolean", "PLAY", "true")
+            buildConfigField("int", "TRIAL_DAYS", "3")
+        }
     }
 
     // Chave FIXA do APK de teste: sem ela cada build sai com uma assinatura diferente e o Android
@@ -47,6 +63,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     lint {
@@ -81,6 +98,8 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    "playImplementation"("com.android.billingclient:billing-ktx:8.3.0")
 
     testImplementation("junit:junit:4.13.2")
     // org.json do android.jar é só um stub nos testes de JVM.

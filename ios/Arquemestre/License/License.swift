@@ -24,7 +24,10 @@ final class LicenseManager: ObservableObject {
     private let d = UserDefaults.standard
     private var updates: Task<Void, Never>?
 
-    var fullPrice: String { fullProduct?.displayPrice ?? "pagamento único" }
+    /// " de R$ 149,90" quando a App Store já respondeu; vazio enquanto não respondeu.
+    var priceOf: String { fullProduct.map { " de \($0.displayPrice)" } ?? "" }
+    /// " · R$ 149,90" para botões.
+    var priceTag: String { fullProduct.map { " · \($0.displayPrice)" } ?? "" }
 
     init() {
         #if DEBUG

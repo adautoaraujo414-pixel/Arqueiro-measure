@@ -5,6 +5,7 @@ private func fmt(_ p: String) -> DateFormatter { let f = DateFormatter(); f.loca
 private let fmtDay = fmt("EEEE, dd 'de' MMMM"), fmtHour = fmt("HH:mm"), fmtDate = fmt("dd/MM/yyyy"), fmtMonth = fmt("MMMM 'de' yyyy")
 private var cal: Calendar { var c = Calendar(identifier: .gregorian); c.locale = ptBR; return c }
 
+private func capFirst(_ s: String) -> String { s.prefix(1).uppercased() + s.dropFirst() }
 private func dayStart(_ d: Date) -> Date { cal.startOfDay(for: d) }
 
 private func whenLabel(_ d: Date) -> String {
@@ -13,7 +14,7 @@ private func whenLabel(_ d: Date) -> String {
     case 0: return "Hoje"
     case 1: return "Amanhã"
     case -1: return "Ontem"
-    default: return fmtDay.string(from: d).capitalized(with: ptBR)
+    default: return capFirst(fmtDay.string(from: d))
     }
 }
 
@@ -107,7 +108,7 @@ private struct MonthGrid: View {
             HStack {
                 Button { month = cal.date(byAdding: .month, value: -1, to: first)! } label: { Image(systemName: "chevron.left") }
                 Spacer()
-                Text(fmtMonth.string(from: first).capitalized(with: ptBR)).foregroundColor(Ui.text)
+                Text(capFirst(fmtMonth.string(from: first))).foregroundColor(Ui.text)
                 Spacer()
                 Button { month = cal.date(byAdding: .month, value: 1, to: first)! } label: { Image(systemName: "chevron.right") }
             }.padding(.horizontal, 8).padding(.vertical, 6)
@@ -116,7 +117,7 @@ private struct MonthGrid: View {
                 HStack(spacing: 2) {
                     ForEach(0..<7, id: \.self) { c in
                         let n = r * 7 + c - offset + 1
-                        if n < 1 || n > days { Color.clear.frame(maxWidth: .infinity).aspectRatio(1.25, contentMode: .fit) } else {
+                        if n < 1 || n > days { Color.clear.frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44) } else {
                             let d = cal.date(byAdding: .day, value: n - 1, to: first)!
                             let list = byDay[d] ?? []
                             Button { onDay(d) } label: {
@@ -124,9 +125,10 @@ private struct MonthGrid: View {
                                     Text("\(n)").foregroundColor(selDay == d ? .white : Ui.text)
                                     HStack(spacing: 2) { ForEach(list.prefix(3)) { a in Circle().fill(a.kind.color).frame(width: 5, height: 5) } }.frame(height: 6)
                                 }
-                                .frame(maxWidth: .infinity).aspectRatio(1.25, contentMode: .fit)
+                                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
                                 .background(RoundedRectangle(cornerRadius: 8).fill(selDay == d ? Ui.accent : (d == today ? Ui.panel2 : .clear)))
-                            }.buttonStyle(.plain)
+                                .contentShape(Rectangle())
+                            }.buttonStyle(.plain).frame(maxWidth: .infinity)
                         }
                     }
                 }

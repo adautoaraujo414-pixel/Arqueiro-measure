@@ -14,7 +14,7 @@ struct MoveisView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.white.ignoresSafeArea()
+            Ui.bg.ignoresSafeArea()
             MoveisWeb(app: app, peer: peer, holder: holder, onClose: { leave() }, onTrena: { btOpen = true }, onShare: { shareOpen = true })
             if app.moveisView {
                 HStack(spacing: 10) {

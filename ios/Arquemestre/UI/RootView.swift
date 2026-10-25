@@ -87,7 +87,7 @@ struct TrialOfferView: View {
                     Text("Como funciona").font(.headline).foregroundColor(.white)
                     Label("Teste grátis de \(LicenseManager.TRIAL_DAYS) dias com tudo liberado.", systemImage: "gift")
                     Label("Depois dos \(LicenseManager.TRIAL_DAYS) dias, as telas ficam bloqueadas até a compra. Seus dados continuam guardados e dá para fazer backup.", systemImage: "lock")
-                    Label("Acesso completo: compra única de \(lic.fullPrice) pela App Store. Sem assinatura, sem mensalidade.", systemImage: "creditcard")
+                    Label("Acesso completo: compra única\(lic.priceOf) pela App Store. Sem assinatura, sem mensalidade.", systemImage: "creditcard")
                     Label("O teste não cobra nada e não vira cobrança sozinho.", systemImage: "checkmark.shield")
                 }
                 .font(.subheadline).foregroundColor(Ui.dim)
@@ -100,7 +100,7 @@ struct TrialOfferView: View {
                 .buttonStyle(.borderedProminent).tint(Ui.accent).disabled(lic.busy)
 
                 Button { Task { await lic.buyFull() } } label: {
-                    Text("Comprar acesso completo · \(lic.fullPrice)").frame(maxWidth: .infinity).padding(.vertical, 10)
+                    Text("Comprar acesso completo\(lic.priceTag)").frame(maxWidth: .infinity).padding(.vertical, 10)
                 }
                 .buttonStyle(.bordered).disabled(lic.busy)
 
@@ -137,10 +137,10 @@ struct LockView: View {
             VStack(spacing: 16) {
                 Text("ARQUEMESTRE").font(.system(size: 26, weight: .bold)).foregroundColor(Ui.gold).padding(.top, 50)
                 Text("Você chegou ao fim do período de teste").font(.title3.bold()).foregroundColor(.white).multilineTextAlignment(.center)
-                Text("Para continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), o acesso completo é por pagamento único de \(lic.fullPrice).")
+                Text("Para continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), o acesso completo é por pagamento único\(lic.priceOf) pela App Store.")
                     .foregroundColor(Ui.dim).multilineTextAlignment(.center)
                 Button { Task { await lic.buyFull() } } label: {
-                    Text("Desbloquear · \(lic.fullPrice)").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
+                    Text("Desbloquear\(lic.priceTag)").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
                 }.buttonStyle(.borderedProminent).disabled(lic.busy)
                 Button("Já comprei · restaurar compra") { Task { await lic.restore() } }.disabled(lic.busy)
                 if lic.busy { ProgressView() }
@@ -168,7 +168,7 @@ struct TrialChip: View {
         .sheet(isPresented: $open) {
             VStack(spacing: 14) {
                 Text("Versão de teste").font(.title3.bold())
-                Text("Falta \(lic.leftLabel) de teste. Acesso completo: pagamento único de \(lic.fullPrice).").multilineTextAlignment(.center).foregroundColor(Ui.dim)
+                Text("Falta \(lic.leftLabel) de teste. Acesso completo: pagamento único\(lic.priceOf).").multilineTextAlignment(.center).foregroundColor(Ui.dim)
                 Button { Task { await lic.buyFull() } } label: { Text("Desbloquear agora").frame(maxWidth: .infinity).padding(.vertical, 8) }
                     .buttonStyle(.borderedProminent)
                 Button("Já comprei · restaurar compra") { Task { await lic.restore() } }

@@ -10,6 +10,9 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 shoot() { # $1 kind (iphone|ipad)
   local kind="$1" udid
   udid=$(python3 "$DIR/pick_sim.py" "$kind")
+  # aparelho limpo: só os dados de exemplo (os testes deixam dados no simulador)
+  xcrun simctl shutdown "$udid" 2>/dev/null || true
+  xcrun simctl erase "$udid"
   xcrun simctl boot "$udid" 2>/dev/null || true
   xcrun simctl bootstatus "$udid" -b
   xcrun simctl status_bar "$udid" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true

@@ -57,9 +57,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     buildFeatures {
         compose = true
@@ -104,4 +101,10 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // org.json do android.jar é só um stub nos testes de JVM.
     testImplementation("org.json:json:20240303")
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }

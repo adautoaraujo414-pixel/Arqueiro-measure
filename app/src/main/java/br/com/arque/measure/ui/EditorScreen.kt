@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
 package br.com.arque.measure.ui
 
 import br.com.arque.measure.model.isOpening
@@ -251,7 +253,9 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                     try {
                         do {
                             // parado com a caneta encostada: depois de um tempo o traço vira reta
-                            val ev = withTimeoutOrNull(600L) { awaitPointerEvent() } ?: run { controller.hold(); awaitPointerEvent() }
+                            var evN = withTimeoutOrNull(600L) { awaitPointerEvent() }
+                            if (evN == null) { controller.hold(); evN = awaitPointerEvent() }
+                            val ev = evN
                             // caneta encostou depois da mão: descarta o toque da mão e passa a seguir a caneta
                             if (!pen) {
                                 val sty = ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.type == PointerType.Stylus }

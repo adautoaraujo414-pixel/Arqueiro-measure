@@ -1,0 +1,4 @@
+build/
+Arquemestre.xcodeproj/
+*.xcworkspace/
+DerivedData/

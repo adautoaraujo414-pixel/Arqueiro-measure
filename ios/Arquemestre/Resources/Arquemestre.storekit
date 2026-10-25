@@ -1,0 +1,51 @@
+{
+  "identifier" : "6C1F2A8E-4B7D-4F3E-9A51-2D8C0B3E7A20",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "0.0",
+      "familyShareable" : false,
+      "internalID" : "6743000001",
+      "localizations" : [
+        {
+          "description" : "Use tudo de graça por 3 dias. Depois, o acesso completo é uma compra única.",
+          "displayName" : "Teste grátis de 3 dias",
+          "locale" : "pt_BR"
+        }
+      ],
+      "productID" : "arquemestre_teste_3_dias",
+      "referenceName" : "3-day Trial",
+      "type" : "NonConsumable"
+    },
+    {
+      "displayPrice" : "149.9",
+      "familyShareable" : false,
+      "internalID" : "6743000002",
+      "localizations" : [
+        {
+          "description" : "Desbloqueia o Arquemestre para sempre, pagamento único.",
+          "displayName" : "Acesso completo",
+          "locale" : "pt_BR"
+        }
+      ],
+      "productID" : "arquemestre_acesso_completo",
+      "referenceName" : "Acesso completo",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6743000000",
+    "_developerTeamID" : "",
+    "_locale" : "pt_BR",
+    "_storefront" : "BRA"
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

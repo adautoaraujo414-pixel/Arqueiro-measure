@@ -1,0 +1,112 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ 'feature/**' ]
+    paths: [ 'ios/**', 'app/src/main/assets/editor.html', '.github/workflows/ios.yml' ]
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: 'Enviar para o TestFlight (precisa da conta Apple paga e dos segredos ASC_*)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Xcode 26 (exigido pela App Store desde 28/04/2026)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n1)
+          [ -n "$X" ] || X=/Applications/Xcode.app
+          sudo xcode-select -s "$X/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Gerar o projeto Xcode (XcodeGen)
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Compilar e rodar os testes no simulador
+        run: |
+          cd ios && mkdir -p build
+          UDID=$(python3 scripts/pick_sim.py iphone)
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
+            CODE_SIGNING_ALLOWED=NO test > build/xcodebuild-test.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* " build/xcodebuild-test.log | tail -n 300
+          exit $RC
+
+      - name: Compilar para iPhone de verdade (Release, sem assinatura)
+        run: |
+          cd ios && mkdir -p build
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ddrel \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build > build/xcodebuild-release.log 2>&1
+          RC=$?
+          grep -E "error:|\*\* " build/xcodebuild-release.log | tail -n 200
+          exit $RC
+
+      - name: Capturas de tela (iPhone 6,9" e iPad 13")
+        run: |
+          cd ios
+          APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
+          bash scripts/screenshots.sh "$APP" build/capturas
+
+      - name: Resumo dos erros
+        if: failure()
+        run: |
+          cd ios
+          M=$( (grep -hE "error:|Failing|failed|XCTAssert" build/*.log 2>/dev/null | head -120) | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::error title=Erros do build iOS::$M"
+
+      - name: Publicar capturas, testes e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-resultados
+          path: |
+            ios/build/capturas/
+            ios/build/*.log
+            ios/build/Testes.xcresult
+          if-no-files-found: ignore
+
+      # ---- só com a conta Apple paga e com confirmação manual (botão "Run workflow") ----
+      - name: Enviar ao TestFlight
+        if: github.event_name == 'workflow_dispatch' && inputs.testflight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$APPLE_TEAM_ID" ]; then echo "::error::Faltam os segredos ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_B64 e APPLE_TEAM_ID"; exit 1; fi
+          cd ios
+          mkdir -p ~/private_keys
+          echo "$ASC_KEY_P8_B64" | base64 -d > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release -sdk iphoneos \
+            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} $AUTH archive
+          cat > build/export.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath build/Arquemestre.xcarchive -exportOptionsPlist build/export.plist -exportPath build/export $AUTH
+          rm -rf ~/private_keys

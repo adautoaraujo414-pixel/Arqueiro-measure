@@ -1,5 +1,6 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.model.isOpening
 import android.graphics.Path as APath
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -71,6 +72,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -1089,6 +1091,21 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                                 .clickable(enabled = !r.locked) { st.setSegKind(r.id, k, kd) }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 14.sp) }
+                    }
+                }
+                if (seg.kind == br.com.arque.measure.model.SegKind.DOOR) {
+                    Text("Sentido da porta", color = dark, fontSize = 13.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, hinge = 1 - seg.hinge) }, enabled = !r.locked) { Text("↔ Dobradiça do outro lado") }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, side = -seg.side) }, enabled = !r.locked) { Text("⇅ Abre pro outro lado") }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, slide = !seg.slide) }, enabled = !r.locked) { Text(if (seg.slide) "De correr ✓" else "De abrir ✓") }
+                    }
+                } else if (!seg.kind.isOpening()) {
+                    Text("Abrir neste trecho (a parede se divide e você mede cada parte)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.DOOR) }, enabled = !r.locked) { Text("＋ Porta") }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.WINDOW) }, enabled = !r.locked) { Text("＋ Janela") }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.OPENING) }, enabled = !r.locked) { Text("＋ Vão") }
                     }
                 }
                 TextButton(onClick = { st.setAllSegKinds(r.id, seg.kind) }, enabled = !r.locked) {

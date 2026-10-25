@@ -101,6 +101,7 @@ object Json {
                             JSONObject().put("kind", sg.kind.name).put("valueMm", sg.valueMm ?: JSONObject.NULL)
                                 .put("source", sg.source?.name ?: JSONObject.NULL)
                                 .put("history", JSONArray(sg.history.map(::readingToJson)))
+                                .put("hinge", sg.hinge).put("side", sg.side).put("slide", sg.slide)
                         },
                     ),
                 )
@@ -207,10 +208,11 @@ object Json {
                 closed = j.optBoolean("closed", false),
                 segs = j.getJSONArray("segs").mapObjects { sj ->
                     Seg(
-                        kind = SegKind.valueOf(sj.optString("kind", "WALL")),
+                        kind = runCatching { SegKind.valueOf(sj.optString("kind", "WALL")) }.getOrDefault(SegKind.WALL),
                         valueMm = sj.optDoubleOrNull("valueMm"),
                         source = sj.optStringOrNull("source")?.let { MeasureSource.valueOf(it) },
                         history = sj.optJSONArray("history")?.mapObjects(::readingFromJson) ?: emptyList(),
+                        hinge = sj.optInt("hinge", 0), side = sj.optInt("side", 1), slide = sj.optBoolean("slide", false),
                     )
                 },
                 color = j.getInt("color"), width = j.getDouble("width").toFloat(),

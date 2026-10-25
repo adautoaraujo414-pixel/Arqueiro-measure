@@ -122,7 +122,11 @@ enum class Template(val label: String) {
 /** Tipo de um segmento do cômodo: parede, painel, pia ou cuba. */
 enum class SegKind(val label: String) {
     WALL("Parede"), PANEL("Painel"), SINK("Pia"), BASIN("Cuba"), DOOR("Porta"),
+    DIVIDER("Divisória"), WINDOW("Janela"), OPENING("Vão"),
 }
+
+/** Tipos que marcam abertura na parede (nunca são unidos com a parede vizinha). */
+fun SegKind.isOpening(): Boolean = this == SegKind.DOOR || this == SegKind.WINDOW || this == SegKind.OPENING
 
 /** Um segmento do contorno: tipo e medida (única origem: trena). */
 data class Seg(
@@ -130,6 +134,12 @@ data class Seg(
     val valueMm: Double? = null,
     val source: MeasureSource? = null,
     val history: List<Reading> = emptyList(),
+    /** Porta: dobradiça no início (0) ou no fim (1) do trecho. */
+    val hinge: Int = 0,
+    /** Porta: lado pra onde abre (1 ou -1). */
+    val side: Int = 1,
+    /** Porta de correr. */
+    val slide: Boolean = false,
 )
 
 /**

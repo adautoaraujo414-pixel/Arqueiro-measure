@@ -80,6 +80,34 @@ class RoomTest {
         assertEquals(r.segs, b.segs)
         assertEquals(r.pts, b.pts)
     }
+
+    @Test fun doorInsideWallKeepsVerticesAndSense() {
+        val wall = RoomObj(photoId = null, pts = listOf(Pt(0f, 0f), Pt(300f, 0f)), closed = false, segs = listOf(Seg()), color = 0, width = 2f)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(wall)))))
+        st.splitSeg(wall.id, 0, SegKind.DOOR)
+        var r = st.sheet.objs[0] as RoomObj
+        assertEquals(4, r.pts.size)
+        assertEquals(listOf(SegKind.WALL, SegKind.DOOR, SegKind.WALL), r.segs.map { it.kind })
+        assertEquals(1, st.selectedSeg)
+        // unir pontos soltos não pode apagar a porta (pontos em linha reta, mas tipos diferentes)
+        st.mergeRoomStray(wall.id)
+        r = st.sheet.objs[0] as RoomObj
+        assertEquals(4, r.pts.size)
+        st.setSegDoor(wall.id, 1, hinge = 1, side = -1, slide = true)
+        r = st.sheet.objs[0] as RoomObj
+        assertEquals(1, r.segs[1].hinge); assertEquals(-1, r.segs[1].side); assertTrue(r.segs[1].slide)
+        val back = Json.noteFromJson(Json.noteToJson(Note(name = "t", pages = listOf(st.sheet)))).pages[0].objs[0] as RoomObj
+        assertEquals(r.segs, back.segs)
+    }
+
+    @Test fun doorUsesMeasuredWallForWidth() {
+        val wall = RoomObj(photoId = null, pts = listOf(Pt(0f, 0f), Pt(400f, 0f)), closed = false, segs = listOf(Seg(valueMm = 4000.0, source = MeasureSource.BLUETOOTH)), color = 0, width = 2f)
+        val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(wall)))))
+        st.splitSeg(wall.id, 0, SegKind.DOOR)
+        val r = st.sheet.objs[0] as RoomObj
+        assertEquals(40f, r.pts[2].x - r.pts[1].x, 0.01f) // 800 de 4000 = 20% do traço
+        assertTrue(r.segs.all { it.valueMm == null })
+    }
 }
 
 class LassoTest {

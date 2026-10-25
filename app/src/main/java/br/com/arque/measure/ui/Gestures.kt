@@ -207,14 +207,50 @@ class GestureController(private val s: EditorSession, private val density: Float
         )
         if (res == null) { st.cancelGesture(); return }
         val n = if (res.closed) res.pts.size else res.pts.size - 1
+        val snapped = snapToRooms(res.pts, res.closed, (26f * density * k).coerceIn(14f, 44f), prev.id)
         val room = RoomObj(
-            photoId = null, pts = res.pts, closed = res.closed, segs = List(n) { Seg() },
+            photoId = null, pts = snapped, closed = res.closed, segs = List(n) { Seg() },
             color = s.color, width = s.width,
         )
         st.live(st.sheet.copy(objs = st.sheet.objs.filter { it.id != prev.id } + room))
         st.endGesture()
         st.mergeRoomStray(room.id)
         st.selectSeg(room.id, 0)
+    }
+
+    /**
+     * Planta da casa: os cantos do traço novo grudam nos cantos das paredes que já existem,
+     * e as pontas de uma parede aberta (divisória) grudam em cima da parede mais perto.
+     */
+    private fun snapToRooms(pts: List<Pt>, closed: Boolean, tolS: Float, skipId: String): List<Pt> {
+        val photos = st.sheet.photos()
+        val others = st.sheet.objs.filterIsInstance<RoomObj>().filter { it.id != skipId }
+        if (others.isEmpty()) return pts
+        val verts = others.flatMap { Geo.annPoints(photos, it) }
+        val segs = others.flatMap { o ->
+            val q = Geo.annPoints(photos, o)
+            val n = if (o.closed) q.size else q.size - 1
+            (0 until n).map { q[it] to q[(it + 1) % q.size] }
+        }
+        fun d(a: Pt, b: Pt) = kotlin.math.hypot((a.x - b.x).toDouble(), (a.y - b.y).toDouble()).toFloat()
+        return pts.mapIndexed { i, p ->
+            val v = verts.minByOrNull { d(it, p) }
+            if (v != null && d(v, p) <= tolS) return@mapIndexed v
+            val end = !closed && (i == 0 || i == pts.lastIndex)
+            if (!end) return@mapIndexed p
+            var best: Pt? = null
+            var bd = tolS
+            for ((a, b) in segs) {
+                val dx = b.x - a.x; val dy = b.y - a.y
+                val l2 = dx * dx + dy * dy
+                if (l2 < 1e-6f) continue
+                val t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).coerceIn(0f, 1f)
+                val pr = Pt(a.x + dx * t, a.y + dy * t)
+                val dd = d(pr, p)
+                if (dd <= bd) { bd = dd; best = pr }
+            }
+            best ?: p
+        }
     }
 
     private fun startStroke(p: Pt, tool: Tool) {

@@ -8,6 +8,7 @@ import br.com.arque.measure.model.Pt
 import br.com.arque.measure.model.Cabinet
 import br.com.arque.measure.model.Seg
 import br.com.arque.measure.model.SegKind
+import br.com.arque.measure.model.isOpening
 import br.com.arque.measure.model.LengthUnit
 import br.com.arque.measure.model.Note
 import br.com.arque.measure.model.Obj
@@ -341,6 +342,44 @@ class EditorState(
         commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(kind = kind) else sg }) })
     }
 
+    /** Sentido da porta: dobradiça (0 início / 1 fim), lado que abre (1 / -1) e se é de correr. */
+    fun setSegDoor(id: String, k: Int, hinge: Int? = null, side: Int? = null, slide: Boolean? = null) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked || k !in r.segs.indices) return
+        commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(hinge = hinge ?: sg.hinge, side = side ?: sg.side, slide = slide ?: sg.slide) else sg }) })
+    }
+
+    /**
+     * Divide o trecho [k]. Com [mid] = null, parte no meio (2 trechos do mesmo tipo).
+     * Com [mid], abre uma porta/janela/vão no meio da parede (3 trechos: parede · [mid] · parede).
+     * Medida do trecho dividido some: cada pedaço é medido de novo (manual ou trena).
+     */
+    fun splitSeg(id: String, k: Int, mid: SegKind? = null) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked || k !in r.segs.indices) return
+        val a = r.pts[k]
+        val b = r.pts[(k + 1) % r.pts.size]
+        val sg = r.segs[k]
+        val clean = sg.copy(valueMm = null, source = null, history = emptyList())
+        val newPts: List<Pt>
+        val newSegs: List<Seg>
+        if (mid == null) {
+            newPts = listOf(a + (b - a) * 0.5f)
+            newSegs = listOf(clean, clean)
+        } else {
+            val want = if (mid == SegKind.WINDOW) 1200.0 else 800.0
+            val f = (sg.valueMm?.let { (want / it).coerceIn(0.15, 0.8) } ?: (1.0 / 3.0)).toFloat()
+            val t0 = (1f - f) / 2f
+            newPts = listOf(a + (b - a) * t0, a + (b - a) * (t0 + f))
+            val wall = clean.copy(kind = if (sg.kind.isOpening()) SegKind.WALL else sg.kind)
+            newSegs = listOf(wall, Seg(kind = mid), wall)
+        }
+        val pts = r.pts.toMutableList().apply { addAll(k + 1, newPts) }
+        val segs = r.segs.toMutableList().apply { removeAt(k); addAll(k, newSegs) }
+        commit(mapObj(id) { (it as RoomObj).copy(pts = pts, segs = segs) })
+        selectSeg(id, if (mid == null) k else k + 1)
+    }
+
     /** Marca todos os segmentos do cômodo com o mesmo tipo (medidas ficam como estão). */
     fun setAllSegKinds(id: String, kind: SegKind) {
         val r = sheet.obj(id) as? RoomObj ?: return
@@ -364,7 +403,13 @@ class EditorState(
     fun mergeRoomStray(id: String): Boolean {
         val r = sheet.obj(id) as? RoomObj ?: return false
         if (r.locked) return false
-        val keep = br.com.arque.measure.logic.Straighten.strayFreeIndices(r.pts, r.closed)
+        val nSeg = r.segs.size
+        val fixed = r.pts.indices.filter { i ->
+            val before = if (i == 0) (if (r.closed) r.segs.getOrNull(nSeg - 1) else null) else r.segs.getOrNull(i - 1)
+            val after = r.segs.getOrNull(i)
+            before != null && after != null && (before.kind != after.kind || before.kind.isOpening() || after.kind.isOpening())
+        }.toSet()
+        val keep = br.com.arque.measure.logic.Straighten.strayFreeIndices(r.pts, r.closed, fixed = fixed)
         if (keep.size == r.pts.size) return false
         val n = r.pts.size
         val segs = ArrayList<br.com.arque.measure.model.Seg>()

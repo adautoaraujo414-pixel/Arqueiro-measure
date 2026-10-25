@@ -44,6 +44,9 @@ fun roomSegColor(o: RoomObj, kind: SegKind): Int = when (kind) {
     SegKind.SINK -> 0xFF1E88E5.toInt()
     SegKind.BASIN -> 0xFF00A88F.toInt()
     SegKind.DOOR -> 0xFFD35400.toInt()
+    SegKind.DIVIDER -> 0xFF6D4C41.toInt()
+    SegKind.WINDOW -> 0xFF0288D1.toInt()
+    SegKind.OPENING -> 0xFF7F8C8D.toInt()
 }
 
 class SheetRenderer(private val images: (String) -> Bitmap?) {
@@ -612,24 +615,74 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                     c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
                 }
                 SegKind.DOOR -> {
-                    // vão da porta: linha fina tracejada + folha aberta (arco de 90°) para dentro do cômodo
+                    // vão da porta tracejado + folha: de abrir (arco de 90° no lado e dobradiça escolhidos) ou de correr
+                    val sg = o.segs[k]
                     strokePaint.color = col; strokePaint.strokeWidth = w * 0.9f
                     strokePaint.strokeCap = Paint.Cap.BUTT
                     strokePaint.pathEffect = DashPathEffect(floatArrayOf(w * 3f, w * 2.5f), 0f)
                     c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
                     strokePaint.pathEffect = null
+                    val h = if (sg.hinge == 1) b else a
+                    val e = if (sg.hinge == 1) a else b
+                    val len = kotlin.math.hypot((e.x - h.x).toDouble(), (e.y - h.y).toDouble()).toFloat()
+                    if (len > 1f) {
+                        val ux = (e.x - h.x) / len
+                        val uy = (e.y - h.y) / len
+                        val sd = if (sg.side < 0) -1f else 1f
+                        val nx = -uy * sd
+                        val ny = ux * sd
+                        if (sg.slide) {
+                            // porta de correr: folha paralela ao vão, deslocada pro lado, com seta do sentido
+                            val off = w * 2.6f
+                            strokePaint.strokeWidth = w * 1.8f
+                            val sx0 = h.x + nx * off; val sy0 = h.y + ny * off
+                            val sx1 = h.x + ux * len * 0.62f + nx * off; val sy1 = h.y + uy * len * 0.62f + ny * off
+                            c.drawLine(sx0, sy0, sx1, sy1, strokePaint)
+                            strokePaint.strokeWidth = w * 0.8f
+                            val ax0 = h.x + ux * len * 0.25f + nx * off * 2.4f; val ay0 = h.y + uy * len * 0.25f + ny * off * 2.4f
+                            val ax1 = h.x + ux * len * 0.75f + nx * off * 2.4f; val ay1 = h.y + uy * len * 0.75f + ny * off * 2.4f
+                            c.drawLine(ax0, ay0, ax1, ay1, strokePaint)
+                            val hx = w * 2f
+                            c.drawLine(ax1, ay1, ax1 - ux * hx + nx * hx * 0.6f, ay1 - uy * hx + ny * hx * 0.6f, strokePaint)
+                            c.drawLine(ax1, ay1, ax1 - ux * hx - nx * hx * 0.6f, ay1 - uy * hx - ny * hx * 0.6f, strokePaint)
+                        } else {
+                            val lx = h.x + nx * len
+                            val ly = h.y + ny * len
+                            strokePaint.strokeWidth = w * 1.2f
+                            c.drawLine(h.x, h.y, lx, ly, strokePaint)
+                            strokePaint.strokeWidth = w * 0.7f
+                            val ang = Math.toDegrees(kotlin.math.atan2(uy.toDouble(), ux.toDouble())).toFloat()
+                            rect.set(h.x - len, h.y - len, h.x + len, h.y + len)
+                            c.drawArc(rect, ang, 90f * sd, false, strokePaint)
+                        }
+                    }
+                }
+                SegKind.WINDOW -> {
+                    // janela: duas linhas paralelas finas + fio no meio (símbolo de planta)
                     val len = kotlin.math.hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble()).toFloat()
                     if (len > 1f) {
-                        val ang = Math.toDegrees(kotlin.math.atan2((b.y - a.y).toDouble(), (b.x - a.x).toDouble())).toFloat()
-                        val rad = Math.toRadians((ang + 90f).toDouble())
-                        val lx = a.x + len * kotlin.math.cos(rad).toFloat()
-                        val ly = a.y + len * kotlin.math.sin(rad).toFloat()
-                        strokePaint.strokeWidth = w * 1.2f
-                        c.drawLine(a.x, a.y, lx, ly, strokePaint)
-                        strokePaint.strokeWidth = w * 0.7f
-                        rect.set(a.x - len, a.y - len, a.x + len, a.y + len)
-                        c.drawArc(rect, ang, 90f, false, strokePaint)
+                        val nx = -(b.y - a.y) / len * w * 1.4f
+                        val ny = (b.x - a.x) / len * w * 1.4f
+                        strokePaint.color = col; strokePaint.strokeWidth = w * 0.7f
+                        strokePaint.strokeCap = Paint.Cap.BUTT
+                        c.drawLine(a.x + nx, a.y + ny, b.x + nx, b.y + ny, strokePaint)
+                        c.drawLine(a.x - nx, a.y - ny, b.x - nx, b.y - ny, strokePaint)
+                        c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                        c.drawLine(a.x + nx, a.y + ny, a.x - nx, a.y - ny, strokePaint)
+                        c.drawLine(b.x + nx, b.y + ny, b.x - nx, b.y - ny, strokePaint)
                     }
+                }
+                SegKind.OPENING -> {
+                    // vão sem porta: só o tracejado fino
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 0.8f
+                    strokePaint.strokeCap = Paint.Cap.BUTT
+                    strokePaint.pathEffect = DashPathEffect(floatArrayOf(w * 2f, w * 3f), 0f)
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+                    strokePaint.pathEffect = null
+                }
+                SegKind.DIVIDER -> {
+                    strokePaint.color = col; strokePaint.strokeWidth = w * 1.1f
+                    c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
                 }
                 SegKind.BASIN -> {
                     strokePaint.color = col; strokePaint.strokeWidth = w * 3f

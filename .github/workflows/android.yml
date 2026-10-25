@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
     branches: [ main, 'feature/**' ]
+    paths-ignore: [ 'ios/**', '.github/workflows/ios.yml' ]
   pull_request:
   workflow_dispatch:
 
@@ -88,12 +89,17 @@ jobs:
             --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
 
       - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
-        if: success() && github.event_name == 'push'
+        if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         env:
           GH_TOKEN: ${{ github.token }}
           KEY_PASS: ${{ secrets.UPLOAD_KEY_PASSWORD }}
         run: |
-          if [ -z "$KEY_PASS" ]; then echo "::warning title=Google Play::Falta o segredo UPLOAD_KEY_PASSWORD: AAB não gerado."; exit 0; fi
+          set -o pipefail
+          if [ -z "$KEY_PASS" ]; then
+            # confere que a versão da loja compila inteira, mesmo sem a chave (AAB sem assinatura não é publicado)
+            ./gradlew --no-daemon bundlePlayRelease 2>&1 | tee -a build.log
+            echo "::warning title=Google Play::Falta o segredo UPLOAD_KEY_PASSWORD: AAB compilado mas NÃO assinado nem publicado."; exit 0
+          fi
           # a chave de upload fica no repositório criptografada; só abre com a senha do segredo
           openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in app/upload-key.jks.enc -out "$RUNNER_TEMP/upload.jks" -pass env:KEY_PASS || { echo "::warning title=Google Play::A senha UPLOAD_KEY_PASSWORD não abre a chave: AAB não gerado."; exit 0; }
           set -o pipefail
@@ -105,7 +111,11 @@ jobs:
           rm -f "$RUNNER_TEMP/upload.jks"
           AAB=$(ls app/build/outputs/bundle/playRelease/*.aab | head -n1)
           cp "$AAB" Arquemestre-GooglePlay.aab
-          gh release upload "apk-${GITHUB_RUN_NUMBER}" Arquemestre-GooglePlay.aab --clobber
+          keytool -printcert -jarfile Arquemestre-GooglePlay.aab | grep -E "SHA1:|SHA256:"
+          TAG="apk-${GITHUB_RUN_NUMBER}"
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --title "Arquemestre Google Play #${GITHUB_RUN_NUMBER}" --notes "AAB assinado para enviar ao Play Console."
+          gh release upload "$TAG" Arquemestre-GooglePlay.aab --clobber
+          echo "::notice title=Google Play::AAB assinado publicado em $TAG"
 
       - name: Resumo dos erros
         if: failure()

@@ -105,7 +105,7 @@ class RoomTest {
         val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(wall)))))
         st.splitSeg(wall.id, 0, SegKind.DOOR)
         val r = st.sheet.objs[0] as RoomObj
-        assertEquals(40f, r.pts[2].x - r.pts[1].x, 0.01f) // 800 de 4000 = 20% do traço
+        assertEquals(80f, r.pts[2].x - r.pts[1].x, 0.01f) // 800 de 4000 = 20% do traço de 400
         assertTrue(r.segs.all { it.valueMm == null })
     }
 }

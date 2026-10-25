@@ -167,9 +167,9 @@ private fun Field(value: String, label: String, modifier: Modifier = Modifier.fi
 @Composable
 private fun NumField(key: String, init: Double, label: String, modifier: Modifier, onValue: (Double) -> Unit) {
     var t by remember(key) { mutableStateOf(if (init == 0.0) "" else QuoteMath.numStr(init)) }
-    Field(t, label, modifier, number = true) { s ->
-        t = s
-        onValue(QuoteMath.parseNum(s) ?: 0.0)
+    NumPadField(t, label, modifier) { v ->
+        t = QuoteMath.numStr(v)
+        onValue(v)
     }
 }
 

@@ -100,6 +100,16 @@ class RoomTest {
         assertEquals(r.segs, back.segs)
     }
 
+    @Test fun newWallAlignsWithExistingCorners() {
+        // parede nova quase em cima da linha x=100 de uma parede que já existe: a junta fica reta
+        val refs = listOf(Pt(100f, 0f), Pt(100f, 300f), Pt(400f, 300f))
+        val drawn = listOf(Pt(104f, 300f), Pt(104f, 600f), Pt(396f, 600f))
+        val r = Straighten.alignTo(drawn, false, refs, 10f)
+        assertEquals(100f, r[0].x, 0.01f); assertEquals(100f, r[1].x, 0.01f) // parede vertical inteira foi junto
+        assertEquals(400f, r[2].x, 0.01f)
+        assertEquals(600f, r[1].y, 0.01f); assertEquals(600f, r[2].y, 0.01f)
+    }
+
     @Test fun doorUsesMeasuredWallForWidth() {
         val wall = RoomObj(photoId = null, pts = listOf(Pt(0f, 0f), Pt(400f, 0f)), closed = false, segs = listOf(Seg(valueMm = 4000.0, source = MeasureSource.BLUETOOTH)), color = 0, width = 2f)
         val st = EditorState(Note(name = "t", pages = listOf(Sheet(objs = listOf(wall)))))

@@ -207,7 +207,10 @@ class GestureController(private val s: EditorSession, private val density: Float
         )
         if (res == null) { st.cancelGesture(); return }
         val n = if (res.closed) res.pts.size else res.pts.size - 1
-        val snapped = snapToRooms(res.pts, res.closed, (26f * density * k).coerceIn(14f, 44f), prev.id)
+        val tolS = (26f * density * k).coerceIn(14f, 44f)
+        val refPts = st.sheet.objs.filterIsInstance<RoomObj>().filter { it.id != prev.id }.flatMap { Geo.annPoints(st.sheet.photos(), it) }
+        val aligned = br.com.arque.measure.logic.Straighten.alignTo(res.pts, res.closed, refPts, tolS)
+        val snapped = snapToRooms(aligned, res.closed, tolS, prev.id)
         val room = RoomObj(
             photoId = null, pts = snapped, closed = res.closed, segs = List(n) { Seg() },
             color = s.color, width = s.width,

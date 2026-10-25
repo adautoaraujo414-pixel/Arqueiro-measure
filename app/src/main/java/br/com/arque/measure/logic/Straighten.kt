@@ -173,6 +173,49 @@ object Straighten {
     }
 
     /**
+     * Planta da casa: alinha os cantos do traço novo com os cantos que já existem (mesmo x ou mesmo y,
+     * dentro de [tol]), levando junto o outro canto de cada parede reta, pra que as juntas fiquem
+     * numa linha reta só (sem degrauzinho entre uma parede e outra).
+     */
+    fun alignTo(pts: List<Pt>, closed: Boolean, refs: List<Pt>, tol: Float, snapDeg: Float = 12f): List<Pt> {
+        if (refs.isEmpty() || pts.size < 2) return pts
+        val p = pts.toMutableList()
+        val n = p.size
+        val segs = if (closed) n else n - 1
+        val ax = (0 until segs).map { axisOf(p[it], p[(it + 1) % n], snapDeg) }
+        fun neighbors(i: Int, want: Axis): List<Int> {
+            val r = ArrayList<Int>()
+            val prev = if (i > 0) i - 1 else if (closed) n - 1 else -1
+            if (prev >= 0 && ax[prev] == want) r += prev
+            if (i < segs && ax[i] == want) r += (i + 1) % n
+            return r
+        }
+        fun setX(i: Int, x: Float, seen: MutableSet<Int>) {
+            if (!seen.add(i)) return
+            p[i] = Pt(x, p[i].y)
+            neighbors(i, Axis.V).forEach { setX(it, x, seen) }
+        }
+        fun setY(i: Int, y: Float, seen: MutableSet<Int>) {
+            if (!seen.add(i)) return
+            p[i] = Pt(p[i].x, y)
+            neighbors(i, Axis.H).forEach { setY(it, y, seen) }
+        }
+        val doneX = HashSet<Int>()
+        val doneY = HashSet<Int>()
+        for (i in 0 until n) {
+            if (i !in doneX) {
+                val rx = refs.minByOrNull { abs(it.x - p[i].x) }
+                if (rx != null && abs(rx.x - p[i].x) <= tol) setX(i, rx.x, doneX)
+            }
+            if (i !in doneY) {
+                val ry = refs.minByOrNull { abs(it.y - p[i].y) }
+                if (ry != null && abs(ry.y - p[i].y) <= tol) setY(i, ry.y, doneY)
+            }
+        }
+        return p
+    }
+
+    /**
      * Índices dos vértices que ficam depois de tirar os que estão no meio de uma reta
      * (pontas soltas). Cantos de verdade (viradas grandes) nunca saem.
      */

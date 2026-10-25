@@ -868,25 +868,10 @@ private fun NumField(label: String, mm: Double, vm: AppViewModel, onSet: (Double
         ) { Text("⟷", color = Color(0xFF3B5B85), fontSize = 18.sp) }
     }
     if (dialog) {
-        var text by remember { mutableStateOf(Units.formatNumber(mm, LengthUnit.MM)) }
-        AlertDialog(
-            onDismissRequest = { dialog = false },
-            title = { Text(label) },
-            text = {
-                OutlinedTextField(
-                    value = text, onValueChange = { text = it }, singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    suffix = { Text("mm") },
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    Units.parseToMm(text, LengthUnit.MM)?.let(onSet)
-                    dialog = false
-                }) { Text("OK") }
-            },
-            dismissButton = { TextButton(onClick = { dialog = false }) { Text("Cancelar") } },
-        )
+        NumPadDialog(label, Units.formatNumber(mm, LengthUnit.MM), "mm", onDismiss = { dialog = false }) { v ->
+            if (v > 0) onSet(v)
+            dialog = false
+        }
     }
 }
 

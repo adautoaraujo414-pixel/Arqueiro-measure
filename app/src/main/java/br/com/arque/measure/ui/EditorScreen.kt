@@ -1477,23 +1477,10 @@ private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, 
         Text(if (text == "–" && enabled) "– toque p/ digitar" else text, color = Ui.distBlue, fontSize = if (text == "–" && enabled) 15.sp else 22.sp)
     }
     if (open) {
-        val parsed = Units.parseToMm(input, unit ?: br.com.arque.measure.model.LengthUnit.MM)
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { open = false },
-            title = { Text("Digitar medida") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    OutlinedTextField(
-                        value = input, onValueChange = { input = it }, singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
-                        label = { Text("Medida em $unitLabel") },
-                    )
-                    Text("Aceita vírgula ou ponto; pode escrever 2,5m ou 850mm. Fica marcada como digitada à mão.", fontSize = 12.sp, color = Color(0xFF555555))
-                }
-            },
-            confirmButton = { TextButton(enabled = parsed != null, onClick = { parsed?.let(onSet); open = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { open = false }) { Text("Cancelar") } },
-        )
+        NumPadDialog("Digitar medida", input, unitLabel, hint = "Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão.", onDismiss = { open = false }) { v ->
+            if (v > 0) onSet(Units.toMm(v, unit ?: br.com.arque.measure.model.LengthUnit.MM))
+            open = false
+        }
     }
 }
 

@@ -12,7 +12,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   ios:
@@ -63,6 +63,24 @@ jobs:
           cd ios
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
           bash scripts/screenshots.sh "$APP" build/capturas
+
+      - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          cd ios
+          OUT=$(mktemp -d)
+          mkdir -p "$OUT/capturas"
+          cp -R build/capturas/. "$OUT/capturas/" 2>/dev/null || true
+          { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
+            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 400; } > "$OUT/RESUMO.txt" || true
+          grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
+          cd "$OUT"
+          git init -q && git checkout -q -b ci/ios-resultados
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -A && git commit -qm "Resultados iOS $GITHUB_RUN_NUMBER ($GITHUB_SHA)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci/ios-resultados
+          T=$(grep -hE "Executed [0-9]+ test" RESUMO.txt | tail -n1)
+          echo "::notice title=Testes iOS::${T:-sem resumo}"
 
       - name: Resumo dos erros
         if: failure()

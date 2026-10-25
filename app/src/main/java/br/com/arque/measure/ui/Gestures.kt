@@ -55,6 +55,10 @@ class GestureController(private val s: EditorSession, private val density: Float
     private var lastScreen = Offset.Zero
     private var lastSheet = Pt(0f, 0f)
     private var moved = false
+    // escrita livre: segurar parado no fim do traço vira reta (estilo Star Note), pontas encaixam em pontos próximos
+    private var strokeStraight = false
+    private var lastSigT = 0L
+    private var lastSigScreen = Offset.Zero
 
     // pinça
     private var prevC = Offset.Zero
@@ -256,6 +260,47 @@ class GestureController(private val s: EditorSession, private val density: Float
         }
     }
 
+    /** Pontos que servem de encaixe: pontas de traços, linhas, setas e cantos de cômodo. */
+    private fun snapPoint(p: Pt, skipId: String?): Pt? {
+        val photos = st.sheet.photos()
+        val tolS = 14f * density / s.view.scale
+        var best: Pt? = null
+        var bd = tolS
+        fun cand(q: Pt) { val d = hypot(q.x - p.x, q.y - p.y); if (d <= bd) { bd = d; best = q } }
+        st.sheet.objs.forEach { o ->
+            if (o.id == skipId) return@forEach
+            when (o) {
+                is StrokeObj -> if (o.pts.size >= 2) { cand(Geo.toSheet(photos, o.photoId, o.pts.first())); cand(Geo.toSheet(photos, o.photoId, o.pts.last())) }
+                is ShapeObj -> { cand(Geo.toSheet(photos, o.photoId, o.a)); cand(Geo.toSheet(photos, o.photoId, o.b)) }
+                is DimObj -> { cand(Geo.toSheet(photos, o.photoId, o.a)); cand(Geo.toSheet(photos, o.photoId, o.b)) }
+                is RoomObj -> Geo.annPoints(photos, o).forEach(::cand)
+                else -> {}
+            }
+        }
+        return best
+    }
+
+    /** Caneta encostada sem andar (só pressão mudando): conta o tempo parado. */
+    fun still(t: Long) {
+        if (mode == Mode.STROKE && !strokeStraight && lastSigT >= 0 && t - lastSigT > 550L) hold()
+    }
+
+    /** Segurou parado no fim do traço: vira linha reta do começo até ali (encaixa no eixo e nos pontos perto). */
+    fun hold() {
+        if (mode != Mode.STROKE || strokeStraight) return
+        val o = st.sheet.obj(createdId) as? StrokeObj ?: return
+        if (o.kind == StrokeKind.HIGHLIGHTER && o.pts.size < 2) return
+        val photos = st.sheet.photos()
+        val pts = o.pts.map { Geo.toSheet(photos, o.photoId, it) }
+        if (pts.size < 3) return
+        val len = pts.zipWithNext().sumOf { (a, b) -> hypot(b.x - a.x, b.y - a.y).toDouble() }.toFloat()
+        if (len * s.view.scale < 30f * density) return
+        strokeStraight = true
+        val a0 = snapPoint(pts.first(), o.id) ?: pts.first()
+        val e0 = snapPoint(pts.last(), o.id) ?: Geo.snapAxis(a0, pts.last())
+        st.live(replace(o.copy(pts = listOf(Geo.fromSheet(photos, o.photoId, a0), Geo.fromSheet(photos, o.photoId, e0)))))
+    }
+
     private fun startStroke(p: Pt, tool: Tool) {
         val photos = st.sheet.photos()
         val photoId = Geo.photoAt(st.sheet, p)?.id
@@ -274,6 +319,9 @@ class GestureController(private val s: EditorSession, private val density: Float
         st.live(st.sheet.copy(objs = st.sheet.objs + o))
         createdId = o.id
         mode = Mode.STROKE
+        strokeStraight = false
+        lastSigT = -1L
+        lastSigScreen = s.view.toScreen(p)
     }
 
     private fun startShape(p: Pt, tool: Tool) {
@@ -309,7 +357,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         mode = Mode.SHAPE
     }
 
-    fun move(screen: Offset) {
+    fun move(screen: Offset, t: Long = -1L) {
         val p = s.view.toSheet(screen)
         if (!moved && (screen - downScreen).getDistance() > slop) moved = true
         when (mode) {
@@ -329,9 +377,21 @@ class GestureController(private val s: EditorSession, private val density: Float
                 val o = st.sheet.obj(createdId) as? StrokeObj
                 if (o != null) {
                     val photos = st.sheet.photos()
-                    val last = Geo.toSheet(photos, o.photoId, o.pts.last())
-                    if (hypot(p.x - last.x, p.y - last.y) >= 0.8f) {
-                        st.live(replace(o.copy(pts = o.pts + Geo.fromSheet(photos, o.photoId, p))))
+                    if (mode == Mode.STROKE && strokeStraight) {
+                        // reta: a ponta acompanha o dedo, encaixa no eixo e em pontos próximos
+                        val a = Geo.toSheet(photos, o.photoId, o.pts.first())
+                        val end = snapPoint(p, o.id) ?: Geo.snapAxis(a, p)
+                        st.live(replace(o.copy(pts = listOf(o.pts.first(), Geo.fromSheet(photos, o.photoId, end)))))
+                    } else {
+                        val last = Geo.toSheet(photos, o.photoId, o.pts.last())
+                        // passo mínimo bem pequeno (em pixels de tela) pra escrita fina ficar precisa em qualquer zoom
+                        if (hypot(p.x - last.x, p.y - last.y) * s.view.scale >= 0.6f) {
+                            st.live(replace(o.copy(pts = o.pts + Geo.fromSheet(photos, o.photoId, p))))
+                        }
+                        if (mode == Mode.STROKE && t >= 0) {
+                            if (lastSigT < 0 || (screen - lastSigScreen).getDistance() > 3f * density) { lastSigScreen = screen; lastSigT = t }
+                            else if (t - lastSigT > 550L) hold()
+                        }
                     }
                 }
             }

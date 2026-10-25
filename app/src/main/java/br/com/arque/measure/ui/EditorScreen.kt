@@ -250,7 +250,8 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                     var last = downPos
                     try {
                         do {
-                            val ev = awaitPointerEvent()
+                            // parado com a caneta encostada: depois de um tempo o traço vira reta
+                            val ev = withTimeoutOrNull(600L) { awaitPointerEvent() } ?: run { controller.hold(); awaitPointerEvent() }
                             // caneta encostou depois da mão: descarta o toque da mão e passa a seguir a caneta
                             if (!pen) {
                                 val sty = ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.type == PointerType.Stylus }
@@ -278,9 +279,11 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                                 upT = ch.uptimeMillis
                                 if ((ch.position - downPos).getDistance() > 24f * density) moved = true
                                 if (ch.positionChanged()) {
-                                    controller.move(ch.position)
+                                    // pontos intermediários que o Android junta num quadro só: escrita da caneta fica precisa
+                                    ch.historical.forEach { h -> controller.move(h.position, h.uptimeMillis) }
+                                    controller.move(ch.position, ch.uptimeMillis)
                                     ch.consume()
-                                }
+                                } else controller.still(ch.uptimeMillis)
                             } else if (!pen && pressed.isEmpty()) {
                                 ev.changes.firstOrNull { it.id == downId }?.let { upT = it.uptimeMillis }
                             }

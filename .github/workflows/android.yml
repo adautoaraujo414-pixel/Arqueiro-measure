@@ -84,9 +84,18 @@ jobs:
         run: |
           TAG="apk-${GITHUB_RUN_NUMBER}"
           cp app/build/outputs/apk/site/debug/*.apk ArqueMeasure-debug.apk
-          gh release create "$TAG" ArqueMeasure-debug.apk --target "$GITHUB_SHA" --prerelease \
-            --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
-            --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
+          # reexecução: a release já existe -> mantém tudo como está (não apaga nem sobrescreve)
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qx "ArqueMeasure-debug.apk"; then
+              echo "::notice title=Release::$TAG já tem o APK (reexecução): mantido sem alteração."
+            else
+              gh release upload "$TAG" ArqueMeasure-debug.apk
+            fi
+          else
+            gh release create "$TAG" ArqueMeasure-debug.apk --target "$GITHUB_SHA" --prerelease \
+              --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
+              --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
+          fi
 
       - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
         if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -111,11 +120,25 @@ jobs:
           rm -f "$RUNNER_TEMP/upload.jks"
           AAB=$(ls app/build/outputs/bundle/playRelease/*.aab | head -n1)
           cp "$AAB" Arquemestre-GooglePlay.aab
-          keytool -printcert -jarfile Arquemestre-GooglePlay.aab | grep -E "SHA1:|SHA256:"
+          # confere a assinatura (só dados públicos do certificado aparecem no log)
+          jarsigner -verify Arquemestre-GooglePlay.aab | tail -n 2
+          jarsigner -verify Arquemestre-GooglePlay.aab | grep -q "jar verified" || { echo "::error::AAB sem assinatura válida"; exit 1; }
+          FP=$(keytool -printcert -jarfile Arquemestre-GooglePlay.aab | grep -E "SHA256:" | head -n1 | sed 's/.*SHA256: //')
+          OWNER=$(keytool -printcert -jarfile Arquemestre-GooglePlay.aab | grep -m1 "Owner:" | sed 's/.*Owner: //')
+          SUM=$(sha256sum Arquemestre-GooglePlay.aab | cut -d' ' -f1)
+          echo "Certificado: $OWNER"; echo "SHA-256 do certificado: $FP"; echo "SHA-256 do arquivo: $SUM"
+          echo "::notice title=AAB assinado::Certificado $OWNER · SHA-256 $FP"
           TAG="apk-${GITHUB_RUN_NUMBER}"
-          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --title "Arquemestre Google Play #${GITHUB_RUN_NUMBER}" --notes "AAB assinado para enviar ao Play Console."
-          gh release upload "$TAG" Arquemestre-GooglePlay.aab --clobber
-          echo "::notice title=Google Play::AAB assinado publicado em $TAG"
+          NOTE="AAB assinado com a chave de upload (certificado SHA-256 $FP). Arquivo SHA-256 $SUM."
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --target "$GITHUB_SHA" --prerelease --title "Arquemestre Google Play #${GITHUB_RUN_NUMBER}" --notes "$NOTE"
+          NAME=Arquemestre-GooglePlay.aab
+          # reexecução: não sobrescreve o AAB que já está publicado; o novo sai com o número da tentativa
+          if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qx "$NAME"; then
+            NAME="Arquemestre-GooglePlay-tentativa-${GITHUB_RUN_ATTEMPT}.aab"
+            cp Arquemestre-GooglePlay.aab "$NAME"
+          fi
+          gh release upload "$TAG" "$NAME"
+          echo "::notice title=Google Play::$NAME publicado em $TAG"
 
       - name: Resumo dos erros
         if: failure()

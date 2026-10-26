@@ -85,6 +85,11 @@ object Json {
                 .put("color", o.color).put("width", o.width.toDouble()).put("fill", o.fill)
             is TextObj -> j.put("type", "text").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("at", ptToJson(o.at)).put("text", o.text).put("size", o.size.toDouble()).put("color", o.color)
+            is br.com.arque.measure.model.DoorObj -> j.put("type", "door").put("photoId", o.photoId ?: JSONObject.NULL)
+                .put("a", ptToJson(o.a)).put("b", ptToJson(o.b)).put("hinge", o.hinge).put("side", o.side).put("slide", o.slide)
+                .put("valueMm", o.valueMm ?: JSONObject.NULL).put("source", o.source?.name ?: JSONObject.NULL)
+                .put("history", JSONArray(o.history.map(::readingToJson)))
+                .put("color", o.color).put("width", o.width.toDouble())
             is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
                 .put("cab", cabToJson(o.cab)).also { jj ->
                     o.wall?.let { jj.put("wall", wallToJson(it)) }
@@ -220,6 +225,15 @@ object Json {
                 labelAlpha = j.optDouble("labelAlpha", 1.0).toFloat(),
                 labelIntensity = j.optDouble("labelIntensity", 1.0).toFloat(),
                 locked = locked,
+            )
+            "door" -> br.com.arque.measure.model.DoorObj(
+                id = id, photoId = j.optStringOrNull("photoId"),
+                a = ptFromJson(j.getJSONArray("a")), b = ptFromJson(j.getJSONArray("b")),
+                hinge = j.optInt("hinge", 0), side = j.optInt("side", 1), slide = j.optBoolean("slide", false),
+                valueMm = j.optDoubleOrNull("valueMm"),
+                source = j.optStringOrNull("source")?.let { MeasureSource.valueOf(it) },
+                history = j.optJSONArray("history")?.mapObjects(::readingFromJson) ?: emptyList(),
+                color = j.optInt("color", 0xFFE53935.toInt()), width = j.optDouble("width", 2.1).toFloat(), locked = locked,
             )
             "dim" -> DimObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

@@ -99,7 +99,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         }
         when (tool) {
             Tool.NAVIGATE -> mode = Mode.PAN
-            Tool.SELECT, Tool.DIM -> downSelectOrDim(screen, p, tool)
+            Tool.SELECT, Tool.DIM, Tool.DOOR -> downSelectOrDim(screen, p, tool)
             Tool.ROOM -> downRoom(screen, p)
             Tool.LASSO -> downLasso(p)
             Tool.PEN, Tool.PENCIL, Tool.HIGHLIGHTER -> startStroke(p, tool)
@@ -132,7 +132,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         }
         val prevSelected = st.selectedId
         val hit = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit))
-        if (hit != null && (tool == Tool.SELECT || hit is DimObj)) {
+        if (hit != null && (tool == Tool.SELECT || (tool == Tool.DIM && hit is DimObj) || (tool == Tool.DOOR && hit is br.com.arque.measure.model.DoorObj))) {
             if (hit is TextObj && prevSelected == hit.id) tapTextId = hit.id
             if (hit is DimObj) tapDimId = hit.id
             st.select(hit.id)
@@ -150,6 +150,8 @@ class GestureController(private val s: EditorSession, private val density: Float
         if (tool == Tool.SELECT) {
             st.select(null)
             mode = Mode.PAN
+        } else if (tool == Tool.DOOR) {
+            startDoor(p)
         } else {
             startShapeLike(p, dim = true, kind = null)
         }
@@ -343,6 +345,24 @@ class GestureController(private val s: EditorSession, private val density: Float
         startShapeLike(p, dim = false, kind = kind)
     }
 
+    /** Linha onde a porta está sendo marcada (a porta fica só num trecho dela). */
+    private var doorHost: Pair<Pt, Pt>? = null
+
+    /** Ferramenta Porta: arrastar EM CIMA de uma linha marca só aquele trecho como porta. */
+    private fun startDoor(p: Pt) {
+        val host = Geo.nearestLine(st.sheet, p, tol() * 1.6f)
+        doorHost = host
+        val start = host?.let { Geo.projectOnSegment(p, it.first, it.second) } ?: p
+        val o = br.com.arque.measure.model.DoorObj(a = start, b = start, width = maxOf(1.6f, s.width))
+        st.live(st.sheet.copy(objs = st.sheet.objs + o))
+        createdId = o.id
+        mode = Mode.SHAPE
+    }
+
+    /** Ponto da porta: em cima da linha de apoio (se houver), senão alinhado na horizontal/vertical. */
+    private fun doorTarget(anchor: Pt, p: Pt, host: Pair<Pt, Pt>?): Pt =
+        if (host != null) Geo.projectOnSegment(p, host.first, host.second) else Geo.snapAxis(anchor, p)
+
     private fun startShapeLike(p: Pt, dim: Boolean, kind: ShapeKind?) {
         val photos = st.sheet.photos()
         val photoId = Geo.photoAt(st.sheet, p)?.id
@@ -400,9 +420,9 @@ class GestureController(private val s: EditorSession, private val density: Float
                 if (o is Ann) {
                     val anchor = Geo.annPoints(st.sheet.photos(), o)[0]
                     val straight = o is DimObj || (o is ShapeObj && o.kind in straightKinds)
-                    val target = if (straight) Geo.snapAxis(anchor, p) else p
+                    val target = if (o is br.com.arque.measure.model.DoorObj) doorTarget(anchor, p, doorHost) else if (straight) Geo.snapAxis(anchor, p) else p
                     st.live(replace(Geo.withEndpoint(st.sheet, o, true, target)))
-                    if (o is DimObj || (o is ShapeObj && (o.kind == ShapeKind.ARROW || o.kind == ShapeKind.DARROW))) s.loupe = screen
+                    if (o is DimObj || o is br.com.arque.measure.model.DoorObj || (o is ShapeObj && (o.kind == ShapeKind.ARROW || o.kind == ShapeKind.DARROW))) s.loupe = screen
                 }
             }
             Mode.ERASE -> erase(p)
@@ -421,7 +441,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val sh = st.sheet
         val r = s.eraserSize * density / s.view.scale
         val onlyHl = s.eraserOnlyHighlighter
-        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
+        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is br.com.arque.measure.model.DoorObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
             (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
         if (s.eraserMode == EraserMode.PIXEL) {
             val photos = sh.photos()
@@ -461,7 +481,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         val p = s.view.toSheet(screen)
         when (mode) {
             Mode.PAN -> { s.settle() }
-            Mode.SHAPE -> if (!moved) {
+            Mode.SHAPE -> if (!moved || (st.sheet.obj(createdId) as? br.com.arque.measure.model.DoorObj)?.let { d -> hypot(d.b.x - d.a.x, d.b.y - d.a.y) < 6f } == true) {
                 st.cancelGesture()
             } else {
                 // seta livre: o comprimento ao soltar vira a referência do tamanho do quadradinho
@@ -485,7 +505,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 val onlyHl = s.eraserOnlyHighlighter
                 val ids = Geo.lassoPick(st.sheet, s.lasso).filter { id ->
                     val o = st.sheet.obj(id)
-                    o is Ann && o !is DimObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
+                    o is Ann && o !is DimObj && o !is br.com.arque.measure.model.DoorObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
                 }.toSet()
                 s.lasso = emptyList()
                 st.deleteIds(ids)
@@ -549,7 +569,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 Geo.corners(o).forEachIndexed { i, c -> if (near(c)) return H.CORNER to i }
                 null
             }
-            is DimObj, is ShapeObj -> {
+            is DimObj, is ShapeObj, is br.com.arque.measure.model.DoorObj -> {
                 val pts = Geo.annPoints(photos, o as Ann)
                 if (near(pts[1])) H.B to 0 else if (near(pts[0])) H.A to 0 else null
             }
@@ -586,11 +606,15 @@ class GestureController(private val s: EditorSession, private val density: Float
                     st.live(replace(Geo.resizeFromCorner(o, handleIdx, p, maxSide)))
                 }
             }
-            is DimObj, is ShapeObj -> {
+            is DimObj, is ShapeObj, is br.com.arque.measure.model.DoorObj -> {
                 val pts = Geo.annPoints(st.sheet.photos(), o as Ann)
                 val other = if (handle == H.B) pts[0] else pts[1]
                 val straight = o is DimObj || (o is ShapeObj && o.kind in straightKinds)
-                val target = if (straight) Geo.snapAxis(other, p) else p
+                val target = if (o is br.com.arque.measure.model.DoorObj) {
+                    // a ponta da porta corre em cima da mesma linha da outra ponta
+                    val host = Geo.nearestLine(st.sheet, other, 2f, o.id)
+                    doorTarget(other, p, host)
+                } else if (straight) Geo.snapAxis(other, p) else p
                 st.live(replace(Geo.withEndpoint(st.sheet, o, handle == H.B, target)))
                 s.loupe = s.view.toScreen(target)
             }

@@ -91,6 +91,17 @@ object Export {
                     ).append('\n')
                 }
             }
+            sheet.objs.filterIsInstance<br.com.arque.measure.model.DoorObj>().forEachIndexed { i, d ->
+                sb.append(
+                    listOf(
+                        csv(note.name), (pi + 1).toString(), "porta-${i + 1}",
+                        d.valueMm?.let { "%.1f".format(Locale.US, it) } ?: "",
+                        csv(br.com.arque.measure.logic.Geo.doorLabel(d, note.unit) + (if (d.slide) " (de correr)" else "")),
+                        when (d.source) { MeasureSource.BLUETOOTH -> "bluetooth"; MeasureSource.MANUAL -> "manual"; null -> "" },
+                        d.history.lastOrNull()?.let { h -> fmt.format(Date(h.timeMs)) } ?: "",
+                    ).joinToString(";"),
+                ).append('\n')
+            }
             sheet.objs.filterIsInstance<br.com.arque.measure.model.RoomObj>().forEach { o ->
                 o.segs.forEachIndexed { k, sg ->
                     sb.append(

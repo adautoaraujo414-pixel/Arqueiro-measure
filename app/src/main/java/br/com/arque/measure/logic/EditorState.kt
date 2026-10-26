@@ -96,7 +96,7 @@ class EditorState(
 
     /** Limpa a folha: traços, formas e textos (fotos, cotas e cômodos ficam). Dá para desfazer. */
     fun clearPageDrawings() {
-        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is RoomObj || it is CabObj || it is br.com.arque.measure.model.WallObj || it.locked }
+        val keep = sheet.objs.filter { it is PhotoObj || it is DimObj || it is br.com.arque.measure.model.DoorObj || it is RoomObj || it is CabObj || it is br.com.arque.measure.model.WallObj || it.locked }
         if (keep.size == sheet.objs.size) return
         commit(sheet.copy(objs = keep))
         fixSelection()
@@ -619,6 +619,7 @@ class EditorState(
                     is StrokeObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is ShapeObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is DimObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
+                    is br.com.arque.measure.model.DoorObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is RoomObj -> it.copy(color = color ?: it.color, width = width ?: it.width)
                     is CabObj -> it
                     is br.com.arque.measure.model.WallObj -> it
@@ -730,7 +731,19 @@ class EditorState(
 
     // ---- medidas (única origem: trena Bosch) ----
 
+    /** Sentido da porta marcada na linha: dobradiça (0 início / 1 fim), lado que abre (1 / -1) e se é de correr. */
+    fun setDoor(id: String, hinge: Int? = null, side: Int? = null, slide: Boolean? = null) {
+        val d = sheet.obj(id) as? br.com.arque.measure.model.DoorObj ?: return
+        if (d.locked) return
+        commit(mapObj(id) { d.copy(hinge = hinge ?: d.hinge, side = side ?: d.side, slide = slide ?: d.slide) })
+    }
+
     fun clearValue(id: String) {
+        (sheet.obj(id) as? br.com.arque.measure.model.DoorObj)?.let { d ->
+            if (d.locked) return
+            commit(mapObj(id) { d.copy(valueMm = null, source = null) })
+            return
+        }
         val room = sheet.obj(id) as? RoomObj
         if (room != null) {
             val k = selectedSeg
@@ -766,6 +779,11 @@ class EditorState(
                 if (seg >= 0) selectSeg(id, seg) else select(id)
             }
             return room.id
+        }
+        (selected as? br.com.arque.measure.model.DoorObj)?.let { dr ->
+            if (dr.locked) return null
+            commit(mapObj(dr.id) { dr.copy(valueMm = r.mm, source = r.source, history = dr.history + r) })
+            return dr.id
         }
         val d = selected as? DimObj ?: return null
         if (d.locked) return null

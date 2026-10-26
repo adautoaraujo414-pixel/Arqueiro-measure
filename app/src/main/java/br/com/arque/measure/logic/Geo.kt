@@ -99,6 +99,7 @@ object Geo {
         is StrokeObj -> a.pts.map { toSheet(photos, a.photoId, it) }
         is ShapeObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is DimObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
+        is br.com.arque.measure.model.DoorObj -> listOf(toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b))
         is TextObj -> listOf(toSheet(photos, a.photoId, a.at))
         is RoomObj -> a.pts.map { toSheet(photos, a.photoId, it) }
         is CabObj -> a.origin().let { o -> listOf(o, Pt(o.x + a.widthUnits(), o.y + a.heightUnits())) }
@@ -127,6 +128,7 @@ object Geo {
             is StrokeObj -> ann.copy(pts = ann.pts.map(::mv))
             is ShapeObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is DimObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
+            is br.com.arque.measure.model.DoorObj -> ann.copy(a = mv(ann.a), b = mv(ann.b))
             is TextObj -> ann.copy(at = mv(ann.at))
             is RoomObj -> ann.copy(pts = ann.pts.map(::mv))
             is CabObj -> ann.slide(dx, dy)
@@ -141,6 +143,7 @@ object Geo {
         return when (ann) {
             is ShapeObj -> if (endB) ann.copy(b = local) else ann.copy(a = local)
             is DimObj -> if (endB) ann.copy(b = local) else ann.copy(a = local)
+            is br.com.arque.measure.model.DoorObj -> if (endB) ann.copy(b = local) else ann.copy(a = local)
             else -> o
         }
     }
@@ -153,6 +156,7 @@ object Geo {
             is StrokeObj -> a.copy(pts = a.pts.map(::conv)).withPhotoId(newPhotoId)
             is ShapeObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
             is DimObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
+            is br.com.arque.measure.model.DoorObj -> a.copy(a = conv(a.a), b = conv(a.b)).withPhotoId(newPhotoId)
             is TextObj -> a.copy(at = conv(a.at)).withPhotoId(newPhotoId)
             is RoomObj -> a.copy(pts = a.pts.map(::conv)).withPhotoId(newPhotoId)
             is CabObj -> a
@@ -301,6 +305,11 @@ object Geo {
                 }
             }
             is TextObj -> textBox(o, annPoints(photos, o)[0]).contains(s, tol)
+            is br.com.arque.measure.model.DoorObj -> {
+                val (a, b) = annPoints(photos, o)
+                distToSegment(s, a, b) <= tol + o.width * 1.5f ||
+                    dimLabelBox(a, b, doorLabel(o, unit)).contains(s, tol / 2f)
+            }
             is RoomObj -> hitSeg(sheet, o, s, tol, unit) >= 0
             is CabObj -> {
                 val p = annPoints(photos, o)
@@ -318,6 +327,59 @@ object Geo {
                     (o.valueMm != null && dimLabelBox(a, b, Units.label(o, unit), labelScale(o, photos)).contains(s, tol / 2f))
             }
         }
+    }
+
+    /** Texto do quadradinho da porta: "Porta" ou "Porta 0,820 m". */
+    fun doorLabel(d: br.com.arque.measure.model.DoorObj, unit: LengthUnit): String =
+        "Porta" + (d.valueMm?.let { " " + Units.format(it, unit) } ?: "")
+
+    /**
+     * Trecho de linha mais perto de [p] (paredes de cômodo, linhas/setas e traços), para a porta ficar
+     * em cima da linha. Devolve (início, fim) em coordenadas da folha, ou null se nada estiver a [tol].
+     */
+    fun nearestLine(sheet: Sheet, p: Pt, tol: Float, skipId: String? = null): Pair<Pt, Pt>? {
+        val photos = sheet.photos()
+        var best: Pair<Pt, Pt>? = null
+        var bd = tol
+        fun cand(a: Pt, b: Pt) {
+            if (hypot(b.x - a.x, b.y - a.y) < 4f) return
+            val d = distToSegment(p, a, b)
+            if (d <= bd) { bd = d; best = a to b }
+        }
+        for (o in sheet.objs) {
+            if (o.id == skipId) continue
+            when (o) {
+                is RoomObj -> { val q = annPoints(photos, o); for (k in 0 until o.segCount()) cand(q[k], q[(k + 1) % q.size]) }
+                is ShapeObj -> {
+                    val q = annPoints(photos, o)
+                    when (o.kind) {
+                        ShapeKind.LINE, ShapeKind.DASHED, ShapeKind.ARROW, ShapeKind.DARROW -> cand(q[0], q[1])
+                        ShapeKind.RECT, ShapeKind.RRECT -> {
+                            val l = min(q[0].x, q[1].x); val r = max(q[0].x, q[1].x); val t = min(q[0].y, q[1].y); val bt = max(q[0].y, q[1].y)
+                            cand(Pt(l, t), Pt(r, t)); cand(Pt(r, t), Pt(r, bt)); cand(Pt(r, bt), Pt(l, bt)); cand(Pt(l, bt), Pt(l, t))
+                        }
+                        ShapeKind.ELBOW, ShapeKind.RTRI, ShapeKind.DIAMOND, ShapeKind.TRAP -> {
+                            val c = polyPoints(o.kind, q[0], q[1])!!
+                            val ring = if (o.kind == ShapeKind.ELBOW) c else c + c.first()
+                            ring.zipWithNext().forEach { (a, b) -> cand(a, b) }
+                        }
+                        else -> {}
+                    }
+                }
+                is StrokeObj -> annPoints(photos, o).zipWithNext().forEach { (a, b) -> cand(a, b) }
+                else -> {}
+            }
+        }
+        return best
+    }
+
+    /** Projeta [p] na reta [a]-[b], sem passar das pontas. */
+    fun projectOnSegment(p: Pt, a: Pt, b: Pt): Pt {
+        val dx = b.x - a.x; val dy = b.y - a.y
+        val l2 = dx * dx + dy * dy
+        if (l2 < 1e-6f) return a
+        val t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).coerceIn(0f, 1f)
+        return Pt(a.x + dx * t, a.y + dy * t)
     }
 
     /** Extremidades do segmento [k] do cômodo, em coordenadas da folha. */

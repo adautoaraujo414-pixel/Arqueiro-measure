@@ -140,6 +140,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             is ShapeObj -> drawShape(c, o, photos)
             is TextObj -> drawText(c, o, photos)
             is DimObj -> drawDim(c, o, photos, unit)
+            is br.com.arque.measure.model.DoorObj -> drawDoor(c, o, photos, unit)
             is RoomObj -> drawRoom(c, o, photos, unit)
             is CabObj -> drawCab(c, o)
             is br.com.arque.measure.model.WallObj -> Unit
@@ -320,6 +321,71 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT_BOLD
         c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * k * 0.35f, textPaint)
+    }
+
+    /**
+     * Porta marcada num trecho da linha: linha vermelha grossa por cima do vão, quadradinho "Porta"
+     * (com a largura, quando medida) e o sentido de abertura (arco de 90°) ou a seta da porta de correr.
+     */
+    private fun drawDoor(c: Canvas, o: br.com.arque.measure.model.DoorObj, photos: Map<String, PhotoObj>, unit: LengthUnit) {
+        val (a, b) = Geo.annPoints(photos, o)
+        val w = o.width
+        val len = hypot((b.x - a.x).toDouble(), (b.y - a.y).toDouble()).toFloat()
+        strokePaint.pathEffect = null
+        strokePaint.color = o.color
+        strokePaint.strokeCap = Paint.Cap.BUTT
+        strokePaint.strokeWidth = w * 2.6f
+        c.drawLine(a.x, a.y, b.x, b.y, strokePaint)
+        // batentes nas pontas
+        if (len > 1f) {
+            val px = -(b.y - a.y) / len * w * 2.4f
+            val py = (b.x - a.x) / len * w * 2.4f
+            strokePaint.strokeWidth = w * 1.2f
+            c.drawLine(a.x - px, a.y - py, a.x + px, a.y + py, strokePaint)
+            c.drawLine(b.x - px, b.y - py, b.x + px, b.y + py, strokePaint)
+            val h = if (o.hinge == 1) b else a
+            val e = if (o.hinge == 1) a else b
+            val ux = (e.x - h.x) / len
+            val uy = (e.y - h.y) / len
+            val sd = if (o.side < 0) -1f else 1f
+            val nx = -uy * sd
+            val ny = ux * sd
+            if (o.slide) {
+                val off = w * 3f
+                strokePaint.strokeWidth = w * 1.6f
+                c.drawLine(h.x + nx * off, h.y + ny * off, h.x + ux * len * 0.62f + nx * off, h.y + uy * len * 0.62f + ny * off, strokePaint)
+                strokePaint.strokeWidth = w * 0.8f
+                val ax0 = h.x + ux * len * 0.25f + nx * off * 2.4f; val ay0 = h.y + uy * len * 0.25f + ny * off * 2.4f
+                val ax1 = h.x + ux * len * 0.75f + nx * off * 2.4f; val ay1 = h.y + uy * len * 0.75f + ny * off * 2.4f
+                c.drawLine(ax0, ay0, ax1, ay1, strokePaint)
+                val hx = w * 2.2f
+                c.drawLine(ax1, ay1, ax1 - ux * hx + nx * hx * 0.6f, ay1 - uy * hx + ny * hx * 0.6f, strokePaint)
+                c.drawLine(ax1, ay1, ax1 - ux * hx - nx * hx * 0.6f, ay1 - uy * hx - ny * hx * 0.6f, strokePaint)
+            } else {
+                strokePaint.strokeWidth = w * 1.1f
+                c.drawLine(h.x, h.y, h.x + nx * len, h.y + ny * len, strokePaint)
+                strokePaint.strokeWidth = w * 0.7f
+                strokePaint.pathEffect = DashPathEffect(floatArrayOf(w * 2.5f, w * 2f), 0f)
+                val ang = Math.toDegrees(kotlin.math.atan2(uy.toDouble(), ux.toDouble())).toFloat()
+                rect.set(h.x - len, h.y - len, h.x + len, h.y + len)
+                c.drawArc(rect, ang, 90f * sd, false, strokePaint)
+                strokePaint.pathEffect = null
+            }
+        }
+        // quadradinho "Porta" (fundo vermelho claro, texto vermelho)
+        val label = Geo.doorLabel(o, unit)
+        val box = Geo.dimLabelBox(a, b, label)
+        rect.set(box.l, box.t, box.r, box.b)
+        fillPaint.color = 0xF2FFFFFF.toInt()
+        c.drawRoundRect(rect, 3f, 3f, fillPaint)
+        strokePaint.color = o.color; strokePaint.strokeWidth = 1.4f
+        c.drawRoundRect(rect, 3f, 3f, strokePaint)
+        textPaint.color = o.color
+        textPaint.textSize = Geo.DIM_TEXT_SIZE
+        textPaint.textAlign = Paint.Align.CENTER
+        textPaint.typeface = Typeface.DEFAULT_BOLD
+        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * 0.35f, textPaint)
+        strokePaint.strokeCap = Paint.Cap.ROUND
     }
 
     /** Móvel: vista frontal na escala da folha, com largura e altura. */
@@ -761,10 +827,10 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                     handle(rh)
                 }
             }
-            is DimObj, is ShapeObj -> {
+            is DimObj, is ShapeObj, is br.com.arque.measure.model.DoorObj -> {
                 val pts = Geo.annPoints(photos, o as br.com.arque.measure.model.Ann)
                                 if (!o.locked) {
-                    val ring = if (o is DimObj) o.color else (o as ShapeObj).color
+                    val ring = when (o) { is DimObj -> o.color; is br.com.arque.measure.model.DoorObj -> o.color; else -> (o as ShapeObj).color }
                     pts.forEach { p ->
                         fillPaint.color = 0xFFFFFFFF.toInt()
                         c.drawCircle(p.x, p.y, 7f / viewScale, fillPaint)

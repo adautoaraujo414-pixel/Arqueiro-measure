@@ -154,7 +154,7 @@ private fun Tool.icon(): ImageVector = when (this) {
 
 private val shapeTools = listOf(
     Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DARROW, Tool.CURVE,
-    Tool.ELBOW, Tool.DIM, Tool.ROOM, Tool.RECT, Tool.RRECT,
+    Tool.ELBOW, Tool.DIM, Tool.DOOR, Tool.ROOM, Tool.RECT, Tool.RRECT,
     Tool.ELLIPSE, Tool.TRIANGLE, Tool.RTRI, Tool.DIAMOND, Tool.TRAP,
 )
 
@@ -632,6 +632,11 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                             }
                         }
                         ToolBtn(Tool.TEXT, session)
+                        // porta num trecho da linha (atalho; também está no menu de formas)
+                        IconButton(
+                            onClick = { session.chooseTool(Tool.DOOR) },
+                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.tool == Tool.DOOR) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
+                        ) { ShapeGlyph(Tool.DOOR, if (session.tool == Tool.DOOR) Ui.accent else Ui.text, 22.dp) }
                         Box {
                             val inShapes = session.tool in shapeTools
                             Box(Modifier.clip(CircleShape).background(if (inShapes) Ui.accent.copy(alpha = 0.3f) else Color.Transparent)) {
@@ -744,7 +749,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(10.dp).widthIn(max = 360.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val hasPanel = selected is DimObj || selected is br.com.arque.measure.model.RoomObj
+                val hasPanel = selected is DimObj || selected is br.com.arque.measure.model.DoorObj || selected is br.com.arque.measure.model.RoomObj
                 var panelMin by remember(selected?.id) { mutableStateOf(false) }
                 if (hasPanel) {
                     // minimizado: a medida da trena continua entrando no segmento selecionado, só some o painel
@@ -757,6 +762,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 }
                 if (!panelMin) {
                     (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.DoorObj)?.let { DoorPanel(vm, session, it) }
                     (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
                     (selected as? br.com.arque.measure.model.WallObj)?.let { WallPanel(session, it) }
                 }
@@ -832,6 +838,13 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp, 
             Tool.ARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)) }
             Tool.DARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)); head(P(0.12f, 0.88f), P(0.88f, 0.12f)) }
             Tool.DIM -> { drawLine(tint, P(0.1f, 0.5f), P(0.9f, 0.5f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.9f, 0.5f), P(0.1f, 0.5f)); head(P(0.1f, 0.5f), P(0.9f, 0.5f)); drawLine(tint, P(0.1f, 0.25f), P(0.1f, 0.75f), sw); drawLine(tint, P(0.9f, 0.25f), P(0.9f, 0.75f), sw) }
+            Tool.DOOR -> {
+                // parede, trecho vermelho da porta e o arco de abertura
+                drawLine(tint, P(0.05f, 0.82f), P(0.95f, 0.82f), sw)
+                drawLine(Color(0xFFE53935), P(0.25f, 0.82f), P(0.75f, 0.82f), sw * 2f)
+                drawLine(Color(0xFFE53935), P(0.25f, 0.82f), P(0.25f, 0.32f), sw)
+                drawArc(Color(0xFFE53935), -90f, 90f, false, P(-0.25f, 0.32f), androidx.compose.ui.geometry.Size(1.0f * w, 1.0f * h), style = androidx.compose.ui.graphics.drawscope.Stroke(width = sw * 0.7f))
+            }
             Tool.CURVE -> {
                 val path = androidx.compose.ui.graphics.Path()
                 path.moveTo(0.12f * w, 0.85f * h); path.quadraticBezierTo(0.15f * w, 0.1f * h, 0.88f * w, 0.15f * h)
@@ -1198,6 +1211,50 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
                 TextButton(onClick = { st.applyDimLabelToAll(d.id) }, enabled = !d.locked) { Text("Aplicar a todas as cotas") }
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir", color = Color(0xFFD32F2F)) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Porta marcada na linha
+
+@Composable
+private fun DoorPanel(vm: AppViewModel, session: EditorSession, d: br.com.arque.measure.model.DoorObj) {
+    val st = session.state
+    val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
+    val dark = Color(0xFF111111)
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("🚪 Porta na linha", color = Color(0xFFE53935), fontSize = 16.sp)
+            Text("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha.", color = Color(0xFF555555), fontSize = 12.sp)
+            Text("Sentido de abertura", color = dark, fontSize = 13.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                OutlinedButton(onClick = { st.setDoor(d.id, hinge = 1 - d.hinge) }, enabled = !d.locked) { Text("↔ Dobradiça do outro lado") }
+                OutlinedButton(onClick = { st.setDoor(d.id, side = -d.side) }, enabled = !d.locked) { Text("⇅ Abre pro outro lado") }
+                OutlinedButton(onClick = { st.setDoor(d.id, slide = !d.slide) }, enabled = !d.locked) { Text(if (d.slide) "De correr ✓" else "De abrir ✓") }
+            }
+            Text("Largura do vão", color = dark, fontSize = 13.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
+                TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
+            }
+            Text(
+                when {
+                    d.valueMm != null && connected -> "Meça de novo para substituir"
+                    d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
+                    d.valueMm != null -> "Medido pela trena Bosch"
+                    !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
+                    else -> "Aguardando a medida da trena…"
+                },
+                color = Color(0xFF555555), fontSize = 13.sp,
+            )
+            Row {
+                if (d.valueMm != null) TextButton(onClick = { st.clearValue(d.id) }) { Text("Limpar medida") }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir porta", color = Color(0xFFD32F2F)) }
             }
         }
     }

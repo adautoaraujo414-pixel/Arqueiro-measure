@@ -111,6 +111,27 @@ data class DimObj(
     override val locked: Boolean = false,
 ) : Ann()
 
+/**
+ * Porta marcada num TRECHO de uma linha (parede, linha ou cômodo): linha vermelha por cima, identificada
+ * como "Porta", com o sentido de abertura. [a]→[b] é o vão; [hinge] 0 = dobradiça em [a], 1 = em [b];
+ * [side] 1/-1 = lado para onde abre; [slide] = porta de correr. [valueMm] = largura medida (trena ou teclado).
+ */
+data class DoorObj(
+    override val id: String = newId(),
+    override val photoId: String? = null,
+    val a: Pt,
+    val b: Pt,
+    val hinge: Int = 0,
+    val side: Int = 1,
+    val slide: Boolean = false,
+    val valueMm: Double? = null,
+    val source: MeasureSource? = null,
+    val history: List<Reading> = emptyList(),
+    val color: Int = 0xFFE53935.toInt(),
+    val width: Float = 2.1f,
+    override val locked: Boolean = false,
+) : Ann()
+
 /** Modelos de folha. */
 enum class Template(val label: String) {
     ARAUJO("Arquemestre croqui"),
@@ -196,7 +217,7 @@ data class Note(
     val unit: LengthUnit = LengthUnit.M,
     val pages: List<Sheet> = listOf(Sheet()),
 ) {
-    fun dimCount(): Int = pages.sumOf { p -> p.objs.sumOf { o -> when (o) { is DimObj -> 1; is RoomObj -> o.segs.size; else -> 0 } } }
+    fun dimCount(): Int = pages.sumOf { p -> p.objs.sumOf { o -> when (o) { is DimObj -> 1; is DoorObj -> 1; is RoomObj -> o.segs.size; else -> 0 } } }
     fun meta() = NoteMeta(id, name, folderId, createdMs, pinned, locked, trash, pages.size, dimCount())
 }
 
@@ -225,6 +246,7 @@ fun Obj.withLocked(v: Boolean): Obj = when (this) {
     is ShapeObj -> copy(locked = v)
     is TextObj -> copy(locked = v)
     is DimObj -> copy(locked = v)
+    is DoorObj -> copy(locked = v)
     is RoomObj -> copy(locked = v)
     is CabObj -> copy(locked = v)
     is WallObj -> copy(locked = v)
@@ -236,6 +258,7 @@ fun Obj.withId(newId: String): Obj = when (this) {
     is ShapeObj -> copy(id = newId)
     is TextObj -> copy(id = newId)
     is DimObj -> copy(id = newId)
+    is DoorObj -> copy(id = newId)
     is RoomObj -> copy(id = newId)
     is CabObj -> copy(id = newId)
     is WallObj -> copy(id = newId)
@@ -246,6 +269,7 @@ fun Ann.withPhotoId(pid: String?): Ann = when (this) {
     is ShapeObj -> copy(photoId = pid)
     is TextObj -> copy(photoId = pid)
     is DimObj -> copy(photoId = pid)
+    is DoorObj -> copy(photoId = pid)
     is RoomObj -> copy(photoId = pid)
     is CabObj -> copy(photoId = pid)
     is WallObj -> copy(photoId = pid)

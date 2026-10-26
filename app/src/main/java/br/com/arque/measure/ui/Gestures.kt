@@ -109,6 +109,7 @@ class GestureController(private val s: EditorSession, private val density: Float
             } else {
                 mode = Mode.ERASE
                 st.beginGesture()
+                lastErase = null
                 erase(p)
             }
             Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE,
@@ -437,9 +438,15 @@ class GestureController(private val s: EditorSession, private val density: Float
         lastSheet = p
     }
 
+    /** Último ponto onde a borracha apagou: pontos muito perto são pulados (não trava com o dedo/caneta rápido). */
+    private var lastErase: Pt? = null
+
     private fun erase(p: Pt) {
         val sh = st.sheet
         val r = s.eraserSize * density / s.view.scale
+        val le = lastErase
+        if (le != null && hypot(p.x - le.x, p.y - le.y) < r * 0.45f) return
+        lastErase = p
         val onlyHl = s.eraserOnlyHighlighter
         // apaga qualquer linha ou contorno (traço, forma, cota, porta, parede do cômodo); módulos ficam protegidos
         fun erasable(o: Obj) = o is Ann && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&

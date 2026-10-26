@@ -42,7 +42,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
-import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.Redo
@@ -140,7 +139,7 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.PEN -> Icons.Filled.Edit
     Tool.PENCIL -> Icons.Filled.Create
     Tool.HIGHLIGHTER -> Icons.Filled.Edit
-    Tool.ERASER -> Icons.AutoMirrored.Filled.Backspace
+    Tool.ERASER -> EraserIcon
     Tool.LINE -> Icons.Filled.Remove
     Tool.DASHED -> Icons.Filled.ShapeLine
     Tool.ARROW -> Icons.AutoMirrored.Filled.ArrowRightAlt
@@ -152,6 +151,18 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.TRIANGLE -> Icons.Filled.ChangeHistory
     Tool.TEXT -> Icons.Filled.TextFields
     else -> Icons.Filled.CropSquare
+}
+
+/** Borracha de verdade (bloco inclinado com a ponta), no lugar do símbolo de apagar texto. */
+val EraserIcon: androidx.compose.ui.graphics.vector.ImageVector by lazy {
+    androidx.compose.ui.graphics.vector.ImageVector.Builder("Borracha", 24.dp, 24.dp, 24f, 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(
+                "M16.24,3.56L21.19,8.5C21.97,9.29 21.97,10.55 21.19,11.34L12,20.53C10.44,22.09 7.91,22.09 6.34,20.53L2.81,17C2.03,16.21 2.03,14.95 2.81,14.16L13.41,3.56C14.2,2.78 15.46,2.78 16.24,3.56M4.22,15.58L7.76,19.11C8.54,19.9 9.8,19.9 10.59,19.11L14.12,15.58L9.17,10.63L4.22,15.58Z",
+            ).toNodes(),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
 }
 
 private val shapeTools = listOf(
@@ -627,7 +638,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                             IconButton(
                                 onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) },
                                 modifier = Modifier.size(40.dp).clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                            ) { Icon(Icons.AutoMirrored.Filled.Backspace, "Borracha", tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
+                            ) { Icon(EraserIcon, "Borracha", tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
                             DropdownMenu(expanded = eraserMenu, onDismissRequest = { eraserMenu = false }) {
                                 Column(Modifier.padding(horizontal = 14.dp).widthIn(min = 260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text("Borracha", fontSize = 15.sp)

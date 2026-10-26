@@ -110,7 +110,9 @@ class GestureController(private val s: EditorSession, private val density: Float
                 mode = Mode.ERASE
                 st.beginGesture()
                 lastErase = null
+                boxCache.clear()
                 erase(p)
+                flush()
             }
             Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.RECT, Tool.RRECT, Tool.ELLIPSE, Tool.TRIANGLE,
             Tool.DARROW, Tool.CURVE, Tool.ELBOW, Tool.RTRI, Tool.DIAMOND, Tool.TRAP -> startShape(p, tool)
@@ -440,63 +442,108 @@ class GestureController(private val s: EditorSession, private val density: Float
 
     /** Último ponto onde a borracha apagou: pontos muito perto são pulados (não trava com o dedo/caneta rápido). */
     private var lastErase: Pt? = null
+    /** Pontos da borracha que chegaram neste quadro: apaga todos de uma vez e redesenha uma vez só. */
+    private val erasePending = ArrayList<Pt>()
+    /** Caixa (folha) de cada objeto: o que está longe da borracha nem é olhado. */
+    private val boxCache = java.util.IdentityHashMap<Obj, FloatArray>()
 
     private fun erase(p: Pt) {
-        val sh = st.sheet
+        erasePending += p
+    }
+
+    /** Chamado no fim de cada evento de toque: aplica a borracha nos pontos juntados. */
+    fun flush() {
+        if (erasePending.isEmpty()) return
+        val pts = ArrayList(erasePending)
+        erasePending.clear()
+        eraseNow(pts)
+    }
+
+    private fun boxOf(photos: Map<String, PhotoObj>, o: Obj): FloatArray = boxCache.getOrPut(o) {
+        val ps = if (o is Ann) Geo.annPoints(photos, o) else emptyList()
+        if (ps.isEmpty()) floatArrayOf(-1e9f, -1e9f, 1e9f, 1e9f)
+        else {
+            var l = Float.MAX_VALUE; var t = Float.MAX_VALUE; var r = -Float.MAX_VALUE; var b = -Float.MAX_VALUE
+            for (q in ps) { if (q.x < l) l = q.x; if (q.y < t) t = q.y; if (q.x > r) r = q.x; if (q.y > b) b = q.y }
+            // texto e etiquetas: folga grande pra não perder o quadradinho
+            val pad = if (o is TextObj || o is DimObj || o is RoomObj || o is br.com.arque.measure.model.DoorObj) 80f else 0f
+            floatArrayOf(l - pad, t - pad, r + pad, b + pad)
+        }
+    }
+
+    private fun eraseNow(points: List<Pt>) {
         val r = s.eraserSize * density / s.view.scale
-        val le = lastErase
-        if (le != null && hypot(p.x - le.x, p.y - le.y) < r * 0.45f) return
-        lastErase = p
         val onlyHl = s.eraserOnlyHighlighter
         // apaga qualquer linha ou contorno (traço, forma, cota, porta, parede do cômodo); módulos ficam protegidos
         fun erasable(o: Obj) = o is Ann && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
             (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
-        s.eraserTrail = (s.eraserTrail + p).takeLast(40)
-        if (s.eraserMode == EraserMode.PIXEL) {
-            val photos = sh.photos()
-            var changed = false
-            val out = ArrayList<Obj>(sh.objs.size)
-            for (o in sh.objs) {
-                if (!erasable(o)) { out += o; continue }
-                if (o is StrokeObj) {
-                    val sp = Geo.annPoints(photos, o)
-                    val pieces = br.com.arque.measure.logic.Eraser.erasePieces(sp, p, r + o.width / 2f)
-                    if (pieces == null) { out += o; continue }
-                    changed = true
-                    pieces.forEachIndexed { k, pc ->
-                        val local = pc.map { Geo.fromSheet(photos, o.photoId, it) }
-                        out += if (k == 0) o.copy(pts = local) else o.copy(id = br.com.arque.measure.model.newId(), pts = local)
-                    }
-                } else if (o is ShapeObj && !o.fill) {
-                    // forma vira traço e a borracha tira só o pedaço que passou
-                    val (sa, sb) = Geo.annPoints(photos, o)
-                    val outline = br.com.arque.measure.logic.Eraser.shapeOutline(o.kind, sa, sb)
-                    val pieces = br.com.arque.measure.logic.Eraser.erasePieces(outline, p, r + o.width / 2f)
-                    if (pieces == null) { out += o; continue }
-                    changed = true
-                    pieces.forEach { pc ->
-                        out += StrokeObj(photoId = o.photoId, pts = pc.map { Geo.fromSheet(photos, o.photoId, it) }, color = o.color, width = o.width)
-                    }
-                } else if (o is RoomObj) {
-                    val rp = Geo.annPoints(photos, o)
-                    val pieces = br.com.arque.measure.logic.Eraser.roomPieces(o, rp, p, r + o.width / 2f)
-                    if (pieces == null) { out += o; continue }
-                    changed = true
-                    pieces.forEachIndexed { k, (verts, segs) ->
-                        out += o.copy(
-                            id = if (k == 0) o.id else br.com.arque.measure.model.newId(),
-                            pts = verts.map { o.pts[it] }, segs = segs.map { o.segs[it] }, closed = false,
-                        )
-                    }
-                } else if (Geo.hitObj(sh, o, p, r, st.unit)) {
-                    changed = true
-                } else out += o
-            }
-            if (changed) st.live(sh.copy(objs = out))
-            return
+        val use = ArrayList<Pt>()
+        for (p in points) {
+            val le = lastErase
+            if (le != null && hypot(p.x - le.x, p.y - le.y) < r * 0.45f) continue
+            lastErase = p
+            use += p
         }
-        val gone = sh.objs.filter { erasable(it) && it !is DimObj && it !is RoomObj && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
-        if (gone.isNotEmpty()) st.live(sh.copy(objs = sh.objs.filter { it.id !in gone }))
+        if (use.isEmpty()) return
+        s.eraserTrail = (s.eraserTrail + use).takeLast(40)
+        val sh0 = st.sheet
+        val photos = sh0.photos()
+        var objs: List<Obj> = sh0.objs
+        var changedAny = false
+        for (p in use) {
+            fun near(o: Obj, extra: Float): Boolean {
+                val bx = boxOf(photos, o); val rr = r + extra
+                return p.x >= bx[0] - rr && p.x <= bx[2] + rr && p.y >= bx[1] - rr && p.y <= bx[3] + rr
+            }
+            var changed = false
+            val out = ArrayList<Obj>(objs.size + 4)
+            val sh = sh0.copy(objs = objs)
+            if (s.eraserMode == EraserMode.PIXEL) {
+                for (o in objs) {
+                    if (!erasable(o) || !near(o, (o as? StrokeObj)?.width ?: (o as? Ann)?.let { 10f } ?: 0f)) { out += o; continue }
+                    if (o is StrokeObj) {
+                        val sp = Geo.annPoints(photos, o)
+                        val pieces = br.com.arque.measure.logic.Eraser.erasePieces(sp, p, r + o.width / 2f)
+                        if (pieces == null) { out += o; continue }
+                        changed = true
+                        pieces.forEachIndexed { k, pc ->
+                            val local = pc.map { Geo.fromSheet(photos, o.photoId, it) }
+                            out += if (k == 0) o.copy(pts = local) else o.copy(id = br.com.arque.measure.model.newId(), pts = local)
+                        }
+                    } else if (o is ShapeObj && !o.fill) {
+                        // forma vira traço e a borracha tira só o pedaço que passou
+                        val (sa, sb) = Geo.annPoints(photos, o)
+                        val outline = br.com.arque.measure.logic.Eraser.shapeOutline(o.kind, sa, sb)
+                        val pieces = br.com.arque.measure.logic.Eraser.erasePieces(outline, p, r + o.width / 2f)
+                        if (pieces == null) { out += o; continue }
+                        changed = true
+                        pieces.forEach { pc ->
+                            out += StrokeObj(photoId = o.photoId, pts = pc.map { Geo.fromSheet(photos, o.photoId, it) }, color = o.color, width = o.width)
+                        }
+                    } else if (o is RoomObj) {
+                        val rp = Geo.annPoints(photos, o)
+                        val pieces = br.com.arque.measure.logic.Eraser.roomPieces(o, rp, p, r + o.width / 2f)
+                        if (pieces == null) { out += o; continue }
+                        changed = true
+                        pieces.forEachIndexed { k, (verts, segs) ->
+                            out += o.copy(
+                                id = if (k == 0) o.id else br.com.arque.measure.model.newId(),
+                                pts = verts.map { o.pts[it] }, segs = segs.map { o.segs[it] }, closed = false,
+                            )
+                        }
+                    } else if (Geo.hitObj(sh, o, p, r, st.unit)) {
+                        changed = true
+                    } else out += o
+                }
+            } else {
+                for (o in objs) {
+                    if (erasable(o) && o !is DimObj && o !is RoomObj && near(o, 10f) && Geo.hitObj(sh, o, p, r, st.unit)) changed = true
+                    else out += o
+                }
+            }
+            if (changed) { objs = out; changedAny = true }
+        }
+        if (changedAny) st.live(sh0.copy(objs = objs))
     }
 
     /** Fim do gesto de um dedo. Retorna uma ação de UI (editar número da cota, editar texto) se foi um toque. */
@@ -541,6 +588,8 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.deleteIds(ids)
             }
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> {
+                if (mode == Mode.ERASE) flush()
+                boxCache.clear()
                 s.eraserTrail = emptyList()
                 val roomHandle = mode == Mode.HANDLE && st.sheet.obj(activeId) is RoomObj
                 st.endGesture()
@@ -583,6 +632,8 @@ class GestureController(private val s: EditorSession, private val density: Float
         if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM || mode == Mode.GROUP) st.cancelGesture()
         if (mode == Mode.LASSO || mode == Mode.ERASE_LASSO) s.lasso = emptyList()
         s.eraserTrail = emptyList()
+        erasePending.clear()
+        boxCache.clear()
         mode = Mode.NONE
     }
 

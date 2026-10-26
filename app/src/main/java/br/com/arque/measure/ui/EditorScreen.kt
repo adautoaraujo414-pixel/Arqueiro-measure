@@ -350,6 +350,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                                     // pontos intermediários que o Android junta num quadro só: escrita da caneta fica precisa
                                     ch.historical.forEach { h -> controller.move(h.position, h.uptimeMillis) }
                                     controller.move(ch.position, ch.uptimeMillis)
+                                    controller.flush()
                                     ch.consume()
                                 } else controller.still(ch.uptimeMillis)
                             } else if (!pen && pressed.isEmpty()) {

@@ -16,6 +16,7 @@ class MainActivity : ComponentActivity() {
         br.com.arque.measure.data.DataBackup.applyPending(applicationContext)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        br.com.arque.measure.ui.PalmGuard.pxPerMm = resources.displayMetrics.xdpi / 25.4f
         handleIntent(intent)
         vm.checkLicense()
         vm.startStore()
@@ -24,6 +25,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             ArqueTheme { App(vm) }
         }
+    }
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
+        br.com.arque.measure.ui.PalmGuard.record(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     override fun onNewIntent(intent: android.content.Intent) {

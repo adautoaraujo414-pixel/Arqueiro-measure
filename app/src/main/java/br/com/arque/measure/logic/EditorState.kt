@@ -732,10 +732,27 @@ class EditorState(
     // ---- medidas (única origem: trena Bosch) ----
 
     /** Sentido da porta marcada na linha: dobradiça (0 início / 1 fim), lado que abre (1 / -1) e se é de correr. */
-    fun setDoor(id: String, hinge: Int? = null, side: Int? = null, slide: Boolean? = null) {
+    fun setDoor(
+        id: String, hinge: Int? = null, side: Int? = null, slide: Boolean? = null,
+        labelScale: Float? = null, width: Float? = null, labelVert: Boolean? = null, live: Boolean = false,
+    ) {
         val d = sheet.obj(id) as? br.com.arque.measure.model.DoorObj ?: return
         if (d.locked) return
-        commit(mapObj(id) { d.copy(hinge = hinge ?: d.hinge, side = side ?: d.side, slide = slide ?: d.slide) })
+        val next = mapObj(id) {
+            d.copy(
+                hinge = hinge ?: d.hinge, side = side ?: d.side, slide = slide ?: d.slide,
+                labelScale = labelScale?.coerceIn(0.1f, 4f) ?: d.labelScale,
+                width = width?.coerceIn(0.3f, 8f) ?: d.width,
+                labelVert = labelVert ?: d.labelVert,
+            )
+        }
+        if (live) live(next) else commit(next)
+    }
+
+    fun setRoomLabelVert(id: String, vert: Boolean) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked) return
+        commit(mapObj(id) { (it as RoomObj).copy(labelVert = vert) })
     }
 
     fun clearValue(id: String) {

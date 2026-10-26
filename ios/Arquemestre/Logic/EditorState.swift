@@ -467,12 +467,23 @@ final class EditorState {
     }
 
     // ---- medidas ----
-    func setDoor(_ id: String, hinge: Int? = nil, side: Int? = nil, slide: Bool? = nil) {
+    func setDoor(_ id: String, hinge: Int? = nil, side: Int? = nil, slide: Bool? = nil,
+                 labelScale: CGFloat? = nil, width: CGFloat? = nil, labelVert: Bool? = nil, live isLive: Bool = false) {
         guard var d = sheet.obj(id)?.asDoor, !d.locked else { return }
         if let v = hinge { d.hinge = v }
         if let v = side { d.side = v }
         if let v = slide { d.slide = v }
-        commit(mapObj(id) { _ in .door(d) })
+        if let v = labelScale { d.labelScale = min(4, max(0.1, v)) }
+        if let v = width { d.width = min(8, max(0.3, v)) }
+        if let v = labelVert { d.labelVert = v }
+        let next = mapObj(id) { _ in .door(d) }
+        if isLive { live(next) } else { commit(next) }
+    }
+
+    func setRoomLabelVert(_ id: String, _ vert: Bool) {
+        guard var r = sheet.obj(id)?.asRoom, !r.locked else { return }
+        r.labelVert = vert
+        commit(mapObj(id) { _ in .room(r) })
     }
 
     func clearValue(_ id: String) {

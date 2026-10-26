@@ -93,7 +93,8 @@ enum JsonCodec {
         case .door(let d):
             return ["id": d.id, "locked": d.locked, "type": "door", "photoId": nul(d.photoId), "a": pt(d.a), "b": pt(d.b),
                     "hinge": d.hinge, "side": d.side, "slide": d.slide, "valueMm": nul(d.valueMm), "source": nul(d.source?.rawValue),
-                    "history": d.history.map(readingToJ), "color": d.color, "width": Double(d.width)]
+                    "history": d.history.map(readingToJ), "color": d.color, "width": Double(d.width),
+                    "labelScale": Double(d.labelScale), "labelVert": d.labelVert]
         case .room(let r):
             return ["id": r.id, "locked": r.locked, "type": "room", "photoId": nul(r.photoId), "pts": r.pts.map(pt), "closed": r.closed,
                     "segs": r.segs.map { sg -> J in
@@ -101,7 +102,7 @@ enum JsonCodec {
                          "history": sg.history.map(readingToJ), "hinge": sg.hinge, "side": sg.side, "slide": sg.slide]
                     },
                     "color": r.color, "width": Double(r.width), "labelScale": Double(r.labelScale), "labelAlpha": Double(r.labelAlpha),
-                    "labelIntensity": Double(r.labelIntensity)]
+                    "labelIntensity": Double(r.labelIntensity), "labelVert": r.labelVert]
         case .legacy(let l):
             var j = (try? parseObject(l.rawJSON)) ?? [:]
             j["id"] = l.id; j["locked"] = l.locked
@@ -140,7 +141,8 @@ enum JsonCodec {
                                  hinge: int(j, "hinge", 0), side: int(j, "side", 1), slide: bool(j, "slide", false),
                                  valueMm: optDbl(j, "valueMm"), source: optStr(j, "source").flatMap(MeasureSource.init(rawValue:)),
                                  history: try ((j["history"] as? [Any]) ?? []).compactMap { $0 as? J }.map(readingFromJ),
-                                 color: int(j, "color", argb(0xFFE53935)), width: CGFloat(dbl(j, "width", 2.1)), locked: locked))
+                                 color: int(j, "color", argb(0xFFE53935)), width: CGFloat(dbl(j, "width", 2.1)),
+                                 labelScale: CGFloat(dbl(j, "labelScale", 1)), labelVert: bool(j, "labelVert", false), locked: locked))
         case "room":
             let segs = try ((j["segs"] as? [Any]) ?? []).compactMap { $0 as? J }.map { sj -> Seg in
                 Seg(kind: SegKind(rawValue: s(sj, "kind", "WALL")) ?? .WALL, valueMm: optDbl(sj, "valueMm"),
@@ -151,7 +153,7 @@ enum JsonCodec {
             return .room(RoomObj(id: id, photoId: optStr(j, "photoId"), pts: try pts(j["pts"]), closed: bool(j, "closed", false), segs: segs,
                                  color: int(j, "color", -16777216), width: CGFloat(try dbl(j, "width")),
                                  labelScale: CGFloat(dbl(j, "labelScale", 1)), labelAlpha: CGFloat(dbl(j, "labelAlpha", 1)),
-                                 labelIntensity: CGFloat(dbl(j, "labelIntensity", 1)), locked: locked))
+                                 labelIntensity: CGFloat(dbl(j, "labelIntensity", 1)), labelVert: bool(j, "labelVert", false), locked: locked))
         case "cab", "wallplan":
             return .legacy(legacy(j, id: id, locked: locked, type: type))
         default:

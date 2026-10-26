@@ -374,17 +374,22 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         }
         // quadradinho "Porta" (fundo vermelho claro, texto vermelho)
         val label = Geo.doorLabel(o, unit)
-        val box = Geo.dimLabelBox(a, b, label)
+        val sc = o.labelScale.coerceIn(0.1f, 4f)
+        val box = Geo.dimLabelBox(a, b, label, sc)
+        val cx = (box.l + box.r) / 2f; val cy = (box.t + box.b) / 2f
+        c.save()
+        if (o.labelVert) c.rotate(-90f, cx, cy)
         rect.set(box.l, box.t, box.r, box.b)
         fillPaint.color = 0xF2FFFFFF.toInt()
-        c.drawRoundRect(rect, 3f, 3f, fillPaint)
-        strokePaint.color = o.color; strokePaint.strokeWidth = 1.4f
-        c.drawRoundRect(rect, 3f, 3f, strokePaint)
+        c.drawRoundRect(rect, 3f * sc, 3f * sc, fillPaint)
+        strokePaint.color = o.color; strokePaint.strokeWidth = 1.4f * sc
+        c.drawRoundRect(rect, 3f * sc, 3f * sc, strokePaint)
         textPaint.color = o.color
-        textPaint.textSize = Geo.DIM_TEXT_SIZE
+        textPaint.textSize = Geo.DIM_TEXT_SIZE * sc
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT_BOLD
-        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * 0.35f, textPaint)
+        c.drawText(label, cx, cy + Geo.DIM_TEXT_SIZE * sc * 0.35f, textPaint)
+        c.restore()
         strokePaint.strokeCap = Paint.Cap.ROUND
     }
 
@@ -774,6 +779,9 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         val label = if (measured) Units.labelSeg(seg, unit) else seg.kind.label
         val sc = o.labelScale
         val box = Geo.dimLabelBox(a, b, label, sc)
+        val lcx = (box.l + box.r) / 2f; val lcy = (box.t + box.b) / 2f
+        c.save()
+        if (o.labelVert) c.rotate(-90f, lcx, lcy)
         rect.set(box.l, box.t, box.r, box.b)
         if (measured) {
             val tint = mix(col, 0xFFFFFFFF.toInt(), o.labelIntensity.coerceIn(0f, 1f))
@@ -792,7 +800,8 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         textPaint.textSize = Geo.DIM_TEXT_SIZE * sc
         textPaint.textAlign = Paint.Align.CENTER
         textPaint.typeface = Typeface.DEFAULT_BOLD
-        c.drawText(label, (box.l + box.r) / 2f, (box.t + box.b) / 2f + Geo.DIM_TEXT_SIZE * sc * 0.35f, textPaint)
+        c.drawText(label, lcx, lcy + Geo.DIM_TEXT_SIZE * sc * 0.35f, textPaint)
+        c.restore()
     }
 
     // ---- seleção e alças (só na tela) ----

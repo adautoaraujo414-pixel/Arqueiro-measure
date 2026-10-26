@@ -129,6 +129,10 @@ data class DoorObj(
     val history: List<Reading> = emptyList(),
     val color: Int = 0xFFE53935.toInt(),
     val width: Float = 2.1f,
+    /** Tamanho do quadradinho "Porta" (multiplicador). */
+    val labelScale: Float = 1f,
+    /** Escrita do quadradinho em pé (vertical) em vez de deitada. */
+    val labelVert: Boolean = false,
     override val locked: Boolean = false,
 ) : Ann()
 
@@ -178,6 +182,8 @@ data class RoomObj(
     val labelScale: Float = 1f,
     val labelAlpha: Float = 1f,
     val labelIntensity: Float = 1f,
+    /** Escrita dos quadradinhos das paredes em pé (vertical) em vez de deitada. */
+    val labelVert: Boolean = false,
     override val locked: Boolean = false,
 ) : Ann() {
     fun segCount(): Int = if (closed) pts.size else pts.size - 1

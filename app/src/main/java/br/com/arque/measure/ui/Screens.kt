@@ -461,7 +461,9 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fill
             .clickable(enabled = !trash) { vm.openNote(n.id) }.padding(if (bare) 8.dp else 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val thumb = remember(n.id, vm.thumbVersion, n.pageCount, n.dimCount) { vm.loadThumb(n.id) }
+        val thumb = androidx.compose.runtime.produceState(vm.cachedThumb(n.id), n.id, vm.thumbVersion, n.pageCount, n.dimCount) {
+            value = vm.loadThumbAsync(n.id) ?: value
+        }.value
         Box(
             Modifier.size(width = if (bare) 44.dp else 56.dp, height = if (bare) 64.dp else 76.dp).clip(RoundedCornerShape(4.dp)).background(Color.White)
                 .border(BorderStroke(1.dp, Ui.line), RoundedCornerShape(4.dp)),

@@ -289,12 +289,16 @@ final class SheetRenderer {
             }
         }
         let label = Geo.doorLabel(o, unit)
-        let box = Geo.dimLabelBox(a, b, label)
+        let sc = min(4, max(0.1, o.labelScale))
+        let box = Geo.dimLabelBox(a, b, label, sc)
         let rect = CGRect(x: box.l, y: box.t, width: box.r - box.l, height: box.b - box.t)
-        let path = UIBezierPath(roundedRect: rect, cornerRadius: 3).cgPath
+        c.saveGState()
+        if o.labelVert { c.translateBy(x: rect.midX, y: rect.midY); c.rotate(by: -.pi / 2); c.translateBy(x: -rect.midX, y: -rect.midY) }
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: 3 * sc).cgPath
         fill(c, argb(0xF2FFFFFF)); c.addPath(path); c.fillPath()
-        stroke(c, o.color, 1.4); c.addPath(path); c.strokePath()
-        text(c, label, rect.midX, rect.midY + Geo.DIM_TEXT_SIZE * 0.35, size: Geo.DIM_TEXT_SIZE, color: o.color, bold: true, align: .center)
+        stroke(c, o.color, 1.4 * sc); c.addPath(path); c.strokePath()
+        text(c, label, rect.midX, rect.midY + Geo.DIM_TEXT_SIZE * sc * 0.35, size: Geo.DIM_TEXT_SIZE * sc, color: o.color, bold: true, align: .center)
+        c.restoreGState()
     }
 
     private func drawLegacy(_ c: CGContext, _ l: LegacyObj) {
@@ -368,7 +372,11 @@ final class SheetRenderer {
             c.setLineDash(phase: 0, lengths: [])
             let measured = sg.valueMm != nil
             let label = measured ? Units.labelSeg(sg, unit) : sg.kind.label
-            labelBox(c, Geo.dimLabelBox(a, b, label, o.labelScale), label, o.labelScale, col: col, alpha: o.labelAlpha, intensity: o.labelIntensity, measured: measured)
+            let lb = Geo.dimLabelBox(a, b, label, o.labelScale)
+            c.saveGState()
+            if o.labelVert { let mx = (lb.l + lb.r) / 2, my = (lb.t + lb.b) / 2; c.translateBy(x: mx, y: my); c.rotate(by: -.pi / 2); c.translateBy(x: -mx, y: -my) }
+            labelBox(c, lb, label, o.labelScale, col: col, alpha: o.labelAlpha, intensity: o.labelIntensity, measured: measured)
+            c.restoreGState()
         }
         fill(c, o.color)
         for p in pts { c.fillEllipse(in: CGRect(x: p.x - w * 1.1, y: p.y - w * 1.1, width: w * 2.2, height: w * 2.2)) }

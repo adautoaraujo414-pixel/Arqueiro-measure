@@ -90,6 +90,7 @@ object Json {
                 .put("valueMm", o.valueMm ?: JSONObject.NULL).put("source", o.source?.name ?: JSONObject.NULL)
                 .put("history", JSONArray(o.history.map(::readingToJson)))
                 .put("color", o.color).put("width", o.width.toDouble())
+                .put("labelScale", o.labelScale.toDouble()).put("labelVert", o.labelVert)
             is CabObj -> j.put("type", "cab").put("at", ptToJson(o.at)).put("name", o.name).put("scaleDen", o.scaleDen)
                 .put("cab", cabToJson(o.cab)).also { jj ->
                     o.wall?.let { jj.put("wall", wallToJson(it)) }
@@ -112,7 +113,7 @@ object Json {
                 )
                 .put("color", o.color).put("width", o.width.toDouble())
                 .put("labelScale", o.labelScale.toDouble()).put("labelAlpha", o.labelAlpha.toDouble())
-                .put("labelIntensity", o.labelIntensity.toDouble())
+                .put("labelIntensity", o.labelIntensity.toDouble()).put("labelVert", o.labelVert)
             is DimObj -> j.put("type", "dim").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("a", ptToJson(o.a)).put("b", ptToJson(o.b))
                 .put("valueMm", o.valueMm ?: JSONObject.NULL)
@@ -224,6 +225,7 @@ object Json {
                 labelScale = j.optDouble("labelScale", 1.0).toFloat(),
                 labelAlpha = j.optDouble("labelAlpha", 1.0).toFloat(),
                 labelIntensity = j.optDouble("labelIntensity", 1.0).toFloat(),
+                labelVert = j.optBoolean("labelVert", false),
                 locked = locked,
             )
             "door" -> br.com.arque.measure.model.DoorObj(
@@ -233,7 +235,8 @@ object Json {
                 valueMm = j.optDoubleOrNull("valueMm"),
                 source = j.optStringOrNull("source")?.let { MeasureSource.valueOf(it) },
                 history = j.optJSONArray("history")?.mapObjects(::readingFromJson) ?: emptyList(),
-                color = j.optInt("color", 0xFFE53935.toInt()), width = j.optDouble("width", 2.1).toFloat(), locked = locked,
+                color = j.optInt("color", 0xFFE53935.toInt()), width = j.optDouble("width", 2.1).toFloat(),
+                labelScale = j.optDouble("labelScale", 1.0).toFloat(), labelVert = j.optBoolean("labelVert", false), locked = locked,
             )
             "dim" -> DimObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

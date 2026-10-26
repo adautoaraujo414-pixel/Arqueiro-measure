@@ -102,6 +102,8 @@ import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
@@ -173,6 +175,10 @@ private val overlayPaint = android.graphics.Paint(android.graphics.Paint.ANTI_AL
     color = 0xFF2F80ED.toInt()
 }
 private val overlayPath = android.graphics.Path()
+private val eraserPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+    strokeCap = android.graphics.Paint.Cap.ROUND
+    strokeJoin = android.graphics.Paint.Join.ROUND
+}
 
 private fun drawScene(
     nc: android.graphics.Canvas,
@@ -203,6 +209,28 @@ private fun drawScene(
                 nc.drawPath(overlayPath, overlayPaint)
             }
             overlayPaint.pathEffect = null
+            // rastro da borracha: faixa cinza clara por onde ela passou + o círculo dela
+            val tr = session.eraserTrail
+            if (tr.isNotEmpty()) {
+                val er = session.eraserSize * session.density / scale
+                eraserPaint.style = android.graphics.Paint.Style.STROKE
+                eraserPaint.strokeWidth = er * 2f
+                eraserPaint.color = 0x33808080
+                if (tr.size > 1) {
+                    overlayPath.reset()
+                    overlayPath.moveTo(tr[0].x, tr[0].y)
+                    for (k in 1 until tr.size) overlayPath.lineTo(tr[k].x, tr[k].y)
+                    nc.drawPath(overlayPath, eraserPaint)
+                }
+                val last = tr.last()
+                eraserPaint.style = android.graphics.Paint.Style.FILL
+                eraserPaint.color = 0x55FFFFFF
+                nc.drawCircle(last.x, last.y, er, eraserPaint)
+                eraserPaint.style = android.graphics.Paint.Style.STROKE
+                eraserPaint.strokeWidth = 1.5f / scale
+                eraserPaint.color = 0xFF666666.toInt()
+                nc.drawCircle(last.x, last.y, er, eraserPaint)
+            }
         }
         nc.restore()
     }
@@ -215,10 +243,17 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
     val renderer = remember { vm.renderer() }
     val controller = remember(session) { GestureController(session, density) }
     val loupePath = remember { APath() }
+    // entrega os toques da caneta/dedo sem esperar o quadro da tela: traço responde mais rápido
+    val hostView = androidx.compose.ui.platform.LocalView.current
+    androidx.compose.runtime.DisposableEffect(hostView) {
+        if (android.os.Build.VERSION.SDK_INT >= 30) runCatching { hostView.requestUnbufferedDispatch(android.view.InputDevice.SOURCE_CLASS_POINTER) }
+        onDispose { if (android.os.Build.VERSION.SDK_INT >= 30) runCatching { hostView.requestUnbufferedDispatch(0) } }
+    }
 
     Canvas(
         modifier = modifier
             .onSizeChanged { session.onCanvasSize(it.width.toFloat(), it.height.toFloat()) }
+            .onGloballyPositioned { session.canvasOrigin = it.positionInWindow() }
             .pointerInput(session) {
                 // loop próprio (não espera todos os dedos saírem): com a mão apoiada, a caneta continua escrevendo
                 awaitPointerEventScope {
@@ -239,13 +274,20 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                         if (!moved && upT - first.uptimeMillis < 400L && session.registerTap(upT, first.position)) session.toggleLock()
                         continue
                     }
+                    fun palmAt(c: androidx.compose.ui.input.pointer.PointerInputChange) =
+                        c.type != PointerType.Stylus && PalmGuard.isPalm(session.canvasOrigin.x + c.position.x, session.canvasOrigin.y + c.position.y)
+                    val palmIds = HashSet<androidx.compose.ui.input.pointer.PointerId>()
                     var downId = first.id
                     var downPos = first.position
                     var downT = first.uptimeMillis
                     var pen = first.type == PointerType.Stylus
-                    session.tapDown(downT)
-                    session.textEdit = null
-                    controller.down(downPos, first.type == PointerType.Touch)
+                    // mão/punho apoiado: não faz nada, espera a caneta ou um dedo de verdade
+                    var ignored = palmAt(first)
+                    if (ignored) { palmIds += first.id; first.consume() } else {
+                        session.tapDown(downT)
+                        session.textEdit = null
+                        controller.down(downPos, first.type == PointerType.Touch)
+                    }
                     var multi = false
                     var moved = false
                     var upT = downT
@@ -254,21 +296,32 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                         do {
                             // parado com a caneta encostada: depois de um tempo o traço vira reta
                             var evN = withTimeoutOrNull(600L) { awaitPointerEvent() }
-                            if (evN == null) { controller.hold(); evN = awaitPointerEvent() }
+                            if (evN == null) { if (!ignored) controller.hold(); evN = awaitPointerEvent() }
                             val ev = evN
+                            // toques novos de mão/punho e o toque que virou mão (contato cresceu) ficam de fora
+                            ev.changes.forEach { if (it.pressed && it.id !in palmIds && palmAt(it)) palmIds += it.id }
+                            if (!ignored && !pen && downId in palmIds) {
+                                if (multi) controller.pinchEnd() else controller.cancelSingle()
+                                session.settle()
+                                multi = false; ignored = true
+                            }
+                            ev.changes.forEach { if (it.id in palmIds) it.consume() }
                             // caneta encostou depois da mão: descarta o toque da mão e passa a seguir a caneta
                             if (!pen) {
                                 val sty = ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.type == PointerType.Stylus }
+                                    ?: if (ignored) ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.id !in palmIds } else null
                                 if (sty != null) {
-                                    if (multi) controller.pinchEnd() else controller.cancelSingle()
-                                    multi = false; moved = false; pen = true
+                                    if (!ignored) { if (multi) controller.pinchEnd() else controller.cancelSingle() }
+                                    multi = false; moved = false; pen = sty.type == PointerType.Stylus; ignored = false
                                     downId = sty.id; downPos = sty.position; downT = sty.uptimeMillis; upT = downT; last = downPos
                                     session.tapDown(downT)
-                                    controller.down(downPos, false)
+                                    session.textEdit = null
+                                    controller.down(downPos, sty.type == PointerType.Touch)
                                 }
                             }
+                            if (ignored) continue
                             if (pen) ev.changes.forEach { if (it.id != downId) it.consume() }
-                            val pressed = ev.changes.filter { it.pressed && (!pen || it.id == downId) }
+                            val pressed = ev.changes.filter { it.pressed && it.id !in palmIds && (!pen || it.id == downId) }
                             if (pressed.size >= 2) {
                                 if (!multi) {
                                     multi = true
@@ -291,14 +344,16 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                             } else if (!pen && pressed.isEmpty()) {
                                 ev.changes.firstOrNull { it.id == downId }?.let { upT = it.uptimeMillis }
                             }
-                        } while (ev.changes.any { it.pressed && (!pen || it.id == downId) })
+                        } while (ev.changes.any { it.pressed && (ignored || it.id !in palmIds) && (!pen || it.id == downId) })
                     } catch (e: kotlinx.coroutines.CancellationException) {
                         // gesto interrompido pelo sistema: não deixa traço/arrasto pendurado
                         if (multi) controller.pinchEnd() else controller.cancelSingle()
                         session.settle()
                         throw e
                     }
-                    if (multi) {
+                    if (ignored) {
+                        session.settle()
+                    } else if (multi) {
                         controller.pinchEnd()
                         session.settle()
                     } else {
@@ -589,7 +644,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                     }
                                     Text(
                                         when (session.eraserMode) {
-                                            br.com.arque.measure.ui.EraserMode.PIXEL -> "Apaga só o pedaço que você passa por cima."
+                                            br.com.arque.measure.ui.EraserMode.PIXEL -> "Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede)."
                                             br.com.arque.measure.ui.EraserMode.STROKE -> "Apaga o traço ou a forma inteira que você tocar."
                                             br.com.arque.measure.ui.EraserMode.LASSO -> "Contorne com a caneta para apagar o que ficar dentro."
                                         },
@@ -1155,6 +1210,10 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
             }
             HorizontalDivider(color = Color(0xFFDDDDDD))
             LabelSlider("Quadradinho", r.labelScale, 0.1f, 3f, "${(r.labelScale * 100).roundToInt()}%", !r.locked, st) { v -> st.setRoomLabelScale(r.id, v, live = true) }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, false) }, enabled = !r.locked) { Text(if (!r.labelVert) "Escrita deitada ✓" else "Escrita deitada") }
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, true) }, enabled = !r.locked) { Text(if (r.labelVert) "Escrita em pé ✓" else "Escrita em pé") }
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Cor da parede", color = dark, fontSize = 13.sp)
                 ColorRow(r.color) { applyColor(session, it) }
@@ -1235,6 +1294,13 @@ private fun DoorPanel(vm: AppViewModel, session: EditorSession, d: br.com.arque.
                 OutlinedButton(onClick = { st.setDoor(d.id, hinge = 1 - d.hinge) }, enabled = !d.locked) { Text("↔ Dobradiça do outro lado") }
                 OutlinedButton(onClick = { st.setDoor(d.id, side = -d.side) }, enabled = !d.locked) { Text("⇅ Abre pro outro lado") }
                 OutlinedButton(onClick = { st.setDoor(d.id, slide = !d.slide) }, enabled = !d.locked) { Text(if (d.slide) "De correr ✓" else "De abrir ✓") }
+            }
+            Text("Tamanho e escrita", color = dark, fontSize = 13.sp)
+            LabelSlider("Quadradinho", d.labelScale, 0.2f, 2.5f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, labelScale = v, live = true) }
+            LabelSlider("Linha vermelha", d.width, 0.4f, 5f, "${(d.width / 2.1f * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, width = v, live = true) }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = false) }, enabled = !d.locked) { Text(if (!d.labelVert) "Escrita deitada ✓" else "Escrita deitada") }
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = true) }, enabled = !d.locked) { Text(if (d.labelVert) "Escrita em pé ✓" else "Escrita em pé") }
             }
             Text("Largura do vão", color = dark, fontSize = 13.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {

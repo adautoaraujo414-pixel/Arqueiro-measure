@@ -479,6 +479,13 @@ struct DoorPanel: View {
                         Button(d.slide ? "De correr ✓" : "De abrir ✓") { st.setDoor(d.id, slide: !d.slide) }
                     }.buttonStyle(.bordered).disabled(d.locked)
                 }
+                Text("Tamanho e escrita").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                LabelSlider(label: "Quadradinho", value: d.labelScale, range: 0.2...2.5, enabled: !d.locked, st: st) { st.setDoor(d.id, labelScale: $0, live: true) }
+                LabelSlider(label: "Linha vermelha", value: d.width, range: 0.4...5, enabled: !d.locked, st: st) { st.setDoor(d.id, width: $0, live: true) }
+                HStack {
+                    Button(d.labelVert ? "Escrita deitada" : "Escrita deitada ✓") { st.setDoor(d.id, labelVert: false) }
+                    Button(d.labelVert ? "Escrita em pé ✓" : "Escrita em pé") { st.setDoor(d.id, labelVert: true) }
+                }.buttonStyle(.bordered).disabled(d.locked)
                 Text("Largura do vão").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
                 HStack {
                     ManualValueBox(text: d.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !d.locked) { st.setManualValue($0) }
@@ -558,6 +565,10 @@ struct RoomPanel: View {
                 if r.pts.count >= 3 { Button(r.closed ? "Abrir contorno" : "Fechar contorno") { st.setRoomClosed(r.id, !r.closed) }.font(.footnote) }
                 Divider()
                 LabelSlider(label: "Quadradinho", value: r.labelScale, range: 0.1...3, enabled: !r.locked, st: st) { st.setRoomLabelScale(r.id, $0, live: true) }
+                HStack {
+                    Button(r.labelVert ? "Escrita deitada" : "Escrita deitada ✓") { st.setRoomLabelVert(r.id, false) }
+                    Button(r.labelVert ? "Escrita em pé ✓" : "Escrita em pé") { st.setRoomLabelVert(r.id, true) }
+                }.buttonStyle(.bordered).disabled(r.locked)
                 HStack { Text("Cor da parede").font(.footnote).foregroundColor(dark); ColorRow(current: r.color) { session.applyColor($0) } }
             }.padding(14)
         }

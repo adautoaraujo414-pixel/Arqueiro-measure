@@ -253,6 +253,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun loadThumb(id: String): ImageBitmap? =
         thumbFile(id).takeIf { it.exists() }?.let { BitmapFactory.decodeFile(it.path)?.asImageBitmap() }
 
+    /** Miniaturas já lidas (a lista de notas não lê arquivo na thread principal). */
+    private val thumbCache = android.util.LruCache<String, Pair<Long, ImageBitmap>>(160)
+
+    fun cachedThumb(id: String): ImageBitmap? = thumbCache.get(id)?.second
+
+    /** Lê a miniatura fora da thread principal; só decodifica de novo se o arquivo mudou. */
+    suspend fun loadThumbAsync(id: String): ImageBitmap? = withContext(Dispatchers.IO) {
+        val f = thumbFile(id)
+        if (!f.exists()) return@withContext null
+        val lm = f.lastModified()
+        thumbCache.get(id)?.let { if (it.first == lm) return@withContext it.second }
+        val b = runCatching { BitmapFactory.decodeFile(f.path)?.asImageBitmap() }.getOrNull() ?: return@withContext null
+        thumbCache.put(id, lm to b)
+        b
+    }
+
     /** Grava agora (ao sair da nota ou do app). */
     fun flush() {
         val s = session ?: return

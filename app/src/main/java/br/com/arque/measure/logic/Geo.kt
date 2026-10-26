@@ -253,10 +253,12 @@ object Geo {
         return (d.labelScale * auto).coerceIn(0.05f, 8f)
     }
 
-    fun dimLabelBox(a: Pt, b: Pt, label: String, scale: Float = 1f): Box {
+    fun dimLabelBox(a: Pt, b: Pt, label: String, scale: Float = 1f, vert: Boolean = false): Box {
         val c = dimLabelCenter(a, b)
-        val w = (label.length * DIM_TEXT_SIZE * 0.58f + 12f) * scale
-        val h = (DIM_TEXT_SIZE + 8f) * scale
+        val w0 = (label.length * DIM_TEXT_SIZE * 0.58f + 12f) * scale
+        val h0 = (DIM_TEXT_SIZE + 8f) * scale
+        val w = if (vert) h0 else w0
+        val h = if (vert) w0 else h0
         return Box(c.x - w / 2, c.y - h / 2, c.x + w / 2, c.y + h / 2)
     }
 
@@ -308,7 +310,7 @@ object Geo {
             is br.com.arque.measure.model.DoorObj -> {
                 val (a, b) = annPoints(photos, o)
                 distToSegment(s, a, b) <= tol + o.width * 1.5f ||
-                    dimLabelBox(a, b, doorLabel(o, unit)).contains(s, tol / 2f)
+                    dimLabelBox(a, b, doorLabel(o, unit), o.labelScale, o.labelVert).contains(s, tol / 2f)
             }
             is RoomObj -> hitSeg(sheet, o, s, tol, unit) >= 0
             is CabObj -> {
@@ -390,7 +392,7 @@ object Geo {
 
     fun segLabelBox(photos: Map<String, PhotoObj>, o: RoomObj, k: Int, unit: LengthUnit): Box {
         val (a, b) = segEnds(photos, o, k)
-        return dimLabelBox(a, b, Units.labelSeg(o.segs[k], unit), o.labelScale)
+        return dimLabelBox(a, b, Units.labelSeg(o.segs[k], unit), o.labelScale, o.labelVert)
     }
 
     /** Segmento do cômodo sob o ponto (linha ou quadradinho), ou -1. O mais próximo ganha. */

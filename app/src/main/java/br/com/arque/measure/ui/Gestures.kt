@@ -441,8 +441,10 @@ class GestureController(private val s: EditorSession, private val density: Float
         val sh = st.sheet
         val r = s.eraserSize * density / s.view.scale
         val onlyHl = s.eraserOnlyHighlighter
-        fun erasable(o: Obj) = o is Ann && o !is DimObj && o !is br.com.arque.measure.model.DoorObj && o !is RoomObj && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
+        // apaga qualquer linha ou contorno (traço, forma, cota, porta, parede do cômodo); módulos ficam protegidos
+        fun erasable(o: Obj) = o is Ann && o !is br.com.arque.measure.model.CabObj && o !is br.com.arque.measure.model.WallObj && !o.locked &&
             (!onlyHl || (o is StrokeObj && o.kind == StrokeKind.HIGHLIGHTER))
+        s.eraserTrail = (s.eraserTrail + p).takeLast(40)
         if (s.eraserMode == EraserMode.PIXEL) {
             val photos = sh.photos()
             var changed = false
@@ -458,6 +460,27 @@ class GestureController(private val s: EditorSession, private val density: Float
                         val local = pc.map { Geo.fromSheet(photos, o.photoId, it) }
                         out += if (k == 0) o.copy(pts = local) else o.copy(id = br.com.arque.measure.model.newId(), pts = local)
                     }
+                } else if (o is ShapeObj && !o.fill) {
+                    // forma vira traço e a borracha tira só o pedaço que passou
+                    val (sa, sb) = Geo.annPoints(photos, o)
+                    val outline = br.com.arque.measure.logic.Eraser.shapeOutline(o.kind, sa, sb)
+                    val pieces = br.com.arque.measure.logic.Eraser.erasePieces(outline, p, r + o.width / 2f)
+                    if (pieces == null) { out += o; continue }
+                    changed = true
+                    pieces.forEach { pc ->
+                        out += StrokeObj(photoId = o.photoId, pts = pc.map { Geo.fromSheet(photos, o.photoId, it) }, color = o.color, width = o.width)
+                    }
+                } else if (o is RoomObj) {
+                    val rp = Geo.annPoints(photos, o)
+                    val pieces = br.com.arque.measure.logic.Eraser.roomPieces(o, rp, p, r + o.width / 2f)
+                    if (pieces == null) { out += o; continue }
+                    changed = true
+                    pieces.forEachIndexed { k, (verts, segs) ->
+                        out += o.copy(
+                            id = if (k == 0) o.id else br.com.arque.measure.model.newId(),
+                            pts = verts.map { o.pts[it] }, segs = segs.map { o.segs[it] }, closed = false,
+                        )
+                    }
                 } else if (Geo.hitObj(sh, o, p, r, st.unit)) {
                     changed = true
                 } else out += o
@@ -465,7 +488,7 @@ class GestureController(private val s: EditorSession, private val density: Float
             if (changed) st.live(sh.copy(objs = out))
             return
         }
-        val gone = sh.objs.filter { erasable(it) && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
+        val gone = sh.objs.filter { erasable(it) && it !is DimObj && it !is RoomObj && Geo.hitObj(sh, it, p, r, st.unit) }.map { it.id }.toSet()
         if (gone.isNotEmpty()) st.live(sh.copy(objs = sh.objs.filter { it.id !in gone }))
     }
 
@@ -511,6 +534,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                 st.deleteIds(ids)
             }
             Mode.STROKE, Mode.MOVE, Mode.HANDLE, Mode.ERASE -> {
+                s.eraserTrail = emptyList()
                 val roomHandle = mode == Mode.HANDLE && st.sheet.obj(activeId) is RoomObj
                 st.endGesture()
                 if (roomHandle) activeId?.let { st.mergeRoomStray(it) }
@@ -551,6 +575,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         s.loupe = null
         if (mode == Mode.STROKE || mode == Mode.SHAPE || mode == Mode.ERASE || mode == Mode.ROOM || mode == Mode.GROUP) st.cancelGesture()
         if (mode == Mode.LASSO || mode == Mode.ERASE_LASSO) s.lasso = emptyList()
+        s.eraserTrail = emptyList()
         mode = Mode.NONE
     }
 

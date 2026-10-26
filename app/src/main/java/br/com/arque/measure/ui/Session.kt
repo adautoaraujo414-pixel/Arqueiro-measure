@@ -101,7 +101,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     var stylusOnly by mutableStateOf(false)
 
     // borracha
-    var eraserMode by mutableStateOf(EraserMode.STROKE)
+    var eraserMode by mutableStateOf(EraserMode.PIXEL)
+    /** Rastro da borracha na tela enquanto apaga (folha). */
+    var eraserTrail by mutableStateOf<List<br.com.arque.measure.model.Pt>>(emptyList())
     var eraserSize by mutableStateOf(12f)
     var eraserOnlyHighlighter by mutableStateOf(false)
     var fullscreen by mutableStateOf(false)
@@ -164,6 +166,8 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     var canvasW = 0f
     var canvasH = 0f
     var density = 1f
+    /** Canto da tela do caderno na janela (para comparar com os toques da mão). */
+    var canvasOrigin = androidx.compose.ui.geometry.Offset.Zero
     private var fitted = false
 
     fun chooseTool(t: Tool) {

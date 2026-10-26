@@ -145,6 +145,8 @@ struct DoorObj: Equatable {
     var history: [Reading] = []
     var color: Int = argb(0xFFE53935)
     var width: CGFloat = 2.1
+    var labelScale: CGFloat = 1
+    var labelVert: Bool = false
     var locked: Bool = false
 }
 
@@ -160,6 +162,7 @@ struct RoomObj: Equatable {
     var labelScale: CGFloat = 1
     var labelAlpha: CGFloat = 1
     var labelIntensity: CGFloat = 1
+    var labelVert: Bool = false
     var locked: Bool = false
     var segCount: Int { closed ? pts.count : pts.count - 1 }
 }

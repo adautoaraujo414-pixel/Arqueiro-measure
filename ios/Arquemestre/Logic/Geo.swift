@@ -184,10 +184,12 @@ enum Geo {
         return clamp(d.labelScale * auto, 0.05, 8)
     }
 
-    static func dimLabelBox(_ a: Pt, _ b: Pt, _ label: String, _ scale: CGFloat = 1) -> Box {
+    static func dimLabelBox(_ a: Pt, _ b: Pt, _ label: String, _ scale: CGFloat = 1, vert: Bool = false) -> Box {
         let c = dimLabelCenter(a, b)
-        let w = (CGFloat(label.count) * DIM_TEXT_SIZE * 0.58 + 12) * scale
-        let h = (DIM_TEXT_SIZE + 8) * scale
+        let w0 = (CGFloat(label.count) * DIM_TEXT_SIZE * 0.58 + 12) * scale
+        let h0 = (DIM_TEXT_SIZE + 8) * scale
+        let w = vert ? h0 : w0
+        let h = vert ? w0 : h0
         return Box(l: c.x - w / 2, t: c.y - h / 2, r: c.x + w / 2, b: c.y + h / 2)
     }
 
@@ -230,7 +232,7 @@ enum Geo {
         case .text(let t): return textBox(t, annPoints(photos, o)[0]).contains(s, tol)
         case .door(let d):
             let ab = annPoints(photos, o)
-            return distToSegment(s, ab[0], ab[1]) <= tol + d.width * 1.5 || dimLabelBox(ab[0], ab[1], doorLabel(d, unit)).contains(s, tol / 2)
+            return distToSegment(s, ab[0], ab[1]) <= tol + d.width * 1.5 || dimLabelBox(ab[0], ab[1], doorLabel(d, unit), d.labelScale, vert: d.labelVert).contains(s, tol / 2)
         case .room(let r): return hitSeg(sheet, r, s, tol, unit) >= 0
         case .legacy(let l): return Box(l: l.at.x, t: l.at.y, r: l.at.x + l.wUnits, b: l.at.y + l.hUnits).contains(s, tol / 2)
         case .dim(let d):
@@ -289,7 +291,7 @@ enum Geo {
 
     static func segLabelBox(_ photos: [String: PhotoObj], _ o: RoomObj, _ k: Int, _ unit: LengthUnit) -> Box {
         let (a, b) = segEnds(photos, o, k)
-        return dimLabelBox(a, b, Units.labelSeg(o.segs[k], unit), o.labelScale)
+        return dimLabelBox(a, b, Units.labelSeg(o.segs[k], unit), o.labelScale, vert: o.labelVert)
     }
 
     static func hitSeg(_ sheet: Sheet, _ o: RoomObj, _ s: Pt, _ tol: CGFloat, _ unit: LengthUnit) -> Int {

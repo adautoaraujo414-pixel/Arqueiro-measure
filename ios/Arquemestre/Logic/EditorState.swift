@@ -67,7 +67,7 @@ final class EditorState {
     /// Limpa traços, formas e textos (fotos, cotas e cômodos ficam).
     func clearPageDrawings() {
         let keep = sheet.objs.filter {
-            switch $0 { case .photo, .dim, .room, .legacy: return true; default: return $0.locked }
+            switch $0 { case .photo, .dim, .door, .room, .legacy: return true; default: return $0.locked }
         }
         if keep.count == sheet.objs.count { return }
         var s = sheet; s.objs = keep
@@ -376,6 +376,7 @@ final class EditorState {
             case .stroke(var a): a.color = color ?? a.color; a.width = width ?? a.width; return .stroke(a)
             case .shape(var a): a.color = color ?? a.color; a.width = width ?? a.width; return .shape(a)
             case .dim(var a): a.color = color ?? a.color; a.width = width ?? a.width; return .dim(a)
+            case .door(var a): a.color = color ?? a.color; a.width = width ?? a.width; return .door(a)
             case .room(var a): a.color = color ?? a.color; a.width = width ?? a.width; return .room(a)
             case .text(var a): a.color = color ?? a.color; if let w = width { a.size = w * 6 }; return .text(a)
             default: return o
@@ -466,7 +467,21 @@ final class EditorState {
     }
 
     // ---- medidas ----
+    func setDoor(_ id: String, hinge: Int? = nil, side: Int? = nil, slide: Bool? = nil) {
+        guard var d = sheet.obj(id)?.asDoor, !d.locked else { return }
+        if let v = hinge { d.hinge = v }
+        if let v = side { d.side = v }
+        if let v = slide { d.slide = v }
+        commit(mapObj(id) { _ in .door(d) })
+    }
+
     func clearValue(_ id: String) {
+        if var d = sheet.obj(id)?.asDoor {
+            if d.locked { return }
+            d.valueMm = nil; d.source = nil
+            commit(mapObj(id) { _ in .door(d) })
+            return
+        }
         if let room = sheet.obj(id)?.asRoom {
             let k = selectedSeg
             if room.locked || !room.segs.indices.contains(k) { return }
@@ -490,6 +505,12 @@ final class EditorState {
                 if nx.seg >= 0 { selectSeg(nx.id, nx.seg) } else { select(nx.id) }
             }
             return room.id
+        }
+        if var dr = selected?.asDoor {
+            if dr.locked { return nil }
+            dr.valueMm = r.mm; dr.source = r.source; dr.history.append(r)
+            commit(mapObj(dr.id) { _ in .door(dr) })
+            return dr.id
         }
         guard var d = selected?.asDim, !d.locked else { return nil }
         d.valueMm = r.mm; d.source = r.source; d.history.append(r)

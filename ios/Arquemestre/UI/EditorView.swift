@@ -206,6 +206,7 @@ struct EditorView: View {
                         Button { app.photoToNewPage = false; camera = true } label: { Label("Câmera", systemImage: "camera") }
                     } label: { Image(systemName: "photo").foregroundColor(Ui.text).frame(width: 40, height: 40) }
                     toolBtn(.TEXT)
+                    toolBtn(.DOOR)
                     Button { shapesMenu = true } label: {
                         let inShapes = shapeTools.contains(session.tool)
                         ShapeGlyph(tool: inShapes ? session.tool : .RECT, tint: inShapes ? Ui.accent : Ui.text)
@@ -294,7 +295,7 @@ struct EditorView: View {
     @ViewBuilder private var bottomPanel: some View {
         let sel = st.selected
         VStack(alignment: .leading, spacing: 8) {
-            if sel?.asDim != nil || sel?.asRoom != nil {
+            if sel?.asDim != nil || sel?.asRoom != nil || sel?.asDoor != nil {
                 Button { panelMin.toggle() } label: {
                     Text(panelMin ? "▲ Medida (toque para abrir)" : "▼ Minimizar").font(.caption).foregroundColor(.white)
                         .padding(.horizontal, 12).padding(.vertical, 7).background(Capsule().fill(Color(argb: 0xB31B1C20)))
@@ -302,6 +303,7 @@ struct EditorView: View {
             }
             if !panelMin {
                 if let d = sel?.asDim { DistancePanel(session: session, d: d) }
+                if let d = sel?.asDoor { DoorPanel(session: session, d: d) }
                 if let r = sel?.asRoom { RoomPanel(session: session, r: r) }
             }
             if ble.state == .CONNECTED && !app.trenaHidden { MiniTelemeter(open: $miniOpen) }
@@ -455,6 +457,42 @@ struct DistancePanel: View {
             }.padding(14)
         }
         .frame(maxHeight: 260)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+    }
+}
+
+struct DoorPanel: View {
+    @EnvironmentObject var ble: BoschBLE
+    @ObservedObject var session: EditorSession
+    var d: DoorObj
+    var body: some View {
+        let st = session.state
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("🚪 Porta na linha").font(.headline).foregroundColor(Color(argb: 0xFFE53935))
+                Text("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha.").font(.caption).foregroundColor(Color(argb: 0xFF555555))
+                Text("Sentido de abertura").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        Button("↔ Dobradiça do outro lado") { st.setDoor(d.id, hinge: 1 - d.hinge) }
+                        Button("⇅ Abre pro outro lado") { st.setDoor(d.id, side: -d.side) }
+                        Button(d.slide ? "De correr ✓" : "De abrir ✓") { st.setDoor(d.id, slide: !d.slide) }
+                    }.buttonStyle(.bordered).disabled(d.locked)
+                }
+                Text("Largura do vão").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                HStack {
+                    ManualValueBox(text: d.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !d.locked) { st.setManualValue($0) }
+                    Button(st.unit.label) { st.setUnit(st.unit.next) }.font(.title3)
+                }
+                Text(statusText(d.valueMm != nil, d.source, ble.state == .CONNECTED)).font(.footnote).foregroundColor(Color(argb: 0xFF555555))
+                HStack {
+                    if d.valueMm != nil { Button("Limpar medida") { st.clearValue(d.id) } }
+                    Spacer()
+                    Button("Excluir porta", role: .destructive) { st.delete(d.id) }.disabled(d.locked)
+                }.font(.footnote)
+            }.padding(14)
+        }
+        .frame(maxHeight: 280)
         .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
     }
 }

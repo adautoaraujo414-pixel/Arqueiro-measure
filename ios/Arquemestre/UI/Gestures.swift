@@ -63,7 +63,7 @@ final class GestureController {
         if isFinger && s.stylusOnly && tool.drawing { mode = .PAN; return } // só o Apple Pencil desenha
         switch tool {
         case .NAVIGATE: mode = .PAN
-        case .SELECT, .DIM: downSelectOrDim(screen, p, tool)
+        case .SELECT, .DIM, .DOOR: downSelectOrDim(screen, p, tool)
         case .ROOM: downRoom(screen, p)
         case .LASSO: downLasso(p)
         case .PEN, .PENCIL, .HIGHLIGHTER: startStroke(p, tool)
@@ -79,7 +79,7 @@ final class GestureController {
             handle = h.0; handleIdx = h.1; activeId = sel.id; mode = .HANDLE; st.beginGesture(); return
         }
         let prevSelected = st.selectedId
-        if let hit = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit)), tool == .SELECT || hit.asDim != nil {
+        if let hit = st.sheet.obj(Geo.hit(st.sheet, p, tol(), st.unit)), tool == .SELECT || (tool == .DIM && hit.asDim != nil) || (tool == .DOOR && hit.asDoor != nil) {
             if hit.asText != nil && prevSelected == hit.id { tapTextId = hit.id }
             if hit.asDim != nil { tapDimId = hit.id }
             st.select(hit.id)
@@ -91,7 +91,7 @@ final class GestureController {
             if !hit.locked { if case .legacy = hit {} else { mode = .MOVE; st.beginGesture() } }
             return
         }
-        if tool == .SELECT { st.select(nil); mode = .PAN } else { startShapeLike(p, dim: true, kind: nil) }
+        if tool == .SELECT { st.select(nil); mode = .PAN } else if tool == .DOOR { startDoor(p) } else { startShapeLike(p, dim: true, kind: nil) }
     }
 
     private func downRoom(_ screen: CGPoint, _ p: Pt) {
@@ -235,6 +235,23 @@ final class GestureController {
         startShapeLike(p, dim: false, kind: map[tool] ?? .LINE)
     }
 
+    /// Linha onde a porta está sendo marcada (a porta fica só num trecho dela).
+    private var doorHost: (Pt, Pt)?
+
+    private func startDoor(_ p: Pt) {
+        doorHost = Geo.nearestLine(st.sheet, p, tol() * 1.6)
+        let start = doorHost.map { Geo.projectOnSegment(p, $0.0, $0.1) } ?? p
+        let o = DoorObj(a: start, b: start, width: max(1.6, s.width))
+        var sh = st.sheet; sh.objs.append(.door(o))
+        st.live(sh)
+        createdId = o.id
+        mode = .SHAPE
+    }
+
+    private func doorTarget(_ anchor: Pt, _ p: Pt, _ host: (Pt, Pt)?) -> Pt {
+        host.map { Geo.projectOnSegment(p, $0.0, $0.1) } ?? Geo.snapAxis(anchor, p)
+    }
+
     private func startShapeLike(_ p: Pt, dim: Bool, kind: ShapeKind?) {
         let photos = st.sheet.photos()
         let photoId = Geo.photoAt(st.sheet, p)?.id
@@ -286,9 +303,9 @@ final class GestureController {
             if let o = st.sheet.obj(createdId), o.isAnn {
                 let anchor = Geo.annPoints(st.sheet.photos(), o)[0]
                 let straight = o.asDim != nil || (o.asShape.map { straightKinds.contains($0.kind) } ?? false)
-                let target = straight ? Geo.snapAxis(anchor, p) : p
+                let target = o.asDoor != nil ? doorTarget(anchor, p, doorHost) : (straight ? Geo.snapAxis(anchor, p) : p)
                 st.live(replace(Geo.withEndpoint(st.sheet, o, true, target)))
-                if o.asDim != nil || o.asShape?.kind == .ARROW || o.asShape?.kind == .DARROW { s.loupe = screen }
+                if o.asDim != nil || o.asDoor != nil || o.asShape?.kind == .ARROW || o.asShape?.kind == .DARROW { s.loupe = screen }
             }
         case .ERASE: erase(p)
         case .LASSO, .ERASE_LASSO:
@@ -342,7 +359,7 @@ final class GestureController {
         switch mode {
         case .PAN: s.settle()
         case .SHAPE:
-            if !moved { st.cancelGesture() } else {
+            if !moved || (st.sheet.obj(createdId)?.asDoor.map { hypotf2($0.b.x - $0.a.x, $0.b.y - $0.a.y) < 6 } ?? false) { st.cancelGesture() } else {
                 if let d = st.sheet.obj(createdId)?.asDim, d.refSize <= 0 {
                     let ab = Geo.annPoints(st.sheet.photos(), .dim(d))
                     var n = d; n.refSize = hypotf2(ab[1].x - ab[0].x, ab[1].y - ab[0].y)
@@ -403,7 +420,7 @@ final class GestureController {
             if near(Geo.rotateHandle(p, s.view.scale)) { return (.ROTATE, 0) }
             for (i, c) in Geo.corners(p).enumerated() where near(c) { return (.CORNER, i) }
             return nil
-        case .dim, .shape:
+        case .dim, .shape, .door:
             let pts = Geo.annPoints(photos, o)
             if near(pts[1]) { return (.B, 0) }
             if near(pts[0]) { return (.A, 0) }
@@ -432,11 +449,11 @@ final class GestureController {
             } else {
                 st.live(replace(.photo(Geo.resizeFromCorner(ph, handleIdx, p, max(st.sheet.width, st.sheet.height) * 3))))
             }
-        case .dim, .shape:
+        case .dim, .shape, .door:
             let pts = Geo.annPoints(st.sheet.photos(), o)
             let other = handle == .B ? pts[0] : pts[1]
             let straight = o.asDim != nil || (o.asShape.map { straightKinds.contains($0.kind) } ?? false)
-            let target = straight ? Geo.snapAxis(other, p) : p
+            let target = o.asDoor != nil ? doorTarget(other, p, Geo.nearestLine(st.sheet, other, 2, skip: o.id)) : (straight ? Geo.snapAxis(other, p) : p)
             st.live(replace(Geo.withEndpoint(st.sheet, o, handle == .B, target)))
             s.loupe = s.view.toScreen(target)
         case .room(var r):

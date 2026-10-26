@@ -222,3 +222,22 @@ final class ZipBackupTests: XCTestCase {
         XCTAssertTrue(r.has("files/moveis/projects.json"))
     }
 }
+
+final class DoorTests: XCTestCase {
+    func testPortaNumTrechoDaLinha() throws {
+        let r = RoomObj(photoId: nil, pts: [Pt(0, 0), Pt(400, 0), Pt(400, 300), Pt(0, 300)], closed: true, segs: Array(repeating: Seg(), count: 4), color: 0, width: 2)
+        let host = Geo.nearestLine(Sheet(objs: [.room(r)]), Pt(150, 8), 20)
+        XCTAssertNotNil(host)
+        XCTAssertEqual(Geo.projectOnSegment(Pt(150, 8), host!.0, host!.1), Pt(150, 0))
+        let d = DoorObj(a: Pt(100, 0), b: Pt(180, 0))
+        var n = Note(name: "t"); n.pages = [Sheet(objs: [.room(r), .door(d)])]
+        let st = EditorState(n)
+        st.select(d.id)
+        st.setDoor(d.id, hinge: 1, side: -1)
+        st.assignReading(Reading(mm: 820, source: .BLUETOOTH, timeMs: 1))
+        let got = st.sheet.obj(d.id)!.asDoor!
+        XCTAssertEqual(got.hinge, 1); XCTAssertEqual(got.side, -1); XCTAssertEqual(got.valueMm, 820)
+        XCTAssertEqual(st.sheet.obj(r.id)?.asRoom?.segs.count, 4) // a parede continua inteira
+        XCTAssertEqual(try JsonCodec.noteFromJson(JsonCodec.noteToJson(st.note)), st.note)
+    }
+}

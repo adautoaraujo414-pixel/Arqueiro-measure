@@ -131,6 +131,7 @@ final class SheetRenderer {
         case .shape(let s): drawShape(c, s, photos)
         case .text(let t): drawText(c, t, photos)
         case .dim(let d): drawDim(c, d, photos, unit)
+        case .door(let d): drawDoor(c, d, photos, unit)
         case .room(let r): drawRoom(c, r, photos, unit)
         case .legacy(let l): drawLegacy(c, l)
         }
@@ -254,6 +255,48 @@ final class SheetRenderer {
         labelBox(c, Geo.dimLabelBox(a, b, label, k), label, k, col: o.color, alpha: o.labelAlpha, intensity: o.labelIntensity, measured: true)
     }
 
+    /// Porta num trecho da linha: linha vermelha, batentes, sentido de abertura e "Porta".
+    private func drawDoor(_ c: CGContext, _ o: DoorObj, _ photos: [String: PhotoObj], _ unit: LengthUnit) {
+        let ab = Geo.annPoints(photos, .door(o)); let a = ab[0], b = ab[1]
+        let w = o.width
+        let len = hypotf2(b.x - a.x, b.y - a.y)
+        stroke(c, o.color, w * 2.6, cap: .butt); line(c, a, b)
+        if len > 1 {
+            let px = -(b.y - a.y) / len * w * 2.4, py = (b.x - a.x) / len * w * 2.4
+            stroke(c, o.color, w * 1.2, cap: .butt)
+            line(c, Pt(a.x - px, a.y - py), Pt(a.x + px, a.y + py)); line(c, Pt(b.x - px, b.y - py), Pt(b.x + px, b.y + py))
+            let h = o.hinge == 1 ? b : a, e = o.hinge == 1 ? a : b
+            let ux = (e.x - h.x) / len, uy = (e.y - h.y) / len
+            let sd: CGFloat = o.side < 0 ? -1 : 1
+            let nx = -uy * sd, ny = ux * sd
+            if o.slide {
+                let off = w * 3
+                stroke(c, o.color, w * 1.6, cap: .butt)
+                line(c, Pt(h.x + nx * off, h.y + ny * off), Pt(h.x + ux * len * 0.62 + nx * off, h.y + uy * len * 0.62 + ny * off))
+                stroke(c, o.color, w * 0.8, cap: .butt)
+                let a0 = Pt(h.x + ux * len * 0.25 + nx * off * 2.4, h.y + uy * len * 0.25 + ny * off * 2.4)
+                let a1 = Pt(h.x + ux * len * 0.75 + nx * off * 2.4, h.y + uy * len * 0.75 + ny * off * 2.4)
+                line(c, a0, a1)
+                let hx = w * 2.2
+                line(c, a1, Pt(a1.x - ux * hx + nx * hx * 0.6, a1.y - uy * hx + ny * hx * 0.6))
+                line(c, a1, Pt(a1.x - ux * hx - nx * hx * 0.6, a1.y - uy * hx - ny * hx * 0.6))
+            } else {
+                stroke(c, o.color, w * 1.1, cap: .butt); line(c, h, Pt(h.x + nx * len, h.y + ny * len))
+                stroke(c, o.color, w * 0.7, cap: .butt, dash: [w * 2.5, w * 2])
+                let ang = atan2(uy, ux)
+                c.beginPath(); c.addArc(center: h.cg, radius: len, startAngle: ang, endAngle: ang + (.pi / 2) * sd, clockwise: sd < 0); c.strokePath()
+                c.setLineDash(phase: 0, lengths: [])
+            }
+        }
+        let label = Geo.doorLabel(o, unit)
+        let box = Geo.dimLabelBox(a, b, label)
+        let rect = CGRect(x: box.l, y: box.t, width: box.r - box.l, height: box.b - box.t)
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: 3).cgPath
+        fill(c, argb(0xF2FFFFFF)); c.addPath(path); c.fillPath()
+        stroke(c, o.color, 1.4); c.addPath(path); c.strokePath()
+        text(c, label, rect.midX, rect.midY + Geo.DIM_TEXT_SIZE * 0.35, size: Geo.DIM_TEXT_SIZE, color: o.color, bold: true, align: .center)
+    }
+
     private func drawLegacy(_ c: CGContext, _ l: LegacyObj) {
         let r = CGRect(x: l.at.x, y: l.at.y, width: l.wUnits, height: l.hUnits)
         fill(c, argb(0x33C8A96A)); c.fill(r)
@@ -356,6 +399,8 @@ final class SheetRenderer {
             if !d.locked { Geo.annPoints(photos, o).forEach { handle($0, d.color, 7 / viewScale) } }
         case .shape(let s):
             if !s.locked { Geo.annPoints(photos, o).forEach { handle($0, s.color, 7 / viewScale) } }
+        case .door(let d):
+            if !d.locked { Geo.annPoints(photos, o).forEach { handle($0, d.color, 7 / viewScale) } }
         case .room(let ro):
             let pts = Geo.annPoints(photos, o)
             if selectedSeg >= 0 && selectedSeg < ro.segCount {

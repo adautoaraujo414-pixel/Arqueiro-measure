@@ -6,13 +6,13 @@ enum EraserMode: String, CaseIterable { case PIXEL, STROKE, LASSO
 }
 
 enum Tool: String, CaseIterable {
-    case NAVIGATE, SELECT, PEN, PENCIL, HIGHLIGHTER, ERASER, LINE, DASHED, ARROW, DIM, ROOM, RECT, RRECT, ELLIPSE, TRIANGLE, DARROW, CURVE, ELBOW, RTRI, DIAMOND, TRAP, LASSO, TEXT
+    case NAVIGATE, SELECT, PEN, PENCIL, HIGHLIGHTER, ERASER, LINE, DASHED, ARROW, DIM, DOOR, ROOM, RECT, RRECT, ELLIPSE, TRIANGLE, DARROW, CURVE, ELBOW, RTRI, DIAMOND, TRAP, LASSO, TEXT
 
     var label: String {
         switch self {
         case .NAVIGATE: return "Navegar"; case .SELECT: return "Selecionar"; case .PEN: return "Caneta"; case .PENCIL: return "Lápis"
         case .HIGHLIGHTER: return "Marca-texto"; case .ERASER: return "Borracha"; case .LINE: return "Linha"; case .DASHED: return "Tracejada"
-        case .ARROW: return "Seta"; case .DIM: return "Seta de cota"; case .ROOM: return "Cômodo"; case .RECT: return "Retângulo"
+        case .ARROW: return "Seta"; case .DIM: return "Seta de cota"; case .DOOR: return "Porta na linha"; case .ROOM: return "Cômodo"; case .RECT: return "Retângulo"
         case .RRECT: return "Retângulo arredondado"; case .ELLIPSE: return "Oval"; case .TRIANGLE: return "Triângulo"; case .DARROW: return "Seta dupla"
         case .CURVE: return "Curva"; case .ELBOW: return "Linha em L"; case .RTRI: return "Triângulo retângulo"; case .DIAMOND: return "Losango"
         case .TRAP: return "Trapézio"; case .LASSO: return "Laço"; case .TEXT: return "Texto"
@@ -31,6 +31,7 @@ enum Tool: String, CaseIterable {
         case .ARROW: return "arrow.up.right"
         case .DARROW: return "arrow.up.left.and.arrow.down.right"
         case .DIM: return "ruler"
+        case .DOOR: return "door.left.hand.open"
         case .ROOM: return "house"
         case .RECT: return "rectangle"
         case .RRECT: return "app"
@@ -47,7 +48,7 @@ enum Tool: String, CaseIterable {
     }
 }
 
-let shapeTools: [Tool] = [.LINE, .DASHED, .ARROW, .DARROW, .CURVE, .ELBOW, .DIM, .ROOM, .RECT, .RRECT, .ELLIPSE, .TRIANGLE, .RTRI, .DIAMOND, .TRAP]
+let shapeTools: [Tool] = [.LINE, .DASHED, .ARROW, .DARROW, .CURVE, .ELBOW, .DIM, .DOOR, .ROOM, .RECT, .RRECT, .ELLIPSE, .TRIANGLE, .RTRI, .DIAMOND, .TRAP]
 
 /// Cores da paleta: preto, vermelho, azul, verde, âmbar.
 let PALETTE: [Int] = [argb(0xFF111111), argb(0xFFE53935), argb(0xFF1E5BD8), argb(0xFF2E9E57), argb(0xFFF5B400)]

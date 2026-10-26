@@ -289,6 +289,11 @@ struct ShapeGlyph: View {
                 poly([P(0.1, 0.5), P(0.9, 0.5)], false); head(P(0.9, 0.5), P(0.1, 0.5)); head(P(0.1, 0.5), P(0.9, 0.5))
                 poly([P(0.1, 0.25), P(0.1, 0.75)], false); poly([P(0.9, 0.25), P(0.9, 0.75)], false)
             case .CURVE: p.move(to: P(0.12, 0.85)); p.addQuadCurve(to: P(0.88, 0.15), control: P(0.15, 0.1))
+            case .DOOR:
+                poly([P(0.05, 0.82), P(0.95, 0.82)], false)
+                var dp = Path(); dp.move(to: P(0.25, 0.82)); dp.addLine(to: P(0.75, 0.82)); dp.move(to: P(0.25, 0.82)); dp.addLine(to: P(0.25, 0.32))
+                dp.addArc(center: P(0.25, 0.82), radius: 0.5 * w, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+                ctx.stroke(dp, with: .color(Color(argb: 0xFFE53935)), lineWidth: 2.4)
             case .ELBOW: poly([P(0.12, 0.85), P(0.12, 0.15), P(0.88, 0.15)], false)
             case .LASSO: p.addEllipse(in: CGRect(x: 0.1 * w, y: 0.14 * h, width: 0.8 * w, height: 0.55 * h)); dash = [4, 3]
             case .ROOM: poly([P(0.12, 0.2), P(0.6, 0.2), P(0.6, 0.5), P(0.88, 0.5), P(0.88, 0.85), P(0.12, 0.85)], true)

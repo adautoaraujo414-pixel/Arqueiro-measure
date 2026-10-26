@@ -67,6 +67,7 @@ enum Geo {
         case .stroke(let a): return a.pts.map { toSheet(photos, a.photoId, $0) }
         case .shape(let a): return [toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b)]
         case .dim(let a): return [toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b)]
+        case .door(let a): return [toSheet(photos, a.photoId, a.a), toSheet(photos, a.photoId, a.b)]
         case .text(let a): return [toSheet(photos, a.photoId, a.at)]
         case .room(let a): return a.pts.map { toSheet(photos, a.photoId, $0) }
         case .legacy(let l): return [l.at, Pt(l.at.x + l.wUnits, l.at.y + l.hUnits)]
@@ -86,6 +87,7 @@ enum Geo {
         case .stroke(var a): a.pts = a.pts.map(mv); return .stroke(a)
         case .shape(var a): a.a = mv(a.a); a.b = mv(a.b); return .shape(a)
         case .dim(var a): a.a = mv(a.a); a.b = mv(a.b); return .dim(a)
+        case .door(var a): a.a = mv(a.a); a.b = mv(a.b); return .door(a)
         case .text(var a): a.at = mv(a.at); return .text(a)
         case .room(var a): a.pts = a.pts.map(mv); return .room(a)
         default: return o // objetos do Android não se movem aqui
@@ -97,6 +99,7 @@ enum Geo {
         switch o {
         case .shape(var a): if endB { a.b = local } else { a.a = local }; return .shape(a)
         case .dim(var a): if endB { a.b = local } else { a.a = local }; return .dim(a)
+        case .door(var a): if endB { a.b = local } else { a.a = local }; return .door(a)
         default: return o
         }
     }
@@ -225,6 +228,9 @@ enum Geo {
                 return pairs(poly).contains { distToSegment(s, $0.0, $0.1) <= r }
             }
         case .text(let t): return textBox(t, annPoints(photos, o)[0]).contains(s, tol)
+        case .door(let d):
+            let ab = annPoints(photos, o)
+            return distToSegment(s, ab[0], ab[1]) <= tol + d.width * 1.5 || dimLabelBox(ab[0], ab[1], doorLabel(d, unit)).contains(s, tol / 2)
         case .room(let r): return hitSeg(sheet, r, s, tol, unit) >= 0
         case .legacy(let l): return Box(l: l.at.x, t: l.at.y, r: l.at.x + l.wUnits, b: l.at.y + l.hUnits).contains(s, tol / 2)
         case .dim(let d):
@@ -232,6 +238,48 @@ enum Geo {
             return distToSegment(s, ab[0], ab[1]) <= tol + d.width / 2 ||
                 (d.valueMm != nil && dimLabelBox(ab[0], ab[1], Units.label(d, unit), labelScale(d, photos)).contains(s, tol / 2))
         }
+    }
+
+    static func doorLabel(_ d: DoorObj, _ unit: LengthUnit) -> String { "Porta" + (d.valueMm.map { " " + Units.format($0, unit) } ?? "") }
+
+    /// Trecho de linha mais perto de p (paredes, linhas e traços): a porta fica em cima da linha.
+    static func nearestLine(_ sheet: Sheet, _ p: Pt, _ tol: CGFloat, skip: String? = nil) -> (Pt, Pt)? {
+        let photos = sheet.photos()
+        var best: (Pt, Pt)?
+        var bd = tol
+        func cand(_ a: Pt, _ b: Pt) {
+            if hypotf2(b.x - a.x, b.y - a.y) < 4 { return }
+            let d = distToSegment(p, a, b)
+            if d <= bd { bd = d; best = (a, b) }
+        }
+        for o in sheet.objs where o.id != skip {
+            switch o {
+            case .room(let r):
+                let q = annPoints(photos, o)
+                if r.segCount > 0 { for k in 0..<r.segCount { cand(q[k], q[(k + 1) % q.count]) } }
+            case .shape(let sh):
+                let q = annPoints(photos, o)
+                switch sh.kind {
+                case .LINE, .DASHED, .ARROW, .DARROW: cand(q[0], q[1])
+                case .RECT, .RRECT:
+                    let l = min(q[0].x, q[1].x), r = max(q[0].x, q[1].x), t = min(q[0].y, q[1].y), bt = max(q[0].y, q[1].y)
+                    cand(Pt(l, t), Pt(r, t)); cand(Pt(r, t), Pt(r, bt)); cand(Pt(r, bt), Pt(l, bt)); cand(Pt(l, bt), Pt(l, t))
+                default: break
+                }
+            case .stroke:
+                let q = annPoints(photos, o)
+                if q.count > 1 { for i in 1..<q.count { cand(q[i - 1], q[i]) } }
+            default: break
+            }
+        }
+        return best
+    }
+
+    static func projectOnSegment(_ p: Pt, _ a: Pt, _ b: Pt) -> Pt {
+        let dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy
+        if l2 < 1e-6 { return a }
+        let t = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / l2, 0, 1)
+        return Pt(a.x + dx * t, a.y + dy * t)
     }
 
     static func segEnds(_ photos: [String: PhotoObj], _ o: RoomObj, _ k: Int) -> (Pt, Pt) {

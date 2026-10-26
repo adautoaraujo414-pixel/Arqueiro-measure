@@ -131,6 +131,23 @@ struct Seg: Equatable {
     var slide: Bool = false
 }
 
+/// Porta marcada num trecho de uma linha (linha vermelha "Porta" por cima, com sentido de abertura).
+struct DoorObj: Equatable {
+    var id: String = newId()
+    var photoId: String? = nil
+    var a: Pt
+    var b: Pt
+    var hinge: Int = 0
+    var side: Int = 1
+    var slide: Bool = false
+    var valueMm: Double? = nil
+    var source: MeasureSource? = nil
+    var history: [Reading] = []
+    var color: Int = argb(0xFFE53935)
+    var width: CGFloat = 2.1
+    var locked: Bool = false
+}
+
 /// Contorno de cômodo (planta): vértices ligados por trechos retos, cada um com tipo e medida.
 struct RoomObj: Equatable {
     var id: String = newId()
@@ -166,6 +183,7 @@ enum Obj: Equatable {
     case shape(ShapeObj)
     case text(TextObj)
     case dim(DimObj)
+    case door(DoorObj)
     case room(RoomObj)
     case legacy(LegacyObj)
 
@@ -176,6 +194,7 @@ enum Obj: Equatable {
         case .shape(let o): return o.id
         case .text(let o): return o.id
         case .dim(let o): return o.id
+        case .door(let o): return o.id
         case .room(let o): return o.id
         case .legacy(let o): return o.id
         }
@@ -188,6 +207,7 @@ enum Obj: Equatable {
         case .shape(let o): return o.locked
         case .text(let o): return o.locked
         case .dim(let o): return o.locked
+        case .door(let o): return o.locked
         case .room(let o): return o.locked
         case .legacy(let o): return o.locked
         }
@@ -200,6 +220,7 @@ enum Obj: Equatable {
         case .shape(let o): return o.photoId
         case .text(let o): return o.photoId
         case .dim(let o): return o.photoId
+        case .door(let o): return o.photoId
         case .room(let o): return o.photoId
         default: return nil
         }
@@ -215,6 +236,7 @@ enum Obj: Equatable {
     var isLegacy: Bool { if case .legacy = self { return true }; return false }
     var asPhoto: PhotoObj? { if case .photo(let o) = self { return o }; return nil }
     var asDim: DimObj? { if case .dim(let o) = self { return o }; return nil }
+    var asDoor: DoorObj? { if case .door(let o) = self { return o }; return nil }
     var asRoom: RoomObj? { if case .room(let o) = self { return o }; return nil }
     var asText: TextObj? { if case .text(let o) = self { return o }; return nil }
     var asStroke: StrokeObj? { if case .stroke(let o) = self { return o }; return nil }
@@ -227,6 +249,7 @@ enum Obj: Equatable {
         case .shape(var o): o.locked = v; return .shape(o)
         case .text(var o): o.locked = v; return .text(o)
         case .dim(var o): o.locked = v; return .dim(o)
+        case .door(var o): o.locked = v; return .door(o)
         case .room(var o): o.locked = v; return .room(o)
         case .legacy(var o): o.locked = v; return .legacy(o)
         }
@@ -239,6 +262,7 @@ enum Obj: Equatable {
         case .shape(var o): o.id = nid; return .shape(o)
         case .text(var o): o.id = nid; return .text(o)
         case .dim(var o): o.id = nid; return .dim(o)
+        case .door(var o): o.id = nid; return .door(o)
         case .room(var o): o.id = nid; return .room(o)
         case .legacy(var o): o.id = nid; return .legacy(o)
         }
@@ -250,6 +274,7 @@ enum Obj: Equatable {
         case .shape(var o): o.photoId = pid; return .shape(o)
         case .text(var o): o.photoId = pid; return .text(o)
         case .dim(var o): o.photoId = pid; return .dim(o)
+        case .door(var o): o.photoId = pid; return .door(o)
         case .room(var o): o.photoId = pid; return .room(o)
         default: return self
         }
@@ -308,7 +333,7 @@ struct Note: Equatable {
         pages.reduce(0) { acc, p in
             acc + p.objs.reduce(0) { a, o in
                 switch o {
-                case .dim: return a + 1
+                case .dim, .door: return a + 1
                 case .room(let r): return a + r.segs.count
                 default: return a
                 }

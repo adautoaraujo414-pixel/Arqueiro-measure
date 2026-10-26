@@ -1,6 +1,7 @@
 package br.com.arque.measure.logic
 
 import br.com.arque.measure.model.Pt
+import br.com.arque.measure.model.ShapeKind as K
 import kotlin.math.ceil
 import kotlin.math.hypot
 
@@ -45,8 +46,7 @@ object Eraser {
     }
 
     /** Contorno de uma forma como linha de pontos (fechada quando é forma fechada). Folha. */
-    fun shapeOutline(kind: br.com.arque.measure.model.ShapeKind, a: Pt, b: Pt): List<Pt> {
-        val K = br.com.arque.measure.model.ShapeKind
+    fun shapeOutline(kind: K, a: Pt, b: Pt): List<Pt> {
         val l = kotlin.math.min(a.x, b.x); val r = kotlin.math.max(a.x, b.x)
         val t = kotlin.math.min(a.y, b.y); val bt = kotlin.math.max(a.y, b.y)
         fun closed(c: List<Pt>) = c + c.first()

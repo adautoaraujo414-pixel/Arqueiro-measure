@@ -127,8 +127,15 @@ final class AppModel: ObservableObject {
     func createNote() -> String {
         var folder: String?
         if case .folder(let f) = filter { folder = f }
-        let n = Note(name: tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1), folderId: folder)
-        if let p = lastProjectId { linkProject(n.id, p) }
+        // nota nova ligada a um projeto já nasce com o nome do cliente
+        let proj = lastProjectId.flatMap { pid in moveisProjects().first { $0.id == pid } }.flatMap { defaultProjName($0) ? nil : $0 }
+        let n = Note(name: proj?.name ?? tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1), folderId: folder)
+        if let p = lastProjectId {
+            links[n.id] = p
+            store.saveLinks(links)
+            if let pr = proj { setLinkName(n.id, pr.name) }
+            projVersion += 1
+        }
         store.saveNote(n)
         upsertMeta(n)
         writeThumb(n)
@@ -390,7 +397,68 @@ final class AppModel: ObservableObject {
     func linkProject(_ noteId: String, _ projectId: String?) {
         if let p = projectId { links[noteId] = p } else { links.removeValue(forKey: noteId) }
         store.saveLinks(links)
+        if let p = projectId { _ = syncPair(noteId, p, moveisProjects()) } else { setLinkName(noteId, nil) }
         projVersion += 1
+    }
+
+    // ---------- nota e projeto do mesmo cliente ficam com o mesmo nome ----------
+
+    /// Último nome em comum de cada par nota↔projeto (pra saber qual dos dois foi renomeado depois).
+    private var linkNames: [String: String] {
+        get { (UserDefaults.standard.dictionary(forKey: "arque.linknames") as? [String: String]) ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: "arque.linknames") }
+    }
+    private func setLinkName(_ noteId: String, _ name: String?) { var d = linkNames; d[noteId] = name; linkNames = d }
+
+    private func defaultNoteName(_ s: String) -> Bool {
+        let t = s.trimmingCharacters(in: .whitespaces)
+        return t.isEmpty || t.range(of: #"^(nota|note)(\s+\d+)?(\s*\((cópia|copia|copy)\))*$"#, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+    private func defaultProjName(_ p: MoveisProjects.P) -> Bool {
+        p.auto || p.name.isEmpty || p.name == tr("Projeto sem nome") || p.name == "Projeto sem nome"
+            || p.name.range(of: #"^(projeto|project|proyecto)\s+\d{1,2}/\d{1,2}"#, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// Junta o nome da nota e do projeto ligados: o nome de cliente (o que não é "Nota 3" nem "Projeto 26/10 19:46")
+    /// vale pros dois. Se os dois têm nome, quem foi renomeado por último manda; na primeira vez, o da nota.
+    private func syncPair(_ noteId: String, _ pid: String, _ projs: [MoveisProjects.P]) -> Bool {
+        guard let n = index.notes.first(where: { $0.id == noteId && !$0.trash }), let p = projs.first(where: { $0.id == pid }) else { return false }
+        let nName = n.name.trimmingCharacters(in: .whitespaces), pName = p.name.trimmingCharacters(in: .whitespaces)
+        let nDef = defaultNoteName(nName), pDef = defaultProjName(p)
+        let last = linkNames[noteId]
+        var target: String?
+        if nName == pName { target = (nDef && pDef) ? nil : nName }
+        else if let l = last, nName == l, !pDef { target = pName }   // o projeto foi renomeado
+        else if let l = last, pName == l, !nDef { target = nName }   // a nota foi renomeada
+        else if !nDef { target = nName }
+        else if !pDef { target = pName }
+        guard let t = target else { return false }
+        var changed = false
+        if nName != t { renameNoteKeepOpen(noteId, t); changed = true }
+        if pName != t || p.auto { MoveisProjects.rename(pid, t); changed = true }
+        setLinkName(noteId, t)
+        return changed
+    }
+
+    /// Confere todos os pares nota↔projeto (ao abrir a biblioteca, depois de renomear algo).
+    func syncLinkedNames() {
+        let projs = moveisProjects()
+        var changed = false
+        for (noteId, pid) in links where syncPair(noteId, pid, projs) { changed = true }
+        if changed { projVersion += 1 }
+    }
+
+    /// Renomeia a nota sem fechar o editor se ela estiver aberta.
+    private func renameNoteKeepOpen(_ id: String, _ name: String) {
+        if let s = session, s.state.note.id == id {
+            s.state.renameNoteSilently(name)
+            upsertMeta(s.state.note)
+            return
+        }
+        var ix = index
+        if let i = ix.notes.firstIndex(where: { $0.id == id }) { ix.notes[i].name = name; updateIndex(ix) }
+        let st = store
+        io.async { if var n = st.loadNote(id) { n.name = name; st.saveNote(n) } }
     }
     func notesOfProject(_ pid: String) -> [String] { links.filter { $0.value == pid }.map(\.key) }
     func openProject(_ id: String) { pendingProject = id; screen = .moveis }

@@ -129,8 +129,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun createNote(): String {
         val folder = (filter as? LibFilter.InFolder)?.id
-        val n = Note(name = tr("Nota {0}", index.notes.count { !it.trash } + 1), folderId = folder)
-        lastProjectId?.let { linkProject(n.id, it) }
+        // nota nova ligada a um projeto já nasce com o nome do cliente
+        val proj = lastProjectId?.let { pid -> moveisProjects().firstOrNull { it.id == pid } }?.takeIf { !defaultProjName(it) }
+        val n = Note(name = proj?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1), folderId = folder)
+        lastProjectId?.let { pid ->
+            links.edit().putString(n.id, pid).apply()
+            if (proj != null) linkNames.edit().putString(n.id, proj.name).apply()
+            projVersion++
+        }
         viewModelScope.launch(io) { store.saveNote(n) }
         upsertMeta(n)
         writeThumb(n)
@@ -559,7 +565,67 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun renameMoveisProject(id: String, name: String) { br.com.arque.measure.data.MoveisProjects.rename(getApplication(), id, name); projVersion++ }
     fun linkedProject(noteId: String): String? = links.getString(noteId, null)
     fun linkProject(noteId: String, projectId: String?) {
-        links.edit().apply { if (projectId == null) remove(noteId) else putString(noteId, projectId) }.apply(); projVersion++
+        links.edit().apply { if (projectId == null) remove(noteId) else putString(noteId, projectId) }.apply()
+        if (projectId == null) linkNames.edit().remove(noteId).apply()
+        else syncPair(noteId, projectId, moveisProjects())
+        projVersion++
+    }
+
+    // ---------- nota e projeto do mesmo cliente ficam com o mesmo nome ----------
+
+    /** Último nome em comum de cada par nota↔projeto (pra saber qual dos dois foi renomeado depois). */
+    private val linkNames by lazy { getApplication<Application>().getSharedPreferences("arque.linknames", android.content.Context.MODE_PRIVATE) }
+    private val defaultNoteRx = Regex("""^(nota|note)(\s+\d+)?(\s*\((cópia|copia|copy)\))*$""", RegexOption.IGNORE_CASE)
+    private val autoProjRx = Regex("""^(projeto|project|proyecto)\s+\d{1,2}/\d{1,2}""", RegexOption.IGNORE_CASE)
+    private fun defaultNoteName(s: String) = s.isBlank() || defaultNoteRx.matches(s.trim())
+    private fun defaultProjName(p: br.com.arque.measure.data.MoveisProjects.P) =
+        p.auto || p.name.isBlank() || p.name == tr("Projeto sem nome") || p.name == "Projeto sem nome" || autoProjRx.containsMatchIn(p.name)
+
+    /**
+     * Junta o nome da nota e do projeto ligados: o nome de cliente (o que não é "Nota 3" nem "Projeto 26/10 19:46")
+     * vale pros dois. Se os dois têm nome, quem foi renomeado por último manda; na primeira vez, o da nota.
+     * Devolve true se mudou algo.
+     */
+    private fun syncPair(noteId: String, pid: String, projs: List<br.com.arque.measure.data.MoveisProjects.P>): Boolean {
+        val n = index.notes.firstOrNull { it.id == noteId && !it.trash } ?: return false
+        val p = projs.firstOrNull { it.id == pid } ?: return false
+        val nName = n.name.trim(); val pName = p.name.trim()
+        val nDef = defaultNoteName(nName); val pDef = defaultProjName(p)
+        val last = linkNames.getString(noteId, null)
+        val target = when {
+            nName == pName -> if (nDef && pDef) null else nName
+            last != null && nName == last && !pDef -> pName // o projeto foi renomeado
+            last != null && pName == last && !nDef -> nName // a nota foi renomeada
+            !nDef -> nName
+            !pDef -> pName
+            else -> null
+        } ?: return false
+        var changed = false
+        if (nName != target) { renameNoteKeepOpen(noteId, target); changed = true }
+        if (pName != target || p.auto) { br.com.arque.measure.data.MoveisProjects.rename(getApplication(), pid, target); changed = true }
+        linkNames.edit().putString(noteId, target).apply()
+        return changed
+    }
+
+    /** Confere todos os pares nota↔projeto (ao abrir a biblioteca, depois de renomear algo). */
+    fun syncLinkedNames() {
+        val projs = moveisProjects()
+        var changed = false
+        links.all.forEach { (noteId, v) -> (v as? String)?.let { if (syncPair(noteId, it, projs)) changed = true } }
+        if (changed) projVersion++
+    }
+
+    /** Renomeia a nota sem fechar o editor se ela estiver aberta. */
+    private fun renameNoteKeepOpen(id: String, name: String) {
+        val s = session
+        if (s != null && s.state.note.id == id) {
+            s.state.renameNoteSilently(name)
+            upsertMeta(s.state.note)
+            return
+        }
+        // o índice muda na hora (a próxima conferência já vê o nome novo); o arquivo grava em segundo plano
+        updateIndex(index.copy(notes = index.notes.map { if (it.id == id) it.copy(name = name) else it }))
+        viewModelScope.launch(io) { runCatching { store.loadNote(id)?.copy(name = name)?.let { store.saveNote(it) } } }
     }
     fun notesOfProject(projectId: String): List<String> = links.all.filter { it.value == projectId }.keys.toList()
 

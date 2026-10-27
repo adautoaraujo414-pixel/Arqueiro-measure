@@ -43,6 +43,10 @@ struct LibraryView: View {
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
+        // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
+        .onAppear { app.syncLinkedNames() }
+        .onChange(of: app.projVersion) { _ in app.syncLinkedNames() }
+        .onChange(of: app.index.notes.map(\.name)) { _ in app.syncLinkedNames() }
         .fileImporter(isPresented: $restorePick, allowedContentTypes: [.zip, .data]) { r in if case .success(let u) = r { confirmRestore = u } }
         .alert(tr("Restaurar backup?"), isPresented: Binding(get: { confirmRestore != nil }, set: { if !$0 { confirmRestore = nil } })) {
             Button(tr("Cancelar"), role: .cancel) { confirmRestore = nil }

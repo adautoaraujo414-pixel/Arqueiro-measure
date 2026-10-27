@@ -434,6 +434,17 @@ final class EditorState {
     func setUnit(_ u: LengthUnit) { var n = note; n.unit = u; commitNote(n) }
     func setNoteLocked(_ v: Bool) { var n = note; n.locked = v; commitNote(n) }
 
+    /// Troca o nome da nota sem entrar no desfazer (o nome vem do cliente do projeto ligado).
+    /// As cópias do desfazer/refazer também levam o nome novo, pra ↶ não voltar o nome antigo.
+    func renameNoteSilently(_ name: String) {
+        if name.isEmpty || name == note.name { return }
+        undoStack = undoStack.map { var x = $0; x.name = name; return x }
+        redoStack = redoStack.map { var x = $0; x.name = name; return x }
+        note.name = name
+        onCommit(note)
+        onChange()
+    }
+
     // ---- folhas ----
     @discardableResult
     func addPage(_ pos: Int, _ tpl: Template) -> Bool {

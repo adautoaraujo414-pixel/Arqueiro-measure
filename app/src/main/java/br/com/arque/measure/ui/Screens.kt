@@ -204,6 +204,8 @@ fun LibraryScreen(vm: AppViewModel) {
         .filter { tab != LibTab.PDF && tab != LibTab.MOVEIS }
         .sortedWith(compareByDescending<NoteMeta> { it.pinned }.thenByDescending { it.createdMs })
 
+    // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
+    LaunchedEffect(vm.projVersion, vm.index) { vm.syncLinkedNames() }
     val projList = remember(vm.projVersion, vm.screen) { vm.moveisProjects() }
     BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
         val wide = maxWidth >= 700.dp

@@ -695,6 +695,19 @@ class EditorState(
         commitNote(note.copy(unit = u))
     }
 
+    /**
+     * Troca o nome da nota sem entrar no desfazer (o nome vem do cliente do projeto ligado).
+     * As cópias do desfazer/refazer também levam o nome novo, pra ↶ não voltar o nome antigo.
+     */
+    fun renameNoteSilently(name: String) {
+        if (name.isBlank() || name == note.name) return
+        val u = undoStack.map { it.copy(name = name) }; undoStack.clear(); undoStack.addAll(u)
+        val r = redoStack.map { it.copy(name = name) }; redoStack.clear(); redoStack.addAll(r)
+        note = note.copy(name = name)
+        onCommit(note)
+        notifyChange()
+    }
+
     fun setNoteLocked(v: Boolean) {
         commitNote(note.copy(locked = v))
     }

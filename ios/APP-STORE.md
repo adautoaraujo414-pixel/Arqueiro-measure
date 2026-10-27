@@ -77,6 +77,48 @@ cd ios && xcodegen generate && open Arquemestre.xcodeproj
   - `ipad-*` para o iPad 13" (2064 × 2752).
 - **Exportação de criptografia:** já respondida no Info.plist (`ITSAppUsesNonExemptEncryption = NO`).
 
+## Idiomas (Português, English, Español)
+- O app já sai em 3 idiomas: segue o idioma do iPhone (qualquer outro idioma abre em inglês) e dá pra trocar em
+  ⋯ → 🌐 Idioma · Language. O Info.plist declara pt-BR, en e es, então a App Store mostra os 3 idiomas.
+- Textos do app: `app/src/main/assets/i18n/en.json` e `es.json` (os mesmos do Android e do editor de móveis).
+  A chave é o texto em português; texto sem tradução continua em português.
+- Moeda dos orçamentos: a do país do aparelho (Brasil R$, EUA $, Espanha €…).
+- Capturas por idioma: `capturas/` (português), `capturas/en/` e `capturas/es/`.
+- Em "Disponibilidade" marque os países onde quer vender (ex.: Brasil, Estados Unidos, México, Espanha…).
+- No App Store Connect, adicione as localizações **English (U.S.)** e **Spanish (Mexico)** e cole:
+
+**English (U.S.)**
+- Name: `Arquemestre`
+- Subtitle: `Woodshop measuring & cabinets`
+- Keywords: `woodworking,cabinet,laser measure,bosch,cut list,kitchen,closet,quote,sketch,carpentry`
+- Description:
+```
+Arquemestre puts your woodshop's measuring, design, cutting, quotes and schedule in one place.
+
+• Measuring: create a note, take a photo or draw the sketch, connect a Bosch laser measure (Bluetooth) and the reading drops straight into the dimension.
+• Furniture editor: build kitchens, wardrobes, panels and living rooms. See them in 3D, open doors and drawers, stretch parts by dragging.
+• Cut list and quotes: parts list, full-board cutting plan, material cost and a PDF quote with your logo.
+• Schedule: deliveries, visits and measuring linked to each client, with reminders.
+
+Free trial with everything unlocked. Then a one-time purchase — no subscription.
+```
+
+**Spanish (Mexico)**
+- Nombre: `Arquemestre`
+- Subtítulo: `Medición y muebles a medida`
+- Palabras clave: `carpintería,muebles,cocina,ropero,medidor láser,bosch,lista de corte,presupuesto,croquis`
+- Descripción:
+```
+Arquemestre reúne la medición, el proyecto, el corte, el presupuesto y la agenda de tu carpintería en un solo lugar.
+
+• Medición: crea una nota, toma una foto o dibuja el croquis, conecta el medidor láser Bosch (Bluetooth) y la medida cae directo en la cota.
+• Editor de muebles: arma cocinas, roperos, paneles y salas. Míralos en 3D, abre puertas y cajones, estira piezas arrastrando.
+• Lista de corte y presupuesto: lista de piezas, plano de corte de tableros enteros, costo del material y presupuesto en PDF con tu logo.
+• Agenda: entregas, visitas y mediciones ligadas a cada cliente, con avisos.
+
+Prueba gratis con todo liberado. Después, compra única — sin suscripción.
+```
+
 ## Notas para a revisão da Apple (colar em "Notas")
 ```
 O Arquemestre não tem login nem conta.

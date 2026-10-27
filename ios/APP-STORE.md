@@ -130,7 +130,7 @@ Arquivo `ios/ArquemestreTests/SubscriptionTests.swift`, com o **StoreKit Testing
 9. **Restaurar** em outra instalação com o mesmo Apple ID: liberado, sem senha.
 10. Restaurar sem assinatura: continua bloqueado, com aviso.
 
-Resultado (27/10/2026, execução 39 do CI, Xcode 26.6): **11 de 11 passaram** (o 11º é um diagnóstico que confere se a loja de teste
+Resultado (27/10/2026, execução 38 do CI, Xcode 26.6): **11 de 11 passaram** (o 11º é um diagnóstico que confere se a loja de teste
 devolve `arquemestre_mensal` por R$ 29,90). O resumo fica no ramo `ci/ios-resultados` → `RESUMO.txt`, parte "Assinatura (StoreKit)".
 
 > Isso é o ambiente local de testes do Xcode, que simula a App Store. **Não é o Sandbox dos servidores da Apple.**

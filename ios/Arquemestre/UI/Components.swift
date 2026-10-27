@@ -246,6 +246,25 @@ struct Pill<Content: View>: View {
     }
 }
 
+/// Ícone com o nome embaixo (fica claro o que cada botão faz).
+struct LabeledIcon<Icon: View>: View {
+    var label: String
+    var on = false
+    var enabled = true
+    @ViewBuilder var icon: (Color) -> Icon
+    var body: some View {
+        let col: Color = !enabled ? Ui.line : (on ? Ui.accent : Ui.text)
+        VStack(spacing: 1) {
+            icon(col).frame(width: 24, height: 24)
+            Text(label).font(.system(size: 10)).foregroundColor(col).lineLimit(1)
+        }
+        .frame(minWidth: 50)
+        .padding(.horizontal, 4).padding(.vertical, 3)
+        .background(RoundedRectangle(cornerRadius: 12).fill(on ? Ui.accent.opacity(0.22) : Color.clear))
+        .contentShape(Rectangle())
+    }
+}
+
 struct BarIcon: View {
     var symbol: String
     var label: String
@@ -254,13 +273,41 @@ struct BarIcon: View {
     var action: () -> Void
     var body: some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 18))
-                .foregroundColor(!enabled ? Ui.line : (on ? Ui.accent : Ui.text))
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(on ? Ui.accent.opacity(0.3) : Color.clear))
+            LabeledIcon(label: label, on: on, enabled: enabled) { col in
+                if symbol.hasPrefix("custom.") { ToolGlyph(name: symbol, tint: col) }
+                else { Image(systemName: symbol).font(.system(size: 18)).foregroundColor(col) }
+            }
         }
+        .buttonStyle(.plain)
         .disabled(!enabled)
         .accessibilityLabel(label)
+    }
+}
+
+/// Desenhos próprios pras ferramentas que no SF Symbols ficariam parecidas (caneta x lápis x marca-texto).
+struct ToolGlyph: View {
+    var name: String
+    var tint: Color
+    var body: some View {
+        Canvas { ctx, size in
+            let k = min(size.width, size.height) / 24
+            func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * k, y: y * k) }
+            var p = Path()
+            if name == "custom.pen" {
+                // ponta de pena com furo e fenda
+                p.move(to: P(12, 1.8)); p.addLine(to: P(18.3, 9.4)); p.addLine(to: P(15.2, 21.2)); p.addLine(to: P(8.8, 21.2)); p.addLine(to: P(5.7, 9.4)); p.closeSubpath()
+                p.addEllipse(in: CGRect(x: 10.3 * k, y: 9.2 * k, width: 3.4 * k, height: 3.4 * k))
+                p.addRect(CGRect(x: 11.35 * k, y: 12.9 * k, width: 1.3 * k, height: 6.5 * k))
+                ctx.fill(p, with: .color(tint), style: FillStyle(eoFill: true))
+            } else {
+                // marca-texto: corpo largo, ponta chanfrada e a faixa marcada
+                p.move(to: P(15.2, 2.2)); p.addLine(to: P(21.8, 8.8)); p.addLine(to: P(12.6, 18)); p.addLine(to: P(6, 11.4)); p.closeSubpath()
+                p.move(to: P(5.3, 12.1)); p.addLine(to: P(11.9, 18.7)); p.addLine(to: P(9.6, 21)); p.addLine(to: P(5, 21)); p.addLine(to: P(3, 19)); p.addLine(to: P(3, 14.4)); p.closeSubpath()
+                p.addRect(CGRect(x: 13.5 * k, y: 20.6 * k, width: 8.5 * k, height: 1.8 * k))
+                ctx.fill(p, with: .color(tint))
+            }
+        }
+        .frame(width: 22, height: 22)
     }
 }
 

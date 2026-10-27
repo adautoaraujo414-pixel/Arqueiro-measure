@@ -19,12 +19,20 @@ enum Tool: String, CaseIterable {
         }
     }
     var drawing: Bool { !(self == .NAVIGATE || self == .SELECT || self == .TEXT) }
+    /// Nome curto que aparece embaixo do ícone na barra.
+    var short: String {
+        switch self {
+        case .DIM: return "Medida"; case .DOOR: return "Porta"; case .RRECT: return "Arredond."; case .RTRI: return "Tri. reto"
+        case .DARROW: return "Seta dupla"; case .ELBOW: return "Linha L"
+        default: return label
+        }
+    }
     var symbol: String {
         switch self {
         case .NAVIGATE, .SELECT: return "cursorarrow"
-        case .PEN: return "pencil.tip"
+        case .PEN: return "custom.pen"
         case .PENCIL: return "pencil"
-        case .HIGHLIGHTER: return "highlighter"
+        case .HIGHLIGHTER: return "custom.marker"
         case .ERASER: return "eraser"
         case .LINE: return "line.diagonal"
         case .DASHED: return "line.3.horizontal.decrease"
@@ -106,7 +114,7 @@ final class EditorSession: ObservableObject {
 
     var canvasW: CGFloat = 0
     var canvasH: CGFloat = 0
-    var topInsetPts: CGFloat = 130
+    var topInsetPts: CGFloat = 165
     var bottomInsetPts: CGFloat = 90
     private var fitted = false
     private var tapTimes: [TimeInterval] = []

@@ -203,7 +203,7 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
         updateActivePage()
     }
 
-    private fun topInset() = 120f * density
+    private fun topInset() = 150f * density
     private fun bottomInset() = 90f * density
 
     /** Limita a câmera. Em cima: parada dura. Embaixo: resistência além do fim (puxar para criar folha). */

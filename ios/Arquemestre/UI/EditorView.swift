@@ -95,7 +95,7 @@ struct EditorView: View {
                 if let edit = session.textEdit { textField(edit, geo.size) }
             }
             .onAppear {
-                session.topInsetPts = 130 + geo.safeAreaInsets.top
+                session.topInsetPts = 165 + geo.safeAreaInsets.top
                 if let imp = app.pendingImport {
                     app.pendingImport = nil
                     if imp == "gallery" { pickPhotos = true } else { camera = true }
@@ -143,9 +143,11 @@ struct EditorView: View {
                 }
                 let vp = session.visiblePage()
                 Pill {
-                    BarIcon(symbol: "chevron.left", label: "Folha anterior", enabled: vp > 0) { session.goToPage(vp - 1) }
-                    Button { overview = true } label: { Text("\(vp + 1)/\(note.pages.count)").foregroundColor(Ui.text).padding(.horizontal, 2) }
-                    BarIcon(symbol: "chevron.right", label: "Próxima folha", enabled: vp < note.pages.count - 1) { session.goToPage(vp + 1) }
+                    BarIcon(symbol: "chevron.left", label: "Anterior", enabled: vp > 0) { session.goToPage(vp - 1) }
+                    Button { overview = true } label: {
+                        LabeledIcon(label: "Folhas") { col in Text("\(vp + 1)/\(note.pages.count)").font(.system(size: 15, weight: .bold)).foregroundColor(col) }
+                    }.buttonStyle(.plain)
+                    BarIcon(symbol: "chevron.right", label: "Próxima", enabled: vp < note.pages.count - 1) { session.goToPage(vp + 1) }
                     Menu {
                         Button("Antes da folha atual") { addPage(st.pageIdx) }
                         Button("Após a folha atual") { addPage(st.pageIdx + 1) }
@@ -154,23 +156,25 @@ struct EditorView: View {
                         Divider()
                         Button("Importar imagem") { app.photoToNewPage = true; pickPhotos = true }
                         Button("Tirar fotografia") { app.photoToNewPage = true; camera = true }
-                    } label: { Label("Folha", systemImage: "plus").foregroundColor(Ui.accent).padding(.horizontal, 10).padding(.vertical, 8) }
+                    } label: { LabeledIcon(label: "Nova folha") { _ in Image(systemName: "plus").font(.system(size: 18)).foregroundColor(Ui.accent) } }
                 }
                 let linkedId = app.linkedProject(note.id)
                 let linkedName = linkedId.flatMap { id in app.moveisProjects().first { $0.id == id }?.name }
                 Pill {
                     Button { projLink = true } label: {
-                        Text(linkedName.map { "🪚 \($0)" } ?? "🪚").foregroundColor(linkedName != nil ? Ui.accent : Ui.text).lineLimit(1)
-                            .frame(maxWidth: 160).padding(.horizontal, 10).padding(.vertical, 8)
-                    }
+                        LabeledIcon(label: linkedName ?? "Projeto", on: linkedName != nil) { _ in Text("🪚").font(.system(size: 17)) }.frame(maxWidth: 160)
+                    }.buttonStyle(.plain)
                 }
                 Pill {
-                    Button { st.setUnit(note.unit.next) } label: { Text(note.unit.label).foregroundColor(Ui.text).padding(.horizontal, 12).padding(.vertical, 8) }
+                    Button { st.setUnit(note.unit.next) } label: {
+                        LabeledIcon(label: "Unidade") { col in Text(note.unit.label).font(.system(size: 15, weight: .bold)).foregroundColor(col) }
+                    }.buttonStyle(.plain)
                     Button { btOpen = true } label: {
                         let connected = ble.state == .CONNECTED
-                        Label(connected ? "Bosch" : "Conectar", systemImage: "dot.radiowaves.left.and.right")
-                            .foregroundColor(connected ? Ui.accent : Ui.text).padding(.horizontal, 10).padding(.vertical, 8)
-                    }
+                        LabeledIcon(label: connected ? "Trena ligada" : "Trena Bosch", on: connected) { col in
+                            Image(systemName: "dot.radiowaves.left.and.right").font(.system(size: 18)).foregroundColor(col)
+                        }
+                    }.buttonStyle(.plain)
                 }
                 Pill {
                     Menu {
@@ -186,13 +190,14 @@ struct EditorView: View {
                         Button("Exportar medidas (CSV)") { shareURL = app.exportCsv() }
                         Divider()
                         Button(session.stylusOnly ? "Desenhar só com Apple Pencil: ligado" : "Desenhar só com Apple Pencil: desligado") { session.stylusOnly.toggle() }
-                    } label: { Image(systemName: "ellipsis").foregroundColor(Ui.text).frame(width: 40, height: 40) }
+                    } label: { LabeledIcon(label: "Mais") { col in Image(systemName: "ellipsis").font(.system(size: 18)).foregroundColor(col) } }
                 }
             }.padding(.horizontal, 8)
         }
         .padding(.top, 2)
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                // escrever
                 Pill {
                     toolBtn(.PEN); toolBtn(.PENCIL); toolBtn(.HIGHLIGHTER)
                     BarIcon(symbol: Tool.ERASER.symbol, label: "Borracha", on: session.tool == .ERASER) {
@@ -200,34 +205,54 @@ struct EditorView: View {
                     }
                     .popover(isPresented: $eraserMenu) { EraserSettings(session: session).frame(minWidth: 280).padding() .presentationCompactAdaptation(.popover) }
                 }
+                // selecionar
+                Pill { toolBtn(.SELECT); glyphBtn(.LASSO) }
+                // medir e marcar
+                Pill { glyphBtn(.DIM); glyphBtn(.ROOM); glyphBtn(.DOOR) }
+                // inserir
                 Pill {
-                    toolBtn(.SELECT)
-                    BarIcon(symbol: "plus.forwardslash.minus", label: "Calculadora", on: session.calcOpen) { session.calcOpen.toggle() }
-                    toolBtn(.LASSO)
+                    Button { shapesMenu = true } label: {
+                        let inShapes = shapeTools.contains(session.tool) && ![.DIM, .ROOM, .DOOR].contains(session.tool)
+                        LabeledIcon(label: inShapes ? session.tool.short : "Formas", on: inShapes) { col in ShapeGlyph(tool: inShapes ? session.tool : .RECT, tint: col) }
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $shapesMenu) { ShapesPanel(session: session) { shapesMenu = false }.padding().presentationCompactAdaptation(.popover) }
+                    toolBtn(.TEXT)
                     Menu {
                         Button { app.photoToNewPage = false; pickPhotos = true } label: { Label("Álbum", systemImage: "photo") }
                         Button { app.photoToNewPage = false; camera = true } label: { Label("Câmera", systemImage: "camera") }
-                    } label: { Image(systemName: "photo").foregroundColor(Ui.text).frame(width: 40, height: 40) }
-                    toolBtn(.TEXT)
-                    toolBtn(.DOOR)
-                    Button { shapesMenu = true } label: {
-                        let inShapes = shapeTools.contains(session.tool)
-                        ShapeGlyph(tool: inShapes ? session.tool : .RECT, tint: inShapes ? Ui.accent : Ui.text)
-                            .frame(width: 40, height: 40).background(Circle().fill(inShapes ? Ui.accent.opacity(0.3) : .clear))
-                    }
-                    .popover(isPresented: $shapesMenu) { ShapesPanel(session: session) { shapesMenu = false }.padding().presentationCompactAdaptation(.popover) }
+                    } label: { LabeledIcon(label: "Imagem") { col in Image(systemName: "photo").font(.system(size: 18)).foregroundColor(col) } }
+                    BarIcon(symbol: "plus.forwardslash.minus", label: "Calculadora", on: session.calcOpen) { session.calcOpen.toggle() }
                 }
+                // cor e espessura
                 Pill {
-                    ColorRow(current: session.color) { session.applyColor($0) }.padding(.leading, 10)
-                    Text(mmText(session.width)).font(.caption).foregroundColor(Ui.dim).padding(.horizontal, 10)
+                    VStack(spacing: 1) {
+                        ColorRow(current: session.color) { session.applyColor($0) }
+                        Text("Cor").font(.system(size: 10)).foregroundColor(Ui.text)
+                    }.padding(.horizontal, 8)
+                    BarIcon(symbol: "minus", label: "Mais fina") { session.applyWidth(-0.1) }
+                    VStack(spacing: 1) {
+                        Text(mmText(session.width)).font(.caption).foregroundColor(Ui.text)
+                        Text("Espessura").font(.system(size: 10)).foregroundColor(Ui.dim)
+                    }
+                    BarIcon(symbol: "plus", label: "Mais grossa") { session.applyWidth(0.1) }
                 }
             }.padding(.horizontal, 8)
         }
         .padding(.top, 6).padding(.bottom, 6)
     }
 
+    /// Ferramenta com desenho próprio (laço, medida, cômodo, porta) e o nome embaixo.
+    private func glyphBtn(_ t: Tool) -> some View {
+        Button { session.chooseTool(t) } label: {
+            LabeledIcon(label: t.short, on: session.tool == t) { col in ShapeGlyph(tool: t, tint: col) }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(t.label)
+    }
+
     private func toolBtn(_ t: Tool) -> some View {
-        BarIcon(symbol: t.symbol, label: t.label, on: session.tool == t) { session.chooseTool(t) }
+        BarIcon(symbol: t.symbol, label: t.short, on: session.tool == t) { session.chooseTool(t) }
     }
 
     private func addPage(_ pos: Int) {
@@ -351,11 +376,16 @@ struct ShapesPanel: View {
     var close: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(48)), count: 5), spacing: 4) {
-                ForEach(shapeTools, id: \.self) { t in
+            Text("Formas").font(.headline)
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(62)), count: 4), spacing: 6) {
+                ForEach(shapeTools.filter { ![.DIM, .ROOM, .DOOR].contains($0) }, id: \.self) { t in
                     Button { session.chooseTool(t); close() } label: {
-                        ShapeGlyph(tool: t, tint: session.tool == t ? Ui.accent : .primary).frame(width: 46, height: 46)
-                            .background(Circle().fill(session.tool == t ? Ui.accent.opacity(0.3) : .clear))
+                        VStack(spacing: 2) {
+                            ShapeGlyph(tool: t, tint: session.tool == t ? Ui.accent : .primary)
+                            Text(t.short).font(.system(size: 10)).foregroundColor(session.tool == t ? Ui.accent : .primary).lineLimit(1)
+                        }
+                        .frame(width: 60, height: 50)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(session.tool == t ? Ui.accent.opacity(0.3) : .clear))
                     }.accessibilityLabel(t.label)
                 }
             }

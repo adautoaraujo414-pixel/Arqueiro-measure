@@ -96,6 +96,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
@@ -136,9 +139,9 @@ import kotlin.math.roundToInt
 private fun Tool.icon(): ImageVector = when (this) {
     Tool.NAVIGATE -> Icons.Filled.NearMe
     Tool.SELECT -> Icons.Filled.NearMe
-    Tool.PEN -> Icons.Filled.Edit
-    Tool.PENCIL -> Icons.Filled.Create
-    Tool.HIGHLIGHTER -> Icons.Filled.Edit
+    Tool.PEN -> PenIcon
+    Tool.PENCIL -> Icons.Filled.Edit
+    Tool.HIGHLIGHTER -> HighlighterIcon
     Tool.ERASER -> EraserIcon
     Tool.LINE -> Icons.Filled.Remove
     Tool.DASHED -> Icons.Filled.ShapeLine
@@ -151,6 +154,25 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.TRIANGLE -> Icons.Filled.ChangeHistory
     Tool.TEXT -> Icons.Filled.TextFields
     else -> Icons.Filled.CropSquare
+}
+
+private fun svgIcon(name: String, d: String, evenOdd: Boolean = false): ImageVector =
+    ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(d).toNodes(),
+            pathFillType = if (evenOdd) androidx.compose.ui.graphics.PathFillType.EvenOdd else androidx.compose.ui.graphics.PathFillType.NonZero,
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
+
+/** Caneta: ponta de pena (bico com furo e fenda) — diferente do lápis. */
+val PenIcon: ImageVector by lazy {
+    svgIcon("Caneta", "M12,1.8L18.3,9.4L15.2,21.2L8.8,21.2L5.7,9.4Z M13.7,10.9A1.7,1.7 0 1,1 10.3,10.9A1.7,1.7 0 1,1 13.7,10.9Z M11.35,12.9L12.65,12.9L12.65,19.4L11.35,19.4Z", evenOdd = true)
+}
+
+/** Marca-texto: corpo largo com ponta chanfrada e a faixa marcada embaixo. */
+val HighlighterIcon: ImageVector by lazy {
+    svgIcon("Marca-texto", "M15.2,2.2L21.8,8.8L12.6,18L6,11.4Z M5.3,12.1L11.9,18.7L9.6,21L5,21L3,19L3,14.4Z M13.5,20.6L22,20.6L22,22.4L13.5,22.4Z")
 }
 
 /** Borracha de verdade (bloco inclinado com a ponta), no lugar do símbolo de apagar texto. */
@@ -550,23 +572,17 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     BarPill {
-                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar") { vm.closeEditor() }
+                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar pra biblioteca", label = "Voltar") { vm.closeEditor() }
                         BarIcon(Icons.AutoMirrored.Filled.Undo, "Desfazer", st.canUndo) { st.undo() }
                         BarIcon(Icons.AutoMirrored.Filled.Redo, "Refazer", st.canRedo) { st.redo() }
                     }
                     val vp = session.visiblePage()
                     BarPill {
-                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Folha anterior", vp > 0) { session.goToPage(vp - 1) }
-                        Text("${vp + 1}/${note.pages.size}", color = Ui.text, fontSize = 14.sp, modifier = Modifier.clickable { overview = true }.padding(horizontal = 2.dp, vertical = 8.dp))
-                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Próxima folha", vp < note.pages.lastIndex) { session.goToPage(vp + 1) }
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Folha anterior", vp > 0, label = "Anterior") { session.goToPage(vp - 1) }
+                        LBtn("Folhas", onClick = { overview = true }) { c -> Text("${vp + 1}/${note.pages.size}", color = c, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Próxima folha", vp < note.pages.lastIndex, label = "Próxima") { session.goToPage(vp + 1) }
                         Box {
-                            Row(
-                                Modifier.clip(RoundedCornerShape(16.dp)).clickable { pageMenu = true }.padding(horizontal = 10.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(Icons.Filled.Add, null, Modifier.size(16.dp), tint = Ui.accent)
-                                Text(" Folha", color = Ui.accent, fontSize = 14.sp)
-                            }
+                            LBtn("Nova folha", onClick = { pageMenu = true }) { _ -> Icon(Icons.Filled.Add, null, Modifier.size(22.dp), tint = Ui.accent) }
                             DropdownMenu(expanded = pageMenu, onDismissRequest = { pageMenu = false }) {
                                 DropdownMenuItem(text = { Text("Antes da folha atual") }, onClick = { addPage(st.pageIdx) })
                                 DropdownMenuItem(text = { Text("Após a folha atual") }, onClick = { addPage(st.pageIdx + 1) })
@@ -589,28 +605,18 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     val linkedId = remember(vm.projVersion, note.id) { vm.linkedProject(note.id) }
                     val linkedName = remember(vm.projVersion, linkedId) { linkedId?.let { id -> vm.moveisProjects().firstOrNull { it.id == id }?.name } }
                     BarPill {
-                        Text(
-                            if (linkedName != null) "🪚 $linkedName" else "🪚", color = if (linkedName != null) Ui.accent else Ui.text, fontSize = 14.sp, maxLines = 1,
-                            modifier = Modifier.clip(RoundedCornerShape(16.dp)).clickable { projLinkOpen = true }.padding(horizontal = 10.dp, vertical = 8.dp).widthIn(max = 160.dp),
-                        )
+                        LBtn(linkedName ?: "Projeto", on = linkedName != null, onClick = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
                     }
                     if (projLinkOpen) ProjectLinkDialog(vm, note.id, linkedId) { projLinkOpen = false }
                     val connected = bleState == BleState.CONNECTED
                     BarPill {
-                        Text(
-                            note.unit.label, color = Ui.text, fontSize = 14.sp,
-                            modifier = Modifier.clip(RoundedCornerShape(16.dp)).clickable { st.setUnit(nextUnit(note.unit)) }.padding(horizontal = 12.dp, vertical = 8.dp),
-                        )
-                        Row(
-                            Modifier.clip(RoundedCornerShape(16.dp)).clickable { btOpen = true }.padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, "Trena", Modifier.size(18.dp), tint = if (connected) Ui.accent else Ui.text)
-                            Text(if (connected) " Bosch" else " Conectar", color = if (connected) Ui.accent else Ui.text, fontSize = 14.sp)
+                        LBtn("Unidade", onClick = { st.setUnit(nextUnit(note.unit)) }) { c -> Text(note.unit.label, color = c, fontSize = 15.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        LBtn(if (connected) "Trena ligada" else "Trena Bosch", on = connected, onClick = { btOpen = true }) { c ->
+                            Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, null, Modifier.size(22.dp), tint = c)
                         }
                     }
                     Box {
-                        BarPill { BarIcon(Icons.Filled.MoreVert, "Mais opções") { menuOpen = true } }
+                        BarPill { BarIcon(Icons.Filled.MoreVert, "Mais opções", label = "Mais") { menuOpen = true } }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                             DropdownMenuItem(text = { Text("Zoom em tela cheia") }, onClick = { menuOpen = false; session.fullscreen = true })
                             DropdownMenuItem(text = { Text("Visão geral da nota") }, onClick = { menuOpen = false; overview = true })
@@ -631,20 +637,21 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     }
                 }
                 Spacer(Modifier.height(6.dp))
-                // ---- linha 2: desenho · objetos · cor e espessura ----
+                // ---- linha 2: ferramentas (cada uma com o nome embaixo) ----
                 Row(
                     Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    // escrever
                     BarPill {
                         ToolBtn(Tool.PEN, session)
                         ToolBtn(Tool.PENCIL, session)
+                        ToolBtn(Tool.HIGHLIGHTER, session)
                         Box {
                             val on = session.tool == Tool.ERASER
-                            IconButton(
-                                onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) },
-                                modifier = Modifier.size(40.dp).clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                            ) { Icon(EraserIcon, "Borracha", tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
+                            LBtn("Borracha", on = on, onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) }) { c ->
+                                Icon(EraserIcon, null, tint = c, modifier = Modifier.size(22.dp))
+                            }
                             DropdownMenu(expanded = eraserMenu, onDismissRequest = { eraserMenu = false }) {
                                 Column(Modifier.padding(horizontal = 14.dp).widthIn(min = 260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text("Borracha", fontSize = 15.sp)
@@ -682,49 +689,31 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                             }
                         }
                     }
+                    // selecionar
                     BarPill {
                         ToolBtn(Tool.SELECT, session)
-                        IconButton(
-                            onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) },
-                            modifier = Modifier.size(40.dp),
-                        ) { Text("▭", color = Ui.text, fontSize = 20.sp) }
-                        IconButton(
-                            onClick = { session.calcOpen = !session.calcOpen },
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.calcOpen) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                        ) { Text("÷×", color = if (session.calcOpen) Ui.accent else Ui.text, fontSize = 15.sp) }
-                        IconButton(
-                            onClick = { session.chooseTool(Tool.LASSO) },
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.tool == Tool.LASSO) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                        ) { ShapeGlyph(Tool.LASSO, if (session.tool == Tool.LASSO) Ui.accent else Ui.text, 22.dp) }
+                        ToolBtn(Tool.LASSO, session)
+                    }
+                    // medir e marcar
+                    BarPill {
+                        ToolBtn(Tool.DIM, session)
+                        ToolBtn(Tool.ROOM, session)
+                        ToolBtn(Tool.DOOR, session)
+                    }
+                    // inserir
+                    BarPill {
                         Box {
-                            BarIcon(Icons.Filled.Image, "Imagem") { imageMenu = true }
-                            DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
-                                DropdownMenuItem(text = { Text("Álbum") }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
-                                DropdownMenuItem(text = { Text("Câmera") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
-                            }
-                        }
-                        ToolBtn(Tool.TEXT, session)
-                        // porta num trecho da linha (atalho; também está no menu de formas)
-                        IconButton(
-                            onClick = { session.chooseTool(Tool.DOOR) },
-                            modifier = Modifier.size(40.dp).clip(CircleShape).background(if (session.tool == Tool.DOOR) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                        ) { ShapeGlyph(Tool.DOOR, if (session.tool == Tool.DOOR) Ui.accent else Ui.text, 22.dp) }
-                        Box {
-                            val inShapes = session.tool in shapeTools
-                            Box(Modifier.clip(CircleShape).background(if (inShapes) Ui.accent.copy(alpha = 0.3f) else Color.Transparent)) {
-                                IconButton(onClick = { shapesMenu = true }, modifier = Modifier.size(40.dp)) {
-                                    ShapeGlyph(if (inShapes) session.tool else Tool.RECT, if (inShapes) Ui.accent else Ui.text, 22.dp)
-                                }
+                            val inShapes = session.tool in shapeTools && session.tool !in listOf(Tool.DIM, Tool.ROOM, Tool.DOOR)
+                            LBtn(if (inShapes) session.tool.short() else "Formas", on = inShapes, onClick = { shapesMenu = true }) { c ->
+                                ShapeGlyph(if (inShapes) session.tool else Tool.RECT, c, 22.dp)
                             }
                             DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
                                 Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
-                                    shapeTools.chunked(5).forEach { rowTools ->
-                                        Row {
+                                    Text("Formas", fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
+                                    shapeTools.filter { it != Tool.DIM && it != Tool.ROOM && it != Tool.DOOR }.chunked(4).forEach { rowTools ->
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             rowTools.forEach { t ->
-                                                IconButton(
-                                                    onClick = { session.chooseTool(t); shapesMenu = false },
-                                                    modifier = Modifier.size(48.dp).clip(CircleShape).background(if (session.tool == t) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-                                                ) { ShapeGlyph(t, if (session.tool == t) Ui.accent else Ui.text, 24.dp) }
+                                                LBtn(t.short(), on = session.tool == t, onClick = { session.chooseTool(t); shapesMenu = false }) { c -> ShapeGlyph(t, c, 24.dp) }
                                             }
                                         }
                                     }
@@ -742,10 +731,31 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                 }
                             }
                         }
+                        ToolBtn(Tool.TEXT, session)
+                        Box {
+                            LBtn("Imagem", onClick = { imageMenu = true }) { c -> Icon(Icons.Filled.Image, null, tint = c, modifier = Modifier.size(22.dp)) }
+                            DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
+                                DropdownMenuItem(text = { Text("Álbum") }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text("Câmera") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
+                            }
+                        }
+                        LBtn("Móveis", onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) }) { c -> ShapeGlyph(Tool.RECT, c, 22.dp, cabinet = true) }
+                        LBtn("Calculadora", on = session.calcOpen, onClick = { session.calcOpen = !session.calcOpen }) { c ->
+                            Icon(Icons.Filled.Calculate, null, tint = c, modifier = Modifier.size(22.dp))
+                        }
                     }
+                    // cor e espessura
                     BarPill {
-                        Box(Modifier.padding(start = 10.dp)) { ColorRow(session.color) { applyColor(session, it) } }
-                        Text(mmText(session.width), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 10.dp))
+                        Column(Modifier.padding(horizontal = 8.dp, vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            ColorRow(session.color) { applyColor(session, it) }
+                            Text("Cor", color = Ui.text, fontSize = 10.sp, lineHeight = 12.sp)
+                        }
+                        LBtn("Mais fina", onClick = { applyWidth(session, -0.1f) }) { c -> Icon(Icons.Filled.Remove, null, tint = c, modifier = Modifier.size(20.dp)) }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(mmText(session.width), color = Ui.text, fontSize = 12.sp)
+                            Text("Espessura", color = Ui.dim, fontSize = 10.sp, lineHeight = 12.sp)
+                        }
+                        LBtn("Mais grossa", onClick = { applyWidth(session, 0.1f) }) { c -> Icon(Icons.Filled.Add, null, tint = c, modifier = Modifier.size(20.dp)) }
                     }
                 }
             }
@@ -949,20 +959,48 @@ private fun BarPill(content: @Composable () -> Unit) {
     ) { content() }
 }
 
+/** Botão da barra: ícone com o nome embaixo (fica claro o que cada um faz). */
 @Composable
-private fun BarIcon(icon: ImageVector, desc: String, enabled: Boolean = true, tint: Color = Ui.text, onClick: () -> Unit) {
-    IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(40.dp)) {
-        Icon(icon, desc, tint = if (enabled) tint else Ui.line, modifier = Modifier.size(22.dp))
+private fun LBtn(label: String, on: Boolean = false, enabled: Boolean = true, onClick: () -> Unit, icon: @Composable (Color) -> Unit) {
+    val col = when { !enabled -> Ui.line; on -> Ui.accent; else -> Ui.text }
+    Column(
+        Modifier.widthIn(min = 50.dp).clip(RoundedCornerShape(12.dp))
+            .background(if (on) Ui.accent.copy(alpha = 0.22f) else Color.Transparent)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { contentDescription = label }
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { icon(col) }
+        Text(label, color = col, fontSize = 10.sp, maxLines = 1, lineHeight = 12.sp)
     }
+}
+
+@Composable
+private fun BarIcon(icon: ImageVector, desc: String, enabled: Boolean = true, tint: Color = Ui.text, label: String = desc, onClick: () -> Unit) {
+    LBtn(label, enabled = enabled, onClick = onClick) { c -> Icon(icon, null, tint = if (enabled && c == Ui.text) tint else c, modifier = Modifier.size(22.dp)) }
+}
+
+/** Nome curto da ferramenta na barra. */
+private fun Tool.short(): String = when (this) {
+    Tool.DIM -> "Medida"
+    Tool.DOOR -> "Porta"
+    Tool.RRECT -> "Arredond."
+    Tool.RTRI -> "Tri. reto"
+    Tool.DARROW -> "Seta dupla"
+    Tool.ELBOW -> "Linha L"
+    else -> label
 }
 
 @Composable
 private fun ToolBtn(t: Tool, session: EditorSession) {
     val on = session.tool == t
-    IconButton(
-        onClick = { session.chooseTool(t) },
-        modifier = Modifier.size(40.dp).clip(CircleShape).background(if (on) Ui.accent.copy(alpha = 0.3f) else Color.Transparent),
-    ) { Icon(t.icon(), t.label, tint = if (on) Ui.accent else Ui.text, modifier = Modifier.size(22.dp)) }
+    LBtn(t.short(), on = on, onClick = { session.chooseTool(t) }) { c ->
+        when (t) {
+            Tool.LASSO, Tool.DIM, Tool.DOOR, Tool.ROOM -> ShapeGlyph(t, c, 22.dp)
+            else -> Icon(t.icon(), null, tint = c, modifier = Modifier.size(22.dp))
+        }
+    }
 }
 
 @Composable

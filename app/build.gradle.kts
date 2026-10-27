@@ -28,7 +28,8 @@ android {
         create("play") {
             dimension = "loja"
             buildConfigField("boolean", "PLAY", "true")
-            buildConfigField("int", "TRIAL_DAYS", "3")
+            // no Google Play o teste grátis é o da assinatura (oferta de 3 dias no Play Console), não um teste do app
+            buildConfigField("int", "TRIAL_DAYS", "0")
         }
     }
 

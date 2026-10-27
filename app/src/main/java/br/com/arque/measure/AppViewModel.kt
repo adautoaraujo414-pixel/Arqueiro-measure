@@ -874,6 +874,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Preço da compra no Google Play (some até a loja responder). */
     var storePrice by mutableStateOf<String?>(null)
+    /** Dias de teste grátis da assinatura que esta conta ainda pode usar (0 = já usou / sem teste). */
+    var storeTrialDays by mutableStateOf(0)
     private var storeStarted = false
 
     fun startStore() {
@@ -882,6 +884,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         br.com.arque.measure.license.StoreBilling.start(getApplication()) {
             viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
                 storePrice = br.com.arque.measure.license.StoreBilling.price()
+                storeTrialDays = br.com.arque.measure.license.StoreBilling.trialDays()
                 checkLicense()
             }
         }
@@ -890,6 +893,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val storeMsg: (String) -> Unit = { m -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { toast = m; checkLicense() } }
     fun buyStore(a: android.app.Activity) = br.com.arque.measure.license.StoreBilling.buy(a, storeMsg)
     fun restoreStore() = br.com.arque.measure.license.StoreBilling.restore(getApplication(), storeMsg)
+    fun manageStore() = br.com.arque.measure.license.StoreBilling.manage(getApplication())
 
     fun unlock(code: String): Boolean {
         val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)

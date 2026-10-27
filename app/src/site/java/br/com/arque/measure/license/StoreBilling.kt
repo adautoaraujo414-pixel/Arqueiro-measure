@@ -8,6 +8,8 @@ object StoreBilling {
     const val AVAILABLE = false
     fun start(ctx: Context, onChange: () -> Unit) {}
     fun price(): String? = null
+    fun trialDays(): Int = 0
     fun buy(activity: Activity, onMsg: (String) -> Unit) {}
     fun restore(ctx: Context, onMsg: (String) -> Unit) {}
+    fun manage(ctx: Context) {}
 }

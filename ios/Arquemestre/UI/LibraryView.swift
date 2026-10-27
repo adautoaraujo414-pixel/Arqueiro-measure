@@ -17,6 +17,7 @@ struct LibraryView: View {
     @State private var confirmRestore: URL?
     @State private var peerView = false
     @State private var langOpen = false
+    @State private var manageSub = false
 
     private var notes: [NoteMeta] {
         app.index.notes.filter {
@@ -43,6 +44,7 @@ struct LibraryView: View {
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
+        .manageSubscriptionsSheet(isPresented: $manageSub)
         // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
         .onAppear { app.syncLinkedNames() }
         .onChange(of: app.projVersion) { _ in app.syncLinkedNames() }
@@ -114,6 +116,7 @@ struct LibraryView: View {
                         Button(tr("Ver projeto de outro iPhone")) { peerView = true }
                         Divider()
                         Button(langMenuLabel() + " (" + currentLangName() + ")") { langOpen = true }
+                        Button(tr("Gerenciar assinatura")) { manageSub = true }
                         Link(tr("Ajuda e suporte"), destination: SiteLinks.support)
                         Link(tr("Privacidade"), destination: SiteLinks.privacy)
                     } label: {

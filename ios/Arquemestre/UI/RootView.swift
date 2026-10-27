@@ -53,7 +53,7 @@ struct RootView: View {
 
 // ---------------- Licença ----------------
 
-/// Antes de usar: explica o teste grátis (prazo, o que acontece depois e o preço), como a Apple pede.
+/// Antes de usar: tela da assinatura com o teste grátis (prazo, preço depois do teste e como cancelar), como a Apple pede.
 struct TrialOfferView: View {
     @EnvironmentObject var lic: LicenseManager
     @State private var guide = 0
@@ -92,34 +92,59 @@ struct TrialOfferView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(tr("Como funciona")).font(.headline).foregroundColor(.white)
-                    Label(tr("Teste grátis de {0} dias com tudo liberado.", LicenseManager.TRIAL_DAYS), systemImage: "gift")
-                    Label(tr("Depois dos {0} dias, as telas ficam bloqueadas até a compra. Seus dados continuam guardados e dá para fazer backup.", LicenseManager.TRIAL_DAYS), systemImage: "lock")
-                    Label(tr("Acesso completo: compra única{0} pela App Store. Sem assinatura, sem mensalidade.", lic.priceOf), systemImage: "creditcard")
-                    Label(tr("O teste não cobra nada e não vira cobrança sozinho."), systemImage: "checkmark.shield")
+                    if lic.trialDays > 0 { Label(tr("{0} dias grátis com tudo liberado.", lic.trialDays), systemImage: "gift") }
+                    Label(lic.price.isEmpty ? tr("Assinatura mensal pela App Store.") : tr("Depois, {0} por mês, renovado automaticamente pela App Store.", lic.price), systemImage: "creditcard")
+                    Label(tr("Cancele quando quiser em Ajustes › seu nome › Assinaturas. Cancelando até 24 h antes do fim do teste, nada é cobrado."), systemImage: "xmark.circle")
+                    Label(tr("Sem assinatura ativa, as telas ficam bloqueadas, mas seus dados continuam guardados e dá para fazer backup."), systemImage: "lock")
                 }
                 .font(.subheadline).foregroundColor(Ui.dim)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16).background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
 
-                Button { Task { await lic.startTrial() } } label: {
-                    Text(tr("Começar teste grátis de {0} dias", LicenseManager.TRIAL_DAYS)).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
-                }
-                .buttonStyle(.borderedProminent).tint(Ui.accent).disabled(lic.busy)
-
-                Button { Task { await lic.buyFull() } } label: {
-                    Text(tr("Comprar acesso completo{0}", lic.priceTag)).frame(maxWidth: .infinity).padding(.vertical, 10)
-                }
-                .buttonStyle(.bordered).disabled(lic.busy)
-
-                Button(tr("Já comprei · restaurar compra")) { Task { await lic.restore() } }.disabled(lic.busy)
-
-                if lic.busy { ProgressView() }
-                if let m = lic.message { Text(m).font(.footnote).foregroundColor(Ui.gold).multilineTextAlignment(.center) }
-                LegalLinks()
+                SubscribeBox()
             }
             .padding(20).frame(maxWidth: 520)
             .frame(maxWidth: .infinity)
         }
+    }
+}
+
+/// Preço em destaque, botão de assinar, restaurar, gerenciar e o texto da renovação automática (regra 3.1.2 da Apple).
+struct SubscribeBox: View {
+    @EnvironmentObject var lic: LicenseManager
+    @State private var manage = false
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(lic.price.isEmpty ? tr("Carregando o preço…") : tr("{0} por mês", lic.price))
+                .font(.title2.bold()).foregroundColor(.white)
+            if lic.trialDays > 0 && !lic.price.isEmpty {
+                Text(tr("{0} dias grátis, depois {1} por mês.", lic.trialDays, lic.price)).font(.subheadline).foregroundColor(Ui.gold)
+            }
+            Button { Task { await lic.subscribe() } } label: {
+                Text(lic.trialDays > 0 ? tr("Começar {0} dias grátis", lic.trialDays) : tr("Assinar"))
+                    .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
+            }
+            .buttonStyle(.borderedProminent).tint(Ui.accent).disabled(lic.busy || lic.price.isEmpty)
+
+            Button(tr("Já assino · restaurar compras")) { Task { await lic.restore() } }.disabled(lic.busy)
+            Button(tr("Gerenciar assinatura")) { manage = true }.font(.footnote)
+
+            if lic.busy { ProgressView() }
+            if let m = lic.message { Text(m).font(.footnote).foregroundColor(Ui.gold).multilineTextAlignment(.center) }
+            SubscriptionTerms()
+            LegalLinks()
+        }
+        .manageSubscriptionsSheet(isPresented: $manage)
+    }
+}
+
+/// Texto obrigatório da renovação automática.
+struct SubscriptionTerms: View {
+    @EnvironmentObject var lic: LicenseManager
+    var body: some View {
+        Text(tr("Arquemestre Mensal: assinatura de 1 mês com renovação automática por {0}. O pagamento é cobrado na sua conta Apple ao confirmar (ou no fim do teste grátis). A assinatura renova sozinha, a menos que seja cancelada pelo menos 24 horas antes do fim do período atual. Gerencie ou cancele em Ajustes › seu nome › Assinaturas.", lic.price.isEmpty ? "—" : lic.price))
+            .font(.caption2).foregroundColor(Ui.dim).multilineTextAlignment(.center)
     }
 }
 
@@ -145,7 +170,7 @@ struct LegalLinks: View {
     }
 }
 
-/// Depois do teste: bloqueia, mas os dados ficam e dá para fazer backup.
+/// Assinatura terminou: bloqueia, mas os dados ficam e dá para fazer backup.
 struct LockView: View {
     @EnvironmentObject var app: AppModel
     @EnvironmentObject var lic: LicenseManager
@@ -155,19 +180,12 @@ struct LockView: View {
         ScrollView {
             VStack(spacing: 16) {
                 Text("ARQUEMESTRE").font(.system(size: 26, weight: .bold)).foregroundColor(Ui.gold).padding(.top, 50)
-                Text(tr("Você chegou ao fim do período de teste")).font(.title3.bold()).foregroundColor(.white).multilineTextAlignment(.center)
-                Text(tr("Para continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), o acesso completo é por pagamento único{0} pela App Store.", lic.priceOf))
+                Text(tr("Sua assinatura terminou")).font(.title3.bold()).foregroundColor(.white).multilineTextAlignment(.center)
+                Text(tr("Seus dados continuam guardados no aparelho. Assine de novo pra continuar usando."))
                     .foregroundColor(Ui.dim).multilineTextAlignment(.center)
-                Button { Task { await lic.buyFull() } } label: {
-                    Text(tr("Desbloquear{0}", lic.priceTag)).font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
-                }.buttonStyle(.borderedProminent).disabled(lic.busy)
-                Button(tr("Já comprei · restaurar compra")) { Task { await lic.restore() } }.disabled(lic.busy)
-                if lic.busy { ProgressView() }
-                if let m = lic.message { Text(m).font(.footnote).foregroundColor(Ui.gold).multilineTextAlignment(.center) }
+                SubscribeBox()
                 Button(tr("Salvar uma cópia dos meus dados (backup)")) { shareURL = app.makeBackup() }
                     .buttonStyle(.bordered).padding(.top, 8)
-                Text(tr("As atualizações chegam pela App Store, sem perder nada.")).font(.caption).foregroundColor(Ui.dim)
-                LegalLinks()
             }
             .padding(24).frame(maxWidth: 480).frame(maxWidth: .infinity)
         }
@@ -175,27 +193,28 @@ struct LockView: View {
     }
 }
 
+/// No teste grátis: quanto falta e quanto custa depois.
 struct TrialChip: View {
     @EnvironmentObject var lic: LicenseManager
     @State private var open = false
+    @State private var manage = false
     var body: some View {
         Button { open = true } label: {
-            Text(tr("Teste · falta {0}", lic.leftLabel)).font(.caption).foregroundColor(Ui.gold)
+            Text(tr("Teste grátis · falta {0}", lic.leftLabel)).font(.caption).foregroundColor(Ui.gold)
                 .padding(.horizontal, 10).padding(.vertical, 5)
                 .background(Capsule().fill(Color.black.opacity(0.8)))
         }
         .sheet(isPresented: $open) {
             VStack(spacing: 14) {
-                Text(tr("Versão de teste")).font(.title3.bold())
-                Text(tr("Falta {0} de teste. Acesso completo: pagamento único{1}.", lic.leftLabel, lic.priceOf)).multilineTextAlignment(.center).foregroundColor(Ui.dim)
-                Button { Task { await lic.buyFull() } } label: { Text(tr("Desbloquear agora")).frame(maxWidth: .infinity).padding(.vertical, 8) }
-                    .buttonStyle(.borderedProminent)
-                Button(tr("Já comprei · restaurar compra")) { Task { await lic.restore() } }
-                if let m = lic.message { Text(m).font(.footnote).foregroundColor(Ui.gold) }
+                Text(tr("Teste grátis")).font(.title3.bold())
+                Text(tr("Falta {0} de teste grátis. Depois, {1} por mês, renovado automaticamente. Pra não ser cobrado, cancele até 24 h antes do fim do teste.", lic.leftLabel, lic.price.isEmpty ? "—" : lic.price))
+                    .multilineTextAlignment(.center).foregroundColor(Ui.dim)
+                Button(tr("Gerenciar assinatura")) { manage = true }.buttonStyle(.bordered)
                 LegalLinks()
             }
             .padding(24)
             .presentationDetents([.medium])
+            .manageSubscriptionsSheet(isPresented: $manage)
         }
     }
 }

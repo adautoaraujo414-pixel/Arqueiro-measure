@@ -183,6 +183,7 @@ fun LibraryScreen(vm: AppViewModel) {
     var btView by remember { mutableStateOf(false) }
     var langOpen by remember { mutableStateOf(false) }
     if (langOpen) LanguageDialog { langOpen = false }
+    val ctxN2 = androidx.compose.ui.platform.LocalContext.current
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) vm.backup(uri)
@@ -272,6 +273,15 @@ fun LibraryScreen(vm: AppViewModel) {
                             })
                             DropdownMenuItem(text = { Text(langMenuLabel() + " (" + currentLangName() + ")") }, onClick = {
                                 topMenu = false; langOpen = true
+                            })
+                            if (br.com.arque.measure.BuildConfig.PLAY) DropdownMenuItem(text = { Text(tr("Gerenciar assinatura")) }, onClick = {
+                                topMenu = false; vm.manageStore()
+                            })
+                            DropdownMenuItem(text = { Text(tr("Ajuda e suporte")) }, onClick = {
+                                topMenu = false; SiteLinks.open(ctxN2, SiteLinks.support())
+                            })
+                            DropdownMenuItem(text = { Text(tr("Privacidade")) }, onClick = {
+                                topMenu = false; SiteLinks.open(ctxN2, SiteLinks.privacy())
                             })
                         }
                     }

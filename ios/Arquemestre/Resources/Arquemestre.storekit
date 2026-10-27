@@ -4,36 +4,7 @@
 
   ],
   "products" : [
-    {
-      "displayPrice" : "0.0",
-      "familyShareable" : false,
-      "internalID" : "6743000001",
-      "localizations" : [
-        {
-          "description" : "Use tudo de graça por 3 dias. Depois, o acesso completo é uma compra única.",
-          "displayName" : "Teste grátis de 3 dias",
-          "locale" : "pt_BR"
-        }
-      ],
-      "productID" : "arquemestre_teste_3_dias",
-      "referenceName" : "3-day Trial",
-      "type" : "NonConsumable"
-    },
-    {
-      "displayPrice" : "149.9",
-      "familyShareable" : false,
-      "internalID" : "6743000002",
-      "localizations" : [
-        {
-          "description" : "Desbloqueia o Arquemestre para sempre, pagamento único.",
-          "displayName" : "Acesso completo",
-          "locale" : "pt_BR"
-        }
-      ],
-      "productID" : "arquemestre_acesso_completo",
-      "referenceName" : "Acesso completo",
-      "type" : "NonConsumable"
-    }
+
   ],
   "settings" : {
     "_applicationInternalID" : "6743000000",
@@ -42,7 +13,49 @@
     "_storefront" : "BRA"
   },
   "subscriptionGroups" : [
+    {
+      "id" : "21500001",
+      "localizations" : [
+        {
+          "description" : "Arquemestre",
+          "displayName" : "Arquemestre",
+          "locale" : "pt_BR"
+        }
+      ],
+      "name" : "Arquemestre",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
 
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.9",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6743000003",
+          "introductoryOffer" : {
+            "internalID" : "6743000004",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Tudo liberado: medição, móveis, corte, orçamento e agenda.",
+              "displayName" : "Arquemestre Mensal",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "arquemestre_mensal",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Arquemestre Mensal",
+          "subscriptionGroupID" : "21500001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
   ],
   "version" : {
     "major" : 3,

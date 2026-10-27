@@ -64,10 +64,13 @@ object License {
         return ok
     }
 
-    /** Compra confirmada pelo Google Play. */
+    /** Assinatura ativa confirmada pelo Google Play. */
     fun grantStore(ctx: Context) {
-        sp(ctx).edit().putBoolean("ok", true).putBoolean("store", true).apply()
+        sp(ctx).edit().putBoolean("ok", true).putBoolean("store", true).putBoolean("hadStore", true).apply()
     }
+
+    /** Já assinou alguma vez neste aparelho (pra dizer "sua assinatura terminou" em vez das boas-vindas). */
+    fun hadStore(ctx: Context): Boolean = sp(ctx).getBoolean("hadStore", false)
 
     /** O Google Play diz que não há compra (reembolso): tira só o desbloqueio que veio da loja. */
     fun revokeStore(ctx: Context) {

@@ -8,7 +8,7 @@ Tudo do app e da ficha já está pronto. Faltam só os passos que precisam da su
    - A aprovação costuma levar de algumas horas a 2 dias.
 2. **App Store Connect → Contratos, impostos e bancos:** assine o contrato de **Apps pagos** e cadastre conta bancária e dados fiscais. Sem isso a compra não funciona.
 3. **Criar o app** no App Store Connect (seção "Conta Apple Developer" abaixo): Bundle ID `br.com.arque.measure`, SKU `arquemestre-ios`.
-4. **Criar as 2 compras** (`arquemestre_teste_3_dias` grátis e `arquemestre_acesso_completo` paga) — textos prontos na seção "Compras dentro do app".
+4. **Criar a assinatura mensal** `arquemestre_mensal` (R$ 29,90/mês, com 3 dias grátis pra quem nunca assinou) — tudo pronto na seção "Assinatura".
 5. **Chave da API** (Usuários e acesso → Integrações → App Store Connect API → função **App Manager**) e cadastrar no GitHub os 4 segredos:
    `ASC_KEY_ID`, `ASC_ISSUER_ID`, `APPLE_TEAM_ID` e `ASC_KEY_P8` (abra o arquivo `.p8` num editor de texto e cole o conteúdo inteiro).
 6. **Mandar pro TestFlight:** GitHub → Actions → "iOS CI" → **Run workflow** → marque "Enviar para o TestFlight". Leva uns 30 min.
@@ -36,10 +36,10 @@ O app abre a página no idioma em uso (Privacidade · Termos de uso · Ajuda, e 
 - **Orçamentos** em PDF, com logo.
 - **Backup ZIP** no mesmo formato do Android: um backup feito no Android abre no iPhone e vice-versa.
 - **Ver projeto ao vivo** entre iPhones/iPads, por MultipeerConnectivity. Entre Android e iPhone isso não funciona, porque o iOS não deixa apps usarem Bluetooth clássico; nesse caso, use o backup.
-- **Compra pelo StoreKit 2**, seguindo a regra 3.1.1 da Apple:
-  - `arquemestre_teste_3_dias`: não consumível de preço **zero**, que libera o teste;
-  - `arquemestre_acesso_completo`: não consumível pago;
-  - botão "Já comprei · restaurar compra".
+- **Assinatura pelo StoreKit 2**, seguindo a regra 3.1.2 da Apple:
+  - `arquemestre_mensal`: assinatura mensal com renovação automática (R$ 29,90), com oferta introdutória de 3 dias grátis;
+  - botões "Já assino · restaurar compras" e "Gerenciar assinatura";
+  - texto da renovação automática e links de Privacidade e Termos de uso na tela de assinatura.
   - Não tem anúncios nem login.
 - `PrivacyInfo.xcprivacy`: sem rastreamento, sem coleta, só as APIs de motivo obrigatório (UserDefaults e data de arquivo).
 - CI no GitHub (`.github/workflows/ios.yml`, roda em macOS 26):
@@ -64,16 +64,32 @@ cd ios && xcodegen generate && open Arquemestre.xcodeproj
    - idioma principal Português (Brasil);
    - Bundle ID `br.com.arque.measure`; SKU `arquemestre-ios`; acesso completo.
 
-## Compras dentro do app
-Em **Monetização → Compras dentro do app**, crie as duas do tipo **Não consumível**:
+## Assinatura (R$ 29,90 por mês)
+Em **Monetização → Assinaturas**:
+1. **Grupo de assinaturas:** nome de referência `Arquemestre`.
+   - Localizações do grupo (nome que aparece no Ajustes do iPhone): pt-BR "Arquemestre", en-US "Arquemestre", es-MX "Arquemestre".
+2. **Assinatura** dentro do grupo:
+   - Nome de referência: `Arquemestre Mensal` · ID do produto: **`arquemestre_mensal`** (tem que ser exatamente esse, o app procura por ele).
+   - Duração: **1 mês** · Preço: **R$ 29,90** com país base Brasil (a Apple calcula os outros países; nos EUA fica perto de US$ 5,99 — pode ajustar).
+   - Compartilhamento familiar: desligado.
+   - Localizações:
 
-| ID do produto | Nome de referência | Preço | Nome de exibição (pt / en / es) | Descrição (pt / en / es) |
-|---|---|---|---|---|
-| `arquemestre_teste_3_dias` | 3-day Trial | Grátis | Teste grátis de 3 dias / 3-Day Free Trial / Prueba gratis de 3 días | Libera tudo por 3 dias. / Unlocks everything for 3 days. / Libera todo por 3 días. |
-| `arquemestre_acesso_completo` | Full Access | ex.: R$ 149,90 (a Apple converte pros outros países) | Acesso completo / Full Access / Acceso completo | Compra única, sem assinatura. / One-time purchase, no subscription. / Compra única, sin suscripción. |
+| Idioma | Nome de exibição | Descrição |
+|---|---|---|
+| Português (Brasil) | Arquemestre Mensal | Tudo liberado: medição, móveis, corte, orçamento e agenda. |
+| English (U.S.) | Arquemestre Monthly | Everything unlocked: measuring, cabinets, cutting, quotes, schedule. |
+| Spanish (Mexico) | Arquemestre Mensual | Todo liberado: medición, muebles, corte, presupuesto y agenda. |
 
-- Captura pra revisão das compras: `capturas/iphone-6-trial.png` (ramo `ci/ios-resultados`).
-- Na primeira versão, as compras vão junto: na página da versão, em "Compras dentro do app", adicione as duas antes de enviar.
+   - **Informações para a revisão:** captura de tela da tela de assinatura (`capturas/iphone-6-trial.png`) e a nota: "Monthly subscription that unlocks the whole app."
+3. **Oferta introdutória** (na página da assinatura → Preços da assinatura → ＋ Oferta introdutória):
+   - todos os países · tipo **Grátis** · duração **3 dias** · só pra quem nunca assinou (a Apple controla isso sozinha).
+4. Na primeira versão, a assinatura vai junto: na página da versão 1.0, em "Compras dentro do app e assinaturas", adicione `arquemestre_mensal` antes de enviar.
+
+O que o app já faz (regra 3.1.2 da Apple):
+- mostra o preço mensal em destaque, os dias grátis, que renova sozinho e como cancelar, antes de assinar;
+- botões "Já assino · restaurar compras" e "Gerenciar assinatura" (abre a tela de assinaturas da Apple);
+- links pra Política de privacidade e Termos de uso (EULA padrão da Apple) na tela de assinatura;
+- sem assinatura ativa, as telas ficam bloqueadas mas os dados continuam e dá pra fazer backup.
 
 ## Enviar ao TestFlight sem Mac (pelo GitHub)
 1. Em App Store Connect › Usuários e acesso › Integrações › App Store Connect API, crie uma **chave** com função "App Manager" e baixe o `.p8` (só dá pra baixar uma vez).
@@ -123,8 +139,11 @@ O Arquemestre junta a medição, o projeto, o corte, o orçamento e a agenda da 
 • Lista de corte e orçamento: lista de peças, plano das chapas inteiras, custo do material e orçamento em PDF com a sua logo.
 • Agenda: entregas, visitas e medições ligadas a cada cliente, com aviso antes.
 
-Teste grátis de 3 dias com tudo liberado. Depois, compra única — sem assinatura, sem mensalidade.
+Assinatura mensal de R$ 29,90 com 3 dias grátis para quem nunca assinou. A assinatura renova automaticamente todo mês, a menos que seja cancelada pelo menos 24 horas antes do fim do período; cancele quando quiser em Ajustes › seu nome › Assinaturas.
 Funciona sem internet e sem cadastro: seus dados ficam no seu aparelho.
+
+Política de privacidade: https://adautoaraujo414-pixel.github.io/Arqueiro-measure/privacidade.html
+Termos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 ```
 
 **English (U.S.)**
@@ -141,8 +160,11 @@ Arquemestre puts your woodshop's measuring, design, cutting, quotes and schedule
 • Cut list and quotes: parts list, full-board cutting plan, material cost and a PDF quote with your logo.
 • Schedule: deliveries, visits and measuring linked to each client, with reminders.
 
-Free 3-day trial with everything unlocked. Then a one-time purchase — no subscription, no monthly fee.
+Monthly subscription with a free 3-day trial for new subscribers. The subscription renews automatically every month unless canceled at least 24 hours before the end of the current period; cancel anytime in Settings › your name › Subscriptions.
 Works offline and with no sign-up: your data stays on your device.
+
+Privacy Policy: https://adautoaraujo414-pixel.github.io/Arqueiro-measure/privacy.html
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 ```
 
 **Spanish (Mexico)**
@@ -159,20 +181,25 @@ Arquemestre reúne la medición, el proyecto, el corte, el presupuesto y la agen
 • Lista de corte y presupuesto: lista de piezas, plano de corte de tableros enteros, costo del material y presupuesto en PDF con tu logo.
 • Agenda: entregas, visitas y mediciones ligadas a cada cliente, con avisos.
 
-Prueba gratis de 3 días con todo liberado. Después, compra única — sin suscripción, sin mensualidad.
+Suscripción mensual con 3 días gratis para quien nunca se suscribió. La suscripción se renueva automáticamente cada mes, salvo que se cancele al menos 24 horas antes del fin del periodo; cancela cuando quieras en Ajustes › tu nombre › Suscripciones.
 Funciona sin internet y sin registro: tus datos quedan en tu equipo.
+
+Política de privacidad: https://adautoaraujo414-pixel.github.io/Arqueiro-measure/privacidad.html
+Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 ```
 
 ## Notas para a revisão da Apple (colar em "Notas", em inglês — o revisor lê em inglês)
 ```
-Arquemestre is a work tool for woodworkers and cabinet makers. There is no login and no account; all data stays on the device.
+Arquemestre is a professional work tool for woodworkers and cabinet makers (measuring, 3D furniture design,
+cut lists, PDF quotes and job scheduling). There is no login and no account; all data stays on the device.
 
-Free trial: on first launch tap "Start 3-day free trial". The trial is a zero-price non-consumable in-app purchase
-(arquemestre_teste_3_dias), following guideline 3.1.1. After 3 days the app asks for the one-time non-consumable
-purchase "Full Access" (arquemestre_acesso_completo). "Already bought · restore purchase" calls AppStore.sync().
-No subscriptions.
+Subscription: the app is unlocked by one auto-renewable subscription, "Arquemestre Monthly" (arquemestre_mensal,
+1 month), with a 3-day free trial introductory offer for new subscribers. The paywall shows the monthly price,
+the trial length, the auto-renewal terms, Restore Purchases, Manage Subscription, and links to the Privacy Policy
+and Terms of Use (Apple standard EULA). The subscription provides ongoing value: regular updates with new
+furniture modules, catalog items and features, plus e-mail support.
 
-Laser measure: the app can receive measurements from Bosch laser measures (GLM 50 C, GLM 50-27 CG) over Bluetooth LE.
+Laser measure: the app can receive measurements from Bosch laser measures with Bluetooth (tested with the GLM 50-27 CG) over Bluetooth LE.
 Without the device, open a note, tap any dimension label and type the value on the in-app keypad — every feature works.
 
 Live project view: between two devices with the app (local peer-to-peer network), view only.

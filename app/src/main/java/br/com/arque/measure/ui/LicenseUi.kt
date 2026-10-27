@@ -105,9 +105,77 @@ private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
     }
 }
 
+/** Endereços públicos (GitHub Pages) no idioma do app. */
+object SiteLinks {
+    private const val BASE = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/"
+    fun privacy() = BASE + when (br.com.arque.measure.i18n.I18n.lang) { "en" -> "privacy.html"; "es" -> "privacidad.html"; else -> "privacidade.html" }
+    fun support() = BASE + when (br.com.arque.measure.i18n.I18n.lang) { "en" -> "support.html"; "es" -> "soporte.html"; else -> "suporte.html" }
+    fun open(ctx: android.content.Context, url: String) {
+        runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+}
+
+/**
+ * Google Play: tela de assinatura (aparece antes de usar e quando a assinatura acaba).
+ * Mostra o preço do Google Play, o teste grátis (se a conta ainda tiver direito) e como cancelar.
+ */
+@Composable
+private fun PlayPaywall(vm: AppViewModel) {
+    val ctx = LocalContext.current
+    val backup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri -> if (uri != null) vm.backup(uri) }
+    val price = vm.storePrice
+    val trial = vm.storeTrialDays
+    val returning = br.com.arque.measure.license.License.hadStore(ctx)
+    Box(Modifier.fillMaxSize().background(Color(0xFF14171C)).statusBarsPadding().navigationBarsPadding(), contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("ARQUEMESTRE", color = Gold, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text(
+                if (returning) tr("Sua assinatura terminou") else tr("Medição, projeto, corte, orçamento e agenda da sua marcenaria num lugar só."),
+                color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+            )
+            if (returning) Text(tr("Seus dados continuam guardados no aparelho. Assine de novo pra continuar usando."), color = Color(0xFFCBD5E1), fontSize = 15.sp, textAlign = TextAlign.Center)
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xFF1F242C)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(
+                    tr("📏 Trena laser Bosch: a medida cai direto na cota"),
+                    tr("🪚 Editor de móveis em 3D"),
+                    tr("📋 Lista de corte, plano das chapas e orçamento em PDF"),
+                    tr("📅 Agenda de entregas, visitas e medições"),
+                ).forEach { Text(it, color = Color(0xFFE2E8F0), fontSize = 14.sp) }
+            }
+            // o preço da assinatura é o destaque (regra das lojas); o teste grátis vem junto
+            Text(price?.let { tr("{0} por mês", it) } ?: tr("Carregando o preço…"), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            if (trial > 0 && price != null) Text(tr("{0} dias grátis, depois {1} por mês.", trial, price), color = Gold, fontSize = 15.sp, textAlign = TextAlign.Center)
+            Button(
+                onClick = { ctx.activity()?.let { vm.buyStore(it) } }, enabled = price != null, modifier = Modifier.fillMaxWidth().height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF01875F), contentColor = Color.White),
+            ) { Text(if (trial > 0) tr("Começar {0} dias grátis", trial) else tr("Assinar"), fontSize = 16.sp) }
+            Text(
+                tr("Assinatura mensal com renovação automática pela Google Play. Cancele quando quiser em Google Play › Pagamentos e assinaturas. Cancelando antes do fim do teste grátis, nada é cobrado."),
+                color = Color(0xFF94A3B8), fontSize = 12.sp, textAlign = TextAlign.Center,
+            )
+            vm.toast?.let { Text(it, color = Gold, fontSize = 14.sp, textAlign = TextAlign.Center) }
+            OutlinedButton(onClick = { vm.restoreStore() }, modifier = Modifier.fillMaxWidth()) {
+                Text(tr("Já assino · restaurar assinatura"), color = Color(0xFFCBD5E1))
+            }
+            OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
+                Text(tr("Salvar uma cópia dos meus dados (backup)"), color = Color(0xFFCBD5E1))
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(tr("Privacidade"), color = Color(0xFF94A3B8), fontSize = 13.sp, modifier = Modifier.clickable { SiteLinks.open(ctx, SiteLinks.privacy()) })
+                Text(tr("Gerenciar assinatura"), color = Color(0xFF94A3B8), fontSize = 13.sp, modifier = Modifier.clickable { vm.manageStore() })
+                Text(tr("Ajuda"), color = Color(0xFF94A3B8), fontSize = 13.sp, modifier = Modifier.clickable { SiteLinks.open(ctx, SiteLinks.support()) })
+            }
+        }
+    }
+}
+
 /** Tela de bloqueio depois do teste. Os dados ficam guardados; dá pra fazer backup mesmo bloqueado. */
 @Composable
 fun LockScreen(vm: AppViewModel) {
+    if (br.com.arque.measure.BuildConfig.PLAY) { PlayPaywall(vm); return }
     val ctx = LocalContext.current
     val backup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri -> if (uri != null) vm.backup(uri) }
     Box(Modifier.fillMaxSize().background(Color(0xFF14171C)).statusBarsPadding().navigationBarsPadding(), contentAlignment = Alignment.Center) {
@@ -160,7 +228,10 @@ fun WelcomeDialog(vm: AppViewModel) {
         text = {
             Column {
                 Text(
-                    if (page == 0) tr("Você está na versão de teste por {0} dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?", License.TRIAL_DAYS)
+                    if (page == 0) {
+                    if (br.com.arque.measure.BuildConfig.PLAY) tr("Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?")
+                    else tr("Você está na versão de teste por {0} dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?", License.TRIAL_DAYS)
+                }
                     else guide[page - 1].second + "\n\n${page}/${guide.size}",
                 )
                 if (page == 0) TextButton(onClick = { langOpen = true }) { Text(langMenuLabel() + ": " + currentLangName()) }

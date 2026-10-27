@@ -1,33 +1,62 @@
 import Foundation
 import StoreKit
 
-/// Licença no iPhone/iPad, do jeito que a Apple permite (App Review 3.1.1):
-///  • teste grátis = compra NÃO consumível de preço zero ("Teste grátis de 3 dias");
-///  • acesso completo = compra única NÃO consumível;
-///  • restaurar compras (mesmo Apple ID).
-/// Sem login e sem servidor: o StoreKit guarda e assina as compras.
+/// Assinatura no iPhone/iPad (App Review 3.1.2):
+///  • assinatura mensal com renovação automática [SUB_ID] (grupo "Arquemestre"), R$ 29,90/mês;
+///  • teste grátis = oferta introdutória de 3 dias da própria assinatura (só pra quem nunca assinou);
+///  • restaurar compras e gerenciar a assinatura (cancelar) pela App Store.
+/// Sem login e sem servidor: o StoreKit guarda e assina as transações.
 @MainActor
 final class LicenseManager: ObservableObject {
-    static let FULL_ID = "arquemestre_acesso_completo"
-    static let TRIAL_ID = "arquemestre_teste_3_dias"
+    static let SUB_ID = "arquemestre_mensal"
+    /// Compra única antiga (não é mais vendida): se alguém tiver, continua valendo.
+    static let LEGACY_FULL_ID = "arquemestre_acesso_completo"
+    /// Teste grátis configurado na oferta introdutória (o valor real vem da App Store).
     static let TRIAL_DAYS = 3
     static let TRIAL_SECONDS: TimeInterval = Double(TRIAL_DAYS) * 24 * 3600
 
+    /// notStarted = nunca assinou · trial = no teste grátis · unlocked = assinatura ativa · expired = assinou e acabou
     enum Status: Equatable { case loading, notStarted, trial, expired, unlocked }
 
     @Published private(set) var status: Status = .loading
-    @Published private(set) var fullProduct: Product?
-    @Published private(set) var trialProduct: Product?
+    @Published private(set) var subProduct: Product?
+    /// Esta conta ainda tem direito ao teste grátis?
+    @Published private(set) var trialEligible = true
+    /// Fim do teste grátis (quando está no teste) ou próxima renovação.
+    @Published private(set) var periodEnd: Date?
     @Published var busy = false
     @Published var message: String?
 
-    private let d = UserDefaults.standard
     private var updates: Task<Void, Never>?
 
-    /// " de R$ 149,90" quando a App Store já respondeu; vazio enquanto não respondeu.
-    var priceOf: String { fullProduct.map { tr(" de {0}", $0.displayPrice) } ?? "" }
-    /// " · R$ 149,90" para botões.
-    var priceTag: String { fullProduct.map { " · \($0.displayPrice)" } ?? "" }
+    /// Capturas de tela automáticas (só no build de teste): mostra o preço e o teste como na loja.
+    private var demoPaywall: Bool {
+        #if DEBUG
+        return subProduct == nil && ProcessInfo.processInfo.arguments.contains("-trialOffer")
+        #else
+        return false
+        #endif
+    }
+
+    /// "R$ 29,90" (preço da App Store); vazio enquanto não respondeu.
+    var price: String {
+        if let p = subProduct { return p.displayPrice }
+        return demoPaywall ? (I18n.shared.lang == "pt" ? "R$ 29,90" : "$5.99") : ""
+    }
+
+    /// Dias do teste grátis que a App Store oferece pra esta conta (0 se não tiver direito).
+    var trialDays: Int {
+        if demoPaywall { return LicenseManager.TRIAL_DAYS }
+        guard trialEligible, let o = subProduct?.subscription?.introductoryOffer, o.paymentMode == .freeTrial else { return 0 }
+        let n = o.period.value
+        switch o.period.unit {
+        case .day: return n
+        case .week: return n * 7
+        case .month: return n * 30
+        case .year: return n * 365
+        @unknown default: return n
+        }
+    }
 
     init() {
         #if DEBUG
@@ -47,60 +76,50 @@ final class LicenseManager: ObservableObject {
 
     func load() async {
         do {
-            let ps = try await Product.products(for: [LicenseManager.FULL_ID, LicenseManager.TRIAL_ID])
-            fullProduct = ps.first { $0.id == LicenseManager.FULL_ID }
-            trialProduct = ps.first { $0.id == LicenseManager.TRIAL_ID }
+            let ps = try await Product.products(for: [LicenseManager.SUB_ID])
+            subProduct = ps.first { $0.id == LicenseManager.SUB_ID }
+            if let s = subProduct?.subscription { trialEligible = await s.isEligibleForIntroOffer }
         } catch {
-            // sem internet: o que já foi comprado continua valendo (fica guardado no aparelho)
+            // sem internet: a assinatura já feita continua valendo (o StoreKit guarda no aparelho)
         }
         await refresh()
     }
 
-    /// Lê as compras assinadas pela Apple que estão neste Apple ID.
+    /// Lê as transações assinadas pela Apple deste Apple ID.
     func refresh() async {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-trialOffer") { status = .notStarted; return }
         if ProcessInfo.processInfo.arguments.contains("-demo") { status = .unlocked; return }
         #endif
-        var unlocked = false
-        var trialStart: Date?
+        var active = false, inTrial = false, legacy = false
+        var end: Date?
         for await r in Transaction.currentEntitlements {
             guard case .verified(let t) = r, t.revocationDate == nil else { continue }
-            if t.productID == LicenseManager.FULL_ID { unlocked = true }
-            if t.productID == LicenseManager.TRIAL_ID { trialStart = t.originalPurchaseDate }
+            if t.productID == LicenseManager.LEGACY_FULL_ID { legacy = true }
+            if t.productID == LicenseManager.SUB_ID, (t.expirationDate ?? .distantFuture) > Date() {
+                active = true
+                end = t.expirationDate
+                if t.offerType == .introductory { inTrial = true }
+            }
         }
-        if unlocked { d.set(true, forKey: "lic.unlocked") } else { d.set(false, forKey: "lic.unlocked") }
-        if let s = trialStart { d.set(s.timeIntervalSince1970, forKey: "lic.trialStart") }
-        status = computeStatus(unlocked: unlocked, trialStart: trialStart ?? storedTrialStart)
+        periodEnd = end
+        if legacy || (active && !inTrial) { status = .unlocked; return }
+        if active { status = .trial; return }
+        // nunca assinou → boas-vindas com o teste grátis; já assinou → "sua assinatura terminou"
+        let had = await Transaction.latest(for: LicenseManager.SUB_ID) != nil
+        status = had ? .expired : .notStarted
     }
 
-    private var storedTrialStart: Date? {
-        let v = d.double(forKey: "lic.trialStart")
-        return v > 0 ? Date(timeIntervalSince1970: v) : nil
-    }
-
-    /// Tempo de teste usado, protegido contra voltar o relógio (vale a maior data já vista).
+    /// Tempo usado, protegido contra voltar o relógio (vale a maior data já vista).
     nonisolated static func used(start: Date, now: Date, seen: Date?) -> TimeInterval {
         let ref = max(now, seen ?? now)
         return max(0, ref.timeIntervalSince(start))
     }
 
-    private func computeStatus(unlocked: Bool, trialStart: Date?) -> Status {
-        if unlocked { return .unlocked }
-        guard let start = trialStart else { return .notStarted }
-        let now = Date()
-        let seenV = d.double(forKey: "lic.seen")
-        let seen = seenV > 0 ? Date(timeIntervalSince1970: seenV) : nil
-        d.set(max(now, seen ?? now).timeIntervalSince1970, forKey: "lic.seen")
-        return LicenseManager.used(start: start, now: now, seen: seen) >= LicenseManager.TRIAL_SECONDS ? .expired : .trial
-    }
-
-    /// "1 dia e 5 h", "3 h", "20 min".
+    /// Quanto falta do teste grátis: "1 dia e 5 h", "3 h", "20 min".
     var leftLabel: String {
-        guard let start = storedTrialStart else { return tr("{0} dias", LicenseManager.TRIAL_DAYS) }
-        let seenV = d.double(forKey: "lic.seen")
-        let left = max(0, LicenseManager.TRIAL_SECONDS - LicenseManager.used(start: start, now: Date(), seen: seenV > 0 ? Date(timeIntervalSince1970: seenV) : nil))
-        return LicenseManager.leftText(left)
+        guard let e = periodEnd else { return tr("{0} dias", LicenseManager.TRIAL_DAYS) }
+        return LicenseManager.leftText(max(0, e.timeIntervalSinceNow))
     }
 
     nonisolated static func leftText(_ left: TimeInterval) -> String {
@@ -114,11 +133,8 @@ final class LicenseManager: ObservableObject {
     }
 
     // ---- ações ----
-    func startTrial() async { await purchase(trialProduct, ok: tr("Teste grátis de {0} dias liberado.", LicenseManager.TRIAL_DAYS)) }
-    func buyFull() async { await purchase(fullProduct, ok: tr("Compra confirmada. App desbloqueado. Obrigado!")) }
-
-    private func purchase(_ p: Product?, ok: String) async {
-        guard let p = p else {
+    func subscribe() async {
+        guard let p = subProduct else {
             message = tr("Não consegui falar com a App Store agora. Confira a internet e tente de novo.")
             await load()
             return
@@ -128,7 +144,7 @@ final class LicenseManager: ObservableObject {
         do {
             switch try await p.purchase() {
             case .success(let r):
-                if case .verified(let t) = r { await t.finish(); message = ok } else { message = tr("A compra não pôde ser verificada.") }
+                if case .verified(let t) = r { await t.finish(); message = tr("Assinatura ativa. Obrigado!") } else { message = tr("A compra não pôde ser verificada.") }
             case .pending: message = tr("Compra pendente (aguardando aprovação). O app libera sozinho quando for aprovada.")
             case .userCancelled: break
             @unknown default: break
@@ -136,15 +152,15 @@ final class LicenseManager: ObservableObject {
         } catch {
             message = tr("Não deu certo: {0}", error.localizedDescription)
         }
-        await refresh()
+        await load()
     }
 
     func restore() async {
         busy = true
         defer { busy = false }
         do { try await AppStore.sync() } catch { message = tr("Não consegui falar com a App Store agora.") }
-        await refresh()
-        if status != .unlocked && status != .trial { message = tr("Não encontrei compra neste Apple ID.") }
-        else if status == .unlocked { message = tr("Compra restaurada. App desbloqueado.") }
+        await load()
+        if status == .unlocked || status == .trial { message = tr("Assinatura restaurada.") }
+        else { message = tr("Não encontrei assinatura ativa neste Apple ID.") }
     }
 }

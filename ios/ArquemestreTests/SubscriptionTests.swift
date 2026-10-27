@@ -13,9 +13,13 @@ final class SubscriptionTests: XCTestCase {
     private var session: SKTestSession!
 
     override func setUp() async throws {
-        let url = try XCTUnwrap(Bundle(for: SubscriptionTests.self).url(forResource: "Arquemestre", withExtension: "storekit"),
-                                "Arquemestre.storekit precisa estar no pacote de testes")
-        session = try SKTestSession(contentsOf: url)
+        if let s = try? SKTestSession(configurationFileNamed: "Arquemestre") {
+            session = s
+        } else {
+            let url = try XCTUnwrap(Bundle(for: SubscriptionTests.self).url(forResource: "Arquemestre", withExtension: "storekit"),
+                                    "Arquemestre.storekit precisa estar no pacote de testes")
+            session = try SKTestSession(contentsOf: url)
+        }
         session.resetToDefaultState()
         session.disableDialogs = true
         session.askToBuyEnabled = false
@@ -76,6 +80,18 @@ final class SubscriptionTests: XCTestCase {
     private func lastTransactionId() throws -> UInt {
         let all = session.allTransactions().filter { $0.productIdentifier == LicenseManager.SUB_ID }
         return try XCTUnwrap(all.last, "sem transação da assinatura").identifier
+    }
+
+    func test00_DiagnosticoDaLojaDeTeste() async {
+        print("SKT: storefront=\(session.storefront) locale=\(session.locale.identifier) bundle=\(Bundle.main.bundleIdentifier ?? "-")")
+        do {
+            let ps = try await Product.products(for: [LicenseManager.SUB_ID])
+            print("SKT: Product.products → \(ps.map { "\($0.id) \($0.displayPrice)" })")
+            XCTAssertEqual(ps.count, 1, "a loja de teste não devolveu o produto")
+        } catch {
+            print("SKT: Product.products erro → \(error)")
+            XCTFail("Product.products falhou: \(error)")
+        }
     }
 
     func test01_AntesDeAssinarMostraPrecoTesteENaoLibera() async {

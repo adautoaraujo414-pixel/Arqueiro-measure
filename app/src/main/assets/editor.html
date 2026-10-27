@@ -1210,7 +1210,7 @@ function opLocked(o){return !!o&&(o.lk===1||(o.lk!==0&&opHasWork(o)))}
 
 /* laterais e travessas que fecham o afastamento do painel até a parede (frente e trás), menos onde a porta de correr passa */
 function rpTamp(a){var af=rpAf(a);if(!a||a.prat||af<=0)return [];var out=[],t=18,top=a.b+a.h,paths=[];
- (S.rp||[]).forEach(function(q){var sp=supOf(q);if(sp&&sp.F){var F=sp.F,p0=Math.min(F.x0,F.x0+F.dir*F.trav)-5,p1=Math.max(F.x1,F.x1+F.dir*F.trav)+5;paths.push({x0:p0,x1:p1,y1:(sp.T?sp.T.y1:sp.yt+40)})}});
+ (S.rp||[]).forEach(function(q){if(q.pt&&q.pt.tipo==='correr'&&!q.prat){var dq=null;try{dq=rpDoor(q)}catch(_){}if(dq&&dq.cr){var fq=rpFolha(dq),bq=rpBolso(q,dq),gq=dq.vao?10+dq.vao.b:q.b+6;paths.push(bq.left?{x0:q.x+dq.x0-fq.w-30,x1:q.x+dq.x1+60,y1:gq+fq.h+60}:{x0:q.x+dq.x0-60,x1:q.x+dq.x1+fq.w+30,y1:gq+fq.h+60})}}var sp=supOf(q);if(sp&&sp.F){var F=sp.F,p0=Math.min(F.x0,F.x0+F.dir*F.trav)-5,p1=Math.max(F.x1,F.x1+F.dir*F.trav)+5;paths.push({x0:p0,x1:p1,y1:(sp.T?sp.T.y1:sp.yt+40)})}});
  var add=function(x0,x1,y0,y1,nm){paths.forEach(function(p){if(x1>p.x0&&x0<p.x1&&y0<p.y1)y0=Math.max(y0,p.y1)});if(x1-x0>1&&y1-y0>1)out.push({x0:x0,x1:x1,y0:y0,y1:y1,nm:nm})};
  var sp=supOf(a);
  add(a.x,a.x+t,a.b,top,'lateral esquerda');add(a.x+a.w-t,a.x+a.w,a.b,top,'lateral direita');
@@ -1278,9 +1278,13 @@ function rpMergeClose(){(S.rp||[]).slice().forEach(function(a){if(a.prat||!a.pt|
  S.rp=S.rp.filter(function(o){return run.indexOf(o)<0});try{toast('Painel da porta foi até a parede: em cima inteiro, do lado só o batente de 6 cm')}catch(_){}})}
 
 /* porta de correr: sem emenda ao lado da porta — o painel da porta termina na borda da porta e o painel do lado (onde ela entra) vem até ali */
-function rpSeamDoor(){(S.rp||[]).forEach(function(a){if(a.prat||!a.pt||a.pt.tipo!=='correr')return;var vo=null;try{vo=rpVao(a)}catch(_){}if(vo)return;var d=null;try{d=rpDoor(a)}catch(_){}if(!d)return;var right=d.lado==='e',edge=right?a.x+a.w:a.x,cut=right?a.x+d.x1:a.x+d.x0;if(Math.abs(edge-cut)<1)return;
- var nb=S.rp.filter(function(o){return o!==a&&!o.prat&&!o.pt&&!o.rc&&Math.abs(o.b-a.b)<5&&Math.abs(o.h-a.h)<5&&(right?Math.abs(o.x-edge)<=40:Math.abs(o.x+o.w-edge)<=40)})[0];if(!nb)return;
- var rd=function(v){return Math.round(v*10)/10};if(right){var ne=nb.x+nb.w;a.w=rd(cut-a.x);a.pt.w=rd(d.x1-d.x0);nb.x=rd(cut);nb.w=rd(ne-cut)}else{var ae=a.x+a.w;nb.w=rd(cut-nb.x);a.x=rd(cut);a.w=rd(ae-cut);a.pt.w=rd(d.x1-d.x0)}})}
+function rpJt(o){return (o&&o.liso&&o.jt&&o.jt.t&&o.jt.t!=='seca')?(+o.jt.w||15):0}
+/* porta de correr (no canto ou em cima do vão): na borda da porta fica UMA junta só (seca ou rebaixo, a do painel) e o painel do lado vem até ali; sem tira de painel sobrando */
+function rpSeamDoor(){(S.rp||[]).forEach(function(a){if(a.prat||!a.pt||a.pt.tipo!=='correr'||S.rp.indexOf(a)<0)return;var d=null;try{d=rpDoor(a)}catch(_){}if(!d||!d.cr)return;var right=d.lado==='e',edge=right?a.x+a.w:a.x,cut=right?a.x+d.x1:a.x+d.x0;
+ var nb=S.rp.filter(function(o){return o!==a&&!o.prat&&!o.pt&&!(o.rc&&(o.rc.sup||o.rc.sobre))&&Math.abs(o.b-a.b)<5&&Math.abs(o.h-a.h)<5&&(right?(o.x>=edge-60&&o.x<=edge+60):(o.x+o.w>=edge-60&&o.x+o.w<=edge+60))})[0];if(!nb)return;
+ var rd=function(v){return Math.round(v*10)/10},tg=right?rpJt(a):rpJt(nb);
+ if(right){if(Math.abs(edge-cut)<0.5&&Math.abs(nb.x-(cut+tg))<0.5)return;var ne=nb.x+nb.w;a.w=rd(cut-a.x);if(!d.vao)a.pt.w=rd(d.x1-d.x0);nb.x=rd(cut+tg);nb.w=rd(ne-nb.x)}
+ else{if(Math.abs(edge-cut)<0.5&&Math.abs(nb.x+nb.w-(cut-tg))<0.5)return;var ae=a.x+a.w;nb.w=rd(cut-tg-nb.x);a.x=rd(cut);a.w=rd(ae-cut);if(!d.vao)a.pt.w=rd(d.x1-d.x0)}})}
 function rpAlignAf(){var m=0;(S.rp||[]).forEach(function(a){if(a.prat)return;var d=null;try{d=rpDoor(a)}catch(_){}var sp=null;try{sp=supOf(a)}catch(_){}if((d&&d.cr)||(sp&&sp.F))m=Math.max(m,rpAf(a))});if(m>0)(S.rp||[]).forEach(function(a){if(!a.prat&&rpAf(a)<m)a.af=m})}
 function roomClamp(){try{rpMergeClose()}catch(_){}try{rpSeamDoor()}catch(_){}try{rpAlignAf()}catch(_){}var W=+S.W,H=+S.H;if(!(W>0)||!(H>0))return;var top=H-fgh();(S.mods||[]).forEach(function(m){if(m.h>top)m.h=top;if(m.b<0)m.b=0;if(m.b+m.h>top)m.b=Math.max(0,top-m.h)});(S.rp||[]).forEach(function(a){if(a.rc&&a.rc.op&&!a.rc.sup&&!a.rc.sobre&&!a.prat){var od=(S.ops||[]).filter(function(q){return q.id===a.rc.op})[0];if(od&&a.b>od.b+300&&a.b<od.b+od.h&&a.b+a.h>od.b+od.h){a.rc={op:od.id,sup:1,ds:Math.round(od.b+od.h-a.b),U:'e',u:60,pf:0,px:60,jn:'seca'};supFit(a,true)}}if(a.rc&&a.rc.sup)supFit(a);if(a.w>W)a.w=W;if(a.x<0)a.x=0;if(a.x+a.w>W)a.x=Math.max(0,W-a.w);if(a.h>top)a.h=top;if(a.b<0)a.b=0;if(a.b+a.h>top)a.b=Math.max(0,top-a.h)});try{rpMagnet()}catch(_){}}
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-sp],[data-oplk],[data-spnew]');if(!t)return;var d=t.dataset;

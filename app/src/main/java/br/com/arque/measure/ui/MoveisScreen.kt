@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -176,7 +178,7 @@ fun MoveisScreen(vm: AppViewModel) {
                                 if (u.host == "wa.me") it.setPackage(null)
                                 ctx.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                             } catch (_: ActivityNotFoundException) {
-                                vm.toast = "Nenhum app encontrado pra abrir isso"
+                                vm.toast = tr("Nenhum app encontrado pra abrir isso")
                             }
                             return true
                         }
@@ -204,7 +206,7 @@ fun MoveisScreen(vm: AppViewModel) {
                                     type = if (wantsVideo) "video/*" else "image/*"
                                     putExtra(Intent.EXTRA_ALLOW_MULTIPLE, params.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE)
                                 }
-                                Intent.createChooser(pick, if (wantsVideo) "Vídeo" else "Foto").putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cam))
+                                Intent.createChooser(pick, if (wantsVideo) tr("Vídeo") else tr("Foto")).putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cam))
                             }
                             return try {
                                 chooser.launch(intent); true
@@ -229,14 +231,14 @@ fun MoveisScreen(vm: AppViewModel) {
             ) {
                 Text(
                     when (vState) {
-                        "connecting" -> "📡 Conectando em ${br.com.arque.measure.share.BtShare.viewFrom}…"
-                        "connected" -> "👁 Ao vivo · ${br.com.arque.measure.share.BtShare.viewFrom} · só visualização"
-                        "error" -> "Não conectou. O outro celular está compartilhando?"
-                        else -> "Conexão encerrada"
+                        "connecting" -> tr("📡 Conectando em {0}…", br.com.arque.measure.share.BtShare.viewFrom)
+                        "connected" -> tr("👁 Ao vivo · {0} · só visualização", br.com.arque.measure.share.BtShare.viewFrom)
+                        "error" -> tr("Não conectou. O outro celular está compartilhando?")
+                        else -> tr("Conexão encerrada")
                     },
                     color = Color.White, fontSize = 12.sp,
                 )
-                Text("  ✕ Sair", color = Color(0xFFF5B400), fontSize = 12.sp, modifier = Modifier.clickable { leaveView() })
+                Text(tr("  ✕ Sair"), color = Color(0xFFF5B400), fontSize = 12.sp, modifier = Modifier.clickable { leaveView() })
             }
         }
     }

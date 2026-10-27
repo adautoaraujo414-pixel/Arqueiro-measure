@@ -1,5 +1,7 @@
 package br.com.arque.measure.data
 
+import br.com.arque.measure.i18n.tr
+
 import br.com.arque.measure.model.Index
 import br.com.arque.measure.model.Reading
 import br.com.arque.measure.model.Note
@@ -141,7 +143,7 @@ class Store(val root: File) {
                 while (e != null) {
                     val target = File(staging, e.name)
                     if (!target.canonicalPath.startsWith(stagingCanon)) {
-                        throw SecurityException("entrada inválida no backup: ${e.name}")
+                        throw SecurityException(tr("entrada inválida no backup: {0}", e.name))
                     }
                     if (e.isDirectory) target.mkdirs() else {
                         target.parentFile?.mkdirs()
@@ -151,7 +153,7 @@ class Store(val root: File) {
                 }
             }
             val idx = File(staging, "index.json")
-            if (!idx.exists()) throw IllegalStateException("backup sem index.json")
+            if (!idx.exists()) throw IllegalStateException(tr("backup sem index.json"))
             Json.indexFromJson(idx.readText())
 
             root.listFiles()?.forEach { it.deleteRecursively() }

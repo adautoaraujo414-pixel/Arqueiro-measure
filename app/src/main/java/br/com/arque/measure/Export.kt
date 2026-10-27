@@ -1,5 +1,7 @@
 package br.com.arque.measure
 
+import br.com.arque.measure.i18n.tr
+
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfDocument
@@ -85,7 +87,7 @@ object Export {
                     sb.append(
                         listOf(
                             csv(note.name), (pi + 1).toString(), csv("${cb.name} · ${ln.kind.label}"),
-                            "", csv("${ln.qty} × ${Units.formatNumber(ln.cutL, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(ln.cutW, br.com.arque.measure.model.LengthUnit.MM)} × ${Units.formatNumber(ln.esp, br.com.arque.measure.model.LengthUnit.MM)} mm"),
+                            "", csv(tr("{0} × {1} × {2} × {3} mm", ln.qty, Units.formatNumber(ln.cutL, br.com.arque.measure.model.LengthUnit.MM), Units.formatNumber(ln.cutW, br.com.arque.measure.model.LengthUnit.MM), Units.formatNumber(ln.esp, br.com.arque.measure.model.LengthUnit.MM))),
                             "peca", "",
                         ).joinToString(";"),
                     ).append('\n')
@@ -96,7 +98,7 @@ object Export {
                     listOf(
                         csv(note.name), (pi + 1).toString(), "porta-${i + 1}",
                         d.valueMm?.let { "%.1f".format(Locale.US, it) } ?: "",
-                        csv(br.com.arque.measure.logic.Geo.doorLabel(d, note.unit) + (if (d.slide) " (de correr)" else "")),
+                        csv(br.com.arque.measure.logic.Geo.doorLabel(d, note.unit) + (if (d.slide) tr(" (de correr)") else "")),
                         when (d.source) { MeasureSource.BLUETOOTH -> "bluetooth"; MeasureSource.MANUAL -> "manual"; null -> "" },
                         d.history.lastOrNull()?.let { h -> fmt.format(Date(h.timeMs)) } ?: "",
                     ).joinToString(";"),

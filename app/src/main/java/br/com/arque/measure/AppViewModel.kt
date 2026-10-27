@@ -1,5 +1,7 @@
 package br.com.arque.measure
 
+import br.com.arque.measure.i18n.tr
+
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -127,7 +129,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun createNote(): String {
         val folder = (filter as? LibFilter.InFolder)?.id
-        val n = Note(name = "Nota ${index.notes.count { !it.trash } + 1}", folderId = folder)
+        val n = Note(name = tr("Nota {0}", index.notes.count { !it.trash } + 1), folderId = folder)
         lastProjectId?.let { linkProject(n.id, it) }
         viewModelScope.launch(io) { store.saveNote(n) }
         upsertMeta(n)
@@ -163,7 +165,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val c = withContext(io) {
                 store.loadNote(id)?.let { src ->
-                    src.copy(id = newId(), name = src.name + " (cópia)", createdMs = System.currentTimeMillis(), pinned = false, trash = false)
+                    src.copy(id = newId(), name = src.name + tr(" (cópia)"), createdMs = System.currentTimeMillis(), pinned = false, trash = false)
                         .also { store.saveNote(it) }
                 }
             }
@@ -181,14 +183,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun openNote(id: String) {
         val meta = index.notes.firstOrNull { it.id == id } ?: return
         if (meta.locked) {
-            toast = "Nota bloqueada. Remova o bloqueio no menu da nota."
+            toast = tr("Nota bloqueada. Remova o bloqueio no menu da nota.")
             return
         }
         if (session?.state?.note?.id == id) { screen = Screen.Editor; return }
         viewModelScope.launch {
             val note = withContext(io) { store.loadNote(id) }
             if (note == null) {
-                toast = "Não foi possível abrir a nota"
+                toast = tr("Não foi possível abrir a nota")
                 return@launch
             }
             flush()
@@ -209,7 +211,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         screen = Screen.Library
     }
 
-    fun tabName(id: String) = index.notes.firstOrNull { it.id == id }?.name ?: "Nota"
+    fun tabName(id: String) = index.notes.firstOrNull { it.id == id }?.name ?: tr("Nota")
 
     /** Salvamento automático: espera uma pausa nas edições e grava a nota. */
     private fun scheduleSave(note: Note) {
@@ -305,14 +307,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val result = withContext(io) {
                 runCatching {
-                    val input = app.contentResolver.openInputStream(uri) ?: error("sem acesso à foto")
+                    val input = app.contentResolver.openInputStream(uri) ?: error(tr("sem acesso à foto"))
                     val name = store.importImage(input, extFor(uri))
-                    val size = ImageCache.orientedSize(store.imageFile(name)) ?: error("imagem inválida")
+                    val size = ImageCache.orientedSize(store.imageFile(name)) ?: error(tr("imagem inválida"))
                     Triple(name, size.first, size.second)
                 }
             }
             result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h) }
-                .onFailure { toast = "Não foi possível adicionar a foto" }
+                .onFailure { toast = tr("Não foi possível adicionar a foto") }
         }
     }
 
@@ -324,24 +326,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         val newPage = photoToNewPage
         photoToNewPage = false
-        toast = "Adicionando ${uris.size} fotos…"
+        toast = tr("Adicionando {0} fotos…", uris.size)
         viewModelScope.launch {
             val ok = mutableListOf<Triple<String, Int, Int>>()
             var fail = 0
             for (u in uris) {
                 val r = withContext(io) {
                     runCatching {
-                        val input = app.contentResolver.openInputStream(u) ?: error("sem acesso à foto")
+                        val input = app.contentResolver.openInputStream(u) ?: error(tr("sem acesso à foto"))
                         val name = store.importImage(input, extFor(u))
-                        val size = ImageCache.orientedSize(store.imageFile(name)) ?: error("imagem inválida")
+                        val size = ImageCache.orientedSize(store.imageFile(name)) ?: error(tr("imagem inválida"))
                         Triple(name, size.first, size.second)
                     }
                 }
                 r.onSuccess { ok += it }.onFailure { fail++ }
             }
             val placed = s.addPhotos(ok, newPage)
-            toast = "$placed fotos adicionadas" + (if (fail > 0) " · $fail não abriram" else "") +
-                (if (placed < ok.size) " · limite de folhas atingido" else "")
+            toast = tr("{0} fotos adicionadas", placed) + (if (fail > 0) tr(" · {0} não abriram", fail) else "") +
+                (if (placed < ok.size) tr(" · limite de folhas atingido") else "")
         }
     }
 
@@ -386,12 +388,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     saveToGallery(f)
                     val name = store.importImage(f.inputStream(), "jpg")
                     f.delete()
-                    val size = ImageCache.orientedSize(store.imageFile(name)) ?: error("imagem inválida")
+                    val size = ImageCache.orientedSize(store.imageFile(name)) ?: error(tr("imagem inválida"))
                     Triple(name, size.first, size.second)
                 }
             }
             result.onSuccess { (name, w, h) -> placePhoto(s, name, w, h); askAnotherPhoto = true }
-                .onFailure { toast = "Não foi possível adicionar a foto" }
+                .onFailure { toast = tr("Não foi possível adicionar a foto") }
         }
     }
 
@@ -456,7 +458,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             recent.remove(r)
             persistRecent()
         } else {
-            toast = "Toque numa seta de cota primeiro"
+            toast = tr("Toque numa seta de cota primeiro")
         }
     }
 
@@ -500,7 +502,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private fun runIo(okMsg: String, block: () -> Unit) {
         viewModelScope.launch {
             val r = withContext(io) { runCatching(block) }
-            toast = if (r.isSuccess) okMsg else "Falhou: ${r.exceptionOrNull()?.message ?: "erro"}"
+            toast = if (r.isSuccess) okMsg else tr("Falhou: {0}", r.exceptionOrNull()?.message ?: tr("erro"))
         }
     }
 
@@ -594,14 +596,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     while (maxOf(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 800) sample *= 2
                     val raw = app.contentResolver.openInputStream(uri)?.use {
                         BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
-                    } ?: error("imagem inválida")
+                    } ?: error(tr("imagem inválida"))
                     val k = 800f / maxOf(raw.width, raw.height)
                     val b = if (k < 1f) Bitmap.createScaledBitmap(raw, (raw.width * k).toInt().coerceAtLeast(1), (raw.height * k).toInt().coerceAtLeast(1), true) else raw
                     store.logoFile.outputStream().use { b.compress(Bitmap.CompressFormat.PNG, 100, it) }
                     b
                 }
             }
-            bmp.onSuccess { logoBmp = it }.onFailure { toast = "Não consegui abrir a imagem" }
+            bmp.onSuccess { logoBmp = it }.onFailure { toast = tr("Não consegui abrir a imagem") }
         }
     }
 
@@ -647,7 +649,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", f)
                 }
             }
-            r.onSuccess(onReady).onFailure { toast = "Falhou: ${it.message ?: "erro ao gerar o PDF"}" }
+            r.onSuccess(onReady).onFailure { toast = tr("Falhou: {0}", it.message ?: tr("erro ao gerar o PDF")) }
         }
     }
 
@@ -657,8 +659,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val note = s.state.note
         val app = getApplication<Application>()
         val renderer = SheetRenderer { images.getBlocking(it) }
-        runIo("PDF exportado") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.pdf(note, renderer, it) }
+        runIo(tr("PDF exportado")) {
+            (app.contentResolver.openOutputStream(uri) ?: error(tr("sem acesso ao destino"))).use { Export.pdf(note, renderer, it) }
         }
     }
 
@@ -669,8 +671,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val page = s.state.pageIdx
         val app = getApplication<Application>()
         val renderer = SheetRenderer { images.getBlocking(it) }
-        runIo("Imagem exportada") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { Export.png(note, page, renderer, it) }
+        runIo(tr("Imagem exportada")) {
+            (app.contentResolver.openOutputStream(uri) ?: error(tr("sem acesso ao destino"))).use { Export.png(note, page, renderer, it) }
         }
     }
 
@@ -679,8 +681,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         flush()
         val note = s.state.note
         val app = getApplication<Application>()
-        runIo("Medidas exportadas (CSV)") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use {
+        runIo(tr("Medidas exportadas (CSV)")) {
+            (app.contentResolver.openOutputStream(uri) ?: error(tr("sem acesso ao destino"))).use {
                 it.write(Export.csv(note).toByteArray(Charsets.UTF_8))
             }
         }
@@ -689,8 +691,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun backup(uri: Uri) {
         flush()
         val app = getApplication<Application>()
-        runIo("Backup salvo") {
-            (app.contentResolver.openOutputStream(uri) ?: error("sem acesso ao destino")).use { br.com.arque.measure.data.DataBackup.fullBackup(app, it) }
+        runIo(tr("Backup salvo")) {
+            (app.contentResolver.openOutputStream(uri) ?: error(tr("sem acesso ao destino"))).use { br.com.arque.measure.data.DataBackup.fullBackup(app, it) }
         }
     }
 
@@ -706,7 +708,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (full) {
                 flush()
-                toast = "Restaurando… o app vai reiniciar"
+                toast = tr("Restaurando… o app vai reiniciar")
                 kotlinx.coroutines.delay(600)
                 br.com.arque.measure.data.DataBackup.restart(app)
                 return@launch
@@ -721,9 +723,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 index = store.loadIndex()
                 recent.clear(); recent.addAll(store.loadReadings())
                 screen = Screen.Library
-                toast = "Backup restaurado"
+                toast = tr("Backup restaurado")
             } else {
-                toast = "Backup inválido: nada foi alterado"
+                toast = tr("Backup inválido: nada foi alterado")
             }
         }
     }
@@ -764,24 +766,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (br.com.arque.measure.BuildConfig.PLAY) return
         val app = getApplication<Application>()
         updateReady = null
-        updateState = "Procurando versão nova…"
+        updateState = tr("Procurando versão nova…")
         viewModelScope.launch {
             val r = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() } }
             val rel = r.getOrNull()
-            if (rel == null) { updateState = "Não consegui verificar agora (sem internet?)."; return@launch }
+            if (rel == null) { updateState = tr("Não consegui verificar agora (sem internet?)."); return@launch }
             val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
-            if (rel.number <= mine) { updateState = "Você já está na versão mais nova (apk-$mine)."; return@launch }
+            if (rel.number <= mine) { updateState = tr("Você já está na versão mais nova (apk-{0}).", mine); return@launch }
             flush()
-            updateState = "Salvando seus dados antes de atualizar…"
+            updateState = tr("Salvando seus dados antes de atualizar…")
             withContext(io) { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(app, force = true) } }
-            updateState = "Baixando apk-${rel.number}…"
+            updateState = tr("Baixando apk-{0}…", rel.number)
             val f = withContext(kotlinx.coroutines.Dispatchers.IO) {
-                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = "Baixando apk-${rel.number}… $p%" } } }
+                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = tr("Baixando apk-{0}… {1}%", rel.number, p) } } }
             }
             val apk = f.getOrNull()
-            if (apk == null) { updateState = "Falhou o download: ${f.exceptionOrNull()?.message}"; return@launch }
+            if (apk == null) { updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message); return@launch }
             updateReady = apk
-            updateState = "apk-${rel.number} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure)."
+            updateState = tr("apk-{0} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure).", rel.number)
             if (autoInstall) installUpdate()
         }
     }
@@ -825,7 +827,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun unlock(code: String): Boolean {
         val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)
-        if (ok) { licLocked = false; licUnlocked = true; trialLeft = ""; toast = "App desbloqueado. Obrigado!" }
+        if (ok) { licLocked = false; licUnlocked = true; trialLeft = ""; toast = tr("App desbloqueado. Obrigado!") }
         return ok
     }
 
@@ -833,7 +835,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val app = getApplication<Application>()
         val apk = updateReady ?: return
         if (!br.com.arque.measure.data.AppUpdater.canInstall(app)) {
-            updateState = "Libere \"instalar apps desta fonte\" pro Arque Measure e toque em Instalar de novo."
+            updateState = tr("Libere \"instalar apps desta fonte\" pro Arque Measure e toque em Instalar de novo.")
             br.com.arque.measure.data.AppUpdater.askInstallPermission(app)
             return
         }

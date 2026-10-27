@@ -2,6 +2,8 @@
 
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -83,11 +85,11 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-private val ptBR = Locale("pt", "BR")
-private val fmtDay = SimpleDateFormat("EEEE, dd 'de' MMMM", ptBR)
-private val fmtHour = SimpleDateFormat("HH:mm", ptBR)
-private val fmtDate = SimpleDateFormat("dd/MM/yyyy", ptBR)
-private val fmtMonth = SimpleDateFormat("MMMM 'de' yyyy", ptBR)
+private val ptBR get() = br.com.arque.measure.i18n.I18n.locale
+private val fmtDay get() = br.com.arque.measure.i18n.I18n.dayFormat()
+private val fmtHour get() = br.com.arque.measure.i18n.I18n.hourFormat()
+private val fmtDate get() = br.com.arque.measure.i18n.I18n.dateFormat()
+private val fmtMonth get() = br.com.arque.measure.i18n.I18n.monthFormat()
 
 private fun dayStart(ms: Long): Long = Calendar.getInstance().apply {
     timeInMillis = ms; set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
@@ -96,9 +98,9 @@ private fun dayStart(ms: Long): Long = Calendar.getInstance().apply {
 private fun whenLabel(startMs: Long, now: Long = System.currentTimeMillis()): String {
     val d = (dayStart(startMs) - dayStart(now)) / 86_400_000L
     return when {
-        d == 0L -> "Hoje"
-        d == 1L -> "Amanhã"
-        d == -1L -> "Ontem"
+        d == 0L -> tr("Hoje")
+        d == 1L -> tr("Amanhã")
+        d == -1L -> tr("Ontem")
         else -> fmtDay.format(Date(startMs)).replaceFirstChar { it.uppercase() }
     }
 }
@@ -140,35 +142,35 @@ fun AgendaScreen(vm: AppViewModel) {
     Box(Modifier.fillMaxSize().background(Ui.bg).statusBarsPadding().navigationBarsPadding()) {
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { vm.screen = Screen.Library }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text) }
-                Text("Agenda", color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
+                IconButton(onClick = { vm.screen = Screen.Library }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar"), tint = Ui.text) }
+                Text(tr("Agenda"), color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
                 Button(onClick = {
                     val base = selDay?.let { it + 9 * 3600_000L } ?: (now + 3600_000L)
                     isNew = true; editing = Appointment(startMs = base)
-                }) { Text("+ Novo") }
+                }) { Text(tr("+ Novo")) }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!exactOk) {
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF3A2E12)).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text("Pra o aviso tocar na hora certa, libere “Alarmes e lembretes”.", color = Color(0xFFF5D68A), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Text(tr("Pra o aviso tocar na hora certa, libere “Alarmes e lembretes”."), color = Color(0xFFF5D68A), fontSize = 13.sp, modifier = Modifier.weight(1f))
                         TextButton(onClick = {
                             if (Build.VERSION.SDK_INT >= 31) runCatching {
                                 ctx.startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:${ctx.packageName}")))
                             }
-                        }) { Text("Liberar") }
+                        }) { Text(tr("Liberar")) }
                     }
                 }
                 MonthGrid(monthMs, all, selDay, { monthMs = it }) { d -> selDay = if (selDay == d) null else d }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    FilterChip(selected = selDay == null && mode == 0, onClick = { selDay = null; mode = 0 }, label = { Text("Próximos") })
-                    FilterChip(selected = selDay == null && mode == 1, onClick = { selDay = null; mode = 1 }, label = { Text("Concluídos / passados") })
+                    FilterChip(selected = selDay == null && mode == 0, onClick = { selDay = null; mode = 0 }, label = { Text(tr("Próximos")) })
+                    FilterChip(selected = selDay == null && mode == 1, onClick = { selDay = null; mode = 1 }, label = { Text(tr("Concluídos / passados")) })
                     if (selDay != null) FilterChip(selected = true, onClick = { selDay = null }, label = { Text(fmtDate.format(Date(selDay!!)) + "  ✕") })
                 }
                 if (selDay != null) {
                     DayHours(vm, selDay!!, shown, onNew = { ms -> isNew = true; editing = Appointment(startMs = ms) }, onEdit = { isNew = false; editing = it })
                 } else if (shown.isEmpty()) {
                     Text(
-                        if (selDay != null) "Nada marcado nesse dia." else if (mode == 0) "Nenhum compromisso por vir. Toque em “+ Novo” pra marcar uma entrega ou visita." else "Nada por aqui ainda.",
+                        if (selDay != null) tr("Nada marcado nesse dia.") else if (mode == 0) tr("Nenhum compromisso por vir. Toque em “+ Novo” pra marcar uma entrega ou visita.") else tr("Nada por aqui ainda."),
                         color = Ui.dim, fontSize = 14.sp, modifier = Modifier.padding(vertical = 12.dp),
                     )
                 }
@@ -211,7 +213,7 @@ private fun DayHours(vm: AppViewModel, day: Long, list: List<Appointment>, onNew
             ) {
                 Text("%02d:00".format(h), color = if (current) Color(0xFF7FB2FF) else Ui.dim, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp).padding(top = 2.dp))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (inHour.isEmpty()) Text("livre · toque pra marcar", color = Color(0x55FFFFFF), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    if (inHour.isEmpty()) Text(tr("livre · toque pra marcar"), color = Color(0x55FFFFFF), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
                     inHour.forEach { a -> ApptCard(vm, a, onEdit = { onEdit(a) }) }
                 }
             }
@@ -230,11 +232,11 @@ private fun MonthGrid(monthMs: Long, all: List<Appointment>, selDay: Long?, onMo
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ui.panel).padding(10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onMonth(Calendar.getInstance().apply { timeInMillis = first; add(Calendar.MONTH, -1) }.timeInMillis) }) {
-                Icon(Icons.Filled.ChevronLeft, "Mês anterior", tint = Ui.text)
+                Icon(Icons.Filled.ChevronLeft, tr("Mês anterior"), tint = Ui.text)
             }
             Text(fmtMonth.format(Date(first)).replaceFirstChar { it.uppercase() }, color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             IconButton(onClick = { onMonth(Calendar.getInstance().apply { timeInMillis = first; add(Calendar.MONTH, 1) }.timeInMillis) }) {
-                Icon(Icons.Filled.ChevronRight, "Próximo mês", tint = Ui.text)
+                Icon(Icons.Filled.ChevronRight, tr("Próximo mês"), tint = Ui.text)
             }
         }
         Row(Modifier.fillMaxWidth()) {
@@ -281,11 +283,11 @@ private fun ApptCard(vm: AppViewModel, a: Appointment, onEdit: () -> Unit) {
             Text(fmtHour.format(Date(a.startMs)), color = Ui.text, fontSize = 18.sp)
         }
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (a.projectId != null) AssistChipLike("📐 Abrir projeto") { vm.openProject(a.projectId) }
-            if (noteMeta != null) AssistChipLike("📝 Abrir nota") { vm.openNote(noteMeta.id) }
-            if (a.quoteId != null) AssistChipLike("💲 Orçamento") { vm.screen = Screen.Quotes }
-            if (a.clientPhone.isNotBlank()) AssistChipLike("💬 Avisar cliente") { openWhatsApp(ctx, vm, a) }
-            AssistChipLike(if (a.done) "↩ Reabrir" else "✔ Concluir") { vm.saveAppt(a.copy(done = !a.done)) }
+            if (a.projectId != null) AssistChipLike(tr("📐 Abrir projeto")) { vm.openProject(a.projectId) }
+            if (noteMeta != null) AssistChipLike(tr("📝 Abrir nota")) { vm.openNote(noteMeta.id) }
+            if (a.quoteId != null) AssistChipLike(tr("💲 Orçamento")) { vm.screen = Screen.Quotes }
+            if (a.clientPhone.isNotBlank()) AssistChipLike(tr("💬 Avisar cliente")) { openWhatsApp(ctx, vm, a) }
+            AssistChipLike(if (a.done) tr("↩ Reabrir") else tr("✔ Concluir")) { vm.saveAppt(a.copy(done = !a.done)) }
         }
     }
 }
@@ -300,14 +302,14 @@ private fun AssistChipLike(text: String, onClick: () -> Unit) {
 private fun openWhatsApp(ctx: android.content.Context, vm: AppViewModel, a: Appointment) {
     var d = a.clientPhone.filter { it.isDigit() }
     if (d.length in 10..11) d = "55$d"
-    val who = a.clientName.substringBefore(' ').ifBlank { "tudo bem" }
-    val msg = "Olá, $who! Passando pra confirmar ${a.kind.label.lowercase()} " +
-        "${whenLabel(a.startMs).lowercase()} (${fmtDate.format(Date(a.startMs))}) às ${fmtHour.format(Date(a.startMs))}" +
-        (if (a.address.isNotBlank()) ", em ${a.address}" else "") + "." +
+    val who = a.clientName.substringBefore(' ').ifBlank { tr("tudo bem") }
+    val msg = tr("Olá, {0}! Passando pra confirmar {1} {2} ({3}) às {4}", who, a.kind.label.lowercase(), whenLabel(a.startMs).lowercase(),
+        fmtDate.format(Date(a.startMs)), fmtHour.format(Date(a.startMs))) +
+        (if (a.address.isNotBlank()) tr(", em {0}", a.address) else "") + "." +
         (if (vm.company.name.isNotBlank()) " — ${vm.company.name}" else "")
     runCatching {
         ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$d?text=${Uri.encode(msg)}")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    }.onFailure { vm.toast = "Não consegui abrir o WhatsApp" }
+    }.onFailure { vm.toast = tr("Não consegui abrir o WhatsApp") }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -338,9 +340,9 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
         Surface(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(), color = Ui.bg) {
             Column(Modifier.fillMaxSize()) {
                 Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Fechar", tint = Ui.text) }
-                    Text(if (isNew) "Novo compromisso" else "Compromisso", color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
-                    Button(onClick = { vm.saveAppt(a.copy(title = a.title.trim())); onClose() }) { Text("Salvar") }
+                    IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Fechar"), tint = Ui.text) }
+                    Text(if (isNew) tr("Novo compromisso") else tr("Compromisso"), color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
+                    Button(onClick = { vm.saveAppt(a.copy(title = a.title.trim())); onClose() }) { Text(tr("Salvar")) }
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -348,15 +350,15 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                             FilterChip(selected = a.kind == k, onClick = { a = a.copy(kind = k) }, label = { Text("${k.icon} ${k.label}") })
                         }
                     }
-                    OutlinedTextField(a.title, { a = a.copy(title = it) }, label = { Text("Título (ex.: Entrega da cozinha)") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(a.title, { a = a.copy(title = it) }, label = { Text(tr("Título (ex.: Entrega da cozinha)")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = { pickDate = true }, modifier = Modifier.weight(1f)) { Text("📅 ${fmtDate.format(Date(a.startMs))}") }
                         OutlinedButton(onClick = { pickTime = true }, modifier = Modifier.weight(1f)) { Text("🕒 ${fmtHour.format(Date(a.startMs))}") }
                     }
-                    Text("Cliente", color = Ui.dim, fontSize = 13.sp)
+                    Text(tr("Cliente"), color = Ui.dim, fontSize = 13.sp)
                     OutlinedTextField(
                         a.clientName, { a = a.copy(clientName = it); showSug = true },
-                        label = { Text("Nome do cliente (digite pra buscar)") }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                        label = { Text(tr("Nome do cliente (digite pra buscar)")) }, modifier = Modifier.fillMaxWidth(), singleLine = true,
                     )
                     if (showSug && sugg.isNotEmpty()) {
                         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ui.panel)) {
@@ -369,40 +371,40 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                         }
                     }
                     if (a.clientName.isBlank() && clients.isNotEmpty()) {
-                        Text("Clientes salvos (toque pra puxar telefone, endereço e projeto):", color = Ui.dim, fontSize = 12.sp)
+                        Text(tr("Clientes salvos (toque pra puxar telefone, endereço e projeto):"), color = Ui.dim, fontSize = 12.sp)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             clients.take(12).forEach { c -> AssistChipLike((if (c.projectId != null) "📐 " else "💲 ") + c.name) { pickClient(c) } }
                         }
                     }
-                    OutlinedTextField(a.clientPhone, { a = a.copy(clientPhone = it) }, label = { Text("Telefone / WhatsApp do cliente") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-                    OutlinedTextField(a.address, { a = a.copy(address = it) }, label = { Text("Endereço do compromisso") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(a.clientPhone, { a = a.copy(clientPhone = it) }, label = { Text(tr("Telefone / WhatsApp do cliente")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                    OutlinedTextField(a.address, { a = a.copy(address = it) }, label = { Text(tr("Endereço do compromisso")) }, modifier = Modifier.fillMaxWidth())
 
-                    Text("Vínculos", color = Ui.dim, fontSize = 13.sp)
+                    Text(tr("Vínculos"), color = Ui.dim, fontSize = 13.sp)
                     Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ui.panel).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("📐 Projeto do cliente", color = Ui.text, fontSize = 15.sp)
-                            Text(if (a.projectId != null) "Vinculado — abre direto no editor de móveis" else "Escolha o cliente salvo pra vincular o projeto", color = Ui.dim, fontSize = 12.sp)
+                            Text(tr("📐 Projeto do cliente"), color = Ui.text, fontSize = 15.sp)
+                            Text(if (a.projectId != null) tr("Vinculado — abre direto no editor de móveis") else tr("Escolha o cliente salvo pra vincular o projeto"), color = Ui.dim, fontSize = 12.sp)
                         }
                         if (a.projectId != null) {
-                            TextButton(onClick = { vm.saveAppt(a); onClose(); vm.openProject(a.projectId!!) }) { Text("Abrir") }
-                            TextButton(onClick = { a = a.copy(projectId = null) }) { Text("Tirar") }
+                            TextButton(onClick = { vm.saveAppt(a); onClose(); vm.openProject(a.projectId!!) }) { Text(tr("Abrir")) }
+                            TextButton(onClick = { a = a.copy(projectId = null) }) { Text(tr("Tirar")) }
                         }
                     }
                     Box {
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ui.panel).clickable { noteMenu = true }.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text("📝 Nota", color = Ui.text, fontSize = 15.sp)
-                                Text(notes.firstOrNull { it.id == a.noteId }?.name ?: "Toque pra vincular uma nota (medidas, fotos)", color = Ui.dim, fontSize = 12.sp)
+                                Text(tr("📝 Nota"), color = Ui.text, fontSize = 15.sp)
+                                Text(notes.firstOrNull { it.id == a.noteId }?.name ?: tr("Toque pra vincular uma nota (medidas, fotos)"), color = Ui.dim, fontSize = 12.sp)
                             }
-                            if (a.noteId != null) TextButton(onClick = { val id = a.noteId!!; vm.saveAppt(a); onClose(); vm.openNote(id) }) { Text("Abrir") }
+                            if (a.noteId != null) TextButton(onClick = { val id = a.noteId!!; vm.saveAppt(a); onClose(); vm.openNote(id) }) { Text(tr("Abrir")) }
                         }
                         DropdownMenu(expanded = noteMenu, onDismissRequest = { noteMenu = false }) {
-                            DropdownMenuItem(text = { Text("Nenhuma") }, onClick = { a = a.copy(noteId = null); noteMenu = false })
+                            DropdownMenuItem(text = { Text(tr("Nenhuma")) }, onClick = { a = a.copy(noteId = null); noteMenu = false })
                             notes.forEach { n -> DropdownMenuItem(text = { Text(n.name) }, onClick = { a = a.copy(noteId = n.id); noteMenu = false }) }
                         }
                     }
                     if (quotesOfClient.isNotEmpty()) {
-                        Text("💲 Orçamento do cliente", color = Ui.dim, fontSize = 13.sp)
+                        Text(tr("💲 Orçamento do cliente"), color = Ui.dim, fontSize = 13.sp)
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             quotesOfClient.forEach { q ->
                                 FilterChip(selected = a.quoteId == q.id, onClick = { a = a.copy(quoteId = if (a.quoteId == q.id) null else q.id) },
@@ -411,7 +413,7 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                         }
                     }
 
-                    Text("Avisar (notificação neste aparelho)", color = Ui.dim, fontSize = 13.sp)
+                    Text(tr("Avisar (notificação neste aparelho)"), color = Ui.dim, fontSize = 13.sp)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         REMIND_OPTIONS.forEach { (min, label) ->
                             FilterChip(selected = min in a.remindMin, onClick = {
@@ -419,8 +421,8 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                             }, label = { Text(label) })
                         }
                     }
-                    OutlinedTextField(a.notes, { a = a.copy(notes = it) }, label = { Text("Observações") }, modifier = Modifier.fillMaxWidth().height(110.dp))
-                    if (!isNew) TextButton(onClick = { confirmDel = true }) { Text("Apagar compromisso", color = Color(0xFFEF6A6A)) }
+                    OutlinedTextField(a.notes, { a = a.copy(notes = it) }, label = { Text(tr("Observações")) }, modifier = Modifier.fillMaxWidth().height(110.dp))
+                    if (!isNew) TextButton(onClick = { confirmDel = true }) { Text(tr("Apagar compromisso"), color = Color(0xFFEF6A6A)) }
                     Spacer(Modifier.height(24.dp))
                 }
             }
@@ -445,7 +447,7 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                     pickDate = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickDate = false }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { pickDate = false }) { Text(tr("Cancelar")) } },
         ) { DatePicker(st) }
     }
     if (pickTime) {
@@ -460,12 +462,12 @@ private fun ApptEditor(vm: AppViewModel, initial: Appointment, isNew: Boolean, o
                     pickTime = false
                 }) { Text("OK") }
             },
-            dismissButton = { TextButton(onClick = { pickTime = false }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { pickTime = false }) { Text(tr("Cancelar")) } },
             text = { TimePicker(st) },
         )
     }
     if (confirmDel) {
-        ConfirmDialog("Apagar compromisso", "Apagar “${a.title.ifBlank { a.kind.label }}”?", "Apagar", { confirmDel = false }) {
+        ConfirmDialog(tr("Apagar compromisso"), tr("Apagar “{0}”?", a.title.ifBlank { a.kind.label }), tr("Apagar"), { confirmDel = false }) {
             vm.deleteAppt(a.id); confirmDel = false; onClose()
         }
     }

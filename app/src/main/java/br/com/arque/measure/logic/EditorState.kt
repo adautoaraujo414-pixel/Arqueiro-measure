@@ -1,5 +1,7 @@
 package br.com.arque.measure.logic
 
+import br.com.arque.measure.i18n.tr
+
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
@@ -138,7 +140,7 @@ class EditorState(
     }
 
     /** Coloca um móvel novo na folha ativa e o seleciona. */
-    fun addCab(at: Pt, cab: Cabinet = Cabinet(), name: String = "Armário base"): String {
+    fun addCab(at: Pt, cab: Cabinet = Cabinet(), name: String = tr("Armário base")): String {
         val o = CabObj(at = at, cab = br.com.arque.measure.logic.CabinetMath.normalized(cab), name = name)
         commit(sheet.copy(objs = sheet.objs + o))
         select(o.id)
@@ -150,15 +152,15 @@ class EditorState(
      * (traço desenhado ÷ mm medidos). Devolve um aviso (ou null se tudo certo).
      */
     fun addCabOnWall(roomId: String, k: Int): String? {
-        val room = sheet.obj(roomId) as? br.com.arque.measure.model.RoomObj ?: return "Cômodo não encontrado"
-        val mm = room.segs.getOrNull(k)?.valueMm ?: return "Meça (ou digite) esta parede antes de encaixar o móvel"
-        if (mm <= 0.0) return "Medida da parede inválida"
+        val room = sheet.obj(roomId) as? br.com.arque.measure.model.RoomObj ?: return tr("Cômodo não encontrado")
+        val mm = room.segs.getOrNull(k)?.valueMm ?: return tr("Meça (ou digite) esta parede antes de encaixar o móvel")
+        if (mm <= 0.0) return tr("Medida da parede inválida")
         val photos = sheet.photos()
         val (a, b) = Geo.segEnds(photos, room, k)
         val dx = b.x - a.x
         val dy = b.y - a.y
         val len = kotlin.math.hypot(dx, dy)
-        if (len < 1f) return "Parede curta demais no desenho"
+        if (len < 1f) return tr("Parede curta demais no desenho")
         val ux = dx / len
         val uy = dy / len
         val poly = Geo.annPoints(photos, room)
@@ -182,10 +184,10 @@ class EditorState(
         val w = minOf(base.wMm, mm)
         val cab = br.com.arque.measure.logic.CabinetMath.normalized(base.copy(wMm = w))
         val wf = br.com.arque.measure.model.WallFit(roomId, k, a.x, a.y, ux, uy, nx, ny, upm, mm, 0.0)
-        val o = CabObj(at = a, cab = cab, name = "Armário base", wall = wf)
+        val o = CabObj(at = a, cab = cab, name = tr("Armário base"), wall = wf)
         commit(sheet.copy(objs = sheet.objs + o))
         select(o.id)
-        return if (base.wMm > mm) "Parede de ${mm.toLong()} mm: o móvel foi ajustado para caber" else null
+        return if (base.wMm > mm) tr("Parede de {0} mm: o móvel foi ajustado para caber", mm.toLong()) else null
     }
 
     // ---- parede do projeto ----
@@ -234,7 +236,7 @@ class EditorState(
         } else Cabinet(wMm = width)
         val o = CabObj(
             at = w.at, cab = br.com.arque.measure.logic.CabinetMath.normalized(base),
-            name = (if (upper) "Superior " else "Base ") + (row.size + 1),
+            name = (if (upper) tr("Superior ") else tr("Base ")) + (row.size + 1),
             scaleDen = w.scaleDen, layout = br.com.arque.measure.model.LayoutFit(wallId, (row.maxOfOrNull { it.layout!!.order } ?: -1) + 1),
         )
         commit(sheet.copy(objs = sheet.objs + o))
@@ -568,7 +570,7 @@ class EditorState(
         if (o is CabObj && fit != null) {
             // módulo da parede: a cópia entra logo ao lado (mesma fileira), com as mesmas medidas
             val row = WallLayout.members(sheet, fit.wallId, o.cab.superior)
-            val copy = o.copy(id = newId(), name = o.name + " (cópia)", locked = false, layout = fit.copy(order = fit.order + 1))
+            val copy = o.copy(id = newId(), name = o.name + tr(" (cópia)"), locked = false, layout = fit.copy(order = fit.order + 1))
             commit(sheet.copy(objs = sheet.objs.map {
                 if (it is CabObj && it.layout?.wallId == fit.wallId && it.cab.superior == o.cab.superior && it.layout.order > fit.order) it.copy(layout = it.layout.copy(order = it.layout.order + 1)) else it
             } + copy))

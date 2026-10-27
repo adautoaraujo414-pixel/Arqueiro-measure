@@ -1,8 +1,11 @@
 package br.com.arque.measure.model
 
+import br.com.arque.measure.i18n.tr
+
 /** O que vai dentro de um vão do móvel. */
-enum class VaoKind(val label: String) {
-    FREE("Livre"), SHELVES("Prateleiras"), DRAWERS("Gavetas"), DOOR("Porta"), OVEN("Forno"),
+enum class VaoKind(private val ptLabel: String) {
+    FREE("Livre"), SHELVES("Prateleiras"), DRAWERS("Gavetas"), DOOR("Porta"), OVEN("Forno");
+    val label: String get() = tr(ptLabel)
 }
 
 /** Um vão (espaço entre laterais/divisórias). Só os campos do tipo escolhido valem. */
@@ -86,9 +89,10 @@ data class Cabinet(
 )
 
 /** Tipos de peça (nomes mostrados na lista). */
-enum class PartKind(val label: String) {
+enum class PartKind(private val ptLabel: String) {
     LATERAL("Lateral"), BASE("Base"), TRAVESSA("Travessa frontal"), TOPO("Tampo superior"), REGUA("Régua (engrossa a borda)"), TAMP_BAIXO("Tamponamento de baixo"), DIVISORIA("Divisória"),
-    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"), FORNO("Forno (corte)"),
+    PRATELEIRA("Prateleira"), FRENTE_GAVETA("Frente de gaveta"), PORTA("Porta"), RODAPE("Rodapé / pedestal"), FUNDO("Fundo"), MOLDURA("Moldura (acabamento)"), TAMPONAMENTO("Tamponamento"), BATENTE("Batente de cava"), FORNO("Forno (corte)");
+    val label: String get() = tr(ptLabel)
 }
 
 /**
@@ -121,7 +125,7 @@ data class CabObj(
     override val photoId: String? = null,
     val at: Pt,
     val cab: Cabinet = Cabinet(),
-    val name: String = "Armário base",
+    val name: String = tr("Armário base"),
     val scaleDen: Int = 10,
     override val locked: Boolean = false,
     val wall: WallFit? = null,

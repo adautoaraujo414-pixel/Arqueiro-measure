@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -61,11 +63,11 @@ fun ShareViewPicker(vm: AppViewModel, onDismiss: () -> Unit) {
     val enable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
     fun add(d: BluetoothDevice) { if (devs.none { it.address == d.address }) devs.add(d) }
     fun scan() {
-        val ad = BtShare.adapter(ctx) ?: run { msg = "Este celular não tem Bluetooth."; return }
+        val ad = BtShare.adapter(ctx) ?: run { msg = tr("Este celular não tem Bluetooth."); return }
         if (!ad.isEnabled) { enable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)); return }
         runCatching { ad.bondedDevices.forEach { add(it) } }
         runCatching { ad.cancelDiscovery(); ad.startDiscovery() }
-        msg = "Procurando… no celular do dono: Editor de móveis → 📤 Compartilhar."
+        msg = tr("Procurando… no celular do dono: Editor de móveis → 📤 Compartilhar.")
     }
     LaunchedEffect(Unit) { if (!ok) perm.launch(btPerms()) }
     LaunchedEffect(ok) { if (ok) scan() }
@@ -82,11 +84,11 @@ fun ShareViewPicker(vm: AppViewModel, onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Ver projeto por Bluetooth") },
+        title = { Text(tr("Ver projeto por Bluetooth")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Escolha o celular de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.", fontSize = 13.sp)
-                if (!ok) TextButton(onClick = { perm.launch(btPerms()) }) { Text("Permitir Bluetooth") }
+                Text(tr("Escolha o celular de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada."), fontSize = 13.sp)
+                if (!ok) TextButton(onClick = { perm.launch(btPerms()) }) { Text(tr("Permitir Bluetooth")) }
                 if (msg.isNotEmpty()) Text(msg, fontSize = 12.sp, color = Color(0xFF666666))
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(devs, key = { it.address }) { d ->
@@ -102,8 +104,8 @@ fun ShareViewPicker(vm: AppViewModel, onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { if (ok) scan() else perm.launch(btPerms()) }) { Text("Procurar de novo") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
+        confirmButton = { TextButton(onClick = { if (ok) scan() else perm.launch(btPerms()) }) { Text(tr("Procurar de novo")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Fechar")) } },
     )
 }
 
@@ -130,22 +132,22 @@ fun ShareHostDialog(onPush: () -> Unit, onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Compartilhar projeto") },
+        title = { Text(tr("Compartilhar projeto")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (err.isNotEmpty()) Text(err, color = Color(0xFFE5484D))
-                else if (hosting) Text("📡 Compartilhando por Bluetooth · " + (if (viewers == 0) "ninguém vendo ainda" else "$viewers vendo agora"))
-                else Text("Ligando o Bluetooth…")
-                Text("No outro celular (com o Arquemestre): menu ⋮ → Ver projeto por Bluetooth → escolher este celular. Ele vê tudo ao vivo, com as medidas, mas não altera nada.", fontSize = 13.sp)
+                else if (hosting) Text(tr("📡 Compartilhando por Bluetooth · ") + (if (viewers == 0) tr("ninguém vendo ainda") else tr("{0} vendo agora", viewers)))
+                else Text(tr("Ligando o Bluetooth…"))
+                Text(tr("No outro celular (com o Arquemestre): menu ⋮ → Ver projeto por Bluetooth → escolher este celular. Ele vê tudo ao vivo, com as medidas, mas não altera nada."), fontSize = 13.sp)
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Continuar editando") } },
-        dismissButton = { TextButton(onClick = { BtShare.stopHost(); onDismiss() }) { Text("Parar de compartilhar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Continuar editando")) } },
+        dismissButton = { TextButton(onClick = { BtShare.stopHost(); onDismiss() }) { Text(tr("Parar de compartilhar")) } },
     )
 }
 
 private fun start(ctx: Context, onPush: () -> Unit, visible: androidx.activity.result.ActivityResultLauncher<Intent>, onErr: (String) -> Unit) {
-    if (!BtShare.startHost(ctx)) { onErr("Não consegui ligar o compartilhamento. Confira se o Bluetooth está ligado."); return }
+    if (!BtShare.startHost(ctx)) { onErr(tr("Não consegui ligar o compartilhamento. Confira se o Bluetooth está ligado.")); return }
     onPush()
     runCatching { visible.launch(Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)) }
 }

@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -58,7 +60,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR")).apply { isLenient = false }
+private val dateFmt get() = br.com.arque.measure.i18n.I18n.dateFormat().apply { isLenient = false }
 
 @Composable
 fun QuotesScreen(vm: AppViewModel) {
@@ -71,10 +73,10 @@ fun QuotesScreen(vm: AppViewModel) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { if (editingId != null) editingId = null else vm.screen = Screen.Library }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar"), tint = Ui.text)
             }
-            Text(if (editingId == null) "Orçamentos" else "Orçamento", color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
-            TextButton(onClick = { companyDlg = true }) { Text("Dados da empresa") }
+            Text(if (editingId == null) tr("Orçamentos") else tr("Orçamento"), color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))
+            TextButton(onClick = { companyDlg = true }) { Text(tr("Dados da empresa")) }
         }
         val q = vm.quotes.firstOrNull { it.id == editingId }
         if (q != null) {
@@ -84,9 +86,9 @@ fun QuotesScreen(vm: AppViewModel) {
                 Button(onClick = {
                     val n = Quote(city = vm.company.city)
                     vm.saveQuote(n); editingId = n.id
-                }, modifier = Modifier.fillMaxWidth()) { Text("+ Novo orçamento") }
+                }, modifier = Modifier.fillMaxWidth()) { Text(tr("+ Novo orçamento")) }
                 if (vm.company.name.isBlank()) {
-                    Text("Dica: preencha os “Dados da empresa” uma vez e eles saem em todos os orçamentos.", color = Ui.dim, fontSize = 13.sp)
+                    Text(tr("Dica: preencha os “Dados da empresa” uma vez e eles saem em todos os orçamentos."), color = Ui.dim, fontSize = 13.sp)
                 }
                 vm.quotes.forEach { it ->
                     Row(
@@ -95,11 +97,11 @@ fun QuotesScreen(vm: AppViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text(it.clientName.ifBlank { "(sem cliente)" }, color = Ui.text, fontSize = 16.sp)
+                            Text(it.clientName.ifBlank { tr("(sem cliente)") }, color = Ui.text, fontSize = 16.sp)
                             Text(dateFmt.format(Date(it.dateMs)) + (if (it.city.isNotBlank()) " · ${it.city}" else ""), color = Ui.dim, fontSize = 12.sp)
                         }
                         Text(QuoteMath.brl(QuoteMath.finalValue(it)), color = Ui.text, fontSize = 15.sp)
-                        IconButton(onClick = { confirmDel = it }) { Icon(Icons.Filled.Delete, "Apagar", tint = Ui.dim) }
+                        IconButton(onClick = { confirmDel = it }) { Icon(Icons.Filled.Delete, tr("Apagar"), tint = Ui.dim) }
                     }
                 }
                 Spacer(Modifier.height(24.dp))
@@ -110,7 +112,7 @@ fun QuotesScreen(vm: AppViewModel) {
     }
     if (companyDlg) CompanyDialog(vm, vm.company, { companyDlg = false }) { vm.saveCompany(it); companyDlg = false }
     confirmDel?.let { d ->
-        ConfirmDialog("Apagar orçamento", "Apagar o orçamento de ${d.clientName.ifBlank { "(sem cliente)" }}?", "Apagar", { confirmDel = null }) {
+        ConfirmDialog(tr("Apagar orçamento"), tr("Apagar o orçamento de {0}?", d.clientName.ifBlank { tr("(sem cliente)") }), tr("Apagar"), { confirmDel = null }) {
             vm.deleteQuote(d.id); confirmDel = null
         }
     }
@@ -128,30 +130,30 @@ private fun CompanyDialog(vm: AppViewModel, c: Company, onDismiss: () -> Unit, o
     ) { uri -> if (uri != null) vm.setLogo(uri) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Dados da empresa") },
+        title = { Text(tr("Dados da empresa")) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Logo (sai no topo do orçamento)", color = Ui.dim, fontSize = 13.sp)
+                Text(tr("Logo (sai no topo do orçamento)"), color = Ui.dim, fontSize = 13.sp)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     val lb = vm.logoBmp
                     Box(Modifier.width(96.dp).height(64.dp).clip(RoundedCornerShape(8.dp)).background(Color.White), contentAlignment = Alignment.Center) {
-                        if (lb != null) androidx.compose.foundation.Image(lb.asImageBitmap(), "Logo", Modifier.fillMaxSize().padding(4.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
-                        else Text("sem logo", color = Color.Gray, fontSize = 12.sp)
+                        if (lb != null) androidx.compose.foundation.Image(lb.asImageBitmap(), tr("Logo"), Modifier.fillMaxSize().padding(4.dp), contentScale = androidx.compose.ui.layout.ContentScale.Fit)
+                        else Text(tr("sem logo"), color = Color.Gray, fontSize = 12.sp)
                     }
                     Column {
-                        TextButton(onClick = { pick.launch("image/*") }) { Text(if (lb == null) "Carregar logo" else "Trocar logo") }
-                        if (lb != null) TextButton(onClick = { vm.clearLogo() }) { Text("Remover") }
+                        TextButton(onClick = { pick.launch("image/*") }) { Text(if (lb == null) tr("Carregar logo") else tr("Trocar logo")) }
+                        if (lb != null) TextButton(onClick = { vm.clearLogo() }) { Text(tr("Remover")) }
                     }
                 }
-                Field(name, "Nome da empresa") { name = it }
-                Field(cnpj, "CNPJ") { cnpj = it }
-                Field(addr, "Endereço") { addr = it }
-                Field(city, "Cidade") { city = it }
-                Field(phone, "Telefone / WhatsApp") { phone = it }
+                Field(name, tr("Nome da empresa")) { name = it }
+                Field(cnpj, tr("CNPJ")) { cnpj = it }
+                Field(addr, tr("Endereço")) { addr = it }
+                Field(city, tr("Cidade")) { city = it }
+                Field(phone, tr("Telefone / WhatsApp")) { phone = it }
             }
         },
-        confirmButton = { TextButton(onClick = { onOk(Company(name.trim(), cnpj.trim(), addr.trim(), city.trim(), phone.trim())) }) { Text("Salvar") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = { onOk(Company(name.trim(), cnpj.trim(), addr.trim(), city.trim(), phone.trim())) }) { Text(tr("Salvar")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 
@@ -182,53 +184,53 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
     fun upd(n: Quote) = vm.saveQuote(n)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Field(q.clientName, "Nome do cliente") { upd(q.copy(clientName = it)) }
+        Field(q.clientName, tr("Nome do cliente")) { upd(q.copy(clientName = it)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Field(q.city, "Cidade", Modifier.weight(1f)) { upd(q.copy(city = it)) }
-            Field(dateText, "Data (dd/mm/aaaa)", Modifier.weight(1f)) { s ->
+            Field(q.city, tr("Cidade"), Modifier.weight(1f)) { upd(q.copy(city = it)) }
+            Field(dateText, tr("Data (dd/mm/aaaa)"), Modifier.weight(1f)) { s ->
                 dateText = s
                 if (s.length == 10) runCatching { dateFmt.parse(s) }.getOrNull()?.let { upd(q.copy(dateMs = it.time)) }
             }
         }
-        Text("Itens", color = Ui.text, fontSize = 16.sp)
+        Text(tr("Itens"), color = Ui.text, fontSize = 16.sp)
         q.items.forEachIndexed { idx, it ->
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Field(it.desc, "Descrição do item ${idx + 1}", Modifier.weight(1f)) { s -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(desc = s) else x })) }
+                    Field(it.desc, tr("Descrição do item {0}", idx + 1), Modifier.weight(1f)) { s -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(desc = s) else x })) }
                     IconButton(onClick = { upd(q.copy(items = q.items.filter { x -> x.id != it.id }.ifEmpty { listOf(QuoteItem()) })) }) {
-                        Icon(Icons.Filled.Delete, "Remover item", tint = Ui.dim)
+                        Icon(Icons.Filled.Delete, tr("Remover item"), tint = Ui.dim)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    NumField(it.id + "q", it.qty, "Qtd", Modifier.weight(1f)) { v -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(qty = v) else x })) }
-                    Field(it.unit, "Un.", Modifier.weight(1f)) { s -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(unit = s) else x })) }
-                    NumField(it.id + "v", it.unitValue, "Valor unit. (R$)", Modifier.weight(1.6f)) { v -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(unitValue = v) else x })) }
+                    NumField(it.id + "q", it.qty, tr("Qtd"), Modifier.weight(1f)) { v -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(qty = v) else x })) }
+                    Field(it.unit, tr("Un."), Modifier.weight(1f)) { s -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(unit = s) else x })) }
+                    NumField(it.id + "v", it.unitValue, tr("Valor unit. ({0})", br.com.arque.measure.i18n.I18n.currencySymbol()), Modifier.weight(1.6f)) { v -> upd(q.copy(items = q.items.map { x -> if (x.id == it.id) x.copy(unitValue = v) else x })) }
                 }
-                Text("Subtotal: " + QuoteMath.brl(QuoteMath.lineTotal(it)), color = Ui.dim, fontSize = 13.sp)
+                Text(tr("Subtotal: ") + QuoteMath.brl(QuoteMath.lineTotal(it)), color = Ui.dim, fontSize = 13.sp)
             }
         }
-        OutlinedButton(onClick = { upd(q.copy(items = q.items + QuoteItem())) }, modifier = Modifier.fillMaxWidth()) { Text("+ Adicionar item") }
+        OutlinedButton(onClick = { upd(q.copy(items = q.items + QuoteItem())) }, modifier = Modifier.fillMaxWidth()) { Text(tr("+ Adicionar item")) }
 
-        NumField(q.id + "d", q.discountPct, "Desconto (%)", Modifier.fillMaxWidth()) { v -> upd(q.copy(discountPct = v.coerceIn(0.0, 100.0))) }
+        NumField(q.id + "d", q.discountPct, tr("Desconto (%)"), Modifier.fillMaxWidth()) { v -> upd(q.copy(discountPct = v.coerceIn(0.0, 100.0))) }
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Valor original: " + QuoteMath.brl(QuoteMath.original(q)), color = Ui.text, fontSize = 15.sp)
+            Text(tr("Valor original: ") + QuoteMath.brl(QuoteMath.original(q)), color = Ui.text, fontSize = 15.sp)
             if (q.discountPct > 0.0) {
-                Text("Desconto: − " + QuoteMath.brl(QuoteMath.discountValue(q)), color = Ui.dim, fontSize = 14.sp)
-                Text("Valor com desconto: " + QuoteMath.brl(QuoteMath.finalValue(q)), color = Ui.text, fontSize = 17.sp)
+                Text(tr("Desconto: − ") + QuoteMath.brl(QuoteMath.discountValue(q)), color = Ui.dim, fontSize = 14.sp)
+                Text(tr("Valor com desconto: ") + QuoteMath.brl(QuoteMath.finalValue(q)), color = Ui.text, fontSize = 17.sp)
             }
-            Text("Validade da proposta: ${q.validityDays} dias", color = Ui.dim, fontSize = 13.sp)
+            Text(tr("Validade da proposta: {0} dias", q.validityDays), color = Ui.dim, fontSize = 13.sp)
         }
 
-        Field(q.notes, "Observações (opcional)", Modifier.fillMaxWidth()) { upd(q.copy(notes = it)) }
+        Field(q.notes, tr("Observações (opcional)"), Modifier.fillMaxWidth()) { upd(q.copy(notes = it)) }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Incluir o desenho (nota) no PDF", color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+            Text(tr("Incluir o desenho (nota) no PDF"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
             Switch(checked = q.includeDrawing, onCheckedChange = { upd(q.copy(includeDrawing = it)) })
         }
         if (q.includeDrawing) {
             Box {
                 OutlinedButton(onClick = { noteMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(notes.firstOrNull { it.id == q.noteId }?.name ?: "Escolher a nota do desenho")
+                    Text(notes.firstOrNull { it.id == q.noteId }?.name ?: tr("Escolher a nota do desenho"))
                 }
                 DropdownMenu(expanded = noteMenu, onDismissRequest = { noteMenu = false }) {
                     notes.forEach { n -> DropdownMenuItem(text = { Text(n.name) }, onClick = { noteMenu = false; upd(q.copy(noteId = n.id)) }) }
@@ -238,18 +240,18 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
 
         Button(
             onClick = {
-                if (q.includeDrawing && q.noteId == null) { vm.toast = "Escolha a nota do desenho"; return@Button }
+                if (q.includeDrawing && q.noteId == null) { vm.toast = tr("Escolha a nota do desenho"); return@Button }
                 vm.buildQuotePdf(q) { uri ->
                     val send = Intent(Intent.ACTION_SEND).apply {
                         type = "application/pdf"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
-                    ctx.startActivity(Intent.createChooser(send, "Enviar orçamento").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    ctx.startActivity(Intent.createChooser(send, tr("Enviar orçamento")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Gerar PDF e enviar") }
+        ) { Text(tr("Gerar PDF e enviar")) }
         Spacer(Modifier.height(32.dp))
     }
 }

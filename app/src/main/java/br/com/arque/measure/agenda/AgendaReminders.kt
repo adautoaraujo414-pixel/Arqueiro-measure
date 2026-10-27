@@ -1,5 +1,7 @@
 package br.com.arque.measure.agenda
 
+import br.com.arque.measure.i18n.tr
+
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -24,16 +26,16 @@ object AgendaReminders {
     const val CHANNEL = "agenda"
     const val EXTRA_APPT = "appt_id"
     private val allOffsets = REMIND_OPTIONS.map { it.first }
-    private val dayFmt = SimpleDateFormat("EEE dd/MM", Locale("pt", "BR"))
-    private val hourFmt = SimpleDateFormat("HH:mm", Locale("pt", "BR"))
+    private val dayFmt get() = br.com.arque.measure.i18n.I18n.shortDayFormat()
+    private val hourFmt get() = br.com.arque.measure.i18n.I18n.hourFormat()
 
     fun ensureChannel(ctx: Context) {
         if (Build.VERSION.SDK_INT >= 26) {
             val nm = ctx.getSystemService(NotificationManager::class.java)
             if (nm.getNotificationChannel(CHANNEL) == null) {
                 nm.createNotificationChannel(
-                    NotificationChannel(CHANNEL, "Agenda (entregas e visitas)", NotificationManager.IMPORTANCE_HIGH)
-                        .apply { description = "Lembretes dos compromissos da agenda" },
+                    NotificationChannel(CHANNEL, tr("Agenda (entregas e visitas)"), NotificationManager.IMPORTANCE_HIGH)
+                        .apply { description = tr("Lembretes dos compromissos da agenda") },
                 )
             }
         }
@@ -80,10 +82,10 @@ object AgendaReminders {
 
     fun whenText(a: Appointment, off: Int): String = when {
         off == 0 -> "agora"
-        off < 60 -> "em $off min"
-        off < 1440 -> "em ${off / 60} h"
-        off == 1440 -> "amanhã"
-        else -> "em ${off / 1440} dias"
+        off < 60 -> tr("em {0} min", off)
+        off < 1440 -> tr("em {0} h", off / 60)
+        off == 1440 -> tr("amanhã")
+        else -> tr("em {0} dias", off / 1440)
     }
 
     fun show(ctx: Context, a: Appointment, off: Int) {
@@ -94,9 +96,9 @@ object AgendaReminders {
             Intent(ctx, MainActivity::class.java).putExtra(EXTRA_APPT, a.id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val title = "${a.kind.icon} ${a.kind.label}: ${a.title.ifBlank { a.clientName.ifBlank { "sem título" } }}"
+        val title = "${a.kind.icon} ${a.kind.label}: ${a.title.ifBlank { a.clientName.ifBlank { tr("sem título") } }}"
         val body = buildString {
-            append(dayFmt.format(Date(a.startMs))).append(" às ").append(hourFmt.format(Date(a.startMs)))
+            append(dayFmt.format(Date(a.startMs))).append(tr(" às ")).append(hourFmt.format(Date(a.startMs)))
             append(" (").append(whenText(a, off)).append(")")
             if (a.clientName.isNotBlank()) append(" · ").append(a.clientName)
             if (a.address.isNotBlank()) append("\n").append(a.address)

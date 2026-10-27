@@ -2,6 +2,8 @@
 
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import br.com.arque.measure.model.isOpening
 import android.graphics.Path as APath
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -485,10 +487,10 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     if (vm.askAnotherPhoto) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { vm.askAnotherPhoto = false },
-            title = { Text("Foto adicionada") },
-            text = { Text("Também ficou salva na galeria do telefone (Imagens/ArqueMeasure).") },
-            confirmButton = { TextButton(onClick = { vm.askAnotherPhoto = false; camera.launch(vm.newCameraUri()) }) { Text("Tirar outra") } },
-            dismissButton = { TextButton(onClick = { vm.askAnotherPhoto = false }) { Text("Pronto") } },
+            title = { Text(tr("Foto adicionada")) },
+            text = { Text(tr("Também ficou salva na galeria do telefone (Imagens/ArqueMeasure).")) },
+            confirmButton = { TextButton(onClick = { vm.askAnotherPhoto = false; camera.launch(vm.newCameraUri()) }) { Text(tr("Tirar outra")) } },
+            dismissButton = { TextButton(onClick = { vm.askAnotherPhoto = false }) { Text(tr("Pronto")) } },
         )
     }
     val pdfOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { it?.let(vm::exportPdf) }
@@ -506,7 +508,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
 
     fun addPage(pos: Int) {
         pageMenu = false
-        if (st.addPage(pos, tpl)) session.goToPage(st.pageIdx) else vm.toast = "Limite de ${Sheet.MAX_PAGES} folhas"
+        if (st.addPage(pos, tpl)) session.goToPage(st.pageIdx) else vm.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES)
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -521,7 +523,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
         }
         if (session.screenLocked) {
             Text(
-                "🔒 Tela travada · toque aqui para destravar",
+                tr("🔒 Tela travada · toque aqui para destravar"),
                 color = Color.White, fontSize = 14.sp,
                 modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xE61B1C20)).clickable { session.toggleLock() }.padding(horizontal = 16.dp, vertical = 10.dp),
             )
@@ -531,7 +533,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
         if (session.pull > 20f) {
             val ready = session.pull >= 80f * density.density
             Text(
-                if (ready) "Solte para adicionar uma folha" else "Continue a deslizar para adicionar uma folha",
+                if (ready) tr("Solte para adicionar uma folha") else tr("Continue a deslizar para adicionar uma folha"),
                 color = Color.White, fontSize = 13.sp,
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 24.dp)
                     .clip(RoundedCornerShape(16.dp)).background(Color(0xCC000000)).padding(horizontal = 14.dp, vertical = 8.dp),
@@ -542,7 +544,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
             IconButton(
                 onClick = { session.fullscreen = false },
                 modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp).clip(CircleShape).background(Color(0x99000000)),
-            ) { Icon(Icons.Filled.Close, "Sair da tela cheia", tint = Color.White) }
+            ) { Icon(Icons.Filled.Close, tr("Sair da tela cheia"), tint = Color.White) }
         } else {
             Surface(
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
@@ -561,7 +563,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(if (on) note.name else vm.tabName(id), color = if (on) Ui.text else Ui.dim, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 140.dp))
-                                IconButton(onClick = { vm.closeTab(id) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Filled.Close, "Fechar aba", tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+                                IconButton(onClick = { vm.closeTab(id) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Filled.Close, tr("Fechar aba"), tint = Ui.dim, modifier = Modifier.size(14.dp)) }
                             }
                         }
                     }
@@ -572,21 +574,21 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     BarPill {
-                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar pra biblioteca", label = "Voltar") { vm.closeEditor() }
-                        BarIcon(Icons.AutoMirrored.Filled.Undo, "Desfazer", st.canUndo) { st.undo() }
-                        BarIcon(Icons.AutoMirrored.Filled.Redo, "Refazer", st.canRedo) { st.redo() }
+                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar pra biblioteca"), label = tr("Voltar")) { vm.closeEditor() }
+                        BarIcon(Icons.AutoMirrored.Filled.Undo, tr("Desfazer"), st.canUndo) { st.undo() }
+                        BarIcon(Icons.AutoMirrored.Filled.Redo, tr("Refazer"), st.canRedo) { st.redo() }
                     }
                     val vp = session.visiblePage()
                     BarPill {
-                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Folha anterior", vp > 0, label = "Anterior") { session.goToPage(vp - 1) }
-                        LBtn("Folhas", onClick = { overview = true }) { c -> Text("${vp + 1}/${note.pages.size}", color = c, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
-                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Próxima folha", vp < note.pages.lastIndex, label = "Próxima") { session.goToPage(vp + 1) }
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tr("Folha anterior"), vp > 0, label = tr("Anterior")) { session.goToPage(vp - 1) }
+                        LBtn(tr("Folhas"), onClick = { overview = true }) { c -> Text("${vp + 1}/${note.pages.size}", color = c, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, tr("Próxima folha"), vp < note.pages.lastIndex, label = tr("Próxima")) { session.goToPage(vp + 1) }
                         Box {
-                            LBtn("Nova folha", onClick = { pageMenu = true }) { _ -> Icon(Icons.Filled.Add, null, Modifier.size(22.dp), tint = Ui.accent) }
+                            LBtn(tr("Nova folha"), onClick = { pageMenu = true }) { _ -> Icon(Icons.Filled.Add, null, Modifier.size(22.dp), tint = Ui.accent) }
                             DropdownMenu(expanded = pageMenu, onDismissRequest = { pageMenu = false }) {
-                                DropdownMenuItem(text = { Text("Antes da folha atual") }, onClick = { addPage(st.pageIdx) })
-                                DropdownMenuItem(text = { Text("Após a folha atual") }, onClick = { addPage(st.pageIdx + 1) })
-                                DropdownMenuItem(text = { Text("Última página") }, onClick = { addPage(note.pages.size) })
+                                DropdownMenuItem(text = { Text(tr("Antes da folha atual")) }, onClick = { addPage(st.pageIdx) })
+                                DropdownMenuItem(text = { Text(tr("Após a folha atual")) }, onClick = { addPage(st.pageIdx + 1) })
+                                DropdownMenuItem(text = { Text(tr("Última página")) }, onClick = { addPage(note.pages.size) })
                                 HorizontalDivider()
                                 Template.entries.forEach { t ->
                                     DropdownMenuItem(
@@ -595,42 +597,42 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                     )
                                 }
                                 HorizontalDivider()
-                                DropdownMenuItem(text = { Text("Adicionar outras páginas de nota (em breve)") }, enabled = false, onClick = {})
-                                DropdownMenuItem(text = { Text("Importar ficheiros (em breve)") }, enabled = false, onClick = {})
-                                DropdownMenuItem(text = { Text("Importar imagem") }, onClick = { pageMenu = false; vm.photoToNewPage = true; pickPhotos.launch("image/*") })
-                                DropdownMenuItem(text = { Text("Tirar fotografia") }, onClick = { pageMenu = false; vm.photoToNewPage = true; camera.launch(vm.newCameraUri()) })
+                                DropdownMenuItem(text = { Text(tr("Adicionar outras páginas de nota (em breve)")) }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text(tr("Importar ficheiros (em breve)")) }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text(tr("Importar imagem")) }, onClick = { pageMenu = false; vm.photoToNewPage = true; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text(tr("Tirar fotografia")) }, onClick = { pageMenu = false; vm.photoToNewPage = true; camera.launch(vm.newCameraUri()) })
                             }
                         }
                     }
                     val linkedId = remember(vm.projVersion, note.id) { vm.linkedProject(note.id) }
                     val linkedName = remember(vm.projVersion, linkedId) { linkedId?.let { id -> vm.moveisProjects().firstOrNull { it.id == id }?.name } }
                     BarPill {
-                        LBtn(linkedName ?: "Projeto", on = linkedName != null, onClick = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
+                        LBtn(linkedName ?: tr("Projeto"), on = linkedName != null, onClick = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
                     }
                     if (projLinkOpen) ProjectLinkDialog(vm, note.id, linkedId) { projLinkOpen = false }
                     val connected = bleState == BleState.CONNECTED
                     BarPill {
-                        LBtn("Unidade", onClick = { st.setUnit(nextUnit(note.unit)) }) { c -> Text(note.unit.label, color = c, fontSize = 15.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
-                        LBtn(if (connected) "Trena ligada" else "Trena Bosch", on = connected, onClick = { btOpen = true }) { c ->
+                        LBtn(tr("Unidade"), onClick = { st.setUnit(nextUnit(note.unit)) }) { c -> Text(note.unit.label, color = c, fontSize = 15.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        LBtn(if (connected) tr("Trena ligada") else tr("Trena Bosch"), on = connected, onClick = { btOpen = true }) { c ->
                             Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, null, Modifier.size(22.dp), tint = c)
                         }
                     }
                     Box {
-                        BarPill { BarIcon(Icons.Filled.MoreVert, "Mais opções", label = "Mais") { menuOpen = true } }
+                        BarPill { BarIcon(Icons.Filled.MoreVert, tr("Mais opções"), label = tr("Mais")) { menuOpen = true } }
                         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                            DropdownMenuItem(text = { Text("Zoom em tela cheia") }, onClick = { menuOpen = false; session.fullscreen = true })
-                            DropdownMenuItem(text = { Text("Visão geral da nota") }, onClick = { menuOpen = false; overview = true })
+                            DropdownMenuItem(text = { Text(tr("Zoom em tela cheia")) }, onClick = { menuOpen = false; session.fullscreen = true })
+                            DropdownMenuItem(text = { Text(tr("Visão geral da nota")) }, onClick = { menuOpen = false; overview = true })
                             DropdownMenuItem(
-                                text = { Text(if (note.locked) "Remover bloqueio" else "Adicionar bloqueio") },
-                                onClick = { menuOpen = false; st.setNoteLocked(!note.locked); vm.toast = if (!note.locked) "Nota bloqueada: abrirá só após remover o bloqueio" else "Bloqueio removido" },
+                                text = { Text(if (note.locked) tr("Remover bloqueio") else tr("Adicionar bloqueio")) },
+                                onClick = { menuOpen = false; st.setNoteLocked(!note.locked); vm.toast = if (!note.locked) tr("Nota bloqueada: abrirá só após remover o bloqueio") else tr("Bloqueio removido") },
                             )
                             HorizontalDivider()
-                            DropdownMenuItem(text = { Text("Exportar PDF") }, onClick = { menuOpen = false; pdfOut.launch("${note.name}.pdf") })
-                            DropdownMenuItem(text = { Text("Exportar folha (PNG)") }, onClick = { menuOpen = false; pngOut.launch("${note.name}.png") })
-                            DropdownMenuItem(text = { Text("Exportar medidas (CSV)") }, onClick = { menuOpen = false; csvOut.launch("${note.name}-medidas.csv") })
+                            DropdownMenuItem(text = { Text(tr("Exportar PDF")) }, onClick = { menuOpen = false; pdfOut.launch("${note.name}.pdf") })
+                            DropdownMenuItem(text = { Text(tr("Exportar folha (PNG)")) }, onClick = { menuOpen = false; pngOut.launch("${note.name}.png") })
+                            DropdownMenuItem(text = { Text(tr("Exportar medidas (CSV)")) }, onClick = { menuOpen = false; csvOut.launch("${note.name}-medidas.csv") })
                             HorizontalDivider()
                             DropdownMenuItem(
-                                text = { Text(if (session.stylusOnly) "Desenhar só com S Pen: ligado" else "Desenhar só com S Pen: desligado") },
+                                text = { Text(if (session.stylusOnly) tr("Desenhar só com S Pen: ligado") else tr("Desenhar só com S Pen: desligado")) },
                                 onClick = { menuOpen = false; session.stylusOnly = !session.stylusOnly },
                             )
                         }
@@ -649,12 +651,12 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         ToolBtn(Tool.HIGHLIGHTER, session)
                         Box {
                             val on = session.tool == Tool.ERASER
-                            LBtn("Borracha", on = on, onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) }) { c ->
+                            LBtn(tr("Borracha"), on = on, onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) }) { c ->
                                 Icon(EraserIcon, null, tint = c, modifier = Modifier.size(22.dp))
                             }
                             DropdownMenu(expanded = eraserMenu, onDismissRequest = { eraserMenu = false }) {
                                 Column(Modifier.padding(horizontal = 14.dp).widthIn(min = 260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text("Borracha", fontSize = 15.sp)
+                                    Text(tr("Borracha"), fontSize = 15.sp)
                                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         br.com.arque.measure.ui.EraserMode.values().forEach { m ->
                                             val sel = session.eraserMode == m
@@ -668,22 +670,22 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                     }
                                     Text(
                                         when (session.eraserMode) {
-                                            br.com.arque.measure.ui.EraserMode.PIXEL -> "Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede)."
-                                            br.com.arque.measure.ui.EraserMode.STROKE -> "Apaga o traço ou a forma inteira que você tocar."
-                                            br.com.arque.measure.ui.EraserMode.LASSO -> "Contorne com a caneta para apagar o que ficar dentro."
+                                            br.com.arque.measure.ui.EraserMode.PIXEL -> tr("Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede).")
+                                            br.com.arque.measure.ui.EraserMode.STROKE -> tr("Apaga o traço ou a forma inteira que você tocar.")
+                                            br.com.arque.measure.ui.EraserMode.LASSO -> tr("Contorne com a caneta para apagar o que ficar dentro.")
                                         },
                                         fontSize = 12.sp, color = Ui.dim,
                                     )
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Tamanho", fontSize = 13.sp, modifier = Modifier.width(80.dp))
+                                        Text(tr("Tamanho"), fontSize = 13.sp, modifier = Modifier.width(80.dp))
                                         androidx.compose.material3.Slider(value = session.eraserSize, onValueChange = { session.eraserSize = it }, valueRange = 4f..60f, modifier = Modifier.weight(1f))
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Apenas apagar marca-texto", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                        Text(tr("Apenas apagar marca-texto"), fontSize = 13.sp, modifier = Modifier.weight(1f))
                                         Switch(checked = session.eraserOnlyHighlighter, onCheckedChange = { session.eraserOnlyHighlighter = it })
                                     }
                                     TextButton(onClick = { st.clearPageDrawings(); eraserMenu = false }) {
-                                        Text("Limpar a página atual", color = Color(0xFFFF5A5A))
+                                        Text(tr("Limpar a página atual"), color = Color(0xFFFF5A5A))
                                     }
                                 }
                             }
@@ -704,12 +706,12 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         Box {
                             val inShapes = session.tool in shapeTools && session.tool !in listOf(Tool.DIM, Tool.ROOM, Tool.DOOR)
-                            LBtn(if (inShapes) session.tool.short() else "Formas", on = inShapes, onClick = { shapesMenu = true }) { c ->
+                            LBtn(if (inShapes) session.tool.short() else tr("Formas"), on = inShapes, onClick = { shapesMenu = true }) { c ->
                                 ShapeGlyph(if (inShapes) session.tool else Tool.RECT, c, 22.dp)
                             }
                             DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
                                 Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
-                                    Text("Formas", fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
+                                    Text(tr("Formas"), fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
                                     shapeTools.filter { it != Tool.DIM && it != Tool.ROOM && it != Tool.DOOR }.chunked(4).forEach { rowTools ->
                                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                             rowTools.forEach { t ->
@@ -718,14 +720,14 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                         }
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Espessura", modifier = Modifier.weight(1f), fontSize = 13.sp)
-                                        IconButton(onClick = { applyWidth(session, -0.1f) }) { Icon(Icons.Filled.Remove, "Mais fino") }
+                                        Text(tr("Espessura"), modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        IconButton(onClick = { applyWidth(session, -0.1f) }) { Icon(Icons.Filled.Remove, tr("Mais fino")) }
                                         Text(mmText(session.width), fontSize = 13.sp)
-                                        IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, "Mais grosso") }
+                                        IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, tr("Mais grosso")) }
                                     }
                                     ColorRow(session.color) { applyColor(session, it) }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("Preenchimento", modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        Text(tr("Preenchimento"), modifier = Modifier.weight(1f), fontSize = 13.sp)
                                         Switch(checked = session.fill, onCheckedChange = { session.fill = it })
                                     }
                                 }
@@ -733,14 +735,14 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         }
                         ToolBtn(Tool.TEXT, session)
                         Box {
-                            LBtn("Imagem", onClick = { imageMenu = true }) { c -> Icon(Icons.Filled.Image, null, tint = c, modifier = Modifier.size(22.dp)) }
+                            LBtn(tr("Imagem"), onClick = { imageMenu = true }) { c -> Icon(Icons.Filled.Image, null, tint = c, modifier = Modifier.size(22.dp)) }
                             DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
-                                DropdownMenuItem(text = { Text("Álbum") }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
-                                DropdownMenuItem(text = { Text("Câmera") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
+                                DropdownMenuItem(text = { Text(tr("Álbum")) }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text(tr("Câmera")) }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
                             }
                         }
-                        LBtn("Móveis", onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) }) { c -> ShapeGlyph(Tool.RECT, c, 22.dp, cabinet = true) }
-                        LBtn("Calculadora", on = session.calcOpen, onClick = { session.calcOpen = !session.calcOpen }) { c ->
+                        LBtn(tr("Móveis"), onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) }) { c -> ShapeGlyph(Tool.RECT, c, 22.dp, cabinet = true) }
+                        LBtn(tr("Calculadora"), on = session.calcOpen, onClick = { session.calcOpen = !session.calcOpen }) { c ->
                             Icon(Icons.Filled.Calculate, null, tint = c, modifier = Modifier.size(22.dp))
                         }
                     }
@@ -748,14 +750,14 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         Column(Modifier.padding(horizontal = 8.dp, vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             ColorRow(session.color) { applyColor(session, it) }
-                            Text("Cor", color = Ui.text, fontSize = 10.sp, lineHeight = 12.sp)
+                            Text(tr("Cor"), color = Ui.text, fontSize = 10.sp, lineHeight = 12.sp)
                         }
-                        LBtn("Mais fina", onClick = { applyWidth(session, -0.1f) }) { c -> Icon(Icons.Filled.Remove, null, tint = c, modifier = Modifier.size(20.dp)) }
+                        LBtn(tr("Mais fina"), onClick = { applyWidth(session, -0.1f) }) { c -> Icon(Icons.Filled.Remove, null, tint = c, modifier = Modifier.size(20.dp)) }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(mmText(session.width), color = Ui.text, fontSize = 12.sp)
-                            Text("Espessura", color = Ui.dim, fontSize = 10.sp, lineHeight = 12.sp)
+                            Text(tr("Espessura"), color = Ui.dim, fontSize = 10.sp, lineHeight = 12.sp)
                         }
-                        LBtn("Mais grossa", onClick = { applyWidth(session, 0.1f) }) { c -> Icon(Icons.Filled.Add, null, tint = c, modifier = Modifier.size(20.dp)) }
+                        LBtn(tr("Mais grossa"), onClick = { applyWidth(session, 0.1f) }) { c -> Icon(Icons.Filled.Add, null, tint = c, modifier = Modifier.size(20.dp)) }
                     }
                 }
             }
@@ -779,12 +781,12 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         shape = RoundedCornerShape(12.dp), color = Color(0xEE111111),
                     ) {
                         Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${st.groupIds.size} itens", color = Color(0xFFAAAAAA), fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
-                            CtxBtn("Eliminar") { st.deleteGroup() }
-                            CtxBtn("Cortar") { session.copyGroup(cut = true) }
-                            CtxBtn("Copiar") { session.copyGroup() }
-                            CtxBtn("Duplicar") { st.pasteObjs(st.groupWithLinked()) }
-                            CtxBtn("Colar", session.clipboard.isNotEmpty()) { session.paste() }
+                            Text(tr("{0} itens", st.groupIds.size), color = Color(0xFFAAAAAA), fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
+                            CtxBtn(tr("Eliminar")) { st.deleteGroup() }
+                            CtxBtn(tr("Cortar")) { session.copyGroup(cut = true) }
+                            CtxBtn(tr("Copiar")) { session.copyGroup() }
+                            CtxBtn(tr("Duplicar")) { st.pasteObjs(st.groupWithLinked()) }
+                            CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
                         }
                     }
                 }
@@ -823,7 +825,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("${session.zoomPercent}%", color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(start = 12.dp))
-                IconButton(onClick = { session.fitButton() }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.FitScreen, "Ajustar à largura", tint = Color.White, modifier = Modifier.size(18.dp)) }
+                IconButton(onClick = { session.fitButton() }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.FitScreen, tr("Ajustar à largura"), tint = Color.White, modifier = Modifier.size(18.dp)) }
             }
 
             // ---- painel inferior: Distância, Telémetro, leituras ----
@@ -836,7 +838,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                 if (hasPanel) {
                     // minimizado: a medida da trena continua entrando no segmento selecionado, só some o painel
                     Text(
-                        if (panelMin) "▲ Medida (toque para abrir)" else "▼ Minimizar",
+                        if (panelMin) tr("▲ Medida (toque para abrir)") else tr("▼ Minimizar"),
                         color = Color.White, fontSize = 12.sp,
                         modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xB31B1C20))
                             .clickable { panelMin = !panelMin }.padding(horizontal = 12.dp, vertical = 7.dp),
@@ -983,12 +985,12 @@ private fun BarIcon(icon: ImageVector, desc: String, enabled: Boolean = true, ti
 
 /** Nome curto da ferramenta na barra. */
 private fun Tool.short(): String = when (this) {
-    Tool.DIM -> "Medida"
-    Tool.DOOR -> "Porta"
-    Tool.RRECT -> "Arredond."
-    Tool.RTRI -> "Tri. reto"
-    Tool.DARROW -> "Seta dupla"
-    Tool.ELBOW -> "Linha L"
+    Tool.DIM -> tr("Medida")
+    Tool.DOOR -> tr("Porta")
+    Tool.RRECT -> tr("Arredond.")
+    Tool.RTRI -> tr("Tri. reto")
+    Tool.DARROW -> tr("Seta dupla")
+    Tool.ELBOW -> tr("Linha L")
     else -> label
 }
 
@@ -1027,13 +1029,13 @@ private fun ColorRow(current: Int, onPick: (Int) -> Unit) {
         Dialog(onDismissRequest = { more = false }) {
             Surface(shape = RoundedCornerShape(16.dp), color = Ui.panel) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Cores", color = Ui.text, fontSize = 16.sp)
+                    Text(tr("Cores"), color = Ui.text, fontSize = 16.sp)
                     EXTRA_COLORS.chunked(7).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             row.forEach { c -> Box(Modifier.size(32.dp)) { ColorDot(c, current == c) { onPick(c); more = false } } }
                         }
                     }
-                    TextButton(onClick = { more = false }) { Text("Fechar") }
+                    TextButton(onClick = { more = false }) { Text(tr("Fechar")) }
                 }
             }
         }
@@ -1050,35 +1052,35 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
     // barra pequena e suave: uma linha só, rola para o lado se não couber, e não cobre o desenho
     Surface(modifier = modifier.widthIn(max = maxW), shape = RoundedCornerShape(10.dp), color = Color(0xB31B1C20)) {
         Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-            CtxBtn("Eliminar", !o.locked) { st.delete(o.id) }
-            CtxBtn("Cortar", !o.locked) { session.copySelection(cut = true) }
-            CtxBtn("Copiar") { session.copySelection() }
-            CtxBtn("Colar", session.clipboard.isNotEmpty()) { session.paste() }
-            CtxBtn("Duplicar") { st.duplicate(o.id) }
-            if (o is PhotoObj) CtxBtn("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) }
+            CtxBtn(tr("Eliminar"), !o.locked) { st.delete(o.id) }
+            CtxBtn(tr("Cortar"), !o.locked) { session.copySelection(cut = true) }
+            CtxBtn(tr("Copiar")) { session.copySelection() }
+            CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
+            CtxBtn(tr("Duplicar")) { st.duplicate(o.id) }
+            if (o is PhotoObj) CtxBtn(tr("Girar 90°"), !o.locked) { st.rotatePhoto90(o.id) }
             if (o is br.com.arque.measure.model.CabObj) {
                 val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
                 if (o.layout != null) {
-                    CtxBtn("◀ Mover", !o.locked) { st.moveModule(o.id, -1) }
-                    CtxBtn("Mover ▶", !o.locked) { st.moveModule(o.id, 1) }
-                    CtxBtn("⚙ Configurar") { session.cabQuickId = o.id }
-                    CtxBtn("Copiar ao lado", !o.locked) { st.duplicate(o.id) }
-                    CtxBtn("Parede") { st.select(o.layout.wallId) }
+                    CtxBtn(tr("◀ Mover"), !o.locked) { st.moveModule(o.id, -1) }
+                    CtxBtn(tr("Mover ▶"), !o.locked) { st.moveModule(o.id, 1) }
+                    CtxBtn(tr("⚙ Configurar")) { session.cabQuickId = o.id }
+                    CtxBtn(tr("Copiar ao lado"), !o.locked) { st.duplicate(o.id) }
+                    CtxBtn(tr("Parede")) { st.select(o.layout.wallId) }
                 } else if (o.wall != null) {
-                    CtxBtn(if (o.overflowsWall()) "⚠ Passa da parede" else "Na parede (desliza)", false) { }
+                    CtxBtn(if (o.overflowsWall()) tr("⚠ Passa da parede") else tr("Na parede (desliza)"), false) { }
                 } else {
-                CtxBtn("− Diminuir", !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
-                CtxBtn("+ Aumentar", !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
-                CtxBtn("Caber na folha", !o.locked) {
+                CtxBtn(tr("− Diminuir"), !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
+                CtxBtn(tr("+ Aumentar"), !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
+                CtxBtn(tr("Caber na folha"), !o.locked) {
                     val need = maxOf(o.cab.wMm * 3.7795277 / 700.0, o.cab.hMm * 3.7795277 / 880.0)
                     st.setCabScale(o.id, steps.firstOrNull { it >= need } ?: 100)
                 }
-                CtxBtn("Escala 1:${o.scaleDen}", false) { }
+                CtxBtn(tr("Escala 1:{0}", o.scaleDen), false) { }
                 }
             }
-            CtxBtn(if (o.locked) "Desbloquear" else "Bloqueio") { st.setLocked(o.id, !o.locked) }
-            CtxBtn("Para frente") { st.reorder(o.id, up = true) }
-            CtxBtn("Para trás") { st.reorder(o.id, up = false) }
+            CtxBtn(if (o.locked) tr("Desbloquear") else tr("Bloqueio")) { st.setLocked(o.id, !o.locked) }
+            CtxBtn(tr("Para frente")) { st.reorder(o.id, up = true) }
+            CtxBtn(tr("Para trás")) { st.reorder(o.id, up = false) }
         }
     }
 }
@@ -1128,7 +1130,7 @@ private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
                 },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("⠿  Calculadora", color = Color(0xFFAAAAAA), fontSize = 13.sp, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
+                Text(tr("⠿  Calculadora"), color = Color(0xFFAAAAAA), fontSize = 13.sp, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
                 Text("–", color = Color.White, fontSize = 20.sp, modifier = Modifier.clickable { collapsed = !collapsed }.padding(horizontal = 12.dp))
                 Text("✕", color = Color.White, fontSize = 16.sp, modifier = Modifier.clickable { session.calcOpen = false }.padding(horizontal = 8.dp))
             }
@@ -1166,7 +1168,7 @@ private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
                             .background(if (lastMm != null) Color(0xFF2E6B4F) else Color(0xFF2A2C30))
                             .clickable(enabled = lastMm != null) { press("Medida") },
                         contentAlignment = Alignment.Center,
-                    ) { Text("Última medida", color = if (lastMm != null) Color.White else Color(0xFF777777), fontSize = 13.sp) }
+                    ) { Text(tr("Última medida"), color = if (lastMm != null) Color.White else Color(0xFF777777), fontSize = 13.sp) }
                     Box(
                         Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp)).background(Ui.accent).clickable { press("=") },
                         contentAlignment = Alignment.Center,
@@ -1181,7 +1183,7 @@ private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
                             session.addTextCenter(if (expr.isNotEmpty() && expr != r) "$expr = $r" else r)
                         },
                     contentAlignment = Alignment.Center,
-                ) { Text("📝 Escrever na folha", color = if (result != null) Color.White else Color(0xFF777777), fontSize = 14.sp) }
+                ) { Text(tr("📝 Escrever na folha"), color = if (result != null) Color.White else Color(0xFF777777), fontSize = 14.sp) }
             }
         }
     }
@@ -1204,7 +1206,7 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    if (seg != null) "Cômodo · segmento ${k + 1} de ${r.segCount()}" else "Cômodo · toque num segmento",
+                    if (seg != null) tr("Cômodo · segmento {0} de {1}", k + 1, r.segCount()) else tr("Cômodo · toque num segmento"),
                     color = dark, fontSize = 16.sp, modifier = Modifier.weight(1f),
                 )
                 TextButton(onClick = { st.stepSeg(-1) }) { Text("‹") }
@@ -1224,22 +1226,22 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                     }
                 }
                 if (seg.kind == br.com.arque.measure.model.SegKind.DOOR) {
-                    Text("Sentido da porta", color = dark, fontSize = 13.sp)
+                    Text(tr("Sentido da porta"), color = dark, fontSize = 13.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, hinge = 1 - seg.hinge) }, enabled = !r.locked) { Text("↔ Dobradiça do outro lado") }
-                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, side = -seg.side) }, enabled = !r.locked) { Text("⇅ Abre pro outro lado") }
-                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, slide = !seg.slide) }, enabled = !r.locked) { Text(if (seg.slide) "De correr ✓" else "De abrir ✓") }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, hinge = 1 - seg.hinge) }, enabled = !r.locked) { Text(tr("↔ Dobradiça do outro lado")) }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, side = -seg.side) }, enabled = !r.locked) { Text(tr("⇅ Abre pro outro lado")) }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, slide = !seg.slide) }, enabled = !r.locked) { Text(if (seg.slide) tr("De correr ✓") else tr("De abrir ✓")) }
                     }
                 } else if (!seg.kind.isOpening()) {
-                    Text("Abrir neste trecho (a parede se divide e você mede cada parte)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Abrir neste trecho (a parede se divide e você mede cada parte)"), color = Color(0xFF555555), fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.DOOR) }, enabled = !r.locked) { Text("＋ Porta") }
-                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.WINDOW) }, enabled = !r.locked) { Text("＋ Janela") }
-                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.OPENING) }, enabled = !r.locked) { Text("＋ Vão") }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.DOOR) }, enabled = !r.locked) { Text(tr("＋ Porta")) }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.WINDOW) }, enabled = !r.locked) { Text(tr("＋ Janela")) }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.OPENING) }, enabled = !r.locked) { Text(tr("＋ Vão")) }
                     }
                 }
                 TextButton(onClick = { st.setAllSegKinds(r.id, seg.kind) }, enabled = !r.locked) {
-                    Text("Aplicar \"${seg.kind.label}\" a todo o contorno")
+                    Text(tr("Aplicar \"{0}\" a todo o contorno", seg.kind.label))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ManualValueBox(Modifier.weight(1f), seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !r.locked) { mm -> st.setManualValue(mm) }
@@ -1247,30 +1249,30 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                 }
                 Text(
                     when {
-                        seg.valueMm != null && connected -> "Meça de novo para substituir"
-                        seg.valueMm != null && seg.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
-                        seg.valueMm != null -> "Medido pela trena Bosch"
-                        !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
-                        else -> "Aguardando a medida da trena…"
+                        seg.valueMm != null && connected -> tr("Meça de novo para substituir")
+                        seg.valueMm != null && seg.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+                        seg.valueMm != null -> tr("Medido pela trena Bosch")
+                        !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+                        else -> tr("Aguardando a medida da trena…")
                     },
                     color = Color(0xFF555555), fontSize = 13.sp,
                 )
-                if (seg.valueMm != null) TextButton(onClick = { st.clearValue(r.id) }) { Text("Limpar medida") }
+                if (seg.valueMm != null) TextButton(onClick = { st.clearValue(r.id) }) { Text(tr("Limpar medida")) }
             }
             if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
-                TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text("Unir pontos soltos (reta = 1 medida)") }
+                TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text(tr("Unir pontos soltos (reta = 1 medida)")) }
             }
             if (r.pts.size >= 3) {
-                TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) "Abrir contorno" else "Fechar contorno") }
+                TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) tr("Abrir contorno") else tr("Fechar contorno")) }
             }
             HorizontalDivider(color = Color(0xFFDDDDDD))
-            LabelSlider("Quadradinho", r.labelScale, 0.1f, 3f, "${(r.labelScale * 100).roundToInt()}%", !r.locked, st) { v -> st.setRoomLabelScale(r.id, v, live = true) }
+            LabelSlider(tr("Quadradinho"), r.labelScale, 0.1f, 3f, "${(r.labelScale * 100).roundToInt()}%", !r.locked, st) { v -> st.setRoomLabelScale(r.id, v, live = true) }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, false) }, enabled = !r.locked) { Text(if (!r.labelVert) "Escrita deitada ✓" else "Escrita deitada") }
-                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, true) }, enabled = !r.locked) { Text(if (r.labelVert) "Escrita em pé ✓" else "Escrita em pé") }
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, false) }, enabled = !r.locked) { Text(if (!r.labelVert) tr("Escrita deitada ✓") else tr("Escrita deitada")) }
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, true) }, enabled = !r.locked) { Text(if (r.labelVert) tr("Escrita em pé ✓") else tr("Escrita em pé")) }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Cor da parede", color = dark, fontSize = 13.sp)
+                Text(tr("Cor da parede"), color = dark, fontSize = 13.sp)
                 ColorRow(r.color) { applyColor(session, it) }
             }
         }
@@ -1284,18 +1286,18 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
     val st = session.state
     val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
     val status = when {
-        d.valueMm != null && connected -> "Meça de novo para substituir"
-        d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
-        d.valueMm != null -> "Medido pela trena Bosch"
-        !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
-        else -> "Aguardando a medida da trena…"
+        d.valueMm != null && connected -> tr("Meça de novo para substituir")
+        d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+        d.valueMm != null -> tr("Medido pela trena Bosch")
+        !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+        else -> tr("Aguardando a medida da trena…")
     }
     Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
         Column(
             Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Distância", color = Color(0xFF111111), fontSize = 16.sp)
+            Text(tr("Distância"), color = Color(0xFF111111), fontSize = 16.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
                 TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
@@ -1303,28 +1305,28 @@ private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
             Text(status, color = Color(0xFF555555), fontSize = 13.sp)
             HorizontalDivider(color = Color(0xFFDDDDDD))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Cor", color = Color(0xFF111111), fontSize = 13.sp)
+                Text(tr("Cor"), color = Color(0xFF111111), fontSize = 13.sp)
                 ColorRow(d.color) { applyColor(session, it) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Espessura da linha", color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.weight(1f))
-                IconButton(onClick = { applyWidth(session, -0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Remove, "Mais fina", tint = Color(0xFF111111)) }
+                Text(tr("Espessura da linha"), color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                IconButton(onClick = { applyWidth(session, -0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Remove, tr("Mais fina"), tint = Color(0xFF111111)) }
                 Text(mmText(d.width), color = Color(0xFF111111), fontSize = 13.sp)
-                IconButton(onClick = { applyWidth(session, 0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Add, "Mais grossa", tint = Color(0xFF111111)) }
+                IconButton(onClick = { applyWidth(session, 0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Add, tr("Mais grossa"), tint = Color(0xFF111111)) }
             }
             HorizontalDivider(color = Color(0xFFDDDDDD))
-            Text("Quadradinho da medida", color = Color(0xFF111111), fontSize = 14.sp)
-            LabelSlider("Tamanho", d.labelScale, 0.1f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
-            LabelSlider("Opacidade", d.labelAlpha, 0.1f, 1f, "${(d.labelAlpha * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, alpha = v, live = true) }
-            LabelSlider("Intensidade da cor", d.labelIntensity, 0.15f, 1f, "${(d.labelIntensity * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, intensity = v, live = true) }
+            Text(tr("Quadradinho da medida"), color = Color(0xFF111111), fontSize = 14.sp)
+            LabelSlider(tr("Tamanho"), d.labelScale, 0.1f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
+            LabelSlider(tr("Opacidade"), d.labelAlpha, 0.1f, 1f, "${(d.labelAlpha * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, alpha = v, live = true) }
+            LabelSlider(tr("Intensidade da cor"), d.labelIntensity, 0.15f, 1f, "${(d.labelIntensity * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, intensity = v, live = true) }
             Text(
-                "O quadradinho acompanha o tamanho da foto e da seta automaticamente.",
+                tr("O quadradinho acompanha o tamanho da foto e da seta automaticamente."),
                 color = Color(0xFF777777), fontSize = 11.sp,
             )
             Row {
-                TextButton(onClick = { st.applyDimLabelToAll(d.id) }, enabled = !d.locked) { Text("Aplicar a todas as cotas") }
+                TextButton(onClick = { st.applyDimLabelToAll(d.id) }, enabled = !d.locked) { Text(tr("Aplicar a todas as cotas")) }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir", color = Color(0xFFD32F2F)) }
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text(tr("Excluir"), color = Color(0xFFD32F2F)) }
             }
         }
     }
@@ -1342,40 +1344,40 @@ private fun DoorPanel(vm: AppViewModel, session: EditorSession, d: br.com.arque.
             Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("🚪 Porta na linha", color = Color(0xFFE53935), fontSize = 16.sp)
-            Text("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha.", color = Color(0xFF555555), fontSize = 12.sp)
-            Text("Sentido de abertura", color = dark, fontSize = 13.sp)
+            Text(tr("🚪 Porta na linha"), color = Color(0xFFE53935), fontSize = 16.sp)
+            Text(tr("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha."), color = Color(0xFF555555), fontSize = 12.sp)
+            Text(tr("Sentido de abertura"), color = dark, fontSize = 13.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                OutlinedButton(onClick = { st.setDoor(d.id, hinge = 1 - d.hinge) }, enabled = !d.locked) { Text("↔ Dobradiça do outro lado") }
-                OutlinedButton(onClick = { st.setDoor(d.id, side = -d.side) }, enabled = !d.locked) { Text("⇅ Abre pro outro lado") }
-                OutlinedButton(onClick = { st.setDoor(d.id, slide = !d.slide) }, enabled = !d.locked) { Text(if (d.slide) "De correr ✓" else "De abrir ✓") }
+                OutlinedButton(onClick = { st.setDoor(d.id, hinge = 1 - d.hinge) }, enabled = !d.locked) { Text(tr("↔ Dobradiça do outro lado")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, side = -d.side) }, enabled = !d.locked) { Text(tr("⇅ Abre pro outro lado")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, slide = !d.slide) }, enabled = !d.locked) { Text(if (d.slide) tr("De correr ✓") else tr("De abrir ✓")) }
             }
-            Text("Tamanho e escrita", color = dark, fontSize = 13.sp)
-            LabelSlider("Quadradinho", d.labelScale, 0.2f, 2.5f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, labelScale = v, live = true) }
-            LabelSlider("Linha vermelha", d.width, 0.4f, 5f, "${(d.width / 2.1f * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, width = v, live = true) }
+            Text(tr("Tamanho e escrita"), color = dark, fontSize = 13.sp)
+            LabelSlider(tr("Quadradinho"), d.labelScale, 0.2f, 2.5f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, labelScale = v, live = true) }
+            LabelSlider(tr("Linha vermelha"), d.width, 0.4f, 5f, "${(d.width / 2.1f * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, width = v, live = true) }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = false) }, enabled = !d.locked) { Text(if (!d.labelVert) "Escrita deitada ✓" else "Escrita deitada") }
-                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = true) }, enabled = !d.locked) { Text(if (d.labelVert) "Escrita em pé ✓" else "Escrita em pé") }
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = false) }, enabled = !d.locked) { Text(if (!d.labelVert) tr("Escrita deitada ✓") else tr("Escrita deitada")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = true) }, enabled = !d.locked) { Text(if (d.labelVert) tr("Escrita em pé ✓") else tr("Escrita em pé")) }
             }
-            Text("Largura do vão", color = dark, fontSize = 13.sp)
+            Text(tr("Largura do vão"), color = dark, fontSize = 13.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
                 TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
             }
             Text(
                 when {
-                    d.valueMm != null && connected -> "Meça de novo para substituir"
-                    d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> "Digitado à mão"
-                    d.valueMm != null -> "Medido pela trena Bosch"
-                    !connected -> "Toque na medida para digitar, ou conecte a trena Bosch"
-                    else -> "Aguardando a medida da trena…"
+                    d.valueMm != null && connected -> tr("Meça de novo para substituir")
+                    d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+                    d.valueMm != null -> tr("Medido pela trena Bosch")
+                    !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+                    else -> tr("Aguardando a medida da trena…")
                 },
                 color = Color(0xFF555555), fontSize = 13.sp,
             )
             Row {
-                if (d.valueMm != null) TextButton(onClick = { st.clearValue(d.id) }) { Text("Limpar medida") }
+                if (d.valueMm != null) TextButton(onClick = { st.clearValue(d.id) }) { Text(tr("Limpar medida")) }
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text("Excluir porta", color = Color(0xFFD32F2F)) }
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text(tr("Excluir porta"), color = Color(0xFFD32F2F)) }
             }
         }
     }
@@ -1415,16 +1417,16 @@ private fun MiniTelemeter(vm: AppViewModel, open: Boolean, toggle: () -> Unit) {
     Surface(shape = RoundedCornerShape((12 * k).dp), color = Ui.panel) {
         Column(Modifier.padding((8 * k).dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Trena", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.padding(end = (10 * k).dp))
-                Text(if (open) "Pronto ▾" else "Pronto ▸", color = Ui.accent, fontSize = (12 * k).sp, modifier = Modifier.clickable(onClick = toggle))
+                Text(tr("Trena"), color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.padding(end = (10 * k).dp))
+                Text(if (open) tr("Pronto ▾") else tr("Pronto ▸"), color = Ui.accent, fontSize = (12 * k).sp, modifier = Modifier.clickable(onClick = toggle))
                 Box(Modifier.weight(1f))
                 Text("A−", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale - 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
                 Text("A+", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale + 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
                 Text("✕", color = Ui.dim, fontSize = (14 * k).sp, modifier = Modifier.clickable { vm.changeTrenaHidden(true) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
             }
             if (open) {
-                Text(name ?: "Bosch", color = Ui.dim, fontSize = (12 * k).sp, modifier = Modifier.padding(top = (2 * k).dp))
-                TextButton(onClick = { vm.ble.disconnect() }) { Text("Desconectar", fontSize = (12 * k).sp) }
+                Text(name ?: tr("Bosch"), color = Ui.dim, fontSize = (12 * k).sp, modifier = Modifier.padding(top = (2 * k).dp))
+                TextButton(onClick = { vm.ble.disconnect() }) { Text(tr("Desconectar"), fontSize = (12 * k).sp) }
             }
         }
     }
@@ -1436,7 +1438,7 @@ private fun ChipsBar(vm: AppViewModel, connected: Boolean, onBt: () -> Unit) {
     val unit = vm.session?.state?.unit ?: LengthUnit.M
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (!vm.trenaHidden) Box(Modifier.size((44 * vm.trenaScale).dp).clip(CircleShape).background(Ui.distBlue).clickable(onClick = onBt), contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.Bluetooth, "Bluetooth", tint = Color.White, modifier = Modifier.size((24 * vm.trenaScale).dp))
+            Icon(Icons.Filled.Bluetooth, tr("Bluetooth"), tint = Color.White, modifier = Modifier.size((24 * vm.trenaScale).dp))
         }
         vm.recent.forEach { r ->
             Row(
@@ -1444,7 +1446,7 @@ private fun ChipsBar(vm: AppViewModel, connected: Boolean, onBt: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(Units.format(r.mm, unit), color = Ui.text, fontSize = 15.sp)
-                IconButton(onClick = { vm.discardRecent(r) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Filled.Close, "Descartar", tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+                IconButton(onClick = { vm.discardRecent(r) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Filled.Close, tr("Descartar"), tint = Ui.dim, modifier = Modifier.size(14.dp)) }
             }
         }
     }
@@ -1462,9 +1464,9 @@ private fun OverviewDialog(session: EditorSession, vm: AppViewModel, onDismiss: 
         Surface(Modifier.fillMaxSize(), color = Ui.bg) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
                 Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, "Fechar", tint = Ui.text) }
-                    Text("Visão geral do documento", color = Ui.text, fontSize = 17.sp, modifier = Modifier.weight(1f))
-                    Text("${st.note.pages.size} folhas", color = Ui.dim, fontSize = 13.sp, modifier = Modifier.padding(end = 12.dp))
+                    IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, tr("Fechar"), tint = Ui.text) }
+                    Text(tr("Visão geral do documento"), color = Ui.text, fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    Text(tr("{0} folhas", st.note.pages.size), color = Ui.dim, fontSize = 13.sp, modifier = Modifier.padding(end = 12.dp))
                 }
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(150.dp),
@@ -1496,14 +1498,14 @@ private fun OverviewDialog(session: EditorSession, vm: AppViewModel, onDismiss: 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("${i + 1}", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f).padding(start = 4.dp))
                                 Box {
-                                    IconButton(onClick = { menuFor = i; confirmDel = null }) { Icon(Icons.Filled.MoreVert, "Mais", tint = Ui.text) }
+                                    IconButton(onClick = { menuFor = i; confirmDel = null }) { Icon(Icons.Filled.MoreVert, tr("Mais"), tint = Ui.text) }
                                     DropdownMenu(expanded = menuFor == i, onDismissRequest = { menuFor = null; confirmDel = null }) {
-                                        DropdownMenuItem(text = { Text("Duplicar folha") }, onClick = {
+                                        DropdownMenuItem(text = { Text(tr("Duplicar folha")) }, onClick = {
                                             menuFor = null
-                                            if (!st.duplicatePage(i)) vm.toast = "Limite de ${Sheet.MAX_PAGES} folhas"
+                                            if (!st.duplicatePage(i)) vm.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES)
                                         })
                                         DropdownMenuItem(
-                                            text = { Text(if (confirmDel == i) "Confirmar exclusão" else "Excluir folha", color = Color(0xFFE53935)) },
+                                            text = { Text(if (confirmDel == i) tr("Confirmar exclusão") else tr("Excluir folha"), color = Color(0xFFE53935)) },
                                             enabled = st.note.pages.size > 1,
                                             onClick = {
                                                 if (confirmDel == i) { menuFor = null; confirmDel = null; st.deletePage(i); session.updateActivePage(); session.clampView() }
@@ -1552,7 +1554,7 @@ private fun FloatingField(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onConfirm(tfv.text) }),
             )
-            IconButton(onClick = { onConfirm(tfv.text) }) { Icon(Icons.Filled.Check, "Confirmar") }
+            IconButton(onClick = { onConfirm(tfv.text) }) { Icon(Icons.Filled.Check, tr("Confirmar")) }
         }
     }
     LaunchedEffect(Unit) { focus.requestFocus() }
@@ -1581,19 +1583,19 @@ internal fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
         Surface(Modifier.fillMaxSize(), color = Ui.bg) {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar", tint = Ui.text) }
-                    Text("Ferramentas Bluetooth®", color = Ui.text, fontSize = 20.sp)
+                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar"), tint = Ui.text) }
+                    Text(tr("Ferramentas Bluetooth®"), color = Ui.text, fontSize = 20.sp)
                 }
                 val ready = state == BleState.CONNECTED
                 val status = when (state) {
-                    BleState.CONNECTED -> "Pronto"
-                    BleState.CONNECTING -> "Conectando…"
-                    BleState.SCANNING -> "A pesquisar ferramentas."
-                    BleState.IDLE -> "Pronto"
-                    BleState.OFF -> "Bluetooth desligado"
-                    BleState.NO_PERMISSION -> "Falta permissão de Bluetooth"
-                    BleState.UNAVAILABLE -> "Bluetooth LE indisponível"
-                    BleState.ERROR -> "Erro"
+                    BleState.CONNECTED -> tr("Pronto")
+                    BleState.CONNECTING -> tr("Conectando…")
+                    BleState.SCANNING -> tr("A pesquisar ferramentas.")
+                    BleState.IDLE -> tr("Pronto")
+                    BleState.OFF -> tr("Bluetooth desligado")
+                    BleState.NO_PERMISSION -> tr("Falta permissão de Bluetooth")
+                    BleState.UNAVAILABLE -> tr("Bluetooth LE indisponível")
+                    BleState.ERROR -> tr("Erro")
                 }
                 Text(status, color = Ui.text, fontSize = 16.sp)
                 Box(
@@ -1603,44 +1605,44 @@ internal fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
                 )
                 if (message.isNotBlank()) Text(message, color = Ui.dim, fontSize = 13.sp)
                 Text(
-                    "Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena.",
+                    tr("Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena."),
                     color = Color(0xFFFF8A80), fontSize = 13.sp,
                 )
                 if (ready) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(name ?: "Bosch", color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { ble.disconnect() }) { Text("Desconectar") }
+                        Text(name ?: tr("Bosch"), color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { ble.disconnect() }) { Text(tr("Desconectar")) }
                     }
                 } else {
-                    Text("Outras ferramentas", color = Ui.dim, fontSize = 14.sp)
+                    Text(tr("Outras ferramentas"), color = Ui.dim, fontSize = 14.sp)
                     found.forEach { d ->
                         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Bluetooth, null, tint = Ui.distBlue, modifier = Modifier.size(20.dp))
                             Text(d.name, color = Ui.text, fontSize = 16.sp, modifier = Modifier.padding(start = 10.dp).weight(1f))
-                            TextButton(onClick = { ble.connect(d.address, d.name) }) { Text("Conectar") }
+                            TextButton(onClick = { ble.connect(d.address, d.name) }) { Text(tr("Conectar")) }
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { search() }) { Text("Procurar de novo") }
-                        TextButton(onClick = { if (ble.hasPermissions()) ble.startScan(all = true) else permLauncher.launch(ble.requiredPermissions()) }) { Text("Mostrar todos") }
+                        TextButton(onClick = { search() }) { Text(tr("Procurar de novo")) }
+                        TextButton(onClick = { if (ble.hasPermissions()) ble.startScan(all = true) else permLauncher.launch(ble.requiredPermissions()) }) { Text(tr("Mostrar todos")) }
                         if (ble.lastAddress != null) {
-                            TextButton(onClick = { if (ble.hasPermissions()) ble.reconnectLast() else permLauncher.launch(ble.requiredPermissions()) }) { Text("Última trena") }
+                            TextButton(onClick = { if (ble.hasPermissions()) ble.reconnectLast() else permLauncher.launch(ble.requiredPermissions()) }) { Text(tr("Última trena")) }
                         }
                     }
                 }
                 HorizontalDivider()
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Mostrar painel da trena na folha", color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    Text(tr("Mostrar painel da trena na folha"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
                     Switch(checked = !vm.trenaHidden, onCheckedChange = { vm.changeTrenaHidden(!it) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Tamanho do painel", color = Ui.text, fontSize = 15.sp, modifier = Modifier.width(150.dp))
+                    Text(tr("Tamanho do painel"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.width(150.dp))
                     androidx.compose.material3.Slider(value = vm.trenaScale, onValueChange = { vm.changeTrenaScale(it) }, valueRange = 0.5f..1.3f, modifier = Modifier.weight(1f))
                 }
-                Text("Com o painel oculto, a medida continua indo direto para a cota ou o segmento selecionado.", color = Ui.dim, fontSize = 12.sp)
+                Text(tr("Com o painel oculto, a medida continua indo direto para a cota ou o segmento selecionado."), color = Ui.dim, fontSize = 12.sp)
                 if (log.isNotEmpty()) {
                     HorizontalDivider()
-                    Text("Diagnóstico: últimos quadros recebidos", color = Ui.dim, fontSize = 13.sp)
+                    Text(tr("Diagnóstico: últimos quadros recebidos"), color = Ui.dim, fontSize = 13.sp)
                     log.forEach { Text(it, color = Ui.dim, fontFamily = FontFamily.Monospace, fontSize = 11.sp) }
                 }
             }
@@ -1659,10 +1661,10 @@ private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, 
             .clickable(enabled = enabled) { input = if (text == "–") "" else text; open = true }
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
-        Text(if (text == "–" && enabled) "– toque p/ digitar" else text, color = Ui.distBlue, fontSize = if (text == "–" && enabled) 15.sp else 22.sp)
+        Text(if (text == "–" && enabled) tr("– toque p/ digitar") else text, color = Ui.distBlue, fontSize = if (text == "–" && enabled) 15.sp else 22.sp)
     }
     if (open) {
-        NumPadDialog("Digitar medida", input, unitLabel, hint = "Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão.", onDismiss = { open = false }) { v ->
+        NumPadDialog(tr("Digitar medida"), input, unitLabel, hint = tr("Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão."), onDismiss = { open = false }) { v ->
             if (v > 0) onSet(Units.toMm(v, unit ?: br.com.arque.measure.model.LengthUnit.MM))
             open = false
         }
@@ -1681,47 +1683,47 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
             Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Parede · ${w.wMm.toLong()} × ${w.hMm.toLong()} mm · escala 1:${w.scaleDen}", color = dark, fontSize = 16.sp)
+            Text(tr("Parede · {0} × {1} mm · escala 1:{2}", w.wMm.toLong(), w.hMm.toLong(), w.scaleDen), color = dark, fontSize = 16.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text("Largura (linha do topo)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Largura (linha do topo)"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.wMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, wMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Folga total", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Folga total"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.folgaMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, folgaMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Altura", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Altura"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.hMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, hMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Superior a (do chão)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Superior a (do chão)"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.upperBottomMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, upperBottomMm = mm) }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Column(Modifier.weight(1f)) {
-                    Text("Pedra · largura (0 = sem)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Pedra · largura (0 = sem)"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneWMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneWMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Pedra · recuo da esq.", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Pedra · recuo da esq."), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneXMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneXMm = mm) }
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Pedra · altura do chão (0 = auto)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Pedra · altura do chão (0 = auto)"), color = Color(0xFF555555), fontSize = 12.sp)
                     ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneTopMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneTopMm = mm) }
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                TextButton(onClick = { st.addWallModule(w.id, false) }, enabled = !w.locked) { Text("+ Módulo de baixo") }
-                TextButton(onClick = { st.addWallModule(w.id, true) }, enabled = !w.locked) { Text("+ Módulo superior") }
-                listOf("Sobra à esq." to 0, "Sobra nos 2 lados" to 1, "Sobra à dir." to 2).forEach { (lb, v) ->
+                TextButton(onClick = { st.addWallModule(w.id, false) }, enabled = !w.locked) { Text(tr("+ Módulo de baixo")) }
+                TextButton(onClick = { st.addWallModule(w.id, true) }, enabled = !w.locked) { Text(tr("+ Módulo superior")) }
+                listOf(tr("Sobra à esq.") to 0, tr("Sobra nos 2 lados") to 1, tr("Sobra à dir.") to 2).forEach { (lb, v) ->
                     TextButton(onClick = { st.setWall(w.id, alignRow = v) }, enabled = !w.locked && w.alignRow != v) { Text(lb) }
                 }
-                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.firstOrNull { it > w.scaleDen } ?: 100) }, enabled = !w.locked && w.scaleDen < 100) { Text("− Diminuir") }
-                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.lastOrNull { it < w.scaleDen } ?: 5) }, enabled = !w.locked && w.scaleDen > 5) { Text("+ Aumentar") }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.firstOrNull { it > w.scaleDen } ?: 100) }, enabled = !w.locked && w.scaleDen < 100) { Text(tr("− Diminuir")) }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.lastOrNull { it < w.scaleDen } ?: 5) }, enabled = !w.locked && w.scaleDen > 5) { Text(tr("+ Aumentar")) }
             }
         }
     }
@@ -1763,22 +1765,22 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                     Modifier.heightIn(max = 430.dp).verticalScroll(rememberScrollState()).padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Medidas", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Medidas"), color = Color(0xFF555555), fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Column(Modifier.weight(1f)) {
-                            Text("Largura", fontSize = 12.sp)
+                            Text(tr("Largura"), fontSize = 12.sp)
                             ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.wMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(wMm = mm.coerceIn(150.0, 6000.0)) } }
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("Altura", fontSize = 12.sp)
+                            Text(tr("Altura"), fontSize = 12.sp)
                             ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.hMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(hMm = mm.coerceIn(150.0, 3000.0)) } }
                         }
                         Column(Modifier.weight(1f)) {
-                            Text("Prof.", fontSize = 12.sp)
+                            Text(tr("Prof."), fontSize = 12.sp)
                             ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.dMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(dMm = mm.coerceIn(100.0, 1500.0)) } }
                         }
                     }
-                    Text("Dentro do vão (todos os vãos)", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Dentro do vão (todos os vãos)"), color = Color(0xFF555555), fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                         br.com.arque.measure.model.VaoKind.values().forEach { kd ->
                             val on = first.kind == kd
@@ -1799,7 +1801,7 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                     var dKind by remember(id, first.kind) { mutableStateOf(first.kind) }
                     var dCnt by remember(id, first.kind, committed) { mutableStateOf(committed) }
                     var dCava by remember(id, first.cava) { mutableStateOf(first.cava) }
-                    Text("Dentro do vão (todos os vãos) — escolha e toque OK", color = Color(0xFF555555), fontSize = 12.sp)
+                    Text(tr("Dentro do vão (todos os vãos) — escolha e toque OK"), color = Color(0xFF555555), fontSize = 12.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                         br.com.arque.measure.model.VaoKind.values().forEach { kd ->
                             val on = dKind == kd
@@ -1812,45 +1814,45 @@ private fun CabQuickWindow(session: EditorSession, id: String) {
                     val mmF = { v: Double -> Units.formatNumber(v, br.com.arque.measure.model.LengthUnit.MM) }
                     when (dKind) {
                         br.com.arque.measure.model.VaoKind.SHELVES -> {
-                            QuickStep("Prateleiras", dCnt, 1, 20) { dCnt = it }
-                            Text("Espaço livre entre elas: ${mmF((vh - dCnt * cab.espMm) / (dCnt + 1))} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                            QuickStep(tr("Prateleiras"), dCnt, 1, 20) { dCnt = it }
+                            Text(tr("Espaço livre entre elas: {0} mm", mmF((vh - dCnt * cab.espMm) / (dCnt + 1))), color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         br.com.arque.measure.model.VaoKind.DRAWERS -> {
-                            QuickStep("Gavetas", dCnt, 1, 20) { dCnt = it }
-                            Text("Cada frente de gaveta: ~${mmF(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, dCnt, vh, first))} mm de altura", color = Color(0xFF555555), fontSize = 12.sp)
+                            QuickStep(tr("Gavetas"), dCnt, 1, 20) { dCnt = it }
+                            Text(tr("Cada frente de gaveta: ~{0} mm de altura", mmF(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, dCnt, vh, first))), color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         br.com.arque.measure.model.VaoKind.DOOR -> {
-                            QuickStep("Portas", dCnt, 1, 4) { dCnt = it }
+                            QuickStep(tr("Portas"), dCnt, 1, 4) { dCnt = it }
                             val dw = if (dCnt >= 2) (vw0 + 12.0) / dCnt else vw0 + 14.0
-                            Text("Cada porta: ${mmF(dw)} × ${mmF(vh + 30.0)} mm", color = Color(0xFF555555), fontSize = 12.sp)
+                            Text(tr("Cada porta: {0} × {1} mm", mmF(dw), mmF(vh + 30.0)), color = Color(0xFF555555), fontSize = 12.sp)
                         }
                         else -> {}
                     }
                     if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS || dKind == br.com.arque.measure.model.VaoKind.DOOR) {
-                        QuickSwitch("Cava (puxador cortado a 30°)", dCava) { dCava = it }
+                        QuickSwitch(tr("Cava (puxador cortado a 30°)"), dCava) { dCava = it }
                     }
                     androidx.compose.material3.Button(
                         onClick = {
                             setAll { it.copy(kind = dKind, cava = dCava, shelves = if (dKind == br.com.arque.measure.model.VaoKind.SHELVES) dCnt else it.shelves, drawers = if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS) dCnt else it.drawers, doors = if (dKind == br.com.arque.measure.model.VaoKind.DOOR) dCnt else it.doors) }
                         },
                         enabled = !o.locked, modifier = Modifier.fillMaxWidth(),
-                    ) { Text("OK · incluir") }
-                    QuickSwitch("Alinhar pelo topo (ao diminuir, a base sobe)", o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
-                    QuickSwitch("Fundo (3 mm)", cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
-                    QuickSwitch("Tamponamento esquerdo", cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
-                    QuickSwitch("Tamponamento direito", cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }
-                    QuickSwitch("Tamponamento de baixo (30)", cab.tampBaixo) { b -> st.updateCab(id) { it.copy(tampBaixo = b) } }
-                    QuickSwitch("Juntar tamp. de baixo com o do lado (peça única)", cab.tampBaixoJunto) { b -> st.joinBottom(id, b) }
-                    if (cab.tampBaixo) QuickSwitch("De baixo passa reto", cab.tampBaixoPassa) { b -> st.updateCab(id) { it.copy(tampBaixoPassa = b) } }
-                    QuickSwitch("Réguas nas bordas", cab.reguas) { b -> st.updateCab(id) { it.copy(reguas = b) } }
+                    ) { Text(tr("OK · incluir")) }
+                    QuickSwitch(tr("Alinhar pelo topo (ao diminuir, a base sobe)"), o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
+                    QuickSwitch(tr("Fundo (3 mm)"), cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
+                    QuickSwitch(tr("Tamponamento esquerdo"), cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
+                    QuickSwitch(tr("Tamponamento direito"), cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }
+                    QuickSwitch(tr("Tamponamento de baixo (30)"), cab.tampBaixo) { b -> st.updateCab(id) { it.copy(tampBaixo = b) } }
+                    QuickSwitch(tr("Juntar tamp. de baixo com o do lado (peça única)"), cab.tampBaixoJunto) { b -> st.joinBottom(id, b) }
+                    if (cab.tampBaixo) QuickSwitch(tr("De baixo passa reto"), cab.tampBaixoPassa) { b -> st.updateCab(id) { it.copy(tampBaixoPassa = b) } }
+                    QuickSwitch(tr("Réguas nas bordas"), cab.reguas) { b -> st.updateCab(id) { it.copy(reguas = b) } }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        TextButton(onClick = { st.moveModule(id, -1) }, enabled = !o.locked) { Text("◀ Mover") }
-                        TextButton(onClick = { st.moveModule(id, 1) }, enabled = !o.locked) { Text("Mover ▶") }
-                        TextButton(onClick = { st.duplicate(id); session.cabQuickId = st.selectedId }, enabled = !o.locked) { Text("Copiar ao lado") }
+                        TextButton(onClick = { st.moveModule(id, -1) }, enabled = !o.locked) { Text(tr("◀ Mover")) }
+                        TextButton(onClick = { st.moveModule(id, 1) }, enabled = !o.locked) { Text(tr("Mover ▶")) }
+                        TextButton(onClick = { st.duplicate(id); session.cabQuickId = st.selectedId }, enabled = !o.locked) { Text(tr("Copiar ao lado")) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                        TextButton(onClick = { session.cabQuickId = null; session.cabEditId = id }) { Text("Editor completo") }
-                        TextButton(onClick = { st.delete(id); session.cabQuickId = null }, enabled = !o.locked) { Text("Excluir", color = Color(0xFFC0392B)) }
+                        TextButton(onClick = { session.cabQuickId = null; session.cabEditId = id }) { Text(tr("Editor completo")) }
+                        TextButton(onClick = { st.delete(id); session.cabQuickId = null }, enabled = !o.locked) { Text(tr("Excluir"), color = Color(0xFFC0392B)) }
                     }
                 }
             }
@@ -1883,16 +1885,16 @@ internal fun ProjectLinkDialog(vm: AppViewModel, noteId: String, linkedId: Strin
     val list = remember(vm.projVersion) { vm.moveisProjects() }
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Projeto de móveis desta nota") },
+        title = { Text(tr("Projeto de móveis desta nota")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 val cur = list.firstOrNull { it.id == linkedId }
                 if (cur != null) {
-                    Text("Ligada a: ${cur.name}", fontSize = 15.sp)
-                    TextButton(onClick = { onDismiss(); vm.flush(); vm.openProject(cur.id) }) { Text("🪚 Abrir o projeto") }
-                    TextButton(onClick = { vm.linkProject(noteId, null); onDismiss() }) { Text("Desligar desta nota") }
-                    Text("Ou trocar por:", fontSize = 13.sp, color = Color(0xFF666666))
-                } else Text(if (list.isEmpty()) "Ainda não tem projeto de móveis. Crie um no editor de móveis e ele fica salvo na biblioteca." else "Escolha o projeto pra ligar a esta nota:", fontSize = 13.sp)
+                    Text(tr("Ligada a: {0}", cur.name), fontSize = 15.sp)
+                    TextButton(onClick = { onDismiss(); vm.flush(); vm.openProject(cur.id) }) { Text(tr("🪚 Abrir o projeto")) }
+                    TextButton(onClick = { vm.linkProject(noteId, null); onDismiss() }) { Text(tr("Desligar desta nota")) }
+                    Text(tr("Ou trocar por:"), fontSize = 13.sp, color = Color(0xFF666666))
+                } else Text(if (list.isEmpty()) tr("Ainda não tem projeto de móveis. Crie um no editor de móveis e ele fica salvo na biblioteca.") else tr("Escolha o projeto pra ligar a esta nota:"), fontSize = 13.sp)
                 androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 300.dp)) {
                     items(list.filter { it.id != linkedId }.size) { i ->
                         val p = list.filter { it.id != linkedId }[i]
@@ -1901,6 +1903,6 @@ internal fun ProjectLinkDialog(vm: AppViewModel, noteId: String, linkedId: Strin
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Fechar")) } },
     )
 }

@@ -1,5 +1,7 @@
 package br.com.arque.measure.update
 
+import br.com.arque.measure.i18n.tr
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -52,19 +54,19 @@ class UpdateWorker(ctx: Context, p: WorkerParameters) : CoroutineWorker(ctx, p) 
             ) return
             val nm = ctx.getSystemService(NotificationManager::class.java)
             if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
-                nm.createNotificationChannel(NotificationChannel(CHANNEL, "Atualizações do app", NotificationManager.IMPORTANCE_HIGH))
+                nm.createNotificationChannel(NotificationChannel(CHANNEL, tr("Atualizações do app"), NotificationManager.IMPORTANCE_HIGH))
             }
             val open = Intent(ctx, MainActivity::class.java).putExtra(EXTRA_UPDATE, true)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             val pi = PendingIntent.getActivity(ctx, 7301, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val n = NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle("Atualização do Arquemestre disponível")
-                .setContentText("Versão apk-$number. Toque pra baixar e instalar — nada é perdido.")
+                .setContentTitle(tr("Atualização do Arquemestre disponível"))
+                .setContentText(tr("Versão apk-{0}. Toque pra baixar e instalar — nada é perdido.", number))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pi)
-                .addAction(0, "Baixar agora", pi)
+                .addAction(0, tr("Baixar agora"), pi)
                 .build()
             runCatching { nm.notify(7301, n) }
         }

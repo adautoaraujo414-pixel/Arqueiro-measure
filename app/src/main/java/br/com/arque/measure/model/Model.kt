@@ -1,5 +1,7 @@
 package br.com.arque.measure.model
 
+import br.com.arque.measure.i18n.tr
+
 import java.util.UUID
 
 fun newId(): String = UUID.randomUUID().toString()
@@ -137,17 +139,19 @@ data class DoorObj(
 ) : Ann()
 
 /** Modelos de folha. */
-enum class Template(val label: String) {
+enum class Template(private val ptLabel: String) {
     ARAUJO("Arquemestre croqui"),
     BLANK("Em branco"),
-    LINES("Linha fina"),
+    LINES("Linha fina");
+    val label: String get() = tr(ptLabel)
 }
 
 /** Uma folha A4 de uma nota. Tamanho fixo: a folha nunca muda ao mexer em fotos. */
 /** Tipo de um segmento do cômodo: parede, painel, pia ou cuba. */
-enum class SegKind(val label: String) {
+enum class SegKind(private val ptLabel: String) {
     WALL("Parede"), PANEL("Painel"), SINK("Pia"), BASIN("Cuba"), DOOR("Porta"),
-    DIVIDER("Divisória"), WINDOW("Janela"), OPENING("Vão"),
+    DIVIDER("Divisória"), WINDOW("Janela"), OPENING("Vão");
+    val label: String get() = tr(ptLabel)
 }
 
 /** Tipos que marcam abertura na parede (nunca são unidos com a parede vizinha). */

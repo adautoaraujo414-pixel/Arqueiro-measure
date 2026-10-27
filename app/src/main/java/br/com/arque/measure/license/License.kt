@@ -1,5 +1,7 @@
 package br.com.arque.measure.license
 
+import br.com.arque.measure.i18n.tr
+
 import android.content.Context
 import java.security.MessageDigest
 
@@ -48,9 +50,9 @@ object License {
         val left = (TRIAL_MS - used(ctx)).coerceAtLeast(0L)
         val h = left / 3_600_000L
         return when {
-            h >= 24 -> "${h / 24} dia" + (if (h / 24 > 1) "s" else "") + (if (h % 24 > 0) " e ${h % 24} h" else "")
+            h >= 24 -> tr("{0} dia", h / 24) + (if (h / 24 > 1) "s" else "") + (if (h % 24 > 0) " e ${h % 24} h" else "")
             h >= 1 -> "$h h"
-            else -> "${left / 60_000L} min"
+            else -> tr("{0} min", left / 60_000L)
         }
     }
 

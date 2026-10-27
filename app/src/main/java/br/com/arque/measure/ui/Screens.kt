@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,6 +38,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AllInbox
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.CreateNewFolder
@@ -145,8 +148,8 @@ fun NameDialog(title: String, label: String, initial: String = "", onDismiss: ()
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text(label) }, singleLine = true) },
-        confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onOk(text) }) { Text("Salvar") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        confirmButton = { TextButton(onClick = { if (text.isNotBlank()) onOk(text) }) { Text(tr("Salvar")) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 
@@ -157,13 +160,15 @@ fun ConfirmDialog(title: String, message: String, confirm: String, onDismiss: ()
         title = { Text(title) },
         text = { Text(message) },
         confirmButton = { TextButton(onClick = onOk) { Text(confirm) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 
-private val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+private val dateFmt get() = br.com.arque.measure.i18n.I18n.dateFormat()
 
-private enum class LibTab(val label: String) { ALL("TUDO"), NOTE("NOTA"), MOVEIS("MÓVEIS"), PDF("PDF") }
+private enum class LibTab(private val ptLabel: String) { ALL("TUDO"), NOTE("NOTA"), MOVEIS("MÓVEIS"), PDF("PDF");
+    val label: String get() = tr(ptLabel)
+}
 
 // ---------------------------------------------------------------- Biblioteca (estilo Star Note, escura)
 
@@ -176,6 +181,8 @@ fun LibraryScreen(vm: AppViewModel) {
     var newFolder by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf<Uri?>(null) }
     var btView by remember { mutableStateOf(false) }
+    var langOpen by remember { mutableStateOf(false) }
+    if (langOpen) LanguageDialog { langOpen = false }
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) vm.backup(uri)
@@ -204,17 +211,18 @@ fun LibraryScreen(vm: AppViewModel) {
             if (wide) {
                 Column(Modifier.width(230.dp).fillMaxHeight().background(Ui.panel).verticalScroll(rememberScrollState()).padding(12.dp)) {
                     Text("ARQUEMESTRE", color = Ui.text, fontSize = 15.sp, modifier = Modifier.padding(8.dp))
-                    SideItem("Todas as notas", Icons.Filled.AllInbox, filter == LibFilter.All) { vm.filter = LibFilter.All }
-                    Text("Pastas", color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp))
+                    SideItem(tr("Todas as notas"), Icons.Filled.AllInbox, filter == LibFilter.All) { vm.filter = LibFilter.All }
+                    Text(tr("Pastas"), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp))
                     vm.index.folders.forEach { f ->
                         SideItem(f.name, Icons.Filled.Folder, filter == LibFilter.InFolder(f.id)) { vm.filter = LibFilter.InFolder(f.id) }
                     }
-                    SideItem("Nova pasta", Icons.Filled.CreateNewFolder, false) { newFolder = true }
+                    SideItem(tr("Nova pasta"), Icons.Filled.CreateNewFolder, false) { newFolder = true }
                     Spacer(Modifier.height(12.dp))
-                    SideItem("Novo projeto de móveis", Icons.Filled.Build, false) { vm.newMoveisProject() }
-                    SideItem("Agenda", Icons.Filled.Event, false) { vm.screen = Screen.Agenda }
-                    SideItem("Orçamentos", Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
-                    SideItem("Lixo", Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
+                    SideItem(tr("Novo projeto de móveis"), Icons.Filled.Build, false) { vm.newMoveisProject() }
+                    SideItem(tr("Agenda"), Icons.Filled.Event, false) { vm.screen = Screen.Agenda }
+                    SideItem(tr("Orçamentos"), Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
+                    SideItem(tr("Lixo"), Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
+                    SideItem(langMenuLabel(), Icons.Filled.Language, false) { langOpen = true }
                 }
             }
             Column(Modifier.weight(1f).fillMaxHeight()) {
@@ -230,35 +238,38 @@ fun LibraryScreen(vm: AppViewModel) {
                             textStyle = androidx.compose.ui.text.TextStyle(color = Ui.text, fontSize = 15.sp),
                             cursorBrush = androidx.compose.ui.graphics.SolidColor(Ui.accent),
                             decorationBox = { inner ->
-                                if (query.isEmpty()) Text("Pesquisar", color = Ui.dim, fontSize = 15.sp)
+                                if (query.isEmpty()) Text(tr("Pesquisar"), color = Ui.dim, fontSize = 15.sp)
                                 inner()
                             },
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }
                     Box {
-                        IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, "Menu", tint = Ui.text) }
+                        IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, tr("Menu"), tint = Ui.text) }
                         DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
-                            DropdownMenuItem(text = { Text("Editor de móveis") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Editor de móveis")) }, onClick = {
                                 topMenu = false; vm.newMoveisProject()
                             })
-                            DropdownMenuItem(text = { Text("Agenda") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Agenda")) }, onClick = {
                                 topMenu = false; vm.screen = Screen.Agenda
                             })
-                            DropdownMenuItem(text = { Text("Orçamentos") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Orçamentos")) }, onClick = {
                                 topMenu = false; vm.screen = Screen.Quotes
                             })
-                            DropdownMenuItem(text = { Text("Fazer backup completo (ZIP)") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Fazer backup completo (ZIP)")) }, onClick = {
                                 topMenu = false; backupLauncher.launch("arque-measure-backup.zip")
                             })
-                            DropdownMenuItem(text = { Text("Restaurar backup") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Restaurar backup")) }, onClick = {
                                 topMenu = false; restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
                             })
-                            if (!br.com.arque.measure.BuildConfig.PLAY) DropdownMenuItem(text = { Text("Atualizar o app (sem perder dados)") }, onClick = {
+                            if (!br.com.arque.measure.BuildConfig.PLAY) DropdownMenuItem(text = { Text(tr("Atualizar o app (sem perder dados)")) }, onClick = {
                                 topMenu = false; vm.checkUpdate()
                             })
-                            DropdownMenuItem(text = { Text("Ver projeto por Bluetooth") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Ver projeto por Bluetooth")) }, onClick = {
                                 topMenu = false; btView = true
+                            })
+                            DropdownMenuItem(text = { Text(langMenuLabel() + " (" + currentLangName() + ")") }, onClick = {
+                                topMenu = false; langOpen = true
                             })
                         }
                     }
@@ -268,14 +279,14 @@ fun LibraryScreen(vm: AppViewModel) {
                         Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        FilterChip(selected = false, onClick = { vm.screen = Screen.Agenda }, label = { Text("📅 Agenda") })
-                        FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text("+ Projeto de móveis") })
-                        FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text("Todas as notas") })
+                        FilterChip(selected = false, onClick = { vm.screen = Screen.Agenda }, label = { Text(tr("📅 Agenda")) })
+                        FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text(tr("+ Projeto de móveis")) })
+                        FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text(tr("Todas as notas")) })
                         vm.index.folders.forEach { f ->
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })
                         }
-                        FilterChip(selected = filter == LibFilter.Trash, onClick = { vm.filter = LibFilter.Trash }, label = { Text("Lixo") })
-                        FilterChip(selected = false, onClick = { vm.screen = Screen.Quotes }, label = { Text("Orçamentos") })
+                        FilterChip(selected = filter == LibFilter.Trash, onClick = { vm.filter = LibFilter.Trash }, label = { Text(tr("Lixo")) })
+                        FilterChip(selected = false, onClick = { vm.screen = Screen.Quotes }, label = { Text(tr("Orçamentos")) })
                     }
                 }
                 Row(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -306,7 +317,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     val paired = pairs.flatMap { pr -> pr.second.map { it.id } }.toSet()
                     items(pairs, key = { "par-" + it.first.id }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { (pj, ns) -> ClientPair(vm, pj, ns) }
                     if (filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)) {
-                        if (tab == LibTab.MOVEIS && query.isBlank()) item(key = "novo-proj") { CreateTile(label = "Novo projeto de móveis") { vm.newMoveisProject() } }
+                        if (tab == LibTab.MOVEIS && query.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo projeto de móveis")) { vm.newMoveisProject() } }
                         val inPair = pairs.map { it.first.id }.toSet()
                         val projs = projList.filter { it.id !in inPair && (query.isBlank() || it.name.contains(query, ignoreCase = true)) }
                         items(projs, key = { "proj-" + it.id }) { pj -> ProjRow(vm, pj) }
@@ -321,22 +332,22 @@ fun LibraryScreen(vm: AppViewModel) {
                 Box(
                     Modifier.size(58.dp).clip(CircleShape).background(Ui.accent).clickable { fabMenu = true },
                     contentAlignment = Alignment.Center,
-                ) { Icon(Icons.Filled.Add, "Novo", tint = Color.White, modifier = Modifier.size(30.dp)) }
+                ) { Icon(Icons.Filled.Add, tr("Novo"), tint = Color.White, modifier = Modifier.size(30.dp)) }
                 DropdownMenu(expanded = fabMenu, onDismissRequest = { fabMenu = false }) {
-                    DropdownMenuItem(text = { Text("Criar nota") }, leadingIcon = { Icon(Icons.Filled.NoteAdd, null) }, onClick = {
+                    DropdownMenuItem(text = { Text(tr("Criar nota")) }, leadingIcon = { Icon(Icons.Filled.NoteAdd, null) }, onClick = {
                         fabMenu = false; vm.openNote(vm.createNote())
                     })
-                    DropdownMenuItem(text = { Text("Anotação infinita (em breve)") }, enabled = false, onClick = {})
-                    DropdownMenuItem(text = { Text("Importar ficheiros (em breve)") }, enabled = false, onClick = {})
-                    DropdownMenuItem(text = { Text("Importar imagem") }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = {
+                    DropdownMenuItem(text = { Text(tr("Anotação infinita (em breve)")) }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Importar ficheiros (em breve)")) }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Importar imagem")) }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = {
                         fabMenu = false
                         val id = vm.createNote(); vm.pendingImport = "gallery"; vm.openNote(id)
                     })
-                    DropdownMenuItem(text = { Text("Tirar fotografia") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = {
+                    DropdownMenuItem(text = { Text(tr("Tirar fotografia")) }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = {
                         fabMenu = false
                         val id = vm.createNote(); vm.pendingImport = "camera"; vm.openNote(id)
                     })
-                    DropdownMenuItem(text = { Text("Criar nova pasta") }, leadingIcon = { Icon(Icons.Filled.CreateNewFolder, null) }, onClick = {
+                    DropdownMenuItem(text = { Text(tr("Criar nova pasta")) }, leadingIcon = { Icon(Icons.Filled.CreateNewFolder, null) }, onClick = {
                         fabMenu = false; newFolder = true
                     })
                 }
@@ -344,24 +355,24 @@ fun LibraryScreen(vm: AppViewModel) {
         }
     }
 
-    if (newFolder) NameDialog("Nova pasta", "Nome da pasta", "", { newFolder = false }) { newFolder = false; vm.addFolder(it) }
+    if (newFolder) NameDialog(tr("Nova pasta"), tr("Nome da pasta"), "", { newFolder = false }) { newFolder = false; vm.addFolder(it) }
     if (btView) ShareViewPicker(vm) { btView = false }
     vm.updateState?.let { msg ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { vm.updateState = null },
-            title = { Text("Atualizar o app") },
+            title = { Text(tr("Atualizar o app")) },
             text = { Text(msg) },
             confirmButton = {
-                if (vm.updateReady != null) androidx.compose.material3.TextButton(onClick = { vm.installUpdate() }) { Text("Instalar") }
+                if (vm.updateReady != null) androidx.compose.material3.TextButton(onClick = { vm.installUpdate() }) { Text(tr("Instalar")) }
             },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = { vm.updateState = null }) { Text("Fechar") } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { vm.updateState = null }) { Text(tr("Fechar")) } },
         )
     }
     confirmRestore?.let { uri ->
         ConfirmDialog(
-            title = "Restaurar backup?",
-            message = "Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. O app reinicia.",
-            confirm = "Restaurar",
+            title = tr("Restaurar backup?"),
+            message = tr("Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. O app reinicia."),
+            confirm = tr("Restaurar"),
             onDismiss = { confirmRestore = null },
             onOk = { confirmRestore = null; vm.restore(uri) },
         )
@@ -382,7 +393,7 @@ private fun SideItem(label: String, icon: ImageVector, selected: Boolean, onClic
 }
 
 @Composable
-private fun CreateTile(label: String = "Criar", onClick: () -> Unit) {
+private fun CreateTile(label: String = tr("Criar"), onClick: () -> Unit) {
     Box(
         Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).drawBehind {
             drawRoundRect(
@@ -416,24 +427,24 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
         }
         Spacer(Modifier.width(if (bare) 8.dp else 12.dp))
         Column(Modifier.weight(1f)) {
-            Text(if (bare) "Projeto de móveis" else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text((if (bare) "" else "Projeto de móveis · ") + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
+            Text(if (bare) tr("Projeto de móveis") else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text((if (bare) "" else tr("Projeto de móveis · ")) + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
             Text("${p.mods} ${if (p.mods == 1) "módulo" else "módulos"}" + (if (linked > 0 && !bare) " · $linked ${if (linked == 1) "nota" else "notas"}" else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, "Menu do projeto", tint = Ui.text) }
+            IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, tr("Menu do projeto"), tint = Ui.text) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Abrir") }, onClick = { menu = false; vm.openProject(p.id) })
-                DropdownMenuItem(text = { Text("Renomear (nome do cliente)") }, onClick = { menu = false; rename = true })
-                DropdownMenuItem(text = { Text("Nova nota ligada a este projeto") }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
-                DropdownMenuItem(text = { Text("Apagar projeto") }, onClick = { menu = false; del = true })
+                DropdownMenuItem(text = { Text(tr("Abrir")) }, onClick = { menu = false; vm.openProject(p.id) })
+                DropdownMenuItem(text = { Text(tr("Renomear (nome do cliente)")) }, onClick = { menu = false; rename = true })
+                DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
+                DropdownMenuItem(text = { Text(tr("Apagar projeto")) }, onClick = { menu = false; del = true })
             }
         }
     }
-    if (rename) NameDialog("Nome do projeto", "Cliente / projeto", if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
+    if (rename) NameDialog(tr("Nome do projeto"), tr("Cliente / projeto"), if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
     if (del) ConfirmDialog(
-        title = "Apagar este projeto?", message = "\"${p.name}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.",
-        confirm = "Apagar", onDismiss = { del = false }, onOk = { del = false; vm.deleteMoveisProject(p.id) },
+        title = tr("Apagar este projeto?"), message = tr("\"{0}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.", p.name),
+        confirm = tr("Apagar"), onDismiss = { del = false }, onOk = { del = false; vm.deleteMoveisProject(p.id) },
     )
 }
 
@@ -486,46 +497,46 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fill
             )
         }
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, "Menu da nota", tint = Ui.text) }
+            IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, tr("Menu da nota"), tint = Ui.text) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 if (trash) {
-                    DropdownMenuItem(text = { Text("Restaurar") }, onClick = { menu = false; vm.trashNote(n.id, false) })
+                    DropdownMenuItem(text = { Text(tr("Restaurar")) }, onClick = { menu = false; vm.trashNote(n.id, false) })
                 } else {
-                    DropdownMenuItem(text = { Text("Editar") }, onClick = { menu = false; rename = true })
-                    DropdownMenuItem(text = { Text("Copiar") }, onClick = { menu = false; vm.copyNote(n.id) })
+                    DropdownMenuItem(text = { Text(tr("Editar")) }, onClick = { menu = false; rename = true })
+                    DropdownMenuItem(text = { Text(tr("Copiar")) }, onClick = { menu = false; vm.copyNote(n.id) })
                     DropdownMenuItem(
-                        text = { Text(if (n.pinned) "Desafixar nota" else "Fixar nota") },
+                        text = { Text(if (n.pinned) tr("Desafixar nota") else tr("Fixar nota")) },
                         onClick = { menu = false; vm.pinNote(n.id, !n.pinned) },
                     )
-                    DropdownMenuItem(text = { Text("Alterar a capa (em breve)") }, enabled = false, onClick = {})
-                    DropdownMenuItem(text = { Text("Exportar e partilhar (em breve)") }, enabled = false, onClick = {})
-                    DropdownMenuItem(text = { Text("Editar etiquetas (em breve)") }, enabled = false, onClick = {})
-                    DropdownMenuItem(text = { Text("Mover para") }, onClick = { menu = false; move = true })
+                    DropdownMenuItem(text = { Text(tr("Alterar a capa (em breve)")) }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Exportar e partilhar (em breve)")) }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Editar etiquetas (em breve)")) }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Mover para")) }, onClick = { menu = false; move = true })
                     DropdownMenuItem(
-                        text = { Text(if (n.locked) "Remover bloqueio" else "Adicionar bloqueio") },
+                        text = { Text(if (n.locked) tr("Remover bloqueio") else tr("Adicionar bloqueio")) },
                         onClick = { menu = false; vm.lockNote(n.id, !n.locked) },
                     )
-                    DropdownMenuItem(text = { Text("Sincronização em nuvem (em breve)") }, enabled = false, onClick = {})
+                    DropdownMenuItem(text = { Text(tr("Sincronização em nuvem (em breve)")) }, enabled = false, onClick = {})
                     HorizontalDivider()
-                    DropdownMenuItem(text = { Text("Mover para o lixo") }, onClick = { menu = false; vm.trashNote(n.id, true) })
+                    DropdownMenuItem(text = { Text(tr("Mover para o lixo")) }, onClick = { menu = false; vm.trashNote(n.id, true) })
                 }
             }
         }
     }
-    if (rename) NameDialog("Editar nota", "Nome", n.name, { rename = false }) { rename = false; vm.renameNote(n.id, it) }
+    if (rename) NameDialog(tr("Editar nota"), tr("Nome"), n.name, { rename = false }) { rename = false; vm.renameNote(n.id, it) }
     if (move) {
         AlertDialog(
             onDismissRequest = { move = false },
-            title = { Text("Mover para") },
+            title = { Text(tr("Mover para")) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
-                    TextButton(onClick = { move = false; vm.moveNote(n.id, null) }) { Text("Sem pasta") }
+                    TextButton(onClick = { move = false; vm.moveNote(n.id, null) }) { Text(tr("Sem pasta")) }
                     vm.index.folders.forEach { f ->
                         TextButton(onClick = { move = false; vm.moveNote(n.id, f.id) }) { Text(f.name) }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { move = false }) { Text("Cancelar") } },
+            confirmButton = { TextButton(onClick = { move = false }) { Text(tr("Cancelar")) } },
         )
     }
 }

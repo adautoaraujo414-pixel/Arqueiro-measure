@@ -1,5 +1,7 @@
 package br.com.arque.measure
 
+import br.com.arque.measure.i18n.tr
+
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -76,7 +78,7 @@ object QuotePdf {
             val pg = Pager(doc)
             pg.next()
             val c0 = pg.c
-            val dateFmt = SimpleDateFormat("dd/MM/yyyy", Locale("pt", "BR"))
+            val dateFmt = br.com.arque.measure.i18n.I18n.dateFormat()
 
             // cabeçalho com os dados da empresa
             val top = pg.y
@@ -88,10 +90,10 @@ object QuotePdf {
                 c0.drawBitmap(logo, null, android.graphics.RectF(M, top, M + lw, top + logoH), Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
                 tx = M + lw + 14f
             }
-            c0.drawText(company.name.ifBlank { "Minha empresa" }.uppercase(), tx, pg.y + 18f, paint(18f, true))
+            c0.drawText(company.name.ifBlank { tr("Minha empresa") }.uppercase(), tx, pg.y + 18f, paint(18f, true))
             pg.y += 26f
             val sub = listOfNotNull(
-                company.cnpj.takeIf { it.isNotBlank() }?.let { "CNPJ $it" },
+                company.cnpj.takeIf { it.isNotBlank() }?.let { tr("CNPJ {0}", it) },
                 company.phone.takeIf { it.isNotBlank() },
             ).joinToString("  ·  ")
             if (sub.isNotEmpty()) { c0.drawText(sub, tx, pg.y + 10f, paint(10f, color = GRAY)); pg.y += 14f }
@@ -103,12 +105,12 @@ object QuotePdf {
             c0.drawLine(M, pg.y, W - M, pg.y, gold)
             pg.y += 22f
 
-            c0.drawText("ORÇAMENTO", M, pg.y, paint(20f, true))
+            c0.drawText(tr("ORÇAMENTO"), M, pg.y, paint(20f, true))
             c0.drawText(dateFmt.format(Date(q.dateMs)), W - M, pg.y, paint(11f, color = GRAY, align = Paint.Align.RIGHT))
             pg.y += 22f
             val lab = paint(10f, color = GRAY)
             val valp = paint(12f, true)
-            c0.drawText("CLIENTE", M, pg.y, lab); c0.drawText("CIDADE", 330f, pg.y, lab)
+            c0.drawText(tr("CLIENTE"), M, pg.y, lab); c0.drawText(tr("CIDADE"), 330f, pg.y, lab)
             pg.y += 15f
             c0.drawText(q.clientName.ifBlank { "—" }, M, pg.y, valp); c0.drawText(q.city.ifBlank { "—" }, 330f, pg.y, valp)
             pg.y += 26f
@@ -123,11 +125,11 @@ object QuotePdf {
                 val hp = paint(9.5f, true, Color.WHITE)
                 val bg = Paint().apply { color = INK }
                 pg.c.drawRect(M, pg.y, W - M, pg.y + 20f, bg)
-                pg.c.drawText("DESCRIÇÃO", M + 6f, pg.y + 13.5f, hp)
-                pg.c.drawText("QTD", right1, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
-                pg.c.drawText("UN", unitX, pg.y + 13.5f, hp)
-                pg.c.drawText("VALOR UNIT.", right2, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
-                pg.c.drawText("SUBTOTAL", right3 - 6f, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
+                pg.c.drawText(tr("DESCRIÇÃO"), M + 6f, pg.y + 13.5f, hp)
+                pg.c.drawText(tr("QTD"), right1, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
+                pg.c.drawText(tr("UN"), unitX, pg.y + 13.5f, hp)
+                pg.c.drawText(tr("VALOR UNIT."), right2, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
+                pg.c.drawText(tr("SUBTOTAL"), right3 - 6f, pg.y + 13.5f, paint(9.5f, true, Color.WHITE, Paint.Align.RIGHT))
                 pg.y += 20f
             }
             tableHead()
@@ -156,15 +158,15 @@ object QuotePdf {
             pg.ensure(if (hasDisc) 90f else 50f) {}
             val rp = paint(11f, color = GRAY, align = Paint.Align.RIGHT)
             if (hasDisc) {
-                pg.c.drawText("Valor original", right2, pg.y + 12f, rp)
+                pg.c.drawText(tr("Valor original"), right2, pg.y + 12f, rp)
                 pg.c.drawText(QuoteMath.brl(orig), right3 - 6f, pg.y + 12f, paint(11f, align = Paint.Align.RIGHT))
                 pg.y += 18f
-                pg.c.drawText("Desconto (${QuoteMath.numStr(q.discountPct)}%)", right2, pg.y + 12f, rp)
+                pg.c.drawText(tr("Desconto ({0}%)", QuoteMath.numStr(q.discountPct)), right2, pg.y + 12f, rp)
                 pg.c.drawText("− " + QuoteMath.brl(QuoteMath.discountValue(q)), right3 - 6f, pg.y + 12f, paint(11f, align = Paint.Align.RIGHT))
                 pg.y += 22f
             }
             pg.c.drawRect(300f, pg.y, W - M, pg.y + 28f, Paint().apply { color = GOLD })
-            pg.c.drawText(if (hasDisc) "VALOR COM DESCONTO" else "TOTAL", 308f, pg.y + 18.5f, paint(10.5f, true, Color.WHITE))
+            pg.c.drawText(if (hasDisc) tr("VALOR COM DESCONTO") else tr("TOTAL"), 308f, pg.y + 18.5f, paint(10.5f, true, Color.WHITE))
             pg.c.drawText(QuoteMath.brl(QuoteMath.finalValue(q)), right3 - 8f, pg.y + 19f, paint(14f, true, Color.WHITE, Paint.Align.RIGHT))
             pg.y += 46f
 
@@ -172,8 +174,8 @@ object QuotePdf {
             val until = Date(q.dateMs + q.validityDays * 86_400_000L)
             val vp = paint(11f)
             val extra = ArrayList<String>()
-            extra += "Validade desta proposta: ${q.validityDays} dias (até ${dateFmt.format(until)})."
-            if (q.notes.isNotBlank()) extra += "Observações: " + q.notes.trim()
+            extra += tr("Validade desta proposta: {0} dias (até {1}).", q.validityDays, dateFmt.format(until))
+            if (q.notes.isNotBlank()) extra += tr("Observações: ") + q.notes.trim()
             val wrapped = extra.flatMap { wrap(it, vp, W - 2 * M) + "" }
             wrapped.forEach { l ->
                 pg.ensure(16f) {}

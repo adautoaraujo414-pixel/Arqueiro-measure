@@ -1,5 +1,7 @@
 package br.com.arque.measure.data
 
+import br.com.arque.measure.i18n.tr
+
 import android.content.Context
 import org.json.JSONArray
 import java.io.File
@@ -18,7 +20,7 @@ object MoveisProjects {
             val p = a.getJSONObject(k)
             val nome = p.optJSONObject("client")?.optString("nome")?.trim().orEmpty()
             val mods = p.optJSONObject("current")?.optJSONArray("mods")?.length() ?: 0
-            P(p.optString("id"), nome.ifBlank { "Projeto sem nome" }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"))
+            P(p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"))
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())
 

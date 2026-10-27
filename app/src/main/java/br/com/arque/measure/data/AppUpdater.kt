@@ -1,5 +1,7 @@
 package br.com.arque.measure.data
 
+import br.com.arque.measure.i18n.tr
+
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -54,7 +56,7 @@ object AppUpdater {
             c.connectTimeout = 15000; c.readTimeout = 60000
             val code = c.responseCode
             if (code in 300..399 && hops++ < 5) { url = URL(url, c.getHeaderField("Location")); c.disconnect(); continue }
-            if (code != 200) error("download falhou ($code)")
+            if (code != 200) error(tr("download falhou ({0})", code))
             break
         }
         val total = c.contentLengthLong

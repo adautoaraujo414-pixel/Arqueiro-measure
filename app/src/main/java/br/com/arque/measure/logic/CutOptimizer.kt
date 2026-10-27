@@ -1,5 +1,7 @@
 package br.com.arque.measure.logic
 
+import br.com.arque.measure.i18n.tr
+
 import kotlin.math.max
 
 /**
@@ -102,7 +104,7 @@ object CutOptimizer {
 
     /** Texto de cada corte, na ordem em que a serra deve passar. */
     fun describeCut(c: Cut, fmt: (Double) -> String): String {
-        val dir = if (c.vertical) "vertical (mede ${fmt(c.pos)} a partir da esquerda)" else "horizontal (mede ${fmt(c.pos)} a partir de cima)"
-        return "${c.step}. Corte $dir na faixa ${fmt(c.rectW)} × ${fmt(c.rectH)}"
+        val dir = if (c.vertical) tr("vertical (mede {0} a partir da esquerda)", fmt(c.pos)) else tr("horizontal (mede {0} a partir de cima)", fmt(c.pos))
+        return tr("{0}. Corte {1} na faixa {2} × {3}", c.step, dir, fmt(c.rectW), fmt(c.rectH))
     }
 }

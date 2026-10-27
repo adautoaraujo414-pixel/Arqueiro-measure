@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
         vm.autoCheckUpdate()
         if (!BuildConfig.PLAY) runCatching { br.com.arque.measure.update.UpdateWorker.schedule(applicationContext) }
         setContent {
-            ArqueTheme { App(vm) }
+            // trocar o idioma redesenha o app inteiro no idioma novo (nada é perdido: tudo fica no ViewModel)
+            ArqueTheme { androidx.compose.runtime.key(br.com.arque.measure.i18n.I18n.lang) { App(vm) } }
         }
     }
 

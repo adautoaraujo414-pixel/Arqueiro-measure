@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -130,14 +132,14 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    TextButton(onClick = onClose) { Text("‹ Folha", color = L.text) }
+                    TextButton(onClick = onClose) { Text(tr("‹ Folha"), color = L.text) }
                     Column(Modifier.weight(1f).clickable { renameOpen = true }) {
                         Text(obj.name, color = L.text, fontSize = 16.sp)
-                        Text("Vista frontal · ${mmStr(cab.wMm)} × ${mmStr(cab.hMm)} × ${mmStr(cab.dMm)}", color = L.dim, fontSize = 12.sp)
+                        Text(tr("Vista frontal · {0} × {1} × {2}", mmStr(cab.wMm), mmStr(cab.hMm), mmStr(cab.dMm)), color = L.dim, fontSize = 12.sp)
                     }
-                    TextButton(onClick = { st.undo() }, enabled = st.canUndo) { Text("Desfazer") }
-                    TextButton(onClick = { st.redo() }, enabled = st.canRedo) { Text("Refazer") }
-                    TextButton(onClick = { listOpen = true }) { Text("Lista de peças", color = L.accent) }
+                    TextButton(onClick = { st.undo() }, enabled = st.canUndo) { Text(tr("Desfazer")) }
+                    TextButton(onClick = { st.redo() }, enabled = st.canRedo) { Text(tr("Refazer")) }
+                    TextButton(onClick = { listOpen = true }) { Text(tr("Lista de peças"), color = L.accent) }
                 }
                 val canvasPart: @Composable (Modifier) -> Unit = { mod ->
                     Box(mod) {
@@ -160,14 +162,14 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                         refitTick = refitTick,
                     )
                     Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(end = 120.dp).horizontalScroll(rememberScrollState()).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        QuickBtn("↶ Desfazer", st.canUndo) { st.undo() }
-                        QuickBtn("↷ Refazer", st.canRedo) { st.redo() }
-                        QuickBtn(if (shelfMode) "✓ Pronto" else "+ Prateleiras", true) { shelfMode = !shelfMode; divMode = false }
-                        QuickBtn(if (divMode) "✓ Pronto" else "+ Divisórias", true) { divMode = !divMode; shelfMode = false }
+                        QuickBtn(tr("↶ Desfazer"), st.canUndo) { st.undo() }
+                        QuickBtn(tr("↷ Refazer"), st.canRedo) { st.redo() }
+                        QuickBtn(if (shelfMode) tr("✓ Pronto") else tr("+ Prateleiras"), true) { shelfMode = !shelfMode; divMode = false }
+                        QuickBtn(if (divMode) tr("✓ Pronto") else tr("+ Divisórias"), true) { divMode = !divMode; shelfMode = false }
                     }
                     if (shelfMode || divMode) {
                         Text(
-                            if (divMode) "Toque no vão, onde quer cada divisória. Quando terminar, toque em Pronto." else "Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto.",
+                            if (divMode) tr("Toque no vão, onde quer cada divisória. Quando terminar, toque em Pronto.") else tr("Toque no vão, na altura de cada prateleira. Quando terminar, toque em Pronto."),
                             color = Color.White, fontSize = 14.sp,
                             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xE63B82F6)).padding(horizontal = 14.dp, vertical = 10.dp),
                         )
@@ -181,26 +183,26 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             fun setV(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
-                            QuickBtn("+ Gaveta", true) { setV { if (it.kind == VaoKind.DRAWERS) it.copy(drawers = (it.drawers + 1).coerceAtMost(8)) else it.copy(kind = VaoKind.DRAWERS, drawers = 3) } }
-                            QuickBtn("+ Prateleira aqui", true) {
+                            QuickBtn(tr("+ Gaveta"), true) { setV { if (it.kind == VaoKind.DRAWERS) it.copy(drawers = (it.drawers + 1).coerceAtMost(8)) else it.copy(kind = VaoKind.DRAWERS, drawers = 3) } }
+                            QuickBtn(tr("+ Prateleira aqui"), true) {
                                 val y = Math.round(tapMm.y.toDouble()).toDouble()
                                 setV { it.copy(shelfYs = it.shelfYs + y) }
                             }
-                            QuickBtn("+ Forno", true) { setV { it.copy(kind = VaoKind.OVEN) } }
-                            QuickBtn("Porta", true) { setV { it.copy(kind = VaoKind.DOOR, doors = 1) } }
-                            QuickBtn("2 portas", true) { setV { it.copy(kind = VaoKind.DOOR, doors = 2) } }
-                            QuickBtn("Divisória aqui", true) {
+                            QuickBtn(tr("+ Forno"), true) { setV { it.copy(kind = VaoKind.OVEN) } }
+                            QuickBtn(tr("Porta"), true) { setV { it.copy(kind = VaoKind.DOOR, doors = 1) } }
+                            QuickBtn(tr("2 portas"), true) { setV { it.copy(kind = VaoKind.DOOR, doors = 2) } }
+                            QuickBtn(tr("Divisória aqui"), true) {
                                 val x0 = rg[selVao].first; val x1 = rg[selVao].second
                                 val cx = tapMm.x.toDouble().coerceIn(x0 + 40.0, x1 - 40.0 - e0)
                                 val ratio = ((Math.round(cx - e0 / 2) + e0 / 2 - e0) / iw0).toFloat()
                                 val i = selVao
                                 edit { c -> c.copy(dividers = c.dividers.sorted().take(i) + ratio + c.dividers.sorted().drop(i), vaos = c.vaos.take(i + 1) + Vao() + c.vaos.drop(i + 1)) }
                             }
-                            QuickBtn("Igualar vãos", cab.dividers.isNotEmpty()) {
+                            QuickBtn(tr("Igualar vãos"), cab.dividers.isNotEmpty()) {
                                 val n = cab.dividers.size
                                 edit { c -> c.copy(dividers = List(n) { k -> ((k + 1).toFloat() / (n + 1)) }) }
                             }
-                            QuickBtn("Limpar vão", true) { setV { Vao() } }
+                            QuickBtn(tr("Limpar vão"), true) { setV { Vao() } }
                         }
                     }
                     }
@@ -233,10 +235,10 @@ fun CabinetScreen(vm: AppViewModel, session: EditorSession, id: String, onClose:
         var text by remember { mutableStateOf(obj.name) }
         AlertDialog(
             onDismissRequest = { renameOpen = false },
-            title = { Text("Nome do móvel") },
+            title = { Text(tr("Nome do móvel")) },
             text = { OutlinedTextField(value = text, onValueChange = { text = it }, singleLine = true) },
             confirmButton = { TextButton(onClick = { st.renameCab(id, text); renameOpen = false }) { Text("OK") } },
-            dismissButton = { TextButton(onClick = { renameOpen = false }) { Text("Cancelar") } },
+            dismissButton = { TextButton(onClick = { renameOpen = false }) { Text(tr("Cancelar")) } },
         )
     }
     if (listOpen) CutListDialog(cab, obj.name) { listOpen = false }
@@ -532,7 +534,7 @@ private fun CabinetCanvas(
         ranges.forEach { (x0, x1) -> chip(Units.formatNumber(x1 - x0, LengthUnit.MM), (X(x0) + X(x1)) / 2, bottom) }
     }
     Row(Modifier.align(Alignment.TopEnd).padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("Centralizar" to { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }).forEach { (t, f) ->
+        listOf(tr("Centralizar") to { ref[0] = cabNow.wMm; ref[1] = cabNow.hMm; zoomS = 1f; panS = Offset.Zero; camRev++ }).forEach { (t, f) ->
             Text(t, color = L.text, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(L.panel2).clickable { f() }.padding(horizontal = 14.dp, vertical = 8.dp))
         }
     }
@@ -577,7 +579,7 @@ private fun CabinetPanel(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-            listOf("Estrutura","Divisões","Internos","Portas","Fundos").forEachIndexed { i, t ->
+            listOf(tr("Estrutura"),tr("Divisões"),tr("Internos"),tr("Portas"),tr("Fundos")).forEachIndexed { i, t ->
                 Column(Modifier.clickable { tab = i }.padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(t, color = if (tab == i) L.accent else L.text, fontSize = 14.sp)
                     Box(Modifier.padding(top = 4.dp).height(2.dp).width(30.dp).background(if (tab == i) L.accent else Color.Transparent))
@@ -586,104 +588,104 @@ private fun CabinetPanel(
         }
         HorizontalDivider(color = L.line)
         if (tab == 0) {
-        Label("Dimensões do móvel")
-        NumField("Largura", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
-        NumField("Altura", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
-        NumField("Profundidade", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
+        Label(tr("Dimensões do móvel"))
+        NumField(tr("Largura"), cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
+        NumField(tr("Altura"), cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
+        NumField(tr("Profundidade"), cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
         HorizontalDivider(color = L.line)
-        Label("Pedra")
-        NumField("Largura da pedra", cab.pedraWMm ?: (cab.wMm + CabinetMath.descontoPedra(cab)), vm) { v ->
+        Label(tr("Pedra"))
+        NumField(tr("Largura da pedra"), cab.pedraWMm ?: (cab.wMm + CabinetMath.descontoPedra(cab)), vm) { v ->
             edit { it.copy(pedraWMm = v, wMm = (v - CabinetMath.descontoPedra(it)).coerceIn(150.0, 6000.0)) }
         }
-        NumField("Profundidade da pedra", cab.pedraDMm ?: (cab.dMm + 40.0), vm) { v ->
+        NumField(tr("Profundidade da pedra"), cab.pedraDMm ?: (cab.dMm + 40.0), vm) { v ->
             edit { it.copy(pedraDMm = v, dMm = (v - 40.0).coerceIn(100.0, 1500.0)) }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Chip("Tamponamento esq.", cab.tampEsq) { edit { c -> val n = c.copy(tampEsq = !c.tampEsq); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
-            Chip("Tamponamento dir.", cab.tampDir) { edit { c -> val n = c.copy(tampDir = !c.tampDir); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
+            Chip(tr("Tamponamento esq."), cab.tampEsq) { edit { c -> val n = c.copy(tampEsq = !c.tampEsq); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
+            Chip(tr("Tamponamento dir."), cab.tampDir) { edit { c -> val n = c.copy(tampDir = !c.tampDir); n.copy(wMm = n.pedraWMm?.let { p -> (p - CabinetMath.descontoPedra(n)).coerceIn(150.0, 6000.0) } ?: n.wMm) } }
         }
-        NumField("Largura do módulo", cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
-        NumField("Profundidade do módulo", cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
-        NumField("Altura (chão até a pedra)", cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
-        Text("A pedra manda: largura do módulo = pedra (− 35 mm por lado com tamponamento); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora.", color = L.dim, fontSize = 12.sp)
-        Label("Regras do módulo")
-        NumField("Espessura das chapas", cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
+        NumField(tr("Largura do módulo"), cab.wMm, vm) { v -> edit { it.copy(wMm = v.coerceIn(150.0, 6000.0), pedraWMm = null) } }
+        NumField(tr("Profundidade do módulo"), cab.dMm, vm) { v -> edit { it.copy(dMm = v.coerceIn(100.0, 1500.0), pedraDMm = null) } }
+        NumField(tr("Altura (chão até a pedra)"), cab.hMm, vm) { v -> edit { it.copy(hMm = v.coerceIn(300.0, 3000.0)) } }
+        Text(tr("A pedra manda: largura do módulo = pedra (− 35 mm por lado com tamponamento); profundidade = pedra − 40 mm. Arraste as divisórias e a lateral direita no desenho; as medidas dos vãos mudam na hora."), color = L.dim, fontSize = 12.sp)
+        Label(tr("Regras do módulo"))
+        NumField(tr("Espessura das chapas"), cab.espMm, vm) { x -> edit { it.copy(espMm = x.coerceIn(3.0, 40.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Pedestal no chão (rodapé)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Pedestal no chão (rodapé)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasRodape, onCheckedChange = { b -> edit { it.copy(hasRodape = b) } })
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Chapa da base (sob as laterais)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Chapa da base (sob as laterais)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBase, onCheckedChange = { b -> edit { it.copy(hasBase = b) } })
         }
-        NumField("Altura do pedestal (rodapé)", cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
-        NumField("Folga do topo (sob a pedra)", cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
+        NumField(tr("Altura do pedestal (rodapé)"), cab.rodapeMm, vm) { x -> edit { it.copy(rodapeMm = x.coerceIn(0.0, 300.0)) } }
+        NumField(tr("Folga do topo (sob a pedra)"), cab.folgaTopoMm, vm) { x -> edit { it.copy(folgaTopoMm = x.coerceIn(0.0, 60.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Moldura de acabamento (${Units.formatNumber(cab.molduraMm, LengthUnit.MM)} mm)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Moldura de acabamento ({0} mm)", Units.formatNumber(cab.molduraMm, LengthUnit.MM)), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasMoldura, onCheckedChange = { b -> edit { it.copy(hasMoldura = b) } })
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Travessa frontal (régua)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Travessa frontal (régua)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasTravessa, onCheckedChange = { b -> edit { it.copy(hasTravessa = b) } })
         }
         if (cab.hasTravessa) {
-            NumField("Altura da travessa frontal", cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
+            NumField(tr("Altura da travessa frontal"), cab.travessaMm, vm) { x -> edit { it.copy(travessaMm = x.coerceIn(20.0, 300.0)) } }
         } else {
-            Text("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais.", color = L.dim, fontSize = 12.sp)
+            Text(tr("Sem travessa: entra um tampo igual à base, parafusado por cima das laterais."), color = L.dim, fontSize = 12.sp)
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Armário superior (caixote)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Armário superior (caixote)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.superior, onCheckedChange = { b -> edit { it.copy(superior = b) } })
         }
-        NumField("Prateleira menor que a base (profundidade)", cab.prateleiraMenorMm, vm) { x -> edit { it.copy(prateleiraMenorMm = x.coerceIn(0.0, 200.0)) } }
+        NumField(tr("Prateleira menor que a base (profundidade)"), cab.prateleiraMenorMm, vm) { x -> edit { it.copy(prateleiraMenorMm = x.coerceIn(0.0, 200.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Réguas nas bordas (engrossa frente e trás)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Réguas nas bordas (engrossa frente e trás)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.reguas, onCheckedChange = { b -> edit { it.copy(reguas = b) } })
         }
-        if (cab.reguas) NumField("Largura da régua", cab.reguaMm, vm) { x -> edit { it.copy(reguaMm = x.coerceIn(10.0, 300.0)) } }
+        if (cab.reguas) NumField(tr("Largura da régua"), cab.reguaMm, vm) { x -> edit { it.copy(reguaMm = x.coerceIn(10.0, 300.0)) } }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Tamponamento de baixo (batente da cava)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Tamponamento de baixo (batente da cava)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.tampBaixo, onCheckedChange = { b -> edit { it.copy(tampBaixo = b) } })
         }
         if (cab.tampBaixo) {
-            NumField("Altura do tamponamento de baixo", cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
+            NumField(tr("Altura do tamponamento de baixo"), cab.tampBaixoMm, vm) { x -> edit { it.copy(tampBaixoMm = x.coerceIn(10.0, 200.0)) } }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("De baixo passa reto (laterais morrem nele)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                Text(tr("De baixo passa reto (laterais morrem nele)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
                 Switch(checked = cab.tampBaixoPassa, onCheckedChange = { b -> edit { it.copy(tampBaixoPassa = b) } })
             }
         }
         }
         if (selDivider in dx.indices) {
             if (tab == 1) {
-            Label("Divisória ${selDivider + 1} · MDF ${Units.formatNumber(e, LengthUnit.MM)} mm")
-            NumField("Distância da lateral esq.", dx[selDivider] - e, vm) { d ->
+            Label(tr("Divisória {0} · MDF {1} mm", selDivider + 1, Units.formatNumber(e, LengthUnit.MM)))
+            NumField(tr("Distância da lateral esq."), dx[selDivider] - e, vm) { d ->
                 edit { c -> c.copy(dividers = c.dividers.sorted().mapIndexed { i, r -> if (i == selDivider) (((d + e / 2) / iw).toFloat()).coerceIn(0.02f, 0.98f) else r }) }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PillBtn("Centralizar no vão") {
+                PillBtn(tr("Centralizar no vão")) {
                     val left = if (selDivider == 0) e else dx[selDivider - 1] + e
                     val right = if (selDivider + 1 < dx.size) dx[selDivider + 1] else cab.wMm - e
                     val center = (left + right) / 2
                     edit { c -> c.copy(dividers = c.dividers.sorted().mapIndexed { i, r -> if (i == selDivider) ((center - e) / iw).toFloat() else r }) }
                 }
-                PillBtn("Remover", danger = true) {
+                PillBtn(tr("Remover"), danger = true) {
                     val j = selDivider
                     edit { c -> c.copy(dividers = c.dividers.sorted().filterIndexed { i, _ -> i != j }, vaos = c.vaos.filterIndexed { i, _ -> i != j + 1 }) }
                     pickDivider(-1)
                 }
                 }
-            } else if (tab != 4 && tab != 0) Text("Divisória selecionada: veja a aba Divisões. Toque num vão para ver Internos/Portas.", color = L.dim, fontSize = 12.sp)
+            } else if (tab != 4 && tab != 0) Text(tr("Divisória selecionada: veja a aba Divisões. Toque num vão para ver Internos/Portas."), color = L.dim, fontSize = 12.sp)
         } else if (selVao in ranges.indices) {
             val v = cab.vaos[selVao]
             val vw = ranges[selVao].second - ranges[selVao].first
-            Label("Vão ${selVao + 1} · ${mmStr(vw)}")
+            Label(tr("Vão {0} · {1}", selVao + 1, mmStr(vw)))
             fun setVao(f: (Vao) -> Vao) = edit { c -> c.copy(vaos = c.vaos.mapIndexed { i, o -> if (i == selVao) f(o) else o }) }
             if (tab == 1) {
-            Label("Dividir este vão em partes iguais")
+            Label(tr("Dividir este vão em partes iguais"))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 (2..5).forEach { n -> Chip("÷$n", false) { edit { c -> CabinetMath.splitVao(c, selVao, n) } } }
             }
-            PillBtn("+ Divisória no meio deste vão") {
+            PillBtn(tr("+ Divisória no meio deste vão")) {
                 val mid = (ranges[selVao].first + ranges[selVao].second) / 2
                 val r = ((mid - e) / iw).toFloat()
                 edit { c ->
@@ -699,101 +701,101 @@ private fun CabinetPanel(
                 }
             }
                 when (v.kind) {
-                VaoKind.SHELVES -> Stepper("Prateleiras", v.shelves, 1, 8) { n -> setVao { it.copy(shelves = n) } }
+                VaoKind.SHELVES -> Stepper(tr("Prateleiras"), v.shelves, 1, 8) { n -> setVao { it.copy(shelves = n) } }
                 VaoKind.DRAWERS -> {
                     // 1º o batente (cava), 2º a quantidade de gavetas
-                    Label("1 · Batente de cava")
+                    Label(tr("1 · Batente de cava"))
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Usar batente entre as gavetas (cava a 30° na peça)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Text(tr("Usar batente entre as gavetas (cava a 30° na peça)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
                         Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
                     }
-                    if (v.cava) NumField("Altura de cada batente", v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
-                    Label("2 · Gavetas")
-                    Stepper("Quantidade (gavetas, gavetões)", v.drawers, 1, 8) { n -> setVao { it.copy(drawers = n) } }
-                    Stepper("Prateleiras em cima das gavetas", v.shelvesAbove, 0, 6) { n -> setVao { it.copy(shelvesAbove = n) } }
-                    if (v.shelvesAbove > 0) NumField("Altura do gaveteiro", CabinetMath.gaveteiroH(cab, v), vm) { g -> setVao { it.copy(gaveteiroMm = g) } }
+                    if (v.cava) NumField(tr("Altura de cada batente"), v.batenteMm, vm) { b -> setVao { it.copy(batenteMm = b.coerceIn(10.0, 150.0)) } }
+                    Label(tr("2 · Gavetas"))
+                    Stepper(tr("Quantidade (gavetas, gavetões)"), v.drawers, 1, 8) { n -> setVao { it.copy(drawers = n) } }
+                    Stepper(tr("Prateleiras em cima das gavetas"), v.shelvesAbove, 0, 6) { n -> setVao { it.copy(shelvesAbove = n) } }
+                    if (v.shelvesAbove > 0) NumField(tr("Altura do gaveteiro"), CabinetMath.gaveteiroH(cab, v), vm) { g -> setVao { it.copy(gaveteiroMm = g) } }
                     if (!v.cava) {
-                        NumField("Borda superior", cab.bordaSupMm, vm) { x -> edit { it.copy(bordaSupMm = x.coerceIn(0.0, 50.0)) } }
-                        NumField("Borda inferior", cab.bordaInfMm, vm) { x -> edit { it.copy(bordaInfMm = x.coerceIn(0.0, 50.0)) } }
-                        NumField("Folga entre frentes", cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
+                        NumField(tr("Borda superior"), cab.bordaSupMm, vm) { x -> edit { it.copy(bordaSupMm = x.coerceIn(0.0, 50.0)) } }
+                        NumField(tr("Borda inferior"), cab.bordaInfMm, vm) { x -> edit { it.copy(bordaInfMm = x.coerceIn(0.0, 50.0)) } }
+                        NumField(tr("Folga entre frentes"), cab.folgaGavetaMm, vm) { x -> edit { it.copy(folgaGavetaMm = x.coerceIn(0.0, 30.0)) } }
                     }
                     val area = CabinetMath.gaveteiroH(cab, v)
                     val fh = CabinetMath.drawerFrontH(cab, v.drawers, area, v)
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
-                        Text("Resultado", color = L.dim, fontSize = 12.sp)
+                        Text(tr("Resultado"), color = L.dim, fontSize = 12.sp)
                         Text("${v.drawers} × ${Units.format(fh, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
                         if (v.cava && v.drawers > 1) {
                             val bt = v.batenteMm * (v.drawers - 1)
-                            Text("+ ${v.drawers - 1} batente(s) × ${Units.formatNumber(v.batenteMm, LengthUnit.MM)} = ${Units.formatNumber(bt, LengthUnit.MM)} mm", color = Color(0xFF3B5B85), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                            Text(tr("+ {0} batente(s) × {1} = {2} mm", v.drawers - 1, Units.formatNumber(v.batenteMm, LengthUnit.MM), Units.formatNumber(bt, LengthUnit.MM)), color = Color(0xFF3B5B85), fontSize = 13.sp, fontFamily = FontFamily.Monospace)
                             Text("(${Units.formatNumber(area, LengthUnit.MM)} − ${Units.formatNumber(bt, LengthUnit.MM)}) ÷ ${v.drawers}", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         } else if (!v.cava) {
-                            Text("(área − bordas − folgas) ÷ ${v.drawers}", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text(tr("(área − bordas − folgas) ÷ {0}", v.drawers), color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
-                        if (v.shelvesAbove > 0) Text("Área acima das gavetas: ${Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)} mm", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        if (v.shelvesAbove > 0) Text(tr("Área acima das gavetas: {0} mm", Units.formatNumber(CabinetMath.vaoH(cab) - area, LengthUnit.MM)), color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
-                    Text("Frente da gaveta: vão + 15 (7,5 por lado). Caixa: largura do vão − ${Units.formatNumber(cab.corredicaMm, LengthUnit.MM)} das corrediças.", color = L.dim, fontSize = 12.sp)
+                    Text(tr("Frente da gaveta: vão + 15 (7,5 por lado). Caixa: largura do vão − {0} das corrediças.", Units.formatNumber(cab.corredicaMm, LengthUnit.MM)), color = L.dim, fontSize = 12.sp)
                 }
                 VaoKind.OVEN -> {
                     val vwO = ranges[selVao].second - ranges[selVao].first
-                    NumField("Largura do corte (centralizado)", v.ovenW, vm) { w -> setVao { it.copy(ovenW = w.coerceIn(100.0, vwO)) } }
-                    NumField("Altura do corte", v.ovenH, vm) { h -> setVao { it.copy(ovenH = h.coerceIn(100.0, CabinetMath.vaoH(cab) - cab.espMm)) } }
-                    NumField("Da travessa até o corte", v.ovenTop, vm) { t -> setVao { it.copy(ovenTop = t.coerceAtLeast(0.0)) } }
+                    NumField(tr("Largura do corte (centralizado)"), v.ovenW, vm) { w -> setVao { it.copy(ovenW = w.coerceIn(100.0, vwO)) } }
+                    NumField(tr("Altura do corte"), v.ovenH, vm) { h -> setVao { it.copy(ovenH = h.coerceIn(100.0, CabinetMath.vaoH(cab) - cab.espMm)) } }
+                    NumField(tr("Da travessa até o corte"), v.ovenTop, vm) { t -> setVao { it.copy(ovenTop = t.coerceAtLeast(0.0)) } }
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
-                        Text("Sobra de cada lado", color = L.dim, fontSize = 12.sp)
+                        Text(tr("Sobra de cada lado"), color = L.dim, fontSize = 12.sp)
                         Text(Units.format(((vwO - v.ovenW) / 2).coerceAtLeast(0.0), LengthUnit.MM), color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                        Text("(vão ${Units.formatNumber(vwO, LengthUnit.MM)} − corte ${Units.formatNumber(v.ovenW, LengthUnit.MM)}) ÷ 2", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                        Text(tr("(vão {0} − corte {1}) ÷ 2", Units.formatNumber(vwO, LengthUnit.MM), Units.formatNumber(v.ovenW, LengthUnit.MM)), color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                     }
-                    Text("560 × 595 é um valor de partida. Confira a medida do nicho no manual do seu forno.", color = L.dim, fontSize = 12.sp)
+                    Text(tr("560 × 595 é um valor de partida. Confira a medida do nicho no manual do seu forno."), color = L.dim, fontSize = 12.sp)
                 }
-                    VaoKind.DOOR -> Text("Esse vão usa porta: veja a aba Portas.", color = L.dim, fontSize = 12.sp)
-                VaoKind.FREE -> Text("Vão livre. Escolha prateleiras, gavetas ou porta.", color = L.dim, fontSize = 12.sp)
+                    VaoKind.DOOR -> Text(tr("Esse vão usa porta: veja a aba Portas."), color = L.dim, fontSize = 12.sp)
+                VaoKind.FREE -> Text(tr("Vão livre. Escolha prateleiras, gavetas ou porta."), color = L.dim, fontSize = 12.sp)
                 }
             run {
                 val vt = CabinetMath.vaoTop(cab)
                 val vb = CabinetMath.vaoBottom(cab)
                 val sorted = v.shelfYs.sorted()
-                Label("Prateleiras soltas")
+                Label(tr("Prateleiras soltas"))
                 sorted.forEachIndexed { n, y ->
-                    NumField("Prateleira ${n + 1} · distância da travessa", y - vt, vm) { d ->
+                    NumField(tr("Prateleira {0} · distância da travessa", n + 1), y - vt, vm) { d ->
                         setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y } + (vt + d).coerceIn(vt + cab.espMm + 5.0, vb - cab.espMm - 5.0)) }
                     }
-                    PillBtn("Remover a prateleira ${n + 1}", danger = true) { setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y }) } }
+                    PillBtn(tr("Remover a prateleira {0}", n + 1), danger = true) { setVao { o -> o.copy(shelfYs = o.shelfYs.filter { it != y }) } }
                 }
-                PillBtn(if (sorted.isEmpty()) "+ Prateleira (no meio do vão)" else "+ Prateleira (mesma distância da última)") {
+                PillBtn(if (sorted.isEmpty()) tr("+ Prateleira (no meio do vão)") else tr("+ Prateleira (mesma distância da última)")) {
                     val last = sorted.lastOrNull()
                     val prev = if (sorted.size >= 2) sorted[sorted.size - 2] else vt
                     val gap = if (last == null) (vb - vt) / 2 else last - prev
                     val ny = if (last == null) vt + gap else last + gap
                     if (ny < vb - cab.espMm - 5.0) setVao { o -> o.copy(shelfYs = o.shelfYs + ny) }
                 }
-                if (sorted.isNotEmpty()) Text("Cada prateleira tem a sua medida: toque no número para digitar a distância exata a partir da travessa.", color = L.dim, fontSize = 12.sp)
+                if (sorted.isNotEmpty()) Text(tr("Cada prateleira tem a sua medida: toque no número para digitar a distância exata a partir da travessa."), color = L.dim, fontSize = 12.sp)
             }
             }
             if (tab == 3) {
-                Label("Folhas de porta neste vão")
+                Label(tr("Folhas de porta neste vão"))
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     (1..4).forEach { n -> Chip("$n", v.kind == VaoKind.DOOR && (if (n == 1) v.doors < 2 else v.doors == n)) { setVao { it.copy(kind = VaoKind.DOOR, doors = n) } } }
-                    Chip("Sem porta", v.kind != VaoKind.DOOR) { setVao { it.copy(kind = VaoKind.FREE) } }
+                    Chip(tr("Sem porta"), v.kind != VaoKind.DOOR) { setVao { it.copy(kind = VaoKind.FREE) } }
                 }
                 if (v.kind == VaoKind.DOOR) {
                     if (v.doors >= 2) {
                         val dw = (vw + CabinetMath.PORTA_SOBRE_L_MM) / v.doors.coerceIn(2, 6)
                         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
-                            Text("Cada folha", color = L.dim, fontSize = 12.sp)
+                            Text(tr("Cada folha"), color = L.dim, fontSize = 12.sp)
                             Text("${Units.formatNumber(dw, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                            Text("(vão + 12) ÷ ${v.doors.coerceIn(2, 6)} · altura do vão + 30", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text(tr("(vão + 12) ÷ {0} · altura do vão + 30", v.doors.coerceIn(2, 6)), color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
                     } else {
                         val dw1 = vw + CabinetMath.PORTA1_SOBRE_L_MM
                         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFFE6EEFB)).padding(12.dp)) {
-                            Text("Porta", color = L.dim, fontSize = 12.sp)
+                            Text(tr("Porta"), color = L.dim, fontSize = 12.sp)
                             Text("${Units.formatNumber(dw1, LengthUnit.MM)} × ${Units.formatNumber(CabinetMath.vaoH(cab) + CabinetMath.PORTA_SOBRE_H_MM, LengthUnit.MM)}", color = Color(0xFF0B2A3D), fontSize = 22.sp, fontFamily = FontFamily.Monospace)
-                            Text("vão + 14 · altura do vão + 30", color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
+                            Text(tr("vão + 14 · altura do vão + 30"), color = Color(0xFF3B5B85), fontSize = 12.sp, fontFamily = FontFamily.Monospace)
                         }
                     }
             if (v.kind == VaoKind.DOOR) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Cava (puxador a 30° na peça)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    Text(tr("Cava (puxador a 30° na peça)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
                     Switch(checked = v.cava, onCheckedChange = { b -> setVao { it.copy(cava = b) } })
                 }
             }
@@ -802,11 +804,11 @@ private fun CabinetPanel(
         }
         if (tab == 4) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Fundo (3 mm)", color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(tr("Fundo (3 mm)"), color = L.text, fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = cab.hasBack, onCheckedChange = { b -> edit { it.copy(hasBack = b) } })
         }
         HorizontalDivider(color = L.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
-        Text("LISTA DE PEÇAS (ao vivo)", color = L.dim, fontSize = 12.sp)
+        Text(tr("LISTA DE PEÇAS (ao vivo)"), color = L.dim, fontSize = 12.sp)
         CutListBody(CabinetMath.cutList(cab))
         }
     }
@@ -860,7 +862,7 @@ private fun NumField(label: String, mm: Double, vm: AppViewModel, onSet: (Double
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = L.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
-        Text(if (armed) "aguardando a trena…" else mmStr(mm), color = if (armed) Color(0xFF2F6BE0) else L.text, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
+        Text(if (armed) tr("aguardando a trena…") else mmStr(mm), color = if (armed) Color(0xFF2F6BE0) else L.text, fontSize = 14.sp, fontFamily = FontFamily.Monospace)
         Box(
             Modifier.padding(start = 8.dp).size(36.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFFCFE0FA))
                 .clickable { if (armed) vm.cancelMeasure() else vm.armMeasure(label) { v -> onSet(Math.round(v * 10.0) / 10.0) } },
@@ -881,14 +883,14 @@ private fun NumField(label: String, mm: Double, vm: AppViewModel, onSet: (Double
 private fun CutListDialog(cab: Cabinet, name: String, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Lista de peças · $name") },
+        title = { Text(tr("Lista de peças · {0}", name)) },
         text = { Column(Modifier.verticalScroll(rememberScrollState())) { CutListBody(CabinetMath.cutList(cab), name) } },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Fechar")) } },
     )
 }
 
 @Composable
-private fun CutListBody(lines: List<CabinetMath.Line>, name: String = "Móvel") {
+private fun CutListBody(lines: List<CabinetMath.Line>, name: String = tr("Móvel")) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         lines.forEach { l ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -901,7 +903,7 @@ private fun CutListBody(lines: List<CabinetMath.Line>, name: String = "Móvel") 
             }
         }
         Text(
-            "${lines.sumOf { it.qty }} peças · medidas em mm (comprimento × largura × espessura).",
+            tr("{0} peças · medidas em mm (comprimento × largura × espessura).", lines.sumOf { it.qty }),
             color = L.dim, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp),
         )
     }
@@ -928,18 +930,18 @@ private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
     }
     fun f(v: Double) = Units.formatNumber(v, LengthUnit.MM)
     HorizontalDivider(color = L.dim.copy(alpha = 0.3f), modifier = Modifier.padding(vertical = 6.dp))
-    Label("Plano de corte · esquadrejadeira")
+    Label(tr("Plano de corte · esquadrejadeira"))
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
         SHEET_PRESETS.forEachIndexed { i, sp -> Chip(sp.label, presetIdx == i) { presetIdx = i } }
-        listOf(3, 4, 5).forEach { k -> Chip("serra $k mm", kerf == k) { kerf = k } }
-        Chip(if (rotate) "pode girar" else "veio fixo", rotate) { rotate = !rotate }
+        listOf(3, 4, 5).forEach { k -> Chip(tr("serra {0} mm", k), kerf == k) { kerf = k } }
+        Chip(if (rotate) tr("pode girar") else tr("veio fixo"), rotate) { rotate = !rotate }
     }
     results.forEach { (esp, res) ->
         val usage = (CutOptimizer.totalUsage(res) * 100).toInt()
-        Text("Chapa de ${f(esp)} mm: ${res.sheets.size} chapa(s) · aproveitamento $usage%", color = L.text, fontSize = 13.sp)
-        if (res.tooBig.isNotEmpty()) Text("Não cabe na chapa: " + res.tooBig.joinToString { "${it.label} ${f(it.w)}×${f(it.h)}" }, color = Color(0xFFFF7A7A), fontSize = 12.sp)
+        Text(tr("Chapa de {0} mm: {1} chapa(s) · aproveitamento {2}%", f(esp), res.sheets.size, usage), color = L.text, fontSize = 13.sp)
+        if (res.tooBig.isNotEmpty()) Text(tr("Não cabe na chapa: ") + res.tooBig.joinToString { "${it.label} ${f(it.w)}×${f(it.h)}" }, color = Color(0xFFFF7A7A), fontSize = 12.sp)
         res.sheets.forEachIndexed { si, sh ->
-            Text("Chapa ${si + 1} · ${(sh.usage * 100).toInt()}% usada", color = L.dim, fontSize = 11.sp)
+            Text(tr("Chapa {0} · {1}% usada", si + 1, (sh.usage * 100).toInt()), color = L.dim, fontSize = 11.sp)
             val ratio = (sh.h / sh.w).toFloat().coerceIn(0.3f, 1.2f)
             Canvas(Modifier.fillMaxWidth().aspectRatio(1f / ratio).clip(RoundedCornerShape(4.dp)).background(Color(0xFFE6E9EE))) {
                 val sc = size.width / sh.w.toFloat()
@@ -954,28 +956,28 @@ private fun CutPlan(lines: List<CabinetMath.Line>, name: String) {
         }
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        PillBtn(if (showSteps) "Esconder passo a passo" else "Passo a passo dos cortes") { showSteps = !showSteps }
-        PillBtn("Compartilhar") {
-            val sb = StringBuilder("$name\n\nLISTA DE PEÇAS (mm)\n")
+        PillBtn(if (showSteps) tr("Esconder passo a passo") else tr("Passo a passo dos cortes")) { showSteps = !showSteps }
+        PillBtn(tr("Compartilhar")) {
+            val sb = StringBuilder(tr("{0}\n\nLISTA DE PEÇAS (mm)\n", name))
             lines.forEach { l -> sb.append("${l.qty}× ${l.kind.label}  ${f(l.cutL)} × ${f(l.cutW)} × ${f(l.esp)}\n") }
-            sb.append("\nPLANO DE CORTE · chapa ${preset.label} · serra $kerf mm · ${if (rotate) "pode girar" else "veio fixo"}\n")
+            sb.append(tr("\nPLANO DE CORTE · chapa {0} · serra {1} mm · {2}\n", preset.label, kerf, if (rotate) tr("pode girar") else tr("veio fixo")))
             results.forEach { (esp, res) ->
-                sb.append("\nChapa de ${f(esp)} mm: ${res.sheets.size} chapa(s)\n")
+                sb.append(tr("\nChapa de {0} mm: {1} chapa(s)\n", f(esp), res.sheets.size))
                 res.sheets.forEachIndexed { si, sh ->
-                    sb.append("Chapa ${si + 1}:\n")
+                    sb.append(tr("Chapa {0}:\n", si + 1))
                     sh.cuts.forEach { sb.append("  " + CutOptimizer.describeCut(it, ::f) + "\n") }
                 }
             }
-            sb.append("\nConfira as medidas antes de cortar.")
+            sb.append(tr("\nConfira as medidas antes de cortar."))
             val i = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, sb.toString()) }
-            ctx.startActivity(android.content.Intent.createChooser(i, "Compartilhar").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+            ctx.startActivity(android.content.Intent.createChooser(i, tr("Compartilhar")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
         }
     }
     if (showSteps) results.forEach { (esp, res) ->
         res.sheets.forEachIndexed { si, sh ->
-            Text("Chapa ${si + 1} (${f(esp)} mm)", color = L.text, fontSize = 12.sp)
+            Text(tr("Chapa {0} ({1} mm)", si + 1, f(esp)), color = L.text, fontSize = 12.sp)
             sh.cuts.forEach { Text(CutOptimizer.describeCut(it, ::f), color = L.dim, fontSize = 12.sp) }
         }
     }
-    Text("Só cortes retos de ponta a ponta (guilhotina). Confira as medidas antes de cortar.", color = L.dim, fontSize = 11.sp)
+    Text(tr("Só cortes retos de ponta a ponta (guilhotina). Confira as medidas antes de cortar."), color = L.dim, fontSize = 11.sp)
 }

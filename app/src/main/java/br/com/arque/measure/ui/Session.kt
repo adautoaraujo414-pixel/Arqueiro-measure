@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,9 +20,11 @@ import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
-enum class EraserMode(val label: String) { PIXEL("Pixels"), STROKE("Traços"), LASSO("Laço") }
+enum class EraserMode(private val ptLabel: String) { PIXEL("Pixels"), STROKE("Traços"), LASSO("Laço");
+    val label: String get() = tr(ptLabel)
+}
 
-enum class Tool(val label: String, val drawing: Boolean) {
+enum class Tool(private val ptLabel: String, val drawing: Boolean) {
     NAVIGATE("Navegar", false),
     SELECT("Selecionar", false),
     PEN("Caneta", true),
@@ -44,7 +48,8 @@ enum class Tool(val label: String, val drawing: Boolean) {
     DIAMOND("Losango", true),
     TRAP("Trapézio", true),
     LASSO("Laço", true),
-    TEXT("Texto", false),
+    TEXT("Texto", false);
+    val label: String get() = tr(ptLabel)
 }
 
 /**
@@ -151,7 +156,7 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
             if (state.sheet.obj(id) is br.com.arque.measure.model.RoomObj && tapSelSeg >= 0) state.selectSeg(id, tapSelSeg) else state.select(id)
         }
         screenLocked = !screenLocked
-        lockMsg = if (screenLocked) "Tela travada" else "Tela destravada"
+        lockMsg = if (screenLocked) tr("Tela travada") else tr("Tela destravada")
     }
 
     /** Calculadora flutuante aberta? */

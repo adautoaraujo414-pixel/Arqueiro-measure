@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.DashPathEffect
@@ -99,7 +101,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         p.textSize = 30f; p.letterSpacing = 0.06f
         c.drawText("ARQUEMESTRE", 36f, 38f, p)
         p.color = goldDeep; p.typeface = Typeface.DEFAULT; p.textSize = 9.5f; p.letterSpacing = 0.14f
-        c.drawText("SOLUÇÕES DE MARCENARIA E ARQUITETURA", 37f, 54f, p)
+        c.drawText(tr("SOLUÇÕES DE MARCENARIA E ARQUITETURA"), 37f, 54f, p)
         p.letterSpacing = 0f
         // divisória vertical
         p.style = Paint.Style.STROKE; p.strokeWidth = 1.2f; p.color = 0xFF8A6A25.toInt()
@@ -107,7 +109,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         // título
         p.style = Paint.Style.FILL; p.color = gold; p.typeface = Typeface.DEFAULT_BOLD
         p.textSize = 17f; p.textAlign = Paint.Align.CENTER; p.textScaleX = 0.92f
-        c.drawText("ESPAÇO PARA DESENHAR / CROQUI", 584f, 44f, p)
+        c.drawText(tr("ESPAÇO PARA DESENHAR / CROQUI"), 584f, 44f, p)
         p.textScaleX = 1f
         // moldura arredondada dourada
         p.strokeWidth = 1.5f; p.color = frameGold
@@ -159,7 +161,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             fillPaint.color = 0xFFDDDDDD.toInt()
             c.drawRect(rect, fillPaint)
             textPaint.color = 0xFF777777.toInt(); textPaint.textSize = 18f; textPaint.textAlign = Paint.Align.CENTER
-            c.drawText("carregando…", 0f, 6f, textPaint)
+            c.drawText(tr("carregando…"), 0f, 6f, textPaint)
         }
         c.restore()
     }
@@ -488,7 +490,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             strokePaint.color = 0xFF6F685A.toInt(); strokePaint.strokeWidth = 1f
             c.drawRect(sx1, sy1, sx2, sy2, strokePaint)
             textPaint.color = 0xFF6F685A.toInt(); textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9.5f; textPaint.textAlign = Paint.Align.CENTER
-            c.drawText("pedra ${o.stoneWMm.toLong()}", (sx1 + sx2) / 2f, sy1 - 3f, textPaint)
+            c.drawText(tr("pedra {0}", o.stoneWMm.toLong()), (sx1 + sx2) / 2f, sy1 - 3f, textPaint)
             if (o.stoneXMm > 0.0) c.drawText("${o.stoneXMm.toLong()}", (l + sx1) / 2f, sy1 - 3f, textPaint)
             val rest = o.wMm - o.stoneXMm - o.stoneWMm
             if (rest > 0.5) c.drawText("${rest.toLong()}", (sx2 + r) / 2f, sy1 - 3f, textPaint)
@@ -551,7 +553,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 c.drawLine(cx - 3f, yLim, cx + 3f, yLim, strokePaint)
                 c.drawLine(cx - 3f, yTop, cx + 3f, yTop, strokePaint)
                 textPaint.color = col; textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9.5f; textPaint.textAlign = Paint.Align.LEFT
-                c.drawText(if (bad) "passa ${(-gap).toLong()}" else "${gap.toLong()}", cx + 5f, (yTop + yLim) / 2f + 3f, textPaint)
+                c.drawText(if (bad) tr("passa {0}", (-gap).toLong()) else "${gap.toLong()}", cx + 5f, (yTop + yLim) / 2f + 3f, textPaint)
             }
         }
         // tamponamento de baixo contínuo (uma peça só juntando módulos vizinhos)
@@ -567,7 +569,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
                 fillPaint.color = 0xCCD9A93E.toInt()
                 c.drawRect(x1, y1, x2, y1 + th, fillPaint)
                 textPaint.color = 0xFF8A6A25.toInt(); textPaint.typeface = Typeface.DEFAULT_BOLD; textPaint.textSize = 9f; textPaint.textAlign = Paint.Align.CENTER
-                c.drawText("tamp. contínuo ${WallLayout.runLength(run).toLong()} × ${f.cab.tampBaixoMm.toLong()}", (x1 + x2) / 2f, y1 + th + 10f, textPaint)
+                c.drawText(tr("tamp. contínuo {0} × {1}", WallLayout.runLength(run).toLong(), f.cab.tampBaixoMm.toLong()), (x1 + x2) / 2f, y1 + th + 10f, textPaint)
             }
         }
         // sobra dos dois lados de cada fileira: da parede até o primeiro módulo e do último até a parede
@@ -601,18 +603,18 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         val lines = ArrayList<Pair<String, Boolean>>()
         if (lowH != null) {
             val topRef = upMods.takeIf { it.isNotEmpty() }?.let { upBot }
-            lines += ("Pia (${lowH.toLong()}) até " + (if (topRef != null) "o superior: ${(topRef - lowH).toLong()} mm" else "o teto: ${(o.hMm - lowH).toLong()} mm")) to (topRef != null && topRef < lowH)
+            lines += (tr("Pia ({0}) até ", lowH.toLong()) + (if (topRef != null) tr("o superior: {0} mm", (topRef - lowH).toLong()) else tr("o teto: {0} mm", (o.hMm - lowH).toLong()))) to (topRef != null && topRef < lowH)
         }
-        if (upTop != null) lines += "Superior até o teto: ${(o.hMm - upTop).toLong()} mm" to (upTop > o.hMm + 0.5)
+        if (upTop != null) lines += tr("Superior até o teto: {0} mm", (o.hMm - upTop).toLong()) to (upTop > o.hMm + 0.5)
         for (upper in listOf(false, true)) {
             val mods = WallLayout.members(sheet, o.id, upper)
             if (mods.isEmpty()) continue
             val used = mods.sumOf { WallLayout.occ(it) }
             val left = o.usableMm - used
             val topOver = upper && ((mods.maxOfOrNull { WallLayout.topMm(o, it) } ?: 0.0) > o.hMm + 0.5)
-            val txt = (if (upper) "Superiores" else "Baixos") + ": ${used.toLong()} de ${o.usableMm.toLong()} mm úteis (folga ${o.folgaMm.toLong()}) · " +
-                (if (left < -0.5) "passa ${(-left).toLong()} mm da parede" else "sobra ${left.toLong()} mm") +
-                (if (topOver) " · passa do teto" else "")
+            val txt = (if (upper) tr("Superiores") else tr("Baixos")) + tr(": {0} de {1} mm úteis (folga {2}) · ", used.toLong(), o.usableMm.toLong(), o.folgaMm.toLong()) +
+                (if (left < -0.5) tr("passa {0} mm da parede", (-left).toLong()) else tr("sobra {0} mm", left.toLong())) +
+                (if (topOver) tr(" · passa do teto") else "")
             lines += txt to (left < -0.5 || topOver)
         }
         textPaint.typeface = Typeface.DEFAULT
@@ -649,7 +651,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         textPaint.textAlign = Paint.Align.CENTER
         c.drawText(o.name, cx, cy - 2f, textPaint)
         textPaint.typeface = Typeface.DEFAULT
-        c.drawText(if (bad) "passa da parede!" else "${o.cab.wMm.toLong()} × ${o.cab.dMm.toLong()} mm", cx, cy + 9f, textPaint)
+        c.drawText(if (bad) tr("passa da parede!") else tr("{0} × {1} mm", o.cab.wMm.toLong(), o.cab.dMm.toLong()), cx, cy + 9f, textPaint)
     }
 
     /** Cor de cada tipo de segmento (parede usa a cor do cômodo). */

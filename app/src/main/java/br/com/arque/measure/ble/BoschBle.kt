@@ -1,5 +1,7 @@
 package br.com.arque.measure.ble
 
+import br.com.arque.measure.i18n.tr
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -91,15 +93,15 @@ class BoschBle(private val context: Context) {
         val a = adapter
         when {
             a == null || !context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) -> {
-                setState(BleState.UNAVAILABLE, "Este aparelho não tem Bluetooth LE")
+                setState(BleState.UNAVAILABLE, tr("Este aparelho não tem Bluetooth LE"))
                 return false
             }
             !hasPermissions() -> {
-                setState(BleState.NO_PERMISSION, "Permissão de Bluetooth necessária")
+                setState(BleState.NO_PERMISSION, tr("Permissão de Bluetooth necessária"))
                 return false
             }
             !a.isEnabled -> {
-                setState(BleState.OFF, "Bluetooth desligado")
+                setState(BleState.OFF, tr("Bluetooth desligado"))
                 return false
             }
         }
@@ -125,14 +127,14 @@ class BoschBle(private val context: Context) {
             val hasService = uuids.any { BoschProtocol.isBoschService(it) }
             val nameMatch = rawName != null && BoschProtocol.NAME_REGEX.containsMatchIn(rawName)
             if (!scanAll && !hasService && !nameMatch) return
-            val name = rawName ?: "Bosch (${result.device.address.takeLast(5)})"
+            val name = rawName ?: tr("Bosch ({0})", result.device.address.takeLast(5))
             val d = FoundDevice(name, result.device.address, result.rssi)
             _found.value = (_found.value.filter { it.address != d.address } + d).sortedByDescending { it.rssi }
         }
 
         override fun onScanFailed(errorCode: Int) {
             scanning = false
-            setState(BleState.ERROR, "Falha na busca (código $errorCode)")
+            setState(BleState.ERROR, tr("Falha na busca (código {0})", errorCode))
         }
     }
 
@@ -140,13 +142,13 @@ class BoschBle(private val context: Context) {
         if (!checkAvailability()) return
         scanAll = all
         val scanner = adapter?.bluetoothLeScanner ?: run {
-            setState(BleState.ERROR, "Scanner Bluetooth indisponível")
+            setState(BleState.ERROR, tr("Scanner Bluetooth indisponível"))
             return
         }
         if (scanning) return
         _found.value = emptyList()
         scanning = true
-        setState(BleState.SCANNING, if (all) "Procurando todos os dispositivos BLE…" else "Procurando trena Bosch…")
+        setState(BleState.SCANNING, if (all) tr("Procurando todos os dispositivos BLE…") else tr("Procurando trena Bosch…"))
         scanner.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCallback)
         main.postDelayed({ stopScan() }, SCAN_TIMEOUT_MS)
     }
@@ -156,7 +158,7 @@ class BoschBle(private val context: Context) {
         scanning = false
         runCatching { adapter?.bluetoothLeScanner?.stopScan(scanCallback) }
         if (_state.value == BleState.SCANNING) {
-            setState(BleState.IDLE, if (_found.value.isEmpty()) "Nenhuma trena encontrada" else "")
+            setState(BleState.IDLE, if (_found.value.isEmpty()) tr("Nenhuma trena encontrada") else "")
         }
     }
 
@@ -181,11 +183,11 @@ class BoschBle(private val context: Context) {
             if (dev.address != pendingAddress) return
             val st = i.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR)
             if (st == BluetoothDevice.BOND_BONDED) {
-                addLog("Pareamento concluído; reconectando")
+                addLog(tr("Pareamento concluído; reconectando"))
                 pendingAddress?.let { main.postDelayed({ connect(it, _deviceName.value) }, 800) }
             } else if (st == BluetoothDevice.BOND_NONE && bondRequested) {
                 bondRequested = false
-                setState(BleState.ERROR, "Pareamento recusado ou cancelado")
+                setState(BleState.ERROR, tr("Pareamento recusado ou cancelado"))
             }
         }
     }
@@ -203,7 +205,7 @@ class BoschBle(private val context: Context) {
         if (!checkAvailability()) return
         stopScan()
         val device: BluetoothDevice = runCatching { adapter!!.getRemoteDevice(address) }.getOrElse {
-            setState(BleState.ERROR, "Endereço inválido")
+            setState(BleState.ERROR, tr("Endereço inválido"))
             return
         }
         registerBondReceiver()
@@ -212,8 +214,8 @@ class BoschBle(private val context: Context) {
         closeGatt()
         _deviceName.value = name ?: device.name
         prefs.edit().putString("last_address", address).putString("last_name", _deviceName.value).apply()
-        setState(BleState.CONNECTING, "Conectando…")
-        addLog("Conectando a $address")
+        setState(BleState.CONNECTING, tr("Conectando…"))
+        addLog(tr("Conectando a {0}", address))
         gatt = if (Build.VERSION.SDK_INT >= 23) {
             device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
         } else {
@@ -255,9 +257,9 @@ class BoschBle(private val context: Context) {
             if (op(g)) return // operação iniciada: o callback chama nextOp de novo
         }
         if (notifyEnabled > 0) {
-            setState(BleState.CONNECTED, "Conectada. Meça com a trena.")
+            setState(BleState.CONNECTED, tr("Conectada. Meça com a trena."))
         } else {
-            setState(BleState.ERROR, "Conectou, mas não foi possível ativar o recebimento de medidas")
+            setState(BleState.ERROR, tr("Conectou, mas não foi possível ativar o recebimento de medidas"))
         }
     }
 
@@ -266,8 +268,8 @@ class BoschBle(private val context: Context) {
     private fun requestBond(g: BluetoothGatt) {
         if (bondRequested) return
         bondRequested = true
-        addLog("A trena pediu pareamento; confirme na tela do celular")
-        setState(BleState.CONNECTING, "Pareando… confirme no celular e, se pedir, na trena")
+        addLog(tr("A trena pediu pareamento; confirme na tela do celular"))
+        setState(BleState.CONNECTING, tr("Pareando… confirme no celular e, se pedir, na trena"))
         g.device.createBond()
     }
 
@@ -276,20 +278,20 @@ class BoschBle(private val context: Context) {
             main.post {
                 if (newState == BluetoothProfile.STATE_CONNECTED && status == BluetoothGatt.GATT_SUCCESS) {
                     reconnectAttempts = 0
-                    setState(BleState.CONNECTING, "Descobrindo serviços…")
-                    addLog("Conectado ao GATT; descobrindo serviços")
+                    setState(BleState.CONNECTING, tr("Descobrindo serviços…"))
+                    addLog(tr("Conectado ao GATT; descobrindo serviços"))
                     main.postDelayed({ if (gatt === g) g.discoverServices() }, 600)
                 } else {
-                    addLog("Desconectado (status $status)")
+                    addLog(tr("Desconectado (status {0})", status))
                     runCatching { g.close() }
                     if (gatt === g) gatt = null
                     val addr = pendingAddress
                     if (!userDisconnected && reconnectAttempts < MAX_RECONNECTS && addr != null && !bondRequested) {
                         reconnectAttempts++
-                        setState(BleState.CONNECTING, "Tentando de novo ($reconnectAttempts/$MAX_RECONNECTS)… status $status")
+                        setState(BleState.CONNECTING, tr("Tentando de novo ({0}/{1})… status {2}", reconnectAttempts, MAX_RECONNECTS, status))
                         main.postDelayed({ if (!userDisconnected) connect(addr, _deviceName.value) }, RECONNECT_DELAY_MS)
                     } else if (!userDisconnected && !bondRequested) {
-                        setState(BleState.ERROR, "Não conectou (status $status). Ligue a trena, ative o Bluetooth nela e chegue perto.")
+                        setState(BleState.ERROR, tr("Não conectou (status {0}). Ligue a trena, ative o Bluetooth nela e chegue perto.", status))
                     }
                 }
             }
@@ -298,7 +300,7 @@ class BoschBle(private val context: Context) {
         override fun onServicesDiscovered(g: BluetoothGatt, status: Int) {
             main.post {
                 if (status != BluetoothGatt.GATT_SUCCESS) {
-                    setState(BleState.ERROR, "Falha ao ler serviços (status $status)")
+                    setState(BleState.ERROR, tr("Falha ao ler serviços (status {0})", status))
                     return@post
                 }
                 // diagnóstico: tudo que o aparelho expõe
@@ -312,7 +314,7 @@ class BoschBle(private val context: Context) {
                     }
                 }
                 if (cands.isEmpty()) {
-                    setState(BleState.ERROR, "Serviço Bosch não encontrado neste aparelho (veja o diagnóstico)")
+                    setState(BleState.ERROR, tr("Serviço Bosch não encontrado neste aparelho (veja o diagnóstico)"))
                     return@post
                 }
                 prefs.edit().putString("last_address", g.device.address).putString("last_name", _deviceName.value ?: g.device.name).apply()
@@ -334,9 +336,9 @@ class BoschBle(private val context: Context) {
             main.post {
                 if (status == BluetoothGatt.GATT_SUCCESS) {
                     notifyEnabled++
-                    addLog("Recebimento ligado em ${d.characteristic.uuid}")
+                    addLog(tr("Recebimento ligado em {0}", d.characteristic.uuid))
                 } else {
-                    addLog("Falha ao ligar recebimento em ${d.characteristic.uuid} (status $status)")
+                    addLog(tr("Falha ao ligar recebimento em {0} (status {1})", d.characteristic.uuid, status))
                     if (needsBond(status) && g.device.bondState == BluetoothDevice.BOND_NONE) {
                         ops.clear()
                         requestBond(g)
@@ -349,7 +351,7 @@ class BoschBle(private val context: Context) {
 
         override fun onCharacteristicWrite(g: BluetoothGatt, c: BluetoothGattCharacteristic, status: Int) {
             main.post {
-                addLog(if (status == BluetoothGatt.GATT_SUCCESS) "Comando enviado em ${c.uuid}" else "Falha ao enviar comando em ${c.uuid} (status $status)")
+                addLog(if (status == BluetoothGatt.GATT_SUCCESS) tr("Comando enviado em {0}", c.uuid) else tr("Falha ao enviar comando em {0} (status {1})", c.uuid, status))
                 if (status != BluetoothGatt.GATT_SUCCESS && needsBond(status) && g.device.bondState == BluetoothDevice.BOND_NONE) {
                     ops.clear()
                     requestBond(g)
@@ -364,7 +366,7 @@ class BoschBle(private val context: Context) {
             handleFrame(value, g.device.name)
         }
 
-        @Deprecated("Usado em Android 12 e anteriores")
+        @Deprecated(tr("Usado em Android 12 e anteriores"))
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic) {
             if (Build.VERSION.SDK_INT < 33) handleFrame(c.value ?: return, g.device.name)

@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -99,7 +101,7 @@ fun NumPadDialog(title: String, initial: String, suffix: String = "", allowOps: 
             }
         },
         confirmButton = { TextButton(enabled = v != null, onClick = { v?.let(onOk) }) { Text("OK") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
     )
 }
 

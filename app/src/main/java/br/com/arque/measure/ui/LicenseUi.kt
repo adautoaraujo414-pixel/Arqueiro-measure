@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,7 +54,7 @@ import br.com.arque.measure.license.License
 private val Gold = Color(0xFFF5B400)
 
 private fun openWhats(ctx: android.content.Context) {
-    val msg = "Olá! Meu período de teste do Arquemestre terminou e quero prosseguir com o pagamento único de ${License.PRICE}. Pode me passar a senha de desbloqueio?"
+    val msg = tr("Olá! Meu período de teste do Arquemestre terminou e quero prosseguir com o pagamento único de {0}. Pode me passar a senha de desbloqueio?", License.PRICE)
     val uri = Uri.parse("https://wa.me/${License.WHATS}?text=" + Uri.encode(msg))
     runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
@@ -71,14 +73,14 @@ private fun StoreButtons(vm: AppViewModel, dark: Boolean) {
         Button(
             onClick = { ctx.activity()?.let { vm.buyStore(it) } }, modifier = Modifier.fillMaxWidth().height(52.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF01875F), contentColor = Color.White),
-        ) { Text("Desbloquear pela Google Play" + (vm.storePrice?.let { " · $it" } ?: ""), fontSize = 15.sp) }
+        ) { Text(tr("Desbloquear pela Google Play") + (vm.storePrice?.let { " · $it" } ?: ""), fontSize = 15.sp) }
         OutlinedButton(onClick = { vm.restoreStore() }, modifier = Modifier.fillMaxWidth()) {
-            Text("Já comprei · restaurar compra", color = if (dark) Color(0xFFCBD5E1) else Color(0xFF334155))
+            Text(tr("Já comprei · restaurar compra"), color = if (dark) Color(0xFFCBD5E1) else Color(0xFF334155))
         }
     }
 }
 
-private fun priceOf(vm: AppViewModel) = if (br.com.arque.measure.BuildConfig.PLAY) (vm.storePrice ?: "valor único") else License.PRICE
+private fun priceOf(vm: AppViewModel) = if (br.com.arque.measure.BuildConfig.PLAY) (vm.storePrice ?: tr("valor único")) else License.PRICE
 
 /** Campo de senha + botão. */
 @Composable
@@ -87,7 +89,7 @@ private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
     var err by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // teclado do próprio app (o do celular não abre); a senha aparece como •••
-        Text("Senha de desbloqueio: " + "•".repeat(code.length).ifEmpty { "–" }, color = Color(0xFF111111), fontSize = 15.sp)
+        Text(tr("Senha de desbloqueio: ") + "•".repeat(code.length).ifEmpty { "–" }, color = Color(0xFF111111), fontSize = 15.sp)
         AppNumPad("•".repeat(code.length), { t ->
             code = when {
                 t.isEmpty() -> ""
@@ -96,9 +98,9 @@ private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
             }
             err = false
         }, allowOps = false)
-        if (err) Text("Senha incorreta. Confira com quem te passou.", color = Color(0xFFE5484D), fontSize = 13.sp)
+        if (err) Text(tr("Senha incorreta. Confira com quem te passou."), color = Color(0xFFE5484D), fontSize = 13.sp)
         Button(onClick = { if (vm.unlock(code)) onDone() else err = true }, enabled = code.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
-            Text("Desbloquear")
+            Text(tr("Desbloquear"))
         }
     }
 }
@@ -114,13 +116,13 @@ fun LockScreen(vm: AppViewModel) {
             verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("ARQUEMESTRE", color = Gold, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Text("Você chegou ao fim do período de teste", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(tr("Você chegou ao fim do período de teste"), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Text(
-                "Pra continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), " +
-                    "o acesso completo é por pagamento único de ${priceOf(vm)}.",
+                tr("Pra continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), ") +
+                    tr("o acesso completo é por pagamento único de {0}.", priceOf(vm)),
                 color = Color(0xFFCBD5E1), fontSize = 15.sp, textAlign = TextAlign.Center,
             )
-            Text("Quer prosseguir?", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text(tr("Quer prosseguir?"), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             if (br.com.arque.measure.BuildConfig.PLAY) {
                 StoreButtons(vm, dark = true)
                 vm.toast?.let { Text(it, color = Gold, fontSize = 14.sp, textAlign = TextAlign.Center) }
@@ -128,14 +130,14 @@ fun LockScreen(vm: AppViewModel) {
                 Button(
                     onClick = { openWhats(ctx) }, modifier = Modifier.fillMaxWidth().height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = Color.White),
-                ) { Text("Sim, quero prosseguir · falar no WhatsApp", fontSize = 15.sp) }
-                Text("Depois do pagamento você recebe a senha. É só digitar aqui:", color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
+                ) { Text(tr("Sim, quero prosseguir · falar no WhatsApp"), fontSize = 15.sp) }
+                Text(tr("Depois do pagamento você recebe a senha. É só digitar aqui:"), color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp)) { UnlockBox(vm) }
             }
             OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Salvar uma cópia dos meus dados (backup)", color = Color(0xFFCBD5E1))
+                Text(tr("Salvar uma cópia dos meus dados (backup)"), color = Color(0xFFCBD5E1))
             }
-            Text(if (br.com.arque.measure.BuildConfig.PLAY) "As atualizações chegam pela Google Play, sem perder nada." else "Atualizações futuras instalam por cima, sem perder nada.", color = Color(0xFF64748B), fontSize = 12.sp)
+            Text(if (br.com.arque.measure.BuildConfig.PLAY) tr("As atualizações chegam pela Google Play, sem perder nada.") else tr("Atualizações futuras instalam por cima, sem perder nada."), color = Color(0xFF64748B), fontSize = 12.sp)
         }
     }
 }
@@ -144,27 +146,32 @@ fun LockScreen(vm: AppViewModel) {
 @Composable
 fun WelcomeDialog(vm: AppViewModel) {
     var page by remember { mutableIntStateOf(0) }
+    var langOpen by remember { mutableStateOf(false) }
+    if (langOpen) LanguageDialog { langOpen = false }
     val guide = listOf(
-        "📏 Medições" to "Crie uma nota, tire foto ou desenhe o croqui e ligue a trena Bosch: a medida cai direto na cota, com milímetro.",
-        "🪚 Editor de móveis" to "Monte cozinha, guarda-roupa e cozinha em L. Veja em 3D, abra portas e gavetas, estique peças arrastando.",
-        "📋 Corte e orçamento" to "Lista de corte, plano das chapas inteiras, custo do material e preço sugerido saem sozinhos. Preços em ⚙.",
-        "📅 Agenda" to "Marque entregas, visitas e medições ligadas ao cliente. O app avisa antes.",
+        tr("📏 Medições") to tr("Crie uma nota, tire foto ou desenhe o croqui e ligue a trena Bosch: a medida cai direto na cota, com milímetro."),
+        tr("🪚 Editor de móveis") to tr("Monte cozinha, guarda-roupa e cozinha em L. Veja em 3D, abra portas e gavetas, estique peças arrastando."),
+        tr("📋 Corte e orçamento") to tr("Lista de corte, plano das chapas inteiras, custo do material e preço sugerido saem sozinhos. Preços em ⚙."),
+        tr("📅 Agenda") to tr("Marque entregas, visitas e medições ligadas ao cliente. O app avisa antes."),
     )
     AlertDialog(
         onDismissRequest = {},
-        title = { Text(if (page == 0) "Seja bem-vindo ao Arquemestre!" else guide[page - 1].first) },
+        title = { Text(if (page == 0) tr("Seja bem-vindo ao Arquemestre!") else guide[page - 1].first) },
         text = {
-            Text(
-                if (page == 0) "Você está na versão de teste por ${License.TRIAL_DAYS} dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?"
-                else guide[page - 1].second + "\n\n${page}/${guide.size}",
-            )
+            Column {
+                Text(
+                    if (page == 0) tr("Você está na versão de teste por {0} dias. Aqui vamos desenrolar a produção e a organização da sua marcenaria: medição, projeto, corte, orçamento e agenda num lugar só.\n\nQuer ver um guia rápido de como usar?", License.TRIAL_DAYS)
+                    else guide[page - 1].second + "\n\n${page}/${guide.size}",
+                )
+                if (page == 0) TextButton(onClick = { langOpen = true }) { Text(langMenuLabel() + ": " + currentLangName()) }
+            }
         },
         confirmButton = {
             TextButton(onClick = { if (page < guide.size) page++ else vm.showWelcome = false }) {
-                Text(if (page == 0) "Ver o guia" else if (page < guide.size) "Próximo" else "Começar")
+                Text(if (page == 0) tr("Ver o guia") else if (page < guide.size) tr("Próximo") else tr("Começar"))
             }
         },
-        dismissButton = { TextButton(onClick = { vm.showWelcome = false }) { Text(if (page == 0) "Começar agora" else "Pular") } },
+        dismissButton = { TextButton(onClick = { vm.showWelcome = false }) { Text(if (page == 0) tr("Começar agora") else tr("Pular")) } },
     )
 }
 
@@ -176,21 +183,21 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
     Row(
         modifier.clip(RoundedCornerShape(50)).background(Color(0xCC14171C)).clickable { open = true }.padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-    ) { Text("Teste · falta ${vm.trialLeft}", color = Gold, fontSize = 12.sp) }
+    ) { Text(tr("Teste · falta {0}", vm.trialLeft), color = Gold, fontSize = 12.sp) }
     if (open) AlertDialog(
         onDismissRequest = { open = false },
-        title = { Text("Versão de teste") },
+        title = { Text(tr("Versão de teste")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Falta ${vm.trialLeft} de teste. Acesso completo: pagamento único de ${priceOf(vm)}.")
+                Text(tr("Falta {0} de teste. Acesso completo: pagamento único de {1}.", vm.trialLeft, priceOf(vm)))
                 if (br.com.arque.measure.BuildConfig.PLAY) StoreButtons(vm, dark = false) else {
-                    Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text("Falar no WhatsApp") }
+                    Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text(tr("Falar no WhatsApp")) }
                     Spacer(Modifier.height(2.dp))
                     UnlockBox(vm) { open = false }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { open = false }) { Text("Fechar") } },
+        confirmButton = { TextButton(onClick = { open = false }) { Text(tr("Fechar")) } },
     )
 }
 
@@ -200,13 +207,13 @@ fun UpdateOfferDialog(vm: AppViewModel) {
     val r = vm.updateOffer ?: return
     AlertDialog(
         onDismissRequest = { vm.updateOffer = null },
-        title = { Text("Atualização disponível") },
-        text = { Text("Saiu a versão apk-${r.number}. Quer atualizar agora? O app baixa e instala por cima — nada é perdido (antes ele guarda uma cópia dos dados em Downloads/ArqueMeasure).") },
-        confirmButton = { TextButton(onClick = { vm.acceptUpdate() }) { Text("Atualizar agora") } },
+        title = { Text(tr("Atualização disponível")) },
+        text = { Text(tr("Saiu a versão apk-{0}. Quer atualizar agora? O app baixa e instala por cima — nada é perdido (antes ele guarda uma cópia dos dados em Downloads/ArqueMeasure).", r.number)) },
+        confirmButton = { TextButton(onClick = { vm.acceptUpdate() }) { Text(tr("Atualizar agora")) } },
         dismissButton = {
             Row {
-                TextButton(onClick = { vm.skipUpdate() }) { Text("Pular esta") }
-                TextButton(onClick = { vm.updateOffer = null }) { Text("Depois") }
+                TextButton(onClick = { vm.skipUpdate() }) { Text(tr("Pular esta")) }
+                TextButton(onClick = { vm.updateOffer = null }) { Text(tr("Depois")) }
             }
         },
     )

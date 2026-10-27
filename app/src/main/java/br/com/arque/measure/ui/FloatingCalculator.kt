@@ -1,5 +1,7 @@
 package br.com.arque.measure.ui
 
+import br.com.arque.measure.i18n.tr
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -140,7 +142,7 @@ fun BoxScope.FloatingCalculator() {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(Modifier.fillMaxWidth().then(dragMod), verticalAlignment = Alignment.CenterVertically) {
-            Text("Calculadora  ⠿", color = Ui.dim, fontSize = 12.sp, modifier = Modifier.weight(1f).padding(start = 4.dp))
+            Text(tr("Calculadora  ⠿"), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.weight(1f).padding(start = 4.dp))
             Text("✕", color = Ui.text, fontSize = 18.sp, modifier = Modifier.clickable { open = false }.padding(horizontal = 10.dp, vertical = 2.dp))
         }
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ui.bg).padding(10.dp), horizontalAlignment = Alignment.End) {

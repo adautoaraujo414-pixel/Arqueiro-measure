@@ -1,5 +1,7 @@
 package br.com.arque.measure.logic
 
+import br.com.arque.measure.i18n.tr
+
 import br.com.arque.measure.model.Ann
 import br.com.arque.measure.model.DimObj
 import br.com.arque.measure.model.RoomObj
@@ -333,7 +335,7 @@ object Geo {
 
     /** Texto do quadradinho da porta: "Porta" ou "Porta 0,820 m". */
     fun doorLabel(d: br.com.arque.measure.model.DoorObj, unit: LengthUnit): String =
-        "Porta" + (d.valueMm?.let { " " + Units.format(it, unit) } ?: "")
+        tr("Porta") + (d.valueMm?.let { " " + Units.format(it, unit) } ?: "")
 
     /**
      * Trecho de linha mais perto de [p] (paredes de cômodo, linhas/setas e traços), para a porta ficar

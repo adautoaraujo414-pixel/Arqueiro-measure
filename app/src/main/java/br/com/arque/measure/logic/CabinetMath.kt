@@ -1,5 +1,7 @@
 package br.com.arque.measure.logic
 
+import br.com.arque.measure.i18n.tr
+
 import br.com.arque.measure.model.Cabinet
 import br.com.arque.measure.model.Part
 import br.com.arque.measure.model.PartKind
@@ -24,7 +26,7 @@ object CabinetMath {
     const val PORTA1_SOBRE_L_MM = 14.0
     /** Frente de gaveta passa 7,5 em cada lado (vão + 15). */
     const val GAVETA_SOBRE_L_MM = 15.0
-    private fun cavaNote(v: Vao) = if (v.cava) " · cava: corte a 30° na peça" else ""
+    private fun cavaNote(v: Vao) = if (v.cava) tr(" · cava: corte a 30° na peça") else ""
 
     /** Folga por lado até a pedra: 20 mm sem tamponamento, 35 mm com (20 + 15 da chapa). */
     fun descontoPedra(c: Cabinet) = (if (c.tampEsq) 35.0 else 0.0) + (if (c.tampDir) 35.0 else 0.0)
@@ -141,17 +143,17 @@ object CabinetMath {
         val latH = lateralH(c)
         val vTop = vaoTop(c)
         val vh = vaoH(c)
-        val reb = "rebaixo ${fmt(e)} × ${fmt(c.travessaMm)} na frente, em cima"
+        val reb = tr("rebaixo {0} × {1} na frente, em cima", fmt(e), fmt(c.travessaMm))
         val out = ArrayList<Part>()
-        if (c.hasBase) out += Part(PartKind.BASE, 0.0, bb - e, c.wMm, e, c.wMm, dep, e, note = "inteiriça, sob as laterais")
+        if (c.hasBase) out += Part(PartKind.BASE, 0.0, bb - e, c.wMm, e, c.wMm, dep, e, note = tr("inteiriça, sob as laterais"))
         if (c.hasTravessa) {
             out += Part(PartKind.LATERAL, 0.0, top, e, latH, latH, dep, e, note = reb)
             out += Part(PartKind.LATERAL, c.wMm - e, top, e, latH, latH, dep, e, note = reb)
-            out += Part(PartKind.TRAVESSA, 0.0, top, c.wMm, c.travessaMm, c.wMm, c.travessaMm, e, note = "embute ${fmt(e)} no rebaixo das laterais")
+            out += Part(PartKind.TRAVESSA, 0.0, top, c.wMm, c.travessaMm, c.wMm, c.travessaMm, e, note = tr("embute {0} no rebaixo das laterais", fmt(e)))
         } else {
             out += Part(PartKind.LATERAL, 0.0, top + e, e, latH, latH, dep, e)
             out += Part(PartKind.LATERAL, c.wMm - e, top + e, e, latH, latH, dep, e)
-            out += Part(PartKind.TOPO, 0.0, top, c.wMm, e, c.wMm, dep, e, note = "igual à base, parafusada por cima das laterais")
+            out += Part(PartKind.TOPO, 0.0, top, c.wMm, e, c.wMm, dep, e, note = tr("igual à base, parafusada por cima das laterais"))
         }
         val dx = dividerX(c)
         dx.forEachIndexed { i, x ->
@@ -176,7 +178,7 @@ object CabinetMath {
         }
         ranges.forEachIndexed { i, (x0, x1) ->
             c.vaos[i].shelfYs.sorted().filter { it > vTop + e && it < vaoBottom(c) - e }.forEach { y ->
-                out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - c.prateleiraMenorMm, e, vao = i, note = "na posição escolhida (${fmt(y - vTop)} abaixo da travessa)")
+                out += Part(PartKind.PRATELEIRA, x0, y - e / 2, x1 - x0, e, x1 - x0, dep - c.prateleiraMenorMm, e, vao = i, note = tr("na posição escolhida ({0} abaixo da travessa)", fmt(y - vTop)))
             }
         }
         if (c.hasRodape && c.rodapeMm > 0) out += Part(PartKind.RODAPE, e, bb, iw, c.rodapeMm, iw, c.rodapeMm, e)
@@ -191,13 +193,13 @@ object CabinetMath {
                     val gap = if (v.cava) v.batenteMm else c.folgaGavetaMm
                     val top0 = if (v.cava) 0.0 else c.bordaSupMm
                     if (v.cava) for (k in 0 until v.drawers - 1) {
-                        out += Part(PartKind.BATENTE, x0, y0 + (k + 1) * fh + k * gap, vw, gap, vw, gap, e, vao = i, note = "cor do móvel · ${v.drawers - 1} batente(s) entre ${v.drawers} gavetas")
+                        out += Part(PartKind.BATENTE, x0, y0 + (k + 1) * fh + k * gap, vw, gap, vw, gap, e, vao = i, note = tr("cor do móvel · {0} batente(s) entre {1} gavetas", v.drawers - 1, v.drawers))
                     }
                     val fw = vw + GAVETA_SOBRE_L_MM
                     val caixaW = vw - c.corredicaMm
                     for (k in 0 until v.drawers) {
                         val y = y0 + top0 + k * (fh + gap)
-                        out += Part(PartKind.FRENTE_GAVETA, x0 - GAVETA_SOBRE_L_MM / 2, y, fw, fh, fw, fh, e, vao = i, note = "frente = vão + ${fmt(GAVETA_SOBRE_L_MM)} (7,5 por lado) · caixa: largura ${fmt(caixaW)} (vão − ${fmt(c.corredicaMm)} das corrediças)" + cavaNote(v))
+                        out += Part(PartKind.FRENTE_GAVETA, x0 - GAVETA_SOBRE_L_MM / 2, y, fw, fh, fw, fh, e, vao = i, note = tr("frente = vão + {0} (7,5 por lado) · caixa: largura {1} (vão − {2} das corrediças)", fmt(GAVETA_SOBRE_L_MM), fmt(caixaW), fmt(c.corredicaMm)) + cavaNote(v))
                     }
                 }
                 VaoKind.OVEN -> {
@@ -205,12 +207,12 @@ object CabinetMath {
                     val oh = v.ovenH.coerceIn(50.0, vh - e)
                     val ox0 = x0 + (vw - ow) / 2 // centralizado no vão
                     val oy = vTop + v.ovenTop.coerceIn(0.0, vh - oh - e)
-                    out += Part(PartKind.FORNO, ox0, oy, ow, oh, ow, oh, 0.0, vao = i, note = "corte centralizado · sobra ${fmt((vw - ow) / 2)} de cada lado")
-                    if (oy > vTop + 0.5) out += Part(PartKind.PRATELEIRA, x0, oy - e, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = "acima do forno")
-                    out += Part(PartKind.PRATELEIRA, x0, oy + oh, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = "apoio do forno")
+                    out += Part(PartKind.FORNO, ox0, oy, ow, oh, ow, oh, 0.0, vao = i, note = tr("corte centralizado · sobra {0} de cada lado", fmt((vw - ow) / 2)))
+                    if (oy > vTop + 0.5) out += Part(PartKind.PRATELEIRA, x0, oy - e, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = tr("acima do forno"))
+                    out += Part(PartKind.PRATELEIRA, x0, oy + oh, vw, e, vw, dep - c.prateleiraMenorMm, e, vao = i, note = tr("apoio do forno"))
                     if ((vw - ow) / 2 > 0.5) for (side in 0..1) {
                         val fx = if (side == 0) x0 else ox0 + ow
-                        out += Part(PartKind.DIVISORIA, fx, oy, (vw - ow) / 2, oh, oh, (vw - ow) / 2, e, vao = i, note = "fechamento ao lado do forno (peça em pé, ${fmt((vw - ow) / 2)} de largura)")
+                        out += Part(PartKind.DIVISORIA, fx, oy, (vw - ow) / 2, oh, oh, (vw - ow) / 2, e, vao = i, note = tr("fechamento ao lado do forno (peça em pé, {0} de largura)", fmt((vw - ow) / 2)))
                     }
                 }
                 VaoKind.DOOR -> {
@@ -222,13 +224,13 @@ object CabinetMath {
                         for (k in 0 until nd) {
                             val x = x0 - PORTA_SOBRE_L_MM / 2 + k * dw
                             out += Part(PartKind.PORTA, x, vTop - PORTA_SOBRE_H_MM / 2, dw, dh, dw, dh, e, vao = i,
-                                note = "(vão + ${fmt(PORTA_SOBRE_L_MM)}) ÷ $nd · altura do vão + ${fmt(PORTA_SOBRE_H_MM)}" + cavaNote(v))
+                                note = tr("(vão + {0}) ÷ {1} · altura do vão + {2}", fmt(PORTA_SOBRE_L_MM), nd, fmt(PORTA_SOBRE_H_MM)) + cavaNote(v))
                         }
                     } else {
                         val dw = vw + PORTA1_SOBRE_L_MM
                         val dh = vh + PORTA_SOBRE_H_MM
                         out += Part(PartKind.PORTA, x0 - PORTA1_SOBRE_L_MM / 2, vTop - PORTA_SOBRE_H_MM / 2, dw, dh, dw, dh, e, vao = i,
-                            note = "vão + ${fmt(PORTA1_SOBRE_L_MM)} · altura do vão + ${fmt(PORTA_SOBRE_H_MM)}" + cavaNote(v))
+                            note = tr("vão + {0} · altura do vão + {1}", fmt(PORTA1_SOBRE_L_MM), fmt(PORTA_SOBRE_H_MM)) + cavaNote(v))
                     }
                 }
                 else -> {}
@@ -238,20 +240,20 @@ object CabinetMath {
         // com tamponamento de baixo: lateral = todas as peças somadas (até o fim da base) + 30 mm do batente, ou só até a base se o de baixo passa reto
         val tampH = if (c.tampBaixo) bb + (if (c.tampBaixoPassa) 0.0 else c.tampBaixoMm) else latH + c.tampAltExtraMm
         val tampD = c.dMm + c.tampProfExtraMm
-        val tn = "por fora; +${fmt(c.tampProfExtraMm)} na profundidade e +${fmt(c.tampAltExtraMm)} na altura"
+        val tn = tr("por fora; +{0} na profundidade e +{1} na altura", fmt(c.tampProfExtraMm), fmt(c.tampAltExtraMm))
         // alinhado em cima com a moldura (y = 0), sem "dente"; engrossa a lateral (lateral + tamponamento = 2 × espessura)
-        if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
-        if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = "$tn · engrossa a lateral (${fmt(e)} + ${fmt(e)})")
+        if (c.tampEsq) out += Part(PartKind.TAMPONAMENTO, -e, 0.0, e, tampH, tampH, tampD, e, note = tr("{0} · engrossa a lateral ({1} + {2})", tn, fmt(e), fmt(e)))
+        if (c.tampDir) out += Part(PartKind.TAMPONAMENTO, c.wMm, 0.0, e, tampH, tampH, tampD, e, note = tr("{0} · engrossa a lateral ({1} + {2})", tn, fmt(e), fmt(e)))
         if (c.tampBaixo && !c.tampBaixoJunto) {
             val sx = if (c.tampBaixoPassa && c.tampEsq) -e else 0.0
             val sw = c.wMm + (if (c.tampBaixoPassa && c.tampEsq) e else 0.0) + (if (c.tampBaixoPassa && c.tampDir) e else 0.0)
             out += Part(
                 PartKind.TAMP_BAIXO, sx, bb, sw, c.tampBaixoMm, sw, c.tampBaixoMm, e,
-                note = if (c.tampBaixoPassa) "passa reto por baixo; as laterais morrem nele" else "abaixo da base, do tamanho da base (batente da cava)",
+                note = if (c.tampBaixoPassa) tr("passa reto por baixo; as laterais morrem nele") else tr("abaixo da base, do tamanho da base (batente da cava)"),
             )
         }
         if (c.hasMoldura) {
-            out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = "acabamento, cobre a folga do topo")
+            out += Part(PartKind.MOLDURA, 0.0, 0.0, c.wMm, c.molduraMm, c.wMm, c.molduraMm, e, note = tr("acabamento, cobre a folga do topo"))
         }
         return out
     }
@@ -269,7 +271,7 @@ object CabinetMath {
         if (!c.reguas) return emptyList()
         val painel = (if (c.hasBase) 1 else 0) + (if (!c.hasTravessa) 1 else 0)
         return List(painel * 2) {
-            Part(PartKind.REGUA, 0.0, 0.0, 0.0, 0.0, c.wMm, c.reguaMm, c.espMm, note = "colada na borda da frente / de trás da base e do tampo")
+            Part(PartKind.REGUA, 0.0, 0.0, 0.0, 0.0, c.wMm, c.reguaMm, c.espMm, note = tr("colada na borda da frente / de trás da base e do tampo"))
         }
     }
 
@@ -287,6 +289,6 @@ object CabinetMath {
     /** Medidas "reais" mostradas em tempo real: largura, largura interna e vãos. */
     fun summary(c: Cabinet): String {
         val r = vaoRanges(normalized(c))
-        return "Largura ${fmt(c.wMm)} · interna ${fmt(innerW(c))} · vãos ${r.joinToString(" | ") { fmt(it.second - it.first) }} mm"
+        return tr("Largura {0} · interna {1} · vãos {2} mm", fmt(c.wMm), fmt(innerW(c)), r.joinToString(" | ") { fmt(it.second - it.first) })
     }
 }

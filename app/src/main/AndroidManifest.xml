@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
+        android:name=".ArqueApp"
         android:allowBackup="true"
         android:largeHeap="true"
         android:icon="@mipmap/ic_launcher"

@@ -204,7 +204,7 @@ struct ProjRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(bare ? tr("Projeto de móveis") : p.name).foregroundColor(Ui.text).lineLimit(1)
                 Text((bare ? "" : tr("Projeto de móveis · ")) + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
-                Text("\(p.mods) \(p.mods == 1 ? "módulo" : "módulos")" + (linked > 0 && !bare ? " · \(linked) \(linked == 1 ? "nota" : "notas")" : ""))
+                Text(tr(p.mods == 1 ? "{0} módulo" : "{0} módulos", p.mods) + (linked > 0 && !bare ? tr(linked == 1 ? " · {0} nota" : " · {0} notas", linked) : ""))
                     .font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
             Spacer()
@@ -267,7 +267,7 @@ struct NoteRow: View {
                     if n.locked { Image(systemName: "lock.fill").font(.caption).foregroundColor(Ui.dim) }
                 }
                 Text(dateText(n.createdMs)).font(.caption).foregroundColor(Ui.dim)
-                Text("\(n.pageCount) \(n.pageCount == 1 ? "folha" : "folhas") · \(n.dimCount) \(n.dimCount == 1 ? "cota" : "cotas")").font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+                Text(tr(n.pageCount == 1 ? "{0} folha" : "{0} folhas", n.pageCount) + " · " + tr(n.dimCount == 1 ? "{0} cota" : "{0} cotas", n.dimCount)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
             Spacer()
             Menu {

@@ -240,7 +240,7 @@ private fun MonthGrid(monthMs: Long, all: List<Appointment>, selDay: Long?, onMo
             }
         }
         Row(Modifier.fillMaxWidth()) {
-            listOf("D", "S", "T", "Q", "Q", "S", "S").forEach { Text(it, color = Ui.dim, fontSize = 12.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+            tr("D S T Q Q S S").split(" ").forEach { Text(it, color = Ui.dim, fontSize = 12.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
         }
         val rows = (offset + days + 6) / 7
         for (r in 0 until rows) {

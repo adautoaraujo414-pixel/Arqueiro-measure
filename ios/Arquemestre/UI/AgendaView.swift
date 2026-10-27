@@ -114,7 +114,7 @@ private struct MonthGrid: View {
                 Spacer()
                 Button { month = cal.date(byAdding: .month, value: 1, to: first)! } label: { Image(systemName: "chevron.right") }
             }.padding(.horizontal, 8).padding(.vertical, 6)
-            HStack { ForEach(["D", "S", "T", "Q", "Q", "S", "S"].indices, id: \.self) { i in Text(["D", "S", "T", "Q", "Q", "S", "S"][i]).font(.caption).foregroundColor(Ui.dim).frame(maxWidth: .infinity) } }
+            HStack { ForEach(Array(tr("D S T Q Q S S").split(separator: " ").enumerated()), id: \.offset) { _, d in Text(String(d)).font(.caption).foregroundColor(Ui.dim).frame(maxWidth: .infinity) } }
             ForEach(0..<rows, id: \.self) { r in
                 HStack(spacing: 2) {
                     ForEach(0..<7, id: \.self) { c in

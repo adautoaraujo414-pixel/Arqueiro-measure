@@ -15,7 +15,7 @@ enum Reminders {
     }
 
     static func whenText(_ off: Int) -> String {
-        if off == 0 { return "agora" }
+        if off == 0 { return tr("agora") }
         if off < 60 { return tr("em {0} min", off) }
         if off < 1440 { return tr("em {0} h", off / 60) }
         if off == 1440 { return tr("amanhã") }

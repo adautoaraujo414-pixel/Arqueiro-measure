@@ -81,7 +81,7 @@ object AgendaReminders {
     fun scheduleAll(ctx: Context, list: List<Appointment>) = list.forEach { schedule(ctx, it) }
 
     fun whenText(a: Appointment, off: Int): String = when {
-        off == 0 -> "agora"
+        off == 0 -> tr("agora")
         off < 60 -> tr("em {0} min", off)
         off < 1440 -> tr("em {0} h", off / 60)
         off == 1440 -> tr("amanhã")

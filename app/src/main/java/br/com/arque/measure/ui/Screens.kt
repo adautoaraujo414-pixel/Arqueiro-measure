@@ -431,7 +431,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
         Column(Modifier.weight(1f)) {
             Text(if (bare) tr("Projeto de móveis") else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text((if (bare) "" else tr("Projeto de móveis · ")) + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
-            Text("${p.mods} ${if (p.mods == 1) "módulo" else "módulos"}" + (if (linked > 0 && !bare) " · $linked ${if (linked == 1) "nota" else "notas"}" else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
+            Text(tr(if (p.mods == 1) "{0} módulo" else "{0} módulos", p.mods) + (if (linked > 0 && !bare) tr(if (linked == 1) " · {0} nota" else " · {0} notas", linked) else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
             IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, tr("Menu do projeto"), tint = Ui.text) }
@@ -494,7 +494,7 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fill
             }
             Text(dateFmt.format(Date(n.createdMs)), color = Ui.dim, fontSize = 12.sp)
             Text(
-                "${n.pageCount} ${if (n.pageCount == 1) "folha" else "folhas"} · ${n.dimCount} ${if (n.dimCount == 1) "cota" else "cotas"}",
+                tr(if (n.pageCount == 1) "{0} folha" else "{0} folhas", n.pageCount) + " · " + tr(if (n.dimCount == 1) "{0} cota" else "{0} cotas", n.dimCount),
                 color = Ui.dim, fontSize = 12.sp, maxLines = 1,
             )
         }

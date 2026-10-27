@@ -215,7 +215,7 @@ fun MoveisScreen(vm: AppViewModel) {
                             }
                         }
                     }
-                    loadUrl("https://${WebViewAssetLoader.DEFAULT_DOMAIN}/assets/editor.html?lang=${br.com.arque.measure.i18n.I18n.lang}")
+                    loadUrl("https://${WebViewAssetLoader.DEFAULT_DOMAIN}/assets/editor.html?lang=${br.com.arque.measure.i18n.I18n.lang}&cur=${android.net.Uri.encode(br.com.arque.measure.i18n.I18n.currencySymbol())}")
                     web = this
                 }
             },

@@ -38,6 +38,56 @@ body.ro #bd input,body.ro #bd select,body.ro #bd textarea{pointer-events:none;ba
  <div class="pn"><div class="tabs" id="tabs"></div><div class="bd" id="bd"></div></div>
 </div>
 <script>
+/* Idioma: o editor é escrito em português. Com ?lang=en|es (o app passa o idioma escolhido) os textos da tela
+   são traduzidos aqui, com o mesmo dicionário do app (i18n/<lang>.json). Nada muda nos dados nem nas contas.
+   ?cur= troca o "R$" pela moeda do país (ex.: $). */
+(function(){
+ var q;try{q=new URLSearchParams(location.search)}catch(e){q=null}
+ var L=((q&&q.get('lang'))||'pt').toLowerCase(),CUR=(q&&q.get('cur'))||'';
+ window.ARQ_LANG=L;
+ if(L==='pt'&&(!CUR||CUR==='R$'))return;
+ var D=null,C=new Map(),MINE=new WeakMap(),ATTR=['title','placeholder','aria-label'];
+ var DL=/(\s*(?:-?\d[\d.,]*\s*(?:mm|cm|m|°|%|x)?(?![A-Za-zÀ-ÿ])|[·:|()\[\]{}—–\/,;=+×÷→←↔≈✓✕▾▸▲▼◀▶⚙…"“”«»<>!?]|[\u{1F300}-\u{1FAFF}☀-➿⬀-⯿️])+\s*)/u;
+ function put(s,t,v){return s.replace(t,function(){return v})}
+ function sent(pt){var sn=pt.split(/(?<=[.!?])\s+/);if(sn.length<2)return null;var o=[],ch=false;
+  for(var j=0;j<sn.length;j++){var q=tx(sn[j]);if(q!==sn[j])ch=true;o.push(q)}return ch?o.join(' '):null}
+ function tx(s){
+  if(!s)return s;var c=C.get(s);if(c!==undefined)return c;
+  var r=s,t=s.trim();
+  if(D&&t&&/[A-Za-zÀ-ÿ]/.test(t)){
+   var v=D[t];
+   if(v!=null)r=put(s,t,v);
+   else{var ps=s.split(DL),ch=false;
+    for(var i=0;i<ps.length;i+=2){var p=ps[i];if(!p)continue;var pt=p.trim();if(!pt)continue;var w=D[pt];
+     if(w==null&&/[.!?]\s+\S/.test(pt))w=sent(pt);
+     if(w!=null){ps[i]=put(p,pt,w);ch=true}}
+    if(ch)r=ps.join('')}
+  }
+  if(CUR&&CUR!=='R$'&&r.indexOf('R$')>=0)r=r.split('R$').join(CUR);
+  if(C.size>30000)C.clear();C.set(s,r);return r}
+ window.arqueT=tx;
+ function txt(n){var v=n.nodeValue;if(!v||MINE.get(n)===v)return;var w=tx(v);if(w!==v){n.nodeValue=w;MINE.set(n,w)}}
+ function att(e){for(var i=0;i<ATTR.length;i++){var a=ATTR[i],v=e.getAttribute(a);if(v){var w=tx(v);if(w!==v)e.setAttribute(a,w)}}}
+ function skip(n){var p=n.parentNode;return p&&(p.nodeName==='SCRIPT'||p.nodeName==='STYLE'||p.nodeName==='TEXTAREA')}
+ function tree(n){
+  if(!D&&!CUR)return;
+  if(n.nodeType===3){if(!skip(n))txt(n);return}
+  if(n.nodeType!==1||n.nodeName==='SCRIPT'||n.nodeName==='STYLE'||n.nodeName==='TEXTAREA')return;
+  if(n.hasAttribute&&(n.hasAttribute('title')||n.hasAttribute('placeholder')||n.hasAttribute('aria-label')))att(n);
+  var w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT,null),x;while((x=w.nextNode()))if(!skip(x))txt(x);
+  var es=n.querySelectorAll?n.querySelectorAll('[title],[placeholder],[aria-label]'):[];for(var i=0;i<es.length;i++)att(es[i])}
+ var mo=new MutationObserver(function(rs){if(!D&&!CUR)return;for(var i=0;i<rs.length;i++){var r=rs[i];
+  if(r.type==='characterData'){if(!skip(r.target))txt(r.target)}
+  else if(r.type==='attributes'){if(r.target.nodeType===1)att(r.target)}
+  else for(var j=0;j<r.addedNodes.length;j++)tree(r.addedNodes[j])}});
+ mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:ATTR});
+ function all(){tree(document.body);document.title=tx(document.title)}
+ if(L==='pt'){all();return}
+ try{document.documentElement.lang=L}catch(e){}
+ fetch('i18n/'+L+'.json').then(function(r){return r.json()}).then(function(d){D=d;C.clear();all()}).catch(function(){all()});
+})();
+</script>
+<script>
 var $=function(i){return document.getElementById(i)};
 var S={mods:[],items:[{id:1,k:'cuba',x:1100,y:130,w:500,d:400}],selI:1,stD:600,W:3200,H:2600,stW:2700,stX:0,stT:820,stE:40,m:{x:768,b:1740,w:1190,h:750,d:350,sup:true,div:[],shv:[],v:[],tl:false,tr:false,tb:false,fundo:true},tab:0,sv:0,hist:[],fw:false,fvw:10,fh:false,fvh:10,env:'cozinha',fr:[],rp:[],rs:{w:40,gap:25,sheetW:1840,sheetH:2750,kerf:4}};
 var RPSEL=0,RPARM=false;
@@ -1324,7 +1374,7 @@ function phRender(msg){var p=pLoadAll().filter(function(q){return q.id===PH.pid}
    f.marks.forEach(function(m,i){h+='<g data-phm="'+i+'"><circle cx="'+m.x*W+'" cy="'+m.y*H+'" r="'+R*.45+'" fill="#e0a100" stroke="#fff" stroke-width="'+R*.12+'"/><text x="'+(m.x*W+R*.7)+'" y="'+(m.y*H-R*.5)+'" font-size="'+R*1.1+'" font-weight="700" fill="#fff" stroke="#000" stroke-width="'+R*.22+'" paint-order="stroke">'+esc(m.label)+' '+esc(m.val)+'</text></g>'});
    if(PH.pin)h+='<circle cx="'+PH.pin.x*W+'" cy="'+PH.pin.y*H+'" r="'+R*.5+'" fill="none" stroke="#2f6fe0" stroke-width="'+R*.2+'"/>';
    h+='</svg>';
-   if(PH.pin){var refs=phRefs();h+='<div class="box" style="margin-top:8px"><small>Novo ponto marcado</small><div class="g"><label>O que é essa medida?</label><select id="phl" style="width:100%;padding:8px">'+refs.map(function(r){return '<option>'+r[0]+'</option>'}).join('')+'<option>Outra medida</option></select></div><div class="g"><label>Se for outra, nome</label><input id="pho" type="text" style="text-align:left"></div><div class="g"><label>Medida (mm)</label><input id="phv" type="text" inputmode="none" data-calc="1" value="'+(LZ.pend||'')+'"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button id="pht2">📏 Usar leitura da trena</button><button id="phs" style="background:var(--acc);color:#fff;border-color:var(--acc)">Salvar ponto</button><button id="phc">Cancelar</button></div></div>'}
+   if(PH.pin){var refs=phRefs();h+='<div class="box" style="margin-top:8px"><small>Novo ponto marcado</small><div class="g"><label>O que é essa medida?</label><select id="phl" style="width:100%;padding:8px">'+refs.map(function(r){return '<option value="'+esc(r[0])+'">'+r[0]+'</option>'}).join('')+'<option value="Outra medida">Outra medida</option></select></div><div class="g"><label>Se for outra, nome</label><input id="pho" type="text" style="text-align:left"></div><div class="g"><label>Medida (mm)</label><input id="phv" type="text" inputmode="none" data-calc="1" value="'+(LZ.pend||'')+'"></div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button id="pht2">📏 Usar leitura da trena</button><button id="phs" style="background:var(--acc);color:#fff;border-color:var(--acc)">Salvar ponto</button><button id="phc">Cancelar</button></div></div>'}
    if(f.marks.length){var rf=phRefs();h+='<div class="sec">Marcações · conferência com o projeto<span>⌃</span></div>'+f.marks.map(function(m,i){var r=rf.filter(function(x){return x[0]===m.label})[0],cmp='';if(r&&+m.val>0){var d=Math.round(+m.val-r[1]);cmp=d===0?'<span style="color:#1f9d55">✓ igual ao projeto ('+r[1]+')</span>':'<span style="color:#d33">projeto '+r[1]+' · diferença '+(d>0?'+':'')+d+' mm</span>'}return '<div style="display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:6px 0;font-size:13px"><span><b>'+esc(m.label)+'</b> · '+esc(m.val)+' mm<br>'+cmp+'</span><button data-phmd="'+i+'">✕</button></div>'}).join('')}
   }else{
    h+='<div style="display:flex;gap:6px;margin:8px 0">'+['projeto','obra','video'].map(function(k){return '<button class="'+(PH.kind===k?'sel':'')+'" data-phk="'+k+'">'+(k==='projeto'?'Fotos do projeto':(k==='obra'?'Fotos da obra':'Vídeos'))+'</button>'}).join('')+'</div>';

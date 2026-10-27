@@ -119,7 +119,8 @@ struct MoveisWeb: UIViewRepresentable {
         w.isOpaque = true
         w.backgroundColor = .white
         holder.web = w
-        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)")!))
+        let cur = I18n.shared.currencySymbol().addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)") ?? URL(string: "arque://app/editor.html")!))
         return w
     }
 

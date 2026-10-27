@@ -741,7 +741,6 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                                 DropdownMenuItem(text = { Text(tr("Câmera")) }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
                             }
                         }
-                        LBtn(tr("Móveis"), onClick = { st.addWall(br.com.arque.measure.model.Pt(70f, 150f)) }) { c -> ShapeGlyph(Tool.RECT, c, 22.dp, cabinet = true) }
                         LBtn(tr("Calculadora"), on = session.calcOpen, onClick = { session.calcOpen = !session.calcOpen }) { c ->
                             Icon(Icons.Filled.Calculate, null, tint = c, modifier = Modifier.size(22.dp))
                         }

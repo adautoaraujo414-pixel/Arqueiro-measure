@@ -72,8 +72,11 @@ struct EditorView: View {
 
                 if session.calcOpen { FloatingCalc(session: session) }
 
-                groupBar(geo.size)
-                contextBar(geo.size)
+                // durante o gesto (traço/arrasto) as barras somem: a folha responde sem esperar a tela toda
+                if !st.inGesture {
+                    groupBar(geo.size)
+                    contextBar(geo.size)
+                }
 
                 // zoom
                 HStack(spacing: 0) {
@@ -334,7 +337,7 @@ struct EraserSettings: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Borracha").font(.headline)
             Picker("", selection: $session.eraserMode) { ForEach(EraserMode.allCases, id: \.self) { Text($0.label).tag($0) } }.pickerStyle(.segmented)
-            Text(session.eraserMode == .PIXEL ? "Apaga só o pedaço que você passa por cima." : (session.eraserMode == .STROKE ? "Apaga o traço ou a forma inteira que você tocar." : "Contorne para apagar o que ficar dentro."))
+            Text(session.eraserMode == .PIXEL ? "Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede)." : (session.eraserMode == .STROKE ? "Apaga o traço ou a forma inteira que você tocar." : "Contorne para apagar o que ficar dentro."))
                 .font(.caption).foregroundColor(.secondary)
             HStack { Text("Tamanho"); Slider(value: $session.eraserSize, in: 4...60) }
             Toggle("Apenas apagar marca-texto", isOn: $session.eraserOnlyHighlighter)

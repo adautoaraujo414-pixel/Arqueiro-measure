@@ -111,14 +111,23 @@ final class SheetRenderer {
     }
 
     // ---- folha inteira ----
-    func draw(_ c: CGContext, _ sheet: Sheet, _ unit: LengthUnit, selectedId: String?, viewScale: CGFloat, withPaper: Bool = true, selectedSeg: Int = -1) {
+    /// Desenha só um objeto da folha (o que está sendo escrito), por cima da imagem guardada do resto.
+    func drawOne(_ c: CGContext, _ sheet: Sheet, _ unit: LengthUnit, id: String) {
+        guard let o = sheet.obj(id) else { return }
+        c.saveGState()
+        c.clip(to: CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height))
+        drawObj(c, o, sheet.photos(), unit)
+        c.restoreGState()
+    }
+
+    func draw(_ c: CGContext, _ sheet: Sheet, _ unit: LengthUnit, selectedId: String?, viewScale: CGFloat, withPaper: Bool = true, selectedSeg: Int = -1, skipId: String? = nil) {
         if withPaper { fill(c, argb(0x33000000)); c.fill(CGRect(x: 5, y: 6, width: sheet.width, height: sheet.height)) }
         fill(c, argb(0xFFFFFFFF)); c.fill(CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height))
         paintTemplate(c, sheet.tpl, sheet.width, sheet.height)
         c.saveGState()
         c.clip(to: CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height))
         let photos = sheet.photos()
-        for o in sheet.objs { drawObj(c, o, photos, unit) }
+        for o in sheet.objs where o.id != skipId { drawObj(c, o, photos, unit) }
         c.restoreGState()
         if withPaper { stroke(c, argb(0xFFC9C6BD), 1); c.stroke(CGRect(x: 0, y: 0, width: sheet.width, height: sheet.height)) }
         if let o = sheet.obj(selectedId) { drawSelection(c, sheet, o, viewScale, selectedSeg) }

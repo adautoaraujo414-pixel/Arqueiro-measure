@@ -47,6 +47,17 @@ class EditorState(
     var selectedSeg: Int = -1
         private set
 
+    /** Chamado quando muda algo que os painéis/barras mostram (fora de um gesto contínuo). */
+    var onUi: () -> Unit = {}
+    /** Tem um gesto contínuo em andamento (traço, arrasto, borracha). */
+    val inGesture: Boolean get() = gestureBase != null
+
+    /** Folha muda: a tela redesenha sempre; os painéis só recompõem fora do gesto (não pesa no traço). */
+    private fun notifyChange() {
+        onChange()
+        if (gestureBase == null) onUi()
+    }
+
     private val undoStack = ArrayDeque<Note>()
     private val redoStack = ArrayDeque<Note>()
     private var gestureBase: Note? = null
@@ -62,7 +73,7 @@ class EditorState(
             selectedId = id
             selectedSeg = -1
             groupIds = emptySet()
-            onChange()
+            notifyChange()
         }
     }
 
@@ -74,7 +85,7 @@ class EditorState(
         selectedId = null
         selectedSeg = -1
         groupIds = ids
-        onChange()
+        notifyChange()
     }
 
     fun groupObjs(): List<Obj> = sheet.objs.filter { it.id in groupIds }
@@ -91,7 +102,7 @@ class EditorState(
         if (gone.isEmpty()) return
         commit(sheet.copy(objs = sheet.objs.filter { it.id !in gone }))
         fixSelection()
-        onChange()
+        notifyChange()
     }
 
     /** Limpa a folha: traços, formas e textos (fotos, cotas e cômodos ficam). Dá para desfazer. */
@@ -100,7 +111,7 @@ class EditorState(
         if (keep.size == sheet.objs.size) return
         commit(sheet.copy(objs = keep))
         fixSelection()
-        onChange()
+        notifyChange()
     }
 
     fun deleteGroup() {
@@ -318,7 +329,7 @@ class EditorState(
     fun selectSeg(id: String, k: Int) {
         selectedId = id
         selectedSeg = k
-        onChange()
+        notifyChange()
     }
 
     /** Anda para o segmento anterior/seguinte do cômodo selecionado. */
@@ -327,7 +338,7 @@ class EditorState(
         val n = r.segCount()
         if (n == 0) return
         selectedSeg = ((if (selectedSeg < 0) 0 else selectedSeg) + delta + n) % n
-        onChange()
+        notifyChange()
     }
 
     /** Insere um cômodo recém-criado e seleciona o primeiro segmento. */
@@ -446,7 +457,7 @@ class EditorState(
             pageIdx = n
             selectedId = null
             groupIds = emptySet()
-            onChange()
+            notifyChange()
         }
     }
 
@@ -456,31 +467,33 @@ class EditorState(
     // ---- gestos contínuos ----
 
     fun beginGesture() {
-        if (gestureBase == null) gestureBase = note
+        if (gestureBase == null) { gestureBase = note; onUi() }
     }
 
     fun live(newSheet: Sheet) {
-        if (gestureBase == null) gestureBase = note
+        val first = gestureBase == null
+        if (first) gestureBase = note
         note = withSheet(newSheet)
-        onChange()
+        notifyChange()
+        if (first) onUi()
     }
 
     fun endGesture() {
         val base = gestureBase ?: return
         gestureBase = null
-        if (base != note) {
+        if (base !== note) {
             push(base)
             redoStack.clear()
             onCommit(note)
         }
-        onChange()
+        notifyChange()
     }
 
     fun cancelGesture() {
         gestureBase?.let { note = it }
         gestureBase = null
         fixSelection()
-        onChange()
+        notifyChange()
     }
 
     // ---- operações discretas ----
@@ -493,7 +506,7 @@ class EditorState(
         redoStack.clear()
         note = n
         onCommit(note)
-        onChange()
+        notifyChange()
     }
 
     private fun push(s: Note) {
@@ -506,7 +519,7 @@ class EditorState(
         pageIdx = pageIdx.coerceIn(0, note.pages.lastIndex)
         fixSelection()
         onCommit(note)
-        onChange()
+        notifyChange()
     }
 
     fun undo() {
@@ -545,7 +558,7 @@ class EditorState(
         }
         commit(sheet.copy(objs = sheet.objs.filter { it.id !in gone }))
         fixSelection()
-        onChange()
+        notifyChange()
     }
 
     /** Duplica o objeto com deslocamento. Foto duplicada leva suas anotações junto. */
@@ -694,7 +707,7 @@ class EditorState(
         commitNote(note.copy(pages = pages))
         pageIdx = at
         selectedId = null
-        onChange()
+        notifyChange()
         return true
     }
 
@@ -714,7 +727,7 @@ class EditorState(
         commitNote(note.copy(pages = pages))
         pageIdx = i + 1
         selectedId = null
-        onChange()
+        notifyChange()
         return true
     }
 
@@ -725,7 +738,7 @@ class EditorState(
         commitNote(note.copy(pages = pages))
         pageIdx = pageIdx.coerceIn(0, note.pages.lastIndex)
         selectedId = null
-        onChange()
+        notifyChange()
         return true
     }
 

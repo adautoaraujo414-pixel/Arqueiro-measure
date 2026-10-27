@@ -216,4 +216,39 @@ enum Eraser {
         if cur.count >= 2 { pieces.append(cur) }
         return pieces
     }
+
+    /// Contorno de uma forma como linha de pontos (fechada quando a forma é fechada). Folha.
+    static func shapeOutline(_ kind: ShapeKind, _ a: Pt, _ b: Pt) -> [Pt] {
+        let l = min(a.x, b.x), r = max(a.x, b.x), t = min(a.y, b.y), bt = max(a.y, b.y)
+        func closed(_ c: [Pt]) -> [Pt] { c + [c[0]] }
+        switch kind {
+        case .LINE, .DASHED, .ARROW, .DARROW: return [a, b]
+        case .CURVE: return Geo.curvePoints(a, b)
+        case .ELBOW: return Geo.polyPoints(kind, a, b) ?? [a, b]
+        case .RTRI, .DIAMOND, .TRAP: return closed(Geo.polyPoints(kind, a, b) ?? [a, b])
+        case .TRIANGLE: return closed([Pt((l + r) / 2, t), Pt(r, bt), Pt(l, bt)])
+        case .RECT, .RRECT: return closed([Pt(l, t), Pt(r, t), Pt(r, bt), Pt(l, bt)])
+        case .ELLIPSE:
+            let cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, rx = abs(b.x - a.x) / 2, ry = abs(b.y - a.y) / 2
+            return (0...64).map { i in let q = CGFloat(i) / 64 * 2 * .pi; return Pt(cx + rx * cos(q), cy + ry * sin(q)) }
+        }
+    }
+
+    /// Cômodo depois da borracha: tira os trechos tocados; o resto vira contornos abertos (índices de vértices e trechos). nil = não tocou.
+    static func roomPieces(_ o: RoomObj, _ pts: [Pt], _ c: Pt, _ r: CGFloat) -> [([Int], [Int])]? {
+        let n = o.segCount
+        if n <= 0 || pts.count < 2 { return nil }
+        let hit = (0..<n).map { k in Geo.distToSegment(c, pts[k], pts[(k + 1) % pts.count]) <= r }
+        guard let f = hit.firstIndex(of: true) else { return nil }
+        let order: [Int] = o.closed ? (1...n).map { (f + $0) % n } : Array(0..<n)
+        var out: [([Int], [Int])] = []
+        var segs: [Int] = []
+        func flush() {
+            if !segs.isEmpty { out.append((segs + [(segs[segs.count - 1] + 1) % pts.count], segs)) }
+            segs = []
+        }
+        for k in order { if hit[k] { flush() } else { segs.append(k) } }
+        flush()
+        return out
+    }
 }

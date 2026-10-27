@@ -39,8 +39,19 @@ final class GestureController {
     private var accAng: CGFloat = 0
     private var rotating = false
     private var pinchPhotoId: String?
+    // pontos que chegam num quadro: gravados de uma vez no flush (não copia o traço a cada ponto)
+    private var strokePending: [Pt] = []
+    private var strokePhotos: [String: PhotoObj]?
+    private var erasePending: [Pt] = []
+    private var lastErase: Pt?
+    private var boxCache: [String: (Int, CGFloat, CGFloat, CGRect)] = [:]
 
     init(_ s: EditorSession) { self.s = s }
+
+    /// Objeto sendo desenhado agora (o resto da folha pode ficar numa imagem guardada).
+    var liveId: String? { (mode == .STROKE || mode == .ROOM) ? createdId : nil }
+    /// Só traço, borracha e laço usam os pontos intermediários.
+    var wantsHistory: Bool { mode == .STROKE || mode == .ROOM || mode == .ERASE || mode == .LASSO || mode == .ERASE_LASSO }
 
     private var st: EditorState { s.state }
     private let slop: CGFloat = 8
@@ -68,7 +79,7 @@ final class GestureController {
         case .LASSO: downLasso(p)
         case .PEN, .PENCIL, .HIGHLIGHTER: startStroke(p, tool)
         case .ERASER:
-            if s.eraserMode == .LASSO { s.lasso = [p]; mode = .ERASE_LASSO } else { mode = .ERASE; st.beginGesture(); erase(p) }
+            if s.eraserMode == .LASSO { s.lasso = [p]; mode = .ERASE_LASSO } else { mode = .ERASE; st.beginGesture(); lastErase = nil; boxCache = [:]; erase(p); flush() }
         case .LINE, .DASHED, .ARROW, .RECT, .RRECT, .ELLIPSE, .TRIANGLE, .DARROW, .CURVE, .ELBOW, .RTRI, .DIAMOND, .TRAP: startShape(p, tool)
         case .TEXT: mode = .NONE
         }
@@ -199,6 +210,7 @@ final class GestureController {
 
     /// Segurou parado no fim do traço: vira linha reta do começo até ali.
     func hold() {
+        flushStroke()
         guard mode == .STROKE, !strokeStraight, let o = st.sheet.obj(createdId)?.asStroke else { return }
         let photos = st.sheet.photos()
         let pts = o.pts.map { Geo.toSheet(photos, o.photoId, $0) }
@@ -215,6 +227,8 @@ final class GestureController {
 
     private func startStroke(_ p: Pt, _ tool: Tool) {
         let photos = st.sheet.photos()
+        strokePhotos = photos
+        strokePending = []
         let photoId = Geo.photoAt(st.sheet, p)?.id
         let kind: StrokeKind = tool == .PENCIL ? .PENCIL : (tool == .HIGHLIGHTER ? .HIGHLIGHTER : .PEN)
         let width: CGFloat = kind == .PEN ? s.width : (kind == .PENCIL ? max(1.2, s.width * 0.6) : s.width * 6)
@@ -280,18 +294,18 @@ final class GestureController {
         case .HANDLE: applyHandle(p)
         case .STROKE, .ROOM:
             if let o = st.sheet.obj(createdId)?.asStroke {
-                let photos = st.sheet.photos()
+                let photos: [String: PhotoObj]
+                if let sp = strokePhotos { photos = sp } else { photos = st.sheet.photos(); strokePhotos = photos }
                 if mode == .STROKE && strokeStraight {
                     let a = Geo.toSheet(photos, o.photoId, o.pts[0])
                     let end = snapPoint(p, o.id) ?? Geo.snapAxis(a, p)
                     var n = o; n.pts = [o.pts[0], Geo.fromSheet(photos, o.photoId, end)]
                     st.live(replace(.stroke(n)))
                 } else {
-                    let last = Geo.toSheet(photos, o.photoId, o.pts[o.pts.count - 1])
+                    let last = Geo.toSheet(photos, o.photoId, strokePending.last ?? o.pts[o.pts.count - 1])
                     // passo mínimo bem pequeno (em pontos de tela) para a escrita fina ficar precisa em qualquer zoom
                     if hypotf2(p.x - last.x, p.y - last.y) * s.view.scale >= 0.6 {
-                        var n = o; n.pts.append(Geo.fromSheet(photos, o.photoId, p))
-                        st.live(replace(.stroke(n)))
+                        strokePending.append(Geo.fromSheet(photos, o.photoId, p))
                     }
                     if mode == .STROKE && t >= 0 {
                         if lastSigT < 0 || hypot(screen.x - lastSigScreen.x, screen.y - lastSigScreen.y) > 3 { lastSigScreen = screen; lastSigT = t }
@@ -307,7 +321,7 @@ final class GestureController {
                 st.live(replace(Geo.withEndpoint(st.sheet, o, true, target)))
                 if o.asDim != nil || o.asDoor != nil || o.asShape?.kind == .ARROW || o.asShape?.kind == .DARROW { s.loupe = screen }
             }
-        case .ERASE: erase(p)
+        case .ERASE: erasePending.append(p)
         case .LASSO, .ERASE_LASSO:
             if let last = s.lasso.last, hypotf2(p.x - last.x, p.y - last.y) < 3 {} else { s.lasso.append(p) }
         case .GROUP: if moved, let b = groupBase { st.moveGroupLive(b, p.x - groupStart.x, p.y - groupStart.y) }
@@ -317,44 +331,126 @@ final class GestureController {
         lastSheet = p
     }
 
+    /// Apaga qualquer linha ou contorno (traço, forma, texto, cota, porta, parede); objetos antigos do Android ficam protegidos.
     private func erasable(_ o: Obj) -> Bool {
-        switch o {
-        case .stroke(let s2): return !s2.locked && (!s.eraserOnlyHighlighter || s2.kind == .HIGHLIGHTER)
-        case .shape(let s2): return !s2.locked && !s.eraserOnlyHighlighter
-        case .text(let t): return !t.locked && !s.eraserOnlyHighlighter
-        default: return false
-        }
+        if o.locked || o.isLegacy { return false }
+        if case .photo = o { return false }
+        if s.eraserOnlyHighlighter { if case .stroke(let s2) = o { return s2.kind == .HIGHLIGHTER }; return false }
+        return true
     }
 
-    private func erase(_ p: Pt) {
-        let sh = st.sheet
-        let r = s.eraserSize / s.view.scale
-        if s.eraserMode == .PIXEL {
-            let photos = sh.photos()
-            var changed = false
-            var out: [Obj] = []
-            for o in sh.objs {
-                if !erasable(o) { out.append(o); continue }
-                if case .stroke(let so) = o {
-                    let sp = Geo.annPoints(photos, o)
-                    guard let pieces = Eraser.erasePieces(sp, p, r + so.width / 2) else { out.append(o); continue }
-                    changed = true
-                    for (k, pc) in pieces.enumerated() {
-                        var n = so
-                        n.pts = pc.map { Geo.fromSheet(photos, so.photoId, $0) }
-                        if k > 0 { n.id = newId() }
-                        out.append(.stroke(n))
-                    }
-                } else if Geo.hitObj(sh, o, p, r, st.unit) { changed = true } else { out.append(o) }
-            }
-            if changed { var n = sh; n.objs = out; st.live(n) }
-            return
+    private func erase(_ p: Pt) { erasePending.append(p) }
+
+    private func flushStroke() {
+        if strokePending.isEmpty { return }
+        if let o = st.sheet.obj(createdId)?.asStroke {
+            var n = o; n.pts.append(contentsOf: strokePending)
+            st.live(replace(.stroke(n)))
         }
-        let gone = Set(sh.objs.filter { erasable($0) && Geo.hitObj(sh, $0, p, r, st.unit) }.map(\.id))
-        if !gone.isEmpty { var n = sh; n.objs = sh.objs.filter { !gone.contains($0.id) }; st.live(n) }
+        strokePending = []
+    }
+
+    /// Fim de cada evento de toque: aplica o traço e a borracha de uma vez e redesenha uma vez só.
+    func flush() {
+        flushStroke()
+        if erasePending.isEmpty { return }
+        let pts = erasePending
+        erasePending = []
+        eraseNow(pts)
+    }
+
+    private func boxOf(_ photos: [String: PhotoObj], _ o: Obj) -> CGRect {
+        var key = 0; var fx: CGFloat = 0; var lx: CGFloat = 0
+        if case .stroke(let so) = o { key = so.pts.count; fx = so.pts.first?.x ?? 0; lx = so.pts.last?.x ?? 0 }
+        if let c = boxCache[o.id], c.0 == key, c.1 == fx, c.2 == lx { return c.3 }
+        let ps = Geo.annPoints(photos, o)
+        var r = CGRect(x: -1e9, y: -1e9, width: 2e9, height: 2e9)
+        if let f = ps.first {
+            var l = f.x, t = f.y, rr = f.x, b = f.y
+            for q in ps { l = min(l, q.x); t = min(t, q.y); rr = max(rr, q.x); b = max(b, q.y) }
+            var pad: CGFloat = 0
+            switch o { case .text, .dim, .room, .door: pad = 80; default: pad = 0 }
+            r = CGRect(x: l - pad, y: t - pad, width: rr - l + 2 * pad, height: b - t + 2 * pad)
+        }
+        boxCache[o.id] = (key, fx, lx, r)
+        return r
+    }
+
+    private func eraseNow(_ points: [Pt]) {
+        let r = s.eraserSize / s.view.scale
+        var use: [Pt] = []
+        for p in points {
+            if let le = lastErase, hypotf2(p.x - le.x, p.y - le.y) < r * 0.45 { continue }
+            lastErase = p
+            use.append(p)
+        }
+        if use.isEmpty { return }
+        s.eraserTrail = Array((s.eraserTrail + use).suffix(40))
+        let sh0 = st.sheet
+        let photos = sh0.photos()
+        var objs = sh0.objs
+        var changedAny = false
+        for p in use {
+            var out: [Obj] = []
+            out.reserveCapacity(objs.count + 4)
+            var changed = false
+            var sh = sh0; sh.objs = objs
+            for o in objs {
+                var extra: CGFloat = 10
+                if case .stroke(let so) = o { extra = so.width }
+                let bx = boxOf(photos, o).insetBy(dx: -(r + extra), dy: -(r + extra))
+                if !erasable(o) || !bx.contains(CGPoint(x: p.x, y: p.y)) { out.append(o); continue }
+                if s.eraserMode == .PIXEL {
+                    switch o {
+                    case .stroke(let so):
+                        let sp = Geo.annPoints(photos, o)
+                        guard let pieces = Eraser.erasePieces(sp, p, r + so.width / 2) else { out.append(o); continue }
+                        changed = true
+                        for (k, pc) in pieces.enumerated() {
+                            var n = so
+                            n.pts = pc.map { Geo.fromSheet(photos, so.photoId, $0) }
+                            if k > 0 { n.id = newId() }
+                            out.append(.stroke(n))
+                        }
+                    case .shape(let sh2) where !sh2.fill:
+                        // forma vira traço e a borracha tira só o pedaço que passou
+                        let ab = Geo.annPoints(photos, o)
+                        let outline = Eraser.shapeOutline(sh2.kind, ab[0], ab[1])
+                        guard let pieces = Eraser.erasePieces(outline, p, r + sh2.width / 2) else { out.append(o); continue }
+                        changed = true
+                        for pc in pieces {
+                            out.append(.stroke(StrokeObj(photoId: sh2.photoId, pts: pc.map { Geo.fromSheet(photos, sh2.photoId, $0) }, color: sh2.color, width: sh2.width)))
+                        }
+                    case .room(let ro):
+                        let rp = Geo.annPoints(photos, o)
+                        guard let pieces = Eraser.roomPieces(ro, rp, p, r + ro.width / 2) else { out.append(o); continue }
+                        changed = true
+                        for (k, pc) in pieces.enumerated() {
+                            var n = ro
+                            if k > 0 { n.id = newId() }
+                            n.pts = pc.0.map { ro.pts[$0] }
+                            n.segs = pc.1.map { ro.segs[$0] }
+                            n.closed = false
+                            out.append(.room(n))
+                        }
+                    default:
+                        if Geo.hitObj(sh, o, p, r, st.unit) { changed = true } else { out.append(o) }
+                    }
+                } else {
+                    var skip = false
+                    switch o { case .dim, .room: skip = true; default: skip = false }
+                    if !skip && Geo.hitObj(sh, o, p, r, st.unit) { changed = true } else { out.append(o) }
+                }
+            }
+            if changed { objs = out; changedAny = true }
+        }
+        if changedAny { var n = sh0; n.objs = objs; st.live(n) }
     }
 
     func up(_ screen: CGPoint) -> GestureAction? {
+        flush()
+        strokePhotos = nil
+        s.eraserTrail = []
         let p = s.view.toSheet(screen)
         switch mode {
         case .PAN: s.settle()
@@ -405,6 +501,10 @@ final class GestureController {
     /// Um segundo dedo apareceu: descarta o desenho em andamento.
     func cancelSingle() {
         s.loupe = nil
+        strokePending = []
+        strokePhotos = nil
+        erasePending = []
+        s.eraserTrail = []
         if [.STROKE, .SHAPE, .ERASE, .ROOM, .GROUP, .MOVE, .HANDLE].contains(mode) { st.cancelGesture() }
         if mode == .LASSO || mode == .ERASE_LASSO { s.lasso = [] }
         mode = .NONE

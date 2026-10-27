@@ -167,7 +167,6 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
     private fun withAlpha(color: Int, alpha: Int): Int = (color and 0x00FFFFFF) or (alpha shl 24)
 
     private fun drawStroke(c: Canvas, o: StrokeObj, photos: Map<String, PhotoObj>) {
-        val pts = Geo.annPoints(photos, o)
         val alpha = when (o.kind) {
             StrokeKind.PEN -> 255
             StrokeKind.PENCIL -> 205
@@ -176,21 +175,35 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         strokePaint.color = withAlpha(o.color, alpha)
         strokePaint.strokeWidth = o.width
         strokePaint.strokeCap = if (o.kind == StrokeKind.HIGHLIGHTER) Paint.Cap.SQUARE else Paint.Cap.ROUND
-        if (pts.size == 1) {
+        if (o.pts.isEmpty()) return
+        if (o.pts.size == 1) {
+            val p0 = Geo.toSheet(photos, o.photoId, o.pts[0])
             fillPaint.color = strokePaint.color
-            c.drawCircle(pts[0].x, pts[0].y, o.width / 2f, fillPaint)
+            c.drawCircle(p0.x, p0.y, o.width / 2f, fillPaint)
             return
         }
-        path.reset()
-        path.moveTo(pts[0].x, pts[0].y)
-        for (i in 1 until pts.size - 1) {
-            val mx = (pts[i].x + pts[i + 1].x) / 2f
-            val my = (pts[i].y + pts[i + 1].y) / 2f
-            path.quadTo(pts[i].x, pts[i].y, mx, my)
+        // caminho guardado por traço: só refaz o que mudou (o traço sendo escrito); o resto só redesenha
+        val ph = o.photoId?.let { photos[it] }
+        val cached = pathCache[o.id]
+        val path = if (cached != null && cached.pts === o.pts && cached.ph === ph) cached.path else {
+            val pts = Geo.annPoints(photos, o)
+            val np = Path()
+            np.moveTo(pts[0].x, pts[0].y)
+            for (i in 1 until pts.size - 1) {
+                val mx = (pts[i].x + pts[i + 1].x) / 2f
+                val my = (pts[i].y + pts[i + 1].y) / 2f
+                np.quadTo(pts[i].x, pts[i].y, mx, my)
+            }
+            np.lineTo(pts.last().x, pts.last().y)
+            if (pathCache.size > 8000) pathCache.clear()
+            pathCache[o.id] = CachedPath(o.pts, ph, np)
+            np
         }
-        path.lineTo(pts.last().x, pts.last().y)
         c.drawPath(path, strokePaint)
     }
+
+    private class CachedPath(val pts: List<Pt>, val ph: PhotoObj?, val path: Path)
+    private val pathCache = HashMap<String, CachedPath>()
 
     private fun arrowHead(c: Canvas, tip: Pt, from: Pt, size: Float, color: Int) {
         val ang = atan2((tip.y - from.y).toDouble(), (tip.x - from.x).toDouble())

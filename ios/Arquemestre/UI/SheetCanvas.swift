@@ -3,7 +3,12 @@ import UIKit
 
 /// A folha na tela: desenha todas as folhas empilhadas e recebe dedo, Apple Pencil e pinça.
 final class SheetCanvasView: UIView {
-    var session: EditorSession! { didSet { controller = GestureController(session) } }
+    var session: EditorSession! {
+        didSet {
+            controller = GestureController(session)
+            session.onCanvas = { [weak self] in self?.setNeedsDisplay() }
+        }
+    }
     var onAction: ((GestureAction) -> Void)?
     private var controller: GestureController!
     private let renderer = SheetRenderer()
@@ -17,6 +22,14 @@ final class SheetCanvasView: UIView {
     private var lastMoveT: TimeInterval = 0
     private var holdTimer: Timer?
     private var lockedTouchMoved = false
+    /// Toques de mão/punho apoiados: ignorados até soltar.
+    private var palms = Set<UITouch>()
+    /// Imagem do que está parado na folha enquanto se escreve (só o traço novo é redesenhado).
+    private var cache: UIImage?
+    private var cacheKey = ""
+
+    /// Contato grande (mão, punho) e não é o Apple Pencil.
+    private func isPalm(_ t: UITouch) -> Bool { t.type != .pencil && t.majorRadius > 30 }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -36,6 +49,7 @@ final class SheetCanvasView: UIView {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let s = session else { return }
         for t in touches {
+            if isPalm(t) { palms.insert(t); continue }
             if s.screenLocked {
                 if active == nil { active = t; downT = t.timestamp; downPos = t.location(in: self); lockedTouchMoved = false }
                 continue
@@ -86,12 +100,19 @@ final class SheetCanvasView: UIView {
             return
         }
         guard let a = active else { return }
+        // o toque que virou mão apoiada (contato cresceu) é descartado
+        if !pen && !multi && isPalm(a) {
+            controller.cancelSingle(); s.settle()
+            palms.insert(a); active = nil; holdTimer?.invalidate()
+            setNeedsDisplay(); return
+        }
         if multi, let b = second {
             controller.pinch(a.location(in: self), b.location(in: self))
         } else if touches.contains(a) {
-            // pontos intermediários que o iOS junta num quadro só: escrita precisa
-            let all = event?.coalescedTouches(for: a) ?? [a]
+            // pontos intermediários que o iOS junta num quadro só: escrita precisa (arrastar usa só o último)
+            let all = controller.wantsHistory ? (event?.coalescedTouches(for: a) ?? [a]) : [a]
             for c in all { controller.move(c.location(in: self), c.timestamp) }
+            controller.flush()
             lastMoveT = a.timestamp
         }
         setNeedsDisplay()
@@ -101,6 +122,7 @@ final class SheetCanvasView: UIView {
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { finish(touches, cancelled: true) }
 
     private func finish(_ touches: Set<UITouch>, cancelled: Bool) {
+        for t in touches { palms.remove(t) }
         guard let s = session else { return }
         if s.screenLocked {
             if let a = active, touches.contains(a) {
@@ -140,11 +162,58 @@ final class SheetCanvasView: UIView {
         c.setFillColor(backgroundColor?.cgColor ?? UIColor.darkGray.cgColor)
         c.fill(bounds)
         let v = s.view
-        c.saveGState()
-        c.translateBy(x: v.ox, y: v.oy)
-        c.scaleBy(x: v.scale, y: v.scale)
-        drawScene(c, s, v.scale, selected: true, visible: CGRect(x: -v.ox / v.scale, y: -v.oy / v.scale, width: bounds.width / v.scale, height: bounds.height / v.scale))
-        c.restoreGState()
+        let visible = CGRect(x: -v.ox / v.scale, y: -v.oy / v.scale, width: bounds.width / v.scale, height: bounds.height / v.scale)
+        if let lid = controller?.liveId, s.state.inGesture {
+            // escrevendo: o resto da folha vira uma imagem (feita uma vez); só o traço novo é desenhado a cada quadro
+            let key = "\(s.staticRev)|\(v.ox)|\(v.oy)|\(v.scale)|\(bounds.width)|\(bounds.height)|\(lid)|\(s.state.pageIdx)"
+            if cache == nil || cacheKey != key {
+                let fmt = UIGraphicsImageRendererFormat.default()
+                fmt.opaque = true
+                cache = UIGraphicsImageRenderer(size: bounds.size, format: fmt).image { ctx in
+                    let cc = ctx.cgContext
+                    cc.setFillColor(backgroundColor?.cgColor ?? UIColor.darkGray.cgColor)
+                    cc.fill(CGRect(origin: .zero, size: bounds.size))
+                    cc.translateBy(x: v.ox, y: v.oy)
+                    cc.scaleBy(x: v.scale, y: v.scale)
+                    drawScene(cc, s, v.scale, selected: true, visible: visible, skipId: lid)
+                }
+                cacheKey = key
+            }
+            cache?.draw(in: bounds)
+            c.saveGState()
+            c.translateBy(x: v.ox, y: v.oy)
+            c.scaleBy(x: v.scale, y: v.scale)
+            c.translateBy(x: 0, y: CGFloat(s.state.pageIdx) * (Sheet.H + Sheet.GAP))
+            renderer.drawOne(c, s.state.sheet, s.state.unit, id: lid)
+            c.restoreGState()
+        } else {
+            cache = nil
+            c.saveGState()
+            c.translateBy(x: v.ox, y: v.oy)
+            c.scaleBy(x: v.scale, y: v.scale)
+            drawScene(c, s, v.scale, selected: true, visible: visible)
+            c.restoreGState()
+        }
+        // rastro da borracha: faixa clara por onde passou + o círculo dela
+        if !s.eraserTrail.isEmpty {
+            c.saveGState()
+            c.translateBy(x: v.ox, y: v.oy)
+            c.scaleBy(x: v.scale, y: v.scale)
+            c.translateBy(x: 0, y: CGFloat(s.state.pageIdx) * (Sheet.H + Sheet.GAP))
+            let er = s.eraserSize / v.scale
+            if s.eraserTrail.count > 1 {
+                c.setStrokeColor(UIColor(white: 0.5, alpha: 0.2).cgColor)
+                c.setLineWidth(er * 2); c.setLineCap(.round); c.setLineJoin(.round)
+                c.beginPath(); c.move(to: s.eraserTrail[0].cg)
+                for p in s.eraserTrail.dropFirst() { c.addLine(to: p.cg) }
+                c.strokePath()
+            }
+            let last = s.eraserTrail[s.eraserTrail.count - 1]
+            let rr = CGRect(x: last.x - er, y: last.y - er, width: er * 2, height: er * 2)
+            c.setFillColor(UIColor(white: 1, alpha: 0.33).cgColor); c.fillEllipse(in: rr)
+            c.setStrokeColor(UIColor(white: 0.4, alpha: 1).cgColor); c.setLineWidth(1.5 / v.scale); c.strokeEllipse(in: rr)
+            c.restoreGState()
+        }
 
         // lupa circular com mira (3,4×)
         if let f = s.loupe {
@@ -168,7 +237,7 @@ final class SheetCanvasView: UIView {
         }
     }
 
-    private func drawScene(_ c: CGContext, _ s: EditorSession, _ scale: CGFloat, selected: Bool, visible: CGRect) {
+    private func drawScene(_ c: CGContext, _ s: EditorSession, _ scale: CGFloat, selected: Bool, visible: CGRect, skipId: String? = nil) {
         let st = s.state
         let step = Sheet.H + Sheet.GAP
         for (i, page) in st.note.pages.enumerated() {
@@ -176,7 +245,7 @@ final class SheetCanvasView: UIView {
             if y0 > visible.maxY || y0 + Sheet.H < visible.minY { continue }
             c.saveGState()
             c.translateBy(x: 0, y: y0)
-            renderer.draw(c, page, st.unit, selectedId: (selected && i == st.pageIdx) ? st.selectedId : nil, viewScale: scale, selectedSeg: st.selectedSeg)
+            renderer.draw(c, page, st.unit, selectedId: (selected && i == st.pageIdx) ? st.selectedId : nil, viewScale: scale, selectedSeg: st.selectedSeg, skipId: i == st.pageIdx ? skipId : nil)
             if i == st.pageIdx {
                 c.setStrokeColor(UIColor(red: 0.18, green: 0.5, blue: 0.93, alpha: 1).cgColor)
                 c.setLineWidth(2 / scale)

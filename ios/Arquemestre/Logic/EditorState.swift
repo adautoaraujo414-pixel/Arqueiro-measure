@@ -16,9 +16,14 @@ final class EditorState {
     private var undoStack: [Note] = []
     private var redoStack: [Note] = []
     private var gestureBase: Note?
+    private var gestureDirty = false
 
     var onCommit: (Note) -> Void
     var onChange: () -> Void
+    /// Chamado uma vez quando começa um gesto contínuo (os painéis escondem o que atrapalha).
+    var onGestureStart: () -> Void = {}
+    /// Tem um gesto contínuo em andamento (traço, arrasto, borracha).
+    var inGesture: Bool { gestureBase != nil }
 
     init(_ initial: Note, onCommit: @escaping (Note) -> Void = { _ in }, onChange: @escaping () -> Void = {}) {
         note = initial
@@ -231,18 +236,23 @@ final class EditorState {
     }
 
     // ---- gestos contínuos ----
-    func beginGesture() { if gestureBase == nil { gestureBase = note } }
+    func beginGesture() { if gestureBase == nil { gestureBase = note; gestureDirty = false; onGestureStart() } }
 
     func live(_ newSheet: Sheet) {
-        if gestureBase == nil { gestureBase = note }
+        let first = gestureBase == nil
+        if first { gestureBase = note; gestureDirty = false }
         note = withSheet(newSheet)
+        gestureDirty = true
         onChange()
+        if first { onGestureStart() }
     }
 
     func endGesture() {
         guard let base = gestureBase else { return }
         gestureBase = nil
-        if base != note {
+        // sem comparar a nota inteira (pesava ao soltar a caneta): mudou se teve live no gesto
+        if gestureDirty {
+            gestureDirty = false
             push(base)
             redoStack.removeAll()
             onCommit(note)
@@ -253,6 +263,7 @@ final class EditorState {
     func cancelGesture() {
         if let g = gestureBase { note = g }
         gestureBase = nil
+        gestureDirty = false
         fixSelection()
         onChange()
     }

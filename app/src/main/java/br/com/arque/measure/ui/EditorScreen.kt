@@ -197,10 +197,15 @@ private fun drawScene(
     renderer: SheetRenderer,
     scale: Float,
     selected: Boolean,
+    visTop: Float = -Float.MAX_VALUE,
+    visBot: Float = Float.MAX_VALUE,
 ) {
     val st = session.state
     val step = Sheet.H + Sheet.GAP
     st.note.pages.forEachIndexed { i, page ->
+        // folha fora da tela não é desenhada (com muitas folhas era o que mais pesava)
+        val y0 = i * step
+        if (y0 > visBot || y0 + Sheet.H < visTop) return@forEachIndexed
         nc.save()
         nc.translate(0f, i * step)
         renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg)
@@ -348,7 +353,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                                 if ((ch.position - downPos).getDistance() > 24f * density) moved = true
                                 if (ch.positionChanged()) {
                                     // pontos intermediários que o Android junta num quadro só: escrita da caneta fica precisa
-                                    ch.historical.forEach { h -> controller.move(h.position, h.uptimeMillis) }
+                                    if (controller.wantsHistory()) ch.historical.forEach { h -> controller.move(h.position, h.uptimeMillis) }
                                     controller.move(ch.position, ch.uptimeMillis)
                                     controller.flush()
                                     ch.consume()
@@ -391,7 +396,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
             nc.save()
             nc.translate(v.ox, v.oy)
             nc.scale(v.scale, v.scale)
-            drawScene(nc, session, renderer, v.scale, selected = true)
+            drawScene(nc, session, renderer, v.scale, selected = true, visTop = -v.oy / v.scale - 20f, visBot = if (session.canvasH > 0f) (-v.oy + session.canvasH) / v.scale + 20f else Float.MAX_VALUE)
             nc.restore()
 
             // lupa circular com mira, ≈124 dp, zoom 3,4×
@@ -412,7 +417,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
                 nc.translate(lcx, lcy)
                 nc.scale(v.scale * 3.4f, v.scale * 3.4f)
                 nc.translate(-fw.x, -fw.y)
-                drawScene(nc, session, renderer, v.scale * 3.4f, selected = false)
+                drawScene(nc, session, renderer, v.scale * 3.4f, selected = false, visTop = fw.y - 80f, visBot = fw.y + 80f)
                 nc.restore()
                 val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
                 p.style = android.graphics.Paint.Style.STROKE
@@ -433,7 +438,7 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
 @Composable
 fun EditorScreen(vm: AppViewModel, session: EditorSession) {
     @Suppress("UNUSED_VARIABLE")
-    val rev = session.rev
+    val rev = session.uiRev
     val st = session.state
     val note = st.note
     val selected = st.selected
@@ -750,7 +755,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
             if (session.calcOpen) FloatingCalc(vm, session)
 
             // ---- barra do grupo (laço) ----
-            if (st.groupIds.isNotEmpty()) {
+            if (st.groupIds.isNotEmpty() && !st.inGesture) {
                 val boxes = st.groupObjs().map { Geo.bounds(st.sheet, it) }
                 if (boxes.isNotEmpty()) {
                     val tl = session.view.toScreen(br.com.arque.measure.model.Pt(boxes.minOf { it.l }, boxes.minOf { it.t }))
@@ -776,7 +781,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
             }
 
             // ---- menu de contexto acima do objeto selecionado ----
-            if (selected != null && selected !is DimObj) {
+            if (selected != null && selected !is DimObj && !st.inGesture) {
                 val ptsSheet = if (selected is PhotoObj) Geo.corners(selected)
                 else Geo.annPoints(st.sheet.photos(), selected as br.com.arque.measure.model.Ann)
                 if (ptsSheet.isNotEmpty()) {
@@ -1438,7 +1443,7 @@ private fun OverviewDialog(session: EditorSession, vm: AppViewModel, onDismiss: 
                             ) {
                                 val img = vm.images.version
                                 Canvas(Modifier.fillMaxWidth().height(200.dp)) {
-                                    @Suppress("UNUSED_VARIABLE") val t = img + session.rev
+                                    @Suppress("UNUSED_VARIABLE") val t = img + session.uiRev
                                     drawIntoCanvas { c ->
                                         val nc = c.nativeCanvas
                                         val k = min(size.width / Sheet.W, size.height / Sheet.H)
@@ -1689,7 +1694,7 @@ private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.Wall
 @Composable
 private fun CabQuickWindow(session: EditorSession, id: String) {
     val st = session.state
-    @Suppress("UNUSED_VARIABLE") val rev = session.rev
+    @Suppress("UNUSED_VARIABLE") val rev = session.uiRev
     val o = st.sheet.obj(id) as? br.com.arque.measure.model.CabObj
     if (o == null) { session.cabQuickId = null; return }
     val cab = o.cab

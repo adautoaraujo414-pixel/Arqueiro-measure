@@ -78,7 +78,13 @@ struct TextEdit: Equatable { var id: String?; var at: Pt }
 final class EditorSession: ObservableObject {
     @Published var rev = 0
     let state: EditorState
-    var view = ViewState() { didSet { rev &+= 1 } }
+    var view = ViewState() { didSet { staticRev &+= 1; rev &+= 1 } }
+    /// A folha desenha direto (sem passar pelo SwiftUI) a cada ponto do traço.
+    var onCanvas: (() -> Void)?
+    /// Muda quando o que está parado na folha mudou (fora do gesto): a imagem guardada é refeita.
+    var staticRev = 0
+    /// Rastro da borracha (folha), desenhado por cima enquanto apaga.
+    var eraserTrail: [Pt] = []
 
     @Published private(set) var tool: Tool = .SELECT
     @Published var color: Int = PALETTE[0]
@@ -86,7 +92,7 @@ final class EditorSession: ObservableObject {
     @Published var width: CGFloat = 0.55 * UNITS_PER_MM
     @Published var fill = false
     @Published var stylusOnly = false
-    @Published var eraserMode: EraserMode = .STROKE
+    @Published var eraserMode: EraserMode = .PIXEL
     @Published var eraserSize: CGFloat = 12
     @Published var eraserOnlyHighlighter = false
     @Published var textEdit: TextEdit?
@@ -110,7 +116,13 @@ final class EditorSession: ObservableObject {
 
     init(_ note: Note, onCommit: @escaping (Note) -> Void) {
         state = EditorState(note, onCommit: onCommit)
-        state.onChange = { [weak self] in self?.rev &+= 1 }
+        // durante o traço só a folha redesenha; os painéis (SwiftUI) só no começo e no fim do gesto
+        state.onChange = { [weak self] in
+            guard let self = self else { return }
+            self.onCanvas?()
+            if !self.state.inGesture { self.staticRev &+= 1; self.rev &+= 1 }
+        }
+        state.onGestureStart = { [weak self] in self?.rev &+= 1 }
     }
 
     func chooseTool(_ t: Tool) {

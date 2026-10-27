@@ -293,6 +293,7 @@ class GestureController(private val s: EditorSession, private val density: Float
     /** Segurou parado no fim do traço: vira linha reta do começo até ali (encaixa no eixo e nos pontos perto). */
     fun hold() {
         if (mode != Mode.STROKE || strokeStraight) return
+        flushStroke()
         val o = st.sheet.obj(createdId) as? StrokeObj ?: return
         if (o.kind == StrokeKind.HIGHLIGHTER && o.pts.size < 2) return
         val photos = st.sheet.photos()
@@ -308,6 +309,8 @@ class GestureController(private val s: EditorSession, private val density: Float
 
     private fun startStroke(p: Pt, tool: Tool) {
         val photos = st.sheet.photos()
+        strokePhotos = photos
+        strokePending.clear()
         val photoId = Geo.photoAt(st.sheet, p)?.id
         val kind = when (tool) {
             Tool.PENCIL -> StrokeKind.PENCIL
@@ -380,6 +383,9 @@ class GestureController(private val s: EditorSession, private val density: Float
         mode = Mode.SHAPE
     }
 
+    /** Só traço, borracha e laço precisam dos pontos intermediários; arrastar usa só a última posição. */
+    fun wantsHistory(): Boolean = mode == Mode.STROKE || mode == Mode.ROOM || mode == Mode.ERASE || mode == Mode.LASSO || mode == Mode.ERASE_LASSO
+
     fun move(screen: Offset, t: Long = -1L) {
         val p = s.view.toSheet(screen)
         if (!moved && (screen - downScreen).getDistance() > slop) moved = true
@@ -399,17 +405,18 @@ class GestureController(private val s: EditorSession, private val density: Float
             Mode.STROKE, Mode.ROOM -> {
                 val o = st.sheet.obj(createdId) as? StrokeObj
                 if (o != null) {
-                    val photos = st.sheet.photos()
+                    val photos = strokePhotos ?: st.sheet.photos().also { strokePhotos = it }
                     if (mode == Mode.STROKE && strokeStraight) {
                         // reta: a ponta acompanha o dedo, encaixa no eixo e em pontos próximos
                         val a = Geo.toSheet(photos, o.photoId, o.pts.first())
                         val end = snapPoint(p, o.id) ?: Geo.snapAxis(a, p)
                         st.live(replace(o.copy(pts = listOf(o.pts.first(), Geo.fromSheet(photos, o.photoId, end)))))
                     } else {
-                        val last = Geo.toSheet(photos, o.photoId, o.pts.last())
+                        val last = Geo.toSheet(photos, o.photoId, strokePending.lastOrNull() ?: o.pts.last())
                         // passo mínimo bem pequeno (em pixels de tela) pra escrita fina ficar precisa em qualquer zoom
                         if (hypot(p.x - last.x, p.y - last.y) * s.view.scale >= 0.6f) {
-                            st.live(replace(o.copy(pts = o.pts + Geo.fromSheet(photos, o.photoId, p))))
+                            // junta os pontos do quadro e grava uma vez só no flush (não copia o traço a cada ponto)
+                            strokePending += Geo.fromSheet(photos, o.photoId, p)
                         }
                         if (mode == Mode.STROKE && t >= 0) {
                             if (lastSigT < 0 || (screen - lastSigScreen).getDistance() > 3f * density) { lastSigScreen = screen; lastSigT = t }
@@ -451,8 +458,20 @@ class GestureController(private val s: EditorSession, private val density: Float
         erasePending += p
     }
 
-    /** Chamado no fim de cada evento de toque: aplica a borracha nos pontos juntados. */
+    /** Pontos do traço que chegaram neste quadro (gravados de uma vez no flush). */
+    private val strokePending = ArrayList<Pt>()
+    private var strokePhotos: Map<String, PhotoObj>? = null
+
+    private fun flushStroke() {
+        if (strokePending.isEmpty()) return
+        val o = st.sheet.obj(createdId) as? StrokeObj
+        if (o != null) st.live(replace(o.copy(pts = o.pts + strokePending)))
+        strokePending.clear()
+    }
+
+    /** Chamado no fim de cada evento de toque: aplica o traço e a borracha nos pontos juntados. */
     fun flush() {
+        flushStroke()
         if (erasePending.isEmpty()) return
         val pts = ArrayList(erasePending)
         erasePending.clear()
@@ -555,6 +574,8 @@ class GestureController(private val s: EditorSession, private val density: Float
     }
 
     fun up(screen: Offset): GestureAction? {
+        flushStroke()
+        strokePhotos = null
         val p = s.view.toSheet(screen)
         when (mode) {
             Mode.PAN -> { s.settle() }
@@ -634,6 +655,8 @@ class GestureController(private val s: EditorSession, private val density: Float
         s.eraserTrail = emptyList()
         erasePending.clear()
         boxCache.clear()
+        strokePending.clear()
+        strokePhotos = null
         mode = Mode.NONE
     }
 

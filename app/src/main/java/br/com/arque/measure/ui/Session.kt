@@ -90,6 +90,9 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     var rev by mutableIntStateOf(0)
 
     val state = EditorState(initial, onCommit) { rev++ }
+    /** Muda só quando os painéis precisam mudar (não a cada ponto do traço). */
+    var uiRev by mutableIntStateOf(0)
+    init { state.onUi = { uiRev++ } }
     val view = ViewState()
 
     var tool by mutableStateOf(Tool.SELECT)

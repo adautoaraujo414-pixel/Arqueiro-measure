@@ -45,7 +45,7 @@ struct RootView: View {
             case .agenda: AgendaView()
             case .moveis: MoveisView()
             }
-            if lic.status == .trial && app.screen == .library {
+            if lic.hasAccess && (lic.status == .trial || !lic.willRenew || lic.inGrace) && app.screen == .library {
                 TrialChip().padding(12)
             }
         }
@@ -93,7 +93,10 @@ struct TrialOfferView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(tr("Como funciona")).font(.headline).foregroundColor(.white)
-                    if lic.trialDays > 0 { Label(tr("{0} dias grátis com tudo liberado.", lic.trialDays), systemImage: "gift") }
+                    if lic.trialDays > 0 {
+                        Label(tr("{0} dias grátis com tudo liberado.", lic.trialDays), systemImage: "gift")
+                        Label(tr("O teste começa quando você confirma a assinatura na Apple. Antes disso, nada fica liberado e nada é cobrado."), systemImage: "checkmark.seal")
+                    }
                     Label(lic.price.isEmpty ? tr("Assinatura mensal pela App Store.") : tr("Depois, {0} por mês, renovado automaticamente pela App Store.", lic.price), systemImage: "creditcard")
                     Label(tr("Cancele quando quiser em Ajustes › seu nome › Assinaturas. Cancelando até 24 h antes do fim do teste, nada é cobrado."), systemImage: "xmark.circle")
                     Label(tr("Sem assinatura ativa, as telas ficam bloqueadas, mas seus dados continuam guardados e dá para fazer backup."), systemImage: "lock")
@@ -194,21 +197,35 @@ struct LockView: View {
     }
 }
 
-/// No teste grátis: quanto falta e quanto custa depois.
+/// Selo na biblioteca: quanto falta do teste grátis, assinatura cancelada (vale até o fim do período) ou cobrança com problema.
 struct TrialChip: View {
     @EnvironmentObject var lic: LicenseManager
     @State private var open = false
     @State private var manage = false
+    private var chip: String {
+        if lic.inGrace { return tr("Problema na cobrança · toque aqui") }
+        if lic.status == .trial { return tr("Teste grátis · falta {0}", lic.leftLabel) }
+        return tr("Assinatura até {0}", lic.periodEndText)
+    }
+    private var detail: String {
+        if lic.inGrace { return tr("A Apple não conseguiu cobrar a renovação. O app continua liberado por alguns dias: atualize a forma de pagamento em Ajustes › seu nome › Assinaturas.") }
+        if lic.status == .trial {
+            return lic.willRenew
+                ? tr("Falta {0} de teste grátis. Depois, {1} por mês, renovado automaticamente. Pra não ser cobrado, cancele até 24 h antes do fim do teste.", lic.leftLabel, lic.price.isEmpty ? "—" : lic.price)
+                : tr("Renovação automática desligada: o teste grátis vai até {0} e nada será cobrado. Depois disso as telas bloqueiam, mas seus dados ficam guardados.", lic.periodEndText)
+        }
+        return tr("Renovação automática desligada: a assinatura vale até {0}. Depois disso as telas bloqueiam, mas seus dados ficam guardados. Pra continuar, ligue a renovação em Gerenciar assinatura.", lic.periodEndText)
+    }
     var body: some View {
         Button { open = true } label: {
-            Text(tr("Teste grátis · falta {0}", lic.leftLabel)).font(.caption).foregroundColor(Ui.gold)
+            Text(chip).font(.caption).foregroundColor(Ui.gold)
                 .padding(.horizontal, 10).padding(.vertical, 5)
                 .background(Capsule().fill(Color.black.opacity(0.8)))
         }
         .sheet(isPresented: $open) {
             VStack(spacing: 14) {
-                Text(tr("Teste grátis")).font(.title3.bold())
-                Text(tr("Falta {0} de teste grátis. Depois, {1} por mês, renovado automaticamente. Pra não ser cobrado, cancele até 24 h antes do fim do teste.", lic.leftLabel, lic.price.isEmpty ? "—" : lic.price))
+                Text(lic.status == .trial ? tr("Teste grátis") : tr("Assinatura")).font(.title3.bold())
+                Text(detail)
                     .multilineTextAlignment(.center).foregroundColor(Ui.dim)
                 Button(tr("Gerenciar assinatura")) { manage = true }.buttonStyle(.bordered)
                 LegalLinks()

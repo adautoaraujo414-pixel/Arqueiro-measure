@@ -49,6 +49,9 @@ targets:
     platform: iOS
     sources:
       - path: ArquemestreTests
+      # a mesma configuração da loja (assinatura mensal + 3 dias grátis) pros testes de assinatura com o StoreKit de teste
+      - path: Arquemestre/Resources/Arquemestre.storekit
+        buildPhase: resources
     dependencies:
       - target: Arquemestre
     settings:

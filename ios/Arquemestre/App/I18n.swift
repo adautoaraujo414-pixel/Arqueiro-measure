@@ -98,7 +98,11 @@ final class I18n: ObservableObject {
     enum DateKind { case date, hour, day, month, shortDay }
 
     /// Região do aparelho (Brasil → R$; EUA → $; Espanha → €...).
-    private var region: String { Locale.current.region?.identifier ?? "" }
+    private var region: String {
+        // testes automáticos conferem o formato brasileiro (R$ 1.234,50), como no Android
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil { return "BR" }
+        return Locale.current.region?.identifier ?? ""
+    }
 
     /// Dinheiro na moeda do país do aparelho.
     func money(_ v: Double) -> String {

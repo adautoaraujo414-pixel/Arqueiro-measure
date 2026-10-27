@@ -117,7 +117,7 @@ enum QuotePdf {
     }
 
     static func write(company: Company, quote q: Quote, note: Note?, logo: UIImage?, to url: URL) throws {
-        let df = DateFormatter(); df.locale = Locale(identifier: "pt_BR"); df.dateFormat = "dd/MM/yyyy"
+        let df = I18n.shared.dateFormatter(.date)
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: W, height: H))
         try renderer.writePDF(to: url) { ctx in
             var y = M
@@ -132,9 +132,9 @@ enum QuotePdf {
                 lg.draw(in: CGRect(x: M, y: top, width: lw, height: logoH))
                 tx = M + lw + 14
             }
-            draw((company.name.isEmpty ? "Minha empresa" : company.name).uppercased(), tx, y + 18, 18, bold: true)
+            draw((company.name.isEmpty ? tr("Minha empresa") : company.name).uppercased(), tx, y + 18, 18, bold: true)
             y += 26
-            let sub = [company.cnpj.isEmpty ? nil : "CNPJ \(company.cnpj)", company.phone.isEmpty ? nil : company.phone].compactMap { $0 }.joined(separator: "  ·  ")
+            let sub = [company.cnpj.isEmpty ? nil : tr("CNPJ {0}", company.cnpj), company.phone.isEmpty ? nil : company.phone].compactMap { $0 }.joined(separator: "  ·  ")
             if !sub.isEmpty { draw(sub, tx, y + 10, 10, color: GRAY); y += 14 }
             let addr = [company.address, company.city].filter { !$0.isEmpty }.joined(separator: " - ")
             if !addr.isEmpty { draw(addr, tx, y + 10, 10, color: GRAY); y += 14 }
@@ -142,10 +142,10 @@ enum QuotePdf {
             y += 6
             GOLD.setFill(); ctx.fill(CGRect(x: M, y: y - 1, width: W - 2 * M, height: 2))
             y += 22
-            draw("ORÇAMENTO", M, y, 20, bold: true)
+            draw(tr("ORÇAMENTO"), M, y, 20, bold: true)
             draw(df.string(from: Date(timeIntervalSince1970: Double(q.dateMs) / 1000)), W - M, y, 11, color: GRAY, right: true)
             y += 22
-            draw("CLIENTE", M, y, 10, color: GRAY); draw("CIDADE", 330, y, 10, color: GRAY)
+            draw(tr("CLIENTE"), M, y, 10, color: GRAY); draw(tr("CIDADE"), 330, y, 10, color: GRAY)
             y += 15
             draw(q.clientName.isEmpty ? "—" : q.clientName, M, y, 12, bold: true); draw(q.city.isEmpty ? "—" : q.city, 330, y, 12, bold: true)
             y += 26
@@ -154,11 +154,11 @@ enum QuotePdf {
             let descW = right1 - 52 - M
             func head() {
                 INK.setFill(); ctx.fill(CGRect(x: M, y: y, width: W - 2 * M, height: 20))
-                draw("DESCRIÇÃO", M + 6, y + 13.5, 9.5, bold: true, color: .white)
-                draw("QTD", right1, y + 13.5, 9.5, bold: true, color: .white, right: true)
-                draw("UN", unitX, y + 13.5, 9.5, bold: true, color: .white)
-                draw("VALOR UNIT.", right2, y + 13.5, 9.5, bold: true, color: .white, right: true)
-                draw("SUBTOTAL", right3 - 6, y + 13.5, 9.5, bold: true, color: .white, right: true)
+                draw(tr("DESCRIÇÃO"), M + 6, y + 13.5, 9.5, bold: true, color: .white)
+                draw(tr("QTD"), right1, y + 13.5, 9.5, bold: true, color: .white, right: true)
+                draw(tr("UN"), unitX, y + 13.5, 9.5, bold: true, color: .white)
+                draw(tr("VALOR UNIT."), right2, y + 13.5, 9.5, bold: true, color: .white, right: true)
+                draw(tr("SUBTOTAL"), right3 - 6, y + 13.5, 9.5, bold: true, color: .white, right: true)
                 y += 20
             }
             head()
@@ -182,20 +182,20 @@ enum QuotePdf {
             let hasDisc = q.discountPct > 0
             ensure(hasDisc ? 90 : 50)
             if hasDisc {
-                draw("Valor original", right2, y + 12, 11, color: GRAY, right: true)
+                draw(tr("Valor original"), right2, y + 12, 11, color: GRAY, right: true)
                 draw(QuoteMath.brl(QuoteMath.original(q)), right3 - 6, y + 12, 11, right: true)
                 y += 18
-                draw("Desconto (\(QuoteMath.numStr(q.discountPct))%)", right2, y + 12, 11, color: GRAY, right: true)
+                draw(tr("Desconto ({0}%)", QuoteMath.numStr(q.discountPct)), right2, y + 12, 11, color: GRAY, right: true)
                 draw("− " + QuoteMath.brl(QuoteMath.discountValue(q)), right3 - 6, y + 12, 11, right: true)
                 y += 22
             }
             GOLD.setFill(); ctx.fill(CGRect(x: 300, y: y, width: W - M - 300, height: 28))
-            draw(hasDisc ? "VALOR COM DESCONTO" : "TOTAL", 308, y + 18.5, 10.5, bold: true, color: .white)
+            draw(hasDisc ? tr("VALOR COM DESCONTO") : tr("TOTAL"), 308, y + 18.5, 10.5, bold: true, color: .white)
             draw(QuoteMath.brl(QuoteMath.finalValue(q)), right3 - 8, y + 19, 14, bold: true, color: .white, right: true)
             y += 46
             let until = Date(timeIntervalSince1970: Double(q.dateMs) / 1000 + Double(q.validityDays) * 86400)
-            var extra = ["Validade desta proposta: \(q.validityDays) dias (até \(df.string(from: until)))."]
-            if !q.notes.trimmingCharacters(in: .whitespaces).isEmpty { extra.append("Observações: " + q.notes.trimmingCharacters(in: .whitespaces)) }
+            var extra = [tr("Validade desta proposta: {0} dias (até {1}).", q.validityDays, df.string(from: until))]
+            if !q.notes.trimmingCharacters(in: .whitespaces).isEmpty { extra.append(tr("Observações: ") + q.notes.trimmingCharacters(in: .whitespaces)) }
             for l in extra.flatMap({ wrap($0, 11, W - 2 * M) + [""] }) {
                 ensure(16)
                 draw(l, M, y + 11, 11); y += l.isEmpty ? 6 : 15

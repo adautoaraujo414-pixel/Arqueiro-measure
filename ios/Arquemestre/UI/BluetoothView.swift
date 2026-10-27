@@ -15,7 +15,7 @@ struct BluetoothView: View {
                     LinearGradient(colors: [Color(argb: 0xFFE53935), Color(argb: 0xFFF5B400), Color(argb: 0xFF2E9E57), Color(argb: 0xFF1E5BD8), Color(argb: 0xFF8E24AA)], startPoint: .leading, endPoint: .trailing)
                         .frame(height: 4).clipShape(Capsule())
                     if !ble.message.isEmpty { Text(ble.message).font(.footnote).foregroundColor(.secondary) }
-                    Text("Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena.")
+                    Text(tr("Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena."))
                         .font(.footnote).foregroundColor(Color(argb: 0xFFFF8A80))
                 }
                 if ble.state == .CONNECTED {
@@ -23,41 +23,41 @@ struct BluetoothView: View {
                         HStack {
                             Text(ble.deviceName ?? "Bosch")
                             Spacer()
-                            Button("Desconectar") { ble.disconnect() }
+                            Button(tr("Desconectar")) { ble.disconnect() }
                         }
                     }
                 } else {
-                    Section("Ferramentas encontradas") {
-                        if ble.found.isEmpty { Text(ble.state == .SCANNING ? "Procurando…" : "Ligue a trena e ative o Bluetooth nela.").foregroundColor(.secondary) }
+                    Section(tr("Ferramentas encontradas")) {
+                        if ble.found.isEmpty { Text(ble.state == .SCANNING ? tr("Procurando…") : tr("Ligue a trena e ative o Bluetooth nela.")).foregroundColor(.secondary) }
                         ForEach(ble.found) { d in
                             HStack {
                                 Image(systemName: "dot.radiowaves.left.and.right").foregroundColor(Ui.distBlue)
                                 Text(d.name)
                                 Spacer()
-                                Button("Conectar") { ble.connect(d.id, name: d.name) }
+                                Button(tr("Conectar")) { ble.connect(d.id, name: d.name) }
                             }
                         }
                         HStack {
-                            Button("Procurar de novo") { ble.startScan() }
+                            Button(tr("Procurar de novo")) { ble.startScan() }
                             Spacer()
-                            Button("Mostrar todos") { ble.startScan(all: true) }
+                            Button(tr("Mostrar todos")) { ble.startScan(all: true) }
                         }.buttonStyle(.borderless)
-                        if ble.lastId != nil { Button("Última trena (\(ble.lastName ?? "Bosch"))") { ble.reconnectLast() } }
+                        if ble.lastId != nil { Button(tr("Última trena ({0})", ble.lastName ?? tr("Bosch"))) { ble.reconnectLast() } }
                     }
                 }
                 Section {
-                    Toggle("Mostrar painel da trena na folha", isOn: Binding(get: { !app.trenaHidden }, set: { app.setTrenaHidden(!$0) }))
-                    HStack { Text("Tamanho do painel"); Slider(value: Binding(get: { app.trenaScale }, set: { app.setTrenaScale($0) }), in: 0.5...1.3) }
-                    Text("Com o painel oculto, a medida continua indo direto para a cota ou o trecho selecionado.").font(.caption).foregroundColor(.secondary)
+                    Toggle(tr("Mostrar painel da trena na folha"), isOn: Binding(get: { !app.trenaHidden }, set: { app.setTrenaHidden(!$0) }))
+                    HStack { Text(tr("Tamanho do painel")); Slider(value: Binding(get: { app.trenaScale }, set: { app.setTrenaScale($0) }), in: 0.5...1.3) }
+                    Text(tr("Com o painel oculto, a medida continua indo direto para a cota ou o trecho selecionado.")).font(.caption).foregroundColor(.secondary)
                 }
                 if !ble.log.isEmpty {
-                    Section("Diagnóstico: últimos quadros recebidos") {
+                    Section(tr("Diagnóstico: últimos quadros recebidos")) {
                         ForEach(Array(ble.log.enumerated()), id: \.offset) { _, l in Text(l).font(.system(size: 11, design: .monospaced)).foregroundColor(.secondary) }
                     }
                 }
             }
-            .navigationTitle("Ferramentas Bluetooth®").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { dismiss() } } }
+            .navigationTitle(tr("Ferramentas Bluetooth®")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } } }
             .onAppear { if ble.state != .CONNECTED && ble.state != .CONNECTING { ble.startScan() } }
             .onDisappear { ble.stopScan() }
         }
@@ -73,11 +73,11 @@ struct PeerViewPicker: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Escolha o aparelho de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.").font(.footnote)
-                    Text("Funciona entre iPhones e iPads com o Arquemestre. Do Android para o iPhone, mande o backup ZIP.").font(.caption).foregroundColor(.secondary)
+                    Text(tr("Escolha o aparelho de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.")).font(.footnote)
+                    Text(tr("Funciona entre iPhones e iPads com o Arquemestre. Do Android para o iPhone, mande o backup ZIP.")).font(.caption).foregroundColor(.secondary)
                 }
-                Section("Aparelhos por perto") {
-                    if peer.found.isEmpty { Text("Procurando… no aparelho do dono: Editor de móveis → 📤 Compartilhar.").foregroundColor(.secondary) }
+                Section(tr("Aparelhos por perto")) {
+                    if peer.found.isEmpty { Text(tr("Procurando… no aparelho do dono: Editor de móveis → 📤 Compartilhar.")).foregroundColor(.secondary) }
                     ForEach(peer.found, id: \.self) { p in
                         Button("📱 \(p.displayName)") {
                             peer.connect(p)
@@ -88,8 +88,8 @@ struct PeerViewPicker: View {
                     }
                 }
             }
-            .navigationTitle("Ver projeto de outro aparelho").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { peer.disconnect(); dismiss() } } }
+            .navigationTitle(tr("Ver projeto de outro aparelho")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { peer.disconnect(); dismiss() } } }
             .onAppear { peer.browse() }
         }
     }
@@ -102,14 +102,14 @@ struct ShareHostView: View {
     var onPush: () -> Void
     var body: some View {
         VStack(spacing: 14) {
-            Text("Compartilhar projeto").font(.title3.bold())
-            Text(peer.hosting ? "📡 Compartilhando · " + (peer.viewers == 0 ? "ninguém vendo ainda" : "\(peer.viewers) vendo agora") : "Ligando…")
-            Text("No outro iPhone/iPad (com o Arquemestre): menu ⋯ → Ver projeto de outro iPhone → escolher este aparelho. Ele vê tudo ao vivo, mas não altera nada.")
+            Text(tr("Compartilhar projeto")).font(.title3.bold())
+            Text(peer.hosting ? tr("📡 Compartilhando · ") + (peer.viewers == 0 ? tr("ninguém vendo ainda") : tr("{0} vendo agora", peer.viewers)) : tr("Ligando…"))
+            Text(tr("No outro iPhone/iPad (com o Arquemestre): menu ⋯ → Ver projeto de outro iPhone → escolher este aparelho. Ele vê tudo ao vivo, mas não altera nada."))
                 .font(.footnote).foregroundColor(.secondary).multilineTextAlignment(.center)
             HStack {
-                Button("Parar de compartilhar", role: .destructive) { peer.stopHost(); dismiss() }
+                Button(tr("Parar de compartilhar"), role: .destructive) { peer.stopHost(); dismiss() }
                 Spacer()
-                Button("Continuar editando") { dismiss() }.buttonStyle(.borderedProminent)
+                Button(tr("Continuar editando")) { dismiss() }.buttonStyle(.borderedProminent)
             }
         }
         .padding(24)

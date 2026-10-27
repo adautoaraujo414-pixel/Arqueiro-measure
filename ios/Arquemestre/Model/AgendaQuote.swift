@@ -8,11 +8,11 @@ enum ApptKind: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .ENTREGA: return "Entrega"
-        case .VISITA: return "Visita"
-        case .MEDICAO: return "Medição"
-        case .INSTALACAO: return "Instalação"
-        case .OUTRO: return "Outro"
+        case .ENTREGA: return tr("Entrega")
+        case .VISITA: return tr("Visita")
+        case .MEDICAO: return tr("Medição")
+        case .INSTALACAO: return tr("Instalação")
+        case .OUTRO: return tr("Outro")
         }
     }
     var icon: String {
@@ -57,10 +57,10 @@ struct Appointment: Equatable, Identifiable {
     }
 }
 
-let REMIND_OPTIONS: [(Int, String)] = [
-    (0, "Na hora"), (15, "15 min antes"), (30, "30 min antes"), (60, "1 h antes"),
-    (120, "2 h antes"), (1440, "1 dia antes"), (2880, "2 dias antes"),
-]
+var REMIND_OPTIONS: [(Int, String)] { [
+    (0, tr("Na hora")), (15, tr("15 min antes")), (30, tr("30 min antes")), (60, tr("1 h antes")),
+    (120, tr("2 h antes")), (1440, tr("1 dia antes")), (2880, tr("2 dias antes")),
+]}
 
 struct ClientRef: Equatable, Identifiable {
     var name: String

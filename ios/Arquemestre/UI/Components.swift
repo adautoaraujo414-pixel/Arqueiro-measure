@@ -83,7 +83,7 @@ struct NumPadSheet: View {
             AppNumPad(text: $text, allowOps: allowOps)
             if let h = hint { Text(h).font(.caption).foregroundColor(.secondary) }
             HStack {
-                Button("Cancelar") { dismiss() }
+                Button(tr("Cancelar")) { dismiss() }
                 Spacer()
                 Button("OK") { if let v = numPadValue(text) { onOk(v); dismiss() } }
                     .buttonStyle(.borderedProminent).disabled(numPadValue(text) == nil)
@@ -143,11 +143,11 @@ struct ColorRow: View {
         }
         .sheet(isPresented: $more) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Cores").font(.headline)
+                Text(tr("Cores")).font(.headline)
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(40)), count: 7), spacing: 10) {
                     ForEach(EXTRA_COLORS, id: \.self) { c in ColorDot(c: c, on: current == c) { onPick(c); more = false }.frame(width: 32, height: 32) }
                 }
-                Button("Fechar") { more = false }
+                Button(tr("Fechar")) { more = false }
             }
             .padding(20)
             .presentationDetents([.height(320)])
@@ -168,8 +168,8 @@ struct NameSheet: View {
             Form { TextField(label, text: $text) }
                 .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancelar") { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) { Button("Salvar") { if !text.trimmingCharacters(in: .whitespaces).isEmpty { onOk(text); dismiss() } } }
+                    ToolbarItem(placement: .cancellationAction) { Button(tr("Cancelar")) { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) { Button(tr("Salvar")) { if !text.trimmingCharacters(in: .whitespaces).isEmpty { onOk(text); dismiss() } } }
                 }
         }
         .presentationDetents([.height(220)])

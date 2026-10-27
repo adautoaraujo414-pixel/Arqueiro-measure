@@ -366,7 +366,7 @@ class BoschBle(private val context: Context) {
             handleFrame(value, g.device.name)
         }
 
-        @Deprecated(tr("Usado em Android 12 e anteriores"))
+        @Deprecated("Usado em Android 12 e anteriores")
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(g: BluetoothGatt, c: BluetoothGattCharacteristic) {
             if (Build.VERSION.SDK_INT < 33) handleFrame(c.value ?: return, g.device.name)

@@ -6,14 +6,14 @@ enum BleState: String {
     case UNAVAILABLE, OFF, NO_PERMISSION, IDLE, SCANNING, CONNECTING, CONNECTED, ERROR
     var text: String {
         switch self {
-        case .CONNECTED: return "Pronto"
-        case .CONNECTING: return "Conectando…"
-        case .SCANNING: return "Procurando ferramentas…"
-        case .IDLE: return "Pronto"
-        case .OFF: return "Bluetooth desligado"
-        case .NO_PERMISSION: return "Falta permissão de Bluetooth"
-        case .UNAVAILABLE: return "Bluetooth LE indisponível"
-        case .ERROR: return "Erro"
+        case .CONNECTED: return tr("Pronto")
+        case .CONNECTING: return tr("Conectando…")
+        case .SCANNING: return tr("Procurando ferramentas…")
+        case .IDLE: return tr("Pronto")
+        case .OFF: return tr("Bluetooth desligado")
+        case .NO_PERMISSION: return tr("Falta permissão de Bluetooth")
+        case .UNAVAILABLE: return tr("Bluetooth LE indisponível")
+        case .ERROR: return tr("Erro")
         }
     }
 }
@@ -71,9 +71,9 @@ final class BoschBLE: NSObject, ObservableObject {
         case .poweredOn:
             if [.UNAVAILABLE, .OFF, .NO_PERMISSION].contains(state) { setState(.IDLE, "") }
             return true
-        case .unauthorized: setState(.NO_PERMISSION, "Libere o Bluetooth para o Arquemestre em Ajustes › Privacidade › Bluetooth"); return false
-        case .unsupported: setState(.UNAVAILABLE, "Este aparelho não tem Bluetooth LE"); return false
-        case .poweredOff: setState(.OFF, "Ligue o Bluetooth"); return false
+        case .unauthorized: setState(.NO_PERMISSION, tr("Libere o Bluetooth para o Arquemestre em Ajustes › Privacidade › Bluetooth")); return false
+        case .unsupported: setState(.UNAVAILABLE, tr("Este aparelho não tem Bluetooth LE")); return false
+        case .poweredOff: setState(.OFF, tr("Ligue o Bluetooth")); return false
         default: return false // ainda iniciando: o delegate continua
         }
     }
@@ -87,7 +87,7 @@ final class BoschBLE: NSObject, ObservableObject {
         guard let c = central else { return }
         if c.isScanning { c.stopScan() }
         found = []
-        setState(.SCANNING, all ? "Procurando todos os aparelhos BLE…" : "Procurando trena Bosch…")
+        setState(.SCANNING, all ? tr("Procurando todos os aparelhos BLE…") : tr("Procurando trena Bosch…"))
         c.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
         scanTimer?.invalidate()
         scanTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: false) { [weak self] _ in self?.stopScan() }
@@ -97,7 +97,7 @@ final class BoschBLE: NSObject, ObservableObject {
         scanTimer?.invalidate()
         guard let c = central, c.isScanning else { return }
         c.stopScan()
-        if state == .SCANNING { setState(.IDLE, found.isEmpty ? "Nenhuma trena encontrada" : "") }
+        if state == .SCANNING { setState(.IDLE, found.isEmpty ? tr("Nenhuma trena encontrada") : "") }
     }
 
     // ---- conexão ----
@@ -109,13 +109,13 @@ final class BoschBLE: NSObject, ObservableObject {
         userDisconnected = false
         closeCurrent()
         let p = peripherals[id] ?? c.retrievePeripherals(withIdentifiers: [id]).first
-        guard let per = p else { setState(.ERROR, "Trena não encontrada. Procure de novo."); return }
+        guard let per = p else { setState(.ERROR, tr("Trena não encontrada. Procure de novo.")); return }
         peripherals[id] = per
         current = per
         per.delegate = self
         deviceName = name ?? per.name
         d.set(id.uuidString, forKey: "ble.lastId"); d.set(deviceName, forKey: "ble.lastName")
-        setState(.CONNECTING, "Conectando…")
+        setState(.CONNECTING, tr("Conectando…"))
         addLog("Conectando a \(deviceName ?? id.uuidString)")
         c.connect(per, options: nil)
     }
@@ -145,13 +145,13 @@ final class BoschBLE: NSObject, ObservableObject {
 
     private func finishSetup(_ p: CBPeripheral) {
         if candidates.isEmpty {
-            setState(.ERROR, "Serviço Bosch não encontrado neste aparelho (veja o diagnóstico)")
+            setState(.ERROR, tr("Serviço Bosch não encontrado neste aparelho (veja o diagnóstico)"))
             return
         }
         notifyEnabled = 0
         let notifiers = candidates.filter { $0.properties.contains(.notify) || $0.properties.contains(.indicate) }
         for ch in notifiers { p.setNotifyValue(true, for: ch) }
-        if notifiers.isEmpty { setState(.ERROR, "Conectou, mas não foi possível ativar o recebimento de medidas") }
+        if notifiers.isEmpty { setState(.ERROR, tr("Conectou, mas não foi possível ativar o recebimento de medidas")) }
     }
 
     private func sendAutosync(_ p: CBPeripheral) {
@@ -184,7 +184,7 @@ extension BoschBLE: CBCentralManagerDelegate {
 
     func centralManager(_ c: CBCentralManager, didConnect p: CBPeripheral) {
         reconnectAttempts = 0
-        setState(.CONNECTING, "Descobrindo serviços…")
+        setState(.CONNECTING, tr("Descobrindo serviços…"))
         addLog("Conectado; descobrindo serviços")
         p.discoverServices(nil)
     }
@@ -203,20 +203,20 @@ extension BoschBLE: CBCentralManagerDelegate {
         guard !userDisconnected else { return }
         if reconnectAttempts < 5 {
             reconnectAttempts += 1
-            setState(.CONNECTING, "Tentando de novo (\(reconnectAttempts)/5)…")
+            setState(.CONNECTING, tr("Tentando de novo ({0}/5)…", reconnectAttempts))
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
                 guard let self = self, !self.userDisconnected else { return }
                 self.connect(p.identifier, name: self.deviceName)
             }
         } else {
-            setState(.ERROR, "Não conectou. Ligue a trena, ative o Bluetooth nela e chegue perto.")
+            setState(.ERROR, tr("Não conectou. Ligue a trena, ative o Bluetooth nela e chegue perto."))
         }
     }
 }
 
 extension BoschBLE: CBPeripheralDelegate {
     func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
-        guard error == nil, let services = p.services else { setState(.ERROR, "Falha ao ler serviços"); return }
+        guard error == nil, let services = p.services else { setState(.ERROR, tr("Falha ao ler serviços")); return }
         candidates = []
         servicesLeft = services.count
         if services.isEmpty { finishSetup(p); return }
@@ -250,7 +250,7 @@ extension BoschBLE: CBPeripheralDelegate {
         notifyEnabled += 1
         addLog("Recebimento ligado em \(ch.uuid.uuidString)")
         if notifyEnabled == 1 {
-            setState(.CONNECTED, "Conectada. Meça com a trena.")
+            setState(.CONNECTED, tr("Conectada. Meça com a trena."))
             sendAutosync(p)
         }
     }

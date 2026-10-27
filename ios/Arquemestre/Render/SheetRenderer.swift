@@ -101,9 +101,9 @@ final class SheetRenderer {
         fill(c, argb(0xFF121118)); c.fill(CGRect(x: 0, y: 0, width: w, height: 64))
         fill(c, goldDeep); c.fill(CGRect(x: 0, y: 64, width: w, height: 3))
         text(c, "ARQUEMESTRE", 36, 38, size: 30, color: gold, bold: true, spacing: 0.06)
-        text(c, "SOLUÇÕES DE MARCENARIA E ARQUITETURA", 37, 54, size: 9.5, color: goldDeep, spacing: 0.14)
+        text(c, tr("SOLUÇÕES DE MARCENARIA E ARQUITETURA"), 37, 54, size: 9.5, color: goldDeep, spacing: 0.14)
         stroke(c, argb(0xFF8A6A25), 1.2); line(c, Pt(372, 16), Pt(372, 50))
-        text(c, "ESPAÇO PARA DESENHAR / CROQUI", 584, 44, size: 17, color: gold, bold: true, align: .center, scaleX: 0.92)
+        text(c, tr("ESPAÇO PARA DESENHAR / CROQUI"), 584, 44, size: 17, color: gold, bold: true, align: .center, scaleX: 0.92)
         let r = CGRect(x: 18, y: 84, width: w - 36, height: h - 98)
         let p = UIBezierPath(roundedRect: r, cornerRadius: 12).cgPath
         fill(c, argb(0xFFFCFCFB)); c.addPath(p); c.fillPath()
@@ -157,7 +157,7 @@ final class SheetRenderer {
             UIGraphicsPopContext()
         } else {
             fill(c, argb(0xFFDDDDDD)); c.fill(r)
-            text(c, "carregando…", 0, 6, size: 18, color: argb(0xFF777777), align: .center)
+            text(c, tr("carregando…"), 0, 6, size: 18, color: argb(0xFF777777), align: .center)
         }
         c.restoreGState()
     }

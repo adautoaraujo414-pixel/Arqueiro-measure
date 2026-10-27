@@ -26,6 +26,11 @@ targets:
       # o mesmo editor de móveis do Android (um arquivo só para os dois apps)
       - path: ../app/src/main/assets/editor.html
         buildPhase: resources
+      # traduções (as mesmas do Android e do editor): en.json, es.json
+      - path: ../app/src/main/assets/i18n/en.json
+        buildPhase: resources
+      - path: ../app/src/main/assets/i18n/es.json
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.arque.measure

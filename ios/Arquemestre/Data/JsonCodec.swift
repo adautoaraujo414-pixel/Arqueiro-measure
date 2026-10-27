@@ -165,13 +165,13 @@ enum JsonCodec {
     static func legacy(_ j: J, id: String, locked: Bool, type: String) -> LegacyObj {
         let at = (try? pt(j["at"])) ?? Pt(60, 160)
         var w: CGFloat = 120, h: CGFloat = 120, origin = at
-        var label = "Móvel (edite no Android)"
+        var label = tr("Móvel (edite no Android)")
         let k = 3.7795277
         if type == "cab" {
             let cab = (j["cab"] as? J) ?? [:]
             let den = Double(max(2, int(j, "scaleDen", 10)))
             let wMm = dbl(cab, "w", 600), hMm = dbl(cab, "h", 720), dMm = dbl(cab, "d", 550)
-            label = s(j, "name", "Móvel") + " · \(Int(wMm)) mm"
+            label = s(j, "name", tr("Móvel")) + tr(" · {0} mm", Int(wMm))
             if let wf = j["wall"] as? J {
                 let upm = dbl(wf, "upm", 0.2)
                 let ax = dbl(wf, "ax", 0), ay = dbl(wf, "ay", 0), ux = dbl(wf, "ux", 1), uy = dbl(wf, "uy", 0)
@@ -189,7 +189,7 @@ enum JsonCodec {
             let den = Double(max(2, int(j, "scaleDen", 20)))
             let wMm = dbl(j, "wMm", 3000), hMm = dbl(j, "hMm", 2600)
             w = CGFloat(wMm * k / den); h = CGFloat(hMm * k / den)
-            label = "Parede \(Int(wMm)) × \(Int(hMm)) mm (edite no Android)"
+            label = tr("Parede {0} × {1} mm (edite no Android)", Int(wMm), Int(hMm))
         }
         var raw = j
         raw.removeValue(forKey: "id"); raw.removeValue(forKey: "locked")

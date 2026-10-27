@@ -25,7 +25,7 @@ final class LicenseManager: ObservableObject {
     private var updates: Task<Void, Never>?
 
     /// " de R$ 149,90" quando a App Store já respondeu; vazio enquanto não respondeu.
-    var priceOf: String { fullProduct.map { " de \($0.displayPrice)" } ?? "" }
+    var priceOf: String { fullProduct.map { tr(" de {0}", $0.displayPrice) } ?? "" }
     /// " · R$ 149,90" para botões.
     var priceTag: String { fullProduct.map { " · \($0.displayPrice)" } ?? "" }
 
@@ -97,7 +97,7 @@ final class LicenseManager: ObservableObject {
 
     /// "1 dia e 5 h", "3 h", "20 min".
     var leftLabel: String {
-        guard let start = storedTrialStart else { return "\(LicenseManager.TRIAL_DAYS) dias" }
+        guard let start = storedTrialStart else { return tr("{0} dias", LicenseManager.TRIAL_DAYS) }
         let seenV = d.double(forKey: "lic.seen")
         let left = max(0, LicenseManager.TRIAL_SECONDS - LicenseManager.used(start: start, now: Date(), seen: seenV > 0 ? Date(timeIntervalSince1970: seenV) : nil))
         return LicenseManager.leftText(left)
@@ -107,19 +107,19 @@ final class LicenseManager: ObservableObject {
         let h = Int(left / 3600)
         if h >= 24 {
             let dd = h / 24, hh = h % 24
-            return "\(dd) dia" + (dd > 1 ? "s" : "") + (hh > 0 ? " e \(hh) h" : "")
+            return tr("{0} dia", dd) + (dd > 1 ? "s" : "") + (hh > 0 ? " e \(hh) h" : "")
         }
         if h >= 1 { return "\(h) h" }
-        return "\(Int(left / 60)) min"
+        return tr("{0} min", Int(left / 60))
     }
 
     // ---- ações ----
-    func startTrial() async { await purchase(trialProduct, ok: "Teste grátis de \(LicenseManager.TRIAL_DAYS) dias liberado.") }
-    func buyFull() async { await purchase(fullProduct, ok: "Compra confirmada. App desbloqueado. Obrigado!") }
+    func startTrial() async { await purchase(trialProduct, ok: tr("Teste grátis de {0} dias liberado.", LicenseManager.TRIAL_DAYS)) }
+    func buyFull() async { await purchase(fullProduct, ok: tr("Compra confirmada. App desbloqueado. Obrigado!")) }
 
     private func purchase(_ p: Product?, ok: String) async {
         guard let p = p else {
-            message = "Não consegui falar com a App Store agora. Confira a internet e tente de novo."
+            message = tr("Não consegui falar com a App Store agora. Confira a internet e tente de novo.")
             await load()
             return
         }
@@ -128,13 +128,13 @@ final class LicenseManager: ObservableObject {
         do {
             switch try await p.purchase() {
             case .success(let r):
-                if case .verified(let t) = r { await t.finish(); message = ok } else { message = "A compra não pôde ser verificada." }
-            case .pending: message = "Compra pendente (aguardando aprovação). O app libera sozinho quando for aprovada."
+                if case .verified(let t) = r { await t.finish(); message = ok } else { message = tr("A compra não pôde ser verificada.") }
+            case .pending: message = tr("Compra pendente (aguardando aprovação). O app libera sozinho quando for aprovada.")
             case .userCancelled: break
             @unknown default: break
             }
         } catch {
-            message = "Não deu certo: \(error.localizedDescription)"
+            message = tr("Não deu certo: {0}", error.localizedDescription)
         }
         await refresh()
     }
@@ -142,9 +142,9 @@ final class LicenseManager: ObservableObject {
     func restore() async {
         busy = true
         defer { busy = false }
-        do { try await AppStore.sync() } catch { message = "Não consegui falar com a App Store agora." }
+        do { try await AppStore.sync() } catch { message = tr("Não consegui falar com a App Store agora.") }
         await refresh()
-        if status != .unlocked && status != .trial { message = "Não encontrei compra neste Apple ID." }
-        else if status == .unlocked { message = "Compra restaurada. App desbloqueado." }
+        if status != .unlocked && status != .trial { message = tr("Não encontrei compra neste Apple ID.") }
+        else if status == .unlocked { message = tr("Compra restaurada. App desbloqueado.") }
     }
 }

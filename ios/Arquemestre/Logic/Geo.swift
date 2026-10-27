@@ -242,7 +242,7 @@ enum Geo {
         }
     }
 
-    static func doorLabel(_ d: DoorObj, _ unit: LengthUnit) -> String { "Porta" + (d.valueMm.map { " " + Units.format($0, unit) } ?? "") }
+    static func doorLabel(_ d: DoorObj, _ unit: LengthUnit) -> String { tr("Porta") + (d.valueMm.map { " " + Units.format($0, unit) } ?? "") }
 
     /// Trecho de linha mais perto de p (paredes, linhas e traços): a porta fica em cima da linha.
     static func nearestLine(_ sheet: Sheet, _ p: Pt, _ tol: CGFloat, skip: String? = nil) -> (Pt, Pt)? {

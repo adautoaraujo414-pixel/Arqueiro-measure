@@ -2,7 +2,7 @@ import SwiftUI
 import UIKit
 
 enum EraserMode: String, CaseIterable { case PIXEL, STROKE, LASSO
-    var label: String { self == .PIXEL ? "Pixels" : (self == .STROKE ? "Traços" : "Laço") }
+    var label: String { self == .PIXEL ? tr("Pixels") : (self == .STROKE ? tr("Traços") : tr("Laço")) }
 }
 
 enum Tool: String, CaseIterable {
@@ -10,20 +10,20 @@ enum Tool: String, CaseIterable {
 
     var label: String {
         switch self {
-        case .NAVIGATE: return "Navegar"; case .SELECT: return "Selecionar"; case .PEN: return "Caneta"; case .PENCIL: return "Lápis"
-        case .HIGHLIGHTER: return "Marca-texto"; case .ERASER: return "Borracha"; case .LINE: return "Linha"; case .DASHED: return "Tracejada"
-        case .ARROW: return "Seta"; case .DIM: return "Seta de cota"; case .DOOR: return "Porta na linha"; case .ROOM: return "Cômodo"; case .RECT: return "Retângulo"
-        case .RRECT: return "Retângulo arredondado"; case .ELLIPSE: return "Oval"; case .TRIANGLE: return "Triângulo"; case .DARROW: return "Seta dupla"
-        case .CURVE: return "Curva"; case .ELBOW: return "Linha em L"; case .RTRI: return "Triângulo retângulo"; case .DIAMOND: return "Losango"
-        case .TRAP: return "Trapézio"; case .LASSO: return "Laço"; case .TEXT: return "Texto"
+        case .NAVIGATE: return tr("Navegar"); case .SELECT: return tr("Selecionar"); case .PEN: return tr("Caneta"); case .PENCIL: return tr("Lápis")
+        case .HIGHLIGHTER: return tr("Marca-texto"); case .ERASER: return tr("Borracha"); case .LINE: return tr("Linha"); case .DASHED: return tr("Tracejada")
+        case .ARROW: return tr("Seta"); case .DIM: return tr("Seta de cota"); case .DOOR: return tr("Porta na linha"); case .ROOM: return tr("Cômodo"); case .RECT: return tr("Retângulo")
+        case .RRECT: return tr("Retângulo arredondado"); case .ELLIPSE: return tr("Oval"); case .TRIANGLE: return tr("Triângulo"); case .DARROW: return tr("Seta dupla")
+        case .CURVE: return tr("Curva"); case .ELBOW: return tr("Linha em L"); case .RTRI: return tr("Triângulo retângulo"); case .DIAMOND: return tr("Losango")
+        case .TRAP: return tr("Trapézio"); case .LASSO: return tr("Laço"); case .TEXT: return tr("Texto")
         }
     }
     var drawing: Bool { !(self == .NAVIGATE || self == .SELECT || self == .TEXT) }
     /// Nome curto que aparece embaixo do ícone na barra.
     var short: String {
         switch self {
-        case .DIM: return "Medida"; case .DOOR: return "Porta"; case .RRECT: return "Arredond."; case .RTRI: return "Tri. reto"
-        case .DARROW: return "Seta dupla"; case .ELBOW: return "Linha L"
+        case .DIM: return tr("Medida"); case .DOOR: return tr("Porta"); case .RRECT: return tr("Arredond."); case .RTRI: return tr("Tri. reto")
+        case .DARROW: return tr("Seta dupla"); case .ELBOW: return tr("Linha L")
         default: return label
         }
     }
@@ -158,7 +158,7 @@ final class EditorSession: ObservableObject {
             if state.sheet.obj(id)?.asRoom != nil && tapSelSeg >= 0 { state.selectSeg(id, tapSelSeg) } else { state.select(id) }
         }
         screenLocked.toggle()
-        lockMsg = screenLocked ? "Tela travada" : "Tela destravada"
+        lockMsg = screenLocked ? tr("Tela travada") : tr("Tela destravada")
     }
 
     // ---- câmera ----

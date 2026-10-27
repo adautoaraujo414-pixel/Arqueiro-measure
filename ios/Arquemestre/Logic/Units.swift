@@ -143,7 +143,7 @@ enum QuoteMath {
     }()
 
     /// 1234.5 → "R$ 1.234,50".
-    static func brl(_ v: Double) -> String { "R$ " + (brlF.string(from: NSNumber(value: cents(v))) ?? "0,00") }
+    static func brl(_ v: Double) -> String { I18n.shared.money(cents(v)) }
 
     static func numStr(_ d: Double) -> String {
         if d == d.rounded() && abs(d) < 1e15 { return String(Int64(d)) }

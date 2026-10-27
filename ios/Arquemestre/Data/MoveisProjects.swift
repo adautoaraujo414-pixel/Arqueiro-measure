@@ -21,7 +21,7 @@ enum MoveisProjects {
             let nome = ((p["client"] as? [String: Any]).map { JsonCodec.s($0, "nome") } ?? "").trimmingCharacters(in: .whitespaces)
             let mods = ((p["current"] as? [String: Any])?["mods"] as? [Any])?.count ?? 0
             let created = JsonCodec.int64(p, "created", 0)
-            return P(id: id, name: nome.isEmpty ? "Projeto sem nome" : nome, created: created,
+            return P(id: id, name: nome.isEmpty ? tr("Projeto sem nome") : nome, created: created,
                      updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false))
         }.sorted { $0.updated > $1.updated }
     }

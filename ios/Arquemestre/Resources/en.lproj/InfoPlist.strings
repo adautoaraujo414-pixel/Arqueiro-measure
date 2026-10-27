@@ -1,0 +1,7 @@
+/* Textos de permissão do iOS neste idioma */
+"CFBundleDisplayName" = "Arquemestre";
+"NSBluetoothAlwaysUsageDescription" = "Arquemestre uses Bluetooth to receive measurements from your Bosch laser measure straight into the dimensions, and to show a project to another iPhone nearby.";
+"NSCameraUsageDescription" = "The camera takes photos of the room so you can draw the measurements on top (only when you ask).";
+"NSMicrophoneUsageDescription" = "The microphone records the sound of room videos you attach to the client's project (only while you record).";
+"NSPhotoLibraryAddUsageDescription" = "Photos taken in the app are also saved to your library, so they are never lost.";
+"NSLocalNetworkUsageDescription" = "The local network is only used to show the furniture project live to another iPhone nearby.";

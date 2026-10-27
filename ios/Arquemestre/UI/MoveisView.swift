@@ -18,11 +18,11 @@ struct MoveisView: View {
             MoveisWeb(app: app, peer: peer, holder: holder, onClose: { leave() }, onTrena: { btOpen = true }, onShare: { shareOpen = true })
             if app.moveisView {
                 HStack(spacing: 10) {
-                    Text(peer.viewState == "connecting" ? "📡 Conectando em \(peer.viewFrom)…" :
-                         peer.viewState == "connected" ? "👁 Ao vivo · \(peer.viewFrom) · só visualização" :
-                         peer.viewState == "error" ? "Não conectou. O outro aparelho está compartilhando?" : "Conexão encerrada")
+                    Text(peer.viewState == "connecting" ? tr("📡 Conectando em {0}…", peer.viewFrom) :
+                         peer.viewState == "connected" ? tr("👁 Ao vivo · {0} · só visualização", peer.viewFrom) :
+                         peer.viewState == "error" ? tr("Não conectou. O outro aparelho está compartilhando?") : tr("Conexão encerrada"))
                         .font(.caption).foregroundColor(.white)
-                    Button("✕ Sair") { leave() }.font(.caption.bold()).foregroundColor(Ui.gold)
+                    Button(tr("✕ Sair")) { leave() }.font(.caption.bold()).foregroundColor(Ui.gold)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 6)
                 .background(Capsule().fill(Color(argb: 0xE61B1F27)))
@@ -119,7 +119,7 @@ struct MoveisWeb: UIViewRepresentable {
         w.isOpaque = true
         w.backgroundColor = .white
         holder.web = w
-        w.load(URLRequest(url: URL(string: "arque://app/editor.html")!))
+        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)")!))
         return w
     }
 
@@ -192,7 +192,7 @@ struct MoveisWeb: UIViewRepresentable {
             guard let u = nav.request.url else { decisionHandler(.cancel); return }
             if u.scheme == "arque" || u.scheme == "about" || u.scheme == "blob" || u.scheme == "data" { decisionHandler(.allow); return }
             decisionHandler(.cancel)
-            UIApplication.shared.open(u) { ok in if !ok { Task { @MainActor in self.parent.app.toast = "Nenhum app encontrado pra abrir isso" } } }
+            UIApplication.shared.open(u) { ok in if !ok { Task { @MainActor in self.parent.app.toast = tr("Nenhum app encontrado pra abrir isso") } } }
         }
     }
 }

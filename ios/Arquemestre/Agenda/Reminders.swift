@@ -5,8 +5,8 @@ import UserNotifications
 /// O iOS guarda no máximo 64 avisos por app: ficam agendados os 60 mais próximos.
 enum Reminders {
     static let MAX = 60
-    private static let dayFmt: DateFormatter = { let f = DateFormatter(); f.locale = Locale(identifier: "pt_BR"); f.dateFormat = "EEE dd/MM"; return f }()
-    private static let hourFmt: DateFormatter = { let f = DateFormatter(); f.locale = Locale(identifier: "pt_BR"); f.dateFormat = "HH:mm"; return f }()
+    private static var dayFmt: DateFormatter { I18n.shared.dateFormatter(.shortDay) }
+    private static var hourFmt: DateFormatter { I18n.shared.dateFormatter(.hour) }
 
     static func requestPermission(_ done: @escaping (Bool) -> Void = { _ in }) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { ok, _ in
@@ -16,10 +16,10 @@ enum Reminders {
 
     static func whenText(_ off: Int) -> String {
         if off == 0 { return "agora" }
-        if off < 60 { return "em \(off) min" }
-        if off < 1440 { return "em \(off / 60) h" }
-        if off == 1440 { return "amanhã" }
-        return "em \(off / 1440) dias"
+        if off < 60 { return tr("em {0} min", off) }
+        if off < 1440 { return tr("em {0} h", off / 60) }
+        if off == 1440 { return tr("amanhã") }
+        return tr("em {0} dias", off / 1440)
     }
 
     /// Refaz todos os avisos (chamado ao salvar/apagar compromisso e ao abrir o app).
@@ -38,7 +38,7 @@ enum Reminders {
             for (at, a, off) in items.sorted(by: { $0.0 < $1.0 }).prefix(MAX) {
                 let ct = UNMutableNotificationContent()
                 ct.title = "\(a.kind.icon) \(a.kind.label): \(a.title.isEmpty ? (a.clientName.isEmpty ? "sem título" : a.clientName) : a.title)"
-                var body = "\(dayFmt.string(from: a.startDate)) às \(hourFmt.string(from: a.startDate)) (\(whenText(off)))"
+                var body = tr("{0} às {1} ({2})", dayFmt.string(from: a.startDate), hourFmt.string(from: a.startDate), whenText(off))
                 if !a.clientName.isEmpty { body += " · \(a.clientName)" }
                 if !a.address.isEmpty { body += "\n\(a.address)" }
                 ct.body = body

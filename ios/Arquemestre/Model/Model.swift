@@ -106,14 +106,14 @@ enum SegKind: String, CaseIterable {
     case WALL, PANEL, SINK, BASIN, DOOR, DIVIDER, WINDOW, OPENING
     var label: String {
         switch self {
-        case .WALL: return "Parede"
-        case .PANEL: return "Painel"
-        case .SINK: return "Pia"
-        case .BASIN: return "Cuba"
-        case .DOOR: return "Porta"
-        case .DIVIDER: return "Divisória"
-        case .WINDOW: return "Janela"
-        case .OPENING: return "Vão"
+        case .WALL: return tr("Parede")
+        case .PANEL: return tr("Painel")
+        case .SINK: return tr("Pia")
+        case .BASIN: return tr("Cuba")
+        case .DOOR: return tr("Porta")
+        case .DIVIDER: return tr("Divisória")
+        case .WINDOW: return tr("Janela")
+        case .OPENING: return tr("Vão")
         }
     }
     var isOpening: Bool { self == .DOOR || self == .WINDOW || self == .OPENING }
@@ -288,9 +288,9 @@ enum Template: String, CaseIterable {
     case ARAUJO, BLANK, LINES
     var label: String {
         switch self {
-        case .ARAUJO: return "Arquemestre croqui"
-        case .BLANK: return "Em branco"
-        case .LINES: return "Linha fina"
+        case .ARAUJO: return tr("Arquemestre croqui")
+        case .BLANK: return tr("Em branco")
+        case .LINES: return tr("Linha fina")
         }
     }
 }

@@ -35,7 +35,7 @@ enum DataBackup {
 
     enum RestoreError: LocalizedError {
         case invalid
-        var errorDescription: String? { "Backup inválido: nada foi alterado" }
+        var errorDescription: String? { tr("Backup inválido: nada foi alterado") }
     }
 
     /// Restaura um backup (do iOS ou do Android). Valida tudo antes de apagar qualquer coisa.

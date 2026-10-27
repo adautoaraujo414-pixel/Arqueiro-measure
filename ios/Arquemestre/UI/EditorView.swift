@@ -48,13 +48,13 @@ struct EditorView: View {
                 }
                 if session.screenLocked {
                     Button { session.toggleLock() } label: {
-                        Text("🔒 Tela travada · toque aqui para destravar").foregroundColor(.white).font(.subheadline)
+                        Text(tr("🔒 Tela travada · toque aqui para destravar")).foregroundColor(.white).font(.subheadline)
                             .padding(.horizontal, 16).padding(.vertical, 10).background(RoundedRectangle(cornerRadius: 16).fill(Color(argb: 0xE61B1C20)))
                     }
                     .position(x: geo.size.width / 2, y: 90)
                 }
                 if session.pull > 20 {
-                    Text(session.pull >= 80 ? "Solte para adicionar uma folha" : "Continue a deslizar para adicionar uma folha")
+                    Text(session.pull >= 80 ? tr("Solte para adicionar uma folha") : tr("Continue a deslizar para adicionar uma folha"))
                         .font(.footnote).foregroundColor(.white).padding(.horizontal, 14).padding(.vertical, 8)
                         .background(Capsule().fill(Color.black.opacity(0.8)))
                         .position(x: geo.size.width / 2, y: geo.size.height - 50)
@@ -109,10 +109,10 @@ struct EditorView: View {
         .sheet(isPresented: $pickPhotos) { PhotoPicker(limit: 0) { app.addPhotos($0) }.ignoresSafeArea() }
         .fullScreenCover(isPresented: $camera) { CameraPicker { img in if let i = img { app.addCameraPhoto(i) } else { app.photoToNewPage = false } }.ignoresSafeArea() }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
-        .alert("Foto adicionada", isPresented: $app.askAnotherPhoto) {
-            Button("Tirar outra") { camera = true }
-            Button("Pronto", role: .cancel) {}
-        } message: { Text("Também ficou salva na galeria do iPhone.") }
+        .alert(tr("Foto adicionada"), isPresented: $app.askAnotherPhoto) {
+            Button(tr("Tirar outra")) { camera = true }
+            Button(tr("Pronto"), role: .cancel) {}
+        } message: { Text(tr("Também ficou salva na galeria do iPhone.")) }
     }
 
     // ---------------- barra de cima ----------------
@@ -137,60 +137,60 @@ struct EditorView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 Pill {
-                    BarIcon(symbol: "chevron.backward", label: "Voltar") { app.closeEditor() }
-                    BarIcon(symbol: "arrow.uturn.backward", label: "Desfazer", enabled: st.canUndo) { st.undo() }
-                    BarIcon(symbol: "arrow.uturn.forward", label: "Refazer", enabled: st.canRedo) { st.redo() }
+                    BarIcon(symbol: "chevron.backward", label: tr("Voltar")) { app.closeEditor() }
+                    BarIcon(symbol: "arrow.uturn.backward", label: tr("Desfazer"), enabled: st.canUndo) { st.undo() }
+                    BarIcon(symbol: "arrow.uturn.forward", label: tr("Refazer"), enabled: st.canRedo) { st.redo() }
                 }
                 let vp = session.visiblePage()
                 Pill {
-                    BarIcon(symbol: "chevron.left", label: "Anterior", enabled: vp > 0) { session.goToPage(vp - 1) }
+                    BarIcon(symbol: "chevron.left", label: tr("Anterior"), enabled: vp > 0) { session.goToPage(vp - 1) }
                     Button { overview = true } label: {
-                        LabeledIcon(label: "Folhas") { col in Text("\(vp + 1)/\(note.pages.count)").font(.system(size: 15, weight: .bold)).foregroundColor(col) }
+                        LabeledIcon(label: tr("Folhas")) { col in Text("\(vp + 1)/\(note.pages.count)").font(.system(size: 15, weight: .bold)).foregroundColor(col) }
                     }.buttonStyle(.plain)
-                    BarIcon(symbol: "chevron.right", label: "Próxima", enabled: vp < note.pages.count - 1) { session.goToPage(vp + 1) }
+                    BarIcon(symbol: "chevron.right", label: tr("Próxima"), enabled: vp < note.pages.count - 1) { session.goToPage(vp + 1) }
                     Menu {
-                        Button("Antes da folha atual") { addPage(st.pageIdx) }
-                        Button("Após a folha atual") { addPage(st.pageIdx + 1) }
-                        Button("Última página") { addPage(note.pages.count) }
-                        Picker("Modelo", selection: $tpl) { ForEach(Template.allCases, id: \.self) { Text($0.label).tag($0) } }
+                        Button(tr("Antes da folha atual")) { addPage(st.pageIdx) }
+                        Button(tr("Após a folha atual")) { addPage(st.pageIdx + 1) }
+                        Button(tr("Última página")) { addPage(note.pages.count) }
+                        Picker(tr("Modelo"), selection: $tpl) { ForEach(Template.allCases, id: \.self) { Text($0.label).tag($0) } }
                         Divider()
-                        Button("Importar imagem") { app.photoToNewPage = true; pickPhotos = true }
-                        Button("Tirar fotografia") { app.photoToNewPage = true; camera = true }
-                    } label: { LabeledIcon(label: "Nova folha") { _ in Image(systemName: "plus").font(.system(size: 18)).foregroundColor(Ui.accent) } }
+                        Button(tr("Importar imagem")) { app.photoToNewPage = true; pickPhotos = true }
+                        Button(tr("Tirar fotografia")) { app.photoToNewPage = true; camera = true }
+                    } label: { LabeledIcon(label: tr("Nova folha")) { _ in Image(systemName: "plus").font(.system(size: 18)).foregroundColor(Ui.accent) } }
                 }
                 let linkedId = app.linkedProject(note.id)
                 let linkedName = linkedId.flatMap { id in app.moveisProjects().first { $0.id == id }?.name }
                 Pill {
                     Button { projLink = true } label: {
-                        LabeledIcon(label: linkedName ?? "Projeto", on: linkedName != nil) { _ in Text("🪚").font(.system(size: 17)) }.frame(maxWidth: 160)
+                        LabeledIcon(label: linkedName ?? tr("Projeto"), on: linkedName != nil) { _ in Text("🪚").font(.system(size: 17)) }.frame(maxWidth: 160)
                     }.buttonStyle(.plain)
                 }
                 Pill {
                     Button { st.setUnit(note.unit.next) } label: {
-                        LabeledIcon(label: "Unidade") { col in Text(note.unit.label).font(.system(size: 15, weight: .bold)).foregroundColor(col) }
+                        LabeledIcon(label: tr("Unidade")) { col in Text(note.unit.label).font(.system(size: 15, weight: .bold)).foregroundColor(col) }
                     }.buttonStyle(.plain)
                     Button { btOpen = true } label: {
                         let connected = ble.state == .CONNECTED
-                        LabeledIcon(label: connected ? "Trena ligada" : "Trena Bosch", on: connected) { col in
+                        LabeledIcon(label: connected ? tr("Trena ligada") : tr("Trena Bosch"), on: connected) { col in
                             Image(systemName: "dot.radiowaves.left.and.right").font(.system(size: 18)).foregroundColor(col)
                         }
                     }.buttonStyle(.plain)
                 }
                 Pill {
                     Menu {
-                        Button("Zoom em tela cheia") { fullscreen = true }
-                        Button("Visão geral da nota") { overview = true }
-                        Button(note.locked ? "Remover bloqueio" : "Adicionar bloqueio") {
+                        Button(tr("Zoom em tela cheia")) { fullscreen = true }
+                        Button(tr("Visão geral da nota")) { overview = true }
+                        Button(note.locked ? tr("Remover bloqueio") : tr("Adicionar bloqueio")) {
                             st.setNoteLocked(!note.locked)
-                            app.toast = !note.locked ? "Nota bloqueada: abrirá só após remover o bloqueio" : "Bloqueio removido"
+                            app.toast = !note.locked ? tr("Nota bloqueada: abrirá só após remover o bloqueio") : tr("Bloqueio removido")
                         }
                         Divider()
-                        Button("Exportar PDF") { shareURL = app.exportPdf() }
-                        Button("Exportar folha (PNG)") { shareURL = app.exportPng() }
-                        Button("Exportar medidas (CSV)") { shareURL = app.exportCsv() }
+                        Button(tr("Exportar PDF")) { shareURL = app.exportPdf() }
+                        Button(tr("Exportar folha (PNG)")) { shareURL = app.exportPng() }
+                        Button(tr("Exportar medidas (CSV)")) { shareURL = app.exportCsv() }
                         Divider()
-                        Button(session.stylusOnly ? "Desenhar só com Apple Pencil: ligado" : "Desenhar só com Apple Pencil: desligado") { session.stylusOnly.toggle() }
-                    } label: { LabeledIcon(label: "Mais") { col in Image(systemName: "ellipsis").font(.system(size: 18)).foregroundColor(col) } }
+                        Button(session.stylusOnly ? tr("Desenhar só com Apple Pencil: ligado") : tr("Desenhar só com Apple Pencil: desligado")) { session.stylusOnly.toggle() }
+                    } label: { LabeledIcon(label: tr("Mais")) { col in Image(systemName: "ellipsis").font(.system(size: 18)).foregroundColor(col) } }
                 }
             }.padding(.horizontal, 8)
         }
@@ -200,7 +200,7 @@ struct EditorView: View {
                 // escrever
                 Pill {
                     toolBtn(.PEN); toolBtn(.PENCIL); toolBtn(.HIGHLIGHTER)
-                    BarIcon(symbol: Tool.ERASER.symbol, label: "Borracha", on: session.tool == .ERASER) {
+                    BarIcon(symbol: Tool.ERASER.symbol, label: tr("Borracha"), on: session.tool == .ERASER) {
                         if session.tool == .ERASER { eraserMenu = true } else { session.chooseTool(.ERASER) }
                     }
                     .popover(isPresented: $eraserMenu) { EraserSettings(session: session).frame(minWidth: 280).padding() .presentationCompactAdaptation(.popover) }
@@ -213,29 +213,29 @@ struct EditorView: View {
                 Pill {
                     Button { shapesMenu = true } label: {
                         let inShapes = shapeTools.contains(session.tool) && ![.DIM, .ROOM, .DOOR].contains(session.tool)
-                        LabeledIcon(label: inShapes ? session.tool.short : "Formas", on: inShapes) { col in ShapeGlyph(tool: inShapes ? session.tool : .RECT, tint: col) }
+                        LabeledIcon(label: inShapes ? session.tool.short : tr("Formas"), on: inShapes) { col in ShapeGlyph(tool: inShapes ? session.tool : .RECT, tint: col) }
                     }
                     .buttonStyle(.plain)
                     .popover(isPresented: $shapesMenu) { ShapesPanel(session: session) { shapesMenu = false }.padding().presentationCompactAdaptation(.popover) }
                     toolBtn(.TEXT)
                     Menu {
-                        Button { app.photoToNewPage = false; pickPhotos = true } label: { Label("Álbum", systemImage: "photo") }
-                        Button { app.photoToNewPage = false; camera = true } label: { Label("Câmera", systemImage: "camera") }
-                    } label: { LabeledIcon(label: "Imagem") { col in Image(systemName: "photo").font(.system(size: 18)).foregroundColor(col) } }
-                    BarIcon(symbol: "plus.forwardslash.minus", label: "Calculadora", on: session.calcOpen) { session.calcOpen.toggle() }
+                        Button { app.photoToNewPage = false; pickPhotos = true } label: { Label(tr("Álbum"), systemImage: "photo") }
+                        Button { app.photoToNewPage = false; camera = true } label: { Label(tr("Câmera"), systemImage: "camera") }
+                    } label: { LabeledIcon(label: tr("Imagem")) { col in Image(systemName: "photo").font(.system(size: 18)).foregroundColor(col) } }
+                    BarIcon(symbol: "plus.forwardslash.minus", label: tr("Calculadora"), on: session.calcOpen) { session.calcOpen.toggle() }
                 }
                 // cor e espessura
                 Pill {
                     VStack(spacing: 1) {
                         ColorRow(current: session.color) { session.applyColor($0) }
-                        Text("Cor").font(.system(size: 10)).foregroundColor(Ui.text)
+                        Text(tr("Cor")).font(.system(size: 10)).foregroundColor(Ui.text)
                     }.padding(.horizontal, 8)
-                    BarIcon(symbol: "minus", label: "Mais fina") { session.applyWidth(-0.1) }
+                    BarIcon(symbol: "minus", label: tr("Mais fina")) { session.applyWidth(-0.1) }
                     VStack(spacing: 1) {
                         Text(mmText(session.width)).font(.caption).foregroundColor(Ui.text)
-                        Text("Espessura").font(.system(size: 10)).foregroundColor(Ui.dim)
+                        Text(tr("Espessura")).font(.system(size: 10)).foregroundColor(Ui.dim)
                     }
-                    BarIcon(symbol: "plus", label: "Mais grossa") { session.applyWidth(0.1) }
+                    BarIcon(symbol: "plus", label: tr("Mais grossa")) { session.applyWidth(0.1) }
                 }
             }.padding(.horizontal, 8)
         }
@@ -256,7 +256,7 @@ struct EditorView: View {
     }
 
     private func addPage(_ pos: Int) {
-        if st.addPage(pos, tpl) { session.goToPage(st.pageIdx) } else { app.toast = "Limite de \(Sheet.MAX_PAGES) folhas" }
+        if st.addPage(pos, tpl) { session.goToPage(st.pageIdx) } else { app.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES) }
     }
 
     // ---------------- grupo (laço) e menu da seleção ----------------
@@ -268,12 +268,12 @@ struct EditorView: View {
                 let tr = session.view.toScreen(Pt(boxes.map(\.r).max()!, boxes.map(\.t).min()!))
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
-                        Text("\(st.groupIds.count) itens").font(.caption).foregroundColor(.gray).padding(.leading, 10)
-                        ctx("Eliminar") { st.deleteGroup() }
-                        ctx("Cortar") { session.copyGroup(cut: true) }
-                        ctx("Copiar") { session.copyGroup() }
-                        ctx("Duplicar") { st.pasteObjs(st.groupWithLinked()) }
-                        ctx("Colar", session.clipboard.isEmpty == false) { session.paste() }
+                        Text(tr("{0} itens", st.groupIds.count)).font(.caption).foregroundColor(.gray).padding(.leading, 10)
+                        ctx(tr("Eliminar")) { st.deleteGroup() }
+                        ctx(tr("Cortar")) { session.copyGroup(cut: true) }
+                        ctx(tr("Copiar")) { session.copyGroup() }
+                        ctx(tr("Duplicar")) { st.pasteObjs(st.groupWithLinked()) }
+                        ctx(tr("Colar"), session.clipboard.isEmpty == false) { session.paste() }
                     }
                 }
                 .frame(maxWidth: min(size.width - 24, 420))
@@ -294,15 +294,15 @@ struct EditorView: View {
                 let y = topY - 34 >= 200 ? topY - 34 : min(botY + 34, size.height - 60)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
-                        ctx("Eliminar", !o.locked) { st.delete(o.id) }
-                        ctx("Cortar", !o.locked) { session.copySelection(cut: true) }
-                        ctx("Copiar") { session.copySelection() }
-                        ctx("Colar", !session.clipboard.isEmpty) { session.paste() }
-                        if !o.isLegacy { ctx("Duplicar") { st.duplicate(o.id) } }
-                        if o.asPhoto != nil { ctx("Girar 90°", !o.locked) { st.rotatePhoto90(o.id) } }
-                        ctx(o.locked ? "Desbloquear" : "Bloqueio") { st.setLocked(o.id, !o.locked) }
-                        ctx("Para frente") { st.reorder(o.id, up: true) }
-                        ctx("Para trás") { st.reorder(o.id, up: false) }
+                        ctx(tr("Eliminar"), !o.locked) { st.delete(o.id) }
+                        ctx(tr("Cortar"), !o.locked) { session.copySelection(cut: true) }
+                        ctx(tr("Copiar")) { session.copySelection() }
+                        ctx(tr("Colar"), !session.clipboard.isEmpty) { session.paste() }
+                        if !o.isLegacy { ctx(tr("Duplicar")) { st.duplicate(o.id) } }
+                        if o.asPhoto != nil { ctx(tr("Girar 90°"), !o.locked) { st.rotatePhoto90(o.id) } }
+                        ctx(o.locked ? tr("Desbloquear") : tr("Bloqueio")) { st.setLocked(o.id, !o.locked) }
+                        ctx(tr("Para frente")) { st.reorder(o.id, up: true) }
+                        ctx(tr("Para trás")) { st.reorder(o.id, up: false) }
                     }
                 }
                 .frame(maxWidth: min(size.width - 24, 520))
@@ -325,7 +325,7 @@ struct EditorView: View {
         VStack(alignment: .leading, spacing: 8) {
             if sel?.asDim != nil || sel?.asRoom != nil || sel?.asDoor != nil {
                 Button { panelMin.toggle() } label: {
-                    Text(panelMin ? "▲ Medida (toque para abrir)" : "▼ Minimizar").font(.caption).foregroundColor(.white)
+                    Text(panelMin ? tr("▲ Medida (toque para abrir)") : tr("▼ Minimizar")).font(.caption).foregroundColor(.white)
                         .padding(.horizontal, 12).padding(.vertical, 7).background(Capsule().fill(Color(argb: 0xB31B1C20)))
                 }
             }
@@ -344,7 +344,7 @@ struct EditorView: View {
         let existing = edit.id.flatMap { st.sheet.obj($0)?.asText }
         let at = existing.map { session.view.toScreen(Geo.annPoints(st.sheet.photos(), .text($0))[0]) } ?? session.view.toScreen(edit.at)
         return HStack {
-            TextField("Texto", text: $textValue, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(1...4)
+            TextField(tr("Texto"), text: $textValue, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(1...4)
                 .onSubmit { session.commitText(edit, textValue) }
             Button { session.commitText(edit, textValue) } label: { Image(systemName: "checkmark.circle.fill").font(.title2) }
         }
@@ -360,13 +360,13 @@ struct EraserSettings: View {
     @ObservedObject var session: EditorSession
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Borracha").font(.headline)
+            Text(tr("Borracha")).font(.headline)
             Picker("", selection: $session.eraserMode) { ForEach(EraserMode.allCases, id: \.self) { Text($0.label).tag($0) } }.pickerStyle(.segmented)
-            Text(session.eraserMode == .PIXEL ? "Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede)." : (session.eraserMode == .STROKE ? "Apaga o traço ou a forma inteira que você tocar." : "Contorne para apagar o que ficar dentro."))
+            Text(session.eraserMode == .PIXEL ? tr("Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede).") : (session.eraserMode == .STROKE ? tr("Apaga o traço ou a forma inteira que você tocar.") : tr("Contorne para apagar o que ficar dentro.")))
                 .font(.caption).foregroundColor(.secondary)
-            HStack { Text("Tamanho"); Slider(value: $session.eraserSize, in: 4...60) }
-            Toggle("Apenas apagar marca-texto", isOn: $session.eraserOnlyHighlighter)
-            Button("Limpar a página atual", role: .destructive) { session.state.clearPageDrawings() }
+            HStack { Text(tr("Tamanho")); Slider(value: $session.eraserSize, in: 4...60) }
+            Toggle(tr("Apenas apagar marca-texto"), isOn: $session.eraserOnlyHighlighter)
+            Button(tr("Limpar a página atual"), role: .destructive) { session.state.clearPageDrawings() }
         }
     }
 }
@@ -376,7 +376,7 @@ struct ShapesPanel: View {
     var close: () -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Formas").font(.headline)
+            Text(tr("Formas")).font(.headline)
             LazyVGrid(columns: Array(repeating: GridItem(.fixed(62)), count: 4), spacing: 6) {
                 ForEach(shapeTools.filter { ![.DIM, .ROOM, .DOOR].contains($0) }, id: \.self) { t in
                     Button { session.chooseTool(t); close() } label: {
@@ -390,14 +390,14 @@ struct ShapesPanel: View {
                 }
             }
             HStack {
-                Text("Espessura").font(.footnote)
+                Text(tr("Espessura")).font(.footnote)
                 Spacer()
                 Button { session.applyWidth(-0.1) } label: { Image(systemName: "minus") }
                 Text(mmText(session.width)).font(.footnote)
                 Button { session.applyWidth(0.1) } label: { Image(systemName: "plus") }
             }
             ColorRow(current: session.color) { session.applyColor($0) }
-            Toggle("Preenchimento", isOn: $session.fill).font(.footnote)
+            Toggle(tr("Preenchimento"), isOn: $session.fill).font(.footnote)
         }
         .frame(width: 270)
     }
@@ -406,11 +406,11 @@ struct ShapesPanel: View {
 // ---------------- painéis da medida ----------------
 
 private func statusText(_ hasValue: Bool, _ source: MeasureSource?, _ connected: Bool) -> String {
-    if hasValue && connected { return "Meça de novo para substituir" }
-    if hasValue && source == .MANUAL { return "Digitado à mão" }
-    if hasValue { return "Medido pela trena Bosch" }
-    if !connected { return "Toque na medida para digitar, ou conecte a trena Bosch" }
-    return "Aguardando a medida da trena…"
+    if hasValue && connected { return tr("Meça de novo para substituir") }
+    if hasValue && source == .MANUAL { return tr("Digitado à mão") }
+    if hasValue { return tr("Medido pela trena Bosch") }
+    if !connected { return tr("Toque na medida para digitar, ou conecte a trena Bosch") }
+    return tr("Aguardando a medida da trena…")
 }
 
 /// Caixa da medida: toque para digitar no teclado do app.
@@ -422,7 +422,7 @@ struct ManualValueBox: View {
     @State private var open = false
     var body: some View {
         Button { open = true } label: {
-            Text(text == "–" && enabled ? "– toque p/ digitar" : text)
+            Text(text == "–" && enabled ? tr("– toque p/ digitar") : text)
                 .font(text == "–" ? .body : .system(size: 22, weight: .medium)).foregroundColor(Ui.distBlue)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12).padding(.vertical, 10)
@@ -430,7 +430,7 @@ struct ManualValueBox: View {
         }
         .disabled(!enabled)
         .sheet(isPresented: $open) {
-            NumPadSheet(title: "Digitar medida", suffix: unit.label, hint: "Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão.",
+            NumPadSheet(title: tr("Digitar medida"), suffix: unit.label, hint: tr("Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão."),
                         text: text == "–" ? "" : text) { v in if v > 0 { onSet(Units.toMm(v, unit)) } }
         }
     }
@@ -461,31 +461,31 @@ struct DistancePanel: View {
         let st = session.state
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Distância").font(.headline).foregroundColor(Color(argb: 0xFF111111))
+                Text(tr("Distância")).font(.headline).foregroundColor(Color(argb: 0xFF111111))
                 HStack {
                     ManualValueBox(text: d.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !d.locked) { st.setManualValue($0) }
                     Button(st.unit.label) { st.setUnit(st.unit.next) }.font(.title3)
                 }
                 Text(statusText(d.valueMm != nil, d.source, ble.state == .CONNECTED)).font(.footnote).foregroundColor(Color(argb: 0xFF555555))
                 Divider()
-                HStack { Text("Cor").font(.footnote).foregroundColor(Color(argb: 0xFF111111)); ColorRow(current: d.color) { session.applyColor($0) } }
+                HStack { Text(tr("Cor")).font(.footnote).foregroundColor(Color(argb: 0xFF111111)); ColorRow(current: d.color) { session.applyColor($0) } }
                 HStack {
-                    Text("Espessura da linha").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                    Text(tr("Espessura da linha")).font(.footnote).foregroundColor(Color(argb: 0xFF111111))
                     Spacer()
                     Button { session.applyWidth(-0.1) } label: { Image(systemName: "minus") }
                     Text(mmText(d.width)).font(.footnote).foregroundColor(Color(argb: 0xFF111111))
                     Button { session.applyWidth(0.1) } label: { Image(systemName: "plus") }
                 }
                 Divider()
-                Text("Quadradinho da medida").font(.subheadline).foregroundColor(Color(argb: 0xFF111111))
-                LabelSlider(label: "Tamanho", value: d.labelScale, range: 0.1...3, enabled: !d.locked, st: st) { st.setDimLabel(d.id, scale: $0, live: true) }
-                LabelSlider(label: "Opacidade", value: d.labelAlpha, range: 0.1...1, enabled: !d.locked, st: st) { st.setDimLabel(d.id, alpha: $0, live: true) }
-                LabelSlider(label: "Intensidade", value: d.labelIntensity, range: 0.15...1, enabled: !d.locked, st: st) { st.setDimLabel(d.id, intensity: $0, live: true) }
-                Text("O quadradinho acompanha o tamanho da foto e da seta automaticamente.").font(.caption2).foregroundColor(.gray)
+                Text(tr("Quadradinho da medida")).font(.subheadline).foregroundColor(Color(argb: 0xFF111111))
+                LabelSlider(label: tr("Tamanho"), value: d.labelScale, range: 0.1...3, enabled: !d.locked, st: st) { st.setDimLabel(d.id, scale: $0, live: true) }
+                LabelSlider(label: tr("Opacidade"), value: d.labelAlpha, range: 0.1...1, enabled: !d.locked, st: st) { st.setDimLabel(d.id, alpha: $0, live: true) }
+                LabelSlider(label: tr("Intensidade"), value: d.labelIntensity, range: 0.15...1, enabled: !d.locked, st: st) { st.setDimLabel(d.id, intensity: $0, live: true) }
+                Text(tr("O quadradinho acompanha o tamanho da foto e da seta automaticamente.")).font(.caption2).foregroundColor(.gray)
                 HStack {
-                    Button("Aplicar a todas as cotas") { st.applyDimLabelToAll(d.id) }.disabled(d.locked)
+                    Button(tr("Aplicar a todas as cotas")) { st.applyDimLabelToAll(d.id) }.disabled(d.locked)
                     Spacer()
-                    Button("Excluir", role: .destructive) { st.delete(d.id) }.disabled(d.locked)
+                    Button(tr("Excluir"), role: .destructive) { st.delete(d.id) }.disabled(d.locked)
                 }.font(.footnote)
             }.padding(14)
         }
@@ -502,33 +502,33 @@ struct DoorPanel: View {
         let st = session.state
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
-                Text("🚪 Porta na linha").font(.headline).foregroundColor(Color(argb: 0xFFE53935))
-                Text("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha.").font(.caption).foregroundColor(Color(argb: 0xFF555555))
-                Text("Sentido de abertura").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                Text(tr("🚪 Porta na linha")).font(.headline).foregroundColor(Color(argb: 0xFFE53935))
+                Text(tr("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha.")).font(.caption).foregroundColor(Color(argb: 0xFF555555))
+                Text(tr("Sentido de abertura")).font(.footnote).foregroundColor(Color(argb: 0xFF111111))
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        Button("↔ Dobradiça do outro lado") { st.setDoor(d.id, hinge: 1 - d.hinge) }
-                        Button("⇅ Abre pro outro lado") { st.setDoor(d.id, side: -d.side) }
-                        Button(d.slide ? "De correr ✓" : "De abrir ✓") { st.setDoor(d.id, slide: !d.slide) }
+                        Button(tr("↔ Dobradiça do outro lado")) { st.setDoor(d.id, hinge: 1 - d.hinge) }
+                        Button(tr("⇅ Abre pro outro lado")) { st.setDoor(d.id, side: -d.side) }
+                        Button(d.slide ? tr("De correr ✓") : tr("De abrir ✓")) { st.setDoor(d.id, slide: !d.slide) }
                     }.buttonStyle(.bordered).disabled(d.locked)
                 }
-                Text("Tamanho e escrita").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
-                LabelSlider(label: "Quadradinho", value: d.labelScale, range: 0.2...2.5, enabled: !d.locked, st: st) { st.setDoor(d.id, labelScale: $0, live: true) }
-                LabelSlider(label: "Linha vermelha", value: d.width, range: 0.4...5, enabled: !d.locked, st: st) { st.setDoor(d.id, width: $0, live: true) }
+                Text(tr("Tamanho e escrita")).font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                LabelSlider(label: tr("Quadradinho"), value: d.labelScale, range: 0.2...2.5, enabled: !d.locked, st: st) { st.setDoor(d.id, labelScale: $0, live: true) }
+                LabelSlider(label: tr("Linha vermelha"), value: d.width, range: 0.4...5, enabled: !d.locked, st: st) { st.setDoor(d.id, width: $0, live: true) }
                 HStack {
-                    Button(d.labelVert ? "Escrita deitada" : "Escrita deitada ✓") { st.setDoor(d.id, labelVert: false) }
-                    Button(d.labelVert ? "Escrita em pé ✓" : "Escrita em pé") { st.setDoor(d.id, labelVert: true) }
+                    Button(d.labelVert ? tr("Escrita deitada") : tr("Escrita deitada ✓")) { st.setDoor(d.id, labelVert: false) }
+                    Button(d.labelVert ? tr("Escrita em pé ✓") : tr("Escrita em pé")) { st.setDoor(d.id, labelVert: true) }
                 }.buttonStyle(.bordered).disabled(d.locked)
-                Text("Largura do vão").font(.footnote).foregroundColor(Color(argb: 0xFF111111))
+                Text(tr("Largura do vão")).font(.footnote).foregroundColor(Color(argb: 0xFF111111))
                 HStack {
                     ManualValueBox(text: d.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !d.locked) { st.setManualValue($0) }
                     Button(st.unit.label) { st.setUnit(st.unit.next) }.font(.title3)
                 }
                 Text(statusText(d.valueMm != nil, d.source, ble.state == .CONNECTED)).font(.footnote).foregroundColor(Color(argb: 0xFF555555))
                 HStack {
-                    if d.valueMm != nil { Button("Limpar medida") { st.clearValue(d.id) } }
+                    if d.valueMm != nil { Button(tr("Limpar medida")) { st.clearValue(d.id) } }
                     Spacer()
-                    Button("Excluir porta", role: .destructive) { st.delete(d.id) }.disabled(d.locked)
+                    Button(tr("Excluir porta"), role: .destructive) { st.delete(d.id) }.disabled(d.locked)
                 }.font(.footnote)
             }.padding(14)
         }
@@ -549,7 +549,7 @@ struct RoomPanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(seg != nil ? "Cômodo · trecho \(k + 1) de \(r.segCount)" : "Cômodo · toque num trecho").font(.headline).foregroundColor(dark)
+                    Text(seg != nil ? tr("Cômodo · trecho {0} de {1}", k + 1, r.segCount) : tr("Cômodo · toque num trecho")).font(.headline).foregroundColor(dark)
                     Spacer()
                     Button("‹") { st.stepSeg(-1) }.font(.title2)
                     Button("›") { st.stepSeg(1) }.font(.title2)
@@ -568,41 +568,41 @@ struct RoomPanel: View {
                         }
                     }
                     if sg.kind == .DOOR {
-                        Text("Sentido da porta").font(.footnote).foregroundColor(dark)
+                        Text(tr("Sentido da porta")).font(.footnote).foregroundColor(dark)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack {
-                                Button("↔ Dobradiça do outro lado") { st.setSegDoor(r.id, k, hinge: 1 - sg.hinge) }
-                                Button("⇅ Abre pro outro lado") { st.setSegDoor(r.id, k, side: -sg.side) }
-                                Button(sg.slide ? "De correr ✓" : "De abrir ✓") { st.setSegDoor(r.id, k, slide: !sg.slide) }
+                                Button(tr("↔ Dobradiça do outro lado")) { st.setSegDoor(r.id, k, hinge: 1 - sg.hinge) }
+                                Button(tr("⇅ Abre pro outro lado")) { st.setSegDoor(r.id, k, side: -sg.side) }
+                                Button(sg.slide ? tr("De correr ✓") : tr("De abrir ✓")) { st.setSegDoor(r.id, k, slide: !sg.slide) }
                             }.buttonStyle(.bordered).disabled(r.locked)
                         }
                     } else if !sg.kind.isOpening {
-                        Text("Abrir neste trecho (a parede se divide e você mede cada parte)").font(.caption).foregroundColor(Color(argb: 0xFF555555))
+                        Text(tr("Abrir neste trecho (a parede se divide e você mede cada parte)")).font(.caption).foregroundColor(Color(argb: 0xFF555555))
                         HStack {
-                            Button("＋ Porta") { st.splitSeg(r.id, k, .DOOR) }
-                            Button("＋ Janela") { st.splitSeg(r.id, k, .WINDOW) }
-                            Button("＋ Vão") { st.splitSeg(r.id, k, .OPENING) }
+                            Button(tr("＋ Porta")) { st.splitSeg(r.id, k, .DOOR) }
+                            Button(tr("＋ Janela")) { st.splitSeg(r.id, k, .WINDOW) }
+                            Button(tr("＋ Vão")) { st.splitSeg(r.id, k, .OPENING) }
                         }.buttonStyle(.bordered).disabled(r.locked)
                     }
-                    Button("Aplicar \"\(sg.kind.label)\" a todo o contorno") { st.setAllSegKinds(r.id, sg.kind) }.font(.footnote).disabled(r.locked)
+                    Button(tr("Aplicar \"{0}\" a todo o contorno", sg.kind.label)) { st.setAllSegKinds(r.id, sg.kind) }.font(.footnote).disabled(r.locked)
                     HStack {
                         ManualValueBox(text: sg.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !r.locked) { st.setManualValue($0) }
                         Button(st.unit.label) { st.setUnit(st.unit.next) }.font(.title3)
                     }
                     Text(statusText(sg.valueMm != nil, sg.source, ble.state == .CONNECTED)).font(.footnote).foregroundColor(Color(argb: 0xFF555555))
-                    if sg.valueMm != nil { Button("Limpar medida") { st.clearValue(r.id) }.font(.footnote) }
+                    if sg.valueMm != nil { Button(tr("Limpar medida")) { st.clearValue(r.id) }.font(.footnote) }
                 }
                 if r.pts.count >= 4 || (!r.closed && r.pts.count >= 3) {
-                    Button("Unir pontos soltos (reta = 1 medida)") { st.mergeRoomStray(r.id) }.font(.footnote).disabled(r.locked)
+                    Button(tr("Unir pontos soltos (reta = 1 medida)")) { st.mergeRoomStray(r.id) }.font(.footnote).disabled(r.locked)
                 }
-                if r.pts.count >= 3 { Button(r.closed ? "Abrir contorno" : "Fechar contorno") { st.setRoomClosed(r.id, !r.closed) }.font(.footnote) }
+                if r.pts.count >= 3 { Button(r.closed ? tr("Abrir contorno") : tr("Fechar contorno")) { st.setRoomClosed(r.id, !r.closed) }.font(.footnote) }
                 Divider()
-                LabelSlider(label: "Quadradinho", value: r.labelScale, range: 0.1...3, enabled: !r.locked, st: st) { st.setRoomLabelScale(r.id, $0, live: true) }
+                LabelSlider(label: tr("Quadradinho"), value: r.labelScale, range: 0.1...3, enabled: !r.locked, st: st) { st.setRoomLabelScale(r.id, $0, live: true) }
                 HStack {
-                    Button(r.labelVert ? "Escrita deitada" : "Escrita deitada ✓") { st.setRoomLabelVert(r.id, false) }
-                    Button(r.labelVert ? "Escrita em pé ✓" : "Escrita em pé") { st.setRoomLabelVert(r.id, true) }
+                    Button(r.labelVert ? tr("Escrita deitada") : tr("Escrita deitada ✓")) { st.setRoomLabelVert(r.id, false) }
+                    Button(r.labelVert ? tr("Escrita em pé ✓") : tr("Escrita em pé")) { st.setRoomLabelVert(r.id, true) }
                 }.buttonStyle(.bordered).disabled(r.locked)
-                HStack { Text("Cor da parede").font(.footnote).foregroundColor(dark); ColorRow(current: r.color) { session.applyColor($0) } }
+                HStack { Text(tr("Cor da parede")).font(.footnote).foregroundColor(dark); ColorRow(current: r.color) { session.applyColor($0) } }
             }.padding(14)
         }
         .frame(maxHeight: 280)
@@ -618,16 +618,16 @@ struct MiniTelemeter: View {
         let k = app.trenaScale
         VStack(alignment: .leading, spacing: 4 * k) {
             HStack(spacing: 8 * k) {
-                Text("Trena").font(.system(size: 13 * k)).foregroundColor(Ui.text)
-                Button(open ? "Pronto ▾" : "Pronto ▸") { open.toggle() }.font(.system(size: 12 * k)).foregroundColor(Ui.accent)
+                Text(tr("Trena")).font(.system(size: 13 * k)).foregroundColor(Ui.text)
+                Button(open ? tr("Pronto ▾") : tr("Pronto ▸")) { open.toggle() }.font(.system(size: 12 * k)).foregroundColor(Ui.accent)
                 Spacer()
                 Button("A−") { app.setTrenaScale(app.trenaScale - 0.1) }.font(.system(size: 13 * k))
                 Button("A+") { app.setTrenaScale(app.trenaScale + 0.1) }.font(.system(size: 13 * k))
                 Button("✕") { app.setTrenaHidden(true) }.font(.system(size: 14 * k)).foregroundColor(Ui.dim)
             }
             if open {
-                Text(ble.deviceName ?? "Bosch").font(.system(size: 12 * k)).foregroundColor(Ui.dim)
-                Button("Desconectar") { ble.disconnect() }.font(.system(size: 12 * k))
+                Text(ble.deviceName ?? tr("Bosch")).font(.system(size: 12 * k)).foregroundColor(Ui.dim)
+                Button(tr("Desconectar")) { ble.disconnect() }.font(.system(size: 12 * k))
             }
         }
         .padding(8 * k)
@@ -680,7 +680,7 @@ struct FloatingCalc: View {
         let lastMm = app.recent.first?.mm
         VStack(spacing: 8) {
             HStack {
-                Text("⠿  Calculadora").font(.footnote).foregroundColor(.gray)
+                Text(tr("⠿  Calculadora")).font(.footnote).foregroundColor(.gray)
                 Spacer()
                 Button("–") { collapsed.toggle() }.foregroundColor(.white).font(.title3)
                 Button("✕") { session.calcOpen = false }.foregroundColor(.white).padding(.leading, 8)
@@ -707,7 +707,7 @@ struct FloatingCalc: View {
                 }
                 HStack(spacing: 6) {
                     Button { press("Medida", result, lastMm) } label: {
-                        Text("Última medida").font(.footnote).foregroundColor(lastMm != nil ? .white : .gray).frame(maxWidth: .infinity, minHeight: 42)
+                        Text(tr("Última medida")).font(.footnote).foregroundColor(lastMm != nil ? .white : .gray).frame(maxWidth: .infinity, minHeight: 42)
                             .background(RoundedRectangle(cornerRadius: 10).fill(lastMm != nil ? Color(argb: 0xFF2E6B4F) : Color(argb: 0xFF2A2C30)))
                     }.buttonStyle(.plain).disabled(lastMm == nil)
                     Button { press("=", result, lastMm) } label: {
@@ -718,7 +718,7 @@ struct FloatingCalc: View {
                 Button {
                     if let r = result { let t = Calc.format(r); session.addTextCenter(!expr.isEmpty && expr != t ? "\(expr) = \(t)" : t) }
                 } label: {
-                    Text("📝 Escrever na folha").font(.subheadline).foregroundColor(result != nil ? .white : .gray).frame(maxWidth: .infinity, minHeight: 40)
+                    Text(tr("📝 Escrever na folha")).font(.subheadline).foregroundColor(result != nil ? .white : .gray).frame(maxWidth: .infinity, minHeight: 40)
                         .background(RoundedRectangle(cornerRadius: 10).fill(result != nil ? Color(argb: 0xFF3B4D7A) : Color(argb: 0xFF2A2C30)))
                 }.buttonStyle(.plain).disabled(result == nil)
             }
@@ -761,19 +761,19 @@ struct OverviewView: View {
                                 Text("\(i + 1)")
                                 Spacer()
                                 Menu {
-                                    Button("Duplicar folha") { if !st.duplicatePage(i) { app.toast = "Limite de \(Sheet.MAX_PAGES) folhas" } }
-                                    Button("Excluir folha", role: .destructive) { confirmDel = i }.disabled(st.note.pages.count <= 1)
+                                    Button(tr("Duplicar folha")) { if !st.duplicatePage(i) { app.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES) } }
+                                    Button(tr("Excluir folha"), role: .destructive) { confirmDel = i }.disabled(st.note.pages.count <= 1)
                                 } label: { Image(systemName: "ellipsis.circle") }
                             }
                         }
                     }
                 }.padding(12)
             }
-            .navigationTitle("Visão geral · \(st.note.pages.count) folhas").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { dismiss() } } }
-            .alert("Excluir esta folha?", isPresented: Binding(get: { confirmDel != nil }, set: { if !$0 { confirmDel = nil } })) {
-                Button("Cancelar", role: .cancel) {}
-                Button("Excluir", role: .destructive) { if let i = confirmDel { st.deletePage(i); session.updateActivePage(); session.clampView() } }
+            .navigationTitle(tr("Visão geral · {0} folhas", st.note.pages.count)).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } } }
+            .alert(tr("Excluir esta folha?"), isPresented: Binding(get: { confirmDel != nil }, set: { if !$0 { confirmDel = nil } })) {
+                Button(tr("Cancelar"), role: .cancel) {}
+                Button(tr("Excluir"), role: .destructive) { if let i = confirmDel { st.deletePage(i); session.updateActivePage(); session.clampView() } }
             }
         }
     }
@@ -806,19 +806,19 @@ struct ProjectLinkView: View {
         NavigationStack {
             List {
                 if let cur = list.first(where: { $0.id == linked }) {
-                    Section("Ligada a: \(cur.name)") {
-                        Button("🪚 Abrir o projeto") { dismiss(); app.flush(); app.openProject(cur.id) }
-                        Button("Desligar desta nota", role: .destructive) { app.linkProject(noteId, nil); dismiss() }
+                    Section(tr("Ligada a: {0}", cur.name)) {
+                        Button(tr("🪚 Abrir o projeto")) { dismiss(); app.flush(); app.openProject(cur.id) }
+                        Button(tr("Desligar desta nota"), role: .destructive) { app.linkProject(noteId, nil); dismiss() }
                     }
                 }
-                Section(list.isEmpty ? "Ainda não tem projeto de móveis. Crie um no editor de móveis." : (linked != nil ? "Ou trocar por:" : "Escolha o projeto para ligar a esta nota:")) {
+                Section(list.isEmpty ? tr("Ainda não tem projeto de móveis. Crie um no editor de móveis.") : (linked != nil ? tr("Ou trocar por:") : tr("Escolha o projeto para ligar a esta nota:"))) {
                     ForEach(list.filter { $0.id != linked }) { p in
                         Button("🪚 \(p.name)") { app.linkProject(noteId, p.id); dismiss() }
                     }
                 }
             }
-            .navigationTitle("Projeto de móveis desta nota").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fechar") { dismiss() } } }
+            .navigationTitle(tr("Projeto de móveis desta nota")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } } }
         }
     }
 }

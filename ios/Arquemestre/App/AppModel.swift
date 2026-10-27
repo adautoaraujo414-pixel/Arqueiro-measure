@@ -73,7 +73,7 @@ final class AppModel: ObservableObject {
             DemoData.seedIfEmpty(self)
             if let i = args.firstIndex(of: "-screen"), i + 1 < args.count {
                 switch args[i + 1] {
-                case "editor": if let n = index.notes.first(where: { $0.name.hasPrefix("Cozinha") }) { openNote(n.id) }
+                case "editor": if let n = index.notes.first(where: { $0.name.hasPrefix(tr("Cozinha")) }) { openNote(n.id) }
                 case "agenda": screen = .agenda
                 case "quotes": screen = .quotes
                 case "moveis": screen = .moveis
@@ -127,7 +127,7 @@ final class AppModel: ObservableObject {
     func createNote() -> String {
         var folder: String?
         if case .folder(let f) = filter { folder = f }
-        let n = Note(name: "Nota \(index.notes.filter { !$0.trash }.count + 1)", folderId: folder)
+        let n = Note(name: tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1), folderId: folder)
         if let p = lastProjectId { linkProject(n.id, p) }
         store.saveNote(n)
         upsertMeta(n)
@@ -166,7 +166,7 @@ final class AppModel: ObservableObject {
 
     func copyNote(_ id: String) {
         guard var c = store.loadNote(id) else { return }
-        c.id = newId(); c.name += " (cópia)"; c.createdMs = nowMs(); c.pinned = false; c.trash = false
+        c.id = newId(); c.name += tr(" (cópia)"); c.createdMs = nowMs(); c.pinned = false; c.trash = false
         store.saveNote(c)
         upsertMeta(c)
         writeThumb(c)
@@ -175,9 +175,9 @@ final class AppModel: ObservableObject {
     // ---------- editor ----------
     func openNote(_ id: String) {
         guard let meta = index.notes.first(where: { $0.id == id }) else { return }
-        if meta.locked { toast = "Nota bloqueada. Remova o bloqueio no menu da nota."; return }
+        if meta.locked { toast = tr("Nota bloqueada. Remova o bloqueio no menu da nota."); return }
         if session?.state.note.id == id { screen = .editor; return }
-        guard let note = store.loadNote(id) else { toast = "Não foi possível abrir a nota"; return }
+        guard let note = store.loadNote(id) else { toast = tr("Não foi possível abrir a nota"); return }
         flush()
         session = EditorSession(note) { [weak self] n in self?.scheduleSave(n) }
         if !tabs.contains(id) { tabs.append(id) }
@@ -191,7 +191,7 @@ final class AppModel: ObservableObject {
 
     func closeEditor() { flush(); screen = .library }
 
-    func tabName(_ id: String) -> String { index.notes.first { $0.id == id }?.name ?? "Nota" }
+    func tabName(_ id: String) -> String { index.notes.first { $0.id == id }?.name ?? tr("Nota") }
 
     private func scheduleSave(_ note: Note) {
         saveWork?.cancel()
@@ -250,7 +250,7 @@ final class AppModel: ObservableObject {
         guard let s = session else { return }
         if datas.isEmpty { photoToNewPage = false; return }
         if datas.count == 1 {
-            if let r = importPhoto(datas[0].0, ext: datas[0].1) { placePhoto(s, r.0, r.1, r.2) } else { toast = "Não foi possível adicionar a foto" }
+            if let r = importPhoto(datas[0].0, ext: datas[0].1) { placePhoto(s, r.0, r.1, r.2) } else { toast = tr("Não foi possível adicionar a foto") }
             return
         }
         let newPage = photoToNewPage
@@ -259,14 +259,14 @@ final class AppModel: ObservableObject {
         var fail = 0
         for (d, e) in datas { if let r = importPhoto(d, ext: e) { ok.append(r) } else { fail += 1 } }
         let placed = s.addPhotos(ok, newPage: newPage)
-        toast = "\(placed) fotos adicionadas" + (fail > 0 ? " · \(fail) não abriram" : "") + (placed < ok.count ? " · limite de folhas atingido" : "")
+        toast = tr("{0} fotos adicionadas", placed) + (fail > 0 ? tr(" · {0} não abriram", fail) : "") + (placed < ok.count ? tr(" · limite de folhas atingido") : "")
     }
 
     /// Foto da câmera: guarda também na galeria do iPhone (não se perde).
     func addCameraPhoto(_ img: UIImage) {
         UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil)
         guard let d = img.jpegData(compressionQuality: 0.92) else { return }
-        guard let s = session, let r = importPhoto(d, ext: "jpg") else { toast = "Não foi possível adicionar a foto"; return }
+        guard let s = session, let r = importPhoto(d, ext: "jpg") else { toast = tr("Não foi possível adicionar a foto"); return }
         placePhoto(s, r.0, r.1, r.2)
         askAnotherPhoto = true
     }
@@ -284,7 +284,7 @@ final class AppModel: ObservableObject {
 
     func applyRecent(_ r: Reading) {
         guard let s = session else { return }
-        if s.state.assignReading(r) != nil { recent.removeAll { $0.id == r.id }; persistRecent() } else { toast = "Toque numa seta de cota primeiro" }
+        if s.state.assignReading(r) != nil { recent.removeAll { $0.id == r.id }; persistRecent() } else { toast = tr("Toque numa seta de cota primeiro") }
     }
 
     func onDimTap(_ id: String) {
@@ -304,13 +304,13 @@ final class AppModel: ObservableObject {
         guard let s = session else { return nil }
         flush()
         let url = Export.tempURL("\(s.state.note.name).pdf")
-        do { try Export.pdf(s.state.note, to: url); return url } catch { toast = "Falhou: \(error.localizedDescription)"; return nil }
+        do { try Export.pdf(s.state.note, to: url); return url } catch { toast = tr("Falhou: {0}", error.localizedDescription); return nil }
     }
 
     func exportPng() -> URL? {
         guard let s = session else { return nil }
         let url = Export.tempURL("\(s.state.note.name).png")
-        do { try Export.png(s.state.note, page: s.state.pageIdx, to: url); return url } catch { toast = "Falhou ao gerar a imagem"; return nil }
+        do { try Export.png(s.state.note, page: s.state.pageIdx, to: url); return url } catch { toast = tr("Falhou ao gerar a imagem"); return nil }
     }
 
     func exportCsv() -> URL? {
@@ -323,7 +323,7 @@ final class AppModel: ObservableObject {
         flush()
         let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
         let url = Export.tempURL("arquemestre-backup-\(df.string(from: Date())).zip")
-        do { try DataBackup.fullBackup(to: url); return url } catch { toast = "Falhou o backup: \(error.localizedDescription)"; return nil }
+        do { try DataBackup.fullBackup(to: url); return url } catch { toast = tr("Falhou o backup: {0}", error.localizedDescription); return nil }
     }
 
     func restore(from url: URL) {
@@ -346,9 +346,9 @@ final class AppModel: ObservableObject {
             WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast) {}
             projVersion += 1
             screen = .library
-            toast = "Backup restaurado"
+            toast = tr("Backup restaurado")
         } catch {
-            toast = (error as? LocalizedError)?.errorDescription ?? "Backup inválido: nada foi alterado"
+            toast = (error as? LocalizedError)?.errorDescription ?? tr("Backup inválido: nada foi alterado")
         }
     }
 
@@ -424,7 +424,7 @@ final class AppModel: ObservableObject {
         let safe = (q.clientName.isEmpty ? "cliente" : q.clientName).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: "_")
         let url = Export.tempURL("Orcamento_\(String(safe.prefix(30))).pdf")
         do { try QuotePdf.write(company: company, quote: q, note: note, logo: logo, to: url); return url }
-        catch { toast = "Falhou: \(error.localizedDescription)"; return nil }
+        catch { toast = tr("Falhou: {0}", error.localizedDescription); return nil }
     }
 
     /// Ao ir para segundo plano: grava e faz a cópia automática.

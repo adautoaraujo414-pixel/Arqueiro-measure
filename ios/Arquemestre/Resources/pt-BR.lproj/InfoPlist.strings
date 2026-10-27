@@ -1,0 +1,7 @@
+/* Textos de permissão do iOS neste idioma */
+"CFBundleDisplayName" = "Arquemestre";
+"NSBluetoothAlwaysUsageDescription" = "O Arquemestre usa o Bluetooth para receber as medidas da trena laser Bosch direto nas cotas, e para mostrar um projeto a outro iPhone por perto.";
+"NSCameraUsageDescription" = "A câmera tira fotos do ambiente para você desenhar as medidas por cima (só quando você pede).";
+"NSMicrophoneUsageDescription" = "O microfone grava o som dos vídeos do ambiente que você anexa ao projeto do cliente (só quando você grava).";
+"NSPhotoLibraryAddUsageDescription" = "As fotos tiradas pelo app também são guardadas na sua galeria, para não se perderem.";
+"NSLocalNetworkUsageDescription" = "A rede local é usada só para mostrar o projeto de móveis ao vivo para outro iPhone que esteja perto.";

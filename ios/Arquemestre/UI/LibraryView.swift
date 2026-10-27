@@ -1,7 +1,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-private let dateFmt: DateFormatter = { let f = DateFormatter(); f.locale = Locale(identifier: "pt_BR"); f.dateFormat = "dd/MM/yyyy"; return f }()
+private var dateFmt: DateFormatter { I18n.shared.dateFormatter(.date) }
 private func dateText(_ ms: Int64) -> String { dateFmt.string(from: Date(timeIntervalSince1970: Double(ms) / 1000)) }
 
 private enum LibTab: String, CaseIterable { case ALL = "TUDO", NOTE = "NOTA", MOVEIS = "MÓVEIS" }
@@ -16,6 +16,7 @@ struct LibraryView: View {
     @State private var restorePick = false
     @State private var confirmRestore: URL?
     @State private var peerView = false
+    @State private var langOpen = false
 
     private var notes: [NoteMeta] {
         app.index.notes.filter {
@@ -38,29 +39,30 @@ struct LibraryView: View {
                 content(wide: wide)
             }
         }
-        .sheet(isPresented: $newFolder) { NameSheet(title: "Nova pasta", label: "Nome da pasta", text: "") { app.addFolder($0) } }
+        .sheet(isPresented: $newFolder) { NameSheet(title: tr("Nova pasta"), label: tr("Nome da pasta"), text: "") { app.addFolder($0) } }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
+        .sheet(isPresented: $langOpen) { LanguagePicker() }
         .fileImporter(isPresented: $restorePick, allowedContentTypes: [.zip, .data]) { r in if case .success(let u) = r { confirmRestore = u } }
-        .alert("Restaurar backup?", isPresented: Binding(get: { confirmRestore != nil }, set: { if !$0 { confirmRestore = nil } })) {
-            Button("Cancelar", role: .cancel) { confirmRestore = nil }
-            Button("Restaurar", role: .destructive) { if let u = confirmRestore { app.restore(from: u) }; confirmRestore = nil }
-        } message: { Text("Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. Vale backup do iPhone ou do Android.") }
+        .alert(tr("Restaurar backup?"), isPresented: Binding(get: { confirmRestore != nil }, set: { if !$0 { confirmRestore = nil } })) {
+            Button(tr("Cancelar"), role: .cancel) { confirmRestore = nil }
+            Button(tr("Restaurar"), role: .destructive) { if let u = confirmRestore { app.restore(from: u) }; confirmRestore = nil }
+        } message: { Text(tr("Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. Vale backup do iPhone ou do Android.")) }
     }
 
     private var sidebar: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 2) {
                 Text("ARQUEMESTRE").font(.subheadline.bold()).foregroundColor(Ui.text).padding(8)
-                side("Todas as notas", "tray.full", app.filter == .all) { app.filter = .all }
-                Text("Pastas").font(.caption).foregroundColor(Ui.dim).padding(.leading, 8).padding(.top, 12)
+                side(tr("Todas as notas"), "tray.full", app.filter == .all) { app.filter = .all }
+                Text(tr("Pastas")).font(.caption).foregroundColor(Ui.dim).padding(.leading, 8).padding(.top, 12)
                 ForEach(app.index.folders) { f in side(f.name, "folder", app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
-                side("Nova pasta", "folder.badge.plus", false) { newFolder = true }
+                side(tr("Nova pasta"), "folder.badge.plus", false) { newFolder = true }
                 Divider().padding(.vertical, 8)
-                side("Novo projeto de móveis", "hammer", false) { app.newMoveisProject() }
-                side("Agenda", "calendar", false) { app.screen = .agenda }
-                side("Orçamentos", "doc.text", false) { app.screen = .quotes }
-                side("Lixo", "trash", app.filter == .trash) { app.filter = .trash }
+                side(tr("Novo projeto de móveis"), "hammer", false) { app.newMoveisProject() }
+                side(tr("Agenda"), "calendar", false) { app.screen = .agenda }
+                side(tr("Orçamentos"), "doc.text", false) { app.screen = .quotes }
+                side(tr("Lixo"), "trash", app.filter == .trash) { app.filter = .trash }
             }.padding(12)
         }
     }
@@ -93,19 +95,21 @@ struct LibraryView: View {
                 HStack {
                     HStack {
                         Image(systemName: "magnifyingglass").foregroundColor(Ui.dim)
-                        TextField("Pesquisar", text: $query).foregroundColor(Ui.text)
+                        TextField(tr("Pesquisar"), text: $query).foregroundColor(Ui.text)
                     }
                     .padding(.horizontal, 12).padding(.vertical, 10)
                     .background(RoundedRectangle(cornerRadius: 12).fill(Ui.panel2))
                     Menu {
-                        Button("Editor de móveis") { app.newMoveisProject() }
-                        Button("Agenda") { app.screen = .agenda }
-                        Button("Orçamentos") { app.screen = .quotes }
+                        Button(tr("Editor de móveis")) { app.newMoveisProject() }
+                        Button(tr("Agenda")) { app.screen = .agenda }
+                        Button(tr("Orçamentos")) { app.screen = .quotes }
                         Divider()
-                        Button("Fazer backup completo (ZIP)") { shareURL = app.makeBackup() }
-                        Button("Restaurar backup") { restorePick = true }
+                        Button(tr("Fazer backup completo (ZIP)")) { shareURL = app.makeBackup() }
+                        Button(tr("Restaurar backup")) { restorePick = true }
                         Divider()
-                        Button("Ver projeto de outro iPhone") { peerView = true }
+                        Button(tr("Ver projeto de outro iPhone")) { peerView = true }
+                        Divider()
+                        Button(langMenuLabel() + " (" + currentLangName() + ")") { langOpen = true }
                     } label: {
                         Image(systemName: "ellipsis.circle").font(.title2).foregroundColor(Ui.text).frame(width: 44, height: 44)
                     }
@@ -113,12 +117,12 @@ struct LibraryView: View {
                 if !wide {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            chip("📅 Agenda", false) { app.screen = .agenda }
-                            chip("+ Projeto de móveis", false) { app.newMoveisProject() }
-                            chip("Todas as notas", app.filter == .all) { app.filter = .all }
+                            chip(tr("📅 Agenda"), false) { app.screen = .agenda }
+                            chip(tr("+ Projeto de móveis"), false) { app.newMoveisProject() }
+                            chip(tr("Todas as notas"), app.filter == .all) { app.filter = .all }
                             ForEach(app.index.folders) { f in chip(f.name, app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
-                            chip("Lixo", app.filter == .trash) { app.filter = .trash }
-                            chip("Orçamentos", false) { app.screen = .quotes }
+                            chip(tr("Lixo"), app.filter == .trash) { app.filter = .trash }
+                            chip(tr("Orçamentos"), false) { app.screen = .quotes }
                         }.padding(.horizontal, 12)
                     }
                 }
@@ -126,7 +130,7 @@ struct LibraryView: View {
                     ForEach(LibTab.allCases, id: \.self) { t in
                         Button { tab = t } label: {
                             VStack(spacing: 4) {
-                                Text(t.rawValue).font(.footnote).foregroundColor(tab == t ? Ui.text : Ui.dim)
+                                Text(tr(t.rawValue)).font(.footnote).foregroundColor(tab == t ? Ui.text : Ui.dim)
                                 Rectangle().fill(tab == t ? Ui.accent : .clear).frame(width: 28, height: 2)
                             }
                         }.buttonStyle(.plain)
@@ -136,9 +140,9 @@ struct LibraryView: View {
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 10)], spacing: 10) {
                         if app.filter != .trash && query.isEmpty && tab != .MOVEIS {
-                            CreateTile(label: "Criar") { app.openNote(app.createNote()) }
+                            CreateTile(label: tr("Criar")) { app.openNote(app.createNote()) }
                         }
-                        if tab == .MOVEIS && query.isEmpty { CreateTile(label: "Novo projeto de móveis") { app.newMoveisProject() } }
+                        if tab == .MOVEIS && query.isEmpty { CreateTile(label: tr("Novo projeto de móveis")) { app.newMoveisProject() } }
                         ForEach(pairs, id: \.0.id) { pr in ClientPair(p: pr.0, notes: pr.1) }
                         ForEach(projs) { pj in ProjRow(p: pj) }
                         ForEach(notes.filter { !paired.contains($0.id) }) { n in NoteRow(n: n) }
@@ -148,10 +152,10 @@ struct LibraryView: View {
             }
             if app.filter != .trash {
                 Menu {
-                    Button { app.openNote(app.createNote()) } label: { Label("Criar nota", systemImage: "square.and.pencil") }
-                    Button { let id = app.createNote(); app.pendingImport = "gallery"; app.openNote(id) } label: { Label("Importar imagem", systemImage: "photo") }
-                    Button { let id = app.createNote(); app.pendingImport = "camera"; app.openNote(id) } label: { Label("Tirar fotografia", systemImage: "camera") }
-                    Button { newFolder = true } label: { Label("Criar nova pasta", systemImage: "folder.badge.plus") }
+                    Button { app.openNote(app.createNote()) } label: { Label(tr("Criar nota"), systemImage: "square.and.pencil") }
+                    Button { let id = app.createNote(); app.pendingImport = "gallery"; app.openNote(id) } label: { Label(tr("Importar imagem"), systemImage: "photo") }
+                    Button { let id = app.createNote(); app.pendingImport = "camera"; app.openNote(id) } label: { Label(tr("Tirar fotografia"), systemImage: "camera") }
+                    Button { newFolder = true } label: { Label(tr("Criar nova pasta"), systemImage: "folder.badge.plus") }
                 } label: {
                     Image(systemName: "plus").font(.system(size: 26, weight: .semibold)).foregroundColor(.white)
                         .frame(width: 58, height: 58).background(Circle().fill(Ui.accent))
@@ -194,28 +198,28 @@ struct ProjRow: View {
             Text("🪚").font(.system(size: bare ? 20 : 26)).frame(width: bare ? 44 : 56, height: bare ? 64 : 76)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Color(argb: 0xFF2B2416)))
             VStack(alignment: .leading, spacing: 2) {
-                Text(bare ? "Projeto de móveis" : p.name).foregroundColor(Ui.text).lineLimit(1)
-                Text((bare ? "" : "Projeto de móveis · ") + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+                Text(bare ? tr("Projeto de móveis") : p.name).foregroundColor(Ui.text).lineLimit(1)
+                Text((bare ? "" : tr("Projeto de móveis · ")) + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
                 Text("\(p.mods) \(p.mods == 1 ? "módulo" : "módulos")" + (linked > 0 && !bare ? " · \(linked) \(linked == 1 ? "nota" : "notas")" : ""))
                     .font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
             Spacer()
             Menu {
-                Button("Abrir") { app.openProject(p.id) }
-                Button("Renomear (nome do cliente)") { rename = true }
-                Button("Nova nota ligada a este projeto") { app.lastProjectId = p.id; app.openNote(app.createNote()) }
-                Button("Apagar projeto", role: .destructive) { del = true }
+                Button(tr("Abrir")) { app.openProject(p.id) }
+                Button(tr("Renomear (nome do cliente)")) { rename = true }
+                Button(tr("Nova nota ligada a este projeto")) { app.lastProjectId = p.id; app.openNote(app.createNote()) }
+                Button(tr("Apagar projeto"), role: .destructive) { del = true }
             } label: { Image(systemName: "chevron.down").foregroundColor(Ui.text).frame(width: 40, height: 40) }
         }
         .padding(bare ? 8 : 10).frame(height: 96)
         .background(RoundedRectangle(cornerRadius: 14).fill(bare ? Color.clear : Ui.panel))
         .contentShape(Rectangle())
         .onTapGesture { app.openProject(p.id) }
-        .sheet(isPresented: $rename) { NameSheet(title: "Nome do projeto", label: "Cliente / projeto", text: p.auto ? "" : p.name) { app.renameMoveisProject(p.id, $0) } }
-        .alert("Apagar este projeto?", isPresented: $del) {
-            Button("Cancelar", role: .cancel) {}
-            Button("Apagar", role: .destructive) { app.deleteMoveisProject(p.id) }
-        } message: { Text("\"\(p.name)\" sai da lista de projetos de móveis. Isso não pode ser desfeito.") }
+        .sheet(isPresented: $rename) { NameSheet(title: tr("Nome do projeto"), label: tr("Cliente / projeto"), text: p.auto ? "" : p.name) { app.renameMoveisProject(p.id, $0) } }
+        .alert(tr("Apagar este projeto?"), isPresented: $del) {
+            Button(tr("Cancelar"), role: .cancel) {}
+            Button(tr("Apagar"), role: .destructive) { app.deleteMoveisProject(p.id) }
+        } message: { Text(tr("\"{0}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.", p.name)) }
     }
 }
 
@@ -264,16 +268,16 @@ struct NoteRow: View {
             Spacer()
             Menu {
                 if n.trash {
-                    Button("Restaurar") { app.trashNote(n.id, false) }
-                    Button("Apagar para sempre", role: .destructive) { confirmDelete = true }
+                    Button(tr("Restaurar")) { app.trashNote(n.id, false) }
+                    Button(tr("Apagar para sempre"), role: .destructive) { confirmDelete = true }
                 } else {
-                    Button("Editar nome") { rename = true }
-                    Button("Copiar") { app.copyNote(n.id) }
-                    Button(n.pinned ? "Desafixar nota" : "Fixar nota") { app.pinNote(n.id, !n.pinned) }
-                    Button("Mover para") { move = true }
-                    Button(n.locked ? "Remover bloqueio" : "Adicionar bloqueio") { app.lockNote(n.id, !n.locked) }
+                    Button(tr("Editar nome")) { rename = true }
+                    Button(tr("Copiar")) { app.copyNote(n.id) }
+                    Button(n.pinned ? tr("Desafixar nota") : tr("Fixar nota")) { app.pinNote(n.id, !n.pinned) }
+                    Button(tr("Mover para")) { move = true }
+                    Button(n.locked ? tr("Remover bloqueio") : tr("Adicionar bloqueio")) { app.lockNote(n.id, !n.locked) }
                     Divider()
-                    Button("Mover para o lixo", role: .destructive) { app.trashNote(n.id, true) }
+                    Button(tr("Mover para o lixo"), role: .destructive) { app.trashNote(n.id, true) }
                 }
             } label: { Image(systemName: "chevron.down").foregroundColor(Ui.text).frame(width: 40, height: 40) }
         }
@@ -281,14 +285,14 @@ struct NoteRow: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(bare ? Color.clear : Ui.panel))
         .contentShape(Rectangle())
         .onTapGesture { if !n.trash { app.openNote(n.id) } }
-        .sheet(isPresented: $rename) { NameSheet(title: "Editar nota", label: "Nome", text: n.name) { app.renameNote(n.id, $0) } }
-        .confirmationDialog("Mover para", isPresented: $move) {
-            Button("Sem pasta") { app.moveNote(n.id, nil) }
+        .sheet(isPresented: $rename) { NameSheet(title: tr("Editar nota"), label: tr("Nome"), text: n.name) { app.renameNote(n.id, $0) } }
+        .confirmationDialog(tr("Mover para"), isPresented: $move) {
+            Button(tr("Sem pasta")) { app.moveNote(n.id, nil) }
             ForEach(app.index.folders) { f in Button(f.name) { app.moveNote(n.id, f.id) } }
         }
-        .alert("Apagar para sempre?", isPresented: $confirmDelete) {
-            Button("Cancelar", role: .cancel) {}
-            Button("Apagar", role: .destructive) { app.deleteForever(n.id) }
+        .alert(tr("Apagar para sempre?"), isPresented: $confirmDelete) {
+            Button(tr("Cancelar"), role: .cancel) {}
+            Button(tr("Apagar"), role: .destructive) { app.deleteForever(n.id) }
         }
     }
 }

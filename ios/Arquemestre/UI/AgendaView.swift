@@ -1,8 +1,10 @@
 import SwiftUI
 
-private let ptBR = Locale(identifier: "pt_BR")
-private func fmt(_ p: String) -> DateFormatter { let f = DateFormatter(); f.locale = ptBR; f.dateFormat = p; return f }
-private let fmtDay = fmt("EEEE, dd 'de' MMMM"), fmtHour = fmt("HH:mm"), fmtDate = fmt("dd/MM/yyyy"), fmtMonth = fmt("MMMM 'de' yyyy")
+private var ptBR: Locale { I18n.shared.locale }
+private var fmtDay: DateFormatter { I18n.shared.dateFormatter(.day) }
+private var fmtHour: DateFormatter { I18n.shared.dateFormatter(.hour) }
+private var fmtDate: DateFormatter { I18n.shared.dateFormatter(.date) }
+private var fmtMonth: DateFormatter { I18n.shared.dateFormatter(.month) }
 private var cal: Calendar { var c = Calendar(identifier: .gregorian); c.locale = ptBR; return c }
 
 private func capFirst(_ s: String) -> String { s.prefix(1).uppercased() + s.dropFirst() }
@@ -11,9 +13,9 @@ private func dayStart(_ d: Date) -> Date { cal.startOfDay(for: d) }
 private func whenLabel(_ d: Date) -> String {
     let n = cal.dateComponents([.day], from: dayStart(Date()), to: dayStart(d)).day ?? 0
     switch n {
-    case 0: return "Hoje"
-    case 1: return "Amanhã"
-    case -1: return "Ontem"
+    case 0: return tr("Hoje")
+    case 1: return tr("Amanhã")
+    case -1: return tr("Ontem")
     default: return capFirst(fmtDay.string(from: d))
     }
 }
@@ -38,9 +40,9 @@ struct AgendaView: View {
         VStack(spacing: 0) {
             HStack {
                 Button { app.screen = .library } label: { Image(systemName: "chevron.backward").foregroundColor(Ui.text).frame(width: 40, height: 40) }
-                Text("Agenda").font(.title3).foregroundColor(Ui.text)
+                Text(tr("Agenda")).font(.title3).foregroundColor(Ui.text)
                 Spacer()
-                Button("+ Novo") {
+                Button(tr("+ Novo")) {
                     let base = selDay.map { $0.addingTimeInterval(9 * 3600) } ?? Date().addingTimeInterval(3600)
                     var a = Appointment(); a.startDate = base
                     isNew = true; editing = a
@@ -51,15 +53,15 @@ struct AgendaView: View {
                     MonthGrid(month: $month, all: all, selDay: selDay) { d in selDay = selDay == d ? nil : d }
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
-                            chip("Próximos", selDay == nil && mode == 0) { selDay = nil; mode = 0 }
-                            chip("Concluídos / passados", selDay == nil && mode == 1) { selDay = nil; mode = 1 }
+                            chip(tr("Próximos"), selDay == nil && mode == 0) { selDay = nil; mode = 0 }
+                            chip(tr("Concluídos / passados"), selDay == nil && mode == 1) { selDay = nil; mode = 1 }
                             if let d = selDay { chip(fmtDate.string(from: d) + "  ✕", true) { selDay = nil } }
                         }
                     }
                     if let d = selDay {
                         DayHours(day: d, list: shown, onNew: { t in var a = Appointment(); a.startDate = t; isNew = true; editing = a }, onEdit: { isNew = false; editing = $0 })
                     } else if shown.isEmpty {
-                        Text(mode == 0 ? "Nenhum compromisso por vir. Toque em “+ Novo” pra marcar uma entrega ou visita." : "Nada por aqui ainda.")
+                        Text(mode == 0 ? tr("Nenhum compromisso por vir. Toque em “+ Novo” pra marcar uma entrega ou visita.") : tr("Nada por aqui ainda."))
                             .font(.subheadline).foregroundColor(Ui.dim).padding(.vertical, 12)
                     } else {
                         ForEach(Array(shown.enumerated()), id: \.element.id) { i, a in
@@ -155,7 +157,7 @@ private struct DayHours: View {
                 HStack(alignment: .top) {
                     Text(String(format: "%02d:00", h)).font(.footnote.bold()).foregroundColor(current ? Color(argb: 0xFF7FB2FF) : Ui.dim).frame(width: 52, alignment: .leading)
                     VStack(spacing: 6) {
-                        if inHour.isEmpty { Text("livre · toque pra marcar").font(.caption).foregroundColor(Color.white.opacity(0.33)).frame(maxWidth: .infinity, alignment: .leading) }
+                        if inHour.isEmpty { Text(tr("livre · toque pra marcar")).font(.caption).foregroundColor(Color.white.opacity(0.33)).frame(maxWidth: .infinity, alignment: .leading) }
                         ForEach(inHour) { a in ApptCard(a: a) { onEdit(a) } }
                     }
                 }
@@ -187,11 +189,11 @@ private struct ApptCard: View {
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    if let p = a.projectId { mini("📐 Abrir projeto") { app.openProject(p) } }
-                    if let n = noteMeta { mini("📝 Abrir nota") { app.openNote(n.id) } }
-                    if a.quoteId != nil { mini("💲 Orçamento") { app.screen = .quotes } }
-                    if !a.clientPhone.isEmpty { mini("💬 Avisar cliente") { whatsApp() } }
-                    mini(a.done ? "↩ Reabrir" : "✔ Concluir") { var b = a; b.done.toggle(); app.saveAppt(b) }
+                    if let p = a.projectId { mini(tr("📐 Abrir projeto")) { app.openProject(p) } }
+                    if let n = noteMeta { mini(tr("📝 Abrir nota")) { app.openNote(n.id) } }
+                    if a.quoteId != nil { mini(tr("💲 Orçamento")) { app.screen = .quotes } }
+                    if !a.clientPhone.isEmpty { mini(tr("💬 Avisar cliente")) { whatsApp() } }
+                    mini(a.done ? tr("↩ Reabrir") : tr("✔ Concluir")) { var b = a; b.done.toggle(); app.saveAppt(b) }
                 }
             }
         }
@@ -207,14 +209,14 @@ private struct ApptCard: View {
     private func whatsApp() {
         var d = a.clientPhone.filter(\.isNumber)
         if d.count == 10 || d.count == 11 { d = "55" + d }
-        let who = a.clientName.split(separator: " ").first.map(String.init) ?? "tudo bem"
-        var msg = "Olá, \(who)! Passando pra confirmar \(a.kind.label.lowercased()) \(whenLabel(a.startDate).lowercased()) (\(fmtDate.string(from: a.startDate))) às \(fmtHour.string(from: a.startDate))"
-        if !a.address.isEmpty { msg += ", em \(a.address)" }
+        let who = a.clientName.split(separator: " ").first.map(String.init) ?? tr("tudo bem")
+        var msg = tr("Olá, {0}! Passando pra confirmar {1} {2} ({3}) às {4}", who, a.kind.label.lowercased(), whenLabel(a.startDate).lowercased(), fmtDate.string(from: a.startDate), fmtHour.string(from: a.startDate))
+        if !a.address.isEmpty { msg += tr(", em {0}", a.address) }
         msg += "."
         if !app.company.name.isEmpty { msg += " — \(app.company.name)" }
         var c = URLComponents(string: "https://wa.me/\(d)")!
         c.queryItems = [URLQueryItem(name: "text", value: msg)]
-        if let u = c.url { UIApplication.shared.open(u) { ok in if !ok { Task { @MainActor in app.toast = "Não consegui abrir o WhatsApp" } } } }
+        if let u = c.url { UIApplication.shared.open(u) { ok in if !ok { Task { @MainActor in app.toast = tr("Não consegui abrir o WhatsApp") } } } }
     }
 }
 
@@ -241,44 +243,44 @@ private struct ApptEditor: View {
                             Button("\(k.icon) \(k.label)") { a.kind = k }.buttonStyle(.bordered).tint(a.kind == k ? Ui.accent : .gray)
                         } }
                     }
-                    TextField("Título (ex.: Entrega da cozinha)", text: $a.title)
-                    DatePicker("Data e hora", selection: $a.startDate).environment(\.locale, ptBR)
+                    TextField(tr("Título (ex.: Entrega da cozinha)"), text: $a.title)
+                    DatePicker(tr("Data e hora"), selection: $a.startDate).environment(\.locale, ptBR)
                 }
-                Section("Cliente") {
-                    TextField("Nome do cliente (digite pra buscar)", text: $a.clientName).onChange(of: a.clientName) { _ in showSug = true }
+                Section(tr("Cliente")) {
+                    TextField(tr("Nome do cliente (digite pra buscar)"), text: $a.clientName).onChange(of: a.clientName) { _ in showSug = true }
                     if showSug { ForEach(Array(sugg)) { c in Button((c.projectId != nil ? "📐 " : "💲 ") + c.name) { pick(c) } } }
                     if a.clientName.isEmpty && !clients.isEmpty {
-                        Text("Clientes salvos (toque pra puxar telefone, endereço e projeto):").font(.caption).foregroundColor(.secondary)
+                        Text(tr("Clientes salvos (toque pra puxar telefone, endereço e projeto):")).font(.caption).foregroundColor(.secondary)
                         ForEach(clients.prefix(12)) { c in Button((c.projectId != nil ? "📐 " : "💲 ") + c.name) { pick(c) } }
                     }
-                    TextField("Telefone / WhatsApp do cliente", text: $a.clientPhone).keyboardType(.phonePad)
-                    TextField("Endereço do compromisso", text: $a.address, axis: .vertical)
+                    TextField(tr("Telefone / WhatsApp do cliente"), text: $a.clientPhone).keyboardType(.phonePad)
+                    TextField(tr("Endereço do compromisso"), text: $a.address, axis: .vertical)
                 }
-                Section("Vínculos") {
+                Section(tr("Vínculos")) {
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("📐 Projeto do cliente")
-                            Text(a.projectId != nil ? "Vinculado — abre direto no editor de móveis" : "Escolha o cliente salvo pra vincular o projeto").font(.caption).foregroundColor(.secondary)
+                            Text(tr("📐 Projeto do cliente"))
+                            Text(a.projectId != nil ? tr("Vinculado — abre direto no editor de móveis") : tr("Escolha o cliente salvo pra vincular o projeto")).font(.caption).foregroundColor(.secondary)
                         }
                         Spacer()
                         if let p = a.projectId {
-                            Button("Abrir") { app.saveAppt(a); dismiss(); app.openProject(p) }.buttonStyle(.borderless)
-                            Button("Tirar") { a.projectId = nil }.buttonStyle(.borderless)
+                            Button(tr("Abrir")) { app.saveAppt(a); dismiss(); app.openProject(p) }.buttonStyle(.borderless)
+                            Button(tr("Tirar")) { a.projectId = nil }.buttonStyle(.borderless)
                         }
                     }
-                    Picker("📝 Nota", selection: Binding(get: { a.noteId ?? "" }, set: { a.noteId = $0.isEmpty ? nil : $0 })) {
-                        Text("Nenhuma").tag("")
+                    Picker(tr("📝 Nota"), selection: Binding(get: { a.noteId ?? "" }, set: { a.noteId = $0.isEmpty ? nil : $0 })) {
+                        Text(tr("Nenhuma")).tag("")
                         ForEach(notes) { n in Text(n.name).tag(n.id) }
                     }
-                    if let nid = a.noteId { Button("Abrir a nota") { app.saveAppt(a); dismiss(); app.openNote(nid) } }
+                    if let nid = a.noteId { Button(tr("Abrir a nota")) { app.saveAppt(a); dismiss(); app.openNote(nid) } }
                     if !quotesOfClient.isEmpty {
-                        Picker("💲 Orçamento", selection: Binding(get: { a.quoteId ?? "" }, set: { a.quoteId = $0.isEmpty ? nil : $0 })) {
-                            Text("Nenhum").tag("")
+                        Picker(tr("💲 Orçamento"), selection: Binding(get: { a.quoteId ?? "" }, set: { a.quoteId = $0.isEmpty ? nil : $0 })) {
+                            Text(tr("Nenhum")).tag("")
                             ForEach(quotesOfClient) { q in Text(fmtDate.string(from: Date(timeIntervalSince1970: Double(q.dateMs) / 1000))).tag(q.id) }
                         }
                     }
                 }
-                Section("Avisar (notificação neste aparelho)") {
+                Section(tr("Avisar (notificação neste aparelho)")) {
                     ForEach(REMIND_OPTIONS, id: \.0) { opt in
                         let m = opt.0
                         Toggle(opt.1, isOn: Binding(get: { a.remindMin.contains(m) }, set: { on in
@@ -286,18 +288,18 @@ private struct ApptEditor: View {
                         }))
                     }
                 }
-                Section("Observações") { TextField("Observações", text: $a.notes, axis: .vertical).lineLimit(3...8) }
-                if !isNew { Section { Button("Apagar compromisso", role: .destructive) { confirmDel = true } } }
+                Section(tr("Observações")) { TextField(tr("Observações"), text: $a.notes, axis: .vertical).lineLimit(3...8) }
+                if !isNew { Section { Button(tr("Apagar compromisso"), role: .destructive) { confirmDel = true } } }
             }
-            .navigationTitle(isNew ? "Novo compromisso" : "Compromisso").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(isNew ? tr("Novo compromisso") : tr("Compromisso")).navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Fechar") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Salvar") { a.title = a.title.trimmingCharacters(in: .whitespaces); app.saveAppt(a); dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button(tr("Salvar")) { a.title = a.title.trimmingCharacters(in: .whitespaces); app.saveAppt(a); dismiss() } }
             }
-            .alert("Apagar compromisso?", isPresented: $confirmDel) {
-                Button("Cancelar", role: .cancel) {}
-                Button("Apagar", role: .destructive) { app.deleteAppt(a.id); dismiss() }
-            } message: { Text("Apagar “\(a.title.isEmpty ? a.kind.label : a.title)”?") }
+            .alert(tr("Apagar compromisso?"), isPresented: $confirmDel) {
+                Button(tr("Cancelar"), role: .cancel) {}
+                Button(tr("Apagar"), role: .destructive) { app.deleteAppt(a.id); dismiss() }
+            } message: { Text(tr("Apagar “{0}”?", a.title.isEmpty ? a.kind.label : a.title)) }
         }
     }
 

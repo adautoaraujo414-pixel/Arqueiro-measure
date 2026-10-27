@@ -64,14 +64,22 @@ cd ios && xcodegen generate && open Arquemestre.xcodeproj
    - idioma principal Português (Brasil);
    - Bundle ID `br.com.arque.measure`; SKU `arquemestre-ios`; acesso completo.
 
-## Assinatura (R$ 29,90 por mês)
-Em **Monetização → Assinaturas**:
-1. **Grupo de assinaturas:** nome de referência `Arquemestre`.
-   - Localizações do grupo (nome que aparece no Ajustes do iPhone): pt-BR "Arquemestre", en-US "Arquemestre", es-MX "Arquemestre".
+## Assinatura (R$ 29,90 por mês) — configuração no App Store Connect
+O app é **grátis pra baixar**. Tudo é liberado por **uma assinatura mensal com renovação automática** pela Apple (StoreKit 2),
+com **3 dias grátis** só pra quem nunca assinou. Não existe senha, compra única nem pagamento por fora no iPhone/iPad.
+
+### Antes de tudo (sem isso a assinatura não aparece nem no Sandbox)
+1. **Contratos, impostos e bancos:** contrato de **Apps pagos** assinado, conta bancária e formulários fiscais preenchidos (status "Ativo").
+2. App criado com o Bundle ID `br.com.arque.measure` (capacidade **In-App Purchase** ligada no App ID; vem ligada por padrão).
+
+### Monetização → Assinaturas
+1. **Grupo de assinaturas** · nome de referência `Arquemestre`.
+   - Localizações do grupo (nome que aparece em Ajustes › Assinaturas): pt-BR "Arquemestre" · en-US "Arquemestre" · es-MX "Arquemestre".
 2. **Assinatura** dentro do grupo:
-   - Nome de referência: `Arquemestre Mensal` · ID do produto: **`arquemestre_mensal`** (tem que ser exatamente esse, o app procura por ele).
-   - Duração: **1 mês** · Preço: **R$ 29,90** com país base Brasil (a Apple calcula os outros países; nos EUA fica perto de US$ 5,99 — pode ajustar).
-   - Compartilhamento familiar: desligado.
+   - Nome de referência `Arquemestre Mensal` · **ID do produto `arquemestre_mensal`** (exatamente esse: o app procura por ele).
+   - Duração **1 mês** · Disponibilidade: os mesmos países do app.
+   - **Preço:** país base **Brasil, R$ 29,90** → "Próximo" e aceite os preços que a Apple calcula pros outros países (EUA fica perto de US$ 5,99; dá pra ajustar).
+   - Compartilhamento familiar: **desligado**.
    - Localizações:
 
 | Idioma | Nome de exibição | Descrição |
@@ -80,16 +88,68 @@ Em **Monetização → Assinaturas**:
 | English (U.S.) | Arquemestre Monthly | Everything unlocked: measuring, cabinets, cutting, quotes, schedule. |
 | Spanish (Mexico) | Arquemestre Mensual | Todo liberado: medición, muebles, corte, presupuesto y agenda. |
 
-   - **Informações para a revisão:** captura de tela da tela de assinatura (`capturas/iphone-6-trial.png`) e a nota: "Monthly subscription that unlocks the whole app."
-3. **Oferta introdutória** (na página da assinatura → Preços da assinatura → ＋ Oferta introdutória):
-   - todos os países · tipo **Grátis** · duração **3 dias** · só pra quem nunca assinou (a Apple controla isso sozinha).
-4. Na primeira versão, a assinatura vai junto: na página da versão 1.0, em "Compras dentro do app e assinaturas", adicione `arquemestre_mensal` antes de enviar.
+3. **Oferta introdutória** (página da assinatura → Preço da assinatura → ＋ → "Criar oferta introdutória"):
+   - todos os países · início: hoje · sem data de fim · tipo **Teste grátis** · duração **3 dias**.
+   - A Apple só oferece a quem nunca assinou nesse grupo (o app lê isso sozinho e esconde o "3 dias grátis" de quem já usou).
+4. **Informações para a revisão** (fim da página da assinatura):
+   - **Captura de tela:** a tela de assinatura do app, ramo `ci/ios-resultados` → `capturas/iphone-6-trial.png` (português) — mostra preço, 3 dias grátis, renovação, cancelar, restaurar, gerenciar, privacidade e termos.
+   - **Notas da revisão:** `Auto-renewable monthly subscription that unlocks the whole app. 3-day free trial for new subscribers (introductory offer). No login needed: tap "Start 3 days free" on the first screen and confirm with your Sandbox account.`
+5. **Notificações do servidor da App Store:** não precisa (o app não tem servidor; o StoreKit 2 confere tudo no aparelho).
+6. O status da assinatura fica **"Pronto para enviar"** quando todos os campos acima estiverem preenchidos.
 
-O que o app já faz (regra 3.1.2 da Apple):
-- mostra o preço mensal em destaque, os dias grátis, que renova sozinho e como cancelar, antes de assinar;
-- botões "Já assino · restaurar compras" e "Gerenciar assinatura" (abre a tela de assinaturas da Apple);
-- links pra Política de privacidade e Termos de uso (EULA padrão da Apple) na tela de assinatura;
-- sem assinatura ativa, as telas ficam bloqueadas mas os dados continuam e dá pra fazer backup.
+### Juntar a assinatura à versão (sem enviar agora)
+- Na página da versão **1.0** → seção **"Compras dentro do app e assinaturas"** → **＋** → marque `arquemestre_mensal` → Concluído.
+- A primeira assinatura **só vai pra revisão junto com uma versão do app**. Deixe assim e **não toque em "Enviar para revisão"** até terminar os testes no Sandbox (abaixo).
+- Na descrição da ficha já está o link dos **Termos de uso (EULA padrão da Apple)** e da **Política de privacidade** (a Apple exige os dois pra apps com assinatura).
+
+### O que o app faz (regras 3.1.1 e 3.1.2 da Apple)
+- **Antes de assinar** (primeira tela): preço mensal em destaque ("R$ 29,90 por mês"), "3 dias grátis, depois R$ 29,90 por mês",
+  que renova sozinho, que o teste só começa quando a Apple confirma, como cancelar (Ajustes › seu nome › Assinaturas, até 24 h antes),
+  botões **Começar 3 dias grátis**, **Já assino · restaurar compras**, **Gerenciar assinatura** e os links **Privacidade** e **Termos de uso (EULA)**.
+- **Depois da confirmação da Apple:** tudo liberado. Na biblioteca aparece "Teste grátis · falta X"; se a pessoa desligar a renovação,
+  aparece até quando vale; se a cobrança falhar, o app avisa e continua liberado no período de carência da Apple.
+- **Compra pendente** (Ask to Buy / aprovação): não libera até a Apple aprovar.
+- **Acesso validado só pela assinatura** (transações assinadas pela Apple, StoreKit 2). Sem senha manual. Funciona sem internet com a última confirmação.
+- **Expirou, cancelou e acabou o período, ou houve reembolso:** as telas bloqueiam na hora certa (o app confere no fim do período e ao voltar pro app),
+  **nenhum projeto, nota, orçamento ou agenda é apagado**, e a tela de bloqueio tem "Salvar uma cópia dos meus dados (backup)", restaurar e assinar de novo (sem 2º teste grátis).
+- Reinstalou ou trocou de iPhone com o mesmo Apple ID: "Já assino · restaurar compras" (ou o app já reconhece sozinho ao abrir).
+
+## Testes da assinatura
+
+### Já testado (automático, a cada envio de código, no CI do GitHub)
+Arquivo `ios/ArquemestreTests/SubscriptionTests.swift`, com o **StoreKit Testing do Xcode** (arquivo `Arquemestre.storekit`, igual à loja:
+`arquemestre_mensal`, 1 mês, R$ 29,90, oferta grátis de 3 dias) rodando o código de verdade do app (`LicenseManager`) no simulador:
+1. Antes de assinar: preço R$ 29,90, 1 mês, 3 dias grátis, conta elegível, **nada liberado**.
+2. Teste grátis **só começa depois da confirmação**: status "teste", fim em 3 dias, renovação ligada, sem direito a 2º teste.
+3. Compra pendente (Ask to Buy): **não libera**.
+4. **Renovação** depois do teste: vira assinatura paga, período de 1 mês.
+5. **Cancelamento** (renovação desligada): continua liberado até o fim do período.
+6. **Expiração:** bloqueia e **o projeto salvo continua lá**.
+7. Assinar de novo depois de expirar: **sem 2º teste**, já pago.
+8. **Reembolso:** tira o acesso.
+9. **Restaurar** em outra instalação com o mesmo Apple ID: liberado, sem senha.
+10. Restaurar sem assinatura: continua bloqueado, com aviso.
+
+> Isso é o ambiente local de testes do Xcode, que simula a App Store. **Não é o Sandbox dos servidores da Apple.**
+
+### Falta (só dá pra fazer com a sua conta Apple): teste no Sandbox
+Pré-requisitos: contrato de Apps pagos ativo, assinatura e oferta criadas (acima), build no **TestFlight** (Actions → iOS CI → Run workflow → "Enviar para o TestFlight").
+No TestFlight a compra usa o Sandbox automaticamente, sem cobrar. Para repetir o teste grátis, crie um **testador Sandbox** em
+App Store Connect → Usuários e acesso → **Sandbox** e, no iPhone, entre com ele em Ajustes › App Store › **Conta Sandbox**.
+
+No Sandbox o tempo anda rápido (aproximado): **3 dias de teste ≈ 2 min**, **1 mês ≈ 5 min**; a renovação automática repete algumas vezes e para sozinha.
+No iPhone, Ajustes › App Store › Conta Sandbox › **Gerenciar** permite cancelar e mudar a velocidade das renovações.
+
+| # | Teste | Como fazer | Esperado |
+|---|---|---|---|
+| 1 | Tela antes de assinar | Instalar e abrir | Preço R$ 29,90/mês, 3 dias grátis, renovação, como cancelar, restaurar, gerenciar, Privacidade, Termos |
+| 2 | Compra + teste grátis | "Começar 3 dias grátis" → confirmar com a conta Sandbox | Só libera depois da confirmação; selo "Teste grátis · falta …" |
+| 3 | Renovação | Esperar ~2 min | Selo some (assinatura paga); app continua liberado |
+| 4 | Cancelamento | Ajustes › App Store › Conta Sandbox › Gerenciar → cancelar | Selo "Assinatura até …"; continua liberado até o fim |
+| 5 | Expiração | Esperar o fim do período após cancelar (~5 min) e voltar pro app | "Sua assinatura terminou"; notas e projetos continuam lá; backup funciona |
+| 6 | Restaurar | Apagar e instalar de novo → "Já assino · restaurar compras" | Volta liberado sem senha (se a assinatura estiver ativa) |
+| 7 | 2º teste | Com a mesma conta Sandbox, assinar de novo | Sem "3 dias grátis"; cobra o mês direto (no Sandbox, sem cobrança real) |
+| 8 | Novo teste do zero | App Store Connect → Usuários e acesso → Sandbox → testador → **Limpar histórico de compras** | Volta a oferecer 3 dias grátis |
 
 ## Enviar ao TestFlight sem Mac (pelo GitHub)
 1. Em App Store Connect › Usuários e acesso › Integrações › App Store Connect API, crie uma **chave** com função "App Manager" e baixe o `.p8` (só dá pra baixar uma vez).
@@ -193,11 +253,14 @@ Términos de uso (EULA): https://www.apple.com/legal/internet-services/itunes/de
 Arquemestre is a professional work tool for woodworkers and cabinet makers (measuring, 3D furniture design,
 cut lists, PDF quotes and job scheduling). There is no login and no account; all data stays on the device.
 
-Subscription: the app is unlocked by one auto-renewable subscription, "Arquemestre Monthly" (arquemestre_mensal,
-1 month), with a 3-day free trial introductory offer for new subscribers. The paywall shows the monthly price,
-the trial length, the auto-renewal terms, Restore Purchases, Manage Subscription, and links to the Privacy Policy
-and Terms of Use (Apple standard EULA). The subscription provides ongoing value: regular updates with new
-furniture modules, catalog items and features, plus e-mail support.
+Subscription: the app is free to download and is unlocked by one auto-renewable subscription, "Arquemestre Monthly"
+(arquemestre_mensal, 1 month, R$ 29.90 in Brazil), with a 3-day free trial introductory offer for new subscribers.
+The trial starts only after the purchase is confirmed by Apple. The first screen shows the monthly price, the trial length,
+the auto-renewal terms, how to cancel, Restore Purchases, Manage Subscription, and links to the Privacy Policy and
+Terms of Use (Apple standard EULA). There are no other purchases, no passwords and no external payment links.
+To test: tap "Start 3 days free" and confirm with a Sandbox account. When the subscription ends, the screens lock
+but all saved data stays on the device (a backup button is offered). The subscription provides ongoing value:
+regular updates with new furniture modules, catalog items and features, plus e-mail support.
 
 Laser measure: the app can receive measurements from Bosch laser measures with Bluetooth (tested with the GLM 50-27 CG) over Bluetooth LE.
 Without the device, open a note, tap any dimension label and type the value on the in-app keypad — every feature works.

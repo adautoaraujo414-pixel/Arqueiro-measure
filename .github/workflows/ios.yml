@@ -36,15 +36,17 @@ jobs:
           cd ios && xcodegen generate
 
       - name: Compilar e rodar os testes no simulador
+        timeout-minutes: 30
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py iphone)
           set +e
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
             CODE_SIGNING_ALLOWED=NO test > build/xcodebuild-test.log 2>&1
           RC=$?
-          grep -E "error:|Test Case .*(passed|failed)|Executed|\*\* " build/xcodebuild-test.log | tail -n 300
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | tail -n 300
           exit $RC
 
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
@@ -72,7 +74,7 @@ jobs:
           mkdir -p "$OUT/capturas"
           cp -R build/capturas/. "$OUT/capturas/" 2>/dev/null || true
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
-            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 400; } > "$OUT/RESUMO.txt" || true
+            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500; } > "$OUT/RESUMO.txt" || true
           grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
           cd "$OUT"
           git init -q && git checkout -q -b ci/ios-resultados

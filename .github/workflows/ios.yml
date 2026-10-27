@@ -107,12 +107,17 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          if [ -z "$ASC_KEY_ID" ] || [ -z "$APPLE_TEAM_ID" ]; then echo "::error::Faltam os segredos ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_B64 e APPLE_TEAM_ID"; exit 1; fi
+          # a chave .p8 pode vir colada como texto (ASC_KEY_P8, mais fácil) ou em base64 (ASC_KEY_P8_B64)
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$APPLE_TEAM_ID" ] || { [ -z "$ASC_KEY_P8" ] && [ -z "$ASC_KEY_P8_B64" ]; }; then
+            echo "::error::Faltam segredos: ASC_KEY_ID, ASC_ISSUER_ID, APPLE_TEAM_ID e ASC_KEY_P8 (texto do arquivo .p8)"; exit 1
+          fi
           cd ios
           mkdir -p ~/private_keys
-          echo "$ASC_KEY_P8_B64" | base64 -d > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          if [ -n "$ASC_KEY_P8" ]; then printf '%s\n' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          else echo "$ASC_KEY_P8_B64" | base64 -d > ~/private_keys/AuthKey_$ASC_KEY_ID.p8; fi
           AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release -sdk iphoneos \
             -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} $AUTH archive

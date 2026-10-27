@@ -74,7 +74,7 @@ struct PeerViewPicker: View {
             List {
                 Section {
                     Text(tr("Escolha o aparelho de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.")).font(.footnote)
-                    Text(tr("Funciona entre iPhones e iPads com o Arquemestre. Do Android para o iPhone, mande o backup ZIP.")).font(.caption).foregroundColor(.secondary)
+                    Text(tr("Funciona entre iPhones e iPads com o Arquemestre. De outros aparelhos, mande o backup ZIP.")).font(.caption).foregroundColor(.secondary)
                 }
                 Section(tr("Aparelhos por perto")) {
                     if peer.found.isEmpty { Text(tr("Procurando… no aparelho do dono: Editor de móveis → 📤 Compartilhar.")).foregroundColor(.secondary) }

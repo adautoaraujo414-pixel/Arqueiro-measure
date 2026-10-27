@@ -123,11 +123,23 @@ struct TrialOfferView: View {
     }
 }
 
+/// Páginas públicas (GitHub Pages) no idioma do app.
+enum SiteLinks {
+    static let base = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/"
+    static var privacy: URL {
+        URL(string: base + (I18n.shared.lang == "en" ? "privacy.html" : I18n.shared.lang == "es" ? "privacidad.html" : "privacidade.html"))!
+    }
+    static var support: URL {
+        URL(string: base + (I18n.shared.lang == "en" ? "support.html" : I18n.shared.lang == "es" ? "soporte.html" : "suporte.html"))!
+    }
+}
+
 struct LegalLinks: View {
     var body: some View {
         HStack(spacing: 16) {
-            Link(tr("Privacidade"), destination: URL(string: "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/privacidade.html")!)
+            Link(tr("Privacidade"), destination: SiteLinks.privacy)
             Link(tr("Termos de uso (EULA)"), destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+            Link(tr("Ajuda"), destination: SiteLinks.support)
         }
         .font(.caption).foregroundColor(Ui.dim).padding(.top, 6)
     }

@@ -51,7 +51,7 @@ struct LibraryView: View {
         .alert(tr("Restaurar backup?"), isPresented: Binding(get: { confirmRestore != nil }, set: { if !$0 { confirmRestore = nil } })) {
             Button(tr("Cancelar"), role: .cancel) { confirmRestore = nil }
             Button(tr("Restaurar"), role: .destructive) { if let u = confirmRestore { app.restore(from: u) }; confirmRestore = nil }
-        } message: { Text(tr("Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. Vale backup do iPhone ou do Android.")) }
+        } message: { Text(tr("Isto substitui os dados atuais (notas, agenda, orçamentos, móveis) pelos do backup. Vale backup feito em qualquer aparelho com o Arquemestre.")) }
     }
 
     private var sidebar: some View {
@@ -114,6 +114,8 @@ struct LibraryView: View {
                         Button(tr("Ver projeto de outro iPhone")) { peerView = true }
                         Divider()
                         Button(langMenuLabel() + " (" + currentLangName() + ")") { langOpen = true }
+                        Link(tr("Ajuda e suporte"), destination: SiteLinks.support)
+                        Link(tr("Privacidade"), destination: SiteLinks.privacy)
                     } label: {
                         Image(systemName: "ellipsis.circle").font(.title2).foregroundColor(Ui.text).frame(width: 44, height: 44)
                     }

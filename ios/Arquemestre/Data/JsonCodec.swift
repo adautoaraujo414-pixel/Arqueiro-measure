@@ -165,7 +165,7 @@ enum JsonCodec {
     static func legacy(_ j: J, id: String, locked: Bool, type: String) -> LegacyObj {
         let at = (try? pt(j["at"])) ?? Pt(60, 160)
         var w: CGFloat = 120, h: CGFloat = 120, origin = at
-        var label = tr("Móvel (edite no Android)")
+        var label = tr("Móvel (só visualização)")
         let k = 3.7795277
         if type == "cab" {
             let cab = (j["cab"] as? J) ?? [:]
@@ -189,7 +189,7 @@ enum JsonCodec {
             let den = Double(max(2, int(j, "scaleDen", 20)))
             let wMm = dbl(j, "wMm", 3000), hMm = dbl(j, "hMm", 2600)
             w = CGFloat(wMm * k / den); h = CGFloat(hMm * k / den)
-            label = tr("Parede {0} × {1} mm (edite no Android)", Int(wMm), Int(hMm))
+            label = tr("Parede {0} × {1} mm (só visualização)", Int(wMm), Int(hMm))
         }
         var raw = j
         raw.removeValue(forKey: "id"); raw.removeValue(forKey: "locked")

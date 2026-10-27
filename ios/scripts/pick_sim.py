@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Escolhe o simulador: python3 pick_sim.py iphone|ipad -> imprime o UDID."""
+"""Escolhe o simulador: python3 pick_sim.py iphone|ipad|storekit -> imprime o UDID.
+storekit = iPhone num iOS até 26.2: no iOS 26.3+ o `xcodebuild test` não carrega o .storekit
+(bug da Apple FB22237318, "SKTestSession ... Error saving configuration file", SKInternalErrorDomain 3)."""
 import json, subprocess, sys
 
 kind = sys.argv[1] if len(sys.argv) > 1 else "iphone"
+storekit = kind == "storekit"
+if storekit:
+    kind = "iphone"
 data = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "devices", "available", "-j"]))
 devs = []
 for runtime, lst in data["devices"].items():
@@ -32,6 +37,8 @@ def vkey(v):
     except ValueError:
         return (0,)
 
+if storekit:
+    devs = [d for d in devs if (17,) <= vkey(d[0]) <= (26, 2, 99)]
 best = sorted(devs, key=lambda d: (score(d[1]), tuple(-x for x in vkey(d[0]))))
 if not best or score(best[0][1]) >= 999:
     sys.exit("nenhum simulador " + kind)

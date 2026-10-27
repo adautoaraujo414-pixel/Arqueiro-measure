@@ -36,6 +36,7 @@ jobs:
           cd ios && xcodegen generate
 
       - name: Compilar e rodar os testes no simulador
+        id: build_tests
         timeout-minutes: 30
         run: |
           cd ios && mkdir -p build
@@ -44,6 +45,7 @@ jobs:
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            -skip-testing:ArquemestreTests/SubscriptionTests \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-test.log 2>&1
           RC=$?
@@ -67,6 +69,44 @@ jobs:
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
           bash scripts/screenshots.sh "$APP" build/capturas
 
+      # Assinatura (StoreKit Testing): no iOS 26.3+ o `xcodebuild test` não carrega o .storekit (bug da Apple FB22237318),
+      # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).
+      - name: Testes da assinatura (StoreKit) num iOS até 26.2
+        id: storekit
+        if: always() && steps.build_tests.outcome != 'skipped'
+        timeout-minutes: 40
+        run: |
+          cd ios && mkdir -p build
+          xcrun simctl list runtimes > build/runtimes.txt 2>&1 || true
+          cat build/runtimes.txt
+          UDID=$(python3 scripts/pick_sim.py storekit) || UDID=""
+          if [ -z "$UDID" ]; then
+            echo "SKT: sem simulador iOS <= 26.2 no runner; baixando o iOS 26.1"
+            for v in 26.1 26.2 26.0; do
+              xcodebuild -downloadPlatform iOS -buildVersion "$v" > build/download.log 2>&1 && { echo "SKT: baixou iOS $v"; break; }
+              echo "SKT: não deu pra baixar iOS $v: $(tail -n 3 build/download.log | tr '\n' ' ')"
+            done
+            xcrun simctl list runtimes >> build/runtimes.txt 2>&1 || true
+            RT=$(xcrun simctl list runtimes -j | python3 -c "import json,sys;r=[x for x in json.load(sys.stdin)['runtimes'] if x.get('platform')=='iOS' and x.get('isAvailable') and tuple(int(p) for p in x['version'].split('.')[:2])<=(26,2) and tuple(int(p) for p in x['version'].split('.')[:2])>=(17,0)];r.sort(key=lambda x:[int(p) for p in x['version'].split('.')]);print(r[-1]['identifier'] if r else '')")
+            if [ -n "$RT" ]; then
+              for dt in "iPhone 17 Pro" "iPhone 16 Pro" "iPhone 16" "iPhone 15"; do
+                UDID=$(xcrun simctl create "iPhone StoreKit" "$dt" "$RT" 2>/dev/null) && break
+              done
+            fi
+          fi
+          if [ -z "$UDID" ]; then echo "SKT: nenhum simulador iOS <= 26.2 disponível"; exit 1; fi
+          echo "SKT: simulador dos testes da assinatura: $(xcrun simctl list devices | grep "$UDID")"
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/ddsk -resultBundlePath build/TestesAssinatura.xcresult \
+            -only-testing:ArquemestreTests/SubscriptionTests \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            test > build/xcodebuild-storekit.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-storekit.log | tail -n 300
+          exit $RC
+
       - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados
         if: always() && github.event_name != 'pull_request'
         run: |
@@ -75,7 +115,9 @@ jobs:
           mkdir -p "$OUT/capturas"
           cp -R build/capturas/. "$OUT/capturas/" 2>/dev/null || true
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
-            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500; } > "$OUT/RESUMO.txt" || true
+            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
+            echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;
+            echo "==== Simuladores ===="; cat build/runtimes.txt 2>/dev/null; } > "$OUT/RESUMO.txt" || true
           grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
           cd "$OUT"
           git init -q && git checkout -q -b ci/ios-resultados

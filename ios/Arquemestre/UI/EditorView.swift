@@ -265,7 +265,7 @@ struct EditorView: View {
             let boxes = st.groupObjs().map { Geo.bounds(st.sheet, $0) }
             if !boxes.isEmpty {
                 let tl = session.view.toScreen(Pt(boxes.map(\.l).min()!, boxes.map(\.t).min()!))
-                let tr = session.view.toScreen(Pt(boxes.map(\.r).max()!, boxes.map(\.t).min()!))
+                let tRight = session.view.toScreen(Pt(boxes.map(\.r).max()!, boxes.map(\.t).min()!))
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
                         Text(tr("{0} itens", st.groupIds.count)).font(.caption).foregroundColor(.gray).padding(.leading, 10)
@@ -279,7 +279,7 @@ struct EditorView: View {
                 .frame(maxWidth: min(size.width - 24, 420))
                 .background(RoundedRectangle(cornerRadius: 12).fill(Color(argb: 0xEE111111)))
                 .fixedSize(horizontal: false, vertical: true)
-                .position(x: clamp((tl.x + tr.x) / 2, 160, max(160, size.width - 160)), y: max(200, tl.y - 30))
+                .position(x: clamp((tl.x + tRight.x) / 2, 160, max(160, size.width - 160)), y: max(200, tl.y - 30))
             }
         }
     }

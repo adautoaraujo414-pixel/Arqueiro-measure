@@ -8,9 +8,8 @@ import StoreKit
 /// Sem login e sem servidor: o StoreKit guarda e assina as transações.
 @MainActor
 final class LicenseManager: ObservableObject {
+    /// Único produto do app na App Store: a assinatura mensal (sem compra única, sem senha, sem pagamento por fora).
     static let SUB_ID = "arquemestre_mensal"
-    /// Compra única antiga (não é mais vendida): se alguém tiver, continua valendo.
-    static let LEGACY_FULL_ID = "arquemestre_acesso_completo"
     /// Teste grátis configurado na oferta introdutória (o valor real vem da App Store).
     static let TRIAL_DAYS = 3
     static let TRIAL_SECONDS: TimeInterval = Double(TRIAL_DAYS) * 24 * 3600
@@ -91,11 +90,10 @@ final class LicenseManager: ObservableObject {
         if ProcessInfo.processInfo.arguments.contains("-trialOffer") { status = .notStarted; return }
         if ProcessInfo.processInfo.arguments.contains("-demo") { status = .unlocked; return }
         #endif
-        var active = false, inTrial = false, legacy = false
+        var active = false, inTrial = false
         var end: Date?
         for await r in Transaction.currentEntitlements {
             guard case .verified(let t) = r, t.revocationDate == nil else { continue }
-            if t.productID == LicenseManager.LEGACY_FULL_ID { legacy = true }
             if t.productID == LicenseManager.SUB_ID, (t.expirationDate ?? .distantFuture) > Date() {
                 active = true
                 end = t.expirationDate
@@ -103,7 +101,7 @@ final class LicenseManager: ObservableObject {
             }
         }
         periodEnd = end
-        if legacy || (active && !inTrial) { status = .unlocked; return }
+        if active && !inTrial { status = .unlocked; return }
         if active { status = .trial; return }
         // nunca assinou → boas-vindas com o teste grátis; já assinou → "sua assinatura terminou"
         let had = await Transaction.latest(for: LicenseManager.SUB_ID) != nil

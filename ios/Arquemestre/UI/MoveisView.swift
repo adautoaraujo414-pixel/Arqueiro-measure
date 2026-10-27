@@ -95,7 +95,8 @@ struct MoveisWeb: UIViewRepresentable {
         putFile:function(n,b){post({op:'putFile',name:String(n),b64:String(b)})},
         getFile:function(n){return sync('getFile',n)},
         delFile:function(n){post({op:'delFile',name:String(n)})},
-        listFiles:function(){return sync('listFiles','')||'[]'}
+        listFiles:function(){return sync('listFiles','')||'[]'},
+        makeQuote:function(j){post({op:'makeQuote',json:String(j)})}
       };
     })();
     """
@@ -120,7 +121,9 @@ struct MoveisWeb: UIViewRepresentable {
         w.backgroundColor = .white
         holder.web = w
         let cur = I18n.shared.currencySymbol().addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
-        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)") ?? URL(string: "arque://app/editor.html")!))
+        // capturas automáticas da loja (-demo): sem a janela de primeira vez dos padrões
+        let demo = ProcessInfo.processInfo.arguments.contains("-demo") ? "&nosetup=1" : ""
+        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)\(demo)") ?? URL(string: "arque://app/editor.html")!))
         return w
     }
 
@@ -151,6 +154,7 @@ struct MoveisWeb: UIViewRepresentable {
                     try? d.write(to: dir.appendingPathComponent(safe(n)), options: [.atomic])
                 }
             case "delFile": if let n = m["name"] as? String { try? FileManager.default.removeItem(at: dir.appendingPathComponent(safe(n))) }
+            case "makeQuote": if let j = m["json"] as? String { app.quoteFromMoveis(j) }
             default: break
             }
         }

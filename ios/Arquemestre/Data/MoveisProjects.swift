@@ -9,6 +9,26 @@ enum MoveisProjects {
         var updated: Int64
         var mods: Int
         var auto: Bool
+        var status: String = "orc"
+    }
+
+    /// Status do projeto escolhido pela pessoa: orçamento, fechado (cliente fechou), produção, finalizado.
+    static let statuses = ["orc", "fech", "prod", "fin"]
+    static func statusLabel(_ s: String) -> String {
+        switch s {
+        case "fech": return tr("Fechado")
+        case "prod": return tr("Produção")
+        case "fin": return tr("Finalizado")
+        default: return tr("Orçamento")
+        }
+    }
+    static func statusColor(_ s: String) -> UInt32 {
+        switch s {
+        case "fech": return 0x1F9D55
+        case "prod": return 0xD9822B
+        case "fin": return 0x2F6BE0
+        default: return 0x6B7280
+        }
     }
 
     static var file: URL { AppPaths.moveis.appendingPathComponent("projects.json") }
@@ -22,7 +42,8 @@ enum MoveisProjects {
             let mods = ((p["current"] as? [String: Any])?["mods"] as? [Any])?.count ?? 0
             let created = JsonCodec.int64(p, "created", 0)
             return P(id: id, name: nome.isEmpty ? tr("Projeto sem nome") : nome, created: created,
-                     updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false))
+                     updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false),
+                     status: JsonCodec.s(p, "status").isEmpty ? "orc" : JsonCodec.s(p, "status"))
         }.sorted { $0.updated > $1.updated }
     }
 
@@ -33,6 +54,17 @@ enum MoveisProjects {
     }
 
     static func delete(_ id: String) { edit { $0.filter { JsonCodec.s($0, "id") != id } } }
+
+    static func setStatus(_ id: String, _ status: String) {
+        edit { list in
+            list.map { p in
+                guard JsonCodec.s(p, "id") == id else { return p }
+                var q = p
+                q["status"] = status; q["updated"] = nowMs()
+                return q
+            }
+        }
+    }
 
     static func rename(_ id: String, _ name: String) {
         edit { list in

@@ -65,22 +65,7 @@ private fun android.content.Context.activity(): android.app.Activity? {
     return null
 }
 
-/** Versão do Google Play: comprar e restaurar a compra. */
-@Composable
-private fun StoreButtons(vm: AppViewModel, dark: Boolean) {
-    val ctx = LocalContext.current
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Button(
-            onClick = { ctx.activity()?.let { vm.buyStore(it) } }, modifier = Modifier.fillMaxWidth().height(52.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF01875F), contentColor = Color.White),
-        ) { Text(tr("Desbloquear pela Google Play") + (vm.storePrice?.let { " · $it" } ?: ""), fontSize = 15.sp) }
-        OutlinedButton(onClick = { vm.restoreStore() }, modifier = Modifier.fillMaxWidth()) {
-            Text(tr("Já comprei · restaurar compra"), color = if (dark) Color(0xFFCBD5E1) else Color(0xFF334155))
-        }
-    }
-}
-
-private fun priceOf(vm: AppViewModel) = if (br.com.arque.measure.BuildConfig.PLAY) (vm.storePrice ?: tr("valor único")) else License.PRICE
+private fun priceOf(@Suppress("UNUSED_PARAMETER") vm: AppViewModel) = License.PRICE
 
 /** Campo de senha + botão. */
 @Composable
@@ -191,10 +176,7 @@ fun LockScreen(vm: AppViewModel) {
                 color = Color(0xFFCBD5E1), fontSize = 15.sp, textAlign = TextAlign.Center,
             )
             Text(tr("Quer prosseguir?"), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            if (br.com.arque.measure.BuildConfig.PLAY) {
-                StoreButtons(vm, dark = true)
-                vm.toast?.let { Text(it, color = Gold, fontSize = 14.sp, textAlign = TextAlign.Center) }
-            } else {
+            run {
                 Button(
                     onClick = { openWhats(ctx) }, modifier = Modifier.fillMaxWidth().height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = Color.White),
@@ -205,7 +187,7 @@ fun LockScreen(vm: AppViewModel) {
             OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
                 Text(tr("Salvar uma cópia dos meus dados (backup)"), color = Color(0xFFCBD5E1))
             }
-            Text(if (br.com.arque.measure.BuildConfig.PLAY) tr("As atualizações chegam pela Google Play, sem perder nada.") else tr("Atualizações futuras instalam por cima, sem perder nada."), color = Color(0xFF64748B), fontSize = 12.sp)
+            Text(tr("Atualizações futuras instalam por cima, sem perder nada."), color = Color(0xFF64748B), fontSize = 12.sp)
         }
     }
 }
@@ -249,6 +231,8 @@ fun WelcomeDialog(vm: AppViewModel) {
 /** Selo "Teste · falta X" — toque pra desbloquear antes do fim. */
 @Composable
 fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
+    // Google Play: o teste é o da assinatura (a loja cuida); sem pagamento único nem senha
+    if (br.com.arque.measure.BuildConfig.PLAY) return
     var open by remember { mutableStateOf(false) }
     val ctx = LocalContext.current
     Row(
@@ -261,7 +245,7 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(tr("Falta {0} de teste. Acesso completo: pagamento único de {1}.", vm.trialLeft, priceOf(vm)))
-                if (br.com.arque.measure.BuildConfig.PLAY) StoreButtons(vm, dark = false) else {
+                run {
                     Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text(tr("Falar no WhatsApp")) }
                     Spacer(Modifier.height(2.dp))
                     UnlockBox(vm) { open = false }

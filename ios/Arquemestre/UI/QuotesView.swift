@@ -12,7 +12,7 @@ struct QuotesView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Button { if editingId != nil { editingId = nil } else { app.screen = .library } } label: {
+                Button { if editingId != nil { editingId = nil } else { app.leaveQuotes() } } label: {
                     Image(systemName: "chevron.backward").foregroundColor(Ui.text).frame(width: 40, height: 40)
                 }
                 Text(editingId == nil ? tr("Orçamentos") : tr("Orçamento")).font(.title3).foregroundColor(Ui.text)
@@ -50,6 +50,7 @@ struct QuotesView: View {
             }
         }
         .background(Ui.bg)
+        .onAppear { if let id = app.pendingQuoteId { editingId = id; app.pendingQuoteId = nil } }
         .sheet(isPresented: $companyOpen) { CompanySheet(c: app.company) }
         .sheet(isPresented: $calcOpen) { CalcSheet() }
         .alert(tr("Apagar orçamento?"), isPresented: Binding(get: { confirmDel != nil }, set: { if !$0 { confirmDel = nil } })) {

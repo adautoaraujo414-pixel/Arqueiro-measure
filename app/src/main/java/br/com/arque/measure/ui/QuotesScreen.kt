@@ -64,7 +64,8 @@ private val dateFmt get() = br.com.arque.measure.i18n.I18n.dateFormat().apply { 
 
 @Composable
 fun QuotesScreen(vm: AppViewModel) {
-    var editingId by remember { mutableStateOf<String?>(null) }
+    var editingId by remember { mutableStateOf(vm.pendingQuoteId) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { vm.pendingQuoteId = null }
     var companyDlg by remember { mutableStateOf(false) }
     var confirmDel by remember { mutableStateOf<Quote?>(null) }
     BackHandler(enabled = editingId != null) { editingId = null }
@@ -72,7 +73,7 @@ fun QuotesScreen(vm: AppViewModel) {
     Box(Modifier.fillMaxSize().background(Ui.bg).statusBarsPadding().navigationBarsPadding()) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { if (editingId != null) editingId = null else vm.screen = Screen.Library }) {
+            IconButton(onClick = { if (editingId != null) editingId = null else vm.leaveQuotes() }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar"), tint = Ui.text)
             }
             Text(if (editingId == null) tr("Orçamentos") else tr("Orçamento"), color = Ui.text, fontSize = 20.sp, modifier = Modifier.weight(1f))

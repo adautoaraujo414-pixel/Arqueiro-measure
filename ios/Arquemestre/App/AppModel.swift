@@ -393,6 +393,8 @@ final class AppModel: ObservableObject {
     func newMoveisProject() { pendingProject = nil; pendingNewProject = true; screen = .moveis }
     func deleteMoveisProject(_ id: String) { MoveisProjects.delete(id); if lastProjectId == id { lastProjectId = nil }; projVersion += 1 }
     func renameMoveisProject(_ id: String, _ name: String) { MoveisProjects.rename(id, name); projVersion += 1 }
+    /// Status do projeto (orc, fech, prod, fin), o mesmo que o editor grava em projects.json.
+    func setProjectStatus(_ id: String, _ status: String) { MoveisProjects.setStatus(id, status); projVersion += 1 }
     func linkedProject(_ noteId: String) -> String? { links[noteId] }
     func linkProject(_ noteId: String, _ projectId: String?) {
         if let p = projectId { links[noteId] = p } else { links.removeValue(forKey: noteId) }
@@ -473,6 +475,42 @@ final class AppModel: ObservableObject {
     }
     func clearLogo() { logo = nil; try? FileManager.default.removeItem(at: store.logoFile) }
     func saveCompany(_ c: Company) { company = c; let s = store; io.async { s.saveCompany(c) } }
+
+    /// Orçamento criado pelo editor de móveis: abre direto nele; ao sair, volta pro projeto.
+    var pendingQuoteId: String?
+    var quotesBackProject: String?
+
+    /// "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações.
+    func quoteFromMoveis(_ json: String) {
+        guard let d = json.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else {
+            toast = tr("Não consegui montar o orçamento."); return
+        }
+        let num: (Any?) -> Double = { v in (v as? NSNumber)?.doubleValue ?? Double(String(describing: v ?? "")) ?? 0 }
+        var items: [QuoteItem] = ((o["items"] as? [[String: Any]]) ?? []).map { it in
+            QuoteItem(desc: (it["desc"] as? String) ?? "", qty: it["qty"] == nil ? 1 : num(it["qty"]), unit: (it["unit"] as? String) ?? "un", unitValue: num(it["value"]))
+        }
+        if items.isEmpty { items = [QuoteItem()] }
+        let pid = ((o["pid"] as? String) ?? "").isEmpty ? nil : o["pid"] as? String
+        var q = Quote()
+        q.clientName = (o["client"] as? String) ?? ""
+        let city = (o["city"] as? String) ?? ""
+        q.city = city.isEmpty ? company.city : city
+        q.items = items
+        q.notes = (o["notes"] as? String) ?? ""
+        q.noteId = pid.flatMap { notesOfProject($0).first }
+        saveQuote(q)
+        pendingQuoteId = q.id
+        quotesBackProject = pid
+        if let pid { lastProjectId = pid }
+        screen = .quotes
+    }
+
+    /// Sai da tela de orçamentos: volta pro projeto de móveis de onde veio, ou pra biblioteca.
+    func leaveQuotes() {
+        let p = quotesBackProject
+        quotesBackProject = nil
+        if let p { openProject(p) } else { screen = .library }
+    }
 
     func saveQuote(_ q: Quote) {
         if let i = quotes.firstIndex(where: { $0.id == q.id }) { quotes[i] = q } else { quotes.insert(q, at: 0) }

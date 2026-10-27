@@ -208,7 +208,14 @@ struct ProjRow: View {
             Text("🪚").font(.system(size: bare ? 20 : 26)).frame(width: bare ? 44 : 56, height: bare ? 64 : 76)
                 .background(RoundedRectangle(cornerRadius: 4).fill(Color(argb: 0xFF2B2416)))
             VStack(alignment: .leading, spacing: 2) {
-                Text(bare ? tr("Projeto de móveis") : p.name).foregroundColor(Ui.text).lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(bare ? tr("Projeto de móveis") : p.name).foregroundColor(Ui.text).lineLimit(1)
+                    Menu {
+                        ForEach(MoveisProjects.statuses, id: \.self) { s in
+                            Button((s == p.status ? "✓ " : "") + MoveisProjects.statusLabel(s)) { app.setProjectStatus(p.id, s) }
+                        }
+                    } label: { StatusChip(status: p.status) }
+                }
                 Text((bare ? "" : tr("Projeto de móveis · ")) + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
                 Text(tr(p.mods == 1 ? "{0} módulo" : "{0} módulos", p.mods) + (linked > 0 && !bare ? tr(linked == 1 ? " · {0} nota" : " · {0} notas", linked) : ""))
                     .font(.caption).foregroundColor(Ui.dim).lineLimit(1)
@@ -217,6 +224,11 @@ struct ProjRow: View {
             Menu {
                 Button(tr("Abrir")) { app.openProject(p.id) }
                 Button(tr("Renomear (nome do cliente)")) { rename = true }
+                Menu(tr("Status do projeto") + ": " + MoveisProjects.statusLabel(p.status)) {
+                    ForEach(MoveisProjects.statuses, id: \.self) { s in
+                        Button((s == p.status ? "✓ " : "") + MoveisProjects.statusLabel(s)) { app.setProjectStatus(p.id, s) }
+                    }
+                }
                 Button(tr("Nova nota ligada a este projeto")) { app.lastProjectId = p.id; app.openNote(app.createNote()) }
                 Button(tr("Apagar projeto"), role: .destructive) { del = true }
             } label: { Image(systemName: "chevron.down").foregroundColor(Ui.text).frame(width: 40, height: 40) }
@@ -230,6 +242,16 @@ struct ProjRow: View {
             Button(tr("Cancelar"), role: .cancel) {}
             Button(tr("Apagar"), role: .destructive) { app.deleteMoveisProject(p.id) }
         } message: { Text(tr("\"{0}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.", p.name)) }
+    }
+}
+
+/// Etiqueta pequena do status do projeto (orçamento, fechado, produção, finalizado).
+struct StatusChip: View {
+    var status: String
+    var body: some View {
+        Text(MoveisProjects.statusLabel(status)).font(.system(size: 10, weight: .semibold)).foregroundColor(.white).lineLimit(1)
+            .padding(.horizontal, 6).padding(.vertical, 1)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color(argb: 0xFF000000 | MoveisProjects.statusColor(status))))
     }
 }
 

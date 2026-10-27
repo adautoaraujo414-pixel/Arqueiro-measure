@@ -13,9 +13,10 @@ O app (versão `play`) já está pronto pra loja:
 
 ## O que falta (em ordem) — só você pode fazer
 1. **Conta no Play Console** (US$ 25, uma vez só): play.google.com/console.
-   - **Conta de pessoa física nova:** o Google obriga um **teste fechado com pelo menos 12 testadores por 14 dias seguidos**
-     antes de liberar a produção. Junte 12 pessoas (clientes, marceneiros) com conta Gmail.
-   - **Conta de organização (CNPJ):** não tem essa exigência, mas pede o número **D-U-N-S** da empresa (gratuito, sai em alguns dias pelo site da Dun & Bradstreet).
+   - **Sua conta é de 2017:** a exigência do **teste fechado com 12 testadores por 14 dias** só vale pra conta de pessoa física
+     criada **depois de 13/11/2023**. Conta antiga como a sua pode mandar direto pra Produção.
+     (Se o Play Console mostrar essa exigência no painel "Publicar", aí ela vale: junte 12 pessoas com Gmail no teste fechado.)
+   - Conta nova de organização (CNPJ) não tem o teste obrigatório, mas pede o número **D-U-N-S** da empresa.
 2. **Perfil de pagamentos** (Configurar › Perfil de pagamentos): conta bancária e dados fiscais. Sem isso não dá pra vender assinatura.
 3. **Criar o app:** nome "Arquemestre", idioma padrão Português (Brasil), App, Pago? → **Gratuito** (a cobrança é pela assinatura dentro do app).
 4. **Subir o primeiro AAB** numa faixa de teste (Teste interno ou Teste fechado): baixe o `Arquemestre-GooglePlay.aab` do último release
@@ -29,7 +30,7 @@ O app (versão `play`) já está pronto pra loja:
 6. **Teste de licença** (Configurações › Teste de licença): coloque seu Gmail. Assim você assina de teste sem ser cobrado.
 7. **Conteúdo do app** (Política › Conteúdo do app) — respostas abaixo.
 8. **Ficha da loja** em pt-BR, en-US e es-419 — textos abaixo. Gráficos em `docs/play/` (ícone 512, destaque 1024×500, capturas).
-9. **Produção:** depois do teste (ou direto, se for conta de organização), promova o build pra Produção e envie pra revisão.
+9. **Produção:** com a conta de 2017, promova o build direto pra Produção e envie pra revisão (sem esperar 14 dias de teste).
    A primeira revisão costuma levar de alguns dias a 1 semana.
 
 ## Respostas do "Conteúdo do app"
@@ -152,4 +153,5 @@ Arquemestre no está afiliado a Bosch ni a otros fabricantes de medidores láser
 ## Notas
 - **Categoria:** Produtividade.
 - **E-mail de contato da ficha:** adautoaraujo414@gmail.com · **Site:** `https://adautoaraujo414-pixel.github.io/Arqueiro-measure/suporte.html`
-- O APK do site (GitHub) continua com o desbloqueio por senha; ele não vai pra loja.
+- O APK do site (GitHub) continua com 3 dias de teste e depois o desbloqueio por senha; ele não vai pra loja.
+  A versão da Google Play não tem senha, nem compra única, nem pagamento por fora: só a assinatura mensal da própria Google Play.

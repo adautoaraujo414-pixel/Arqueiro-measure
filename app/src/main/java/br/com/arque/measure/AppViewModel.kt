@@ -563,6 +563,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun newMoveisProject() { pendingProject = null; pendingNewProject = true; screen = Screen.Moveis }
     fun deleteMoveisProject(id: String) { br.com.arque.measure.data.MoveisProjects.delete(getApplication(), id); if (lastProjectId == id) lastProjectId = null; projVersion++ }
     fun renameMoveisProject(id: String, name: String) { br.com.arque.measure.data.MoveisProjects.rename(getApplication(), id, name); projVersion++ }
+    /** Status do projeto (orc, fech, prod, fin), o mesmo que o editor grava em projects.json. */
+    fun setProjectStatus(id: String, status: String) { br.com.arque.measure.data.MoveisProjects.setStatus(getApplication(), id, status); projVersion++ }
     fun linkedProject(noteId: String): String? = links.getString(noteId, null)
     fun linkProject(noteId: String, projectId: String?) {
         links.edit().apply { if (projectId == null) remove(noteId) else putString(noteId, projectId) }.apply()
@@ -681,6 +683,44 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun saveCompany(c: br.com.arque.measure.model.Company) {
         company = c
         viewModelScope.launch(io) { store.saveCompany(c) }
+    }
+
+    /** Orçamento criado pelo editor de móveis: abre direto nele; ao sair, volta pro projeto. */
+    var pendingQuoteId by mutableStateOf<String?>(null)
+    var quotesBackProject by mutableStateOf<String?>(null)
+
+    /** "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações. */
+    fun quoteFromMoveis(json: String) {
+        runCatching {
+            val o = org.json.JSONObject(json)
+            val arr = o.optJSONArray("items")
+            val items = buildList {
+                if (arr != null) for (i in 0 until arr.length()) {
+                    val jo = arr.getJSONObject(i)
+                    add(br.com.arque.measure.model.QuoteItem(desc = jo.optString("desc"), qty = jo.optDouble("qty", 1.0), unit = jo.optString("unit", "un"), unitValue = jo.optDouble("value", 0.0)))
+                }
+            }
+            val pid = o.optString("pid").ifBlank { null }
+            val q = br.com.arque.measure.model.Quote(
+                clientName = o.optString("client"),
+                city = o.optString("city").ifBlank { company.city },
+                items = items.ifEmpty { listOf(br.com.arque.measure.model.QuoteItem()) },
+                notes = o.optString("notes"),
+                noteId = pid?.let { notesOfProject(it).firstOrNull() },
+            )
+            saveQuote(q)
+            pendingQuoteId = q.id
+            quotesBackProject = pid
+            if (pid != null) lastProjectId = pid
+            screen = Screen.Quotes
+        }.onFailure { toast = br.com.arque.measure.i18n.tr("Não consegui montar o orçamento.") }
+    }
+
+    /** Sai da tela de orçamentos: volta pro projeto de móveis de onde veio, ou pra biblioteca. */
+    fun leaveQuotes() {
+        val p = quotesBackProject
+        quotesBackProject = null
+        if (p != null) openProject(p) else screen = Screen.Library
     }
 
     /** Cria ou atualiza o orçamento (grava na hora). */
@@ -857,7 +897,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Editor de móveis aberto só pra ver o projeto de outro celular (Bluetooth). */
     var moveisView by mutableStateOf(false)
 
-    // ---- teste de 2 dias / desbloqueio ----
+    // ---- teste de 3 dias (APK do site) / desbloqueio ----
     var licLocked by mutableStateOf(false)
     var showWelcome by mutableStateOf(false)
     var trialLeft by mutableStateOf("")

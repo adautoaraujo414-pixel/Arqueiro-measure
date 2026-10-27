@@ -6,8 +6,8 @@ import android.content.Context
 import java.security.MessageDigest
 
 /**
- * Período de teste (2 dias no APK do site, 3 dias no Google Play) e desbloqueio
- * por senha (site) ou pela compra no Google Play (play).
+ * APK do site: 3 dias de teste e depois desbloqueio por senha (pagamento único combinado fora do app).
+ * Google Play: só a assinatura mensal da loja (o teste grátis de 3 dias é a oferta da própria assinatura).
  * Fica nas preferências do app: atualizar o APK por cima mantém tudo (teste, desbloqueio e dados).
  * Voltar o relógio do celular não estende o teste (vale a maior data já vista).
  */

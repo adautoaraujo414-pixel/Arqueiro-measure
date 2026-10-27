@@ -96,7 +96,7 @@ fun MoveisScreen(vm: AppViewModel) {
 
     val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
     var showShare by remember { mutableStateOf(false) }
-    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.lastProjectId = id; vm.projVersion++ }) }
+    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.lastProjectId = id; vm.projVersion++ }, { json -> vm.quoteFromMoveis(json) }) }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
     val viewing = vm.moveisView
     val vState by br.com.arque.measure.share.BtShare.viewState.collectAsStateWithLifecycle()
@@ -255,7 +255,10 @@ class MoveisBridge(
     private val onShare: () -> Unit = {},
     private val viewing: () -> Boolean = { false },
     private val onCurrent: (String) -> Unit = {},
+    private val onQuote: (String) -> Unit = {},
 ) {
+    /** "Gerar orçamento em PDF" no editor: cria o orçamento do app com o cliente e o valor do projeto. */
+    @JavascriptInterface fun makeQuote(json: String) { web()?.post { onQuote(json) } }
     @JavascriptInterface fun setCurrent(id: String) { web()?.post { onCurrent(id) } }
     @JavascriptInterface fun openTrena() { web()?.post { onTrena() } }
     @JavascriptInterface fun shareStart() { web()?.post { onShare() } }

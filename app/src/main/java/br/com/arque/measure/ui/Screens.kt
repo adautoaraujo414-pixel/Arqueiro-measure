@@ -95,7 +95,7 @@ import java.util.Locale
 @Composable
 fun App(vm: AppViewModel) {
     BackHandler(enabled = vm.screen == Screen.Editor) { vm.closeEditor() }
-    BackHandler(enabled = vm.screen == Screen.Quotes) { vm.screen = Screen.Library }
+    BackHandler(enabled = vm.screen == Screen.Quotes) { vm.leaveQuotes() }
 
     LaunchedEffect(vm.toast) {
         if (vm.toast != null) {
@@ -428,6 +428,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
     var menu by remember { mutableStateOf(false) }
     var rename by remember { mutableStateOf(false) }
     var del by remember { mutableStateOf(false) }
+    var stDlg by remember { mutableStateOf(false) }
     val linked = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).size }
     Row(
         mod.height(96.dp).clip(RoundedCornerShape(14.dp)).background(if (bare) Color.Transparent else Ui.panel)
@@ -439,7 +440,10 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
         }
         Spacer(Modifier.width(if (bare) 8.dp else 12.dp))
         Column(Modifier.weight(1f)) {
-            Text(if (bare) tr("Projeto de móveis") else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (bare) tr("Projeto de móveis") else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                StatusChip(p.status, Modifier.padding(start = 6.dp).clickable { stDlg = true })
+            }
             Text((if (bare) "" else tr("Projeto de móveis · ")) + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
             Text(tr(if (p.mods == 1) "{0} módulo" else "{0} módulos", p.mods) + (if (linked > 0 && !bare) tr(if (linked == 1) " · {0} nota" else " · {0} notas", linked) else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
@@ -448,15 +452,44 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text(tr("Abrir")) }, onClick = { menu = false; vm.openProject(p.id) })
                 DropdownMenuItem(text = { Text(tr("Renomear (nome do cliente)")) }, onClick = { menu = false; rename = true })
+                DropdownMenuItem(text = { Text(tr("Status do projeto") + ": " + br.com.arque.measure.data.MoveisProjects.statusLabel(p.status)) }, onClick = { menu = false; stDlg = true })
                 DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
                 DropdownMenuItem(text = { Text(tr("Apagar projeto")) }, onClick = { menu = false; del = true })
             }
         }
     }
     if (rename) NameDialog(tr("Nome do projeto"), tr("Cliente / projeto"), if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
+    if (stDlg) AlertDialog(
+        onDismissRequest = { stDlg = false },
+        title = { Text(tr("Status do projeto")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                br.com.arque.measure.data.MoveisProjects.STATUS.forEach { s ->
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(if (s == p.status) Color(br.com.arque.measure.data.MoveisProjects.statusColor(s)).copy(alpha = 0.15f) else Color.Transparent)
+                            .clickable { stDlg = false; vm.setProjectStatus(p.id, s) }.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        StatusChip(s)
+                        if (s == p.status) Text("  ✓", color = Ui.text)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { stDlg = false }) { Text(tr("Fechar")) } },
+    )
     if (del) ConfirmDialog(
         title = tr("Apagar este projeto?"), message = tr("\"{0}\" sai da lista de projetos de móveis. Isso não pode ser desfeito.", p.name),
         confirm = tr("Apagar"), onDismiss = { del = false }, onOk = { del = false; vm.deleteMoveisProject(p.id) },
+    )
+}
+
+/** Etiqueta pequena do status do projeto (orçamento, fechado, produção, finalizado). */
+@Composable
+private fun StatusChip(status: String, mod: Modifier = Modifier) {
+    Text(
+        br.com.arque.measure.data.MoveisProjects.statusLabel(status), color = Color.White, fontSize = 10.sp, maxLines = 1,
+        modifier = mod.clip(RoundedCornerShape(8.dp)).background(Color(br.com.arque.measure.data.MoveisProjects.statusColor(status))).padding(horizontal = 6.dp, vertical = 1.dp),
     )
 }
 

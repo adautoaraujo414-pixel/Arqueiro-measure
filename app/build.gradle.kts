@@ -16,14 +16,14 @@ android {
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
     }
 
-    // site = APK do GitHub (atualiza sozinho, desbloqueio por senha)
+    // site = APK do GitHub (atualiza sozinho, 3 dias de teste e depois desbloqueio por senha)
     // play = Google Play (sem atualizador próprio, desbloqueio pela compra no Google Play)
     flavorDimensions += "loja"
     productFlavors {
         create("site") {
             dimension = "loja"
             buildConfigField("boolean", "PLAY", "false")
-            buildConfigField("int", "TRIAL_DAYS", "2")
+            buildConfigField("int", "TRIAL_DAYS", "3")
         }
         create("play") {
             dimension = "loja"

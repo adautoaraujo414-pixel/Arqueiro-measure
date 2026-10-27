@@ -8,7 +8,22 @@ import java.io.File
 
 /** Projetos do editor de móveis (arquivo moveis/projects.json, o mesmo que o editor usa). */
 object MoveisProjects {
-    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean)
+    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc")
+
+    /** Status do projeto escolhido pela pessoa: orçamento, fechado (cliente fechou), produção, finalizado. */
+    val STATUS = listOf("orc", "fech", "prod", "fin")
+    fun statusLabel(s: String): String = when (s) {
+        "fech" -> tr("Fechado")
+        "prod" -> tr("Produção")
+        "fin" -> tr("Finalizado")
+        else -> tr("Orçamento")
+    }
+    fun statusColor(s: String): Long = when (s) {
+        "fech" -> 0xFF1F9D55
+        "prod" -> 0xFFD9822B
+        "fin" -> 0xFF2F6BE0
+        else -> 0xFF6B7280
+    }
 
     private fun file(ctx: Context) = File(ctx.filesDir, "moveis/projects.json")
 
@@ -20,7 +35,7 @@ object MoveisProjects {
             val p = a.getJSONObject(k)
             val nome = p.optJSONObject("client")?.optString("nome")?.trim().orEmpty()
             val mods = p.optJSONObject("current")?.optJSONArray("mods")?.length() ?: 0
-            P(p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"))
+            P(p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"), p.optString("status").ifBlank { "orc" })
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())
 
@@ -39,6 +54,14 @@ object MoveisProjects {
         val n = JSONArray()
         for (k in 0 until a.length()) { val p = a.getJSONObject(k); if (p.optString("id") != id) n.put(p) }
         n
+    }
+
+    fun setStatus(ctx: Context, id: String, status: String) = edit(ctx) { a ->
+        for (k in 0 until a.length()) {
+            val p = a.getJSONObject(k)
+            if (p.optString("id") == id) { p.put("status", status); p.put("updated", System.currentTimeMillis()) }
+        }
+        a
     }
 
     fun rename(ctx: Context, id: String, name: String) = edit(ctx) { a ->

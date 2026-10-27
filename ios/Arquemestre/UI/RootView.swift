@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 struct RootView: View {
     @EnvironmentObject var app: AppModel

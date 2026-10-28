@@ -328,6 +328,8 @@ final class AppModel: ObservableObject {
 
     func makeBackup() -> URL? {
         flush()
+        // O flush grava na fila de disco; termina as gravações antes de copiar os dados.
+        io.sync {}
         let df = DateFormatter(); df.dateFormat = "yyyy-MM-dd"
         let url = Export.tempURL("arquemestre-backup-\(df.string(from: Date())).zip")
         do { try DataBackup.fullBackup(to: url); return url } catch { toast = tr("Falhou o backup: {0}", error.localizedDescription); return nil }
@@ -338,6 +340,8 @@ final class AppModel: ObservableObject {
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         flush()
         do {
+            // Nenhuma gravação da versão anterior pode alcançar a pasta já restaurada.
+            io.sync {}
             try DataBackup.restore(from: url)
             session = nil
             tabs = []
@@ -539,3 +543,4 @@ final class AppModel: ObservableObject {
         io.async { DataBackup.autoBackup() }
     }
 }
+

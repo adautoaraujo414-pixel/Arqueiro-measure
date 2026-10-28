@@ -243,7 +243,7 @@ fun MoveisScreen(vm: AppViewModel) {
         }
     }
     if (showBle) BluetoothScreen(vm) { showBle = false }
-    if (showShare) ShareHostDialog(onPush = { web?.post { web?.evaluateJavascript("window.arqueShareNow&&window.arqueShareNow()", null) } }) { showShare = false }
+    if (showShare) ShareHostDialog(company = vm.company.name, onPush = { web?.post { web?.evaluateJavascript("window.arqueShareNow&&window.arqueShareNow()", null) } }) { showShare = false }
 }
 
 /** Ponte que o editor (JavaScript) usa pra falar com o Android: fechar a tela e guardar cópias em arquivo. */

@@ -8,5 +8,7 @@ class ArqueApp : Application() {
     override fun onCreate() {
         super.onCreate()
         I18n.init(this)
+        // se o app foi fechado no meio de um compartilhamento, o Bluetooth volta a ter o nome original
+        br.com.arque.measure.share.BtShare.restoreName(this)
     }
 }

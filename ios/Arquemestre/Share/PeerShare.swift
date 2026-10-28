@@ -6,8 +6,19 @@ import UIKit
 /// Quem compartilha manda o projeto inteiro a cada alteração; quem vê só recebe.
 /// Entre iPhone e Android isso não funciona (o iOS não abre Bluetooth "clássico" para apps);
 /// para Android ↔ iPhone, use o backup ZIP.
+/// Só aparece Arquemestre: a busca é pelo serviço "arque-proj" do próprio app (outros aparelhos e Bluetooth
+/// nunca aparecem) e quem compartilha aparece como "Arquemestre · Empresa".
 final class PeerShare: NSObject, ObservableObject {
     static let serviceType = "arque-proj"
+    static let prefix = "Arquemestre"
+
+    /// "Arquemestre · Marcenaria X" (sem empresa cadastrada: "Arquemestre · iPhone"). Máximo de 63 bytes (regra do MCPeerID).
+    static func shareName(_ company: String) -> String {
+        let who = company.trimmingCharacters(in: .whitespacesAndNewlines)
+        var n = prefix + " · " + (who.isEmpty ? UIDevice.current.model : who)
+        while n.utf8.count > 63 { n.removeLast() }
+        return n
+    }
 
     @Published private(set) var hosting = false
     @Published private(set) var viewers = 0
@@ -16,19 +27,20 @@ final class PeerShare: NSObject, ObservableObject {
     @Published private(set) var frame: String?
     @Published private(set) var viewFrom = ""
 
-    private let me = MCPeerID(displayName: UIDevice.current.name)
+    private var me = MCPeerID(displayName: PeerShare.shareName(""))
     private var session: MCSession?
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
     private var last: Data?
 
     // ---- dono ----
-    func startHost() {
+    func startHost(company: String = "") {
         if hosting { return }
+        me = MCPeerID(displayName: PeerShare.shareName(company))
         let s = MCSession(peer: me, securityIdentity: nil, encryptionPreference: .required)
         s.delegate = self
         session = s
-        let adv = MCNearbyServiceAdvertiser(peer: me, discoveryInfo: ["app": "arquemestre"], serviceType: PeerShare.serviceType)
+        let adv = MCNearbyServiceAdvertiser(peer: me, discoveryInfo: ["app": "arquemestre", "nome": String(company.prefix(40))], serviceType: PeerShare.serviceType)
         adv.delegate = self
         adv.startAdvertisingPeer()
         advertiser = adv
@@ -64,7 +76,7 @@ final class PeerShare: NSObject, ObservableObject {
 
     func connect(_ peer: MCPeerID) {
         guard let s = session, let b = browser else { return }
-        viewFrom = peer.displayName
+        viewFrom = PeerShare.display(peer)
         viewState = "connecting"
         frame = nil
         b.invitePeer(peer, to: s, withContext: nil, timeout: 20)
@@ -113,7 +125,14 @@ extension PeerShare: MCNearbyServiceAdvertiserDelegate {
 
 extension PeerShare: MCNearbyServiceBrowserDelegate {
     func browser(_ b: MCNearbyServiceBrowser, foundPeer peer: MCPeerID, withDiscoveryInfo info: [String: String]?) {
+        // só o Arquemestre compartilhando (o serviço já é do app; confere a marca também)
+        guard info?["app"] == "arquemestre" else { return }
         DispatchQueue.main.async { if !self.found.contains(peer) { self.found.append(peer) } }
+    }
+
+    /// Nome pra mostrar na lista: sempre começa com "Arquemestre".
+    static func display(_ p: MCPeerID) -> String {
+        p.displayName.hasPrefix(prefix) ? p.displayName : prefix + " · " + p.displayName
     }
     func browser(_ b: MCNearbyServiceBrowser, lostPeer peer: MCPeerID) {
         DispatchQueue.main.async { self.found.removeAll { $0 == peer } }

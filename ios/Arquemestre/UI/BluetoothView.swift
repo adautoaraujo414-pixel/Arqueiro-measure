@@ -73,13 +73,13 @@ struct PeerViewPicker: View {
         NavigationStack {
             List {
                 Section {
-                    Text(tr("Escolha o aparelho de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.")).font(.footnote)
+                    Text(tr("Só aparecem aparelhos com o Arquemestre compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada.")).font(.footnote)
                     Text(tr("Funciona entre iPhones e iPads com o Arquemestre. De outros aparelhos, mande o backup ZIP.")).font(.caption).foregroundColor(.secondary)
                 }
                 Section(tr("Aparelhos por perto")) {
                     if peer.found.isEmpty { Text(tr("Procurando… no aparelho do dono: Editor de móveis → 📤 Compartilhar.")).foregroundColor(.secondary) }
                     ForEach(peer.found, id: \.self) { p in
-                        Button("📱 \(p.displayName)") {
+                        Button("📐 " + PeerShare.display(p)) {
                             peer.connect(p)
                             app.moveisView = true
                             app.screen = .moveis
@@ -97,6 +97,7 @@ struct PeerViewPicker: View {
 
 /// Dono: compartilhando o projeto aberto.
 struct ShareHostView: View {
+    @EnvironmentObject var app: AppModel
     @EnvironmentObject var peer: PeerShare
     @Environment(\.dismiss) private var dismiss
     var onPush: () -> Void
@@ -104,7 +105,7 @@ struct ShareHostView: View {
         VStack(spacing: 14) {
             Text(tr("Compartilhar projeto")).font(.title3.bold())
             Text(peer.hosting ? tr("📡 Compartilhando · ") + (peer.viewers == 0 ? tr("ninguém vendo ainda") : tr("{0} vendo agora", peer.viewers)) : tr("Ligando…"))
-            Text(tr("No outro iPhone/iPad (com o Arquemestre): menu ⋯ → Ver projeto de outro iPhone → escolher este aparelho. Ele vê tudo ao vivo, mas não altera nada."))
+            Text(tr("No outro iPhone/iPad (com o Arquemestre): menu ⋯ → Ver projeto de outro iPhone → escolher “{0}”. Lá só aparecem aparelhos com o Arquemestre. Ele vê tudo ao vivo, mas não altera nada.", PeerShare.shareName(app.company.name)))
                 .font(.footnote).foregroundColor(.secondary).multilineTextAlignment(.center)
             HStack {
                 Button(tr("Parar de compartilhar"), role: .destructive) { peer.stopHost(); dismiss() }
@@ -114,6 +115,6 @@ struct ShareHostView: View {
         }
         .padding(24)
         .presentationDetents([.medium])
-        .onAppear { peer.startHost(); onPush() }
+        .onAppear { peer.startHost(company: app.company.name); onPush() }
     }
 }

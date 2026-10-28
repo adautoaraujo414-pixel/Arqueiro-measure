@@ -21,11 +21,65 @@ import java.util.zip.GZIPOutputStream
  * Compartilhar projeto de móveis por Bluetooth, celular com celular, em tempo real.
  * Quem compartilha (dono) manda o projeto inteiro a cada alteração; quem vê só recebe (não altera nada).
  * Quadro: [tamanho Int][JSON compactado em gzip].
+ *
+ * Só aparece Arquemestre: enquanto compartilha, o Bluetooth do dono fica com o nome "Arquemestre · Empresa"
+ * (o nome original volta quando para), e quem procura só lista aparelhos com esse nome ou com o serviço do
+ * Arquemestre (conferido pelo SDP). Fones, caixas, TVs, carros e outros celulares não aparecem.
  */
 @SuppressLint("MissingPermission")
 object BtShare {
-    private val ID: UUID = UUID.fromString("6c1f2a8e-4b7d-4f3e-9a51-2d8c0b3e7a19")
+    /** Serviço do compartilhamento (registro SDP do RFCOMM). */
+    val ID: UUID = UUID.fromString("6c1f2a8e-4b7d-4f3e-9a51-2d8c0b3e7a19")
     private const val MAX = 30 * 1024 * 1024
+    const val PREFIX = "Arquemestre"
+    private const val PREFS = "arque.btshare"
+    private var appCtx: Context? = null
+
+    /** Nome que aparece pros outros: "Arquemestre · Marcenaria X" (sem empresa cadastrada: o modelo do celular). */
+    fun shareName(company: String): String {
+        val who = company.trim().ifBlank { android.os.Build.MODEL ?: "" }.replace(Regex("\\s+"), " ")
+        return (if (who.isBlank()) PREFIX else "$PREFIX · $who").take(40)
+    }
+
+    /** O aparelho é um Arquemestre compartilhando? (nome ou serviço no SDP) */
+    fun isArquemestreName(name: String?): Boolean = name?.trim()?.startsWith(PREFIX, ignoreCase = true) == true
+    fun hasService(uuids: Array<out android.os.Parcelable>?): Boolean {
+        val rev = reversed(ID)
+        return uuids.orEmpty().any { (it as? android.os.ParcelUuid)?.uuid.let { u -> u == ID || u == rev } }
+    }
+    /** Alguns Androids devolvem o UUID de 128 bits de trás pra frente. */
+    private fun reversed(u: UUID): UUID {
+        val b = java.nio.ByteBuffer.allocate(16).putLong(u.mostSignificantBits).putLong(u.leastSignificantBits).array().reversedArray()
+        val bb = java.nio.ByteBuffer.wrap(b)
+        return UUID(bb.long, bb.long)
+    }
+    /** Nome pra mostrar na lista: sempre começa com "Arquemestre". */
+    fun displayName(name: String?, address: String): String {
+        val n = name?.trim().orEmpty()
+        return if (isArquemestreName(n)) n else if (n.isNotEmpty()) "$PREFIX · $n" else "$PREFIX · $address"
+    }
+
+    /** Põe o nome "Arquemestre · Empresa" no Bluetooth enquanto compartilha (guarda o original). */
+    private fun applyShareName(ctx: Context, ad: BluetoothAdapter, company: String) {
+        runCatching {
+            val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val cur = ad.name.orEmpty()
+            if (!isArquemestreName(cur) && cur.isNotBlank()) p.edit().putString("orig", cur).apply()
+            ad.setName(shareName(company))
+        }
+    }
+
+    /** Volta o nome original do Bluetooth (ao parar, ou ao abrir o app se ele tinha sido fechado compartilhando). */
+    fun restoreName(ctx: Context) {
+        runCatching {
+            val p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val orig = p.getString("orig", null) ?: return
+            val ad = adapter(ctx) ?: return
+            if (!ad.isEnabled) return
+            if (isArquemestreName(ad.name)) ad.setName(orig)
+            p.edit().remove("orig").apply()
+        }
+    }
 
     private val _hosting = MutableStateFlow(false)
     val hosting: StateFlow<Boolean> = _hosting
@@ -54,12 +108,14 @@ object BtShare {
     }
 
     // ---------------- dono do projeto ----------------
-    fun startHost(ctx: Context): Boolean {
+    fun startHost(ctx: Context, company: String = ""): Boolean {
         if (_hosting.value) return true
         val ad = adapter(ctx) ?: return false
         if (!ad.isEnabled) return false
         val s = runCatching { ad.listenUsingInsecureRfcommWithServiceRecord("Arquemestre projeto", ID) }.getOrNull() ?: return false
         server = s
+        appCtx = ctx.applicationContext
+        applyShareName(ctx.applicationContext, ad, company)
         _hosting.value = true
         Thread {
             while (_hosting.value) {
@@ -101,6 +157,7 @@ object BtShare {
         outs.clear()
         _viewers.value = 0
         last = null
+        appCtx?.let { restoreName(it) }
     }
 
     // ---------------- quem vê ----------------
@@ -108,7 +165,7 @@ object BtShare {
         disconnect()
         _viewState.value = "connecting"
         _frame.value = null
-        viewFrom = runCatching { dev.name }.getOrNull() ?: dev.address
+        viewFrom = displayName(runCatching { dev.name }.getOrNull(), dev.address)
         Thread {
             try {
                 adapter(ctx)?.cancelDiscovery()

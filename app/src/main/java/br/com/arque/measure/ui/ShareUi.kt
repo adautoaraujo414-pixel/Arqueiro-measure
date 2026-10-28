@@ -51,50 +51,111 @@ private fun btPerms(): Array<String> =
 
 private fun hasBt(ctx: Context) = btPerms().all { ContextCompat.checkSelfPermission(ctx, it) == PackageManager.PERMISSION_GRANTED }
 
-/** Escolher o celular do dono do projeto e ver o projeto ao vivo (só visualização). */
+/** Escolher o celular do dono do projeto e ver o projeto ao vivo (só visualização).
+ *  Só aparecem aparelhos com o Arquemestre compartilhando: nome "Arquemestre · …" ou o serviço do Arquemestre
+ *  confirmado no SDP. Fones, caixas de som, TVs, carros e celulares sem o app ficam escondidos. */
 @SuppressLint("MissingPermission")
 @Composable
 fun ShareViewPicker(vm: AppViewModel, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     val devs = remember { mutableStateListOf<BluetoothDevice>() }
+    val names = remember { androidx.compose.runtime.mutableStateMapOf<String, String>() }
     var ok by remember { mutableStateOf(hasBt(ctx)) }
     var msg by remember { mutableStateOf("") }
+    var searching by remember { mutableStateOf(false) }
     val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { ok = hasBt(ctx) }
     val enable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
-    fun add(d: BluetoothDevice) { if (devs.none { it.address == d.address }) devs.add(d) }
+    // celulares/tablets ainda sem nome do Arquemestre: confere o serviço (SDP) um de cada vez, depois da busca
+    val pending = remember { ArrayDeque<BluetoothDevice>() }
+    val checked = remember { mutableSetOf<String>() }
+    var checking by remember { mutableStateOf<BluetoothDevice?>(null) }
+    val handler = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
+
+    fun show(d: BluetoothDevice, name: String?) {
+        names[d.address] = BtShare.displayName(name ?: runCatching { d.name }.getOrNull(), d.address)
+        if (devs.none { it.address == d.address }) devs.add(d)
+    }
+    fun phoneLike(d: BluetoothDevice): Boolean {
+        val major = runCatching { d.bluetoothClass?.majorDeviceClass }.getOrNull() ?: return true
+        return major == android.bluetooth.BluetoothClass.Device.Major.PHONE || major == android.bluetooth.BluetoothClass.Device.Major.COMPUTER ||
+            major == android.bluetooth.BluetoothClass.Device.Major.UNCATEGORIZED || major == android.bluetooth.BluetoothClass.Device.Major.MISC
+    }
+    /** Decide se o aparelho entra na lista; os que precisam de conferência vão pra fila do SDP. */
+    fun consider(d: BluetoothDevice, name: String?) {
+        if (devs.any { it.address == d.address }) { if (BtShare.isArquemestreName(name)) show(d, name); return }
+        val n = name ?: runCatching { d.name }.getOrNull()
+        if (BtShare.isArquemestreName(n)) { show(d, n); return }
+        if (BtShare.hasService(runCatching { d.uuids }.getOrNull())) { show(d, n); return }
+        if (phoneLike(d) && d.address !in checked && pending.none { it.address == d.address }) pending.addLast(d)
+    }
+    fun checkNext() {
+        checking = null
+        val d = pending.removeFirstOrNull() ?: run {
+            searching = false
+            msg = if (devs.isEmpty()) tr("Nenhum Arquemestre compartilhando por perto. No celular do dono: Editor de móveis → 📤 Compartilhar, e toque em Procurar de novo.") else ""
+            return
+        }
+        checked.add(d.address)
+        checking = d
+        if (runCatching { d.fetchUuidsWithSdp() }.getOrDefault(false) != true) { checkNext(); return }
+        val me = d.address
+        handler.postDelayed({ if (checking?.address == me) checkNext() }, 6000)
+    }
     fun scan() {
         val ad = BtShare.adapter(ctx) ?: run { msg = tr("Este celular não tem Bluetooth."); return }
         if (!ad.isEnabled) { enable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)); return }
-        runCatching { ad.bondedDevices.forEach { add(it) } }
+        pending.clear(); checked.clear(); checking = null
+        runCatching { ad.bondedDevices.forEach { consider(it, null) } }
         runCatching { ad.cancelDiscovery(); ad.startDiscovery() }
-        msg = tr("Procurando… no celular do dono: Editor de móveis → 📤 Compartilhar.")
+        searching = true
+        msg = tr("Procurando celulares com o Arquemestre por perto…")
     }
     LaunchedEffect(Unit) { if (!ok) perm.launch(btPerms()) }
     LaunchedEffect(ok) { if (ok) scan() }
     DisposableEffect(Unit) {
         val rx = object : BroadcastReceiver() {
             override fun onReceive(c: Context, i: Intent) {
-                val d: BluetoothDevice? = if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-                else @Suppress("DEPRECATION") i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                d?.let { add(it) }
+                val d: BluetoothDevice = (if (Build.VERSION.SDK_INT >= 33) i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+                else @Suppress("DEPRECATION") i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)) ?: run {
+                    if (i.action == BluetoothAdapter.ACTION_DISCOVERY_FINISHED) checkNext()
+                    return
+                }
+                when (i.action) {
+                    BluetoothDevice.ACTION_FOUND, BluetoothDevice.ACTION_NAME_CHANGED -> consider(d, i.getStringExtra(BluetoothDevice.EXTRA_NAME))
+                    BluetoothDevice.ACTION_UUID -> {
+                        @Suppress("DEPRECATION") val u = i.getParcelableArrayExtra(BluetoothDevice.EXTRA_UUID)
+                        if (BtShare.hasService(u)) show(d, null)
+                        if (checking?.address == d.address) checkNext()
+                    }
+                }
             }
         }
-        ContextCompat.registerReceiver(ctx, rx, IntentFilter(BluetoothDevice.ACTION_FOUND), ContextCompat.RECEIVER_EXPORTED)
-        onDispose { runCatching { ctx.unregisterReceiver(rx) }; runCatching { BtShare.adapter(ctx)?.cancelDiscovery() } }
+        val f = IntentFilter().apply {
+            addAction(BluetoothDevice.ACTION_FOUND)
+            addAction(BluetoothDevice.ACTION_NAME_CHANGED)
+            addAction(BluetoothDevice.ACTION_UUID)
+            addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        }
+        ContextCompat.registerReceiver(ctx, rx, f, ContextCompat.RECEIVER_EXPORTED)
+        onDispose {
+            handler.removeCallbacksAndMessages(null)
+            runCatching { ctx.unregisterReceiver(rx) }
+            runCatching { BtShare.adapter(ctx)?.cancelDiscovery() }
+        }
     }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(tr("Ver projeto por Bluetooth")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(tr("Escolha o celular de quem está compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada."), fontSize = 13.sp)
+                Text(tr("Só aparecem celulares com o Arquemestre compartilhando. Você vê o projeto ao vivo, com todas as medidas, mas não altera nada."), fontSize = 13.sp)
                 if (!ok) TextButton(onClick = { perm.launch(btPerms()) }) { Text(tr("Permitir Bluetooth")) }
                 if (msg.isNotEmpty()) Text(msg, fontSize = 12.sp, color = Color(0xFF666666))
+                if (searching && checking != null) Text(tr("Conferindo aparelhos por perto…"), fontSize = 12.sp, color = Color(0xFF666666))
                 LazyColumn(Modifier.heightIn(max = 320.dp)) {
                     items(devs, key = { it.address }) { d ->
-                        val name = runCatching { d.name }.getOrNull() ?: d.address
                         Text(
-                            "📱 $name", fontSize = 15.sp,
+                            "📐 " + (names[d.address] ?: BtShare.displayName(runCatching { d.name }.getOrNull(), d.address)), fontSize = 15.sp,
                             modifier = Modifier.fillMaxWidth().clickable {
                                 BtShare.connect(ctx, d); vm.moveisView = true; vm.screen = Screen.Moveis; onDismiss()
                             }.padding(vertical = 12.dp),
@@ -111,23 +172,23 @@ fun ShareViewPicker(vm: AppViewModel, onDismiss: () -> Unit) {
 
 /** Dono: liga o compartilhamento (fica visível pros outros celulares por 5 min) e mostra quantos estão vendo. */
 @Composable
-fun ShareHostDialog(onPush: () -> Unit, onDismiss: () -> Unit) {
+fun ShareHostDialog(company: String = "", onPush: () -> Unit, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     var ok by remember { mutableStateOf(hasBt(ctx)) }
     var err by remember { mutableStateOf("") }
     val hosting by BtShare.hosting.collectAsStateWithLifecycle()
     val viewers by BtShare.viewers.collectAsStateWithLifecycle()
     val visible = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
-    val enable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { start(ctx, onPush, visible) { err = it } }
+    val enable = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { start(ctx, company, onPush, visible) { err = it } }
     val perm = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         ok = hasBt(ctx)
-        if (ok) { if (BtShare.adapter(ctx)?.isEnabled == true) start(ctx, onPush, visible) { e -> err = e } else enable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) }
+        if (ok) { if (BtShare.adapter(ctx)?.isEnabled == true) start(ctx, company, onPush, visible) { e -> err = e } else enable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)) }
     }
     LaunchedEffect(Unit) {
         if (!hosting) {
             if (!ok) perm.launch(btPerms())
             else if (BtShare.adapter(ctx)?.isEnabled != true) enable.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
-            else start(ctx, onPush, visible) { err = it }
+            else start(ctx, company, onPush, visible) { err = it }
         }
     }
     AlertDialog(
@@ -138,7 +199,8 @@ fun ShareHostDialog(onPush: () -> Unit, onDismiss: () -> Unit) {
                 if (err.isNotEmpty()) Text(err, color = Color(0xFFE5484D))
                 else if (hosting) Text(tr("📡 Compartilhando por Bluetooth · ") + (if (viewers == 0) tr("ninguém vendo ainda") else tr("{0} vendo agora", viewers)))
                 else Text(tr("Ligando o Bluetooth…"))
-                Text(tr("No outro celular (com o Arquemestre): menu ⋮ → Ver projeto por Bluetooth → escolher este celular. Ele vê tudo ao vivo, com as medidas, mas não altera nada."), fontSize = 13.sp)
+                Text(tr("Este celular aparece no Bluetooth como “{0}” enquanto compartilha (o nome volta ao normal quando parar).", BtShare.shareName(company)), fontSize = 13.sp)
+                Text(tr("No outro celular (com o Arquemestre): menu ⋮ → Ver projeto por Bluetooth → escolher “{0}”. Lá só aparecem aparelhos com o Arquemestre. Ele vê tudo ao vivo, com as medidas, mas não altera nada.", BtShare.shareName(company)), fontSize = 13.sp)
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Continuar editando")) } },
@@ -146,8 +208,8 @@ fun ShareHostDialog(onPush: () -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-private fun start(ctx: Context, onPush: () -> Unit, visible: androidx.activity.result.ActivityResultLauncher<Intent>, onErr: (String) -> Unit) {
-    if (!BtShare.startHost(ctx)) { onErr(tr("Não consegui ligar o compartilhamento. Confira se o Bluetooth está ligado.")); return }
+private fun start(ctx: Context, company: String, onPush: () -> Unit, visible: androidx.activity.result.ActivityResultLauncher<Intent>, onErr: (String) -> Unit) {
+    if (!BtShare.startHost(ctx, company)) { onErr(tr("Não consegui ligar o compartilhamento. Confira se o Bluetooth está ligado.")); return }
     onPush()
     runCatching { visible.launch(Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)) }
 }

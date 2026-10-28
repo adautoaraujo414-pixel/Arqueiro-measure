@@ -6,14 +6,18 @@
   if (!A || !A.putVideo || typeof window.phPut !== 'function') return;
   var put = window.phPut, del = window.phDel;
   var maxBytes = 64 * 1024 * 1024;
+  var versions = Object.create(null);
   function failed() {
     if (typeof window.toast === 'function') window.toast('Não foi possível guardar o vídeo no backup. Tente um vídeo menor (até 64 MB).');
   }
   function persist(o, done) {
     if (!o.blob || o.blob.size > maxBytes) { done(false); return; }
+    var version = versions[o.id] || 0;
     var reader = new FileReader();
     reader.onerror = reader.onabort = function () { done(false); };
     reader.onload = function () {
+      // Não recria um vídeo que foi excluído ou atualizado enquanto o FileReader trabalhava.
+      if ((versions[o.id] || 0) !== version) { done(null); return; }
       var copy = Object.assign({}, o);
       delete copy.blob;
       copy.videoData = reader.result;
@@ -23,12 +27,14 @@
   }
   window.phPut = function (o, cb) {
     if (!o.blob) { put(o, cb); return; }
+    versions[o.id] = (versions[o.id] || 0) + 1;
     persist(o, function (ok) {
       // Só confirma o salvamento depois que a cópia nativa estiver no disco.
-      if (ok) put(o, cb); else failed();
+      if (ok) put(o, cb); else if (ok === false) failed();
     });
   };
   window.phDel = function (id, cb) {
+    versions[id] = (versions[id] || 0) + 1;
     try { A.delFile('video_' + id + '.json'); } catch (_) {}
     del(id, cb);
   };
@@ -37,7 +43,7 @@
     all.forEach(function (o) {
       have[o.id] = true;
       // Migração de vídeos já existentes no IndexedDB do iPhone.
-      if (o.blob) persist(o, function (ok) { if (!ok) failed(); });
+      if (o.blob) persist(o, function (ok) { if (ok === false) failed(); });
     });
     var names;
     try { names = JSON.parse(A.listFiles() || '[]'); } catch (_) { return; }

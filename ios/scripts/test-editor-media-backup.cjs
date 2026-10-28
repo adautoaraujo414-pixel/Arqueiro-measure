@@ -72,3 +72,10 @@ test('rejeita vídeo acima do limite antes de ler o conteúdo', () => {
   e.context.phPut({id: 'large', kind: 'video', blob: {size: 64 * 1024 * 1024 + 1}}, () => { done = true; });
   assert.equal(done, false); assert.equal(e.notices.length, 1);
 });
+test('excluir durante migração não recria o vídeo no backup', async () => {
+  const e = editor({records: [video()]});
+  e.context.phDel('v1');
+  await drain();
+  assert.equal(e.files['video_v1.json'], undefined);
+  assert.equal(e.stored.size, 0);
+});

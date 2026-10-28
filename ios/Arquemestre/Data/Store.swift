@@ -14,7 +14,12 @@ enum AppPaths {
         try? v.setResourceValues(rv)
         return u
     }()
-    static var files: URL { dir(base.appendingPathComponent("files", isDirectory: true)) }
+    static var files: URL {
+        let files = base.appendingPathComponent("files", isDirectory: true)
+        // Se a restauração foi interrompida, não cria uma pasta vazia sobre a cópia anterior.
+        do { try BackupFileSwap.recoverIfNeeded(at: files) } catch { return files }
+        return dir(files)
+    }
     static var projects: URL { dir(files.appendingPathComponent("projects", isDirectory: true)) }
     static var moveis: URL { dir(files.appendingPathComponent("moveis", isDirectory: true)) }
     /// Pasta visível no app Arquivos ("No meu iPhone › Arquemestre").
@@ -148,3 +153,4 @@ final class ImageCache {
         return o >= 5 ? (h, w) : (w, h)
     }
 }
+

@@ -32,6 +32,19 @@ final class PeerShare: NSObject, ObservableObject {
     private var advertiser: MCNearbyServiceAdvertiser?
     private var browser: MCNearbyServiceBrowser?
     private var last: Data?
+    private var pendingInvitation: UUID?
+    private var answerInvitation: ((Bool) -> Void)?
+    private weak var invitationAlert: UIAlertController?
+
+    // Separado da apresentação para testar aceitação, recusa e encerramento da sessão.
+    var requestViewerApproval: ((String, @escaping (Bool) -> Void) -> Void)?
+
+    private func finishInvitation(_ allowed: Bool) {
+        let answer = answerInvitation
+        answerInvitation = nil; pendingInvitation = nil
+        invitationAlert?.dismiss(animated: true); invitationAlert = nil
+        answer?(allowed)
+    }
 
     // ---- dono ----
     func startHost(company: String = "") {
@@ -55,6 +68,7 @@ final class PeerShare: NSObject, ObservableObject {
     }
 
     func stopHost() {
+        finishInvitation(false)
         advertiser?.stopAdvertisingPeer(); advertiser = nil
         session?.disconnect(); session = nil
         hosting = false; viewers = 0; last = nil
@@ -118,8 +132,49 @@ extension PeerShare: MCSessionDelegate {
 
 extension PeerShare: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ a: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peer: MCPeerID, withContext: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        // só visualização: aceita quem pede para ver
-        invitationHandler(true, session)
+        DispatchQueue.main.async {
+            guard self.hosting, a === self.advertiser, let session = self.session,
+                  self.pendingInvitation == nil else { invitationHandler(false, nil); return }
+            let token = UUID()
+            self.pendingInvitation = token
+            self.answerInvitation = { [weak self, weak session] allowed in
+                guard let self = self, let session = session,
+                      allowed, self.hosting, self.session === session else {
+                    invitationHandler(false, nil); return
+                }
+                invitationHandler(true, session)
+            }
+            let answer: (Bool) -> Void = { [weak self] allowed in
+                DispatchQueue.main.async {
+                    guard self?.pendingInvitation == token else { return }
+                    self?.finishInvitation(allowed)
+                }
+            }
+            if let approve = self.requestViewerApproval {
+                approve(peer.displayName, answer)
+            } else {
+                guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                    .first(where: { $0.activationState == .foregroundActive }),
+                      var presenter = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+                    self.finishInvitation(false); return
+                }
+                while let top = presenter.presentedViewController { presenter = top }
+                guard presenter.viewIfLoaded?.window != nil, !presenter.isBeingDismissed else {
+                    self.finishInvitation(false); return
+                }
+                let alert = UIAlertController(title: tr("Permitir visualização do projeto?"),
+                    message: tr("{0} quer ver este projeto e os dados do cliente ao vivo. Permita apenas se reconhecer o aparelho.", peer.displayName), preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: tr("Não permitir"), style: .cancel) { _ in answer(false) })
+                alert.addAction(UIAlertAction(title: tr("Permitir"), style: .default) { _ in answer(true) })
+                self.invitationAlert = alert
+                presenter.present(alert, animated: true)
+            }
+            // O convite do outro aparelho expira em 20 s; nunca deixa uma autorização pendente.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                guard self.pendingInvitation == token else { return }
+                self.finishInvitation(false)
+            }
+        }
     }
 }
 
@@ -138,3 +193,4 @@ extension PeerShare: MCNearbyServiceBrowserDelegate {
         DispatchQueue.main.async { self.found.removeAll { $0 == peer } }
     }
 }
+

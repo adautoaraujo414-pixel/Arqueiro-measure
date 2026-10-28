@@ -35,6 +35,9 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      - name: Testar preservação dos vídeos do editor iOS
+        run: node ios/scripts/test-editor-media-backup.cjs
+
       - name: Compilar e rodar os testes no simulador
         id: build_tests
         timeout-minutes: 30
@@ -178,3 +181,4 @@ jobs:
           EOF
           xcodebuild -exportArchive -archivePath build/Arquemestre.xcarchive -exportOptionsPlist build/export.plist -exportPath build/export $AUTH
           rm -rf ~/private_keys
+

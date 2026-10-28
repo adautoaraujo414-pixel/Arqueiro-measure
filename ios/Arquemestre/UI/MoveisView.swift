@@ -93,6 +93,7 @@ struct MoveisWeb: UIViewRepresentable {
         isViewer:function(){return !!window.__arqueViewer},
         shareUpdate:function(j){post({op:'shareUpdate',json:String(j)})},
         putFile:function(n,b){post({op:'putFile',name:String(n),b64:String(b)})},
+        putVideo:function(j){return sync('putVideo',String(j))==='ok'},
         getFile:function(n){return sync('getFile',n)},
         delFile:function(n){post({op:'delFile',name:String(n)})},
         listFiles:function(){return sync('listFiles','')||'[]'},
@@ -111,6 +112,10 @@ struct MoveisWeb: UIViewRepresentable {
         cfg.mediaTypesRequiringUserActionForPlayback = []
         let uc = WKUserContentController()
         uc.addUserScript(WKUserScript(source: MoveisWeb.bridgeJS, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        if let url = Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"),
+           let script = try? String(contentsOf: url, encoding: .utf8) {
+            uc.addUserScript(WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+        }
         uc.add(context.coordinator, name: "arque")
         cfg.userContentController = uc
         let w = WKWebView(frame: .zero, configuration: cfg)
@@ -161,7 +166,12 @@ struct MoveisWeb: UIViewRepresentable {
 
         // ponte síncrona (o editor espera a resposta na hora): getFile e listFiles
         func webView(_ w: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
-            if prompt == "__arque__:getFile" {
+            if prompt == "__arque__:putVideo" {
+                do {
+                    try EditorVideoBackup.save(defaultText ?? "", in: dir)
+                    completionHandler("ok")
+                } catch { completionHandler("error") }
+            } else if prompt == "__arque__:getFile" {
                 let url = dir.appendingPathComponent(safe(defaultText ?? ""))
                 completionHandler((try? Data(contentsOf: url))?.base64EncodedString() ?? "")
             } else if prompt == "__arque__:listFiles" {
@@ -201,3 +211,4 @@ struct MoveisWeb: UIViewRepresentable {
         }
     }
 }
+

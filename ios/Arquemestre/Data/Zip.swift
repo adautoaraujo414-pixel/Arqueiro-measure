@@ -37,6 +37,7 @@ enum Deflate {
 
     static func decompress(_ data: Data, size: Int) -> Data? {
         if size == 0 { return Data() }
+        guard size > 0, size <= ZipReader.maxEntrySize, !data.isEmpty else { return nil }
         var out = Data(count: size)
         let n = out.withUnsafeMutableBytes { (dst: UnsafeMutableRawBufferPointer) -> Int in
             data.withUnsafeBytes { (src: UnsafeRawBufferPointer) -> Int in
@@ -63,6 +64,7 @@ final class ZipWriter {
     private var offset: UInt32 = 0
     private var central = Data()
     private var count: UInt16 = 0
+    private var unpacked = 0
 
     init(url: URL) throws {
         FileManager.default.createFile(atPath: url.path, contents: nil)
@@ -72,6 +74,10 @@ final class ZipWriter {
     private static let noCompress: Set<String> = ["jpg", "jpeg", "png", "webp", "heic", "mp4", "mov", "zip", "apk"]
 
     func add(name: String, data: Data) throws {
+        let nameData = Data(name.utf8)
+        guard !nameData.isEmpty, nameData.count <= Int(UInt16.max), count < 10_000,
+              data.count <= ZipReader.maxEntrySize,
+              data.count <= ZipReader.maxTotalSize - unpacked else { throw ZipReader.Err.unsupported }
         let ext = (name as NSString).pathExtension.lowercased()
         var method: UInt16 = 0
         var body = data
@@ -79,7 +85,6 @@ final class ZipWriter {
             method = 8; body = c
         }
         let crc = Crc32.of(data)
-        let nameData = Data(name.utf8)
         var h = Data()
         h.le32(0x04034b50); h.le16(20); h.le16(0x0800); h.le16(method); h.le16(0); h.le16(0x21)
         h.le32(crc); h.le32(UInt32(body.count)); h.le32(UInt32(data.count)); h.le16(UInt16(nameData.count)); h.le16(0)
@@ -94,6 +99,7 @@ final class ZipWriter {
         central.append(c)
         offset += UInt32(h.count + body.count)
         count += 1
+        unpacked += data.count
     }
 
     func finish() throws {
@@ -112,10 +118,14 @@ struct ZipEntry {
     var compSize: Int
     var size: Int
     var localOffset: Int
+    var crc: UInt32
     var isDir: Bool { name.hasSuffix("/") }
 }
 
 final class ZipReader {
+    // Limites antes de alocar memória: arquivos externos não são confiáveis.
+    static let maxEntrySize = 128 * 1024 * 1024
+    static let maxTotalSize = 512 * 1024 * 1024
     let data: Data
     private(set) var entries: [ZipEntry] = []
 
@@ -132,37 +142,63 @@ final class ZipReader {
         var eocd = -1
         var i = n - 22
         let stop = max(0, n - 22 - 65_535)
-        while i >= stop { if data.u32(i) == 0x06054b50 { eocd = i; break }; i -= 1 }
+        while i >= stop {
+            if data.u32(i) == 0x06054b50, i + 22 + Int(data.u16(i + 20)) == n { eocd = i; break }
+            i -= 1
+        }
         guard eocd >= 0 else { throw Err.notZip }
+        guard data.u16(eocd + 4) == 0, data.u16(eocd + 6) == 0,
+              data.u16(eocd + 8) == data.u16(eocd + 10) else { throw Err.unsupported }
         let total = Int(data.u16(eocd + 10))
         var p = Int(data.u32(eocd + 16))
+        let centralSize = Int(data.u32(eocd + 12))
+        guard total <= 10_000, p <= eocd, centralSize <= eocd - p else { throw Err.corrupt }
+        let end = p + centralSize
+        var unpacked = 0
+        var names = Set<String>()
         for _ in 0..<total {
-            guard p + 46 <= n, data.u32(p) == 0x02014b50 else { throw Err.corrupt }
+            guard p + 46 <= end, data.u32(p) == 0x02014b50 else { throw Err.corrupt }
+            guard data.u16(p + 8) & 1 == 0 else { throw Err.unsupported }
             let method = data.u16(p + 10)
             let comp = Int(data.u32(p + 20)), size = Int(data.u32(p + 24))
             let nl = Int(data.u16(p + 28)), el = Int(data.u16(p + 30)), cl = Int(data.u16(p + 32))
             let off = Int(data.u32(p + 42))
+            let next = p + 46 + nl + el + cl
+            guard next <= end, size <= Self.maxEntrySize, comp <= Self.maxEntrySize,
+                  size <= Self.maxTotalSize - unpacked else { throw Err.corrupt }
             let name = String(decoding: data.subdata(in: (p + 46)..<(p + 46 + nl)), as: UTF8.self)
-            entries.append(ZipEntry(name: name, method: method, compSize: comp, size: size, localOffset: off))
-            p += 46 + nl + el + cl
+            guard !name.isEmpty, names.insert(name).inserted else { throw Err.corrupt }
+            entries.append(ZipEntry(name: name, method: method, compSize: comp, size: size, localOffset: off, crc: data.u32(p + 16)))
+            unpacked += size
+            p = next
         }
+        guard p == end else { throw Err.corrupt }
     }
 
     func read(_ e: ZipEntry) throws -> Data {
         let p = e.localOffset
-        guard p + 30 <= data.count, data.u32(p) == 0x04034b50 else { throw Err.corrupt }
+        guard p >= 0, p + 30 <= data.count, data.u32(p) == 0x04034b50,
+              data.u16(p + 6) & 1 == 0, data.u16(p + 8) == e.method else { throw Err.corrupt }
         let nl = Int(data.u16(p + 26)), el = Int(data.u16(p + 28))
         let start = p + 30 + nl + el
-        guard start + e.compSize <= data.count else { throw Err.corrupt }
+        guard e.size >= 0, e.size <= Self.maxEntrySize, e.compSize >= 0,
+              e.compSize <= Self.maxEntrySize, start <= data.count,
+              e.compSize <= data.count - start else { throw Err.corrupt }
         let body = data.subdata(in: start..<(start + e.compSize))
+        let result: Data
         switch e.method {
-        case 0: return body
+        case 0:
+            guard body.count == e.size else { throw Err.corrupt }
+            result = body
         case 8:
             guard let d = Deflate.decompress(body, size: e.size) else { throw Err.corrupt }
-            return d
+            result = d
         default: throw Err.unsupported
         }
+        guard Crc32.of(result) == e.crc else { throw Err.corrupt }
+        return result
     }
 
     func has(_ name: String) -> Bool { entries.contains { $0.name == name } }
 }
+

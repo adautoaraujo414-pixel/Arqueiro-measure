@@ -26,7 +26,7 @@ enum DataBackup {
                 guard fp.hasPrefix(basePath + "/") else { continue }
                 let rel = String(fp.dropFirst(basePath.count + 1))
                 if skip(rel) { continue }
-                guard let d = try? Data(contentsOf: f, options: .alwaysMapped) else { continue }
+                let d = try Data(contentsOf: f, options: .alwaysMapped)
                 try z.add(name: rel, data: d)
             }
         }
@@ -67,21 +67,35 @@ enum DataBackup {
             try zip.read(e).write(to: target)
             wrote += 1
         }
-        let idx = staging.appendingPathComponent("files/projects/index.json")
-        guard wrote > 0, let txt = try? String(contentsOf: idx, encoding: .utf8), (try? JsonCodec.indexFromJson(txt)) != nil else {
-            // backup só de móveis também vale
-            guard fm.fileExists(atPath: staging.appendingPathComponent("files/moveis").path) else { throw RestoreError.invalid }
-            try swapIn(staging)
-            return
-        }
+        guard wrote > 0 else { throw RestoreError.invalid }
+        try validate(staging.appendingPathComponent("files"))
         try swapIn(staging)
     }
 
-    private static func swapIn(_ staging: URL) throws {
+    private static func validate(_ files: URL) throws {
         let fm = FileManager.default
-        let old = AppPaths.files
-        try? fm.removeItem(at: old)
-        try fm.moveItem(at: staging.appendingPathComponent("files"), to: old)
+        let idx = files.appendingPathComponent("projects/index.json")
+        let moveis = files.appendingPathComponent("moveis/projects.json")
+        var valid = false
+        if fm.fileExists(atPath: idx.path) {
+            guard let data = try? Data(contentsOf: idx),
+                  let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  obj["folders"] is [[String: Any]], obj["notes"] is [[String: Any]],
+                  let text = String(data: data, encoding: .utf8),
+                  (try? JsonCodec.indexFromJson(text)) != nil else { throw RestoreError.invalid }
+            valid = true
+        }
+        if fm.fileExists(atPath: moveis.path) {
+            guard let data = try? Data(contentsOf: moveis),
+                  let projects = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]],
+                  projects.allSatisfy({ ($0["id"] as? String)?.isEmpty == false }) else { throw RestoreError.invalid }
+            valid = true
+        }
+        guard valid else { throw RestoreError.invalid }
+    }
+
+    private static func swapIn(_ staging: URL) throws {
+        try BackupFileSwap.install(staging.appendingPathComponent("files"), at: AppPaths.files)
         AppPaths.dir(AppPaths.projects.appendingPathComponent("images"))
         AppPaths.dir(AppPaths.projects.appendingPathComponent("notes"))
     }
@@ -103,3 +117,35 @@ enum DataBackup {
         }
     }
 }
+
+/// Mantém a versão anterior até concluir a troca. A cópia também permite recuperar
+/// uma interrupção entre as duas movimentações na próxima abertura do app.
+enum BackupFileSwap {
+    static func previous(_ files: URL) -> URL { files.appendingPathExtension("restore-previous") }
+
+    static func recoverIfNeeded(at files: URL) throws {
+        let fm = FileManager.default, backup = previous(files)
+        if !fm.fileExists(atPath: files.path), fm.fileExists(atPath: backup.path) {
+            try fm.moveItem(at: backup, to: files)
+        }
+    }
+
+    static func install(_ staged: URL, at files: URL,
+                        move: (URL, URL) throws -> Void = { try FileManager.default.moveItem(at: $0, to: $1) }) throws {
+        let fm = FileManager.default, backup = previous(files)
+        try recoverIfNeeded(at: files)
+        // Uma cópia de uma troca já concluída pode ter ficado após interrupção.
+        if fm.fileExists(atPath: backup.path) { try fm.removeItem(at: backup) }
+        let hadFiles = fm.fileExists(atPath: files.path)
+        if hadFiles { try move(files, backup) }
+        do {
+            try move(staged, files)
+        } catch {
+            // Não remove a cópia anterior se o rollback falhar; será recuperada ao abrir.
+            if hadFiles { try? fm.moveItem(at: backup, to: files) }
+            throw error
+        }
+        try? fm.removeItem(at: backup)
+    }
+}
+

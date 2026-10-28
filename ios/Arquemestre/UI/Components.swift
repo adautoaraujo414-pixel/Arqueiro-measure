@@ -218,15 +218,23 @@ struct PhotoPicker: UIViewControllerRepresentable {
 
 struct CameraPicker: UIViewControllerRepresentable {
     var onImage: (UIImage?) -> Void
-    func makeUIViewController(context: Context) -> UIImagePickerController {
+    func makeUIViewController(context: Context) -> UIViewController {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            // O seletor moderno libera apenas a imagem escolhida, sem acesso à biblioteca inteira.
+            var cfg = PHPickerConfiguration()
+            cfg.filter = .images; cfg.selectionLimit = 1
+            let picker = PHPickerViewController(configuration: cfg)
+            picker.delegate = context.coordinator
+            return picker
+        }
         let vc = UIImagePickerController()
-        vc.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
+        vc.sourceType = .camera
         vc.delegate = context.coordinator
         return vc
     }
-    func updateUIViewController(_ vc: UIImagePickerController, context: Context) {}
+    func updateUIViewController(_ vc: UIViewController, context: Context) {}
     func makeCoordinator() -> Coord { Coord(onImage) }
-    final class Coord: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    final class Coord: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate, PHPickerViewControllerDelegate {
         let onImage: (UIImage?) -> Void
         init(_ f: @escaping (UIImage?) -> Void) { onImage = f }
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
@@ -234,6 +242,13 @@ struct CameraPicker: UIViewControllerRepresentable {
             onImage(info[.originalImage] as? UIImage)
         }
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { picker.dismiss(animated: true); onImage(nil) }
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            picker.dismiss(animated: true)
+            guard let item = results.first?.itemProvider else { onImage(nil); return }
+            item.loadObject(ofClass: UIImage.self) { object, _ in
+                DispatchQueue.main.async { self.onImage(object as? UIImage) }
+            }
+        }
     }
 }
 
@@ -357,3 +372,4 @@ struct ShapeGlyph: View {
         .frame(width: 22, height: 22)
     }
 }
+

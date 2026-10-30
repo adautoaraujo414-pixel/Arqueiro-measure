@@ -268,7 +268,7 @@ To test: tap "Start 3 days free" and confirm with a Sandbox account. When the su
 but all saved data stays on the device (a backup button is offered). The subscription provides ongoing value:
 regular updates with new furniture modules, catalog items and features, plus e-mail support.
 
-Laser measure: the app can receive measurements from Bosch laser measures with Bluetooth (tested with the GLM 50-27 CG) over Bluetooth LE.
+Laser measure: the app can receive measurements from Bosch laser measures over Bluetooth LE (it implements the protocol of the GLM 50-27 CG; the Bluetooth reading was verified on Android, and the iOS code shares the same protocol and unit tests).
 Without the device, open a note, tap any dimension label and type the value on the in-app keypad — every feature works.
 
 Live project view: between two devices with the app (local peer-to-peer network), view only.

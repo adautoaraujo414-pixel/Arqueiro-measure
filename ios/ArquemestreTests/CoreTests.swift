@@ -158,6 +158,29 @@ final class LogicTests: XCTestCase {
         XCTAssertEqual(st.note.pages[0].objs[0].asDim?.valueMm, 1234)
     }
 
+    /// Copiar e colar traço: a cópia sai deslocada (não fica escondida em cima da original) e,
+    /// se o traço estava preso numa foto que não existe na folha de destino, ele volta pra coordenada da folha.
+    func testColarTracoDeslocadoESoltoDaFoto() {
+        let ph = PhotoObj(file: "f.jpg", pxW: 1000, pxH: 1000, cx: 300, cy: 300, w: 200, h: 200)
+        let onPhoto = StrokeObj(photoId: ph.id, pts: [Pt(0.5, 0.5), Pt(1, 1)], color: 0, width: 2)
+        let free = StrokeObj(photoId: nil, pts: [Pt(10, 10), Pt(50, 10)], color: 0, width: 2)
+        var n = Note(name: "t"); n.pages = [Sheet(objs: [.photo(ph), .stroke(onPhoto), .stroke(free)]), Sheet()]
+        let st = EditorState(n)
+        // mesma folha: traço solto sai 24 pro lado
+        st.pasteObjs([.stroke(free)], from: st.sheet, off: 24)
+        let c1 = st.note.pages[0].objs.last!
+        XCTAssertNotEqual(c1.id, free.id)
+        if case .stroke(let s1) = c1 { XCTAssertEqual(s1.pts[0].x, 34, accuracy: 0.01); XCTAssertEqual(s1.pts[0].y, 34, accuracy: 0.01) } else { XCTFail("não colou traço") }
+        // outra folha sem a foto: o traço da foto vira coordenada da folha (perto do centro da foto, não no canto)
+        let src = st.sheet
+        st.setPage(1)
+        st.pasteObjs([.stroke(onPhoto)], from: src, off: 0)
+        guard case .stroke(let s2) = st.note.pages[1].objs.last! else { return XCTFail("não colou na outra folha") }
+        XCTAssertNil(s2.photoId)
+        XCTAssertEqual(s2.pts[0].x, 300, accuracy: 1)
+        XCTAssertEqual(s2.pts[0].y, 300, accuracy: 1)
+    }
+
     func testPortaNoMeioDaParede() {
         let r = RoomObj(photoId: nil, pts: [Pt(0, 0), Pt(400, 0), Pt(400, 300), Pt(0, 300)], closed: true, segs: Array(repeating: Seg(valueMm: 4000), count: 4), color: 0, width: 2)
         var n = Note(name: "t"); n.pages = [Sheet(objs: [.room(r)])]

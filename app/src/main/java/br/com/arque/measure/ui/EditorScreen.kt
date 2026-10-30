@@ -12,6 +12,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -607,7 +608,8 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     val linkedId = remember(vm.projVersion, note.id) { vm.linkedProject(note.id) }
                     val linkedName = remember(vm.projVersion, linkedId) { linkedId?.let { id -> vm.moveisProjects().firstOrNull { it.id == id }?.name } }
                     BarPill {
-                        LBtn(linkedName ?: tr("Projeto"), on = linkedName != null, onClick = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
+                        // acesso rápido: ligada → abre o projeto do cliente direto (segurar: trocar/desligar)
+                        LBtn(linkedName ?: tr("Projeto"), on = linkedName != null, onClick = { if (!vm.openProjectOfNote(note.id)) projLinkOpen = true }, onLong = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
                     }
                     if (projLinkOpen) ProjectLinkDialog(vm, note.id, linkedId) { projLinkOpen = false }
                     val connected = bleState == BleState.CONNECTED
@@ -962,12 +964,13 @@ private fun BarPill(content: @Composable () -> Unit) {
 
 /** Botão da barra: ícone com o nome embaixo (fica claro o que cada um faz). */
 @Composable
-private fun LBtn(label: String, on: Boolean = false, enabled: Boolean = true, onClick: () -> Unit, icon: @Composable (Color) -> Unit) {
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private fun LBtn(label: String, on: Boolean = false, enabled: Boolean = true, onClick: () -> Unit, onLong: (() -> Unit)? = null, icon: @Composable (Color) -> Unit) {
     val col = when { !enabled -> Ui.line; on -> Ui.accent; else -> Ui.text }
     Column(
         Modifier.widthIn(min = 50.dp).clip(RoundedCornerShape(12.dp))
             .background(if (on) Ui.accent.copy(alpha = 0.22f) else Color.Transparent)
-            .clickable(enabled = enabled, onClick = onClick)
+            .then(if (onLong != null) Modifier.combinedClickable(enabled = enabled, onClick = onClick, onLongClick = onLong) else Modifier.clickable(enabled = enabled, onClick = onClick))
             .semantics { contentDescription = label }
             .padding(horizontal = 6.dp, vertical = 3.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1890,14 +1893,15 @@ internal fun ProjectLinkDialog(vm: AppViewModel, noteId: String, linkedId: Strin
                 val cur = list.firstOrNull { it.id == linkedId }
                 if (cur != null) {
                     Text(tr("Ligada a: {0}", cur.name), fontSize = 15.sp)
-                    TextButton(onClick = { onDismiss(); vm.flush(); vm.openProject(cur.id) }) { Text(tr("🪚 Abrir o projeto")) }
+                    TextButton(onClick = { onDismiss(); vm.openProjectOfNote(noteId) }) { Text(tr("🪚 Abrir o projeto")) }
                     TextButton(onClick = { vm.linkProject(noteId, null); onDismiss() }) { Text(tr("Desligar desta nota")) }
                     Text(tr("Ou trocar por:"), fontSize = 13.sp, color = Color(0xFF666666))
                 } else Text(if (list.isEmpty()) tr("Ainda não tem projeto de móveis. Crie um no editor de móveis e ele fica salvo na biblioteca.") else tr("Escolha o projeto pra ligar a esta nota:"), fontSize = 13.sp)
+                TextButton(onClick = { onDismiss(); vm.newProjectForNote(noteId) }) { Text(tr("＋ Novo projeto para este cliente")) }
                 androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 300.dp)) {
                     items(list.filter { it.id != linkedId }.size) { i ->
                         val p = list.filter { it.id != linkedId }[i]
-                        Text("🪚 ${p.name}", fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { vm.linkProject(noteId, p.id); onDismiss() }.padding(vertical = 10.dp))
+                        Text("🪚 ${p.name} · ${p.label}", fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { vm.linkProject(noteId, p.id); onDismiss() }.padding(vertical = 10.dp))
                     }
                 }
             }

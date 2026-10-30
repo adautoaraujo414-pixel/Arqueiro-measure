@@ -15,6 +15,8 @@ final class AppModel: ObservableObject {
 
     @Published var index: LibIndex
     @Published var screen: Screen = .library
+    /// Guia passo a passo: aparece sozinho na primeira vez (e no menu da biblioteca).
+    @Published var showGuide = !UserDefaults.standard.bool(forKey: "arque.guideSeen") && !ProcessInfo.processInfo.arguments.contains("-demo")
     @Published var filter: LibFilter = .all
     @Published private(set) var session: EditorSession?
     @Published var tabs: [String] = []
@@ -394,7 +396,65 @@ final class AppModel: ObservableObject {
 
     // ---------- projetos do editor de móveis ----------
     func moveisProjects() -> [MoveisProjects.P] { MoveisProjects.list() }
-    func newMoveisProject() { pendingProject = nil; pendingNewProject = true; screen = .moveis }
+    func newMoveisProject() { pendingProject = nil; pendingNewProject = true; pendingNewName = nil; pendingLinkNote = nil; contextNoteId = nil; screen = .moveis }
+
+    // ---------- nota ↔ projeto do mesmo cliente (acesso rápido) ----------
+    /// Nota de onde a pessoa abriu o editor de móveis (o editor puxa o nome do cliente dela).
+    var contextNoteId: String?
+    /// Projeto novo já no nome do cliente (e a nota que fica ligada a ele quando o editor criar o projeto).
+    var pendingNewName: String?
+    var pendingLinkNote: String?
+
+    func newProjectForClient(_ name: String, _ noteId: String?) {
+        if session != nil { flush() }
+        let t = name.trimmingCharacters(in: .whitespaces)
+        pendingProject = nil; pendingNewProject = true
+        pendingNewName = (t.isEmpty || defaultNoteName(t) || t.range(of: #"^(projeto|project|proyecto)\s+\d{1,2}/\d{1,2}"#, options: [.regularExpression, .caseInsensitive]) != nil) ? nil : t
+        pendingLinkNote = noteId
+        if let n = noteId { contextNoteId = n }
+        screen = .moveis
+    }
+    func newProjectForNote(_ noteId: String) {
+        guard let n = index.notes.first(where: { $0.id == noteId }) else { return }
+        newProjectForClient(n.name, noteId)
+    }
+    /// O editor de móveis criou/abriu um projeto: liga a nota que estava esperando.
+    func onEditorProject(_ id: String) {
+        lastProjectId = id
+        if let nid = pendingLinkNote { pendingLinkNote = nil; linkProject(nid, id) }
+        projVersion += 1
+    }
+    /// Lista de notas pro editor procurar a nota do cliente (JSON).
+    func notesJson() -> String {
+        let df = DateFormatter(); df.dateStyle = .short; df.timeStyle = .none
+        let arr: [[String: Any]] = index.notes.filter { !$0.trash }.sorted { $0.createdMs > $1.createdMs }.map { n in
+            ["id": n.id, "name": n.name, "date": df.string(from: Date(timeIntervalSince1970: Double(n.createdMs) / 1000)), "proj": linkedProject(n.id) != nil]
+        }
+        return JsonCodec.string(arr)
+    }
+    /// Nota aberta (ou de onde veio): o editor já preenche o nome do cliente com ela.
+    func contextNoteJson() -> String {
+        guard let id = contextNoteId ?? session?.state.note.id, let n = index.notes.first(where: { $0.id == id && !$0.trash }), !defaultNoteName(n.name) else { return "" }
+        return JsonCodec.string(["id": n.id, "name": n.name] as [String: Any])
+    }
+    /// "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente.
+    func openNoteOf(_ projectId: String) {
+        let nid = notesOfProject(projectId).first { id in index.notes.contains { $0.id == id && !$0.trash } }
+        lastProjectId = projectId
+        if let n = nid { openNote(n) } else { openNote(createNote()) }
+    }
+    func setProjectTitle(_ id: String, _ title: String) { MoveisProjects.setTitle(id, title); projVersion += 1 }
+    /// Abre o projeto da nota direto (se ligada) — acesso rápido.
+    @discardableResult
+    func openProjectOfNote(_ noteId: String) -> Bool {
+        guard let pid = linkedProject(noteId), moveisProjects().contains(where: { $0.id == pid }) else { return false }
+        if session != nil { flush() }
+        contextNoteId = noteId
+        openProject(pid)
+        return true
+    }
+    func isDefaultProj(_ p: MoveisProjects.P) -> Bool { defaultProjName(p) }
+    func isDefaultNote(_ s: String) -> Bool { defaultNoteName(s) }
     func deleteMoveisProject(_ id: String) { MoveisProjects.delete(id); if lastProjectId == id { lastProjectId = nil }; projVersion += 1 }
     func renameMoveisProject(_ id: String, _ name: String) { MoveisProjects.rename(id, name); projVersion += 1 }
     /// Status do projeto (orc, fech, prod, fin), o mesmo que o editor grava em projects.json.

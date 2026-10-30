@@ -364,13 +364,13 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
         textEdit = null
     }
 
-    /** Área de transferência (cortar/copiar/colar) entre folhas da mesma nota. */
-    var clipboard by mutableStateOf<List<br.com.arque.measure.model.Obj>>(emptyList())
+    /** Área de transferência (cortar/copiar/colar): vale entre folhas e entre notas (fica no app enquanto ele estiver aberto). */
+    val clipboard: List<br.com.arque.measure.model.Obj> get() = Clip.objs
 
     fun copyGroup(cut: Boolean = false) {
         val objs = state.groupWithLinked()
         if (objs.isEmpty()) return
-        clipboard = objs
+        Clip.put(objs, state.sheet, cut)
         if (cut) state.deleteGroup()
     }
 
@@ -380,17 +380,29 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
             add(o)
             if (o is PhotoObj) addAll(state.sheet.objs.filterIsInstance<br.com.arque.measure.model.Ann>().filter { it.photoId == o.id })
         }
-        clipboard = objs
+        Clip.put(objs, state.sheet, cut)
         if (cut) state.delete(o.id)
     }
 
+    /** Cola deslocado (cada colagem um pouco mais pro lado, pra não ficar em cima da original). */
     fun paste() {
-        if (clipboard.isEmpty()) return
-        state.pasteObjs(clipboard)
+        if (Clip.objs.isEmpty()) return
+        Clip.n++
+        state.pasteObjs(Clip.objs, Clip.from, 24f * Clip.n)
     }
 
     fun widthMm(): Float = width * MM_PER_UNIT
 
     @Suppress("unused")
     private fun keep() = max(0, 0)
+}
+
+/** O que foi copiado/cortado: os traços e a folha de onde vieram (pra converter quando estavam presos numa foto). */
+object Clip {
+    var objs by mutableStateOf<List<br.com.arque.measure.model.Obj>>(emptyList())
+        private set
+    var from: br.com.arque.measure.model.Sheet? = null
+        private set
+    var n = 0
+    fun put(o: List<br.com.arque.measure.model.Obj>, sheet: br.com.arque.measure.model.Sheet, cut: Boolean) { objs = o; from = sheet; n = if (cut) -1 else 0 }
 }

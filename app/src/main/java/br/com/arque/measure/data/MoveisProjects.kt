@@ -8,7 +8,19 @@ import java.io.File
 
 /** Projetos do editor de móveis (arquivo moveis/projects.json, o mesmo que o editor usa). */
 object MoveisProjects {
-    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc")
+    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "") {
+        /** Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…). */
+        val label: String get() = title.ifBlank { roomLabel(room) }
+    }
+
+    fun roomLabel(r: String): String = when (r) {
+        "banho" -> tr("Banheiro")
+        "sala" -> tr("Sala")
+        "quarto" -> tr("Quarto")
+        "escr" -> tr("Escritório")
+        "livre" -> tr("Livre (tudo)")
+        else -> tr("Cozinha")
+    }
 
     /** Status do projeto escolhido pela pessoa: orçamento, fechado (cliente fechou), produção, finalizado. */
     val STATUS = listOf("orc", "fech", "prod", "fin")
@@ -34,8 +46,13 @@ object MoveisProjects {
         (0 until a.length()).map { k ->
             val p = a.getJSONObject(k)
             val nome = p.optJSONObject("client")?.optString("nome")?.trim().orEmpty()
-            val mods = p.optJSONObject("current")?.optJSONArray("mods")?.length() ?: 0
-            P(p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"), p.optString("status").ifBlank { "orc" })
+            val cur = p.optJSONObject("current")
+            val mods = cur?.optJSONArray("mods")?.length() ?: 0
+            val room = cur?.optString("room").orEmpty().ifBlank { if (cur?.optString("env") == "livre") "livre" else "cozinha" }
+            P(
+                p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"),
+                p.optString("status").ifBlank { "orc" }, p.optString("titulo").trim(), room, p.optJSONObject("client")?.optString("cidade")?.trim().orEmpty(),
+            )
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())
 
@@ -71,6 +88,15 @@ object MoveisProjects {
                 val c = p.optJSONObject("client") ?: org.json.JSONObject().also { p.put("client", it) }
                 c.put("nome", name.trim()); p.put("auto", false); p.put("updated", System.currentTimeMillis())
             }
+        }
+        a
+    }
+
+    /** Nome do projeto (ex.: "Cozinha", "Suíte"); o nome do cliente continua o mesmo. */
+    fun setTitle(ctx: Context, id: String, title: String) = edit(ctx) { a ->
+        for (k in 0 until a.length()) {
+            val p = a.getJSONObject(k)
+            if (p.optString("id") == id) { p.put("titulo", title.trim()); p.put("updated", System.currentTimeMillis()) }
         }
         a
     }

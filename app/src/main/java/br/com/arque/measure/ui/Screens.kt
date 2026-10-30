@@ -201,7 +201,6 @@ fun LibraryScreen(vm: AppViewModel) {
                 is LibFilter.InFolder -> !it.trash && it.folderId == filter.id
             }
         }
-        .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
         .filter { tab != LibTab.PDF && tab != LibTab.MOVEIS }
         .sortedWith(compareByDescending<NoteMeta> { it.pinned }.thenByDescending { it.createdMs })
 
@@ -277,6 +276,9 @@ fun LibraryScreen(vm: AppViewModel) {
                             if (br.com.arque.measure.BuildConfig.PLAY) DropdownMenuItem(text = { Text(tr("Gerenciar assinatura")) }, onClick = {
                                 topMenu = false; vm.manageStore()
                             })
+                            DropdownMenuItem(text = { Text(tr("Guia passo a passo")) }, onClick = {
+                                topMenu = false; vm.openGuide()
+                            })
                             DropdownMenuItem(text = { Text(tr("Ajuda e suporte")) }, onClick = {
                                 topMenu = false; SiteLinks.open(ctxN2, SiteLinks.support())
                             })
@@ -319,22 +321,20 @@ fun LibraryScreen(vm: AppViewModel) {
                     if (filter != LibFilter.Trash && tab != LibTab.PDF && query.isBlank()) {
                         item(key = "criar") { CreateTile { vm.openNote(vm.createNote()) } }
                     }
-                    // mesmo cliente: nota e projeto juntos no mesmo quadro (nota de um lado, projeto do outro)
-                    val pairs = if (tab == LibTab.ALL && filter != LibFilter.Trash) {
-                        projList.mapNotNull { pj ->
-                            val ns = notes.filter { n -> vm.linkedProject(n.id) == pj.id || (!pj.auto && n.name.trim().equals(pj.name.trim(), ignoreCase = true)) }
-                            if (ns.isEmpty() || (query.isNotBlank() && !pj.name.contains(query, ignoreCase = true) && ns.none { it.name.contains(query, ignoreCase = true) })) null else pj to ns
-                        }
-                    } else emptyList()
-                    val paired = pairs.flatMap { pr -> pr.second.map { it.id } }.toSet()
-                    items(pairs, key = { "par-" + it.first.id }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { (pj, ns) -> ClientPair(vm, pj, ns) }
-                    if (filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)) {
-                        if (tab == LibTab.MOVEIS && query.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo projeto de móveis")) { vm.newMoveisProject() } }
-                        val inPair = pairs.map { it.first.id }.toSet()
-                        val projs = projList.filter { it.id !in inPair && (query.isBlank() || it.name.contains(query, ignoreCase = true)) }
+                    // um quadro por cliente: notas de um lado, os projetos dele do outro (dá pra ter vários projetos por cliente)
+                    val showProj = filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)
+                    val groups = if (showProj) clientGroups(vm, projList, if (tab == LibTab.ALL) notes else emptyList()) else emptyList()
+                    val q = query.trim()
+                    val shown = groups.filter { g -> q.isBlank() || g.matches(q) }
+                    val inGroupP = groups.flatMap { g -> g.projs.map { it.id } }.toSet()
+                    val inGroupN = groups.flatMap { g -> g.notes.map { it.id } }.toSet()
+                    if (tab == LibTab.MOVEIS && filter == LibFilter.All && q.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo projeto de móveis")) { vm.newMoveisProject() } }
+                    items(shown, key = { "cli-" + it.key }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { g -> ClientCard(vm, g) }
+                    if (showProj) {
+                        val projs = projList.filter { it.id !in inGroupP && (q.isBlank() || projMatches(it, q)) }
                         items(projs, key = { "proj-" + it.id }) { pj -> ProjRow(vm, pj) }
                     }
-                    items(notes.filter { it.id !in paired }, key = { it.id }) { n -> NoteRow(vm, n) }
+                    items(notes.filter { it.id !in inGroupN && (q.isBlank() || it.name.contains(q, ignoreCase = true)) }, key = { it.id }) { n -> NoteRow(vm, n) }
                 }
             }
         }
@@ -429,6 +429,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
     var rename by remember { mutableStateOf(false) }
     var del by remember { mutableStateOf(false) }
     var stDlg by remember { mutableStateOf(false) }
+    var titleDlg by remember { mutableStateOf(false) }
     val linked = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).size }
     Row(
         mod.height(96.dp).clip(RoundedCornerShape(14.dp)).background(if (bare) Color.Transparent else Ui.panel)
@@ -441,16 +442,28 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
         Spacer(Modifier.width(if (bare) 8.dp else 12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (bare) tr("Projeto de móveis") else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Text(if (bare) p.label else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 StatusChip(p.status, Modifier.padding(start = 6.dp).clickable { stDlg = true })
             }
-            Text((if (bare) "" else tr("Projeto de móveis · ")) + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
+            Text((if (bare) "" else "🪚 " + p.label + " · ") + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
             Text(tr(if (p.mods == 1) "{0} módulo" else "{0} módulos", p.mods) + (if (linked > 0 && !bare) tr(if (linked == 1) " · {0} nota" else " · {0} notas", linked) else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
             IconButton(onClick = { menu = true }) { Icon(Icons.Filled.KeyboardArrowDown, tr("Menu do projeto"), tint = Ui.text) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                // projeto, ambiente e a nota do cliente ligada
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    Text(tr("Cliente: {0}", p.name), fontSize = 13.sp, color = Ui.dim)
+                    Text(tr("Projeto: {0}", p.label), fontSize = 13.sp, color = Ui.dim)
+                    Text(tr("Ambiente: {0}", br.com.arque.measure.data.MoveisProjects.roomLabel(p.room)), fontSize = 13.sp, color = Ui.dim)
+                    val nn = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).mapNotNull { id -> vm.index.notes.firstOrNull { it.id == id && !it.trash }?.name } }
+                    Text(if (nn.isEmpty()) tr("Nota: nenhuma ligada") else tr("Nota: {0}", nn.joinToString()), fontSize = 13.sp, color = Ui.dim)
+                }
+                HorizontalDivider()
                 DropdownMenuItem(text = { Text(tr("Abrir")) }, onClick = { menu = false; vm.openProject(p.id) })
+                DropdownMenuItem(text = { Text(tr("📝 Abrir a nota do cliente")) }, onClick = { menu = false; vm.openNoteOf(p.id) })
+                DropdownMenuItem(text = { Text(tr("Nome do projeto (ex.: Cozinha, Suíte)")) }, onClick = { menu = false; titleDlg = true })
+                DropdownMenuItem(text = { Text(tr("＋ Novo projeto deste cliente")) }, onClick = { menu = false; vm.newProjectForClient(p.name, vm.notesOfProject(p.id).firstOrNull()) })
                 DropdownMenuItem(text = { Text(tr("Renomear (nome do cliente)")) }, onClick = { menu = false; rename = true })
                 DropdownMenuItem(text = { Text(tr("Status do projeto") + ": " + br.com.arque.measure.data.MoveisProjects.statusLabel(p.status)) }, onClick = { menu = false; stDlg = true })
                 DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
@@ -459,6 +472,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
         }
     }
     if (rename) NameDialog(tr("Nome do projeto"), tr("Cliente / projeto"), if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
+    if (titleDlg) NameDialog(tr("Nome do projeto (ex.: Cozinha, Suíte)"), tr("Nome do projeto"), p.title, { titleDlg = false }) { titleDlg = false; vm.setProjectTitle(p.id, it) }
     if (stDlg) AlertDialog(
         onDismissRequest = { stDlg = false },
         title = { Text(tr("Status do projeto")) },
@@ -493,16 +507,49 @@ private fun StatusChip(status: String, mod: Modifier = Modifier) {
     )
 }
 
-/** Quadro do cliente: nome em cima, nota(s) à esquerda e o projeto de móveis à direita. */
+/** Cliente com suas notas e projetos (nota e projeto ligados ficam com o mesmo nome, no mesmo quadro). */
+private class ClientGroup(val key: String, val name: String, val projs: List<br.com.arque.measure.data.MoveisProjects.P>, val notes: List<NoteMeta>) {
+    fun matches(q: String): Boolean = name.contains(q, ignoreCase = true) || projs.any { projMatches(it, q) } || notes.any { it.name.contains(q, ignoreCase = true) }
+}
+
+/** Busca no projeto: cliente, nome do projeto, ambiente, cidade e status. */
+private fun projMatches(p: br.com.arque.measure.data.MoveisProjects.P, q: String): Boolean =
+    listOf(p.name, p.label, br.com.arque.measure.data.MoveisProjects.roomLabel(p.room), p.city, br.com.arque.measure.data.MoveisProjects.statusLabel(p.status))
+        .any { it.contains(q, ignoreCase = true) }
+
+private fun clientGroups(vm: AppViewModel, projs: List<br.com.arque.measure.data.MoveisProjects.P>, notes: List<NoteMeta>): List<ClientGroup> {
+    fun k(s: String) = s.trim().lowercase()
+    val pk = HashMap<String, String>()   // projeto -> cliente
+    projs.forEach { p -> pk[p.id] = if (vm.isDefaultProj(p)) "id:" + p.id else k(p.name) }
+    val byKey = LinkedHashMap<String, Pair<MutableList<br.com.arque.measure.data.MoveisProjects.P>, MutableList<NoteMeta>>>()
+    projs.forEach { p -> byKey.getOrPut(pk.getValue(p.id)) { mutableListOf<br.com.arque.measure.data.MoveisProjects.P>() to mutableListOf() }.first.add(p) }
+    notes.forEach { n ->
+        val key = vm.linkedProject(n.id)?.let { pk[it] } ?: if (vm.isDefaultNote(n.name)) null else k(n.name)
+        if (key != null) byKey[key]?.second?.add(n)
+    }
+    return byKey.mapNotNull { (key, v) ->
+        val (ps, ns) = v
+        if (ps.isEmpty() || ps.size + ns.size < 2) null
+        else ClientGroup(key, ps.firstOrNull { !vm.isDefaultProj(it) }?.name ?: ns.firstOrNull()?.name ?: ps.first().name, ps.sortedByDescending { it.updated }, ns)
+    }
+}
+
+/** Quadro do cliente: nome em cima, nota(s) à esquerda, os projetos dele à direita e "＋ Novo projeto deste cliente". */
 @Composable
-private fun ClientPair(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProjects.P, ns: List<NoteMeta>) {
+private fun ClientCard(vm: AppViewModel, g: ClientGroup) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ui.panel).padding(top = 8.dp)) {
-        Text("👤 " + p.name, color = Ui.text, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 12.dp))
-        Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
-            Column(Modifier.weight(1f)) { ns.forEach { n -> NoteRow(vm, n, Modifier.fillMaxWidth(), bare = true) } }
-            Box(Modifier.padding(vertical = 10.dp).width(1.dp).fillMaxHeight().background(Ui.line))
-            Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.TopCenter) { ProjRow(vm, p, Modifier.fillMaxWidth(), bare = true) }
+        Row(Modifier.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("👤 " + g.name, color = Ui.text, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            if (g.projs.size > 1) Text("  " + tr("{0} projetos", g.projs.size), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
+        Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+            if (g.notes.isNotEmpty()) {
+                Column(Modifier.weight(1f)) { g.notes.forEach { n -> NoteRow(vm, n, Modifier.fillMaxWidth(), bare = true) } }
+                Box(Modifier.padding(vertical = 10.dp).width(1.dp).fillMaxHeight().background(Ui.line))
+            }
+            Column(Modifier.weight(1f)) { g.projs.forEach { p -> ProjRow(vm, p, Modifier.fillMaxWidth(), bare = true) } }
+        }
+        TextButton(onClick = { vm.newProjectForClient(g.name, g.notes.firstOrNull()?.id) }, modifier = Modifier.padding(start = 4.dp)) { Text(tr("＋ Novo projeto deste cliente")) }
     }
 }
 
@@ -547,6 +594,8 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fill
                 if (trash) {
                     DropdownMenuItem(text = { Text(tr("Restaurar")) }, onClick = { menu = false; vm.trashNote(n.id, false) })
                 } else {
+                    DropdownMenuItem(text = { Text(tr("🪚 Abrir o projeto deste cliente")) }, onClick = { menu = false; if (!vm.openProjectOfNote(n.id)) vm.newProjectForNote(n.id) })
+                    DropdownMenuItem(text = { Text(tr("＋ Novo projeto para este cliente")) }, onClick = { menu = false; vm.newProjectForNote(n.id) })
                     DropdownMenuItem(text = { Text(tr("Editar")) }, onClick = { menu = false; rename = true })
                     DropdownMenuItem(text = { Text(tr("Copiar")) }, onClick = { menu = false; vm.copyNote(n.id) })
                     DropdownMenuItem(

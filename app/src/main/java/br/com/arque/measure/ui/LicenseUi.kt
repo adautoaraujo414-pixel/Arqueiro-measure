@@ -32,6 +32,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -192,18 +193,26 @@ fun LockScreen(vm: AppViewModel) {
     }
 }
 
+/** Passos do guia (português é a chave da tradução). */
+val GUIDE = listOf(
+    "1 · Crie a nota do cliente" to "Toque em ＋ Criar nota e dê o nome do cliente. Tire foto do ambiente ou desenhe o croqui com o dedo ou a caneta.",
+    "2 · Meça com a trena" to "Ligue a trena Bosch (botão Trena) e toque na cota: a medida cai direto, em milímetro. Sem trena, digite no teclado do app.",
+    "3 · Abra o projeto de móveis" to "Na nota, toque em 🪚 Projeto: o projeto já nasce com o nome do cliente e fica ligado à nota, no mesmo quadro da biblioteca. Um cliente pode ter vários projetos (cozinha, suíte…).",
+    "4 · Monte os módulos" to "Toque em 📦 Módulos (tem lupa pra procurar), arraste no desenho e ajuste as medidas. Puxadores, tamponamentos, cuba e cooktop ficam no painel do lado.",
+    "5 · Veja em 3D" to "Toque em 🧊: um dedo gira, dois dedos dão zoom, toque na porta pra abrir. ↶ desfaz. Em ⋯ Mais ficam as vistas, portas e janelas do ambiente.",
+    "6 · Corte e orçamento" to "☰ mostra a lista e o plano de corte das chapas: toque na peça pra ver no 3D e 2 toques marca ✓ cortada. 💰 calcula material e preço e gera o orçamento em PDF.",
+    "7 · Agenda e backup" to "Marque entregas e medições na Agenda. No menu ⋮ faça o backup completo (ZIP) de vez em quando. Fotos da câmera também ficam na galeria do celular.",
+)
+
 /** Boas-vindas na primeira abertura + guia rápido opcional. */
 @Composable
 fun WelcomeDialog(vm: AppViewModel) {
     var page by remember { mutableIntStateOf(0) }
     var langOpen by remember { mutableStateOf(false) }
     if (langOpen) LanguageDialog { langOpen = false }
-    val guide = listOf(
-        tr("📏 Medições") to tr("Crie uma nota, tire foto ou desenhe o croqui e ligue a trena Bosch: a medida cai direto na cota, com milímetro."),
-        tr("🪚 Editor de móveis") to tr("Monte cozinha, guarda-roupa e cozinha em L. Veja em 3D, abra portas e gavetas, estique peças arrastando."),
-        tr("📋 Corte e orçamento") to tr("Lista de corte, plano das chapas inteiras, custo do material e preço sugerido saem sozinhos. Preços em ⚙."),
-        tr("📅 Agenda") to tr("Marque entregas, visitas e medições ligadas ao cliente. O app avisa antes."),
-    )
+    // guia passo a passo: do primeiro cliente até o corte e o orçamento
+    val guide = GUIDE.map { tr(it.first) to tr(it.second) }
+    LaunchedEffect(vm.guideFromMenu) { if (vm.guideFromMenu) { page = 1; vm.guideFromMenu = false } }
     AlertDialog(
         onDismissRequest = {},
         title = { Text(if (page == 0) tr("Seja bem-vindo ao Arquemestre!") else guide[page - 1].first) },

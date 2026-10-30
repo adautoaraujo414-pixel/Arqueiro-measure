@@ -28,7 +28,6 @@ struct LibraryView: View {
             case .folder(let f): return !$0.trash && $0.folderId == f
             }
         }
-        .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
         .filter { _ in tab != .MOVEIS }
         .sorted { ($0.pinned ? 1 : 0, $0.createdMs) > ($1.pinned ? 1 : 0, $1.createdMs) }
     }
@@ -88,15 +87,15 @@ struct LibraryView: View {
     private func content(wide: Bool) -> some View {
         let projList = app.moveisProjects()
         _ = app.projVersion
-        let pairs: [(MoveisProjects.P, [NoteMeta])] = (tab == .ALL && app.filter != .trash) ? projList.compactMap { pj in
-            let ns = notes.filter { n in app.linkedProject(n.id) == pj.id || (!pj.auto && n.name.trimmingCharacters(in: .whitespaces).caseInsensitiveCompare(pj.name.trimmingCharacters(in: .whitespaces)) == .orderedSame) }
-            if ns.isEmpty { return nil }
-            if !query.isEmpty && !pj.name.localizedCaseInsensitiveContains(query) && !ns.contains(where: { $0.name.localizedCaseInsensitiveContains(query) }) { return nil }
-            return (pj, ns)
-        } : []
-        let paired = Set(pairs.flatMap { $0.1.map(\.id) })
-        let inPair = Set(pairs.map { $0.0.id })
-        let projs = (app.filter == .all && tab != .NOTE) ? projList.filter { !inPair.contains($0.id) && (query.isEmpty || $0.name.localizedCaseInsensitiveContains(query)) } : []
+        // um quadro por cliente: notas de um lado, os projetos dele do outro (dá pra ter vários projetos por cliente)
+        let showProj = app.filter == .all && tab != .NOTE
+        let q = query.trimmingCharacters(in: .whitespaces)
+        let groups = showProj ? clientGroups(app, projList, tab == .ALL ? notes : []) : []
+        let shown = groups.filter { q.isEmpty || $0.matches(q) }
+        let inGroupP = Set(groups.flatMap { $0.projs.map(\.id) })
+        let inGroupN = Set(groups.flatMap { $0.notes.map(\.id) })
+        let projs = showProj ? projList.filter { !inGroupP.contains($0.id) && (q.isEmpty || projMatches($0, q)) } : []
+        let looseNotes = notes.filter { !inGroupN.contains($0.id) && (q.isEmpty || $0.name.localizedCaseInsensitiveContains(q)) }
         return ZStack(alignment: .bottomTrailing) {
             VStack(spacing: 0) {
                 HStack {
@@ -118,6 +117,7 @@ struct LibraryView: View {
                         Divider()
                         Button(langMenuLabel() + " (" + currentLangName() + ")") { langOpen = true }
                         Button(tr("Gerenciar assinatura")) { manageSub = true }
+                        Button(tr("Guia passo a passo")) { app.showGuide = true }
                         Link(tr("Ajuda e suporte"), destination: SiteLinks.support)
                         Link(tr("Privacidade"), destination: SiteLinks.privacy)
                     } label: {
@@ -153,9 +153,9 @@ struct LibraryView: View {
                             CreateTile(label: tr("Criar")) { app.openNote(app.createNote()) }
                         }
                         if tab == .MOVEIS && query.isEmpty { CreateTile(label: tr("Novo projeto de móveis")) { app.newMoveisProject() } }
-                        ForEach(pairs, id: \.0.id) { pr in ClientPair(p: pr.0, notes: pr.1) }
+                        ForEach(shown) { g in ClientCard(g: g) }
                         ForEach(projs) { pj in ProjRow(p: pj) }
-                        ForEach(notes.filter { !paired.contains($0.id) }) { n in NoteRow(n: n) }
+                        ForEach(looseNotes) { n in NoteRow(n: n) }
                     }
                     .padding(.horizontal, 12).padding(.top, 4).padding(.bottom, 110)
                 }
@@ -202,6 +202,8 @@ struct ProjRow: View {
     var bare = false
     @State private var rename = false
     @State private var del = false
+    @State private var titleDlg = false
+    private var noteNames: String { app.notesOfProject(p.id).compactMap { id in app.index.notes.first { $0.id == id && !$0.trash }?.name }.joined(separator: ", ") }
     var body: some View {
         let linked = app.notesOfProject(p.id).count
         HStack(spacing: bare ? 8 : 12) {
@@ -209,20 +211,29 @@ struct ProjRow: View {
                 .background(RoundedRectangle(cornerRadius: 4).fill(Color(argb: 0xFF2B2416)))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(bare ? tr("Projeto de móveis") : p.name).foregroundColor(Ui.text).lineLimit(1)
+                    Text(bare ? p.label : p.name).foregroundColor(Ui.text).lineLimit(1)
                     Menu {
                         ForEach(MoveisProjects.statuses, id: \.self) { s in
                             Button((s == p.status ? "✓ " : "") + MoveisProjects.statusLabel(s)) { app.setProjectStatus(p.id, s) }
                         }
                     } label: { StatusChip(status: p.status) }
                 }
-                Text((bare ? "" : tr("Projeto de móveis · ")) + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+                Text((bare ? "" : "🪚 " + p.label + " · ") + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
                 Text(tr(p.mods == 1 ? "{0} módulo" : "{0} módulos", p.mods) + (linked > 0 && !bare ? tr(linked == 1 ? " · {0} nota" : " · {0} notas", linked) : ""))
                     .font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
             Spacer()
             Menu {
+                Section {
+                    Text(tr("Cliente: {0}", p.name))
+                    Text(tr("Projeto: {0}", p.label))
+                    Text(tr("Ambiente: {0}", MoveisProjects.roomLabel(p.room)))
+                    Text(noteNames.isEmpty ? tr("Nota: nenhuma ligada") : tr("Nota: {0}", noteNames))
+                }
                 Button(tr("Abrir")) { app.openProject(p.id) }
+                Button(tr("📝 Abrir a nota do cliente")) { app.openNoteOf(p.id) }
+                Button(tr("Nome do projeto (ex.: Cozinha, Suíte)")) { titleDlg = true }
+                Button(tr("＋ Novo projeto deste cliente")) { app.newProjectForClient(p.name, app.notesOfProject(p.id).first) }
                 Button(tr("Renomear (nome do cliente)")) { rename = true }
                 Menu(tr("Status do projeto") + ": " + MoveisProjects.statusLabel(p.status)) {
                     ForEach(MoveisProjects.statuses, id: \.self) { s in
@@ -238,6 +249,7 @@ struct ProjRow: View {
         .contentShape(Rectangle())
         .onTapGesture { app.openProject(p.id) }
         .sheet(isPresented: $rename) { NameSheet(title: tr("Nome do projeto"), label: tr("Cliente / projeto"), text: p.auto ? "" : p.name) { app.renameMoveisProject(p.id, $0) } }
+        .sheet(isPresented: $titleDlg) { NameSheet(title: tr("Nome do projeto (ex.: Cozinha, Suíte)"), label: tr("Nome do projeto"), text: p.title) { app.setProjectTitle(p.id, $0) } }
         .alert(tr("Apagar este projeto?"), isPresented: $del) {
             Button(tr("Cancelar"), role: .cancel) {}
             Button(tr("Apagar"), role: .destructive) { app.deleteMoveisProject(p.id) }
@@ -255,17 +267,58 @@ struct StatusChip: View {
     }
 }
 
-struct ClientPair: View {
-    var p: MoveisProjects.P
+/// Cliente com suas notas e projetos (nota e projeto ligados ficam com o mesmo nome, no mesmo quadro).
+struct ClientGroup: Identifiable {
+    var id: String
+    var name: String
+    var projs: [MoveisProjects.P]
     var notes: [NoteMeta]
+    func matches(_ q: String) -> Bool { name.localizedCaseInsensitiveContains(q) || projs.contains { projMatches($0, q) } || notes.contains { $0.name.localizedCaseInsensitiveContains(q) } }
+}
+
+/// Busca no projeto: cliente, nome do projeto, ambiente, cidade e status.
+func projMatches(_ p: MoveisProjects.P, _ q: String) -> Bool {
+    [p.name, p.label, MoveisProjects.roomLabel(p.room), p.city, MoveisProjects.statusLabel(p.status)].contains { $0.localizedCaseInsensitiveContains(q) }
+}
+
+@MainActor func clientGroups(_ app: AppModel, _ projs: [MoveisProjects.P], _ notes: [NoteMeta]) -> [ClientGroup] {
+    func k(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
+    var pk: [String: String] = [:]
+    for p in projs { pk[p.id] = app.isDefaultProj(p) ? "id:" + p.id : k(p.name) }
+    var order: [String] = []
+    var ps: [String: [MoveisProjects.P]] = [:], ns: [String: [NoteMeta]] = [:]
+    for p in projs { let key = pk[p.id]!; if ps[key] == nil { order.append(key) }; ps[key, default: []].append(p) }
+    for n in notes {
+        let key = app.linkedProject(n.id).flatMap { pk[$0] } ?? (app.isDefaultNote(n.name) ? nil : k(n.name))
+        if let key = key, ps[key] != nil { ns[key, default: []].append(n) }
+    }
+    return order.compactMap { key in
+        let P = ps[key] ?? [], N = ns[key] ?? []
+        if P.isEmpty || P.count + N.count < 2 { return nil }
+        let name = P.first { !app.isDefaultProj($0) }?.name ?? N.first?.name ?? P[0].name
+        return ClientGroup(id: key, name: name, projs: P.sorted { $0.updated > $1.updated }, notes: N)
+    }
+}
+
+/// Quadro do cliente: nome em cima, nota(s) à esquerda, os projetos dele à direita e "＋ Novo projeto deste cliente".
+struct ClientCard: View {
+    @EnvironmentObject var app: AppModel
+    var g: ClientGroup
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("👤 " + p.name).foregroundColor(Ui.text).lineLimit(1).padding(.horizontal, 12).padding(.top, 8)
+            HStack(spacing: 6) {
+                Text("👤 " + g.name).foregroundColor(Ui.text).lineLimit(1)
+                if g.projs.count > 1 { Text(tr("{0} projetos", g.projs.count)).font(.caption).foregroundColor(Ui.dim) }
+            }.padding(.horizontal, 12).padding(.top, 8)
             HStack(alignment: .top, spacing: 0) {
-                VStack(spacing: 0) { ForEach(notes) { NoteRow(n: $0, bare: true) } }.frame(maxWidth: .infinity)
-                Rectangle().fill(Ui.line).frame(width: 1).padding(.vertical, 10)
-                ProjRow(p: p, bare: true).frame(maxWidth: .infinity)
+                if !g.notes.isEmpty {
+                    VStack(spacing: 0) { ForEach(g.notes) { NoteRow(n: $0, bare: true) } }.frame(maxWidth: .infinity)
+                    Rectangle().fill(Ui.line).frame(width: 1).padding(.vertical, 10)
+                }
+                VStack(spacing: 0) { ForEach(g.projs) { ProjRow(p: $0, bare: true) } }.frame(maxWidth: .infinity)
             }
+            Button(tr("＋ Novo projeto deste cliente")) { app.newProjectForClient(g.name, g.notes.first?.id) }
+                .font(.subheadline).foregroundColor(Ui.accent).padding(.horizontal, 12).padding(.bottom, 10).padding(.top, 2)
         }
         .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
     }
@@ -303,6 +356,8 @@ struct NoteRow: View {
                     Button(tr("Restaurar")) { app.trashNote(n.id, false) }
                     Button(tr("Apagar para sempre"), role: .destructive) { confirmDelete = true }
                 } else {
+                    Button(tr("🪚 Abrir o projeto deste cliente")) { if !app.openProjectOfNote(n.id) { app.newProjectForNote(n.id) } }
+                    Button(tr("＋ Novo projeto para este cliente")) { app.newProjectForNote(n.id) }
                     Button(tr("Editar nome")) { rename = true }
                     Button(tr("Copiar")) { app.copyNote(n.id) }
                     Button(n.pinned ? tr("Desafixar nota") : tr("Fixar nota")) { app.pinNote(n.id, !n.pinned) }

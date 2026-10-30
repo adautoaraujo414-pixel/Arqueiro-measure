@@ -97,7 +97,12 @@ struct MoveisWeb: UIViewRepresentable {
         getFile:function(n){return sync('getFile',n)},
         delFile:function(n){post({op:'delFile',name:String(n)})},
         listFiles:function(){return sync('listFiles','')||'[]'},
-        makeQuote:function(j){post({op:'makeQuote',json:String(j)})}
+        makeQuote:function(j){post({op:'makeQuote',json:String(j)})},
+        listNotes:function(){return sync('listNotes','')||'[]'},
+        contextNote:function(){return sync('contextNote','')},
+        linkNote:function(n,p){post({op:'linkNote',note:String(n),id:String(p)})},
+        openNoteOf:function(p,n){post({op:'openNoteOf',id:String(p)})},
+        saveToGallery:function(d){post({op:'saveGallery',data:String(d)})}
       };
     })();
     """
@@ -152,7 +157,10 @@ struct MoveisWeb: UIViewRepresentable {
             case "close": parent.onClose()
             case "openTrena": parent.onTrena()
             case "shareStart": parent.onShare()
-            case "setCurrent": if let id = m["id"] as? String { app.lastProjectId = id; app.projVersion += 1 }
+            case "setCurrent": if let id = m["id"] as? String { app.onEditorProject(id) }
+            case "linkNote": if let n = m["note"] as? String, let id = m["id"] as? String { app.linkProject(n, id) }
+            case "openNoteOf": if let id = m["id"] as? String { app.openNoteOf(id) }
+            case "saveGallery": if let d = m["data"] as? String { GallerySave.save(dataURL: d) }
             case "shareUpdate": if let j = m["json"] as? String { parent.peer.update(j) }
             case "putFile":
                 if let n = m["name"] as? String, let b = m["b64"] as? String, let d = Data(base64Encoded: b, options: .ignoreUnknownCharacters) {
@@ -174,6 +182,10 @@ struct MoveisWeb: UIViewRepresentable {
             } else if prompt == "__arque__:getFile" {
                 let url = dir.appendingPathComponent(safe(defaultText ?? ""))
                 completionHandler((try? Data(contentsOf: url))?.base64EncodedString() ?? "")
+            } else if prompt == "__arque__:listNotes" {
+                completionHandler(parent.app.notesJson())
+            } else if prompt == "__arque__:contextNote" {
+                completionHandler(parent.app.contextNoteJson())
             } else if prompt == "__arque__:listFiles" {
                 let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
                 completionHandler(JsonCodec.string(names))
@@ -193,7 +205,9 @@ struct MoveisWeb: UIViewRepresentable {
             }
             if app.pendingNewProject && !app.moveisView {
                 app.pendingNewProject = false
-                w.evaluateJavaScript("window.arqueNewProject&&window.arqueNewProject()")
+                let nm = app.pendingNewName; app.pendingNewName = nil
+                let arg: String = { guard let n = nm else { return "" }; return String(JsonCodec.string([n]).dropFirst().dropLast()) }()
+                w.evaluateJavaScript("window.arqueNewProject&&window.arqueNewProject(\(arg))")
             }
             if let id = app.pendingProject {
                 app.pendingProject = nil
@@ -212,3 +226,21 @@ struct MoveisWeb: UIViewRepresentable {
     }
 }
 
+/// Foto ou vídeo da câmera do editor de móveis: guarda também na galeria do iPhone (não se perde).
+enum GallerySave {
+    static func save(dataURL: String) {
+        DispatchQueue.global(qos: .utility).async {
+            guard let comma = dataURL.firstIndex(of: ","), dataURL.hasPrefix("data:") else { return }
+            let header = String(dataURL[..<comma]), b64 = String(dataURL[dataURL.index(after: comma)...])
+            guard header.hasSuffix(";base64"), let d = Data(base64Encoded: b64, options: .ignoreUnknownCharacters) else { return }
+            if header.hasPrefix("data:image") {
+                if let img = UIImage(data: d) { UIImageWriteToSavedPhotosAlbum(img, nil, nil, nil) }
+            } else if header.hasPrefix("data:video") {
+                let ext = header.contains("quicktime") ? "mov" : "mp4"
+                let url = FileManager.default.temporaryDirectory.appendingPathComponent("arque_\(Int(Date().timeIntervalSince1970 * 1000)).\(ext)")
+                guard (try? d.write(to: url, options: [.atomic])) != nil else { return }
+                if UIVideoAtPathIsCompatibleWithSavedPhotosAlbum(url.path) { UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil) }
+            }
+        }
+    }
+}

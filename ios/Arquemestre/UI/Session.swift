@@ -110,7 +110,8 @@ final class EditorSession: ObservableObject {
     @Published var loupe: CGPoint?
     @Published var lasso: [Pt] = []
     @Published var pull: CGFloat = 0
-    @Published var clipboard: [Obj] = []
+    /// Área de transferência (cortar/copiar/colar): vale entre folhas e entre notas enquanto o app estiver aberto.
+    var clipboard: [Obj] { Clip.shared.objs }
 
     var canvasW: CGFloat = 0
     var canvasH: CGFloat = 0
@@ -315,7 +316,7 @@ final class EditorSession: ObservableObject {
     func copyGroup(cut: Bool = false) {
         let objs = state.groupWithLinked()
         if objs.isEmpty { return }
-        clipboard = objs
+        Clip.shared.put(objs, state.sheet, cut: cut); objectWillChange.send()
         if cut { state.deleteGroup() }
     }
 
@@ -323,11 +324,17 @@ final class EditorSession: ObservableObject {
         guard let o = state.selected else { return }
         var objs = [o]
         if case .photo = o { objs += state.sheet.objs.filter { $0.photoId == o.id } }
-        clipboard = objs
+        Clip.shared.put(objs, state.sheet, cut: cut); objectWillChange.send()
         if cut { state.delete(o.id) }
     }
 
-    func paste() { if !clipboard.isEmpty { state.pasteObjs(clipboard) } }
+    /// Cola deslocado (cada colagem um pouco mais pro lado, pra não ficar em cima da original).
+    func paste() {
+        let c = Clip.shared
+        if c.objs.isEmpty { return }
+        c.n += 1
+        state.pasteObjs(c.objs, from: c.from, off: 24 * CGFloat(c.n))
+    }
 
     func applyColor(_ c: Int) {
         color = c
@@ -339,4 +346,13 @@ final class EditorSession: ObservableObject {
         width = w
         if let s = state.selected, s.asPhoto == nil, s.asText == nil { state.setStyle(s.id, width: w) }
     }
+}
+
+/// O que foi copiado/cortado: os traços e a folha de onde vieram (pra converter quando estavam presos numa foto).
+final class Clip {
+    static let shared = Clip()
+    private(set) var objs: [Obj] = []
+    private(set) var from: Sheet?
+    var n = 0
+    func put(_ o: [Obj], _ sheet: Sheet, cut: Bool) { objs = o; from = sheet; n = cut ? -1 : 0 }
 }

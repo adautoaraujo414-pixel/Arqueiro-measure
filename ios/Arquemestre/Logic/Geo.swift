@@ -75,6 +75,23 @@ enum Geo {
         }
     }
 
+    /// Solta a anotação da foto: os pontos voltam pra coordenada da folha [from] (pra colar em outra folha ou nota).
+    static func detach(_ from: Sheet, _ o: Obj) -> Obj {
+        guard let pid = o.photoId else { return o }
+        let photos = from.photos()
+        if photos[pid] == nil { return o.withPhotoId(nil) }
+        func s(_ p: Pt) -> Pt { toSheet(photos, pid, p) }
+        switch o {
+        case .stroke(var a): a.pts = a.pts.map(s); return Obj.stroke(a).withPhotoId(nil)
+        case .shape(var a): a.a = s(a.a); a.b = s(a.b); return Obj.shape(a).withPhotoId(nil)
+        case .dim(var a): a.a = s(a.a); a.b = s(a.b); return Obj.dim(a).withPhotoId(nil)
+        case .door(var a): a.a = s(a.a); a.b = s(a.b); return Obj.door(a).withPhotoId(nil)
+        case .text(var a): a.at = s(a.at); return Obj.text(a).withPhotoId(nil)
+        case .room(var a): a.pts = a.pts.map(s); return Obj.room(a).withPhotoId(nil)
+        default: return o.withPhotoId(nil)
+        }
+    }
+
     static func translate(_ sheet: Sheet, _ o: Obj, _ dx: CGFloat, _ dy: CGFloat) -> Obj {
         if case .photo(var p) = o { p.cx += dx; p.cy += dy; return .photo(p) }
         let photos = sheet.photos()

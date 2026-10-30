@@ -161,9 +161,12 @@ struct EditorView: View {
                 let linkedId = app.linkedProject(note.id)
                 let linkedName = linkedId.flatMap { id in app.moveisProjects().first { $0.id == id }?.name }
                 Pill {
-                    Button { projLink = true } label: {
-                        LabeledIcon(label: linkedName ?? tr("Projeto"), on: linkedName != nil) { _ in Text("🪚").font(.system(size: 17)) }.frame(maxWidth: 160)
-                    }.buttonStyle(.plain)
+                    // acesso rápido: ligada → abre o projeto do cliente direto (segurar: trocar/desligar)
+                    LabeledIcon(label: linkedName ?? tr("Projeto"), on: linkedName != nil) { _ in Text("🪚").font(.system(size: 17)) }.frame(maxWidth: 160)
+                        .contentShape(Rectangle())
+                        .onTapGesture { if !app.openProjectOfNote(note.id) { projLink = true } }
+                        .onLongPressGesture { projLink = true }
+                        .accessibilityAddTraits(.isButton)
                 }
                 Pill {
                     Button { st.setUnit(note.unit.next) } label: {
@@ -807,13 +810,16 @@ struct ProjectLinkView: View {
             List {
                 if let cur = list.first(where: { $0.id == linked }) {
                     Section(tr("Ligada a: {0}", cur.name)) {
-                        Button(tr("🪚 Abrir o projeto")) { dismiss(); app.flush(); app.openProject(cur.id) }
+                        Button(tr("🪚 Abrir o projeto")) { dismiss(); app.openProjectOfNote(noteId) }
                         Button(tr("Desligar desta nota"), role: .destructive) { app.linkProject(noteId, nil); dismiss() }
                     }
                 }
+                Section {
+                    Button(tr("＋ Novo projeto para este cliente")) { dismiss(); app.newProjectForNote(noteId) }
+                }
                 Section(list.isEmpty ? tr("Ainda não tem projeto de móveis. Crie um no editor de móveis.") : (linked != nil ? tr("Ou trocar por:") : tr("Escolha o projeto para ligar a esta nota:"))) {
                     ForEach(list.filter { $0.id != linked }) { p in
-                        Button("🪚 \(p.name)") { app.linkProject(noteId, p.id); dismiss() }
+                        Button("🪚 \(p.name) · \(p.label)") { app.linkProject(noteId, p.id); dismiss() }
                     }
                 }
             }

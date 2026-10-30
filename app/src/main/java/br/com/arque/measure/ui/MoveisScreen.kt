@@ -72,6 +72,7 @@ fun MoveisScreen(vm: AppViewModel) {
     // ---- escolha de arquivo (galeria, câmera de foto e de vídeo) ----
     var chooserCb by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
     var camUri by remember { mutableStateOf<Uri?>(null) }
+    var camFile by remember { mutableStateOf<File?>(null) }
     val chooser = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
         val cb = chooserCb
         chooserCb = null
@@ -84,19 +85,30 @@ fun MoveisScreen(vm: AppViewModel) {
         val data = res.data
         data?.clipData?.let { c -> for (i in 0 until c.itemCount) list.add(c.getItemAt(i).uri) }
         data?.data?.let { if (!list.contains(it)) list.add(it) }
-        if (list.isEmpty()) camUri?.let { list.add(it) }
+        if (list.isEmpty()) camUri?.let { u ->
+            list.add(u)
+            // foto ou vídeo da câmera: guarda também na galeria do celular (não se perde nunca)
+            camFile?.let { f -> Thread { br.com.arque.measure.ui.GallerySave.save(ctx, f, f.extension == "mp4") }.start() }
+        }
         cb.onReceiveValue(if (list.isEmpty()) null else list.toTypedArray())
     }
 
     fun newCamFile(ext: String): Uri {
         val dir = File(ctx.cacheDir, "camera").apply { mkdirs() }
         val f = File(dir, "m_${System.currentTimeMillis()}.$ext")
+        camFile = f
         return FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
     }
 
     val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
     var showShare by remember { mutableStateOf(false) }
-    val bridge = remember { MoveisBridge(files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.lastProjectId = id; vm.projVersion++ }, { json -> vm.quoteFromMoveis(json) }) }
+    val bridge = remember {
+        MoveisBridge(
+            files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.onEditorProject(id) }, { json -> vm.quoteFromMoveis(json) },
+            notes = { vm.notesJson() }, ctxNote = { vm.contextNoteJson() },
+            onLink = { nid, pid -> vm.linkProject(nid, pid) }, onOpenNote = { pid -> vm.openNoteOf(pid) },
+        )
+    }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
     val viewing = vm.moveisView
     val vState by br.com.arque.measure.share.BtShare.viewState.collectAsStateWithLifecycle()
@@ -158,7 +170,8 @@ fun MoveisScreen(vm: AppViewModel) {
                             }
                             if (vm.pendingNewProject && !vm.moveisView) {
                                 vm.pendingNewProject = false
-                                view.evaluateJavascript("window.arqueNewProject&&window.arqueNewProject()", null)
+                                val nm = vm.pendingNewName; vm.pendingNewName = null
+                                view.evaluateJavascript("window.arqueNewProject&&window.arqueNewProject(${if (nm.isNullOrBlank()) "" else org.json.JSONObject.quote(nm)})", null)
                             }
                             vm.pendingProject?.let { id ->
                                 vm.pendingProject = null
@@ -256,7 +269,19 @@ class MoveisBridge(
     private val viewing: () -> Boolean = { false },
     private val onCurrent: (String) -> Unit = {},
     private val onQuote: (String) -> Unit = {},
+    private val notes: () -> String = { "[]" },
+    private val ctxNote: () -> String = { "" },
+    private val onLink: (String, String) -> Unit = { _, _ -> },
+    private val onOpenNote: (String) -> Unit = {},
 ) {
+    /** Notas do app (o painel de clientes procura a nota e puxa o nome do cliente). */
+    @JavascriptInterface fun listNotes(): String = runCatching { notes() }.getOrDefault("[]")
+    /** Nota aberta / de onde veio: o nome do cliente já vem preenchido. */
+    @JavascriptInterface fun contextNote(): String = runCatching { ctxNote() }.getOrDefault("")
+    /** Liga a nota ao projeto (mesmo cliente, mesmo nome, mesmo quadro na biblioteca). */
+    @JavascriptInterface fun linkNote(noteId: String, projectId: String) { web()?.post { onLink(noteId, projectId) } }
+    /** "📝 Nota do cliente": abre a nota ligada ao projeto (ou cria uma no nome do cliente). */
+    @JavascriptInterface fun openNoteOf(projectId: String, @Suppress("UNUSED_PARAMETER") name: String) { web()?.post { onOpenNote(projectId) } }
     /** "Gerar orçamento em PDF" no editor: cria o orçamento do app com o cliente e o valor do projeto. */
     @JavascriptInterface fun makeQuote(json: String) { web()?.post { onQuote(json) } }
     @JavascriptInterface fun setCurrent(id: String) { web()?.post { onCurrent(id) } }

@@ -49,6 +49,7 @@ struct RootView: View {
                 TrialChip().padding(12)
             }
         }
+        .sheet(isPresented: $app.showGuide, onDismiss: { UserDefaults.standard.set(true, forKey: "arque.guideSeen") }) { GuideView() }
     }
 }
 

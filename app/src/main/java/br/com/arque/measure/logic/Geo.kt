@@ -117,6 +117,12 @@ object Geo {
         return Pt(org.x + w, org.y + h / 2f) to Pt(org.x + w / 2f, if (anchored) org.y + h else org.y)
     }
 
+    /** Solta a anotação da foto: os pontos voltam pra coordenada da folha [from] (pra colar em outra folha ou nota). */
+    fun detach(from: Sheet, a: Ann): Ann {
+        val pid = a.photoId ?: return a
+        return if (from.photos().containsKey(pid)) relink(from, a, null) else a.withPhotoId(null)
+    }
+
     /** Move o objeto por (dx,dy) em unidades de folha. */
     fun translate(sheet: Sheet, o: Obj, dx: Float, dy: Float): Obj {
         if (o is PhotoObj) return o.copy(cx = o.cx + dx, cy = o.cy + dy)

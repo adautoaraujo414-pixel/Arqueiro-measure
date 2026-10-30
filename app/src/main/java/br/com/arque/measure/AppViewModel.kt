@@ -560,7 +560,71 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val links by lazy { getApplication<Application>().getSharedPreferences("arque.links", android.content.Context.MODE_PRIVATE) }
 
     fun moveisProjects(): List<br.com.arque.measure.data.MoveisProjects.P> = br.com.arque.measure.data.MoveisProjects.list(getApplication())
-    fun newMoveisProject() { pendingProject = null; pendingNewProject = true; screen = Screen.Moveis }
+    fun newMoveisProject() { pendingProject = null; pendingNewProject = true; pendingNewName = null; pendingLinkNote = null; contextNoteId = null; screen = Screen.Moveis }
+
+    // ---------- nota ↔ projeto do mesmo cliente (acesso rápido) ----------
+    /** Nota de onde a pessoa abriu o editor de móveis (o editor puxa o nome do cliente dela). */
+    var contextNoteId: String? = null
+    /** Projeto novo já no nome do cliente (e a nota que fica ligada a ele quando o editor criar o projeto). */
+    var pendingNewName: String? = null
+    var pendingLinkNote: String? = null
+
+    /** Projeto novo pra este cliente, ligado à nota (da biblioteca ou de dentro da nota). */
+    fun newProjectForClient(name: String, noteId: String?) {
+        if (session != null) flush()
+        pendingProject = null; pendingNewProject = true
+        pendingNewName = name.trim().takeIf { it.isNotBlank() && !defaultNoteName(it) && !autoProjRx.containsMatchIn(it) }
+        pendingLinkNote = noteId; if (noteId != null) contextNoteId = noteId
+        screen = Screen.Moveis
+    }
+
+    fun newProjectForNote(noteId: String) {
+        val n = index.notes.firstOrNull { it.id == noteId } ?: return
+        newProjectForClient(n.name, noteId)
+    }
+
+    /** O editor de móveis criou/abriu um projeto: liga a nota que estava esperando. */
+    fun onEditorProject(id: String) {
+        lastProjectId = id
+        pendingLinkNote?.let { nid -> pendingLinkNote = null; linkProject(nid, id) }
+        projVersion++
+    }
+
+    /** Lista de notas pro editor procurar a nota do cliente (JSON). */
+    fun notesJson(): String {
+        val a = org.json.JSONArray()
+        val df = br.com.arque.measure.i18n.I18n.dateFormat()
+        index.notes.filter { !it.trash }.sortedByDescending { it.createdMs }.forEach { n ->
+            a.put(org.json.JSONObject().put("id", n.id).put("name", n.name).put("date", df.format(java.util.Date(n.createdMs))).put("proj", linkedProject(n.id) != null))
+        }
+        return a.toString()
+    }
+
+    /** Nota aberta (ou de onde veio): o editor já preenche o nome do cliente com ela. */
+    fun contextNoteJson(): String {
+        val id = contextNoteId ?: session?.state?.note?.id ?: return ""
+        val n = index.notes.firstOrNull { it.id == id && !it.trash } ?: return ""
+        if (defaultNoteName(n.name)) return ""
+        return org.json.JSONObject().put("id", n.id).put("name", n.name).toString()
+    }
+
+    /** "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente. */
+    fun openNoteOf(projectId: String) {
+        val nid = notesOfProject(projectId).firstOrNull { id -> index.notes.any { it.id == id && !it.trash } }
+        lastProjectId = projectId
+        if (nid != null) openNote(nid) else openNote(createNote())
+    }
+
+    fun setProjectTitle(id: String, title: String) { br.com.arque.measure.data.MoveisProjects.setTitle(getApplication(), id, title); projVersion++ }
+
+    /** Abre o projeto da nota direto (se ligada) — acesso rápido. */
+    fun openProjectOfNote(noteId: String): Boolean {
+        val pid = linkedProject(noteId)?.takeIf { id -> moveisProjects().any { it.id == id } } ?: return false
+        if (session != null) flush()
+        contextNoteId = noteId
+        openProject(pid)
+        return true
+    }
     fun deleteMoveisProject(id: String) { br.com.arque.measure.data.MoveisProjects.delete(getApplication(), id); if (lastProjectId == id) lastProjectId = null; projVersion++ }
     fun renameMoveisProject(id: String, name: String) { br.com.arque.measure.data.MoveisProjects.rename(getApplication(), id, name); projVersion++ }
     /** Status do projeto (orc, fech, prod, fin), o mesmo que o editor grava em projects.json. */
@@ -580,6 +644,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val defaultNoteRx = Regex("""^(nota|note)(\s+\d+)?(\s*\((cópia|copia|copy)\))*$""", RegexOption.IGNORE_CASE)
     private val autoProjRx = Regex("""^(projeto|project|proyecto)\s+\d{1,2}/\d{1,2}""", RegexOption.IGNORE_CASE)
     private fun defaultNoteName(s: String) = s.isBlank() || defaultNoteRx.matches(s.trim())
+    fun isDefaultProj(p: br.com.arque.measure.data.MoveisProjects.P) = defaultProjName(p)
+    fun isDefaultNote(name: String) = defaultNoteName(name)
     private fun defaultProjName(p: br.com.arque.measure.data.MoveisProjects.P) =
         p.auto || p.name.isBlank() || p.name == tr("Projeto sem nome") || p.name == "Projeto sem nome" || autoProjRx.containsMatchIn(p.name)
 
@@ -900,6 +966,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // ---- teste de 3 dias (APK do site) / desbloqueio ----
     var licLocked by mutableStateOf(false)
     var showWelcome by mutableStateOf(false)
+    /** "Guia passo a passo" no menu: abre direto no primeiro passo. */
+    var guideFromMenu by mutableStateOf(false)
+    fun openGuide() { guideFromMenu = true; showWelcome = true }
     var trialLeft by mutableStateOf("")
     var licUnlocked by mutableStateOf(false)
 

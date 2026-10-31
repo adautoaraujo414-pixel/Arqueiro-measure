@@ -259,4 +259,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["sv"] as? Int, 2, "projeto salva as ilhas")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    /// LED com cor embaixo dos aéreos, cooktop aceso com panelas, torneira com água e tocar pra editar (pedra, parede) no 3D
+    func testLEDChamaAguaEEditarNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];S.st.items.push({id:77,k:'cook',x:1500,y:60,w:600,d:500});apAdd('torneira',0);draw();
+          window.open3D();fx3api.lk({k:'45',c:'azul'});fx3api.add('sup');var led=S.mods[1].led||{},nl=fx3api.leds(),len=fx3api.len();
+          fx3api.open({k:'cook',sid:S.st.id,iid:77});document.querySelector('#it4 [data-qfire="1"]').click();var fire=Object.keys(fx3api.fire()).length;document.querySelector('#it4 [data-qpan="1"]').click();var pan=S.st.items.filter(function(i){return i.k==='cook'})[0].pan;
+          var tq=S.fr.filter(function(f){return f.t==='torneira'})[0];fx3api.open({k:'fr',id:tq.id});document.querySelector('#it4 [data-qwat="1"]').click();var wat=Object.keys(fx3api.water()).length;
+          await new Promise(function(r){setTimeout(r,500)});var fx=fx3api.fx();
+          fx3api.open({k:'st',id:S.st.id});var w0=S.st.w;document.querySelector('#it4 [data-qin="w|-50"]').click();var w1=S.st.w;
+          fx3api.open({k:'wall',s:'F'});document.querySelector('#it4 [data-qwc="#b8c4ae"]').click();var wc=S.wc;
+          fx3api.night(1);fx3api.night(0);var sv=snapState();document.getElementById('v3x').click();
+          return JSON.stringify({k:led.k,c:led.c,nl:nl,len:len,fire:fire,pan:pan,wat:wat,fx:fx,dw:w0-w1,wc:wc,svled:!!sv.mods[1].led,svwc:sv.wc,errs:__errs});
+          """#)
+        XCTAssertEqual(o["k"] as? String, "45", "perfil 45°")
+        XCTAssertEqual(o["c"] as? String, "azul", "luz azul")
+        XCTAssertEqual(o["nl"] as? Int, 1, "uma fita embaixo do aéreo")
+        XCTAssertGreaterThan(o["len"] as? Double ?? 0, 0.5, "metros de fita contados")
+        XCTAssertEqual(o["fire"] as? Int, 4, "Acender todas: 4 bocas")
+        XCTAssertEqual(o["pan"] as? Int, 1, "panelas no cooktop")
+        XCTAssertEqual(o["wat"] as? Int, 1, "torneira com água")
+        XCTAssertGreaterThan(o["fx"] as? Int ?? 0, 10, "chama, vapor e água desenhados")
+        XCTAssertEqual(o["dw"] as? Double, 50, "− na pedra diminui 50 mm")
+        XCTAssertEqual(o["wc"] as? String, "#b8c4ae", "cor da parede")
+        XCTAssertEqual(o["svled"] as? Bool, true, "projeto salva o LED")
+        XCTAssertEqual(o["svwc"] as? String, "#b8c4ae", "projeto salva a cor da parede")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

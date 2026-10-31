@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
@@ -193,10 +194,12 @@ fun LibraryScreen(vm: AppViewModel) {
     }
 
     val filter = vm.filter
+    val searching = query.isNotBlank()
+    // quem está numa pasta sai de "Todas as notas" (fica só na pasta); na busca aparece tudo
     val notes = vm.index.notes
         .filter {
             when (filter) {
-                LibFilter.All -> !it.trash
+                LibFilter.All -> !it.trash && (searching || vm.liveFolder(it.folderId) == null)
                 LibFilter.Trash -> it.trash
                 is LibFilter.InFolder -> !it.trash && it.folderId == filter.id
             }
@@ -206,7 +209,16 @@ fun LibraryScreen(vm: AppViewModel) {
 
     // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
     LaunchedEffect(vm.projVersion, vm.index) { vm.syncLinkedNames() }
-    val projList = remember(vm.projVersion, vm.screen) { vm.moveisProjects() }
+    val projAll = remember(vm.projVersion, vm.screen) { vm.moveisProjects() }
+    // o projeto fica na mesma pasta que a nota do cliente
+    val projFolder = remember(projAll, vm.index) { vm.projectFolders(projAll) }
+    val projList = projAll.filter { p ->
+        when (filter) {
+            LibFilter.All -> searching || projFolder[p.id] == null
+            is LibFilter.InFolder -> projFolder[p.id] == filter.id
+            LibFilter.Trash -> false
+        }
+    }
     BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding()) {
         val wide = maxWidth >= 700.dp
         Row(Modifier.fillMaxSize()) {
@@ -322,7 +334,14 @@ fun LibraryScreen(vm: AppViewModel) {
                         item(key = "criar") { CreateTile { vm.openNote(vm.createNote()) } }
                     }
                     // um quadro por cliente: notas de um lado, os projetos dele do outro (dá pra ter vários projetos por cliente)
-                    val showProj = filter == LibFilter.All && (tab == LibTab.ALL || tab == LibTab.MOVEIS)
+                    val showProj = filter != LibFilter.Trash && (tab == LibTab.ALL || tab == LibTab.MOVEIS)
+                    // as pastas aparecem em cima, com quantos itens têm (o que entrou numa pasta sai daqui)
+                    if (filter == LibFilter.All && !searching && tab != LibTab.PDF) {
+                        vm.index.folders.sortedWith(compareBy<br.com.arque.measure.model.Folder, String>(NameOrder) { it.name }).forEach { f ->
+                            val cnt = vm.index.notes.count { !it.trash && it.folderId == f.id && tab != LibTab.MOVEIS } + (if (tab == LibTab.NOTE) 0 else projFolder.values.count { it == f.id })
+                            item(key = "pasta-" + f.id) { FolderTile(f.name, cnt) { vm.filter = LibFilter.InFolder(f.id) } }
+                        }
+                    }
                     val groups = if (showProj) clientGroups(vm, projList, if (tab == LibTab.ALL) notes else emptyList()) else emptyList()
                     val q = query.trim()
                     val shown = groups.filter { g -> q.isBlank() || g.matches(q) }
@@ -436,6 +455,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
     var del by remember { mutableStateOf(false) }
     var stDlg by remember { mutableStateOf(false) }
     var titleDlg by remember { mutableStateOf(false) }
+    var move by remember { mutableStateOf(false) }
     val linked = remember(vm.projVersion, p.id) { vm.notesOfProject(p.id).size }
     Row(
         mod.height(96.dp).clip(RoundedCornerShape(14.dp)).background(if (bare) Color.Transparent else Ui.panel)
@@ -477,12 +497,14 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
                 DropdownMenuItem(text = { Text(tr("Renomear (nome do cliente)")) }, onClick = { menu = false; rename = true })
                 DropdownMenuItem(text = { Text(tr("Status do projeto") + ": " + br.com.arque.measure.data.MoveisProjects.statusLabel(p.status)) }, onClick = { menu = false; stDlg = true })
                 DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
+                DropdownMenuItem(text = { Text(tr("📁 Mover para pasta (vai junto com a nota)")) }, onClick = { menu = false; move = true })
                 DropdownMenuItem(text = { Text(tr("Apagar projeto")) }, onClick = { menu = false; del = true })
             }
         }
     }
     if (rename) NameDialog(tr("Nome do projeto"), tr("Cliente / projeto"), if (p.auto) "" else p.name, { rename = false }) { rename = false; vm.renameMoveisProject(p.id, it) }
     if (titleDlg) NameDialog(tr("Nome do projeto (ex.: Cozinha, Suíte)"), tr("Nome do projeto"), p.title, { titleDlg = false }) { titleDlg = false; vm.setProjectTitle(p.id, it) }
+    if (move) FolderPicker(vm, { move = false }) { f -> move = false; vm.moveClient(null, p.id, f) }
     if (stDlg) AlertDialog(
         onDismissRequest = { stDlg = false },
         title = { Text(tr("Status do projeto")) },
@@ -652,19 +674,41 @@ private fun NoteRow(vm: AppViewModel, n: NoteMeta, mod: Modifier = Modifier.fill
         }
     }
     if (rename) NameDialog(tr("Editar nota"), tr("Nome"), n.name, { rename = false }) { rename = false; vm.renameNote(n.id, it) }
-    if (move) {
-        AlertDialog(
-            onDismissRequest = { move = false },
-            title = { Text(tr("Mover para")) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    TextButton(onClick = { move = false; vm.moveNote(n.id, null) }) { Text(tr("Sem pasta")) }
-                    vm.index.folders.forEach { f ->
-                        TextButton(onClick = { move = false; vm.moveNote(n.id, f.id) }) { Text(f.name) }
-                    }
+    if (move) FolderPicker(vm, { move = false }) { f -> move = false; vm.moveClient(n.id, null, f) }
+}
+
+/** Escolher a pasta: o cliente vai inteiro (nota e projetos) e sai de onde estava. */
+@Composable
+private fun FolderPicker(vm: AppViewModel, onDismiss: () -> Unit, onPick: (String?) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Mover para")) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(tr("A nota e o projeto do cliente vão juntos."), color = Ui.dim, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
+                TextButton(onClick = { onPick(null) }) { Text(tr("Sem pasta")) }
+                vm.index.folders.sortedWith(compareBy<br.com.arque.measure.model.Folder, String>(NameOrder) { it.name }).forEach { f ->
+                    TextButton(onClick = { onPick(f.id) }) { Text("📁 " + f.name) }
                 }
-            },
-            confirmButton = { TextButton(onClick = { move = false }) { Text(tr("Cancelar")) } },
-        )
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Cancelar")) } },
+    )
+}
+
+/** Pasta na tela "Todas as notas": toque abre a pasta. */
+@Composable
+private fun FolderTile(name: String, count: Int, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(14.dp)).background(Ui.panel).clickable(onClick = onClick).padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.Folder, null, tint = Ui.accent, modifier = Modifier.size(26.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, color = Ui.text, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(tr(if (count == 1) "{0} item" else "{0} itens", count), color = Ui.dim, fontSize = 12.sp)
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Ui.dim)
     }
 }

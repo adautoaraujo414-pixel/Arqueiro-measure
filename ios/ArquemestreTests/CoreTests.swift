@@ -300,3 +300,27 @@ final class LibraryOrderTests: XCTestCase {
         XCTAssertEqual(nomes.sorted(by: nameLess), ["Ângela", "cintia iturama", "Gabrielle belline", "Janette", "natalia iturama", "Nota 2", "Nota 10", "Projeto 29/10"])
     }
 }
+
+/// Projeto muda de pasta junto com a nota do cliente (campo "pasta" no projects.json, sem perder o resto do projeto).
+final class ProjectFolderTests: XCTestCase {
+    func testPastaDoProjetoGravaSemMexerNoResto() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let originalBase = AppPaths.base
+        AppPaths.base = root.appendingPathComponent("app")
+        defer { AppPaths.base = originalBase; try? FileManager.default.removeItem(at: root) }
+        let json = #"[{"id":"p1","client":{"nome":"cintia iturama"},"status":"prod","updated":111,"current":{"mods":[{},{}]}},{"id":"p2","client":{"nome":"Gabrielle"},"updated":222}]"#
+        try Data(json.utf8).write(to: MoveisProjects.file)
+        var l = MoveisProjects.list()
+        XCTAssertFalse(l.first { $0.id == "p1" }!.folderSet, "projeto antigo: segue a pasta da nota")
+        MoveisProjects.setFolder(["p1"], "f1")
+        l = MoveisProjects.list()
+        let p1 = try XCTUnwrap(l.first { $0.id == "p1" }), p2 = try XCTUnwrap(l.first { $0.id == "p2" })
+        XCTAssertEqual(p1.folder, "f1"); XCTAssertTrue(p1.folderSet)
+        XCTAssertEqual(p1.status, "prod"); XCTAssertEqual(p1.mods, 2); XCTAssertEqual(p1.updated, 111, "mudar de pasta não muda a data do projeto")
+        XCTAssertNil(p2.folder); XCTAssertFalse(p2.folderSet, "o outro projeto não muda")
+        MoveisProjects.setFolder(["p1"], nil)
+        let p1b = try XCTUnwrap(MoveisProjects.list().first { $0.id == "p1" })
+        XCTAssertNil(p1b.folder); XCTAssertTrue(p1b.folderSet, "tirado da pasta fica fora das pastas")
+    }
+}

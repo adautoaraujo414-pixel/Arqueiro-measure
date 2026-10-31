@@ -20,10 +20,12 @@ struct LibraryView: View {
     @State private var langOpen = false
     @State private var manageSub = false
 
+    private var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
+    // quem está numa pasta sai de "Todas as notas" (fica só na pasta); na busca aparece tudo
     private var notes: [NoteMeta] {
         app.index.notes.filter {
             switch app.filter {
-            case .all: return !$0.trash
+            case .all: return !$0.trash && (searching || app.liveFolder($0.folderId) == nil)
             case .trash: return $0.trash
             case .folder(let f): return !$0.trash && $0.folderId == f
             }
@@ -85,10 +87,19 @@ struct LibraryView: View {
     }
 
     private func content(wide: Bool) -> some View {
-        let projList = app.moveisProjects()
+        let projAll = app.moveisProjects()
         _ = app.projVersion
+        // o projeto fica na mesma pasta que a nota do cliente
+        let projFolder = app.projectFolders(projAll)
+        let projList = projAll.filter { p in
+            switch app.filter {
+            case .all: return searching || projFolder[p.id] == nil
+            case .folder(let f): return projFolder[p.id] == f
+            case .trash: return false
+            }
+        }
         // um quadro por cliente: notas de um lado, os projetos dele do outro (dá pra ter vários projetos por cliente)
-        let showProj = app.filter == .all && tab != .NOTE
+        let showProj = app.filter != .trash && tab != .NOTE
         let q = query.trimmingCharacters(in: .whitespaces)
         let groups = showProj ? clientGroups(app, projList, tab == .ALL ? notes : []) : []
         let shown = groups.filter { q.isEmpty || $0.matches(q) }
@@ -156,6 +167,13 @@ struct LibraryView: View {
                             CreateTile(label: tr("Criar")) { app.openNote(app.createNote()) }
                         }
                         if tab == .MOVEIS && query.isEmpty { CreateTile(label: tr("Novo projeto de móveis")) { app.newMoveisProject() } }
+                        // as pastas aparecem em cima, com quantos itens têm (o que entrou numa pasta sai daqui)
+                        if app.filter == .all && !searching {
+                            ForEach(app.index.folders.sorted { nameLess($0.name, $1.name) }) { f in
+                                let cnt = (tab == .MOVEIS ? 0 : app.index.notes.filter { !$0.trash && $0.folderId == f.id }.count) + (tab == .NOTE ? 0 : projFolder.values.filter { $0 == f.id }.count)
+                                FolderTile(name: f.name, count: cnt) { app.filter = .folder(f.id) }
+                            }
+                        }
                         ForEach(entries) { e in
                             switch e {
                             case .g(let g): ClientCard(g: g)
@@ -203,6 +221,29 @@ struct CreateTile: View {
     }
 }
 
+/// Pasta na tela "Todas as notas": toque abre a pasta.
+struct FolderTile: View {
+    var name: String
+    var count: Int
+    var action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: "folder.fill").font(.title2).foregroundColor(Ui.accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name).foregroundColor(Ui.text).lineLimit(1)
+                    Text(tr(count == 1 ? "{0} item" : "{0} itens", count)).font(.caption).foregroundColor(Ui.dim)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").foregroundColor(Ui.dim)
+            }
+            .padding(.horizontal, 14).frame(height: 64)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
+            .contentShape(Rectangle())
+        }.buttonStyle(.plain)
+    }
+}
+
 struct ProjRow: View {
     @EnvironmentObject var app: AppModel
     var p: MoveisProjects.P
@@ -210,6 +251,7 @@ struct ProjRow: View {
     @State private var rename = false
     @State private var del = false
     @State private var titleDlg = false
+    @State private var move = false
     private var noteNames: String { app.notesOfProject(p.id).compactMap { id in app.index.notes.first { $0.id == id && !$0.trash }?.name }.joined(separator: ", ") }
     var body: some View {
         let linked = app.notesOfProject(p.id).count
@@ -249,6 +291,7 @@ struct ProjRow: View {
                     }
                 }
                 Button(tr("Nova nota ligada a este projeto")) { app.lastProjectId = p.id; app.openNote(app.createNote()) }
+                Button(tr("📁 Mover para pasta (vai junto com a nota)")) { move = true }
                 Button(tr("Apagar projeto"), role: .destructive) { del = true }
             } label: { Image(systemName: "chevron.down").foregroundColor(Ui.text).frame(width: 40, height: 40) }
         }
@@ -258,6 +301,10 @@ struct ProjRow: View {
         .onTapGesture { app.openProject(p.id) }
         .sheet(isPresented: $rename) { NameSheet(title: tr("Nome do projeto"), label: tr("Cliente / projeto"), text: p.auto ? "" : p.name) { app.renameMoveisProject(p.id, $0) } }
         .sheet(isPresented: $titleDlg) { NameSheet(title: tr("Nome do projeto (ex.: Cozinha, Suíte)"), label: tr("Nome do projeto"), text: p.title) { app.setProjectTitle(p.id, $0) } }
+        .confirmationDialog(tr("Mover para"), isPresented: $move) {
+            Button(tr("Sem pasta")) { app.moveClient(note: nil, proj: p.id, folder: nil) }
+            ForEach(app.index.folders.sorted { nameLess($0.name, $1.name) }) { f in Button("📁 " + f.name) { app.moveClient(note: nil, proj: p.id, folder: f.id) } }
+        } message: { Text(tr("A nota e o projeto do cliente vão juntos.")) }
         .alert(tr("Apagar este projeto?"), isPresented: $del) {
             Button(tr("Cancelar"), role: .cancel) {}
             Button(tr("Apagar"), role: .destructive) { app.deleteMoveisProject(p.id) }
@@ -399,9 +446,9 @@ struct NoteRow: View {
         .onTapGesture { if !n.trash { app.openNote(n.id) } }
         .sheet(isPresented: $rename) { NameSheet(title: tr("Editar nota"), label: tr("Nome"), text: n.name) { app.renameNote(n.id, $0) } }
         .confirmationDialog(tr("Mover para"), isPresented: $move) {
-            Button(tr("Sem pasta")) { app.moveNote(n.id, nil) }
-            ForEach(app.index.folders) { f in Button(f.name) { app.moveNote(n.id, f.id) } }
-        }
+            Button(tr("Sem pasta")) { app.moveClient(note: n.id, proj: nil, folder: nil) }
+            ForEach(app.index.folders.sorted { nameLess($0.name, $1.name) }) { f in Button("📁 " + f.name) { app.moveClient(note: n.id, proj: nil, folder: f.id) } }
+        } message: { Text(tr("A nota e o projeto do cliente vão juntos.")) }
         .alert(tr("Apagar para sempre?"), isPresented: $confirmDelete) {
             Button(tr("Cancelar"), role: .cancel) {}
             Button(tr("Apagar"), role: .destructive) { app.deleteForever(n.id) }

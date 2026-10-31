@@ -8,7 +8,7 @@ import java.io.File
 
 /** Projetos do editor de móveis (arquivo moveis/projects.json, o mesmo que o editor usa). */
 object MoveisProjects {
-    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "", val corte: Boolean = false, val from: String = "") {
+    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "", val corte: Boolean = false, val from: String = "", val folder: String? = null, val folderSet: Boolean = false) {
         /** Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…). */
         val label: String get() = title.ifBlank { roomLabel(room) }
     }
@@ -53,6 +53,7 @@ object MoveisProjects {
                 p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"),
                 p.optString("status").ifBlank { "orc" }, p.optString("titulo").trim(), room, p.optJSONObject("client")?.optString("cidade")?.trim().orEmpty(),
                 p.has("corte"), p.optJSONObject("corte")?.optString("fr")?.trim().orEmpty(),
+                p.optString("pasta").trim().ifBlank { null }, p.has("pasta"),
             )
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())
@@ -89,6 +90,15 @@ object MoveisProjects {
                 val c = p.optJSONObject("client") ?: org.json.JSONObject().also { p.put("client", it) }
                 c.put("nome", name.trim()); p.put("auto", false); p.put("updated", System.currentTimeMillis())
             }
+        }
+        a
+    }
+
+    /** Pasta da biblioteca onde o projeto fica ("" = fora das pastas). Não mexe na data do projeto. */
+    fun setFolder(ctx: Context, ids: Set<String>, folderId: String?) = edit(ctx) { a ->
+        for (k in 0 until a.length()) {
+            val p = a.getJSONObject(k)
+            if (p.optString("id") in ids) p.put("pasta", folderId ?: "")
         }
         a
     }

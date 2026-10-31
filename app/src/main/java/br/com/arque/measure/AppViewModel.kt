@@ -721,6 +721,49 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun notesOfProject(projectId: String): List<String> = links.all.filter { it.value == projectId }.keys.toList()
 
+    // ---------- pastas: o cliente (notas e projetos) muda de pasta junto ----------
+
+    /** Pasta que ainda existe (se a pasta sumiu, o item volta pra fora das pastas). */
+    fun liveFolder(id: String?): String? = id?.takeIf { f -> index.folders.any { it.id == f } }
+    private fun clientKey(s: String) = s.trim().lowercase()
+    private fun projKey(p: br.com.arque.measure.data.MoveisProjects.P) = if (defaultProjName(p) || p.corte) "id:" + p.id else clientKey(p.name)
+    private fun noteKey(n: br.com.arque.measure.model.NoteMeta, pk: Map<String, String>): String? =
+        linkedProject(n.id)?.let { pk[it] } ?: if (defaultNoteName(n.name)) null else clientKey(n.name)
+
+    /** Pasta de cada projeto: a que foi escolhida; nos projetos de antes, a pasta da nota do mesmo cliente. */
+    fun projectFolders(projs: List<br.com.arque.measure.data.MoveisProjects.P>): Map<String, String?> {
+        val pk = projs.associate { it.id to projKey(it) }
+        val noteFolder = HashMap<String, String>()
+        index.notes.filter { !it.trash }.forEach { n ->
+            val f = liveFolder(n.folderId) ?: return@forEach
+            noteKey(n, pk)?.let { noteFolder.putIfAbsent(it, f) }
+        }
+        return projs.associate { p -> p.id to (if (p.folderSet) liveFolder(p.folder) else noteFolder[pk.getValue(p.id)]) }
+    }
+
+    /** Tudo do mesmo cliente, do jeito que a biblioteca junta no quadro: notas e projetos. */
+    private fun clientSet(noteId: String?, projId: String?): Pair<Set<String>, Set<String>> {
+        val projs = moveisProjects()
+        val pk = projs.associate { it.id to projKey(it) }
+        val notes = index.notes.filter { !it.trash }
+        val key = projId?.let { pk[it] } ?: noteId?.let { id -> notes.firstOrNull { it.id == id }?.let { noteKey(it, pk) } }
+        val ps = if (key == null) emptySet() else projs.filter { pk[it.id] == key }.map { it.id }.toSet()
+        val ns = if (ps.isEmpty()) emptySet() else notes.filter { noteKey(it, pk) == key }.map { it.id }.toSet()
+        return (ns + listOfNotNull(noteId)) to (ps + listOfNotNull(projId))
+    }
+
+    /** Muda o cliente de pasta: a nota e o(s) projeto(s) dele vão juntos e saem do lugar de antes. */
+    fun moveClient(noteId: String?, projId: String?, folderId: String?) {
+        val (ns, ps) = clientSet(noteId, projId)
+        val f = liveFolder(folderId)
+        updateIndex(index.copy(notes = index.notes.map { if (it.id in ns) it.copy(folderId = f) else it }))
+        ns.forEach { moveNote(it, f) }
+        if (ps.isNotEmpty()) br.com.arque.measure.data.MoveisProjects.setFolder(getApplication(), ps, f)
+        projVersion++
+        val where = index.folders.firstOrNull { it.id == f }?.name ?: tr("fora das pastas")
+        toast = if (ps.isNotEmpty() && ns.isNotEmpty()) tr("Nota e projeto do cliente foram juntos pra: {0}", where) else tr("Movido pra: {0}", where)
+    }
+
     /** Abre o projeto do cliente no editor de móveis. */
     fun openProject(projectId: String) {
         pendingProject = projectId

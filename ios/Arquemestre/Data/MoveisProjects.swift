@@ -16,6 +16,9 @@ enum MoveisProjects {
         /// Plano de corte recebido de outra pessoa (abre no modo corte, sem valores e sem editar).
         var corte: Bool = false
         var from: String = ""
+        /// Pasta da biblioteca ("pasta" no projects.json); folderSet = a pessoa já escolheu (vazio = fora das pastas).
+        var folder: String? = nil
+        var folderSet: Bool = false
         /// Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…).
         var label: String { title.isEmpty ? MoveisProjects.roomLabel(room) : title }
     }
@@ -68,7 +71,9 @@ enum MoveisProjects {
                      updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false),
                      status: JsonCodec.s(p, "status").isEmpty ? "orc" : JsonCodec.s(p, "status"),
                      title: JsonCodec.s(p, "titulo").trimmingCharacters(in: .whitespaces), room: room, city: city,
-                     corte: p["corte"] != nil, from: ((p["corte"] as? [String: Any]).map { JsonCodec.s($0, "fr") } ?? "").trimmingCharacters(in: .whitespaces))
+                     corte: p["corte"] != nil, from: ((p["corte"] as? [String: Any]).map { JsonCodec.s($0, "fr") } ?? "").trimmingCharacters(in: .whitespaces),
+                     folder: JsonCodec.s(p, "pasta").trimmingCharacters(in: .whitespaces).isEmpty ? nil : JsonCodec.s(p, "pasta").trimmingCharacters(in: .whitespaces),
+                     folderSet: p["pasta"] != nil)
         }.sorted { $0.updated > $1.updated }
     }
 
@@ -99,6 +104,18 @@ enum MoveisProjects {
                 var c = (q["client"] as? [String: Any]) ?? [:]
                 c["nome"] = name.trimmingCharacters(in: .whitespaces)
                 q["client"] = c; q["auto"] = false; q["updated"] = nowMs()
+                return q
+            }
+        }
+    }
+
+    /// Pasta da biblioteca onde o projeto fica ("" = fora das pastas). Não mexe na data do projeto.
+    static func setFolder(_ ids: Set<String>, _ folderId: String?) {
+        edit { list in
+            list.map { p in
+                guard ids.contains(JsonCodec.s(p, "id")) else { return p }
+                var q = p
+                q["pasta"] = folderId ?? ""
                 return q
             }
         }

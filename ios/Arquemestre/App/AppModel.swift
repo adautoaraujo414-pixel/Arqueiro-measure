@@ -595,6 +595,57 @@ final class AppModel: ObservableObject {
     func notesOfProject(_ pid: String) -> [String] { links.filter { $0.value == pid }.map(\.key) }
     func openProject(_ id: String) { pendingProject = id; screen = .moveis }
 
+    // ---------- pastas: o cliente (notas e projetos) muda de pasta junto ----------
+
+    /// Pasta que ainda existe (se a pasta sumiu, o item volta pra fora das pastas).
+    func liveFolder(_ id: String?) -> String? { guard let f = id, index.folders.contains(where: { $0.id == f }) else { return nil }; return f }
+    private func clientKey(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
+    private func projKey(_ p: MoveisProjects.P) -> String { (defaultProjName(p) || p.corte) ? "id:" + p.id : clientKey(p.name) }
+    private func noteKey(_ n: NoteMeta, _ pk: [String: String]) -> String? {
+        if let pid = linkedProject(n.id), let k = pk[pid] { return k }
+        return defaultNoteName(n.name) ? nil : clientKey(n.name)
+    }
+
+    /// Pasta de cada projeto: a que foi escolhida; nos projetos de antes, a pasta da nota do mesmo cliente.
+    func projectFolders(_ projs: [MoveisProjects.P]) -> [String: String] {
+        var pk: [String: String] = [:]
+        for p in projs { pk[p.id] = projKey(p) }
+        var noteFolder: [String: String] = [:]
+        for n in index.notes where !n.trash {
+            guard let f = liveFolder(n.folderId), let k = noteKey(n, pk), noteFolder[k] == nil else { continue }
+            noteFolder[k] = f
+        }
+        var out: [String: String] = [:]
+        for p in projs { if let f = p.folderSet ? liveFolder(p.folder) : noteFolder[pk[p.id]!] { out[p.id] = f } }
+        return out
+    }
+
+    /// Tudo do mesmo cliente, do jeito que a biblioteca junta no quadro: notas e projetos.
+    private func clientSet(note: String?, proj: String?) -> (notes: Set<String>, projs: Set<String>) {
+        let projs = moveisProjects()
+        var pk: [String: String] = [:]
+        for p in projs { pk[p.id] = projKey(p) }
+        let notes = index.notes.filter { !$0.trash }
+        let key = proj.flatMap { pk[$0] } ?? note.flatMap { id in notes.first { $0.id == id }.flatMap { noteKey($0, pk) } }
+        var ps = Set<String>(), ns = Set<String>()
+        if let k = key { ps = Set(projs.filter { pk[$0.id] == k }.map(\.id)) }
+        if !ps.isEmpty, let k = key { ns = Set(notes.filter { noteKey($0, pk) == k }.map(\.id)) }
+        if let n = note { ns.insert(n) }
+        if let p = proj { ps.insert(p) }
+        return (ns, ps)
+    }
+
+    /// Muda o cliente de pasta: a nota e o(s) projeto(s) dele vão juntos e saem do lugar de antes.
+    func moveClient(note: String?, proj: String?, folder: String?) {
+        let set = clientSet(note: note, proj: proj)
+        let f = liveFolder(folder)
+        for id in set.notes { moveNote(id, f) }
+        if !set.projs.isEmpty { MoveisProjects.setFolder(set.projs, f) }
+        projVersion += 1
+        let whereName = index.folders.first { $0.id == f }?.name ?? tr("fora das pastas")
+        toast = (!set.projs.isEmpty && !set.notes.isEmpty) ? tr("Nota e projeto do cliente foram juntos pra: {0}", whereName) : tr("Movido pra: {0}", whereName)
+    }
+
     // ---------- orçamentos ----------
     func setLogo(_ img: UIImage) {
         let k = min(1, 800 / max(img.size.width, img.size.height))

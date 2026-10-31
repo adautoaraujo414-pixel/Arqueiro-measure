@@ -229,4 +229,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["gd"] as? Int, 13, "passo a passo com 13 assuntos")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    /// Ilha com pedra criada no 3D: peças no corte, linha no valor, orçamento do cliente (antes quebrava: TQ não era função), paredes do lado
+    func testIlhaComPedraParedesEOrcamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[3]);S.m=S.mods[0];draw();
+          var a=islNew('ilha');S.isl.push(a);var vm=islVM(a),ps=partsOf(vm).map(function(p){return p.name});
+          var G=cutGroups(),pc=0;G.ord.forEach(function(k){var g=G.map[k];if(g.where['Ilha 1'])pc+=g.where['Ilha 1']});
+          var bu=budget(),row=bu.rows.filter(function(x){return x.m.islN==='Ilha 1'}).length;
+          var q=quoteData().items.map(function(i){return i.desc}).join('|');
+          S.wl={L:'s'};var wl=sideWalls().L;S.wl=null;
+          window.open3D();var bx=window.dbg3all(),ib=bx.filter(function(b){return b.isl===a.id}).length,tx=(bx.filter(function(b){return b.isl===a.id&&b.g==='stc'})[0]||{}).tx||0;
+          document.getElementById('v3add').click();var menu=!document.getElementById('crp3').hidden;document.querySelector('[data-cadd="pen"]').click();
+          var np=S.isl.length,pen=S.isl[1]||{};document.getElementById('v3x').click();var sv=(snapState().isl||[]).length;
+          return JSON.stringify({portas:ps.indexOf('Porta')>=0,fundo:vm.fundo,pc:pc,row:row,q:q,wl:wl,ib:ib,tx:tx,menu:menu,np:np,rot:pen.rot,sv:sv,errs:__errs});
+          """#)
+        XCTAssertEqual(o["portas"] as? Bool, true, "ilha montada com portas (mesmas regras dos módulos)")
+        XCTAssertEqual(o["fundo"] as? Bool, false, "ilha sem fundo de 6 mm: tem fechamento na cor")
+        XCTAssertGreaterThanOrEqual(o["pc"] as? Int ?? 0, 10, "peças da Ilha 1 na lista de corte")
+        XCTAssertEqual(o["row"] as? Int, 1, "Ilha 1 aparece no valor")
+        XCTAssertTrue((o["q"] as? String ?? "").contains("Ilha"), "orçamento do cliente funciona e mostra a ilha: \(o["q"] ?? "")")
+        XCTAssertEqual(o["wl"] as? Double, 0, "Mostrar parede esquerda")
+        XCTAssertGreaterThan(o["ib"] as? Int ?? 0, 20, "ilha desenhada no 3D")
+        XCTAssertEqual(o["tx"] as? Int, 2, "pedra de mármore com veio")
+        XCTAssertEqual(o["menu"] as? Bool, true, "＋ Criar abre o menu")
+        XCTAssertEqual(o["np"] as? Int, 2, "＋ Península cria a segunda")
+        XCTAssertEqual(o["rot"] as? Int, 90, "península girada")
+        XCTAssertEqual(o["sv"] as? Int, 2, "projeto salva as ilhas")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

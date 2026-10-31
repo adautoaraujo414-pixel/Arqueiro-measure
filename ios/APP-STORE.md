@@ -15,6 +15,16 @@ Tudo do app e da ficha já está pronto. Faltam só os passos que precisam da su
 7. **Preencher a ficha** (textos, capturas, URLs, idade, privacidade — tudo abaixo), escolher o build e **Enviar para revisão**.
    - A revisão da Apple costuma levar de 1 a 3 dias.
 
+### Revisão de 31/10/2026 (antes de mandar pra Apple)
+Conferido no código e no CI (simulador iOS 26 do GitHub, Xcode 26; **não foi testado num iPhone de verdade**):
+- Build Release para iPhone (sem assinatura) e testes no simulador passando, inclusive os 11 testes da assinatura (R$ 29,90, 3 dias grátis, restaurar, cancelar, expirar).
+- Editor de móveis rodando no **WebKit do iOS** (`EditorWebKitTests`): plano de corte, enviar projeto pro cortador (compactação e modo corte sem valores), puxadores (perfil G −35 mm, cava de perfil −30 mm, concha no meio), TV na sala, trava de módulo e 3D.
+- `PrivacyInfo.xcprivacy` completo: UserDefaults, data de arquivo e **tempo desde que o aparelho ligou** (`systemUptime`, usado pra medir toques). Sem esse último, a App Store Connect recusa o envio (ITMS-91053).
+- Convite do plano de corte: o app **não lê** a área de transferência sozinho; na 1ª abertura mostra o botão **Colar** do próprio iOS (sem o aviso "Permitir colar?").
+- Página do convite (`docs/corte.html`) em português, inglês e espanhol; política de privacidade atualizada (enviar plano de corte).
+- **Depois que o app for aprovado:** troque em `docs/corte.html` o link `APPSTORE` (hoje é a busca da App Store) pelo link do app (`https://apps.apple.com/app/id…`).
+- A cada novo envio ao TestFlight o número do build sobe sozinho (número da execução do CI); a versão é `1.0.0` (`MARKETING_VERSION` no `project.yml`).
+
 ### Links públicos (já no ar pelo GitHub Pages, pasta `docs/`)
 | | Português | English | Español |
 |---|---|---|---|
@@ -41,7 +51,8 @@ O app abre a página no idioma em uso (Privacidade · Termos de uso · Ajuda, e 
   - botões "Já assino · restaurar compras" e "Gerenciar assinatura";
   - texto da renovação automática e links de Privacidade e Termos de uso na tela de assinatura.
   - Não tem anúncios nem login.
-- `PrivacyInfo.xcprivacy`: sem rastreamento, sem coleta, só as APIs de motivo obrigatório (UserDefaults e data de arquivo).
+- `PrivacyInfo.xcprivacy`: sem rastreamento, sem coleta, só as APIs de motivo obrigatório (UserDefaults, data de arquivo e tempo desde o boot).
+- **Enviar plano de corte** pro cortador: link com o projeto compactado (sem preços) pelo WhatsApp; abre no app pelo esquema `arquemestre://corte?d=…` em modo corte (lista, chapas, 3D e ✓, sem valores e sem editar).
 - CI no GitHub (`.github/workflows/ios.yml`, roda em macOS 26):
   - gera o projeto com XcodeGen;
   - roda os testes no simulador;
@@ -171,7 +182,7 @@ No iPhone, Ajustes › App Store › Conta Sandbox › **Gerenciar** permite can
 ## Ficha da App Store
 - **Categoria:** Produtividade (secundária: Negócios).
 - **Classificação etária:** 4+. Responda "não"/"nenhum" a todos os itens do questionário.
-- **Privacidade do app (rótulo):** "Não coletamos dados deste app".
+- **Privacidade do app (rótulo):** "Não coletamos dados deste app". (O plano de corte enviado vai dentro do link, de pessoa pra pessoa; não passa por servidor nosso.)
 - **URL da política de privacidade:** a do idioma (tabela no topo).
 - **URL de suporte:** a do idioma (tabela no topo). URL de marketing: deixe em branco.
 - **Copyright:** `2026 Adauto Araújo`
@@ -272,5 +283,14 @@ Laser measure: the app can receive measurements from Bosch laser measures over B
 Without the device, open a note, tap any dimension label and type the value on the in-app keypad — every feature works.
 
 Live project view: between two devices with the app (local peer-to-peer network), view only.
+
+Sending a cutting plan (optional): in the furniture editor open the cut list and tap "📤 Send project". The app builds a link
+(the project is compressed inside the link itself, without prices) and opens the iOS share sheet (e.g. WhatsApp).
+The person who receives it opens the link; the web page opens the app (arquemestre:// URL scheme) and the project opens
+read-only in "cutting mode": cut list, board layout, 3D view and ✓ marks for cut pieces, no prices and no editing.
+To try it on the review device, open this demo link in Safari and tap "Open in Arquemestre":
+https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d=z7VZLj9MwEP4rq-8EkpGStuljbisqtBKwQAXaw2oPTuKkYZM4OG5aWOW_o7GTtnCACw8J9pTxPL-Z-er6AR0oFLgHQZpPO_Us0cYqCDRFCkITLlbT2WwxiWbLeQABaUFHXRSsAoEahLWq9MXzslC1hYAF4WVhk62qIZAZEC45eaVaa9TFk1RV-ikEkiwHPaDdKmVvQJNFFAh_ugKFy1kgYFRWlBoUBgL3ymSgmUCnCg0KegGZyJhTqAPXTLSBYPlaVwoECBQ1G2Ij60T742jrBVrrYuvOxX4p6q2EgGlAt3cCpmXrHsQ4ctmAJpE4gvXwRrAe-gCw9z1zjmwPymTZKoGs2_s2su2Zbut1N6DpJAgEONechc0axP1rXflOWqtr1YJuH8CrCQUOzmPP1TkiBblIC1pOAgHlkRdWVd-E8a6TXcytHkBhyDGfQeHUJ4uGXLMg6O_6OwHdtL6ZSqc-0QEUCcRj-RVHbIeqKSia82R2zbHNtOh8hnY7CJ3Lk8hOgqzZKQG9HwL1FhStIgFtGYzHm2q32ho0YUi2POa25iTGp8Hu6lSPqVXbgMKIt_KhcdCNyq9BEx5vOnoZnb6ueBuBQCxbNeorXabnMjvxqKyR3ahnmfULx9h8J49AjMpHg42PoY1s2xPs8mbMOArlJe-Ip8Pa80N5mX50c7dmlNi0Bi1diVfeGG_c142Bq84H-X3RaBBaHRv-kRvZ5votaDmIG89GG49AGg6eCFh7Gq0uc-nn2Qz9qNyXVflm-K59y_uizp0ml93VKLxgrgkk3TRwfEy6aQgKe-GItQrOqbX8A9Qycq9M69k1e2TXP80uz63Q3dbuOh745RQpaBqN_PKj_8s3l2fBYPkZ0UZO_JBpg9P3VPvP6BX8anbxv2PhilX8aHhk2iPTfhPT-CFYOKdK2negh94tQjZq6FfVElTvynJ8HXs52dk39969OaxV5vV9_xU
+If the app was just installed from the App Store, the first launch shows a notice with the system Paste button
+(SwiftUI PasteButton): the app only reads the clipboard if the user taps it.
 Languages: Portuguese, English and Spanish (follows the device; can be changed in ⋯ → Language).
 ```

@@ -89,21 +89,31 @@ final class AppModel: ObservableObject {
         return head + "\n\n" + tr("Toque no link pra abrir (se ainda não tem o app, ele leva pra baixar o Arquemestre):") + "\n" + AppModel.cutURL + code
     }
 
-    /// Quem ainda não tinha o app: a página do convite copia o código antes de mandar pra App Store.
-    /// Só na primeira abertura depois de instalar o app procura esse código (pra não pedir colar toda hora).
+    /// Quem ainda não tinha o app: a página do convite copia o link antes de mandar pra App Store.
+    /// Na primeira abertura, se tem um link copiado, o app mostra um botão "Colar" do sistema (PasteButton):
+    /// o app só lê o que está copiado se a pessoa tocar nele (sem o aviso "Permitir colar?").
+    @Published var cutPasteOffer = false
+
     func checkCutClipboard() {
         let k = "arque.cutclip"
         if UserDefaults.standard.bool(forKey: k) || ProcessInfo.processInfo.arguments.contains("-demo") { return }
         UserDefaults.standard.set(true, forKey: k)
-        // só lê (e o iOS só pergunta "Permitir colar?") quando tem um link copiado
-        UIPasteboard.general.detectPatterns(for: [.probableWebURL]) { [weak self] r in
-            guard case .success(let p) = r, p.contains(.probableWebURL) else { return }
-            Task { @MainActor in
-                guard let self, let s = UIPasteboard.general.string, AppModel.cutCode(from: s) != nil else { return }
-                UIPasteboard.general.string = ""
-                self.openCutLink(s)
-            }
+        // só confere SE tem um link copiado (não lê o conteúdo)
+        let web: Set<PartialKeyPath<UIPasteboard.DetectedValues>> = [\UIPasteboard.DetectedValues.probableWebURL]
+        Task { @MainActor [weak self] in
+            guard let found = try? await UIPasteboard.general.detectedPatterns(for: web),
+                  found.contains(\UIPasteboard.DetectedValues.probableWebURL) else { return }
+            self?.cutPasteOffer = true
         }
+    }
+
+    /// Tocou no "Colar" do aviso: abre o plano de corte se o que foi copiado for o link do convite.
+    func pastedCut(_ items: [String]) {
+        cutPasteOffer = false
+        guard let s = items.first(where: { AppModel.cutCode(from: $0) != nil }) else {
+            toast = tr("O que está copiado não é um link de plano de corte."); return
+        }
+        openCutLink(s)
     }
     @Published var moveisView = false
     var moveisSink: ((Double) -> Void)?

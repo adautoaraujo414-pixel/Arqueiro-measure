@@ -30,21 +30,26 @@
 <body>
 <main>
  <div class="brand">ARQUEMESTRE</div>
- <h1>Você recebeu um plano de corte</h1>
- <p>O projeto abre só dentro do app Arquemestre: lista de corte, plano das chapas e o 3D pra ver de onde é cada peça. Dá pra marcar ✓ em cada peça cortada.</p>
+ <h1 data-t="h1">Você recebeu um plano de corte</h1>
+ <p data-t="p1">O projeto abre só dentro do app Arquemestre: lista de corte, plano das chapas e o 3D pra ver de onde é cada peça. Dá pra marcar ✓ em cada peça cortada.</p>
  <div class="card" id="ok">
-  <button class="btn go" id="abrir">Abrir no Arquemestre</button>
-  <button class="btn store" id="baixar">Ainda não tenho o app · baixar</button>
+  <button class="btn go" id="abrir" data-t="abrir">Abrir no Arquemestre</button>
+  <button class="btn store" id="baixar" data-t="baixar">Ainda não tenho o app · baixar</button>
   <ol>
-   <li>Baixe e abra o Arquemestre.</li>
-   <li>O plano de corte já abre sozinho. Se não abrir, volte aqui e toque em <b>Abrir no Arquemestre</b>.</li>
+   <li data-t="s1">Baixe e abra o Arquemestre.</li>
+   <li data-t="s2">Ao abrir, o plano de corte aparece (no iPhone, toque em <b>Colar</b> no aviso). Se não aparecer, volte aqui e toque em <b>Abrir no Arquemestre</b>.</li>
   </ol>
  </div>
- <div class="card err" id="bad" hidden>Este link está incompleto. Peça pra enviar o plano de corte de novo.</div>
- <small>Ninguém vê o projeto por esta página: ele vai direto pro app no seu celular.</small>
+ <div class="card err" id="bad" hidden data-t="bad">Este link está incompleto. Peça pra enviar o plano de corte de novo.</div>
+ <small data-t="priv">Ninguém vê o projeto por esta página: ele vai direto pro app no seu celular.</small>
 </main>
 <script>
 (function(){
+ /* idioma do celular: português, español ou english */
+ var L=(navigator.language||'pt').toLowerCase(),T={
+  en:{h1:'You received a cutting plan',p1:'The project opens only inside the Arquemestre app: cut list, board layout and the 3D view to see where each piece goes. You can tick ✓ each piece once it is cut.',abrir:'Open in Arquemestre',baixar:"I don't have the app yet · download",s1:'Download and open Arquemestre.',s2:"When it opens, the cutting plan shows up (on iPhone, tap <b>Paste</b> in the notice). If it doesn't, come back here and tap <b>Open in Arquemestre</b>.",bad:'This link is incomplete. Ask for the cutting plan to be sent again.',priv:'Nobody sees the project through this page: it goes straight to the app on your phone.',title:'Cutting plan · Arquemestre'},
+  es:{h1:'Recibiste un plan de corte',p1:'El proyecto se abre solo dentro de la app Arquemestre: lista de corte, plano de los tableros y el 3D para ver de dónde es cada pieza. Puedes marcar ✓ cada pieza cortada.',abrir:'Abrir en Arquemestre',baixar:'Todavía no tengo la app · descargar',s1:'Descarga y abre Arquemestre.',s2:'Al abrir, aparece el plan de corte (en iPhone, toca <b>Pegar</b> en el aviso). Si no aparece, vuelve aquí y toca <b>Abrir en Arquemestre</b>.',bad:'Este enlace está incompleto. Pide que te envíen el plan de corte de nuevo.',priv:'Nadie ve el proyecto en esta página: va directo a la app de tu celular.',title:'Plan de corte · Arquemestre'}}[L.slice(0,2)==='pt'?'pt':L.slice(0,2)==='es'?'es':'en'];
+ if(T){document.documentElement.lang=L.slice(0,2);document.title=T.title;Array.prototype.forEach.call(document.querySelectorAll('[data-t]'),function(e){var v=T[e.getAttribute('data-t')];if(v)e.innerHTML=v})}
  var m=(location.hash||'').match(/[#&]d=([A-Za-z0-9_\-]+)/),d=m?m[1]:'';
  var ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),android=/Android/i.test(ua);
  var PLAY='https://play.google.com/store/apps/details?id=br.com.arque.measure';

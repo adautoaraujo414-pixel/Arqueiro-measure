@@ -57,6 +57,8 @@ struct ArquemestreApp: App {
                 .environmentObject(app.peer)
                 .preferredColorScheme(.dark)
                 .tint(Ui.accent)
+                // quem instalou pelo convite do plano de corte: botão "Colar" pra abrir o projeto recebido
+                .overlay(alignment: .bottom) { if app.cutPasteOffer { CutPasteBanner(app: app) } }
                 .onAppear {
                     delegate.onOpenAppointment = { id in app.openAppointment(id) }
                     if let id = delegate.pendingAppt { delegate.pendingAppt = nil; app.openAppointment(id) }

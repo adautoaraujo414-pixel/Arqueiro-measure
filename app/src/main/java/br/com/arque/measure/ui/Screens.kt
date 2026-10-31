@@ -202,7 +202,7 @@ fun LibraryScreen(vm: AppViewModel) {
             }
         }
         .filter { tab != LibTab.PDF && tab != LibTab.MOVEIS }
-        .sortedWith(compareByDescending<NoteMeta> { it.pinned }.thenByDescending { it.createdMs })
+        .sortedWith(compareByDescending<NoteMeta> { it.pinned }.then(compareBy<NoteMeta, String>(NameOrder) { it.name }))
 
     // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
     LaunchedEffect(vm.projVersion, vm.index) { vm.syncLinkedNames() }
@@ -215,7 +215,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     Text("ARQUEMESTRE", color = Ui.text, fontSize = 15.sp, modifier = Modifier.padding(8.dp))
                     SideItem(tr("Todas as notas"), Icons.Filled.AllInbox, filter == LibFilter.All) { vm.filter = LibFilter.All }
                     Text(tr("Pastas"), color = Ui.dim, fontSize = 12.sp, modifier = Modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp))
-                    vm.index.folders.forEach { f ->
+                    vm.index.folders.sortedWith(compareBy<br.com.arque.measure.model.Folder, String>(NameOrder) { it.name }).forEach { f ->
                         SideItem(f.name, Icons.Filled.Folder, filter == LibFilter.InFolder(f.id)) { vm.filter = LibFilter.InFolder(f.id) }
                     }
                     SideItem(tr("Nova pasta"), Icons.Filled.CreateNewFolder, false) { newFolder = true }
@@ -296,7 +296,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         FilterChip(selected = false, onClick = { vm.screen = Screen.Agenda }, label = { Text(tr("📅 Agenda")) })
                         FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text(tr("+ Projeto de móveis")) })
                         FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text(tr("Todas as notas")) })
-                        vm.index.folders.forEach { f ->
+                        vm.index.folders.sortedWith(compareBy<br.com.arque.measure.model.Folder, String>(NameOrder) { it.name }).forEach { f ->
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })
                         }
                         FilterChip(selected = filter == LibFilter.Trash, onClick = { vm.filter = LibFilter.Trash }, label = { Text(tr("Lixo")) })
@@ -329,12 +329,18 @@ fun LibraryScreen(vm: AppViewModel) {
                     val inGroupP = groups.flatMap { g -> g.projs.map { it.id } }.toSet()
                     val inGroupN = groups.flatMap { g -> g.notes.map { it.id } }.toSet()
                     if (tab == LibTab.MOVEIS && filter == LibFilter.All && q.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo projeto de móveis")) { vm.newMoveisProject() } }
-                    items(shown, key = { "cli-" + it.key }, span = { GridItemSpan(minOf(2, maxLineSpan)) }) { g -> ClientCard(vm, g) }
-                    if (showProj) {
-                        val projs = projList.filter { it.id !in inGroupP && (q.isBlank() || projMatches(it, q)) }
-                        items(projs, key = { "proj-" + it.id }) { pj -> ProjRow(vm, pj) }
+                    // tudo em ordem alfabética pelo nome (cliente, projeto ou nota); notas fixadas continuam em cima
+                    val projs = if (showProj) projList.filter { it.id !in inGroupP && (q.isBlank() || projMatches(it, q)) } else emptyList()
+                    val loose = notes.filter { it.id !in inGroupN && (q.isBlank() || it.name.contains(q, ignoreCase = true)) }
+                    val entries = (shown.map { LibEntry.G(it) } + projs.map { LibEntry.Pj(it) } + loose.map { LibEntry.Nt(it) })
+                        .sortedWith(compareByDescending<LibEntry> { it.pinned }.then(compareBy<LibEntry, String>(NameOrder) { it.name }))
+                    items(entries, key = { it.key }, span = { e -> if (e is LibEntry.G) GridItemSpan(minOf(2, maxLineSpan)) else GridItemSpan(1) }) { e ->
+                        when (e) {
+                            is LibEntry.G -> ClientCard(vm, e.g)
+                            is LibEntry.Pj -> ProjRow(vm, e.p)
+                            is LibEntry.Nt -> NoteRow(vm, e.n)
+                        }
                     }
-                    items(notes.filter { it.id !in inGroupN && (q.isBlank() || it.name.contains(q, ignoreCase = true)) }, key = { it.id }) { n -> NoteRow(vm, n) }
                 }
             }
         }
@@ -512,6 +518,30 @@ private fun StatusChip(status: String, mod: Modifier = Modifier) {
 }
 
 /** Cliente com suas notas e projetos (nota e projeto ligados ficam com o mesmo nome, no mesmo quadro). */
+/** Ordem alfabética do jeito que a gente lê: sem diferença de maiúscula/acento e com número na ordem certa (Nota 2 antes de Nota 10). */
+internal object NameOrder : Comparator<String> {
+    private val col = java.text.Collator.getInstance(Locale("pt", "BR")).apply { strength = java.text.Collator.PRIMARY }
+    private val part = Regex("\\d+|\\D+")
+    override fun compare(a: String, b: String): Int {
+        val x = part.findAll(a.trim()).map { it.value }.toList()
+        val y = part.findAll(b.trim()).map { it.value }.toList()
+        for (i in 0 until minOf(x.size, y.size)) {
+            val p = x[i]; val q = y[i]
+            val c = if (p[0].isDigit() && q[0].isDigit()) p.trimStart('0').length.compareTo(q.trimStart('0').length).let { if (it != 0) it else p.trimStart('0').compareTo(q.trimStart('0')) }
+            else synchronized(col) { col.compare(p, q) }
+            if (c != 0) return c
+        }
+        return x.size.compareTo(y.size)
+    }
+}
+
+/** Item da biblioteca: quadro do cliente, projeto solto ou nota solta. */
+private sealed class LibEntry(val name: String, val pinned: Boolean, val key: String) {
+    class G(val g: ClientGroup) : LibEntry(g.name, false, "cli-" + g.key)
+    class Pj(val p: br.com.arque.measure.data.MoveisProjects.P) : LibEntry(p.name, false, "proj-" + p.id)
+    class Nt(val n: NoteMeta) : LibEntry(n.name, n.pinned, n.id)
+}
+
 private class ClientGroup(val key: String, val name: String, val projs: List<br.com.arque.measure.data.MoveisProjects.P>, val notes: List<NoteMeta>) {
     fun matches(q: String): Boolean = name.contains(q, ignoreCase = true) || projs.any { projMatches(it, q) } || notes.any { it.name.contains(q, ignoreCase = true) }
 }
@@ -534,7 +564,7 @@ private fun clientGroups(vm: AppViewModel, projs: List<br.com.arque.measure.data
     return byKey.mapNotNull { (key, v) ->
         val (ps, ns) = v
         if (ps.isEmpty() || ps.size + ns.size < 2) null
-        else ClientGroup(key, ps.firstOrNull { !vm.isDefaultProj(it) }?.name ?: ns.firstOrNull()?.name ?: ps.first().name, ps.sortedByDescending { it.updated }, ns)
+        else ClientGroup(key, ps.firstOrNull { !vm.isDefaultProj(it) }?.name ?: ns.firstOrNull()?.name ?: ps.first().name, ps.sortedWith(compareBy<br.com.arque.measure.data.MoveisProjects.P, String>(NameOrder) { it.label }), ns.sortedWith(compareBy<NoteMeta, String>(NameOrder) { it.name }))
     }
 }
 

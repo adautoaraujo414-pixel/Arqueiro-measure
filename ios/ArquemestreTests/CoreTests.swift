@@ -292,3 +292,11 @@ final class CutLinkTests: XCTestCase {
         XCTAssertEqual(l.last?.corte, false)
     }
 }
+
+/// Biblioteca em ordem alfabética: sem diferença de maiúscula/acento e número na ordem certa.
+final class LibraryOrderTests: XCTestCase {
+    func testOrdemAlfabetica() {
+        let nomes = ["natalia iturama", "Gabrielle belline", "cintia iturama", "Nota 10", "Janette", "Nota 2", "Ângela", "Projeto 29/10"]
+        XCTAssertEqual(nomes.sorted(by: nameLess), ["Ângela", "cintia iturama", "Gabrielle belline", "Janette", "natalia iturama", "Nota 2", "Nota 10", "Projeto 29/10"])
+    }
+}

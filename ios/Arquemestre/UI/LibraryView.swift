@@ -29,7 +29,7 @@ struct LibraryView: View {
             }
         }
         .filter { _ in tab != .MOVEIS }
-        .sorted { ($0.pinned ? 1 : 0, $0.createdMs) > ($1.pinned ? 1 : 0, $1.createdMs) }
+        .sorted { $0.pinned != $1.pinned ? $0.pinned : nameLess($0.name, $1.name) }
     }
 
     var body: some View {
@@ -62,7 +62,7 @@ struct LibraryView: View {
                 Text("ARQUEMESTRE").font(.subheadline.bold()).foregroundColor(Ui.text).padding(8)
                 side(tr("Todas as notas"), "tray.full", app.filter == .all) { app.filter = .all }
                 Text(tr("Pastas")).font(.caption).foregroundColor(Ui.dim).padding(.leading, 8).padding(.top, 12)
-                ForEach(app.index.folders) { f in side(f.name, "folder", app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
+                ForEach(app.index.folders.sorted { nameLess($0.name, $1.name) }) { f in side(f.name, "folder", app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
                 side(tr("Nova pasta"), "folder.badge.plus", false) { newFolder = true }
                 Divider().padding(.vertical, 8)
                 side(tr("Novo projeto de móveis"), "hammer", false) { app.newMoveisProject() }
@@ -96,6 +96,9 @@ struct LibraryView: View {
         let inGroupN = Set(groups.flatMap { $0.notes.map(\.id) })
         let projs = showProj ? projList.filter { !inGroupP.contains($0.id) && (q.isEmpty || projMatches($0, q)) } : []
         let looseNotes = notes.filter { !inGroupN.contains($0.id) && (q.isEmpty || $0.name.localizedCaseInsensitiveContains(q)) }
+        // tudo em ordem alfabética pelo nome (cliente, projeto ou nota); notas fixadas continuam em cima
+        let entries: [LibEntry] = (shown.map { LibEntry.g($0) } + projs.map { LibEntry.p($0) } + looseNotes.map { LibEntry.n($0) })
+            .sorted { $0.pinned != $1.pinned ? $0.pinned : nameLess($0.name, $1.name) }
         return ZStack(alignment: .bottomTrailing) {
             VStack(spacing: 0) {
                 HStack {
@@ -130,7 +133,7 @@ struct LibraryView: View {
                             chip(tr("📅 Agenda"), false) { app.screen = .agenda }
                             chip(tr("+ Projeto de móveis"), false) { app.newMoveisProject() }
                             chip(tr("Todas as notas"), app.filter == .all) { app.filter = .all }
-                            ForEach(app.index.folders) { f in chip(f.name, app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
+                            ForEach(app.index.folders.sorted { nameLess($0.name, $1.name) }) { f in chip(f.name, app.filter == .folder(f.id)) { app.filter = .folder(f.id) } }
                             chip(tr("Lixo"), app.filter == .trash) { app.filter = .trash }
                             chip(tr("Orçamentos"), false) { app.screen = .quotes }
                         }.padding(.horizontal, 12)
@@ -153,9 +156,13 @@ struct LibraryView: View {
                             CreateTile(label: tr("Criar")) { app.openNote(app.createNote()) }
                         }
                         if tab == .MOVEIS && query.isEmpty { CreateTile(label: tr("Novo projeto de móveis")) { app.newMoveisProject() } }
-                        ForEach(shown) { g in ClientCard(g: g) }
-                        ForEach(projs) { pj in ProjRow(p: pj) }
-                        ForEach(looseNotes) { n in NoteRow(n: n) }
+                        ForEach(entries) { e in
+                            switch e {
+                            case .g(let g): ClientCard(g: g)
+                            case .p(let pj): ProjRow(p: pj)
+                            case .n(let n): NoteRow(n: n)
+                            }
+                        }
                     }
                     .padding(.horizontal, 12).padding(.top, 4).padding(.bottom, 110)
                 }
@@ -268,6 +275,23 @@ struct StatusChip: View {
     }
 }
 
+/// Ordem alfabética do jeito que a gente lê: sem diferença de maiúscula/acento e com número na ordem certa (Nota 2 antes de Nota 10).
+func nameLess(_ a: String, _ b: String) -> Bool {
+    a.trimmingCharacters(in: .whitespaces).compare(b.trimmingCharacters(in: .whitespaces), options: [.caseInsensitive, .diacriticInsensitive, .numeric], range: nil, locale: Locale(identifier: "pt_BR")) == .orderedAscending
+}
+
+/// Item da biblioteca: quadro do cliente, projeto solto ou nota solta.
+enum LibEntry: Identifiable {
+    case g(ClientGroup), p(MoveisProjects.P), n(NoteMeta)
+    var id: String {
+        switch self { case .g(let x): return "cli-" + x.id; case .p(let x): return "proj-" + x.id; case .n(let x): return "note-" + x.id }
+    }
+    var name: String {
+        switch self { case .g(let x): return x.name; case .p(let x): return x.name; case .n(let x): return x.name }
+    }
+    var pinned: Bool { if case .n(let x) = self { return x.pinned }; return false }
+}
+
 /// Cliente com suas notas e projetos (nota e projeto ligados ficam com o mesmo nome, no mesmo quadro).
 struct ClientGroup: Identifiable {
     var id: String
@@ -297,7 +321,7 @@ func projMatches(_ p: MoveisProjects.P, _ q: String) -> Bool {
         let P = ps[key] ?? [], N = ns[key] ?? []
         if P.isEmpty || P.count + N.count < 2 { return nil }
         let name = P.first { !app.isDefaultProj($0) }?.name ?? N.first?.name ?? P[0].name
-        return ClientGroup(id: key, name: name, projs: P.sorted { $0.updated > $1.updated }, notes: N)
+        return ClientGroup(id: key, name: name, projs: P.sorted { nameLess($0.label, $1.label) }, notes: N.sorted { nameLess($0.name, $1.name) })
     }
 }
 

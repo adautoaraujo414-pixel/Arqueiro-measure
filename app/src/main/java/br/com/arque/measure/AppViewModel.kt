@@ -521,6 +521,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Projeto de cliente a abrir assim que o editor de móveis carregar. */
     var pendingProject by mutableStateOf<String?>(null)
 
+    // ---------- plano de corte enviado pra outra pessoa (abre só no app, modo corte) ----------
+    /** Código do projeto recebido pelo link do WhatsApp; o editor abre ele no modo corte. */
+    var pendingCut by mutableStateOf<String?>(null)
+    fun openCutLink(code: String) {
+        val c = cutCodeOf(code) ?: code.trim().takeIf { t -> t.length >= 8 && t.all { cutCh(it) } }
+        if (c == null) { toast = br.com.arque.measure.i18n.tr("Link do plano de corte incompleto. Peça pra enviar de novo."); return }
+        if (session != null) flush()
+        pendingProject = null; pendingNewProject = false
+        pendingCut = c
+        screen = Screen.Moveis
+    }
+
+    /** Texto do convite (WhatsApp): o link abre o app; quem não tem baixa o Arquemestre. */
+    fun cutInvite(code: String, name: String, title: String): String {
+        val who = company.name.trim()
+        val proj = listOf(name.trim(), title.trim()).filter { it.isNotEmpty() }.joinToString(" · ")
+        val suf = if (proj.isEmpty()) "" else " ($proj)"
+        val head = if (who.isEmpty()) br.com.arque.measure.i18n.tr("📐 Você recebeu um plano de corte{0} no Arquemestre.", suf)
+            else br.com.arque.measure.i18n.tr("📐 {0} te mandou o plano de corte{1} no Arquemestre.", who, suf)
+        return head + "\n\n" + br.com.arque.measure.i18n.tr("Toque no link pra abrir (se ainda não tem o app, ele leva pra baixar o Arquemestre):") + "\n" + CUT_URL + code
+    }
+
+
+
     fun saveAppt(a: br.com.arque.measure.model.Appointment) {
         appointments = (if (appointments.any { it.id == a.id }) appointments.map { if (it.id == a.id) a else it } else appointments + a).sortedBy { it.startMs }
         val snap = appointments
@@ -1030,5 +1054,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
         const val MAX_RECENT = 30
+        const val CUT_PREFIX = "arquemestre-corte:"
+        const val CUT_URL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d="
+        private fun cutCh(c: Char) = c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c == '-' || c == '_'
+        /** Código do plano de corte num texto: o link do convite (…corte.html#d=…), arquemestre://corte?d=… ou "arquemestre-corte:…". */
+        fun cutCodeOf(text: String): String? {
+            val t = text.trim()
+            val raw = when {
+                t.startsWith(CUT_PREFIX) -> t.removePrefix(CUT_PREFIX)
+                t.contains("corte.html#d=") -> t.substringAfter("corte.html#d=")
+                t.startsWith("arquemestre://corte") -> t.substringAfter("d=", "")
+                else -> return null
+            }
+            val c = raw.takeWhile { cutCh(it) }
+            return if (c.length >= 8) c else null
+        }
     }
 }

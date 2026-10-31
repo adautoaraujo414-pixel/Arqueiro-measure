@@ -60,6 +60,13 @@ struct ArquemestreApp: App {
                 .onAppear {
                     delegate.onOpenAppointment = { id in app.openAppointment(id) }
                     if let id = delegate.pendingAppt { delegate.pendingAppt = nil; app.openAppointment(id) }
+                    app.checkCutClipboard()
+                }
+                // convite do plano de corte (WhatsApp → página → app): arquemestre://corte?d=...
+                .onOpenURL { url in
+                    guard url.scheme == "arquemestre", url.host == "corte",
+                          let d = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "d" })?.value else { return }
+                    app.openCutLink(d)
                 }
         }
         .onChange(of: phase) { p in

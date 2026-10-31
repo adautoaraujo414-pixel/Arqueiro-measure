@@ -8,7 +8,7 @@ import java.io.File
 
 /** Projetos do editor de móveis (arquivo moveis/projects.json, o mesmo que o editor usa). */
 object MoveisProjects {
-    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "") {
+    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "", val corte: Boolean = false, val from: String = "") {
         /** Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…). */
         val label: String get() = title.ifBlank { roomLabel(room) }
     }
@@ -52,6 +52,7 @@ object MoveisProjects {
             P(
                 p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"),
                 p.optString("status").ifBlank { "orc" }, p.optString("titulo").trim(), room, p.optJSONObject("client")?.optString("cidade")?.trim().orEmpty(),
+                p.has("corte"), p.optJSONObject("corte")?.optString("fr")?.trim().orEmpty(),
             )
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())

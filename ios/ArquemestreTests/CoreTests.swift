@@ -264,3 +264,31 @@ final class DoorTests: XCTestCase {
         XCTAssertEqual(try JsonCodec.noteFromJson(JsonCodec.noteToJson(st.note)), st.note)
     }
 }
+
+/// Plano de corte enviado pelo WhatsApp: o código sai do link do convite e o projeto recebido aparece na biblioteca.
+final class CutLinkTests: XCTestCase {
+    func testCodigoDoLinkDoConvite() {
+        let code = "zq1W_-abc9XYZ"
+        XCTAssertEqual(AppModel.cutCode(from: AppModel.cutURL + code), code)
+        XCTAssertEqual(AppModel.cutCode(from: "  " + AppModel.cutURL + code + "\n"), code)
+        XCTAssertEqual(AppModel.cutCode(from: "arquemestre://corte?d=" + code), code)
+        XCTAssertEqual(AppModel.cutCode(from: AppModel.cutPrefix + code), code)
+        XCTAssertEqual(AppModel.cutCode(from: AppModel.cutURL + code + "&x=1"), code)
+        XCTAssertNil(AppModel.cutCode(from: "https://exemplo.com/qualquer"))
+        XCTAssertNil(AppModel.cutCode(from: AppModel.cutURL + "abc"))
+        XCTAssertNil(AppModel.cutCode(from: "texto qualquer copiado"))
+    }
+
+    func testProjetoRecebidoNaBiblioteca() throws {
+        try FileManager.default.createDirectory(at: AppPaths.moveis, withIntermediateDirectories: true)
+        let bak = try? Data(contentsOf: MoveisProjects.file)
+        defer { if let b = bak { try? b.write(to: MoveisProjects.file) } else { try? FileManager.default.removeItem(at: MoveisProjects.file) } }
+        try Data(#"[{"id":"cX1","client":{"nome":"Carlos"},"titulo":"Cozinha","created":1,"updated":5,"corte":{"fr":"Marcenaria Teste","at":1},"current":{"mods":[1,2,3]}},{"id":"p2","client":{"nome":"Ana"},"created":1,"updated":2,"current":{"mods":[1]}}]"#.utf8).write(to: MoveisProjects.file)
+        let l = MoveisProjects.list()
+        XCTAssertEqual(l.count, 2)
+        XCTAssertEqual(l.first?.corte, true)
+        XCTAssertEqual(l.first?.from, "Marcenaria Teste")
+        XCTAssertEqual(l.first?.mods, 3)
+        XCTAssertEqual(l.last?.corte, false)
+    }
+}

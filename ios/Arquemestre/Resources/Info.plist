@@ -63,6 +63,17 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>br.com.arque.measure.corte</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>arquemestre</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>O Arquemestre usa o Bluetooth para receber as medidas da trena laser Bosch direto nas cotas, e para mostrar um projeto a outro iPhone por perto.</string>
 	<key>NSCameraUsageDescription</key>

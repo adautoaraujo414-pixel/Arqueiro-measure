@@ -218,7 +218,8 @@ struct ProjRow: View {
                         }
                     } label: { StatusChip(status: p.status) }
                 }
-                Text((bare ? "" : "🪚 " + p.label + " · ") + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+                Text(p.corte ? tr("✂ Plano de corte recebido") + (p.from.isEmpty ? "" : " · " + p.from) : (bare ? "" : "🪚 " + p.label + " · ") + dateText(p.updated))
+                    .font(.caption).foregroundColor(p.corte ? Ui.accent : Ui.dim).lineLimit(1)
                 Text(tr(p.mods == 1 ? "{0} módulo" : "{0} módulos", p.mods) + (linked > 0 && !bare ? tr(linked == 1 ? " · {0} nota" : " · {0} notas", linked) : ""))
                     .font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
@@ -284,7 +285,7 @@ func projMatches(_ p: MoveisProjects.P, _ q: String) -> Bool {
 @MainActor func clientGroups(_ app: AppModel, _ projs: [MoveisProjects.P], _ notes: [NoteMeta]) -> [ClientGroup] {
     func k(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
     var pk: [String: String] = [:]
-    for p in projs { pk[p.id] = app.isDefaultProj(p) ? "id:" + p.id : k(p.name) }
+    for p in projs { pk[p.id] = (app.isDefaultProj(p) || p.corte) ? "id:" + p.id : k(p.name) }
     var order: [String] = []
     var ps: [String: [MoveisProjects.P]] = [:], ns: [String: [NoteMeta]] = [:]
     for p in projs { let key = pk[p.id]!; if ps[key] == nil { order.append(key) }; ps[key, default: []].append(p) }

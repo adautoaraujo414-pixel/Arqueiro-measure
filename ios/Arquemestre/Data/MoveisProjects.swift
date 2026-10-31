@@ -13,6 +13,9 @@ enum MoveisProjects {
         var title: String = ""
         var room: String = "cozinha"
         var city: String = ""
+        /// Plano de corte recebido de outra pessoa (abre no modo corte, sem valores e sem editar).
+        var corte: Bool = false
+        var from: String = ""
         /// Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…).
         var label: String { title.isEmpty ? MoveisProjects.roomLabel(room) : title }
     }
@@ -64,7 +67,8 @@ enum MoveisProjects {
             return P(id: id, name: nome.isEmpty ? tr("Projeto sem nome") : nome, created: created,
                      updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false),
                      status: JsonCodec.s(p, "status").isEmpty ? "orc" : JsonCodec.s(p, "status"),
-                     title: JsonCodec.s(p, "titulo").trimmingCharacters(in: .whitespaces), room: room, city: city)
+                     title: JsonCodec.s(p, "titulo").trimmingCharacters(in: .whitespaces), room: room, city: city,
+                     corte: p["corte"] != nil, from: ((p["corte"] as? [String: Any]).map { JsonCodec.s($0, "fr") } ?? "").trimmingCharacters(in: .whitespaces))
         }.sorted { $0.updated > $1.updated }
     }
 

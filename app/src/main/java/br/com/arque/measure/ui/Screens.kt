@@ -445,7 +445,11 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
                 Text(if (bare) p.label else p.name, color = Ui.text, fontSize = if (bare) 14.sp else 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 StatusChip(p.status, Modifier.padding(start = 6.dp).clickable { stDlg = true })
             }
-            Text((if (bare) "" else "🪚 " + p.label + " · ") + dateFmt.format(Date(p.updated)), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
+            Text(
+                if (p.corte) tr("✂ Plano de corte recebido") + (if (p.from.isNotEmpty()) " · " + p.from else "")
+                else (if (bare) "" else "🪚 " + p.label + " · ") + dateFmt.format(Date(p.updated)),
+                color = if (p.corte) Color(0xFF2F6BE0) else Ui.dim, fontSize = 12.sp, maxLines = 1,
+            )
             Text(tr(if (p.mods == 1) "{0} módulo" else "{0} módulos", p.mods) + (if (linked > 0 && !bare) tr(if (linked == 1) " · {0} nota" else " · {0} notas", linked) else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
@@ -520,7 +524,7 @@ private fun projMatches(p: br.com.arque.measure.data.MoveisProjects.P, q: String
 private fun clientGroups(vm: AppViewModel, projs: List<br.com.arque.measure.data.MoveisProjects.P>, notes: List<NoteMeta>): List<ClientGroup> {
     fun k(s: String) = s.trim().lowercase()
     val pk = HashMap<String, String>()   // projeto -> cliente
-    projs.forEach { p -> pk[p.id] = if (vm.isDefaultProj(p)) "id:" + p.id else k(p.name) }
+    projs.forEach { p -> pk[p.id] = if (vm.isDefaultProj(p) || p.corte) "id:" + p.id else k(p.name) }
     val byKey = LinkedHashMap<String, Pair<MutableList<br.com.arque.measure.data.MoveisProjects.P>, MutableList<NoteMeta>>>()
     projs.forEach { p -> byKey.getOrPut(pk.getValue(p.id)) { mutableListOf<br.com.arque.measure.data.MoveisProjects.P>() to mutableListOf() }.first.add(p) }
     notes.forEach { n ->

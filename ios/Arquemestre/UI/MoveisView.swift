@@ -36,6 +36,14 @@ struct MoveisView: View {
             holder.eval("window.arqueView&&window.arqueView(\(f))")
         }
         .onReceive(peer.$hosting) { h in holder.eval("window.__arqueSharing=\(h ? "true" : "false")") }
+        .onReceive(app.$pendingCut) { c in
+            guard let c = c, holder.loaded else { return }
+            app.pendingCut = nil
+            holder.eval("window.arqueCutOpen&&window.arqueCutOpen('\(MoveisWeb.safeCode(c))')")
+        }
+        .sheet(isPresented: Binding(get: { app.cutShareText != nil }, set: { if !$0 { app.cutShareText = nil } })) {
+            ShareSheet(items: [app.cutShareText ?? ""])
+        }
         .onAppear {
             app.moveisSink = { mm in holder.eval("window.arqueLaser&&window.arqueLaser(\(String(format: "%.1f", mm)))") }
         }
@@ -50,6 +58,7 @@ struct MoveisView: View {
 
 final class WebHolder: ObservableObject {
     weak var web: WKWebView?
+    var loaded = false
     func eval(_ js: String) { DispatchQueue.main.async { self.web?.evaluateJavaScript(js, completionHandler: nil) } }
 }
 
@@ -102,7 +111,9 @@ struct MoveisWeb: UIViewRepresentable {
         contextNote:function(){return sync('contextNote','')},
         linkNote:function(n,p){post({op:'linkNote',note:String(n),id:String(p)})},
         openNoteOf:function(p,n){post({op:'openNoteOf',id:String(p)})},
-        saveToGallery:function(d){post({op:'saveGallery',data:String(d)})}
+        saveToGallery:function(d){post({op:'saveGallery',data:String(d)})},
+        companyName:function(){return sync('companyName','')},
+        shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})}
       };
     })();
     """
@@ -143,8 +154,11 @@ struct MoveisWeb: UIViewRepresentable {
         w.configuration.userContentController.removeScriptMessageHandler(forName: "arque")
     }
 
+    static func safeCode(_ c: String) -> String { String(c.filter { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }) }
+
     final class Coord: NSObject, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
         var parent: MoveisWeb
+        var loaded = false
         init(_ p: MoveisWeb) { parent = p }
 
         private var dir: URL { AppPaths.moveis }
@@ -161,6 +175,8 @@ struct MoveisWeb: UIViewRepresentable {
             case "linkNote": if let n = m["note"] as? String, let id = m["id"] as? String { app.linkProject(n, id) }
             case "openNoteOf": if let id = m["id"] as? String { app.openNoteOf(id) }
             case "saveGallery": if let d = m["data"] as? String { GallerySave.save(dataURL: d) }
+            case "shareCut":
+                if let c = m["code"] as? String { app.cutShareText = app.cutInvite(c, (m["name"] as? String) ?? "", (m["title"] as? String) ?? "") }
             case "shareUpdate": if let j = m["json"] as? String { parent.peer.update(j) }
             case "putFile":
                 if let n = m["name"] as? String, let b = m["b64"] as? String, let d = Data(base64Encoded: b, options: .ignoreUnknownCharacters) {
@@ -182,6 +198,8 @@ struct MoveisWeb: UIViewRepresentable {
             } else if prompt == "__arque__:getFile" {
                 let url = dir.appendingPathComponent(safe(defaultText ?? ""))
                 completionHandler((try? Data(contentsOf: url))?.base64EncodedString() ?? "")
+            } else if prompt == "__arque__:companyName" {
+                completionHandler(parent.app.company.name)
             } else if prompt == "__arque__:listNotes" {
                 completionHandler(parent.app.notesJson())
             } else if prompt == "__arque__:contextNote" {
@@ -212,6 +230,11 @@ struct MoveisWeb: UIViewRepresentable {
             if let id = app.pendingProject {
                 app.pendingProject = nil
                 w.evaluateJavaScript("window.arqueOpenClient&&window.arqueOpenClient('\(id.replacingOccurrences(of: "'", with: ""))')")
+            }
+            loaded = true; parent.holder.loaded = true
+            if let c = app.pendingCut {
+                app.pendingCut = nil
+                w.evaluateJavaScript("window.arqueCutOpen&&window.arqueCutOpen('\(MoveisWeb.safeCode(c))')")
             }
             w.evaluateJavaScript("window.__arqueSharing=\(parent.peer.hosting ? "true" : "false")")
         }

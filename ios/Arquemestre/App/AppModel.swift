@@ -49,6 +49,62 @@ final class AppModel: ObservableObject {
     var lastProjectId: String?
     @Published var pendingNewProject = false
     @Published var pendingProject: String?
+    /// Código do plano de corte recebido pelo link do WhatsApp; o editor abre ele no modo corte.
+    @Published var pendingCut: String?
+    /// Convite pronto pra mandar (abre a folha de compartilhar: WhatsApp e outros).
+    @Published var cutShareText: String?
+    nonisolated static let cutPrefix = "arquemestre-corte:"
+    nonisolated static let cutURL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d="
+
+    nonisolated private static func cutCh(_ c: Character) -> Bool { c.isASCII && (c.isLetter || c.isNumber || c == "-" || c == "_") }
+    /// Código do plano de corte num texto: o link do convite (…corte.html#d=…), arquemestre://corte?d=… ou "arquemestre-corte:…".
+    nonisolated static func cutCode(from text: String) -> String? {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw: Substring
+        if t.hasPrefix(cutPrefix) { raw = t.dropFirst(cutPrefix.count) }
+        else if let r = t.range(of: "corte.html#d=") { raw = t[r.upperBound...] }
+        else if t.hasPrefix("arquemestre://corte"), let r = t.range(of: "d=") { raw = t[r.upperBound...] }
+        else { return nil }
+        let c = String(raw.prefix(while: cutCh))
+        return c.count >= 8 ? c : nil
+    }
+
+    func openCutLink(_ code: String) {
+        let t = code.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let c = AppModel.cutCode(from: t) ?? ((t.count >= 8 && t.allSatisfy(AppModel.cutCh)) ? t : nil) else {
+            toast = tr("Link do plano de corte incompleto. Peça pra enviar de novo."); return
+        }
+        if session != nil { flush() }
+        pendingProject = nil; pendingNewProject = false
+        pendingCut = c
+        screen = .moveis
+    }
+
+    /// Texto do convite (WhatsApp): o link abre o app; quem não tem baixa o Arquemestre.
+    func cutInvite(_ code: String, _ name: String, _ title: String) -> String {
+        let who = company.name.trimmingCharacters(in: .whitespaces)
+        let proj = [name, title].map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }.joined(separator: " · ")
+        let suf = proj.isEmpty ? "" : " (\(proj))"
+        let head = who.isEmpty ? tr("📐 Você recebeu um plano de corte{0} no Arquemestre.", suf) : tr("📐 {0} te mandou o plano de corte{1} no Arquemestre.", who, suf)
+        return head + "\n\n" + tr("Toque no link pra abrir (se ainda não tem o app, ele leva pra baixar o Arquemestre):") + "\n" + AppModel.cutURL + code
+    }
+
+    /// Quem ainda não tinha o app: a página do convite copia o código antes de mandar pra App Store.
+    /// Só na primeira abertura depois de instalar o app procura esse código (pra não pedir colar toda hora).
+    func checkCutClipboard() {
+        let k = "arque.cutclip"
+        if UserDefaults.standard.bool(forKey: k) || ProcessInfo.processInfo.arguments.contains("-demo") { return }
+        UserDefaults.standard.set(true, forKey: k)
+        // só lê (e o iOS só pergunta "Permitir colar?") quando tem um link copiado
+        UIPasteboard.general.detectPatterns(for: [.probableWebURL]) { [weak self] r in
+            guard case .success(let p) = r, p.contains(.probableWebURL) else { return }
+            Task { @MainActor in
+                guard let self, let s = UIPasteboard.general.string, AppModel.cutCode(from: s) != nil else { return }
+                UIPasteboard.general.string = ""
+                self.openCutLink(s)
+            }
+        }
+    }
     @Published var moveisView = false
     var moveisSink: ((Double) -> Void)?
     private var links: [String: String]

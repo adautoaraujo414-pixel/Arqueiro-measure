@@ -101,12 +101,23 @@ fun MoveisScreen(vm: AppViewModel) {
     }
 
     val files = remember { File(ctx.filesDir, "moveis").apply { mkdirs() } }
+    var loaded by remember { mutableStateOf(false) }
+    // link do plano de corte chegou com o editor já aberto
+    LaunchedEffect(vm.pendingCut, loaded, web) {
+        val c = vm.pendingCut ?: return@LaunchedEffect
+        val w = web ?: return@LaunchedEffect
+        if (!loaded) return@LaunchedEffect
+        vm.pendingCut = null
+        w.evaluateJavascript("window.arqueCutOpen&&window.arqueCutOpen('${c.filter { it.isLetterOrDigit() || it == '-' || it == '_' }}')", null)
+    }
     var showShare by remember { mutableStateOf(false) }
     val bridge = remember {
         MoveisBridge(
             files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.onEditorProject(id) }, { json -> vm.quoteFromMoveis(json) },
             notes = { vm.notesJson() }, ctxNote = { vm.contextNoteJson() },
             onLink = { nid, pid -> vm.linkProject(nid, pid) }, onOpenNote = { pid -> vm.openNoteOf(pid) },
+            company = { vm.company.name },
+            onShareCut = { code, name, title -> shareCutInvite(ctx, vm.cutInvite(code, name, title)) },
         )
     }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
@@ -176,6 +187,11 @@ fun MoveisScreen(vm: AppViewModel) {
                             vm.pendingProject?.let { id ->
                                 vm.pendingProject = null
                                 view.evaluateJavascript("window.arqueOpenClient&&window.arqueOpenClient('${id.replace("'", "")}')", null)
+                            }
+                            loaded = true
+                            vm.pendingCut?.let { c ->
+                                vm.pendingCut = null
+                                view.evaluateJavascript("window.arqueCutOpen&&window.arqueCutOpen('${c.filter { it.isLetterOrDigit() || it == '-' || it == '_' }}')", null)
                             }
                         }
 
@@ -273,7 +289,13 @@ class MoveisBridge(
     private val ctxNote: () -> String = { "" },
     private val onLink: (String, String) -> Unit = { _, _ -> },
     private val onOpenNote: (String) -> Unit = {},
+    private val company: () -> String = { "" },
+    private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
+    /** Nome da empresa (vai no convite do plano de corte). */
+    @JavascriptInterface fun companyName(): String = runCatching { company() }.getOrDefault("")
+    /** "📤 Enviar projeto" no plano de corte: convite pelo WhatsApp com o link do projeto (só pra cortar). */
+    @JavascriptInterface fun shareCut(code: String, name: String, title: String) { web()?.post { onShareCut(code, name, title) } }
     /** Notas do app (o painel de clientes procura a nota e puxa o nome do cliente). */
     @JavascriptInterface fun listNotes(): String = runCatching { notes() }.getOrDefault("[]")
     /** Nota aberta / de onde veio: o nome do cliente já vem preenchido. */
@@ -310,4 +332,13 @@ class MoveisBridge(
 
     @JavascriptInterface fun listFiles(): String =
         (dir.list() ?: emptyArray()).joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
+}
+
+/** Convite do plano de corte: abre direto no WhatsApp (ou WhatsApp Business); sem eles, a escolha de apps. */
+fun shareCutInvite(ctx: android.content.Context, text: String) {
+    val base = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    for (pkg in listOf("com.whatsapp", "com.whatsapp.w4b")) {
+        try { ctx.startActivity(Intent(base).setPackage(pkg)); return } catch (_: ActivityNotFoundException) {}
+    }
+    try { ctx.startActivity(Intent.createChooser(base, tr("Enviar plano de corte")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {}
 }

@@ -10,6 +10,7 @@ let GUIDE: [(String, String)] = [
     ("5 · Veja em 3D", "Toque em 🧊: um dedo gira, dois dedos dão zoom, toque na porta pra abrir. ↶ desfaz. Em ⋯ Mais ficam as vistas, portas e janelas do ambiente."),
     ("6 · Corte e orçamento", "☰ mostra a lista e o plano de corte das chapas: toque na peça pra ver no 3D e 2 toques marca ✓ cortada. 💰 calcula material e preço e gera o orçamento em PDF."),
     ("7 · Agenda e backup", "Marque entregas e medições na Agenda. No menu ⋯ faça o backup completo (ZIP) de vez em quando. Fotos da câmera também ficam na galeria do iPhone."),
+    ("8 · Passo a passo de tudo", "No editor de móveis toque em ❓: explica bem devagar como criar módulo, porta, gaveta, folgas, alturas, tamponamento, régua, corte e as notas. As folgas, a corrediça (telescópica ou oculta) e a posição da concha ficam no ⚙."),
 ]
 
 struct GuideView: View {

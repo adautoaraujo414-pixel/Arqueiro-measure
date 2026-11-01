@@ -33,7 +33,7 @@ shoot() { # $1 kind (iphone|ipad)
       else
         xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -demo -screen "$scr" >/dev/null
       fi
-      sleep 7
+      if [ "$scr" = "moveis" ]; then sleep 20; else sleep 7; fi
       xcrun simctl io "$udid" screenshot "$dir/${kind}-${n}-${scr}.png"
       n=$((n+1))
     done

@@ -16,6 +16,23 @@ struct MoveisView: View {
         ZStack(alignment: .top) {
             Ui.bg.ignoresSafeArea()
             MoveisWeb(app: app, peer: peer, holder: holder, onClose: { leave() }, onTrena: { btOpen = true }, onShare: { shareOpen = true })
+            if !holder.ready {
+                // enquanto o WebKit abre o editor (ou se ele cair): tela escura com aviso, nunca uma tela branca vazia
+                VStack(spacing: 14) {
+                    Spacer()
+                    if holder.failed {
+                        Text(tr("O editor de móveis não abriu.")).foregroundColor(Ui.text)
+                        Button(tr("Tentar de novo")) { holder.retry() }.buttonStyle(.borderedProminent)
+                        Button(tr("Voltar")) { leave() }.foregroundColor(Ui.dim)
+                    } else {
+                        ProgressView().tint(Ui.gold).scaleEffect(1.3)
+                        Text(tr("Abrindo o editor de móveis…")).foregroundColor(Ui.dim)
+                    }
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Ui.bg)
+            }
             if app.moveisView {
                 HStack(spacing: 10) {
                     Text(peer.viewState == "connecting" ? tr("📡 Conectando em {0}…", peer.viewFrom) :
@@ -59,7 +76,22 @@ struct MoveisView: View {
 final class WebHolder: ObservableObject {
     weak var web: WKWebView?
     var loaded = false
+    /// o editor já desenhou a tela (sai o "Abrindo…")
+    @Published var ready = false
+    /// o WebKit não conseguiu abrir: mostra "Tentar de novo"
+    @Published var failed = false
+    private var watchdog: DispatchWorkItem?
     func eval(_ js: String) { DispatchQueue.main.async { self.web?.evaluateJavaScript(js, completionHandler: nil) } }
+    /// se em 30 s o editor não abrir, oferece tentar de novo (em vez de ficar parado)
+    func arm() {
+        watchdog?.cancel()
+        let w = DispatchWorkItem { [weak self] in guard let self = self, !self.ready else { return }; self.failed = true }
+        watchdog = w
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30, execute: w)
+    }
+    func done() { watchdog?.cancel(); failed = false; ready = true }
+    func fail() { watchdog?.cancel(); ready = false; failed = true }
+    func retry() { failed = false; ready = false; arm(); web?.reload() }
 }
 
 /// Serve o editor.html do app com uma origem fixa (arque://app), para o armazenamento do editor ficar guardado.
@@ -138,9 +170,12 @@ struct MoveisWeb: UIViewRepresentable {
         w.navigationDelegate = context.coordinator
         w.uiDelegate = context.coordinator
         w.scrollView.bounces = false
-        w.isOpaque = true
-        w.backgroundColor = .white
+        // transparente até o editor abrir: aparece a tela escura com "Abrindo…" (nunca um branco vazio)
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.scrollView.backgroundColor = .clear
         holder.web = w
+        holder.arm()
         let cur = I18n.shared.currencySymbol().addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
         // capturas automáticas da loja (-demo): sem a janela de primeira vez dos padrões
         let demo = ProcessInfo.processInfo.arguments.contains("-demo") ? "&nosetup=1" : ""
@@ -232,11 +267,24 @@ struct MoveisWeb: UIViewRepresentable {
                 w.evaluateJavaScript("window.arqueOpenClient&&window.arqueOpenClient('\(id.replacingOccurrences(of: "'", with: ""))')")
             }
             loaded = true; parent.holder.loaded = true
+            parent.holder.done()
             if let c = app.pendingCut {
                 app.pendingCut = nil
                 w.evaluateJavaScript("window.arqueCutOpen&&window.arqueCutOpen('\(MoveisWeb.safeCode(c))')")
             }
             w.evaluateJavaScript("window.__arqueSharing=\(parent.peer.hosting ? "true" : "false")")
+        }
+
+        /// O processo do WebKit caiu (falta de memória, por exemplo): recarrega sozinho em vez de deixar a tela vazia.
+        func webViewWebContentProcessDidTerminate(_ w: WKWebView) {
+            parent.holder.ready = false
+            parent.holder.arm()
+            w.reload()
+        }
+
+        func webView(_ w: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { parent.holder.fail() }
+        func webView(_ w: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            if (error as NSError).code != NSURLErrorCancelled { parent.holder.fail() }
         }
 
         /// tel:, WhatsApp (wa.me), e-mail e links de fora abrem nos apps do aparelho.

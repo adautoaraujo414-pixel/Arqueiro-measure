@@ -37,7 +37,7 @@ enum Reminders {
             }
             for (at, a, off) in items.sorted(by: { $0.0 < $1.0 }).prefix(MAX) {
                 let ct = UNMutableNotificationContent()
-                ct.title = "\(a.kind.icon) \(a.kind.label): \(a.title.isEmpty ? (a.clientName.isEmpty ? "sem título" : a.clientName) : a.title)"
+                ct.title = "\(a.kind.icon) \(a.kind.label): \(a.title.isEmpty ? (a.clientName.isEmpty ? tr("sem título") : a.clientName) : a.title)"
                 var body = tr("{0} às {1} ({2})", dayFmt.string(from: a.startDate), hourFmt.string(from: a.startDate), whenText(off))
                 if !a.clientName.isEmpty { body += " · \(a.clientName)" }
                 if !a.address.isEmpty { body += "\n\(a.address)" }

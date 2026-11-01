@@ -181,7 +181,8 @@ final class LicenseManager: ObservableObject {
         let h = Int(left / 3600)
         if h >= 24 {
             let dd = h / 24, hh = h % 24
-            return tr("{0} dia", dd) + (dd > 1 ? "s" : "") + (hh > 0 ? " e \(hh) h" : "")
+            let days = dd == 1 ? tr("1 dia") : tr("{0} dias", dd)
+            return hh > 0 ? tr("{0} e {1} h", days, hh) : days
         }
         if h >= 1 { return "\(h) h" }
         return tr("{0} min", Int(left / 60))

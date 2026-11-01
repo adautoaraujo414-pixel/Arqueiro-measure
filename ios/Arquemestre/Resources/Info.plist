@@ -42,7 +42,7 @@
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
-		<string></string>
+		<string>LaunchBg</string>
 	</dict>
 	<key>UIUserInterfaceStyle</key>
 	<string>Dark</string>

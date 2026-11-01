@@ -304,7 +304,20 @@ final class AppModel: ObservableObject {
         }
     }
 
-    func loadThumb(_ id: String) -> UIImage? { UIImage(contentsOfFile: thumbFile(id).path) }
+    /// Miniatura da nota; se ainda não existe (nota vinda de backup, por exemplo), desenha uma vez em segundo plano.
+    private var thumbPending = Set<String>()
+    func loadThumb(_ id: String) -> UIImage? {
+        if let img = UIImage(contentsOfFile: thumbFile(id).path) { return img }
+        if !thumbPending.contains(id) {
+            thumbPending.insert(id)
+            let st = store
+            DispatchQueue.global(qos: .utility).async {
+                guard let n = st.loadNote(id) else { return }
+                Task { @MainActor in self.writeThumb(n) }
+            }
+        }
+        return nil
+    }
 
     // ---------- fotos ----------
     private func placePhoto(_ s: EditorSession, _ name: String, _ w: Int, _ h: Int) {

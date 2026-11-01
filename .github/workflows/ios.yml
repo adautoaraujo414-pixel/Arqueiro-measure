@@ -30,6 +30,11 @@ jobs:
           xcodebuild -version
           xcrun --sdk iphoneos --show-sdk-version
 
+      - name: Conferência App Store (o que mais dá recusa na revisão)
+        run: |
+          mkdir -p ios/build
+          python3 ios/scripts/appstore_check.py | tee ios/build/appstore-check.txt
+
       - name: Gerar o projeto Xcode (XcodeGen)
         run: |
           brew install xcodegen
@@ -71,6 +76,11 @@ jobs:
           cd ios
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
           bash scripts/screenshots.sh "$APP" build/capturas
+
+      - name: Capturas não podem sair vazias (tela que não carregou)
+        run: |
+          cd ios
+          python3 scripts/check_blank.py build/capturas | tee build/blank-check.txt
 
       # Assinatura (StoreKit Testing): no iOS 26.3+ o `xcodebuild test` não carrega o .storekit (bug da Apple FB22237318),
       # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).
@@ -120,6 +130,8 @@ jobs:
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
             grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
             echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;
+            echo "==== Conferência App Store ===="; cat build/appstore-check.txt 2>/dev/null;
+            echo "==== Capturas vazias? ===="; cat build/blank-check.txt 2>/dev/null;
             echo "==== Simuladores ===="; cat build/runtimes.txt 2>/dev/null; } > "$OUT/RESUMO.txt" || true
           grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
           cd "$OUT"

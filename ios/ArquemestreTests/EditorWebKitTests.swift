@@ -298,7 +298,7 @@ final class EditorWebKitTests: XCTestCase {
           var P=partsOf(m),reg=P.filter(function(p){return /^Engrosso cava · régua/.test(p.name)}),rb=Math.min.apply(null,reg.map(y0)),tb=pn(P,'Tamponamento de baixo'),tl=pn(P,'Tamponamento esquerdo'),tr=pn(P,'Tamponamento direito');
           m.tb=false;draw();var tl2=pn(partsOf(m),'Tamponamento esquerdo');
           S.fr=[];var g=apAdd('geladeira',2),t=apAdd('torneira',0);window.open3D();var bx=window.dbg3all(),gb=bx.filter(function(b){return b.fr===g.id}).length,tq=bx.filter(function(b){return b.fr===t.id}).length;document.getElementById('v3x').click();
-          catOpen('ele');var ic=document.querySelectorAll('#catb [data-cati] svg').length,nb=document.querySelectorAll('#catb [data-cati]').length;document.getElementById('catm').hidden=true;
+          catOpen('cgel');var ic=document.querySelectorAll('#catb [data-cati] svg').length,nb=document.querySelectorAll('#catb [data-cati]').length;document.getElementById('catm').hidden=true;
           return JSON.stringify({mb:m.b,rb:rb,tbTop:y1(tb),tbBot:y0(tb),tlBot:y0(tl),trBot:y0(tr),tl2Bot:y0(tl2),gb:gb,tq:tq,ic:ic,nb:nb,errs:__errs});
           """#)
         let mb = o["mb"] as? Double ?? 0, rb = o["rb"] as? Double ?? 0, tbBot = o["tbBot"] as? Double ?? 0
@@ -329,13 +329,45 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["d0"] as? String, "inox,cromado,", "sem escolher: Inox e Cromado; TV sem acabamento")
         XCTAssertEqual(o["chips"] as? Int, 3, "geladeira: Inox, Branco, Preto")
-        XCTAssertEqual(o["tch"] as? Int, 4, "torneira: Cromado, Preto fosco, Dourado, Inox escovado")
+        XCTAssertEqual(o["tch"] as? Int, 5, "torneira: Cromado, Preto fosco, Dourado, Inox escovado, Rose gold")
         XCTAssertEqual(o["vch"] as? Int, 0, "TV sem botão de acabamento")
         let gI = o["gI"] as? Double ?? 0, gP = o["gP"] as? Double ?? 0
         XCTAssertLessThan(gP, gI * 0.5, "geladeira preta fica escura no 3D")
         XCTAssertGreaterThanOrEqual(o["tvn"] as? Int ?? 0, 7, "TV com borda, caixa de trás, suporte, luz e reflexo")
         XCTAssertEqual(o["fins"] as? String, "preto,dourado,", "acabamento salvo no projeto")
         XCTAssertEqual(o["preto2d"] as? Bool, true, "desenho 2D segue o acabamento")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testParedesCubasCooktopEDormitorio() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();
+          var sw=sideWalls(),lados=(sw.L===0&&sw.R===S.W);
+          window.open3D();window.fx3api.open({k:'wall',s:'L'});var campos=Array.prototype.map.call(document.querySelectorAll('#it4 [data-qf]'),function(i){return i.dataset.qf}).join(),tipos=document.querySelectorAll('#it4 [data-qwt]').length,ori=document.querySelectorAll('#it4 [data-qwo]').length;
+          var i=document.querySelector('#it4 [data-qf="wrel"]');i.value='110';i.dispatchEvent(new Event('change',{bubbles:true}));var w=window.dbgWall(),gir=!!(w.L[0]&&w.L[0].gp&&w.L[0].x0<-500),ang=S.wall.L.a;
+          document.getElementById('v3x').click();S.wall=null;draw();
+          S.st.items=[];S.st.w=2600;catAct2({act:'cuba',cm:'mar2'});catAct2({act:'cook',cm:'b5t'});S.st.items[0].x=200;S.st.items[1].x=1500;draw();
+          window.open3D();var bx=window.dbg3all(),cuba=bx.filter(function(q){return q.sid===S.st.id&&!q.ck}).length,cook=bx.filter(function(q){return q.ck}).length;document.getElementById('v3x').click();
+          var bocas=cookPos(S.st.items[1]).length,cubas=cubaBowls(S.st.items[0]).length;
+          S.room='quarto';S.env='livre';S.mods=[];S.stones=[];S.st=null;draw();
+          var arm=CATS.filter(function(c){return c.id==='dArm'})[0].it;newTpl(arm[4]);var P=partsOf(S.mods[0]).map(function(p){return p.name});newTpl(arm[10]);var P2=partsOf(S.mods[1]).map(function(p){return p.name});
+          return JSON.stringify({lados:lados,campos:campos,tipos:tipos,ori:ori,gir:gir,ang:ang,cuba:cuba,cook:cook,bocas:bocas,cubas:cubas,narm:arm.length,portas:P.filter(function(n){return n==='Porta'}).length,gav:P.filter(function(n){return n==='Frente de gaveta'}).length,semLat:P2.indexOf('Lateral esquerda')<0&&P2.indexOf('Lateral direita')>=0,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lados"] as? Bool, true, "paredes do lado aparecem sempre")
+        XCTAssertEqual(o["campos"] as? String, "wlen,wabs,wrel,wt,wh0,wh1", "editor de paredes com comprimento, ângulos, espessura e pé-direito")
+        XCTAssertEqual(o["tipos"] as? Int, 4, "tipo da parede")
+        XCTAssertEqual(o["ori"] as? Int, 3, "orientação")
+        XCTAssertEqual(o["gir"] as? Bool, true, "parede girada no 3D")
+        XCTAssertEqual(o["ang"] as? Int, 110, "ângulo salvo")
+        XCTAssertGreaterThan(o["cuba"] as? Int ?? 0, 60, "cuba com aba, cantos redondos e ralo")
+        XCTAssertGreaterThan(o["cook"] as? Int ?? 0, 60, "cooktop com grades e botões")
+        XCTAssertEqual(o["bocas"] as? Int, 5, "cooktop 5 bocas")
+        XCTAssertEqual(o["cubas"] as? Int, 2, "Marea 2C com 2 cubas")
+        XCTAssertEqual(o["narm"] as? Int, 13, "13 armários de dormitório")
+        XCTAssertEqual(o["portas"] as? Int, 2, "2P+Gav Ext: 2 portas")
+        XCTAssertEqual(o["gav"] as? Int, 3, "2P+Gav Ext: 3 gavetas de fora")
+        XCTAssertEqual(o["semLat"] as? Bool, true, "s/ Lat Esq sem a lateral esquerda")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

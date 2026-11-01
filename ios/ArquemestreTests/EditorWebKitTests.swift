@@ -312,4 +312,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ic"] as? Int, o["nb"] as? Int, "cada eletro do catálogo com o desenho na frente")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    func testAcabamentoDosEletrosETVReal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);S.fr=[];var g=apAdd('geladeira',2),t=apAdd('torneira',0),v=apAdd('tv',1);draw();
+          var d0=[apFin(g),apFin(t),apFin(v)].join();
+          window.open3D();var lum=function(id){var b=window.dbg3all().filter(function(q){return q.fr===id&&!q.em&&Array.isArray(q.c)}),s=0,n=0;b.forEach(function(q){var a=(q.x1-q.x0)*(q.y1-q.y0)+(q.x1-q.x0)*(q.z1-q.z0)+(q.y1-q.y0)*(q.z1-q.z0);s+=a*(q.c[0]+q.c[1]+q.c[2])/3;n+=a});return n?s/n:-1};
+          var gI=lum(g.id);window.fx3api.open({k:'fr',id:g.id});var chips=document.querySelectorAll('#it4 [data-qfin]').length;document.querySelector('#it4 [data-qfin="preto"]').click();var gP=lum(g.id);
+          window.fx3api.open({k:'fr',id:t.id});var tch=document.querySelectorAll('#it4 [data-qfin]').length;document.querySelector('#it4 [data-qfin="dourado"]').click();
+          window.fx3api.open({k:'fr',id:v.id});var vch=document.querySelectorAll('#it4 [data-qfin]').length,tvn=window.dbg3all().filter(function(q){return q.fr===v.id}).length;
+          document.getElementById('v3x').click();
+          var st=JSON.parse(JSON.stringify(snapState()));S.fr.forEach(function(f){delete f.fin});loadState(st);
+          var svg=(document.querySelector('[data-ap="'+g.id+'"]')||{}).innerHTML||'';
+          return JSON.stringify({d0:d0,gI:gI,gP:gP,chips:chips,tch:tch,vch:vch,tvn:tvn,fins:S.fr.map(function(f){return f.fin||''}).join(),preto2d:svg.indexOf('#3a3e44')>=0,errs:__errs});
+          """#)
+        XCTAssertEqual(o["d0"] as? String, "inox,cromado,", "sem escolher: Inox e Cromado; TV sem acabamento")
+        XCTAssertEqual(o["chips"] as? Int, 3, "geladeira: Inox, Branco, Preto")
+        XCTAssertEqual(o["tch"] as? Int, 4, "torneira: Cromado, Preto fosco, Dourado, Inox escovado")
+        XCTAssertEqual(o["vch"] as? Int, 0, "TV sem botão de acabamento")
+        let gI = o["gI"] as? Double ?? 0, gP = o["gP"] as? Double ?? 0
+        XCTAssertLessThan(gP, gI * 0.5, "geladeira preta fica escura no 3D")
+        XCTAssertGreaterThanOrEqual(o["tvn"] as? Int ?? 0, 7, "TV com borda, caixa de trás, suporte, luz e reflexo")
+        XCTAssertEqual(o["fins"] as? String, "preto,dourado,", "acabamento salvo no projeto")
+        XCTAssertEqual(o["preto2d"] as? Bool, true, "desenho 2D segue o acabamento")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

@@ -32,6 +32,7 @@ jobs:
 
       - name: Conferência App Store (o que mais dá recusa na revisão)
         run: |
+          set -o pipefail
           mkdir -p ios/build
           python3 ios/scripts/appstore_check.py | tee ios/build/appstore-check.txt
 
@@ -79,8 +80,9 @@ jobs:
 
       - name: Capturas não podem sair vazias (tela que não carregou)
         run: |
+          set -o pipefail
           cd ios
-          python3 scripts/check_blank.py build/capturas | tee build/blank-check.txt
+          { cat build/capturas-tentativas.txt 2>/dev/null; python3 scripts/check_blank.py build/capturas; } | tee build/blank-check.txt
 
       # Assinatura (StoreKit Testing): no iOS 26.3+ o `xcodebuild test` não carrega o .storekit (bug da Apple FB22237318),
       # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).

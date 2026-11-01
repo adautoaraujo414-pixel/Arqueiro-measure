@@ -6,6 +6,29 @@ APP="$1"; OUT="$2"
 BID=br.com.arque.measure
 mkdir -p "$OUT"
 DIR="$(cd "$(dirname "$0")" && pwd)"
+LOG="$(dirname "$OUT")/capturas-tentativas.txt"
+: > "$LOG"
+
+# tira a captura; se saiu vazia (o app ainda não desenhou a primeira tela), espera mais e tira de novo.
+# Se continuar vazia, abre o app de novo uma vez. Anota cada nova tentativa (fica no RESUMO), pra não esconder nada.
+take() { # $1 udid  $2 arquivo  $3.. comando de abrir o app
+  local udid="$1" f="$2" t; shift 2
+  for t in 1 2 3 4 5 6; do
+    xcrun simctl io "$udid" screenshot "$f" >/dev/null
+    if python3 "$DIR/check_blank.py" --one "$f"; then
+      [ "$t" = 1 ] || echo "$(basename "$(dirname "$f")")/$(basename "$f"): saiu certa na tentativa $t" >> "$LOG"
+      return 0
+    fi
+    echo "$(basename "$(dirname "$f")")/$(basename "$f"): tentativa $t vazia, esperando mais" >> "$LOG"
+    if [ "$t" = 3 ]; then
+      xcrun simctl terminate "$udid" "$BID" 2>/dev/null || true
+      "$@" >/dev/null
+      sleep 10
+    else
+      sleep 6
+    fi
+  done
+}
 
 shoot() { # $1 kind (iphone|ipad)
   local kind="$1" udid
@@ -24,17 +47,19 @@ shoot() { # $1 kind (iphone|ipad)
     mkdir -p "$dir"
     xcrun simctl uninstall "$udid" "$BID" 2>/dev/null || true
     xcrun simctl install "$udid" "$APP"
+    # região do idioma: no simulador ela é EUA, e o dinheiro sairia "$" nas capturas em português
+    local loc=pt_BR
+    [ "$lang" = "en" ] && loc=en_US
+    [ "$lang" = "es" ] && loc=es_MX
     local n=1
     for scr in library editor agenda quotes moveis trial; do
       xcrun simctl terminate "$udid" "$BID" 2>/dev/null || true
       xcrun simctl privacy "$udid" grant photos "$BID" 2>/dev/null || true
-      if [ "$scr" = "trial" ]; then
-        xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -demo -trialOffer >/dev/null
-      else
-        xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -demo -screen "$scr" >/dev/null
-      fi
+      local cmd=(xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -AppleLocale "$loc" -demo)
+      if [ "$scr" = "trial" ]; then cmd+=(-trialOffer); else cmd+=(-screen "$scr"); fi
+      "${cmd[@]}" >/dev/null
       if [ "$scr" = "moveis" ]; then sleep 20; else sleep 7; fi
-      xcrun simctl io "$udid" screenshot "$dir/${kind}-${n}-${scr}.png"
+      take "$udid" "$dir/${kind}-${n}-${scr}.png" "${cmd[@]}"
       n=$((n+1))
     done
   done

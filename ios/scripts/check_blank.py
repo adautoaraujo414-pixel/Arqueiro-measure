@@ -2,7 +2,7 @@
 """Confere se alguma captura de tela saiu vazia (tela toda de uma cor só: branca ou preta).
 
 Tela vazia é motivo comum de recusa (regra 2.1: "não carregou o conteúdo"). Sem bibliotecas de fora:
-lê o PNG com zlib. Uso: check_blank.py <pasta das capturas>
+lê o PNG com zlib. Uso: check_blank.py <pasta das capturas>  |  check_blank.py --one <arquivo.png>
 """
 import os, shutil, struct, subprocess, sys, tempfile, zlib
 
@@ -72,6 +72,10 @@ def blank_fraction(path):
 
 
 def main():
+    # check_blank.py --one <arquivo.png>: só diz (pelo código de saída) se a captura saiu vazia — usado pelo screenshots.sh pra esperar mais
+    if len(sys.argv) > 2 and sys.argv[1] == '--one':
+        fr = blank_fraction(sys.argv[2])
+        sys.exit(1 if fr is not None and fr > 0.95 else 0)
     root = sys.argv[1] if len(sys.argv) > 1 else 'build/capturas'
     bad = []
     for d, _, fs in os.walk(root):

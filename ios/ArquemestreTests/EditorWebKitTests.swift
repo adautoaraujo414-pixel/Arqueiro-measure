@@ -370,4 +370,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semLat"] as? Bool, true, "s/ Lat Esq sem a lateral esquerda")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    func testSetinhasParedesECaixa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();apAdd('geladeira',0);draw();
+          window.open3D();window.fx3api.open({k:'st',id:S.st.id});var st=ah3api.specs().join();
+          window.fx3api.open({k:'fr',id:S.fr[0].id});var fr=ah3api.specs().join();window.fx3api.open({k:'mod',mi:1});var md=ah3api.specs().join();
+          window.fx3api.open({k:'wall',s:'P'});var pi=ah3api.specs().join();var vis=document.querySelectorAll('#ah3 [data-ah]').length;
+          S.geo=[{id:1,x:600,z:900,w:600,d:400,b:0,h:300,c:'#d9d4ca'}];S.xw=[{id:1,a:[500,1500],b:[2000,1500],t:150}];window.re3();
+          var gb=window.dbg3all().length;window.fx3api.open({k:'geo',id:1});var gs=ah3api.specs().join();window.fx3api.open({k:'wall',s:'X1'});var xs=ah3api.specs().join();
+          ah3api.wm(1);var bar=Array.prototype.map.call(document.querySelectorAll('#v3wb [data-wb]'),function(b){return b.dataset.wb}).slice(0,3).join();ah3api.del('X1');var nx=S.xw.length;ah3api.del('L');var semL=sideWalls().L===null;ah3api.wm(0);
+          var sv=JSON.parse(JSON.stringify(snapState()));document.getElementById('v3x').click();
+          return JSON.stringify({st:st,fr:fr,md:md,pi:pi,vis:vis,gs:gs,xs:xs,bar:bar,nx:nx,semL:semL,sg:(sv.geo||[]).length,errs:__errs});
+          """#)
+        XCTAssertEqual(o["st"] as? String, "xm,xp,zp,yp", "pedra: setinhas nos lados, frente e altura")
+        XCTAssertEqual(o["fr"] as? String, "xm,xp,yp,ym,zp", "eletro: setinhas")
+        XCTAssertEqual(o["md"] as? String, "xm,xp,yp,zp,ym", "aéreo: setinhas")
+        XCTAssertEqual(o["pi"] as? String, "pc,px,pz", "piso: canto e lados")
+        XCTAssertGreaterThanOrEqual(o["vis"] as? Int ?? 0, 2, "setinhas aparecem por cima do 3D")
+        XCTAssertEqual(o["gs"] as? String, "xm,xp,ym,yp,zm,zp", "caixa: 6 setinhas")
+        XCTAssertEqual(o["xs"] as? String, "xa,xb,xt", "parede nova: pontas e altura")
+        XCTAssertEqual(o["bar"] as? String, "new,del,ok", "cabeçalho simples das paredes")
+        XCTAssertEqual(o["nx"] as? Int, 0, "apagar parede nova")
+        XCTAssertEqual(o["semL"] as? Bool, true, "apagar parede esquerda")
+        XCTAssertEqual(o["sg"] as? Int, 1, "caixa salva no projeto")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

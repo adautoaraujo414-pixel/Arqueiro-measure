@@ -1,0 +1,1906 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
+package br.com.arque.measure.ui
+
+import br.com.arque.measure.i18n.tr
+
+import br.com.arque.measure.model.isOpening
+import android.graphics.Path as APath
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Redo
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.ChangeHistory
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CropSquare
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FitScreen
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.RoundedCorner
+import androidx.compose.material.icons.filled.ShapeLine
+import androidx.compose.material.icons.filled.Straighten
+import androidx.compose.material.icons.filled.TextFields
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import br.com.arque.measure.compat.nativeCanvas
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.ui.input.pointer.PointerType
+import androidx.compose.ui.input.pointer.changedToDown
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import br.com.arque.measure.AppViewModel
+import br.com.arque.measure.Screen
+import br.com.arque.measure.ble.BleState
+import br.com.arque.measure.logic.Geo
+import br.com.arque.measure.logic.Units
+import br.com.arque.measure.model.DimObj
+import br.com.arque.measure.model.LengthUnit
+import br.com.arque.measure.model.PhotoObj
+import br.com.arque.measure.model.Sheet
+import br.com.arque.measure.model.Template
+import br.com.arque.measure.model.TextObj
+import java.util.Locale
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
+
+private fun Tool.icon(): ImageVector = when (this) {
+    Tool.NAVIGATE -> Icons.Filled.NearMe
+    Tool.SELECT -> Icons.Filled.NearMe
+    Tool.PEN -> PenIcon
+    Tool.PENCIL -> Icons.Filled.Edit
+    Tool.HIGHLIGHTER -> HighlighterIcon
+    Tool.ERASER -> EraserIcon
+    Tool.LINE -> Icons.Filled.Remove
+    Tool.DASHED -> Icons.Filled.ShapeLine
+    Tool.ARROW -> Icons.AutoMirrored.Filled.ArrowRightAlt
+    Tool.DIM -> Icons.Filled.Straighten
+    Tool.ROOM -> Icons.Filled.Home
+    Tool.RECT -> Icons.Filled.CropSquare
+    Tool.RRECT -> Icons.Filled.RoundedCorner
+    Tool.ELLIPSE -> Icons.Filled.RadioButtonUnchecked
+    Tool.TRIANGLE -> Icons.Filled.ChangeHistory
+    Tool.TEXT -> Icons.Filled.TextFields
+    else -> Icons.Filled.CropSquare
+}
+
+private fun svgIcon(name: String, d: String, evenOdd: Boolean = false): ImageVector =
+    ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(d).toNodes(),
+            pathFillType = if (evenOdd) androidx.compose.ui.graphics.PathFillType.EvenOdd else androidx.compose.ui.graphics.PathFillType.NonZero,
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
+
+/** Caneta: ponta de pena (bico com furo e fenda) — diferente do lápis. */
+val PenIcon: ImageVector by lazy {
+    svgIcon("Caneta", "M12,1.8L18.3,9.4L15.2,21.2L8.8,21.2L5.7,9.4Z M13.7,10.9A1.7,1.7 0 1,1 10.3,10.9A1.7,1.7 0 1,1 13.7,10.9Z M11.35,12.9L12.65,12.9L12.65,19.4L11.35,19.4Z", evenOdd = true)
+}
+
+/** Marca-texto: corpo largo com ponta chanfrada e a faixa marcada embaixo. */
+val HighlighterIcon: ImageVector by lazy {
+    svgIcon("Marca-texto", "M15.2,2.2L21.8,8.8L12.6,18L6,11.4Z M5.3,12.1L11.9,18.7L9.6,21L5,21L3,19L3,14.4Z M13.5,20.6L22,20.6L22,22.4L13.5,22.4Z")
+}
+
+/** Borracha de verdade (bloco inclinado com a ponta), no lugar do símbolo de apagar texto. */
+val EraserIcon: androidx.compose.ui.graphics.vector.ImageVector by lazy {
+    androidx.compose.ui.graphics.vector.ImageVector.Builder("Borracha", 24.dp, 24.dp, 24f, 24f).apply {
+        addPath(
+            androidx.compose.ui.graphics.vector.PathParser().parsePathString(
+                "M16.24,3.56L21.19,8.5C21.97,9.29 21.97,10.55 21.19,11.34L12,20.53C10.44,22.09 7.91,22.09 6.34,20.53L2.81,17C2.03,16.21 2.03,14.95 2.81,14.16L13.41,3.56C14.2,2.78 15.46,2.78 16.24,3.56M4.22,15.58L7.76,19.11C8.54,19.9 9.8,19.9 10.59,19.11L14.12,15.58L9.17,10.63L4.22,15.58Z",
+            ).toNodes(),
+            fill = androidx.compose.ui.graphics.SolidColor(Color.Black),
+        )
+    }.build()
+}
+
+private val shapeTools = listOf(
+    Tool.LINE, Tool.DASHED, Tool.ARROW, Tool.DARROW, Tool.CURVE,
+    Tool.ELBOW, Tool.DIM, Tool.DOOR, Tool.ROOM, Tool.RECT, Tool.RRECT,
+    Tool.ELLIPSE, Tool.TRIANGLE, Tool.RTRI, Tool.DIAMOND, Tool.TRAP,
+)
+
+private fun mmText(units: Float): String = String.format(Locale("pt", "BR"), "%.2f mm", units * MM_PER_UNIT)
+
+private fun nextUnit(u: LengthUnit) = when (u) {
+    LengthUnit.M -> LengthUnit.MM
+    LengthUnit.MM -> LengthUnit.CM
+    LengthUnit.CM -> LengthUnit.M
+}
+
+// ------------------------------------------------------------------ Cena (todas as folhas)
+
+private val overlayPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+    style = android.graphics.Paint.Style.STROKE
+    color = 0xFF2F80ED.toInt()
+}
+private val overlayPath = android.graphics.Path()
+private val eraserPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+    strokeCap = android.graphics.Paint.Cap.ROUND
+    strokeJoin = android.graphics.Paint.Join.ROUND
+}
+
+private fun drawScene(
+    nc: android.graphics.Canvas,
+    session: EditorSession,
+    renderer: SheetRenderer,
+    scale: Float,
+    selected: Boolean,
+    visTop: Float = -Float.MAX_VALUE,
+    visBot: Float = Float.MAX_VALUE,
+) {
+    val st = session.state
+    val step = Sheet.H + Sheet.GAP
+    st.note.pages.forEachIndexed { i, page ->
+        // folha fora da tela não é desenhada (com muitas folhas era o que mais pesava)
+        val y0 = i * step
+        if (y0 > visBot || y0 + Sheet.H < visTop) return@forEachIndexed
+        nc.save()
+        nc.translate(0f, i * step)
+        renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg)
+        if (i == st.pageIdx) {
+            overlayPaint.strokeWidth = 2f / scale
+            overlayPaint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f / scale, 6f / scale), 0f)
+            for (o in st.groupObjs()) {
+                val b = Geo.bounds(page, o)
+                val pad = 4f / scale
+                nc.drawRect(b.l - pad, b.t - pad, b.r + pad, b.b + pad, overlayPaint)
+            }
+            val lp = session.lasso
+            if (lp.size > 1) {
+                overlayPath.reset()
+                overlayPath.moveTo(lp[0].x, lp[0].y)
+                for (k in 1 until lp.size) overlayPath.lineTo(lp[k].x, lp[k].y)
+                nc.drawPath(overlayPath, overlayPaint)
+            }
+            overlayPaint.pathEffect = null
+            // rastro da borracha: faixa cinza clara por onde ela passou + o círculo dela
+            val tr = session.eraserTrail
+            if (tr.isNotEmpty()) {
+                val er = session.eraserSize * session.density / scale
+                eraserPaint.style = android.graphics.Paint.Style.STROKE
+                eraserPaint.strokeWidth = er * 2f
+                eraserPaint.color = 0x33808080
+                if (tr.size > 1) {
+                    overlayPath.reset()
+                    overlayPath.moveTo(tr[0].x, tr[0].y)
+                    for (k in 1 until tr.size) overlayPath.lineTo(tr[k].x, tr[k].y)
+                    nc.drawPath(overlayPath, eraserPaint)
+                }
+                val last = tr.last()
+                eraserPaint.style = android.graphics.Paint.Style.FILL
+                eraserPaint.color = 0x55FFFFFF
+                nc.drawCircle(last.x, last.y, er, eraserPaint)
+                eraserPaint.style = android.graphics.Paint.Style.STROKE
+                eraserPaint.strokeWidth = 1.5f / scale
+                eraserPaint.color = 0xFF666666.toInt()
+                nc.drawCircle(last.x, last.y, er, eraserPaint)
+            }
+        }
+        nc.restore()
+    }
+}
+
+@Composable
+fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = Modifier) {
+    val density = LocalDensity.current.density
+    session.density = density
+    val renderer = remember { vm.renderer() }
+    val controller = remember(session) { GestureController(session, density) }
+    val loupePath = remember { APath() }
+    // entrega os toques da caneta/dedo sem esperar o quadro da tela: traço responde mais rápido
+
+    Canvas(
+        modifier = modifier
+            .onSizeChanged { session.onCanvasSize(it.width.toFloat(), it.height.toFloat()) }
+            .onGloballyPositioned { session.canvasOrigin = it.positionInWindow() }
+            .pointerInput(session) {
+                // loop próprio (não espera todos os dedos saírem): com a mão apoiada, a caneta continua escrevendo
+                awaitPointerEventScope {
+                  while (true) {
+                    val first = awaitFirstDown(requireUnconsumed = false)
+                    if (session.screenLocked) {
+                        // travada: ignora tudo, só conta 3 toques seguidos para destravar
+                        var moved = false
+                        var upT = first.uptimeMillis
+                        do {
+                            val ev = awaitPointerEvent()
+                            ev.changes.forEach {
+                                if ((it.position - first.position).getDistance() > 24f * density) moved = true
+                                upT = it.uptimeMillis
+                                it.consume()
+                            }
+                        } while (ev.changes.any { it.pressed })
+                        if (!moved && upT - first.uptimeMillis < 400L && session.registerTap(upT, first.position)) session.toggleLock()
+                        continue
+                    }
+                    fun palmAt(c: androidx.compose.ui.input.pointer.PointerInputChange) =
+                        c.type != PointerType.Stylus && PalmGuard.isPalm(session.canvasOrigin.x + c.position.x, session.canvasOrigin.y + c.position.y)
+                    val palmIds = HashSet<androidx.compose.ui.input.pointer.PointerId>()
+                    var downId = first.id
+                    var downPos = first.position
+                    var downT = first.uptimeMillis
+                    var pen = first.type == PointerType.Stylus
+                    // mão/punho apoiado: não faz nada, espera a caneta ou um dedo de verdade
+                    var ignored = palmAt(first)
+                    if (ignored) { palmIds += first.id; first.consume() } else {
+                        session.tapDown(downT)
+                        session.textEdit = null
+                        controller.down(downPos, first.type == PointerType.Touch)
+                    }
+                    var multi = false
+                    var moved = false
+                    var upT = downT
+                    var last = downPos
+                    try {
+                        do {
+                            // parado com a caneta encostada: depois de um tempo o traço vira reta
+                            var evN = withTimeoutOrNull(600L) { awaitPointerEvent() }
+                            if (evN == null) { if (!ignored) controller.hold(); evN = awaitPointerEvent() }
+                            val ev = evN
+                            // toques novos de mão/punho e o toque que virou mão (contato cresceu) ficam de fora
+                            ev.changes.forEach { if (it.pressed && it.id !in palmIds && palmAt(it)) palmIds += it.id }
+                            if (!ignored && !pen && downId in palmIds) {
+                                if (multi) controller.pinchEnd() else controller.cancelSingle()
+                                session.settle()
+                                multi = false; ignored = true
+                            }
+                            ev.changes.forEach { if (it.id in palmIds) it.consume() }
+                            // caneta encostou depois da mão: descarta o toque da mão e passa a seguir a caneta
+                            if (!pen) {
+                                val sty = ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.type == PointerType.Stylus }
+                                    ?: if (ignored) ev.changes.firstOrNull { it.pressed && it.changedToDown() && it.id !in palmIds } else null
+                                if (sty != null) {
+                                    if (!ignored) { if (multi) controller.pinchEnd() else controller.cancelSingle() }
+                                    multi = false; moved = false; pen = sty.type == PointerType.Stylus; ignored = false
+                                    downId = sty.id; downPos = sty.position; downT = sty.uptimeMillis; upT = downT; last = downPos
+                                    session.tapDown(downT)
+                                    session.textEdit = null
+                                    controller.down(downPos, sty.type == PointerType.Touch)
+                                }
+                            }
+                            if (ignored) continue
+                            if (pen) ev.changes.forEach { if (it.id != downId) it.consume() }
+                            val pressed = ev.changes.filter { it.pressed && it.id !in palmIds && (!pen || it.id == downId) }
+                            if (pressed.size >= 2) {
+                                if (!multi) {
+                                    multi = true
+                                    controller.cancelSingle()
+                                    controller.pinchBegin(pressed[0].position, pressed[1].position)
+                                }
+                                controller.pinch(pressed[0].position, pressed[1].position)
+                                ev.changes.forEach { it.consume() }
+                            } else if (!multi && pressed.size == 1) {
+                                val ch = pressed[0]
+                                last = ch.position
+                                upT = ch.uptimeMillis
+                                if ((ch.position - downPos).getDistance() > 24f * density) moved = true
+                                if (ch.positionChanged()) {
+                                    // pontos intermediários que o Android junta num quadro só: escrita da caneta fica precisa
+                                    if (controller.wantsHistory()) ch.historical.forEach { h -> controller.move(h.position, h.uptimeMillis) }
+                                    controller.move(ch.position, ch.uptimeMillis)
+                                    controller.flush()
+                                    ch.consume()
+                                } else controller.still(ch.uptimeMillis)
+                            } else if (!pen && pressed.isEmpty()) {
+                                ev.changes.firstOrNull { it.id == downId }?.let { upT = it.uptimeMillis }
+                            }
+                        } while (ev.changes.any { it.pressed && (ignored || it.id !in palmIds) && (!pen || it.id == downId) })
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        // gesto interrompido pelo sistema: não deixa traço/arrasto pendurado
+                        if (multi) controller.pinchEnd() else controller.cancelSingle()
+                        session.settle()
+                        throw e
+                    }
+                    if (ignored) {
+                        session.settle()
+                    } else if (multi) {
+                        controller.pinchEnd()
+                        session.settle()
+                    } else {
+                        when (val a = controller.up(last)) {
+                            is GestureAction.TapDim -> vm.onDimTap(a.id)
+                            is GestureAction.TapSeg -> vm.onSegTap(a.id, a.seg)
+                            is GestureAction.EditText -> session.textEdit = TextEdit(a.id, a.at)
+                            null -> {}
+                        }
+                        // 3 toques rápidos travam a tela só na ferramenta de seleção (escrevendo, pontos e acentos não travam mais)
+                        if (!moved && upT - downT < 400L && session.tool == Tool.SELECT && session.registerTap(upT, downPos)) session.toggleLock()
+                    }
+                  }
+                }
+            },
+    ) {
+        @Suppress("UNUSED_VARIABLE")
+        val trigger = session.rev + vm.images.version
+        drawRect(Ui.paperBg)
+        val v = session.view
+        drawIntoCanvas { c ->
+            val nc = c.nativeCanvas
+            nc.save()
+            nc.translate(v.ox, v.oy)
+            nc.scale(v.scale, v.scale)
+            drawScene(nc, session, renderer, v.scale, selected = true, visTop = -v.oy / v.scale - 20f, visBot = if (session.canvasH > 0f) (-v.oy + session.canvasH) / v.scale + 20f else Float.MAX_VALUE)
+            nc.restore()
+
+            // lupa circular com mira, ≈124 dp, zoom 3,4×
+            val f = session.loupe
+            if (f != null) {
+                val size = 124f * density
+                val r = size / 2f
+                val margin = 12f * density
+                val left = f.x > session.canvasW * 0.55f && f.y < 300f * density
+                val lcx = if (left) margin + r else session.canvasW - margin - r
+                val lcy = 150f * density + r
+                val fw = v.toWorld(f)
+                nc.save()
+                loupePath.reset()
+                loupePath.addCircle(lcx, lcy, r, APath.Direction.CW)
+                nc.clipPath(loupePath)
+                nc.drawColor(0xFFFFFFFF.toInt())
+                nc.translate(lcx, lcy)
+                nc.scale(v.scale * 3.4f, v.scale * 3.4f)
+                nc.translate(-fw.x, -fw.y)
+                drawScene(nc, session, renderer, v.scale * 3.4f, selected = false, visTop = fw.y - 80f, visBot = fw.y + 80f)
+                nc.restore()
+                val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+                p.style = android.graphics.Paint.Style.STROKE
+                p.color = 0xFF222222.toInt(); p.strokeWidth = 1f * density
+                nc.drawLine(lcx - r * 0.35f, lcy, lcx + r * 0.35f, lcy, p)
+                nc.drawLine(lcx, lcy - r * 0.35f, lcx, lcy + r * 0.35f, p)
+                p.color = 0xFFFFFFFF.toInt(); p.strokeWidth = 3f * density
+                nc.drawCircle(lcx, lcy, r, p)
+                p.color = 0x66000000; p.strokeWidth = 1f * density
+                nc.drawCircle(lcx, lcy, r + 1.5f * density, p)
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Editor
+
+@Composable
+fun EditorScreen(vm: AppViewModel, session: EditorSession) {
+    @Suppress("UNUSED_VARIABLE")
+    val rev = session.uiRev
+    val st = session.state
+    val note = st.note
+    val selected = st.selected
+    val bleState by vm.ble.state.collectAsStateWithLifecycle()
+    val density = LocalDensity.current
+
+    var btOpen by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var pageMenu by remember { mutableStateOf(false) }
+    var shapesMenu by remember { mutableStateOf(false) }
+    var eraserMenu by remember { mutableStateOf(false) }
+    var imageMenu by remember { mutableStateOf(false) }
+    var overview by remember { mutableStateOf(false) }
+    var tpl by remember { mutableStateOf(Template.ARAUJO) }
+    var miniOpen by remember { mutableStateOf(false) }
+    var projLinkOpen by remember { mutableStateOf(false) }
+
+    val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        vm.addPhotosFromUris(uris)
+    }
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok -> vm.onCameraResult(ok) }
+    if (vm.askAnotherPhoto) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { vm.askAnotherPhoto = false },
+            title = { Text(tr("Foto adicionada")) },
+            text = { Text(tr("Também ficou salva na galeria do telefone (Imagens/ArqueMeasure).")) },
+            confirmButton = { TextButton(onClick = { vm.askAnotherPhoto = false; camera.launch(vm.newCameraUri()) }) { Text(tr("Tirar outra")) } },
+            dismissButton = { TextButton(onClick = { vm.askAnotherPhoto = false }) { Text(tr("Pronto")) } },
+        )
+    }
+    val pdfOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { it?.let(vm::exportPdf) }
+    val pngOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { it?.let(vm::exportPng) }
+    val csvOut = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { it?.let(vm::exportCsv) }
+
+    LaunchedEffect(vm.pendingImport, vm.screen) {
+        if (vm.screen == Screen.Editor) {
+            when (vm.pendingImport) {
+                "gallery" -> { vm.pendingImport = null; pickPhotos.launch("image/*") }
+                "camera" -> { vm.pendingImport = null; camera.launch(vm.newCameraUri()) }
+            }
+        }
+    }
+
+    fun addPage(pos: Int) {
+        pageMenu = false
+        if (st.addPage(pos, tpl)) session.goToPage(st.pageIdx) else vm.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES)
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        SheetCanvas(vm, session, Modifier.fillMaxSize())
+        session.lockMsg?.let { msg ->
+            LaunchedEffect(msg, session.screenLocked) { kotlinx.coroutines.delay(1600); session.lockMsg = null }
+            Text(
+                (if (session.screenLocked) "🔒 " else "🔓 ") + msg,
+                color = Color.White, fontSize = 22.sp,
+                modifier = Modifier.align(Alignment.Center).clip(RoundedCornerShape(16.dp)).background(Color(0xCC111111)).padding(horizontal = 22.dp, vertical = 14.dp),
+            )
+        }
+        if (session.screenLocked) {
+            Text(
+                tr("🔒 Tela travada · toque aqui para destravar"),
+                color = Color.White, fontSize = 14.sp,
+                modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 70.dp).clip(RoundedCornerShape(16.dp)).background(Color(0xE61B1C20)).clickable { session.toggleLock() }.padding(horizontal = 16.dp, vertical = 10.dp),
+            )
+        }
+
+        // dica de puxar para criar folha
+        if (session.pull > 20f) {
+            val ready = session.pull >= 80f * density.density
+            Text(
+                if (ready) tr("Solte para adicionar uma folha") else tr("Continue a deslizar para adicionar uma folha"),
+                color = Color.White, fontSize = 13.sp,
+                modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 24.dp)
+                    .clip(RoundedCornerShape(16.dp)).background(Color(0xCC000000)).padding(horizontal = 14.dp, vertical = 8.dp),
+            )
+        }
+
+        if (session.fullscreen) {
+            IconButton(
+                onClick = { session.fullscreen = false },
+                modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp).clip(CircleShape).background(Color(0x99000000)),
+            ) { Icon(Icons.Filled.Close, tr("Sair da tela cheia"), tint = Color.White) }
+        } else {
+            Surface(
+                modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth(),
+                color = Ui.panel, shadowElevation = 6.dp,
+                shape = RoundedCornerShape(bottomStart = 18.dp, bottomEnd = 18.dp),
+            ) {
+            Column(Modifier.statusBarsPadding().padding(bottom = 6.dp)) {
+                // ---- abas (só aparecem com mais de uma nota aberta) ----
+                if (vm.tabs.size > 1) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        vm.tabs.forEach { id ->
+                            val on = id == note.id
+                            Row(
+                                Modifier.clip(RoundedCornerShape(10.dp)).background(if (on) Ui.panel2 else Color.Transparent)
+                                    .clickable { if (!on) { vm.flush(); vm.openNote(id) } }.padding(start = 12.dp, end = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(if (on) note.name else vm.tabName(id), color = if (on) Ui.text else Ui.dim, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 140.dp))
+                                IconButton(onClick = { vm.closeTab(id) }, modifier = Modifier.size(28.dp)) { Icon(Icons.Filled.Close, tr("Fechar aba"), tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+                            }
+                        }
+                    }
+                }
+                // ---- linha 1: nota · folhas · medida ----
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    BarPill {
+                        BarIcon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar pra biblioteca"), label = tr("Voltar")) { vm.closeEditor() }
+                        BarIcon(Icons.AutoMirrored.Filled.Undo, tr("Desfazer"), st.canUndo) { st.undo() }
+                        BarIcon(Icons.AutoMirrored.Filled.Redo, tr("Refazer"), st.canRedo) { st.redo() }
+                    }
+                    val vp = session.visiblePage()
+                    BarPill {
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, tr("Folha anterior"), vp > 0, label = tr("Anterior")) { session.goToPage(vp - 1) }
+                        LBtn(tr("Folhas"), onClick = { overview = true }) { c -> Text("${vp + 1}/${note.pages.size}", color = c, fontSize = 14.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        BarIcon(Icons.AutoMirrored.Filled.KeyboardArrowRight, tr("Próxima folha"), vp < note.pages.lastIndex, label = tr("Próxima")) { session.goToPage(vp + 1) }
+                        Box {
+                            LBtn(tr("Nova folha"), onClick = { pageMenu = true }) { _ -> Icon(Icons.Filled.Add, null, Modifier.size(22.dp), tint = Ui.accent) }
+                            DropdownMenu(expanded = pageMenu, onDismissRequest = { pageMenu = false }) {
+                                DropdownMenuItem(text = { Text(tr("Antes da folha atual")) }, onClick = { addPage(st.pageIdx) })
+                                DropdownMenuItem(text = { Text(tr("Após a folha atual")) }, onClick = { addPage(st.pageIdx + 1) })
+                                DropdownMenuItem(text = { Text(tr("Última página")) }, onClick = { addPage(note.pages.size) })
+                                HorizontalDivider()
+                                Template.entries.forEach { t ->
+                                    DropdownMenuItem(
+                                        text = { Text((if (tpl == t) "● " else "○ ") + t.label) },
+                                        onClick = { tpl = t },
+                                    )
+                                }
+                                HorizontalDivider()
+                                DropdownMenuItem(text = { Text(tr("Adicionar outras páginas de nota (em breve)")) }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text(tr("Importar ficheiros (em breve)")) }, enabled = false, onClick = {})
+                                DropdownMenuItem(text = { Text(tr("Importar imagem")) }, onClick = { pageMenu = false; vm.photoToNewPage = true; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text(tr("Tirar fotografia")) }, onClick = { pageMenu = false; vm.photoToNewPage = true; camera.launch(vm.newCameraUri()) })
+                            }
+                        }
+                    }
+                    val linkedId = remember(vm.projVersion, note.id) { vm.linkedProject(note.id) }
+                    val linkedName = remember(vm.projVersion, linkedId) { linkedId?.let { id -> vm.moveisProjects().firstOrNull { it.id == id }?.name } }
+                    BarPill {
+                        // acesso rápido: ligada → abre o projeto do cliente direto (segurar: trocar/desligar)
+                        LBtn(linkedName ?: tr("Projeto"), on = linkedName != null, onClick = { if (!vm.openProjectOfNote(note.id)) projLinkOpen = true }, onLong = { projLinkOpen = true }) { _ -> Text("🪚", fontSize = 17.sp) }
+                    }
+                    if (projLinkOpen) ProjectLinkDialog(vm, note.id, linkedId) { projLinkOpen = false }
+                    val connected = bleState == BleState.CONNECTED
+                    BarPill {
+                        LBtn(tr("Unidade"), onClick = { st.setUnit(nextUnit(note.unit)) }) { c -> Text(note.unit.label, color = c, fontSize = 15.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) }
+                        LBtn(if (connected) tr("Trena ligada") else tr("Trena Bosch"), on = connected, onClick = { btOpen = true }) { c ->
+                            Icon(if (connected) Icons.Filled.BluetoothConnected else Icons.Filled.Bluetooth, null, Modifier.size(22.dp), tint = c)
+                        }
+                    }
+                    Box {
+                        BarPill { BarIcon(Icons.Filled.MoreVert, tr("Mais opções"), label = tr("Mais")) { menuOpen = true } }
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(text = { Text(tr("Zoom em tela cheia")) }, onClick = { menuOpen = false; session.fullscreen = true })
+                            DropdownMenuItem(text = { Text(tr("Visão geral da nota")) }, onClick = { menuOpen = false; overview = true })
+                            DropdownMenuItem(
+                                text = { Text(if (note.locked) tr("Remover bloqueio") else tr("Adicionar bloqueio")) },
+                                onClick = { menuOpen = false; st.setNoteLocked(!note.locked); vm.toast = if (!note.locked) tr("Nota bloqueada: abrirá só após remover o bloqueio") else tr("Bloqueio removido") },
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(text = { Text(tr("Exportar PDF")) }, onClick = { menuOpen = false; pdfOut.launch("${note.name}.pdf") })
+                            DropdownMenuItem(text = { Text(tr("Exportar folha (PNG)")) }, onClick = { menuOpen = false; pngOut.launch("${note.name}.png") })
+                            DropdownMenuItem(text = { Text(tr("Exportar medidas (CSV)")) }, onClick = { menuOpen = false; csvOut.launch("${note.name}-medidas.csv") })
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(if (session.stylusOnly) tr("Desenhar só com S Pen: ligado") else tr("Desenhar só com S Pen: desligado")) },
+                                onClick = { menuOpen = false; session.stylusOnly = !session.stylusOnly },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                // ---- linha 2: ferramentas (cada uma com o nome embaixo) ----
+                Row(
+                    Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // escrever
+                    BarPill {
+                        ToolBtn(Tool.PEN, session)
+                        ToolBtn(Tool.PENCIL, session)
+                        ToolBtn(Tool.HIGHLIGHTER, session)
+                        Box {
+                            val on = session.tool == Tool.ERASER
+                            LBtn(tr("Borracha"), on = on, onClick = { if (on) eraserMenu = true else session.chooseTool(Tool.ERASER) }) { c ->
+                                Icon(EraserIcon, null, tint = c, modifier = Modifier.size(22.dp))
+                            }
+                            DropdownMenu(expanded = eraserMenu, onDismissRequest = { eraserMenu = false }) {
+                                Column(Modifier.padding(horizontal = 14.dp).widthIn(min = 260.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(tr("Borracha"), fontSize = 15.sp)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        br.com.arque.measure.ui.EraserMode.values().forEach { m ->
+                                            val sel = session.eraserMode == m
+                                            Box(
+                                                Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                                                    .background(if (sel) Ui.accent.copy(alpha = 0.35f) else Color(0x22FFFFFF))
+                                                    .clickable { session.eraserMode = m }.padding(vertical = 10.dp),
+                                                contentAlignment = Alignment.Center,
+                                            ) { Text(m.label, fontSize = 13.sp, color = if (sel) Ui.accent else Ui.text) }
+                                        }
+                                    }
+                                    Text(
+                                        when (session.eraserMode) {
+                                            br.com.arque.measure.ui.EraserMode.PIXEL -> tr("Borracha normal: apaga só por onde passa (traço, linha, forma, contorno e parede).")
+                                            br.com.arque.measure.ui.EraserMode.STROKE -> tr("Apaga o traço ou a forma inteira que você tocar.")
+                                            br.com.arque.measure.ui.EraserMode.LASSO -> tr("Contorne com a caneta para apagar o que ficar dentro.")
+                                        },
+                                        fontSize = 12.sp, color = Ui.dim,
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("Tamanho"), fontSize = 13.sp, modifier = Modifier.width(80.dp))
+                                        androidx.compose.material3.Slider(value = session.eraserSize, onValueChange = { session.eraserSize = it }, valueRange = 4f..60f, modifier = Modifier.weight(1f))
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("Apenas apagar marca-texto"), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                                        Switch(checked = session.eraserOnlyHighlighter, onCheckedChange = { session.eraserOnlyHighlighter = it })
+                                    }
+                                    TextButton(onClick = { st.clearPageDrawings(); eraserMenu = false }) {
+                                        Text(tr("Limpar a página atual"), color = Color(0xFFFF5A5A))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // selecionar
+                    BarPill {
+                        ToolBtn(Tool.SELECT, session)
+                        ToolBtn(Tool.LASSO, session)
+                    }
+                    // medir e marcar
+                    BarPill {
+                        ToolBtn(Tool.DIM, session)
+                        ToolBtn(Tool.ROOM, session)
+                        ToolBtn(Tool.DOOR, session)
+                    }
+                    // inserir
+                    BarPill {
+                        Box {
+                            val inShapes = session.tool in shapeTools && session.tool !in listOf(Tool.DIM, Tool.ROOM, Tool.DOOR)
+                            LBtn(if (inShapes) session.tool.short() else tr("Formas"), on = inShapes, onClick = { shapesMenu = true }) { c ->
+                                ShapeGlyph(if (inShapes) session.tool else Tool.RECT, c, 22.dp)
+                            }
+                            DropdownMenu(expanded = shapesMenu, onDismissRequest = { shapesMenu = false }) {
+                                Column(Modifier.padding(horizontal = 12.dp).widthIn(min = 250.dp)) {
+                                    Text(tr("Formas"), fontSize = 15.sp, modifier = Modifier.padding(vertical = 4.dp))
+                                    shapeTools.filter { it != Tool.DIM && it != Tool.ROOM && it != Tool.DOOR }.chunked(4).forEach { rowTools ->
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            rowTools.forEach { t ->
+                                                LBtn(t.short(), on = session.tool == t, onClick = { session.chooseTool(t); shapesMenu = false }) { c -> ShapeGlyph(t, c, 24.dp) }
+                                            }
+                                        }
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("Espessura"), modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        IconButton(onClick = { applyWidth(session, -0.1f) }) { Icon(Icons.Filled.Remove, tr("Mais fino")) }
+                                        Text(mmText(session.width), fontSize = 13.sp)
+                                        IconButton(onClick = { applyWidth(session, 0.1f) }) { Icon(Icons.Filled.Add, tr("Mais grosso")) }
+                                    }
+                                    ColorRow(session.color) { applyColor(session, it) }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(tr("Preenchimento"), modifier = Modifier.weight(1f), fontSize = 13.sp)
+                                        Switch(checked = session.fill, onCheckedChange = { session.fill = it })
+                                    }
+                                }
+                            }
+                        }
+                        ToolBtn(Tool.TEXT, session)
+                        Box {
+                            LBtn(tr("Imagem"), onClick = { imageMenu = true }) { c -> Icon(Icons.Filled.Image, null, tint = c, modifier = Modifier.size(22.dp)) }
+                            DropdownMenu(expanded = imageMenu, onDismissRequest = { imageMenu = false }) {
+                                DropdownMenuItem(text = { Text(tr("Álbum")) }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; pickPhotos.launch("image/*") })
+                                DropdownMenuItem(text = { Text(tr("Câmera")) }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = { imageMenu = false; vm.photoToNewPage = false; camera.launch(vm.newCameraUri()) })
+                            }
+                        }
+                        LBtn(tr("Calculadora"), on = session.calcOpen, onClick = { session.calcOpen = !session.calcOpen }) { c ->
+                            Icon(Icons.Filled.Calculate, null, tint = c, modifier = Modifier.size(22.dp))
+                        }
+                    }
+                    // cor e espessura
+                    BarPill {
+                        Column(Modifier.padding(horizontal = 8.dp, vertical = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            ColorRow(session.color) { applyColor(session, it) }
+                            Text(tr("Cor"), color = Ui.text, fontSize = 10.sp, lineHeight = 12.sp)
+                        }
+                        LBtn(tr("Mais fina"), onClick = { applyWidth(session, -0.1f) }) { c -> Icon(Icons.Filled.Remove, null, tint = c, modifier = Modifier.size(20.dp)) }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(mmText(session.width), color = Ui.text, fontSize = 12.sp)
+                            Text(tr("Espessura"), color = Ui.dim, fontSize = 10.sp, lineHeight = 12.sp)
+                        }
+                        LBtn(tr("Mais grossa"), onClick = { applyWidth(session, 0.1f) }) { c -> Icon(Icons.Filled.Add, null, tint = c, modifier = Modifier.size(20.dp)) }
+                    }
+                }
+            }
+            }
+
+            // ---- calculadora flutuante ----
+            if (session.calcOpen) FloatingCalc(vm, session)
+
+            // ---- barra do grupo (laço) ----
+            if (st.groupIds.isNotEmpty() && !st.inGesture) {
+                val boxes = st.groupObjs().map { Geo.bounds(st.sheet, it) }
+                if (boxes.isNotEmpty()) {
+                    val tl = session.view.toScreen(br.com.arque.measure.model.Pt(boxes.minOf { it.l }, boxes.minOf { it.t }))
+                    val br2 = session.view.toScreen(br.com.arque.measure.model.Pt(boxes.maxOf { it.r }, boxes.minOf { it.t }))
+                    val cx = (tl.x + br2.x) / 2f
+                    val dx = with(density) { 130.dp.toPx() }
+                    val minY = with(density) { 190.dp.toPx() }
+                    val py = with(density) { 56.dp.toPx() }
+                    Surface(
+                        modifier = Modifier.offset { IntOffset((cx - dx).roundToInt().coerceAtLeast(8), (tl.y - py).roundToInt().coerceAtLeast(minY.roundToInt())) },
+                        shape = RoundedCornerShape(12.dp), color = Color(0xEE111111),
+                    ) {
+                        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(tr("{0} itens", st.groupIds.size), color = Color(0xFFAAAAAA), fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
+                            CtxBtn(tr("Eliminar")) { st.deleteGroup() }
+                            CtxBtn(tr("Cortar")) { session.copyGroup(cut = true) }
+                            CtxBtn(tr("Copiar")) { session.copyGroup() }
+                            CtxBtn(tr("Duplicar")) { st.pasteObjs(st.groupWithLinked()) }
+                            CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
+                        }
+                    }
+                }
+            }
+
+            // ---- menu de contexto acima do objeto selecionado ----
+            if (selected != null && selected !is DimObj && !st.inGesture) {
+                val ptsSheet = if (selected is PhotoObj) Geo.corners(selected)
+                else Geo.annPoints(st.sheet.photos(), selected as br.com.arque.measure.model.Ann)
+                if (ptsSheet.isNotEmpty()) {
+                    val screenPts = ptsSheet.map { session.view.toScreen(it) }
+                    val topY = screenPts.minOf { it.y }
+                    val cx = screenPts.map { it.x }.average().toFloat()
+                    val dx = with(density) { 160.dp.toPx() }
+                    val minY = with(density) { 190.dp.toPx() }
+                    val py = with(density) { 56.dp.toPx() }
+                    val botY = screenPts.maxOf { it.y }
+                    val scrH = with(density) { androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp.toPx() }
+                    val scrW = with(density) { androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp.toPx() }
+                    val barH = with(density) { 48.dp.toPx() }
+                    // acima do objeto se couber; senão embaixo dele, nunca por cima do desenho
+                    val yPos = if (topY - py >= minY) topY - py else (botY + with(density) { 10.dp.toPx() }).coerceAtMost(scrH - barH - with(density) { 24.dp.toPx() })
+                    val maxBarW = (scrW - with(density) { 24.dp.toPx() }).coerceAtLeast(200f)
+                    val xPos = (cx - dx).coerceIn(with(density) { 8.dp.toPx() }, (scrW - maxBarW).coerceAtLeast(8f))
+                    ContextBar(
+                        session = session,
+                        maxWidthPx = maxBarW,
+                        modifier = Modifier.offset { IntOffset(xPos.roundToInt(), yPos.roundToInt()) },
+                    )
+                }
+            }
+
+            // ---- zoom ----
+            Row(
+                Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(10.dp).clip(RoundedCornerShape(20.dp)).background(Color(0xCC000000)),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("${session.zoomPercent}%", color = Color.White, fontSize = 12.sp, modifier = Modifier.padding(start = 12.dp))
+                IconButton(onClick = { session.fitButton() }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.FitScreen, tr("Ajustar à largura"), tint = Color.White, modifier = Modifier.size(18.dp)) }
+            }
+
+            // ---- painel inferior: Distância, Telémetro, leituras ----
+            Column(
+                Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(10.dp).widthIn(max = 360.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val hasPanel = selected is DimObj || selected is br.com.arque.measure.model.DoorObj || selected is br.com.arque.measure.model.RoomObj
+                var panelMin by remember(selected?.id) { mutableStateOf(false) }
+                if (hasPanel) {
+                    // minimizado: a medida da trena continua entrando no segmento selecionado, só some o painel
+                    Text(
+                        if (panelMin) tr("▲ Medida (toque para abrir)") else tr("▼ Minimizar"),
+                        color = Color.White, fontSize = 12.sp,
+                        modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color(0xB31B1C20))
+                            .clickable { panelMin = !panelMin }.padding(horizontal = 12.dp, vertical = 7.dp),
+                    )
+                }
+                if (!panelMin) {
+                    (selected as? DimObj)?.let { DistancePanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.DoorObj)?.let { DoorPanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.RoomObj)?.let { RoomPanel(vm, session, it) }
+                    (selected as? br.com.arque.measure.model.WallObj)?.let { WallPanel(session, it) }
+                }
+                if (bleState == BleState.CONNECTED && !vm.trenaHidden) MiniTelemeter(vm, miniOpen, { miniOpen = !miniOpen })
+                ChipsBar(vm, bleState == BleState.CONNECTED) { btOpen = true }
+            }
+        }
+
+        // ---- campo de texto flutuante ----
+        session.textEdit?.let { edit ->
+            val existing = edit.id?.let { st.sheet.obj(it) as? TextObj }
+            val at = if (existing != null) {
+                session.view.toScreen(Geo.annPoints(st.sheet.photos(), existing)[0])
+            } else {
+                session.view.toScreen(edit.at)
+            }
+            FloatingField(
+                initial = existing?.text ?: "", width = 280.dp,
+                at = at, canvasW = session.canvasW, canvasH = session.canvasH,
+            ) { text -> session.commitText(edit, text) }
+        }
+    }
+
+    if (btOpen) BluetoothScreen(vm) { btOpen = false }
+    session.cabQuickId?.let { cid -> CabQuickWindow(session, cid) }
+    session.cabEditId?.let { cid -> CabinetScreen(vm, session, cid) { st.fitCabToPage(cid); session.cabEditId = null } }
+    if (overview) OverviewDialog(session, vm, onDismiss = { overview = false })
+}
+
+private fun applyColor(session: EditorSession, c: Int) {
+    session.color = c
+    session.state.selected?.let { if (it !is PhotoObj) session.state.setStyle(it.id, color = c) }
+}
+
+private fun applyWidth(session: EditorSession, deltaMm: Float) {
+    val w = (session.width + deltaMm * UNITS_PER_MM).coerceIn(0.1f * UNITS_PER_MM, 6f * UNITS_PER_MM)
+    session.width = w
+    session.state.selected?.let { if (it !is PhotoObj && it !is TextObj) session.state.setStyle(it.id, width = w) }
+}
+
+/** Ícone desenhado de cada forma (grade do painel de Formas). */
+@Composable
+private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp, cabinet: Boolean = false) {
+    Canvas(Modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        val sw = 2.2f * density
+        val st = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        fun P(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(x * w, y * h)
+        fun poly(p: List<androidx.compose.ui.geometry.Offset>, close: Boolean) {
+            val path = androidx.compose.ui.graphics.Path()
+            path.moveTo(p[0].x, p[0].y)
+            for (i in 1 until p.size) path.lineTo(p[i].x, p[i].y)
+            if (close) path.close()
+            drawPath(path, tint, style = st)
+        }
+        fun head(tip: androidx.compose.ui.geometry.Offset, from: androidx.compose.ui.geometry.Offset) {
+            val ang = Math.atan2((tip.y - from.y).toDouble(), (tip.x - from.x).toDouble())
+            val s = 0.26f * w
+            fun q(d: Double) = androidx.compose.ui.geometry.Offset(tip.x - s * Math.cos(ang + d).toFloat(), tip.y - s * Math.sin(ang + d).toFloat())
+            poly(listOf(q(-0.45), tip, q(0.45)), false)
+        }
+        if (cabinet) {
+            drawRect(tint, P(0.14f, 0.12f), androidx.compose.ui.geometry.Size(0.72f * w, 0.76f * h), style = st)
+            drawLine(tint, P(0.5f, 0.12f), P(0.5f, 0.88f), sw)
+            drawLine(tint, P(0.5f, 0.4f), P(0.86f, 0.4f), sw)
+            drawLine(tint, P(0.5f, 0.64f), P(0.86f, 0.64f), sw)
+            return@Canvas
+        }
+        when (t) {
+            Tool.LINE -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
+            Tool.DASHED -> drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round, androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(5f * density, 4f * density)))
+            Tool.ARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)) }
+            Tool.DARROW -> { drawLine(tint, P(0.12f, 0.88f), P(0.88f, 0.12f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.88f, 0.12f), P(0.12f, 0.88f)); head(P(0.12f, 0.88f), P(0.88f, 0.12f)) }
+            Tool.DIM -> { drawLine(tint, P(0.1f, 0.5f), P(0.9f, 0.5f), sw, androidx.compose.ui.graphics.StrokeCap.Round); head(P(0.9f, 0.5f), P(0.1f, 0.5f)); head(P(0.1f, 0.5f), P(0.9f, 0.5f)); drawLine(tint, P(0.1f, 0.25f), P(0.1f, 0.75f), sw); drawLine(tint, P(0.9f, 0.25f), P(0.9f, 0.75f), sw) }
+            Tool.DOOR -> {
+                // parede, trecho vermelho da porta e o arco de abertura
+                drawLine(tint, P(0.05f, 0.82f), P(0.95f, 0.82f), sw)
+                drawLine(Color(0xFFE53935), P(0.25f, 0.82f), P(0.75f, 0.82f), sw * 2f)
+                drawLine(Color(0xFFE53935), P(0.25f, 0.82f), P(0.25f, 0.32f), sw)
+                drawArc(Color(0xFFE53935), -90f, 90f, false, P(-0.25f, 0.32f), androidx.compose.ui.geometry.Size(1.0f * w, 1.0f * h), style = androidx.compose.ui.graphics.drawscope.Stroke(width = sw * 0.7f))
+            }
+            Tool.CURVE -> {
+                val path = androidx.compose.ui.graphics.Path()
+                path.moveTo(0.12f * w, 0.85f * h); path.quadraticBezierTo(0.15f * w, 0.1f * h, 0.88f * w, 0.15f * h)
+                drawPath(path, tint, style = st)
+            }
+            Tool.ELBOW -> poly(listOf(P(0.12f, 0.85f), P(0.12f, 0.15f), P(0.88f, 0.15f)), false)
+            Tool.LASSO -> {
+                drawOval(tint, P(0.1f, 0.14f), androidx.compose.ui.geometry.Size(0.8f * w, 0.55f * h), style = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f * density, 3f * density))))
+                drawLine(tint, P(0.4f, 0.69f), P(0.3f, 0.9f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+            Tool.ROOM -> poly(listOf(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f)), true)
+            Tool.RECT -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
+            Tool.RRECT -> drawRoundRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), androidx.compose.ui.geometry.CornerRadius(0.16f * w), style = st)
+            Tool.ELLIPSE -> drawOval(tint, P(0.12f, 0.2f), androidx.compose.ui.geometry.Size(0.76f * w, 0.6f * h), style = st)
+            Tool.TRIANGLE -> poly(listOf(P(0.5f, 0.14f), P(0.88f, 0.84f), P(0.12f, 0.84f)), true)
+            Tool.RTRI -> poly(listOf(P(0.16f, 0.14f), P(0.86f, 0.84f), P(0.16f, 0.84f)), true)
+            Tool.DIAMOND -> poly(listOf(P(0.5f, 0.1f), P(0.9f, 0.5f), P(0.5f, 0.9f), P(0.1f, 0.5f)), true)
+            Tool.TRAP -> poly(listOf(P(0.3f, 0.2f), P(0.7f, 0.2f), P(0.9f, 0.8f), P(0.1f, 0.8f)), true)
+            else -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
+        }
+    }
+}
+
+/** Grupo de botões da barra, em cápsula. */
+@Composable
+private fun BarPill(content: @Composable () -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(20.dp)).background(Ui.panel2).padding(horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) { content() }
+}
+
+/** Botão da barra: ícone com o nome embaixo (fica claro o que cada um faz). */
+@Composable
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+private fun LBtn(label: String, on: Boolean = false, enabled: Boolean = true, onClick: () -> Unit, onLong: (() -> Unit)? = null, icon: @Composable (Color) -> Unit) {
+    val col = when { !enabled -> Ui.line; on -> Ui.accent; else -> Ui.text }
+    Column(
+        Modifier.widthIn(min = 50.dp).clip(RoundedCornerShape(12.dp))
+            .background(if (on) Ui.accent.copy(alpha = 0.22f) else Color.Transparent)
+            .then(if (onLong != null) Modifier.combinedClickable(enabled = enabled, onClick = onClick, onLongClick = onLong) else Modifier.clickable(enabled = enabled, onClick = onClick))
+            .semantics { contentDescription = label }
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) { icon(col) }
+        Text(label, color = col, fontSize = 10.sp, maxLines = 1, lineHeight = 12.sp)
+    }
+}
+
+@Composable
+private fun BarIcon(icon: ImageVector, desc: String, enabled: Boolean = true, tint: Color = Ui.text, label: String = desc, onClick: () -> Unit) {
+    LBtn(label, enabled = enabled, onClick = onClick) { c -> Icon(icon, null, tint = if (enabled && c == Ui.text) tint else c, modifier = Modifier.size(22.dp)) }
+}
+
+/** Nome curto da ferramenta na barra. */
+private fun Tool.short(): String = when (this) {
+    Tool.DIM -> tr("Medida")
+    Tool.DOOR -> tr("Porta")
+    Tool.RRECT -> tr("Arredond.")
+    Tool.RTRI -> tr("Tri. reto")
+    Tool.DARROW -> tr("Seta dupla")
+    Tool.ELBOW -> tr("Linha L")
+    else -> label
+}
+
+@Composable
+private fun ToolBtn(t: Tool, session: EditorSession) {
+    val on = session.tool == t
+    LBtn(t.short(), on = on, onClick = { session.chooseTool(t) }) { c ->
+        when (t) {
+            Tool.LASSO, Tool.DIM, Tool.DOOR, Tool.ROOM -> ShapeGlyph(t, c, 22.dp)
+            else -> Icon(t.icon(), null, tint = c, modifier = Modifier.size(22.dp))
+        }
+    }
+}
+
+@Composable
+private fun ColorDot(c: Int, on: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.size(24.dp).clip(CircleShape).background(Color(c))
+            .border(if (on) 3.dp else 1.dp, if (on) Ui.accent else Color(0xFF777777), CircleShape).clickable(onClick = onClick),
+    )
+}
+
+@Composable
+private fun ColorRow(current: Int, onPick: (Int) -> Unit) {
+    var more by remember { mutableStateOf(false) }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        PALETTE.forEach { c -> ColorDot(c, current == c) { onPick(c) } }
+        if (current !in PALETTE) ColorDot(current, true) { more = true }
+        Box(
+            Modifier.size(24.dp).clip(CircleShape).clickable { more = true }.background(
+                Brush.sweepGradient(listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)),
+            ),
+        )
+    }
+    if (more) {
+        Dialog(onDismissRequest = { more = false }) {
+            Surface(shape = RoundedCornerShape(16.dp), color = Ui.panel) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(tr("Cores"), color = Ui.text, fontSize = 16.sp)
+                    EXTRA_COLORS.chunked(7).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            row.forEach { c -> Box(Modifier.size(32.dp)) { ColorDot(c, current == c) { onPick(c); more = false } } }
+                        }
+                    }
+                    TextButton(onClick = { more = false }) { Text(tr("Fechar")) }
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Menu de contexto da seleção
+
+@Composable
+private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modifier) {
+    val st = session.state
+    val o = st.selected ?: return
+    val maxW = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidthPx.toDp() }
+    // barra pequena e suave: uma linha só, rola para o lado se não couber, e não cobre o desenho
+    Surface(modifier = modifier.widthIn(max = maxW), shape = RoundedCornerShape(10.dp), color = Color(0xB31B1C20)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            CtxBtn(tr("Eliminar"), !o.locked) { st.delete(o.id) }
+            CtxBtn(tr("Cortar"), !o.locked) { session.copySelection(cut = true) }
+            CtxBtn(tr("Copiar")) { session.copySelection() }
+            CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
+            CtxBtn(tr("Duplicar")) { st.duplicate(o.id) }
+            if (o is PhotoObj) CtxBtn(tr("Girar 90°"), !o.locked) { st.rotatePhoto90(o.id) }
+            if (o is br.com.arque.measure.model.CabObj) {
+                val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+                if (o.layout != null) {
+                    CtxBtn(tr("◀ Mover"), !o.locked) { st.moveModule(o.id, -1) }
+                    CtxBtn(tr("Mover ▶"), !o.locked) { st.moveModule(o.id, 1) }
+                    CtxBtn(tr("⚙ Configurar")) { session.cabQuickId = o.id }
+                    CtxBtn(tr("Copiar ao lado"), !o.locked) { st.duplicate(o.id) }
+                    CtxBtn(tr("Parede")) { st.select(o.layout.wallId) }
+                } else if (o.wall != null) {
+                    CtxBtn(if (o.overflowsWall()) tr("⚠ Passa da parede") else tr("Na parede (desliza)"), false) { }
+                } else {
+                CtxBtn(tr("− Diminuir"), !o.locked && o.scaleDen < 100) { st.setCabScale(o.id, steps.firstOrNull { it > o.scaleDen } ?: 100) }
+                CtxBtn(tr("+ Aumentar"), !o.locked && o.scaleDen > 5) { st.setCabScale(o.id, steps.lastOrNull { it < o.scaleDen } ?: 5) }
+                CtxBtn(tr("Caber na folha"), !o.locked) {
+                    val need = maxOf(o.cab.wMm * 3.7795277 / 700.0, o.cab.hMm * 3.7795277 / 880.0)
+                    st.setCabScale(o.id, steps.firstOrNull { it >= need } ?: 100)
+                }
+                CtxBtn(tr("Escala 1:{0}", o.scaleDen), false) { }
+                }
+            }
+            CtxBtn(if (o.locked) tr("Desbloquear") else tr("Bloqueio")) { st.setLocked(o.id, !o.locked) }
+            CtxBtn(tr("Para frente")) { st.reorder(o.id, up = true) }
+            CtxBtn(tr("Para trás")) { st.reorder(o.id, up = false) }
+        }
+    }
+}
+
+@Composable
+private fun CtxBtn(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    Text(
+        label, color = if (enabled) Color.White else Color(0xFF777777), fontSize = 12.sp,
+        maxLines = 1, softWrap = false,
+        modifier = Modifier.clickable(enabled = enabled, onClick = onClick).padding(horizontal = 9.dp, vertical = 9.dp),
+    )
+}
+
+// ------------------------------------------------------------------ Calculadora flutuante
+
+@Composable
+private fun FloatingCalc(vm: AppViewModel, session: EditorSession) {
+    var ox by remember { mutableStateOf(40f) }
+    var oy by remember { mutableStateOf(220f) }
+    var expr by remember { mutableStateOf("") }
+    var collapsed by remember { mutableStateOf(false) }
+    val st = session.state
+    val result = br.com.arque.measure.logic.Calc.eval(expr)
+    val preview = if (expr.isEmpty()) "" else result?.let { br.com.arque.measure.logic.Calc.format(it) } ?: ""
+    val lastMm = vm.recent.firstOrNull()?.mm
+    fun press(k: String) {
+        when (k) {
+            "C" -> expr = ""
+            "⌫" -> expr = expr.dropLast(1)
+            "=" -> result?.let { expr = br.com.arque.measure.logic.Calc.format(it) }
+            "Medida" -> lastMm?.let { expr += br.com.arque.measure.logic.Units.formatNumber(it, st.unit) }
+            else -> expr += k
+        }
+    }
+    Surface(
+        modifier = Modifier.offset { IntOffset(ox.roundToInt(), oy.roundToInt()) }.width(236.dp),
+        shape = RoundedCornerShape(16.dp), color = Color(0xF2202226), shadowElevation = 10.dp,
+    ) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier.fillMaxWidth().pointerInput(Unit) {
+                    detectDragGestures { change, drag ->
+                        change.consume()
+                        ox += drag.x
+                        oy += drag.y
+                    }
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(tr("⠿  Calculadora"), color = Color(0xFFAAAAAA), fontSize = 13.sp, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
+                Text("–", color = Color.White, fontSize = 20.sp, modifier = Modifier.clickable { collapsed = !collapsed }.padding(horizontal = 12.dp))
+                Text("✕", color = Color.White, fontSize = 16.sp, modifier = Modifier.clickable { session.calcOpen = false }.padding(horizontal = 8.dp))
+            }
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(0xFF111214)).padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.End,
+            ) {
+                Text(if (expr.isEmpty()) "0" else expr, color = Color.White, fontSize = 24.sp, maxLines = 1)
+                Text(if (preview.isNotEmpty() && preview != expr) "= $preview" else " ", color = Color(0xFF7FB0FF), fontSize = 14.sp, maxLines = 1)
+            }
+            if (!collapsed) {
+                val rows = listOf(
+                    listOf("C", "⌫", "%", "÷"),
+                    listOf("7", "8", "9", "×"),
+                    listOf("4", "5", "6", "−"),
+                    listOf("1", "2", "3", "+"),
+                    listOf("0", ",", "(", ")"),
+                )
+                rows.forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                        row.forEach { k ->
+                            val op = k in listOf("÷", "×", "−", "+")
+                            Box(
+                                Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp))
+                                    .background(if (op) Ui.accent else Color(0xFF33363C))
+                                    .clickable { press(k) },
+                                contentAlignment = Alignment.Center,
+                            ) { Text(k, color = Color.White, fontSize = 18.sp) }
+                        }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp))
+                            .background(if (lastMm != null) Color(0xFF2E6B4F) else Color(0xFF2A2C30))
+                            .clickable(enabled = lastMm != null) { press("Medida") },
+                        contentAlignment = Alignment.Center,
+                    ) { Text(tr("Última medida"), color = if (lastMm != null) Color.White else Color(0xFF777777), fontSize = 13.sp) }
+                    Box(
+                        Modifier.weight(1f).height(42.dp).clip(RoundedCornerShape(10.dp)).background(Ui.accent).clickable { press("=") },
+                        contentAlignment = Alignment.Center,
+                    ) { Text("=", color = Color.White, fontSize = 22.sp) }
+                }
+                // escreve a conta e o resultado na folha (no meio do que está na tela)
+                Box(
+                    Modifier.fillMaxWidth().height(40.dp).clip(RoundedCornerShape(10.dp))
+                        .background(if (result != null) Color(0xFF3B4D7A) else Color(0xFF2A2C30))
+                        .clickable(enabled = result != null) {
+                            val r = br.com.arque.measure.logic.Calc.format(result!!)
+                            session.addTextCenter(if (expr.isNotEmpty() && expr != r) "$expr = $r" else r)
+                        },
+                    contentAlignment = Alignment.Center,
+                ) { Text(tr("📝 Escrever na folha"), color = if (result != null) Color.White else Color(0xFF777777), fontSize = 14.sp) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Cômodo
+
+@Composable
+private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.measure.model.RoomObj) {
+    val st = session.state
+    val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
+    val k = st.selectedSeg
+    val seg = r.segs.getOrNull(k)
+    val kinds = br.com.arque.measure.model.SegKind.values()
+    val dark = Color(0xFF111111)
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    if (seg != null) tr("Cômodo · segmento {0} de {1}", k + 1, r.segCount()) else tr("Cômodo · toque num segmento"),
+                    color = dark, fontSize = 16.sp, modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = { st.stepSeg(-1) }) { Text("‹") }
+                TextButton(onClick = { st.stepSeg(1) }) { Text("›") }
+            }
+            if (seg != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                    kinds.forEach { kd ->
+                        val on = seg.kind == kd
+                        val col = Color(roomSegColor(r, kd))
+                        Box(
+                            Modifier.clip(RoundedCornerShape(16.dp))
+                                .background(if (on) col else Color(0xFFEFEFEF))
+                                .clickable(enabled = !r.locked) { st.setSegKind(r.id, k, kd) }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 14.sp) }
+                    }
+                }
+                if (seg.kind == br.com.arque.measure.model.SegKind.DOOR) {
+                    Text(tr("Sentido da porta"), color = dark, fontSize = 13.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, hinge = 1 - seg.hinge) }, enabled = !r.locked) { Text(tr("↔ Dobradiça do outro lado")) }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, side = -seg.side) }, enabled = !r.locked) { Text(tr("⇅ Abre pro outro lado")) }
+                        OutlinedButton(onClick = { st.setSegDoor(r.id, k, slide = !seg.slide) }, enabled = !r.locked) { Text(if (seg.slide) tr("De correr ✓") else tr("De abrir ✓")) }
+                    }
+                } else if (!seg.kind.isOpening()) {
+                    Text(tr("Abrir neste trecho (a parede se divide e você mede cada parte)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.DOOR) }, enabled = !r.locked) { Text(tr("＋ Porta")) }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.WINDOW) }, enabled = !r.locked) { Text(tr("＋ Janela")) }
+                        OutlinedButton(onClick = { st.splitSeg(r.id, k, br.com.arque.measure.model.SegKind.OPENING) }, enabled = !r.locked) { Text(tr("＋ Vão")) }
+                    }
+                }
+                TextButton(onClick = { st.setAllSegKinds(r.id, seg.kind) }, enabled = !r.locked) {
+                    Text(tr("Aplicar \"{0}\" a todo o contorno", seg.kind.label))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ManualValueBox(Modifier.weight(1f), seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !r.locked) { mm -> st.setManualValue(mm) }
+                    TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
+                }
+                Text(
+                    when {
+                        seg.valueMm != null && connected -> tr("Meça de novo para substituir")
+                        seg.valueMm != null && seg.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+                        seg.valueMm != null -> tr("Medido pela trena Bosch")
+                        !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+                        else -> tr("Aguardando a medida da trena…")
+                    },
+                    color = Color(0xFF555555), fontSize = 13.sp,
+                )
+                if (seg.valueMm != null) TextButton(onClick = { st.clearValue(r.id) }) { Text(tr("Limpar medida")) }
+            }
+            if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
+                TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text(tr("Unir pontos soltos (reta = 1 medida)")) }
+            }
+            if (r.pts.size >= 3) {
+                TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) tr("Abrir contorno") else tr("Fechar contorno")) }
+            }
+            HorizontalDivider(color = Color(0xFFDDDDDD))
+            LabelSlider(tr("Quadradinho"), r.labelScale, 0.1f, 3f, "${(r.labelScale * 100).roundToInt()}%", !r.locked, st) { v -> st.setRoomLabelScale(r.id, v, live = true) }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, false) }, enabled = !r.locked) { Text(if (!r.labelVert) tr("Escrita deitada ✓") else tr("Escrita deitada")) }
+                OutlinedButton(onClick = { st.setRoomLabelVert(r.id, true) }, enabled = !r.locked) { Text(if (r.labelVert) tr("Escrita em pé ✓") else tr("Escrita em pé")) }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(tr("Cor da parede"), color = dark, fontSize = 13.sp)
+                ColorRow(r.color) { applyColor(session, it) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Distância (estilo Bosch, só leitura)
+
+@Composable
+private fun DistancePanel(vm: AppViewModel, session: EditorSession, d: DimObj) {
+    val st = session.state
+    val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
+    val status = when {
+        d.valueMm != null && connected -> tr("Meça de novo para substituir")
+        d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+        d.valueMm != null -> tr("Medido pela trena Bosch")
+        !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+        else -> tr("Aguardando a medida da trena…")
+    }
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(tr("Distância"), color = Color(0xFF111111), fontSize = 16.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
+                TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
+            }
+            Text(status, color = Color(0xFF555555), fontSize = 13.sp)
+            HorizontalDivider(color = Color(0xFFDDDDDD))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(tr("Cor"), color = Color(0xFF111111), fontSize = 13.sp)
+                ColorRow(d.color) { applyColor(session, it) }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(tr("Espessura da linha"), color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                IconButton(onClick = { applyWidth(session, -0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Remove, tr("Mais fina"), tint = Color(0xFF111111)) }
+                Text(mmText(d.width), color = Color(0xFF111111), fontSize = 13.sp)
+                IconButton(onClick = { applyWidth(session, 0.1f) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Filled.Add, tr("Mais grossa"), tint = Color(0xFF111111)) }
+            }
+            HorizontalDivider(color = Color(0xFFDDDDDD))
+            Text(tr("Quadradinho da medida"), color = Color(0xFF111111), fontSize = 14.sp)
+            LabelSlider(tr("Tamanho"), d.labelScale, 0.1f, 3f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, scale = v, live = true) }
+            LabelSlider(tr("Opacidade"), d.labelAlpha, 0.1f, 1f, "${(d.labelAlpha * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, alpha = v, live = true) }
+            LabelSlider(tr("Intensidade da cor"), d.labelIntensity, 0.15f, 1f, "${(d.labelIntensity * 100).roundToInt()}%", !d.locked, st) { v -> st.setDimLabel(d.id, intensity = v, live = true) }
+            Text(
+                tr("O quadradinho acompanha o tamanho da foto e da seta automaticamente."),
+                color = Color(0xFF777777), fontSize = 11.sp,
+            )
+            Row {
+                TextButton(onClick = { st.applyDimLabelToAll(d.id) }, enabled = !d.locked) { Text(tr("Aplicar a todas as cotas")) }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text(tr("Excluir"), color = Color(0xFFD32F2F)) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Porta marcada na linha
+
+@Composable
+private fun DoorPanel(vm: AppViewModel, session: EditorSession, d: br.com.arque.measure.model.DoorObj) {
+    val st = session.state
+    val connected = vm.ble.state.collectAsStateWithLifecycle().value == BleState.CONNECTED
+    val dark = Color(0xFF111111)
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 280.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(tr("🚪 Porta na linha"), color = Color(0xFFE53935), fontSize = 16.sp)
+            Text(tr("Arraste as bolinhas das pontas pra ajustar o vão em cima da linha."), color = Color(0xFF555555), fontSize = 12.sp)
+            Text(tr("Sentido de abertura"), color = dark, fontSize = 13.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                OutlinedButton(onClick = { st.setDoor(d.id, hinge = 1 - d.hinge) }, enabled = !d.locked) { Text(tr("↔ Dobradiça do outro lado")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, side = -d.side) }, enabled = !d.locked) { Text(tr("⇅ Abre pro outro lado")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, slide = !d.slide) }, enabled = !d.locked) { Text(if (d.slide) tr("De correr ✓") else tr("De abrir ✓")) }
+            }
+            Text(tr("Tamanho e escrita"), color = dark, fontSize = 13.sp)
+            LabelSlider(tr("Quadradinho"), d.labelScale, 0.2f, 2.5f, "${(d.labelScale * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, labelScale = v, live = true) }
+            LabelSlider(tr("Linha vermelha"), d.width, 0.4f, 5f, "${(d.width / 2.1f * 100).roundToInt()}%", !d.locked, st) { v -> st.setDoor(d.id, width = v, live = true) }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = false) }, enabled = !d.locked) { Text(if (!d.labelVert) tr("Escrita deitada ✓") else tr("Escrita deitada")) }
+                OutlinedButton(onClick = { st.setDoor(d.id, labelVert = true) }, enabled = !d.locked) { Text(if (d.labelVert) tr("Escrita em pé ✓") else tr("Escrita em pé")) }
+            }
+            Text(tr("Largura do vão"), color = dark, fontSize = 13.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ManualValueBox(Modifier.weight(1f), d.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !d.locked) { mm -> st.setManualValue(mm) }
+                TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
+            }
+            Text(
+                when {
+                    d.valueMm != null && connected -> tr("Meça de novo para substituir")
+                    d.valueMm != null && d.source == br.com.arque.measure.model.MeasureSource.MANUAL -> tr("Digitado à mão")
+                    d.valueMm != null -> tr("Medido pela trena Bosch")
+                    !connected -> tr("Toque na medida para digitar, ou conecte a trena Bosch")
+                    else -> tr("Aguardando a medida da trena…")
+                },
+                color = Color(0xFF555555), fontSize = 13.sp,
+            )
+            Row {
+                if (d.valueMm != null) TextButton(onClick = { st.clearValue(d.id) }) { Text(tr("Limpar medida")) }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = { st.delete(d.id) }, enabled = !d.locked) { Text(tr("Excluir porta"), color = Color(0xFFD32F2F)) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Telémetro e leituras
+
+@Composable
+private fun LabelSlider(
+    label: String,
+    value: Float,
+    min: Float,
+    max: Float,
+    shown: String,
+    enabled: Boolean,
+    st: br.com.arque.measure.logic.EditorState,
+    onChange: (Float) -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = Color(0xFF111111), fontSize = 13.sp, modifier = Modifier.width(120.dp))
+        androidx.compose.material3.Slider(
+            value = value.coerceIn(min, max),
+            onValueChange = { st.beginGesture(); onChange(it) },
+            onValueChangeFinished = { st.endGesture() },
+            valueRange = min..max,
+            enabled = enabled,
+            modifier = Modifier.weight(1f).height(32.dp),
+        )
+        Text(shown, color = Color(0xFF555555), fontSize = 12.sp, modifier = Modifier.width(44.dp))
+    }
+}
+
+@Composable
+private fun MiniTelemeter(vm: AppViewModel, open: Boolean, toggle: () -> Unit) {
+    val name by vm.ble.deviceName.collectAsStateWithLifecycle()
+    val k = vm.trenaScale
+    Surface(shape = RoundedCornerShape((12 * k).dp), color = Ui.panel) {
+        Column(Modifier.padding((8 * k).dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(tr("Trena"), color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.padding(end = (10 * k).dp))
+                Text(if (open) tr("Pronto ▾") else tr("Pronto ▸"), color = Ui.accent, fontSize = (12 * k).sp, modifier = Modifier.clickable(onClick = toggle))
+                Box(Modifier.weight(1f))
+                Text("A−", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale - 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("A+", color = Ui.text, fontSize = (13 * k).sp, modifier = Modifier.clickable { vm.changeTrenaScale(vm.trenaScale + 0.1f) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+                Text("✕", color = Ui.dim, fontSize = (14 * k).sp, modifier = Modifier.clickable { vm.changeTrenaHidden(true) }.padding(horizontal = (8 * k).dp, vertical = (4 * k).dp))
+            }
+            if (open) {
+                Text(name ?: tr("Bosch"), color = Ui.dim, fontSize = (12 * k).sp, modifier = Modifier.padding(top = (2 * k).dp))
+                TextButton(onClick = { vm.ble.disconnect() }) { Text(tr("Desconectar"), fontSize = (12 * k).sp) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChipsBar(vm: AppViewModel, connected: Boolean, onBt: () -> Unit) {
+    if (!connected && vm.recent.isEmpty()) return
+    val unit = vm.session?.state?.unit ?: LengthUnit.M
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (!vm.trenaHidden) Box(Modifier.size((44 * vm.trenaScale).dp).clip(CircleShape).background(Ui.distBlue).clickable(onClick = onBt), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Bluetooth, tr("Bluetooth"), tint = Color.White, modifier = Modifier.size((24 * vm.trenaScale).dp))
+        }
+        vm.recent.forEach { r ->
+            Row(
+                Modifier.clip(RoundedCornerShape(22.dp)).background(Ui.panel2).clickable { vm.applyRecent(r) }.padding(start = 14.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(Units.format(r.mm, unit), color = Ui.text, fontSize = 15.sp)
+                IconButton(onClick = { vm.discardRecent(r) }, modifier = Modifier.size(32.dp)) { Icon(Icons.Filled.Close, tr("Descartar"), tint = Ui.dim, modifier = Modifier.size(14.dp)) }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Visão geral
+
+@Composable
+private fun OverviewDialog(session: EditorSession, vm: AppViewModel, onDismiss: () -> Unit) {
+    val st = session.state
+    val renderer = remember { vm.renderer() }
+    var confirmDel by remember { mutableStateOf<Int?>(null) }
+    var menuFor by remember { mutableStateOf<Int?>(null) }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize(), color = Ui.bg) {
+            Column(Modifier.statusBarsPadding().navigationBarsPadding()) {
+                Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, tr("Fechar"), tint = Ui.text) }
+                    Text(tr("Visão geral do documento"), color = Ui.text, fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    Text(tr("{0} folhas", st.note.pages.size), color = Ui.dim, fontSize = 13.sp, modifier = Modifier.padding(end = 12.dp))
+                }
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(150.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    itemsIndexed(st.note.pages, key = { _, p -> p.id }) { i, page ->
+                        Column {
+                            Box(
+                                Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))
+                                    .border(if (i == st.pageIdx) 2.dp else 1.dp, if (i == st.pageIdx) Ui.accent else Ui.line, RoundedCornerShape(6.dp))
+                                    .clickable { onDismiss(); session.goToPage(i) },
+                            ) {
+                                val img = vm.images.version
+                                Canvas(Modifier.fillMaxWidth().height(200.dp)) {
+                                    @Suppress("UNUSED_VARIABLE") val t = img + session.uiRev
+                                    drawIntoCanvas { c ->
+                                        val nc = c.nativeCanvas
+                                        val k = min(size.width / Sheet.W, size.height / Sheet.H)
+                                        nc.save()
+                                        nc.translate((size.width - Sheet.W * k) / 2f, 0f)
+                                        nc.scale(k, k)
+                                        renderer.draw(nc, page, st.unit, null, k, withPaper = false)
+                                        nc.restore()
+                                    }
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("${i + 1}", color = Ui.text, fontSize = 14.sp, modifier = Modifier.weight(1f).padding(start = 4.dp))
+                                Box {
+                                    IconButton(onClick = { menuFor = i; confirmDel = null }) { Icon(Icons.Filled.MoreVert, tr("Mais"), tint = Ui.text) }
+                                    DropdownMenu(expanded = menuFor == i, onDismissRequest = { menuFor = null; confirmDel = null }) {
+                                        DropdownMenuItem(text = { Text(tr("Duplicar folha")) }, onClick = {
+                                            menuFor = null
+                                            if (!st.duplicatePage(i)) vm.toast = tr("Limite de {0} folhas", Sheet.MAX_PAGES)
+                                        })
+                                        DropdownMenuItem(
+                                            text = { Text(if (confirmDel == i) tr("Confirmar exclusão") else tr("Excluir folha"), color = Color(0xFFE53935)) },
+                                            enabled = st.note.pages.size > 1,
+                                            onClick = {
+                                                if (confirmDel == i) { menuFor = null; confirmDel = null; st.deletePage(i); session.updateActivePage(); session.clampView() }
+                                                else confirmDel = i
+                                            },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------------------ Campo flutuante (texto)
+
+@Composable
+private fun FloatingField(
+    initial: String,
+    width: Dp,
+    at: Offset,
+    canvasW: Float,
+    canvasH: Float,
+    onConfirm: (String) -> Unit,
+) {
+    val density = LocalDensity.current
+    val wPx = with(density) { width.toPx() }
+    val hPx = with(density) { 76.dp.toPx() }
+    val x = (at.x - wPx / 2f).coerceIn(8f, max(8f, canvasW - wPx - 8f))
+    val y = (at.y - hPx / 2f).coerceIn(8f, max(8f, canvasH - hPx - 8f))
+    var tfv by remember { mutableStateOf(TextFieldValue(initial, TextRange(0, initial.length))) }
+    val focus = remember { FocusRequester() }
+    Surface(
+        modifier = Modifier.offset { IntOffset(x.roundToInt(), y.roundToInt()) }.width(width),
+        shape = RoundedCornerShape(14.dp), shadowElevation = 10.dp, tonalElevation = 3.dp,
+    ) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                value = tfv,
+                onValueChange = { tfv = it },
+                singleLine = true,
+                modifier = Modifier.weight(1f).focusRequester(focus),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onConfirm(tfv.text) }),
+            )
+            IconButton(onClick = { onConfirm(tfv.text) }) { Icon(Icons.Filled.Check, tr("Confirmar")) }
+        }
+    }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+}
+
+// ------------------------------------------------------------------ Tela Bluetooth ("Ferramentas Bluetooth®")
+
+@Composable
+internal fun BluetoothScreen(vm: AppViewModel, onDismiss: () -> Unit) {
+    val ble = vm.ble
+    val state by ble.state.collectAsStateWithLifecycle()
+    val message by ble.message.collectAsStateWithLifecycle()
+    val found by ble.found.collectAsStateWithLifecycle()
+    val name by ble.deviceName.collectAsStateWithLifecycle()
+    val log by ble.log.collectAsStateWithLifecycle()
+
+    val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res ->
+        if (res.values.all { it }) ble.startScan() else ble.checkAvailability()
+    }
+    fun search() {
+        if (!ble.hasPermissions()) permLauncher.launch(ble.requiredPermissions()) else ble.startScan()
+    }
+    LaunchedEffect(Unit) { if (state != BleState.CONNECTED && state != BleState.CONNECTING) search() }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(Modifier.fillMaxSize(), color = Ui.bg) {
+            Column(Modifier.statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onDismiss) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr("Voltar"), tint = Ui.text) }
+                    Text(tr("Ferramentas Bluetooth®"), color = Ui.text, fontSize = 20.sp)
+                }
+                val ready = state == BleState.CONNECTED
+                val status = when (state) {
+                    BleState.CONNECTED -> tr("Pronto")
+                    BleState.CONNECTING -> tr("Conectando…")
+                    BleState.SCANNING -> tr("A pesquisar ferramentas.")
+                    BleState.IDLE -> tr("Pronto")
+                    BleState.OFF -> tr("Bluetooth desligado")
+                    BleState.NO_PERMISSION -> tr("Falta permissão de Bluetooth")
+                    BleState.UNAVAILABLE -> tr("Bluetooth LE indisponível")
+                    BleState.ERROR -> tr("Erro")
+                }
+                Text(status, color = Ui.text, fontSize = 16.sp)
+                Box(
+                    Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(
+                        Brush.horizontalGradient(listOf(Color(0xFFE53935), Color(0xFFF5B400), Color(0xFF2E9E57), Color(0xFF1E5BD8), Color(0xFF8E24AA))),
+                    ),
+                )
+                if (message.isNotBlank()) Text(message, color = Ui.dim, fontSize = 13.sp)
+                Text(
+                    tr("Protocolo não oficial, testado com a Bosch GLM 50-27 CG. Em outros modelos, confira cada valor com o visor da trena."),
+                    color = Color(0xFFFF8A80), fontSize = 13.sp,
+                )
+                if (ready) {
+                    Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(name ?: tr("Bosch"), color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                        TextButton(onClick = { ble.disconnect() }) { Text(tr("Desconectar")) }
+                    }
+                } else {
+                    Text(tr("Outras ferramentas"), color = Ui.dim, fontSize = 14.sp)
+                    found.forEach { d ->
+                        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Bluetooth, null, tint = Ui.distBlue, modifier = Modifier.size(20.dp))
+                            Text(d.name, color = Ui.text, fontSize = 16.sp, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                            TextButton(onClick = { ble.connect(d.address, d.name) }) { Text(tr("Conectar")) }
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { search() }) { Text(tr("Procurar de novo")) }
+                        TextButton(onClick = { if (ble.hasPermissions()) ble.startScan(all = true) else permLauncher.launch(ble.requiredPermissions()) }) { Text(tr("Mostrar todos")) }
+                        if (ble.lastAddress != null) {
+                            TextButton(onClick = { if (ble.hasPermissions()) ble.reconnectLast() else permLauncher.launch(ble.requiredPermissions()) }) { Text(tr("Última trena")) }
+                        }
+                    }
+                }
+                HorizontalDivider()
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("Mostrar painel da trena na folha"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    Switch(checked = !vm.trenaHidden, onCheckedChange = { vm.changeTrenaHidden(!it) })
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(tr("Tamanho do painel"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.width(150.dp))
+                    androidx.compose.material3.Slider(value = vm.trenaScale, onValueChange = { vm.changeTrenaScale(it) }, valueRange = 0.5f..1.3f, modifier = Modifier.weight(1f))
+                }
+                Text(tr("Com o painel oculto, a medida continua indo direto para a cota ou o segmento selecionado."), color = Ui.dim, fontSize = 12.sp)
+                if (log.isNotEmpty()) {
+                    HorizontalDivider()
+                    Text(tr("Diagnóstico: últimos quadros recebidos"), color = Ui.dim, fontSize = 13.sp)
+                    log.forEach { Text(it, color = Ui.dim, fontFamily = FontFamily.Monospace, fontSize = 11.sp) }
+                }
+            }
+        }
+    }
+}
+
+/** Caixa da medida: toque para digitar à mão (quando a trena não está conectada). */
+@Composable
+private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, enabled: Boolean, onSet: (Double) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    var input by remember { mutableStateOf("") }
+    val unit = br.com.arque.measure.model.LengthUnit.values().firstOrNull { it.label == unitLabel }
+    Box(
+        modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFFE6EEFF))
+            .clickable(enabled = enabled) { input = if (text == "–") "" else text; open = true }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Text(if (text == "–" && enabled) tr("– toque p/ digitar") else text, color = Ui.distBlue, fontSize = if (text == "–" && enabled) 15.sp else 22.sp)
+    }
+    if (open) {
+        NumPadDialog(tr("Digitar medida"), input, unitLabel, hint = tr("Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão."), onDismiss = { open = false }) { v ->
+            if (v > 0) onSet(Units.toMm(v, unit ?: br.com.arque.measure.model.LengthUnit.MM))
+            open = false
+        }
+    }
+}
+
+
+/** Painel da parede do projeto: medidas máximas e módulos (de baixo e superiores) lado a lado. */
+@Composable
+private fun WallPanel(session: EditorSession, w: br.com.arque.measure.model.WallObj) {
+    val st = session.state
+    val dark = Color(0xFF111111)
+    val steps = listOf(5, 8, 10, 15, 20, 25, 30, 40, 50, 75, 100)
+    Surface(shape = RoundedCornerShape(14.dp), color = Color.White) {
+        Column(
+            Modifier.heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(tr("Parede · {0} × {1} mm · escala 1:{2}", w.wMm.toLong(), w.hMm.toLong(), w.scaleDen), color = dark, fontSize = 16.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Largura (linha do topo)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.wMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, wMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Folga total"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.folgaMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, folgaMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Altura"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.hMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, hMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Superior a (do chão)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.upperBottomMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, upperBottomMm = mm) }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Pedra · largura (0 = sem)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneWMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneWMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Pedra · recuo da esq."), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneXMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneXMm = mm) }
+                }
+                Column(Modifier.weight(1f)) {
+                    Text(tr("Pedra · altura do chão (0 = auto)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(w.stoneTopMm, st.unit), st.unit.label, !w.locked) { mm -> st.setWall(w.id, stoneTopMm = mm) }
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                TextButton(onClick = { st.addWallModule(w.id, false) }, enabled = !w.locked) { Text(tr("+ Módulo de baixo")) }
+                TextButton(onClick = { st.addWallModule(w.id, true) }, enabled = !w.locked) { Text(tr("+ Módulo superior")) }
+                listOf(tr("Sobra à esq.") to 0, tr("Sobra nos 2 lados") to 1, tr("Sobra à dir.") to 2).forEach { (lb, v) ->
+                    TextButton(onClick = { st.setWall(w.id, alignRow = v) }, enabled = !w.locked && w.alignRow != v) { Text(lb) }
+                }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.firstOrNull { it > w.scaleDen } ?: 100) }, enabled = !w.locked && w.scaleDen < 100) { Text(tr("− Diminuir")) }
+                TextButton(onClick = { st.setWall(w.id, scaleDen = steps.lastOrNull { it < w.scaleDen } ?: 5) }, enabled = !w.locked && w.scaleDen > 5) { Text(tr("+ Aumentar")) }
+            }
+        }
+    }
+}
+
+
+/** Janela arrastável com as configurações do módulo (3 toques nele): medidas, vão, fundo, tamponamentos. */
+@Composable
+private fun CabQuickWindow(session: EditorSession, id: String) {
+    val st = session.state
+    @Suppress("UNUSED_VARIABLE") val rev = session.uiRev
+    val o = st.sheet.obj(id) as? br.com.arque.measure.model.CabObj
+    if (o == null) { session.cabQuickId = null; return }
+    val cab = o.cab
+    val dark = Color(0xFF111111)
+    var off by remember { mutableStateOf(androidx.compose.ui.unit.IntOffset(40, 260)) }
+    val first = cab.vaos.firstOrNull() ?: br.com.arque.measure.model.Vao()
+    fun setAll(f: (br.com.arque.measure.model.Vao) -> br.com.arque.measure.model.Vao) = st.updateCab(id) { c -> c.copy(vaos = c.vaos.map(f)) }
+    androidx.compose.ui.window.Popup(
+        alignment = Alignment.TopStart, offset = off,
+        properties = androidx.compose.ui.window.PopupProperties(focusable = false),
+    ) {
+        Surface(shape = RoundedCornerShape(14.dp), color = Color.White, contentColor = dark, shadowElevation = 14.dp, modifier = Modifier.width(330.dp)) {
+            Column {
+                Row(
+                    Modifier.fillMaxWidth().background(Color(0xFFE9ECF2))
+                        .pointerInput(Unit) {
+                            detectDragGestures { change, drag ->
+                                change.consume()
+                                off = androidx.compose.ui.unit.IntOffset(off.x + drag.x.roundToInt(), off.y + drag.y.roundToInt())
+                            }
+                        }.padding(start = 14.dp, top = 8.dp, bottom = 8.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("⠿  " + o.name, fontSize = 15.sp, modifier = Modifier.weight(1f), maxLines = 1)
+                    TextButton(onClick = { session.cabQuickId = null }) { Text("✕", fontSize = 16.sp) }
+                }
+                Column(
+                    Modifier.heightIn(max = 430.dp).verticalScroll(rememberScrollState()).padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(tr("Medidas"), color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(Modifier.weight(1f)) {
+                            Text(tr("Largura"), fontSize = 12.sp)
+                            ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.wMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(wMm = mm.coerceIn(150.0, 6000.0)) } }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(tr("Altura"), fontSize = 12.sp)
+                            ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.hMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(hMm = mm.coerceIn(150.0, 3000.0)) } }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(tr("Prof."), fontSize = 12.sp)
+                            ManualValueBox(Modifier.fillMaxWidth(), Units.formatNumber(cab.dMm, st.unit), st.unit.label, !o.locked) { mm -> st.updateCab(id) { it.copy(dMm = mm.coerceIn(100.0, 1500.0)) } }
+                        }
+                    }
+                    Text(tr("Dentro do vão (todos os vãos)"), color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        br.com.arque.measure.model.VaoKind.values().forEach { kd ->
+                            val on = first.kind == kd
+                            Box(
+                                Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Ui.accent else Color(0xFFEFEFEF))
+                                    .clickable(enabled = !o.locked) { setAll { it.copy(kind = kd) } }.padding(horizontal = 12.dp, vertical = 8.dp),
+                            ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 13.sp) }
+                        }
+                    }
+                    val vh = br.com.arque.measure.logic.CabinetMath.vaoH(cab)
+                    val vw0 = br.com.arque.measure.logic.CabinetMath.vaoRanges(cab).firstOrNull()?.let { it.second - it.first } ?: cab.wMm
+                    val committed = when (first.kind) {
+                        br.com.arque.measure.model.VaoKind.SHELVES -> first.shelves
+                        br.com.arque.measure.model.VaoKind.DRAWERS -> first.drawers
+                        br.com.arque.measure.model.VaoKind.DOOR -> first.doors
+                        else -> 1
+                    }
+                    var dKind by remember(id, first.kind) { mutableStateOf(first.kind) }
+                    var dCnt by remember(id, first.kind, committed) { mutableStateOf(committed) }
+                    var dCava by remember(id, first.cava) { mutableStateOf(first.cava) }
+                    Text(tr("Dentro do vão (todos os vãos) — escolha e toque OK"), color = Color(0xFF555555), fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        br.com.arque.measure.model.VaoKind.values().forEach { kd ->
+                            val on = dKind == kd
+                            Box(
+                                Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Ui.accent else Color(0xFFEFEFEF))
+                                    .clickable(enabled = !o.locked) { dKind = kd; if (kd == br.com.arque.measure.model.VaoKind.DOOR) dCnt = dCnt.coerceIn(1, 4) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                            ) { Text(kd.label, color = if (on) Color.White else dark, fontSize = 13.sp) }
+                        }
+                    }
+                    val mmF = { v: Double -> Units.formatNumber(v, br.com.arque.measure.model.LengthUnit.MM) }
+                    when (dKind) {
+                        br.com.arque.measure.model.VaoKind.SHELVES -> {
+                            QuickStep(tr("Prateleiras"), dCnt, 1, 20) { dCnt = it }
+                            Text(tr("Espaço livre entre elas: {0} mm", mmF((vh - dCnt * cab.espMm) / (dCnt + 1))), color = Color(0xFF555555), fontSize = 12.sp)
+                        }
+                        br.com.arque.measure.model.VaoKind.DRAWERS -> {
+                            QuickStep(tr("Gavetas"), dCnt, 1, 20) { dCnt = it }
+                            Text(tr("Cada frente de gaveta: ~{0} mm de altura", mmF(br.com.arque.measure.logic.CabinetMath.drawerFrontH(cab, dCnt, vh, first))), color = Color(0xFF555555), fontSize = 12.sp)
+                        }
+                        br.com.arque.measure.model.VaoKind.DOOR -> {
+                            QuickStep(tr("Portas"), dCnt, 1, 4) { dCnt = it }
+                            val dw = if (dCnt >= 2) (vw0 + 12.0) / dCnt else vw0 + 14.0
+                            Text(tr("Cada porta: {0} × {1} mm", mmF(dw), mmF(vh + 30.0)), color = Color(0xFF555555), fontSize = 12.sp)
+                        }
+                        else -> {}
+                    }
+                    if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS || dKind == br.com.arque.measure.model.VaoKind.DOOR) {
+                        QuickSwitch(tr("Cava (puxador cortado a 30°)"), dCava) { dCava = it }
+                    }
+                    androidx.compose.material3.Button(
+                        onClick = {
+                            setAll { it.copy(kind = dKind, cava = dCava, shelves = if (dKind == br.com.arque.measure.model.VaoKind.SHELVES) dCnt else it.shelves, drawers = if (dKind == br.com.arque.measure.model.VaoKind.DRAWERS) dCnt else it.drawers, doors = if (dKind == br.com.arque.measure.model.VaoKind.DOOR) dCnt else it.doors) }
+                        },
+                        enabled = !o.locked, modifier = Modifier.fillMaxWidth(),
+                    ) { Text(tr("OK · incluir")) }
+                    QuickSwitch(tr("Alinhar pelo topo (ao diminuir, a base sobe)"), o.layout?.anchorTop == true) { b -> st.setAnchorTop(id, b) }
+                    QuickSwitch(tr("Fundo (3 mm)"), cab.hasBack) { b -> st.updateCab(id) { it.copy(hasBack = b) } }
+                    QuickSwitch(tr("Tamponamento esquerdo"), cab.tampEsq) { b -> st.updateCab(id) { it.copy(tampEsq = b) } }
+                    QuickSwitch(tr("Tamponamento direito"), cab.tampDir) { b -> st.updateCab(id) { it.copy(tampDir = b) } }
+                    QuickSwitch(tr("Tamponamento de baixo (30)"), cab.tampBaixo) { b -> st.updateCab(id) { it.copy(tampBaixo = b) } }
+                    QuickSwitch(tr("Juntar tamp. de baixo com o do lado (peça única)"), cab.tampBaixoJunto) { b -> st.joinBottom(id, b) }
+                    if (cab.tampBaixo) QuickSwitch(tr("De baixo passa reto"), cab.tampBaixoPassa) { b -> st.updateCab(id) { it.copy(tampBaixoPassa = b) } }
+                    QuickSwitch(tr("Réguas nas bordas"), cab.reguas) { b -> st.updateCab(id) { it.copy(reguas = b) } }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        TextButton(onClick = { st.moveModule(id, -1) }, enabled = !o.locked) { Text(tr("◀ Mover")) }
+                        TextButton(onClick = { st.moveModule(id, 1) }, enabled = !o.locked) { Text(tr("Mover ▶")) }
+                        TextButton(onClick = { st.duplicate(id); session.cabQuickId = st.selectedId }, enabled = !o.locked) { Text(tr("Copiar ao lado")) }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                        TextButton(onClick = { session.cabQuickId = null; session.cabEditId = id }) { Text(tr("Editor completo")) }
+                        TextButton(onClick = { st.delete(id); session.cabQuickId = null }, enabled = !o.locked) { Text(tr("Excluir"), color = Color(0xFFC0392B)) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickStep(label: String, value: Int, min: Int, max: Int, onSet: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f))
+        TextButton(onClick = { onSet((value - 1).coerceAtLeast(min)) }, enabled = value > min) { Text("−", fontSize = 20.sp) }
+        Text("$value", fontSize = 18.sp)
+        TextButton(onClick = { onSet((value + 1).coerceAtMost(max)) }, enabled = value < max) { Text("+", fontSize = 20.sp) }
+    }
+}
+
+@Composable
+private fun QuickSwitch(label: String, on: Boolean, onSet: (Boolean) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(label, modifier = Modifier.weight(1f))
+        Switch(checked = on, onCheckedChange = onSet)
+    }
+}
+
+
+/** Projeto de móveis ligado a esta nota: abrir, trocar ou desligar. */
+@Composable
+internal fun ProjectLinkDialog(vm: AppViewModel, noteId: String, linkedId: String?, onDismiss: () -> Unit) {
+    val list = remember(vm.projVersion) { vm.moveisProjects() }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr("Projeto de móveis desta nota")) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val cur = list.firstOrNull { it.id == linkedId }
+                if (cur != null) {
+                    Text(tr("Ligada a: {0}", cur.name), fontSize = 15.sp)
+                    TextButton(onClick = { onDismiss(); vm.openProjectOfNote(noteId) }) { Text(tr("🪚 Abrir o projeto")) }
+                    TextButton(onClick = { vm.linkProject(noteId, null); onDismiss() }) { Text(tr("Desligar desta nota")) }
+                    Text(tr("Ou trocar por:"), fontSize = 13.sp, color = Color(0xFF666666))
+                } else Text(if (list.isEmpty()) tr("Ainda não tem projeto de móveis. Crie um no editor de móveis e ele fica salvo na biblioteca.") else tr("Escolha o projeto pra ligar a esta nota:"), fontSize = 13.sp)
+                TextButton(onClick = { onDismiss(); vm.newProjectForNote(noteId) }) { Text(tr("＋ Novo projeto para este cliente")) }
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 300.dp)) {
+                    items(list.filter { it.id != linkedId }.size) { i ->
+                        val p = list.filter { it.id != linkedId }[i]
+                        Text("🪚 ${p.name} · ${p.label}", fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { vm.linkProject(noteId, p.id); onDismiss() }.padding(vertical = 10.dp))
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Fechar")) } },
+    )
+}

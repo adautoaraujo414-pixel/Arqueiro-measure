@@ -43,8 +43,15 @@ val copySharedAssets by tasks.registering(Sync::class) {
     from("../app/src/main/assets") { include("editor.html", "i18n/**") }
     into(sharedAssets.map { it.dir("assets") })
 }
-sourceSets.main { resources.srcDir(sharedAssets) }
-tasks.named("processResources") { dependsOn(copySharedAssets) }
+// número desta versão (o mesmo do release win-N): o app usa pra saber se há versão nova
+val buildInfo = layout.buildDirectory.dir("generated/arqueBuild")
+val writeBuildInfo by tasks.registering {
+    val n = runNumber
+    outputs.dir(buildInfo)
+    doLast { buildInfo.get().file("build-number.txt").asFile.apply { parentFile.mkdirs() }.writeText(n) }
+}
+sourceSets.main { resources.srcDir(sharedAssets); resources.srcDir(buildInfo) }
+tasks.named("processResources") { dependsOn(copySharedAssets, writeBuildInfo) }
 
 tasks.test {
     useJUnit()
@@ -73,6 +80,7 @@ compose.desktop {
             vendor = "Arque"
             copyright = "Arque"
             includeAllModules = true
+            // o pacote MSI/EXE usa o número do build; o nome da pasta instalada fica "Arquemestre"
             windows {
                 menu = true
                 menuGroup = "Arquemestre"

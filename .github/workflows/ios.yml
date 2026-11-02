@@ -22,7 +22,7 @@ jobs:
       - name: Baixar código
         uses: actions/checkout@v4
         with:
-          ref: feature/arque-measure-kotlin
+          ref: f797512ccd59aaa2751a6b9e914d460184e4183d
 
       - name: Xcode 26 (exigido pela App Store desde 28/04/2026)
         run: |

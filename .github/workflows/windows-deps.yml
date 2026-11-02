@@ -5,7 +5,7 @@ name: Windows - cache de dependências (dev)
 on:
   push:
     branches: [ 'feature/**' ]
-    paths: [ 'windows/build.gradle.kts', 'windows/settings.gradle.kts', '.github/workflows/windows-deps.yml' ]
+    paths: [ '.github/workflows/windows-deps.yml' ]
   workflow_dispatch:
 
 permissions:

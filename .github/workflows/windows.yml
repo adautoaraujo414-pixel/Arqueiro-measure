@@ -32,21 +32,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Versão do navegador embutido
-        run: |
-          $jv = (Select-String -Path windows/build.gradle.kts -Pattern 'jcefVersion = "([^"]+)"').Matches[0].Groups[1].Value
-          $meta = (Invoke-WebRequest -UseBasicParsing https://repo1.maven.org/maven2/me/friwi/jcef-natives-windows-amd64/maven-metadata.xml).Content
-          $jn = ([regex]::Matches($meta, "<version>([^<]*cef-$([regex]::Escape($jv))\+[^<]*)</version>") | Select-Object -Last 1).Groups[1].Value
-          "JCEF_NATIVES=$jn" | Out-File -Append $env:GITHUB_ENV
-          Write-Host "natives: $jn"
-
       - name: Testes automáticos (JVM, no Windows)
         working-directory: windows
-        run: gradle --no-daemon "-PjcefNativesVersion=$env:JCEF_NATIVES" test
+        run: gradle --no-daemon test
 
       - name: Instalador e versão portátil
         working-directory: windows
-        run: gradle --no-daemon "-PjcefNativesVersion=$env:JCEF_NATIVES" packageExe packageMsi createDistributable
+        run: gradle --no-daemon packageExe packageMsi createDistributable
 
       - name: Instalar (MSI, sem perguntas) e testar o app instalado
         run: |

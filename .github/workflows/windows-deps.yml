@@ -1,0 +1,56 @@
+name: Windows - cache de dependências (dev)
+
+# Só pra desenvolvimento: baixa as bibliotecas do projeto Windows e guarda num release de rascunho,
+# pra compilar e testar fora do GitHub sem acesso ao Maven. Não gera instalador e não mexe no Android/iOS.
+on:
+  push:
+    branches: [ 'feature/**' ]
+    paths: [ 'windows/build.gradle.kts', 'windows/settings.gradle.kts', '.github/workflows/windows-deps.yml' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+          cache-disabled: true
+      - name: Versões disponíveis
+        run: |
+          for u in \
+            https://plugins.gradle.org/m2/org/jetbrains/compose/org.jetbrains.compose.gradle.plugin/maven-metadata.xml \
+            https://repo1.maven.org/maven2/me/friwi/jcefmaven/maven-metadata.xml \
+            https://repo1.maven.org/maven2/me/friwi/jcef-natives-windows-amd64/maven-metadata.xml \
+            https://repo1.maven.org/maven2/me/friwi/jcef-natives-linux-amd64/maven-metadata.xml \
+            https://repo1.maven.org/maven2/org/apache/pdfbox/pdfbox/maven-metadata.xml \
+            https://repo1.maven.org/maven2/org/json/json/maven-metadata.xml \
+            https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-swing/maven-metadata.xml ; do
+            echo "== $u"; curl -s "$u" | grep -o '<version>[^<]*' | sed 's/<version>//' | tail -12 | tr '\n' ' '; echo
+          done
+      - name: Baixar dependências e compilar
+        working-directory: windows
+        run: |
+          JN=$(curl -s https://repo1.maven.org/maven2/me/friwi/jcef-natives-linux-amd64/maven-metadata.xml | grep -o '<version>[^<]*' | sed 's/<version>//' | grep "cef-$(grep -o 'jcefVersion = "[^"]*' build.gradle.kts | cut -d'"' -f2)+" | tail -1)
+          echo "natives: $JN"
+          gradle --no-daemon --stacktrace -PjcefNativesVersion="$JN" resolveAll compileKotlin compileTestKotlin test || true
+          gradle --no-daemon -PjcefNativesVersion="$JN" resolveAll
+          echo "$JN" > ~/.gradle/jcef-natives-version.txt
+      - name: Guardar o cache num release de rascunho
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd ~ && tar czf /tmp/win-gradle-cache.tgz .gradle/caches/modules-2 .gradle/jcef-natives-version.txt
+          ls -la /tmp/win-gradle-cache.tgz
+          gh release delete win-dev-deps -y --cleanup-tag -R "$GITHUB_REPOSITORY" || true
+          gh release create win-dev-deps /tmp/win-gradle-cache.tgz -R "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" \
+            --title "dev: cache do build Windows (não é versão do app)" --notes "Arquivo interno de desenvolvimento. Não instale."

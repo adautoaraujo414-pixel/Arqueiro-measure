@@ -10,6 +10,10 @@ on:
         description: 'Enviar para o TestFlight (precisa da conta Apple paga e dos segredos ASC_*)'
         type: boolean
         default: false
+      ref:
+        description: 'Ramo ou commit do app a enviar (vazio = feature/arque-measure-kotlin, a versão mais nova)'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -22,7 +26,8 @@ jobs:
       - name: Baixar código
         uses: actions/checkout@v4
         with:
-          ref: f797512ccd59aaa2751a6b9e914d460184e4183d
+          # versão mais nova do app (ou outra revisão/ramo informado no disparo)
+          ref: ${{ inputs.ref || 'feature/arque-measure-kotlin' }}
 
       - name: Xcode 26 (exigido pela App Store desde 28/04/2026)
         run: |

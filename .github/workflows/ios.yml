@@ -184,7 +184,9 @@ jobs:
           else echo "$ASC_KEY_P8_B64" | base64 -d > ~/private_keys/AuthKey_$ASC_KEY_ID.p8; fi
           AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release -sdk iphoneos \
-            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} $AUTH archive
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
           cat > build/export.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

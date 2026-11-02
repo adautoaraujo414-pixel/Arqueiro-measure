@@ -397,27 +397,4 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["sg"] as? Int, 1, "caixa salva no projeto")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
-
-    func testPlantaDaCasa() async throws {
-        let web = try await editor()
-        let o = try await run(web, #"""
-          PR.setupDone=1;casaOpen();document.querySelector('#casa [data-cu="demo"]').click();
-          var rooms=casaApi.rooms().length,area=Math.round(casaAreas().util/1e4)/100,pages=casaDocPages().length,pdf=dwPDF(casaDocPages(['cot','area'])).length,q=casaQuant().rows.length;
-          var w=casa().W[2],I=cWallInfo(w);var face=Math.round(I.L.net/1e4)/100;
-          document.querySelector('#casa [data-ct="3d"]').click();var on=c3api.on(),objs=c3api.objs(),gl=c3api.gl();c3api.stg('alv');var o2=c3api.objs();c3api.walk(true);c3api.walk(false);
-          document.querySelector('#c3b [data-cx]').click();var sv=JSON.parse(JSON.stringify(snapState()));casaShow(false);
-          return JSON.stringify({rooms:rooms,area:area,pages:pages,pdf:pdf,q:q,face:face,on:on,objs:objs,gl:gl,o2:o2,saved:!!(sv.casa&&sv.casa.W.length===8),errs:__errs});
-          """#)
-        XCTAssertEqual(o["rooms"] as? Int, 5, "planta de exemplo: 5 ambientes")
-        XCTAssertEqual(o["area"] as? Double, 66.53, "área útil")
-        XCTAssertGreaterThanOrEqual(o["pages"] as? Int ?? 0, 15, "pranchas")
-        XCTAssertGreaterThan(o["pdf"] as? Int ?? 0, 30000, "PDF gerado")
-        XCTAssertGreaterThanOrEqual(o["q"] as? Int ?? 0, 15, "quantitativos")
-        XCTAssertGreaterThan(o["face"] as? Double ?? 0, 0, "área líquida da face")
-        XCTAssertEqual(o["on"] as? Int, 1, "casa no 3D")
-        XCTAssertGreaterThanOrEqual(o["objs"] as? Int ?? 0, 20, "peças da casa no 3D")
-        XCTAssertEqual(o["gl"] as? Bool, true, "WebGL com as texturas da casa")
-        XCTAssertEqual(o["saved"] as? Bool, true, "casa salva no projeto")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
-    }
 }

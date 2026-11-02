@@ -3,5 +3,4 @@
     <cache-path name="camera" path="camera/" />
     <cache-path name="quotes" path="quotes/" />
     <cache-path name="update" path="update/" />
-    <cache-path name="docs" path="docs/" />
 </paths>

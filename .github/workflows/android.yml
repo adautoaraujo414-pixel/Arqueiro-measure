@@ -3,7 +3,7 @@ name: Android CI
 on:
   push:
     branches: [ main, 'feature/**' ]
-    paths-ignore: [ 'ios/**', '.github/workflows/ios.yml', 'docs/**' ]
+    paths-ignore: [ 'ios/**', '.github/workflows/ios.yml', 'docs/**', 'windows/**', '.github/workflows/windows*.yml' ]
   pull_request:
   workflow_dispatch:
 

@@ -632,45 +632,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return org.json.JSONObject().put("id", n.id).put("name", n.name).toString()
     }
 
-    /**
-     * Planta da casa: cômodos (ferramenta Cômodo), portas soltas e textos da nota, em pontos da folha,
-     * pro editor montar as paredes de verdade. Usa a folha com mais cômodos.
-     */
-    fun noteRoomsJson(noteId: String): String {
-        val id = noteId.ifBlank { contextNoteId ?: session?.state?.note?.id ?: return "" }
-        val n = session?.state?.note?.takeIf { it.id == id } ?: store.loadNote(id) ?: return ""
-        val page = n.pages.maxByOrNull { p -> p.objs.count { it is br.com.arque.measure.model.RoomObj } } ?: return ""
-        val roomsObjs = page.objs.filterIsInstance<br.com.arque.measure.model.RoomObj>()
-        if (roomsObjs.isEmpty()) return ""
-        val photos = page.photos()
-        fun pt(p: br.com.arque.measure.model.Pt) = org.json.JSONArray().put(p.x.toDouble()).put(p.y.toDouble())
-        val rooms = org.json.JSONArray()
-        roomsObjs.forEach { r ->
-            val pts = org.json.JSONArray()
-            br.com.arque.measure.logic.Geo.annPoints(photos, r).forEach { pts.put(pt(it)) }
-            val segs = org.json.JSONArray()
-            r.segs.forEach { s ->
-                val o = org.json.JSONObject().put("k", s.kind.name).put("hinge", s.hinge).put("side", s.side).put("slide", s.slide)
-                s.valueMm?.let { o.put("mm", it) }
-                segs.put(o)
-            }
-            rooms.put(org.json.JSONObject().put("pts", pts).put("closed", r.closed).put("segs", segs))
-        }
-        val doors = org.json.JSONArray()
-        page.objs.filterIsInstance<br.com.arque.measure.model.DoorObj>().forEach { d ->
-            val q = br.com.arque.measure.logic.Geo.annPoints(photos, d)
-            val o = org.json.JSONObject().put("a", pt(q[0])).put("b", pt(q[1])).put("hinge", d.hinge).put("side", d.side).put("slide", d.slide)
-            d.valueMm?.let { o.put("mm", it) }
-            doors.put(o)
-        }
-        val texts = org.json.JSONArray()
-        page.objs.filterIsInstance<br.com.arque.measure.model.TextObj>().forEach { t ->
-            val q = br.com.arque.measure.logic.Geo.annPoints(photos, t)[0]
-            texts.put(org.json.JSONObject().put("x", q.x.toDouble()).put("y", q.y.toDouble()).put("t", t.text))
-        }
-        return org.json.JSONObject().put("name", n.name).put("rooms", rooms).put("doors", doors).put("texts", texts).toString()
-    }
-
     /** "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente. */
     fun openNoteOf(projectId: String) {
         val nid = notesOfProject(projectId).firstOrNull { id -> index.notes.any { it.id == id && !it.trash } }

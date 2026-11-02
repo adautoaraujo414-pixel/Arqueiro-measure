@@ -144,8 +144,6 @@ struct MoveisWeb: UIViewRepresentable {
         linkNote:function(n,p){post({op:'linkNote',note:String(n),id:String(p)})},
         openNoteOf:function(p,n){post({op:'openNoteOf',id:String(p)})},
         saveToGallery:function(d){post({op:'saveGallery',data:String(d)})},
-        noteRooms:function(id){return sync('noteRooms',String(id==null?'':id))},
-        shareFile:function(n,b,m){post({op:'shareFile',name:String(n),b64:String(b),mime:String(m||'')})},
         companyName:function(){return sync('companyName','')},
         shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})}
       };
@@ -191,21 +189,6 @@ struct MoveisWeb: UIViewRepresentable {
         w.configuration.userContentController.removeScriptMessageHandler(forName: "arque")
     }
 
-    /// Abre o compartilhar do iOS (no iPad, como balão no meio da tela).
-    static func presentShare(_ url: URL) {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first,
-              var top = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController ?? scene.windows.first?.rootViewController else { return }
-        while let p = top.presentedViewController { top = p }
-        let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-        if let pop = vc.popoverPresentationController {
-            pop.sourceView = top.view
-            pop.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 1, height: 1)
-            pop.permittedArrowDirections = []
-        }
-        top.present(vc, animated: true)
-    }
-
     static func safeCode(_ c: String) -> String { String(c.filter { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-" || $0 == "_") }) }
 
     final class Coord: NSObject, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
@@ -236,12 +219,6 @@ struct MoveisWeb: UIViewRepresentable {
                 }
             case "delFile": if let n = m["name"] as? String { try? FileManager.default.removeItem(at: dir.appendingPathComponent(safe(n))) }
             case "makeQuote": if let j = m["json"] as? String { app.quoteFromMoveis(j) }
-            case "shareFile":
-                // documentos da planta da casa (PDF): grava num arquivo temporário e abre o compartilhar
-                if let n = m["name"] as? String, let b = m["b64"] as? String, let d = Data(base64Encoded: b, options: .ignoreUnknownCharacters) {
-                    let url = FileManager.default.temporaryDirectory.appendingPathComponent(safe(n.isEmpty ? "arquivo.pdf" : n))
-                    if (try? d.write(to: url, options: [.atomic])) != nil { MoveisWeb.presentShare(url) }
-                }
             default: break
             }
         }
@@ -262,8 +239,6 @@ struct MoveisWeb: UIViewRepresentable {
                 completionHandler(parent.app.notesJson())
             } else if prompt == "__arque__:contextNote" {
                 completionHandler(parent.app.contextNoteJson())
-            } else if prompt == "__arque__:noteRooms" {
-                completionHandler(parent.app.noteRoomsJson(defaultText ?? ""))
             } else if prompt == "__arque__:listFiles" {
                 let names = (try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []
                 completionHandler(JsonCodec.string(names))

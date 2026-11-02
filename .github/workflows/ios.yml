@@ -1,0 +1,200 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ 'feature/**' ]
+    paths: [ 'ios/**', 'app/src/main/assets/editor.html', '.github/workflows/ios.yml' ]
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: 'Enviar para o TestFlight (precisa da conta Apple paga e dos segredos ASC_*)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+        with:
+          ref: feature/arque-measure-kotlin
+
+      - name: Xcode 26 (exigido pela App Store desde 28/04/2026)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n1)
+          [ -n "$X" ] || X=/Applications/Xcode.app
+          sudo xcode-select -s "$X/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+
+      - name: Conferência App Store (o que mais dá recusa na revisão)
+        run: |
+          set -o pipefail
+          mkdir -p ios/build
+          python3 ios/scripts/appstore_check.py | tee ios/build/appstore-check.txt
+
+      - name: Gerar o projeto Xcode (XcodeGen)
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Testar preservação dos vídeos do editor iOS
+        run: node ios/scripts/test-editor-media-backup.cjs
+
+      - name: Compilar e rodar os testes no simulador
+        id: build_tests
+        timeout-minutes: 30
+        run: |
+          cd ios && mkdir -p build
+          UDID=$(python3 scripts/pick_sim.py iphone)
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            -skip-testing:ArquemestreTests/SubscriptionTests \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            test > build/xcodebuild-test.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | tail -n 300
+          exit $RC
+
+      - name: Compilar para iPhone de verdade (Release, sem assinatura)
+        run: |
+          cd ios && mkdir -p build
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build/ddrel \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build > build/xcodebuild-release.log 2>&1
+          RC=$?
+          grep -E "error:|\*\* " build/xcodebuild-release.log | tail -n 200
+          exit $RC
+
+      - name: Capturas de tela (iPhone 6,9" e iPad 13")
+        run: |
+          cd ios
+          APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
+          bash scripts/screenshots.sh "$APP" build/capturas
+
+      - name: Capturas não podem sair vazias (tela que não carregou)
+        run: |
+          set -o pipefail
+          cd ios
+          { cat build/capturas-tentativas.txt 2>/dev/null; python3 scripts/check_blank.py build/capturas; } | tee build/blank-check.txt
+
+      # Assinatura (StoreKit Testing): no iOS 26.3+ o `xcodebuild test` não carrega o .storekit (bug da Apple FB22237318),
+      # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).
+      - name: Testes da assinatura (StoreKit) num iOS até 26.2
+        id: storekit
+        if: always() && steps.build_tests.outcome != 'skipped'
+        timeout-minutes: 40
+        run: |
+          cd ios && mkdir -p build
+          xcrun simctl list runtimes > build/runtimes.txt 2>&1 || true
+          cat build/runtimes.txt
+          UDID=$(python3 scripts/pick_sim.py storekit) || UDID=""
+          if [ -z "$UDID" ]; then
+            echo "SKT: sem simulador iOS <= 26.2 no runner; baixando o iOS 26.1"
+            for v in 26.1 26.2 26.0; do
+              xcodebuild -downloadPlatform iOS -buildVersion "$v" > build/download.log 2>&1 && { echo "SKT: baixou iOS $v"; break; }
+              echo "SKT: não deu pra baixar iOS $v: $(tail -n 3 build/download.log | tr '\n' ' ')"
+            done
+            xcrun simctl list runtimes >> build/runtimes.txt 2>&1 || true
+            RT=$(xcrun simctl list runtimes -j | python3 -c "import json,sys;r=[x for x in json.load(sys.stdin)['runtimes'] if x.get('platform')=='iOS' and x.get('isAvailable') and tuple(int(p) for p in x['version'].split('.')[:2])<=(26,2) and tuple(int(p) for p in x['version'].split('.')[:2])>=(17,0)];r.sort(key=lambda x:[int(p) for p in x['version'].split('.')]);print(r[-1]['identifier'] if r else '')")
+            if [ -n "$RT" ]; then
+              for dt in "iPhone 17 Pro" "iPhone 16 Pro" "iPhone 16" "iPhone 15"; do
+                UDID=$(xcrun simctl create "iPhone StoreKit" "$dt" "$RT" 2>/dev/null) && break
+              done
+            fi
+          fi
+          if [ -z "$UDID" ]; then echo "SKT: nenhum simulador iOS <= 26.2 disponível"; exit 1; fi
+          echo "SKT: simulador dos testes da assinatura: $(xcrun simctl list devices | grep "$UDID")"
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/ddsk -resultBundlePath build/TestesAssinatura.xcresult \
+            -only-testing:ArquemestreTests/SubscriptionTests \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            test > build/xcodebuild-storekit.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-storekit.log | tail -n 300
+          exit $RC
+
+      - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          cd ios
+          OUT=$(mktemp -d)
+          mkdir -p "$OUT/capturas"
+          cp -R build/capturas/. "$OUT/capturas/" 2>/dev/null || true
+          { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
+            grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
+            echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;
+            echo "==== Conferência App Store ===="; cat build/appstore-check.txt 2>/dev/null;
+            echo "==== Capturas vazias? ===="; cat build/blank-check.txt 2>/dev/null;
+            echo "==== Simuladores ===="; cat build/runtimes.txt 2>/dev/null; } > "$OUT/RESUMO.txt" || true
+          grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
+          cd "$OUT"
+          git init -q && git checkout -q -b ci/ios-resultados
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -A && git commit -qm "Resultados iOS $GITHUB_RUN_NUMBER ($GITHUB_SHA)"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci/ios-resultados
+          T=$(grep -hE "Executed [0-9]+ test" RESUMO.txt | tail -n1)
+          echo "::notice title=Testes iOS::${T:-sem resumo}"
+
+      - name: Resumo dos erros
+        if: failure()
+        run: |
+          cd ios
+          M=$( (grep -hE "error:|Failing|failed|XCTAssert" build/*.log 2>/dev/null | head -120) | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::error title=Erros do build iOS::$M"
+
+      - name: Publicar capturas, testes e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-resultados
+          path: |
+            ios/build/capturas/
+            ios/build/*.log
+            ios/build/Testes.xcresult
+          if-no-files-found: ignore
+
+      # ---- só com a conta Apple paga e com confirmação manual (botão "Run workflow") ----
+      - name: Enviar ao TestFlight
+        if: github.event_name == 'workflow_dispatch' && inputs.testflight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # a chave .p8 pode vir colada como texto (ASC_KEY_P8, mais fácil) ou em base64 (ASC_KEY_P8_B64)
+          if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$APPLE_TEAM_ID" ] || { [ -z "$ASC_KEY_P8" ] && [ -z "$ASC_KEY_P8_B64" ]; }; then
+            echo "::error::Faltam segredos: ASC_KEY_ID, ASC_ISSUER_ID, APPLE_TEAM_ID e ASC_KEY_P8 (texto do arquivo .p8)"; exit 1
+          fi
+          cd ios
+          mkdir -p ~/private_keys
+          if [ -n "$ASC_KEY_P8" ]; then printf '%s\n' "$ASC_KEY_P8" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          else echo "$ASC_KEY_P8_B64" | base64 -d > ~/private_keys/AuthKey_$ASC_KEY_ID.p8; fi
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release -sdk iphoneos \
+            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} $AUTH archive
+          cat > build/export.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>automatic</string>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath build/Arquemestre.xcarchive -exportOptionsPlist build/export.plist -exportPath build/export $AUTH
+          rm -rf ~/private_keys
+

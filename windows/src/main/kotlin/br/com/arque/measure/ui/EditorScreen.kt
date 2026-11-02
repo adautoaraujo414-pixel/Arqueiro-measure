@@ -105,6 +105,11 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.changedToDown
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.isTertiaryPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.isCtrlPressed
+import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -290,11 +295,30 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
         modifier = modifier
             .onSizeChanged { session.onCanvasSize(it.width.toFloat(), it.height.toFloat()) }
             .onGloballyPositioned { session.canvasOrigin = it.positionInWindow() }
+            // Windows: roda do mouse rola a folha · Ctrl + roda dá zoom · Shift + roda rola pro lado
+            .onPointerEvent(androidx.compose.ui.input.pointer.PointerEventType.Scroll) { ev ->
+                val ch = ev.changes.firstOrNull() ?: return@onPointerEvent
+                val d = ch.scrollDelta
+                val km = ev.keyboardModifiers
+                if (km.isCtrlPressed) session.zoomAround(if (d.y < 0) 1.12f else 1f / 1.12f, ch.position.x, ch.position.y)
+                else if (km.isShiftPressed) session.panBy(-d.y * 60f * density, 0f)
+                else session.panBy(-d.x * 60f * density, -d.y * 60f * density)
+                ch.consume()
+            }
             .pointerInput(session) {
                 // loop próprio (não espera todos os dedos saírem): com a mão apoiada, a caneta continua escrevendo
                 awaitPointerEventScope {
                   while (true) {
                     val first = awaitFirstDown(requireUnconsumed = false)
+                    if (first.type == PointerType.Mouse && (currentEvent.buttons.isTertiaryPressed || currentEvent.buttons.isSecondaryPressed)) {
+                        // Windows: botão do meio (ou direito) arrasta a folha
+                        var last0 = first.position
+                        do {
+                            val ev = awaitPointerEvent()
+                            ev.changes.forEach { c -> if (c.pressed) { session.panBy(c.position.x - last0.x, c.position.y - last0.y); last0 = c.position }; c.consume() }
+                        } while (ev.changes.any { it.pressed })
+                        continue
+                    }
                     if (session.screenLocked) {
                         // travada: ignora tudo, só conta 3 toques seguidos para destravar
                         var moved = false

@@ -56,6 +56,12 @@ tasks.named("processResources") { dependsOn(copySharedAssets, writeBuildInfo) }
 tasks.test {
     useJUnit()
     systemProperty("arque.test", "1")
+    val td = layout.buildDirectory.dir("testdata").get().asFile
+    systemProperty("arque.data", File(td, "dados").path)
+    systemProperty("arque.docs", File(td, "documentos").path)
+    systemProperty("arque.pics", File(td, "imagens").path)
+    systemProperty("arque.multi", "1")
+    doFirst { td.deleteRecursively() }
     testLogging { events("passed", "failed", "skipped"); showStandardStreams = true; exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
 }
 

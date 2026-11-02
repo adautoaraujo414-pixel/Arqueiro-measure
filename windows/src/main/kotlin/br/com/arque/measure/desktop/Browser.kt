@@ -52,6 +52,8 @@ object Browser {
 
     val ready: Boolean get() = browser != null
     @Volatile var loads = 0
+    /** O editor terminou de carregar (scripts rodaram). */
+    @Volatile var pageReady = false
     /** O navegador nativo só existe depois que a janela dele aparece: até lá o endereço fica guardado. */
     @Volatile private var created = false
     @Volatile private var pendingUrl: String? = null
@@ -143,6 +145,7 @@ object Browser {
     }
 
     fun load(url: String) {
+        pageReady = false
         val b = init()
         if (created) b.loadURL(url) else pendingUrl = url
     }
@@ -261,6 +264,8 @@ object Browser {
     shareUpdate:function(){},shareCut:A('shareCut'),close:A('close'),
     putFile:A('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
   };
+  window.addEventListener('load',function(){setTimeout(function(){call('pageReady',[typeof S])},0)});
+  document.addEventListener('DOMContentLoaded',function(){var st=document.createElement('style');st.textContent='#shb{display:none!important}';document.head.appendChild(st)});
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'&&!e.defaultPrevented){var t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
       if(!(window.arqueBack&&window.arqueBack()))window.ArqueApp.close();e.preventDefault()}

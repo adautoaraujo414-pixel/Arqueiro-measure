@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+
 package br.com.arque.measure.ui
 
 import br.com.arque.measure.i18n.tr
@@ -59,6 +61,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.foundation.layout.aspectRatio
 import br.com.arque.measure.compat.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -285,7 +289,27 @@ private fun CabinetCanvas(
     fun fit(sz: Size) = fx(sz)
     Box(modifier) {
     Canvas(
-        modifier = Modifier.fillMaxSize().background(Color.White).pointerInput(Unit) {
+        modifier = Modifier.fillMaxSize().background(Color.White)
+            // Windows: roda do mouse dá zoom no ponto do cursor · Shift + roda move pro lado
+            .onPointerEvent(androidx.compose.ui.input.pointer.PointerEventType.Scroll) { ev ->
+                val ch = ev.changes.firstOrNull() ?: return@onPointerEvent
+                val sz = Size(size.width.toFloat(), size.height.toFloat())
+                if (ev.keyboardModifiers.isShiftPressed) { panS = panS + Offset(-ch.scrollDelta.y * 60f, 0f) }
+                else {
+                    val f = if (ch.scrollDelta.y < 0) 1.12f else 1f / 1.12f
+                    val nz = (zoomS * f).coerceIn(0.3f, 12f)
+                    val (k0, ox0, oy0) = fx(sz, zoomS, panS)
+                    val (k1, ox1, oy1) = fx(sz, nz, panS)
+                    val r = k1 / k0
+                    val tx = ch.position.x - (ch.position.x - ox0) * r
+                    val ty = ch.position.y - (ch.position.y - oy0) * r
+                    zoomS = nz
+                    panS = panS + Offset(tx - ox1, ty - oy1)
+                }
+                camRev++
+                ch.consume()
+            }
+            .pointerInput(Unit) {
             val slop = viewConfiguration.touchSlop
             awaitEachGesture {
                 val down = awaitFirstDown(requireUnconsumed = false)

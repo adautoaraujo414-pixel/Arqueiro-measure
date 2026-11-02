@@ -192,6 +192,7 @@ class MoveisBridge(
                 if (f.exists()) android.util.Base64.encodeToString(f.readBytes(), android.util.Base64.NO_WRAP) else ""
             }.getOrDefault("")
             "delFile" -> { runCatching { File(dir, safe(arg(0))).delete() }; "" }
+            "pageReady" -> { br.com.arque.measure.desktop.Browser.pageReady = true; "" }
             "tourResult" -> { br.com.arque.measure.desktop.Tour.editorResult = arg(0); "" }
             "listFiles" -> (dir.list() ?: emptyArray()).joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
             else -> ""

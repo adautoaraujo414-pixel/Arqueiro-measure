@@ -115,11 +115,11 @@ object Tour {
             editorResult = null
             vm.newMoveisProject()
             step("abre o editor de móveis", waitFor(240000) { Browser.ready }, Browser.error ?: "")
-            step("editor carregou a página", waitFor(60000) { Browser.loads > 0 && Browser.url().contains("editor.html") }, Browser.url())
-            delay(4000)
+            step("editor carregou a página", waitFor(90000) { Browser.pageReady && Browser.url().contains("editor.html") }, Browser.url())
+            delay(2500)
             Browser.js(
                 """
-                (function(){var r={};try{
+                (function go(n){if(typeof S==='undefined'||typeof newTpl!=='function'){if(n<150)return setTimeout(function(){go(n+1)},200)}var r={};try{
                   r.app=!!(window.ArqueApp&&ArqueApp.isApp());r.win=!!ArqueApp.isWindows;
                   r.notas=JSON.parse(ArqueApp.listNotes()||'[]').length;
                   S.mods=[];newTpl(CATS[0].it[0]);draw();panel();r.mods=S.mods.length;
@@ -130,7 +130,7 @@ object Tour {
                   r.lista=JSON.parse(ArqueApp.listFiles()).indexOf('tour.json')>=0;
                   try{if(typeof pSaveAll==='function'&&typeof pLoadAll==='function'){var all=pLoadAll();all.push({id:'tour'+Date.now(),name:'Projeto teste Windows',S:JSON.parse(JSON.stringify(S))});pSaveAll(all)}}catch(e){r.salvarErr=String(e)}
                 }catch(e){r.err=String(e)}
-                ArqueApp.tourResult(JSON.stringify(r))})()
+                ArqueApp.tourResult(JSON.stringify(r))})(0)
                 """.trimIndent(),
             )
             step("editor responde pela ponte", waitFor(20000) { editorResult != null }, editorResult ?: ("url=" + Browser.url() + " loads=" + Browser.loads + " console=" + Browser.console.toList().takeLast(12).joinToString(" | ")))

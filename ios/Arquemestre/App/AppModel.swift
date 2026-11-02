@@ -516,6 +516,41 @@ final class AppModel: ObservableObject {
         guard let id = contextNoteId ?? session?.state.note.id, let n = index.notes.first(where: { $0.id == id && !$0.trash }), !defaultNoteName(n.name) else { return "" }
         return JsonCodec.string(["id": n.id, "name": n.name] as [String: Any])
     }
+    /// Planta da casa: cômodos (ferramenta Cômodo), portas soltas e textos da nota, em pontos da folha,
+    /// pro editor montar as paredes de verdade. Usa a folha com mais cômodos.
+    func noteRoomsJson(_ noteId: String) -> String {
+        let id = noteId.isEmpty ? (contextNoteId ?? session?.state.note.id ?? "") : noteId
+        guard !id.isEmpty else { return "" }
+        let open: Note? = session?.state.note.id == id ? session?.state.note : nil
+        guard let n = open ?? store.loadNote(id) else { return "" }
+        func count(_ s: Sheet) -> Int { s.objs.filter { if case .room = $0 { return true }; return false }.count }
+        guard let page = n.pages.max(by: { count($0) < count($1) }), count(page) > 0 else { return "" }
+        let photos = page.photos()
+        func pt(_ p: Pt) -> [Double] { [Double(p.x), Double(p.y)] }
+        var rs: [[String: Any]] = [], ds: [[String: Any]] = [], ts: [[String: Any]] = []
+        for o in page.objs {
+            switch o {
+            case .room(let r):
+                let segs: [[String: Any]] = r.segs.map { s in
+                    var d: [String: Any] = ["k": "\(s.kind)", "hinge": s.hinge, "side": s.side, "slide": s.slide]
+                    if let v = s.valueMm { d["mm"] = v }
+                    return d
+                }
+                rs.append(["pts": Geo.annPoints(photos, o).map(pt), "closed": r.closed, "segs": segs])
+            case .door(let d):
+                let q = Geo.annPoints(photos, o)
+                var x: [String: Any] = ["a": pt(q[0]), "b": pt(q[1]), "hinge": d.hinge, "side": d.side, "slide": d.slide]
+                if let v = d.valueMm { x["mm"] = v }
+                ds.append(x)
+            case .text(let t):
+                let q = Geo.annPoints(photos, o)[0]
+                ts.append(["x": Double(q.x), "y": Double(q.y), "t": t.text])
+            default: break
+            }
+        }
+        return JsonCodec.string(["name": n.name, "rooms": rs, "doors": ds, "texts": ts] as [String: Any])
+    }
+
     /// "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente.
     func openNoteOf(_ projectId: String) {
         let nid = notesOfProject(projectId).first { id in index.notes.contains { $0.id == id && !$0.trash } }

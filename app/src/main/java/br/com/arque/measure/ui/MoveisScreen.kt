@@ -118,6 +118,8 @@ fun MoveisScreen(vm: AppViewModel) {
             onLink = { nid, pid -> vm.linkProject(nid, pid) }, onOpenNote = { pid -> vm.openNoteOf(pid) },
             company = { vm.company.name },
             onShareCut = { code, name, title -> shareCutInvite(ctx, vm.cutInvite(code, name, title)) },
+            rooms = { id -> vm.noteRoomsJson(id) },
+            onShareFile = { name, b64, mime -> shareEditorFile(ctx, name, b64, mime) },
         )
     }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
@@ -291,7 +293,13 @@ class MoveisBridge(
     private val onOpenNote: (String) -> Unit = {},
     private val company: () -> String = { "" },
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
+    private val rooms: (String) -> String = { "" },
+    private val onShareFile: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
+    /** Planta da casa: cômodos desenhados na nota (pra virar paredes no editor). */
+    @JavascriptInterface fun noteRooms(noteId: String): String = runCatching { rooms(noteId) }.getOrDefault("")
+    /** Documentos da casa (PDF): abre o compartilhar do Android. */
+    @JavascriptInterface fun shareFile(name: String, b64: String, mime: String) { web()?.post { onShareFile(name, b64, mime) } }
     /** Nome da empresa (vai no convite do plano de corte). */
     @JavascriptInterface fun companyName(): String = runCatching { company() }.getOrDefault("")
     /** "📤 Enviar projeto" no plano de corte: convite pelo WhatsApp com o link do projeto (só pra cortar). */
@@ -332,6 +340,18 @@ class MoveisBridge(
 
     @JavascriptInterface fun listFiles(): String =
         (dir.list() ?: emptyArray()).joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
+}
+
+/** PDF (ou outro arquivo) feito no editor: grava no cache e abre o compartilhar (WhatsApp, e-mail, Drive...). */
+fun shareEditorFile(ctx: android.content.Context, name: String, b64: String, mime: String) {
+    runCatching {
+        val dir = File(ctx.cacheDir, "docs").apply { mkdirs() }
+        val f = File(dir, name.replace(Regex("[^A-Za-z0-9_.-]"), "_").ifBlank { "arquivo.pdf" })
+        f.writeBytes(Base64.decode(b64, Base64.DEFAULT))
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
+        val send = Intent(Intent.ACTION_SEND).setType(mime.ifBlank { "application/pdf" }).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        ctx.startActivity(Intent.createChooser(send, tr("Enviar")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }
 
 /** Convite do plano de corte: abre direto no WhatsApp (ou WhatsApp Business); sem eles, a escolha de apps. */

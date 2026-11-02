@@ -1,0 +1,22 @@
+name: App Store - enviar capturas de tela
+
+# Pega as capturas do último iOS CI (ramo ci/ios-resultados) e sobe na versão em preparo do App Store Connect.
+# Roda em Linux (sem fila de Mac) e também serve pra testar se a chave da API (segredos ASC_*) está certa.
+on:
+  workflow_dispatch:
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar as capturas
+        run: git fetch --depth 1 origin ci/ios-resultados && git worktree add /tmp/res FETCH_HEAD && ls /tmp/res/capturas
+      - run: pip install pyjwt cryptography requests pillow
+      - name: Enviar ao App Store Connect
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: python .github/scripts/asc_screenshots.py /tmp/res/capturas 6829800820

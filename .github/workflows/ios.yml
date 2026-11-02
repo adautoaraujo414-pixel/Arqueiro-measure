@@ -81,12 +81,16 @@ jobs:
           exit $RC
 
       - name: Capturas de tela (iPhone 6,9" e iPad 13")
+        # roda mesmo se um teste do editor estourar o tempo no simulador lento (o app já foi compilado)
+        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' }}
         run: |
           cd ios
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
           bash scripts/screenshots.sh "$APP" build/capturas
 
       - name: Capturas não podem sair vazias (tela que não carregou)
+        # roda mesmo se um teste do editor estourar o tempo no simulador lento (o app já foi compilado)
+        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' }}
         run: |
           set -o pipefail
           cd ios

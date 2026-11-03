@@ -3357,21 +3357,21 @@ function frToggle(id,on){var k=String(id);FRT[k]=on===undefined?((FRT[k]||0)>.5?
 function frOpenK(f){return /^(geladeira|forno|microondas)$/.test(f.t||'geladeira')}
 function ease(a){return a<.5?2*a*a:1-Math.pow(-2*a+2,2)/2}
 /* gira uma caixa em volta de um eixo vertical (porta de geladeira, micro-ondas) */
-function rotY(b,hx,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].map(function(p){var dx=p[0]-hx,dz=p[1]-hz;return [hx+dx*c-dz*s,hz+dx*s+dz*c]});b.pf={ax:'y',pts:P};b.x0=Math.min.apply(null,P.map(function(p){return p[0]}));b.x1=Math.max.apply(null,P.map(function(p){return p[0]}));b.z0=Math.min.apply(null,P.map(function(p){return p[1]}));b.z1=Math.max.apply(null,P.map(function(p){return p[1]}))}
+function frRotY(b,hx,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].map(function(p){var dx=p[0]-hx,dz=p[1]-hz;return [hx+dx*c-dz*s,hz+dx*s+dz*c]});b.pf={ax:'y',pts:P};b.x0=Math.min.apply(null,P.map(function(p){return p[0]}));b.x1=Math.max.apply(null,P.map(function(p){return p[0]}));b.z0=Math.min.apply(null,P.map(function(p){return p[1]}));b.z1=Math.max.apply(null,P.map(function(p){return p[1]}))}
 /* gira uma caixa em volta de um eixo deitado (porta do forno, que desce pra frente) */
-function rotX(b,hy,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.z0,b.y0],[b.z1,b.y0],[b.z1,b.y1],[b.z0,b.y1]].map(function(p){var dz=p[0]-hz,dy=p[1]-hy;return [hz+dz*c+dy*s,hy-dz*s+dy*c]});b.pf={ax:'x',pts:P};b.z0=Math.min.apply(null,P.map(function(p){return p[0]}));b.z1=Math.max.apply(null,P.map(function(p){return p[0]}));b.y0=Math.min.apply(null,P.map(function(p){return p[1]}));b.y1=Math.max.apply(null,P.map(function(p){return p[1]}))}
+function frRotX(b,hy,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.z0,b.y0],[b.z1,b.y0],[b.z1,b.y1],[b.z0,b.y1]].map(function(p){var dz=p[0]-hz,dy=p[1]-hy;return [hz+dz*c+dy*s,hy-dz*s+dy*c]});b.pf={ax:'x',pts:P};b.z0=Math.min.apply(null,P.map(function(p){return p[0]}));b.z1=Math.max.apply(null,P.map(function(p){return p[0]}));b.y0=Math.min.apply(null,P.map(function(p){return p[1]}));b.y1=Math.max.apply(null,P.map(function(p){return p[1]}))}
 var ap3model_k=ap3model;ap3model=function(f,z0){var p=CURF;CURF=f;try{return ap3model_k(f,z0)}finally{CURF=p}};
 var geladeira3_k=geladeira3;geladeira3=function(f,z0){var n0=boxes.length;geladeira3_k(f,z0);var a=ease(FRA[String(f.id)]||0);if(a<=0)return;
  var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,h=f.h,y1=y0+h,D=z0+(f.d||700),dz=D-40,nm=f.nome||'',side=/side/i.test(nm),xm=x0+w*.45,phi=a*Math.PI*.58,yb=y0+72,yt=y1-4;
- for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z0<dz-.5||b.y1<yb-1)continue;var left=!side||(b.x0+b.x1)/2<xm;rotY(b,left?x0:x1,dz,left?phi:-phi)}
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z0<dz-.5||b.y1<yb-1)continue;var left=!side||(b.x0+b.x1)/2<xm;frRotY(b,left?x0:x1,dz,left?phi:-phi)}
  /* por dentro: branco com prateleiras e gavetas */
  var L=function(xa,xb,ya,yc){bx(xa+18,xb-18,ya+10,yc-10,dz-1.5,dz-.5,'#f4f6f8');var n=Math.max(2,Math.round((yc-ya)/330));for(var j=1;j<n;j++){var yy=ya+(yc-ya)*j/n;bx(xa+20,xb-20,yy-3,yy,dz-.5,dz+.5,'#cfd8e0')}bx(xa+30,xb-30,ya+14,ya+150,dz-.5,dz+.8,'#e3ebf2')};
  if(side){L(x0,xm-2,yb,yt);L(xm+2,x1,yb,yt)}else L(x0,x1,yb,yt);var lt=bx(x0+w*.3,x1-w*.3,yt-24,yt-14,dz-.5,dz+.5,'#fff6d8');lt.em=1};
 var fornoF_k=fornoF;fornoF=function(x0,x1,y0,y1,z){var n0=boxes.length;fornoF_k(x0,x1,y0,y1,z);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var H=y1-y0,hp=Math.min(110,H*.18),yd=y1-hp-3;
- for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.y1>yd+1||b.z1<z-21)continue;rotX(b,y0,z,a*Math.PI*.5)}
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.y1>yd+1||b.z1<z-21)continue;frRotX(b,y0,z,a*Math.PI*.5)}
  bx(x0+40,x1-40,y0+20,yd-20,z-21,z-20.2,'#1b1d20');for(var g=1;g<=2;g++){var yg=y0+(yd-y0)*g/3;bx(x0+50,x1-50,yg-2,yg,z-20.2,z-19,'#8a929c')}var lp=bx(x0+(x1-x0)*.45,x1-(x1-x0)*.45,yd-40,yd-30,z-20.2,z-19.8,'#ffb347');lp.em=1};
 var microF_k=microF;microF=function(x0,x1,y0,y1,z,emb){var n0=boxes.length;microF_k(x0,x1,y0,y1,z,emb);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var w=x1-x0,xd=x0+w*(emb?.74:.7);
- for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z1<z+.5||(b.x0+b.x1)/2>xd-2)continue;rotY(b,x0,z,a*Math.PI*.55)}
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z1<z+.5||(b.x0+b.x1)/2>xd-2)continue;frRotY(b,x0,z,a*Math.PI*.55)}
  bx(x0+14,xd-10,y0+14,y1-14,z-21,z-20.2,'#2a2c30');var pr=cylY((x0+xd)/2,z-120,Math.min(110,(xd-x0)*.35),y0+16,y0+20,'#e9edf1',18);var lp2=bx(x0+20,xd-16,y1-28,y1-20,z-20.2,z-19.8,'#fff3c4');lp2.em=1};
 /* fogão de piso e de embutir: mesa com bocas e grades, painel com botões, forno embaixo (a porta abre) */
 function fogBocas(n,x0,x1,z0,z1){var P=[],cols=n<=2?2:n===4?2:3,rows=n<=2?1:2,i;for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)P.push([x0+(x1-x0)*(c+.5)/cols,z0+(z1-z0)*(rows===1?.5:(r+.5)/rows)]);if(n===5)P=[[x0+(x1-x0)*.22,z0+(z1-z0)*.28],[x0+(x1-x0)*.22,z0+(z1-z0)*.74],[x0+(x1-x0)*.5,z0+(z1-z0)*.5],[x0+(x1-x0)*.78,z0+(z1-z0)*.28],[x0+(x1-x0)*.78,z0+(z1-z0)*.74]];return P.slice(0,n)}
@@ -3415,7 +3415,7 @@ var PXDR=null;
 function pxDoorOf(m){var ps=[];try{ps=partsOf(m)}catch(_){}return ps.filter(function(p){return /^Porta$/.test(p.name)})[0]||ps.filter(function(p){return /^Frente de gaveta/.test(p.name)})[0]||null}
 function pxCurT(){var t=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!t&&/^(door|drawers)$/.test(v.k)&&!v.vidro)t=pxOf(v,false)})});return t||'externo'}
 function pxCurC(){var c=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!c&&v.pxc)c=v.pxc})});return c||pxcDef()}
-function pxPanel(mi){var E=it4Box(),m=S.mods[mi];if(!m)return;var p=pxDoorOf(m),t=pxCurT(),c=pxCurC(),movable=/^(externo|bola|concha)$/.test(t)&&p&&/^Porta$/.test(p.name);
+function px3Panel(mi){var E=it4Box(),m=S.mods[mi];if(!m)return;var p=pxDoorOf(m),t=pxCurT(),c=pxCurC(),movable=/^(externo|bola|concha)$/.test(t)&&p&&/^Porta$/.test(p.name);
  var Bt=function(at,tx,o){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(o?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},row=function(h){return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+h+'</div>'};
  var h='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><b style="flex:1;font-size:14px">🔧 Puxadores <span style="color:#666;font-size:12px;font-weight:400">vale pra todas as portas e gavetas</span></b>'+Bt('data-pxback="1" title="Voltar"','← Módulo')+Bt('data-qx="1" title="Fechar" aria-label="Fechar"','✕')+'</div>'
 ;
@@ -3432,14 +3432,14 @@ function pxPanel(mi){var E=it4Box(),m=S.mods[mi];if(!m)return;var p=pxDoorOf(m),
   pad.addEventListener('pointermove',function(ev){if(PXDR!==ev.pointerId)return;ev.preventDefault();ev.stopPropagation();mv(ev)});
   ['pointerup','pointercancel'].forEach(function(n){pad.addEventListener(n,function(ev){if(PXDR!==ev.pointerId)return;PXDR=null;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();ambMsg('Puxador no lugar · todas as portas copiaram')})})}}
 it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX)return;var d=t.dataset;
- if(d.qmpux!==undefined&&ISX.k==='mod'){e.stopImmediatePropagation();ISX={k:'pux',mi:ISX.mi};pxPanel(ISX.mi);return}
+ if(d.qmpux!==undefined&&ISX.k==='mod'){e.stopImmediatePropagation();ISX={k:'pux',mi:ISX.mi};px3Panel(ISX.mi);return}
  if(ISX.k!=='pux')return;e.stopImmediatePropagation();if(d.qx!==undefined){itClose();return}if(d.pxback){ISX={k:'mod',mi:ISX.mi};itRender();return}if(window.RO)return;
- if(d.pxt){snap();var n=pxApplyAll(d.pxt,pxCurC());try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);ambMsg('Puxador trocado em '+n+(n===1?' peça':' peças'));return}
- if(d.pxc){snap();pxApplyAll(pxCurT(),d.pxc);try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);return}
- if(d.pxreset){snap();delete S.pxa;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);return}},true);
+ if(d.pxt){snap();var n=pxApplyAll(d.pxt,pxCurC());try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();px3Panel(ISX.mi);ambMsg('Puxador trocado em '+n+(n===1?' peça':' peças'));return}
+ if(d.pxc){snap();pxApplyAll(pxCurT(),d.pxc);try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();px3Panel(ISX.mi);return}
+ if(d.pxreset){snap();delete S.pxa;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();px3Panel(ISX.mi);return}},true);
 var itObj_c=itObj;itObj=function(){var x=ISX;if(x&&x.k==='pux')return S.mods[x.mi]||null;return itObj_c()};
-var itRender_c=itRender;itRender=function(){if(ISX&&ISX.k==='pux'){if(M.hidden)return;pxPanel(ISX.mi);return}itRender_c();var E=it4Box(),x=ISX;if(!x||x.k!=='mod'||E.hidden)return;var m=S.mods[x.mi];if(!m||!pxDoorOf(m))return;var lk=E.querySelector('[data-qmlock]');if(lk&&!E.querySelector('[data-qmpux]'))lk.insertAdjacentHTML('beforebegin','<button data-qmpux="1" style="padding:4px 9px;min-height:32px;font-size:13px">🔧 Puxadores</button>')};
-window.pux3api={open:function(mi){ISX={k:'pux',mi:mi};pxPanel(mi)},set:function(du,dt){S.pxa={du:du,dt:dt};build();render()},bar:function(p,m){return pxBar(p,m,p.w,p.h)}};
+var itRender_c=itRender;itRender=function(){if(ISX&&ISX.k==='pux'){if(M.hidden)return;px3Panel(ISX.mi);return}itRender_c();var E=it4Box(),x=ISX;if(!x||x.k!=='mod'||E.hidden)return;var m=S.mods[x.mi];if(!m||!pxDoorOf(m))return;var lk=E.querySelector('[data-qmlock]');if(lk&&!E.querySelector('[data-qmpux]'))lk.insertAdjacentHTML('beforebegin','<button data-qmpux="1" style="padding:4px 9px;min-height:32px;font-size:13px">🔧 Puxadores</button>')};
+window.pux3api={open:function(mi){ISX={k:'pux',mi:mi};px3Panel(mi)},set:function(du,dt){S.pxa={du:du,dt:dt};build();render()},bar:function(p,m){return pxBar(p,m,p.w,p.h)}};
 /* ===== ＋ Criar: módulos direto no 3D (de baixo, gaveteiro, aéreo, torre, estante) · ilha já abre mostrando as portas ===== */
 var MODADD=[[3,'＋ Base com portas'],[2,'＋ Gaveteiro'],[4,'＋ Aéreo (em cima)'],[6,'＋ Aéreo baixo'],[0,'＋ Torre / coluna'],[5,'＋ Estante (nichos)']];
 var crpRender_d=crpRender;crpRender=function(){crpRender_d();var C=crpBox();if(C.querySelector('[data-cmod]'))return;var Bt=function(at,tx){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px">'+tx+'</button>'};

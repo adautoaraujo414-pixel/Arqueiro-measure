@@ -3648,6 +3648,53 @@ function selFoot(){var x=ISX;if(x&&x.k==='geo'){var g=geoBy(x.id);return g?{x0:g
 var render_dim=render;render=function(){var r=render_dim.apply(this,arguments);try{var sv=dimBox(),F=selFoot();if(!F||window.FPV||M.hidden){sv.innerHTML='';return r}var cv=document.getElementById('cv3'),oy=cv.offsetTop,ox=cv.offsetLeft,P=function(p){var q=proj3(p);return q?[q[0]+ox,q[1]+oy]:null},h='',zm=(F.z0+F.z1)/2,xm=(F.x0+F.x1)/2;
  var seg=function(a,b,v){var A=P(a),Bq=P(b);if(!A||!Bq||v<1)return;var mx=(A[0]+Bq[0])/2,my=(A[1]+Bq[1])/2;h+='<line x1="'+A[0]+'" y1="'+A[1]+'" x2="'+Bq[0]+'" y2="'+Bq[1]+'" stroke="#1f4fe0" stroke-width="1.6"/><text x="'+mx+'" y="'+(my-5)+'" font-size="12" font-weight="700" fill="#c62828" text-anchor="middle" style="paint-order:stroke;stroke:#fff;stroke-width:3px">'+String(Math.round(v*10)/10).replace('.',',')+'</text>'};
  seg([0,2,zm],[F.x0,2,zm],F.x0);seg([F.x1,2,zm],[S.W,2,zm],S.W-F.x1);seg([xm,2,0],[xm,2,F.z0],F.z0);sv.innerHTML=h}catch(_){}return r};
+/* ===== Balcão em L: a pedra vira L e os módulos de baixo acompanham as pontas dela (fundo + canto + lateral).
+   Tudo continua editável: cada módulo se toca e muda (tamanho, portas, gavetas, parede), a pedra muda as duas pontas,
+   a profundidade e a altura, e "Refazer os módulos" enche de novo seguindo a pedra ===== */
+function lSplit(L){if(L<250)return [];var n=Math.max(1,Math.ceil(L/900)),w=Math.floor(L/n),r=[];for(var i=0;i<n;i++)r.push(i<n-1?w:L-w*(n-1));return r}
+function lMod(x,w,v,wing,D){var n={x:Math.round(x),b:0,w:Math.round(w),h:Math.round(S.stT||820),d:Math.max(100,Math.round(D-40)),sup:false,div:[],shv:[],v:v.map(function(o){return Object.assign({cava:false,ow:560,oh:595,ot:50},o)}),tl:false,tr:false,tb:false,fundo:true};defs(n);applyStd(n,{sup:false,keep:true});n.h=Math.round(S.stT||820);n.d=Math.max(100,Math.round(D-40));n.rod=true;n.lock=false;if(wing)n.wing=wing;S.mods.push(n);return n}
+function lV(w,last){return last&&w>=400?[{k:'drawers',n:3}]:[{k:'door',n:w>=600?2:1}]}
+function lShapeSide(st){var sh=st.shape||'reta';return sh==='Le'?'e':sh==='Ld'?'d':sh==='U'?'u':''}
+/* side: 'e', 'd' ou 'u' (as duas) · Lf: comprimento no fundo · Ls: comprimento na lateral (da parede do fundo até a ponta) */
+function mkL(side,Lf,Ls,D,noSnap){if(window.RO)return null;if(!noSnap)snap();var st=S.stones[0];if(!st){st={id:Date.now()%1e6,x:0,w:Lf,d:D,t:S.stT||820,e:S.stE||30,items:[]};S.stones.push(st)}
+ D=Math.max(350,Math.round(D||st.d||S.stD||600));var cur=st.shape||'reta',u=side==='u'||cur==='U'||(cur==='Le'&&side==='d')||(cur==='Ld'&&side==='e'),x0,x1;
+ if(side==='u'){x0=st.x;x1=st.x+st.w}else{Lf=Math.max(D+300,Math.min(Math.round(Lf),S.W));Ls=Math.max(D+300,Math.round(Ls));var nx0=side==='e'?0:S.W-Lf,nx1=nx0+Lf;x0=u?Math.min(st.x,nx0):nx0;x1=u?Math.max(st.x+st.w,nx1):nx1;if(side==='e'){st.lenA=Ls-D;st.widA=D}else{st.lenB=Ls-D;st.widB=D}}
+ if(u){if(!(+st.lenA))st.lenA=900;if(!(+st.lenB))st.lenB=900;st.widA=st.widB=D}
+ st.x=x0;st.w=x1-x0;st.d=D;st.shape=u?'U':(side==='e'?'Le':'Ld');var sides=u?['e','d']:[side];
+ /* tira só os módulos de baixo que ficam embaixo dessa pedra (no fundo e nessa lateral); torre, aéreo, ilha e eletros ficam */
+ S.mods=S.mods.filter(function(m){if(m.sup||m.h>=1500||m.b>10)return true;if(m.wing)return sides.indexOf(m.wing)<0;var a=m.x,b=m.x+m.w;return !(b>x0+1&&a<x1-1)});
+ var K={};sides.forEach(function(sd){var c=lMod(sd==='e'?x0:x1-900,900,[{k:'door',n:2}],0,D);c.corner=sd;c.cw2=900;c.cshelf=1;c.tl=c.tr=false;c.trav=true;c.mold=true;K[sd]=c});
+ /* fundo: do canto até a outra ponta da pedra */
+ var a0=K.e?K.e.x+K.e.w:x0,a1=K.d?K.d.x:x1,ws=lSplit(a1-a0),xx=a0;ws.forEach(function(w,i){var far=side==='e'?i===ws.length-1:i===0;lMod(xx,w,lV(w,!u&&far),0,D);xx+=w});
+ /* lateral: do canto até a ponta do L */
+ sides.forEach(function(sd){var s0=wingStart(sd),Le=D+(sd==='e'?+st.lenA:+st.lenB),wl=lSplit(Le-s0),y=s0;wl.forEach(function(w,i){lMod(y,w,lV(w,i===wl.length-1),sd,D);y+=w})});
+ S.m=S.mods[S.mods.length-1];try{draw();panel()}catch(_){}return st}
+window.mkL=mkL;
+/* ＋ Criar: balcão em L */
+var crpRender_q=crpRender;crpRender=function(){crpRender_q();var C=crpBox();if(C.querySelector('[data-cl]'))return;var p=C.querySelector('[data-cpedra]');if(!p)return;
+ p.insertAdjacentHTML('afterend','<button data-cl="e" style="padding:4px 10px;min-height:34px;font-size:13px">◣ Balcão em L (esquerda)</button><button data-cl="d" style="padding:4px 10px;min-height:34px;font-size:13px">◢ Balcão em L (direita)</button>')};
+crpBox().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!t.dataset.cl)return;e.stopImmediatePropagation();if(window.RO)return;CRP.hidden=true;
+ var D=(S.stones[0]&&S.stones[0].d)||S.stD||600,Rd=(typeof roomD==='function'?roomD():2600),st=mkL(t.dataset.cl,Math.min(S.W,2400),Math.min(Math.max(1500,Rd-900),1800),D);if(!st)return;build();render();itOpen({k:'st',id:st.id});ambMsg('Balcão em L pronto · mude as duas pontas da pedra aqui · toque num módulo pra mudar ele')},true);
+/* painel da pedra no 3D: formato e as pontas do L, e encher de módulos seguindo a pedra */
+var itRender_q=itRender;itRender=function(){itRender_q();var E=it4Box(),x=ISX;if(!x||x.k!=='st'||E.hidden||E.querySelector('[data-qlsh]'))return;var st=S.stones.filter(function(s){return s.id===x.id})[0];if(!st)return;
+ var sh=st.shape||'reta',D=st.d,Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},
+ nm=function(k,lab,v){return '<div style="display:flex;align-items:center;gap:4px;margin:2px 0"><span style="flex:1;font-size:12px;color:#444">'+lab+'</span>'+Bt('data-qlin="'+k+'|-50"','−')+'<input data-qlf="'+k+'" type="text" inputmode="numeric" value="'+Math.round(v)+'" style="width:62px;text-align:center;padding:5px 3px;min-height:32px;margin:0;font-size:14px">'+Bt('data-qlin="'+k+'|50"','＋')+'</div>'};
+ var h='<div style="font-size:12px;color:#444;margin:6px 0 0">Formato da pedra</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+[['reta','▬ Reta'],['Le','◣ L esquerda'],['Ld','◢ L direita'],['U','⊔ U']].map(function(q){return Bt('data-qlsh="'+q[0]+'"',q[1],sh===q[0])}).join('')+'</div>';
+ if(sh==='Le'||sh==='U')h+=nm('la','Lado esquerdo do L: da parede do fundo até a ponta (mm)',D+(+st.lenA||600));
+ if(sh==='Ld'||sh==='U')h+=nm('lb','Lado direito do L: da parede do fundo até a ponta (mm)',D+(+st.lenB||600));
+ h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0"><button data-qlfill="1" style="padding:4px 9px;min-height:32px;font-size:13px;background:#1f8a5b;color:#fff;border-color:#1f8a5b;font-weight:700">🧩 Refazer os módulos embaixo seguindo a pedra</button></div><div style="font-size:12px;color:#555">Os módulos de baixo acompanham as pontas da pedra: fundo, canto e lateral. Depois toque em qualquer módulo pra mudar largura, portas, gavetas ou parede.</div>';
+ E.insertAdjacentHTML('beforeend',h);if(window.RO)E.querySelectorAll('[data-qlsh],[data-qlin],[data-qlf],[data-qlfill]').forEach(function(b){b.disabled=true})};
+function lRedo(st){var sh=st.shape||'reta';if(sh==='reta')return;var D=st.d;snap();if(sh==='U')mkL('u',st.w,0,D,1);else mkL(sh==='Le'?'e':'d',st.w,D+(sh==='Le'?+st.lenA||600:+st.lenB||600),D,1)}
+window.lRedo=lRedo;
+function lSet(st,k,v){v=Math.max(st.d+300,Math.min(8000,Math.round(v)));if(k==='la')st.lenA=v-st.d;else st.lenB=v-st.d;
+ /* a lateral acompanha: o último módulo da lateral estica ou encolhe até a ponta da pedra */
+ var sd=k==='la'?'e':'d',row=S.mods.filter(function(m){return m.wing===sd&&!m.sup&&m.h<1500}).sort(function(a,b){return a.x-b.x}),last=row[row.length-1];if(last){var nw=v-last.x;if(nw>=250&&nw<=1200)last.w=Math.round(nw);else lRedo(st)}}
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX||ISX.k!=='st')return;var d=t.dataset,st=S.stones.filter(function(s){return s.id===ISX.id})[0];if(!st||window.RO)return;
+ if(d.qlsh){e.stopImmediatePropagation();snap();var to=d.qlsh;if(to==='reta'){st.shape='reta'}else{if(to==='Le'||to==='U'){if(!(+st.lenA))st.lenA=900;st.widA=st.d}if(to==='Ld'||to==='U'){if(!(+st.lenB))st.lenB=900;st.widB=st.d}st.shape=to;if(to==='Le')st.x=0;if(to==='Ld')st.x=Math.max(0,S.W-st.w);if(to==='U'){st.x=0;st.w=S.W}lRedo(st)}build();render();itRender();try{draw()}catch(_){}return}
+ if(d.qlin){e.stopImmediatePropagation();var q=d.qlin.split('|'),k=q[0],cur=st.d+(k==='la'?+st.lenA||600:+st.lenB||600);snap();lSet(st,k,cur+(+q[1]));build();render();itRender();try{draw()}catch(_){}return}
+ if(d.qlfill){e.stopImmediatePropagation();lRedo(st);build();render();itRender();ambMsg('Módulos refeitos seguindo a pedra');return}},true);
+it4Box().addEventListener('change',function(e){var t=e.target;if(!t.dataset||!t.dataset.qlf||!ISX||ISX.k!=='st'||window.RO)return;var st=S.stones.filter(function(s){return s.id===ISX.id})[0],v=parseFloat(String(t.value).replace(',','.'));if(!st||!isFinite(v))return;e.stopImmediatePropagation();snap();lSet(st,t.dataset.qlf,v);build();render();itRender();try{draw()}catch(_){}},true);
+window.l3api={mk:mkL,redo:lRedo,set:function(k,v){var st=S.stones[0];lSet(st,k,v);build()}};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>
@@ -3813,6 +3860,17 @@ var apA=apAdd;apAdd=function(t,mi){var it=apA(t,mi),D=(typeof roomD==='function'
  else if(t==='airfryer'||(t==='deco'&&!(mm[4]&&mm[4].b!==undefined))){it.b=benchTop();it.y=Math.max(0,Math.round((600-it.d)/2));var st=S.stones&&S.stones[0];it.x=st?Math.round(st.x+Math.max(0,st.w-it.w-200)):200}
  else if(MOBT2.indexOf(t)>=0){it.y=Math.round(Math.max(700,Math.min(D-it.d-200,D/2)));it.x=Math.round(Math.max(0,(S.W-it.w)/2));if(mm[4]&&mm[4].b!==undefined)it.b=mm[4].b}
  if(MOBT2.indexOf(t)>=0||t==='airfryer')delete it.fin;return it};
+})();
+</script>
+<script>
+/* ===== cabeçalho: o "Enviar" agora manda o projeto pro cliente ver em 3D (link, sem servidor) ===== */
+(function(){var b=document.getElementById('shb');if(!b)return;
+ var sp=b.querySelector('span');if(sp)sp.textContent='Cliente 3D';b.title='Enviar o projeto pro cliente ver em 3D';b.setAttribute('aria-label','Enviar o projeto pro cliente ver em 3D');
+ function vis(){b.hidden=!!window.RO}vis();setTimeout(vis,600);
+ b.addEventListener('click',function(e){e.stopImmediatePropagation();e.preventDefault();if(window.RO)return;if(typeof window.clientSend==='function')window.clientSend()},true);
+ /* também no ⋯ Mais da Visão 3D */
+ var r=document.getElementById('v3row2');if(r&&!document.getElementById('v3cli')){var c=document.createElement('button');c.id='v3cli';c.textContent='🏠 Enviar pro cliente';c.style.cssText='background:#1f6feb;color:#fff;border-color:#1f6feb;font-weight:700';c.onclick=function(){if(!window.RO&&window.clientSend)window.clientSend()};r.appendChild(c);
+  var ro=function(){c.hidden=!!window.RO};ro();setInterval(ro,1500)}
 })();
 </script>
 </body></html>

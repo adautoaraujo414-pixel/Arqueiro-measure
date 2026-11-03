@@ -401,6 +401,7 @@ fun LibraryScreen(vm: AppViewModel) {
             if (a.kind.isNotEmpty()) vm.pendingImport = a.kind
             vm.openNote(id)
         }
+    }
     if (btView) ShareViewPicker(vm) { btView = false }
     vm.updateState?.let { msg ->
         androidx.compose.material3.AlertDialog(

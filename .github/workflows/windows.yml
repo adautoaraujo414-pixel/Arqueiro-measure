@@ -69,6 +69,10 @@ jobs:
           gh release create "win-$n" rel/* -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease `
             --title "Arquemestre para Windows $n" `
             --notes "Instalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups."
+          # ponteiro fixo "win-latest": o app lê latest.txt direto do download (sem feed, sem limite da API)
+          Set-Content -Path rel/latest.txt -Value "$n" -NoNewline
+          gh release view win-latest -R "$env:GITHUB_REPOSITORY" 2>$null; if ($LASTEXITCODE -ne 0) { gh release create win-latest -R "$env:GITHUB_REPOSITORY" --prerelease --title "Windows · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em win-N." }
+          gh release upload win-latest rel/latest.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
 
       - name: Guardar resultados (prints e relatório) no ramo ci/windows-resultados
         if: always()

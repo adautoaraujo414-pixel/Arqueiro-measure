@@ -1028,7 +1028,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun autoCheckUpdate() {
         if (br.com.arque.measure.BuildConfig.PLAY) return // no Google Play quem atualiza é a loja
         val now = System.currentTimeMillis()
-        if (now - lastAutoCheck < 30 * 60_000L || updateState != null) return
+        // não checa de novo só enquanto um download está rolando ou já tem apk pronto pra instalar (um aviso antigo tipo "já está na mais nova" não trava a checagem)
+        if (now - lastAutoCheck < 30 * 60_000L || updateReady != null || (updateState?.contains("%") == true)) return
         lastAutoCheck = now
         val app = getApplication<Application>()
         viewModelScope.launch {

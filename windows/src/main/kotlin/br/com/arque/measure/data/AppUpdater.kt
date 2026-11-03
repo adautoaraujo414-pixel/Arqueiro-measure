@@ -39,7 +39,12 @@ object AppUpdater {
     /** Versão mais nova publicada (a de número maior, não a primeira da lista). Rede: chamar fora da thread principal. */
     fun latest(): Release? {
         var best: Release? = null
+        // 1) ponteiro fixo win-latest/latest.txt (download direto: não depende do feed de 10 itens nem do limite da API)
         runCatching {
+            val n = get(DL + "win-latest/latest.txt", false).trim().toInt()
+            if (n > 0) best = Release(n, DL + "win-" + n + "/" + ASSET)
+        }
+        if (best == null) runCatching {
             val xml = get(FEED, false)
             Regex("releases/tag/win-(\\d+)").findAll(xml).forEach { m ->
                 val n = m.groupValues[1].toInt()

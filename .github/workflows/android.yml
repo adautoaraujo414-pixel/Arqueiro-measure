@@ -96,6 +96,10 @@ jobs:
               --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
               --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
           fi
+          # ponteiro fixo "apk-latest": o app lê latest.txt direto do download (sem feed, sem limite da API)
+          echo "${GITHUB_RUN_NUMBER}" > latest.txt
+          gh release view apk-latest >/dev/null 2>&1 || gh release create apk-latest --prerelease --title "Android · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em apk-N."
+          gh release upload apk-latest latest.txt ArqueMeasure-debug.apk --clobber
 
       - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
         if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

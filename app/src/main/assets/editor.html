@@ -411,7 +411,7 @@ function partsOf0(m){if(!m.cv31){m.cv31=1;(m.v||[]).forEach(function(v){if(v.k==
  });
  if(m.mold)add('Moldura de acabamento',0,0,m.w,Math.min(m.moldMm,top+topo(m)),F,m.w,m.moldMm,{op:.55,note:'acabamento, cobre a folga do topo'});
  if(m.tt){var ttx=m.tl?-m.tlW:0,ttl=m.w+(m.tl?m.tlW:0)+(m.tr?m.trW:0),ttd=dep+25+fBack(m);add('Tamponamento de cima',ttx,-TBW,ttl,TBW,TB,ttl,ttd,{mat:TBW,op:.9,note:'passa reto por cima, cobrindo as laterais · prof. '+dep+' + 25'+(fBack(m)?' + fundo':'')+' · espessura '+TBW+' mm'})}
- if(m.tb){var tx0=(m.tpass?(m.tl?-m.tlW:0):0)-(m.tbL||0),tlen=m.w+(m.tpass?(m.tl?m.tlW:0)+(m.tr?m.trW:0):0)+(m.tbL||0)+(m.tbR||0);add('Tamponamento de baixo',tx0,bb+roff,tlen,TBW,TB,tlen,dep+25+fBack(m),{mat:TBW,op:.9,note:'cobre embaixo do módulo da parede até 25 mm pra frente · prof. '+dep+' + 25'+(fBack(m)?' + fundo':'')+' · '+(m.tpass?'passa reto':'morre nas laterais')+((m.tbL||m.tbR)?' · aumentado '+((m.tbL||0)+(m.tbR||0))+' mm no comprimento':'')+' · espessura '+TBW+' mm'})}
+ if(m.tb&&m.sup){var tx0=(m.tpass?(m.tl?-m.tlW:0):0)-(m.tbL||0),tlen=m.w+(m.tpass?(m.tl?m.tlW:0)+(m.tr?m.trW:0):0)+(m.tbL||0)+(m.tbR||0);add('Tamponamento de baixo',tx0,bb+roff,tlen,TBW,TB,tlen,dep+25+fBack(m),{mat:TBW,op:.9,note:'cobre embaixo do módulo da parede até 25 mm pra frente · prof. '+dep+' + 25'+(fBack(m)?' + fundo':'')+' · '+(m.tpass?'passa reto':'morre nas laterais')+((m.tbL||m.tbR)?' · aumentado '+((m.tbL||0)+(m.tbR||0))+' mm no comprimento':'')+' · espessura '+TBW+' mm'})}
  if(m.regua&&m.sup){var rh=e;if(m.base){for(var rl=0;rl<rN_;rl++){add('Engrosso cava · régua da frente'+(rN_>1?' '+(rl+1):''),0,bb+rl*rh,m.w,rh,'#cdb98f',m.w,m.regMm,{noCut:true,note:'alinhada na frente da base · '+m.regMm+' × '+m.w+' (largura do módulo, fora tamponamento)'});add('Engrosso cava · régua de trás'+(rN_>1?' '+(rl+1):''),0,bb+rl*rh,m.w,rh,'#cdb98f',m.w,m.regMm,{noCut:true,noDraw2d:true,note:'alinhada atrás da base · '+m.regMm+' × '+m.w})}}
   }
  var FT_=fTipo(m);if(m.fundo&&FT_!=='sobre'){var rgN='rasgo do fundo: '+(+m.fundoMm||6)+' × '+(+m.rasgoP||8)+' mm · distância da traseira: '+(+m.rasgoR||10)+' mm';o.forEach(function(p){if(/^Lateral (esquerda|direita)$/.test(p.name)||(FT_==='rasgo4'&&/^Base (inferior|superior)$/.test(p.name)))p.note=(p.note?p.note+' · ':'')+rgN})}
@@ -4128,7 +4128,7 @@ var TCMAX=2700;
 function tcChain(m){var row=S.mods.filter(function(o){return !!o.sup===!!m.sup&&(o.wing||0)===(m.wing||0)&&!o.corner&&Math.abs((o.b+(o.sup?0:o.h))-(m.b+(m.sup?0:m.h)))<5}).sort(function(a,b){return a.x-b.x}),i=row.indexOf(m);if(i<0)return [m];
  var near=function(a,b){var g=(b.x-(typeof lt==='function'?lt(b):0))-(a.x+a.w+(typeof rt==='function'?rt(a):0));return g<=8&&g>=-8},ch=[m],j=i;while(j>0&&near(row[j-1],row[j])){ch.unshift(row[j-1]);j--}j=i;while(j<row.length-1&&near(row[j],row[j+1])){ch.push(row[j+1]);j++}return ch}
 function tcApply(m){var ch=tcChain(m);if(ch.length<2){toast('Encoste outro módulo do lado pra puxar o tamponamento');return}snap();var tt=ch.some(function(o){return o.tt}),tb=ch.some(function(o){return o.tb});
- for(var i=0;i<ch.length;i++){var o=ch[i];if(i>0)o.tl=false;if(i<ch.length-1)o.tr=false;if(tt)o.tt=true;if(tb)o.tb=true;o.tc=1}
+ for(var i=0;i<ch.length;i++){var o=ch[i];if(i>0)o.tl=false;if(i<ch.length-1)o.tr=false;if(tt)o.tt=true;if(tb&&o.sup)o.tb=true;o.tc=1}
  for(var k=1;k<ch.length;k++){var p=ch[k-1],q=ch[k],nx=p.x+p.w;if(Math.abs(q.x-nx)>0.1){var dx=nx-q.x;q.x=nx;S.mods.forEach(function(r){if(ch.indexOf(r)<0&&!!r.sup===!!q.sup&&(r.wing||0)===(q.wing||0)&&r.x>q.x)r.x+=dx})}}
  try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}var L=ch[ch.length-1].x+ch[ch.length-1].w-ch[0].x;toast('Tamponamento corrido em '+ch.length+' módulos ('+Math.round(L)+' mm)'+(L>TCMAX?' · emenda na junta dos módulos':' · peça única'))}
 window.tcApply=tcApply;
@@ -4201,6 +4201,23 @@ function tjNb(m,side){var best=null;S.mods.forEach(function(n){if(n===m||!n.sup|
 var partsOf_tj=partsOf;partsOf=function(m){var P=partsOf_tj.apply(this,arguments);try{if(!m||!m.sup||!m.tb||m.corner||m.nicho||m.tpass)return P;var L=tjNb(m,-1),R=tjNb(m,1),tbw=+m.tbW||30;if(!L&&!R)return P;
   P.forEach(function(p){if(p.name==='Tamponamento de baixo'){var el=L&&m.tl?(+m.tlW||30):0,er=R&&m.tr?(+m.trW||30):0;if(el||er){p.x-=el;p.w+=el+er;p.cl=Math.round((p.cl+el+er)*10)/10;p.note=(p.note||'')+' · passa por baixo do tamponamento lateral do meio (encontra o do vizinho)'}}
    else if((p.name==='Tamponamento esquerdo'&&L)||(p.name==='Tamponamento direito'&&R)){if(p.h>tbw+50){p.h-=tbw;p.cl=Math.round((p.cl-tbw)*10)/10;p.note=(p.note||'')+' · para em cima do tamponamento de baixo (meio de dois módulos)'}}})}catch(_){}return P};
+
+/* planta: medida real do espaço livre embaixo da pedra (parte verde) onde ainda não tem armário */
+function plGaps(a0,a1,occ){occ=occ.filter(function(o){return o[1]>a0&&o[0]<a1}).sort(function(a,b){return a[0]-b[0]});var g=[],x=a0;occ.forEach(function(o){if(o[0]>x+20)g.push([x,o[0]]);x=Math.max(x,o[1])});if(a1>x+20)g.push([x,a1]);return g}
+var plantaSvg_free=plantaSvg;plantaSvg=function(){var s=plantaSvg_free.apply(this,arguments);try{if(S.env==='livre')return s;var k=PLK||1,L=OX,T=OY+10,sw=sideWalls(),W=S.W,P=function(x,y){return [L+x*k,T+y*k]},o='';
+ var fl=S.mods.filter(function(m){return !m.sup&&(+m.b||0)<10});
+ var lab=function(p,v,rot){o+='<g pointer-events="none"><rect x="'+(p[0]-34)+'" y="'+(p[1]-9)+'" width="68" height="17" rx="8" fill="#fff" fill-opacity=".9" stroke="#c62828"'+(rot?' transform="rotate(-90 '+p[0]+' '+p[1]+')"':'')+'/><text x="'+p[0]+'" y="'+(p[1]+4)+'" font-size="11" font-weight="700" text-anchor="middle" fill="#c62828"'+(rot?' transform="rotate(-90 '+p[0]+' '+p[1]+')"':'')+'>livre '+Math.round(v)+'</text></g>'};
+ var dl=function(a,b){o+='<line x1="'+a[0].toFixed(1)+'" y1="'+a[1].toFixed(1)+'" x2="'+b[0].toFixed(1)+'" y2="'+b[1].toFixed(1)+'" stroke="#c62828" stroke-width="1.4" stroke-dasharray="5 3" pointer-events="none"/>'};
+ S.stones.forEach(function(q){var sh=q.shape||'reta',D=+q.d||600,d6=function(v){return v===undefined?600:+v};
+  var occF=fl.filter(function(m){return !m.wing}).map(function(m){return [m.x-(m.tl?+m.tlW||0:0),m.x+m.w+(m.tr?+m.trW||0:0)]});
+  plGaps(q.x,q.x+q.w,occF).forEach(function(g){var y=D*0.5;dl(P(g[0],y),P(g[1],y));lab(P((g[0]+g[1])/2,y),g[1]-g[0])});
+  [['e','Le'],['d','Ld']].forEach(function(w){if(sh!==w[1]&&sh!=='U')return;var len=w[0]==='e'?d6(q.lenA):d6(q.lenB),wd=w[0]==='e'?Math.min(d6(q.widA),q.w):Math.min(d6(q.widB),q.w);
+   var occ=fl.filter(function(m){return m.wing===w[0]}).map(function(m){return [m.x,m.x+m.w]});fl.forEach(function(m){if(m.corner===w[0]&&!m.wing)occ.push([0,Math.max(m.d+200,m.cw2||900)])});
+   var xw=w[0]==='e'?q.x+wd/2:q.x+q.w-wd/2;plGaps(D,D+len,occ).forEach(function(g){dl(P(xw,g[0]),P(xw,g[1]));lab(P(xw,(g[0]+g[1])/2),g[1]-g[0],1)})})});
+ s+=o}catch(_){}return s};
+
+/* módulo de baixo não tem tamponamento embaixo (regra dos outros): esconde a opção */
+var panel_ntb=panel;panel=function(){var r=panel_ntb.apply(this,arguments);try{if(S.m&&!S.m.sup){var c=document.querySelector('input[data-c="tb"]');if(c){var ch=c.closest('.chk');var sec=ch&&ch.previousElementSibling;if(sec&&/Embaixo \(azul\)/.test(sec.textContent))sec.style.display='none';if(ch)ch.style.display='none';var nx=ch&&ch.nextElementSibling;while(nx&&!nx.classList.contains('sec')){if(/tbL|tbR|tpass|Aumentar comprimento/.test(nx.innerHTML))nx.style.display='none';nx=nx.nextElementSibling}}}}catch(_){}return r};
 
 </script>
 </body></html>

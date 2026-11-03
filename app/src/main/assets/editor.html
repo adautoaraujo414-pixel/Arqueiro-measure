@@ -3787,6 +3787,14 @@ it4Box().addEventListener('click',function(e){var t=e.target.closest('button');i
  if(d.qfo){e.stopImmediatePropagation();var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(f){frToggle(f.id);setTimeout(itRender,50)}return}},true);
 /* sem setas de medida nos itens (só arrastar); móveis e mobília do chão arrastam pelo chão */
 var ahSpecs_mini=ahSpecs;ahSpecs=function(){var H=ahSpecs_mini();var x=ISX;if(!x||!MINIK[x.k]||x.full||window.RO||window.MINI3OFF)return H;if(x.k==='fr'){var f=itObj();if(f&&frFloor(f))BDR={k:'xz',y:f.b||0,f:function(s,d){var D=(typeof roomD==='function'?roomD():6000);f.x=Math.max(0,Math.min(S.W-f.w,Math.round((s.x+d[0])/10)*10));f.y=Math.max(0,Math.min(D-(f.d||400),Math.round(((+s.y||0)+d[1])/10)*10))}}}return []};
+/* cava usinada a 30° das portas: a face inclinada aparece escura (sombra do puxador cava), como na peça de verdade */
+var build_cava=build;build=function(){build_cava();try{var add=[];boxes.forEach(function(b){if(!b.poly||b.poly.length!==5||!/:(Porta|Frente)/.test(String(b.nm||'')))return;var P=b.poly,down=P[0][1]>b.y0+1,A=down?P[0]:P[4],Bp=down?P[1]:P[3];
+  var dz=Bp[0]-A[0],dy=Bp[1]-A[1],L=Math.hypot(dz,dy)||1,nz=-dy/L,ny=dz/L;/* normal pra fora da madeira (lado do canto cortado) */if(down){if(ny>0){nz=-nz;ny=-ny}}else{if(ny<0){nz=-nz;ny=-ny}}if(nz>0){}
+  var t=0.8,pts=[[A[0],A[1]],[Bp[0],Bp[1]],[Bp[0]+nz*t,Bp[1]+ny*t],[A[0]+nz*t,A[1]+ny*t]],zs=pts.map(function(q){return q[0]}),ys=pts.map(function(q){return q[1]});
+  add.push({x0:b.x0+.5,x1:b.x1-.5,y0:Math.min.apply(null,ys),y1:Math.max.apply(null,ys),z0:Math.min.apply(null,zs),z1:Math.max.apply(null,zs),c:hex('#3d342b'),a:1,g:'f',nm:b.nm,vi:b.vi,pk:b.pk,dq:b.dq,pf:{ax:'x',pts:pts},nol:1})});add.forEach(function(q){boxes.push(q)})}catch(_){}};
+/* tamponamentos com a mesma cor e textura das portas do módulo (tudo uniforme) */
+var build_tpc=build;build=function(){build_tpc();try{var col={};boxes.forEach(function(b){var nm=String(b.nm||''),mi=nm.split(':')[0];if(!/^\d+$/.test(mi)||col[mi])return;if(/:(Porta|Frente)/.test(nm)&&Array.isArray(b.c)&&!(b.a<.9)&&!b.pf&&!b.nol&&(b.poly||(b.x1-b.x0)*(b.y1-b.y0)>40000))col[mi]=b.c});
+ boxes.forEach(function(b){var nm=String(b.nm||''),mi=nm.split(':')[0];if(!col[mi]||!/:(Tamponamento|Engrosso|Moldura|Régua|Travessa frontal)/.test(nm)||b.pf)return;b.c=col[mi].slice()})}catch(_){}};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

@@ -2652,7 +2652,7 @@ function mvSnap(m,nx,nb){var th=45,bx=null,bb=null,ws=m.wing||0,why=[];var xs=[[
 /* ===== toques no 3D: 1 toque arrasta o móvel (ou abre porta), 2 toques edita a peça, 3 toques muda o tamanho do módulo ===== */
 var MPEND=null,MZB=null;window.MZ3I=-1;
 function modAt(cx,cy){var b=pickFace(cx,cy,null);if(!b||!b.nm||!/^\d+:/.test(b.nm))return -1;var mi=+String(b.nm).split(':')[0];return S.mods[mi]?mi:-1}
-function one3(cx,cy){var b=pickFace(cx,cy,function(q){return /:(Porta|Frente)/.test(q.nm)});var nm=b?String(b.nm).split(':')[1]||'':'';if(b&&/^(Porta|Frente)/.test(nm)){tap3(cx,cy);return}var mi=modAt(cx,cy);if(mi<0){if(SEL3)sel3(-9999,-9999);if(window.MZ3I>=0)mz3Close();return}S.m=S.mods[mi];try{draw();if(typeof panel==='function')panel()}catch(_){}ambMsg('Módulo selecionado · arraste pra mover · 2 toques: editar a peça · 3 toques: tamanho do módulo')}
+function one3(cx,cy){var b=pickFace(cx,cy,function(q){return /:(Porta|Frente)/.test(q.nm)});var nm=b?String(b.nm).split(':')[1]||'':'';if(b&&/^(Porta|Frente)/.test(nm)){tap3(cx,cy);return}var mi=modAt(cx,cy);if(mi<0){if(SEL3)sel3(-9999,-9999);if(window.MZ3I>=0)mz3Close();return}S.m=S.mods[mi];try{draw();if(typeof panel==='function')panel()}catch(_){}ambMsg('Módulo selecionado · arraste pra mover · 2 toques na peça: setas pra aumentar ou diminuir · 3 toques: opções do módulo')}
 function mz3Box(){if(MZB)return MZB;MZB=document.createElement('div');MZB.id='mz3';MZB.hidden=true;MZB.style.cssText='position:absolute;left:8px;top:var(--v3top,56px);z-index:5;background:rgba(255,255,255,.97);color:#1b1f27;border-radius:12px;padding:8px 10px;max-width:calc(100% - 16px);box-shadow:0 6px 24px rgba(0,0,0,.4);font-size:13px';M.appendChild(MZB);
  MZB.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;var d=t.dataset;if(d.mzx!==undefined){mz3Close();return}var m=S.mods[window.MZ3I];if(!m)return;if(d.mz){var q=d.mz.split('|');mzSet(m,q[0],m[q[0]]+(+q[1]))}if(d.mzw!==undefined){mzWall(m,d.mzw);return}if(d.mzj){mzJoin(m,d.mzj)}});
  MZB.addEventListener('change',function(e){var t=e.target;if(!t.dataset||!t.dataset.mzf)return;var m=S.mods[window.MZ3I];if(!m)return;var v=parseFloat(String(t.value).replace(',','.'));if(!isNaN(v))mzSet(m,t.dataset.mzf,v)});return MZB}
@@ -2991,7 +2991,7 @@ var one3_j=one3;one3=function(cx,cy){if(IDRAW)return;var h=pickItem(cx,cy);
   itOpen(h);return}
  if(ISX){ISX=null;if(IT4)IT4.hidden=true;build();render();if(h&&h.k==='wall')return}
  var busy=SEL3||window.MZ3I>=0||ISEL;one3_j(cx,cy);var mi=S.mods.indexOf(S.m),b=pickFace(cx,cy,function(q){return /:(Porta|Frente)/.test(q.nm)}),nm=b?String(b.nm).split(':')[1]||'':'';
- if(!islHit(cx,cy)&&!(b&&/^(Porta|Frente)/.test(nm))&&modAt(cx,cy)>=0&&mi>=0&&!window.RO){itOpen({k:'mod',mi:mi});return}
+ if(!islHit(cx,cy)&&!(b&&/^(Porta|Frente)/.test(nm))&&modAt(cx,cy)>=0&&mi>=0&&!window.RO){/* 1 toque só seleciona pra arrastar; as opções do módulo abrem com 3 toques */return}
  if(h&&h.k==='wall'&&!busy&&!ISEL)itOpen(h)};
 var sel3_j=sel3;sel3=function(cx,cy){if(ISX&&cx>-9000){ISX=null;if(IT4)IT4.hidden=true}sel3_j(cx,cy)};
 var size3_j=size3;size3=function(cx,cy){if(ISX){ISX=null;if(IT4)IT4.hidden=true}size3_j(cx,cy)};
@@ -3335,7 +3335,7 @@ function cw2Set(m,v){v=Math.round(Math.max(m.d+200,Math.min(2000,v)));if(v===m.c
 function tetoSet(f,v){var T=S.teto=S.teto||{};snap();if(f==='H'){S.H=Math.round(Math.max(2000,Math.min(5000,v)))}else T.rb=Math.round(Math.max(0,Math.min(600,v)));try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itRender()}
 var itObj_k=itObj;itObj=function(){var x=ISX;if(x&&x.k==='wall'&&x.s==='T')return {};return itObj_k()};
 /* parede e piso não abrem sozinhos ao tocar: só pelo 🧱 Ambiente do cabeçalho */
-var one3_k=one3;one3=function(cx,cy){if(IDRAW)return;var h=null;try{h=pickItem(cx,cy)}catch(_){}if(h&&h.k==='wall'&&modAt(cx,cy)<0){if(ISX){ISX=null;if(IT4)IT4.hidden=true;build();render()}if(SEL3)sel3(-9999,-9999);if(window.MZ3I>=0)mz3Close();return}var mi=modAt(cx,cy);one3_k(cx,cy);if(mi>=0&&S.mods[mi]&&!ISX&&!ISEL&&!SEL3&&!islHit(cx,cy))itOpen({k:'mod',mi:mi})};
+var one3_k=one3;one3=function(cx,cy){if(IDRAW)return;var h=null;try{h=pickItem(cx,cy)}catch(_){}if(h&&h.k==='wall'&&modAt(cx,cy)<0){if(ISX){ISX=null;if(IT4)IT4.hidden=true;build();render()}if(SEL3)sel3(-9999,-9999);if(window.MZ3I>=0)mz3Close();return}var mi=modAt(cx,cy);one3_k(cx,cy);/* 1 toque no módulo só seleciona (arrastar); as opções abrem com 3 toques */if(mi>=0&&ISX&&ISX.k==='mod'&&ISX.mi!==mi){ISX=null;if(IT4)IT4.hidden=true;build();render()}};
 /* LED: no menu também só nos módulos de cima e na cristaleira */
 var ledAdd_k=ledAdd;ledAdd=function(where){if(where==='mod'&&S.m&&!ledOk(S.m)){ambMsg('LED vai só nos módulos de cima e na cristaleira');return}if(where==='sup'){var n=0;snap();S.mods.forEach(function(m){if(ledOk(m)){m.led=ledDef(m.sup);n++}});try{draw();panel()}catch(_){}build();render();crpRender();ambMsg(n?'💡 LED colocado em '+n+(n===1?' módulo':' módulos')+' · toque na luz pra mudar':'Não tem módulo de cima nem cristaleira no projeto.');return}return ledAdd_k(where)};
 /* teto no 3D: sólido, do mesmo material das paredes, cobre o ambiente inteiro · de fora (vista de cima) ele some pra deixar ver os móveis; no modo pessoa ele aparece */
@@ -3715,6 +3715,14 @@ it4Box().addEventListener('click',function(e){var t=e.target.closest('[data-qmde
  if(!ISX.del){ISX.del=1;itRender();return}
  snap();S.m=m;LAST='mod';try{$('delMod').click()}catch(_){S.mods=S.mods.filter(function(a){return a!==m});S.m=S.mods[0]||null}
  ISX=null;if(IT4)IT4.hidden=true;window.MZ3I=-1;if(MZB)MZB.hidden=true;try{draw();panel()}catch(_){}build();render();ambMsg('Módulo excluído · ↶ desfaz')},true);
+/* 3 toques no módulo: abre as opções dele (tamanho, portas, LED, puxadores, travar, encostar, excluir) */
+var size3_o=size3;size3=function(cx,cy){if(window.RO||islHit(cx,cy)){size3_o(cx,cy);return}var mi=modAt(cx,cy);if(mi<0){size3_o(cx,cy);return}if(SEL3){SEL3=null;e3Box().hidden=true;H3.innerHTML=''}if(window.MZ3I>=0){window.MZ3I=-1;if(MZB)MZB.hidden=true}S.m=S.mods[mi];try{draw();if(typeof panel==='function')panel()}catch(_){}itOpen({k:'mod',mi:mi})};
+/* pedra em L: setas pra aumentar e diminuir o lado do L (comprimento e largura); os módulos de baixo da lateral acompanham */
+var ahSpecs_L=ahSpecs;ahSpecs=function(){var H=ahSpecs_L();var x=ISX;if(!x||x.k!=='st'||window.RO)return H;var q=itObj();if(!q)return H;var sh=q.shape||'reta',y=(+q.t||820)+(+q.e||30)/2,d6=function(v){return v===undefined||v===null||v===''?600:+v};
+ [['e','A','la'],['d','B','lb']].forEach(function(c){if(!(sh==='U'||(c[0]==='e'&&sh==='Le')||(c[0]==='d'&&sh==='Ld')))return;var len=d6(q['len'+c[1]]),wd=Math.min(d6(q['wid'+c[1]]),q.w),xc=c[0]==='e'?q.x+wd/2:q.x+q.w-wd/2,xe=c[0]==='e'?q.x+wd:q.x+q.w-wd;
+  H.push({k:'z'+c[2],p:[xc,y,q.d+len],ax:2,f:function(s,a){var v=Math.max(q.d+300,Math.min(8000,Math.round((q.d+d6(s['len'+c[1]])+a)/10)*10));lSet(q,c[2],v);try{draw()}catch(_){}}});
+  H.push({k:'x'+c[2],p:[xe,y,q.d+len/2],ax:0,f:function(s,a){var w0=Math.min(d6(s['wid'+c[1]]),s.w),v=Math.max(250,Math.min(1500,Math.round((w0+(c[0]==='e'?a:-a))/10)*10));q['wid'+c[1]]=v;try{draw()}catch(_){}}})});
+ return H};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

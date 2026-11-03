@@ -202,8 +202,8 @@ function vaoRanges(m){var e=m.esp,d=dividersX(m),o=[],x=e*(1+(m.egL||0));d.forEa
 function r1(v){return Math.round(v*10)/10}
 /* ===== Regra de acabamento: por dentro tudo branco, por fora (topo, tamponamentos, engrossos, frentes) na cor ===== */
 var WHITE='#f4f2ee';
-function finOf(n){if(/^(Frente\/costa|Lateral de gaveta|Fundo de gaveta|Fundo|Gaveta interna)/.test(n))return 'b';if(/^(Porta|Frente de gaveta|Gaveta|Forno|Tampa|Frente \(porta tempero|Batente|Moldura|Tamponamento|Engrosso|Travessa)/.test(n))return 'c';return 'b'}
-function paintCol(m,p){if(p.glass||p.oven||/^(Corte do forno|Rodapé)/.test(p.name))return;if(finOf(p.name)==='b'){p.col=WHITE;return}if(/^(Porta|Frente|Gaveta|Forno|Tampa|Batente)/.test(p.name)){if(m.corF)p.col=m.corF}else if(m.cor)p.col=m.cor}
+function finOf(n){if(/^(Frente\/costa|Lateral de gaveta|Fundo de gaveta|Fundo|Gaveta interna|Travessa deitada|Divisória do pedestal|Rodapé)/.test(n))return 'b';if(/^(Porta|Frente de gaveta|Gaveta|Forno|Tampa|Frente \(porta tempero|Batente|Moldura|Tamponamento|Engrosso|Travessa)/.test(n))return 'c';return 'b'}
+function paintCol(m,p){if(p.glass||p.oven||/^(Corte do forno)/.test(p.name))return;if(finOf(p.name)==='b'){p.col=WHITE;return}if(/^(Porta|Frente|Gaveta|Forno|Tampa|Batente)/.test(p.name)){if(m.corF)p.col=m.corF}else if(m.cor)p.col=m.cor}
 /* ===== Preços de material (configurações) ===== */
 var PRK='arque.prices.v1',PRD={refilo:10,kerf:4,veio:0,mult:2.5,perda:15,mdfB:0,mdfC:0,fundo:0,fitaB:0,fitaC:0,dob:0,cor:0,dobQ:2,tmp:0,fPerda:10,sheetW:2750,sheetH:1840};
 var PR=(function(){var o=Object.assign({},PRD);try{Object.assign(o,JSON.parse(localStorage.getItem(PRK)||'{}'))}catch(e){}return o})();
@@ -379,7 +379,8 @@ function partsOf0(m){if(!m.cv31){m.cv31=1;(m.v||[]).forEach(function(v){if(v.k==
  if(m.trav)add('Travessa frontal',0,top,m.w,m.travMm,F,m.w,m.travMm,{note:'embute '+e+' no rebaixo das laterais'});
  else add('Base superior',0,top,m.w,e,W,m.w,dep,{note:'igual à base, parafusado por cima das laterais'+(!m.sup&&!m.mold?' · módulo FECHADO em cima (sem régua de 70 e sem moldura)':'')});
  m.div.map(function(r,i){return [r,(m.dr&&m.dr[i])||0]}).sort(function(a,b){return a[0]-b[0]}).forEach(function(pr,i){var rc=pr[1],dx=m.esp+(m.w-2*m.esp)*pr[0]-m.esp/2;if(rc<0){add('Montante '+(i+1)+' · '+(-rc)+' mm',dx,vT,e,vH,W,vH,-rc,{mont:-rc,depFull:dep,note:'MONTANTE de '+(-rc)+' mm só na frente, onde parafusa a dobradiça · a prateleira passa por trás'});return}add('Divisória '+(i+1),dx,vT,e,vH,W,vH,dep-rc,{note:rc?'recuo traseiro '+rc+' mm':'sem recuo'})});
- if(m.rod){add('Rodapé (pedestal)',e,bb,iw,m.rodMm,W,iw,m.rodMm,{op:.9});add('Rodapé traseiro (pedestal)',e,bb,iw,m.rodMm,W,iw,m.rodMm,{op:.9,note:'travessa traseira do pedestal, recuada 30 mm do fundo'});var rlL=Math.max(50,dep-60-2*e);add('Rodapé lateral esquerdo (pedestal)',e,bb,e,m.rodMm,W,rlL,m.rodMm,{op:.9,note:'fecha o pedestal (quadrado) entre frente e trás'});add('Rodapé lateral direito (pedestal)',m.w-2*e,bb,e,m.rodMm,W,rlL,m.rodMm,{op:.9,note:'fecha o pedestal (quadrado) entre frente e trás'})}
+ if(m.rod){add('Rodapé (pedestal)',e,bb,iw,m.rodMm,W,iw,m.rodMm,{op:.9});add('Rodapé traseiro (pedestal)',e,bb,iw,m.rodMm,W,iw,m.rodMm,{op:.9,note:'travessa traseira do pedestal, recuada 30 mm do fundo'});var rlL=Math.max(50,dep-60-2*e);add('Rodapé lateral esquerdo (pedestal)',e,bb,e,m.rodMm,W,rlL,m.rodMm,{op:.9,note:'fecha o pedestal (quadrado) entre frente e trás'});add('Rodapé lateral direito (pedestal)',m.w-2*e,bb,e,m.rodMm,W,rlL,m.rodMm,{op:.9,note:'fecha o pedestal (quadrado) entre frente e trás'});var dvX=Math.round((m.w-e)/2),fx_=Math.min(100,Math.max(60,Math.round(rlL/3)));add('Divisória do pedestal (meio)',dvX,bb,e,m.rodMm,W,rlL,m.rodMm,{op:.9,note:'no meio do pedestal, entre frente e trás · dá firmeza'});
+ add('Travessa deitada do pedestal (fixação)',e,bb+m.rodMm-e,fx_,e,W,rlL,fx_,{op:.9,noDraw2d:true,note:'deitada no canto, em cima do pedestal · parafusa de baixo pra cima na base do módulo'});add('Travessa deitada do pedestal (fixação)',m.w-e-fx_,bb+m.rodMm-e,fx_,e,W,rlL,fx_,{op:.9,noDraw2d:true,note:'deitada no canto, em cima do pedestal · parafusa de baixo pra cima na base do módulo'})}
  var vr=vaoRanges(m);
  vr.forEach(function(rg,i){var v=gv(i,m),vx=rg[0],vw=rg[1]-rg[0];
   m.shv.forEach(function(r,j){var rc=(m.sr&&m.sr[j]!==undefined)?m.sr[j]:m.pm;add('Prateleira solta',vx,vT+vH*r-e/2,vw,e,W,vw,dep-rc,{note:rc?'recuo '+rc+' mm (prateleira '+rc+' menor que a base)':'sem recuo'})});
@@ -2388,6 +2389,8 @@ function build(){LEDS=[];try{if(typeof roomClamp==='function')roomClamp()}catch(
    else if(/Prateleira/.test(n)){var rr=/recuo (\d+) mm/.exec(p.note||'');B(boxes,x0,x1,y0,y1,0,dep-(rr?+rr[1]:(n==='Prateleira'?(m.pm||0):0)),p.col)}
    else if(/Travessa frontal/.test(n)){B(boxes,x0,x1,y0,y1,dep-15,dep,p.col)}
    else if(/^Rodapé lateral/.test(n)){if(!rodSkip(m,p))B(boxes,x0,x1,y0,y1,30+m.esp,dep-30-m.esp,p.col)}
+   else if(/^Divisória do pedestal/.test(n)){B(boxes,x0,x1,y0,y1,30+m.esp,dep-30-m.esp,p.col)}
+   else if(/^Travessa deitada do pedestal/.test(n)){B(boxes,x0,x1,y1-m.esp,y1,30+m.esp,dep-30-m.esp,p.col)}
    else if(/Rodapé/.test(n)){var rear=/traseiro/.test(n),zb=rear?30:dep-30-m.esp;var rq=rodRunOf(m);if(rq){if(S.mods.indexOf(m)===rq.idx[0])B(boxes,x0,rq.x1-m.esp+(x1-(m.x+p.base.x+p.base.w)),y0,y1,zb,zb+m.esp,p.col)}else B(boxes,x0,x1,y0,y1,zb,zb+m.esp,p.col)}
    else if(/^Engrosso lateral/.test(n)){var ed_=m.egD||70;if(m.trav){B(boxes,x0,x1,y0,y1-m.travMm,dep-ed_,dep,p.col);B(boxes,x0,x1,y1-m.travMm,y1,dep-ed_,dep-15,p.col)}else B(boxes,x0,x1,y0,y1,dep-ed_,dep,p.col)}
    else if(/^Moldura/.test(n)){var mr_=moldRunOf(m);if(mr_){if(S.mods.indexOf(m)===mr_.idx[0])B(boxes,x0,mr_.x1+(x1-(m.x+p.base.x+p.base.w)),y0,y1,dep,dep+15,m.corF||p.col,1,'f')}else B(boxes,x0,x1,y0,y1,dep,dep+15,m.corF||p.col,1,'f')}
@@ -3803,7 +3806,7 @@ var build_cava=build;build=function(){build_cava();try{var add=[];boxes.forEach(
   add.push({x0:b.x0+.5,x1:b.x1-.5,y0:Math.min.apply(null,ys),y1:Math.max.apply(null,ys),z0:Math.min.apply(null,zs),z1:Math.max.apply(null,zs),c:hex('#3d342b'),a:1,g:'f',nm:b.nm,vi:b.vi,pk:b.pk,dq:b.dq,pf:{ax:'x',pts:pts},nol:1})});add.forEach(function(q){boxes.push(q)})}catch(_){}};
 /* tamponamentos com a mesma cor e textura das portas do módulo (tudo uniforme) */
 var build_tpc=build;build=function(){build_tpc();try{if(window.HL3&&HL3.length)return;var col={};boxes.forEach(function(b){var nm=String(b.nm||''),mi=nm.split(':')[0];if(!/^\d+$/.test(mi)||col[mi])return;if(/:(Porta|Frente)/.test(nm)&&Array.isArray(b.c)&&!(b.a<.9)&&!b.pf&&!b.nol&&(b.poly||(b.x1-b.x0)*(b.y1-b.y0)>40000))col[mi]=b.c});
- boxes.forEach(function(b){var nm=String(b.nm||''),mi=nm.split(':')[0];if(!col[mi]||!/:(Tamponamento|Engrosso|Moldura|Régua|Travessa frontal)/.test(nm)||b.pf)return;b.c=col[mi].slice()})}catch(_){}};
+ boxes.forEach(function(b){var nm=String(b.nm||''),mi=nm.split(':')[0];if(!col[mi]||!/:(Tamponamento|Engrosso|Moldura|Régua|Travessa frontal|Batente)/.test(nm)||b.pf)return;b.c=col[mi].slice()})}catch(_){}};
 /* 2 toques no tamponamento (peça fina): acha mesmo tocando perto, em vez de pegar a porta ou o vazio */
 function tampNear(cx,cy,lim){lim=lim||16;var best=null,bd=1e9;boxes.forEach(function(b){if(!b.nm||!b.pk||b.pf||!/^\d+:Tamponamento/.test(b.nm))return;var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,ok=false;corners(b).forEach(function(c){var s=proj3(c);if(!s)return;ok=true;x0=Math.min(x0,s[0]);x1=Math.max(x1,s[0]);y0=Math.min(y0,s[1]);y1=Math.max(y1,s[1])});if(!ok)return;var dx=Math.max(x0-cx,0,cx-x1),dy=Math.max(y0-cy,0,cy-y1),d=Math.hypot(dx,dy);if(d<=lim&&d<bd){bd=d;best=b}});return best}
 var sel3_tn=sel3;sel3=function(cx,cy){try{if(cx>-9000&&!window.RO){var b=pickFace(cx,cy,null),nm=b?String(b.nm||''):'';if(!/:Tamponamento/.test(nm)||!b.pk){var t=tampNear(cx,cy,(b&&b.pk)?6:18);if(t){var mi=+String(t.nm).split(':')[0];S.m=S.mods[mi];SEL3={mi:mi,pk:t.pk};build();render();e3Render();ambMsg('Tamponamento selecionado · puxe as bolinhas laranja pro lado: passa por baixo do módulo vizinho sem afastar');return}}}}catch(_){}return sel3_tn(cx,cy)};
@@ -3811,7 +3814,7 @@ var sel3_tn=sel3;sel3=function(cx,cy){try{if(cx>-9000&&!window.RO){var b=pickFac
 var rp3_wall=rp3;rp3=function(a){var n0=boxes.length;rp3_wall(a);if(!a||!a.wall)return;var sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R;
  for(var i=n0;i<boxes.length;i++){var b=boxes[i],x0=b.x0,x1=b.x1,z0=b.z0,z1=b.z1;if(a.wall==='e'){b.x0=xl+z0;b.x1=xl+z1;b.z0=x0;b.z1=x1}else{b.x0=xr-z1;b.x1=xr-z0;b.z0=x0;b.z1=x1}
   if(b.pf)delete b.pf;if(b.poly)delete b.poly}};
-window.__build=function(){build()};
+window.__build=function(){build()};window.__matTx=function(b){return matTx(b)};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

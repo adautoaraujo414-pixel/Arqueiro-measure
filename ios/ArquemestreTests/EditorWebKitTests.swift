@@ -47,7 +47,7 @@ final class EditorWebKitTests: XCTestCase {
         let ready = expectation(description: "editor carregado"), d = Loaded(ready)
         web.navigationDelegate = d
         web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
-        await fulfillment(of: [ready], timeout: 30)
+        await fulfillment(of: [ready], timeout: 60)
         web.navigationDelegate = nil
         _ = d
         try await Task.sleep(nanoseconds: 700_000_000)

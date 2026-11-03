@@ -369,8 +369,8 @@ function partsOf0(m){if(!m.cv31){m.cv31=1;(m.v||[]).forEach(function(v){if(v.k==
 
  function tEnd(a,adj){if(!m.sup)return Math.max(top+50,(m.h>=1500?m.h:bb+(m.tb&&!m.tpass?TBW:0))+(adj||0));var E0=(m.tb||(m.regua&&m.sup))?bb+roff:top+latH+30,v=(a==='tamp'||a==='full')?(m.tb&&m.tpass?E0:E0+(m.tb?TBW:0)+((m.regua&&m.sup)?0:m.tpMm)):E0+(m.tb&&!m.tpass?TBW:0);return Math.max(top+50,v+(adj||0))}
  var tNote=function(a,adj){return (adj?'aumentado '+adj+' mm pra baixo · ':'')+(!m.sup?'módulo de base: tamponamento total, prof. '+dep+' + 25 pra frente':a==='full'?'TOTAL do módulo: prof. '+dep+' + 25 pra frente (cobre toda a lateral)':a==='tamp'?'prof. do armário '+dep+' + 25 pra frente · pós cava, '+((m.regua&&m.sup)?'rente com a régua embaixo':'passa '+m.tpMm+' mm pra baixo'):'passa 25 pra frente · prof. '+m.cavaD+' mm até o fim da cava')};
- if(m.tl){var hl=tEnd(m.tlA,m.tlAdj);add('Tamponamento esquerdo',-m.tlW,0,m.tlW,hl,TB,hl,dep+25+fBack(m),{mat:m.tlW,op:.9,note:tNote(m.tlA,m.tlAdj)})}
- if(m.tr){var hr=tEnd(m.trA,m.trAdj);add('Tamponamento direito',m.w,0,m.trW,hr,TB,hr,dep+25+fBack(m),{mat:m.trW,op:.9,note:tNote(m.trA,m.trAdj)})}
+ if(m.tl){var hl=tEnd(m.tlA,m.tlAdj);add('Tamponamento esquerdo',-m.tlW,0,m.tlW,hl,TB,hl,(m.tlA==='cava'&&m.sup)?m.cavaD:dep+25+fBack(m),{mat:m.tlW,op:.9,note:tNote(m.tlA,m.tlAdj)})}
+ if(m.tr){var hr=tEnd(m.trA,m.trAdj);add('Tamponamento direito',m.w,0,m.trW,hr,TB,hr,(m.trA==='cava'&&m.sup)?m.cavaD:dep+25+fBack(m),{mat:m.trW,op:.9,note:tNote(m.trA,m.trAdj)})}
  if(m.base)add('Base inferior',0,bb-e,m.w,e,W,m.w,dep,{note:'inteiriça, sob as laterais'});
  add('Lateral esquerda',0,m.trav?top:top+e,e,latH,W,latH,dep,m.trav?{note:'rebaixo '+e+' × '+m.travMm+' na frente, em cima'}:{});
  add('Lateral direita',m.w-e,m.trav?top:top+e,e,latH,W,latH,dep,m.trav?{note:'rebaixo '+e+' × '+m.travMm+' na frente, em cima'}:{});

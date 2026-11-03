@@ -605,6 +605,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Último projeto aberto no editor nesta sessão (nota nova criada depois se vincula a ele). */
     var lastProjectId: String? = null
     var pendingNewProject by mutableStateOf(false)
+    /** Backup vindo do iPhone: a ligação nota ↔ projeto vem em files/projects/links.json; passa pras preferências daqui. */
+    private fun importIosLinks() {
+        runCatching {
+            val f = java.io.File(java.io.File(getApplication<Application>().filesDir, "projects"), "links.json")
+            if (!f.exists()) return
+            val o = org.json.JSONObject(f.readText())
+            val ed = links.edit()
+            o.keys().forEach { k -> if (!links.contains(k)) ed.putString(k, o.optString(k)) }
+            ed.apply()
+            f.renameTo(java.io.File(f.parentFile, "links.imported.json"))
+        }
+    }
+
     private val links by lazy { getApplication<Application>().getSharedPreferences("arque.links", android.content.Context.MODE_PRIVATE) }
 
     fun moveisProjects(): List<br.com.arque.measure.data.MoveisProjects.P> = br.com.arque.measure.data.MoveisProjects.list(getApplication())
@@ -796,6 +809,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     init {
+        importIosLinks()
         br.com.arque.measure.agenda.AgendaReminders.ensureChannel(app)
         br.com.arque.measure.agenda.AgendaReminders.scheduleAll(app, appointments)
     }

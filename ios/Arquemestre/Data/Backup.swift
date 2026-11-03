@@ -68,6 +68,22 @@ enum DataBackup {
             wrote += 1
         }
         guard wrote > 0 else { throw RestoreError.invalid }
+        // backup do Android: a ligação nota ↔ projeto fica em shared_prefs/arque.links.xml → vira files/projects/links.json
+        if full, let e = zip.entries.first(where: { $0.name.hasSuffix("shared_prefs/arque.links.xml") }),
+           let xml = String(data: (try? zip.read(e)) ?? Data(), encoding: .utf8) {
+            let lf = staging.appendingPathComponent("files/projects/links.json")
+            var m: [String: String] = [:]
+            if let d = try? Data(contentsOf: lf), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: String] { m = o }
+            if let rx = try? NSRegularExpression(pattern: "<string name=\"([^\"]+)\">([^<]*)</string>") {
+                for r in rx.matches(in: xml, range: NSRange(xml.startIndex..., in: xml)) {
+                    if let a = Range(r.range(at: 1), in: xml), let b = Range(r.range(at: 2), in: xml), m[String(xml[a])] == nil { m[String(xml[a])] = String(xml[b]) }
+                }
+            }
+            if !m.isEmpty {
+                try? fm.createDirectory(at: lf.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? JsonCodec.string(m).data(using: .utf8)?.write(to: lf)
+            }
+        }
         try validate(staging.appendingPathComponent("files"))
         try swapIn(staging)
     }

@@ -3771,7 +3771,7 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
  /* 📝 do lado do 👤: abre a nota do mesmo cliente (ou cria uma já ligada) */
  var nb=document.getElementById('ntb');if(nb&&A&&A.openNoteOf&&!(A.isViewer&&A.isViewer())){nb.hidden=false;nb.onclick=function(){try{ensureProj()}catch(e){}try{saveNow()}catch(e){}if(!CUR){toast('Mexa no projeto primeiro: ele salva sozinho e aí abre a nota.');return}var p=pLoadAll().filter(function(q){return q.id===CUR})[0];try{A.openNoteOf(CUR,p?p.client.nome:'')}catch(e){}}}
  /* iPhone: foto ou vídeo da câmera também vai pra galeria (no Android isso é feito direto pelo app) */
- if(A&&A.saveToGallery)document.addEventListener('change',function(e){var t=e.target;if(!t||!/^(cph|cvd|phf|phv2)$/.test(t.id)||!t.files)return;[].slice.call(t.files).forEach(function(f){if(f.size>150*1024*1024)return;var r=new FileReader();r.onload=function(){try{A.saveToGallery(String(r.result))}catch(_){}};try{r.readAsDataURL(f)}catch(_){}})},true);
+ if(A&&A.saveToGallery)document.addEventListener('change',function(e){var t=e.target;if(!t||!/^(cph|cvd|phf|phv2)$/.test(t.id)||!t.files)return;[].slice.call(t.files).forEach(function(f){if(f.size>150*1024*1024)return;/* só foto/vídeo que acabou de sair da câmera (escolhida do álbum já está na galeria) */if(!(f.lastModified&&Date.now()-f.lastModified<180000))return;var r=new FileReader();r.onload=function(){try{A.saveToGallery(String(r.result))}catch(_){}};try{r.readAsDataURL(f)}catch(_){}})},true);
 })();
 </script>
 <script>

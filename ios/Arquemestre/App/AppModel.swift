@@ -53,6 +53,8 @@ final class AppModel: ObservableObject {
     @Published var pendingProject: String?
     /// Código do plano de corte recebido pelo link do WhatsApp; o editor abre ele no modo corte.
     @Published var pendingCut: String?
+    /// Abriu um link de projeto (cliente ou plano de corte): dá pra ver sem assinar; editar continua pedindo a assinatura.
+    @Published var linkViewer = false
     /// Convite pronto pra mandar (abre a folha de compartilhar: WhatsApp e outros).
     @Published var cutShareText: String?
     nonisolated static let cutPrefix = "arquemestre-corte:"
@@ -81,6 +83,7 @@ final class AppModel: ObservableObject {
         if session != nil { flush() }
         pendingProject = nil; pendingNewProject = false
         pendingCut = c
+        linkViewer = true
         screen = .moveis
     }
 

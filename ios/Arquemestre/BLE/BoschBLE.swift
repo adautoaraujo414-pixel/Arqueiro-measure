@@ -200,12 +200,13 @@ extension BoschBLE: CBCentralManagerDelegate {
     }
 
     private func retry(_ p: CBPeripheral) {
-        guard !userDisconnected else { return }
+        // só tenta de novo a trena atual (trocar de trena ou tocar em Conectar no meio não religa a antiga)
+        guard !userDisconnected, current == nil || current?.identifier == p.identifier else { return }
         if reconnectAttempts < 5 {
             reconnectAttempts += 1
             setState(.CONNECTING, tr("Tentando de novo ({0}/5)…", reconnectAttempts))
             DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
-                guard let self = self, !self.userDisconnected else { return }
+                guard let self = self, !self.userDisconnected, self.current == nil || self.current?.identifier == p.identifier, self.state != .CONNECTED else { return }
                 self.connect(p.identifier, name: self.deviceName)
             }
         } else {

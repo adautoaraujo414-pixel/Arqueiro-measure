@@ -13,10 +13,21 @@ struct RootView: View {
             switch lic.status {
             case .loading:
                 ProgressView().tint(Ui.gold)
-            case .notStarted:
-                TrialOfferView()
-            case .expired:
-                LockView()
+            case .notStarted, .expired:
+                if app.linkViewer && app.screen == .moveis {
+                    // quem recebeu o link (cliente ou cortador) vê o projeto sem assinar
+                    ZStack(alignment: .bottom) {
+                        MoveisView()
+                        Button { app.linkViewer = false; app.screen = .library } label: {
+                            Text(tr("Conhecer o Arquemestre")).font(.footnote.weight(.semibold)).foregroundColor(.white)
+                                .padding(.horizontal, 14).padding(.vertical, 8).background(Capsule().fill(Color.black.opacity(0.7)))
+                        }.padding(.bottom, 18)
+                    }
+                } else if lic.status == .notStarted {
+                    TrialOfferView()
+                } else {
+                    LockView()
+                }
             case .trial, .unlocked:
                 main
             }

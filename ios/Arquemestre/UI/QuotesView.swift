@@ -141,13 +141,13 @@ private struct QuoteEditor: View {
                 ForEach(Array(q.items.enumerated()), id: \.element.id) { idx, it in
                     VStack(alignment: .leading, spacing: 6) {
                         HStack {
-                            TextField(tr("Descrição do item {0}", idx + 1), text: Binding(get: { it.desc }, set: { v in upd { $0.items[idx].desc = v } }), axis: .vertical)
+                            TextField(tr("Descrição do item {0}", idx + 1), text: Binding(get: { it.desc }, set: { v in upd { qq in if let k = qq.items.firstIndex(where: { $0.id == it.id }) { qq.items[k].desc = v } } }), axis: .vertical)
                             Button { upd { qq in qq.items.removeAll { $0.id == it.id }; if qq.items.isEmpty { qq.items = [QuoteItem()] } } } label: { Image(systemName: "trash") }.buttonStyle(.borderless)
                         }
                         HStack(spacing: 6) {
-                            NumPadField(value: it.qty == 0 ? "" : QuoteMath.numStr(it.qty), label: tr("Qtd")) { v in upd { $0.items[idx].qty = v } }
-                            TextField(tr("Un."), text: Binding(get: { it.unit }, set: { v in upd { $0.items[idx].unit = v } })).frame(width: 60)
-                            NumPadField(value: it.unitValue == 0 ? "" : QuoteMath.numStr(it.unitValue), label: tr("Valor unit. ({0})", I18n.shared.currencySymbol())) { v in upd { $0.items[idx].unitValue = v } }
+                            NumPadField(value: it.qty == 0 ? "" : QuoteMath.numStr(it.qty), label: tr("Qtd")) { v in upd { qq in if let k = qq.items.firstIndex(where: { $0.id == it.id }) { qq.items[k].qty = v } } }
+                            TextField(tr("Un."), text: Binding(get: { it.unit }, set: { v in upd { qq in if let k = qq.items.firstIndex(where: { $0.id == it.id }) { qq.items[k].unit = v } } })).frame(width: 60)
+                            NumPadField(value: it.unitValue == 0 ? "" : QuoteMath.numStr(it.unitValue), label: tr("Valor unit. ({0})", I18n.shared.currencySymbol())) { v in upd { qq in if let k = qq.items.firstIndex(where: { $0.id == it.id }) { qq.items[k].unitValue = v } } }
                         }
                         Text(tr("Subtotal: ") + QuoteMath.brl(QuoteMath.lineTotal(it))).font(.footnote).foregroundColor(.secondary)
                     }

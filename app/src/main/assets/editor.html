@@ -3397,6 +3397,48 @@ var itRender_f2=itRender;itRender=function(){itRender_f2();var E=it4Box(),x=ISX;
 it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX||ISX.k!=='fr')return;var d=t.dataset;if(d.qfro!==undefined){e.stopImmediatePropagation();frToggle(ISX.id,d.qfro==='1');itRender();return}if(d.qfog!==undefined){e.stopImmediatePropagation();FOGL[String(ISX.id)]=d.qfog==='1'?1:0;build();render();itRender();ambMsg(d.qfog==='1'?'🔥 Bocas acesas':'Bocas apagadas');return}},true);
 var open3D_f2=window.open3D;window.open3D=function(){FRA={};FRT={};FOGL={};return open3D_f2.apply(this,arguments)};
 window.ele3api={toggle:frToggle,ang:function(id){return FRA[String(id)]||0},lit:function(id,v){FOGL[String(id)]=v?1:0;build();render()},n:fogaoN};
+/* ===== Puxadores (testes no iPhone): escolha o tipo e arraste o puxador na porta; vale pra todas as portas do projeto,
+   espelhado (na porta da esquerda fica no canto dela, na da direita no canto dela) · bola de 1 furo ===== */
+if(!PXT.some(function(q){return q[0]==='bola'}))PXT.splice(PXT.length-2,0,['bola','Bola (1 furo)']);PXCOL.bola=1;
+function pxaDoor(p,m,W,H){var A=S.pxa;if(!A||!/^Porta/.test(p.name||''))return null;var vv=m&&m.v&&m.v[p.vi];if(vv&&vv.bas)return null;var top=!m.sup,du=Math.max(15,Math.min(W-15,+A.du||45)),dt=Math.max(15,Math.min(H-15,+A.dt||100));return {u:p.hinge==='r'?du:W-du,vc:top?H-dt:dt,t:top?dt:H-dt}}
+var pxBar_c=pxBar;pxBar=function(p,m,W,H){var b=pxBar_c(p,m,W,H),a=pxaDoor(p,m,W,H);if(a&&b.vert){b.u=a.u;b.v=Math.max(b.L/2+5,Math.min(H-b.L/2-5,a.vc))}return b};
+var chAt_c=chAt;chAt=function(p,m,W,H){W=W===undefined?p.cl:W;H=H===undefined?p.cw:H;var r=chAt_c(p,m,W,H),a=pxaDoor(p,m,W,H);if(a){r.u=a.u;r.t=a.t}return r};
+/* bola: um botão redondo com 1 furo (fica onde a barra ficaria, no ponto do meio) */
+function pxBall(p,m,W,H){var b=pxBar(p,m,W,H);return {u:b.u,v:b.vert?b.v:b.v}}
+var pxParts_c=pxParts;pxParts=function(p,m,W,H){if(p.px!=='bola')return pxParts_c(p,m,W,H);var c=pxCol(p.pxc)[1],o=[],b=pxBall(p,m,W,H),P_=function(u0,u1,v0,v1,w0,w1,col,sh){o.push({u0:u0,u1:u1,v0:v0,v1:v1,w0:w0,w1:w1,c:col||c,sh:sh})};
+ P_(b.u-5,b.u+5,b.v-5,b.v+5,.3,16,c,'octz');P_(b.u-15,b.u+15,b.v-15,b.v+15,16,30,c,'octz');P_(b.u-11,b.u+11,b.v-11,b.v+11,30,33,pxMix(c,'#ffffff',.25),'octz');return o};
+var pxSvg_c=pxSvg;pxSvg=function(p,m,x0,y1,k){if(p.px!=='bola')return pxSvg_c(p,m,x0,y1,k);var c=pxCol(p.pxc)[1],b=pxBall(p,m,p.w,p.h),X=x0+p.x*k,Y=y1+p.y*k,cx=X+b.u*k,cy=Y+(p.h-b.v)*k,r=Math.max(2.5,15*k);return '<circle cx="'+(Math.round(cx*10)/10)+'" cy="'+(Math.round(cy*10)/10)+'" r="'+(Math.round(r*10)/10)+'" fill="'+c+'" stroke="#333" stroke-width=".8"/>'};
+var pxDesc_c=pxDesc;pxDesc=function(px,pxc,sup){if(px==='bola')return 'Puxador bola · 1 furo · '+pxCol(pxc)[2].toLowerCase();return pxDesc_c(px,pxc,sup)};
+/* quadro do puxador no 3D */
+var PXDR=null;
+function pxDoorOf(m){var ps=[];try{ps=partsOf(m)}catch(_){}return ps.filter(function(p){return /^Porta$/.test(p.name)})[0]||ps.filter(function(p){return /^Frente de gaveta/.test(p.name)})[0]||null}
+function pxCurT(){var t=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!t&&/^(door|drawers)$/.test(v.k)&&!v.vidro)t=pxOf(v,false)})});return t||'externo'}
+function pxCurC(){var c=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!c&&v.pxc)c=v.pxc})});return c||pxcDef()}
+function pxPanel(mi){var E=it4Box(),m=S.mods[mi];if(!m)return;var p=pxDoorOf(m),t=pxCurT(),c=pxCurC(),movable=/^(externo|bola|concha)$/.test(t)&&p&&/^Porta$/.test(p.name);
+ var Bt=function(at,tx,o){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(o?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},row=function(h){return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+h+'</div>'};
+ var h='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><b style="flex:1;font-size:14px">🔧 Puxadores <span style="color:#666;font-size:12px;font-weight:400">vale pra todas as portas e gavetas</span></b>'+Bt('data-pxback="1" title="Voltar"','← Módulo')+Bt('data-qx="1" title="Fechar" aria-label="Fechar"','✕')+'</div>'
+;
+ var tc='<div style="font-size:12px;color:#444">Tipo</div>'+row(PXT.map(function(q){return Bt('data-pxt="'+q[0]+'"',q[1],q[0]===t)}).join(''))
+  +(PXCOL[t]?'<div style="font-size:12px;color:#444">Cor</div>'+row(PXC.map(function(q){return '<button data-pxc="'+q[0]+'" style="min-height:32px;padding:2px 8px;border-radius:8px;background:'+q[1]+';color:'+stInk(q[1])+';border:'+(q[0]===c?'3px solid #1f6feb':'1px solid #8a8f98')+';font-size:12px">'+q[2]+'</button>'}).join('')):'');
+ if(movable){var W=p.w,H=p.h,sc=Math.min(150/H,130/W),bw=W*sc,bh=H*sc,hp=p.hinge==='r',pos=t==='concha'?chAt(p,m,W,H):null,b=t!=='concha'?pxBar(p,m,W,H):null,ux=(t==='concha'?pos.u:b.u)*sc,vy=(t==='concha'?pos.t:(H-b.v))*sc;
+  h+='<div style="display:flex;gap:10px;align-items:center;margin-top:6px"><svg id="pxpad" width="'+(bw+20)+'" height="'+(bh+20)+'" style="touch-action:none;background:#eef1f4;border-radius:8px;flex:none;width:'+(bw+20)+'px;height:'+(bh+20)+'px;max-width:none"><rect x="10" y="10" width="'+bw+'" height="'+bh+'" fill="#d9c7a0" stroke="#6b5b3e"/><line x1="'+(hp?10+bw:10)+'" y1="'+(10+bh*.15)+'" x2="'+(hp?10+bw:10)+'" y2="'+(10+bh*.85)+'" stroke="#1f6feb" stroke-width="3"/><circle id="pxdot" cx="'+(10+ux)+'" cy="'+(10+vy)+'" r="11" fill="#c62828" stroke="#fff" stroke-width="2"/></svg>'
+   +'<div style="font-size:12px;color:#444;line-height:1.35">Arraste a bolinha vermelha na porta. A linha azul é o lado da dobradiça.<br>As outras portas copiam, espelhado: na porta da esquerda fica no canto dela, na da direita no canto dela.<div style="margin-top:6px">'+Bt('data-pxreset="1"','Voltar pro padrão')+'</div></div></div>'}
+ else h+='<div style="font-size:12px;color:#555;margin:4px 0">'+(/^(g|perfil|facetado|cava)$/.test(t)?'Esse puxador fica na borda da porta, não muda de lugar.':t==='toque'||t==='nenhum'?'Sem puxador pra mudar de lugar.':'Escolha Barra, Bola ou Concha pra mudar o lugar.')+'</div>';
+ h+=tc;E.style.maxHeight='62%';
+ E.innerHTML=h;E.hidden=false;if(window.RO)E.querySelectorAll('button:not([data-qx]):not([data-pxback])').forEach(function(x){x.disabled=true});
+ var pad=E.querySelector('#pxpad');if(pad&&!window.RO){var dot=pad.querySelector('#pxdot'),raf=0,mv=function(ev){var r=pad.getBoundingClientRect(),x=Math.max(10,Math.min(10+bw,ev.clientX-r.left)),y=Math.max(10,Math.min(10+bh,ev.clientY-r.top));dot.setAttribute('cx',x);dot.setAttribute('cy',y);var u=(x-10)/sc,tt=(y-10)/sc;var du=hp?u:W-u,dt=m.sup?H-tt:tt;S.pxa={du:Math.round(du),dt:Math.round(dt)};if(!raf)raf=requestAnimationFrame(function(){raf=0;build();render()})};
+  pad.addEventListener('pointerdown',function(ev){ev.preventDefault();ev.stopPropagation();snap();PXDR=ev.pointerId;try{pad.setPointerCapture(ev.pointerId)}catch(_){}mv(ev)});
+  pad.addEventListener('pointermove',function(ev){if(PXDR!==ev.pointerId)return;ev.preventDefault();ev.stopPropagation();mv(ev)});
+  ['pointerup','pointercancel'].forEach(function(n){pad.addEventListener(n,function(ev){if(PXDR!==ev.pointerId)return;PXDR=null;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();ambMsg('Puxador no lugar · todas as portas copiaram')})})}}
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX)return;var d=t.dataset;
+ if(d.qmpux!==undefined&&ISX.k==='mod'){e.stopImmediatePropagation();ISX={k:'pux',mi:ISX.mi};pxPanel(ISX.mi);return}
+ if(ISX.k!=='pux')return;e.stopImmediatePropagation();if(d.qx!==undefined){itClose();return}if(d.pxback){ISX={k:'mod',mi:ISX.mi};itRender();return}if(window.RO)return;
+ if(d.pxt){snap();var n=pxApplyAll(d.pxt,pxCurC());try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);ambMsg('Puxador trocado em '+n+(n===1?' peça':' peças'));return}
+ if(d.pxc){snap();pxApplyAll(pxCurT(),d.pxc);try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);return}
+ if(d.pxreset){snap();delete S.pxa;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();pxPanel(ISX.mi);return}},true);
+var itObj_c=itObj;itObj=function(){var x=ISX;if(x&&x.k==='pux')return S.mods[x.mi]||null;return itObj_c()};
+var itRender_c=itRender;itRender=function(){if(ISX&&ISX.k==='pux'){if(M.hidden)return;pxPanel(ISX.mi);return}itRender_c();var E=it4Box(),x=ISX;if(!x||x.k!=='mod'||E.hidden)return;var m=S.mods[x.mi];if(!m||!pxDoorOf(m))return;var lk=E.querySelector('[data-qmlock]');if(lk&&!E.querySelector('[data-qmpux]'))lk.insertAdjacentHTML('beforebegin','<button data-qmpux="1" style="padding:4px 9px;min-height:32px;font-size:13px">🔧 Puxadores</button>')};
+window.pux3api={open:function(mi){ISX={k:'pux',mi:mi};pxPanel(mi)},set:function(du,dt){S.pxa={du:du,dt:dt};build();render()},bar:function(p,m){return pxBar(p,m,p.w,p.h)}};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

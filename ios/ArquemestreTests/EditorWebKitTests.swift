@@ -281,6 +281,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testPontaExpostaGanhaTamponamentoSozinhaEPlantaEmAnguloDaZoom() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.W=4140;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));draw();var A=S.mods[0],B=S.mods[1];
+          var s1=[A.tl?1:0,A.tr?1:0,B.tl?1:0,B.tr?1:0].join('');/* parede à esquerda; ponta direita do gaveteiro exposta */
+          B.x=2000;draw();var s2=[A.tr?1:0,B.tl?1:0,B.tr?1:0].join('');/* afastou: as duas pontas do meio ficam expostas */
+          B.x=A.x+A.w+30;draw();var s3=[A.tr?1:0,B.tl?1:0,B.tr?1:0,B.x-(A.x+A.w)].join('');/* voltou a encostar: tamponamentos do meio somem e os módulos se encontram */
+          S.m=B;B.tr=false;B.trM=1;delete B.trAuto;draw();var s4=B.tr?1:0;/* desmarcou na mão: não volta sozinho */
+          PLV=true;PLANG=true;VB={x:0,y:0,w:900,h:560};setVB();draw();zoom(1.4);var vb=$('svg').getAttribute('viewBox').split(' ').map(Number);
+          return JSON.stringify({s1:s1,s2:s2,s3:s3,s4:s4,zw:Math.round(vb[2]),ang:PLANG,errs:__errs});
+          """#)
+        XCTAssertEqual(o["s1"] as? String, "0001", "só a ponta exposta (direita do gaveteiro) ganha tamponamento; encostado na parede e entre vizinhos não")
+        XCTAssertEqual(o["s2"] as? String, "111", "afastou: as pontas que ficaram soltas ganham tamponamento")
+        XCTAssertEqual(o["s3"] as? String, "0010", "encostou de novo: tamponamentos do meio somem e os módulos se encontram (gap 0)")
+        XCTAssertEqual(o["s4"] as? Int, 0, "desmarcado na mão fica desmarcado")
+        XCTAssertEqual(o["zw"] as? Int, 643, "zoom (+) funciona na planta em ângulo igual na reta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

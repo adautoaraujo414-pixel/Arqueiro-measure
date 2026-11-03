@@ -3487,6 +3487,33 @@ var one3_h=one3;one3=function(cx,cy){if(window.FPV||window.CLV){touchOnly(cx,cy)
 var fpStart_h=fpStart;fpStart=function(){fpStart_h();var hp=M.querySelector('#cv3+div');if(hp)hp.hidden=true;FPB.style.bottom='10px'};
 var fpStop_h=fpStop;fpStop=function(){fpStop_h();var hp=M.querySelector('#cv3+div');if(hp)hp.hidden=false};
 window.fp3api.start=fpStart;window.fp3api.stop=fpStop;window.fp3api.touch=touchOnly;
+/* ===== Mobília: mesas, cadeiras e banquetas com medida de verdade (ficam com os eletros) ===== */
+(function(){if(APM.mesa)return;
+ APM.mesa={n:'Mesa',m:[['Mesa retangular 4 lugares · 120 × 80',1200,750,800],['Mesa retangular 6 lugares · 160 × 90',1600,750,900],['Mesa retangular 8 lugares · 200 × 100',2000,750,1000],['Mesa redonda 4 lugares · Ø 100',1000,750,1000],['Mesa redonda 6 lugares · Ø 120',1200,750,1200],['Mesa quadrada 4 lugares · 90 × 90',900,750,900]],b:0};
+ APM.cadeira={n:'Cadeira',m:[['Cadeira de jantar estofada',450,900,520],['Cadeira de madeira',430,880,500]],b:0};
+ APM.banqueta={n:'Banqueta',m:[['Banqueta alta (bancada 90 cm) · assento 65',380,650,380],['Banqueta alta (ilha 105 cm) · assento 75',400,750,400],['Banqueta de bar (balcão 110 cm) · assento 80',400,800,400]],b:0};
+ if(typeof QLIM!=='undefined')QLIM.y=QLIM.y||[0,8000]})();
+var MOBC='#8a6a48',MOBT='#b08a5f',MOBS='#3b4a5c',MOBM='#2b2e33';
+function mobZ(f,z0){return z0+(+f.y||0)}
+function mesa3(f,z0){var x0=f.x,w=f.w,d=f.d||800,y0=f.b||0,h=f.h||750,za=mobZ(f,z0),xc=x0+w/2,zc=za+d/2,rd=/redonda/i.test(f.nome||'');
+ if(rd){cylY(xc,zc,w/2,y0+h-30,y0+h,MOBT,40);cylY(xc,zc,45,y0+60,y0+h-30,MOBM,14);cylY(xc,zc,w*.28,y0,y0+60,MOBM,24);return}
+ bx(x0,x0+w,y0+h-30,y0+h,za,za+d,MOBT);[[x0+40,za+40],[x0+w-40,za+40],[x0+40,za+d-40],[x0+w-40,za+d-40]].forEach(function(q){bx(q[0]-25,q[0]+25,y0,y0+h-30,q[1]-25,q[1]+25,MOBC)});bx(x0+50,x0+w-50,y0+h-110,y0+h-30,za+30,za+42,MOBC);bx(x0+50,x0+w-50,y0+h-110,y0+h-30,za+d-42,za+d-30,MOBC)}
+function cadeira3(f,z0){var x0=f.x,w=f.w,d=f.d||520,y0=f.b||0,za=mobZ(f,z0),sh=460,est=/estofada/i.test(f.nome||''),c=est?MOBS:MOBT;
+ bx(x0,x0+w,y0+sh-40,y0+sh,za,za+d,c);[[x0+25,za+25],[x0+w-25,za+25],[x0+25,za+d-25],[x0+w-25,za+d-25]].forEach(function(q){bx(q[0]-16,q[0]+16,y0,y0+sh-40,q[1]-16,q[1]+16,MOBC)});
+ bx(x0+10,x0+w-10,y0+sh,y0+(f.h||900),za,za+30,c)}
+function banqueta3(f,z0){var x0=f.x,w=f.w,d=f.d||w,y0=f.b||0,h=f.h||650,za=mobZ(f,z0),xc=x0+w/2,zc=za+d/2,r=w/2-20;
+ cylY(xc,zc,r,y0+h-55,y0+h,MOBS,24);cylY(xc,zc,22,y0+80,y0+h-55,MOBM,12);cylY(xc,zc,r*.75,y0+260,y0+275,MOBM,20);cylY(xc,zc,r*.9,y0,y0+18,MOBM,24)}
+var ap3model_i=ap3model;ap3model=function(f,z0){var t=f.t,fn={mesa:mesa3,cadeira:cadeira3,banqueta:banqueta3}[t];if(fn){fn(f,z0);return true}return ap3model_i(f,z0)};
+/* posição: as mesas vão pro meio da sala */
+var apAdd_i=apAdd;apAdd=function(t,mi){var it=apAdd_i(t,mi);if(/^(mesa|cadeira|banqueta)$/.test(t)){var D=(typeof roomD==='function'?roomD():2600);it.b=0;it.x=Math.round(Math.max(0,(S.W-it.w)/2));it.y=Math.round(Math.max(700,Math.min(D-it.d-200,D/2)));if(apFinK&&APFINS)delete it.fin}return it};
+var apFinK_i=apFinK;apFinK=function(t){if(/^(mesa|cadeira|banqueta)$/.test(t||''))return null;return apFinK_i(t)};
+/* quadro: mesa, cadeira e banqueta mostram também a distância da parede do fundo */
+var itRender_i=itRender;itRender=function(){itRender_i();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||!/^(mesa|cadeira|banqueta)$/.test(f.t))return;if(E.querySelector('[data-qf="y"]'))return;var rx=E.querySelector('[data-qf="x"]');if(!rx)return;var row=rx.parentNode,cl=row.cloneNode(true);cl.querySelector('span').textContent='Da parede do fundo (mm)';cl.querySelectorAll('[data-qin]').forEach(function(b){b.dataset.qin='y|'+(b.dataset.qin.split('|')[1])});var ip=cl.querySelector('input');ip.dataset.qf='y';ip.value=+f.y||0;row.insertAdjacentElement('afterend',cl)};
+/* ＋ Criar: Mobília (mesa, cadeira, banqueta) · toque nela abre o quadro com altura, largura e lugar */
+var crpRender_j2=crpRender;crpRender=function(){crpRender_j2();var C=crpBox();if(C.querySelector('[data-cmob]'))return;var Bt=function(at,tx){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px">'+tx+'</button>'},L=[['mesa',0,'＋ Mesa 4 lugares'],['mesa',1,'＋ Mesa 6 lugares'],['mesa',3,'＋ Mesa redonda'],['cadeira',0,'＋ Cadeira'],['banqueta',0,'＋ Banqueta (bancada)'],['banqueta',1,'＋ Banqueta (ilha)']];
+ var il=[].slice.call(C.querySelectorAll('div')).filter(function(dv){return /^Ilha, península/.test(dv.textContent.trim())&&dv.children.length<=1})[0],h='<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:10px 0 6px;border-top:1px solid #e3e6ea;padding-top:8px">'+ICO('modulo',24)+'Mobília</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px">'+L.map(function(q){return Bt('data-cmob="'+q[0]+'|'+q[1]+'"',q[2])}).join('')+'</div><div style="font-size:12px;color:#555;margin-bottom:4px">Toque nela no 3D pra mudar a altura, o tamanho e o lugar.</div>';
+ if(il)il.insertAdjacentHTML('beforebegin',h);else C.insertAdjacentHTML('beforeend',h)};
+crpBox().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!t.dataset.cmob)return;e.stopImmediatePropagation();if(window.RO)return;var q=t.dataset.cmob.split('|');snap();var it=apAdd(q[0],+q[1]);CRP.hidden=true;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itOpen({k:'fr',id:it.id});ambMsg('Arraste pra mudar de lugar · no quadro: altura e tamanho')},true);
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

@@ -3292,7 +3292,7 @@ var itRender_k=itRender;itRender=function(){itRender_k();var E=it4Box(),x=ISX;if
   num=function(f,lab,v,step){return '<div style="display:flex;align-items:center;gap:4px;margin:2px 0"><span style="flex:1;font-size:12px;color:#444">'+lab+'</span>'+Bt('data-qms="'+f+'|-'+step+'" aria-label="menos"','−','','min-width:36px;padding:4px')+'<input data-qmf="'+f+'" type="text" inputmode="numeric" value="'+v+'" style="width:66px;text-align:center;padding:5px 3px;min-height:32px;margin:0;font-size:14px">'+Bt('data-qms="'+f+'|'+step+'" aria-label="mais"','＋','','min-width:36px;padding:4px')+'</div>'};
  if(x.k==='mod'){var m=S.mods[x.mi];if(!m)return;var op=modOpenAny(m);
   E.innerHTML=hd('modulo',modLabel(m,x.mi),m.w+' × '+m.h+' × '+m.d)
-   +num('w','Largura (mm)',m.w,10)+num('h','Altura (mm)',m.h,10)+num('d','Profundidade (mm)',m.d,10)
+   +num('w','Largura (mm)',m.w,10)+num('h','Altura (mm)',m.h,10)+num('d','Profundidade (mm)',m.d,10)+(m.corner?num('cw2','Lado do L, na outra parede (mm)',m.cw2||900,10):'')
    +row(Bt('data-qmopen="'+(op?0:1)+'"',op?'🚪 Fechar portas e gavetas':'🚪 Abrir portas e gavetas',op)+(ledOk(m)?Bt('data-qmled="1"',m.led?'💡 LED (mudar)':'💡 Pôr LED'):'')+Bt('data-qmlock="1"',m.lock?'🔒 Travado':'🔓 Travar',!!m.lock))
    +row(Bt('data-qmj="l"','⇤ Encostar à esquerda')+Bt('data-qmj="r"','Encostar à direita ⇥'))
    +nt('Arraste o módulo pra mudar de lugar · 1 toque na porta ou gaveta abre só ela · 2 toques numa peça: aumentar ou diminuir só ela.'+(ledOk(m)?'':' LED vai só nos módulos de cima e na cristaleira.'));
@@ -3311,7 +3311,7 @@ it4Box().addEventListener('click',function(e){var t=e.target.closest('button');i
  if(x.k==='mod'){var m=S.mods[x.mi];if(!m)return;
   if(d.qmopen!==undefined){e.stopImmediatePropagation();modOpen(m,d.qmopen==='1');itRender();return}
   if(window.RO)return;
-  if(d.qms){e.stopImmediatePropagation();if(m.lock){ambMsg('🔒 Módulo travado · 4 toques em cima destrava');return}var q=d.qms.split('|');mzSet(m,q[0],m[q[0]]+(+q[1]));itRender();return}
+  if(d.qms){e.stopImmediatePropagation();if(m.lock){ambMsg('🔒 Módulo travado · 4 toques em cima destrava');return}var q=d.qms.split('|');if(q[0]==='cw2')cw2Set(m,(m.cw2||900)+(+q[1]));else mzSet(m,q[0],m[q[0]]+(+q[1]));itRender();return}
   if(d.qmj){e.stopImmediatePropagation();mzJoin(m,d.qmj);if(MZB)MZB.hidden=true;window.MZ3I=-1;itRender();return}
   if(d.qmled&&!ledOk(m)){e.stopImmediatePropagation();ambMsg('LED vai só nos módulos de cima e na cristaleira');return}}
  if(x.k==='wall'){
@@ -3323,7 +3323,8 @@ it4Box().addEventListener('click',function(e){var t=e.target.closest('button');i
   if(d.qtv){e.stopImmediatePropagation();snap();T.v=d.qtv;build();render();itRender();return}
   if(d.qms&&x.s==='T'){e.stopImmediatePropagation();var q2=d.qms.split('|');tetoSet(q2[0],(q2[0]==='H'?S.H:(T.rb||0))+(+q2[1]));return}}},true);
 it4Box().addEventListener('change',function(e){var t=e.target,x=ISX;if(!x||!t.dataset||!t.dataset.qmf||window.RO)return;var v=parseFloat(String(t.value).replace(',','.'));if(isNaN(v))return;e.stopImmediatePropagation();
- if(x.k==='mod'){var m=S.mods[x.mi];if(m&&!m.lock){mzSet(m,t.dataset.qmf,v);itRender()}return}if(x.k==='wall'&&x.s==='T')tetoSet(t.dataset.qmf,v)},true);
+ if(x.k==='mod'){var m=S.mods[x.mi];if(m&&!m.lock){if(t.dataset.qmf==='cw2')cw2Set(m,v);else mzSet(m,t.dataset.qmf,v);itRender()}return}if(x.k==='wall'&&x.s==='T')tetoSet(t.dataset.qmf,v)},true);
+function cw2Set(m,v){v=Math.round(Math.max(m.d+200,Math.min(2000,v)));if(v===m.cw2)return;snap();m.cw2=v;try{tidy(m)}catch(_){}try{draw();if(typeof panel==='function')panel()}catch(_){}build();render()}
 function tetoSet(f,v){var T=S.teto=S.teto||{};snap();if(f==='H'){S.H=Math.round(Math.max(2000,Math.min(5000,v)))}else T.rb=Math.round(Math.max(0,Math.min(600,v)));try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itRender()}
 var itObj_k=itObj;itObj=function(){var x=ISX;if(x&&x.k==='wall'&&x.s==='T')return {};return itObj_k()};
 /* parede e piso não abrem sozinhos ao tocar: só pelo 🧱 Ambiente do cabeçalho */
@@ -3347,6 +3348,55 @@ crpBox().addEventListener('click',function(e){var t=e.target.closest('button');i
  if(d.cteto){e.stopImmediatePropagation();CRP.hidden=true;if(!window.RO){S.teto=S.teto||{};if(!S.teto.on){snap();S.teto.on=1}}itOpen({k:'wall',s:'T'});return}
  if(d.cop){e.stopImmediatePropagation();if(window.RO)return;CRP.hidden=true;if(d.cop==='blindex')add3Op('janela','blindex');else add3Op(d.cop);return}},true);
 window.org3api={ledOk:ledOk,open:modOpen,teto:function(){return boxes.concat(bg).filter(function(b){return b.g==='teto'}).length},cam:function(){return {zoom:zoom,px:px,py:py}},setCam:function(z,x,y){zoom=z;px=x;py=y;render()},one:function(cx,cy){one3(cx,cy)},isx:function(){return ISX?JSON.parse(JSON.stringify(ISX)):null},proj:function(p){return proj3(p)}};
+/* ===== eletros que abrem no 3D (testes no iPhone): toque na geladeira, forno, micro-ondas ou fogão abre a porta com animação;
+   fogão de piso e de embutir com 2, 4, 5 ou 6 bocas (medidas reais) e bocas que acendem ===== */
+var FRA={},FRT={},FRAR=0,CURF=null,FOGL={};
+function frAnim(){if(FRAR)return;FRAR=1;var last=performance.now();(function f(now){var dt=Math.min(64,now-last);last=now;var more=false;Object.keys(FRT).forEach(function(k){var a=FRA[k]||0,t=FRT[k];if(Math.abs(a-t)<.001){FRA[k]=t;return}var st=dt/420;a=t>a?Math.min(t,a+st):Math.max(t,a-st);FRA[k]=a;more=true});build();render();if(more&&!M.hidden)requestAnimationFrame(f);else FRAR=0})(last)}
+function frToggle(id,on){var k=String(id);FRT[k]=on===undefined?((FRT[k]||0)>.5?0:1):(on?1:0);frAnim();return FRT[k]>.5}
+function frOpenK(f){return /^(geladeira|forno|microondas)$/.test(f.t||'geladeira')}
+function ease(a){return a<.5?2*a*a:1-Math.pow(-2*a+2,2)/2}
+/* gira uma caixa em volta de um eixo vertical (porta de geladeira, micro-ondas) */
+function rotY(b,hx,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].map(function(p){var dx=p[0]-hx,dz=p[1]-hz;return [hx+dx*c-dz*s,hz+dx*s+dz*c]});b.pf={ax:'y',pts:P};b.x0=Math.min.apply(null,P.map(function(p){return p[0]}));b.x1=Math.max.apply(null,P.map(function(p){return p[0]}));b.z0=Math.min.apply(null,P.map(function(p){return p[1]}));b.z1=Math.max.apply(null,P.map(function(p){return p[1]}))}
+/* gira uma caixa em volta de um eixo deitado (porta do forno, que desce pra frente) */
+function rotX(b,hy,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.z0,b.y0],[b.z1,b.y0],[b.z1,b.y1],[b.z0,b.y1]].map(function(p){var dz=p[0]-hz,dy=p[1]-hy;return [hz+dz*c+dy*s,hy-dz*s+dy*c]});b.pf={ax:'x',pts:P};b.z0=Math.min.apply(null,P.map(function(p){return p[0]}));b.z1=Math.max.apply(null,P.map(function(p){return p[0]}));b.y0=Math.min.apply(null,P.map(function(p){return p[1]}));b.y1=Math.max.apply(null,P.map(function(p){return p[1]}))}
+var ap3model_k=ap3model;ap3model=function(f,z0){var p=CURF;CURF=f;try{return ap3model_k(f,z0)}finally{CURF=p}};
+var geladeira3_k=geladeira3;geladeira3=function(f,z0){var n0=boxes.length;geladeira3_k(f,z0);var a=ease(FRA[String(f.id)]||0);if(a<=0)return;
+ var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,h=f.h,y1=y0+h,D=z0+(f.d||700),dz=D-40,nm=f.nome||'',side=/side/i.test(nm),xm=x0+w*.45,phi=a*Math.PI*.58,yb=y0+72,yt=y1-4;
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z0<dz-.5||b.y1<yb-1)continue;var left=!side||(b.x0+b.x1)/2<xm;rotY(b,left?x0:x1,dz,left?phi:-phi)}
+ /* por dentro: branco com prateleiras e gavetas */
+ var L=function(xa,xb,ya,yc){bx(xa+18,xb-18,ya+10,yc-10,dz-1.5,dz-.5,'#f4f6f8');var n=Math.max(2,Math.round((yc-ya)/330));for(var j=1;j<n;j++){var yy=ya+(yc-ya)*j/n;bx(xa+20,xb-20,yy-3,yy,dz-.5,dz+.5,'#cfd8e0')}bx(xa+30,xb-30,ya+14,ya+150,dz-.5,dz+.8,'#e3ebf2')};
+ if(side){L(x0,xm-2,yb,yt);L(xm+2,x1,yb,yt)}else L(x0,x1,yb,yt);var lt=bx(x0+w*.3,x1-w*.3,yt-24,yt-14,dz-.5,dz+.5,'#fff6d8');lt.em=1};
+var fornoF_k=fornoF;fornoF=function(x0,x1,y0,y1,z){var n0=boxes.length;fornoF_k(x0,x1,y0,y1,z);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var H=y1-y0,hp=Math.min(110,H*.18),yd=y1-hp-3;
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.y1>yd+1||b.z1<z-21)continue;rotX(b,y0,z,a*Math.PI*.5)}
+ bx(x0+40,x1-40,y0+20,yd-20,z-21,z-20.2,'#1b1d20');for(var g=1;g<=2;g++){var yg=y0+(yd-y0)*g/3;bx(x0+50,x1-50,yg-2,yg,z-20.2,z-19,'#8a929c')}var lp=bx(x0+(x1-x0)*.45,x1-(x1-x0)*.45,yd-40,yd-30,z-20.2,z-19.8,'#ffb347');lp.em=1};
+var microF_k=microF;microF=function(x0,x1,y0,y1,z,emb){var n0=boxes.length;microF_k(x0,x1,y0,y1,z,emb);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var w=x1-x0,xd=x0+w*(emb?.74:.7);
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z1<z+.5||(b.x0+b.x1)/2>xd-2)continue;rotY(b,x0,z,a*Math.PI*.55)}
+ bx(x0+14,xd-10,y0+14,y1-14,z-21,z-20.2,'#2a2c30');var pr=cylY((x0+xd)/2,z-120,Math.min(110,(xd-x0)*.35),y0+16,y0+20,'#e9edf1',18);var lp2=bx(x0+20,xd-16,y1-28,y1-20,z-20.2,z-19.8,'#fff3c4');lp2.em=1};
+/* fogão de piso e de embutir: mesa com bocas e grades, painel com botões, forno embaixo (a porta abre) */
+function fogBocas(n,x0,x1,z0,z1){var P=[],cols=n<=2?2:n===4?2:3,rows=n<=2?1:2,i;for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)P.push([x0+(x1-x0)*(c+.5)/cols,z0+(z1-z0)*(rows===1?.5:(r+.5)/rows)]);if(n===5)P=[[x0+(x1-x0)*.22,z0+(z1-z0)*.28],[x0+(x1-x0)*.22,z0+(z1-z0)*.74],[x0+(x1-x0)*.5,z0+(z1-z0)*.5],[x0+(x1-x0)*.78,z0+(z1-z0)*.28],[x0+(x1-x0)*.78,z0+(z1-z0)*.74]];return P.slice(0,n)}
+function fogaoN(f){var m=String(f.nome||'').match(/(\d)\s*bocas/i);return m?+m[1]:4}
+function fogao3(f,z0){var x0=f.x,x1=x0+f.w,w=f.w,y0=f.b||0,y1=y0+f.h,D=z0+(f.d||600),n=fogaoN(f),emb=/embutir/i.test(f.nome||''),vid=/vidro|mesa de vidro/i.test(f.nome||''),yt=y1-30;
+ bx(x0+4,x1-4,y0+90,yt,z0,D-20,INOX2);bx(x0+30,x1-30,y0,y0+90,z0+40,D-40,'#22262b');
+ if(!emb)[[x0+40,z0+60],[x1-40,z0+60],[x0+40,D-70],[x1-40,D-70]].forEach(function(q){bx(q[0]-18,q[0]+18,y0,y0+20,q[1]-18,q[1]+18,'#16181b')});
+ fornoF(x0,x1,y0+95,yt,D);
+ bx(x0,x1,yt,y1-12,z0,D,vid?'#15171a':INOX);bx(x0+6,x1-6,y1-12,y1-10,z0+8,D-8,vid?'#202328':'#d7dce1');
+ var B_=fogBocas(n,x0+w*.06,x1-w*.06,z0+60,D-70),lit=!!FOGL[String(f.id)];
+ B_.forEach(function(p,i){var r=i===2&&n===5?62:(n>=5?46:52);cylY(p[0],p[1],r,y1-10,y1-2,'#2b2e33',18);cylY(p[0],p[1],r*.55,y1-2,y1+4,'#3a3f46',16);
+  [[-1,0],[0,-1]].forEach(function(d){bx(p[0]-(d[0]?0:r+14)-4*Math.abs(d[0]),p[0]+(d[0]?0:r+14)+4*Math.abs(d[0]),y1+10,y1+18,p[1]-(d[1]?0:r+14)-4*Math.abs(d[1]),p[1]+(d[1]?0:r+14)+4*Math.abs(d[1]),'#1d2126')});
+  if(lit){for(var k=0;k<10;k++){var t=k/10*Math.PI*2,fx=p[0]+Math.cos(t)*r*.62,fz=p[1]+Math.sin(t)*r*.62;var fl=bx(fx-6,fx+6,y1+4,y1+22,fz-6,fz+6,'#3d8bff');fl.em=1;fl.a=.85}}});
+ if(!emb){bx(x0,x1,y1-12,y1+70,z0,z0+18,vid?'#15171a':INOX)}}
+var forno3_k=forno3;forno3=function(f,z0){if(/fog[aã]o/i.test(f.nome||'')){fogao3(f,z0);return}forno3_k(f,z0)};
+/* modelos de fogão (vão junto dos fornos na lista de eletros) */
+(function(){var L=[['Fogão de piso 2 bocas (compacto) · conferir medidas',370,850,500,{b:0}],['Fogão de piso 4 bocas (tipo Electrolux/Consul)',510,900,620,{b:0}],['Fogão de piso 5 bocas (tipo Electrolux/Brastemp)',760,920,660,{b:0}],['Fogão de piso 6 bocas (tipo Brastemp/Electrolux)',760,920,660,{b:0}],['Fogão de embutir 4 bocas (fica no vão do módulo)',560,850,560,{b:0}],['Fogão de embutir 5 bocas (fica no vão do módulo)',760,850,560,{b:0}],['Fogão de embutir 4 bocas mesa de vidro',560,850,560,{b:0,fin:'preto'}],['Fogão de piso 4 bocas branco',510,900,620,{b:0,fin:'branco'}],['Fogão de piso 6 bocas preto',760,920,660,{b:0,fin:'preto'}]];
+ if(typeof APM!=='undefined'&&APM.forno&&!APM.forno.m.some(function(q){return /^Fogão/.test(q[0])})){L.forEach(function(q){APM.forno.m.push(q)});APM.forno.n='Forno e fogão'}})();
+/* 1 toque: abre ou fecha a porta (geladeira, forno, micro-ondas, fogão) e o quadro mostra o botão também */
+var one3_f=one3;one3=function(cx,cy){if(IDRAW)return one3_f(cx,cy);var h=null;try{h=pickItem(cx,cy)}catch(_){}if(h&&h.k==='fr'){var f=(S.fr||[]).filter(function(q){return q.id===h.id})[0];if(f&&frOpenK(f)){var on=frToggle(f.id);ambMsg(on?'🚪 Aberto · toque de novo pra fechar':'Fechado')}}one3_f(cx,cy)};
+var itRender_f2=itRender;itRender=function(){itRender_f2();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||!frOpenK(f))return;var on=(FRT[String(f.id)]||0)>.5,fog=/fog[aã]o/i.test(f.nome||''),lit=!!FOGL[String(f.id)];
+ var Bt=function(at,tx,o){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(o?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'};
+ var hdr=E.firstElementChild;if(hdr)hdr.insertAdjacentHTML('afterend','<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+Bt('data-qfro="'+(on?0:1)+'"',on?'🚪 Fechar a porta':(f.t==='geladeira'?'🚪 Abrir a geladeira':f.t==='microondas'?'🚪 Abrir o micro-ondas':'🚪 Abrir o forno'),on)+(fog?Bt('data-qfog="'+(lit?0:1)+'"',lit?'🔥 Apagar as bocas':'🔥 Acender as bocas',lit):'')+'</div>')};
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX||ISX.k!=='fr')return;var d=t.dataset;if(d.qfro!==undefined){e.stopImmediatePropagation();frToggle(ISX.id,d.qfro==='1');itRender();return}if(d.qfog!==undefined){e.stopImmediatePropagation();FOGL[String(ISX.id)]=d.qfog==='1'?1:0;build();render();itRender();ambMsg(d.qfog==='1'?'🔥 Bocas acesas':'Bocas apagadas');return}},true);
+var open3D_f2=window.open3D;window.open3D=function(){FRA={};FRT={};FOGL={};return open3D_f2.apply(this,arguments)};
+window.ele3api={toggle:frToggle,ang:function(id){return FRA[String(id)]||0},lit:function(id,v){FOGL[String(id)]=v?1:0;build();render()},n:fogaoN};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

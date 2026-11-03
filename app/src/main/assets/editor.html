@@ -3360,12 +3360,7 @@ function frRotY(b,hx,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=
 /* gira uma caixa em volta de um eixo deitado (porta do forno, que desce pra frente) */
 function frRotX(b,hy,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.z0,b.y0],[b.z1,b.y0],[b.z1,b.y1],[b.z0,b.y1]].map(function(p){var dz=p[0]-hz,dy=p[1]-hy;return [hz+dz*c+dy*s,hy-dz*s+dy*c]});b.pf={ax:'x',pts:P};b.z0=Math.min.apply(null,P.map(function(p){return p[0]}));b.z1=Math.max.apply(null,P.map(function(p){return p[0]}));b.y0=Math.min.apply(null,P.map(function(p){return p[1]}));b.y1=Math.max.apply(null,P.map(function(p){return p[1]}))}
 var ap3model_k=ap3model;ap3model=function(f,z0){var p=CURF;CURF=f;try{return ap3model_k(f,z0)}finally{CURF=p}};
-var geladeira3_k=geladeira3;geladeira3=function(f,z0){var n0=boxes.length;geladeira3_k(f,z0);var a=ease(FRA[String(f.id)]||0);if(a<=0)return;
- var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,h=f.h,y1=y0+h,D=z0+(f.d||700),dz=D-40,nm=f.nome||'',side=/side/i.test(nm),xm=x0+w*.45,phi=a*Math.PI*.58,yb=y0+72,yt=y1-4;
- for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.z0<dz-.5||b.y1<yb-1)continue;var left=!side||(b.x0+b.x1)/2<xm;frRotY(b,left?x0:x1,dz,left?phi:-phi)}
- /* por dentro: branco com prateleiras e gavetas */
- var L=function(xa,xb,ya,yc){bx(xa+18,xb-18,ya+10,yc-10,dz-1.5,dz-.5,'#f4f6f8');var n=Math.max(2,Math.round((yc-ya)/330));for(var j=1;j<n;j++){var yy=ya+(yc-ya)*j/n;bx(xa+20,xb-20,yy-3,yy,dz-.5,dz+.5,'#cfd8e0')}bx(xa+30,xb-30,ya+14,ya+150,dz-.5,dz+.8,'#e3ebf2')};
- if(side){L(x0,xm-2,yb,yt);L(xm+2,x1,yb,yt)}else L(x0,x1,yb,yt);var lt=bx(x0+w*.3,x1-w*.3,yt-24,yt-14,dz-.5,dz+.5,'#fff6d8');lt.em=1};
+var geladeira3_k=geladeira3;
 var fornoF_k=fornoF;fornoF=function(x0,x1,y0,y1,z){var n0=boxes.length;fornoF_k(x0,x1,y0,y1,z);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var H=y1-y0,hp=Math.min(110,H*.18),yd=y1-hp-3;
  for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.y1>yd+1||b.z1<z-21)continue;frRotX(b,y0,z,a*Math.PI*.5)}
  bx(x0+40,x1-40,y0+20,yd-20,z-21,z-20.2,'#1b1d20');for(var g=1;g<=2;g++){var yg=y0+(yd-y0)*g/3;bx(x0+50,x1-50,yg-2,yg,z-20.2,z-19,'#8a929c')}var lp=bx(x0+(x1-x0)*.45,x1-(x1-x0)*.45,yd-40,yd-30,z-20.2,z-19.8,'#ffb347');lp.em=1};
@@ -3516,6 +3511,45 @@ crpBox().addEventListener('click',function(e){var t=e.target.closest('button');i
 /* aumentar a largura do módulo empurra os do lado (e diminuir puxa os que estavam encostados): o módulo fica no lugar */
 var mzSet_l=mzSet;mzSet=function(m,f,v){if(f!=='w'||!m)return mzSet_l(m,f,v);var r0=m.x+m.w+rt(m),w0=m.w,row=S.mods.filter(function(o){return o!==m&&!!o.sup===!!m.sup&&(o.wing||0)===(m.wing||0)&&!o.lock&&(o.x-lt(o))>=r0-1}),touch=row.filter(function(o){return Math.abs((o.x-lt(o))-r0)<=2});
  var x0=m.x,ox=S.mods.map(function(o){return o.x});S.m=m;mzSet_l(m,f,v);var dw=m.w-w0;if(!dw)return;S.mods.forEach(function(o,i){o.x=ox[i]});m.x=x0;(dw>0||touch.length?row:[]).forEach(function(o){o.x=Math.round((o.x+dw)*10)/10});try{draw();if(typeof panel==='function')panel()}catch(_){}build();render()};
+/* ===== por dentro dos eletros, como os de verdade (geladeira duplex, inverse e side by side, forno, micro-ondas):
+   o corpo vira uma caixa oca com o revestimento branco; prateleiras de vidro, gavetão de legumes, prateleiras da porta,
+   forminha de gelo; forno com as guias, a grade e a assadeira; micro-ondas com o prato de vidro ===== */
+var LINER='#f3f5f7',GLASS='#cfe7f3',BALC='#e9f1f6',CRIS='#dbeef7';
+function hollow(b,t,col,front){var x0=b.x0,x1=b.x1,y0=b.y0,y1=b.y1,z0=b.z0,z1=b.z1;b.x1=b.x0+t;var L=[bx(x1-t,x1,y0,y1,z0,z1,b.c&&'#'+b.c.map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join('')),bx(x0,x1,y0,y0+t,z0,z1,col),bx(x0,x1,y1-t,y1,z0,z1,col),bx(x0,x1,y0,y1,z0,z0+t,col)];
+ /* revestimento por dentro */bx(x0+t,x1-t,y0+t,y1-t,z0+t,z0+t+1.5,col);bx(x0+t,x0+t+1.5,y0+t,y1-t,z0+t,z1-1,col);bx(x1-t-1.5,x1-t,y0+t,y1-t,z0+t,z1-1,col);bx(x0+t,x1-t,y0+t,y0+t+1.5,z0+t,z1-1,col);bx(x0+t,x1-t,y1-t-1.5,y1-t,z0+t,z1-1,col);return L}
+function glassShelf(xa,xb,y,za,zb){var g=bx(xa,xb,y-5,y,za,zb,GLASS);g.a=.55;bx(xa,xb,y-9,y-5,zb-14,zb,'#c3cbd2')}
+function balcony(xa,xb,y,zd,tag){var p=[bx(xa,xb,y,y+12,zd-95,zd,BALC),bx(xa,xb,y+12,y+75,zd-95,zd-88,BALC)];p[1].a=.75;p.forEach(function(q){q.frd=tag});return p}
+function crisper(xa,xb,ya,yb,za,zb){var c=bx(xa,xb,ya,yb,za,zb,CRIS);c.a=.5;bx(xa,xb,yb-6,yb,za,zb,'#e8f3f8')}
+function iceTray(xa,xb,y,za){var t=bx(xa,xb,y,y+30,za,za+110,'#eef6fb');t.a=.8;for(var i=1;i<6;i++){var xx=xa+(xb-xa)*i/6;bx(xx-1,xx+1,y+30,y+31,za+5,za+105,'#cfe0ea')}}
+geladeira3=function(f,z0){var n0=boxes.length;geladeira3_k(f,z0);var a=ease(FRA[String(f.id)]||0);
+ var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,h=f.h,y1=y0+h,D=z0+(f.d||700),dz=D-40,nm=f.nome||'',side=/side/i.test(nm),inv=/inverse/i.test(nm),dup=/duplex/i.test(nm),xm=x0+w*.45,yb=y0+72,yt=y1-4,phi=a*Math.PI*.58;
+ if(a<=0)return;var body=boxes[n0];if(body)hollow(body,22,LINER);
+ var zi0=z0+30,zi1=dz-8,ndb=boxes.length,sh=function(xa,xb,ya,yc,n){for(var j=1;j<=n;j++)glassShelf(xa+24,xb-24,ya+(yc-ya)*j/(n+1),zi0,zi1)};
+ var lamp=function(xa,xb,yy){var l=bx(xa+(xb-xa)*.35,xb-(xb-xa)*.35,yy-16,yy-8,zi1-120,zi1-60,'#fff6d8');l.em=1};
+ if(side){sh(x0,xm-2,yb+300,yt,4);crisper(x0+30,xm-30,yb+30,yb+260,zi0+20,zi1-30);sh(xm+2,x1,yb+300,yt,3);crisper(xm+30,x1-30,yb+30,yb+200,zi0+20,zi1-30);crisper(xm+30,x1-30,yb+210,yb+300,zi0+20,zi1-30);lamp(xm,x1,yt);
+  for(var k=0;k<5;k++){balcony(x0+30,xm-30,yb+120+k*(yt-yb-200)/5,dz,'l');}for(var k2=0;k2<4;k2++){balcony(xm+30,x1-30,yb+120+k2*(yt-yb-200)/4,dz,'r')}}
+ else if(inv){var yi=y0+h*.38;sh(x0,x1,yi+40,yt,3);crisper(x0+30,x1-30,yi+30,yi+230,zi0+20,zi1-30);lamp(x0,x1,yt);var bk=bx(x0+30,x1-30,yb+40,yi-60,zi0+20,zi1-20,'#e4edf3');bk.a=.6;bk.inv=1;
+  for(var k3=0;k3<3;k3++)balcony(x0+40,x1-40,yi+150+k3*(yt-yi-260)/3,dz,'l')}
+ else if(dup){var yf=y1-h*.3;glassShelf(x0+24,x1-24,yf+(yt-yf)*.5,zi0,zi1);iceTray(x0+60,x0+60+(w-120)*.45,yf+(yt-yf)*.5+2,zi0+30);bx(x0+20,x1-20,yf-4,yf+4,zi0,zi1,LINER);
+  sh(x0,x1,yb+260,yf-10,3);crisper(x0+30,x1-30,yb+20,yb+240,zi0+20,zi1-30);lamp(x0,x1,yf-6);
+  balcony(x0+40,x1-40,yf+80,dz,'l');for(var k4=0;k4<3;k4++)balcony(x0+40,x1-40,yb+140+k4*(yf-yb-260)/3,dz,'l')}
+ else{sh(x0,x1,yb+260,yt,4);crisper(x0+30,x1-30,yb+20,yb+240,zi0+20,zi1-30);lamp(x0,x1,yt);var fz=bx(x0+40,x1-40,yt-240,yt-60,zi0+10,zi1-40,'#e6eef4');fz.a=.7;for(var k5=0;k5<3;k5++)balcony(x0+40,x1-40,yb+140+k5*(yt-yb-300)/3,dz,'l')}
+ /* portas (e as prateleiras da porta) giram na dobradiça; no inverse o freezer de baixo é uma gaveta que sai pra frente */
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];var isDoor=b.z0>=dz-.5&&b.y1>=yb-1;if(!isDoor&&!b.frd&&!b.inv)continue;
+  if(inv&&(b.inv||(isDoor&&b.y1<=y0+h*.38+2))){var dzv=a*420;b.z0+=dzv;b.z1+=dzv;continue}
+  var left=b.frd?b.frd==='l':(!side||(b.x0+b.x1)/2<xm);frRotY(b,left?x0:x1,dz,left?phi:-phi)}};
+/* forno: cavidade escura de verdade, guias dos lados, grade e assadeira, luz no fundo */
+var forno3_m=forno3_k;forno3_k=function(f,z0){var n0=boxes.length;forno3_m(f,z0);var a=FRA[String(f.id)]||0;if(a<=0)return;var body=boxes[n0],x0=f.x,x1=x0+f.w,y0=f.b||0,y1=y0+f.h,D=z0+(f.d||565),zf=D-20;if(!body)return;
+ var top=/torre/i.test(f.nome||'')?y0+595:y1,H=top-y0,hp=Math.min(110,H*.18),ya=y0+30,yc=top-hp-20;var keep=[body.x0,body.x1,body.y0,body.y1,body.z0,body.z1];body.y0=top-hp-3;
+ var xa=keep[0],xb=keep[1],za=keep[4],ENA='#2a2d31';bx(xa,xb,keep[2],ya,za,zf,'#5a5f66');bx(xa,xa+18,ya,top-hp,za,zf,'#5a5f66');bx(xb-18,xb,ya,top-hp,za,zf,'#5a5f66');bx(xa,xb,ya,top-hp,za,za+18,ENA);
+ bx(xa+18,xb-18,ya,ya+2,za+18,zf,ENA);bx(xa+18,xb-18,yc,yc+2,za+18,zf,ENA);bx(xa+18,xa+20,ya,yc,za+18,zf,ENA);bx(xb-20,xb-18,ya,yc,za+18,zf,ENA);
+ for(var g=1;g<=4;g++){var yg=ya+(yc-ya)*g/5;bx(xa+20,xa+30,yg-3,yg,za+40,zf-10,'#8a929c');bx(xb-30,xb-20,yg-3,yg,za+40,zf-10,'#8a929c')}
+ var yr=ya+(yc-ya)*2/5+1;for(var r=0;r<9;r++){var xr=xa+30+(xb-xa-60)*r/8;bx(xr-1.5,xr+1.5,yr,yr+3,za+40,zf-12,'#b3bac2')}bx(xa+30,xb-30,yr,yr+3,za+40,za+44,'#b3bac2');bx(xa+30,xb-30,yr,yr+3,zf-16,zf-12,'#b3bac2');
+ var yt2=ya+(yc-ya)/5+1;bx(xa+30,xb-30,yt2,yt2+18,za+40,zf-12,'#1d1f22');var lp=cylZ(xb-60,yc-40,14,za+18,za+20,'#ffd48a',12);lp.em=1};
+/* micro-ondas: por dentro claro com o prato de vidro e a luz */
+var micro3_m=micro3;micro3=function(f,z0){var n0=boxes.length;micro3_m(f,z0);var a=FRA[String(f.id)]||0;if(a<=0)return;var body=boxes[n0];if(!body)return;var emb=/embutir/i.test(f.nome||''),x0=f.x,x1=x0+f.w,w=f.w,xd=x0+w*(emb?.74:.7),bz0=body.z0,bz1=body.z1,y0=body.y0,y1=body.y1;
+ body.x0=xd-6;var CV='#e3e6e9';bx(x0+(emb?20:0),xd-6,y0,y0+10,bz0,bz1,CV);bx(x0+(emb?20:0),xd-6,y1-10,y1,bz0,bz1,CV);bx(x0+(emb?20:0),x0+(emb?30:10),y0,y1,bz0,bz1,CV);bx(x0+(emb?20:0),xd-6,y0,y1,bz0,bz0+10,CV);
+ var pr=cylY((x0+xd)/2,(bz0+bz1)/2,Math.min(135,(xd-x0)*.36),y0+14,y0+18,'#e9f3f8',22);pr.a=.7;var lp=bx(xd-30,xd-14,y1-30,y1-14,bz0+40,bz0+60,'#fff3c4');lp.em=1};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

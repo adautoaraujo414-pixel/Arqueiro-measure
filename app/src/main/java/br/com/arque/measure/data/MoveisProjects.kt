@@ -8,7 +8,7 @@ import java.io.File
 
 /** Projetos do editor de móveis (arquivo moveis/projects.json, o mesmo que o editor usa). */
 object MoveisProjects {
-    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "", val corte: Boolean = false, val from: String = "", val folder: String? = null, val folderSet: Boolean = false) {
+    data class P(val id: String, val name: String, val created: Long, val updated: Long, val mods: Int, val auto: Boolean, val status: String = "orc", val title: String = "", val room: String = "cozinha", val city: String = "", val corte: Boolean = false, val from: String = "", val folder: String? = null, val folderSet: Boolean = false, val cliente: Boolean = false, val entrega: String = "") {
         /** Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…). */
         val label: String get() = title.ifBlank { roomLabel(room) }
     }
@@ -37,6 +37,18 @@ object MoveisProjects {
         else -> 0xFF6B7280
     }
 
+    /** Entrega: "📅 Entrega 06/11 · faltam 3 dias"; em vermelho quando faltam 5 dias ou menos (e o projeto não foi finalizado). */
+    fun entregaInfo(p: P): Pair<String, Boolean>? {
+        if (p.entrega.isBlank() || p.status == "orc") return null
+        val d = runCatching { java.time.LocalDate.parse(p.entrega) }.getOrNull() ?: return null
+        val dm = "%02d/%02d".format(d.dayOfMonth, d.monthValue)
+        if (p.status == "fin") return tr("✓ Entregue · {0}", dm) to false
+        val days = java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), d).toInt()
+        val left = when { days < 0 -> tr("atrasado"); days == 0 -> tr("é hoje"); days == 1 -> tr("falta {0} dia", days); else -> tr("faltam {0} dias", days) }
+        val late = days <= 5 && !p.cliente
+        return ((if (late) tr("⏰ Prazo acabando") + " · " else "📅 ") + tr("Entrega {0}", dm) + " · " + left) to late
+    }
+
     private fun file(ctx: Context) = File(ctx.filesDir, "moveis/projects.json")
 
     fun list(ctx: Context): List<P> = runCatching {
@@ -52,8 +64,8 @@ object MoveisProjects {
             P(
                 p.optString("id"), nome.ifBlank { tr("Projeto sem nome") }, p.optLong("created"), p.optLong("updated", p.optLong("created")), mods, p.optBoolean("auto"),
                 p.optString("status").ifBlank { "orc" }, p.optString("titulo").trim(), room, p.optJSONObject("client")?.optString("cidade")?.trim().orEmpty(),
-                p.has("corte"), p.optJSONObject("corte")?.optString("fr")?.trim().orEmpty(),
-                p.optString("pasta").trim().ifBlank { null }, p.has("pasta"),
+                p.has("corte"), (p.optJSONObject("corte") ?: p.optJSONObject("cliente"))?.optString("fr")?.trim().orEmpty(),
+                p.optString("pasta").trim().ifBlank { null }, p.has("pasta"), p.has("cliente"), p.optString("entrega").trim(),
             )
         }.filter { it.id.isNotBlank() }.sortedByDescending { it.updated }
     }.getOrDefault(emptyList())

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seu projeto · Arquemestre</title>
+<meta property="og:title" content="Seu projeto em 3D">
+<meta property="og:description" content="Toque pra abrir e caminhar pelo seu projeto.">
+<meta name="robots" content="noindex">
+<style>
+ :root{--bg:#14171c;--fg:#f3f4f6;--dim:#a8b0bd;--acc:#25d366;--gold:#e0a100}
+ *{box-sizing:border-box}[hidden]{display:none!important}
+ body{margin:0;min-height:100vh;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+ main{width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px;text-align:center}
+ .brand{font-weight:800;letter-spacing:.1em;color:var(--gold);font-size:13px}
+ h1{font-size:26px;line-height:1.2;margin:0}
+ p{margin:0;color:var(--dim)}
+ .btn{display:block;width:100%;padding:16px;border-radius:14px;border:0;font:700 17px system-ui,sans-serif;cursor:pointer}
+ .go{background:var(--acc);color:#06210f}
+ .store{background:#2a313b;color:var(--fg)}
+</style>
+</head>
+<body>
+<main>
+ <div class="brand">ARQUEMESTRE</div>
+ <h1 data-t="h1">Seu projeto em 3D</h1>
+ <p data-t="p1">Abrindo no app…</p>
+ <button class="btn go" id="abrir" data-t="abrir">Abrir meu projeto</button>
+ <button class="btn store" id="baixar" data-t="baixar">Baixar o app</button>
+ <p id="bad" hidden data-t="bad">Link incompleto. Peça pra enviar de novo.</p>
+</main>
+<script>
+(function(){
+ var L=(navigator.language||'pt').toLowerCase().slice(0,2),T={
+  en:{h1:'Your project in 3D',p1:'Opening in the app…',abrir:'Open my project',baixar:'Get the app',bad:'Incomplete link. Ask for it to be sent again.'},
+  es:{h1:'Tu proyecto en 3D',p1:'Abriendo en la app…',abrir:'Abrir mi proyecto',baixar:'Descargar la app',bad:'Enlace incompleto. Pide que lo envíen de nuevo.'}}[L];
+ if(T){document.documentElement.lang=L;Array.prototype.forEach.call(document.querySelectorAll('[data-t]'),function(e){var v=T[e.getAttribute('data-t')];if(v)e.textContent=v})}
+ var m=(location.hash||'').match(/[#&]d=([A-Za-z0-9_\-]+)/),d=m?m[1]:'';
+ var ua=navigator.userAgent||'',ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),android=/Android/i.test(ua);
+ var PLAY='https://play.google.com/store/apps/details?id=br.com.arque.measure',APPSTORE='https://apps.apple.com/br/search?term=Arquemestre';
+ if(!d||d.length<8){document.getElementById('abrir').hidden=true;document.querySelector('[data-t="p1"]').hidden=true;document.getElementById('bad').hidden=false;return}
+ /* guarda o link: depois de instalar, o app encontra e abre o projeto */
+ function keep(){try{if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(location.href.split('#')[0]+'#d='+d).catch(function(){})}catch(e){}return Promise.resolve()}
+ function store(){location.href=ios?APPSTORE:PLAY}
+ function open(){keep().then(function(){
+  if(android){location.href='intent://corte?d='+d+'#Intent;scheme=arquemestre;S.browser_fallback_url='+encodeURIComponent(PLAY)+';end';return}
+  var t=Date.now();location.href='arquemestre://corte?d='+d;
+  setTimeout(function(){if(Date.now()-t<2200&&!document.hidden)store()},1600)})}
+ document.getElementById('abrir').onclick=open;
+ document.getElementById('baixar').onclick=function(){keep().then(store)};
+ /* já tenta abrir sozinho (sem app, cai na loja) */
+ setTimeout(open,350);
+})();
+</script>
+</body>
+</html>

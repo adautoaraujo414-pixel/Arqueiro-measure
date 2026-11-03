@@ -145,7 +145,8 @@ struct MoveisWeb: UIViewRepresentable {
         openNoteOf:function(p,n){post({op:'openNoteOf',id:String(p)})},
         saveToGallery:function(d){post({op:'saveGallery',data:String(d)})},
         companyName:function(){return sync('companyName','')},
-        shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})}
+        shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})},
+        shareClient:function(c,n,t){post({op:'shareClient',code:String(c),name:String(n),title:String(t)})}
       };
     })();
     """
@@ -212,6 +213,8 @@ struct MoveisWeb: UIViewRepresentable {
             case "saveGallery": if let d = m["data"] as? String { GallerySave.save(dataURL: d) }
             case "shareCut":
                 if let c = m["code"] as? String { app.cutShareText = app.cutInvite(c, (m["name"] as? String) ?? "", (m["title"] as? String) ?? "") }
+            case "shareClient":
+                if let c = m["code"] as? String { app.cutShareText = app.clientInvite(c, (m["name"] as? String) ?? "", (m["title"] as? String) ?? "") }
             case "shareUpdate": if let j = m["json"] as? String { parent.peer.update(j) }
             case "putFile":
                 if let n = m["name"] as? String, let b = m["b64"] as? String, let d = Data(base64Encoded: b, options: .ignoreUnknownCharacters) {

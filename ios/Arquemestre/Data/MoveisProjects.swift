@@ -19,6 +19,9 @@ enum MoveisProjects {
         /// Pasta da biblioteca ("pasta" no projects.json); folderSet = a pessoa já escolheu (vazio = fora das pastas).
         var folder: String? = nil
         var folderSet: Bool = false
+        /// Projeto recebido do marceneiro (cliente só vê e mexe no 3D) e data de entrega ("AAAA-MM-DD").
+        var cliente: Bool = false
+        var entrega: String = ""
         /// Nome do projeto: o que a pessoa deu (ex.: "Suíte") ou o ambiente do editor (Cozinha, Banheiro…).
         var label: String { title.isEmpty ? MoveisProjects.roomLabel(room) : title }
     }
@@ -53,6 +56,19 @@ enum MoveisProjects {
         }
     }
 
+    /// Entrega: "📅 Entrega 06/11 · faltam 3 dias"; em vermelho quando faltam 5 dias ou menos (e o projeto não foi finalizado).
+    static func entregaInfo(_ p: P) -> (text: String, late: Bool)? {
+        guard !p.entrega.isEmpty, p.status != "orc" else { return nil }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX")
+        guard let d = f.date(from: p.entrega) else { return nil }
+        let o = DateFormatter(); o.dateFormat = "dd/MM"
+        if p.status == "fin" { return (tr("✓ Entregue · {0}", o.string(from: d)), false) }
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: Date()), to: d).day ?? 0
+        let left = days < 0 ? tr("atrasado") : days == 0 ? tr("é hoje") : tr(days == 1 ? "falta {0} dia" : "faltam {0} dias", days)
+        let late = days <= 5
+        return ((late && !p.cliente ? tr("⏰ Prazo acabando") + " · " : "📅 ") + tr("Entrega {0}", o.string(from: d)) + " · " + left, late && !p.cliente)
+    }
+
     static var file: URL { AppPaths.moveis.appendingPathComponent("projects.json") }
 
     static func list() -> [P] {
@@ -71,9 +87,10 @@ enum MoveisProjects {
                      updated: JsonCodec.int64(p, "updated", created), mods: mods, auto: JsonCodec.bool(p, "auto", false),
                      status: JsonCodec.s(p, "status").isEmpty ? "orc" : JsonCodec.s(p, "status"),
                      title: JsonCodec.s(p, "titulo").trimmingCharacters(in: .whitespaces), room: room, city: city,
-                     corte: p["corte"] != nil, from: ((p["corte"] as? [String: Any]).map { JsonCodec.s($0, "fr") } ?? "").trimmingCharacters(in: .whitespaces),
+                     corte: p["corte"] != nil, from: (((p["corte"] ?? p["cliente"]) as? [String: Any]).map { JsonCodec.s($0, "fr") } ?? "").trimmingCharacters(in: .whitespaces),
                      folder: JsonCodec.s(p, "pasta").trimmingCharacters(in: .whitespaces).isEmpty ? nil : JsonCodec.s(p, "pasta").trimmingCharacters(in: .whitespaces),
-                     folderSet: p["pasta"] != nil)
+                     folderSet: p["pasta"] != nil,
+                     cliente: p["cliente"] != nil, entrega: JsonCodec.s(p, "entrega"))
         }.sorted { $0.updated > $1.updated }
     }
 

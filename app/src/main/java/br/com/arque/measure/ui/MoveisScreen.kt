@@ -118,6 +118,7 @@ fun MoveisScreen(vm: AppViewModel) {
             onLink = { nid, pid -> vm.linkProject(nid, pid) }, onOpenNote = { pid -> vm.openNoteOf(pid) },
             company = { vm.company.name },
             onShareCut = { code, name, title -> shareCutInvite(ctx, vm.cutInvite(code, name, title)) },
+            onShareClient = { code, name, room -> shareCutInvite(ctx, vm.clientInvite(code, name, room)) },
         )
     }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
@@ -291,7 +292,10 @@ class MoveisBridge(
     private val onOpenNote: (String) -> Unit = {},
     private val company: () -> String = { "" },
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
+    private val onShareClient: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
+    /** "🏠 Enviar o projeto pro cliente": link limpo pelo WhatsApp (o cliente só vê e mexe no 3D). */
+    @JavascriptInterface fun shareClient(code: String, name: String, title: String) { web()?.post { onShareClient(code, name, title) } }
     /** Nome da empresa (vai no convite do plano de corte). */
     @JavascriptInterface fun companyName(): String = runCatching { company() }.getOrDefault("")
     /** "📤 Enviar projeto" no plano de corte: convite pelo WhatsApp com o link do projeto (só pra cortar). */

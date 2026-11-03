@@ -82,6 +82,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.arque.measure.AppViewModel
@@ -473,9 +474,13 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
             }
             Text(
                 if (p.corte) tr("✂ Plano de corte recebido") + (if (p.from.isNotEmpty()) " · " + p.from else "")
+                else if (p.cliente) "🏠 " + p.label + (if (p.from.isNotEmpty()) " · " + p.from else "")
                 else (if (bare) "" else "🪚 " + p.label + " · ") + dateFmt.format(Date(p.updated)),
-                color = if (p.corte) Color(0xFF2F6BE0) else Ui.dim, fontSize = 12.sp, maxLines = 1,
+                color = if (p.corte || p.cliente) Color(0xFF2F6BE0) else Ui.dim, fontSize = 12.sp, maxLines = 1,
             )
+            br.com.arque.measure.data.MoveisProjects.entregaInfo(p)?.let { (t, late) ->
+                Text(t, color = if (late) Color(0xFFE53935) else Ui.dim, fontSize = 12.sp, maxLines = 1, fontWeight = if (late) FontWeight.Bold else FontWeight.Normal)
+            }
             Text(tr(if (p.mods == 1) "{0} módulo" else "{0} módulos", p.mods) + (if (linked > 0 && !bare) tr(if (linked == 1) " · {0} nota" else " · {0} notas", linked) else ""), color = Ui.dim, fontSize = 12.sp, maxLines = 1)
         }
         Box {
@@ -576,7 +581,7 @@ private fun projMatches(p: br.com.arque.measure.data.MoveisProjects.P, q: String
 private fun clientGroups(vm: AppViewModel, projs: List<br.com.arque.measure.data.MoveisProjects.P>, notes: List<NoteMeta>): List<ClientGroup> {
     fun k(s: String) = s.trim().lowercase()
     val pk = HashMap<String, String>()   // projeto -> cliente
-    projs.forEach { p -> pk[p.id] = if (vm.isDefaultProj(p) || p.corte) "id:" + p.id else k(p.name) }
+    projs.forEach { p -> pk[p.id] = if (vm.isDefaultProj(p) || p.corte || p.cliente) "id:" + p.id else k(p.name) }
     val byKey = LinkedHashMap<String, Pair<MutableList<br.com.arque.measure.data.MoveisProjects.P>, MutableList<NoteMeta>>>()
     projs.forEach { p -> byKey.getOrPut(pk.getValue(p.id)) { mutableListOf<br.com.arque.measure.data.MoveisProjects.P>() to mutableListOf() }.first.add(p) }
     notes.forEach { n ->

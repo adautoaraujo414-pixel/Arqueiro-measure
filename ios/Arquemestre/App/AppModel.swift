@@ -55,6 +55,7 @@ final class AppModel: ObservableObject {
     @Published var cutShareText: String?
     nonisolated static let cutPrefix = "arquemestre-corte:"
     nonisolated static let cutURL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d="
+    nonisolated static let clientURL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/p.html#d="
 
     nonisolated private static func cutCh(_ c: Character) -> Bool { c.isASCII && (c.isLetter || c.isNumber || c == "-" || c == "_") }
     /// Código do plano de corte num texto: o link do convite (…corte.html#d=…), arquemestre://corte?d=… ou "arquemestre-corte:…".
@@ -63,6 +64,7 @@ final class AppModel: ObservableObject {
         let raw: Substring
         if t.hasPrefix(cutPrefix) { raw = t.dropFirst(cutPrefix.count) }
         else if let r = t.range(of: "corte.html#d=") { raw = t[r.upperBound...] }
+        else if let r = t.range(of: "/p.html#d=") { raw = t[r.upperBound...] }
         else if t.hasPrefix("arquemestre://corte"), let r = t.range(of: "d=") { raw = t[r.upperBound...] }
         else { return nil }
         let c = String(raw.prefix(while: cutCh))
@@ -87,6 +89,14 @@ final class AppModel: ObservableObject {
         let suf = proj.isEmpty ? "" : " (\(proj))"
         let head = who.isEmpty ? tr("📐 Você recebeu um plano de corte{0} no Arquemestre.", suf) : tr("📐 {0} te mandou o plano de corte{1} no Arquemestre.", who, suf)
         return head + "\n\n" + tr("Toque no link pra abrir (se ainda não tem o app, ele leva pra baixar o Arquemestre):") + "\n" + AppModel.cutURL + code
+    }
+
+    /// Projeto pro cliente: mensagem curta com o link limpo (abre no app ou leva pra baixar).
+    func clientInvite(_ code: String, _ name: String, _ room: String) -> String {
+        let who = company.name.trimmingCharacters(in: .whitespaces)
+        let r = room.trimmingCharacters(in: .whitespaces).isEmpty ? tr("Cozinha") : room
+        let head = who.isEmpty ? tr("🏠 Seu projeto em 3D ({0}).", r) : tr("🏠 {0} · seu projeto em 3D ({1}).", who, r)
+        return head + "\n" + AppModel.clientURL + code
     }
 
     /// Quem ainda não tinha o app: a página do convite copia o link antes de mandar pra App Store.
@@ -613,7 +623,7 @@ final class AppModel: ObservableObject {
     /// Pasta que ainda existe (se a pasta sumiu, o item volta pra fora das pastas).
     func liveFolder(_ id: String?) -> String? { guard let f = id, index.folders.contains(where: { $0.id == f }) else { return nil }; return f }
     private func clientKey(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
-    private func projKey(_ p: MoveisProjects.P) -> String { (defaultProjName(p) || p.corte) ? "id:" + p.id : clientKey(p.name) }
+    private func projKey(_ p: MoveisProjects.P) -> String { (defaultProjName(p) || p.corte || p.cliente) ? "id:" + p.id : clientKey(p.name) }
     private func noteKey(_ n: NoteMeta, _ pk: [String: String]) -> String? {
         if let pid = linkedProject(n.id), let k = pk[pid] { return k }
         return defaultNoteName(n.name) ? nil : clientKey(n.name)

@@ -265,6 +265,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testSoEmbaixoDaPiaSemFundoETorreComBaseETeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.env='cozinha';var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          newTpl(T('Balcão 2 portas'));newTpl(T('Balcão da pia (cuba)'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(0);newTpl(4);addStone();draw();open3D();var B=__boxes();
+          var z=S.mods.map(function(m,i){return Math.min.apply(null,B.filter(function(b){return String(b.nm)===i+':Lateral esquerda'}).map(function(b){return Math.round(b.z0)}))});
+          var tor=S.mods[3],bt=partsOf(tor).filter(function(p){return /^Base (inferior|superior)$/.test(p.name)}).length;
+          return JSON.stringify({f:S.mods.map(function(m){return m.fundo}).join(','),z:z.join(','),bt:bt,tt:!!tor.tt,errs:__errs});
+          """#)
+        XCTAssertEqual(o["f"] as? String, "true,false,true,true,true", "só o balcão embaixo da pia fica sem fundo (área úmida)")
+        XCTAssertEqual(o["z"] as? String, "6,6,6,6,6", "frentes alinhadas, com ou sem fundo")
+        XCTAssertEqual(o["bt"] as? Int, 2, "torre tem base e teto")
+        XCTAssertEqual(o["tt"] as? Bool, false, "torre sem tamponamento em cima")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

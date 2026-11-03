@@ -277,7 +277,7 @@ function pxSvg(p,m,x0,y1,k){var px=p.px;if(!px)return p.mark?ln(x0+(p.x+p.w*.5)*
  else if(px==='toque'){var rr=Math.max(2,9*k),yt=top?Y+Math.max(5,30*k):Y+H-Math.max(5,30*k);o='<circle cx="'+r(cx)+'" cy="'+r(yt)+'" r="'+r(rr)+'" fill="none" stroke="#555" stroke-width=".9"/><circle cx="'+r(cx)+'" cy="'+r(yt)+'" r="'+r(rr*.35)+'" fill="#555"/>'}
  return o?'<g pointer-events="none">'+o+'</g>':''}
 function fTipo(m){return m.corner?'sobre':(m.fundoTipo||'sobre')}
-function fBack(m){return m.fundo&&fTipo(m)==='sobre'?(+m.fundoMm||6):0}
+function fBack(m){return (m.fundo||m.fundoPia)&&fTipo(m)==='sobre'?(+m.fundoMm||6):0}
 function TQ(s){return window.arqueT?window.arqueT(s):s}
 function matQ(){if(!S.matQ)S.matQ={};return S.matQ}
 function catTot(){var t=0,L=[];PR.cat.forEach(function(c){var q=+(matQ()[c.id]||0);if(q>0){var v=q*(+c.p||0);t+=v;L.push({c:c,q:q,v:v})}});return {t:t,L:L}}
@@ -421,7 +421,7 @@ function partsOf0(m){if(!m.cv31){m.cv31=1;(m.v||[]).forEach(function(v){if(v.k==
 function cutLines(m){var map={},ord=[];function put(n,qty,L,Wd,note,mat,pk){mat=mat||m.esp;var fn=finOf(n),k=L+'|'+Wd+'|'+mat+'|'+fn;if(!map[k]){map[k]={names:[],qty:0,L:L,W:Wd,notes:[],mat:mat,fin:fn,pks:[]};ord.push(k)}var g=map[k];if(g.names.indexOf(n)<0)g.names.push(n);if(note&&g.notes.indexOf(note)<0)g.notes.push(note);g.qty+=qty;for(var i_=0;i_<qty;i_++)g.pks.push(pk||null)}
  var rn=moldRunOf(m),bn=baseRunOf(m),rdn=rodRunOf(m);partsOf(m).forEach(function(p){if(p.noCut)return;if(rn&&/^Moldura de acabamento$/.test(p.name))return;if(bn&&p.name==='Base inferior')return;if(rodSkip(m,p))return;put(p.name,1,p.cl,p.cw,p.note,p.mat,p.pk)});
  if(m.regua&&m.sup){var rN2=Math.max(1,Math.min(3,Math.round(+m.regN||2)));put('Engrosso cava (régua)',2*rN2,m.w,m.regMm,rN2+' na frente + '+rN2+' atrás, alinhadas com a base (fora tamponamento)')}
- if(m.fundo&&m.corner)put('Fundo (lado do canto)',1,Math.max(m.d+200,m.cw2||900)-(m.fundoMm||6),m.h,m.fundoMm+' mm',m.fundoMm);if(m.fundo){var fd2=fundoDims(m);put('Fundo',1,fd2.L,fd2.W,fd2.note,m.fundoMm,'Fundo#1')};
+ if(m.fundo&&m.corner)put('Fundo (lado do canto)',1,Math.max(m.d+200,m.cw2||900)-(m.fundoMm||6),m.h,m.fundoMm+' mm',m.fundoMm,'Fundo (lado do canto)#1');if(m.fundo){var fd2=fundoDims(m);put('Fundo',1,fd2.L,fd2.W,fd2.note,m.fundoMm,'Fundo#1')};
  return ord.map(function(k){var g=map[k];g.name=g.names.join(' + ')+(g.mat!==m.esp&&g.names.join(' ').indexOf('('+g.mat+' mm)')<0?' ('+g.mat+' mm)':'')+(g.fin==='c'?' · NA COR':' · BRANCO');g.note=g.notes.join(' · ');return g})}
 
 function fundoDims(m){var t=fTipo(m),fm=+m.fundoMm||6;if(t==='sobre'){var fe=fE(m);return {t:t,L:Math.max(10,m.w+(fe.er||0)-(fe.el||0)),W:Math.max(10,m.h+(fe.et||0)-(fe.eb||0)),note:fm+' mm · sobreposto (parafusado atrás)'+((fe.el||fe.er||fe.eb||fe.et)?' · ajustado no 3D':'')}}
@@ -1165,7 +1165,7 @@ document.addEventListener('click',function(ev){var t=ev.target;
  if(t.dataset.frdel){S.fr=S.fr.filter(function(f){return f.id!=t.dataset.frdel});draw();panel();return}
  if(t.dataset.fw!==undefined||t.dataset.fh!==undefined){if(t.dataset.fw!==undefined)S.fw=t.checked;else S.fh=t.checked;S.mods.forEach(function(q){noOverlap(q,'m');if(q.sup&&q.b+q.h>S.H-fgh())q.b=Math.max(0,S.H-fgh()-q.h)});draw();panel();return}
  if(t.dataset.rc){snap();S.m[t.dataset.rc]=t.checked;tidy(S.m);draw();panel()}
- if(t.dataset.c){snap();S.m[t.dataset.c]=t.checked;if(/^(tl|tr|tb|tt|tpass)$/.test(t.dataset.c)){confineAll();rowJoin(S.m.sup)}draw();if(S.tab===4||S.tab===5||S.tab===0)panel()}
+ if(t.dataset.c){snap();S.m[t.dataset.c]=t.checked;if(t.dataset.c==='fundo'){S.m.fundoMan=1;delete S.m.fundoPia}if(/^(tl|tr|tb|tt|tpass)$/.test(t.dataset.c)){confineAll();rowJoin(S.m.sup)}draw();if(S.tab===4||S.tab===5||S.tab===0)panel()}
  if(t.dataset.vidro!==undefined){snap();gv(S.sv).vidro=t.checked;panel();draw();return}
  if(t.dataset.bas!==undefined){snap();gv(S.sv).bas=t.checked;panel();draw();return}  if(t.dataset.basd){snap();gv(S.sv).bd=t.dataset.basd;panel();draw();try{if(window.re3)window.re3()}catch(_){}return}
  if(t.dataset.hg){snap();gv(S.sv).hg=t.dataset.hg;panel();draw();return}
@@ -4265,14 +4265,17 @@ var cutGroups_lr=cutGroups;cutGroups=function(){var G=cutGroups_lr();try{var map
     c.forEach(function(o){if(!K[2](o.m)){flush();return}var pk=lrPk(o,K[0]),p=lrPiece(o.m,pk);if(!p){flush();return}var L=+p.cl||0;if(tot+L>2700)flush();seg.push({o:o,pk:pk,p:p});tot+=L});flush()})})})}catch(e){}return G};
 
 /* armário de baixo não leva fundo: vai direto na parede (uma vez por módulo; depois dá pra ligar o fundo de novo se quiser) */
-function baseSemFundo(){S.mods.forEach(function(m){if(!m.ttOk&&!m.sup&&(+m.h||0)>=1500&&(+m.b||0)<10){m.ttOk=1;m.tt=false}if(m.fdOk||m.sup||(+m.b||0)>=10||(+m.h||0)>=1500||m.nicho)return;m.fdOk=1;m.fundo=false})}
+function underPia(m){if(!m||m.sup||(+m.b||0)>=10||(+m.h||0)>=1500||m.nicho)return false;var hasC=(S.stones||[]).some(function(q){return (q.items||[]).some(function(it){return it.k==='cuba'})});if(!hasC||S.env==='livre')return !!m.pia;if(m.wing)return false;return (S.stones||[]).some(function(q){return (q.items||[]).some(function(it){if(it.k!=='cuba')return false;var a=(+q.x||0)+(+it.x||0),b=a+(+it.w||0);return a<m.x+m.w-1&&b>m.x+1})})}
+function baseSemFundo(){S.mods.forEach(function(m){if(!m.ttOk&&!m.sup&&(+m.h||0)>=1500&&(+m.b||0)<10){m.ttOk=1;m.tt=false}
+  /* desfaz a regra antiga (todo armário de baixo sem fundo): volta o fundo */if(m.fdOk===1){m.fdOk=2;m.fundo=true}
+  /* só embaixo da pia (área úmida) não vai fundo · automático, a não ser que você mude o fundo desse módulo à mão */if(m.fundoMan)return;var up=underPia(m);if(up&&m.fundo){m.fundo=false;m.fundoPia=1}else if(!up&&m.fundoPia){m.fundo=true;delete m.fundoPia}})}
 var draw_bsf=draw;draw=function(){try{baseSemFundo()}catch(_){}return draw_bsf.apply(this,arguments)};
 
 /* ===== localizar a peça no 3D com precisão: canto com o nome de cada peça, peças corridas acham a peça grande do módulo do lado ===== */
 window.pkFix3=function(boxes){var cache={};boxes.forEach(function(b){if(b.pk||!b.nm)return;var nm=String(b.nm),mi=parseInt(nm,10);if(isNaN(mi))return;var m=S.mods[mi];if(!m||!m.corner||m.wing)return;var N=nm.slice(nm.indexOf(':')+1);
   var names=cache[mi]||(cache[mi]=partsOf(m).map(function(p){return p.name}));var has=function(n){return names.indexOf(n)>=0?n:null};
   var dep_=(+m.d||560)+25,side=/do lado|lado do canto|fim do lado/.test(N)||(m.corner==='d'?b.x0>=m.x+m.w-dep_:b.x1<=m.x+dep_);var thinX=(b.x1-b.x0)<=20,thinZ=(b.z1-b.z0)<=20,pk=null;
-  if(N==='Lateral'){if(thinZ&&!thinX)pk=has('Lateral do canto (fim do lado)');else pk=names.filter(function(n){return /^Lateral (esquerda|direita)$/.test(n)})[0]||null}
+  if(N==='Fundo'){b.pk=side?'Fundo (lado do canto)#1':'Fundo#1';return}else if(N==='Lateral'){if(thinZ&&!thinX)pk=has('Lateral do canto (fim do lado)');else pk=names.filter(function(n){return /^Lateral (esquerda|direita)$/.test(n)})[0]||null}
   else if(side&&!/do lado|lado do canto/.test(N))pk=has(N+' (lado do canto)')||has(N+' do lado')||has(N);else pk=has(N);
   if(pk)b.pk=pk+'#1'})};
 window.hlResolve=function(boxes,HL){var out=[];HL.forEach(function(h){out.push(h);if(h.rp!=null||!h.pk)return;var ok=boxes.some(function(q){return parseInt(String(q.nm),10)===h.mi&&q.pk===h.pk});if(ok)return;

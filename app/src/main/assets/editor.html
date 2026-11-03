@@ -4111,4 +4111,25 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 var draw_plw=draw;draw=function(){var r=draw_plw.apply(this,arguments);try{if(PLV){var g=document.getElementById('plg');if(g){var k=PLK||1,L=OX,T=OY+10,W=S.W*k,D=(typeof roomD==='function'?roomD():2600)*k,sw=sideWalls(),xl=L+((sw.L===null?0:sw.L)*k),xr=L+((sw.R===null?S.W:sw.R)*k),z=function(id,x,y,w,h){var on=PLWS===id;return '<rect data-plwall="'+id+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+(on?'rgba(31,111,235,.35)':'rgba(31,111,235,.001)')+'" stroke="'+(on?'#1f6feb':'none')+'" stroke-width="3" style="cursor:pointer"/>'};
   g.insertAdjacentHTML('beforeend',z('F',L,T-18,W,22)+z('e',xl-18,T,22,D)+z('d',xr-4,T,22,D))}}}catch(_){}plwBar();return r};
 </script>
+<script>
+/* ===== Tamponamento corrido: puxar o tamponamento de cima/de baixo pros módulos do lado SEM afastar eles
+   (tira os tamponamentos do meio, encosta os módulos); a peça é única até 2700 mm e, passando disso,
+   a emenda cai na junta entre dois módulos (alinhada com a lateral) ===== */
+var TCMAX=2700;
+function tcChain(m){var row=S.mods.filter(function(o){return !!o.sup===!!m.sup&&(o.wing||0)===(m.wing||0)&&!o.corner&&Math.abs((o.b+(o.sup?0:o.h))-(m.b+(m.sup?0:m.h)))<5}).sort(function(a,b){return a.x-b.x}),i=row.indexOf(m);if(i<0)return [m];
+ var near=function(a,b){var g=(b.x-(typeof lt==='function'?lt(b):0))-(a.x+a.w+(typeof rt==='function'?rt(a):0));return g<=8&&g>=-8},ch=[m],j=i;while(j>0&&near(row[j-1],row[j])){ch.unshift(row[j-1]);j--}j=i;while(j<row.length-1&&near(row[j],row[j+1])){ch.push(row[j+1]);j++}return ch}
+function tcApply(m){var ch=tcChain(m);if(ch.length<2){toast('Encoste outro módulo do lado pra puxar o tamponamento');return}snap();var tt=ch.some(function(o){return o.tt}),tb=ch.some(function(o){return o.tb});
+ for(var i=0;i<ch.length;i++){var o=ch[i];if(i>0)o.tl=false;if(i<ch.length-1)o.tr=false;if(tt)o.tt=true;if(tb)o.tb=true;o.tc=1}
+ for(var k=1;k<ch.length;k++){var p=ch[k-1],q=ch[k],nx=p.x+p.w;if(Math.abs(q.x-nx)>0.1){var dx=nx-q.x;q.x=nx;S.mods.forEach(function(r){if(ch.indexOf(r)<0&&!!r.sup===!!q.sup&&(r.wing||0)===(q.wing||0)&&r.x>q.x)r.x+=dx})}}
+ try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}var L=ch[ch.length-1].x+ch[ch.length-1].w-ch[0].x;toast('Tamponamento corrido em '+ch.length+' módulos ('+Math.round(L)+' mm)'+(L>TCMAX?' · emenda na junta dos módulos':' · peça única'))}
+window.tcApply=tcApply;
+/* peça única do tamponamento de CIMA também (o de baixo já junta) · emenda na junta */
+function ttRuns(){var L=S.mods.filter(function(m){return m.tt&&!m.corner&&!m.nicho}).sort(function(a,b){return (a.sup?1:0)-(b.sup?1:0)||(a.wing||'').localeCompare(b.wing||'')||a.x-b.x}),runs=[],cur=null;
+ L.forEach(function(m){if(cur){var p=cur[cur.length-1],gap=m.x-(p.x+p.w);if(!!p.sup===!!m.sup&&(p.wing||0)===(m.wing||0)&&gap>=-1&&gap<=3&&Math.abs(m.b+m.h-(p.b+p.h))<=2&&(m.x+m.w-cur[0].x)<=TCMAX){cur.push(m);return}}cur=[m];runs.push(cur)});return runs}
+var cutLines_tt=cutLines;cutLines=function(m){var L=cutLines_tt.apply(this,arguments);if(!m||!m.tt)return L;var run=null;ttRuns().forEach(function(r){if(r.indexOf(m)>=0)run=r});if(!run||run.length<2)return L;
+ var first=run[0]===m,out=[];L.forEach(function(l){if(!(l.names||[]).some(function(n){return /^Tamponamento de cima/.test(n)})){out.push(l);return}if(!first)return;var tot=Math.round((run[run.length-1].x+run[run.length-1].w-run[0].x)*10)/10,n=Object.assign({},l);n.L=tot;n.names=['Tamponamento de cima (peça única)'];n.name='Tamponamento de cima (peça única)';n.note='uma peça só por cima de '+run.length+' módulos · '+(l.note||'');n.notes=[n.note];out.push(n)});return out};
+/* botão no painel do módulo (2D) e no quadro do módulo no 3D */
+var panel_tc=panel;panel=function(){var r=panel_tc.apply(this,arguments);try{if(window.RO||!S.m||S.tab!==0)return r;var secs=[].slice.call(document.querySelectorAll('.sec')).filter(function(e){return /^Tamponamentos deste módulo/.test(e.textContent.trim())});var s0=secs[0];if(s0&&!document.querySelector('[data-tcap]')){var ch=tcChain(S.m);s0.insertAdjacentHTML('afterend','<div style="margin:6px 0"><button data-tcap="1" style="width:100%;min-height:40px;font-weight:700"'+(ch.length<2?' disabled':'')+'>↔ Puxar o tamponamento pros módulos do lado (sem afastar)</button><div class="note">'+(ch.length<2?'Encoste outro módulo do lado pra usar.':'Junta '+ch.length+' módulos: tira os tamponamentos do meio, encosta os módulos e faz o de cima/de baixo numa peça só até 2700 mm; passando, a emenda cai na junta dos módulos.')+'</div></div>')}}catch(_){}return r};
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-tcap]');if(!t||window.RO||!S.m)return;tcApply(S.m)});
+</script>
 </body></html>

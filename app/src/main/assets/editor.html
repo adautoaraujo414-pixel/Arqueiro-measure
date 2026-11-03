@@ -862,7 +862,7 @@ function roomD(){var need=0;S.mods.forEach(function(m){if(m.wing)need=Math.max(n
 S.isl=S.isl||[];S.wl=S.wl||null;var ISLID=1;
 function islFix(a){var c=function(k,lo,hi,df){var v=+a[k];if(!isFinite(v))v=df;a[k]=Math.round(Math.max(lo,Math.min(hi,v)))};
  c('w',400,6000,1800);c('d',300,1500,600);c('h',a._rise?20:300,1200,820);c('x',-1000,30000,0);c('z',0,30000,1000);
- a.rot=+a.rot===90?90:0;a.fs=+a.fs===-1?-1:1;if(['portas','gavetas','misto','nichos'].indexOf(a.fr)<0)a.fr='portas';a.nv=Math.max(0,Math.min(12,Math.round(+a.nv||0)));if(['ilha','pen','banc'].indexOf(a.k)<0)a.k='ilha';
+ a.rot=+a.rot===90?90:0;a.fs=+a.fs===-1?-1:1;if(['portas','gavetas','misto','nichos','sem'].indexOf(a.fr)<0)a.fr='portas';a.nv=Math.max(0,Math.min(12,Math.round(+a.nv||0)));if(['ilha','pen','banc'].indexOf(a.k)<0)a.k='ilha';
  var s=a.st=(a.st&&typeof a.st==='object')?a.st:{};s.on=s.on===undefined?1:(s.on?1:0);if(!s.c||!/^#[0-9a-f]{6}$/i.test(s.c))s.c='#ecebe7';s.e=[20,30,40,50].indexOf(+s.e)>=0?+s.e:30;
  s.ov=Math.max(0,Math.min(700,Math.round(isFinite(+s.ov)?+s.ov:300)));s.op=Math.max(0,Math.min(150,Math.round(isFinite(+s.op)?+s.op:20)));s.cas=s.cas?1:0;a.bq=a.bq===undefined?1:(a.bq?1:0);if(a.cor&&!/^#[0-9a-f]{6}$/i.test(a.cor))delete a.cor;return a}
 /* posição: x/z = canto do móvel mais perto da parede esquerda e da parede do fundo. Local: x no comprimento, z na profundidade (z=0 costas, z=d frente das portas) */
@@ -3597,6 +3597,57 @@ var itRender_o=itRender;itRender=function(){itRender_o();var E=it4Box(),x=ISX;if
  var hd=E.firstElementChild;if(hd)hd.insertAdjacentHTML('afterend',h)};
 function modUnder(f){var cx=f.x+f.w/2,best=null;S.mods.forEach(function(m){if(m.wing||cx<m.x||cx>m.x+m.w)return;var top=m.b+m.h;if(!best||top<best.b+best.h)best=m});return best}
 it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||t.dataset.qon===undefined||!ISX||ISX.k!=='fr'||window.RO)return;e.stopImmediatePropagation();var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f)return;snap();f.b=+t.dataset.qon;if(f.b>0&&!(+f.y>0))f.y=Math.max(0,Math.round((600-f.d)/2));try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itRender()},true);
+/* ===== Ilha: sem armário (só a pedra com 2 pés), cuba e cooktop na ilha · Placa e tamponamento soltos (arrasta e estica igual à caixa),
+   com ripado colado · medidas até as paredes enquanto escolhe/arrasta ===== */
+/* ilha sem armário: em vez do móvel, 2 pés (placas de 30 mm) segurando a pedra */
+var islVM_p=islVM;
+var isl3_p=isl3;isl3=function(DRM){var keep=[];(S.isl||[]).forEach(function(a){if(a.fr==='sem'&&!a._rise){keep.push(a)}});
+ if(!keep.length){var r=isl3_p(DRM);islExtras();return r}
+ var DR2=function(vm){var a=(S.isl||[]).filter(function(q){return q.id===vm.isl})[0];if(a&&a.fr==='sem'){var cf=a.cor||'#e6d9be',L=islStoneL(a),ph=a.h;B(boxes,0,30,0,ph,0,a.d+15,cf);B(boxes,a.w-30,a.w,0,ph,0,a.d+15,cf);a._legEnd=boxes.length;return}DRM(vm)};
+ var r2=isl3_p(DR2);keep.forEach(function(a){if(a._legEnd!==undefined&&boxes[a._legEnd])boxes[a._legEnd]._kill=1;delete a._legEnd});boxes=boxes.filter(function(b){return !b._kill});islExtras();return r2};
+/* cuba e cooktop em cima da ilha: desenhados no lugar da ilha (girando junto com ela) */
+function islExtras(){(S.isl||[]).forEach(function(a){if(a._rise||(!a.cuba&&!a.cook)||!a.st||!a.st.on)return;var M=islM(a),n0=boxes.length,y=a.h+a.st.e,zc=(15+a.d+15)/2;
+ if(a.cuba){var cw=a.cuba.w||500,cd=a.cuba.d||400,cx=a.cuba.x!==undefined?a.cuba.x:a.w*(a.cook?.3:.5);B(boxes,cx-cw/2-12,cx+cw/2+12,y,y+1.5,zc-cd/2-12,zc+cd/2+12,'#c6ccd2');B(boxes,cx-cw/2,cx+cw/2,y-200,y+1.6,zc-cd/2,zc+cd/2,'#8a929c');B(boxes,cx-cw/2+8,cx+cw/2-8,y-196,y+1.7,zc-cd/2+8,zc+cd/2-8,'#b3bac2');
+  var tz=zc-cd/2-60;BH(boxes,circ(cx,tz,22,12),y,y+300,'#c6ccd2');B(boxes,cx-12,cx+12,y+290,y+312,tz,tz+170,'#c6ccd2');B(boxes,cx-10,cx+10,y+250,y+300,tz+160,tz+172,'#c6ccd2')}
+ if(a.cook){var kw=580,kd=510,kx=a.cook.x!==undefined?a.cook.x:a.w*(a.cuba?.72:.5);B(boxes,kx-kw/2,kx+kw/2,y,y+6,zc-kd/2,zc+kd/2,'#15171a');[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){BH(boxes,circ(kx+q[0]*kw*.25,zc+q[1]*kd*.25,70,16),y+6,y+8,'#3a3f46');BH(boxes,circ(kx+q[0]*kw*.25,zc+q[1]*kd*.25,35,12),y+8,y+18,'#2b2e33')})}
+ for(var i=n0;i<boxes.length;i++){islXf(boxes[i],M);boxes[i].isl=a.id}})}
+/* lista de corte e valor: ilha sem armário = 2 pés de 30 mm (2 camadas de 15) */
+var islLines_p=islLines;islLines=function(a){if(a.fr!=='sem')return islLines_p(a);return [{names:['Pé da bancada (placa lateral 30 mm = 2 × 15)'],qty:4,L:a.h,W:a.d+15,mat:15,fin:'c',note:'2 pés · cada pé com 2 camadas de 15 mm coladas · fita nas bordas aparentes',pks:[null]}]};
+var islCost_p=islCost;islCost=function(a,vm){if(a.fr!=='sem')return islCost_p(a,vm);var r=mCost(islVM_p(a));Object.keys(r).forEach(function(k){r[k]=0});r.aC=4*a.h*(a.d+15)/1e6;r.tC=2*(2*a.h+(a.d+15))/1000;return r};
+/* quadro da ilha: "Sem armário" e cuba/cooktop */
+var islPanel_p=islPanel;islPanel=function(){islPanel_p();var E=it3Box(),a=ISEL?islBy(ISEL):null;if(!a||E.hidden)return;var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'};
+ var nb=E.querySelector('[data-ifr="nichos"]');if(nb&&!E.querySelector('[data-ifr="sem"]'))nb.insertAdjacentHTML('afterend',Bt('data-ifr="sem"','Sem armário (só a pedra com 2 pés)',a.fr==='sem'));
+ var cas=E.querySelector('[data-icas]');if(cas&&!E.querySelector('[data-icuba]'))cas.insertAdjacentHTML('beforebegin',Bt('data-icuba="1"',(a.cuba?'✓ ':'＋ ')+'Cuba na ilha',!!a.cuba)+Bt('data-icook="1"',(a.cook?'✓ ':'＋ ')+'Cooktop na ilha',!!a.cook))};
+it3Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||window.RO)return;var d=t.dataset,a=ISEL?islBy(ISEL):null;if(!a)return;if(d.icuba||d.icook){e.stopImmediatePropagation();snap();if(d.icuba)a.cuba=a.cuba?null:{w:500,d:400};else a.cook=a.cook?null:{};if(!a.st.on)a.st.on=1;try{draw();panel()}catch(_){}build();render();islPanel();ambMsg(d.icuba?(a.cuba?'🚰 Cuba na ilha':'Cuba tirada'):(a.cook?'🔥 Cooktop na ilha':'Cooktop tirado'))}},true);
+/* ---------- placa e tamponamento soltos (são caixas com tipo) ---------- */
+function projCor(){var c=null;boxes.forEach(function(b){if(!c&&/:(Porta|Tamponamento)/.test(String(b.nm||''))&&Array.isArray(b.c))c='#'+b.c.map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join('')});return c||'#e6d9be'}
+function geoAdd(tp){var D=(typeof roomD==='function'?roomD():2600),g={id:nid(S.geo),tp:tp,b:0,x:Math.round(S.W/2-300),z:Math.round(Math.min(D-800,D*.45)),c:projCor()};
+ if(tp==='placa'){g.w=600;g.h=1200;g.d=15}else if(tp==='tamp'){g.w=30;g.h=820;g.d=600}else{g.w=600;g.h=600;g.d=600;g.c='#d9d4ca'}
+ snap();S.geo=S.geo||[];S.geo.push(g);try{draw();panel()}catch(_){}build();render();itOpen({k:'geo',id:g.id});ambMsg(tp==='placa'?'Placa criada · arraste pra mover, setinhas pra esticar':tp==='tamp'?'Tamponamento criado · arraste pra mover':'Caixa criada')}
+var geo3_p=geo3;geo3=function(){geo3_p();(S.geo||[]).forEach(function(g){if(!g.rip||(g.tp!=='placa'&&g.tp!=='tamp'))return;var rw=+g.rip.w||30,rg=+g.rip.g||15,rd=+g.rip.d||18,c=g.rip.c||g.c||'#b88a5a',thinZ=g.d<=g.w;
+ if(thinZ){var z1=g.rf==='t'?g.z:g.z+g.d,dz=g.rf==='t'?-rd:rd,n=Math.floor((g.w+rg)/(rw+rg)),off=(g.w-(n*rw+(n-1)*rg))/2;for(var i=0;i<n;i++){var xa=g.x+off+i*(rw+rg);B(boxes,xa,xa+rw,g.b,g.b+g.h,Math.min(z1,z1+dz),Math.max(z1,z1+dz),c);boxes[boxes.length-1].geo=g.id}}
+ else{var x1=g.rf==='t'?g.x:g.x+g.w,dx=g.rf==='t'?-rd:rd,n2=Math.floor((g.d+rg)/(rw+rg)),off2=(g.d-(n2*rw+(n2-1)*rg))/2;for(var j=0;j<n2;j++){var za=g.z+off2+j*(rw+rg);B(boxes,Math.min(x1,x1+dx),Math.max(x1,x1+dx),g.b,g.b+g.h,za,za+rw,c);boxes[boxes.length-1].geo=g.id}}})};
+var itRender_p=itRender;itRender=function(){itRender_p();var E=it4Box(),x=ISX;if(!x||x.k!=='geo'||E.hidden)return;var g=geoBy(x.id);if(!g)return;if(E.querySelector('[data-qgt]'))return;var tp=g.tp||'caixa';
+ var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},row=function(h){return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+h+'</div>'};
+ var tt=E.querySelector('b');if(tt&&tt.firstChild)tt.firstChild.nodeValue={caixa:'Caixa ',placa:'Placa MDF ',tamp:'Tamponamento '}[tp];
+ var h=row([['caixa','Caixa'],['placa','Placa MDF'],['tamp','Tamponamento']].map(function(q){return Bt('data-qgt="'+q[0]+'"',q[1],tp===q[0])}).join('')+Bt('data-qgrot="1"','⟲ Girar 90°'));
+ if(tp!=='caixa'){var R=g.rip;h+=row(Bt('data-qgrip="1"',R?'✓ Ripado colado nela':'＋ Ripado colado nela',!!R)+(R?Bt('data-qgrf="1"',g.rf==='t'?'Ripado: lado de trás':'Ripado: lado da frente'):''));
+  if(R)h+='<div style="font-size:12px;color:#444;margin:2px 0 4px"><div>Largura da ripa</div>'+row([20,30,40,50].map(function(v){return Bt('data-qgrw="'+v+'"',v+' mm',+R.w===v)}).join(''))+'<div style="margin-top:4px">Espaço entre ripas</div>'+row([10,15,20,30].map(function(v){return Bt('data-qgrg="'+v+'"',v+' mm',+R.g===v)}).join(''))+'</div>'}
+ var hd=E.firstElementChild;if(hd)hd.insertAdjacentHTML('afterend',h)};
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX||ISX.k!=='geo'||window.RO)return;var d=t.dataset,g=geoBy(ISX.id);if(!g)return;var hit=d.qgt||d.qgrot||d.qgrip||d.qgrf||d.qgrw||d.qgrg;if(!hit)return;e.stopImmediatePropagation();snap();
+ if(d.qgt){g.tp=d.qgt;if(d.qgt==='placa'){g.d=15;if(g.h<300)g.h=1200}else if(d.qgt==='tamp'){g.w=30}if(d.qgt!=='caixa'&&(!g.c||g.c==='#d9d4ca'))g.c=projCor()}
+ if(d.qgrot){var w=g.w;g.w=g.d;g.d=w}
+ if(d.qgrip)g.rip=g.rip?null:{w:30,g:15,d:18};if(d.qgrf)g.rf=g.rf==='t'?'':'t';if(d.qgrw&&g.rip)g.rip.w=+d.qgrw;if(d.qgrg&&g.rip)g.rip.g=+d.qgrg;
+ try{draw();panel()}catch(_){}build();render();itRender()},true);
+var crpRender_p=crpRender;crpRender=function(){crpRender_p();var C=crpBox(),cx=C.querySelector('[data-cgeo]');if(cx&&!C.querySelector('[data-cplaca]'))cx.insertAdjacentHTML('afterend','<button data-cplaca="1" style="padding:4px 10px;min-height:34px;font-size:13px">＋ Placa MDF</button><button data-ctamp="1" style="padding:4px 10px;min-height:34px;font-size:13px">＋ Tamponamento</button><button data-cpedra="1" style="padding:4px 10px;min-height:34px;font-size:13px">＋ Só a pedra (com 2 pés)</button>')};
+crpBox().addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;var d=t.dataset;if(!(d.cplaca||d.ctamp||d.cpedra))return;e.stopImmediatePropagation();if(window.RO)return;CRP.hidden=true;
+ if(d.cpedra){snap();var a=islNew('banc');a.fr='sem';a.d=600;a.w=1600;S.isl.push(a);ITAB='st';var to=a.h;a.h=40;islRise(a,to);return}geoAdd(d.cplaca?'placa':'tamp')},true);
+/* medidas até as paredes (linha azul com o número) da caixa, placa, tamponamento, eletro/mobília ou ilha escolhida */
+var DIMV=null;function dimBox(){if(DIMV)return DIMV;DIMV=document.createElementNS('http://www.w3.org/2000/svg','svg');DIMV.setAttribute('style','position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:3');M.appendChild(DIMV);return DIMV}
+function selFoot(){var x=ISX;if(x&&x.k==='geo'){var g=geoBy(x.id);return g?{x0:g.x,x1:g.x+g.w,z0:g.z,z1:g.z+g.d}:null}if(x&&x.k==='fr'){var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||f.t==='torneira')return null;var z=+f.y||0;return {x0:f.x,x1:f.x+f.w,z0:z,z1:z+(f.d||500)}}if(ISEL){var a=islBy(ISEL);if(a){var F=islFoot(a);return F}}return null}
+var render_dim=render;render=function(){var r=render_dim.apply(this,arguments);try{var sv=dimBox(),F=selFoot();if(!F||window.FPV||M.hidden){sv.innerHTML='';return r}var cv=document.getElementById('cv3'),oy=cv.offsetTop,ox=cv.offsetLeft,P=function(p){var q=proj3(p);return q?[q[0]+ox,q[1]+oy]:null},h='',zm=(F.z0+F.z1)/2,xm=(F.x0+F.x1)/2;
+ var seg=function(a,b,v){var A=P(a),Bq=P(b);if(!A||!Bq||v<1)return;var mx=(A[0]+Bq[0])/2,my=(A[1]+Bq[1])/2;h+='<line x1="'+A[0]+'" y1="'+A[1]+'" x2="'+Bq[0]+'" y2="'+Bq[1]+'" stroke="#1f4fe0" stroke-width="1.6"/><text x="'+mx+'" y="'+(my-5)+'" font-size="12" font-weight="700" fill="#c62828" text-anchor="middle" style="paint-order:stroke;stroke:#fff;stroke-width:3px">'+String(Math.round(v*10)/10).replace('.',',')+'</text>'};
+ seg([0,2,zm],[F.x0,2,zm],F.x0);seg([F.x1,2,zm],[S.W,2,zm],S.W-F.x1);seg([xm,2,0],[xm,2,F.z0],F.z0);sv.innerHTML=h}catch(_){}return r};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

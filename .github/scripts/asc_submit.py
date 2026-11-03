@@ -33,9 +33,31 @@ def call(method, path, ok=False, **kw):
     return r.json() if r.text else {}
 
 
-versions = call("GET", f"/apps/{APP_ID}/appStoreVersions", params={"filter[platform]": "IOS", "limit": 20})["data"]
-ver = next((v for v in versions if v["attributes"]["appStoreState"] in
-            ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")), None)
+PREP = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")
+TIRAR = os.environ.get("TIRAR") == "1"
+
+
+def versao_em_preparo():
+    vs = call("GET", f"/apps/{APP_ID}/appStoreVersions", params={"filter[platform]": "IOS", "limit": 20})["data"]
+    return vs, next((v for v in vs if v["attributes"]["appStoreState"] in PREP), None)
+
+
+versions, ver = versao_em_preparo()
+# 0) com TIRAR=1: se a versão está "Aguardando revisão", tira da fila (cancela o envio) pra poder trocar o build e as capturas
+if not ver and TIRAR:
+    esperando = next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
+    if esperando:
+        subs = call("GET", "/reviewSubmissions", params={"filter[app]": APP_ID, "filter[platform]": "IOS", "limit": 10})["data"]
+        for sb in subs:
+            if sb["attributes"]["state"] in ("WAITING_FOR_REVIEW", "IN_REVIEW", "UNRESOLVED_ISSUES"):
+                call("PATCH", f"/reviewSubmissions/{sb['id']}", json={"data": {"type": "reviewSubmissions", "id": sb["id"], "attributes": {"canceled": True}}})
+                print("envio", sb["id"], "tirado da revisão (estava", sb["attributes"]["state"] + ")")
+        for i in range(20):
+            time.sleep(15)
+            versions, ver = versao_em_preparo()
+            if ver:
+                break
+            print("esperando a versão voltar pra preparo…")
 if not ver:
     for v in versions:
         print("versão", v["attributes"]["versionString"], v["attributes"]["appStoreState"])

@@ -7,6 +7,10 @@ on:
         description: "Enviar pra revisão da Apple agora"
         type: boolean
         default: false
+      tirar:
+        description: "Se a versão estiver 'Aguardando revisão', tirar da fila antes (pra trocar build/capturas)"
+        type: boolean
+        default: false
 
 jobs:
   enviar:
@@ -21,4 +25,5 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           ENVIAR: ${{ inputs.enviar && '1' || '0' }}
+          TIRAR: ${{ inputs.tirar && '1' || '0' }}
         run: python .github/scripts/asc_submit.py 6829800820

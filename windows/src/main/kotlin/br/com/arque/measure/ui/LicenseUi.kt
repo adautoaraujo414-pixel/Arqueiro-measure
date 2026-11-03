@@ -244,13 +244,19 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
     // Google Play: o teste é o da assinatura (a loja cuida); sem pagamento único nem senha
     if (br.com.arque.measure.BuildConfig.PLAY) return
     var open by remember { mutableStateOf(false) }
-    val ctx = LocalContext.current
     Row(
         modifier.clip(RoundedCornerShape(50)).background(Color(0xCC14171C)).clickable { open = true }.padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) { Text(tr("Teste · falta {0}", vm.trialLeft), color = Gold, fontSize = 12.sp) }
-    if (open) AlertDialog(
-        onDismissRequest = { open = false },
+    if (open) TrialDialog(vm) { open = false }
+}
+
+/** Versão de teste: quanto falta, WhatsApp e a senha de desbloqueio (selo de teste e a barra da tela inicial). */
+@Composable
+fun TrialDialog(vm: AppViewModel, onDismiss: () -> Unit) {
+    val ctx = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
         title = { Text(tr("Versão de teste")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -258,11 +264,11 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
                 run {
                     Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text(tr("Falar no WhatsApp")) }
                     Spacer(Modifier.height(2.dp))
-                    UnlockBox(vm) { open = false }
+                    UnlockBox(vm) { onDismiss() }
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { open = false }) { Text(tr("Fechar")) } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(tr("Fechar")) } },
     )
 }
 

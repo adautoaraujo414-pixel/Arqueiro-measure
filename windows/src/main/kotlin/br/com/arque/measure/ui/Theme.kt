@@ -15,6 +15,10 @@ object Ui {
     val accent = Color(0xFF3B82F6)
     val paperBg = Color(0xFF1E2025)
     val distBlue = Color(0xFF1E5BD8)
+    /** Dourado da marca (ARQUEMESTRE, tela inicial, selos). */
+    val gold = Color(0xFFF5B400)
+    /** Fundo escuro puxado pro dourado (avatar do cliente, ícones dos atalhos). */
+    val goldDim = Color(0xFF2B2416)
 }
 
 private val ArqueColors = darkColorScheme(
@@ -22,7 +26,7 @@ private val ArqueColors = darkColorScheme(
     onPrimary = Color.White,
     primaryContainer = Color(0xFF1E3A66),
     onPrimaryContainer = Color(0xFFD6E6FF),
-    secondary = Color(0xFFF5B400),
+    secondary = Ui.gold,
     background = Ui.bg,
     onBackground = Ui.text,
     surface = Ui.panel,

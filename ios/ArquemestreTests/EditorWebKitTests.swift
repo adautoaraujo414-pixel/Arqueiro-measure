@@ -397,4 +397,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["sg"] as? Int, 1, "caixa salva no projeto")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    /// Testes do iPhone (02/11): quadro do módulo, LED só em cima, teto, fogão que abre, puxador arrastável, mobília, modo pessoa e projeto do cliente.
+    @MainActor
+    func testOrganizacao3DClienteEModoPessoa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();ensureProj();
+          window.open3D();await new Promise(function(r){setTimeout(r,400)});
+          window.fx3api.open({k:'mod',mi:0});var E=document.getElementById('it4'),ledBase=!!E.querySelector('[data-qmled]');
+          E.querySelector('[data-qms="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;
+          window.fx3api.open({k:'mod',mi:2});var ledSup=!!document.querySelector('#it4 [data-qmled]');
+          document.getElementById('v3wal').click();document.querySelector('#it4 [data-qwtab="T"]').click();document.querySelector('#it4 [data-qtt="1"]').click();var teto=window.org3api.teto();
+          var fi=apModels('forno').findIndex(function(q){return /6 bocas \(tipo/.test(q[0])}),fg=apAdd('forno',fi);window.ele3api.toggle(fg.id,true);
+          await new Promise(function(r){setTimeout(r,700)});var ang=window.ele3api.ang(fg.id);
+          window.pux3api.open(0);document.querySelector('#it4 [data-pxt="bola"]').click();window.pux3api.set(60,120);var px=S.mods[0].v[0].px;
+          var bq=apAdd('banqueta',1);
+          window.fp3api.start();window.fp3api.walk(1,0);var fp=!!window.fp3api.st();window.fp3api.stop();
+          var code=await cutEncode(window.clientPayload());window.arqueCutOpen(code);await new Promise(function(r){setTimeout(r,900)});
+          return JSON.stringify({ledBase:ledBase,ledSup:ledSup,w:w,nx:nx,teto:teto,ang:ang,px:px,bq:bq.t,fp:fp,clv:!!window.CLV,ro:!!window.RO,errs:__errs});
+          """#)
+        XCTAssertEqual(o["ledBase"] as? Bool, false, "LED não vai no módulo de baixo")
+        XCTAssertEqual(o["ledSup"] as? Bool, true, "LED no aéreo")
+        XCTAssertEqual(o["w"] as? Double, 910, "＋10 na largura")
+        XCTAssertEqual(o["nx"] as? Double, 915, "o módulo do lado foi empurrado")
+        XCTAssertGreaterThan(o["teto"] as? Int ?? 0, 0, "teto no 3D")
+        XCTAssertGreaterThan(o["ang"] as? Double ?? 0, 0, "porta do forno do fogão abrindo")
+        XCTAssertEqual(o["px"] as? String, "bola", "puxador bola")
+        XCTAssertEqual(o["bq"] as? String, "banqueta", "banqueta")
+        XCTAssertEqual(o["fp"] as? Bool, true, "modo pessoa")
+        XCTAssertEqual(o["clv"] as? Bool, true, "projeto do cliente abre só pra ver")
+        XCTAssertEqual(o["ro"] as? Bool, true, "cliente não edita")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

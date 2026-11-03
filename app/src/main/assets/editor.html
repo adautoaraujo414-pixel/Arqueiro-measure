@@ -3814,6 +3814,19 @@ var sel3_tn=sel3;sel3=function(cx,cy){try{if(cx>-9000&&!window.RO){var b=pickFac
 var rp3_wall=rp3;rp3=function(a){var n0=boxes.length;rp3_wall(a);if(!a||!a.wall)return;var sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R;
  for(var i=n0;i<boxes.length;i++){var b=boxes[i],x0=b.x0,x1=b.x1,z0=b.z0,z1=b.z1;if(a.wall==='e'){b.x0=xl+z0;b.x1=xl+z1;b.z0=x0;b.z1=x1}else{b.x0=xr-z1;b.x1=xr-z0;b.z0=x0;b.z1=x1}
   if(b.pf)delete b.pf;if(b.poly)delete b.poly}};
+
+/* ===== Tamponamento de 30 no 3D = face de 15 pra fora + 2 tiras de 80 coladas por dentro (ou 2 camadas inteiras até 160): cada peça com o próprio nome, pra localizar certinho ===== */
+var build_eng3=build;build=function(){build_eng3();try{var outB=[],rm={};boxes.forEach(function(b,bi){var nm=String(b.nm||''),mm=/^(\d+):(Tamponamento (esquerdo|direito|de cima|de baixo|do lado do canto))$/.exec(nm);if(!mm||b.pf||b.poly||!b.pk)return;var m=S.mods[+mm[1]];if(!m)return;var dx=b.x1-b.x0,dy=b.y1-b.y0,dz=b.z1-b.z0,th=Math.min(dx,dy,dz);if(th<25||th>45)return;var n=Math.round(th/15);if(n<2)return;
+  var side=dx===th?'x':dy===th?'y':'z',W=side==='z'?dx:dz,base=String(b.pk).replace(/#\d+$/,''),mk=function(x0,x1,y0,y1,z0,z1,pk){var c=Object.assign({},b);c.x0=x0;c.x1=x1;c.y0=y0;c.y1=y1;c.z0=z0;c.z1=z1;c.pk=pk;outB.push(c)};
+  var outer=/esquerdo/.test(nm)?'lo':/direito/.test(nm)?'hi':/de cima/.test(nm)?'hi':/lado do canto/.test(nm)?'hi':'lo';var L15=15;
+  if(W<=160){for(var k=0;k<n;k++){var pk='Tamponamento '+mm[3]+' (régua)#'+(k+1);if(side==='x'){var xa=outer==='lo'?b.x0+k*L15:b.x1-(k+1)*L15;mk(xa,xa+L15,b.y0,b.y1,b.z0,b.z1,pk)}else if(side==='y'){var ya=outer==='lo'?b.y0+k*L15:b.y1-(k+1)*L15;mk(b.x0,b.x1,ya,ya+L15,b.z0,b.z1,pk)}else{var za=outer==='lo'?b.z0+k*L15:b.z1-(k+1)*L15;mk(b.x0,b.x1,b.y0,b.y1,za,za+L15,pk)}}}
+  else{if(side==='x'){var fx0=outer==='lo'?b.x0:b.x1-L15,ix0=outer==='lo'?b.x0+L15:b.x0;mk(fx0,fx0+L15,b.y0,b.y1,b.z0,b.z1,b.pk);for(var k2=1;k2<n;k2++){var sx=outer==='lo'?b.x0+k2*L15:b.x1-(k2+1)*L15;mk(sx,sx+L15,b.y0,b.y1,b.z1-80,b.z1,base+' · engrosso 80#'+(2*k2-1));mk(sx,sx+L15,b.y0,b.y1,b.z0,b.z0+80,base+' · engrosso 80#'+(2*k2))}}
+   else if(side==='y'){var fy0=outer==='lo'?b.y0:b.y1-L15;mk(b.x0,b.x1,fy0,fy0+L15,b.z0,b.z1,b.pk);for(var k3=1;k3<n;k3++){var sy=outer==='lo'?b.y0+k3*L15:b.y1-(k3+1)*L15;mk(b.x0,b.x1,sy,sy+L15,b.z1-80,b.z1,base+' · engrosso 80#'+(2*k3-1));mk(b.x0,b.x1,sy,sy+L15,b.z0,b.z0+80,base+' · engrosso 80#'+(2*k3))}}
+   else{var fz0=outer==='lo'?b.z0:b.z1-L15;mk(b.x0,b.x1,b.y0,b.y1,fz0,fz0+L15,b.pk);for(var k4=1;k4<n;k4++){var sz=outer==='lo'?b.z0+k4*L15:b.z1-(k4+1)*L15;mk(b.x1-80,b.x1,b.y0,b.y1,sz,sz+L15,base+' · engrosso 80#'+(2*k4-1));mk(b.x0,b.x0+80,b.y0,b.y1,sz,sz+L15,base+' · engrosso 80#'+(2*k4))}}}
+  rm[bi]=1});if(outB.length){boxes=boxes.filter(function(b,i){return !rm[i]});
+  if(window.HL3&&HL3.length){var HLR=HL3;try{if(window.hlResolve)HLR=hlResolve(boxes.concat(outB),HL3)}catch(_){}var PK=hex('#e3197b'),isP=function(c){return c&&Math.abs(c[0]-PK[0])<2&&Math.abs(c[1]-PK[1])<2&&Math.abs(c[2]-PK[2])<2};
+   outB.forEach(function(c){var nm=String(c.nm),mi=parseInt(nm,10),hit=HLR.some(function(h){return h.rp==null&&mi===h.mi&&(!h.pk||(c.pk===h.pk&&(h.any||!window.pkOk||pkOk(nm,h.pk))))});if(hit){c.c=PK;c.a=1}else{c.a=Math.min(c.a==null?1:c.a,.2);if(isP(c.c)){var d=boxes.filter(function(q){return parseInt(String(q.nm),10)===mi&&/:Porta|:Frente/.test(q.nm)&&!q.pf&&!isP(q.c)})[0];c.c=d?d.c.slice():[230,217,190]}}})}
+  outB.forEach(function(b){boxes.push(b)})}}catch(_){}};
 window.__build=function(){build()};window.__matTx=function(b){return matTx(b)};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
@@ -4165,10 +4178,10 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 var ENG_W=80;
 var cutLines_eng=cutLines;cutLines=function(m){var L=cutLines_eng.apply(this,arguments),out=[];
  L.forEach(function(l){var mat=+l.mat||15;if(!(mat>18&&mat%15===0)){out.push(l);return}var n=mat/15,W=+l.W||0,base=(l.names&&l.names[0])||l.name||'Peça',q=+l.qty||1;
-  var mk=function(nm,qq,w,note){var c=Object.assign({},l);c.mat=15;c.qty=qq;c.W=w;c.names=[nm];var pk0=(l.pks||[]).filter(Boolean);c.pks=[];for(var z_=0;z_<qq;z_++)c.pks.push(pk0.length?pk0[Math.floor(z_*pk0.length/qq)]:null);c.name=nm+(l.fin==='c'?' · NA COR':' · BRANCO');c.note=note;c.notes=[note];return c};
-  if(W<=2*ENG_W){out.push(mk(base+' (régua '+mat+' mm)',q*n,W,n+' peças de 15 mm coladas uma na outra = uma só de '+mat+' mm · '+(l.note||'')))}
-  else{out.push(mk(base+' · face',q,W,'peça inteira na cor, parte lisa pra fora · depois cola os engrossos por dentro = '+mat+' mm · '+(l.note||'')));
-   out.push(mk(base+' · engrosso '+ENG_W,q*2*(n-1),ENG_W,'tiras de '+ENG_W+' mm coladas por dentro na frente e atrás da face (escondidas dentro do armário) = '+mat+' mm na borda'))}});
+  var mk=function(nm,qq,w,note,kind){var c=Object.assign({},l);c.mat=15;c.qty=qq;c.W=w;c.names=[nm];var pk0=(l.pks||[]).filter(Boolean);c.pks=[];var per=pk0.length?Math.max(1,Math.round(qq/pk0.length)):1;for(var z_=0;z_<qq;z_++){var b0=pk0.length?pk0[Math.floor(z_/per)]:null,ix=(z_%per)+1;c.pks.push(!b0?null:kind==='face'?b0:String(b0).replace(/#\d+$/,'')+(kind==='eng'?' · engrosso 80':' (régua)')+'#'+ix)}c.name=nm+(l.fin==='c'?' · NA COR':' · BRANCO');c.note=note;c.notes=[note];return c};
+  if(W<=2*ENG_W){out.push(mk(base+' (régua '+mat+' mm)',q*n,W,n+' peças de 15 mm coladas uma na outra = uma só de '+mat+' mm · '+(l.note||''),'reg'))}
+  else{out.push(mk(base+' · face',q,W,'peça inteira na cor, parte lisa pra fora · depois cola os engrossos por dentro = '+mat+' mm · '+(l.note||''),'face'));
+   out.push(mk(base+' · engrosso '+ENG_W,q*2*(n-1),ENG_W,'tiras de '+ENG_W+' mm coladas por dentro na frente e atrás da face (escondidas dentro do armário) = '+mat+' mm na borda','eng'))}});
  return out};
 /* fundo maior que a chapa: divide em partes com a emenda em cima de uma divisória (ou ao meio, se não tiver) */
 var cutLines_fsp=cutLines;cutLines=function(m){var L=cutLines_fsp.apply(this,arguments);if(!m||!m.fundo)return L;var ref=+(PR.refilo===undefined?10:PR.refilo),SW=(+PR.sheetW||2750)-2*ref,SH=(+PR.sheetH||1840)-2*ref,mx=Math.max(SW,SH),mn=Math.min(SW,SH),out=[];
@@ -4300,7 +4313,7 @@ window.hlResolve=function(boxes,HL){var out=[];HL.forEach(function(h){out.push(h
   var base=String(h.pk).replace(/#\d+$/,'');boxes.forEach(function(q){if(!q.pk||String(q.pk).replace(/#\d+$/,'')!==base)return;var qm=parseInt(String(q.nm),10);if(isNaN(qm)||qm===h.mi)return;if(mb&&q.x1>mb.x0+1&&q.x0<mb.x1-1&&q.z1>mb.z0-1&&q.z0<mb.z1+1)out.push({mi:qm,pk:q.pk})})});return out};
 /* tamponamento de baixo/cima em peça única: localiza em todos os módulos que ela cobre */
 var cutGroups_hl=cutGroups;cutGroups=function(){var G=cutGroups_hl();try{var R={b:tbRuns(),c:ttRuns()};G.ord.forEach(function(k){var g=G.map[k];if(!g||!g.src)return;var nm=(g.names||[]).join(' ');var w=/Tamponamento de baixo \(peça única\)/.test(nm)?'b':/Tamponamento de cima \(peça única\)/.test(nm)?'c':null;if(!w)return;
-  g.src=g.src.map(function(s){if(!s||s.length!==1)return s;var mi=s[0].mi,run=null;R[w].forEach(function(r){if(r.indexOf(S.mods[mi])>=0)run=r});if(!run||run.length<2)return s;var pk=w==='b'?'Tamponamento de baixo#1':'Tamponamento de cima#1';return run.map(function(m){return {mi:S.mods.indexOf(m),pk:pk}})})})}catch(_){}return G};
+  g.src=g.src.map(function(s){if(!s||s.length!==1)return s;var mi=s[0].mi,run=null;R[w].forEach(function(r){if(r.indexOf(S.mods[mi])>=0)run=r});if(!run||run.length<2)return s;var pk=s[0].pk||(w==='b'?'Tamponamento de baixo#1':'Tamponamento de cima#1');return run.map(function(m){return {mi:S.mods.indexOf(m),pk:pk}})})})}catch(_){}return G};
 
 window.pkOk=function(nm,pk){var bn=String(nm).slice(String(nm).indexOf(':')+1),pb=String(pk).replace(/#\d+$/,'');if(!bn)return true;return bn===pb||pb.indexOf(bn)===0||bn.indexOf(pb)===0||(/^Rodapé/.test(bn)&&/^Rodapé/.test(pb))||(/^Gaveta|^Frente|^Porta/.test(bn)&&/^Gaveta|^Frente|^Porta/.test(pb))};
 /* ===== Nicho para micro-ondas (embaixo do aéreo, com o micro-ondas dentro) e nicho em cima do aéreo (parte de cima até o teto) ===== */

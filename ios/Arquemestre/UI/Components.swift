@@ -163,9 +163,14 @@ struct NameSheet: View {
     @State var text: String
     var onOk: (String) -> Void
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var focus: Bool
     var body: some View {
         NavigationStack {
-            Form { TextField(label, text: $text) }
+            Form {
+                TextField(label, text: $text).focused($focus).submitLabel(.done)
+                    .onSubmit { if !text.trimmingCharacters(in: .whitespaces).isEmpty { onOk(text); dismiss() } }
+            }
+            .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { focus = true } }
                 .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button(tr("Cancelar")) { dismiss() } }

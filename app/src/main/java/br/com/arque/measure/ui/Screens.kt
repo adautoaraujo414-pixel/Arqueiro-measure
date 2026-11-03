@@ -332,7 +332,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (filter != LibFilter.Trash && tab != LibTab.PDF && query.isBlank()) {
-                        item(key = "criar") { CreateTile { vm.openNote(vm.createNote()) } }
+                        item(key = "criar") { CreateTile { vm.noteAsk = AppViewModel.NoteAsk() } }
                     }
                     // um quadro por cliente: notas de um lado, os projetos dele do outro (dá pra ter vários projetos por cliente)
                     val showProj = filter != LibFilter.Trash && (tab == LibTab.ALL || tab == LibTab.MOVEIS)
@@ -373,17 +373,17 @@ fun LibraryScreen(vm: AppViewModel) {
                 ) { Icon(Icons.Filled.Add, tr("Novo"), tint = Color.White, modifier = Modifier.size(30.dp)) }
                 DropdownMenu(expanded = fabMenu, onDismissRequest = { fabMenu = false }) {
                     DropdownMenuItem(text = { Text(tr("Criar nota")) }, leadingIcon = { Icon(Icons.Filled.NoteAdd, null) }, onClick = {
-                        fabMenu = false; vm.openNote(vm.createNote())
+                        fabMenu = false; vm.noteAsk = AppViewModel.NoteAsk()
                     })
                     DropdownMenuItem(text = { Text(tr("Anotação infinita (em breve)")) }, enabled = false, onClick = {})
                     DropdownMenuItem(text = { Text(tr("Importar ficheiros (em breve)")) }, enabled = false, onClick = {})
                     DropdownMenuItem(text = { Text(tr("Importar imagem")) }, leadingIcon = { Icon(Icons.Filled.Image, null) }, onClick = {
                         fabMenu = false
-                        val id = vm.createNote(); vm.pendingImport = "gallery"; vm.openNote(id)
+                        vm.noteAsk = AppViewModel.NoteAsk("gallery")
                     })
                     DropdownMenuItem(text = { Text(tr("Tirar fotografia")) }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) }, onClick = {
                         fabMenu = false
-                        val id = vm.createNote(); vm.pendingImport = "camera"; vm.openNote(id)
+                        vm.noteAsk = AppViewModel.NoteAsk("camera")
                     })
                     DropdownMenuItem(text = { Text(tr("Criar nova pasta")) }, leadingIcon = { Icon(Icons.Filled.CreateNewFolder, null) }, onClick = {
                         fabMenu = false; newFolder = true
@@ -394,6 +394,15 @@ fun LibraryScreen(vm: AppViewModel) {
     }
 
     if (newFolder) NameDialog(tr("Nova pasta"), tr("Nome da pasta"), "", { newFolder = false }) { newFolder = false; vm.addFolder(it) }
+    // nota nova: pergunta o nome antes de criar (cada nota com o seu nome)
+    vm.noteAsk?.let { a ->
+        NameDialog(tr("Nova nota"), tr("Nome da nota"), vm.suggestedNoteName(a.project), { vm.noteAsk = null }) { name ->
+            vm.noteAsk = null
+            val id = vm.createNamedNote(name, a.project)
+            if (a.kind.isNotEmpty()) vm.pendingImport = a.kind
+            vm.openNote(id)
+        }
+    }
     if (btView) ShareViewPicker(vm) { btView = false }
     vm.updateState?.let { msg ->
         androidx.compose.material3.AlertDialog(
@@ -501,7 +510,7 @@ private fun ProjRow(vm: AppViewModel, p: br.com.arque.measure.data.MoveisProject
                 DropdownMenuItem(text = { Text(tr("＋ Novo projeto deste cliente")) }, onClick = { menu = false; vm.newProjectForClient(p.name, vm.notesOfProject(p.id).firstOrNull()) })
                 DropdownMenuItem(text = { Text(tr("Renomear (nome do cliente)")) }, onClick = { menu = false; rename = true })
                 DropdownMenuItem(text = { Text(tr("Status do projeto") + ": " + br.com.arque.measure.data.MoveisProjects.statusLabel(p.status)) }, onClick = { menu = false; stDlg = true })
-                DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.lastProjectId = p.id; vm.openNote(vm.createNote()) })
+                DropdownMenuItem(text = { Text(tr("Nova nota ligada a este projeto")) }, onClick = { menu = false; vm.noteAsk = AppViewModel.NoteAsk("", p.id) })
                 DropdownMenuItem(text = { Text(tr("📁 Mover para pasta (vai junto com a nota)")) }, onClick = { menu = false; move = true })
                 DropdownMenuItem(text = { Text(tr("Apagar projeto")) }, onClick = { menu = false; del = true })
             }

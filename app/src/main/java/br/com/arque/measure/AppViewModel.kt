@@ -127,14 +127,38 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         updateIndex(index.copy(notes = if (metas.any { it.id == n.id }) metas.map { if (it.id == n.id) m else it } else metas + m))
     }
 
-    fun createNote(): String {
+    /** Nota nova esperando o nome: tipo ("" em branco, "gallery", "camera") e o projeto, se veio de um projeto. */
+    data class NoteAsk(val kind: String = "", val project: String? = null)
+    var noteAsk by mutableStateOf<NoteAsk?>(null)
+
+    fun suggestedNoteName(project: String? = null): String {
+        val p = project?.let { pid -> moveisProjects().firstOrNull { it.id == pid } }?.takeIf { !defaultProjName(it) }
+        return p?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1)
+    }
+
+    /** Cria a nota com o nome escrito; só fica ligada a um projeto quando veio de "Nova nota ligada a este projeto". */
+    fun createNamedNote(name: String, project: String? = null): String {
+        val keep = lastProjectId
+        lastProjectId = project
+        val id = createNote(name)
+        lastProjectId = project ?: keep
+        val p = project?.let { pid -> moveisProjects().firstOrNull { it.id == pid } }
+        if (p != null && name.trim() != p.name.trim()) {
+            val sp = getApplication<Application>().getSharedPreferences("noteFree", 0)
+            sp.edit().putBoolean(id, true).apply()
+        }
+        return id
+    }
+
+    fun createNote(name: String? = null): String {
         val folder = (filter as? LibFilter.InFolder)?.id
         // nota nova ligada a um projeto já nasce com o nome do cliente
         val proj = lastProjectId?.let { pid -> moveisProjects().firstOrNull { it.id == pid } }?.takeIf { !defaultProjName(it) }
-        val n = Note(name = proj?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1), folderId = folder)
+        val typed = name?.trim().orEmpty()
+        val n = Note(name = typed.ifEmpty { proj?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1) }, folderId = folder)
         lastProjectId?.let { pid ->
             links.edit().putString(n.id, pid).apply()
-            if (proj != null) linkNames.edit().putString(n.id, proj.name).apply()
+            if (proj != null && (typed.isEmpty() || typed == proj.name)) linkNames.edit().putString(n.id, proj.name).apply()
             projVersion++
         }
         viewModelScope.launch(io) { store.saveNote(n) }
@@ -711,7 +735,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun syncLinkedNames() {
         val projs = moveisProjects()
         var changed = false
-        links.all.forEach { (noteId, v) -> (v as? String)?.let { if (syncPair(noteId, it, projs)) changed = true } }
+        val free = getApplication<Application>().getSharedPreferences("noteFree", 0)
+        links.all.forEach { (noteId, v) -> if (!free.getBoolean(noteId, false)) (v as? String)?.let { if (syncPair(noteId, it, projs)) changed = true } }
         if (changed) projVersion++
     }
 

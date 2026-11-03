@@ -33,6 +33,8 @@ final class AppModel: ObservableObject {
 
     var photoToNewPage = false
     @Published var pendingImport: String?
+    /// Nota nova esperando o nome (a tela pergunta antes de criar).
+    @Published var noteAsk: NoteAsk?
     @Published var askAnotherPhoto = false
 
     // agenda
@@ -201,17 +203,39 @@ final class AppModel: ObservableObject {
         updateIndex(n)
     }
 
+    /// Nome sugerido pra nota nova (o usuário confirma ou troca antes de criar).
+    func suggestedNoteName(project: String? = nil) -> String {
+        if let pid = project, let p = moveisProjects().first(where: { $0.id == pid }), !defaultProjName(p) { return p.name }
+        return tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1)
+    }
+
+    /// Cria a nota com o nome que o usuário escreveu; só fica ligada a um projeto quando veio de "Nova nota ligada a este projeto".
     @discardableResult
-    func createNote() -> String {
+    func createNamedNote(_ name: String, project: String? = nil) -> String {
+        let keep = lastProjectId
+        lastProjectId = project
+        let id = createNote(name: name)
+        lastProjectId = project ?? keep
+        // nome escolhido diferente do cliente: a nota fica ligada ao projeto mas guarda o próprio nome
+        if let pid = project, let p = moveisProjects().first(where: { $0.id == pid }), name.trimmingCharacters(in: .whitespacesAndNewlines) != p.name.trimmingCharacters(in: .whitespaces) {
+            var f = Set(UserDefaults.standard.stringArray(forKey: "noteFreeNames") ?? []); f.insert(id)
+            UserDefaults.standard.set(Array(f), forKey: "noteFreeNames")
+        }
+        return id
+    }
+
+    @discardableResult
+    func createNote(name: String? = nil) -> String {
         var folder: String?
         if case .folder(let f) = filter { folder = f }
         // nota nova ligada a um projeto já nasce com o nome do cliente
         let proj = lastProjectId.flatMap { pid in moveisProjects().first { $0.id == pid } }.flatMap { defaultProjName($0) ? nil : $0 }
-        let n = Note(name: proj?.name ?? tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1), folderId: folder)
+        let typed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let n = Note(name: !typed.isEmpty ? typed : (proj?.name ?? tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1)), folderId: folder)
         if let p = lastProjectId {
             links[n.id] = p
             store.saveLinks(links)
-            if let pr = proj { setLinkName(n.id, pr.name) }
+            if let pr = proj, typed.isEmpty || typed == pr.name { setLinkName(n.id, pr.name) }
             projVersion += 1
         }
         store.saveNote(n)
@@ -599,7 +623,8 @@ final class AppModel: ObservableObject {
     func syncLinkedNames() {
         let projs = moveisProjects()
         var changed = false
-        for (noteId, pid) in links where syncPair(noteId, pid, projs) { changed = true }
+        let free = Set(UserDefaults.standard.stringArray(forKey: "noteFreeNames") ?? [])
+        for (noteId, pid) in links where !free.contains(noteId) && syncPair(noteId, pid, projs) { changed = true }
         if changed { projVersion += 1 }
     }
 
@@ -744,3 +769,9 @@ final class AppModel: ObservableObject {
     }
 }
 
+/// Pedido de nota nova: o tipo ("" nota em branco, "gallery", "camera") e o projeto, se veio de um projeto.
+struct NoteAsk: Identifiable {
+    let id = UUID()
+    var kind: String = ""
+    var project: String? = nil
+}

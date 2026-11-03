@@ -43,6 +43,17 @@ struct LibraryView: View {
             }
         }
         .sheet(isPresented: $newFolder) { NameSheet(title: tr("Nova pasta"), label: tr("Nome da pasta"), text: "") { app.addFolder($0) } }
+        // nota nova: pergunta o nome antes de criar (cada nota com o seu nome)
+        .sheet(item: $app.noteAsk) { a in
+            NameSheet(title: tr("Nova nota"), label: tr("Nome da nota"), text: app.suggestedNoteName(project: a.project)) { name in
+                let id = app.createNamedNote(name, project: a.project)
+                // abre depois que a janelinha do nome fecha
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    if !a.kind.isEmpty { app.pendingImport = a.kind }
+                    app.openNote(id)
+                }
+            }
+        }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
@@ -164,7 +175,7 @@ struct LibraryView: View {
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 10)], spacing: 10) {
                         if app.filter != .trash && query.isEmpty && tab != .MOVEIS {
-                            CreateTile(label: tr("Criar")) { app.openNote(app.createNote()) }
+                            CreateTile(label: tr("Criar")) { app.noteAsk = NoteAsk(kind: "") }
                         }
                         if tab == .MOVEIS && query.isEmpty { CreateTile(label: tr("Novo projeto de móveis")) { app.newMoveisProject() } }
                         // as pastas aparecem em cima, com quantos itens têm (o que entrou numa pasta sai daqui)
@@ -187,9 +198,9 @@ struct LibraryView: View {
             }
             if app.filter != .trash {
                 Menu {
-                    Button { app.openNote(app.createNote()) } label: { Label(tr("Criar nota"), systemImage: "square.and.pencil") }
-                    Button { let id = app.createNote(); app.pendingImport = "gallery"; app.openNote(id) } label: { Label(tr("Importar imagem"), systemImage: "photo") }
-                    Button { let id = app.createNote(); app.pendingImport = "camera"; app.openNote(id) } label: { Label(tr("Tirar fotografia"), systemImage: "camera") }
+                    Button { app.noteAsk = NoteAsk(kind: "") } label: { Label(tr("Criar nota"), systemImage: "square.and.pencil") }
+                    Button { app.noteAsk = NoteAsk(kind: "gallery") } label: { Label(tr("Importar imagem"), systemImage: "photo") }
+                    Button { app.noteAsk = NoteAsk(kind: "camera") } label: { Label(tr("Tirar fotografia"), systemImage: "camera") }
                     Button { newFolder = true } label: { Label(tr("Criar nova pasta"), systemImage: "folder.badge.plus") }
                 } label: {
                     Image(systemName: "plus").font(.system(size: 26, weight: .semibold)).foregroundColor(.white)
@@ -293,7 +304,7 @@ struct ProjRow: View {
                         Button((s == p.status ? "✓ " : "") + MoveisProjects.statusLabel(s)) { app.setProjectStatus(p.id, s) }
                     }
                 }
-                Button(tr("Nova nota ligada a este projeto")) { app.lastProjectId = p.id; app.openNote(app.createNote()) }
+                Button(tr("Nova nota ligada a este projeto")) { app.noteAsk = NoteAsk(kind: "", project: p.id) }
                 Button(tr("📁 Mover para pasta (vai junto com a nota)")) { move = true }
                 Button(tr("Apagar projeto"), role: .destructive) { del = true }
             } label: { Image(systemName: "chevron.down").foregroundColor(Ui.text).frame(width: 40, height: 40) }

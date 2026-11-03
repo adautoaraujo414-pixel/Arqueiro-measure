@@ -2388,7 +2388,7 @@ function build(){LEDS=[];try{if(typeof roomClamp==='function')roomClamp()}catch(
    else if(/^Moldura/.test(n)){var mr_=moldRunOf(m);if(mr_){if(S.mods.indexOf(m)===mr_.idx[0])B(boxes,x0,mr_.x1+(x1-(m.x+p.base.x+p.base.w)),y0,y1,dep,dep+15,m.corF||p.col,1,'f')}else B(boxes,x0,x1,y0,y1,dep,dep+15,m.corF||p.col,1,'f')}
    else if(/^Tamponamento/.test(n)){var tcw_=(p.base&&p.base.d)||p.cw;B(boxes,x0,x1,y0,y1,dep+25-Math.min(tcw_,dep+25),dep+25,bc)}
    else if(/Engrosso/.test(n)){B(boxes,x0,x1,y0,y1,0,dep,p.col)}
-   else if(/^Lateral (esquerda|direita)/.test(n)&&m.trav){B(boxes,x0,x1,y0,y1-m.travMm,0,dep,p.col);B(boxes,x0,x1,y1-m.travMm,y1,0,dep-15,p.col)}
+   else if(/^Lateral (esquerda|direita)/.test(n)&&m.trav){B(boxes,x0,x1,y0,y1-m.travMm,0,dep,p.col);boxes[boxes.length-1].ne='t';B(boxes,x0,x1,y1-m.travMm,y1,0,dep-15,p.col);boxes[boxes.length-1].ne='b'}
    else if(/^Montante \d/.test(n)&&p.mont){B(boxes,x0,x1,y0,y1,dep-p.mont,dep,p.col)}else if(/^Divisória/.test(n)){var dd=/(\d+) mm/.exec(p.note||'');B(boxes,x0,x1,y0,y1,dd?+dd[1]:0,dep,p.col)}
    else if(n==='Base inferior'&&baseRunOf(m)){var bq=baseRunOf(m);if(S.mods.indexOf(m)===bq.idx[0])B(boxes,x0,bq.x1+(x1-(m.x+p.base.x+p.base.w)),y0,y1,0,dep,p.col)}
    else B(boxes,x0,x1,y0,y1,0,dep,p.col)});
@@ -2490,7 +2490,7 @@ function glFill(){var F=[],L=[],T=[],TL=[],all=bg.concat(boxes).filter(wvis),i=0
   if(b.gp){gpFill(b,V,LL);return}
   if(b.pf){pfFill(b,V,LL);return}
   if(b.g!=='lo')FC.forEach(function(f,fi){var sh=b.em?1:f[2],c=[b.c[0]*sh/255,b.c[1]*sh/255,b.c[2]*sh/255,b.a],q=QF[fi],o=[q[0],q[1],q[2],q[0],q[2],q[3]];o.forEach(function(k){V.push(cs[k][0],cs[k][1],cs[k][2],c[0],c[1],c[2],c[3],(b.g==='st'||b.g==='stc')?(b.tx||txRGB()[b.c.join()]||1):matTx(b))})});
-  var lc=tr?[.16,.13,.09,.4]:[.16,.13,.09,.8];if(b.g!=='stc'&&b.g!=='sh'&&!b.nol)ED.forEach(function(e2){e2.forEach(function(k){LL.push(cs[k][0],cs[k][1],cs[k][2],lc[0],lc[1],lc[2],lc[3],0)})})});
+  var lc=tr?[.16,.13,.09,.4]:[.16,.13,.09,.8];if(b.g!=='stc'&&b.g!=='sh'&&!b.nol)ED.forEach(function(e2,ei){if((b.ne==='t'&&(ei===10||ei===11))||(b.ne==='b'&&(ei===8||ei===9)))return;e2.forEach(function(k){LL.push(cs[k][0],cs[k][1],cs[k][2],lc[0],lc[1],lc[2],lc[3],0)})})});
  function up(buf,arr){gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);return arr.length/8}
  gN=up(GB.f,F);lN=up(GB.l,L);tN=up(GB.t,T);GB.tln=up(GB.tl,TL);gDirty=false}
 function renderGL(){var w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;var r=window.devicePixelRatio||1;if(cv.width!==Math.round(w*r)||cv.height!==Math.round(h*r)){cv.width=Math.round(w*r);cv.height=Math.round(h*r)}
@@ -4199,7 +4199,7 @@ document.addEventListener('pointerdown',function(ev){PLOFF=null;var t=ev.target&
 function tjNb(m,side){var best=null;S.mods.forEach(function(n){if(n===m||!n.sup||!n.tb||(n.wing||0)!==(m.wing||0)||Math.abs((+n.b||0)-(+m.b||0))>2||n.corner||n.nicho)return;
   var gap=side<0?m.x-(n.x+n.w):n.x-(m.x+m.w),need=side<0?((m.tl?+m.tlW||30:0)+(n.tr?+n.trW||30:0)):((m.tr?+m.trW||30:0)+(n.tl?+n.tlW||30:0));if(need>0&&Math.abs(gap-need)<=3)best=n});return best}
 var partsOf_tj=partsOf;partsOf=function(m){var P=partsOf_tj.apply(this,arguments);try{if(!m||!m.sup||!m.tb||m.corner||m.nicho||m.tpass)return P;var L=tjNb(m,-1),R=tjNb(m,1),tbw=+m.tbW||30;if(!L&&!R)return P;
-  P.forEach(function(p){if(p.name==='Tamponamento de baixo'){var el=L&&m.tl?(+m.tlW||30):0,er=R&&m.tr?(+m.trW||30):0;if(el||er){p.x-=el;p.w+=el+er;p.cl=Math.round((p.cl+el+er)*10)/10;p.note=(p.note||'')+' · passa por baixo do tamponamento lateral do meio (encontra o do vizinho)'}}
+  P.forEach(function(p){if(p.name==='Tamponamento de baixo'){var el=L&&m.tl&&!(+m.tbL)&&!((+L.tbR||0)<0)?(+m.tlW||30):0,er=R&&m.tr&&!(+m.tbR)&&!((+R.tbL||0)<0)?(+m.trW||30):0;if(el||er){p.x-=el;p.w+=el+er;p.cl=Math.round((p.cl+el+er)*10)/10;p.note=(p.note||'')+' · passa por baixo do tamponamento lateral do meio (encontra o do vizinho)'}}
    else if((p.name==='Tamponamento esquerdo'&&L)||(p.name==='Tamponamento direito'&&R)){if(p.h>tbw+50){p.h-=tbw;p.cl=Math.round((p.cl-tbw)*10)/10;p.note=(p.note||'')+' · para em cima do tamponamento de baixo (meio de dois módulos)'}}})}catch(_){}return P};
 
 /* planta: medida real do espaço livre embaixo da pedra (parte verde) onde ainda não tem armário */
@@ -4218,6 +4218,27 @@ var plantaSvg_free=plantaSvg;plantaSvg=function(){var s=plantaSvg_free.apply(thi
 
 /* módulo de baixo não tem tamponamento embaixo (regra dos outros): esconde a opção */
 var panel_ntb=panel;panel=function(){var r=panel_ntb.apply(this,arguments);try{if(S.m&&!S.m.sup){var c=document.querySelector('input[data-c="tb"]');if(c){var ch=c.closest('.chk');var sec=ch&&ch.previousElementSibling;if(sec&&/Embaixo \(azul\)/.test(sec.textContent))sec.style.display='none';if(ch)ch.style.display='none';var nx=ch&&ch.nextElementSibling;while(nx&&!nx.classList.contains('sec')){if(/tbL|tbR|tpass|Aumentar comprimento/.test(nx.innerHTML))nx.style.display='none';nx=nx.nextElementSibling}}}}catch(_){}return r};
+
+/* ===== régua (travessa da frente) e rodapé correndo modular: módulos encostados na mesma parede (e o canto com o módulo da lateral)
+   viram uma peça só até 2700 mm; passando, a emenda cai na junta dos módulos ===== */
+function lrRows(){var fl=S.mods.map(function(m,i){return {m:m,i:i}}).filter(function(o){var m=o.m;return !m.sup&&(+m.b||0)<10&&(+m.h||0)<1500&&!m.nicho}),rows=[];
+ var F=fl.filter(function(o){return !o.m.wing}).map(function(o){var m=o.m;return {i:o.i,m:m,c:m.corner?'F':'',a:m.x-(m.corner?0:lt(m)),b:m.x+m.w+(m.corner?0:rt(m)),l:m.corner?0:lt(m),r:m.corner?0:rt(m)}}).sort(function(a,b){return a.a-b.a});rows.push({w:0,it:F});
+ ['e','d'].forEach(function(w){var it=fl.filter(function(o){return o.m.wing===w}).map(function(o){var m=o.m;return {i:o.i,m:m,c:'',a:m.x-lt(m),b:m.x+m.w+rt(m),l:lt(m),r:rt(m)}});fl.forEach(function(o){if(o.m.corner===w&&!o.m.wing){var W2=Math.max(o.m.d+200,o.m.cw2||900);it.push({i:o.i,m:o.m,c:'S',a:0,b:W2,l:0,r:0})}});it.sort(function(a,b){return a.a-b.a});rows.push({w:w,it:it})});return rows}
+function lrPk(o,key){if(key==='trav')return o.c==='S'?'Travessa frontal (lado do canto)#1':'Travessa frontal#1';if(key==='rf')return o.c==='S'?'Rodapé (pedestal) do lado#1':'Rodapé (pedestal)#1';return o.c==='S'?'Rodapé traseiro (pedestal) do lado#1':'Rodapé traseiro (pedestal)#1'}
+function lrPiece(m,pk){var p=null;try{p=partsOf(m).filter(function(q){return q.pk===pk&&!q.noCut})[0]}catch(_){}return p}
+var cutGroups_lr=cutGroups;cutGroups=function(){var G=cutGroups_lr();try{var map=G.map,ord=G.ord;
+ var take=function(mi,pk){for(var j=0;j<ord.length;j++){var g=map[ord[j]];if(!g||!g.src)continue;for(var t=0;t<g.src.length;t++){var s=g.src[t];if(s&&s.length===1&&s[0].mi===mi&&s[0].pk===pk){g.src.splice(t,1);g.qty--;if(g.qty<=0){delete map[ord[j]];ord.splice(j,1)}return g}}}return null};
+ var put=function(name,L,W,mat,fin,src,note){var k=L+'|'+W+'|'+mat+'|'+fin+'|lr'+ord.length+name;map[k]={names:[name],qty:1,L:Math.round(L*10)/10,W:W,mat:mat,fin:fin,where:{},src:[src],note:note};ord.push(k)};
+ lrRows().forEach(function(row){var ch=[],cur=null;row.it.forEach(function(o){if(cur){var p=cur[cur.length-1];if(Math.abs(o.a-p.b)<=1&&!p.r&&!o.l&&p.m.d===o.m.d){cur.push(o);return}}cur=[o];ch.push(cur)});
+  ch.forEach(function(c){if(c.length<2)return;
+   [['trav','Travessa frontal (régua corrida)',function(m){return m.trav}],['rf','Rodapé (pedestal) corrido · frente',function(m){return m.rod&&!m.wing&&!m.corner?false:m.rod}],['rb','Rodapé traseiro (pedestal) corrido',function(m){return m.rod&&!m.wing&&!m.corner?false:m.rod}]].forEach(function(K){if(K[0]!=='trav'&&!row.w)return;
+    var seg=[],tot=0,flush=function(){if(seg.length>=2){var gs=[],src=[],W=0,mat=15,fin='b';seg.forEach(function(q){var g=take(q.o.i,q.pk);if(g){W=g.W;mat=g.mat;fin=g.fin}src.push({mi:q.o.i,pk:q.pk})});put(K[1],tot,W||seg[0].p.cw,mat,fin,src,'uma peça só passando por '+seg.length+' módulos'+(seg.some(function(q){return q.o.c})?' (inclui o canto)':'')+' · emenda, se houver, na junta dos módulos');
+       if(K[0]==='rf'){seg.forEach(function(q,j){if(q.o.c)return;if(j>0)take(q.o.i,'Rodapé lateral esquerdo (pedestal)#1');if(j<seg.length-1)take(q.o.i,'Rodapé lateral direito (pedestal)#1')})}}seg=[];tot=0};
+    c.forEach(function(o){if(!K[2](o.m)){flush();return}var pk=lrPk(o,K[0]),p=lrPiece(o.m,pk);if(!p){flush();return}var L=+p.cl||0;if(tot+L>2700)flush();seg.push({o:o,pk:pk,p:p});tot+=L});flush()})})})}catch(e){}return G};
+
+/* armário de baixo não leva fundo: vai direto na parede (uma vez por módulo; depois dá pra ligar o fundo de novo se quiser) */
+function baseSemFundo(){S.mods.forEach(function(m){if(m.fdOk||m.sup||(+m.b||0)>=10||(+m.h||0)>=1500||m.nicho)return;m.fdOk=1;m.fundo=false})}
+var draw_bsf=draw;draw=function(){try{baseSemFundo()}catch(_){}return draw_bsf.apply(this,arguments)};
 
 </script>
 </body></html>

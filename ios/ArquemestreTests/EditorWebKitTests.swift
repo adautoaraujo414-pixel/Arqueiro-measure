@@ -65,7 +65,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPlanoDeCorteAbreOtimizaENaoDaErro() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();
           var t0=performance.now();openCut();var dt=performance.now()-t0;
           var n=document.querySelectorAll('#cutbody [data-cp]').length;
           await new Promise(function(r){var t1=Date.now();(function w(){var b=(document.getElementById('cutopt')||{}).textContent||'';if(b.indexOf('✓')>=0||Date.now()-t1>30000)r();else setTimeout(w,100)})()});
@@ -85,7 +85,7 @@ final class EditorWebKitTests: XCTestCase {
     func testEnviarProjetoCompactaSemPrecoEAbreNoModoCorte() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(3);newTpl(4);draw();S.preco=1234;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);newTpl(4);draw();S.preco=1234;
           openCut();cutSend();
           await new Promise(function(r){var t=Date.now();(function w(){if(__shared||Date.now()-t>5000)r();else setTimeout(w,50)})()});
           var code=__shared?__shared.code:'';var back=code?await cutDecode(code):null;
@@ -113,7 +113,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPuxadoresDescontamCertoEConchaNoMeio() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(3);draw();var m=S.mods[0];
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);draw();var m=S.mods[0];
           function fr(){return partsOf(m).filter(function(p){return p.name==='Porta'&&!p.noDraw}).map(function(p){return {cl:p.cl,cw:p.cw,note:p.note||''}})[0]}
           pxApplyAll('externo','inox');var a=fr();pxApplyAll('g','inox');var g=fr();pxApplyAll('perfil','preto');var c=fr();pxApplyAll('concha','dourado');var k=fr();
           S.m=m;S.sv=0;S.tab=3;panel();var foto=!!document.querySelector('.pxcard img');
@@ -134,7 +134,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTVNaSalaETravarModulo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.tab=9;panel();document.querySelector('[data-room="sala"]').click();
+          window.MINI3OFF=1;PR.setupDone=1;S.tab=9;panel();document.querySelector('[data-room="sala"]').click();
           S.mods=[];S.rp=[];S.fr=[];draw();panel();
           catOpen('painel');Array.from(document.querySelectorAll('#catgw [data-cati]')).filter(function(x){return /Painel liso \(placa\)/.test(x.textContent)})[0].click();
           await new Promise(function(r){setTimeout(r,300)});
@@ -162,7 +162,7 @@ final class EditorWebKitTests: XCTestCase {
     func test3DAbreComPuxadorEPrateleira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(3);newTpl(4);draw();pxApplyAll('g','dourado');
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);newTpl(4);draw();pxApplyAll('g','dourado');
           S.rp.push({id:77,prat:true,x:200,w:900,b:1600,h:40,pd:250,rd:60});draw();
           open3D();await new Promise(function(r){setTimeout(r,1000)});
           var n=dbg3().length;document.getElementById('v3x').click();
@@ -175,7 +175,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBuscaAchaTVEletrodomesticoEFacetadoDesconta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;function nm(q){return catFind(q).reduce(function(a,g){return a.concat(g.it.map(function(r){return r.it.n}))},[])}
+          window.MINI3OFF=1;PR.setupDone=1;function nm(q){return catFind(q).reduce(function(a,g){return a.concat(g.it.map(function(r){return r.it.n}))},[])}
           var tv=nm('tv'),tele=nm('televisão'),gela=nm('gela'),dois=nm('2p');
           S.tab=9;panel();document.querySelector('[data-room="sala"]').click();catOpen();
           var abas=Array.from(document.querySelectorAll('#catb [data-catt]')).map(function(b){return b.textContent}).join('|'),prim=document.querySelector('#catgw [data-cati]').textContent;
@@ -203,7 +203,7 @@ final class EditorWebKitTests: XCTestCase {
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[3]);draw();var m=S.mods[0];
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[3]);draw();var m=S.mods[0];
           var vr=vaoRanges(m)[0],vw=vr[1]-vr[0],t=gbox(m.v[0],vw,drawerH(m.v[0]),m.d);
           document.getElementById('prb').click();var cfg=!document.getElementById('stdm').hidden&&document.querySelectorAll('#stdbody [data-cfggo]').length;
           document.querySelector('[data-std="corr"][data-v="oc"]').click();document.querySelector('[data-stdall]').click();
@@ -234,7 +234,7 @@ final class EditorWebKitTests: XCTestCase {
     func testIlhaComPedraParedesEOrcamento() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[3]);S.m=S.mods[0];draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[3]);S.m=S.mods[0];draw();
           var a=islNew('ilha');S.isl.push(a);var vm=islVM(a),ps=partsOf(vm).map(function(p){return p.name});
           var G=cutGroups(),pc=0;G.ord.forEach(function(k){var g=G.map[k];if(g.where['Ilha 1'])pc+=g.where['Ilha 1']});
           var bu=budget(),row=bu.rows.filter(function(x){return x.m.islN==='Ilha 1'}).length;
@@ -264,7 +264,7 @@ final class EditorWebKitTests: XCTestCase {
     func testLEDChamaAguaEEditarNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];S.st.items.push({id:77,k:'cook',x:1500,y:60,w:600,d:500});apAdd('torneira',0);draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];S.st.items.push({id:77,k:'cook',x:1500,y:60,w:600,d:500});apAdd('torneira',0);draw();
           window.open3D();fx3api.lk({k:'45',c:'azul'});fx3api.add('sup');var led=S.mods[1].led||{},nl=fx3api.leds(),len=fx3api.len();
           fx3api.open({k:'cook',sid:S.st.id,iid:77});document.querySelector('#it4 [data-qfire="1"]').click();var fire=Object.keys(fx3api.fire()).length;document.querySelector('#it4 [data-qpan="1"]').click();var pan=S.st.items.filter(function(i){return i.k==='cook'})[0].pan;
           var tq=S.fr.filter(function(f){return f.t==='torneira'})[0];fx3api.open({k:'fr',id:tq.id});document.querySelector('#it4 [data-qwat="1"]').click();var wat=Object.keys(fx3api.water()).length;
@@ -293,7 +293,7 @@ final class EditorWebKitTests: XCTestCase {
     func testReguaTamponamentoRenteEEletrosReais() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[1].it[2]);var m=S.mods[0];m.regua=true;m.regN=2;m.tl=true;m.tlA='tamp';m.tr=true;m.trA='cava';m.tb=true;m.tpass=false;draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[1].it[2]);var m=S.mods[0];m.regua=true;m.regN=2;m.tl=true;m.tlA='tamp';m.tr=true;m.trA='cava';m.tb=true;m.tpass=false;draw();
           var top=m.b+m.h,y0=function(p){return top-p.y-p.h},y1=function(p){return top-p.y},pn=function(L,n){return L.filter(function(p){return p.name===n})[0]};
           var P=partsOf(m),reg=P.filter(function(p){return /^Engrosso cava · régua/.test(p.name)}),rb=Math.min.apply(null,reg.map(y0)),tb=pn(P,'Tamponamento de baixo'),tl=pn(P,'Tamponamento esquerdo'),tr=pn(P,'Tamponamento direito');
           m.tb=false;draw();var tl2=pn(partsOf(m),'Tamponamento esquerdo');
@@ -316,7 +316,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAcabamentoDosEletrosETVReal() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);S.fr=[];var g=apAdd('geladeira',2),t=apAdd('torneira',0),v=apAdd('tv',1);draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);S.fr=[];var g=apAdd('geladeira',2),t=apAdd('torneira',0),v=apAdd('tv',1);draw();
           var d0=[apFin(g),apFin(t),apFin(v)].join();
           window.open3D();var lum=function(id){var b=window.dbg3all().filter(function(q){return q.fr===id&&!q.em&&Array.isArray(q.c)}),s=0,n=0;b.forEach(function(q){var a=(q.x1-q.x0)*(q.y1-q.y0)+(q.x1-q.x0)*(q.z1-q.z0)+(q.y1-q.y0)*(q.z1-q.z0);s+=a*(q.c[0]+q.c[1]+q.c[2])/3;n+=a});return n?s/n:-1};
           var gI=lum(g.id);window.fx3api.open({k:'fr',id:g.id});var chips=document.querySelectorAll('#it4 [data-qfin]').length;document.querySelector('#it4 [data-qfin="preto"]').click();var gP=lum(g.id);
@@ -342,7 +342,7 @@ final class EditorWebKitTests: XCTestCase {
     func testParedesCubasCooktopEDormitorio() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();
           var sw=sideWalls(),lados=(sw.L===0&&sw.R===S.W);
           window.open3D();window.fx3api.open({k:'wall',s:'L'});var campos=Array.prototype.map.call(document.querySelectorAll('#it4 [data-qf]'),function(i){return i.dataset.qf}).join(),tipos=document.querySelectorAll('#it4 [data-qwt]').length,ori=document.querySelectorAll('#it4 [data-qwo]').length;
           var i=document.querySelector('#it4 [data-qf="wrel"]');i.value='110';i.dispatchEvent(new Event('change',{bubbles:true}));var w=window.dbgWall(),gir=!!(w.L[0]&&w.L[0].gp&&w.L[0].x0<-500),ang=S.wall.L.a;
@@ -374,7 +374,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSetinhasParedesECaixa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();apAdd('geladeira',0);draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();apAdd('geladeira',0);draw();
           window.open3D();window.fx3api.open({k:'st',id:S.st.id});var st=ah3api.specs().join();
           window.fx3api.open({k:'fr',id:S.fr[0].id});var fr=ah3api.specs().join();window.fx3api.open({k:'mod',mi:1});var md=ah3api.specs().join();
           window.fx3api.open({k:'wall',s:'P'});var pi=ah3api.specs().join();var vis=document.querySelectorAll('#ah3 [data-ah]').length;
@@ -403,7 +403,7 @@ final class EditorWebKitTests: XCTestCase {
     func testOrganizacao3DClienteEModoPessoa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();ensureProj();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();ensureProj();
           window.open3D();await new Promise(function(r){setTimeout(r,400)});
           window.fx3api.open({k:'mod',mi:0});var E=document.getElementById('it4'),ledBase=!!E.querySelector('[data-qmled]');
           S.m=S.mods[0];window.mz3Open();document.querySelector('#mz3 [data-mz="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;

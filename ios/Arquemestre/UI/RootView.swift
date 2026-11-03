@@ -254,10 +254,10 @@ extension TrialChip {
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
             }
-            .foregroundColor(Ui.gold)
+            .foregroundColor(Color.white)
             .padding(.horizontal, 14).frame(height: 46)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.gold.opacity(0.08)))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ui.gold, lineWidth: 1.2))
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.08)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white, lineWidth: 1.2))
             .contentShape(Rectangle())
         } else {
             Text(chip).font(.caption).foregroundColor(Ui.gold)

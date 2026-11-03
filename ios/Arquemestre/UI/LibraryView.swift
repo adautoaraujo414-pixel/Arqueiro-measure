@@ -144,7 +144,7 @@ struct LibraryView: View {
     private func side(_ label: String, _ icon: String, _ sel: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: icon).foregroundColor(sel ? Ui.gold : Ui.dim).frame(width: 20)
+                Image(systemName: icon).foregroundColor(sel ? Color.white : Ui.dim).frame(width: 20)
                 Text(label).foregroundColor(Ui.text).lineLimit(1)
                 Spacer()
             }
@@ -259,9 +259,9 @@ struct LibraryView: View {
     }
 
     private var logoMark: some View {
-        Text("A").font(.system(size: 28, weight: .black)).foregroundColor(Ui.bg)
+        Image("LogoArque").resizable().scaledToFill()
             .frame(width: 48, height: 48)
-            .background(RoundedRectangle(cornerRadius: 13).fill(Ui.gold))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func circleIcon(_ name: String) -> some View {
@@ -273,7 +273,7 @@ struct LibraryView: View {
     private var bellIcon: some View {
         circleIcon("bell").overlay(alignment: .topTrailing) {
             if hasSoonAppt {
-                Circle().fill(Ui.gold).frame(width: 10, height: 10).offset(x: -8, y: 8)
+                Circle().fill(Color.white).frame(width: 10, height: 10).offset(x: -8, y: 8)
             }
         }
     }
@@ -286,7 +286,7 @@ struct LibraryView: View {
                 segPill(tr("Clientes"), "person", home == .clientes) { selectHome(.clientes) }
                 segPill(tr("Projetos"), "square.stack.3d.up", home == .projetos) { selectHome(.projetos) }
             }
-            Rectangle().fill(Ui.gold).frame(height: 1.5)
+            Rectangle().fill(Color.white).frame(height: 1.5)
         }
         .padding(.horizontal, 16)
     }
@@ -299,7 +299,7 @@ struct LibraryView: View {
             }
             .foregroundColor(sel ? Ui.bg : Ui.text)
             .frame(maxWidth: .infinity).frame(height: 50)
-            .background(RoundedRectangle(cornerRadius: 14).fill(sel ? Ui.gold : Ui.panel2))
+            .background(RoundedRectangle(cornerRadius: 14).fill(sel ? Color.white : Ui.panel2))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
@@ -345,7 +345,7 @@ struct LibraryView: View {
             Image(systemName: "line.3.horizontal.decrease").font(.system(size: 17, weight: .semibold))
                 .foregroundColor(statusFilter == nil ? Ui.text : Ui.bg)
                 .frame(width: 48, height: 48)
-                .background(RoundedRectangle(cornerRadius: 14).fill(statusFilter == nil ? Ui.panel2 : Ui.gold))
+                .background(RoundedRectangle(cornerRadius: 14).fill(statusFilter == nil ? Ui.panel2 : Color.white))
         }
         .accessibilityLabel(tr("Filtrar por status"))
     }
@@ -370,7 +370,7 @@ struct LibraryView: View {
     @ViewBuilder private var scopeBar: some View {
         if app.filter != .all {
             HStack(spacing: 10) {
-                Image(systemName: app.filter == .trash ? "trash" : "folder.fill").foregroundColor(Ui.gold)
+                Image(systemName: app.filter == .trash ? "trash" : "folder.fill").foregroundColor(Color.white)
                 Text(scopeTitle).font(.headline).foregroundColor(Ui.text).lineLimit(1)
                 Spacer()
                 Button { app.filter = .all } label: {
@@ -400,7 +400,7 @@ struct LibraryView: View {
             }
             .foregroundColor(Ui.bg)
             .frame(maxWidth: .infinity).frame(height: 54)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.gold))
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
@@ -451,10 +451,10 @@ struct LibraryView: View {
                 Image(systemName: icon).font(.system(size: 14, weight: .bold))
                 Text(label).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
             }
-            .foregroundColor(filled ? Ui.bg : Ui.gold)
+            .foregroundColor(filled ? Ui.bg : Color.white)
             .padding(.horizontal, 10).frame(maxWidth: .infinity).frame(height: 44)
-            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Ui.gold : Ui.panel))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Ui.gold, lineWidth: filled ? 0 : 1))
+            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Color.white : Ui.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white, lineWidth: filled ? 0 : 1))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
@@ -464,13 +464,13 @@ struct LibraryView: View {
             HStack(spacing: 12) {
                 Image(systemName: "plus").font(.system(size: 18, weight: .bold)).foregroundColor(Ui.bg)
                     .frame(width: 34, height: 34)
-                    .background(RoundedRectangle(cornerRadius: 9).fill(Ui.gold))
-                Text(tr("Novo Projetor 3D")).font(.headline).foregroundColor(Ui.gold)
+                    .background(RoundedRectangle(cornerRadius: 9).fill(Color.white))
+                Text(tr("Novo Projetor 3D")).font(.headline).foregroundColor(Color.white)
                 Spacer()
             }
             .padding(.horizontal, 12).frame(height: 58)
             .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ui.gold.opacity(0.6)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.6)))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
@@ -544,7 +544,7 @@ struct LibraryView: View {
     private func shortcut(_ label: String, _ icon: String, _ a: @escaping () -> Void) -> some View {
         Button(action: a) {
             VStack(spacing: 8) {
-                Image(systemName: icon).font(.system(size: 24, weight: .semibold)).foregroundColor(Ui.gold)
+                Image(systemName: icon).font(.system(size: 24, weight: .semibold)).foregroundColor(Color.white)
                 Text(label).font(.footnote.weight(.semibold)).foregroundColor(Ui.text).lineLimit(1).minimumScaleFactor(0.75)
             }
             .frame(maxWidth: .infinity).frame(height: 84)
@@ -573,9 +573,9 @@ struct LibraryView: View {
             VStack(spacing: 3) {
                 Image(systemName: icon).font(.system(size: 19, weight: .semibold))
                 Text(label).font(.system(size: 10, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
-                Capsule().fill(sel ? Ui.gold : Color.clear).frame(width: 22, height: 3)
+                Capsule().fill(sel ? Color.white : Color.clear).frame(width: 22, height: 3)
             }
-            .foregroundColor(sel ? Ui.gold : Ui.dim)
+            .foregroundColor(sel ? Color.white : Ui.dim)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
         }
@@ -709,7 +709,7 @@ struct ProjRow: View {
         Text("🪚").font(.system(size: bare ? 20 : 26))
             .frame(width: bare ? 44 : 56, height: bare ? 44 : 76)
             .background(RoundedRectangle(cornerRadius: bare ? 10 : 6).fill(Color(argb: 0xFF2B2416)))
-            .overlay(RoundedRectangle(cornerRadius: bare ? 10 : 6).stroke(Ui.gold.opacity(0.35)))
+            .overlay(RoundedRectangle(cornerRadius: bare ? 10 : 6).stroke(Color.white.opacity(0.35)))
     }
 
     private var info: some View {
@@ -719,7 +719,7 @@ struct ProjRow: View {
                 statusMenu
             }
             if let o = originLine {
-                Text(o).font(.caption).foregroundColor(Ui.gold).lineLimit(1)
+                Text(o).font(.caption).foregroundColor(Color.white).lineLimit(1)
             } else if !bare {
                 Text("🪚 " + p.label + " · " + dateText(p.updated)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
             }
@@ -852,10 +852,10 @@ struct ClientAvatar: View {
     private var initial: String { String(name.trimmingCharacters(in: .whitespaces).prefix(1)).uppercased() }
     var body: some View {
         Text(initial.isEmpty ? "?" : initial)
-            .font(.system(size: size * 0.46, weight: .bold)).foregroundColor(Ui.gold)
+            .font(.system(size: size * 0.46, weight: .bold)).foregroundColor(Color.white)
             .frame(width: size, height: size)
             .background(RoundedRectangle(cornerRadius: size * 0.27).fill(Color(argb: 0xFF2B2416)))
-            .overlay(RoundedRectangle(cornerRadius: size * 0.27).stroke(Ui.gold.opacity(0.3)))
+            .overlay(RoundedRectangle(cornerRadius: size * 0.27).stroke(Color.white.opacity(0.3)))
     }
 }
 
@@ -965,7 +965,7 @@ struct ClientDetailSheet: View {
     }
 
     private func sectionTitle(_ title: String, _ count: Int) -> some View {
-        Text(title + " (\(count))").font(.headline).foregroundColor(Ui.gold)
+        Text(title + " (\(count))").font(.headline).foregroundColor(Color.white)
     }
 
     private func createButton(_ label: String, filled: Bool, _ a: @escaping () -> Void) -> some View {
@@ -974,10 +974,10 @@ struct ClientDetailSheet: View {
                 Image(systemName: "plus").font(.system(size: 15, weight: .bold))
                 Text(label).font(.subheadline.weight(.semibold)).lineLimit(1)
             }
-            .foregroundColor(filled ? Ui.bg : Ui.gold)
+            .foregroundColor(filled ? Ui.bg : Color.white)
             .frame(maxWidth: .infinity).frame(height: 48)
-            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Ui.gold : Color.clear))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Ui.gold, lineWidth: 1.2))
+            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Color.white : Color.clear))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white, lineWidth: 1.2))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -1036,7 +1036,7 @@ struct NoteRow: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 6) {
                 Text(n.name).font(bare ? Font.subheadline.weight(.semibold) : Font.body).foregroundColor(Ui.text).lineLimit(1)
-                if n.pinned { Image(systemName: "pin.fill").font(.caption).foregroundColor(Ui.gold) }
+                if n.pinned { Image(systemName: "pin.fill").font(.caption).foregroundColor(Color.white) }
                 if n.locked { Image(systemName: "lock.fill").font(.caption).foregroundColor(Ui.dim) }
             }
             Text(dateText(n.createdMs) + " • " + tr(n.pageCount == 1 ? "{0} folha" : "{0} folhas", n.pageCount)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)

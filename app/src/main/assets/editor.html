@@ -3770,6 +3770,23 @@ var rp3_pw=rp3;rp3=function(a){var n0=boxes.length;rp3_pw(a);if(!a||!a.sl)return
  for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.pf||b.poly){nw.push(b);continue}var tl=yS(b.x0),tr=yS(b.x1),lo=Math.min(tl,tr);if(b.y1<=lo+.5){nw.push(b);continue}if(b.y0>=Math.max(tl,tr)-.5)continue;
   var t=[];var CURN0=window.CURN;window.CURN=b.nm;BZ(t,[[b.x0,b.y0],[b.x1,b.y0],[b.x1,Math.max(b.y0,Math.min(b.y1,tr))],[b.x0,Math.max(b.y0,Math.min(b.y1,tl))]],b.z0,b.z1,'#'+(b.c||[200,200,200]).map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join(''),b.a);window.CURN=CURN0;var q=t[0];q.rpid=b.rpid;q.rpd=b.rpd;nw.push(q)}
  boxes.length=0;keep.concat(nw).forEach(function(b){boxes.push(b)})};
+/* ===== 3D sem telas de medida: tocar num item só seleciona (arrastar) e mostra uma barrinha embaixo com as ações
+   rápidas (acender, água, abrir, tirar). Medidas ficam no 2D (Estrutura). ⚙ abre as opções completas só se pedir ===== */
+var MINIK={fr:1,cook:1,cuba:1,geo:1,st:1};
+function frFloor(f){return f&&(f.b||0)<5&&/^(mesa|cadeira|banqueta|banco|deco|geladeira|lavaloucas|tv|sofa|cama)/.test(f.t||'')}
+var itRender_mini=itRender;itRender=function(){itRender_mini.apply(this,arguments);var E=it4Box(),x=ISX;if(!x||E.hidden){E.classList.remove('mini3');return}
+ if(!MINIK[x.k]||x.full||window.RO||window.MINI3OFF){E.classList.remove('mini3');E.style.top='';E.style.bottom='';return}
+ var o=itObj();if(!o)return;var B=function(at,tx,st){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px;'+(st||'')+'">'+tx+'</button>'},nm='',acts='';
+ if(x.k==='cook'){nm='Cooktop';acts=B('data-qfire="1"','🔥 Acender')+B('data-qfire="0"','Apagar')}
+ else if(x.k==='fr'){nm=o.nome||(typeof APM!=='undefined'&&APM[o.t]?APM[o.t].n:o.t)||'Item';if(o.t==='torneira'){var on=!!(WATER[String(o.id)]&&!WATER[String(o.id)].off);acts=B('data-qwat="'+(on?0:1)+'"',on?'🚰 Fechar':'🚰 Água')}else if(typeof frOpenK==='function'&&frOpenK(o))acts=B('data-qfo="1"',(FRT[String(o.id)]||0)>.5?'Fechar':'Abrir')}
+ else if(x.k==='geo')nm=o.tp==='placa'?'Placa MDF':o.tp==='tamp'?'Tamponamento':'Caixa';else if(x.k==='st')nm='Pedra';else nm='Cuba';
+ E.innerHTML='<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><b style="flex:1;min-width:80px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(String(nm).split(' · ')[0])+'</b>'+acts+(x.k!=='st'?B('data-qdel="1"',x.del?'Toque de novo':'🗑',x.del?'background:#c62828;color:#fff;border-color:#c62828':''):'')+B('data-qfull="1"','⚙')+B('data-qx="1"','✕')+'</div><div style="font-size:11px;color:#666;margin-top:2px">Arraste pra mudar de lugar · medidas no 2D (Estrutura)</div>';
+ E.classList.add('mini3');E.style.top='auto';E.style.bottom='8px'};
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!ISX)return;var d=t.dataset;
+ if(d.qfull){e.stopImmediatePropagation();ISX.full=1;var E=it4Box();E.style.top='';E.style.bottom='';itRender();build();render();return}
+ if(d.qfo){e.stopImmediatePropagation();var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(f){frToggle(f.id);setTimeout(itRender,50)}return}},true);
+/* sem setas de medida nos itens (só arrastar); móveis e mobília do chão arrastam pelo chão */
+var ahSpecs_mini=ahSpecs;ahSpecs=function(){var H=ahSpecs_mini();var x=ISX;if(!x||!MINIK[x.k]||x.full||window.RO||window.MINI3OFF)return H;if(x.k==='fr'){var f=itObj();if(f&&frFloor(f))BDR={k:'xz',y:f.b||0,f:function(s,d){var D=(typeof roomD==='function'?roomD():6000);f.x=Math.max(0,Math.min(S.W-f.w,Math.round((s.x+d[0])/10)*10));f.y=Math.max(0,Math.min(D-(f.d||400),Math.round(((+s.y||0)+d[1])/10)*10))}}}return []};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>

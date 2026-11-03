@@ -312,7 +312,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         androidx.compose.foundation.text.BasicTextField(
                             value = query, onValueChange = { query = it }, singleLine = true,
                             textStyle = androidx.compose.ui.text.TextStyle(color = Ui.text, fontSize = 15.sp),
-                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Ui.gold),
+                            cursorBrush = androidx.compose.ui.graphics.SolidColor(Color.White),
                             decorationBox = { inner ->
                                 if (query.isEmpty()) Text(
                                     if (tab == HomeTab.CLIENTES) tr("Buscar cliente...") else tr("Buscar projeto..."),
@@ -331,20 +331,20 @@ fun LibraryScreen(vm: AppViewModel) {
                     Box {
                         val on = statusF != null
                         Box(
-                            Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(if (on) Ui.gold.copy(alpha = 0.18f) else Ui.panel)
-                                .border(1.dp, if (on) Ui.gold else Ui.line, RoundedCornerShape(14.dp)).clickable { statusMenu = true },
+                            Modifier.size(48.dp).clip(RoundedCornerShape(14.dp)).background(if (on) Color.White.copy(alpha = 0.18f) else Ui.panel)
+                                .border(1.dp, if (on) Color.White else Ui.line, RoundedCornerShape(14.dp)).clickable { statusMenu = true },
                             contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Filled.FilterAlt, tr("Filtrar por status"), tint = if (on) Ui.gold else Ui.text, modifier = Modifier.size(22.dp)) }
+                        ) { Icon(Icons.Filled.FilterAlt, tr("Filtrar por status"), tint = if (on) Color.White else Ui.text, modifier = Modifier.size(22.dp)) }
                         DropdownMenu(expanded = statusMenu, onDismissRequest = { statusMenu = false }) {
                             DropdownMenuItem(
                                 text = { Text(tr("Todos")) },
-                                trailingIcon = { if (statusF == null) Icon(Icons.Filled.Check, null, tint = Ui.gold) },
+                                trailingIcon = { if (statusF == null) Icon(Icons.Filled.Check, null, tint = Color.White) },
                                 onClick = { statusMenu = false; statusF = null },
                             )
                             br.com.arque.measure.data.MoveisProjects.STATUS.forEach { s ->
                                 DropdownMenuItem(
                                     text = { StatusChip(s) },
-                                    trailingIcon = { if (statusF == s) Icon(Icons.Filled.Check, null, tint = Ui.gold) },
+                                    trailingIcon = { if (statusF == s) Icon(Icons.Filled.Check, null, tint = Color.White) },
                                     onClick = { statusMenu = false; statusF = s },
                                 )
                             }
@@ -359,11 +359,11 @@ fun LibraryScreen(vm: AppViewModel) {
                         LibFilter.All -> ""
                     }
                     Row(
-                        Modifier.padding(horizontal = 16.dp, vertical = 2.dp).clip(RoundedCornerShape(50)).background(Ui.gold.copy(alpha = 0.15f))
+                        Modifier.padding(horizontal = 16.dp, vertical = 2.dp).clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.15f))
                             .clickable { vm.filter = LibFilter.All }.padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(if (trash) Icons.Filled.Delete else Icons.Filled.Folder, null, tint = Ui.gold, modifier = Modifier.size(16.dp))
+                        Icon(if (trash) Icons.Filled.Delete else Icons.Filled.Folder, null, tint = Color.White, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(fname, color = Ui.text, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                         Spacer(Modifier.width(6.dp))
@@ -513,9 +513,8 @@ fun LibraryScreen(vm: AppViewModel) {
 @Composable
 private fun HomeHeader(bellDot: Boolean, onBell: () -> Unit, onProfile: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)).background(Ui.gold), contentAlignment = Alignment.Center) {
-            Text("A", color = Ui.bg, fontSize = 28.sp, fontWeight = FontWeight.Black)
-        }
+        androidx.compose.foundation.Image(painter = androidx.compose.ui.res.painterResource(br.com.arque.measure.R.drawable.logo_arque), contentDescription = "Arquemestre",
+            modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text("ARQUEMESTRE", color = Ui.text, fontSize = 19.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, maxLines = 1)
@@ -535,7 +534,7 @@ private fun RoundIconButton(icon: ImageVector, desc: String, dot: Boolean = fals
     ) {
         Icon(icon, desc, tint = Ui.text, modifier = Modifier.size(22.dp))
         if (dot) Box(
-            Modifier.align(Alignment.TopEnd).padding(top = 9.dp, end = 10.dp).size(10.dp).clip(CircleShape).background(Ui.gold)
+            Modifier.align(Alignment.TopEnd).padding(top = 9.dp, end = 10.dp).size(10.dp).clip(CircleShape).background(Color.White)
                 .border(2.dp, Ui.panel, CircleShape),
         )
     }
@@ -552,14 +551,14 @@ private fun HomeSegments(tab: HomeTab, onTab: (HomeTab) -> Unit) {
             SegPill(tr("Clientes"), Icons.Filled.Person, tab == HomeTab.CLIENTES, Modifier.weight(1f)) { onTab(HomeTab.CLIENTES) }
             SegPill(tr("Projetos"), Icons.Filled.Layers, tab == HomeTab.PROJETOS, Modifier.weight(1f)) { onTab(HomeTab.PROJETOS) }
         }
-        Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(1.dp).background(Ui.gold.copy(alpha = 0.55f)))
+        Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(1.dp).background(Color.White.copy(alpha = 0.55f)))
     }
 }
 
 @Composable
 private fun SegPill(label: String, icon: ImageVector, selected: Boolean, mod: Modifier, onClick: () -> Unit) {
     Row(
-        mod.height(46.dp).clip(RoundedCornerShape(12.dp)).background(if (selected) Ui.gold else Color.Transparent).clickable(onClick = onClick),
+        mod.height(46.dp).clip(RoundedCornerShape(12.dp)).background(if (selected) Color.White else Color.Transparent).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -573,7 +572,7 @@ private fun SegPill(label: String, icon: ImageVector, selected: Boolean, mod: Mo
 @Composable
 private fun GoldButton(label: String, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(14.dp)).background(Ui.gold).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(14.dp)).background(Color.White).clickable(onClick = onClick),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -587,12 +586,12 @@ private fun GoldButton(label: String, onClick: () -> Unit) {
 @Composable
 private fun SmallAction(label: String, icon: ImageVector, gold: Boolean, mod: Modifier, onClick: () -> Unit) {
     Row(
-        mod.height(48.dp).clip(RoundedCornerShape(14.dp)).background(if (gold) Ui.gold else Ui.panel)
-            .border(1.dp, if (gold) Ui.gold else Ui.line, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp),
+        mod.height(48.dp).clip(RoundedCornerShape(14.dp)).background(if (gold) Color.White else Ui.panel)
+            .border(1.dp, if (gold) Color.White else Ui.line, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, null, tint = if (gold) Ui.bg else Ui.gold, modifier = Modifier.size(18.dp))
+        Icon(icon, null, tint = if (gold) Ui.bg else Color.White, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(6.dp))
         Text(label, color = if (gold) Ui.bg else Ui.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -633,11 +632,11 @@ private fun homeClients(vm: AppViewModel, projs: List<br.com.arque.measure.data.
 @Composable
 private fun ClientAvatar(name: String, size: Int = 48) {
     Box(
-        Modifier.size(size.dp).clip(RoundedCornerShape((size / 4).dp)).background(Ui.goldDim)
-            .border(1.dp, Ui.gold.copy(alpha = 0.35f), RoundedCornerShape((size / 4).dp)),
+        Modifier.size(size.dp).clip(RoundedCornerShape((size / 4).dp)).background(Color(0xFF2A2E35))
+            .border(1.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape((size / 4).dp)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = Ui.gold, fontSize = (size * 0.46f).sp, fontWeight = FontWeight.Bold)
+        Text(name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "?", color = Color.White, fontSize = (size * 0.46f).sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -712,7 +711,7 @@ private fun ClientDetail(vm: AppViewModel, c: HomeClient, onClose: () -> Unit) {
 @Composable
 private fun SectionTitle(label: String, icon: ImageVector) {
     Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, tint = Ui.gold, modifier = Modifier.size(18.dp))
+        Icon(icon, null, tint = Color.White, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Text(label, color = Ui.text, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
@@ -736,8 +735,8 @@ private fun ShortcutCard(label: String, icon: ImageVector, mod: Modifier, onClic
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.size(34.dp).clip(CircleShape).background(Ui.goldDim), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = Ui.gold, modifier = Modifier.size(20.dp))
+        Box(Modifier.size(34.dp).clip(CircleShape).background(Color(0xFF2A2E35)), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.height(5.dp))
         Text(label, color = Ui.text, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -749,13 +748,13 @@ private fun ShortcutCard(label: String, icon: ImageVector, mod: Modifier, onClic
 private fun TrialBar(left: String, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp))
-            .border(1.dp, Ui.gold, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
+            .border(1.dp, Color.White, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Filled.Timer, null, tint = Ui.gold, modifier = Modifier.size(18.dp))
+        Icon(Icons.Filled.Timer, null, tint = Color.White, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text(tr("Teste grátis · falta {0}", left), color = Ui.gold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Ui.gold)
+        Text(tr("Teste grátis · falta {0}", left), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Color.White)
     }
 }
 
@@ -780,9 +779,9 @@ private fun NavItem(label: String, icon: ImageVector, selected: Boolean, mod: Mo
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(icon, label, tint = if (selected) Ui.gold else Ui.dim, modifier = Modifier.size(24.dp))
-        Text(label, color = if (selected) Ui.gold else Ui.dim, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Box(Modifier.padding(top = 3.dp).size(width = 22.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(if (selected) Ui.gold else Color.Transparent))
+        Icon(icon, label, tint = if (selected) Color.White else Ui.dim, modifier = Modifier.size(24.dp))
+        Text(label, color = if (selected) Color.White else Ui.dim, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Box(Modifier.padding(top = 3.dp).size(width = 22.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(if (selected) Color.White else Color.Transparent))
     }
 }
 
@@ -805,7 +804,7 @@ private fun HomeSheet(title: String, onDismiss: () -> Unit, items: List<SheetIte
             ) {
                 Box(Modifier.padding(top = 10.dp).align(Alignment.CenterHorizontally).size(width = 40.dp, height = 4.dp).clip(RoundedCornerShape(2.dp)).background(Ui.line))
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, color = Ui.gold, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text(title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     IconButton(onClick = onDismiss) { Icon(Icons.Filled.Close, tr("Fechar"), tint = Ui.dim) }
                 }
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 10.dp)) {
@@ -815,10 +814,10 @@ private fun HomeSheet(title: String, onDismiss: () -> Unit, items: List<SheetIte
                                 .clickable { onDismiss(); it2.onClick() }.padding(horizontal = 12.dp, vertical = 13.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(it2.icon, null, tint = if (it2.selected) Ui.gold else Ui.dim, modifier = Modifier.size(22.dp))
+                            Icon(it2.icon, null, tint = if (it2.selected) Color.White else Ui.dim, modifier = Modifier.size(22.dp))
                             Spacer(Modifier.width(14.dp))
                             Text(it2.label, color = Ui.text, fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            if (it2.selected) Icon(Icons.Filled.Check, null, tint = Ui.gold, modifier = Modifier.size(18.dp))
+                            if (it2.selected) Icon(Icons.Filled.Check, null, tint = Color.White, modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -834,7 +833,7 @@ private fun SideItem(label: String, icon: ImageVector, selected: Boolean, onClic
             .clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, null, tint = if (selected) Ui.gold else Ui.dim, modifier = Modifier.size(18.dp))
+        Icon(icon, null, tint = if (selected) Color.White else Ui.dim, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         Text(label, color = Ui.text, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

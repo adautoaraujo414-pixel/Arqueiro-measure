@@ -4,9 +4,7 @@ name: Windows
 # gera o instalador (.exe e .msi) e a versão portátil (.zip) e publica no release win-N.
 # Não mexe no Android nem no iOS (tem build e workflow próprios).
 on:
-  push:
-    branches: [ 'feature/**' ]
-    paths: [ 'windows/**', 'app/src/main/assets/**', '.github/workflows/windows.yml' ]
+  # Windows em pausa (prioridade iOS e Android): só roda quando disparado à mão
   workflow_dispatch:
 
 permissions:

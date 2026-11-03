@@ -52,13 +52,13 @@ shoot() { # $1 kind (iphone|ipad)
     [ "$lang" = "en" ] && loc=en_US
     [ "$lang" = "es" ] && loc=es_MX
     local n=1
-    for scr in library editor agenda quotes moveis trial; do
+    for scr in library editor agenda quotes moveis trial moveis3d moveisplanta; do
       xcrun simctl terminate "$udid" "$BID" 2>/dev/null || true
       xcrun simctl privacy "$udid" grant photos "$BID" 2>/dev/null || true
       local cmd=(xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -AppleLocale "$loc" -demo)
       if [ "$scr" = "trial" ]; then cmd+=(-trialOffer); else cmd+=(-screen "$scr"); fi
       "${cmd[@]}" >/dev/null
-      if [ "$scr" = "moveis" ]; then sleep 20; else sleep 7; fi
+      if [ "$scr" = "moveis" ] || [ "$scr" = "moveis3d" ] || [ "$scr" = "moveisplanta" ]; then sleep 22; else sleep 7; fi
       take "$udid" "$dir/${kind}-${n}-${scr}.png" "${cmd[@]}"
       n=$((n+1))
     done

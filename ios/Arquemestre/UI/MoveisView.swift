@@ -179,7 +179,11 @@ struct MoveisWeb: UIViewRepresentable {
         holder.arm()
         let cur = I18n.shared.currencySymbol().addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
         // capturas automáticas da loja (-demo): sem a janela de primeira vez dos padrões
-        let demo = ProcessInfo.processInfo.arguments.contains("-demo") ? "&nosetup=1" : ""
+        let args = ProcessInfo.processInfo.arguments
+        var demo = args.contains("-demo") ? "&nosetup=1" : ""
+        if let i = args.firstIndex(of: "-screen"), i + 1 < args.count {
+            if args[i + 1] == "moveis3d" { demo += "&demo3d=1" } else if args[i + 1] == "moveisplanta" { demo += "&demoplanta=1" }
+        }
         w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)\(demo)") ?? URL(string: "arque://app/editor.html")!))
         return w
     }

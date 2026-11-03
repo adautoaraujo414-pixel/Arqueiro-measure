@@ -10,8 +10,8 @@ from PIL import Image
 API = "https://api.appstoreconnect.apple.com/v1"
 SRC, APP_ID = sys.argv[1], sys.argv[2]
 
-# ordem na loja (a "library" do iPhone saiu com a tela inicial do iOS, então fica de fora)
-IPHONE = ["iphone-5-moveis", "iphone-2-editor", "iphone-4-quotes", "iphone-3-agenda", "iphone-6-trial"]
+# ordem na loja: tela inicial nova primeiro
+IPHONE = ["iphone-1-library", "iphone-5-moveis", "iphone-2-editor", "iphone-4-quotes", "iphone-3-agenda", "iphone-6-trial"]
 IPAD = ["ipad-5-moveis", "ipad-2-editor", "ipad-1-library", "ipad-4-quotes", "ipad-3-agenda", "ipad-6-trial"]
 # (tipo na API, lista, tamanho final ou None pra manter)
 SETS = [

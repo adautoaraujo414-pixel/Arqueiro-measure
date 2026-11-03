@@ -1,0 +1,24 @@
+name: App Store - colocar build na versão e enviar pra revisão
+
+on:
+  workflow_dispatch:
+    inputs:
+      enviar:
+        description: "Enviar pra revisão da Apple agora"
+        type: boolean
+        default: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyjwt cryptography requests
+      - name: Build na versão (e envio)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ENVIAR: ${{ inputs.enviar && '1' || '0' }}
+        run: python .github/scripts/asc_submit.py 6829800820

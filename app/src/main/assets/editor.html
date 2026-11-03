@@ -3502,9 +3502,9 @@ var ap3model_i=ap3model;ap3model=function(f,z0){var t=f.t,fn={mesa:mesa3,cadeira
 var apAdd_i=apAdd;apAdd=function(t,mi){var it=apAdd_i(t,mi);if(/^(mesa|cadeira|banqueta)$/.test(t)){var D=(typeof roomD==='function'?roomD():2600);it.b=0;it.x=Math.round(Math.max(0,(S.W-it.w)/2));it.y=Math.round(Math.max(700,Math.min(D-it.d-200,D/2)));if(apFinK&&APFINS)delete it.fin}return it};
 var apFinK_i=apFinK;apFinK=function(t){if(/^(mesa|cadeira|banqueta)$/.test(t||''))return null;return apFinK_i(t)};
 /* quadro: mesa, cadeira e banqueta mostram também a distância da parede do fundo */
-var itRender_i=itRender;itRender=function(){itRender_i();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||!/^(mesa|cadeira|banqueta)$/.test(f.t))return;if(E.querySelector('[data-qf="y"]'))return;var rx=E.querySelector('[data-qf="x"]');if(!rx)return;var row=rx.parentNode,cl=row.cloneNode(true);cl.querySelector('span').textContent='Da parede do fundo (mm)';cl.querySelectorAll('[data-qin]').forEach(function(b){b.dataset.qin='y|'+(b.dataset.qin.split('|')[1])});var ip=cl.querySelector('input');ip.dataset.qf='y';ip.value=+f.y||0;row.insertAdjacentElement('afterend',cl)};
+var itRender_i=itRender;itRender=function(){itRender_i();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||!/^(mesa|cadeira|banqueta|banco|deco|airfryer)$/.test(f.t))return;if(E.querySelector('[data-qf="y"]'))return;var rx=E.querySelector('[data-qf="x"]');if(!rx)return;var row=rx.parentNode,cl=row.cloneNode(true);cl.querySelector('span').textContent='Da parede do fundo (mm)';cl.querySelectorAll('[data-qin]').forEach(function(b){b.dataset.qin='y|'+(b.dataset.qin.split('|')[1])});var ip=cl.querySelector('input');ip.dataset.qf='y';ip.value=+f.y||0;row.insertAdjacentElement('afterend',cl)};
 /* ＋ Criar: Mobília (mesa, cadeira, banqueta) · toque nela abre o quadro com altura, largura e lugar */
-var crpRender_j2=crpRender;crpRender=function(){crpRender_j2();var C=crpBox();if(C.querySelector('[data-cmob]'))return;var Bt=function(at,tx){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px">'+tx+'</button>'},L=[['mesa',0,'＋ Mesa 4 lugares'],['mesa',1,'＋ Mesa 6 lugares'],['mesa',3,'＋ Mesa redonda'],['cadeira',0,'＋ Cadeira'],['banqueta',0,'＋ Banqueta (bancada)'],['banqueta',1,'＋ Banqueta (ilha)']];
+var crpRender_j2=crpRender;crpRender=function(){crpRender_j2();var C=crpBox();if(C.querySelector('[data-cmob]'))return;var Bt=function(at,tx){return '<button '+at+' style="padding:4px 10px;min-height:34px;font-size:13px">'+tx+'</button>'},L=[['mesa',0,'＋ Mesa 4 lugares'],['mesa',1,'＋ Mesa 6 lugares'],['mesa',3,'＋ Mesa redonda'],['cadeira',0,'＋ Cadeira'],['banqueta',0,'＋ Banqueta (bancada)'],['banqueta',1,'＋ Banqueta (ilha)'],['banco',0,'＋ Banco'],['deco',0,'＋ Vaso com planta'],['deco',2,'＋ Fruteira'],['airfryer',0,'＋ Air fryer'],['lavaloucas',3,'＋ Lava-louças 14 serviços']];
  var il=[].slice.call(C.querySelectorAll('div')).filter(function(dv){return /^Ilha, península/.test(dv.textContent.trim())&&dv.children.length<=1})[0],h='<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:10px 0 6px;border-top:1px solid #e3e6ea;padding-top:8px">'+ICO('modulo',24)+'Mobília</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px">'+L.map(function(q){return Bt('data-cmob="'+q[0]+'|'+q[1]+'"',q[2])}).join('')+'</div><div style="font-size:12px;color:#555;margin-bottom:4px">Toque nela no 3D pra mudar a altura, o tamanho e o lugar.</div>';
  if(il)il.insertAdjacentHTML('beforebegin',h);else C.insertAdjacentHTML('beforeend',h)};
 crpBox().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||!t.dataset.cmob)return;e.stopImmediatePropagation();if(window.RO)return;var q=t.dataset.cmob.split('|');snap();var it=apAdd(q[0],+q[1]);CRP.hidden=true;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itOpen({k:'fr',id:it.id});ambMsg('Arraste pra mudar de lugar · no quadro: altura e tamanho')},true);
@@ -3550,6 +3550,53 @@ var forno3_m=forno3_k;forno3_k=function(f,z0){var n0=boxes.length;forno3_m(f,z0)
 var micro3_m=micro3;micro3=function(f,z0){var n0=boxes.length;micro3_m(f,z0);var a=FRA[String(f.id)]||0;if(a<=0)return;var body=boxes[n0];if(!body)return;var emb=/embutir/i.test(f.nome||''),x0=f.x,x1=x0+f.w,w=f.w,xd=x0+w*(emb?.74:.7),bz0=body.z0,bz1=body.z1,y0=body.y0,y1=body.y1;
  body.x0=xd-6;var CV='#e3e6e9';bx(x0+(emb?20:0),xd-6,y0,y0+10,bz0,bz1,CV);bx(x0+(emb?20:0),xd-6,y1-10,y1,bz0,bz1,CV);bx(x0+(emb?20:0),x0+(emb?30:10),y0,y1,bz0,bz1,CV);bx(x0+(emb?20:0),xd-6,y0,y1,bz0,bz0+10,CV);
  var pr=cylY((x0+xd)/2,(bz0+bz1)/2,Math.min(135,(xd-x0)*.36),y0+14,y0+18,'#e9f3f8',22);pr.a=.7;var lp=bx(xd-30,xd-14,y1-30,y1-14,bz0+40,bz0+60,'#fff3c4');lp.em=1};
+/* ===== 3D da mobília, objetos, lava-louça e air fryer (formas de verdade) ===== */
+var WOOD='#a47a52',WOOD2='#8a6440',FERRO='#26292d',TEC='#c9b79c';
+function legs4(x0,x1,za,zb,y0,y1,r,c,ins){ins=ins||30;[[x0+ins,za+ins],[x1-ins,za+ins],[x0+ins,zb-ins],[x1-ins,zb-ins]].forEach(function(q){bx(q[0]-r,q[0]+r,y0,y1,q[1]-r,q[1]+r,c)})}
+function banco3(f,z0){var x0=f.x,w=f.w,x1=x0+w,d=f.d||350,y0=f.b||0,h=f.h||450,za=mobZ(f,z0),zb=za+d,nm=f.nome||'';
+ if(/puff/i.test(nm)){cylY(x0+w/2,za+d/2,w/2,y0+20,y0+h,'#7b6a5c',22);cylY(x0+w/2,za+d/2,w/2-6,y0+h,y0+h+6,'#8a7868',22);return}
+ bx(x0,x1,y0+h-40,y0+h,za,zb,WOOD);legs4(x0,x1,za,zb,y0,y0+h-40,20,WOOD2,40);bx(x0+60,x1-60,y0+120,y0+150,za+d/2-12,za+d/2+12,WOOD2)}
+var banqueta3_o=banqueta3;banqueta3=function(f,z0){var nm=f.nome||'';if(!/madeira/i.test(nm))return banqueta3_o(f,z0);var x0=f.x,w=f.w,x1=x0+w,d=f.d||w,y0=f.b||0,h=f.h||650,za=mobZ(f,z0),zb=za+d;
+ bx(x0,x1,y0+h-35,y0+h,za,zb,WOOD);legs4(x0,x1,za,zb,y0,y0+h-35,16,WOOD2,25);[[za+25,za+30],[zb-30,zb-25]].forEach(function(q){bx(x0+25,x1-25,y0+250,y0+275,q[0],q[1],WOOD2)});bx(x0+25,x0+30,y0+250,y0+275,za+25,zb-25,WOOD2);bx(x1-30,x1-25,y0+250,y0+275,za+25,zb-25,WOOD2);
+ if(/encosto/i.test(nm)){bx(x0+10,x1-10,y0+h+180,y0+h+260,za,za+25,WOOD);bx(x0+40,x0+60,y0+h,y0+h+180,za,za+20,WOOD2);bx(x1-60,x1-40,y0+h,y0+h+180,za,za+20,WOOD2)}};
+var cadeira3_o=cadeira3;cadeira3=function(f,z0){if(!/ferro/i.test(f.nome||''))return cadeira3_o(f,z0);var x0=f.x,w=f.w,x1=x0+w,d=f.d||480,y0=f.b||0,za=mobZ(f,z0),zb=za+d,sh=460;
+ bx(x0,x1,y0+sh-25,y0+sh,za,zb,FERRO);legs4(x0,x1,za,zb,y0,y0+sh-25,10,FERRO,18);bx(x0+10,x0+22,y0+sh,y0+(f.h||850),za,za+14,FERRO);bx(x1-22,x1-10,y0+sh,y0+(f.h||850),za,za+14,FERRO);for(var k=0;k<3;k++){var yy=y0+sh+120+k*80;bx(x0+22,x1-22,yy,yy+30,za,za+12,FERRO)}};
+function deco3(f,z0){var x0=f.x,w=f.w,x1=x0+w,d=f.d||w,y0=f.b||0,h=f.h||200,za=mobZ(f,z0),zb=za+d,xc=x0+w/2,zc=za+d/2,nm=f.nome||'';
+ if(/vaso/i.test(nm)){var hv=Math.min(h*.4,350);cylY(xc,zc,w*.32,y0,y0+hv,'#b8a089',18);cylY(xc,zc,w*.36,y0+hv-20,y0+hv,'#a38c75',18);for(var k=0;k<7;k++){var t=k/7*Math.PI*2,r=w*.18;var lf=bx(xc+Math.cos(t)*r-w*.12,xc+Math.cos(t)*r+w*.12,y0+hv,y0+h-(k%3)*h*.08,zc+Math.sin(t)*r-w*.04,zc+Math.sin(t)*r+w*.04,k%2?'#3f7d3a':'#4f9446')}return}
+ if(/fruteira/i.test(nm)){cylY(xc,zc,w/2,y0,y0+50,'#d9d4cb',20);var fr=[['#e2452f',0,0],['#f1c232',.5,1],['#7cb342',-.4,2],['#e2452f',.2,-1.2],['#ff9800',-.3,-.6]];fr.forEach(function(q,i){cylY(xc+q[1]*w*.25,zc+q[2]*w*.08,w*.12,y0+50,y0+50+w*.2+i%2*20,q[0],12)});return}
+ if(/pratos/i.test(nm)){for(var p=0;p<8;p++)cylY(xc,zc,w/2-(p%2)*4,y0+p*14,y0+p*14+12,p%2?'#f5f5f2':'#e9e9e4',20);return}
+ if(/livros/i.test(nm)){var cs=['#7b2d26','#2d4f7b','#c9a227','#3d6b4a','#5a3f6b'],bw=w/5;cs.forEach(function(c,i){bx(x0+i*bw,x0+(i+1)*bw-3,y0,y0+h-(i%2)*20,za,zb,c)});return}
+ if(/toalhas/i.test(nm)){['#e8e2d6','#9fb8c9','#e8e2d6','#c98f8f'].forEach(function(c,i){bx(x0,x1,y0+i*40,y0+i*40+38,za,zb,c)});return}
+ if(/camisas/i.test(nm)){['#ffffff','#2d4f7b','#9e9e9e','#c62828','#f1e5c9'].forEach(function(c,i){bx(x0,x1,y0+i*28,y0+i*28+26,za,zb,c);bx(xc-40,xc+40,y0+i*28+26,y0+i*28+28,za+10,za+60,c)});return}
+ if(/sapatos/i.test(nm)){[x0,xc+10].forEach(function(xa){bx(xa,xa+w/2-10,y0,y0+30,za,zb,'#3e2a1e');bx(xa,xa+w/2-10,y0+30,y0+h,za,za+d*.45,'#4e3626');bx(xa+5,xa+w/2-15,y0+28,y0+32,za+d*.45,zb-10,'#2b1d14')});return}
+ if(/cafeteira/i.test(nm)){bx(x0,x1,y0,y0+30,za,zb,'#1d2126');bx(x0,x1,y0+30,y0+h,za,za+d*.35,'#1d2126');bx(x0,x1,y0+h-60,y0+h,za+d*.35,zb,'#1d2126');var jar=cylY(xc,za+d*.65,w*.35,y0+30,y0+h*.55,'#a8c4d6',16);jar.a=.55;return}
+ if(/liquidificador/i.test(nm)){bx(x0,x1,y0,y0+h*.3,za,zb,'#2a2d31');var cp=bx(x0+15,x1-15,y0+h*.3,y0+h-20,za+15,zb-15,'#bcd3e0');cp.a=.5;bx(x0+10,x1-10,y0+h-20,y0+h,za+10,zb-10,'#2a2d31');return}
+ if(/roupas no cabide/i.test(nm)){bx(x0,x1,y0+h-15,y0+h,zc-8,zc+8,'#b3bac2');var C=['#2d4f7b','#ffffff','#c62828','#3d6b4a','#9e9e9e','#f1e5c9','#5a3f6b','#1d2126'],n=Math.max(4,Math.round(w/70));for(var i=0;i<n;i++){var xx=x0+15+(w-30)*i/(n-1);bx(xx-6,xx+6,y0+h-150-(i%3)*120,y0+h-25,za+20,zb-20,C[i%C.length]);bx(xx-1,xx+1,y0+h-30,y0+h-15,zc-30,zc+30,'#9aa3ad')}return}
+ bx(x0,x1,y0,y0+h,za,zb,'#c9c2b6')}
+function airfryer3(f,z0){var x0=f.x,w=f.w,x1=x0+w,d=f.d||360,y0=f.b||0,h=f.h||340,za=mobZ(f,z0),zb=za+d,a=FRA[String(f.id)]||0,c='#1d2126';
+ bx(x0+10,x1-10,y0+15,y0+h-10,za,zb-40,c);bx(x0,x1,y0+h-30,y0+h,za+10,zb-30,'#26292d');var dp=bx(x0+w*.3,x1-w*.3,y0+h-2,y0+h+1,zb-110,zb-60,'#3fd0ff');dp.em=1;
+ [[x0+30,za+30],[x1-30,za+30],[x0+30,zb-70],[x1-30,zb-70]].forEach(function(q){bx(q[0]-12,q[0]+12,y0,y0+15,q[1]-12,q[1]+12,'#111')});
+ var s=a*Math.min(260,d*.75);bx(x0+18,x1-18,y0+20,y0+h*.62,zb-40+s-d*.6,zb-40+s,'#2b2e33');bx(x0+12,x1-12,y0+18,y0+h*.65,zb-40+s,zb-25+s,c);bx(x0+w*.38,x1-w*.38,y0+h*.3,y0+h*.4,zb-25+s,zb+40+s,'#2b2e33');
+ if(a>0){var bk=bx(x0+30,x1-30,y0+h*.2,y0+h*.58,zb-40+s-d*.55,zb-50+s,'#5a5f66');bk.a=.85}}
+function lavaloucas3(f,z0){var x0=f.x,w=f.w,x1=x0+w,d=f.d||600,y0=f.b||0,h=f.h||845,D=z0+d,emb=!!f.emb||/embutir/i.test(f.nome||''),a=ease(FRA[String(f.id)]||0),n0=boxes.length,c=emb?'#cdb98f':INOX,ins=20;
+ var body=bx(x0+2,x1-2,y0+80,y0+h-2,z0,D-30,'#9aa3ad');bx(x0+30,x1-30,y0,y0+80,z0+40,D-60,'#2c3036');
+ var nd=boxes.length;bx(x0,x1,y0+80,y0+h,D-30,D,c);bx(x0,x1,y0+h-90,y0+h,D,D+2,emb?c:'#2b2e33');var lb=bx(x0+w*.6,x0+w*.8,y0+h-60,y0+h-40,D+2,D+3,'#4be3a0');lb.em=1;if(!emb)puxH(x0+w*.2,x1-w*.2,y0+h-110,D);var ne=boxes.length;
+ if(a<=0)return;hollow(body,18,'#c3cad1');var phi=a*Math.PI*.5;for(var i=nd;i<ne;i++)frRotX(boxes[i],y0+80,D,phi);
+ var zi0=z0+30,zi1=D-40,yl=y0+80+30,yu=y0+80+(h-80)*.55,sl=a*(d*.55);
+ [[yl,yu-30,'#9aa3ad',sl],[yu,y0+h-60,'#9aa3ad',0]].forEach(function(q,k){var za=zi0+q[3],zb=zi1+q[3],yA=q[0],yB=q[0]+(k?90:130);bx(x0+ins,x1-ins,yA,yA+4,za,zb,'#b3bac2');[za,zb-4].forEach(function(zz){bx(x0+ins,x1-ins,yA,yB,zz,zz+4,'#b3bac2')});bx(x0+ins,x0+ins+4,yA,yB,za,zb,'#b3bac2');bx(x1-ins-4,x1-ins,yA,yB,za,zb,'#b3bac2');
+  if(!k){for(var p=0;p<9;p++){var zp=za+40+(zb-za-80)*p/8;var pl=cylZ(x0+w*.35,yA+110,95,zp,zp+6,'#f5f5f2',18);pl.a=.95}var cb=bx(x1-ins-140,x1-ins-10,yA+4,yA+130,za+20,za+150,'#c7cdd3');cb.a=.8}
+  else{for(var g=0;g<6;g++){var xg=x0+ins+40+(w-2*ins-80)*(g%3)/2,zg=za+60+(zb-za-120)*Math.floor(g/3);cylY(xg,zg,34,yA+4,yA+84,'#e9f3f8',14).a=.6}}});
+ cylY((x0+x1)/2,(zi0+zi1)/2,12,yl-6,yl-2,'#8a929c',10);bx(x0+w*.2,x1-w*.2,yl-6,yl-2,(zi0+zi1)/2-10,(zi0+zi1)/2+10,'#8a929c')}
+var ap3model_o=ap3model;ap3model=function(f,z0){var t=f.t,fn={banco:banco3,deco:deco3,airfryer:airfryer3,lavaloucas:lavaloucas3}[t];if(fn){fn(f,z0);return true}return ap3model_o(f,z0)};
+var frOpenK_o=frOpenK;frOpenK=function(f){return /^(lavaloucas|airfryer)$/.test(f.t||'')||frOpenK_o(f)};
+var apFinK_o=apFinK;apFinK=function(t){if(/^(banco|deco|airfryer)$/.test(t||''))return null;return apFinK_o(t)};
+/* quadro de mobília/objeto: onde fica (no chão, na bancada, em cima do módulo) e a altura */
+var itRender_o=itRender;itRender=function(){itRender_o();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||!/^(mesa|cadeira|banqueta|banco|deco|airfryer)$/.test(f.t))return;if(E.querySelector('[data-qon]'))return;
+ var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'},bt=window.benchTop?benchTop():920,mi=modUnder(f),mt=mi?Math.round(mi.b+mi.h):0;
+ var h='<div style="font-size:12px;color:#444;margin:4px 0 0">Onde fica</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+Bt('data-qon="0"','No chão',!(f.b>0))+(S.stones&&S.stones.length?Bt('data-qon="'+bt+'"','Em cima da bancada',f.b===bt):'')+(mi?Bt('data-qon="'+mt+'"','Em cima do módulo',f.b===mt):'')+'</div>';
+ var hd=E.firstElementChild;if(hd)hd.insertAdjacentHTML('afterend',h)};
+function modUnder(f){var cx=f.x+f.w/2,best=null;S.mods.forEach(function(m){if(m.wing||cx<m.x||cx>m.x+m.w)return;var top=m.b+m.h;if(!best||top<best.b+best.h)best=m});return best}
+it4Box().addEventListener('click',function(e){var t=e.target.closest('button');if(!t||t.dataset.qon===undefined||!ISX||ISX.k!=='fr'||window.RO)return;e.stopImmediatePropagation();var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f)return;snap();f.b=+t.dataset.qon;if(f.b>0&&!(+f.y>0))f.y=Math.max(0,Math.round((600-f.d)/2));try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itRender()},true);
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>
@@ -3684,6 +3731,37 @@ document.addEventListener('click',function(e){var x=e.target&&e.target.closest&&
 /* o projeto do cliente não salva nada por cima */
 var sv=window.saveNow;if(typeof sv==='function')window.saveNow=function(){if(window.CLV)return;return sv.apply(this,arguments)};
 var ps=window.prSave;if(typeof ps==='function')window.prSave=function(){if(window.CLV)return;return ps.apply(this,arguments)};
+})();
+</script>
+<script>
+/* ===== 🪑 Mobília e pequenos eletros (medidas reais) · lava-louças 8 a 14 serviços · air fryer · mobília e objetos
+   que vão em qualquer lugar: no chão, em cima da bancada, em cima do móvel ===== */
+(function(){
+var A=function(t,n,b,L){if(!APM[t])APM[t]={n:n,m:[],b:b};L.forEach(function(q){if(!APM[t].m.some(function(o){return o[0]===q[0]}))APM[t].m.push(q)})};
+/* lava-louças: Brastemp BLF08 63×51×65 · Electrolux LS10E 84,5×49,5×60 · LL14X 84,5×59,8×61 */
+A('lavaloucas','Lava-louças',0,[['Lava-louças 8 serviços de bancada (tipo Brastemp BLF08) · 51 × 63 × 65',510,630,650],['Lava-louças 10 serviços slim (tipo Electrolux LS10E) · 49,5 × 84,5 × 60',495,845,600],['Lava-louças 12 serviços (60 cm) · conferir medidas',598,845,600],['Lava-louças 14 serviços (tipo Electrolux LL14X) · 59,8 × 84,5 × 61',598,845,610],['Lava-louças 14 serviços de embutir (painel do móvel)',596,820,555,{emb:1}]]);
+/* air fryer: Mondial AFN-40 4 L 36×34×36 */
+A('airfryer','Air fryer',920,[['Air fryer 4 L (tipo Mondial AFN-40) · 36 × 34 × 36',360,340,360],['Air fryer 5,5 L · conferir medidas',290,320,380],['Air fryer forno 12 L · conferir medidas',360,370,320]]);
+A('mesa','Mesa',0,[['Mesa redonda 2 lugares · Ø 70',700,750,700],['Mesa de cozinha 2 lugares · 80 × 60',800,750,600]]);
+A('cadeira','Cadeira',0,[['Cadeira de ferro (preta)',420,850,480]]);
+A('banqueta','Banqueta',0,[['Banqueta de madeira com encosto · assento 65',400,950,400],['Banqueta quadrada de madeira · assento 75',380,750,380]]);
+A('banco','Banco',0,[['Banco de madeira 120 cm (mesa de 4 lugares)',1200,450,350],['Banco de madeira 160 cm',1600,450,350],['Puff redondo Ø 40',400,420,400]]);
+A('deco','Objetos (decoração)',920,[['Vaso com planta (chão) · Ø 35',350,900,350,{b:0}],['Vaso pequeno com planta · Ø 15',150,300,150],['Fruteira com frutas · Ø 30',300,150,300],['Pilha de pratos',260,120,260],['Livros (5)',250,240,180],['Toalhas dobradas',300,160,250],['Cafeteira',200,330,260],['Liquidificador',180,420,200],['Roupas no cabide (cabideiro do armário)',600,1000,450,{b:900}],['Camisas dobradas',300,150,350],['Sapatos (par)',260,110,280,{b:0}]]);
+if(typeof QLIM!=='undefined')QLIM.y=QLIM.y||[0,8000];
+var MOBT2=['mesa','cadeira','banqueta','banco','deco'];window.MOBT2=MOBT2;
+/* catálogo: aba 🪑 Mobília em todos os ambientes e 🍽 Lava-louças e pequenos eletros na cozinha */
+if(!CATS.some(function(c){return c.id==='mob'})){CATS.push({id:'mob',n:'🪑 Mobília',it:[]},{id:'clav',n:'🍽 Lava-louças e pequenos eletros',it:[]})}
+Object.keys(ROOMCATS).forEach(function(k){var L=ROOMCATS[k];if(!L)return;if(L.indexOf('mob')<0)L.push('mob');if(k==='cozinha'&&L.indexOf('clav')<0)L.splice(L.indexOf('cgel')+1,0,'clav')});
+var cA=catAp;catAp=function(){cA();var map={mob:MOBT2,clav:['lavaloucas','airfryer']};CATS.forEach(function(c){var ts=map[c.id];if(!ts)return;c.it=[];ts.forEach(function(t){if(!APM[t])return;apModels(t).forEach(function(mm,mi){c.it.push({n:APM[t].n+' · '+mm[0],w:mm[1],h:mm[2],d:mm[3],act:'ap',ap:t,mi:mi,kw:APM[t].n+(t==='lavaloucas'||t==='airfryer'?' eletrodomestico':' mobilia movel decoracao')})})})});
+ var ele=CATS.filter(function(c){return c.id==='ele'})[0];if(ele)ele.it=ele.it.filter(function(i){return MOBT2.indexOf(i.ap)<0})};
+try{catAp()}catch(_){}
+/* posição inicial: lava-louça embaixo da bancada, air fryer e objetos em cima da bancada, mobília no meio da sala */
+function benchTop(){var st=S.stones&&S.stones[0];return st?Math.round((+st.t||S.stT||820)+(+st.e||40)):920}
+window.benchTop=benchTop;
+var apA=apAdd;apAdd=function(t,mi){var it=apA(t,mi),D=(typeof roomD==='function'?roomD():2600),mm=apModels(t)[mi]||[];if(t==='lavaloucas'){it.b=0;it.y=0;it.x=Math.max(0,Math.round((S.W-it.w)/2))}
+ else if(t==='airfryer'||(t==='deco'&&!(mm[4]&&mm[4].b!==undefined))){it.b=benchTop();it.y=Math.max(0,Math.round((600-it.d)/2));var st=S.stones&&S.stones[0];it.x=st?Math.round(st.x+Math.max(0,st.w-it.w-200)):200}
+ else if(MOBT2.indexOf(t)>=0){it.y=Math.round(Math.max(700,Math.min(D-it.d-200,D/2)));it.x=Math.round(Math.max(0,(S.W-it.w)/2));if(mm[4]&&mm[4].b!==undefined)it.b=mm[4].b}
+ if(MOBT2.indexOf(t)>=0||t==='airfryer')delete it.fin;return it};
 })();
 </script>
 </body></html>

@@ -121,7 +121,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         let a = o["a"] as? Double ?? 0, w = o["w"] as? Double ?? 0
         XCTAssertEqual(o["g"] as? Double ?? 0, a - 35, accuracy: 0.01, "perfil G desconta 35 mm")
-        XCTAssertEqual(o["c"] as? Double ?? 0, a - 30, accuracy: 0.01, "cava de perfil desconta 30 mm")
+        XCTAssertEqual(o["c"] as? Double ?? 0, a, accuracy: 0.01, "cava de perfil NÃO desconta: porta = lateral + 30, o perfil entra na cava")
         XCTAssertEqual(o["k"] as? Double ?? 0, a, accuracy: 0.01, "concha não muda a altura")
         XCTAssertTrue((o["gnote"] as? String ?? "").contains("+ perfil 35 ="))
         func n1(_ v: Double) -> String { String(format: "%g", (v * 10).rounded() / 10).replacingOccurrences(of: ".", with: ",") }

@@ -993,10 +993,17 @@ function plantaSvg(){var W=S.W,D=roomD(),k=Math.min(780/W,440/D),L=OX,T=OY+10,s=
  return s}
 function mkCorner(cw){newMod(false);var mm=S.m;snap();mm.corner=cw;mm.cw2=mm.cw2||900;if(mm.cshelf===undefined)mm.cshelf=1;mm.div=[];mm.v=[{k:'door',n:2,cava:true}];mm.tl=false;mm.tr=false;if(mm.w<600)mm.w=900;mm.x=cw==='e'?0:Math.max(0,S.W-mm.w);wingShape(cw);S.mods.filter(function(a){return a.wing===cw&&!a.sup&&a.x<wingStart(cw)}).forEach(function(a){a.x=wingStart(cw)});draw();panel();toast('Módulo de canto '+(cw==='e'?'esquerdo':'direito')+' com porta articulada · veja na planta e no 3D')}
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-plc],[data-plw],#plv');if(!t)return;if(t.id==='plv'){PLV=!PLV;t.textContent=PLV?'▭ Frente':'⬒ Planta';t.style.background=PLV?'#cfe3ff':'';var pb=$('plbar');if(pb)pb.hidden=!PLV;VB={x:0,y:0,w:900,h:560};setVB();draw();if(PLV)toast('Planta: vista de cima da cozinha (em L aparece o formato inteiro)');return}if(t.dataset.plc){mkCorner(t.dataset.plc);return}if(t.dataset.plw){addWing(t.dataset.plw);draw();return}});
+/* planta: arrastar o módulo de baixo pro lado do L (parede esquerda/direita, abaixo do canto) e de volta pra parede do fundo */
+function plWingSwap(m,p){if(m.sup||m.corner||m.h>=1500||S.env==='livre')return false;var X=(p.x-OX)/PLK,Y=(p.y-(OY+10))/PLK,sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R,to=null;
+ if(!m.wing){if(Y>m.d+250){if(X<xl+m.d+250)to='e';else if(X>xr-m.d-250)to='d'}}
+ else if(Y<wingStart(m.wing)-80)to=0;
+ if(to===null)return false;
+ if(to){m.wing=to;m.x=Math.max(wingStart(to),Math.round((Y-m.w/2)/10)*10)}else{m.wing=0;m.x=Math.max(0,Math.min(S.W-m.w,Math.round((X-m.w/2)/10)*10))}
+ PLD.p=p;PLD.x0=m.x;PLD.moved=true;draw();toast(to?'Módulo no lado '+(to==='e'?'esquerdo':'direito')+' do L':'Módulo na parede do fundo');return true}
 $('svg').addEventListener('pointerdown',function(ev){if(!PLV)return;ev.stopImmediatePropagation();var g=ev.target.closest&&ev.target.closest('[data-pm]'),p=px(ev);
  if(g&&!window.RO){var i=+g.dataset.pm,m=S.mods[i];if(!m)return;if(S.m!==m){S.m=m;S.sv=0;$('tipo').textContent=m.sup?'Superior':'Base';S.tab=0;panel()}snap();PLD={i:i,p:p,x0:m.x,moved:false,id:ev.pointerId};try{$('svg').setPointerCapture(ev.pointerId)}catch(e){}draw()}
  else PLD={scroll:true,cy:ev.clientY,st0:(document.scrollingElement||document.documentElement).scrollTop,id:ev.pointerId,touch:ev.pointerType!=='mouse'}},true);
-$('svg').addEventListener('pointermove',function(ev){if(!PLV)return;ev.stopImmediatePropagation();if(!PLD||ev.pointerId!==PLD.id)return;if(PLD.scroll){if(PLD.touch){var se=document.scrollingElement||document.documentElement;se.scrollTop=PLD.st0-(ev.clientY-PLD.cy)}return}var m=S.mods[PLD.i];if(!m||m.corner)return;if(m.lock){if(!PLD.lk){PLD.lk=1;toast('🔒 Módulo travado · 4 toques em cima destrava')}return}var p=px(ev),d=(m.wing?(p.y-PLD.p.y):(p.x-PLD.p.x))/PLK;if(Math.abs(d)>3)PLD.moved=true;if(!PLD.moved)return;var nx=Math.round((PLD.x0+d)/10)*10;m.x=stLimX(m,m.wing?Math.max(0,nx):Math.max(0,Math.min(S.W-m.w,nx)));draw()},true);
+$('svg').addEventListener('pointermove',function(ev){if(!PLV)return;ev.stopImmediatePropagation();if(!PLD||ev.pointerId!==PLD.id)return;if(PLD.scroll){if(PLD.touch){var se=document.scrollingElement||document.documentElement;se.scrollTop=PLD.st0-(ev.clientY-PLD.cy)}return}var m=S.mods[PLD.i];if(!m||m.corner)return;if(m.lock){if(!PLD.lk){PLD.lk=1;toast('🔒 Módulo travado · 4 toques em cima destrava')}return}var p=px(ev);if(plWingSwap(m,p))return;var d=(m.wing?(p.y-PLD.p.y):(p.x-PLD.p.x))/PLK;if(Math.abs(d)>3)PLD.moved=true;if(!PLD.moved)return;var nx=Math.round((PLD.x0+d)/10)*10;m.x=stLimX(m,m.wing?Math.max(0,nx):Math.max(0,Math.min(S.W-m.w,nx)));draw()},true);
 ['pointerup','pointercancel'].forEach(function(n){$('svg').addEventListener(n,function(ev){if(!PLV)return;ev.stopImmediatePropagation();if(PLD&&PLD.i!==undefined){var m=S.mods[PLD.i];if(m&&PLD.moved){try{tidy(m);gapJoin(m)}catch(e){}}draw();try{if(S.tab===0)syncInputs()}catch(e){}}PLD=null},true)});
 var CLR=false;
 function stPts(st){var W=st.w,D=st.d,sh=st.shape||'reta',d6=function(v){return v===undefined?600:v},lA=d6(st.lenA),wA=Math.min(d6(st.widA),W),lB=d6(st.lenB),wB=Math.min(d6(st.widB),W);
@@ -3695,6 +3702,19 @@ it4Box().addEventListener('click',function(e){var t=e.target.closest('button');i
  if(d.qlfill){e.stopImmediatePropagation();lRedo(st);build();render();itRender();ambMsg('Módulos refeitos seguindo a pedra');return}},true);
 it4Box().addEventListener('change',function(e){var t=e.target;if(!t.dataset||!t.dataset.qlf||!ISX||ISX.k!=='st'||window.RO)return;var st=S.stones.filter(function(s){return s.id===ISX.id})[0],v=parseFloat(String(t.value).replace(',','.'));if(!st||!isFinite(v))return;e.stopImmediatePropagation();snap();lSet(st,t.dataset.qlf,v);build();render();itRender();try{draw()}catch(_){}},true);
 window.l3api={mk:mkL,redo:lRedo,set:function(k,v){var st=S.stones[0];lSet(st,k,v);build()}};
+/* torneira fácil de tocar: toque perto dela (ou na cuba) já conta como toque na torneira */
+var pickItem_t=pickItem;pickItem=function(cx,cy){var h=pickItem_t.apply(this,arguments);if(h&&(h.k==='cook'||(h.k==='fr'&&(S.fr||[]).some(function(q){return q.id===h.id&&q.t==='torneira'}))))return h;
+ var best=null,bd=46;(S.fr||[]).forEach(function(f){if(f.t!=='torneira')return;var q=proj3([f.x+f.w/2,(+f.b||0)+(+f.h||250)*.6,(+f.y||0)+(+f.d||60)/2]);if(!q)return;var d=Math.hypot(q[0]-cx,q[1]-cy);if(d<bd){bd=d;best=f}});
+ if(!best&&h&&h.k==='st'){var st=S.stones.filter(function(s){return s.id===h.id})[0];if(st)(st.items||[]).forEach(function(a){if(a.k!=='cuba'||best)return;var q=proj3([st.x+a.x+a.w/2,(+st.t||S.stT||820)+(+st.e||30),(+a.y||0)+(+a.d||400)/2]);if(q&&Math.hypot(q[0]-cx,q[1]-cy)<120)best=(S.fr||[]).filter(function(f){return f.t==='torneira'})[0]||null})}
+ return best?{k:'fr',id:best.id}:h};
+/* tocou no módulo: também dá pra excluir ele ali mesmo (2 toques no botão, pra não apagar sem querer) */
+var itRender_del=itRender;itRender=function(){itRender_del();var E=it4Box(),x=ISX;if(!x||x.k!=='mod'||E.hidden||window.RO||E.querySelector('[data-qmdel]'))return;
+ E.insertAdjacentHTML('beforeend','<div style="display:flex;gap:5px;margin:6px 0 0"><button data-qmdel="1" style="padding:4px 10px;min-height:32px;font-size:13px'+(x.del?';background:#c62828;color:#fff;border-color:#c62828':'')+'">'+(x.del?'Toque de novo pra excluir':'🗑 Excluir módulo')+'</button></div>')};
+it4Box().addEventListener('click',function(e){var t=e.target.closest('[data-qmdel]');if(!t||!ISX||ISX.k!=='mod'||window.RO)return;e.stopImmediatePropagation();var m=S.mods[ISX.mi];if(!m)return;
+ if(m.lock){ambMsg('🔒 Módulo travado · destrave antes de excluir');return}
+ if(!ISX.del){ISX.del=1;itRender();return}
+ snap();S.m=m;LAST='mod';try{$('delMod').click()}catch(_){S.mods=S.mods.filter(function(a){return a!==m});S.m=S.mods[0]||null}
+ ISX=null;if(IT4)IT4.hidden=true;window.MZ3I=-1;if(MZB)MZB.hidden=true;try{draw();panel()}catch(_){}build();render();ambMsg('Módulo excluído · ↶ desfaz')},true);
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>
@@ -3893,4 +3913,9 @@ window.veioFx=veioFx;
  var ls=loadState;loadState=function(o){var r=ls.apply(this,arguments);XK.forEach(function(k){if(o&&o[k]!==undefined)S[k]=JSON.parse(JSON.stringify(o[k]));else delete S[k]});return r};
 })();
 </script>
+<style>
+/* iPhone/iPad: o Safari só manda o "click" pra elementos que parecem clicáveis; sem isto, tocar na peça do plano de corte,
+   numa linha da lista, num item do desenho etc. não fazia nada no iOS (no Android funcionava) */
+[data-add],[data-ah],[data-ap],[data-ap] *,[data-cp],[data-cp] *,[data-phm],[data-phm] *,[data-q],[data-rp],[data-rp] *,[data-rpsel],[data-rpsel] *,tr[data-src],tr[data-src] *,tr[data-lk],tr[data-lk] *,[data-pm],[data-add] *,[data-ah] *{cursor:pointer;-webkit-tap-highlight-color:rgba(227,25,123,.15)}
+</style>
 </body></html>

@@ -54,6 +54,22 @@ jobs:
           $env:ARQUE_TOUR = (Resolve-Path tour).Path
           python windows/test/tour.py "$($exe.FullName)" tour
 
+      - name: Publicar release win-N
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $n = $env:GITHUB_RUN_NUMBER
+          $exe = Get-ChildItem windows/build/compose/binaries/main/exe/*.exe | Select-Object -First 1
+          $msi = Get-ChildItem windows/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
+          New-Item -ItemType Directory -Force rel | Out-Null
+          Copy-Item $exe.FullName rel/Arquemestre-Windows-Instalador.exe
+          Copy-Item $msi.FullName rel/Arquemestre-Windows.msi
+          Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath rel/Arquemestre-Windows-portatil.zip
+          gh release create "win-$n" rel/* -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease `
+            --title "Arquemestre para Windows $n" `
+            --notes "Instalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups."
+
       - name: Guardar resultados (prints e relatório) no ramo ci/windows-resultados
         if: always()
         env:
@@ -71,19 +87,3 @@ jobs:
           Move-Item out/* . ; Remove-Item out
           git add -A; git commit -q -m "Resultados Windows $env:GITHUB_RUN_NUMBER ($env:GITHUB_SHA)"
           git push -f origin HEAD:ci/windows-resultados
-
-      - name: Publicar release win-N
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          $n = $env:GITHUB_RUN_NUMBER
-          $exe = Get-ChildItem windows/build/compose/binaries/main/exe/*.exe | Select-Object -First 1
-          $msi = Get-ChildItem windows/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
-          New-Item -ItemType Directory -Force rel | Out-Null
-          Copy-Item $exe.FullName rel/Arquemestre-Windows-Instalador.exe
-          Copy-Item $msi.FullName rel/Arquemestre-Windows.msi
-          Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath rel/Arquemestre-Windows-portatil.zip
-          gh release create "win-$n" rel/* -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease `
-            --title "Arquemestre para Windows $n" `
-            --notes "Instalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups."

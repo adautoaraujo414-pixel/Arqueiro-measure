@@ -408,12 +408,12 @@ final class EditorWebKitTests: XCTestCase {
           window.fx3api.open({k:'mod',mi:0});var E=document.getElementById('it4'),ledBase=!!E.querySelector('[data-qmled]');
           E.querySelector('[data-qms="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;
           window.fx3api.open({k:'mod',mi:2});var ledSup=!!document.querySelector('#it4 [data-qmled]');
-          document.getElementById('v3wal').click();document.querySelector('#it4 [data-qwtab="T"]').click();document.querySelector('#it4 [data-qtt="1"]').click();var teto=window.org3api.teto();
+          document.getElementById('v3wal').click();document.querySelector('#it4 [data-qwtab="T"]').click();document.querySelector('#it4 [data-qtt="1"]').click();
           var fi=apModels('forno').findIndex(function(q){return /6 bocas \(tipo/.test(q[0])}),fg=apAdd('forno',fi);window.ele3api.toggle(fg.id,true);
           await new Promise(function(r){setTimeout(r,700)});var ang=window.ele3api.ang(fg.id);
           window.pux3api.open(0);document.querySelector('#it4 [data-pxt="bola"]').click();window.pux3api.set(60,120);var px=S.mods[0].v[0].px;
           var bq=apAdd('banqueta',1);
-          window.fp3api.start();window.fp3api.walk(1,0);var fp=!!window.fp3api.st();window.fp3api.stop();
+          window.fp3api.start();var teto=window.org3api.teto();window.fp3api.walk(1,0);var fp=!!window.fp3api.st();window.fp3api.stop();
           var code=await cutEncode(window.clientPayload());window.arqueCutOpen(code);await new Promise(function(r){setTimeout(r,900)});
           return JSON.stringify({ledBase:ledBase,ledSup:ledSup,w:w,nx:nx,teto:teto,ang:ang,px:px,bq:bq.t,fp:fp,clv:!!window.CLV,ro:!!window.RO,errs:__errs});
           """#)

@@ -342,6 +342,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testRipadoNoPlanoOtimizadoComPlacasDaBaseEParedeLateralAteOMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=4140;S.H=2700;var ra=rpNew({x:0,b:0,w:4000,h:2600});draw();
+          var L=rpLayout(ra),pcs=rpCutPieces(),P=sheetPlan(),big=P.groups.reduce(function(s,g){return s+(g.big?g.big.length:0)},0);
+          var base=pcs.filter(function(p){return /Chapa base/.test(p.name)}),ripas=pcs.filter(function(p){return /^Ripa /.test(p.name)});
+          open3D();var B=__boxes();var b3=B.filter(function(b){return b.rpid===ra.id&&Math.abs((b.z1-b.z0)-6)<0.01}).length;
+          S.env='cozinha';newTpl(4);var m=S.mods[0];m.x=5;m.d=350;S.pw={ate:'movel',tipo:'ripado'};pwGenerateWall('e');var wl=S.rp.filter(function(a){return a.wall==='e'})[0];
+          return JSON.stringify({seams:L.seams.join(','),nBase:base.length,baseW:base.map(function(p){return p.L+'x'+p.W}).join(','),ripas:ripas.reduce(function(s,p){return s+p.qty},0),n:L.n,big:big,b3:b3,wallW:wl?wl.w:null,wallRip:wl?!wl.liso:null,front:pwFront('e'),errs:__errs});
+          """#)
+        XCTAssertEqual(o["seams"] as? String, "1820,3640", "emendas da chapa base pela chapa útil (1840 − 2×10 de refilo)")
+        XCTAssertEqual(o["nBase"] as? Int, 3, "chapa base dividida em 3 placas")
+        XCTAssertEqual(o["baseW"] as? String, "2600x1820,2600x1820,2600x360", "placas 1820 + 1820 + 360")
+        XCTAssertEqual(o["ripas"] as? Int, o["n"] as? Int, "todas as ripas entram no plano otimizado")
+        XCTAssertEqual(o["big"] as? Int, 0, "nenhuma peça fora da chapa")
+        XCTAssertEqual(o["b3"] as? Int, 3, "3D mostra as 3 placas da base")
+        XCTAssertEqual(o["wallRip"] as? Bool, true, "parede lateral pode ser ripado")
+        XCTAssertEqual((o["wallW"] as? Double ?? 0), (o["front"] as? Double ?? 0) - 50, accuracy: 0.6, "painel lateral vai até 50 mm antes da frente do móvel")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

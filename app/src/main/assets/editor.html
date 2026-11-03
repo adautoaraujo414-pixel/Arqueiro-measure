@@ -3723,6 +3723,12 @@ var ahSpecs_L=ahSpecs;ahSpecs=function(){var H=ahSpecs_L();var x=ISX;if(!x||x.k!
   H.push({k:'z'+c[2],p:[xc,y,q.d+len],ax:2,f:function(s,a){var v=Math.max(q.d+300,Math.min(8000,Math.round((q.d+d6(s['len'+c[1]])+a)/10)*10));lSet(q,c[2],v);try{draw()}catch(_){}}});
   H.push({k:'x'+c[2],p:[xe,y,q.d+len/2],ax:0,f:function(s,a){var w0=Math.min(d6(s['wid'+c[1]]),s.w),v=Math.max(250,Math.min(1500,Math.round((w0+(c[0]==='e'?a:-a))/10)*10));q['wid'+c[1]]=v;try{draw()}catch(_){}}})});
  return H};
+/* 3D: arrastando o módulo de baixo pro canto do L ele vira pra parede do lado (e volta pra parede do fundo) */
+M.addEventListener('pointermove',function(e){if(!MDRG||e.pointerId!==MDRG.pid)return;var m=MDRG.m;if(m&&m.wing&&MDRG.wo===undefined){var r0=cv.getBoundingClientRect(),F0=floorAt(MDRG.sx-r0.left,MDRG.sy-r0.top,0);MDRG.wo=F0?Math.max(0,Math.min(m.w,F0[1]-MDRG.x0)):m.w/2}if(!m||m.sup||m.corner||m.h>=1500||S.env==='livre')return;var r=cv.getBoundingClientRect(),F=floorAt(e.clientX-r.left,e.clientY-r.top,0);if(!F)return;
+ var X=F[0],Z=F[1],sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R,to=null;
+ if(!m.wing){if(Z>m.d+250){if(X<xl+m.d+250)to='e';else if(X>xr-m.d-250)to='d'}}else if(Z<wingStart(m.wing)-80)to=0;
+ if(to===null){if(m.wing){/* na parede do lado: segue o dedo pelo chão (a profundidade de frente engana) */var Dm=(typeof roomD==='function'?roomD():6000);m.x=Math.max(wingStart(m.wing),Math.min(Math.max(wingStart(m.wing),Dm-m.w),Math.round((Z-(MDRG.wo||m.w/2))/10)*10));if(!DRAF2)DRAF2=requestAnimationFrame(function(){DRAF2=0;build();render()})}return}if(to){m.wing=to;m.x=Math.max(wingStart(to),Math.round((Z-m.w/2)/10)*10)}else{m.wing=0;m.x=Math.max(0,Math.min(S.W-m.w,Math.round((X-m.w/2)/10)*10))}
+ build();var bb=modBounds(S.mods.indexOf(m));if(bb){var c=[(bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,(bb.z0+bb.z1)/2];MDRG.va=scrAx(c,m.wing?2:0);MDRG.vy=scrAx(c,1)}MDRG.sx=e.clientX;MDRG.sy=e.clientY;MDRG.x0=m.x;MDRG.b0=m.b;try{draw()}catch(_){}render();ambMsg(to?'Módulo no lado '+(to==='e'?'esquerdo':'direito')+' do L':'Módulo na parede do fundo')},true);
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>
@@ -3926,4 +3932,15 @@ window.veioFx=veioFx;
    numa linha da lista, num item do desenho etc. não fazia nada no iOS (no Android funcionava) */
 [data-add],[data-ah],[data-ap],[data-ap] *,[data-cp],[data-cp] *,[data-phm],[data-phm] *,[data-q],[data-rp],[data-rp] *,[data-rpsel],[data-rpsel] *,tr[data-src],tr[data-src] *,tr[data-lk],tr[data-lk] *,[data-pm],[data-add] *,[data-ah] *{cursor:pointer;-webkit-tap-highlight-color:rgba(227,25,123,.15)}
 </style>
+<script>
+/* ===== teclado (Windows/computador): Delete apaga o módulo selecionado (2D ou 3D), Ctrl+Z desfaz, Ctrl+Y / Ctrl+Shift+Z refaz ===== */
+document.addEventListener('keydown',function(e){var tg=e.target;if(tg&&(/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable))return;if(window.RO)return;
+ var k=(e.key||'').toLowerCase();
+ if((e.ctrlKey||e.metaKey)&&k==='z'&&!e.shiftKey){e.preventDefault();try{$('und').click()}catch(_){}return}
+ if((e.ctrlKey||e.metaKey)&&(k==='y'||(k==='z'&&e.shiftKey))){e.preventDefault();try{$('red').click()}catch(_){}return}
+ if(e.key!=='Delete')return;
+ var v3=document.getElementById('v3'),in3=v3&&!v3.hidden,it4=document.getElementById('it4');
+ if(in3&&it4&&!it4.hidden){var b=it4.querySelector('[data-qmdel]');if(b){e.preventDefault();b.click();if(it4.querySelector('[data-qmdel]'))it4.querySelector('[data-qmdel]').click();return}return}
+ if(!S.m||!S.mods.length)return;if(S.m.lock){toast('🔒 Módulo travado');return}e.preventDefault();try{snap()}catch(_){}LAST='mod';$('delMod').click();if(in3){try{window.re3&&window.re3()}catch(_){}}toast('Módulo apagado · Ctrl+Z desfaz')});
+</script>
 </body></html>

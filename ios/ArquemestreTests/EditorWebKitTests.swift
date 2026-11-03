@@ -251,6 +251,20 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testPlanoDeCorteLocalizaCadaPecaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.env='cozinha';var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          mkCorner('e');newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));PLWS='e';plwAdd('base');plwAdd('base');PLWS=null;newTpl(4);newTpl(4);var U=S.mods.filter(function(m){return m.sup});U.forEach(function(m,i){m.tb=true;m.tt=true;m.tl=i===0;m.tr=i===U.length-1});U[1].x=U[0].x+U[0].w;
+          draw();open3D();var B=__boxes();pkFix3(B);var tot=0,ruins=[];
+          sheetPlan().groups.forEach(function(g){g.sheets.forEach(function(s){s.used.forEach(function(u){tot++;(u.p.src||[{}]).forEach(function(e){if(e.mi==='rp')return;if(e.mi===undefined||!e.pk){ruins.push(u.p.lab);return}var ok=hlResolve(B,[{mi:e.mi,pk:e.pk}]).length>1||B.some(function(b){return parseInt(String(b.nm),10)===e.mi&&b.pk===e.pk});if(!ok)ruins.push(u.p.lab)})})})});
+          return JSON.stringify({tot:tot,ruins:ruins.length,lista:ruins.slice(0,5).join(' | '),errs:__errs});
+          """#)
+        XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 40)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "toda peça do plano acha a peça certa no 3D: \(o["lista"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

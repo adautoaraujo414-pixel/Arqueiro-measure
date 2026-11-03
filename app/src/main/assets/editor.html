@@ -3592,4 +3592,62 @@ var qD=quoteData;quoteData=function(){var q=qD();if(S.vlTot){var room={cozinha:'
 document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;var b=t.closest('[data-vlhide],[data-vltot]');if(!b||!b.closest('#vlm'))return;if(window.RO)return;if(b.dataset.vlhide)S.vlHide=S.vlHide?0:1;else S.vlTot=S.vlTot?0:1;try{edited()}catch(_){}vlRender()});
 })();
 </script>
+<script>
+/* ===== 🏠 Projeto pro cliente: o marceneiro manda um link limpo; o cliente abre no app (ou baixa) e só vê e mexe no 3D
+   (andar, agachar, sentar, abrir portas e eletros, ligar torneira e fogo) · status e data de entrega com contagem ao vivo ·
+   se o marceneiro mudar algo, manda de novo e o mesmo projeto atualiza no celular do cliente ===== */
+(function(){
+var DAY=864e5;
+function entOf(p){var e=p&&(p.entrega||(p.cliente&&p.cliente.entrega));if(!e)return null;var d=new Date(e+'T18:00:00');return isNaN(d)?null:d}
+function fmtD(d){return ('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+d.getFullYear()}
+function leftTxt(d){var ms=d-Date.now();if(ms<=0)return 'Prazo de entrega chegou';var dd=Math.floor(ms/DAY),hh=Math.floor(ms%DAY/36e5),mm=Math.floor(ms%36e5/6e4),ss=Math.floor(ms%6e4/1e3);return (dd?dd+(dd===1?' dia ':' dias '):'')+('0'+hh).slice(-2)+'h '+('0'+mm).slice(-2)+'min '+('0'+ss).slice(-2)+'s'}
+function late(d){return d&&(d-Date.now())<=5*DAY}
+window.entregaInfo=function(p){var d=entOf(p);if(!d)return null;var st=stOf(p);return {d:d,txt:fmtD(d),left:d-Date.now(),late:late(d)&&st!=='fin'}};
+function roomName(){return {cozinha:'Cozinha',sala:'Sala',banho:'Banheiro',quarto:'Quarto',escr:'Escritório',livre:'Projeto'}[typeof roomOf==='function'?roomOf():'cozinha']||'Cozinha'}
+function company(){try{return String(window.ArqueApp&&ArqueApp.companyName?ArqueApp.companyName():'')}catch(_){return ''}}
+
+/* ---------- lado do marceneiro: Valores › data de entrega + enviar pro cliente ---------- */
+var vlR=vlRender;vlRender=function(){vlR();var B=document.getElementById('vlbody'),p=curProj();if(!B||!p)return;var st=stOf(p),chips=B.querySelector('[data-vst]');chips=chips&&chips.parentNode;if(!chips)return;var h='';
+ if(st==='fech'||st==='prod'||st==='fin'){var e=entregaInfo(p);h+='<div class="g" style="margin-top:6px"><label>📅 Data de entrega</label><input type="date" data-vent="1" value="'+(p.entrega||'')+'" style="text-align:right"></div>';
+  if(e)h+='<div class="note" style="margin:2px 0 0;'+(e.late?'color:#c62828;font-weight:700':'')+'">'+(e.late?'⏰ Prazo acabando · ':'Faltam ')+'<span data-vcnt="1">'+leftTxt(e.d)+'</span> · entrega '+e.txt+'</div>'}
+ h+='<button data-vcli="1" style="width:100%;margin-top:10px;padding:12px;font-weight:700;background:#1f6feb;color:#fff;border-color:#1f6feb">🏠 '+(p.cliSent?'Atualizar o projeto do cliente':'Enviar o projeto pro cliente ver em 3D')+'</button><div class="note">O cliente abre o link, caminha pela '+roomName().toLowerCase()+', abre portas e eletros. Ele só vê: não muda nada e não vê valores.'+(p.cliSent?' Mudou algo? Envie de novo e atualiza no celular dele.':'')+'</div>';
+ chips.insertAdjacentHTML('afterend',h)};
+document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.vent||!t.closest('#vlm'))return;var a=pLoadAll(),p=a.filter(function(q){return q.id===CUR})[0];if(!p)return;p.entrega=t.value||'';p.updated=Date.now();pSaveAll(a);vlRender()});
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-vcli]');if(!t||window.RO)return;clientSend()});
+setInterval(function(){var c=document.querySelector('#vlm:not([hidden]) [data-vcnt]'),p=curProj();if(!c||!p)return;var e=entregaInfo(p);if(e)c.textContent=leftTxt(e.d)},1000);
+function clientPayload(){var p=curProj(),st=snapState();delete st.preco;delete st.vlHide;delete st.vlTot;
+ return {v:1,k:'arque-cliente',pid:CUR||'',at:Date.now(),n:p?p.client.nome:'',t:p?(p.titulo||''):'',room:roomName(),fr:company(),status:stOf(p),entrega:(p&&p.entrega)||'',acab:ACAB(),st:st}}
+function clientSend(){var A=window.ArqueApp;try{ensureProj()}catch(_){}try{saveNow()}catch(_){}var o=clientPayload();
+ cutEncode(o).then(function(code){var a=pLoadAll(),p=a.filter(function(q){return q.id===CUR})[0];if(p){p.cliSent=Date.now();pSaveAll(a)}
+  if(A&&A.shareClient){A.shareClient(code,o.n||'',o.room||'');return}if(A&&A.shareCut){A.shareCut(code,o.n||'',o.room||'','cliente');return}
+  window.__clientLink='https://adautoaraujo414-pixel.github.io/Arqueiro-measure/p.html#d='+code;toast('Link do cliente pronto')}).catch(function(){toast('Não consegui preparar o envio. Tente de novo.')})}
+window.clientSend=clientSend;window.clientPayload=clientPayload;
+
+/* ---------- lado do cliente: recebe, guarda e abre só pra ver ---------- */
+var cutOpen=window.arqueCutOpen;window.arqueCutOpen=function(code){cutDecode(code).then(function(o){if(!o||o.k!=='arque-cliente')return cutOpen(code);if(!o.st||!o.st.mods)throw 0;
+  var a=pLoadAll(),id='v'+(o.pid||o.at),p=a.filter(function(q){return q.id===id})[0],novo=!p;if(!p){p={id:id,created:Date.now()};a.push(p)}
+  p.client={nome:o.n||'Meu projeto',end:'',cidade:'',tel:''};p.titulo=o.room||'';p.status=o.status||'orc';p.entrega=o.entrega||'';p.cliente={fr:o.fr||'',room:o.room||'Cozinha',at:o.at,acab:o.acab||null};p.original=o.st;p.current=JSON.parse(JSON.stringify(o.st));p.updated=Date.now();pSaveAll(a);
+  clientEnter(p);toast(novo?'Projeto recebido · '+(o.fr||o.room||''):'Projeto atualizado · '+(o.fr||o.room||''))}).catch(function(){cutOpen(code)})};
+var openCl=window.arqueOpenClient;window.arqueOpenClient=function(id){var p=pLoadAll().filter(function(q){return q.id===id})[0];if(p&&p.cliente){clientEnter(p);return true}return openCl(id)};
+var CLB=null,CLT=null;
+function clientEnter(p){CUR=p.id;window.__edited=0;loadState(p.current);if(p.cliente&&p.cliente.acab)S.acab=p.cliente.acab;try{window.ArqueApp&&ArqueApp.setCurrent&&ArqueApp.setCurrent(p.id)}catch(_){}
+ window.RO=true;window.CLV=p;document.body.classList.add('ro','clv');try{draw()}catch(_){}open3D();clientChrome(p);setTimeout(function(){try{window.fp3api.start()}catch(_){}},400)}
+window.clientEnter=clientEnter;
+function clientChrome(p){var M=document.getElementById('v3');if(!M)return;
+ /* só fica: Fechar e o modo pessoa · some tudo de editar */
+ ['v3und','v3red','v3m','v3wal','v3add','v3more'].forEach(function(id){var b=document.getElementById(id);if(b)b.hidden=true});var r2=document.getElementById('v3row2');if(r2)r2.hidden=true;
+ var t=M.querySelector('b');if(t)t.textContent='🏠 '+((p.cliente&&p.cliente.room)||'Cozinha')+(p.cliente&&p.cliente.fr?' · '+p.cliente.fr:'');
+ if(!CLB){CLB=document.createElement('div');CLB.id='clvbar';CLB.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:0 10px 8px;color:#e5e7eb;font-size:13px';var cv=document.getElementById('cv3');cv.parentNode.insertBefore(CLB,cv);
+  var fp=document.createElement('button');fp.id='clvfp';fp.style.cssText='margin-left:auto';CLB.appendChild(fp)}
+ clientBar();clearInterval(CLT);CLT=setInterval(clientBar,1000)}
+function clientBar(){var p=window.CLV;if(!p||!CLB)return;var e=entregaInfo(p),st=stOf(p),fp=document.getElementById('clvfp'),h=stChip(st);
+ if(e&&st!=='orc')h+=st==='fin'?' <span>✓ Entregue</span>':' <span>📅 Entrega '+e.txt+' · faltam '+leftTxt(e.d)+'</span>';else if(st==='prod')h+=' <span>Seus móveis estão em produção</span>';
+ var keep=fp;CLB.innerHTML=h;CLB.appendChild(keep);keep.textContent=window.FPV?'👀 Ver de fora':'🚶 Entrar e caminhar';keep.onclick=function(){if(window.FPV)window.fp3api.stop();else window.fp3api.start();clientBar()}}
+/* sair do 3D no projeto do cliente fecha o projeto (não mostra o editor) */
+document.addEventListener('click',function(e){var x=e.target&&e.target.closest&&e.target.closest('#v3x');if(!x||!window.CLV)return;e.stopImmediatePropagation();e.preventDefault();window.CLV=null;clearInterval(CLT);document.body.classList.remove('clv');try{window.fp3api.stop()}catch(_){}document.getElementById('v3').hidden=true;try{window.ArqueApp&&ArqueApp.close&&ArqueApp.close()}catch(_){}},true);
+/* o projeto do cliente não salva nada por cima */
+var sv=window.saveNow;if(typeof sv==='function')window.saveNow=function(){if(window.CLV)return;return sv.apply(this,arguments)};
+var ps=window.prSave;if(typeof ps==='function')window.prSave=function(){if(window.CLV)return;return ps.apply(this,arguments)};
+})();
+</script>
 </body></html>

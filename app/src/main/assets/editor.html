@@ -4132,4 +4132,18 @@ var cutLines_tt=cutLines;cutLines=function(m){var L=cutLines_tt.apply(this,argum
 var panel_tc=panel;panel=function(){var r=panel_tc.apply(this,arguments);try{if(window.RO||!S.m||S.tab!==0)return r;var secs=[].slice.call(document.querySelectorAll('.sec')).filter(function(e){return /^Tamponamentos deste módulo/.test(e.textContent.trim())});var s0=secs[0];if(s0&&!document.querySelector('[data-tcap]')){var ch=tcChain(S.m);s0.insertAdjacentHTML('afterend','<div style="margin:6px 0"><button data-tcap="1" style="width:100%;min-height:40px;font-weight:700"'+(ch.length<2?' disabled':'')+'>↔ Puxar o tamponamento pros módulos do lado (sem afastar)</button><div class="note">'+(ch.length<2?'Encoste outro módulo do lado pra usar.':'Junta '+ch.length+' módulos: tira os tamponamentos do meio, encosta os módulos e faz o de cima/de baixo numa peça só até 2700 mm; passando, a emenda cai na junta dos módulos.')+'</div></div>')}}catch(_){}return r};
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-tcap]');if(!t||window.RO||!S.m)return;tcApply(S.m)});
 </script>
+<script>
+/* ===== Tamponamento / régua de 30 mm (duas chapas de 15 coladas):
+   · até 160 mm de largura (régua): duas peças inteiras coladas uma na outra = uma só de 30
+   · mais largo: uma peça inteira na cor (parte lisa pra fora) + duas tiras de 80 mm coladas por dentro,
+     na frente e atrás (engrosso escondido dentro do armário) ===== */
+var ENG_W=80;
+var cutLines_eng=cutLines;cutLines=function(m){var L=cutLines_eng.apply(this,arguments),out=[];
+ L.forEach(function(l){var mat=+l.mat||15;if(!(mat>18&&mat%15===0)){out.push(l);return}var n=mat/15,W=+l.W||0,base=(l.names&&l.names[0])||l.name||'Peça',q=+l.qty||1;
+  var mk=function(nm,qq,w,note){var c=Object.assign({},l);c.mat=15;c.qty=qq;c.W=w;c.names=[nm];c.name=nm+(l.fin==='c'?' · NA COR':' · BRANCO');c.note=note;c.notes=[note];return c};
+  if(W<=2*ENG_W){out.push(mk(base+' (régua '+mat+' mm)',q*n,W,n+' peças de 15 mm coladas uma na outra = uma só de '+mat+' mm · '+(l.note||'')))}
+  else{out.push(mk(base+' · face',q,W,'peça inteira na cor, parte lisa pra fora · depois cola os engrossos por dentro = '+mat+' mm · '+(l.note||'')));
+   out.push(mk(base+' · engrosso '+ENG_W,q*2*(n-1),ENG_W,'tiras de '+ENG_W+' mm coladas por dentro na frente e atrás da face (escondidas dentro do armário) = '+mat+' mm na borda'))}});
+ return out};
+</script>
 </body></html>

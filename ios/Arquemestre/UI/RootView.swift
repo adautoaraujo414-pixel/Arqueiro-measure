@@ -57,7 +57,12 @@ struct RootView: View {
             case .moveis: MoveisView()
             }
             if lic.hasAccess && (lic.status == .trial || !lic.willRenew || lic.inGrace) && app.screen == .library {
-                TrialChip().padding(12)
+                // no iPhone a biblioteca tem a barra de abas embaixo: o selo fica acima dela
+                GeometryReader { g in
+                    TrialChip().padding(12)
+                        .padding(.bottom, g.size.width < LibraryView.wideMinWidth ? LibraryView.tabBarHeight : 0)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                }
             }
         }
         .sheet(isPresented: $app.showGuide, onDismiss: { UserDefaults.standard.set(true, forKey: "arque.guideSeen") }) { GuideView() }

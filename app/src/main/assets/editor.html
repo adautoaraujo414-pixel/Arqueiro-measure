@@ -3993,7 +3993,7 @@ function addNicho(fc){var sups=S.mods.filter(function(m){return m.sup&&!m.nicho&
  var spot=sups.slice().sort(function(a,b){return a.x-b.x}).filter(function(u){return !S.mods.some(function(o){return o!==m&&o.nicho&&Math.abs(o.x-u.x)<5})})[0];if(spot){m.x=spot.x;m.w=spot.w;m.b=Math.max(0,spot.b-h)}else if(first){m.x=first.x}
  m.tl=m.tr=m.tb=false;S.m=m;try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}toast('Nicho superior · fundo 15 mm '+(m.nicho==='madeira'?'amadeirado':'liso')+' · medidas na aba Estrutura');return m}
 window.addNicho=addNicho;
-(function(){var sc=CATS.filter(function(c){return c.id==='sup'})[0];if(sc&&!sc.it.some(function(i){return i.act==='nicho'}))sc.it.unshift({n:'Nicho superior livre · fundo 15 mm amadeirado',act:'nicho',fc:'madeira',kw:'nicho aberto superior madeira'},{n:'Nicho superior livre · fundo 15 mm liso',act:'nicho',fc:'liso',kw:'nicho aberto superior liso'});
+(function(){var sc=CATS.filter(function(c){return c.id==='sup'})[0];if(sc&&!sc.it.some(function(i){return i.act==='nicho'}))sc.it.push({n:'Nicho superior livre · fundo 15 mm amadeirado',act:'nicho',fc:'madeira',kw:'nicho aberto superior madeira'},{n:'Nicho superior livre · fundo 15 mm liso',act:'nicho',fc:'liso',kw:'nicho aberto superior liso'});
  var ca=catAct2;catAct2=function(it){if(it&&it.act==='nicho'){snap();addNicho(it.fc);return true}return ca(it)};
  var cl=cutLines;cutLines=function(m){var L=cl.apply(this,arguments);if(m&&m.nicho==='madeira')L.forEach(function(l){if((l.names||[]).some(function(n){return /^Fundo/.test(n)})){l.fin='c';if(l.name)l.name=String(l.name).replace('BRANCO','AMADEIRADO (na cor)');l.note=(l.note||'')+' · fundo do nicho amadeirado'}});return L};
 })();

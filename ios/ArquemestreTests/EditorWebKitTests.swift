@@ -406,7 +406,7 @@ final class EditorWebKitTests: XCTestCase {
           PR.setupDone=1;S.mods=[];newTpl(3);newTpl(2);newTpl(4);draw();ensureProj();
           window.open3D();await new Promise(function(r){setTimeout(r,400)});
           window.fx3api.open({k:'mod',mi:0});var E=document.getElementById('it4'),ledBase=!!E.querySelector('[data-qmled]');
-          E.querySelector('[data-qms="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;
+          S.m=S.mods[0];window.mz3Open();document.querySelector('#mz3 [data-mz="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;
           window.fx3api.open({k:'mod',mi:2});var ledSup=!!document.querySelector('#it4 [data-qmled]');
           document.getElementById('v3wal').click();document.querySelector('#it4 [data-qwtab="T"]').click();document.querySelector('#it4 [data-qtt="1"]').click();
           var fi=apModels('forno').findIndex(function(q){return /6 bocas \(tipo/.test(q[0])}),fg=apAdd('forno',fi);window.ele3api.toggle(fg.id,true);

@@ -23,21 +23,43 @@ object AppUpdater {
         (System.getProperty("arque.build") ?: AppUpdater::class.java.getResourceAsStream("/build-number.txt")?.bufferedReader()?.use { it.readText().trim() })
             ?.toLongOrNull() ?: 0L
 
-    fun latest(): Release? {
-        val c = URL(API).openConnection() as HttpURLConnection
-        c.setRequestProperty("Accept", "application/vnd.github+json")
+    /** Lista de versões pelo feed do GitHub (não tem o limite de 60 consultas/hora da API, que estoura em rede de celular). */
+    private const val FEED = "https://github.com/adautoaraujo414-pixel/Arqueiro-measure/releases.atom"
+    private const val DL = "https://github.com/adautoaraujo414-pixel/Arqueiro-measure/releases/download/"
+
+    private fun get(u: String, json: Boolean): String {
+        val c = URL(u).openConnection() as HttpURLConnection
+        c.setRequestProperty("User-Agent", "Arquemestre-app")
+        if (json) c.setRequestProperty("Accept", "application/vnd.github+json")
         c.connectTimeout = 15000; c.readTimeout = 20000
-        val arr = JSONArray(c.inputStream.bufferedReader().use { it.readText() })
-        for (i in 0 until arr.length()) {
-            val r = arr.getJSONObject(i)
-            val n = r.optString("tag_name").removePrefix("win-").toIntOrNull() ?: continue
-            val assets = r.optJSONArray("assets") ?: continue
-            for (k in 0 until assets.length()) {
-                val a = assets.getJSONObject(k)
-                if (a.optString("name") == ASSET) return Release(n, a.optString("browser_download_url"))
+        if (c.responseCode != 200) error("HTTP " + c.responseCode)
+        return c.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    /** Versão mais nova publicada (a de número maior, não a primeira da lista). Rede: chamar fora da thread principal. */
+    fun latest(): Release? {
+        var best: Release? = null
+        runCatching {
+            val xml = get(FEED, false)
+            Regex("releases/tag/win-(\\d+)").findAll(xml).forEach { m ->
+                val n = m.groupValues[1].toInt()
+                if (best == null || n > best!!.number) best = Release(n, DL + "win-" + n + "/" + ASSET)
             }
         }
-        return null
+        if (best == null) runCatching {
+            val arr = JSONArray(get(API, true))
+            for (i in 0 until arr.length()) {
+                val r = arr.getJSONObject(i)
+                val n = r.optString("tag_name").removePrefix("win-").toIntOrNull() ?: continue
+                if (!r.optString("tag_name").startsWith("win-")) continue
+                val assets = r.optJSONArray("assets") ?: continue
+                for (k in 0 until assets.length()) {
+                    val a = assets.getJSONObject(k)
+                    if (a.optString("name") == ASSET && (best == null || n > best!!.number)) best = Release(n, a.optString("browser_download_url"))
+                }
+            }
+        }
+        return best
     }
 
     fun download(ctx: Context, r: Release, progress: (Int) -> Unit): File {

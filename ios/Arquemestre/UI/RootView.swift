@@ -56,14 +56,7 @@ struct RootView: View {
             case .agenda: AgendaView()
             case .moveis: MoveisView()
             }
-            if lic.hasAccess && (lic.status == .trial || !lic.willRenew || lic.inGrace) && app.screen == .library {
-                // no iPhone a biblioteca tem a barra de abas embaixo: o selo fica acima dela
-                GeometryReader { g in
-                    TrialChip().padding(12)
-                        .padding(.bottom, g.size.width < LibraryView.wideMinWidth ? LibraryView.tabBarHeight : 0)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                }
-            }
+            // o aviso do teste grátis / assinatura fica dentro da tela inicial (TrialChip(bar: true) na LibraryView)
         }
         .sheet(isPresented: $app.showGuide, onDismiss: { UserDefaults.standard.set(true, forKey: "arque.guideSeen") }) { GuideView() }
     }
@@ -217,6 +210,8 @@ struct LockView: View {
 /// Selo na biblioteca: quanto falta do teste grátis, assinatura cancelada (vale até o fim do período) ou cobrança com problema.
 struct TrialChip: View {
     @EnvironmentObject var lic: LicenseManager
+    /// Barra larga da tela inicial (contorno dourado, relógio e seta) em vez do selo pequeno.
+    var bar = false
     @State private var open = false
     @State private var manage = false
     private var chip: String {
@@ -234,11 +229,7 @@ struct TrialChip: View {
         return tr("Renovação automática desligada: a assinatura vale até {0}. Depois disso as telas bloqueiam, mas seus dados ficam guardados. Pra continuar, ligue a renovação em Gerenciar assinatura.", lic.periodEndText)
     }
     var body: some View {
-        Button { open = true } label: {
-            Text(chip).font(.caption).foregroundColor(Ui.gold)
-                .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(Capsule().fill(Color.black.opacity(0.8)))
-        }
+        Button { open = true } label: { chipLabel }
         .sheet(isPresented: $open) {
             VStack(spacing: 14) {
                 Text(lic.status == .trial ? tr("Teste grátis") : tr("Assinatura")).font(.title3.bold())
@@ -250,6 +241,28 @@ struct TrialChip: View {
             .padding(24)
             .presentationDetents([.medium])
             .manageSubscriptionsSheet(isPresented: $manage)
+        }
+    }
+}
+
+extension TrialChip {
+    @ViewBuilder fileprivate var chipLabel: some View {
+        if bar {
+            HStack(spacing: 10) {
+                Image(systemName: "clock").font(.system(size: 16, weight: .semibold))
+                Text(chip).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold))
+            }
+            .foregroundColor(Ui.gold)
+            .padding(.horizontal, 14).frame(height: 46)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.gold.opacity(0.08)))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ui.gold, lineWidth: 1.2))
+            .contentShape(Rectangle())
+        } else {
+            Text(chip).font(.caption).foregroundColor(Ui.gold)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(Capsule().fill(Color.black.opacity(0.8)))
         }
     }
 }

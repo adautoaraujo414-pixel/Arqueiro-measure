@@ -74,7 +74,8 @@ struct CalcSheet: View {
     }
 }
 
-private struct CompanySheet: View {
+/// Dados da empresa e logo (também em Ajustes, na tela inicial).
+struct CompanySheet: View {
     @EnvironmentObject var app: AppModel
     @Environment(\.dismiss) private var dismiss
     @State var c: Company

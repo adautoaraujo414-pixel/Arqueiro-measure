@@ -4,27 +4,36 @@ import UniformTypeIdentifiers
 
 private var dateFmt: DateFormatter { I18n.shared.dateFormatter(.date) }
 private func dateText(_ ms: Int64) -> String { dateFmt.string(from: Date(timeIntervalSince1970: Double(ms) / 1000)) }
+/// Data do cartão do cliente (dd/MM/aaaa).
+private var dmyFmt: DateFormatter { let f = DateFormatter(); f.dateFormat = "dd/MM/yyyy"; return f }
+private func dmyText(_ ms: Int64) -> String { dmyFmt.string(from: Date(timeIntervalSince1970: Double(ms) / 1000)) }
 
-private enum LibTab: String, CaseIterable { case ALL = "TUDO", NOTE = "NOTA", MOVEIS = "MÓVEIS" }
-
-/// Abas sublinhadas da tela inicial: clientes (quadros por cliente) ou projetos (lista corrida, mais recentes primeiro).
+/// Abas grandes da tela inicial: clientes (um cartão por cliente) ou projetos (lista corrida, mais recentes primeiro).
 private enum HomeTab { case clientes, projetos }
+/// Dentro de "Projetos": tudo, só as notas (atalho "Notas") ou só o Projetor 3D (aba de baixo).
+private enum ProjMode { case all, notes, moveis }
 
 /// O que a lista mostra (calculado uma vez por desenho).
-fileprivate struct LibData {
+fileprivate struct HomeData {
+    var clients: [ClientGroup]
     var entries: [LibEntry]
-    var projFolder: [String: String]
 }
+
+/// Cliente aberto na folha de detalhes (pela chave do cliente).
+struct ClientPick: Identifiable { let id: String }
 
 /// Biblioteca (escura, destaque dourado): clientes, projetos (Projetor 3D), notas e pastas.
 struct LibraryView: View {
     @EnvironmentObject var app: AppModel
+    @EnvironmentObject var lic: LicenseManager
     @State private var query = ""
-    @State private var tab: LibTab = .ALL
     @State private var home: HomeTab = .clientes
-    @State private var searchOpen = false
-    @FocusState private var searchFocus: Bool
+    @State private var projMode: ProjMode = .all
+    /// Filtro do funil: status do projeto (nil = todos).
+    @State private var statusFilter: String?
     @State private var newFolder = false
+    @State private var newClient = false
+    @State private var clientOpen: ClientPick?
     @State private var shareURL: URL?
     @State private var restorePick = false
     @State private var confirmRestore: URL?
@@ -33,39 +42,30 @@ struct LibraryView: View {
     @State private var manageSub = false
     @State private var toolsOpen = false
     @State private var settingsOpen = false
+    @State private var companyOpen = false
     @State private var btOpen = false
-    /// Ordem escolhida em "Ordenar" (cada aba guarda a sua).
-    @AppStorage("arque.lib.recent.clientes") private var cliRecent = false
-    @AppStorage("arque.lib.recent.projetos") private var projRecent = true
 
-    /// Altura da barra de abas de baixo (só no iPhone); o selo do teste grátis sobe essa altura.
+    /// Altura da barra de abas de baixo (só no iPhone).
     static let tabBarHeight: CGFloat = 58
     /// A partir desta largura a biblioteca usa a barra lateral (iPad) em vez da barra de abas.
     static let wideMinWidth: CGFloat = 700
 
     private var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
-    // quem está numa pasta sai de "Todas as notas" (fica só na pasta); na busca aparece tudo
-    private var notes: [NoteMeta] {
-        app.index.notes.filter {
-            switch app.filter {
-            case .all: return !$0.trash && (searching || app.liveFolder($0.folderId) == nil)
-            case .trash: return $0.trash
-            case .folder(let f): return !$0.trash && $0.folderId == f
-            }
-        }
-        .filter { _ in tab != .MOVEIS }
-        .sorted { $0.pinned != $1.pinned ? $0.pinned : nameLess($0.name, $1.name) }
-    }
     private var sortedFolders: [Folder] { app.index.folders.sorted { nameLess($0.name, $1.name) } }
     private var langLabel: String { langMenuLabel() + " (" + currentLangName() + ")" }
-    private var sortRecent: Bool { home == .projetos ? projRecent : cliRecent }
     /// Compromisso não concluído nas próximas 24 h (bolinha no sino).
     private var hasSoonAppt: Bool {
         let now = nowMs()
         return app.appointments.contains { !$0.done && $0.startMs >= now && $0.startMs <= now + 86_400_000 }
     }
+    /// Mesma regra do selo do teste grátis: teste, renovação desligada ou cobrança com problema.
+    private var showTrial: Bool { lic.hasAccess && (lic.status == .trial || !lic.willRenew || lic.inGrace) }
 
     var body: some View {
+        dialogs(sheets(layout))
+    }
+
+    private var layout: some View {
         GeometryReader { geo in
             let wide = geo.size.width >= LibraryView.wideMinWidth
             HStack(spacing: 0) {
@@ -73,7 +73,12 @@ struct LibraryView: View {
                 content(wide: wide)
             }
         }
+        .background(Ui.bg.ignoresSafeArea())
         .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+
+    private func sheets<V: View>(_ v: V) -> some View {
+        v
         .sheet(isPresented: $newFolder) { NameSheet(title: tr("Nova pasta"), label: tr("Nome da pasta"), text: "") { app.addFolder($0) } }
         // nota nova: pergunta o nome antes de criar (cada nota com o seu nome)
         .sheet(item: $app.noteAsk) { a in
@@ -86,12 +91,24 @@ struct LibraryView: View {
                 }
             }
         }
+        // cliente novo: pergunta o nome e abre o Projetor 3D já no nome dele
+        .sheet(isPresented: $newClient) {
+            NameSheet(title: tr("Novo cliente"), label: tr("Nome do cliente"), text: "") { name in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { app.newProjectForClient(name, nil) }
+            }
+        }
+        .sheet(item: $clientOpen) { c in ClientDetailSheet(key: c.id) }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
         .sheet(isPresented: $btOpen) { BluetoothView() }
+        .sheet(isPresented: $companyOpen) { CompanySheet(c: app.company) }
         .sheet(isPresented: $toolsOpen) { HomeMenuSheet(title: tr("Ferramentas"), items: toolsItems) }
         .sheet(isPresented: $settingsOpen) { HomeMenuSheet(title: tr("Ajustes"), items: settingsItems) }
+    }
+
+    private func dialogs<V: View>(_ v: V) -> some View {
+        v
         .manageSubscriptionsSheet(isPresented: $manageSub)
         // nota e projeto ligados ao mesmo cliente ficam com o mesmo nome
         .onAppear { app.syncLinkedNames() }
@@ -118,6 +135,7 @@ struct LibraryView: View {
                 side(tr("Novo Projetor 3D"), "cube", false) { app.newMoveisProject() }
                 side(tr("Agenda"), "calendar", false) { app.screen = .agenda }
                 side(tr("Orçamentos"), "doc.text", false) { app.screen = .quotes }
+                side(tr("Trena Bosch"), "ruler", false) { btOpen = true }
                 side(tr("Lixo"), "trash", app.filter == .trash) { app.filter = .trash }
             }.padding(12)
         }
@@ -137,338 +155,411 @@ struct LibraryView: View {
     // ---------------- Conteúdo ----------------
 
     private func content(wide: Bool) -> some View {
-        let data = libData()
-        return ZStack(alignment: .bottomTrailing) {
-            VStack(spacing: 0) {
-                header
-                if searchOpen || searching { searchRow }
-                chipsRow(wide: wide).padding(.top, 6)
-                underTabs.padding(.top, 10)
-                ScrollView { listBody(data) }
-                if !wide { tabBar }
-            }
-            if app.filter != .trash {
-                fab.padding(.bottom, wide ? 0 : LibraryView.tabBarHeight)
-            }
+        let d = homeData()
+        return VStack(spacing: 0) {
+            header
+            segmented.padding(.top, 14)
+            searchRow.padding(.top, 14)
+            ScrollView { listBody(d) }
+                .scrollDismissesKeyboard(.interactively)
+            bottomBlock
+            if !wide { tabBar }
         }
     }
 
-    private func libData() -> LibData {
-        let projAll = app.moveisProjects()
+    private func homeData() -> HomeData {
         _ = app.projVersion
+        let projAll = app.moveisProjects()
         // o projeto fica na mesma pasta que a nota do cliente
         let projFolder = app.projectFolders(projAll)
         let q = query.trimmingCharacters(in: .whitespaces)
-        if home == .projetos {
-            return LibData(entries: flatEntries(projAll, projFolder, q), projFolder: projFolder)
+        if home == .projetos || app.filter == .trash {
+            return HomeData(clients: [], entries: flatEntries(projAll, projFolder, q))
         }
-        let projList = projAll.filter { p in
-            switch app.filter {
-            case .all: return searching || projFolder[p.id] == nil
-            case .folder(let f): return projFolder[p.id] == f
-            case .trash: return false
-            }
+        let projs = projAll.filter { projInScope($0, projFolder) }
+        let notes = app.index.notes.filter { noteInScope($0) }
+        let groups = homeClients(app, projs, notes).groups
+        let shown = groups.filter { g in
+            (q.isEmpty || g.matches(q)) && (statusFilter == nil || g.projs.contains { $0.status == statusFilter })
         }
-        // um quadro por cliente: as notas e os projetos dele (dá pra ter vários projetos por cliente)
-        let showProj = app.filter != .trash && tab != .NOTE
-        let groups = showProj ? clientGroups(app, projList, tab == .ALL ? notes : []) : []
-        let shown = groups.filter { q.isEmpty || $0.matches(q) }
-        let inGroupP = Set(groups.flatMap { $0.projs.map(\.id) })
-        let inGroupN = Set(groups.flatMap { $0.notes.map(\.id) })
-        let projs = showProj ? projList.filter { !inGroupP.contains($0.id) && (q.isEmpty || projMatches($0, q)) } : []
-        let looseNotes = notes.filter { !inGroupN.contains($0.id) && (q.isEmpty || $0.name.localizedCaseInsensitiveContains(q)) }
-        let all: [LibEntry] = shown.map { LibEntry.g($0) } + projs.map { LibEntry.p($0) } + looseNotes.map { LibEntry.n($0) }
-        return LibData(entries: sortEntries(all, recent: cliRecent), projFolder: projFolder)
+        let sorted = shown.sorted { a, b in a.lastDate != b.lastDate ? a.lastDate > b.lastDate : nameLess(a.name, b.name) }
+        return HomeData(clients: sorted, entries: [])
     }
 
-    /// Aba "Projetos": todos os projetos e notas (também os que estão em pastas), sem agrupar por cliente.
+    /// Aba Clientes: quem está numa pasta só aparece na pasta (na busca aparece tudo).
+    private func projInScope(_ p: MoveisProjects.P, _ projFolder: [String: String]) -> Bool {
+        switch app.filter {
+        case .all: return searching || projFolder[p.id] == nil
+        case .folder(let f): return projFolder[p.id] == f
+        case .trash: return false
+        }
+    }
+
+    private func noteInScope(_ n: NoteMeta) -> Bool {
+        switch app.filter {
+        case .all: return !n.trash && (searching || app.liveFolder(n.folderId) == nil)
+        case .trash: return n.trash
+        case .folder(let f): return !n.trash && n.folderId == f
+        }
+    }
+
+    /// Aba Projetos: todos os projetos e notas (também os que estão em pastas), mais recentes primeiro.
     private func flatEntries(_ projAll: [MoveisProjects.P], _ projFolder: [String: String], _ q: String) -> [LibEntry] {
         var out: [LibEntry] = []
-        if app.filter != .trash && tab != .NOTE {
-            for p in projAll {
-                var inScope = true
-                if case .folder(let f) = app.filter { inScope = projFolder[p.id] == f }
-                if inScope && (q.isEmpty || projMatches(p, q)) { out.append(LibEntry.p(p)) }
-            }
+        let trash = app.filter == .trash
+        if !trash && projMode != .notes {
+            for p in projAll where projShown(p, projFolder, q) { out.append(LibEntry.p(p)) }
         }
-        if tab != .MOVEIS {
-            for n in app.index.notes {
-                let inScope: Bool
-                switch app.filter {
-                case .all: inScope = !n.trash
-                case .trash: inScope = n.trash
-                case .folder(let f): inScope = !n.trash && n.folderId == f
-                }
-                if inScope && (q.isEmpty || n.name.localizedCaseInsensitiveContains(q)) { out.append(LibEntry.n(n)) }
-            }
+        if trash || projMode != .moveis {
+            let statusOf = Dictionary(projAll.map { ($0.id, $0.status) }, uniquingKeysWith: { a, _ in a })
+            for n in app.index.notes where noteShown(n, q, statusOf) { out.append(LibEntry.n(n)) }
         }
-        return sortEntries(out, recent: projRecent)
-    }
-
-    /// Notas fixadas em cima; depois por nome (A-Z) ou pelos mais recentes.
-    private func sortEntries(_ l: [LibEntry], recent: Bool) -> [LibEntry] {
-        l.sorted { a, b in
+        return out.sorted { a, b in
             if a.pinned != b.pinned { return a.pinned }
-            if recent && a.date != b.date { return a.date > b.date }
+            if a.date != b.date { return a.date > b.date }
             return nameLess(a.name, b.name)
         }
+    }
+
+    private func projShown(_ p: MoveisProjects.P, _ projFolder: [String: String], _ q: String) -> Bool {
+        if case .folder(let f) = app.filter, projFolder[p.id] != f { return false }
+        if let s = statusFilter, p.status != s { return false }
+        return q.isEmpty || projMatches(p, q)
+    }
+
+    /// Com o filtro de status, a nota entra quando o projeto ligado a ela está naquele status.
+    private func noteShown(_ n: NoteMeta, _ q: String, _ statusOf: [String: String]) -> Bool {
+        switch app.filter {
+        case .all: if n.trash { return false }
+        case .trash: if !n.trash { return false }
+        case .folder(let f): if n.trash || n.folderId != f { return false }
+        }
+        if let s = statusFilter, app.filter != .trash {
+            guard let pid = app.linkedProject(n.id), statusOf[pid] == s else { return false }
+        }
+        return q.isEmpty || n.name.localizedCaseInsensitiveContains(q)
     }
 
     // ---------------- Cabeçalho ----------------
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             logoMark
-            VStack(alignment: .leading, spacing: 1) {
-                Text("ARQUEMESTRE").font(.system(size: 18, weight: .heavy)).foregroundColor(Ui.text).lineLimit(1).minimumScaleFactor(0.7)
-                Text(tr("Organização de Projetos")).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("ARQUEMESTRE").font(.system(size: 20, weight: .heavy)).foregroundColor(Ui.text).lineLimit(1).minimumScaleFactor(0.7)
+                Text(tr("Gestão de Projetos para Marcenaria")).font(.caption).foregroundColor(Ui.dim).lineLimit(1).minimumScaleFactor(0.75)
             }
             Spacer(minLength: 6)
-            Button { toggleSearch() } label: { circleIcon(searchOpen ? "xmark" : "magnifyingglass") }
-                .buttonStyle(.plain).accessibilityLabel(tr("Pesquisar"))
             Button { app.screen = .agenda } label: { bellIcon }
                 .buttonStyle(.plain).accessibilityLabel(tr("Agenda"))
-            Menu { settingsMenuItems } label: { circleIcon("ellipsis") }
+            Button { settingsOpen = true } label: { circleIcon("person") }
+                .buttonStyle(.plain).accessibilityLabel(tr("Ajustes"))
         }
-        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 4)
+        .padding(.horizontal, 16).padding(.top, 8)
     }
 
     private var logoMark: some View {
-        Text("A").font(.system(size: 22, weight: .black)).foregroundColor(Ui.bg)
-            .frame(width: 40, height: 40)
-            .background(RoundedRectangle(cornerRadius: 11).fill(Ui.gold))
+        Text("A").font(.system(size: 28, weight: .black)).foregroundColor(Ui.bg)
+            .frame(width: 48, height: 48)
+            .background(RoundedRectangle(cornerRadius: 13).fill(Ui.gold))
     }
 
     private func circleIcon(_ name: String) -> some View {
-        Image(systemName: name).font(.system(size: 16, weight: .semibold)).foregroundColor(Ui.text)
-            .frame(width: 40, height: 40)
+        Image(systemName: name).font(.system(size: 17, weight: .semibold)).foregroundColor(Ui.text)
+            .frame(width: 44, height: 44)
             .background(Circle().fill(Ui.panel2))
     }
 
     private var bellIcon: some View {
         circleIcon("bell").overlay(alignment: .topTrailing) {
             if hasSoonAppt {
-                Circle().fill(Ui.gold).frame(width: 9, height: 9).offset(x: -7, y: 7)
+                Circle().fill(Ui.gold).frame(width: 10, height: 10).offset(x: -8, y: 8)
             }
         }
     }
 
-    private func toggleSearch() {
-        if searchOpen || searching {
-            searchOpen = false
-            query = ""
-            searchFocus = false
-        } else {
-            searchOpen = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { searchFocus = true }
-        }
-    }
+    // ---------------- Clientes / Projetos ----------------
 
-    private var searchRow: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").foregroundColor(Ui.dim)
-            TextField(tr("Pesquisar"), text: $query).foregroundColor(Ui.text).focused($searchFocus)
-            if !query.isEmpty {
-                Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundColor(Ui.dim) }.buttonStyle(.plain)
+    private var segmented: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                segPill(tr("Clientes"), "person", home == .clientes) { selectHome(.clientes) }
+                segPill(tr("Projetos"), "square.stack.3d.up", home == .projetos) { selectHome(.projetos) }
             }
+            Rectangle().fill(Ui.gold).frame(height: 1.5)
         }
-        .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Ui.panel2))
-        .padding(.horizontal, 16).padding(.top, 6)
-    }
-
-    /// Itens do menu "…" (os mesmos de Ajustes).
-    @ViewBuilder private var settingsMenuItems: some View {
-        Button { shareURL = app.makeBackup() } label: { Label(tr("Fazer backup completo (ZIP)"), systemImage: "archivebox") }
-        Button { restorePick = true } label: { Label(tr("Restaurar backup"), systemImage: "arrow.counterclockwise") }
-        Divider()
-        Button { peerView = true } label: { Label(tr("Ver projeto de outro iPhone"), systemImage: "iphone.radiowaves.left.and.right") }
-        Divider()
-        Button { langOpen = true } label: { Label(langLabel, systemImage: "globe") }
-        Button { manageSub = true } label: { Label(tr("Gerenciar assinatura"), systemImage: "creditcard") }
-        Button { app.showGuide = true } label: { Label(tr("Guia passo a passo"), systemImage: "book") }
-        Link(destination: SiteLinks.support) { Label(tr("Ajuda e suporte"), systemImage: "questionmark.circle") }
-        Link(destination: SiteLinks.privacy) { Label(tr("Privacidade"), systemImage: "hand.raised") }
-    }
-
-    // ---------------- Filtros e abas ----------------
-
-    private func chipsRow(wide: Bool) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                filterChip(tr("Todos"), "folder", tab == .ALL && app.filter == .all) { tab = .ALL; app.filter = .all }
-                filterChip(tr("Notas"), "doc.text", tab == .NOTE && app.filter != .trash) { tab = .NOTE; if app.filter == .trash { app.filter = .all } }
-                filterChip(tr("Móveis"), "hammer", tab == .MOVEIS && app.filter != .trash) { tab = .MOVEIS; if app.filter == .trash { app.filter = .all } }
-                filterChip(tr("Orçamentos"), "dollarsign.circle", false) { app.screen = .quotes }
-                // no iPhone as pastas e o lixo ficam aqui (no iPad estão na barra lateral)
-                if !wide {
-                    ForEach(sortedFolders) { f in
-                        filterChip(f.name, "folder.fill", app.filter == .folder(f.id)) { app.filter = .folder(f.id) }
-                    }
-                    filterChip(tr("Lixo"), "trash", app.filter == .trash) { app.filter = .trash }
-                }
-            }
-            .padding(.horizontal, 16)
-        }
-    }
-
-    private func filterChip(_ label: String, _ icon: String, _ sel: Bool, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) {
-            HStack(spacing: 6) {
-                Image(systemName: icon).font(.system(size: 13, weight: .semibold))
-                Text(label).font(.subheadline.weight(.semibold)).lineLimit(1)
-            }
-            .foregroundColor(sel ? Ui.bg : Ui.text)
-            .padding(.horizontal, 14).padding(.vertical, 8)
-            .background(Capsule().fill(sel ? Ui.gold : Ui.panel2))
-        }.buttonStyle(.plain)
-    }
-
-    private var underTabs: some View {
-        HStack(spacing: 0) {
-            underTab(tr("Clientes"), "person", home == .clientes) { home = .clientes }
-            underTab(tr("Projetos"), "doc.text", home == .projetos) { home = .projetos }
-            underTab(tr("Agenda"), "calendar", false) { app.screen = .agenda }
-        }
-        .background(alignment: .bottom) { Rectangle().fill(Ui.line).frame(height: 1) }
         .padding(.horizontal, 16)
     }
 
-    private func underTab(_ label: String, _ icon: String, _ sel: Bool, _ a: @escaping () -> Void) -> some View {
+    private func segPill(_ label: String, _ icon: String, _ sel: Bool, _ a: @escaping () -> Void) -> some View {
         Button(action: a) {
-            VStack(spacing: 8) {
-                HStack(spacing: 6) {
-                    Image(systemName: icon).font(.footnote.weight(.semibold))
-                    Text(label).font(.subheadline.weight(.semibold)).lineLimit(1)
-                }
-                .foregroundColor(sel ? Ui.gold : Ui.dim)
-                Rectangle().fill(sel ? Ui.gold : Color.clear).frame(height: 2)
+            HStack(spacing: 8) {
+                Image(systemName: icon).font(.system(size: 16, weight: .semibold))
+                Text(label).font(.headline).lineLimit(1)
             }
-            .frame(maxWidth: .infinity)
+            .foregroundColor(sel ? Ui.bg : Ui.text)
+            .frame(maxWidth: .infinity).frame(height: 50)
+            .background(RoundedRectangle(cornerRadius: 14).fill(sel ? Ui.gold : Ui.panel2))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
-    // ---------------- Lista ----------------
-
-    private func listBody(_ d: LibData) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if app.filter != .trash && !searching { createBlock }
-            sectionHeader(d.entries.count)
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 10)], spacing: 10) {
-                // as pastas aparecem em cima, com quantos itens têm (o que entrou numa pasta sai daqui)
-                if home == .clientes && app.filter == .all && !searching {
-                    ForEach(sortedFolders) { f in
-                        FolderTile(name: f.name, count: folderCount(f.id, d.projFolder)) { app.filter = .folder(f.id) }
-                    }
-                }
-                ForEach(d.entries) { e in entryView(e) }
-            }
-        }
-        .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 96)
+    private func selectHome(_ t: HomeTab) {
+        home = t
+        projMode = .all
+        if app.filter == .trash { app.filter = .all }
     }
 
-    private func folderCount(_ fid: String, _ projFolder: [String: String]) -> Int {
-        let n = tab == .MOVEIS ? 0 : app.index.notes.filter { !$0.trash && $0.folderId == fid }.count
-        let p = tab == .NOTE ? 0 : projFolder.values.filter { $0 == fid }.count
-        return n + p
+    // ---------------- Busca e filtro ----------------
+
+    private var searchPrompt: String { home == .projetos ? tr("Buscar projeto...") : tr("Buscar cliente...") }
+
+    private var searchRow: some View {
+        HStack(spacing: 10) {
+            searchField
+            filterMenu
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").foregroundColor(Ui.dim)
+            TextField("", text: $query, prompt: Text(searchPrompt).foregroundColor(Ui.dim))
+                .foregroundColor(Ui.text).submitLabel(.search)
+            if !query.isEmpty {
+                Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundColor(Ui.dim) }.buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14).frame(height: 48)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel2))
+    }
+
+    private var filterMenu: some View {
+        Menu {
+            Button((statusFilter == nil ? "✓ " : "") + tr("Todos")) { statusFilter = nil }
+            ForEach(MoveisProjects.statuses, id: \.self) { s in
+                Button((statusFilter == s ? "✓ " : "") + MoveisProjects.statusLabel(s)) { statusFilter = s }
+            }
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease").font(.system(size: 17, weight: .semibold))
+                .foregroundColor(statusFilter == nil ? Ui.text : Ui.bg)
+                .frame(width: 48, height: 48)
+                .background(RoundedRectangle(cornerRadius: 14).fill(statusFilter == nil ? Ui.panel2 : Ui.gold))
+        }
+        .accessibilityLabel(tr("Filtrar por status"))
+    }
+
+    // ---------------- Lista ----------------
+
+    private func listBody(_ d: HomeData) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            scopeBar
+            if app.filter != .trash && projMode == .all { newClientButton }
+            modeRow
+            if home == .clientes && app.filter != .trash {
+                clientList(d.clients)
+            } else {
+                entryList(d.entries)
+            }
+        }
+        .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 16)
+    }
+
+    /// Pasta ou lixo aberto (pela barra lateral ou por Ferramentas): mostra onde está e o "x" pra voltar.
+    @ViewBuilder private var scopeBar: some View {
+        if app.filter != .all {
+            HStack(spacing: 10) {
+                Image(systemName: app.filter == .trash ? "trash" : "folder.fill").foregroundColor(Ui.gold)
+                Text(scopeTitle).font(.headline).foregroundColor(Ui.text).lineLimit(1)
+                Spacer()
+                Button { app.filter = .all } label: {
+                    Image(systemName: "xmark").font(.system(size: 13, weight: .bold)).foregroundColor(Ui.text)
+                        .frame(width: 32, height: 32).background(Circle().fill(Ui.panel2))
+                }
+                .buttonStyle(.plain).accessibilityLabel(tr("Fechar"))
+            }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
+        }
+    }
+
+    private var scopeTitle: String {
+        switch app.filter {
+        case .trash: return tr("Lixo")
+        case .folder(let f): return app.index.folders.first(where: { $0.id == f })?.name ?? tr("Pastas")
+        case .all: return ""
+        }
+    }
+
+    private var newClientButton: some View {
+        Button { newClient = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus").font(.system(size: 18, weight: .bold))
+                Text(tr("Novo cliente")).font(.headline)
+            }
+            .foregroundColor(Ui.bg)
+            .frame(maxWidth: .infinity).frame(height: 54)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.gold))
+            .contentShape(Rectangle())
+        }.buttonStyle(.plain)
+    }
+
+    /// Modo só notas (atalho "Notas") ou só Projetor 3D (aba de baixo): título, "x" e os botões de criar.
+    @ViewBuilder private var modeRow: some View {
+        if home == .projetos && app.filter != .trash {
+            switch projMode {
+            case .notes:
+                VStack(alignment: .leading, spacing: 10) {
+                    modeTitle(tr("Notas"))
+                    notesActions
+                }
+            case .moveis:
+                VStack(alignment: .leading, spacing: 10) {
+                    modeTitle(tr("Projetor 3D"))
+                    newMoveisRow
+                }
+            case .all:
+                EmptyView()
+            }
+        }
+    }
+
+    private func modeTitle(_ title: String) -> some View {
+        HStack {
+            Text(title).font(.title3.bold()).foregroundColor(Ui.text)
+            Spacer()
+            Button { projMode = .all } label: {
+                Image(systemName: "xmark").font(.system(size: 13, weight: .bold)).foregroundColor(Ui.text)
+                    .frame(width: 32, height: 32).background(Circle().fill(Ui.panel2))
+            }
+            .buttonStyle(.plain).accessibilityLabel(tr("Fechar"))
+        }
+    }
+
+    private var notesActions: some View {
+        HStack(spacing: 8) {
+            smallAction(tr("Nova nota"), "plus", filled: true) { app.noteAsk = NoteAsk(kind: "") }
+            smallAction(tr("Importar imagem"), "photo", filled: false) { app.noteAsk = NoteAsk(kind: "gallery") }
+            smallAction(tr("Foto"), "camera", filled: false) { app.noteAsk = NoteAsk(kind: "camera") }
+        }
+    }
+
+    private func smallAction(_ label: String, _ icon: String, filled: Bool, _ a: @escaping () -> Void) -> some View {
+        Button(action: a) {
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 14, weight: .bold))
+                Text(label).font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.75)
+            }
+            .foregroundColor(filled ? Ui.bg : Ui.gold)
+            .padding(.horizontal, 10).frame(maxWidth: .infinity).frame(height: 44)
+            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Ui.gold : Ui.panel))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Ui.gold, lineWidth: filled ? 0 : 1))
+            .contentShape(Rectangle())
+        }.buttonStyle(.plain)
+    }
+
+    private var newMoveisRow: some View {
+        Button { app.newMoveisProject() } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "plus").font(.system(size: 18, weight: .bold)).foregroundColor(Ui.bg)
+                    .frame(width: 34, height: 34)
+                    .background(RoundedRectangle(cornerRadius: 9).fill(Ui.gold))
+                Text(tr("Novo Projetor 3D")).font(.headline).foregroundColor(Ui.gold)
+                Spacer()
+            }
+            .padding(.horizontal, 12).frame(height: 58)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ui.gold.opacity(0.6)))
+            .contentShape(Rectangle())
+        }.buttonStyle(.plain)
+    }
+
+    @ViewBuilder private func clientList(_ l: [ClientGroup]) -> some View {
+        if l.isEmpty {
+            emptyText(searching || statusFilter != nil ? tr("Nada encontrado") : tr("Nenhum cliente ainda. Toque em \"Novo cliente\"."))
+        } else {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 10)], spacing: 10) {
+                ForEach(l) { g in
+                    ClientRow(g: g) { clientOpen = ClientPick(id: g.id) }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func entryList(_ l: [LibEntry]) -> some View {
+        if l.isEmpty {
+            emptyText(tr("Nada encontrado"))
+        } else {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300), spacing: 10)], spacing: 10) {
+                ForEach(l) { e in entryView(e) }
+            }
+        }
+    }
+
+    private func emptyText(_ s: String) -> some View {
+        Text(s).font(.subheadline).foregroundColor(Ui.dim).multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity).padding(.vertical, 28)
     }
 
     @ViewBuilder private func entryView(_ e: LibEntry) -> some View {
         switch e {
-        case .g(let g): ClientCard(g: g)
         case .p(let pj): ProjRow(p: pj)
         case .n(let n): NoteRow(n: n)
         }
     }
 
-    /// "＋ Novo projeto" (tracejado) e os atalhos Projetor 3D, Nota e Orçamento.
-    private var createBlock: some View {
+    // ---------------- Atalhos, teste grátis e barra de abas ----------------
+
+    private var bottomBlock: some View {
         VStack(spacing: 10) {
-            Button { app.newMoveisProject() } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "plus").font(.system(size: 18, weight: .bold)).foregroundColor(Ui.bg)
-                        .frame(width: 34, height: 34)
-                        .background(RoundedRectangle(cornerRadius: 9).fill(Ui.gold))
-                    Text(tr("Novo projeto")).font(.headline).foregroundColor(Ui.gold)
-                }
-                .frame(maxWidth: .infinity).frame(height: 64)
-                .background(RoundedRectangle(cornerRadius: 16).fill(Ui.gold.opacity(0.06)))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Ui.gold, style: StrokeStyle(lineWidth: 1.5, dash: [8, 5])))
-                .contentShape(Rectangle())
-            }.buttonStyle(.plain)
             HStack(spacing: 10) {
-                quickButton(tr("Projetor 3D"), "cube") { app.newMoveisProject() }
-                quickButton(tr("Nota"), "square.and.pencil") { app.noteAsk = NoteAsk(kind: "") }
-                quickButton(tr("Orçamento"), "dollarsign.circle") { app.screen = .quotes }
+                shortcut(tr("Projetor 3D"), "cube") { app.newMoveisProject() }
+                shortcut(tr("Notas"), "square.and.pencil") { openNotesMode() }
+                shortcut(tr("Orçamentos"), "dollarsign.circle") { app.screen = .quotes }
             }
+            if showTrial { TrialChip(bar: true) }
         }
+        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 10)
     }
 
-    private func quickButton(_ label: String, _ icon: String, _ a: @escaping () -> Void) -> some View {
+    private func openNotesMode() {
+        home = .projetos
+        projMode = .notes
+        if app.filter == .trash { app.filter = .all }
+    }
+
+    private func openMoveisMode() {
+        home = .projetos
+        projMode = .moveis
+        if app.filter == .trash { app.filter = .all }
+    }
+
+    private func goHome() {
+        home = .clientes
+        projMode = .all
+        app.filter = .all
+    }
+
+    private func shortcut(_ label: String, _ icon: String, _ a: @escaping () -> Void) -> some View {
         Button(action: a) {
-            VStack(spacing: 6) {
-                Image(systemName: icon).font(.system(size: 20, weight: .semibold)).foregroundColor(Ui.gold)
-                Text(label).font(.footnote.weight(.semibold)).foregroundColor(Ui.text).lineLimit(1).minimumScaleFactor(0.8)
+            VStack(spacing: 8) {
+                Image(systemName: icon).font(.system(size: 24, weight: .semibold)).foregroundColor(Ui.gold)
+                Text(label).font(.footnote.weight(.semibold)).foregroundColor(Ui.text).lineLimit(1).minimumScaleFactor(0.75)
             }
-            .frame(maxWidth: .infinity).frame(height: 70)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Ui.line))
+            .frame(maxWidth: .infinity).frame(height: 84)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Ui.panel))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Ui.line))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
-    private var sectionTitle: String {
-        switch app.filter {
-        case .trash: return tr("Lixo")
-        case .folder(let f): return app.index.folders.first(where: { $0.id == f })?.name ?? tr("Pastas")
-        case .all: return home == .projetos ? tr("Projetos") : tr("Clientes")
-        }
-    }
-
-    private func setSort(_ recent: Bool) {
-        if home == .projetos { projRecent = recent } else { cliRecent = recent }
-    }
-
-    private func sectionHeader(_ count: Int) -> some View {
-        HStack {
-            Text(sectionTitle + " (\(count))").font(.headline).foregroundColor(Ui.text).lineLimit(1)
-            Spacer()
-            Menu {
-                Button((sortRecent ? "" : "✓ ") + tr("Nome (A-Z)")) { setSort(false) }
-                Button((sortRecent ? "✓ " : "") + tr("Mais recentes")) { setSort(true) }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(tr("Ordenar"))
-                    Image(systemName: "chevron.down").font(.caption.weight(.semibold))
-                }
-                .font(.subheadline.weight(.semibold)).foregroundColor(Ui.gold)
-            }
-        }
-        .padding(.horizontal, 4).padding(.top, 4)
-    }
-
-    // ---------------- Botão "+" e barra de abas ----------------
-
-    private var fab: some View {
-        Menu {
-            Button { app.noteAsk = NoteAsk(kind: "") } label: { Label(tr("Criar nota"), systemImage: "square.and.pencil") }
-            Button { app.noteAsk = NoteAsk(kind: "gallery") } label: { Label(tr("Importar imagem"), systemImage: "photo") }
-            Button { app.noteAsk = NoteAsk(kind: "camera") } label: { Label(tr("Tirar fotografia"), systemImage: "camera") }
-            Button { newFolder = true } label: { Label(tr("Criar nova pasta"), systemImage: "folder.badge.plus") }
-        } label: {
-            Image(systemName: "plus").font(.system(size: 26, weight: .semibold)).foregroundColor(Ui.bg)
-                .frame(width: 58, height: 58)
-                .background(Circle().fill(Ui.gold))
-                .shadow(color: Color.black.opacity(0.35), radius: 8, y: 3)
-        }
-        .padding(20)
-    }
+    private var moveisTabOn: Bool { home == .projetos && projMode == .moveis }
 
     private var tabBar: some View {
         HStack(spacing: 0) {
-            barItem(tr("Organização"), "folder", home == .clientes) { home = .clientes }
-            barItem(tr("Projetos"), "pencil.and.ruler", home == .projetos) { home = .projetos }
+            barItem(tr("Início"), "house", !moveisTabOn) { goHome() }
+            barItem(tr("Projetor 3D"), "cube", moveisTabOn) { openMoveisMode() }
             barItem(tr("Ferramentas"), "wrench.and.screwdriver", false) { toolsOpen = true }
             barItem(tr("Ajustes"), "gearshape", false) { settingsOpen = true }
         }
@@ -482,6 +573,7 @@ struct LibraryView: View {
             VStack(spacing: 3) {
                 Image(systemName: icon).font(.system(size: 19, weight: .semibold))
                 Text(label).font(.system(size: 10, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                Capsule().fill(sel ? Ui.gold : Color.clear).frame(width: 22, height: 3)
             }
             .foregroundColor(sel ? Ui.gold : Ui.dim)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -499,21 +591,28 @@ struct LibraryView: View {
     }
 
     private var toolsItems: [HomeMenuItem] {
-        [
-            HomeMenuItem(icon: "cube", label: tr("Novo Projetor 3D"), action: { afterSheet { app.newMoveisProject() } }),
+        var l: [HomeMenuItem] = [
             HomeMenuItem(icon: "calendar", label: tr("Agenda"), action: { afterSheet { app.screen = .agenda } }),
             HomeMenuItem(icon: "dollarsign.circle", label: tr("Orçamentos"), action: { afterSheet { app.screen = .quotes } }),
             HomeMenuItem(icon: "ruler", label: tr("Trena Bosch"), action: { afterSheet { btOpen = true } }),
             HomeMenuItem(icon: "iphone.radiowaves.left.and.right", label: tr("Ver projeto de outro iPhone"), action: { afterSheet { peerView = true } }),
-            HomeMenuItem(icon: "folder.badge.plus", label: tr("Nova pasta"), action: { afterSheet { newFolder = true } }),
-            HomeMenuItem(icon: "trash", label: tr("Lixo"), action: { toolsOpen = false; app.filter = .trash }),
         ]
+        // pastas: abre a pasta na tela inicial
+        for f in sortedFolders {
+            let fid = f.id
+            l.append(HomeMenuItem(icon: "folder.fill", label: f.name, action: { toolsOpen = false; projMode = .all; app.filter = .folder(fid) }))
+        }
+        l.append(HomeMenuItem(icon: "folder.badge.plus", label: tr("Nova pasta"), action: { afterSheet { newFolder = true } }))
+        l.append(HomeMenuItem(icon: "trash", label: tr("Lixo"), action: { toolsOpen = false; projMode = .all; app.filter = .trash }))
+        return l
     }
 
     private var settingsItems: [HomeMenuItem] {
         [
+            HomeMenuItem(icon: "building.2", label: tr("Dados da empresa"), action: { afterSheet { companyOpen = true } }),
             HomeMenuItem(icon: "archivebox", label: tr("Fazer backup completo (ZIP)"), action: { afterSheet { shareURL = app.makeBackup() } }),
             HomeMenuItem(icon: "arrow.counterclockwise", label: tr("Restaurar backup"), action: { afterSheet { restorePick = true } }),
+            HomeMenuItem(icon: "iphone.radiowaves.left.and.right", label: tr("Ver projeto de outro iPhone"), action: { afterSheet { peerView = true } }),
             HomeMenuItem(icon: "globe", label: langLabel, action: { afterSheet { langOpen = true } }),
             HomeMenuItem(icon: "creditcard", label: tr("Gerenciar assinatura"), action: { afterSheet { manageSub = true } }),
             HomeMenuItem(icon: "book", label: tr("Guia passo a passo"), action: { afterSheet { app.showGuide = true } }),
@@ -554,29 +653,6 @@ struct HomeMenuSheet: View {
         } else {
             Button(action: it.action) { Label(it.label, systemImage: it.icon).foregroundColor(Ui.text) }
         }
-    }
-}
-
-/// Pasta na tela "Todas as notas": toque abre a pasta.
-struct FolderTile: View {
-    var name: String
-    var count: Int
-    var action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: "folder.fill").font(.title2).foregroundColor(Ui.gold)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(name).foregroundColor(Ui.text).lineLimit(1)
-                    Text(tr(count == 1 ? "{0} item" : "{0} itens", count)).font(.caption).foregroundColor(Ui.dim)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").foregroundColor(Ui.dim)
-            }
-            .padding(.horizontal, 14).frame(height: 64)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
-            .contentShape(Rectangle())
-        }.buttonStyle(.plain)
     }
 }
 
@@ -704,123 +780,213 @@ func nameLess(_ a: String, _ b: String) -> Bool {
     a.trimmingCharacters(in: .whitespaces).compare(b.trimmingCharacters(in: .whitespaces), options: [.caseInsensitive, .diacriticInsensitive, .numeric], range: nil, locale: Locale(identifier: "pt_BR")) == .orderedAscending
 }
 
-/// Item da biblioteca: quadro do cliente, projeto solto ou nota solta.
+/// Item da aba Projetos: projeto do Projetor 3D ou nota.
 enum LibEntry: Identifiable {
-    case g(ClientGroup), p(MoveisProjects.P), n(NoteMeta)
+    case p(MoveisProjects.P), n(NoteMeta)
     var id: String {
-        switch self { case .g(let x): return "cli-" + x.id; case .p(let x): return "proj-" + x.id; case .n(let x): return "note-" + x.id }
+        switch self { case .p(let x): return "proj-" + x.id; case .n(let x): return "note-" + x.id }
     }
     var name: String {
-        switch self { case .g(let x): return x.name; case .p(let x): return x.name; case .n(let x): return x.name }
+        switch self { case .p(let x): return x.name; case .n(let x): return x.name }
     }
     var pinned: Bool { if case .n(let x) = self { return x.pinned }; return false }
-    /// Data para "Mais recentes": projeto = última alteração; nota = criação; cliente = o mais novo dos dois.
+    /// Data para "mais recentes": projeto = última alteração; nota = criação.
     var date: Int64 {
         switch self {
-        case .g(let x): return max(x.projs.map(\.updated).max() ?? 0, x.notes.map(\.createdMs).max() ?? 0)
         case .p(let x): return x.updated
         case .n(let x): return x.createdMs
         }
     }
 }
 
-/// Cliente com suas notas e projetos (nota e projeto ligados ficam com o mesmo nome, no mesmo quadro).
+/// Cliente com seus projetos do Projetor 3D (mais recente primeiro) e as notas ligadas ou de mesmo nome.
 struct ClientGroup: Identifiable {
     var id: String
     var name: String
     var projs: [MoveisProjects.P]
     var notes: [NoteMeta]
+    /// Projeto alterado por último (o status dele aparece no cartão).
+    var latest: MoveisProjects.P? { projs.max { $0.updated < $1.updated } }
+    var lastDate: Int64 { max(projs.map(\.updated).max() ?? 0, notes.map(\.createdMs).max() ?? 0) }
+    var count: Int { projs.count + notes.count }
     func matches(_ q: String) -> Bool { name.localizedCaseInsensitiveContains(q) || projs.contains { projMatches($0, q) } || notes.contains { $0.name.localizedCaseInsensitiveContains(q) } }
+}
+
+/// Junta por cliente: projetos com o mesmo nome de cliente ficam juntos, com as notas ligadas a eles (ou com o mesmo nome).
+/// Projeto sem nome de cliente, plano de corte recebido e projeto recebido do marceneiro ficam soltos (aparecem na aba Projetos).
+@MainActor func homeClients(_ app: AppModel, _ projs: [MoveisProjects.P], _ notes: [NoteMeta]) -> (groups: [ClientGroup], looseProjs: [MoveisProjects.P], looseNotes: [NoteMeta]) {
+    func k(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
+    var pk: [String: String] = [:]
+    var order: [String] = []
+    var ps: [String: [MoveisProjects.P]] = [:]
+    var looseP: [MoveisProjects.P] = []
+    for p in projs {
+        if app.isDefaultProj(p) || p.corte || p.cliente {
+            pk[p.id] = "id:" + p.id
+            looseP.append(p)
+            continue
+        }
+        let key = k(p.name)
+        pk[p.id] = key
+        if ps[key] == nil { order.append(key) }
+        ps[key, default: []].append(p)
+    }
+    var ns: [String: [NoteMeta]] = [:]
+    var looseN: [NoteMeta] = []
+    for n in notes {
+        let key = app.linkedProject(n.id).flatMap { pk[$0] } ?? (app.isDefaultNote(n.name) ? nil : k(n.name))
+        if let key = key, ps[key] != nil { ns[key, default: []].append(n) } else { looseN.append(n) }
+    }
+    let groups: [ClientGroup] = order.map { key in
+        let P = (ps[key] ?? []).sorted { $0.updated > $1.updated }
+        let N = (ns[key] ?? []).sorted { $0.createdMs > $1.createdMs }
+        return ClientGroup(id: key, name: P.first?.name ?? key, projs: P, notes: N)
+    }
+    return (groups, looseP, looseN)
+}
+
+/// Quadradinho com a inicial do cliente (fundo escuro dourado, letra dourada).
+struct ClientAvatar: View {
+    var name: String
+    var size: CGFloat = 52
+    private var initial: String { String(name.trimmingCharacters(in: .whitespaces).prefix(1)).uppercased() }
+    var body: some View {
+        Text(initial.isEmpty ? "?" : initial)
+            .font(.system(size: size * 0.46, weight: .bold)).foregroundColor(Ui.gold)
+            .frame(width: size, height: size)
+            .background(RoundedRectangle(cornerRadius: size * 0.27).fill(Color(argb: 0xFF2B2416)))
+            .overlay(RoundedRectangle(cornerRadius: size * 0.27).stroke(Ui.gold.opacity(0.3)))
+    }
+}
+
+/// Cartão do cliente na tela inicial: inicial, nome, quantos projetos, última alteração e status do projeto mais recente.
+struct ClientRow: View {
+    var g: ClientGroup
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ClientAvatar(name: g.name)
+                info
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundColor(Ui.dim)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Ui.panel))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var countText: String { tr(g.count == 1 ? "{0} projeto" : "{0} projetos", g.count) }
+
+    private var info: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(g.name).font(.headline).foregroundColor(Ui.text).lineLimit(1)
+                Text("· " + countText).font(.caption).foregroundColor(Ui.dim).lineLimit(1).fixedSize()
+            }
+            HStack(spacing: 8) {
+                Text(dmyText(g.lastDate)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
+                if let p = g.latest { StatusChip(status: p.status) }
+            }
+            if let p = g.latest, let e = MoveisProjects.entregaInfo(p), e.late {
+                Text(e.text).font(.caption2.weight(.bold)).foregroundColor(Color(argb: 0xFFE53935)).lineLimit(1)
+            }
+        }
+    }
+}
+
+/// Folha do cliente: projetos do Projetor 3D e notas dele, com os botões de criar.
+struct ClientDetailSheet: View {
+    @EnvironmentObject var app: AppModel
+    @Environment(\.dismiss) private var dismiss
+    var key: String
+
+    private var group: ClientGroup? {
+        _ = app.projVersion
+        let notes = app.index.notes.filter { !$0.trash }
+        return homeClients(app, app.moveisProjects(), notes).groups.first { $0.id == key }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                if let g = group {
+                    detail(g)
+                } else {
+                    Text(tr("Nada encontrado")).font(.subheadline).foregroundColor(Ui.dim).padding(.top, 40)
+                }
+            }
+            .background(Ui.bg.ignoresSafeArea())
+            .navigationTitle(tr("Cliente")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } } }
+        }
+        // abriu um projeto ou uma nota: a tela muda e a folha fecha
+        .onChange(of: app.screen) { _ in dismiss() }
+        // "Nova nota" (daqui ou do menu do projeto): fecha a folha e a biblioteca pergunta o nome
+        .onChange(of: app.noteAsk?.id) { v in
+            guard v != nil, let a = app.noteAsk else { return }
+            app.noteAsk = nil
+            dismiss()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { app.noteAsk = a }
+        }
+    }
+
+    private func detail(_ g: ClientGroup) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            head(g)
+            sectionTitle(tr("Projetor 3D"), g.projs.count)
+            ForEach(g.projs) { p in ProjRow(p: p) }
+            createButton(tr("Projetor 3D deste cliente"), filled: true) {
+                dismiss()
+                app.newProjectForClient(g.name, nil)
+            }
+            sectionTitle(tr("Notas"), g.notes.count).padding(.top, 8)
+            ForEach(g.notes) { n in NoteRow(n: n) }
+            createButton(tr("Nota"), filled: false) {
+                app.noteAsk = NoteAsk(kind: "", project: g.projs.first?.id)
+            }
+        }
+        .padding(16)
+    }
+
+    private func head(_ g: ClientGroup) -> some View {
+        HStack(spacing: 14) {
+            ClientAvatar(name: g.name, size: 60)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(g.name).font(.title2.bold()).foregroundColor(Ui.text).lineLimit(2)
+                Text(tr(g.count == 1 ? "{0} projeto" : "{0} projetos", g.count)).font(.subheadline).foregroundColor(Ui.dim)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.bottom, 6)
+    }
+
+    private func sectionTitle(_ title: String, _ count: Int) -> some View {
+        Text(title + " (\(count))").font(.headline).foregroundColor(Ui.gold)
+    }
+
+    private func createButton(_ label: String, filled: Bool, _ a: @escaping () -> Void) -> some View {
+        Button(action: a) {
+            HStack(spacing: 8) {
+                Image(systemName: "plus").font(.system(size: 15, weight: .bold))
+                Text(label).font(.subheadline.weight(.semibold)).lineLimit(1)
+            }
+            .foregroundColor(filled ? Ui.bg : Ui.gold)
+            .frame(maxWidth: .infinity).frame(height: 48)
+            .background(RoundedRectangle(cornerRadius: 12).fill(filled ? Ui.gold : Color.clear))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Ui.gold, lineWidth: 1.2))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
 }
 
 /// Busca no projeto: cliente, nome do projeto, ambiente, cidade e status.
 func projMatches(_ p: MoveisProjects.P, _ q: String) -> Bool {
     [p.name, p.label, MoveisProjects.roomLabel(p.room), p.city, MoveisProjects.statusLabel(p.status)].contains { $0.localizedCaseInsensitiveContains(q) }
-}
-
-@MainActor func clientGroups(_ app: AppModel, _ projs: [MoveisProjects.P], _ notes: [NoteMeta]) -> [ClientGroup] {
-    func k(_ s: String) -> String { s.trimmingCharacters(in: .whitespaces).lowercased() }
-    var pk: [String: String] = [:]
-    for p in projs { pk[p.id] = (app.isDefaultProj(p) || p.corte || p.cliente) ? "id:" + p.id : k(p.name) }
-    var order: [String] = []
-    var ps: [String: [MoveisProjects.P]] = [:], ns: [String: [NoteMeta]] = [:]
-    for p in projs { let key = pk[p.id]!; if ps[key] == nil { order.append(key) }; ps[key, default: []].append(p) }
-    for n in notes {
-        let key = app.linkedProject(n.id).flatMap { pk[$0] } ?? (app.isDefaultNote(n.name) ? nil : k(n.name))
-        if let key = key, ps[key] != nil { ns[key, default: []].append(n) }
-    }
-    return order.compactMap { key in
-        let P = ps[key] ?? [], N = ns[key] ?? []
-        if P.isEmpty || P.count + N.count < 2 { return nil }
-        let name = P.first { !app.isDefaultProj($0) }?.name ?? N.first?.name ?? P[0].name
-        return ClientGroup(id: key, name: name, projs: P.sorted { nameLess($0.label, $1.label) }, notes: N.sorted { nameLess($0.name, $1.name) })
-    }
-}
-
-/// Quadro do cliente: nome e quantos projetos, a lista das notas e projetos dele e "＋ Novo projeto deste cliente".
-struct ClientCard: View {
-    @EnvironmentObject var app: AppModel
-    var g: ClientGroup
-    @State private var open = true
-
-    private var rows: [LibEntry] { g.notes.map { LibEntry.n($0) } + g.projs.map { LibEntry.p($0) } }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            header
-            if open { itemList }
-            newButton
-        }
-        .padding(12)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Ui.panel))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Ui.line))
-    }
-
-    private var header: some View {
-        Button { withAnimation(.easeInOut(duration: 0.15)) { open.toggle() } } label: {
-            HStack(spacing: 10) {
-                Image(systemName: "person.fill").font(.system(size: 16, weight: .semibold)).foregroundColor(Ui.gold)
-                    .frame(width: 36, height: 36)
-                    .background(Circle().fill(Ui.gold.opacity(0.15)))
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(g.name).font(.headline).foregroundColor(Ui.text).lineLimit(1)
-                    Text(tr(g.projs.count == 1 ? "{0} projeto" : "{0} projetos", g.projs.count)).font(.caption).foregroundColor(Ui.dim).lineLimit(1)
-                }
-                Spacer()
-                Image(systemName: open ? "chevron.up" : "chevron.down").font(.footnote.weight(.semibold)).foregroundColor(Ui.dim)
-            }
-            .contentShape(Rectangle())
-        }.buttonStyle(.plain)
-    }
-
-    private var itemList: some View {
-        VStack(spacing: 0) {
-            ForEach(rows) { e in
-                VStack(spacing: 0) {
-                    if e.id != rows.first?.id { Rectangle().fill(Ui.line).frame(height: 1).padding(.leading, 60) }
-                    row(e)
-                }
-            }
-        }
-        .background(RoundedRectangle(cornerRadius: 12).fill(Ui.bg))
-    }
-
-    @ViewBuilder private func row(_ e: LibEntry) -> some View {
-        switch e {
-        case .n(let n): NoteRow(n: n, bare: true)
-        case .p(let p): ProjRow(p: p, bare: true)
-        case .g: EmptyView()
-        }
-    }
-
-    private var newButton: some View {
-        Button { app.newProjectForClient(g.name, g.notes.first?.id) } label: {
-            Text(tr("＋ Novo projeto deste cliente")).font(.subheadline.weight(.semibold)).foregroundColor(Ui.gold)
-                .frame(maxWidth: .infinity).frame(height: 44)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Ui.gold, lineWidth: 1.2))
-                .contentShape(Rectangle())
-        }.buttonStyle(.plain)
-    }
 }
 
 /// Nota. `bare` = linha compacta dentro do quadro do cliente.

@@ -322,6 +322,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testPortaComCavaSempreLateralMais30EmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it})).filter(function(i){return i.w&&i.v});var bad=[],n=0;
+          ['cava','perfil'].forEach(function(px){all.forEach(function(t){S.mods=[];S.stones=[];S.fr=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(e){return}var m=S.mods[0];if(!m||m.corner)return;
+            (m.v||[]).forEach(function(v){if(v.k==='door'){v.px=px;v.cava=px==='cava'}});draw();var P=partsOf(m),lat=P.filter(function(p){return p.name==='Lateral esquerda'})[0],pV=mv(m,'pV',15),pS=mv(m,'pSn',6);
+            P.filter(function(p){return p.name==='Porta'&&!p.glass}).forEach(function(p){var v=m.v[p.vi];if(!v||v.mw||v.gx)return;n++;
+              /* altura: vão + 2×15 (= lateral + 30 quando o vão é único) */if(Math.abs(p.cw-(p.h+(p.pxD||0)))>0.11||(p.pxD||0)>0)bad.push(t.n+' | '+px+' | porta '+p.cl+'×'+p.cw+' com desconto '+(p.pxD||0));
+              if(m.v.length===1&&!m.div&&lat&&Math.abs(p.cw-(lat.cl+2*pV))>0.11)bad.push(t.n+' | '+px+' | porta alt '+p.cw+' ≠ lateral '+lat.cl+' + '+(2*pV));
+              /* largura: (vão + 12) ÷ n nas portas duplas do aéreo/balcão */if(v.n>=2&&m.v.length===1&&!m.div&&Math.abs(p.cl-Math.round(((m.w-2*m.esp)+2*pS-(v.n-1)*mv(m,'pGap',0))/v.n*10)/10)>0.11)bad.push(t.n+' | '+px+' | porta larg '+p.cl)})})});
+          /* o caso real: aéreo 1105 × 800 × 350, 2 portas, cava de perfil */S.mods=[];newTpl(4);var m=S.mods[0];m.w=1105;m.h=800;m.d=350;m.v=[{k:'door',n:2,cava:false,px:'perfil'}];draw();var d=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.cl+'x'+p.cw}).join(',');
+          return JSON.stringify({portas:n,bad:bad.slice(0,10),caso:d,cv:STD().cvDesc,errs:__errs});
+          """#)
+        XCTAssertGreaterThan(o["portas"] as? Int ?? 0, 100, "auditou o catálogo inteiro")
+        XCTAssertEqual((o["bad"] as? [String])?.count, 0, "porta com cava fora da regra lateral + 30: \(o["bad"] ?? "")")
+        XCTAssertEqual(o["caso"] as? String, "543.5x800,543.5x800", "aéreo 1105 × 800 com cava de perfil: portas 543,5 × 800 (não 770)")
+        XCTAssertEqual(o["cv"] as? Int, 0, "cava de perfil não desconta altura")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

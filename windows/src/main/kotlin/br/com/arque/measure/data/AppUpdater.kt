@@ -13,7 +13,7 @@ import java.net.URL
  * no GitHub, baixa e abre. O instalador atualiza por cima e os dados ficam (pasta do usuário).
  */
 object AppUpdater {
-    private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=20"
+    private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=40"
     const val ASSET = "Arquemestre-Windows-Instalador.exe"
 
     data class Release(val number: Int, val url: String)

@@ -15,7 +15,7 @@ import java.net.URL
 
 /** Atualiza o app pelo próprio app: busca o APK mais novo no GitHub e abre o instalador. */
 object AppUpdater {
-    private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=5"
+    private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=40"
 
     data class Release(val number: Int, val url: String)
 

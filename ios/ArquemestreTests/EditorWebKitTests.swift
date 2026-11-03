@@ -301,6 +301,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testFerragensFitaPorCorNichoNaCorDeForaEPaletaAmadeirada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('2P c/ Cab+Gav Int 600mm'));newTpl(4);S.mods.forEach(function(m){m.corF='#a67c52';m.corFN='Freijó'});draw();var n2=addNichoMicro(1,'liso');newTpl(T('Estante com porta de correr'));draw();
+          var hw={};S.mods.forEach(function(m,i){hw[hwTag(m,i)]=hwOf(m)});var g=function(t,k){return (hw[t]&&hw[t][k])?hw[t][k].n:0};
+          var nl=cutLines(n2);var txt=cutAll().replace(/<[^>]+>/g,' ');
+          open3D();var B=__boxes();var ni=S.mods.indexOf(n2);var cols=B.filter(function(b){return String(b.nm).indexOf(ni+':')===0&&!b.pf&&b.c}).map(function(b){return b.c.join(',')});var okCol=cols.length>0&&cols.every(function(c){return c==='166,124,82'});
+          return JSON.stringify({dob1:g('Base 1','Dobradiça 35 mm (caneco)'),cor2:g('Base 2','Corrediça telescópica 500 mm (par)'),dob3:g('Base 3','Dobradiça 35 mm (caneco)'),kit:Object.keys(hw['Base 4']||{}).some(function(k){return /Kit porta de correr/.test(k)}),nichoCor:nl.every(function(l){return l.fin==='c'}),okCol:okCol,fita:/Total de fita de borda/.test(txt)&&/na cor de fora/.test(txt),amad:SWW.length>=10&&/Amadeiradas/.test(swRow('corF','')),errs:__errs});
+          """#)
+        XCTAssertEqual(o["dob1"] as? Int, 4, "2 portas de 820 → 2 dobradiças 35 mm cada")
+        XCTAssertEqual(o["cor2"] as? Int, 3, "3 gavetas → 3 pares de corrediça no comprimento da lateral (500)")
+        XCTAssertEqual(o["dob3"] as? Int, 10, "2 portas de 2400 → 5 dobradiças cada")
+        XCTAssertEqual(o["kit"] as? Bool, true, "porta de correr → kit de trilhos")
+        XCTAssertEqual(o["nichoCor"] as? Bool, true, "nicho aberto: todas as peças na chapa cor")
+        XCTAssertEqual(o["okCol"] as? Bool, true, "nicho no 3D na cor de fora do módulo vizinho")
+        XCTAssertEqual(o["fita"] as? Bool, true, "plano de corte traz metros de fita por cor")
+        XCTAssertEqual(o["amad"] as? Bool, true, "paleta com cores amadeiradas")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

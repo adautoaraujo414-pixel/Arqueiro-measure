@@ -3359,7 +3359,7 @@ window.org3api={ledOk:ledOk,open:modOpen,teto:function(){return boxes.concat(bg)
 /* ===== eletros que abrem no 3D (testes no iPhone): toque na geladeira, forno, micro-ondas ou fogão abre a porta com animação;
    fogão de piso e de embutir com 2, 4, 5 ou 6 bocas (medidas reais) e bocas que acendem ===== */
 var FRA={},FRT={},FRAR=0,CURF=null,FOGL={};
-function frAnim(){if(FRAR)return;FRAR=1;var last=performance.now();(function f(now){var dt=Math.min(64,now-last);last=now;var more=false;Object.keys(FRT).forEach(function(k){var a=FRA[k]||0,t=FRT[k];if(Math.abs(a-t)<.001){FRA[k]=t;return}var st=dt/420;a=t>a?Math.min(t,a+st):Math.max(t,a-st);FRA[k]=a;more=true});build();render();if(more&&!M.hidden)requestAnimationFrame(f);else FRAR=0})(last)}
+function frAnim(){if(FRAR)return;FRAR=1;var last=performance.now();(function f(now){var dt=Math.max(0,Math.min(64,now-last));last=Math.max(last,now);var more=false;Object.keys(FRT).forEach(function(k){var a=FRA[k]||0,t=FRT[k];if(Math.abs(a-t)<.001){FRA[k]=t;return}var st=dt/420;a=t>a?Math.min(t,a+st):Math.max(t,a-st);FRA[k]=a;more=true});build();render();if(more&&!M.hidden)requestAnimationFrame(f);else FRAR=0})(last)}
 function frToggle(id,on){var k=String(id);FRT[k]=on===undefined?((FRT[k]||0)>.5?0:1):(on?1:0);frAnim();return FRT[k]>.5}
 function frOpenK(f){return /^(geladeira|forno|microondas)$/.test(f.t||'geladeira')}
 function ease(a){return a<.5?2*a*a:1-Math.pow(-2*a+2,2)/2}

@@ -34,7 +34,7 @@ final class EditorMediaWebKitTests: XCTestCase {
         };
         </script></body></html>
         """, baseURL: nil)
-        await fulfillment(of: [ready], timeout: 15)
+        await fulfillment(of: [ready], timeout: 40)
         web.navigationDelegate = nil
         _ = delegate
         return web

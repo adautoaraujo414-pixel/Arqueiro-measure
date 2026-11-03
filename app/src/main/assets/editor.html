@@ -4194,5 +4194,13 @@ var px_plx=px;px=function(ev){var p=px_plx(ev);if(PLV&&PLOFF)return {x:p.x+PLOFF
 document.addEventListener('pointerdown',function(ev){PLOFF=null;var t=ev.target&&ev.target.closest&&ev.target.closest('[data-pmx]');if(!t||!PLV||!PLANG)return;var g=document.getElementById('plg'),el=g&&g.querySelector('[data-pm="'+t.dataset.pm+'"]');if(!el)return;var bb=el.getBBox(),p=px_plx(ev);PLOFF=[bb.x+bb.width/2-p.x,bb.y+bb.height/2-p.y]},true);
 ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){setTimeout(function(){PLOFF=null},0)},true)});
 
+/* aéreos encostados com tamponamento lateral no meio e tamponamento de baixo nos dois: o de baixo passa reto por baixo do lateral
+   (encontra o do vizinho, sem sobrar o pedacinho) e o lateral do meio para em cima dele · sai numa peça só no corte (até 2700) */
+function tjNb(m,side){var best=null;S.mods.forEach(function(n){if(n===m||!n.sup||!n.tb||(n.wing||0)!==(m.wing||0)||Math.abs((+n.b||0)-(+m.b||0))>2||n.corner||n.nicho)return;
+  var gap=side<0?m.x-(n.x+n.w):n.x-(m.x+m.w),need=side<0?((m.tl?+m.tlW||30:0)+(n.tr?+n.trW||30:0)):((m.tr?+m.trW||30:0)+(n.tl?+n.tlW||30:0));if(need>0&&Math.abs(gap-need)<=3)best=n});return best}
+var partsOf_tj=partsOf;partsOf=function(m){var P=partsOf_tj.apply(this,arguments);try{if(!m||!m.sup||!m.tb||m.corner||m.nicho||m.tpass)return P;var L=tjNb(m,-1),R=tjNb(m,1),tbw=+m.tbW||30;if(!L&&!R)return P;
+  P.forEach(function(p){if(p.name==='Tamponamento de baixo'){var el=L&&m.tl?(+m.tlW||30):0,er=R&&m.tr?(+m.trW||30):0;if(el||er){p.x-=el;p.w+=el+er;p.cl=Math.round((p.cl+el+er)*10)/10;p.note=(p.note||'')+' · passa por baixo do tamponamento lateral do meio (encontra o do vizinho)'}}
+   else if((p.name==='Tamponamento esquerdo'&&L)||(p.name==='Tamponamento direito'&&R)){if(p.h>tbw+50){p.h-=tbw;p.cl=Math.round((p.cl-tbw)*10)/10;p.note=(p.note||'')+' · para em cima do tamponamento de baixo (meio de dois módulos)'}}})}catch(_){}return P};
+
 </script>
 </body></html>

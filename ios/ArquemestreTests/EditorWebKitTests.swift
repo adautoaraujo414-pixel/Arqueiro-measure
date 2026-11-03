@@ -236,6 +236,21 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testTamponamentoLateralDoMeioAlinhaComODeBaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(4);newTpl(4);var A=S.mods[0],B=S.mods[1];A.tb=B.tb=true;A.tl=true;B.tl=true;B.x=A.x+A.w+30;draw();
+          var pa=partsOf(A).filter(function(p){return p.name==='Tamponamento de baixo'})[0],pb=partsOf(B).filter(function(p){return p.name==='Tamponamento de baixo'})[0],sl=partsOf(B).filter(function(p){return p.name==='Tamponamento esquerdo'})[0];
+          var c=[].concat.apply([],S.mods.map(function(m){return cutLines(m).filter(function(l){return /de baixo/.test(l.name)&&!/engrosso/.test(l.name)}).map(function(l){return l.L})}));
+          return JSON.stringify({fimA:A.x+pa.x+pa.w,iniB:B.x+pb.x,meioH:sl.h,modH:B.h,pecas:c.length,L:c[0]||0,errs:__errs});
+          """#)
+        XCTAssertEqual(o["fimA"] as? Double, o["iniB"] as? Double, "o de baixo encontra o do vizinho, sem sobrar pedaço")
+        XCTAssertEqual(o["meioH"] as? Double, o["modH"] as? Double, "o lateral do meio para em cima do de baixo")
+        XCTAssertEqual(o["pecas"] as? Int, 1)
+        XCTAssertEqual(o["L"] as? Double ?? 0, 2030, accuracy: 0.5)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

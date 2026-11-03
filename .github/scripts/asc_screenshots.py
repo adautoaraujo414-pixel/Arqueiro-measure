@@ -11,8 +11,8 @@ API = "https://api.appstoreconnect.apple.com/v1"
 SRC, APP_ID = sys.argv[1], sys.argv[2]
 
 # ordem na loja: tela inicial nova primeiro
-IPHONE = ["iphone-1-library", "iphone-5-moveis", "iphone-2-editor", "iphone-4-quotes", "iphone-3-agenda", "iphone-6-trial"]
-IPAD = ["ipad-5-moveis", "ipad-2-editor", "ipad-1-library", "ipad-4-quotes", "ipad-3-agenda", "ipad-6-trial"]
+IPHONE = ["iphone-7-moveis3d", "iphone-1-library", "iphone-8-moveisplanta", "iphone-5-moveis", "iphone-2-editor", "iphone-4-quotes", "iphone-3-agenda", "iphone-6-trial"]
+IPAD = ["ipad-7-moveis3d", "ipad-8-moveisplanta", "ipad-5-moveis", "ipad-2-editor", "ipad-1-library", "ipad-4-quotes", "ipad-3-agenda", "ipad-6-trial"]
 # (tipo na API, lista, tamanho final ou None pra manter)
 SETS = [
     ("APP_IPHONE_61", IPHONE, (1206, 2622)),          # obrigatório: iPhone com Dynamic Island (tela média)

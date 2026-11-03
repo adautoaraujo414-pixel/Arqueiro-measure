@@ -29,7 +29,9 @@ final class SheetCanvasView: UIView {
     private var cacheKey = ""
 
     /// Contato grande (mão, punho) e não é o Apple Pencil.
-    private func isPalm(_ t: UITouch) -> Bool { t.type != .pencil && t.majorRadius > 30 }
+    /// Só no iPad (onde se apoia a mão pra escrever com o Pencil). No iPhone o dedo grande (polegar na pinça) não pode virar "mão".
+    private let padIdiom = UIDevice.current.userInterfaceIdiom == .pad
+    private func isPalm(_ t: UITouch) -> Bool { padIdiom && t.type != .pencil && t.majorRadius > 42 }
 
     override init(frame: CGRect) {
         super.init(frame: frame)

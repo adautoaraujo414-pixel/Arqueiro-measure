@@ -233,7 +233,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     }
                     SideItem(tr("Nova pasta"), Icons.Filled.CreateNewFolder, false) { newFolder = true }
                     Spacer(Modifier.height(12.dp))
-                    SideItem(tr("Novo projeto de móveis"), Icons.Filled.Build, false) { vm.newMoveisProject() }
+                    SideItem(tr("Novo Projetor 3D"), Icons.Filled.Build, false) { vm.newMoveisProject() }
                     SideItem(tr("Agenda"), Icons.Filled.Event, false) { vm.screen = Screen.Agenda }
                     SideItem(tr("Orçamentos"), Icons.Filled.Description, false) { vm.screen = Screen.Quotes }
                     SideItem(tr("Lixo"), Icons.Filled.Delete, filter == LibFilter.Trash) { vm.filter = LibFilter.Trash }
@@ -262,7 +262,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     Box {
                         IconButton(onClick = { topMenu = true }) { Icon(Icons.Filled.MoreVert, tr("Menu"), tint = Ui.text) }
                         DropdownMenu(expanded = topMenu, onDismissRequest = { topMenu = false }) {
-                            DropdownMenuItem(text = { Text(tr("Editor de móveis")) }, onClick = {
+                            DropdownMenuItem(text = { Text(tr("Projetor 3D")) }, onClick = {
                                 topMenu = false; vm.newMoveisProject()
                             })
                             DropdownMenuItem(text = { Text(tr("Agenda")) }, onClick = {
@@ -307,7 +307,7 @@ fun LibraryScreen(vm: AppViewModel) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         FilterChip(selected = false, onClick = { vm.screen = Screen.Agenda }, label = { Text(tr("📅 Agenda")) })
-                        FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text(tr("+ Projeto de móveis")) })
+                        FilterChip(selected = false, onClick = { vm.newMoveisProject() }, label = { Text(tr("+ Projetor 3D")) })
                         FilterChip(selected = filter == LibFilter.All, onClick = { vm.filter = LibFilter.All }, label = { Text(tr("Todas as notas")) })
                         vm.index.folders.sortedWith(compareBy<br.com.arque.measure.model.Folder, String>(NameOrder) { it.name }).forEach { f ->
                             FilterChip(selected = filter == LibFilter.InFolder(f.id), onClick = { vm.filter = LibFilter.InFolder(f.id) }, label = { Text(f.name) })
@@ -348,7 +348,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     val shown = groups.filter { g -> q.isBlank() || g.matches(q) }
                     val inGroupP = groups.flatMap { g -> g.projs.map { it.id } }.toSet()
                     val inGroupN = groups.flatMap { g -> g.notes.map { it.id } }.toSet()
-                    if (tab == LibTab.MOVEIS && filter == LibFilter.All && q.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo projeto de móveis")) { vm.newMoveisProject() } }
+                    if (tab == LibTab.MOVEIS && filter == LibFilter.All && q.isBlank()) item(key = "novo-proj") { CreateTile(label = tr("Novo Projetor 3D")) { vm.newMoveisProject() } }
                     // tudo em ordem alfabética pelo nome (cliente, projeto ou nota); notas fixadas continuam em cima
                     val projs = if (showProj) projList.filter { it.id !in inGroupP && (q.isBlank() || projMatches(it, q)) } else emptyList()
                     val loose = notes.filter { it.id !in inGroupN && (q.isBlank() || it.name.contains(q, ignoreCase = true)) }

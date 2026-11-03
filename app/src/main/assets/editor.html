@@ -679,7 +679,7 @@ function tx(x,y,t,c,a,sz,b,rot){return '<text x="'+x+'" y="'+y+'" fill="'+c+'" t
 function ln(a,b,c,d,col,w,da){return '<line x1="'+a+'" y1="'+b+'" x2="'+c+'" y2="'+d+'" stroke="'+col+'" stroke-width="'+(w||1)+'"'+(da?' stroke-dasharray="6 5"':'')+'/>'}
 var RAFD=null;function rafDraw(fn){var first=!RAFD;RAFD={fn:fn};if(first)requestAnimationFrame(function(){var q=RAFD;RAFD=null;draw();if(q&&q.fn)try{q.fn()}catch(_){}})}
 function draw(){try{confineAll()}catch(e){}try{regDet()}catch(e){}try{histTick()}catch(e){}
- if(PLV){$('svg').innerHTML='<style>#plg text{pointer-events:none}</style><g id="plg">'+plantaSvg()+'</g>';return}
+ if(PLV){$('svg').innerHTML='<style>#plg text{pointer-events:none}</style><g id="plg"'+(typeof plAngT==='function'?plAngT():'')+'>'+plantaSvg()+'</g>';return}
 
  var m=S.m,k=Math.min(780/S.W,470/S.H);K=k;
  var L=OX,T=OY,R=L+S.W*k,B=T+S.H*k,s='';
@@ -2414,13 +2414,15 @@ function mkTex2(){var c=document.createElement('canvas');c.width=c.height=512;va
  function vein(w,al){var x=rn()*512,y=rn()*512,a=-.7+rn()*.5,pts=[];for(var k=0;k<80;k++){pts.push([x,y]);a+=(rn()-.5)*.45;x+=Math.cos(a)*9;y+=Math.sin(a)*9}O.forEach(function(o){g.beginPath();pts.forEach(function(p,i){if(i)g.lineTo(p[0]+o[0],p[1]+o[1]);else g.moveTo(p[0]+o[0],p[1]+o[1])});g.strokeStyle='rgba(60,60,60,'+al+')';g.lineWidth=w;g.lineJoin='round';g.stroke()})}
  for(var v=0;v<6;v++)vein(2+rn()*2.6,.28+rn()*.28);for(var v2=0;v2<14;v2++)vein(.6+rn()*.9,.2+rn()*.22);
  var tex=gl.createTexture();gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);gl.activeTexture(gl.TEXTURE0)}
+/* textura das peças: madeira com veio nos MDF amadeirados (frentes, caixas, fundo do nicho), MDF liso com leve granulado */
+function matTx(b){if(!b||b.pf||b.a<.95||b.em||b.g==='lo'||b.g==='sh')return 0;if(b.tx==='wood')return 5;var nm=String(b.nm||'');if(!/^\d+:|rp|^isl/.test(nm)&&b.rpid==null&&b.isl==null)return 0;if(/Vidro|vidro|LED|Puxador|Cava|Dobradi/.test(nm))return 0;var c=b.c;if(!c)return 0;var r=c[0],g=c[1],bl=c[2],mx=Math.max(r,g,bl),mn=Math.min(r,g,bl);if(r>g&&g>=bl&&r-bl>28&&mx>60&&mx<222&&(mx-mn)/mx>.3)return 5;if(mx-mn<14&&mx>150)return 6;return 0}
 function glInit(){try{
  var vs='attribute vec3 p;attribute vec4 c;attribute float t;uniform vec4 r0,r1,r2,r3;varying vec4 vc;varying vec2 uv;varying float vt;void main(){vec4 q=vec4(p,1.);gl_Position=vec4(dot(r0,q),dot(r1,q),dot(r2,q),dot(r3,q));vc=c;vt=t;uv=vec2(p.x+p.y*.37,p.z+p.y*.61)/420.;}',
- fs='precision mediump float;uniform sampler2D tx;uniform sampler2D tx2;varying vec4 vc;varying vec2 uv;varying float vt;void main(){vec3 col=vc.rgb;if(vt>3.5){float l=texture2D(tx,uv).r;col=vc.rgb*(.93+l*.24);}else if(vt>2.5){float l=texture2D(tx2,uv*.5).r;col=mix(vc.rgb,vec3(.9,.9,.88),(1.-l)*.9);}else if(vt>1.5){float l=texture2D(tx2,uv*.5).r;col=vc.rgb*(.5+.5*l);}else if(vt>.5){float l=texture2D(tx,uv).r;col=vc.rgb*(.7+l*1.7);}gl_FragColor=vec4(col,vc.a);}';
+ fs='precision mediump float;uniform sampler2D tx;uniform sampler2D tx2;varying vec4 vc;varying vec2 uv;varying float vt;void main(){vec3 col=vc.rgb;if(vt>5.5){float n=texture2D(tx,uv*2.).r;col=vc.rgb*(.965+n*.07);}else if(vt>4.5){float n=texture2D(tx,uv*vec2(.35,2.2)).r;float g=sin(uv.y*95.+n*7.+sin(uv.x*3.)*4.)*.5+.5;float g2=sin(uv.y*23.+n*3.)*.5+.5;col=vc.rgb*(.84+.13*g+.07*g2+.05*n);}else if(vt>3.5){float l=texture2D(tx,uv).r;col=vc.rgb*(.93+l*.24);}else if(vt>2.5){float l=texture2D(tx2,uv*.5).r;col=mix(vc.rgb,vec3(.9,.9,.88),(1.-l)*.9);}else if(vt>1.5){float l=texture2D(tx2,uv*.5).r;col=vc.rgb*(.5+.5*l);}else if(vt>.5){float l=texture2D(tx,uv).r;col=vc.rgb*(.7+l*1.7);}gl_FragColor=vec4(col,vc.a);}';
  function sh(t,s){var o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o}
  GP=gl.createProgram();gl.attachShader(GP,sh(gl.VERTEX_SHADER,vs));gl.attachShader(GP,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(GP);if(!gl.getProgramParameter(GP,gl.LINK_STATUS))throw 'link';
  mkTex();try{mkTex2()}catch(_){}GB={f:gl.createBuffer(),l:gl.createBuffer(),t:gl.createBuffer(),tl:gl.createBuffer()};glOK=true}catch(e){glOK=false}}
-if(gl)glInit();
+if(gl)glInit();window.gl3ok=function(){return glOK};window.__boxes=function(){return boxes};
 var QF=[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[3,2,6,7]],ED=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
 function polyFill(b,V,LL,e){var P=b.poly,n=P.length,z0=b.z0,z1=b.z1,y0=b.y0,y1=b.y1,sz=z1-z0,sy=y1-y0;if(sz<=2*e||sy<=2*e)e=0;
  var Q=P.map(function(p){return [z0+e+(p[0]-z0)*(sz-2*e)/sz,y0+e+(p[1]-y0)*(sy-2*e)/sy]}),xa=b.x0+e,xb=Math.max(xa,b.x1-e),c=b.c,al=b.a;
@@ -2483,7 +2485,7 @@ function glFill(){var F=[],L=[],T=[],TL=[],all=bg.concat(boxes).filter(wvis),i=0
   if(b.poly){polyFill(b,V,LL,e);return}
   if(b.gp){gpFill(b,V,LL);return}
   if(b.pf){pfFill(b,V,LL);return}
-  if(b.g!=='lo')FC.forEach(function(f,fi){var sh=b.em?1:f[2],c=[b.c[0]*sh/255,b.c[1]*sh/255,b.c[2]*sh/255,b.a],q=QF[fi],o=[q[0],q[1],q[2],q[0],q[2],q[3]];o.forEach(function(k){V.push(cs[k][0],cs[k][1],cs[k][2],c[0],c[1],c[2],c[3],(b.g==='st'||b.g==='stc')?(b.tx||txRGB()[b.c.join()]||1):0)})});
+  if(b.g!=='lo')FC.forEach(function(f,fi){var sh=b.em?1:f[2],c=[b.c[0]*sh/255,b.c[1]*sh/255,b.c[2]*sh/255,b.a],q=QF[fi],o=[q[0],q[1],q[2],q[0],q[2],q[3]];o.forEach(function(k){V.push(cs[k][0],cs[k][1],cs[k][2],c[0],c[1],c[2],c[3],(b.g==='st'||b.g==='stc')?(b.tx||txRGB()[b.c.join()]||1):matTx(b))})});
   var lc=tr?[.16,.13,.09,.4]:[.16,.13,.09,.8];if(b.g!=='stc'&&b.g!=='sh'&&!b.nol)ED.forEach(function(e2){e2.forEach(function(k){LL.push(cs[k][0],cs[k][1],cs[k][2],lc[0],lc[1],lc[2],lc[3],0)})})});
  function up(buf,arr){gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(arr),gl.STATIC_DRAW);return arr.length/8}
  gN=up(GB.f,F);lN=up(GB.l,L);tN=up(GB.t,T);GB.tln=up(GB.tl,TL);gDirty=false}
@@ -3300,10 +3302,9 @@ var itRender_k=itRender;itRender=function(){itRender_k();var E=it4Box(),x=ISX;if
   num=function(f,lab,v,step){return '<div style="display:flex;align-items:center;gap:4px;margin:2px 0"><span style="flex:1;font-size:12px;color:#444">'+lab+'</span>'+Bt('data-qms="'+f+'|-'+step+'" aria-label="menos"','−','','min-width:36px;padding:4px')+'<input data-qmf="'+f+'" type="text" inputmode="numeric" value="'+v+'" style="width:66px;text-align:center;padding:5px 3px;min-height:32px;margin:0;font-size:14px">'+Bt('data-qms="'+f+'|'+step+'" aria-label="mais"','＋','','min-width:36px;padding:4px')+'</div>'};
  if(x.k==='mod'){var m=S.mods[x.mi];if(!m)return;var op=modOpenAny(m);
   E.innerHTML=hd('modulo',modLabel(m,x.mi),m.w+' × '+m.h+' × '+m.d)
-   +num('w','Largura (mm)',m.w,10)+num('h','Altura (mm)',m.h,10)+num('d','Profundidade (mm)',m.d,10)+(m.corner?num('cw2','Lado do L, na outra parede (mm)',m.cw2||900,10):'')
    +row(Bt('data-qmopen="'+(op?0:1)+'"',op?'🚪 Fechar portas e gavetas':'🚪 Abrir portas e gavetas',op)+(ledOk(m)?Bt('data-qmled="1"',m.led?'💡 LED (mudar)':'💡 Pôr LED'):'')+Bt('data-qmlock="1"',m.lock?'🔒 Travado':'🔓 Travar',!!m.lock))
    +row(Bt('data-qmj="l"','⇤ Encostar à esquerda')+Bt('data-qmj="r"','Encostar à direita ⇥'))
-   +nt('Arraste o módulo pra mudar de lugar · 1 toque na porta ou gaveta abre só ela · 2 toques numa peça: aumentar ou diminuir só ela.'+(ledOk(m)?'':' LED vai só nos módulos de cima e na cristaleira.'));
+   +nt('📐 Medidas do módulo: no desenho 2D (aba Estrutura). Aqui no 3D só posição e acabamento.')+nt('Arraste o módulo pra mudar de lugar · 1 toque na porta ou gaveta abre só ela · 2 toques numa peça: aumentar ou diminuir só ela.'+(ledOk(m)?'':' LED vai só nos módulos de cima e na cristaleira.'));
   if(window.RO)E.querySelectorAll('button:not([data-qx]):not([data-qmopen]),input').forEach(function(b){b.disabled=true});return}
  if(x.k==='wall'){var tabs=E.querySelector('[data-qwtab="P"]');if(tabs&&!E.querySelector('[data-qwtab="T"]'))tabs.insertAdjacentHTML('afterend',Bt('data-qwtab="T"','Teto',x.s==='T'));
   var hb=E.querySelector('b');if(hb&&hb.firstChild&&x.s!=='T')hb.firstChild.nodeValue='Ambiente: paredes, piso e teto ';
@@ -3760,6 +3761,15 @@ it4Box().addEventListener('change',function(e){var t=e.target;if(!t.dataset||!t.
 var crpRender_w=crpRender;crpRender=function(){crpRender_w();var C=crpBox();if(C.querySelector('[data-cwet]'))return;var p=C.querySelector('[data-cl="d"]');if(p)p.insertAdjacentHTML('afterend','<button data-cwet="1" style="padding:4px 10px;min-height:34px;font-size:13px">💧 Área molhada na pedra</button>')};
 crpBox().addEventListener('click',function(e){var t=e.target.closest('[data-cwet]');if(!t)return;e.stopImmediatePropagation();if(window.RO)return;CRP.hidden=true;var st=S.stones[0];if(!st){ambMsg('Ponha uma pedra primeiro (Balcão em L ou aba Pedra)');return}snap();if(!st.wet)st.wet=wetDefault(st);build();render();itOpen({k:'st',id:st.id});ambMsg('💧 Área molhada · mude a largura e os cantos aqui · o resto da pedra é área seca')},true);
 window.wet3api={on:function(i){var st=S.stones[i||0];st.wet=wetDefault(st);build();return st.wet},n:function(){return boxes.filter(function(b){return b.wet!=null}).length}};
+/* nicho superior: fundo amadeirado no 3D + botões no ＋ Criar */
+var build_ni=build;build=function(){build_ni();try{boxes.forEach(function(b){var nm=String(b.nm||'');if(!/^\d+:Fundo/.test(nm))return;var m=S.mods[+nm.split(':')[0]];if(m&&m.nicho==='madeira'){b.c=[167,123,79];b.tx='wood'}})}catch(_){}};
+var crpRender_ni=crpRender;crpRender=function(){crpRender_ni();var C=crpBox();if(C.querySelector('[data-cnicho]'))return;var p=C.querySelector('[data-cmod]');if(p)p.parentNode.insertAdjacentHTML('beforeend','<button data-cnicho="madeira" style="padding:4px 10px;min-height:34px;font-size:13px">＋ Nicho superior (fundo amadeirado)</button><button data-cnicho="liso" style="padding:4px 10px;min-height:34px;font-size:13px">＋ Nicho superior (fundo liso)</button>')};
+crpBox().addEventListener('click',function(e){var t=e.target.closest('[data-cnicho]');if(!t)return;e.stopImmediatePropagation();if(window.RO)return;CRP.hidden=true;snap();var m=window.addNicho(t.dataset.cnicho);if(m){build();render();ambMsg('Nicho superior · arraste pra mudar de lugar · 2 toques numa peça: setas · medidas no 2D')}},true);
+/* placa com desnível: no 3D o topo segue a linha do teto (corte em ângulo) */
+var rp3_pw=rp3;rp3=function(a){var n0=boxes.length;rp3_pw(a);if(!a||!a.sl)return;var yS=function(x){return a.b+a.sl.l+(a.sl.r-a.sl.l)*Math.max(0,Math.min(1,(x-a.x)/Math.max(1,a.w)))},keep=boxes.slice(0,n0),nw=[];
+ for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.pf||b.poly){nw.push(b);continue}var tl=yS(b.x0),tr=yS(b.x1),lo=Math.min(tl,tr);if(b.y1<=lo+.5){nw.push(b);continue}if(b.y0>=Math.max(tl,tr)-.5)continue;
+  var t=[];var CURN0=window.CURN;window.CURN=b.nm;BZ(t,[[b.x0,b.y0],[b.x1,b.y0],[b.x1,Math.max(b.y0,Math.min(b.y1,tr))],[b.x0,Math.max(b.y0,Math.min(b.y1,tl))]],b.z0,b.z1,'#'+(b.c||[200,200,200]).map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join(''),b.a);window.CURN=CURN0;var q=t[0];q.rpid=b.rpid;q.rpd=b.rpd;nw.push(q)}
+ boxes.length=0;keep.concat(nw).forEach(function(b){boxes.push(b)})};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 })();
 </script>
@@ -3973,5 +3983,86 @@ document.addEventListener('keydown',function(e){var tg=e.target;if(tg&&(/^(INPUT
  var v3=document.getElementById('v3'),in3=v3&&!v3.hidden,it4=document.getElementById('it4');
  if(in3&&it4&&!it4.hidden){var b=it4.querySelector('[data-qmdel]');if(b){e.preventDefault();b.click();if(it4.querySelector('[data-qmdel]'))it4.querySelector('[data-qmdel]').click();return}return}
  if(!S.m||!S.mods.length)return;if(S.m.lock){toast('🔒 Módulo travado');return}e.preventDefault();try{snap()}catch(_){}LAST='mod';$('delMod').click();if(in3){try{window.re3&&window.re3()}catch(_){}}toast('Módulo apagado · Ctrl+Z desfaz')});
+</script>
+<script>
+/* ===== Nicho superior livre: caixa aberta embaixo dos aéreos da cozinha, fundo de 15 mm amadeirado ou liso ===== */
+function addNicho(fc){var sups=S.mods.filter(function(m){return m.sup&&!m.nicho&&m.h>=300}),first=sups.slice().sort(function(a,b){return a.x-b.x})[0],bmin=sups.length?Math.min.apply(null,sups.map(function(m){return m.b})):0,h=350,d=300;
+ var w=first?first.w:900;newTpl({n:'Nicho superior',w:w,h:h,d:d,b:1400,sup:true,keep:true,v:[{k:'free',n:1}]});var m=S.mods[S.mods.length-1];if(!m)return null;
+ m.nicho=fc==='liso'?'liso':'madeira';m.fundo=true;m.fundoMm=15;m.fundoTipo='sobre';m.h=h;m.d=d;m.b=sups.length?Math.max(0,bmin-h):Math.max(0,(+STD().supB||1740)-h);
+ /* encosta embaixo do primeiro aéreo livre (sem outro nicho embaixo) */
+ var spot=sups.slice().sort(function(a,b){return a.x-b.x}).filter(function(u){return !S.mods.some(function(o){return o!==m&&o.nicho&&Math.abs(o.x-u.x)<5})})[0];if(spot){m.x=spot.x;m.w=spot.w;m.b=Math.max(0,spot.b-h)}else if(first){m.x=first.x}
+ m.tl=m.tr=m.tb=false;S.m=m;try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}toast('Nicho superior · fundo 15 mm '+(m.nicho==='madeira'?'amadeirado':'liso')+' · medidas na aba Estrutura');return m}
+window.addNicho=addNicho;
+(function(){var sc=CATS.filter(function(c){return c.id==='sup'})[0];if(sc&&!sc.it.some(function(i){return i.act==='nicho'}))sc.it.unshift({n:'Nicho superior livre · fundo 15 mm amadeirado',act:'nicho',fc:'madeira',kw:'nicho aberto superior madeira'},{n:'Nicho superior livre · fundo 15 mm liso',act:'nicho',fc:'liso',kw:'nicho aberto superior liso'});
+ var ca=catAct2;catAct2=function(it){if(it&&it.act==='nicho'){snap();addNicho(it.fc);return true}return ca(it)};
+ var cl=cutLines;cutLines=function(m){var L=cl.apply(this,arguments);if(m&&m.nicho==='madeira')L.forEach(function(l){if((l.names||[]).some(function(n){return /^Fundo/.test(n)})){l.fin='c';if(l.name)l.name=String(l.name).replace('BRANCO','AMADEIRADO (na cor)');l.note=(l.note||'')+' · fundo do nicho amadeirado'}});return L};
+})();
+</script>
+<script>
+/* ===== Revestir a parede com painéis (sala): parede com altura em cada ponta (desnível), portas primeiro (recorte),
+   placas de no máximo 1800 × 2730, junta seca ou rebaixo 15 × 6, acima de 2730 outra junta e continua até o teto,
+   tudo alinhado; o painel de cima cobre o desnível; porta de correr por trás: painel 85 mm pra frente com travas ===== */
+function pwCfg(){var c=S.pw||{};return {hl:+c.hl||S.H,hr:+c.hr||+c.hl||S.H,x0:c.x0!==undefined&&c.x0!==''?+c.x0:fgv(),x1:c.x1!==undefined&&c.x1!==''?+c.x1:S.W-fgv(),b0:+c.b0||0,jt:c.jt||'reb',jw:+c.jw||15,jd:+c.jd||6,mw:Math.min(+c.mw||1800,plLim().w),mh:Math.min(+c.mh||2730,plLim().h),correr:!!c.correr,af:+c.af||85,cor:c.cor||null}}
+function pwTop(x,c){c=c||pwCfg();return c.hl+(c.hr-c.hl)*Math.max(0,Math.min(1,x/Math.max(1,S.W)))}
+function pwOpsOver(a){return (S.ops||[]).filter(function(o){return (!o.wall||o.wall==='F')&&o.x<a.x+a.w-1&&o.x+o.w>a.x+1&&o.b<a.b+a.h-1&&o.b+o.h>a.b+1})}
+function pwMake(a0,c){var a={id:Date.now()+Math.floor(Math.random()*99999),liso:true,pw:1,x:Math.round(a0.x*10)/10,b:Math.round(a0.b*10)/10,w:Math.round(a0.w*10)/10,h:Math.round(a0.h*10)/10,jt:{t:c.jt==='reb'?'reb':'seca',w:c.jw,d:c.jd}};
+ if(a0.sl)a.sl={l:Math.round(a0.sl.l*10)/10,r:Math.round(a0.sl.r*10)/10};if(c.correr)a.af=c.af;if(c.cor)a.cor=c.cor;
+ var ops=pwOpsOver(a);if(ops.length){var o=ops[0];if(o.x<=a.x+1&&o.x+o.w>=a.x+a.w-1&&o.b<=a.b+1&&o.b+o.h>=a.b+a.h-1)return null;a.rc={op:o.id,f:0}}return a}
+/* uma coluna de placas, de y até o teto (com o desnível) */
+function pwColumn(x,w,y,c,out){var jw=c.jt==='reb'?c.jw:0,tA=pwTop(x,c),tB=pwTop(x+w,c),guard=0;
+ while(guard++<8){var rem=Math.max(tA,tB)-y;if(rem<=1)break;var hn=rem<=c.mh?rem:c.mh,la=Math.min(hn,tA-y),lb=Math.min(hn,tB-y);if(la<=1&&lb<=1)break;var h=Math.max(la,lb),a0={x:x,b:y,w:w,h:h};if(Math.abs(la-lb)>0.5||Math.min(la,lb)<h-0.5)a0.sl={l:Math.max(0,la),r:Math.max(0,lb)};var a=pwMake(a0,c);if(a)out.push(a);y+=hn+jw}return out}
+function pwGenerate(){var c=pwCfg(),W=c.x1-c.x0;if(W<100)return toast('Largura da parede muito pequena');var jw=c.jt==='reb'?c.jw:0,n=Math.max(1,Math.ceil((W+jw)/(c.mw+jw))),cw=(W-(n-1)*jw)/n;
+ snap();S.H=Math.max(S.H,Math.round(Math.max(c.hl,c.hr)));S.rp=S.rp.filter(function(a){return !a.pw});var out=[];for(var i=0;i<n;i++)pwColumn(c.x0+i*(cw+jw),cw,c.b0,c,out);out.forEach(function(a){S.rp.push(a)});RPSEL=out.length?out[0].id:0;LAST='rp';
+ try{panel();draw()}catch(_){}try{if(window.re3)window.re3()}catch(_){}toast(out.length+' placas · '+n+' colunas de '+(Math.round(cw*10)/10)+' mm'+(c.hl!==c.hr?' · desnível '+Math.abs(c.hr-c.hl)+' mm coberto em cima':''));return out}
+/* complementar acima da placa escolhida até o teto (já com o desnível) */
+function pwAbove(a){var c=pwCfg(),jw=(a.jt&&a.jt.t==='reb')?(+a.jt.w||15):(c.jt==='reb'?c.jw:0),top=a.b+a.h;if(Math.max(pwTop(a.x,c),pwTop(a.x+a.w,c))-top<=jw+5)return toast('Já chega no teto');snap();var out=pwColumn(a.x,a.w,top+jw,Object.assign({},c,{jt:a.jt?a.jt.t:c.jt}),[]);if(a.jt&&a.jt.t==='reb')a.jt=Object.assign({},a.jt);out.forEach(function(q){q.pw=a.pw?1:0;S.rp.push(q)});RPSEL=out.length?out[out.length-1].id:RPSEL;try{panel();draw()}catch(_){}try{if(window.re3)window.re3()}catch(_){}toast(out.length?'Painel completado até o teto ('+out.length+' placa'+(out.length>1?'s':'')+')':'Nada pra completar')}
+window.pwGenerate=pwGenerate;window.pwAbove=pwAbove;
+function pwDeg(a){if(!a.sl)return 0;return Math.round(Math.atan2(Math.abs(a.sl.l-a.sl.r),a.w)*1800/Math.PI)/10}
+/* painel da aba Painéis */
+var rpPanel_pw=rpPanel;rpPanel=function(){var h=rpPanel_pw.apply(this,arguments),c=pwCfg(),f=function(k,l,v){return '<div class="g"><label>'+l+'</label><input type="text" inputmode="decimal" data-pwf="'+k+'" value="'+v+'"></div>'},B=function(k,v,t,on){return '<button data-pwb="'+k+'|'+v+'"'+(on?' class="sel"':'')+'>'+t+'</button>'};
+ var cols=(function(){var W=c.x1-c.x0,jw=c.jt==='reb'?c.jw:0,n=Math.max(1,Math.ceil((W+jw)/(c.mw+jw)));return n+' colunas de '+Math.round((W-(n-1)*jw)/n)+' mm'})();
+ var sec='<div class="sec">🧱 Revestir a parede com painéis<span>⌃</span></div><div class="note">1) Ponha as portas e janelas primeiro (aba Ambiente): o painel já sai recortado. 2) Escolha a junta e as alturas da parede. 3) Criar. Depois toque numa placa pra mudar ou usar “⬆ Completar acima”.</div>'
+  +f('hl','Altura da parede na ponta esquerda (mm)',c.hl)+f('hr','Altura na ponta direita (mm) · desnível',c.hr)+f('x0','Começa a (mm da esquerda)',Math.round(c.x0))+f('x1','Termina a (mm da esquerda)',Math.round(c.x1))+f('b0','Do chão (mm)',c.b0)
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'+B('jt','seca','Junta seca',c.jt==='seca')+B('jt','reb','Junta com rebaixo',c.jt==='reb')+'</div>'+(c.jt==='reb'?f('jw','Rebaixo · largura (mm)',c.jw)+f('jd','Rebaixo · fundo (mm)',c.jd):'')
+  +f('mw','Placa · largura máxima (mm)',c.mw)+f('mh','Placa · altura máxima (mm)',c.mh)
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">'+B('correr',c.correr?0:1,(c.correr?'✓ ':'')+'Porta de correr por trás (painel '+c.af+' mm pra frente, travas atrás)',c.correr)+'</div>'
+  +'<div class="note">'+cols+(c.hl!==c.hr?' · desnível de '+Math.abs(c.hr-c.hl)+' mm: a placa de cima corta em ângulo':'')+'</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"><button data-pwgo="1" style="background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700">🧱 Criar painéis na parede</button>'+(S.rp.some(function(a){return a.pw})?'<button data-pwclr="1">Tirar os painéis criados</button>':'')+'</div>';
+ return sec+h};
+document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.pwf)return;var v=parseFloat(String(t.value).replace(',','.'));if(isNaN(v))return;S.pw=S.pw||{};S.pw[t.dataset.pwf]=v;if(t.dataset.pwf==='hl'&&!(S.pw.hr))S.pw.hr=v;setTimeout(function(){try{panel()}catch(_){}},0)});
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pwb],[data-pwgo],[data-pwclr]');if(!t||window.RO)return;var d=t.dataset;S.pw=S.pw||{};
+ if(d.pwb){var q=d.pwb.split('|');S.pw[q[0]]=q[0]==='correr'?q[1]==='1':q[1];try{panel()}catch(_){}return}
+ if(d.pwgo){pwGenerate();return}if(d.pwclr){snap();S.rp=S.rp.filter(function(a){return !a.pw});try{panel();draw()}catch(_){}try{if(window.re3)window.re3()}catch(_){}}});
+/* barra da placa: ⬆ Completar acima */
+var rpBar_pw=rpBar;rpBar=function(){rpBar_pw.apply(this,arguments);var el=$('rpbar'),a=rpCur();if(!el||el.hidden||!a||!a.liso||el.querySelector('[data-pwab]'))return;var row=el.querySelector('[data-rpb="add|1"]');if(row)row.insertAdjacentHTML('afterend','<button data-pwab="1">⬆ Completar acima até o teto</button>')};
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pwab]');if(!t||window.RO)return;var a=rpCur();if(a)pwAbove(a)});
+/* desenho 2D: a parte acima do desnível sai cortada (tracejado vermelho) */
+var draw_pw=draw;draw=function(){var r=draw_pw.apply(this,arguments);try{var sv=$('svg');(S.rp||[]).forEach(function(a){if(!a.sl)return;var rc=sv.querySelector('rect[data-rp="'+a.id+'"]');if(!rc)return;var x=+rc.getAttribute('x'),y=+rc.getAttribute('y'),w=+rc.getAttribute('width'),h=+rc.getAttribute('height'),yl=y+h*(1-a.sl.l/a.h),yr=y+h*(1-a.sl.r/a.h);
+  var g=document.createElementNS('http://www.w3.org/2000/svg','g');g.setAttribute('pointer-events','none');g.innerHTML='<polygon points="'+x+','+y+' '+(x+w)+','+y+' '+(x+w)+','+yr+' '+x+','+yl+'" fill="#ffffff" fill-opacity=".85" stroke="none"/><line x1="'+x+'" y1="'+yl+'" x2="'+(x+w)+'" y2="'+yr+'" stroke="#c62828" stroke-width="2" stroke-dasharray="6 4"/><text x="'+(x+w/2)+'" y="'+(Math.min(yl,yr)-4)+'" font-size="11" text-anchor="middle" fill="#c62828" font-weight="700">corte '+pwDeg(a)+'° · '+Math.round(Math.abs(a.sl.l-a.sl.r))+' mm</text>';sv.appendChild(g)})}catch(_){}return r};
+/* plano e lista de corte: placa quadrada + o desnível e o ângulo */
+var rpCutHtml_pw=rpCutHtml;rpCutHtml=function(){var h=rpCutHtml_pw.apply(this,arguments);if(!h)return h;var rows='';(S.rp||[]).forEach(function(a,i){if(!a.sl)return;var d=Math.round(Math.abs(a.sl.l-a.sl.r)*10)/10;rows+='<tr data-src="rp|'+a.id+'" style="border-top:1px solid var(--line);cursor:pointer;background:#fff4f4"><td style="padding:4px 2px"><b>✂</b></td><td>Placa '+(i+1)+' (parede desnivelada): cortar QUADRADA '+a.w+' × '+a.h+', depois cortar em ângulo de '+pwDeg(a)+'° · altura '+Math.round(a.sl.l*10)/10+' mm na esquerda e '+Math.round(a.sl.r*10)/10+' mm na direita · diferença '+d+' mm (lado '+(a.sl.l<a.sl.r?'esquerdo':'direito')+' mais baixo)</td><td>'+a.h+' × '+a.w+'</td></tr>'});
+ var c=S.pw?pwCfg():null;if(S.rp.some(function(a){return a.pw})&&c){rows+='<tr style="border-top:1px solid var(--line)"><td>ℹ</td><td>Parede '+Math.round(c.x1-c.x0)+' mm · altura '+c.hl+' (esq.) / '+c.hr+' (dir.) · junta '+(c.jt==='reb'?'com rebaixo '+c.jw+' × '+c.jd:'seca')+(c.correr?' · painel '+c.af+' mm pra frente com travas atrás (porta de correr por trás)':'')+'</td><td>—</td></tr>'}
+ return rows?h.replace('</table>',rows+'</table>'):h};
+</script>
+<script>
+/* ===== Tamponamento de baixo dos aéreos: uma peça só pela profundidade total do móvel (caixa + porta), juntando os
+   módulos encostados enquanto o comprimento total não passa de 2700 mm ===== */
+function tbRuns(){var L=S.mods.filter(function(m){return m.sup&&m.tb&&!m.corner&&!m.nicho}).sort(function(a,b){return a.x-b.x}),runs=[],cur=null;
+ L.forEach(function(m){if(cur){var p=cur[cur.length-1],gap=m.x-(p.x+p.w);if(gap>=-1&&gap<=3&&Math.abs(m.b-p.b)<=2&&(m.x+m.w-cur[0].x)<=2700){cur.push(m);return}}cur=[m];runs.push(cur)});return runs}
+var cutLines_tb=cutLines;cutLines=function(m){var L=cutLines_tb.apply(this,arguments);if(!m||!m.sup||!m.tb)return L;var run=null;tbRuns().forEach(function(r){if(r.indexOf(m)>=0)run=r});if(!run)return L;
+ var isTb=function(l){return (l.names||[]).some(function(n){return /^Tamponamento de baixo/.test(n)})},first=run[0]===m,out=[];
+ L.forEach(function(l){if(!isTb(l)){out.push(l);return}if(!first)return;var tot=Math.round((run[run.length-1].x+run[run.length-1].w-run[0].x)*10)/10,dd=Math.max.apply(null,run.map(function(o){return +o.d||350}))+(+m.esp||15),n=Object.assign({},l);
+  n.L=tot;n.W=Math.round(dd);n.names=['Tamponamento de baixo (peça única)'];n.name='Tamponamento de baixo (peça única) · '+(l.fin==='c'?'NA COR':'BRANCO');n.note='uma peça só abaixo do cava · '+run.length+' módulo'+(run.length>1?'s':'')+' · profundidade total (caixa + porta) · '+(l.note||'');n.notes=[n.note];out.push(n)});return out};
+window.tbRuns=tbRuns;
+</script>
+<script>
+/* ===== Planta em ângulo: a vista de cima girada e inclinada (sem perspectiva, linhas paralelas), pra ver e mexer nos cantos ===== */
+var PLANG=false,PLAM=null;
+function plAngM(){var k=PLK||1,W=S.W*k,D=(typeof roomD==='function'?roomD():2600)*k,cx=OX+W/2,cy=OY+10+D/2,t=30*Math.PI/180,sc=.92,a=Math.cos(t)*sc,c=-Math.sin(t)*sc,b=.62*Math.sin(t)*sc,d=.62*Math.cos(t)*sc;
+ /* centro do desenho fica no meio da área da planta */return {a:a,b:b,c:c,d:d,cx:cx,cy:cy,tx:450,ty:280}}
+function plAngT(){if(!PLANG)return '';var m=PLAM=plAngM();return ' transform="translate('+m.tx+' '+m.ty+') matrix('+m.a+' '+m.b+' '+m.c+' '+m.d+' 0 0) translate('+(-m.cx)+' '+(-m.cy)+')"'}
+var px_ang=px;px=function(ev){var p=px_ang(ev);if(!PLV||!PLANG||!PLAM)return p;var m=PLAM,u=p.x-m.tx,v=p.y-m.ty,det=m.a*m.d-m.b*m.c;return {x:(m.d*u-m.c*v)/det+m.cx,y:(-m.b*u+m.a*v)/det+m.cy}};
+(function(){var b=document.getElementById('plv');if(!b||document.getElementById('pla'))return;var a=document.createElement('button');a.id='pla';a.title='Planta em ângulo (ver os cantos)';a.textContent='◇ Ângulo';a.hidden=true;b.insertAdjacentElement('afterend',a);
+ a.addEventListener('click',function(){PLANG=!PLANG;a.style.background=PLANG?'#cfe3ff':'';try{draw()}catch(_){}});
+ var d0=draw;draw=function(){var r=d0.apply(this,arguments);a.hidden=!PLV;if(!PLV&&PLANG){PLANG=false;a.style.background=''}return r}})();
 </script>
 </body></html>

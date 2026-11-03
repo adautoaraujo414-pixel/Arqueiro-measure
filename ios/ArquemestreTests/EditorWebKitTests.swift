@@ -221,6 +221,21 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testTamponamentoDeBaixoPassaPorBaixoDoVizinhoSemAfastar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(4);newTpl(4);var A=S.mods[0],B=S.mods[1];A.tb=true;B.tb=true;B.tl=true;B.x=A.x+A.w+30;draw();var x0=[A.x,B.x];
+          B.tbL=500;tbCover(B,{});S.mods.forEach(function(q){noOverlap(q,'m')});draw();
+          var c=[].concat.apply([],S.mods.map(function(m){return cutLines(m).filter(function(l){return /de baixo/.test(l.name)&&/face|única/.test(l.name)&&!/engrosso/.test(l.name)}).map(function(l){return l.L})}));
+          return JSON.stringify({ax:A.x,bx:B.x,ax0:x0[0],bx0:x0[1],pecas:c.length,L:c[0]||0,errs:__errs});
+          """#)
+        XCTAssertEqual(o["ax"] as? Double, o["ax0"] as? Double, "o vizinho não sai do lugar")
+        XCTAssertEqual(o["bx"] as? Double, o["bx0"] as? Double, "o módulo não sai do lugar")
+        XCTAssertEqual(o["pecas"] as? Int, 1, "vira uma peça só (até 2700)")
+        XCTAssertEqual(o["L"] as? Double ?? 0, 2030, accuracy: 0.5)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

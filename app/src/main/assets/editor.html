@@ -768,7 +768,7 @@ function confineAll(){S.mods.forEach(function(q){confine(q)});S.mods.forEach(fun
 /* fecha folgas pequenas (até 40 mm) entre módulos vizinhos: sem espaçamento flutuante quando tira/põe tamponamento */
 function rowJoin(sup,maxGap){maxGap=maxGap||40;var ms=S.mods.filter(function(o){return !!o.sup===!!sup&&!o.wing&&!o.corner}),rows=[];ms.forEach(function(o){var r=rows.filter(function(R){return R.some(function(q){return sameRow(o,q)})})[0];if(r)r.push(o);else rows.push([o])});
  rows.forEach(function(r){r.sort(function(a,b){return a.x-b.x});var ex=r.map(extOf),sh=0;for(var j=1;j<r.length;j++){var gap=ex[j][0]-ex[j-1][1];if(gap>maxGap)sh=0;else if(gap>0.5)sh+=gap;if(sh)r[j].x=Math.round((r[j].x-sh)*10)/10}})}
-function lt(o){return Math.max(o.tl&&o.corner!=='e'?o.tlW:0,o.tbL||0)}function rt(o){return Math.max(o.tr&&o.corner!=='d'?o.trW:0,o.tbR||0)}
+function lt(o){return Math.max(o.tl&&o.corner!=='e'?o.tlW:0,o.sup?0:(o.tbL||0))}function rt(o){return Math.max(o.tr&&o.corner!=='d'?o.trW:0,o.sup?0:(o.tbR||0))}
 function sameRow(a,o){return (a.wing||0)===(o.wing||0)&&!!a.sup===!!o.sup&&a.b<o.b+o.h&&o.b<a.b+a.h}
 function noOverlap(m,what){if(what==='m'){placeFree(m,S.mods);if(!m.wing)m.x=Math.max(lt(m)+fgv(),Math.min(S.W-fgv()-m.w-rt(m),m.x));return}for(var pass=0;pass<4;pass++){var moved=false;S.mods.forEach(function(o){if(o===m||!sameRow(m,o))return;var a0=m.x-lt(m),a1=m.x+m.w+rt(m),b0=o.x-lt(o),b1=o.x+o.w+rt(o);if(a0<b1-0.01&&b0<a1-0.01){moved=true;
   if(what==='r'){m.w=Math.max(50,b0-rt(m)-m.x)}else if(what==='l'){m.x=b1+lt(m)}else if((a0+a1)/2<(b0+b1)/2){m.x=b0-m.w-rt(m)}else{m.x=b1+lt(m)}}});if(!moved)break}
@@ -836,7 +836,7 @@ $('svg').addEventListener('pointermove',function(ev){if(ptrs[ev.pointerId])ptrs[
  if(drag.t==='aph'){var ah=S.fr.filter(function(a){return a.id===drag.id})[0];if(ah){if(drag.mode!=='h')ah.w=Math.max(50,Math.round((drag.w0+(p.x-drag.p.x)/k)/5)*5);if(drag.mode!=='w')ah.h=Math.max(30,Math.round((drag.h0-(p.y-drag.p.y)/k)/5)*5);draw();syncAp()}return}
  if(drag.t==='ap'){var af=S.fr.filter(function(a){return a.id===drag.id})[0];if(af){var nx=drag.x0+(p.x-drag.p.x)/k;nx=Math.max(0,Math.min(S.W-af.w,Math.round(nx/5)*5));var xs2=[fgv(),S.W-fgv()];S.mods.forEach(function(o){xs2.push(o.x-lt(o),o.x+o.w+rt(o))});S.fr.forEach(function(o){if(o!==af)xs2.push(o.x,o.x+o.w)});S.stones.forEach(function(q){xs2.push(q.x,q.x+q.w)});af.x=Math.max(0,Math.min(S.W-af.w,nx));if((af.t||'geladeira')!=='geladeira'){af.b=Math.max(0,Math.min(S.H-af.h,Math.round((drag.b0-(p.y-drag.p.y)/k)/5)*5))}draw();syncAp()}return}
  if((drag.t==='m'||drag.t==='h')&&m.lock){if(!drag.lk&&Math.hypot(p.x-drag.p.x,p.y-drag.p.y)>6){drag.lk=1;toast('🔒 Módulo travado · 4 toques em cima destrava')}return}  if(drag.t==='m'){m.x=Math.max(fgv(),Math.min(S.W-fgv()-m.w,r(drag.m.x+(p.x-drag.p.x)/k)));m.b=Math.max(0,Math.min(S.H-fgh()-m.h,r(drag.m.b-(p.y-drag.p.y)/k)));confine(m,drag.m)}
- else if(drag.t==='tp'){var o=drag.m,dx=(p.x-drag.p.x)/k,dy=(p.y-drag.p.y)/k,c5=function(v,lo,hi){return Math.max(lo,Math.min(hi,Math.round(v/5)*5))};if(drag.name==='Tamponamento de baixo'){if(drag.left)m.tbL=c5((o.tbL||0)-dx,-m.w/2,1500);else m.tbR=c5((o.tbR||0)+dx,-m.w/2,1500)}else if(drag.name==='Tamponamento esquerdo')m.tlAdj=c5((o.tlAdj||0)+dy,-300,600);else m.trAdj=c5((o.trAdj||0)+dy,-300,600)}
+ else if(drag.t==='tp'){var o=drag.m,dx=(p.x-drag.p.x)/k,dy=(p.y-drag.p.y)/k,c5=function(v,lo,hi){return Math.max(lo,Math.min(hi,Math.round(v/5)*5))};if(drag.name==='Tamponamento de baixo'){var wl_=m.wing?1e5:Math.max(0,m.x-fgv()),wr_=m.wing?1e5:Math.max(0,S.W-fgv()-m.x-m.w);if(drag.left)m.tbL=c5((o.tbL||0)-dx,-m.w/2,Math.min(1500,wl_));else m.tbR=c5((o.tbR||0)+dx,-m.w/2,Math.min(1500,wr_));try{tbCover(m,drag)}catch(_){}}else if(drag.name==='Tamponamento esquerdo')m.tlAdj=c5((o.tlAdj||0)+dy,-300,600);else m.trAdj=c5((o.trAdj||0)+dy,-300,600)}
  else if(drag.t==='h'&&drag.h==='tbh'){var o=drag.m;m.tbMm=Math.max(10,Math.min(200,Math.round(((o.tbMm)+(p.y-drag.p.y)/k)/5)*5))}
  else if(drag.t==='h'){var o=drag.m;if(drag.h==='r')m.w=Math.max(200,Math.min(S.W-m.x,r(o.w+(p.x-drag.p.x)/k)));
   if(drag.h==='l'){var nx=Math.max(0,r(o.x+(p.x-drag.p.x)/k));m.w=Math.max(200,o.w+o.x-nx);m.x=o.x+o.w-m.w}
@@ -4075,8 +4075,9 @@ var rpCutHtml_pw=rpCutHtml;rpCutHtml=function(){var h=rpCutHtml_pw.apply(this,ar
 <script>
 /* ===== Tamponamento de baixo dos aéreos: uma peça só pela profundidade total do móvel (caixa + porta), juntando os
    módulos encostados enquanto o comprimento total não passa de 2700 mm ===== */
-function tbRuns(){var L=S.mods.filter(function(m){return m.sup&&m.tb&&!m.corner&&!m.nicho}).sort(function(a,b){return a.x-b.x}),runs=[],cur=null;
- L.forEach(function(m){if(cur){var p=cur[cur.length-1],gap=m.x-(p.x+p.w);if(gap>=-1&&gap<=3&&Math.abs(m.b-p.b)<=2&&(m.x+m.w-cur[0].x)<=2700){cur.push(m);return}}cur=[m];runs.push(cur)});return runs}
+function tbIv(m){var p=null;try{p=partsOf(m).filter(function(q){return q.name==='Tamponamento de baixo'})[0]}catch(_){}if(!p)return [m.x,m.x+m.w];return [m.x+(+p.x||0),m.x+(+p.x||0)+(+p.cl||m.w)]}
+function tbRuns(){var L=S.mods.filter(function(m){return m.sup&&m.tb&&!m.corner&&!m.nicho}).map(function(m){return {m:m,iv:tbIv(m)}}).sort(function(a,b){return a.iv[0]-b.iv[0]}),runs=[],cur=null,c0=0,c1=0;
+ L.forEach(function(e){var m=e.m;if(cur){var p=cur[cur.length-1],gap=e.iv[0]-c1;if((p.wing||0)===(m.wing||0)&&gap>=-1&&gap<=3&&Math.abs(m.b-p.b)<=2&&(e.iv[1]-c0)<=2700){cur.push(m);c1=Math.max(c1,e.iv[1]);return}}cur=[m];c0=e.iv[0];c1=e.iv[1];runs.push(cur)});return runs}
 function tRunLen(run,re){var t=0;run.forEach(function(o){var q=partsOf(o).filter(function(p){return re.test(p.name)})[0];t+=q?(+q.cl||0):(+o.w||0)});return Math.round(t*10)/10}
 function tSplit(l,re){var nm=(l.names||[]).filter(function(n){return re.test(n)});if(!nm.length)return null;var oth=(l.names||[]).filter(function(n){return !re.test(n)});if(!oth.length)return {hit:l,rest:null};
  var pk=(l.pks||[]),hp=[],rp=[],hc=0;pk.forEach(function(k){if(k&&re.test(String(k)))hp.push(k);else rp.push(k)});hc=hp.length||1;if(!hp.length&&rp.length){hp=[rp.shift()]}var h=Object.assign({},l),r=Object.assign({},l);h.qty=hc;h.names=nm;h.pks=hp;r.qty=Math.max(0,(+l.qty||0)-hc);r.names=oth;r.pks=rp;r.name=oth.join(' + ')+String(l.name||'').replace(/^.*?(?=( \(\d+ mm\))? · (NA COR|BRANCO))/,'');return {hit:h,rest:r.qty>0?r:null}}
@@ -4162,5 +4163,12 @@ var cutLines_fsp=cutLines;cutLines=function(m){var L=cutLines_fsp.apply(this,arg
  return out};
 /* balcão da pia: marca o módulo e põe a cuba na pedra em cima dele */
 var newTpl_pia=newTpl;newTpl=function(i){var t=typeof i==='object'?i:TPL[i],n0=S.mods.length,r=newTpl_pia.apply(this,arguments);try{if(t&&t.pia&&S.mods.length>n0){var m=S.mods[S.mods.length-1];m.pia=1;(S.stones||[]).forEach(function(st){piaCuba(st)});draw()}}catch(_){}return r};window.newTpl=newTpl;
+/* tamponamento de baixo puxado pro lado: passa por baixo do módulo vizinho (não afasta) e o vizinho perde o pedaço coberto */
+function tbCover(m,drag){if(!m.sup)return;if(!m.wing){m.tbL=Math.min(m.tbL||0,Math.max(0,m.x-fgv()));m.tbR=Math.min(m.tbR||0,Math.max(0,S.W-fgv()-m.x-m.w))}drag.nb=drag.nb||{};var L0=m.x-(m.tbL||0),R0=m.x+m.w+(m.tbR||0);
+ S.mods.forEach(function(o,i){if(o===m||!o.sup||(o.wing||0)!==(m.wing||0)||Math.abs((o.b||0)-(m.b||0))>3)return;if(!(i in drag.nb))drag.nb[i]={tb:o.tb,tbL:o.tbL||0,tbR:o.tbR||0};var ob=drag.nb[i];o.tb=ob.tb;o.tbL=ob.tbL;o.tbR=ob.tbR;if(!ob.tb)return;
+  var oL=o.x-ob.tbL,oR=o.x+o.w+ob.tbR;
+  if(o.x+o.w<=m.x+1){var cov=oR-L0;if(cov<=0)return;if(L0<=oL+1){o.tb=false;return}o.tbR=Math.round(ob.tbR-cov)}
+  else if(o.x>=m.x+m.w-1){var cov2=R0-oL;if(cov2<=0)return;if(R0>=oR-1){o.tb=false;return}o.tbL=Math.round(ob.tbL-cov2)}})}
+
 </script>
 </body></html>

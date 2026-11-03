@@ -3518,4 +3518,15 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
  document.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||!t.closest||window.RO)return;var g=t.closest('[data-rp]');if(!g)return;var a=S.rp.filter(function(q){return String(q.id)===g.dataset.rp})[0];if(!a)return;var n=tapCount('r'+a.id,ev);if(n>=4){TQK.k=null;toast(lockToggle(a,1));return}if(n===2&&a.prat)TQK.tm=setTimeout(function(){if(TQK.k==='r'+a.id&&TQK.n===2)pratEdit(a)},330)},true);
 })();
 </script>
+<script>
+/* ===== Valores (testes no iPhone): digitar o valor do projeto lá em cima · esconder o valor do material · orçamento só com o valor total ===== */
+(function(){
+var vlR=vlRender;vlRender=function(){vlR();var B=document.getElementById('vlbody');if(!B)return;var hide=!!S.vlHide,tot=!!S.vlTot,t=B.querySelector('.tot');if(!t)return;
+ t.insertAdjacentHTML('afterend','<div class="g" style="margin-top:8px"><label>✏ Valor do projeto: digite o valor que vai cobrar (vazio = o sugerido)</label><input data-vlp="1" inputmode="decimal" style="text-align:right;font-size:18px;font-weight:700" value="'+(+S.preco>0?money(S.preco):'')+'" placeholder="'+money(budget().sale)+'"></div><div class="chips" style="margin:6px 0"><button data-vlhide="1" class="'+(hide?'on':'')+'">'+(hide?'✓ ':'')+'Esconder o valor do material</button><button data-vltot="1" class="'+(tot?'on':'')+'">'+(tot?'✓ ':'')+'Orçamento só com o valor total</button></div>'+(tot?'<div class="note" style="margin-top:0">O PDF vai com uma linha só: os móveis do projeto e o valor total.</div>':''));
+ if(!hide)return;[].slice.call(t.children).slice(0,4).forEach(function(e){e.style.display='none'});
+ var cut=false,sec='';[].slice.call(B.children).forEach(function(e){if(e.classList&&e.classList.contains('sec2')){sec=e.textContent.trim();cut=/^(Material|Por módulo)$/.test(sec)}if(cut)e.style.display='none';else if(sec==='Mão de obra e lucro'&&e.tagName==='TABLE')[].slice.call(e.querySelectorAll('tr')).forEach(function(r){if(/^(Material|Mão de obra)/.test((r.firstElementChild||{}).textContent||''))r.style.display='none'})})};
+var qD=quoteData;quoteData=function(){var q=qD();if(S.vlTot){var room={cozinha:'Cozinha',sala:'Sala',banho:'Banheiro'}[roomOf()]||'';q.items=[{desc:(room?TQ(room)+' · ':'')+TQ('Móveis planejados conforme o projeto'),qty:1,unit:'un',value:q.total}]}return q};
+document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;var b=t.closest('[data-vlhide],[data-vltot]');if(!b||!b.closest('#vlm'))return;if(window.RO)return;if(b.dataset.vlhide)S.vlHide=S.vlHide?0:1;else S.vlTot=S.vlTot?0:1;try{edited()}catch(_){}vlRender()});
+})();
+</script>
 </body></html>

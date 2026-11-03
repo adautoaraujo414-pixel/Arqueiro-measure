@@ -66,6 +66,7 @@ fun MoveisScreen(vm: AppViewModel) {
             onOpenNote = { pid -> vm.openNoteOf(pid) },
             company = { vm.company.name },
             onShareCut = { code, name, title -> shareCutInvite(vm.cutInvite(code, name, title)) },
+            onShareClient = { code, name, room -> shareCutInvite(vm.clientInvite(code, name, room)) },
         )
     }
 
@@ -165,6 +166,7 @@ class MoveisBridge(
     private val onOpenNote: (String) -> Unit = {},
     private val company: () -> String = { "" },
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
+    private val onShareClient: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
     private fun safe(name: String) = name.replace(Regex("[^A-Za-z0-9_.-]"), "_")
     private fun ui(f: () -> Unit) = SwingUtilities.invokeLater { runCatching(f) }
@@ -185,6 +187,7 @@ class MoveisBridge(
             "isSharing" -> "false"
             "isViewer" -> viewing().toString()
             "shareCut" -> { ui { onShareCut(arg(0), arg(1), arg(2)) }; "" }
+            "shareClient" -> { ui { onShareClient(arg(0), arg(1), arg(2)) }; "" }
             "close" -> { ui(onClose); "" }
             "putFile" -> { runCatching { File(dir, safe(arg(0))).writeBytes(android.util.Base64.decode(arg(1), android.util.Base64.DEFAULT)) }; "" }
             "getFile" -> runCatching {

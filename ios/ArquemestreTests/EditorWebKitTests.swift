@@ -200,6 +200,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testGavetaTelescopicaRebaixoContraFrenteEFundo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));S.mods=[];newTpl(JSON.parse(JSON.stringify(all.filter(function(i){return i.n==='Gaveteiro 3 gavetas'})[0])));var m=S.mods[0];S.m=m;CURM=m;
+          var v=m.v[0],vr=vaoRanges(m)[0],vw=vr[1]-vr[0],fh=drawerH(v);CURM=null;
+          var P=partsOf(m),g=function(re){return P.filter(function(p){return re.test(p.name)})[0]},la=g(/^Lateral de gaveta/),cf=g(/^Frente\/costa de gaveta/),fu=g(/^Fundo de gaveta/);
+          var L=cutLines(m),cq=L.filter(function(l){return /^Frente\/costa de gaveta/.test(l.names[0])}).reduce(function(a,l){return a+l.qty},0);
+          return JSON.stringify({vw:vw,fh:fh,lh:la.cw,ld:la.cl,cl:cf.cl,ch:cf.cw,fw:fu.cl,fd:fu.cw,fmat:fu.mat,cq:cq,errs:__errs});
+          """#)
+        let vw = o["vw"] as? Double ?? 0, fh = o["fh"] as? Double ?? 0, lh = o["lh"] as? Double ?? 0
+        let cx = (vw - 26).rounded()
+        XCTAssertEqual(lh, fh - 56, accuracy: 0.11, "lateral = vão da gaveta − 56")
+        XCTAssertEqual(o["ch"] as? Double ?? 0, lh - 15, accuracy: 0.11, "contra-frente 15 mm menor que a lateral (fica em cima do fundo)")
+        XCTAssertEqual(o["cl"] as? Double ?? 0, cx - 30, accuracy: 0.11, "contra-frente entre as laterais = caixa − 30")
+        XCTAssertEqual(o["fw"] as? Double ?? 0, cx - 18, accuracy: 0.11, "fundo no rebaixo 6 × 6 = caixa − 30 + 12")
+        XCTAssertEqual(o["fd"] as? Double ?? 0, o["ld"] as? Double ?? -1, accuracy: 0.11, "fundo no comprimento todo da lateral")
+        XCTAssertEqual(o["fmat"] as? Double ?? 0, 6, accuracy: 0.01)
+        XCTAssertEqual(o["cq"] as? Int, 6, "3 gavetas = 6 peças de contra-frente/traseira")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

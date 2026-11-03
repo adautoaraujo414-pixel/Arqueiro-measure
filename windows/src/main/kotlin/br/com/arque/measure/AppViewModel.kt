@@ -558,6 +558,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Texto do convite (WhatsApp): o link abre o app; quem não tem baixa o Arquemestre. */
+    fun clientInvite(code: String, @Suppress("UNUSED_PARAMETER") name: String, room: String): String {
+        val who = company.name.trim()
+        val r = room.trim().ifEmpty { br.com.arque.measure.i18n.tr("Cozinha") }
+        val head = if (who.isEmpty()) br.com.arque.measure.i18n.tr("🏠 Seu projeto em 3D ({0}).", r) else br.com.arque.measure.i18n.tr("🏠 {0} · seu projeto em 3D ({1}).", who, r)
+        return head + "\n" + CLIENT_URL + code
+    }
+
     fun cutInvite(code: String, name: String, title: String): String {
         val who = company.name.trim()
         val proj = listOf(name.trim(), title.trim()).filter { it.isNotEmpty() }.joinToString(" · ")
@@ -1138,6 +1145,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         const val MAX_RECENT = 30
         const val CUT_PREFIX = "arquemestre-corte:"
         const val CUT_URL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d="
+        const val CLIENT_URL = "https://adautoaraujo414-pixel.github.io/Arqueiro-measure/p.html#d="
         private fun cutCh(c: Char) = c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c == '-' || c == '_'
         /** Código do plano de corte num texto: o link do convite (…corte.html#d=…), arquemestre://corte?d=… ou "arquemestre-corte:…". */
         fun cutCodeOf(text: String): String? {

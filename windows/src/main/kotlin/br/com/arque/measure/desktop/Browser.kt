@@ -261,7 +261,7 @@ object Browser {
     companyName:A('companyName'),listNotes:A('listNotes'),contextNote:A('contextNote'),
     linkNote:A('linkNote'),openNoteOf:A('openNoteOf'),makeQuote:A('makeQuote'),setCurrent:A('setCurrent'),
     openTrena:A('openTrena'),shareStart:A('shareStart'),isSharing:B('isSharing'),isViewer:B('isViewer'),
-    shareUpdate:function(){},shareCut:A('shareCut'),close:A('close'),
+    shareUpdate:function(){},shareCut:A('shareCut'),shareClient:A('shareClient'),close:A('close'),
     putFile:A('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
   };
   window.addEventListener('load',function(){setTimeout(function(){call('pageReady',[typeof S])},0)});

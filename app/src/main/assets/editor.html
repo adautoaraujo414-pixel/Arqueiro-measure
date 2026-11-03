@@ -4093,7 +4093,7 @@ window.tbRuns=tbRuns;
 <script>
 /* ===== Planta em ângulo: a vista de cima girada e inclinada (sem perspectiva, linhas paralelas), pra ver e mexer nos cantos ===== */
 var PLANG=false,PLAM=null;
-function plAngM(){var k=PLK||1,W=S.W*k,D=(typeof roomD==='function'?roomD():2600)*k,cx=OX+W/2,cy=OY+10+D/2,rv_=window.PLWV==='e'?90:window.PLWV==='d'?-90:0,t=(30+rv_)*Math.PI/180,EV=.78,
+function plAngM(){var D0_=(typeof roomD==='function'?roomD():2600),k=Math.min(780/S.W,440/D0_),W=S.W*k,D=D0_*k,cx=OX+W/2,cy=OY+10+D/2,rv_=window.PLWV==='e'?90:window.PLWV==='d'?-90:0,t=(30+rv_)*Math.PI/180,EV=.78,
   a=Math.cos(t),c=-Math.sin(t),b=.62*Math.sin(t),d=.62*Math.cos(t),Hp=(S.H||2600)*k*EV,xs=[],ys=[];
  [[OX,OY+10],[OX+W,OY+10],[OX+W,OY+10+D],[OX,OY+10+D]].forEach(function(q){var X=a*(q[0]-cx)+c*(q[1]-cy),Y=b*(q[0]-cx)+d*(q[1]-cy);xs.push(X,X);ys.push(Y,Y-Hp)});
  var x0=Math.min.apply(null,xs),x1=Math.max.apply(null,xs),y0=Math.min.apply(null,ys),y1=Math.max.apply(null,ys),sc=Math.min(860/Math.max(1,x1-x0),520/Math.max(1,y1-y0));
@@ -4186,7 +4186,7 @@ function plExtrude(){if(!PLV||!PLANG||!PLAM)return;var g=document.getElementById
  var out='<g id="plx">',L=[];
  /* paredes em pé (só as que ficam atrás, pra não tapar os móveis) */
  var xl=sw.L===null?0:sw.L,xr=sw.R===null?W:sw.R,walls=[{a:[xl,0],b:[xr,0],n:[0,1]}];if(sw.L!==null)walls.push({a:[xl,D],b:[xl,0],n:[1,0]});if(sw.R!==null)walls.push({a:[xr,0],b:[xr,D],n:[-1,0]});
- walls.forEach(function(w){if(!fv(w.n[0],w.n[1]))return;var A=P(w.a[0],w.a[1]),B=P(w.b[0],w.b[1]);out+='<polygon points="'+pt([T(A,0),T(B,0),T(B,H),T(A,H)])+'" fill="#ece9e3" fill-opacity=".85" stroke="#9a948a" stroke-width=".8" pointer-events="none"/>'});
+ walls.forEach(function(w){var bk=fv(w.n[0],w.n[1]),A=P(w.a[0],w.a[1]),B=P(w.b[0],w.b[1]);out+='<polygon points="'+pt([T(A,0),T(B,0),T(B,H),T(A,H)])+'" fill="#ece9e3" fill-opacity="'+(bk?.85:.16)+'" stroke="#9a948a" stroke-width=".8"'+(bk?'':' stroke-dasharray="6 4"')+' pointer-events="none"/>'});
  /* prisma: chão (pontos em mm na planta), de h0 a h1 */
  var prism=function(poly,h0,h1,col,o){o=o||{};var Q=poly.map(function(q){return P(q[0],q[1])}),n=Q.length,cxm=0,cym=0;poly.forEach(function(q){cxm+=q[0]/n;cym+=q[1]/n});var area=0;for(var i=0;i<n;i++){var a=poly[i],b=poly[(i+1)%n];area+=a[0]*b[1]-b[0]*a[1]}var sg=area>0?1:-1;
   var s='',faces=[];for(var i2=0;i2<n;i2++){var a2=poly[i2],b2=poly[(i2+1)%n],ex=b2[0]-a2[0],ey=b2[1]-a2[1],nx=ey*sg,ny=-ex*sg;if(!fv(nx,ny))continue;var A=Q[i2],B=Q[(i2+1)%n];faces.push({p:[T(A,h0),T(B,h0),T(B,h1),T(A,h1)],l:Math.max(.62,Math.min(1,.8+.25*(ny>0?1:0)-.1*Math.abs(nx)/(Math.hypot(nx,ny)||1)))})}

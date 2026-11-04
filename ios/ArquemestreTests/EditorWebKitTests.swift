@@ -991,6 +991,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testCarneAssandoComFumacaEBotaoDoLEDLigaEDesliga() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Aéreo 2 portas'));var a=S.mods[0];a.x=600;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};
+          newTpl(tpl('Aéreo 2 portas'));var a2=S.mods[1];a2.x=1600;a2.b=1500;a2.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};S.m=a;draw();
+          var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=3000;
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();
+          /* botão do LED: cada toque liga/desliga só o LED daquele aéreo */
+          var hid=0,nb=0;__boxes().filter(function(q){return q.lbt!==undefined&&q.c&&q.c.join()==='20,21,24'}).forEach(function(k){nb++;var cx=(k.x0+k.x1)/2,cy=(k.y0+k.y1)/2,cz=(k.z0+k.z1)/2;if(__boxes().some(function(q){return q.lbt===undefined&&String(q.nm||'').indexOf(k.lbt+':')===0&&!q.em&&cx>q.x0+.5&&cx<q.x1-.5&&cy>q.y0+.5&&cy<q.y1-.5&&cz>q.z0+.5&&cz<q.z1-.5}))hid++});
+          var lb=__lbt(),led=[];for(var i=0;i<lb.length;i++){var s0=lb[i].s;org3api.one(s0[0],s0[1]);led.push(S.mods[lb[i].mi].led.on);org3api.one(s0[0],s0[1]);led.push(S.mods[lb[i].mi].led.on)}
+          var door=__boxes().filter(function(q){return /^0:Porta/.test(q.nm)&&(q.x1-q.x0)>300})[0],dc=org3api.proj([(door.x0+door.x1)/2,(door.y0+door.y1)/2,door.z1]);org3api.one(dc[0],dc[1]);var ledDoor=a.led.on;
+          /* toque na churrasqueira: acende, a carne vai pra grelha e sai fumaça */
+          var n0=__boxes().filter(function(q){return q.fr===ch.id}).length,cp=org3api.proj([ch.x+ch.w/2,700,ch.d-20]);org3api.one(cp[0],cp[1]);var n1=__boxes().filter(function(q){return q.fr===ch.id}).length,msg=(document.getElementById('ambMsg')||{}).textContent||'';
+          await new Promise(function(r){setTimeout(r,800)});var fx=fx3api.fx(),chg=__chg();
+          org3api.one(cp[0],cp[1]);await new Promise(function(r){setTimeout(r,300)});var chgOff=__chg(),n2=__boxes().filter(function(q){return q.fr===ch.id}).length;
+          /* todos os tipos têm carne quando acesos */
+          var semCarne=[];['alv','parrilla','gasbox','emb','alvv','ele'].forEach(function(k){S.fr=S.fr.filter(function(f){return f.id!==ch.id});var mi=apModels('churrasqueira').findIndex(function(q){return (q[4]&&q[4].k)===k||chKind({nome:q[0]})===k});if(mi<0){semCarne.push(k+'?');return}var c=apAdd('churrasqueira',mi);c.x=3000;ele3api.luz(c.id,1);__build();var m=__boxes().filter(function(q){return q.fr===c.id&&q.c&&(q.c.join()==='123,52,32'||q.c.join()==='138,47,29')}).length;if(m<4)semCarne.push(k+':'+m);ele3api.luz(c.id,0);S.fr=S.fr.filter(function(f){return f.id!==c.id})});
+          document.getElementById('v3x').click();
+          return JSON.stringify({nb:nb,hid:hid,tamp:__boxes().filter(function(q){return /^0:Tamponamento/.test(q.nm)}).length,lb:lb.length,led:led.join(','),ledDoor:ledDoor,carne:n1-n0,fx:fx,chg:chg,chgOff:chgOff,volta:n2===n0,semCarne:semCarne.join(','),errs:__errs});
+          """#)
+        XCTAssertEqual(o["nb"] as? Int, 2, "uma bolinha em cada aéreo com LED")
+        XCTAssertEqual(o["hid"] as? Int, 0, "a bolinha fica na face de fora (não escondida dentro do tamponamento)")
+        XCTAssertEqual(o["lb"] as? Int, 2, "botão do LED nos dois aéreos")
+        XCTAssertEqual(o["led"] as? String, "0,1,0,1", "cada toque na bolinha desliga e liga o LED daquele aéreo")
+        XCTAssertEqual(o["ledDoor"] as? Int, 1, "toque na porta não mexe no LED")
+        XCTAssertGreaterThan(o["carne"] as? Int ?? 0, 20, "toque na churrasqueira põe a carne na grelha e nos espetos")
+        XCTAssertGreaterThan(o["fx"] as? Int ?? 0, 10, "sai fumaça da carne")
+        XCTAssertEqual(o["chg"] as? Int, 1, "churrasqueira acesa")
+        XCTAssertEqual(o["chgOff"] as? Int, 0, "outro toque apaga")
+        XCTAssertEqual(o["volta"] as? Bool, true, "apagada, a carne sai")
+        XCTAssertEqual(o["semCarne"] as? String, "", "todos os tipos de churrasqueira assam carne")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

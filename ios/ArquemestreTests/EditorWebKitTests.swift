@@ -568,6 +568,66 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Fita de topo do caixote branco na cor das portas (branca só em prateleira, gaveta e porta tempero · editável nos Ajustes),
+    /// pincel: 💧 copiar a cor de uma peça e pintar só a fita de topo · tudo vai pro plano de corte (nome da cor da fita)
+    func testFitaDeTopoNaCorDasPortasContaGotasEPintarSoAFita() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;
+          newTpl(3);var m=S.mods[0];newTpl(5);var e=S.mods[1];S.m=m;draw();panel();
+          var cum=MAT.filter(function(c){return /cumaru/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];
+          var white=['Prateleira','Lateral de gaveta','Base (porta tempero)','Lateral esquerda','Base inferior','Divisória 1','Porta'].map(function(n){return n+':'+fitaWhite(n)});
+          m.pcT={Porta:{c:cum.hex,n:matLabel(cum),id:cum.id}};e.pcT={Porta:{c:cum.hex,n:matLabel(cum),id:cum.id}};
+          open3D();
+          var fts=function(mi){var o={};__boxes().forEach(function(b){if(!b.ft||(mi!==undefined&&String(b.nm).split(':')[0]!==String(mi)))return;var nm=String(b.nm).split(':')[1].replace(/#\d+$/,'');var hx='#'+b.c.slice(0,3).map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join('');o[nm]=o[nm]||{};o[nm][hx+(b.mid?'|'+b.mid:'')]=1});var r={};Object.keys(o).forEach(function(k){r[k]=Object.keys(o[k]).join(',')});return r};
+          var f1=fts(),cut1=cutLines(m).filter(function(l){return /^(Lateral esquerda|Base inferior)/.test((l.names||[])[0]||'')}).map(function(l){return (l.names||[])[0]+'='+(l.ftN||'-')+'/'+l.fin});
+          STD().fitaB='gav,temp,div';__build();var f2=fts()['Prateleira'],cut2=cutLines(e).filter(function(l){return /^Prateleira/.test((l.names||[])[0]||'')}).map(function(l){return l.ftN||'-'})[0];STD().fitaB='prat,gav,temp';
+          m.cor=cz.hex;m.corN=matLabel(cz);m.corId=cz.id;STD().fitaCor='fora';__build();var f3=fts(0)['Lateral direita'];STD().fitaCor='portas';__build();var f3b=fts(0)['Lateral direita'];delete m.cor;delete m.corN;delete m.corId;
+          pt3(true);window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};__pt3pick(0,'Lateral esquerda#1','fita');
+          var pf=m.pf['Lateral esquerda#1'].id,lat=(function(){var b=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];return '#'+b.c.slice(0,3).map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join('')})();
+          var cut4=cutLines(m).filter(function(l){return /^Lateral esquerda/.test((l.names||[])[0]||'')}).map(function(l){return (l.ftN||'-')+'×'+l.qty}).sort();
+          window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};__pt3pick(0,'Base inferior#1','fitaMod');var pfM=m.pfM.id+'|'+(m.pf===undefined),f5=fts(0)['Base inferior'];
+          window.PT3={c:'',n:'Tirar pintura',erase:true};__pt3pick(0,'Base inferior#1','fitaMod');var f6=fts(0)['Base inferior'];
+          var pb=__boxes().filter(function(b){return !b.ft&&/^0:Porta/.test(b.nm)&&b.a>=.95})[0],pick=__pt3pickCol(pb);
+          document.querySelector('#pt3 [data-ptk]').click();var pickOn=__pt3state().pick,hdr=document.querySelector('#pt3 [data-pth]').textContent;
+          pt3(false);document.getElementById('v3x').click();
+          stdOpen(0,'chapa');var chips=[].map.call(document.querySelectorAll('#stdm [data-stdm="fitaB"]'),function(b){return b.dataset.v+':'+b.classList.contains('on')}),chipCor=[].map.call(document.querySelectorAll('#stdm [data-std="fitaCor"]'),function(b){return b.dataset.v+':'+b.classList.contains('on')});
+          document.querySelector('#stdm [data-stdm="fitaB"][data-v="div"]').click();var after=STD().fitaB;document.querySelector('#stdm [data-stdm="fitaB"][data-v="div"]').click();var after2=STD().fitaB;
+          openCut();var txt=document.getElementById('cutbody').textContent.replace(/\s+/g,' ');var fitaTxt=(txt.match(/fita: Cumaru · Arauco Trend/g)||[]).length,fitaRow=(txt.match(/branco · fita Cumaru · Arauco Trend/g)||[]).length;document.getElementById('cutm').hidden=true;
+          return JSON.stringify({white:white,f1:f1,cut1:cut1,f2:f2,cut2:cut2,f3:f3,f3b:f3b,pf:pf,lat:lat,cut4:cut4,pfM:pfM,f5:f5,f6:f6,pick:pick,pickOn:pickOn,hdr:hdr,chips:chips,chipCor:chipCor,after:after,after2:after2,fitaTxt:fitaTxt,fitaRow:fitaRow,errs:__errs});
+          """#)
+        XCTAssertEqual(o["white"] as? [String], ["Prateleira:true", "Lateral de gaveta:true", "Base (porta tempero):true", "Lateral esquerda:false", "Base inferior:false", "Divisória 1:false", "Porta:false"], "fita branca só em prateleira, gaveta e porta tempero")
+        let f1 = o["f1"] as? [String: String] ?? [:]
+        XCTAssertEqual(f1["Lateral esquerda"], "#b49c7d|arauco-cumaru-trend", "caixote branco com portas Cumaru → fita da lateral em Cumaru (com a textura)")
+        XCTAssertEqual(f1["Base inferior"], "#b49c7d|arauco-cumaru-trend")
+        XCTAssertEqual(f1["Base superior"], "#b49c7d|arauco-cumaru-trend")
+        XCTAssertEqual(f1["Prateleira"], "#f4f2ee", "prateleira com fita branca")
+        XCTAssertNil(f1["Tamponamento direito"], "tamponamento não ganha fita por cima")
+        XCTAssertEqual(o["cut1"] as? [String], ["Base inferior=Cumaru · Arauco Trend/b", "Lateral esquerda=Cumaru · Arauco Trend/b"], "plano de corte: peça branca com o nome da cor da fita")
+        XCTAssertEqual(o["f2"] as? String, "#b49c7d|arauco-cumaru-trend", "Ajustes: desmarcando prateleira, a fita dela vai na cor")
+        XCTAssertEqual(o["cut2"] as? String, "Cumaru · Arauco Trend")
+        XCTAssertEqual(o["f3"] as? String, "#716c69|duratex-cinza-sagrado-essencial", "fita na cor de fora do caixote quando configurado")
+        XCTAssertEqual(o["f3b"] as? String, "#b49c7d|arauco-cumaru-trend", "fita na cor das portas (padrão)")
+        XCTAssertEqual(o["pf"] as? String, "duratex-cinza-sagrado-essencial", "pintar só a fita guarda o padrão")
+        XCTAssertEqual(o["lat"] as? String, "#f4f2ee", "a peça fica como está (branca)")
+        XCTAssertEqual(o["cut4"] as? [String], ["Cinza Sagrado · Duratex Essencial Acetinada×1", "Cumaru · Arauco Trend×1"], "lateral com fita pintada separa da outra no corte")
+        XCTAssertEqual(o["pfM"] as? String, "duratex-cinza-sagrado-essencial|true", "fitas do módulo inteiro (tira as por peça)")
+        XCTAssertEqual(o["f5"] as? String, "#716c69|duratex-cinza-sagrado-essencial")
+        XCTAssertEqual(o["f6"] as? String, "#b49c7d|arauco-cumaru-trend", "tirar a pintura das fitas volta pro padrão")
+        let pick = o["pick"] as? [String: Any] ?? [:]
+        XCTAssertEqual(pick["id"] as? String, "arauco-cumaru-trend", "💧 copia o padrão real da porta")
+        XCTAssertEqual(pick["n"] as? String, "Cumaru · Arauco Trend")
+        XCTAssertEqual(o["pickOn"] as? Bool, true)
+        XCTAssertEqual(o["hdr"] as? String, "💧 toque na peça pra copiar")
+        XCTAssertEqual(o["chips"] as? [String], ["prat:true", "gav:true", "temp:true", "div:false", "cx:false"], "chips da fita branca nos Ajustes")
+        XCTAssertEqual(o["chipCor"] as? [String], ["portas:true", "fora:false"])
+        XCTAssertEqual(o["after"] as? String, "prat,gav,temp,div")
+        XCTAssertEqual(o["after2"] as? String, "prat,gav,temp")
+        XCTAssertGreaterThan(o["fitaTxt"] as? Int ?? 0, 0, "coluna Fita do plano mostra a cor")
+        XCTAssertGreaterThan(o["fitaRow"] as? Int ?? 0, 0, "lista geral mostra a cor da fita")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

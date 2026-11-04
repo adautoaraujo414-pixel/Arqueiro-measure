@@ -519,6 +519,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Regras novas nos Ajustes (valem pros módulos novos e "aplicar a todos"): recuo do rodapé, avanço do tamponamento, recuo da prateleira,
+    /// corrediça pela profundidade, frente de gaveta sobe separado, porta de correr (sobreposição/folga/altura), arredondamento, peça máxima,
+    /// Sistema 32 no plano e padrão de cor real dos módulos novos
+    func testAjustesNovosRodapeTamponamentoPrateleiraCorredicaCorrerSistema32ECorPadrao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          var st=STD(),keep=JSON.stringify(st);
+          /* 1) valores novos nos ajustes */st.rodRec=50;st.tpAv=40;st.pm=40;st.corrDsc=50;st.corrStep=50;st.gUp=10;st.frUp=5;st.pcSob=40;st.pcW=20;st.pcH=40;st.s32=1;st.s32Off=37;st.s32Step=32;st.rnd=1;st.pcMax=2000;
+          var lf=MAT.filter(function(c){return c.id==='arauco-louro-freijo-trend'})[0],cs=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];st.corFDef=lf.id;st.corDef=cs.id;prSave();
+          newTpl(3);var m=S.mods[0];m.d=590;m.tl=true;m.tlM=1;m.tlW=30;m.v=[{k:'drawers',n:2,cava:true}];S.m=m;draw();
+          var P=partsOf(m),g=function(re){return P.filter(function(p){return re.test(p.name)})[0]||{}};
+          var rl=g(/^Rodapé lateral esquerdo/),tp=g(/^Tamponamento esquerdo/),fr=P.filter(function(p){return /^Frente de gaveta/.test(p.name)}),gb=gbox(m.v[0],vaoRanges(m)[0][1]-vaoRanges(m)[0][0],drawerH(m.v[0]),m.d),lat=g(/^Lateral esquerda$/);
+          var cor={corF:m.corF,corFId:m.corFId,corN:m.corN,corId:m.corId};
+          open3D();var B=__boxes(),rb=B.filter(function(b){return /^0:Rodapé \(pedestal\)$/.test(String(b.nm))})[0],tb=B.filter(function(b){return /^0:Tamponamento esquerdo$/.test(String(b.nm))&&!b.pk.match(/engrosso|régua/)})[0];document.getElementById('v3x').click();
+          /* 2) prateleira, porta de correr e peça máxima */S.mods=[];newTpl(5);var n2=S.mods[0];n2.v=[{k:'shelves',n:1}];n2.d=400;draw();var sh=partsOf(n2).filter(function(p){return p.name==='Prateleira'})[0]||{};
+          S.mods=[];newTpl(1);var n3=S.mods[0];n3.div=[];n3.v=[{k:'slide',n:2}];n3.w=1800;draw();var vr=vaoRanges(n3)[0],vw=vr[1]-vr[0],sl=partsOf(n3).filter(function(p){return p.name==='Porta de correr'})[0]||{};
+          S.mods=[];newTpl(3);newTpl(3);newTpl(3);S.mods.forEach(function(q,i){q.x=i*900;q.w=900;q.b=0;q.sup=false;q.rod=true;q.tb=false});draw();var runs=moldRuns('rod').map(function(r){return r.idx.length});
+          /* 3) sistema 32 no plano */var s32=lat.fur&&lat.fur.kind,s32n=lat.fur&&lat.fur.n,s32rows=lat.fur&&lat.fur.rows;
+          S.mods=[];newTpl(3);S.m=S.mods[0];draw();openCut();await new Promise(function(r){var t0=Date.now();(function w(){var b=(document.getElementById('cutopt')||{}).textContent||'';if(b.indexOf('✓')>=0||Date.now()-t0>30000)r();else setTimeout(w,100)})()});
+          var svg=document.getElementById('cutbody').innerHTML,circ=(svg.match(/stroke="#1f7a4d"/g)||[]).length,txt32=/sistema 32/.test(svg);document.getElementById('cutm').hidden=true;
+          /* 4) campos nos ajustes */document.getElementById('prb').click();var ids=['tpAv','rodRec','pm','corrDsc','gUp','pcSob','pcW','pcH','pcMax','s32Off','s32Step'].filter(function(k){return !document.querySelector('#stdm [data-stdn="'+k+'"]')}),chips=['s32','rnd','corrStep'].filter(function(k){return !document.querySelector('#stdm [data-std="'+k+'"]')}),mats=document.querySelectorAll('#stdm [data-stdmat^="corFDef|"]').length;
+          var mq=document.querySelector('#stdm [data-csq="stdcorDef"]');mq.value='sagrado';mq.dispatchEvent(new Event('input',{bubbles:true}));var mvis=[].filter.call(document.querySelectorAll('#stdm [data-csl="stdcorDef"] [data-stdmat]'),function(b){return !b.hidden}).map(function(b){return b.title});
+          document.getElementById('stdm').hidden=true;
+          /* volta os ajustes */PR.std=JSON.parse(keep);prSave();
+          return JSON.stringify({rl:rl.cl,tp:tp.cw,frY:fr.map(function(p){return p.upMm}),nl:gb.nl,cor:cor,rbZ:rb?Math.round(rb.z0):null,rbD:rb?Math.round(rb.z1-rb.z0):null,tbZ:tb?Math.round(tb.z1):null,sh:sh.cw,slW:sl.cl,slH:sl.cw,vw:vw,runs:runs,s32:s32,s32n:s32n,s32rows:s32rows,circ:circ,txt32:txt32,ids:ids,chips:chips,mats:mats,mvis:mvis,rnd:[rl.cl,tp.cw,lat.cl,lat.cw].every(function(v){return v===Math.round(v)}),errs:__errs});
+          """#)
+        XCTAssertEqual(o["rl"] as? Double, 460, "rodapé lateral = prof 590 − 2 × recuo 50 − 2 × 15")
+        XCTAssertEqual(o["tp"] as? Double, 636, "tamponamento = prof 590 + avanço 40 + fundo 6")
+        XCTAssertEqual(o["frY"] as? [Double], [10, 10], "frentes de gaveta sobem 10 (separado das portas, 5)")
+        XCTAssertEqual(o["nl"] as? Double, 500, "corrediça: múltiplo de 50 abaixo de (590 − 50)")
+        XCTAssertEqual((o["cor"] as? [String: Any])?["corFId"] as? String, "arauco-louro-freijo-trend", "módulo novo já vem com o padrão das frentes")
+        XCTAssertEqual((o["cor"] as? [String: Any])?["corId"] as? String, "duratex-cinza-sagrado-essencial", "e com o padrão do caixote")
+        XCTAssertEqual(o["sh"] as? Double, 360, "prateleira = prof 400 − recuo 40")
+        XCTAssertEqual(o["slW"] as? Double, 915, "porta de correr = (vão 1770 + 20 + 40) ÷ 2")
+        XCTAssertEqual(o["slH"] as? Double, 2310, "folha = vão + 40 de altura")
+        XCTAssertEqual(o["runs"] as? [Int], [2, 1], "peça corrida máxima 2000: 3 módulos de 900 viram 2 + 1")
+        XCTAssertEqual(o["s32"] as? String, "s32", "lateral com Sistema 32")
+        XCTAssertEqual(o["s32rows"] as? [Double], [37, 553], "fileiras a 37 mm da frente e de trás (prof 590)")
+        XCTAssertGreaterThan(o["circ"] as? Int ?? 0, 40, "furos desenhados no plano de corte")
+        XCTAssertEqual(o["txt32"] as? Bool, true)
+        XCTAssertEqual(o["ids"] as? [String], [], "todos os campos novos nos Ajustes")
+        XCTAssertEqual(o["chips"] as? [String], [], "chips s32 / arredondamento / passo da corrediça")
+        XCTAssertEqual(o["mats"] as? Int, 61, "paleta real do padrão (60 + sem padrão)")
+        XCTAssertEqual(o["mvis"] as? [String], ["Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no padrão de cor dos Ajustes")
+        XCTAssertEqual(o["rnd"] as? Bool, true, "arredondamento em 1 mm")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

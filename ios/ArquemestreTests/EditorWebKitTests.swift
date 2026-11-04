@@ -667,6 +667,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Porta de vidro real: 4 réguas de perfil de alumínio na cor escolhida + vidro de 4 mm (reflexo bronze, fumê…) no 3D, fechada, aberta e basculante;
+    /// cor do alumínio e do vidro por módulo (aba Portas) e padrão nos Ajustes; o pincel não pinta o perfil; ferragens listam perfil (m) e vidro (m²)
+    func testPortaDeVidroComPerfilDeAluminioEVidroBronze() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          newTpl(0);var t=S.mods[0];t.w=600;t.h=2300;t.d=400;t.v=[{k:'door',n:2,vidro:true,open:0}];S.m=t;S.sv=0;S.tab=3;draw();panel();
+          var chips=[].map.call(document.querySelectorAll('[data-alcor]'),function(b){return b.dataset.alcor+(b.classList.contains('sel')?'*':'')}).join(',')+' | '+[].map.call(document.querySelectorAll('[data-vicor]'),function(b){return b.dataset.vicor+(b.classList.contains('sel')?'*':'')}).join(',');
+          var hw=hwOf(t),hwk=Object.keys(hw).filter(function(k){return /vidro|Vidro/.test(k)}).map(function(k){return k+'='+hw[k].n+hw[k].u});
+          var pd=partsOf(t).filter(function(p){return p.glass})[0],p2d=pd.col+'/'+pd.st;
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var snap=function(mi){var gb=__boxes().filter(function(b){return (new RegExp('^'+mi+':Porta')).test(b.nm)});return {n:gb.length,alu:gb.filter(function(b){return b.alu}).map(function(b){return b.c.slice(0,3).join()}).filter(function(v,i,a){return a.indexOf(v)===i}),gl:gb.filter(function(b){return b.gl}).map(function(b){return b.c.slice(0,3).join()+'/'+b.a+'/'+(b.pf?'pf':'box')}).filter(function(v,i,a){return a.indexOf(v)===i})}};
+          var s1=snap(0);
+          document.getElementById('v3x').click();document.querySelector('[data-alcor="champagne"]').click();document.querySelector('[data-vicor="fume"]').click();var mod=t.alCor+'/'+t.viCor;
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();var s2=snap(0);
+          var jat=MAT.filter(function(c){return /jatob/i.test(c.n)})[0];t.pcT={Porta:{c:jat.hex,n:matLabel(jat),id:jat.id}};__build();var s3=snap(0);delete t.pcT;
+          t.v[0].open=1;window.anim3();await new Promise(function(r){setTimeout(r,1600)});var s4=snap(0);t.v[0].open=0;
+          newTpl(4);var a=S.mods[1];a.v=[{k:'door',n:1,vidro:true,bas:true,bd:'up',open:1}];window.anim3();await new Promise(function(r){setTimeout(r,1600)});var sb=snap(1);
+          document.getElementById('v3x').click();
+          stdOpen(0,'portas');var std=[].map.call(document.querySelectorAll('#stdm [data-std="alCor"]'),function(b){return b.dataset.v+(b.classList.contains('on')?'*':'')}).join(',')+' | '+[].map.call(document.querySelectorAll('#stdm [data-std="viCor"]'),function(b){return b.dataset.v+(b.classList.contains('on')?'*':'')}).join(',');
+          document.querySelector('#stdm [data-std="viCor"][data-v="incolor"]').click();var stdAfter=STD().viCor;STD().viCor='bronze';prSave();
+          return JSON.stringify({chips:chips,hw:hwk,p2d:p2d,s1:s1,mod:mod,s2:s2,s3:s3,s4:s4,sb:sb,std:std,stdAfter:stdAfter,errs:__errs});
+          """#)
+        XCTAssertEqual(o["chips"] as? String, "preto*,champagne,prata,bronze,grafite,branco | bronze*,fume,incolor,preto,verde", "aba Portas: cor do perfil e do vidro por módulo")
+        XCTAssertEqual(o["hw"] as? [String], ["Perfil de alumínio p/ vidro · Preto fosco (m)=9.96m", "Vidro 4 mm · Reflexo bronze (m²)=1.28m²"], "ferragens: perfil em metros e vidro em m²")
+        XCTAssertEqual(o["p2d"] as? String, "#b9a088/#262626", "2D: vidro bronze claro com perfil preto")
+        let s1 = o["s1"] as? [String: Any] ?? [:]
+        XCTAssertEqual(s1["alu"] as? [String], ["38,38,38"], "perfil preto fosco no 3D")
+        XCTAssertEqual(s1["gl"] as? [String], ["91,63,42/0.55/box"], "vidro reflexo bronze (translúcido) fechado")
+        XCTAssertEqual(o["mod"] as? String, "champagne/fume")
+        let s2 = o["s2"] as? [String: Any] ?? [:]
+        XCTAssertEqual(s2["alu"] as? [String], ["201,180,140"], "perfil champagne depois de trocar no painel")
+        XCTAssertEqual(s2["gl"] as? [String], ["58,61,66/0.52/box"], "vidro fumê")
+        let s3 = o["s3"] as? [String: Any] ?? [:]
+        XCTAssertEqual(s3["alu"] as? [String], ["201,180,140"], "o pincel (porta pintada por tipo) não pinta o perfil de alumínio")
+        let s4 = o["s4"] as? [String: Any] ?? [:]
+        XCTAssertEqual(s4["alu"] as? [String], ["201,180,140"], "porta aberta: perfil continua")
+        XCTAssertEqual(s4["gl"] as? [String], ["58,61,66/0.52/pf"], "porta aberta: vidro girado junto")
+        let sb = o["sb"] as? [String: Any] ?? [:]
+        XCTAssertEqual(sb["n"] as? Int, 5, "basculante de vidro aberta: 4 réguas + 1 vidro")
+        XCTAssertEqual((sb["gl"] as? [String])?.count, 1)
+        XCTAssertEqual(o["std"] as? String, "preto*,champagne,prata,bronze,grafite,branco | bronze*,fume,incolor,preto,verde", "Ajustes · Portas: padrão do perfil e do vidro")
+        XCTAssertEqual(o["stdAfter"] as? String, "incolor")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

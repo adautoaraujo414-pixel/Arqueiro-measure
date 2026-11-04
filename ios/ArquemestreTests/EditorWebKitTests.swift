@@ -430,6 +430,20 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testPortaBasculanteAbreParaBaixoOuCimaNo2DENo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=3200;S.H=2600;newTpl(4);var m=S.mods[0];m.w=1700;m.h=230;m.d=300;m.b=1500;m.div=[1/3,2/3];
+          m.v=[{k:'door',n:1,cava:true,open:1},{k:'door',n:1,cava:true,bas:true,bd:'down',open:1},{k:'door',n:1,cava:true,bas:true,bd:'up',open:1}];S.m=m;draw();
+          var paths=[].map.call(document.querySelectorAll('#svg #mod path[fill="#e6d9be"]'),function(p){var d=p.getAttribute('d').match(/-?[\d.]+/g).map(Number);var xs=[d[0],d[2],d[4],d[6]],ys=[d[1],d[3],d[5],d[7]];return (Math.max.apply(null,xs)-Math.min.apply(null,xs))>(Math.max.apply(null,ys)-Math.min.apply(null,ys))?'deitada':'em pé'});
+          open3D();var B=__boxes();var d3=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.nol&&((b.x1-b.x0)>300||(b.z1-b.z0)>300)}).map(function(b){return b.vi+':'+((b.pf&&b.pf.ax==='x')?'gira-eixo-x':'lado')+':'+Math.round(b.y1-b.y0)});
+          return JSON.stringify({p2d:paths.join(','),d3:d3.join(','),errs:__errs});
+          """#)
+        XCTAssertEqual(o["p2d"] as? String, "em pé,deitada,deitada", "2D: porta de lado abre pro lado; basculante abre pra baixo/cima (faixa deitada)")
+        XCTAssertEqual(o["d3"] as? String, "0:lado:230,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

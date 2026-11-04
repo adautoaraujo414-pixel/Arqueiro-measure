@@ -453,7 +453,7 @@ final class EditorWebKitTests: XCTestCase {
           var B=__boxes(),eng=B.filter(function(b){return /Tamponamento esquerdo · engrosso 80#/.test(String(b.pk||''))}).map(function(b){return String(b.pk).replace(/^.*#/,'')+':'+[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].map(Math.round).join('x')}).sort().join(',');
           var cl=cutLines(m).filter(function(l){return /engrosso/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+'x'+l.qty}).join(',');
           var tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
-          var sw=/url\(cores\/arauco-louro-freijo-trend\.jpg\)/.test(swRow('corF',''))&&!/sem textura/.test(swRow('corF',''));
+          var sw=/data-bg="cores\/arauco-louro-freijo-trend\.jpg"/.test(swRow('corF',''))&&!/sem textura/.test(swRow('corF',''));
           pt3(true);var on=__pt3state().on&&!document.getElementById('pt3').hidden&&document.querySelectorAll('#pt3 [data-ptc]').length>=20;
           window.PT3={c:'#6b4a2f',n:'Nogueira',erase:false};__pt3pick(0,'Fundo#1','one');
           var fb=__boxes().filter(function(b){return /^0:Fundo$/.test(String(b.nm))})[0],fc=fb?fb.c.join()+'/'+__matTx(fb):'';

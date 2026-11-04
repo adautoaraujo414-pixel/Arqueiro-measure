@@ -3,6 +3,14 @@ name: App Store - colocar build na versão e enviar pra revisão
 on:
   workflow_dispatch:
     inputs:
+      versao:
+        description: "Versão nova pra criar depois que a anterior foi pra loja (ex.: 3.0.1 · auto = a última da loja + 1)"
+        type: string
+        default: ''
+      novidades:
+        description: "Texto de Novidades da versão (o que mudou)"
+        type: string
+        default: ''
       enviar:
         description: "Enviar pra revisão da Apple agora"
         type: boolean
@@ -31,4 +39,6 @@ jobs:
           ENVIAR: ${{ inputs.enviar && '1' || '0' }}
           TIRAR: ${{ inputs.tirar && '1' || '0' }}
           LIBERAR: ${{ inputs.liberar && '1' || '0' }}
+          VERSAO: ${{ inputs.versao }}
+          NOVIDADES: ${{ inputs.novidades }}
         run: python .github/scripts/asc_submit.py 6829800820

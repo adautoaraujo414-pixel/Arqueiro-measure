@@ -18,6 +18,10 @@ on:
         description: 'Mac do GitHub (vazio = macos-26; use macos-15 ou macos-15-intel quando faltar macos-26)'
         type: string
         default: ''
+      versao:
+        description: 'Número da versão do app no build (ex.: 3.0.1) · vazio = o do projeto · tem que ser o mesmo da versão nova na App Store'
+        type: string
+        default: ''
       rapido:
         description: 'Rápido: sem capturas de tela e sem os testes da assinatura (pra Mac lento ou fila cheia) · mantém as capturas que já estão na App Store'
         type: boolean
@@ -208,7 +212,7 @@ jobs:
           AUTH="-allowProvisioningUpdates -authenticationKeyPath $HOME/private_keys/AuthKey_$ASC_KEY_ID.p8 -authenticationKeyID $ASC_KEY_ID -authenticationKeyIssuerID $ASC_ISSUER_ID"
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Release -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            -archivePath build/Arquemestre.xcarchive DEVELOPMENT_TEAM=$APPLE_TEAM_ID CURRENT_PROJECT_VERSION=${{ github.run_number }} ${{ inputs.versao && format('MARKETING_VERSION={0}', inputs.versao) || '' }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive
           cat > build/export.plist <<EOF
           <?xml version="1.0" encoding="UTF-8"?>

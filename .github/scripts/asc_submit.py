@@ -57,7 +57,58 @@ def lancamento_automatico(v):
     return False
 
 
+VERSAO = (os.environ.get("VERSAO") or "").strip()
+NOVIDADES = (os.environ.get("NOVIDADES") or "").strip()
+OCUPADA = ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "PENDING_APPLE_RELEASE", "PROCESSING_FOR_APP_STORE")
+
+
+def vnum(s):
+    try:
+        return tuple(int(p) for p in s.split("."))
+    except ValueError:
+        return (0,)
+
+
+def nova_versao(versions):
+    """Depois que a versão anterior foi pra loja: cria a próxima (ex.: 3.0 → 3.0.1) em lançamento automático."""
+    oc = next((v for v in versions if v["attributes"]["appStoreState"] in OCUPADA), None)
+    if oc:
+        print("::warning::a versão", oc["attributes"]["versionString"], "ainda está", oc["attributes"]["appStoreState"], "· a nova só depois que ela for pra loja")
+        return None
+    nome = VERSAO
+    if nome == "auto":
+        top = max((v["attributes"]["versionString"] for v in versions), key=vnum, default="1.0")
+        p = list(vnum(top)) + [0] * (3 - len(vnum(top)))
+        p[-1] += 1
+        nome = ".".join(str(n) for n in p)
+    r = call("POST", "/appStoreVersions", json={"data": {"type": "appStoreVersions",
+             "attributes": {"platform": "IOS", "versionString": nome, "releaseType": "AFTER_APPROVAL"},
+             "relationships": {"app": {"data": {"type": "apps", "id": APP_ID}}}}})
+    print("VERSÃO NOVA CRIADA:", nome, "(lançamento automático) ✓")
+    return r["data"]
+
+
+def novidades(v):
+    """Texto de "Novidades" (whatsNew) em todos os idiomas da versão · a 1ª versão do app não tem esse campo."""
+    for loc in call("GET", f"/appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]:
+        a = loc["attributes"]
+        txt = NOVIDADES or a.get("whatsNew") or "Correções e melhorias no editor 3D, nos eletrodomésticos e na pintura das peças."
+        if a.get("whatsNew") == txt:
+            continue
+        r = call("PATCH", f"/appStoreVersionLocalizations/{loc['id']}", ok=True,
+                 json={"data": {"type": "appStoreVersionLocalizations", "id": loc["id"], "attributes": {"whatsNew": txt}}})
+        if r:
+            print("novidades", a["locale"], ":", txt)
+
+
 versions, ver = versao_em_preparo()
+if not ver and VERSAO:
+    if nova_versao(versions):
+        for i in range(10):
+            versions, ver = versao_em_preparo()
+            if ver:
+                break
+            time.sleep(10)
 # -1) com LIBERAR=1: versão já aprovada e esperando → libera agora; senão liga o lançamento automático
 if LIBERAR:
     pend = next((v for v in versions if v["attributes"]["appStoreState"] == "PENDING_DEVELOPER_RELEASE"), None)
@@ -124,6 +175,8 @@ if build["attributes"].get("usesNonExemptEncryption") is None:
 # 2) coloca o build na versão
 call("PATCH", f"/appStoreVersions/{ver['id']}/relationships/build", json={"data": {"type": "builds", "id": build["id"]}})
 print("build colocado na versão", vs)
+if VERSAO or NOVIDADES or len(versions) > 1:
+    novidades(ver)
 
 # 3) conferência do que a Apple pede
 for loc in call("GET", f"/appStoreVersions/{ver['id']}/appStoreVersionLocalizations")["data"]:

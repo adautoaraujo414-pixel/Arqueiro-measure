@@ -363,6 +363,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testLateraisPorForaLadoDaFitaEImpressaoDoPlano() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;
+          newTpl(4);var m=S.mods[0];m.w=900;m.h=800;m.d=350;m.latFora=true;draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};
+          var sides=['Porta','Lateral esquerda','Base inferior','Base superior','Fundo','Lateral de gaveta','Rodapé (pedestal)','Ripa 40 mm','Tamponamento esquerdo'].map(function(n){return edgeSides(n)}).join('|');
+          window.print=function(){window.__printed=1};openCut();var pb=document.getElementById('cutprint');var tbl=document.querySelector('#cutbody table.cutpt'),heads=tbl?[].map.call(tbl.querySelectorAll('th'),function(t){return t.textContent}).join(','):'';cutPrint();var hd=document.getElementById('pthead');
+          var greens=(document.querySelector('#cutbody svg')||{innerHTML:''}).innerHTML.indexOf('#1f9d55')>=0;
+          return JSON.stringify({lat:g('Lateral esquerda'),base:g('Base inferior'),teto:g('Base superior'),sides:sides,btn:!!pb,heads:heads,hd:!!(hd&&/Data|Ordem/.test(hd.textContent)),greens:greens,opt:STDOPT.caixa.length,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lat"] as? String, "800x350", "laterais por fora: lateral inteira (altura do módulo)")
+        XCTAssertEqual(o["base"] as? String, "870x350", "base entre as laterais: largura − 2 × 15")
+        XCTAssertEqual(o["teto"] as? String, "870x350", "teto entre as laterais")
+        XCTAssertEqual(o["sides"] as? String, "LRTB|B|B|LRTB||T||TB|LRTB", "regra do lado da fita por peça")
+        XCTAssertEqual(o["btn"] as? Bool, true, "botão Imprimir / PDF na lista")
+        XCTAssertEqual(o["heads"] as? String, "#,Peça,Compr. × Larg.,Qtd,Fita,☐", "tabela da chapa: número, peça, medida, qtd, lado da fita e ☐")
+        XCTAssertEqual(o["hd"] as? Bool, true, "cabeçalho de impressão com ordem e data")
+        XCTAssertEqual(o["greens"] as? Bool, true, "lado da fita em verde no desenho da chapa")
+        XCTAssertEqual(o["opt"] as? Int, 2, "opção de caixaria: por dentro / por fora")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

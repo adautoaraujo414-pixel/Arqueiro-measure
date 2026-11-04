@@ -321,6 +321,18 @@ class MoveisBridge(
 
     @JavascriptInterface fun isApp(): Boolean = true
 
+    /** "🖨 Imprimir / PDF" no plano de corte: impressão nativa do Android (a caixa permite salvar em PDF). */
+    @JavascriptInterface fun printPage(title: String) {
+        web()?.post {
+            runCatching {
+                val w = web() ?: return@post
+                val pm = w.context.getSystemService(android.content.Context.PRINT_SERVICE) as android.print.PrintManager
+                val name = if (title.isBlank()) "Plano de corte" else title
+                pm.print(name, w.createPrintDocumentAdapter(name), android.print.PrintAttributes.Builder().setMediaSize(android.print.PrintAttributes.MediaSize.ISO_A4).build())
+            }
+        }
+    }
+
     @JavascriptInterface fun close() { web()?.post { onClose() } }
 
     @JavascriptInterface fun putFile(name: String, b64: String) {

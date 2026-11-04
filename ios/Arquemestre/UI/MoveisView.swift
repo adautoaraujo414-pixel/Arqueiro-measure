@@ -146,7 +146,8 @@ struct MoveisWeb: UIViewRepresentable {
         saveToGallery:function(d){post({op:'saveGallery',data:String(d)})},
         companyName:function(){return sync('companyName','')},
         shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})},
-        shareClient:function(c,n,t){post({op:'shareClient',code:String(c),name:String(n),title:String(t)})}
+        shareClient:function(c,n,t){post({op:'shareClient',code:String(c),name:String(n),title:String(t)})},
+        printPage:function(t){post({op:'printPage',title:String(t||'')})}
       };
     })();
     """
@@ -226,6 +227,17 @@ struct MoveisWeb: UIViewRepresentable {
                 }
             case "delFile": if let n = m["name"] as? String { try? FileManager.default.removeItem(at: dir.appendingPathComponent(safe(n))) }
             case "makeQuote": if let j = m["json"] as? String { app.quoteFromMoveis(j) }
+            case "printPage":
+                // "🖨 Imprimir / PDF" no plano de corte: impressão nativa (a folha de compartilhar permite salvar em PDF)
+                if let w = message.webView {
+                    let pc = UIPrintInteractionController.shared
+                    let info = UIPrintInfo(dictionary: nil)
+                    info.outputType = .general
+                    info.jobName = (m["title"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "Plano de corte"
+                    pc.printInfo = info
+                    pc.printFormatter = w.viewPrintFormatter()
+                    pc.present(animated: true, completionHandler: nil)
+                }
             default: break
             }
         }

@@ -877,6 +877,47 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testEletrosComMedidaRealDeFabricaFrenchDoorEInducao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];
+          /* nada de "medida típica" ou "conferir" no catálogo: todo eletro tem a medida da ficha do fabricante */
+          var gen=0,real=0;['geladeira','microondas','forno','depurador','coifa','lavaloucas','airfryer','tv'].forEach(function(t){APM[t].m.forEach(function(q){if(/conferir|t[ií]pica/i.test(q[0]))gen++;if(/\(tipo [A-Z]/.test(q[0]))real++})});
+          var M=function(t,re){return APM[t].m.filter(function(q){return re.test(q[0])})[0]||[]};
+          var brm=M('geladeira',/BRM45/).slice(1,4).join('x'),ib=M('geladeira',/IB54/).slice(1,4).join('x'),fd=M('geladeira',/BRO85/).slice(1,4).join('x'),oe8=M('forno',/OE8MX/).slice(1,4).join('x'),cfo=M('forno',/CFO4NAR \(/).slice(1,4).join('x'),tv55=M('tv',/55"/).slice(1,4).join('x');
+          /* French door: 2 portas em cima que abrem pros lados e a gaveta do freezer que sai pra frente */
+          var gi=APM.geladeira.m.indexOf(M('geladeira',/BRO85/)),g=apAdd('geladeira',gi);g.x=0;draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});ele3api.toggle(g.id);await new Promise(function(r){setTimeout(r,1800)});__build();
+          var B=__boxes().filter(function(b){return b.fr===g.id}),gav=B.filter(function(b){return b.inv}).length,rotL=0,rotR=0;B.forEach(function(b){if(b.pf&&b.pf.ax!=='x'&&b.y0>g.h*.38){if((b.x0+b.x1)/2<g.x+g.w/2)rotL++;else rotR++}});
+          /* fogão de piso: altura de verdade com a tampa (a mesa fica abaixo) · de embutir: mesa na altura da bancada */
+          var fg=apAdd('forno',APM.forno.m.indexOf(M('forno',/CFO4NAR \(/)));fg.x=900;var fe=apAdd('forno',APM.forno.m.indexOf(M('forno',/76EXR/)));fe.x=2200;__build();
+          var fgTop=Math.round(Math.max.apply(null,__boxes().filter(function(b){return b.fr===fg.id}).map(function(b){return b.y1}))),feTop=fe.b+fe.h,bt=benchTop();
+          /* cooktop de indução: vidro liso, zona fica vermelha ao tocar (sem chama) */
+          var ind=COOKM.filter(function(q){return q.ind})[0];S.st.items.push({id:77,k:'cook',x:1500,y:60,w:ind.w,d:ind.d,cm:ind.id});var st=S.st,it=st.items.filter(function(i){return i.id===77})[0];__build();
+          var y=st.t+st.e+9,P=cookPos(it).map(function(q){return [st.x+it.x+it.w*q[0],it.y+it.d*q[1]]}),p=org3api.proj([P[0][0],y,P[0][1]]);org3api.one(p[0],p[1]);await new Promise(function(r){setTimeout(r,500)});
+          var lit=Object.keys(fx3api.fire()).length,fx=fx3api.fx(),grade=__boxes().filter(function(b){return b.ck===st.id+':77'&&b.c&&(b.c==='#1d1f23'||String(b.c)==='29,31,35')}).length;
+          document.getElementById('v3x').click();
+          return JSON.stringify({gen:gen,real:real,brm:brm,ib:ib,fd:fd,oe8:oe8,cfo:cfo,tv55:tv55,gav:gav,rotL:rotL,rotR:rotR,fgTop:fgTop,fgH:fg.h,feTop:feTop,bt:bt,ind:ind.n,lit:lit,fx:fx,errs:__errs});
+          """#)
+        XCTAssertEqual(o["gen"] as? Int, 0, "nenhum eletro com medida típica/conferir")
+        XCTAssertGreaterThanOrEqual(o["real"] as? Int ?? 0, 60, "modelos reais (tipo marca) em todas as categorias")
+        XCTAssertEqual(o["brm"] as? String, "621x1760x755", "Duplex BRM45 da ficha da Brastemp")
+        XCTAssertEqual(o["ib"] as? String, "699x1895x749", "Inverse IB54")
+        XCTAssertEqual(o["fd"] as? String, "836x1857x793", "French door BRO85")
+        XCTAssertEqual(o["oe8"] as? String, "595x595x575", "forno OE8MX")
+        XCTAssertEqual(o["cfo"] as? String, "515x960x603", "fogão CFO4NAR")
+        XCTAssertEqual(o["tv55"] as? String, "1236x718x68", "TV 55 sem a base")
+        XCTAssertGreaterThanOrEqual(o["gav"] as? Int ?? 0, 1, "French door: gaveta do freezer sai pra frente")
+        XCTAssertGreaterThan(o["rotL"] as? Int ?? 0, 0, "porta da esquerda abre")
+        XCTAssertGreaterThan(o["rotR"] as? Int ?? 0, 0, "porta da direita abre")
+        XCTAssertEqual(o["fgTop"] as? Int, o["fgH"] as? Int, "fogão de piso não passa da altura real")
+        XCTAssertEqual(o["feTop"] as? Int, o["bt"] as? Int, "fogão de embutir com a mesa na altura da bancada")
+        XCTAssertTrue((o["ind"] as? String ?? "").contains("Indução"))
+        XCTAssertEqual(o["lit"] as? Int, 1, "toque na zona liga a indução")
+        XCTAssertGreaterThan(o["fx"] as? Int ?? 0, 0, "zona vermelha acesa")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

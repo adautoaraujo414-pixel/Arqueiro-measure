@@ -1316,7 +1316,11 @@ var COOKM=[
  {id:'b4',n:'Brasil 4GG 55 · 4 bocas',w:555,d:470,nb:4},
  {id:'b5',n:'Brasil 5GG 70 · 5 bocas',w:700,d:510,nb:5},
  {id:'b5t',n:'Brasil 5GG Tri 70 · 5 bocas (tripla chama)',w:700,d:510,nb:5,tri:1},
- {id:'p4',n:'Cooktop 4 bocas 58 (padrão)',w:580,d:510,nb:4}];
+ {id:'p4',n:'Cooktop 4 bocas 58 (padrão)',w:580,d:510,nb:4},
+ {id:'ke4',n:'KE4GP 4 bocas a gás (tipo Electrolux) · recorte 52 × 39',w:554,d:445,nb:4},
+ {id:'bds62',n:'BDS62 4 bocas vidro (tipo Brastemp)',w:590,d:485,nb:4},
+ {id:'bdd85',n:'Ative BDD85 5 bocas quadrichama (tipo Brastemp) · recorte 81,5 × 40,5',w:850,d:460,nb:5,tri:1},
+ {id:'ie60',n:'Indução IE60P 4 zonas (tipo Electrolux) · recorte 56 × 49',w:590,d:520,nb:4,ind:1}];
 function cubM(id){return CUBM.filter(function(q){return q.id===id})[0]||null}
 function cookM(id){return COOKM.filter(function(q){return q.id===id})[0]||null}
 /* cubas de dentro do item (medidas a partir do canto de trás-esquerdo do item) */
@@ -1325,6 +1329,7 @@ function cubaBowls(it){var M=cubM(it.cm)||{g:'emb',bw:[1],dep:180},W=it.w,D=it.d
  M.bw.forEach(function(b,i){var w=av*b/tot,small=(M.sm||[]).indexOf(i)>=0,z0=small?bk+(D-bk-fr)*.28:bk;o.push({x0:x,x1:x+w,z0:z0,z1:D-fr,dep:small?Math.round(M.dep*.7):M.dep,r:Math.min(45,w/4),sm:small});x+=w+sep});return o}
 function cookNb(it){var M=cookM(it.cm);return +(it.nb||(M&&M.nb)||4)}
 function cookTri(it){var M=cookM(it.cm);return !!(it.tri||(M&&M.tri))}
+function cookInd(it){var M=cookM(it.cm);return !!(it.ind||(M&&M.ind))}
 function cookPos(it){return cookNb(it)===5?[[.2,.28],[.8,.28],[.2,.72],[.8,.72],[.5,.5]]:[[.25,.3],[.75,.3],[.25,.7],[.75,.7]]}
 /* desenho de cima da cuba e do cooktop (planta da pedra) */
 function itPlanSvg(it,x,y,w,h){var k=w/Math.max(1,it.w),o='',di=' data-i="'+it.id+'"';
@@ -1342,7 +1347,7 @@ function stItemAdd(k,M){if(!S.st)addStone();var it={id:NID++,k:k,x:0,y:k==='cuba
 (function(){var A=function(t,L){L.forEach(function(q){APM[t].m.push(q)})};
  /* micro-ondas com medida real (largura × altura × profundidade da ficha técnica) · de embutir com o nicho do fabricante */
  A('microondas',[['Bancada 21 L NN-ST25 (tipo Panasonic) · 442 × 260 × 366',442,260,366],['Bancada 30 L MS3091 (tipo LG) · 508 × 290 × 400',508,290,400],['Bancada 32 L BMS45 (tipo Brastemp) · 539 × 307 × 430',539,307,430],
-  ['Embutir 32 L BM146 (tipo Brastemp) · 595 × 390 × 372 · nicho 560 × 380 × 455',595,390,372,{nicho:[560,380,455]}],['Embutir 34 L ME3EP (tipo Electrolux) · 540 × 363 × 395 · nicho 560 de largura',540,363,395,{nicho:[560,370,450]}]]);
+  ['Embutir 32 L BM146 (tipo Brastemp) · 595 × 390 × 372 · nicho 560 × 380 × 455',595,390,372,{nf:[560,380,455]}],['Embutir 34 L ME3EP (tipo Electrolux) · 540 × 363 × 395 · nicho 560 de largura',540,363,395,{nf:[560,370,450]}]]);
  A('geladeira',[['Side by side SH70B · branca (tipo Electrolux)',910,1780,740,{fin:'branco'}],['Side by side SS72B · branca (tipo Electrolux)',910,1780,740,{fin:'branco'}],['Side by side SH70X · inox (tipo Electrolux)',910,1780,740,{fin:'inox'}],['Side by side SH72X · inox (tipo Electrolux)',910,1780,740,{fin:'inox'}],['Side by side SS77X · inox (tipo Electrolux)',910,1780,740,{fin:'inox'}],['Side by side SH72B · branca (tipo Electrolux)',910,1780,740,{fin:'branco'}],['Side by side SS72X · inox (tipo Electrolux)',910,1780,740,{fin:'inox'}],['Side by side SS90X · inox escuro (tipo Electrolux)',915,1790,745,{fin:'preto'}]]);
  A('coifa',[['Coifa de ilha Slim Isla 90 Split (tipo Tramontina)',900,750,450],['Coifa de ilha Square Isla 40 · cubo (tipo Tramontina)',400,750,400],['Coifa de parede Dritta 90 Black (tipo Tramontina)',900,800,500,{fin:'preto'}],['Coifa de parede Dritta 90 White (tipo Tramontina)',900,800,500,{fin:'branco'}],['Coifa de parede Dritta 90 Split (tipo Tramontina)',900,800,500],['Coifa de ilha Dritta Isla 90 Split (tipo Tramontina)',900,800,600],['Coifa de parede New Dritta 60 (tipo Tramontina)',600,800,500],['Coifa de parede New Dritta 90 (tipo Tramontina)',900,800,500],['Coifa de ilha New Dritta Isla 90 (tipo Tramontina)',900,800,600],['Coifa de parede New Vetro 60 (tipo Tramontina)',600,800,500],['Coifa de parede New Vetro 80 (tipo Tramontina)',800,800,500],['Coifa de parede New Vetro 90 (tipo Tramontina)',900,800,500],['Coifa de ilha New Vetro Isla 90 (tipo Tramontina)',900,800,600],['Coifa de ilha Tube Isla 35 · cilíndrica (tipo Tramontina)',350,800,350],['Coifa de ilha Slim Isla 90 (tipo Tramontina)',900,750,450]]);
  A('depurador',[['Depurador de embutir Incasso 75 (tipo Tramontina)',750,300,300],['Depurador de embutir Incasso 75 Split (tipo Tramontina)',750,300,300]]);
@@ -2981,7 +2986,13 @@ function ledOf(o){if(!o)return null;if(o.o==='m')return S.mods[o.id]||null;if(o.
 function ledName(o){var x=ledOf(o);if(!x)return 'LED';if(o.o==='m'){var m=x;return (m.sup?'Superior':'Base')+' '+(S.mods.filter(function(q,j){return j<=o.id&&!!q.sup===!!m.sup}).length)}if(o.o==='r')return 'Prateleira';return islName(x,S.isl.indexOf(x))}
 /* cooktop a gás: bocas redondas com grade, botões e as panelas (se ligadas) */
 function cookB(st,it){var x0=st.x+it.x;return cookPos(it).map(function(q){return [x0+it.w*q[0],it.y+it.d*q[1]]})}
-function cook3(st,it){var x0=st.x+it.x,x1=x0+it.w,y=st.t+st.e,n0=boxes.length,tri=cookTri(it),P=cookB(st,it),nb=P.length;BH(boxes,rr2(x0,x1,it.y,it.y+it.d,14,4),y,y+5,'#141619');B(boxes,x0+6,x1-6,y+5,y+5.3,it.y+6,it.y+8,'#3a3f46');
+function cook3(st,it){if(cookInd(it)){indu3(st,it);return}cook3g(st,it)}
+function indu3(st,it){var x0=st.x+it.x,x1=x0+it.w,y=st.t+st.e,n0=boxes.length,P=cookB(st,it);BH(boxes,rr2(x0,x1,it.y,it.y+it.d,10,4),y,y+5,'#0d0f12');B(boxes,x0+2,x1-2,y+5,y+5.2,it.y+2,it.y+4,'#5b6169');
+ P.forEach(function(q,i){var R=i%3===0?95:78;BH(boxes,circ(q[0],q[1],R,28),y+5,y+5.3,'#6b7380');BH(boxes,circ(q[0],q[1],R-4,28),y+5.3,y+5.5,'#0d0f12');var c=BH(boxes,circ(q[0],q[1],7,10),y+5.5,y+5.7,'#6b7380')});
+ var zc=it.y+it.d-32,xc=(x0+x1)/2;B(boxes,xc-150,xc+150,y+5,y+5.4,zc-14,zc+14,'#16191d');for(var k=0;k<6;k++){var kx=xc-125+k*50;B(boxes,kx-9,kx+9,y+5.4,y+5.7,zc-6,zc+6,k===5?'#ff5a3c':'#9aa3ad')}
+ if(it.pan){var a=P[0],yp=y+6;BH(boxes,circ(a[0],a[1],100,20),yp,yp+140,'#c9ced4');BH(boxes,circ(a[0],a[1],104,20),yp+140,yp+146,'#aeb5bd');BH(boxes,circ(a[0],a[1],14,10),yp+146,yp+166,'#2a2c30')}
+ for(var i=n0;i<boxes.length;i++)boxes[i].ck=st.id+':'+it.id}
+function cook3g(st,it){var x0=st.x+it.x,x1=x0+it.w,y=st.t+st.e,n0=boxes.length,tri=cookTri(it),P=cookB(st,it),nb=P.length;BH(boxes,rr2(x0,x1,it.y,it.y+it.d,14,4),y,y+5,'#141619');B(boxes,x0+6,x1-6,y+5,y+5.3,it.y+6,it.y+8,'#3a3f46');
  P.forEach(function(q,i){var big=tri&&i===4,R=big?62:46;BH(boxes,circ(q[0],q[1],R,20),y+5,y+6,'#2b2e33');BH(boxes,circ(q[0],q[1],R*.62,16),y+6,y+11,'#5b6169');BH(boxes,circ(q[0],q[1],R*.45,14),y+11,y+13,'#1f2125');if(big){BH(boxes,circ(q[0],q[1],R*.3,12),y+13,y+15,'#5b6169');BH(boxes,circ(q[0],q[1],R*.18,10),y+15,y+16,'#1f2125')}
   var g=big?118:Math.min(100,it.w/(nb===5?5.2:4.3)),gy0=y+13,gy1=y+20,c='#1d1f23';B(boxes,q[0]-g,q[0]+g,gy0,gy1,q[1]-g,q[1]-g+7,c);B(boxes,q[0]-g,q[0]+g,gy0,gy1,q[1]+g-7,q[1]+g,c);B(boxes,q[0]-g,q[0]-g+7,gy0,gy1,q[1]-g,q[1]+g,c);B(boxes,q[0]+g-7,q[0]+g,gy0,gy1,q[1]-g,q[1]+g,c);
   [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){var a=R*.35,b2=g;B(boxes,d[0]?Math.min(q[0]+d[0]*a,q[0]+d[0]*b2):q[0]-3,d[0]?Math.max(q[0]+d[0]*a,q[0]+d[0]*b2):q[0]+3,gy0+1,gy1,d[1]?Math.min(q[1]+d[1]*a,q[1]+d[1]*b2):q[1]-3,d[1]?Math.max(q[1]+d[1]*a,q[1]+d[1]*b2):q[1]+3,c)})});
@@ -2999,6 +3010,7 @@ function fxKick(){if(FXRUN||!glOK)return;FXRUN=1;var last=0;function f(now){if(M
 function fxBoxes(now){var A=[],G=function(o){var b=A[A.length-1];b.em=1;b.nol=1;return b};
  Object.keys(FIRE).forEach(function(k){var F=FIRE[k];if(!F)return;var q=k.split(':'),st=S.stones.filter(function(s){return s.id==q[0]})[0],it=st&&(st.items||[]).filter(function(i){return i.id==q[1]})[0];if(!st||!it||S.env==='livre'){delete FIRE[k];return}
   var sc=F.off?1-(now-F.off)/260:Math.min(1,(now-F.t0)/380);if(sc<=0){delete FIRE[k];return}var bi=+q[2],p=cookB(st,it)[bi],y0=st.t+st.e+9,pan=it.pan&&(bi===0||bi===3);if(!p)return;
+  if(cookInd(it)){var yi=st.t+st.e+5.6,R=bi%3===0?95:78;for(var g=0;g<3;g++){BH(A,circ(p[0],p[1],R*(.95-g*.28)+2*Math.sin(now*.006+g),24),yi+g*.2,yi+g*.2+.3,g===1?'#ff7a3c':'#ff3b1f',(.75-g*.15)*sc);G()}return}
   if(pan){var rr=bi===0?104:124;BH(A,circ(p[0],p[1],rr+6+3*Math.sin(now*.02+bi),20),y0-3,y0+1,'#3d7dff',.5*sc);G();
    if(bi===0&&now-F.t0>1200)for(var s=0;s<5;s++){var lf=((now*.00055)+s/5)%1,yy=y0+3+140+6+20+lf*360,r=28+lf*80;BH(A,circ(p[0]+Math.sin(lf*6+s)*25,p[1]+Math.cos(lf*5+s)*15,r,12),yy,yy+r*.7,'#ffffff',.2*(1-lf)*sc);G()}}
   else for(var i=0;i<12;i++){var th=i/12*Math.PI*2,ux=Math.cos(th),uz=Math.sin(th),r0=30,h=(24+8*Math.sin(now*.013+i*1.9)+5*Math.sin(now*.029+i*.7))*sc,bx=p[0]+ux*r0,bz=p[1]+uz*r0,tx=-uz*5,tz=ux*5,ap=[p[0]+ux*(r0+5*sc),y0+h,p[1]+uz*(r0+5*sc)];
@@ -3511,7 +3523,7 @@ var microF_k=microF;microF=function(x0,x1,y0,y1,z,emb){var n0=boxes.length;micro
 /* fogão de piso e de embutir: mesa com bocas e grades, painel com botões, forno embaixo (a porta abre) */
 function fogBocas(n,x0,x1,z0,z1){var P=[],cols=n<=2?2:n===4?2:3,rows=n<=2?1:2,i;for(var r=0;r<rows;r++)for(var c=0;c<cols;c++)P.push([x0+(x1-x0)*(c+.5)/cols,z0+(z1-z0)*(rows===1?.5:(r+.5)/rows)]);if(n===5)P=[[x0+(x1-x0)*.22,z0+(z1-z0)*.28],[x0+(x1-x0)*.22,z0+(z1-z0)*.74],[x0+(x1-x0)*.5,z0+(z1-z0)*.5],[x0+(x1-x0)*.78,z0+(z1-z0)*.28],[x0+(x1-x0)*.78,z0+(z1-z0)*.74]];return P.slice(0,n)}
 function fogaoN(f){var m=String(f.nome||'').match(/(\d)\s*bocas/i);return m?+m[1]:4}
-function fogao3(f,z0){var x0=f.x,x1=x0+f.w,w=f.w,y0=f.b||0,y1=y0+f.h,D=z0+(f.d||600),n=fogaoN(f),emb=/embutir/i.test(f.nome||''),vid=/vidro|mesa de vidro/i.test(f.nome||''),yt=y1-30;
+function fogao3(f,z0){var x0=f.x,x1=x0+f.w,w=f.w,y0=f.b||0,D=z0+(f.d||600),n=fogaoN(f),emb=/embutir/i.test(f.nome||''),y1=y0+f.h-(f.tot&&!emb?70:0),vid=/vidro|mesa de vidro/i.test(f.nome||''),yt=y1-30;
  var hpF=Math.min(110,(yt-y0-95)*.18);bx(x0+4,x0+24,y0+90,yt,z0,D-20,INOX2);bx(x1-24,x1-4,y0+90,yt,z0,D-20,INOX2);bx(x0+24,x1-24,y0+90,yt,z0,z0+20,INOX2);bx(x0+24,x1-24,yt-hpF-3,yt,z0,D-20,INOX2);bx(x0+24,x1-24,y0+90,y0+112,z0,D-20,INOX2);ovCav(x0+30,x1-30,y0+114,yt-hpF-16,z0+20,D-20,ovLit(f.id));bx(x0+30,x1-30,y0,y0+90,z0+40,D-40,'#22262b');
  if(!emb)[[x0+40,z0+60],[x1-40,z0+60],[x0+40,D-70],[x1-40,D-70]].forEach(function(q){bx(q[0]-18,q[0]+18,y0,y0+20,q[1]-18,q[1]+18,'#16181b')});
  fornoF(x0,x1,y0+95,yt,D);
@@ -4195,6 +4207,80 @@ var apA=apAdd;apAdd=function(t,mi){var it=apA(t,mi),D=(typeof roomD==='function'
  else if(t==='airfryer'||(t==='deco'&&!(mm[4]&&mm[4].b!==undefined))){it.b=benchTop();it.y=Math.max(0,Math.round((600-it.d)/2));var st=S.stones&&S.stones[0];it.x=st?Math.round(st.x+Math.max(0,st.w-it.w-200)):200}
  else if(MOBT2.indexOf(t)>=0){it.y=Math.round(Math.max(700,Math.min(D-it.d-200,D/2)));it.x=Math.round(Math.max(0,(S.W-it.w)/2));if(mm[4]&&mm[4].b!==undefined)it.b=mm[4].b}
  if(MOBT2.indexOf(t)>=0||t==='airfryer')delete it.fin;return it};
+})();
+</script>
+<script>
+/* ===== eletros com a medida de fábrica (largura × altura × profundidade em mm, da ficha técnica do fabricante/loja) =====
+   R troca no mesmo lugar da lista o modelo genérico ("medida típica"/"conferir") por um modelo real · A põe modelos reais no fim
+   (o que já está no projeto guarda as próprias medidas, então nada muda no que já foi desenhado) */
+(function(){if(typeof APM==='undefined')return;
+var R=function(t,old,q){var L=APM[t]&&APM[t].m;if(!L)return;for(var i=0;i<L.length;i++)if(L[i][0]===old){L[i]=q;return}};
+var A=function(t,L){if(!APM[t])return;L.forEach(function(q){if(!APM[t].m.some(function(o){return o[0]===q[0]}))APM[t].m.push(q)})};
+/* geladeiras */
+R('geladeira','Frost free 1 porta (compacta)',['Frost free 1 porta 342 L CRB39 (tipo Consul) · 616 × 1700 × 691',616,1700,691]);
+R('geladeira','Duplex frost free (freezer em cima)',['Duplex frost free 375 L BRM45 (tipo Brastemp) · 621 × 1760 × 755',621,1760,755]);
+R('geladeira','Side by side (2 portas lado a lado)',['Side by side 602 L RS65R (tipo Samsung) · 912 × 1780 × 716',912,1780,716]);
+R('geladeira','Inverse (freezer embaixo)',['Inverse 490 L IB54 (tipo Electrolux) · 699 × 1895 × 749',699,1895,749]);
+A('geladeira',[['Frost free 1 porta 322 L RFE39 (tipo Electrolux) · 602 × 1590 × 713',602,1590,713,{fin:'branco'}],
+ ['Duplex frost free 412 L CRM50 (tipo Consul) · 702 × 1745 × 720',702,1745,720,{fin:'branco'}],
+ ['Duplex frost free 474 L TF56S (tipo Electrolux) · 700 × 1890 × 732',700,1890,732,{fin:'inox'}],
+ ['Inverse 447 L BRE57 (tipo Brastemp) · 700 × 1845 × 755',700,1845,755,{fin:'branco'}],
+ ['Inverse 425 L NR-BB53 (tipo Panasonic) · 695 × 1854 × 758',695,1854,758,{fin:'inox'}],
+ ['Side by side 601 L GS65SDN1 (tipo LG) · 912 × 1790 × 738',912,1790,738,{fin:'inox'}],
+ ['French door 3 portas 559 L BRO85 (tipo Brastemp) · 836 × 1857 × 793',836,1857,793,{fin:'inox'}],
+ ['French door 3 portas 579 L DM84X (tipo Electrolux) · 835 × 1900 × 789',835,1900,789,{fin:'inox'}],
+ ['French door 3 portas RF27CG (tipo Samsung) · 908 × 1778 × 748',908,1778,748,{fin:'inox'}]]);
+/* micro-ondas genéricos viram modelos reais */
+R('microondas','20 L de bancada',['Bancada 20 L CMA20 (tipo Consul) · 455 × 264 × 353',455,264,353]);
+R('microondas','30 L de bancada',['Bancada 32 L BMS46 (tipo Brastemp) · 538 × 301 × 391',538,301,391]);
+R('microondas','Embutir 25 L (moldura)',['Embutir 28 L MB38T (tipo Electrolux) · 594 × 373 × 440',594,373,440]);
+/* fornos de embutir (nicho do manual do fabricante) */
+R('forno','Embutir elétrico 60',['Embutir elétrico 60 · 80 L OE8MX (tipo Electrolux) · 595 × 595 × 575 · nicho 560 × 600 × 570',595,595,575]);
+R('forno','Embutir 45 (compacto)',['Embutir 45 compacto · 50 L OE4EH (tipo Electrolux) · 596 × 456 × 613',596,456,613]);
+A('forno',[['Embutir elétrico 60 · 84 L BOA84 (tipo Brastemp) · 600 × 619 × 580 · nicho 610 × 620 × 580',600,619,580],
+ ['Embutir elétrico 60 · 84 L COB84 (tipo Consul) · 600 × 619 × 580 · nicho 610 × 620 × 580',600,619,580],
+ ['Embutir a gás 60 · 80 L OE8GH (tipo Electrolux) · 595 × 596 × 613',595,596,613],
+ ['Embutir a gás 60 · 78 L COA84 (tipo Consul) · 600 × 619 × 580 · nicho 610 × 620 × 580',600,619,580],
+ ['Embutir 45 · forno + micro-ondas 43 L ME4EP (tipo Electrolux) · 595 × 455 × 567 · nicho 560 × 444 × 553',595,455,567]]);
+/* fogões: piso com a altura com a tampa fechada (tot) · embutir com o nicho */
+R('forno','Fogão de piso 2 bocas (compacto) · conferir medidas',['Fogão de piso 4 bocas mesa de vidro FE4GP (tipo Electrolux) · 520 × 968 × 634',520,968,634,{b:0,tot:1,fin:'preto'}]);
+R('forno','Fogão de piso 4 bocas (tipo Electrolux/Consul)',['Fogão de piso 4 bocas CFO4NAR (tipo Consul) · 515 × 960 × 603',515,960,603,{b:0,tot:1}]);
+R('forno','Fogão de piso 5 bocas (tipo Electrolux/Brastemp)',['Fogão de piso 5 bocas BFS5NCR (tipo Brastemp) · 778 × 976 × 681',778,976,681,{b:0,tot:1}]);
+R('forno','Fogão de piso 6 bocas (tipo Brastemp/Electrolux)',['Fogão de piso 6 bocas CFS6NAB (tipo Consul) · 764 × 960 × 635',764,960,635,{b:0,tot:1}]);
+R('forno','Fogão de embutir 4 bocas (fica no vão do módulo)',['Fogão de embutir 4 bocas BYO4EBR (tipo Brastemp) · 510 × 725 × 654 · nicho 510 × 670 × 550',510,725,654,{b:0}]);
+R('forno','Fogão de embutir 5 bocas (fica no vão do módulo)',['Fogão de embutir 5 bocas 76EXR (tipo Electrolux) · 795 × 686 × 707 · nicho 768 × 605 × 597',795,686,707,{b:0}]);
+R('forno','Fogão de embutir 4 bocas mesa de vidro',['Fogão de embutir 5 bocas mesa de vidro BYS5VCR (tipo Brastemp) · 773 × 793 × 674 · nicho 780 × 703 × 562',773,793,674,{b:0,fin:'preto'}]);
+R('forno','Fogão de piso 4 bocas branco',['Fogão de piso 4 bocas branco · medida do CFO4NAR (tipo Consul) · 515 × 960 × 603',515,960,603,{b:0,tot:1,fin:'branco'}]);
+R('forno','Fogão de piso 6 bocas preto',['Fogão de piso 6 bocas Milão (tipo Atlas) · 762 × 886 × 554',762,886,554,{b:0,tot:1,fin:'preto'}]);
+A('forno',[['Fogão de piso 5 bocas duplo forno 76DXR (tipo Electrolux) · 762 × 960 × 680',762,960,680,{b:0,tot:1}]]);
+/* coifas e depuradores (altura: a menor da chaminé regulável) */
+R('coifa','Coifa de parede 60 (chaminé) · medida típica',['Coifa de parede 60 chaminé Fit (tipo Fischer) · 600 × 550 × 470 · altura 550 a 840',600,550,470]);
+R('coifa','Coifa de parede 90 (chaminé) · medida típica',['Coifa de parede 90 chaminé Fit (tipo Fischer) · 900 × 560 × 470 · altura 560 a 850',900,560,470]);
+R('coifa','Coifa de ilha 90 · medida típica',['Coifa de ilha 90 Island (tipo Fischer) · 900 × 990 × 600 · altura 990 a 1280',900,990,600]);
+R('depurador','Depurador Slim 60 (tipo Suggar DPS162)',['Depurador Slim 60 DPS162 (tipo Suggar) · 600 × 85 × 480',600,85,480]);
+R('depurador','Depurador de embutir 60 (tipo Suggar DE62) · conferir',['Depurador de embutir Slim 60 (tipo Fischer) · 600 × 175 × 280',600,175,280]);
+R('depurador','Depurador Slim 80 · conferir medidas',['Depurador Slim 80 DPS182 (tipo Suggar) · 800 × 85 × 480',800,85,480]);
+R('depurador','Depurador Slim 90 · conferir medidas',['Depurador Slim 90 PDR90I (tipo Philco) · 896 × 80 × 509',896,80,509]);
+R('coifa','Coifa inclinada de vidro 80 · medida típica',['Coifa de parede 80 vidro curvo (tipo Nardelli) · 800 × 1000 × 450',800,1000,450]);
+/* lava-louças e air fryer */
+R('lavaloucas','Lava-louças 8 serviços de bancada (tipo Brastemp BLF08) · 51 × 63 × 65',['Lava-louças 8 serviços de bancada BLF08 (tipo Brastemp) · 510 × 630 × 650',510,630,650]);
+R('lavaloucas','Lava-louças 10 serviços slim (tipo Electrolux LS10E) · 49,5 × 84,5 × 60',['Lava-louças 10 serviços slim LS10E (tipo Electrolux) · 495 × 845 × 600',495,845,600]);
+R('lavaloucas','Lava-louças 12 serviços (60 cm) · conferir medidas',['Lava-louças 14 serviços 60 cm BLF14 (tipo Brastemp) · 598 × 845 × 600',598,845,600]);
+R('lavaloucas','Lava-louças 14 serviços (tipo Electrolux LL14X) · 59,8 × 84,5 × 61',['Lava-louças 14 serviços 60 cm LL14X (tipo Electrolux) · 598 × 845 × 610',598,845,610]);
+A('lavaloucas',[['Lava-louças 10 serviços 45 cm LL10X (tipo Electrolux) · 448 × 845 × 610',448,845,610]]);
+A('airfryer',[['Air fryer 5 L EAF50 (tipo Electrolux) · 318 × 351 × 382',318,351,382]]);
+R('airfryer','Air fryer 4 L (tipo Mondial AFN-40) · 36 × 34 × 36',['Air fryer 4 L AFN-40 (tipo Mondial) · 360 × 340 × 360',360,340,360]);
+R('airfryer','Air fryer 5,5 L · conferir medidas',['Air fryer 4,1 L RI9201 (tipo Philips Walita) · 264 × 295 × 360',264,295,360]);
+R('airfryer','Air fryer forno 12 L · conferir medidas',['Air fryer forno 12 L AFON-12L (tipo Mondial) · 320 × 360 × 320',320,360,320]);
+/* TVs: só a tela, sem a base (ficha técnica) */
+R('tv','TV 32"',['TV 32" UN32H5000 (tipo Samsung) · 733 × 439 × 72',733,439,72]);
+R('tv','TV 43"',['TV 43" UN43U8100F (tipo Samsung) · 968 × 561 × 60',968,561,60]);
+R('tv','TV 50"',['TV 50" UN50U8600F (tipo Samsung) · 1120 × 647 × 60',1120,647,60]);
+R('tv','TV 55"',['TV 55" 55UA8550 (tipo LG) · 1236 × 718 × 68',1236,718,68]);
+R('tv','TV 65"',['TV 65" UN65U8100F (tipo Samsung) · 1453 × 834 × 61',1453,834,61]);
+/* fogão de embutir: a mesa fica na altura da bancada (o corpo entra no vão do módulo) */
+var apF=apAdd;apAdd=function(t,mi){var it=apF(t,mi);if(it&&t==='forno'&&/fog[aã]o de embutir/i.test(it.nome||'')){var bt=(typeof window.benchTop==='function'?window.benchTop():(S.stT||820)+40);it.b=Math.max(0,Math.round(bt-it.h))}return it};
+try{catAp()}catch(_){}
 })();
 </script>
 <script>

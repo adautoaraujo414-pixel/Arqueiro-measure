@@ -18,6 +18,10 @@ on:
         description: 'Mac do GitHub (vazio = macos-26; use macos-15 ou macos-15-intel quando faltar macos-26)'
         type: string
         default: ''
+      rapido:
+        description: 'Rápido: sem capturas de tela e sem os testes da assinatura (pra Mac lento ou fila cheia) · mantém as capturas que já estão na App Store'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -25,7 +29,7 @@ permissions:
 jobs:
   ios:
     runs-on: ${{ inputs.mac || 'macos-26' }}
-    timeout-minutes: 60
+    timeout-minutes: ${{ inputs.rapido && 120 || 60 }}
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
@@ -88,7 +92,7 @@ jobs:
 
       - name: Capturas de tela (iPhone 6,9" e iPad 13")
         # roda mesmo se um teste do editor estourar o tempo no simulador lento (o app já foi compilado)
-        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' }}
+        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' && !inputs.rapido }}
         run: |
           cd ios
           APP=$(ls -d build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app)
@@ -96,7 +100,7 @@ jobs:
 
       - name: Capturas não podem sair vazias (tela que não carregou)
         # roda mesmo se um teste do editor estourar o tempo no simulador lento (o app já foi compilado)
-        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' }}
+        if: ${{ !cancelled() && steps.build_tests.outcome != 'skipped' && !inputs.rapido }}
         run: |
           set -o pipefail
           cd ios
@@ -106,7 +110,7 @@ jobs:
       # então estes testes rodam num simulador iOS até 26.2 (se não tiver no runner, baixa o iOS 26.1).
       - name: Testes da assinatura (StoreKit) num iOS até 26.2
         id: storekit
-        if: always() && steps.build_tests.outcome != 'skipped'
+        if: always() && steps.build_tests.outcome != 'skipped' && !inputs.rapido
         timeout-minutes: 40
         run: |
           cd ios && mkdir -p build
@@ -141,7 +145,8 @@ jobs:
           exit $RC
 
       - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados
-        if: always() && github.event_name != 'pull_request'
+        # no modo rápido não tem capturas novas: não mexe no ramo (as capturas da App Store continuam as de antes)
+        if: always() && github.event_name != 'pull_request' && !inputs.rapido
         run: |
           cd ios
           OUT=$(mktemp -d)

@@ -14,13 +14,17 @@ on:
         description: 'Ramo ou commit do app a enviar (vazio = feature/arque-measure-kotlin, a versão mais nova)'
         type: string
         default: ''
+      mac:
+        description: 'Mac do GitHub (vazio = macos-26; use macos-15 ou macos-15-intel quando faltar macos-26)'
+        type: string
+        default: ''
 
 permissions:
   contents: write
 
 jobs:
   ios:
-    runs-on: macos-26
+    runs-on: ${{ inputs.mac || 'macos-26' }}
     timeout-minutes: 60
     steps:
       - name: Baixar código
@@ -35,7 +39,9 @@ jobs:
           [ -n "$X" ] || X=/Applications/Xcode.app
           sudo xcode-select -s "$X/Contents/Developer"
           xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-version
+          SDK=$(xcrun --sdk iphoneos --show-sdk-version); echo "SDK iOS $SDK"
+          # a App Store só aceita SDK 26 ou mais novo: em outro Mac sem Xcode 26 para aqui antes de gastar tempo
+          if [ "${{ inputs.testflight }}" = "true" ] && [ "${SDK%%.*}" -lt 26 ]; then echo "::error::Esse Mac não tem o Xcode 26 (SDK $SDK)"; exit 1; fi
 
       - name: Conferência App Store (o que mais dá recusa na revisão)
         run: |

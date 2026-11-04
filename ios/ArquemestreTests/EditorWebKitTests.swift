@@ -628,6 +628,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Abrir a porta não muda a cor de nada: tamponamento, engrosso e réguas seguem a cor das portas (pintadas pelo pincel) com a porta fechada,
+    /// abrindo e fechando de novo · no plano de corte também · tocar na fita de topo abre o diálogo pela fita e, pintando uma, pergunta pelas outras
+    func testAcabamentoNaoMudaAoAbrirPortaEFitaPeloToque() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          newTpl(4);var m=S.mods[0];m.v=[{k:'door',n:1,cava:true,bas:true,bd:'up',open:0}];m.tb=true;m.regua=true;m.regN=2;m.regMm=70;m.tl=true;m.tlW=30;m.tlM=1;S.m=m;draw();panel();
+          var jat=MAT.filter(function(c){return /jatob/i.test(c.n)})[0];m.pcT={Porta:{c:jat.hex,n:matLabel(jat),id:jat.id}};
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var col=function(){var o={};__boxes().forEach(function(b){if(!/^0:(Tamponamento|Engrosso|Porta)/.test(b.nm)||b.ft)return;var nm=String(b.nm).split(':')[1].replace(/#\d+$/,'');var hx='#'+b.c.slice(0,3).map(function(n){return ('0'+Math.round(n).toString(16)).slice(-2)}).join('');o[nm]=o[nm]||{};o[nm][hx+'|'+(b.mid||'-')]=1});var r={};Object.keys(o).forEach(function(k){r[k]=Object.keys(o[k]).join(',')});return r};
+          var closed=col();m.v[0].open=1;window.anim3();await new Promise(function(r){setTimeout(r,1600)});var opened=col();m.v[0].open=0;window.anim3();await new Promise(function(r){setTimeout(r,1600)});var closed2=col();
+          var cl=cutLines(m).filter(function(l){return /^(Tamponamento|Engrosso)/.test((l.names||[])[0]||'')}).map(function(l){return l.fin+':'+(l.colN||'-')});
+          pt3(true);window.PT3={c:jat.hex,n:matLabel(jat),id:jat.id,erase:false};var fb=__boxes().filter(function(b){return b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(fb);
+          var q=document.getElementById('pt3q'),title=q.textContent.replace(/\s+/g,' ').slice(0,90),order=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq}),pv=__pt3state().pv;
+          q.querySelector('[data-ptq="fita"]').click();var more=q.hidden?'hidden':q.textContent.replace(/\s+/g,' ').slice(0,40),pf1=m.pf['Lateral esquerda#1'].id;
+          q.querySelector('[data-ptq="fitaAll"]').click();var pfAll=S.mods.map(function(q){return (q.pfM&&q.pfM.id)||'-'}).join(','),pfGone=m.pf===undefined,hid=q.hidden;
+          pt3(false);document.getElementById('v3x').click();
+          return JSON.stringify({closed:closed,opened:opened,closed2:closed2,cl:cl,title:title,order:order,pvFita:pv.fita,more:more,pf1:pf1,pfAll:pfAll,pfGone:pfGone,hid:hid,errs:__errs});
+          """#)
+        let jat = "#623516|arauco-jatoba-brasileiro-trend"
+        for st in ["closed", "opened", "closed2"] {
+            let c = o[st] as? [String: String] ?? [:]
+            XCTAssertEqual(c["Tamponamento de baixo"], jat, "\(st): tamponamento na cor das portas pintadas, com a textura")
+            XCTAssertEqual(c["Tamponamento esquerdo"], jat, st)
+            XCTAssertEqual(c["Engrosso cava · régua da frente 1"], jat, "\(st): régua do engrosso cava na cor das portas")
+            XCTAssertTrue((c["Porta"] ?? "").hasPrefix(jat), "\(st): porta pintada")
+        }
+        XCTAssertEqual(o["cl"] as? [String], ["c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend"], "plano de corte: tamponamentos e réguas na cor das portas pintadas")
+        XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
+        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "one", "type", "typeAll", "mod"], "tocando na fita, as opções de fita vêm primeiro")
+        XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
+        XCTAssertTrue((o["more"] as? String ?? "").hasPrefix("Pintar as outras fitas de topo"), "depois de pintar uma fita pergunta pelas outras: \(o["more"] ?? "")")
+        XCTAssertEqual(o["pf1"] as? String, "arauco-jatoba-brasileiro-trend")
+        XCTAssertEqual(o["pfAll"] as? String, "arauco-jatoba-brasileiro-trend", "fitas de todos os módulos")
+        XCTAssertEqual(o["pfGone"] as? Bool, true, "a pintura por fita sai quando pinta o módulo inteiro")
+        XCTAssertEqual(o["hid"] as? Bool, true, "diálogo fecha depois de responder")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

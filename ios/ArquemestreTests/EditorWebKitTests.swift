@@ -350,7 +350,11 @@ final class EditorWebKitTests: XCTestCase {
           var base=pcs.filter(function(p){return /Chapa base/.test(p.name)}),ripas=pcs.filter(function(p){return /^Ripa /.test(p.name)});
           open3D();var B=__boxes();var b3=B.filter(function(b){return b.rpid===ra.id&&Math.abs((b.z1-b.z0)-6)<0.01}).length;
           S.env='cozinha';newTpl(4);var m=S.mods[0];m.x=5;m.d=350;S.pw={ate:'movel',tipo:'ripado'};pwGenerateWall('e');var wl=S.rp.filter(function(a){return a.wall==='e'})[0];
-          return JSON.stringify({seams:L.seams.join(','),nBase:base.length,baseW:base.map(function(p){return p.L+'x'+p.W}).join(','),ripas:ripas.reduce(function(s,p){return s+p.qty},0),n:L.n,big:big,b3:b3,wallW:wl?wl.w:null,wallRip:wl?!wl.liso:null,front:pwFront('e'),errs:__errs});
+          /* localizar no 3D: a placa 2 da base e as ripas têm origem no plano e ficam em rosa */
+          var G=cutGroups(),gb=G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Chapa base do ripado/.test(g.names[0])}),src2=srcStr([].concat.apply([],gb[1].src)),srcR=srcStr([].concat.apply([],G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Ripa /.test(g.names[0])})[0].src));
+          show3D(src2,'Chapa base');await new Promise(function(r){setTimeout(r,250)});var pink=function(){return __boxes().filter(function(b){return b.rpid===ra.id&&b.c[0]===227&&b.c[1]===25&&b.c[2]===123}).map(function(b){return b.rpart})};var pink2=pink();
+          show3D(srcR,'Ripa');await new Promise(function(r){setTimeout(r,250)});var pr=pink(),pinkR=pr.length+':'+pr.filter(function(v,i,a){return a.indexOf(v)===i}).join();document.getElementById('v3x').click();
+          return JSON.stringify({seams:L.seams.join(','),nBase:base.length,baseW:base.map(function(p){return p.L+'x'+p.W}).join(','),ripas:ripas.reduce(function(s,p){return s+p.qty},0),n:L.n,big:big,b3:b3,wallW:wl?wl.w:null,wallRip:wl?!wl.liso:null,front:pwFront('e'),src2:src2,pink2:pink2,pinkR:pinkR,errs:__errs});
           """#)
         XCTAssertEqual(o["seams"] as? String, "1820,3640", "emendas da chapa base pela chapa útil (1840 − 2×10 de refilo)")
         XCTAssertEqual(o["nBase"] as? Int, 3, "chapa base dividida em 3 placas")
@@ -358,6 +362,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ripas"] as? Int, o["n"] as? Int, "todas as ripas entram no plano otimizado")
         XCTAssertEqual(o["big"] as? Int, 0, "nenhuma peça fora da chapa")
         XCTAssertEqual(o["b3"] as? Int, 3, "3D mostra as 3 placas da base")
+        XCTAssertTrue((o["src2"] as? String ?? "").hasPrefix("rp|") && (o["src2"] as? String ?? "").hasSuffix("|base2"), "placa da base tem origem pro 3D: \(o["src2"] ?? "")")
+        XCTAssertEqual(o["pink2"] as? [String], ["base2"], "localizar a placa 2: só ela em rosa no 3D")
+        XCTAssertEqual(o["pinkR"] as? String, "\(o["n"] as? Int ?? -1):ripa", "localizar as ripas: todas em rosa, só elas")
         XCTAssertEqual(o["wallRip"] as? Bool, true, "parede lateral pode ser ripado")
         XCTAssertEqual((o["wallW"] as? Double ?? 0), (o["front"] as? Double ?? 0) - 50, accuracy: 0.6, "painel lateral vai até 50 mm antes da frente do móvel")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")

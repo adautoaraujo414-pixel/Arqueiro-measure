@@ -720,6 +720,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Eletros vivos: forno embutido no módulo e na torre abre com 1 toque (forno e micro-ondas separados), porta com vidro transparente
+    /// mostrando a cavidade (guias, grade, assadeira, lâmpada), luz acende ao abrir ou pelo 💡 · coifa liga luz e motor · TV liga
+    func testEletrosVivosFornoMicroCoifaETV() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2600;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Torre forno + micro-ondas (embutir)'));draw();['forno','coifa','tv'].forEach(function(t){apAdd(t,0)});draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var ov=__boxes().filter(function(b){return /^0:Corte do forno/.test(b.nm)}),mc=__boxes().filter(function(b){return /^0:Corte do micro/.test(b.nm)});
+          var glassOv=ov.filter(function(b){return b.gl&&b.a<.6}).length,glassMc=mc.filter(function(b){return b.gl&&b.a<.6}).length,emClosed=ov.filter(function(b){return b.em}).length;
+          ele3api.toggle('mo0|0',true);await new Promise(function(r){setTimeout(r,1800)});
+          var ov2=__boxes().filter(function(b){return /^0:Corte do forno/.test(b.nm)}),openOv=ele3api.ang('mo0|0'),micStill=ele3api.ang('mo0|0m')||0,litOv=ele3api.ovLit('mo0|0'),emOpen=ov2.filter(function(b){return b.em}).length,rot=ov2.filter(function(b){return b.pf}).length;
+          var tvf=S.fr.filter(function(f){return f.t==='tv'})[0],cof=S.fr.filter(function(f){return f.t==='coifa'})[0],fo=S.fr.filter(function(f){return f.t==='forno'})[0];
+          var emOf=function(f){return __boxes().filter(function(b){return b.em&&b.x0>=f.x-5&&b.x1<=f.x+f.w+5&&b.y0>=(f.b||0)-500&&b.y1<=(f.b||0)+f.h+5}).length};
+          var e0={tv:emOf(tvf),co:emOf(cof)};ele3api.luz(tvf.id,1);ele3api.luz(cof.id,1);var e1={tv:emOf(tvf),co:emOf(cof)};
+          fx3api.open({k:'fr',id:fo.id});var btns=[].map.call(document.querySelectorAll('[data-qfro],[data-qluz]'),function(b){return b.textContent});
+          document.getElementById('v3x').click();
+          return JSON.stringify({glassOv:glassOv,glassMc:glassMc,emClosed:emClosed,openOv:openOv,micStill:micStill,litOv:litOv,emOpen:emOpen,rot:rot,e0:e0,e1:e1,btns:btns,errs:__errs});
+          """#)
+        XCTAssertGreaterThanOrEqual(o["glassOv"] as? Int ?? 0, 1, "porta do forno com vidro transparente")
+        XCTAssertGreaterThanOrEqual(o["glassMc"] as? Int ?? 0, 1, "janela do micro-ondas transparente")
+        XCTAssertEqual(o["openOv"] as? Double, 1, "forno do módulo abre")
+        XCTAssertEqual(o["micStill"] as? Double, 0, "micro-ondas da torre não abre junto com o forno")
+        XCTAssertEqual(o["litOv"] as? Bool, true, "abriu: a luz de dentro acende")
+        XCTAssertGreaterThan(o["emOpen"] as? Int ?? 0, o["emClosed"] as? Int ?? 0, "luz acesa = mais pontos de luz")
+        XCTAssertGreaterThan(o["rot"] as? Int ?? 0, 3, "porta girou pra baixo")
+        let e0 = o["e0"] as? [String: Int] ?? [:], e1 = o["e1"] as? [String: Int] ?? [:]
+        XCTAssertGreaterThan(e1["tv"] ?? 0, e0["tv"] ?? 0, "TV liga a tela")
+        XCTAssertGreaterThan(e1["co"] ?? 0, e0["co"] ?? 0, "coifa liga a luz")
+        XCTAssertEqual(o["btns"] as? [String], ["💡 Acender a luz de dentro", "🚪 Abrir o forno"], "quadro do forno: luz e porta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

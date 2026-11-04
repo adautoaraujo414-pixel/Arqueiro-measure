@@ -664,7 +664,7 @@ final class EditorWebKitTests: XCTestCase {
         }
         XCTAssertEqual(o["cl"] as? [String], ["c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend"], "plano de corte: tamponamentos e réguas na cor das portas pintadas")
         XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
-        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "one", "type", "typeAll", "mod"], "tocando na fita, as opções de fita vêm primeiro")
+        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
         XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
         XCTAssertTrue((o["more"] as? String ?? "").hasPrefix("Pintar as outras fitas de topo"), "depois de pintar uma fita pergunta pelas outras: \(o["more"] ?? "")")
         XCTAssertEqual(o["pf1"] as? String, "arauco-jatoba-brasileiro-trend")
@@ -797,6 +797,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue(o["isx1"] is NSNull || o["isx1"] == nil, "toque na boca não seleciona o cooktop")
         XCTAssertEqual(o["lit"] as? Int, 1, "só a boca tocada acende")
         XCTAssertEqual(o["isx2"] as? String, "cook", "toque no vidro fora das bocas abre o quadro do cooktop")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Fita uma por uma, com toque de verdade: base, prateleira, tirar a pintura de uma fita só, fita branca numa peça só,
+    /// a fita tocada fica destacada em laranja e, se a cor for a mesma, avisa que já estava (acompanha as portas)
+    func testFitaUmaPorUmaPrateleiraTirarEBranca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};newTpl(tpl('Aéreo 2 portas'));newTpl(tpl('Aéreo 2 portas'));var m=S.mods[1];m.shv=[0.5];S.m=m;draw();
+          var pf=MAT.filter(function(c){return /pau ferro/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];S.mods.forEach(function(q){q.pcT={Porta:{c:pf.hex,n:matLabel(pf),id:pf.id}}});
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();pt3(true);
+          var fb=function(re){return __boxes().filter(function(b){return b.ft&&re.test(b.nm)})[0]},col=function(re){var b=fb(re);return b.c.slice(0,3).join()+'|'+(b.mid||'-')},Q=function(){return document.getElementById('pt3q')},pick=function(k){Q().querySelector('[data-ptq="'+k+'"]').click();if(!Q().hidden){var x=Q().querySelector('[data-ptq="x"]');if(x)x.click()}};
+          var shelf0=col(/^1:Prateleira solta/);
+          window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};__pt3tapBox(fb(/^1:Base inferior/));var now1=(Q().textContent.match(/Fita agora: (.*?)Só a fita/)||['',''])[1];pick('fita');var base1=col(/^1:Base inferior/);
+          __pt3tapBox(fb(/^1:Prateleira solta/));pick('fita');var shelf1=col(/^1:Prateleira solta/);
+          __pt3tapBox(fb(/^1:Base inferior/));var hasOff=!!Q().querySelector('[data-ptq="fitaOff"]');pick('fitaOff');var base2=col(/^1:Base inferior/);
+          __pt3tapBox(fb(/^1:Lateral esquerda/));pick('fitaW');var lat=col(/^1:Lateral esquerda/),latOther=col(/^1:Lateral direita/);
+          window.PT3={c:pf.hex,n:matLabel(pf),id:pf.id,erase:false};__pt3tapBox(fb(/^1:Base superior/));var hl=fb(/^1:Base superior/).c.slice(0,3).join();pick('fita');var msg=(document.getElementById('amsg')||{}).textContent||'';
+          var cut=cutLines(m).filter(function(l){return /^(Prateleira solta|Lateral esquerda)/.test((l.names||[])[0]||'')}).map(function(l){return (l.names||[])[0]+'='+(l.ftN||'-')+'×'+l.qty});
+          pt3(false);document.getElementById('v3x').click();
+          return JSON.stringify({shelf0:shelf0,now1:now1,base1:base1,shelf1:shelf1,hasOff:hasOff,base2:base2,lat:lat,latOther:latOther,hl:hl,msg:msg,cut:cut,errs:__errs});
+          """#)
+        let cz = "113,108,105|duratex-cinza-sagrado-essencial", pfz = "117,69,46|duratex-pau-ferro-natural-essencial-wood"
+        XCTAssertEqual(o["shelf0"] as? String, "244,242,238|-", "prateleira começa com fita branca")
+        XCTAssertEqual(o["now1"] as? String, "Pau Ferro Natural · Duratex Essencial Wood Madeira Leve", "diálogo mostra a cor da fita agora")
+        XCTAssertEqual(o["base1"] as? String, cz, "fita da base pintada")
+        XCTAssertEqual(o["shelf1"] as? String, cz, "fita da prateleira pintada")
+        XCTAssertEqual(o["hasOff"] as? Bool, true, "fita pintada tem a opção de tirar a pintura")
+        XCTAssertEqual(o["base2"] as? String, pfz, "tirar a pintura de uma fita só: volta pra cor das portas")
+        XCTAssertEqual(o["lat"] as? String, "244,242,238|-", "fita branca só na lateral esquerda")
+        XCTAssertEqual(o["latOther"] as? String, pfz, "a outra lateral continua na cor das portas")
+        XCTAssertEqual(o["hl"] as? String, "255,159,26", "mesma cor: a fita tocada fica em laranja pra ver qual foi")
+        XCTAssertTrue((o["msg"] as? String ?? "").hasPrefix("A fita já estava em Pau Ferro"), "\(o["msg"] ?? "")")
+        XCTAssertEqual(o["cut"] as? [String], ["Lateral esquerda=-×1", "Lateral esquerda=Pau Ferro Natural · Duratex Essencial Wood Madeira Leve×1", "Prateleira solta=Cinza Sagrado · Duratex Essencial Acetinada×1"].sorted(), "plano de corte: fita de cada peça")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

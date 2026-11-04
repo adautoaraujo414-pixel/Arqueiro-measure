@@ -852,7 +852,10 @@ final class EditorWebKitTests: XCTestCase {
           f.x=850;f.b=1700;delete f.nicho;fx3api.open({k:'fr',id:f.id});document.querySelector('#it4 [data-qapoia]').click();var apoia={x:f.x,b:f.b};
           f.w=700;fx3api.open({k:'fr',id:f.id});var nao=/não cabe/.test(document.querySelector('#it4').textContent);
           document.getElementById('v3x').click();
-          return JSON.stringify({models:models,msg:msg,emb:emb,zmin:zmin,zmin2:zmin2,apoia:apoia,nao:nao,errs:__errs});
+          /* 2D: arrastou e soltou em cima do módulo → encaixa sozinho e aparece por cima do módulo (dentro do nicho) */
+          f.w=442;delete f.nicho;f.x=1100;f.b=1650;draw();drag={t:'ap',id:f.id,p:{x:0,y:0},x0:f.x,b0:f.b};document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));drag={t:'none'};
+          var drop={x:f.x,b:f.b,nicho:f.nicho},order=[].map.call(document.querySelectorAll('#svg [data-ap], #svg #mod'),function(g){return g.id==='mod'?'mod':'ap'}).join(',');
+          return JSON.stringify({models:models,msg:msg,emb:emb,zmin:zmin,zmin2:zmin2,apoia:apoia,nao:nao,drop:drop,order:order,errs:__errs});
           """#)
         XCTAssertGreaterThanOrEqual(o["models"] as? Int ?? 0, 5, "micro-ondas com medida real no catálogo")
         XCTAssertEqual(o["msg"] as? String, "Nicho 570 × 420 × 350 · micro-ondas 442 × 260 × 366 · sobra 64 de cada lado e 160 em cima", "mostra o nicho e a folga")
@@ -866,6 +869,11 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(ap["x"] as? Int, 850, "só apoiar: não mexe no lado")
         XCTAssertEqual(ap["b"] as? Int, 1515, "só apoiar: desce até a base")
         XCTAssertEqual(o["nao"] as? Bool, true, "avisa quando não cabe")
+        let dr = o["drop"] as? [String: Any] ?? [:]
+        XCTAssertEqual(dr["x"] as? Int, 979, "2D: soltou em cima do módulo, centraliza no vão")
+        XCTAssertEqual(dr["b"] as? Int, 1515, "2D: apoia na base")
+        XCTAssertEqual(dr["nicho"] as? Int, 1)
+        XCTAssertEqual(o["order"] as? String, "mod,ap", "2D: o micro-ondas aparece por cima do módulo (dentro do nicho), não atrás")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

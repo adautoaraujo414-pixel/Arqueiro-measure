@@ -649,10 +649,12 @@ final class EditorWebKitTests: XCTestCase {
           var cl=cutLines(m).filter(function(l){return /^(Tamponamento|Engrosso)/.test((l.names||[])[0]||'')}).map(function(l){return l.fin+':'+(l.colN||'-')});
           pt3(true);window.PT3={c:jat.hex,n:matLabel(jat),id:jat.id,erase:false};var fb=__boxes().filter(function(b){return b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(fb);
           var q=document.getElementById('pt3q'),title=q.textContent.replace(/\s+/g,' ').slice(0,90),order=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq}),pv=__pt3state().pv;
+          q.querySelector('[data-ptq="fita"]').click();var same=(document.getElementById('amsg')||{}).textContent||'';
+          var cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};__pt3tapBox(fb);q=document.getElementById('pt3q');
           q.querySelector('[data-ptq="fita"]').click();var more=q.hidden?'hidden':q.textContent.replace(/\s+/g,' ').slice(0,40),pf1=m.pf['Lateral esquerda#1'].id;
           q.querySelector('[data-ptq="fitaAll"]').click();var pfAll=S.mods.map(function(q){return (q.pfM&&q.pfM.id)||'-'}).join(','),pfGone=m.pf===undefined,hid=q.hidden;
           pt3(false);document.getElementById('v3x').click();
-          return JSON.stringify({closed:closed,opened:opened,closed2:closed2,cl:cl,title:title,order:order,pvFita:pv.fita,more:more,pf1:pf1,pfAll:pfAll,pfGone:pfGone,hid:hid,errs:__errs});
+          return JSON.stringify({closed:closed,opened:opened,closed2:closed2,cl:cl,title:title,order:order,pvFita:pv.fita,same:same,more:more,pf1:pf1,pfAll:pfAll,pfGone:pfGone,hid:hid,errs:__errs});
           """#)
         let jat = "#623516|arauco-jatoba-brasileiro-trend"
         for st in ["closed", "opened", "closed2"] {
@@ -666,9 +668,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
         XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
         XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
+        XCTAssertTrue((o["same"] as? String ?? "").contains("já estava"), "fita já na cor das portas: avisa em vez de repetir: \(o["same"] ?? "")")
         XCTAssertTrue((o["more"] as? String ?? "").hasPrefix("Pintar as outras fitas de topo"), "depois de pintar uma fita pergunta pelas outras: \(o["more"] ?? "")")
-        XCTAssertEqual(o["pf1"] as? String, "arauco-jatoba-brasileiro-trend")
-        XCTAssertEqual(o["pfAll"] as? String, "arauco-jatoba-brasileiro-trend", "fitas de todos os módulos")
+        XCTAssertEqual(o["pf1"] as? String, "duratex-cinza-sagrado-essencial")
+        XCTAssertEqual(o["pfAll"] as? String, "duratex-cinza-sagrado-essencial", "fitas de todos os módulos")
         XCTAssertEqual(o["pfGone"] as? Bool, true, "a pintura por fita sai quando pinta o módulo inteiro")
         XCTAssertEqual(o["hid"] as? Bool, true, "diálogo fecha depois de responder")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
@@ -1160,7 +1163,7 @@ final class EditorWebKitTests: XCTestCase {
           S.m=S.mods[0];window.mz3Open();document.querySelector('#mz3 [data-mz="w|10"]').click();var w=S.mods[0].w,nx=S.mods[1].x;
           window.fx3api.open({k:'mod',mi:2});var ledSup=!!document.querySelector('#it4 [data-qmled]');
           document.getElementById('v3wal').click();document.querySelector('#it4 [data-qwtab="T"]').click();document.querySelector('#it4 [data-qtt="1"]').click();
-          var fi=apModels('forno').findIndex(function(q){return /6 bocas \(tipo/.test(q[0])}),fg=apAdd('forno',fi);window.ele3api.toggle(fg.id,true);
+          var fi=apModels('forno').findIndex(function(q){return /^Fogão de piso 6 bocas/.test(q[0])}),fg=apAdd('forno',fi);window.ele3api.toggle(fg.id,true);
           await new Promise(function(r){setTimeout(r,700)});var ang=window.ele3api.ang(fg.id);
           window.pux3api.open(0);document.querySelector('#it4 [data-pxt="bola"]').click();window.pux3api.set(60,120);var px=S.mods[0].v[0].px;
           var bq=apAdd('banqueta',1);

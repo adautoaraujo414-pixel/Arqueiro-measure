@@ -835,6 +835,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Micro-ondas no nicho do armário: medidas reais no catálogo, encaixar (centraliza no vão, apoia na base, frente rente à caixa),
+    /// só apoiar na base e o aviso de folga / não cabe
+    func testMicroondasEncaixaNoNichoComMedidaReal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Aéreo nicho aberto'));var m=S.mods[0];m.x=900;m.w=600;m.h=450;m.b=1500;m.d=350;m.v=[{k:'shelves',n:0}];S.m=m;draw();
+          apAdd('microondas',0);var f=S.fr[S.fr.length-1];var models=APM.microondas.m.map(function(q){return q[0]}).filter(function(n){return /tipo /.test(n)}).length;
+          var q=APM.microondas.m.filter(function(q){return /NN-ST25/.test(q[0])})[0];f.w=q[1];f.h=q[2];f.d=q[3];f.nome=q[0];f.x=1000;f.b=1600;draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});fx3api.open({k:'fr',id:f.id});var msg=(document.querySelector('#it4').textContent.match(/Nicho [^·]*· [^·]*·[^·]*/)||[''])[0].trim();
+          document.querySelector('#it4 [data-qnicho="1"]').click();var emb={x:f.x,b:f.b,nicho:f.nicho};
+          var zs=__boxes().filter(function(b){return b.x0>=f.x-1&&b.x1<=f.x+f.w+1&&b.y0>=f.b-1&&b.y1<=f.b+f.h+2&&!/^0:/.test(String(b.nm||''))}),zmin=Math.round(Math.min.apply(null,zs.map(function(b){return b.z0})));
+          f.d=300;__build();var zs2=__boxes().filter(function(b){return b.x0>=f.x-1&&b.x1<=f.x+f.w+1&&b.y0>=f.b-1&&b.y1<=f.b+f.h+2&&!/^0:/.test(String(b.nm||''))}),zmin2=Math.round(Math.min.apply(null,zs2.map(function(b){return b.z0})));
+          f.x=850;f.b=1700;delete f.nicho;fx3api.open({k:'fr',id:f.id});document.querySelector('#it4 [data-qapoia]').click();var apoia={x:f.x,b:f.b};
+          f.w=700;fx3api.open({k:'fr',id:f.id});var nao=/não cabe/.test(document.querySelector('#it4').textContent);
+          document.getElementById('v3x').click();
+          return JSON.stringify({models:models,msg:msg,emb:emb,zmin:zmin,zmin2:zmin2,apoia:apoia,nao:nao,errs:__errs});
+          """#)
+        XCTAssertGreaterThanOrEqual(o["models"] as? Int ?? 0, 5, "micro-ondas com medida real no catálogo")
+        XCTAssertEqual(o["msg"] as? String, "Nicho 570 × 420 × 350 · micro-ondas 442 × 260 × 366 · sobra 64 de cada lado e 160 em cima", "mostra o nicho e a folga")
+        let emb = o["emb"] as? [String: Any] ?? [:]
+        XCTAssertEqual(emb["x"] as? Int, 979, "centralizado no vão (915..1485)")
+        XCTAssertEqual(emb["b"] as? Int, 1515, "apoiado na base do armário (1500 + 15)")
+        XCTAssertEqual(emb["nicho"] as? Int, 1)
+        XCTAssertEqual(o["zmin"] as? Int, 0, "mais fundo que o nicho (366 > 350): encosta no fundo e sobra pra frente")
+        XCTAssertEqual(o["zmin2"] as? Int, 48, "300 de fundo: entra até ficar com a frente rente à caixa (350 − 300 − 2)")
+        let ap = o["apoia"] as? [String: Any] ?? [:]
+        XCTAssertEqual(ap["x"] as? Int, 850, "só apoiar: não mexe no lado")
+        XCTAssertEqual(ap["b"] as? Int, 1515, "só apoiar: desce até a base")
+        XCTAssertEqual(o["nao"] as? Bool, true, "avisa quando não cabe")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

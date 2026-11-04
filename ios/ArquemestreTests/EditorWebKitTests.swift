@@ -444,6 +444,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Tamponamento total = moldura de 4 réguas de 80 (frente, trás e as duas pontas) no 3D e no corte · cor amadeirada com veio no 3D e nas bolinhas ·
+    /// 🖌 Pintar no 3D: pinta só a peça tocada (3D, 2D e plano de corte NA COR), por tipo, e tira · opção de desligar o tamponamento automático
+    func testMolduraDoTamponamentoVeioDaMadeiraPincelEAutoTamponamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.w=1400;m.x=500;m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;m.corF='#b98d5b';m.corFN='Carvalho Hanover';S.m=m;draw();open3D();
+          var B=__boxes(),eng=B.filter(function(b){return /Tamponamento esquerdo · engrosso 80#/.test(String(b.pk||''))}).map(function(b){return String(b.pk).replace(/^.*#/,'')+':'+[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].map(Math.round).join('x')}).sort().join(',');
+          var cl=cutLines(m).filter(function(l){return /engrosso/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+'x'+l.qty}).join(',');
+          var tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
+          var sw=/url\(data:image/.test(swRow('corF',''))&&!/sem textura/.test(swRow('corF',''));
+          pt3(true);var on=__pt3state().on&&!document.getElementById('pt3').hidden&&document.querySelectorAll('#pt3 [data-ptc]').length>=20;
+          window.PT3={c:'#6b4a2f',n:'Nogueira',erase:false};__pt3pick(0,'Fundo#1','one');
+          var fb=__boxes().filter(function(b){return /^0:Fundo$/.test(String(b.nm))})[0],fc=fb?fb.c.join()+'/'+__matTx(fb):'';
+          var fl=cutLines(m).filter(function(l){return /^Fundo/.test((l.names||[])[0]||'')}).map(function(l){return l.fin+':'+(l.names||[]).join('/')}).join(',');
+                    __pt3pick(0,'Porta#1','type');var fp=partsOf(m).filter(function(p){return p.name==='Porta'})[0];paintCol(m,fp);var f2=fp.col;var pt=m.pcT&&m.pcT.Porta&&m.pcT.Porta.n,pb=__boxes().filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return b.c.join()}).join(',');
+          window.PT3={c:'',n:'Tirar',erase:true};__pt3pick(0,'Fundo#1','one');var fb2=__boxes().filter(function(b){return /^0:Fundo$/.test(String(b.nm))})[0],fc2=fb2?fb2.c.join():'';
+          pt3(false);var off=!__pt3state().on&&document.getElementById('pt3').hidden;document.getElementById('v3x').click();
+          S.mods=[];newTpl(3);var a=S.mods[0];a.x=800;draw();var at1=[!!a.tl,!!a.tr,!!a.tlAuto].join();var s=STD();s.autoTamp=0;prSave();draw();var at0=[!!a.tl,!!a.tr].join();s.autoTamp=1;prSave();draw();var at2=[!!a.tl,!!a.tr].join();
+          document.getElementById('prb').click();var chips=document.querySelectorAll('#stdm [data-std="autoTamp"]').length;document.getElementById('stdm').hidden=true;
+          return JSON.stringify({eng:eng,cl:cl,tx:tx,sw:sw,on:on,fc:fc,fl:fl,f2:f2,pt:pt,pb:pb,fc2:fc2,off:off,at1:at1,at0:at0,at2:at2,chips:chips,errs:__errs});
+          """#)
+        XCTAssertEqual(o["eng"] as? String, "1:15x720x80,2:15x720x80,3:15x80x431,4:15x80x431", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (591 − 160 = 431)")
+        XCTAssertEqual(o["cl"] as? String, "720x80x4,431x80x4", "corte: 2 réguas no comprimento + 2 nas pontas, por lado")
+        XCTAssertEqual(o["tx"] as? String, "5,5", "portas na cor amadeirada ganham veio no 3D")
+        XCTAssertEqual(o["sw"] as? Bool, true, "bolinhas amadeiradas mostram o veio")
+        XCTAssertEqual(o["on"] as? Bool, true, "🖌 Pintar abre a paleta com todas as cores")
+        XCTAssertEqual(o["fc"] as? String, "107,74,47/5", "fundo pintado de Nogueira no 3D, com veio")
+        XCTAssertEqual(o["fl"] as? String, "c:Fundo · Nogueira", "plano de corte: fundo pintado vira NA COR com o nome da cor")
+        XCTAssertEqual(o["f2"] as? String, "#6b4a2f", "2D: porta pintada (paintCol)")
+        XCTAssertEqual(o["pt"] as? String, "Nogueira", "por tipo: todas as portas do módulo")
+        XCTAssertEqual(o["pb"] as? String, "107,74,47,107,74,47", "as duas portas pintadas")
+        XCTAssertEqual(o["fc2"] as? String, "244,242,238", "tirar a pintura volta pro branco")
+        XCTAssertEqual(o["off"] as? Bool, true)
+        XCTAssertEqual(o["at1"] as? String, "true,true,true", "ponta exposta ganha tamponamento sozinha")
+        XCTAssertEqual(o["at0"] as? String, "false,false", "automático desligado nos ajustes: tira os automáticos")
+        XCTAssertEqual(o["at2"] as? String, "true,true", "ligando de novo, volta")
+        XCTAssertEqual(o["chips"] as? Int, 2, "opção nos ajustes (seção e assistente)")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

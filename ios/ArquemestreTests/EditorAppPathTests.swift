@@ -98,6 +98,28 @@ final class EditorAppPathTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "erros: \(o["errs"] ?? "")")
     }
 
+    /// Texturas reais dos padrões (cores/<id>.jpg) vêm do pacote do app pelo esquema arque:// e entram no WebGL:
+    /// porta em Louro Freijó (Arauco Trend) fica com a textura (t=7), e a chapa do plano de corte sai com o nome da cor
+    @MainActor
+    func testTexturaRealDoPadraoCarregaPeloEsquemaDoApp() async throws {
+        let (w, _) = try await openLikeTheApp(lang: "pt")
+        let o = try await run(w, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;
+          var lf=MAT.filter(function(c){return c.id==='arauco-louro-freijo-trend'})[0];m.corF=lf.hex;m.corFN=matLabel(lf);m.corFId=lf.id;S.m=m;draw();open3D();
+          var img=await new Promise(function(r){var im=new Image();im.onload=function(){r(im.naturalWidth+'x'+im.naturalHeight)};im.onerror=function(){r('erro')};im.src=matImg(lf.id)});
+          await new Promise(function(r){var t0=Date.now();(function w(){var st=__mtex().join(',');if(/ok/.test(st)||/err/.test(st)||Date.now()-t0>15000)r();else setTimeout(w,100)})()});
+          re3();var B=__boxes(),tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
+          var pl=sheetPlan().groups.filter(function(g){return g.t==='c'}).map(function(g){return g.colN});
+          return JSON.stringify({img:img,mtex:__mtex().join(','),tx:tx,pl:pl,n:MAT.length,errs:__errs});
+          """#)
+        XCTAssertEqual(o["img"] as? String, "512x1024", "textura cores/arauco-louro-freijo-trend.jpg servida pelo app (512×1024, veio na vertical)")
+        XCTAssertEqual(o["mtex"] as? String, "arauco-louro-freijo-trend:ok", "textura entrou no WebGL")
+        XCTAssertEqual(o["tx"] as? String, "7,7", "portas desenhadas com a foto do padrão")
+        XCTAssertEqual(o["pl"] as? [String], ["Louro Freijó · Arauco Trend"], "chapa do plano com o nome da cor")
+        XCTAssertEqual(o["n"] as? Int, 60, "60 padrões reais no catálogo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "erros: \(o["errs"] ?? "")")
+    }
+
     /// Em inglês e espanhol o editor também abre e traduz (a tradução vem do próprio app, pelo esquema arque://).
     @MainActor
     func testEditorEmInglesEEspanhol() async throws {

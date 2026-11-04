@@ -100,10 +100,16 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
         guard let url = task.request.url else { return }
         let name = url.lastPathComponent.isEmpty ? "editor.html" : url.lastPathComponent
         let base = (name as NSString).deletingPathExtension, ext = (name as NSString).pathExtension
-        guard let file = Bundle.main.url(forResource: base, withExtension: ext.isEmpty ? "html" : ext), let data = try? Data(contentsOf: file) else {
+        // subpasta (ex.: cores/arauco-louro-freijo-trend.jpg → pasta "cores" do pacote); sem subpasta cai no arquivo solto
+        let dir = (url.path as NSString).deletingLastPathComponent.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let found = (dir.isEmpty ? nil : Bundle.main.url(forResource: base, withExtension: ext.isEmpty ? "html" : ext, subdirectory: dir))
+            ?? Bundle.main.url(forResource: base, withExtension: ext.isEmpty ? "html" : ext)
+        guard let file = found, let data = try? Data(contentsOf: file) else {
             task.didFailWithError(NSError(domain: "arque", code: 404)); return
         }
-        let mime = ext == "html" || ext.isEmpty ? "text/html" : "application/octet-stream"
+        let mimes = ["html": "text/html", "js": "text/javascript", "json": "application/json", "css": "text/css",
+                     "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp", "svg": "image/svg+xml"]
+        let mime = ext.isEmpty ? "text/html" : (mimes[ext.lowercased()] ?? "application/octet-stream")
         task.didReceive(HTTPURLResponse(url: url, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "\(mime); charset=utf-8", "Content-Length": "\(data.count)"])!)
         task.didReceive(data)
         task.didFinish()

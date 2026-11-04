@@ -31,6 +31,10 @@ targets:
         buildPhase: resources
       - path: ../app/src/main/assets/i18n/es.json
         buildPhase: resources
+      # padrões reais de cor (Arauco, Duratex, Greenplac): texturas em cores/<id>.jpg, servidas em arque://app/cores/… (pasta inteira, como no Android)
+      - path: ../app/src/main/assets/cores
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.arque.measure

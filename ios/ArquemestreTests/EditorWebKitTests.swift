@@ -453,7 +453,7 @@ final class EditorWebKitTests: XCTestCase {
           var B=__boxes(),eng=B.filter(function(b){return /Tamponamento esquerdo · engrosso 80#/.test(String(b.pk||''))}).map(function(b){return String(b.pk).replace(/^.*#/,'')+':'+[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].map(Math.round).join('x')}).sort().join(',');
           var cl=cutLines(m).filter(function(l){return /engrosso/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+'x'+l.qty}).join(',');
           var tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
-          var sw=/url\(data:image/.test(swRow('corF',''))&&!/sem textura/.test(swRow('corF',''));
+          var sw=/url\(cores\/arauco-louro-freijo-trend\.jpg\)/.test(swRow('corF',''))&&!/sem textura/.test(swRow('corF',''));
           pt3(true);var on=__pt3state().on&&!document.getElementById('pt3').hidden&&document.querySelectorAll('#pt3 [data-ptc]').length>=20;
           window.PT3={c:'#6b4a2f',n:'Nogueira',erase:false};__pt3pick(0,'Fundo#1','one');
           var fb=__boxes().filter(function(b){return /^0:Fundo$/.test(String(b.nm))})[0],fc=fb?fb.c.join()+'/'+__matTx(fb):'';
@@ -468,7 +468,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["eng"] as? String, "1:15x720x80,2:15x720x80,3:15x80x431,4:15x80x431", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (591 − 160 = 431)")
         XCTAssertEqual(o["cl"] as? String, "720x80x4,431x80x4", "corte: 2 réguas no comprimento + 2 nas pontas, por lado")
         XCTAssertEqual(o["tx"] as? String, "5,5", "portas na cor amadeirada ganham veio no 3D")
-        XCTAssertEqual(o["sw"] as? Bool, true, "bolinhas amadeiradas mostram o veio")
+        XCTAssertEqual(o["sw"] as? Bool, true, "bolinhas amadeiradas mostram a textura real do padrão")
         XCTAssertEqual(o["on"] as? Bool, true, "🖌 Pintar abre a paleta com todas as cores")
         XCTAssertEqual(o["fc"] as? String, "107,74,47/5", "fundo pintado de Nogueira no 3D, com veio")
         XCTAssertEqual(o["fl"] as? String, "c:Fundo · Nogueira", "plano de corte: fundo pintado vira NA COR com o nome da cor")
@@ -481,6 +481,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["at0"] as? String, "false,false", "automático desligado nos ajustes: tira os automáticos")
         XCTAssertEqual(o["at2"] as? String, "true,true", "ligando de novo, volta")
         XCTAssertEqual(o["chips"] as? Int, 2, "opção nos ajustes (seção e assistente)")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Paleta real (Arauco, Duratex, Greenplac) com nome · marca · textura, 🔍 procurar cor no painel e no pincel do 3D,
+    /// peça pintada/colorida sai NA COR com o nome da cor, e cada cor vira a sua chapa no plano (tamponamento Louro Freijó → chapa Louro Freijó)
+    func testPaletaRealComBuscaEChapaPorCor() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;S.m=m;draw();panel();
+          var n=[].filter.call(document.querySelectorAll('[data-csl="corF"] [data-cs]'),function(b){return !!b.title}).length,q=document.querySelector('[data-csq="corF"]');q.value='louro freij';q.dispatchEvent(new Event('input',{bubbles:true}));
+          var vis=[].filter.call(document.querySelectorAll('[data-csl="corF"] [data-cs]'),function(b){return !b.hidden}).map(function(b){return b.title});
+          document.querySelector('[data-csl="corF"] [data-cs*="arauco-louro-freijo-trend"]').click();m=S.mods[0];
+          var cs=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];newTpl(4);var a=S.mods[1];a.corF=cs.hex;a.corFN=matLabel(cs);a.corFId=cs.id;a.cor=cs.hex;a.corN=matLabel(cs);a.corId=cs.id;draw();
+          var cl=cutLines(m).filter(function(l){return /^Tamponamento esquerdo · face/.test(l.name||'')}).map(function(l){return l.fin+':'+l.colN})[0];
+          var pl=sheetPlan().groups.map(function(g){return g.t+'|'+g.colN});
+          openCut();var heads=[].map.call(document.querySelectorAll('#cutbody div'),function(d){return d.textContent}).filter(function(t){return /^🎨 CHAPA [A-Z]/.test(t)&&!/chapa \d/.test(t)});
+          var rows=[].map.call(document.querySelectorAll('#cutbody tr'),function(r){return r.textContent.replace(/\s+/g,' ').trim()}).filter(function(t){return /^Chapa MDF 15 mm ·/.test(t)}).map(function(t){return t.replace(/\d+% aproveit\..*$/,'').trim()});
+          document.getElementById('cutm').hidden=true;
+          open3D();pt3(true);var pq=document.querySelector('#pt3 [data-csq]');pq.value='cinza';pq.dispatchEvent(new Event('input',{bubbles:true}));
+          var pvis=[].filter.call(document.querySelectorAll('#pt3 [data-ptc]'),function(b){return !b.hidden}).map(function(b){return b.title});
+          window.PT3={c:cs.hex,n:matLabel(cs),id:cs.id,erase:false};__pt3pick(0,'Porta#1','one');var pc=m.pc['Porta#1'].id,pcl=cutLines(m).filter(function(l){return /^Porta/.test((l.names||[])[0]||'')}).map(function(l){return l.fin+':'+l.colN+':'+l.qty});
+          pt3(false);document.getElementById('v3x').click();
+          return JSON.stringify({n:n,vis:vis,corF:m.corF,corFN:m.corFN,corFId:m.corFId,cl:cl,pl:pl,heads:heads,rows:rows,pvis:pvis,pc:pc,pcl:pcl,errs:__errs});
+          """#)
+        XCTAssertEqual(o["n"] as? Int, 60, "60 padrões reais na paleta (45 lisos + 15 amadeirados)")
+        XCTAssertEqual(o["vis"] as? [String], ["Louro Freijó · Arauco Trend", "Louro Freijó · Arauco Poro"], "🔍 'louro freij' acha os dois Louro Freijó")
+        XCTAssertEqual(o["corFId"] as? String, "arauco-louro-freijo-trend")
+        XCTAssertEqual(o["corFN"] as? String, "Louro Freijó · Arauco Trend", "nome real: padrão · fabricante · textura")
+        XCTAssertEqual(o["cl"] as? String, "c:Louro Freijó · Arauco Trend", "tamponamento em Louro Freijó → peça NA COR Louro Freijó")
+        XCTAssertEqual(o["pl"] as? [String], ["b|", "c|Cinza Sagrado · Duratex Essencial Acetinada", "c|Louro Freijó · Arauco Trend", "f|"], "uma chapa por cor no plano")
+        XCTAssertEqual(o["heads"] as? [String], ["🎨 CHAPA CINZA SAGRADO · DURATEX ESSENCIAL ACETINADA · MDF 15 mm", "🎨 CHAPA LOURO FREIJÓ · ARAUCO TREND · MDF 15 mm"], "cabeçalho da chapa com o nome da cor")
+        XCTAssertEqual(o["rows"] as? [String], ["Chapa MDF 15 mm · Cinza Sagrado · Duratex Essencial Acetinada", "Chapa MDF 15 mm · Louro Freijó · Arauco Trend"], "material: uma linha por cor")
+        XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no pincel do 3D")
+        XCTAssertEqual(o["pc"] as? String, "duratex-cinza-sagrado-essencial", "pintura guarda o padrão")
+        XCTAssertEqual(o["pcl"] as? [String], ["c:Cinza Sagrado · Duratex Essencial Acetinada:1", "c:Louro Freijó · Arauco Trend:1"], "porta pintada separa da outra no corte, cada uma na sua cor")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

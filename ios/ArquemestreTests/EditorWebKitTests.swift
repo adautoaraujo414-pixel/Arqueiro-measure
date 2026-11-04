@@ -443,11 +443,11 @@ final class EditorWebKitTests: XCTestCase {
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=3200;S.H=2600;newTpl(4);var m=S.mods[0];m.w=1700;m.h=230;m.d=300;m.b=1500;m.div=[1/3,2/3];
           m.v=[{k:'door',n:1,cava:true,open:1},{k:'door',n:1,cava:true,bas:true,bd:'down',open:1},{k:'door',n:1,cava:true,bas:true,bd:'up',open:1}];S.m=m;draw();
           var paths=[].map.call(document.querySelectorAll('#svg #mod path[fill="#e6d9be"]'),function(p){var d=p.getAttribute('d').match(/-?[\d.]+/g).map(Number);var xs=[d[0],d[2],d[4],d[6]],ys=[d[1],d[3],d[5],d[7]];return (Math.max.apply(null,xs)-Math.min.apply(null,xs))>(Math.max.apply(null,ys)-Math.min.apply(null,ys))?'deitada':'em pé'});
-          open3D();var B=__boxes();var d3=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.nol&&((b.x1-b.x0)>300||(b.z1-b.z0)>300)}).map(function(b){return b.vi+':'+((b.pf&&b.pf.ax==='x')?'gira-eixo-x':'lado')+':'+Math.round(b.y1-b.y0)});
+          open3D();var B=__boxes();var d3=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.nol&&(b.y1-b.y0)>12&&((b.x1-b.x0)>300||(b.z1-b.z0)>300)}).map(function(b){return b.vi+':'+((b.pf&&b.pf.ax==='x')?'gira-eixo-x':'lado')+':'+Math.round(b.y1-b.y0)});
           return JSON.stringify({p2d:paths.join(','),d3:d3.join(','),errs:__errs});
           """#)
         XCTAssertEqual(o["p2d"] as? String, "em pé,deitada,deitada", "2D: porta de lado abre pro lado; basculante abre pra baixo/cima (faixa deitada)")
-        XCTAssertEqual(o["d3"] as? String, "0:lado:230,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado")
+        XCTAssertEqual(o["d3"] as? String, "0:lado:209,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado (230 − 21 do chanfro da cava, que sai em degraus finos)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
@@ -751,6 +751,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(e1["tv"] ?? 0, e0["tv"] ?? 0, "TV liga a tela")
         XCTAssertGreaterThan(e1["co"] ?? 0, e0["co"] ?? 0, "coifa liga a luz")
         XCTAssertEqual(o["btns"] as? [String], ["💡 Acender a luz de dentro", "🚪 Abrir o forno"], "quadro do forno: luz e porta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Cava usinada sem faixa preta (só a linha fina de sombra na cor da porta) e com o chanfro na porta aberta ·
+    /// pincel: tocar perto da fita de topo (0,8 mm) pega a fita, modo ▭ Fita e 💧 copiando a cor da fita
+    func testCavaSemFaixaPretaChanfroNaPortaAbertaEFitaFacilDeTocar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;
+          newTpl(4);var m=S.mods[0];m.x=600;var pf=MAT.filter(function(c){return /pau ferro/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];m.corF=pf.hex;m.corFN=matLabel(pf);m.corFId=pf.id;S.m=m;draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var cvl=__boxes().filter(function(b){return b.cvl}),cvlH=cvl.map(function(b){return Math.round(b.y1-b.y0)}),dark=__boxes().filter(function(b){return /^0:Porta/.test(b.nm)&&b.c[0]<70&&b.c[1]<70&&b.c[2]<70&&(b.y1-b.y0)>5}).length;
+          m.v[0].open=1;window.anim3();await new Promise(function(r){setTimeout(r,1800)});var doorBoxes=__boxes().filter(function(b){return /^0:Porta/.test(b.nm)&&b.pf&&!b.nol}).length;m.v[0].open=0;window.anim3();await new Promise(function(r){setTimeout(r,1800)});
+          S.mods=[];newTpl(5);var e=S.mods[0];e.pcT={Porta:{c:pf.hex,n:matLabel(pf),id:pf.id}};S.m=e;draw();__build();pt3(true);
+          var fb=__boxes().filter(function(b){return b.ft&&/^0:Base superior/.test(b.nm)})[0],x=0,y=0;[[fb.x0,fb.y0,fb.z1],[fb.x1,fb.y0,fb.z1],[fb.x1,fb.y1,fb.z1],[fb.x0,fb.y1,fb.z1]].forEach(function(c){var p=org3api.proj(c);x+=p[0]/4;y+=p[1]/4});
+          window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(x,y+7);var pv1=__pt3state().pv;document.getElementById('pt3q').querySelector('[data-ptq="x"]').click();
+          document.querySelector('#pt3 [data-ptk]').click();paintTap(x,y+6);var pick=__pt3state().n;
+          document.querySelector('#pt3 [data-ptf]').click();var lat=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0],c1=org3api.proj([lat.x0,(lat.y0+lat.y1)/2,(lat.z0+lat.z1)/2]);window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(c1[0],c1[1]);var pv2=__pt3state().pv;
+          pt3(false);var fmOff=!window.PTFM;document.getElementById('v3x').click();
+          return JSON.stringify({cvlH:cvlH,dark:dark,doorBoxes:doorBoxes,pv1:pv1&&(pv1.key+'|'+pv1.fita),pick:pick,pv2:pv2&&(pv2.key+'|'+pv2.fita),fmOff:fmOff,errs:__errs});
+          """#)
+        XCTAssertEqual(o["dark"] as? Int, 0, "sem faixa preta na porta com cava")
+        XCTAssertEqual(o["cvlH"] as? [Int], [3, 3], "só uma linha fina de 3 mm na borda da cava, em cada porta")
+        XCTAssertGreaterThan(o["doorBoxes"] as? Int ?? 0, 10, "porta aberta mostra o chanfro da cava (perfil em degraus)")
+        XCTAssertEqual(o["pv1"] as? String, "Base superior#1|true", "tocar 7 px ao lado da fita pega a fita, não o fundo")
+        XCTAssertEqual(o["pick"] as? String, "Pau Ferro Natural · Duratex Essencial Wood Madeira Leve", "💧 na fita copia a cor da fita (cor das portas)")
+        XCTAssertEqual(o["pv2"] as? String, "Lateral esquerda#1|true", "modo ▭ Fita: tocar no meio da lateral pega a fita dela")
+        XCTAssertEqual(o["fmOff"] as? Bool, true, "fechar o pincel desliga o modo fita")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Cooktop: 1 toque numa boca acende só ela, sem selecionar o cooktop inteiro · toque no vidro fora das bocas abre o quadro
+    func testCooktopToqueNaBocaAcendeSemSelecionar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];S.st.items.push({id:77,k:'cook',x:1500,y:60,w:600,d:500});draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});
+          var st=S.st,it=st.items.filter(function(i){return i.id===77})[0],y=st.t+st.e+9,B=cookPos(it).map(function(q){return [st.x+it.x+it.w*q[0],it.y+it.d*q[1]]});
+          var p=org3api.proj([B[0][0],y,B[0][1]]);org3api.one(p[0],p[1]);var isx1=org3api.isx(),lit=Object.keys(fx3api.fire()).filter(function(k){var f=fx3api.fire()[k];return f&&!f.off}).length;
+          var c=org3api.proj([st.x+it.x+it.w*.5,y,it.y+it.d*.5]);org3api.one(c[0],c[1]);var isx2=org3api.isx()&&org3api.isx().k;
+          document.getElementById('v3x').click();
+          return JSON.stringify({isx1:isx1,lit:lit,isx2:isx2,errs:__errs});
+          """#)
+        XCTAssertTrue(o["isx1"] is NSNull || o["isx1"] == nil, "toque na boca não seleciona o cooktop")
+        XCTAssertEqual(o["lit"] as? Int, 1, "só a boca tocada acende")
+        XCTAssertEqual(o["isx2"] as? String, "cook", "toque no vidro fora das bocas abre o quadro do cooktop")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

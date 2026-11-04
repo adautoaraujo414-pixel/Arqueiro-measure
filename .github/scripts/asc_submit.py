@@ -35,6 +35,7 @@ def call(method, path, ok=False, **kw):
 
 PREP = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")
 TIRAR = os.environ.get("TIRAR") == "1"
+LIBERAR = os.environ.get("LIBERAR") == "1"  # lançamento automático quando a Apple aprovar (ou liberar agora se já aprovada)
 
 
 def versao_em_preparo():
@@ -42,7 +43,40 @@ def versao_em_preparo():
     return vs, next((v for v in vs if v["attributes"]["appStoreState"] in PREP), None)
 
 
+def lancamento_automatico(v):
+    """Deixa a versão ir pra loja sozinha assim que a Apple aprovar (releaseType AFTER_APPROVAL)."""
+    nome = v["attributes"]["versionString"]
+    if v["attributes"].get("releaseType") == "AFTER_APPROVAL":
+        print("versão", nome, "já está em lançamento automático ✓")
+        return True
+    r = call("PATCH", f"/appStoreVersions/{v['id']}", ok=True,
+             json={"data": {"type": "appStoreVersions", "id": v["id"], "attributes": {"releaseType": "AFTER_APPROVAL"}}})
+    if r:
+        print("LANÇAMENTO AUTOMÁTICO LIGADO: versão", nome, "vai pra loja sozinha quando a Apple aprovar ✓")
+        return True
+    return False
+
+
 versions, ver = versao_em_preparo()
+# -1) com LIBERAR=1: versão já aprovada e esperando → libera agora; senão liga o lançamento automático
+if LIBERAR:
+    pend = next((v for v in versions if v["attributes"]["appStoreState"] == "PENDING_DEVELOPER_RELEASE"), None)
+    if pend:
+        call("POST", "/appStoreVersionReleaseRequests", json={"data": {"type": "appStoreVersionReleaseRequests", "relationships": {
+             "appStoreVersion": {"data": {"type": "appStoreVersions", "id": pend["id"]}}}}})
+        print("VERSÃO", pend["attributes"]["versionString"], "LIBERADA PRA LOJA AGORA (já estava aprovada) ✓")
+        sys.exit(0)
+    alvo = ver or next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
+    if not alvo:
+        for v in versions:
+            print("versão", v["attributes"]["versionString"], v["attributes"]["appStoreState"], v["attributes"].get("releaseType"))
+        sys.exit("::error::nenhuma versão em preparo nem na fila da revisão")
+    if lancamento_automatico(alvo):
+        if not (TIRAR or SUBMIT):
+            sys.exit(0)
+    elif alvo is not ver:
+        print("::warning::a Apple não deixou mudar com a versão na fila · tirando da fila, ligando o automático e reenviando")
+        TIRAR = SUBMIT = True
 # 0) com TIRAR=1: se a versão está "Aguardando revisão", tira da fila (cancela o envio) pra poder trocar o build e as capturas
 if not ver and TIRAR:
     esperando = next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
@@ -64,6 +98,8 @@ if not ver:
     sys.exit("::error::nenhuma versão em preparo (talvez já esteja em revisão)")
 vs = ver["attributes"]["versionString"]
 print("versão", vs, ver["attributes"]["appStoreState"])
+if LIBERAR:
+    lancamento_automatico(ver)
 
 # 1) build mais novo pronto
 build = None

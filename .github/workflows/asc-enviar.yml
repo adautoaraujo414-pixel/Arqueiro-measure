@@ -11,6 +11,10 @@ on:
         description: "Se a versão estiver 'Aguardando revisão', tirar da fila antes (pra trocar build/capturas)"
         type: boolean
         default: false
+      liberar:
+        description: "Lançar na loja automaticamente quando a Apple aprovar (se já estiver aprovada, libera agora)"
+        type: boolean
+        default: false
 
 jobs:
   enviar:
@@ -26,4 +30,5 @@ jobs:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
           ENVIAR: ${{ inputs.enviar && '1' || '0' }}
           TIRAR: ${{ inputs.tirar && '1' || '0' }}
+          LIBERAR: ${{ inputs.liberar && '1' || '0' }}
         run: python .github/scripts/asc_submit.py 6829800820

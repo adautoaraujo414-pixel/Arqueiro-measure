@@ -35,6 +35,10 @@ targets:
       - path: ../app/src/main/assets/cores
         type: folder
         buildPhase: resources
+      # fotos do catálogo (render do próprio 3D de cada módulo e eletro): fotos/<chave>.webp, servidas em arque://app/fotos/…
+      - path: ../app/src/main/assets/fotos
+        type: folder
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: br.com.arque.measure

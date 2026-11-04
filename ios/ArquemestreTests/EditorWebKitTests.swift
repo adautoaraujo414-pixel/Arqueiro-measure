@@ -991,6 +991,69 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testBotaoDoLEDUmSoOuUmPorModuloCorEMudarDeLugarCom2Toques() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1300;
+          newTpl(tpl('Aéreo 2 portas'));var a=S.mods[1];a.x=600;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};
+          newTpl(tpl('Aéreo 2 portas'));var a2=S.mods[2];a2.x=1600;a2.b=1500;a2.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};S.m=b;draw();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();
+          var R={};document.getElementById('v3add').click();R.ui=document.querySelectorAll('#crp3 [data-clbm]').length+'/'+document.querySelectorAll('#crp3 [data-clbc]').length;
+          /* um botão só: liga e desliga todas as luzes */
+          document.querySelector('#crp3 [data-clbm="um"]').click();var lb=__lbt();R.um=lb.length+':'+lb.map(function(q){return q.mi}).join();
+          org3api.one(lb[0].s[0],lb[0].s[1]);R.off=[a.led.on,a2.led.on].join();org3api.one(lb[0].s[0],lb[0].s[1]);R.on=[a.led.on,a2.led.on].join();
+          /* cor do botão */
+          document.querySelector('#crp3 [data-clbc="branco"]').click();R.cor=__boxes().filter(function(q){return q.lbt===-1&&q.c&&q.c.join()==='241,241,238'}).length;
+          /* um em cada módulo */
+          document.querySelector('#crp3 [data-clbm="cada"]').click();R.cada=__lbt().length;document.getElementById('crp3').hidden=true;
+          /* 2 toques no botão e 2 toques na porta do balcão: o botão vai pra lá e continua ligando/desligando */
+          var s0=__lbt().filter(function(q){return q.mi===1})[0].s;__sel3(s0[0],s0[1]);
+          var zf=zoOf(b)+b.d,tg=org3api.proj([b.x+b.w*0.7,b.h*0.55,zf+18]);__sel3(tg[0],tg[1]);
+          R.bt=a.led.bt&&a.led.bt.f;var q=__lbt().filter(function(q){return q.mi===1})[0];R.dist=Math.round(Math.hypot(q.s[0]-tg[0],q.s[1]-tg[1]));
+          var o0=a.led.on;org3api.one(q.s[0],q.s[1]);R.tog=o0+'>'+a.led.on;
+          /* o botão anda junto com o módulo dele */
+          var px0=__lbtp().filter(function(q){return q.mi===1})[0].p[0];a.x+=100;__build();R.fica=Math.round(__lbtp().filter(function(q){return q.mi===1})[0].p[0]-px0);b.x+=100;__build();R.anda=Math.round(__lbtp().filter(function(q){return q.mi===1})[0].p[0]-px0);
+          document.getElementById('v3x').click();R.errs=__errs;
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["ui"] as? String, "3/5", "no menu do LED: um botão só / um em cada módulo / sem botão e as cores")
+        XCTAssertEqual(o["um"] as? String, "1:-1", "um botão só pra todas as luzes")
+        XCTAssertEqual(o["off"] as? String, "0,0", "o botão único desliga todas")
+        XCTAssertEqual(o["on"] as? String, "1,1", "e liga todas")
+        XCTAssertEqual(o["cor"] as? Int, 1, "botão na cor escolhida (branco)")
+        XCTAssertEqual(o["cada"] as? Int, 2, "um botão em cada módulo com LED")
+        XCTAssertEqual(o["bt"] as? String, "pt", "2 toques no botão e 2 toques em outro lugar: ele muda de lugar")
+        XCTAssertLessThanOrEqual(o["dist"] as? Int ?? 99, 3, "o botão vai pro ponto tocado")
+        XCTAssertEqual(o["tog"] as? String, "1>0", "no lugar novo o toque continua desligando o LED")
+        XCTAssertEqual(o["fica"] as? Int, 0, "mexer o aéreo não tira o botão da porta onde ele foi posto")
+        XCTAssertEqual(o["anda"] as? Int, 100, "o botão anda junto com o móvel onde ele está")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testCatalogoComFotoDeCadaModuloEEletro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.mods=[];S.fr=[];S.env='cozinha';draw();window.CATALL=true;catOpen('inf');
+          var imgs=[].slice.call(document.querySelectorAll('#catb img'));
+          await Promise.all(imgs.slice(0,6).map(function(im){return new Promise(function(r){if(im.complete&&im.naturalWidth)return r();im.onload=im.onerror=function(){r()};setTimeout(r,5000)})}));
+          var ok=imgs.slice(0,6).filter(function(im){return im.naturalWidth>=200}).length;
+          /* todo item do catálogo tem foto */
+          try{catAp()}catch(_){}var semFoto=[];CATS.forEach(function(c){c.it.forEach(function(it){if(it.act!=='tvs'&&!FOTOS[fotoKey(it)])semFoto.push(it.n)})});
+          document.getElementById('catm').hidden=true;
+          /* aba Eletrodomésticos também com foto */
+          S.tab=7;panel();var tab=document.querySelectorAll('#bd img[src^="fotos/"]').length;
+          return JSON.stringify({nf:Object.keys(FOTOS).length,imgs:imgs.length,ok:ok,nSem:semFoto.length,sem:semFoto.slice(0,4).join(' | '),tab:tab,errs:__errs});
+          """#)
+        XCTAssertGreaterThan(o["nf"] as? Int ?? 0, 250, "fotos de todos os itens do catálogo")
+        XCTAssertGreaterThan(o["imgs"] as? Int ?? 0, 5, "os cartões do catálogo mostram a foto")
+        XCTAssertEqual(o["ok"] as? Int, 6, "as fotos carregam de dentro do app (pasta fotos)")
+        XCTAssertLessThanOrEqual(o["nSem"] as? Int ?? 99, 3, "item sem foto: \(o["sem"] ?? "")")
+        XCTAssertGreaterThan(o["tab"] as? Int ?? 0, 50, "a aba Eletrodomésticos também mostra as fotos")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testCarneAssandoComFumacaEBotaoDoLEDLigaEDesliga() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -1166,7 +1229,7 @@ final class EditorWebKitTests: XCTestCase {
           var P=partsOf(m),reg=P.filter(function(p){return /^Engrosso cava · régua/.test(p.name)}),rb=Math.min.apply(null,reg.map(y0)),tb=pn(P,'Tamponamento de baixo'),tl=pn(P,'Tamponamento esquerdo'),tr=pn(P,'Tamponamento direito');
           m.tb=false;draw();var tl2=pn(partsOf(m),'Tamponamento esquerdo');
           S.fr=[];var g=apAdd('geladeira',2),t=apAdd('torneira',0);window.open3D();var bx=window.dbg3all(),gb=bx.filter(function(b){return b.fr===g.id}).length,tq=bx.filter(function(b){return b.fr===t.id}).length;document.getElementById('v3x').click();
-          catOpen('cgel');var ic=document.querySelectorAll('#catb [data-cati] svg').length,nb=document.querySelectorAll('#catb [data-cati]').length;document.getElementById('catm').hidden=true;
+          catOpen('cgel');var ic=document.querySelectorAll('#catb [data-cati] svg, #catb [data-cati] img').length,nb=document.querySelectorAll('#catb [data-cati]').length;document.getElementById('catm').hidden=true;
           return JSON.stringify({mb:m.b,rb:rb,tbTop:y1(tb),tbBot:y0(tb),tlBot:y0(tl),trBot:y0(tr),tl2Bot:y0(tl2),gb:gb,tq:tq,ic:ic,nb:nb,errs:__errs});
           """#)
         let mb = o["mb"] as? Double ?? 0, rb = o["rb"] as? Double ?? 0, tbBot = o["tbBot"] as? Double ?? 0
@@ -1177,7 +1240,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tl2Bot"] as? Double ?? 0, rb, accuracy: 0.01, "sem tamponamento de baixo: pós cava rente com a régua")
         XCTAssertGreaterThanOrEqual(o["gb"] as? Int ?? 0, 15, "geladeira com portas, puxadores e dispenser")
         XCTAssertGreaterThan(o["tq"] as? Int ?? 0, 10, "torneira gourmet com mola e bico")
-        XCTAssertEqual(o["ic"] as? Int, o["nb"] as? Int, "cada eletro do catálogo com o desenho na frente")
+        XCTAssertEqual(o["ic"] as? Int, o["nb"] as? Int, "cada eletro do catálogo com a foto (ou o desenho) na frente")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

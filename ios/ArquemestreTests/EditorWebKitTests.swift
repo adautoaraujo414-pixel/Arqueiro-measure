@@ -954,6 +954,84 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=300;newTpl(tpl('Aéreo 2 portas'));var a=S.mods[1];a.x=300;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};S.m=b;draw();
+          /* tomada dentro do armário (no fundo) e na parede, registro de água */
+          var t1=apAdd('eletrica',0);t1.x=500;t1.b=400;var dentro0=elDentro(t1);var t2=apAdd('eletrica',1);t2.x=500;t2.b=1150;var rg=apAdd('eletrica',7);rg.x=900;rg.b=1100;draw();
+          var cats=CATS.filter(function(c){return c.id==='cel'||c.id==='cchur'}).map(function(c){return c.id+':'+c.it.length}).join(',');
+          /* churrasqueira pré-moldada com medida real */
+          var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=2600;var chm=[ch.w,ch.h,ch.d].join('x');
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();
+          var z1=Math.round(Math.min.apply(null,__boxes().filter(function(q){return q.fr===t1.id}).map(function(q){return q.z0}))),z2=Math.round(Math.min.apply(null,__boxes().filter(function(q){return q.fr===t2.id}).map(function(q){return q.z0})));
+          /* toque na churrasqueira acende a brasa */
+          var cb=__boxes().filter(function(q){return q.fr===ch.id});var bb=cb[0],cp=org3api.proj([ch.x+ch.w/2,700,ch.d-20]);org3api.one(cp[0],cp[1]);var brasa=__boxes().filter(function(q){return q.fr===ch.id&&q.em}).length;
+          /* botão do LED: bolinha preta embaixo do aéreo · toque desliga */
+          var lb=__lbt(),s0=lb[0]&&lb[0].s;if(s0)org3api.one(s0[0],s0[1]);var ledOff=a.led.on;
+          /* TV: abertura com a logo e depois a imagem */
+          var tv=apAdd('tv',1);tv.x=1500;tv.b=1300;__build();ele3api.luz(tv.id,1);await new Promise(function(r){setTimeout(r,1400)});var tvs=__tvs(),logo=fx3api.fx();await new Promise(function(r){setTimeout(r,2400)});var tvs2=__tvs();
+          document.getElementById('v3x').click();
+          return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
+          """#)
+        XCTAssertEqual(o["dentro0"] as? Bool, true, "tomada posta em cima do módulo vai dentro do armário")
+        XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:19", "abas de tomadas/registros e de churrasqueiras")
+        XCTAssertEqual(o["chm"] as? String, "840x2350x570", "churrasqueira com a medida do fabricante")
+        XCTAssertGreaterThan(o["z1"] as? Int ?? 0, 15, "tomada dentro do armário fica no fundo do módulo (não na parede)")
+        XCTAssertEqual(o["z2"] as? Int, 0, "tomada na parede")
+        XCTAssertGreaterThan(o["brasa"] as? Int ?? 0, 5, "toque acende a brasa")
+        XCTAssertEqual(o["lb"] as? Int, 1, "botão do LED no aéreo")
+        XCTAssertEqual(o["ledOff"] as? Int, 0, "toque no botão desliga o LED")
+        XCTAssertEqual(o["tvSplash"] as? Bool, false, "TV ligando mostra a abertura")
+        XCTAssertGreaterThan(o["logo"] as? Int ?? 0, 50, "logo do Arquemestre na tela")
+        XCTAssertEqual(o["tvDone"] as? Int, 1, "depois da abertura, a imagem normal")
+        XCTAssertGreaterThanOrEqual(o["rooms"] as? Int ?? -1, 0, "ambiente Área gourmet")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão canto cego · cego na direita (porta na esquerda)'));var cg=S.mods[0];cg.x=600;newTpl(tpl('Balcão 2 portas'));var n2=S.mods[1];n2.x=1600;S.m=n2;draw();
+          var dobCg=mCost(cg).dob,dobN=mCost(n2).dob,cego=partsOf(cg).filter(function(p){return p.cego}).length;
+          /* lateral de pedra descendo até o chão: na ponta e num ponto */
+          addStone();var st=S.st;st.x=600;st.w=2200;S.tab=6;draw();panel();document.querySelector('#bd [data-stlat="d"]').click();var ip=document.querySelector('[data-stlatx]');ip.value='1000';document.querySelector('[data-stlatadd]').click();
+          var lat=(st.lat||[]).map(function(l){return l.at+(l.x!==undefined?l.x:'')}).join(','),svg2=(document.getElementById('svg').innerHTML.match(/stroke="#20262e"/g)||[]).length;
+          /* zoom na vista de cima */
+          var P=document.getElementById('plan'),w0=+P.getAttribute('viewBox').split(' ')[2];document.querySelector('[data-pz="1"]').click();var w1=+P.getAttribute('viewBox').split(' ')[2];document.querySelector('[data-pz="0"]').click();var w2=+P.getAttribute('viewBox').split(' ')[2];
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var latB=__boxes().filter(function(q){return q.slat!==undefined}).map(function(q){return Math.round(q.y1-q.y0)});
+          /* painel cego não abre */
+          var fp=partsOf(cg).filter(function(p){return p.cego})[0],pb=__boxes().filter(function(q){return q.pk===fp.pk&&String(q.nm).indexOf('0:Porta')===0})[0],pc=org3api.proj([(pb.x0+pb.x1)/2,(pb.y0+pb.y1)/2,pb.z1]);org3api.one(pc[0],pc[1]);await new Promise(function(r){setTimeout(r,300)});var cegoOd=Object.keys(cg.v[1].od||{}).length;
+          /* ilha no meio com armários e painel ripado no lado fechado */
+          var il=__islAdd('ilha');await new Promise(function(r){setTimeout(r,1600)});il.rip=1;il.st.cas=1;__build();var rip=__boxes().filter(function(q){return q.irip}).length,ripCut=rpCutPieces().filter(function(p){return /painel ripado/.test(p.where)}).length;
+          /* tamanho do móvel inteiro com bolinhas no 3D */
+          S.m=n2;window.mz3Open();var mzh=document.querySelectorAll('[data-mzh]').length;
+          document.getElementById('v3x').click();
+          /* link recebido (do Android/iPhone) colado: abre só pra ver */
+          var cli=null;ArqueApp.shareClient=function(c){cli=c};document.querySelector('#shb').click();await new Promise(function(r){setTimeout(r,1500)});var ok=cli?arquePasteLink('https://adautoaraujo414-pixel.github.io/Arqueiro-measure/p.html#d='+cli):false;await new Promise(function(r){setTimeout(r,1500)});
+          return JSON.stringify({dobCg:dobCg,dobN:dobN,cego:cego,lat:lat,svg2:svg2,w:[w0,w1,w2],latB:latB,cegoOd:cegoOd,rip:rip,ripCut:ripCut,mzh:mzh,ok:ok,ro:!!window.RO,errs:__errs});
+          """#)
+        XCTAssertEqual(o["cego"] as? Int, 1, "canto cego tem o painel cego")
+        XCTAssertLessThan(o["dobCg"] as? Int ?? 9, o["dobN"] as? Int ?? 0, "painel cego sem dobradiça")
+        XCTAssertEqual(o["lat"] as? String, "d,x1000", "lateral na ponta direita e no ponto de 1000 mm")
+        XCTAssertGreaterThanOrEqual(o["svg2"] as? Int ?? 0, 2, "lateral aparece no desenho de frente")
+        let w = o["w"] as? [Double] ?? []
+        XCTAssertEqual(w.count, 3)
+        if w.count == 3 { XCTAssertLessThan(w[1], w[0], "＋ aproxima a vista de cima"); XCTAssertEqual(w[2], w[0], "⌂ volta a ver a pedra inteira") }
+        XCTAssertEqual(o["latB"] as? [Int], [820, 820], "lateral desce do chão até a pedra")
+        XCTAssertEqual(o["cegoOd"] as? Int, 0, "painel cego não abre")
+        XCTAssertGreaterThan(o["rip"] as? Int ?? 0, 10, "ilha com painel ripado")
+        XCTAssertEqual(o["ripCut"] as? Int, 2, "ripas e chapa base no plano de corte")
+        XCTAssertEqual(o["mzh"] as? Int, 3, "bolinhas pra largura, altura e fundura do móvel")
+        XCTAssertEqual(o["ok"] as? Bool, true, "link colado abre")
+        XCTAssertEqual(o["ro"] as? Bool, true, "projeto recebido abre só pra ver")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

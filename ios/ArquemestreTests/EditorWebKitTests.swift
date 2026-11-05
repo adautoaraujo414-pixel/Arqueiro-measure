@@ -992,6 +992,34 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// Caixa da geladeira (laterais até em cima + aéreo), ripado em cima dos módulos até o teto (na frente ou na parede) e réguas das laterais por nível
+    func testCaixaDaGeladeiraRipadoEmCimaEReguasDasLaterais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
+          /* caixa da geladeira: laterais até em cima + aéreo, vão aberto embaixo e a geladeira já dentro */
+          newTpl(tpl('Caixa da geladeira side by side (laterais + aéreo)'));var g=S.mods[0];R.caixa=[g.h,g.base,g.rod].join(',');R.nicho=partsOf(g).some(function(p){return p.gelN});R.gel=S.fr.filter(function(f){return f.t==='geladeira'}).length;
+          /* ripado em cima dos superiores até o teto */
+          for(var i=0;i<2;i++){newTpl(4);var u=S.mods[S.mods.length-1];u.x=1100+i*800;u.w=800}var up=S.mods.filter(function(m){return m.sup});S.m=up[0];S.tab=4;draw();panel();
+          document.querySelector('#bd [data-rpt="frente"]').click();document.querySelector('#bd [data-rptall]').click();R.ripado=up.every(function(m){return m.rpTop==='frente'});var ch=partsOf(up[0]).filter(function(p){return /^Chapa base do ripado/.test(p.name)})[0];R.ateTeto=ch?ch.h:0;
+          document.querySelector('#bd [data-rpt="parede"]').click();R.parede=(partsOf(up[0]).filter(function(p){return /^Ripa/.test(p.name)})[0]||{rpz:[-1]}).rpz[0];
+          /* réguas das laterais por nível */
+          document.querySelector('#bd [data-rgm="sup|pontas"]').click();R.pontas=up.map(function(m){return (m.egL||0)+''+(m.egR||0)}).join(',');
+          document.querySelector('#bd [data-rgm="sup|duplo"]').click();R.duplo=up[0].egD===up[0].d;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["caixa"] as? String, "2500,false,false", "caixa da geladeira do chão até em cima, sem base e sem pedestal")
+        XCTAssertEqual(o["nicho"] as? Bool, true, "vão aberto da geladeira")
+        XCTAssertEqual(o["gel"] as? Int, 1, "geladeira já dentro da caixa")
+        XCTAssertEqual(o["ripado"] as? Bool, true, "ripado em todos os superiores")
+        XCTAssertEqual(o["ateTeto"] as? Int, 200, "ripado do topo do aéreo até o teto")
+        XCTAssertEqual(o["parede"] as? Int, 6, "ripado encostado na parede")
+        XCTAssertEqual(o["pontas"] as? String, "10,01", "régua só nas pontas")
+        XCTAssertEqual(o["duplo"] as? Bool, true, "engrossado total duplo na profundidade toda")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Armário alto: 3 toques põem o nicho de forno / micro-ondas e as réguas do cava (em cima e embaixo)
     func testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo() async throws {
         let web = try await editor()

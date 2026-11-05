@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.QuoteMathTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-05T23:33:52.793Z" hostname="runnervmm7ud1" time="0.003">
+  <properties/>
+  <testcase name="totalsAndDiscount" classname="br.com.arque.measure.QuoteMathTest" time="0.001"/>
+  <testcase name="formatsAndParsesBrazilianNumbers" classname="br.com.arque.measure.QuoteMathTest" time="0.001"/>
+  <testcase name="jsonRoundTrip" classname="br.com.arque.measure.QuoteMathTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

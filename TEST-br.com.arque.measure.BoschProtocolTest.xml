@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.BoschProtocolTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-05T23:33:52.603Z" hostname="runnervmm7ud1" time="0.013">
+  <properties/>
+  <testcase name="quadro real da comunidade C0 55 10 06 le o float no byte 7" classname="br.com.arque.measure.BoschProtocolTest" time="0.008"/>
+  <testcase name="leitura invalida byte 3 igual a 02 nao gera medida" classname="br.com.arque.measure.BoschProtocolTest" time="0.001"/>
+  <testcase name="reconhece os UUIDs Bosch conhecidos" classname="br.com.arque.measure.BoschProtocolTest" time="0.0"/>
+  <testcase name="comando de autosync e hex" classname="br.com.arque.measure.BoschProtocolTest" time="0.002"/>
+  <testcase name="ignora o comando de autosync e quadros curtos" classname="br.com.arque.measure.BoschProtocolTest" time="0.0"/>
+  <testcase name="extrai metros e converte para mm inteiros" classname="br.com.arque.measure.BoschProtocolTest" time="0.0"/>
+  <testcase name="rejeita valores impossiveis" classname="br.com.arque.measure.BoschProtocolTest" time="0.0"/>
+  <testcase name="ignora quadro que nao comeca com C0" classname="br.com.arque.measure.BoschProtocolTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.EditorStateTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-11-05T23:33:52.745Z" hostname="runnervmm7ud1" time="0.028">
+  <properties/>
+  <testcase name="sem cota selecionada a leitura nao e aplicada" classname="br.com.arque.measure.EditorStateTest" time="0.002"/>
+  <testcase name="apagar foto apaga as anotacoes vinculadas e duplicar leva junto" classname="br.com.arque.measure.EditorStateTest" time="0.004"/>
+  <testcase name="desfazer e refazer" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="camadas sobem e descem" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="um gesto inteiro vira um unico passo de desfazer" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="leitura vai para a cota selecionada e e salva na hora" classname="br.com.arque.measure.EditorStateTest" time="0.0"/>
+  <testcase name="proxima cota pendente pode estar em outra folha" classname="br.com.arque.measure.EditorStateTest" time="0.0"/>
+  <testcase name="depois de medir seleciona a proxima cota sem valor" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="excluir folha exige pelo menos uma e duplicar copia o conteudo" classname="br.com.arque.measure.EditorStateTest" time="0.0"/>
+  <testcase name="adicionar folha antes e depois respeita a posicao e o modelo" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="gesto cancelado nao deixa rastro" classname="br.com.arque.measure.EditorStateTest" time="0.0"/>
+  <testcase name="nova leitura substitui o valor e mantem historico" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="objeto travado nao pode ser apagado" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <testcase name="nota comeca com uma folha e aceita ate 100" classname="br.com.arque.measure.EditorStateTest" time="0.005"/>
+  <testcase name="cota pendente nao mostra rotulo e medida mostra no formato em metros" classname="br.com.arque.measure.EditorStateTest" time="0.003"/>
+  <testcase name="objetos pertencem a folha ativa e desfazer volta a nota inteira" classname="br.com.arque.measure.EditorStateTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

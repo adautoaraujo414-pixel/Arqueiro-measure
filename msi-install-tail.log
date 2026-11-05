@@ -1,0 +1,200 @@
+Property(S): dir662c2219fe6c38a183edcb2e3cf0f1f1 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.xml.crypto\
+Property(S): dire48ccefc221834168438e64b1b665179 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.random\
+Property(S): dir2603662ba796333eb8233539121dfaa7 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\lib\security\
+Property(S): dirc4b784192df83c9e9ac819ba342b4833 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jartool\
+Property(S): dir3514978a836f3e138ba92213a166d60b = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.scripting\
+Property(S): dir4bc3ae48657c3f7880ba2fc5b2010f8d = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.crypto.ec\
+Property(S): dir0c98d90aeafc3c01af4bbe43eac0ae8e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.charsets\
+Property(S): dir3257666fb05f3d9dbd63c692376cec0b = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.dynalink\
+Property(S): dirb7ede6df8c593618afc205ba731cf864 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.nio.mapmode\
+Property(S): dir57c3e1ccc1913acc857b6174cb0186c6 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.crypto.cryptoki\
+Property(S): dire19a743fc0eb3f55abc7b62884718fe1 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.xml.dom\
+Property(S): dir275c12ae2afd3a74af36a8dc8f89d49e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.security.jgss\
+Property(S): dir1e08c79b7c55361b81b1a887233c601b = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.datatransfer\
+Property(S): dird4162455a905351ba4c81d5bef13ee9b = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.security.sasl\
+Property(S): dir53eb65194e4637ec8c6c38858937cf2d = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jdeps\
+Property(S): dir7edce3fae50d30b9aacc0626b3ace913 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.smartcardio\
+Property(S): dir405978e32ea434e8a144055a8d1e0c9e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.security.auth\
+Property(S): dirce0e884e44ff35d0bc85107669bec4c9 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.compiler\
+Property(S): dirf1b6edc8eb8f389795b8f26ceb774ffc = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.management\
+Property(S): dir538187761a8e367aa68d9b6f318440e0 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.naming.rmi\
+Property(S): dir8b01219f4ded39688a611eb5fea97d45 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.editpad\
+Property(S): dircea78ee53f72322ca64fd212c954db86 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.internal.vm.compiler\
+Property(S): dir5f43712d4e70368f8571eadac7f5c20d = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.crypto.mscapi\
+Property(S): dir8c2c9aa79bfe3f9e9e4ebb5f9b2458c9 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.internal.ed\
+Property(S): INSTALLDIR = C:\Users\runneradmin\AppData\Local\Arquemestre\
+Property(S): dirb3d730454e3533adaa3b991668e9823e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.sctp\
+Property(S): diree9c531594c6347081f4f8d6aad46fce = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jpackage\
+Property(S): dirc4f8f29e38c532e18602c883db63e757 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.se\
+Property(S): dircd0e0b9ac26938dd881b41052c929eeb = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.net.http\
+Property(S): dircf9a22dc840b3cff9bb0e789148cd11f = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\lib\
+Property(S): dir8647a0fe90ec3558a4f7319b6a4e130b = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.hotspot.agent\
+Property(S): dirad0ef43c747e396ebb311b315bfa5f51 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.naming.dns\
+Property(S): dir943b8b23ba7e3436857aa5f52994ad9d = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jsobject\
+Property(S): dircb50796436a13cdc9b0dc8d16ff1d708 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\conf\management\
+Property(S): dir881f52c0b61632768712e2f9b4ce9183 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.internal.vm.ci\
+Property(S): dir2d369fcb4d45321a9d1fda8457a26189 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.naming\
+Property(S): direc3c3ad8698d3a9e800c26000877df50 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.httpserver\
+Property(S): dirb3b665e7f40c3cb0bd8264124d21b2aa = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jconsole\
+Property(S): dir14bb5ca9ac6734bc84fdd05aa07f3fd4 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.compiler\
+Property(S): dird53db12636bf37f4805a77734a81fe4e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.management\
+Property(S): dir8a1dea6409843a70878005b9c17de130 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jshell\
+Property(S): dirbbce250911163e86883cb2c37399b604 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jlink\
+Property(S): dir94085e31dd8f390caf4ea84a1d57e751 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\conf\security\
+Property(S): dire5d87b917d2a3a7f8cd496b9a1d59fd4 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jstatd\
+Property(S): direbaafb90011f37ca9886d609858aa634 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.internal.jvmstat\
+Property(S): dir7d4938c291413b478ff929becd1cb432 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.unsupported.desktop\
+Property(S): dir83999e0e61183dc4a1a7d6d25c982bc8 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.sql\
+Property(S): dire21e6bd3fde0303dad682c7988bedd63 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.security.jgss\
+Property(S): dircd56f720b00c3e64acfe2e1db33234f6 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.internal.vm.compiler.management\
+Property(S): dir8bc041b05b6134b7a87f51376165033c = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.javadoc\
+Property(S): dir3512dbbdaf4c338bb908abbb9161206c = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jcmd\
+Property(S): dir1b74edbf234730278bbbbb2f2f883473 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.prefs\
+Property(S): dir231e6a506fe7391ea7fa4f2559307f5e = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\conf\
+Property(S): dir954318e8304c3453a12207d75fa27e9a = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.jdi\
+Property(S): dir988510ece3b13e35a550f3391c32bffb = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.localedata\
+Property(S): dir397c92055a9137aeb8b4873a2901dc79 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.unsupported\
+Property(S): dire87a7d2cab5f35e0bf0a9181e38d0c09 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\
+Property(S): dir921b3b705f6a3c6f9c59e00f1a8a2b08 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\java.sql.rowset\
+Property(S): dir3ef5e5db34e73763a77a1959d21f9a46 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.attach\
+Property(S): dir800e59f893cf30bfb9bb9a3f6e92b681 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\conf\security\policy\unlimited\
+Property(S): dirbb362e5246873511867209e9c853d033 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\bin\server\
+Property(S): dird18d6cdbda8d32808cbd0aee1d693703 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\lib\jfr\
+Property(S): dir58ad176b945f3860a8b9d7b1deb963d3 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\conf\security\policy\
+Property(S): dirbc70f77504f439d3862553086f673358 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\jdk.incubator.vector\
+Property(S): dire07ad78c628d3050965dc9cbd1b1f465 = C:\Users\runneradmin\AppData\Local\Arquemestre\app\resources\
+Property(S): dir5391ccbfa2c03538b949e3f55c8f5005 = C:\Users\runneradmin\AppData\Local\Arquemestre\runtime\legal\
+Property(S): WixUIRMOption = UseRM
+Property(S): WIXUI_INSTALLDIR = INSTALLDIR
+Property(S): ARPNOMODIFY = 1
+Property(S): ARPINSTALLLOCATION = C:\Users\runneradmin\AppData\Local\Arquemestre\
+Property(S): ARPCOMMENTS = Arquemestre - medição, projeto de móveis, corte, orçamento e agenda
+Property(S): ARPCONTACT = Arque
+Property(S): ARPSIZE = 398932
+Property(S): TARGETDIR = D:\
+Property(S): SourceDir = D:\a\Arqueiro-measure\Arqueiro-measure\windows\build\compose\binaries\main\msi\
+Property(S): ProgramMenuFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\
+Property(S): LocalAppDataFolder = C:\Users\runneradmin\AppData\Local\
+Property(S): ARPPRODUCTICON = JpARPPRODUCTICON
+Property(S): Manufacturer = Arque
+Property(S): ProductCode = {6EF97FC4-0FFF-3068-840C-2AD995A3068C}
+Property(S): ProductLanguage = 1033
+Property(S): ProductName = Arquemestre
+Property(S): ProductVersion = 1.0.67
+Property(S): DefaultUIFont = WixUI_Font_Normal
+Property(S): WixUI_Mode = InstallDir
+Property(S): ErrorDialog = ErrorDlg
+Property(S): SecureCustomProperties = JP_DOWNGRADABLE_FOUND;JP_UPGRADABLE_FOUND
+Property(S): MsiLogFileLocation = D:\a\Arqueiro-measure\Arqueiro-measure\msi-install.log
+Property(S): PackageCode = {6717F49E-B4BE-4DB4-9CF9-ADB353C78CCE}
+Property(S): ProductState = -1
+Property(S): PackagecodeChanging = 1
+Property(S): CURRENTDIRECTORY = D:\a\Arqueiro-measure\Arqueiro-measure
+Property(S): CLIENTUILEVEL = 3
+Property(S): CLIENTPROCESSID = 5780
+Property(S): VersionDatabase = 200
+Property(S): VersionMsi = 5.00
+Property(S): VersionNT = 603
+Property(S): VersionNT64 = 603
+Property(S): WindowsBuild = 9600
+Property(S): ServicePackLevel = 0
+Property(S): ServicePackLevelMinor = 0
+Property(S): MsiNTProductType = 3
+Property(S): MsiNTSuiteDataCenter = 1
+Property(S): WindowsFolder = C:\Windows\
+Property(S): WindowsVolume = C:\
+Property(S): System64Folder = C:\Windows\system32\
+Property(S): SystemFolder = C:\Windows\SysWOW64\
+Property(S): RemoteAdminTS = 1
+Property(S): TempFolder = C:\Users\RUNNER~1\AppData\Local\Temp\
+Property(S): ProgramFilesFolder = C:\Program Files (x86)\
+Property(S): CommonFilesFolder = C:\Program Files (x86)\Common Files\
+Property(S): ProgramFiles64Folder = C:\Program Files\
+Property(S): CommonFiles64Folder = C:\Program Files\Common Files\
+Property(S): AppDataFolder = C:\Users\runneradmin\AppData\Roaming\
+Property(S): FavoritesFolder = C:\Users\runneradmin\Favorites\
+Property(S): NetHoodFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Network Shortcuts\
+Property(S): PersonalFolder = C:\Users\runneradmin\Documents\
+Property(S): PrintHoodFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Printer Shortcuts\
+Property(S): RecentFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Recent\
+Property(S): SendToFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\SendTo\
+Property(S): TemplateFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Templates\
+Property(S): CommonAppDataFolder = C:\ProgramData\
+Property(S): MyPicturesFolder = C:\Users\runneradmin\Pictures\
+Property(S): AdminToolsFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Administrative Tools\
+Property(S): StartupFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\
+Property(S): StartMenuFolder = C:\Users\runneradmin\AppData\Roaming\Microsoft\Windows\Start Menu\
+Property(S): FontsFolder = C:\Windows\Fonts\
+Property(S): GPTSupport = 1
+Property(S): OLEAdvtSupport = 1
+Property(S): ShellAdvtSupport = 1
+Property(S): MsiAMD64 = 26
+Property(S): Msix64 = 26
+Property(S): Intel = 26
+Property(S): PhysicalMemory = 16379
+Property(S): VirtualMemory = 16952
+Property(S): AdminUser = 1
+Property(S): MsiTrueAdminUser = 1
+Property(S): LogonUser = runneradmin
+Property(S): UserSID = S-1-5-21-3289802278-1561746829-1498425070-500
+Property(S): UserLanguageID = 1033
+Property(S): ComputerName = runnervmm7ud1
+Property(S): SystemLanguageID = 1033
+Property(S): ScreenX = 1024
+Property(S): ScreenY = 768
+Property(S): CaptionHeight = 23
+Property(S): BorderTop = 1
+Property(S): BorderSide = 1
+Property(S): TextHeight = 16
+Property(S): TextInternalLeading = 3
+Property(S): ColorBits = 32
+Property(S): TTCSupport = 1
+Property(S): Time = 23:36:49
+Property(S): Date = 11/5/2026
+Property(S): MsiNetAssemblySupport = 4.8.9221.0
+Property(S): MsiWin32AssemblySupport = 6.3.26100.33648
+Property(S): RedirectedDllSupport = 2
+Property(S): MsiRunningElevated = 1
+Property(S): Privileged = 1
+Property(S): DATABASE = C:\Windows\Installer\6f688.msi
+Property(S): OriginalDatabase = D:\a\Arqueiro-measure\Arqueiro-measure\windows\build\compose\binaries\main\msi\Arquemestre-1.0.67.msi
+Property(S): UILevel = 2
+Property(S): ACTION = INSTALL
+Property(S): ROOTDRIVE = D:\
+Property(S): CostingComplete = 1
+Property(S): OutOfDiskSpace = 0
+Property(S): OutOfNoRbDiskSpace = 0
+Property(S): PrimaryVolumeSpaceAvailable = 0
+Property(S): PrimaryVolumeSpaceRequired = 0
+Property(S): PrimaryVolumeSpaceRemaining = 0
+Property(S): INSTALLLEVEL = 1
+Property(S): SOURCEDIR = D:\a\Arqueiro-measure\Arqueiro-measure\windows\build\compose\binaries\main\msi\
+Property(S): SourcedirProduct = {6EF97FC4-0FFF-3068-840C-2AD995A3068C}
+Property(S): ProductToBeRegistered = 1
+MSI (s) (0C:DC) [23:36:49:756]: Note: 1: 1707 
+MSI (s) (0C:DC) [23:36:49:756]: Note: 1: 2205 2:  3: Error 
+MSI (s) (0C:DC) [23:36:49:756]: Note: 1: 2228 2:  3: Error 4: SELECT `Message` FROM `Error` WHERE `Error` = 1707 
+MSI (s) (0C:DC) [23:36:49:756]: Note: 1: 2205 2:  3: Error 
+MSI (s) (0C:DC) [23:36:49:756]: Note: 1: 2228 2:  3: Error 4: SELECT `Message` FROM `Error` WHERE `Error` = 1709 
+MSI (s) (0C:DC) [23:36:49:756]: Product: Arquemestre -- Installation completed successfully.
+
+MSI (s) (0C:DC) [23:36:49:758]: Windows Installer installed the product. Product Name: Arquemestre. Product Version: 1.0.67. Product Language: 1033. Manufacturer: Arque. Installation success or error status: 0.
+
+MSI (s) (0C:DC) [23:36:49:786]: Deferring clean up of packages/files, if any exist
+MSI (s) (0C:DC) [23:36:49:787]: MainEngineThread is returning 0
+MSI (s) (0C:BC) [23:36:49:787]: RESTART MANAGER: Session closed.
+MSI (s) (0C:BC) [23:36:49:787]: No System Restore sequence number for this installation.
+=== Logging stopped: 11/5/2026  23:36:49 ===
+MSI (s) (0C:BC) [23:36:49:800]: User policy value 'DisableRollback' is 0
+MSI (s) (0C:BC) [23:36:49:800]: Machine policy value 'DisableRollback' is 0
+MSI (s) (0C:BC) [23:36:49:800]: Incrementing counter to disable shutdown. Counter after increment: 0
+MSI (s) (0C:BC) [23:36:49:800]: Note: 1: 1402 2: HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Installer\Rollback\Scripts 3: 2 
+MSI (s) (0C:BC) [23:36:49:809]: Note: 1: 2265 2:  3: -2147287035 
+MSI (s) (0C:BC) [23:36:49:809]: Note: 1: 1402 2: HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Installer\Rollback\Scripts 3: 2 
+MSI (s) (0C:BC) [23:36:49:809]: Decrementing counter to disable shutdown. If counter >= 0, shutdown will be denied.  Counter after decrement: -1
+MSI (s) (0C:BC) [23:36:49:811]: Destroying RemoteAPI object.
+MSI (s) (0C:E0) [23:36:49:811]: Custom Action Manager thread ending.
+MSI (c) (94:AC) [23:36:49:813]: Decrementing counter to disable shutdown. If counter >= 0, shutdown will be denied.  Counter after decrement: -1
+MSI (c) (94:AC) [23:36:49:813]: MainEngineThread is returning 0
+=== Verbose logging stopped: 11/5/2026  23:36:49 ===
+

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.DoorTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-11-05T23:33:52.732Z" hostname="runnervmm7ud1" time="0.008">
+  <properties/>
+  <testcase name="acha a linha da parede e projeta o ponto em cima dela" classname="br.com.arque.measure.DoorTest" time="0.001"/>
+  <testcase name="porta guarda sentido e medida e volta igual do JSON" classname="br.com.arque.measure.DoorTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

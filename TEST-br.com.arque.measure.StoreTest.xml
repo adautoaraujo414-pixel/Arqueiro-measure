@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.StoreTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-11-05T23:33:52.807Z" hostname="runnervmm7ud1" time="0.129">
+  <properties/>
+  <testcase name="restauracao rejeita zip malicioso e zip sem indice sem apagar nada" classname="br.com.arque.measure.StoreTest" time="0.038"/>
+  <testcase name="recupera a folha pelo backup quando o arquivo principal corrompe" classname="br.com.arque.measure.StoreTest" time="0.024"/>
+  <testcase name="importar foto copia os bytes originais sem alterar" classname="br.com.arque.measure.StoreTest" time="0.002"/>
+  <testcase name="indice e leituras sobrevivem ao ciclo JSON" classname="br.com.arque.measure.StoreTest" time="0.002"/>
+  <testcase name="folha completa sobrevive ao ciclo JSON sem perder nada" classname="br.com.arque.measure.StoreTest" time="0.002"/>
+  <testcase name="salvar e carregar folha do disco" classname="br.com.arque.measure.StoreTest" time="0.014"/>
+  <testcase name="folha inexistente retorna null" classname="br.com.arque.measure.StoreTest" time="0.002"/>
+  <testcase name="backup e restauracao devolvem os mesmos dados" classname="br.com.arque.measure.StoreTest" time="0.045"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

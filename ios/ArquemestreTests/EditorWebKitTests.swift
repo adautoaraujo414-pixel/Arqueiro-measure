@@ -666,7 +666,7 @@ final class EditorWebKitTests: XCTestCase {
         }
         XCTAssertEqual(o["cl"] as? [String], ["c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend"], "plano de corte: tamponamentos e réguas na cor das portas pintadas")
         XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
-        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
+        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod", "modIn"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
         XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
         XCTAssertTrue((o["same"] as? String ?? "").contains("já estava"), "fita já na cor das portas: avisa em vez de repetir: \(o["same"] ?? "")")
         XCTAssertTrue((o["more"] as? String ?? "").hasPrefix("Pintar as outras fitas de topo"), "depois de pintar uma fita pergunta pelas outras: \(o["more"] ?? "")")
@@ -1017,6 +1017,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["parede"] as? Int, 6, "ripado encostado na parede")
         XCTAssertEqual(o["pontas"] as? String, "10,01", "régua só nas pontas")
         XCTAssertEqual(o["duplo"] as? Bool, true, "engrossado total duplo na profundidade toda")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Rodapé do armário alto igual aos de baixo, pintar o módulo por dentro, dobradiça real, porta com amortecedor e eletro aberto sem ficar azul
+    func testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
+          /* armário alto com rodapé: o tamponamento para em cima do rodapé, igual aos módulos de baixo */
+          newTpl(tpl('Despenseiro'));var d=S.mods[0];R.tamp=partsOf(d).filter(function(p){return /^Tamponamento/.test(p.name)}).map(function(p){return p.h}).join(',');R.alto=d.h-d.rodMm;
+          /* pintar o módulo inteiro por dentro (porta-tempero): peças de dentro na cor, frente e tamponamento não */
+          S.mods=[];newTpl(tpl('Porta-tempero'));var m=S.mods[0];draw();open3D();await new Promise(function(r){setTimeout(r,300)});
+          window.PT3={c:'#ff00ff',n:'Rosa',id:''};var pk0=partsOf(m).filter(function(p){return /^Base \(porta tempero/.test(p.name)})[0].pk;__pt3pick(0,pk0,'modIn');__build();
+          var bx=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0&&Array.isArray(b.c)}),pink=function(b){return b.c[0]>240&&b.c[1]<20&&b.c[2]>240},nm=function(b){return String(b.nm).split(':')[1]};
+          R.tempero=['Frente atrás (porta tempero)','Costa (porta tempero)','Base (porta tempero)','Régua (porta tempero)','Fundo'].every(function(n){return bx.some(function(b){return nm(b)===n&&pink(b)})});
+          R.fora=bx.some(function(b){return pink(b)&&/^(Porta|Frente \(porta tempero|Tamponamento|Rodapé)/.test(nm(b))});R.corte=cutLines(m).some(function(l){return /Rosa/.test(l.name+' '+(l.note||''))});window.PT3=null;
+          /* dobradiça real: quantidade pela altura da porta (2 até 900, 3 até 1600...) */
+          S.mods=[];newTpl(tpl('Armário alto 2 portas'));draw();__build();R.dob=dobFor(2000);
+          /* porta fecha com amortecedor: 80% do curso rápido, os últimos 20% devagar */
+          S.mods=[];newTpl(tpl('Balcão 2 portas'));draw();__build();__e3open(0,'Porta#1');document.querySelector('#e3 [data-op="one"]').click();await new Promise(function(r){setTimeout(r,1400)});
+          var k=Object.keys(__ang().t).filter(function(q){return q[0]==='p'&&__ang().t[q]>0})[0];document.querySelector('#e3 [data-op="one"]').click();var t0=performance.now(),smp=[];
+          while(performance.now()-t0<2200){await new Promise(function(r){setTimeout(r,40)});smp.push([performance.now()-t0,__ang().g[k]])}
+          var tA=(smp.filter(function(s){return s[1]<=90*0.2})[0]||[9999])[0],tB=(smp.filter(function(s){return s[1]<=0.5})[0]||[9999])[0];R.amort=tB-tA>tA*0.6;R.fechou=smp[smp.length-1][1]<0.5;
+          document.querySelector('#e3 [data-e3x]').click();
+          /* eletro aberto não fica azul */
+          S.mods=[];S.fr=[];draw();var f=apAdd('lavaloucas',2);draw();__build();var col=function(){return __boxes().filter(function(b){return b.fr===f.id&&Array.isArray(b.c)}).map(function(b){return b.c.join()}).join('|')};var c0=col();
+          fx3api.open({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,200)});R.semAzul=col()===c0;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["tamp"] as? String, "2100,2100", "tamponamento do armário alto para em cima do rodapé")
+        XCTAssertEqual(o["alto"] as? Int, 2100)
+        XCTAssertEqual(o["tempero"] as? Bool, true, "porta-tempero pintado por dentro (frente de trás, costa, base, réguas e fundo)")
+        XCTAssertEqual(o["fora"] as? Bool, false, "por dentro não pinta frente, tamponamento nem rodapé")
+        XCTAssertEqual(o["corte"] as? Bool, true, "plano de corte com a cor de dentro")
+        XCTAssertEqual(o["dob"] as? Int, 4, "porta de 2000: 4 dobradiças")
+        XCTAssertEqual(o["amort"] as? Bool, true, "os últimos 20% fecham devagar")
+        XCTAssertEqual(o["fechou"] as? Bool, true, "porta encosta e fecha")
+        XCTAssertEqual(o["semAzul"] as? Bool, true, "eletro aberto não fica azul")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

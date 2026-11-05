@@ -1328,6 +1328,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Área do painel/ripado: toque no vão ou arraste marcando a área, o app acha as áreas livres (desvia de móvel, pedra, janela, eletro e outro painel), largura final e cria
+    func testAreaDoPainelDesviaDosSolidosComLarguraFinal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='cozinha';S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          addStone();S.stones[0].x=0;S.stones[0].w=3000;newTpl({n:'Balcão',w:1500,h:820,d:560,b:0,v:[{k:'door',n:2}]});newTpl({n:'Balcão',w:1500,h:820,d:560,b:0,v:[{k:'door',n:2}]});
+          newTpl({n:'Aéreo',w:1400,h:700,d:350,b:1600,sup:true,v:[{k:'door',n:2}]});newTpl({n:'Aéreo',w:1400,h:700,d:350,b:1600,sup:true,v:[{k:'door',n:2}]});
+          apAdd('geladeira',0);S.ops.push({id:99,t:'janela',w:600,h:800,x:3100,b:1300});S.tab=8;draw();panel();
+          /* base do 2º balcão: no limite da pedra (não vai pra parede do lado, diminui um pouco) */
+          R.balcao=S.mods.filter(function(m){return !m.sup}).map(function(m){return m.x+'+'+m.w+(m.wing||'')}).join(' ');
+          /* toque no vão entre a pedra e o aéreo: a área livre vai da pedra até o aéreo e até a janela */
+          document.querySelector('[data-rparm]').click();R.arm=!!(RPSA&&RPSA.arm)&&!RPSA.liso;
+          RPSA.pt=[700,1200];RPSA.areas=saAreas();saBar();R.toque=JSON.stringify(RPSA.areas.map(function(a){return [a.x0,a.x1,a.y0,a.y1]}));
+          /* largura final 2000 encostada na esquerda e cria o ripado */
+          var inp=document.querySelector('#rpsabar [data-saw="0"]');inp.value='2000';inp.dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('#rpsabar [data-sab="al|0|e"]').click();
+          document.querySelector('#rpsabar [data-sab="go"]').click();R.criado=S.rp.map(function(a){return a.x+'+'+a.w+' b'+a.b+' h'+a.h+(a.liso?' liso':' ripado')}).join();R.fechou=!window.RPSA&&document.getElementById('rpsabar').hidden;
+          /* arrastando a parede toda acima da pedra: várias áreas, nenhuma entra em móvel, pedra, janela, eletro ou no ripado que já está lá */
+          saStart(true);RPSA.sel={x0:0,x1:4200,y0:0,y1:2700};RPSA.areas=saAreas();var sol=saSolids(false),bad=0;RPSA.areas.forEach(function(a){sol.forEach(function(q){if(a.x0<q.x1-1&&q.x0<a.x1-1&&a.y0<q.y1-1&&q.y0<a.y1-1)bad++})});R.areas=RPSA.areas.length;R.bad=bad;
+          /* passar por trás dos móveis: a área acima da pedra fica inteira */
+          document.querySelector('#rpsabar [data-sab="bh|1"]').click();R.atras=RPSA.areas.some(function(a){return a.y0<=860.5&&a.y1>=2300});
+          document.querySelector('#rpsabar [data-sab="x"]').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["balcao"] as? String, "5+1500 1505+1465", "2º balcão diminui um pouco no limite da pedra")
+        XCTAssertEqual(o["arm"] as? Bool, true, "botão arma a seleção de área")
+        XCTAssertEqual(o["toque"] as? String, "[[0,3100,860,1600]]", "vão entre a pedra e o aéreo até a janela")
+        XCTAssertEqual(o["criado"] as? String, "0+2000 b860 h740 ripado", "largura final 2000 encostada na esquerda")
+        XCTAssertEqual(o["fechou"] as? Bool, true, "barra fecha depois de criar")
+        XCTAssertGreaterThan(o["areas"] as? Int ?? 0, 3, "várias áreas livres na parede")
+        XCTAssertEqual(o["bad"] as? Int, 0, "nenhuma área entra em algo sólido")
+        XCTAssertEqual(o["atras"] as? Bool, true, "passando por trás dos móveis a área fica inteira")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

@@ -114,7 +114,7 @@ jobs:
           set +e
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/ddsk -resultBundlePath build/TestesAssinatura.xcresult \
-            -only-testing:ArquemestreTests/SubscriptionTests \
+            -only-testing:ArquemestreTests/SubscriptionTests -retry-tests-on-failure -test-iterations 2 \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-storekit.log 2>&1

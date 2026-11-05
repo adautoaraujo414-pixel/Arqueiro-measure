@@ -6,6 +6,7 @@ import android.content.Context
 import java.security.MessageDigest
 
 /**
+ * Windows: 3 dias de teste e depois desbloqueio por senha (licença vitalícia de R$ 350,00, pagamento único combinado fora do app).
  * APK do site: 3 dias de teste e depois desbloqueio por senha (pagamento único combinado fora do app).
  * Google Play: só a assinatura mensal da loja (o teste grátis de 3 dias é a oferta da própria assinatura).
  * Fica nas preferências do app: atualizar o APK por cima mantém tudo (teste, desbloqueio e dados).
@@ -14,7 +15,8 @@ import java.security.MessageDigest
 object License {
     val TRIAL_DAYS: Int = br.com.arque.measure.BuildConfig.TRIAL_DAYS
     val TRIAL_MS: Long = TRIAL_DAYS * 24L * 3600 * 1000
-    const val PRICE = "R$ 149,90"
+    /** Windows: licença vitalícia (pagamento único, sem mensalidade). */
+    const val PRICE = "R$ 350,00 (licença vitalícia do Windows)"
     const val WHATS = "5534984039955"
 
     /** SHA-256 da senha de desbloqueio (a senha em si não fica escrita no app). */

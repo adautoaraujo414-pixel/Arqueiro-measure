@@ -1020,6 +1020,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Editar qualquer peça de qualquer módulo pronto: caixa da gaveta inteira, canto em L, régua do tamponamento e medida digitada
+    func testEditarQualquerPecaCaixaDaGavetaCantoEmLEMedidaDigitada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.rp=[];S.env='cozinha';S.W=4200;S.H=2700;draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
+          open3D();await new Promise(function(r){setTimeout(r,300)});
+          /* caixa da gaveta: altura e profundidade digitadas mudam laterais, frente/costa e fundo juntos */
+          newTpl(tpl('Gaveteiro 3 gavetas'));var g=S.mods[0];__build();__e3t(0,'Lateral de gaveta#1',1,160);__e3t(0,'Fundo de gaveta (6 mm)#1',2,450);
+          var P=partsOf(g),pk=function(k){return P.filter(function(p){return p.pk===k})[0]||{}};
+          R.lat=[pk('Lateral de gaveta#1').cl,pk('Lateral de gaveta#1').cw,pk('Lateral de gaveta#2').cl,pk('Lateral de gaveta#2').cw].join(',');R.fc=pk('Frente/costa de gaveta (contra-frente e traseira)#1').cw;R.fundo=pk('Fundo de gaveta (6 mm)#1').cw;R.outra=pk('Lateral de gaveta#3').cl;
+          /* canto em L: peça do lado do canto muda no corte e no 3D */
+          S.mods=[];newTpl(tpl('Canto L guarda-roupa · esquerdo'));var c=S.mods[0];__build();var t3=__e3t(0,'Travessa frontal (lado do canto)#1',1,200);R.trav=(partsOf(c).filter(function(p){return p.pk==='Travessa frontal (lado do canto)#1'})[0]||{}).cw;R.trav3=t3.d?Math.round(t3.d[1]):0;
+          /* tamponamento com engrosso: tocar na régua de dentro seleciona o tamponamento */
+          S.mods=[];newTpl(tpl('Balcão 2 portas'));__build();var rg=__boxes().filter(function(b){return b.ppk})[0];R.ppk=rg?rg.ppk:'';R.sel=rg?__e3(0,rg.ppk).part:false;
+          /* forno: aparelho, não estica */
+          S.mods=[];newTpl(tpl('Torre quente (forno)'));__build();R.forno=__e3(0,'Corte do forno#1').h.length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["lat"] as? String, "450,160,450,160", "as duas laterais da gaveta mudam juntas (altura e profundidade)")
+        XCTAssertEqual(o["fc"] as? Int, 145, "frente/costa acompanha a altura da caixa")
+        XCTAssertEqual(o["fundo"] as? Int, 450, "fundo acompanha a profundidade (corrediça de 450)")
+        XCTAssertEqual(o["outra"] as? Int, 500, "as outras gavetas não mudam")
+        XCTAssertEqual(o["trav"] as? Int, 200, "peça do lado do canto muda no corte")
+        XCTAssertEqual(o["trav3"] as? Int, 200, "e no 3D")
+        XCTAssertEqual(o["ppk"] as? String, "Tamponamento direito#1", "régua de dentro aponta pro tamponamento")
+        XCTAssertEqual(o["sel"] as? Bool, true, "tamponamento selecionado")
+        XCTAssertEqual(o["forno"] as? Int, 0, "forno é aparelho: sem bolinhas")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Armário alto: 3 toques põem o nicho de forno / micro-ondas e as réguas do cava (em cima e embaixo)
     func testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo() async throws {
         let web = try await editor()

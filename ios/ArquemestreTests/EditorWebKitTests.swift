@@ -1362,6 +1362,50 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Cor e veio dos painéis (placa lisa, ripas e fundo do ripado) com textura real no 3D, plano de corte por cor com veio travado, e a régua da junta em pé fecha o cruzamento com a junta de cima
+    func testCorEVeioDosPaineisEReguaDaJuntaFechaOCruzamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='sala';S.env='livre';S.W=4140;S.H=3190;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var wood=MAT.filter(function(c){return c.cat==='wood'})[0],uni=MAT.filter(function(c){return c.cat!=='wood'})[0];
+          /* painel liso grande: escolhe a cor amadeirada pela barra do painel e o sentido deitado (veio deitado) */
+          var a=rpNew({x:0,b:2610,w:4140,h:580});a.liso=true;LAST='rp';S.tab=8;RPSEL=a.id;draw();panel();rpBar();
+          R.secao=/Cor da placa/.test(document.getElementById('rpbar').innerText);
+          document.querySelector('#rpbar [data-rpcor="cor|'+wood.id+'"]').click();document.querySelector('#rpbar [data-rpb="ps|c"]').click();
+          R.cor=a.corId===wood.id&&a.cor===wood.hex;R.veio=rpVeio(a);
+          /* ripado: ripas numa cor, fundo em outra */
+          var r=rpNew({x:200,b:0,w:1200,h:2400});LAST='rp';RPSEL=r.id;draw();rpBar();document.querySelector('#rpbar [data-rpcor="cor|'+uni.id+'"]').click();document.querySelector('#rpbar [data-rpb="ct|b"]').click();document.querySelector('#rpbar [data-rpcor="corB|'+wood.id+'"]').click();
+          R.ripado=r.corId===uni.id&&r.corBId===wood.id;
+          /* 3D: textura real e veio deitado só no liso deitado */
+          __build();var B=__boxes(),pl=B.filter(function(b){return b.rpid===a.id&&b.g!=='lo'}),rb=B.filter(function(b){return b.rpid===r.id&&b.rpart==='ripa'}),rf=B.filter(function(b){return b.rpid===r.id&&/^base/.test(b.rpart||'')});
+          R.tex3d=pl.length>0&&pl.every(function(b){return b.mid===wood.id&&b.vr===1})&&rb.length>0&&rb.every(function(b){return b.mid===uni.id&&!b.vr})&&rf.length>0&&rf.every(function(b){return b.mid===wood.id})?1:0;
+          /* plano de corte: as placas vão na chapa da cor certa, com o veio travado */
+          var G=cutGroups(),pk=G.ord.filter(function(k){return /^Placa do painel liso/.test(G.map[k].names[0])});R.placas=pk.length>0&&pk.every(function(k){return G.map[k].colN===matLabel(wood)&&G.map[k].vfix===1});
+          var sp=sheetPlan();R.chapa=sp.groups.some(function(g){return g.colN===matLabel(wood)&&g.mat===18});
+          R.ripas=G.ord.some(function(k){return /^Ripa/.test(G.map[k].names[0])&&G.map[k].colN===matLabel(uni)});
+          /* "usar em todos": outro painel liso pega a mesma cor */
+          var a2=rpNew({x:0,b:0,w:600,h:600});a2.liso=true;RPSEL=a.id;rpBar();document.querySelector('#rpbar [data-rpb="corall|cor"]').click();R.todos=a2.corId===wood.id;S.rp=S.rp.filter(function(q){return q!==a2});
+          /* junta com rebaixo: a régua em pé de baixo sobe o vão da junta de cima (sem buraco no cruzamento) e o plano de corte sai com a medida certa */
+          S.rp=[];var jt={t:'reb',w:15,d:6};var p1=rpNew({x:0,b:0,w:1800,h:2700}),p2=rpNew({x:1815,b:0,w:1800,h:2700}),p3=rpNew({x:0,b:2715,w:1800,h:475}),p4=rpNew({x:1815,b:2715,w:1800,h:475});[p1,p2,p3,p4].forEach(function(q){q.liso=true;q.jt=Object.assign({},jt)});draw();
+          var gv=jtGaps(p1).filter(function(g){return g.dir==='v'})[0];R.regua=gv?gv.y0+'..'+gv.y1:'';
+          R.corte=/Detalhe de rebaixo à direita da placa 1[^<]*<\/td><td>2715 × 15/.test(rpCutHtml());
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["secao"] as? Bool, true, "barra do painel tem a cor")
+        XCTAssertEqual(o["cor"] as? Bool, true, "cor amadeirada na placa")
+        XCTAssertEqual(o["veio"] as? String, "h", "chapa deitada = veio deitado")
+        XCTAssertEqual(o["ripado"] as? Bool, true, "ripas e fundo com cores diferentes")
+        XCTAssertEqual(o["tex3d"] as? Int, 1, "textura real no 3D, veio girado só na placa deitada")
+        XCTAssertEqual(o["placas"] as? Bool, true, "placas no plano de corte com a cor e o veio travado")
+        XCTAssertEqual(o["chapa"] as? Bool, true, "chapa da cor certa no plano")
+        XCTAssertEqual(o["ripas"] as? Bool, true, "ripas na cor delas")
+        XCTAssertEqual(o["todos"] as? Bool, true, "usar a cor em todos os painéis")
+        XCTAssertEqual(o["regua"] as? String, "0..2715", "régua em pé sobe os 15 da junta de cima")
+        XCTAssertEqual(o["corte"] as? Bool, true, "plano de corte com a régua de 2715")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

@@ -991,6 +991,86 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testGestosNoEletro2ToquesMudaDeLugar3ToquesConfiguracoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1600;addStone();S.st.x=1600;S.st.w=1800;draw();
+          var mw=apAdd('microondas',0);mw.x=200;var me=apAdd('mesa',0);me.x=1900;var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=3500;draw();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var R={};
+          var ctr=function(f){var bb=__boxes().filter(function(q){return q.fr===f.id});var p=[0,1,2].map(function(i){var k=['x','y','z'][i];return (Math.min.apply(null,bb.map(function(q){return q[k+'0']}))+Math.max.apply(null,bb.map(function(q){return q[k+'1']})))/2});return org3api.proj(p)};
+          /* 2 toques no micro-ondas, 2 toques na pedra */
+          var s0=ctr(mw);__sel3(s0[0],s0[1]);R.esc=__frmv()===mw.id;var lar=__boxes().filter(function(q){return q.fr===mw.id&&q.c&&q.c[0]>200&&q.c[1]<200&&q.c[2]<150}).length;R.laranja=lar>0;
+          var st=S.stones[0],sp=org3api.proj([st.x+st.w*0.75,860,300]);__sel3(sp[0],sp[1]);R.pedra=[mw.b,Math.round(mw.x+mw.w/2-(st.x+st.w*0.75))].join();s0=ctr(mw);__sel3(s0[0],s0[1]);var dp=org3api.proj([st.x+st.w*0.3,400,zoOf(b)+b.d+18]);__sel3(dp[0],dp[1]);R.porta=mw.b;
+          /* 2 toques na mesa: vai pra cima dela */
+          s0=ctr(mw);__sel3(s0[0],s0[1]);var mp=org3api.proj([me.x+me.w/2,750,(+me.y)+me.d/2]);__sel3(mp[0],mp[1]);R.mesa=mw.b;
+          /* 2 toques na churrasqueira e 2 toques na parede da esquerda */
+          s0=ctr(ch);__sel3(s0[0],s0[1]);var wp=org3api.proj([0,1200,1500]);var h=__ray(wp[0],wp[1]);R.alvoParede=h&&h.n.join();__sel3(wp[0],wp[1]);R.parede=[ch.wall,ch.x].join();
+          /* 2 toques no chão */
+          s0=ctr(mw);__sel3(s0[0],s0[1]);var fp=org3api.proj([3000,0,1600]);__sel3(fp[0],fp[1]);R.chao=[mw.b,Math.round(mw.x+mw.w/2),Math.round(mw.y+mw.d/2)].join();
+          /* 3 toques: configurações */
+          s0=ctr(mw);__size3(s0[0],s0[1]);R.config=JSON.stringify(org3api.isx());
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["esc"] as? Bool, true, "2 toques no micro-ondas: escolhido pra mudar de lugar")
+        XCTAssertEqual(o["laranja"] as? Bool, true, "fica laranja enquanto espera o lugar novo")
+        XCTAssertEqual(o["pedra"] as? String, "860,-2", "2 toques na pedra: vai pra cima dela, no ponto tocado")
+        XCTAssertEqual(o["porta"] as? Int, 860, "2 toques na frente do balcão: sobe pra cima da pedra")
+        XCTAssertEqual(o["mesa"] as? Int, 750, "2 toques na mesa: vai pra cima da mesa")
+        XCTAssertEqual(o["parede"] as? String, "e,1080", "2 toques na parede da esquerda: vai pra ela (L)")
+        XCTAssertEqual(o["chao"] as? String, "0,2998,1597", "2 toques no chão: vai pro chão no ponto tocado")
+        XCTAssertTrue((o["config"] as? String ?? "").contains("\"fr\""), "3 toques: abre as configurações")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testEletroPelo3DComLupaEmCimaDaPedraMesaEParedeDoL() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=600;addStone();S.st.x=600;S.st.w=1800;draw();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var R={};
+          /* ＋ Criar tem a lupa e os atalhos */
+          document.getElementById('v3add').click();R.lupa=!!document.querySelector('#crp3 #crpq')+'/'+document.querySelectorAll('#crp3 [data-ccat]').length;
+          var qi=document.getElementById('crpq');qi.value='micro-ondas';qi.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await new Promise(function(r){setTimeout(r,200)});
+          var cm=document.getElementById('catm');R.cat=cm&&!cm.hidden?cm.style.zIndex:'fechado';var btn=[].slice.call(document.querySelectorAll('#catm [data-cati]')).filter(function(b){return /Micro-ondas · Bancada/.test(b.textContent)})[0];R.achou=!!btn;
+          if(!btn)return JSON.stringify(R);btn.click();await new Promise(function(r){setTimeout(r,200)});var mw=S.fr[S.fr.length-1];R.novo=mw&&mw.t;R.quadro=!!(document.querySelector('[data-qon="st"]'));
+          /* em cima da pedra */
+          var qq=document.querySelector('[data-qon="st"]');if(!qq){R.isx=JSON.stringify(window.org3api.isx());return JSON.stringify(R)}qq.click();var st=S.stones[0];R.pedra=[mw.b,Math.round(+st.t+(+st.e||40)),mw.y].join();R.onde=!!document.querySelector('[data-qon="st"][style*="1f6feb"]');var bb=__boxes().filter(function(q){return q.fr===mw.id});R.y0=Math.round(Math.min.apply(null,bb.map(function(q){return q.y0})));R.z0=Math.round(Math.min.apply(null,bb.map(function(q){return q.z0})));
+          /* mesa no meio e a air fryer em cima dela */
+          var me=apAdd('mesa',0);__build();var af=apAdd('airfryer',0);af.x=200;__build();org3api.isx&&0;
+          window.__3dAdded(S.fr.length-1,S.mods.length);document.querySelector('[data-qon="mesa"]').click();R.mesa=[af.b,me.h,Math.round(af.x+af.w/2-(me.x+me.w/2)),Math.round(af.y+af.d/2-(me.y+me.d/2))].join();
+          var ab=__boxes().filter(function(q){return q.fr===af.id});R.afz=Math.round(Math.min.apply(null,ab.map(function(q){return q.z0})))+'>'+Math.round(me.y);
+          /* churrasqueira na parede da esquerda (L) */
+          var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=2500;__build();window.__3dAdded(S.fr.length-1,S.mods.length);
+          document.querySelector('[data-qwl="e"]').click();var cb=__boxes().filter(function(q){return q.fr===ch.id}),X0=Math.min.apply(null,cb.map(function(q){return q.x0})),X1=Math.max.apply(null,cb.map(function(q){return q.x1})),Z0=Math.min.apply(null,cb.map(function(q){return q.z0})),Z1=Math.max.apply(null,cb.map(function(q){return q.z1}));
+          R.lado=[ch.wall,ch.x,Math.round(X0),Math.round(X1-X0),Math.round(Z0),Math.round(Z1-Z0)].join();
+          ele3api.luz(ch.id,1);__build();await new Promise(function(r){setTimeout(r,500)});R.fumaca=fx3api.fx();
+          var dc=__boxes().filter(function(q){return q.fr===ch.id});
+          /* direita */
+          document.querySelector('[data-qwl="d"]').click();cb=__boxes().filter(function(q){return q.fr===ch.id});R.dir=[Math.round(Math.max.apply(null,cb.map(function(q){return q.x1}))),Math.round(Math.min.apply(null,cb.map(function(q){return q.z0})))].join();
+          /* sala também tem churrasqueira */
+          document.getElementById('v3x').click();var rm=window.roomOf?roomOf():'';R.salaCat=ROOMCATS.sala.indexOf('cchur')>=0&&ROOMCATS.sala.indexOf('ele')>=0;
+          /* planta e vista de frente */
+          var svgF=document.getElementById('svg').innerHTML.length;R.errs=__errs;
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["lupa"] as? String, "true/5", "no ＋ Criar do 3D: lupa e atalhos pros módulos, eletros e mobília")
+        XCTAssertEqual(o["cat"] as? String, "90", "o catálogo abre por cima do 3D")
+        XCTAssertEqual(o["achou"] as? Bool, true, "a lupa acha o micro-ondas")
+        XCTAssertEqual(o["novo"] as? String, "microondas", "escolhido no catálogo, entra no 3D")
+        XCTAssertEqual(o["quadro"] as? Bool, true, "e abre o quadro dele com o lugar")
+        XCTAssertEqual(o["pedra"] as? String, "860,860,124", "micro-ondas em cima da pedra (pia), na altura dela")
+        XCTAssertEqual(o["y0"] as? Int, 860, "no 3D ele fica em cima da pedra")
+        XCTAssertEqual(o["mesa"] as? String, "750,750,0,0", "air fryer em cima da mesa, no meio dela")
+        XCTAssertEqual(o["lado"] as? String, "e,200,0,610,180,880", "churrasqueira na parede da esquerda (L)")
+        XCTAssertGreaterThan(o["fumaca"] as? Int ?? 0, 10, "na lateral ela também assa e solta fumaça")
+        XCTAssertEqual(o["dir"] as? String, "4000,180", "e na parede da direita")
+        XCTAssertEqual(o["salaCat"] as? Bool, true, "churrasqueira e eletros em qualquer ambiente")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testBotaoDoLEDUmSoOuUmPorModuloCorEMudarDeLugarCom2Toques() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

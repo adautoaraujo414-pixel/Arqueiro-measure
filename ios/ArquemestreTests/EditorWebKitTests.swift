@@ -992,6 +992,31 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// Gaveta não encosta em cima: a folga do vão fica dividida (em cima e embaixo); se estiver apertado, 2 cm embaixo e 1,5 cm em cima,
+    /// e a corrediça telescópica vai no meio da lateral da caixa
+    func testGavetaComFolgaDivididaENaoEncostaEmCimaCorredicaNoMeio() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2000;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Gaveteiro 3 gavetas'));var m=S.mods[0];S.m=m;draw();var R={};
+          var vi=m.v.findIndex(function(v){return v.k==='drawers'}),v=m.v[vi];CURM=m;var fh=drawerH(v);
+          /* folga dividida em cima e embaixo; apertado: 2 cm embaixo e 1,5 cm em cima */
+          var g0=gbox(v,900,fh,560);R.normal=g0.fb+'/'+g0.ft;v.gH=fh-20;var g1=gbox(v,900,fh,560);R.apertado=(fh-g1.h)+':'+g1.fb+'/'+g1.ft;delete v.gH;CURM=null;
+          /* no 3D a caixa de cima não encosta na travessa e a corrediça fica no meio da lateral */
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var bx=__boxes(),lat=bx.filter(function(b){return /:Lateral de gaveta$/.test(b.nm)}),topo=Math.max.apply(null,lat.map(function(b){return b.y1})),tr=bx.filter(function(b){return /:Travessa frontal$/.test(b.nm)})[0];
+          R.folgaTopo=Math.round(tr.y0-topo);var c1=lat.filter(function(b){return b.y1===topo})[0],rl=bx.filter(function(b){return /Corrediça telescópica/.test(b.nm)&&b.y0<topo&&b.y1>c1.y0})[0];R.corredica=rl?Math.round(((rl.y0+rl.y1)/2-(c1.y0+c1.y1)/2)):'sem';
+          R.nota=/corrediça no meio da lateral/.test(partsOf(m).filter(function(p){return /^Lateral de gaveta/.test(p.name)})[0].note);
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["normal"] as? String, "28/28", "folga do vão dividida em cima e embaixo")
+        XCTAssertEqual(o["apertado"] as? String, "35:20/15", "apertado: 2 cm embaixo e 1,5 cm em cima")
+        XCTAssertEqual(o["folgaTopo"] as? Int, 28, "caixa de cima não encosta na travessa")
+        XCTAssertEqual(o["corredica"] as? Int, 0, "corrediça no meio da lateral")
+        XCTAssertEqual(o["nota"] as? Bool, true, "lista de corte diz onde vai a corrediça")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// separados por categoria, no piso e nas paredes do 3D (as juntas vêm na peça); tudo salvo no projeto
     func testCoresComPisosEPorcelanatosReaisParedesArmariosPortasEFitas() async throws {
         let web = try await editor()

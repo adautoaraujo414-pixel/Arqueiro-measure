@@ -992,6 +992,79 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// Torre: marcar o pedestal desce o módulo suspenso até o chão; a prateleira de dentro arrasta pra cima e pra baixo
+    func testTorrePedestalDesceAteOChaoEPrateleiraArrasta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3000;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Despenseiro'));var m=S.mods[0];m.x=1000;m.w=730;m.h=2260;m.b=140;S.m=m;S.tab=0;draw();panel();var R={};
+          /* torre suspensa: marcar o pedestal desce até o chão (o topo fica) e põe o pedestal */
+          R.antes=m.rod+'/'+m.b;document.querySelector('#bd input[data-rc="rod"]').click();R.depois=m.rod+'/'+m.b+'/'+m.h;
+          /* prateleira de dentro da torre arrasta pra cima e pra baixo */
+          setShelves(m,0,1);S.tab=1;draw();panel();var h=document.querySelector('#svg circle[data-ish]');R.alca=!!h;
+          if(h){var r=h.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,a0=m.v[0].int[0].h,s0=m.v[0].int[0].h+m.v[0].int[1].h;h.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:7,isPrimary:true}));document.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,cancelable:true,clientX:cx,clientY:cy-8,pointerId:7}));document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:cx,clientY:cy-8,pointerId:7}));R.subiu=m.v[0].int[0].h<a0;R.soma=(m.v[0].int[0].h+m.v[0].int[1].h)===s0;R.x=m.x}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["antes"] as? String, "false/140", "torre suspensa sem pedestal")
+        XCTAssertEqual(o["depois"] as? String, "true/0/2400", "pedestal: desce até o chão e o topo fica")
+        XCTAssertEqual(o["alca"] as? Bool, true, "bolinha na prateleira")
+        XCTAssertEqual(o["subiu"] as? Bool, true, "arrastou pra cima")
+        XCTAssertEqual(o["soma"] as? Bool, true, "vão de cima + vão de baixo fica igual")
+        XCTAssertEqual(o["x"] as? Int, 1000, "o módulo não sai do lugar")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// 3 toques no módulo: encaixar o lado de fora embaixo da pedra (pingadeira 0,5 cm, o outro lado fica) e esticar ou encurtar o móvel
+    func testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));newTpl(tpl('Balcão 2 portas'));var a=S.mods[0],b=S.mods[1];a.x=1000;b.x=1900;addStone();S.st.x=1100;S.st.w=1800;draw();var R={};
+          open3D();await new Promise(function(r){setTimeout(r,300)});
+          /* 3 toques: encaixar o lado de fora embaixo da pedra com pingadeira de 5 mm, o lado encostado no vizinho fica */
+          fx3api.open({k:'mod',mi:1});var it=document.getElementById('it4'),e0=extOf(b)[0];it.querySelector('[data-qmfit]').click();R.ping=Math.round((S.st.x+S.st.w)-extOf(b)[1]);R.fica=extOf(b)[0]===e0;
+          /* esticar ou encurtar o móvel pelo quadro */
+          var w0=b.w;it.querySelector('[data-qms="w|-10"]').click();R.encurta=w0-b.w;R.campos=it.querySelectorAll('[data-qmf="w"],[data-qmf="h"],[data-qmf="d"]').length;
+          it.querySelector('[data-qmz]').click();await new Promise(function(r){setTimeout(r,100)});R.bolinhas=[].map.call(document.querySelectorAll('[data-mzh]'),function(d){return d.dataset.mzh}).sort().join(',');
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["ping"] as? Int, 5, "pedra passa 5 mm do lado de fora")
+        XCTAssertEqual(o["fica"] as? Bool, true, "o lado encostado no vizinho fica")
+        XCTAssertEqual(o["encurta"] as? Int, 10, "encurta pelo quadro")
+        XCTAssertEqual(o["campos"] as? Int, 3, "largura, altura e profundidade no quadro")
+        XCTAssertEqual(o["bolinhas"] as? String, "d,h,w,wl", "bolinhas dos dois lados")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Torre quente: acha pela lupa e muda forno (embutido, só nicho, sem) e micro-ondas (embutir, nicho aberto, só nicho, sem)
+    func testTorreQuenteEditavelPelaLupaComNichosEMicroOndas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;draw();var R={};
+          /* lupa do catálogo de baixo acha a torre quente */
+          catLevel('inf');var q=document.getElementById('catq');q.value='torre quente';q.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(function(r){setTimeout(r,200)});
+          R.achou=[].filter.call(document.querySelectorAll('#catgw [data-cati]'),function(b){return b.style.display!=='none'&&/^Torre/.test(b.textContent)}).length;document.getElementById('catm').hidden=true;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Torre quente (forno)'));var m=S.mods[0];S.m=m;draw();var vi=m.v.findIndex(function(v){return v.k==='oven'});S.sv=vi;S.tab=2;panel();
+          var nm=function(){return partsOf(m).filter(function(p){return /^(Corte|Nicho|Porta)/.test(p.name)}).map(function(p){return p.name.split(' (')[0]}).join(',')};
+          R.forno=nm();document.querySelector('#bd [data-tqm="embutir"]').click();R.micro=nm();document.querySelector('#bd [data-tqm="aberto"]').click();R.aberto=partsOf(m).some(function(p){return p.mwOpen});
+          document.querySelector('#bd [data-tqf="nao"]').click();R.semForno=nm();document.querySelector('#bd [data-tqf="nicho"]').click();document.querySelector('#bd [data-tqm="nicho"]').click();R.nichos=nm();
+          /* 3 toques na torre no 3D também mudam */
+          open3D();await new Promise(function(r){setTimeout(r,300)});fx3api.open({k:'mod',mi:0});document.querySelector('#it4 [data-qtqf$="|forno"]').click();R.q3=m.v[vi].fo;
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertGreaterThanOrEqual(o["achou"] as? Int ?? 0, 6, "lupa acha as torres")
+        XCTAssertEqual(o["forno"] as? String, "Corte do forno,Porta,Porta", "torre quente com portas em cima e embaixo")
+        XCTAssertEqual(o["micro"] as? String, "Corte do forno,Corte do micro-ondas,Porta,Porta", "micro-ondas de embutir")
+        XCTAssertEqual(o["aberto"] as? Bool, true, "nicho aberto do micro-ondas de bancada")
+        XCTAssertEqual(o["semForno"] as? String, "Nicho do micro-ondas,Porta,Porta", "sem forno")
+        XCTAssertEqual(o["nichos"] as? String, "Nicho do forno,Nicho do micro-ondas,Porta,Porta", "só os nichos")
+        XCTAssertEqual(o["q3"] as? String, "forno", "3 toques no 3D mudam a torre")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Planta em ângulo: cada peça desenhada na ordem certa (a pedra cobre o módulo, nada sobreposto ou torto)
     func testPlantaEmAnguloPedraCobreOModuloSemSobreposicao() async throws {
         let web = try await editor()
@@ -1335,7 +1408,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cegoOd"] as? Int, 0, "painel cego não abre")
         XCTAssertGreaterThan(o["rip"] as? Int ?? 0, 10, "ilha com painel ripado")
         XCTAssertEqual(o["ripCut"] as? Int, 2, "ripas e chapa base no plano de corte")
-        XCTAssertEqual(o["mzh"] as? Int, 3, "bolinhas pra largura, altura e fundura do móvel")
+        XCTAssertEqual(o["mzh"] as? Int, 4, "bolinhas pra largura (dos dois lados), altura e fundura do móvel")
         XCTAssertEqual(o["ok"] as? Bool, true, "link colado abre")
         XCTAssertEqual(o["ro"] as? Bool, true, "projeto recebido abre só pra ver")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")

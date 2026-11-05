@@ -992,6 +992,24 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// Planta em ângulo: cada peça desenhada na ordem certa (a pedra cobre o módulo, nada sobreposto ou torto)
+    func testPlantaEmAnguloPedraCobreOModuloSemSobreposicao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;var R={};
+          /* ordem: a pedra (em cima) vem depois do módulo (embaixo); o que está mais pra frente vem depois do que está atrás */
+          var T=function(x,z,h){return [x-z*.5,z*.3-h]},bx=function(n,x0,x1,y0,y1,z0,z1){return {n:n,b:{x0:x0,x1:x1,y0:y0,y1:y1,z0:z0,z1:z1}}};
+          var L=[bx('pedra',0,600,860,900,0,600),bx('frente',0,600,0,860,560,580),bx('modulo',0,600,0,860,0,560)];
+          R.ordem=plDepthSort(L,0,1,T).map(function(it){return it.n}).join(',');
+          /* cozinha em L na planta em ângulo: desenha e não dá erro */
+          demoScene();PLV=true;PLANG=true;draw();R.polys=document.querySelectorAll('#plx polygon').length;PLANG=false;PLV=false;draw();
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["ordem"] as? String, "modulo,frente,pedra", "módulo, depois a frente, e a pedra por cima")
+        XCTAssertGreaterThan(o["polys"] as? Int ?? 0, 100, "cozinha em L desenhada")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Gaveta não encosta em cima: a folga do vão fica dividida (em cima e embaixo); se estiver apertado, 2 cm embaixo e 1,5 cm em cima,
     /// e a corrediça telescópica vai no meio da lateral da caixa
     func testGavetaComFolgaDivididaENaoEncostaEmCimaCorredicaNoMeio() async throws {

@@ -4940,16 +4940,34 @@ function plExtrude3(){if(!PLV||!PLANG||!PLAM)return false;var g=document.getElem
  var xl=sw.L===null?0:sw.L,xr=sw.R===null?W:sw.R,walls=[{a:[xl,0],b:[xr,0],n:[0,1]}];if(sw.L!==null)walls.push({a:[xl,D],b:[xl,0],n:[1,0]});if(sw.R!==null)walls.push({a:[xr,0],b:[xr,D],n:[-1,0]});
  walls.forEach(function(w){var bk=fv(w.n[0],w.n[1]);out+='<polygon points="'+pt([T(w.a[0],w.a[1],0),T(w.b[0],w.b[1],0),T(w.b[0],w.b[1],H),T(w.a[0],w.a[1],H)])+'" fill="#ece9e3" fill-opacity="'+(bk?.85:.16)+'" stroke="#9a948a" stroke-width=".8"'+(bk?'':' stroke-dasharray="6 4"')+' pointer-events="none"/>'});
  var L=[],lab={};
- BX.forEach(function(b){if(b.g==='sh'||b.g==='lo'||b.em)return;var dx=b.x1-b.x0,dy=b.y1-b.y0,dz=b.z1-b.z0;if(!(dx>0&&dy>0&&dz>0))return;var mn=Math.min(dx,dy,dz),mx=Math.max(dx,dy,dz);if(mn<2.5&&mx<400)return;if(mn<1.5)return;if(mx<25)return;
+ BX.forEach(function(b){if(b.g==='sh'||b.g==='lo'||b.em)return;var dx=b.x1-b.x0,dy=b.y1-b.y0,dz=b.z1-b.z0;if(!(dx>0&&dy>0&&dz>0))return;var mn=Math.min(dx,dy,dz),mx=Math.max(dx,dy,dz),md=dx+dy+dz-mn-mx;/* chapa fina mas grande (fundo da cuba, vidro) aparece; fiozinho não */if(mn<2.5&&mx<400&&md<60)return;if(mn<1.5&&md<60)return;if(mx<25)return;
   var nm=b.nm==null?'':String(b.nm),mi=parseInt(nm,10);if(!isNaN(mi)&&S.mods[mi]){var o=lab[mi]||(lab[mi]={x0:1e9,x1:-1e9,z0:1e9,z1:-1e9,y1:-1e9});o.x0=Math.min(o.x0,b.x0);o.x1=Math.max(o.x1,b.x1);o.z0=Math.min(o.z0,b.z0);o.z1=Math.max(o.z1,b.z1);o.y1=Math.max(o.y1,b.y1)}
   L.push({b:b,mi:isNaN(mi)?-1:mi,k:((b.x0+b.x1)/2)*vx+((b.z0+b.z1)/2)*vz+(b.y0+b.y1)*.0002})});
  L.sort(function(a,c){return a.k-c.k});
+ /* ordem de desenho certa (o que está atrás primeiro): entre duas peças que se cobrem na tela, a que está do lado de quem olha (mais alta, ou mais pra frente) vai por cima · assim a pedra cobre o módulo, nada fica sobreposto */
+ try{L=plDepthSort(L,vx,vz,T)}catch(_){}
  L.forEach(function(it){var b=it.b,act=it.mi>=0&&S.mods[it.mi]===S.m,st=act?'#1f6feb':'#3d342b',sw_=act?1.4:.5,al=(b.a==null||b.a>=.5)?1:b.a,/* porta/frente (op .85 no 3D) é opaca na planta: não mostra o interior através dela */pm=it.mi>=0?' data-pm="'+it.mi+'" data-pmx="1" style="cursor:move"':' pointer-events="none"',s='';
   var F=[];if(fv(1,0))F.push([[b.x1,b.z0],[b.x1,b.z1],.84]);if(fv(-1,0))F.push([[b.x0,b.z1],[b.x0,b.z0],.84]);if(fv(0,1))F.push([[b.x0,b.z1],[b.x1,b.z1],.95]);if(fv(0,-1))F.push([[b.x1,b.z0],[b.x0,b.z0],.95]);
   F.forEach(function(f){s+='<polygon'+pm+' points="'+pt([T(f[0][0],f[0][1],b.y0),T(f[1][0],f[1][1],b.y0),T(f[1][0],f[1][1],b.y1),T(f[0][0],f[0][1],b.y1)])+'" fill="'+col(b.c,f[2])+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>'});
   s+='<polygon'+pm+' points="'+pt([T(b.x0,b.z0,b.y1),T(b.x1,b.z0,b.y1),T(b.x1,b.z1,b.y1),T(b.x0,b.z1,b.y1)])+'" fill="'+col(b.c,1.04)+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>';out+=s});
  Object.keys(lab).forEach(function(i){var o=lab[i],m=S.mods[i];if(!m)return;var c=T((o.x0+o.x1)/2,(o.z0+o.z1)/2,o.y1+5);out+='<text x="'+c[0].toFixed(1)+'" y="'+(c[1]+4).toFixed(1)+'" font-size="10" text-anchor="middle" fill="#222" style="pointer-events:none;paint-order:stroke" stroke="#fff" stroke-width="2.5">'+(m.sup?'Sup. ':'')+m.w+'</text>'});
  out+='</g>';svg.insertAdjacentHTML('beforeend',out);return true}
+/* ordenação por profundidade de caixas alinhadas aos eixos (projeção paralela): plano que separa as duas decide quem fica na frente */
+function plDepthSort(L,vx,vz,T){var n=L.length,e=.6;if(n<2)return L;
+ L.forEach(function(it,i){var b=it.b,X0=1e9,X1=-1e9,Y0=1e9,Y1=-1e9;[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].forEach(function(q){[b.y0,b.y1].forEach(function(h){var p=T(q[0],q[1],h);if(p[0]<X0)X0=p[0];if(p[0]>X1)X1=p[0];if(p[1]<Y0)Y0=p[1];if(p[1]>Y1)Y1=p[1]})});it.s0=X0;it.s1=X1;it.t0=Y0;it.t1=Y1;it.ix=i});
+ function front(A,B){/* true: B na frente de A (A desenha antes) · false: A na frente · null: não dá pra saber (se cruzam) */var a=A.b,b=B.b;
+  if(a.y1<=b.y0+e)return true;if(b.y1<=a.y0+e)return false;
+  if(Math.abs(vx)>1e-6){if(a.x1<=b.x0+e)return vx>0;if(b.x1<=a.x0+e)return vx<0}
+  if(Math.abs(vz)>1e-6){if(a.z1<=b.z0+e)return vz>0;if(b.z1<=a.z0+e)return vz<0}
+  return null}
+ var out=[],deg=new Array(n).fill(0),adj=[];for(var i=0;i<n;i++)adj.push([]);
+ var ord=L.slice().sort(function(p,q){return p.s0-q.s0});
+ for(var i=0;i<n;i++){var A=ord[i];for(var j=i+1;j<n;j++){var B=ord[j];if(B.s0>=A.s1-.3)break;if(B.t0>=A.t1-.3||A.t0>=B.t1-.3)continue;var f=front(A,B);if(f===true){adj[A.ix].push(B.ix);deg[B.ix]++}else if(f===false){adj[B.ix].push(A.ix);deg[A.ix]++}}}
+ /* Kahn com fila pela ordem antiga (empates e ciclos seguem a ordem de antes) */
+ var heap=[],push=function(x){heap.push(x);var c=heap.length-1;while(c>0){var p=(c-1)>>1;if(heap[p]<=heap[c])break;var t=heap[p];heap[p]=heap[c];heap[c]=t;c=p}},pop=function(){var r=heap[0],l=heap.pop();if(heap.length){heap[0]=l;var c=0;for(;;){var a=2*c+1,b2=a+1,m=c;if(a<heap.length&&heap[a]<heap[m])m=a;if(b2<heap.length&&heap[b2]<heap[m])m=b2;if(m===c)break;var t=heap[m];heap[m]=heap[c];heap[c]=t;c=m}}return r},done=new Array(n).fill(false),cnt=0,nx=0;
+ for(var i=0;i<n;i++)if(!deg[i])push(i);
+ while(cnt<n){if(!heap.length){while(nx<n&&done[nx])nx++;if(nx>=n)break;deg[nx]=0;push(nx)}var u=pop();if(done[u])continue;done[u]=true;cnt++;out.push(L[u]);adj[u].forEach(function(w){if(!done[w]&&--deg[w]===0)push(w)})}
+ return out.length===n?out:L}
 var plExtrude_old=plExtrude;plExtrude=function(){var ok=false;try{ok=plExtrude3()}catch(e){ok=false}if(!ok)plExtrude_old()};
 
 /* ===== Painel liso nas paredes laterais (esquerda/direita): mesmas placas, viradas pra parede do lado ===== */

@@ -1153,6 +1153,49 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Pedra não some editando o 2D só do módulo (nem no desfazer), 🗑 não tira pedra, pedra travada no 3D, geladeira visível no 2D, mudar de parede sem perder nada, trena 2D/3D e lado da porta do ambiente
+    func testPedraTravadaNaoSomeTrenaComLupaGeladeiraNo2DEPortaDoAmbiente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();var R={};var st=S.stones[0],w0=JSON.stringify(st);
+          /* editar no 2D só do módulo não tira a pedra (nem do desfazer) */
+          soloOn(S.mods[1]);snap();S.mods[1].d=500;draw();await new Promise(function(r){setTimeout(r,800)});snap();S.mods[1].w=1100;draw();await new Promise(function(r){setTimeout(r,800)});
+          R.hist=HIST.every(function(h){return JSON.parse(h.s).stones.length===1});soloOff();document.getElementById('und').click();R.desfazer=S.stones.length===1;
+          /* 🗑 do 2D não tira pedra nem cuba */
+          S.st=S.stones[0];LAST='stone';document.getElementById('delMod').click();var n1=S.stones.length;LAST='item';S.selI=(S.stones[0].items[0]||{}).id;document.getElementById('delMod').click();R.lixo=n1===1&&S.stones[0].items.length===1;
+          /* no 3D a pedra, a cuba e o cooktop ficam travados */
+          open3D();await new Promise(function(r){setTimeout(r,300)});st=S.stones[0];var a=__itOpen({k:'st',id:st.id});var it=st.items[0],b=__itOpen({k:'cook',sid:st.id,iid:it.id});R.trava3d=a.h===0&&!a.bdr&&b.h===0&&!b.bdr&&!!document.querySelector('.stlk');document.getElementById('v3x').click();
+          /* geladeira aparece no 2D dentro da caixa (parede do fundo e do lado) */
+          S.W=4000;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Caixa da geladeira side by side (laterais + aéreo)'));var g=S.mods[0];g.x=1500;S.m=null;draw();var top=function(){var e=document.querySelector('#svg [data-ap]');return !!e&&!!e.compareDocumentPosition&&!!(document.querySelector('#svg [data-mi]').compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING)};R.gel2d=top();
+          var k0=JSON.stringify(Object.assign({},g,{x:0,wing:0,_gel:0}));__mdDrop(0,[0.5,1200,1500]);R.gelLado=g.wing==='e'&&!!document.querySelector('#svg [data-ap]');R.naoPerde=JSON.stringify(Object.assign({},g,{x:0,wing:0,_gel:0}))===k0;
+          /* trena no 2D: gruda nas bordas e dá a medida */
+          S.mods=[];S.fr=[];draw();newTpl(tpl('Balcão 2 portas'));var m=S.mods[0];m.x=600;S.m=null;draw();document.getElementById('med2b').click();
+          var sv=document.getElementById('svg'),host=sv.parentNode,rc=sv.getBoundingClientRect(),f=rc.width/VB.w,P=function(x,y){return [rc.left+(OX+x*K-VB.x)*f,rc.top+(OY+(S.H-y)*K-VB.y)*f]},ev=function(tp,el,p){el.dispatchEvent(new PointerEvent(tp,{clientX:p[0],clientY:p[1],pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
+          var pa=P(m.x+6,400),pb=P(m.x+m.w-5,410);ev('pointerdown',sv,pa);ev('pointermove',sv,pb);ev('pointerup',sv,pb);R.trena2d=MED2.L.length===1&&Math.round(Math.hypot(MED2.L[0].b[0]-MED2.L[0].a[0],MED2.L[0].b[1]-MED2.L[0].a[1]))===900&&/900 mm/.test((document.querySelector('#medg text')||{}).textContent||'');R.naoMexeu=m.x===600;document.getElementById('med2b').click();
+          /* trena no 3D */
+          open3D();await new Promise(function(r){setTimeout(r,300)});__foto3({yaw:.2,pitch:.3});__foto3(null);__build();document.getElementById('v3med').click();var x0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;__boxes().forEach(function(q){if(!/^0:/.test(q.nm))return;x0=Math.min(x0,q.x0);x1=Math.max(x1,q.x1);y1=Math.max(y1,q.y1);z1=Math.max(z1,q.z1)});
+          var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),qa=__p3(x0,y1,z1),qb=__p3(x1,y1,z1);ev('pointerdown',cv,[cr.left+qa[0]+4,cr.top+qa[1]+3]);ev('pointermove',cv,[cr.left+qb[0]-4,cr.top+qb[1]+3]);ev('pointerup',cv,[cr.left+qb[0]-4,cr.top+qb[1]+3]);
+          var M3=__med3();R.trena3d=M3.L.length===1&&Math.round(Math.hypot(M3.L[0].b[0]-M3.L[0].a[0],M3.L[0].b[1]-M3.L[0].a[1],M3.L[0].b[2]-M3.L[0].a[2]))===900&&!!document.querySelector('#med3 text');R.naoMexeu3=m.x===600;document.getElementById('v3med').click();
+          /* porta do ambiente: lado e pra dentro / pra fora */
+          S.ops=[{id:6,t:'porta',x:2600,b:0,w:800,h:2100,hg:'d',out:1,open:true}];__build();anim3();await new Promise(function(r){setTimeout(r,1500)});var lf=null;__bg().concat(__boxes()).forEach(function(q){if(q.op===6&&q.pf&&q.y1>1900&&q.y1<2200&&q.x1-q.x0+q.z1-q.z0>500)lf=q});R.porta=!!lf&&lf.x0>3300&&lf.z1<=1&&lf.z0<-700;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["hist"] as? Bool, true, "editar no 2D só do módulo não tira a pedra do desfazer")
+        XCTAssertEqual(o["desfazer"] as? Bool, true, "desfazer mantém a pedra")
+        XCTAssertEqual(o["lixo"] as? Bool, true, "🗑 do 2D não tira pedra nem cuba")
+        XCTAssertEqual(o["trava3d"] as? Bool, true, "pedra, cuba e cooktop travados no 3D")
+        XCTAssertEqual(o["gel2d"] as? Bool, true, "geladeira aparece no 2D por cima da caixa")
+        XCTAssertEqual(o["gelLado"] as? Bool, true, "geladeira aparece com a caixa na parede do lado")
+        XCTAssertEqual(o["naoPerde"] as? Bool, true, "mudar a caixa de parede não perde nada")
+        XCTAssertEqual(o["trena2d"] as? Bool, true, "trena no 2D gruda nas bordas e dá 900 mm")
+        XCTAssertEqual(o["naoMexeu"] as? Bool, true, "medir não arrasta o módulo")
+        XCTAssertEqual(o["trena3d"] as? Bool, true, "trena no 3D dá 900 mm")
+        XCTAssertEqual(o["naoMexeu3"] as? Bool, true, "medir no 3D não arrasta o módulo")
+        XCTAssertEqual(o["porta"] as? Bool, true, "porta do ambiente abre do lado direito pra fora")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()
@@ -1800,7 +1843,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pan"] as? Int, 1, "panelas no cooktop")
         XCTAssertEqual(o["wat"] as? Int, 1, "torneira com água")
         XCTAssertGreaterThan(o["fx"] as? Int ?? 0, 10, "chama, vapor e água desenhados")
-        XCTAssertEqual(o["dw"] as? Double, 50, "− na pedra diminui 50 mm")
+        XCTAssertEqual(o["dw"] as? Double, 0, "pedra travada no 3D: o − não muda a medida (muda pela aba Pedra)")
         XCTAssertEqual(o["wc"] as? String, "#b8c4ae", "cor da parede")
         XCTAssertEqual(o["svled"] as? Bool, true, "projeto salva o LED")
         XCTAssertEqual(o["svwc"] as? String, "#b8c4ae", "projeto salva a cor da parede")
@@ -1902,7 +1945,7 @@ final class EditorWebKitTests: XCTestCase {
           var sv=JSON.parse(JSON.stringify(snapState()));document.getElementById('v3x').click();
           return JSON.stringify({st:st,fr:fr,md:md,pi:pi,vis:vis,gs:gs,xs:xs,bar:bar,nx:nx,semL:semL,sg:(sv.geo||[]).length,errs:__errs});
           """#)
-        XCTAssertEqual(o["st"] as? String, "xm,xp,zp,yp", "pedra: setinhas nos lados, frente e altura")
+        XCTAssertEqual(o["st"] as? String, "", "pedra travada no 3D: sem setinhas (muda pela aba Pedra)")
         XCTAssertEqual(o["fr"] as? String, "xm,xp,yp,ym,zp", "eletro: setinhas")
         XCTAssertEqual(o["md"] as? String, "xm,xp,yp,zp,ym", "aéreo: setinhas")
         XCTAssertEqual(o["pi"] as? String, "pc,px,pz", "piso: canto e lados")

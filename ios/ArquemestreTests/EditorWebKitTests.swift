@@ -972,9 +972,9 @@ final class EditorWebKitTests: XCTestCase {
           /* botão do LED: bolinha preta embaixo do aéreo · toque desliga */
           var lb=__lbt(),s0=lb[0]&&lb[0].s;if(s0)org3api.one(s0[0],s0[1]);var ledOff=a.led.on;
           /* TV: abertura com a logo e depois a imagem */
-          var tv=apAdd('tv',1);tv.x=1500;tv.b=1300;__build();ele3api.luz(tv.id,1);await new Promise(function(r){setTimeout(r,1400)});var tvs=__tvs(),logo=fx3api.fx();await new Promise(function(r){setTimeout(r,2400)});var tvs2=__tvs();
+          var tv=apAdd('tv',1);tv.x=1500;tv.b=1300;__build();ele3api.luz(tv.id,1);await new Promise(function(r){setTimeout(r,1400)});var tvs=__tvs(),logo=fx3api.fx();await new Promise(function(r){setTimeout(r,2400)});var wel=fx3api.fx();await new Promise(function(r){setTimeout(r,2300)});var tvs2=__tvs(),car=__tvCar();
           document.getElementById('v3x').click();
-          return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
+          return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,wel:wel,car:car,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
           """#)
         XCTAssertEqual(o["dentro0"] as? Bool, true, "tomada posta em cima do módulo vai dentro do armário")
         XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:19", "abas de tomadas/registros e de churrasqueiras")
@@ -986,6 +986,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ledOff"] as? Int, 0, "toque no botão desliga o LED")
         XCTAssertEqual(o["tvSplash"] as? Bool, false, "TV ligando mostra a abertura")
         XCTAssertGreaterThan(o["logo"] as? Int ?? 0, 50, "logo do Arquemestre na tela")
+        XCTAssertGreaterThan(o["wel"] as? Int ?? 0, 50, "depois da logo: SEJA BEM-VINDO na tela")
+        XCTAssertGreaterThan(o["car"] as? Int ?? 0, 30, "TV ligada: o marceneiro passa de carro com a escada e a logo")
         XCTAssertEqual(o["tvDone"] as? Int, 1, "depois da abertura, a imagem normal")
         XCTAssertGreaterThanOrEqual(o["rooms"] as? Int ?? -1, 0, "ambiente Área gourmet")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
@@ -1176,9 +1178,15 @@ final class EditorWebKitTests: XCTestCase {
           /* trena no 3D */
           open3D();await new Promise(function(r){setTimeout(r,300)});__foto3({yaw:.2,pitch:.3});__foto3(null);__build();document.getElementById('v3med').click();var x0=1e9,x1=-1e9,y1=-1e9,z1=-1e9;__boxes().forEach(function(q){if(!/^0:/.test(q.nm))return;x0=Math.min(x0,q.x0);x1=Math.max(x1,q.x1);y1=Math.max(y1,q.y1);z1=Math.max(z1,q.z1)});
           var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),qa=__p3(x0,y1,z1),qb=__p3(x1,y1,z1);ev('pointerdown',cv,[cr.left+qa[0]+4,cr.top+qa[1]+3]);ev('pointermove',cv,[cr.left+qb[0]-4,cr.top+qb[1]+3]);ev('pointerup',cv,[cr.left+qb[0]-4,cr.top+qb[1]+3]);
-          var M3=__med3();R.trena3d=M3.L.length===1&&Math.round(Math.hypot(M3.L[0].b[0]-M3.L[0].a[0],M3.L[0].b[1]-M3.L[0].a[1],M3.L[0].b[2]-M3.L[0].a[2]))===900&&!!document.querySelector('#med3 text');R.naoMexeu3=m.x===600;document.getElementById('v3med').click();
+          var M3=__med3();R.trena3d=M3.L.length===1&&Math.round(Math.hypot(M3.L[0].b[0]-M3.L[0].a[0],M3.L[0].b[1]-M3.L[0].a[1],M3.L[0].b[2]-M3.L[0].a[2]))===900&&!!document.querySelector('#med3 text');R.naoMexeu3=m.x===600;
+          /* a trena não atravessa o armário: do chão na frente até o fundo do tampo, para no balcão · só tocar não mede */
+          __foto3({yaw:.5,pitch:.45});__foto3(null);__build();cr=cv.getBoundingClientRect();var n0=M3.L.length,fa=__p3(1050,0,1300),fb=__p3(1050,820,200);ev('pointerdown',cv,[cr.left+fa[0],cr.top+fa[1]]);ev('pointermove',cv,[cr.left+fb[0],cr.top+fb[1]]);ev('pointerup',cv,[cr.left+fb[0],cr.top+fb[1]]);var L1=M3.L[M3.L.length-1];R.solida=M3.L.length===n0+1&&Math.hypot(L1.b[0]-L1.a[0],L1.b[1]-L1.a[1],L1.b[2]-L1.a[2])<1300;
+          var n1=M3.L.length,ft=__p3(1050,400,566);ev('pointerdown',cv,[cr.left+ft[0],cr.top+ft[1]]);ev('pointerup',cv,[cr.left+ft[0],cr.top+ft[1]]);R.toque=M3.L.length===n1;document.getElementById('v3med').click();
+
           /* porta do ambiente: lado e pra dentro / pra fora */
           S.ops=[{id:6,t:'porta',x:2600,b:0,w:800,h:2100,hg:'d',out:1,open:true}];__build();anim3();await new Promise(function(r){setTimeout(r,1500)});var lf=null;__bg().concat(__boxes()).forEach(function(q){if(q.op===6&&q.pf&&q.y1>1900&&q.y1<2200&&q.x1-q.x0+q.z1-q.z0>500)lf=q});R.porta=!!lf&&lf.x0>3300&&lf.z1<=1&&lf.z0<-700;
+          /* basculante aberta: dobradiças, caneco e compasso/pistão aparecem */
+          S.ops=[];S.mods=[];S.fr=[];draw();newTpl(tpl('Rack com portas basculantes'));newTpl(tpl('Aéreo basculante'));S.mods[1].x=1900;S.mods.forEach(function(q){q.v.forEach(function(v){v.open=true})});draw();__build();anim3();await new Promise(function(r){setTimeout(r,1800)});__build();R.dobBas=__boxes().filter(function(q){return q.pf&&q.pf.ax==='x'&&q.c&&q.c[0]===195&&q.c[1]===201}).length>=6;
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["hist"] as? Bool, true, "editar no 2D só do módulo não tira a pedra do desfazer")
@@ -1193,6 +1201,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["trena3d"] as? Bool, true, "trena no 3D dá 900 mm")
         XCTAssertEqual(o["naoMexeu3"] as? Bool, true, "medir no 3D não arrasta o módulo")
         XCTAssertEqual(o["porta"] as? Bool, true, "porta do ambiente abre do lado direito pra fora")
+        XCTAssertEqual(o["solida"] as? Bool, true, "a trena não atravessa o armário")
+        XCTAssertEqual(o["toque"] as? Bool, true, "só tocar não cria trena")
+        XCTAssertEqual(o["dobBas"] as? Bool, true, "basculante aberta mostra dobradiças e caneco")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

@@ -1020,6 +1020,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Painel: no cabeçalho escolhe ripado ou painel liso (toque pra adicionar) e troca depois no painel selecionado
+    func testPainelRipadoOuLisoNoCabecalho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3000;S.H=2700;S.mods=[];S.fr=[];S.rp=[];draw();S.tab=8;panel();var R={};
+          /* cabeçalho de criar: escolhe ripado ou painel liso e toca pra adicionar */
+          document.querySelector('#bd [data-rpk="liso"]').click();R.on=document.querySelector('#bd [data-rpk="liso"]').classList.contains('on');
+          document.querySelector('#bd [data-rpadd]').click();var a=S.rp[S.rp.length-1];R.liso=!!a.liso;
+          /* cabeçalho do painel selecionado: troca de painel liso pra ripado */
+          var bar=document.getElementById('rpbar');R.bar=!bar.hidden;bar.querySelector('[data-rpb="tp|rip"]').click();R.ripado=!S.rp[S.rp.length-1].liso;R.ripas=rpStats(S.rp[S.rp.length-1]).n>0;
+          document.getElementById('rpbar').querySelector('[data-rpb="tp|liso"]').click();R.volta=!!S.rp[S.rp.length-1].liso;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["on"] as? Bool, true, "painel liso escolhido no cabeçalho")
+        XCTAssertEqual(o["liso"] as? Bool, true, "o painel criado sai liso")
+        XCTAssertEqual(o["bar"] as? Bool, true, "painel novo já fica selecionado")
+        XCTAssertEqual(o["ripado"] as? Bool, true, "troca pra ripado no cabeçalho do painel")
+        XCTAssertEqual(o["ripas"] as? Bool, true, "ripado com ripas")
+        XCTAssertEqual(o["volta"] as? Bool, true, "volta pra painel liso")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Rodapé do armário alto igual aos de baixo, pintar o módulo por dentro, dobradiça real, porta com amortecedor e eletro aberto sem ficar azul
     func testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida() async throws {
         let web = try await editor()

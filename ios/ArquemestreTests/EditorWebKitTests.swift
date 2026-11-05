@@ -1020,6 +1020,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
+    func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.stones=[];draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
+          /* todas as portas de todos os módulos abrem (caixa da geladeira e torres também) */
+          var items=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&t.v)items.push(t)})});var bad=[];
+          items.forEach(function(t){S.mods=[];S.fr=[];try{newTpl(t)}catch(e){return}var m=S.mods[0];if(!m)return;partsOf(m).filter(function(p){return /^Porta/.test(p.name)&&p.vi!==undefined&&!p.noCut}).forEach(function(p){var v=m.v[p.vi];if(!v)return;v.od={};v.od[p.dq]=1;var q=partsOf(m).filter(function(x){return x.pk===p.pk})[0];if(!q||!q.open)bad.push(t.n);v.od={}})});R.portas=bad.length;
+          /* torre: portas separadas (em cima e embaixo) com divisão, régua do cava e volta pra inteiras */
+          S.mods=[];S.fr=[];newTpl(tpl('Despenseiro'));var d=S.mods[0];draw();open3D();await new Promise(function(r){setTimeout(r,300)});fx3api.open({k:'mod',mi:0});
+          document.querySelector('#it4 [data-qtqsep^="1"]').click();var P=partsOf(d);R.sep=P.filter(function(p){return /^Porta/.test(p.name)}).length;R.div=P.some(function(p){return /divide as portas/.test(p.name)});
+          document.querySelector('#it4 [data-qtqr$="|rgI"]').click();R.regua=partsOf(d).some(function(p){return /régua da torre \(embaixo/.test(p.name)});
+          document.querySelector('#it4 [data-qtqsep^="0"]').click();R.inteira=d.v[0].k;try{itClose()}catch(_){}
+          /* 2 toques no módulo e 2 toques perto da parede da direita: o módulo vai pra lá */
+          S.mods=[];newTpl(tpl('Balcão 2 portas'));var m=S.mods[0];m.x=1200;draw();__build();var b=__boxes().filter(function(q){return String(q.nm)==='0:Lateral esquerda'})[0];var c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1);__sel3(c[0],c[1]);var f=__p3(4000,0,1300);__sel3(f[0],f[1]);R.parede=m.wing||'';
+          /* planta em ângulo: nenhuma peça de baixo por cima da pedra */
+          demoScene();PLV=true;PLANG=true;draw();var L=window.__plL||[],e=.6,st=function(q){return q.g==='stc'||q.g==='st'},nb=0;
+          for(var i=0;i<L.length;i++)for(var j=i+1;j<L.length;j++){var A=L[i],B=L[j];if(!st(A.b)||st(B.b))continue;var a=A.b,q=B.b;if(q.x0<a.x1-e&&q.x1>a.x0+e&&q.z0<a.z1-e&&q.z1>a.z0+e&&q.y1<=a.y1+e&&A.s0<B.s1-.3&&B.s0<A.s1-.3&&A.t0<B.t1-.3&&B.t0<A.t1-.3)nb++}
+          R.planta=nb;R.n=L.length;PLANG=false;PLV=false;draw();
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["portas"] as? Int, 0, "todas as portas de todos os módulos abrem")
+        XCTAssertEqual(o["sep"] as? Int, 4, "portas separadas: 2 em cima e 2 embaixo")
+        XCTAssertEqual(o["div"] as? Bool, true, "prateleira fixa dividindo as portas")
+        XCTAssertEqual(o["regua"] as? Bool, true, "régua do cava embaixo da divisão")
+        XCTAssertEqual(o["inteira"] as? String, "door", "volta pra portas inteiras")
+        XCTAssertEqual(o["parede"] as? String, "d", "2 toques no módulo e 2 toques perto da parede da direita: foi pra lá")
+        XCTAssertEqual(o["planta"] as? Int, 0, "planta em ângulo: a pedra sempre por cima do módulo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Painel: no cabeçalho escolhe ripado ou painel liso (toque pra adicionar) e troca depois no painel selecionado
     func testPainelRipadoOuLisoNoCabecalho() async throws {
         let web = try await editor()

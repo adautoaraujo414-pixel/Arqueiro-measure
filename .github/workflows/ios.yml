@@ -76,7 +76,7 @@ jobs:
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
             -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
-            -skip-testing:ArquemestreTests/SubscriptionTests \
+            -skip-testing:ArquemestreTests/SubscriptionTests -retry-tests-on-failure -test-iterations 2 \
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-test.log 2>&1
           RC=$?

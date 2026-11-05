@@ -992,6 +992,25 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// Armário alto: 3 toques põem o nicho de forno / micro-ondas e as réguas do cava (em cima e embaixo)
+    func testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Despenseiro'));var m=S.mods[0];m.x=900;S.m=m;draw();var R={};
+          /* 3 toques no armário alto: pôr nicho de forno / micro-ondas e réguas do cava em cima e embaixo */
+          open3D();await new Promise(function(r){setTimeout(r,300)});fx3api.open({k:'mod',mi:0});var it=document.getElementById('it4');it.querySelector('[data-qtqadd]').click();R.k=m.v[0].k;
+          it.querySelector('[data-qtqm$="|embutir"]').click();it.querySelector('[data-qtqr$="|rgS"]').click();it.querySelector('[data-qtqr$="|rgI"]').click();
+          R.reguas=partsOf(m).filter(function(p){return /^Engrosso cava · régua da torre/.test(p.name)}).length;R.cortes=partsOf(m).filter(function(p){return /^Corte do (forno|micro-ondas)/.test(p.name)}).length;
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["k"] as? String, "oven", "virou torre com nicho")
+        XCTAssertEqual(o["cortes"] as? Int, 2, "forno e micro-ondas de embutir")
+        XCTAssertEqual(o["reguas"] as? Int, 2, "régua do cava em cima e embaixo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre: marcar o pedestal desce o módulo suspenso até o chão; a prateleira de dentro arrasta pra cima e pra baixo
     func testTorrePedestalDesceAteOChaoEPrateleiraArrasta() async throws {
         let web = try await editor()

@@ -52,6 +52,18 @@ object AppUpdater {
         return c.inputStream.bufferedReader().use { it.readText() }
     }
 
+    /** O arquivo existe no release (o envio pode ter falhado nesse número): pergunta sem baixar. */
+    private fun exists(u: String): Boolean = runCatching {
+        val c = URL(u).openConnection() as HttpURLConnection
+        c.instanceFollowRedirects = false
+        c.requestMethod = "HEAD"
+        c.setRequestProperty("User-Agent", "Arquemestre-app")
+        c.connectTimeout = 15000; c.readTimeout = 20000
+        val code = c.responseCode
+        c.disconnect()
+        code == 200 || code in 300..399
+    }.getOrDefault(true)
+
     /** Versão mais nova publicada (a de número maior, não a primeira da lista). Rede: chamar fora da thread principal. */
     fun latest(asset: String = asset()): Release? {
         val ASSET = asset
@@ -61,12 +73,12 @@ object AppUpdater {
             val n = get(DL + "win-latest/latest.txt", false).trim().toInt()
             if (n > 0) best = Release(n, DL + "win-" + n + "/" + ASSET)
         }
+        // o instalador desse número não subiu (ex.: o do Windows 7/8): procura o mais novo que tem ele
+        if (best != null && !exists(best!!.url)) best = null
         if (best == null) runCatching {
             val xml = get(FEED, false)
-            Regex("releases/tag/win-(\\d+)").findAll(xml).forEach { m ->
-                val n = m.groupValues[1].toInt()
-                if (best == null || n > best!!.number) best = Release(n, DL + "win-" + n + "/" + ASSET)
-            }
+            Regex("releases/tag/win-(\\d+)").findAll(xml).map { it.groupValues[1].toInt() }.distinct().sortedDescending().take(6)
+                .firstOrNull { exists(DL + "win-" + it + "/" + ASSET) }?.let { best = Release(it, DL + "win-" + it + "/" + ASSET) }
         }
         if (best == null) runCatching {
             val arr = JSONArray(get(API, true))

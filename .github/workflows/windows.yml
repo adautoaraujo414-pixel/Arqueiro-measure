@@ -84,8 +84,15 @@ jobs:
           $exe = Get-ChildItem build/compose/binaries/main/exe/*.exe | Select-Object -First 1
           Copy-Item $exe.FullName Arquemestre-Windows7-Instalador.exe
           Write-Host "Windows 7/8: $([math]::Round((Get-Item Arquemestre-Windows7-Instalador.exe).Length/1MB)) MB"
-          gh release upload "win-$env:GITHUB_RUN_NUMBER" Arquemestre-Windows7-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
-          gh release upload win-latest Arquemestre-Windows7-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+          # o GitHub às vezes responde 500 no envio: tenta de novo
+          foreach ($tag in @("win-$env:GITHUB_RUN_NUMBER","win-latest")) {
+            $ok = $false
+            for ($i = 1; $i -le 4 -and -not $ok; $i++) {
+              gh release upload $tag Arquemestre-Windows7-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+              if ($LASTEXITCODE -eq 0) { $ok = $true } else { Write-Host "envio falhou ($tag), tentativa $i"; Start-Sleep -Seconds (15 * $i) }
+            }
+            if (-not $ok) { throw "não consegui enviar o instalador do Windows 7/8 pra $tag" }
+          }
 
       - name: Guardar resultados (prints e relatório) no ramo ci/windows-resultados
         if: always()

@@ -734,7 +734,7 @@ final class EditorWebKitTests: XCTestCase {
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();
           var ov=__boxes().filter(function(b){return /^0:Corte do forno/.test(b.nm)}),mc=__boxes().filter(function(b){return /^0:Corte do micro/.test(b.nm)});
           var glassOv=ov.filter(function(b){return b.gl&&b.a<.6}).length,glassMc=mc.filter(function(b){return b.gl&&b.a<.6}).length,emClosed=ov.filter(function(b){return b.em}).length;
-          ele3api.toggle('mo0|0',true);await new Promise(function(r){setTimeout(r,1800)});
+          ele3api.toggle('mo0|0',true);for(var w_=0;w_<60&&ele3api.ang('mo0|0')<1;w_++)await new Promise(function(r){setTimeout(r,100)});
           var ov2=__boxes().filter(function(b){return /^0:Corte do forno/.test(b.nm)}),openOv=ele3api.ang('mo0|0'),micStill=ele3api.ang('mo0|0m')||0,litOv=ele3api.ovLit('mo0|0'),emOpen=ov2.filter(function(b){return b.em}).length,rot=ov2.filter(function(b){return b.pf}).length;
           var tvf=S.fr.filter(function(f){return f.t==='tv'})[0],cof=S.fr.filter(function(f){return f.t==='coifa'})[0],fo=S.fr.filter(function(f){return f.t==='forno'})[0];
           var emOf=function(f){return __boxes().filter(function(b){return b.em&&b.x0>=f.x-5&&b.x1<=f.x+f.w+5&&b.y0>=(f.b||0)-500&&b.y1<=(f.b||0)+f.h+5}).length};
@@ -1130,13 +1130,13 @@ final class EditorWebKitTests: XCTestCase {
           window.__3dAdded(S.fr.length-1,S.mods.length);document.querySelector('[data-qon="mesa"]').click();R.mesa=[af.b,me.h,Math.round(af.x+af.w/2-(me.x+me.w/2)),Math.round(af.y+af.d/2-(me.y+me.d/2))].join();
           var ab=__boxes().filter(function(q){return q.fr===af.id});R.afz=Math.round(Math.min.apply(null,ab.map(function(q){return q.z0})))+'>'+Math.round(me.y);
           /* churrasqueira na parede da esquerda (L) */
-          var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=2500;__build();window.__3dAdded(S.fr.length-1,S.mods.length);
-          document.querySelector('[data-qwl="e"]').click();var cb=__boxes().filter(function(q){return q.fr===ch.id}),X0=Math.min.apply(null,cb.map(function(q){return q.x0})),X1=Math.max.apply(null,cb.map(function(q){return q.x1})),Z0=Math.min.apply(null,cb.map(function(q){return q.z0})),Z1=Math.max.apply(null,cb.map(function(q){return q.z1}));
+          var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=2500;__build();window.__3dAdded(S.fr.length-1,S.mods.length);fx3api.open({k:'fr',id:ch.id});
+          document.querySelector('#it4 [data-qwl="e"]').click();var cb=__boxes().filter(function(q){return q.fr===ch.id}),X0=Math.min.apply(null,cb.map(function(q){return q.x0})),X1=Math.max.apply(null,cb.map(function(q){return q.x1})),Z0=Math.min.apply(null,cb.map(function(q){return q.z0})),Z1=Math.max.apply(null,cb.map(function(q){return q.z1}));
           R.lado=[ch.wall,ch.x,Math.round(X0),Math.round(X1-X0),Math.round(Z0),Math.round(Z1-Z0)].join();
           ele3api.luz(ch.id,1);__build();await new Promise(function(r){setTimeout(r,500)});R.fumaca=fx3api.fx();
           var dc=__boxes().filter(function(q){return q.fr===ch.id});
           /* direita */
-          document.querySelector('[data-qwl="d"]').click();cb=__boxes().filter(function(q){return q.fr===ch.id});R.dir=[Math.round(Math.max.apply(null,cb.map(function(q){return q.x1}))),Math.round(Math.min.apply(null,cb.map(function(q){return q.z0})))].join();
+          fx3api.open({k:'fr',id:ch.id});document.querySelector('#it4 [data-qwl="d"]').click();cb=__boxes().filter(function(q){return q.fr===ch.id});R.dir=[Math.round(Math.max.apply(null,cb.map(function(q){return q.x1}))),Math.round(Math.min.apply(null,cb.map(function(q){return q.z0})))].join();
           /* sala também tem churrasqueira */
           document.getElementById('v3x').click();var rm=window.roomOf?roomOf():'';R.salaCat=ROOMCATS.sala.indexOf('cchur')>=0&&ROOMCATS.sala.indexOf('ele')>=0;
           /* planta e vista de frente */

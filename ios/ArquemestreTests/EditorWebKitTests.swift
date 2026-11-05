@@ -1207,6 +1207,75 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Painéis lisos da parede: um não entra em cima do outro (o vizinho encurta e a junta continua), a placa recortada na porta é uma peça só no 3D e placa só até 2700 (o resto vai em cima depois da junta)
+    func testPaineisLisosSemSobreporEPortaSemRiscoNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.ops=[{id:9,t:'porta',x:0,b:0,w:800,h:2100,st:'vao'}];draw();var R={};
+          /* 4 placas com junta de 15 (rebaixo) e a primeira recortada na porta */
+          var x=0;[983.5,983.5,983.5,983.5].forEach(function(w,i){var a={id:100+i,liso:true,x:x,b:0,w:w,h:2600,jt:{t:'reb',w:15,d:6}};if(Math.min(800,x+w)-Math.max(0,x)>1)a.rc={op:9,f:0};S.rp.push(a);x+=w+15});draw();
+          /* a primeira cresce: a segunda encurta e a junta de 15 continua (uma não entra em cima da outra) */
+          S.rp[0].w=1079;draw();var p=S.rp[0],q=S.rp[1];R.junta=Math.round((q.x-(p.x+p.w))*10)/10;R.w2=q.w;R.fim=Math.round((S.rp[3].x+S.rp[3].w)*10)/10;
+          /* no 3D a placa recortada é uma peça só: sem risco de emenda em cima da porta (só o contorno) */
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();var bx=__boxes().filter(function(b){return b.rpid===100});R.semRisco=bx.filter(function(b){return b.g!=='lo'}).every(function(b){return b.nol===1})&&bx.some(function(b){return b.g==='lo'&&Math.abs(b.x0-800)<1&&Math.abs(b.x1-1079)<1});
+          /* regra: placa vai até 2700 · parede de 3100: em cima, depois da junta de 15, a continuação com a mesma largura */
+          document.getElementById('v3x').click();S.H=3100;S.rp=[];S.ops=[];S.rodape=0;draw();S.trena={x0:1070,x1:3979};TRT='reb';TRJ=15;TRN=3;TRW=0;TRH=0;trCreate();var lo=S.rp.filter(function(a){return a.b===0}),hi=S.rp.filter(function(a){return a.b>0});
+          R.max2700=Math.max.apply(null,S.rp.map(function(a){return a.h}))===2700;R.emCima=lo.length===3&&hi.length===3&&lo.every(function(a){return hi.some(function(u){return u.x===a.x&&u.w===a.w&&u.b===2715&&u.h===385})});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["junta"] as? Double, 15, "a junta de 15 continua entre as placas")
+        XCTAssertEqual(o["w2"] as? Double, 888, "a placa vizinha encurta")
+        XCTAssertEqual(o["fim"] as? Double, 3979, "a última placa continua no fim da parede")
+        XCTAssertEqual(o["semRisco"] as? Bool, true, "placa recortada na porta sem risco de emenda no 3D")
+        XCTAssertEqual(o["max2700"] as? Bool, true, "placa vai até 2700 de altura")
+        XCTAssertEqual(o["emCima"] as? Bool, true, "acima de 2700: junta e a continuação em cima, mesma largura")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Trena no 3D: gruda sozinha no canto de dentro (parede + parede + chão) e na quina de fora do painel, e mede reto
+    func testTrenaGrudaNoCantoPorDentroEPorFora() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          /* trena no 3D gruda no canto de dentro (parede + parede + chão) e na quina de fora do painel, e mede reto pelo chão */
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];S.rodape=0;draw();
+          S.trena={x0:1070,x1:3979};TRT='reb';TRJ=15;TRN=3;TRW=0;TRH=0;trCreate();draw();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__foto3({yaw:.45,pitch:.25});__foto3(null);__build();var R={};
+          /* canto de dentro: parede da esquerda + parede do fundo + chão · toque 8 px fora do canto */
+          var q=__p3(0,0,0);var h=__med3Hit(q[0]+8,q[1]-6);R.canto=h.map(Math.round);
+          /* canto de fora do painel (quina de baixo esquerda do 1º painel, na frente) */
+          var pz=__boxes().filter(function(b){return b.rpid!=null&&b.x0>=1069&&b.x0<=1071&&b.y0<1})[0];R.pz=pz?[pz.x0,pz.z1]:null;var q2=__p3(1070,0,pz?pz.z1:18);var h2=__med3Hit(q2[0]-6,q2[1]+5);R.quina=h2.map(Math.round);
+          /* medir do canto até o painel pelo chão: reta, 1070 */
+          document.getElementById('v3med').click();var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),ev=function(tp,p){cv.dispatchEvent(new PointerEvent(tp,{clientX:cr.left+p[0],clientY:cr.top+p[1],pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
+          ev('pointerdown',[q[0]+8,q[1]-6]);ev('pointermove',[q2[0]-6,q2[1]+5]);ev('pointerup',[q2[0]-6,q2[1]+5]);var M3=__med3(),L=M3.L[0];R.seg=L?JSON.stringify([L.a.map(Math.round),L.b.map(Math.round)]):null;R.len=L?Math.round(Math.hypot(L.b[0]-L.a[0],L.b[1]-L.a[1],L.b[2]-L.a[2])):0;
+          R.canto0=JSON.stringify(R.canto)==='[0,0,0]';R.quinaOk=JSON.stringify(R.quina)==='[1070,0,18]';R.mede=R.len===1070;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["canto0"] as? Bool, true, "canto de dentro exato: \(o["canto"] ?? "")")
+        XCTAssertEqual(o["quinaOk"] as? Bool, true, "quina de fora do painel exata: \(o["quina"] ?? "")")
+        XCTAssertEqual(o["mede"] as? Bool, true, "do canto até o painel: 1070 (\(o["len"] ?? ""))")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Rack do zero (Sala): entra a caixa vazia com foto no catálogo e já abre o 2D só dele pra montar divisória, gaveta e porta
+    func testRackDoZeroAbreSoEleParaMontar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3600;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];draw();var R={};
+          /* Rack do zero na Sala: entra a caixa vazia e já abre o 2D só dele pra montar (divisória, gavetas, porta) */
+          var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q.n==='Rack do zero (você monta)')it=q})});R.noCatalogo=!!it&&CATS.some(function(c){return c.it.indexOf(it)>=0&&/Sala/.test(c.n)});R.foto=!!it&&!!FOTOS[fotoKey(it)];
+          newTpl(it);await new Promise(function(r){setTimeout(r,200)});var m=S.mods[0];R.caixa=!!m&&m.v.length===1&&m.v[0].k==='free'&&m.w===1800;R.solo=window.SOLO2===m&&!document.getElementById('solobar').hidden;
+          var c1=document.querySelector('#solobar [data-sov]');c1.click();document.querySelector('#vmenu [data-vk="split"]').click();document.querySelector('#vmenu [data-vk="dv|2"]').click();await new Promise(function(r){setTimeout(r,100)});
+          var ch=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));R.vaos=ch.length;ch[0].click();document.querySelector('#vmenu [data-vk="drawers"]').click();ch=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));ch[2].click();document.querySelector('#vmenu [data-vk="door1"]').click();
+          R.v=m.v.map(function(v){return v.k+(v.n||'')}).join();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["noCatalogo"] as? Bool, true, "Rack do zero na Sala")
+        XCTAssertEqual(o["foto"] as? Bool, true, "com foto no catálogo")
+        XCTAssertEqual(o["caixa"] as? Bool, true, "entra a caixa vazia")
+        XCTAssertEqual(o["solo"] as? Bool, true, "abre o 2D só dele")
+        XCTAssertEqual(o["vaos"] as? Int, 3, "2 divisórias = 3 vãos")
+        XCTAssertEqual(o["v"] as? String, "drawers3,free1,door1", "gavetas, nicho e porta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

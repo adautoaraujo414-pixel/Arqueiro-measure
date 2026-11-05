@@ -1273,7 +1273,7 @@ final class EditorWebKitTests: XCTestCase {
           /* painel cego não abre */
           var fp=partsOf(cg).filter(function(p){return p.cego})[0],pb=__boxes().filter(function(q){return q.pk===fp.pk&&String(q.nm).indexOf('0:Porta')===0})[0],pc=org3api.proj([(pb.x0+pb.x1)/2,(pb.y0+pb.y1)/2,pb.z1]);org3api.one(pc[0],pc[1]);await new Promise(function(r){setTimeout(r,300)});var cegoOd=Object.keys(cg.v[1].od||{}).length;
           /* ilha no meio com armários e painel ripado no lado fechado */
-          var il=__islAdd('ilha');await new Promise(function(r){setTimeout(r,1600)});il.rip=1;il.st.cas=1;__build();var rip=__boxes().filter(function(q){return q.irip}).length,ripCut=rpCutPieces().filter(function(p){return /painel ripado/.test(p.where)}).length;
+          var il=__islAdd('ilha');for(var w_=0;w_<60&&il._rise;w_++)await new Promise(function(r){setTimeout(r,100)});if(il._rise){delete il._rise;il.h=islNew('ilha').h}il.rip=1;il.st.cas=1;__build();var rip=__boxes().filter(function(q){return q.irip}).length,ripCut=rpCutPieces().filter(function(p){return /painel ripado/.test(p.where)}).length;
           /* tamanho do móvel inteiro com bolinhas no 3D */
           S.m=n2;window.mz3Open();var mzh=document.querySelectorAll('[data-mzh]').length;
           document.getElementById('v3x').click();

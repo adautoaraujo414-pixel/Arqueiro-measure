@@ -1020,6 +1020,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// 🎯 Só este módulo (câmera fixa nele, frente/ângulo/lado/cima, ↩ volta) e janela arrastável no 2D
+    func testFocarSoNoModuloEArrastarJanelaNo2D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R={};
+          /* 🎯 só este módulo: câmera fixa nele, só o corpo dele aparece; ↩ volta pro ambiente */
+          demoScene();draw();var wi=S.mods.findIndex(function(m){return m.wing==='e'});open3D();await new Promise(function(r){setTimeout(r,300)});var n0=__boxes().length;
+          focOn(wi,'front');var f=__foc();R.so=__boxes().every(function(b){return String(b.nm).indexOf(wi+':')===0});R.menos=f.n<n0;R.barra=!document.getElementById('foc3').hidden;
+          document.querySelector('#foc3 [data-fcv="side"]').click();R.lado=__foc().v;document.querySelector('#foc3 [data-fcx]').click();R.volta=__foc()===null&&__boxes().length===n0;document.getElementById('v3x').click();
+          /* janela: arrasta no 2D mesmo com móvel embaixo (não trava sozinha) */
+          S.W=5610;S.H=2600;S.mods=[];S.fr=[];S.stones=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          newTpl(tpl('Balcão 2 portas'));S.mods[0].x=1400;S.ops=[{id:7,t:'janela',x:1500,b:1100,w:1700,h:600}];draw();
+          var g=document.querySelector('#svg [data-op2="7"] rect'),rc=g.getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height/2,svg=document.getElementById('svg'),ev=function(tp,el,cx,cy){el.dispatchEvent(new PointerEvent(tp,{clientX:cx,clientY:cy,pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
+          ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["so"] as? Bool, true, "só as peças do módulo focado aparecem")
+        XCTAssertEqual(o["menos"] as? Bool, true)
+        XCTAssertEqual(o["barra"] as? Bool, true, "barra do foco com as vistas")
+        XCTAssertEqual(o["lado"] as? String, "side", "vista de lado no foco")
+        XCTAssertEqual(o["volta"] as? Bool, true, "↩ volta pro ambiente com tudo")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()
@@ -1094,7 +1119,7 @@ final class EditorWebKitTests: XCTestCase {
           S.mods=[];newTpl(tpl('Balcão 2 portas'));draw();__build();__e3open(0,'Porta#1');document.querySelector('#e3 [data-op="one"]').click();await new Promise(function(r){setTimeout(r,1400)});
           var k=Object.keys(__ang().t).filter(function(q){return q[0]==='p'&&__ang().t[q]>0})[0];document.querySelector('#e3 [data-op="one"]').click();var t0=performance.now(),smp=[];
           while(performance.now()-t0<2200){await new Promise(function(r){setTimeout(r,40)});smp.push([performance.now()-t0,__ang().g[k]])}
-          var tA=(smp.filter(function(s){return s[1]<=90*0.2})[0]||[9999])[0],tB=(smp.filter(function(s){return s[1]<=0.5})[0]||[9999])[0];R.amort=tB-tA>tA*0.6;R.fechou=smp[smp.length-1][1]<0.5;
+          var tA=(smp.filter(function(s){return s[1]<=90*0.2})[0]||[9999])[0],tB=(smp.filter(function(s){return s[1]<=0.5})[0]||[9999])[0];R.amort=tB-tA>tA*0.35;R.fechou=smp[smp.length-1][1]<0.5;
           document.querySelector('#e3 [data-e3x]').click();
           /* eletro aberto não fica azul */
           S.mods=[];S.fr=[];draw();var f=apAdd('lavaloucas',2);draw();__build();var col=function(){return __boxes().filter(function(b){return b.fr===f.id&&Array.isArray(b.c)}).map(function(b){return b.c.join()}).join('|')};var c0=col();

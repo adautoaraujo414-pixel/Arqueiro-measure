@@ -991,6 +991,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testModoPessoaNaoAtravessaMesaCafeteiraPedrasReaisESetinhasDaPedra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4100;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          for(var i=0;i<3;i++){newTpl(tpl('Balcão 2 portas'));S.mods[S.mods.length-1].x=200+i*900}
+          addStone();S.st.x=200;S.st.w=2700;S.st.cor='#a3a4a3';var me=apAdd('mesa',0);
+          var ci=apModels('deco').findIndex(function(q){return /Cafeteira/.test(q[0])}),cf=apAdd('deco',ci);cf.x=600;cf.b=860;cf.y=150;
+          var hi=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',hi);ch.x=3150;S.tab=6;draw();panel();var R={};
+          /* 15 pedras com nome real e faixa · a pedra pinta com a textura */
+          R.pedras=STS.filter(function(c){return c[3]}).length+'/'+STS.filter(function(c){return c[4]==='Premium'}).length;R.nome=STS[0][0];R.f2d=stF(S.st);
+          /* setinhas da pedra longe dos números */
+          var hl=document.querySelector('#plan circle[data-sth^="l|"]'),lb=document.querySelector('#plan text[data-q="ed|3"]');var hb=hl.getBBox(),tb=lb.getBBox();R.setinha=Math.round(Math.max(0,Math.max(tb.x-(hb.x+hb.width),hb.x-(tb.x+tb.width),tb.y-(hb.y+hb.height),hb.y-(tb.y+tb.height))));
+          var hf=document.querySelector('#plan circle[data-sth^="f|"]'),lf=document.querySelector('#plan text[data-q="ed|2"]');var fb=hf.getBBox(),ff=lf.getBBox();R.setinhaF=Math.round(Math.max(0,Math.max(ff.x-(fb.x+fb.width),fb.x-(ff.x+ff.width),ff.y-(fb.y+fb.height),fb.y-(ff.y+ff.height))));
+          R.imers=!!document.querySelector('[data-imers]');
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();R.tex3d=__boxes().filter(function(b){return b.mid==='pedra-cinza-corumba'}).length>0;
+          /* cafeteira: toque passa o café */
+          var c=[cf.x+cf.w/2,cf.b+cf.h*.4,cf.y+cf.d],s0=org3api.proj(c);org3api.one(s0[0],s0[1]);R.cafe=JSON.stringify(__caf()).indexOf('enchendo')>0;
+          /* modo pessoa: a mesa não deixa passar e o toque acende a churrasqueira na hora */
+          fp3api.start();await new Promise(function(r){setTimeout(r,200)});var e=fp3api.st().e;fp3api.st();var f=window.FPV;f.e[0]=me.x+me.w/2;f.e[2]=me.y+me.d+600;for(var k=0;k<40;k++)fp3api.walk(1,0);R.mesa=Math.round(window.FPV.e[2]-(me.y+me.d));
+          var cp=org3api.proj([ch.x+ch.w/2,700,ch.d-20]);var before=__chg();if(cp){org3api.one(cp[0],cp[1])}R.churras=before+'>'+__chg();
+          fp3api.stop();document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["pedras"] as? String, "15/3", "15 pedras com textura, 3 premium")
+        XCTAssertEqual(o["nome"] as? String, "Granito Cinza Corumbá", "nome real da pedra")
+        XCTAssertEqual(o["f2d"] as? String, "url(#stp-pedra-cinza-corumba)", "no 2D a pedra tem a textura dela")
+        XCTAssertGreaterThan(o["setinha"] as? Int ?? 0, 2, "a setinha ↔ não fica em cima do número do lado")
+        XCTAssertGreaterThan(o["setinhaF"] as? Int ?? 0, 2, "a setinha ↕ não fica em cima do número da frente")
+        XCTAssertEqual(o["imers"] as? Bool, true, "botão da imersão na vista de cima")
+        XCTAssertEqual(o["tex3d"] as? Bool, true, "no 3D a pedra usa a textura dela")
+        XCTAssertEqual(o["cafe"] as? Bool, true, "toque na cafeteira passa o café")
+        XCTAssertGreaterThanOrEqual(o["mesa"] as? Int ?? 0, 200, "no modo pessoa a mesa não deixa atravessar")
+        XCTAssertEqual(o["churras"] as? String, "0>1", "no modo pessoa o toque acende a churrasqueira na hora")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testGestosNoEletro2ToquesMudaDeLugar3ToquesConfiguracoes() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

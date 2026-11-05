@@ -1,0 +1,91 @@
+name: Windows
+
+# Versão Windows do Arquemestre (pasta windows/): compila, testa no Windows de verdade,
+# gera o instalador (.exe e .msi) e a versão portátil (.zip) e publica no release win-N.
+# Não mexe no Android nem no iOS (tem build e workflow próprios).
+on:
+  # Windows em pausa (prioridade iOS e Android): só roda quando disparado à mão
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Testes automáticos (JVM, no Windows)
+        working-directory: windows
+        run: gradle --no-daemon test
+
+      - name: Instalador e versão portátil
+        working-directory: windows
+        run: gradle --no-daemon packageExe packageMsi createDistributable
+
+      - name: Instalar (MSI, sem perguntas) e testar o app instalado
+        run: |
+          $msi = Get-ChildItem windows/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
+          Write-Host "MSI: $($msi.FullName) ($([math]::Round($msi.Length/1MB)) MB)"
+          $p = Start-Process msiexec.exe -ArgumentList "/i `"$($msi.FullName)`" /qn /l*v msi-install.log" -Wait -PassThru
+          Write-Host "msiexec saiu com $($p.ExitCode)"
+          $exe = Get-ChildItem "$env:LOCALAPPDATA\Arquemestre\Arquemestre.exe","$env:ProgramFiles\Arquemestre\Arquemestre.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) { Get-Content msi-install.log -Tail 60; throw "app instalado não encontrado" }
+          Write-Host "instalado em $($exe.FullName)"
+          "ARQUE_EXE=$($exe.FullName)" | Out-File -Append $env:GITHUB_ENV
+          New-Item -ItemType Directory -Force tour | Out-Null
+          $env:ARQUE_TOUR = (Resolve-Path tour).Path
+          python windows/test/tour.py "$($exe.FullName)" tour
+
+      - name: Publicar release win-N
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $n = $env:GITHUB_RUN_NUMBER
+          $exe = Get-ChildItem windows/build/compose/binaries/main/exe/*.exe | Select-Object -First 1
+          $msi = Get-ChildItem windows/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
+          New-Item -ItemType Directory -Force rel | Out-Null
+          Copy-Item $exe.FullName rel/Arquemestre-Windows-Instalador.exe
+          Copy-Item $msi.FullName rel/Arquemestre-Windows.msi
+          Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath rel/Arquemestre-Windows-portatil.zip
+          gh release create "win-$n" rel/* -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease `
+            --title "Arquemestre para Windows $n" `
+            --notes "Instalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups."
+          # ponteiro fixo "win-latest": o app lê latest.txt direto do download (sem feed, sem limite da API)
+          Set-Content -Path rel/latest.txt -Value "$n" -NoNewline
+          gh release view win-latest -R "$env:GITHUB_REPOSITORY" 2>$null; if ($LASTEXITCODE -ne 0) { gh release create win-latest -R "$env:GITHUB_REPOSITORY" --prerelease --title "Windows · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em win-N." }
+          gh release upload win-latest rel/latest.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+
+      - name: Guardar resultados (prints e relatório) no ramo ci/windows-resultados
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          if (Test-Path tour) { Copy-Item -Recurse tour out/tour }
+          if (Test-Path msi-install.log) { Get-Content msi-install.log -Tail 200 | Out-File out/msi-install-tail.log }
+          Get-ChildItem windows/build/test-results/test/*.xml -ErrorAction SilentlyContinue | Copy-Item -Destination out/
+          "run $env:GITHUB_RUN_NUMBER sha $env:GITHUB_SHA" | Out-File out/RUN.txt
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git fetch origin ci/windows-resultados 2>$null
+          git switch --orphan tmp-res
+          Get-ChildItem -Force | Where-Object { $_.Name -notin @('.git','out') } | Remove-Item -Recurse -Force
+          Move-Item out/* . ; Remove-Item out
+          git add -A; git commit -q -m "Resultados Windows $env:GITHUB_RUN_NUMBER ($env:GITHUB_SHA)"
+          git push -f origin HEAD:ci/windows-resultados

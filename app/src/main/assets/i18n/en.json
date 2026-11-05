@@ -5072,5 +5072,17 @@
 "Nenhuma nota ligada a este cliente.": "No notes linked to this client.",
 "O lixo está vazio.": "Trash is empty.",
 "Pasta": "Folder",
-"Voltar para tudo": "Back to all"
+"Voltar para tudo": "Back to all",
+"Olá! Quero pagar a mensalidade do Arquemestre de {0} por mês. Pode me passar a senha deste mês?": "Hi! I'd like to pay the Arquemestre monthly fee of {0}. Can you send me this month's password?",
+"Senha do mês: ": "Monthly password: ",
+"Sua mensalidade venceu": "Your monthly plan has expired",
+"o acesso completo é por mensalidade de {0} (cada pagamento libera {1} dias).": "full access is a monthly fee of {0} (each payment unlocks {1} days).",
+"Depois do pagamento você recebe a senha do mês. É só digitar aqui:": "After paying you get this month's password. Just type it here:",
+"Mensalidade": "Monthly plan",
+"Mensalidade de {0}. Vence em {1}. Pagou o próximo mês? Digite a senha do mês aqui (os dias somam).": "Monthly fee of {0}. Expires in {1}. Paid next month already? Type the monthly password here (the days add up).",
+"Falta {0} de teste. Acesso completo: {1} por mês.": "{0} of trial left. Full access: {1} per month.",
+"Mensalidade · vence em {0}": "Monthly plan · expires in {0}",
+"Licença / senha do mês": "License / monthly password",
+"Essa senha já foi usada neste aparelho. Peça a senha do mês.": "This password was already used on this device. Ask for this month's password.",
+"App liberado por mais {0} dias. Obrigado!": "App unlocked for {0} more days. Thank you!"
 }

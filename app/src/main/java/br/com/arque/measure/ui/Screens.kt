@@ -270,7 +270,8 @@ fun LibraryScreen(vm: AppViewModel) {
     }
     val showFolders = filter == LibFilter.All && !searching && !trash && folders.isNotEmpty() && (tab == HomeTab.CLIENTES || mode == ProjMode.ALL)
 
-    val showTrial = !br.com.arque.measure.BuildConfig.PLAY && !vm.licUnlocked && vm.trialLeft.isNotEmpty()
+    val showTrial = !br.com.arque.measure.BuildConfig.PLAY && ((!vm.licUnlocked && vm.trialLeft.isNotEmpty()) || vm.payLeft.isNotEmpty())
+    val showLicItem = !br.com.arque.measure.BuildConfig.PLAY && (showTrial || vm.licMonthly)
     val now = System.currentTimeMillis()
     // sininho com ponto dourado: tem compromisso nas próximas 24 h
     val bellDot = vm.appointments.any { !it.done && it.startMs >= now && it.startMs <= now + DAY_MS }
@@ -427,7 +428,7 @@ fun LibraryScreen(vm: AppViewModel) {
                     onNotes = { tab = HomeTab.PROJETOS; mode = ProjMode.NOTES; statusF = null; if (trash) vm.filter = LibFilter.All },
                     onQuotes = { vm.screen = Screen.Quotes },
                 )
-                if (showTrial) TrialBar(vm.trialLeft) { trialOpen = true }
+                if (showTrial) TrialBar(if (vm.payLeft.isNotEmpty()) tr("Mensalidade · vence em {0}", vm.payLeft) else tr("Teste grátis · falta {0}", vm.trialLeft)) { trialOpen = true }
                 HomeBottomNav(
                     selected = if (tab == HomeTab.PROJETOS && mode == ProjMode.PROJ3D) 1 else 0,
                     onHome = goHome,
@@ -453,7 +454,7 @@ fun LibraryScreen(vm: AppViewModel) {
         if (!br.com.arque.measure.BuildConfig.PLAY) add(SheetItem(tr("Atualizar o app (sem perder dados)"), Icons.Filled.SystemUpdate) { vm.checkUpdate() })
         add(SheetItem(tr("Ver projeto por Bluetooth"), Icons.Filled.Bluetooth) { btView = true })
         add(SheetItem(langMenuLabel() + " (" + currentLangName() + ")", Icons.Filled.Language) { langOpen = true })
-        if (showTrial) add(SheetItem(tr("Licença / senha de desbloqueio"), Icons.Filled.Lock) { trialOpen = true })
+        if (showLicItem) add(SheetItem(tr("Licença / senha do mês"), Icons.Filled.Lock) { trialOpen = true })
         if (br.com.arque.measure.BuildConfig.PLAY) add(SheetItem(tr("Gerenciar assinatura"), Icons.Filled.ShoppingCart) { vm.manageStore() })
         add(SheetItem(tr("Guia passo a passo"), Icons.Filled.Info) { vm.openGuide() })
         add(SheetItem(tr("Ajuda e suporte"), Icons.Filled.Email) { SiteLinks.open(ctxN2, SiteLinks.support()) })
@@ -745,7 +746,7 @@ private fun ShortcutCard(label: String, icon: ImageVector, mod: Modifier, onClic
 
 /** Barra "⏱ Teste grátis · falta X" (abre a licença / senha). */
 @Composable
-private fun TrialBar(left: String, onClick: () -> Unit) {
+private fun TrialBar(label: String, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp))
             .border(1.dp, Color.White, RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 10.dp),
@@ -753,7 +754,7 @@ private fun TrialBar(left: String, onClick: () -> Unit) {
     ) {
         Icon(Icons.Filled.Timer, null, tint = Color.White, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text(tr("Teste grátis · falta {0}", left), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(label, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Color.White)
     }
 }

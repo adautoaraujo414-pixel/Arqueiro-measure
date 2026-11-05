@@ -5072,5 +5072,17 @@
 "Nenhuma nota ligada a este cliente.": "Ninguna nota vinculada a este cliente.",
 "O lixo está vazio.": "La papelera está vacía.",
 "Pasta": "Carpeta",
-"Voltar para tudo": "Volver a todo"
+"Voltar para tudo": "Volver a todo",
+"Olá! Quero pagar a mensalidade do Arquemestre de {0} por mês. Pode me passar a senha deste mês?": "¡Hola! Quiero pagar la mensualidad de Arquemestre de {0} al mes. ¿Me pasas la contraseña de este mes?",
+"Senha do mês: ": "Contraseña del mes: ",
+"Sua mensalidade venceu": "Tu mensualidad venció",
+"o acesso completo é por mensalidade de {0} (cada pagamento libera {1} dias).": "el acceso completo es por una mensualidad de {0} (cada pago libera {1} días).",
+"Depois do pagamento você recebe a senha do mês. É só digitar aqui:": "Después del pago recibes la contraseña del mes. Solo escríbela aquí:",
+"Mensalidade": "Mensualidad",
+"Mensalidade de {0}. Vence em {1}. Pagou o próximo mês? Digite a senha do mês aqui (os dias somam).": "Mensualidad de {0}. Vence en {1}. ¿Ya pagaste el próximo mes? Escribe la contraseña del mes aquí (los días se suman).",
+"Falta {0} de teste. Acesso completo: {1} por mês.": "Quedan {0} de prueba. Acceso completo: {1} al mes.",
+"Mensalidade · vence em {0}": "Mensualidad · vence en {0}",
+"Licença / senha do mês": "Licencia / contraseña del mes",
+"Essa senha já foi usada neste aparelho. Peça a senha do mês.": "Esta contraseña ya se usó en este dispositivo. Pide la contraseña del mes.",
+"App liberado por mais {0} dias. Obrigado!": "App liberada por {0} días más. ¡Gracias!"
 }

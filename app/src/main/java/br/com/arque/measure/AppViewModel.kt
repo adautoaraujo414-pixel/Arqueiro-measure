@@ -1086,13 +1086,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun openGuide() { guideFromMenu = true; showWelcome = true }
     var trialLeft by mutableStateOf("")
     var licUnlocked by mutableStateOf(false)
+    /** Mensalidade (APK do site): quanto falta pra vencer, só nos últimos 3 dias ("" fora disso). */
+    var payLeft by mutableStateOf("")
+    /** Paga por mês (não é o desbloqueio antigo de pagamento único). */
+    var licMonthly by mutableStateOf(false)
 
     fun checkLicense() {
         val app = getApplication<Application>()
         if (br.com.arque.measure.license.License.firstRun(app)) showWelcome = true
         licUnlocked = br.com.arque.measure.license.License.isUnlocked(app)
         licLocked = br.com.arque.measure.license.License.isLocked(app)
-        trialLeft = if (licUnlocked) "" else br.com.arque.measure.license.License.leftLabel(app)
+        licMonthly = br.com.arque.measure.license.License.isMonthly(app)
+        trialLeft = if (licUnlocked || licMonthly) "" else br.com.arque.measure.license.License.leftLabel(app)
+        payLeft = if (licUnlocked) br.com.arque.measure.license.License.payLeftLabel(app) else ""
         if (licLocked) flush()
     }
 
@@ -1119,9 +1125,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreStore() = br.com.arque.measure.license.StoreBilling.restore(getApplication(), storeMsg)
     fun manageStore() = br.com.arque.measure.license.StoreBilling.manage(getApplication())
 
+    /** Por que a senha não entrou ("" = senha errada). */
+    var unlockErr by mutableStateOf("")
+
     fun unlock(code: String): Boolean {
-        val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)
-        if (ok) { licLocked = false; licUnlocked = true; trialLeft = ""; toast = tr("App desbloqueado. Obrigado!") }
+        val app = getApplication<Application>()
+        val ok = br.com.arque.measure.license.License.tryUnlock(app, code)
+        unlockErr = if (!ok && br.com.arque.measure.license.License.wasUsed(app, code)) tr("Essa senha já foi usada neste aparelho. Peça a senha do mês.") else ""
+        if (ok) {
+            checkLicense()
+            toast = tr("App liberado por mais {0} dias. Obrigado!", br.com.arque.measure.license.License.PERIOD_DAYS)
+        }
         return ok
     }
 

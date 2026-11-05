@@ -1045,6 +1045,114 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Porta do ambiente abre na parede do lado, pedra sólida (caixa da geladeira e geladeira não passam por ela), geladeira acompanha a caixa e 5 toques abrem o 2D só do módulo
+    func testPedraSolidaGeladeiraAcompanhaPortaDaSalaE5ToquesEditaSoOModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=5000;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
+          /* porta do ambiente na parede da esquerda abre de verdade (a folha gira pra dentro do ambiente) */
+          S.ops=[{id:5,t:'porta',x:1400,b:0,w:700,h:2000,wall:'e'}];draw();open3D();await new Promise(function(r){setTimeout(r,300)});
+          var folha=function(){var m=0;__bg().concat(__boxes()).forEach(function(b){if(b.pf&&b.y1>1900&&b.y1<2050&&b.x0<300)m=Math.max(m,b.x1-b.x0)});return Math.round(m)};
+          S.ops[0].open=true;anim3();await new Promise(function(r){setTimeout(r,1500)});R.abriu=__ang().g.od5===90&&folha()>=600;S.ops[0].open=false;S.ops=[];document.getElementById('v3x').click();
+          /* pedra sólida: a caixa da geladeira não entra embaixo da pedra; os balcões continuam embaixo dela */
+          newTpl(tpl('Balcão 2 portas'));S.mods[0].x=0;newTpl(tpl('Balcão 2 portas'));S.mods[1].x=S.mods[0].w;draw();var bx0=S.mods.map(function(m){return m.x}).join();
+          S.stones=[{id:1,x:0,w:S.mods[0].w+S.mods[1].w,d:600,t:820,e:40,items:[],shape:'reta'}];var fimPedra=S.stones[0].w;
+          newTpl(tpl('Caixa da geladeira duplex / inverse (laterais + aéreo)'));var g=S.mods[S.mods.length-1];g.x=900;draw();
+          R.foraDaPedra=g.x>=fimPedra-1;R.balcoes=S.mods.slice(0,2).map(function(m){return m.x}).join()===bx0;
+          var f=S.fr.filter(function(q){return q.id===g._gel})[0];R.gelDentro=!!f&&f.x>=g.x&&f.x+f.w<=g.x+g.w;
+          /* geladeira solta também não passa pela pedra; micro-ondas em cima da pedra fica */
+          S.fr.push({id:77,t:'geladeira',x:600,y:0,w:700,h:1800,d:750,b:0},{id:78,t:'microondas',x:300,y:0,w:450,h:260,d:340,b:860});draw();
+          var gs=S.fr.filter(function(q){return q.id===77})[0],mw=S.fr.filter(function(q){return q.id===78})[0];R.solta=gs.x+gs.w<=1||gs.x>=fimPedra-1;R.micro=mw.x===300;
+          /* puxada pra frente (fora da pedra) pode ficar onde está */
+          gs.x=600;gs.y=700;draw();R.frente=gs.x===600;
+          /* 5 toques no módulo: sai do 3D e abre o 2D só dele com o cabeçalho; mudar profundidade; fechar volta pro projeto */
+          S.fr=S.fr.filter(function(q){return q.id!==77&&q.id!==78});draw();var nAll=document.querySelectorAll('#svg [data-mi]').length;
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();var mi=S.mods.indexOf(g),b=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':Lateral')===0})[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1);
+          __solo3(c[0],c[1]);await new Promise(function(r){setTimeout(r,200)});var bar=document.getElementById('solobar');
+          R.solo=window.SOLO2===g&&S.m===g&&!!bar&&!bar.hidden&&/Editando só/.test(bar.textContent);R.saiu3D=getComputedStyle(document.getElementById('v3')).display==='none'||document.getElementById('v3').hidden;
+          R.soEle=document.querySelectorAll('#svg [data-mi]').length<nAll;
+          var d0=g.d,inp=[].slice.call(document.querySelectorAll('input')).filter(function(i){var l=i.closest('label')||i.parentNode;return l&&/Profund/i.test(l.textContent)&&i.offsetParent})[0];if(inp){inp.value=String(d0-150);inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}draw();R.prof=g.d===d0-150&&bar.textContent.indexOf('× '+(d0-150)+' mm')>0;
+          document.getElementById('cx').click();R.voltou=!window.SOLO2&&bar.hidden&&document.querySelectorAll('#svg [data-mi]').length>=nAll;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["abriu"] as? Bool, true, "porta do ambiente na parede do lado abre com a folha girando pra dentro")
+        XCTAssertEqual(o["foraDaPedra"] as? Bool, true, "caixa da geladeira não entra embaixo da pedra")
+        XCTAssertEqual(o["balcoes"] as? Bool, true, "balcões continuam embaixo da pedra")
+        XCTAssertEqual(o["gelDentro"] as? Bool, true, "a geladeira acompanha a caixa dela")
+        XCTAssertEqual(o["solta"] as? Bool, true, "geladeira solta não passa pela pedra")
+        XCTAssertEqual(o["micro"] as? Bool, true, "micro-ondas em cima da pedra fica onde está")
+        XCTAssertEqual(o["frente"] as? Bool, true, "geladeira puxada pra frente da pedra pode ficar")
+        XCTAssertEqual(o["solo"] as? Bool, true, "5 toques: 2D só do módulo com o cabeçalho")
+        XCTAssertEqual(o["saiu3D"] as? Bool, true, "sai do 3D")
+        XCTAssertEqual(o["soEle"] as? Bool, true, "só ele aparece no 2D")
+        XCTAssertEqual(o["prof"] as? Bool, true, "dá pra diminuir a profundidade")
+        XCTAssertEqual(o["voltou"] as? Bool, true, "fechar volta pro 2D do projeto todo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Só o módulo: no 3D tem o 2D só dele e no 2D só dele tem os vãos (porta, gaveta, divisória) e o 3D só dele, sem mexer nos outros módulos
+    func testSoOModulo3DE2DComPortaGavetaEDivisoriaSoNele() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          /* 🎯 só o módulo no 3D tem o ✏️ 2D só ele; no 2D só dele: vãos com porta, gaveta, divisória e 🧊 3D só ele */
+          window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();var R={};var mi=1,m=S.mods[mi];var others=JSON.stringify(S.mods.filter(function(q){return q!==m}));
+          open3D();await new Promise(function(r){setTimeout(r,300)});focOn(mi,'front');await new Promise(function(r){setTimeout(r,200)});
+          var b2=document.querySelector('#foc3 [data-fc2d]');R.btn2d=!!b2&&b2.offsetParent!==null;
+          b2.click();await new Promise(function(r){setTimeout(r,300)});R.solo=window.SOLO2===m;R.v3=getComputedStyle(document.getElementById('v3')).display;R.foc=!window.FOC3;
+          var chips=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));R.chips=chips.map(function(c){return c.textContent});
+          R.v0=m.v.map(function(v){return v.k+(v.n||'')}).join();
+          /* vão 2: 1 porta */
+          var c2=chips[chips.length>1?1:0];c2.click();await new Promise(function(r){setTimeout(r,150)});R.menu=!!document.getElementById('vmenu');var d1=document.querySelector('#vmenu [data-vk="door1"]');if(d1)d1.click();await new Promise(function(r){setTimeout(r,150)});
+          R.v1=m.v.map(function(v){return v.k+(v.n||'')}).join();R.soloStill=window.SOLO2===m;
+          /* vão 1: gavetas */
+          chips=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));chips[0].click();await new Promise(function(r){setTimeout(r,150)});var dg=document.querySelector('#vmenu [data-vk="drawers"]');if(dg)dg.click();await new Promise(function(r){setTimeout(r,150)});
+          R.v2=m.v.map(function(v){return v.k+(v.n||'')}).join();
+          /* divisória no vão 1 */
+          chips=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));chips[chips.length-1].click();await new Promise(function(r){setTimeout(r,150)});var ds=document.querySelector('#vmenu [data-vk="split"]');if(ds)ds.click();await new Promise(function(r){setTimeout(r,100)});var d2=document.querySelector('#vmenu [data-vk="dv|2"]');R.dvBtn=!!d2;if(d2)d2.click();await new Promise(function(r){setTimeout(r,150)});
+          R.v3v=m.v.map(function(v){return v.k+(v.n||'')}).join();R.chips2=[].slice.call(document.querySelectorAll('#solobar [data-sov]')).map(function(c){return c.textContent});
+          R.othersSame=JSON.stringify(S.mods.filter(function(q){return q!==m}))===others;
+          /* 3D só ele */
+          document.querySelector('#solobar [data-so3]').click();await new Promise(function(r){setTimeout(r,400)});R.foc3=window.FOC3&&window.FOC3.mi===mi;R.so3=__boxes().every(function(b){return String(b.nm).indexOf(mi+':')===0});
+          document.getElementById('v3x').click();await new Promise(function(r){setTimeout(r,200)});R.backSolo=window.SOLO2===m;
+          document.querySelector('#solobar [data-sox]').click();R.geral=!window.SOLO2;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["btn2d"] as? Bool, true, "no 3D só do módulo tem o ✏️ 2D só ele")
+        XCTAssertEqual(o["solo"] as? Bool, true, "abre o 2D só dele")
+        XCTAssertEqual(o["v3"] as? String, "none", "sai do 3D")
+        XCTAssertEqual(o["menu"] as? Bool, true, "tocar no vão abre porta, gaveta, divisória…")
+        XCTAssertEqual(o["v1"] as? String, "door1", "1 porta no vão")
+        XCTAssertEqual(o["v2"] as? String, "drawers3", "gavetas no vão")
+        XCTAssertEqual(o["v3v"] as? String, "drawers3,drawers3,drawers3", "divisórias em pé no vão")
+        XCTAssertEqual((o["chips2"] as? [String])?.count, 3, "os vãos novos aparecem no cabeçalho")
+        XCTAssertEqual(o["othersSame"] as? Bool, true, "os outros módulos não mudam")
+        XCTAssertEqual(o["foc3"] as? Bool, true, "🧊 3D só ele")
+        XCTAssertEqual(o["so3"] as? Bool, true, "no 3D só as peças dele")
+        XCTAssertEqual(o["backSolo"] as? Bool, true, "fechar o 3D volta pro 2D só dele")
+        XCTAssertEqual(o["geral"] as? Bool, true, "↩ volta pro projeto todo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Toque no 3D acha a peça certa no ponto exato (a da frente) em várias vistas, e o dedo pertinho da borda de peça fina ainda acha o módulo
+    func testToqueNo3DAchaAPecaCertaEBordaFina() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();open3D();await new Promise(function(r){setTimeout(r,400)});var R={};
+          /* o toque acha a peça que está na frente no ponto exato (raio do dedo), em várias vistas */
+          var cv=document.getElementById('cv3'),W=cv.clientWidth,H=cv.clientHeight,views=[[.6,.35],[0,.2],[1.1,.4],[-.9,.3],[.3,1.2]],tot=0,bad=0;
+          views.forEach(function(v){__foto3({yaw:v[0],pitch:v[1]});__foto3(null);__build();for(var y=40;y<H-40;y+=18)for(var x=10;x<W-10;x+=18){var h=__rayMod(x,y);if(!h)continue;tot++;var p=__pick(x,y);if(!p||p.nm!==h.nm)bad++}});
+          R.tot=tot>300;R.bad=bad;
+          /* dedo pertinho da borda de fora da lateral (peça fina) ainda acha o módulo */
+          __foto3({yaw:.6,pitch:.35});__foto3(null);__build();var n=0,ok=0;__boxes().filter(function(b){return /^\d+:Lateral/.test(b.nm)}).forEach(function(b){var c=__p3(b.x1,(b.y0+b.y1)/2,b.z1);if(!c)return;var h0=__rayMod(c[0]-1,c[1]);if(!h0||h0.nm!==b.nm)return;n++;var p=__pick(c[0]+5,c[1]);if(p&&String(p.nm).split(':')[0]===String(b.nm).split(':')[0])ok++});
+          R.borda=n>3&&ok===n;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["tot"] as? Bool, true, "muitos pontos conferidos")
+        XCTAssertEqual(o["bad"] as? Int, 0, "o toque acha a peça que está na frente no ponto tocado")
+        XCTAssertEqual(o["borda"] as? Bool, true, "dedo pertinho da borda da lateral acha o módulo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

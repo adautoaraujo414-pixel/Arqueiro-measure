@@ -55,7 +55,7 @@ import br.com.arque.measure.license.License
 private val Gold = Color(0xFFF5B400)
 
 private fun openWhats(ctx: android.content.Context) {
-    val msg = tr("Olá! Meu período de teste do Arquemestre terminou e quero prosseguir com o pagamento único de {0}. Pode me passar a senha de desbloqueio?", License.PRICE)
+    val msg = tr("Olá! Quero pagar a mensalidade do Arquemestre de {0} por mês. Pode me passar a senha deste mês?", License.PRICE)
     val uri = Uri.parse("https://wa.me/${License.WHATS}?text=" + Uri.encode(msg))
     runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }
@@ -74,17 +74,17 @@ private fun UnlockBox(vm: AppViewModel, onDone: () -> Unit = {}) {
     var code by remember { mutableStateOf("") }
     var err by remember { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        // teclado do próprio app (o do celular não abre); a senha aparece como •••
-        Text(tr("Senha de desbloqueio: ") + "•".repeat(code.length).ifEmpty { "–" }, color = Color(0xFF111111), fontSize = 15.sp)
-        AppNumPad("•".repeat(code.length), { t ->
+        // teclado do próprio app (o do celular não abre), com o tracinho da senha do mês (ex.: 000000-10)
+        Text(tr("Senha do mês: ") + code.ifEmpty { "–" }, color = Color(0xFF111111), fontSize = 15.sp)
+        AppNumPad(code, { t ->
             code = when {
                 t.isEmpty() -> ""
                 t.length < code.length -> code.dropLast(1)
-                else -> (code + t.last().takeIf { it.isDigit() }.let { it?.toString() ?: "" }).take(12)
+                else -> (code + t.last().takeIf { it.isDigit() || it == '-' }.let { it?.toString() ?: "" }).take(16)
             }
             err = false
-        }, allowOps = false)
-        if (err) Text(tr("Senha incorreta. Confira com quem te passou."), color = Color(0xFFE5484D), fontSize = 13.sp)
+        }, allowOps = false, dash = true)
+        if (err) Text(vm.unlockErr.ifEmpty { tr("Senha incorreta. Confira com quem te passou.") }, color = Color(0xFFE5484D), fontSize = 13.sp)
         Button(onClick = { if (vm.unlock(code)) onDone() else err = true }, enabled = code.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
             Text(tr("Desbloquear"))
         }
@@ -170,10 +170,10 @@ fun LockScreen(vm: AppViewModel) {
             verticalArrangement = Arrangement.spacedBy(14.dp), horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("ARQUEMESTRE", color = Gold, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-            Text(tr("Você chegou ao fim do período de teste"), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(if (vm.licMonthly) tr("Sua mensalidade venceu") else tr("Você chegou ao fim do período de teste"), color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             Text(
                 tr("Pra continuar usando e não perder nada (notas, agenda, orçamentos e projetos de móveis ficam todos guardados), ") +
-                    tr("o acesso completo é por pagamento único de {0}.", priceOf(vm)),
+                    tr("o acesso completo é por mensalidade de {0} (cada pagamento libera {1} dias).", priceOf(vm), License.PERIOD_DAYS),
                 color = Color(0xFFCBD5E1), fontSize = 15.sp, textAlign = TextAlign.Center,
             )
             Text(tr("Quer prosseguir?"), color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
@@ -182,7 +182,7 @@ fun LockScreen(vm: AppViewModel) {
                     onClick = { openWhats(ctx) }, modifier = Modifier.fillMaxWidth().height(52.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = Color.White),
                 ) { Text(tr("Sim, quero prosseguir · falar no WhatsApp"), fontSize = 15.sp) }
-                Text(tr("Depois do pagamento você recebe a senha. É só digitar aqui:"), color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
+                Text(tr("Depois do pagamento você recebe a senha do mês. É só digitar aqui:"), color = Color(0xFF94A3B8), fontSize = 13.sp, textAlign = TextAlign.Center)
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White).padding(14.dp)) { UnlockBox(vm) }
             }
             OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
@@ -247,7 +247,7 @@ fun TrialChip(vm: AppViewModel, modifier: Modifier = Modifier) {
     Row(
         modifier.clip(RoundedCornerShape(50)).background(Color(0xCC14171C)).clickable { open = true }.padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-    ) { Text(tr("Teste · falta {0}", vm.trialLeft), color = Gold, fontSize = 12.sp) }
+    ) { Text(if (vm.payLeft.isNotEmpty()) tr("Mensalidade · vence em {0}", vm.payLeft) else tr("Teste · falta {0}", vm.trialLeft), color = Gold, fontSize = 12.sp) }
     if (open) TrialDialog(vm) { open = false }
 }
 
@@ -257,10 +257,14 @@ fun TrialDialog(vm: AppViewModel, onDismiss: () -> Unit) {
     val ctx = LocalContext.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(tr("Versão de teste")) },
+        title = { Text(if (vm.licMonthly) tr("Mensalidade") else tr("Versão de teste")) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(tr("Falta {0} de teste. Acesso completo: pagamento único de {1}.", vm.trialLeft, priceOf(vm)))
+                val payAll = License.payLeftLabel(ctx, all = true)
+                Text(
+                    if (vm.licMonthly) tr("Mensalidade de {0}. Vence em {1}. Pagou o próximo mês? Digite a senha do mês aqui (os dias somam).", priceOf(vm), payAll.ifEmpty { "0 h" })
+                    else tr("Falta {0} de teste. Acesso completo: {1} por mês.", vm.trialLeft, priceOf(vm)),
+                )
                 run {
                     Button(onClick = { openWhats(ctx) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), modifier = Modifier.fillMaxWidth()) { Text(tr("Falar no WhatsApp")) }
                     Spacer(Modifier.height(2.dp))

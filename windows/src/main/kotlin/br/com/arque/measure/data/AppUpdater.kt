@@ -15,6 +15,22 @@ import java.net.URL
 object AppUpdater {
     private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=40"
     const val ASSET = "Arquemestre-Windows-Instalador.exe"
+    /** Instalador com o Chromium 109 (o último que roda no Windows 7, 8 e 8.1). */
+    const val ASSET7 = "Arquemestre-Windows7-Instalador.exe"
+
+    /** Este app é o instalador do Windows 7/8 (Chromium 109). */
+    val win7Build: Boolean by lazy {
+        runCatching { AppUpdater::class.java.getResourceAsStream("/variant.txt")?.bufferedReader()?.use { it.readText().trim() } }.getOrNull() == "win7"
+    }
+
+    /** Windows 7, 8 ou 8.1 (o Java diz 6.1, 6.2 ou 6.3): o Chromium novo não abre neles. */
+    val oldWindows: Boolean by lazy {
+        System.getProperty("os.name").orEmpty().lowercase().contains("win") &&
+            (System.getProperty("os.version").orEmpty().substringBefore('.').toIntOrNull() ?: 10) < 10
+    }
+
+    /** Qual instalador baixar pra atualizar: o mesmo tipo deste (e sempre o do Windows 7/8 num Windows antigo). */
+    fun asset(): String = if (win7Build || oldWindows) ASSET7 else ASSET
 
     data class Release(val number: Int, val url: String)
 
@@ -37,7 +53,8 @@ object AppUpdater {
     }
 
     /** Versão mais nova publicada (a de número maior, não a primeira da lista). Rede: chamar fora da thread principal. */
-    fun latest(): Release? {
+    fun latest(asset: String = asset()): Release? {
+        val ASSET = asset
         var best: Release? = null
         // 1) ponteiro fixo win-latest/latest.txt (download direto: não depende do feed de 10 itens nem do limite da API)
         runCatching {

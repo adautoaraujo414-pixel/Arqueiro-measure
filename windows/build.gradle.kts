@@ -17,8 +17,11 @@ val jcefNatives = when {
     hostOs.contains("mac") -> "macosx-amd64"
     else -> "linux-amd64"
 }
-val jcefVersion = "135.0.20"
-val jcefNativesVersion = providers.gradleProperty("jcefNativesVersion").orNull
+// Windows 10/11: Chromium 135 · Windows 7/8/8.1 (-Pwin7=1): Chromium 109, o último que roda neles
+val win7 = providers.gradleProperty("win7").orNull == "1"
+val jcefVersion = providers.gradleProperty("jcefVersion").orNull ?: if (win7) "109.1.11" else "135.0.20"
+val jcefNativesVersion = if (win7) (providers.gradleProperty("jcefNativesVersion7").orNull ?: "jcef-108adb8+cef-109.1.11+g6d4fdb2+chromium-109.0.5414.87")
+    else providers.gradleProperty("jcefNativesVersion").orNull
 
 dependencies {
     implementation(compose.desktop.currentOs)
@@ -47,8 +50,15 @@ val copySharedAssets by tasks.registering(Sync::class) {
 val buildInfo = layout.buildDirectory.dir("generated/arqueBuild")
 val writeBuildInfo by tasks.registering {
     val n = runNumber
+    val v = if (win7) "win7" else "std"
+    inputs.property("n", n)
+    inputs.property("v", v)
     outputs.dir(buildInfo)
-    doLast { buildInfo.get().file("build-number.txt").asFile.apply { parentFile.mkdirs() }.writeText(n) }
+    doLast {
+        buildInfo.get().file("build-number.txt").asFile.apply { parentFile.mkdirs() }.writeText(n)
+        // qual instalador esta versão é (o normal ou o do Windows 7/8): o app se atualiza com o mesmo tipo
+        buildInfo.get().file("variant.txt").asFile.writeText(v)
+    }
 }
 sourceSets.main { resources.srcDir(sharedAssets); resources.srcDir(buildInfo) }
 tasks.named("processResources") { dependsOn(copySharedAssets, writeBuildInfo) }

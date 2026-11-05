@@ -130,7 +130,12 @@ fun MoveisScreen(vm: AppViewModel) {
         when {
             err != null -> Column(Modifier.align(Alignment.Center).width(460.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(tr("Não consegui abrir o editor de móveis neste computador."), color = Color(0xFF1B1F27))
-                Text(err ?: "", color = Color(0xFF666666))
+                if (br.com.arque.measure.data.AppUpdater.oldWindows && !br.com.arque.measure.data.AppUpdater.win7Build) {
+                    // Windows 7/8: o Chromium novo não roda · tem o instalador próprio com o Chromium 109
+                    Text(tr("Este computador está com Windows 7 ou 8. O editor precisa da versão do Arquemestre feita para Windows 7/8 (seus dados continuam)."), color = Color(0xFF1B1F27))
+                    Button(onClick = { vm.installWin7() }) { Text(tr("Baixar e instalar a versão para Windows 7/8")) }
+                    vm.updateState?.let { Text(it, color = Color(0xFF666666)) }
+                } else Text(err ?: "", color = Color(0xFF666666))
                 Button(onClick = { vm.screen = Screen.Library }) { Text(tr("Voltar")) }
             }
             !ready -> Column(Modifier.align(Alignment.Center).width(420.dp), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {

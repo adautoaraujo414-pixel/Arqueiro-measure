@@ -72,6 +72,21 @@ jobs:
           gh release view win-latest -R "$env:GITHUB_REPOSITORY" 2>$null; if ($LASTEXITCODE -ne 0) { gh release create win-latest -R "$env:GITHUB_REPOSITORY" --prerelease --title "Windows · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em win-N." }
           gh release upload win-latest rel/latest.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
 
+      - name: Instalador para Windows 7/8 (Chromium 109)
+        if: success()
+        working-directory: windows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # o Chromium 135 não roda no Windows 7/8/8.1 (chrome_elf.dll: procedimento não encontrado):
+          # este instalador usa o Chromium 109 (o último que roda neles) e se atualiza com o mesmo tipo
+          gradle --no-daemon packageExe -Pwin7=1
+          $exe = Get-ChildItem build/compose/binaries/main/exe/*.exe | Select-Object -First 1
+          Copy-Item $exe.FullName Arquemestre-Windows7-Instalador.exe
+          Write-Host "Windows 7/8: $([math]::Round((Get-Item Arquemestre-Windows7-Instalador.exe).Length/1MB)) MB"
+          gh release upload "win-$env:GITHUB_RUN_NUMBER" Arquemestre-Windows7-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+          gh release upload win-latest Arquemestre-Windows7-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+
       - name: Guardar resultados (prints e relatório) no ramo ci/windows-resultados
         if: always()
         env:

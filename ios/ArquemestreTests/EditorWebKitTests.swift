@@ -268,7 +268,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSoEmbaixoDaPiaSemFundoETorreComBaseETeto() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.env='cozinha';var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.env='cozinha';S.W=4200;/* parede onde tudo cabe inteiro (sem espaço, o módulo novo vai pra parede do lado) */var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
           newTpl(T('Balcão 2 portas'));newTpl(T('Balcão da pia (cuba)'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(0);newTpl(4);addStone();draw();open3D();var B=__boxes();
           var z=S.mods.map(function(m,i){return Math.min.apply(null,B.filter(function(b){return String(b.nm)===i+':Lateral esquerda'}).map(function(b){return Math.round(b.z0)}))});
           var tor=S.mods[3],bt=partsOf(tor).filter(function(p){return /^Base (inferior|superior)$/.test(p.name)}).length;
@@ -1273,6 +1273,58 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["solo"] as? Bool, true, "abre o 2D só dele")
         XCTAssertEqual(o["vaos"] as? Int, 3, "2 divisórias = 3 vãos")
         XCTAssertEqual(o["v"] as? String, "drawers3,free1,door1", "gavetas, nicho e porta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Sólido: peça nova não entra em outra (torres, prateleiras, geladeiras, air fryer, guarda-roupa, porta de correr no painel) e painel liso maior que a chapa sai em placas de 1800 × 2700 no sentido escolhido
+    func testSolidoNadaEntraEmNadaEPainelSaiEmPlacasDaChapa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          var fresh=function(room){S.room=room;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw()};
+          var clk=function(cid,re){window.CATALL=true;catOpen(cid);var c=CATS.filter(function(x){return x.id===cid})[0],k=-1;c.it.forEach(function(it,i){var t=typeof it==='number'?TPL[it]:it;if(k<0&&t&&re.test(t.n))k=i});document.querySelector('#catm [data-cati="'+cid+'|'+k+'"]').click();var m=document.getElementById('catm');if(m)m.hidden=true};
+          var ov=function(a,b,c,d){return a<d-1&&c<b-1};
+          /* torres: a 4ª não cabe mais na parede do fundo (pedra + 3 torres) e vai pra parede do lado, sem entrar em nada */
+          fresh('cozinha');addStone();['Armário alto 2 portas','Despenseiro','Torre quente','Torre forno \\+ micro'].forEach(function(n){clk('alto',new RegExp('^'+n))});draw();
+          R.torres=S.mods.filter(function(m){return modOverlaps(m)||!fitsHere(m)}).length;R.lado=S.mods.filter(function(m){return m.wing}).length;
+          /* duas prateleiras suspensas: a segunda não entra na primeira (empilha) */
+          fresh('sala');clk('sala',/^Prateleira suspensa · canto quadrado/);clk('sala',/^Prateleira suspensa · canto quadrado/);draw();var p=S.rp.filter(function(a){return a.prat});
+          R.prat=p.length===2&&!(ov(p[0].x,p[0].x+p[0].w,p[1].x,p[1].x+p[1].w)&&ov(p[0].b-150,p[0].b+p[0].h+150,p[1].b,p[1].b+p[1].h));
+          /* duas geladeiras e duas air fryers: lado a lado, dentro da parede e a air fryer em cima da pedra */
+          fresh('cozinha');addStone();clk('cgel',/SS90X/);clk('cgel',/SS90X/);clk('clav',/Air fryer 4 L AFN-40/);clk('clav',/Air fryer 4 L AFN-40/);draw();
+          var g=S.fr.filter(function(f){return f.t==='geladeira'}),af=S.fr.filter(function(f){return f.t==='airfryer'}),st=S.stones[0];
+          R.gel=g.length===2&&!ov(g[0].x,g[0].x+g[0].w,g[1].x,g[1].x+g[1].w)&&g.every(function(f){return f.x>=0&&f.x+f.w<=S.W});
+          R.af=af.length===2&&!ov(af[0].x,af[0].x+af[0].w,af[1].x,af[1].x+af[1].w)&&af.every(function(f){return f.y===af[0].y&&f.x>=st.x&&f.x+f.w<=st.x+st.w});
+          /* catálogo sem módulo escolhido não quebra */
+          fresh('cozinha');clk('inf',/^Módulo vazio/);clk('canto',/^Canto em L/);clk('ccoz',/^Cuba de embutir 50/);draw();
+          /* guarda-roupa: as roupas da decoração ficam dentro dele (não viram caixas soltas no canto) */
+          fresh('quarto');clk('dArm',/^2P 600mm/);clk('dArm',/^2P 600mm/);draw();__build();R.deco=__boxes().filter(function(b){return /Decora/.test(String(b.nm||''))}).length;R.dois=S.mods.length===2&&!modOverlaps(S.mods[1]);
+          /* painel com porta de correr embutida: a folha corre no rasgo do batente, não entra na madeira */
+          fresh('sala');clk('painel',/^Painel liso \+ porta de correr/);draw();__build();var a=S.rp[0],X=__boxes(),fo=X.filter(function(b){return b.rpd===a.id}),pa=X.filter(function(b){return b.rpid===a.id&&b.g!=='lo'});
+          R.folha=fo.length>0&&!fo.some(function(f){return pa.some(function(q){return ov(f.x0,f.x1,q.x0,q.x1)&&ov(f.y0,f.y1,q.y0,q.y1)&&ov(f.z0,f.z1,q.z0,q.z1)})});
+          /* painel liso esticado (4140 × 580): sai em placas de no máximo 1800 × 2700 no sentido escolhido e vai pro plano de corte */
+          fresh('cozinha');S.W=4140;S.H=3190;var L=rpNew({x:0,b:2610,w:4140,h:580});L.liso=true;LAST='rp';S.tab=8;RPSEL=L.id;draw();panel();rpBar();
+          R.pergunta=!!document.querySelector('#rpbar [data-rpb="ps|c"]')&&/maior que a chapa/.test(document.getElementById('rpbar').innerText);
+          document.querySelector('#rpbar [data-rpb="ps|c"]').click();R.c=JSON.stringify(plPlates(L).cols);
+          document.querySelector('#rpbar [data-rpb="ps|l"]').click();R.l=JSON.stringify(plPlates(L).cols);
+          var G=cutGroups(),pc=G.ord.map(function(k){return G.map[k]}).filter(function(q){return /^Placa do painel liso/.test(q.names[0])});R.corte=pc.map(function(q){return q.qty+'x'+q.L+'x'+q.W}).join(' ');
+          /* qualquer peça maior que a chapa sai em partes (prateleira de 3200) */
+          var sh=rpNew({x:200,b:1750,w:3200,h:50});sh.prat=true;sh.pd=250;draw();G=cutGroups();R.partes=G.ord.some(function(k){return /em 2 partes/.test(G.map[k].names[0])&&G.map[k].L<=2730});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["torres"] as? Int, 0, "nenhuma torre entra em outra nem na pedra")
+        XCTAssertEqual(o["lado"] as? Int, 1, "a que não cabe vai pra parede do lado")
+        XCTAssertEqual(o["prat"] as? Bool, true, "prateleira nova não entra na outra")
+        XCTAssertEqual(o["gel"] as? Bool, true, "geladeiras lado a lado, dentro da parede")
+        XCTAssertEqual(o["af"] as? Bool, true, "air fryer ao lado da outra, em cima da pedra")
+        XCTAssertEqual(o["deco"] as? Int, 0, "decoração dentro do guarda-roupa")
+        XCTAssertEqual(o["dois"] as? Bool, true, "dois guarda-roupas sem sobrepor")
+        XCTAssertEqual(o["folha"] as? Bool, true, "folha de correr no rasgo do batente")
+        XCTAssertEqual(o["pergunta"] as? Bool, true, "pergunta o sentido do corte")
+        XCTAssertEqual(o["c"] as? String, "[[0,2700],[2700,4140]]", "comprimento: 2700 + 1440")
+        XCTAssertEqual(o["l"] as? String, "[[0,1800],[1800,3600],[3600,4140]]", "largura: 1800 + 1800 + 540")
+        XCTAssertEqual(o["corte"] as? String, "2x580x1800 1x580x540", "placas no plano de corte no sentido certo")
+        XCTAssertEqual(o["partes"] as? Bool, true, "peça maior que a chapa sai em partes")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

@@ -5084,5 +5084,10 @@
 "Mensalidade · vence em {0}": "Mensualidad · vence en {0}",
 "Licença / senha do mês": "Licencia / contraseña del mes",
 "Essa senha já foi usada neste aparelho. Peça a senha do mês.": "Esta contraseña ya se usó en este dispositivo. Pide la contraseña del mes.",
-"App liberado por mais {0} dias. Obrigado!": "App liberada por {0} días más. ¡Gracias!"
+"App liberado por mais {0} dias. Obrigado!": "App liberada por {0} días más. ¡Gracias!",
+"Procurando a versão para Windows 7/8…": "Buscando la versión para Windows 7/8…",
+"Baixando a versão para Windows 7/8… {0}%": "Descargando la versión para Windows 7/8… {0}%",
+"Pronto: abrindo o instalador (seus dados continuam).": "Listo: abriendo el instalador (tus datos se mantienen).",
+"Este computador está com Windows 7 ou 8. O editor precisa da versão do Arquemestre feita para Windows 7/8 (seus dados continuam).": "Esta computadora usa Windows 7 u 8. El editor necesita la versión de Arquemestre hecha para Windows 7/8 (tus datos se mantienen).",
+"Baixar e instalar a versão para Windows 7/8": "Descargar e instalar la versión para Windows 7/8"
 }

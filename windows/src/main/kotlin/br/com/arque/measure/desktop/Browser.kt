@@ -65,7 +65,8 @@ object Browser {
         browser?.let { return it }
         try {
             val b = CefAppBuilder()
-            b.setInstallDir(File(Paths.data, "jcef"))
+            // Windows 7/8 usa o Chromium 109 numa pasta própria (não mistura com o 135 de uma instalação antiga)
+            b.setInstallDir(File(Paths.data, if (br.com.arque.measure.data.AppUpdater.win7Build) "jcef109" else "jcef"))
             b.setProgressHandler(IProgressHandler { st, pct ->
                 progress = when (st) {
                     EnumProgress.LOCATING -> 2
@@ -80,7 +81,7 @@ object Browser {
             val s = b.cefSettings
             s.windowless_rendering_enabled = false
             val cache = File(Paths.data, "app_webview").apply { mkdirs() }.absolutePath
-            s.root_cache_path = cache
+            runCatching { CefSettings::class.java.getField("root_cache_path").set(s, cache) }
             s.cache_path = cache
             s.persist_session_cookies = true
             s.locale = when (br.com.arque.measure.i18n.I18n.lang) { "en" -> "en-US"; "es" -> "es"; else -> "pt-BR" }

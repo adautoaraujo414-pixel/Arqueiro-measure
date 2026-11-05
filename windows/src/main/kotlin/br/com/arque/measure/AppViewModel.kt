@@ -1073,6 +1073,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Windows 7/8 com o instalador normal: baixa e instala o do Windows 7/8 (Chromium 109), mesmo sendo o mesmo número. */
+    fun installWin7() {
+        val app = getApplication<Application>()
+        updateReady = null
+        updateState = tr("Procurando a versão para Windows 7/8…")
+        viewModelScope.launch {
+            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest(br.com.arque.measure.data.AppUpdater.ASSET7) }.getOrNull() }
+            if (rel == null) { updateState = tr("Não consegui verificar agora (sem internet?)."); return@launch }
+            flush()
+            withContext(io) { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(app, force = true) } }
+            val f = withContext(kotlinx.coroutines.Dispatchers.IO) {
+                runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = tr("Baixando a versão para Windows 7/8… {0}%", p) } } }
+            }
+            val exe = f.getOrNull()
+            if (exe == null) { updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message); return@launch }
+            updateReady = exe
+            updateState = tr("Pronto: abrindo o instalador (seus dados continuam).")
+            installUpdate()
+        }
+    }
+
     /** Editor de móveis aberto só pra ver o projeto de outro celular (Bluetooth). */
     var moveisView by mutableStateOf(false)
 

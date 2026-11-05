@@ -991,6 +991,57 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
+    /// separados por categoria, no piso e nas paredes do 3D (as juntas vêm na peça); tudo salvo no projeto
+    func testCoresComPisosEPorcelanatosReaisParedesArmariosPortasEFitas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          for(var i=0;i<3;i++){newTpl(tpl('Balcão 2 portas'));S.mods[S.mods.length-1].x=200+i*900}
+          S.m=S.mods[0];S.tab=10;__cores('pp','all','piso');draw();panel();var R={},Q=function(q){return document.querySelector('#bd '+q)};
+          /* aba 🎨 Cores logo depois do Ambiente, com o cabeçalho organizado */
+          R.aba=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(d){return d.textContent})[1];
+          R.cab=[].map.call(document.querySelectorAll('#bd .cortb button'),function(b){return b.textContent}).join('|');
+          /* 15 pisos e porcelanatos com textura, separados por categoria */
+          R.pisos=document.querySelectorAll('#bd [data-cfm]:not([data-cfm=""])').length;R.cats=[].map.call(document.querySelectorAll('#bd .rvc'),function(d){return d.textContent}).join(',');
+          R.img=/cores\/piso-calacata-altissimo\.jpg/.test(Q('[data-cfm="piso-calacata-altissimo"] i').style.backgroundImage);
+          Q('[data-cfm="piso-carvalho-natural"]').click();R.fm=S.fm;R.junta=!Q('[data-cpj]');
+          __cores('pp','all','parede');panel();Q('[data-cwm="piso-calacata-altissimo"]').click();R.wm=S.wm;
+          /* armários e portas: a cor vai pra todos os módulos */
+          __cores('arm','all');panel();var b=Q('[data-csl="cor"] [data-cs*="arauco"]'),id=b.dataset.cs.split('|')[3];b.click();R.arm=S.mods.map(function(m){return m.corId===id?1:0}).join('');
+          __cores('port','all');panel();var b2=Q('[data-csl="corF"] [data-cs*="duratex"]'),id2=b2.dataset.cs.split('|')[3];b2.click();R.port=S.mods.map(function(m){return m.corFId===id2?1:0}).join('');
+          /* fitas */
+          __cores('fita');panel();var f0=STD().fitaMm;Q('[data-std="fitaMm"][data-v="35"]').click();R.fita=STD().fitaMm;STD().fitaMm=f0;prSave();
+          /* salva no projeto (e o botão do LED também) */
+          S.lbtm='um';S.lbtc='preto';var sv=JSON.parse(JSON.stringify(snapState()));delete S.fm;delete S.wm;delete S.lbtm;delete S.lbtc;loadState(sv);R.salvo=S.fm+'|'+S.wm+'|'+S.lbtm+'|'+S.lbtc;
+          /* no 3D: piso e paredes com o porcelanato (as juntas vêm na peça) e o quadro do piso com as categorias */
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var bs=__bg();R.piso3d=bs[0].mid;R.juntas=bs.filter(function(q){return q.fj}).length;R.paredes3d=bs.filter(function(q){return q.wl&&q.mid==='piso-calacata-altissimo'}).length>0;
+          fx3api.open({k:'wall',s:'P'});var it=document.getElementById('it4');R.quadro=it.querySelectorAll('[data-qrv]').length;it.querySelector('[data-qrv="piso-terrae-cotta"]').click();R.fm3=S.fm;
+          it.querySelector('[data-qwc]:not([data-qwc=""])').click();R.tinta=String(S.fm);
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["aba"] as? String, "🎨 Cores", "aba Cores logo depois do Ambiente")
+        XCTAssertEqual(o["cab"] as? String, "🧱 Paredes e pisos|🗄 Armários|🚪 Portas|🎞 Fitas", "cabeçalho organizado")
+        XCTAssertEqual(o["pisos"] as? Int, 15, "15 pisos e porcelanatos")
+        XCTAssertEqual(o["cats"] as? String, "Liso,Neutro,Cimentício,Marmorizado,Pedra,Granilite,Amadeirado,Terracota", "separados por categoria")
+        XCTAssertEqual(o["img"] as? Bool, true, "cada piso mostra a textura")
+        XCTAssertEqual(o["fm"] as? String, "piso-carvalho-natural", "piso escolhido")
+        XCTAssertEqual(o["junta"] as? Bool, true, "com porcelanato as juntas vêm na peça")
+        XCTAssertEqual(o["wm"] as? String, "piso-calacata-altissimo", "porcelanato nas paredes")
+        XCTAssertEqual(o["arm"] as? String, "111", "cor dos armários em todos os módulos")
+        XCTAssertEqual(o["port"] as? String, "111", "cor das portas em todos os módulos")
+        XCTAssertEqual(o["fita"] as? Int, 35, "largura da fita pela aba Cores")
+        XCTAssertEqual(o["salvo"] as? String, "piso-carvalho-natural|piso-calacata-altissimo|um|preto", "piso, parede e botão do LED salvos no projeto")
+        XCTAssertEqual(o["piso3d"] as? String, "piso-carvalho-natural", "no 3D o piso usa a textura")
+        XCTAssertEqual(o["juntas"] as? Int, 0, "sem as juntas de desenho por cima do porcelanato")
+        XCTAssertEqual(o["paredes3d"] as? Bool, true, "no 3D as paredes usam o porcelanato")
+        XCTAssertEqual(o["quadro"] as? Int, 16, "quadro do piso no 3D com os 15 e o sem porcelanato")
+        XCTAssertEqual(o["fm3"] as? String, "piso-terrae-cotta", "troca o piso pelo 3D")
+        XCTAssertEqual(o["tinta"] as? String, "undefined", "escolher a cor tira o porcelanato")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testModoPessoaNaoAtravessaMesaCafeteiraPedrasReaisESetinhasDaPedra() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

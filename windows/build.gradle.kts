@@ -40,7 +40,7 @@ kotlin { jvmToolchain(21) }
 // o editor de móveis e as traduções vêm direto do app Android: o Windows usa sempre a versão mais nova
 val sharedAssets = layout.buildDirectory.dir("generated/arqueAssets")
 val copySharedAssets by tasks.registering(Sync::class) {
-    from("../app/src/main/assets") { include("editor.html", "i18n/**", "fotos/**") }
+    from("../app/src/main/assets") { include("editor.html", "i18n/**", "fotos/**", "cores/**") }
     into(sharedAssets.map { it.dir("assets") })
 }
 // número desta versão (o mesmo do release win-N): o app usa pra saber se há versão nova

@@ -1543,6 +1543,82 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Rack do zero entra suspenso no meio do painel (moldura e régua de escolha, tampo em cima), painel aparece no 2D só dele,
+    /// ⇔ Centralizar rack e prateleira (sobra igual dos dois lados) e sem painel fica no meio da parede
+    func testRackNoMeioDoPainelSuspensoECentralizar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it},sob=function(m,a,b){return [(m.x-lt(m))-a,b-(m.x+m.w+rt(m))]};
+          /* painel liso 2400 (2 placas) e o rack do zero: entra suspenso, sem pedestal, com moldura e régua, no meio do painel */
+          var p1=rpNew({x:1000,b:0,w:1200,h:2700});p1.liso=true;var p2=rpNew({x:2215,b:0,w:1200,h:2700});p2.liso=true;draw();
+          var tt=JSON.parse(JSON.stringify(pick('Rack do zero (você monta)')));tt.sup=!!tt.sup;newTpl(tt);await new Promise(function(r){setTimeout(r,300)});var m=S.mods[0],s0=sob(m,1000,3415);
+          R.suspenso=m.b===350&&!m.rod&&!!m.mold&&!!m.trav;R.meio=Math.abs(s0[0]-s0[1])<=.5&&m.tl===m.tr;
+          /* no 2D só dele o painel continua aparecendo (apagado, sem mexer) */
+          R.solo=window.SOLO2===m&&!!document.querySelector('#svg g[opacity=".35"] [data-rp]');
+          var P=function(){return partsOf(m).map(function(p){return p.name}).join('|')};R.pecas=/Moldura de acabamento/.test(P())&&/Travessa frontal/.test(P());/* rack não leva pedra: tem tampo em cima mesmo com a régua */R.tampo=/Base superior/.test(P())&&__build()===undefined&&__boxes().some(function(b){return String(b.nm||'').indexOf('0:Base superior')===0&&Math.abs(b.y1-850)<1});
+          /* moldura e régua saem e voltam pelo cabeçalho */
+          var cl=function(k){document.querySelector('#solobar [data-sorc="'+k+'"]').click()};cl('mold');cl('trav');R.tira=!m.mold&&!m.trav&&!/Moldura de acabamento/.test(P())&&!/Travessa frontal/.test(P());cl('mold');cl('trav');R.volta=!!m.mold&&!!m.trav;
+          cl('sus');R.chao=m.b===0&&!!m.rod;cl('sus');R.sobe=m.b===350&&!m.rod;
+          /* arrastou pro lado: ⇔ Centralizar volta pro meio, sobra igual dos dois lados */
+          m.x=1150;draw();cl('ctr');var s1=sob(m,1000,3415);R.centraliza=Math.abs(s1[0]-s1[1])<=.5&&s1[0]>0;
+          /* prateleira: centraliza no painel, até meio milímetro */
+          var pr=rpNew({x:1300,b:1750,w:1001,h:50});pr.prat=true;pr.pd=250;LAST='rp';RPSEL=pr.id;soloOff();draw();panel();var bt=document.querySelector('[data-rpctr]');R.botao=!!bt;if(bt)bt.click();R.prat=Math.abs((pr.x-1000)-(3415-pr.x-pr.w))<.01;
+          /* sem painel: no meio da parede */
+          S.mods=[];S.rp=[];draw();newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso'))));await new Promise(function(r){setTimeout(r,100)});var m2=S.mods[0],s2=sob(m2,0,S.W);R.parede=Math.abs(s2[0]-s2[1])<=.5;try{soloOff()}catch(_){}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["suspenso"] as? Bool, true, "rack do zero entra suspenso, sem pedestal, com moldura e régua")
+        XCTAssertEqual(o["meio"] as? Bool, true, "rack entra no meio do painel")
+        XCTAssertEqual(o["solo"] as? Bool, true, "no 2D só do rack o painel continua aparecendo")
+        XCTAssertEqual(o["pecas"] as? Bool, true, "moldura e régua no plano de corte")
+        XCTAssertEqual(o["tampo"] as? Bool, true, "rack tem tampo em cima mesmo com a régua")
+        XCTAssertEqual(o["tira"] as? Bool, true, "tira moldura e régua pelo cabeçalho")
+        XCTAssertEqual(o["volta"] as? Bool, true, "volta moldura e régua")
+        XCTAssertEqual(o["chao"] as? Bool, true, "rack no chão com pedestal")
+        XCTAssertEqual(o["sobe"] as? Bool, true, "rack suspenso de novo")
+        XCTAssertEqual(o["centraliza"] as? Bool, true, "⇔ Centralizar: sobra igual dos dois lados")
+        XCTAssertEqual(o["botao"] as? Bool, true, "botão Centralizar na barra da prateleira")
+        XCTAssertEqual(o["prat"] as? Bool, true, "prateleira centralizada no painel")
+        XCTAssertEqual(o["parede"] as? Bool, true, "sem painel: rack no meio da parede")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Localizador da chapa: tocar na placa do painel no plano de corte acende ela em rosa no 3D (por cima da cor/madeira),
+    /// cada peça de painel acha a sua, régua do rebaixo acende só as réguas e a folha da porta embutida acende a folha
+    func testLocalizadorDaChapaAchaAPlacaDoPainelNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R={};
+          S.room='sala';S.env='livre';S.W=6000;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0];
+          /* painel liso maior que a chapa (2 placas) em Louro Freijó, com rebaixo · ripado com porta embutida · liso com porta de correr · prateleira */
+          var a1=rpNew({x:0,b:0,w:2400,h:2700});a1.liso=true;a1.jt={t:'reb',w:15,d:6};a1.cor=wood.hex;a1.corId=wood.id;var a2=rpNew({x:0,b:2715,w:2400,h:500});a2.liso=true;a2.jt={t:'reb',w:15,d:6};
+          var a3=rpNew({x:2500,b:0,w:1500,h:2600});a3.pt={x:300,w:800,h:2100};var a4=rpNew({x:4100,b:0,w:1200,h:2600});a4.liso=true;a4.pt={x:200,w:800,h:2100,tipo:'correr',lado:'d'};var a5=rpNew({x:5400,b:1500,w:500,h:50});a5.prat=true;a5.pd=250;draw();
+          var pink=function(){return __boxes().filter(function(b){return b.a===1&&b.c&&b.c[0]===227&&b.c[1]===25&&b.c[2]===123})};
+          /* toque na peça desenhada na chapa (plano de corte) */
+          openCut();var ps=[].slice.call(document.querySelectorAll('#cutbody [data-cp]')).filter(function(g){return /^Placa do painel liso 1 · placa 2 de 2/.test(g.dataset.lab)});R.naChapa=ps.length>0;
+          ps[0].dispatchEvent(new MouseEvent('click',{bubbles:true}));await new Promise(function(r){setTimeout(r,700)});__build();var P=pink();
+          R.acha=P.length>0&&P.every(function(b){return b.rpid===a1.id&&b.rpart==='placa2'});R.rosa=P.length>0&&P.every(function(b){return !b.mid});R.banner=!document.getElementById('v3hl').hidden;
+          /* cada peça de painel do plano acha alguma coisa no 3D (e só do painel dela) */
+          var G=cutGroups(),tot=0,ok=0,fal=[];G.ord.forEach(function(k){var g=G.map[k],seen={};(g.src||[]).forEach(function(sub){var ss=srcStr(Array.isArray(sub)?sub:[sub]);if(ss.indexOf('rp|')<0||seen[ss])return;seen[ss]=1;tot++;show3D(ss,g.names[0]);__build();var p=pink(),id=ss.split('|')[1];if(p.length&&p.every(function(b){return String(b.rpid)===id||String(b.rpd)===id})&&!p.some(function(b){return b.mid}))ok++;else fal.push(g.names[0].slice(0,40))})});
+          R.todas=tot>10&&ok===tot;R.fal=fal.join(' / ');
+          /* régua do rebaixo acende só as réguas · folha da porta embutida acende a folha */
+          var jr=G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Detalhe de rebaixo/.test(g.names[0])})[0];show3D(srcStr(jr.src[0]),'r');__build();R.regua=pink().length>0&&pink().every(function(b){return b.rpart==='junta'});
+          var fo=G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Folha da porta/.test(g.names[0])})[0];show3D(srcStr(fo.src[0]),'f');__build();R.folha=pink().length>0&&pink().every(function(b){return b.rpd===a4.id});
+          try{document.getElementById('v3x').click()}catch(_){}R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["naChapa"] as? Bool, true, "placa do painel desenhada na chapa")
+        XCTAssertEqual(o["acha"] as? Bool, true, "toque na placa 2 acende só a placa 2 no 3D")
+        XCTAssertEqual(o["rosa"] as? Bool, true, "rosa por cima da madeira")
+        XCTAssertEqual(o["banner"] as? Bool, true, "faixa da peça localizada")
+        XCTAssertEqual(o["todas"] as? Bool, true, "toda peça de painel acha a sua: \(o["fal"] ?? "")")
+        XCTAssertEqual(o["regua"] as? Bool, true, "régua do rebaixo acende só as réguas")
+        XCTAssertEqual(o["folha"] as? Bool, true, "folha da porta embutida")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

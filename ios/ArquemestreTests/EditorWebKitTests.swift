@@ -2479,6 +2479,24 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Balcão em L e U: módulos do fundo e da lateral não se sobrepõem (pingadeira de 5 mm descontada na divisão)
+    func testPlacaDo3DSolidaTravaApagaAparece2DEPlanoDeCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.geo=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;var a=rpNew({x:600,b:0,w:1035,h:2700});a.liso=true;draw();open3D();
+          var T=__geoT();T.add('placa');var g=S.geo[0];T.set('gx',700);T.set('gz',-10);var z=g.z;T.set('gh',3500);var h=g.h;T.close();var lk=g.lock?1:0;
+          var G=cutGroups(),pl=G.ord.filter(function(k){return /\|geo\|/.test(k)}).length;document.getElementById('v3x').click();draw();var d2=document.querySelectorAll('.geo2d').length;
+          open3D();__itOpen({k:'geo',id:g.id});var E=T.box();var b=E.querySelector('[data-qdel]')||E.querySelector('[data-qgdel]');b.click();(E.querySelector('[data-qdel]')||E.querySelector('[data-qgdel]')).click();
+          return JSON.stringify({z:z,h:h,lk:lk,pl:pl,d2:d2,sobra:S.geo.length,errs:__errs});
+          """#)
+        XCTAssertEqual(o["z"] as? Int, 18, "não entra na parede nem no painel: fica encostada na frente")
+        XCTAssertEqual(o["h"] as? Int, 2890, "não passa do teto")
+        XCTAssertEqual(o["lk"] as? Int, 1, "fechar o quadro trava")
+        XCTAssertEqual(o["pl"] as? Int, 1, "placa no plano de corte")
+        XCTAssertEqual(o["d2"] as? Int, 1, "placa aparece no 2D")
+        XCTAssertEqual(o["sobra"] as? Int, 0, "🗑 apaga a placa")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

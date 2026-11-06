@@ -183,12 +183,12 @@ class EditorStateTest {
         assertEquals("b", st.selectedId)
     }
 
-    @Test fun `cota pendente nao mostra rotulo e medida mostra no formato em metros`() {
+    @Test fun `cota pendente nao mostra rotulo e medida mostra em cm com uma casa`() {
         val st = state(dim("a"))
         val d0 = st.sheet.obj("a") as DimObj
         assertEquals("", br.com.arque.measure.logic.Units.label(d0, st.unit))
         st.select("a")
         st.assignReading(reading(1540.0))
-        assertEquals("1,540 m", br.com.arque.measure.logic.Units.label(st.sheet.obj("a") as DimObj, st.unit))
+        assertEquals("154,0 cm", br.com.arque.measure.logic.Units.label(st.sheet.obj("a") as DimObj, st.unit))
     }
 }

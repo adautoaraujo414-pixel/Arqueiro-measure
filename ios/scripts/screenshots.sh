@@ -53,7 +53,7 @@ shoot() { # $1 kind (iphone|ipad)
     [ "$lang" = "es" ] && loc=es_MX
     local n=1
     # loja: só projetos prontos e cores (sem agenda, orçamento, assinatura nem plano de corte)
-    for scr in moveis3d moveissala moveiscores moveiscloset moveisplanta moveis editor; do
+    for scr in moveis3d moveissala moveis2d moveiscorte moveiscores moveiscloset moveisplanta editor; do
       xcrun simctl terminate "$udid" "$BID" 2>/dev/null || true
       xcrun simctl privacy "$udid" grant photos "$BID" 2>/dev/null || true
       local cmd=(xcrun simctl launch "$udid" "$BID" -arque.lang "$lang" -AppleLocale "$loc" -demo)

@@ -972,7 +972,7 @@ final class EditorWebKitTests: XCTestCase {
           /* botão do LED: bolinha preta embaixo do aéreo · toque desliga */
           var lb=__lbt(),s0=lb[0]&&lb[0].s;if(s0)org3api.one(s0[0],s0[1]);var ledOff=a.led.on;
           /* TV: abertura com a logo e depois a imagem */
-          var tv=apAdd('tv',1);tv.x=1500;tv.b=1300;__build();ele3api.luz(tv.id,1);await new Promise(function(r){setTimeout(r,1400)});var tvs=__tvs(),logo=fx3api.fx();await new Promise(function(r){setTimeout(r,2400)});var wel=fx3api.fx();await new Promise(function(r){setTimeout(r,2300)});var tvs2=__tvs(),car=__tvCar();
+          var tv=apAdd('tv',1);tv.x=1500;tv.b=1300;__build();ele3api.luz(tv.id,1);await new Promise(function(r){setTimeout(r,1400)});var tvs=__tvs(),logo=fx3api.fx();await new Promise(function(r){setTimeout(r,2400)});var wel=fx3api.fx();var car=0;for(var ci_=0;ci_<20;ci_++){await new Promise(function(r){setTimeout(r,150)});car=Math.max(car,__tvCar())}var tvs2=__tvs();
           document.getElementById('v3x').click();
           return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,wel:wel,car:car,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
           """#)

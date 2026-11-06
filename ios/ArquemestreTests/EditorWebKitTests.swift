@@ -1406,6 +1406,81 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Pintar painéis: pelo 3D (pincel, conta-gotas e borracha, sem selecionar o painel) e pela aba Cores › ▥ Painéis (mesmo sem módulo), com o veio
+    func testPintarPaineisPelo3DEPelaAbaCores() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='quarto';S.env='livre';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0],uni=MAT.filter(function(c){return c.cat!=='wood'})[2];
+          /* parede de painéis lisos (sem nenhum módulo) + um ripado */
+          var P=[];for(var i=0;i<3;i++){var a=rpNew({x:i*960,b:0,w:949,h:2700});a.liso=true;P.push(a)}var r=rpNew({x:2880,b:0,w:900,h:2400});draw();
+          /* 2D: aba Cores › ▥ Painéis aparece mesmo sem módulo e pinta todos os lisos */
+          S.tab=10;CORTAB='arm';panel();R.dica=/aba <b>▥ Painéis<\/b>/.test(document.getElementById('bd').innerHTML)||/Painéis/.test(document.getElementById('bd').innerText);
+          document.querySelector('[data-cortab="pain"]').click();R.aba=!!document.querySelector('[data-cpn="liso"]');
+          document.querySelector('[data-cpnc="'+uni.id+'"]').click();R.lisos=P.every(function(a){return a.corId===uni.id});
+          document.querySelector('[data-cpn="rip"]').click();document.querySelector('[data-cpnc="'+wood.id+'"]').click();R.ripas=r.corId===wood.id&&!P.some(function(a){return a.corId===wood.id});
+          document.querySelector('[data-cpn="liso"]').click();document.querySelector('[data-cpnv="c"]').click();R.veio=P.every(function(a){return a.ps==='c'});
+          /* 3D: pincel com Louro Freijó pinta só o painel tocado; conta-gotas copia a cor do painel */
+          open3D();await new Promise(function(q){setTimeout(q,300)});document.getElementById('v3pt').click();window.PT3={c:wood.hex,n:matLabel(wood),id:wood.id,erase:false};
+          __build();var b=__boxes().filter(function(q){return q.rpid===P[1].id&&q.g!=='lo'})[0];__pt3tapBox(b);R.pinta3d=P[1].corId===wood.id&&P[0].corId===uni.id;
+          __build();R.tex=__boxes().filter(function(q){return q.rpid===P[1].id&&q.g!=='lo'}).every(function(q){return q.mid===wood.id});
+          window.PT3={c:'#000000',n:'x',id:'',erase:false,pick:true};var b0=__boxes().filter(function(q){return q.rpid===P[0].id&&q.g!=='lo'})[0];__pt3tapBox(b0);R.copia=PT3.id===uni.id;
+          window.PT3={c:'',n:'',id:'',erase:true};__build();b=__boxes().filter(function(q){return q.rpid===P[2].id&&q.g!=='lo'})[0];__pt3tapBox(b);R.apaga=!P[2].cor;
+          /* toque de verdade na tela em cima do 1º painel */window.PT3={c:wood.hex,n:matLabel(wood),id:wood.id,erase:false};__build();var c3=__p3(P[0].x+P[0].w/2,1200,60);paintTap(c3[0],c3[1]);R.toque=P[0].corId===wood.id;
+          try{document.getElementById('v3x').click()}catch(_){}R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["dica"] as? Bool, true, "sem módulo aponta pra aba Painéis")
+        XCTAssertEqual(o["aba"] as? Bool, true, "aba ▥ Painéis em Cores")
+        XCTAssertEqual(o["lisos"] as? Bool, true, "pinta todos os painéis lisos")
+        XCTAssertEqual(o["ripas"] as? Bool, true, "pinta só as ripas")
+        XCTAssertEqual(o["veio"] as? Bool, true, "veio deitado em todos")
+        XCTAssertEqual(o["pinta3d"] as? Bool, true, "pincel do 3D pinta só o painel tocado")
+        XCTAssertEqual(o["tex"] as? Bool, true, "textura real no 3D")
+        XCTAssertEqual(o["copia"] as? Bool, true, "conta-gotas copia a cor do painel")
+        XCTAssertEqual(o["apaga"] as? Bool, true, "borracha tira a cor")
+        XCTAssertEqual(o["toque"] as? Bool, true, "toque na tela em cima do painel pinta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// 2 toques na parede no 3D: sem nada escolhido pergunta (porta, vão, janela) e cria ali; com a porta escolhida ela vai pra lá; medidas digitadas no quadro
+    func testDoisToquesNaParedeCriaEMovePortaEJanela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
+          /* 2 toques na parede do fundo, sem nada escolhido: pergunta o que criar ali */
+          var c=__p3(2500,1200,0);__sel3(c[0],c[1]);var ch=document.getElementById('opch3');R.pergunta=!!ch&&!ch.hidden&&/Porta aqui/.test(ch.innerText)&&/Janela aqui/.test(ch.innerText);
+          ch.querySelector('[data-och="porta"]').click();var o=S.ops[S.ops.length-1];R.porta=o&&o.t==='porta'&&!o.st&&(o.wall||'f')==='f'&&Math.abs(o.x+o.w/2-2500)<=2&&o.b===0;
+          /* com a porta escolhida, 2 toques na parede da esquerda: ela vai pra lá */
+          __build();var c2=__p3(0,1000,1500),hw=__wallHit3(c2[0]+4,c2[1]);__sel3(c2[0]+4,c2[1]);R.esquerda=!!hw&&hw.w==='e'&&o.wall==='e'&&Math.abs(o.x+o.w/2-hw.a)<=2;
+          /* medidas digitadas no quadro */
+          var inp=document.querySelector('[data-ofi="w"]');inp.value='900';inp.dispatchEvent(new Event('change',{bubbles:true}));R.largura=o.w===900;
+          inp=document.querySelector('[data-ofi="x"]');inp.value='600';inp.dispatchEvent(new Event('change',{bubbles:true}));R.posicao=o.x===600;
+          /* janela: criada na altura do toque */
+          __opSel(0);try{document.querySelector('[data-ox="1"]').click()}catch(_){}__build();var c3=__p3(1000,1500,0);__sel3(c3[0],c3[1]);ch=document.getElementById('opch3');ch.querySelector('[data-och="janela"]').click();var j=S.ops[S.ops.length-1];
+          R.janela=j.t==='janela'&&(j.wall||'f')==='f'&&Math.abs(j.b+j.h/2-1500)<=2&&Math.abs(j.x+j.w/2-1000)<=2;
+          inp=document.querySelector('[data-ofi="b"]');inp.value='1100';inp.dispatchEvent(new Event('change',{bubbles:true}));R.chao=j.b===1100;
+          /* vão (passagem) */
+          __opSel(0);__build();var c4=__p3(3300,1000,0);__sel3(c4[0],c4[1]);document.getElementById('opch3').querySelector('[data-och="vao"]').click();var v=S.ops[S.ops.length-1];R.vao=v.t==='porta'&&v.st==='vao'&&v.x+v.w<=S.W;
+          /* "Só voltar a vista" não cria nada */
+          __opSel(0);var n0=S.ops.length;__build();__sel3(c[0],c[1]);document.getElementById('opch3').querySelector('[data-och="vista"]').click();R.vista=S.ops.length===n0;
+          /* no 2D também aparece */
+          document.getElementById('v3x').click();draw();R.no2d=S.ops.length===3;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["pergunta"] as? Bool, true, "pergunta o que criar na parede")
+        XCTAssertEqual(o["porta"] as? Bool, true, "porta com folha onde tocou")
+        XCTAssertEqual(o["esquerda"] as? Bool, true, "porta escolhida vai pra parede da esquerda")
+        XCTAssertEqual(o["largura"] as? Bool, true, "largura digitada")
+        XCTAssertEqual(o["posicao"] as? Bool, true, "posição digitada")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela na altura do toque")
+        XCTAssertEqual(o["chao"] as? Bool, true, "altura do chão digitada")
+        XCTAssertEqual(o["vao"] as? Bool, true, "vão (passagem)")
+        XCTAssertEqual(o["vista"] as? Bool, true, "só voltar a vista não cria nada")
+        XCTAssertEqual(o["no2d"] as? Bool, true, "aparece no 2D")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()
@@ -1695,7 +1770,7 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["aba"] as? String, "🎨 Cores", "aba Cores logo depois do Ambiente")
-        XCTAssertEqual(o["cab"] as? String, "🧱 Paredes e pisos|🗄 Armários|🚪 Portas|🎞 Fitas", "cabeçalho organizado")
+        XCTAssertEqual(o["cab"] as? String, "🧱 Paredes e pisos|🗄 Armários|🚪 Portas|▥ Painéis|🎞 Fitas", "cabeçalho organizado")
         XCTAssertEqual(o["pisos"] as? Int, 15, "15 pisos e porcelanatos")
         XCTAssertEqual(o["cats"] as? String, "Liso,Neutro,Cimentício,Marmorizado,Pedra,Granilite,Amadeirado,Terracota", "separados por categoria")
         XCTAssertEqual(o["img"] as? Bool, true, "cada piso mostra a textura")

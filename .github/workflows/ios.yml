@@ -61,6 +61,25 @@ jobs:
           grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | tail -n 300
           exit $RC
 
+      # a mesma bateria de testes também no iPad (tela grande, toques e 3D): o que roda no iPhone tem que rodar no iPad
+      - name: Testes no iPad (mesma bateria do iPhone)
+        id: ipad_tests
+        if: steps.build_tests.outcome == 'success'
+        timeout-minutes: 30
+        run: |
+          cd ios && mkdir -p build
+          UDID=$(python3 scripts/pick_sim.py ipad)
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
+            -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/TestesIPad.xcresult \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 \
+            -skip-testing:ArquemestreTests/SubscriptionTests -retry-tests-on-failure -test-iterations 2 \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
+            test-without-building > build/xcodebuild-test-ipad.log 2>&1
+          RC=$?
+          grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-ipad.log | tail -n 120
+          exit $RC
+
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
         run: |
           cd ios && mkdir -p build

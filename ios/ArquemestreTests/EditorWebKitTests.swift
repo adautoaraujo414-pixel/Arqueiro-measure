@@ -1481,6 +1481,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Régua do rebaixo das juntas: cor própria (Cores, painel e pincel do 3D) e no plano de corte; vão nas paredes do lado igual ao do fundo
+    func testReguaDoRebaixoPintaEVaoNaParedeDoLado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='sala';S.env='livre';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0],preto=MAT.filter(function(c){return c.cat!=='wood'&&/preto|black|grafite/i.test(c.n)})[0]||MAT.filter(function(c){return c.cat!=='wood'})[0];
+          /* duas fileiras de placas lisas com junta de rebaixo 15 */
+          var jt={t:'reb',w:15,d:6},P=[];[[0,0,1800,2700],[1815,0,1800,2700],[0,2715,1800,500],[1815,2715,1800,500]].forEach(function(q){var a=rpNew({x:q[0],b:q[1],w:q[2],h:q[3]});a.liso=true;a.jt=Object.assign({},jt);a.cor=wood.hex;a.corId=wood.id;P.push(a)});draw();
+          /* a régua sai na cor da placa (um pouco mais escura), em #hex (no 3D não fica branca) */
+          var g=jtGaps(P[0]).filter(function(q){return q.dir==='v'})[0];R.hex=/^#[0-9a-f]{6}$/.test(g.c);
+          /* Cores › Painéis › Rebaixo das juntas: pinta todas as réguas */
+          S.tab=10;panel();document.querySelector('[data-cortab="pain"]').click();document.querySelector('[data-cpn="junta"]').click();document.querySelector('[data-cpnc="'+preto.id+'"]').click();R.todas=P.every(function(a){return a.corJId===preto.id});
+          open3D();await new Promise(function(q){setTimeout(q,300)});__build();var J=__boxes().filter(function(b){return b.rpart==='junta'});R.junta3d=J.length>0&&J.every(function(b){return b.mid===preto.id&&b.rpid!=null});
+          /* pincel do 3D na régua: pinta só a régua */
+          document.getElementById('v3pt').click();window.PT3={c:wood.hex,n:matLabel(wood),id:wood.id,erase:false};__pt3tapBox(J[0]);var dono=P.filter(function(a){return a.id===J[0].rpid})[0];R.pincel=dono.corJId===wood.id&&dono.corId===wood.id;try{pt3Off()}catch(_){}
+          /* plano de corte: a régua na cor dela */
+          var G=cutGroups();R.corte=G.ord.some(function(k){return /^Detalhe de rebaixo/.test(G.map[k].names[0])&&!!G.map[k].colN});
+          /* ⬆ completar acima: 15 mm de junta e já sai com a cor da placa e da régua */
+          S.rp=[];var pa=rpNew({x:0,b:0,w:1800,h:2700});pa.liso=true;pa.jt={t:'reb',w:15,d:6};pa.cor=wood.hex;pa.corId=wood.id;pa.corJ=preto.hex;pa.corJId=preto.id;var n0=S.rp.length;pwAbove(pa);var up=S.rp.slice(n0);R.acima=up.length===1&&up[0].b===2715&&up[0].corId===wood.id&&up[0].corJId===preto.id;
+          /* vão na parede da esquerda: a parede é recortada (dá pra ver a passagem), igual à do fundo */
+          S.rp=[];S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:468,b:0,wall:'e'}];document.getElementById('v3x').click();draw();open3D();await new Promise(function(q){setTimeout(q,300)});var vb=document.querySelector('#v3 [data-v="left"]');if(vb)vb.click();await new Promise(function(q){setTimeout(q,200)});__build();
+          var c=__p3(0,1000,868),r=__ray(c[0],c[1]);R.furo=!!r&&r.p[0]<-50;var c2=__p3(0,1000,2500),r2=__ray(c2[0],c2[1]);R.parede=!!r2&&Math.abs(r2.p[0])<2;
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["hex"] as? Bool, true, "régua na cor da placa (hex)")
+        XCTAssertEqual(o["todas"] as? Bool, true, "Cores › Painéis pinta todas as réguas")
+        XCTAssertEqual(o["junta3d"] as? Bool, true, "réguas do 3D com a cor escolhida")
+        XCTAssertEqual(o["pincel"] as? Bool, true, "pincel do 3D pinta só a régua")
+        XCTAssertEqual(o["corte"] as? Bool, true, "plano de corte com a cor da régua")
+        XCTAssertEqual(o["acima"] as? Bool, true, "completar acima: junta de 15 e mesma cor")
+        XCTAssertEqual(o["furo"] as? Bool, true, "parede da esquerda recortada no vão")
+        XCTAssertEqual(o["parede"] as? Bool, true, "fora do vão a parede continua")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

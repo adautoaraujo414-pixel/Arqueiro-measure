@@ -337,7 +337,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertGreaterThan(o["portas"] as? Int ?? 0, 100, "auditou o catálogo inteiro")
         XCTAssertEqual((o["bad"] as? [String])?.count, 0, "porta com cava fora da regra lateral + 30: \(o["bad"] ?? "")")
-        XCTAssertEqual(o["caso"] as? String, "543.5x800,543.5x800", "aéreo 1105 × 800 com cava de perfil: portas 543,5 × 800 (não 770)")
+        XCTAssertEqual(o["caso"] as? String, "542.5x800,542.5x800", "aéreo 1105 × 800 com cava de perfil: portas 542,5 × 800 (2 mm entre as folhas; não 770)")
         XCTAssertEqual(o["cv"] as? Int, 0, "cava de perfil não desconta altura")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }

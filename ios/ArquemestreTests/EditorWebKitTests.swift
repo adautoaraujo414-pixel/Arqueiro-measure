@@ -2511,6 +2511,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testSofaSolidoGiraSalvaExcluiEm2DE3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.geo=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;S.RD=4000;draw();open3D();
+          var a=apAdd('sofa',1);draw();var b3=__bb3('fr',a.id);var dentro=b3.x0>=a.x-1&&b3.x1<=a.x+a.w+1&&b3.z0>=a.y-1&&b3.z1<=a.y+a.d+1&&b3.y0>=0;
+          var p=apAdd('poltrona',0);__isx({k:'fr',id:p.id});__itSet('x',a.x);__itSet('y',0);var sob=Math.min(a.x+a.w,p.x+p.w)-Math.max(a.x,p.x)>1&&Math.min(a.y+a.d,p.y+p.d)-Math.max(a.y,p.y)>1;
+          mobAct(a,'rot',90);var g90=a.rot===90&&a.w===950&&a.d===2200;mobAct(a,'cor','verde');mobAct(a,'tec','veludo');
+          var st=JSON.stringify(snapState());S.fr=[];loadState(JSON.parse(st));var a2=S.fr.filter(function(q){return q.id===a.id})[0];var salvo=!!a2&&a2.rot===90&&a2.cor==='verde'&&a2.tec==='veludo';
+          document.getElementById('v3x').click();draw();var em2d=!!document.querySelector('[data-ap="'+a.id+'"]');open3D();
+          S.fr=S.fr.filter(function(q){return q.id!==a.id});draw();var some=!__bb3('fr',a.id);
+          return JSON.stringify({dentro:dentro,sob:sob,g90:g90,salvo:salvo,em2d:em2d,some:some,errs:__errs});
+          """#)
+        XCTAssertEqual(o["dentro"] as? Bool, true, "3D do sofá dentro da medida e no piso")
+        XCTAssertEqual(o["sob"] as? Bool, false, "poltrona não fica por cima do sofá")
+        XCTAssertEqual(o["g90"] as? Bool, true, "girou 90° trocando largura e profundidade")
+        XCTAssertEqual(o["salvo"] as? Bool, true, "salva e reabre com giro, cor e tecido")
+        XCTAssertEqual(o["em2d"] as? Bool, true, "aparece no 2D")
+        XCTAssertEqual(o["some"] as? Bool, true, "excluir tira do 3D")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testPortaDeVidroTelescopicaReconstroiEAbre() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;draw();open3D();
+          S.ops.push({id:77,t:'porta',w:3000,h:2300,x:500,b:0,st:'vidro',vm:'t4',vc:'fume',fp:'preto'});draw();var I=vdInfo(S.ops[0]);
+          var vid=function(){__anim();return dbg3().filter(function(q){return q.a&&q.a<.9&&q.y1-q.y0>1500}).length};var n4=vid();S.ops[0].vm='t3';var n3=vid();S.ops[0].vm='t6';var n6=vid();
+          var xs=function(){return dbg3().filter(function(q){return q.a&&q.a<.9&&q.y1-q.y0>1500}).map(function(q){return Math.round(q.x0)}).sort(function(a,b){return a-b}).join(',')};__anim();var fe=xs();S.ops[0].open=true;__anim();var ab=xs();
+          return JSON.stringify({lw:I.lw,nt:I.nt,free:I.free,n3:n3,n4:n4,n6:n6,mudou:fe!==ab,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lw"] as? Double, 787.5, "folha = (vão + 3 sobreposições de 50) ÷ 4")
+        XCTAssertEqual(o["nt"] as? Int, 4, "4 trilhos")
+        XCTAssertEqual(o["n3"] as? Int, 3, "3 folhas no 3D")
+        XCTAssertEqual(o["n4"] as? Int, 4, "4 folhas no 3D")
+        XCTAssertEqual(o["n6"] as? Int, 6, "6 folhas no 3D")
+        XCTAssertEqual(o["mudou"] as? Bool, true, "abriu: folhas recolheram")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

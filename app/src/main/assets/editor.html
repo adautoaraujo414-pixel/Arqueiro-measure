@@ -725,6 +725,7 @@ function offHtml(pl){var L=pl.off||[],n=L.reduce(function(a,o){return a+o.q},0),
  +(ed?'<div class="note" style="color:#b42318;margin:6px 0 0">Toque numa peça na chapa pra tirar do plano. O app reorganiza as chapas sozinho. (Ou use o <b>−</b> na lista embaixo.)</div>':'<div class="note" style="margin:6px 0 0">Tem a peça pronta ou numa sobra? Tire do plano e o app reorganiza as chapas. A lista de material e o orçamento não mudam.</div>');
  if(n)h+='<div style="font-weight:700;font-size:13px;margin:8px 0 2px">Fora do plano · '+n+' peça'+(n===1?'':'s')+'</div><table style="width:100%;border-collapse:collapse;font-size:12px">'+L.map(function(o){return '<tr style="border-top:1px solid #e3e3e3"><td style="padding:4px 2px">'+esc(o.lab)+'<br><small style="color:var(--dim)">'+esc(o.grp)+'</small></td><td style="text-align:right;white-space:nowrap">'+dimf(o.w,o.h)+'</td><td style="text-align:right">'+o.q+'×</td><td style="text-align:right"><button data-con="'+esc(o.k)+'" style="min-height:30px;padding:2px 8px">↩ Voltar</button></td></tr>'}).join('')+'</table>';
  return h+'</div>'}
+function corNome(g){var n=String((g&&g.colN)||'').trim();if(n&&!/^(cor|na cor|chapa cor|amadeirado|amadeirada|padrão)$/i.test(n))return n;try{var mt=matOf(g&&g.colId);if(mt)return matLabel(mt)}catch(_){}var hx=String((g&&g.col)||'').toLowerCase();if(hx){try{var c=SWW.concat(SWS).filter(function(q){return String(q[1]).toLowerCase()===hx})[0];if(c)return c[0]}catch(_){}try{var m2=MAT.filter(function(q){return String(q.hex).toLowerCase()===hx})[0];if(m2)return matLabel(m2)}catch(_){}}try{var a=ACAB(),fn=finName(a.ext,a.extNome);if(fn&&!/^(cor|na cor|amadeirado|amadeirada)$/i.test(String(fn).trim()))return fn}catch(_){}return n}
 function planHtml(pl,mn){if(!pl.groups.length)return '';var mt=PR.metodo||'max',mb=function(k,t){return '<button data-mt="'+k+'" style="flex:1 1 44%;padding:9px 4px;border-radius:9px;font-weight:600;'+(mt===k?'background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+t+'</button>'},MSN={max:'livres (máximo aproveitamento)',opt:'retos (otimizado)',opt2:'retos (otimizado)',comp:'retos por comprimento',larg:'retos por largura'},PW=+PR.sheetW,PH=+PR.sheetH,M2=function(a){return (a/1e6).toLocaleString('pt-BR',{minimumFractionDigits:3,maximumFractionDigits:3})+' m²'},MIN=+(PR.sobraMin||100),OK=S.cutOk||{},nOk=0,nAll=0;
  var h='<h3 style="margin:14px 0 4px" id="planoCorte">Plano de corte · chapas inteiras</h3><div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">'+mb('max','✨ Máximo aproveitamento')+mb('opt','✂ Cortes retos')+mb('comp','☰ Por comprimento')+mb('larg','▥ Por largura')+'</div><div class="note">Chapa deitada '+PW+' × '+PH+' · refilo '+pl.ref+' mm por lado · serra '+pl.kf+' mm · '+(PR.veio?'peças na cor sem girar (veio)':'peças podem girar')+'. <b>Máximo aproveitamento</b> testa os cortes retos e o encaixe livre e fica com o que gasta menos chapa (se empatar, fica com cortes retos). <b>Cortes retos</b> = guilhotina, cada corte atravessa a chapa (esquadrejadeira). Desperdício real = só a serra e o refilo; o resto vira sobra pro próximo serviço.</div><div class="note" style="color:#1b1f27"><b>Toque</b> numa peça pra ver no 3D onde ela fica · <b>2 toques</b> marca ✓ que já cortou. Azul = tamponamento · laranja = engrosso.</div>@@OK@@'+(mn?'':prpmHtml(pl)+offHtml(pl));if(mn)h=h.replace(/<div class="note" style="color:#1b1f27"><b>Toque<\/b>[^]*?<\/div>@@OK@@/,'');
  pl.groups.forEach(function(g){var ap=0,cut=0,sob=0,np=0;g.sheets.forEach(function(s){cut+=s.cut||0;s.used.forEach(function(u){ap+=u.w*u.h;np++});s.free.forEach(function(f){var w=f.w-pl.kf,hh=f.h-pl.kf;if(w>=MIN&&hh>=MIN)sob+=w*hh})});var tot=g.n*PW*PH,des=Math.max(0,tot-ap-sob),LB=packLB(g.sheets.reduce(function(a,s){return a.concat(s.used.map(function(u){return u.p}))},[]),pl.SW,pl.SH,pl.kf);
@@ -733,19 +734,19 @@ function planHtml(pl,mn){if(!pl.groups.length)return '';var mt=PR.metodo||'max',
   var row=function(a,b){return '<tr><td style="border:1px solid #888;background:#e9e9e9;padding:4px 6px">'+a+'</td><td style="border:1px solid #888;padding:4px 6px;text-align:right">'+b+'</td></tr>'};
   h+='<div style="margin:14px 0 4px;font-size:15px"><b>'+g.label+'</b></div><table style="width:100%;border-collapse:collapse;font-size:13px">'+row('Dimensões da chapa',PW+' × '+PH)+row('Quant. chapas','<b>'+g.n+'</b>'+(g.n<=LB?' <small style="color:#1f9d55">(o mínimo possível)</small>':' <small style="color:var(--dim)">(mínimo pela área: '+LB+')</small>'))+row('Área da chapa',M2(PW*PH))+row('Área das chapas',M2(tot))+row('Comprimento de cortes',(cut/1000).toLocaleString('pt-BR',{maximumFractionDigits:2})+' m')+row('Quant. peças',np)+row('Área das peças',M2(ap))+row('Área das sobras (≥ '+MIN+'×'+MIN+')',M2(sob))+row('Área de desperdício',M2(des))+row('Aproveitamento das peças',(Math.round(ap/tot*1000)/10).toLocaleString('pt-BR')+'%')+row('Aproveitamento total (peças + sobras que voltam pro estoque)','<b>'+(Math.round((ap+sob)/tot*1000)/10).toLocaleString('pt-BR')+'%</b>')+'</table>';
   if(g.big.length)h+='<div class="note" style="color:#b35">⚠ '+g.big.length+' peça(s) maior(es) que a chapa útil: '+g.big.map(function(p){return p.lab+' '+p.w+'×'+p.h}).join(' · ')+'</div>';
-  var gc=g.t==='c'&&/^#[0-9a-f]{6}$/i.test(g.col||'')?g.col:'',fill=g.t==='c'?(gc?mixHex(gc,'#ffffff',.5):'#f2d29b'):g.t==='f'?'#e4d3b0':'#ffffff',occ={};h+=g.t==='c'?'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:'+(gc||'#8a5a24')+';color:'+(gc?(hexLum(gc)>.55?'#111':'#fff'):'#fff')+';font-weight:700">🎨 CHAPA '+(g.colN?esc(String(g.colN).toUpperCase()):'COR')+' · MDF '+g.mat+' mm</div>':g.t==='f'?'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:#d9c7a3;color:#3a2d16;border:2px solid #8a7450;font-weight:700">▦ FUNDO '+g.mat+' MM · '+(g.colN?esc(g.colN):'todos os fundos (módulos e gavetas)')+'</div>':'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:#f1f3f5;color:#222;border:2px solid #9aa3ad;font-weight:700">'+(ACAB().int==='branco'?'⬜ PEÇA BRANCA':'⬜ CAIXA (INTERNO)')+' · '+esc(grpLabel(g.t,g.mat))+'</div>';
+  var gc=g.t==='c'&&/^#[0-9a-f]{6}$/i.test(g.col||'')?g.col:'',fill=g.t==='c'?(gc?mixHex(gc,'#ffffff',.5):'#f2d29b'):g.t==='f'?'#e4d3b0':'#ffffff',occ={};h+=g.t==='c'?'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:'+(gc||'#8a5a24')+';color:'+(gc?(hexLum(gc)>.55?'#111':'#fff'):'#fff')+';font-weight:700">🎨 CHAPA '+(corNome(g)?esc(String(corNome(g)).toUpperCase()):'COR')+' · MDF '+g.mat+' mm</div>':g.t==='f'?'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:#d9c7a3;color:#3a2d16;border:2px solid #8a7450;font-weight:700">▦ FUNDO '+g.mat+' MM · '+(g.colN?esc(g.colN):'todos os fundos (módulos e gavetas)')+'</div>':'<div style="margin:8px 0 2px;padding:6px 10px;border-radius:8px;background:#f1f3f5;color:#222;border:2px solid #9aa3ad;font-weight:700">'+(ACAB().int==='branco'?'⬜ PEÇA BRANCA':'⬜ CAIXA (INTERNO)')+' · '+esc(grpLabel(g.t,g.mat))+'</div>';
   g.sheets.forEach(function(s,si){var R=pl.ref,sv='<svg viewBox="-30 -30 '+(PW+60)+' '+(PH+60)+'" style="width:100%;background:#fff;display:block;margin:4px 0;touch-action:manipulation;box-sizing:border-box;border-radius:6px;border:6px solid '+(g.t==='c'?'#8a5a24':g.t==='f'?'#b08d4f':'#c3c9d1')+';outline:'+(g.t==='b'?'1px solid #6b7480':'none')+'" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="hz'+si+g.t+g.mat+'" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="40" stroke="#e05555" stroke-width="3"/></pattern></defs><rect x="0" y="0" width="'+PW+'" height="'+PH+'" fill="#f3f3f3" stroke="#222" stroke-width="6"/>';
    s.free.forEach(function(f){var w=f.w-pl.kf,hh=f.h-pl.kf;if(w<=2||hh<=2)return;var x=R+f.x,y=R+f.y,fs=Math.max(26,Math.min(60,Math.min(w,hh)/3));sv+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" fill="url(#hz'+si+g.t+g.mat+')" stroke="#555" stroke-width="2"/>';if(w>=MIN&&hh>=MIN){sv+='<text x="'+(x+w/2)+'" y="'+(y+fs+4)+'" font-size="'+fs+'" text-anchor="middle" fill="#d12c2c" font-family="sans-serif">'+Math.round(w)+'</text>';if(hh>3*fs)sv+='<text x="'+(x+fs+2)+'" y="'+(y+hh/2)+'" font-size="'+fs+'" text-anchor="middle" fill="#d12c2c" font-family="sans-serif" transform="rotate(-90 '+(x+fs+2)+' '+(y+hh/2)+')">'+Math.round(hh)+'</text>'}});
    s.used.forEach(function(u){var lk=u.p.lab+'|'+u.p.w+'×'+u.p.h,e=L[lk];u.no=e.n;var ck=g.t+g.mat+'|'+lk+'#'+(occ[lk]=(occ[lk]||0)+1),done=!!OK[ck];nAll++;if(done){nOk++;e.ok++}
     var x=R+u.x,y=R+u.y,fs=Math.max(24,Math.min(64,Math.min(u.w,u.h)/3.2)),W_=u.r?u.p.h:u.p.w,H_=u.r?u.p.w:u.p.h,tp=/^(Tamponamento|Engrosso(?! cava))/.test(u.p.lab),eg=/^Engrosso(?! cava)/.test(u.p.lab),fl=fill,nm=shortLab(u.p.lab)+(/camada/.test(u.p.lab)?' '+(u.p.lab.match(/camada (\d+\/\d+)/)||['',''])[1]:''),fn=Math.max(22,Math.min(fs*.85,58));
     sv+='<g data-cp="'+esc(ck)+'"'+(u.p.ok?' data-off="'+esc(u.p.ok)+'"':'')+' data-src="'+esc(srcStr(u.p.src))+'" data-lab="'+esc(u.p.lab+' · '+u.p.w+' × '+u.p.h)+'" style="cursor:pointer"><rect x="'+x+'" y="'+y+'" width="'+u.w+'" height="'+u.h+'" fill="'+fl+'" stroke="#222" stroke-width="3"/>';
     if(u.w>fs*1.6)sv+='<text x="'+(x+u.w/2)+'" y="'+(y+fs+2)+'" font-size="'+fs+'" text-anchor="middle" fill="#1d3fbf" font-family="sans-serif">'+mmf(W_)+'</text>';if(u.h>fs*2.2)sv+='<text x="'+(x+fs)+'" y="'+(y+u.h/2)+'" font-size="'+fs+'" text-anchor="middle" fill="#1d3fbf" font-family="sans-serif" transform="rotate(-90 '+(x+fs)+' '+(y+u.h/2)+')">'+mmf(H_)+'</text>';
-    var tw=nm.length*fn*.56,cxp=x+u.w/2,cyp=y+u.h/2;if(tw<u.w-fs*1.2&&u.h>fn*2.4)sv+='<text x="'+cxp+'" y="'+(cyp+fn*.35)+'" font-size="'+fn+'" text-anchor="middle" fill="'+(tp?'#1b4fa8':'#3b4350')+'" font-family="sans-serif" font-weight="700">'+esc(nm)+'</text>';else if(tw<u.h-fs*1.2&&u.w>fn*2.4)sv+='<text x="'+cxp+'" y="'+(cyp+fn*.35)+'" font-size="'+fn+'" text-anchor="middle" fill="'+(tp?'#1b4fa8':'#3b4350')+'" font-family="sans-serif" font-weight="700" transform="rotate(-90 '+cxp+' '+cyp+')">'+esc(nm)+'</text>';else if(Math.max(u.w,u.h)>nm.length*18){var f2=Math.max(16,Math.min(fn,(Math.max(u.w,u.h)-20)/(nm.length*.56),Math.min(u.w,u.h)*.6));sv+='<text x="'+cxp+'" y="'+(cyp+f2*.35)+'" font-size="'+f2+'" text-anchor="middle" fill="'+(tp?'#1b4fa8':'#3b4350')+'" font-family="sans-serif" font-weight="700"'+(u.h>u.w?' transform="rotate(-90 '+cxp+' '+cyp+')"':'')+'>'+esc(nm)+'</text>'}
+    /* o nome fica só na faixa livre do meio: fora do número de cima, do número em pé (esquerda) e do #n (canto) */var nCol=tp?'#1b4fa8':'#3b4350',padL=(u.h>fs*2.2?fs*1.9:4),padT=(u.w>fs*1.6?fs+10:4),padB=(u.w>fs*2&&u.h>fs*2?fs+12:4),bw=u.w-padL-4,bh=u.h-padT-padB,cxp=x+padL+bw/2,cyp=y+padT+bh/2,ln=Math.max(1,nm.length*.56),fH=Math.min(fn,(bw-6)/ln,bh/1.3),fV=Math.min(fn,(bh-6)/ln,bw/1.3);if(bw>18&&bh>12&&fH>=13&&fH>=fV)sv+='<text x="'+cxp+'" y="'+(cyp+fH*.35)+'" font-size="'+fH+'" text-anchor="middle" fill="'+nCol+'" font-family="sans-serif" font-weight="700">'+esc(nm)+'</text>';else if(bw>12&&bh>18&&fV>=13)sv+='<text x="'+cxp+'" y="'+(cyp+fV*.35)+'" font-size="'+fV+'" text-anchor="middle" fill="'+nCol+'" font-family="sans-serif" font-weight="700" transform="rotate(-90 '+cxp+' '+cyp+')">'+esc(nm)+'</text>';
     if(u.w>fs*2&&u.h>fs*2)sv+='<text x="'+(x+u.w-6)+'" y="'+(y+u.h-8)+'" font-size="'+fs+'" text-anchor="end" fill="#222" font-family="sans-serif" font-weight="700">#'+u.no+'</text>';
     try{var sd=edgeSides(u.p.lab);if(sd){var EW=9,ec='#1f9d55',ln_=function(a,b,c_,d_){sv+='<line x1="'+a+'" y1="'+b+'" x2="'+c_+'" y2="'+d_+'" stroke="'+ec+'" stroke-width="'+EW+'" stroke-linecap="butt"/>'};/* peça deitada: B = frente (lado de baixo); girada: o comprimento fica em pé, frente = lado esquerdo */var B_=u.r?'L':'B',T_=u.r?'R':'T',L_=u.r?'T':'L',R_=u.r?'B':'R',has=function(k){return sd.indexOf(k)>=0},sh=EW/2;if(has('B')){if(B_==='B')ln_(x,y+u.h-sh,x+u.w,y+u.h-sh);else ln_(x+sh,y,x+sh,y+u.h)}if(has('T')){if(T_==='T')ln_(x,y+sh,x+u.w,y+sh);else ln_(x+u.w-sh,y,x+u.w-sh,y+u.h)}if(has('L')){if(L_==='L')ln_(x+sh,y,x+sh,y+u.h);else ln_(x,y+sh,x+u.w,y+sh)}if(has('R')){if(R_==='R')ln_(x+u.w-sh,y,x+u.w-sh,y+u.h);else ln_(x,y+u.h-sh,x+u.w,y+u.h-sh)}}}catch(_){}
     try{sv+=furSvg(u,x,y)}catch(_){}if(done)sv+=cutOkSvg(x,y,u.w,u.h);
     sv+='</g>'});
-   sv+='</svg>';h+='<div style="font-size:13px;margin-top:8px"><b>'+(g.t==='c'?'🎨 CHAPA '+(g.colN?esc(String(g.colN).toUpperCase()):'COR')+' · ':g.t==='f'?'▦ FUNDO '+g.mat+' MM · ':(ACAB().int==='branco'?'⬜ PEÇA BRANCA':'⬜ CAIXA (INTERNO)')+' · ')+PW+'×'+PH+' · chapa '+(si+1)+'/'+g.n+'</b> <span style="color:var(--dim)">· '+s.used.length+' peças · '+Math.round(s.used.reduce(function(a,u){return a+u.w*u.h},0)/(PW*PH)*100)+'% · cortes '+MSN[g.ms||'opt']+'</span></div>'+sv});
+   sv+='</svg>';h+='<div style="font-size:13px;margin-top:8px"><b>'+(g.t==='c'?'🎨 CHAPA '+(corNome(g)?esc(String(corNome(g)).toUpperCase()):'COR')+' · ':g.t==='f'?'▦ FUNDO '+g.mat+' MM · ':(ACAB().int==='branco'?'⬜ PEÇA BRANCA':'⬜ CAIXA (INTERNO)')+' · ')+PW+'×'+PH+' · chapa '+(si+1)+'/'+g.n+'</b> <span style="color:var(--dim)">· '+s.used.length+' peças · '+Math.round(s.used.reduce(function(a,u){return a+u.w*u.h},0)/(PW*PH)*100)+'% · cortes '+MSN[g.ms||'opt']+'</span> <button class="no-pt" data-czoom="1" style="padding:3px 9px;min-height:30px;font-size:12px">🔍 Ampliar</button></div>'+sv});
   var lc=-1;h+='<table class="cutpt" style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px"><tr style="color:var(--dim);text-align:left"><th>#</th><th>Peça</th><th style="text-align:right">Compr. × Larg.</th><th style="text-align:right">Qtd</th><th title="Lado da fita de borda (verde)">Fita</th><th class="pt-only">☐</th></tr>'+keys.map(function(k){var e=L[k],hd=e.c!==lc?catHdr(e.c,6):'';lc=e.c;return hd+'<tr data-lk="'+esc(g.t+g.mat+'|'+k)+'" data-l="'+esc(e.lab)+'" data-src="'+esc(srcStr(e.src))+'" data-lab="'+esc(e.lab+' · '+e.d)+'" style="border-top:1px solid #ddd;cursor:pointer'+(e.ok>=e.q?';background:#e3f5ea':'')+'"><td><b>#'+e.n+'</b></td><td>'+e.lab+(e.ok?' <small style="color:#1f9d55">✓ '+e.ok+'/'+e.q+'</small>':'')+'</td><td style="text-align:right">'+e.d+'</td><td style="text-align:right">'+e.q+'</td><td style="white-space:nowrap">'+edgeSvg(e.lab)+' <small style="color:var(--dim)">'+edgeTxt(e.lab)+(e.ft?'<br>fita: <b style="color:#1b1f27">'+esc(e.ft)+'</b>':'')+(mn||!e.off?'':'<br><button class="no-pt" data-coff="'+esc(e.off)+'" title="Tirar 1 do plano de corte" aria-label="Tirar 1 do plano de corte" style="min-height:30px;margin-top:3px;padding:2px 9px;color:#b42318">− tirar</button>')+'</small></td><td class="pt-only" style="text-align:center"><span style="display:inline-block;width:14px;height:14px;border:1.5px solid #333;border-radius:2px"></span></td></tr>'}).join('')+'</table>'});
  return h.replace('@@OK@@','<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0;font-size:13px"><b id="cutcnt" style="color:'+(nOk&&nOk===nAll?'#1f9d55':'#1b1f27')+'">✓ '+nOk+' de '+nAll+' peças cortadas</b>'+(nOk?'<button data-cutclr="1" style="padding:4px 10px;min-height:30px">Limpar marcações</button>':'')+'</div>')}
 function cutAll(){var G_=cutGroups(),map=G_.map,SF_=sameFin(),TY=function(g){return (+g.mat||15)<=9?2:g.fin==='c'?1:0},ord=G_.ord.slice().sort(function(a,b){var A=map[a],B=map[b];return TY(A)-TY(B)||pcat(A.names[0])-pcat(B.names[0])||B.L*B.W-A.L*A.W}),lc=-1,lt=-1,TYH=['<tr><td colspan="3" style="background:#f1f3f5;border:2px solid #9aa3ad;font-weight:800;padding:6px">'+(ACAB().int==='branco'?'⬜ PEÇA BRANCA':'⬜ CAIXA (INTERNO)')+' (internos / caixote)</td></tr>','<tr><td colspan="3" style="background:#8a5a24;color:#fff;font-weight:800;padding:6px">🎨 CHAPA COR (tamponamentos, portas, frentes, réguas, molduras)</td></tr>','<tr><td colspan="3" style="background:#d9c7a3;font-weight:800;padding:6px">▦ FUNDO 6 MM (todos os fundos)</td></tr>'];
@@ -1115,7 +1116,7 @@ function furSvg(u,x,y){var s=u.p&&u.p.src;if(!s||s.length!==1||s[0].mi==null||!s
  if(F.kind==='s32'){/* duas fileiras ao longo do comprimento, uma a B da frente e outra a B de trás */F.rows.forEach(function(ry){F.pos.forEach(function(t){var c=u.r?[ry,t]:[t,ry];o+='<circle cx="'+(x+c[0])+'" cy="'+(y+c[1])+'" r="6" fill="#e6f4ec" stroke="'+col+'" stroke-width="2.5"/>'})});if((u.r?u.h:u.w)>380){var tx2=x+(u.r?H/2+44:W/2),ty2=y+(u.r?W/2:H/2+44);/* embaixo do nome da peça */o+='<text x="'+tx2+'" y="'+ty2+'" font-size="30" text-anchor="middle" dominant-baseline="middle" fill="'+col+'" font-family="sans-serif" font-weight="700"'+(u.r?' transform="rotate(-90 '+tx2+' '+ty2+')"':'')+'>'+F.lab+' · '+F.n+'×2 furos · passo '+F.st+'</text>'}return o}
  var pts=F.pos.map(function(t){var px=vert?(F.s==='l'?F.B:W-F.B):t,py=vert?t:(F.s==='t'?F.B:H-F.B);return u.r?[py,px]:[px,py]});
  pts.forEach(function(c){o+='<circle cx="'+(x+c[0])+'" cy="'+(y+c[1])+'" r="17.5" fill="#fff1e6" stroke="'+col+'" stroke-width="5"/><circle cx="'+(x+c[0])+'" cy="'+(y+c[1])+'" r="3" fill="'+col+'"/>'});
- var a=pts[0],b=pts[pts.length-1],alongX=Math.abs(b[0]-a[0])>Math.abs(b[1]-a[1]),mid=[(a[0]+b[0])/2,(a[1]+b[1])/2],ed=u.r?(vert?(F.s==='l'?'t':'b'):(F.s==='t'?'l':'r')):F.s,off=60,tx=x+mid[0]+(ed==='l'?off:ed==='r'?-off:0),ty=y+mid[1]+(ed==='t'?off:ed==='b'?-off:0),lab=F.lab||'furo dobradiça';
+ var a=pts[0],b=pts[pts.length-1],alongX=Math.abs(b[0]-a[0])>Math.abs(b[1]-a[1]),mid=[(a[0]+b[0])/2,(a[1]+b[1])/2],ed=u.r?(vert?(F.s==='l'?'t':'b'):(F.s==='t'?'l':'r')):F.s,/* afasta o rótulo do furo o tanto que o número da medida ocupa, pra um não cair em cima do outro */off=Math.max(60,Math.max(24,Math.min(64,Math.min(u.w,u.h)/3.2))*1.7),tx=x+mid[0]+(ed==='l'?off:ed==='r'?-off:0),ty=y+mid[1]+(ed==='t'?off:ed==='b'?-off:0),lab=F.lab||'furo dobradiça';
  if(pts.length>1&&(alongX?u.w:u.h)>380)o+='<text x="'+tx+'" y="'+ty+'" font-size="34" text-anchor="middle" dominant-baseline="middle" fill="'+col+'" font-family="sans-serif" font-weight="700"'+(alongX?'':' transform="rotate(-90 '+tx+' '+ty+')"')+'>'+lab+'</text>';return o}
 /* quadro da porta: furação (liga/desliga e como fica) */
 function furPanel(v){if(!v||v.k!=='door'||v.vidro||v.cam)return '';var ps=[];try{ps=partsOf(S.m).filter(function(p){return p.vi===S.sv&&p.name==='Porta'})}catch(_){}var f=null;ps.forEach(function(p){if(!f)f=p.fur||null});var on=v.fur!==0&&+STD().furOn!==0,st=STD(),D=+st.furD>0?+st.furD:100,B=+st.furB>0?+st.furB:22;
@@ -4999,6 +5000,112 @@ window.__opSel=function(id){OPSEL=id;try{opBoxShow()}catch(_){}};
 window.__e3=function(mi,pk,k,v){SEL3={mi:mi,pk:pk};build();render();var p=null;try{p=e3Part()}catch(_){}var b0=e3Bounds();try{e3Render()}catch(_){}var h=H3?[].map.call(H3.querySelectorAll('[data-hk]'),function(d){return d.dataset.hk}):[];var r={part:!!p,name:p&&p.name,h:h,b0:b0};if(k){var m=S.mods[mi];if(!m.po)m.po={};var o=poEdges(m.po[pk]||{v2:1});o[k]=v;m.po[pk]=o;build();r.b1=e3Bounds()}SEL3=null;if(E3)E3.hidden=true;if(H3)H3.innerHTML="";return r};
 window.__build=function(){build()};window.__matTx=function(b){return matTx(b)};
 window.addEventListener('resize',function(){if(!M.hidden)render()});
+/* ===== Peça solta (Caixa · Placa MDF · Tamponamento) =====
+   • Minimizar vira uma bolinha flutuante arrastável: o painel some, mas a peça continua
+     escolhida e as setinhas continuam funcionando (o que estava fazendo não para).
+   • Colar na parede (esquerda, fundo, direita), no chão e no teto.
+   • Deitar e levantar a peça.
+   • Girar no próprio eixo (gira no lugar, sem pular pro lado).
+   • Passo dos botões ＋ − escolhido por você: vale pra largura, altura, profundidade e afastamentos.
+   • Trocar entre Caixa / Placa / Tamponamento sem perder as medidas que você digitou.
+   Fechar continua travando a peça do jeito que você deixou. */
+(function(){
+ if(window.__GEOX)return;window.__GEOX=1;
+ var GMIN=0,FAB=null,FABP=null,GSTEP=10;
+
+ function fabEl(){
+  if(FAB)return FAB;
+  FAB=document.createElement('button');FAB.id='geofab';FAB.type='button';FAB.hidden=true;
+  FAB.style.cssText='position:absolute;z-index:9;width:54px;height:54px;border-radius:50%;border:none;background:#1f6feb;color:#fff;font-size:20px;box-shadow:0 4px 16px rgba(0,0,0,.45);touch-action:none;padding:0;display:flex;align-items:center;justify-content:center';
+  FAB.textContent='▤';FAB.title='Abrir as opções da peça · arraste pra mudar de lugar';
+  M.appendChild(FAB);
+  var dg=null;
+  FAB.addEventListener('pointerdown',function(e){dg={id:e.pointerId,x:e.clientX,y:e.clientY,l:FAB.offsetLeft,t:FAB.offsetTop,mv:0};try{FAB.setPointerCapture(e.pointerId)}catch(_){}e.stopPropagation()},true);
+  FAB.addEventListener('pointermove',function(e){if(!dg||e.pointerId!==dg.id)return;var dx=e.clientX-dg.x,dy=e.clientY-dg.y;if(!dg.mv&&Math.sqrt(dx*dx+dy*dy)<6)return;dg.mv=1;var r=M.getBoundingClientRect(),L=Math.max(4,Math.min(r.width-58,dg.l+dx)),T=Math.max(4,Math.min(r.height-58,dg.t+dy));FAB.style.left=L+'px';FAB.style.top=T+'px';FABP={x:L,y:T};e.stopPropagation();e.preventDefault()},true);
+  FAB.addEventListener('pointerup',function(e){if(!dg||e.pointerId!==dg.id)return;var mv=dg.mv;dg=null;e.stopPropagation();if(mv)return;GMIN=0;FAB.hidden=true;try{itRender()}catch(_){}},true);
+  return FAB;
+ }
+ function fabShow(){var F=fabEl(),r=M.getBoundingClientRect();if(!FABP)FABP={x:Math.max(4,r.width-72),y:Math.max(4,r.height-150)};F.style.left=FABP.x+'px';F.style.top=FABP.y+'px';F.hidden=false}
+ function fabHide(){if(FAB)FAB.hidden=true}
+
+ function roomDep(){try{return (typeof roomD==='function'?roomD():2600)}catch(_){return 2600}}
+ function fin(msg){try{draw();panel()}catch(_){}try{build();render()}catch(_){}try{itRender()}catch(_){}if(msg){try{ambMsg(msg)}catch(_){}}}
+
+ /* cola a peça numa parede, no chão ou no teto */
+ var WNM={e:'na parede esquerda',d:'na parede direita',f:'na parede do fundo',c:'no chão',t:'no teto'};
+ function wallStick(g,w){
+  var D=roomDep(),s={x:g.x,z:g.z,b:g.b};
+  if(w==='e')g.x=0;
+  else if(w==='d')g.x=Math.round(Math.max(0,S.W-g.w));
+  else if(w==='f')g.z=0;
+  else if(w==='c')g.b=0;
+  else if(w==='t')g.b=Math.round(Math.max(0,S.H-g.h));
+  var m='';try{m=geoSolid(g,null)||''}catch(_){}
+  if(m==='sem lugar livre aí'){g.x=s.x;g.z=s.z;g.b=s.b;return '⛔ Ali não cabe: já tem outra peça'}
+  return '✓ Colada '+WNM[w];
+ }
+ /* deita (altura vira profundidade) e levanta de volta */
+ function layDown(g){var h=g.h;g.h=g.d;g.d=h;try{geoSolid(g,null)}catch(_){}}
+ /* gira 90° em cima do próprio centro: não pula pro lado como o giro antigo */
+ function spin(g){var cx=g.x+g.w/2,cz=g.z+g.d/2,w=g.w;g.w=g.d;g.d=w;g.x=Math.round(cx-g.w/2);g.z=Math.round(Math.max(0,cz-g.d/2));try{geoSolid(g,null)}catch(_){}}
+
+ var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'};
+ var row=function(lab,h){return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0;align-items:center">'+(lab?'<span style="color:#666;font-size:12px">'+lab+'</span>':'')+h+'</div>'};
+
+ var ir=itRender;
+ itRender=function(){
+  var r=ir.apply(this,arguments);
+  var E,x=ISX,g=null;
+  try{E=it4Box()}catch(_){return r}
+  if(x&&x.k==='geo'){try{g=geoBy(x.id)}catch(_){g=null}}
+  if(!g||M.hidden||E.hidden){if(!g)GMIN=0;fabHide();return r}
+  if(GMIN){E.hidden=true;fabShow();return r}
+  fabHide();
+  /* no quadro pequeno (só o nome e o ⚙) não entra nada: as opções são do quadro completo */
+  if(E.classList.contains('mini3'))return r;
+  /* minimizar passa a ser o nosso: some o painel e deixa a bolinha */
+  var mb=E.querySelector('[data-qmin]');
+  if(mb){mb.removeAttribute('data-qmin');mb.setAttribute('data-qgmin','1');mb.textContent='▁';mb.title='Minimizar: vira uma bolinha e continua editando'}
+  /* o giro antigo pulava a peça pro lado: trocado pelo giro no próprio eixo */
+  var rb=E.querySelector('[data-qgrot]');if(rb)rb.remove();
+  /* trocar de tipo sem perder as medidas digitadas */
+  [].forEach.call(E.querySelectorAll('[data-qgt]'),function(b){var v=b.dataset.qgt;b.removeAttribute('data-qgt');b.setAttribute('data-qgt2',v)});
+  /* passo escolhido vale pra todos os ＋ − do quadro (largura, altura, profundidade, afastamentos) */
+  [].forEach.call(E.querySelectorAll('[data-qin]'),function(b){var p=String(b.dataset.qin).split('|');if(p.length===2)b.dataset.qin=p[0]+'|'+(p[1].charAt(0)==='-'?'-':'')+GSTEP});
+  if(!E.querySelector('[data-qgw]')){
+   var hh=row('Colar:',Bt('data-qgw="e"','⟵ Esquerda')+Bt('data-qgw="f"','↑ Fundo')+Bt('data-qgw="d"','Direita ⟶')+Bt('data-qgw="c"','⌄ Chão')+Bt('data-qgw="t"','⌃ Teto'))
+    +row('',Bt('data-qglay="1"',g.h<g.d?'⤒ Levantar':'⤓ Deitar')+Bt('data-qgspin="1"','⟲ Girar no próprio eixo'))
+    +row('Passo dos ＋ −:',[1,5,10,50,100].map(function(v){return Bt('data-qgstep="'+v+'"',v+' mm',GSTEP===v)}).join(''));
+   var an=E.querySelector('[data-qgt2]');an=an?an.parentNode:E.firstElementChild;
+   if(an)an.insertAdjacentHTML('afterend',hh);
+  }
+  return r;
+ };
+
+ var ic=itClose;itClose=function(){GMIN=0;fabHide();return ic.apply(this,arguments)};
+
+ /* capturado no M (pai do quadro): roda antes dos cliques antigos, então o giro e o
+    minimizar novos é que valem */
+ M.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('button'):null;if(!t)return;
+  var E;try{E=it4Box()}catch(_){return}
+  if(!E||!E.contains(t))return;
+  var d=t.dataset;
+  if(!(d.qgmin||d.qgw||d.qglay||d.qgspin||d.qgstep||d.qgt2))return;
+  e.stopImmediatePropagation();e.preventDefault();
+  if(d.qgstep){GSTEP=+d.qgstep;try{itRender()}catch(_){}return}
+  if(d.qgmin){GMIN=1;try{itRender()}catch(_){}return}
+  if(window.RO)return;
+  var x=ISX,g=null;if(x&&x.k==='geo'){try{g=geoBy(x.id)}catch(_){}}
+  if(!g)return;
+  if(d.qgt2){try{snap()}catch(_){}g.tp=d.qgt2;if(d.qgt2!=='caixa'&&(!g.c||g.c==='#d9d4ca')){try{g.c=projCor()}catch(_){}}fin('Agora é '+({caixa:'Caixa',placa:'Placa MDF',tamp:'Tamponamento'}[d.qgt2])+' · medidas mantidas');return}
+  if(g.lock){try{ambMsg('🔒 Travada · toque 🔓 pra destravar')}catch(_){}return}
+  try{snap()}catch(_){}
+  if(d.qgw){fin(wallStick(g,d.qgw));return}
+  if(d.qglay){layDown(g);fin(g.h<g.d?'⤓ Deitada':'⤒ Em pé');return}
+  if(d.qgspin){spin(g);fin('⟲ Girada no próprio eixo')}
+ },true);
+})();
 })();
 </script>
 
@@ -6419,5 +6526,59 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset|
 (function(){var sv=$('svg');if(!sv)return;sv.addEventListener('pointermove',function(e){if(window.SOLO2&&typeof drag!=='undefined'&&drag&&drag.t==='m'){e.stopImmediatePropagation()}},true)})();
 /* botão no 2D, ao lado de 🎯 */
 (function(){var a=document.getElementById('plfoc');if(!a||document.getElementById('plsolo'))return;var b=document.createElement('button');b.id='plsolo';b.title='Editar só o módulo selecionado (o 2D mostra só ele)';b.textContent='✏️ Só ele no 2D';a.insertAdjacentElement('afterend',b);b.addEventListener('click',function(){if(!S.m||S.mods.indexOf(S.m)<0){toast('Toque num módulo primeiro');return}if(window.SOLO2)soloOff();else soloOn(S.m)});var d0=draw;draw=function(){var r=d0.apply(this,arguments);b.hidden=!S.m||!S.mods.length;b.textContent=window.SOLO2?'↩ Projeto todo':'✏️ Só ele no 2D';return r}})();
+/* ===== 🔍 Ampliar a chapa do plano de corte: abre a chapa grande, com ＋ − pra enxergar
+   as peças pequenas e arrastar pra andar nela. Não mexe no plano, é só pra ver. ===== */
+(function(){
+ if(window.__CUTZOOM)return;window.__CUTZOOM=1;
+ var Z=null,CZ=100;
+ function box(){
+  if(Z)return Z;
+  Z=document.createElement('div');Z.id='cutzoom';Z.hidden=true;
+  Z.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#fff;display:flex;flex-direction:column';
+  Z.innerHTML='<div style="display:flex;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #ddd;flex-wrap:wrap;background:#fff">'
+   +'<b id="czt" style="flex:1;min-width:110px;font-size:13px;line-height:1.25"></b>'
+   +'<button data-cz="-" style="min-height:38px;min-width:44px;font-size:18px">−</button>'
+   +'<b id="czp" style="min-width:54px;text-align:center;font-size:13px">100%</b>'
+   +'<button data-cz="+" style="min-height:38px;min-width:44px;font-size:18px">＋</button>'
+   +'<button data-cz="f" style="min-height:38px;padding:4px 10px;font-size:13px">Ajustar</button>'
+   +'<button data-cz="x" style="min-height:38px;padding:4px 14px;font-size:15px">✕</button></div>'
+   +'<div id="czb" style="flex:1;overflow:auto;-webkit-overflow-scrolling:touch;background:#eceff3;padding:8px;touch-action:pan-x pan-y pinch-zoom"></div>';
+  document.body.appendChild(Z);
+  Z.addEventListener('click',function(ev){
+   var b=ev.target&&ev.target.closest&&ev.target.closest('[data-cz]');if(!b)return;
+   ev.preventDefault();ev.stopPropagation();
+   var k=b.dataset.cz;
+   if(k==='x'){Z.hidden=true;return}
+   if(k==='f')CZ=100;else CZ=Math.max(60,Math.min(1600,CZ+(k==='+'?(CZ<200?25:50):(CZ<=200?-25:-50))));
+   apply();
+  },true);
+  document.addEventListener('keydown',function(ev){if(!Z.hidden&&ev.key==='Escape')Z.hidden=true});
+  return Z;
+ }
+ function apply(){
+  var b=box(),s=b.querySelector('#czb svg'),p=b.querySelector('#czp');
+  if(s){s.style.width=CZ+'%';s.style.maxWidth='none'}
+  if(p)p.textContent=CZ+'%';
+ }
+ function open(svg,titulo){
+  var b=box();b.hidden=false;
+  b.querySelector('#czt').textContent=titulo||'Chapa';
+  var c=b.querySelector('#czb');c.innerHTML='';
+  var n=svg.cloneNode(true);
+  n.removeAttribute('style');
+  n.style.cssText='display:block;height:auto;background:#fff;border-radius:6px;border:4px solid #8a8f98;box-sizing:border-box';
+  n.querySelectorAll('[data-cp]').forEach(function(g){g.removeAttribute('data-cp');g.style.cursor='default'});
+  c.appendChild(n);CZ=100;apply();
+ }
+ document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest&&e.target.closest('[data-czoom]');if(!t)return;
+  e.preventDefault();e.stopPropagation();
+  var hd=t.parentNode,sv=hd&&hd.nextElementSibling;
+  while(sv&&String(sv.tagName).toLowerCase()!=='svg')sv=sv.nextElementSibling;
+  if(!sv)return;
+  open(sv,(hd.textContent||'').replace(/🔍 Ampliar/,'').trim());
+ },true);
+ window.__cutZoom=function(sv,t){open(sv,t)};
+})();
 </script>
 </body></html>

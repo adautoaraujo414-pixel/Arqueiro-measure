@@ -2497,6 +2497,20 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testBasculanteComCavaSemEngrossoFolga4NoTopo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;
+          newTpl({n:'Rack de TV',w:1800,h:500,d:450,b:400,keep:true,div:[1/3,2/3],v:[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}]});var m=S.mods[S.mods.length-1];
+          m.v.forEach(function(v){if(v.k==='door')v.bas=1});draw();var top=function(){return Math.round(Math.max.apply(null,dbg3all().filter(function(q){return /^\d+:Porta/.test(q.nm)}).map(function(q){return q.y1})))};
+          var a=top();m.regua=1;draw();var b=top();
+          return JSON.stringify({sem:(m.b+m.h)-a,com:(m.b+m.h)-b,errs:__errs});
+          """#)
+        XCTAssertEqual(o["sem"] as? Int, 4, "basculante com cava sem engrosso: 4 mm abaixo do topo")
+        XCTAssertLessThan(o["com"] as? Int ?? 99, 1, "com engrosso cava a porta sobe até o topo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

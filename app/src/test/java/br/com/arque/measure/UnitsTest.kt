@@ -57,5 +57,8 @@ class UnitsTest {
         assertEquals(1950.0, Units.typedToMm(1.95, LengthUnit.M), 1e-9)
         assertEquals(600.0, Units.typedToMm(60.0, LengthUnit.M), 1e-9)
         assertEquals(2750.0, Units.typedToMm(2750.0, LengthUnit.MM), 1e-9)
+        assertEquals("1000,9 cm", Units.format(10009.0, LengthUnit.CM))
+        assertEquals("189,8 cm", Units.format(1898.0, LengthUnit.CM))
+        assertEquals("200,0 cm", Units.format(2000.0, LengthUnit.CM))
     }
 }

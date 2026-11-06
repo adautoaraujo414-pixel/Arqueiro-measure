@@ -224,7 +224,7 @@ data class Note(
     val pinned: Boolean = false,
     val locked: Boolean = false,
     val trash: Boolean = false,
-    val unit: LengthUnit = LengthUnit.M,
+    val unit: LengthUnit = LengthUnit.CM, // nota nova já em cm (189,8)
     val pages: List<Sheet> = listOf(Sheet()),
 ) {
     fun dimCount(): Int = pages.sumOf { p -> p.objs.sumOf { o -> when (o) { is DimObj -> 1; is DoorObj -> 1; is RoomObj -> o.segs.size; else -> 0 } } }

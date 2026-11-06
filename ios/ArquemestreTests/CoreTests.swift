@@ -47,6 +47,10 @@ final class UnitsTests: XCTestCase {
     func testFormatoIgualAoAndroid() {
         XCTAssertEqual(Units.format(2345, .MM), "2345 mm")
         XCTAssertEqual(Units.format(2345, .CM), "234,5 cm")
+        XCTAssertEqual(Units.format(10009, .CM), "1000,9 cm")
+        XCTAssertEqual(Units.format(2000, .CM), "200,0 cm")
+        XCTAssertEqual(Units.typedToMm(1950, .M), 1950, accuracy: 1e-9)
+        XCTAssertEqual(Units.typedToMm(195.5, .CM), 1955, accuracy: 1e-9)
         XCTAssertEqual(Units.format(2345, .M), "2,345 m")
         XCTAssertEqual(Units.format(1540, .M), "1,540 m")
         XCTAssertEqual(BoschProtocol.metersToMm(0.5477), 548)

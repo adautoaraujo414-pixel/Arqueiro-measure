@@ -34,7 +34,7 @@ enum Units {
         return f
     }
     private static let fMM = formatter(min: 0, max: 1)
-    private static let fCM = formatter(min: 1, max: 2)
+    private static let fCM = formatter(min: 1, max: 1) // sempre 1 casa: 189,8 · 1000,9
     private static let fM = formatter(min: 3, max: 3) // 3 casas igual ao visor da trena
 
     /// Número sem sufixo (vírgula decimal).

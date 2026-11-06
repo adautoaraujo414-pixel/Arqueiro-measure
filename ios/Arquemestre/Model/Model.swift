@@ -329,7 +329,7 @@ struct Note: Equatable {
     var pinned = false
     var locked = false
     var trash = false
-    var unit: LengthUnit = .M
+    var unit: LengthUnit = .CM // nota nova já em cm
     var pages: [Sheet] = [Sheet()]
 
     func dimCount() -> Int {

@@ -189,7 +189,7 @@ struct MoveisWeb: UIViewRepresentable {
         let args = ProcessInfo.processInfo.arguments
         var demo = args.contains("-demo") ? "&nosetup=1" : ""
         if let i = args.firstIndex(of: "-screen"), i + 1 < args.count {
-            if args[i + 1] == "moveis3d" { demo += "&demo3d=1" } else if args[i + 1] == "moveisplanta" { demo += "&demoplanta=1" }
+            if args[i + 1] == "moveis3d" { demo += "&demo3d=1" } else if args[i + 1] == "moveisplanta" { demo += "&demoplanta=1" } else if ["moveissala", "moveiscores", "moveiscloset"].contains(args[i + 1]) { demo += "&demox=\(args[i + 1])" }
         }
         w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)\(demo)") ?? URL(string: "arque://app/editor.html")!))
         return w

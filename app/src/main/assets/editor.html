@@ -4133,6 +4133,7 @@ var fpPose_s=fpPose;fpPose=function(p){var f=window.FPV;if(!f)return;
  if(f.seat&&p!=='sentar'){var s=f.seat;f.seat=null;var nx=s.x+s.d[0]*650,nz=s.z+s.d[1]*650;if(!fpHit(nx,nz)){f.e[0]=nx;f.e[2]=nz}}
  return fpPose_s.apply(this,arguments)};
 window.fp3api.pose=fpPose;
+window.__cam=function(y,p,z){yaw=y;pitch=p;zoom=z;px=0;py=0;render()};
 /* aumentar a largura do módulo empurra os do lado (e diminuir puxa os que estavam encostados): o módulo fica no lugar */
 var mzSet_l=mzSet;mzSet=function(m,f,v){if(f!=='w'||!m)return mzSet_l(m,f,v);var r0=m.x+m.w+rt(m),w0=m.w,row=S.mods.filter(function(o){return o!==m&&!!o.sup===!!m.sup&&(o.wing||0)===(m.wing||0)&&!o.lock&&(o.x-lt(o))>=r0-1}),touch=row.filter(function(o){return Math.abs((o.x-lt(o))-r0)<=2});
  var x0=m.x,ox=S.mods.map(function(o){return o.x});S.m=m;mzSet_l(m,f,v);var dw=m.w-w0;if(!dw)return;S.mods.forEach(function(o,i){o.x=ox[i]});m.x=x0;(dw>0||touch.length?row:[]).forEach(function(o){o.x=Math.round((o.x+dw)*10)/10});try{draw();if(typeof panel==='function')panel()}catch(_){}build();render()};
@@ -5644,7 +5645,24 @@ var plantaSvg_pw=plantaSvg;plantaSvg=function(){var s=plantaSvg_pw.apply(this,ar
 function demoScene(){try{PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
  mkCorner('e');newTpl(T('Balcão da pia (cuba)'));newTpl(T('Gaveteiro 3 gavetas'));PLWS='e';plwAdd('base');plwAdd('base');plwAdd('pedra');PLWS='d';plwAdd('torre');PLWS=null;
  newTpl(4);newTpl(4);newTpl(4);var U=S.mods.filter(function(m){return m.sup&&!m.wing});U.forEach(function(m,i){m.tb=true;m.tl=i===0;m.tr=i===U.length-1});for(var i=1;i<U.length;i++)U[i].x=U[i-1].x+U[i-1].w;S.m=S.mods[0];draw()}catch(e){}}
-window.addEventListener('load',function(){setTimeout(function(){var q=location.search||'';if(/[?&]demo3d=1/.test(q)){demoScene();try{open3D()}catch(_){}}else if(/[?&]demoplanta=1/.test(q)){demoScene();try{PLV=true;PLANG=true;window.PLWV='F';PLWS='F';draw();var pa=document.getElementById('pla');if(pa)pa.style.background='#cfe3ff'}catch(_){}}},900)});
+/* capturas da loja: projetos prontos com cor (cozinha, sala com home e sofá, quarto, paleta de cores) */
+function demoMat(id){try{return matOf(id)}catch(_){return null}}
+function demoPaint(m,front,box){var f=demoMat(front),b=demoMat(box||'duratex-branco-diamante-essencial');if(f){m.corF=f.hex;m.corFN=matLabel(f);m.corFId=f.id}if(b){m.cor=b.hex;m.corN=matLabel(b);m.corId=b.id}}
+function demoPaintMods(){S.mods.forEach(function(m){demoPaint(m,m.sup?'duratex-freijo-puro-essencial-wood':'duratex-branco-diamante-essencial')});draw()}
+function demoHint(){try{var tt=document.querySelectorAll('#toast,.toast,#amsg');tt.forEach(function(e){e.hidden=true;e.style.display='none'});var hp=document.querySelector('#cv3+div');if(hp)hp.hidden=true}catch(_){}}
+function demoSala(){try{window.toast=function(){};PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.ops=[];S.geo=[];S.isl=[];S.env='sala';S.room='sala';S.W=4400;S.H=2700;S.RD=4200;draw();
+ CATALL=true;catOpen('painel');var b=document.querySelector('[data-cati="painel|0"]');if(b)b.click();var cm=document.getElementById('catm');if(cm)cm.hidden=true;
+ var wd=demoMat('arauco-louro-freijo-trend');(S.rp||[]).forEach(function(a){if(!a.prat&&wd){a.cor=wd.hex;a.corN=matLabel(wd);a.corId=wd.id}});S.mods.forEach(function(m){demoPaint(m,'duratex-cinza-sagrado-essencial','duratex-cinza-sagrado-essencial')});
+ draw();try{open3D()}catch(_){}
+ try{if(APM.tv){var tv=apAdd('tv',Math.min(2,APM.tv.m.length-1));var pn=(S.rp||[]).filter(function(a){return a.liso&&!a.prat})[0];if(pn){tv.x=Math.round(pn.x+(pn.w-tv.w)/2);tv.b=1050}}}catch(_){}var so=apAdd('sofa',6);so.cor='cinza';so.tec='linho';so.rot=180;so.lado='e';so.x=Math.round((S.W-so.w)/2);so.y=1500;
+ var po=apAdd('poltrona',0);po.cor='caramelo';po.tec='couro';po.pe='metal';po.rot=90;var w_=po.w;po.w=po.d;po.d=w_;po.x=200;po.y=1300;
+ S.ops.push({id:9001,t:'porta',wall:'d',w:2400,h:2300,x:600,b:0,st:'vidro',vm:'t4',vc:'fume',fp:'preto'});
+ try{frSolid(so,null);frSolid(po,null)}catch(_){}draw();try{open3D()}catch(_){}setTimeout(function(){try{__cam(.5,.45,.78)}catch(_){}demoHint()},120)}catch(e){}}
+function demoCloset(){try{window.toast=function(){};PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.ops=[];S.geo=[];S.isl=[];S.env='quarto';S.room='quarto';S.W=4800;S.H=2700;S.RD=3600;var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+ newTpl(T('Guarda-roupa 3 vãos'));newTpl(T('Guarda-roupa porta de correr'));S.mods.forEach(function(m){demoPaint(m,'duratex-carvalho-batur-essencial-wood','duratex-branco-diamante-essencial')});S.m=S.mods[0];draw();try{open3D()}catch(_){}setTimeout(function(){try{__cam(.45,.3,1)}catch(_){}demoHint()},120)}catch(e){}}
+function demoCores(){try{window.toast=function(){};demoScene();demoPaintMods();S.tab=10;panel();draw();var pb=[].slice.call(document.querySelectorAll('#bd button')).filter(function(b){return /Portas/.test(b.textContent)})[0];if(pb)pb.click();setTimeout(function(){demoHint();var hh=[].slice.call(document.querySelectorAll('#bd *')).filter(function(e){return /^Portas e frentes/.test((e.textContent||'').trim())&&e.children.length<3})[0];if(hh)hh.scrollIntoView({block:'start'})},300)}catch(e){}}
+window.demoSala=demoSala;window.demoCloset=demoCloset;window.demoCores=demoCores;window.demoPaintMods=demoPaintMods;
+window.addEventListener('load',function(){setTimeout(function(){var q=location.search||'';var dx=(q.match(/[?&]demox=([a-z]+)/)||[])[1];if(dx==='moveissala'){demoSala();return}if(dx==='moveiscloset'){demoCloset();return}if(dx==='moveiscores'){demoCores();return}if(/[?&]demo3d=1/.test(q)){window.toast=function(){};demoScene();demoPaintMods();try{open3D()}catch(_){}demoHint()}else if(/[?&]demoplanta=1/.test(q)){window.toast=function(){};demoScene();demoPaintMods();setTimeout(demoHint,200);try{PLV=true;PLANG=true;window.PLWV='F';PLWS='F';draw();var pa=document.getElementById('pla');if(pa)pa.style.background='#cfe3ff'}catch(_){}}},900)});
 </script>
 <script>
 /* nicho aberto (sem porta): caixa, fundo e prateleiras SEMPRE na cor de fora */

@@ -1382,7 +1382,7 @@ final class EditorWebKitTests: XCTestCase {
           R.tex3d=pl.length>0&&pl.every(function(b){return b.mid===wood.id&&b.vr===1})&&rb.length>0&&rb.every(function(b){return b.mid===uni.id&&!b.vr})&&rf.length>0&&rf.every(function(b){return b.mid===wood.id})?1:0;
           /* plano de corte: as placas vão na chapa da cor certa, com o veio travado */
           var G=cutGroups(),pk=G.ord.filter(function(k){return /^Placa do painel liso/.test(G.map[k].names[0])});R.placas=pk.length>0&&pk.every(function(k){return G.map[k].colN===matLabel(wood)&&G.map[k].vfix===1});
-          var sp=sheetPlan();R.chapa=sp.groups.some(function(g){return g.colN===matLabel(wood)&&g.mat===18});
+          var sp=sheetPlan();R.chapa=sp.groups.some(function(g){return g.colN===matLabel(wood)&&g.mat===rpE()});
           R.ripas=G.ord.some(function(k){return /^Ripa/.test(G.map[k].names[0])&&G.map[k].colN===matLabel(uni)});
           /* "usar em todos": outro painel liso pega a mesma cor */
           var a2=rpNew({x:0,b:0,w:600,h:600});a2.liso=true;RPSEL=a.id;rpBar();document.querySelector('#rpbar [data-rpb="corall|cor"]').click();R.todos=a2.corId===wood.id;S.rp=S.rp.filter(function(q){return q!==a2});

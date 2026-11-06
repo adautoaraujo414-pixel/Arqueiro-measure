@@ -1661,6 +1661,114 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Desenho 2D sem texto em cima de texto nem da trena (sala com rack no chão e suspenso, cozinha, exemplo, quarto)
+    func testDesenhoSemTextoEmCimaDeTexto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;
+          window.__ovl=function(){var svg=document.getElementById('svg'),T=[].slice.call(svg.querySelectorAll('text')).filter(function(t){var r=t.getBoundingClientRect();return r.width>2&&r.height>2&&t.textContent.trim()&&getComputedStyle(t).display!=='none'}),
+           O=[].slice.call(svg.querySelectorAll('rect[fill="#f5c400"],circle[data-trh]')).map(function(e){return {r:e.getBoundingClientRect(),n:'trena'}}),ov=[];
+           var hit=function(a,b,m){var ix=Math.min(a.right,b.right)-Math.max(a.left,b.left),iy=Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top);return ix>m&&iy>m};
+           for(var i=0;i<T.length;i++){var a=T[i].getBoundingClientRect();for(var j=i+1;j<T.length;j++){var b=T[j].getBoundingClientRect();if(hit(a,b,2))ov.push(T[i].textContent.slice(0,28)+' X '+T[j].textContent.slice(0,28))}
+            if(!/^Trena|^\d$/.test(T[i].textContent))O.forEach(function(o){if(hit(a,o.r,2))ov.push(T[i].textContent.slice(0,28)+' X '+o.n)})}
+           return ov.filter(function(v,i,s){return s.indexOf(v)===i})};
+          window.MINI3OFF=1;PR.setupDone=1;var R={};var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
+          var run=function(tag,setup){S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;setup();try{soloOff()}catch(_){}draw();panel();var all=[];for(var i=-1;i<S.mods.length;i++){S.m=i<0?null:S.mods[i];LAST='';draw();__ovl().forEach(function(v){if(all.indexOf(v)<0)all.push(v)})}R[tag]=all};
+          run('salaChao',function(){S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;for(var i=0;i<4;i++){var a=rpNew({x:i*964,b:0,w:949,h:2700});a.liso=true}var tv=apAdd('tv',1);tv.x=1350;tv.b=1100;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))))});
+          run('salaDois',function(){S.room='sala';S.env='cozinha';S.W=4200;S.H=2700;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))));newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso'))));});
+          run('cozinha',function(){S.room='cozinha';S.env='cozinha';S.W=3600;S.H=2700;['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão da pia (cuba)','Balcão 1 porta'].forEach(function(n){newTpl(JSON.parse(JSON.stringify(pick(n))))});newTpl(4);newTpl(4);newTpl(4)});
+          run('demo',function(){demoScene()});
+          run('quarto',function(){S.room='quarto';S.env='livre';S.W=3600;S.H=2700;var it=null;CATS.forEach(function(c){if(/Quarto|quarto/.test(c.n))c.it.slice(0,4).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&!t.act)newTpl(JSON.parse(JSON.stringify(t)))})})});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual((o["salaChao"] as? [String])?.count, 0, "textos sobrepostos em salaChao: \(o["salaChao"] ?? "")")
+        XCTAssertEqual((o["salaDois"] as? [String])?.count, 0, "textos sobrepostos em salaDois: \(o["salaDois"] ?? "")")
+        XCTAssertEqual((o["cozinha"] as? [String])?.count, 0, "textos sobrepostos em cozinha: \(o["cozinha"] ?? "")")
+        XCTAssertEqual((o["demo"] as? [String])?.count, 0, "textos sobrepostos em demo: \(o["demo"] ?? "")")
+        XCTAssertEqual((o["quarto"] as? [String])?.count, 0, "textos sobrepostos em quarto: \(o["quarto"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Teclado numérico nunca cobre o campo que está sendo digitado (Estrutura, barra do painel, aba Painéis, quadro da prateleira, trena, quadro da porta no 3D, área do ripado)
+    func testTecladoNumericoNuncaCobreOCampo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var chk=async function(tag,el){await W(60);if(typeof el==='function')el=el();if(!el){R[tag]='sem campo';return}el.focus();el.dispatchEvent(new Event('focusin',{bubbles:true}));await W(1000);var kp=document.getElementById('calcbar'),a=el.getBoundingClientRect(),b=kp&&!kp.hidden?kp.getBoundingClientRect():null;
+           R[tag]=!b?'teclado não abriu':(a.bottom<=b.top+1&&a.top>=0&&a.height>0?'ok':'COBERTO in '+Math.round(a.top)+'-'+Math.round(a.bottom)+' kp '+Math.round(b.top)+' vh '+innerHeight);
+           try{document.activeElement.blur()}catch(_){}document.body.click();await W(150)};
+          var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso basculante'))));try{soloOff()}catch(_){}S.tab=0;panel();draw();
+          await chk('estruturaLargura',function(){return document.querySelector('#bd [data-k="w"]')});
+          await chk('estruturaProf',function(){return document.querySelector('#bd [data-k="d"]')});
+          await chk('estruturaUltimo',function(){var ins=[].slice.call(document.querySelectorAll('#bd [data-calc]'));return ins[ins.length-1]});
+          /* painel: barra do painel (posição e ajuste fino) */
+          var a=rpNew({x:0,b:0,w:949,h:2700});a.liso=true;LAST='rp';RPSEL=a.id;RPBM='sz';draw();panel();await chk('barraPainel',function(){return document.querySelector('#rpbar [data-rpbf]')});S.tab=8;panel();await chk('abaPaineis',function(){return document.querySelector('#bd [data-pwf]')});
+          /* prateleira: quadro de medidas */
+          var pr=rpNew({x:30,b:1750,w:1100,h:50});pr.prat=true;pr.pd=250;pratEdit(pr);await W(100);await chk('quadroPrateleira',document.querySelector('#pratm [data-pe="x"]'));await chk('quadroPrateleiraW',document.querySelector('#pratm [data-pe="w"]'));document.getElementById('pratm').hidden=true;
+          /* trena */
+          S.m=null;LAST='';draw();panel();await chk('trena',function(){return document.querySelector('[data-trf]')});
+          /* porta/janela no 3D */
+          S.ops=[{id:1,t:'porta',w:800,h:2100,x:500,b:0,wall:'f'}];draw();open3D();await W(400);__build();__opSel(1);await W(200);await chk('porta3D',function(){return document.querySelector('[data-ofi="w"]')});await chk('porta3Dx',function(){return document.querySelector('[data-ofi="x"]')});try{document.getElementById('v3x').click()}catch(_){}
+          /* área do ripado (largura final) */try{document.getElementById('v3x').click()}catch(_){}S.ops=[];S.rp=[];S.mods=[];draw();LAST='';S.tab=8;draw();panel();try{var bt=document.querySelector('[data-rparm]');if(bt)bt.click();else saStart(false);RPSA.pt=[700,1200];RPSA.areas=saAreas();saBar()}catch(e){R.saErr=String(e)}await W(100);await chk('areaRipado',function(){return document.querySelector('[data-saw]')});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["estruturaLargura"] as? String, "ok", "teclado cobrindo estruturaLargura: \(o["estruturaLargura"] ?? "")")
+        XCTAssertEqual(o["estruturaProf"] as? String, "ok", "teclado cobrindo estruturaProf: \(o["estruturaProf"] ?? "")")
+        XCTAssertEqual(o["estruturaUltimo"] as? String, "ok", "teclado cobrindo estruturaUltimo: \(o["estruturaUltimo"] ?? "")")
+        XCTAssertEqual(o["barraPainel"] as? String, "ok", "teclado cobrindo barraPainel: \(o["barraPainel"] ?? "")")
+        XCTAssertEqual(o["abaPaineis"] as? String, "ok", "teclado cobrindo abaPaineis: \(o["abaPaineis"] ?? "")")
+        XCTAssertEqual(o["quadroPrateleira"] as? String, "ok", "teclado cobrindo quadroPrateleira: \(o["quadroPrateleira"] ?? "")")
+        XCTAssertEqual(o["quadroPrateleiraW"] as? String, "ok", "teclado cobrindo quadroPrateleiraW: \(o["quadroPrateleiraW"] ?? "")")
+        XCTAssertEqual(o["trena"] as? String, "ok", "teclado cobrindo trena: \(o["trena"] ?? "")")
+        XCTAssertEqual(o["porta3D"] as? String, "ok", "teclado cobrindo porta3D: \(o["porta3D"] ?? "")")
+        XCTAssertEqual(o["porta3Dx"] as? String, "ok", "teclado cobrindo porta3Dx: \(o["porta3Dx"] ?? "")")
+        XCTAssertEqual(o["areaRipado"] as? String, "ok", "teclado cobrindo areaRipado: \(o["areaRipado"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// 🔒 Travar porta, vão e janela (Ambiente e quadro do 3D) e projeto recebido pelo link (funcionário/cliente/ao vivo) abre tudo travado: só quem criou mexe
+    func testTravarPortaJanelaEProjetoRecebidoTudoTravado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
+          S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:300,b:0,wall:'f'},{id:2,t:'janela',w:1200,h:1000,x:2200,b:1100,wall:'f'}];draw();
+          /* aba Ambiente: toda porta, vão e janela tem 🔒 Travar (não só as que têm painel em cima) */
+          S.tab=9;panel();R.ambiente=!!document.querySelector('[data-oplk="1"]')&&!!document.querySelector('[data-oplk="2"]');
+          /* quadro da porta no 3D: 🔓 Travar · travada não muda medida, tipo, parede nem apaga */
+          open3D();await W(300);__build();__opSel(1);await W(100);var o=S.ops[0],q=function(s){return document.querySelector(s)};q('[data-olk]').click();R.trava=o.lk===1;
+          q('[data-osz="w|100"]').click();q('[data-ost="std"]').click();q('[data-odel]').click();var inp=q('[data-ofi="w"]');inp.value='950';inp.dispatchEvent(new Event('change',{bubbles:true}));
+          var c=__p3(1500,1000,0),hw=__wallHit3(c[0],c[1]);__sel3(c[0],c[1]);R.travada=S.ops.length===2&&o.w===800&&o.st==='vao'&&o.x===300&&o.wall==='f';
+          q('[data-olk]').click();q('[data-osz="w|100"]').click();R.destrava=!o.lk&&o.w===900;
+          /* janela também trava */__opSel(2);await W(50);q('[data-olk]').click();var j=S.ops[1];q('[data-osz="h|100"]').click();R.janela=j.lk===1&&j.h===1000;try{q('#v3x').click()}catch(_){}
+          /* projeto enviado (link do WhatsApp pro funcionário): abre tudo travado, só quem criou mexe */
+          var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};S.ops.forEach(function(x){delete x.lk});
+          newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso'))));try{soloOff()}catch(_){}var pa=rpNew({x:0,b:0,w:949,h:2700});pa.liso=true;var tv=apAdd('tv',1);tv.x=1500;tv.b=1200;draw();
+          openCut();cutSend();await new Promise(function(r){var t=Date.now();(function w(){if(window.__shared||Date.now()-t>5000)r();else setTimeout(w,50)})()});var code=window.__shared?__shared.code:'';window.arqueCutOpen(code);await W(1200);
+          R.recebido=!!window.RO&&S.mods.length===1;R.tudo=S.mods.every(function(m){return m.lock})&&S.rp.every(function(a){return a.lock})&&S.fr.every(function(f){return f.lock})&&S.ops.every(function(x){return x.lk===1});
+          var n0=S.mods.length,r0=S.rp.length;R.semCopia=modCopy(S.mods[0])===null&&rpCopy(S.rp[0])===null&&S.mods.length===n0&&S.rp.length===r0;
+          var x0=S.mods[0].x;modCenter(S.mods[0]);R.semMover=S.mods[0].x===x0;R.semDestravar=lockToggle(S.mods[0])===''&&!!S.mods[0].lock;
+          open3D();await W(300);__build();var c2=__p3(2500,1500,0);__sel3(c2[0],c2[1]);var ch=document.getElementById('opch3');R.semCriar=(!ch||ch.hidden)&&S.ops.length===2;
+          __opSel(1);await W(50);var ol=document.querySelector('[data-olk]');if(ol)ol.click();R.semDestravarPorta=S.ops[0].lk===1;try{document.getElementById('v3x').click()}catch(_){}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["ambiente"] as? Bool, true, "ambiente")
+        XCTAssertEqual(o["trava"] as? Bool, true, "trava")
+        XCTAssertEqual(o["travada"] as? Bool, true, "travada")
+        XCTAssertEqual(o["destrava"] as? Bool, true, "destrava")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela")
+        XCTAssertEqual(o["recebido"] as? Bool, true, "recebido")
+        XCTAssertEqual(o["tudo"] as? Bool, true, "tudo")
+        XCTAssertEqual(o["semCopia"] as? Bool, true, "semCopia")
+        XCTAssertEqual(o["semMover"] as? Bool, true, "semMover")
+        XCTAssertEqual(o["semDestravar"] as? Bool, true, "semDestravar")
+        XCTAssertEqual(o["semCriar"] as? Bool, true, "semCriar")
+        XCTAssertEqual(o["semDestravarPorta"] as? Bool, true, "semDestravarPorta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

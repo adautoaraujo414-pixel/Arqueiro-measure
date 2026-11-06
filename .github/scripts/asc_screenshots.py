@@ -12,7 +12,7 @@ SRC, APP_ID = sys.argv[1], sys.argv[2]
 
 # ordem na loja: tela inicial nova primeiro
 # ordem na loja: só projetos prontos e cores (sem agenda, orçamento, assinatura nem plano de corte)
-SHOTS = ["1-moveis3d", "2-moveissala", "3-moveiscores", "4-moveiscloset", "5-moveisplanta", "6-moveis", "7-editor"]
+SHOTS = ["1-moveis3d", "2-moveissala", "3-moveis2d", "4-moveiscorte", "5-moveiscores", "6-moveiscloset", "7-moveisplanta", "8-editor"]
 IPHONE = ["iphone-" + n for n in SHOTS]
 IPAD = ["ipad-" + n for n in SHOTS]
 # (tipo na API, lista, tamanho final ou None pra manter)

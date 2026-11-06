@@ -1686,7 +1686,7 @@ private fun ManualValueBox(modifier: Modifier, text: String, unitLabel: String, 
     }
     if (open) {
         NumPadDialog(tr("Digitar medida"), input, unitLabel, hint = tr("Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão."), onDismiss = { open = false }) { v ->
-            if (v > 0) onSet(Units.toMm(v, unit ?: br.com.arque.measure.model.LengthUnit.MM))
+            if (v > 0) onSet(Units.typedToMm(v, unit ?: br.com.arque.measure.model.LengthUnit.MM))
             open = false
         }
     }

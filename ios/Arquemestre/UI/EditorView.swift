@@ -434,7 +434,7 @@ struct ManualValueBox: View {
         .disabled(!enabled)
         .sheet(isPresented: $open) {
             NumPadSheet(title: tr("Digitar medida"), suffix: unit.label, hint: tr("Teclado do app: pode somar ou tirar (ex.: 2750−4). Fica marcada como digitada à mão."),
-                        text: text == "–" ? "" : text) { v in if v > 0 { onSet(Units.toMm(v, unit)) } }
+                        text: text == "–" ? "" : text) { v in if v > 0 { onSet(Units.typedToMm(v, unit)) } }
         }
     }
 }

@@ -21,6 +21,21 @@ object Units {
         LengthUnit.M -> mm / 1000.0
     }
 
+    /**
+     * Medida digitada à mão no teclado do app. Quem trabalha com marcenaria digita em mm
+     * (ex.: 1950 ou 2750−4) mesmo com a tela em cm ou m: número grande demais pra unidade
+     * da tela é lido como mm (1950 em m vira 1950 mm = 195,0 cm, e não 1950 metros).
+     */
+    fun typedToMm(v: Double, u: LengthUnit): Double = when (u) {
+        LengthUnit.MM -> v
+        LengthUnit.CM -> if (v >= 1000.0) v else v * 10.0
+        LengthUnit.M -> when {
+            v >= 100.0 -> v           // 1950 → 1950 mm
+            v > 15.0 -> v * 10.0      // 60 → 60 cm
+            else -> v * 1000.0        // 1,95 → 1,95 m
+        }
+    }
+
     fun toMm(v: Double, u: LengthUnit): Double = when (u) {
         LengthUnit.MM -> v
         LengthUnit.CM -> v * 10.0

@@ -47,4 +47,15 @@ class UnitsTest {
         assertNull(Units.parseToMm("0", LengthUnit.MM))
         assertNull(Units.parseToMm("-5", LengthUnit.MM))
     }
+
+    @Test
+    fun digitadoEmMmComTelaEmMetroOuCm() {
+        assertEquals(1950.0, Units.typedToMm(1950.0, LengthUnit.M), 1e-9)
+        assertEquals(1968.0, Units.typedToMm(1968.0, LengthUnit.CM), 1e-9)
+        assertEquals("195,0", Units.formatNumber(Units.typedToMm(1950.0, LengthUnit.M), LengthUnit.CM))
+        assertEquals(1955.0, Units.typedToMm(195.5, LengthUnit.CM), 1e-9)
+        assertEquals(1950.0, Units.typedToMm(1.95, LengthUnit.M), 1e-9)
+        assertEquals(600.0, Units.typedToMm(60.0, LengthUnit.M), 1e-9)
+        assertEquals(2750.0, Units.typedToMm(2750.0, LengthUnit.MM), 1e-9)
+    }
 }

@@ -8,6 +8,16 @@ enum Units {
         switch u { case .MM: return mm; case .CM: return mm / 10; case .M: return mm / 1000 }
     }
 
+    /// Medida digitada à mão: número grande demais pra unidade da tela é lido como mm
+    /// (1950 em m vira 1950 mm = 195,0 cm, e não 1950 metros). Igual ao Android.
+    static func typedToMm(_ v: Double, _ u: LengthUnit) -> Double {
+        switch u {
+        case .MM: return v
+        case .CM: return v >= 1000 ? v : v * 10
+        case .M: return v >= 100 ? v : (v > 15 ? v * 10 : v * 1000)
+        }
+    }
+
     static func toMm(_ v: Double, _ u: LengthUnit) -> Double {
         switch u { case .MM: return v; case .CM: return v * 10; case .M: return v * 1000 }
     }

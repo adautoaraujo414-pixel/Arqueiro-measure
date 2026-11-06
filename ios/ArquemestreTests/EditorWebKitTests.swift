@@ -1517,6 +1517,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Parede com porta ou vão sai inteira: sem risco nem emenda em cima da porta (fundo e lados); janela não recorta a parede
+    func testParedeSemRiscoEmCimaDaPortaEJanela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R={};
+          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
+          /* vão e porta no fundo, porta e vão na esquerda, janela no fundo e na direita */
+          S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:1500,b:0,wall:'f'},{id:2,t:'porta',w:800,h:2100,x:2600,b:0,wall:'f'},{id:3,t:'janela',w:1000,h:1000,x:300,b:1100,wall:'f'},{id:4,t:'porta',w:800,h:2100,x:900,b:0,wall:'e'},{id:5,t:'porta',st:'vao',w:900,h:2100,x:2000,b:0,wall:'e'},{id:6,t:'janela',w:1200,h:1000,x:700,b:1100,wall:'d'}];
+          draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
+          var pol=function(b){return b.pf?b.pf.pts:b.poly?b.poly:[[b.x0,b.y0],[b.x1,b.y0],[b.x1,b.y1],[b.x0,b.y1]]},area=function(P){var a=0;for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2};
+          var chk=function(wl,ow){var ps=__bg().filter(function(b){return b.wl===wl&&!b.cs&&b.c&&(b.pf||b.poly||b.x1-b.x0>50)&&(wl==='F'?b.z1<=0.01&&b.z0<-50:true)}),ds=S.ops.filter(function(o){return o.t==='porta'&&(o.wall||'f')===ow}),risco=0,jamb=0;
+            ps.forEach(function(b){var P=pol(b);for(var k=0;k<P.length;k++){var p=P[k],q=P[(k+1)%P.length];if(Math.abs(p[0]-q[0])>.01)continue;var y0=Math.min(p[1],q[1]),y1=Math.max(p[1],q[1]),hid=b.he&&b.he.indexOf(k)>=0;ds.forEach(function(o){if(Math.abs(p[0]-o.x)>.6&&Math.abs(p[0]-o.x-o.w)>.6)return;if(!hid&&y1>o.b+o.h+1)risco++;if(!hid&&y1<=o.b+o.h+.5&&y0<=.5)jamb++})}});return {n:ps.length,risco:risco,jamb:jamb,ps:ps}};
+          var F=chk('F','f'),L=chk('L','e');R.fundo=F.risco===0&&F.jamb>=4;R.esquerda=L.risco===0&&L.jamb>=4;
+          /* a parede do fundo continua inteira (só falta o vão das portas) */
+          var xs=[];F.ps.forEach(function(b){pol(b).forEach(function(p){xs.push(p[0])})});var X0=Math.min.apply(null,xs),X1=Math.max.apply(null,xs),A=F.ps.reduce(function(s,b){return s+area(pol(b))},0);R.inteira=Math.abs(A-((X1-X0)*2700-800*2100*2))<5;
+          /* janela não recorta a parede (nada de emenda) */
+          R.janela=__bg().filter(function(b){return b.wl==='R'&&(b.poly||b.pf)}).length===1&&!__bg().some(function(b){return b.wl==='R'&&b.he});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["fundo"] as? Bool, true, "parede do fundo sem risco em cima da porta, só o contorno do vão")
+        XCTAssertEqual(o["esquerda"] as? Bool, true, "parede da esquerda sem risco em cima da porta")
+        XCTAssertEqual(o["inteira"] as? Bool, true, "parede inteira, só falta o vão")
+        XCTAssertEqual(o["janela"] as? Bool, true, "janela não recorta a parede")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

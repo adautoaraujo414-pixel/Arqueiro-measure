@@ -1695,7 +1695,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
           var chk=async function(tag,el){await W(60);if(typeof el==='function')el=el();if(!el){R[tag]='sem campo';return}el.focus();el.dispatchEvent(new Event('focusin',{bubbles:true}));await W(1000);var kp=document.getElementById('calcbar'),a=el.getBoundingClientRect(),b=kp&&!kp.hidden?kp.getBoundingClientRect():null;
-           R[tag]=!b?'teclado não abriu':(a.bottom<=b.top+1&&a.top>=0&&a.height>0?'ok':'COBERTO in '+Math.round(a.top)+'-'+Math.round(a.bottom)+' kp '+Math.round(b.top)+' vh '+innerHeight);
+           R[tag]=!b?'teclado não abriu':((a.bottom<=b.top+1||a.right<=b.left||a.left>=b.right)&&a.top>=0&&a.height>0?'ok':'COBERTO in '+Math.round(a.top)+'-'+Math.round(a.bottom)+' kp '+Math.round(b.top)+' vh '+innerHeight);
            try{document.activeElement.blur()}catch(_){}document.body.click();await W(150)};
           var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
           S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
@@ -1766,6 +1766,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semDestravar"] as? Bool, true, "semDestravar")
         XCTAssertEqual(o["semCriar"] as? Bool, true, "semCriar")
         XCTAssertEqual(o["semDestravarPorta"] as? Bool, true, "semDestravarPorta")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    /// Monta vários armários do catálogo (cozinha, sala, quarto), muda largura, altura e fundo digitando: nada entra em nada,
+    /// peças sem medida errada, plano de corte sem peça maior que a chapa e sem travar (plano, 3D e 2D rápidos)
+    func testMontaVariosArmariosSemSobreporECortePreciso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={rooms:{},bad:[],slow:[]},T=function(){return performance.now()};
+          var ref=+(PR.refilo===undefined?10:PR.refilo),SW=(+PR.sheetW||2750)-2*ref,SH=(+PR.sheetH||1840)-2*ref;
+          var rooms=['cozinha','sala','quarto'];
+          var items=function(room){var out=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&!t.act&&!t.corner)out.push(t)})});return out};
+          var check=function(tag){S.mods.forEach(function(m,i){if(modOverlaps(m)){var e=extOf(m),pr=S.mods.filter(function(o){if(o===m||(o.wing||0)!==(m.wing||0))return false;if(!((+m.b||0)<(+o.b||0)+(+o.h||0)-1&&(+o.b||0)<(+m.b||0)+(+m.h||0)-1))return false;var f=extOf(o);return e[0]<f[1]-1&&f[0]<e[1]-1}).map(function(o){return S.mods.indexOf(o)+(o.corner?'c':'')+':'+extOf(o).join('-')});R.bad.push(tag+' sobrepõe: '+i+(m.wing?' wing'+m.wing:'')+' '+e.join('-')+' b'+m.b+' com '+pr.join(','))}
+            var P=[];try{P=partsOf(m)}catch(e){R.bad.push(tag+' partsOf erro '+i+': '+e.message);return}
+            P.forEach(function(p){['w','h','x','y'].forEach(function(k){if(!isFinite(+p[k]))R.bad.push(tag+' peça '+p.name+' '+k+'='+p[k])});if(!p.noCut&&!p.noDraw&&(+p.w<=0||+p.h<=0))R.bad.push(tag+' peça vazia '+p.name+' '+p.w+'x'+p.h+' mod '+i)})});
+            var G;try{G=cutGroups()}catch(e){R.bad.push(tag+' cutGroups erro '+e.message);return}
+            G.ord.forEach(function(k){var g=G.map[k],L=+g.L,Wd=+g.W;if(!isFinite(L)||!isFinite(Wd)||L<=0||Wd<=0||!(g.qty>0))R.bad.push(tag+' corte '+g.names[0].slice(0,40)+' '+g.L+'x'+g.W+' q'+g.qty);
+             else if((Math.max(L,Wd)>Math.max(SW,SH)+.5||Math.min(L,Wd)>Math.min(SW,SH)+.5)&&!/partes|emenda/.test(g.names.join(' ')+(g.note||'')))R.bad.push(tag+' maior que a chapa '+g.names[0].slice(0,40)+' '+L+'x'+Wd)});
+            var t0=T();try{if(window.sheetPlan)sheetPlan()}catch(e){R.bad.push(tag+' plano erro '+e.message)}var tp=T()-t0;t0=T();try{__build()}catch(e){R.bad.push(tag+' 3D erro '+e.message)}var tb=T()-t0;t0=T();draw();var td=T()-t0;if(tp>4000||tb>4000||td>2500)R.slow.push(tag+' plano '+Math.round(tp)+' 3D '+Math.round(tb)+' 2D '+Math.round(td))};
+          rooms.forEach(function(room){S.room=room;S.env=room==='quarto'||room==='closet'?'livre':'cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+            var its=items(room).filter(function(t){return CATS.some(function(c){return c.it.indexOf(t)>=0||c.it.some(function(q){return TPL[q]===t})})}),n=0;
+            /* arma o ambiente com o que couber */
+            var semLugar=0;its.slice(0,40).forEach(function(t){var k=S.mods.length;try{newTpl(JSON.parse(JSON.stringify(Object.assign({},t,{sup:!!t.sup}))))}catch(e){R.bad.push(room+' newTpl '+t.n+': '+e.message)}try{soloOff()}catch(_){}if(S.mods.length>k){if(modOverlaps(S.mods[S.mods.length-1])){S.mods.pop();semLugar++;S.m=S.mods[S.mods.length-1]||null}else n++}});draw();
+            check(room);
+            /* mexe nas medidas de cada um e confere de novo */
+            S.mods.forEach(function(m,i){if(m.corner)return;S.m=m;S.tab=0;try{panel()}catch(e){R.bad.push(room+' panel '+e.message);return}var set=function(k,v){var el=document.querySelector('#bd [data-k="'+k+'"]');if(!el)return;el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}))};set('w',Math.round(m.w*(0.7+((i*37)%60)/100)));set('d',Math.round(m.d*(0.8+((i*13)%40)/100)));if(!m.sup&&m.h<1500)set('h',Math.round(m.h*(0.85+((i*7)%30)/100)))});draw();check(room+'*');
+            R.rooms[room]=n+' (sem lugar '+semLugar+')'});
+          R.nbad=R.bad.length;R.bad=R.bad.slice(0,60);R.errs=__errs.slice(0,10);return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["nbad"] as? Int, 0, "\(o["bad"] ?? "")")
+        XCTAssertEqual((o["slow"] as? [String])?.count, 0, "lento: \(o["slow"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

@@ -2479,6 +2479,24 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /// Balcão em L e U: módulos do fundo e da lateral não se sobrepõem (pingadeira de 5 mm descontada na divisão)
+    func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=2600;S.H=2890;
+          var a=rpNew({x:0,b:1000,w:1035,h:365});a.liso=true;a.jt={t:'reb',w:15,d:6};var c=rpNew({x:1050,b:1000,w:721,h:365});c.liso=true;c.jt={t:'reb',w:15,d:6};var t=rpNew({x:0,b:1365,w:1035,h:175});t.liso=true;draw();
+          var R={x:0,w:1035,b:1000,h:365},lr=rpEdgeLim(a,'r',R),lt=rpEdgeLim(a,'t',R);
+          a.w=1300;rpFitTyped(a,'w',1035);var w1=a.w;a.h=800;rpFitTyped(a,'h',365);var h1=a.h;draw();
+          return JSON.stringify({lr:lr,lt:lt,w:w1,h:h1,cx:c.x,cw:c.w,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lr"] as? Double, 1035, "borda direita para antes da junta de 15")
+        XCTAssertEqual(o["lt"] as? Double, 1365, "borda de cima para no painel de cima")
+        XCTAssertEqual(o["w"] as? Double, 1035, "largura digitada não entra no vizinho")
+        XCTAssertEqual(o["h"] as? Double, 365, "altura digitada não entra no de cima")
+        XCTAssertEqual(o["cx"] as? Double, 1050, "vizinho não foi empurrado")
+        XCTAssertEqual(o["cw"] as? Double, 721, "vizinho não foi encolhido")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testBalcaoEmLSemModuloSobreposto() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

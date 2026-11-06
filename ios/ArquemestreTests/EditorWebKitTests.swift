@@ -1619,6 +1619,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// ⧉ Copiar: módulo pela Estrutura e pelo 2D só dele (sai igual, do lado, sem entrar em nada), prateleira (em cima/embaixo) e painel; sem lugar avisa
+    func testCopiarModuloPainelEPrateleira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
+          /* rack suspenso com portas: Estrutura › ⧉ Copiar este módulo · sai outro igual do lado, sem entrar em nada */
+          newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso basculante'))));try{soloOff()}catch(_){}var m=S.mods[0];m.x=40;m.cor='#7a5230';draw();S.tab=1;panel();
+          var b=document.querySelector('[data-mcopy]');R.botao=!!b;b.click();var c=S.mods[1];if(!c)return JSON.stringify({semCopia:1,errs:__errs});
+          R.igual=!!c&&c!==m&&c.w===m.w&&c.h===m.h&&c.d===m.d&&c.b===m.b&&c.cor===m.cor&&JSON.stringify(c.v)===JSON.stringify(m.v)&&JSON.stringify(c.div)===JSON.stringify(m.div);
+          R.lado=!!c&&c.x-lt(c)>=m.x+m.w+rt(m)-.5&&!modOverlaps(c)&&!modOverlaps(m);R.escolhido=S.m===c;
+          /* cópia independente: mexer na cópia não muda o original */c.w=c.w-100;R.independente=m.w!==c.w;
+          /* prateleira de módulo (aérea fina): cópia vai pra cima ou pra baixo */
+          S.mods=[];draw();newTpl({n:'Prateleira com LED',w:1200,h:60,d:250,b:1750,sup:true,v:[{k:'free',n:1}]});var p=S.mods[0];p.x=800;p.b=1750;draw();var p2=modCopy(p);R.pratModulo=!!p2&&p2.x===p.x&&Math.abs(p2.b-p.b)===350&&!modOverlaps(p2);
+          /* 2D só dele: ⧉ Copiar no cabeçalho */
+          soloOn(p2);await new Promise(function(r){setTimeout(r,50)});var n0=S.mods.length;var sb=document.querySelector('#solobar [data-sorc="copy"]');R.solo=!!sb;if(sb)sb.click();R.soloCopia=S.mods.length===n0+1;try{soloOff()}catch(_){}
+          /* prateleira suspensa (painel): ⧉ Copiar na barra · vai pra 350 embaixo ou em cima, mesma largura */
+          S.mods=[];var pr=rpNew({x:600,b:1750,w:1200,h:50});pr.prat=true;pr.pd=250;pr.rd=60;LAST='rp';RPSEL=pr.id;draw();panel();var cb=document.querySelector('[data-rpcopy]');R.barra=!!cb;if(cb)cb.click();var q=S.rp[S.rp.length-1];
+          R.prat=!!q&&q!==pr&&q.prat&&q.w===pr.w&&q.pd===pr.pd&&q.rd===pr.rd&&q.x===pr.x&&Math.abs(q.b-pr.b)===350&&q.id!==pr.id;
+          /* painel liso: cópia sai do lado, sem entrar no outro */
+          var pl=rpNew({x:0,b:0,w:900,h:2700});pl.liso=true;pl.cor='#8a6a4a';var old=S.rp.slice();var pc=rpCopy(pl);R.painel=!!pc&&pc.liso&&pc.cor===pl.cor&&pc.w===900&&(pc.x>=pl.x+pl.w-.5||pc.x+pc.w<=pl.x+.5);
+          /* sem lugar na parede: não cria por cima de nada, avisa */
+          S.mods=[];S.rp=[];draw();newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso basculante'))));try{soloOff()}catch(_){}var mm=S.mods[0];mm.x=900;draw();R.semLugar=modCopy(mm)===null&&S.mods.length===1;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["semCopia"] as? Int, nil, "o rack tinha que copiar")
+        XCTAssertEqual(o["botao"] as? Bool, true, "botão Copiar na Estrutura")
+        XCTAssertEqual(o["igual"] as? Bool, true, "cópia igual (medidas, vãos, divisões, cor)")
+        XCTAssertEqual(o["lado"] as? Bool, true, "cópia do lado, sem entrar em nada")
+        XCTAssertEqual(o["escolhido"] as? Bool, true, "a cópia fica escolhida")
+        XCTAssertEqual(o["independente"] as? Bool, true, "mexer na cópia não muda o original")
+        XCTAssertEqual(o["pratModulo"] as? Bool, true, "prateleira de módulo: cópia em cima ou embaixo")
+        XCTAssertEqual(o["solo"] as? Bool, true, "Copiar no 2D só dele")
+        XCTAssertEqual(o["soloCopia"] as? Bool, true, "copiou pelo 2D só dele")
+        XCTAssertEqual(o["barra"] as? Bool, true, "Copiar na barra da prateleira")
+        XCTAssertEqual(o["prat"] as? Bool, true, "prateleira copiada igual, 350 embaixo ou em cima")
+        XCTAssertEqual(o["painel"] as? Bool, true, "painel copiado do lado")
+        XCTAssertEqual(o["semLugar"] as? Bool, true, "sem lugar: não cria por cima, avisa")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()

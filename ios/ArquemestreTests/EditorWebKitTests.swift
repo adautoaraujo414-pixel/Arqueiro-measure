@@ -2478,6 +2478,19 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Balcão em L e U: módulos do fundo e da lateral não se sobrepõem (pingadeira de 5 mm descontada na divisão)
+    func testBalcaoEmLSemModuloSobreposto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R=[];[['e',3000,2000,600],['d',3000,2000,600],['u',3600,1800,600],['e',3333,1777,600],['d',4100,2650,580]].forEach(function(c){S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.env='cozinha';S.W=Math.max(c[1],3000);S.H=2700;draw();mkL(c[0],c[1],c[2],c[3],1);draw();
+           var row=S.mods.filter(function(m){return !m.sup&&!m.wing}).sort(function(a,b){return a.x-b.x});for(var i=1;i<row.length;i++){var ov=row[i-1].x+row[i-1].w-row[i].x;if(ov>0.5)R.push(c.join('x')+': '+Math.round(ov)+' mm')}
+           var st=S.stones[0];row.forEach(function(m){if(m.x<st.x+4.5||m.x+m.w>st.x+st.w-4.5)R.push(c.join('x')+': módulo sem pingadeira '+m.x+'+'+m.w)})});
+          return JSON.stringify({r:R.join(' | '),errs:__errs});
+          """#)
+        XCTAssertEqual(o["r"] as? String, "", "módulos sobrepostos no balcão em L/U")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testAcabamentoDosEletrosETVReal() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

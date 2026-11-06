@@ -2529,8 +2529,8 @@ final class EditorWebKitTests: XCTestCase {
           window.open3D();var bx=window.dbg3all(),cuba=bx.filter(function(q){return q.sid===S.st.id&&!q.ck}).length,cook=bx.filter(function(q){return q.ck}).length;document.getElementById('v3x').click();
           var bocas=cookPos(S.st.items[1]).length,cubas=cubaBowls(S.st.items[0]).length;
           S.room='quarto';S.env='livre';S.mods=[];S.stones=[];S.st=null;draw();
-          var arm=CATS.filter(function(c){return c.id==='dArm'})[0].it;newTpl(arm[4]);var P=partsOf(S.mods[0]).map(function(p){return p.name});newTpl(arm[10]);var P2=partsOf(S.mods[1]).map(function(p){return p.name});
-          return JSON.stringify({lados:lados,campos:campos,tipos:tipos,ori:ori,gir:gir,ang:ang,cuba:cuba,cook:cook,bocas:bocas,cubas:cubas,narm:arm.length,portas:P.filter(function(n){return n==='Porta'}).length,gav:P.filter(function(n){return n==='Frente de gaveta'}).length,semLat:P2.indexOf('Lateral esquerda')<0&&P2.indexOf('Lateral direita')>=0,errs:__errs});
+          var arm=CATS.filter(function(c){return c.id==='dArm'})[0].it;newTpl(arm[4]);var P=partsOf(S.mods[0]).map(function(p){return p.name});var semL=arm.filter(function(it){S.mods=[];newTpl(it);var q=partsOf(S.mods[0]).map(function(p){return p.name});return q.indexOf('Lateral esquerda')<0||q.indexOf('Lateral direita')<0}).map(function(it){return it.n});var P2=semL;
+          return JSON.stringify({lados:lados,campos:campos,tipos:tipos,ori:ori,gir:gir,ang:ang,cuba:cuba,cook:cook,bocas:bocas,cubas:cubas,narm:arm.length,portas:P.filter(function(n){return n==='Porta'}).length,gav:P.filter(function(n){return n==='Frente de gaveta'}).length,semLat:P2.join(','),errs:__errs});
           """#)
         XCTAssertEqual(o["lados"] as? Bool, true, "paredes do lado aparecem sempre")
         XCTAssertEqual(o["campos"] as? String, "wlen,wabs,wrel,wt,wh0,wh1", "editor de paredes com comprimento, ângulos, espessura e pé-direito")
@@ -2542,10 +2542,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["cook"] as? Int ?? 0, 60, "cooktop com grades e botões")
         XCTAssertEqual(o["bocas"] as? Int, 5, "cooktop 5 bocas")
         XCTAssertEqual(o["cubas"] as? Int, 2, "Marea 2C com 2 cubas")
-        XCTAssertEqual(o["narm"] as? Int, 13, "13 armários de dormitório")
+        XCTAssertEqual(o["narm"] as? Int, 10, "10 armários de dormitório (todos com as duas laterais)")
         XCTAssertEqual(o["portas"] as? Int, 2, "2P+Gav Ext: 2 portas")
         XCTAssertEqual(o["gav"] as? Int, 3, "2P+Gav Ext: 3 gavetas de fora")
-        XCTAssertEqual(o["semLat"] as? Bool, true, "s/ Lat Esq sem a lateral esquerda")
+        XCTAssertEqual(o["semLat"] as? String, "", "todo módulo do catálogo Armários tem as duas laterais (sem módulo só com tamponamento)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 

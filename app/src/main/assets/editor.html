@@ -790,15 +790,25 @@ var RAFD=null;function rafDraw(fn){var first=!RAFD;RAFD={fn:fn};if(first)request
 /* soltou o micro-ondas/forno em cima de um módulo no 2D: encaixa no nicho */
 document.addEventListener('pointerup',function(){try{if(typeof drag==='undefined'||!drag||drag.t!=='ap')return;var f=S.fr.filter(function(a){return a.id===drag.id})[0];if(f&&/^(microondas|forno)$/.test(f.t||'')&&window.fnEncaixa)fnEncaixa(f,true)}catch(_){}},true);
 /* cotas da placa selecionada no 2D (atualiza enquanto puxa): largura, altura, total da coluna (placas + juntas) e o que ficou livre até o chão e até o teto */
+/* toque na medida vermelha: digita quanto quer de livre (a outra ponta da coluna fica parada) */
+function rpFreeEdit(w){var cv=document.querySelector('.cv'),c=window.__RPCOL;if(!cv||!c||window.RO)return;var C=(S.rp||[]).filter(function(q){return c.ids.indexOf(q.id)>=0}).sort(function(p,q){return p.b-q.b});if(!C.length)return;var cur=w==='chao'?C[0].b:c.top-(C[C.length-1].b+C[C.length-1].h);
+ var bx=document.getElementById('rpfbox');if(!bx){bx=document.createElement('div');bx.id='rpfbox';bx.style.cssText='position:absolute;left:50%;top:44px;transform:translateX(-50%);z-index:6;background:#fff3f3;border:2px solid #d62828;border-radius:10px;padding:8px 10px;box-shadow:0 4px 16px rgba(0,0,0,.25);display:flex;gap:8px;align-items:flex-end;font-size:12px';cv.appendChild(bx)}
+ bx.dataset.w=w;bx.innerHTML='<label style="display:flex;flex-direction:column;color:#b42318;font-weight:700">Livre até o '+(w==='chao'?'chão':'teto')+' (mm)<input data-rpfv="1" data-calc="1" type="text" inputmode="decimal" value="'+Math.round(cur*10)/10+'" style="width:110px;font-size:16px"></label><button data-rpfx="1" style="min-height:34px">✕</button>';bx.hidden=false;var i=bx.querySelector('[data-rpfv]');try{i.focus();i.select()}catch(_){}}
+function rpFreeApply(w,v){var c=window.__RPCOL;if(!c)return false;var C=(S.rp||[]).filter(function(q){return c.ids.indexOf(q.id)>=0}).sort(function(p,q){return p.b-q.b});if(!C.length)return false;var rd=function(x){return Math.round(x*10)/10};v=Math.max(0,v);
+ if(w==='chao'){var a=C[0],t=a.b+a.h;if(t-v<50){toast('Não dá: a placa ficaria com menos de 5 cm');return false}snap();a.b=rd(v);a.h=rd(t-v);a.wFix=1}else{var z=C[C.length-1],nt=c.top-v;if(nt-z.b<50){toast('Não dá: a placa ficaria com menos de 5 cm');return false}snap();z.h=rd(nt-z.b)}draw();panel();try{if(window.re3)window.re3()}catch(_){}return true}
+window.rpFreeEdit=rpFreeEdit;window.rpFreeApply=rpFreeApply;
+document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;if(t.closest('[data-rpfx]')){var b=document.getElementById('rpfbox');if(b)b.hidden=true}});
+/* no desenho o toque vira arrasto: pega a medida já no encostar do dedo */document.addEventListener('pointerdown',function(e){var t=e.target;if(!t||!t.closest)return;var r=t.closest('[data-rpfree]');if(!r||window.RO)return;e.preventDefault();e.stopImmediatePropagation();var w=r.getAttribute('data-rpfree');setTimeout(function(){rpFreeEdit(w)},0)},true);
+document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||t.dataset.rpfv===undefined)return;var bx=document.getElementById('rpfbox'),v=parseFloat(String(t.value).replace(',','.'));if(!bx||isNaN(v))return;if(rpFreeApply(bx.dataset.w,v)){bx.hidden=true;toast('Livre até o '+(bx.dataset.w==='chao'?'chão':'teto')+': '+v+' mm')}});
 function rpDims(L,B,k){var a=(S.rp||[]).filter(function(q){return q.id===RPSEL})[0];if(!a||a.prat||a.wall||window.SOLO2D)return '';var rd=function(v){return Math.round(v*10)/10},fmt=function(v){return String(rd(v)).replace('.',',')};
  var ov=function(q){return Math.min(q.x+q.w,a.x+a.w)-Math.max(q.x,a.x)>=Math.min(q.w,a.w)*.5},col=(S.rp||[]).filter(function(q){return !q.prat&&!q.wall&&ov(q)}).sort(function(p,q){return p.b-q.b});
  /* só as placas encostadas (com a junta no meio) formam a coluna */var i=col.indexOf(a),lo=i,hi=i;while(lo>0&&a&&col[lo].b-(col[lo-1].b+col[lo-1].h)<=40)lo--;while(hi<col.length-1&&col[hi+1].b-(col[hi].b+col[hi].h)<=40)hi++;var C=col.slice(lo,hi+1),b0=C[0].b,b1=C[C.length-1].b+C[C.length-1].h,top=S.H-(typeof fgh==='function'?fgh():0);
  var x0=L+a.x*k,x1=L+(a.x+a.w)*k,y0=B-(a.b+a.h)*k,y1=B-a.b*k,o='<g pointer-events="none" font-family="sans-serif">',bl='#1f4fbf',rdc='#d62828',
-  vline=function(x,ya,yb,t,c,dx){o+='<line x1="'+x+'" y1="'+ya+'" x2="'+x+'" y2="'+yb+'" stroke="'+c+'" stroke-width="1.6"/><line x1="'+(x-4)+'" y1="'+ya+'" x2="'+(x+4)+'" y2="'+ya+'" stroke="'+c+'" stroke-width="1.6"/><line x1="'+(x-4)+'" y1="'+yb+'" x2="'+(x+4)+'" y2="'+yb+'" stroke="'+c+'" stroke-width="1.6"/>';var ym=(ya+yb)/2;o+='<text x="'+(x+(dx||-5))+'" y="'+ym+'" font-size="11" font-weight="700" fill="'+c+'" text-anchor="middle" transform="rotate(-90 '+(x+(dx||-5))+' '+ym+')" paint-order="stroke" stroke="#fff" stroke-width="3">'+t+'</text>'};
+  vline=function(x,ya,yb,t,c,dx,tap){if(tap)o+='<rect data-rpfree="'+tap+'" x="'+(x-14)+'" y="'+Math.min(ya,yb)+'" width="28" height="'+Math.abs(yb-ya)+'" fill="transparent" pointer-events="all" style="cursor:pointer"/>';o+='<line x1="'+x+'" y1="'+ya+'" x2="'+x+'" y2="'+yb+'" stroke="'+c+'" stroke-width="1.6"/><line x1="'+(x-4)+'" y1="'+ya+'" x2="'+(x+4)+'" y2="'+ya+'" stroke="'+c+'" stroke-width="1.6"/><line x1="'+(x-4)+'" y1="'+yb+'" x2="'+(x+4)+'" y2="'+yb+'" stroke="'+c+'" stroke-width="1.6"/>';var ym=(ya+yb)/2;o+='<text x="'+(x+(dx||-5))+'" y="'+ym+'" font-size="11" font-weight="700" fill="'+c+'" text-anchor="middle" transform="rotate(-90 '+(x+(dx||-5))+' '+ym+')" paint-order="stroke" stroke="#fff" stroke-width="3">'+t+'</text>'};
  /* largura (embaixo da placa, por dentro) */var yw=y1-8;o+='<line x1="'+x0+'" y1="'+yw+'" x2="'+x1+'" y2="'+yw+'" stroke="'+bl+'" stroke-width="1.6"/><text x="'+((x0+x1)/2)+'" y="'+(yw-4)+'" font-size="11" font-weight="700" fill="'+bl+'" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3">'+fmt(a.w)+'</text>';
  /* altura da placa */vline(x0+12,y0,y1,fmt(a.h),bl,10);
  /* total da coluna */if(C.length>1)vline(x0+34,B-b1*k,B-b0*k,'total '+fmt(b1-b0)+' ('+C.length+' placas)',bl,10);
- /* livre até o chão e até o teto */var xr=x1-12;if(b0>0.5)vline(xr,B-b0*k,B,'livre '+fmt(b0)+' até o chão',rdc,-6);if(top-b1>0.5)vline(xr,B-top*k,B-b1*k,'livre '+fmt(top-b1)+' até o teto',rdc,-6);
+ /* livre até o chão e até o teto */var xr=x1-12;window.__RPCOL={ids:C.map(function(q){return q.id}),top:top};if(b0>0.5)vline(xr,B-b0*k,B,'livre '+fmt(b0)+' até o chão ✎',rdc,-6,'chao');if(top-b1>0.5)vline(xr,B-top*k,B-b1*k,'livre '+fmt(top-b1)+' até o teto ✎',rdc,-6,'teto');
  return o+'</g>'}
 function draw(){try{if(!window.SOLO2D)confineAll()}catch(e){}try{if(!window.SOLO2D)frStAll()}catch(e){}try{regDet()}catch(e){}try{histTick()}catch(e){}
  if(PLV){$('svg').innerHTML='<style>#plg text{pointer-events:none}</style><g id="plg"'+(typeof plAngT==='function'?plAngT():'')+'>'+plantaSvg()+'</g>';return}
@@ -1480,10 +1490,7 @@ CATS.push(
   {n:'Bifold 3F 1000mm',w:1000,h:2400,d:550,b:0,v:[D2_(3,{cam:1,int:INTG})]},
   {n:'1 Vão 600mm',w:600,h:2400,d:550,b:0,v:[{k:'free',n:1,int:INTG}]},
   {n:'2 Vãos 1600mm',w:1600,h:2400,d:550,b:0,div:[0.5],v:[{k:'free',n:1,int:INTG},{k:'free',n:1,int:INTN}]},
-  {n:'3 Vãos 2400mm',w:2400,h:2400,d:550,b:0,div:[1/3,2/3],v:[{k:'free',n:1,int:INTG},{k:'free',n:1,int:INTN},{k:'free',n:1,int:INTG}]},
-  {n:'s/ Lat Esq 600mm',w:600,h:2400,d:550,b:0,sLE:1,v:[{k:'free',n:1,int:INTG}]},
-  {n:'s/ Lat Dir 600mm',w:600,h:2400,d:550,b:0,sLD:1,v:[{k:'free',n:1,int:INTG}]},
-  {n:'s/ Laterais 600mm',w:600,h:2400,d:550,b:0,sLE:1,sLD:1,v:[{k:'free',n:1,int:INTG}]}]},
+  {n:'3 Vãos 2400mm',w:2400,h:2400,d:550,b:0,div:[1/3,2/3],v:[{k:'free',n:1,int:INTG},{k:'free',n:1,int:INTN},{k:'free',n:1,int:INTG}]}]},
  {id:'dCan',n:'◣ Cantos',it:[
   {n:'Canto L guarda-roupa · esquerdo',w:1000,h:2400,d:550,b:0,corner:'e',cw2:1000,v:[D2_(2,{int:INTG})]},
   {n:'Canto L guarda-roupa · direito',w:1000,h:2400,d:550,b:0,corner:'d',cw2:1000,v:[D2_(2,{int:INTG})]}]},
@@ -1512,7 +1519,7 @@ catAp=(function(o){return function(){o();var map={cforno:['forno','microondas'],
 function catAct2(it){var a=it.act;if(a==='cuba'||a==='cook'){var M=a==='cuba'?cubM(it.cm):cookM(it.cm);if(!M)return true;snap();stItemAdd(a,M);return true}
  if(a==='fchL'||a==='fchR'||a==='fchT'){var m=S.m;if(!m){toast('Escolha um módulo primeiro');return true}snap();if(a==='fchL')m.tl=true;else if(a==='fchR')m.tr=true;else m.tt=true;draw();panel();try{if(window.re3)window.re3()}catch(_){}toast('Fechamento posto no módulo escolhido (tamponamento)');return true}return false}
 /* módulo sem lateral (usa a do vizinho): as laterais não entram no corte nem no desenho */
-partsOf=(function(o){return function(m){var P=o.apply(this,arguments);if(m&&(m.sLE||m.sLD))P=P.filter(function(p){return !((m.sLE&&p.name==='Lateral esquerda')||(m.sLD&&p.name==='Lateral direita'))});return P}})(partsOf);
+partsOf=(function(o){return function(m){var P=o.apply(this,arguments);/* todo módulo tem as duas laterais (os antigos 's/ lateral' voltam a ter) */if(m&&(m.sLE||m.sLD)){delete m.sLE;delete m.sLD};return P}})(partsOf);
 newTpl=(function(o){return function(i){var t=typeof i==='object'?i:TPL[i],old=S.mods.slice(),r=o.apply(this,arguments);if(t&&(t.sLE||t.sLD))S.mods.forEach(function(m){if(old.indexOf(m)<0){if(t.sLE)m.sLE=1;if(t.sLD)m.sLD=1}});return r}})(newTpl);
 try{catAp()}catch(_){}
 function roomOf(){return S.room||(S.env==='livre'?'livre':'cozinha')}

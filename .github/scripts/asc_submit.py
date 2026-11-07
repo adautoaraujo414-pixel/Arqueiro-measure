@@ -148,6 +148,11 @@ if not ver:
         print("versão", v["attributes"]["versionString"], v["attributes"]["appStoreState"])
     sys.exit("::error::nenhuma versão em preparo (talvez já esteja em revisão)")
 vs = ver["attributes"]["versionString"]
+# versão em preparo com outro número (ex.: tirou a 3.0.12 da fila pra mandar a 3.0.14): renomeia, senão o build novo não encaixa
+if VERSAO and VERSAO != "auto" and VERSAO != vs and ver["attributes"]["appStoreState"] in PREP:
+    call("PATCH", f"/appStoreVersions/{ver['id']}", json={"data": {"type": "appStoreVersions", "id": ver["id"], "attributes": {"versionString": VERSAO}}})
+    print("versão renomeada", vs, "→", VERSAO)
+    vs = VERSAO
 print("versão", vs, ver["attributes"]["appStoreState"])
 if LIBERAR:
     lancamento_automatico(ver)

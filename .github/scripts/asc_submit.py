@@ -225,7 +225,7 @@ if not (items and items.get("data")):
 
 # 4b) assinaturas ainda não aprovadas (READY_TO_SUBMIT etc.) entram NO MESMO envio da versão.
 #     Sem isso a Apple aprova o app sem a assinatura e a tela fica em "Carregando o preço…" (foi o que houve na 3.0.1).
-PEND_SUB = ("READY_TO_SUBMIT", "DEVELOPER_ACTION_NEEDED", "REJECTED", "MISSING_METADATA")
+PEND_SUB = ("READY_TO_SUBMIT", "DEVELOPER_ACTION_NEEDED", "REJECTED", "DEVELOPER_REJECTED", "MISSING_METADATA", "PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW")
 def assinaturas_pendentes():
     out = []
     for g in (call("GET", f"/apps/{APP_ID}/subscriptionGroups", ok=True, params={"limit": 20}) or {}).get("data", []):

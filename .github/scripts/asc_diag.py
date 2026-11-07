@@ -65,7 +65,7 @@ for g in grupos:
         print("      países com preço:", n)
         for o in get(f"/subscriptions/{s['id']}/introductoryOffers", limit=200)["data"][:3]:
             print("      oferta de teste:", a(o).get("offerMode"), a(o).get("duration"), a(o).get("numberOfPeriods"), "· território", (o.get("relationships", {}).get("territory", {}).get("data") or {}).get("id"), "· início", a(o).get("startDate"), "· fim", a(o).get("endDate"))
-        av = get(f"/subscriptions/{s['id']}/subscriptionAvailability", **{"include": "availableTerritories", "limit[availableTerritories]": 200})
+        av = get(f"/subscriptions/{s['id']}/subscriptionAvailability", **{"include": "availableTerritories", "limit[availableTerritories]": 50})
         if av.get("data"):
             print("      disponível em novos países:", a(av["data"]).get("availableInNewTerritories"), "· países:", len(av.get("included", [])))
         rs = get(f"/subscriptions/{s['id']}/appStoreReviewScreenshot")
@@ -75,7 +75,7 @@ for g in grupos:
             print("      print da revisão: NENHUM")
 
 print("== DISPONIBILIDADE DO APP ==")
-av = get(f"/apps/{APP_ID}/appAvailabilityV2", **{"include": "territoryAvailabilities", "limit[territoryAvailabilities]": 200})
+av = get(f"/apps/{APP_ID}/appAvailabilityV2", **{"include": "territoryAvailabilities", "limit[territoryAvailabilities]": 50})
 if av.get("data"):
     inc = av.get("included", [])
     ok = [i for i in inc if a(i).get("available")]
@@ -85,6 +85,18 @@ if av.get("data"):
         if "BRA" in i["id"]:
             print("  Brasil:", a(i))
 
+print("== ENVIOS PRA REVISÃO ==")
+for rs in get("/reviewSubmissions", **{"filter[app]": APP_ID, "filter[platform]": "IOS", "limit": 5})["data"]:
+    print("  envio", rs["id"][:8], a(rs).get("state"), "· enviado em", a(rs).get("submittedDate"))
+    for it in get(f"/reviewSubmissions/{rs['id']}/items", limit=20)["data"]:
+        rel = {k: (v.get("data") or {}).get("type") for k, v in it.get("relationships", {}).items() if v.get("data")}
+        print("    item", a(it).get("state"), rel)
+for g in grupos:
+    for s_ in get(f"/subscriptionGroups/{g['id']}/subscriptions", limit=20)["data"]:
+        pass
+sv = get("/subscriptionVersions/6e692abb-6213-47f2-bf0c-a53abd57bff4")
+if sv.get("data"):
+    print("  versão da assinatura:", a(sv["data"]))
 print("== BUILDS ==")
 for b in get("/builds", **{"filter[app]": APP_ID, "sort": "-uploadedDate", "limit": 6, "fields[builds]": "version,uploadedDate,processingState,expired"})["data"]:
     print("  build", a(b).get("version"), a(b).get("processingState"), a(b).get("uploadedDate"), "expirado" if a(b).get("expired") else "")

@@ -1,0 +1,467 @@
+commit ccf0c47aba0fb0889806c5ecf3b67ee47216e60b · execução 319
+Xcode 26.6
+Build version 17F113
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/ModuleCache.noindex/_StoreKit_SwiftUI-5DD32ZUZKJ6VTSZF3E89LZK0R.pcm
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/ModuleCache.noindex/StoreKit-2VG2SOGVV1Y89WE8IBH7GIJLA.pcm
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/ModuleCache.noindex/StoreKitTest-8K7VFX1GY447KKHQRMX578VZA.pcm
+1 | #import "Headers/StoreKitTest.h"
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/StoreKitTest.h:14:9: note: in file included from /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/StoreKitTest.h:14:
+12 | #import <StoreKitTest/SKTestError.h>
+13 | #import <StoreKitTest/SKTestSession.h>
+14 | #import <StoreKitTest/SKTestTransaction.h>
+   |         `- note: in file included from /Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/StoreKitTest.h:14:
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/Developer/Library/Frameworks/StoreKitTest.framework/Headers/SKTestTransaction.h:34:32: warning: 'SKPaymentTransactionState' is deprecated: first deprecated in iOS 18.0 - Use PurchaseResult from Product.purchase(confirmIn:options:).
+/Applications/Xcode_26.6.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.5.sdk/System/Library/Frameworks/StoreKit.framework/Headers/SKPaymentTransaction.h:14:28: note: 'SKPaymentTransactionState' has been explicitly marked deprecated here
+SwiftExplicitDependencyCompileModuleFromInterface arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/ModuleCache.noindex/StoreKitTest-2UXH0HQW0UXP4.swiftmodule
+CpResource /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app/PlugIns/ArquemestreTests.xctest/Arquemestre.storekit /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Resources/Arquemestre.storekit (in target 'ArquemestreTests' from project 'Arquemestre')
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Resources/Arquemestre.storekit /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app/PlugIns/ArquemestreTests.xctest
+Test Case '-[ArquemestreTests.BackupSafetyTests testCorruptStoredPayloadFailsChecksum]' passed (0.017 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testCumulativeUncompressedSizeIsBounded]' passed (0.003 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testInterruptedSwapRecoversPreviousDirectory]' passed (0.003 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testInvalidFurnitureBackupDoesNotReplaceCurrentData]' passed (0.007 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testMediaBackupScriptIsIncludedInAppBundle]' passed (0.068 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testOversizedEntryRejectedBeforeDecompression]' passed (0.002 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testRollbackPreservesOldFilesWhenInstallingFails]' passed (0.002 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testSuccessfulSwapInstallsNewFiles]' passed (0.002 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testTruncatedCentralNameThrowsInsteadOfCrashing]' passed (0.002 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testVideoNativeFileSurvivesFullBackupAndRestore]' passed (0.012 seconds).
+Test Case '-[ArquemestreTests.BackupSafetyTests testVideoRejectsPathTraversalAndInvalidEncoding]' passed (0.001 seconds).
+	 Executed 11 tests, with 0 failures (0 unexpected) in 0.119 (0.187) seconds
+Test Case '-[ArquemestreTests.BoschProtocolTests testAutosyncHex]' passed (0.007 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testExtraiMetrosEConverteParaMm]' passed (0.001 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testIgnoraAutosyncEQuadrosCurtos]' passed (0.001 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testIgnoraQuadroSemC0]' passed (0.000 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testQuadroRealDaComunidade]' passed (0.001 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testRejeitaValoresImpossiveis]' passed (0.001 seconds).
+Test Case '-[ArquemestreTests.BoschProtocolTests testUUIDs]' passed (0.005 seconds).
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.015 (0.072) seconds
+Test Case '-[ArquemestreTests.CutLinkTests testCodigoDoLinkDoConvite]' passed (0.079 seconds).
+Test Case '-[ArquemestreTests.CutLinkTests testProjetoRecebidoNaBiblioteca]' passed (0.003 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.083 (0.084) seconds
+Test Case '-[ArquemestreTests.DoorTests testPortaNumTrechoDaLinha]' passed (0.024 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.024 (0.024) seconds
+Test Case '-[ArquemestreTests.EditorAppPathTests testEditorAbreComoNoAppSemTelaBranca]' passed (12.451 seconds).
+Test Case '-[ArquemestreTests.EditorAppPathTests testEditorEmInglesEEspanhol]' passed (7.473 seconds).
+2026-11-07 15:02:16.876697+0000 Arquemestre[4875:23537] [ProcessSuspension] 0x123130780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6170, error: (null)
+2026-11-07 15:02:16.954728+0000 Arquemestre[4875:23537] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=6170, error: (null)
+2026-11-07 15:02:17.059339+0000 Arquemestre[4875:23537] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=6162, error: (null)
+Test Case '-[ArquemestreTests.EditorAppPathTests testTexturaRealDoPadraoCarregaPeloEsquemaDoApp]' passed (3.465 seconds).
+2026-11-07 15:02:20.395055+0000 Arquemestre[4875:25363] [ProcessSuspension] 0x123130600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6180, error: (null)
+2026-11-07 15:02:20.398239+0000 Arquemestre[4875:25363] [ProcessSuspension] 0x1231306c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=6180, error: (null)
+2026-11-07 15:02:20.403132+0000 Arquemestre[4875:25363] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=5588, error: (null)
+Test Case '-[ArquemestreTests.EditorAppPathTests testTudoNoEditorSemErro]' passed (13.445 seconds).
+	 Executed 4 tests, with 0 failures (0 unexpected) in 36.834 (36.841) seconds
+2026-11-07 15:02:33.776701+0000 Arquemestre[4875:26819] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=6388, error: (null)
+2026-11-07 15:02:33.805906+0000 Arquemestre[4875:26819] [ProcessSuspension] 0x123130a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6401, error: (null)
+Test Case '-[ArquemestreTests.EditorMediaWebKitTests testFileReaderPersistsVideoBeforeSuccessInRealWebKit]' passed (1.314 seconds).
+2026-11-07 15:02:35.053289+0000 Arquemestre[4875:26817] [ProcessSuspension] 0x123130cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6771, error: (null)
+2026-11-07 15:02:35.106120+0000 Arquemestre[4875:23537] [ProcessSuspension] 0x123130d80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=5585, error: (null)
+Test Case '-[ArquemestreTests.EditorMediaWebKitTests testNativeVideoRestoresAsPlayableBlobInRealWebKit]' passed (0.996 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 2.310 (2.312) seconds
+2026-11-07 15:02:36.077673+0000 Arquemestre[4875:23537] [ProcessSuspension] 0x123130e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6776, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests test3DAbreComPuxadorEPrateleira]' passed (4.444 seconds).
+2026-11-07 15:02:40.525165+0000 Arquemestre[4875:26821] [ProcessSuspension] 0x123130540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6779, error: (null)
+2026-11-07 15:02:40.553753+0000 Arquemestre[4875:26821] [ProcessSuspension] 0x123130c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=6779, error: (null)
+2026-11-07 15:02:40.554299+0000 Arquemestre[4875:26821] [ProcessSuspension] 0x123130f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6781, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testAcabamentoDosEletrosETVReal]' passed (2.371 seconds).
+2026-11-07 15:02:42.877793+0000 Arquemestre[4875:26820] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=7104, error: (null)
+2026-11-07 15:02:42.912685+0000 Arquemestre[4875:26820] [ProcessSuspension] 0x123130c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7059, error: (null)
+2026-11-07 15:02:42.913550+0000 Arquemestre[4875:26820] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7059, error: (null)
+2026-11-07 15:02:42.914107+0000 Arquemestre[4875:26820] [ProcessSuspension] 0x123131080 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7104, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testAcabamentoNaoMudaAoAbrirPortaEFitaPeloToque]' passed (6.255 seconds).
+2026-11-07 15:02:49.135223+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7351, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testAjustesNovosRodapeTamponamentoPrateleiraCorredicaCorrerSistema32ECorPadrao]' passed (3.111 seconds).
+2026-11-07 15:02:52.244957+0000 Arquemestre[4875:28328] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=7365, error: (null)
+2026-11-07 15:02:52.279806+0000 Arquemestre[4875:28328] [ProcessSuspension] 0x123130600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7362, error: (null)
+2026-11-07 15:02:52.281926+0000 Arquemestre[4875:28328] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7362, error: (null)
+2026-11-07 15:02:52.387905+0000 Arquemestre[4875:28328] [ProcessSuspension] 0x123130900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7365, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testAreaDoPainelDesviaDosSolidosComLarguraFinal]' passed (5.742 seconds).
+2026-11-07 15:02:58.094957+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123130300 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=7374, error: (null)
+2026-11-07 15:02:58.104550+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=7378, error: (null)
+2026-11-07 15:02:58.830157+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7374, error: (null)
+2026-11-07 15:02:58.986986+0000 ArquemeTest Case '-[ArquemestreTests.EditorWebKitTests testAssistenteDeAjustesAplicaNosModulosPlantaOpacaECompletarFileira]' passed (4.782 seconds).
+stre[4875:25367] [ProcessSuspension] 0x123131140 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7374, error: (null)
+2026-11-07 15:03:04.720112+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131200 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7378, error: (null)
+2026-11-07 15:03:04.768457+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x1231312c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Foreground Assertion' for process with PID=7445, error: (null)
+round Assertion' for process with PID=7449, error: (null)
+2026-11-07 15:03:04.789181+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=7445, error: (null)
+2026-11-07 15:03:04.821924+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131380 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=7449, error: (null)
+2026-11-07 15:03:04.825005+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131440 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'GPUProcess Background Assertion' for process with PID=6775, error: (null)
+2026-11-07 15:03:04.949258+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131500 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7445, error: (null)
+2026-11-07 15:03:04.949902+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x1231315c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7445, error: (null)
+2026-11-07 15:03:04.954006+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131680 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7449, error: (null)
+2026-11-07 15:03:04.955743+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123131740 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=6775, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testBalcaoEmLSemModuloSobreposto]' passed (6.180 seconds).
+2026-11-07 15:03:10.970421+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x123130540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7484, error: (null)
+2026-11-07 15:03:11.003256+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x1231306c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7484, error: (null)
+2026-11-07 15:03:11.005060+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7486, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testBasculanteComCavaSemEngrossoFolga4NoTopo]' passed (3.334 seconds).
+2026-11-07 15:03:14.250120+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=7542, error: (null)
+2026-11-07 15:03:14.254567+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x1231306c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7536, error: (null)
+2026-11-07 15:03:14.255720+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x123130a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7536, error: (null)
+2026-11-07 15:03:14.642884+0000 Arquemestre[4875:28469] [ProcessSuspension] 0x123130b40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7542, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testBotaoDoLEDUmSoOuUmPorModuloCorEMudarDeLugarCom2Toques]' passed (6.420 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testBuscaAchaTVEletrodomesticoEFacetadoDesconta]' passed (8.247 seconds).
+2026-11-07 15:03:28.925223+0000 Arquemestre[4875:29981] [ProcessSuspension] 0x123130900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7815, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testCaixaDaGeladeiraRipadoEmCimaEReguasDasLaterais]' passed (2.309 seconds).
+2026-11-07 15:03:31.366260+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123130c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7828, error: (null)
+2026-11-07 15:03:32.373690+0000 Arquemestre[4875:25367] [ProcessSuspension] 0x123130cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7839, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testCarneAssandoComFumacaEBotaoDoLEDLigaEDesliga]' passed (4.551 seconds).
+2026-11-07 15:03:35.793676+0000 Arquemestre[4875:29135] [ProcessSuspension] 0x123130e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7863, error: (null)
+2026-11-07 15:03:39.072546+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.073141+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.073826+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.074386+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.074653+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.075112+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.078369+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.079107+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.079261+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:03:39.079731+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[7937] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testCatalogoComFotoDeCadaModuloEEletro]' passed (3.327 seconds).
+2026-11-07 15:03:39.550534+0000 Arquemestre[4875:29981] [ProcessSuspension] 0x123130f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=7937, error: (null)
+2026-11-07 15:03:39.866405+0000 Arquemestre[4875:29981] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=7938, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testCavaSemFaixaPretaChanfroNaPortaAbertaEFitaFacilDeTocar]' passed (6.683 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testConfiguracoesCorredicaOcultaConchaECorteAvulso]' passed (38.859 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testCooktopToqueNaBocaAcendeSemSelecionar]' passed (3.960 seconds).
+for process with PID=9190, error: (null)
+2026-11-07 15:04:28.738269+0000 Arquemestre[4875:30893] [ProcessSuspension] 0x123130780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=9190, error: (null)
+2026-11-07 15:04:28.760460+0000 Arquemestre[4875:30893] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9195, error: (null)
+ [ProcessSuspension] 0x123130300 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=9202, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testCopiarModuloPainelEPrateleira]' passed (2.837 seconds).
+2026-11-07 15:04:31.492851+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x1231303c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=9203, error: (null)
+2026-11-07 15:04:31.525000+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x123130780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9202, error: (null)
+2026-11-07 15:04:31.539014+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x123130900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=9202, error: (null)
+2026-11-07 15:04:31.556469+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9203, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testCoresComPisosEPorcelanatosReaisParedesArmariosPortasEFitas]' passed (3.266 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testCorEVeioDosPaineisEReguaDaJuntaFechaOCruzamento]' passed (2.955 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testDesenhoSemTextoEmCimaDeTexto]' passed (3.320 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testDoisToquesNaParedeCriaEMovePortaEJanela]' passed (4.604 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testEditarQualquerPecaCaixaDaGavetaCantoEmLEMedidaDigitada]' passed (2.947 seconds).
+2026-11-07 15:04:48.598907+0000 Arquemestre[4875:29980] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9875, error: (null)
+2026-11-07 15:04:48.622063+0000 Arquemestre[4875:29980] [ProcessSuspension] 0x123131140 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=9875, error: (null)
+2026-11-07 15:04:48.640725+0000 Arquemestre[4875:29980] [ProcessSuspension] 0x123131200 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9876, error: (null)
+2026-11-07 15:04:51.584084+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.584408+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.585229+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.585790+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.586257+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.586683+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.589867+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.590398+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.590878+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.713588+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.809581+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.809824+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.810363+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.810951+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.811669+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.812565+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.836905+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.913588+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.914095+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.914407+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.914661+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.915042+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.915247+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:04:51.918342+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[9883] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testEletroPelo3DComLupaEmCimaDaPedraMesaEParedeDoL]' passed (4.252 seconds).
+2026-11-07 15:04:52.934492+0000 Arquemestre[4875:35075] [ProcessSuspension] 0x1231312c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=9883, error: (null)
+2026-11-07 15:04:53.086348+0000 Arquemestre[4875:35075] [ProcessSuspension] 0x123131380 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9884, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testEletrosComMedidaRealDeFabricaFrenchDoorEInducao]' passed (5.235 seconds).
+nWatchdog' for process with PID=9894, error: (null)
+2026-11-07 15:04:58.342557+0000 Arquemestre[4875:35075] [ProcessSuspension] 0x1231306c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=9894, error: (null)
+2026-11-07 15:04:58.343769+0000 Arquemestre[4875:35075] [ProcessSuspension] 0x1231312c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=9905, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testEletrosVivosFornoMicroCoifaETV]' passed (3.785 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testEnviarProjetoCompactaSemPrecoEAbreNoModoCorte]' passed (4.761 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testFerragensFitaPorCorNichoNaCorDeForaEPaletaAmadeirada]' passed (2.350 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testFitaDaBaseEmbaixoDaPortaPintaPeloToque]' passed (6.252 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testFitaDeTopoNaCorDasPortasContaGotasEPintarSoAFita]' passed (2.622 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testFitaUmaPorUmaPrateleiraTirarEBranca]' passed (4.186 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testFocarSoNoModuloEArrastarJanelaNo2D]' passed (2.967 seconds).
+nTerminationWatchdog' for process with PID=11007, error: (null)
+2026-11-07 15:05:25.078245+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=11007, error: (null)
+2026-11-07 15:05:25.078917+0000 Arquemestre[4875:34438] [ProcessSuspension] 0x123131080 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=11010, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testGavetaComFolgaDivididaENaoEncostaEmCimaCorredicaNoMeio]' passed (2.601 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testGavetaTelescopicaRebaixoContraFrenteEFundo]' passed (2.021 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testGestosNoEletro2ToquesMudaDeLugar3ToquesConfiguracoes]' passed (3.835 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testIlhaComPedraParedesEOrcamento]' passed (2.063 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano]' passed (3.164 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testLEDChamaAguaEEditarNo3D]' passed (3.518 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testLocalizadorDaChapaAchaAPlacaDoPainelNo3D]' passed (3.329 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testMicroondasEncaixaNoNichoComMedidaReal]' passed (2.874 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testModoPessoaNaoAtravessaMesaCafeteiraPedrasReaisESetinhasDaPedra]' passed (3.485 seconds).
+2026-11-07 15:05:51.989460+0000 Arquemestre[4875:35074] [ProcessSuspension] 0x1231315c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=12041, error: (null)
+2026-11-07 15:05:52.000373+0000 Arquemestre[4875:35074] [ProcessSuspension] 0x123131680 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=12095, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testMolduraDoTamponamentoVeioDaMadeiraPincelEAutoTamponamento]' passed (3.266 seconds).
+2026-11-07 15:05:55.233049+0000 Arquemestre[4875:38599] [ProcessSuspension] 0x123130cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=12279, error: (null)
+2026-11-07 15:05:55.257799+0000 Arquemestre[4875:38599] [ProcessSuspension] 0x123130e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=12279, error: (null)
+2026-11-07 15:05:55.280611+0000 Arquemestre[4875:38599] [ProcessSuspension] 0x123130f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=12312, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testMontaVariosArmariosSemSobreporECortePreciso]' passed (13.943 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testOrganizacao3DClienteEModoPessoa]' passed (9.215 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPaineisLisosSemSobreporEPortaSemRiscoNo3D]' passed (3.323 seconds).
+2026-11-07 15:06:21.753552+0000 Arquemestre[4875:43671] [ProcessSuspension] 0x123130780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=13092, error: (null)
+2026-11-07 15:06:21.796176+0000 Arquemestre[4875:43671] [ProcessSuspension] 0x123130900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=13092, error: (null)
+2026-11-07 15:06:21.797362+0000 Arquemestre[4875:43671] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=13093, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoEntraNoVizinhoNemNaJunta]' passed (3.044 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelRipadoOuLisoNoCabecalho]' passed (2.830 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPaletaRealComBuscaEChapaPorCor]' passed (2.918 seconds).
+ocess with PID=13295, error: (null)
+2026-11-07 15:06:30.553368+0000 Arquemestre[4875:43671] [ProcessSuspension] 0x123130d80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=13295, error: (null)
+2026-11-07 15:06:30.554450+0000 Arquemestre[4875:43671] [ProcessSuspension] 0x123130e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=13322, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesCubasCooktopEDormitorio]' passed (3.137 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeSemRiscoEmCimaDaPortaEJanela]' passed (3.315 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido]' passed (7.401 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraSolidaGeladeiraAcompanhaPortaDaSalaE5ToquesEditaSoOModulo]' passed (5.728 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraTravadaNaoSomeTrenaComLupaGeladeiraNo2DEPortaDoAmbiente]' passed (8.851 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPintarPaineisPelo3DEPelaAbaCores]' passed (3.678 seconds).
+ionWatchdog' for process with PID=14837, error: (null)
+2026-11-07 15:07:03.467575+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=14837, error: (null)
+2026-11-07 15:07:03.470494+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x123130a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=14866, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlacaDo3DSolidaTravaApagaAparece2DEPlanoDeCorte]' passed (4.651 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteAbreOtimizaENaoDaErro]' passed (3.461 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteLocalizaCadaPecaNo3D]' passed (2.477 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlantaEmAnguloPedraCobreOModuloSemSobreposicao]' passed (2.614 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPontaExpostaGanhaTamponamentoSozinhaEPlantaEmAnguloDaZoom]' passed (2.386 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaBasculanteAbreParaBaixoOuCimaNo2DENo3D]' passed (4.456 seconds).
+2026-11-07 15:07:22.673826+0000 Arquemestre[4875:47684] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=15260, error: (null)
+2026-11-07 15:07:22.678889+0000 Arquemestre[4875:47684] [ProcessSuspension] 0x123131140 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=15279, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaComCavaSempreLateralMais30EmTodoOCatalogo]' passed (4.324 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeCantoMarcacaoEmTodaPortaELixoApagaDivisoriaOuPortas]' passed (3.332 seconds).
+2026-11-07 15:07:30.908720+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x123131380 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=15651, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeVidroComPerfilDeAluminioEVidroBronze]' passed (7.352 seconds).
+2026-11-07 15:07:37.835525+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x123130780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=15663, error: (null)
+2026-11-07 15:07:38.426103+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x123130900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=15663, error: (null)
+2026-11-07 15:07:38.427404+0000 Arquemestre[4875:47687] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=15664, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeVidroTelescopicaReconstroiEAbre]' passed (2.631 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadoresDescontamCertoEConchaNoMeio]' passed (2.597 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRackDoZeroAbreSoEleParaMontar]' passed (2.560 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRackNoMeioDoPainelSuspensoECentralizar]' passed (2.709 seconds).
+2026-11-07 15:07:48.177952+0000 Arquemestre[4875:47684] [ProcessSuspension] 0x123130fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=16290, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaDoRebaixoPintaEVaoNaParedeDoLado]' passed (3.031 seconds).
+2026-11-07 15:07:51.259963+0000 Arquemestre[4875:49007] [ProcessSuspension] 0x123131080 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=16466, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaTamponamentoRenteEEletrosReais]' passed (2.253 seconds).
+2026-11-07 15:07:53.439814+0000 Arquemestre[4875:47684] [ProcessSuspension] 0x123130f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=16543, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRipadoNoPlanoOtimizadoComPlacasDaBaseEParedeLateralAteOMovel]' passed (3.184 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida]' passed (6.466 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetinhasParedesECaixa]' passed (2.623 seconds).
+rocess with PID=16910, error: (null)
+2026-11-07 15:08:05.748342+0000 Arquemestre[4875:54584] [ProcessSuspension] 0x123131380 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=16910, error: (null)
+2026-11-07 15:08:05.750414+0000 Arquemestre[4875:54584] [ProcessSuspension] 0x123131440 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=16955, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSoEmbaixoDaPiaSemFundoETorreComBaseETeto]' passed (2.302 seconds).
+hdog' for process with PID=17138, error: (null)
+2026-11-07 15:08:08.085395+0000 Arquemestre[4875:51996] [ProcessSuspension] 0x1231309c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=17138, error: (null)
+2026-11-07 15:08:08.086099+0000 Arquemestre[4875:51996] [ProcessSuspension] 0x123131380 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17199, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSofaSolidoGiraSalvaExcluiEm2DE3D]' passed (2.223 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSolidoNadaEntraEmNadaEPainelSaiEmPlacasDaChapa]' passed (2.174 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSoOModulo3DE2DComPortaGavetaEDivisoriaSoNele]' passed (4.890 seconds).
+2026-11-07 15:08:17.343496+0000 Arquemestre[4875:54584] [ProcessSuspension] 0x123130a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17496, error: (null)
+2026-11-07 15:08:17.385190+0000 Arquemestre[4875:54584] [ProcessSuspension] 0x123130b40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=17496, error: (null)
+2026-11-07 15:08:17.386034+0000 Arquemestre[4875:54584] [ProcessSuspension] 0x123130c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17499, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDeBaixoPassaPorBaixoDoVizinhoSemAfastar]' passed (2.004 seconds).
+ess NearSuspended Assertion' for process with PID=17508, error: (null)
+2026-11-07 15:08:19.417238+0000 Arquemestre[4875:54586] [ProcessSuspension] 0x123130cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17512, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLateralDoMeioAlinhaComODeBaixo]' passed (2.160 seconds).
+2026-11-07 15:08:21.466906+0000 Arquemestre[4875:56243] [ProcessSuspension] 0x123130d80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=17542, error: (null)
+2026-11-07 15:08:21.511119+0000 Arquemestre[4875:56243] [ProcessSuspension] 0x123130e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17582, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTecladoNumericoNuncaCobreOCampo]' passed (16.483 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo]' passed (13.025 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNo3DAchaAPecaCertaEBordaFina]' passed (6.066 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo]' passed (3.871 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePedestalDesceAteOChaoEPrateleiraArrasta]' passed (3.186 seconds).
+rtion 'WebProcess NearSuspended Assertion' for process with PID=19159, error: (null)
+2026-11-07 15:09:04.276236+0000 Arquemestre[4875:56242] [ProcessSuspension] 0x123130cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=19185, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor]' passed (4.332 seconds).
+2026-11-07 15:09:08.623298+0000 Arquemestre[4875:61263] [ProcessSuspension] 0x123130840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=19313, error: (null)
+2026-11-07 15:09:08.625596+0000 Arquemestre[4875:61263] [ProcessSuspension] 0x123130c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=19360, error: (null)
+2026-11-07 15:09:10.993326+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:09:10.994041+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:09:10.994523+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:09:10.995552+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:09:10.996013+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-07 15:09:10.996677+0000 Arquemestre[4875:23923] [com.apple.WebKit.WebContent] WebContent[19565] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreQuenteEditavelPelaLupaComNichosEMicroOndas]' passed (3.235 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTravarPortaJanelaEProjetoRecebidoTudoTravado]' passed (5.434 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrenaGrudaNoCantoPorDentroEPorFora]' passed (2.982 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel]' passed (2.768 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTVNaSalaETravarModulo]' passed (2.578 seconds).
+	 Executed 88 tests, with 0 failures (0 unexpected) in 407.272 (409.355) seconds
+Test Case '-[ArquemestreTests.JsonCompatTests testAgendaEOrcamento]' passed (0.050 seconds).
+Test Case '-[ArquemestreTests.JsonCompatTests testLeNotaDoAndroidEGravaIgual]' passed (0.039 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.090 (0.093) seconds
+Test Case '-[ArquemestreTests.LibraryOrderTests testOrdemAlfabetica]' passed (0.003 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Case '-[ArquemestreTests.LogicTests testColarTracoDeslocadoESoltoDaFoto]' passed (0.004 seconds).
+Test Case '-[ArquemestreTests.LogicTests testLeituraVaiParaACotaEAvanca]' passed (0.004 seconds).
+Test Case '-[ArquemestreTests.LogicTests testLicencaNaoVoltaComORelogio]' passed (0.007 seconds).
+Test Case '-[ArquemestreTests.LogicTests testPortaNoMeioDaParede]' passed (0.004 seconds).
+Test Case '-[ArquemestreTests.LogicTests testQuadradoVira4Paredes]' passed (0.024 seconds).
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.042 (0.065) seconds
+Test Case '-[ArquemestreTests.ProjectFolderTests testPastaDoProjetoGravaSemMexerNoResto]' passed (0.016 seconds).
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.016 (0.017) seconds
+Test Case '-[ArquemestreTests.UnitsTests testCalc]' passed (0.016 seconds).
+Test Case '-[ArquemestreTests.UnitsTests testFormatoIgualAoAndroid]' passed (0.003 seconds).
+Test Case '-[ArquemestreTests.UnitsTests testLeitura]' passed (0.001 seconds).
+Test Case '-[ArquemestreTests.UnitsTests testReais]' passed (0.298 seconds).
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.318 (0.320) seconds
+Test Case '-[ArquemestreTests.ZipBackupTests testRestauraBackupNoFormatoDoAndroid]' passed (0.022 seconds).
+Test Case '-[ArquemestreTests.ZipBackupTests testZipIdaEVolta]' passed (0.004 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.026 (0.027) seconds
+	 Executed 130 tests, with 0 failures (0 unexpected) in 447.151 (449.599) seconds
+	 Executed 130 tests, with 0 failures (0 unexpected) in 447.151 (449.602) seconds
+** TEST SUCCEEDED **
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_StoreKit_SwiftUI-AI5NJFY8I9I2P5HDRIVYJVLCF.pcm
+SwiftExplicitDependencyGeneratePcm arm64 /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/StoreKit-6MU5K7AYM98PCWBV7A1Q41V9C.pcm
+SwiftCompile normal arm64 Compiling\ AgendaQuote.swift,\ AgendaView.swift,\ AppModel.swift,\ ArquemestreApp.swift,\ Backup.swift,\ BluetoothView.swift,\ BoschBLE.swift,\ BoschProtocol.swift,\ Components.swift,\ CutPasteBanner.swift,\ DemoData.swift,\ EditorState.swift,\ EditorVideoBackup.swift,\ EditorView.swift,\ Export.swift,\ Geo.swift,\ Gestures.swift,\ GuideView.swift,\ I18n.swift,\ JsonCodec.swift,\ LibraryView.swift,\ License.swift,\ Model.swift,\ MoveisProjects.swift,\ MoveisView.swift,\ PeerShare.swift,\ QuotesView.swift,\ Reminders.swift,\ RootView.swift,\ Session.swift,\ SheetCanvas.swift,\ SheetRenderer.swift,\ Store.swift,\ Straighten.swift,\ Units.swift,\ Zip.swift,\ GeneratedAssetSymbols.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Model/AgendaQuote.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/AgendaView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/AppModel.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/ArquemestreApp.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/Backup.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/BluetoothView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/BLE/BoschBLE.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/BLE/BoschProtocol.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/Components.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/CutPasteBanner.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/DemoData.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Logic/EditorState.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/EditorVideoBackup.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/EditorView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Render/Export.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Logic/Geo.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/Gestures.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/GuideView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/App/I18n.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/JsonCodec.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/LibraryView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/License/License.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Model/Model.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/MoveisProjects.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/MoveisView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Share/PeerShare.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/QuotesView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Agenda/Reminders.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/RootView.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/Session.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/UI/SheetCanvas.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Render/SheetRenderer.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/Store.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Logic/Straighten.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Logic/Units.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/Arquemestre/Data/Zip.swift /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/Build/Intermediates.noindex/Arquemestre.build/Release-iphoneos/Arquemestre.build/DerivedSources/GeneratedAssetSymbols.swift /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Observation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CryptoKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/DeveloperToolsSupport.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/QuartzCore.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Symbols.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/OSLog.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/UIKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_Builtin_float.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_Concurrency.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/BackgroundAssets.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/LightweightCodeRequirements.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Spatial.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation3.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Darwin.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Synchronization.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/XPC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreMedia.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/simd.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Dispatch.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/FileProvider.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation2.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_StringProcessing.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Network.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/AVFAudio.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreData.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/ExtensionFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/ObjectiveC.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Foundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Metal.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreImage.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Photos.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/DataDetection.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/StoreKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreTransferable.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_StoreKit_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Swift.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreAudio.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_PhotosUI_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/WebKit.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/LocalAuthentication.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/SwiftUICore.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreMIDI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/os.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Distributed.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_DarwinFoundation1.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreVideo.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Combine.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/AudioToolbox.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreGraphics.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/System.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/UniformTypeIdentifiers.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/PhotosUI.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Accessibility.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/Compression.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreText.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/AVFoundation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/CoreLocation.swiftmodule/arm64e-apple-ios.swiftmodule /Applications/Xcode_26.6.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos/prebuilt-modules/26.5/_WebKit_SwiftUI.swiftmodule/arm64e-apple-ios.swiftmodule /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/StoreKit-6MU5K7AYM98PCWBV7A1Q41V9C.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_StoreKit_SwiftUI-AI5NJFY8I9I2P5HDRIVYJVLCF.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/AVFoundation-BQ32UAD8RKXX7TITSVITB7YPZ.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreVideo-6FFUYFACYV5KSYZU541NVXWKM.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Photos-4UVFZWQYI3GM9DSRQD0DD02GI.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/dnssd-4ALZRO8LDCNRMJOJ1OHROZMKC.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreData-8XFQ2FB321R70AW8QTF460KRX.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/DeveloperToolsSupport-AUCHXQQON33BA51P1RI602BZN.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreMedia-C029LRJQPQZBIAGQU48IGZBB4.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/BackgroundAssets-3H0EY9RGDKVNB76PIISTL9HDW.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/LocalAuthentication-5ZRORHP3TFB8QWA6BXVAA6KFS.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Compression-CTPDXJK86PJ1YZ8ZHWELVRJCH.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Accessibility-5H2CDNM368F7TS1VK5GOB4SO2.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Security-AASVXRG6J49NO5M0KGNZKWM7D.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_stdatomic-8TLKEOV7CWTIVSUM8HZIDHB0T.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/ImageIO-BBX0HXHKHX33YDEVM191QRCV2.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_DarwinFoundation2-36P8M1SCI8TXAO33Q8I0ZDVMX.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/SwiftUI-4GVYAJWSIUASPSSNT44V5LSXP.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/DataDetection-24ZBBXZ4CX4UV8GH3NJVRH9OE.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Network-2W572ASQX5KKGRLBVRN07V1X3.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_SwiftConcurrencyShims-9AIG2VKXC7JA859NFGADV8R0M.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/simd-9XMB6XF0QQAUDQYD4BXHITQVU.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/ObjectiveC-3JO4PI4UMMU292J3JGP0RMFTY.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_LocationEssentials-C9PS25SR85W56P9A19T3UMWPP.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreMIDI-4I91W040C7RLM5UDHDHDQD417.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Darwin-6TX5Q71ZLEFFTSRP2MZC5XHHB.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/PhotosUI-ES3KUIDIM2ANVNPWH0PDUWMOQ.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreAudioTypes-226GBUQPQJJUPDFCP1XMDPAWB.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/os_object-6MXFSXXSW5X2UYHYR1IAT9T53.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/AVFAudio-ENOGVVO33C5Z1QP9MWV2G1E9T.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreBluetooth-8TS3L88D9CY2RMXCIP2ULG3O6.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/IOSurface-E7GZY17KMQEPYGZJ4ZZ6DIB2L.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/os-CMOX9PVHU28Y6R0IPX1JOPZ91.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/AudioToolbox-C7C25851MT9TX4YO4YYZLP9I3.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/UIKit-7FTNZYDNW6CH1TJ329AYOT7LM.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/QuartzCore-6ZJGR0HB8HSBT2WD1KY1S9NGZ.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Dispatch-2AL8TYBFOPLJ3KYZOZND737TI.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CFNetwork-5R78FWVGD2KOP7T1UC6KR0J7H.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/FileProvider-6JIU1E550A1KXWUHDCR5243IW.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreLocation-8GJG5IITBNWZFPPSRNW2C6HYE.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/SwiftUICore-APJCHAHJTFFA4MI8IGVZQZ5LK.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_float-1EBFPGETC31BLIR2SEGQXRNL6.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/MultipeerConnectivity-5YKA7XVKRQXUNYR43FJ6QN1L2.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_stdint-8Z1MBOPA66HBG0MRSOC3TG8QT.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/ptrauth-4EQK0366VTGLVDX90GSAPHE4B.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_AvailabilityInternal-4RYLMZ0P31X1INNP0WXA3OXV.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_DarwinFoundation1-2K447HEWNW183SZ0F32A8RN1J.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/AVRouting-135X3RK8W97WGC6NEDM7HBR3X.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Spatial-5APGPZRQT9XDGZ3620JDDFRWI.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreTransferable-642VEUAZNPDDJQSVNI7R90KB8.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreImage-4Y34VNQRNK7I7DNTPFUCM9EN6.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Metal-CAGKQKF6U7R9NWIJXX3VIWP7H.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_intrinsics-BL6WIDGWEY7CN4K3ZKL9XWGAV.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Foundation-6EIN1EQ8A3UGE9DNCJ8ELY0JM.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/sys_types-544EV8OCG92YU1R4260H4X18L.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/os_workgroup-8FYMNOC111UGSODOVOMWCIX0Z.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/MediaToolbox-6Z9IO8BJPZMUXF7QLYON3AC2N.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreFoundation-7BA6R20JTPMYUY1KHMYJQ1A0R.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/UserNotifications-5IDAGJHM8WI6FQG21X2YOANDE.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/UniformTypeIdentifiers-3ZWAUCTD9YVRIXB9RWX2T1HB8.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreText-DGQEA2KC29C66DIQS1LRJQLO3.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_tgmath-CWW4313HD1TWMOFY8ELNG870.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/OpenGLES-P0LD97X3OXK3DWX7IQR0DDL.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/OSLog-734VW7WTM4ICGNSCQTHHZP5YX.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/Symbols-62W16FGGS8TPIH8TN253182X6.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreGraphics-DSBDKRDP86X4B44JQ5949T10K.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/SwiftShims-4255YHI63Q5YNOYGVJG9HE44J.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_stdarg-A0FWP20WBTW5HKKRGKXNMOD78.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/ExtensionFoundation-DQCQL78KD1SDOG5CAZDQSXRDZ.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_limits-1MKA0HAU725W2UA7TYIS25H0A.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/ptrcheck-20CGLABLUTPAYC2VSZ2LOO2BL.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_stddef-6K14M3KKQZY3YFE337KZ69XRB.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/WebKit-D1GADSJT60HUCTRJ5XQWW0V7Y.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/MachO-1GGYCUDJ82QE0UPZMV0JO625P.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/UIUtilities-3QXZNV2J64UG144Q4YGQ3GJWG.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_DarwinFoundation3-E1X8UM2XC7A1GHTWBE2MKMCW9.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/XPC-5CFV0B3UXUASG0WKJXC4P78RY.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_stdbool-LCMAF9VH5EKLK5P2MUZPSCYT.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/_Builtin_inttypes-7EE1WZ4VN72EDW6SZVUDR2W3N.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/ModuleCache.noindex/CoreAudio-2ZF80A56NGJMEWZYFNPPR8E3E.pcm /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/ddrel/Build/Intermediates.noindex/Arquemestre.build/Release-iphoneos/Arquemestre.build/Objects-normal/arm64/Arquemestre-dependencies-1.json (in target 'Arquemestre' from project 'Arquemestre')
+** BUILD SUCCEEDED **
+==== Assinatura (StoreKit) ====
+SKT: storefront=BRA locale=pt_BR bundle=br.com.arque.measure
+SKT: Product.products → ["arquemestre_mensal R$ 29,90"]
+Test Case '-[ArquemestreTests.SubscriptionTests test00_DiagnosticoDaLojaDeTeste]' passed (1.588 seconds).
+SKT: -[SubscriptionTests test01_AntesDeAssinarMostraPrecoTesteENaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+Test Case '-[ArquemestreTests.SubscriptionTests test01_AntesDeAssinarMostraPrecoTesteENaoLibera]' passed (0.458 seconds).
+SKT: -[SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:58:37 +0000) msg=Assinatura ativa. Obrigado!
+Test Case '-[ArquemestreTests.SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao]' passed (6.143 seconds).
+SKT: -[SubscriptionTests test03_CompraPendenteNaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test03_CompraPendenteNaoLibera] → comprar (Product.purchase)
+SKT: depois da compra status=notStarted fim=nil msg=Compra pendente (aguardando aprovação). O app libera sozinho quando for aprovada.
+Test Case '-[ArquemestreTests.SubscriptionTests test03_CompraPendenteNaoLibera]' passed (0.425 seconds).
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:58:48 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → renovação paga
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → renovação paga
+Test Case '-[ArquemestreTests.SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga]' passed (17.812 seconds).
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:58:58 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+Test Case '-[ArquemestreTests.SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo]' passed (6.114 seconds).
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:59:04 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → assinatura expirada
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → assinatura expirada
+Test Case '-[ArquemestreTests.SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos]' passed (3.260 seconds).
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:59:07 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → assinatura expirada
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → assinatura expirada
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → recarregar
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → comprar (Product.purchase)
+SKT: depois da compra status=unlocked fim=Optional(2026-12-07 15:59:09 +0000) msg=Assinatura ativa. Obrigado!
+Test Case '-[ArquemestreTests.SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste]' passed (2.881 seconds).
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=notStarted
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:59:10 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → acesso revogado
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → acesso revogado
+Test Case '-[ArquemestreTests.SubscriptionTests test08_ReembolsoTiraOAcesso]' passed (1.671 seconds).
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-10 15:59:11 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=trial
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → restaurar (AppStore.sync)
+Test Case '-[ArquemestreTests.SubscriptionTests test09_RestaurarEmOutraInstalacao]' passed (2.114 seconds).
+SKT: -[SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera] → restaurar (AppStore.sync)
+Test Case '-[ArquemestreTests.SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera]' passed (0.433 seconds).
+	 Executed 11 tests, with 0 failures (0 unexpected) in 42.898 (42.908) seconds
+	 Executed 11 tests, with 0 failures (0 unexpected) in 42.898 (42.908) seconds
+	 Executed 11 tests, with 0 failures (0 unexpected) in 42.898 (42.911) seconds
+** TEST SUCCEEDED **
+==== Conferência App Store ====
+✓ Info.plist e versão conferidos
+✓ textos das permissões conferidos
+✓ roda no iPad com as 4 orientações
+✓ ícone 1024 sem transparência
+✓ manifesto de privacidade cobre as APIs usadas
+✓ assinatura mensal R$ 29,90 com 3 dias grátis, restaurar, gerenciar, termos e privacidade
+✓ nenhum texto na tela fala de Android/Play/APK/beta
+✓ links conferidos (2 páginas do site usadas no app)
+✓ atalhos de teste só no DEBUG
+
+Tudo certo: nenhum dos pontos que mais dão recusa na App Store.
+==== Capturas vazias? ====
+capturas/iphone-1-moveis3d.png: tentativa 1 vazia, esperando mais
+capturas/iphone-1-moveis3d.png: saiu certa na tentativa 2
+ipad-1-moveis3d.png: 43% de uma cor só
+ipad-2-moveissala.png: 43% de uma cor só
+ipad-3-moveis2d.png: 71% de uma cor só
+ipad-4-moveiscorte.png: 34% de uma cor só
+ipad-5-moveiscores.png: 71% de uma cor só
+ipad-6-moveiscloset.png: 35% de uma cor só
+ipad-7-moveisplanta.png: 65% de uma cor só
+ipad-8-editor.png: 49% de uma cor só
+iphone-1-moveis3d.png: 54% de uma cor só
+iphone-2-moveissala.png: 53% de uma cor só
+iphone-3-moveis2d.png: 42% de uma cor só
+iphone-4-moveiscorte.png: 45% de uma cor só
+iphone-5-moveiscores.png: 26% de uma cor só
+iphone-6-moveiscloset.png: 49% de uma cor só
+iphone-7-moveisplanta.png: 41% de uma cor só
+iphone-8-editor.png: 40% de uma cor só
+es/ipad-1-moveis3d.png: 43% de uma cor só
+es/ipad-2-moveissala.png: 43% de uma cor só
+es/ipad-3-moveis2d.png: 71% de uma cor só
+es/ipad-4-moveiscorte.png: 37% de uma cor só
+es/ipad-5-moveiscores.png: 71% de uma cor só
+es/ipad-6-moveiscloset.png: 32% de uma cor só
+es/ipad-7-moveisplanta.png: 65% de uma cor só
+es/ipad-8-editor.png: 49% de uma cor só
+es/iphone-1-moveis3d.png: 54% de uma cor só
+es/iphone-2-moveissala.png: 53% de uma cor só
+es/iphone-3-moveis2d.png: 44% de uma cor só
+es/iphone-4-moveiscorte.png: 56% de uma cor só
+es/iphone-5-moveiscores.png: 48% de uma cor só
+es/iphone-6-moveiscloset.png: 49% de uma cor só
+es/iphone-7-moveisplanta.png: 42% de uma cor só
+es/iphone-8-editor.png: 40% de uma cor só
+en/ipad-1-moveis3d.png: 43% de uma cor só
+en/ipad-2-moveissala.png: 43% de uma cor só
+en/ipad-3-moveis2d.png: 71% de uma cor só
+en/ipad-4-moveiscorte.png: 38% de uma cor só
+en/ipad-5-moveiscores.png: 72% de uma cor só
+en/ipad-6-moveiscloset.png: 35% de uma cor só
+en/ipad-7-moveisplanta.png: 65% de uma cor só
+en/ipad-8-editor.png: 49% de uma cor só
+en/iphone-1-moveis3d.png: 54% de uma cor só
+en/iphone-2-moveissala.png: 53% de uma cor só
+en/iphone-3-moveis2d.png: 44% de uma cor só
+en/iphone-4-moveiscorte.png: 55% de uma cor só
+en/iphone-5-moveiscores.png: 48% de uma cor só
+en/iphone-6-moveiscloset.png: 49% de uma cor só
+en/iphone-7-moveisplanta.png: 45% de uma cor só
+en/iphone-8-editor.png: 40% de uma cor só
+
+Nenhuma captura vazia.
+==== Simuladores ====
+== Runtimes ==
+iOS 26.2 (26.2 - 23C54) - com.apple.CoreSimulator.SimRuntime.iOS-26-2
+iOS 26.4 (26.4.1 - 23E254a) - com.apple.CoreSimulator.SimRuntime.iOS-26-4
+iOS 26.5 (26.5 - 23F77) - com.apple.CoreSimulator.SimRuntime.iOS-26-5
+tvOS 26.2 (26.2 - 23K51) - com.apple.CoreSimulator.SimRuntime.tvOS-26-2
+tvOS 26.4 (26.4 - 23L243a) - com.apple.CoreSimulator.SimRuntime.tvOS-26-4
+tvOS 26.5 (26.5 - 23L470) - com.apple.CoreSimulator.SimRuntime.tvOS-26-5
+watchOS 26.2 (26.2 - 23S303) - com.apple.CoreSimulator.SimRuntime.watchOS-26-2
+watchOS 26.4 (26.4 - 23T240b) - com.apple.CoreSimulator.SimRuntime.watchOS-26-4
+watchOS 26.5 (26.5 - 23T570) - com.apple.CoreSimulator.SimRuntime.watchOS-26-5
+visionOS 26.2 (26.2 - 23N301) - com.apple.CoreSimulator.SimRuntime.xrOS-26-2
+visionOS 26.4 (26.4.1 - 23O249a) - com.apple.CoreSimulator.SimRuntime.xrOS-26-4
+visionOS 26.5 (26.5 - 23O470) - com.apple.CoreSimulator.SimRuntime.xrOS-26-5

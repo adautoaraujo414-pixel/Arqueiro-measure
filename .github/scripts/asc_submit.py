@@ -211,5 +211,52 @@ if not (items and items.get("data")):
     call("POST", "/reviewSubmissionItems", json={"data": {"type": "reviewSubmissionItems", "relationships": {
          "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub["id"]}},
          "appStoreVersion": {"data": {"type": "appStoreVersions", "id": ver["id"]}}}}})
+
+# 4b) assinaturas ainda não aprovadas (READY_TO_SUBMIT etc.) entram NO MESMO envio da versão.
+#     Sem isso a Apple aprova o app sem a assinatura e a tela fica em "Carregando o preço…" (foi o que houve na 3.0.1).
+PEND_SUB = ("READY_TO_SUBMIT", "DEVELOPER_ACTION_NEEDED", "REJECTED", "MISSING_METADATA")
+def assinaturas_pendentes():
+    out = []
+    for g in (call("GET", f"/apps/{APP_ID}/subscriptionGroups", ok=True, params={"limit": 20}) or {}).get("data", []):
+        for sb in (call("GET", f"/subscriptionGroups/{g['id']}/subscriptions", ok=True, params={"limit": 50}) or {}).get("data", []):
+            print("assinatura", sb["attributes"].get("productId"), sb["attributes"].get("state"))
+            if sb["attributes"].get("state") in PEND_SUB:
+                out.append(sb)
+    return out
+def item_assinatura(sb):
+    # caminho novo (versão da assinatura) → item do envio; se a API não aceitar, usa o envio direto (antigo)
+    sv = call("POST", "/subscriptionVersions", ok=True, json={"data": {"type": "subscriptionVersions", "relationships": {
+             "subscription": {"data": {"type": "subscriptions", "id": sb["id"]}}}}})
+    if not sv or not sv.get("data"):
+        lst = call("GET", f"/subscriptions/{sb['id']}/subscriptionVersions", ok=True, params={"limit": 5})
+        svs = [v for v in (lst or {}).get("data", []) if v["attributes"].get("state") in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", None)]
+        sv = {"data": svs[0]} if svs else None
+    if sv and sv.get("data"):
+        it = call("POST", "/reviewSubmissionItems", ok=True, json={"data": {"type": "reviewSubmissionItems", "relationships": {
+                  "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub["id"]}},
+                  "subscriptionVersion": {"data": {"type": "subscriptionVersions", "id": sv["data"]["id"]}}}}})
+        if it:
+            print("assinatura", sb["attributes"].get("productId"), "entrou no envio (versão da assinatura) ✓")
+            return True
+    it = call("POST", "/reviewSubmissionItems", ok=True, json={"data": {"type": "reviewSubmissionItems", "relationships": {
+              "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub["id"]}},
+              "subscription": {"data": {"type": "subscriptions", "id": sb["id"]}}}}})
+    if it:
+        print("assinatura", sb["attributes"].get("productId"), "entrou no envio ✓")
+        return True
+    ss = call("POST", "/subscriptionSubmissions", ok=True, json={"data": {"type": "subscriptionSubmissions", "relationships": {
+              "subscription": {"data": {"type": "subscriptions", "id": sb["id"]}}}}})
+    if ss:
+        print("assinatura", sb["attributes"].get("productId"), "enviada pra revisão pelo caminho antigo ✓")
+        return True
+    print("::error::não consegui pôr a assinatura", sb["attributes"].get("productId"), "no envio · tem que marcar no App Store Connect (versão › Compras no app e assinaturas)")
+    return False
+ja = [i for i in ((call("GET", f"/reviewSubmissions/{sub['id']}/items", ok=True) or {}).get("data", []))]
+print("itens no envio antes:", len(ja))
+for sb in assinaturas_pendentes():
+    item_assinatura(sb)
 r = call("PATCH", f"/reviewSubmissions/{sub['id']}", json={"data": {"type": "reviewSubmissions", "id": sub["id"], "attributes": {"submitted": True}}})
 print("ENVIADO PRA REVISÃO DA APPLE:", r["data"]["attributes"].get("state"))
+for g in (call("GET", f"/apps/{APP_ID}/subscriptionGroups", ok=True, params={"limit": 20}) or {}).get("data", []):
+    for sb in (call("GET", f"/subscriptionGroups/{g['id']}/subscriptions", ok=True, params={"limit": 50}) or {}).get("data", []):
+        print("assinatura depois do envio:", sb["attributes"].get("productId"), sb["attributes"].get("state"))

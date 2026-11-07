@@ -18,6 +18,7 @@ S = requests.Session()
 
 
 def get(path, **params):
+    params = {k: v for k, v in params.items()}
     S.headers["Authorization"] = "Bearer " + token()
     r = S.get(API + path, params=params, timeout=120)
     if r.status_code >= 400:
@@ -31,8 +32,8 @@ def a(x):
 
 
 print("== APP ==")
-app = get(f"/apps/{APP_ID}", **{"fields[apps]": "name,bundleId,sku,primaryLocale,availableInNewTerritories,contentRightsDeclaration"})["data"]
-print(" ", a(app).get("name"), a(app).get("bundleId"), "· sku", a(app).get("sku"), "· novos países:", a(app).get("availableInNewTerritories"))
+app = get(f"/apps/{APP_ID}", **{"fields[apps]": "name,bundleId,sku,primaryLocale"}).get("data") or {}
+print(" ", a(app).get("name"), a(app).get("bundleId"), "· sku", a(app).get("sku"))
 
 print("== VERSÕES ==")
 for v in get(f"/apps/{APP_ID}/appStoreVersions", **{"filter[platform]": "IOS", "limit": 10})["data"]:

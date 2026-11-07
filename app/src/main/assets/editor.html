@@ -4969,6 +4969,85 @@ var frSolid_vol=frSolid;frSolid=function(f,s){if(!f||isMob2(f)||!frHard(f))retur
   try{itRender()}catch(_){}
  },true);
 })();
+/* ===== Panelas, pratos e copos DENTRO do armário =====
+   Entram no catálogo de decoração e no ＋ Criar › Mobília. "Dentro do armário" põe o objeto
+   em cima de uma prateleira de verdade do módulo (a geometria desenhada), dentro das laterais
+   e dentro da profundidade: nada inventado, nada passando do móvel, nada flutuando.
+   Dá pra subir e descer de prateleira. */
+(function(){
+ if(window.__PANELAS)return;window.__PANELAS=1;
+ /* catálogo: o APM.deco é criado num script mais abaixo, então entra aqui na hora de usar */
+ function cat(){try{if(!APM.deco||!APM.deco.m)return false;var M_=APM.deco.m,tem=function(n){return M_.some(function(q){return q[0]===n})};
+  [['Panela com tampa · Ø 24',240,160,240],['Panela grande com tampa · Ø 28',280,190,280],['Frigideira · Ø 26',260,60,400],
+   ['Jogo de panelas (3)',540,190,300],['Pratos em pé (escorredor)',300,240,170],['Copos (6)',240,110,170]].forEach(function(q){if(!tem(q[0]))M_.push(q)});return true}catch(_){return false}}
+ setTimeout(cat,0);try{window.addEventListener('load',cat);document.addEventListener('DOMContentLoaded',cat)}catch(_){}
+ /* e na hora de listar os modelos (quadro de decoração), garante que já estão lá */
+ try{var am_=apModels;apModels=function(){cat();return am_.apply(this,arguments)}}catch(_){}
+ function idx(re){cat();try{for(var i=0;i<APM.deco.m.length;i++)if(re.test(APM.deco.m[i][0]))return i}catch(_){}return -1}
+
+ /* desenho */
+ var INOX='#c9ced3',INOXE='#aab1b8',PRETO='#2b2e33',TAMPA='#d9dde1';
+ function panela(xc,zc,r,y0,h){cylY(xc,zc,r,y0,y0+h,INOX,22);cylY(xc,zc,r-2,y0+h,y0+h+8,TAMPA,22);cylY(xc,zc,r*.55,y0+h+8,y0+h+14,INOXE,16);cylY(xc,zc,14,y0+h+14,y0+h+32,PRETO,10);
+  bx(xc-r-38,xc-r+2,y0+h*.55,y0+h*.55+14,zc-18,zc+18,PRETO);bx(xc+r-2,xc+r+38,y0+h*.55,y0+h*.55+14,zc-18,zc+18,PRETO)}
+ var d3=decoObj3;decoObj3=function(f,z0){
+  var nm=String(f.nome||''),x0=f.x,w=f.w,d=f.d||w,y0=f.b||0,h=f.h||200,za=mobZ(f,z0),xc=x0+w/2,zc=za+d/2;
+  if(/jogo de panelas/i.test(nm)){var r1=w*.17,r2=w*.14,r3=w*.11;panela(x0+r1+6,zc,r1,y0,h*.72);panela(x0+2*r1+2*r2+10,zc,r2,y0,h*.6);panela(x0+w-r3-6,zc,r3,y0,h*.5);return}
+  if(/frigideira/i.test(nm)){var rf=Math.min(w,d)*.5-4;cylY(x0+rf+4,zc,rf,y0,y0+h,INOX,24);cylY(x0+rf+4,zc,rf-8,y0+h-4,y0+h,PRETO,24);bx(x0+2*rf+2,x0+w,y0+h*.4,y0+h*.4+14,zc-12,zc+12,PRETO);return}
+  if(/panela/i.test(nm)){panela(xc,zc,Math.min(w,d)*.5-40,y0,h-32);return}
+  if(/pratos em p/i.test(nm)){var n=7,st=w/n;for(var i=0;i<n;i++){var rx=x0+i*st+st/2;bx(rx-4,rx+4,y0+8,y0+h,zc-h*.45,zc+h*.45,i%2?'#f5f5f2':'#e9e9e4')}bx(x0,x0+w,y0,y0+8,zc-h*.5,zc+h*.5,INOXE);return}
+  if(/copos/i.test(nm)){var cw=w/3,cd=d/2;for(var a=0;a<3;a++)for(var b=0;b<2;b++)cylY(x0+a*cw+cw/2,za+b*cd+cd/2,Math.min(cw,cd)*.38,y0,y0+h,'#dfe8ee',16);return}
+  return d3.apply(this,arguments);
+ };
+
+ /* prateleiras de verdade do módulo que contém o objeto */
+ function modDe(f){var cx=f.x+f.w/2,c=null;S.mods.forEach(function(m){if(m.wing||cx<m.x||cx>m.x+m.w)return;var dentroY=f.b>=m.b-1&&f.b<=m.b+m.h;if(!c||dentroY||(!c._y&&m.b<c.b))c=m;c._y=dentroY});S.mods.forEach(function(m){delete m._y});return c}
+ function prateleiras(m){var mi=S.mods.indexOf(m),re=new RegExp('^'+mi+':(Prateleira|Base|Fundo do nicho)'),L=[];
+  boxes.forEach(function(b){if(!b.nm||!re.test(String(b.nm)))return;if(String(b.nm).indexOf(':Base')>0&&b.y1-b.y0>40)return;L.push({y:b.y1,x0:b.x0,x1:b.x1,z0:b.z0,z1:b.z1,nm:String(b.nm)})});
+  if(!L.length){var e=m.esp||15,fb=fBack(m);L.push({y:m.b+e,x0:m.x+e,x1:m.x+m.w-e,z0:fb,z1:fb+m.d,nm:'chão do módulo'})}
+  /* junta caixas da mesma prateleira (mesma altura) e ordena de baixo pra cima */
+  var G={};L.forEach(function(p){var k=Math.round(p.y);if(!G[k])G[k]=p;else{G[k].x0=Math.min(G[k].x0,p.x0);G[k].x1=Math.max(G[k].x1,p.x1);G[k].z0=Math.min(G[k].z0,p.z0);G[k].z1=Math.max(G[k].z1,p.z1)}});
+  return Object.keys(G).map(function(k){return G[k]}).sort(function(a,b){return a.y-b.y}).filter(function(p){return p.y<m.b+m.h-40})}
+ function poe(f,m,p){var e=m.esp||15,x0=Math.max(p.x0,m.x+e)+8,x1=Math.min(p.x1,m.x+m.w-e)-8;
+  if(x1-x0<f.w){f.w=Math.max(60,Math.round(x1-x0))}
+  f.x=Math.round(Math.max(x0,Math.min(x1-f.w,f.x)));
+  var fb=fBack(m),z0=Math.max(p.z0,fb)+10,z1=Math.min(p.z1,fb+m.d)-10;if(z1-z0<f.d)f.d=Math.max(60,Math.round(z1-z0));
+  f.y=Math.round(Math.max(z0,Math.min(z1-f.d,z0+(z1-z0-f.d)/2)));
+  f.b=Math.round(p.y);f.wall='f';delete f.nicho;f.dentro=S.mods.indexOf(m)}
+ var fp=frPutOn;frPutOn=function(f,k){
+  if(k!=='dentro'&&k!=='dentro+'&&k!=='dentro-')return fp.apply(this,arguments);
+  var m=modDe(f);if(!m)return 'Não tem armário embaixo desse objeto: arraste ele pra cima de um';
+  build();var P=prateleiras(m);if(!P.length)return 'Esse armário não tem prateleira';
+  var i=0;if(k!=='dentro'){var cur=-1;P.forEach(function(p,j){if(Math.abs(p.y-f.b)<2)cur=j});i=cur<0?0:Math.max(0,Math.min(P.length-1,cur+(k==='dentro+'?1:-1)))}
+  poe(f,m,P[i]);return 'Dentro do armário · prateleira '+(i+1)+' de '+P.length};
+ var fw=frWhere;frWhere=function(f){var r=fw.apply(this,arguments);if(!r||r==='chao'||r==='mod'){var m=modDe(f);if(m&&f.b>m.b+1&&f.b<m.b+m.h-1&&f.x>=m.x&&f.x+f.w<=m.x+m.w)return 'dentro'}return r};
+
+ /* quadro: "Dentro do armário" e subir/descer de prateleira */
+ var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'};
+ var ir=itRender;itRender=function(){var r=ir.apply(this,arguments),E,x=ISX;try{E=it4Box()}catch(_){return r}
+  if(!x||x.k!=='fr'||E.hidden)return r;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f)return r;
+  var an=E.querySelector('[data-qon]');if(!an||E.querySelector('[data-qon="dentro"]'))return r;
+  var wh=frWhere(f),m=modDe(f);if(!m)return r;
+  an.parentNode.insertAdjacentHTML('beforeend',Bt('data-qon="dentro"','Dentro do armário',wh==='dentro')+(wh==='dentro'?Bt('data-qon="dentro+"','Prateleira ↑')+Bt('data-qon="dentro-"','Prateleira ↓'):''));
+  return r};
+
+ /* ＋ Criar › Mobília: panelas e pratos já entram dentro do armário escolhido */
+ var cr=crpRender;crpRender=function(){cr.apply(this,arguments);cat();var C=crpBox();if(!C||C.querySelector('[data-cpan]'))return;
+  var L=[[/^Panela com tampa/,'＋ Panela'],[/^Jogo de panelas/,'＋ Jogo de panelas'],[/^Frigideira/,'＋ Frigideira'],[/^Pilha de pratos/,'＋ Pilha de pratos'],[/^Pratos em p/,'＋ Pratos em pé'],[/^Copos/,'＋ Copos']];
+  var h='<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:10px 0 6px">🍳 Panelas e louça (dentro do armário)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px">'
+   +L.map(function(q){var i=idx(q[0]);return i<0?'':Bt('data-cpan="'+i+'"',q[1])}).join('')+'</div><div style="font-size:12px;color:#555;margin-bottom:4px">Vai pra dentro do módulo escolhido (ou do primeiro de base). No quadro: Prateleira ↑ ↓.</div>';
+  var mob=[].slice.call(C.querySelectorAll('div')).filter(function(dv){return /^Mobília$/.test(dv.textContent.trim())})[0];
+  if(mob)mob.insertAdjacentHTML('beforebegin',h);else C.insertAdjacentHTML('beforeend',h)};
+ var ct=document.createElement('div');
+ M.addEventListener('click',function(e){var t=e.target&&e.target.closest?e.target.closest('[data-cpan]'):null;if(!t)return;e.stopImmediatePropagation();e.preventDefault();if(window.RO)return;
+  try{snap()}catch(_){}var it=apAdd('deco',+t.dataset.cpan);
+  var m=(S.m&&S.mods.indexOf(S.m)>=0)?S.m:(S.mods.filter(function(q){return !q.sup&&!q.wing})[0]||S.mods[0]);
+  if(m){it.x=Math.round(m.x+(m.w-it.w)/2);it.b=m.b+20;build();var msg=frPutOn(it,'dentro')}
+  try{var C=crpBox();if(C)C.hidden=true}catch(_){}
+  try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();try{itOpen({k:'fr',id:it.id})}catch(_){}
+  try{ambMsg(m?('✓ '+msg):'Crie um módulo primeiro pra pôr dentro')}catch(_){}
+ },true);
+ window.__panelas={idx:idx,put:function(id,k){var f=(S.fr||[]).filter(function(q){return q.id===id})[0];return f?frPutOn(f,k):''},where:function(id){var f=(S.fr||[]).filter(function(q){return q.id===id})[0];return f?frWhere(f):''},prateleiras:function(mi){build();return prateleiras(S.mods[mi]).map(function(p){return {y:p.y,x0:Math.round(p.x0),x1:Math.round(p.x1),nm:p.nm}})}};
+})();
 var frDropAt_hard=frDropAt;frDropAt=function(f,hit){var m=frDropAt_hard.apply(this,arguments);try{if(frHard(f)){build();var r=frSolid(f,null);if(r==='sem lugar livre aí')return 'ali já tem outra coisa: não cabe'}}catch(_){}return m};
 /* arrastar no desenho 2D: mesma coisa ao soltar */
 var drawDrop_hard=window.frDrop2D;window.frDrop2D=function(f){try{if(frHard(f)){build();return frSolid(f,null)}}catch(_){}return ''};

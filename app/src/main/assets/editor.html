@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Editor de Módulo</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -6307,18 +6307,24 @@ var stEnds_lat=stEnds;stEnds=function(L,B,k){var o=stEnds_lat.apply(this,argumen
 /* --- zoom na vista de cima (planta ao vivo): ＋ − ⌂, dois dedos e a rodinha · com zoom, um dedo no vazio arrasta --- */
 var PZ={z:1,cx:null,cy:null};window.__pz=PZ;
 function pzApply(){var P=$('plan');if(!P)return;var vb=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number),W0=900,H0=vb[3];if(P.dataset.h0)H0=+P.dataset.h0;else P.dataset.h0=H0;if(PZ.z<=1.001){PZ.z=1;PZ.cx=null;PZ.cy=null;P.setAttribute('viewBox','0 0 '+W0+' '+H0);pzBar();return}var w=W0/PZ.z,h=H0/PZ.z;if(PZ.cx===null){PZ.cx=W0/2;PZ.cy=H0/2}PZ.cx=Math.max(w/2,Math.min(W0-w/2,PZ.cx));PZ.cy=Math.max(h/2,Math.min(H0-h/2,PZ.cy));P.setAttribute('viewBox',(PZ.cx-w/2)+' '+(PZ.cy-h/2)+' '+w+' '+h);pzBar()}
-window.pzApply=pzApply;
+window.pzApply=pzApply;window.pzBar=function(){pzBar()};
 function pzBar(){var P=$('plan');if(!P)return;var cv=P.parentNode,b=document.getElementById('pzbar');if(!b){b=document.createElement('div');b.id='pzbar';b.style.cssText='position:absolute;right:6px;top:6px;display:flex;gap:4px;z-index:2';b.innerHTML='<button data-pz="1" title="Aproximar" aria-label="Aproximar" style="min-width:34px;min-height:32px;padding:0">＋</button><button data-pz="-1" title="Afastar" aria-label="Afastar" style="min-width:34px;min-height:32px;padding:0">－</button><button data-pz="0" title="Ver a pedra inteira" aria-label="Ver a pedra inteira" style="min-width:34px;min-height:32px;padding:0">⌂</button>';cv.style.position='relative';cv.appendChild(b)}var z=b.querySelector('[data-pz="0"]');if(z)z.textContent=PZ.z>1.001?Math.round(PZ.z*10)/10+'×':'⌂'}
-function pzSet(z,ux,uy){var P=$('plan');if(!P)return;var vb=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number);var old=PZ.z;PZ.z=Math.max(1,Math.min(6,z));if(ux!==undefined){var fx=(ux-vb[0])/vb[2],fy=(uy-vb[1])/vb[3],w=900/PZ.z,h=(+P.dataset.h0||vb[3])/PZ.z;PZ.cx=ux-(fx-.5)*w;PZ.cy=uy-(fy-.5)*h}pzApply()}
+function pzSet(z,ux,uy){var P=$('plan');if(!P)return;var vb=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number);var old=PZ.z;PZ.z=Math.max(1,Math.min(6,z));if(ux!==undefined){var fx=(ux-vb[0])/vb[2],fy=(uy-vb[1])/vb[3],w=900/PZ.z,h=(+P.dataset.h0||vb[3])/PZ.z;PZ.cx=ux-(fx-.5)*w;PZ.cy=uy-(fy-.5)*h}window.pzApply()}
 window.pzSet=pzSet;
-var drawPlan_z=drawPlan;drawPlan=function(){drawPlan_z.apply(this,arguments);try{var P=$('plan');if(P){P.dataset.h0=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number)[3]}pzApply()}catch(_){}};
+var drawPlan_z=drawPlan;drawPlan=function(){drawPlan_z.apply(this,arguments);try{var P=$('plan');if(P){/* altura inteira do desenho vem da geometria (PLGEO), não do viewBox: durante um gesto o viewBox ainda é o antigo, com zoom */P.dataset.h0=(window.PLGEO&&PLGEO.PH)||(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number)[3]}window.pzApply()}catch(_){}};
 document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-pz]');if(!t)return;e.stopImmediatePropagation();var v=+t.dataset.pz;if(v===0)pzSet(1);else pzSet(PZ.z*(v>0?1.5:1/1.5))},true);
 (function(){var P=$('plan');if(!P)return;var pts={},pin=null,pan=null,toUser=function(cx,cy){var r=P.getBoundingClientRect(),vb=P.getAttribute('viewBox').split(/[\s,]+/).map(Number);return [vb[0]+(cx-r.left)/r.width*vb[2],vb[1]+(cy-r.top)/r.height*vb[3]]};
  P.addEventListener('wheel',function(e){if(!e.ctrlKey&&Math.abs(e.deltaY)<1)return;e.preventDefault();var u=toUser(e.clientX,e.clientY);pzSet(PZ.z*(e.deltaY<0?1.2:1/1.2),u[0],u[1])},{passive:false});
- P.addEventListener('pointerdown',function(e){pts[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(pts);if(k.length===2){var a=pts[k[0]],b=pts[k[1]];pin={d:Math.hypot(a[0]-b[0],a[1]-b[1]),z:PZ.z,u:toUser((a[0]+b[0])/2,(a[1]+b[1])/2)};pan=null;e.stopImmediatePropagation();return}
+ /* medidas sem a transformação de GPU do gesto (o bloco da pinça sem lag guarda o retângulo e o viewBox reais) */
+ var gst=function(){var q=window.__pzGesto&&window.__pzGesto();return q||{r:P.getBoundingClientRect(),vb:P.getAttribute('viewBox')}};
+ toUser=function(cx,cy){var q=gst(),r=q.r,vb=String(q.vb||'0 0 900 220').split(/[\s,]+/).map(Number);return [vb[0]+(cx-r.left)/r.width*vb[2],vb[1]+(cy-r.top)/r.height*vb[3]]};
+ P.addEventListener('pointerdown',function(e){pts[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(pts);if(k.length===2){var a=pts[k[0]],b=pts[k[1]];pin={d:Math.hypot(a[0]-b[0],a[1]-b[1]),z:PZ.z,u:toUser((a[0]+b[0])/2,(a[1]+b[1])/2)};PZ.user=1;/* foi o dedo: a imersão não recentra no meio do gesto */pan=null;e.stopImmediatePropagation();return}
   var tg=e.target,ds=tg&&tg.dataset||{};if(PZ.z>1.001&&!ds.i&&!ds.st&&!ds.ed&&!ds.sth&&!(tg.closest&&tg.closest('[data-sth],[data-i]'))){pan={x:e.clientX,y:e.clientY,cx:PZ.cx,cy:PZ.cy,moved:false}}},true);
- P.addEventListener('pointermove',function(e){if(!pts[e.pointerId])return;pts[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(pts);if(pin&&k.length===2){var a=pts[k[0]],b=pts[k[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pin.d>10){PZ.z=Math.max(1,Math.min(6,pin.z*d/pin.d));PZ.cx=pin.u[0];PZ.cy=pin.u[1];pzApply()}e.preventDefault();e.stopImmediatePropagation();return}
-  if(pan){var r=P.getBoundingClientRect(),vb=P.getAttribute('viewBox').split(/[\s,]+/).map(Number),dx=(e.clientX-pan.x)/r.width*vb[2],dy=(e.clientY-pan.y)/r.height*vb[3];if(Math.abs(e.clientX-pan.x)+Math.abs(e.clientY-pan.y)>4)pan.moved=true;if(pan.moved){PZ.cx=pan.cx-dx;PZ.cy=pan.cy-dy;pzApply();e.preventDefault();e.stopImmediatePropagation()}}},true);
+ P.addEventListener('pointermove',function(e){if(!pts[e.pointerId])return;pts[e.pointerId]=[e.clientX,e.clientY];var k=Object.keys(pts);if(pin&&k.length===2){var a=pts[k[0]],b=pts[k[1]],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pin.d>10){PZ.z=Math.max(1,Math.min(6,pin.z*d/pin.d));
+   /* o ponto da pedra que estava entre os dois dedos continua entre eles: afasta, aproxima e arrasta junto, como no 3D */
+   var mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,r=gst().r;PZ.cx=pin.u[0];PZ.cy=pin.u[1];window.pzApply();
+   var vb=String(gst().vb||'0 0 900 220').split(/[\s,]+/).map(Number);PZ.cx=pin.u[0]-((mx-r.left)/r.width-.5)*vb[2];PZ.cy=pin.u[1]-((my-r.top)/r.height-.5)*vb[3];window.pzApply()}e.preventDefault();e.stopImmediatePropagation();return}
+  if(pan){var r=P.getBoundingClientRect(),vb=P.getAttribute('viewBox').split(/[\s,]+/).map(Number),dx=(e.clientX-pan.x)/r.width*vb[2],dy=(e.clientY-pan.y)/r.height*vb[3];if(Math.abs(e.clientX-pan.x)+Math.abs(e.clientY-pan.y)>4)pan.moved=true;if(pan.moved){PZ.user=1;PZ.cx=pan.cx-dx;PZ.cy=pan.cy-dy;window.pzApply();e.preventDefault();e.stopImmediatePropagation()}}},true);
  var up=function(e){delete pts[e.pointerId];if(Object.keys(pts).length<2)pin=null;if(pan&&pan.moved){e.stopImmediatePropagation()}pan=null};P.addEventListener('pointerup',up,true);P.addEventListener('pointercancel',up,true)})();
 /* --- abrir um link recebido (de outro celular ou do WhatsApp): cola o link e abre --- */
 window.arquePasteLink=function(txt){var t=String(txt||'').trim(),m=t.match(/(?:corte\.html#d=|\/p\.html#d=|arquemestre:\/\/corte\?d=|arquemestre-corte:)([A-Za-z0-9_\-]{8,})/)||(/^[A-Za-z0-9_\-]{12,}$/.test(t)?[t,t]:null);if(!m){try{toast('Isso não é um link do Arquemestre. Copie o link inteiro que chegou no WhatsApp.')}catch(_){}return false}try{window.arqueCutOpen&&arqueCutOpen(m[1])}catch(e){try{toast('Não consegui abrir: '+e.message)}catch(_){}return false}return true};
@@ -6348,43 +6354,34 @@ var rpCutPieces_isl=rpCutPieces;rpCutPieces=function(){var out=rpCutPieces_isl.a
 /* 🔍 imersão na vista de cima da pedra: rolando a tela pra cima, a vista cresce e aproxima a pedra · voltando, mostra a cozinha inteira de novo */
 /* a imersão vira um multiplicador do zoom: o que o dedo escolheu (＋ −) continua valendo,
    e a rolagem vai somando por cima */
-var pzApply_im=window.pzApply;window.pzApply=pzApply=function(){var Z=window.__pz,f=Math.max(1,+(Z&&Z.imz)||1);if(!Z||f<=1.001)return pzApply_im.apply(this,arguments);var z0=Z.z;Z.z=Math.max(1,Math.min(6,z0*f));var r=pzApply_im.apply(this,arguments);Z.z=z0;return r};
+var pzApply_im=window.pzApply;
+/* Zoom e imersão numa conta só: o fator da imersão (f) vem da posição da rolagem e é recalculado toda vez
+   que a vista é aplicada; o viewBox e a altura do SVG saem da mesma fórmula, então a proporção bate sempre
+   (sem faixa branca, sem o dedo errar na vertical) — com ou sem zoom, no meio da pinça ou da rolagem. */
 (function(){var IM={on:true,raf:0,p:0};try{IM.on=localStorage.getItem('arque_imers')!=='0'}catch(_){}
  function scr(el){var t=window.scrollY||0;for(var e=el&&el.parentNode;e&&e.nodeType===1;e=e.parentNode)t+=e.scrollTop||0;return t}
- function apply(){IM.raf=0;var P=document.getElementById('plan'),wr=document.getElementById('planwrap');if(!P||!wr||wr.hidden||!window.PLGEO)return;var G=window.PLGEO,pz=window.__pz;
-  if(pz&&pz.z>1.001){
-   /* ANTES: com zoom a imersão desistia. Agora ela continua: a vista de cima da pedra vai
-      crescendo conforme desce a tela, somando com o zoom que já estava escolhido. */
-   var r2=wr.getBoundingClientRect(),vh2=window.innerHeight||800,sc2=scr(wr),st2=Math.max(0,(r2.top+sc2)-vh2*.75),
-       p2=IM.on?Math.max(0,Math.min(1,(sc2-st2)/320)):0,e2=p2*p2*(3-2*p2),
-       W2=P.parentNode.clientWidth||P.clientWidth||400,Hb=W2*G.PH/900,
-       b0=1e9,b1=-1e9;(S.st?[S.st]:S.stones).forEach(function(q){b0=Math.min(b0,q.x);b1=Math.max(b1,q.x+q.w)});
-   var fit2=b1>b0?900/(((b1-b0)*G.k)+90):1,
-       /* teto: 70% da tela, e nunca passar do ponto em que a pedra inteira ainda cabe,
-          contando junto o zoom que o dedo já escolheu */
-       fmax=Math.max(1,Math.min(fit2/Math.max(1,pz.z),(vh2*.70)/Math.max(1,Hb))),f2=1+(fmax-1)*e2;
-   IM.p=p2;pz.imz=f2;
-   /* com a imersão puxando o zoom, a janela tem que ficar em cima da pedra: senão ela
-      sai de vista e fica só faixa branca (era o bug do vídeo) */
-   /* recentra na pedra só se ela saiu da janela (ou se o usuário não mexeu no zoom): se você deu
-      zoom em cima dela, a imersão te deixa em paz */
-   var Zt=Math.max(1,pz.z*f2),wv=900/Zt,px0=G.L+b0*G.k,px1=G.L+b1*G.k,cxv=(pz.cx===null||pz.cx===undefined)?450:pz.cx,fora=(px1<cxv-wv/2||px0>cxv+wv/2);
-   if(f2>1.001&&b1>b0&&(!pz.user||fora))pz.cx=G.L+((b0+b1)/2)*G.k;
-   if(f2<=1.001){pz.imz=1;if(P.style.height)P.style.height=''}else P.style.height=(Hb*f2).toFixed(0)+'px';
-   try{pzApply()}catch(_){}
-   return}
-  if(pz)pz.imz=1;
-  var r=wr.getBoundingClientRect(),vh=window.innerHeight||800,sc=scr(wr),rest=r.top+sc,start=Math.max(0,rest-vh*.75),p=IM.on?Math.max(0,Math.min(1,(sc-start)/320)):0;IM.p=p;
-  var st0=S.st||null,bx0=1e9,bx1=-1e9;(st0?[st0]:S.stones).forEach(function(q){bx0=Math.min(bx0,q.x);bx1=Math.max(bx1,q.x+q.w)});var fit=bx1>bx0?900/(((bx1-bx0)*G.k)+90):1,W=P.parentNode.clientWidth||P.clientWidth||400,H0=W*G.PH/900,/* cresce até encher 70% da tela, MAS nunca além do ponto em que a pedra inteira ainda
-     cabe na largura (fit): passar disso cortava a pedra e sobrava faixa branca */zm=Math.max(1,Math.min(fit,(vh*.70)/H0)),e=p*p*(3-2*p),z=1+(zm-1)*e,H=H0*z;
-  if(z<1.01){if(P.style.height){P.style.height='';P.setAttribute('viewBox','0 0 900 '+G.PH)}return}
-  var cx=bx1>bx0?G.L+((bx0+bx1)/2)*G.k:450,vw=900/z,x0=Math.max(0,Math.min(900-vw,cx-vw/2));P.setAttribute('viewBox',x0.toFixed(1)+' 0 '+vw.toFixed(1)+' '+G.PH);P.style.height=H.toFixed(0)+'px'}
+ function pedra(G){var b0=1e9,b1=-1e9;(S.st?[S.st]:S.stones).forEach(function(q){b0=Math.min(b0,q.x);b1=Math.max(b1,q.x+q.w)});return b1>b0?{b0:b0,b1:b1,fit:900/(((b1-b0)*G.k)+90),cx:G.L+((b0+b1)/2)*G.k}:null}
+ /* quanto a imersão aumenta agora (1 = nada): cresce ao rolar até 70% da tela, mas nunca além do ponto em que a pedra inteira ainda cabe na largura, contando o zoom do dedo */
+ function imF(P,wr,G,z){if(!IM.on)return 1;var r=wr.getBoundingClientRect(),vh=window.innerHeight||800,sc=scr(wr),st=Math.max(0,(r.top+sc)-vh*.75),p=Math.max(0,Math.min(1,(sc-st)/320)),e=p*p*(3-2*p);IM.p=p;
+  var W=P.parentNode.clientWidth||P.clientWidth||400,Hb=W*G.PH/900,pd=pedra(G),fit=pd?pd.fit:1,/* o fator não depende do zoom do dedo (senão a vista mudava de tamanho no meio da pinça): o zoom é zoom, a imersão é só o quanto a vista cresce ao rolar */fmax=Math.max(1,Math.min(fit,(vh*.70)/Math.max(1,Hb)));return 1+(fmax-1)*e}
+ window.pzApply=function(){var P=document.getElementById('plan'),wr=document.getElementById('planwrap'),Z=window.__pz,G=window.PLGEO;if(!P||!Z||!G||!wr)return pzApply_im.apply(this,arguments);
+  var H0=G.PH,z=Math.max(1,Math.min(6,Z.z||1)),f=imF(P,wr,G,z);Z.z=z;Z.imz=f;var Zt=z*f,W=P.parentNode.clientWidth||P.clientWidth||400,Hb=W*H0/900;
+  if(Zt<=1.001){Z.z=1;Z.cx=null;Z.cy=null;if(P.style.height)P.style.height='';P.setAttribute('viewBox','0 0 900 '+H0);try{window.pzBar&&pzBar()}catch(_){}return}
+  var w=900/Zt,h=Math.min(H0,H0*f/Zt),pd=pedra(G);
+  if(Z.cx===null||Z.cx===undefined){Z.cx=(f>1.001&&pd)?pd.cx:450;Z.cy=H0/2}
+  /* a imersão recentra na pedra só se ela saiu da janela ou se o usuário não mexeu no zoom: se você deu zoom em cima dela, ela te deixa em paz */
+  if(f>1.001&&pd){var fora=(G.L+pd.b1*G.k<Z.cx-w/2||G.L+pd.b0*G.k>Z.cx+w/2);/* só quando a rolagem mudou a imersão (não a cada redesenho: um toque não pode mexer a vista) */if((!Z.user&&Math.abs(f-(IM.lastF||0))>1e-6)||fora)Z.cx=pd.cx}IM.lastF=f;
+  Z.cx=Math.max(w/2,Math.min(900-w/2,Z.cx));Z.cy=Math.max(h/2,Math.min(H0-h/2,Z.cy));
+  P.setAttribute('viewBox',(Z.cx-w/2)+' '+(Z.cy-h/2)+' '+w+' '+h);
+  var hpx=f>1.001?(Hb*f).toFixed(0)+'px':'';if(P.style.height!==hpx)P.style.height=hpx;try{window.pzBar&&pzBar()}catch(_){}};
+ function apply(){IM.raf=0;var wr=document.getElementById('planwrap');if(!wr||wr.hidden||!window.PLGEO)return;try{pzApply()}catch(_){}}
+ window.__imersApply=apply;
  function kick(){if(!IM.raf)IM.raf=requestAnimationFrame(apply)}
  window.addEventListener('scroll',kick,{capture:true,passive:true});window.addEventListener('resize',kick);
- var dp=window.drawPlan;if(typeof dp==='function'){window.drawPlan=drawPlan=function(){var r=dp.apply(this,arguments);try{apply()}catch(_){}return r}}
  /* botão liga/desliga na faixa da vista de cima */
  function btn(){var n=document.querySelector('#planwrap .note');if(!n||n.querySelector('[data-imers]'))return;n.insertAdjacentHTML('beforeend',' <button data-imers="1" style="padding:2px 9px;min-height:28px;font-size:12px;margin-left:4px">'+(IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada')+'</button>')}
- document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-imers]');if(!t)return;e.stopImmediatePropagation();IM.on=!IM.on;try{localStorage.setItem('arque_imers',IM.on?'1':'0')}catch(_){}t.textContent=IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada';apply();if(!IM.on){var P=document.getElementById('plan');if(P&&window.PLGEO){P.style.height='';P.setAttribute('viewBox','0 0 900 '+PLGEO.PH)}}},true);
+ var dp=window.drawPlan;if(typeof dp==='function'){window.drawPlan=drawPlan=function(){var r=dp.apply(this,arguments);try{btn()}catch(_){}return r}}
+ document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-imers]');if(!t)return;e.stopImmediatePropagation();IM.on=!IM.on;try{localStorage.setItem('arque_imers',IM.on?'1':'0')}catch(_){}t.textContent=IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada';apply()},true);
  btn();window.__imers=function(){apply();var P=document.getElementById('plan');return {p:IM.p,vb:P&&P.getAttribute('viewBox'),h:P&&P.style.height}}})();
 </script>
 <script>
@@ -6906,13 +6903,16 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset|
  P.setAttribute=function(k,v){if(k==='viewBox'&&g){pend=String(v);if(!raf)raf=requestAnimationFrame(pinta);return}return so(k,v)};
  var dedos={};
  P.addEventListener('pointerdown',function(e){dedos[e.pointerId]=1;if(!g){g={vb:vb(),r:P.getBoundingClientRect(),z:PZ.z,cx:PZ.cx,cy:PZ.cy};pend=null}},true);
+ window.__pzGesto=function(){return g?{r:g.r,vb:pend||g.vb.join(' ')}:null};
+ /* iOS: o gesto nativo de zoom da página não pode roubar o 2º dedo */
+ ['gesturestart','gesturechange','gestureend'].forEach(function(n){P.addEventListener(n,function(e){e.preventDefault()},{passive:false});W.addEventListener(n,function(e){e.preventDefault()},{passive:false})});
  function solta(e){delete dedos[e.pointerId];if(Object.keys(dedos).length)return;if(!g)return;
   var mexeu=!!pend&&pend!==g.vb.join(' ');var fim=pend;g=null;if(raf){cancelAnimationFrame(raf);raf=0}
   P.style.transform='';if(fim)so('viewBox',fim);pend=null;if(mexeu)PZ.user=1}
  /* solta no SVG ou fora dele (o dedo pode sair da área) */
  document.addEventListener('pointerup',solta,true);document.addEventListener('pointercancel',solta,true);
  /* roda do mouse e botões ＋ − também contam como "foi o usuário"; ⌂ zera */
- var ps=window.pzSet;if(ps)window.pzSet=function(z){var r=ps.apply(this,arguments);PZ.user=(z<=1.001)?0:1;return r};
+ var ps=window.pzSet;if(ps)window.pzSet=function(z){var r=ps.apply(this,arguments);PZ.user=(z<=1.001)?0:1;/* ⌂ (ver a pedra inteira): volta a centrar na pedra, mesmo com a imersão crescida */if(z<=1.001){PZ.cx=null;PZ.cy=null;try{window.pzApply()}catch(_){}}return r};
 })();
 </script>
 </body></html>

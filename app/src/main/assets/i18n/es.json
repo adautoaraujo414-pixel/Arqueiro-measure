@@ -5089,5 +5089,7 @@
 "Baixando a versão para Windows 7/8… {0}%": "Descargando la versión para Windows 7/8… {0}%",
 "Pronto: abrindo o instalador (seus dados continuam).": "Listo: abriendo el instalador (tus datos se mantienen).",
 "Este computador está com Windows 7 ou 8. O editor precisa da versão do Arquemestre feita para Windows 7/8 (seus dados continuam).": "Esta computadora usa Windows 7 u 8. El editor necesita la versión de Arquemestre hecha para Windows 7/8 (tus datos se mantienen).",
-"Baixar e instalar a versão para Windows 7/8": "Descargar e instalar la versión para Windows 7/8"
+"Baixar e instalar a versão para Windows 7/8": "Descargar e instalar la versión para Windows 7/8",
+"A App Store ainda não respondeu o preço. Tentando de novo…": "App Store aún no respondió el precio. Intentando de nuevo…",
+"Não consegui carregar o preço da App Store. Confira a internet e toque em \"Tentar de novo\".": "No pude cargar el precio de App Store. Revisa la conexión y toca \"Intentar de nuevo\"."
 }

@@ -84,15 +84,41 @@ final class LicenseManager: ObservableObject {
 
     deinit { updates?.cancel(); expiryCheck?.cancel() }
 
+    /// Carrega o produto da App Store. Se a loja não responder (sem internet, ou a assinatura recém-aprovada
+    /// ainda não chegou na loja), tenta de novo sozinho: 3 s, 6 s, 12 s, 24 s, 48 s… até 6 vezes. Antes, uma falha
+    /// deixava a tela presa em "Carregando o preço…" até fechar o app.
+    private var carregando = false
     func load() async {
-        do {
-            let ps = try await Product.products(for: [LicenseManager.SUB_ID])
-            if let p = ps.first(where: { $0.id == LicenseManager.SUB_ID }) { subProduct = p }
-            if let s = subProduct?.subscription { trialEligible = await s.isEligibleForIntroOffer }
-        } catch {
-            // sem internet: a assinatura já feita continua valendo (o StoreKit guarda no aparelho)
+        if carregando { return }
+        carregando = true
+        defer { carregando = false }
+        var wait: UInt64 = 3
+        var avisei = false
+        for tentativa in 0..<6 {
+            do {
+                let ps = try await Product.products(for: [LicenseManager.SUB_ID])
+                if let p = ps.first(where: { $0.id == LicenseManager.SUB_ID }) { subProduct = p }
+                if let s = subProduct?.subscription { trialEligible = await s.isEligibleForIntroOffer }
+            } catch {
+                // sem internet: a assinatura já feita continua valendo (o StoreKit guarda no aparelho)
+            }
+            if subProduct != nil || Task.isCancelled { break }
+            if tentativa == 1 { message = tr("A App Store ainda não respondeu o preço. Tentando de novo…"); avisei = true }
+            try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
+            wait = min(wait * 2, 60)
+        }
+        if subProduct == nil {
+            message = tr("Não consegui carregar o preço da App Store. Confira a internet e toque em \"Tentar de novo\".")
+        } else if avisei {
+            message = nil
         }
         await refresh()
+    }
+
+    /// Botão "Tentar de novo" da tela de assinatura (e volta do app pro primeiro plano sem preço).
+    func reloadProducts() {
+        guard subProduct == nil, !busy, !carregando else { return }
+        Task { await load() }
     }
 
     /// Foi a oferta introdutória (teste grátis)?

@@ -141,6 +141,9 @@ struct SubscribeBox: View {
             }
             .buttonStyle(.borderedProminent).tint(Ui.accent).disabled(lic.busy || lic.price.isEmpty)
 
+            if lic.price.isEmpty {
+                Button(tr("Tentar de novo")) { lic.reloadProducts() }.disabled(lic.busy)
+            }
             Button(tr("Já assino · restaurar compras")) { Task { await lic.restore() } }.disabled(lic.busy)
             Button(tr("Gerenciar assinatura")) { manage = true }.font(.footnote)
 

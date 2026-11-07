@@ -73,7 +73,7 @@ struct ArquemestreApp: App {
         }
         .onChange(of: phase) { p in
             if p == .background { app.onBackground() }
-            if p == .active { Task { await app.license.refresh() } }
+            if p == .active { app.license.reloadProducts(); Task { await app.license.refresh() } }
         }
     }
 }

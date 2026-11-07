@@ -4907,6 +4907,68 @@ var frSolid_vol=frSolid;frSolid=function(f,s){if(!f||isMob2(f)||!frHard(f))retur
 
  window.__mobGira=function(id,a){var f=(S.fr||[]).filter(function(q){return q.id===id})[0];if(!f)return null;if(a!==undefined){f.ang=a;try{build()}catch(_){}}return ang(f)};
 })();
+/* ===== LED embutido no tamponamento de baixo dos aéreos =====
+   Quando o aéreo tem tamponamento de baixo, o LED "Embaixo" vai na própria peça: de fora
+   a fora, encostado na face de baixo dela, 55 mm atrás da borda da frente. Nada inventado:
+   a posição sai da peça desenhada. Nunca passa da peça e nunca flutua. Dá pra encurtar
+   pelas duas pontas (mm) e voltar pra "de fora a fora". */
+(function(){
+ if(window.__LEDTB)return;window.__LEDTB=1;
+ function tbBox(mi){var r=null,nm=mi+':Tamponamento de baixo';boxes.forEach(function(b){if(b.nm!==nm)return;if(!r)r={x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.y0=Math.min(r.y0,b.y0);r.y1=Math.max(r.y1,b.y1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}});return r}
+ function temTb(m){return !!(m&&m.sup&&m.tb&&!m.corner)}
+ /* pontas: nunca passa da peça, sempre sobra pelo menos 100 mm de fita */
+ function pontas(L,len){var a=Math.max(0,Math.round(+L.a||0)),b=Math.max(0,Math.round(+L.b||0));if(a>len-100)a=Math.max(0,len-100);if(b>len-100-a)b=Math.max(0,len-100-a);return [a,b]}
+ window.__ledTbPontas=pontas;
+
+ var l3=led3m;led3m=function(m){
+  var L=m&&m.led;
+  if(!L||!temTb(m)||(L.pos&&L.pos!=='base'))return l3.apply(this,arguments);
+  var mi=S.mods.indexOf(m);if(mi<0)return;
+  var tb=tbBox(mi);if(!tb)return l3.apply(this,arguments);
+  var len=tb.x1-tb.x0,ab=pontas(L,len),x0=tb.x0+ab[0],x1=tb.x1-ab[1],y=tb.y0,fb=fBack(m),prof=tb.z1-fb,zc=Math.max(20,prof-55);
+  LEDK='m'+mi;var n0=boxes.length,o={o:'m',id:mi},on=L.on!==0,col=ledCol(L);
+  window.CURN=null;window.CURK=null;window.CURV=undefined;window.CURQ=undefined;
+  var sf=ledSurf(x0,x1,y),yT=sf.t;
+  if(L.k==='45'){ledStrip(L,x0,x1,y,0,false,o);if(on)ledGlow(x0,x1,y,70,col,yT,1,0,sf.z)}
+  else{ledStrip(L,x0,x1,y,zc,false,o);if(on)ledGlow(x0,x1,y,zc,col,yT,prof<450,0,sf.z)}
+  if(fb)for(var i=n0;i<boxes.length;i++)shiftZ(boxes[i],fb);
+  LEDK=null;
+ };
+
+ /* no quadro do LED: encurtar pelas pontas e voltar pra de fora a fora */
+ var Bt=function(at,tx,on){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+tx+'</button>'};
+ var ir=itRender;itRender=function(){
+  var r=ir.apply(this,arguments),E,x=ISX;
+  try{E=it4Box()}catch(_){return r}
+  if(!x||x.k!=='led'||E.hidden||!x.o||x.o.o!=='m')return r;
+  var m=S.mods[x.o.id];if(!temTb(m)||!m.led||(m.led.pos&&m.led.pos!=='base'))return r;
+  if(E.querySelector('[data-qledp]'))return r;
+  var L=m.led,tb=tbBox(x.o.id),len=tb?Math.round(tb.x1-tb.x0):0,ab=pontas(L,len||1e6),fita=len?len-ab[0]-ab[1]:0;
+  var num=function(k,lab,v){return '<div style="display:flex;gap:4px;align-items:center;margin:4px 0;flex-wrap:wrap"><span style="color:#666;font-size:12px;min-width:150px">'+lab+'</span>'
+   +'<button data-qledp="'+k+'|-50" style="min-width:34px;min-height:32px">−</button><b style="min-width:52px;text-align:center">'+v+'</b><button data-qledp="'+k+'|50" style="min-width:34px;min-height:32px">＋</button></div>'};
+  var h='<div style="margin:6px 0 2px;font-size:12px;color:#444">No tamponamento de baixo · peça de '+len+' mm · fita de <b>'+fita+' mm</b></div>'
+   +num('a','Tira da ponta esquerda (mm)',ab[0])+num('b','Tira da ponta direita (mm)',ab[1])
+   +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin:4px 0">'+Bt('data-qledp="full|0"','↔ De fora a fora',!ab[0]&&!ab[1])+'</div>';
+  var an=E.querySelector('[data-qlk="pos"]');an=an?an.parentNode:null;
+  if(an)an.insertAdjacentHTML('afterend',h);else E.insertAdjacentHTML('beforeend',h);
+  return r;
+ };
+
+ M.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('[data-qledp]'):null;if(!t)return;
+  e.stopImmediatePropagation();e.preventDefault();
+  if(window.RO)return;
+  var x=ISX;if(!x||x.k!=='led'||!x.o||x.o.o!=='m')return;
+  var m=S.mods[x.o.id];if(!temTb(m)||!m.led)return;
+  try{snap()}catch(_){}
+  var p=String(t.dataset.qledp).split('|'),k=p[0],d=+p[1]||0,L=m.led;
+  if(k==='full'){delete L.a;delete L.b}
+  else{L[k]=Math.max(0,Math.round((+L[k]||0)+d));var tb=tbBox(x.o.id),len=tb?tb.x1-tb.x0:1e6,ab=pontas(L,len);L.a=ab[0];L.b=ab[1];if(!L.a)delete L.a;if(!L.b)delete L.b}
+  try{draw();panel()}catch(_){}
+  try{build();render()}catch(_){}
+  try{itRender()}catch(_){}
+ },true);
+})();
 var frDropAt_hard=frDropAt;frDropAt=function(f,hit){var m=frDropAt_hard.apply(this,arguments);try{if(frHard(f)){build();var r=frSolid(f,null);if(r==='sem lugar livre aí')return 'ali já tem outra coisa: não cabe'}}catch(_){}return m};
 /* arrastar no desenho 2D: mesma coisa ao soltar */
 var drawDrop_hard=window.frDrop2D;window.frDrop2D=function(f){try{if(frHard(f)){build();return frSolid(f,null)}}catch(_){}return ''};

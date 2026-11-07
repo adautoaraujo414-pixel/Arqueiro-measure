@@ -130,11 +130,11 @@ if LIBERAR:
         TIRAR = SUBMIT = True
 # 0) com TIRAR=1: se a versão está "Aguardando revisão", tira da fila (cancela o envio) pra poder trocar o build e as capturas
 if not ver and TIRAR:
-    esperando = next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
+    esperando = next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW", "READY_FOR_REVIEW")), None)
     if esperando:
         subs = call("GET", "/reviewSubmissions", params={"filter[app]": APP_ID, "filter[platform]": "IOS", "limit": 10})["data"]
         for sb in subs:
-            if sb["attributes"]["state"] in ("WAITING_FOR_REVIEW", "IN_REVIEW", "UNRESOLVED_ISSUES"):
+            if sb["attributes"]["state"] in ("WAITING_FOR_REVIEW", "IN_REVIEW", "UNRESOLVED_ISSUES", "READY_FOR_REVIEW"):
                 call("PATCH", f"/reviewSubmissions/{sb['id']}", json={"data": {"type": "reviewSubmissions", "id": sb["id"], "attributes": {"canceled": True}}})
                 print("envio", sb["id"], "tirado da revisão (estava", sb["attributes"]["state"] + ")")
         for i in range(20):
@@ -221,6 +221,7 @@ def assinaturas_pendentes():
         for sb in (call("GET", f"/subscriptionGroups/{g['id']}/subscriptions", ok=True, params={"limit": 50}) or {}).get("data", []):
             print("assinatura", sb["attributes"].get("productId"), sb["attributes"].get("state"))
             if sb["attributes"].get("state") in PEND_SUB:
+                sb.setdefault("relationships", {})["group"] = {"data": {"id": g["id"]}}
                 out.append(sb)
     return out
 def item_assinatura(sb):
@@ -258,10 +259,37 @@ def item_assinatura(sb):
         return True
     print("::error::não consegui pôr a assinatura", sb["attributes"].get("productId"), "no envio · tem que marcar no App Store Connect (versão › Compras no app e assinaturas)")
     return False
+def item_grupo(gid):
+    """A Apple exige a versão do grupo junto com a 1ª assinatura (SUBSCRIPTION_SUBMISSION_REQUIRES_GROUP_VERSION)."""
+    import re
+    S.headers["Authorization"] = "Bearer " + token()
+    rr = S.post(API + "/subscriptionGroupVersions", timeout=120, json={"data": {"type": "subscriptionGroupVersions", "relationships": {
+                "subscriptionGroup": {"data": {"type": "subscriptionGroups", "id": gid}}}}})
+    gv = rr.json().get("data", {}).get("id") if rr.status_code < 400 and rr.text else None
+    if not gv:
+        m = re.search(r"inflight version with id '([0-9a-f-]+)'", rr.text)
+        gv = m.group(1) if m else None
+        if not gv:
+            print("::warning::POST /subscriptionGroupVersions ->", rr.status_code, rr.text[:400])
+            return False
+        print("versão do grupo já existente:", gv)
+    it = call("POST", "/reviewSubmissionItems", ok=True, json={"data": {"type": "reviewSubmissionItems", "relationships": {
+              "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub["id"]}},
+              "subscriptionGroupVersion": {"data": {"type": "subscriptionGroupVersions", "id": gv}}}}})
+    print("grupo de assinatura", gid, "entrou no envio ✓" if it else "NÃO entrou")
+    return bool(it)
 ja = [i for i in ((call("GET", f"/reviewSubmissions/{sub['id']}/items", ok=True) or {}).get("data", []))]
 print("itens no envio antes:", len(ja))
+grupos_pend = set()
 for sb in assinaturas_pendentes():
-    item_assinatura(sb)
+    if item_assinatura(sb):
+        g = (sb.get("relationships", {}).get("group", {}).get("data") or {}).get("id")
+        if g:
+            grupos_pend.add(g)
+if not grupos_pend and any(True for _ in assinaturas_pendentes()):
+    grupos_pend = {g["id"] for g in (call("GET", f"/apps/{APP_ID}/subscriptionGroups", ok=True, params={"limit": 20}) or {}).get("data", [])}
+for gid in grupos_pend:
+    item_grupo(gid)
 r = call("PATCH", f"/reviewSubmissions/{sub['id']}", json={"data": {"type": "reviewSubmissions", "id": sub["id"], "attributes": {"submitted": True}}})
 print("ENVIADO PRA REVISÃO DA APPLE:", r["data"]["attributes"].get("state"))
 for g in (call("GET", f"/apps/{APP_ID}/subscriptionGroups", ok=True, params={"limit": 20}) or {}).get("data", []):

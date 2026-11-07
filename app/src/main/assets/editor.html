@@ -11,6 +11,10 @@
 .bar b{font-size:15px;margin-right:auto}.bar button.hb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;min-height:46px;padding:3px 5px;border-radius:8px}.bar button.hb span{font-size:10px;line-height:1.1;font-weight:600;pointer-events:none;white-space:nowrap}button{min-width:40px;min-height:36px;font:inherit;border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:6px 10px;color:var(--fg)}
 .main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:10px}@media(max-width:760px){.main{grid-template-columns:1fr}}
 .cv{border:1px solid var(--line);border-radius:8px;background:#fff;touch-action:none}svg{width:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+/* iPhone: tocar e segurar num botão (andar pra frente, pro lado, agachar) fazia aparecer
+   a seleção de texto com as bolinhas azuis. Botão e 3D não selecionam texto; campo de digitar sim. */
+button,[data-fpw],[data-fpp],#v3,#v3 *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#v3 input,#v3 textarea,#v3 [contenteditable]{-webkit-user-select:text;user-select:text}
 .pn{border:1px solid var(--line);border-radius:8px;background:var(--panel);min-width:0}
 .tabs{display:flex;overflow:auto;border-bottom:1px solid var(--line)}.tabs div{padding:9px 12px;cursor:pointer;color:var(--fg);white-space:nowrap;border-bottom:2px solid transparent}.tabs div.on{color:var(--acc);border-color:var(--acc)}
 .bd{padding:10px;max-height:560px;overflow:auto}.sec{background:#cfe0f5;border-radius:4px;padding:4px 8px;margin:8px 0 4px;font-weight:600;display:flex;justify-content:space-between}
@@ -3906,7 +3910,7 @@ function fpWalk(fw,sd,dist,noR){var f=window.FPV;if(!f)return;var st=dist===unde
  f.e[0]=t[0];f.e[2]=t[1];if(!noR)render()}
 function fpPose(p){var f=window.FPV;if(!f)return;f.pose=p;var to=EYE[p],from=f.e[1],t0=performance.now();(function a(now){var k=Math.min(1,(now-t0)/450);f.e[1]=from+(to-from)*(k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2);render();if(k<1&&window.FPV)requestAnimationFrame(a)})(t0);fpBox().querySelectorAll('[data-fpp]').forEach(function(b){b.style.background=b.dataset.fpp===p?'#1f6feb':'';b.style.color=b.dataset.fpp===p?'#fff':''})}
 function fpBox(){if(FPB)return FPB;FPB=document.createElement('div');FPB.hidden=true;FPB.style.cssText='position:absolute;left:0;right:0;bottom:44px;z-index:7;display:flex;justify-content:space-between;align-items:flex-end;padding:0 10px;pointer-events:none';
- var bs='pointer-events:auto;min-width:54px;min-height:54px;font-size:22px;border-radius:12px;background:rgba(255,255,255,.92);border:1px solid #8a8f98;touch-action:none';
+ var bs='pointer-events:auto;min-width:54px;min-height:54px;font-size:22px;border-radius:12px;background:rgba(255,255,255,.92);border:1px solid #8a8f98;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent';
  FPB.innerHTML='<div style="display:grid;grid-template-columns:54px 54px 54px;gap:6px"><span></span><button data-fpw="1|0" style="'+bs+'">▲</button><span></span><button data-fpw="0|-1" style="'+bs+'">◀</button><button data-fpw="-1|0" style="'+bs+'">▼</button><button data-fpw="0|1" style="'+bs+'">▶</button></div>'
   +'<div style="display:flex;flex-direction:column;gap:6px">'+[['pe','🧍 Em pé'],['agachar','🧎 Agachar'],['sentar','🪑 Sentar']].map(function(q){return '<button data-fpp="'+q[0]+'" style="'+bs+';font-size:14px;min-width:110px;min-height:40px'+(q[0]==='pe'?';background:#1f6feb;color:#fff':'')+'">'+q[1]+'</button>'}).join('')+'</div>';
  M.appendChild(FPB);
@@ -4833,6 +4837,72 @@ var frObs_vol=frObs;frObs=function(f){var O=frObs_vol.apply(this,arguments);try{
 /* folga que o desenho do eletro passa da medida nominal (porta, puxádor, costas) */
 function frPad(f){var r=null;try{boxes.forEach(function(b){if(b.fr!==f.id)return;if(b.a!==undefined&&b.a<.5)return;if(!r)r={x0:b.x0,x1:b.x1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}})}catch(_){}if(!r)return null;var T=mobFoot(f),p={l:Math.max(0,T.x0-r.x0),r:Math.max(0,r.x1-T.x1),f:Math.max(0,T.z0-r.z0),b:Math.max(0,r.z1-T.z1)};return (p.l||p.r||p.f||p.b)?p:null}
 var frSolid_vol=frSolid;frSolid=function(f,s){if(!f||isMob2(f)||!frHard(f))return frSolid_vol.apply(this,arguments);var P=frPad(f);if(!P)return frSolid_vol.apply(this,arguments);var w0=f.w,d0=f.d;f.x=Math.round(f.x-P.l);f.y=Math.round((+f.y||0)-P.f);f.w=w0+P.l+P.r;f.d=d0+P.f+P.b;var s2=s?{x:(+s.x||0)-P.l,y:(+s.y||0)-P.f,w:(+s.w||w0)+P.l+P.r,d:(+s.d||d0)+P.f+P.b,h:s.h,b:s.b,t:s.t,rot:s.rot,id:s.id}:null;var m=frSolid_vol.call(this,f,s2);f.w=w0;f.d=d0;f.x=Math.round(f.x+P.l);f.y=Math.round((+f.y||0)+P.f);return m};
+/* ===== Girar a mobília (mesa, cadeira, banqueta, banco, deco) em qualquer ângulo =====
+   Os sofás já giravam de 90 em 90. Estes aqui eram desenhados sempre retos, então não
+   dava pra encaixar cadeira na quina da mesa nem acertar no módulo. Agora o desenho sai
+   girado no ângulo que você escolher, de 15 em 15 ou de 90 em 90. */
+(function(){
+ if(window.__MOBGIRA)return;window.__MOBGIRA=1;
+ function livre(f){return !!f&&/^(mesa|cadeira|banqueta|banco|deco)$/.test(f.t||'')}
+ function ang(f){var a=+(f&&f.ang)||0;a=a%360;if(a<0)a+=360;return a}
+
+ /* gira o que a função de desenho acabou de pôr, em volta do centro da própria peça */
+ var ap3=ap3model;ap3model=function(f,z0){
+  var a=livre(f)?ang(f):0,i0=boxes.length,r=ap3.apply(this,arguments);
+  if(!a||boxes.length<=i0)return r;
+  var novos=boxes.splice(i0),X0=1e9,X1=-1e9,Z0=1e9,Z1=-1e9;
+  novos.forEach(function(b){X0=Math.min(X0,b.x0);X1=Math.max(X1,b.x1);Z0=Math.min(Z0,b.z0);Z1=Math.max(Z1,b.z1)});
+  var cx=(X0+X1)/2,cz=(Z0+Z1)/2,t=a*Math.PI/180,co=Math.cos(t),si=Math.sin(t),
+      gi=function(p){var dx=p[0]-cx,dz=p[1]-cz;return [cx+dx*co-dz*si,cz+dx*si+dz*co]};
+  novos.forEach(function(b){
+   var pts=(b.pf&&b.pf.ax==='y'&&b.pf.pts&&b.pf.pts.length>2)?b.pf.pts.map(gi)
+          :[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].map(gi);
+   var xs=pts.map(function(p){return p[0]}),zs=pts.map(function(p){return p[1]}),n={};
+   for(var k in b)n[k]=b[k];
+   n.x0=Math.min.apply(null,xs);n.x1=Math.max.apply(null,xs);
+   n.z0=Math.min.apply(null,zs);n.z1=Math.max.apply(null,zs);
+   n.pf={ax:'y',pts:pts};
+   boxes.push(n);
+  });
+  return r;
+ };
+
+ /* botões no quadro da peça */
+ var Bt=function(at,tx){return '<button '+at+' style="padding:4px 9px;min-height:32px;font-size:13px">'+tx+'</button>'};
+ var ir=itRender;itRender=function(){
+  var r=ir.apply(this,arguments),E,x=ISX;
+  try{E=it4Box()}catch(_){return r}
+  if(!x||x.k!=='fr'||E.hidden||E.classList.contains('mini3'))return r;
+  var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];
+  if(!livre(f)||E.querySelector('[data-qang]'))return r;
+  var h='<div style="display:flex;gap:5px;flex-wrap:wrap;margin:6px 0;align-items:center">'
+   +'<span style="color:#666;font-size:12px">↻ Virada: <b style="color:#1b1f27">'+ang(f)+'°</b></span>'
+   +Bt('data-qang="-90"','⟲ 90°')+Bt('data-qang="-15"','⟲ 15°')+Bt('data-qang="15"','15° ⟳')+Bt('data-qang="90"','90° ⟳')
+   +(ang(f)?Bt('data-qang="0"','Endireitar'):'')+'</div>';
+  var an=E.querySelector('[data-qon]');an=an?an.parentNode:null;
+  if(an)an.insertAdjacentHTML('afterend',h);else E.insertAdjacentHTML('beforeend',h);
+  return r;
+ };
+
+ M.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('[data-qang]'):null;if(!t)return;
+  e.stopImmediatePropagation();e.preventDefault();
+  if(window.RO)return;
+  var x=ISX;if(!x||x.k!=='fr')return;
+  var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!livre(f))return;
+  if(f.lock){try{ambMsg('🔒 Travada · toque 🔓 pra destravar')}catch(_){}return}
+  try{snap()}catch(_){}
+  var v=+t.dataset.qang;
+  f.ang=v===0?0:ang(f)+v;
+  if(!ang(f))delete f.ang;
+  try{draw();panel()}catch(_){}
+  try{build();render()}catch(_){}
+  try{itRender()}catch(_){}
+  try{ambMsg('↻ '+((APM[f.t]&&APM[f.t].n)||'Peça')+' virada '+ang(f)+'°')}catch(_){}
+ },true);
+
+ window.__mobGira=function(id,a){var f=(S.fr||[]).filter(function(q){return q.id===id})[0];if(!f)return null;if(a!==undefined){f.ang=a;try{build()}catch(_){}}return ang(f)};
+})();
 var frDropAt_hard=frDropAt;frDropAt=function(f,hit){var m=frDropAt_hard.apply(this,arguments);try{if(frHard(f)){build();var r=frSolid(f,null);if(r==='sem lugar livre aí')return 'ali já tem outra coisa: não cabe'}}catch(_){}return m};
 /* arrastar no desenho 2D: mesma coisa ao soltar */
 var drawDrop_hard=window.frDrop2D;window.frDrop2D=function(f){try{if(frHard(f)){build();return frSolid(f,null)}}catch(_){}return ''};

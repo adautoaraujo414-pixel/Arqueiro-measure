@@ -33,7 +33,7 @@ def call(method, path, ok=False, **kw):
     return r.json() if r.text else {}
 
 
-PREP = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")
+PREP = ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED", "READY_FOR_REVIEW")  # READY_FOR_REVIEW = no envio, ainda não mandado
 TIRAR = os.environ.get("TIRAR") == "1"
 LIBERAR = os.environ.get("LIBERAR") == "1"  # lançamento automático quando a Apple aprovar (ou liberar agora se já aprovada)
 
@@ -178,8 +178,19 @@ if build["attributes"].get("usesNonExemptEncryption") is None:
     call("PATCH", f"/builds/{build['id']}", ok=True, json={"data": {"type": "builds", "id": build["id"], "attributes": {"usesNonExemptEncryption": False}}})
 
 # 2) coloca o build na versão
-call("PATCH", f"/appStoreVersions/{ver['id']}/relationships/build", json={"data": {"type": "builds", "id": build["id"]}})
-print("build colocado na versão", vs)
+if ver["attributes"]["appStoreState"] == "READY_FOR_REVIEW":
+    cur = call("GET", f"/appStoreVersions/{ver['id']}/build", ok=True)
+    cid = ((cur or {}).get("data") or {}).get("id")
+    if cid != build["id"]:
+        if call("PATCH", f"/appStoreVersions/{ver['id']}/relationships/build", ok=True, json={"data": {"type": "builds", "id": build["id"]}}):
+            print("build trocado na versão", vs)
+        else:
+            print("::warning::não deu pra trocar o build com a versão já no envio (fica o build", (cur or {}).get("data", {}).get("attributes", {}).get("version"), ")")
+    else:
+        print("build já estava na versão", vs)
+else:
+    call("PATCH", f"/appStoreVersions/{ver['id']}/relationships/build", json={"data": {"type": "builds", "id": build["id"]}})
+    print("build colocado na versão", vs)
 if VERSAO or NOVIDADES or len(versions) > 1:
     novidades(ver)
 

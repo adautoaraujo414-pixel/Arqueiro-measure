@@ -4092,11 +4092,14 @@ var apFinK_s=apFinK;apFinK=function(t){if(/^(sofa|poltrona|clinica)$/.test(t||''
 /* sólido: não entra em parede, móvel, painel, eletro nem em outro sofá; sempre no piso */
 /* pegada no chão (retrátil aberto avança 42 cm pra frente) */
 function mobFoot(f){var T=mobT(f),ex=(f.sm==='ret'&&f.open)?420:0,a=T.P(0,0),b=T.P(T.Lw,T.Ld+ex);return {x0:Math.min(a[0],b[0]),x1:Math.max(a[0],b[0]),z0:Math.min(a[1],b[1]),z1:Math.max(a[1],b[1])}}
+/* sólidos de verdade: além dos móveis, a geladeira também não entra dentro de nada */
+function frHard(f){return isMob2(f)||(!!f&&/^(geladeira)$/.test(f.t||''))}
+window.frHard=frHard;
 function frObs(f){var O=geoObs(null),G={},M2={};(S.fr||[]).forEach(function(q){if(q!==f&&isMob2(q)&&!(q.wall==='e'||q.wall==='d')){M2[String(q.id)]=1;var ft=mobFoot(q);O.push({x0:ft.x0,x1:ft.x1,y0:+q.b||0,y1:(+q.b||0)+q.h,z0:ft.z0,z1:ft.z1})}});boxes.forEach(function(b){if(b.fr==null||b.fr===f.id||M2[String(b.fr)]||(b.a!==undefined&&b.a<.5))return;var k=String(b.fr),r=G[k];if(!r)G[k]={x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.y0=Math.min(r.y0,b.y0);r.y1=Math.max(r.y1,b.y1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}});Object.keys(G).forEach(function(k){var g=G[k];if(g.x1-g.x0>1&&g.y1-g.y0>1&&g.z1-g.z0>1)O.push(g)});return O}
-function frSolid(f,s){if(!isMob2(f))return '';if(!(f.cm==='painel'))f.b=0;var ft=mobFoot(f),ox=ft.x0-f.x,oz=ft.z0-(+f.y||0),ew=(ft.x1-ft.x0)-f.w,ed=(ft.z1-ft.z0)-f.d,p={x:ft.x0,w:f.w+ew,b:f.b||0,h:f.h,z:ft.z0,d:f.d+ed},sp=s?{x:s.x+ox,w:s.w+ew,b:s.b||0,h:s.h,z:(+s.y||0)+oz,d:s.d+ed}:null,m=geoSolid(p,sp,frObs(f),true);if(!(f.cm==='painel'))p.b=0;f.x=Math.round(p.x-ox);f.w=Math.round(p.w-ew);f.b=p.b;f.h=p.h;f.y=Math.round(p.z-oz);f.d=Math.round(p.d-ed);return m}
+function frSolid(f,s){if(!frHard(f))return '';if(!(f.cm==='painel'))f.b=0;var ft=mobFoot(f),ox=ft.x0-f.x,oz=ft.z0-(+f.y||0),ew=(ft.x1-ft.x0)-f.w,ed=(ft.z1-ft.z0)-f.d,p={x:ft.x0,w:f.w+ew,b:f.b||0,h:f.h,z:ft.z0,d:f.d+ed},sp=s?{x:s.x+ox,w:s.w+ew,b:s.b||0,h:s.h,z:(+s.y||0)+oz,d:s.d+ed}:null,m=geoSolid(p,sp,frObs(f),true);if(!(f.cm==='painel'))p.b=0;f.x=Math.round(p.x-ox);f.w=Math.round(p.w-ew);f.b=p.b;f.h=p.h;f.y=Math.round(p.z-oz);f.d=Math.round(p.d-ed);return m}
 window.frSolid=frSolid;window.__frObs=function(id){var f=(S.fr||[]).filter(function(q){return q.id===id})[0];return frObs(f).map(function(r){return [r.x0,r.x1,r.y0,r.y1,r.z0,r.z1].map(Math.round).join(',')})};window.__bb3=function(k,id){build();var r=null,n=0;boxes.forEach(function(b){if(b[k]!==id)return;n++;if(!r)r={x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.y0=Math.min(r.y0,b.y0);r.y1=Math.max(r.y1,b.y1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}});if(r){for(var q in r)r[q]=Math.round(r[q]);r.n=n}return r};window.__itSet=function(k,v){snap();itSet(k,v);itDone()};window.__isx=function(x){itOpen(x)};window.__anim=function(){build();for(var k in ANT)ANG[k]=ANT[k];build()};
-var ahKick_s=ahKick;ahKick=function(){try{var x=ISX,f=x&&x.k==='fr'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(isMob2(f)){var s_=(BPEND&&BPEND.go&&BPEND.s)||(typeof ADR!=='undefined'&&ADR&&ADR.s)||null;if(s_)GEOM=frSolid(f,s_)}}catch(_){}return ahKick_s.apply(this,arguments)};
-var itSet_s=itSet;itSet=function(k,v){var x=ISX,f=x&&x.k==='fr'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(!isMob2(f))return itSet_s.apply(this,arguments);if(f.lock){ambMsg('🔒 Travado · toque 🔓 pra destravar');return}var s0=JSON.parse(JSON.stringify(f));itSet_s.apply(this,arguments);var m_=frSolid(f,s0);if(m_)ambMsg(m_==='sem lugar livre aí'?'⛔ Ali já tem outro móvel: não cabe':'Encostou · da esquerda '+f.x+' · da parede do fundo '+f.y)};
+var ahKick_s=ahKick;ahKick=function(){try{var x=ISX,f=x&&x.k==='fr'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(frHard(f)){var s_=(BPEND&&BPEND.go&&BPEND.s)||(typeof ADR!=='undefined'&&ADR&&ADR.s)||null;if(s_)GEOM=frSolid(f,s_)}}catch(_){}return ahKick_s.apply(this,arguments)};
+var itSet_s=itSet;itSet=function(k,v){var x=ISX,f=x&&x.k==='fr'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(!frHard(f))return itSet_s.apply(this,arguments);if(f.lock){ambMsg('🔒 Travado · toque 🔓 pra destravar');return}var s0=JSON.parse(JSON.stringify(f));itSet_s.apply(this,arguments);var m_=frSolid(f,s0);if(m_)ambMsg(m_==='sem lugar livre aí'?'⛔ Ali já tem outro móvel: não cabe':'Encostou · da esquerda '+f.x+' · da parede do fundo '+f.y)};
 /* girar, encostar, centralizar, alinhar e estofado (tecido, cor, assentos, braços, pés, almofadas, chaise, retrátil) */
 function mobAct(f,a,v){var D=(typeof roomD==='function'?roomD():2600),s0=JSON.parse(JSON.stringify(f)),msg='';
  if(a==='rot'){var cx=f.x+f.w/2,cz=(+f.y||0)+f.d/2,w=f.w;f.w=f.d;f.d=w;f.rot=(((+f.rot||0)+(+v||90))%360+360)%360;f.x=Math.round(cx-f.w/2);f.y=Math.round(cz-f.d/2);msg='⟳ Girado '+f.rot+'°'}
@@ -4821,6 +4824,18 @@ var sel3_fr=sel3;sel3=function(cx,cy){if(IDRAW||window.PT3)return sel3_fr(cx,cy)
  return sel3_fr(cx,cy)};
 var size3_fr=size3;size3=function(cx,cy){var it=null;try{it=pickItem(cx,cy)}catch(_){}if(it&&it.k==='fr'){var f=frById(it.id);if(f){FRMV=null;itOpen({k:'fr',id:f.id});ambMsg('⚙ Configurações do '+((APM[f.t]&&APM[f.t].n)||'item').toLowerCase());return}}return size3_fr(cx,cy)};
 /* selecionado pra mudar de lugar: fica laranja */
+/* pôr com 2 toques (chão, pedra, mesa, parede): depois de cair no lugar, empurra pra fora
+   se tiver caído dentro de módulo, pedra, móvel ou outro eletro */
+/* O que vale pra bater é o volume DESENHADO, não a medida nominal. A pedra não entrava
+   na conta de obstáculos: agora entra, pelo tampo que aparece no 3D. */
+function volDe(ks){var G={};boxes.forEach(function(b){if(b.a!==undefined&&b.a<.5)return;for(var i=0;i<ks.length;i++){var k=ks[i],v=b[k];if(v==null)continue;var q=k+':'+v,r=G[q];if(!r)G[q]={x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.y0=Math.min(r.y0,b.y0);r.y1=Math.max(r.y1,b.y1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}}});return Object.keys(G).map(function(q){return G[q]}).filter(function(r){return r.x1-r.x0>1&&r.y1-r.y0>1&&r.z1-r.z0>1})}
+var frObs_vol=frObs;frObs=function(f){var O=frObs_vol.apply(this,arguments);try{O=O.concat(volDe(['sid']))}catch(_){}return O};
+/* folga que o desenho do eletro passa da medida nominal (porta, puxádor, costas) */
+function frPad(f){var r=null;try{boxes.forEach(function(b){if(b.fr!==f.id)return;if(b.a!==undefined&&b.a<.5)return;if(!r)r={x0:b.x0,x1:b.x1,z0:b.z0,z1:b.z1};else{r.x0=Math.min(r.x0,b.x0);r.x1=Math.max(r.x1,b.x1);r.z0=Math.min(r.z0,b.z0);r.z1=Math.max(r.z1,b.z1)}})}catch(_){}if(!r)return null;var T=mobFoot(f),p={l:Math.max(0,T.x0-r.x0),r:Math.max(0,r.x1-T.x1),f:Math.max(0,T.z0-r.z0),b:Math.max(0,r.z1-T.z1)};return (p.l||p.r||p.f||p.b)?p:null}
+var frSolid_vol=frSolid;frSolid=function(f,s){if(!f||isMob2(f)||!frHard(f))return frSolid_vol.apply(this,arguments);var P=frPad(f);if(!P)return frSolid_vol.apply(this,arguments);var w0=f.w,d0=f.d;f.x=Math.round(f.x-P.l);f.y=Math.round((+f.y||0)-P.f);f.w=w0+P.l+P.r;f.d=d0+P.f+P.b;var s2=s?{x:(+s.x||0)-P.l,y:(+s.y||0)-P.f,w:(+s.w||w0)+P.l+P.r,d:(+s.d||d0)+P.f+P.b,h:s.h,b:s.b,t:s.t,rot:s.rot,id:s.id}:null;var m=frSolid_vol.call(this,f,s2);f.w=w0;f.d=d0;f.x=Math.round(f.x+P.l);f.y=Math.round((+f.y||0)+P.f);return m};
+var frDropAt_hard=frDropAt;frDropAt=function(f,hit){var m=frDropAt_hard.apply(this,arguments);try{if(frHard(f)){build();var r=frSolid(f,null);if(r==='sem lugar livre aí')return 'ali já tem outra coisa: não cabe'}}catch(_){}return m};
+/* arrastar no desenho 2D: mesma coisa ao soltar */
+var drawDrop_hard=window.frDrop2D;window.frDrop2D=function(f){try{if(frHard(f)){build();return frSolid(f,null)}}catch(_){}return ''};
 var build_frmv=build;build=function(){build_frmv.apply(this,arguments);if(FRMV){boxes.forEach(function(b){if(b.fr===FRMV&&Array.isArray(b.c)){b.c=[Math.round(b.c[0]*.55+255*.45),Math.round(b.c[1]*.55+150*.45),Math.round(b.c[2]*.55+30*.45)]}})}};
 /* 1 dedo em cima do eletro: arrasta pelo chão (ou pela altura onde ele está) */
 cv.addEventListener('pointerdown',function(e){FDR=null;if(window.RO||window.PT3||IDRAW||XDRAW||GDRAW||window.FPV||!e.isPrimary||e.pointerType==='mouse'&&e.button!==0)return;if(ISX&&ISX.k==='fr')return;var r=cv.getBoundingClientRect(),cx=e.clientX-r.left,cy=e.clientY-r.top,h=null;try{h=pickItem(cx,cy)}catch(_){}if(!h||h.k!=='fr')return;var f=frById(h.id);if(!frGest(f)||f.lock)return;MPEND=null;try{RPEND=null}catch(_){}FDR={pid:e.pointerId,sx:e.clientX,sy:e.clientY,f:f,go:0,p0:null,s:{x:f.x,y:+f.y||0}}},true);
@@ -5011,7 +5026,7 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
    Fechar continua travando a peça do jeito que você deixou. */
 (function(){
  if(window.__GEOX)return;window.__GEOX=1;
- var GMIN=0,FAB=null,FABP=null,GSTEP=10;
+ var GMIN=0,OMIN=0,FAB=null,FABP=null,GSTEP=10,GKEY='';
 
  function fabEl(){
   if(FAB)return FAB;
@@ -5022,7 +5037,7 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
   var dg=null;
   FAB.addEventListener('pointerdown',function(e){dg={id:e.pointerId,x:e.clientX,y:e.clientY,l:FAB.offsetLeft,t:FAB.offsetTop,mv:0};try{FAB.setPointerCapture(e.pointerId)}catch(_){}e.stopPropagation()},true);
   FAB.addEventListener('pointermove',function(e){if(!dg||e.pointerId!==dg.id)return;var dx=e.clientX-dg.x,dy=e.clientY-dg.y;if(!dg.mv&&Math.sqrt(dx*dx+dy*dy)<6)return;dg.mv=1;var r=M.getBoundingClientRect(),L=Math.max(4,Math.min(r.width-58,dg.l+dx)),T=Math.max(4,Math.min(r.height-58,dg.t+dy));FAB.style.left=L+'px';FAB.style.top=T+'px';FABP={x:L,y:T};e.stopPropagation();e.preventDefault()},true);
-  FAB.addEventListener('pointerup',function(e){if(!dg||e.pointerId!==dg.id)return;var mv=dg.mv;dg=null;e.stopPropagation();if(mv)return;GMIN=0;FAB.hidden=true;try{itRender()}catch(_){}},true);
+  FAB.addEventListener('pointerup',function(e){if(!dg||e.pointerId!==dg.id)return;var mv=dg.mv;dg=null;e.stopPropagation();if(mv)return;FAB.hidden=true;if(OMIN){OMIN=0;try{opBoxShow()}catch(_){}}else{GMIN=0;try{itRender()}catch(_){}}},true);
   return FAB;
  }
  function fabShow(){var F=fabEl(),r=M.getBoundingClientRect();if(!FABP)FABP={x:Math.max(4,r.width-72),y:Math.max(4,r.height-150)};F.style.left=FABP.x+'px';F.style.top=FABP.y+'px';F.hidden=false}
@@ -5057,15 +5072,25 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
   var r=ir.apply(this,arguments);
   var E,x=ISX,g=null;
   try{E=it4Box()}catch(_){return r}
-  if(x&&x.k==='geo'){try{g=geoBy(x.id)}catch(_){g=null}}
-  if(!g||M.hidden||E.hidden){if(!g)GMIN=0;fabHide();return r}
+  /* trocou de coisa escolhida: abre o quadro da nova em vez de continuar minimizado */
+  var kk=x?(x.k+':'+x.id):'';
+  if(kk!==GKEY){GKEY=kk;GMIN=0}
+  if(!x||M.hidden||E.hidden){GMIN=0;fabHide();return r}
   if(GMIN){E.hidden=true;fabShow();return r}
   fabHide();
   /* no quadro pequeno (só o nome e o ⚙) não entra nada: as opções são do quadro completo */
   if(E.classList.contains('mini3'))return r;
-  /* minimizar passa a ser o nosso: some o painel e deixa a bolinha */
+  /* minimizar em QUALQUER quadro (porta, janela, módulo, pedra, peça...): some o quadro
+     e deixa a bolinha, pra poder arrastar a coisa no 3D sem o quadro na frente */
   var mb=E.querySelector('[data-qmin]');
-  if(mb){mb.removeAttribute('data-qmin');mb.setAttribute('data-qgmin','1');mb.textContent='▁';mb.title='Minimizar: vira uma bolinha e continua editando'}
+  if(mb){mb.removeAttribute('data-qmin');mb.setAttribute('data-qgmin','1');mb.textContent='▁';mb.title='Minimizar: vira uma bolinha e continua mexendo'}
+  else if(!E.querySelector('[data-qgmin]')){
+   var xb=E.querySelector('[data-qx]');
+   if(xb)xb.insertAdjacentHTML('beforebegin','<button data-qgmin="1" title="Minimizar: vira uma bolinha e continua mexendo" style="min-width:42px;min-height:38px">▁</button>');
+  }
+  if(x.k!=='geo')return r;
+  try{g=geoBy(x.id)}catch(_){g=null}
+  if(!g)return r;
   /* o giro antigo pulava a peça pro lado: trocado pelo giro no próprio eixo */
   var rb=E.querySelector('[data-qgrot]');if(rb)rb.remove();
   /* trocar de tipo sem perder as medidas digitadas */
@@ -5084,17 +5109,35 @@ window.addEventListener('resize',function(){if(!M.hidden)render()});
 
  var ic=itClose;itClose=function(){GMIN=0;fabHide();return ic.apply(this,arguments)};
 
+ /* o quadro da porta/janela é outro elemento (OPB), com botões próprios: ganha o mesmo
+    minimizar, pra dar pra arrastar a porta no 3D sem o quadro na frente */
+ var obs=opBoxShow;opBoxShow=function(){
+  var r=obs.apply(this,arguments);
+  try{
+   if(!OPB||OPB.hidden){if(OMIN){OMIN=0;fabHide()}return r}
+   var kk='op:'+OPSEL;if(kk!==GKEY){GKEY=kk;OMIN=0}
+   if(OMIN){OPB.hidden=true;fabShow();return r}
+   if(!GMIN)fabHide();
+   if(!OPB.querySelector('[data-qgmin]')){
+    var bt='<button data-qgmin="op" title="Minimizar: vira uma bolinha e continua mexendo" style="min-width:42px;min-height:34px">▁</button>',
+        xb=OPB.querySelector('[data-ox]');
+    if(xb)xb.insertAdjacentHTML('beforebegin',bt);else OPB.insertAdjacentHTML('afterbegin',bt);
+   }
+  }catch(_){}
+  return r;
+ };
+
  /* capturado no M (pai do quadro): roda antes dos cliques antigos, então o giro e o
     minimizar novos é que valem */
  M.addEventListener('click',function(e){
   var t=e.target&&e.target.closest?e.target.closest('button'):null;if(!t)return;
-  var E;try{E=it4Box()}catch(_){return}
-  if(!E||!E.contains(t))return;
+  var E=null;try{E=it4Box()}catch(_){}
+  if(!((E&&E.contains(t))||(OPB&&OPB.contains(t))))return;
   var d=t.dataset;
   if(!(d.qgmin||d.qgw||d.qglay||d.qgspin||d.qgstep||d.qgt2))return;
   e.stopImmediatePropagation();e.preventDefault();
   if(d.qgstep){GSTEP=+d.qgstep;try{itRender()}catch(_){}return}
-  if(d.qgmin){GMIN=1;try{itRender()}catch(_){}return}
+  if(d.qgmin){if(d.qgmin==='op'){OMIN=1;try{opBoxShow()}catch(_){}}else{GMIN=1;try{itRender()}catch(_){}}return}
   if(window.RO)return;
   var x=ISX,g=null;if(x&&x.k==='geo'){try{g=geoBy(x.id)}catch(_){}}
   if(!g)return;
@@ -6064,12 +6107,27 @@ var rpCutPieces_isl=rpCutPieces;rpCutPieces=function(){var out=rpCutPieces_isl.a
 </script>
 <script>
 /* 🔍 imersão na vista de cima da pedra: rolando a tela pra cima, a vista cresce e aproxima a pedra · voltando, mostra a cozinha inteira de novo */
+/* a imersão vira um multiplicador do zoom: o que o dedo escolheu (＋ −) continua valendo,
+   e a rolagem vai somando por cima */
+var pzApply_im=window.pzApply;window.pzApply=pzApply=function(){var Z=window.__pz,f=Math.max(1,+(Z&&Z.imz)||1);if(!Z||f<=1.001)return pzApply_im.apply(this,arguments);var z0=Z.z;Z.z=Math.max(1,Math.min(6,z0*f));var r=pzApply_im.apply(this,arguments);Z.z=z0;return r};
 (function(){var IM={on:true,raf:0,p:0};try{IM.on=localStorage.getItem('arque_imers')!=='0'}catch(_){}
  function scr(el){var t=window.scrollY||0;for(var e=el&&el.parentNode;e&&e.nodeType===1;e=e.parentNode)t+=e.scrollTop||0;return t}
  function apply(){IM.raf=0;var P=document.getElementById('plan'),wr=document.getElementById('planwrap');if(!P||!wr||wr.hidden||!window.PLGEO)return;var G=window.PLGEO,pz=window.__pz;
-  if(pz&&pz.z>1.001){if(P.style.height){P.style.height=''}return}
+  if(pz&&pz.z>1.001){
+   /* ANTES: com zoom a imersão desistia. Agora ela continua: a vista de cima da pedra vai
+      crescendo conforme desce a tela, somando com o zoom que já estava escolhido. */
+   var r2=wr.getBoundingClientRect(),vh2=window.innerHeight||800,sc2=scr(wr),st2=Math.max(0,(r2.top+sc2)-vh2*.75),
+       p2=IM.on?Math.max(0,Math.min(1,(sc2-st2)/320)):0,e2=p2*p2*(3-2*p2),
+       W2=P.parentNode.clientWidth||P.clientWidth||400,Hb=W2*G.PH/900,
+       /* teto: a faixa cresce até encher 70% da tela do telefone e trava aí */
+       fmax=Math.max(1,Math.min(8,(vh2*.70)/Math.max(1,Hb))),f2=1+(fmax-1)*e2;
+   IM.p=p2;pz.imz=f2;
+   if(f2<=1.001){pz.imz=1;if(P.style.height)P.style.height=''}else P.style.height=(Hb*f2).toFixed(0)+'px';
+   try{pzApply()}catch(_){}
+   return}
+  if(pz)pz.imz=1;
   var r=wr.getBoundingClientRect(),vh=window.innerHeight||800,sc=scr(wr),rest=r.top+sc,start=Math.max(0,rest-vh*.75),p=IM.on?Math.max(0,Math.min(1,(sc-start)/320)):0;IM.p=p;
-  var st0=S.st||null,bx0=1e9,bx1=-1e9;(st0?[st0]:S.stones).forEach(function(q){bx0=Math.min(bx0,q.x);bx1=Math.max(bx1,q.x+q.w)});var fit=bx1>bx0?900/(((bx1-bx0)*G.k)+90):1,W=P.parentNode.clientWidth||P.clientWidth||400,H0=W*G.PH/900,zm=Math.max(1,Math.min(3,fit,(vh*.62)/H0)),e=p*p*(3-2*p),z=1+(zm-1)*e,H=H0*z;
+  var st0=S.st||null,bx0=1e9,bx1=-1e9;(st0?[st0]:S.stones).forEach(function(q){bx0=Math.min(bx0,q.x);bx1=Math.max(bx1,q.x+q.w)});var fit=bx1>bx0?900/(((bx1-bx0)*G.k)+90):1,W=P.parentNode.clientWidth||P.clientWidth||400,H0=W*G.PH/900,/* cresce até a faixa encher 70% da tela do telefone e trava */zm=Math.max(1,Math.min(8,(vh*.70)/H0)),e=p*p*(3-2*p),z=1+(zm-1)*e,H=H0*z;
   if(z<1.01){if(P.style.height){P.style.height='';P.setAttribute('viewBox','0 0 900 '+G.PH)}return}
   var cx=bx1>bx0?G.L+((bx0+bx1)/2)*G.k:450,vw=900/z,x0=Math.max(0,Math.min(900-vw,cx-vw/2));P.setAttribute('viewBox',x0.toFixed(1)+' 0 '+vw.toFixed(1)+' '+G.PH);P.style.height=H.toFixed(0)+'px'}
  function kick(){if(!IM.raf)IM.raf=requestAnimationFrame(apply)}

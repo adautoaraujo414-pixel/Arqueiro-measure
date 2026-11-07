@@ -225,12 +225,19 @@ def assinaturas_pendentes():
     return out
 def item_assinatura(sb):
     # caminho novo (versão da assinatura) → item do envio; se a API não aceitar, usa o envio direto (antigo)
-    sv = call("POST", "/subscriptionVersions", ok=True, json={"data": {"type": "subscriptionVersions", "relationships": {
-             "subscription": {"data": {"type": "subscriptions", "id": sb["id"]}}}}})
-    if not sv or not sv.get("data"):
-        lst = call("GET", f"/subscriptions/{sb['id']}/subscriptionVersions", ok=True, params={"limit": 5})
-        svs = [v for v in (lst or {}).get("data", []) if v["attributes"].get("state") in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", None)]
-        sv = {"data": svs[0]} if svs else None
+    S.headers["Authorization"] = "Bearer " + token()
+    rr = S.post(API + "/subscriptionVersions", timeout=120, json={"data": {"type": "subscriptionVersions", "relationships": {
+                "subscription": {"data": {"type": "subscriptions", "id": sb["id"]}}}}})
+    sv = rr.json() if rr.status_code < 400 and rr.text else None
+    if not sv:
+        # já existe uma versão em andamento: a Apple devolve o id dela no erro ("inflight version with id '…'")
+        import re
+        m = re.search(r"inflight version with id '([0-9a-f-]+)'", rr.text)
+        if m:
+            sv = {"data": {"id": m.group(1)}}
+            print("versão da assinatura já existente:", m.group(1))
+        else:
+            print("::warning::POST /subscriptionVersions ->", rr.status_code, rr.text[:400])
     if sv and sv.get("data"):
         it = call("POST", "/reviewSubmissionItems", ok=True, json={"data": {"type": "reviewSubmissionItems", "relationships": {
                   "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": sub["id"]}},

@@ -6342,7 +6342,10 @@ var pzApply_im=window.pzApply;window.pzApply=pzApply=function(){var Z=window.__p
    IM.p=p2;pz.imz=f2;
    /* com a imersão puxando o zoom, a janela tem que ficar em cima da pedra: senão ela
       sai de vista e fica só faixa branca (era o bug do vídeo) */
-   if(f2>1.001&&b1>b0)pz.cx=G.L+((b0+b1)/2)*G.k;
+   /* recentra na pedra só se ela saiu da janela (ou se o usuário não mexeu no zoom): se você deu
+      zoom em cima dela, a imersão te deixa em paz */
+   var Zt=Math.max(1,pz.z*f2),wv=900/Zt,px0=G.L+b0*G.k,px1=G.L+b1*G.k,cxv=(pz.cx===null||pz.cx===undefined)?450:pz.cx,fora=(px1<cxv-wv/2||px0>cxv+wv/2);
+   if(f2>1.001&&b1>b0&&(!pz.user||fora))pz.cx=G.L+((b0+b1)/2)*G.k;
    if(f2<=1.001){pz.imz=1;if(P.style.height)P.style.height=''}else P.style.height=(Hb*f2).toFixed(0)+'px';
    try{pzApply()}catch(_){}
    return}
@@ -6859,6 +6862,33 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset|
   open(sv,(hd.textContent||'').replace(/🔍 Ampliar/,'').trim());
  },true);
  window.__cutZoom=function(sv,t){open(sv,t)};
+})();
+/* ===== Pinça e arrasto na vista de cima da pedra, sem lag =====
+   Antes: cada movimento do dedo reescrevia o viewBox do SVG inteiro (centenas de elementos),
+   e o iPhone não dava conta → atraso. Agora, enquanto o dedo está na tela, a escrita do
+   viewBox é segurada e o zoom vira uma transformação de GPU no SVG (instantânea, como a
+   câmera do 3D); o viewBox é gravado UMA vez ao soltar. E a imersão deixa de recentrar a
+   vista quando foi você que deu zoom ou arrastou. */
+(function(){
+ if(window.__PINCA)return;window.__PINCA=1;
+ var P=document.getElementById('plan'),PZ=window.__pz;if(!P||!PZ)return;
+ var W=P.parentNode,g=null,raf=0,pend=null,so=P.setAttribute.bind(P);
+ try{W.style.overflow='hidden';W.style.touchAction='none';P.style.touchAction='none';P.style.transformOrigin='0 0';P.style.willChange='transform'}catch(_){}
+ function vb(s){return String(s||P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number)}
+ /* usa o tamanho medido no começo do gesto: depois da 1ª transformação o getBoundingClientRect já vem escalado */
+ function pinta(){raf=0;if(!g||!pend)return;var r=g.r,v1=vb(pend),v0=g.vb,k1=r.width/v1[2],s=v0[2]/v1[2],tx=(v0[0]-v1[0])*k1,ty=(v0[1]-v1[1])*(r.height/v1[3]);
+  P.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')'}
+ /* durante o gesto, a escrita do viewBox é adiada e vira transformação */
+ P.setAttribute=function(k,v){if(k==='viewBox'&&g){pend=String(v);if(!raf)raf=requestAnimationFrame(pinta);return}return so(k,v)};
+ var dedos={};
+ P.addEventListener('pointerdown',function(e){dedos[e.pointerId]=1;if(!g){g={vb:vb(),r:P.getBoundingClientRect(),z:PZ.z,cx:PZ.cx,cy:PZ.cy};pend=null}},true);
+ function solta(e){delete dedos[e.pointerId];if(Object.keys(dedos).length)return;if(!g)return;
+  var mexeu=!!pend&&pend!==g.vb.join(' ');var fim=pend;g=null;if(raf){cancelAnimationFrame(raf);raf=0}
+  P.style.transform='';if(fim)so('viewBox',fim);pend=null;if(mexeu)PZ.user=1}
+ /* solta no SVG ou fora dele (o dedo pode sair da área) */
+ document.addEventListener('pointerup',solta,true);document.addEventListener('pointercancel',solta,true);
+ /* roda do mouse e botões ＋ − também contam como "foi o usuário"; ⌂ zera */
+ var ps=window.pzSet;if(ps)window.pzSet=function(z){var r=ps.apply(this,arguments);PZ.user=(z<=1.001)?0:1;return r};
 })();
 </script>
 </body></html>

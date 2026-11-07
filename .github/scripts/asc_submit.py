@@ -59,7 +59,7 @@ def lancamento_automatico(v):
 
 VERSAO = (os.environ.get("VERSAO") or "").strip()
 NOVIDADES = (os.environ.get("NOVIDADES") or "").strip()
-OCUPADA = ("WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", "PENDING_APPLE_RELEASE", "PROCESSING_FOR_APP_STORE")
+OCUPADA = ("WAITING_FOR_REVIEW", "IN_REVIEW", "READY_FOR_REVIEW", "PENDING_DEVELOPER_RELEASE", "PENDING_APPLE_RELEASE", "PROCESSING_FOR_APP_STORE")
 
 
 def vnum(s):
@@ -117,7 +117,7 @@ if LIBERAR:
              "appStoreVersion": {"data": {"type": "appStoreVersions", "id": pend["id"]}}}}})
         print("VERSÃO", pend["attributes"]["versionString"], "LIBERADA PRA LOJA AGORA (já estava aprovada) ✓")
         sys.exit(0)
-    alvo = ver or next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW")), None)
+    alvo = ver or next((v for v in versions if v["attributes"]["appStoreState"] in ("WAITING_FOR_REVIEW", "IN_REVIEW", "READY_FOR_REVIEW")), None)
     if not alvo:
         for v in versions:
             print("versão", v["attributes"]["versionString"], v["attributes"]["appStoreState"], v["attributes"].get("releaseType"))

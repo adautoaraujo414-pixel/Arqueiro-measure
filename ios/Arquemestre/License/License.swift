@@ -89,7 +89,11 @@ final class LicenseManager: ObservableObject {
     /// deixava a tela presa em "Carregando o preço…" até fechar o app.
     private var carregando = false
     func load() async {
-        if carregando { return }
+        if carregando {
+            // já tem uma carga rodando (a do init): espera ela terminar em vez de duplicar
+            while carregando { try? await Task.sleep(nanoseconds: 100_000_000) }
+            return
+        }
         carregando = true
         defer { carregando = false }
         var wait: UInt64 = 3

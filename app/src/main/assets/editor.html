@@ -1648,8 +1648,10 @@ function qeL(x1,y1,x2,y2,q){return '<line data-qe="'+q+'" x1="'+x1+'" y1="'+y1+'
 function qtx(q,x,y,t,c,a,sz,b,rot){return tx(x,y,t,c,a,sz,b,rot).replace('<text ','<text data-q="'+q+'" stroke="transparent" stroke-width="14" style="cursor:pointer" ')}
 function drawPlan(){var d6=function(v){return v===undefined?600:v},ext=function(st){var sh=st.shape||'reta',la=(sh==='Le'||sh==='U')?d6(st.lenA):0,lb=(sh==='Ld'||sh==='U')?d6(st.lenB):0;return st.d+Math.max(la,lb)};
  var Dmax=600;S.stones.forEach(function(st){Dmax=Math.max(Dmax,ext(st))});S.mods.forEach(function(m){Dmax=Math.max(Dmax,m.d)});S.fr.forEach(function(f){Dmax=Math.max(Dmax,f.d)});Dmax=Math.max(Dmax,S.m?S.m.d:0);
- var WW=S.W,k=Math.min(780/WW,300/Dmax),L=60,T=34,PH=Math.round(T+Dmax*k+46),s='';$('plan').setAttribute('viewBox','0 0 900 '+PH);window.PLGEO={k:k,L:L,T:T,PH:PH};
- s+='<rect x="'+L+'" y="'+T+'" width="'+(WW*k)+'" height="'+(Dmax*k)+'" fill="#fafafa" stroke="#c4c9d1" stroke-dasharray="5 4"/>'+ln(L,T,L+WW*k,T,'#333',4)+tx(L+WW*k/2,T-8,'Parede '+WW+' (fundo)','#2f2fd6','middle',11,1);
+ /* com a imersão ligada a vista de cima mostra o chão da cozinha inteira (fundo real da sala), do tamanho do 2D de cima; sem imersão, só a faixa da bancada */
+ var fundo=0;try{fundo=window.__planFundo?+__planFundo()||0:0}catch(_){}var Dv=Math.max(Dmax,fundo);
+ var WW=S.W,k=Math.min(780/WW,(fundo>0?480:300)/Dv),L=60,T=34,PH=Math.round(T+Dv*k+46),s='';if(fundo>0){L=Math.round((900-WW*k)/2)}$('plan').setAttribute('viewBox','0 0 900 '+PH);window.PLGEO={k:k,L:L,T:T,PH:PH,fundo:fundo>0?Dv:0};
+ s+='<rect x="'+L+'" y="'+T+'" width="'+(WW*k)+'" height="'+(Dv*k)+'" fill="#fafafa" stroke="#c4c9d1" stroke-dasharray="5 4"/>'+ln(L,T,L+WW*k,T,'#333',4)+tx(L+WW*k/2,T-8,'Parede '+WW+' (fundo)','#2f2fd6','middle',11,1);
  S.fr.forEach(function(f){var t=f.t||'geladeira',R_=frPlanR(f),y=T+R_.z*k;if(t==='eletrica')return;if(t==='torneira'){s+='<circle cx="'+(L+(R_.x+R_.w/2)*k)+'" cy="'+(y+R_.h*k/2)+'" r="'+Math.max(3,f.w*k/2)+'" fill="#b8c0c8" stroke="#555" pointer-events="none"/>';return}
   if(t==='forno'||t==='microondas'||t==='tv'||t==='depurador'||t==='coifa'){s+='<rect x="'+(L+R_.x*k)+'" y="'+y+'" width="'+(R_.w*k)+'" height="'+(R_.h*k)+'" fill="none" stroke="#7b8490" stroke-dasharray="4 3" pointer-events="none"/>'+tx(L+(R_.x+R_.w/2)*k,y+R_.h*k/2+4,APM[t].n,'#4a5360','middle',10,1);return}
   s+='<rect x="'+(L+R_.x*k)+'" y="'+y+'" width="'+(R_.w*k)+'" height="'+(R_.h*k)+'" fill="#dfe3e8" stroke="#7b8490" pointer-events="none"/>'+tx(L+(R_.x+R_.w/2)*k,y+R_.h*k/2+4,((APM[t]&&APM[t].n)||'Geladeira')+' '+f.w+' × '+f.d,'#4a5360','middle',10,1)});
@@ -6308,7 +6310,7 @@ var stEnds_lat=stEnds;stEnds=function(L,B,k){var o=stEnds_lat.apply(this,argumen
 var PZ={z:1,cx:null,cy:null};window.__pz=PZ;
 function pzApply(){var P=$('plan');if(!P)return;var vb=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number),W0=900,H0=vb[3];if(P.dataset.h0)H0=+P.dataset.h0;else P.dataset.h0=H0;if(PZ.z<=1.001){PZ.z=1;PZ.cx=null;PZ.cy=null;P.setAttribute('viewBox','0 0 '+W0+' '+H0);pzBar();return}var w=W0/PZ.z,h=H0/PZ.z;if(PZ.cx===null){PZ.cx=W0/2;PZ.cy=H0/2}PZ.cx=Math.max(w/2,Math.min(W0-w/2,PZ.cx));PZ.cy=Math.max(h/2,Math.min(H0-h/2,PZ.cy));P.setAttribute('viewBox',(PZ.cx-w/2)+' '+(PZ.cy-h/2)+' '+w+' '+h);pzBar()}
 window.pzApply=pzApply;window.pzBar=function(){pzBar()};
-function pzBar(){var P=$('plan');if(!P)return;var cv=P.parentNode,b=document.getElementById('pzbar');if(!b){b=document.createElement('div');b.id='pzbar';b.style.cssText='position:absolute;right:6px;top:6px;display:flex;gap:4px;z-index:2';b.innerHTML='<button data-pz="1" title="Aproximar" aria-label="Aproximar" style="min-width:34px;min-height:32px;padding:0">＋</button><button data-pz="-1" title="Afastar" aria-label="Afastar" style="min-width:34px;min-height:32px;padding:0">－</button><button data-pz="0" title="Ver a pedra inteira" aria-label="Ver a pedra inteira" style="min-width:34px;min-height:32px;padding:0">⌂</button>';cv.style.position='relative';cv.appendChild(b)}var z=b.querySelector('[data-pz="0"]');if(z)z.textContent=PZ.z>1.001?Math.round(PZ.z*10)/10+'×':'⌂'}
+function pzBar(){var P=$('plan');if(!P)return;var cv=P.parentNode,b=document.getElementById('pzbar');if(!b){b=document.createElement('div');b.id='pzbar';b.style.cssText='position:absolute;right:6px;bottom:6px;display:flex;gap:4px;z-index:2';b.innerHTML='<button data-pz="1" title="Aproximar" aria-label="Aproximar" style="min-width:34px;min-height:32px;padding:0">＋</button><button data-pz="-1" title="Afastar" aria-label="Afastar" style="min-width:34px;min-height:32px;padding:0">－</button><button data-pz="0" title="Ver a pedra inteira" aria-label="Ver a pedra inteira" style="min-width:34px;min-height:32px;padding:0">⌂</button>';cv.style.position='relative';cv.appendChild(b)}var z=b.querySelector('[data-pz="0"]');if(z)z.textContent=PZ.z>1.001?Math.round(PZ.z*10)/10+'×':'⌂'}
 function pzSet(z,ux,uy){var P=$('plan');if(!P)return;var vb=(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number);var old=PZ.z;PZ.z=Math.max(1,Math.min(6,z));if(ux!==undefined){var fx=(ux-vb[0])/vb[2],fy=(uy-vb[1])/vb[3],w=900/PZ.z,h=(+P.dataset.h0||vb[3])/PZ.z;PZ.cx=ux-(fx-.5)*w;PZ.cy=uy-(fy-.5)*h}window.pzApply()}
 window.pzSet=pzSet;
 var drawPlan_z=drawPlan;drawPlan=function(){drawPlan_z.apply(this,arguments);try{var P=$('plan');if(P){/* altura inteira do desenho vem da geometria (PLGEO), não do viewBox: durante um gesto o viewBox ainda é o antigo, com zoom */P.dataset.h0=(window.PLGEO&&PLGEO.PH)||(P.getAttribute('viewBox')||'0 0 900 220').split(/[\s,]+/).map(Number)[3]}window.pzApply()}catch(_){}};
@@ -6370,18 +6372,20 @@ var pzApply_im=window.pzApply;
   var w=900/Zt,h=Math.min(H0,H0*f/Zt),pd=pedra(G);
   if(Z.cx===null||Z.cx===undefined){Z.cx=(f>1.001&&pd)?pd.cx:450;Z.cy=H0/2}
   /* a imersão recentra na pedra só se ela saiu da janela ou se o usuário não mexeu no zoom: se você deu zoom em cima dela, ela te deixa em paz */
-  if(f>1.001&&pd){var fora=(G.L+pd.b1*G.k<Z.cx-w/2||G.L+pd.b0*G.k>Z.cx+w/2);/* só quando a rolagem mudou a imersão (não a cada redesenho: um toque não pode mexer a vista) */if((!Z.user&&Math.abs(f-(IM.lastF||0))>1e-6)||fora)Z.cx=pd.cx}IM.lastF=f;
+  if(f>1.001&&pd){var sx0=G.L+pd.b0*G.k,sx1=G.L+pd.b1*G.k,vis=Math.min(sx1,Z.cx+w/2)-Math.max(sx0,Z.cx-w/2),fora=vis<0.3*Math.min(sx1-sx0,w);/* "fora" = menos de 30% da pedra na janela *//* só quando a rolagem mudou a imersão (não a cada redesenho: um toque não pode mexer a vista) */if((!Z.user&&Math.abs(f-(IM.lastF||0))>1e-6)||fora)Z.cx=pd.cx}IM.lastF=f;
   Z.cx=Math.max(w/2,Math.min(900-w/2,Z.cx));Z.cy=Math.max(h/2,Math.min(H0-h/2,Z.cy));
   P.setAttribute('viewBox',(Z.cx-w/2)+' '+(Z.cy-h/2)+' '+w+' '+h);
   var hpx=f>1.001?(Hb*f).toFixed(0)+'px':'';if(P.style.height!==hpx)P.style.height=hpx;try{window.pzBar&&pzBar()}catch(_){}};
  function apply(){IM.raf=0;var wr=document.getElementById('planwrap');if(!wr||wr.hidden||!window.PLGEO)return;try{pzApply()}catch(_){}}
  window.__imersApply=apply;
+ /* fundo da sala pra vista de cima (só com a imersão ligada): a caixa fica do tamanho do 2D da cozinha */
+ window.__planFundo=function(){if(!IM.on)return 0;try{return Math.max(1200,typeof roomD==='function'?roomD():(+S.D||2600))}catch(_){return +S.D||2600}};
  function kick(){if(!IM.raf)IM.raf=requestAnimationFrame(apply)}
  window.addEventListener('scroll',kick,{capture:true,passive:true});window.addEventListener('resize',kick);
  /* botão liga/desliga na faixa da vista de cima */
  function btn(){var n=document.querySelector('#planwrap .note');if(!n||n.querySelector('[data-imers]'))return;n.insertAdjacentHTML('beforeend',' <button data-imers="1" style="padding:2px 9px;min-height:28px;font-size:12px;margin-left:4px">'+(IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada')+'</button>')}
  var dp=window.drawPlan;if(typeof dp==='function'){window.drawPlan=drawPlan=function(){var r=dp.apply(this,arguments);try{btn()}catch(_){}return r}}
- document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-imers]');if(!t)return;e.stopImmediatePropagation();IM.on=!IM.on;try{localStorage.setItem('arque_imers',IM.on?'1':'0')}catch(_){}t.textContent=IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada';apply()},true);
+ document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-imers]');if(!t)return;e.stopImmediatePropagation();IM.on=!IM.on;try{localStorage.setItem('arque_imers',IM.on?'1':'0')}catch(_){}t.textContent=IM.on?'🔍 Imersão: ligada':'🔍 Imersão: desligada';try{var Z=window.__pz;if(Z){Z.cx=null;Z.cy=null}drawPlan()}catch(_){}apply()},true);
  btn();window.__imers=function(){apply();var P=document.getElementById('plan');return {p:IM.p,vb:P&&P.getAttribute('viewBox'),h:P&&P.style.height}}})();
 </script>
 <script>

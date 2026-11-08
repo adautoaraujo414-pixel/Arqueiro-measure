@@ -420,13 +420,13 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;var all=TPL.concat(CATS.flatMap(function(c){return c.it})).filter(function(i){return i.w&&i.v});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),esp=(c.w-e-D-22)+'x650,'+(W2-e-D-15)+'x650';/* folha do fundo = vão − 22: começa depois da folha do lado (15) + 2 de folga, sem as duas se atravessarem */
+          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),esp=(c.w-e-D-10)+'x650,'+(W2-e-D-15)+'x650';/* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
           /* toda porta tem marcação (dobradiça ou roldana) */var tot=0,ok=0;all.forEach(function(t){S.mods=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(_){return}var m=S.mods[0];if(!m)return;partsOf(m).forEach(function(p){if(!/^Porta/.test(p.name)||p.glass||p.noCut)return;tot++;if(p.fur)ok++})});
           /* 🗑 apaga só a divisória selecionada; 🗑 na porta tira as portas do vão */S.mods=[];newTpl(T('Rack de TV'));var m=S.mods[0];S.m=m;draw();var d0=m.div.length,v0=m.v.length;window.DIVI=1;LAST='div';$('delMod').click();var d1=m.div.length,v1=m.v.length,n1=S.mods.length;S.sv=0;LAST='porta';$('delMod').click();var k0=m.v[0].k,n2=S.mods.length;
           var cat=CATS.filter(function(q){return q.id==='painel'})[0].it.some(function(i){return /superior livre/.test(i.n)});
           return JSON.stringify({canto:canto,esp:esp,tot:tot,ok:ok,d:d0+'>'+d1,v:v0+'>'+v1,mods:n1+'/'+n2,k0:k0,cat:cat,errs:__errs});
           """#)
-        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto: vão − 22 e vão − 15, altura do vão + 30")
+        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto: vão − 10 e vão − 15, altura do vão + 30")
         XCTAssertEqual(o["ok"] as? Int, o["tot"] as? Int, "toda porta (abrir, basculante, camarão, canto, correr) tem marcação no plano")
         XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 90, "auditou o catálogo inteiro")
         XCTAssertEqual(o["d"] as? String, "2>1", "🗑 com divisória selecionada apaga só ela")
@@ -2809,6 +2809,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["k"] as? String, "mur"); XCTAssertEqual(o["cola"] as? Bool, true, "mureta na frente da pedra da pia")
         XCTAssertEqual(o["top"] as? Int, 1100, "1,10 m com a pedra")
         XCTAssertEqual(o["tw"] as? Int, 450, "largura da pedra em cima editável")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testCantoEncostaPlantaEmAnguloComPedraECooktopPorCimaDo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var W=function(ms){return new Promise(function(r){setTimeout(r,ms||300)})};
+          S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.W=3200;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=900+i*900}addStone();S.st.x=0;S.st.w=S.W;S.m=S.mods[1];mkCorner('d');draw();
+          var row=S.mods.filter(function(m){return !m.sup&&!m.wing}),bad=0;row.forEach(function(a,i){row.forEach(function(c,j){if(j<=i)return;var A=extOf(a),C=extOf(c);if(A[0]<C[1]-0.5&&C[0]<A[1]-0.5)bad++})});
+          var c=S.mods.filter(function(m){return m.corner})[0],mold=partsOf(c).some(function(p){return /Moldura/.test(p.name)});
+          S.mods=[];S.stones=[];for(var k=0;k<2;k++){newTpl(CATS[0].it[0]);S.mods[k].x=300+k*900}addStone();S.st.cor='#123456';S.m=S.mods[0];draw();panel();
+          var f=document.getElementById('plfoc');if(f){f.click();await W(600);document.getElementById('v3x').click();await W()}if(!PLV)document.getElementById('plv').click();await W();if(!PLANG)document.getElementById('pla').click();await W();
+          var g=document.getElementById('plx'),pedra=g?[].filter.call(g.querySelectorAll('polygon'),function(p){return /rgb\(1[0-9],\s?[3-5][0-9],/.test(p.getAttribute('fill')||'')}).length:-1;document.getElementById('plv').click();await W();
+          open3D();await W();document.getElementById('v3pd').click();await W(200);document.querySelector('#pd3 [data-pda="cook"]').click();await W(200);var ck=document.getElementById('ckpk'),topo=+getComputedStyle(ck).zIndex>+getComputedStyle(document.getElementById('v3')).zIndex;document.getElementById('v3x').click();ck.hidden=true;
+          return JSON.stringify({bad:bad,mold:mold,pedra:pedra,topo:topo,errs:__errs});
+          """#)
+        XCTAssertEqual(o["bad"] as? Int, 0, "canto novo: os módulos encostam do lado, sem entrar um no outro")
+        XCTAssertEqual(o["mold"] as? Bool, false, "balcão de canto embaixo da pedra sem moldura deitada em cima")
+        XCTAssertGreaterThan(o["pedra"] as? Int ?? 0, 0, "planta em ângulo mostra a pedra depois do só o módulo")
+        XCTAssertEqual(o["topo"] as? Bool, true, "quadro do cooktop por cima do 3D")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

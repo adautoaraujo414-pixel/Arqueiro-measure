@@ -2332,7 +2332,7 @@ final class EditorWebKitTests: XCTestCase {
           newTpl(tpl('Balcão canto cego · cego na direita (porta na esquerda)'));var cg=S.mods[0];cg.x=600;newTpl(tpl('Balcão 2 portas'));var n2=S.mods[1];n2.x=1600;S.m=n2;draw();
           var dobCg=mCost(cg).dob,dobN=mCost(n2).dob,cego=partsOf(cg).filter(function(p){return p.cego}).length;
           /* lateral de pedra descendo até o chão: na ponta e num ponto */
-          addStone();var st=S.st;st.x=600;st.w=2200;S.tab=6;draw();panel();document.querySelector('#bd [data-stlat="d"]').click();var ip=document.querySelector('[data-stlatx]');ip.value='1000';document.querySelector('[data-stlatadd]').click();
+          addStone();var st=S.st;st.x=600;st.w=2200;S.tab=6;draw();panel();document.querySelector('#bd [data-stlat="d"]').click();/* lateral só nas pontas (o ponto no meio foi tirado a pedido) */if(document.querySelector('[data-stlat="e"]'))document.querySelector('#bd [data-stlat="e"]').click();
           var lat=(st.lat||[]).map(function(l){return l.at+(l.x!==undefined?l.x:'')}).join(','),svg2=(document.getElementById('svg').innerHTML.match(/stroke="#20262e"/g)||[]).length;
           /* zoom na vista de cima */
           var P=document.getElementById('plan'),w0=+P.getAttribute('viewBox').split(' ')[2];document.querySelector('[data-pz="1"]').click();var w1=+P.getAttribute('viewBox').split(' ')[2];document.querySelector('[data-pz="0"]').click();var w2=+P.getAttribute('viewBox').split(' ')[2];
@@ -2350,7 +2350,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["cego"] as? Int, 1, "canto cego tem o painel cego")
         XCTAssertLessThan(o["dobCg"] as? Int ?? 9, o["dobN"] as? Int ?? 0, "painel cego sem dobradiça")
-        XCTAssertEqual(o["lat"] as? String, "d,x1000", "lateral na ponta direita e no ponto de 1000 mm")
+        XCTAssertEqual(Set(((o["lat"] as? String) ?? "").split(separator: ",").map(String.init)), ["d", "e"], "lateral nas duas pontas (só nas pontas, não no meio) · \(o["lat"] ?? "")")
         XCTAssertGreaterThanOrEqual(o["svg2"] as? Int ?? 0, 2, "lateral aparece no desenho de frente")
         let w = o["w"] as? [Double] ?? []
         XCTAssertEqual(w.count, 3)

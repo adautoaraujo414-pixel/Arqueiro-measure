@@ -2792,4 +2792,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["modos"] as? Int, 3, "barra Toque: Normal · Editar peça · Tamanho")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    func testPedrasNo3DMuretaComPedra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+          S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.W=3600;for(var i=0;i<3;i++){newTpl(CATS[0].it[0]);S.mods[i].x=600+i*900}addStone();draw();open3D();await new Promise(function(r){setTimeout(r,400)});
+          document.getElementById('v3pd').click();var bts=[].map.call(document.querySelectorAll('#pd3 [data-pda]'),function(b){return b.dataset.pda}).join(',');
+          document.querySelector('#pd3 [data-pda="mur"]').click();await new Promise(function(r){setTimeout(r,1200)});
+          var a=S.isl[0],st=S.stones[0];__build();var B=__boxes().filter(function(q){return q.isl===a.id});var top=Math.round(Math.max.apply(null,B.map(function(q){return q.y1})));
+          __islApi.set(a,'tw',450);__islApi.fix(a);var tw=__islApi.get(a,'tw');var mdf=__islApi.lines(a).length;
+          document.getElementById('v3x').click();
+          return JSON.stringify({bts:bts,k:a.k,cola:a.x===st.x&&a.w===st.w&&a.z===st.d,top:top,tw:tw,errs:__errs});
+          """#)
+        XCTAssertEqual(o["bts"] as? String, "base,mur,ilha,pen,cook,cuba,aj", "🪨 Pedras com tudo de pedra")
+        XCTAssertEqual(o["k"] as? String, "mur"); XCTAssertEqual(o["cola"] as? Bool, true, "mureta na frente da pedra da pia")
+        XCTAssertEqual(o["top"] as? Int, 1100, "1,10 m com a pedra")
+        XCTAssertEqual(o["tw"] as? Int, 450, "largura da pedra em cima editável")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

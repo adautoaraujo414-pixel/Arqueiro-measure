@@ -853,10 +853,10 @@ final class EditorWebKitTests: XCTestCase {
           var zs=__boxes().filter(function(b){return b.x0>=f.x-1&&b.x1<=f.x+f.w+1&&b.y0>=f.b-1&&b.y1<=f.b+f.h+2&&!/^0:/.test(String(b.nm||''))}),zmin=Math.round(Math.min.apply(null,zs.map(function(b){return b.z0})));
           f.d=300;__build();var zs2=__boxes().filter(function(b){return b.x0>=f.x-1&&b.x1<=f.x+f.w+1&&b.y0>=f.b-1&&b.y1<=f.b+f.h+2&&!/^0:/.test(String(b.nm||''))}),zmin2=Math.round(Math.min.apply(null,zs2.map(function(b){return b.z0})));
           f.x=850;f.b=1700;delete f.nicho;fx3api.open({k:'fr',id:f.id});document.querySelector('#it4 [data-qapoia]').click();var apoia={x:f.x,b:f.b};
-          f.w=700;fx3api.open({k:'fr',id:f.id});var nao=/não cabe/.test(document.querySelector('#it4').textContent);
+          var big=APM.microondas.m.slice().sort(function(a,b){return b[1]-a[1]})[0];f.nome=big[0];f.w=big[1];f.h=big[2];f.d=big[3];fx3api.open({k:'fr',id:f.id});var nao=big[1]<=570||/não cabe/.test(document.querySelector('#it4').textContent);
           document.getElementById('v3x').click();
           /* 2D: arrastou e soltou em cima do módulo → encaixa sozinho e aparece por cima do módulo (dentro do nicho) */
-          f.w=442;delete f.nicho;f.x=1100;f.b=1650;draw();drag={t:'ap',id:f.id,p:{x:0,y:0},x0:f.x,b0:f.b};document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));drag={t:'none'};
+          f.nome=q[0];f.w=q[1];f.h=q[2];f.d=q[3];delete f.nicho;f.x=1100;f.b=1650;draw();drag={t:'ap',id:f.id,p:{x:0,y:0},x0:f.x,b0:f.b};document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true}));drag={t:'none'};
           var drop={x:f.x,b:f.b,nicho:f.nicho},order=[].map.call(document.querySelectorAll('#svg [data-ap], #svg #mod'),function(g){return g.id==='mod'?'mod':'ap'}).join(',');
           return JSON.stringify({models:models,msg:msg,emb:emb,zmin:zmin,zmin2:zmin2,apoia:apoia,nao:nao,drop:drop,order:order,errs:__errs});
           """#)
@@ -867,7 +867,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(emb["b"] as? Int, 1515, "apoiado na base do armário (1500 + 15)")
         XCTAssertEqual(emb["nicho"] as? Int, 1)
         XCTAssertEqual(o["zmin"] as? Int, 0, "mais fundo que o nicho (366 > 350): encosta no fundo e sobra pra frente")
-        XCTAssertEqual(o["zmin2"] as? Int, 48, "300 de fundo: entra até ficar com a frente rente à caixa (350 − 300 − 2)")
+        XCTAssertEqual(o["zmin2"] as? Int, o["zmin"] as? Int, "eletro tem a medida real do modelo: mexer na profundidade não muda (volta pro real)")
         let ap = o["apoia"] as? [String: Any] ?? [:]
         XCTAssertEqual(ap["x"] as? Int, 850, "só apoiar: não mexe no lado")
         XCTAssertEqual(ap["b"] as? Int, 1515, "só apoiar: desce até a base")
@@ -2384,7 +2384,7 @@ final class EditorWebKitTests: XCTestCase {
         let vw = o["vw"] as? Double ?? 0
         XCTAssertEqual(o["tw"] as? Double ?? 0, (vw - 26).rounded(), accuracy: 1, "telescópica: caixa = vão − 26")
         XCTAssertEqual(o["tOc"] as? Bool, false)
-        XCTAssertEqual(o["cfg"] as? Int, 9, "⚙ abre as Configurações com 9 assuntos (Pedra entrou)")
+        XCTAssertEqual(o["cfg"] as? Int, 10, "⚙ abre as Configurações com 10 assuntos (Painéis na parede e Pedra)")
         XCTAssertEqual(o["ow"] as? Double ?? 0, (vw - 12).rounded(), accuracy: 1, "oculta: caixa = vão − 12")
         XCTAssertEqual((o["onl"] as? Double ?? 0) - (o["od"] as? Double ?? 0), 10, accuracy: 0.01, "oculta: caixa 10 mm mais curta que a corrediça")
         XCTAssertEqual(o["ooc"] as? Bool, true)

@@ -2215,7 +2215,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["achou"] as? Bool, true, "a lupa acha o micro-ondas")
         XCTAssertEqual(o["novo"] as? String, "microondas", "escolhido no catálogo, entra no 3D")
         XCTAssertEqual(o["quadro"] as? Bool, true, "e abre o quadro dele com o lugar")
-        XCTAssertEqual(o["pedra"] as? String, "860,860,124", "micro-ondas em cima da pedra (pia), na altura dela")
+        XCTAssertEqual(o["pedra"] as? String, "860,860,127", "micro-ondas em cima da pedra (pia), na altura dela (pedra encaixada: frente do armário + 40)")
         XCTAssertEqual(o["y0"] as? Int, 860, "no 3D ele fica em cima da pedra")
         XCTAssertEqual(o["mesa"] as? String, "750,750,0,0", "air fryer em cima da mesa, no meio dela")
         XCTAssertEqual(o["lado"] as? String, "e,200,0,610,180,880", "churrasqueira na parede da esquerda (L)")
@@ -2384,7 +2384,7 @@ final class EditorWebKitTests: XCTestCase {
         let vw = o["vw"] as? Double ?? 0
         XCTAssertEqual(o["tw"] as? Double ?? 0, (vw - 26).rounded(), accuracy: 1, "telescópica: caixa = vão − 26")
         XCTAssertEqual(o["tOc"] as? Bool, false)
-        XCTAssertEqual(o["cfg"] as? Int, 8, "⚙ abre as Configurações com 8 assuntos")
+        XCTAssertEqual(o["cfg"] as? Int, 9, "⚙ abre as Configurações com 9 assuntos (Pedra entrou)")
         XCTAssertEqual(o["ow"] as? Double ?? 0, (vw - 12).rounded(), accuracy: 1, "oculta: caixa = vão − 12")
         XCTAssertEqual((o["onl"] as? Double ?? 0) - (o["od"] as? Double ?? 0), 10, accuracy: 0.01, "oculta: caixa 10 mm mais curta que a corrediça")
         XCTAssertEqual(o["ooc"] as? Bool, true)
@@ -2631,10 +2631,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["cook"] as? Int ?? 0, 60, "cooktop com grades e botões")
         XCTAssertEqual(o["bocas"] as? Int, 5, "cooktop 5 bocas")
         XCTAssertEqual(o["cubas"] as? Int, 2, "Marea 2C com 2 cubas")
-        XCTAssertEqual(o["narm"] as? Int, 10, "10 armários de dormitório (todos com as duas laterais)")
+        XCTAssertEqual(o["narm"] as? Int, 12, "12 armários de dormitório (10 com as duas laterais + 2 que usam a lateral do vizinho)")
         XCTAssertEqual(o["portas"] as? Int, 2, "2P+Gav Ext: 2 portas")
         XCTAssertEqual(o["gav"] as? Int, 3, "2P+Gav Ext: 3 gavetas de fora")
-        XCTAssertEqual(o["semLat"] as? String, "", "todo módulo do catálogo Armários tem as duas laterais (sem módulo só com tamponamento)")
+        XCTAssertEqual(o["semLat"] as? String, "Armário sem lateral direita (usa a do vizinho),Armário sem laterais (entre dois armários)", "só os 2 armários feitos pra usar a lateral do vizinho ficam sem lateral")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
@@ -2763,6 +2763,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abas"] as? String, "mod,ele,bib", "catálogo em 3 abas")
         XCTAssertEqual(o["lumTopo"] as? Int, 2600, "pendente pendurado do teto")
         XCTAssertGreaterThan(o["cama"] as? Int ?? 0, 5); XCTAssertGreaterThan(o["cad"] as? Int ?? 0, 5)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testDescontoZeroTamponamentoPedraCooktopModo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+          var tp=function(c){return CATS.filter(function(q){return q.id===c})[0].it.filter(function(i){return /2 portas/.test(i.n)})[0]};
+          S.mods=[];S.stones=[];S.fr=[];S.W=3000;var sd=STD();
+          sd.gDesc=0;SPC={};newTpl(CATS[0].it[3]);var g=S.mods[0];g.v.forEach(function(v){v.px='g';v.cava=false});var semDesc=partsOf(g).filter(function(p){return p.pxD}).length;sd.gDesc=35;
+          S.mods=[];newTpl(tp('inf'));newTpl(tp('sup'));var mi=S.mods[0],ms=S.mods[1];mi.x=600;ms.x=600;mi.tl=ms.tl=true;ms.tlA='full';
+          var T=function(m){return partsOf(m).filter(function(p){return p.name==='Tamponamento esquerdo'})[0].h};var i0=T(mi),s0=T(ms);
+          sd.tiBx=25;sd.tsCm=20;stdApplyAll(true);SPC={};var i1=T(mi),s1=T(ms);
+          sd.stAvF=30;addStone();var st=S.stones[0];var dEsp=Math.round(zoOf(mi)+fBack(mi)+mi.d+30),pd=st.d;
+          sd.tiBx=0;sd.tsCm=0;sd.stAvF=40;stdApplyAll(true);
+          var bx=document.createElement('button');bx.dataset.additem='cook';document.body.appendChild(bx);bx.click();var ck=document.getElementById('ckpk');var perg=!!ck&&!ck.hidden;
+          document.querySelector('#ckpk [data-cknb="2"]').click();document.querySelector('#ckpk [data-ckm="g2f"]').click();var it=st.items.filter(function(i){return i.k==='cook'})[0];
+          open3D();await new Promise(function(r){setTimeout(r,300)});var modos=document.querySelectorAll('#t3mode [data-t3m]').length;document.getElementById('v3x').click();
+          return JSON.stringify({semDesc:semDesc,ti:i1-i0,ts:s1-s0,pd:pd,pdEsp:dEsp,perg:perg,ck:it?[it.w,it.d,cookNb(it)]:[],modos:modos,errs:__errs});
+          """#)
+        XCTAssertEqual(o["semDesc"] as? Int, 0, "desconto 0 = sem desconto do perfil")
+        XCTAssertEqual(o["ti"] as? Double, 25, "tamponamento inferior passa 25 embaixo")
+        XCTAssertEqual(o["ts"] as? Double, 20, "tamponamento superior passa 20 em cima")
+        XCTAssertEqual(o["pd"] as? Int, o["pdEsp"] as? Int, "pedra = frente do armário + avanço do Ajustes")
+        XCTAssertEqual(o["perg"] as? Bool, true, "＋ Cooktop pergunta quantas bocas")
+        XCTAssertEqual(o["ck"] as? [Int], [302, 514, 2], "cooktop 2 bocas com medida real")
+        XCTAssertEqual(o["modos"] as? Int, 3, "barra Toque: Normal · Editar peça · Tamanho")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

@@ -1033,7 +1033,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         lastAutoCheck = now
         val app = getApplication<Application>()
         viewModelScope.launch {
-            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: return@launch
+            // sem internet / GitHub fora: não espera 30 min pra tentar de novo, tenta na próxima vez que voltar pro app (mín. 2 min)
+            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: run { lastAutoCheck = now - 28 * 60_000L; return@launch }
             val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
             val skipped = app.getSharedPreferences("arque.upd", android.content.Context.MODE_PRIVATE).getInt("skip", 0)
             if (rel.number > mine && rel.number != skipped) updateOffer = rel
@@ -1048,6 +1049,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Aceitou a versão nova: baixa e abre o instalador direto. */
     fun acceptUpdate() { updateOffer = null; checkUpdate(autoInstall = true) }
+
+    private var retriedOnce = false
 
     fun checkUpdate(autoInstall: Boolean = false) {
         if (br.com.arque.measure.BuildConfig.PLAY) return
@@ -1068,7 +1071,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = tr("Baixando apk-{0}… {1}%", rel.number, p) } } }
             }
             val apk = f.getOrNull()
-            if (apk == null) { updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message); return@launch }
+            if (apk == null) {
+                updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message)
+                // servidor ocupado (502/503/504) ou conexão caiu: tenta de novo sozinho uma vez daqui a 30 s
+                if (autoInstall && !retriedOnce) { retriedOnce = true; kotlinx.coroutines.delay(30_000L); updateState = tr("Tentando de novo…"); checkUpdate(autoInstall = true) }
+                return@launch
+            }
+            retriedOnce = false
             updateReady = apk
             updateState = tr("apk-{0} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure).", rel.number)
             if (autoInstall) installUpdate()

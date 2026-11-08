@@ -7244,4 +7244,18 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset|
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-catt]');if(!b)return;window.CATSEC=secOf(b.dataset.catt);setTimeout(function(){try{catSec()}catch(_){}},0)},false);
 })();
 </script>
+<script>
+/* ===== Puxador de barra com medida real (furação padrão de mercado): o 2D, o 3D, a nota da peça e a furação seguem a medida escolhida ===== */
+(function(){if(typeof pxBar!=='function')return;
+ var PXM=window.PXM=[['auto','Automático (pelo tamanho da porta)',0,0],['b96','Barra · furação 96 · comp. 128',96,128],['b128','Barra · furação 128 · comp. 160',128,160],['b160','Barra · furação 160 · comp. 192',160,192],['b192','Barra · furação 192 · comp. 224',192,224],['b256','Barra · furação 256 · comp. 288',256,288],['b320','Barra · furação 320 · comp. 352',320,352],['a480','Alça · furação 480 · comp. 500',480,500]];
+ var pm=function(){var k=(S.pxm||'auto'),q=PXM.filter(function(x){return x[0]===k})[0];return q&&q[2]?q:null};window.pxModel=pm;
+ var pxBar_m=pxBar;pxBar=function(p,m,W,H){var b=pxBar_m.apply(this,arguments),q=pm();if(!q)return b;var lim=b.vert?H-20:W-20;b.L=Math.min(q[3],Math.max(40,lim));b.fur=q[2];if(b.vert){b.v=Math.max(b.L/2+5,Math.min(H-b.L/2-5,b.v))}return b};window.pxBar=pxBar;
+ var pxPost_m=pxPost;pxPost=function(m,ps){var r=pxPost_m.apply(this,arguments);try{var q=pm();if(q)(r||ps).forEach(function(p){if(p.px==='externo'){var b=pxBar(p,m,p.w,p.h);p.note=(p.note?p.note+' · ':'')+q[1]+(b.L<q[3]?' (não cabe inteiro: '+Math.round(b.L)+')':'')+' · furos a '+(b.vert?'':'')+q[2]+' mm um do outro'}})}catch(_){}return r};window.pxPost=pxPost;
+ /* quadro de puxadores do 3D: acrescenta a linha de medidas quando o tipo é barra */
+ var pxmAdd=function(){try{var pt=document.querySelector('[data-pxt]');if(!pt||document.querySelector('[data-pxm]'))return;var E=pt.parentNode&&pt.parentNode.parentNode;if(!E)return;var tt=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!tt&&/^(door|drawers)$/.test(v.k)&&!v.vidro)tt=pxOf(v,false)})});if((tt||'externo')!=='externo')return;var cur=S.pxm||'auto',d=document.createElement('div');d.innerHTML='<div style="font-size:12px;color:#444">Medida do puxador (furação padrão)</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+PXM.map(function(q){return '<button data-pxm="'+q[0]+'" style="padding:4px 9px;min-height:32px;font-size:12px'+(q[0]===cur?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+q[1]+'</button>'}).join('')+'</div>';E.appendChild(d)}catch(_){}};
+ try{new MutationObserver(function(){pxmAdd()}).observe(document.body,{childList:true,subtree:true})}catch(_){}
+ var snap_m=snapState;snapState=function(){var o=snap_m.apply(this,arguments);if(S.pxm)o.pxm=S.pxm;return o};window.snapState=snapState;var load_m=loadState;loadState=function(o){var r=load_m.apply(this,arguments);try{S.pxm=o&&o.pxm||undefined}catch(_){}return r};window.loadState=loadState;
+ window.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pxm]');if(!t)return;e.stopImmediatePropagation();try{snap()}catch(_){}S.pxm=t.dataset.pxm==='auto'?undefined:t.dataset.pxm;try{draw()}catch(_){}try{if(window.re3)re3()}catch(_){}var mi=S.mods.indexOf(S.m);try{if(window.pux3api)pux3api.open(mi<0?0:mi)}catch(_){}setTimeout(pxmAdd,0)},true);
+})();
+</script>
 </body></html>

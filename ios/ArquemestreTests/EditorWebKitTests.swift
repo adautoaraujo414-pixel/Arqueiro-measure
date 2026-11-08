@@ -2823,12 +2823,14 @@ final class EditorWebKitTests: XCTestCase {
           var f=document.getElementById('plfoc');if(f){f.click();await W(600);document.getElementById('v3x').click();await W()}if(!PLV)document.getElementById('plv').click();await W();if(!PLANG)document.getElementById('pla').click();await W();
           var g=document.getElementById('plx'),pedra=g?[].filter.call(g.querySelectorAll('polygon'),function(p){return /rgb\(1[0-9],\s?[3-5][0-9],/.test(p.getAttribute('fill')||'')}).length:-1;document.getElementById('plv').click();await W();
           open3D();await W();document.getElementById('v3pd').click();await W(200);document.querySelector('#pd3 [data-pda="cook"]').click();await W(200);var ck=document.getElementById('ckpk'),topo=+getComputedStyle(ck).zIndex>+getComputedStyle(document.getElementById('v3')).zIndex;document.getElementById('v3x').click();ck.hidden=true;
-          return JSON.stringify({bad:bad,mold:mold,pedra:pedra,topo:topo,errs:__errs});
+          var cb=document.createElement('button');cb.dataset.additem='cuba';document.body.appendChild(cb);cb.click();var cbx=document.getElementById('cbpk'),cbn=cbx.querySelectorAll('[data-cbm]').length,cbf=cbx.querySelectorAll('[data-cbm] img').length;cbx.querySelector('[data-cbm]').click();
+          return JSON.stringify({bad:bad,mold:mold,pedra:pedra,topo:topo,cbn:cbn,cbf:cbf,cubas:S.stones[0].items.filter(function(i){return i.k==='cuba'}).length,errs:__errs});
           """#)
         XCTAssertEqual(o["bad"] as? Int, 0, "canto novo: os módulos encostam do lado, sem entrar um no outro")
         XCTAssertEqual(o["mold"] as? Bool, false, "balcão de canto embaixo da pedra sem moldura deitada em cima")
         XCTAssertGreaterThan(o["pedra"] as? Int ?? 0, 0, "planta em ângulo mostra a pedra depois do só o módulo")
         XCTAssertEqual(o["topo"] as? Bool, true, "quadro do cooktop por cima do 3D")
+        XCTAssertGreaterThan(o["cbn"] as? Int ?? 0, 3, "＋ Cuba mostra os modelos"); XCTAssertEqual(o["cbf"] as? Int, o["cbn"] as? Int, "cada cuba com foto"); XCTAssertEqual(o["cubas"] as? Int, 1, "cuba escolhida entra na pedra")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

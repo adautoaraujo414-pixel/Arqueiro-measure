@@ -396,7 +396,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-          /* assistente: laterais por fora, desconto da lateral da gaveta 60, rasgo 8 */wizOpen();var st=STD();st.caixa='fora';st.gavDsc=60;st.gavRb=8;window.WIZ=5;stdRe();var done=!!document.querySelector('#stdbody [data-wizdone="1"]');window.WIZ=null;stdSave();
+          /* assistente: laterais por fora, desconto da lateral da gaveta 60, rasgo 8 */wizOpen();var st=STD();st.caixa='fora';st.gavDsc=60;st.gavRb=8;window.WIZ=wizSteps().length-1;stdRe();var done=!!document.querySelector('#stdbody [data-wizdone="1"]');window.WIZ=null;stdSave();
           newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};var fund=P.filter(function(q){return /^Fundo de gaveta/.test(q.name)})[0];
           var cl=cutLines(m).filter(function(l){return /Lateral de gaveta|Fundo de gaveta/.test(l.name)}).map(function(l){return l.L+'x'+l.W}).join(',');
           /* planta em ângulo: portas e frentes opacas */PLV=true;PLANG=true;draw();var g_=document.getElementById('plx');var trans=g_?[].filter.call(g_.querySelectorAll('polygon[data-pm]'),function(p){return p.getAttribute('fill-opacity')&&+p.getAttribute('fill-opacity')<1}).length:-1;var polys=g_?g_.querySelectorAll('polygon[data-pm]').length:0;PLV=false;PLANG=false;

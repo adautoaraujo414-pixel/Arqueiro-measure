@@ -69,35 +69,66 @@ object AppUpdater {
         return best
     }
 
-    /** Baixa o APK para o cache e devolve o arquivo. */
+    /**
+     * Baixa o APK para o cache e devolve o arquivo.
+     * O GitHub às vezes devolve 502/503/504 (servidor de arquivos ocupado) ou corta a conexão no meio:
+     * tenta de novo sozinho (3 vezes em cada endereço, esperando 2 s, 5 s, 10 s) e, se o endereço da versão
+     * falhar, baixa a mesma versão pela cópia fixa "apk-latest". Confere o tamanho no fim (arquivo cortado não instala).
+     */
     fun download(ctx: Context, r: Release, progress: (Int) -> Unit): File {
         val dir = File(ctx.cacheDir, "update").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
         val out = File(dir, "ArqueMeasure-${r.number}.apk")
-        var url = URL(r.url)
+        val urls = listOf(r.url, DL + "apk-latest/ArqueMeasure-debug.apk").distinct()
+        var last: Throwable? = null
+        for (u in urls) {
+            for (attempt in 0 until 3) {
+                if (attempt > 0) Thread.sleep(longArrayOf(0, 2000, 5000, 10000)[attempt])
+                try {
+                    fetch(u, out, progress)
+                    return out
+                } catch (e: Throwable) {
+                    last = e
+                    out.delete()
+                    // 404/403: esse endereço não tem o arquivo, vai pro próximo sem insistir
+                    val m = e.message ?: ""
+                    if (m.contains("(404)") || m.contains("(403)")) break
+                }
+            }
+        }
+        throw last ?: IllegalStateException(tr("download falhou ({0})", 0))
+    }
+
+    private fun fetch(u: String, out: File, progress: (Int) -> Unit) {
+        var url = URL(u)
         var c: HttpURLConnection
         var hops = 0
         while (true) {
             c = url.openConnection() as HttpURLConnection
             c.instanceFollowRedirects = false
-            c.connectTimeout = 15000; c.readTimeout = 60000
+            c.setRequestProperty("User-Agent", "Arquemestre-app")
+            c.connectTimeout = 20000; c.readTimeout = 60000
             val code = c.responseCode
-            if (code in 300..399 && hops++ < 5) { url = URL(url, c.getHeaderField("Location")); c.disconnect(); continue }
-            if (code != 200) error(tr("download falhou ({0})", code))
+            if (code in 300..399 && hops++ < 6) { url = URL(url, c.getHeaderField("Location")); c.disconnect(); continue }
+            if (code != 200) { c.disconnect(); error(tr("download falhou ({0})", code)) }
             break
         }
         val total = c.contentLengthLong
-        c.inputStream.use { inp ->
-            out.outputStream().use { o ->
-                val buf = ByteArray(64 * 1024); var done = 0L; var last = -1
-                while (true) {
-                    val n = inp.read(buf); if (n < 0) break
-                    o.write(buf, 0, n); done += n
-                    if (total > 0) { val p = (done * 100 / total).toInt(); if (p != last) { last = p; progress(p) } }
+        var done = 0L
+        try {
+            c.inputStream.use { inp ->
+                out.outputStream().use { o ->
+                    val buf = ByteArray(64 * 1024); var lastP = -1
+                    while (true) {
+                        val n = inp.read(buf); if (n < 0) break
+                        o.write(buf, 0, n); done += n
+                        if (total > 0) { val p = (done * 100 / total).toInt(); if (p != lastP) { lastP = p; progress(p) } }
+                    }
                 }
             }
-        }
-        return out
+        } finally { c.disconnect() }
+        if (total > 0 && done != total) error(tr("download falhou ({0})", "cortado " + done + "/" + total))
+        if (done < 1_000_000) error(tr("download falhou ({0})", "arquivo pequeno demais"))
     }
 
     fun canInstall(ctx: Context): Boolean =

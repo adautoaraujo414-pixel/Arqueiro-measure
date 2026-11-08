@@ -2738,4 +2738,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pisca"] as? [Int], [0, 0, 0, 0], "a 25 mm da parede o tamponamento automático não liga e desliga")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+    /// Caixote de gavetas do guarda-roupa, régua do canto cego, divisor de talheres, catálogo em 3 abas e biblioteca (luminária, cama, cadeira)
+    @MainActor
+    func testCaixoteReguaTalheresBiblioteca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+          var find=function(n){var q=null;CATS.forEach(function(c){c.it.forEach(function(i){var t=typeof i==='number'?TPL[i]:i;if(t&&t.n===n)q=i})});return q};
+          S.mods=[];S.stones=[];S.fr=[];S.W=3000;S.room='quarto';newTpl(find('1 Vão 600mm'));var m=S.mods[0];m.w=994;m.d=550;m.v[0].int=[{t:'cxg',h:830,n:4}];draw();
+          var vr=vaoRanges(m)[0],vw=vr[1]-vr[0],P=partsOf(m),g=function(n){return P.filter(function(p){return p.name===n})};
+          var cx={base:(g('Caixote · base superior')[0]||{}).cl,vw:vw,regua:g('Caixote · régua espaçadora 40').length,trav:g('Caixote · travessa 100').length,fr:g('Frente de gaveta (caixote)').map(function(p){return p.cl})};
+          S.mods=[];newTpl(find('Balcão canto cego · cego na esquerda (porta na direita)'));var c=S.mods[0];draw();var rg=partsOf(c).filter(function(p){return p.name==='Régua espaçadora do canto'})[0];
+          S.mods=[];newTpl(CATS[0].it[3]);var gv=S.mods[0];gv.v[0].dt=[0];draw();var dt=partsOf(gv).filter(function(p){return /Divisor de talheres/.test(p.name)}).length;
+          catOpen();await new Promise(function(r){setTimeout(r,200)});var abas=[].slice.call(document.querySelectorAll('#catsec [data-catsec]')).map(function(b){return b.dataset.catsec}).join(',');document.getElementById('catm').hidden=true;
+          S.mods=[];S.fr=[];S.H=2600;open3D();await new Promise(function(r){setTimeout(r,300)});var lu=apAdd('luminaria',0),ca=apAdd('cama',1),cd=apAdd('cadesc',0);__build();var B=__boxes(),top=function(f){return Math.round(Math.max.apply(null,B.filter(function(q){return q.fr===f.id}).map(function(q){return q.y1})))},n3=function(f){return B.filter(function(q){return q.fr===f.id}).length};document.getElementById('v3x').click();
+          return JSON.stringify({cx:cx,regua:rg?rg.cw:0,dt:dt,abas:abas,lumTopo:top(lu),cama:n3(ca),cad:n3(cd),errs:__errs});
+          """#)
+        let cx = o["cx"] as? [String: Any]
+        XCTAssertEqual(cx?["base"] as? Double, cx?["vw"] as? Double, "base superior do caixote com a largura do vão")
+        XCTAssertEqual(cx?["regua"] as? Int, 2); XCTAssertEqual(cx?["trav"] as? Int, 4)
+        XCTAssertEqual((cx?["fr"] as? [Double])?.count, 4, "4 frentes")
+        XCTAssertEqual(o["regua"] as? Double, 40, "canto cego nasce com régua de 40")
+        XCTAssertGreaterThan(o["dt"] as? Int ?? 0, 5, "divisor de talheres dentro da gaveta")
+        XCTAssertEqual(o["abas"] as? String, "mod,ele,bib", "catálogo em 3 abas")
+        XCTAssertEqual(o["lumTopo"] as? Int, 2600, "pendente pendurado do teto")
+        XCTAssertGreaterThan(o["cama"] as? Int ?? 0, 5); XCTAssertGreaterThan(o["cad"] as? Int ?? 0, 5)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

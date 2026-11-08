@@ -1222,10 +1222,12 @@ function itClamp(st,it,x,y){var W=st.w,D=st.d,sh=st.shape||'reta',d6=function(v)
  return best||[Math.max(0,Math.min(W-it.w,x)),Math.max(0,Math.min(D-it.d,y))]}
 function stEdges(st){var W=st.w,D=st.d,sh=st.shape||'reta',d6=function(v){return v===undefined?600:v},lA=d6(st.lenA),wA=d6(st.widA),lB=d6(st.lenB),wB=d6(st.widB),P=stPts(st),
  L={reta:['Fundo (parede)','Lateral direita','Frente','Lateral esquerda'],Le:['Fundo (parede)','Lateral direita','Frente do corpo','Lado interno','Frente da perna','Lateral esquerda'],Ld:['Fundo (parede)','Lateral direita','Frente da perna','Lado interno','Frente do corpo','Lateral esquerda'],U:['Fundo (parede)','Lateral direita','Frente perna direita','Interno direito','Frente do corpo','Interno esquerdo','Frente perna esquerda','Lateral esquerda']}[sh],
- S={reta:[function(v){st.w=v},function(v){st.d=v},function(v){st.w=v},function(v){st.d=v}],
- Le:[function(v){st.w=v},function(v){st.d=v},function(v){st.widA=Math.max(0,W-v)},function(v){st.lenA=v},function(v){st.widA=v},function(v){st.lenA=Math.max(0,v-D)}],
- Ld:[function(v){st.w=v},function(v){st.lenB=Math.max(0,v-D)},function(v){st.widB=v},function(v){st.lenB=v},function(v){st.widB=Math.max(0,W-v)},function(v){st.d=v}],
- U:[function(v){st.w=v},function(v){st.lenB=Math.max(0,v-D)},function(v){st.widB=v},function(v){st.lenB=v},function(v){st.widB=Math.max(0,W-wA-v)},function(v){st.lenA=v},function(v){st.widA=v},function(v){st.lenA=Math.max(0,v-D)}]}[sh];
+ /* limites: perna com pelo menos 200 de largura e 100 de comprimento, corpo livre de pelo menos 300 entre pernas/ponta · nenhuma medida vira zero ou negativa (o desenho quebrava) */
+ cw=function(v){return Math.max(300,Math.round(v))},cd=function(v){return Math.max(300,Math.round(v))},pw=function(v,outra){return Math.max(200,Math.min(Math.max(200,W-300-(outra||0)),Math.round(v)))},pl=function(v){return Math.max(100,Math.round(v))},
+ S={reta:[function(v){st.w=cw(v)},function(v){st.d=cd(v)},function(v){st.w=cw(v)},function(v){st.d=cd(v)}],
+ Le:[function(v){st.w=cw(v)},function(v){st.d=cd(v)},function(v){st.widA=pw(W-v)},function(v){st.lenA=pl(v)},function(v){st.widA=pw(v)},function(v){st.lenA=pl(v-D)}],
+ Ld:[function(v){st.w=cw(v)},function(v){st.lenB=pl(v-D)},function(v){st.widB=pw(v)},function(v){st.lenB=pl(v)},function(v){st.widB=pw(W-v)},function(v){st.d=cd(v)}],
+ U:[function(v){st.w=cw(v)},function(v){st.lenB=pl(v-D)},function(v){st.widB=pw(v,wA)},function(v){st.lenB=pl(v)},function(v){st.widB=pw(W-wA-v,wA)},function(v){st.lenA=pl(v)},function(v){st.widA=pw(v,wB)},function(v){st.lenA=pl(v-D)}]}[sh];
  return L.map(function(lab,i){var a=P[i],b=P[(i+1)%P.length];return {lab:lab,val:Math.round(Math.abs(b[0]-a[0])+Math.abs(b[1]-a[1])),set:S[i]}})}
 function clearBox(m,v){var A=vhm(m),e=m.esp,c=[];if(v.k==='shelves')for(var q=1;q<=v.n;q++)c.push(A*q/(v.n+1));m.shv.forEach(function(r){c.push(A*r)});c.sort(function(a,b){return a-b});if(!c.length)return '<div class="box"><small>Espaço interno livre do vão</small><b>'+Math.round(A)+'</b><small>sem prateleiras</small></div>';
  var gaps=[],prev=0;c.forEach(function(y,i){gaps.push(Math.round(y-e/2-prev));prev=y+e/2});gaps.push(Math.round(A-prev));

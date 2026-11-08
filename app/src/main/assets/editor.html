@@ -7382,7 +7382,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset|
 })();
 
 /* o painel às vezes mostra a vista de cima que estava escondida: arruma os rótulos na hora */
-(function(){if(typeof panel!=='function')return;var panel_dc=panel,dcQ=0;panel=function(){var r=panel_dc.apply(this,arguments);/* junta várias chamadas num quadro só: arruma antes de pintar, sem pesar cada toque */if(!dcQ){dcQ=1;(window.requestAnimationFrame||setTimeout)(function(){dcQ=0;try{if(window.plDeclutter)plDeclutter()}catch(_){}})}return r};window.panel=panel})();
+(function(){if(typeof panel!=='function')return;var panel_dc=panel,dcF=null,dcV=false;panel=function(){var r=panel_dc.apply(this,arguments);/* só arruma de novo se a vista de cima mudou ou acabou de aparecer (assim o painel não pesa a cada toque) */try{var P=$('plan'),f=P&&P.firstChild,v=!!(P&&P.getClientRects().length);if(P&&window.plDeclutter&&(f!==dcF||(v&&!dcV))){plDeclutter();dcF=f;dcV=v}}catch(_){}return r};window.panel=panel})();
 
 /* projetos salvos: balcão de canto (embaixo da pedra) não leva a moldura deitada no topo */
 (function(){if(typeof loadState!=='function')return;var ls_cm=loadState;loadState=function(){var r=ls_cm.apply(this,arguments);try{(S.mods||[]).forEach(function(m){if(m&&m.corner&&!m.sup&&m.mold&&(+m.h||0)<1200)m.mold=false})}catch(_){}return r};window.loadState=loadState})();

@@ -2874,4 +2874,21 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["det"] as? Bool, true, "detalhamento com furo da tomada, sobra até o teto e pedra até o teto")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    func testDistanciasDoModuloTocaEDigitaELimiteDoAereo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;S.mods=[];S.stones=[];S.fr=[];S.W=3200;S.H=2600;S.wall={};STD().supPedra=700;
+          for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=870;st.e=30;newMod(true);var a=S.mods[2];a.x=300;supByStone(a);S.m=a;draw();
+          var temRot=!!document.querySelector('#svg text[data-q="mp"]')&&!!document.querySelector('#svg text[data-q="mt"]');
+          modGapSet(a,'mp',750);var b750=a.b;modGapSet(a,'mp',600);var lim=a.b;modGapSet(a,'mt',300);var teto=Math.round(2600-a.b-a.h-fgh());var x0=a.x,g=modGaps(a).esq;modGapSet(a,'ml',g+50);var andou=Math.round(a.x-x0);
+          return JSON.stringify({temRot:temRot,b750:b750,lim:lim,teto:teto,andou:andou,errs:__errs});
+          """#)
+        XCTAssertEqual(o["temRot"] as? Bool, true, "mostra da pedra e até o teto no desenho")
+        XCTAssertEqual(o["b750"] as? Int, 1650, "750 da pedra (pedra em cima a 900)")
+        XCTAssertEqual(o["lim"] as? Int, 1600, "não desce abaixo de 700 da pedra")
+        XCTAssertEqual(o["teto"] as? Int, 300, "até o teto 300")
+        XCTAssertEqual(o["andou"] as? Int, 50, "distância da esquerda move o módulo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

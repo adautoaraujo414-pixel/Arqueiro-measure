@@ -2697,4 +2697,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ro"] as? Bool, true, "cliente não edita")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+    /// iPad/iPhone: cuba e cooktop arrastam na vista de cima (toque), de novo e de novo, com zoom, e seguem pelos eventos de toque
+    /// se o WebKit cancelar o ponteiro (pointercancel); teclado do campo só aplica no OK (125+120+120+120 = 485 sem bagunçar a cuba);
+    /// lixeira no 3D; parede encolhida leva pedra e móveis junto; altura da pedra puxa os módulos; tamponamento automático não pisca
+    @MainActor
+    func testCubaArrastaNoTouchTecladoSomaLixeiraEParedeEncolhida() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+          S.mods=[];S.fr=[];S.stones=[];S.W=5610;newTpl(CATS[0].it[0]);newTpl(CATS[0].it[0]);addStone();var st=S.st;st.x=0;st.w=2950;st.shape='Le';st.lenA=1870;st.widA=650;
+          addItem('cuba');addItem('cook');var cu=S.items[0],ck=S.items[1];cu.x=970;cu.y=95;ck.x=1700;ck.y=60;S.tab=6;draw();panel();pzSet(1);await new Promise(function(r){setTimeout(r,250)});
+          var P=document.getElementById('plan');P.scrollIntoView({block:'center'});await new Promise(function(r){setTimeout(r,150)});
+          function pe(type,tg,id,x,y){tg.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:y}))}
+          async function drag(it,dx,id){var el=P.querySelector('[data-i="'+it.id+'"]');if(!el)return 'sem rect';var bb=el.getBoundingClientRect(),x0=bb.left+bb.width/2,y0=bb.top+bb.height/2,ox=it.x;pe('pointerdown',el,id,x0,y0);await new Promise(function(r){setTimeout(r,30)});for(var i=1;i<=8;i++){pe('pointermove',P,id,x0+dx*i/8,y0);await new Promise(function(r){requestAnimationFrame(r)})}pe('pointerup',P,id,x0+dx,y0);await new Promise(function(r){setTimeout(r,120)});return it.x-ox}
+          var d1=await drag(cu,30,11),d2=await drag(cu,-20,12),d3=await drag(ck,-25,13),d4=await drag(ck,20,14);pzSet(2);await new Promise(function(r){setTimeout(r,120)});var d5=await drag(cu,15,15);pzSet(1);await new Promise(function(r){setTimeout(r,120)});
+          /* pointercancel → segue pelo toque (TouchEvent só se o WebKit deixar construir) */var d6=null;try{var el=P.querySelector('[data-i="'+cu.id+'"]'),bb=el.getBoundingClientRect(),x0=bb.left+bb.width/2,y0=bb.top+bb.height/2,ox=cu.x;pe('pointerdown',el,17,x0,y0);await new Promise(function(r){setTimeout(r,30)});P.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,cancelable:true,pointerId:17,pointerType:'touch',isPrimary:true}));
+            function tm(type,x,y){var tc=new Touch({identifier:17,target:el,clientX:x,clientY:y});P.dispatchEvent(new TouchEvent(type,{bubbles:true,cancelable:true,touches:type==='touchend'?[]:[tc],changedTouches:[tc]}))}
+            for(var j=1;j<=8;j++){tm('touchmove',x0+5*j,y0);await new Promise(function(r){requestAnimationFrame(r)})}tm('touchend',x0+40,y0);await new Promise(function(r){setTimeout(r,120)});d6=cu.x-ox}catch(e){d6='sem Touch: '+e.message}
+          /* teclado do campo: 125+120+120+120 → 485 só no OK; a cuba não é empurrada enquanto digita */
+          cu.x=300;draw();panel();var inp=document.querySelector('#bd input[data-k="stW"]');var ws=[],cxs=[];var kd=null;if(inp){inp.focus();await new Promise(function(r){setTimeout(r,120)});var seq=['1','2','5','+','1','2','0','+','1','2','0','+','1','2','0'];for(var q=0;q<seq.length;q++){var bt=document.querySelector('[data-c="'+seq[q]+'"]');bt.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));await new Promise(function(r){setTimeout(r,25)});ws.push(S.st.w);cxs.push(cu.x)}var okb=document.querySelector('[data-c="ok"]');okb.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));await new Promise(function(r){setTimeout(r,200)});kd={w:S.st.w,wsDuranteOk:ws.every(function(w){return w===2950}),cxDurante:cxs.every(function(c){return c===300})}}
+          /* lixeira */var lx=apAdd('lixeira',1);var lix={b:lx.b,x:lx.x,y:lx.y,n:apModels('lixeira').length};open3D();await new Promise(function(r){setTimeout(r,300)});__build();lix.caixas=__boxes().filter(function(b){return b.fr===lx.id}).length;document.getElementById('v3x').click();
+          /* parede encolhe: pedra e lixeira ficam dentro */S.st.w=2950;setv('W',2400);await new Promise(function(r){setTimeout(r,150)});var enc={W:S.W,stFim:S.st.x+S.st.w,lixFim:lx.x+lx.w};
+          /* altura da pedra puxa os módulos */var tops0=S.mods.filter(function(m){return !m.sup}).map(function(m){return (m.b||0)+m.h});setv('stT',900);await new Promise(function(r){setTimeout(r,100)});var tops1=S.mods.filter(function(m){return !m.sup}).map(function(m){return (m.b||0)+m.h});
+          /* tamponamento automático não pisca a 25 mm da parede */S.W=3000;var m0=S.mods[0];m0.x=25;m0.tl=false;delete m0.tlAuto;var seq2=[];for(var z=0;z<4;z++){window.autoTamp();seq2.push(m0.tl?1:0)}
+          return JSON.stringify({d1:d1,d2:d2,d3:d3,d4:d4,d5:d5,d6:d6,kd:kd,lix:lix,enc:enc,tops0:tops0,tops1:tops1,stT:S.st.t,pisca:seq2,errs:__errs});
+          """#)
+        for k in ["d1", "d3", "d4", "d5"] { XCTAssertGreaterThan(abs((o[k] as? Double) ?? 0), 20, "\(k): a cuba/cooktop tem que andar no arrasto · \(o[k] ?? "")") }
+        XCTAssertLessThan((o["d2"] as? Double) ?? 0, -20, "2º arrasto pra esquerda também anda")
+        if let d6 = o["d6"] as? Double { XCTAssertGreaterThan(d6, 20, "depois do pointercancel o arrasto segue pelo toque") }
+        let kd = o["kd"] as? [String: Any]
+        XCTAssertEqual(kd?["w"] as? Double, 485, "125+120+120+120 = 485 no OK · \(kd ?? [:])")
+        XCTAssertEqual(kd?["wsDuranteOk"] as? Bool, true, "enquanto digita a pedra não muda")
+        XCTAssertEqual(kd?["cxDurante"] as? Bool, true, "enquanto digita a cuba não é empurrada")
+        let lix = o["lix"] as? [String: Any]
+        XCTAssertEqual(lix?["n"] as? Int, 5); XCTAssertEqual(lix?["b"] as? Double, 0); XCTAssertGreaterThanOrEqual((lix?["caixas"] as? Int) ?? 0, 3, "lixeira aparece no 3D")
+        let enc = o["enc"] as? [String: Any]
+        XCTAssertLessThanOrEqual((enc?["stFim"] as? Double) ?? 9e9, 2400, "pedra dentro da parede encolhida · \(enc ?? [:])")
+        XCTAssertLessThanOrEqual((enc?["lixFim"] as? Double) ?? 9e9, 2400, "lixeira dentro da parede encolhida")
+        XCTAssertEqual(o["tops1"] as? [Double], [900, 900], "módulos acompanham a pedra a 900 · \(o["tops0"] ?? "")")
+        XCTAssertEqual(o["pisca"] as? [Int], [0, 0, 0, 0], "a 25 mm da parede o tamponamento automático não liga e desliga")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

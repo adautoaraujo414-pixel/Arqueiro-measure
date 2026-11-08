@@ -2384,7 +2384,7 @@ final class EditorWebKitTests: XCTestCase {
         let vw = o["vw"] as? Double ?? 0
         XCTAssertEqual(o["tw"] as? Double ?? 0, (vw - 26).rounded(), accuracy: 1, "telescópica: caixa = vão − 26")
         XCTAssertEqual(o["tOc"] as? Bool, false)
-        XCTAssertEqual(o["cfg"] as? Int, 10, "⚙ abre as Configurações com 10 assuntos (Painéis na parede e Pedra)")
+        XCTAssertEqual(o["cfg"] as? Int, 11, "⚙ abre as Configurações com 11 assuntos (Painéis na parede, Senha da obra e Pedra)")
         XCTAssertEqual(o["ow"] as? Double ?? 0, (vw - 12).rounded(), accuracy: 1, "oculta: caixa = vão − 12")
         XCTAssertEqual((o["onl"] as? Double ?? 0) - (o["od"] as? Double ?? 0), 10, accuracy: 0.01, "oculta: caixa 10 mm mais curta que a corrediça")
         XCTAssertEqual(o["ooc"] as? Bool, true)
@@ -2831,6 +2831,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["pedra"] as? Int ?? 0, 0, "planta em ângulo mostra a pedra depois do só o módulo")
         XCTAssertEqual(o["topo"] as? Bool, true, "quadro do cooktop por cima do 3D")
         XCTAssertGreaterThan(o["cbn"] as? Int ?? 0, 3, "＋ Cuba mostra os modelos"); XCTAssertEqual(o["cbf"] as? Int, o["cbn"] as? Int, "cada cuba com foto"); XCTAssertEqual(o["cubas"] as? Int, 1, "cuba escolhida entra na pedra")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testMedidasDaObraTravadasComSenhaTomadaEEsquadro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;delete PR.obraPw;var W=function(ms){return new Promise(function(r){setTimeout(r,ms||200)})};
+          S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.W=3200;S.H=2600;S.wall={};S.obra=null;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=860;st.e=30;var tm=apAdd('eletrica',0);tm.x=1000;tm.b=1100;S.m=S.mods[0];draw();
+          S.tab=9;panel();document.querySelector('#bd [data-oblk]').click();await W();var bx=document.getElementById('obrapw');bx.querySelector('#obrapw1').value='1234';bx.querySelector('#obrapw2').value='1234';bx.querySelector('[data-obok]').click();await W();
+          S.W=3000;st.w=1000;tm.x=1500;draw();var travou=[S.W,st.w===S.obra.snap.stones[0].w,tm.x];
+          S.tab=9;panel();document.querySelector('#bd [data-obun]').click();await W();bx.querySelector('#obrapw1').value='0000';bx.querySelector('[data-obok]').click();await W();var errada=obraOn();bx.querySelector('#obrapw1').value='1234';bx.querySelector('[data-obok]').click();await W();var certa=!obraOn();
+          S.tab=7;panel();var inf=(document.querySelector('#bd [data-ptinfo]')||{}).textContent||'';
+          S.wall={L:{a:88,len:2000}};var sq=sqDiff().L;
+          return JSON.stringify({travou:travou,errada:errada,certa:certa,info:/até o teto/.test(inf)&&/Da pedra/.test(inf),fecha:sq?sq.fecha:null,errs:__errs});
+          """#)
+        XCTAssertEqual(o["travou"] as? [AnyHashable], [3200, true, 1000] as [AnyHashable], "medidas da obra travadas voltam")
+        XCTAssertEqual(o["errada"] as? Bool, true, "senha errada não destrava"); XCTAssertEqual(o["certa"] as? Bool, true, "senha certa destrava")
+        XCTAssertEqual(o["info"] as? Bool, true, "tomada mostra até o teto e da pedra")
+        XCTAssertEqual(o["fecha"] as? Int, 70, "lateral a 88° com 2 m fecha 70 mm")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

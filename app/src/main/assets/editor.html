@@ -7588,5 +7588,37 @@ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&
  function watch(){var v3=document.getElementById('v3');if(v3)mo.observe(v3,{subtree:true,attributes:true,attributeFilter:['hidden','style'],childList:true});else setTimeout(watch,300)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',watch);else watch();
 })();
+
+/* 🧱 Paredes (modo fácil), na aba Ambiente: formato (reta, L pra esquerda, L pra direita, U) e as medidas de cada parede.
+   Fundo: largura e altura. Laterais: comprimento e altura. "Mesma altura em todas" (padrão): mudou uma, mudam todas. */
+(function(){
+ function same(){return !(wallRaw('F').sep)}
+ function has(sd){var w=S.wl||{};return w[sd]!=='n'&&wallCfg(sd).tp!=='sem'}
+ function fmt(){var l=has('L'),r=has('R');return l&&r?'u':l?'le':r?'ld':'reta'}
+ function inpP(k,lab,v){return '<div class="g" style="min-width:0"><label>'+lab+'</label><input type="text" inputmode="none" data-calc="1" data-pf="'+k+'" value="'+Math.round(v)+'" style="min-width:0;width:100%;box-sizing:border-box"></div>'}
+ function html(){var f=fmt(),B=function(k,t){return '<button data-pfo="'+k+'"'+(f===k?' class="sel"':'')+' style="flex:1;min-width:70px;min-height:40px">'+t+'</button>'},L=wallCfg('L'),R=wallCfg('R'),sm=same();
+  var h='<div class="sec" data-pfsec="1">🧱 Paredes (modo fácil)<span>⌃</span></div><div data-pfbox="1" style="display:flex;flex-direction:column;gap:6px">'
+  +'<div class="note">Escolha o formato e digite as medidas de cada parede (ou meça com a trena: toque no campo e a medida cai nele).</div>'
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+B('reta','▬ Reta')+B('le','▙ L esquerda')+B('ld','▟ L direita')+B('u','▙▟ U')+'</div>'
+  +'<b style="margin-top:4px">Parede do fundo</b><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px">'+inpP('F|w','Largura (mm)',S.W)+inpP('F|h','Altura (mm)',S.H)+'</div>';
+  if(has('L'))h+='<b>Parede esquerda</b><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px">'+inpP('L|len','Comprimento (mm)',L.len)+inpP('L|h','Altura (mm)',sm?S.H:L.h0)+'</div>';
+  if(has('R'))h+='<b>Parede direita</b><div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px">'+inpP('R|len','Comprimento (mm)',R.len)+inpP('R|h','Altura (mm)',sm?S.H:R.h0)+'</div>';
+  h+='<label class="chk" style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-pfsame'+(sm?' checked':'')+'> Mesma altura em todas as paredes (mudou uma, mudam todas)</label></div>';return h}
+ window.pfHtml=html;
+ function ro(bd){if(window.obraOn&&obraOn())[].forEach.call(bd.querySelectorAll('[data-pf],[data-pfo],[data-pfsame]'),function(i){if(i.tagName==='INPUT'&&i.type==='text'){i.readOnly=true;i.removeAttribute('data-calc');i.style.background='#fff4d6'}else i.disabled=true})}
+ var panel_pf=panel;panel=function(){var r=panel_pf.apply(this,arguments);try{var bd=document.getElementById('bd');if(bd&&S.tab===9&&!bd.querySelector('[data-pfsec]')){var sc=[].filter.call(bd.querySelectorAll('.sec'),function(e){return /^Ambiente \(parede\)/.test(e.textContent.trim())})[0];if(sc){sc.insertAdjacentHTML('beforebegin',html());
+   /* largura, altura e desnível antigos ficam escondidos (os dados continuam): as medidas agora ficam só no modo fácil */
+   [].forEach.call(bd.querySelectorAll('input[data-k="W"],input[data-k="H"],input[data-wh1]'),function(i){var g=i.closest('.g');if(g)g.style.display='none'});ro(bd);/* o título antigo ficou sem nada embaixo: some também */var nx=sc.nextElementSibling,vazio=true;while(nx&&!nx.classList.contains('sec')){if(nx.style.display!=='none'&&nx.getClientRects().length)vazio=false;nx=nx.nextElementSibling}if(vazio)sc.style.display='none'}}}catch(_){}return r};window.panel=panel;
+ function apply(){try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}}
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pfo]');if(!t||window.RO||t.disabled)return;if(window.obraOn&&obraOn()){toast('🔐 Medidas da obra travadas: destrave com a senha');return}var k=t.dataset.pfo;snap();S.wl=Object.assign({},S.wl||{});
+  ['L','R'].forEach(function(sd){var on=k==='u'||(k==='le'&&sd==='L')||(k==='ld'&&sd==='R');if(on){delete S.wl[sd];if(wallRaw(sd).tp==='sem')wallSet(sd,'tp','normal')}else S.wl[sd]='n'});if(!Object.keys(S.wl).length)S.wl=null;apply()});
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset)return;
+  if(t.dataset.pfsame!==undefined){snap();if(t.checked){wallSet('F','sep',0);['L','R'].forEach(function(sd){var w=wallRaw(sd);if(w.h0||w.h1){wallSet(sd,'h0',0);wallSet(sd,'h1',0)}})}else wallSet('F','sep',1);apply();return}
+  if(!t.dataset.pf)return;if(window.obraOn&&obraOn()){apply();return}var v=parseFloat(String(t.value).replace(',','.'));try{if(window.calcEval){var c=calcEval(t.value);if(c!==null&&!isNaN(c))v=c}}catch(_){}if(!(v>0)){apply();return}v=Math.round(v);var q=t.dataset.pf.split('|'),sd=q[0],f=q[1];snap();
+  if(sd==='F'&&f==='w')S.W=Math.max(1000,Math.min(12000,v));
+  else if(f==='len')wallSet(sd,'len',Math.max(300,Math.min(12000,v)));
+  else if(f==='h'){v=Math.max(1800,Math.min(4500,v));if(sd==='F'||same()){S.H=v;if(same()){/* todas iguais: tira o desnível e as alturas próprias das laterais */wallSet('F','h1',0);['L','R'].forEach(function(x){wallSet(x,'h0',0);wallSet(x,'h1',0)})}}else{wallSet(sd,'h0',v);wallSet(sd,'h1',v)}}
+  try{if(typeof confineAll==='function')confineAll()}catch(_){}apply()});
+})();
 </script>
 </body></html>

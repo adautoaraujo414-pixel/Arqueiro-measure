@@ -101,6 +101,11 @@ object AppUpdater {
     /** Novidades da versão (novidades.txt do release, download direto, sem limite da API). Sem internet/sem arquivo: vazio. */
     fun notesOf(tag: String): String = runCatching { get(DL + tag + "/novidades.txt", false).trim().take(4000) }.getOrDefault("")
 
+    /** Novidades de todas as versões que a pessoa pulou (da mais nova pra mais velha, até 8 versões). */
+    fun notesSince(installed: Long, latest: Int): String = (latest downTo (installed + 1).toInt().coerceAtLeast(latest - 7)).mapNotNull { n ->
+        notesOf("win-" + n).removePrefix("Novidades desta versão:").trim().takeIf { it.isNotBlank() }?.let { "Versão win-" + n + ":\n" + it }
+    }.joinToString("\n\n").take(6000)
+
     fun download(ctx: Context, r: Release, progress: (Int) -> Unit): File {
         val dir = File(ctx.cacheDir, "update").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }

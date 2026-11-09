@@ -13,6 +13,7 @@ object AppUpdater {
 
     fun installedNumber(ctx: Context): Long = 0L
     fun latest(): Release? = null
+    fun notesSince(installed: Long, latest: Int): String = ""
     fun download(ctx: Context, r: Release, progress: (Int) -> Unit): File = throw UnsupportedOperationException()
     fun canInstall(ctx: Context): Boolean = false
     fun askInstallPermission(ctx: Context) {}

@@ -74,6 +74,11 @@ object AppUpdater {
     /** Novidades da versão (novidades.txt do release, download direto, sem limite da API). Sem internet/sem arquivo: vazio. */
     fun notesOf(tag: String): String = runCatching { get(DL + tag + "/novidades.txt", false).trim().take(4000) }.getOrDefault("")
 
+    /** Novidades de todas as versões que a pessoa pulou (da mais nova pra mais velha, até 8 versões). */
+    fun notesSince(installed: Long, latest: Int): String = (latest downTo (installed + 1).toInt().coerceAtLeast(latest - 7)).mapNotNull { n ->
+        notesOf("apk-" + n).removePrefix("Novidades desta versão:").trim().takeIf { it.isNotBlank() }?.let { "Versão apk-" + n + ":\n" + it }
+    }.joinToString("\n\n").take(6000)
+
     /**
      * Baixa o APK para o cache e devolve o arquivo.
      * O GitHub às vezes devolve 502/503/504 (servidor de arquivos ocupado) ou corta a conexão no meio:

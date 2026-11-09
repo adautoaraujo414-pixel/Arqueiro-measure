@@ -1057,7 +1057,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: run { lastAutoCheck = now - 28 * 60_000L; return@launch }
             val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
             val skipped = app.getSharedPreferences("arque.upd", android.content.Context.MODE_PRIVATE).getInt("skip", 0)
-            if (rel.number > mine && rel.number != skipped) updateOffer = rel
+            if (rel.number > mine && rel.number != skipped) {
+                // novidades de todas as versões puladas (não só da última)
+                val notes = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.notesSince(mine, rel.number) }.getOrDefault("") }
+                updateOffer = if (notes.isNotBlank()) rel.copy(notes = "Novidades desta atualização:\n\n" + notes) else rel
+            }
         }
     }
 

@@ -454,6 +454,26 @@ final class AppModel: ObservableObject {
         do { try DataBackup.fullBackup(to: url); return url } catch { toast = tr("Falhou o backup: {0}", error.localizedDescription); return nil }
     }
 
+    // MARK: sincronizar com outro aparelho (Wi-Fi)
+    /// Grava a nota aberta e espera a fila de gravação antes de comparar ou gravar o que veio do outro aparelho.
+    func syncPrepare() { flush(); io.sync {} }
+    /// Cópia de segurança antes de gravar (na pasta do app no Arquivos).
+    nonisolated func syncBackup() { DataBackup.autoBackup(force: true) }
+    /// Relê tudo do disco depois de receber (igual ao restaurar backup).
+    func syncReload() {
+        io.sync {}
+        session = nil
+        tabs = []
+        index = store.loadIndex()
+        appointments = store.loadAgenda().sorted { $0.startMs < $1.startMs }
+        quotes = store.loadQuotes()
+        Reminders.rescheduleAll(appointments)
+        // o editor de móveis lê os projetos do arquivo (projects.json) quando abre: não precisa apagar nada dele
+        projVersion += 1
+        screen = .library
+        toast = tr("Dados do outro aparelho recebidos")
+    }
+
     func restore(from url: URL) {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }

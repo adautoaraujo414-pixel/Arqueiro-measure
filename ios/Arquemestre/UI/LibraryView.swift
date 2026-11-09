@@ -38,6 +38,7 @@ struct LibraryView: View {
     @State private var restorePick = false
     @State private var confirmRestore: URL?
     @State private var peerView = false
+    @State private var syncOpen = false
     @State private var langOpen = false
     @State private var manageSub = false
     @State private var toolsOpen = false
@@ -100,6 +101,7 @@ struct LibraryView: View {
         .sheet(item: $clientOpen) { c in ClientDetailSheet(key: c.id) }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
+        .sheet(isPresented: $syncOpen) { SyncView().environmentObject(app) }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
         .sheet(isPresented: $btOpen) { BluetoothView() }
         .sheet(isPresented: $companyOpen) { CompanySheet(c: app.company) }
@@ -612,6 +614,7 @@ struct LibraryView: View {
             HomeMenuItem(icon: "building.2", label: tr("Dados da empresa"), action: { afterSheet { companyOpen = true } }),
             HomeMenuItem(icon: "archivebox", label: tr("Fazer backup completo (ZIP)"), action: { afterSheet { shareURL = app.makeBackup() } }),
             HomeMenuItem(icon: "arrow.counterclockwise", label: tr("Restaurar backup"), action: { afterSheet { restorePick = true } }),
+            HomeMenuItem(icon: "arrow.triangle.2.circlepath", label: tr("Sincronizar com outro aparelho (Wi-Fi)"), action: { afterSheet { syncOpen = true } }),
             HomeMenuItem(icon: "iphone.radiowaves.left.and.right", label: tr("Ver projeto de outro iPhone"), action: { afterSheet { peerView = true } }),
             HomeMenuItem(icon: "globe", label: langLabel, action: { afterSheet { langOpen = true } }),
             HomeMenuItem(icon: "creditcard", label: tr("Gerenciar assinatura"), action: { afterSheet { manageSub = true } }),

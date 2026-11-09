@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AllInbox
 import androidx.compose.material.icons.filled.Language
@@ -211,6 +212,7 @@ fun LibraryScreen(vm: AppViewModel) {
     var newFolder by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf<Uri?>(null) }
     var btView by remember { mutableStateOf(false) }
+    var syncOpen by remember { mutableStateOf(false) }
     var langOpen by remember { mutableStateOf(false) }
     if (langOpen) LanguageDialog { langOpen = false }
     val ctxN2 = androidx.compose.ui.platform.LocalContext.current
@@ -452,6 +454,7 @@ fun LibraryScreen(vm: AppViewModel) {
         add(SheetItem(tr("Fazer backup completo (ZIP)"), Icons.Filled.Backup) { backupLauncher.launch("arque-measure-backup.zip") })
         add(SheetItem(tr("Restaurar backup"), Icons.Filled.Restore) { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) })
         if (!br.com.arque.measure.BuildConfig.PLAY) add(SheetItem(tr("Atualizar o app (sem perder dados)"), Icons.Filled.SystemUpdate) { vm.checkUpdate() })
+        add(SheetItem(tr("Sincronizar com outro aparelho (Wi-Fi)"), Icons.Filled.Sync) { syncOpen = true })
         add(SheetItem(tr("Ver projeto por Bluetooth"), Icons.Filled.Bluetooth) { btView = true })
         add(SheetItem(langMenuLabel() + " (" + currentLangName() + ")", Icons.Filled.Language) { langOpen = true })
         if (showLicItem) add(SheetItem(tr("Licença / senha do mês"), Icons.Filled.Lock) { trialOpen = true })
@@ -488,6 +491,7 @@ fun LibraryScreen(vm: AppViewModel) {
         }
     }
     if (btView) ShareViewPicker(vm) { btView = false }
+    if (syncOpen) SyncDialog(vm, vm.company.name.ifBlank { android.os.Build.MODEL ?: "Arquemestre" }) { syncOpen = false }
     vm.updateState?.let { msg ->
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { vm.updateState = null },

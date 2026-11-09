@@ -1016,6 +1016,27 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ---- sincronizar com outro aparelho (Wi-Fi) ----
+    /** Pasta "files/" do app (a mesma estrutura no Android, Windows e iPhone). */
+    fun syncFiles(): java.io.File = getApplication<Application>().filesDir
+    /** Antes de comparar: grava a nota aberta pra lista sair com o que está na tela. */
+    fun syncPrepare() { runCatching { flush() }; runCatching { Thread.sleep(250) } }
+    /** Cópia de segurança antes de gravar o que veio do outro aparelho (roda fora da tela). */
+    fun syncBackup() { runCatching { br.com.arque.measure.data.DataBackup.autoBackup(getApplication(), force = true) } }
+    /** Relê tudo do disco depois de receber (notas, orçamentos, agenda e projetos de móveis). */
+    fun syncReload() {
+        val app = getApplication<Application>()
+        session = null
+        tabs.clear()
+        index = store.loadIndex()
+        quotes = store.loadQuotes()
+        appointments = store.loadAgenda().sortedBy { it.startMs }
+        runCatching { br.com.arque.measure.agenda.AgendaReminders.scheduleAll(app, appointments) }
+        projVersion++
+        screen = Screen.Library
+        toast = tr("Dados do outro aparelho recebidos")
+    }
+
     // ---- atualização do app sem perder dados ----
     var updateState by mutableStateOf<String?>(null)
     var updateReady by mutableStateOf<java.io.File?>(null)

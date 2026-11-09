@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sincronizar com outro aparelho: conversa em HTTP simples só dentro do Wi-Fi da casa (IP local, com senha).
+     O resto do app (atualização, links) continua só por HTTPS. O Android não aceita faixa de IP aqui,
+     então o texto simples fica liberado; o app só usa http:// pra endereços da rede local. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

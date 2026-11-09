@@ -406,7 +406,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["done"] as? Bool, true, "assistente tem o passo final")
         XCTAssertEqual(o["latFora"] as? Bool, true, "módulo novo nasce com laterais por fora (do assistente)")
-        XCTAssertEqual(o["lat"] as? String, "705x560", "lateral inteira do chão ao topo da caixa")
+        XCTAssertEqual(o["lat"] as? String, "805x560", "lateral inteira do chão (até o piso) ao topo da caixa")
         XCTAssertEqual(o["gl"] as? String, "460x110", "lateral da gaveta = frente 170 − 60 · comprimento pela regra (caixote > 470 → 460)")
         XCTAssertEqual(o["fundo"] as? String, "533x460", "fundo = caixa 544 − 30 + 2 × 8 + 2 × 1,5")
         XCTAssertEqual(o["cl"] as? String, "460x110,533x460", "plano de corte segue os ajustes do assistente")
@@ -473,8 +473,8 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('prb').click();var chips=document.querySelectorAll('#stdm [data-std="autoTamp"]').length;document.getElementById('stdm').hidden=true;
           return JSON.stringify({eng:eng,cl:cl,tx:tx,sw:sw,on:on,fc:fc,fl:fl,f2:f2,pt:pt,pb:pb,fc2:fc2,off:off,at1:at1,at0:at0,at2:at2,chips:chips,errs:__errs});
           """#)
-        XCTAssertEqual(o["eng"] as? String, "1:15x720x80,2:15x720x80,3:15x80x425,4:15x80x425", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (tamponamento rente com a lateral: 585 − 160 = 425)")
-        XCTAssertEqual(o["cl"] as? String, "720x80x4,425x80x4", "corte: 2 réguas no comprimento + 2 nas pontas, por lado")
+        XCTAssertEqual(o["eng"] as? String, "1:15x820x80,2:15x820x80,3:15x80x425,4:15x80x425", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (tamponamento rente com a lateral: 585 − 160 = 425)")
+        XCTAssertEqual(o["cl"] as? String, "820x80x4,425x80x4", "corte: 2 réguas no comprimento (até o piso, junto com as laterais) + 2 nas pontas, por lado")
         XCTAssertEqual(o["tx"] as? String, "5,5", "portas na cor amadeirada ganham veio no 3D")
         XCTAssertEqual(o["sw"] as? Bool, true, "bolinhas amadeiradas mostram a textura real do padrão")
         XCTAssertEqual(o["on"] as? Bool, true, "🖌 Pintar abre a paleta com todas as cores")
@@ -533,9 +533,9 @@ final class EditorWebKitTests: XCTestCase {
     func testAjustesNovosRodapeTamponamentoPrateleiraCorredicaCorrerSistema32ECorPadrao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
           var st=STD(),keep=JSON.stringify(st);
-          /* 1) valores novos nos ajustes */st.rodRec=50;st.tpAv=40;st.pm=40;st.corrDsc=50;st.corrStep=50;st.gUp=10;st.frUp=5;st.pcSob=40;st.pcW=20;st.pcH=40;st.s32=1;st.s32Off=37;st.s32Step=32;st.rnd=1;st.pcMax=2000;
+          /* 1) valores novos nos ajustes (rodapé por baixo das laterais pra conferir o rodapé lateral) */st.latPiso='nao';st.rodRec=50;st.tpAv=40;st.pm=40;st.corrDsc=50;st.corrStep=50;st.gUp=10;st.frUp=5;st.pcSob=40;st.pcW=20;st.pcH=40;st.s32=1;st.s32Off=37;st.s32Step=32;st.rnd=1;st.pcMax=2000;
           var lf=MAT.filter(function(c){return c.id==='arauco-louro-freijo-trend'})[0],cs=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];st.corFDef=lf.id;st.corDef=cs.id;prSave();
           newTpl(3);var m=S.mods[0];m.d=590;m.tl=true;m.tlM=1;m.tlW=30;m.v=[{k:'drawers',n:2,cava:true}];S.m=m;draw();
           var P=partsOf(m),g=function(re){return P.filter(function(p){return re.test(p.name)})[0]||{}};
@@ -553,6 +553,7 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('stdm').hidden=true;
           /* volta os ajustes */PR.std=JSON.parse(keep);prSave();
           return JSON.stringify({rl:rl.cl,tp:tp.cw,frY:fr.map(function(p){return p.upMm}),nl:gb.nl,cor:cor,rbZ:rb?Math.round(rb.z0):null,rbD:rb?Math.round(rb.z1-rb.z0):null,tbZ:tb?Math.round(tb.z1):null,sh:sh.cw,slW:sl.cl,slH:sl.cw,vw:vw,runs:runs,s32:s32,s32n:s32n,s32rows:s32rows,circ:circ,txt32:txt32,ids:ids,chips:chips,mats:mats,mvis:mvis,rnd:[rl.cl,tp.cw,lat.cl,lat.cw].every(function(v){return v===Math.round(v)}),errs:__errs});
+          
           """#)
         XCTAssertEqual(o["rl"] as? Double, 460, "rodapé lateral = prof 590 − 2 × recuo 50 − 2 × 15")
         XCTAssertEqual(o["tp"] as? Double, 630, "tamponamento = prof 590 + avanço 40 (rente com a lateral atrás; o fundo sobreposto só soma com a opção “Cobre o fundo” nos Ajustes)")
@@ -1147,7 +1148,7 @@ final class EditorWebKitTests: XCTestCase {
           views.forEach(function(v){__foto3({yaw:v[0],pitch:v[1]});__foto3(null);__build();for(var y=40;y<H-40;y+=18)for(var x=10;x<W-10;x+=18){var h=__rayMod(x,y);if(!h)continue;tot++;var p=__pick(x,y);if(!p||p.nm!==h.nm)bad++}});
           R.tot=tot>300;R.bad=bad;
           /* dedo pertinho da borda de fora da lateral (peça fina) ainda acha o módulo */
-          __foto3({yaw:.6,pitch:.35});__foto3(null);__build();var n=0,ok=0;__boxes().filter(function(b){return /^\d+:Lateral/.test(b.nm)}).forEach(function(b){var c=__p3(b.x1,(b.y0+b.y1)/2,b.z1);if(!c)return;var h0=__rayMod(c[0]-1,c[1]);if(!h0||h0.nm!==b.nm)return;n++;var p=__pick(c[0]+5,c[1]);if(p&&String(p.nm).split(':')[0]===String(b.nm).split(':')[0])ok++});
+          __foto3({yaw:.6,pitch:.35});__foto3(null);__build();var n=0,ok=0;__boxes().filter(function(b){return /^\d+:Lateral/.test(b.nm)}).forEach(function(b){var c=__p3(b.x1,(Math.max(b.y0,115)+b.y1)/2,b.z1);/* meio da lateral acima do rodapé (com as laterais até o piso o meio desceu pra perto da quina da pedra) */if(!c)return;var h0=__rayMod(c[0]-1,c[1]);if(!h0||h0.nm!==b.nm)return;n++;var p=__pick(c[0]+5,c[1]);if(p&&String(p.nm).split(':')[0]===String(b.nm).split(':')[0])ok++});
           R.borda=n>3&&ok===n;R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["tot"] as? Bool, true, "muitos pontos conferidos")
@@ -1884,7 +1885,7 @@ final class EditorWebKitTests: XCTestCase {
           fx3api.open({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,200)});R.semAzul=col()===c0;
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["tamp"] as? String, "2100,2100", "tamponamento do armário alto para em cima do rodapé")
+        XCTAssertEqual(o["tamp"] as? String, "2200,2200", "tamponamento do armário alto desce até o piso junto com as laterais")
         XCTAssertEqual(o["alto"] as? Int, 2100)
         XCTAssertEqual(o["tempero"] as? Bool, true, "porta-tempero pintado por dentro (frente de trás, costa, base, réguas e fundo)")
         XCTAssertEqual(o["fora"] as? Bool, false, "por dentro não pinta frente, tamponamento nem rodapé")
@@ -2922,11 +2923,11 @@ final class EditorWebKitTests: XCTestCase {
           /* o rodapé (pedestal) do módulo de canto sai igual ao dos outros módulos, não na cor de madeira crua */
           var B=__boxes(),ci=-1;S.mods.forEach(function(m,i){if(m.corner&&!m.sup&&ci<0)ci=i});R.canto=ci>=0;
           var rc=B.filter(function(b){return String(b.nm).indexOf(ci+':Rodapé')===0}),ro=B.filter(function(b){var k=+String(b.nm).split(':')[0];return k!==ci&&/^\d+:Rodapé/.test(String(b.nm))&&S.mods[k]&&!S.mods[k].sup&&!S.mods[k].corner});
-          R.tem=rc.length>0&&ro.length>0;R.igual=R.tem&&rc.every(function(b){return String(b.c)===String(ro[0].c)});R.semCru=rc.every(function(b){return String(b.c)!=='205,185,143'});
+          var kd=function(b){return /traseiro/.test(String(b.nm))?'t':'f'},igual=function(rc,ro){return ['f','t'].every(function(k){var cs={};ro.filter(function(b){return kd(b)===k}).forEach(function(b){cs[String(b.c)]=1});var cc=rc.filter(function(b){return kd(b)===k});return cc.length>0&&cc.every(function(b){return cs[String(b.c)]})})};R.tem=rc.length>0&&ro.length>0;R.igual=R.tem&&igual(rc,ro);R.semCru=rc.every(function(b){return String(b.c)!=='205,185,143'});
           /* com a caixa pintada continua igual aos outros */
           var gi=MAT.filter(function(c){return /gianduia/i.test(c.id)})[0]||MAT[0];S.mods.forEach(function(m){m.cor=gi.hex;m.corId=gi.id;m.corF=gi.hex;m.corFId=gi.id});draw();__build();B=__boxes();
           rc=B.filter(function(b){return String(b.nm).indexOf(ci+':Rodapé')===0});ro=B.filter(function(b){var k=+String(b.nm).split(':')[0];return k!==ci&&/^\d+:Rodapé/.test(String(b.nm))&&S.mods[k]&&!S.mods[k].sup&&!S.mods[k].corner});
-          R.pintado=rc.length>0&&ro.length>0&&rc.every(function(b){return String(b.c)===String(ro[0].c)});
+          R.pintado=rc.length>0&&ro.length>0&&igual(rc,ro);
           document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["canto"] as? Bool, true, "a cozinha de exemplo tem módulo de canto")
@@ -2934,6 +2935,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["igual"] as? Bool, true, "rodapé do canto na mesma cor dos outros")
         XCTAssertEqual(o["semCru"] as? Bool, true, "rodapé do canto não sai cor de madeira crua")
         XCTAssertEqual(o["pintado"] as? Bool, true, "com a caixa pintada continua igual aos outros")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testLateraisAtePisoRodapeEntreElasETudoNaCorPorFora() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;draw();
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          var gi=MAT.filter(function(c){return /gianduia/i.test(c.id)})[0]||MAT[0],cor=function(q){q.corF=gi.hex;q.corFId=gi.id;q.corFN=matLabel(gi)};
+          newTpl(tpl('Balcão 2 portas'));try{soloOff()}catch(_){}var m=S.mods[0];m.x=1200;cor(m);draw();
+          /* módulo de baixo nasce com as laterais até o piso e o rodapé entre elas (não fica "flutuando" num caixote) */
+          R.nasce=!!m.latPiso&&!!m.latFora;var P=partsOf(m),pn=function(n){return P.filter(function(p){return p.name===n})[0]};
+          var le=pn('Lateral esquerda');R.latChao=Math.abs(le.y+le.h-m.h)<.6;R.tampChao=Math.abs(pn('Tamponamento esquerdo').h-m.h)<.6&&Math.abs(pn('Tamponamento direito').h-m.h)<.6;
+          var rf=pn('Rodapé (pedestal)');R.rodEntre=Math.abs(rf.x-m.esp)<.6&&Math.abs(rf.w-(m.w-2*m.esp))<.6;R.semRodLat=!P.some(function(p){return /^Rodapé lateral/.test(p.name)});
+          /* aéreo continua igual */
+          newTpl(4);try{soloOff()}catch(_){}var a=S.mods[1];a.x=1200;cor(a);draw();R.aereo=!a.latPiso;
+          /* 3D: lateral e tamponamento no chão, rodapé da frente e o aéreo por baixo na cor de fora */
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var B=__boxes(),hx=[1,3,5].map(function(i){return parseInt(gi.hex.slice(i,i+2),16)}).join(),of=function(n){return B.filter(function(b){return String(b.nm)===n&&Array.isArray(b.c)})};
+          R.chao3d=of('0:Lateral esquerda').some(function(b){return b.y0<1})&&of('0:Tamponamento esquerdo').some(function(b){return b.y0<1});
+          var rod=of('0:Rodapé (pedestal)');R.rod3d=rod.length>0&&rod.some(function(b){return b.c.join()===hx})&&!rod.some(function(b){return b.c.join()==='244,242,238'||b.c.join()==='205,185,143'});
+          R.aereoBaixo=of('1:Base inferior').some(function(b){return b.c.join()===hx});
+          /* plano de corte: rodapé da frente e base do aéreo na chapa da cor */
+          R.corteRod=cutLines(m).some(function(l){return l.names.indexOf('Rodapé (pedestal)')>=0&&l.fin==='c'});R.corteAereo=cutLines(a).some(function(l){return l.names.indexOf('Base inferior')>=0&&l.fin==='c'});
+          document.getElementById('v3x').click();
+          /* botão do módulo: desliga só nele; "aplicar em todos" liga em todos os de baixo */
+          newTpl(tpl('Balcão 2 portas'));try{soloOff()}catch(_){}var n2=S.mods[2];n2.x=200;n2.latPiso=false;draw();
+          S.m=m;S.tab=0;panel();var bt=document.querySelector('#bd [data-latop="latPiso"]');R.botao=!!bt;if(bt)bt.click();R.desliga=!m.latPiso&&!!n2&&!n2.latPiso;
+          bt=document.querySelector('#bd [data-latop="latPiso"]');if(bt)bt.click();var ba=document.querySelector('#bd [data-latall="1"]');R.todos=!!ba;if(ba)ba.click();R.ligouTodos=S.mods.filter(function(q){return !q.sup}).every(function(q){return q.latPiso});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["nasce"] as? Bool, true, "módulo de baixo nasce com as laterais até o piso")
+        XCTAssertEqual(o["latChao"] as? Bool, true, "lateral desce até o chão")
+        XCTAssertEqual(o["tampChao"] as? Bool, true, "tamponamento desce até o chão junto")
+        XCTAssertEqual(o["rodEntre"] as? Bool, true, "rodapé de lateral a lateral")
+        XCTAssertEqual(o["semRodLat"] as? Bool, true, "sem rodapé lateral (a lateral faz o papel)")
+        XCTAssertEqual(o["aereo"] as? Bool, true, "aéreo não muda")
+        XCTAssertEqual(o["chao3d"] as? Bool, true, "3D: lateral e tamponamento no chão")
+        XCTAssertEqual(o["rod3d"] as? Bool, true, "3D: rodapé da frente na cor de fora")
+        XCTAssertEqual(o["aereoBaixo"] as? Bool, true, "3D: aéreo por baixo na cor de fora")
+        XCTAssertEqual(o["corteRod"] as? Bool, true, "corte: rodapé da frente na chapa da cor")
+        XCTAssertEqual(o["corteAereo"] as? Bool, true, "corte: base do aéreo na chapa da cor")
+        XCTAssertEqual(o["botao"] as? Bool, true, "botão Laterais até o piso no módulo")
+        XCTAssertEqual(o["desliga"] as? Bool, true, "desliga só no módulo")
+        XCTAssertEqual(o["todos"] as? Bool, true, "botão aplicar em todos")
+        XCTAssertEqual(o["ligouTodos"] as? Bool, true, "liga em todos os módulos de baixo")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 }

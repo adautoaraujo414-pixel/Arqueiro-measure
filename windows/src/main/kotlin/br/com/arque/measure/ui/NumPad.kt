@@ -36,8 +36,9 @@ import br.com.arque.measure.logic.Calc
  * Aceita dígitos, vírgula e contas de + e − (ex.: 2750−4), o resultado é calculado no OK.
  */
 @Composable
-fun AppNumPad(text: String, onText: (String) -> Unit, allowOps: Boolean = true) {
+fun AppNumPad(text: String, onText: (String) -> Unit, allowOps: Boolean = true, dash: Boolean = false) {
     val keys = if (allowOps) listOf("7", "8", "9", "⌫", "4", "5", "6", "+", "1", "2", "3", "−", "C", "0", ",", "")
+    else if (dash) listOf("7", "8", "9", "⌫", "4", "5", "6", "C", "1", "2", "3", "-", "", "0", "", "")
     else listOf("7", "8", "9", "⌫", "4", "5", "6", "C", "1", "2", "3", "", "", "0", ",", "")
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         val res = if (allowOps && text.any { it == '+' || it == '−' }) Calc.eval(text) else null

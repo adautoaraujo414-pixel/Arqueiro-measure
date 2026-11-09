@@ -1027,11 +1027,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun autoCheckUpdate() {
         if (br.com.arque.measure.BuildConfig.PLAY) return // no Google Play quem atualiza é a loja
         val now = System.currentTimeMillis()
-        if (now - lastAutoCheck < 30 * 60_000L || updateState != null) return
+        // não checa de novo só enquanto um download está rolando ou já tem instalador pronto (um aviso antigo tipo "já está na mais nova" não trava a checagem)
+        if (now - lastAutoCheck < 30 * 60_000L || updateReady != null || (updateState?.contains("%") == true)) return
         lastAutoCheck = now
         val app = getApplication<Application>()
         viewModelScope.launch {
-            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: return@launch
+            // sem internet / GitHub fora: não espera 30 min pra tentar de novo, tenta na próxima vez que voltar pro app (mín. 2 min)
+            val rel = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { br.com.arque.measure.data.AppUpdater.latest() }.getOrNull() } ?: run { lastAutoCheck = now - 28 * 60_000L; return@launch }
             val mine = br.com.arque.measure.data.AppUpdater.installedNumber(app)
             val skipped = app.getSharedPreferences("arque.upd", android.content.Context.MODE_PRIVATE).getInt("skip", 0)
             if (rel.number > mine && rel.number != skipped) updateOffer = rel
@@ -1046,6 +1048,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Aceitou a versão nova: baixa e abre o instalador direto. */
     fun acceptUpdate() { updateOffer = null; checkUpdate(autoInstall = true) }
+
+    private var retriedOnce = false
 
     fun checkUpdate(autoInstall: Boolean = false) {
         if (br.com.arque.measure.BuildConfig.PLAY) return
@@ -1066,7 +1070,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 runCatching { br.com.arque.measure.data.AppUpdater.download(app, rel) { p -> viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) { updateState = tr("Baixando apk-{0}… {1}%", rel.number, p) } } }
             }
             val apk = f.getOrNull()
-            if (apk == null) { updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message); return@launch }
+            if (apk == null) {
+                updateState = tr("Falhou o download: {0}", f.exceptionOrNull()?.message)
+                // servidor ocupado (502/503/504) ou conexão caiu: tenta de novo sozinho uma vez daqui a 30 s
+                if (autoInstall && !retriedOnce) { retriedOnce = true; kotlinx.coroutines.delay(30_000L); updateState = tr("Tentando de novo…"); checkUpdate(autoInstall = true) }
+                return@launch
+            }
+            retriedOnce = false
             updateReady = apk
             updateState = tr("apk-{0} pronto. Toque em Instalar: seus dados continuam (cópia também em Downloads/ArqueMeasure).", rel.number)
             if (autoInstall) installUpdate()
@@ -1105,13 +1115,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun openGuide() { guideFromMenu = true; showWelcome = true }
     var trialLeft by mutableStateOf("")
     var licUnlocked by mutableStateOf(false)
+    /** Mensalidade (APK do site): quanto falta pra vencer, só nos últimos 3 dias ("" fora disso). */
+    var payLeft by mutableStateOf("")
+    /** Paga por mês (não é o desbloqueio antigo de pagamento único). */
+    var licMonthly by mutableStateOf(false)
 
     fun checkLicense() {
         val app = getApplication<Application>()
         if (br.com.arque.measure.license.License.firstRun(app)) showWelcome = true
         licUnlocked = br.com.arque.measure.license.License.isUnlocked(app)
         licLocked = br.com.arque.measure.license.License.isLocked(app)
-        trialLeft = if (licUnlocked) "" else br.com.arque.measure.license.License.leftLabel(app)
+        licMonthly = br.com.arque.measure.license.License.isMonthly(app)
+        trialLeft = if (licUnlocked || licMonthly) "" else br.com.arque.measure.license.License.leftLabel(app)
+        payLeft = if (licUnlocked) br.com.arque.measure.license.License.payLeftLabel(app) else ""
         if (licLocked) flush()
     }
 
@@ -1138,9 +1154,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreStore() = br.com.arque.measure.license.StoreBilling.restore(getApplication(), storeMsg)
     fun manageStore() = br.com.arque.measure.license.StoreBilling.manage(getApplication())
 
+    /** Por que a senha não entrou ("" = senha errada). */
+    var unlockErr by mutableStateOf("")
+
     fun unlock(code: String): Boolean {
-        val ok = br.com.arque.measure.license.License.tryUnlock(getApplication(), code)
-        if (ok) { licLocked = false; licUnlocked = true; trialLeft = ""; toast = tr("App desbloqueado. Obrigado!") }
+        val app = getApplication<Application>()
+        val ok = br.com.arque.measure.license.License.tryUnlock(app, code)
+        unlockErr = if (!ok && br.com.arque.measure.license.License.wasUsed(app, code)) tr("Essa senha já foi usada neste aparelho. Peça a senha do mês.") else ""
+        if (ok) {
+            checkLicense()
+            toast = tr("App liberado por mais {0} dias. Obrigado!", br.com.arque.measure.license.License.PERIOD_DAYS)
+        }
         return ok
     }
 
@@ -1174,6 +1198,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val raw = when {
                 t.startsWith(CUT_PREFIX) -> t.removePrefix(CUT_PREFIX)
                 t.contains("corte.html#d=") -> t.substringAfter("corte.html#d=")
+                t.contains("/p.html#d=") -> t.substringAfter("/p.html#d=")
                 t.startsWith("arquemestre://corte") -> t.substringAfter("d=", "")
                 else -> return null
             }

@@ -33,7 +33,7 @@ permissions:
 jobs:
   ios:
     runs-on: ${{ inputs.mac || 'macos-26' }}
-    timeout-minutes: ${{ inputs.rapido && 120 || 60 }}
+    timeout-minutes: ${{ inputs.rapido && 120 || 90 }}
     steps:
       - name: Baixar código
         uses: actions/checkout@v4

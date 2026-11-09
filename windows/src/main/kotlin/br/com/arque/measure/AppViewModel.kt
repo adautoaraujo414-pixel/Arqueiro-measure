@@ -1184,7 +1184,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         unlockErr = if (!ok && br.com.arque.measure.license.License.wasUsed(app, code)) tr("Essa senha já foi usada neste aparelho. Peça a senha do mês.") else ""
         if (ok) {
             checkLicense()
-            toast = tr("App liberado por mais {0} dias. Obrigado!", br.com.arque.measure.license.License.PERIOD_DAYS)
+            toast = if (br.com.arque.measure.license.License.isLifetimeCode(code))
+                tr("App liberado pra sempre neste aparelho! Sem mais mensalidade. Obrigado!")
+            else tr("App liberado por mais {0} dias. Obrigado!", br.com.arque.measure.license.License.PERIOD_DAYS)
         }
         return ok
     }

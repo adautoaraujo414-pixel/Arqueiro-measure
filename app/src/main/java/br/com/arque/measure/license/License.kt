@@ -29,6 +29,15 @@ object License {
     private const val BASE_SHA = "e7c04298e569b1c5b82af9bbce92df16c01c192898d8edecfca1ecd8c4ac4a13"
     private const val BASE_LEN = 6
 
+    /** SHA-256 da senha vitalícia (libera o aparelho pra sempre, sem mais mensalidade). */
+    private const val LIFE_SHA = "cbc8ab3178ecf91b12c4031e018587bc8b622242a9ce6cf2cde2e32a7a00644f"
+
+    /** A senha digitada é a vitalícia? */
+    fun isLifetimeCode(code: String): Boolean = sha(code.trim().filter { it.isDigit() }) == LIFE_SHA
+
+    /** Libera o aparelho pra sempre (sem mais mensalidade). */
+    fun grantLifetime(ctx: Context) { sp(ctx).edit().putBoolean("ok", true).apply() }
+
     private fun sp(ctx: Context) = ctx.getSharedPreferences("arque.lic", Context.MODE_PRIVATE)
 
     /** Marca o início do teste na primeira abertura e devolve true se for a primeira vez. */
@@ -109,6 +118,7 @@ object License {
     /** Confere a senha do mês (com ou sem os tracinhos) e libera mais 30 dias. */
     fun tryUnlock(ctx: Context, code: String): Boolean {
         val c = code.trim().filter { it.isDigit() }
+        if (sha(c) == LIFE_SHA) { grantLifetime(ctx); return true }
         if (c.length <= BASE_LEN || sha(c.take(BASE_LEN)) != BASE_SHA) return false
         val key = c.drop(BASE_LEN)
         val at = now(ctx)

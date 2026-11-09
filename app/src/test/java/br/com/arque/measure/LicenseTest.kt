@@ -18,4 +18,14 @@ class LicenseTest {
         assertEquals("R$ 29,90", License.PRICE)
         assertEquals(30, License.PERIOD_DAYS)
     }
+
+    @Test
+    fun senhaVitaliciaReconhecida() {
+        // a senha vitalícia (base repetida) é reconhecida; a do mês não
+        assertEquals(true, License.isLifetimeCode("132035132035"))
+        assertEquals(true, License.isLifetimeCode("132035-132035"))
+        assertEquals(false, License.isLifetimeCode("13203511"))
+        assertEquals(false, License.isLifetimeCode("132035"))
+        assertEquals(false, License.isLifetimeCode(""))
+    }
 }

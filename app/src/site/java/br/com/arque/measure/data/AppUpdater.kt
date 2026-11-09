@@ -17,7 +17,8 @@ import java.net.URL
 object AppUpdater {
     private const val API = "https://api.github.com/repos/adautoaraujo414-pixel/Arqueiro-measure/releases?per_page=40"
 
-    data class Release(val number: Int, val url: String)
+    /** notes = "Novidades desta versão" (novidades.txt do release), mostradas no aviso antes de atualizar. */
+    data class Release(val number: Int, val url: String, val notes: String = "")
 
     fun installedNumber(ctx: Context): Long {
         val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
@@ -66,8 +67,12 @@ object AppUpdater {
                 }
             }
         }
+        best?.let { b -> best = b.copy(notes = notesOf("apk-" + b.number)) }
         return best
     }
+
+    /** Novidades da versão (novidades.txt do release, download direto, sem limite da API). Sem internet/sem arquivo: vazio. */
+    fun notesOf(tag: String): String = runCatching { get(DL + tag + "/novidades.txt", false).trim().take(4000) }.getOrDefault("")
 
     /**
      * Baixa o APK para o cache e devolve o arquivo.

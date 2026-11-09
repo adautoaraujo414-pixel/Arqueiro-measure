@@ -8,7 +8,8 @@ import java.io.File
  * Mesma "cara" do atualizador do APK do site, mas sem fazer nada.
  */
 object AppUpdater {
-    data class Release(val number: Int, val url: String)
+    /** notes = "Novidades desta versão" (novidades.txt do release), mostradas no aviso antes de atualizar. */
+    data class Release(val number: Int, val url: String, val notes: String = "")
 
     fun installedNumber(ctx: Context): Long = 0L
     fun latest(): Release? = null

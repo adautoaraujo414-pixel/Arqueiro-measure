@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -25,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
@@ -283,7 +285,16 @@ fun UpdateOfferDialog(vm: AppViewModel) {
     AlertDialog(
         onDismissRequest = { vm.updateOffer = null },
         title = { Text(tr("Atualização disponível")) },
-        text = { Text(tr("Saiu a versão apk-{0}. Quer atualizar agora? O app baixa e instala por cima — nada é perdido (antes ele guarda uma cópia dos dados em Downloads/ArqueMeasure).", r.number)) },
+        text = {
+            // novidades desta versão (novidades.txt do release): o que entrou, com precisão, antes de atualizar
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                Text(tr("Saiu a versão apk-{0}. Quer atualizar agora? O app baixa e instala por cima — nada é perdido (antes ele guarda uma cópia dos dados em Downloads/ArqueMeasure).", r.number))
+                if (r.notes.isNotBlank()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(r.notes, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
         confirmButton = { TextButton(onClick = { vm.acceptUpdate() }) { Text(tr("Atualizar agora")) } },
         dismissButton = {
             Row {

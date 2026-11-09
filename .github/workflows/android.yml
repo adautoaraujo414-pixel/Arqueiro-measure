@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico e tags: as novidades saem dos commits desde o apk-N anterior
 
       - name: Instalar JDK 17
         uses: actions/setup-java@v4
@@ -84,6 +86,9 @@ jobs:
         run: |
           TAG="apk-${GITHUB_RUN_NUMBER}"
           cp app/build/outputs/apk/site/debug/*.apk ArqueMeasure-debug.apk
+          # novidades desta versão (o app mostra no aviso de atualização): commits desde o apk-N anterior
+          python3 .github/scripts/novidades.py apk- "$TAG" > novidades.txt || echo "Novidades desta versão:\nMelhorias e correções." > novidades.txt
+          cat novidades.txt
           # reexecução: a release já existe -> mantém tudo como está (não apaga nem sobrescreve)
           if gh release view "$TAG" >/dev/null 2>&1; then
             if gh release view "$TAG" --json assets --jq '.assets[].name' | grep -qx "ArqueMeasure-debug.apk"; then
@@ -92,14 +97,14 @@ jobs:
               gh release upload "$TAG" ArqueMeasure-debug.apk
             fi
           else
-            gh release create "$TAG" ArqueMeasure-debug.apk --target "$GITHUB_SHA" --prerelease \
+            gh release create "$TAG" ArqueMeasure-debug.apk novidades.txt --target "$GITHUB_SHA" --prerelease \
               --title "ARQUE MEASURE APK debug #${GITHUB_RUN_NUMBER}" \
-              --notes "APK de teste (debug). Protocolo Bluetooth Bosch NÃO validado com trena real."
+              --notes-file novidades.txt
           fi
           # ponteiro fixo "apk-latest": o app lê latest.txt direto do download (sem feed, sem limite da API)
           echo "${GITHUB_RUN_NUMBER}" > latest.txt
           gh release view apk-latest >/dev/null 2>&1 || gh release create apk-latest --prerelease --title "Android · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em apk-N."
-          gh release upload apk-latest latest.txt ArqueMeasure-debug.apk --clobber
+          gh release upload apk-latest latest.txt ArqueMeasure-debug.apk novidades.txt --clobber
 
       - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
         if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')

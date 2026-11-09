@@ -32,7 +32,8 @@ object AppUpdater {
     /** Qual instalador baixar pra atualizar: o mesmo tipo deste (e sempre o do Windows 7/8 num Windows antigo). */
     fun asset(): String = if (win7Build || oldWindows) ASSET7 else ASSET
 
-    data class Release(val number: Int, val url: String)
+    /** notes = "Novidades desta versão" (novidades.txt do release), mostradas no aviso antes de atualizar. */
+    data class Release(val number: Int, val url: String, val notes: String = "")
 
     /** Número desta versão (o mesmo do release win-N que gerou o instalador). */
     fun installedNumber(@Suppress("UNUSED_PARAMETER") ctx: Context): Long =
@@ -93,8 +94,12 @@ object AppUpdater {
                 }
             }
         }
+        best?.let { b -> best = b.copy(notes = notesOf("win-" + b.number)) }
         return best
     }
+
+    /** Novidades da versão (novidades.txt do release, download direto, sem limite da API). Sem internet/sem arquivo: vazio. */
+    fun notesOf(tag: String): String = runCatching { get(DL + tag + "/novidades.txt", false).trim().take(4000) }.getOrDefault("")
 
     fun download(ctx: Context, r: Release, progress: (Int) -> Unit): File {
         val dir = File(ctx.cacheDir, "update").apply { mkdirs() }

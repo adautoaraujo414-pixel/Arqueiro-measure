@@ -19,6 +19,8 @@ jobs:
         shell: pwsh
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico e tags: as novidades saem dos commits desde o win-N anterior
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -64,13 +66,19 @@ jobs:
           Copy-Item $exe.FullName rel/Arquemestre-Windows-Instalador.exe
           Copy-Item $msi.FullName rel/Arquemestre-Windows.msi
           Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath rel/Arquemestre-Windows-portatil.zip
+          # novidades desta versão (o app mostra no aviso de atualização): commits desde o win-N anterior
+          python .github/scripts/novidades.py win- "win-$n" | Out-File -Encoding utf8NoBOM rel/novidades.txt
+          if (-not (Test-Path rel/novidades.txt) -or (Get-Item rel/novidades.txt).Length -lt 5) { "Novidades desta versão:`nMelhorias e correções." | Out-File -Encoding utf8NoBOM rel/novidades.txt }
+          Get-Content rel/novidades.txt
+          $nf = Join-Path $env:RUNNER_TEMP notas.txt
+          (Get-Content rel/novidades.txt -Raw) + "`n`nInstalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups." | Out-File -Encoding utf8NoBOM $nf
           gh release create "win-$n" rel/* -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease `
             --title "Arquemestre para Windows $n" `
-            --notes "Instalador: Arquemestre-Windows-Instalador.exe (ou o .msi). Portátil: descompacte o .zip e abra Arquemestre.exe. Os dados ficam em %LOCALAPPDATA%\Arque\Arquemestre e os backups em Documentos\Arquemestre\Backups."
+            --notes-file $nf
           # ponteiro fixo "win-latest": o app lê latest.txt direto do download (sem feed, sem limite da API)
           Set-Content -Path rel/latest.txt -Value "$n" -NoNewline
           gh release view win-latest -R "$env:GITHUB_REPOSITORY" 2>$null; if ($LASTEXITCODE -ne 0) { gh release create win-latest -R "$env:GITHUB_REPOSITORY" --prerelease --title "Windows · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em win-N." }
-          gh release upload win-latest rel/latest.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
+          gh release upload win-latest rel/latest.txt rel/novidades.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
 
       - name: Instalador para Windows 7/8 (Chromium 109)
         if: success()

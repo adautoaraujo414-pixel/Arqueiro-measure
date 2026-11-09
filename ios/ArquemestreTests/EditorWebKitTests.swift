@@ -304,7 +304,7 @@ final class EditorWebKitTests: XCTestCase {
     func testFerragensFitaPorCorNichoNaCorDeForaEPaletaAmadeirada() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;S.Hm=1;S.Wm=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
           newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('2P c/ Cab+Gav Int 600mm'));newTpl(4);S.mods.forEach(function(m){m.corF='#a67c52';m.corFN='Freijó'});draw();var n2=addNichoMicro(1,'liso');newTpl(T('Estante com porta de correr'));draw();
           var hw={};S.mods.forEach(function(m,i){hw[hwTag(m,i)]=hwOf(m)});var g=function(t,k){return (hw[t]&&hw[t][k])?hw[t][k].n:0};
           var nl=cutLines(n2);var txt=cutAll().replace(/<[^>]+>/g,' ');
@@ -345,7 +345,7 @@ final class EditorWebKitTests: XCTestCase {
     func testRipadoNoPlanoOtimizadoComPlacasDaBaseEParedeLateralAteOMovel() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=4140;S.H=2700;var ra=rpNew({x:0,b:0,w:4000,h:2600});draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=4140;S.H=2700;S.Hm=1;S.Wm=1;var ra=rpNew({x:0,b:0,w:4000,h:2600});draw();
           var L=rpLayout(ra),pcs=rpCutPieces(),P=sheetPlan(),big=P.groups.reduce(function(s,g){return s+(g.big?g.big.length:0)},0);
           var base=pcs.filter(function(p){return /Chapa base/.test(p.name)}),ripas=pcs.filter(function(p){return /^Ripa /.test(p.name)});
           open3D();var B=__boxes();var b3=B.filter(function(b){return b.rpid===ra.id&&Math.abs((b.z1-b.z0)-6)<0.01}).length;
@@ -395,7 +395,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAssistenteDeAjustesAplicaNosModulosPlantaOpacaECompletarFileira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;S.Hm=1;S.Wm=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
           /* assistente: laterais por fora, desconto da lateral da gaveta 60, rasgo 8 */wizOpen();var st=STD();st.caixa='fora';st.gavDsc=60;st.gavRb=8;window.WIZ=wizSteps().length-1;stdRe();var done=!!document.querySelector('#stdbody [data-wizdone="1"]');window.WIZ=null;stdSave();
           newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};var fund=P.filter(function(q){return /^Fundo de gaveta/.test(q.name)})[0];
           var cl=cutLines(m).filter(function(l){return /Lateral de gaveta|Fundo de gaveta/.test(l.name)}).map(function(l){return l.L+'x'+l.W}).join(',');
@@ -440,7 +440,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPortaBasculanteAbreParaBaixoOuCimaNo2DENo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=3200;S.H=2600;newTpl(4);var m=S.mods[0];m.w=1700;m.h=230;m.d=300;m.b=1500;m.div=[1/3,2/3];
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='sala';S.W=3200;S.H=2600;S.Hm=1;S.Wm=1;newTpl(4);var m=S.mods[0];m.w=1700;m.h=230;m.d=300;m.b=1500;m.div=[1/3,2/3];
           m.v=[{k:'door',n:1,cava:true,open:1},{k:'door',n:1,cava:true,bas:true,bd:'down',open:1},{k:'door',n:1,cava:true,bas:true,bd:'up',open:1}];S.m=m;draw();
           var paths=[].map.call(document.querySelectorAll('#svg #mod path[fill="#e6d9be"]'),function(p){var d=p.getAttribute('d').match(/-?[\d.]+/g).map(Number);var xs=[d[0],d[2],d[4],d[6]],ys=[d[1],d[3],d[5],d[7]];return (Math.max.apply(null,xs)-Math.min.apply(null,xs))>(Math.max.apply(null,ys)-Math.min.apply(null,ys))?'deitada':'em pé'});
           open3D();var B=__boxes();var d3=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.nol&&(b.y1-b.y0)>12&&((b.x1-b.x0)>300||(b.z1-b.z0)>300)}).map(function(b){return b.vi+':'+((b.pf&&b.pf.ax==='x')?'gira-eixo-x':'lado')+':'+Math.round(b.y1-b.y0)});
@@ -456,7 +456,7 @@ final class EditorWebKitTests: XCTestCase {
     func testMolduraDoTamponamentoVeioDaMadeiraPincelEAutoTamponamento() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.w=1400;m.x=500;m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;m.corF='#b98d5b';m.corFN='Carvalho Hanover';S.m=m;draw();open3D();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;newTpl(3);var m=S.mods[0];m.w=1400;m.x=500;m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;m.corF='#b98d5b';m.corFN='Carvalho Hanover';S.m=m;draw();open3D();
           var B=__boxes(),eng=B.filter(function(b){return /Tamponamento esquerdo · engrosso 80#/.test(String(b.pk||''))}).map(function(b){return String(b.pk).replace(/^.*#/,'')+':'+[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].map(Math.round).join('x')}).sort().join(',');
           var cl=cutLines(m).filter(function(l){return /engrosso/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+'x'+l.qty}).join(',');
           var tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
@@ -496,7 +496,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPaletaRealComBuscaEChapaPorCor() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;S.m=m;draw();panel();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;S.m=m;draw();panel();
           var n=[].filter.call(document.querySelectorAll('[data-csl="corF"] [data-cs]'),function(b){return !!b.title}).length,q=document.querySelector('[data-csq="corF"]');q.value='louro freij';q.dispatchEvent(new Event('input',{bubbles:true}));
           var vis=[].filter.call(document.querySelectorAll('[data-csl="corF"] [data-cs]'),function(b){return !b.hidden}).map(function(b){return b.title});
           document.querySelector('[data-csl="corF"] [data-cs*="arauco-louro-freijo-trend"]').click();m=S.mods[0];
@@ -532,7 +532,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAjustesNovosRodapeTamponamentoPrateleiraCorredicaCorrerSistema32ECorPadrao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
           var st=STD(),keep=JSON.stringify(st);
           /* 1) valores novos nos ajustes */st.rodRec=50;st.tpAv=40;st.pm=40;st.corrDsc=50;st.corrStep=50;st.gUp=10;st.frUp=5;st.pcSob=40;st.pcW=20;st.pcH=40;st.s32=1;st.s32Off=37;st.s32Step=32;st.rnd=1;st.pcMax=2000;
           var lf=MAT.filter(function(c){return c.id==='arauco-louro-freijo-trend'})[0],cs=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];st.corFDef=lf.id;st.corDef=cs.id;prSave();
@@ -580,7 +580,7 @@ final class EditorWebKitTests: XCTestCase {
     func testFitaDeTopoNaCorDasPortasContaGotasEPintarSoAFita() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;
           newTpl(3);var m=S.mods[0];newTpl(5);var e=S.mods[1];S.m=m;draw();panel();
           var cum=MAT.filter(function(c){return /cumaru/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];
           var white=['Prateleira','Lateral de gaveta','Base (porta tempero)','Lateral esquerda','Base inferior','Divisória 1','Porta'].map(function(n){return n+':'+fitaWhite(n)});
@@ -640,7 +640,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAcabamentoNaoMudaAoAbrirPortaEFitaPeloToque() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
           newTpl(4);var m=S.mods[0];m.v=[{k:'door',n:1,cava:true,bas:true,bd:'up',open:0}];m.tb=true;m.regua=true;m.regN=2;m.regMm=70;m.tl=true;m.tlW=30;m.tlM=1;S.m=m;draw();panel();
           var jat=MAT.filter(function(c){return /jatob/i.test(c.n)})[0];m.pcT={Porta:{c:jat.hex,n:matLabel(jat),id:jat.id}};
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();
@@ -682,7 +682,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPortaDeVidroComPerfilDeAluminioEVidroBronze() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
           newTpl(0);var t=S.mods[0];t.w=600;t.h=2300;t.d=400;t.v=[{k:'door',n:2,vidro:true,open:0}];S.m=t;S.sv=0;S.tab=3;draw();panel();
           var chips=[].map.call(document.querySelectorAll('[data-alcor]'),function(b){return b.dataset.alcor+(b.classList.contains('sel')?'*':'')}).join(',')+' | '+[].map.call(document.querySelectorAll('[data-vicor]'),function(b){return b.dataset.vicor+(b.classList.contains('sel')?'*':'')}).join(',');
           var hw=hwOf(t),hwk=Object.keys(hw).filter(function(k){return /vidro|Vidro/.test(k)}).map(function(k){return k+'='+hw[k].n+hw[k].u});
@@ -728,7 +728,7 @@ final class EditorWebKitTests: XCTestCase {
     func testEletrosVivosFornoMicroCoifaETV() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2600;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Torre forno + micro-ondas (embutir)'));draw();['forno','coifa','tv'].forEach(function(t){apAdd(t,0)});draw();
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();
@@ -762,7 +762,7 @@ final class EditorWebKitTests: XCTestCase {
     func testCavaSemFaixaPretaChanfroNaPortaAbertaEFitaFacilDeTocar() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;
           newTpl(4);var m=S.mods[0];m.x=600;var pf=MAT.filter(function(c){return /pau ferro/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];m.corF=pf.hex;m.corFN=matLabel(pf);m.corFId=pf.id;S.m=m;draw();
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();
           var cvl=__boxes().filter(function(b){return b.cvl}),cvlH=cvl.map(function(b){return Math.round(b.y1-b.y0)}),dark=__boxes().filter(function(b){return /^0:Porta/.test(b.nm)&&b.c[0]<70&&b.c[1]<70&&b.c[2]<70&&(b.y1-b.y0)>5}).length;
@@ -808,7 +808,7 @@ final class EditorWebKitTests: XCTestCase {
     func testFitaUmaPorUmaPrateleiraTirarEBranca() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};newTpl(tpl('Aéreo 2 portas'));newTpl(tpl('Aéreo 2 portas'));var m=S.mods[1];m.shv=[0.5];S.m=m;draw();
           var pf=MAT.filter(function(c){return /pau ferro/i.test(c.n)})[0],cz=MAT.filter(function(c){return c.id==='duratex-cinza-sagrado-essencial'})[0];S.mods.forEach(function(q){q.pcT={Porta:{c:pf.hex,n:matLabel(pf),id:pf.id}}});
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();pt3(true);
@@ -843,7 +843,7 @@ final class EditorWebKitTests: XCTestCase {
     func testMicroondasEncaixaNoNichoComMedidaReal() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Aéreo nicho aberto'));var m=S.mods[0];m.x=900;m.w=600;m.h=450;m.b=1500;m.d=350;m.v=[{k:'shelves',n:0}];S.m=m;draw();
           apAdd('microondas',0);var f=S.fr[S.fr.length-1];var models=APM.microondas.m.map(function(q){return q[0]}).filter(function(n){return /tipo /.test(n)}).length;
@@ -957,7 +957,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=300;newTpl(tpl('Aéreo 2 portas'));var a=S.mods[1];a.x=300;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};S.m=b;draw();
           /* tomada dentro do armário (no fundo) e na parede, registro de água */
@@ -998,7 +998,7 @@ final class EditorWebKitTests: XCTestCase {
     func testCaixaDaGeladeiraRipadoEmCimaEReguasDasLaterais() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           /* caixa da geladeira: laterais até em cima + aéreo, vão aberto embaixo e a geladeira já dentro */
           newTpl(tpl('Caixa da geladeira side by side (laterais + aéreo)'));var g=S.mods[0];R.caixa=[g.h,g.base,g.rod].join(',');R.nicho=partsOf(g).some(function(p){return p.gelN});R.gel=S.fr.filter(function(f){return f.t==='geladeira'}).length;
@@ -1032,7 +1032,7 @@ final class EditorWebKitTests: XCTestCase {
           focOn(wi,'front');var f=__foc();R.so=__boxes().every(function(b){return String(b.nm).indexOf(wi+':')===0});R.menos=f.n<n0;R.barra=!document.getElementById('foc3').hidden;
           document.querySelector('#foc3 [data-fcv="side"]').click();R.lado=__foc().v;document.querySelector('#foc3 [data-fcx]').click();R.volta=__foc()===null&&__boxes().length===n0;document.getElementById('v3x').click();
           /* janela: arrasta no 2D mesmo com móvel embaixo (não trava sozinha) */
-          S.W=5610;S.H=2600;S.mods=[];S.fr=[];S.stones=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          S.W=5610;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));S.mods[0].x=1400;S.ops=[{id:7,t:'janela',x:1500,b:1100,w:1700,h:600}];draw();
           var g=document.querySelector('#svg [data-op2="7"] rect'),rc=g.getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height/2,svg=document.getElementById('svg'),ev=function(tp,el,cx,cy){el.dispatchEvent(new PointerEvent(tp,{clientX:cx,clientY:cy,pointerId:1,bubbles:true,isPrimary:true,pointerType:'touch'}))};
           ev('pointerdown',g,x,y);ev('pointermove',svg,x+40,y-20);ev('pointermove',svg,x+60,y-25);ev('pointerup',svg,x+60,y-25);R.janela=S.ops[0].x!==1500&&S.ops[0].b!==1100;
@@ -1051,7 +1051,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPedraSolidaGeladeiraAcompanhaPortaDaSalaE5ToquesEditaSoOModulo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=5000;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           /* porta do ambiente na parede da esquerda abre de verdade (a folha gira pra dentro do ambiente) */
           S.ops=[{id:5,t:'porta',x:1400,b:0,w:700,h:2000,wall:'e'}];draw();open3D();await new Promise(function(r){setTimeout(r,300)});
@@ -1168,7 +1168,7 @@ final class EditorWebKitTests: XCTestCase {
           /* no 3D a pedra, a cuba e o cooktop ficam travados */
           open3D();await new Promise(function(r){setTimeout(r,300)});st=S.stones[0];var a=__itOpen({k:'st',id:st.id});var it=st.items[0],b=__itOpen({k:'cook',sid:st.id,iid:it.id});R.trava3d=a.h===0&&!a.bdr&&b.h===0&&!b.bdr&&!!document.querySelector('.stlk');document.getElementById('v3x').click();
           /* geladeira aparece no 2D dentro da caixa (parede do fundo e do lado) */
-          S.W=4000;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+          S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.ops=[];draw();var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Caixa da geladeira side by side (laterais + aéreo)'));var g=S.mods[0];g.x=1500;S.m=null;draw();var top=function(){var e=document.querySelector('#svg [data-ap]');return !!e&&!!e.compareDocumentPosition&&!!(document.querySelector('#svg [data-mi]').compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING)};R.gel2d=top();
           var k0=JSON.stringify(Object.assign({},g,{x:0,wing:0,_gel:0}));__mdDrop(0,[0.5,1200,1500]);R.gelLado=g.wing==='e'&&!!document.querySelector('#svg [data-ap]');R.naoPerde=JSON.stringify(Object.assign({},g,{x:0,wing:0,_gel:0}))===k0;
           /* trena no 2D: gruda nas bordas e dá a medida */
@@ -1211,7 +1211,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPaineisLisosSemSobreporEPortaSemRiscoNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.ops=[{id:9,t:'porta',x:0,b:0,w:800,h:2100,st:'vao'}];draw();var R={};
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.ops=[{id:9,t:'porta',x:0,b:0,w:800,h:2100,st:'vao'}];draw();var R={};
           /* 4 placas com junta de 15 (rebaixo) e a primeira recortada na porta */
           var x=0;[983.5,983.5,983.5,983.5].forEach(function(w,i){var a={id:100+i,liso:true,x:x,b:0,w:w,h:2600,jt:{t:'reb',w:15,d:6}};if(Math.min(800,x+w)-Math.max(0,x)>1)a.rc={op:9,f:0};S.rp.push(a);x+=w+15});draw();
           /* a primeira cresce: a segunda encurta e a junta de 15 continua (uma não entra em cima da outra) */
@@ -1219,7 +1219,7 @@ final class EditorWebKitTests: XCTestCase {
           /* no 3D a placa recortada é uma peça só: sem risco de emenda em cima da porta (só o contorno) */
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();var bx=__boxes().filter(function(b){return b.rpid===100});R.semRisco=bx.filter(function(b){return b.g!=='lo'}).every(function(b){return b.nol===1})&&bx.some(function(b){return b.g==='lo'&&Math.abs(b.x0-800)<1&&Math.abs(b.x1-1079)<1});
           /* regra: placa vai até 2700 · parede de 3100: em cima, depois da junta de 15, a continuação com a mesma largura */
-          document.getElementById('v3x').click();S.H=3100;S.rp=[];S.ops=[];S.rodape=0;draw();S.trena={x0:1070,x1:3979};TRT='reb';TRJ=15;TRN=3;TRW=0;TRH=0;trCreate();var lo=S.rp.filter(function(a){return a.b===0}),hi=S.rp.filter(function(a){return a.b>0});
+          document.getElementById('v3x').click();S.H=3100;S.Hm=1;S.Wm=1;S.rp=[];S.ops=[];S.rodape=0;draw();S.trena={x0:1070,x1:3979};TRT='reb';TRJ=15;TRN=3;TRW=0;TRH=0;trCreate();var lo=S.rp.filter(function(a){return a.b===0}),hi=S.rp.filter(function(a){return a.b>0});
           R.max2700=Math.max.apply(null,S.rp.map(function(a){return a.h}))===2700;R.emCima=lo.length===3&&hi.length===3&&lo.every(function(a){return hi.some(function(u){return u.x===a.x&&u.w===a.w&&u.b===2715&&u.h===385})});
           R.errs=__errs;return JSON.stringify(R);
           """#)
@@ -1238,7 +1238,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           try{STD().supPedra=0}catch(_){}/* teste antigo: aéreo pela altura do chão (sem a regra dos 700 acima da pedra) */
           /* trena no 3D gruda no canto de dentro (parede + parede + chão) e na quina de fora do painel, e mede reto pelo chão */
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];S.rodape=0;draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3979;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];S.rodape=0;draw();
           S.trena={x0:1070,x1:3979};TRT='reb';TRJ=15;TRN=3;TRW=0;TRH=0;trCreate();draw();
           open3D();await new Promise(function(r){setTimeout(r,400)});__foto3({yaw:.45,pitch:.25});__foto3(null);__build();var R={};
           /* canto de dentro: parede da esquerda + parede do fundo + chão · toque 8 px fora do canto */
@@ -1260,7 +1260,7 @@ final class EditorWebKitTests: XCTestCase {
     func testRackDoZeroAbreSoEleParaMontar() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3600;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];draw();var R={};
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3600;S.H=2600;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.ops=[];S.rp=[];draw();var R={};
           /* Rack do zero na Sala: entra a caixa vazia e já abre o 2D só dele pra montar (divisória, gavetas, porta) */
           var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q.n==='Rack do zero (você monta)')it=q})});R.noCatalogo=!!it&&CATS.some(function(c){return c.it.indexOf(it)>=0&&/Sala/.test(c.n)});R.foto=!!it&&!!FOTOS[fotoKey(it)];
           newTpl(it);await new Promise(function(r){setTimeout(r,200)});var m=S.mods[0];R.caixa=!!m&&m.v.length===1&&m.v[0].k==='free'&&m.w===1800;R.solo=window.SOLO2===m&&!document.getElementById('solobar').hidden;
@@ -1282,7 +1282,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          var fresh=function(room){S.room=room;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw()};
+          var fresh=function(room){S.room=room;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw()};
           var clk=function(cid,re){window.CATALL=true;catOpen(cid);var c=CATS.filter(function(x){return x.id===cid})[0],k=-1;c.it.forEach(function(it,i){var t=typeof it==='number'?TPL[it]:it;if(k<0&&t&&re.test(t.n))k=i});document.querySelector('#catm [data-cati="'+cid+'|'+k+'"]').click();var m=document.getElementById('catm');if(m)m.hidden=true};
           var ov=function(a,b,c,d){return a<d-1&&c<b-1};
           /* torres: a 4ª não cabe mais na parede do fundo (pedra + 3 torres) e vai pra parede do lado, sem entrar em nada */
@@ -1304,7 +1304,7 @@ final class EditorWebKitTests: XCTestCase {
           fresh('sala');clk('painel',/^Painel liso \+ porta de correr/);draw();__build();var a=S.rp[0],X=__boxes(),fo=X.filter(function(b){return b.rpd===a.id}),pa=X.filter(function(b){return b.rpid===a.id&&b.g!=='lo'});
           R.folha=fo.length>0&&!fo.some(function(f){return pa.some(function(q){return ov(f.x0,f.x1,q.x0,q.x1)&&ov(f.y0,f.y1,q.y0,q.y1)&&ov(f.z0,f.z1,q.z0,q.z1)})});
           /* painel liso esticado (4140 × 580): sai em placas de no máximo 1800 × 2700 no sentido escolhido e vai pro plano de corte */
-          fresh('cozinha');S.W=4140;S.H=3190;var L=rpNew({x:0,b:2610,w:4140,h:580});L.liso=true;LAST='rp';S.tab=8;RPSEL=L.id;draw();panel();rpBar();
+          fresh('cozinha');S.W=4140;S.H=3190;S.Hm=1;S.Wm=1;var L=rpNew({x:0,b:2610,w:4140,h:580});L.liso=true;LAST='rp';S.tab=8;RPSEL=L.id;draw();panel();rpBar();
           R.pergunta=!!document.querySelector('#rpbar [data-rpb="ps|c"]')&&/maior que a chapa/.test(document.getElementById('rpbar').innerText);
           document.querySelector('#rpbar [data-rpb="ps|c"]').click();R.c=JSON.stringify(plPlates(L).cols);
           document.querySelector('#rpbar [data-rpb="ps|l"]').click();R.l=JSON.stringify(plPlates(L).cols);
@@ -1335,7 +1335,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           try{STD().supPedra=0}catch(_){}/* teste antigo: aéreo pela altura do chão (sem a regra dos 700 acima da pedra) */
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='cozinha';S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='cozinha';S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           addStone();S.stones[0].x=0;S.stones[0].w=3000;newTpl({n:'Balcão',w:1500,h:820,d:560,b:0,v:[{k:'door',n:2}]});newTpl({n:'Balcão',w:1500,h:820,d:560,b:0,v:[{k:'door',n:2}]});
           newTpl({n:'Aéreo',w:1400,h:700,d:350,b:1600,sup:true,v:[{k:'door',n:2}]});newTpl({n:'Aéreo',w:1400,h:700,d:350,b:1600,sup:true,v:[{k:'door',n:2}]});
           apAdd('geladeira',0);S.ops.push({id:99,t:'janela',w:600,h:800,x:3100,b:1300});S.tab=8;draw();panel();
@@ -1369,7 +1369,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='sala';S.env='livre';S.W=4140;S.H=3190;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='livre';S.W=4140;S.H=3190;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var wood=MAT.filter(function(c){return c.cat==='wood'})[0],uni=MAT.filter(function(c){return c.cat!=='wood'})[0];
           /* painel liso grande: escolhe a cor amadeirada pela barra do painel e o sentido deitado (veio deitado) */
           var a=rpNew({x:0,b:2610,w:4140,h:580});a.liso=true;LAST='rp';S.tab=8;RPSEL=a.id;draw();panel();rpBar();
@@ -1413,7 +1413,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='quarto';S.env='livre';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='quarto';S.env='livre';S.W=3841;S.H=3215;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0],uni=MAT.filter(function(c){return c.cat!=='wood'})[2];
           /* parede de painéis lisos (sem nenhum módulo) + um ripado */
           var P=[];for(var i=0;i<3;i++){var a=rpNew({x:i*960,b:0,w:949,h:2700});a.liso=true;P.push(a)}var r=rpNew({x:2880,b:0,w:900,h:2400});draw();
@@ -1450,7 +1450,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
+          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
           /* 2 toques na parede do fundo, sem nada escolhido: pergunta o que criar ali */
           var c=__p3(2500,1200,0);__sel3(c[0],c[1]);var ch=document.getElementById('opch3');R.pergunta=!!ch&&!ch.hidden&&/Porta aqui/.test(ch.innerText)&&/Janela aqui/.test(ch.innerText);
           ch.querySelector('[data-och="porta"]').click();var o=S.ops[S.ops.length-1];R.porta=o&&o.t==='porta'&&!o.st&&(o.wall||'f')==='f'&&Math.abs(o.x+o.w/2-2500)<=2&&o.b===0;
@@ -1488,7 +1488,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='sala';S.env='livre';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='livre';S.W=3841;S.H=3215;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0],preto=MAT.filter(function(c){return c.cat!=='wood'&&/preto|black|grafite/i.test(c.n)})[0]||MAT.filter(function(c){return c.cat!=='wood'})[0];
           /* duas fileiras de placas lisas com junta de rebaixo 15 */
           var jt={t:'reb',w:15,d:6},P=[];[[0,0,1800,2700],[1815,0,1800,2700],[0,2715,1800,500],[1815,2715,1800,500]].forEach(function(q){var a=rpNew({x:q[0],b:q[1],w:q[2],h:q[3]});a.liso=true;a.jt=Object.assign({},jt);a.cor=wood.hex;a.corId=wood.id;P.push(a)});draw();
@@ -1524,7 +1524,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var R={};
-          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
+          S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
           /* vão e porta no fundo, porta e vão na esquerda, janela no fundo e na direita */
           S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:1500,b:0,wall:'f'},{id:2,t:'porta',w:800,h:2100,x:2600,b:0,wall:'f'},{id:3,t:'janela',w:1000,h:1000,x:300,b:1100,wall:'f'},{id:4,t:'porta',w:800,h:2100,x:900,b:0,wall:'e'},{id:5,t:'porta',st:'vao',w:900,h:2100,x:2000,b:0,wall:'e'},{id:6,t:'janela',w:1200,h:1000,x:700,b:1100,wall:'d'}];
           draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
@@ -1551,7 +1551,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it},sob=function(m,a,b){return [(m.x-lt(m))-a,b-(m.x+m.w+rt(m))]};
           /* painel liso 2400 (2 placas) e o rack do zero: entra suspenso, sem pedestal, com moldura e régua, no meio do painel */
           var p1=rpNew({x:1000,b:0,w:1200,h:2700});p1.liso=true;var p2=rpNew({x:2215,b:0,w:1200,h:2700});p2.liso=true;draw();
@@ -1593,7 +1593,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var R={};
-          S.room='sala';S.env='livre';S.W=6000;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='livre';S.W=6000;S.H=3215;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var wood=MAT.filter(function(c){return /Louro Freij/.test(c.n)})[0]||MAT.filter(function(c){return c.cat==='wood'})[0];
           /* painel liso maior que a chapa (2 placas) em Louro Freijó, com rebaixo · ripado com porta embutida · liso com porta de correr · prateleira */
           var a1=rpNew({x:0,b:0,w:2400,h:2700});a1.liso=true;a1.jt={t:'reb',w:15,d:6};a1.cor=wood.hex;a1.corId=wood.id;var a2=rpNew({x:0,b:2715,w:2400,h:500});a2.liso=true;a2.jt={t:'reb',w:15,d:6};
@@ -1626,7 +1626,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
-          S.room='sala';S.env='cozinha';S.W=3841;S.H=3215;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=3215;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
           /* rack suspenso com portas: Estrutura › ⧉ Copiar este módulo · sai outro igual do lado, sem entrar em nada */
           newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso basculante'))));try{soloOff()}catch(_){}var m=S.mods[0];m.x=40;m.cor='#7a5230';draw();S.tab=1;panel();
@@ -1676,11 +1676,11 @@ final class EditorWebKitTests: XCTestCase {
            return ov.filter(function(v,i,s){return s.indexOf(v)===i})};
           window.MINI3OFF=1;PR.setupDone=1;var R={};var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
           var run=function(tag,setup){S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;setup();try{soloOff()}catch(_){}draw();panel();var all=[];for(var i=-1;i<S.mods.length;i++){S.m=i<0?null:S.mods[i];LAST='';draw();__ovl().forEach(function(v){if(all.indexOf(v)<0)all.push(v)})}R[tag]=all};
-          run('salaChao',function(){S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;for(var i=0;i<4;i++){var a=rpNew({x:i*964,b:0,w:949,h:2700});a.liso=true}var tv=apAdd('tv',1);tv.x=1350;tv.b=1100;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))))});
-          run('salaDois',function(){S.room='sala';S.env='cozinha';S.W=4200;S.H=2700;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))));newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso'))));});
-          run('cozinha',function(){S.room='cozinha';S.env='cozinha';S.W=3600;S.H=2700;['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão da pia (cuba)','Balcão 1 porta'].forEach(function(n){newTpl(JSON.parse(JSON.stringify(pick(n))))});newTpl(4);newTpl(4);newTpl(4)});
+          run('salaChao',function(){S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;for(var i=0;i<4;i++){var a=rpNew({x:i*964,b:0,w:949,h:2700});a.liso=true}var tv=apAdd('tv',1);tv.x=1350;tv.b=1100;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))))});
+          run('salaDois',function(){S.room='sala';S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;newTpl(JSON.parse(JSON.stringify(pick('Rack de TV'))));newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso'))));});
+          run('cozinha',function(){S.room='cozinha';S.env='cozinha';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão da pia (cuba)','Balcão 1 porta'].forEach(function(n){newTpl(JSON.parse(JSON.stringify(pick(n))))});newTpl(4);newTpl(4);newTpl(4)});
           run('demo',function(){demoScene()});
-          run('quarto',function(){S.room='quarto';S.env='livre';S.W=3600;S.H=2700;var it=null;CATS.forEach(function(c){if(/Quarto|quarto/.test(c.n))c.it.slice(0,4).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&!t.act)newTpl(JSON.parse(JSON.stringify(t)))})})});
+          run('quarto',function(){S.room='quarto';S.env='livre';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;var it=null;CATS.forEach(function(c){if(/Quarto|quarto/.test(c.n))c.it.slice(0,4).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&!t.act)newTpl(JSON.parse(JSON.stringify(t)))})})});
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual((o["salaChao"] as? [String])?.count, 0, "textos sobrepostos em salaChao: \(o["salaChao"] ?? "")")
@@ -1700,7 +1700,7 @@ final class EditorWebKitTests: XCTestCase {
            R[tag]=!b?'teclado não abriu':((a.bottom<=b.top+1||a.right<=b.left||a.left>=b.right)&&a.top>=0&&a.height>0?'ok':'COBERTO in '+Math.round(a.top)+'-'+Math.round(a.bottom)+' kp '+Math.round(b.top)+' vh '+innerHeight);
            try{document.activeElement.blur()}catch(_){}document.body.click();await W(150)};
           var pick=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n===nm)it=q})});return it};
-          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
           newTpl(JSON.parse(JSON.stringify(pick('Rack suspenso basculante'))));try{soloOff()}catch(_){}S.tab=0;panel();draw();
           await chk('estruturaLargura',function(){return document.querySelector('#bd [data-k="w"]')});
           await chk('estruturaProf',function(){return document.querySelector('#bd [data-k="d"]')});
@@ -1735,7 +1735,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
-          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
+          S.room='sala';S.env='cozinha';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
           S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:300,b:0,wall:'f'},{id:2,t:'janela',w:1200,h:1000,x:2200,b:1100,wall:'f'}];draw();
           /* aba Ambiente: toda porta, vão e janela tem 🔒 Travar (não só as que têm painel em cima) */
           S.tab=9;panel();R.ambiente=!!document.querySelector('[data-oplk="1"]')&&!!document.querySelector('[data-oplk="2"]');
@@ -1787,7 +1787,7 @@ final class EditorWebKitTests: XCTestCase {
             G.ord.forEach(function(k){var g=G.map[k],L=+g.L,Wd=+g.W;if(!isFinite(L)||!isFinite(Wd)||L<=0||Wd<=0||!(g.qty>0))R.bad.push(tag+' corte '+g.names[0].slice(0,40)+' '+g.L+'x'+g.W+' q'+g.qty);
              else if((Math.max(L,Wd)>Math.max(SW,SH)+.5||Math.min(L,Wd)>Math.min(SW,SH)+.5)&&!/partes|emenda/.test(g.names.join(' ')+(g.note||'')))R.bad.push(tag+' maior que a chapa '+g.names[0].slice(0,40)+' '+L+'x'+Wd)});
             var t0=T();try{if(window.sheetPlan)sheetPlan()}catch(e){R.bad.push(tag+' plano erro '+e.message)}var tp=T()-t0;t0=T();try{__build()}catch(e){R.bad.push(tag+' 3D erro '+e.message)}var tb=T()-t0;t0=T();draw();var td=T()-t0;if(tp>4000||tb>4000||td>2500)R.slow.push(tag+' plano '+Math.round(tp)+' 3D '+Math.round(tb)+' 2D '+Math.round(td))};
-          rooms.forEach(function(room){S.room=room;S.env=room==='quarto'||room==='closet'?'livre':'cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
+          rooms.forEach(function(room){S.room=room;S.env=room==='quarto'||room==='closet'?'livre':'cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
             var its=items(room).filter(function(t){return CATS.some(function(c){return c.it.indexOf(t)>=0||c.it.some(function(q){return TPL[q]===t})})}),n=0;
             /* arma o ambiente com o que couber */
             var semLugar=0;its.slice(0,40).forEach(function(t){var k=S.mods.length;try{newTpl(JSON.parse(JSON.stringify(Object.assign({},t,{sup:!!t.sup}))))}catch(e){R.bad.push(room+' newTpl '+t.n+': '+e.message)}try{soloOff()}catch(_){}if(S.mods.length>k){if(modOverlaps(S.mods[S.mods.length-1])){S.mods.pop();semLugar++;S.m=S.mods[S.mods.length-1]||null}else n++}});draw();
@@ -1806,7 +1806,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.stones=[];draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           /* todas as portas de todos os módulos abrem (caixa da geladeira e torres também) */
           var items=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.w&&t.v)items.push(t)})});var bad=[];
@@ -1838,7 +1838,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPainelRipadoOuLisoNoCabecalho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3000;S.H=2700;S.mods=[];S.fr=[];S.rp=[];draw();S.tab=8;panel();var R={};
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];draw();S.tab=8;panel();var R={};
           /* cabeçalho de criar: escolhe ripado ou painel liso e toca pra adicionar */
           document.querySelector('#bd [data-rpk="liso"]').click();R.on=document.querySelector('#bd [data-rpk="liso"]').classList.contains('on');
           document.querySelector('#bd [data-rpadd]').click();var a=S.rp[S.rp.length-1];R.liso=!!a.liso;
@@ -1860,7 +1860,7 @@ final class EditorWebKitTests: XCTestCase {
     func testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           /* armário alto com rodapé: o tamponamento para em cima do rodapé, igual aos módulos de baixo */
           newTpl(tpl('Despenseiro'));var d=S.mods[0];R.tamp=partsOf(d).filter(function(p){return /^Tamponamento/.test(p.name)}).map(function(p){return p.h}).join(',');R.alto=d.h-d.rodMm;
@@ -1899,7 +1899,7 @@ final class EditorWebKitTests: XCTestCase {
     func testEditarQualquerPecaCaixaDaGavetaCantoEmLEMedidaDigitada() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.rp=[];S.env='cozinha';S.W=4200;S.H=2700;draw();
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.rp=[];S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           open3D();await new Promise(function(r){setTimeout(r,300)});
           /* caixa da gaveta: altura e profundidade digitadas mudam laterais, frente/costa e fundo juntos */
@@ -1930,7 +1930,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Despenseiro'));var m=S.mods[0];m.x=900;S.m=m;draw();var R={};
           /* 3 toques no armário alto: pôr nicho de forno / micro-ondas e réguas do cava em cima e embaixo */
@@ -1949,7 +1949,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTorrePedestalDesceAteOChaoEPrateleiraArrasta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3000;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3000;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Despenseiro'));var m=S.mods[0];m.x=1000;m.w=730;m.h=2260;m.b=140;S.m=m;S.tab=0;draw();panel();var R={};
           /* torre suspensa: marcar o pedestal desce até o chão (o topo fica) e põe o pedestal */
@@ -1972,7 +1972,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));newTpl(tpl('Balcão 2 portas'));var a=S.mods[0],b=S.mods[1];a.x=1000;b.x=1900;addStone();S.st.x=1100;S.st.w=1800;draw();var R={};
           open3D();await new Promise(function(r){setTimeout(r,300)});
@@ -1995,7 +1995,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTorreQuenteEditavelPelaLupaComNichosEMicroOndas() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;draw();var R={};
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;draw();var R={};
           /* lupa do catálogo de baixo acha a torre quente */
           catLevel('inf');var q=document.getElementById('catq');q.value='torre quente';q.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(function(r){setTimeout(r,200)});
           R.achou=[].filter.call(document.querySelectorAll('#catgw [data-cati]'),function(b){return b.style.display!=='none'&&/^Torre/.test(b.textContent)}).length;document.getElementById('catm').hidden=true;
@@ -2041,7 +2041,7 @@ final class EditorWebKitTests: XCTestCase {
     func testGavetaComFolgaDivididaENaoEncostaEmCimaCorredicaNoMeio() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2000;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=2000;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Gaveteiro 3 gavetas'));var m=S.mods[0];S.m=m;draw();var R={};
           var vi=m.v.findIndex(function(v){return v.k==='drawers'}),v=m.v[vi];CURM=m;var fh=drawerH(v);
@@ -2065,7 +2065,7 @@ final class EditorWebKitTests: XCTestCase {
     func testCoresComPisosEPorcelanatosReaisParedesArmariosPortasEFitas() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           for(var i=0;i<3;i++){newTpl(tpl('Balcão 2 portas'));S.mods[S.mods.length-1].x=200+i*900}
           S.m=S.mods[0];S.tab=10;__cores('pp','all','piso');draw();panel();var R={},Q=function(q){return document.querySelector('#bd '+q)};
@@ -2114,7 +2114,7 @@ final class EditorWebKitTests: XCTestCase {
     func testModoPessoaNaoAtravessaMesaCafeteiraPedrasReaisESetinhasDaPedra() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4100;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4100;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           for(var i=0;i<3;i++){newTpl(tpl('Balcão 2 portas'));S.mods[S.mods.length-1].x=200+i*900}
           addStone();S.st.x=200;S.st.w=2700;S.st.cor='#a3a4a3';var me=apAdd('mesa',0);
@@ -2150,7 +2150,7 @@ final class EditorWebKitTests: XCTestCase {
     func testGestosNoEletro2ToquesMudaDeLugar3ToquesConfiguracoes() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1600;addStone();S.st.x=1600;S.st.w=1800;draw();
           var mw=apAdd('microondas',0);mw.x=200;var me=apAdd('mesa',0);me.x=1900;var ci=apModels('churrasqueira').findIndex(function(q){return /Natural 84/.test(q[0])}),ch=apAdd('churrasqueira',ci);ch.x=3500;draw();
@@ -2183,7 +2183,7 @@ final class EditorWebKitTests: XCTestCase {
     func testEletroPelo3DComLupaEmCimaDaPedraMesaEParedeDoL() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=600;addStone();S.st.x=600;S.st.w=1800;draw();
           open3D();await new Promise(function(r){setTimeout(r,400)});__build();var R={};
@@ -2230,7 +2230,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBotaoDoLEDUmSoOuUmPorModuloCorEMudarDeLugarCom2Toques() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1300;
           newTpl(tpl('Aéreo 2 portas'));var a=S.mods[1];a.x=600;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};
@@ -2293,7 +2293,7 @@ final class EditorWebKitTests: XCTestCase {
     func testCarneAssandoComFumacaEBotaoDoLEDLigaEDesliga() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Aéreo 2 portas'));var a=S.mods[0];a.x=600;a.b=1500;a.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};
           newTpl(tpl('Aéreo 2 portas'));var a2=S.mods[1];a2.x=1600;a2.b=1500;a2.led={k:'quente',c:'#ffd27a',pf:'alu',pos:'base',on:1};S.m=a;draw();
@@ -2329,7 +2329,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           newTpl(tpl('Balcão canto cego · cego na direita (porta na esquerda)'));var cg=S.mods[0];cg.x=600;newTpl(tpl('Balcão 2 portas'));var n2=S.mods[1];n2.x=1600;S.m=n2;draw();
           var dobCg=mCost(cg).dob,dobN=mCost(n2).dob,cego=partsOf(cg).filter(function(p){return p.cego}).length;
@@ -2485,7 +2485,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPlacaDo3DSolidaTravaApagaAparece2DEPlanoDeCorte() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.geo=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;var a=rpNew({x:600,b:0,w:1035,h:2700});a.liso=true;draw();open3D();
+          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.geo=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;S.Hm=1;S.Wm=1;var a=rpNew({x:600,b:0,w:1035,h:2700});a.liso=true;draw();open3D();
           var T=__geoT();T.add('placa');var g=S.geo[0];T.set('gx',700);T.set('gz',-10);var z=g.z;T.set('gh',3500);var h=g.h;T.close();var lk=g.lock?1:0;
           var G=cutGroups(),pl=G.ord.filter(function(k){return /\|geo\|/.test(k)}).length;document.getElementById('v3x').click();draw();var d2=document.querySelectorAll('.geo2d').length;
           open3D();__itOpen({k:'geo',id:g.id});var E=T.box();var b=E.querySelector('[data-qdel]')||E.querySelector('[data-qgdel]');b.click();(E.querySelector('[data-qdel]')||E.querySelector('[data-qgdel]')).click();
@@ -2503,7 +2503,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBasculanteComCavaSemEngrossoFolga4NoTopo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;
+          PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;S.Hm=1;S.Wm=1;
           newTpl({n:'Rack de TV',w:1800,h:500,d:450,b:400,keep:true,div:[1/3,2/3],v:[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}]});var m=S.mods[S.mods.length-1];
           m.v.forEach(function(v){if(v.k==='door')v.bas=1});draw();var top=function(){return Math.round(Math.max.apply(null,dbg3all().filter(function(q){return /^\d+:Porta/.test(q.nm)}).map(function(q){return q.y1})))};
           var a=top();m.regua=1;draw();var b=top();
@@ -2517,7 +2517,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSofaSolidoGiraSalvaExcluiEm2DE3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.geo=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;S.RD=4000;draw();open3D();
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.geo=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;S.Hm=1;S.Wm=1;S.RD=4000;draw();open3D();
           var a=apAdd('sofa',1);draw();var b3=__bb3('fr',a.id);var dentro=b3.x0>=a.x-1&&b3.x1<=a.x+a.w+1&&b3.z0>=a.y-1&&b3.z1<=a.y+a.d+1&&b3.y0>=0;
           var p=apAdd('poltrona',0);__isx({k:'fr',id:p.id});__itSet('x',a.x);__itSet('y',0);var sob=Math.min(a.x+a.w,p.x+p.w)-Math.max(a.x,p.x)>1&&Math.min(a.y+a.d,p.y+p.d)-Math.max(a.y,p.y)>1;
           mobAct(a,'rot',90);var g90=a.rot===90&&a.w===950&&a.d===2200;mobAct(a,'cor','verde');mobAct(a,'tec','veludo');
@@ -2538,7 +2538,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPortaDeVidroTelescopicaReconstroiEAbre() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;draw();open3D();
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.fr=[];S.ops=[];S.stones=[];S.env='sala';S.room='sala';S.W=4000;S.H=2800;S.Hm=1;S.Wm=1;draw();open3D();
           S.ops.push({id:77,t:'porta',w:3000,h:2300,x:500,b:0,st:'vidro',vm:'t4',vc:'fume',fp:'preto'});draw();var I=vdInfo(S.ops[0]);
           var vid=function(){__anim();return dbg3().filter(function(q){return q.a&&q.a<.9&&q.y1-q.y0>1500}).length};var n4=vid();S.ops[0].vm='t3';var n3=vid();S.ops[0].vm='t6';var n6=vid();
           var xs=function(){return dbg3().filter(function(q){return q.a&&q.a<.9&&q.y1-q.y0>1500}).map(function(q){return Math.round(q.x0)}).sort(function(a,b){return a-b}).join(',')};__anim();var fe=xs();S.ops[0].open=true;__anim();var ab=xs();
@@ -2556,7 +2556,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=2600;S.H=2890;
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=2600;S.H=2890;S.Hm=1;S.Wm=1;
           var a=rpNew({x:0,b:1000,w:1035,h:365});a.liso=true;a.jt={t:'reb',w:15,d:6};var c=rpNew({x:1050,b:1000,w:721,h:365});c.liso=true;c.jt={t:'reb',w:15,d:6};var t=rpNew({x:0,b:1365,w:1035,h:175});t.liso=true;draw();
           var R={x:0,w:1035,b:1000,h:365},lr=rpEdgeLim(a,'r',R),lt=rpEdgeLim(a,'t',R);
           a.w=1300;rpFitTyped(a,'w',1035);var w1=a.w;a.h=800;rpFitTyped(a,'h',365);var h1=a.h;draw();
@@ -2574,7 +2574,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBalcaoEmLSemModuloSobreposto() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;var R=[];[['e',3000,2000,600],['d',3000,2000,600],['u',3600,1800,600],['e',3333,1777,600],['d',4100,2650,580]].forEach(function(c){S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.env='cozinha';S.W=Math.max(c[1],3000);S.H=2700;draw();mkL(c[0],c[1],c[2],c[3],1);draw();
+          window.MINI3OFF=1;PR.setupDone=1;var R=[];[['e',3000,2000,600],['d',3000,2000,600],['u',3600,1800,600],['e',3333,1777,600],['d',4100,2650,580]].forEach(function(c){S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.env='cozinha';S.W=Math.max(c[1],3000);S.H=2700;S.Hm=1;S.Wm=1;draw();mkL(c[0],c[1],c[2],c[3],1);draw();
            var row=S.mods.filter(function(m){return !m.sup&&!m.wing}).sort(function(a,b){return a.x-b.x});for(var i=1;i<row.length;i++){var ov=row[i-1].x+row[i-1].w-row[i].x;if(ov>0.5)R.push(c.join('x')+': '+Math.round(ov)+' mm')}
            var st=S.stones[0];row.forEach(function(m){if(m.x<st.x+4.5||m.x+m.w>st.x+st.w-4.5)R.push(c.join('x')+': módulo sem pingadeira '+m.x+'+'+m.w)})});
           return JSON.stringify({r:R.join(' | '),errs:__errs});
@@ -2754,7 +2754,7 @@ final class EditorWebKitTests: XCTestCase {
           S.mods=[];newTpl(find('Balcão canto cego · cego na esquerda (porta na direita)'));var c=S.mods[0];draw();var rg=partsOf(c).filter(function(p){return p.name==='Régua espaçadora do canto'})[0];
           S.mods=[];newTpl(CATS[0].it[3]);var gv=S.mods[0];gv.v[0].dt=[0];draw();var dt=partsOf(gv).filter(function(p){return /Divisor de talheres/.test(p.name)}).length;
           catOpen();await new Promise(function(r){setTimeout(r,200)});var abas=[].slice.call(document.querySelectorAll('#catsec [data-catsec]')).map(function(b){return b.dataset.catsec}).join(',');document.getElementById('catm').hidden=true;
-          S.mods=[];S.fr=[];S.H=2600;open3D();await new Promise(function(r){setTimeout(r,300)});var lu=apAdd('luminaria',0),ca=apAdd('cama',1),cd=apAdd('cadesc',0);__build();var B=__boxes(),top=function(f){return Math.round(Math.max.apply(null,B.filter(function(q){return q.fr===f.id}).map(function(q){return q.y1})))},n3=function(f){return B.filter(function(q){return q.fr===f.id}).length};document.getElementById('v3x').click();
+          S.mods=[];S.fr=[];S.H=2600;S.Hm=1;S.Wm=1;open3D();await new Promise(function(r){setTimeout(r,300)});var lu=apAdd('luminaria',0),ca=apAdd('cama',1),cd=apAdd('cadesc',0);__build();var B=__boxes(),top=function(f){return Math.round(Math.max.apply(null,B.filter(function(q){return q.fr===f.id}).map(function(q){return q.y1})))},n3=function(f){return B.filter(function(q){return q.fr===f.id}).length};document.getElementById('v3x').click();
           return JSON.stringify({cx:cx,regua:rg?rg.cw:0,dt:dt,abas:abas,lumTopo:top(lu),cama:n3(ca),cad:n3(cd),errs:__errs});
           """#)
         let cx = o["cx"] as? [String: Any]
@@ -2841,7 +2841,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;delete PR.obraPw;var W=function(ms){return new Promise(function(r){setTimeout(r,ms||200)})};
-          S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.W=3200;S.H=2600;S.wall={};S.obra=null;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=860;st.e=30;var tm=apAdd('eletrica',0);tm.x=1000;tm.b=1100;S.m=S.mods[0];draw();
+          S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.W=3200;S.H=2600;S.Hm=1;S.Wm=1;S.wall={};S.obra=null;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=860;st.e=30;var tm=apAdd('eletrica',0);tm.x=1000;tm.b=1100;S.m=S.mods[0];draw();
           S.tab=9;panel();document.querySelector('#bd [data-oblk]').click();await W();var bx=document.getElementById('obrapw');bx.querySelector('#obrapw1').value='1234';bx.querySelector('#obrapw2').value='1234';bx.querySelector('[data-obok]').click();await W();
           S.W=3000;st.w=1000;tm.x=1500;draw();var travou=[S.W,st.w===S.obra.snap.stones[0].w,tm.x];
           S.tab=9;panel();document.querySelector('#bd [data-obun]').click();await W();bx.querySelector('#obrapw1').value='0000';bx.querySelector('[data-obok]').click();await W();var errada=obraOn();bx.querySelector('#obrapw1').value='1234';bx.querySelector('[data-obok]').click();await W();var certa=!obraOn();
@@ -2860,7 +2860,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var W=function(ms){return new Promise(function(r){setTimeout(r,ms||200)})};
-          S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.W=3200;S.H=2600;S.wall={};S.obra=null;S.amb={};for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=860;st.e=30;S.m=S.mods[0];draw();
+          S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.W=3200;S.H=2600;S.Hm=1;S.Wm=1;S.wall={};S.obra=null;S.amb={};for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=860;st.e=30;S.m=S.mods[0];draw();
           newMod(true);var ms=S.mods[S.mods.length-1];ms.x=300;supByStone(ms);
           S.tab=9;panel();var wf=document.querySelector('#bd [data-amx="wf"]');wf.focus();wf.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));window.arqueLaser(3212.4);await W();var q=sqDiff();
           S.ops.push({id:7001,t:'porta',w:800,h:2100,x:2300,b:0});panel();var hr=document.querySelector('#bd [data-opf="7001|hR"]');hr.value='2112';hr.dispatchEvent(new Event('change',{bubbles:true}));await W();
@@ -2875,10 +2875,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testPeDireitoNaoMedidoNaoInventaMedidaAteOTeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+          var z=snapState();z.H=2600;z.W=3200;delete z.Hm;delete z.Wm;loadState(z);var novo=S.Hm===false&&S.Wm===false;
+          S.room='sala';S.mods=[];S.stones=[];S.rp=[];draw();newMod(false);var m=S.mods[S.mods.length-1];m.x=600;m.w=1180;m.b=475;m.h=300;S.m=m;draw();
+          var lab=function(){return [].map.call(document.querySelectorAll('[data-q="mt"]'),function(e){return e.textContent}).join('|')};var l0=lab();
+          TRN=4;TRT='reb';var n0=S.rp.length;trCreate();var bloqueou=S.rp.length===n0;
+          S.tab=9;panel();var hi=document.querySelector('[data-pf="F|h"]');hi.value='3150';hi.dispatchEvent(new Event('change',{bubbles:true}));draw();var l1=lab();
+          var sv=snapState();loadState(z);var vNovo=S.Hm;loadState(sv);
+          return JSON.stringify({novo:novo,l0:l0,bloqueou:bloqueou,l1:l1,salvo:S.Hm===true&&S.H===3150,vNovo:vNovo,errs:__errs});
+          """#)
+        XCTAssertEqual(o["novo"] as? Bool, true, "projeto novo: pé-direito e largura não medidos")
+        XCTAssertEqual(o["l0"] as? String, "⚠ pé-direito não medido", "sem medir não mostra número até o teto")
+        XCTAssertEqual(o["bloqueou"] as? Bool, true, "placas até o teto não saem do valor padrão")
+        XCTAssertEqual(o["l1"] as? String, "2375 até o teto (pé-direito 3150)", "medido 3150: 3150 − 475 − 300")
+        XCTAssertEqual(o["salvo"] as? Bool, true, "salvo e aberto continua medido")
+        XCTAssertEqual(o["vNovo"] as? Bool, false, "projeto novo volta pra não medido")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
     func testDistanciasDoModuloTocaEDigitaELimiteDoAereo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;S.mods=[];S.stones=[];S.fr=[];S.W=3200;S.H=2600;S.wall={};STD().supPedra=700;
+          window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;S.mods=[];S.stones=[];S.fr=[];S.W=3200;S.H=2600;S.Hm=1;S.Wm=1;S.wall={};STD().supPedra=700;
           for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();var st=S.stones[0];st.t=870;st.e=30;newMod(true);var a=S.mods[2];a.x=300;supByStone(a);S.m=a;draw();
           var temRot=!!document.querySelector('#svg text[data-q="mp"]')&&!!document.querySelector('#svg text[data-q="mt"]');
           modGapSet(a,'mp',750);var b750=a.b;modGapSet(a,'mp',600);var lim=a.b;modGapSet(a,'mt',300);var teto=Math.round(2600-a.b-a.h-fgh());var x0=a.x,g=modGaps(a).esq;modGapSet(a,'ml',g+50);var andou=Math.round(a.x-x0);

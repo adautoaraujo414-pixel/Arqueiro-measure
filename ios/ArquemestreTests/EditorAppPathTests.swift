@@ -104,7 +104,7 @@ final class EditorAppPathTests: XCTestCase {
     func testTexturaRealDoPadraoCarregaPeloEsquemaDoApp() async throws {
         let (w, _) = try await openLikeTheApp(lang: "pt")
         let o = try await run(w, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;newTpl(3);var m=S.mods[0];m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;
           var lf=MAT.filter(function(c){return c.id==='arauco-louro-freijo-trend'})[0];m.corF=lf.hex;m.corFN=matLabel(lf);m.corFId=lf.id;S.m=m;draw();open3D();
           var img=await new Promise(function(r){var im=new Image();im.onload=function(){r(im.naturalWidth+'x'+im.naturalHeight)};im.onerror=function(){r('erro')};im.src=matImg(lf.id)});
           await new Promise(function(r){var t0=Date.now();(function w(){var st=__mtex().join(',');if(/ok/.test(st)||/err/.test(st)||Date.now()-t0>15000)r();else setTimeout(w,100)})()});

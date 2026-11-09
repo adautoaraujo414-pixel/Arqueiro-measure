@@ -23,7 +23,7 @@ struct SyncView: View {
                 if !err.isEmpty { Text(err).foregroundStyle(.red).font(.callout) }
                 if client == nil {
                     Section {
-                        Text(tr("No outro aparelho (Android ou Windows): Ajustes › Sincronizar com outro aparelho › Receber. Digite aqui o código que aparecer lá:"))
+                        Text(tr("No seu outro aparelho com o Arquemestre: Ajustes › Sincronizar com outro aparelho › Receber. Digite aqui o código que aparecer lá:"))
                             .font(.callout)
                         TextField(tr("Ex.: 10-4821"), text: $code)
                             .keyboardType(.numbersAndPunctuation).font(.system(size: 30, weight: .bold, design: .rounded))

@@ -301,6 +301,11 @@ enum SyncNet {
     final class Client {
         let base: String; let pin: String
         private let session: URLSession
+        /// Endereço do outro aparelho na rede local (IP da casa, não é site): http simples, liberado por NSAllowsLocalNetworking.
+        static func localBase(_ host: String, _ port: Int) -> String {
+            var c = URLComponents(); c.scheme = "http"; c.host = host; c.port = port
+            return c.string ?? ""
+        }
         init(base: String, pin: String) {
             self.base = base; self.pin = pin
             let cfg = URLSessionConfiguration.ephemeral; cfg.timeoutIntervalForRequest = 60; cfg.waitsForConnectivity = false
@@ -324,7 +329,7 @@ enum SyncNet {
 
         static func find(_ t: Target) async throws -> (Client, String)? {
             for h in t.hosts {
-                let c = Client(base: "http://\(h):\(t.port)", pin: t.pin)
+                let c = Client(base: Client.localBase(h, t.port), pin: t.pin)
                 do {
                     let j = try await c.hello()
                     if (j["app"] as? String) == "arquemestre" { return (c, j["name"] as? String ?? "") }

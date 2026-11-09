@@ -7762,4 +7762,17 @@ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&
 (function(){if(typeof rpPieces!=='function')return;var rpp=rpPieces;rpPieces=function(){var L=rpp.apply(this,arguments)||[];try{var rh=+S.rodape||0;if(rh>0){var cuts=(S.ops||[]).filter(function(o){return o.t==='porta'&&(!o.wall||o.wall==='f')&&!(o.b>0)}).map(function(o){return [o.x,o.x+o.w]}).sort(function(a,b){return a[0]-b[0]}),x=0,runs=[];cuts.forEach(function(c){if(c[0]>x+1)runs.push(c[0]-x);x=Math.max(x,c[1])});if(S.W>x+1)runs.push(S.W-x);
   /* rodapé da parede é de obra (azulejo, porcelanato, pintura ou só um espaço): não é peça de MDF, não entra no corte */}}catch(_){}return L};window.rpPieces=rpPieces})();
 </script>
+
+<script>
+/* ===== Toque no 2D abre a edição da peça tocada: módulo → aba Estrutura; painel/prateleira → os campos dela no topo da aba ===== */
+(function(){var T2D=0,PK='';
+ document.addEventListener('pointerdown',function(e){var sv=document.getElementById('svg');if(sv&&e.target&&sv.contains(e.target))T2D=Date.now()},true);
+ document.addEventListener('pointerup',function(e){var sv=document.getElementById('svg');if(!(sv&&e.target&&sv.contains(e.target)))return;setTimeout(function(){try{var key=LAST+':'+(S.m?S.mods.indexOf(S.m):-1)+':'+(window.RPSEL||'');if(key===PK)return;if((LAST==='mod'&&S.m&&[6,7,8,9].indexOf(S.tab)>=0)||(LAST==='rp'&&window.RPSEL&&S.tab!==8)){T2D=Date.now();panel()}}catch(_){}},120)},true);
+ var p0=window.panel;if(typeof p0!=='function')return;
+ window.panel=panel=function(){var tap=Date.now()-T2D<1500,key=LAST+':'+(S.m?S.mods.indexOf(S.m):-1)+':'+(window.RPSEL||'');
+  if(tap&&key!==PK){if(LAST==='mod'&&S.m&&[6,7,8,9].indexOf(S.tab)>=0)S.tab=0;else if(LAST==='rp'&&window.RPSEL&&S.tab!==8)S.tab=8}
+  var r=p0.apply(this,arguments);
+  try{if(S.tab===8&&LAST==='rp'&&window.RPSEL){var bd=document.getElementById('bd'),hd=bd&&bd.querySelector('.sec[data-rpsel="'+RPSEL+'"]');if(hd){var blk=[hd],n=hd.nextElementSibling;while(n&&!n.classList.contains('sec')){blk.push(n);n=n.nextElementSibling}var box=document.createElement('div');box.id='rpselTop';box.style.cssText='border:2px solid var(--acc);border-radius:10px;padding:6px 8px;margin:4px 0 10px;background:#f5f9ff';var tt=document.createElement('div');tt.style.cssText='font-weight:700;font-size:13px;margin-bottom:4px';tt.textContent='✏️ Editando a peça tocada';box.appendChild(tt);blk.forEach(function(x){box.appendChild(x)});bd.insertBefore(box,bd.firstChild);if(tap&&key!==PK)bd.scrollTop=0}}}catch(_){}
+  if(tap)PK=key;return r}})();
+</script>
 </body></html>

@@ -472,8 +472,8 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('prb').click();var chips=document.querySelectorAll('#stdm [data-std="autoTamp"]').length;document.getElementById('stdm').hidden=true;
           return JSON.stringify({eng:eng,cl:cl,tx:tx,sw:sw,on:on,fc:fc,fl:fl,f2:f2,pt:pt,pb:pb,fc2:fc2,off:off,at1:at1,at0:at0,at2:at2,chips:chips,errs:__errs});
           """#)
-        XCTAssertEqual(o["eng"] as? String, "1:15x720x80,2:15x720x80,3:15x80x431,4:15x80x431", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (591 − 160 = 431)")
-        XCTAssertEqual(o["cl"] as? String, "720x80x4,431x80x4", "corte: 2 réguas no comprimento + 2 nas pontas, por lado")
+        XCTAssertEqual(o["eng"] as? String, "1:15x720x80,2:15x720x80,3:15x80x425,4:15x80x425", "3D: 4 réguas de 80 por camada — frente, trás e as duas pontas (tamponamento rente com a lateral: 585 − 160 = 425)")
+        XCTAssertEqual(o["cl"] as? String, "720x80x4,425x80x4", "corte: 2 réguas no comprimento + 2 nas pontas, por lado")
         XCTAssertEqual(o["tx"] as? String, "5,5", "portas na cor amadeirada ganham veio no 3D")
         XCTAssertEqual(o["sw"] as? Bool, true, "bolinhas amadeiradas mostram a textura real do padrão")
         XCTAssertEqual(o["on"] as? Bool, true, "🖌 Pintar abre a paleta com todas as cores")
@@ -554,7 +554,7 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({rl:rl.cl,tp:tp.cw,frY:fr.map(function(p){return p.upMm}),nl:gb.nl,cor:cor,rbZ:rb?Math.round(rb.z0):null,rbD:rb?Math.round(rb.z1-rb.z0):null,tbZ:tb?Math.round(tb.z1):null,sh:sh.cw,slW:sl.cl,slH:sl.cw,vw:vw,runs:runs,s32:s32,s32n:s32n,s32rows:s32rows,circ:circ,txt32:txt32,ids:ids,chips:chips,mats:mats,mvis:mvis,rnd:[rl.cl,tp.cw,lat.cl,lat.cw].every(function(v){return v===Math.round(v)}),errs:__errs});
           """#)
         XCTAssertEqual(o["rl"] as? Double, 460, "rodapé lateral = prof 590 − 2 × recuo 50 − 2 × 15")
-        XCTAssertEqual(o["tp"] as? Double, 636, "tamponamento = prof 590 + avanço 40 + fundo 6")
+        XCTAssertEqual(o["tp"] as? Double, 630, "tamponamento = prof 590 + avanço 40 (rente com a lateral atrás; o fundo sobreposto só soma com a opção “Cobre o fundo” nos Ajustes)")
         XCTAssertEqual(o["frY"] as? [Double], [10, 10], "frentes de gaveta sobem 10 (separado das portas, 5)")
         XCTAssertEqual(o["nl"] as? Double, 500, "corrediça: múltiplo de 50 abaixo de (590 − 50)")
         XCTAssertEqual((o["cor"] as? [String: Any])?["corFId"] as? String, "arauco-louro-freijo-trend", "módulo novo já vem com o padrão das frentes")
@@ -1003,12 +1003,12 @@ final class EditorWebKitTests: XCTestCase {
           /* caixa da geladeira: laterais até em cima + aéreo, vão aberto embaixo e a geladeira já dentro */
           newTpl(tpl('Caixa da geladeira side by side (laterais + aéreo)'));var g=S.mods[0];R.caixa=[g.h,g.base,g.rod].join(',');R.nicho=partsOf(g).some(function(p){return p.gelN});R.gel=S.fr.filter(function(f){return f.t==='geladeira'}).length;
           /* ripado em cima dos superiores até o teto */
-          for(var i=0;i<2;i++){newTpl(4);var u=S.mods[S.mods.length-1];u.x=1100+i*800;u.w=800}var up=S.mods.filter(function(m){return m.sup});S.m=up[0];S.tab=4;draw();panel();
+          for(var i=0;i<2;i++){newTpl(4);var u=S.mods[S.mods.length-1];u.x=1100+i*800;u.w=800}var up=S.mods.filter(function(m){return m.sup});S.m=up[0];S.tab=8;draw();panel();
           document.querySelector('#bd [data-rpt="frente"]').click();document.querySelector('#bd [data-rptall]').click();R.ripado=up.every(function(m){return m.rpTop==='frente'});var ch=partsOf(up[0]).filter(function(p){return /^Chapa base do ripado/.test(p.name)})[0];R.ateTeto=ch?ch.h:0;
           document.querySelector('#bd [data-rpt="parede"]').click();R.parede=(partsOf(up[0]).filter(function(p){return /^Ripa/.test(p.name)})[0]||{rpz:[-1]}).rpz[0];
           /* réguas das laterais por nível */
-          document.querySelector('#bd [data-rgm="sup|pontas"]').click();R.pontas=up.map(function(m){return (m.egL||0)+''+(m.egR||0)}).join(',');
-          document.querySelector('#bd [data-rgm="sup|duplo"]').click();R.duplo=up[0].egD===up[0].d;
+          stdOpen(0);document.querySelector('#stdbody [data-rgm="sup|pontas"]').click();R.pontas=up.map(function(m){return (m.egL||0)+''+(m.egR||0)}).join(',');
+          document.querySelector('#stdbody [data-rgm="sup|duplo"]').click();R.duplo=up[0].egD===up[0].d;document.getElementById('stdm').hidden=true;
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["caixa"] as? String, "2500,false,false", "caixa da geladeira do chão até em cima, sem base e sem pedestal")

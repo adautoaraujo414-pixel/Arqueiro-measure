@@ -214,7 +214,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(lh, fh - 56, accuracy: 0.11, "lateral = vão da gaveta − 56")
         XCTAssertEqual(o["ch"] as? Double ?? 0, lh - 15, accuracy: 0.11, "contra-frente 15 mm menor que a lateral (fica em cima do fundo)")
         XCTAssertEqual(o["cl"] as? Double ?? 0, cx - 30, accuracy: 0.11, "contra-frente entre as laterais = caixa − 30")
-        XCTAssertEqual(o["fw"] as? Double ?? 0, cx - 18, accuracy: 0.11, "fundo no rebaixo 6 × 6 = caixa − 30 + 12")
+        XCTAssertEqual(o["fw"] as? Double ?? 0, cx - 15, accuracy: 0.11, "fundo no rebaixo 6 × 6 + 1,5 a mais por lado (Ajustes) = caixa − 30 + 12 + 3")
+        XCTAssertEqual(o["ld"] as? Double ?? 0, 460, accuracy: 0.11, "regra: caixote acima de 470 → laterais da gaveta com 460")
         XCTAssertEqual(o["fd"] as? Double ?? 0, o["ld"] as? Double ?? -1, accuracy: 0.11, "fundo no comprimento todo da lateral")
         XCTAssertEqual(o["fmat"] as? Double ?? 0, 6, accuracy: 0.01)
         XCTAssertEqual(o["cq"] as? Int, 6, "3 gavetas = 6 peças de contra-frente/traseira")
@@ -309,10 +310,10 @@ final class EditorWebKitTests: XCTestCase {
           var hw={};S.mods.forEach(function(m,i){hw[hwTag(m,i)]=hwOf(m)});var g=function(t,k){return (hw[t]&&hw[t][k])?hw[t][k].n:0};
           var nl=cutLines(n2);var txt=cutAll().replace(/<[^>]+>/g,' ');
           open3D();var B=__boxes();var ni=S.mods.indexOf(n2);var cols=B.filter(function(b){return String(b.nm).indexOf(ni+':')===0&&!b.pf&&b.c}).map(function(b){return b.c.join(',')});var okCol=cols.length>0&&cols.every(function(c){return c==='166,124,82'});
-          return JSON.stringify({dob1:g('Base 1','Dobradiça 35 mm (caneco)'),cor2:g('Base 2','Corrediça telescópica 500 mm (par)'),dob3:g('Base 3','Dobradiça 35 mm (caneco)'),kit:Object.keys(hw['Base 4']||{}).some(function(k){return /Kit porta de correr/.test(k)}),nichoCor:nl.every(function(l){return l.fin==='c'}),okCol:okCol,fita:/Total de fita de borda/.test(txt)&&/na cor de fora/.test(txt),amad:SWW.length>=10&&/Amadeiradas/.test(swRow('corF','')),errs:__errs});
+          return JSON.stringify({dob1:g('Base 1','Dobradiça 35 mm (caneco)'),cor2:g('Base 2','Corrediça telescópica 450 mm (par)'),dob3:g('Base 3','Dobradiça 35 mm (caneco)'),kit:Object.keys(hw['Base 4']||{}).some(function(k){return /Kit porta de correr/.test(k)}),nichoCor:nl.every(function(l){return l.fin==='c'}),okCol:okCol,fita:/Total de fita de borda/.test(txt)&&/na cor de fora/.test(txt),amad:SWW.length>=10&&/Amadeiradas/.test(swRow('corF','')),errs:__errs});
           """#)
         XCTAssertEqual(o["dob1"] as? Int, 4, "2 portas de 820 → 2 dobradiças 35 mm cada")
-        XCTAssertEqual(o["cor2"] as? Int, 3, "3 gavetas → 3 pares de corrediça no comprimento da lateral (500)")
+        XCTAssertEqual(o["cor2"] as? Int, 3, "3 gavetas → 3 pares de corrediça (regra: lateral 460, corrediça 450)")
         XCTAssertEqual(o["dob3"] as? Int, 10, "2 portas de 2400 → 5 dobradiças cada")
         XCTAssertEqual(o["kit"] as? Bool, true, "porta de correr → kit de trilhos")
         XCTAssertEqual(o["nichoCor"] as? Bool, true, "nicho aberto: todas as peças na chapa cor")
@@ -406,9 +407,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["done"] as? Bool, true, "assistente tem o passo final")
         XCTAssertEqual(o["latFora"] as? Bool, true, "módulo novo nasce com laterais por fora (do assistente)")
         XCTAssertEqual(o["lat"] as? String, "705x560", "lateral inteira do chão ao topo da caixa")
-        XCTAssertEqual(o["gl"] as? String, "500x110", "lateral da gaveta = frente 170 − 60")
-        XCTAssertEqual(o["fundo"] as? String, "530x500", "fundo = caixa 544 − 30 + 2 × 8")
-        XCTAssertEqual(o["cl"] as? String, "500x110,530x500", "plano de corte segue os ajustes do assistente")
+        XCTAssertEqual(o["gl"] as? String, "460x110", "lateral da gaveta = frente 170 − 60 · comprimento pela regra (caixote > 470 → 460)")
+        XCTAssertEqual(o["fundo"] as? String, "533x460", "fundo = caixa 544 − 30 + 2 × 8 + 2 × 1,5")
+        XCTAssertEqual(o["cl"] as? String, "460x110,533x460", "plano de corte segue os ajustes do assistente")
         XCTAssertEqual(o["trans"] as? Int, 0, "planta em ângulo: nenhuma face de módulo transparente (portas/frentes opacas)")
         XCTAssertGreaterThan(o["polys"] as? Int ?? 0, 10, "planta em ângulo desenha o módulo")
         XCTAssertEqual(o["okRow"] as? Bool, true, "completar acima faz a fileira inteira com a mesma divisão")
@@ -556,7 +557,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["rl"] as? Double, 460, "rodapé lateral = prof 590 − 2 × recuo 50 − 2 × 15")
         XCTAssertEqual(o["tp"] as? Double, 630, "tamponamento = prof 590 + avanço 40 (rente com a lateral atrás; o fundo sobreposto só soma com a opção “Cobre o fundo” nos Ajustes)")
         XCTAssertEqual(o["frY"] as? [Double], [10, 10], "frentes de gaveta sobem 10 (separado das portas, 5)")
-        XCTAssertEqual(o["nl"] as? Double, 500, "corrediça: múltiplo de 50 abaixo de (590 − 50)")
+        XCTAssertEqual(o["nl"] as? Double, 450, "regra: caixote 590 (> 470) → lateral 460, corrediça de 450")
         XCTAssertEqual((o["cor"] as? [String: Any])?["corFId"] as? String, "arauco-louro-freijo-trend", "módulo novo já vem com o padrão das frentes")
         XCTAssertEqual((o["cor"] as? [String: Any])?["corId"] as? String, "duratex-cinza-sagrado-essencial", "e com o padrão do caixote")
         XCTAssertEqual(o["sh"] as? Double, 360, "prateleira = prof 400 − recuo 40")
@@ -1917,7 +1918,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lat"] as? String, "450,160,450,160", "as duas laterais da gaveta mudam juntas (altura e profundidade)")
         XCTAssertEqual(o["fc"] as? Int, 145, "frente/costa acompanha a altura da caixa")
         XCTAssertEqual(o["fundo"] as? Int, 450, "fundo acompanha a profundidade (corrediça de 450)")
-        XCTAssertEqual(o["outra"] as? Int, 500, "as outras gavetas não mudam")
+        XCTAssertEqual(o["outra"] as? Int, 460, "as outras gavetas não mudam (regra: 460)")
         XCTAssertEqual(o["trav"] as? Int, 200, "peça do lado do canto muda no corte")
         XCTAssertEqual(o["trav3"] as? Int, 200, "e no 3D")
         XCTAssertEqual(o["ppk"] as? String, "Tamponamento direito#1", "régua de dentro aponta pro tamponamento")

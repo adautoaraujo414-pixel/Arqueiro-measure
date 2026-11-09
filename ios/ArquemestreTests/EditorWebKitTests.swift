@@ -2885,7 +2885,7 @@ final class EditorWebKitTests: XCTestCase {
           TRN=4;TRT='reb';var n0=S.rp.length;trCreate();var bloqueou=S.rp.length===n0;
           S.tab=9;panel();var hi=document.querySelector('[data-pf="F|h"]');hi.value='3150';hi.dispatchEvent(new Event('change',{bubbles:true}));draw();var l1=lab();
           var sv=snapState();loadState(z);var vNovo=S.Hm;loadState(sv);
-          return JSON.stringify({novo:novo,l0:l0,bloqueou:bloqueou,l1:l1,salvo:S.Hm===true&&S.H===3150,vNovo:vNovo,errs:__errs});
+          return JSON.stringify({novo:novo,l0:l0,bloqueou:bloqueou,l1:l1,salvo:!!S.Hm&&S.H===3150,vNovo:vNovo,errs:__errs});
           """#)
         XCTAssertEqual(o["novo"] as? Bool, true, "projeto novo: pé-direito e largura não medidos")
         XCTAssertEqual(o["l0"] as? String, "⚠ pé-direito não medido", "sem medir não mostra número até o teto")

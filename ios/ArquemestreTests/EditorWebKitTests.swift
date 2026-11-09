@@ -2913,4 +2913,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["andou"] as? Int, 50, "distância da esquerda move o módulo")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+
+    func testRodapeDoCantoNaMesmaCorDosOutros() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          demoScene();S.m=null;draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
+          /* o rodapé (pedestal) do módulo de canto sai igual ao dos outros módulos, não na cor de madeira crua */
+          var B=__boxes(),ci=-1;S.mods.forEach(function(m,i){if(m.corner&&!m.sup&&ci<0)ci=i});R.canto=ci>=0;
+          var rc=B.filter(function(b){return String(b.nm).indexOf(ci+':Rodapé')===0}),ro=B.filter(function(b){var k=+String(b.nm).split(':')[0];return k!==ci&&/^\d+:Rodapé/.test(String(b.nm))&&S.mods[k]&&!S.mods[k].sup&&!S.mods[k].corner});
+          R.tem=rc.length>0&&ro.length>0;R.igual=R.tem&&rc.every(function(b){return String(b.c)===String(ro[0].c)});R.semCru=rc.every(function(b){return String(b.c)!=='205,185,143'});
+          /* com a caixa pintada continua igual aos outros */
+          var gi=MAT.filter(function(c){return /gianduia/i.test(c.id)})[0]||MAT[0];S.mods.forEach(function(m){m.cor=gi.hex;m.corId=gi.id;m.corF=gi.hex;m.corFId=gi.id});draw();__build();B=__boxes();
+          rc=B.filter(function(b){return String(b.nm).indexOf(ci+':Rodapé')===0});ro=B.filter(function(b){var k=+String(b.nm).split(':')[0];return k!==ci&&/^\d+:Rodapé/.test(String(b.nm))&&S.mods[k]&&!S.mods[k].sup&&!S.mods[k].corner});
+          R.pintado=rc.length>0&&ro.length>0&&rc.every(function(b){return String(b.c)===String(ro[0].c)});
+          document.getElementById('v3x').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["canto"] as? Bool, true, "a cozinha de exemplo tem módulo de canto")
+        XCTAssertEqual(o["tem"] as? Bool, true, "rodapé do canto e dos outros no 3D")
+        XCTAssertEqual(o["igual"] as? Bool, true, "rodapé do canto na mesma cor dos outros")
+        XCTAssertEqual(o["semCru"] as? Bool, true, "rodapé do canto não sai cor de madeira crua")
+        XCTAssertEqual(o["pintado"] as? Bool, true, "com a caixa pintada continua igual aos outros")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
 }

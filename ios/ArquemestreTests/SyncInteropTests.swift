@@ -45,6 +45,17 @@ final class SyncInteropTests: XCTestCase {
         let pays = try XCTUnwrap(f["payloads"] as? [[String: Any]])
         for p in pays { XCTAssertTrue(SyncCore.apply(b, p), "pacote \(p["k"] ?? "")") }
         for p in pays { XCTAssertTrue(SyncCore.apply(b, p)) } // de novo: troca, não duplica
+        // mesma nota, mesmo texto canônico (mostra onde difere, se diferir)
+        let files = try XCTUnwrap(f["files"] as? [String: String])
+        for (rel, b64) in files where rel.hasPrefix("projects/notes/") {
+            let orig = try XCTUnwrap(JSONSerialization.jsonObject(with: XCTUnwrap(Data(base64Encoded: b64))))
+            let got = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: b.appendingPathComponent(rel))))
+            let c1 = SyncCore.canon(orig), c2 = SyncCore.canon(got)
+            if c1 != c2 {
+                let i = zip(c1, c2).prefix(while: { $0 == $1 }).count
+                XCTFail("\(rel) difere em \(i): kotlin=…\(String(c1.dropFirst(max(0, i - 40)).prefix(90))) · iphone=…\(String(c2.dropFirst(max(0, i - 40)).prefix(90)))")
+            }
+        }
         let kt = try XCTUnwrap(f["manifest"] as? [[String: Any]])
         let mine = SyncCore.manifest(b)
         XCTAssertEqual(mine.count, kt.count, "nada duplicado")

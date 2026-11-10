@@ -3074,4 +3074,24 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testTamanhoDoModuloInteiroNo3DAoVivoSemFurarAPedra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={vivo:[]};window.toast=function(){};
+          var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n==='Módulo vazio (montar do zero)'&&!t.sup&&!it)it=t})});newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=300;
+          S.stones=[{id:1,x:300,w:1500,d:600,t:m.h,e:30,shape:'reta',items:[]}];S.st=S.stones[0];draw();R.m0=[m.x,m.w,m.h,m.d,m.b];var m0w_=m.w;
+          open3D();await new Promise(function(r){setTimeout(r,300)});__cam(0.3,0.3,1.2);fx3api.open({k:'mod',mi:0});await new Promise(function(r){setTimeout(r,200)});
+          var cv=document.querySelector('#v3 canvas');var drag=async function(k,px){var h=document.querySelector('[data-ah="'+k+'"]');if(!h)return 'sem '+k;var r=h.getBoundingClientRect(),x=r.left+16,y=r.top+16,pe=function(t,el,X,Y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:X,clientY:Y,pointerId:5,pointerType:'touch',isPrimary:true,buttons:t==='pointerup'?0:1}))};
+            var vx=0,vy=0;var hs=[].slice.call(document.querySelectorAll('[data-ah]'));pe('pointerdown',h,x,y);for(var i=1;i<=6;i++){pe('pointermove',cv,x+px[0]*i/6,y+px[1]*i/6);await new Promise(function(r){requestAnimationFrame(r)});R.vivo.push(m.w)}pe('pointerup',cv,x+px[0],y+px[1]);await new Promise(function(r){setTimeout(r,100)});return [m.x,m.w,m.h,m.d,m.b].join(',')};
+          R.xp=await drag('xp',[120,0]);fx3api.open({k:'mod',mi:0});await new Promise(function(r){setTimeout(r,150)});R.yp=await drag('yp',[0,-60]);fx3api.open({k:'mod',mi:0});await new Promise(function(r){setTimeout(r,150)});R.zp=await drag('zp',[40,40]);
+          R.aoVivo=R.vivo.slice(0,6).filter(function(v,i,a){return a.indexOf(v)===i}).length>=3;R.cresceu=+R.xp.split(',')[1]>m0w_;R.naoFurouPedra=m.h<=820&&m.x===330;R.fundura=m.d<=560;R.portasLaterais=partsOf(m).some(function(p){return /^Lateral direita/.test(p.name)&&p.cl===805});R.partes=partsOf(m).filter(function(p){return /^(Base|Lateral|Fundo|Travessa|Teto)/.test(p.name)}).map(function(p){return p.name+':'+p.cl+'x'+p.cw}).join(' | ');R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["aoVivo"] as? Bool, true, "a largura do módulo inteiro muda enquanto puxa a seta (ao vivo)")
+        XCTAssertEqual(o["cresceu"] as? Bool, true, "puxando a seta da direita o módulo inteiro cresce")
+        XCTAssertEqual(o["naoFurouPedra"] as? Bool, true, "puxando a altura ele para na pedra e não pula de lugar")
+        XCTAssertEqual(o["fundura"] as? Bool, true, "a fundura para embaixo da pedra (com a pingadeira)")
+        XCTAssertEqual(o["portasLaterais"] as? Bool, true, "laterais acompanham o módulo inteiro")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
 }

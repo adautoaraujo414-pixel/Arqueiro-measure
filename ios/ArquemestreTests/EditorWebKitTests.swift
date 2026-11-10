@@ -3314,4 +3314,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    func testJuntaDoPainelAcompanhaEDesnivelDoTeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.ops=[];S.env='sala';S.room='sala';S.W=1415;S.H=2700;S.Hm=1;wallSet('F','h1',2850);var R={};
+          var L=function(){return S.rp.map(function(a){return [a.x,a.b,a.w,a.h,a.sl?a.sl.l+'/'+a.sl.r:''].join(',')}).sort().join(' ')};
+          /* trena: divisão 1,5 em 2 placas, teto com desnível 2700 → 2850 */
+          S.trena={x0:0,x1:1415};TRN=2;TRW=0;TRT='reb';TRJ=15;TRH=0;TRFR=false;trCreate();RPSEL=0;draw();R.tr=L();R.H=S.H;
+          var bot=S.rp.filter(function(a){return a.b<1}),top=S.rp.filter(function(a){return a.b>1});
+          R.alin=top.length===2&&top.every(function(t){return bot.some(function(b){return Math.abs(b.x-t.x)<0.05&&Math.abs(b.w-t.w)<0.05})});
+          R.teto=top.every(function(t){return Math.abs(rpTopAt(t,t.x)-trTop(t.x))<0.3&&Math.abs(rpTopAt(t,t.x+t.w)-trTop(t.x+t.w))<0.3});
+          R.reg=[];S.rp.forEach(function(a){jtGaps(a).forEach(function(g){R.reg.push(g.dir+':'+g.x0+'-'+g.x1+'@'+g.y0+'-'+g.y1)})});R.reg=R.reg.sort().join(' ');
+          var sv=document.getElementById('svg').innerHTML;R.d2=/Parede 2700 · direita 2850/.test(sv)&&/corte 6\.1°/.test(sv);
+          /* painéis da parede: dividir a de baixo em 2 com junta de 15 (marcada junta seca): a de cima divide junto e o corte do teto continua reto */
+          S.W=1400;S.rp=[];pwGenerate();R.Hpw=S.H;var b0=S.rp.filter(function(a){return a.b<1})[0];RPMS=[b0.id];PLN=2;PLJ=15;PLJT={t:'seca',w:15,d:6};PLDIR='v';PLAREA='sel';window.PLCOL=true;plDivide();RPSEL=0;draw();R.dv=L();R.jt=PLJT.t;
+          R.corte=(rpCutHtml().replace(/<[^>]+>/g,' ').match(/o corte começa a [0-9.]+ mm da ponta esquerda/)||[''])[0];
+          /* sem desnível: placa de cima na mesma coluna acompanha; desligado, só a marcada */
+          wallSet('F','h1',2700);S.W=2000;S.rp=[];var p1={id:11,liso:true,x:0,b:0,w:1000,h:1600,jt:{t:'reb',w:15,d:6}},p2={id:12,liso:true,x:0,b:1615,w:1000,h:985,jt:{t:'reb',w:15,d:6}};S.rp.push(p1,p2);RPMS=[11];PLN=2;PLJ=15;PLJT={t:'reb',w:15,d:6};plDivide();draw();R.col=L();
+          S.rp=[];S.rp.push(JSON.parse(JSON.stringify(p1)),JSON.parse(JSON.stringify(p2)));RPMS=[11];window.PLCOL=false;plDivide();draw();R.sem=S.rp.length;window.PLCOL=true;
+          open3D();await new Promise(function(r){setTimeout(r,800)});R.n3=dbg3().length;R.errs=__errs;
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["tr"] as? String, "0,0,700,2700, 0,2715,700,59.2,-15/59.2 715,0,700,2700, 715,2715,700,135,60.8/135", "trena 2 placas com divisão 1,5: as de cima na mesma coluna e cortadas no teto")
+        XCTAssertEqual((o["H"] as? NSNumber)?.doubleValue, 2700, "altura da ponta esquerda não muda")
+        XCTAssertEqual(o["alin"] as? Bool, true, "junta de cima alinhada com a de baixo")
+        XCTAssertEqual(o["teto"] as? Bool, true, "corte das placas de cima em cima da linha do teto")
+        XCTAssertEqual(o["reg"] as? String, "h:141.5-700@2700-2715 h:715-1415@2700-2715 v:700-715@0-2715 v:700-715@2715-2774.2", "réguas da junta param no corte do teto")
+        XCTAssertEqual(o["d2"] as? Bool, true, "2D mostra o desnível e o ângulo")
+        XCTAssertEqual((o["Hpw"] as? NSNumber)?.doubleValue, 2700, "criar painéis não apaga o desnível")
+        XCTAssertEqual(o["dv"] as? String, "0,0,692.5,2700, 0,2715,692.5,59.2,-15/59.2 707.5,0,692.5,2700, 707.5,2715,692.5,135,60.8/135", "dividir a de baixo: a de cima divide no mesmo lugar e o corte continua reto")
+        XCTAssertEqual(o["jt"] as? String, "reb", "junta digitada vira rebaixo (placas iguais)")
+        XCTAssertEqual(o["corte"] as? String, "o corte começa a 140 mm da ponta esquerda")
+        XCTAssertEqual(o["col"] as? String, "0,0,492.5,1600, 0,1615,492.5,985, 507.5,0,492.5,1600, 507.5,1615,492.5,985,", "sem desnível: a placa de cima da coluna acompanha")
+        XCTAssertEqual((o["sem"] as? NSNumber)?.intValue, 3, "desligado: só a marcada")
+        XCTAssertGreaterThan((o["n3"] as? NSNumber)?.intValue ?? 0, 0)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
 }

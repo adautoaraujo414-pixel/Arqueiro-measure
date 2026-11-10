@@ -2222,9 +2222,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pedra"] as? String, "860,860,127", "micro-ondas em cima da pedra (pia), na altura dela (pedra encaixada: frente do armário + 40)")
         XCTAssertEqual(o["y0"] as? Int, 860, "no 3D ele fica em cima da pedra")
         XCTAssertEqual(o["mesa"] as? String, "750,750,0,0", "air fryer em cima da mesa, no meio dela")
-        XCTAssertEqual(o["lado"] as? String, "e,200,0,610,180,880", "churrasqueira na parede da esquerda (L)")
+        XCTAssertEqual(o["lado"] as? String, "e,200,0,570,200,840", "churrasqueira na parede da esquerda (L): medida de fábrica 840 × 570, sem sobra")
         XCTAssertGreaterThan(o["fumaca"] as? Int ?? 0, 10, "na lateral ela também assa e solta fumaça")
-        XCTAssertEqual(o["dir"] as? String, "4000,180", "e na parede da direita")
+        XCTAssertEqual(o["dir"] as? String, "4000,200", "e na parede da direita (medida de fábrica)")
         XCTAssertEqual(o["salaCat"] as? Bool, true, "churrasqueira e eletros em qualquer ambiente")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }

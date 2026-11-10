@@ -28,6 +28,8 @@ struct AgendaView: View {
     @State private var month = dayStart(Date())
     @State private var selDay: Date?
     @State private var mode = 0
+    @AppStorage("agenda.feriados") private var showFer = true
+    @AppStorage("agenda.comemorativas") private var showCom = true
 
     var body: some View {
         let all = app.appointments
@@ -37,6 +39,7 @@ struct AgendaView: View {
             if mode == 0 { return all.filter { !$0.done && $0.startDate >= today } }
             return all.filter { $0.done || $0.startDate < today }.sorted { $0.startMs > $1.startMs }
         }()
+        ZStack(alignment: .bottomTrailing) {
         VStack(spacing: 0) {
             HStack {
                 Button { app.screen = .library } label: { Image(systemName: "chevron.backward").foregroundColor(Ui.text).frame(width: 40, height: 40) }
@@ -50,12 +53,27 @@ struct AgendaView: View {
             }.padding(8)
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    MonthGrid(month: $month, all: all, selDay: selDay) { d in selDay = selDay == d ? nil : d }
+                    MonthGrid(month: $month, all: all, selDay: selDay, showFer: showFer, showCom: showCom) { d in selDay = selDay == d ? nil : d }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            chip(tr("🇧🇷 Feriados"), showFer) { showFer.toggle() }
+                            chip(tr("🎉 Datas comemorativas"), showCom) { showCom.toggle() }
+                        }
+                    }
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             chip(tr("Próximos"), selDay == nil && mode == 0) { selDay = nil; mode = 0 }
                             chip(tr("Concluídos / passados"), selDay == nil && mode == 1) { selDay = nil; mode = 1 }
                             if let d = selDay { chip(fmtDate.string(from: d) + "  ✕", true) { selDay = nil } }
+                        }
+                    }
+                    if let d = selDay {
+                        ForEach(Holidays.on(d, cal: cal, feriados: showFer, comemorativas: showCom)) { h in HolidayRow(h: h, withDate: false) }
+                    } else if mode == 0 {
+                        let nx = Holidays.upcoming(from: Date(), cal: cal, n: 3, feriados: showFer, comemorativas: showCom)
+                        if !nx.isEmpty {
+                            Text(tr("Próximos feriados e datas")).font(.footnote.bold()).foregroundColor(Ui.dim).padding(.top, 2)
+                            ForEach(nx) { h in HolidayRow(h: h, withDate: true) }
                         }
                     }
                     if let d = selDay {
@@ -71,8 +89,22 @@ struct AgendaView: View {
                             ApptCard(a: a) { isNew = false; editing = a }
                         }
                     }
-                }.padding(.horizontal, 16).padding(.bottom, 24)
+                }.padding(.horizontal, 16).padding(.bottom, 84)
             }
+        }
+            // botão "Adicionar em <dia>" (igual ao Google Agenda)
+            let addDay = selDay ?? dayStart(Date())
+            Button {
+                var a = Appointment(); a.startDate = selDay.map { $0.addingTimeInterval(9 * 3600) } ?? Date().addingTimeInterval(3600)
+                isNew = true; editing = a
+            } label: {
+                HStack(spacing: 10) {
+                    Text(tr("Adicionar em") + " " + shortDay(addDay)).font(.body.weight(.medium))
+                    Image(systemName: "plus").font(.title3.bold())
+                }
+                .foregroundColor(.white).padding(.horizontal, 20).padding(.vertical, 14)
+                .background(Capsule().fill(Ui.accent)).shadow(radius: 4, y: 2)
+            }.buttonStyle(.plain).padding(16)
         }
         .background(Ui.bg)
         .sheet(item: $editing) { a in ApptEditor(initial: a, isNew: isNew) }
@@ -94,51 +126,117 @@ struct AgendaView: View {
     }
 }
 
+private func shortDay(_ d: Date) -> String {
+    let f = DateFormatter(); f.locale = ptBR; let lg = ptBR.language.languageCode?.identifier ?? "pt"; f.dateFormat = (lg == "pt" || lg == "es") ? "d 'de' MMM" : "MMM d"; return f.string(from: d)
+}
+
+/// Feriado / data comemorativa como faixa colorida (dia escolhido e próximos).
+private struct HolidayRow: View {
+    var h: Holidays.Day
+    var withDate: Bool
+    var body: some View {
+        HStack {
+            if withDate { Text(String(format: "%02d/%02d", h.day, h.month)).font(.footnote.bold()).frame(width: 50, alignment: .leading) }
+            Text(tr(h.name)).font(.subheadline.weight(.medium))
+            Spacer()
+            Text(tr(h.kindLabel)).font(.caption2).opacity(0.85)
+        }
+        .foregroundColor(.white).padding(.horizontal, 12).padding(.vertical, 9)
+        .background(RoundedRectangle(cornerRadius: 10).fill(h.color))
+    }
+}
+
+/// Mês inteiro como no Google Agenda: cada dia com os nomes (feriado verde, compromissos na cor do tipo),
+/// domingo e feriado em vermelho, hoje em destaque.
 private struct MonthGrid: View {
     @Binding var month: Date
     var all: [Appointment]
     var selDay: Date?
+    var showFer: Bool
+    var showCom: Bool
     var onDay: (Date) -> Void
     var body: some View {
         let first = cal.date(from: cal.dateComponents([.year, .month], from: month))!
+        let ym = cal.dateComponents([.year, .month], from: first)
         let offset = cal.component(.weekday, from: first) - 1
         let days = cal.range(of: .day, in: .month, for: first)!.count
         let today = dayStart(Date())
+        let thisMonth = cal.date(from: cal.dateComponents([.year, .month], from: today))!
         let byDay = Dictionary(grouping: all) { dayStart($0.startDate) }
         let rows = (offset + days + 6) / 7
+        let red = Color(argb: 0xFFF28B82)
         VStack(spacing: 2) {
             HStack {
-                Button { month = cal.date(byAdding: .month, value: -1, to: first)! } label: { Image(systemName: "chevron.left") }
+                Button { month = cal.date(byAdding: .month, value: -1, to: first)! } label: { Image(systemName: "chevron.left").frame(width: 36, height: 36) }
                 Spacer()
-                Text(capFirst(fmtMonth.string(from: first))).foregroundColor(Ui.text)
+                Text(capFirst(fmtMonth.string(from: first))).font(.headline).foregroundColor(Ui.text)
                 Spacer()
-                Button { month = cal.date(byAdding: .month, value: 1, to: first)! } label: { Image(systemName: "chevron.right") }
-            }.padding(.horizontal, 8).padding(.vertical, 6)
-            HStack { ForEach(Array(tr("D S T Q Q S S").split(separator: " ").enumerated()), id: \.offset) { _, d in Text(String(d)).font(.caption).foregroundColor(Ui.dim).frame(maxWidth: .infinity) } }
+                if first != thisMonth { Button(tr("Hoje")) { month = today }.font(.subheadline) }
+                Button { month = cal.date(byAdding: .month, value: 1, to: first)! } label: { Image(systemName: "chevron.right").frame(width: 36, height: 36) }
+            }.padding(.horizontal, 4).padding(.vertical, 4)
+            HStack(spacing: 2) {
+                ForEach(Array(tr("D S T Q Q S S").split(separator: " ").enumerated()), id: \.offset) { i, d in
+                    Text(String(d)).font(.caption.bold()).foregroundColor(i == 0 ? red : Ui.dim).frame(maxWidth: .infinity)
+                }
+            }.padding(.bottom, 2)
             ForEach(0..<rows, id: \.self) { r in
                 HStack(spacing: 2) {
                     ForEach(0..<7, id: \.self) { c in
                         let n = r * 7 + c - offset + 1
-                        if n < 1 || n > days { Color.clear.frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44) } else {
+                        if n < 1 || n > days { Color.clear.frame(maxWidth: .infinity, minHeight: 78, maxHeight: 78) } else {
                             let d = cal.date(byAdding: .day, value: n - 1, to: first)!
-                            let list = byDay[d] ?? []
-                            Button { onDay(d) } label: {
-                                VStack(spacing: 2) {
-                                    Text("\(n)").foregroundColor(selDay == d ? .white : Ui.text)
-                                    HStack(spacing: 2) { ForEach(list.prefix(3)) { a in Circle().fill(a.kind.color).frame(width: 5, height: 5) } }.frame(height: 6)
-                                }
-                                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
-                                .background(RoundedRectangle(cornerRadius: 8).fill(selDay == d ? Ui.accent : (d == today ? Ui.panel2 : .clear)))
-                                .contentShape(Rectangle())
-                            }.buttonStyle(.plain).frame(maxWidth: .infinity)
+                            let hol = Holidays.on(ym.year!, ym.month!, n, feriados: showFer, comemorativas: showCom)
+                            let list = (byDay[d] ?? []).sorted { $0.startMs < $1.startMs }
+                            DayCell(n: n, hol: hol, list: list, isRed: c == 0 || hol.contains { $0.kind == .feriado }, isToday: d == today, sel: selDay == d, red: red) { onDay(d) }
                         }
                     }
                 }
             }
         }
-        .padding(10).background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
+        .padding(8).background(RoundedRectangle(cornerRadius: 14).fill(Ui.panel))
     }
 }
+
+/// Um dia da grade: número (vermelho no domingo/feriado, círculo em hoje) e até 2 nomes coloridos.
+private struct DayCell: View {
+    var n: Int
+    var hol: [Holidays.Day]
+    var list: [Appointment]
+    var isRed: Bool
+    var isToday: Bool
+    var sel: Bool
+    var red: Color
+    var onTap: () -> Void
+    private var chips: [(String, Color)] {
+        var r: [(String, Color)] = hol.map { (tr($0.name), $0.color) }
+        for a in list { r.append((a.title.isEmpty ? a.kind.label : a.title, a.kind.color)) }
+        return r
+    }
+    var body: some View {
+        let ch = chips
+        Button(action: onTap) {
+            VStack(spacing: 2) {
+                Text("\(n)").font(.caption.bold())
+                    .foregroundColor(isToday ? .white : (isRed ? red : Ui.text))
+                    .frame(width: 22, height: 22)
+                    .background(Circle().fill(isToday ? Ui.accent : Color.clear))
+                ForEach(0..<min(2, ch.count), id: \.self) { i in
+                    Text(ch[i].0).font(.system(size: 9)).lineLimit(2).foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 2).padding(.vertical, 1)
+                        .background(RoundedRectangle(cornerRadius: 3).fill(ch[i].1))
+                }
+                if ch.count > 2 { Text("+\(ch.count - 2)").font(.system(size: 9)).foregroundColor(Ui.dim) }
+                Spacer(minLength: 0)
+            }
+            .padding(2)
+            .frame(maxWidth: .infinity, minHeight: 78, maxHeight: 78, alignment: .top)
+            .background(RoundedRectangle(cornerRadius: 6).fill(sel ? Ui.accent.opacity(0.22) : Color.white.opacity(0.05)))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(sel ? Ui.accent : Color.clear, lineWidth: 2))
+            .contentShape(Rectangle())
+        }.buttonStyle(.plain).frame(maxWidth: .infinity)
+    }
+}
+
 
 private struct DayHours: View {
     var day: Date

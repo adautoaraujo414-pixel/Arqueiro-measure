@@ -14,6 +14,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,6 +80,7 @@ import br.com.arque.measure.Screen
 import br.com.arque.measure.agenda.AgendaReminders
 import br.com.arque.measure.model.Appointment
 import br.com.arque.measure.model.ApptKind
+import br.com.arque.measure.model.Holidays
 import br.com.arque.measure.model.REMIND_OPTIONS
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -90,6 +93,7 @@ private val fmtDay get() = br.com.arque.measure.i18n.I18n.dayFormat()
 private val fmtHour get() = br.com.arque.measure.i18n.I18n.hourFormat()
 private val fmtDate get() = br.com.arque.measure.i18n.I18n.dateFormat()
 private val fmtMonth get() = br.com.arque.measure.i18n.I18n.monthFormat()
+private val fmtShort get() = br.com.arque.measure.i18n.I18n.locale.let { l -> java.text.SimpleDateFormat(if (l.language == "pt" || l.language == "es") "d 'de' MMM" else "MMM d", l) }
 
 private fun dayStart(ms: Long): Long = Calendar.getInstance().apply {
     timeInMillis = ms; set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
@@ -116,6 +120,9 @@ fun AgendaScreen(vm: AppViewModel) {
     var selDay by remember { mutableStateOf<Long?>(null) }
     var mode by remember { mutableIntStateOf(0) } // 0 próximos, 1 passados/concluídos
     var exactOk by remember { mutableStateOf(AgendaReminders.canExact(ctx)) }
+    val uiPrefs = remember { ctx.getSharedPreferences("arque.agenda.ui", 0) }
+    var showFer by remember { mutableStateOf(uiPrefs.getBoolean("feriados", true)) }
+    var showCom by remember { mutableStateOf(uiPrefs.getBoolean("comemorativas", true)) }
     BackHandler { if (editing != null) editing = null else vm.screen = Screen.Library }
 
     val notifPerm = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -160,11 +167,25 @@ fun AgendaScreen(vm: AppViewModel) {
                         }) { Text(tr("Liberar")) }
                     }
                 }
-                MonthGrid(monthMs, all, selDay, { monthMs = it }) { d -> selDay = if (selDay == d) null else d }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                MonthGrid(monthMs, all, selDay, showFer, showCom, { monthMs = it }) { d -> selDay = if (selDay == d) null else d }
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(selected = showFer, onClick = { showFer = !showFer; uiPrefs.edit().putBoolean("feriados", showFer).apply() }, label = { Text(tr("🇧🇷 Feriados")) })
+                    FilterChip(selected = showCom, onClick = { showCom = !showCom; uiPrefs.edit().putBoolean("comemorativas", showCom).apply() }, label = { Text(tr("🎉 Datas comemorativas")) })
+                }
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(selected = selDay == null && mode == 0, onClick = { selDay = null; mode = 0 }, label = { Text(tr("Próximos")) })
                     FilterChip(selected = selDay == null && mode == 1, onClick = { selDay = null; mode = 1 }, label = { Text(tr("Concluídos / passados")) })
                     if (selDay != null) FilterChip(selected = true, onClick = { selDay = null }, label = { Text(fmtDate.format(Date(selDay!!)) + "  ✕") })
+                }
+                if (selDay != null) {
+                    Holidays.onMs(selDay!!, showFer, showCom).forEach { HolidayRow(it) }
+                }
+                if (selDay == null && mode == 0) {
+                    val nx = Holidays.upcoming(now, 3, showFer, showCom)
+                    if (nx.isNotEmpty()) {
+                        Text(tr("Próximos feriados e datas"), color = Ui.dim, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+                        nx.forEach { HolidayRow(it, withDate = true) }
+                    }
                 }
                 if (selDay != null) {
                     DayHours(vm, selDay!!, shown, onNew = { ms -> isNew = true; editing = Appointment(startMs = ms) }, onEdit = { isNew = false; editing = it })
@@ -183,8 +204,19 @@ fun AgendaScreen(vm: AppViewModel) {
                     }
                     ApptCard(vm, a, onEdit = { isNew = false; editing = a })
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(84.dp))
             }
+        }
+        val addDay = selDay ?: dayStart(now)
+        Row(
+            Modifier.align(Alignment.BottomEnd).padding(16.dp).clip(RoundedCornerShape(28.dp)).background(Ui.accent)
+                .clickable { isNew = true; editing = Appointment(startMs = if (selDay != null) addDay + 9 * 3600_000L else now + 3600_000L) }
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(tr("Adicionar em") + " " + fmtShort.format(Date(addDay)), color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.width(10.dp))
+            Text("＋", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
     editing?.let { cur ->
@@ -221,45 +253,73 @@ private fun DayHours(vm: AppViewModel, day: Long, list: List<Appointment>, onNew
     }
 }
 
+/** Feriado / data comemorativa como faixa colorida (dia escolhido e próximos). */
 @Composable
-private fun MonthGrid(monthMs: Long, all: List<Appointment>, selDay: Long?, onMonth: (Long) -> Unit, onDay: (Long) -> Unit) {
+private fun HolidayRow(h: Holidays.Day, withDate: Boolean = false) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color(Holidays.argb(h.kind))).padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (withDate) Text("%02d/%02d".format(h.day, h.month), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(52.dp))
+        Text(tr(h.name), color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+        Text(tr(h.kindLabel), color = Color(0xDDFFFFFF), fontSize = 11.sp)
+    }
+}
+
+/** Mês inteiro como no Google Agenda: cada dia com os nomes (feriado verde, compromissos na cor do tipo), domingo e feriado em vermelho, hoje em destaque. */
+@Composable
+private fun MonthGrid(monthMs: Long, all: List<Appointment>, selDay: Long?, showFer: Boolean, showCom: Boolean, onMonth: (Long) -> Unit, onDay: (Long) -> Unit) {
     val cal = Calendar.getInstance().apply { timeInMillis = monthMs; set(Calendar.DAY_OF_MONTH, 1) }
     val first = dayStart(cal.timeInMillis)
+    val year = cal.get(Calendar.YEAR); val month = cal.get(Calendar.MONTH) + 1
     val offset = (cal.get(Calendar.DAY_OF_WEEK) - Calendar.SUNDAY)
     val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
     val today = dayStart(System.currentTimeMillis())
     val byDay = all.groupBy { dayStart(it.startMs) }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ui.panel).padding(10.dp)) {
+    val red = Color(0xFFF28B82)
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Ui.panel).padding(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onMonth(Calendar.getInstance().apply { timeInMillis = first; add(Calendar.MONTH, -1) }.timeInMillis) }) {
                 Icon(Icons.Filled.ChevronLeft, tr("Mês anterior"), tint = Ui.text)
             }
-            Text(fmtMonth.format(Date(first)).replaceFirstChar { it.uppercase() }, color = Ui.text, fontSize = 16.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text(fmtMonth.format(Date(first)).replaceFirstChar { it.uppercase() }, color = Ui.text, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            if (dayStart(Calendar.getInstance().apply { timeInMillis = today; set(Calendar.DAY_OF_MONTH, 1) }.timeInMillis) != first)
+                TextButton(onClick = { onMonth(today) }) { Text(tr("Hoje"), color = Ui.accent) }
             IconButton(onClick = { onMonth(Calendar.getInstance().apply { timeInMillis = first; add(Calendar.MONTH, 1) }.timeInMillis) }) {
                 Icon(Icons.Filled.ChevronRight, tr("Próximo mês"), tint = Ui.text)
             }
         }
-        Row(Modifier.fillMaxWidth()) {
-            tr("D S T Q Q S S").split(" ").forEach { Text(it, color = Ui.dim, fontSize = 12.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
+        Row(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
+            tr("D S T Q Q S S").split(" ").forEachIndexed { i, w -> Text(w, color = if (i == 0) red else Ui.dim, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
         }
         val rows = (offset + days + 6) / 7
         for (r in 0 until rows) {
             Row(Modifier.fillMaxWidth()) {
                 for (c in 0 until 7) {
                     val n = r * 7 + c - offset + 1
-                    if (n < 1 || n > days) { Spacer(Modifier.weight(1f).aspectRatio(1.25f)); continue }
+                    if (n < 1 || n > days) { Spacer(Modifier.weight(1f).height(78.dp).padding(1.dp)); continue }
                     val d = Calendar.getInstance().apply { timeInMillis = first; add(Calendar.DAY_OF_MONTH, n - 1) }.timeInMillis
-                    val list = byDay[d].orEmpty()
+                    val hol = Holidays.on(year, month, n, showFer, showCom)
+                    val list = byDay[d].orEmpty().sortedBy { it.startMs }
+                    val isRed = c == 0 || hol.any { it.kind == Holidays.Kind.FERIADO }
+                    val sel = selDay == d
                     Column(
-                        Modifier.weight(1f).aspectRatio(1.25f).padding(1.dp).clip(RoundedCornerShape(8.dp))
-                            .background(if (selDay == d) Ui.accent else if (d == today) Ui.panel2 else Color.Transparent)
-                            .clickable { onDay(d) },
-                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+                        Modifier.weight(1f).height(78.dp).padding(1.dp).clip(RoundedCornerShape(6.dp))
+                            .background(if (sel) Ui.accent.copy(alpha = 0.22f) else Color(0x0DFFFFFF))
+                            .then(if (sel) Modifier.border(2.dp, Ui.accent, RoundedCornerShape(6.dp)) else Modifier)
+                            .clickable { onDay(d) }.padding(2.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("$n", color = if (selDay == d) Color.White else Ui.text, fontSize = 14.sp)
-                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.height(6.dp)) {
-                            list.take(3).forEach { Box(Modifier.size(5.dp).clip(CircleShape).background(Color(it.kind.argb))) }
+                        Box(
+                            Modifier.size(22.dp).clip(CircleShape).background(if (d == today) Ui.accent else Color.Transparent),
+                            contentAlignment = Alignment.Center,
+                        ) { Text("$n", color = if (d == today) Color.White else if (isRed) red else Ui.text, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                        val chips = hol.map { tr(it.name) to Color(Holidays.argb(it.kind)) } + list.map { (it.title.ifBlank { it.kind.label }) to Color(it.kind.argb) }
+                        chips.take(2).forEach { (t, col) ->
+                            Text(
+                                t, color = Color.White, fontSize = 9.sp, lineHeight = 10.sp, maxLines = 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                modifier = Modifier.fillMaxWidth().padding(top = 2.dp).clip(RoundedCornerShape(3.dp)).background(col).padding(horizontal = 2.dp, vertical = 1.dp),
+                            )
                         }
+                        if (chips.size > 2) Text("+${chips.size - 2}", color = Ui.dim, fontSize = 9.sp)
                     }
                 }
             }

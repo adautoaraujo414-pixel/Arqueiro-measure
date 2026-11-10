@@ -328,3 +328,36 @@ final class ProjectFolderTests: XCTestCase {
         XCTAssertNil(p1b.folder); XCTAssertTrue(p1b.folderSet, "tirado da pasta fica fora das pastas")
     }
 }
+
+/// Feriados e datas comemorativas da agenda (mesmos casos do HolidaysTest do Android).
+final class HolidaysTests: XCTestCase {
+    private func date(_ y: Int, _ name: String) -> [String] {
+        Holidays.of(y).filter { $0.name == name }.map { String(format: "%02d/%02d", $0.day, $0.month) }
+    }
+    func testPascoaEOsQueDependemDela() {
+        XCTAssertTrue(Holidays.easter(2026) == (4, 5))
+        XCTAssertTrue(Holidays.easter(2027) == (3, 28))
+        XCTAssertEqual(date(2026, "Sexta-feira Santa"), ["03/04"])
+        XCTAssertEqual(date(2027, "Carnaval"), ["08/02", "09/02"])
+        XCTAssertEqual(date(2027, "Quarta-feira de Cinzas"), ["10/02"])
+        XCTAssertEqual(date(2027, "Corpus Christi"), ["27/05"])
+        XCTAssertEqual(date(2026, "Corpus Christi"), ["04/06"])
+    }
+    func testOsDezFeriadosNacionaisDe2027() {
+        let f = Holidays.of(2027).filter { $0.kind == .feriado }.map { String(format: "%02d/%02d", $0.day, $0.month) }
+        XCTAssertEqual(f, ["01/01", "26/03", "21/04", "01/05", "07/09", "12/10", "02/11", "15/11", "20/11", "25/12"])
+    }
+    func testMaesEPaisNoSegundoDomingo() {
+        XCTAssertEqual(date(2026, "Dia das Mães"), ["10/05"])
+        XCTAssertEqual(date(2026, "Dia dos Pais"), ["09/08"])
+        XCTAssertEqual(date(2027, "Dia das Mães"), ["09/05"])
+    }
+    func testNovembroEFiltroDasComemorativas() {
+        let nov = Holidays.of(2026).filter { $0.month == 11 && $0.kind == .feriado }.map { "\($0.day) \($0.name)" }
+        XCTAssertEqual(nov, ["2 Finados", "15 Proclamação da República", "20 Dia da Consciência Negra"])
+        XCTAssertEqual(Holidays.on(2023, 11, 20).first?.kind, .comemorativa)
+        XCTAssertEqual(Holidays.on(2026, 10, 12).count, 2)
+        XCTAssertEqual(Holidays.on(2026, 10, 12, comemorativas: false).map { $0.name }, ["Nossa Senhora Aparecida"])
+        XCTAssertTrue(Holidays.on(2026, 6, 12, comemorativas: false).isEmpty)
+    }
+}

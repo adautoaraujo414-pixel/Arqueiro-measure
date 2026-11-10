@@ -2983,4 +2983,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ligouTodos"] as? Bool, true, "liga em todos os módulos de baixo")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
+    func testAssistenteMostraAOpcaoEscolhidaEmAzul() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var R={};
+          /* no assistente de ajustes a opção escolhida aparece em azul (antes ficava tudo cinza) */
+          wizOpen();var bg=function(e){return getComputedStyle(e).backgroundColor};
+          var ref=document.createElement('button');ref.style.background='var(--acc)';document.getElementById('stdbody').appendChild(ref);var az=bg(ref);ref.remove();
+          var on=document.querySelector('#stdbody .stc button.on');R.temOn=!!on;R.onAzul=!!on&&bg(on)===az;
+          var off=document.querySelector('#stdbody .stc button:not(.on)');R.outraCinza=!!off&&bg(off)!==az;
+          var cx=STD().caixa==='fora'?'dentro':'fora';document.querySelector('#stdbody [data-std="caixa"][data-v="'+cx+'"]').click();
+          R.trocou=bg(document.querySelector('#stdbody [data-std="caixa"][data-v="'+cx+'"]'))===az&&bg(document.querySelector('#stdbody [data-std="caixa"]:not([data-v="'+cx+'"])'))!==az;
+          var ok=true,n=0;for(var i=0;i<10;i++){window.WIZ=i;stdRe();[].slice.call(document.querySelectorAll('#stdbody .stc')).forEach(function(g){var bs=[].slice.call(g.querySelectorAll('button'));var a=bs.filter(function(b){return bg(b)===az}).length,c=g.querySelectorAll('button.on').length;n++;if(a!==c||getComputedStyle(g).display!=='flex')ok=false})}
+          R.todos=ok;R.grupos=n;window.WIZ=null;document.getElementById('stdx').click();R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["temOn"] as? Bool, true, "o passo 1 tem uma opção escolhida")
+        XCTAssertEqual(o["onAzul"] as? Bool, true, "a opção escolhida aparece em azul")
+        XCTAssertEqual(o["outraCinza"] as? Bool, true, "a outra opção fica sem destaque")
+        XCTAssertEqual(o["trocou"] as? Bool, true, "tocar na outra opção passa o azul pra ela")
+        XCTAssertEqual(o["todos"] as? Bool, true, "em todos os 10 passos só a escolhida fica em azul")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
 }

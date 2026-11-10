@@ -3222,4 +3222,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    /// Lixeira de embutir na pedra com medida real (furo redondo, aro, altura), no catálogo da cozinha, na pedra e no resumo pra marmoraria;
+    /// não conta como cuba (a torneira vai na cuba).
+    func testLixeiraDeEmbutirNaPedraComMedidaReal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};var tm='';window.toast=function(t){tm=String(t)};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          newTpl(tpl('Balcão 2 portas'));newTpl(tpl('Balcão 2 portas'));draw();if(!S.stones.length)addStone();draw();
+          var c=CATS.filter(function(q){return q.id==='clix'})[0];R.cat=c?c.it.map(function(i){return i.n}):null;R.noCozinha=ROOMCATS.cozinha.indexOf('clix')>=0;
+          catAct2(c.it[0]);var st=S.stones[0],lx=st.items.filter(function(i){return isLix(i)})[0];R.toast=tm;R.item=lx?[lx.w,lx.d,lx.cm].join(','):null;
+          /* cuba normal + torneira: a torneira vai na cuba, não na lixeira */
+          var cu=CATS.filter(function(q){return q.id==='ccoz'})[0].it[0];catAct2(cu);var cub=st.items.filter(function(i){return i.k==='cuba'&&!isLix(i)})[0];cub.x=200;lx.x=1200;draw();
+          var tq=apAdd('torneira',0);draw();R.torneiraNaCuba=Math.abs((tq.x+tq.w/2)-(st.x+cub.x+cub.w/2))<2;
+          R.marm=((window.marmHtml?marmHtml(st):document.body.innerHTML).match(/Recorte da lixeira[^<]*/)||[''])[0];
+          R.svg=/fill="#2f6be0"/.test(document.getElementById('svg').innerHTML);
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();var B=__boxes();R.b3=B.length>0;try{document.getElementById('v3x').click()}catch(_){}
+          S.sel=null;S.selI=lx.id;LAST='item';S.tab=6;panel();R.painel=/Lixeira selecionad/.test(document.getElementById('bd')?document.getElementById('bd').innerHTML:document.body.innerHTML);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual((o["cat"] as? [String])?.count, 3, "3 lixeiras de embutir no catálogo")
+        XCTAssertEqual((o["cat"] as? [String])?.first, "Lixeira de embutir 5 L (tipo Lorben) · furo Ø225 · aro Ø235 · altura 240")
+        XCTAssertEqual(o["noCozinha"] as? Bool, true)
+        XCTAssertEqual(o["item"] as? String, "235,235,lxlor", "aro Ø235 em cima da pedra")
+        XCTAssertEqual(o["torneiraNaCuba"] as? Bool, true, "a torneira vai na cuba, não na lixeira")
+        XCTAssertEqual((o["marm"] as? String)?.hasPrefix("Recorte da lixeira · redondo Ø225 mm"), true, "marmoraria: recorte redondo Ø225")
+        XCTAssertEqual(o["svg"] as? Bool, true, "balde aparece embaixo da pedra no desenho")
+        XCTAssertEqual(o["painel"] as? Bool, true, "quadro diz Lixeira (não Cuba)")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
 }

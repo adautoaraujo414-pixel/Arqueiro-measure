@@ -3179,7 +3179,7 @@ final class EditorWebKitTests: XCTestCase {
           var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n==='Guarda-roupa porta de correr')it=t})});newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=200;m.lock=false;S.m=m;draw();panel();
           var L=function(){return partsOf(m).filter(function(p){return p.name==='Porta de correr'})};R.leaf0=L().map(function(p){return p.cl+'x'+p.cw});
           /* 2 toques na folha 2 no desenho */
-          var r2=[].slice.call(document.querySelectorAll('#svg rect[data-p]')).filter(function(r){var p=partsOf(m)[+r.dataset.p];return p&&p.name==='Porta de correr'&&p.dq===1})[0];var bb=r2.getBoundingClientRect(),cx=bb.left+bb.width*.6,cy=bb.top+bb.height*.5;
+          var r2=[].slice.call(document.querySelectorAll('#svg rect[data-p]')).filter(function(r){var p=partsOf(m)[+r.dataset.p];return p&&p.name==='Porta de correr'&&p.dq===1})[0];r2.scrollIntoView({block:'center'});await new Promise(function(r){setTimeout(r,80)});var bb=r2.getBoundingClientRect(),cx=bb.left+bb.width*.6,cy=bb.top+bb.height*.5;
           var pe=function(t){document.getElementById('svg').dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:4,pointerType:'touch',isPrimary:true,buttons:t==='pointerup'?0:1}))};
           pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,60)});pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,450)});
           var box=document.getElementById('slcfg');R.abriu=!!box&&/folha 2 de 2/.test(box.textContent);R.semMenuVao=!document.querySelector('#vmenu:not([hidden])');

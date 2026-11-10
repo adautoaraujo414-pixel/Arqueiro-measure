@@ -58,7 +58,7 @@ jobs:
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-test.log 2>&1
           RC=$?
-          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | tail -n 300
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
           exit $RC
 
       # a mesma bateria de testes também no iPad (tela grande, toques e 3D): o que roda no iPhone tem que rodar no iPad
@@ -77,7 +77,7 @@ jobs:
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test-without-building > build/xcodebuild-test-ipad.log 2>&1
           RC=$?
-          grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-ipad.log | tail -n 120
+          grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-ipad.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 120
           exit $RC
 
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
@@ -138,7 +138,7 @@ jobs:
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-storekit.log 2>&1
           RC=$?
-          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-storekit.log | tail -n 300
+          grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-storekit.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
           exit $RC
 
       - name: Guardar capturas e resumo dos testes no ramo ci/ios-resultados

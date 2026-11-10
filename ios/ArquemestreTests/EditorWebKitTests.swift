@@ -3142,7 +3142,7 @@ final class EditorWebKitTests: XCTestCase {
           var p=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/MDWEF1433/)));p.fin='preto';draw();R.piso=[p.b,p.fin].join(',');R.semDup=!CATS.some(function(c){return c.it.some(function(i){return /Lava-louças · Lava-louças/.test(i.n)})});
           R.desenho=(document.getElementById('svg').innerHTML.match(/>1:19</g)||[]).length;
           R.foto=c.it.filter(function(i){return /Lava/.test(i.n)}).every(function(i){return !!FOTOS[fotoKey(i)]});
-          open3D();await new Promise(function(r){setTimeout(r,300)});__build();R.box3=__boxes().filter(function(q){return q.fr===f.id}).length;try{document.getElementById('v3x').click()}catch(_){}
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();R.box3=__boxes().filter(function(q){return q.fr===f.id}).length;R.inox=__boxes().filter(function(q){return q.fr===f.id&&q.mid==='inox-escovado'}).length;try{document.getElementById('v3x').click()}catch(_){}
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["ls08e"] as? String, "550x609x500", "Electrolux LS08E de embutir: 55 × 60,9 × 50 cm")
@@ -3168,6 +3168,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(o["desenho"] as? Int ?? 0, 3, "desenho com painel e display de cada modelo")
         XCTAssertEqual(o["foto"] as? Bool, true, "foto de cada lava-louças no catálogo")
         XCTAssertGreaterThan(o["box3"] as? Int ?? 0, 6, "3D detalhado")
+        XCTAssertGreaterThan(o["inox"] as? Int ?? 0, 0, "chapas de inox com a textura escovada no 3D")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 

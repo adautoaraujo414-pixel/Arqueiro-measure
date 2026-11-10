@@ -751,6 +751,8 @@ final class AppModel: ObservableObject {
         q.items = items
         q.notes = (o["notes"] as? String) ?? ""
         q.noteId = pid.flatMap { notesOfProject($0).first }
+        // desconto (%) dado no valor do projeto: o PDF mostra o desconto e o valor com desconto
+        q.discountPct = min(max(num(o["discountPct"]), 0), 100)
         saveQuote(q)
         pendingQuoteId = q.id
         quotesBackProject = pid

@@ -3282,4 +3282,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    /// Desconto (%) no valor do projeto: recalcula na hora (chips e digitando), vai pro orçamento (itens no valor cheio + desconto) e fica salvo no projeto.
+    func testDescontoNoValorDoProjeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          newTpl(tpl('Balcão 2 portas'));newTpl(tpl('Balcão 2 portas'));draw();PR.mdfB=PR.mdfB||300;
+          var b=budget();S.preco=10000;vlOpen();R.base=vlFin(b);
+          var c=document.querySelector('#vlm [data-vdesc="10"]');R.chip=!!c;c.click();R.fin10=vlFin(budget());R.caixa=/Valor com desconto/.test(document.getElementById('vlbody').innerHTML)&&/R\$\s*9\.000,00/.test(document.getElementById('vlbody').innerHTML.replace(/&nbsp;/g,' '));
+          var i=document.querySelector('#vlm [data-vdesci]');i.value='12,5';i.dispatchEvent(new Event('input',{bubbles:true}));R.fin125=vlFin(budget());R.foco=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.vdesci==='1';
+          var q=quoteData();R.q={total:q.total,disc:q.discountPct,sum:Math.round(q.items.reduce(function(a,x){return a+x.value},0)*100)/100,n:q.items.length};
+          S.vlTot=1;var q2=quoteData();R.q2={total:q2.total,disc:q2.discountPct,v:q2.items[0].value,n:q2.items.length};S.vlTot=0;
+          /* salva no projeto e volta */var st=snapState();R.salvo=st.desc;S.desc=0;loadState(st);R.volta=S.desc;
+          document.querySelector('#vlm [data-vdesc="0"]').click();R.zero=vlFin(budget());R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual((o["base"] as? NSNumber)?.doubleValue, 10000)
+        XCTAssertEqual(o["chip"] as? Bool, true)
+        XCTAssertEqual((o["fin10"] as? NSNumber)?.doubleValue, 9000, "10% de desconto: 10.000 → 9.000")
+        XCTAssertEqual(o["caixa"] as? Bool, true, "mostra o valor com desconto")
+        XCTAssertEqual((o["fin125"] as? NSNumber)?.doubleValue, 8750, "digitando 12,5 já recalcula")
+        let q = o["q"] as? [String: Any]
+        XCTAssertEqual((q?["total"] as? NSNumber)?.doubleValue, 8750)
+        XCTAssertEqual((q?["disc"] as? NSNumber)?.doubleValue, 12.5, "orçamento leva o desconto (%)")
+        XCTAssertEqual((q?["sum"] as? NSNumber)?.doubleValue, 10000, "itens no valor cheio (o PDF mostra o desconto)")
+        let q2 = o["q2"] as? [String: Any]
+        XCTAssertEqual((q2?["v"] as? NSNumber)?.doubleValue, 10000, "orçamento com uma linha só também")
+        XCTAssertEqual((o["salvo"] as? NSNumber)?.doubleValue, 12.5, "desconto fica salvo no projeto")
+        XCTAssertEqual((o["volta"] as? NSNumber)?.doubleValue, 12.5)
+        XCTAssertEqual((o["zero"] as? NSNumber)?.doubleValue, 10000, "sem desconto volta ao valor cheio")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
 }

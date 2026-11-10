@@ -6269,7 +6269,7 @@ window.veioFx=veioFx;
 </script>
 <script>
 /* ===== o projeto guarda também o teto, os puxadores espelhados, o veio por peça e os valores (antes se perdiam ao reabrir ou desfazer) ===== */
-(function(){var XK=['pxa','teto','veioP','vlHide','vlTot'];
+(function(){var XK=['pxa','teto','veioP','vlHide','vlTot','desc'];
  var ss=snapState;snapState=function(){var o=ss.apply(this,arguments);XK.forEach(function(k){if(S[k]!==undefined&&S[k]!==null)o[k]=JSON.parse(JSON.stringify(S[k]))});return o};
  var ls=loadState;loadState=function(o){var r=ls.apply(this,arguments);XK.forEach(function(k){if(o&&o[k]!==undefined)S[k]=JSON.parse(JSON.stringify(o[k]));else delete S[k]});return r};
 })();
@@ -8258,5 +8258,24 @@ var vmo_sl=vmenuOpen;vmenuOpen=function(mi,vi,cx,cy){try{var el=document.element
 <script>
 /* girar o eletro pelo quadro do desenho (2D) */
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-apgiro]');if(!t||window.RO)return;var f=(S.fr||[]).filter(function(q){return q.id===SELAP})[0];if(!f)return;try{snap()}catch(_){}f.giro=+t.dataset.apgiro;if(!f.giro)delete f.giro;try{draw();showBox()}catch(_){}try{if(window.re3)window.re3()}catch(_){}toast(f.giro?'⟳ Girado '+f.giro+'°':'De frente (0°)')});
+</script>
+<script>
+/* ===== Desconto no valor do projeto (%): recalcula na hora o valor do projeto, a mão de obra/lucro, os valores por módulo e o orçamento em PDF (sai com a linha do desconto) ===== */
+(function(){
+function dPct(){var d=+S.desc||0;return isFinite(d)?Math.max(0,Math.min(90,Math.round(d*100)/100)):0}
+window.descPct=dPct;
+var vfB=vlFin;window.vlFinBase=function(b){return vfB(b)};
+vlFin=function(b){var v=vfB.apply(this,arguments);return Math.round(v*(1-dPct()/100)*100)/100};
+var nfp=function(v){return String(Math.round(v*100)/100).replace('.',',')};
+var vR=vlRender;vlRender=function(){vR();var B=document.getElementById('vlbody');if(!B)return;var b=budget(),base=vfB(b),d=dPct(),fin=vlFin(b),q=B.querySelector('[data-vlq]');
+ var h='<div class="sec2" style="margin-top:6px">Desconto</div><div class="chips">'+[0,5,10,15,20].map(function(v){return '<button data-vdesc="'+v+'" class="'+(d===v?'on':'')+'">'+(v?v+'%':'Sem desconto')+'</button>'}).join('')+'</div><div class="g"><label>Desconto (%) · digite e já recalcula</label><input data-vdesci="1" inputmode="decimal" style="text-align:right;font-size:17px;font-weight:700" value="'+(d?nfp(d):'')+'" placeholder="0"></div>'
+  +(d>0?'<div class="tot" style="margin-top:6px"><span>Valor sem desconto</span><b class="r">'+brl(base)+'</b><span>Desconto de '+nfp(d)+'%</span><b class="r" style="color:#b42318">− '+brl(Math.round((base-fin)*100)/100)+'</b><span class="big"><b>Valor com desconto</b></span><b class="r big">'+brl(fin)+'</b></div>':'');
+ var box=document.createElement('div');box.id='vldesc';box.innerHTML=h;if(q&&q.parentNode)q.parentNode.insertBefore(box,q);else B.appendChild(box)};
+/* orçamento: os itens no valor cheio e o desconto (%) — o PDF mostra o desconto e o valor com desconto */
+var qD=quoteData;quoteData=function(){var q=qD.apply(this,arguments),d=dPct();if(!(d>0))return q;var k=1/(1-d/100),r2=function(v){return Math.round(v*100)/100},base=r2(vfB(budget())),sum=0;(q.items||[]).forEach(function(it){it.value=r2((+it.value||0)*k);sum+=it.value});if(q.items&&q.items.length){var df=r2(base-sum);if(Math.abs(df)>=0.01)q.items[q.items.length-1].value=r2(q.items[q.items.length-1].value+df)}q.discountPct=d;q.base=base;return q};
+function setD(v){var x=+v;if(!isFinite(x)||x<0)x=0;S.desc=Math.min(90,Math.round(x*100)/100);if(!S.desc)delete S.desc;try{edited()}catch(_){}}
+document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-vdesc]');if(!t||!t.closest('#vlm')||window.RO)return;setD(t.dataset.vdesc);vlRender()});
+document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.vdesci||window.RO)return;var raw=String(t.value),v=raw.trim()===''?0:pnum(raw);if(!(v>=0))return;setD(v);var pos=raw.length;vlRender();var n=document.querySelector('#vlm [data-vdesci]');if(n){n.value=raw;try{n.focus();n.setSelectionRange(pos,pos)}catch(_){}}});
+})();
 </script>
 </body></html>

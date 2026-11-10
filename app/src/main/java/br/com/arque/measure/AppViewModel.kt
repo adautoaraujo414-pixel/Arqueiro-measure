@@ -887,6 +887,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 items = items.ifEmpty { listOf(br.com.arque.measure.model.QuoteItem()) },
                 notes = o.optString("notes"),
                 noteId = pid?.let { notesOfProject(it).firstOrNull() },
+                // desconto (%) dado no valor do projeto: o PDF mostra o desconto e o valor com desconto
+                discountPct = o.optDouble("discountPct", 0.0).let { if (it.isNaN()) 0.0 else it.coerceIn(0.0, 100.0) },
             )
             saveQuote(q)
             pendingQuoteId = q.id

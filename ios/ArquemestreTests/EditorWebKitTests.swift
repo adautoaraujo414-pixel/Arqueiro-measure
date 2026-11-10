@@ -3314,6 +3314,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    func testSomaDasPlacasConfereComATrenaEAJunta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.ops=[];S.env='sala';S.room='sala';S.Hm=1;var R={},F=[],N=0,r1=function(v){return Math.round(v*10)/10};
+          var jw=function(a){return a.jt&&a.jt.t&&a.jt.t!=='seca'?(+a.jt.w||0):0};
+          var chk=function(tag,x0,x1,n,j){N++;var g={};S.rp.filter(function(a){return a.liso&&!a.prat}).forEach(function(a){var k=r1(a.b);(g[k]=g[k]||[]).push(a)});var bad=[];Object.keys(g).forEach(function(k){var Rw=g[k].sort(function(p,q){return p.x-q.x}),ws=Rw.map(function(a){return a.w});if(Math.max.apply(null,ws)-Math.min.apply(null,ws)>0.25)bad.push('larguras '+ws.join('/'));for(var i=1;i<Rw.length;i++){var gp=r1(Rw[i].x-(Rw[i-1].x+Rw[i-1].w));if(Math.abs(gp-j)>0.15)bad.push('junta '+gp)}if(Math.abs(Rw[0].x-x0)>0.15)bad.push('começa '+Rw[0].x);var e=Rw[Rw.length-1].x+Rw[Rw.length-1].w;if(Math.abs(e-x1)>0.15)bad.push('termina '+r1(e));if(Rw.length!==n)bad.push(Rw.length+' placas')});if(bad.length)F.push(tag+': '+bad.slice(0,3).join(' | '))};
+          /* trena com sobra até a parede (0 a 60 mm) dos dois lados, rebaixo, vão e junta seca */
+          [1415,3841].forEach(function(W){[[0,0],[0,10],[0,39],[15,0],[35,20],[100,5]].forEach(function(sb){['reb','seca'].forEach(function(t){[2,5].forEach(function(n){S.W=W;S.H=3215;S.rodape=10;wallSet('F','h1',3215);S.rp=[];S.trena={x0:sb[0],x1:W-sb[1]};TRN=n;TRW=0;TRT=t;TRJ=15;TRH=0;TRFR=false;if(!trCalc().fits)return;trCreate();draw();draw();chk('trena '+W+' '+sb.join('/')+' '+t+' '+n,sb[0],W-sb[1],n,t==='seca'?0:15)})})})});
+          /* painéis na parede com recuo */
+          [[3841,0],[3841,10],[2890,30]].forEach(function(q){S.W=q[0];S.rp=[];S.pw={x0:q[1],x1:q[0]-q[1]};pwGenerate();draw();draw();var n=S.rp.filter(function(a){return a.b<1}).length;chk('painéis '+q.join('/'),q[1],q[0]-q[1],n,15)});S.pw={};
+          /* mais uma: rebaixo marcado com 0 no campo do Dividir, e junta seca com 15 no campo */
+          [[0,'reb',15],[15,'seca',0]].forEach(function(q){S.W=4000;S.rp=[{id:1,liso:true,x:0,b:0,w:900,h:2700,jt:{t:q[1],w:15,d:6}}];PLJ=q[0];PLJT={t:q[1],w:15,d:6};rpAddNext(S.rp[0],1);rpAddNext(rpCur(),1);draw();draw();chk('mais uma '+q[1],0,2700+2*q[2],3,q[2])});
+          R.total=N;R.falhas=F;
+          /* conferência da soma: caso da parede de 3841 com a trena até 3831 */
+          S.W=3841;S.H=3215;S.rodape=10;wallSet('F','h1',3215);S.rp=[];S.trena={x0:0,x1:3831};TRN=5;TRT='reb';TRJ=15;trCreate();draw();var t=rpConf().replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+          R.conf=/Fileira a 10 do chão: 5 × 754,2 \+ 4 juntas de 15 = 3831 · de 0 a 3831 \(parede 3841, sobra 10 na direita\)/.test(t)&&/Altura: 10 \(embaixo\) \+ 2700 \+ 15 de junta \+ 490 = 3215 · teto 3215/.test(t)&&!/⚠/.test(t);
+          R.naLista=rpCutHtml().indexOf('data-rpconf="ok"')>=0;
+          /* plano antigo com junta perdida (706/736): a conferência avisa */
+          S.W=3000;S.rp=[{id:21,liso:true,x:0,b:0,w:736,h:2700},{id:22,liso:true,x:751,b:0,w:706,h:2700},{id:23,liso:true,x:1472,b:0,w:721,h:2700},{id:24,liso:true,x:2208,b:0,w:721,h:2700}];S.rp.forEach(function(a){a.wFix=1;a.jt={t:'reb',w:15,d:6}});var t2=rpConf().replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+          R.avisa=/⚠/.test(t2)&&/placa 1 com 15 a mais/.test(t2)&&/placa 2 com 15 a menos/.test(t2);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertGreaterThan((o["total"] as? NSNumber)?.intValue ?? 0, 30, "cenários conferidos")
+        XCTAssertEqual((o["falhas"] as? [String])?.count, 0, "soma das placas: \(((o["falhas"] as? [String]) ?? []).joined(separator: " || "))")
+        XCTAssertEqual(o["conf"] as? Bool, true, "conferência mostra 5 × 754,2 + 4 juntas de 15 = 3831 e a altura somando 3215")
+        XCTAssertEqual(o["naLista"] as? Bool, true, "a conferência vai junto na lista de corte")
+        XCTAssertEqual(o["avisa"] as? Bool, true, "placa com 15 a mais/menos que as outras é avisada")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
     func testJuntaDoPainelAcompanhaEDesnivelDoTeto() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

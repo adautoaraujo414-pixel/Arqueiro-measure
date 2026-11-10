@@ -3129,8 +3129,8 @@ final class EditorWebKitTests: XCTestCase {
           window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};var tm='';window.toast=function(t){tm=t};
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
           var M=function(re){return APM.lavaloucas.m.filter(function(q){return re.test(q[0])})[0]||[]};
-          R.ls08e=M(/LS08E/).slice(1,4).join('x');R.lb08e=M(/LB08E/).slice(1,4).join('x')+':'+(M(/LB08E/)[4]||{}).fin;R.ll08s=M(/LL08S/).slice(1,4).join('x');R.blf08=M(/BLF08/).slice(1,4).join('x');
-          R.m10=M(/MDWEF1034/).slice(1,4).join('x');R.ls10e=M(/LS10E/).slice(1,4).join('x');R.dwa14=M(/DWA14B/).slice(1,4).join('x');R.m14=M(/MDWEF1433GSS/).slice(1,4).join('x');R.m14b=(M(/MDWEF1433GBS/)[4]||{}).fin;R.blf14=M(/BLF14AB/).slice(1,4).join('x');
+          R.ls08e=M(/LS08E/).slice(1,4).join('x');R.lb08e=M(/LB08E/).slice(1,4).join('x')+':'+(M(/LB08E/)===M(/LS08E/));R.ll08s=M(/LL08S/).slice(1,4).join('x');R.blf08=M(/BLF08/).slice(1,4).join('x');
+          R.m10=M(/MDWEF1034/).slice(1,4).join('x');R.ls10e=M(/LS10E/).slice(1,4).join('x');R.dwa14=M(/DWA14B/).slice(1,4).join('x');R.m14=M(/MDWEF1433/).slice(1,4).join('x');R.m14b=/black inox/.test(M(/MDWEF1433/)[0]||'');R.blf14=M(/BLF14AB/).slice(1,4).join('x');
           R.nModelos=APM.lavaloucas.m.length;R.semGenerico=!APM.lavaloucas.m.some(function(q){return /conferir|t[ií]pica|painel do m/i.test(q[0])});
           newTpl(tpl('Balcão 2 portas'));draw();catAp();var c=CATS.filter(function(q){return q.id==='clav'})[0];R.nichos=c.it.filter(function(i){return i.act==='lvn'}).length;
           catAct2(c.it.filter(function(i){return i.act==='lvn'})[0]);draw();
@@ -3139,31 +3139,32 @@ final class EditorWebKitTests: XCTestCase {
           m.x+=300;draw();R.segue=Math.abs((m.x+m.w/2)-(f.x+f.w/2))<1;R.semPorta=!partsOf(m).some(function(p){return /^Porta|^Frente/.test(p.name)});
           S.stones=[{id:1,x:0,w:2400,d:600,t:820,e:30,shape:'reta',items:[]}];S.st=S.stones[0];
           var g=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/LL08S/)));draw();R.naBancada=g.b===benchTop();
-          var p=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/MDWEF1433GBS/)));draw();R.piso=[p.b,p.fin].join(',');
+          var p=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/MDWEF1433/)));p.fin='preto';draw();R.piso=[p.b,p.fin].join(',');R.semDup=!CATS.some(function(c){return c.it.some(function(i){return /Lava-louças · Lava-louças/.test(i.n)})});
           R.desenho=(document.getElementById('svg').innerHTML.match(/>1:19</g)||[]).length;
           R.foto=c.it.filter(function(i){return /Lava/.test(i.n)}).every(function(i){return !!FOTOS[fotoKey(i)]});
           open3D();await new Promise(function(r){setTimeout(r,300)});__build();R.box3=__boxes().filter(function(q){return q.fr===f.id}).length;try{document.getElementById('v3x').click()}catch(_){}
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["ls08e"] as? String, "550x609x500", "Electrolux LS08E de embutir: 55 × 60,9 × 50 cm")
-        XCTAssertEqual(o["lb08e"] as? String, "550x609x500:branco", "LB08E branca")
+        XCTAssertEqual(o["lb08e"] as? String, "550x609x500:true", "LS08E inox e LB08E branca são o mesmo aparelho: um item só (a cor no Acabamento)")
         XCTAssertEqual(o["ll08s"] as? String, "550x595x500")
         XCTAssertEqual(o["blf08"] as? String, "510x630x650")
         XCTAssertEqual(o["m10"] as? String, "447x845x594", "Midea 10 serviços estreita: 44,7 × 84,5 × 59,4 cm")
         XCTAssertEqual(o["ls10e"] as? String, "495x845x600")
         XCTAssertEqual(o["dwa14"] as? String, "598x850x600", "Midea 14 serviços branca: 59,8 × 85 × 60 cm")
-        XCTAssertEqual(o["m14"] as? String, "600x845x594", "Midea SmartHome 14 serviços: 60 × 84,5 × 59,4 cm")
-        XCTAssertEqual(o["m14b"] as? String, "preto", "black inox")
+        XCTAssertEqual(o["m14"] as? String, "600x845x594", "Midea SmartHome 14 serviços: 60 × 84,5 × 59,4 cm (inox ou black inox num item só)")
+        XCTAssertEqual(o["m14b"] as? Bool, true, "black inox no mesmo item")
         XCTAssertEqual(o["blf14"] as? String, "598x845x600")
-        XCTAssertEqual(o["nModelos"] as? Int, 10)
+        XCTAssertEqual(o["nModelos"] as? Int, 8, "uma de cada (sem repetir a mesma em outra cor)")
         XCTAssertEqual(o["semGenerico"] as? Bool, true, "só modelos reais (troca os genéricos)")
-        XCTAssertEqual(o["nichos"] as? Int, 4, "as 4 de 8 serviços aparecem também embutidas no módulo")
+        XCTAssertEqual(o["nichos"] as? Int, 3, "as de 8 serviços aparecem também embutidas no módulo")
         XCTAssertEqual(o["nicho"] as? String, "600,820,false", "nicho 600 (550 + folgas + laterais), altura do balcão, sem fundo")
         XCTAssertEqual(o["dentro"] as? Bool, true, "lava-louças centralizada dentro do nicho, em cima da base")
         XCTAssertEqual(o["segue"] as? Bool, true, "mexeu o nicho: a lava-louças vai junto")
         XCTAssertEqual(o["semPorta"] as? Bool, true, "nicho aberto (sem porta) pra lava-louças")
         XCTAssertEqual(o["naBancada"] as? Bool, true, "compacta solta vai em cima da bancada")
-        XCTAssertEqual(o["piso"] as? String, "0,preto", "de piso embaixo da bancada, black inox de fábrica")
+        XCTAssertEqual(o["piso"] as? String, "0,preto", "de piso embaixo da bancada, black inox pelo acabamento")
+        XCTAssertEqual(o["semDup"] as? Bool, true, "catálogo sem \"Lava-louças · Lava-louças\"")
         XCTAssertGreaterThanOrEqual(o["desenho"] as? Int ?? 0, 3, "desenho com painel e display de cada modelo")
         XCTAssertEqual(o["foto"] as? Bool, true, "foto de cada lava-louças no catálogo")
         XCTAssertGreaterThan(o["box3"] as? Int ?? 0, 6, "3D detalhado")
@@ -3249,6 +3250,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["marm"] as? String)?.hasPrefix("Recorte da lixeira · redondo Ø225 mm"), true, "marmoraria: recorte redondo Ø225")
         XCTAssertEqual(o["svg"] as? Bool, true, "balde aparece embaixo da pedra no desenho")
         XCTAssertEqual(o["painel"] as? Bool, true, "quadro diz Lixeira (não Cuba)")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    /// Girar no lugar (0, 90, 180, 270°) em todos os eletrodomésticos, pelo quadro do 3D e do 2D: no 3D, na planta e no desenho de frente.
+    func testGirarEletrodomesticoNoLugar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(t){R.toast=String(t)};
+          var M=function(re){return APM.lavaloucas.m.filter(function(q){return re.test(q[0])})[0]};var f=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/BLF14/)));f.x=1000;f.y=0;draw();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();var ext=function(){var B=__boxes().filter(function(q){return q.fr===f.id}),x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;B.forEach(function(q){x0=Math.min(x0,q.x0);x1=Math.max(x1,q.x1);z0=Math.min(z0,q.z0);z1=Math.max(z1,q.z1)});return [Math.round(x1-x0),Math.round(z1-z0),Math.round((x0+x1)/2),Math.round((z0+z1)/2)]};R.e0=ext();
+          /* quadro do 3D: botão girar 90 */fx3api.open({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,200)});var b=document.querySelector('[data-qgiro="90"]');R.botao3D=!!b;if(b)b.click();await new Promise(function(r){setTimeout(r,200)});__build();R.giro=f.giro;R.e90=ext();
+          var b2=document.querySelector('[data-qgiro="180"]');if(b2)b2.click();await new Promise(function(r){setTimeout(r,200)});__build();R.e180=ext();
+          try{document.getElementById('v3x').click()}catch(_){}
+          /* planta e 2D */f.giro=90;draw();var r=frFoot(f);R.foot=r?[Math.round(r.x1-r.x0),Math.round(r.y1-r.y0)]:null;R.lado=/de lado 90/.test(document.getElementById('svg').innerHTML);
+          /* quadro do 2D */SELAP=f.id;LAST='ap';showBox();var c=document.querySelector('[data-apgiro="270"]');R.botao2D=!!c;if(c)c.click();R.g2=f.giro;
+          /* mobília não leva (já gira pelo dela) */var me=apAdd('mesa',0);R.mesa=frGiroOk(me);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["botao3D"] as? Bool, true, "quadro do 3D tem Girar")
+        XCTAssertEqual(o["giro"] as? Int, 90)
+        XCTAssertEqual((o["e0"] as? [Int])?.prefix(2).map { $0 }, [598, 640], "de frente: largura × fundura (com o puxador)")
+        XCTAssertEqual((o["e90"] as? [Int])?.prefix(2).map { $0 }, [640, 598], "girado 90°: troca largura e fundura no 3D")
+        XCTAssertEqual((o["e180"] as? [Int])?.prefix(2).map { $0 }, [598, 640])
+        XCTAssertEqual(o["foot"] as? [Int], [600, 598], "planta: pegada girada")
+        XCTAssertEqual(o["lado"] as? Bool, true, "desenho de frente mostra de lado")
+        XCTAssertEqual(o["botao2D"] as? Bool, true, "quadro do 2D tem Girar")
+        XCTAssertEqual(o["g2"] as? Int, 270)
+        XCTAssertEqual(o["mesa"] as? Bool, false, "mobília continua com o giro dela")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 

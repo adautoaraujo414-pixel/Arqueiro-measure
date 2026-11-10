@@ -357,17 +357,18 @@ final class EditorState {
 
     /// Cola deslocado [off]. Traço preso numa foto que não está nesta folha é solto da foto
     /// (volta pra coordenada da folha), senão ele colaria minúsculo no canto.
-    func pasteObjs(_ src: [Obj], from: Sheet? = nil, off: CGFloat = 24) {
+    func pasteObjs(_ src: [Obj], from: Sheet? = nil, off: CGFloat = 24, offY: CGFloat? = nil) {
+        let offY = offY ?? off
         if src.isEmpty { return }
         var idMap: [String: String] = [:]
         for o in src { idMap[o.id] = newId() }
         let here = Set(sheet.photos().keys)
         let copies: [Obj] = src.map { o in
             var n = o.withId(idMap[o.id]!).withLocked(false)
-            if case .photo(var p) = n { p.cx += off; p.cy += off; return .photo(p) }
+            if case .photo(var p) = n { p.cx += off; p.cy += offY; return .photo(p) }
             if let pid = n.photoId, let np = idMap[pid] { return n.withPhotoId(np) }
             if let pid = n.photoId, !here.contains(pid) { n = from.map { Geo.detach($0, n) } ?? n.withPhotoId(nil) }
-            return off != 0 ? Geo.translate(sheet, n, off, off) : n
+            return (off != 0 || offY != 0) ? Geo.translate(sheet, n, off, offY) : n
         }
         var s = sheet; s.objs += copies
         commit(s)

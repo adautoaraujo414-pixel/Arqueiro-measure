@@ -384,12 +384,35 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
         if (cut) state.delete(o.id)
     }
 
-    /** Cola deslocado (cada colagem um pouco mais pro lado, pra não ficar em cima da original). */
-    fun paste() {
-        if (Clip.objs.isEmpty()) return
+    /**
+     * Cola na folha que está na tela: na mesma folha, com o original à vista, cola um pouco pro lado
+     * (cada colagem mais um pouco); em outra folha/nota (ou com o original fora da tela) cola no meio do que está visível.
+     */
+    fun paste(): Int {
+        if (Clip.objs.isEmpty()) return 0
+        val vp = visiblePage()
+        if (vp != state.pageIdx) { state.setPage(vp); updateActivePage() }
         Clip.n++
-        state.pasteObjs(Clip.objs, Clip.from, 24f * Clip.n)
+        val src = Clip.from ?: state.sheet
+        val boxes = Clip.objs.map { runCatching { Geo.bounds(src, it) }.getOrNull() }.filterNotNull()
+        if (boxes.isEmpty() || canvasW <= 0f) { state.pasteObjs(Clip.objs, Clip.from, 24f * Clip.n); return Clip.objs.size }
+        val cx = (boxes.minOf { it.l } + boxes.maxOf { it.r }) / 2f
+        val cy = (boxes.minOf { it.t } + boxes.maxOf { it.b }) / 2f
+        val a = view.toSheet(Offset(0f, 0f))
+        val z = view.toSheet(Offset(canvasW, canvasH))
+        val sameSheet = Clip.from?.id == state.sheet.id
+        val visible = cx in a.x..z.x && cy in a.y..z.y
+        if (sameSheet && visible) state.pasteObjs(Clip.objs, Clip.from, 24f * Clip.n)
+        else {
+            val c = view.toSheet(Offset(canvasW / 2f, canvasH / 2f))
+            val step = 24f * (Clip.n - 1).coerceAtLeast(0)
+            state.pasteObjs(Clip.objs, Clip.from, c.x - cx + step, c.y - cy + step)
+        }
+        return Clip.objs.size
     }
+
+    /** Limpa o que foi copiado (some o botão "Colar"). */
+    fun clearClip() = Clip.clear()
 
     fun widthMm(): Float = width * MM_PER_UNIT
 
@@ -405,4 +428,5 @@ object Clip {
         private set
     var n = 0
     fun put(o: List<br.com.arque.measure.model.Obj>, sheet: br.com.arque.measure.model.Sheet, cut: Boolean) { objs = o; from = sheet; n = if (cut) -1 else 0 }
+    fun clear() { objs = emptyList(); from = null; n = 0 }
 }

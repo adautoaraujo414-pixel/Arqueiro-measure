@@ -328,13 +328,35 @@ final class EditorSession: ObservableObject {
         if cut { state.delete(o.id) }
     }
 
-    /// Cola deslocado (cada colagem um pouco mais pro lado, pra não ficar em cima da original).
-    func paste() {
+    /// Cola na folha que está na tela: na mesma folha, com o original à vista, cola um pouco pro lado
+    /// (cada colagem mais um pouco); em outra folha/nota (ou com o original fora da tela) cola no meio do que está visível.
+    @discardableResult
+    func paste() -> Int {
         let c = Clip.shared
-        if c.objs.isEmpty { return }
+        if c.objs.isEmpty { return 0 }
+        let vp = visiblePage()
+        if vp != state.pageIdx { state.setPage(vp); updateActivePage() }
         c.n += 1
-        state.pasteObjs(c.objs, from: c.from, off: 24 * CGFloat(c.n))
+        let src = c.from ?? state.sheet
+        let boxes = c.objs.map { Geo.bounds(src, $0) }
+        guard !boxes.isEmpty, canvasW > 0 else { state.pasteObjs(c.objs, from: c.from, off: 24 * CGFloat(c.n)); objectWillChange.send(); return c.objs.count }
+        let cx = (boxes.map(\.l).min()! + boxes.map(\.r).max()!) / 2
+        let cy = (boxes.map(\.t).min()! + boxes.map(\.b).max()!) / 2
+        let a = view.toSheet(CGPoint(x: 0, y: 0)), z = view.toSheet(CGPoint(x: canvasW, y: canvasH))
+        let same = c.from?.id == state.sheet.id
+        let visible = cx >= a.x && cx <= z.x && cy >= a.y && cy <= z.y
+        if same && visible { state.pasteObjs(c.objs, from: c.from, off: 24 * CGFloat(c.n)) }
+        else {
+            let m = view.toSheet(CGPoint(x: canvasW / 2, y: canvasH / 2))
+            let step = 24 * CGFloat(max(0, c.n - 1))
+            state.pasteObjs(c.objs, from: c.from, off: m.x - cx + step, offY: m.y - cy + step)
+        }
+        objectWillChange.send()
+        return c.objs.count
     }
+
+    /// Limpa o que foi copiado (some o botão "Colar").
+    func clearClip() { Clip.shared.clear(); objectWillChange.send() }
 
     func applyColor(_ c: Int) {
         color = c
@@ -355,4 +377,5 @@ final class Clip {
     private(set) var from: Sheet?
     var n = 0
     func put(_ o: [Obj], _ sheet: Sheet, cut: Bool) { objs = o; from = sheet; n = cut ? -1 : 0 }
+    func clear() { objs = []; from = nil; n = 0 }
 }

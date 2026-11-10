@@ -162,6 +162,21 @@ class EditorStateTest {
         assertEquals(1, st.note.pages.size)
     }
 
+    @Test fun `copiar de uma folha e colar em outra cai no lugar pedido`() {
+        val st = state(dim("a", v = 300.0))
+        val src = st.sheet
+        val objs = st.sheet.objs
+        st.addPage(1, Template.BLANK)
+        st.pasteObjs(objs, src, 100f, 250f)
+        val c = st.note.pages[1].objs.single() as DimObj
+        assertEquals(100f, c.a.x, 0.01f)
+        assertEquals(250f, c.a.y, 0.01f)
+        assertEquals(110f, c.b.x, 0.01f)
+        assertEquals(300.0, c.valueMm!!, 0.0)
+        assertTrue(c.id != "a")
+        assertEquals(1, st.note.pages[0].objs.size)
+    }
+
     @Test fun `objetos pertencem a folha ativa e desfazer volta a nota inteira`() {
         val st = state()
         st.addPage(1, Template.BLANK)

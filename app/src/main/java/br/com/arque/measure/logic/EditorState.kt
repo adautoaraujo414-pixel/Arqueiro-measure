@@ -601,7 +601,7 @@ class EditorState(
      * Traço que estava preso numa foto que não está aqui é solto da foto (volta pra coordenada da folha),
      * senão ele colaria minúsculo no canto.
      */
-    fun pasteObjs(src: List<Obj>, from: br.com.arque.measure.model.Sheet? = null, off: Float = 24f) {
+    fun pasteObjs(src: List<Obj>, from: br.com.arque.measure.model.Sheet? = null, off: Float = 24f, offY: Float = off) {
         if (src.isEmpty()) return
         val idMap = src.associate { it.id to newId() }
         val here = sheet.photos().keys
@@ -609,10 +609,10 @@ class EditorState(
             val n = o.withId(idMap.getValue(o.id)).withLocked(false)
             val pid = (n as? Ann)?.photoId
             when {
-                n is PhotoObj -> n.copy(cx = n.cx + off, cy = n.cy + off)
+                n is PhotoObj -> n.copy(cx = n.cx + off, cy = n.cy + offY)
                 n is Ann && pid != null && idMap.containsKey(pid) -> n.withPhotoId(idMap.getValue(pid))
-                n is Ann && pid != null && pid !in here -> Geo.translate(sheet, if (from != null) Geo.detach(from, n) else n.withPhotoId(null), off, off)
-                off != 0f -> Geo.translate(sheet, n, off, off)
+                n is Ann && pid != null && pid !in here -> Geo.translate(sheet, if (from != null) Geo.detach(from, n) else n.withPhotoId(null), off, offY)
+                off != 0f || offY != 0f -> Geo.translate(sheet, n, off, offY)
                 else -> n
             }
         }

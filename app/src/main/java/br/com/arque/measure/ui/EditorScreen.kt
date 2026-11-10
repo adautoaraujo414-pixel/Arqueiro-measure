@@ -784,8 +784,8 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(tr("{0} itens", st.groupIds.size), color = Color(0xFFAAAAAA), fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
                             CtxBtn(tr("Eliminar")) { st.deleteGroup() }
-                            CtxBtn(tr("Cortar")) { session.copyGroup(cut = true) }
-                            CtxBtn(tr("Copiar")) { session.copyGroup() }
+                            CtxBtn(tr("Cortar")) { session.copyGroup(cut = true); vm.toast = tr("{0} itens recortados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.size) }
+                            CtxBtn(tr("Copiar")) { session.copyGroup(); st.select(null); vm.toast = tr("{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.size) }
                             CtxBtn(tr("Duplicar")) { st.pasteObjs(st.groupWithLinked()) }
                             CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
                         }
@@ -816,7 +816,22 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                         session = session,
                         maxWidthPx = maxBarW,
                         modifier = Modifier.offset { IntOffset(xPos.roundToInt(), yPos.roundToInt()) },
+                        onCopied = { n -> vm.toast = tr("{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", n) },
                     )
+                }
+            }
+
+            // ---- copiou: botão "Colar" fica na tela (nada selecionado) pra colar nesta folha, em outra folha ou em outra nota ----
+            if (session.clipboard.isNotEmpty() && st.groupIds.isEmpty() && selected == null && !st.inGesture) {
+                Row(
+                    Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 64.dp).clip(RoundedCornerShape(22.dp)).background(Color(0xEE1E5BD8)),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        tr("📋 Colar {0} itens aqui", session.clipboard.size), color = Color.White, fontSize = 15.sp,
+                        modifier = Modifier.clickable { val n = session.paste(); if (n > 0) vm.toast = tr("{0} itens colados", n) }.padding(start = 16.dp, end = 10.dp, top = 11.dp, bottom = 11.dp),
+                    )
+                    Text("✕", color = Color.White, fontSize = 16.sp, modifier = Modifier.clickable { session.clearClip() }.padding(horizontal = 14.dp, vertical = 11.dp))
                 }
             }
 
@@ -1047,7 +1062,7 @@ private fun ColorRow(current: Int, onPick: (Int) -> Unit) {
 // ------------------------------------------------------------------ Menu de contexto da seleção
 
 @Composable
-private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modifier) {
+private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modifier, onCopied: (Int) -> Unit = {}) {
     val st = session.state
     val o = st.selected ?: return
     val maxW = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidthPx.toDp() }
@@ -1055,8 +1070,8 @@ private fun ContextBar(session: EditorSession, maxWidthPx: Float, modifier: Modi
     Surface(modifier = modifier.widthIn(max = maxW), shape = RoundedCornerShape(10.dp), color = Color(0xB31B1C20)) {
         Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 2.dp), verticalAlignment = Alignment.CenterVertically) {
             CtxBtn(tr("Eliminar"), !o.locked) { st.delete(o.id) }
-            CtxBtn(tr("Cortar"), !o.locked) { session.copySelection(cut = true) }
-            CtxBtn(tr("Copiar")) { session.copySelection() }
+            CtxBtn(tr("Cortar"), !o.locked) { session.copySelection(cut = true); onCopied(session.clipboard.size) }
+            CtxBtn(tr("Copiar")) { session.copySelection(); st.select(null); onCopied(session.clipboard.size) }
             CtxBtn(tr("Colar"), session.clipboard.isNotEmpty()) { session.paste() }
             CtxBtn(tr("Duplicar")) { st.duplicate(o.id) }
             if (o is PhotoObj) CtxBtn(tr("Girar 90°"), !o.locked) { st.rotatePhoto90(o.id) }

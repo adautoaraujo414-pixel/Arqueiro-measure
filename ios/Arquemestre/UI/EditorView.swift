@@ -78,6 +78,19 @@ struct EditorView: View {
                     contextBar(geo.size)
                 }
 
+                // copiou: botão "Colar" fica na tela (nada selecionado) pra colar nesta folha, em outra folha ou em outra nota
+                if !session.clipboard.isEmpty && st.groupIds.isEmpty && st.selected == nil && !st.inGesture {
+                    HStack(spacing: 0) {
+                        Button { let n = session.paste(); if n > 0 { app.toast = tr("{0} itens colados", n) } } label: {
+                            Text(tr("📋 Colar {0} itens aqui", session.clipboard.count)).font(.subheadline.weight(.semibold)).foregroundColor(.white).padding(.leading, 16).padding(.trailing, 10).padding(.vertical, 11)
+                        }
+                        Button { session.clearClip() } label: { Text("✕").foregroundColor(.white).padding(.horizontal, 14).padding(.vertical, 11) }
+                    }
+                    .background(Capsule().fill(Color(argb: 0xEE1E5BD8)))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, 64)
+                }
+
                 // zoom
                 HStack(spacing: 0) {
                     Text("\(session.zoomPercent)%").font(.caption).foregroundColor(.white).padding(.leading, 12)
@@ -273,8 +286,8 @@ struct EditorView: View {
                     HStack(spacing: 0) {
                         Text(tr("{0} itens", st.groupIds.count)).font(.caption).foregroundColor(.gray).padding(.leading, 10)
                         ctx(tr("Eliminar")) { st.deleteGroup() }
-                        ctx(tr("Cortar")) { session.copyGroup(cut: true) }
-                        ctx(tr("Copiar")) { session.copyGroup() }
+                        ctx(tr("Cortar")) { session.copyGroup(cut: true); app.toast = tr("{0} itens recortados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.count) }
+                        ctx(tr("Copiar")) { session.copyGroup(); st.select(nil); app.toast = tr("{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.count) }
                         ctx(tr("Duplicar")) { st.pasteObjs(st.groupWithLinked()) }
                         ctx(tr("Colar"), session.clipboard.isEmpty == false) { session.paste() }
                     }
@@ -298,8 +311,8 @@ struct EditorView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
                         ctx(tr("Eliminar"), !o.locked) { st.delete(o.id) }
-                        ctx(tr("Cortar"), !o.locked) { session.copySelection(cut: true) }
-                        ctx(tr("Copiar")) { session.copySelection() }
+                        ctx(tr("Cortar"), !o.locked) { session.copySelection(cut: true); app.toast = tr("{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.count) }
+                        ctx(tr("Copiar")) { session.copySelection(); st.select(nil); app.toast = tr("{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)", session.clipboard.count) }
                         ctx(tr("Colar"), !session.clipboard.isEmpty) { session.paste() }
                         if !o.isLegacy { ctx(tr("Duplicar")) { st.duplicate(o.id) } }
                         if o.asPhoto != nil { ctx(tr("Girar 90°"), !o.locked) { st.rotatePhoto90(o.id) } }

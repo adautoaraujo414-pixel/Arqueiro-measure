@@ -3094,4 +3094,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    /// Planta (vista de cima): arrasta o módulo até o fim da pedra e ele fica lá (não volta pro vizinho);
+    /// bolinhas azuis esticam/encolhem o módulo e param encostadas no vizinho.
+    func testPlantaArrastaAteOFimEEsticaPelasBolinhas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.RD=3030;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
+          S.stones=[{id:1,x:0,w:3170,d:600,t:820,e:30,shape:'Le',lenA:2430,widA:600,items:[]}];S.st=S.stones[0];
+          addWing('e');var a=S.mods[0];a.w=900;addWing('e');var b=S.mods[1];b.w=1510;a.x=600;b.x=1525;a.lock=false;b.lock=false;draw();
+          document.getElementById('plv').click();draw();
+          var ev=function(tp,X,Y,el){(el||document.getElementById('svg')).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:X,clientY:Y,pointerId:3,pointerType:'touch',isPrimary:true,buttons:tp==='pointerup'?0:1}))};
+          var dragEl=function(el,dy,k){var rc=el.getBoundingClientRect(),x0=rc.left+rc.width/2,y0=rc.top+rc.height/2;ev('pointerdown',x0,y0,el);for(var i=1;i<=8;i++)ev('pointermove',x0,y0+i*(dy*k/8));ev('pointerup',x0,y0+dy*k)};
+          var g=document.querySelector('#svg [data-pm="1"]'),k=g.getBoundingClientRect().height/b.w;
+          dragEl(g,200,k);R.bFim=b.x+b.w;
+          S.m=a;draw();var h=document.querySelector('#svg [data-plh="r"]');R.bolinha=!!h;if(h)dragEl(h,300,k);R.aW=a.w;R.encosta=Math.abs(a.x+a.w-b.x)<1&&!modHit(a);
+          S.m=b;draw();var hl=document.querySelector('#svg [data-plh="l"]');dragEl(hl,200,k);R.bEnc=[b.x,b.w];hl=document.querySelector('#svg [data-plh="l"]');dragEl(hl,-400,k);R.bVolta=[b.x,b.w,b.x+b.w];
+          R.semHit=!S.mods.some(function(o){return modHit(o)});R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["bFim"] as? Int, 3030, "arrastou até o fim da pedra: fica no fim (não volta pro vizinho)")
+        XCTAssertEqual(o["bolinha"] as? Bool, true, "módulo selecionado na planta tem as bolinhas azuis pra esticar")
+        XCTAssertEqual(o["aW"] as? Int, 920, "esticou pela bolinha até encostar no vizinho")
+        XCTAssertEqual(o["encosta"] as? Bool, true)
+        XCTAssertEqual(o["bEnc"] as? [Int], [1720, 1310], "bolinha do outro lado encolhe")
+        XCTAssertEqual(o["bVolta"] as? [Int], [1520, 1510, 3030], "e estica de volta até o vizinho, sem passar")
+        XCTAssertEqual(o["semHit"] as? Bool, true, "nenhum módulo entra no outro")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
 }

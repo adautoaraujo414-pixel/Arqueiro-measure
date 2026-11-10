@@ -5368,5 +5368,9 @@
 "Dia da Consciência Negra": "Día de la Conciencia Negra",
 "Véspera de Natal": "Nochebuena",
 "Natal": "Navidad",
-"Véspera de Ano-Novo": "Nochevieja"
+"Véspera de Ano-Novo": "Nochevieja",
+"{0} itens recortados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} elementos cortados · toca 📋 Pegar donde quieras (esta hoja, otra hoja u otra nota)",
+"{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} elementos copiados · toca 📋 Pegar donde quieras (esta hoja, otra hoja u otra nota)",
+"📋 Colar {0} itens aqui": "📋 Pegar {0} elementos aquí",
+"{0} itens colados": "{0} elementos pegados"
 }

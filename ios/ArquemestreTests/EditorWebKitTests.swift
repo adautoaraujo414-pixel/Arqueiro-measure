@@ -3005,4 +3005,73 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
     }
 
+    func testNichoDaParedeDoLadoNaoEntraNoAereoESemNumeracao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=2960;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          /* cabeçalho e abas na ordem do trabalho, sem os números */
+          var b3=document.getElementById('b3d'),tb=document.querySelector('#tabs [data-t]');R.semNumBotao=!!b3&&!b3.hasAttribute('data-step')&&getComputedStyle(b3,'::before').content==='none';R.semNumAba=!!tb&&getComputedStyle(tb,'::before').content==='none';
+          /* aéreos na parede do fundo, do canto até o fim */
+          for(var i=0;i<3;i++){newTpl(tpl('Aéreo 2 portas'))}S.mods.forEach(function(m,i){m.w=985;m.x=5+i*985;m.b=1750});draw();
+          var n={x:1300,b:1840,w:900,h:350,d:300,sup:true,div:[],shv:[],v:[{k:'free',n:1}],tl:true,tr:true,fundo:true,wing:'e'};defs(n);n.b=1840;n.h=350;n.d=300;n.w=900;S.mods.push(n);S.m=n;draw();panel();
+          var modHit=window.modHit||function(m){return S.mods.some(function(o){return o!==m&&modOv(m,o)})};var noInside=window.noInside||function(){return false};R.longeLivre=!modHit(n);
+          /* no canto: o nicho da parede esquerda entraria no aéreo do fundo */
+          n.x=0;R.cantoBate=modHit(n);n.x=1300;
+          /* pelo campo "Distância da parede do fundo": não deixa entrar */
+          setv('x',100);R.campoNaoEntra=!modHit(n);R.campoX=n.x;
+          /* arrastando (2D/3D): encosta ou pula pro lado livre, nunca fica dentro */
+          var st={};noInside(n,st);n.x=150;var bateu=noInside(n,st);R.arrasteAvisou=bateu;R.arrasteFora=!modHit(n);
+          /* trocar pra parede do fundo: lá não cabe (aéreos do canto ao fim), então não troca */
+          n.x=1300;var bf=[].slice.call(document.querySelectorAll('[data-wing]')).filter(function(b){return b.dataset.wing==='0'})[0];if(bf)bf.click();R.ficouNaLateral=n.wing==='e'&&!modHit(n);
+          /* 2D: o nicho da parede do lado aparece marcado (não parece estar dentro do aéreo) */
+          draw();R.etiqueta=!!document.querySelector('#svg [data-wingtag="e"]');
+          /* 2D: arrastar um balcão por cima do vizinho: encosta nele, não entra */
+          S.mods=[];draw();newTpl(tpl('Balcão 2 portas'));newTpl(tpl('Balcão 2 portas'));var a=S.mods[0],c=S.mods[1];a.x=5;c.x=1400;a.lock=false;c.lock=false;S.m=a;draw();var ra=document.querySelector('#svg rect[data-mi="0"]'),rc=ra.getBoundingClientRect(),kpx=rc.width/a.w;
+          var ev=function(tp,x,y,el){(el||document.getElementById('svg')).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,pointerType:'mouse',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
+          var x0=rc.left+rc.width/2,y0=rc.top+rc.height/2;ev('pointerdown',x0,y0,ra);for(var k=1;k<=10;k++)ev('pointermove',x0+k*(700*kpx/10),y0);ev('pointerup',x0+700*kpx,y0);
+          R.balcaoMexeu=a.x>300;R.balcaoFora=!(a.x<c.x+c.w-1&&c.x<a.x+a.w-1);R.balcaoX=a.x;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["semNumBotao"] as? Bool, true, "botões do cabeçalho sem o número")
+        XCTAssertEqual(o["semNumAba"] as? Bool, true, "abas sem o número")
+        XCTAssertEqual(o["longeLivre"] as? Bool, true, "nicho da parede esquerda longe do canto não bate em nada")
+        XCTAssertEqual(o["cantoBate"] as? Bool, true, "no canto ele entraria no aéreo do fundo: a regra enxerga")
+        XCTAssertEqual(o["campoX"] as? Int, 1300, "pelo campo não deixa ele entrar no aéreo do canto")
+        XCTAssertEqual(o["arrasteAvisou"] as? Bool, true, "arrastando pra dentro do aéreo: encosta ou pula pro lado")
+        XCTAssertEqual(o["arrasteFora"] as? Bool, true, "depois de arrastar ele não fica dentro de nada")
+        XCTAssertEqual(o["ficouNaLateral"] as? Bool, true, "trocar pra parede do fundo cheia não joga ele dentro dos aéreos")
+        XCTAssertEqual(o["etiqueta"] as? Bool, true, "no 2D o nicho da parede do lado aparece com contorno tracejado")
+        XCTAssertEqual(o["balcaoMexeu"] as? Bool, true, "o balcão foi arrastado")
+        XCTAssertEqual(o["balcaoFora"] as? Bool, true, "arrastado contra o vizinho ele encosta, não entra")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
+    func testArrastarNo3DSoSegurandoBaseNoChaoESemSumir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          ['Balcão 2 portas','Balcão 2 portas','Aéreo 2 portas','Aéreo 2 portas'].forEach(function(n){newTpl(tpl(n))});S.mods.forEach(function(m){m.lock=false});S.m=S.mods[0];draw();panel();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
+          var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
+          var ctr=function(i){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0)return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
+          var drag=async function(i,dx,dy,hold){__build();var c=ctr(i);ev('pointerdown',c[0],c[1]);if(hold)await new Promise(function(r){setTimeout(r,420)});for(var s=1;s<=10;s++)ev('pointermove',c[0]+dx*s/10,c[1]+dy*s/10,s>1?M_:cv);ev('pointerup',c[0]+dx,c[1]+dy,M_);await new Promise(function(r){setTimeout(r,40)})};
+          /* arrastar logo de cara em cima do móvel: gira a vista, o móvel fica onde estava */
+          var a=S.mods[0],x0=a.x;await drag(0,250,0,false);R.rapidoNaoMove=a.x===x0&&a.b===0;
+          /* segurando um instante e arrastando: move; o balcão continua no chão */
+          await drag(0,250,0,true);R.seguraMove=a.x!==x0;R.noChao=a.b===0;await drag(1,-200,-120,true);R.noChao2=S.mods[1].b===0;
+          /* aéreo puxado pra baixo: para em cima do balcão, não entra nele nem pula de lado */
+          var u=S.mods[3],ux=u.x;await drag(3,0,260,true);var mh_=window.modHit||function(m){return S.mods.some(function(o){return o!==m&&o.b<m.b+m.h-1&&m.b<o.b+o.h-1&&o.x<m.x+m.w-1&&m.x<o.x+o.w-1})};R.aereoNaoEntra=!mh_(u);R.todos=S.mods.length===4&&S.mods.every(function(m){return !mh_(m)});
+          try{document.getElementById('v3x').click()}catch(_){}R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["rapidoNaoMove"] as? Bool, true, "arrastar logo de cara em cima do móvel gira a vista e não leva o móvel")
+        XCTAssertEqual(o["seguraMove"] as? Bool, true, "segurando um instante e arrastando o móvel muda de lugar")
+        XCTAssertEqual(o["noChao"] as? Bool, true, "balcão arrastado continua no chão")
+        XCTAssertEqual(o["noChao2"] as? Bool, true, "balcão arrastado na diagonal continua no chão (não flutua)")
+        XCTAssertEqual(o["aereoNaoEntra"] as? Bool, true, "aéreo puxado pra baixo para em cima do balcão")
+        XCTAssertEqual(o["todos"] as? Bool, true, "nenhum módulo sumiu e nenhum ficou dentro de outro")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+    }
+
 }

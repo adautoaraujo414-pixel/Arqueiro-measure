@@ -78,7 +78,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["badge"] as? String ?? "").contains("✓"), "otimização terminou: \(o["badge"] ?? "")")
         XCTAssertLessThan(o["ms"] as? Double ?? 99999, 5000, "plano de corte abre rápido")
         XCTAssertEqual(o["enviar"] as? Bool, true, "botão Enviar projeto aparece no app")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     @MainActor
@@ -106,7 +106,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["valores"] as? Bool, false, "o cortador não vê valores")
         XCTAssertEqual(o["fr"] as? Bool, true, "mostra quem mandou")
         XCTAssertTrue((o["avisar"] as? String ?? "").contains("Avisar"))
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     @MainActor
@@ -127,7 +127,7 @@ final class EditorWebKitTests: XCTestCase {
         func n1(_ v: Double) -> String { String(format: "%g", (v * 10).rounded() / 10).replacingOccurrences(of: ".", with: ",") }
         XCTAssertTrue((o["knote"] as? String ?? "").contains("furos a \(n1((w - 96) / 2)) e \(n1((w + 96) / 2)) mm da esquerda, \(n1(a / 2)) mm de cima"), "\(o["knote"] ?? "")")
         XCTAssertEqual(o["foto"] as? Bool, true, "foto do puxador no quadro")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     @MainActor
@@ -155,7 +155,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["msg"] as? String ?? "").contains("travado"))
         XCTAssertEqual(o["cadeado"] as? Bool, true, "cadeado no desenho")
         XCTAssertEqual(o["salvo"] as? Bool, true, "trava fica salva no projeto")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     @MainActor
@@ -169,7 +169,7 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({boxes:n,errs:__errs});
           """#)
         XCTAssertGreaterThan(o["boxes"] as? Int ?? 0, 20, "3D montado")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testBuscaAchaTVEletrodomesticoEFacetadoDesconta() async throws {
@@ -197,7 +197,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["f"] as? Double ?? 0, a - 15.5, accuracy: 0.01, "facetado desconta 15,5 mm")
         XCTAssertTrue((o["fnote"] as? String ?? "").contains("Perfil facetado"), "\(o["fnote"] ?? "")")
         XCTAssertGreaterThan(o["boxes"] as? Int ?? 0, 20, "3D com o facetado")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testGavetaTelescopicaRebaixoContraFrenteEFundo() async throws {
@@ -219,7 +219,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fd"] as? Double ?? 0, o["ld"] as? Double ?? -1, accuracy: 0.11, "fundo no comprimento todo da lateral")
         XCTAssertEqual(o["fmat"] as? Double ?? 0, 6, accuracy: 0.01)
         XCTAssertEqual(o["cq"] as? Int, 6, "3 gavetas = 6 peças de contra-frente/traseira")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testTamponamentoDeBaixoPassaPorBaixoDoVizinhoSemAfastar() async throws {
@@ -234,7 +234,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["bx"] as? Double, o["bx0"] as? Double, "o módulo não sai do lugar")
         XCTAssertEqual(o["pecas"] as? Int, 1, "vira uma peça só (até 2700)")
         XCTAssertEqual(o["L"] as? Double ?? 0, 2030, accuracy: 0.5)
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testTamponamentoLateralDoMeioAlinhaComODeBaixo() async throws {
@@ -249,7 +249,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["meioH"] as? Double, o["modH"] as? Double, "o lateral do meio para em cima do de baixo")
         XCTAssertEqual(o["pecas"] as? Int, 1)
         XCTAssertEqual(o["L"] as? Double ?? 0, 2030, accuracy: 0.5)
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPlanoDeCorteLocalizaCadaPecaNo3D() async throws {
@@ -263,7 +263,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 40)
         XCTAssertEqual(o["ruins"] as? Int, 0, "toda peça do plano acha a peça certa no 3D: \(o["lista"] ?? "")")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testSoEmbaixoDaPiaSemFundoETorreComBaseETeto() async throws {
@@ -279,7 +279,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["z"] as? String, "6,6,6,6,6", "frentes alinhadas, com ou sem fundo")
         XCTAssertEqual(o["bt"] as? Int, 2, "torre tem base e teto")
         XCTAssertEqual(o["tt"] as? Bool, false, "torre sem tamponamento em cima")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPontaExpostaGanhaTamponamentoSozinhaEPlantaEmAnguloDaZoom() async throws {
@@ -299,7 +299,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["s3"] as? String, "0010", "encostou de novo: tamponamentos do meio somem e os módulos se encontram (gap 0)")
         XCTAssertEqual(o["s4"] as? Int, 0, "desmarcado na mão fica desmarcado")
         XCTAssertEqual(o["zw"] as? Int, 643, "zoom (+) funciona na planta em ângulo igual na reta")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testFerragensFitaPorCorNichoNaCorDeForaEPaletaAmadeirada() async throws {
@@ -320,7 +320,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["okCol"] as? Bool, true, "nicho no 3D na cor de fora do módulo vizinho")
         XCTAssertEqual(o["fita"] as? Bool, true, "plano de corte traz metros de fita por cor")
         XCTAssertEqual(o["amad"] as? Bool, true, "paleta com cores amadeiradas")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPortaComCavaSempreLateralMais30EmTodoOCatalogo() async throws {
@@ -340,7 +340,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["bad"] as? [String])?.count, 0, "porta com cava fora da regra lateral + 30: \(o["bad"] ?? "")")
         XCTAssertEqual(o["caso"] as? String, "542.5x800,542.5x800", "aéreo 1105 × 800 com cava de perfil: portas 542,5 × 800 (2 mm entre as folhas; não 770)")
         XCTAssertEqual(o["cv"] as? Int, 0, "cava de perfil não desconta altura")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testRipadoNoPlanoOtimizadoComPlacasDaBaseEParedeLateralAteOMovel() async throws {
@@ -368,7 +368,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pinkR"] as? String, "\(o["n"] as? Int ?? -1):ripa", "localizar as ripas: todas em rosa, só elas")
         XCTAssertEqual(o["wallRip"] as? Bool, true, "parede lateral pode ser ripado")
         XCTAssertEqual((o["wallW"] as? Double ?? 0), (o["front"] as? Double ?? 0) - 50, accuracy: 0.6, "painel lateral vai até 50 mm antes da frente do móvel")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testLateraisPorForaLadoDaFitaEImpressaoDoPlano() async throws {
@@ -390,7 +390,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["hd"] as? Bool, true, "cabeçalho de impressão com ordem e data")
         XCTAssertEqual(o["greens"] as? Bool, true, "lado da fita em verde no desenho da chapa")
         XCTAssertEqual(o["opt"] as? Int, 2, "opção de caixaria: por dentro / por fora")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testAssistenteDeAjustesAplicaNosModulosPlantaOpacaECompletarFileira() async throws {
@@ -414,7 +414,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["polys"] as? Int ?? 0, 10, "planta em ângulo desenha o módulo")
         XCTAssertEqual(o["okRow"] as? Bool, true, "completar acima faz a fileira inteira com a mesma divisão")
         XCTAssertEqual(o["up"] as? Int, 3, "3 colunas, uma placa de 1700 cada até o teto")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPortaDeCantoMarcacaoEmTodaPortaELixoApagaDivisoriaOuPortas() async throws {
@@ -435,7 +435,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mods"] as? String, "1/1", "o módulo pronto continua (não apaga o módulo)")
         XCTAssertEqual(o["k0"] as? String, "free", "🗑 na porta tira as portas do vão")
         XCTAssertEqual(o["cat"] as? Bool, true, "painel/home tem módulo superior livre")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPortaBasculanteAbreParaBaixoOuCimaNo2DENo3D() async throws {
@@ -449,7 +449,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["p2d"] as? String, "em pé,deitada,deitada", "2D: porta de lado abre pro lado; basculante abre pra baixo/cima (faixa deitada)")
         XCTAssertEqual(o["d3"] as? String, "0:lado:209,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado (230 − 21 do chanfro da cava, que sai em degraus finos)")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Tamponamento total = moldura de 4 réguas de 80 (frente, trás e as duas pontas) no 3D e no corte · cor amadeirada com veio no 3D e nas bolinhas ·
@@ -489,7 +489,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["at0"] as? String, "false,false", "automático desligado nos ajustes: tira os automáticos")
         XCTAssertEqual(o["at2"] as? String, "true,true", "ligando de novo, volta")
         XCTAssertEqual(o["chips"] as? Int, 2, "opção nos ajustes (seção e assistente)")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Paleta real (Arauco, Duratex, Greenplac) com nome · marca · textura, 🔍 procurar cor no painel e no pincel do 3D,
@@ -524,7 +524,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no pincel do 3D")
         XCTAssertEqual(o["pc"] as? String, "duratex-cinza-sagrado-essencial", "pintura guarda o padrão")
         XCTAssertEqual(o["pcl"] as? [String], ["c:Cinza Sagrado · Duratex Essencial Acetinada:1", "c:Louro Freijó · Arauco Trend:1"], "porta pintada separa da outra no corte, cada uma na sua cor")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Regras novas nos Ajustes (valem pros módulos novos e "aplicar a todos"): recuo do rodapé, avanço do tamponamento, recuo da prateleira,
@@ -574,7 +574,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mats"] as? Int, 61, "paleta real do padrão (60 + sem padrão)")
         XCTAssertEqual(o["mvis"] as? [String], ["Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no padrão de cor dos Ajustes")
         XCTAssertEqual(o["rnd"] as? Bool, true, "arredondamento em 1 mm")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Fita de topo do caixote branco na cor das portas (branca só em prateleira, gaveta e porta tempero · editável nos Ajustes),
@@ -634,7 +634,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["after2"] as? String, "prat,gav,temp")
         XCTAssertGreaterThan(o["fitaTxt"] as? Int ?? 0, 0, "coluna Fita do plano mostra a cor")
         XCTAssertGreaterThan(o["fitaRow"] as? Int ?? 0, 0, "lista geral mostra a cor da fita")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Abrir a porta não muda a cor de nada: tamponamento, engrosso e réguas seguem a cor das portas (pintadas pelo pincel) com a porta fechada,
@@ -676,7 +676,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pfAll"] as? String, "duratex-cinza-sagrado-essencial", "fitas de todos os módulos")
         XCTAssertEqual(o["pfGone"] as? Bool, true, "a pintura por fita sai quando pinta o módulo inteiro")
         XCTAssertEqual(o["hid"] as? Bool, true, "diálogo fecha depois de responder")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Porta de vidro real: 4 réguas de perfil de alumínio na cor escolhida + vidro de 4 mm (reflexo bronze, fumê…) no 3D, fechada, aberta e basculante;
@@ -722,7 +722,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((sb["gl"] as? [String])?.count, 1)
         XCTAssertEqual(o["std"] as? String, "preto*,champagne,prata,bronze,grafite,branco | bronze*,fume,incolor,preto,verde", "Ajustes · Portas: padrão do perfil e do vidro")
         XCTAssertEqual(o["stdAfter"] as? String, "incolor")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Eletros vivos: forno embutido no módulo e na torre abre com 1 toque (forno e micro-ondas separados), porta com vidro transparente
@@ -756,7 +756,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(e1["tv"] ?? 0, e0["tv"] ?? 0, "TV liga a tela")
         XCTAssertGreaterThan(e1["co"] ?? 0, e0["co"] ?? 0, "coifa liga a luz")
         XCTAssertEqual(o["btns"] as? [String], ["💡 Acender a luz de dentro", "🚪 Abrir o forno"], "quadro do forno: luz e porta")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Cava usinada sem faixa preta (só a linha fina de sombra na cor da porta) e com o chanfro na porta aberta ·
@@ -784,7 +784,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pick"] as? String, "Pau Ferro Natural · Duratex Essencial Wood Madeira Leve", "💧 na fita copia a cor da fita (cor das portas)")
         XCTAssertEqual(o["pv2"] as? String, "Lateral esquerda#1|true", "modo ▭ Fita: tocar no meio da lateral pega a fita dela")
         XCTAssertEqual(o["fmOff"] as? Bool, true, "fechar o pincel desliga o modo fita")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Cooktop: 1 toque numa boca acende só ela, sem selecionar o cooktop inteiro · toque no vidro fora das bocas abre o quadro
@@ -802,7 +802,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue(o["isx1"] is NSNull || o["isx1"] == nil, "toque na boca não seleciona o cooktop")
         XCTAssertEqual(o["lit"] as? Int, 1, "só a boca tocada acende")
         XCTAssertEqual(o["isx2"] as? String, "cook", "toque no vidro fora das bocas abre o quadro do cooktop")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Fita uma por uma, com toque de verdade: base, prateleira, tirar a pintura de uma fita só, fita branca numa peça só,
@@ -837,7 +837,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["hl"] as? String, "255,159,26", "mesma cor: a fita tocada fica em laranja pra ver qual foi")
         XCTAssertTrue((o["msg"] as? String ?? "").hasPrefix("A fita já estava em Pau Ferro"), "\(o["msg"] ?? "")")
         XCTAssertEqual(o["cut"] as? [String], ["Lateral esquerda=-×1", "Lateral esquerda=Pau Ferro Natural · Duratex Essencial Wood Madeira Leve×1", "Prateleira solta=Cinza Sagrado · Duratex Essencial Acetinada×1"].sorted(), "plano de corte: fita de cada peça")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Micro-ondas no nicho do armário: medidas reais no catálogo, encaixar (centraliza no vão, apoia na base, frente rente à caixa),
@@ -879,7 +879,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(dr["b"] as? Int, 1515, "2D: apoia na base")
         XCTAssertEqual(dr["nicho"] as? Int, 1)
         XCTAssertEqual(o["order"] as? String, "mod,ap", "2D: o micro-ondas aparece por cima do módulo (dentro do nicho), não atrás")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testEletrosComMedidaRealDeFabricaFrenchDoorEInducao() async throws {
@@ -920,7 +920,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["ind"] as? String ?? "").contains("Indução"))
         XCTAssertEqual(o["lit"] as? Int, 1, "toque na zona liga a indução")
         XCTAssertGreaterThan(o["fx"] as? Int ?? 0, 0, "zona vermelha acesa")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testFitaDaBaseEmbaixoDaPortaPintaPeloToque() async throws {
@@ -953,7 +953,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["alt2"] as? String ?? "").contains("Base inferior"), "e volta pra fita da base")
         XCTAssertEqual(o["aBase"] as? String, "192,57,43", "fitas do módulo pintadas ganham da peça pintada")
         XCTAssertEqual(o["aLat"] as? String, "192,57,43")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo() async throws {
@@ -992,7 +992,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["car"] as? Int ?? 0, 30, "TV ligada: o marceneiro passa de carro com a escada e a logo")
         XCTAssertEqual(o["tvDone"] as? Int, 1, "depois da abertura, a imagem normal")
         XCTAssertGreaterThanOrEqual(o["rooms"] as? Int ?? -1, 0, "ambiente Área gourmet")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Aba 🎨 Cores no 2D com cabeçalho (paredes e pisos, armários, portas e fitas) e 15 pisos e porcelanatos com textura,
@@ -1021,7 +1021,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["parede"] as? Int, 6, "ripado encostado na parede")
         XCTAssertEqual(o["pontas"] as? String, "10,01", "régua só nas pontas")
         XCTAssertEqual(o["duplo"] as? Bool, true, "engrossado total duplo na profundidade toda")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// 🎯 Só este módulo (câmera fixa nele, frente/ângulo/lado/cima, ↩ volta) e janela arrastável no 2D
@@ -1046,7 +1046,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lado"] as? String, "side", "vista de lado no foco")
         XCTAssertEqual(o["volta"] as? Bool, true, "↩ volta pro ambiente com tudo")
         XCTAssertEqual(o["janela"] as? Bool, true, "janela arrasta no 2D mesmo com móvel embaixo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Porta do ambiente abre na parede do lado, pedra sólida (caixa da geladeira e geladeira não passam por ela), geladeira acompanha a caixa e 5 toques abrem o 2D só do módulo
@@ -1092,7 +1092,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["soEle"] as? Bool, true, "só ele aparece no 2D")
         XCTAssertEqual(o["prof"] as? Bool, true, "dá pra diminuir a profundidade")
         XCTAssertEqual(o["voltou"] as? Bool, true, "fechar volta pro 2D do projeto todo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Só o módulo: no 3D tem o 2D só dele e no 2D só dele tem os vãos (porta, gaveta, divisória) e o 3D só dele, sem mexer nos outros módulos
@@ -1135,7 +1135,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["so3"] as? Bool, true, "no 3D só as peças dele")
         XCTAssertEqual(o["backSolo"] as? Bool, true, "fechar o 3D volta pro 2D só dele")
         XCTAssertEqual(o["geral"] as? Bool, true, "↩ volta pro projeto todo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Toque no 3D acha a peça certa no ponto exato (a da frente) em várias vistas, e o dedo pertinho da borda de peça fina ainda acha o módulo
@@ -1154,7 +1154,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tot"] as? Bool, true, "muitos pontos conferidos")
         XCTAssertEqual(o["bad"] as? Int, 0, "o toque acha a peça que está na frente no ponto tocado")
         XCTAssertEqual(o["borda"] as? Bool, true, "dedo pertinho da borda da lateral acha o módulo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Pedra não some editando o 2D só do módulo (nem no desfazer), 🗑 não tira pedra, pedra travada no 3D, geladeira visível no 2D, mudar de parede sem perder nada, trena 2D/3D e lado da porta do ambiente
@@ -1206,7 +1206,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["solida"] as? Bool, true, "a trena não atravessa o armário")
         XCTAssertEqual(o["toque"] as? Bool, true, "só tocar não cria trena")
         XCTAssertEqual(o["dobBas"] as? Bool, true, "basculante aberta mostra dobradiças e caneco")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Painéis lisos da parede: um não entra em cima do outro (o vizinho encurta e a junta continua), a placa recortada na porta é uma peça só no 3D e placa só até 2700 (o resto vai em cima depois da junta)
@@ -1231,7 +1231,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semRisco"] as? Bool, true, "placa recortada na porta sem risco de emenda no 3D")
         XCTAssertEqual(o["max2700"] as? Bool, true, "placa vai até 2700 de altura")
         XCTAssertEqual(o["emCima"] as? Bool, true, "acima de 2700: junta e a continuação em cima, mesma largura")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Trena no 3D: gruda sozinha no canto de dentro (parede + parede + chão) e na quina de fora do painel, e mede reto
@@ -1255,7 +1255,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["canto0"] as? Bool, true, "canto de dentro exato: \(o["canto"] ?? "")")
         XCTAssertEqual(o["quinaOk"] as? Bool, true, "quina de fora do painel exata: \(o["quina"] ?? "")")
         XCTAssertEqual(o["mede"] as? Bool, true, "do canto até o painel: 1070 (\(o["len"] ?? ""))")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Rack do zero (Sala): entra a caixa vazia com foto no catálogo e já abre o 2D só dele pra montar divisória, gaveta e porta
@@ -1276,7 +1276,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["solo"] as? Bool, true, "abre o 2D só dele")
         XCTAssertEqual(o["vaos"] as? Int, 3, "2 divisórias = 3 vãos")
         XCTAssertEqual(o["v"] as? String, "drawers3,free1,door1", "gavetas, nicho e porta")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Sólido: peça nova não entra em outra (torres, prateleiras, geladeiras, air fryer, guarda-roupa, porta de correr no painel) e painel liso maior que a chapa sai em placas de 1800 × 2700 no sentido escolhido
@@ -1328,7 +1328,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["l"] as? String, "[[0,1800],[1800,3600],[3600,4140]]", "largura: 1800 + 1800 + 540")
         XCTAssertEqual(o["corte"] as? String, "2x580x1800 1x580x540", "placas no plano de corte no sentido certo")
         XCTAssertEqual(o["partes"] as? Bool, true, "peça maior que a chapa sai em partes")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Área do painel/ripado: toque no vão ou arraste marcando a área, o app acha as áreas livres (desvia de móvel, pedra, janela, eletro e outro painel), largura final e cria
@@ -1363,7 +1363,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["areas"] as? Int ?? 0, 3, "várias áreas livres na parede")
         XCTAssertEqual(o["bad"] as? Int, 0, "nenhuma área entra em algo sólido")
         XCTAssertEqual(o["atras"] as? Bool, true, "passando por trás dos móveis a área fica inteira")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Cor e veio dos painéis (placa lisa, ripas e fundo do ripado) com textura real no 3D, plano de corte por cor com veio travado, e a régua da junta em pé fecha o cruzamento com a junta de cima
@@ -1407,7 +1407,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["todos"] as? Bool, true, "usar a cor em todos os painéis")
         XCTAssertEqual(o["regua"] as? String, "0..2715", "régua em pé sobe os 15 da junta de cima")
         XCTAssertEqual(o["corte"] as? Bool, true, "plano de corte com a régua de 2715")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Pintar painéis: pelo 3D (pincel, conta-gotas e borracha, sem selecionar o painel) e pela aba Cores › ▥ Painéis (mesmo sem módulo), com o veio
@@ -1444,7 +1444,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["copia"] as? Bool, true, "conta-gotas copia a cor do painel")
         XCTAssertEqual(o["apaga"] as? Bool, true, "borracha tira a cor")
         XCTAssertEqual(o["toque"] as? Bool, true, "toque na tela em cima do painel pinta")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// 2 toques na parede no 3D: sem nada escolhido pergunta (porta, vão, janela) e cria ali; com a porta escolhida ela vai pra lá; medidas digitadas no quadro
@@ -1482,7 +1482,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["vao"] as? Bool, true, "vão (passagem)")
         XCTAssertEqual(o["vista"] as? Bool, true, "só voltar a vista não cria nada")
         XCTAssertEqual(o["no2d"] as? Bool, true, "aparece no 2D")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Régua do rebaixo das juntas: cor própria (Cores, painel e pincel do 3D) e no plano de corte; vão nas paredes do lado igual ao do fundo
@@ -1518,7 +1518,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["acima"] as? Bool, true, "completar acima: junta de 15 e mesma cor")
         XCTAssertEqual(o["furo"] as? Bool, true, "parede da esquerda recortada no vão")
         XCTAssertEqual(o["parede"] as? Bool, true, "fora do vão a parede continua")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Parede com porta ou vão sai inteira: sem risco nem emenda em cima da porta (fundo e lados); janela não recorta a parede
@@ -1544,7 +1544,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["esquerda"] as? Bool, true, "parede da esquerda sem risco em cima da porta")
         XCTAssertEqual(o["inteira"] as? Bool, true, "parede inteira, só falta o vão")
         XCTAssertEqual(o["janela"] as? Bool, true, "janela não recorta a parede")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Rack do zero entra suspenso no meio do painel (moldura e régua de escolha, tampo em cima), painel aparece no 2D só dele,
@@ -1586,7 +1586,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["botao"] as? Bool, true, "botão Centralizar na barra da prateleira")
         XCTAssertEqual(o["prat"] as? Bool, true, "prateleira centralizada no painel")
         XCTAssertEqual(o["parede"] as? Bool, true, "sem painel: rack no meio da parede")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Localizador da chapa: tocar na placa do painel no plano de corte acende ela em rosa no 3D (por cima da cor/madeira),
@@ -1620,7 +1620,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["todas"] as? Bool, true, "toda peça de painel acha a sua: \(o["fal"] ?? "")")
         XCTAssertEqual(o["regua"] as? Bool, true, "régua do rebaixo acende só as réguas")
         XCTAssertEqual(o["folha"] as? Bool, true, "folha da porta embutida")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// ⧉ Copiar: módulo pela Estrutura e pelo 2D só dele (sai igual, do lado, sem entrar em nada), prateleira (em cima/embaixo) e painel; sem lugar avisa
@@ -1662,7 +1662,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["prat"] as? Bool, true, "prateleira copiada igual, 350 embaixo ou em cima")
         XCTAssertEqual(o["painel"] as? Bool, true, "painel copiado do lado")
         XCTAssertEqual(o["semLugar"] as? Bool, true, "sem lugar: não cria por cima, avisa")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Desenho 2D sem texto em cima de texto nem da trena (sala com rack no chão e suspenso, cozinha, exemplo, quarto)
@@ -1690,7 +1690,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["cozinha"] as? [String])?.count, 0, "textos sobrepostos em cozinha: \(o["cozinha"] ?? "")")
         XCTAssertEqual((o["demo"] as? [String])?.count, 0, "textos sobrepostos em demo: \(o["demo"] ?? "")")
         XCTAssertEqual((o["quarto"] as? [String])?.count, 0, "textos sobrepostos em quarto: \(o["quarto"] ?? "")")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Teclado numérico nunca cobre o campo que está sendo digitado (Estrutura, barra do painel, aba Painéis, quadro da prateleira, trena, quadro da porta no 3D, área do ripado)
@@ -1729,7 +1729,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["porta3D"] as? String, "ok", "teclado cobrindo porta3D: \(o["porta3D"] ?? "")")
         XCTAssertEqual(o["porta3Dx"] as? String, "ok", "teclado cobrindo porta3Dx: \(o["porta3Dx"] ?? "")")
         XCTAssertEqual(o["areaRipado"] as? String, "ok", "teclado cobrindo areaRipado: \(o["areaRipado"] ?? "")")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// 🔒 Travar porta, vão e janela (Ambiente e quadro do 3D) e projeto recebido pelo link (funcionário/cliente/ao vivo) abre tudo travado: só quem criou mexe
@@ -1770,7 +1770,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semDestravar"] as? Bool, true, "semDestravar")
         XCTAssertEqual(o["semCriar"] as? Bool, true, "semCriar")
         XCTAssertEqual(o["semDestravarPorta"] as? Bool, true, "semDestravarPorta")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Monta vários armários do catálogo (cozinha, sala, quarto), muda largura, altura e fundo digitando: nada entra em nada,
@@ -1801,7 +1801,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["nbad"] as? Int, 0, "\(o["bad"] ?? "")")
         XCTAssertEqual((o["slow"] as? [String])?.count, 0, "lento: \(o["slow"] ?? "")")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Torre com portas separadas e réguas, todas as portas abrem, mover módulo com 2 toques e planta em ângulo sem peça por cima da pedra
@@ -1833,7 +1833,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["inteira"] as? String, "door", "volta pra portas inteiras")
         XCTAssertEqual(o["parede"] as? String, "d", "2 toques no módulo e 2 toques perto da parede da direita: foi pra lá")
         XCTAssertEqual(o["planta"] as? Int, 0, "planta em ângulo: a pedra sempre por cima do módulo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Painel: no cabeçalho escolhe ripado ou painel liso (toque pra adicionar) e troca depois no painel selecionado
@@ -1855,7 +1855,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ripado"] as? Bool, true, "troca pra ripado no cabeçalho do painel")
         XCTAssertEqual(o["ripas"] as? Bool, true, "ripado com ripas")
         XCTAssertEqual(o["volta"] as? Bool, true, "volta pra painel liso")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Rodapé do armário alto igual aos de baixo, pintar o módulo por dentro, dobradiça real, porta com amortecedor e eletro aberto sem ficar azul
@@ -1894,7 +1894,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["amort"] as? Bool, true, "os últimos 20% fecham devagar")
         XCTAssertEqual(o["fechou"] as? Bool, true, "porta encosta e fecha")
         XCTAssertEqual(o["semAzul"] as? Bool, true, "eletro aberto não fica azul")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Editar qualquer peça de qualquer módulo pronto: caixa da gaveta inteira, canto em L, régua do tamponamento e medida digitada
@@ -1925,7 +1925,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ppk"] as? String, "Tamponamento direito#1", "régua de dentro aponta pro tamponamento")
         XCTAssertEqual(o["sel"] as? Bool, true, "tamponamento selecionado")
         XCTAssertEqual(o["forno"] as? Int, 0, "forno é aparelho: sem bolinhas")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Armário alto: 3 toques põem o nicho de forno / micro-ondas e as réguas do cava (em cima e embaixo)
@@ -1944,7 +1944,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["k"] as? String, "oven", "virou torre com nicho")
         XCTAssertEqual(o["cortes"] as? Int, 2, "forno e micro-ondas de embutir")
         XCTAssertEqual(o["reguas"] as? Int, 2, "régua do cava em cima e embaixo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Torre: marcar o pedestal desce o módulo suspenso até o chão; a prateleira de dentro arrasta pra cima e pra baixo
@@ -1967,7 +1967,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["subiu"] as? Bool, true, "arrastou pra cima")
         XCTAssertEqual(o["soma"] as? Bool, true, "vão de cima + vão de baixo fica igual")
         XCTAssertEqual(o["x"] as? Int, 1000, "o módulo não sai do lugar")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// 3 toques no módulo: encaixar o lado de fora embaixo da pedra (pingadeira 0,5 cm, o outro lado fica) e esticar ou encurtar o móvel
@@ -1990,7 +1990,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["encurta"] as? Int, 10, "encurta pelo quadro")
         XCTAssertEqual(o["campos"] as? Int, 3, "largura, altura e profundidade no quadro")
         XCTAssertEqual(o["bolinhas"] as? String, "d,h,w,wl", "bolinhas dos dois lados")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Torre quente: acha pela lupa e muda forno (embutido, só nicho, sem) e micro-ondas (embutir, nicho aberto, só nicho, sem)
@@ -2017,7 +2017,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semForno"] as? String, "Nicho do micro-ondas,Porta,Porta", "sem forno")
         XCTAssertEqual(o["nichos"] as? String, "Nicho do forno,Nicho do micro-ondas,Porta,Porta", "só os nichos")
         XCTAssertEqual(o["q3"] as? String, "forno", "3 toques no 3D mudam a torre")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Planta em ângulo: cada peça desenhada na ordem certa (a pedra cobre o módulo, nada sobreposto ou torto)
@@ -2035,7 +2035,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["ordem"] as? String, "modulo,frente,pedra", "módulo, depois a frente, e a pedra por cima")
         XCTAssertGreaterThan(o["polys"] as? Int ?? 0, 100, "cozinha em L desenhada")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Gaveta não encosta em cima: a folga do vão fica dividida (em cima e embaixo); se estiver apertado, 2 cm embaixo e 1,5 cm em cima,
@@ -2060,7 +2060,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["folgaTopo"] as? Int, 28, "caixa de cima não encosta na travessa")
         XCTAssertEqual(o["corredica"] as? Int, 0, "corrediça no meio da lateral")
         XCTAssertEqual(o["nota"] as? Bool, true, "lista de corte diz onde vai a corrediça")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// separados por categoria, no piso e nas paredes do 3D (as juntas vêm na peça); tudo salvo no projeto
@@ -2110,7 +2110,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["quadro"] as? Int, 16, "quadro do piso no 3D com os 15 e o sem porcelanato")
         XCTAssertEqual(o["fm3"] as? String, "piso-terrae-cotta", "troca o piso pelo 3D")
         XCTAssertEqual(o["tinta"] as? String, "undefined", "escolher a cor tira o porcelanato")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testModoPessoaNaoAtravessaMesaCafeteiraPedrasReaisESetinhasDaPedra() async throws {
@@ -2146,7 +2146,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cafe"] as? Bool, true, "toque na cafeteira passa o café")
         XCTAssertGreaterThanOrEqual(o["mesa"] as? Int ?? 0, 200, "no modo pessoa a mesa não deixa atravessar")
         XCTAssertEqual(o["churras"] as? String, "0>1", "no modo pessoa o toque acende a churrasqueira na hora")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testGestosNoEletro2ToquesMudaDeLugar3ToquesConfiguracoes() async throws {
@@ -2179,7 +2179,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["parede"] as? String, "e,1080", "2 toques na parede da esquerda: vai pra ela (L)")
         XCTAssertEqual(o["chao"] as? String, "0,2998,1597", "2 toques no chão: vai pro chão no ponto tocado")
         XCTAssertTrue((o["config"] as? String ?? "").contains("\"fr\""), "3 toques: abre as configurações")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testEletroPelo3DComLupaEmCimaDaPedraMesaEParedeDoL() async throws {
@@ -2226,7 +2226,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["fumaca"] as? Int ?? 0, 10, "na lateral ela também assa e solta fumaça")
         XCTAssertEqual(o["dir"] as? String, "4000,200", "e na parede da direita (medida de fábrica)")
         XCTAssertEqual(o["salaCat"] as? Bool, true, "churrasqueira e eletros em qualquer ambiente")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testBotaoDoLEDUmSoOuUmPorModuloCorEMudarDeLugarCom2Toques() async throws {
@@ -2267,7 +2267,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tog"] as? String, "1>0", "no lugar novo o toque continua desligando o LED")
         XCTAssertEqual(o["fica"] as? Int, 0, "mexer o aéreo não tira o botão da porta onde ele foi posto")
         XCTAssertEqual(o["anda"] as? Int, 100, "o botão anda junto com o móvel onde ele está")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testCatalogoComFotoDeCadaModuloEEletro() async throws {
@@ -2289,7 +2289,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ok"] as? Int, 6, "as fotos carregam de dentro do app (pasta fotos)")
         XCTAssertLessThanOrEqual(o["nSem"] as? Int ?? 99, 3, "item sem foto: \(o["sem"] ?? "")")
         XCTAssertGreaterThan(o["tab"] as? Int ?? 0, 50, "a aba Eletrodomésticos também mostra as fotos")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testCarneAssandoComFumacaEBotaoDoLEDLigaEDesliga() async throws {
@@ -2325,7 +2325,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["chgOff"] as? Int, 0, "outro toque apaga")
         XCTAssertEqual(o["volta"] as? Bool, true, "apagada, a carne sai")
         XCTAssertEqual(o["semCarne"] as? String, "", "todos os tipos de churrasqueira assam carne")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido() async throws {
@@ -2366,7 +2366,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mzh"] as? Int, 4, "bolinhas pra largura (dos dois lados), altura e fundura do móvel")
         XCTAssertEqual(o["ok"] as? Bool, true, "link colado abre")
         XCTAssertEqual(o["ro"] as? Bool, true, "projeto recebido abre só pra ver")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testConfiguracoesCorredicaOcultaConchaECorteAvulso() async throws {
@@ -2396,7 +2396,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["cn"] as? String ?? "").contains("60 mm de cima"), "concha em cima, 60 mm: \(o["cn"] ?? "")")
         XCTAssertEqual(o["mc"] as? Bool, true, "corte avulso calcula as chapas")
         XCTAssertEqual(o["gd"] as? Int, 13, "passo a passo com 13 assuntos")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Ilha com pedra criada no 3D: peças no corte, linha no valor, orçamento do cliente (antes quebrava: TQ não era função), paredes do lado
@@ -2426,7 +2426,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["np"] as? Int, 2, "＋ Península cria a segunda")
         XCTAssertEqual(o["rot"] as? Int, 90, "península girada")
         XCTAssertEqual(o["sv"] as? Int, 2, "projeto salva as ilhas")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// LED com cor embaixo dos aéreos, cooktop aceso com panelas, torneira com água e tocar pra editar (pedra, parede) no 3D
@@ -2455,7 +2455,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["wc"] as? String, "#b8c4ae", "cor da parede")
         XCTAssertEqual(o["svled"] as? Bool, true, "projeto salva o LED")
         XCTAssertEqual(o["svwc"] as? String, "#b8c4ae", "projeto salva a cor da parede")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Tamponamento do aéreo rente com a régua (sem vão), tamponamento de baixo colado nela, eletros com formato de verdade e desenho no catálogo
@@ -2480,7 +2480,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(o["gb"] as? Int ?? 0, 15, "geladeira com portas, puxadores e dispenser")
         XCTAssertGreaterThan(o["tq"] as? Int ?? 0, 10, "torneira gourmet com mola e bico")
         XCTAssertEqual(o["ic"] as? Int, o["nb"] as? Int, "cada eletro do catálogo com a foto (ou o desenho) na frente")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Balcão em L e U: módulos do fundo e da lateral não se sobrepõem (pingadeira de 5 mm descontada na divisão)
@@ -2499,7 +2499,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pl"] as? Int, 1, "placa no plano de corte")
         XCTAssertEqual(o["d2"] as? Int, 1, "placa aparece no 2D")
         XCTAssertEqual(o["sobra"] as? Int, 0, "🗑 apaga a placa")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testBasculanteComCavaSemEngrossoFolga4NoTopo() async throws {
@@ -2513,7 +2513,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["sem"] as? Int, 4, "basculante com cava sem engrosso: 4 mm abaixo do topo")
         XCTAssertLessThan(o["com"] as? Int ?? 99, 1, "com engrosso cava a porta sobe até o topo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testSofaSolidoGiraSalvaExcluiEm2DE3D() async throws {
@@ -2534,7 +2534,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["salvo"] as? Bool, true, "salva e reabre com giro, cor e tecido")
         XCTAssertEqual(o["em2d"] as? Bool, true, "aparece no 2D")
         XCTAssertEqual(o["some"] as? Bool, true, "excluir tira do 3D")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPortaDeVidroTelescopicaReconstroiEAbre() async throws {
@@ -2552,7 +2552,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["n4"] as? Int, 4, "4 folhas no 3D")
         XCTAssertEqual(o["n6"] as? Int, 6, "6 folhas no 3D")
         XCTAssertEqual(o["mudou"] as? Bool, true, "abriu: folhas recolheram")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPainelNaoEntraNoVizinhoNemNaJunta() async throws {
@@ -2570,7 +2570,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["h"] as? Double, 365, "altura digitada não entra no de cima")
         XCTAssertEqual(o["cx"] as? Double, 1050, "vizinho não foi empurrado")
         XCTAssertEqual(o["cw"] as? Double, 721, "vizinho não foi encolhido")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testBalcaoEmLSemModuloSobreposto() async throws {
@@ -2582,7 +2582,7 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({r:R.join(' | '),errs:__errs});
           """#)
         XCTAssertEqual(o["r"] as? String, "", "módulos sobrepostos no balcão em L/U")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testAcabamentoDosEletrosETVReal() async throws {
@@ -2608,7 +2608,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(o["tvn"] as? Int ?? 0, 7, "TV com borda, caixa de trás, suporte, luz e reflexo")
         XCTAssertEqual(o["fins"] as? String, "preto,dourado,", "acabamento salvo no projeto")
         XCTAssertEqual(o["preto2d"] as? Bool, true, "desenho 2D segue o acabamento")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testParedesCubasCooktopEDormitorio() async throws {
@@ -2640,7 +2640,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portas"] as? Int, 2, "2P+Gav Ext: 2 portas")
         XCTAssertEqual(o["gav"] as? Int, 3, "2P+Gav Ext: 3 gavetas de fora")
         XCTAssertEqual(o["semLat"] as? String, "Armário sem lateral direita (usa a do vizinho),Armário sem laterais (entre dois armários)", "só os 2 armários feitos pra usar a lateral do vizinho ficam sem lateral")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testSetinhasParedesECaixa() async throws {
@@ -2667,7 +2667,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["nx"] as? Int, 0, "apagar parede nova")
         XCTAssertEqual(o["semL"] as? Bool, true, "apagar parede esquerda")
         XCTAssertEqual(o["sg"] as? Int, 1, "caixa salva no projeto")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Testes do iPhone (02/11): quadro do módulo, LED só em cima, teto, fogão que abre, puxador arrastável, mobília, modo pessoa e projeto do cliente.
@@ -2700,7 +2700,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fp"] as? Bool, true, "modo pessoa")
         XCTAssertEqual(o["clv"] as? Bool, true, "projeto do cliente abre só pra ver")
         XCTAssertEqual(o["ro"] as? Bool, true, "cliente não edita")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
     /// iPad/iPhone: cuba e cooktop arrastam na vista de cima (toque), de novo e de novo, com zoom, e seguem pelos eventos de toque
     /// se o WebKit cancelar o ponteiro (pointercancel); teclado do campo só aplica no OK (125+120+120+120 = 485 sem bagunçar a cuba);
@@ -2741,7 +2741,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertLessThanOrEqual((enc?["lixFim"] as? Double) ?? 9e9, 2400, "lixeira dentro da parede encolhida")
         XCTAssertEqual(o["tops1"] as? [Double], [900, 900], "módulos acompanham a pedra a 900 · \(o["tops0"] ?? "")")
         XCTAssertEqual(o["pisca"] as? [Int], [0, 0, 0, 0], "a 25 mm da parede o tamponamento automático não liga e desliga")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
     /// Caixote de gavetas do guarda-roupa, régua do canto cego, divisor de talheres, catálogo em 3 abas e biblioteca (luminária, cama, cadeira)
     @MainActor
@@ -2768,7 +2768,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abas"] as? String, "mod,ele,bib", "catálogo em 3 abas")
         XCTAssertEqual(o["lumTopo"] as? Int, 2600, "pendente pendurado do teto")
         XCTAssertGreaterThan(o["cama"] as? Int ?? 0, 5); XCTAssertGreaterThan(o["cad"] as? Int ?? 0, 5)
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testDescontoZeroTamponamentoPedraCooktopModo3D() async throws {
@@ -2795,7 +2795,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["perg"] as? Bool, true, "＋ Cooktop pergunta quantas bocas")
         XCTAssertEqual(o["ck"] as? [Int], [302, 514, 2], "cooktop 2 bocas com medida real")
         XCTAssertEqual(o["modos"] as? Int, 3, "barra Toque: Normal · Editar peça · Tamanho")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPedrasNo3DMuretaComPedra() async throws {
@@ -2814,7 +2814,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["k"] as? String, "mur"); XCTAssertEqual(o["cola"] as? Bool, true, "mureta na frente da pedra da pia")
         XCTAssertEqual(o["top"] as? Int, 1100, "1,10 m com a pedra")
         XCTAssertEqual(o["tw"] as? Int, 450, "largura da pedra em cima editável")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testCantoEncostaPlantaEmAnguloComPedraECooktopPorCimaDo3D() async throws {
@@ -2836,7 +2836,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan(o["pedra"] as? Int ?? 0, 0, "planta em ângulo mostra a pedra depois do só o módulo")
         XCTAssertEqual(o["topo"] as? Bool, true, "quadro do cooktop por cima do 3D")
         XCTAssertGreaterThan(o["cbn"] as? Int ?? 0, 3, "＋ Cuba mostra os modelos"); XCTAssertEqual(o["cbf"] as? Int, o["cbn"] as? Int, "cada cuba com foto"); XCTAssertEqual(o["cubas"] as? Int, 1, "cuba escolhida entra na pedra")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testMedidasDaObraTravadasComSenhaTomadaEEsquadro() async throws {
@@ -2855,7 +2855,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errada"] as? Bool, true, "senha errada não destrava"); XCTAssertEqual(o["certa"] as? Bool, true, "senha certa destrava")
         XCTAssertEqual(o["info"] as? Bool, true, "tomada mostra até o teto e da pedra")
         XCTAssertEqual(o["fecha"] as? Int, 70, "lateral a 88° com 2 m fecha 70 mm")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testMedidasCruzadasTrenaNoCampoDetalhamentoEAereoPelaPedra() async throws {
@@ -2874,7 +2874,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abre"] as? Bool, true, "frente 12 mm maior: as duas laterais abrem")
         XCTAssertEqual(o["hR"] as? Int, 2112, "porta com altura diferente na direita")
         XCTAssertEqual(o["det"] as? Bool, true, "detalhamento com furo da tomada, sobra até o teto e pedra até o teto")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testPeDireitoNaoMedidoNaoInventaMedidaAteOTeto() async throws {
@@ -2895,7 +2895,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["l1"] as? String, "2375 até o teto (pé-direito 3150)", "medido 3150: 3150 − 475 − 300")
         XCTAssertEqual(o["salvo"] as? Bool, true, "salvo e aberto continua medido")
         XCTAssertEqual(o["vNovo"] as? Bool, false, "projeto novo volta pra não medido")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testDistanciasDoModuloTocaEDigitaELimiteDoAereo() async throws {
@@ -2912,7 +2912,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lim"] as? Int, 1600, "não desce abaixo de 700 da pedra")
         XCTAssertEqual(o["teto"] as? Int, 300, "até o teto 300")
         XCTAssertEqual(o["andou"] as? Int, 50, "distância da esquerda move o módulo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testRodapeDoCantoNaMesmaCorDosOutros() async throws {
@@ -2935,7 +2935,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["igual"] as? Bool, true, "rodapé do canto na mesma cor dos outros")
         XCTAssertEqual(o["semCru"] as? Bool, true, "rodapé do canto não sai cor de madeira crua")
         XCTAssertEqual(o["pintado"] as? Bool, true, "com a caixa pintada continua igual aos outros")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testLateraisAtePisoRodapeEntreElasETudoNaCorPorFora() async throws {
@@ -2981,7 +2981,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desliga"] as? Bool, true, "desliga só no módulo")
         XCTAssertEqual(o["todos"] as? Bool, true, "botão aplicar em todos")
         XCTAssertEqual(o["ligouTodos"] as? Bool, true, "liga em todos os módulos de baixo")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
     func testAssistenteMostraAOpcaoEscolhidaEmAzul() async throws {
         let web = try await editor()
@@ -3002,7 +3002,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["outraCinza"] as? Bool, true, "a outra opção fica sem destaque")
         XCTAssertEqual(o["trocou"] as? Bool, true, "tocar na outra opção passa o azul pra ela")
         XCTAssertEqual(o["todos"] as? Bool, true, "em todos os 10 passos só a escolhida fica em azul")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testNichoDaParedeDoLadoNaoEntraNoAereoESemNumeracao() async throws {
@@ -3044,7 +3044,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["etiqueta"] as? Bool, true, "no 2D o nicho da parede do lado aparece com contorno tracejado")
         XCTAssertEqual(o["balcaoMexeu"] as? Bool, true, "o balcão foi arrastado")
         XCTAssertEqual(o["balcaoFora"] as? Bool, true, "arrastado contra o vizinho ele encosta, não entra")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testArrastarNo3DSoSegurandoBaseNoChaoESemSumir() async throws {
@@ -3071,7 +3071,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["noChao2"] as? Bool, true, "balcão arrastado na diagonal continua no chão (não flutua)")
         XCTAssertEqual(o["aereoNaoEntra"] as? Bool, true, "aéreo puxado pra baixo para em cima do balcão")
         XCTAssertEqual(o["todos"] as? Bool, true, "nenhum módulo sumiu e nenhum ficou dentro de outro")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     func testTamanhoDoModuloInteiroNo3DAoVivoSemFurarAPedra() async throws {
@@ -3091,7 +3091,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["naoFurouPedra"] as? Bool, true, "puxando a altura ele para na pedra e não pula de lugar")
         XCTAssertEqual(o["fundura"] as? Bool, true, "a fundura para embaixo da pedra (com a pingadeira)")
         XCTAssertEqual(o["portasLaterais"] as? Bool, true, "laterais acompanham o módulo inteiro")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
     /// Planta (vista de cima): arrasta o módulo até o fim da pedra e ele fica lá (não volta pro vizinho);
@@ -3118,7 +3118,108 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["bEnc"] as? [Int], [1720, 1310], "bolinha do outro lado encolhe")
         XCTAssertEqual(o["bVolta"] as? [Int], [1520, 1510, 3030], "e estica de volta até o vizinho, sem passar")
         XCTAssertEqual(o["semHit"] as? Bool, true, "nenhum módulo entra no outro")
-        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "\(o["errs"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    /// Lava-louças com os modelos reais (medida da ficha, sem embalagem), desenho de cada modelo
+    /// (painel, display, puxador, cor de fábrica) e a de 8 serviços embutida no módulo (nicho com ela dentro).
+    func testLavaLoucasModelosReaisEOitoServicosEmbutidaNoNicho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};var tm='';window.toast=function(t){tm=t};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          var M=function(re){return APM.lavaloucas.m.filter(function(q){return re.test(q[0])})[0]||[]};
+          R.ls08e=M(/LS08E/).slice(1,4).join('x');R.lb08e=M(/LB08E/).slice(1,4).join('x')+':'+(M(/LB08E/)[4]||{}).fin;R.ll08s=M(/LL08S/).slice(1,4).join('x');R.blf08=M(/BLF08/).slice(1,4).join('x');
+          R.m10=M(/MDWEF1034/).slice(1,4).join('x');R.ls10e=M(/LS10E/).slice(1,4).join('x');R.dwa14=M(/DWA14B/).slice(1,4).join('x');R.m14=M(/MDWEF1433GSS/).slice(1,4).join('x');R.m14b=(M(/MDWEF1433GBS/)[4]||{}).fin;R.blf14=M(/BLF14AB/).slice(1,4).join('x');
+          R.nModelos=APM.lavaloucas.m.length;R.semGenerico=!APM.lavaloucas.m.some(function(q){return /conferir|t[ií]pica|painel do m/i.test(q[0])});
+          newTpl(tpl('Balcão 2 portas'));draw();catAp();var c=CATS.filter(function(q){return q.id==='clav'})[0];R.nichos=c.it.filter(function(i){return i.act==='lvn'}).length;
+          catAct2(c.it.filter(function(i){return i.act==='lvn'})[0]);draw();
+          var m=S.mods.filter(function(o){return o.lavaNicho})[0],f=S.fr.filter(function(q){return q.t==='lavaloucas'})[0];
+          R.nicho=m?[m.w,m.h,m.fundo].join(','):null;R.dentro=!!(m&&f&&Math.abs((m.x+m.w/2)-(f.x+f.w/2))<1&&f.b>=m.b+100&&f.b+f.h<=m.b+m.h-15);
+          m.x+=300;draw();R.segue=Math.abs((m.x+m.w/2)-(f.x+f.w/2))<1;R.semPorta=!partsOf(m).some(function(p){return /^Porta|^Frente/.test(p.name)});
+          S.stones=[{id:1,x:0,w:2400,d:600,t:820,e:30,shape:'reta',items:[]}];S.st=S.stones[0];
+          var g=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/LL08S/)));draw();R.naBancada=g.b===benchTop();
+          var p=apAdd('lavaloucas',APM.lavaloucas.m.indexOf(M(/MDWEF1433GBS/)));draw();R.piso=[p.b,p.fin].join(',');
+          R.desenho=(document.getElementById('svg').innerHTML.match(/>1:19</g)||[]).length;
+          R.foto=c.it.filter(function(i){return /Lava/.test(i.n)}).every(function(i){return !!FOTOS[fotoKey(i)]});
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();R.box3=__boxes().filter(function(q){return q.fr===f.id}).length;try{document.getElementById('v3x').click()}catch(_){}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["ls08e"] as? String, "550x609x500", "Electrolux LS08E de embutir: 55 × 60,9 × 50 cm")
+        XCTAssertEqual(o["lb08e"] as? String, "550x609x500:branco", "LB08E branca")
+        XCTAssertEqual(o["ll08s"] as? String, "550x595x500")
+        XCTAssertEqual(o["blf08"] as? String, "510x630x650")
+        XCTAssertEqual(o["m10"] as? String, "447x845x594", "Midea 10 serviços estreita: 44,7 × 84,5 × 59,4 cm")
+        XCTAssertEqual(o["ls10e"] as? String, "495x845x600")
+        XCTAssertEqual(o["dwa14"] as? String, "598x850x600", "Midea 14 serviços branca: 59,8 × 85 × 60 cm")
+        XCTAssertEqual(o["m14"] as? String, "600x845x594", "Midea SmartHome 14 serviços: 60 × 84,5 × 59,4 cm")
+        XCTAssertEqual(o["m14b"] as? String, "preto", "black inox")
+        XCTAssertEqual(o["blf14"] as? String, "598x845x600")
+        XCTAssertEqual(o["nModelos"] as? Int, 10)
+        XCTAssertEqual(o["semGenerico"] as? Bool, true, "só modelos reais (troca os genéricos)")
+        XCTAssertEqual(o["nichos"] as? Int, 4, "as 4 de 8 serviços aparecem também embutidas no módulo")
+        XCTAssertEqual(o["nicho"] as? String, "600,820,false", "nicho 600 (550 + folgas + laterais), altura do balcão, sem fundo")
+        XCTAssertEqual(o["dentro"] as? Bool, true, "lava-louças centralizada dentro do nicho, em cima da base")
+        XCTAssertEqual(o["segue"] as? Bool, true, "mexeu o nicho: a lava-louças vai junto")
+        XCTAssertEqual(o["semPorta"] as? Bool, true, "nicho aberto (sem porta) pra lava-louças")
+        XCTAssertEqual(o["naBancada"] as? Bool, true, "compacta solta vai em cima da bancada")
+        XCTAssertEqual(o["piso"] as? String, "0,preto", "de piso embaixo da bancada, black inox de fábrica")
+        XCTAssertGreaterThanOrEqual(o["desenho"] as? Int ?? 0, 3, "desenho com painel e display de cada modelo")
+        XCTAssertEqual(o["foto"] as? Bool, true, "foto de cada lava-louças no catálogo")
+        XCTAssertGreaterThan(o["box3"] as? Int ?? 0, 6, "3D detalhado")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    /// Porta de correr: 2 toques na folha (2D e 3D) abre a configuração dela; puxador perfil G lateral 35 mm de cima a baixo
+    /// (desconta na largura do MDF), lado (pontas ou meio), cor; espelho só na folha escolhida, tamanho e posição editáveis, centralizar.
+    func testPortaDeCorrerGLateralEEspelhoNaFolhaCom2Toques() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='quarto';S.room='quarto';S.W=2400;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(t){R.toast=String(t)};
+          var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n==='Guarda-roupa porta de correr')it=t})});newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=200;m.lock=false;S.m=m;draw();panel();
+          var L=function(){return partsOf(m).filter(function(p){return p.name==='Porta de correr'})};R.leaf0=L().map(function(p){return p.cl+'x'+p.cw});
+          /* 2 toques na folha 2 no desenho */
+          var r2=[].slice.call(document.querySelectorAll('#svg rect[data-p]')).filter(function(r){var p=partsOf(m)[+r.dataset.p];return p&&p.name==='Porta de correr'&&p.dq===1})[0];var bb=r2.getBoundingClientRect(),cx=bb.left+bb.width*.6,cy=bb.top+bb.height*.5;
+          var pe=function(t){document.getElementById('svg').dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:4,pointerType:'touch',isPrimary:true,buttons:t==='pointerup'?0:1}))};
+          pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,60)});pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,450)});
+          var box=document.getElementById('slcfg');R.abriu=!!box&&/folha 2 de 2/.test(box.textContent);R.semMenuVao=!document.querySelector('#vmenu:not([hidden])');
+          var clk=function(a){var b=document.querySelector('#slcfg [data-slc="'+a+'"]');if(!b)return 'sem '+a;b.click();return 'ok'};
+          R.c1=clk('px|gl');R.gl=L().map(function(p){return p.cl+'x'+p.cw+':'+p.sps});R.nota=/perfil G lateral 35/.test(L()[0].note);
+          R.c2=clk('esp|on');var E=function(){var e=partsOf(m).filter(function(p){return p.mirror});return e.map(function(p){return [p.dq,p.cl,p.cw,m.v[0].esp[p.dq].x,m.v[0].esp[p.dq].y].join(',')})};R.esp1=E();
+          var inp=document.querySelector('#slcfg [data-slci="w"]');inp.value='600';inp.dispatchEvent(new Event('change',{bubbles:true}));R.esp2=E();
+          R.c3=clk('mv|10|0');R.esp3=E();R.c4=clk('ctr|ab');R.esp4=E();R.c5=clk('esp|cheio');R.esp5=E();
+          var iy=document.querySelector('#slcfg [data-slci="y"]');iy.value='5000';iy.dispatchEvent(new Event('change',{bubbles:true}));R.esp6=E();
+          R.c6=clk('lado|meio');R.meio=L().map(function(p){return p.sps}).join('');R.c7=clk('cor|dourado');
+          /* só a folha 2 tem espelho */R.so2=partsOf(m).filter(function(p){return p.mirror}).length===1;
+          var sv=document.getElementById('svg').innerHTML;R.svgEsp=/stroke="#7f8f9a"/.test(sv);
+          var hw=hwOf(m);R.hw=Object.keys(hw).filter(function(k){return /Perfil G lateral|Espelho/.test(k)}).map(function(k){return k+'='+hw[k].n});
+          R.cx=clk('x');R.fechou=!document.getElementById('slcfg');
+          /* 3D: perfil G e espelho; 2 toques na folha abre a configuração */
+          open3D();await new Promise(function(r){setTimeout(r,400)});__cam(0,0.15,1.2);__build();var B=__boxes();R.mir3=B.filter(function(q){return q.mir}).length;
+          var fb=B.filter(function(q){return /:Porta de correr/.test(q.nm)&&q.dq===0&&(q.x1-q.x0)>300})[0];R.fbOk=!!fb;
+          if(fb){var cv=document.querySelector('#v3 canvas'),rc=cv.getBoundingClientRect(),pp=__p3((fb.x0+fb.x1)/2,(fb.y0+fb.y1)/2,fb.z1),X=rc.left+pp[0],Y=rc.top+pp[1];var mk=function(t){return new PointerEvent(t,{bubbles:true,cancelable:true,clientX:X,clientY:Y,pointerId:7,pointerType:'touch',isPrimary:true,buttons:t==='pointerup'?0:1})};/* os 2 toques criados juntos (o 1º toque mexe a folha e o desenho demora no teste) */var E4=[mk('pointerdown'),mk('pointerup'),mk('pointerdown'),mk('pointerup')];E4.forEach(function(e){cv.dispatchEvent(e)});await new Promise(function(r){setTimeout(r,700)});var b3=document.getElementById('slcfg');R.abriu3D=!!b3&&/folha 1 de 2/.test(b3.textContent);try{window.slideCfgClose()}catch(_){}}
+          try{document.getElementById('v3x').click()}catch(_){}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["leaf0"] as? [String], ["906x2300", "906x2300"])
+        XCTAssertEqual(o["abriu"] as? Bool, true, "2 toques na folha 2 no desenho abre a configuração dela")
+        XCTAssertEqual(o["semMenuVao"] as? Bool, true, "não abre o menu do vão em cima")
+        XCTAssertEqual(o["gl"] as? [String], ["871x2300:l", "871x2300:r"], "perfil G lateral: MDF 906 − 35, nas pontas de fora")
+        XCTAssertEqual(o["nota"] as? Bool, true, "plano de corte explica MDF + perfil G lateral")
+        XCTAssertEqual(o["esp1"] as? [String], ["1,700,2000,103,150"], "espelho só na folha 2, centralizado")
+        XCTAssertEqual(o["esp2"] as? [String], ["1,600,2000,153,150"], "mudou a largura: continua centralizado")
+        XCTAssertEqual(o["esp3"] as? [String], ["1,600,2000,163,150"], "reposiciona 10 mm")
+        XCTAssertEqual(o["esp4"] as? [String], ["1,600,2000,153,150"], "centralizar")
+        XCTAssertEqual(o["esp5"] as? [String], ["1,866,2260,20,20"], "espelho na folha inteira")
+        XCTAssertEqual(o["esp6"] as? [String], ["1,866,2260,20,40"], "posição limitada dentro da folha")
+        XCTAssertEqual(o["meio"] as? String, "rl", "puxador no encontro das folhas")
+        XCTAssertEqual(o["so2"] as? Bool, true, "espelho só na folha escolhida")
+        XCTAssertEqual(o["svgEsp"] as? Bool, true, "espelho aparece no desenho")
+        XCTAssertEqual(o["hw"] as? [String], ["Perfil G lateral 35 mm · dourado (m)=4.6", "Espelho 4 mm lapidado · 866 × 2260 (folha 2)=1", "Espelho 4 mm (m²)=1.96"], "ferragens: perfil G e espelho")
+        XCTAssertEqual(o["fechou"] as? Bool, true)
+        XCTAssertEqual(o["mir3"] as? Int, 1, "espelho no 3D")
+        XCTAssertEqual(o["abriu3D"] as? Bool, true, "2 toques na folha no 3D abre a configuração")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
 }

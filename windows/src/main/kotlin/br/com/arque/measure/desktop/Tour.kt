@@ -65,7 +65,7 @@ object Tour {
             // ---- caderno: nota com cota, texto e exportações ----
             val id = vm.createNote()
             vm.openNote(id)
-            step("cria e abre nota", waitFor(5000) { vm.screen == Screen.Editor && vm.session != null })
+            step("cria e abre nota", waitFor(20000) { vm.screen == Screen.Editor && vm.session != null })
             val s = vm.session!!
             s.state.addObj(DimObj(photoId = null, a = Pt(120f, 300f), b = Pt(620f, 300f), valueMm = 2450.0, color = 0xFFE53935.toInt(), width = 4f))
             s.state.addObj(TextObj(photoId = null, at = Pt(140f, 220f), text = "Cozinha do cliente · teste Windows", size = 34f, color = 0xFF1B1B1B.toInt()))

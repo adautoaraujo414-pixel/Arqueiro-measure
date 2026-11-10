@@ -3332,6 +3332,8 @@ final class EditorWebKitTests: XCTestCase {
           /* sem desnível: placa de cima na mesma coluna acompanha; desligado, só a marcada */
           wallSet('F','h1',2700);S.W=2000;S.rp=[];var p1={id:11,liso:true,x:0,b:0,w:1000,h:1600,jt:{t:'reb',w:15,d:6}},p2={id:12,liso:true,x:0,b:1615,w:1000,h:985,jt:{t:'reb',w:15,d:6}};S.rp.push(p1,p2);RPMS=[11];PLN=2;PLJ=15;PLJT={t:'reb',w:15,d:6};plDivide();draw();R.col=L();
           S.rp=[];S.rp.push(JSON.parse(JSON.stringify(p1)),JSON.parse(JSON.stringify(p2)));RPMS=[11];window.PLCOL=false;plDivide();draw();R.sem=S.rp.length;window.PLCOL=true;
+          /* coluna onde o teto passa da altura da chapa: placa reta até ali e depois em ângulo, sem buraco */
+          S.W=3000;S.H=2850;wallSet('F','h1',2650);S.rp=[];pwGenerate();R.kn=L();R.kc=(rpCutHtml().replace(/<[^>]+>/g,' ').match(/reta na altura 2700 até [0-9.]+ mm da ponta esquerda/)||[''])[0];
           open3D();await new Promise(function(r){setTimeout(r,800)});R.n3=dbg3().length;R.errs=__errs;
           return JSON.stringify(R);
           """#)
@@ -3347,6 +3349,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["corte"] as? String, "o corte começa a 140 mm da ponta esquerda")
         XCTAssertEqual(o["col"] as? String, "0,0,492.5,1600, 0,1615,492.5,985, 507.5,0,492.5,1600, 507.5,1615,492.5,985,", "sem desnível: a placa de cima da coluna acompanha")
         XCTAssertEqual((o["sem"] as? NSNumber)?.intValue, 3, "desligado: só a marcada")
+        XCTAssertEqual(o["kn"] as? String, "0,0,1492.5,2700, 0,2715,1492.5,135,135/35.5 1507.5,0,1492.5,2700,2749.5/2650 1507.5,2715,1492.5,34.5,34.5/-65", "teto passa da chapa no meio da coluna: reta até ali e depois em ângulo")
+        XCTAssertEqual(o["kc"] as? String, "reta na altura 2700 até 742.5 mm da ponta esquerda", "lista de corte explica onde o ângulo começa")
         XCTAssertGreaterThan((o["n3"] as? NSNumber)?.intValue ?? 0, 0)
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }

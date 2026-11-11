@@ -2866,14 +2866,15 @@ final class EditorWebKitTests: XCTestCase {
           newMod(true);var ms=S.mods[S.mods.length-1];ms.x=300;supByStone(ms);
           S.tab=9;panel();var wf=document.querySelector('#bd [data-amx="wf"]');wf.focus();wf.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));window.arqueLaser(3212.4);await W();var q=sqDiff();
           S.ops.push({id:7001,t:'porta',w:800,h:2100,x:2300,b:0});panel();var hr=document.querySelector('#bd [data-opf="7001|hR"]');hr.value='2112';hr.dispatchEvent(new Event('change',{bubbles:true}));await W();
-          var tm=apAdd('eletrica',0);tm.x=500;tm.b=400;draw();open3D();await W(300);document.getElementById('v3det').click();await W();var tx=document.getElementById('detbx').textContent;document.getElementById('detbx').hidden=true;document.getElementById('v3x').click();
-          return JSON.stringify({supB:ms.b,wf:S.amb.wf,abre:q.L.fecha<0&&q.R.fecha<0,hR:S.ops[0].hR,det:tx.indexOf('furo no fundo')>=0&&tx.indexOf('sobra')>=0&&tx.indexOf('Da pedra até o teto')>=0,errs:__errs});
+          var tm=apAdd('eletrica',0);tm.x=500;tm.b=400;draw();open3D();await W(300);document.getElementById('v3det').click();await W();var det3_=!!document.querySelector('#det3svg line[marker-end]');document.querySelector('#det3bar [data-d3l]').click();await W();var tx=document.getElementById('detbx').textContent;document.getElementById('detbx').hidden=true;document.getElementById('v3x').click();
+          return JSON.stringify({det3:det3_,supB:ms.b,wf:S.amb.wf,abre:q.L.fecha<0&&q.R.fecha<0,hR:S.ops[0].hR,det:tx.indexOf('furo no fundo')>=0&&tx.indexOf('sobra')>=0&&tx.indexOf('Da pedra até o teto')>=0,errs:__errs});
           """#)
         XCTAssertEqual(o["supB"] as? Int, 1590, "aéreo 700 acima da pedra (860 + 30 + 700)")
         XCTAssertEqual(o["wf"] as? Int, 3212, "trena cai no campo tocado")
         XCTAssertEqual(o["abre"] as? Bool, true, "frente 12 mm maior: as duas laterais abrem")
         XCTAssertEqual(o["hR"] as? Int, 2112, "porta com altura diferente na direita")
-        XCTAssertEqual(o["det"] as? Bool, true, "detalhamento com furo da tomada, sobra até o teto e pedra até o teto")
+        XCTAssertEqual(o["det3"] as? Bool, true, "📏 Detalhamento desenha as cotas em cima do 3D")
+        XCTAssertEqual(o["det"] as? Bool, true, "detalhamento com furo da tomada, sobra até o teto e pedra até o teto") // 📋 lista escrita
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
@@ -3435,6 +3436,250 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cfg"] as? String, "sem/preto", "blindex sem perfil e ferragem preta")
         XCTAssertEqual(o["idsOk"] as? Bool, true, "modelos das torres prontas existem")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// Guarda-roupa: torre por dentro. Toca na parte (quadro ou desenho), digita a medida livre (real, sem a prateleira),
+    /// todo item novo pede a medida (maleiro com confirmação), gaveteiro é o caixote com régua espaçadora e fica em cima da base,
+    /// "só mais uma prateleira", tubo cabideiro e 2 toques no vão abrem só aquela parte.
+    func testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='livre';S.room='quarto';S.W=3500;S.H=2600;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='quarto'})[0];R.torres=c.it.filter(function(q){return /^Torre (do|de prateleiras do) guarda-roupa/.test(q.n)}).length;
+          newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Guarda-roupa 2 vãos'})[0])));var m=S.m,v=m.v[0],A=vhm(m),Lv=function(k){return ibLivre(intLayout(v,A),k,m.esp)};S.tab=2;S.sv=0;draw();panel();
+          var Q=function(s){return document.querySelector('#bd '+s)};R.keys=[].map.call(document.querySelectorAll('#bd [data-intadd]'),function(b){return b.dataset.intadd}).join(',');
+          Q('[data-intadd="mal"]').click();R.pede=ISB.cf===1&&/Confirme a altura do maleiro/.test(Q('#ibbox').textContent);Q('[data-ibmh="450"]').click();Q('[data-ibok]').click();R.mal=Lv(0)+' '+ISB.cf;
+          Q('[data-intadd="nic"]').click();R.pede2=ISB.cf;var il=Q('[data-ibl]');il.value='300';il.dispatchEvent(new Event('input',{bubbles:true}));il.dispatchEvent(new Event('change',{bubbles:true}));R.nic=Lv(1)+' '+v.int[0].h;
+          Q('[data-intadd="cxg"]').click();R.cxg=v.int.map(function(o){return o.t}).join(',')+' '+Math.round(intLayout(v,A).free);R.regua=partsOf(m).filter(function(p){return p.vi===0&&/régua espaçadora/.test(p.name)}).length;
+          var sh0=partsOf(m).filter(function(p){return p.vi===0&&p.name==='Prateleira interna'}).length;S.sv=0;ISB.k=2;panel();Q('[data-ibsp]').click();R.mais=partsOf(m).filter(function(p){return p.vi===0&&p.name==='Prateleira interna'}).length-sh0;
+          R.soma=Math.round(intLayout(v,A).it.reduce(function(a,o){return a+o.h},0)+intLayout(v,A).free)===Math.round(A);
+          /* o outro vão: cabideiro e o tubo */S.sv=1;ISB.k=-1;panel();Q('[data-intadd="cab"]').click();Q('[data-ibtb="10"]').click();var tb=partsOf(m).filter(function(p){return p.vi===1&&/^Cabideiro/.test(p.name)})[0];R.tubo=tb?Math.round(tb.y-vTop(m)):-1;
+          /* desenho grande: alturas de cada parte e digitar tocando no número */draw();R.pilulas=document.querySelectorAll('#svg [data-q^="itw|0.1."]').length;QEXT.itw.set('0.0.0',400);R.digitou=Lv(0);
+          /* 2 toques no vão: só aquela parte */vmenuOpen(0,0,100,100,0);var mb=document.getElementById('vmib');R.menu=!!mb&&/Só esta parte/.test(mb.textContent)&&!!document.querySelector('#vmenu [data-ibm="b|cxg"]');document.querySelector('#vmib [data-ibm="t|nic"]').click();R.troca=v.int[0].t;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual((o["torres"] as? NSNumber)?.intValue, 2, "torres do guarda-roupa no catálogo do quarto")
+        XCTAssertEqual(o["keys"] as? String, "mal,nic,cab,cabl,cxg,sap", "gaveta de guarda-roupa é o caixote com espaçador")
+        XCTAssertEqual(o["pede"] as? Bool, true, "maleiro pede pra confirmar a altura")
+        XCTAssertEqual(o["mal"] as? String, "450 0", "maleiro 450 livre confirmado")
+        XCTAssertEqual((o["pede2"] as? NSNumber)?.intValue, 1, "todo item novo pede a medida")
+        XCTAssertEqual(o["nic"] as? String, "300 465", "nicho com 300 livre e o maleiro não mexe")
+        XCTAssertEqual(o["cxg"] as? String, "mal,nic,nic,cxg 0", "gaveteiro fica em cima da base")
+        XCTAssertEqual((o["regua"] as? NSNumber)?.intValue, 2, "régua espaçadora dos dois lados")
+        XCTAssertEqual((o["mais"] as? NSNumber)?.intValue, 1, "só mais uma prateleira")
+        XCTAssertEqual(o["soma"] as? Bool, true, "a soma das partes é o vão")
+        XCTAssertEqual((o["tubo"] as? NSNumber)?.intValue, 60, "tubo cabideiro a 60 da prateleira de cima")
+        XCTAssertGreaterThan((o["pilulas"] as? NSNumber)?.intValue ?? 0, 0, "altura de cada parte no desenho")
+        XCTAssertEqual((o["digitou"] as? NSNumber)?.intValue, 400, "digitar tocando no número")
+        XCTAssertEqual(o["menu"] as? Bool, true, "2 toques: só aquela parte")
+        XCTAssertEqual(o["troca"] as? String, "nic")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// 🗑 com uma peça escolhida apaga só ela: prateleira de dentro (as duas partes viram uma), porta, base; volta as peças; 3D também.
+    func testApagarSoUmaPecaPrateleiraPortaENo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='livre';S.room='quarto';S.W=3500;S.H=2600;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Guarda-roupa 2 vãos'})[0])));var m=S.m;m.v[0].int=[{t:'mal',h:400},{t:'nic',h:350},{t:'nic',h:350},{t:'cabl',h:1170}];S.tab=2;draw();panel();
+          var svg=document.getElementById('svg');svg.scrollIntoView({block:'start'});await new Promise(function(r){setTimeout(r,60)});
+          var h=document.querySelectorAll('#svg rect[data-ish^="0|"]')[1],b=h.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2,pe=function(el,t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',isPrimary:true,buttons:t==='pointerup'?0:1}))};
+          pe(h,'pointerdown');pe(document.elementFromPoint(x,y)||svg,'pointerup');await new Promise(function(r){setTimeout(r,80)});R.escolheu=LAST+' '+(window.PSEL&&PSEL.nm);R.marca=!!document.querySelector('#svg rect[stroke="#e5484d"]');
+          $('delMod').click();R.prat=JSON.stringify(m.v[0].int)+' '+S.mods.length;
+          var p0=partsOf(m).filter(function(p){return p.name==='Porta'&&p.vi===1})[0];pcSel(0,p0.pk);$('delMod').click();R.porta=partsOf(m).filter(function(p){return p.name==='Porta'}).length+' '+S.mods.length;
+          var G=cutGroups();R.corte=G.ord.filter(function(k){return /^Porta/.test(G.map[k].names[0])}).reduce(function(a,k){return a+G.map[k].qty},0);
+          S.tab=0;panel();R.voltar=!!document.querySelector('[data-xpr]');document.querySelector('[data-xpr]').click();R.voltou=partsOf(m).filter(function(p){return p.name==='Porta'}).length;
+          /* trocar a frente do vão devolve as peças daquele vão */pcSel(0,partsOf(m).filter(function(p){return p.name==='Porta'&&p.vi===1})[0].pk);$('delMod').click();vmenuOpen(0,1,100,100,-1);document.querySelector('#vmenu [data-vk="door1"]').click();R.limpou=(m.xp||[]).length;
+          /* 3D: ✏️ Editar peça · 🗑 Só esta peça */open3D();await new Promise(function(r){setTimeout(r,400)});var bs=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0];__e3open(0,bs.pk);var E=[].filter.call(document.querySelectorAll('[data-e3del]'),function(q){return q.offsetParent})[0];R.botao3d=!!E;if(E)E.click();R.base=partsOf(m).filter(function(p){return p.name==='Base inferior'}).length+' '+S.mods.length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["escolheu"] as? String, "peca Prateleira interna", "toque na prateleira escolhe só ela")
+        XCTAssertEqual(o["marca"] as? Bool, true, "a peça escolhida fica marcada")
+        XCTAssertEqual(o["prat"] as? String, "[{\"t\":\"mal\",\"h\":400},{\"t\":\"nic\",\"h\":700},{\"t\":\"cabl\",\"h\":1170}] 1", "só a prateleira sai, o módulo fica")
+        XCTAssertEqual(o["porta"] as? String, "3 1", "só uma porta sai")
+        XCTAssertEqual((o["corte"] as? NSNumber)?.intValue, 3, "a porta sai do corte também")
+        XCTAssertEqual(o["voltar"] as? Bool, true)
+        XCTAssertEqual((o["voltou"] as? NSNumber)?.intValue, 4, "↺ volta as peças")
+        XCTAssertEqual((o["limpou"] as? NSNumber)?.intValue, 0, "trocar a frente do vão devolve as peças dele")
+        XCTAssertEqual(o["botao3d"] as? Bool, true)
+        XCTAssertEqual(o["base"] as? String, "0 1", "no 3D apaga só a peça")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Torre do forno: a porta de cada vão muda (1 ou 2, dobradiça, mais uma porta, gavetas, sem porta) sem tirar o forno —
+    /// na aba Portas e nos 2 toques; caixa da geladeira: portas do aéreo (1, 2 ou sem porta).
+    func testTorreDoFornoTrocaAPortaDeCadaVaoEGeladeira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3500;S.H=2600;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='alto'})[0],T=function(n){return JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n===n})[0]))};newTpl(T('Torre forno + micro-ondas (embutir)'));var m=S.m,v=m.v[0];S.tab=3;S.sv=0;draw();panel();
+          var Q=function(a){var b=document.querySelector('#bd [data-twd="0|0|'+a+'"]');if(!b)return 'sem '+a;b.click();return 'ok'};R.conv=Q('conv');
+          R.a=[Q('n|0|2'),Q('add|0'),Q('n|1|1'),Q('hg|1|r'),Q('k|4|drw'),Q('dn|4|1'),Q('fr|3|porta')].join(',');
+          R.tw=v.tw.map(function(t){return t.k+(t.n||'')+(t.hg||'')+(t.fr||'')}).join(',');R.forno=partsOf(m).filter(function(p){return /^Corte do (forno|micro)/.test(p.name)}).length;
+          R.portas=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.hinge}).join('');
+          vmenuOpen(0,0,100,100);var vt=document.getElementById('vmtw');R.menu=!!vt&&/Só este vão da torre/.test(vt.textContent);
+          var bk=document.querySelector('#vmtw [data-twd*="|add|"]');var n0=v.tw.length;bk.click();R.mais=v.tw.length-n0;R.fechou=!document.getElementById('vmenu');
+          S.mods=[];newTpl(T('Caixa da geladeira duplex / inverse (laterais + aéreo)'));m=S.m;S.tab=3;draw();panel();var P=function(){return partsOf(m).filter(function(p){return p.name==='Porta'}).length};
+          document.querySelector('#bd [data-geln="1"]').click();R.g1=P();document.querySelector('#bd [data-geln="0"]').click();R.g0=P()+m.v[0].k;document.querySelector('#bd [data-geln="2"]').click();R.g2=P();
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["conv"] as? String, "ok", "torre antiga vira torre por vãos pra trocar a porta")
+        XCTAssertEqual(o["a"] as? String, "ok,ok,ok,ok,ok,ok,ok")
+        XCTAssertEqual(o["tw"] as? String, "door2,door1r,micro,fornoporta,drw3", "cada vão com a sua porta; forno e micro continuam")
+        XCTAssertEqual((o["forno"] as? NSNumber)?.intValue, 2)
+        XCTAssertEqual(o["menu"] as? Bool, true, "2 toques no vão da torre: só aquele vão")
+        XCTAssertEqual((o["mais"] as? NSNumber)?.intValue, 1, "mais uma porta")
+        XCTAssertEqual(o["fechou"] as? Bool, true)
+        XCTAssertEqual((o["g1"] as? NSNumber)?.intValue, 1)
+        XCTAssertEqual(o["g0"] as? String, "0gel", "sem porta continua caixa da geladeira")
+        XCTAssertEqual((o["g2"] as? NSNumber)?.intValue, 2)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Painel novo pergunta a parede (fundo, esquerda, direita), muda de parede e faz cópia separada em outra parede (sala).
+    func testPainelEmOutraParedeMudaECopia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='livre';S.room='sala';S.W=3800;S.H=2700;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='sala'})[0],ix=c.it.findIndex(function(q){return q.act==='pl'});catOpen();await new Promise(function(r){setTimeout(r,80)});document.querySelector('#catm [data-cati="sala|'+ix+'"]').click();await new Promise(function(r){setTimeout(r,250)});
+          var M=document.getElementById('rwm');R.pergunta=!!M&&!M.hidden&&/Em qual parede vai o painel/.test(M.textContent);var a=S.rp[0];document.querySelector('#rwm [data-rwg="'+a.id+'|m|e"]').click();R.esq=a.wall+' '+(a.x+a.w<=roomD());
+          rwAsk(a.id);document.querySelector('#rwm [data-rwg="'+a.id+'|c|d"]').click();rwAsk(a.id);document.querySelector('#rwm [data-rwg="'+a.id+'|c|f"]').click();R.paredes=S.rp.map(function(q){return q.wall||'f'}).join('');
+          var G=cutGroups();R.corte=G.ord.filter(function(k){return /painel liso/i.test(G.map[k].names[0])}).reduce(function(s,k){return s+G.map[k].qty},0);
+          LAST='rp';RPSEL=S.rp[2].id;draw();rpBar();R.barra=!!document.querySelector('#rpbar [data-rwq]');
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var B=__boxes();R.b3=['e','d'].map(function(w){var q=S.rp.filter(function(x){return x.wall===w})[0];return B.some(function(b){return b.rpid===q.id})}).join(',');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["pergunta"] as? Bool, true, "painel novo pergunta a parede")
+        XCTAssertEqual(o["esq"] as? String, "e true", "foi pra parede da esquerda, cabe nela")
+        XCTAssertEqual(o["paredes"] as? String, "edf", "cópias separadas na direita e no fundo")
+        XCTAssertEqual((o["corte"] as? NSNumber)?.intValue, 3, "cada painel com o seu corte")
+        XCTAssertEqual(o["barra"] as? Bool, true, "dá pra mudar de parede tocando no painel")
+        XCTAssertEqual(o["b3"] as? String, "true,true", "aparece no 3D nas paredes do lado")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Toque nas gavetas abre os ajustes: quantidade e altura da caixa de todas (centralizada na frente), também no caixote;
+    /// catálogo: sala com torres tipo guarda-roupa, cada ambiente só com o que serve e mais modelos.
+    func testGavetasAjustesNoToqueECatalogoOrganizado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3500;S.H=2600;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='inf'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Gaveteiro 4 gavetas'})[0])));var m=S.m;draw();
+          var p=partsOf(m).filter(function(q){return q.name==='Frente de gaveta'})[1];window.__pcWas=m;pcTap(m,p);var B=function(a){var b=document.querySelector('#gvbox [data-gv="'+a+'"]');if(b)b.click();return !!b};R.abriu=!document.getElementById('gvbox').hidden;
+          B('h|10');var g=gbox(m.v[0],vaoRanges(m)[0][1]-vaoRanges(m)[0][0],drawerH(m.v[0]),m.d);R.alta=m.v[0].gH+' '+(Math.abs(g.ft-g.fb)<0.6);B('h|-10');B('h|-10');g=gbox(m.v[0],vaoRanges(m)[0][1]-vaoRanges(m)[0][0],drawerH(m.v[0]),m.d);R.baixa=(m.v[0].gH<R.alta.split(' ')[0]*1)+' '+(Math.abs(g.ft-g.fb)<0.6);
+          B('n|1');R.n=m.v[0].n;B('auto');R.auto=m.v[0].gH===undefined;B('x');R.fechou=document.getElementById('gvbox').hidden;
+          S.mods=[];S.room='quarto';S.env='livre';var cq=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return /^Torre do guarda-roupa/.test(q.n)})[0])));m=S.m;gvOpenK(0,0,2);B('h|-10');R.cx=m.v[0].int[2].gH>0&&partsOf(m).some(function(q){return /^Caixote · gaveta · lateral/.test(q.name)});
+          R.sala=ROOMCATS.sala.slice(0,2).join(',')+' '+CATS.filter(function(x){return x.id==='salaT'})[0].it.length;R.quarto=ROOMCATS.quarto[0]+' '+(ROOMCATS.quarto.indexOf('alto')<0)+' '+(ROOMCATS.quarto.indexOf('cchur')<0);
+          S.mods=[];S.room='sala';var cs=CATS.filter(function(x){return x.id==='salaT'})[0];newTpl(JSON.parse(JSON.stringify(cs.it[0])));S.tab=2;S.sv=0;panel();R.chaves=[].map.call(document.querySelectorAll('#bd [data-intadd]'),function(b){return b.dataset.intadd}).join(',');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["abriu"] as? Bool, true, "toque na gaveta abre os ajustes")
+        XCTAssertTrue(((o["alta"] as? String) ?? "").hasSuffix(" true"), "caixa centralizada na frente")
+        XCTAssertEqual(o["baixa"] as? String, "true true", "diminui todas e continua centralizada")
+        XCTAssertEqual((o["n"] as? NSNumber)?.intValue, 5)
+        XCTAssertEqual(o["auto"] as? Bool, true)
+        XCTAssertEqual(o["fechou"] as? Bool, true)
+        XCTAssertEqual(o["cx"] as? Bool, true, "caixote do guarda-roupa também")
+        XCTAssertEqual(o["sala"] as? String, "sala,salaT 8", "torres tipo guarda-roupa na sala")
+        XCTAssertEqual(o["quarto"] as? String, "quarto true true", "quarto sem torre de forno nem churrasqueira")
+        XCTAssertEqual(o["chaves"] as? String, "mal,nic,cab,cabl,cxg,sap", "torre da sala monta igual guarda-roupa")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// 🧠 Cérebro: revisão anti-erros (forno solto na frente da porta vira torre com nicho, porta tempero no banheiro),
+    /// aprende o costume dos projetos (maleiro e fundo) só no aparelho; parede do painel no desenho 3D com largura e altura;
+    /// porta com cava = vão + 30 (passa 20 em cima e 10 embaixo); armário livre do zero.
+    func testCerebroAntiErrosAprendeCostumeEParedeEmTresD() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};PR.brain={p:{},ign:{}};S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=5610;S.H=2600;S.Hm=1;S.Wm=1;S.ambOk=1;draw();
+          var c=CATS.filter(function(x){return x.id==='alto'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Armário alto 2 portas'})[0])));var m=S.m;m.w=800;m.h=2600;m.x=2000;draw();
+          var P=partsOf(m).filter(function(p){return p.name==='Porta'})[0];R.cava=Math.round(P.h-vhm(m))+' '+Math.round(vTop(m)-P.y);
+          apAdd('microondas',apModels('microondas').findIndex(function(q){return /ME3EP/.test(q[0])}));var f1=S.fr[S.fr.length-1];f1.x=2130;f1.b=1170;apAdd('forno',0);var f2=S.fr[S.fr.length-1];f2.x=2100;f2.b=453;draw();
+          var L=brainIssues();R.acha=L.filter(function(q){return q.id==='eletro.porta'}).length;brainOpen();var b=[].filter.call(document.querySelectorAll('#brainm [data-brf]'),function(x){return /torre/.test(x.textContent)})[0];b.click();R.torre=m.v[0].k+' '+m.v[0].tw.map(function(t){return t.k}).join(',')+' '+S.fr.length;document.getElementById('brainm').hidden=true;
+          S.mods=[];S.fr=[];S.room='banho';var cb=CATS.filter(function(x){return x.id==='banho'})[0];newTpl(JSON.parse(JSON.stringify(cb.it.filter(function(q){return q.n==='Gabinete 2 portas'})[0])));S.m.v[0].k='tempero';R.banho=brainIssues().map(function(q){return q.id}).join(',');vmenuOpen(0,0,100,100);R.semForno=!document.querySelector('#vmenu [data-vk="oven"]')&&!document.querySelector('#vmenu [data-vk="tempero"]')||S.m.v[0].k==='tempero';vmenuClose();
+          /* aprende: 2 projetos com maleiro 450 → o próximo maleiro já vem com 450 */S.room='quarto';S.env='livre';var cq=CATS.filter(function(x){return x.id==='quarto'})[0];['p1','p2'].forEach(function(k){S.mods=[];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return q.n==='Guarda-roupa 2 vãos'})[0])));S.m.v[0].int=[{t:'mal',h:450},{t:'cab',h:1820}];PR.brain.p[k]={t:Date.now(),f:(function(){var CUR0=window.CUR;return null})()}});
+          PR.brain.p={p1:{t:1,f:['mal=450','d.quarto.alto=600']},p2:{t:2,f:['mal=450','d.quarto.alto=600']}};R.costume=(brainHabit('mal')||{}).v+' '+(brainHabit('d.quarto.alto')||{}).v;
+          S.mods=[];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return q.n==='Guarda-roupa 2 vãos'})[0])));m=S.m;S.sv=0;var at=ibAdd(m,0,'mal');R.malAprendido=Math.round(m.v[0].int[at].h);R.foge=brainIssues().some(function(q){return q.id==='hab.d.alto'});
+          /* parede do painel: desenho 3D das 3 paredes e o tamanho da parede */S.room='sala';S.mods=[];var a=rpNew({x:100,b:0,w:1800,h:2400});a.liso=true;rwAsk(a.id,true);var g=document.querySelector('#rwm [data-rwp="'+a.id+'|d"]');g.dispatchEvent(new MouseEvent('click',{bubbles:true}));var inp=document.querySelector('#rwm [data-rwz="'+a.id+'|L"]');inp.value='3100';inp.dispatchEvent(new Event('change',{bubbles:true}));R.parede=a.wall+' '+wallCfg('R').len;document.querySelector('#rwm [data-rwx]').click();
+          var cs=CATS.filter(function(x){return x.id==='salaT'})[0];R.livre=cs.it[0].free0===1&&/montar do zero/.test(cs.it[0].n);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cava"] as? String, "30 25", "porta com cava: vão + 30, passa 20 em cima (mais a travessa)")
+        XCTAssertEqual((o["acha"] as? NSNumber)?.intValue, 2, "acha o forno e o micro soltos na frente da porta")
+        XCTAssertEqual(o["torre"] as? String, "oven door,micro,forno,door 0", "1 toque vira torre com nicho")
+        XCTAssertEqual(o["banho"] as? String, "room.tempero", "porta tempero no banheiro não faz sentido")
+        XCTAssertEqual(o["semForno"] as? Bool, true)
+        XCTAssertEqual(o["costume"] as? String, "450 600", "aprende o que se repete")
+        XCTAssertEqual((o["malAprendido"] as? NSNumber)?.intValue, 450, "maleiro novo já vem no costume")
+        XCTAssertEqual(o["foge"] as? Bool, true, "avisa quando foge do costume")
+        XCTAssertEqual(o["parede"] as? String, "d 3100", "escolhe a parede no desenho e muda a largura dela")
+        XCTAssertEqual(o["livre"] as? Bool, true, "armário livre do zero")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    func testDetalhamento3DComSetasESalvarModuloNaCategoriaERecentes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};PR.myMods=[];PR.myCats=[];PR.recent=[];S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.rp=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2600;S.Hm=1;S.Wm=1;S.ambOk=1;draw();
+          /* recentes: o que entrou pelo catálogo aparece primeiro, do mais novo pro mais velho */
+          catOpen('inf');document.querySelector('[data-cati="inf|0"]').click();catOpen('inf');document.querySelector('[data-cati="inf|3"]').click();
+          catOpen();R.primeira=(document.querySelector('#catb [data-catt]')||{dataset:{}}).dataset.catt;catOpen('recent');R.recentes=document.querySelectorAll('#catgw [data-cati]').length;var n0=S.mods.length;document.querySelector('#catgw [data-cati="recent|1"]').click();R.usa=S.mods.length-n0;
+          /* pedra e aéreo pra ter cotas */addStone();var x1=0;S.mods.forEach(function(m){x1=Math.max(x1,m.x+m.w)});S.st.x=0;S.st.w=x1;var cs=CATS.filter(function(x){return x.id==='sup'})[0];newTpl(JSON.parse(JSON.stringify(cs.it.filter(function(q){return q.n==='Aéreo 2 portas'})[0])));draw();
+          open3D();await new Promise(function(r){setTimeout(r,700)});document.getElementById('v3det').click();await new Promise(function(r){setTimeout(r,400)});var sv=document.getElementById('det3svg');
+          R.setas=sv.querySelectorAll('marker').length>0&&sv.querySelectorAll('line[marker-start][marker-end]').length>=3;R.chamada=sv.querySelectorAll('line[stroke-opacity]').length>0;
+          var tx=[].map.call(sv.querySelectorAll('text'),function(t){return t.textContent});R.alturas=['820','40'].every(function(v){return tx.indexOf(v)>=0});R.parede=tx.indexOf('parede 4200')>=0;R.nome=tx.indexOf('módulo')>=0;
+          window.det3Mode('c');tx=[].map.call(sv.querySelectorAll('text'),function(t){return t.textContent});R.doChao=tx.indexOf('+860')>=0&&tx.indexOf('+820')>=0;window.det3Stop();
+          /* salvar o módulo escolhendo a categoria (inclusive uma nova) */
+          S.m=S.mods[0];window.mySaveOpen(S.m);document.getElementById('myname').value='Balcão do João';document.querySelector('#mysvb [data-myall]').click();R.todas=document.querySelectorAll('#mysvb [data-mycat]').length;
+          document.querySelector('#mysvb [data-mynew]').click();document.getElementById('mynewc').value='Padrão da loja';document.querySelector('#mysvb [data-mynewok]').click();document.querySelector('#mysvb [data-myok]').click();
+          var uc=(PR.myCats[0]||{}).id;R.cat=PR.myMods.length===1&&PR.myMods[0].cat===uc;
+          catOpen();R.chips=[].map.call(document.querySelectorAll('#catb [data-catt]'),function(b){return b.dataset.catt}).slice(0,3).join(',').replace(uc,'uc');
+          catOpen(uc);document.querySelector('#catgw [data-cati="'+uc+'|0"]').click();R.entrou=S.m.myN;
+          window.myManage();var se=document.querySelector('#mysvb select[data-mycs]');se.value='alto';se.dispatchEvent(new Event('change',{bubbles:true}));R.muda=PR.myMods[0].cat;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["primeira"] as? String, "recent", "usados por último vem primeiro no catálogo")
+        XCTAssertEqual((o["recentes"] as? NSNumber)?.intValue, 2)
+        XCTAssertEqual((o["usa"] as? NSNumber)?.intValue, 1, "o recente entra igual ao original")
+        XCTAssertEqual(o["setas"] as? Bool, true, "cota com seta nas duas pontas")
+        XCTAssertEqual(o["chamada"] as? Bool, true, "linha de chamada saindo da peça")
+        XCTAssertEqual(o["alturas"] as? Bool, true)
+        XCTAssertEqual(o["parede"] as? Bool, true)
+        XCTAssertEqual(o["nome"] as? Bool, true, "diz o que é cada medida")
+        XCTAssertEqual(o["doChao"] as? Bool, true, "altura de cada nível a partir do chão")
+        XCTAssertGreaterThanOrEqual((o["todas"] as? NSNumber)?.intValue ?? 0, 16, "pode escolher qualquer categoria")
+        XCTAssertEqual(o["cat"] as? Bool, true, "salva na categoria nova")
+        XCTAssertEqual(o["chips"] as? String, "recent,mine,uc")
+        XCTAssertEqual(o["entrou"] as? String, "Balcão do João")
+        XCTAssertEqual(o["muda"] as? String, "alto", "troca a categoria depois")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    func testAjustesEm3DNoModuloDoProjetoComLupaEAntesTracejado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3000;draw();
+          var c=CATS.filter(function(x){return x.id==='inf'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Balcão 2 portas'})[0])));S.m.w=800;draw();
+          stdOpen(0);await new Promise(function(r){setTimeout(r,300)});
+          R.cards=[].map.call(document.querySelectorAll('#stdbody [data-aj3]'),function(e){return e.dataset.aj3}).join(',');
+          var inp=document.querySelector('#stdbody [data-stdn="pSn"]');inp.focus();inp.dispatchEvent(new FocusEvent('focusin',{bubbles:true}));await new Promise(function(r){setTimeout(r,150)});
+          var cd=document.querySelector('#stdbody [data-aj3="portas"]');R.real=/No seu projeto/.test(cd.textContent);R.vermelho=cd.querySelectorAll('polygon[stroke="#d92d20"]').length>0;R.lupa=!!cd.querySelector('clipPath')&&/^6$/.test((cd.querySelector('g[clip-path] text')||{}).textContent||'');
+          var fl=document.getElementById('cfgfloat');R.topo=!!(fl&&fl.querySelector('[data-aj3svg]'));
+          inp.value='9';inp.dispatchEvent(new Event('input',{bubbles:true}));cd=document.querySelector('#stdbody [data-aj3="portas"]');R.antes=/antes/.test(cd.textContent)&&cd.querySelectorAll('polygon[stroke-dasharray]').length>0;R.lupa9=(cd.querySelector('g[clip-path] text')||{}).textContent;
+          STD().pSn=6;var g=document.querySelector('#stdbody [data-aj3="gavetas"] [data-aj3svg]');R.gaveta=!!g;window.CFGHL='baseH';R.alturas=/820/.test(aj3Html('alturas'));
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cards"] as? String, "portas,gavetas,puxadores,caixa,tamp,pedra,alturas", "3D em cada seção")
+        XCTAssertEqual(o["real"] as? Bool, true, "mostra o módulo do projeto")
+        XCTAssertEqual(o["vermelho"] as? Bool, true, "a peça que muda em vermelho")
+        XCTAssertEqual(o["lupa"] as? Bool, true, "lupa com a medida pequena")
+        XCTAssertEqual(o["topo"] as? Bool, true, "3D no quadro preso no topo enquanto digita")
+        XCTAssertEqual(o["antes"] as? Bool, true, "antes tracejado quando muda")
+        XCTAssertEqual(o["lupa9"] as? String, "9")
+        XCTAssertEqual(o["gaveta"] as? Bool, true)
+        XCTAssertEqual(o["alturas"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
     func testSobraQueEuTenhoEntraNoPlanoDeCorteETrocaChapaInteira() async throws {

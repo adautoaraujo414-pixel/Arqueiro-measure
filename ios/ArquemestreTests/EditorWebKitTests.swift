@@ -3437,6 +3437,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 
+    func testRodapeDePedraNaFrenteEMontarOAmbienteNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.geo=[];S.xw=[];S.env='cozinha';S.W=3600;S.H=2700;S.Hm=1;S.Wm=1;S.ambOk=1;draw();mkL('e',3600,2000,600,1);draw();var R={};
+          var m0=S.mods.filter(function(m){return !m.sup&&!m.corner&&!m.wing})[0],r0=rodRF(m0),lat0=partsOf(m0).filter(function(p){return /Rodapé lateral esquerdo/.test(p.name)})[0];
+          /* liga pela regra do módulo: o MDF recua mais 40 e a pedra de 20 vem na frente */
+          S.m=m0;S.tab=4;draw();panel();var tg=document.querySelector('#bd [data-rpp="tog"]');if(!tg){S.tab=0;panel();tg=document.querySelector('#bd [data-rpp="tog"]')}R.botao=!!tg;if(tg)tg.click();else S.rpp={on:true};
+          R.recuo=rodRF(m0)-r0;var lat1=partsOf(m0).filter(function(p){return /Rodapé lateral esquerdo/.test(p.name)})[0];R.lateral=lat0&&lat1?lat0.cl-lat1.cl:null;
+          var P=rppRuns();R.pecas=P.map(function(p){return p.at+':'+p.len+'x'+p.h});
+          /* nenhuma entra na outra: as caixas não se sobrepõem e as da frente encostam na do canto (topo a topo) */
+          var ov=0;for(var i=0;i<P.length;i++)for(var j=i+1;j<P.length;j++){var a=P[i],b=P[j];if(a.x0<b.x1-0.6&&b.x0<a.x1-0.6&&a.z0<b.z1-0.6&&b.z0<a.z1-0.6)ov++}R.sobrepoe=ov;
+          var fr=P.filter(function(p){return p.ax==='x'}),ld=P.filter(function(p){return p.ax==='z'})[0];R.encosta=!!ld&&fr.length>0&&Math.abs(Math.min.apply(null,fr.map(function(p){return p.x0}))-ld.x1)<0.6;
+          R.altura=P.every(function(p){return p.h===m0.rodMm});R.max=P.every(function(p){return p.len<=3000});
+          /* aba Pedra: cor, medidas e a lista pra marmoraria */
+          S.tab=6;S.st=S.stones[0];draw();panel();var bd=document.getElementById('bd');R.secao=!!bd.querySelector('[data-rppv="t"]')&&/Peças pra marmoraria/.test(bd.textContent);
+          var c=bd.querySelector('[data-rppc="#27372c"]');if(c)c.click();R.cor=S.rpp.c==='#27372c';var hi=document.querySelector('#bd [data-rppv="h"]');if(hi){hi.value='80';hi.dispatchEvent(new Event('change',{bubbles:true}))}R.h80=rppRuns().every(function(p){return p.h===80});
+          R.parte2D=partsOf(m0).some(function(p){return p.rppS&&p.noCut});R.semCorteMDF=!cutLines(m0).some(function(l){return (l.names||[]).some(function(n){return /pedra/i.test(n)})});
+          R.salva=(function(){var o=snapState();return o.rpp&&o.rpp.on===true})();
+          /* montar o ambiente: ao escolher o ambiente num projeto vazio abre o 3D só da sala, com tudo num cabeçalho */
+          S.mods=[];S.stones=[];S.rpp=null;delete S.ambOk;S.tab=9;draw();panel();var rb=document.querySelector('#bd [data-room="cozinha"]');R.btn=!!document.querySelector('#bd [data-ambopen]');if(rb)rb.click();await new Promise(function(r){setTimeout(r,400)});
+          var A=document.getElementById('ambset');R.abre=!!A&&!A.hidden&&!!window.AMBSET&&!document.getElementById('v3').hidden;
+          var setI=function(k,v){var i=A.querySelector('[data-ambs="'+k+'"]');if(!i)return false;i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}));return true},bt=function(k){var x=A.querySelector('[data-ambsb="'+k+'"]');if(x)x.click();return !!x};
+          setI('W',4200);setI('RD',3600);setI('H',2750);bt('addcol');bt('addxw');bt('addil');setI('g0.x',500);setI('xw0.L',1800);bt('xwdir:0');setI('Rlen',3900);setI('Lh',2600);
+          R.medidas=[S.W,S.RD,S.H,S.geo.length,S.geo[0].x,S.geo[0].h,S.xw.length,Math.round(Math.hypot(S.xw[0].b[0]-S.xw[0].a[0],S.xw[0].b[1]-S.xw[0].a[1])),Math.abs(S.xw[0].b[0]-S.xw[0].a[0])<1?'pra frente':'deitada',S.isl.length,wallCfg('R').len,wallCfg('L').h0].join(',');
+          R.pisoAcompanha=roomD()>=3900;
+          bt('ok');await new Promise(function(r){setTimeout(r,300)});R.pronto=document.getElementById('v3').hidden&&A.hidden&&!window.AMBSET&&S.ambOk===1;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["botao"] as? Bool, true, "liga o rodapé de pedra pela regra do módulo")
+        XCTAssertEqual((o["recuo"] as? NSNumber)?.intValue, 40, "o rodapé de MDF recua mais 40 mm")
+        XCTAssertEqual((o["lateral"] as? NSNumber)?.intValue, 40, "as peças do lado do pedestal diminuem junto")
+        XCTAssertEqual((o["sobrepoe"] as? NSNumber)?.intValue, 0, "nenhum rodapé de pedra entra no outro: \(o["pecas"] ?? "")")
+        XCTAssertEqual(o["encosta"] as? Bool, true, "a peça da frente encosta na do canto (topo a topo)")
+        XCTAssertEqual(o["altura"] as? Bool, true, "altura = rodapé do móvel")
+        XCTAssertEqual(o["max"] as? Bool, true, "peças até 3 m")
+        XCTAssertEqual(o["secao"] as? Bool, true, "aba Pedra com medidas e lista pra marmoraria")
+        XCTAssertEqual(o["cor"] as? Bool, true, "qualquer cor de pedra")
+        XCTAssertEqual(o["h80"] as? Bool, true, "altura editável")
+        XCTAssertEqual(o["parte2D"] as? Bool, true, "aparece no desenho")
+        XCTAssertEqual(o["semCorteMDF"] as? Bool, true, "não entra no corte de MDF")
+        XCTAssertEqual(o["salva"] as? Bool, true, "fica salvo no projeto")
+        XCTAssertEqual(o["btn"] as? Bool, true, "botão de montar o ambiente")
+        XCTAssertEqual(o["abre"] as? Bool, true, "criar o ambiente abre o 3D só da sala")
+        XCTAssertEqual(o["medidas"] as? String, "4200,3900,2750,1,500,2750,1,1800,pra frente,1,3900,2600", "medidas, coluna, parede no meio, ilha e paredes do lado pelo cabeçalho")
+        XCTAssertEqual(o["pisoAcompanha"] as? Bool, true, "o piso aumenta sozinho")
+        XCTAssertEqual(o["pronto"] as? Bool, true, "Pronto volta pro 2D")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
     func testJuntaDoPainelAcompanhaEDesnivelDoTeto() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

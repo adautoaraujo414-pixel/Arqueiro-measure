@@ -3569,7 +3569,7 @@ final class EditorWebKitTests: XCTestCase {
           B('h|10');var g=gbox(m.v[0],vaoRanges(m)[0][1]-vaoRanges(m)[0][0],drawerH(m.v[0]),m.d);R.alta=m.v[0].gH+' '+(Math.abs(g.ft-g.fb)<0.6);B('h|-10');B('h|-10');g=gbox(m.v[0],vaoRanges(m)[0][1]-vaoRanges(m)[0][0],drawerH(m.v[0]),m.d);R.baixa=(m.v[0].gH<R.alta.split(' ')[0]*1)+' '+(Math.abs(g.ft-g.fb)<0.6);
           B('n|1');R.n=m.v[0].n;B('auto');R.auto=m.v[0].gH===undefined;B('x');R.fechou=document.getElementById('gvbox').hidden;
           S.mods=[];S.room='quarto';S.env='livre';var cq=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return /^Torre do guarda-roupa/.test(q.n)})[0])));m=S.m;gvOpenK(0,0,2);B('h|-10');R.cx=m.v[0].int[2].gH>0&&partsOf(m).some(function(q){return /^Caixote · gaveta · lateral/.test(q.name)});
-          R.sala=ROOMCATS.sala.slice(0,2).join(',')+' '+CATS.filter(function(x){return x.id==='salaT'})[0].it.length;R.quarto=ROOMCATS.quarto[0]+' '+(ROOMCATS.quarto.indexOf('alto')<0)+' '+(ROOMCATS.quarto.indexOf('cchur')<0);
+          R.sala=ROOMCATS.sala.slice(0,2).join(',')+' '+CATS.filter(function(x){return x.id==='salaT'})[0].it.length;var Lq_=ROOMCATS.quarto.filter(function(c){return c!=='recent'&&c!=='mine'&&!/^uc_/.test(c)});R.quarto=Lq_[0]+' '+(Lq_.indexOf('alto')>Lq_.indexOf('dArm'))+' '+(Lq_.indexOf('cchur')===Lq_.length-1);
           S.mods=[];S.room='sala';var cs=CATS.filter(function(x){return x.id==='salaT'})[0];newTpl(JSON.parse(JSON.stringify(cs.it[0])));S.tab=2;S.sv=0;panel();R.chaves=[].map.call(document.querySelectorAll('#bd [data-intadd]'),function(b){return b.dataset.intadd}).join(',');
           R.errs=__errs;return JSON.stringify(R);
           """#)
@@ -3580,8 +3580,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["auto"] as? Bool, true)
         XCTAssertEqual(o["fechou"] as? Bool, true)
         XCTAssertEqual(o["cx"] as? Bool, true, "caixote do guarda-roupa também")
-        XCTAssertEqual(o["sala"] as? String, "sala,salaT 8", "torres tipo guarda-roupa na sala")
-        XCTAssertEqual(o["quarto"] as? String, "quarto true true", "quarto sem torre de forno nem churrasqueira")
+        XCTAssertEqual(o["sala"] as? String, "sala,salaT 9", "torres tipo guarda-roupa na sala (8 + armário livre)")
+        XCTAssertEqual(o["quarto"] as? String, "quarto true true", "no quarto, torre de forno e churrasqueira ficam no fim da lista")
         XCTAssertEqual(o["chaves"] as? String, "mal,nic,cab,cabl,cxg,sap", "torre da sala monta igual guarda-roupa")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }

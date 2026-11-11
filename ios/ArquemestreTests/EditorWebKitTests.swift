@@ -3437,6 +3437,59 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 
+    func testCooktopsReaisCincoBocasEColunaArrastadaComAsMedidas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.geo=[];S.xw=[];S.env='cozinha';S.W=3600;S.H=2700;S.RD=3600;S.ambOk=1;draw();addStone();var st=S.st;st.w=2400;draw();var R={};
+          /* modelos com a medida real: quantas bocas, onde fica cada uma e o recorte da pedra */
+          R.cinco=COOKM.filter(function(q){return q.nb===5}).every(function(q){var t={cm:q.id,w:q.w,d:q.d};return cookNb(t)===5&&cookPos(t).length===5});
+          R.batem=COOKM.every(function(q){var t={cm:q.id,w:q.w,d:q.d};return cookPos(t).length===q.nb&&cookLay(t).bz.length===q.nb&&(!q.rc||(q.rc[0]<q.w&&q.rc[1]<q.d))});
+          var M=cookM('bdd85');R.bdd85=M.w+'x'+M.d+' '+M.rc.join('x')+' '+M.nb+' '+cookLay({cm:'bdd85',w:M.w,d:M.d}).lay;
+          /* sem modelo (ou com a medida mudada) a largura manda: 75 cm sai com 5 bocas */
+          R.largura=[cookNb({k:'cook',w:750,d:510}),cookNb({k:'cook',w:580,d:510}),cookNb({k:'cook',w:300,d:500})].join(',');
+          var it={id:NID++,k:'cook',x:100,y:50,w:580,d:510};st.items.push(it);it.w=760;draw();R.esticou=cookNb(it)+' '+it.w;
+          /* trocar o modelo pelo quadro do cooktop */
+          S.items=st.items;S.selI=it.id;S.tab=6;LAST='';draw();panel();showBox();var rbt=document.querySelector('#itbox [data-ckrep]');R.trocarBtn=!!rbt;if(rbt)rbt.click();
+          var bx=document.getElementById('ckpk');R.trocaAbre=!!bx&&!bx.hidden&&bx.dataset.rep===String(it.id);var mb=bx&&bx.querySelector('[data-ckm="bdd75"]');if(mb)mb.click();
+          R.trocou=it.cm+' '+it.w+'x'+it.d+' '+cookNb(it)+' '+st.items.length;
+          /* no 3D: as 5 bocas, as grades e os botões */
+          open3D();await new Promise(function(r){setTimeout(r,300)});R.tem3D=__boxes().filter(function(b){return b.ck===st.id+':'+it.id}).length>40;
+          /* montar o ambiente: a coluna arrasta na planta do cabeçalho e as medidas até as paredes ficam em volta */
+          document.getElementById('v3x').click();S.stones=[];S.items=[];S.st=null;draw();ambSetOpen();await new Promise(function(r){setTimeout(r,300)});var A=document.getElementById('ambset');
+          A.querySelector('[data-ambsb="addcol"]').click();var col=A.querySelector('[data-amo="g:0"]');R.planta=!!col&&!!A.querySelector('#ambplan [data-q="ra|L"]');
+          var pe=function(el,t,x,y){el.dispatchEvent(new PointerEvent(t,{clientX:x,clientY:y,bubbles:true,cancelable:true,pointerId:7,pointerType:'touch',isPrimary:true}))};
+          var g=S.geo[0],x0=g.x,z0=g.z,r=col.getBoundingClientRect(),X=r.left+r.width/2,Y=r.top+r.height/2;pe(col,'pointerdown',X,Y);for(var k=1;k<=6;k++)pe(A,'pointermove',X-k*8,Y);pe(A,'pointerup',X-48,Y);
+          R.arrastou=S.geo[0].x<x0&&S.geo[0].z===z0&&S.geo[0].x%10===0;
+          /* toca no número da direita e digita: a coluna fica a 1000 da parede direita */
+          var lb=A.querySelector('#ambplan [data-q="ra|R"]'),lr=lb.getBoundingClientRect();pe(lb,'pointerdown',lr.left+lr.width/2,lr.top+lr.height/2);pe(lb,'pointerup',lr.left+lr.width/2,lr.top+lr.height/2);
+          var qi=document.getElementById('qein');R.quadro=!document.getElementById('qebox').hidden&&/parede direita/.test(document.getElementById('qelab').textContent);qi.value='1000';qi.dispatchEvent(new Event('input',{bubbles:true}));
+          R.direita=S.W-S.geo[0].x-S.geo[0].w;document.getElementById('qebox').hidden=true;
+          /* no 3D, a medida da coluna escolhida também se toca e digita (com a da frente) */
+          var c=org3api.proj([S.geo[0].x+150,1200,S.geo[0].z+150]);org3api.one(c[0],c[1]);await new Promise(function(r){setTimeout(r,150)});
+          var l3=document.querySelector('[data-q="rb|F"]');R.frente3D=!!l3;R.quadroEscondido=getComputedStyle(document.getElementById('it4')||document.body).display==='none'||!document.getElementById('it4');
+          if(l3){var q3=l3.getBoundingClientRect();pe(l3,'pointerdown',q3.left+5,q3.top+5);pe(l3,'pointerup',q3.left+5,q3.top+5);qi.value='900';qi.dispatchEvent(new Event('input',{bubbles:true}))}R.frente=roomD()-S.geo[0].z-S.geo[0].d;
+          document.getElementById('qebox').hidden=true;A.querySelector('[data-ambsb="ok"]').click();
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cinco"] as? Bool, true, "todo cooktop de 5 bocas mostra as 5")
+        XCTAssertEqual(o["batem"] as? Bool, true, "bocas, tamanhos e recorte batem com o modelo")
+        XCTAssertEqual(o["bdd85"] as? String, "850x460 815x405 5 l", "medida, recorte e a quadrichama do lado")
+        XCTAssertEqual(o["largura"] as? String, "5,4,2", "sem modelo, a largura decide as bocas")
+        XCTAssertEqual(o["esticou"] as? String, "5 760", "cooktop sem modelo esticado pra 76 cm: 5 bocas")
+        XCTAssertEqual(o["trocarBtn"] as? Bool, true, "botão Trocar modelo no quadro do cooktop")
+        XCTAssertEqual(o["trocaAbre"] as? Bool, true, "abre a lista pra trocar")
+        XCTAssertEqual(o["trocou"] as? String, "bdd75 730x460 5 1", "trocou no mesmo lugar")
+        XCTAssertEqual(o["tem3D"] as? Bool, true, "desenha no 3D")
+        XCTAssertEqual(o["planta"] as? Bool, true, "planta com a coluna e as medidas")
+        XCTAssertEqual(o["arrastou"] as? Bool, true, "arrasta a coluna (de 10 em 10 mm)")
+        XCTAssertEqual(o["quadro"] as? Bool, true, "tocar na medida abre o quadro de digitar")
+        XCTAssertEqual((o["direita"] as? NSNumber)?.intValue, 1000, "fica a 1000 da parede direita")
+        XCTAssertEqual(o["frente3D"] as? Bool, true, "no 3D aparece a medida até a frente")
+        XCTAssertEqual(o["quadroEscondido"] as? Bool, true, "na montagem o quadro do 3D não cobre o cabeçalho")
+        XCTAssertEqual((o["frente"] as? NSNumber)?.intValue, 900, "digitou no 3D: 900 até a frente")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     func testRodapeDePedraNaFrenteEMontarOAmbienteNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -3459,7 +3512,7 @@ final class EditorWebKitTests: XCTestCase {
           S.mods=[];S.stones=[];S.rpp=null;delete S.ambOk;S.tab=9;draw();panel();var rb=document.querySelector('#bd [data-room="cozinha"]');R.btn=!!document.querySelector('#bd [data-ambopen]');if(rb)rb.click();await new Promise(function(r){setTimeout(r,400)});
           var A=document.getElementById('ambset');R.abre=!!A&&!A.hidden&&!!window.AMBSET&&!document.getElementById('v3').hidden;
           var setI=function(k,v){var i=A.querySelector('[data-ambs="'+k+'"]');if(!i)return false;i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}));return true},bt=function(k){var x=A.querySelector('[data-ambsb="'+k+'"]');if(x)x.click();return !!x};
-          setI('W',4200);setI('RD',3600);setI('H',2750);bt('addcol');bt('addxw');bt('addil');setI('g0.x',500);setI('xw0.L',1800);bt('xwdir:0');setI('Rlen',3900);setI('Lh',2600);
+          setI('W',4200);setI('RD',3600);setI('H',2750);bt('addcol');bt('addxw');bt('addil');bt('min');setI('g0.x',500);setI('xw0.L',1800);bt('xwdir:0');setI('Rlen',3900);setI('Lh',2600);
           R.medidas=[S.W,S.RD,S.H,S.geo.length,S.geo[0].x,S.geo[0].h,S.xw.length,Math.round(Math.hypot(S.xw[0].b[0]-S.xw[0].a[0],S.xw[0].b[1]-S.xw[0].a[1])),Math.abs(S.xw[0].b[0]-S.xw[0].a[0])<1?'pra frente':'deitada',S.isl.length,wallCfg('R').len,wallCfg('L').h0].join(',');
           R.pisoAcompanha=roomD()>=3900;
           bt('ok');await new Promise(function(r){setTimeout(r,300)});R.pronto=document.getElementById('v3').hidden&&A.hidden&&!window.AMBSET&&S.ambOk===1;

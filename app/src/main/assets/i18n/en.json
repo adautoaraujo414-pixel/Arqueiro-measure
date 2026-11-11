@@ -5913,5 +5913,7 @@
 "Cozinha de exemplo": "Sample kitchen",
 "Arraste no desenho pra girar": "Drag the drawing to rotate",
 "o detalhe pequeno": "the small detail",
-"tracejado = como era antes": "dashed = how it was before"
+"tracejado = como era antes": "dashed = how it was before",
+"tracejado": "dashed",
+"como era antes": "how it was before"
 }

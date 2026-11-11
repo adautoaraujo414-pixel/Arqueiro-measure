@@ -378,7 +378,7 @@ final class EditorWebKitTests: XCTestCase {
           newTpl(4);var m=S.mods[0];m.w=900;m.h=800;m.d=350;m.latFora=true;draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};
           var sides=['Porta','Lateral esquerda','Base inferior','Base superior','Fundo','Lateral de gaveta','Rodapé (pedestal)','Ripa 40 mm','Tamponamento esquerdo'].map(function(n){return edgeSides(n)}).join('|');
           window.print=function(){window.__printed=1};openCut();var pb=document.getElementById('cutprint');var tbl=document.querySelector('#cutbody table.cutpt'),heads=tbl?[].map.call(tbl.querySelectorAll('th'),function(t){return t.textContent}).join(','):'';cutPrint();var hd=document.getElementById('pthead');
-          var greens=(document.querySelector('#cutbody svg')||{innerHTML:''}).innerHTML.indexOf('#1f9d55')>=0;
+          var greens=(document.querySelector('#cutbody svg[viewBox^="-30 "]')||{innerHTML:''}).innerHTML.indexOf('#1f9d55')>=0;
           return JSON.stringify({lat:g('Lateral esquerda'),base:g('Base inferior'),teto:g('Base superior'),sides:sides,btn:!!pb,heads:heads,hd:!!(hd&&/Data|Ordem/.test(hd.textContent)),greens:greens,opt:STDOPT.caixa.length,errs:__errs});
           """#)
         XCTAssertEqual(o["lat"] as? String, "800x350", "laterais por fora: lateral inteira (altura do módulo)")
@@ -3435,6 +3435,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cfg"] as? String, "sem/preto", "blindex sem perfil e ferragem preta")
         XCTAssertEqual(o["idsOk"] as? Bool, true, "modelos das torres prontas existem")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    func testSobraQueEuTenhoEntraNoPlanoDeCorteETrocaChapaInteira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};PR.metodo='max';PR.veio=false;S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.sobras=[];S.env='cozinha';S.W=5000;S.ambOk=1;draw();addStone();S.st.w=4600;draw();var R={};
+          var c=CATS.filter(function(x){return x.id==='inf'})[0];[0,3,5,0,3].forEach(function(i){newTpl(JSON.parse(JSON.stringify(c.it[i])))});draw();
+          var cnt=function(p){return p.groups.reduce(function(a,g){return a+g.sheets.reduce(function(b,s){return b+s.used.length},0)},0)},pl0=sheetPlan(),gb=pl0.groups.filter(function(g){return g.t==='b'})[0];R.antes=gb.n;
+          /* no cabeçalho do plano: todas as chapas em fila, minimizadas, e o botão da sobra */
+          openCut();await new Promise(function(r){setTimeout(r,400)});var B=function(){return document.getElementById('sobbar')};R.fila=!!B()&&B().querySelectorAll('[data-cgo]').length===pl0.groups.reduce(function(a,g){return a+g.sheets.length},0);
+          B().querySelector('[data-sobadd]').click();R.chips=B().querySelectorAll('[data-sobg] svg').length===pl0.groups.length;B().querySelector('[data-sobg="'+gb.key+'"]').click();
+          var iw=B().querySelector('[data-sobf="w"]'),ih=B().querySelector('[data-sobf="h"]');iw.value='1500';iw.dispatchEvent(new Event('input',{bubbles:true}));ih.value='1800';ih.dispatchEvent(new Event('input',{bubbles:true}));B().querySelector('[data-sobok]').click();await new Promise(function(r){setTimeout(r,300)});
+          R.sobra=JSON.stringify(S.sobras.map(function(b){return [b.k===gb.key,b.w,b.h,b.q,b.on]}));
+          /* recalcula em cima dela: entra primeiro, as peças continuam todas no plano e sai uma chapa inteira a menos */
+          var pl=sheetPlan(),g=pl.groups.filter(function(x){return x.key===gb.key})[0];R.depois=g.n0+'>'+g.n+' sob '+g.nSob+' '+(!!g.sheets[0].sob&&g.sheets[0].used.length>3);R.pecas=cnt(pl)===cnt(pl0);
+          R.dentro=g.sheets[0].used.every(function(u){return u.x>=0&&u.y>=0&&u.x+u.w<=1500-2*pl.ref+.5&&u.y+u.h<=1800-2*pl.ref+.5});
+          R.desenho=!!document.getElementById('cs'+pl.groups.indexOf(g)+'_0')&&/SOBRA/.test(document.getElementById('cs'+pl.groups.indexOf(g)+'_0').textContent);
+          /* por comprimento e por largura também */
+          PR.metodo='comp';var pc=sheetPlan().groups.filter(function(x){return x.key===gb.key})[0];PR.metodo='larg';var pg=sheetPlan().groups.filter(function(x){return x.key===gb.key})[0];PR.metodo='max';R.metodos=pc.sheets[0].ms+' '+pg.sheets[0].ms+' '+pc.nSob+pg.nSob;
+          /* o orçamento continua com as chapas inteiras; a sobra fica no projeto */
+          R.orcamento=sheetPlan(1).groups.filter(function(x){return x.key===gb.key})[0].n===R.antes;R.salva=(snapState().sobras||[]).length;
+          /* pausar e tirar */
+          openCut();await new Promise(function(r){setTimeout(r,300)});B().querySelector('[data-sobon]').click();R.pausou=sheetPlan().groups.filter(function(x){return x.key===gb.key})[0].nSob;
+          openCut();await new Promise(function(r){setTimeout(r,300)});var dl=B().querySelector('[data-sobdel]');dl.click();R.confirma=S.sobras.length;dl=B().querySelector('[data-sobdel]');dl.click();R.tirou=S.sobras.length;
+          document.getElementById('cutm').hidden=true;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["fila"] as? Bool, true, "todas as chapas minimizadas em fila no cabeçalho")
+        XCTAssertEqual(o["chips"] as? Bool, true, "escolhe de qual chapa é pelo desenho pequeno")
+        XCTAssertEqual(o["sobra"] as? String, "[[true,1500,1800,1,1]]", "sobra branca 1500 × 1800 guardada")
+        XCTAssertEqual(o["depois"] as? String, "\((o["antes"] as? NSNumber)?.intValue ?? 0)>\(((o["antes"] as? NSNumber)?.intValue ?? 1) - 1) sob 1 true", "a sobra troca uma chapa inteira")
+        XCTAssertEqual(o["pecas"] as? Bool, true, "nenhuma peça some")
+        XCTAssertEqual(o["dentro"] as? Bool, true, "as peças cabem na sobra (com o refilo)")
+        XCTAssertEqual(o["desenho"] as? Bool, true, "a sobra aparece desenhada no plano")
+        XCTAssertEqual(o["metodos"] as? String, "comp larg 11", "por comprimento e por largura também")
+        XCTAssertEqual(o["orcamento"] as? Bool, true, "orçamento com as chapas inteiras")
+        XCTAssertEqual((o["salva"] as? NSNumber)?.intValue, 1, "fica salva no projeto")
+        XCTAssertEqual((o["pausou"] as? NSNumber)?.intValue, 0, "pausar tira do plano")
+        XCTAssertEqual((o["confirma"] as? NSNumber)?.intValue, 1, "tirar pede o segundo toque")
+        XCTAssertEqual((o["tirou"] as? NSNumber)?.intValue, 0)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
     func testMeusModelosSalvosNoCatalogoEDivisorDeTalheresModelo1e2() async throws {

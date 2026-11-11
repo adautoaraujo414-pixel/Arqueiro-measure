@@ -189,6 +189,8 @@ data class RoomObj(
     /** Escrita dos quadradinhos das paredes em pé (vertical) em vez de deitada. */
     val labelVert: Boolean = false,
     override val locked: Boolean = false,
+    /** Pedra: o desenho acompanha as medidas (lado maior = medida maior) e confere se fecham. */
+    val stone: Boolean = false,
 ) : Ann() {
     fun segCount(): Int = if (closed) pts.size else pts.size - 1
     fun segEnds(k: Int): Pair<Pt, Pt> = pts[k] to pts[(k + 1) % pts.size]

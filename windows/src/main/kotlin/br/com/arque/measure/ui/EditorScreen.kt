@@ -156,6 +156,7 @@ private fun Tool.icon(): ImageVector = when (this) {
     Tool.ARROW -> Icons.AutoMirrored.Filled.ArrowRightAlt
     Tool.DIM -> Icons.Filled.Straighten
     Tool.ROOM -> Icons.Filled.Home
+    Tool.STONE -> Icons.Filled.CropSquare
     Tool.RECT -> Icons.Filled.CropSquare
     Tool.RRECT -> Icons.Filled.RoundedCorner
     Tool.ELLIPSE -> Icons.Filled.RadioButtonUnchecked
@@ -721,6 +722,7 @@ fun EditorScreen(vm: AppViewModel, session: EditorSession) {
                     BarPill {
                         ToolBtn(Tool.DIM, session)
                         ToolBtn(Tool.ROOM, session)
+                        ToolBtn(Tool.STONE, session)
                         ToolBtn(Tool.DOOR, session)
                     }
                     // inserir
@@ -975,6 +977,17 @@ private fun ShapeGlyph(t: Tool, tint: Color, size: androidx.compose.ui.unit.Dp, 
                 drawLine(tint, P(0.4f, 0.69f), P(0.3f, 0.9f), sw, androidx.compose.ui.graphics.StrokeCap.Round)
             }
             Tool.ROOM -> poly(listOf(P(0.12f, 0.2f), P(0.6f, 0.2f), P(0.6f, 0.5f), P(0.88f, 0.5f), P(0.88f, 0.85f), P(0.12f, 0.85f)), true)
+            Tool.STONE -> {
+                // pedra em L, cheia, com a medida em cima
+                val pts = listOf(P(0.08f, 0.3f), P(0.92f, 0.3f), P(0.92f, 0.52f), P(0.34f, 0.52f), P(0.34f, 0.9f), P(0.08f, 0.9f))
+                val path = androidx.compose.ui.graphics.Path()
+                path.moveTo(pts[0].x, pts[0].y); pts.drop(1).forEach { path.lineTo(it.x, it.y) }; path.close()
+                drawPath(path, tint.copy(alpha = 0.28f))
+                poly(pts, true)
+                drawLine(tint, P(0.08f, 0.14f), P(0.92f, 0.14f), sw * 0.8f)
+                drawLine(tint, P(0.08f, 0.06f), P(0.08f, 0.22f), sw * 0.8f)
+                drawLine(tint, P(0.92f, 0.06f), P(0.92f, 0.22f), sw * 0.8f)
+            }
             Tool.RECT -> drawRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), style = st)
             Tool.RRECT -> drawRoundRect(tint, P(0.14f, 0.2f), androidx.compose.ui.geometry.Size(0.72f * w, 0.6f * h), androidx.compose.ui.geometry.CornerRadius(0.16f * w), style = st)
             Tool.ELLIPSE -> drawOval(tint, P(0.12f, 0.2f), androidx.compose.ui.geometry.Size(0.76f * w, 0.6f * h), style = st)
@@ -1035,7 +1048,7 @@ private fun ToolBtn(t: Tool, session: EditorSession) {
     val on = session.tool == t
     LBtn(t.short(), on = on, onClick = { session.chooseTool(t) }) { c ->
         when (t) {
-            Tool.LASSO, Tool.DIM, Tool.DOOR, Tool.ROOM -> ShapeGlyph(t, c, 22.dp)
+            Tool.LASSO, Tool.DIM, Tool.DOOR, Tool.ROOM, Tool.STONE -> ShapeGlyph(t, c, 22.dp)
             else -> Icon(t.icon(), null, tint = c, modifier = Modifier.size(22.dp))
         }
     }
@@ -1242,13 +1255,25 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    if (seg != null) tr("Cômodo · segmento {0} de {1}", k + 1, r.segCount()) else tr("Cômodo · toque num segmento"),
+                    if (r.stone) (if (seg != null) tr("Pedra · lado {0} de {1}", k + 1, r.segCount()) else tr("Pedra · toque num lado"))
+                    else if (seg != null) tr("Cômodo · segmento {0} de {1}", k + 1, r.segCount()) else tr("Cômodo · toque num segmento"),
                     color = dark, fontSize = 16.sp, modifier = Modifier.weight(1f),
                 )
                 TextButton(onClick = { st.stepSeg(-1) }) { Text("‹") }
                 TextButton(onClick = { st.stepSeg(1) }) { Text("›") }
             }
-            if (seg != null) {
+            if (r.stone) {
+                // precisão: as medidas fecham? quanto dá o lado que falta?
+                val chk = br.com.arque.measure.logic.StoneFit.check(r.pts, r.closed, r.segs.map { it.valueMm })
+                val txt = br.com.arque.measure.logic.StoneFit.summary(chk) { Units.format(it, st.unit) }
+                Text(
+                    tr("Digite a medida de cada lado: o desenho fica proporcional (lado maior = medida maior), igual à pedra de verdade."),
+                    color = Color(0xFF555555), fontSize = 12.sp,
+                )
+                if (chk.missing > 0) Text(tr("Faltam {0} lado(s) pra medir", chk.missing), color = dark, fontSize = 13.sp)
+                if (txt != null) Text(txt, color = if (txt.startsWith("⚠")) Color(0xFFB3261E) else Color(0xFF1B7F3B), fontSize = 13.sp)
+            }
+            if (seg != null && !r.stone) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                     kinds.forEach { kd ->
                         val on = seg.kind == kd
@@ -1279,6 +1304,8 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
                 TextButton(onClick = { st.setAllSegKinds(r.id, seg.kind) }, enabled = !r.locked) {
                     Text(tr("Aplicar \"{0}\" a todo o contorno", seg.kind.label))
                 }
+            }
+            if (seg != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ManualValueBox(Modifier.weight(1f), seg.valueMm?.let { Units.formatNumber(it, st.unit) } ?: "–", st.unit.label, !r.locked) { mm -> st.setManualValue(mm) }
                     TextButton(onClick = { st.setUnit(nextUnit(st.unit)) }) { Text(st.unit.label, fontSize = 18.sp) }
@@ -1297,6 +1324,9 @@ private fun RoomPanel(vm: AppViewModel, session: EditorSession, r: br.com.arque.
             }
             if (r.pts.size >= 4 || (!r.closed && r.pts.size >= 3)) {
                 TextButton(onClick = { st.mergeRoomStray(r.id) }, enabled = !r.locked) { Text(tr("Unir pontos soltos (reta = 1 medida)")) }
+            }
+            if (!r.stone && r.photoId == null && r.segs.any { it.valueMm != null }) {
+                TextButton(onClick = { st.fitStone(r.id, force = true) }, enabled = !r.locked) { Text(tr("Deixar o desenho proporcional às medidas")) }
             }
             if (r.pts.size >= 3) {
                 TextButton(onClick = { st.setRoomClosed(r.id, !r.closed) }) { Text(if (r.closed) tr("Abrir contorno") else tr("Fechar contorno")) }

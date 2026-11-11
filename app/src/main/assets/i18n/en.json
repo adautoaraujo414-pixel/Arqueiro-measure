@@ -5372,5 +5372,15 @@
 "{0} itens recortados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} items cut · tap 📋 Paste wherever you want (this sheet, another sheet or another note)",
 "{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} items copied · tap 📋 Paste wherever you want (this sheet, another sheet or another note)",
 "📋 Colar {0} itens aqui": "📋 Paste {0} items here",
-"{0} itens colados": "{0} items pasted"
+"{0} itens colados": "{0} items pasted",
+"Lado {0}": "Side {0}",
+"Pedra · lado {0} de {1}": "Stone · side {0} of {1}",
+"Pedra · toque num lado": "Stone · tap a side",
+"Digite a medida de cada lado: o desenho fica proporcional (lado maior = medida maior), igual à pedra de verdade.": "Type each side's measurement: the drawing stays proportional (longer side = bigger measurement), just like the real stone.",
+"Faltam {0} lado(s) pra medir": "{0} side(s) left to measure",
+"✓ As medidas fecham certinho": "✓ The measurements close exactly",
+"⚠ As medidas não fecham: sobra {0}. Confira antes de cortar.": "⚠ The measurements don't close: {0} off. Check before cutting.",
+"Lado {0} dá {1} pelas outras medidas": "Side {0} comes to {1} from the other measurements",
+"deitado": "horizontal",
+"Deixar o desenho proporcional às medidas": "Make the drawing proportional to the measurements"
 }

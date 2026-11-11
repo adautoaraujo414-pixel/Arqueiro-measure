@@ -669,7 +669,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
             path.moveTo(pts[0].x, pts[0].y)
             for (i in 1 until pts.size) path.lineTo(pts[i].x, pts[i].y)
             path.close()
-            fillPaint.color = withAlpha(o.color, 18)
+            fillPaint.color = if (o.stone) 0x55BDB6AA else withAlpha(o.color, 18)
             c.drawPath(path, fillPaint)
         }
         val w = o.width
@@ -791,7 +791,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
     private fun drawSegLabel(c: Canvas, o: RoomObj, k: Int, a: Pt, b: Pt, col: Int, unit: LengthUnit) {
         val seg = o.segs[k]
         val measured = seg.valueMm != null
-        val label = if (measured) Units.labelSeg(seg, unit) else seg.kind.label
+        val label = if (measured) Units.labelSeg(seg, unit) else if (o.stone) br.com.arque.measure.i18n.tr("Lado {0}", k + 1) else seg.kind.label
         val sc = o.labelScale
         val box = Geo.dimLabelBox(a, b, label, sc)
         val lcx = (box.l + box.r) / 2f; val lcy = (box.t + box.b) / 2f

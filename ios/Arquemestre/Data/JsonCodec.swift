@@ -102,7 +102,7 @@ enum JsonCodec {
                          "history": sg.history.map(readingToJ), "hinge": sg.hinge, "side": sg.side, "slide": sg.slide]
                     },
                     "color": r.color, "width": Double(r.width), "labelScale": Double(r.labelScale), "labelAlpha": Double(r.labelAlpha),
-                    "labelIntensity": Double(r.labelIntensity), "labelVert": r.labelVert]
+                    "labelIntensity": Double(r.labelIntensity), "labelVert": r.labelVert, "stone": r.stone]
         case .legacy(let l):
             var j = (try? parseObject(l.rawJSON)) ?? [:]
             j["id"] = l.id; j["locked"] = l.locked
@@ -153,7 +153,8 @@ enum JsonCodec {
             return .room(RoomObj(id: id, photoId: optStr(j, "photoId"), pts: try pts(j["pts"]), closed: bool(j, "closed", false), segs: segs,
                                  color: int(j, "color", -16777216), width: CGFloat(try dbl(j, "width")),
                                  labelScale: CGFloat(dbl(j, "labelScale", 1)), labelAlpha: CGFloat(dbl(j, "labelAlpha", 1)),
-                                 labelIntensity: CGFloat(dbl(j, "labelIntensity", 1)), labelVert: bool(j, "labelVert", false), locked: locked))
+                                 labelIntensity: CGFloat(dbl(j, "labelIntensity", 1)), labelVert: bool(j, "labelVert", false), locked: locked,
+                                 stone: bool(j, "stone", false)))
         case "cab", "wallplan":
             return .legacy(legacy(j, id: id, locked: locked, type: type))
         default:

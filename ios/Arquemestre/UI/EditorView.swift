@@ -224,7 +224,7 @@ struct EditorView: View {
                 // selecionar
                 Pill { toolBtn(.SELECT); glyphBtn(.LASSO) }
                 // medir e marcar
-                Pill { glyphBtn(.DIM); glyphBtn(.ROOM); glyphBtn(.DOOR) }
+                Pill { glyphBtn(.DIM); glyphBtn(.ROOM); glyphBtn(.STONE); glyphBtn(.DOOR) }
                 // inserir
                 Pill {
                     Button { shapesMenu = true } label: {
@@ -565,12 +565,21 @@ struct RoomPanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(seg != nil ? tr("Cômodo · trecho {0} de {1}", k + 1, r.segCount) : tr("Cômodo · toque num trecho")).font(.headline).foregroundColor(dark)
+                    Text(r.stone ? (seg != nil ? tr("Pedra · lado {0} de {1}", k + 1, r.segCount) : tr("Pedra · toque num lado"))
+                         : (seg != nil ? tr("Cômodo · trecho {0} de {1}", k + 1, r.segCount) : tr("Cômodo · toque num trecho"))).font(.headline).foregroundColor(dark)
                     Spacer()
                     Button("‹") { st.stepSeg(-1) }.font(.title2)
                     Button("›") { st.stepSeg(1) }.font(.title2)
                 }
-                if let sg = seg {
+                if r.stone {
+                    // precisão: as medidas fecham? quanto dá o lado que falta?
+                    let chk = StoneFit.check(r.pts, closed: r.closed, mm: r.segs.map { $0.valueMm })
+                    let txt = StoneFit.summary(chk) { Units.format($0, st.unit) }
+                    Text(tr("Digite a medida de cada lado: o desenho fica proporcional (lado maior = medida maior), igual à pedra de verdade.")).font(.caption).foregroundColor(Color(argb: 0xFF555555))
+                    if chk.missing > 0 { Text(tr("Faltam {0} lado(s) pra medir", chk.missing)).font(.footnote).foregroundColor(dark) }
+                    if let t = txt { Text(t).font(.footnote).foregroundColor(t.hasPrefix("⚠") ? Color(argb: 0xFFB3261E) : Color(argb: 0xFF1B7F3B)) }
+                }
+                if let sg = seg, !r.stone {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
                             ForEach(SegKind.allCases, id: \.self) { kd in
@@ -601,6 +610,8 @@ struct RoomPanel: View {
                         }.buttonStyle(.bordered).disabled(r.locked)
                     }
                     Button(tr("Aplicar \"{0}\" a todo o contorno", sg.kind.label)) { st.setAllSegKinds(r.id, sg.kind) }.font(.footnote).disabled(r.locked)
+                }
+                if let sg = seg {
                     HStack {
                         ManualValueBox(text: sg.valueMm.map { Units.formatNumber($0, st.unit) } ?? "–", unit: st.unit, enabled: !r.locked) { st.setManualValue($0) }
                         Button(st.unit.label) { st.setUnit(st.unit.next) }.font(.title3)
@@ -610,6 +621,9 @@ struct RoomPanel: View {
                 }
                 if r.pts.count >= 4 || (!r.closed && r.pts.count >= 3) {
                     Button(tr("Unir pontos soltos (reta = 1 medida)")) { st.mergeRoomStray(r.id) }.font(.footnote).disabled(r.locked)
+                }
+                if !r.stone && r.photoId == nil && r.segs.contains(where: { $0.valueMm != nil }) {
+                    Button(tr("Deixar o desenho proporcional às medidas")) { st.fitStone(r.id, force: true) }.font(.footnote).disabled(r.locked)
                 }
                 if r.pts.count >= 3 { Button(r.closed ? tr("Abrir contorno") : tr("Fechar contorno")) { st.setRoomClosed(r.id, !r.closed) }.font(.footnote) }
                 Divider()

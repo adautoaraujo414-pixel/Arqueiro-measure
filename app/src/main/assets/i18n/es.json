@@ -5372,5 +5372,15 @@
 "{0} itens recortados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} elementos cortados · toca 📋 Pegar donde quieras (esta hoja, otra hoja u otra nota)",
 "{0} itens copiados · toque em 📋 Colar onde quiser (nesta folha, em outra folha ou outra nota)": "{0} elementos copiados · toca 📋 Pegar donde quieras (esta hoja, otra hoja u otra nota)",
 "📋 Colar {0} itens aqui": "📋 Pegar {0} elementos aquí",
-"{0} itens colados": "{0} elementos pegados"
+"{0} itens colados": "{0} elementos pegados",
+"Lado {0}": "Lado {0}",
+"Pedra · lado {0} de {1}": "Piedra · lado {0} de {1}",
+"Pedra · toque num lado": "Piedra · toque un lado",
+"Digite a medida de cada lado: o desenho fica proporcional (lado maior = medida maior), igual à pedra de verdade.": "Escriba la medida de cada lado: el dibujo queda proporcional (lado mayor = medida mayor), igual que la piedra real.",
+"Faltam {0} lado(s) pra medir": "Faltan {0} lado(s) por medir",
+"✓ As medidas fecham certinho": "✓ Las medidas cierran exactas",
+"⚠ As medidas não fecham: sobra {0}. Confira antes de cortar.": "⚠ Las medidas no cierran: sobran {0}. Revise antes de cortar.",
+"Lado {0} dá {1} pelas outras medidas": "El lado {0} da {1} según las otras medidas",
+"deitado": "horizontal",
+"Deixar o desenho proporcional às medidas": "Dejar el dibujo proporcional a las medidas"
 }

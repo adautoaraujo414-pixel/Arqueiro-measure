@@ -787,6 +787,25 @@ class EditorState(
         if (live) live(next) else commit(next)
     }
 
+    /**
+     * Pedra (ou cômodo, quando pedido): redesenha o contorno pelas medidas — cada lado medido no
+     * tamanho proporcional à medida, os outros esticam pra fechar. Só pra contorno desenhado na folha.
+     */
+    fun fitStone(id: String, force: Boolean = false) {
+        val r = sheet.obj(id) as? RoomObj ?: return
+        if (r.locked || r.photoId != null || (!r.stone && !force)) return
+        val np = StoneFit.fit(r.pts, r.closed, r.segs.map { it.valueMm }) ?: return
+        if (np.size != r.pts.size) return
+        commit(mapObj(id) { (it as RoomObj).copy(pts = np) })
+    }
+
+    /** Pedra com medida nova: o desenho já sai proporcional (no mesmo passo do desfazer). */
+    private fun fitted(r: RoomObj): RoomObj {
+        if (!r.stone || r.photoId != null) return r
+        val np = StoneFit.fit(r.pts, r.closed, r.segs.map { it.valueMm }) ?: return r
+        return if (np.size == r.pts.size) r.copy(pts = np) else r
+    }
+
     fun setRoomLabelVert(id: String, vert: Boolean) {
         val r = sheet.obj(id) as? RoomObj ?: return
         if (r.locked) return
@@ -803,7 +822,7 @@ class EditorState(
         if (room != null) {
             val k = selectedSeg
             if (room.locked || k !in room.segs.indices) return
-            commit(mapObj(id) { (it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(valueMm = null, source = null) else sg }) })
+            commit(mapObj(id) { fitted((it as RoomObj).copy(segs = it.segs.mapIndexed { i, sg -> if (i == k) sg.copy(valueMm = null, source = null) else sg })) })
             return
         }
         val d = sheet.obj(id) as? DimObj ?: return
@@ -822,10 +841,12 @@ class EditorState(
             if (room.locked || k !in room.segs.indices) return null
             commit(
                 mapObj(room.id) {
-                    (it as RoomObj).copy(
-                        segs = it.segs.mapIndexed { i, sg ->
-                            if (i == k) sg.copy(valueMm = r.mm, source = r.source, history = sg.history + r) else sg
-                        },
+                    fitted(
+                        (it as RoomObj).copy(
+                            segs = it.segs.mapIndexed { i, sg ->
+                                if (i == k) sg.copy(valueMm = r.mm, source = r.source, history = sg.history + r) else sg
+                            },
+                        ),
                     )
                 },
             )

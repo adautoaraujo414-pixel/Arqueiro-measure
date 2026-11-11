@@ -364,6 +364,12 @@ struct ShapeGlyph: View {
             case .ELBOW: poly([P(0.12, 0.85), P(0.12, 0.15), P(0.88, 0.15)], false)
             case .LASSO: p.addEllipse(in: CGRect(x: 0.1 * w, y: 0.14 * h, width: 0.8 * w, height: 0.55 * h)); dash = [4, 3]
             case .ROOM: poly([P(0.12, 0.2), P(0.6, 0.2), P(0.6, 0.5), P(0.88, 0.5), P(0.88, 0.85), P(0.12, 0.85)], true)
+            case .STONE:
+                // pedra em L, cheia, com a cota em cima
+                var sp = Path(); sp.addLines([P(0.08, 0.3), P(0.92, 0.3), P(0.92, 0.52), P(0.34, 0.52), P(0.34, 0.9), P(0.08, 0.9)]); sp.closeSubpath()
+                ctx.fill(sp, with: .color(tint.opacity(0.28)))
+                p.addPath(sp)
+                poly([P(0.08, 0.14), P(0.92, 0.14)], false); poly([P(0.08, 0.06), P(0.08, 0.22)], false); poly([P(0.92, 0.06), P(0.92, 0.22)], false)
             case .RRECT: p.addRoundedRect(in: CGRect(x: 0.14 * w, y: 0.2 * h, width: 0.72 * w, height: 0.6 * h), cornerSize: CGSize(width: 0.16 * w, height: 0.16 * w))
             case .ELLIPSE: p.addEllipse(in: CGRect(x: 0.12 * w, y: 0.2 * h, width: 0.76 * w, height: 0.6 * h))
             case .TRIANGLE: poly([P(0.5, 0.14), P(0.88, 0.84), P(0.12, 0.84)], true)

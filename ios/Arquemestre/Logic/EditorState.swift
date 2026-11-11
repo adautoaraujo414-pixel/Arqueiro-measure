@@ -507,6 +507,11 @@ final class EditorState {
         if isLive { live(next) } else { commit(next) }
     }
 
+    /// Cômodo (pedido) ou pedra: redesenha o contorno pelas medidas, lados no tamanho proporcional à medida.
+    func fitStone(_ id: String, force: Bool = false) {
+        if let s = mapRoom(id, { StoneFit.apply(&$0, force: force) }) { commit(s) }
+    }
+
     func setRoomLabelVert(_ id: String, _ vert: Bool) {
         guard var r = sheet.obj(id)?.asRoom, !r.locked else { return }
         r.labelVert = vert
@@ -523,7 +528,7 @@ final class EditorState {
         if let room = sheet.obj(id)?.asRoom {
             let k = selectedSeg
             if room.locked || !room.segs.indices.contains(k) { return }
-            if let s = mapRoom(id, { $0.segs[k].valueMm = nil; $0.segs[k].source = nil }) { commit(s) }
+            if let s = mapRoom(id, { $0.segs[k].valueMm = nil; $0.segs[k].source = nil; StoneFit.apply(&$0) }) { commit(s) }
             return
         }
         guard var d = sheet.obj(id)?.asDim, !d.locked else { return }
@@ -537,7 +542,7 @@ final class EditorState {
         if let room = selected?.asRoom {
             let k = selectedSeg
             if room.locked || !room.segs.indices.contains(k) { return nil }
-            if let s = mapRoom(room.id, { rr in rr.segs[k].valueMm = r.mm; rr.segs[k].source = r.source; rr.segs[k].history.append(r) }) { commit(s) }
+            if let s = mapRoom(room.id, { rr in rr.segs[k].valueMm = r.mm; rr.segs[k].source = r.source; rr.segs[k].history.append(r); StoneFit.apply(&rr) }) { commit(s) }
             if let nx = nextPendingTarget(room.id, k) {
                 setPage(nx.page)
                 if nx.seg >= 0 { selectSeg(nx.id, nx.seg) } else { select(nx.id) }

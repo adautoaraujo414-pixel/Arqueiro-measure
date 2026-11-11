@@ -6,13 +6,13 @@ enum EraserMode: String, CaseIterable { case PIXEL, STROKE, LASSO
 }
 
 enum Tool: String, CaseIterable {
-    case NAVIGATE, SELECT, PEN, PENCIL, HIGHLIGHTER, ERASER, LINE, DASHED, ARROW, DIM, DOOR, ROOM, RECT, RRECT, ELLIPSE, TRIANGLE, DARROW, CURVE, ELBOW, RTRI, DIAMOND, TRAP, LASSO, TEXT
+    case NAVIGATE, SELECT, PEN, PENCIL, HIGHLIGHTER, ERASER, LINE, DASHED, ARROW, DIM, DOOR, ROOM, STONE, RECT, RRECT, ELLIPSE, TRIANGLE, DARROW, CURVE, ELBOW, RTRI, DIAMOND, TRAP, LASSO, TEXT
 
     var label: String {
         switch self {
         case .NAVIGATE: return tr("Navegar"); case .SELECT: return tr("Selecionar"); case .PEN: return tr("Caneta"); case .PENCIL: return tr("Lápis")
         case .HIGHLIGHTER: return tr("Marca-texto"); case .ERASER: return tr("Borracha"); case .LINE: return tr("Linha"); case .DASHED: return tr("Tracejada")
-        case .ARROW: return tr("Seta"); case .DIM: return tr("Seta de cota"); case .DOOR: return tr("Porta na linha"); case .ROOM: return tr("Cômodo"); case .RECT: return tr("Retângulo")
+        case .ARROW: return tr("Seta"); case .DIM: return tr("Seta de cota"); case .DOOR: return tr("Porta na linha"); case .ROOM: return tr("Cômodo"); case .STONE: return tr("Pedra"); case .RECT: return tr("Retângulo")
         case .RRECT: return tr("Retângulo arredondado"); case .ELLIPSE: return tr("Oval"); case .TRIANGLE: return tr("Triângulo"); case .DARROW: return tr("Seta dupla")
         case .CURVE: return tr("Curva"); case .ELBOW: return tr("Linha em L"); case .RTRI: return tr("Triângulo retângulo"); case .DIAMOND: return tr("Losango")
         case .TRAP: return tr("Trapézio"); case .LASSO: return tr("Laço"); case .TEXT: return tr("Texto")
@@ -41,6 +41,7 @@ enum Tool: String, CaseIterable {
         case .DIM: return "ruler"
         case .DOOR: return "door.left.hand.open"
         case .ROOM: return "house"
+        case .STONE: return "square.fill"
         case .RECT: return "rectangle"
         case .RRECT: return "app"
         case .ELLIPSE: return "oval"

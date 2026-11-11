@@ -114,6 +114,7 @@ object Json {
                 .put("color", o.color).put("width", o.width.toDouble())
                 .put("labelScale", o.labelScale.toDouble()).put("labelAlpha", o.labelAlpha.toDouble())
                 .put("labelIntensity", o.labelIntensity.toDouble()).put("labelVert", o.labelVert)
+                .put("stone", o.stone)
             is DimObj -> j.put("type", "dim").put("photoId", o.photoId ?: JSONObject.NULL)
                 .put("a", ptToJson(o.a)).put("b", ptToJson(o.b))
                 .put("valueMm", o.valueMm ?: JSONObject.NULL)
@@ -227,6 +228,7 @@ object Json {
                 labelIntensity = j.optDouble("labelIntensity", 1.0).toFloat(),
                 labelVert = j.optBoolean("labelVert", false),
                 locked = locked,
+                stone = j.optBoolean("stone", false),
             )
             "door" -> br.com.arque.measure.model.DoorObj(
                 id = id, photoId = j.optStringOrNull("photoId"),

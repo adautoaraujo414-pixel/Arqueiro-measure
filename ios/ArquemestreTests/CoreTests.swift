@@ -361,3 +361,30 @@ final class HolidaysTests: XCTestCase {
         XCTAssertTrue(Holidays.on(2026, 6, 12, comemorativas: false).isEmpty)
     }
 }
+
+/// Pedra: mesmos casos do StoneFitTest do Android.
+final class StoneFitTests: XCTestCase {
+    private let pts = [Pt(0, 0), Pt(500, 0), Pt(500, 120), Pt(200, 120), Pt(200, 400), Pt(0, 400)]
+    private func lens(_ p: [Pt]) -> [Double] { p.indices.map { k in let a = p[k], b = p[(k + 1) % p.count]; return Double(hypot(b.x - a.x, b.y - a.y)) } }
+
+    func testLadosFicamProporcionaisAsMedidas() {
+        let mm: [Double?] = [3600, 605, 2951, 1273, 649, 1878]
+        let r = StoneFit.fit(pts, closed: true, mm: mm)!
+        let l = lens(r), k0 = l[0] / 3600
+        for i in l.indices { XCTAssertEqual(l[i] / mm[i]! / k0, 1, accuracy: 0.002, "lado \(i)") }
+    }
+    func testLadoQueFaltaFechaAPedraEConfereAMedida() {
+        let mm: [Double?] = [3600, 605, 2951, nil, 649, 1878]
+        let l = lens(StoneFit.fit(pts, closed: true, mm: mm)!)
+        XCTAssertEqual(l[3] / (l[0] / 3600), 1273, accuracy: 1)
+        let c = StoneFit.check(pts, closed: true, mm: mm)
+        XCTAssertEqual(c.derived[3] ?? 0, 1273, accuracy: 0.01)
+        XCTAssertEqual(c.missing, 1)
+    }
+    func testMedidasQueNaoFechamAvisam() {
+        let c = StoneFit.check(pts, closed: true, mm: [3611, 605, 2951, 1272, 649, 1878])
+        XCTAssertEqual(c.gapX ?? -1, 11, accuracy: 0.01)
+        XCTAssertEqual(c.gapY ?? -1, 1, accuracy: 0.01)
+    }
+    func testSemMedidaNaoMexe() { XCTAssertNil(StoneFit.fit(pts, closed: true, mm: [nil, nil, nil, nil, nil, nil])) }
+}

@@ -164,6 +164,8 @@ struct RoomObj: Equatable {
     var labelIntensity: CGFloat = 1
     var labelVert: Bool = false
     var locked: Bool = false
+    /// Pedra: o desenho acompanha as medidas (lado maior = medida maior) e confere se fecham.
+    var stone: Bool = false
     var segCount: Int { closed ? pts.count : pts.count - 1 }
 }
 

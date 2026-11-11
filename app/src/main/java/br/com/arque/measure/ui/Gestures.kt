@@ -100,7 +100,7 @@ class GestureController(private val s: EditorSession, private val density: Float
         when (tool) {
             Tool.NAVIGATE -> mode = Mode.PAN
             Tool.SELECT, Tool.DIM, Tool.DOOR -> downSelectOrDim(screen, p, tool)
-            Tool.ROOM -> downRoom(screen, p)
+            Tool.ROOM, Tool.STONE -> downRoom(screen, p)
             Tool.LASSO -> downLasso(p)
             Tool.PEN, Tool.PENCIL, Tool.HIGHLIGHTER -> startStroke(p, tool)
             Tool.ERASER -> if (s.eraserMode == EraserMode.LASSO) {
@@ -219,10 +219,11 @@ class GestureController(private val s: EditorSession, private val density: Float
         val tolS = (26f * density * k).coerceIn(14f, 44f)
         val refPts = st.sheet.objs.filterIsInstance<RoomObj>().filter { it.id != prev.id }.flatMap { Geo.annPoints(st.sheet.photos(), it) }
         val aligned = br.com.arque.measure.logic.Straighten.alignTo(res.pts, res.closed, refPts, tolS)
-        val snapped = snapToRooms(aligned, res.closed, tolS, prev.id)
+        val stone = s.tool == Tool.STONE
+        val snapped = if (stone) aligned else snapToRooms(aligned, res.closed, tolS, prev.id)
         val room = RoomObj(
             photoId = null, pts = snapped, closed = res.closed, segs = List(n) { Seg() },
-            color = s.color, width = s.width,
+            color = if (stone) 0xFF5D5A55.toInt() else s.color, width = s.width, stone = stone,
         )
         st.live(st.sheet.copy(objs = st.sheet.objs.filter { it.id != prev.id } + room))
         st.endGesture()
@@ -627,7 +628,7 @@ class GestureController(private val s: EditorSession, private val density: Float
                     val d = st.sheet.obj(tapDimId) as? DimObj
                     if (d != null && !d.locked) action = GestureAction.TapDim(d.id)
                 }
-                (tool == Tool.SELECT || tool == Tool.ROOM) && tapRoomId != null -> {
+                (tool == Tool.SELECT || tool == Tool.ROOM || tool == Tool.STONE) && tapRoomId != null -> {
                     val r = st.sheet.obj(tapRoomId) as? RoomObj
                     if (r != null) {
                         if (st.selectedId != r.id || st.selectedSeg != tapSegIdx) st.selectSeg(r.id, tapSegIdx)

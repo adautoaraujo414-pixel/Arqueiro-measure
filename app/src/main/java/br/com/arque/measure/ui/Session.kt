@@ -37,6 +37,7 @@ enum class Tool(private val ptLabel: String, val drawing: Boolean) {
     DIM("Seta de cota", true),
     DOOR("Porta na linha", true),
     ROOM("Cômodo", true),
+    STONE("Pedra", true),
     RECT("Retângulo", true),
     RRECT("Retângulo arredondado", true),
     ELLIPSE("Oval", true),

@@ -396,7 +396,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAssistenteDeAjustesAplicaNosModulosPlantaOpacaECompletarFileira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;S.Hm=1;S.Wm=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+          window.MINI3OFF=1;PR.setupDone=1;STD().latPiso='sim';/* confere o jeito "até o piso" (o padrão agora é em cima do rodapé) */S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;S.H=2700;S.Hm=1;S.Wm=1;var all=TPL.concat(CATS.flatMap(function(c){return c.it}));var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
           /* assistente: laterais por fora, desconto da lateral da gaveta 60, rasgo 8 */wizOpen();var st=STD();st.caixa='fora';st.gavDsc=60;st.gavRb=8;window.WIZ=wizSteps().length-1;stdRe();var done=!!document.querySelector('#stdbody [data-wizdone="1"]');window.WIZ=null;stdSave();
           newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};var fund=P.filter(function(q){return /^Fundo de gaveta/.test(q.name)})[0];
           var cl=cutLines(m).filter(function(l){return /Lateral de gaveta|Fundo de gaveta/.test(l.name)}).map(function(l){return l.L+'x'+l.W}).join(',');
@@ -457,7 +457,7 @@ final class EditorWebKitTests: XCTestCase {
     func testMolduraDoTamponamentoVeioDaMadeiraPincelEAutoTamponamento() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;newTpl(3);var m=S.mods[0];m.w=1400;m.x=500;m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;m.corF='#b98d5b';m.corFN='Carvalho Hanover';S.m=m;draw();open3D();
+          window.MINI3OFF=1;PR.setupDone=1;STD().latPiso='sim';/* confere o jeito "até o piso" (o padrão agora é em cima do rodapé) */S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;S.Hm=1;S.Wm=1;newTpl(3);var m=S.mods[0];m.w=1400;m.x=500;m.tl=m.tr=true;m.tlW=30;m.trW=30;m.tlM=m.trM=1;m.corF='#b98d5b';m.corFN='Carvalho Hanover';S.m=m;draw();open3D();
           var B=__boxes(),eng=B.filter(function(b){return /Tamponamento esquerdo · engrosso 80#/.test(String(b.pk||''))}).map(function(b){return String(b.pk).replace(/^.*#/,'')+':'+[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].map(Math.round).join('x')}).sort().join(',');
           var cl=cutLines(m).filter(function(l){return /engrosso/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+'x'+l.qty}).join(',');
           var tx=B.filter(function(b){return /^0:Porta$/.test(String(b.nm))&&(b.x1-b.x0)>300&&!b.nol}).map(function(b){return __matTx(b)}).join(',');
@@ -1862,7 +1862,7 @@ final class EditorWebKitTests: XCTestCase {
     func testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();
+          window.MINI3OFF=1;PR.setupDone=1;STD().latPiso='sim';/* confere o jeito "até o piso" (o padrão agora é em cima do rodapé) */S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={};
           /* armário alto com rodapé: o tamponamento para em cima do rodapé, igual aos módulos de baixo */
           newTpl(tpl('Despenseiro'));var d=S.mods[0];R.tamp=partsOf(d).filter(function(p){return /^Tamponamento/.test(p.name)}).map(function(p){return p.h}).join(',');R.alto=d.h-d.rodMm;
@@ -2941,7 +2941,7 @@ final class EditorWebKitTests: XCTestCase {
     func testLateraisAtePisoRodapeEntreElasETudoNaCorPorFora() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
+          window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};STD().latPiso='sim';/* este teste confere o jeito "até o piso" (o padrão agora é em cima do rodapé) */
           S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.isl=[];S.env='cozinha';S.W=3600;S.H=2700;draw();
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
           var gi=MAT.filter(function(c){return /gianduia/i.test(c.id)})[0]||MAT[0],cor=function(q){q.corF=gi.hex;q.corFId=gi.id;q.corFN=matLabel(gi)};
@@ -3055,7 +3055,7 @@ final class EditorWebKitTests: XCTestCase {
           ['Balcão 2 portas','Balcão 2 portas','Aéreo 2 portas','Aéreo 2 portas'].forEach(function(n){newTpl(tpl(n))});S.mods.forEach(function(m){m.lock=false});S.m=S.mods[0];draw();panel();
           open3D();await new Promise(function(r){setTimeout(r,300)});__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
           var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
-          var ctr=function(i){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0)return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
+          var ctr=function(i){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0||/Rodapé|Base inferior/.test(q.nm))return;/* rodapé e base contínuos passam por baixo dos vizinhos: não contam pro meio do móvel */if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
           var drag=async function(i,dx,dy,hold){__build();var c=ctr(i);ev('pointerdown',c[0],c[1]);if(hold)await new Promise(function(r){setTimeout(r,420)});for(var s=1;s<=10;s++)ev('pointermove',c[0]+dx*s/10,c[1]+dy*s/10,s>1?M_:cv);ev('pointerup',c[0]+dx,c[1]+dy,M_);await new Promise(function(r){setTimeout(r,40)})};
           /* arrastar logo de cara em cima do móvel: gira a vista, o móvel fica onde estava */
           var a=S.mods[0],x0=a.x;await drag(0,250,0,false);R.rapidoNaoMove=a.x===x0&&a.b===0;
@@ -3077,7 +3077,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTamanhoDoModuloInteiroNo3DAoVivoSemFurarAPedra() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={vivo:[]};window.toast=function(){};
+          window.MINI3OFF=1;PR.setupDone=1;STD().latPiso='sim';/* confere o jeito "até o piso" (o padrão agora é em cima do rodapé) */S.env='cozinha';S.room='cozinha';S.W=2400;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={vivo:[]};window.toast=function(){};
           var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n==='Módulo vazio (montar do zero)'&&!t.sup&&!it)it=t})});newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=300;
           S.stones=[{id:1,x:300,w:1500,d:600,t:m.h,e:30,shape:'reta',items:[]}];S.st=S.stones[0];draw();R.m0=[m.x,m.w,m.h,m.d,m.b];var m0w_=m.w;
           open3D();await new Promise(function(r){setTimeout(r,300)});__cam(0.3,0.3,1.2);fx3api.open({k:'mod',mi:0});await new Promise(function(r){setTimeout(r,200)});
@@ -3342,6 +3342,99 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["naLista"] as? Bool, true, "a conferência vai junto na lista de corte")
         XCTAssertEqual(o["avisa"] as? Bool, true, "placa com 15 a mais/menos que as outras é avisada")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    func testTorrePorVaosRecorteMeioRecortePortaNormalEModelosReais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];S.ops=[];draw();var R={};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+          var clk=function(sel){var b=document.querySelector('#bd '+sel);if(!b)return false;b.click();return true};
+          var P=function(m){return partsOf(m)},nm=function(p){return p.name};
+          /* 1) torre pronta: micro de embutir (manual) + forno + 2 gavetas */
+          newTpl(tpl('Torre por vãos · micro-ondas + forno + gavetas'));var m=S.mods[0];S.m=m;S.sv=0;S.tab=2;draw();panel();var v=m.v[0];
+          var A=P(m),cm=A.filter(function(p){return p.name==='Corte do micro-ondas'})[0],cf=A.filter(function(p){return p.name==='Corte do forno'})[0];
+          R.micro=cm?[cm.mdl,cm.w,cm.h].join(' '):'';R.forno=cf?[cf.mdl,cf.w,cf.h].join(' '):'';
+          R.gav=A.filter(function(p){return /^Frente de gaveta|^Gaveta/.test(p.name)&&p.dq!==undefined&&p.dq>=20}).length;
+          R.regua=A.filter(function(p){return /^Engrosso cava · régua da torre/.test(p.name)}).length;R.prat=A.filter(function(p){return /^Prateleira fixa da torre/.test(p.name)}).length;
+          R.painel=!!document.getElementById('twed');R.warn=(v.twW||[]).length;
+          /* 2) toca no vão 1 (micro) e vira 2 portas; a prateleira 1 ganha engrosso, frontal pra baixo de 80 e régua em cima */
+          clk('[data-twsel="v|0"]');clk('[data-twk="door|2"]');R.porta2=v.tw[0].k==='door'&&+v.tw[0].n===2&&P(m).filter(function(p){return p.dq!==undefined&&Math.floor(p.dq/10)===0&&/^Porta/.test(p.name)}).length===2;
+          clk('[data-twsel="p|0"]');clk('[data-twpe="1"]');clk('[data-twpf="down"]');var ip=document.querySelector('#bd [data-twpfh]');if(ip){ip.value='80';ip.dispatchEvent(new Event('change',{bubbles:true}))}clk('[data-twpr="up"]');
+          var B2=P(m);R.eng=B2.filter(function(p){return /Prateleira fixa da torre 1/.test(p.name)}).length;R.front=B2.filter(function(p){return /^Frontal da prateleira 1/.test(p.name)}).map(function(p){return Math.round(p.h)}).join(',');R.rg1=B2.filter(function(p){return /régua da torre \(prateleira 1, em cima\)/.test(p.name)}).length;
+          /* 3) vão 3 (gavetas) vira 3 gavetas; depois divide o vão e o novo vira porta */
+          clk('[data-twsel="v|3"]');clk('[data-twn="1"]');R.g3=+v.tw[3].n;clk('[data-twadd="1"]');R.nv=v.tw.length;
+          /* 4) torre com porta de recorte: detalhe por fora e por dentro bate com o manual do forno */
+          S.mods=[];newTpl(tpl('Torre por vãos · forno + micro com porta de recorte'));m=S.mods[0];S.m=m;S.sv=0;S.tab=2;v=m.v[0];draw();panel();
+          var fo=v.tw.map(function(t,j){return t.k==='forno'?j:-1}).filter(function(j){return j>=0})[0];v.twS={t:'v',j:fo};draw();panel();
+          var fp=P(m).filter(function(p){return p.rec&&p.tws===fo})[0],M=TWM[v.tw[fo].mdl];
+          R.rec=!!fp&&fp.rec.w===M.nw&&fp.rec.h===M.nh&&fp.rec.x>0&&fp.rec.y>=0&&fp.rec.x+fp.rec.w<fp.w&&fp.rec.y+fp.rec.h<=fp.h;
+          var tx=(document.getElementById('twed')||{}).textContent||'';R.det=/Por fora: [\d,]+ × [\d,]+/.test(tx)&&/Por dentro \(recorte\): 560 × 580/.test(tx)&&/medida do fabricante, não muda/.test(tx);
+          R.semAltura=!document.querySelector('#bd [data-twh]');
+          /* troca o modelo: o recorte segue o nicho do novo forno */
+          var se=document.querySelector('#bd select[data-twm]');if(se){se.value='f_bx84';se.dispatchEvent(new Event('change',{bubbles:true}))}var fp2=P(m).filter(function(p){return p.rec&&p.tws===fo})[0];R.rec2=fp2?fp2.rec.w+'x'+fp2.rec.h:'';
+          /* meio recorte: aberto embaixo (o recorte vai até a borda de baixo da frente) */
+          clk('[data-twfr="meio"]');var fm=P(m).filter(function(p){return p.rec&&p.tws===fo})[0];R.meio=!!fm&&/meio recorte/.test(fm.name)&&Math.abs(fm.rec.y+fm.rec.h-fm.h)<.6&&fm.rec.w===TWM.f_bx84.nw;
+          tx=(document.getElementById('twed')||{}).textContent||'';R.meioTx=/embaixo aberto/.test(tx)&&/Por dentro · em cima 570/.test(tx);
+          /* no plano de corte o recorte sai desenhado em cima da peça, com as medidas de fora e de dentro */
+          var pl=sheetPlan(1),hs=planHtml(pl,0),un=[];pl.groups.forEach(function(g){g.sheets.forEach(function(sh){sh.used.forEach(function(u){if(/recorte/.test(u.p.lab))un.push(u)})})});R.chapa=un.length>=1&&un.every(function(u){var t=recPcSvg(u,0,0);return /RECORTE/.test(t)&&/topo da peça/.test(t)&&/esq\. \d/.test(t)})&&/RECORTE/.test(hs);
+          /* porta normal: porta que abre na frente, o eletro fica atrás (e avisa no forno) */
+          clk('[data-twfr="normal"]');R.normal=P(m).some(function(p){return p.name==='Porta'&&p.tws===fo})&&!P(m).some(function(p){return p.rec&&p.tws===fo})&&P(m).some(function(p){return p.name==='Corte do forno'&&p.behind});R.avisoF=(v.twW||[]).some(function(w){return /ventilação/.test(w)});
+          clk('[data-twfr="porta"]');
+          /* embutido: some a porta e fica só o corte */
+          clk('[data-twfr="emb"]');R.emb=!P(m).some(function(p){return p.rec&&p.tws===fo})&&P(m).some(function(p){return p.name==='Corte do forno'&&p.tws===fo});
+          /* 2D: a frente do modelo e o tracejado do vão escolhido */
+          draw();R.hl=document.querySelectorAll('#svg [stroke="#2f6be0"]').length>0&&partsOf(m).some(function(p){return p.twsl&&p.tws===fo&&p.st==='#2f6be0'});
+          /* padrão: nenhum módulo desce até o chão, as laterais apoiam na base do rodapé (torre e balcão iguais) */
+          S.mods=[];newTpl(tpl('Torre por vãos · forno + micro com porta de recorte'));newTpl(tpl('Balcão 2 portas'));var tq=S.mods[0],bq=S.mods[1];R.padrao=STD().latPiso==='nao'&&!tq.latPiso&&!bq.latPiso;
+          var latT=partsOf(tq).filter(function(p){return p.name==='Lateral esquerda'})[0],latB=partsOf(bq).filter(function(p){return p.name==='Lateral esquerda'})[0];R.latRod=!!latT&&!!latB&&tq.h-(latT.y+latT.h)>=(+tq.rodMm||0)-1&&bq.h-(latB.y+latB.h)>=(+bq.rodMm||0)-1&&(+tq.rodMm||0)>0;
+          /* torre antiga converte sem perder o forno */
+          var old=tpl('Torre forno + micro-ondas (embutir)');if(old){S.mods=[];newTpl(old);m=S.mods[0];S.m=m;S.sv=0;S.tab=2;v=m.v.filter(function(x){return x.k==='oven'})[0];S.sv=m.v.indexOf(v);draw();panel();clk('[data-twconv="1"]');R.conv=!!(v.tw&&v.tw.some(function(t){return t.k==='forno'}))}else R.conv='sem modelo';
+          /* modelos: medidas do manual, todos diferentes no desenho, todos no catálogo */
+          var ids=Object.keys(TWM),st={};ids.forEach(function(id){var q=TWM[id];st[[q.k,q.emb,q.st.c,q.st.pn,q.st.dr||'',q.st.px,q.w,q.h].join('|')]=1});R.mod=ids.length;R.dif=Object.keys(st).length;
+          R.medida=ids.every(function(id){var q=TWM[id];return q.w>300&&q.h>200&&q.d>300&&(!q.emb||(q.nw>=500&&q.nh>=300&&q.nd>=400))});
+          var cat=[];CATS.forEach(function(c){if(c.id==='ele')c.it.forEach(function(it){cat.push(it.n)})});R.noCat=ids.filter(function(id){return !cat.some(function(n){return n.indexOf(TWM[id].n)>=0})});
+          /* eletro solto (forno do catálogo) desenha a frente do modelo dele */
+          S.mods=[];S.ap=[];var ap=apAdd('forno',apModels('forno').map(function(q){return q[0]}).indexOf(TWM.f_bx84.n));R.solto=ap?__tw.mdlOf({nome:ap.nome})==='f_bx84'&&ap.w===600&&ap.h===620:false;
+          /* blindex: porta pivotante com ferragens, de correr aparente e janela com esquadria preta */
+          S.ap=[];S.mods=[];S.env='sala';S.ops=[{id:1,t:'porta',x:200,b:0,w:900,h:2100,st:'blindex',vm:'a1',fp:'sem',ve:10,pux:'barra',fc:'preto',wall:'f'},{id:2,t:'porta',x:1400,b:0,w:900,h:2100,st:'vidro',vm:'ca',fp:'sem',ve:10,pux:'barra',fc:'cromo',wall:'f'},{id:3,t:'janela',x:2600,b:1000,w:1200,h:1000,st:'blindex',fp:'preto',wall:'f'}];draw();
+          R.vdm=!!VDM.ca;R.cfg=vdCfg(S.ops[1]).fp+'/'+vdCfg(S.ops[0]).fc;
+          var bad=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;(t&&t.v||[]).forEach(function(v){(v.tw||[]).forEach(function(s){if(s.mdl&&!TWM[s.mdl])bad.push(t.n+' '+s.mdl)})})})});R.idsOk=bad.length===0;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["micro"] as? String, "m_me3bp 570 370", "micro de embutir com o nicho do manual")
+        XCTAssertEqual(o["forno"] as? String, "f_el80 560 600", "forno com o nicho do manual")
+        XCTAssertEqual((o["gav"] as? NSNumber)?.intValue, 2, "2 gavetas no vão de baixo")
+        XCTAssertEqual(o["painel"] as? Bool, true, "painel da torre por vãos")
+        XCTAssertEqual((o["warn"] as? NSNumber)?.intValue, 0, "torre pronta sem aviso")
+        XCTAssertEqual(o["porta2"] as? Bool, true, "vão vira 2 portas")
+        XCTAssertEqual((o["eng"] as? NSNumber)?.intValue, 2, "prateleira engrossada = 2 peças")
+        XCTAssertEqual(o["front"] as? String, "80", "frontal de 80 pra baixo")
+        XCTAssertEqual((o["rg1"] as? NSNumber)?.intValue, 1, "régua do cava em cima da prateleira 1")
+        XCTAssertEqual((o["g3"] as? NSNumber)?.intValue, 3, "3 gavetas")
+        XCTAssertEqual((o["nv"] as? NSNumber)?.intValue, 5, "dividir o vão cria mais um")
+        XCTAssertEqual(o["rec"] as? Bool, true, "recorte da porta = nicho do manual, dentro da porta")
+        XCTAssertEqual(o["det"] as? Bool, true, "detalhe do corte por fora e por dentro")
+        XCTAssertEqual(o["semAltura"] as? Bool, true, "altura do vão do forno não é editável")
+        XCTAssertEqual(o["rec2"] as? String, "570x610", "trocar o modelo troca o recorte")
+        XCTAssertEqual(o["meio"] as? Bool, true, "meio recorte aberto embaixo")
+        XCTAssertEqual(o["meioTx"] as? Bool, true, "meio recorte mostra os 4 lados de dentro")
+        XCTAssertEqual(o["chapa"] as? Bool, true, "recorte desenhado em cima da peça no plano de corte")
+        XCTAssertEqual(o["normal"] as? Bool, true, "porta normal na frente do eletro")
+        XCTAssertEqual(o["avisoF"] as? Bool, true, "forno atrás de porta normal avisa")
+        XCTAssertEqual(o["emb"] as? Bool, true, "embutido: só o corte")
+        XCTAssertEqual(o["hl"] as? Bool, true, "vão escolhido aparece marcado no desenho")
+        XCTAssertEqual(o["padrao"] as? Bool, true, "padrão: laterais em cima do rodapé")
+        XCTAssertEqual(o["latRod"] as? Bool, true, "torre e balcão com a lateral apoiada na base do rodapé")
+        XCTAssertEqual(o["conv"] as? Bool, true, "torre antiga converte pra vãos")
+        XCTAssertEqual((o["mod"] as? NSNumber)?.intValue, (o["dif"] as? NSNumber)?.intValue, "cada modelo com desenho diferente")
+        XCTAssertEqual(o["medida"] as? Bool, true, "medidas reais coerentes")
+        XCTAssertEqual((o["noCat"] as? [String])?.count, 0, "todos os modelos no catálogo")
+        XCTAssertEqual(o["solto"] as? Bool, true, "eletro solto usa o modelo")
+        XCTAssertEqual(o["vdm"] as? Bool, true, "porta de vidro de correr aparente")
+        XCTAssertEqual(o["cfg"] as? String, "sem/preto", "blindex sem perfil e ferragem preta")
+        XCTAssertEqual(o["idsOk"] as? Bool, true, "modelos das torres prontas existem")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 
     func testJuntaDoPainelAcompanhaEDesnivelDoTeto() async throws {

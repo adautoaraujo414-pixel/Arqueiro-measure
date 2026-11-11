@@ -322,7 +322,7 @@ final class SheetRenderer {
     private func drawRoom(_ c: CGContext, _ o: RoomObj, _ photos: [String: PhotoObj], _ unit: LengthUnit) {
         let pts = Geo.annPoints(photos, .room(o))
         if pts.count < 2 { return }
-        if o.closed { fill(c, withAlpha(o.color, 18)); c.addPath(poly(c, pts, close: true)); c.fillPath() }
+        if o.closed { fill(c, o.stone ? argb(0x55BDB6AA) : withAlpha(o.color, 18)); c.addPath(poly(c, pts, close: true)); c.fillPath() }
         let w = o.width
         for k in 0..<o.segCount where k < o.segs.count {
             let a = pts[k], b = pts[(k + 1) % pts.count]
@@ -380,7 +380,7 @@ final class SheetRenderer {
             }
             c.setLineDash(phase: 0, lengths: [])
             let measured = sg.valueMm != nil
-            let label = measured ? Units.labelSeg(sg, unit) : sg.kind.label
+            let label = measured ? Units.labelSeg(sg, unit) : (o.stone ? tr("Lado {0}", k + 1) : sg.kind.label)
             let lb = Geo.dimLabelBox(a, b, label, o.labelScale)
             c.saveGState()
             if o.labelVert { let mx = (lb.l + lb.r) / 2, my = (lb.t + lb.b) / 2; c.translateBy(x: mx, y: my); c.rotate(by: -.pi / 2); c.translateBy(x: -mx, y: -my) }

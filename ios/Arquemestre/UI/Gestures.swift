@@ -75,7 +75,7 @@ final class GestureController {
         switch tool {
         case .NAVIGATE: mode = .PAN
         case .SELECT, .DIM, .DOOR: downSelectOrDim(screen, p, tool)
-        case .ROOM: downRoom(screen, p)
+        case .ROOM, .STONE: downRoom(screen, p)
         case .LASSO: downLasso(p)
         case .PEN, .PENCIL, .HIGHLIGHTER: startStroke(p, tool)
         case .ERASER:
@@ -142,8 +142,10 @@ final class GestureController {
         let photos = st.sheet.photos()
         let refPts = st.sheet.objs.compactMap { $0.asRoom }.filter { $0.id != prev.id }.flatMap { Geo.annPoints(photos, .room($0)) }
         let aligned = Straighten.alignTo(res.pts, res.closed, refPts, tolS)
-        let snapped = snapToRooms(aligned, res.closed, tolS, prev.id)
-        let room = RoomObj(photoId: nil, pts: snapped, closed: res.closed, segs: Array(repeating: Seg(), count: n), color: s.color, width: s.width)
+        let stone = s.tool == .STONE
+        let snapped = stone ? aligned : snapToRooms(aligned, res.closed, tolS, prev.id)
+        var room = RoomObj(photoId: nil, pts: snapped, closed: res.closed, segs: Array(repeating: Seg(), count: n), color: stone ? argb(0xFF5D5A55) : s.color, width: s.width)
+        room.stone = stone
         var sh = st.sheet
         sh.objs = sh.objs.filter { $0.id != prev.id } + [.room(room)]
         st.live(sh)
@@ -485,7 +487,7 @@ final class GestureController {
         if !moved {
             let tool = s.tool
             if (tool == .SELECT || tool == .DIM), let id = tapDimId, let d = st.sheet.obj(id)?.asDim, !d.locked { action = .tapDim(d.id) }
-            else if (tool == .SELECT || tool == .ROOM), let id = tapRoomId, let r = st.sheet.obj(id)?.asRoom {
+            else if (tool == .SELECT || tool == .ROOM || tool == .STONE), let id = tapRoomId, let r = st.sheet.obj(id)?.asRoom {
                 if st.selectedId != r.id || st.selectedSeg != tapSegIdx { st.selectSeg(r.id, tapSegIdx) }
                 if !r.locked { action = .tapSeg(r.id, tapSegIdx) }
             } else if tool == .SELECT, let id = tapTextId { action = .editText(id, p) }

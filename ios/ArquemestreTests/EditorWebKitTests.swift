@@ -3437,6 +3437,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 
+    func testMeusModelosSalvosNoCatalogoEDivisorDeTalheresModelo1e2() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};PR.myMods=[];S.mods=[];S.rp=[];S.stones=[];S.fr=[];S.isl=[];S.env='cozinha';S.W=3000;S.ambOk=1;draw();addStone();draw();var R={};
+          /* monta do zero pelo catálogo (Inferiores > Módulo vazio): o módulo guarda de qual categoria veio */
+          catOpen('inf');var c=CATS.filter(function(x){return x.id==='inf'})[0],iz=c.it.map(function(it){return it.n}).indexOf('Módulo vazio (montar do zero)');document.querySelector('#catm [data-cati="inf|'+iz+'"]').click();await new Promise(function(r){setTimeout(r,60)});
+          var m=S.m;R.cat0=m.cat0;m.w=600;m.div=[0.45];m.v=[{k:'door',n:1,cava:true},{k:'drawers',n:3,cava:true}];draw();
+          /* divisor de talheres: escolher o modelo já põe na gaveta 1; modelo 1 sem a atravessada, modelo 2 com */
+          S.tab=2;S.sv=1;panel();var b1=document.querySelector('[data-dtk="1"]');R.previas=document.querySelectorAll('[data-dtk] svg').length;if(b1)b1.click();R.dt1=JSON.stringify(m.v[1].dt)+' '+m.v[1].dtk;
+          var cruz=function(){return partsOf(m).filter(function(p){return p.name==='Divisor de talheres · divisória'&&p.w>200}).length};var emPe=function(){return partsOf(m).filter(function(p){return p.name==='Divisor de talheres · divisória'&&p.w<10}).length};
+          R.m1=cruz()+' '+emPe()+' '+(partsOf(m).filter(function(p){return /^Divisor de talheres \(gaveta 1\) · modelo 1/.test(p.name)}).length);
+          document.querySelector('[data-dtk="2"]').click();R.m2=cruz()+' '+emPe()+' '+m.v[1].dtk;document.querySelector('[data-dtk="1"]').click();
+          /* salvar com nome: aparece primeiro no catálogo (⭐) e a lupa acha */
+          S.tab=0;panel();document.querySelector('[data-msave]').click();var nm=document.getElementById('myname');R.sugere=!!nm&&nm.value.length>3;R.catSel=[].slice.call(document.querySelectorAll('#mysv [data-mycat]')).filter(function(b){return /✓/.test(b.textContent)}).map(function(b){return b.dataset.mycat}).join();
+          nm.value='Gaveteiro com talher';document.querySelector('[data-myok]').click();var sv=PR.myMods[0];R.salvo=PR.myMods.length+' '+sv.n+' '+sv.cat+' '+sv.t.w+' '+sv.t.v[1].dtk+' '+(sv.t.x===undefined);R.guardado=/Gaveteiro com talher/.test(localStorage.getItem(PRK)||'');
+          catOpen('inf');var cards=[].slice.call(document.querySelectorAll('#catm .catc'));R.primeiro=cards.length&&/⭐ Gaveteiro com talher/.test(cards[0].textContent);R.grupo=(document.querySelector('#catm .catgh')||{}).textContent;
+          window.CATQ='talher';document.getElementById('catgw').innerHTML=catGrid(window.CATC);R.lupa=[].slice.call(document.querySelectorAll('#catgw .catc')).some(function(b){return /Gaveteiro com talher/.test(b.textContent)});window.CATQ='';catOpen('inf');
+          /* usar: entra igual (porta, 3 gavetas, divisor modelo 1 na gaveta 1) e dá pra mudar só a medida */
+          var n0=S.mods.length;[].slice.call(document.querySelectorAll('#catm .catc')).filter(function(b){return /Gaveteiro com talher/.test(b.textContent)})[0].click();await new Promise(function(r){setTimeout(r,60)});
+          var n=S.mods[S.mods.length-1];R.entrou=(S.mods.length-n0)+' '+JSON.stringify(n.div)+' '+n.v.map(function(v){return v.k+(v.n||'')+(v.dt?':'+v.dt.join()+'m'+v.dtk:'')}).join(',')+' '+(n.v!==m.v);
+          n.w=800;draw();R.esticou=partsOf(n).filter(function(p){return /^Divisor de talheres \(gaveta 1\)/.test(p.name)}).length===1;
+          /* salvar de novo com o mesmo nome atualiza (não duplica); mudar nome e apagar */
+          window.mySaveOpen(n);document.getElementById('myname').value='Gaveteiro com talher';document.querySelector('[data-myok]').click();R.atualiza=PR.myMods.length+' '+PR.myMods[0].t.w;
+          window.myManage();var ren=document.querySelector('#mysv [data-myren]');ren.value='Gaveteiro talher 80';ren.dispatchEvent(new Event('change',{bubbles:true}));R.renomeou=PR.myMods[0].n;
+          var del=document.querySelector('#mysv [data-mydel]');del.click();R.confirma=PR.myMods.length;del=document.querySelector('#mysv [data-mydel]');del.click();R.apagou=PR.myMods.length+' '+CATS.filter(function(x){return x.id==='inf'})[0].it.some(function(it){return it.my});
+          document.getElementById('mysv').hidden=true;var cm=document.getElementById('catm');if(cm)cm.hidden=true;PR.myMods=[];prSave();
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cat0"] as? String, "inf", "módulo do zero sabe que veio dos inferiores da cozinha")
+        XCTAssertEqual((o["previas"] as? NSNumber)?.intValue, 2, "os dois modelos com desenho de prévia")
+        XCTAssertEqual(o["dt1"] as? String, "[0] 1", "escolher o modelo já põe na gaveta 1")
+        XCTAssertEqual(o["m1"] as? String, "0 2 1", "modelo 1: só divisórias em pé")
+        XCTAssertEqual(o["m2"] as? String, "1 2 2", "modelo 2: com a atravessada no fundo")
+        XCTAssertEqual(o["sugere"] as? Bool, true, "sugere um nome")
+        XCTAssertEqual(o["catSel"] as? String, "inf", "aparece na mesma categoria de onde veio")
+        XCTAssertEqual(o["salvo"] as? String, "1 Gaveteiro com talher inf 600 1 true", "salvo com nome, categoria e estrutura, sem a posição")
+        XCTAssertEqual(o["guardado"] as? Bool, true, "fica guardado no aparelho")
+        XCTAssertEqual(o["primeiro"] as? Bool, true, "vem primeiro no catálogo, com ⭐")
+        XCTAssertEqual(o["grupo"] as? String, "⭐ Meus modelos")
+        XCTAssertEqual(o["lupa"] as? Bool, true, "a lupa acha pelo nome")
+        XCTAssertEqual(o["entrou"] as? String, "1 [0.45] door1,drawers3:0m1 true", "entra igual ao salvo")
+        XCTAssertEqual(o["esticou"] as? Bool, true, "muda a medida e o divisor acompanha")
+        XCTAssertEqual(o["atualiza"] as? String, "1 800", "mesmo nome: atualiza")
+        XCTAssertEqual(o["renomeou"] as? String, "Gaveteiro talher 80")
+        XCTAssertEqual((o["confirma"] as? NSNumber)?.intValue, 1, "apagar pede o segundo toque")
+        XCTAssertEqual(o["apagou"] as? String, "0 false", "apagou e saiu do catálogo")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     func testCooktopsReaisCincoBocasEColunaArrastadaComAsMedidas() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

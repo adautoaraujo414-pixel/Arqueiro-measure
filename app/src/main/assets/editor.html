@@ -9643,4 +9643,47 @@ document.addEventListener('pointermove',function(e){if(!DR)return;AJV.th=DR.th+(
 document.addEventListener('pointerup',function(){DR=null},true);document.addEventListener('pointercancel',function(){DR=null},true);
 })();
 </script>
+<script>
+/* ===== ↔ Folgas das portas no próprio módulo (aba Portas): folga no meio das 2 folhas (0 encostadas, 1, 2, 3 mm…)
+   e quanto a porta passa em cada lado, com o desenho do vão e duas lupas mostrando exatamente o que é cada folga.
+   Vale pro módulo; dá pra usar em todas as portas do projeto ou guardar como padrão dos Ajustes. ===== */
+(function(){
+function f1(v){return String(Math.round(v*10)/10).replace('.',',')}
+function info(m,vi){var v=m&&m.v&&m.v[vi];if(!v||v.k!=='door')return null;var r=vaoRanges(m)[vi];if(!r)return null;var n=Math.max(1,+v.n||1),one=n<2&&!m.sup,ks=one?'pS1':'pSn',sd=mv(m,ks,one?7:6),g=n>1?mv(m,'pGap',0):0,vw=r[1]-r[0];return {v:v,n:n,ks:ks,sd:sd,g:g,vw:vw,vh:vhm(m),e:+m.esp||15,dw:(vw+2*sd-(n-1)*g)/n}}
+function svg(m,vi){var I=info(m,vi);if(!I)return '';var n=I.n,e=I.e,vw=I.vw,K=Math.min(170/(vw+2*e),118/I.vh),X=14,Y=28,W=(vw+2*e)*K,H=I.vh*K,vx=X+e*K,o='',R='#d92d20',T=function(x,y,t,c,a,s){return '<text x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" font-size="'+(s||11)+'" font-weight="800" text-anchor="'+(a||'middle')+'" fill="'+(c||'#1b1f27')+'" paint-order="stroke" stroke="#fff" stroke-width="3" font-family="system-ui,sans-serif">'+t+'</text>'};
+ o+='<defs><marker id="pga" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="'+R+'"/></marker></defs>';
+ /* caixote: laterais e o vão */
+ o+='<rect x="'+X+'" y="'+Y+'" width="'+W.toFixed(1)+'" height="'+H.toFixed(1)+'" fill="#f3ead6" stroke="#8a7556"/><rect x="'+X+'" y="'+Y+'" width="'+(e*K).toFixed(1)+'" height="'+H.toFixed(1)+'" fill="#d9c7a3" stroke="#8a7556"/><rect x="'+(X+W-e*K).toFixed(1)+'" y="'+Y+'" width="'+(e*K).toFixed(1)+'" height="'+H.toFixed(1)+'" fill="#d9c7a3" stroke="#8a7556"/>';
+ /* as folhas na frente */
+ var gx=[];for(var i=0;i<n;i++){var dx=vx+(-I.sd+i*(I.dw+I.g))*K;o+='<rect x="'+dx.toFixed(1)+'" y="'+(Y-2)+'" width="'+(I.dw*K).toFixed(1)+'" height="'+(H+4).toFixed(1)+'" fill="#e9dcc0" fill-opacity=".93" stroke="#6b5a43" stroke-width="1"/>';if(i<n-1)gx.push(dx+I.dw*K+I.g*K/2)}
+ gx.forEach(function(x){o+='<line x1="'+x.toFixed(1)+'" y1="'+(Y-2)+'" x2="'+x.toFixed(1)+'" y2="'+(Y+H+2).toFixed(1)+'" stroke="'+R+'" stroke-width="2.4"/>'});
+ o+=T(X+W/2,Y-9,(n>1?n+' portas · ':'')+f1(I.dw)+(n>1?' cada':' mm'),'#1f5fd6',"middle",12);o+=T(X+W/2,Y+H+16,'vão '+Math.round(vw)+' × '+Math.round(I.vh),'#64748b','middle',10);
+ /* lupas: o meio e o lado */
+ var lupa=function(cx,cy,r,inner,lab,px,py,up){return '<line x1="'+px.toFixed(1)+'" y1="'+py.toFixed(1)+'" x2="'+(cx-r).toFixed(1)+'" y2="'+cy+'" stroke="'+R+'" stroke-width="1" stroke-dasharray="3 2"/><circle cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="5" fill="none" stroke="'+R+'" stroke-width="1.4"/><clipPath id="pgc'+cy+'"><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"/></clipPath><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#f8fafc"/><g clip-path="url(#pgc'+cy+')">'+inner+'</g><circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+R+'" stroke-width="2"/>'+T(cx,up?cy-r-6:cy+r+13,lab,R,'middle',11)};
+ var CX=262,R1=40;
+ if(n>1){var Z=7,gp=I.g*Z,cy=Y+30,a=CX-gp/2,b=CX+gp/2,inn='<rect x="'+(CX-80)+'" y="'+(cy-50)+'" width="'+(a-(CX-80))+'" height="100" fill="#e9dcc0" stroke="#6b5a43"/><rect x="'+b+'" y="'+(cy-50)+'" width="80" height="100" fill="#e9dcc0" stroke="#6b5a43"/>';
+  inn+=I.g>0?'<line x1="'+(a-1)+'" y1="'+cy+'" x2="'+(b+1)+'" y2="'+cy+'" stroke="'+R+'" stroke-width="1.6" marker-start="url(#pga)" marker-end="url(#pga)"/>'+T(CX,cy-10,f1(I.g)+' mm',R,'middle',13):T(CX,cy-8,'encostadas',R,'middle',11);
+  o+=lupa(CX,cy,R1,inn,'folga no meio',gx[0],Y+H*0.35,1)}
+ var Z2=2.4,cy2=n>1?Y+124:Y+60,ef=CX+8,lat='<rect x="'+(ef-e*Z2)+'" y="'+(cy2-50)+'" width="'+(e*Z2)+'" height="100" fill="#d9c7a3" stroke="#8a7556"/><rect x="'+ef+'" y="'+(cy2-50)+'" width="70" height="100" fill="#f3ead6" stroke="#c8b99a"/>',de=ef-I.sd*Z2;
+ lat+='<rect x="'+de+'" y="'+(cy2-50)+'" width="'+(80+I.sd*Z2)+'" height="100" fill="#e9dcc0" fill-opacity=".9" stroke="#6b5a43"/><line x1="'+ef+'" y1="'+(cy2-50)+'" x2="'+ef+'" y2="'+(cy2+50)+'" stroke="#8a7556" stroke-dasharray="3 2"/>'+(I.sd>0?'<line x1="'+de+'" y1="'+(cy2+6)+'" x2="'+ef+'" y2="'+(cy2+6)+'" stroke="'+R+'" stroke-width="1.6" marker-start="url(#pga)" marker-end="url(#pga)"/>':'')+T((de+ef)/2,cy2-4,f1(I.sd),R,'middle',13)+T(ef-e*Z2/2,cy2+30,'lateral','#6b5a43','middle',9);
+ o+=lupa(CX,cy2,R1,lat,'passa no lado',vx+(-I.sd)*K,Y+H*0.7);
+ return '<svg viewBox="0 0 320 '+(Math.max(Y+H+26,cy2+R1+20)).toFixed(0)+'" width="100%" style="display:block;max-width:440px;background:#fff;border:1px solid #e3e7ee;border-radius:10px;margin:6px 0">'+o+'</svg>'}
+window.pgapSvg=svg;
+function chips(k,vals,cur,lab){return '<div style="font-size:13px;font-weight:700;margin:8px 0 2px">'+lab+'</div><div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:0 0 4px">'+vals.map(function(q){var on=Math.abs(cur-q[0])<0.01;return '<button data-pg="'+k+'|'+q[0]+'" style="padding:6px 10px;border-radius:16px'+(on?';background:#d92d20;color:#fff;border-color:#d92d20':'')+'">'+q[1]+'</button>'}).join('')+'<input data-pgi="'+k+'" inputmode="decimal" value="'+f1(cur)+'" style="width:64px;padding:6px;text-align:center" aria-label="'+lab+' (mm)"></div>'}
+function html(m,vi){var I=info(m,vi);if(!I)return '';var s=STD(),h='<div id="pgbox" style="border:1.5px solid #f3c1bc;background:#fffaf9;border-radius:12px;padding:8px 9px;margin:8px 0"><div style="font-weight:800;font-size:15px">↔ Folgas '+(I.n>1?'das '+I.n+' portas':'da porta')+' · este módulo</div>'+svg(m,vi);
+ if(I.n>1)h+=chips('g',[[0,'0 encostadas'],[1,'1'],[2,'2'],[3,'3'],[4,'4']],I.g,'Folga no meio (mm)');
+ h+=chips(I.ks==='pS1'?'s1':'s',I.ks==='pS1'?[[5,'5'],[6,'6'],[7,'7'],[8,'8']]:[[4,'4'],[5,'5'],[6,'6'],[7,'7']],I.sd,'Passa em cada lado (mm)');
+ h+='<div style="font-size:12px;color:#475569;margin:2px 0 6px">Padrão dos Ajustes: '+(I.n>1?'meio '+f1(+s.pGap||0)+' · ':'')+'lado '+f1(+s[I.ks]||0)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap"><button data-pg="all|1" style="flex:1">✔ Usar em todas as portas do projeto</button><button data-pg="std|1" style="flex:1">💾 Guardar como padrão</button></div></div>';return h}
+window.pgapHtml=html;
+function set(k,val){var m=S.m;if(!m||window.RO)return;if(m.lock){toast('🔒 Módulo travado');return}val=Math.max(0,Math.min(k==='g'?20:40,Math.round(val*10)/10));try{snap()}catch(_){}if(k==='g')m.pGap=val;else if(k==='s1')m.pS1=val;else m.pSn=val;re();toast(k==='g'?(val?'↔ Folga no meio: '+f1(val)+' mm':'↔ Portas encostadas no meio'):'↔ Porta passa '+f1(val)+' mm em cada lado')}
+function re(){var sc=window.scrollY;try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}try{window.scrollTo(0,sc)}catch(_){}}
+document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-pg]');if(!b)return;e.stopPropagation();var q=b.dataset.pg.split('|'),m=S.m;if(!m)return;
+ if(q[0]==='all'){try{snap()}catch(_){}var n=0;S.mods.forEach(function(x){if(x.lock)return;x.pGap=mv(m,'pGap',0);x.pSn=mv(m,'pSn',6);x.pS1=mv(m,'pS1',7);n++});re();toast('✔ Folgas iguais em '+n+' módulo'+(n===1?'':'s'));return}
+ if(q[0]==='std'){var s=STD();s.pGap=mv(m,'pGap',0);s.pSn=mv(m,'pSn',6);s.pS1=mv(m,'pS1',7);try{prSave()}catch(_){}toast('💾 Padrão dos Ajustes: meio '+f1(s.pGap)+' · lado '+f1(s.pSn)+' (1 porta '+f1(s.pS1)+')');try{panel()}catch(_){}return}
+ set(q[0],+q[1])},true);
+document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.pgi)return;var v=pnum(t.value);if(isNaN(v))return;set(t.dataset.pgi,v)},true);
+/* aba Portas: entra logo abaixo da escolha de quantas portas */
+var pn0=panel;panel=window.panel=function(){var r=pn0.apply(this,arguments);try{if(S.tab===3&&S.m&&!window.RO){var v=S.m.v&&S.m.v[S.sv||0],old=document.getElementById('pgbox');if(old)old.remove();if(v&&v.k==='door'){var b=document.querySelector('#bd [data-door]'),row=b&&b.parentNode;if(row){var d=document.createElement('div');d.innerHTML=html(S.m,S.sv||0);if(d.firstChild)row.parentNode.insertBefore(d.firstChild,row.nextSibling)}}}}catch(_){}return r};
+})();
+</script>
 </body></html>

@@ -3682,6 +3682,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
+    func testFolgaNoMeioDasDuasPortasELadoComDesenhoNoModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3000;draw();
+          var c=CATS.filter(function(x){return x.id==='inf'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Balcão 2 portas'})[0])));newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Balcão 2 portas'})[0])));S.m=S.mods[0];S.tab=3;S.sv=0;draw();panel();
+          var bx=document.getElementById('pgbox');R.caixa=!!bx&&!!bx.querySelector('svg circle')&&/folga no meio/.test(bx.textContent)&&/passa no lado/.test(bx.textContent);
+          var D=function(m){return partsOf(m).filter(function(p){return p.name==='Porta'}).sort(function(a,b){return a.x-b.x})};
+          document.querySelector('#pgbox [data-pg="g|3"]').click();var d=D(S.mods[0]);R.meio=Math.round((d[1].x-(d[0].x+d[0].w))*10)/10;R.lupa=/3 mm/.test(document.getElementById('pgbox').textContent);
+          document.querySelector('#pgbox [data-pg="g|0"]').click();d=D(S.mods[0]);R.encostadas=Math.round((d[1].x-(d[0].x+d[0].w))*10)/10;
+          var i=document.querySelector('#pgbox [data-pgi="g"]');i.value='1';i.dispatchEvent(new Event('change',{bubbles:true}));d=D(S.mods[0]);R.digitou=Math.round((d[1].x-(d[0].x+d[0].w))*10)/10;
+          document.querySelector('#pgbox [data-pg="s|5"]').click();d=D(S.mods[0]);var vr=vaoRanges(S.mods[0])[0];R.lado=Math.round((vr[0]-d[0].x)*10)/10;
+          R.outro=S.mods[1].pGap;document.querySelector('#pgbox [data-pg="all|1"]').click();R.todas=S.mods[1].pGap+' '+S.mods[1].pSn;
+          document.querySelector('#pgbox [data-pg="std|1"]').click();R.padrao=STD().pGap+' '+STD().pSn;
+          S.mods[0].v[0].n=1;draw();panel();R.uma=!!document.querySelector('#pgbox [data-pg^="s1|"]')&&!document.querySelector('#pgbox [data-pg^="g|"]');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["caixa"] as? Bool, true, "desenho com as lupas do meio e do lado")
+        XCTAssertEqual((o["meio"] as? NSNumber)?.doubleValue, 3, "folga de 3 mm no meio")
+        XCTAssertEqual(o["lupa"] as? Bool, true)
+        XCTAssertEqual((o["encostadas"] as? NSNumber)?.doubleValue, 0)
+        XCTAssertEqual((o["digitou"] as? NSNumber)?.doubleValue, 1, "digita a folga que quiser")
+        XCTAssertEqual((o["lado"] as? NSNumber)?.doubleValue, 5, "passa 5 mm no lado")
+        XCTAssertEqual((o["outro"] as? NSNumber)?.intValue, 2, "o outro módulo não muda sozinho")
+        XCTAssertEqual(o["todas"] as? String, "1 5", "usar em todas as portas do projeto")
+        XCTAssertEqual(o["padrao"] as? String, "1 5", "guardar como padrão")
+        XCTAssertEqual(o["uma"] as? Bool, true, "1 porta: só o lado")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
     func testSobraQueEuTenhoEntraNoPlanoDeCorteETrocaChapaInteira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

@@ -69,10 +69,23 @@ object MoveisProjects {
         }
     }
 
+    /** Excluir pela biblioteca nunca apaga de vez: o projeto vai pra lixeira (moveis/trash.json) e volta pelo editor (Ambiente › Histórico e recuperação). */
     fun delete(ctx: Context, id: String) = edit(ctx) { a ->
         val n = JSONArray()
-        for (k in 0 until a.length()) { val p = a.getJSONObject(k); if (p.optString("id") != id) n.put(p) }
+        for (k in 0 until a.length()) { val p = a.getJSONObject(k); if (p.optString("id") != id) n.put(p) else toTrash(ctx, p) }
         n
+    }
+
+    private fun toTrash(ctx: Context, p: org.json.JSONObject) {
+        runCatching {
+            val f = File(ctx.filesDir, "moveis/trash.json")
+            val t = if (f.exists()) runCatching { JSONArray(f.readText()) }.getOrDefault(JSONArray()) else JSONArray()
+            t.put(org.json.JSONObject().put("t", System.currentTimeMillis()).put("p", p))
+            while (t.length() > 40) t.remove(0)
+            val tmp = File(f.parentFile, f.name + ".tmp")
+            tmp.writeText(t.toString())
+            tmp.renameTo(f)
+        }
     }
 
     fun setStatus(ctx: Context, id: String, status: String) = edit(ctx) { a ->

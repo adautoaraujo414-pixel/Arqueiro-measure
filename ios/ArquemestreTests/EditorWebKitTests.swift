@@ -5083,4 +5083,122 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["alcas"] as? Int, 8, "bolinhas só no painel escolhido")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Projeto nunca some: trocar de parede ou de tipo de ambiente não apaga nada; se perder peças, a versão anterior fica no histórico e dá pra restaurar.
+    func testProjetoNaoSomeAoTrocarDeParedeOuAmbienteEHistoricoRestaura() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          newProjFor({nome:'João',end:'',cidade:'',tel:''});S.room='cozinha';S.env='cozinha';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.rp=[];S.stones=[];S.fr=[];
+          for(var i=0;i<15;i++){newTpl({n:i%2?'Aéreo':'Base',w:500,h:720,d:i%2?350:560,b:i%2?1500:0,sup:!!(i%2),v:[{k:'door',n:1,cava:true}]});var m=S.mods[S.mods.length-1];m.x=Math.floor(i/2)*510;m.tl=m.tr=false}draw();saveNow();R.inicio=S.mods.length;
+          /* Teste 01: trocar de parede e voltar */
+          wvGo('d');await W(50);R.naDireita=S.mods.length;saveNow();wvGo('e');await W(50);saveNow();wvGo('f');await W(50);R.voltou=S.mods.length;
+          /* trocar o tipo de ambiente (era isso que apagava) */
+          S.tab=9;panel();var b=document.querySelector('[data-room="sala"]');R.temBotao=!!b;b.click();await W(50);R.depoisSala=S.mods.length+' room='+S.room+' '+/nada foi apagado/.test(TL.join(' '));saveNow();
+          document.querySelector('[data-room="cozinha"]').click();await W(50);R.depoisCozinha=S.mods.length+' room='+S.room;
+          var pid=CUR;rpNew({x:0,b:900,w:1000,h:800}).liso=true;draw();saveNow();var salvo=pLoadAll().filter(function(q){return q.id===pid})[0];R.salvo=(salvo.current.mods||[]).length+' móveis · '+(salvo.current.rp||[]).length+' painel';loadState(JSON.parse(JSON.stringify(salvo.current)));draw();R.reabriu=S.mods.length+' '+S.rp.length;
+          /* rede de segurança: se o projeto perder peças, a versão anterior fica no histórico e dá pra restaurar */
+          S.mods=[];S.rp=[];draw();saveNow();var H=projHist.list(pid);R.hist=H.filter(function(q){return /perder/.test(q.why)}).map(function(q){return q.why+' ['+projHist.resumo(q.st)+']'}).join(' | ');R.arquivo=Object.keys(__files).filter(function(k){return /^hist_/.test(k)}).length;
+          panel();var hb=document.querySelector('[data-phopen]');R.botaoHist=!!hb;hb.click();var rb=document.querySelector('#phism [data-phr]');R.lista=document.querySelectorAll('#phism [data-phr]').length;rb.click();rb.click();await W(50);R.restaurou=S.mods.length+' '+S.rp.length+' '+/restaurada \(15 móveis · 1 painel\)/.test(TL[TL.length-1]);
+          var s2=pLoadAll().filter(function(q){return q.id===pid})[0];R.gravou=(s2.current.mods||[]).length;R.histDepois=projHist.list(pid).length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["inicio"] as? Int, 15)
+        XCTAssertEqual(o["voltou"] as? Int, 15, "trocar de parede e voltar: os 15 móveis continuam")
+        XCTAssertEqual(o["depoisSala"] as? String, "15 room=sala true", "trocar o tipo de ambiente não apaga nada")
+        XCTAssertEqual(o["depoisCozinha"] as? String, "15 room=cozinha")
+        XCTAssertEqual(o["salvo"] as? String, "15 móveis · 1 painel", "o que foi gravado tem tudo")
+        XCTAssertEqual(o["reabriu"] as? String, "15 1", "fechar e reabrir traz tudo")
+        XCTAssertEqual(o["hist"] as? String, "antes de perder peças (16 → 0) [15 móveis · 1 painel]", "versão anterior guardada antes de gravar um projeto vazio por cima")
+        XCTAssertEqual(o["arquivo"] as? Int, 1, "histórico num arquivo separado, fora do navegador")
+        XCTAssertEqual(o["restaurou"] as? String, "15 1 true", "restaurar traz os móveis e o painel de volta")
+        XCTAssertEqual(o["gravou"] as? Int, 15)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Proteção estrutural: gravar vazio por cima guarda a versão boa; gravação velha não vence a nova; projeto protegido (24 h) só sai com senha; lixeira devolve.
+    func testProtecaoDosProjetosHistoricoSenhaELixeira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var mk=function(n){for(var i=0;i<n;i++){newTpl({n:'Base',w:500,h:720,d:560,b:0,v:[{k:'door',n:1,cava:true}]});S.mods[S.mods.length-1].x=i*510}draw()};
+          R.sha=projGuard.sha('abc');
+          newProjFor({nome:'João',end:'',cidade:'',tel:''});S.room='cozinha';S.env='cozinha';S.W=6000;S.H=2700;S.mods=[];S.rp=[];S.stones=[];S.fr=[];mk(8);saveNow();var pid=CUR;
+          /* 1: o salvamento automático (o caminho que perdeu a cozinha) grava vazio por cima: a versão com peças fica no histórico */
+          S.mods=[];draw();await W(700);var a1=pLoadAll().filter(function(q){return q.id===pid})[0];R.auto=(a1.current.mods||[]).length+' · '+projHist.list(pid).filter(function(q){return /perder/.test(q.why)}).map(function(q){return q.why+' ['+q.n+']'}).join(',');
+          /* 2: 30 gravações erradas em seguida não empurram a versão boa pra fora */
+          for(var k=0;k<30;k++){var a=pLoadAll(),p=a.filter(function(q){return q.id===pid})[0];S.mods=[];if(k%2)mk(1);p.current=snapState();p.updated=Date.now()+k;pSaveAll(a);projHist.push(pid,snapState(),'automática')}
+          var H=projHist.list(pid);R.depois30=H.length+' versões · a de 8 móveis continua: '+H.some(function(q){return q.n===8});
+          /* 3: gravação velha não passa por cima da nova */
+          S.mods=[];mk(5);saveNow();var velha=pLoadAll();velha.forEach(function(q){if(q.id===pid){q.updated=q.updated-60000;q.current=JSON.parse(JSON.stringify(q.current));q.current.mods=[]}});pSaveAll(velha);R.velha=(pLoadAll().filter(function(q){return q.id===pid})[0].current.mods||[]).length;
+          /* 4: lista vazia por falha de leitura: projeto novo (<24h) vai pra lixeira e volta; protegido (>24h) nem sai */
+          var all=pLoadAll();all.forEach(function(q){if(q.id===pid)q.created=Date.now()-25*3600000});pSaveAll(all);
+          newProjFor({nome:'Maria',end:'',cidade:'',tel:''});S.mods=[];mk(2);saveNow();var pid2=CUR;
+          pSaveAll([]);var dp=pLoadAll();R.vazio='ficou '+dp.map(function(q){return q.client.nome}).join(',')+' · lixeira '+projGuard.lixeira().map(function(q){return q.p.client.nome}).join(',')+' · '+/protegido/i.test(TL[TL.length-1]);
+          /* 5: excluir protegido sem senha é barrado; com senha vai pra lixeira */
+          var semSenha=pLoadAll().filter(function(q){return q.id!==pid});pSaveAll(semSenha);R.semSenha=pLoadAll().some(function(q){return q.id===pid});
+          projGuard.defSenha('1234ab');R.senha=projGuard.confere('errada')+' '+projGuard.confere('1234ab')+' guardada='+JSON.stringify(Object.keys(JSON.parse(decodeURIComponent(escape(atob(__files['guard.json'])))))).replace(/"/g,'')+' texto puro='+/1234ab/.test(atob(__files['guard.json']));
+          window.__delAuth={id:pid,t:Date.now()};pSaveAll(pLoadAll().filter(function(q){return q.id!==pid}));R.comSenha=pLoadAll().some(function(q){return q.id===pid})+' · lixeira '+projGuard.lixeira().map(function(q){return q.p.client.nome+':'+((q.p.current.mods||[]).length)}).join(',');
+          /* 6: editar projeto protegido continua livre */
+          /* 7: voltar da lixeira */
+          S.tab=9;panel();document.querySelector('[data-phopen]').click();var bt=[].filter.call(document.querySelectorAll('#phism [data-lxr]'),function(b){return /João/.test(b.parentNode.textContent)})[0];R.lixeiraTela=document.querySelectorAll('#phism [data-lxr]').length;bt.click();await W(30);var jo=pLoadAll().filter(function(q){return q.client.nome==='João'})[0];R.voltou=!!jo+' '+(jo?(jo.current.mods||[]).length:0)+' · lixeira '+projGuard.lixeira().length;
+          /* 8: apagar de vez pede senha */
+          document.querySelector('#phism [data-lxd]').click();var pg=document.getElementById('pgdm');R.pede=!pg.hidden+' '+/EXCLUSÃO DEFINITIVA/.test(pg.textContent);document.getElementById('pgd1').value='errada';pg.querySelector('[data-pgd="ok"]').click();R.errada=projGuard.lixeira().length+' '+document.getElementById('pgde').textContent;document.getElementById('pgd1').value='1234ab';pg.querySelector('[data-pgd="ok"]').click();R.certa=projGuard.lixeira().length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["sha"] as? String, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "SHA-256 confere com o vetor de teste")
+        XCTAssertEqual(o["auto"] as? String, "0 · antes de perder peças (8 → 0) [8]", "salvamento automático gravou vazio: a versão com 8 móveis ficou no histórico")
+        XCTAssertEqual(o["depois30"] as? String, "11 versões · a de 8 móveis continua: true", "30 gravações erradas não empurram a versão boa pra fora")
+        XCTAssertEqual(o["velha"] as? Int, 5, "gravação velha não passa por cima da nova")
+        XCTAssertEqual(o["vazio"] as? String, "ficou João · lixeira Maria · true", "lista vazia: o protegido fica, o novo vai pra lixeira")
+        XCTAssertEqual(o["semSenha"] as? Bool, true, "protegido não sai sem senha")
+        XCTAssertEqual(o["senha"] as? String, "false true guardada=[s,n,h,t] texto puro=false", "senha conferida e nunca guardada em texto puro")
+        XCTAssertEqual(o["comSenha"] as? String, "false · lixeira Maria:2,João:5", "com senha vai pra lixeira (não some)")
+        XCTAssertEqual(o["voltou"] as? String, "true 5 · lixeira 1", "voltar da lixeira traz os móveis")
+        XCTAssertEqual(o["pede"] as? String, "true true")
+        XCTAssertEqual(o["errada"] as? String, "1 Senha incorreta. Nada foi apagado.")
+        XCTAssertEqual(o["certa"] as? Int, 0, "apagar de vez só com a senha certa")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Paredes com identidade: painéis diferentes em cada parede ficam só na dela no 2D, no 3D e no corte, depois de trocar de parede, abrir o 3D, o corte, salvar e reabrir.
+    func testPaineisDiferentesEmCadaParedeBatemNo2DNo3DENoCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];draw();
+          var P=function(x,w,h,liso){var a=rpNew({x:x,b:0,w:w,h:h});if(liso)a.liso=true;return a};
+          P(0,900,2700,1);P(900,900,2700,1);draw();
+          wvGo('d');await W(40);R.dir=wvCur()+' '+S.W+'x'+S.H+' · '+document.getElementById('wvbar').textContent.slice(0,34);P(0,700,2600,1);P(700,700,2600,1);P(1400,700,2600,1);draw();
+          wvGo('e');await W(40);R.esq=wvCur()+' '+S.W+'x'+S.H+' · '+document.getElementById('wvbar').textContent.slice(0,35);P(500,1000,2000,0);draw();
+          wvGo('f');await W(40);R.fundo=String(wvCur())+' '+S.W+'x'+S.H+' barra escondida='+document.getElementById('wvbar').hidden;
+          var por=function(){var c={f:0,e:0,d:0};S.rp.forEach(function(a){c[a.wall||'f']++});return JSON.stringify(c).replace(/"/g,'')},canon=function(){return JSON.stringify(S.rp.map(function(a){return [a.id,a.wall||'f',a.x,a.b,a.w,a.h]}))};
+          R.porParede=por();var c0=canon();
+          /* 3D: cada painel só na parede dele; nada no 3D sem dono no projeto */
+          var aud=function(){__build();var B=__boxes().filter(function(b){return b.rpid}),ids={};S.rp.forEach(function(a){ids[a.id]=a});var orf=0,errado=[],tem={};B.forEach(function(b){var a=ids[b.rpid];if(!a){orf++;return}tem[a.id]=1;var w=a.wall||'f',ok=w==='f'?(b.z1<=120&&b.x0>=-1&&b.x1<=S.W+1):w==='d'?(b.x0>=S.W-120):(b.x1<=120);if(!ok)errado.push(w+':'+[b.x0,b.x1,b.z0,b.z1].map(Math.round).join(','))});return 'caixas '+B.length+' · sem dono '+orf+' · na parede errada '+errado.length+' · painéis sem 3D '+S.rp.filter(function(a){return !tem[a.id]}).length+(errado.length?' '+errado.slice(0,3).join(' | '):'')};
+          open3D();await W(500);R.tresD=aud();document.getElementById('v3x').click();await W(200);
+          /* plano de corte: placas = painéis lisos (nenhuma a mais) */
+          var G=cutGroups(),pl=0;G.ord.forEach(function(k){var l=G.map[k];if(l.names.some(function(n){return /^Placa do painel liso/.test(n)}))pl+=l.qty});var esp=0;S.rp.forEach(function(a){if(a.liso)esp+=plPlates(a).n});R.corte=pl+' placas no corte · '+esp+' no projeto';
+          /* troca de parede 12 vezes + 3D + plano de corte: o projeto não muda */
+          for(var k=0;k<12;k++){wvGo(['d','e','f','d','f','e'][k%6]);await W(15);if(k%4===1){cutGroups()}if(k%5===2){open3D();await W(150);document.getElementById('v3x').click();await W(120)}}wvGo('f');await W(40);R.igual=(canon()===c0)+' '+por();
+          /* salvar e reabrir */
+          var st=JSON.stringify(snapState());S.rp=[];loadState(JSON.parse(st));draw();R.reabriu=(canon()===c0)+' '+por();
+          /* medidas das paredes continuam as mesmas */
+          R.medidas=S.W+' · direita '+wallCfg('R').len+' · esquerda '+wallCfg('L').len+' · fundo do ambiente '+roomD();
+          open3D();await W(400);R.tresD2=aud();
+          R.errs=__errs;/* quadro da régua do cava some quando não é módulo */S.tab=9;panel();draw();var rg=document.getElementById("regdet");R.regua=rg?rg.style.display:"sem";return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["dir"] as? String, "d 3170x3400 · 🧱 Parede da direita · 3170 × 3400")
+        XCTAssertEqual(o["esq"] as? String, "e 3170x3400 · 🧱 Parede da esquerda · 3170 × 3400")
+        XCTAssertEqual(o["fundo"] as? String, "null 4140x3400 barra escondida=true")
+        XCTAssertEqual(o["porParede"] as? String, "{f:2,e:1,d:3}")
+        XCTAssertEqual(o["tresD"] as? String, "caixas 21 · sem dono 0 · na parede errada 0 · painéis sem 3D 0", "3D: cada painel só na parede dele, nada sem dono")
+        XCTAssertEqual(o["corte"] as? String, "5 placas no corte · 5 no projeto")
+        XCTAssertEqual(o["igual"] as? String, "true {f:2,e:1,d:3}", "12 trocas de parede + 3D + corte não mudam o projeto")
+        XCTAssertEqual(o["reabriu"] as? String, "true {f:2,e:1,d:3}")
+        XCTAssertEqual(o["medidas"] as? String, "4140 · direita 3170 · esquerda 3170 · fundo do ambiente 3170", "medida de cada parede não se mistura")
+        XCTAssertEqual(o["tresD2"] as? String, "caixas 21 · sem dono 0 · na parede errada 0 · painéis sem 3D 0")
+        XCTAssertEqual(o["regua"] as? String, "none", "detalhe da régua do cava some fora do módulo")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

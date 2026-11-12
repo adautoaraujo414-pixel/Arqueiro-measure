@@ -100,7 +100,24 @@ enum MoveisProjects {
         try? Data(JsonCodec.string(out).utf8).write(to: file, options: [.atomic])
     }
 
-    static func delete(_ id: String) { edit { $0.filter { JsonCodec.s($0, "id") != id } } }
+    /// Excluir pela biblioteca nunca apaga de vez: o projeto vai pra lixeira (moveis/trash.json) e volta pelo editor (Ambiente › Histórico e recuperação).
+    static func delete(_ id: String) {
+        edit { arr in
+            let gone = arr.filter { JsonCodec.s($0, "id") == id }
+            if !gone.isEmpty { toTrash(gone) }
+            return arr.filter { JsonCodec.s($0, "id") != id }
+        }
+    }
+
+    private static func toTrash(_ ps: [[String: Any]]) {
+        let f = AppPaths.moveis.appendingPathComponent("trash.json")
+        var t: [[String: Any]] = []
+        if let d = try? Data(contentsOf: f), let o = (try? JSONSerialization.jsonObject(with: d)) as? [[String: Any]] { t = o }
+        let now = Int(Date().timeIntervalSince1970 * 1000)
+        for p in ps { t.append(["t": now, "p": p]) }
+        if t.count > 40 { t.removeFirst(t.count - 40) }
+        if let d = try? JSONSerialization.data(withJSONObject: t) { try? d.write(to: f, options: .atomic) }
+    }
 
     static func setStatus(_ id: String, _ status: String) {
         edit { list in

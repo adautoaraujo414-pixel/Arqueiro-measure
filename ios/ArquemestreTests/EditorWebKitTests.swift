@@ -4875,4 +4875,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aviso"] as? String, "false true", "quando não dá, avisa o motivo e não diz adicionado")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Painel liso entra igual ao ripado (toque no vão), diminui arrastando a bolinha, e painel nunca entra em móvel.
+    func testPainelLisoPeloVaoArrastarPraDiminuirENaoEntraNoMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4140;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          [30,1075,2120].forEach(function(x){newTpl({n:'Aéreo',w:1015,h:750,d:350,b:1930,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=x;m.tl=m.tr=false});
+          newTpl({n:'Nicho',w:1015,h:200,d:350,b:1730,sup:true,v:[{k:'free',n:1}]});var n=S.mods[S.mods.length-1];n.x=1075;n.tl=n.tr=false;S.m=n;S.tab=8;RPKIND='liso';draw();panel();
+          /* preencher acima: só o vão livre em cima do aéreo */
+          document.querySelector('[data-rpabove]').click();var F=function(){return S.rp.map(function(a){return a.x+','+a.b+' '+a.w+'x'+a.h+(a.liso?' liso':' ripado')}).join(' | ')};R.acima=F();
+          /* painel liso pelo toque no vão: mesma forma do ripado */
+          saStart(true);R.ini=document.getElementById('rpsabar').querySelector('b').textContent;
+          var sv=document.getElementById('svg'),rc=sv.getBoundingClientRect(),ctm=sv.getScreenCTM(),pt=function(x,y){var p=sv.createSVGPoint();p.x=OX+x*K;p.y=OY+(S.H-y)*K;var q=p.matrixTransform(ctm);return [q.x,q.y]},ev=function(t,n,x,y,id){var c=pt(x,y);t.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id||5,clientX:c[0],clientY:c[1],isPrimary:true,pointerType:'touch'}))};
+          ev(sv,'pointerdown',3000,3000);ev(sv,'pointerup',3000,3000);R.toque=RPSA.areas.map(function(r){return [r.x0,r.x1,r.y0,r.y1].join(',')}).join(' | ')+' · '+document.getElementById('rpsabar').querySelector('b').textContent;
+          document.querySelector('#rpsabar [data-sab="go"]').click();R.criou=F();
+          /* arrastar a bolinha da esquerda pra diminuir até onde quiser */
+          await new Promise(function(r){setTimeout(r,50)});var a=S.rp[S.rp.length-1];RPSEL=a.id;LAST='rp';draw();var h=document.querySelector('[data-rph="'+a.id+'|l"]');R.bolinha=h?h.getAttribute('r'):null;
+          ev(h,'pointerdown',a.x,a.b+a.h/2,7);ev(sv,'pointermove',a.x+300,a.b+a.h/2,7);ev(sv,'pointermove',a.x+600,a.b+a.h/2,7);ev(window,'pointerup',a.x+600,a.b+a.h/2,7);await new Promise(function(r){setTimeout(r,60)});R.diminuiu=(a.x>2090&&a.w<2050&&Math.abs(a.x+a.w-4140)<1)+' '+a.h;
+          /* esticar pra baixo: para em cima do aéreo, não entra */
+          draw();h=document.querySelector('[data-rph="'+a.id+'|b"]');var yb=a.b;ev(h,'pointerdown',a.x+a.w/2,yb,8);ev(sv,'pointermove',a.x+a.w/2,yb-300,8);ev(sv,'pointermove',a.x+a.w/2,yb-600,8);ev(window,'pointerup',a.x+a.w/2,yb-600,8);await new Promise(function(r){setTimeout(r,60)});R.esticou=a.b+' '+a.h;
+          /* arrastar o painel inteiro pra cima do aéreo: para encostado */
+          draw();var g=document.querySelector('rect[data-rp="'+a.id+'"]');ev(g,'pointerdown',a.x+a.w/2,a.b+a.h/2,9);ev(sv,'pointermove',a.x+a.w/2,a.b+a.h/2-200,9);ev(sv,'pointermove',a.x+a.w/2,a.b+a.h/2-500,9);ev(window,'pointerup',a.x+a.w/2,a.b+a.h/2-500,9);await new Promise(function(r){setTimeout(r,60)});R.moveu=a.b+' '+a.h;
+          var col=0;S.rp.forEach(function(p){S.mods.forEach(function(m){if(Math.min(p.x+p.w,m.x+m.w)-Math.max(p.x,m.x)>1&&Math.min(p.b+p.h,m.b+m.h)-Math.max(p.b,m.b)>1)col++})});R.dentro=col;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["acima"] as? String, "1075,2680 1015x720 liso", "preencher acima: só o vão livre em cima do aéreo (não passa por dentro dele)")
+        XCTAssertEqual(o["ini"] as? String, "🎯 Toque no vão ou arraste no desenho: marque onde vai o painel liso")
+        XCTAssertEqual(o["toque"] as? String, "2090,4140,2680,3400 · 🎯 1 área livre pro painel liso", "toque no vão acha a área livre, desviando do painel que já existe")
+        XCTAssertEqual(o["criou"] as? String, "1075,2680 1015x720 liso | 2090,2680 2050x720 liso")
+        XCTAssertEqual(o["bolinha"] as? String, "17", "bolinha grande pra pegar com o dedo")
+        XCTAssertEqual(o["diminuiu"] as? String, "true 720", "arrastar a bolinha diminui o painel")
+        XCTAssertEqual(o["esticou"] as? String, "2680 720", "esticar pra baixo para em cima do aéreo")
+        XCTAssertEqual(o["moveu"] as? String, "2680 720", "arrastar o painel pra cima do aéreo: para encostado")
+        XCTAssertEqual(o["dentro"] as? Int, 0, "nenhum painel dentro de móvel")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

@@ -4911,4 +4911,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["dentro"] as? Int, 0, "nenhum painel dentro de móvel")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Bateria geral: catálogo inteiro sem número quebrado no corte e no 3D; pedra nunca entra em torre, geladeira nem fogão de piso.
+    func testBateriaGeralCatalogoNo3DEPedraNaoEntraEmNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={n:0,bad:[]};
+          var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.tz=[];S.room='cozinha';S.env='cozinha';S.W=6000;S.RD=3500;S.H=2700;S.Hm=1;S.Wm=1;S.m=null};
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return r?JSON.parse(JSON.stringify(r)):null};
+          var put=function(n,x){newTpl(T(n));var m=S.mods[S.mods.length-1];m.x=x;m.tl=m.tr=false;return m};
+          clr();draw();open3D();await new Promise(function(r){setTimeout(r,500)});
+          var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(it&&it.v&&!it.act)all.push(it)})});
+          for(var q=0;q<all.length;q++){var it=all[q];clr();try{newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[S.mods.length-1];if(!m){R.bad.push(it.n+' não entrou');continue}R.n++;partsOf(m).forEach(function(p){['x','y','w','h'].forEach(function(k){if(typeof p[k]!=='number'||!isFinite(p[k]))R.bad.push(it.n+' peça '+p.name+' '+k)});if(!p.noCut&&p.qty!==0&&(!(p.cl>0)||!(p.cw>0)))R.bad.push(it.n+' corte '+p.name+' '+p.cl+'x'+p.cw)});draw();__build();var B=__boxes(),mi=S.mods.indexOf(m);if(!B.some(function(b){return String(b.nm).indexOf(mi+':')===0}))R.bad.push(it.n+' sem 3D');B.forEach(function(b){['x0','x1','y0','y1','z0','z1'].forEach(function(k){if(typeof b[k]!=='number'||!isFinite(b[k]))R.bad.push(it.n+' caixa '+b.nm+' '+k)})})}catch(e){R.bad.push(it.n+' EXC '+String(e).slice(0,100))}}
+          R.bad=R.bad.slice(0,20);
+          /* pedra com torre no fim: para antes dela */
+          clr();var a=put('Balcão da pia (cuba)',0),c=put('Balcão 2 portas',a.w),tw=null;CATS.forEach(function(q){q.it.forEach(function(i){if(!tw&&i&&i.v&&/[Tt]orre/.test(i.n))tw=i})});newTpl(JSON.parse(JSON.stringify(tw)));var tor=S.mods[S.mods.length-1];tor.x=c.x+c.w;tor.tl=tor.tr=false;draw();addStone();draw();R.torre=S.stones.every(function(s){return s.x+s.w<=tor.x+1});
+          /* fogão de piso no meio: a pedra já nasce dividida */
+          clr();a=put('Balcão da pia (cuba)',0);var fi=APM.forno.m.findIndex(function(m){return /Fogão de piso/.test(m[0])}),f=apAdd('forno',fi);f.x=a.w+3;c=put('Balcão 2 portas',f.x+f.w+3);draw();addStone();draw();R.fogao=S.stones.length+' '+S.stones.some(function(s){return Math.min(s.x+s.w,f.x+f.w)-Math.max(s.x,f.x)>2});
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertGreaterThan(o["n"] as? Int ?? 0, 100)
+        XCTAssertEqual((o["bad"] as? [Any])?.count ?? -1, 0, "catálogo sem peça/caixa quebrada: \(o["bad"] ?? "")")
+        XCTAssertEqual(o["torre"] as? Bool, true, "a pedra para antes da torre")
+        XCTAssertEqual(o["fogao"] as? String, "2 false", "pedra nasce dividida no fogão de piso")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

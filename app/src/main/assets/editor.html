@@ -10627,4 +10627,8 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  window.__rpGuardFim=fim;
 })();
 </script>
+<script>
+/* ===== pedra e fogão de piso são físicos: a pedra nova já nasce dividida no fogão (3 mm de cada lado), sem precisar tocar em "dividir" ===== */
+(function(){if(typeof addStone!=='function'||typeof stDividir!=='function'||typeof stDivTem!=='function')return;var as0=addStone;window.addStone=addStone=function(){var r=as0.apply(this,arguments);try{if(stDivTem())stDividir()}catch(_){}return r}})();
+</script>
 </body></html>

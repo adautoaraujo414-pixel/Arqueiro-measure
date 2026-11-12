@@ -513,7 +513,7 @@ final class EditorWebKitTests: XCTestCase {
           pt3(false);document.getElementById('v3x').click();
           return JSON.stringify({n:n,vis:vis,corF:m.corF,corFN:m.corFN,corFId:m.corFId,cl:cl,pl:pl,heads:heads,rows:rows,pvis:pvis,pc:pc,pcl:pcl,errs:__errs});
           """#)
-        XCTAssertEqual(o["n"] as? Int, 197, "197 padrões reais na paleta (Arauco 74, Duratex 71, Greenplac 52), agrupados por marca")
+        XCTAssertEqual(o["n"] as? Int, 239, "239 padrões reais na paleta (Arauco 74, Duratex 71, Greenplac 52, Floraplac 42), agrupados por marca")
         XCTAssertEqual(o["vis"] as? [String], ["Louro Freijó · Arauco Trend", "Louro Freijó · Arauco Poro"], "🔍 'louro freij' acha os dois Louro Freijó")
         XCTAssertEqual(o["corFId"] as? String, "arauco-louro-freijo-trend")
         XCTAssertEqual(o["corFN"] as? String, "Louro Freijó · Arauco Trend", "nome real: padrão · fabricante · textura")
@@ -521,7 +521,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pl"] as? [String], ["b|", "c|Cinza Sagrado · Duratex Essencial Acetinada", "c|Louro Freijó · Arauco Trend", "f|"], "uma chapa por cor no plano")
         XCTAssertEqual(o["heads"] as? [String], ["🎨 CHAPA CINZA SAGRADO · DURATEX ESSENCIAL ACETINADA · MDF 15 mm", "🎨 CHAPA LOURO FREIJÓ · ARAUCO TREND · MDF 15 mm"], "cabeçalho da chapa com o nome da cor")
         XCTAssertEqual(o["rows"] as? [String], ["Chapa MDF 15 mm · Cinza Sagrado · Duratex Essencial Acetinada", "Chapa MDF 15 mm · Louro Freijó · Arauco Trend"], "material: uma linha por cor")
-        XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada", "Cinza Fóssil · Duratex Velluto", "Cinza Cristal · Greenplac Clássicos"], "🔍 no pincel do 3D acha em todas as marcas")
+        XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada", "Cinza Fóssil · Duratex Velluto", "Cinza Cristal · Greenplac Clássicos", "Cinza Cristal · Floraplac TX"], "🔍 no pincel do 3D acha em todas as marcas")
         XCTAssertEqual(o["pc"] as? String, "duratex-cinza-sagrado-essencial", "pintura guarda o padrão")
         XCTAssertEqual(o["pcl"] as? [String], ["c:Cinza Sagrado · Duratex Essencial Acetinada:1", "c:Louro Freijó · Arauco Trend:1"], "porta pintada separa da outra no corte, cada uma na sua cor")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
@@ -5560,6 +5560,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["hist"] as? Bool, true, "a versão de antes fica no Histórico")
         XCTAssertEqual(o["desfez"] as? Bool, true)
         XCTAssertEqual(o["travado"] as? String, "1 módulo", "módulo travado fica de fora")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Catálogo Floraplac (Flora): 42 padrões com nome real, acabamento e textura do catálogo, no mesmo padrão das outras marcas.
+    func testCatalogoFloraplacComNomesETexturasReais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=2400;S.H=2600;newTpl(3);var m=S.mods[0];S.m=m;draw();window.__cores('port');S.tab=10;panel();var R={};
+          var F=MAT.filter(function(c){return c.f==='Floraplac'});R.total=MAT.length+' · Floraplac '+F.length+' ('+F.filter(function(c){return c.cat==='wood'}).length+' madeiras)';
+          R.ids=F.every(function(c){return /^floraplac-[a-z0-9-]+$/.test(c.id)&&/^#[0-9a-f]{6}$/.test(c.hex)&&c.mm&&c.mm[0]>0&&c.mm[1]>0})&&new Set(MAT.map(function(c){return c.id})).size===MAT.length;
+          R.nomes=F.map(function(c){return c.n}).join(', ');
+          R.grupo=/Floraplac/.test(document.getElementById('bd').textContent);
+          var q=document.querySelector('[data-csq="corF"]');q.value='nogueira nobre';q.dispatchEvent(new Event('input',{bubbles:true}));
+          R.busca=[].filter.call(document.querySelectorAll('[data-csl="corF"] [data-cs]'),function(b){return !b.hidden}).map(function(b){return b.title});
+          var b=document.querySelector('[data-csl="corF"] [data-cs*="floraplac-nogueira-nobre-natura"]');R.textura=b.getAttribute('data-bg')||(b.querySelector('[data-bg]')||{getAttribute:function(){return ''}}).getAttribute('data-bg');b.click();m=S.mods[0];
+          R.aplicou=m.corFId+' · '+m.corFN+' · '+m.corF;
+          R.corte=cutLines(m).filter(function(l){return /^Porta/.test((l.names||[])[0]||l.name||'')}).map(function(l){return l.colN})[0];
+          /* as 42 imagens existem e carregam */
+          var ok=0,bad=[];await Promise.all(F.map(function(c){return new Promise(function(r){var im=new Image();im.onload=function(){if(im.naturalWidth===512&&im.naturalHeight===512)ok++;else bad.push(c.id);r()};im.onerror=function(){bad.push(c.id);r()};im.src='cores/'+c.id+'.jpg'})}));R.imagens=ok+' ok '+bad.join(',');
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["total"] as? String, "239 · Floraplac 42 (19 madeiras)")
+        XCTAssertEqual(o["ids"] as? Bool, true, "ids únicos, cor média e medida em todos")
+        XCTAssertEqual(o["nomes"] as? String, "Adega, Âmago, Amêndoa, Convés, Geppetto, Lenho, Nogueira Nobre, Píer, Proa, Asfalto, City, Concrete, Carbon, Floresta, Magma, Rosé Gold, Sereno, Solar, Trama, Durban, Safira, Branco Aspro, Branco Nórdico, Cinza Cristal, Kiev, Viena, Fendi, Gouthier, Preto, Almeria, Barcelona, Freijó Natural, Nogal Amendoado, Carvalho Europeo, Castanea, Milano, Nogueira Imperial, Pau-Ferro Jucá, Copenhagen, Argos, Pietra Santa, Tesselati")
+        XCTAssertEqual(o["grupo"] as? Bool, true, "a marca aparece no painel de cores")
+        XCTAssertEqual(o["busca"] as? [String], ["Nogueira Nobre · Floraplac Natura"])
+        XCTAssertEqual(o["textura"] as? String, "cores/floraplac-nogueira-nobre-natura.jpg")
+        XCTAssertEqual(o["aplicou"] as? String, "floraplac-nogueira-nobre-natura · Nogueira Nobre · Floraplac Natura · #8e735d")
+        XCTAssertEqual(o["corte"] as? String, "Nogueira Nobre · Floraplac Natura", "o nome da cor vai pro plano de corte")
+        XCTAssertEqual(o["imagens"] as? String, "42 ok ", "as 42 texturas existem (512×512)")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

@@ -4352,4 +4352,49 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["digitou"] as? Double, 600, "medida digitada")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Nicho com porta de vidro basculante embaixo do aéreo: mesma largura e fundo, encostado nele; "todos" põe em cada aéreo livre.
+    func testNichoDeVidroBasculanteEmbaixoDoAereo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.W=3000;S.H=2700;S.mods=[];S.fr=[];var R={};
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n)r=q})});return JSON.parse(JSON.stringify(r))};
+          R.semAereo=addNichoVidro(0).length+' '+TL[TL.length-1];
+          newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo basculante'));newTpl(T('Balcão 2 portas'));draw();var a=S.mods[0],b=S.mods[1];
+          var it=CATS.filter(function(c){return c.id==='sup'})[0].it.filter(function(i){return i&&i.act==='nichoVidro'});R.cat=it.length;
+          S.m=a;R.um=catAct2(it[0])+' '+S.mods.length;var n=S.mods[S.mods.length-1];R.lugar=[n.x===a.x,n.w===a.w,n.d===a.d,n.b+n.h===a.b,n.h].join(' ');
+          var P=partsOf(n).filter(function(p){return p.name==='Porta'});R.porta=P.length+' '+/PORTA DE VIDRO/.test(P[0].note||'')+' '+!!n.v[0].bas+' '+!!n.v[0].vidro;
+          R.todos=catAct2(it[1])+' '+S.mods.filter(function(m){return m.nichoVidro}).length;R.denovo=addNichoVidro(1).length+' '+TL[TL.length-1];
+          R.semBater=!S.mods.some(function(o){return typeof modHit==='function'&&modHit(o)});R.salva=snapState().mods.filter(function(m){return m.nichoVidro}).length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["semAereo"] as? String, "0 Ponha um armário aéreo primeiro: o nicho de vidro vai embaixo dele")
+        XCTAssertEqual(o["cat"] as? Int, 2, "duas opções no catálogo dos aéreos")
+        XCTAssertEqual(o["um"] as? String, "true 4")
+        XCTAssertEqual(o["lugar"] as? String, "true true true true 350", "alinhado e encostado embaixo do aéreo")
+        XCTAssertEqual(o["porta"] as? String, "1 true true true", "uma porta de vidro basculante")
+        XCTAssertEqual(o["todos"] as? String, "true 2", "embaixo de todos os aéreos livres")
+        XCTAssertEqual(o["denovo"] as? String, "0 Já tem módulo embaixo dos aéreos", "não repete")
+        XCTAssertEqual(o["semBater"] as? Bool, true)
+        XCTAssertEqual(o["salva"] as? Int, 2)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Visor aceso com números: relógio 12:00 no forno e no micro-ondas da torre (21 + 21 traços) e temperatura na geladeira (16).
+    func testVisorComNumerosNoFornoMicroEGeladeira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=2600;S.H=2700;S.mods=[];S.fr=[];var R={};
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n)r=q})});return JSON.parse(JSON.stringify(r))};
+          var cnt=function(){__build();return __boxes().filter(function(b){return b.em&&b.nol&&(b.z1-b.z0<1||b.pf||b.gp)}).length};
+          open3D();await new Promise(function(r){setTimeout(r,400)});R.vazio=cnt();
+          newTpl(T('Torre forno + micro-ondas (embutir)'));S.mods[0].x=300;draw();R.torre=cnt();
+          var gi=APM.geladeira.m.findIndex(function(m){return /Inverse/.test(m[0])}),g=apAdd('geladeira',gi);g.x=1100;draw();R.geladeira=cnt()-R.torre;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["vazio"] as? Int, 0)
+        XCTAssertEqual(o["torre"] as? Int, 42, "12:00 no forno e no micro-ondas")
+        XCTAssertEqual(o["geladeira"] as? Int, 16, "4° -18° na porta da geladeira")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

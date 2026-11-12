@@ -6437,5 +6437,11 @@
 "Laterais até o chão em todos os módulos de baixo": "Sides down to the floor on all floor modules",
 "Todos os módulos em cima da base · nenhuma lateral desce até o chão": "All modules on the base · no side goes down to the floor",
 "📍 Puxador no lugar · as outras portas acompanharam": "📍 Handle placed · the other doors followed",
-"Segure a bolinha e arraste pra pôr o puxador no lugar": "Hold the dot and drag to place the handle"
+"Segure a bolinha e arraste pra pôr o puxador no lugar": "Hold the dot and drag to place the handle",
+"Nicho com porta de vidro basculante (embaixo do aéreo)": "Niche with lift-up glass door (under the wall cabinet)",
+"Nicho com porta de vidro basculante embaixo de todos os aéreos": "Niche with lift-up glass door under every wall cabinet",
+"Nicho com porta de vidro basculante": "Niche with lift-up glass door",
+"Já tem módulo embaixo dos aéreos": "There is already a module under the wall cabinets",
+"Ponha um armário aéreo primeiro: o nicho de vidro vai embaixo dele": "Add a wall cabinet first: the glass niche goes under it",
+"Não coube: falta altura embaixo do aéreo": "It did not fit: not enough height under the wall cabinet"
 }

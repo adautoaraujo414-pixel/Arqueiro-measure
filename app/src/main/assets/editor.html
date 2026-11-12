@@ -4572,6 +4572,14 @@ function frRotY(b,hx,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=
 function frRotX(b,hy,hz,phi){if(b.pf||b.poly||b.gp)return;var c=Math.cos(phi),s=Math.sin(phi),P=[[b.z0,b.y0],[b.z1,b.y0],[b.z1,b.y1],[b.z0,b.y1]].map(function(p){var dz=p[0]-hz,dy=p[1]-hy;return [hz+dz*c+dy*s,hy-dz*s+dy*c]});b.pf={ax:'x',pts:P};b.z0=Math.min.apply(null,P.map(function(p){return p[0]}));b.z1=Math.max.apply(null,P.map(function(p){return p[0]}));b.y0=Math.min.apply(null,P.map(function(p){return p[1]}));b.y1=Math.max.apply(null,P.map(function(p){return p[1]}))}
 var ap3model_k=ap3model;ap3model=function(f,z0){var p=CURF;CURF=f;try{return ap3model_k(f,z0)}finally{CURF=p}};
 var geladeira3_k=geladeira3;
+/* ===== apresentação: visor aceso com números de verdade (relógio do forno e do micro-ondas, temperatura da geladeira) ===== */
+var SEG7={'0':'abcdef','1':'bc','2':'abged','3':'abgcd','4':'fgbc','5':'afgcd','6':'afgedc','7':'abc','8':'abcdefg','9':'abfgcd','-':'g'};
+function dig7(xc,yc,z,txt,hh,col){var cw=hh*.52,gp=hh*.2,t=Math.max(.8,hh*.13),W_=0,i,ch;for(i=0;i<txt.length;i++){ch=txt[i];W_+=(ch===':'||ch==='°'?t*2.2:ch===' '?cw*.5:cw)+gp}W_-=gp;var x=xc-W_/2,y=yc-hh/2,P=function(a,b,c,d){var q=bx(a,b,c,d,z,z+.5,col);q.em=1;q.nol=1};
+ for(i=0;i<txt.length;i++){ch=txt[i];if(ch===':'){P(x,x+t*1.3,y+hh*.24,y+hh*.24+t*1.3);P(x,x+t*1.3,y+hh*.66,y+hh*.66+t*1.3);x+=t*2.2+gp;continue}if(ch==='°'){P(x,x+t*1.8,y+hh-t*1.8,y+hh);x+=t*2.2+gp;continue}if(ch===' '){x+=cw*.5+gp;continue}var sg=SEG7[ch]||'';
+  if(sg.indexOf('a')>=0)P(x,x+cw,y+hh-t,y+hh);if(sg.indexOf('g')>=0)P(x,x+cw,y+hh/2-t/2,y+hh/2+t/2);if(sg.indexOf('d')>=0)P(x,x+cw,y,y+t);if(sg.indexOf('f')>=0)P(x,x+t,y+hh/2,y+hh);if(sg.indexOf('b')>=0)P(x+cw-t,x+cw,y+hh/2,y+hh);if(sg.indexOf('e')>=0)P(x,x+t,y,y+hh/2);if(sg.indexOf('c')>=0)P(x+cw-t,x+cw,y,y+hh/2);x+=cw+gp}}
+var fornoF_d=fornoF;fornoF=function(x0,x1,y0,y1,z){fornoF_d(x0,x1,y0,y1,z);var H=y1-y0,hp=Math.min(110,H*.18),yp=y1-hp/2,xc=(x0+x1)/2;bx(xc-55,xc+55,yp-13,yp+13,z+1,z+1.4,'#0d1013');dig7(xc,yp,z+1.4,'12:00',15,'#ffb84d')};
+var microF_d=microF;microF=function(x0,x1,y0,y1,z,emb){microF_d(x0,x1,y0,y1,z,emb);var w=x1-x0,h=y1-y0,xd=x0+w*(emb?.74:.7),a=xd+w*.04,b=x1-w*.04,c=y1-h*.3,d=y1-h*.14;bx(a,b,c,d,z+1,z+1.4,'#0d1013');dig7((a+b)/2,(c+d)/2,z+1.4,'12:00',Math.min((d-c)*.55,(b-a)/3.6),'#e9f1ff')};
+var geladeira3_d=geladeira3_k;geladeira3_k=function(f,z0){geladeira3_d(f,z0);var nm=f.nome||'';if(/side|french/i.test(nm))return;var x0=f.x,w=f.w,y0=f.b||0,h=f.h,y1=y0+h,D=z0+(f.d||700),yc=/inverse/i.test(nm)?y0+h*.38+(y1-(y0+h*.38))*.72:/duplex/i.test(nm)?y1-h*.3-110:y0+h*.8,xc=x0+w*.42,dw=Math.min(150,w*.24);bx(xc-dw/2,xc+dw/2,yc-22,yc+22,D,D+1.5,'#0d1013');dig7(xc,yc,D+1.5,'4° -18°',16,'#e9f1ff')};
 var fornoF_k=fornoF;fornoF=function(x0,x1,y0,y1,z){var n0=boxes.length;fornoF_k(x0,x1,y0,y1,z);if(!CURF)return;var a=ease(FRA[String(CURF.id)]||0);if(a<=0)return;var H=y1-y0,hp=Math.min(110,H*.18),yd=y1-hp-3;
  for(var i=n0;i<boxes.length;i++){var b=boxes[i];if(b.y1>yd+1||b.z1<z-21)continue;frRotX(b,y0,z,a*Math.PI*.5)}
  };
@@ -10360,6 +10368,19 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  window.baseTodos=function(v){var on=v==='sim';STD().latPiso=on?'sim':'nao';try{snap()}catch(_){}var n=0;(S.mods||[]).forEach(function(m){if(!vale(m))return;if(!!m.latPiso!==on)n++;m.latPiso=on;if(on)m.latFora=true});try{prSave()}catch(_){}try{SPC={}}catch(_){}try{draw()}catch(_){}try{panel()}catch(_){}try{if(window.re3)re3()}catch(_){}return n};
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-std="latPiso"]');if(b&&b.closest('#stdm')){setTimeout(function(){var n=baseTodos(b.dataset.v);try{stdRe()}catch(_){}try{toast(b.dataset.v==='sim'?'Laterais até o chão em todos os módulos de baixo':'Todos os módulos em cima da base · nenhuma lateral desce até o chão')}catch(_){}},0);return}
   var g=e.target&&e.target.closest&&e.target.closest('[data-cfggo2]');if(g){e.stopPropagation();try{stdOpen(0);var sc=document.getElementById('stdm').firstElementChild,el=[].filter.call(document.querySelectorAll('#stdbody .lb'),function(x){return /^Base dos módulos/.test(x.textContent)})[0];if(el&&sc)sc.scrollTop=Math.max(0,el.offsetTop-8)}catch(_){}}},true);
+})();
+</script>
+<script>
+/* ===== nicho com porta de vidro basculante embaixo do aéreo (mesma largura e fundo do aéreo de cima, encostado nele) ===== */
+(function(){if(typeof newTpl!=='function'||typeof CATS==='undefined')return;
+ function aereos(){return (S.mods||[]).filter(function(o){return o.sup&&!o.nicho&&!o.nichoVidro&&!o.corner&&o.h>=300&&!(o.wing||0)})}
+ function livre(u){return !(S.mods||[]).some(function(n){return n!==u&&n.sup&&(n.wing||0)===(u.wing||0)&&Math.min(n.x+n.w,u.x+u.w)-Math.max(n.x,u.x)>5&&Math.abs(n.b+n.h-u.b)<6})}
+ window.addNichoVidro=function(todos){var A=aereos().filter(livre).sort(function(a,b){return a.x-b.x});if(!todos){var sel=S.m&&A.indexOf(S.m)>=0?S.m:A[0];A=sel?[sel]:[]}
+  if(!A.length){try{toast(aereos().length?'Já tem módulo embaixo dos aéreos':'Ponha um armário aéreo primeiro: o nicho de vidro vai embaixo dele')}catch(_){}return []}
+  var out=[];A.forEach(function(u){var h=Math.min(350,Math.round(u.b-1100));if(h<200)return;var n0=S.mods.length;newTpl({n:'Nicho com porta de vidro basculante',w:u.w,h:h,d:u.d,b:u.b-h,sup:true,v:[{k:'door',n:1,bas:true,vidro:true}]});var m=S.mods[S.mods.length-1];if(S.mods.length<=n0||!m||m===u)return;/* mesmo acabamento de ponta do aéreo de cima, pra ficar alinhado com ele */['tl','tr','tlW','trW','tlA','trA','trAuto','tlAuto','lock'].forEach(function(k){if(u[k]===undefined)delete m[k];else m[k]=u[k]});m.x=u.x;m.w=u.w;m.d=u.d;m.h=h;m.b=u.b-h;m.nichoVidro=1;out.push(m)});
+  try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}try{toast(out.length?'Nicho de vidro basculante embaixo d'+(out.length>1?'e '+out.length+' aéreos':'o aéreo')+' · '+out[0].w+' × '+out[0].h+' × '+out[0].d:'Não coube: falta altura embaixo do aéreo')}catch(_){}return out};
+ var sc=CATS.filter(function(c){return c.id==='sup'})[0];if(sc&&!sc.it.some(function(i){return i&&i.act==='nichoVidro'}))sc.it.push({n:'Nicho com porta de vidro basculante (embaixo do aéreo)',act:'nichoVidro',kw:'nicho vidro basculante embaixo aereo porta de vidro'},{n:'Nicho com porta de vidro basculante embaixo de todos os aéreos',act:'nichoVidro',all:1,kw:'nicho vidro basculante embaixo aereo todos porta de vidro'});
+ if(typeof catAct2==='function'){var ca=catAct2;catAct2=function(it){if(it&&it.act==='nichoVidro'){try{snap()}catch(_){}addNichoVidro(!!it.all);return true}return ca(it)}}
 })();
 </script>
 </body></html>

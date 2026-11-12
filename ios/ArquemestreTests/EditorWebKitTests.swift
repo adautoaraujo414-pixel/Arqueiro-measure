@@ -2752,7 +2752,7 @@ final class EditorWebKitTests: XCTestCase {
           var find=function(n){var q=null;CATS.forEach(function(c){c.it.forEach(function(i){var t=typeof i==='number'?TPL[i]:i;if(t&&t.n===n)q=i})});return q};
           S.mods=[];S.stones=[];S.fr=[];S.W=3000;S.room='quarto';newTpl(find('1 Vão 600mm'));var m=S.mods[0];m.w=994;m.d=550;m.v[0].int=[{t:'cxg',h:830,n:4}];draw();
           var vr=vaoRanges(m)[0],vw=vr[1]-vr[0],P=partsOf(m),g=function(n){return P.filter(function(p){return p.name===n})};
-          var cx={base:(g('Caixote · base superior')[0]||{}).cl,vw:vw,regua:g('Caixote · régua espaçadora 40').length,trav:g('Caixote · travessa 100').length,fr:g('Frente de gaveta (caixote)').map(function(p){return p.cl})};
+          var cx={base:(g('Caixote · base superior')[0]||{}).cl,vw:vw,regua:g('Caixote · régua espaçadora 30').length,trav:g('Caixote · travessa 80').length,fr:g('Frente de gaveta (caixote)').map(function(p){return p.cl})};
           S.mods=[];newTpl(find('Balcão canto cego · cego na esquerda (porta na direita)'));var c=S.mods[0];draw();var rg=partsOf(c).filter(function(p){return p.name==='Régua espaçadora do canto'})[0];
           S.mods=[];newTpl(CATS[0].it[3]);var gv=S.mods[0];gv.v[0].dt=[0];draw();var dt=partsOf(gv).filter(function(p){return /Divisor de talheres/.test(p.name)}).length;
           catOpen();await new Promise(function(r){setTimeout(r,200)});var abas=[].slice.call(document.querySelectorAll('#catsec [data-catsec]')).map(function(b){return b.dataset.catsec}).join(',');document.getElementById('catm').hidden=true;

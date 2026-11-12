@@ -1797,14 +1797,14 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 var INTD={lix:['🗑','Lixeira embutida',420],esc:['🍽','Escorredor aramado',300],mal:['🧳','Maleiro / prateleira',400],nic:['▢','Nicho (prateleira)',350],cab:['👔','Cabideiro · roupa curta',1000],cabl:['🧥','Cabideiro · roupa longa',1500],gav2:['🗄','Gavetas internas · corrediça na lateral (2)',400],gav3:['🗄','Gavetas internas · corrediça na lateral (3)',580],cxg:['🧰','Caixote de gavetas (estrutura própria)',830],sap:['👟','Sapateira',450]};
 function intLayout(v,vH){var it=(v.int||[]).map(function(o){return {t:o.t,n:o.n,tb:o.tb,h:Math.max(120,+o.h||INTD[o.t][2])}}),sum=it.reduce(function(a,o){return a+o.h},0);if(sum>vH&&sum>0){var f=vH/sum;it.forEach(function(o){o.h=Math.floor(o.h*f)})}else if(sum<vH){var c=it.filter(function(o){return /^cab/.test(o.t)})[0];if(c)c.h+=vH-sum}var y=0;it.forEach(function(o){o.y=y;y+=o.h});return {it:it,free:Math.max(0,vH-y)}}
 /* ===== Caixote de gavetas do guarda-roupa (estrutura própria, como na marcenaria)
-   De fora pra dentro, em cada lado: 10 mm de folga da lateral do guarda-roupa · régua espaçadora 40 × 15 na frente,
+   De fora pra dentro, em cada lado: 10 mm de folga da lateral do guarda-roupa · régua espaçadora 30 × 15 na frente,
    parafusada pela lateral do caixote · lateral do caixote (onde vai a corrediça).
    Dentro, deitadas entre as laterais: 4 travessas de 100 (2 embaixo e 2 em cima, frente e fundo).
    Em cima de tudo: base superior com a largura do vão inteiro, passando 25 na frente do caixote (como uma prateleira).
    Gavetas: caixa = vão de cada gaveta − 56 (mesma regra das outras gavetas) · frentes 4 mm pra dentro de cada lado do caixote
    e 25 mm de passagem de mão em cima de cada uma (sem puxador).
    cxz = distância atrás da frente do armário (z do 3D): base superior a partir de 20 · frentes 30–45 · caixote a partir de 45. */
-function cxgDims(o,vw,h,dep,m){m=m||CURM||S.m||{};var n=Math.max(1,Math.min(6,Math.round(+o.n||4))),e=+m.esp||15,G=10,RG=40,
+function cxgDims(o,vw,h,dep,m){m=m||CURM||S.m||{};var n=Math.max(1,Math.min(6,Math.round(+o.n||4))),e=+m.esp||15,G=10,RG=30,
  bk=(m.fundoTipo==='rasgo'?(+m.rasgoR||10)+(+m.fundoMm||6):0),F0=45/* recuado da frente: o braço da dobradiça da porta (até ~53 mm pra dentro, 22 mm da lateral) passa sem bater */,OV=25,FZ=F0+OV,cd=Math.max(200,Math.round(dep-FZ-bk)),
  iw=Math.round((vw-2*G-4*e)*10)/10,cw=vw-2*G,fw=Math.round((cw-8)*10)/10,fh=Math.round((h-e-25*n)/n*10)/10,pit=Math.round((h-3*e)/n*10)/10,
  dsc=mv(m,'gavDsc',56),hc=Math.max(40,Math.min(+o.gH>0?+o.gH:(+m.gavH>0?+m.gavH:250),Math.round((pit-dsc)*10)/10)),bw=Math.round((iw-26)*10)/10,
@@ -1815,10 +1815,10 @@ function cxgParts(o,i,vx,vw,y0,h,e,dep,add,W){var D=cxgDims(o,vw,h,dep),F='#e6d9
  var yb=y0+h,yl=y0+e;
  add('Caixote · base superior',vx,y0,vw,e,W,vw,D.cd+D.OV,{vi:i,cxz:[D.F0,D.FZ+D.cd],note:'largura do vão inteiro ('+nf1(vw)+') · do fundo até 25 mm na frente do caixote · cobre réguas e laterais, como uma prateleira'});
  [0,1].forEach(function(s){var xr=s?vx+vw-G-e:vx+G,xl=s?vx+vw-G-2*e:vx+G+e;
-  add('Caixote · régua espaçadora 40',xr,yl,e,h-e,W,h-e,D.RG,{vi:i,cxz:[D.FZ,D.FZ+D.RG],note:'40 × 15 na frente, por fora da lateral do caixote · parafusada pela lateral · fica 10 mm pra dentro da lateral do guarda-roupa'});
+  add('Caixote · régua espaçadora 30',xr,yl,e,h-e,W,h-e,D.RG,{vi:i,cxz:[D.FZ,D.FZ+D.RG],note:'espaçador de 30 × 15 na frente, por fora da lateral do caixote (deixa a gaveta mais estreita pra não pegar na dobradiça) · parafusada pela lateral · fica 10 mm pra dentro da lateral do guarda-roupa'});
   add('Caixote · lateral',xl,yl,e,h-e,W,h-e,D.cd,{vi:i,cxz:[D.FZ,D.FZ+D.cd],note:'lateral do caixote (aqui vai a corrediça) · altura '+nf1(h-e)+' × profundidade '+nf1(D.cd)})});
- var ix=vx+G+2*e;[['embaixo · frente',yb-e,D.FZ,1],['embaixo · fundo',yb-e,D.FZ+D.cd-100,0],['em cima · frente',yl,D.FZ,1],['em cima · fundo',yl,D.FZ+D.cd-100,0]].forEach(function(t){
-  add('Caixote · travessa 100',ix,t[1],D.iw,e,W,D.iw,100,{vi:i,noDraw2d:!t[3],cxz:[t[2],t[2]+100],note:'deitada por dentro, '+t[0]+' · parafusada pelas laterais · '+nf1(D.iw)+' × 100'})});
+ var ix=vx+G+2*e;[['embaixo · frente',yb-e,D.FZ,1],['embaixo · fundo',yb-e,D.FZ+D.cd-80,0],['em cima · frente',yl,D.FZ,1],['em cima · fundo',yl,D.FZ+D.cd-80,0]].forEach(function(t){
+  add('Caixote · travessa 80',ix,t[1],D.iw,e,W,D.iw,80,{vi:i,noDraw2d:!t[3],cxz:[t[2],t[2]+80],note:'régua de 80 deitada por dentro, '+t[0]+' · parafusada pelas laterais (faz a vez da base: 2 embaixo e 2 em cima, na frente e atrás) · '+nf1(D.iw)+' × 80'})});
  var fN='frente '+nf1(D.fw)+' × '+nf1(D.fh)+' · 4 mm pra dentro de cada lado do caixote · 25 mm de passagem de mão em cima (sem puxador)';
  for(var q=0;q<D.n;q++){var fB=yb-q*(D.fh+25),fT=fB-D.fh;
   add('Frente de gaveta (caixote)',vx+G+4,fT,D.fw,D.fh,F,D.fw,D.fh,{vi:i,dq:q,cxz:[D.F0+10,D.FZ],note:fN});

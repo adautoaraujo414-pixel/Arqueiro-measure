@@ -6456,5 +6456,17 @@
 "1 · Quantas portas neste vão": "1 · How many doors in this bay",
 "2 · Puxador da porta": "2 · Door handle",
 "⚙ Mais opções da porta (abrir pra ver por dentro · vidro · basculante · furo da dobradiça)": "⚙ More door options (open to see inside · glass · lift-up · hinge drilling)",
-"▢ abrir": "▢ open"
+"▢ abrir": "▢ open",
+"🏠 ＋ Rebaixo do teto nesta parede": "🏠 ＋ Ceiling drop on this wall",
+"🏠 ＋ Rebaixo do teto (gesso, viga)": "🏠 ＋ Ceiling drop (drywall, beam)",
+"Largura do rebaixo (mm)": "Drop width (mm)",
+"Do chão até embaixo do rebaixo (mm)": "From the floor to the underside of the drop (mm)",
+"Quanto sai da parede (mm)": "How far it comes out from the wall (mm)",
+"Começa a (mm da esquerda)": "Starts at (mm from the left)",
+"Começa a (mm do canto do fundo)": "Starts at (mm from the back corner)",
+"↔ Parede inteira": "↔ Whole wall",
+"🗑 Apagar": "🗑 Delete",
+"Rebaixo do teto apagado": "Ceiling drop deleted",
+"🏠 Rebaixo do teto criado · ajuste as medidas no quadro": "🏠 Ceiling drop created · adjust the measurements in the box",
+"▥ Painel acompanhou o rebaixo do teto": "▥ Panel followed the ceiling drop"
 }

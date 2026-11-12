@@ -4437,7 +4437,7 @@ final class EditorWebKitTests: XCTestCase {
           var inst=function(){var A=__ang();Object.keys(A.g).forEach(function(k){delete A.g[k]});Object.keys(A.t).forEach(function(k){delete A.t[k]});__build()};
           R.medidas=P();var F=bx();/* fechada: a do lado vai até 3 mm do armário; a do fundo fica 3,4 mm dela */R.folgaArmario=Math.round((F[1].z0-(m.d+6))*10)/10;R.folgaPorta=Math.round((F[0].x0-F[1].x1)*10)/10;
           /* abrir a do lado abre primeiro a do fundo */m.v[0].od={1:true};draw();R.abreAsDuas=P();anim3();var A=__ang(),t0_=Date.now();while(!(A.g['p0|0|0']>0)&&Date.now()-t0_<4000)await new Promise(function(r){setTimeout(r,16)});R.primeiro=(A.g['p0|0|0']>0)+' '+(A.g['p0|0|0']<60?(A.g['p0|0|1']||0):0);
-          await new Promise(function(r){setTimeout(r,2600)});R.fim=Math.round(A.g['p0|0|0'])+' '+Math.round(A.g['p0|0|1']);
+          var t1_=Date.now();while(!(A.g['p0|0|0']>=164.5&&A.g['p0|0|1']>=164.5)&&Date.now()-t1_<9000)await new Promise(function(r){setTimeout(r,50)});R.fim=Math.round(A.g['p0|0|0'])+' '+Math.round(A.g['p0|0|1']);
           var hit=function(){var C=__boxes().filter(function(b){return /^\d+:(Lateral|Base|Fundo|Prateleira|Tamponamento)/.test(String(b.nm))&&!b.pf&&!b.gp}),D=bx(),h=0;D.forEach(function(a){C.concat(D).forEach(function(b){if(a===b)return;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1.2&&oy>1.2&&oz>1.2)h++})});return h};
           R.entra165=hit();
           /* com tamponamento nas duas pontas: 90° e a do lado um pouco menos · sem entrar em nada */
@@ -4567,5 +4567,51 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(q["novo"] as? Bool, true, "abriu de novo: vem inteiro")
         XCTAssertEqual(q["e3"] as? Int, 0, "quadro da peça já tem o botão dele")
         XCTAssertEqual((q["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(q["errs"] ?? "")")
+    }
+
+    /// Rebaixo do teto (gesso/viga) no ambiente: o painel acompanha (divide na quina e fica na altura do rebaixo),
+    /// aparece no 2D e no 3D, toque nele no 3D abre o quadro, guarda no projeto, vale nas paredes laterais.
+    func testRebaixoDoTetoEPainelAcompanha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          S.rp=[{id:11,liso:true,x:0,b:0,w:3000,h:2700}];draw();
+          var P=function(){return (S.rp||[]).map(function(a){return a.x+'+'+a.w+'x'+a.h}).join(' | ')};R.antes=P();
+          var z=tzAdd('f',{x:1000,w:1200,hc:2400});R.box=!document.getElementById('tzbox').hidden;R.divide=P();R.ids=new Set(S.rp.map(function(a){return a.id})).size;
+          R.d2=document.querySelectorAll('#svg [data-tz2]').length+' '+(document.querySelector('#svg [data-tz2] text')||{}).textContent;
+          /* muda a altura digitando: os painéis de baixo acompanham */
+          var i=document.querySelector('#tzbox [data-tzf="hc"]');i.value='2300';i.dispatchEvent(new Event('change',{bubbles:true}));R.maisBaixo=P();
+          /* painel novo que nasce atravessando o rebaixo já sai dividido */
+          S.rp.push({id:99,liso:true,x:3000,b:0,w:1000,h:2700});var z2=tzAdd('f',{x:3500,w:500,hc:2500});R.novo=P();
+          /* prateleira e painel travado não mexem */
+          S.rp.push({id:77,prat:1,x:1100,b:2350,w:800,h:25});draw();R.prat=S.rp.filter(function(a){return a.id===77})[0].b;
+          /* 3D: caixa do rebaixo pendurada no teto; toque nela abre o quadro */
+          document.querySelector('#tzbox [data-tzb="ok"]').click();R.fechou=document.getElementById('tzbox').hidden;
+          open3D();await new Promise(function(r){setTimeout(r,500)});var B=__boxes().filter(function(b){return b.tz});R.b3=B.length+' '+B.map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].join(',')}).join(' / ');
+          var c=B[0],p=__p3((c.x0+c.x1)/2,(c.y0+c.y1)/2,c.z1);__tap3(p[0],p[1]);R.toque=!document.getElementById('tzbox').hidden+' '+(window.TZSEL===z.id);document.getElementById('v3x').click();
+          /* guarda no projeto e volta */
+          var st=snapState();R.salva=(st.tz||[]).length;loadState(JSON.parse(JSON.stringify(st)));R.volta=(S.tz||[]).length;
+          /* apagar */
+          tzBox(S.tz[0].id);document.querySelector('#tzbox [data-tzb="del"]').click();R.apagou=S.tz.length+' '+TL[TL.length-1];
+          /* parede lateral */
+          var ze=tzAdd('e',{x:0,w:800,hc:2200,d:400});var g=tzGeo(ze);R.lateral=[g.x0,g.x1,g.z0,g.z1,g.y0,g.y1].join(',');R.limE=tzLim('e',100,500)+' '+tzLim('e',900,1200)+' '+tzLim('f',0,500);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["antes"] as? String, "0+3000x2700")
+        XCTAssertEqual(o["box"] as? Bool, true)
+        XCTAssertEqual(o["divide"] as? String, "0+1000x2700 | 1000+1200x2400 | 2200+800x2700", "painel dividido na quina do rebaixo")
+        XCTAssertEqual(o["ids"] as? Int, 3)
+        XCTAssertEqual(o["d2"] as? String, "1 Rebaixo do teto · 2400 do chão")
+        XCTAssertEqual(o["maisBaixo"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+800x2700", "mudou a altura: o painel de baixo acompanha")
+        XCTAssertEqual(o["novo"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+800x2700 | 3000+500x2700 | 3500+500x2500", "painel novo já nasce em volta do rebaixo")
+        XCTAssertEqual(o["prat"] as? Int, 2350, "prateleira não mexe")
+        XCTAssertEqual(o["b3"] as? String, "2 1000,2200,2300,2700,0,600 / 3500,4000,2500,2700,0,600", "3D: caixa pendurada no teto")
+        XCTAssertEqual(o["toque"] as? String, "true true", "toque no rebaixo no 3D abre o quadro dele")
+        XCTAssertEqual(o["salva"] as? Int, 2)
+        XCTAssertEqual(o["volta"] as? Int, 2)
+        XCTAssertEqual(o["apagou"] as? String, "1 Rebaixo do teto apagado")
+        XCTAssertEqual(o["lateral"] as? String, "0,400,0,800,2200,2700", "rebaixo na parede da esquerda")
+        XCTAssertEqual(o["limE"] as? String, "2200 2700 2700")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

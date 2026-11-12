@@ -1127,11 +1127,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** Paga por mês (não é o desbloqueio antigo de pagamento único). */
     var licMonthly by mutableStateOf(false)
 
+    /** Confere a licença de 15 em 15 minutos com o app aberto: o teste de 3 dias acaba mesmo sem fechar o app. */
+    private var licTick = false
+    fun startLicenseTick() {
+        if (licTick) return
+        licTick = true
+        viewModelScope.launch {
+            while (true) {
+                delay(15 * 60 * 1000L)
+                runCatching { checkLicense() }
+            }
+        }
+    }
+
     fun checkLicense() {
         val app = getApplication<Application>()
         if (br.com.arque.measure.license.License.firstRun(app)) showWelcome = true
         licUnlocked = br.com.arque.measure.license.License.isUnlocked(app)
         licLocked = br.com.arque.measure.license.License.isLocked(app)
+        startLicenseTick()
         licMonthly = br.com.arque.measure.license.License.isMonthly(app)
         trialLeft = if (licUnlocked || licMonthly) "" else br.com.arque.measure.license.License.leftLabel(app)
         payLeft = if (licUnlocked) br.com.arque.measure.license.License.payLeftLabel(app) else ""

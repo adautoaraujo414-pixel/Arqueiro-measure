@@ -120,10 +120,10 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({a:a.cw,w:a.cl,g:g.cw,c:c.cw,k:k.cw,gnote:g.note,knote:k.note,foto:foto,errs:__errs});
           """#)
         let a = o["a"] as? Double ?? 0, w = o["w"] as? Double ?? 0
-        XCTAssertEqual(o["g"] as? Double ?? 0, a - 35, accuracy: 0.01, "perfil G desconta 35 mm")
+        XCTAssertEqual(o["g"] as? Double ?? 0, a - 29, accuracy: 0.01, "perfil gola (G) desconta 29 mm: 42 de altura − 13 que abraçam a MDF")
         XCTAssertEqual(o["c"] as? Double ?? 0, a, accuracy: 0.01, "cava de perfil NÃO desconta: porta = lateral + 30, o perfil entra na cava")
         XCTAssertEqual(o["k"] as? Double ?? 0, a, accuracy: 0.01, "concha não muda a altura")
-        XCTAssertTrue((o["gnote"] as? String ?? "").contains("+ perfil 35 ="))
+        XCTAssertTrue((o["gnote"] as? String ?? "").contains("+ perfil 29 ="))
         func n1(_ v: Double) -> String { String(format: "%g", (v * 10).rounded() / 10).replacingOccurrences(of: ".", with: ",") }
         XCTAssertTrue((o["knote"] as? String ?? "").contains("furos a \(n1((w - 96) / 2)) e \(n1((w + 96) / 2)) mm da esquerda, \(n1(a / 2)) mm de cima"), "\(o["knote"] ?? "")")
         XCTAssertEqual(o["foto"] as? Bool, true, "foto do puxador no quadro")
@@ -3187,7 +3187,7 @@ final class EditorWebKitTests: XCTestCase {
           pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,60)});pe('pointerdown');pe('pointerup');await new Promise(function(r){setTimeout(r,450)});
           var box=document.getElementById('slcfg');R.abriu=!!box&&/folha 2 de 2/.test(box.textContent);R.semMenuVao=!document.querySelector('#vmenu:not([hidden])');
           var clk=function(a){var b=document.querySelector('#slcfg [data-slc="'+a+'"]');if(!b)return 'sem '+a;b.click();return 'ok'};
-          R.c1=clk('px|gl');R.gl=L().map(function(p){return p.cl+'x'+p.cw+':'+p.sps});R.nota=/perfil G lateral 35/.test(L()[0].note);
+          R.c1=clk('px|gl');R.gl=L().map(function(p){return p.cl+'x'+p.cw+':'+p.sps});R.nota=/perfil G lateral 29/.test(L()[0].note);
           R.c2=clk('esp|on');var E=function(){var e=partsOf(m).filter(function(p){return p.mirror});return e.map(function(p){return [p.dq,p.cl,p.cw,m.v[0].esp[p.dq].x,m.v[0].esp[p.dq].y].join(',')})};R.esp1=E();
           var inp=document.querySelector('#slcfg [data-slci="w"]');inp.value='600';inp.dispatchEvent(new Event('change',{bubbles:true}));R.esp2=E();
           R.c3=clk('mv|10|0');R.esp3=E();R.c4=clk('ctr|ab');R.esp4=E();R.c5=clk('esp|cheio');R.esp5=E();
@@ -3207,7 +3207,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["leaf0"] as? [String], ["906x2300", "906x2300"])
         XCTAssertEqual(o["abriu"] as? Bool, true, "2 toques na folha 2 no desenho abre a configuração dela")
         XCTAssertEqual(o["semMenuVao"] as? Bool, true, "não abre o menu do vão em cima")
-        XCTAssertEqual(o["gl"] as? [String], ["871x2300:l", "871x2300:r"], "perfil G lateral: MDF 906 − 35, nas pontas de fora")
+        XCTAssertEqual(o["gl"] as? [String], ["877x2300:l", "877x2300:r"], "perfil G lateral: MDF 906 − 29 (perfil gola de 42 − 13 que abraçam a MDF), nas pontas de fora")
         XCTAssertEqual(o["nota"] as? Bool, true, "plano de corte explica MDF + perfil G lateral")
         XCTAssertEqual(o["esp1"] as? [String], ["1,700,2000,103,150"], "espelho só na folha 2, centralizado")
         XCTAssertEqual(o["esp2"] as? [String], ["1,600,2000,153,150"], "mudou a largura: continua centralizado")
@@ -3218,7 +3218,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["meio"] as? String, "rl", "puxador no encontro das folhas")
         XCTAssertEqual(o["so2"] as? Bool, true, "espelho só na folha escolhida")
         XCTAssertEqual(o["svgEsp"] as? Bool, true, "espelho aparece no desenho")
-        XCTAssertEqual(o["hw"] as? [String], ["Perfil G lateral 35 mm · dourado (m)=4.6", "Espelho 4 mm lapidado · 866 × 2260 (folha 2)=1", "Espelho 4 mm (m²)=1.96"], "ferragens: perfil G e espelho")
+        XCTAssertEqual(o["hw"] as? [String], ["Perfil G lateral 29 mm · dourado (m)=4.6", "Espelho 4 mm lapidado · 866 × 2260 (folha 2)=1", "Espelho 4 mm (m²)=1.96"], "ferragens: perfil G e espelho")
         XCTAssertEqual(o["fechou"] as? Bool, true)
         XCTAssertEqual(o["mir3"] as? Int, 1, "espelho no 3D")
         XCTAssertEqual(o["abriu3D"] as? Bool, true, "2 toques na folha no 3D abre a configuração")

@@ -10556,4 +10556,22 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  if(typeof catAct2==='function'){var ca=catAct2;catAct2=function(it){if(it&&it.act==='fechTeto'){fechTeto();return true}if(it&&it.act==='espCanto'){espCanto(it.lado);return true}return ca(it)}}
 })();
 </script>
+<script>
+/* ===== ✂ Pedra dividida no fogão: o fogão de piso fica no meio; a pedra para nele (3 mm de folga) e continua do outro lado.
+   Cuba e cooktop ficam no pedaço em que estavam; a perna do L fica no pedaço do lado dela. ===== */
+(function(){if(typeof panel!=='function')return;var r1=function(n){return Math.round(n*10)/10},FOL=3;
+ function fogoes(){return (S.fr||[]).filter(function(f){return f&&f.t==='forno'&&/fog[aã]o/i.test(f.nome||'')&&(+f.b||0)<50&&(!f.wall||f.wall==='f')})}
+ function cortes(st){var x0=st.x,x1=st.x+st.w;return fogoes().filter(function(f){return Math.min(x1,f.x+f.w)-Math.max(x0,f.x)>20}).sort(function(a,b){return a.x-b.x})}
+ window.stDivTem=function(){return (S.stones||[]).some(function(st){return cortes(st).length>0})};
+ window.stDividir=function(){if(window.RO)return 0;var n=0,out=[],nid=Math.max.apply(null,[0].concat((S.stones||[]).map(function(q){return +q.id||0})))+1;if(!stDivTem()){try{toast(fogoes().length?'A pedra já está dividida no fogão':'Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está')}catch(_){}return 0}try{snap()}catch(_){}
+  (S.stones||[]).forEach(function(st){var C=cortes(st);if(!C.length){out.push(st);return}var segs=[],a=st.x,fim=st.x+st.w;C.forEach(function(f){var b=f.x-FOL;if(b-a>=100)segs.push([a,b]);a=Math.max(a,f.x+f.w+FOL)});if(fim-a>=100)segs.push([a,fim]);if(!segs.length){out.push(st);return}
+   var its=(st.items||[]).map(function(i){return {i:i,c:st.x+i.x+(+i.w||0)/2,ax:st.x+i.x}});
+   segs.forEach(function(sg,k){var p=k===0?st:JSON.parse(JSON.stringify(st));if(k){p.id=nid++}var x0=sg[0],x1=sg[1];p.items=[];its.forEach(function(q){var dentro=q.c>=x0&&q.c<=x1,perto=!segs.some(function(o){return q.c>=o[0]&&q.c<=o[1]})&&k===0;if(dentro||perto){var ni=k?JSON.parse(JSON.stringify(q.i)):q.i;ni.x=r1(Math.max(0,Math.min(x1-x0-(+ni.w||0),q.ax-x0)));p.items.push(ni)}});
+    /* perna do L: só no pedaço da ponta do lado dela */var sh=st.shape||'';if(k>0&&/^(Le|U)$/.test(sh)&&p.shape){if(sh==='U'){p.shape='Ld'}else{delete p.shape;delete p.lenA;delete p.widA}}if(k<segs.length-1&&/^(Ld|U)$/.test(sh)&&segs.length>1){if(k===0&&sh==='U')p.shape='Le';else if(sh==='Ld'){delete p.shape;delete p.lenA;delete p.widA;delete p.lenB;delete p.widB}}
+    p.x=r1(x0);p.w=r1(x1-x0);out.push(p)});n+=segs.length-1+(segs.length===1?1:0)});
+  S.stones=out;S.st=out.indexOf(S.st)>=0?S.st:out[0];try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}try{toast('✂ Pedra dividida no fogão · '+out.length+' pedaço'+(out.length>1?'s':'')+': '+out.map(function(q){return Math.round(q.w)}).join(' + ')+' mm')}catch(_){}return out.length};
+ var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{var bd=document.getElementById('bd');if(window.RO||!bd||bd.querySelector('[data-stdiv]'))return r;var ad=bd.querySelector('[data-stadd]');if(!ad||!(S.stones||[]).length||!fogoes().length)return r;var tem=stDivTem(),b=document.createElement('button');b.dataset.stdiv='1';b.textContent='✂ Dividir a pedra no fogão';b.title='A pedra para no fogão de piso e continua do outro lado';if(tem)b.style.cssText='font-weight:700;border:2px solid #1f6feb';ad.parentNode.insertBefore(b,ad.nextSibling)}catch(_){}return r};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-stdiv]');if(!t)return;e.stopPropagation();stDividir()},true);
+})();
+</script>
 </body></html>

@@ -4709,4 +4709,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["b3"] as? Int, 4)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Pedra dividida no fogão de piso: para nele com 3 mm de folga e continua do outro lado; cuba e cooktop ficam no pedaço certo;
+    /// a perna do L fica no pedaço da ponta; sem fogão avisa; não divide duas vezes.
+    func testPedraDivididaNoFogao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.env='cozinha';S.W=3500;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];var R={};draw();
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+          newTpl(T('Balcão da pia (cuba)'));var a=S.mods[0];a.x=0;a.w=1230;a.tl=a.tr=false;a.lock=true;newTpl(T('Balcão 2 portas'));var b=S.mods[1];b.x=2010;b.w=780;b.tl=b.tr=false;b.lock=true;draw();
+          addStone();var st=S.stones[0];st.x=0;st.w=2790;draw();R.antes=S.stones.map(function(q){return q.x+'+'+q.w+' i'+q.items.map(function(i){return i.k+'@'+i.x}).join(',')}).join(' | ');
+          /* sem fogão: avisa e o botão nem aparece */S.tab=6;panel();R.semFogao=stDividir()+' '+!!document.querySelector('#bd [data-stdiv]')+' '+TL[TL.length-1];
+          var fi=APM.forno.m.findIndex(function(m){return /Fogão de piso 5 bocas BFS5NCR/.test(m[0])}),f=apAdd('forno',fi);f.x=1231;st.items.push({id:9,k:'cooktop',x:2200,y:100,w:400,d:350});draw();S.tab=6;panel();
+          var bt=document.querySelector('#bd [data-stdiv]');R.botao=!!bt&&bt.textContent;bt.click();
+          R.depois=S.stones.map(function(q){return q.x+'+'+q.w+' i'+q.items.map(function(i){return i.k+'@'+i.x}).join(',')}).join(' | ');R.toast=TL[TL.length-1];R.ids=new Set(S.stones.map(function(q){return q.id})).size;
+          R.folga=(f.x-(S.stones[0].x+S.stones[0].w))+' '+(S.stones[1].x-(f.x+f.w));
+          R.denovo=stDividir()+' '+TL[TL.length-1];
+          /* 3D: nenhum pedaço de pedra em cima do fogão */
+          open3D();await new Promise(function(r){setTimeout(r,500)});var B=__boxes().filter(function(q){return q.g==='st'||q.g==='stc'});R.b3=B.length>0&&!B.some(function(q){return Math.min(q.x1,f.x+f.w)-Math.max(q.x0,f.x)>1&&q.y1>800});document.getElementById('v3x').click();
+          /* pedra em L: a perna fica só no pedaço da ponta */
+          S.stones=[{id:1,x:0,w:2790,d:600,t:820,e:30,shape:'Le',lenA:2000,widA:600,items:[]}];S.st=S.stones[0];draw();stDividir();R.emL=S.stones.map(function(q){return q.x+'+'+q.w+(q.shape?' '+q.shape+' '+q.lenA:'')}).join(' | ');
+          var s2=snapState();R.salva=s2.stones.length;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["antes"] as? String, "0+2790 icuba@370")
+        XCTAssertEqual(o["semFogao"] as? String, "0 false Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está")
+        XCTAssertEqual(o["botao"] as? String, "✂ Dividir a pedra no fogão")
+        XCTAssertEqual(o["depois"] as? String, "0+1228 icuba@370 | 2012+778 icooktop@188", "dois pedaços, cada item no seu")
+        XCTAssertEqual(o["ids"] as? Int, 2)
+        XCTAssertEqual(o["folga"] as? String, "3 3", "3 mm de cada lado do fogão")
+        XCTAssertEqual(o["denovo"] as? String, "0 A pedra já está dividida no fogão")
+        XCTAssertEqual(o["b3"] as? Bool, true, "3D: nenhuma pedra em cima do fogão")
+        XCTAssertEqual(o["emL"] as? String, "0+1228 Le 2000 | 2012+778", "a perna do L fica no pedaço da ponta")
+        XCTAssertEqual(o["salva"] as? Int, 2)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

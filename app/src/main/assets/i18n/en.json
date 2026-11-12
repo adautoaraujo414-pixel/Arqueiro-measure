@@ -6280,5 +6280,12 @@
 "abre pra cima (pistão)": "opens upward (gas piston)",
 "abre pra baixo (articulador)": "opens downward (stay)",
 "Porta de vidro (perfil de alumínio + vidro)": "Glass door (aluminium frame + glass)",
-"Módulo 2D": "2D module"
+"Módulo 2D": "2D module",
+"Ferragens e perfis de alumínio": "Hardware and aluminium profiles",
+"blindex, puxador, perfil da porta de vidro": "glass-door hardware, handles, glass door frame",
+"Vidros": "Glass",
+"Ferragens e perfis": "Hardware and profiles",
+"neste módulo": "on this module",
+"toque no módulo no 3D": "tap the module in 3D",
+"Toque num módulo que tenha perfil de alumínio ou vidro": "Tap a module that has aluminium profiles or glass"
 }

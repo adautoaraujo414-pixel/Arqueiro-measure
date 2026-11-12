@@ -460,7 +460,7 @@ fun LibraryScreen(vm: AppViewModel) {
         add(SheetItem(tr("Orçamentos"), Icons.Filled.AttachMoney) { vm.screen = Screen.Quotes })
         add(SheetItem(tr("Fazer backup completo (ZIP)"), Icons.Filled.Backup) { backupLauncher.launch("arque-measure-backup.zip") })
         add(SheetItem(tr("Restaurar backup"), Icons.Filled.Restore) { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) })
-        if (!br.com.arque.measure.BuildConfig.PLAY) add(SheetItem(tr("Atualizar o app (sem perder dados)"), Icons.Filled.SystemUpdate) { vm.checkUpdate() })
+        if (!br.com.arque.measure.BuildConfig.PLAY && !br.com.arque.measure.BuildConfig.TESTE) add(SheetItem(tr("Atualizar o app (sem perder dados)"), Icons.Filled.SystemUpdate) { vm.checkUpdate() })
         add(SheetItem(tr("Sincronizar com outro aparelho (Wi-Fi)"), Icons.Filled.Sync) { syncOpen = true })
         add(SheetItem(tr("Ver projeto por Bluetooth"), Icons.Filled.Bluetooth) { btView = true })
         add(SheetItem(langMenuLabel() + " (" + currentLangName() + ")", Icons.Filled.Language) { langOpen = true })

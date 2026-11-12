@@ -5254,13 +5254,16 @@ final class EditorWebKitTests: XCTestCase {
           var st=function(l){var w=wvCur(),c={};var snap=snapState();(snap.rp||[]).forEach(function(a){c[a.wall||'f']=(c[a.wall||'f']||0)+1});R.log.push(l+': vista='+w+' W='+S.W+' real='+JSON.stringify(c).replace(/"/g,'')+' Rlen='+((snap.wall||{}).R||{}).len)};
           st('início');
           var ids=['cutb','mcb','lsb','ltb','listb'];for(var q=0;q<3;q++){for(var i=0;i<ids.length;i++){var b=document.getElementById(ids[i]);if(!b)continue;b.click();await W(650);var row=document.querySelector('#cutm:not([hidden]) [data-src],#mcm:not([hidden]) [data-src]');if(row){row.click();await W(900);var x=document.getElementById('v3x');if(x&&x.offsetParent!==null){x.click();await W(700)}}['cutm','mcm'].forEach(function(k){var m=document.getElementById(k);if(m&&!m.hidden){var cx=m.querySelector('[data-cx],#cx,.x,button');m.hidden=true}});await W(700);st(ids[i]+' ciclo '+q+(row?' com peça':' sem peça'))}}
+          /* continua editando: o painel novo nasce na parede direita */var np=rpNew({x:3124,b:0,w:40,h:2700});np.liso=true;draw();R.novo=wvCur()+' '+snapState().rp.map(function(q){return q.wall||'f'}).join('');
+          /* diagnóstico sem dado de cliente */newProjFor({nome:'Fulano Secreto',end:'Rua X',cidade:'',tel:'34999990000'});var dg=projDiag().txt;R.semCliente=!/Fulano|Rua X|34999990000/.test(dg)&&/Parede direita: /.test(dg);
           open3D();await W(600);__build();var B=__boxes().filter(function(b){return b.rpid}),c={fundo:0,direita:0,outro:0};B.forEach(function(b){if(b.z1<=120&&b.x1<=S.W+1)c.fundo++;else if(b.x0>=S.W-120)c.direita++;else c.outro++});R.caixas=JSON.stringify(c);
           R.errs=__errs;R.l=R.log.join(" | ");return JSON.stringify(R);
           """#)
         let l = o["l"] as? String ?? ""
         XCTAssertFalse(l.contains("vista=null"), "nunca cai no fundo sozinho: \(l)")
         XCTAssertTrue(l.contains("cutb ciclo 2 com peça: vista=d W=3170 real={d:4}"), l)
-        XCTAssertEqual(o["caixas"] as? String, "{\"fundo\":0,\"direita\":4,\"outro\":0}", "os 4 painéis continuam só na parede direita")
+        XCTAssertEqual(o["novo"] as? String, "d ddddd", "continuou editando: o painel novo nasceu na parede direita")
+        XCTAssertEqual(o["semCliente"] as? Bool, true, "diagnóstico só com dados técnicos")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

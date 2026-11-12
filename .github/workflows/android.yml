@@ -5,7 +5,19 @@ on:
     branches: [ main, 'feature/**' ]
     paths-ignore: [ 'ios/**', '.github/workflows/ios.yml', 'docs/**', 'windows/**', '.github/workflows/windows*.yml' ]
   pull_request:
+  # TESTAR (push / disparo no modo "teste"): compila, testa e gera o APK de TESTE. Nunca mexe na versão dos usuários.
+  # PUBLICAR: só à mão, modo "publicar" e escrevendo a confirmação "PUBLICAR <7 letras do commit>".
   workflow_dispatch:
+    inputs:
+      modo:
+        description: 'teste = APK de teste (instala ao lado, não atualiza ninguém) · publicar = atualiza a versão dos usuários'
+        type: choice
+        options: [ teste, publicar ]
+        default: teste
+      confirmar:
+        description: 'Só pra publicar: escreva PUBLICAR e as 7 primeiras letras do commit (ex.: PUBLICAR a54f405)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -19,6 +31,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0   # histórico e tags: as novidades saem dos commits desde o apk-N anterior
+
+      - name: Trava de publicação (compilar nunca publica)
+        run: python3 .github/scripts/trava_publicacao.py
 
       - name: Instalar JDK 17
         uses: actions/setup-java@v4
@@ -44,6 +59,24 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew --no-daemon assembleSiteDebug compilePlayReleaseKotlin 2>&1 | tee build.log
+
+      - name: APK de TESTE (outro pacote, instala ao lado do app de verdade, sem atualizador)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -o pipefail
+          cp app/build/outputs/apk/site/debug/*.apk "$RUNNER_TEMP/publico.apk"
+          ./gradlew --no-daemon assembleSiteDebug -Pteste=1 2>&1 | tee -a build.log
+          cp app/build/outputs/apk/site/debug/*.apk Arquemestre-TESTE.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging Arquemestre-TESTE.apk | head -n 3
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging Arquemestre-TESTE.apk | grep -q "name='br.com.arque.measure.teste'" || { echo "::error::o APK de teste saiu com o pacote do app de verdade"; exit 1; }
+          TAG="teste-android-${GITHUB_RUN_NUMBER}"
+          printf 'APK de TESTE do commit %s.\nInstala AO LADO do Arquemestre (nome "Arquemestre TESTE"), com dados separados. Não atualiza nem substitui o app dos usuários.\n' "${GITHUB_SHA::7}" > nota-teste.txt
+          gh release create "teste-android-${GITHUB_RUN_NUMBER}" Arquemestre-TESTE.apk --target "$GITHUB_SHA" --prerelease --title "TESTE Android ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7}) · não é versão pública" --notes-file nota-teste.txt
+          echo "::notice title=APK de teste::https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Arquemestre-TESTE.apk"
+          # volta o APK normal pro lugar (os passos seguintes conferem ele)
+          ./gradlew --no-daemon assembleSiteDebug 2>&1 | tail -n 3
 
       - name: Salvar log de erro
         if: failure()
@@ -72,18 +105,23 @@ jobs:
           unzip -l "$APK" | grep -q "AndroidManifest.xml"
           "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging "$APK" | head -n 6
 
-      - name: Publicar APK
+      - name: Guardar o APK desta compilação (artefato, não é publicação)
         uses: actions/upload-artifact@v4
         with:
           name: ArqueMeasure-debug-apk
           path: app/build/outputs/apk/site/debug/*.apk
           if-no-files-found: error
 
-      - name: Publicar APK na Release
-        if: success() && github.event_name == 'push'
+      - name: PUBLICAR pros usuários (release apk-N e ponteiro apk-latest)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'
         env:
           GH_TOKEN: ${{ github.token }}
+          CONFIRMAR: ${{ inputs.confirmar }}
         run: |
+          python3 .github/scripts/trava_publicacao.py confirmar "$CONFIRMAR"
+          # guarda o ponteiro anterior (pra poder voltar): fica anotado na release desta versão
+          ANT=$(curl -fsSL "https://github.com/${GITHUB_REPOSITORY}/releases/download/apk-latest/latest.txt" || echo "?")
+          echo "::notice title=Publicação::versão pública anterior apk-${ANT} · nova apk-${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
           TAG="apk-${GITHUB_RUN_NUMBER}"
           cp app/build/outputs/apk/site/debug/*.apk ArqueMeasure-debug.apk
           # novidades desta versão (o app mostra no aviso de atualização): commits desde o apk-N anterior
@@ -106,12 +144,14 @@ jobs:
           gh release view apk-latest >/dev/null 2>&1 || gh release create apk-latest --prerelease --title "Android · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em apk-N."
           gh release upload apk-latest latest.txt ArqueMeasure-debug.apk novidades.txt --clobber
 
-      - name: Gerar AAB assinado para o Google Play (se a senha da chave estiver configurada)
-        if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      - name: Gerar AAB assinado para o Google Play (só no modo publicar)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'
         env:
           GH_TOKEN: ${{ github.token }}
           KEY_PASS: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+          CONFIRMAR: ${{ inputs.confirmar }}
         run: |
+          python3 .github/scripts/trava_publicacao.py confirmar "$CONFIRMAR"
           set -o pipefail
           if [ -z "$KEY_PASS" ]; then
             # confere que a versão da loja compila inteira, mesmo sem a chave (AAB sem assinatura não é publicado)

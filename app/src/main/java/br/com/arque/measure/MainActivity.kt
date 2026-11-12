@@ -20,8 +20,8 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         vm.checkLicense()
         vm.startStore()
-        vm.autoCheckUpdate()
-        if (!BuildConfig.PLAY) runCatching { br.com.arque.measure.update.UpdateWorker.schedule(applicationContext) }
+        if (!BuildConfig.TESTE) vm.autoCheckUpdate()
+        if (!BuildConfig.PLAY && !BuildConfig.TESTE) runCatching { br.com.arque.measure.update.UpdateWorker.schedule(applicationContext) }
         setContent {
             // trocar o idioma redesenha o app inteiro no idioma novo (nada é perdido: tudo fica no ViewModel)
             ArqueTheme { androidx.compose.runtime.key(br.com.arque.measure.i18n.I18n.lang) { App(vm) } }
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         }
         i?.getStringExtra(br.com.arque.measure.agenda.AgendaReminders.EXTRA_APPT)?.let { vm.openAppointment(it) }
         // toque na notificação de versão nova: já baixa e abre o instalador
-        if (!BuildConfig.PLAY && i?.getBooleanExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE, false) == true) {
+        if (!BuildConfig.PLAY && !BuildConfig.TESTE && i?.getBooleanExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE, false) == true) {
             i.removeExtra(br.com.arque.measure.update.UpdateWorker.EXTRA_UPDATE)
             vm.acceptUpdate()
         }

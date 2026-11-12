@@ -14,6 +14,12 @@ android {
         targetSdk = 36
         versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1)
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
+        // CANAL DE TESTE (-Pteste=1): instala AO LADO do app de verdade (outro pacote, outros dados), com outro nome,
+        // sem atualizador e com backup automático em arquivo separado. Nunca substitui nem atualiza o app dos usuários.
+        val teste = (project.findProperty("teste")?.toString() == "1")
+        buildConfigField("boolean", "TESTE", teste.toString())
+        manifestPlaceholders["appLabel"] = if (teste) "Arquemestre TESTE" else "@string/app_name"
+        if (teste) { applicationIdSuffix = ".teste"; versionNameSuffix = "-TESTE" }
     }
 
     // site = APK do GitHub (atualiza sozinho, 3 dias de teste e depois desbloqueio por senha)

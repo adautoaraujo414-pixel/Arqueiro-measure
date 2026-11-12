@@ -21,7 +21,8 @@ import java.util.zip.ZipOutputStream
  */
 object DataBackup {
     const val MARK = "arque-full-backup.txt"
-    private const val AUTO_NAME = "ArqueMeasure-backup-automatico.zip"
+    // o app de TESTE guarda a cópia automática em outro arquivo: nunca grava por cima da cópia do app de verdade
+    private val AUTO_NAME = if (br.com.arque.measure.BuildConfig.TESTE) "ArqueMeasure-TESTE-backup-automatico.zip" else "ArqueMeasure-backup-automatico.zip"
     private val SKIP_TOP = setOf("cache", "code_cache", "lib", "no_backup")
 
     private fun skip(rel: String): Boolean {

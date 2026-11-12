@@ -10782,7 +10782,7 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  function encontros(D){var out=[];for(var i=0;i<D.length;i++)for(var j=i+1;j<D.length;j++){var a=D[i],b=D[j];if(!a.bb||!b.bb||a.wall===b.wall||a.wall==='canto'||b.wall==='canto')continue;var ox=Math.min(a.bb.x1,b.bb.x1)-Math.max(a.bb.x0,b.bb.x0),oy=Math.min(a.bb.y1,b.bb.y1)-Math.max(a.bb.y0,b.bb.y0),oz=Math.min(a.bb.z1,b.bb.z1)-Math.max(a.bb.z0,b.bb.z0);if(oy<=0.5)continue;if(ox>0.5&&oz>0.5)out.push({t:'colisão',a:a,b:b,mm:[r0(ox),r0(oy),r0(oz)]});else{var gx=Math.max(0,-ox),gz=Math.max(0,-oz),g=Math.sqrt(gx*gx+gz*gz);if(g<=200)out.push({t:'folga',a:a,b:b,mm:r0(g),gx:r0(gx),gz:r0(gz)})}}return out}
  function gera(){var st=canon(),P=paredes(st),B=caixas(),D=donos(st,B),L=[],al=[];
   L.push('ARQUEMESTRE · DIAGNÓSTICO DE PAREDES E PEÇAS · '+new Date().toLocaleString());
-  L.push('Ambiente: '+(st.room||'-')+' · vista do 2D agora: '+((window.wvCur&&wvCur())?NM[wvCur()]:'fundo'));
+  L.push('(só dados técnicos: sem nome, telefone ou endereço de cliente)');L.push('Ambiente: '+(st.room||'-')+' · vista do 2D agora: '+((window.wvCur&&wvCur())?NM[wvCur()]:'fundo'));
   ['f','e','d'].forEach(function(w){L.push('Parede '+NM[w]+': '+P[w].len+' × '+P[w].h+' mm'+(w!=='f'?(P[w].proprio?' (medida própria)':' (igual à profundidade do ambiente)'):''))});
   L.push('');L.push('PEÇAS ('+D.length+') — parede · posição na parede (da esquerda, do chão) · medida · onde está no 3D');
   D.forEach(function(o){var pl=plano(o,P,st),esperado=o.wall==='canto'?null:NM[o.wall],ok=!o.bb||!esperado||pl.indexOf(esperado)>=0,lim=o.wall==='canto'?null:P[o.wall],fora=lim&&(o.x<-1||o.x+o.w>lim.len+1||o.b+o.h>lim.h+1);

@@ -4,8 +4,20 @@ name: Windows
 # gera o instalador (.exe e .msi) e a versão portátil (.zip) e publica no release win-N.
 # Não mexe no Android nem no iOS (tem build e workflow próprios).
 on:
-  # Windows em pausa (prioridade iOS e Android): só roda quando disparado à mão
+  # Só roda quando disparado à mão.
+  # TESTAR (modo "teste"): compila, testa e guarda os instaladores como arquivo de teste. Nunca mexe na versão dos usuários.
+  # PUBLICAR: modo "publicar" e escrevendo a confirmação "PUBLICAR <7 letras do commit>".
   workflow_dispatch:
+    inputs:
+      modo:
+        description: 'teste = só compila e guarda os arquivos · publicar = atualiza a versão dos usuários'
+        type: choice
+        options: [ teste, publicar ]
+        default: teste
+      confirmar:
+        description: 'Só pra publicar: escreva PUBLICAR e as 7 primeiras letras do commit (ex.: PUBLICAR a54f405)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -32,6 +44,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Trava de publicação (compilar nunca publica)
+        run: python .github/scripts/trava_publicacao.py
+
       - name: Testes automáticos (JVM, no Windows)
         working-directory: windows
         run: gradle --no-daemon test
@@ -54,11 +69,25 @@ jobs:
           $env:ARQUE_TOUR = (Resolve-Path tour).Path
           python windows/test/tour.py "$($exe.FullName)" tour
 
-      - name: Publicar release win-N
-        if: success()
+      - name: Arquivos de TESTE (portátil e instalador, sem publicar)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          $n = $env:GITHUB_RUN_NUMBER
+          New-Item -ItemType Directory -Force relt | Out-Null
+          Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath relt/Arquemestre-Windows-TESTE-portatil.zip
+          "Arquivos de TESTE do commit $($env:GITHUB_SHA.Substring(0,7)). Nao e versao publica e nao atualiza ninguem. O portatil roda sem instalar (descompacte e abra Arquemestre.exe); ele usa a mesma pasta de dados do app instalado, entao faca backup antes." | Out-File -Encoding utf8NoBOM relt/nota.txt
+          gh release create "teste-windows-$n" relt/Arquemestre-Windows-TESTE-portatil.zip -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease --title "TESTE Windows $n ($($env:GITHUB_SHA.Substring(0,7))) · não é versão pública" --notes-file relt/nota.txt
+
+      - name: PUBLICAR pros usuários (release win-N e ponteiro win-latest)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFIRMAR: ${{ inputs.confirmar }}
+        run: |
+          python .github/scripts/trava_publicacao.py confirmar "$env:CONFIRMAR"
+          if ($LASTEXITCODE -ne 0) { throw "publicação recusada pela trava" }
           $n = $env:GITHUB_RUN_NUMBER
           $exe = Get-ChildItem windows/build/compose/binaries/main/exe/*.exe | Select-Object -First 1
           $msi = Get-ChildItem windows/build/compose/binaries/main/msi/*.msi | Select-Object -First 1
@@ -80,12 +109,15 @@ jobs:
           gh release view win-latest -R "$env:GITHUB_REPOSITORY" 2>$null; if ($LASTEXITCODE -ne 0) { gh release create win-latest -R "$env:GITHUB_REPOSITORY" --prerelease --title "Windows · última versão (ponteiro)" --notes "Usado pelo app pra se atualizar sozinho. A versão de verdade está em win-N." }
           gh release upload win-latest rel/latest.txt rel/novidades.txt rel/Arquemestre-Windows-Instalador.exe -R "$env:GITHUB_REPOSITORY" --clobber
 
-      - name: Instalador para Windows 7/8 (Chromium 109)
-        if: success()
+      - name: PUBLICAR o instalador para Windows 7/8 (Chromium 109)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'
         working-directory: windows
         env:
           GH_TOKEN: ${{ github.token }}
+          CONFIRMAR: ${{ inputs.confirmar }}
         run: |
+          python ../.github/scripts/trava_publicacao.py confirmar "$env:CONFIRMAR"
+          if ($LASTEXITCODE -ne 0) { throw "publicação recusada pela trava" }
           # o Chromium 135 não roda no Windows 7/8/8.1 (chrome_elf.dll: procedimento não encontrado):
           # este instalador usa o Chromium 109 (o último que roda neles) e se atualiza com o mesmo tipo
           gradle --no-daemon packageExe -Pwin7=1

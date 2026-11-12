@@ -3570,7 +3570,7 @@ final class EditorWebKitTests: XCTestCase {
           B('n|1');R.n=m.v[0].n;B('auto');R.auto=m.v[0].gH===undefined;B('x');R.fechou=document.getElementById('gvbox').hidden;
           S.mods=[];S.room='quarto';S.env='livre';var cq=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return /^Torre do guarda-roupa/.test(q.n)})[0])));m=S.m;gvOpenK(0,0,2);B('h|-10');R.cx=m.v[0].int[2].gH>0&&partsOf(m).some(function(q){return /^Caixote · gaveta · lateral/.test(q.name)});
           R.sala=ROOMCATS.sala.slice(0,2).join(',')+' '+CATS.filter(function(x){return x.id==='salaT'})[0].it.length;var Lq_=ROOMCATS.quarto.filter(function(c){return c!=='recent'&&c!=='mine'&&!/^uc_/.test(c)});R.quarto=Lq_[0]+' '+(Lq_.indexOf('alto')>Lq_.indexOf('dArm'))+' '+(Lq_.indexOf('cchur')===Lq_.length-1);
-          S.mods=[];S.room='sala';var cs=CATS.filter(function(x){return x.id==='salaT'})[0];newTpl(JSON.parse(JSON.stringify(cs.it[0])));S.tab=2;S.sv=0;panel();R.chaves=[].map.call(document.querySelectorAll('#bd [data-intadd]'),function(b){return b.dataset.intadd}).join(',');
+          S.mods=[];S.room='sala';var cs=CATS.filter(function(x){return x.id==='salaT'})[0];newTpl(JSON.parse(JSON.stringify(cs.it.filter(function(q){return !q.free0})[0])));S.tab=2;S.sv=0;panel();R.chaves=[].map.call(document.querySelectorAll('#bd [data-intadd]'),function(b){return b.dataset.intadd}).join(',');
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["abriu"] as? Bool, true, "toque na gaveta abre os ajustes")
@@ -3941,6 +3941,50 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["kc"] as? String, "reta na altura 2700 até 742.5 mm da ponta esquerda", "lista de corte explica onde o ângulo começa")
         XCTAssertGreaterThan((o["n3"] as? NSNumber)?.intValue ?? 0, 0)
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    func testEditorPorVaosGavetasColunaTorreCorrerECantos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.env='quarto';S.room='quarto';S.W=3200;S.H=2700;draw();
+          var c=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0])));soloOn(S.m);
+          var m=S.m;R.vaos=rgIs(m)&&window.SOLO2===m;document.querySelector('#svg [data-rgr]').dispatchEvent(new MouseEvent('click',{bubbles:true}));R.rosa=!!RG.sel;
+          document.querySelector('[data-rga="sp|h|2"]').click();RG.sel={mi:0,path:'r.1'};RG.tab='gav';panel();document.querySelector('[data-rga="ins|gav"]').click();
+          RG.sel={mi:0,path:'r'};RG.tab='por';panel();document.querySelector('[data-rga="door|2"]').click();
+          var P=partsOf(m),f=function(n){return P.filter(function(p){return p.name===n})};
+          R.base=f('Gaveteiro · base sobre as gavetas').map(function(p){return p.cw})[0];R.afast=f('Gaveteiro · afastador frontal esquerdo').map(function(p){return p.cw})[0];R.lat=f('Gaveteiro · lateral').map(function(p){return p.cw})[0];
+          var fr=f('Gaveta interna · frente'),lg=f('Gaveta interna · lateral');R.folga=Math.round((fr[1].y-(fr[0].y+fr[0].h))*10)/10;R.caixa=Math.round((fr[0].cw-lg[0].cw)*10)/10;R.portas=f('Porta').length;
+          var h=document.querySelector('#svg circle[data-rgd]'),b=h.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2,pe=function(t,el,yy){el.dispatchEvent(new PointerEvent(t,{bubbles:true,clientX:x,clientY:yy,pointerId:1,isPrimary:true}))};pe('pointerdown',h,y);for(var i=1;i<=6;i++)pe('pointermove',window,y-i*10);pe('pointerup',window,y-60);R.arrastou=!!(m.rt.c[0].z>0);
+          RG.tab='est';panel();document.querySelector('[data-rga="stk|mal"]').click();R.coluna=S.mods.length===2&&S.mods[1].stkB===m.uid&&S.mods[1].b===m.h;R.tamp=partsOf(m).filter(function(p){return p.name==='Tamponamento esquerdo'})[0].cl;
+          S.mods=[];S.room='cozinha';S.env='cozinha';draw();var a=CATS.filter(function(x){return x.id==='alto'})[0];newTpl(JSON.parse(JSON.stringify(a.it.filter(function(q){return /Armário alto livre/.test(q.n)})[0])));soloOn(S.m);var t=S.m;
+          t.rt={s:'h',c:[{p:{n:2}},{t:'ele',el:{mdl:'m_cm146',fr:'rec'},z:600},{p:{n:2}}]};var Q=partsOf(t),fc=Q.filter(function(p){return /^Frente com recorte do micro/.test(p.name)})[0],ct=Q.filter(function(p){return p.name==='Corte do micro-ondas'})[0];
+          R.recorte=fc?fc.rec.w+'x'+fc.rec.h:'';R.centro=fc?Math.round((fc.rec.x*2+fc.rec.w-fc.w)*10)/10:'x';R.puxEmbaixo=Q.filter(function(p){return p.name==='Porta'&&p.pxDn}).length;
+          S.mods=[];S.room='quarto';S.env='quarto';draw();var d=CATS.filter(function(x){return x.id==='dArm'})[0];['2P c/ Cab 600mm','2P 600mm','2P c/ Cab 600mm'].forEach(function(n){newTpl(JSON.parse(JSON.stringify(d.it.filter(function(q){return q.n===n})[0])))});S.m=S.mods[1];S.tab=3;draw();panel();document.querySelector('#bd [data-rga="slr|3"]').click();
+          var C=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta de correr'});R.correr=C.length+' '+C.map(function(p){return p.trk}).join('')+' '+S.mods[2].d;R.gola=partsOf(S.mods[0]).filter(function(p){return p.name==='Puxador gola lateral'}).length;
+          var k=CATS.filter(function(x){return x.id==='dCan'})[0];R.cr=k.it.filter(function(q){return /Canto reto \(CR\)/.test(q.n)}).length;S.mods=[];newTpl(JSON.parse(JSON.stringify(k.it[0])));var L=S.m;R.baseCima=partsOf(L).some(function(p){return p.name==='Base superior'});L.cshT='45';R.p45=partsOf(L).filter(function(p){return /^Prateleira 45/.test(p.name)}).length;
+          R.modbar=!/data-selm/.test(modBar());R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["vaos"] as? Bool, true, "armário livre abre no 2D por vãos")
+        XCTAssertEqual(o["rosa"] as? Bool, true, "toque no vão escolhe ele")
+        XCTAssertEqual(o["base"] as? Double, 500, "base sobre as gavetas passa 20: 480 + 20")
+        XCTAssertEqual(o["afast"] as? Double, 35, "afastador de 35")
+        XCTAssertEqual(o["lat"] as? Double, 480, "conjunto 70 pra dentro: 550 − 70")
+        XCTAssertEqual(o["folga"] as? Double, 2.5, "folga 2,5 entre frentes")
+        XCTAssertEqual(o["caixa"] as? Double, 30, "caixa = frente − 30")
+        XCTAssertEqual(o["portas"] as? Double, 2, "2 portas no vão de fora")
+        XCTAssertEqual(o["arrastou"] as? Bool, true, "arrasta a divisão")
+        XCTAssertEqual(o["coluna"] as? Bool, true, "maleiro unido em cima")
+        XCTAssertEqual(o["tamp"] as? Double, 2600, "tamponamento pega a coluna toda")
+        XCTAssertEqual(o["recorte"] as? String, "560x380", "recorte do manual")
+        XCTAssertEqual(o["centro"] as? Double, 0, "eletro centralizado")
+        XCTAssertEqual(o["puxEmbaixo"] as? Double, 2, "porta acima da pedra com puxador embaixo")
+        XCTAssertEqual(o["correr"] as? String, "3 010 580", "3 portas: 2 atrás e 1 na frente, corpo 650 − 70")
+        XCTAssertEqual(o["gola"] as? Double, 4, "gola: frente dos 2 lados, as de trás do lado de fora")
+        XCTAssertEqual(o["cr"] as? Double, 4, "cantos retos CR")
+        XCTAssertEqual(o["baseCima"] as? Bool, true, "canto alto tem base superior")
+        XCTAssertEqual(o["p45"] as? Double, 1, "prateleira em 45")
+        XCTAssertEqual(o["modbar"] as? Bool, true, "sem a fila Base 1 / Superior 1")
+        XCTAssertEqual((o["errs"] as? [Any])?.count, 0)
     }
 
 }

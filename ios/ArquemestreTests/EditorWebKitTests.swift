@@ -2963,8 +2963,11 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('v3x').click();
           /* botão do módulo: desliga só nele; "aplicar em todos" liga em todos os de baixo */
           newTpl(tpl('Balcão 2 portas'));try{soloOff()}catch(_){}var n2=S.mods[2];n2.x=200;n2.latPiso=false;draw();
-          S.m=m;S.tab=0;panel();var bt=document.querySelector('#bd [data-latop="latPiso"]');R.botao=!!bt;if(bt)bt.click();R.desliga=!m.latPiso&&!!n2&&!n2.latPiso;
-          bt=document.querySelector('#bd [data-latop="latPiso"]');if(bt)bt.click();var ba=document.querySelector('#bd [data-latall="1"]');R.todos=!!ba;if(ba)ba.click();R.ligouTodos=S.mods.filter(function(q){return !q.sup}).every(function(q){return q.latPiso});
+          /* a regra da base é uma só, em Ajustes: no módulo não tem mais botão; lateral aparece marcada (todo módulo tem as duas) */
+          S.m=m;S.tab=0;panel();R.botao=!document.querySelector('#bd [data-latop="latPiso"]')&&!document.querySelector('#bd [data-latall]')&&!!document.querySelector('#bd [data-cfggo2]');R.lat=[].map.call(document.querySelectorAll('#bd [data-latop]'),function(b){return b.textContent}).join('|')+' '+/Tamponamento \(acabamento por fora\) é outra peça/.test(document.getElementById('bd').textContent);
+          document.querySelector('#bd [data-cfggo2]').click();var c=document.querySelector('#stdm [data-std="latPiso"][data-v="nao"]');R.ajustes=!!c&&/Lateral até a base/.test(c.textContent);c.click();await new Promise(function(r){setTimeout(r,60)});R.desliga=STD().latPiso==='nao'&&S.mods.filter(function(q){return !q.sup}).every(function(q){return !q.latPiso});
+          var Lb=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.sobreBase=Lb.h<m.h-100;
+          c=document.querySelector('#stdm [data-std="latPiso"][data-v="sim"]');R.todos=!!c&&/descendo até o chão/.test(c.textContent);c.click();await new Promise(function(r){setTimeout(r,60)});R.ligouTodos=STD().latPiso==='sim'&&S.mods.filter(function(q){return !q.sup}).every(function(q){return q.latPiso});document.getElementById('stdm').hidden=true;
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["nasce"] as? Bool, true, "módulo de baixo nasce com as laterais até o piso")
@@ -2978,10 +2981,13 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aereoBaixo"] as? Bool, true, "3D: aéreo por baixo na cor de fora")
         XCTAssertEqual(o["corteRod"] as? Bool, true, "corte: rodapé da frente na chapa da cor")
         XCTAssertEqual(o["corteAereo"] as? Bool, true, "corte: base do aéreo na chapa da cor")
-        XCTAssertEqual(o["botao"] as? Bool, true, "botão Laterais até o piso no módulo")
-        XCTAssertEqual(o["desliga"] as? Bool, true, "desliga só no módulo")
-        XCTAssertEqual(o["todos"] as? Bool, true, "botão aplicar em todos")
-        XCTAssertEqual(o["ligouTodos"] as? Bool, true, "liga em todos os módulos de baixo")
+        XCTAssertEqual(o["botao"] as? Bool, true, "no módulo não tem mais botão de lateral até o piso: é regra dos Ajustes")
+        XCTAssertEqual(o["lat"] as? String, "✓ Esquerda|✓ Direita true", "todo módulo tem as duas laterais; tamponamento é outra peça")
+        XCTAssertEqual(o["ajustes"] as? Bool, true, "Ajustes: lateral até a base")
+        XCTAssertEqual(o["desliga"] as? Bool, true, "em cima da base em todos os módulos de uma vez")
+        XCTAssertEqual(o["sobreBase"] as? Bool, true, "a lateral para na base, não desce até o chão")
+        XCTAssertEqual(o["todos"] as? Bool, true, "Ajustes: lateral descendo até o chão")
+        XCTAssertEqual(o["ligouTodos"] as? Bool, true, "até o chão em todos os módulos de baixo")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
     func testAssistenteMostraAOpcaoEscolhidaEmAzul() async throws {
@@ -4180,7 +4186,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["txt"] as? String, "380 60 150 555", "medida até os 4 cantos")
         XCTAssertEqual(o["deitada"] as? String, "h 0 328 150 h", "alça deitada: cabe dentro da porta, mesma altura, guardada no projeto")
         XCTAssertEqual(o["empe"] as? String, "undefined 1", "volta pra em pé")
-        XCTAssertTrue(((o["b3"] as? String) ?? "").hasPrefix("12 "), "3D com a alça real (pés + barra)")
+        XCTAssertTrue(((o["b3"] as? String) ?? "").hasPrefix("36 "), "3D com a alça real (pés + arco em gomos + brilho)")
         XCTAssertEqual(o["k"] as? String, "cog bola")
         XCTAssertEqual(o["kn"] as? String, "Puxador ponto Cog")
         XCTAssertEqual(o["salvo"] as? String, "luce192 cog {\"du\":60,\"dt\":150}", "modelo e lugar guardados no projeto")
@@ -4259,4 +4265,91 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
+    /// Puxador com a porta aberta tem o MESMO formato de fechada (ponto redondo não vira quadrado;
+    /// mesma quantidade de peças e de cantos em cada peça), em porta de abrir e em basculante.
+    func testPuxadorIgualComPortaAbertaEFechada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};delete PR.pxSave;delete PR.pxDoors;S.stones=[];S.rp=[];S.W=3000;S.H=2700;S.mods=[];delete S.pxa;delete S.pxm;delete S.pxk;delete S.pxo;S.pxDef=null;
+          var T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))},R={},Q=function(s){return document.querySelector('#bd '+s)};
+          newTpl(T('inf','Balcão 2 portas'));newTpl(T('sup','Aéreo basculante'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();
+          var fmt=function(){var A=__ang();Object.keys(A.g).forEach(function(k){delete A.g[k]});Object.keys(A.t).forEach(function(k){delete A.t[k]});__build();var c={};__boxes().filter(function(b){return b.nol&&b.g==='f'}).forEach(function(b){var k=String(b.nm).split(':')[0]+(b.pf?'p':b.gp?'g':'b')+(b.pf?b.pf.pts.length:b.gp?b.gp.a.length:4);c[k]=(c[k]||0)+1});return Object.keys(c).sort().map(function(k){return k+'x'+c[k]}).join(' ')};
+          var abre=function(o){S.mods.forEach(function(m){(m.v||[]).forEach(function(v){v.open=o})});draw()};
+          open3D();await new Promise(r=>setTimeout(r,500));
+          var roda=function(sel){document.getElementById('v3x').click();S.tab=3;S.m=S.mods[0];panel();Q(sel).click();open3D();abre(false);var f=fmt();abre(true);var a=fmt();abre(false);return f+' | '+a};
+          R.cog=roda('[data-pxkd="cog"]');R.gazza=roda('[data-pxkd="gazza"]');R.luce=roda('[data-pxmd="luce"]');R.mano=roda('[data-pxmd="mano"]');R.bono=roda('[data-pxmd="bono"]');
+          R.errs=__errs;return JSON.stringify(R);
+          
+          """#)
+        XCTAssertEqual(o["cog"] as? String, "0p12x2 0p16x4 0p20x6 1p12x1 1p16x2 1p20x3 | 0g12x2 0g16x4 0g20x6 1g12x1 1g16x2 1g20x3", "Cog redondo fechado e aberto")
+        XCTAssertEqual(o["gazza"] as? String, "0p12x2 0p8x6 1p12x1 1p8x3 | 0g12x2 0g8x6 1g12x1 1g8x3", "Gazza quadrado de canto quebrado")
+        XCTAssertEqual(o["luce"] as? String, "0b4x32 0p12x4 1p12x2 1p4x16 | 0g12x4 0g4x32 1g12x2 1g4x16", "Luce em arco")
+        XCTAssertEqual(o["mano"] as? String, "0b4x8 0p12x4 1p12x2 1p4x3 1p6x1 | 0g12x4 0g4x6 0g6x2 1g12x2 1g4x3 1g6x1", "Mano reta")
+        XCTAssertEqual(o["bono"] as? String, "0p12x8 0p14x4 1p12x4 1p14x2 | 0g12x8 0g14x4 1g12x4 1g14x2", "Bono chata")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Bolinha do puxador no desenho 2D: segura e arrasta, todas as portas acompanham (par espelhado,
+    /// aéreo de baixo pra cima); toque sem arrastar não muda nada; desfazer volta.
+    func testPuxadorArrastaABolinhaNo2DEAsOutrasAcompanham() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};delete PR.pxSave;delete PR.pxDoors;S.stones=[];S.rp=[];S.W=3000;S.H=2700;S.mods=[];delete S.pxa;delete S.pxm;delete S.pxk;delete S.pxo;S.pxDef=null;
+          var T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))},R={};
+          newTpl(T('inf','Balcão 2 portas'));newTpl(T('sup','Aéreo 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxkd="cog"]').click();
+          var gs=document.querySelectorAll('#svg [data-pxg]');R.bolinhas=gs.length;var g=gs[0],r=g.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+          var ev=function(n,x,y,el){(el||document.elementFromPoint(x,y)||document.body).dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:7,clientX:x,clientY:y,isPrimary:true}))};
+          var und0=(typeof UND!=='undefined'?UND.length:-1);
+          ev('pointerdown',cx,cy,g);ev('pointermove',cx+3,cy+2,document.body);R.semMexer=JSON.stringify(S.pxa||null);
+          ev('pointermove',cx+2,cy-9,document.body);await new Promise(r=>setTimeout(r,60));R.txt=(document.querySelector('#svg text[fill="#1f6feb"]')||{}).textContent;ev('pointerup',cx+2,cy-9,document.body);
+          R.pxa=!!(S.pxa&&S.pxa.du>=25&&S.pxa.dt>=25);R.igual=R.txt===S.pxa.du+' · '+S.pxa.dt;R.toast=TL[TL.length-1];
+          var pos=function(mm){return partsOf(mm).filter(p=>p.name==='Porta').map(p=>{var b=pxBar(p,mm,p.w,p.h);return p.hinge+':'+Math.round(p.hinge==='r'?b.u:p.w-b.u)+' cima'+Math.round(p.h-b.v)+' baixo'+Math.round(b.v)})};var pb=pos(S.mods[0]),pa=pos(S.mods[1]);R.par=pb[0].slice(2)===pb[1].slice(2)&&pa[0].slice(2)===pa[1].slice(2);R.segue=pb[0].indexOf('l:'+S.pxa.du+' cima'+S.pxa.dt+' ')===0&&pa[0].indexOf('l:'+S.pxa.du+' ')===0&&/baixo(\d+)$/.exec(pa[0])[1]==S.pxa.dt;
+          R.sel=S.mods.indexOf(S.m);R.semAzul=!document.querySelector('#svg text[fill="#1f6feb"]');
+          var st=snapState();R.salvo=JSON.stringify(st.pxa)===JSON.stringify(S.pxa);var antes=JSON.stringify(S.pxa);
+          /* toque sem arrastar não muda nada */
+          g=document.querySelectorAll('#svg [data-pxg]')[0];r=g.getBoundingClientRect();ev('pointerdown',r.left+5,r.top+5,g);ev('pointerup',r.left+5,r.top+5,document.body);R.toque=(JSON.stringify(S.pxa)===antes)+' '+TL[TL.length-1];
+          document.getElementById('und')?document.getElementById('und').click():0;R.desfez=JSON.stringify(S.pxa||null);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["bolinhas"] as? Int, 4, "uma bolinha em cada porta")
+        XCTAssertEqual(o["semMexer"] as? String, "null", "mexeu menos de 5 pontos: não muda")
+        XCTAssertEqual(o["pxa"] as? Bool, true)
+        XCTAssertEqual(o["igual"] as? Bool, true, "mostra a medida enquanto arrasta")
+        XCTAssertEqual(o["par"] as? Bool, true, "porta par espelhada")
+        XCTAssertEqual(o["segue"] as? Bool, true, "todas as portas no mesmo lugar")
+        XCTAssertEqual(o["salvo"] as? Bool, true, "guardado no projeto")
+        XCTAssertEqual(o["toque"] as? String, "true Segure a bolinha e arraste pra pôr o puxador no lugar")
+        XCTAssertEqual(o["desfez"] as? String, "null", "desfazer volta")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Frontal da base (rodapé da frente) rente com o fim da lateral em todos os módulos; projeto antigo acompanha.
+    /// Tamponamento diminui no 3D pela bolinha sem travar nem pular (no máximo 5 mm por ponto) e aceita medida digitada.
+    func testFrontalDaBaseRenteETamponamentoDiminuiNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=9000;S.H=2700;S.mods=[];var R={};
+          var T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))};
+          /* 1) frontal da base rente com o fim da lateral em TODO módulo de baixo (canto fica de fora: ali ele para no canto) */
+          var n=0,bad=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it||!it.v||it.act)return;S.mods=[];try{newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];if(m.corner||m.latPiso)return;var le=m.semLE?0:0,P=partsOf(m);P.forEach(function(p){if(p.name!=='Rodapé (pedestal)')return;n++;if(Math.abs(p.x)>.5||Math.abs(p.x+p.w-m.w)>.5)bad.push(it.n+' '+p.x+'/'+(m.w-p.x-p.w))})}catch(e){bad.push(it.n+' EXC')}})});R.frontais=n>80;R.fora=bad.slice(0,6);R.std=STD().rodRecL;
+          /* projeto antigo (recuo 30 gravado no módulo) acompanha */
+          S.mods=[];newTpl(T('inf','Balcão 2 portas'));S.mods[0].rodRecL=30;var st=snapState();loadState(JSON.parse(JSON.stringify(st)));var f=partsOf(S.mods[0]).filter(function(p){return p.name==='Rodapé (pedestal)'})[0];R.antigo=f.x+' '+f.w;
+          /* 2) tamponamento: diminuir no 3D arrastando a bolinha, sem travar e sem pular */
+          S.mods=[];newTpl(T('inf','Balcão 2 portas'));S.mods[0].x=600;S.mods[0].tl=S.mods[0].tr=true;draw();open3D();await new Promise(function(r){setTimeout(r,500)});
+          var pk='Tamponamento esquerdo#1',H0=partsOf(S.mods[0]).filter(function(p){return p.pk===pk})[0].h;
+          var drag=function(hk,dx,dy,st_){delete (S.mods[0].po||{})[pk];__e3open(0,pk);var h=document.querySelector('[data-hk="'+hk+'"]');if(!h)return null;var r=h.getBoundingClientRect(),x=r.left+15,y=r.top+15,ev=function(nm,X,Y){h.dispatchEvent(new PointerEvent(nm,{bubbles:true,cancelable:true,pointerId:5,clientX:X,clientY:Y,isPrimary:true}))};ev('pointerdown',x,y);for(var i=1;i<=st_;i++)ev('pointermove',x+dx*i/st_,y+dy*i/st_);ev('pointerup',x+dx,y+dy);var p=partsOf(S.mods[0]).filter(function(q){return q.pk===pk})[0];return {h:p.h,d:p.cw}};
+          var a=drag('et',0,3,3),b=drag('et',0,6,3),c=drag('ef',-5,-5,5);R.bolinhas=!!a;R.pouco=a&&a.h<H0&&H0-a.h<=15;R.mais=b&&b.h<a.h&&H0-b.h<=30;R.fundo=c&&c.d<585;
+          delete (S.mods[0].po||{})[pk];var t=__e3t(0,pk,1,600);R.digitou=partsOf(S.mods[0]).filter(function(q){return q.pk===pk})[0].h;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["frontais"] as? Bool, true)
+        XCTAssertEqual((o["fora"] as? [Any])?.count ?? 9, 0, "frontal fora do fim da lateral: \(o["fora"] ?? "")")
+        XCTAssertEqual(o["antigo"] as? String, "0 900", "projeto antigo (recuo 30) fica rente também")
+        XCTAssertEqual(o["bolinhas"] as? Bool, true)
+        XCTAssertEqual(o["pouco"] as? Bool, true, "diminui só um pouco sem travar")
+        XCTAssertEqual(o["mais"] as? Bool, true, "sem pular")
+        XCTAssertEqual(o["fundo"] as? Bool, true, "profundidade também")
+        XCTAssertEqual(o["digitou"] as? Double, 600, "medida digitada")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

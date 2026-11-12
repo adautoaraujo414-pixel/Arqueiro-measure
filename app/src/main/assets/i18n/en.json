@@ -6425,5 +6425,17 @@
 "Reta · porta cobre": "Full overlay · door covers",
 "mm da lateral": "mm of the side panel",
 "Reta: folga entre as portas de dois módulos encostados (mm)": "Full overlay: gap between the doors of two adjoining modules (mm)",
-"Trocou aqui, as portas mudam de largura sozinhas e o calço da dobradiça sai da mesma conta (toque na dobradiça no 3D pra ver). Em cima de divisória dividida por duas portas a dobradiça continua curva.": "Change it here and the doors resize automatically; the hinge plate comes from the same calculation (tap the hinge in 3D to see). On a partition shared by two doors the hinge stays half overlay."
+"Trocou aqui, as portas mudam de largura sozinhas e o calço da dobradiça sai da mesma conta (toque na dobradiça no 3D pra ver). Em cima de divisória dividida por duas portas a dobradiça continua curva.": "Change it here and the doors resize automatically; the hinge plate comes from the same calculation (tap the hinge in 3D to see). On a partition shared by two doors the hinge stays half overlay.",
+"Laterais da caixa:": "Cabinet sides:",
+"Todo módulo tem as duas. Só desmarque se este módulo for parafusado na lateral do vizinho. Tamponamento (acabamento por fora) é outra peça: fica na aba Tamponamentos.": "Every module has both. Only untick if this module is screwed to the neighbor's side panel. End panel (outside finish) is a different part: it is in the End panels tab.",
+"Todo módulo tem as duas. Só desmarque se este módulo for parafusado na lateral do vizinho. Tamponamento (acabamento por fora) é outra peça: fica na aba Tamponamentos. A lateral parar na base ou descer até o chão é em ⚙ Ajustes, igual pra todos.": "Every module has both. Only untick if this module is screwed to the neighbor's side panel. End panel (outside finish) is a different part: it is in the End panels tab. Whether the side stops at the base or goes down to the floor is set in ⚙ Settings, the same for all.",
+"⚙ Base dos módulos": "⚙ Module base",
+"Base dos módulos de baixo e armários altos": "Base of floor modules and tall cabinets",
+"Em cima da base (padrão): a caixa fica sobre a base do rodapé e nenhuma lateral desce até o chão, igual em todos os módulos de baixo e nas torres. Até o chão: a lateral e o tamponamento descem até o piso e o rodapé fica entre as laterais. Escolheu aqui, muda em todos os módulos do projeto de uma vez.": "On the base (default): the cabinet sits on the plinth base and no side goes down to the floor, the same in every floor module and tower. To the floor: the side and the end panel go down to the floor and the plinth stays between the sides. Choose here and every module in the project changes at once.",
+"Lateral até a base (padrão) · a caixa fica em cima da base": "Side down to the base (default) · the cabinet sits on the base",
+"Lateral descendo até o chão · o rodapé fica entre as laterais": "Side down to the floor · the plinth stays between the sides",
+"Laterais até o chão em todos os módulos de baixo": "Sides down to the floor on all floor modules",
+"Todos os módulos em cima da base · nenhuma lateral desce até o chão": "All modules on the base · no side goes down to the floor",
+"📍 Puxador no lugar · as outras portas acompanharam": "📍 Handle placed · the other doors followed",
+"Segure a bolinha e arraste pra pôr o puxador no lugar": "Hold the dot and drag to place the handle"
 }

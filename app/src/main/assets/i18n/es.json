@@ -6425,5 +6425,17 @@
 "Reta · porta cobre": "Recta · la puerta cubre",
 "mm da lateral": "mm del lateral",
 "Reta: folga entre as portas de dois módulos encostados (mm)": "Recta: holgura entre las puertas de dos módulos juntos (mm)",
-"Trocou aqui, as portas mudam de largura sozinhas e o calço da dobradiça sai da mesma conta (toque na dobradiça no 3D pra ver). Em cima de divisória dividida por duas portas a dobradiça continua curva.": "Al cambiar aquí, las puertas cambian de ancho solas y el calzo de la bisagra sale de la misma cuenta (toca la bisagra en 3D para verlo). Sobre una división compartida por dos puertas la bisagra sigue acodada."
+"Trocou aqui, as portas mudam de largura sozinhas e o calço da dobradiça sai da mesma conta (toque na dobradiça no 3D pra ver). Em cima de divisória dividida por duas portas a dobradiça continua curva.": "Al cambiar aquí, las puertas cambian de ancho solas y el calzo de la bisagra sale de la misma cuenta (toca la bisagra en 3D para verlo). Sobre una división compartida por dos puertas la bisagra sigue acodada.",
+"Laterais da caixa:": "Laterales del cajón:",
+"Todo módulo tem as duas. Só desmarque se este módulo for parafusado na lateral do vizinho. Tamponamento (acabamento por fora) é outra peça: fica na aba Tamponamentos.": "Todo módulo tiene los dos. Desmarca solo si este módulo va atornillado al lateral del vecino. El tapacanto lateral (acabado por fuera) es otra pieza: está en la pestaña Tapas laterales.",
+"Todo módulo tem as duas. Só desmarque se este módulo for parafusado na lateral do vizinho. Tamponamento (acabamento por fora) é outra peça: fica na aba Tamponamentos. A lateral parar na base ou descer até o chão é em ⚙ Ajustes, igual pra todos.": "Todo módulo tiene los dos. Desmarca solo si este módulo va atornillado al lateral del vecino. El tapacanto lateral (acabado por fuera) es otra pieza: está en la pestaña Tapas laterales. Si el lateral termina en la base o baja hasta el piso se define en ⚙ Ajustes, igual para todos.",
+"⚙ Base dos módulos": "⚙ Base de los módulos",
+"Base dos módulos de baixo e armários altos": "Base de los módulos bajos y armarios altos",
+"Em cima da base (padrão): a caixa fica sobre a base do rodapé e nenhuma lateral desce até o chão, igual em todos os módulos de baixo e nas torres. Até o chão: a lateral e o tamponamento descem até o piso e o rodapé fica entre as laterais. Escolheu aqui, muda em todos os módulos do projeto de uma vez.": "Sobre la base (predeterminado): el cajón queda sobre la base del zócalo y ningún lateral baja hasta el piso, igual en todos los módulos bajos y torres. Hasta el piso: el lateral y la tapa lateral bajan hasta el piso y el zócalo queda entre los laterales. Al elegir aquí, cambian todos los módulos del proyecto de una vez.",
+"Lateral até a base (padrão) · a caixa fica em cima da base": "Lateral hasta la base (predeterminado) · el cajón queda sobre la base",
+"Lateral descendo até o chão · o rodapé fica entre as laterais": "Lateral bajando hasta el piso · el zócalo queda entre los laterales",
+"Laterais até o chão em todos os módulos de baixo": "Laterales hasta el piso en todos los módulos bajos",
+"Todos os módulos em cima da base · nenhuma lateral desce até o chão": "Todos los módulos sobre la base · ningún lateral baja hasta el piso",
+"📍 Puxador no lugar · as outras portas acompanharam": "📍 Tirador en su lugar · las otras puertas acompañaron",
+"Segure a bolinha e arraste pra pôr o puxador no lugar": "Mantén el punto y arrastra para colocar el tirador"
 }

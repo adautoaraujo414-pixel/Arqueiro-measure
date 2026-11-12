@@ -4633,7 +4633,8 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["cards"] as? String, "8 8", "cada modelo de alça e ponto com a porta desenhada")
         XCTAssertEqual(o["umPorCard"] as? Bool, true)
-        XCTAssertEqual(o["botoes"] as? Int, 5)
+        XCTAssertEqual(o["botoes"] as? Int, 6)
+        XCTAssertEqual(o["fendi"] as? String, "3 arauco-connect-matt/arauco-connect-matt true")
         XCTAssertEqual(o["grafite"] as? String, "3 arauco-grafito-chess/arauco-louro-freijo-poro true")
         XCTAssertEqual(o["branco"] as? String, "3 arauco-branco-supremo-matt/arauco-carvalho-poro true")
         XCTAssertEqual(o["preto"] as? String, "3 arauco-ebano-chess/arauco-nogueira-persa-trend true")
@@ -4643,6 +4644,69 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tab"] as? Int, 10, "continua na aba Cores")
         XCTAssertEqual(o["cores"] as? String, "#48494e #48494e", "todos os módulos")
         XCTAssertEqual(o["corte"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Cozinha em L: espaçador de canto no gaveteiro (gaveta e porta do móvel da pia abrem sem pegar; sem ele pega),
+    /// e fechamento do teto na frente em cima de todos os aéreos de uma vez.
+    func testEspacadorDeCantoEFechamentoDoTetoNaFrente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=3500;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+          var last=function(){return S.mods[S.mods.length-1]};
+          newTpl(T('Gaveteiro 3 gavetas'));var g=last();g.x=635;g.w=595;g.tl=g.tr=false;g.lock=true;
+          S.m=g;addWing('e');var p=last();p.x=0;p.w=2000;p.div=[0.32];p.v=[{k:'free',n:1},{k:'door',n:2,cava:false,px:'externo'}];p.tl=false;draw();
+          /* catálogo: espaçador e fechamento */
+          var it=function(a,l){var r=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.act===a&&(l===undefined||q.lado===l))r=q})});return r};R.cat=!!it('espCanto','e')+' '+!!it('espCanto','d')+' '+!!it('fechTeto');
+          S.m=g;R.liga=catAct2(it('espCanto','e'))+' '+g.esL;var e=partsOf(g).filter(function(q){return q.name==='Espaçador de canto'})[0];R.peca=e?[e.x,e.w,e.h,e.cl,e.cw].join(' '):null;
+          var G=cutGroups(),l=G.ord.map(function(k){return G.map[k]}).filter(function(q){return q.names.some(function(n){return /^Espaçador de canto/.test(n)})})[0];R.corte=l?l.L+'x'+l.W+' q'+l.qty:null;
+          /* gavetas abertas e porta do móvel da pia: nada encosta */
+          open3D();await new Promise(function(r){setTimeout(r,500)});
+          var hit=function(){var A=__ang();Object.keys(A.g).forEach(function(k){delete A.g[k]});Object.keys(A.t).forEach(function(k){delete A.t[k]});__build();var gi=S.mods.indexOf(g),pi=S.mods.indexOf(p),B=__boxes(),Ga=B.filter(function(b){return String(b.nm).indexOf(gi+':')===0}),Pa=B.filter(function(b){return String(b.nm).indexOf(pi+':')===0}),h=0;Ga.forEach(function(a){Pa.forEach(function(b){var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>.5&&oy>.5&&oz>.5)h++})});return h};
+          g.v[0].open=true;draw();R.gavetaAberta=hit();g.v[0].open=false;p.v[1].open=true;draw();R.portaAberta=hit();p.v[1].open=false;
+          /* sem espaçador e encostado no canto: a gaveta pega (é pra isso que ele serve) */
+          var x0=g.x;delete g.esL;g.x=562;g.v[0].open=true;draw();R.semEspacador=hit()>0;g.x=x0;g.v[0].open=false;g.esL=50;
+          R.tira=catAct2(it('espCanto','e'))+' '+(g.esL===undefined);document.getElementById('v3x').click();
+          /* fechamento do teto na frente: em todos os aéreos de uma vez */
+          R.semAereo=fechTeto()+' '+TL[TL.length-1];
+          [[630,600],[1230,780]].forEach(function(q){newTpl({n:'Aéreo',w:q[1],h:750,d:350,b:1750,sup:true,v:[{k:'door',n:2,cava:true}]});var m=last();m.x=q[0];m.tl=m.tr=false});draw();
+          R.fecha=catAct2(it('fechTeto'))+' '+S.mods.filter(function(m){return m.rtt&&m.rtt.on}).length;R.pecas=S.mods.filter(function(m){return m.sup}).map(function(m){var q=partsOf(m).filter(function(p){return p.name==='Roda-teto'})[0];return q?q.w+'x'+q.h:'-'}).join(' ');
+          R.tiraF=fechTeto()+' '+S.mods.filter(function(m){return m.rtt&&m.rtt.on}).length;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cat"] as? String, "true true true", "opções no catálogo")
+        XCTAssertEqual(o["liga"] as? String, "true 50")
+        XCTAssertEqual(o["peca"] as? String, "-50 50 705 705 50", "régua de 50 do lado, na altura das frentes")
+        XCTAssertEqual(o["corte"] as? String, "705x50 q1", "entra no plano de corte")
+        XCTAssertEqual(o["gavetaAberta"] as? Int, 0, "gaveta aberta não pega no móvel da pia")
+        XCTAssertEqual(o["portaAberta"] as? Int, 0, "porta do móvel da pia aberta não pega no gaveteiro")
+        XCTAssertEqual(o["semEspacador"] as? Bool, true, "sem espaçador e colado no canto, pega")
+        XCTAssertEqual(o["tira"] as? String, "true true")
+        XCTAssertEqual(o["semAereo"] as? String, "0 Ponha os armários de cima primeiro: o fechamento vai deles até o teto")
+        XCTAssertEqual(o["fecha"] as? String, "true 2")
+        XCTAssertEqual(o["pecas"] as? String, "630x200 810x200", "do armário até o teto")
+        XCTAssertEqual(o["tiraF"] as? String, "2 0")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Rebaixo do teto com dente: o rebaixo termina e sobe um degrau do lado; o painel acompanha os dois níveis.
+    func testRebaixoDoTetoComDente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          S.rp=[{id:11,liso:true,x:0,b:0,w:4000,h:2700}];var z=tzAdd('f',{x:1000,w:1200,hc:2300});
+          document.querySelector('#tzbox [data-tzb="dente"]').click();R.zonas=S.tz.map(function(q){return q.x+'+'+q.w+'@'+q.hc}).join(' | ');R.sel=window.TZSEL===S.tz[1].id;R.toast=TL[TL.length-1];
+          R.painel=S.rp.map(function(a){return a.x+'+'+a.w+'x'+a.h}).join(' | ');
+          /* sem parede sobrando na direita: o dente sai pra esquerda */
+          var z3=tzAdd('f',{x:3500,w:500,hc:2400});document.querySelector('#tzbox [data-tzb="dente"]').click();var d=S.tz[S.tz.length-1];R.esq=d.x+'+'+d.w+'@'+d.hc;
+          open3D();await new Promise(function(r){setTimeout(r,800)});R.b3=__boxes().filter(function(b){return b.tz}).length;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["zonas"] as? String, "1000+1200@2300 | 2200+600@2500", "dente encostado, mais alto")
+        XCTAssertEqual(o["sel"] as? Bool, true)
+        XCTAssertEqual(o["painel"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+600x2500 | 2800+1200x2700", "painel acompanha os dois níveis")
+        XCTAssertEqual(o["esq"] as? String, "2900+600@2550", "sem parede na direita: dente sai pra esquerda")
+        XCTAssertEqual(o["b3"] as? Int, 4)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

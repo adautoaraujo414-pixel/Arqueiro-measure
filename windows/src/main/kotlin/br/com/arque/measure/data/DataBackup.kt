@@ -129,7 +129,41 @@ object DataBackup {
      * Cópia automática em Documentos\Arquemestre\Backups (fica mesmo se o app for desinstalado).
      * No máximo a cada 12 horas, sempre sobrescrevendo o mesmo arquivo.
      */
+    /** Só os dados dos projetos (texto, sem fotos): fica pequeno, dá pra guardar um por dia sem nunca apagar. */
+    private fun projectsZip(ctx: Context, out: OutputStream) {
+        val root = dataDir(ctx)
+        ZipOutputStream(out.buffered()).use { zip ->
+            zip.putNextEntry(ZipEntry("arque-projetos.txt"))
+            zip.write("Arquemestre · cópia dos projetos · ${System.currentTimeMillis()}".toByteArray())
+            zip.closeEntry()
+            listOf("files/moveis", "files/projects").forEach { d ->
+                File(root, d).walkTopDown().filter { it.isFile && it.extension.lowercase() == "json" }.forEach { f ->
+                    runCatching {
+                        val rel = f.relativeTo(root).path.replace(File.separatorChar, '/')
+                        f.inputStream().use { inp -> zip.putNextEntry(ZipEntry(rel)); inp.copyTo(zip); zip.closeEntry() }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Cópia datada dos projetos em Documentos\Arquemestre\Backups\Projetos: uma por dia (na primeira abertura do dia,
+     * ou seja, como os projetos estavam ANTES do trabalho do dia). Nunca grava por cima de uma cópia que já existe
+     * e nunca apaga cópia antiga.
+     */
+    fun datedProjects(ctx: Context, tag: String): Boolean = runCatching {
+        if (!File(ctx.filesDir, "moveis/projects.json").exists() && !File(ctx.filesDir, "projects").exists()) return@runCatching false
+        val dir = File(autoDir(), "Projetos").apply { mkdirs() }
+        val dst = File(dir, "Arquemestre-projetos-$tag.zip")
+        if (dst.exists()) return@runCatching false
+        val tmp = File(dir, dst.name + ".tmp")
+        tmp.outputStream().use { projectsZip(ctx, it) }
+        tmp.renameTo(dst)
+    }.getOrDefault(false)
+
     fun autoBackup(ctx: Context, force: Boolean = false): Boolean {
+        runCatching { datedProjects(ctx, java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())) }
         val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         if (!force && now - sp.getLong("last", 0) < 12 * 3600_000L) return false

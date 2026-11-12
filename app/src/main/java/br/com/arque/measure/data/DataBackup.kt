@@ -130,8 +130,62 @@ object DataBackup {
      * Cópia automática em Downloads/ArqueMeasure (fica no celular mesmo se o app for desinstalado).
      * No máximo a cada 12 horas, sempre sobrescrevendo o mesmo arquivo.
      */
+    /** Só os dados dos projetos (texto, sem fotos): fica pequeno, dá pra guardar um por dia sem nunca apagar. */
+    private fun projectsZip(ctx: Context, out: OutputStream) {
+        val root = dataDir(ctx)
+        ZipOutputStream(out.buffered()).use { zip ->
+            zip.putNextEntry(ZipEntry("arque-projetos.txt"))
+            zip.write("Arquemestre · cópia dos projetos · ${System.currentTimeMillis()}".toByteArray())
+            zip.closeEntry()
+            listOf("files/moveis", "files/projects").forEach { d ->
+                File(root, d).walkTopDown().filter { it.isFile && it.extension.lowercase() == "json" }.forEach { f ->
+                    runCatching {
+                        val rel = f.relativeTo(root).path.replace(File.separatorChar, '/')
+                        f.inputStream().use { inp -> zip.putNextEntry(ZipEntry(rel)); inp.copyTo(zip); zip.closeEntry() }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Cópia datada dos projetos em Downloads/ArqueMeasure/Projetos: uma por dia (a primeira abertura do dia, ou seja,
+     * como os projetos estavam ANTES do trabalho do dia) e uma a cada versão nova do app (antes de qualquer uso).
+     * Nunca grava por cima de uma cópia que já existe e nunca apaga cópia antiga.
+     */
+    fun datedProjects(ctx: Context, tag: String): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        if (!File(ctx.filesDir, "moveis/projects.json").exists() && !File(ctx.filesDir, "projects").exists()) return false
+        val name = (if (br.com.arque.measure.BuildConfig.TESTE) "Arquemestre-TESTE-projetos-" else "Arquemestre-projetos-") + tag + ".zip"
+        val cr = ctx.contentResolver
+        val coll = MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        return runCatching {
+            val has = cr.query(coll, arrayOf(MediaStore.Downloads._ID), "${MediaStore.Downloads.DISPLAY_NAME}=?", arrayOf(name), null)?.use { it.moveToFirst() } ?: false
+            if (has) return@runCatching false
+            val cv = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, name)
+                put(MediaStore.Downloads.MIME_TYPE, "application/zip")
+                put(MediaStore.Downloads.RELATIVE_PATH, "Download/ArqueMeasure/Projetos")
+            }
+            val uri = cr.insert(coll, cv) ?: return@runCatching false
+            cr.openOutputStream(uri, "w")!!.use { projectsZip(ctx, it) }
+            true
+        }.getOrDefault(false)
+    }
+
+    private fun datedCopies(ctx: Context) {
+        val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)
+        val ver = br.com.arque.measure.BuildConfig.VERSION_CODE
+        if (sp.getInt("ver", 0) != ver) {
+            datedProjects(ctx, "antes-de-usar-a-versao-$ver")
+            sp.edit().putInt("ver", ver).apply()
+        }
+        datedProjects(ctx, java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date()))
+    }
+
     fun autoBackup(ctx: Context, force: Boolean = false): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        runCatching { datedCopies(ctx) }
         val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)
         val now = System.currentTimeMillis()
         if (!force && now - sp.getLong("last", 0) < 12 * 3600_000L) return false

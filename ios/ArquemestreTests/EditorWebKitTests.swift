@@ -4072,7 +4072,7 @@ final class EditorWebKitTests: XCTestCase {
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["btn"] as? Bool, true, "botão com o nome novo")
-        XCTAssertEqual(o["aba"] as? String, "Ambiente|Módulos prontos|Medidas das paredes|Porta / vão da sala (medida real)|Janelas e portas da parede", "Ambiente só com o útil")
+        XCTAssertEqual(o["aba"] as? String, "🧱 Paredes do ambiente|Ambiente|Módulos prontos|Medidas das paredes|Porta / vão da sala (medida real)|Janelas e portas da parede", "Ambiente só com o útil")
         XCTAssertEqual(o["tit"] as? Bool, true)
         XCTAssertEqual(o["card"] as? String, "e true Llen=3000,Lh0=2700,Lh1=2700", "2 toques na parede livre: comprimento e a altura de cada ponta")
         XCTAssertEqual(o["min"] as? Bool, true, "minimiza e volta")
@@ -5321,6 +5321,213 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["no3D"] as? String, "{fundo:0,direita:6}", "3D: os 6 só na direita (antes 6 no fundo e 6 na direita)")
         XCTAssertEqual(o["aviso"] as? Bool, true, "avisa que a área já tem painel")
         XCTAssertEqual(o["noFundo"] as? String, "🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}", "no fundo a faixa diz fundo e a trena volta pra parede toda")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Aéreo com engrosso cava (réguas embaixo): a porta desce até o fim das réguas, com cava ou com puxador.
+    func testPortaDoAereoVaiAteOFimDasReguas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          try{STD().supPedra=0}catch(_){}
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[1].it[2]);var m=S.mods[0];draw();var R={};
+          var fim=function(){var P=partsOf(m);return P.filter(function(p){return p.name==='Porta'}).map(function(p){return Math.round((p.y+p.h)*10)/10}).join(',')+' · réguas até '+Math.max.apply(null,[m.h].concat(P.filter(function(p){return /^Engrosso cava/.test(p.name)}).map(function(p){return p.y+p.h})))};var rep=function(tag){R[tag+'F']=fim();var P=partsOf(m),top=m.b+m.h;R[tag]=P.filter(function(p){return /^Porta|Engrosso|Base inferior|Tamponamento de baixo/.test(p.name)}).map(function(p){return p.name.slice(0,26)+' y'+p.y+' h'+p.h+' fim='+(Math.round((p.y+p.h)*10)/10)}).join(' | ')+' · módulo h='+m.h+' px='+JSON.stringify((m.vaos||m.v||[]).map(function(v){return [v.k,v.cava,v.px]}))};
+          rep('novo');m.regua=true;m.regN=2;draw();rep('regua');
+          m.v.forEach(function(v){v.cava=false;v.px='alca'});draw();rep('semCava');m.regN=3;draw();rep('tres');m.regua=false;draw();rep('semRegua');
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["novoF"] as? String, "750,750 · réguas até 750", "sem régua: porta até o fim do módulo")
+        XCTAssertEqual(o["reguaF"] as? String, "780,780 · réguas até 780", "2 réguas: a porta desce os 30 das réguas")
+        XCTAssertEqual(o["semCavaF"] as? String, "780,780 · réguas até 780", "porta com puxador: também vai até o fim")
+        XCTAssertEqual(o["tresF"] as? String, "795,795 · réguas até 795", "3 réguas")
+        XCTAssertEqual(o["semReguaF"] as? String, "750,750 · réguas até 750")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Recuperar projetos de um backup (ZIP): só lê, mostra o que tem dentro e recupera como cópia, sem trocar nada do app.
+    func testRecuperarProjetosDeUmBackupSemTrocarNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};var R={};window.MINI3OFF=1;PR.setupDone=1;
+          /* zip de teste (igual ao do backup do app: pasta files/moveis, uma entrada compactada e outra guardada) */
+          var enc=new TextEncoder();
+          async function defl(u){return new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())}
+          async function mkzip(ents){var parts=[],cd=[],off=0;for(var i=0;i<ents.length;i++){var e=ents[i],nm=enc.encode(e.n),raw=enc.encode(e.t),dat=e.m===8?await defl(raw):raw,h=new Uint8Array(30+nm.length),v=new DataView(h.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(8,e.m,true);v.setUint32(18,dat.length,true);v.setUint32(22,raw.length,true);v.setUint16(26,nm.length,true);h.set(nm,30);parts.push(h,dat);
+            var c=new Uint8Array(46+nm.length),cv=new DataView(c.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(10,e.m,true);cv.setUint32(20,dat.length,true);cv.setUint32(24,raw.length,true);cv.setUint16(28,nm.length,true);cv.setUint32(42,off,true);c.set(nm,46);cd.push(c);off+=h.length+dat.length}
+           var cs=cd.reduce(function(s,c){return s+c.length},0),eo=new Uint8Array(22),ev=new DataView(eo.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,ents.length,true);ev.setUint16(10,ents.length,true);ev.setUint32(12,cs,true);ev.setUint32(16,off,true);
+           return new File(parts.concat(cd,[eo]),'ArqueMeasure-backup-automatico.zip')}
+          /* app com 1 projeto (a sala) */
+          var sala=newProjFor({nome:'Cliente Sala'});S.room='sala';rpNew({x:0,b:0,w:900,h:2700}).liso=true;draw();saveNow();
+          var antes=JSON.stringify(pLoadAll());
+          /* backup tem: a mesma sala, a sala numa versão diferente não, uma COZINHA que não está mais no app, e um na lixeira */
+          var st=JSON.parse(JSON.stringify(pLoadAll()[0].current));
+          var coz=JSON.parse(JSON.stringify(pLoadAll()[0]));coz.id='pCOZ';coz.client={nome:'Cliente Cozinha'};coz.current.room='cozinha';coz.current.rp=[];coz.current.mods=[{x:0,b:0,w:800,h:700,d:550,esp:15,v:[]},{x:800,b:0,w:600,h:700,d:550,esp:15,v:[]}];
+          var lx=JSON.parse(JSON.stringify(coz));lx.id='pLIX';lx.client={nome:'Cliente Antigo'};
+          var f=await mkzip([{n:'backup-completo.txt',m:0,t:'Arque Measure'},{n:'files/moveis/projects.json',m:8,t:JSON.stringify([pLoadAll()[0],coz])},{n:'files/moveis/trash.json',m:0,t:JSON.stringify([{t:123,p:lx}])},{n:'files/projects/images/a.jpg',m:0,t:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}]);
+          var r=await projBk.ler(f);
+          R.achou=r.projs.map(function(o){return (o.p.client.nome)+':'+o.st}).join(' | ')+' · erros '+r.erros.length;
+          /* a tela */
+          projHistOpen();await W(80);R.botao=!!document.querySelector('#phism [data-pbk]');projBk.mostrar(r);await W(50);R.tela=document.querySelectorAll('#pbkm [data-pbkr]').length+' botões · '+/NÃO está no app/.test(document.getElementById('pbkb').textContent);
+          /* recuperar a cozinha: entra como cópia, a sala fica igual */
+          var bt=[].slice.call(document.querySelectorAll('#pbkm [data-pbkr]'))[1];bt.click();await W(80);
+          var a=pLoadAll();R.depois=a.map(function(p){return p.client.nome+(p.titulo?' ['+p.titulo+']':'')+' '+(p.current.mods||[]).length+'mód '+(p.current.rp||[]).length+'pn'}).join(' | ');
+          var sA=JSON.parse(antes)[0];R.salaIntacta=a[0].id===sA.id&&JSON.stringify(a[0].client)===JSON.stringify(sA.client)&&JSON.stringify(a[0].current)===JSON.stringify(sA.current);R.idNovo=a[1].id!=='pCOZ';R.marcou=/✔ recuperado/.test(document.getElementById('pbkb').textContent);
+          /* arquivo que não é backup e zip sem projetos: nada muda, não quebra */
+          var n0=JSON.stringify(pLoadAll());var r2=await projBk.ler(new File(['isto não é json'],'x.json'));var r3=await projBk.ler(await mkzip([{n:'files/outra.txt',m:0,t:'a'}]));
+          R.ruim=r2.projs.length+' '+r2.erros.length+' | '+r3.projs.length+' '+r3.erros.length+' | igual='+(JSON.stringify(pLoadAll())===n0);
+          /* projects.json solto também abre */
+          var r4=await projBk.ler(new File([JSON.stringify([coz])],'projects.json'));R.solto=r4.projs.length+':'+r4.projs[0].st;
+          R.errs=window.__errs||[];
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["achou"] as? String, "Cliente Sala:igual | Cliente Cozinha:falta | Cliente Antigo:falta · erros 0")
+        XCTAssertEqual(o["botao"] as? Bool, true, "botão dentro do Histórico e recuperação")
+        XCTAssertEqual(o["tela"] as? String, "3 botões · true")
+        XCTAssertEqual(o["depois"] as? String, "Cliente Sala 2mód 1pn | Cliente Cozinha [(recuperado do backup)] 2mód 0pn", "a cozinha volta como cópia")
+        XCTAssertEqual(o["salaIntacta"] as? Bool, true, "o projeto que já estava no app não muda")
+        XCTAssertEqual(o["idNovo"] as? Bool, true)
+        XCTAssertEqual(o["marcou"] as? Bool, true)
+        XCTAssertEqual(o["ruim"] as? String, "0 1 | 0 1 | igual=true", "arquivo errado: avisa e não muda nada")
+        XCTAssertEqual(o["solto"] as? String, "1:falta")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Aba Ambiente: Esquerda · Fundo · Direita sempre no começo, a parede atual marcada, um toque troca de parede.
+    func testAbaAmbienteComecaComAsParedes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};var R={};window.MINI3OFF=1;PR.setupDone=1;
+          S.room='cozinha';S.rp=[];draw();
+          S.tab=9;panel();await W(60);
+          var bd=document.getElementById('bd'),q=function(){return [].slice.call(bd.querySelectorAll('[data-ambwv]')).map(function(b){return b.textContent+(b.classList.contains('sel')?'*':'')}).join(' ')};
+          R.inicio=q()+' · primeiro='+(bd.firstElementChild&&!!bd.firstElementChild.querySelector('[data-ambwv]'));
+          bd.querySelector('[data-ambwv="d"]').click();await W(100);R.dir=q()+' · parede '+wvCur()+' · '+document.getElementById('wvbar').textContent.slice(0,22);
+          rpNew({x:0,b:0,w:900,h:2700}).liso=true;draw();
+          document.getElementById('bd').querySelector('[data-ambwv="e"]').click();await W(100);R.esq=q()+' · parede '+wvCur()+' painéis '+S.rp.length;
+          document.getElementById('bd').querySelector('[data-ambwv="f"]').click();await W(100);R.fundo=q()+' · parede '+wvCur()+' painéis '+S.rp.length;
+          var st=snapState();R.dados=st.rp.map(function(a){return (a.wall||'f')+':'+a.w}).join(',');
+          /* outras abas não ganham os botões */
+          S.tab=1;panel();await W(60);R.outra=document.getElementById('bd').querySelectorAll('[data-ambwv]').length;S.tab=9;panel();
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["inicio"] as? String, "Esquerda Fundo* Direita · primeiro=true")
+        XCTAssertEqual(o["dir"] as? String, "Esquerda Fundo Direita* · parede d · 🧱 Parede da direita ·")
+        XCTAssertEqual(o["esq"] as? String, "Esquerda* Fundo Direita · parede e painéis 0", "a esquerda não mostra o painel da direita")
+        XCTAssertEqual(o["fundo"] as? String, "Esquerda Fundo* Direita · parede null painéis 1")
+        XCTAssertEqual(o["dados"] as? String, "d:900", "o painel continua guardado na parede direita")
+        XCTAssertEqual(o["outra"] as? Int, 0, "só a aba Ambiente ganha os botões")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Projeto antigo com divisória arrastada pra beira (vão de 24 mm): o app não apaga nada sozinho; avisa e tira só no toque.
+    func testVaoEstreitoAvisaETiraADivisoriaSoNoToque() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          try{STD().supPedra=0}catch(_){}
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[1].it[2]);var m=S.mods[0];m.w=666.8;draw();var R={};
+          var pr=function(){var P=partsOf(m);return 'div='+JSON.stringify(m.div)+' vãos='+m.v.length+' · '+P.filter(function(p){return /^(Prateleira|Divis|Porta)/.test(p.name)}).map(function(p){return p.name.slice(0,10)+' x'+Math.round(p.x)+' w'+Math.round(p.w)}).join(' | ')};
+          /* projeto antigo: divisória arrastada pra beira (95%) + prateleira */
+          m.shv.push(.5);m.div=[0.95];m.v.push(JSON.parse(JSON.stringify(m.v[0])));S.m=m;S.sv=0;draw();panel();await W(60);
+          R.antigo=pr();var st0=JSON.stringify(snapState().mods);
+          var bd=document.getElementById('bd');R.aviso=(bd.querySelector('[data-slv]')?'botão':'sem botão')+' · '+(bd.textContent.match(/Vão de [0-9,]+ mm/)||[''])[0];
+          /* só abrir, desenhar, trocar de aba, gravar e reabrir NÃO muda nada sozinho */
+          S.tab=1;panel();S.tab=9;panel();draw();var j=JSON.stringify(snapState());loadState(JSON.parse(j));draw();m=S.mods[0];S.m=m;panel();await W(60);
+          var A=JSON.parse(st0)[0],B=snapState().mods[0];R.sozinho=['div','dr','shv','v','w','h','x','b'].every(function(k){return JSON.stringify(A[k])===JSON.stringify(B[k])});
+          /* sem azul no vão escolhido */
+          R.azul=[].slice.call(document.querySelectorAll('#svg rect')).filter(function(r){return r.getAttribute('fill')==='var(--acc)'&&r.getAttribute('fill-opacity')==='.10'}).length;
+          /* toque manual no botão: a divisória sai, prateleira e portas vão até o final; Desfazer volta */
+          document.getElementById('bd').querySelector('[data-slv]').click();await W(100);m=S.m;R.tirou=pr()+' · aviso='+!!document.getElementById('bd').querySelector('[data-slv]');
+          document.getElementById('und').click();await W(80);m=S.mods[0];R.desfez=pr();
+          /* outro lado (5%) e módulo travado */
+          m.div=[0.05];draw();S.m=m;panel();await W(50);m.lock=true;document.getElementById('bd').querySelector('[data-slv]').click();await W(60);R.travado=JSON.stringify(m.div);m.lock=false;document.getElementById('bd').querySelector('[data-slv]').click();await W(80);R.esq=pr();
+          /* divisória no meio: sem aviso */
+          m=S.m;m.div=[.5];m.v.push(JSON.parse(JSON.stringify(m.v[0])));draw();panel();await W(50);R.meio=!!document.getElementById('bd').querySelector('[data-slv]');
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["antigo"] as? String, "div=[0.95] vãos=2 · Divisória  x612 w15 | Prateleira x15 w597 | Porta x9 w304 | Porta x315 w304 | Prateleira x627 w24 | Porta x622 w17 | Porta x641 w17")
+        XCTAssertEqual(o["aviso"] as? String, "botão · Vão de 24,3 mm")
+        XCTAssertEqual(o["sozinho"] as? Bool, true, "abrir, desenhar, trocar de aba e reabrir não mexe na divisória")
+        XCTAssertEqual(o["azul"] as? Int, 0, "vão escolhido sem pintar de azul")
+        XCTAssertEqual(o["tirou"] as? String, "div=[] vãos=1 · Prateleira x15 w637 | Porta x9 w323 | Porta x334 w323 · aviso=false", "no toque: prateleira e portas vão até o final")
+        XCTAssertEqual(o["desfez"] as? String, "div=[0.95] vãos=2 · Divisória  x612 w15 | Prateleira x15 w597 | Porta x9 w304 | Porta x315 w304 | Prateleira x627 w24 | Porta x622 w17 | Porta x641 w17", "Desfazer volta")
+        XCTAssertEqual(o["travado"] as? String, "[0.05]", "módulo travado não muda")
+        XCTAssertEqual(o["esq"] as? String, "div=[] vãos=1 · Prateleira x15 w637 | Porta x9 w323 | Porta x334 w323")
+        XCTAssertEqual(o["meio"] as? Bool, false, "divisória no meio não tem aviso")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// REGRA: módulo só sai por operação manual. Mudar a pedra em L não apaga módulo; trocar de ambiente/parede não muda nome nem apaga nada.
+    func testNadaSaiSemOperacaoManualPedraEmLAmbienteEParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+          var bx=function(){return S.mods.filter(function(m){return !m.sup&&m.h<1500}).map(function(m){return (m.wing||'f')+m.x+'+'+m.w+(m.meu?'*':'')}).join(',')};
+          /* projeto com 2 módulos de baixo ajustados pelo marceneiro */
+          S.room='cozinha';S.env='cozinha';S.W=3600;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[1]);S.mods.forEach(function(m){m.meu=1;m.shv=[.4]});draw();
+          R.inicio=bx();var st=S.stones[0];R.temPedra=!!st;
+          /* 1) mudar o formato da pedra direto (sem confirmação): a pedra muda, os módulos ficam */
+          snap();st.shape='Le';st.lenA=900;st.widA=st.d;st.x=0;lRedo(st);draw();R.formato=st.shape+' · '+bx();
+          /* 2) mudar a medida da lateral além do limite */
+          st.lenA=2600;lRedo(st);draw();R.medida=bx();
+          /* 3) com confirmação manual (segundo toque): aí sim refaz */
+          draw();await W(700);try{histTick()}catch(_){}window.__lOk=1;try{lRedo(st)}finally{window.__lOk=0}draw();await W(700);try{histTick()}catch(_){}R.confirmado=S.mods.filter(function(m){return m.meu}).length+' dos meus · '+S.mods.filter(function(m){return !m.sup&&m.h<1500}).length+' de baixo';
+          /* 4) Desfazer devolve os meus */
+          document.getElementById('und').click();await W(80);R.desfez=S.mods.filter(function(m){return m.meu}).length+' dos meus · '+bx();
+          /* 5) sem módulo embaixo: o L cria os módulos normalmente, sem pedir nada */
+          S.mods=[];lRedo(st);draw();R.vazio=S.mods.filter(function(m){return !m.sup}).length>0;
+          /* 6) trocar de ambiente e de parede: mesmo projeto, mesmo nome, nada sai */
+          var p=newProjFor({nome:'Dona Maria'});S.room='cozinha';S.mods=[];newTpl(CATS[0].it[0]);rpNew({x:0,b:0,w:600,h:2000}).liso=true;draw();saveNow();
+          var id0=CUR,q0=pLoadAll().filter(function(q){return q.id===id0})[0],n0=q0.client.nome+'|'+(q0.titulo||''),c0=S.mods.length+'/'+snapState().rp.length,tot0=pLoadAll().length;
+          S.tab=9;panel();await W(40);['sala','quarto','banho','cozinha'].forEach(function(r){var b=document.querySelector('[data-room="'+r+'"]');if(b)b.click()});await W(80);
+          wvGo('d');await W(60);wvGo('e');await W(60);wvGo('f');await W(60);saveNow();await W(700);
+          var q1=pLoadAll().filter(function(q){return q.id===id0})[0];R.ambiente=(CUR===id0)+' · nome igual='+((q1.client.nome+'|'+(q1.titulo||''))===n0)+' · peças '+c0+'>'+(q1.current.mods.length+'/'+q1.current.rp.length)+' · projetos '+tot0+'>'+pLoadAll().length;
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["inicio"] as? String, "f5+900*,f905+450*")
+        XCTAssertEqual(o["formato"] as? String, "Le · f5+900*,f905+450*", "mudar o formato da pedra não apaga os módulos")
+        XCTAssertEqual(o["medida"] as? String, "f5+900*,f905+450*", "mudar a medida da lateral não apaga os módulos")
+        XCTAssertEqual(o["confirmado"] as? String, "0 dos meus · 6 de baixo", "só com a confirmação manual refaz")
+        XCTAssertEqual(o["desfez"] as? String, "2 dos meus · f5+900*,f905+450*", "Desfazer devolve")
+        XCTAssertEqual(o["vazio"] as? Bool, true, "sem módulo embaixo, o L cria os módulos normalmente")
+        XCTAssertEqual(o["ambiente"] as? String, "true · nome igual=true · peças 1/1>1/1 · projetos 2>2", "trocar de ambiente e de parede: mesmo projeto, mesmo nome, mesmas peças")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Botão 🧩 Refazer os módulos: o primeiro toque só avisa; apaga e refaz só no segundo.
+    func testRefazerModulosDaPedraPedeSegundoToque() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+          S.room='cozinha';S.env='cozinha';S.W=3600;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[1]);S.mods.forEach(function(m){m.meu=1});draw();
+          var st=S.stones[0];st.shape='Le';st.lenA=900;st.widA=st.d;st.x=0;draw();
+          var meus=function(){return S.mods.filter(function(m){return m.meu}).length+' meus/'+S.mods.filter(function(m){return !m.sup&&m.h<1500}).length+' de baixo'};
+          
+          open3D();await W(500);try{__itOpen({k:'st',id:st.id,full:1})}catch(e){R.e=String(e)}await W(200);
+          var b=document.querySelector('[data-qlfill]');R.botao=!!b;
+          if(b){b.click();await W(150);R.toque1=meus();b=document.querySelector('[data-qlfill]');b.click();await W(200);R.toque2=meus()}
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["toque1"] as? String, "2 meus/2 de baixo", "primeiro toque não apaga nada")
+        XCTAssertEqual(o["toque2"] as? String, "0 meus/4 de baixo", "segundo toque refaz")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Parede sem espaço: o módulo novo não entra espremido com porta de 5 cm; avisa e não cria. Os que já existem ficam.
+    func testModuloNovoNaoEntraEspremidoComPortaMinuscula() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TL=[];var t0=window.toast;window.toast=toast=function(m){TL.push(String(m));try{return t0.apply(this,arguments)}catch(_){}};
+          var cid=null,ix=-1;CATS.forEach(function(c){(c.it||[]).forEach(function(it,i){if(cid===null&&/^Guarda-roupa 3 vãos/.test(it.n||'')){cid=c.id;ix=i}})});
+          var add=async function(){CATALL=true;catOpen(cid);await W(80);document.querySelector('#catm [data-cati="'+cid+'|'+ix+'"]').click();await W(250)};
+          S.env='livre';S.room='quarto';S.W=3200;S.mods=[];S.stones=[];draw();
+          newTpl(CATS[0].it[0]);var a=S.mods[0];a.x=0;a.w=2765;a.meu=1;draw();var n0=S.mods.length;TL=[];
+          await add();var nv=S.mods.filter(function(m){return !m.meu});R.apertado=nv.length+' novo'+nv.map(function(m){return ' · '+(m.wing||'fundo')+' w='+m.w+' menor porta '+Math.min.apply(null,partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return Math.round(p.w)}))}).join('')+' · aviso='+TL.some(function(t){return /Não tem espaço livre|parede do lado/.test(t)});
+          S.mods=[a];a.w=600;draw();TL=[];await add();var g=S.mods.filter(function(m){return !m.meu})[0];R.normal=g?('w='+g.w+' · menor porta '+Math.min.apply(null,partsOf(g).filter(function(p){return p.name==='Porta'}).map(function(p){return Math.round(p.w)}))):'não entrou';
+          R.existente=S.mods.indexOf(a)>=0&&a.w===600;R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["apertado"] as? String, "0 novo · aviso=true", "antes entrava com 335 mm e portas de 48 a 52 mm")
+        XCTAssertEqual(o["normal"] as? String, "w=2500 · menor porta 409")
+        XCTAssertEqual(o["existente"] as? Bool, true)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

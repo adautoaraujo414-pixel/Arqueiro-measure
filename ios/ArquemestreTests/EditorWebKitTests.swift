@@ -571,7 +571,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["txt32"] as? Bool, true)
         XCTAssertEqual(o["ids"] as? [String], [], "todos os campos novos nos Ajustes")
         XCTAssertEqual(o["chips"] as? [String], [], "chips s32 / arredondamento / passo da corrediça")
-        XCTAssertEqual(o["mats"] as? Int, 198, "paleta real do padrão (197 + sem padrão)")
+        XCTAssertEqual(o["mats"] as? Int, 240, "paleta real do padrão (239 + sem padrão)")
         XCTAssertEqual(o["mvis"] as? [String], ["Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no padrão de cor dos Ajustes")
         XCTAssertEqual(o["rnd"] as? Bool, true, "arredondamento em 1 mm")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")

@@ -49,6 +49,8 @@ final class AppModel: ObservableObject {
     // editor de móveis
     @Published var projVersion = 0
     var lastProjectId: String?
+    /// Saiu do editor de móveis (Pronto/Fechar): a biblioteca reabre a tela do cliente deste projeto.
+    var returnProjectId: String?
     @Published var pendingNewProject = false
     @Published var pendingProject: String?
     /// Código do plano de corte recebido pelo link do WhatsApp; o editor abre ele no modo corte.
@@ -576,7 +578,10 @@ final class AppModel: ObservableObject {
     }
     /// "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente.
     func openNoteOf(_ projectId: String) {
-        let nid = notesOfProject(projectId).first { id in index.notes.contains { $0.id == id && !$0.trash } }
+        let live = index.notes.filter { !$0.trash }
+        // 1) a nota ligada a este projeto · 2) a nota que já existe deste mesmo cliente (outro projeto dele) · 3) só então cria
+        let nid = notesOfProject(projectId).first { id in live.contains { $0.id == id } }
+            ?? live.filter { clientSet(note: nil, proj: projectId).notes.contains($0.id) }.max { $0.createdMs < $1.createdMs }?.id
         lastProjectId = projectId
         if let n = nid { openNote(n) } else { openNote(createNote()) }
     }

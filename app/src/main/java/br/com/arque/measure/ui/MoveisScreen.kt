@@ -113,7 +113,7 @@ fun MoveisScreen(vm: AppViewModel) {
     var showShare by remember { mutableStateOf(false) }
     val bridge = remember {
         MoveisBridge(
-            files, { web }, { vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.onEditorProject(id) }, { json -> vm.quoteFromMoveis(json) },
+            files, { web }, { vm.returnProjectId = vm.lastProjectId; vm.screen = Screen.Library }, { showBle = true }, { showShare = true }, { vm.moveisView }, { id -> vm.onEditorProject(id) }, { json -> vm.quoteFromMoveis(json) },
             notes = { vm.notesJson() }, ctxNote = { vm.contextNoteJson() },
             onLink = { nid, pid -> vm.linkProject(nid, pid) }, onOpenNote = { pid -> vm.openNoteOf(pid) },
             company = { vm.company.name },

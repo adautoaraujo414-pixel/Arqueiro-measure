@@ -611,6 +611,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var projVersion by mutableIntStateOf(0)
     /** Último projeto aberto no editor nesta sessão (nota nova criada depois se vincula a ele). */
     var lastProjectId: String? = null
+    /** Saiu do editor de móveis (Pronto/Fechar): a biblioteca reabre a tela do cliente deste projeto. */
+    var returnProjectId: String? = null
     var pendingNewProject by mutableStateOf(false)
     /** Backup vindo do iPhone: a ligação nota ↔ projeto vem em files/projects/links.json; passa pras preferências daqui. */
     private fun importIosLinks() {
@@ -678,7 +680,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** "📝 Nota" no editor de móveis: abre a nota ligada ao projeto; se não tem, cria uma já no nome do cliente. */
     fun openNoteOf(projectId: String) {
-        val nid = notesOfProject(projectId).firstOrNull { id -> index.notes.any { it.id == id && !it.trash } }
+        val live = index.notes.filter { !it.trash }
+        // 1) a nota ligada a este projeto · 2) a nota que já existe deste mesmo cliente (outro projeto dele) · 3) só então cria
+        val nid = notesOfProject(projectId).firstOrNull { id -> live.any { it.id == id } }
+            ?: clientSet(null, projectId).first.mapNotNull { id -> live.firstOrNull { it.id == id } }.maxByOrNull { it.createdMs }?.id
         lastProjectId = projectId
         if (nid != null) openNote(nid) else openNote(createNote())
     }

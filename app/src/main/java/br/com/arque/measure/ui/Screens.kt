@@ -443,6 +443,13 @@ fun LibraryScreen(vm: AppViewModel) {
     }
 
     // ---- cliente aberto: projetos 3D e notas dele
+    // voltou do editor (Pronto/Fechar): abre a tela do cliente daquele projeto, com os projetos e as notas dele
+    LaunchedEffect(vm.returnProjectId, clients.size) {
+        val pid = vm.returnProjectId ?: return@LaunchedEffect
+        val c = clients.firstOrNull { cl -> cl.projs.any { it.id == pid } }
+        if (c != null) { clientKey = c.key; vm.returnProjectId = null }
+        else if (clients.isNotEmpty()) vm.returnProjectId = null
+    }
     val openClient = clientKey?.let { k -> clients.firstOrNull { it.key == k } }
     if (openClient != null) ClientDetail(vm, openClient) { clientKey = null }
 

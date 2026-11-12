@@ -54,7 +54,7 @@ fun MoveisScreen(vm: AppViewModel) {
     val bridge = remember {
         MoveisBridge(
             dir = files,
-            onClose = { vm.screen = Screen.Library },
+            onClose = { vm.returnProjectId = vm.lastProjectId; vm.screen = Screen.Library },
             onTrena = { vm.toast = tr("No Windows a trena Bosch por Bluetooth ainda não conecta: toque na medida e digite.") },
             onShare = { showShare = true },
             viewing = { vm.moveisView },

@@ -68,7 +68,7 @@ struct MoveisView: View {
     }
 
     private func leave() {
-        if app.moveisView { peer.disconnect(); app.moveisView = false }
+        if app.moveisView { peer.disconnect(); app.moveisView = false } else { app.returnProjectId = app.lastProjectId }
         app.screen = .library
     }
 }

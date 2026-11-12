@@ -6443,5 +6443,18 @@
 "Nicho com porta de vidro basculante": "Niche with lift-up glass door",
 "Já tem módulo embaixo dos aéreos": "There is already a module under the wall cabinets",
 "Ponha um armário aéreo primeiro: o nicho de vidro vai embaixo dele": "Add a wall cabinet first: the glass niche goes under it",
-"Não coube: falta altura embaixo do aéreo": "It did not fit: not enough height under the wall cabinet"
+"Não coube: falta altura embaixo do aéreo": "It did not fit: not enough height under the wall cabinet",
+"Gola horizontal (no topo da porta · no aéreo fica embaixo, invertida)": "Horizontal gola (top of the door · on wall cabinets at the bottom, inverted)",
+"Gola vertical (na lateral da porta, do lado que abre)": "Vertical gola (on the side of the door, opening edge)",
+"Porta do armário com maleiro": "Door of the wardrobe with top box",
+"🚪 Porta inteira (uma só até em cima)": "🚪 Full door (one door up to the top)",
+"✓ 🚪 Porta inteira (uma só até em cima)": "✓ 🚪 Full door (one door up to the top)",
+"🧳 Maleiro com porta própria": "🧳 Top box with its own door",
+"✓ 🧳 Maleiro com porta própria": "✓ 🧳 Top box with its own door",
+"🚪 Porta inteira: uma porta só de baixo até em cima do maleiro": "🚪 Full door: a single door from the bottom to the top of the top box",
+"Toque no vão que vai ganhar porta:": "Tap the bay that will get a door:",
+"1 · Quantas portas neste vão": "1 · How many doors in this bay",
+"2 · Puxador da porta": "2 · Door handle",
+"⚙ Mais opções da porta (abrir pra ver por dentro · vidro · basculante · furo da dobradiça)": "⚙ More door options (open to see inside · glass · lift-up · hinge drilling)",
+"▢ abrir": "▢ open"
 }

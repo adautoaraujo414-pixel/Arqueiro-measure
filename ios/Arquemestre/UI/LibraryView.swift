@@ -99,6 +99,13 @@ struct LibraryView: View {
             }
         }
         .sheet(item: $clientOpen) { c in ClientDetailSheet(key: c.id) }
+        // voltou do editor (Pronto/Fechar): abre a tela do cliente daquele projeto, com os projetos e as notas dele
+        .onAppear {
+            guard let pid = app.returnProjectId else { return }
+            app.returnProjectId = nil
+            let g = homeClients(app, app.moveisProjects(), app.index.notes.filter { !$0.trash }).groups.first { $0.projs.contains { $0.id == pid } }
+            if let g { DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { clientOpen = ClientPick(id: g.id) } }
+        }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $syncOpen) { SyncView().environmentObject(app) }

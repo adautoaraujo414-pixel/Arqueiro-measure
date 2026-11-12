@@ -1936,10 +1936,8 @@ function ibSvg(v,A,L,sel,MI,VI){var E_=+((S.m&&S.m.esp)||15),W=340,H=Math.max(25
 var intPanel0=intPanel;
 intPanel=function(v,A){var m=S.m,vi=S.sv,L=intLayout(v,A),sel=ibSel(m,vi),n=L.it.length,keys=ibKeys(m),q=roomOf()==='quarto'||roomOf()==='closet'||roomOf()==='livre',o=sel>=0&&sel<n?v.int[sel]:null,lo=sel>=0&&sel<n?L.it[sel]:null,B=function(a,l,on,x){return '<button '+a+' class="'+(on?'sel':'')+'" style="'+(x||'')+'">'+l+'</button>'};
  var nSh=0;L.it.forEach(function(_,k){if(ibShelf(L,k))nSh++});
- var h='<div class="sec" id="ibed">'+(q?'🗂 Torre por dentro · vão '+(vi+1):'🧩 Itens dentro do vão '+(vi+1))+'<span>⌃</span></div><div class="note">Toque numa parte (aqui ou no desenho grande) e só ela fica escolhida: troque o que vai nela, digite a altura ou ponha mais uma prateleira. A porta do vão continua igual.</div>';
- h+=ibSvg(v,A,L,sel,S.mods.indexOf(m),vi);
- h+='<div style="text-align:center;font-size:12px;color:#555;margin:0 0 6px">'+n+' parte'+(n===1?'':'s')+' · '+nSh+' prateleira'+(nSh===1?'':'s')+' · soma '+Math.round(A-Math.max(0,L.free))+' de '+Math.round(A)+' mm</div>';
- h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px">'+B('data-ib1="1"','＋ Só mais uma prateleira',false,'font-weight:700;background:#eaf1ff;border-color:#2f6be0')+'<button data-msave="1">💾 Salvar nos meus modelos</button></div>';
+ /* painel limpo: sem a lista "Itens dentro do vão" · a parte só aparece pra editar quando é tocada no desenho */
+ var h='';
  if(o){var mal=o.t==='mal',cab=/^cab/.test(o.t),E_=+m.esp||15,lv=ibLivre(L,sel,E_),rg=vaoRanges(m)[vi]||[0,0],iw=Math.round(rg[1]-rg[0]),cv=lv!==null?lv:Math.round(lo.h);
   h+='<div class="box" id="ibbox" style="text-align:left;border:2px solid #2f6be0;background:#f6f9ff"><div style="font-weight:700;font-size:15px">Parte '+(sel+1)+' de '+n+' · '+(INTD[o.t]?INTD[o.t][0]+' ':'')+ibName(o)+'</div><small>do topo do vão: '+Math.round(lo.y)+' até '+Math.round(lo.y+lo.h)+' mm</small>'
    +'<div style="margin:6px 0;padding:6px 8px;background:#fff;border:1px solid #c9d8ff;border-radius:8px;font-size:13px">📏 Medida real por dentro: <span style="font-weight:700;font-size:15px">'+(lv!==null?lv+' de altura livre':Math.round(lo.h)+' de altura')+' × '+iw+' de largura</span>'+(lv!==null&&lv!==Math.round(lo.h)?'<div style="font-size:11px;color:#555">parte '+Math.round(lo.h)+' − prateleira '+E_+' = '+lv+' livre</div>':'')+'</div>';
@@ -10016,5 +10014,11 @@ var sf0=soloFit;soloFit=window.soloFit=function(m){var b=baseOf(m),L=stackOf(b);
 /* barra do painel: tira a fila Base 1 / Superior 1 (o módulo é escolhido tocando no desenho) */
 var mb0=modBar;modBar=window.modBar=function(){var h=mb0.apply(this,arguments);return String(h).replace(/^<div class="modbar"[\s\S]*?<\/div>/,'')};
 })();
+</script>
+<script>
+/* pôr módulo, eletro ou painel novo com o "só ele no 2D" ligado: volta pra vista do ambiente inteiro, senão o item novo some do 2D e do 3D */
+(function(){document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('#catm [data-cati]');if(!t||!window.SOLO2)return;try{window.soloOff()}catch(_){}},true);
+var nt=window.newTpl||newTpl;newTpl=window.newTpl=function(i){try{var t=typeof i==='object'?i:TPL[i];if(window.SOLO2&&!(t&&t.free0))window.soloOff()}catch(_){}return nt.apply(this,arguments)};
+var nm=window.newMod||newMod;newMod=window.newMod=function(){try{if(window.SOLO2)window.soloOff()}catch(_){}return nm.apply(this,arguments)}})();
 </script>
 </body></html>

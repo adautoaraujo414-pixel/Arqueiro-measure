@@ -10192,4 +10192,83 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  if(H!==null){var st=H<=1?0:H<=3?2:4,df=Math.round((H-st)*10)/10;cal=' · calço de '+st+' mm'+(Math.abs(df)>=0.1?' e '+f(Math.abs(df))+' mm na regulagem do lado':'')}
  return {k:k,D:meio?NaN:D,H:H,K:K,t:'🔩 Dobradiça '+nm+' · '+(meio?'porta presa no montante do meio':k==='a'?'porta embutida (por dentro da lateral)':'a porta cobre '+f(D)+' mm da lateral')+(k==='a'||meio?'':' · furo do caneco a '+f(K)+' mm da borda (centro a '+f(fb)+')')+cal}}catch(_){return null}};
 </script>
+<script>
+/* ===== 🔧 Puxadores reais (alça e ponto) com as medidas de catálogo (Contatto 2026): furação A, comprimento B, quanto sai da porta.
+   Aba Portas › Puxadores: escolhe o modelo pelo desenho, a cor e o lugar. O lugar vale pra todas as portas (porta par: espelhado;
+   aéreo: de baixo pra cima) e mostra a medida até os 4 cantos da porta. Gaveta: no meio da largura, um pouco acima do centro. ===== */
+(function(){if(typeof pxBar!=='function'||!window.PXM)return;
+ /* id, nome, furação A, comprimento B, largura da barra, quanto sai, feitio */
+ var ALC=[['luce','Luce','arco',9.6,23.5,[[192,214],[288,310],[384,406]]],['mano','Mano','reta',9,31,[[96,105],[128,137],[160,169],[192,201]]],['stivo','Stivo','arco',10,29,[[128,149],[160,181]]],['bono','Bono','chata',10.5,29.3,[[96,124],[224,252]]],['libero','Líbero','chata',9,30,[[160,202],[224,267]]],['casuale','Casuale','chata',9,27,[[192,202],[288,298]]]];
+ ALC.forEach(function(q){q[5].forEach(function(s){if(!PXM.some(function(x){return x[0]===q[0]+s[0]}))PXM.push([q[0]+s[0],q[1]+' · furação '+s[0]+' · comp. '+s[1],s[0],s[1],q[3],q[4],q[2],q[0]])})});
+ var PXK=window.PXK=[['cog','Cog · redondo Ø 40','r',40,27],['gazza','Gazza · quadrado 18','q',18,24]];
+ if(!PXC.some(function(q){return q[0]==='rose'}))PXC.push(['rose','#d9a08c','Rosê gold'],['cromado','#d9dde2','Cromado']);
+ function pm(){var k=S.pxm||'auto',q=PXM.filter(function(x){return x[0]===k})[0];return q&&q[2]?q:null}
+ function pk(){var k=S.pxk||'',q=PXK.filter(function(x){return x[0]===k})[0];return q||null}
+ window.pxKnob=pk;
+ /* gaveta e basculante: no meio da largura; gaveta um pouco acima do centro da frente */
+ var pxBar0=pxBar;pxBar=function(p,m,W,H){var b=pxBar0.apply(this,arguments);try{if(!b.vert&&/^(Frente de gaveta|Gaveta interna · frente)/.test(p.name||'')){b.u=W/2;b.v=Math.round((H/2+Math.min(25,H*.12))*10)/10}/* alça na porta: em pé (padrão) ou deitada */if(b.vert&&S.pxo==='h'&&/^Porta$/.test(p.name||'')){b.vert=0;var hl=Math.min(b.L/2+5,W/2);b.u=Math.max(hl,Math.min(W-hl,b.u))}}catch(_){}return b};window.pxBar=pxBar;
+ /* desenho real no 3D */
+ var pp0=pxParts;pxParts=function(p,m,W,H){var t=p.px,q=t==='externo'?pm():null,kq=t==='bola'?pk():null;if(!(q&&q[4])&&!kq)return pp0.apply(this,arguments);
+  var c=pxCol(p.pxc)[1],hi=pxMix(c,'#ffffff',.22),o=[],b=pxBar(p,m,W,H),P_=function(u0,u1,v0,v1,w0,w1,col,sh){o.push({u0:u0,u1:u1,v0:v0,v1:v1,w0:w0,w1:w1,c:col||c,sh:sh})},
+   S_=function(s0,s1,a0,a1,w0,w1,col){/* s = ao longo do puxador · a = atravessado */if(b.vert)P_(b.u+a0,b.u+a1,b.v+s0,b.v+s1,w0,w1,col);else P_(b.u+s0,b.u+s1,b.v+a0,b.v+a1,w0,w1,col)};
+  if(kq){var r=kq[3]/2,Pk=kq[4];if(kq[2]==='r'){P_(b.u-r*.38,b.u+r*.38,b.v-r*.38,b.v+r*.38,.3,Pk*.55,c,'octz');P_(b.u-r,b.u+r,b.v-r,b.v+r,Pk*.55,Pk-3,c,'octz');P_(b.u-r*.72,b.u+r*.72,b.v-r*.72,b.v+r*.72,Pk-3,Pk,hi,'octz')}else{P_(b.u-r*.62,b.u+r*.62,b.v-r*.55,b.v+r*.55,.3,Pk*.45,c);P_(b.u-r,b.u+r,b.v-r*.87,b.v+r*.87,Pk*.45,Pk,c)}return o}
+  var A=q[2],B=Math.min(q[3],b.L),w=q[4],Pj=q[5],st=q[6],h=w/2,f=Math.min(A/2,B/2-h);
+  if(st==='chata'){[-f,f].forEach(function(s){S_(s-7,s+7,-h,h,.3,Pj-5)});S_(-B/2,B/2,-h*1.25,h*1.25,Pj-6,Pj)}
+  else if(st==='arco'){[-f,f].forEach(function(s){S_(s-h,s+h,-h,h,.3,Pj*.62)});S_(-B/2,-B*.22,-h,h,Pj*.55,Pj*.8);S_(B*.22,B/2,-h,h,Pj*.55,Pj*.8);S_(-B*.3,B*.3,-h,h,Pj*.7,Pj);S_(-B*.18,B*.18,-h*.7,h*.7,Pj,Pj+.6,hi)}
+  else{[-f,f].forEach(function(s){S_(s-h,s+h,-h,h,.3,Pj-w)});S_(-B/2,B/2,-h,h,Pj-w,Pj)}
+  return o};window.pxParts=pxParts;
+ /* descrição na peça e na lista de ferragens */
+ var pd0=pxDesc;pxDesc=function(px,pxc,sup){var d=pd0.apply(this,arguments);try{var kq=px==='bola'?pk():null;if(kq)return 'Puxador ponto '+kq[1]+' (Contatto) · 1 furo · sai '+String(kq[4]).replace('.',',')+' mm · '+pxCol(pxc)[2].toLowerCase()}catch(_){}return d};window.pxDesc=pxDesc;
+ /* guarda o modelo do ponto junto com o projeto */
+ var ss0=snapState;snapState=function(){var o=ss0.apply(this,arguments);if(S.pxk)o.pxk=S.pxk;if(S.pxo)o.pxo=S.pxo;return o};window.snapState=snapState;var ls0=loadState;loadState=function(o){var r=ls0.apply(this,arguments);try{S.pxk=o&&o.pxk||undefined;S.pxo=o&&o.pxo||undefined}catch(_){}return r};window.loadState=loadState;
+ /* desenhos (feitos aqui, o mais parecido possível com cada modelo) */
+ function ico(st){var c='#3a3d42',s='<svg viewBox="0 0 84 34" width="84" height="34" style="display:block;margin:0 auto">';
+  if(st==='reta')s+='<path d="M8 28V10h68v18h-7V17H15v11z" fill="'+c+'"/>';
+  else if(st==='arco')s+='<path d="M6 26c10-2 22-16 36-16s26 14 36 16l-2 4C66 28 56 18 42 18S18 28 8 30z" fill="'+c+'"/><rect x="14" y="24" width="5" height="7" fill="'+c+'"/><rect x="65" y="24" width="5" height="7" fill="'+c+'"/>';
+  else if(st==='chata')s+='<path d="M6 12h72l-4 6H10z" fill="'+c+'"/><path d="M12 18h9v12h-9zM63 18h9v12h-9z" fill="'+c+'"/>';
+  else if(st==='r')s+='<ellipse cx="42" cy="13" rx="19" ry="9" fill="'+c+'"/><path d="M35 20h14l3 10H32z" fill="'+c+'"/>';
+  else s+='<path d="M30 6h24l-4 16H34z" fill="'+c+'"/><rect x="36" y="22" width="12" height="8" fill="'+c+'"/>';
+  return s+'</svg>'}
+ function curT(){var t=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!t&&/^(door|drawers)$/.test(v.k)&&!v.vidro)t=pxOf(v,false)})});return t||'externo'}
+ function curC(){var c=null;S.mods.forEach(function(m){(m.v||[]).forEach(function(v){if(!c&&v.pxc)c=v.pxc})});return c||(typeof pxcDef==='function'?pxcDef():'preto')}
+ function doorOf(m){var ps=[];try{ps=partsOf(m)}catch(_){}return ps.filter(function(p){return /^Porta$/.test(p.name)&&p.px&&!p.glass})[0]||null}
+ var f1=function(v){return String(Math.round(v*10)/10).replace('.',',')};
+ function meas(m,p){var W=p.w,H=p.h,t=p.px,u,v;if(t==='concha'){var c=chAt(p,m,W,H);u=c.u;v=H-c.t}else{var b=pxBar(p,m,W,H);u=b.u;v=b.v}return {u:u,v:v,L:u,R:W-u,T:H-v,B:v,W:W,H:H}}
+ function padHtml(m,p){var M=meas(m,p),sc=Math.min(190/M.H,170/M.W),bw=M.W*sc,bh=M.H*sc,X=46,Y=20,hp=p.hinge==='r',cx=X+M.u*sc,cy=Y+(M.H-M.v)*sc,b=p.px!=='concha'?pxBar(p,m,M.W,M.H):null,T=function(x,y,t,an){return '<text x="'+x+'" y="'+y+'" font-size="11" font-weight="700" fill="#c62828" text-anchor="'+(an||'middle')+'" paint-order="stroke" stroke="#fff" stroke-width="3">'+t+'</text>'},L=function(x1,y1,x2,y2){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#c62828" stroke-width="1" stroke-dasharray="4 3"/>'};
+  var hd=p.px==='bola'?'<circle cx="'+cx+'" cy="'+cy+'" r="'+Math.max(5,(pk()?pk()[3]/2:15)*sc)+'" fill="#3a3d42"/>':b&&b.vert?'<rect x="'+(cx-3)+'" y="'+(cy-b.L*sc/2)+'" width="6" height="'+(b.L*sc)+'" rx="2" fill="#3a3d42"/>':'<rect x="'+(cx-(b?b.L:60)*sc/2)+'" y="'+(cy-3)+'" width="'+((b?b.L:60)*sc)+'" height="6" rx="2" fill="#3a3d42"/>';
+  return '<svg data-pxpad2="1" width="'+(bw+92)+'" height="'+(bh+44)+'" style="touch-action:none;background:#eef1f4;border-radius:8px;display:block;max-width:none;cursor:move"><rect x="'+X+'" y="'+Y+'" width="'+bw+'" height="'+bh+'" fill="#d9c7a0" stroke="#6b5b3e"/><line x1="'+(hp?X+bw:X)+'" y1="'+(Y+bh*.12)+'" x2="'+(hp?X+bw:X)+'" y2="'+(Y+bh*.88)+'" stroke="#1f6feb" stroke-width="3"/>'
+   +L(X,cy,cx,cy)+L(cx,cy,X+bw,cy)+L(cx,Y,cx,cy)+L(cx,cy,cx,Y+bh)+hd+'<circle cx="'+cx+'" cy="'+cy+'" r="4" fill="#c62828" stroke="#fff" stroke-width="1.5"/>'
+   +T(X-4,cy+4,f1(M.L),'end')+T(X+bw+4,cy+4,f1(M.R),'start')+T(cx,Y-6,f1(M.T))+T(cx,Y+bh+14,f1(M.B))+'</svg>'}
+ function boxHtml(){var m=S.m;if(!m)return '';var t=curT(),c=curC(),q=pm(),kq=pk(),p=doorOf(m),mov=/^(externo|bola|concha)$/.test(t)&&p,B=function(at,tx,on,st){return '<button '+at+' style="padding:6px 8px;min-height:36px;font-size:12px;'+(on?'border:2px solid #1f6feb;background:#eef4ff;':'')+(st||'')+'">'+tx+'</button>'};
+  var h='<div class="sec" data-pxsec="1">🔧 Puxadores (alça e ponto)<span>⌃</span></div><div class="note">Toque no modelo: vale pra todas as portas e gavetas do projeto. Perfil gola, cava e facetado continuam no vão, como já estavam.</div>';
+  h+='<div style="font-size:13px;font-weight:700;margin:6px 0 3px">Alça</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px">'+ALC.map(function(a){var on=t==='externo'&&q&&q[7]===a[0];return B('data-pxmd="'+a[0]+'"',ico(a[2])+'<b style="display:block;font-size:13px">'+(on?'✓ ':'')+a[1]+'</b><small style="font-size:11px;color:#555">'+a[5].map(function(s){return s[0]}).join(' · ')+'</small>',on,'display:block;text-align:center;color:#1b1f27')}).join('')+'</div>';
+  if(t==='externo'&&q&&q[7]){var a=ALC.filter(function(x){return x[0]===q[7]})[0];h+='<div style="font-size:12px;color:#444;margin:6px 0 2px">Tamanho · furação (de furo a furo)</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+a[5].map(function(s){return B('data-pxm2="'+a[0]+s[0]+'"',s[0]+' mm<br><small>comp. '+s[1]+'</small>',q[0]===a[0]+s[0])}).join('')+'</div>'}
+  if(t==='externo')h+='<div style="font-size:12px;color:#444;margin:6px 0 2px">Como a alça vai montada na porta</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+B('data-pxo="v"','▮ Em pé (vertical)',S.pxo!=='h')+B('data-pxo="h"','▬ Deitada (horizontal)',S.pxo==='h')+'</div><div class="note" style="margin:2px 0">Na gaveta a alça fica sempre deitada.</div>';
+  h+='<div style="font-size:13px;font-weight:700;margin:8px 0 3px">Ponto (1 furo)</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px">'+PXK.map(function(k){var on=t==='bola'&&kq&&kq[0]===k[0];return B('data-pxkd="'+k[0]+'"',ico(k[2])+'<b style="display:block;font-size:13px">'+(on?'✓ ':'')+k[1]+'</b>',on,'display:block;text-align:center;color:#1b1f27')}).join('')+'</div>';
+  if(/^(externo|bola|concha)$/.test(t))h+='<div style="font-size:12px;color:#444;margin:8px 0 2px">Cor do puxador</div><div style="display:flex;gap:5px;flex-wrap:wrap">'+PXC.map(function(x){return '<button data-pxc2="'+x[0]+'" style="min-height:34px;padding:2px 9px;border-radius:8px;background:'+x[1]+';color:'+(typeof stInk==='function'?stInk(x[1]):'#000')+';border:'+(x[0]===c?'3px solid #1f6feb':'1px solid #8a8f98')+';font-size:12px">'+x[2]+'</button>'}).join('')+'</div>';
+  if(mov){var M=meas(m,p),sup=!!m.sup;h+='<div style="font-size:13px;font-weight:700;margin:10px 0 3px">Lugar do puxador na porta</div><div data-pxpos="1" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">'+padHtml(m,p)+'<div style="flex:1;min-width:150px;font-size:12px;color:#444;line-height:1.35">Arraste no desenho ou digite. Os números vermelhos são a distância do centro do puxador até cada canto da porta. A linha azul é o lado da dobradiça.<div class="g" style="margin-top:6px"><label>Da borda que abre (mm)</label><input type="text" inputmode="decimal" data-pxin="du" value="'+f1(p.hinge==='r'?M.L:M.R)+'"></div><div class="g"><label>'+(sup?'De baixo da porta (mm)':'De cima da porta (mm)')+'</label><input type="text" inputmode="decimal" data-pxin="dt" value="'+f1(sup?M.B:M.T)+'"></div><button data-pxrst="1" style="margin-top:4px">Voltar pro padrão</button><div style="margin-top:6px">As outras portas ficam iguais e alinhadas: na porta par é espelhado, no aéreo é de baixo pra cima. Gaveta: no meio da largura, um pouco acima do centro.</div></div></div>'}
+  else if(/^(externo|bola|concha)$/.test(t))h+='<div class="note">Escolha um módulo com porta pra acertar o lugar do puxador. Gaveta: no meio da largura, um pouco acima do centro.</div>';
+  return h}
+ function isPor(){try{if(S.tab===3)return true;return !!(window.RG&&RG.tab==='por'&&window.rgIs&&S.m&&rgIs(S.m))}catch(_){return false}}
+ var p0=panel;panel=function(){var r=p0.apply(this,arguments);try{var bd=document.getElementById('bd');if(bd&&isPor()&&S.mods.length&&!bd.querySelector('[data-pxsec]')){var d=document.createElement('div');d.dataset.pxbox='1';d.innerHTML=boxHtml();bd.appendChild(d)}}catch(_){}return r};window.panel=panel;
+ function re(full){try{draw()}catch(_){}if(full)try{panel()}catch(_){}try{if(window.re3)re3()}catch(_){}}
+ function all(t){var c=curC();try{pxApplyAll(t,c);S.pxDef={px:t,pxc:c}}catch(_){}}
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pxmd],[data-pxm2],[data-pxkd],[data-pxc2],[data-pxrst],[data-pxo]');if(!t||window.RO)return;e.stopPropagation();var d=t.dataset;try{snap()}catch(_){}
+  if(d.pxmd){var a=ALC.filter(function(x){return x[0]===d.pxmd})[0],cur=pm(),s=a[5][Math.min(1,a[5].length-1)];S.pxm=(cur&&cur[7]===a[0])?cur[0]:a[0]+s[0];all('externo');toast('🔧 Alça '+a[1]+' em todas as portas e gavetas')}
+  else if(d.pxm2){S.pxm=d.pxm2;all('externo')}
+  else if(d.pxkd){S.pxk=d.pxkd;all('bola');toast('🔧 Puxador ponto em todas as portas e gavetas')}
+  else if(d.pxc2){try{pxApplyAll(curT(),d.pxc2);S.pxDef={px:curT(),pxc:d.pxc2}}catch(_){}}
+  else if(d.pxrst){delete S.pxa}
+  else if(d.pxo){if(d.pxo==='h')S.pxo='h';else delete S.pxo;toast(d.pxo==='h'?'▬ Alça deitada em todas as portas':'▮ Alça em pé em todas as portas')}
+  re(true)},true);
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.pxin||window.RO)return;var v=parseFloat(String(t.value).replace(',','.'));if(!(v>0)){re(true);return}var m=S.m,p=m&&doorOf(m);if(!p)return;try{snap()}catch(_){}var M=meas(m,p),A=S.pxa||{du:Math.round(p.hinge==='r'?M.L:M.R),dt:Math.round(m.sup?M.B:M.T)};A=Object.assign({},A);A[t.dataset.pxin]=Math.round(v*10)/10;S.pxa=A;re(true)});
+ /* arrastar no desenho */
+ var DRG=null;
+ function setFrom(ev){var sv=DRG.sv,m=S.m,p=m&&doorOf(m);if(!p)return;var r=sv.getBoundingClientRect(),W=p.w,H=p.h,sc=Math.min(190/H,170/W),x=Math.max(0,Math.min(W,(ev.clientX-r.left-46)/sc)),y=Math.max(0,Math.min(H,(ev.clientY-r.top-20)/sc));S.pxa={du:Math.round(p.hinge==='r'?x:W-x),dt:Math.round(m.sup?H-y:y)};var box=sv.parentNode,t=document.createElement('div');t.innerHTML=padHtml(m,p);var n=t.firstChild;box.replaceChild(n,sv);DRG.sv=n;var M=meas(m,p),i1=box.querySelector('[data-pxin="du"]'),i2=box.querySelector('[data-pxin="dt"]');if(i1)i1.value=f1(p.hinge==='r'?M.L:M.R);if(i2)i2.value=f1(m.sup?M.B:M.T);if(!DRG.raf)DRG.raf=requestAnimationFrame(function(){if(DRG)DRG.raf=0;try{draw()}catch(_){}try{if(window.re3)re3()}catch(_){}})}
+ document.addEventListener('pointerdown',function(e){var sv=e.target&&e.target.closest&&e.target.closest('[data-pxpad2]');if(!sv||window.RO)return;e.preventDefault();try{snap()}catch(_){}DRG={sv:sv,id:e.pointerId,raf:0};setFrom(e)},true);
+ document.addEventListener('pointermove',function(e){if(!DRG||e.pointerId!==DRG.id)return;e.preventDefault();setFrom(e)},true);
+ ['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(e){if(!DRG||e.pointerId!==DRG.id)return;DRG=null;re(true)},true)});
+ window.__pxBox=boxHtml;window.__pxMeas=function(){var m=S.m,p=m&&doorOf(m);return p?meas(m,p):null};
+})();
+</script>
 </body></html>

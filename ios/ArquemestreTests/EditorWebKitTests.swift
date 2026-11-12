@@ -4143,4 +4143,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
+    /// Puxadores reais (alça e ponto) na aba Portas: modelo pelo desenho, furação e comprimento de catálogo, lugar digitado
+    /// com a medida até os 4 cantos; as outras portas copiam (par espelhado, aéreo de baixo pra cima); gaveta no meio,
+    /// um pouco acima do centro; 3D com o puxador no tamanho real; modelo guardado no projeto.
+    func testPuxadoresReaisModeloLugarEMedidasNosQuatroCantos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];delete S.pxa;delete S.pxm;delete S.pxk;
+          var T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))},R={};
+          newTpl(T('inf','Balcão 2 portas'));newTpl(T('inf','Gaveteiro 4 gavetas'));newTpl(T('sup','Aéreo 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();
+          var bx=document.querySelector('#bd [data-pxbox]');R.box=!!bx;R.cards=document.querySelectorAll('#bd [data-pxmd]').length+'+'+document.querySelectorAll('#bd [data-pxkd]').length;
+          document.querySelector('#bd [data-pxmd="luce"]').click();R.pxm=S.pxm;R.tipos=[...new Set(S.mods.flatMap(m=>m.v.map(v=>v.px)))].join(',');
+          R.sizes=[].map.call(document.querySelectorAll('#bd [data-pxm2]'),b=>b.dataset.pxm2).join(',');document.querySelector('#bd [data-pxm2="luce192"]').click();R.pxm2=S.pxm;
+          var m=S.mods[0],P=partsOf(m).filter(p=>p.name==='Porta');R.note=(P[0].note||'').split(' · ').filter(s=>/Luce|furos/.test(s)).join(' | ');
+          var M0=__pxMeas();R.m0=[M0.L,M0.R,M0.T,M0.B].map(Math.round).join(',');
+          var i=document.querySelector('#bd [data-pxin="du"]');i.value='60';i.dispatchEvent(new Event('change',{bubbles:true}));i=document.querySelector('#bd [data-pxin="dt"]');i.value='150';i.dispatchEvent(new Event('change',{bubbles:true}));R.pxa=JSON.stringify(S.pxa);
+          var pos=function(mm){return partsOf(mm).filter(p=>p.name==='Porta').map(p=>{var b=pxBar(p,mm,p.w,p.h);return p.hinge+':'+Math.round(b.u)+'/'+Math.round(p.w-b.u)+' cima'+Math.round(p.h-b.v)+' baixo'+Math.round(b.v)+' L'+b.L})};R.base=pos(S.mods[0]);R.aereo=pos(S.mods[2]);
+          var g=S.mods[1],fr=partsOf(g).filter(p=>p.name==='Frente de gaveta')[0],bg=pxBar(fr,g,fr.w,fr.h);R.gav='u'+Math.round(bg.u)+'/'+Math.round(fr.w)+' v'+bg.v+'/'+fr.h+' L'+bg.L;
+          R.txt=[].map.call(document.querySelectorAll('#bd [data-pxpad2] text'),t=>t.textContent).join(' ');
+          document.querySelector('#bd [data-pxo="h"]').click();var bh=pxBar(P[0],m,P[0].w,P[0].h);R.deitada=S.pxo+' '+bh.vert+' '+Math.round(bh.u)+' '+Math.round(P[0].h-bh.v)+' '+snapState().pxo;document.querySelector('#bd [data-pxo="v"]').click();R.empe=String(S.pxo)+' '+pxBar(P[0],m,P[0].w,P[0].h).vert;
+          open3D();await new Promise(r=>setTimeout(r,500));__build();var B=__boxes().filter(b=>b.nol&&/^0:Porta/.test(b.nm));R.b3=B.length+' '+B.slice(0,4).map(b=>'x['+Math.round(b.x0)+','+Math.round(b.x1)+'] y['+Math.round(b.y0)+','+Math.round(b.y1)+'] z['+Math.round(b.z0)+','+Math.round(b.z1)+']').join(' ');
+          document.getElementById('v3x').click();S.tab=3;panel();document.querySelector('#bd [data-pxkd="cog"]').click();R.k=S.pxk+' '+[...new Set(S.mods.flatMap(m=>m.v.map(v=>v.px)))].join(',');R.kn=(partsOf(S.mods[0]).filter(p=>p.name==='Porta')[0].note||'').split(' · ').filter(s=>/ponto|Cog/.test(s)).join('|');
+          var st=snapState();R.salvo=st.pxm+' '+st.pxk+' '+JSON.stringify(st.pxa);
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["box"] as? Bool, true, "quadro de puxadores na aba Portas")
+        XCTAssertEqual(o["cards"] as? String, "6+2")
+        XCTAssertEqual(o["tipos"] as? String, "externo", "vale pra todas as portas e gavetas")
+        XCTAssertEqual(o["sizes"] as? String, "luce192,luce288,luce384")
+        XCTAssertEqual(o["pxm2"] as? String, "luce192")
+        XCTAssertEqual(o["note"] as? String, "Luce | furos a 192 mm um do outro | 2 furos Ø35 a 100 mm das pontas")
+        XCTAssertEqual(o["pxa"] as? String, "{\"du\":60,\"dt\":150}")
+        XCTAssertEqual(o["base"] as? [String], ["l:380/60 cima150 baixo555 L214", "r:60/380 cima150 baixo555 L214"], "porta par: espelhado, mesma altura")
+        XCTAssertEqual(o["aereo"] as? [String], ["l:430/60 cima596 baixo150 L214", "r:60/430 cima596 baixo150 L214"], "aéreo: de baixo pra cima")
+        XCTAssertEqual(o["gav"] as? String, "u393/785 v107.4/173.3 L214", "gaveta: no meio, um pouco acima do centro")
+        XCTAssertEqual(o["txt"] as? String, "380 60 150 555", "medida até os 4 cantos")
+        XCTAssertEqual(o["deitada"] as? String, "h 0 328 150 h", "alça deitada: cabe dentro da porta, mesma altura, guardada no projeto")
+        XCTAssertEqual(o["empe"] as? String, "undefined 1", "volta pra em pé")
+        XCTAssertTrue(((o["b3"] as? String) ?? "").hasPrefix("12 "), "3D com a alça real (pés + barra)")
+        XCTAssertEqual(o["k"] as? String, "cog bola")
+        XCTAssertEqual(o["kn"] as? String, "Puxador ponto Cog")
+        XCTAssertEqual(o["salvo"] as? String, "luce192 cog {\"du\":60,\"dt\":150}", "modelo e lugar guardados no projeto")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
 }

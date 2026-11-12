@@ -4222,4 +4222,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
+    /// Régua espaçadora do canto: aparece no 2D (laranja), toque nela no 2D ou no 3D abre o quadro só dela (frente, trás,
+    /// maior, menor, excluir). Ajustes › Portas: dobradiça reta ou curva muda a largura da porta e a conta da dobradiça.
+    func testReguaEspacadoraEditavelEDobradicaRetaOuCurva() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))};
+          /* régua espaçadora do canto: aparece no 2D, toque abre o quadro só dela */
+          newTpl(T('canto','Balcão canto cego · cego na direita (porta na esquerda)'));var m=S.m;draw();var P=partsOf(m),pi=P.findIndex(function(p){return p.crg}),rg=P[pi];R.cor=rg.col+' '+rg.cxz.join(',');
+          var rc=document.querySelector('#svg g[data-mi="0"] rect[data-p="'+pi+'"]');R.no2d=!!rc;rc.dispatchEvent(new MouseEvent('click',{bubbles:true}));var bx=document.getElementById('crgbox');R.abriu=!!bx&&!bx.hidden;
+          var K=function(k){bx.querySelector('[data-crgb="'+k+'"]').click()},G=function(){var p=partsOf(m).filter(function(q){return q.crg})[0];return p?p.cxz.join(',')+' cw'+p.cw:'sem'};
+          K('f');K('f');R.frente=m.crgZ+' '+G();K('t');K('t');K('t');R.tras=m.crgZ+' '+G();K('z0');K('+');K('+');R.maior=G();K('-');R.menor=G();
+          open3D();await W(500);__build();var b3=__boxes().filter(function(b){return /:Régua espaçadora do canto$/.test(String(b.nm))})[0];R.z3=Math.round(b3.z1-b3.z0);bx.hidden=true;var sp=__p3((b3.x0+b3.x1)/2,(b3.y0+b3.y1)/2,b3.z1);__tap3(sp[0],sp[1]);R.toque3d=!bx.hidden;
+          K('del');R.excluiu=G()+' '+bx.hidden+' '+m.crg;document.getElementById('v3x').click();await W(200);
+          /* dobradiça reta ou curva no Ajustes: a porta muda de largura sozinha e a conta da dobradiça acompanha */
+          var s0=[STD().pS1,STD().pSn,STD().pViz];S.mods=[];newTpl(T('inf','Balcão 2 portas'));m=S.m;draw();var D=function(){var p=partsOf(m).filter(function(q){return q.name==='Porta'})[0],h=hgInfo(m,p);return p.w+' '+h.k+' '+h.D};R.curva=dobTipo()+' '+D();
+          stdOpen(0,'portas');await W(100);R.botoes=document.querySelectorAll('#stdm [data-dobt]').length;document.querySelector('#stdm [data-dobt="reta"]').click();await W(100);R.reta=dobTipo()+' '+STD().pS1+' '+D();R.marcado=document.querySelector('#stdm [data-dobt="reta"]').className;
+          document.querySelector('#stdm [data-dobt="curva"]').click();await W(100);R.voltou=dobTipo()+' '+D();document.getElementById('stdm').hidden=true;STD().pS1=s0[0];STD().pSn=s0[1];STD().pViz=s0[2];try{prSave()}catch(_){}
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cor"] as? String, "#e08a1e -55,-15")
+        XCTAssertEqual(o["no2d"] as? Bool, true, "a régua aparece no 2D do móvel")
+        XCTAssertEqual(o["abriu"] as? Bool, true, "toque nela no 2D abre o quadro")
+        XCTAssertEqual(o["frente"] as? String, "10 -65,-25 cw40", "mais pra frente")
+        XCTAssertEqual(o["tras"] as? String, "-5 -50,-10 cw40", "mais pra trás")
+        XCTAssertEqual(o["maior"] as? String, "-65,-15 cw50")
+        XCTAssertEqual(o["menor"] as? String, "-60,-15 cw45")
+        XCTAssertEqual((o["z3"] as? NSNumber)?.intValue, 45, "3D acompanha")
+        XCTAssertEqual(o["toque3d"] as? Bool, true, "toque nela no 3D abre o quadro")
+        XCTAssertEqual(o["excluiu"] as? String, "sem true 0", "exclui só a régua")
+        XCTAssertEqual(o["curva"] as? String, "curva 440 c 6")
+        XCTAssertEqual((o["botoes"] as? NSNumber)?.intValue, 2)
+        XCTAssertEqual(o["reta"] as? String, "reta 13 447 r 13", "reta: porta mais larga, cobre 13 da lateral")
+        XCTAssertEqual(o["voltou"] as? String, "curva 440 c 6")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
 }

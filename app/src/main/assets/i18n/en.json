@@ -6394,5 +6394,16 @@
 "Padrão salvo": "Default saved",
 "projeto novo já vem com ele": "new projects start with it",
 "Padrão de puxador tirado": "Handle default removed",
-"da borda que abre e": "from the opening edge and"
+"da borda que abre e": "from the opening edge and",
+"Meus modelos de porta": "My door models",
+"A porta fica salva com o puxador e o lugar dele. Toque num modelo pra usar em todas as portas.": "The door is saved with its handle and the handle position. Tap a model to use it on every door.",
+"projeto novo já começa com essa porta.": "new projects start with this door.",
+"Salvar esta porta como modelo": "Save this door as a model",
+"Essa porta já está salva nos seus modelos": "This door is already saved in your models",
+"Porta salva": "Door saved",
+"Modelo de porta apagado": "Door model deleted",
+"Projeto novo volta a começar sem porta padrão": "New projects start without a default door again",
+"Projeto novo já começa com essa porta": "New projects start with this door",
+"em todas as portas": "on every door",
+"Usar nos projetos novos": "Use in new projects"
 }

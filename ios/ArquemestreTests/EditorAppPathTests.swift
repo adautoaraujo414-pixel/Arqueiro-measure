@@ -116,7 +116,7 @@ final class EditorAppPathTests: XCTestCase {
         XCTAssertEqual(o["mtex"] as? String, "arauco-louro-freijo-trend:ok", "textura entrou no WebGL")
         XCTAssertEqual(o["tx"] as? String, "7,7", "portas desenhadas com a foto do padrão")
         XCTAssertEqual(o["pl"] as? [String], ["Louro Freijó · Arauco Trend"], "chapa do plano com o nome da cor")
-        XCTAssertEqual(o["n"] as? Int, 60, "60 padrões reais no catálogo")
+        XCTAssertEqual(o["n"] as? Int, 197, "197 padrões reais no catálogo")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "erros: \(o["errs"] ?? "")")
     }
 

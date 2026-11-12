@@ -513,7 +513,7 @@ final class EditorWebKitTests: XCTestCase {
           pt3(false);document.getElementById('v3x').click();
           return JSON.stringify({n:n,vis:vis,corF:m.corF,corFN:m.corFN,corFId:m.corFId,cl:cl,pl:pl,heads:heads,rows:rows,pvis:pvis,pc:pc,pcl:pcl,errs:__errs});
           """#)
-        XCTAssertEqual(o["n"] as? Int, 60, "60 padrões reais na paleta (45 lisos + 15 amadeirados)")
+        XCTAssertEqual(o["n"] as? Int, 197, "197 padrões reais na paleta (Arauco 74, Duratex 71, Greenplac 52), agrupados por marca")
         XCTAssertEqual(o["vis"] as? [String], ["Louro Freijó · Arauco Trend", "Louro Freijó · Arauco Poro"], "🔍 'louro freij' acha os dois Louro Freijó")
         XCTAssertEqual(o["corFId"] as? String, "arauco-louro-freijo-trend")
         XCTAssertEqual(o["corFN"] as? String, "Louro Freijó · Arauco Trend", "nome real: padrão · fabricante · textura")
@@ -521,7 +521,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pl"] as? [String], ["b|", "c|Cinza Sagrado · Duratex Essencial Acetinada", "c|Louro Freijó · Arauco Trend", "f|"], "uma chapa por cor no plano")
         XCTAssertEqual(o["heads"] as? [String], ["🎨 CHAPA CINZA SAGRADO · DURATEX ESSENCIAL ACETINADA · MDF 15 mm", "🎨 CHAPA LOURO FREIJÓ · ARAUCO TREND · MDF 15 mm"], "cabeçalho da chapa com o nome da cor")
         XCTAssertEqual(o["rows"] as? [String], ["Chapa MDF 15 mm · Cinza Sagrado · Duratex Essencial Acetinada", "Chapa MDF 15 mm · Louro Freijó · Arauco Trend"], "material: uma linha por cor")
-        XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no pincel do 3D")
+        XCTAssertEqual(o["pvis"] as? [String], ["Cinza Puro · Arauco Matt", "Cinza Cristal · Arauco TX", "Cinza Sagrado · Duratex Essencial Acetinada", "Cinza Fóssil · Duratex Velluto", "Cinza Cristal · Greenplac Clássicos"], "🔍 no pincel do 3D acha em todas as marcas")
         XCTAssertEqual(o["pc"] as? String, "duratex-cinza-sagrado-essencial", "pintura guarda o padrão")
         XCTAssertEqual(o["pcl"] as? [String], ["c:Cinza Sagrado · Duratex Essencial Acetinada:1", "c:Louro Freijó · Arauco Trend:1"], "porta pintada separa da outra no corte, cada uma na sua cor")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
@@ -571,7 +571,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["txt32"] as? Bool, true)
         XCTAssertEqual(o["ids"] as? [String], [], "todos os campos novos nos Ajustes")
         XCTAssertEqual(o["chips"] as? [String], [], "chips s32 / arredondamento / passo da corrediça")
-        XCTAssertEqual(o["mats"] as? Int, 61, "paleta real do padrão (60 + sem padrão)")
+        XCTAssertEqual(o["mats"] as? Int, 198, "paleta real do padrão (197 + sem padrão)")
         XCTAssertEqual(o["mvis"] as? [String], ["Cinza Sagrado · Duratex Essencial Acetinada"], "🔍 no padrão de cor dos Ajustes")
         XCTAssertEqual(o["rnd"] as? Bool, true, "arredondamento em 1 mm")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")

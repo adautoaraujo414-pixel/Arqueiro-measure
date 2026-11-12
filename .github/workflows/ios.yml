@@ -59,6 +59,7 @@ jobs:
             test > build/xcodebuild-test.log 2>&1
           RC=$?
           grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
+          echo "==== FALHAS ===="; grep -E "error:|Test Case .*failed" build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 80
           exit $RC
 
       # a mesma bateria de testes também no iPad (tela grande, toques e 3D): o que roda no iPhone tem que rodar no iPad

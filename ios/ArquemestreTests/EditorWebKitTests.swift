@@ -4117,6 +4117,10 @@ final class EditorWebKitTests: XCTestCase {
           var gap=function(mm){var P=partsOf(mm),mo=P.filter(function(p){return p.name==='Moldura de acabamento'})[0],f=P.filter(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)}).sort(function(a,b){return a.y-b.y})[0];return mo&&f?Math.round((f.y-(mo.y+mo.h))*10)/10:null};
           m.mold=true;m.moldOn=true;draw();R.pegaGav=gap(m);var fh=partsOf(m).filter(function(p){return p.name==='Frente de gaveta'}).map(function(p){return p.h});R.iguais=Math.max.apply(null,fh)-Math.min.apply(null,fh)<0.6;
           S.mods=[];newTpl(T('inf','Balcão 2 portas'));m=S.m;m.mold=true;m.moldOn=true;draw();R.pegaPorta=gap(m);S.mods=[];newTpl(T('sup','Aéreo 2 portas'));m=S.m;m.mold=true;draw();R.aereo=gap(m);
+          /* puxador gola lateral: perfil G de verdade junto com a porta (fechada e aberta), na cor escolhida */
+          S.mods=[];S.W=3000;var cq=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return /Armário livre/.test(q.n)})[0])));await W(300);m=S.m;m.w=1060;m.h=450;m.b=1100;m.golaCor='preto';m.rt={p:{n:2,gl:1}};draw();__build();
+          var GB=function(){return __boxes().filter(function(b){return /^0:/.test(String(b.nm))})},pg=GB().filter(function(b){return b.nol&&/:Porta$/.test(b.nm)&&b.y1-b.y0>300});R.golaSolta=GB().filter(function(b){return /gola/.test(b.nm)}).length;R.golaPerfil=pg.length+' '+pg.some(function(b){return String(b.c)==='42,43,46'})+' '+pg.some(function(b){return !!b.pf});
+          (m.v||[]).forEach(function(v){v.open=true});draw();var Ag=__ang();Object.keys(Ag.g).forEach(function(k){delete Ag.g[k]});__build();pg=GB().filter(function(b){return b.nol&&/:Porta$/.test(b.nm)&&b.y1-b.y0>300});R.golaAbre=pg.length+' '+pg.every(function(b){return !!b.pf});
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["hg"] as? String, "c 6 4.5 2.5", "cobre 6 mm: curva")
@@ -4132,6 +4136,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["pegaGav"] as? NSNumber)?.intValue, 30)
         XCTAssertEqual(o["iguais"] as? Bool, true, "frentes das gavetas continuam iguais")
         XCTAssertEqual((o["pegaPorta"] as? NSNumber)?.intValue, 30)
+        XCTAssertEqual((o["golaSolta"] as? NSNumber)?.intValue, 0, "sem a régua chapada solta no armário")
+        XCTAssertEqual(o["golaPerfil"] as? String, "12 true false", "perfil G (6 peças por porta) na cor escolhida")
+        XCTAssertEqual(o["golaAbre"] as? String, "12 true", "o perfil abre junto com a porta")
         XCTAssertEqual((o["aereo"] as? NSNumber)?.intValue, 2)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }

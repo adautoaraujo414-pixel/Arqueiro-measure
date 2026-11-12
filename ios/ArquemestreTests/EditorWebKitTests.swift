@@ -1909,7 +1909,7 @@ final class EditorWebKitTests: XCTestCase {
           var P=partsOf(g),pk=function(k){return P.filter(function(p){return p.pk===k})[0]||{}};
           R.lat=[pk('Lateral de gaveta#1').cl,pk('Lateral de gaveta#1').cw,pk('Lateral de gaveta#2').cl,pk('Lateral de gaveta#2').cw].join(',');R.fc=pk('Frente/costa de gaveta (contra-frente e traseira)#1').cw;R.fundo=pk('Fundo de gaveta (6 mm)#1').cw;R.outra=pk('Lateral de gaveta#3').cl;
           /* canto em L: peça do lado do canto muda no corte e no 3D */
-          S.mods=[];newTpl(tpl('Canto L guarda-roupa · esquerdo'));var c=S.mods[0];__build();var t3=__e3t(0,'Travessa frontal (lado do canto)#1',1,200);R.trav=(partsOf(c).filter(function(p){return p.pk==='Travessa frontal (lado do canto)#1'})[0]||{}).cw;R.trav3=t3.d?Math.round(t3.d[1]):0;
+          S.mods=[];newTpl(tpl('Canto L guarda-roupa · esquerdo'));var c=S.mods[0];__build();var t3=__e3t(0,'Base superior (lado do canto)#1',0,500);R.trav=(partsOf(c).filter(function(p){return p.pk==='Base superior (lado do canto)#1'})[0]||{}).cw;R.trav3=t3.d?Math.round(t3.d[0]):0;
           /* tamponamento com engrosso: tocar na régua de dentro seleciona o tamponamento */
           S.mods=[];newTpl(tpl('Balcão 2 portas'));__build();var rg=__boxes().filter(function(b){return b.ppk})[0];R.ppk=rg?rg.ppk:'';R.sel=rg?__e3(0,rg.ppk).part:false;
           /* forno: aparelho, não estica */
@@ -1920,8 +1920,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fc"] as? Int, 145, "frente/costa acompanha a altura da caixa")
         XCTAssertEqual(o["fundo"] as? Int, 450, "fundo acompanha a profundidade (corrediça de 450)")
         XCTAssertEqual(o["outra"] as? Int, 460, "as outras gavetas não mudam (regra: 460)")
-        XCTAssertEqual(o["trav"] as? Int, 200, "peça do lado do canto muda no corte")
-        XCTAssertEqual(o["trav3"] as? Int, 200, "e no 3D")
+        XCTAssertEqual(o["trav"] as? Int, 500, "peça do lado do canto muda no corte (canto alto tem base em cima, não travessa)")
+        XCTAssertEqual(o["trav3"] as? Int, 500, "e no 3D")
         XCTAssertEqual(o["ppk"] as? String, "Tamponamento direito#1", "régua de dentro aponta pro tamponamento")
         XCTAssertEqual(o["sel"] as? Bool, true, "tamponamento selecionado")
         XCTAssertEqual(o["forno"] as? Int, 0, "forno é aparelho: sem bolinhas")

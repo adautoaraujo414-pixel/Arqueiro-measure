@@ -24,6 +24,8 @@ object DataBackup {
         val top = rel.substringBefore('/')
         if (top in SKIP_TOP) return true
         val low = rel.lowercase()
+        // licença (teste de 3 dias, senha, mensalidade) é do aparelho: não vai no backup nem vem de um backup de outro
+        if (low.startsWith("shared_prefs/arque.lic.")) return true
         return low.endsWith(".tmp") || low.endsWith("/lock") || low.endsWith("lockfile") ||
             low.contains("/cache/") || low.contains("gpucache") || low.contains("code cache") ||
             low.contains("shader") || low.endsWith("singletonlock")
@@ -89,6 +91,8 @@ object DataBackup {
                     e = z.nextEntry
                 }
             }
+            // a licença deste aparelho fica como está (restaurar backup não zera nem copia o teste/senha)
+            val lic = File(root, "shared_prefs").listFiles { x -> x.name.startsWith("arque.lic.") }?.associate { it.name to it.readBytes() } ?: emptyMap()
             listOf("files", "app_webview", "shared_prefs", "databases").forEach { File(root, it).deleteRecursively() }
             ZipInputStream(f.inputStream().buffered()).use { z ->
                 var e = z.nextEntry
@@ -103,6 +107,7 @@ object DataBackup {
                     e = z.nextEntry
                 }
             }
+            lic.forEach { (n, b) -> File(root, "shared_prefs").mkdirs(); File(File(root, "shared_prefs"), n).writeBytes(b) }
         } catch (_: Exception) {
         } finally {
             f.delete()

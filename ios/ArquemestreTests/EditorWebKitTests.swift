@@ -448,7 +448,7 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({p2d:paths.join(','),d3:d3.join(','),errs:__errs});
           """#)
         XCTAssertEqual(o["p2d"] as? String, "em pé,deitada,deitada", "2D: porta de lado abre pro lado; basculante abre pra baixo/cima (faixa deitada)")
-        XCTAssertEqual(o["d3"] as? String, "0:lado:209,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado (230 − 21 do chanfro da cava, que sai em degraus finos)")
+        XCTAssertEqual(o["d3"] as? String, "0:lado:230,1:gira-eixo-x:15,2:gira-eixo-x:15", "3D: basculante gira no eixo horizontal (fica deitada), a comum gira de lado (porta inteira, cava a 30° liso num sólido só, sem degraus)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
@@ -2794,7 +2794,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pd"] as? Int, o["pdEsp"] as? Int, "pedra = frente do armário + avanço do Ajustes")
         XCTAssertEqual(o["perg"] as? Bool, true, "＋ Cooktop pergunta quantas bocas")
         XCTAssertEqual(o["ck"] as? [Int], [302, 514, 2], "cooktop 2 bocas com medida real")
-        XCTAssertEqual(o["modos"] as? Int, 3, "barra Toque: Normal · Editar peça · Tamanho")
+        XCTAssertEqual(o["modos"] as? Int, 3, "barra Toque: Normal · Módulo 2D · Tamanho")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
@@ -3687,6 +3687,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3000;draw();
           var c=CATS.filter(function(x){return x.id==='inf'})[0];newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Balcão 2 portas'})[0])));newTpl(JSON.parse(JSON.stringify(c.it.filter(function(q){return q.n==='Balcão 2 portas'})[0])));S.m=S.mods[0];S.tab=3;S.sv=0;draw();panel();
+          R.semNoModulo=!document.getElementById('pgbox');window.PGBOX=1;panel();
           var bx=document.getElementById('pgbox');R.caixa=!!bx&&!!bx.querySelector('svg circle')&&/folga no meio/.test(bx.textContent)&&/passa no lado/.test(bx.textContent);
           var D=function(m){return partsOf(m).filter(function(p){return p.name==='Porta'}).sort(function(a,b){return a.x-b.x})};
           document.querySelector('#pgbox [data-pg="g|3"]').click();var d=D(S.mods[0]);R.meio=Math.round((d[1].x-(d[0].x+d[0].w))*10)/10;R.lupa=/3 mm/.test(document.getElementById('pgbox').textContent);
@@ -3695,9 +3696,10 @@ final class EditorWebKitTests: XCTestCase {
           document.querySelector('#pgbox [data-pg="s|5"]').click();d=D(S.mods[0]);var vr=vaoRanges(S.mods[0])[0];R.lado=Math.round((vr[0]-d[0].x)*10)/10;
           R.outro=S.mods[1].pGap;document.querySelector('#pgbox [data-pg="all|1"]').click();R.todas=S.mods[1].pGap+' '+S.mods[1].pSn;
           document.querySelector('#pgbox [data-pg="std|1"]').click();R.padrao=STD().pGap+' '+STD().pSn;
-          S.mods[0].v[0].n=1;draw();panel();R.uma=!!document.querySelector('#pgbox [data-pg^="s1|"]')&&!document.querySelector('#pgbox [data-pg^="g|"]');
+          S.mods[0].v[0].n=1;draw();panel();R.uma=!!document.querySelector('#pgbox [data-pg^="s1|"]')&&!document.querySelector('#pgbox [data-pg^="g|"]');window.PGBOX=0;
           R.errs=__errs;return JSON.stringify(R);
           """#)
+        XCTAssertEqual(o["semNoModulo"] as? Bool, true, "folgas da porta ficam só nos Ajustes, não no painel do módulo")
         XCTAssertEqual(o["caixa"] as? Bool, true, "desenho com as lupas do meio e do lado")
         XCTAssertEqual((o["meio"] as? NSNumber)?.doubleValue, 3, "folga de 3 mm no meio")
         XCTAssertEqual(o["lupa"] as? Bool, true)
@@ -3941,6 +3943,50 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["kc"] as? String, "reta na altura 2700 até 742.5 mm da ponta esquerda", "lista de corte explica onde o ângulo começa")
         XCTAssertGreaterThan((o["n3"] as? NSNumber)?.intValue ?? 0, 0)
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
+    }
+
+    /// Editor por vãos (2ª rodada): 🗑 apaga só o escolhido, medida do vão digitada, engrosso da prateleira,
+    /// 3 portas com montante, basculante, vidro, gaveta interna sem caixote fora do quarto, frente do conjunto fixa,
+    /// portas alinhadas no projeto todo e porta de correr de trás cobrindo a lateral.
+    func testEditorPorVaosLixeiraEngrossoPortasEAlinhamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var R={};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.mods=[];S.stones=[];S.fr=[];S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;draw();
+          var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;soloOn(m);
+          var C=function(s){document.querySelector(s).click()},CH=function(s,v){var i=document.querySelector(s);i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}))},CK=function(s,on){var i=document.querySelector(s);i.checked=on;i.dispatchEvent(new Event('change',{bubbles:true}))};
+          RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|2"]');
+          RG.sel={mi:0,path:'r.0'};panel();CH('[data-rgi="vh"]',700);R.vh=rgLay(m).regs.filter(function(r){return r.leaf}).map(function(r){return Math.round(r.y1-r.y0)}).join(' ');
+          RG.tab='por';panel();C('[data-rga="door|3"]');R.tres=partsOf(m).filter(function(p){return p.name==='Porta'}).length+' '+partsOf(m).filter(function(p){return /^Montante/.test(p.name)}).length;
+          C('[data-rga="dbas|down"]');R.bas=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.basv&&p.basv.bd}).join();
+          C('[data-rga="door|2"]');CK('[data-rgc="vid"]',true);R.vid=partsOf(m).filter(function(p){return p.name==='Porta'}).every(function(p){return p.glass&&p.noCut});
+          RG.sel=null;RG.dsel={mi:0,path:'r',i:0};RG.tab='div';panel();C('[data-rga="eng|25"]');C('[data-rga="engn|1"]');CK('[data-rgc="etop"]',true);CH('[data-rgi="ew"]',50);
+          R.eng=partsOf(m).filter(function(p){return /^Engrosso/.test(p.name)}).length+' '+partsOf(m).filter(function(p){return /^Engrosso/.test(p.name)})[0].cw+' '+partsOf(m).filter(function(p){return /^Prateleira encostada/.test(p.name)}).length;
+          RG.sel={mi:0,path:'r.1'};RG.tab='gav';panel();C('[data-rga="ins|gav"]');var lat=function(){var l=partsOf(m).filter(function(p){return p.name==='Gaveteiro · lateral'})[0];return l?l.cw+'@'+l.cxz.join(':'):'-'};R.lat0=lat();CH('[data-rgi="gvD"]',400);R.lat1=lat();CH('[data-rgi="gvR"]',100);R.lat2=lat();
+          RG.sel=null;RG.dsel={mi:0,path:'r',i:0};
+          var n0=S.mods.length;document.getElementById('delMod').click();R.soDiv=(S.mods.length===n0)+' '+!m.rt.c;
+          RG.sel=null;RG.dsel=null;document.getElementById('delMod').click();R.pede2=S.mods.length===n0;
+          soloOff();S.mods=[];S.env='cozinha';S.room='cozinha';newTpl(JSON.parse(JSON.stringify(fo)));var k=S.m;soloOn(k);RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|2"]');RG.sel={mi:0,path:'r.1'};RG.tab='gav';panel();C('[data-rga="ins|gav"]');
+          R.cozinha=partsOf(k).filter(function(p){return /^Gaveteiro/.test(p.name)}).length+' '+partsOf(k).filter(function(p){return p.name==='Gaveta interna · frente'}).length;soloOff();
+          S.mods=[];var ti=TPL.findIndex(function(t){return t.n==='Armário baixo (balcão)'});newTpl(ti);newTpl(ti);var d=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'});S.mods[0].po={};S.mods[0].po[d[0].pk]={v2:1,et:-5,eb:12};R.alinhou=poAlign(0,d[0].pk);R.alturas=S.mods.map(function(q){return partsOf(q).filter(function(p){return p.name==='Porta'}).map(function(p){return p.h}).join(' ')}).join(' | ');
+          S.mods=[];S.env='quarto';S.room='quarto';newTpl(JSON.parse(JSON.stringify(fo)));newTpl(JSON.parse(JSON.stringify(fo)));soloOff();var a=S.mods[0],b=S.mods[1];a.x=500;b.x=500+a.w;a.tl=true;b.tr=true;draw();soloOn(a);RG.tab='est';panel();C('[data-rga="slr|2"]');soloOff();
+          var sl=partsOf(a).filter(function(p){return p.name==='Porta de correr'});R.correr=sl.map(function(p){return Math.round(a.x+p.x)+'+'+p.w}).join(' ');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["vh"] as? String, "700 1555", "digita a altura do vão e a divisão anda")
+        XCTAssertEqual(o["tres"] as? String, "3 1", "3 portas: montante de 80 na junta da dobradiça")
+        XCTAssertEqual(o["bas"] as? String, "down", "basculante abre pra baixo")
+        XCTAssertEqual(o["vid"] as? Bool, true, "porta de vidro não entra no corte de MDF")
+        XCTAssertEqual(o["lat0"] as? String, "480@70:550", "conjunto 70 pra dentro, até o fundo")
+        XCTAssertEqual(o["lat1"] as? String, "400@70:470", "profundidade menor: encurta atrás, a frente fica")
+        XCTAssertEqual(o["lat2"] as? String, "400@100:500", "frente pra dentro digitada")
+        XCTAssertEqual(o["eng"] as? String, "4 50 1", "engrosso 2 camadas × frente e trás, réguas de 50, prateleira encostada")
+        XCTAssertEqual(o["soDiv"] as? String, "true true", "🗑 com a divisão escolhida apaga só ela")
+        XCTAssertEqual(o["pede2"] as? Bool, true, "módulo inteiro só com 2 toques")
+        XCTAssertEqual(o["cozinha"] as? String, "0 4", "fora do quarto: gaveta normal, sem afastador, lateral nem base em cima")
+        XCTAssertEqual((o["alinhou"] as? NSNumber)?.intValue, 3, "as outras portas alinhadas seguem a mesma folga")
+        XCTAssertEqual(o["alturas"] as? String, "688 688 | 688 688")
+        XCTAssertEqual(o["correr"] as? String, "530+870 1385+885", "porta de trás cobre a lateral (gola 20 na ponta), a da frente passa 15 dos dois lados")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 
     func testEditorPorVaosGavetasColunaTorreCorrerECantos() async throws {

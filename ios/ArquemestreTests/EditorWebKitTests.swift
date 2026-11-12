@@ -350,7 +350,7 @@ final class EditorWebKitTests: XCTestCase {
           var L=rpLayout(ra),pcs=rpCutPieces(),P=sheetPlan(),big=P.groups.reduce(function(s,g){return s+(g.big?g.big.length:0)},0);
           var base=pcs.filter(function(p){return /Chapa base/.test(p.name)}),ripas=pcs.filter(function(p){return /^Ripa /.test(p.name)});
           open3D();var B=__boxes();var b3=B.filter(function(b){return b.rpid===ra.id&&Math.abs((b.z1-b.z0)-6)<0.01}).length;
-          S.env='cozinha';newTpl(4);var m=S.mods[0];m.x=5;m.d=350;S.pw={ate:'movel',tipo:'ripado'};pwGenerateWall('e');var wl=S.rp.filter(function(a){return a.wall==='e'})[0];
+          S.env='cozinha';S.room='sala';newTpl(4);var m=S.mods[0];m.x=5;m.d=350;S.pw={ate:'movel',tipo:'ripado'};pwGenerateWall('e');var wl=S.rp.filter(function(a){return a.wall==='e'})[0];
           /* localizar no 3D: a placa 2 da base e as ripas têm origem no plano e ficam em rosa */
           var G=cutGroups(),gb=G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Chapa base do ripado/.test(g.names[0])}),src2=srcStr([].concat.apply([],gb[1].src)),srcR=srcStr([].concat.apply([],G.ord.map(function(k){return G.map[k]}).filter(function(g){return /^Ripa /.test(g.names[0])})[0].src));
           show3D(src2,'Chapa base');await new Promise(function(r){setTimeout(r,250)});var pink=function(){return __boxes().filter(function(b){return b.rpid===ra.id&&b.c[0]===227&&b.c[1]===25&&b.c[2]===123}).map(function(b){return b.rpart})};var pink2=pink();
@@ -401,7 +401,7 @@ final class EditorWebKitTests: XCTestCase {
           newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();var P=partsOf(m),g=function(n){var p=P.filter(function(q){return q.name===n})[0];return p?p.cl+'x'+p.cw:''};var fund=P.filter(function(q){return /^Fundo de gaveta/.test(q.name)})[0];
           var cl=cutLines(m).filter(function(l){return /Lateral de gaveta|Fundo de gaveta/.test(l.name)}).map(function(l){return l.L+'x'+l.W}).join(',');
           /* planta em ângulo: portas e frentes opacas */PLV=true;PLANG=true;draw();var g_=document.getElementById('plx');var trans=g_?[].filter.call(g_.querySelectorAll('polygon[data-pm]'),function(p){return p.getAttribute('fill-opacity')&&+p.getAttribute('fill-opacity')<1}).length:-1;var polys=g_?g_.querySelectorAll('polygon[data-pm]').length:0;PLV=false;PLANG=false;
-          /* completar acima: toda a fileira, mesma divisão */S.rp=[];[0,1400,2800].forEach(function(x){var a=rpNew({x:x,b:0,w:1340,h:1000});a.liso=true;a.jt={t:'seca',w:0,d:0}});pwAbove(S.rp[0]);var up=S.rp.filter(function(a){return a.b>0});var okRow=[0,1400,2800].every(function(x){return up.some(function(u){return Math.abs(u.x-x)<.1&&Math.abs(u.w-1340)<.1})});
+          /* completar acima: toda a fileira, mesma divisão (parede sem móvel na frente: painel não entra em móvel) */S.rp=[];S.mods=[];[0,1400,2800].forEach(function(x){var a=rpNew({x:x,b:0,w:1340,h:1000});a.liso=true;a.jt={t:'seca',w:0,d:0}});pwAbove(S.rp[0]);var up=S.rp.filter(function(a){return a.b>0});var okRow=[0,1400,2800].every(function(x){return up.some(function(u){return Math.abs(u.x-x)<.1&&Math.abs(u.w-1340)<.1})});
           return JSON.stringify({done:done,latFora:!!m.latFora,lat:g('Lateral esquerda'),gl:g('Lateral de gaveta'),fundo:fund?fund.cl+'x'+fund.cw:'',cl:cl,trans:trans,polys:polys,okRow:okRow,up:up.length,errs:__errs});
           """#)
         XCTAssertEqual(o["done"] as? Bool, true, "assistente tem o passo final")
@@ -4934,6 +4934,153 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["bad"] as? [Any])?.count ?? -1, 0, "catálogo sem peça/caixa quebrada: \(o["bad"] ?? "")")
         XCTAssertEqual(o["torre"] as? Bool, true, "a pedra para antes da torre")
         XCTAssertEqual(o["fogao"] as? String, "2 false", "pedra nasce dividida no fogão de piso")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Prateleira só mexe com a aba Divisões aberta: fora dela o toque em cima não pega a prateleira.
+    func testPrateleiraSoMexeComAAbaDivisoesAberta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=3000;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          newTpl({n:'Aéreo',w:1100,h:800,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[0];m.x=500;m.shv=[0.5];S.m=m;S.tab=0;panel();draw();
+          var sv=document.getElementById('svg'),q=function(){return [].slice.call(sv.querySelectorAll('[data-s]'))};R.tem=q().length;R.fechada=q().map(function(e){return e.style.pointerEvents+'/'+(e.style.display||'')}).join(',');
+          var sh0=JSON.stringify(m.shv)+JSON.stringify(m.v);
+          var drag=function(){var e=q()[0],r=e.getBoundingClientRect(),X=r.left+r.width/2,Y=r.top+r.height/2,t=document.elementFromPoint(X,Y),ev=function(tg,n,y){tg.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:4,clientX:X,clientY:y,isPrimary:true,pointerType:'touch'}))};ev(t,'pointerdown',Y);ev(sv,'pointermove',Y+25);ev(sv,'pointermove',Y+60);ev(window,'pointerup',Y+60);return t&&t.dataset&&t.dataset.s!==undefined};
+          var x0=m.x,b0=m.b;R.pegouFechada=drag();await new Promise(function(r){setTimeout(r,50)});R.prateleiraIgual=(JSON.stringify(m.shv)+JSON.stringify(m.v))===sh0;m.x=x0;m.b=b0;
+          S.tab=1;panel();draw();R.aberta=q().map(function(e){return (e.style.pointerEvents||'on')+'/'+(e.style.display||'on')}).join(',');R.pegouAberta=drag();await new Promise(function(r){setTimeout(r,400)});drag();await new Promise(function(r){setTimeout(r,50)});R.mexeu=(JSON.stringify(m.shv)+JSON.stringify(m.v))!==sh0;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["tem"] as? Int, 2)
+        XCTAssertEqual(o["fechada"] as? String, "none/,none/none", "fora da aba Divisões a prateleira não pega o toque")
+        XCTAssertEqual(o["pegouFechada"] as? Bool, false)
+        XCTAssertEqual(o["prateleiraIgual"] as? Bool, true, "a prateleira não saiu do lugar")
+        XCTAssertEqual(o["pegouAberta"] as? Bool, true, "com a aba Divisões aberta ela pega")
+        XCTAssertEqual(o["mexeu"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Regra geral na cozinha: painel é sólido, nunca fica dentro de móvel (é recortado em volta); por trás só de propósito; sala com rack no painel continua.
+    func testPainelSolidoNuncaDentroDoMovelNaCozinha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4140;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          [30,1075,2120].forEach(function(x){newTpl({n:'Aéreo',w:1015,h:800,d:350,b:1730,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=x;m.tl=m.tr=false});
+          newTpl({n:'Nicho',w:1015,h:200,d:350,b:1530,sup:true,v:[{k:'free',n:1}]});var n=S.mods[S.mods.length-1];n.x=30;n.tl=n.tr=false;draw();
+          var F=function(){return S.rp.map(function(a){return a.x+','+a.b+' '+a.w+'x'+a.h}).sort().join(' | ')},col=function(){var c=0;S.rp.forEach(function(p){S.mods.forEach(function(m){if(Math.min(p.x+p.w,m.x+m.w)-Math.max(p.x,m.x)>1&&Math.min(p.b+p.h,m.b+m.h)-Math.max(p.b,m.b)>1)c++})});return c};
+          /* painel igual ao da foto: entre a pedra e o aéreo, pegando o nicho */
+          S.rp=[{id:1,liso:true,x:0,b:860,w:1945,h:870}];draw();R.foto=F()+' dentro '+col();
+          /* painel passando por trás do aéreo até o teto */
+          S.rp=[{id:2,liso:true,x:1075,b:1730,w:1045,h:1670}];draw();R.acima=F()+' dentro '+col();
+          /* por trás de propósito: fica */
+          S.rp=[{id:3,liso:true,tras:1,x:0,b:860,w:1945,h:870}];draw();R.portras=F();
+          /* sala: rack pendurado no painel continua valendo */
+          S.env='livre';S.room='sala';S.rp=[{id:4,liso:true,x:0,b:0,w:3000,h:2700}];S.mods=[];newTpl({n:'Rack',w:1600,h:400,d:420,b:350,v:[{k:'door',n:2,cava:true}]});draw();R.sala=F();
+          R.t=TL.filter(function(t){return /sólido/.test(t)}).length;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["foto"] as? String, "1075,860 870x870 | 30,860 1045x670 dentro 0", "painel entre a pedra e o aéreo contorna o nicho")
+        XCTAssertEqual(o["acima"] as? String, "1075,2530 1045x870 dentro 0", "painel fica só em cima do armário")
+        XCTAssertEqual(o["portras"] as? String, "0,860 1945x870", "por trás só quando criado de propósito")
+        XCTAssertEqual(o["sala"] as? String, "0,0 3000x2700", "sala: rack pendurado no painel continua valendo")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Painel liso maior que a chapa: a área já mostra em quantas placas sai (medida da chapa) e nasce dividido.
+    func testPainelLisoMostraAsPlacasPelaMedidaDaChapaAoAdicionar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4140;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          [0,1035,2070].forEach(function(x){newTpl({n:'Aéreo',w:1035,h:800,d:350,b:1740,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=x;m.tl=m.tr=false});var g=apAdd('geladeira',0);g.x=3200;draw();
+          S.tab=8;panel();saStart(true);RPSA.sel={x0:0,x1:3110,y0:2540,y1:3400};RPSA.areas=saAreas();saBar();draw();
+          R.area=RPSA.areas.map(function(r){return [r.x0,r.x1,r.y0,r.y1].join(',')}).join(' | ');var q=document.querySelector('#rpsabar [data-sapl]');R.placas=q?q.textContent:null;R.linhas=document.querySelectorAll('#saov line').length;R.rotulo=[].map.call(document.querySelectorAll('#saov text'),function(t){return t.textContent}).join('|');
+          document.querySelector('#rpsabar [data-sab="go"]').click();R.criou=S.rp.map(function(a){return a.x+','+a.b+' '+a.w+'x'+a.h}).join(' | ');R.t=TL[TL.length-1];
+          var G=cutGroups();R.corte=G.ord.map(function(k){return G.map[k]}).filter(function(q){return q.names.some(function(n){return /Placa/.test(n)})}).map(function(l){return l.L+'x'+l.W+' q'+l.qty}).join(' | ');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["placas"] as? String, "🪚 2 placas (cabe na chapa: até 1800 × 2700): 1800 × 860 + 1310 × 860")
+        XCTAssertEqual(o["linhas"] as? Int, 1, "emenda desenhada na área")
+        XCTAssertEqual(o["rotulo"] as? String, "Área 1 · 3110 × 860 · 2 placas")
+        XCTAssertEqual(o["criou"] as? String, "0,2540 3110x860")
+        XCTAssertEqual(o["corte"] as? String, "860x1800 q1 | 860x1310 q1", "plano de corte com as placas pela chapa")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Cabeçalho do painel simples: em cima só tipo, medidas, junta e chapa; o resto em "Mais opções" e "Cor".
+    func testCabecalhoDoPainelSimplesComMaisOpcoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4140;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          [0,1035,2070].forEach(function(x){newTpl({n:'Aéreo',w:1035,h:800,d:350,b:1740,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=x;m.tl=m.tr=false});
+          var a=rpNew({x:0,b:2540,w:3110,h:860});a.liso=true;RPSEL=a.id;LAST='rp';S.tab=8;panel();draw();
+          var el=document.getElementById('rpbar'),c=el.firstElementChild;R.h=Math.round(el.getBoundingClientRect().height);R.filhos=[].map.call(c.children,function(k){return k.tagName==='DETAILS'?'['+k.querySelector('summary').textContent.slice(0,14)+']':(k.textContent||'').trim().slice(0,22)});
+          R.bt=!!el.querySelector('[data-rpb="door"]')+' '+!!el.querySelector('[data-rpcq]');
+          var b=rpNew({x:3200,b:2540,w:800,h:860});RPSEL=b.id;panel();draw();el=document.getElementById('rpbar');R.hRip=Math.round(el.getBoundingClientRect().height);R.filhosRip=[].map.call(el.firstElementChild.children,function(k){return k.tagName==='DETAILS'?'['+k.querySelector('summary').textContent.slice(0,14)+']':(k.textContent||'').trim().slice(0,22)});
+          R.errs=__errs;R.f=R.filhos.join(" | ");R.fr=R.filhosRip.join(" | ");return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["f"] as? String, "Placa lisa 1 · 3110 ×  | ▥ Ripado▭ Painel liso | Largura (mm)Altura (mm | Junta entre as placasJ | Sentido do corte da ch | [⚙ Mais opções ] | [🎨 Cor da plac]")
+        XCTAssertEqual(o["fr"] as? String, "Ripado 2 · 800 × 860 · | ▥ Ripado▭ Painel liso | Largura (mm)Altura (mm | [⚙ Mais opções ] | [🎨 Cor das rip]", "ripado e liso com o mesmo cabeçalho")
+        XCTAssertEqual(o["bt"] as? String, "true true", "as funções continuam lá dentro")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Seleção e exclusão: o que está escolhido é o que a 🗑 apaga (divisória, frente do vão, painel, eletro), nunca o módulo por engano; desfazer, refazer e reabrir batem.
+    func testSelecaoEExclusaoApagaSoOEscolhidoEmTodasAsCombinacoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;window.__delConfirma=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={div:{n:0,bad:[]},prat:{n:0,bad:[]},vao:{n:0,bad:[]},itens:{n:0,bad:[]},undo:{n:0,bad:[]},salvar:{n:0,bad:[]}};
+          var clr=function(room){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.tz=[];S.room=room||'cozinha';S.env=S.room==='cozinha'?'cozinha':'livre';S.W=6000;S.RD=3500;S.H=2700;S.Hm=1;S.Wm=1;S.m=null;try{if(typeof soloOff==='function')soloOff()}catch(_){}try{LAST='';RPSEL=0;SELAP=0;window.DIVI=undefined;S.selS=null;RPSA=null}catch(_){}};
+          var sv=document.getElementById('svg'),W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var tap=function(el){var r=el.getBoundingClientRect(),X=r.left+r.width/2,Y=r.top+r.height/2,t=document.elementFromPoint(X,Y)||el,ev=function(tg,n){tg.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:6,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev(t,'pointerdown');ev(window,'pointerup');return t};
+          var trash=function(){document.getElementById('delMod').click()};
+          var ok3=function(lab,bad){try{S.mods.forEach(function(m){partsOf(m).forEach(function(p){['x','y','w','h'].forEach(function(k){if(typeof p[k]!=='number'||!isFinite(p[k]))bad.push(lab+' peça quebrada '+p.name)})})});cutGroups()}catch(e){bad.push(lab+' EXC '+String(e).slice(0,80))}};
+          var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(it&&it.v&&!it.act)all.push([c.id,it])})});
+          var room=function(id){return /quarto|closet|sala|home|tv/.test(id)?'quarto':'cozinha'};
+          /* divisórias e prateleiras de cada módulo do catálogo, uma por uma, pela aba Divisões */
+          for(var q=0;q<all.length;q++){var it=all[q][1],rm=room(all[q][0]);if(it.free0||/do zero/.test(it.n))continue;clr(rm);newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[S.mods.length-1];if(!m)continue;var nd=(m.div||[]).length,ns=0;
+           for(var i=0;i<nd;i++){clr(rm);newTpl(JSON.parse(JSON.stringify(it)));m=S.mods[S.mods.length-1];S.m=m;S.tab=1;panel();draw();var el=sv.querySelector('[data-d="'+i+'"]');R.div.n++;var lab=it.n+' div'+i;if(!el){R.div.bad.push(lab+' SEM ALÇA');continue}var p0=partsOf(m).length;tap(el);await W(5);if(LAST!=='div'){R.div.bad.push(lab+' não escolheu ('+LAST+')');continue}trash();if(S.mods.length!==1)R.div.bad.push(lab+' APAGOU O MÓDULO · '+TL[TL.length-1]);else if(m.div.length!==nd-1)R.div.bad.push(lab+' não apagou ('+m.div.length+'/'+nd+') · '+TL[TL.length-1]);else{if(m.v.length!==m.div.length+1)R.div.bad.push(lab+' vãos '+m.v.length+' pra '+m.div.length+' divisórias');draw();ok3(lab,R.div.bad)}}
+           for(i=0;i<ns;i++){clr(rm);newTpl(JSON.parse(JSON.stringify(it)));m=S.mods[S.mods.length-1];m.shv=[0.3,0.6];S.m=m;S.tab=1;panel();draw();var els=sv.querySelectorAll('[data-s="'+i+'"]');R.prat.n++;lab=it.n+' prat'+i;if(!els.length){R.prat.bad.push(lab+' SEM ALÇA');continue}tap(els[els.length-1]);await W(5);trash();if(S.mods.length!==1)R.prat.bad.push(lab+' APAGOU O MÓDULO · '+TL[TL.length-1]);else if(m.shv.length!==ns-1)R.prat.bad.push(lab+' não apagou ('+m.shv.length+'/'+ns+') · '+LAST+' · '+TL[TL.length-1]);else{draw();ok3(lab,R.prat.bad)}}}
+          /* porta / gaveta do vão: 2 toques no vão escolhe · 🗑 tira só a frente */
+          for(q=0;q<all.length;q+=3){it=all[q][1];clr(room(all[q][0]));newTpl(JSON.parse(JSON.stringify(it)));m=S.mods[0];if(!m)continue;var vi=-1;m.v.forEach(function(v,k){if(vi<0&&/^(door|drawers)$/.test(v.k))vi=k});if(vi<0)continue;S.m=m;S.sv=vi;LAST='porta';R.vao.n++;var k0=m.v[vi].k;trash();lab=it.n+' vão'+vi;if(S.mods.length!==1)R.vao.bad.push(lab+' APAGOU O MÓDULO');else if(m.corner){}else if(m.v[vi].k!=='free')R.vao.bad.push(lab+' ficou '+m.v[vi].k+' · '+TL[TL.length-1]);else{draw();ok3(lab,R.vao.bad);if(partsOf(m).some(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)&&p.vi===vi}))R.vao.bad.push(lab+' sobrou peça da frente no corte')}}
+          /* painel liso, ripado, eletro: tocar e apagar, com e sem a ferramenta de área ligada, com módulo escolhido antes */
+          for(var md=0;md<4;md++){clr();newTpl({n:'Base',w:800,h:720,d:560,b:0,v:[{k:'door',n:2,cava:true}]});var bm=S.mods[0];bm.x=0;newTpl({n:'Aéreo',w:800,h:750,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});var am=S.mods[1];am.x=0;
+           var pl=rpNew({x:1500,b:900,w:900,h:800});pl.liso=true;var rp=rpNew({x:2600,b:900,w:900,h:800});var g=apAdd('geladeira',0);g.x=4000;S.m=am;LAST='mod';RPSEL=0;S.tab=md%2?8:0;panel();draw();if(md>=2){saStart(true)}
+           [['painel liso',function(){return sv.querySelector('rect[data-rp="'+pl.id+'"]')},function(){return S.rp.indexOf(pl)<0}],['ripado',function(){return sv.querySelector('rect[data-rp="'+rp.id+'"]')},function(){return S.rp.indexOf(rp)<0}],['geladeira',function(){return sv.querySelector('[data-ap="'+g.id+'"]')},function(){return S.fr.indexOf(g)<0}]].forEach(function(c){});
+           var casos=[['painel liso',function(){return sv.querySelector('rect[data-rp="'+pl.id+'"]')},function(){return S.rp.indexOf(pl)<0}],['ripado',function(){return sv.querySelector('rect[data-rp="'+rp.id+'"]')},function(){return S.rp.indexOf(rp)<0}],['geladeira',function(){return sv.querySelector('[data-ap="'+g.id+'"]')},function(){return S.fr.indexOf(g)<0}]];
+           for(var ci=0;ci<casos.length;ci++){var c=casos[ci],lb='modo'+md+' '+c[0];R.itens.n++;S.m=am;LAST='mod';draw();if(md>=2&&!RPSA)saStart(true);var e=c[1]();if(!e){R.itens.bad.push(lb+' sem desenho');continue}var nm=S.mods.length,nr=S.rp.length,nf=S.fr.length;tap(e);await W(40);trash();await W(5);if(!c[2]())R.itens.bad.push(lb+' NÃO APAGOU · LAST='+LAST+' · '+TL[TL.length-1]);if(S.mods.length!==nm)R.itens.bad.push(lb+' APAGOU MÓDULO JUNTO');if(nr+nf-S.rp.length-S.fr.length!==1)R.itens.bad.push(lb+' apagou '+(nr+nf-S.rp.length-S.fr.length)+' itens');draw()}}
+          /* marcado no desenho = o que a 🗑 apaga: painel escolhido, depois toca no módulo → o painel desmarca e a 🗑 fala do módulo */
+          clr();newTpl({n:'Aéreo',w:800,h:750,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});am=S.mods[0];am.x=0;newTpl({n:'Aéreo',w:800,h:750,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});S.mods[1].x=900;pl=rpNew({x:2000,b:900,w:900,h:800});pl.liso=true;RPSEL=pl.id;LAST='rp';draw();LAST='mod';S.m=am;draw();R.exclusivo='RPSEL='+RPSEL+' LAST='+LAST+' alças='+sv.querySelectorAll('[data-rph]').length;
+          /* módulo inteiro: a 🗑 pede 2 toques */
+          clr();newTpl({n:'Base',w:800,h:720,d:560,b:0,v:[{k:'door',n:2,cava:true}]});newTpl({n:'Base',w:800,h:720,d:560,b:0,v:[{k:'door',n:2,cava:true}]});S.m=S.mods[1];LAST='mod';draw();trash();R.confirma=S.mods.length+' '+/MÓDULO INTEIRO/.test(TL[TL.length-1]);trash();R.confirma+=' '+S.mods.length;
+          /* desfazer e salvar/reabrir depois de apagar */
+          var smp=all.filter(function(a){return (a[1].div||[]).length}).slice(0,12);for(q=0;q<smp.length;q++){it=smp[q][1];clr(room(smp[q][0]));newTpl(JSON.parse(JSON.stringify(it)));m=S.mods[0];S.m=m;S.tab=1;panel();draw();await W(450);var antes=JSON.stringify(m.div)+JSON.stringify(m.v.map(function(v){return v.k}));tap(sv.querySelector('[data-d="0"]'));await W(5);trash();var meio=JSON.stringify(S.mods[0].div);await W(450);R.salvar.n++;var st=JSON.stringify(snapState()),cut0=JSON.stringify(cutLines(S.mods[0]));loadState(JSON.parse(st));draw();if(JSON.stringify(S.mods[0].div)!==meio)R.salvar.bad.push(it.n+' reabriu diferente');if(JSON.stringify(cutLines(S.mods[0]))!==cut0)R.salvar.bad.push(it.n+' plano de corte mudou ao reabrir');ok3(it.n+' reaberto',R.salvar.bad);loadState(JSON.parse(st));draw()}
+          for(q=0;q<smp.length;q++){it=smp[q][1];clr(room(smp[q][0]));newTpl(JSON.parse(JSON.stringify(it)));m=S.mods[0];S.m=m;S.tab=1;panel();draw();await W(700);var an=JSON.stringify(S.mods[0].div)+JSON.stringify(S.mods[0].v.map(function(v){return v.k}));tap(sv.querySelector('[data-d="0"]'));await W(5);trash();var me=JSON.stringify(S.mods[0].div)+JSON.stringify(S.mods[0].v.map(function(v){return v.k}));await W(700);R.undo.n++;document.getElementById('und').click();await W(40);var dp=JSON.stringify(S.mods[0].div)+JSON.stringify(S.mods[0].v.map(function(v){return v.k}));if(dp!==an)R.undo.bad.push(it.n+' desfazer: '+dp.slice(0,50)+' ≠ '+an.slice(0,50));var rd=document.getElementById('red');if(rd){rd.click();await W(40);var rf=JSON.stringify(S.mods[0].div)+JSON.stringify(S.mods[0].v.map(function(v){return v.k}));if(rf!==me)R.undo.bad.push(it.n+' refazer: '+rf.slice(0,50)+' ≠ '+me.slice(0,50))}}
+          ['div','prat','vao','itens','undo','salvar'].forEach(function(k){R[k].nbad=R[k].bad.length;R[k].bad=R[k].bad.slice(0,14)});R.errs=__errs.slice(0,8);R.res=['div','prat','vao','itens','undo','salvar'].map(function(k){return k+' '+(R[k].n>0?'ok':'0')+' '+R[k].nbad}).join(' | ');return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["res"] as? String, "div ok 0 | prat 0 0 | vao ok 0 | itens ok 0 | undo ok 0 | salvar ok 0", "divisórias: \((o["div"] as? [String: Any])?["bad"] ?? "") · vãos: \((o["vao"] as? [String: Any])?["bad"] ?? "") · itens: \((o["itens"] as? [String: Any])?["bad"] ?? "") · desfazer: \((o["undo"] as? [String: Any])?["bad"] ?? "") · salvar: \((o["salvar"] as? [String: Any])?["bad"] ?? "")")
+        XCTAssertEqual(o["exclusivo"] as? String, "RPSEL=0 LAST=mod alças=0", "tocou no módulo: o painel deixa de aparecer escolhido")
+        XCTAssertEqual(o["confirma"] as? String, "2 true 1", "módulo inteiro só sai no segundo toque da 🗑")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Rebaixo do teto não inventa tira: a placa só divide na ponta do gesso se as partes tiverem 300+ e o gesso descer 50+; etiquetas dos painéis sem uma em cima da outra.
+    func testRebaixoNaoCriaTiraEEtiquetasDosPaineisNaoSeSobrepoem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=3170;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[{id:1,wall:'f',x:0,w:985,hc:3390,d:600}];var R={};
+          [[0,781],[781.3,781],[1562.6,781.3],[2343.9,781.1]].forEach(function(c,i){S.rp.push({id:i+1,liso:true,x:c[0],b:0,w:c[1],h:2715});S.rp.push({id:i+11,liso:true,x:c[0],b:2715,w:c[1],h:685})});draw();
+          R.n=S.rp.length;R.cima=S.rp.filter(function(a){return a.b>0}).map(function(a){return a.x+' '+a.w+'x'+a.h}).join(' | ');
+          /* rebaixo fundo de verdade: divide só se valer a pena */
+          S.rp=[{id:1,liso:true,x:0,b:0,w:3000,h:3400}];S.tz=[{id:1,wall:'f',x:0,w:1200,hc:3000,d:600}];draw();R.grande=S.rp.map(function(a){return a.x+' '+a.w+'x'+a.h}).join(' | ');
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=3170;S.RD=3000;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[{id:1,wall:'f',x:0,w:900,hc:3390,d:600}];
+          var xs=[0,781,1343,2124,2905];var id=1;[[2715,685],[0,2715]].forEach(function(r){[[0,781],[781,562.6],[1343.6,781.3],[2124.9,781.1],[2906,264]].forEach(function(c){S.rp.push({id:id++,liso:true,x:c[0],b:r[0],w:c[1],h:r[1]})})});RPMS=S.rp.map(function(a){return a.id});RPSEL=S.rp[0].id;LAST='rp';draw();
+          var sv=document.getElementById('svg'),T=[].slice.call(sv.querySelectorAll('text')).filter(function(t){return /×|Painel|Rebaixo|^\d+$/.test(t.textContent)}).map(function(t){var r=t.getBoundingClientRect();return {t:t.textContent,x0:r.left,x1:r.right,y0:r.top,y1:r.bottom}}),ov=[];
+          for(var i=0;i<T.length;i++)for(var j=i+1;j<T.length;j++){var a=T[i],b=T[j];if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>2&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>2)ov.push(a.t+' X '+b.t)}
+          R.txt=T.map(function(t){return t.t}).join(' | ');R.ov=ov;R.alcas=sv.querySelectorAll('[data-rph]').length;R.nov=ov.length;R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["n"] as? Int, 8, "4 placas embaixo e 4 em cima: nenhuma peça a mais")
+        XCTAssertEqual(o["cima"] as? String, "0 781x675 | 781.3 781x675 | 1562.6 781.3x685 | 2343.9 781.1x685", "as de baixo do gesso ficam inteiras, só 10 mm mais baixas")
+        XCTAssertEqual(o["grande"] as? String, "0 1200x3000 | 1200 1800x3400", "rebaixo de verdade (400 mm) ainda divide na ponta dele")
+        XCTAssertEqual(o["nov"] as? Int, 0, "etiquetas sobrepostas: \(o["ov"] ?? "")")
+        XCTAssertEqual(o["alcas"] as? Int, 8, "bolinhas só no painel escolhido")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

@@ -283,6 +283,28 @@ final class CutLinkTests: XCTestCase {
         XCTAssertNil(AppModel.cutCode(from: "texto qualquer copiado"))
     }
 
+    /// Excluir projeto pela biblioteca manda pra lixeira (moveis/trash.json): não apaga de vez.
+    func testExcluirProjetoVaiPraLixeira() throws {
+        try FileManager.default.createDirectory(at: AppPaths.moveis, withIntermediateDirectories: true)
+        let trash = AppPaths.moveis.appendingPathComponent("trash.json")
+        let bak = try? Data(contentsOf: MoveisProjects.file), bakT = try? Data(contentsOf: trash)
+        defer {
+            if let b = bak { try? b.write(to: MoveisProjects.file) } else { try? FileManager.default.removeItem(at: MoveisProjects.file) }
+            if let b = bakT { try? b.write(to: trash) } else { try? FileManager.default.removeItem(at: trash) }
+        }
+        try? FileManager.default.removeItem(at: trash)
+        try Data(#"[{"id":"k1","client":{"nome":"Cozinha João"},"created":1,"updated":5,"current":{"mods":[1,2,3]}},{"id":"s2","client":{"nome":"Sala"},"created":1,"updated":2,"current":{"mods":[1]}}]"#.utf8).write(to: MoveisProjects.file)
+        MoveisProjects.delete("k1")
+        XCTAssertEqual(MoveisProjects.list().map { $0.id }, ["s2"], "saiu da lista")
+        let t = (try JSONSerialization.jsonObject(with: Data(contentsOf: trash))) as? [[String: Any]]
+        XCTAssertEqual(t?.count, 1, "foi pra lixeira")
+        let p = t?.first?["p"] as? [String: Any]
+        XCTAssertEqual(p?["id"] as? String, "k1")
+        XCTAssertEqual(((p?["current"] as? [String: Any])?["mods"] as? [Any])?.count, 3, "com os móveis dentro")
+        MoveisProjects.delete("nao-existe")
+        XCTAssertEqual(((try? JSONSerialization.jsonObject(with: Data(contentsOf: trash))) as? [[String: Any]])?.count, 1, "excluir o que não existe não mexe na lixeira")
+    }
+
     func testProjetoRecebidoNaBiblioteca() throws {
         try FileManager.default.createDirectory(at: AppPaths.moveis, withIntermediateDirectories: true)
         let bak = try? Data(contentsOf: MoveisProjects.file)

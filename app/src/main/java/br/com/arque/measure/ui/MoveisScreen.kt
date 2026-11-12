@@ -336,7 +336,8 @@ class MoveisBridge(
     @JavascriptInterface fun close() { web()?.post { onClose() } }
 
     @JavascriptInterface fun putFile(name: String, b64: String) {
-        runCatching { File(dir, safe(name)).writeBytes(Base64.decode(b64, Base64.DEFAULT)) }
+        // gravação atômica: escreve num temporário e troca de nome; se o app morrer no meio, o arquivo anterior continua inteiro
+        runCatching { val f = File(dir, safe(name)); val t = File(dir, f.name + ".tmp"); t.writeBytes(Base64.decode(b64, Base64.DEFAULT)); if (!t.renameTo(f)) { f.writeBytes(t.readBytes()); t.delete() } }
     }
 
     @JavascriptInterface fun getFile(name: String): String = runCatching {

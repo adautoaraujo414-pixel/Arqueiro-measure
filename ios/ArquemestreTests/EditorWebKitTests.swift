@@ -5137,7 +5137,7 @@ final class EditorWebKitTests: XCTestCase {
           pSaveAll([]);var dp=pLoadAll();R.vazio='ficou '+dp.map(function(q){return q.client.nome}).join(',')+' · lixeira '+projGuard.lixeira().map(function(q){return q.p.client.nome}).join(',')+' · '+/protegido/i.test(TL[TL.length-1]);
           /* 5: excluir protegido sem senha é barrado; com senha vai pra lixeira */
           var semSenha=pLoadAll().filter(function(q){return q.id!==pid});pSaveAll(semSenha);R.semSenha=pLoadAll().some(function(q){return q.id===pid});
-          projGuard.defSenha('1234ab');R.senha=projGuard.confere('errada')+' '+projGuard.confere('1234ab')+' guardada='+JSON.stringify(Object.keys(JSON.parse(decodeURIComponent(escape(atob(__files['guard.json'])))))).replace(/"/g,'')+' texto puro='+/1234ab/.test(atob(__files['guard.json']));
+          R.rc=/^[A-Z2-9]{5}-[A-Z2-9]{5}$/.test(window.__rc=projGuard.defSenha('1234ab'));R.rec=projGuard.confereRec('AAAAA-AAAAA')+' '+projGuard.confereRec(window.__rc.toLowerCase());R.senha=projGuard.confere('errada')+' '+projGuard.confere('1234ab')+' guardada='+JSON.stringify(Object.keys(JSON.parse(decodeURIComponent(escape(atob(__files['guard.json'])))))).replace(/"/g,'')+' texto puro='+/1234ab/.test(atob(__files['guard.json']));
           window.__delAuth={id:pid,t:Date.now()};pSaveAll(pLoadAll().filter(function(q){return q.id!==pid}));R.comSenha=pLoadAll().some(function(q){return q.id===pid})+' · lixeira '+projGuard.lixeira().map(function(q){return q.p.client.nome+':'+((q.p.current.mods||[]).length)}).join(',');
           /* 6: editar projeto protegido continua livre */
           /* 7: voltar da lixeira */
@@ -5152,7 +5152,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["velha"] as? Int, 5, "gravação velha não passa por cima da nova")
         XCTAssertEqual(o["vazio"] as? String, "ficou João · lixeira Maria · true", "lista vazia: o protegido fica, o novo vai pra lixeira")
         XCTAssertEqual(o["semSenha"] as? Bool, true, "protegido não sai sem senha")
-        XCTAssertEqual(o["senha"] as? String, "false true guardada=[s,n,h,t] texto puro=false", "senha conferida e nunca guardada em texto puro")
+        XCTAssertEqual(o["senha"] as? String, "false true guardada=[s,n,h,r,t] texto puro=false", "senha conferida e nunca guardada em texto puro")
+        XCTAssertEqual(o["rc"] as? Bool, true, "código de recuperação gerado na criação da senha")
+        XCTAssertEqual(o["rec"] as? String, "false true", "trocar a senha só com o código de recuperação (esperar não basta)")
         XCTAssertEqual(o["comSenha"] as? String, "false · lixeira Maria:2,João:5", "com senha vai pra lixeira (não some)")
         XCTAssertEqual(o["voltou"] as? String, "true 5 · lixeira 1", "voltar da lixeira traz os móveis")
         XCTAssertEqual(o["pede"] as? String, "true true")
@@ -5199,6 +5201,66 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["medidas"] as? String, "4140 · direita 3170 · esquerda 3170 · fundo do ambiente 3170", "medida de cada parede não se mistura")
         XCTAssertEqual(o["tresD2"] as? String, "caixas 21 · sem dono 0 · na parede errada 0 · painéis sem 3D 0")
         XCTAssertEqual(o["regua"] as? String, "none", "detalhe da régua do cava some fora do módulo")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Encontros entre paredes (L e U) e diagnóstico: colisão e folga em mm pela posição real, sem mudar nada; afastamento não muda o corte.
+    func testDiagnosticoDasParedesEEncontrosEmLEU() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];draw();
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+          /* cozinha em U: canto esquerdo e direito, balcões no fundo, alas nas duas laterais, aéreos */
+          mkCorner('e');mkCorner('d');draw();
+          ['Balcão da pia (cuba)','Gaveteiro 3 gavetas'].forEach(function(n){newTpl(T(n))});draw();
+          S.m=S.mods.filter(function(m){return !m.corner&&!m.wing})[0];addWing('e');addWing('e');addWing('d');draw();
+          newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));draw();
+          R.mods=S.mods.map(function(m){return (m.corner?'canto':m.wing||'f')+':'+m.x+'+'+m.w}).join(' | ');
+          open3D();await W(600);var d1=projDiag();R.alertasU=d1.alertas;R.colisoesU=d1.encontros.filter(function(q){return q.t==='colisão'}).map(function(q){return q.a.tipo+' × '+q.b.tipo+' '+q.mm.join('×')});R.folgasU=d1.encontros.filter(function(q){return q.t==='folga'}).length;
+          document.getElementById('v3x').click();await W(200);
+          /* painel na parede direita encostando no canto: com afastamento 0 e depois 60 · e um que entra de propósito no móvel do fundo */
+          S.room='sala';S.env='livre';S.mods=[];S.rp=[];newTpl({n:'Rack',w:1200,h:500,d:450,b:0,v:[{k:'door',n:2,cava:true}]});var rk=S.mods[0];rk.x=S.W-1200;rk.tl=rk.tr=false;draw();
+          wvGo('d');await W(60);var p=rpNew({x:0,b:0,w:900,h:2600});p.liso=true;draw();wvGo('f');await W(60);
+          open3D();await W(600);var d2=projDiag();R.painelXrack=d2.encontros.map(function(q){return q.t+' '+q.a.tipo+'('+q.a.wall+') × '+q.b.tipo+'('+q.b.wall+') '+(q.t==='colisão'?q.mm.join('×'):q.mm)});
+          var cut0=JSON.stringify(cutGroups().ord.map(function(k){var l=cutGroups().map[k];return l.L+'x'+l.W+'q'+l.qty}).filter(function(t){return true}));
+          p.af=60;draw();re3();var d3=projDiag();R.comAfastamento=d3.encontros.map(function(q){return q.t+' '+(q.t==='colisão'?q.mm.join('×'):q.mm)});
+          var G=cutGroups(),pl=G.ord.map(function(k){return G.map[k]}).filter(function(l){return l.names.some(function(n){return /^Placa do painel liso/.test(n)})}).map(function(l){return l.L+'x'+l.W+' q'+l.qty});R.placasComAf=pl.join(',');p.af=0;draw();var G2=cutGroups();R.placasSemAf=G2.ord.map(function(k){return G2.map[k]}).filter(function(l){return l.names.some(function(n){return /^Placa do painel liso/.test(n)})}).map(function(l){return l.L+'x'+l.W+' q'+l.qty}).join(',');
+          /* painel igual em duas paredes: o diagnóstico avisa */
+          var q2=rpNew({x:0,b:0,w:900,h:2600});q2.liso=true;draw();re3();var d4=projDiag();R.copia=d4.alertas.filter(function(t){return /mesma posição/.test(t)}).length;
+          R.txt=d4.txt.split('\n').filter(function(l){return /COLISÃO|Parede (fundo|direita)/.test(l)}).join(' | ');
+          S.tab=9;panel();R.botao=!!document.querySelector('[data-pdopen]');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual((o["alertasU"] as? [Any])?.count ?? -1, 0, "cozinha em U sem alerta: \(o["alertasU"] ?? "")")
+        XCTAssertEqual((o["colisoesU"] as? [Any])?.count ?? -1, 0, "cozinha em U sem colisão entre paredes: \(o["colisoesU"] ?? "")")
+        XCTAssertEqual((o["painelXrack"] as? [String])?.first, "colisão Painel liso 1(d) × Base 1(f) 13×500×481", "painel da direita entra 13 mm no rack do fundo: o diagnóstico mede")
+        XCTAssertEqual((o["comAfastamento"] as? [String])?.first, "colisão 73×500×481", "com 60 de afastamento a colisão passa a 73")
+        XCTAssertEqual(o["placasComAf"] as? String, "2600x900 q1", "afastamento não muda a placa no corte")
+        XCTAssertEqual(o["placasSemAf"] as? String, "2600x900 q1")
+        XCTAssertEqual(o["copia"] as? Int, 1, "painel igual em duas paredes: avisa")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Estava na parede direita, abriu a Lista, tocou numa peça (3D em rosa) e fechou: continua na parede direita (antes caía no fundo sem avisar).
+    func testListaEPecaNo3DVoltamPraMesmaParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={log:[]};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];draw();
+          R.top=[].map.call(document.querySelectorAll('.bar button, header button, #top button'),function(b){return b.id+':'+b.textContent.trim().slice(0,10)}).filter(function(t){return t.length>1}).slice(0,24).join(' | ');
+          wvGo('d');await W(100);[0,781,1562,2343].forEach(function(x){var a=rpNew({x:x,b:0,w:781,h:2700});a.liso=true});draw();await W(100);
+          var st=function(l){var w=wvCur(),c={};var snap=snapState();(snap.rp||[]).forEach(function(a){c[a.wall||'f']=(c[a.wall||'f']||0)+1});R.log.push(l+': vista='+w+' W='+S.W+' real='+JSON.stringify(c).replace(/"/g,'')+' Rlen='+((snap.wall||{}).R||{}).len)};
+          st('início');
+          var ids=['cutb','mcb','lsb','ltb','listb'];for(var q=0;q<3;q++){for(var i=0;i<ids.length;i++){var b=document.getElementById(ids[i]);if(!b)continue;b.click();await W(650);var row=document.querySelector('#cutm:not([hidden]) [data-src],#mcm:not([hidden]) [data-src]');if(row){row.click();await W(900);var x=document.getElementById('v3x');if(x&&x.offsetParent!==null){x.click();await W(700)}}['cutm','mcm'].forEach(function(k){var m=document.getElementById(k);if(m&&!m.hidden){var cx=m.querySelector('[data-cx],#cx,.x,button');m.hidden=true}});await W(700);st(ids[i]+' ciclo '+q+(row?' com peça':' sem peça'))}}
+          open3D();await W(600);__build();var B=__boxes().filter(function(b){return b.rpid}),c={fundo:0,direita:0,outro:0};B.forEach(function(b){if(b.z1<=120&&b.x1<=S.W+1)c.fundo++;else if(b.x0>=S.W-120)c.direita++;else c.outro++});R.caixas=JSON.stringify(c);
+          R.errs=__errs;R.l=R.log.join(" | ");return JSON.stringify(R);
+          """#)
+        let l = o["l"] as? String ?? ""
+        XCTAssertFalse(l.contains("vista=null"), "nunca cai no fundo sozinho: \(l)")
+        XCTAssertTrue(l.contains("cutb ciclo 2 com peça: vista=d W=3170 real={d:4}"), l)
+        XCTAssertEqual(o["caixas"] as? String, "{\"fundo\":0,\"direita\":4,\"outro\":0}", "os 4 painéis continuam só na parede direita")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

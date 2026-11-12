@@ -4187,4 +4187,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
+    /// 💾 Puxador salvo como meu padrão: guarda modelo, cor e lugar; projeto novo já vem com ele nas portas.
+    func testPuxadorSalvoComoPadraoJaVemNoProjetoNovo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};delete PR.pxSave;S.stones=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];delete S.pxa;delete S.pxm;delete S.pxk;delete S.pxo;S.pxDef=null;
+          var T=function(cat,n){return JSON.parse(JSON.stringify(CATS.filter(function(x){return x.id===cat})[0].it.filter(function(q){return q.n===n})[0]))},R={};
+          newTpl(T('inf','Balcão 2 portas'));S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxmd="mano"]').click();document.querySelector('#bd [data-pxc2="dourado"]').click();
+          var i=document.querySelector('#bd [data-pxin="du"]');i.value='70';i.dispatchEvent(new Event('change',{bubbles:true}));
+          document.querySelector('#bd [data-pxsave="1"]').click();R.salvo=JSON.stringify(PR.pxSave);R.txt=/Meu padrão salvo/.test(document.querySelector('#bd [data-pxbox]').textContent);R.toast=TL[TL.length-1];
+          R.guardado=/pxSave/.test(localStorage.getItem(PRK)||'');
+          /* projeto novo: já vem com o puxador */
+          loadState(JSON.parse(JSON.stringify(window.__init0)));R.novo=S.pxm+' '+JSON.stringify(S.pxDef)+' '+JSON.stringify(S.pxa);R.n0=S.mods.length+' '+(window.__init0.mods||[]).length;newTpl(T('inf','Balcão 2 portas'));draw();var mm=S.mods[S.mods.length-1],p=partsOf(mm).filter(q=>q.name==='Porta')[0],b=pxBar(p,mm,p.w,p.h);R.porta=p.px+' '+p.pxc+' L'+b.L+' '+Math.round(p.hinge==='r'?b.u:p.w-b.u);
+          S.tab=3;S.m=S.mods[0];panel();document.querySelector('#bd [data-pxsave="0"]').click();R.tirou=PR.pxSave===undefined;
+          R.errs=__errs;delete PR.pxSave;try{prSave()}catch(_){}return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["salvo"] as? String, "{\"px\":\"externo\",\"pxc\":\"dourado\",\"pxm\":\"mano128\",\"pxa\":{\"du\":70,\"dt\":166}}")
+        XCTAssertEqual(o["txt"] as? Bool, true)
+        XCTAssertEqual(o["guardado"] as? Bool, true, "fica guardado no aparelho")
+        XCTAssertEqual(o["novo"] as? String, "mano128 {\"px\":\"externo\",\"pxc\":\"dourado\"} {\"du\":70,\"dt\":166}", "projeto novo já vem com o padrão")
+        XCTAssertEqual(o["porta"] as? String, "externo dourado L137 70", "porta nova com o puxador salvo, no lugar salvo")
+        XCTAssertEqual(o["tirou"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
 }

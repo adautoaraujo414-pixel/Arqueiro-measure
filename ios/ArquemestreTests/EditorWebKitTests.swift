@@ -4614,4 +4614,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["limE"] as? String, "2200 2700 2700")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Lista de puxadores com cada modelo desenhado na porta; acabamentos prontos pintam portas, armários e piso do projeto inteiro.
+    func testPuxadoresNaPortaEAcabamentosProntos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.W=3400;S.H=2700;S.mods=[];var R={};
+          var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+          newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];S.sv=0;draw();
+          /* lista de puxadores: cada modelo desenhado na porta */
+          S.tab=3;panel();var bx=document.querySelector('#bd [data-pxbox]');R.cards=bx.querySelectorAll('[data-pxmd],[data-pxkd]').length+' '+bx.querySelectorAll('[data-pxdoor]').length;R.umPorCard=[].every.call(bx.querySelectorAll('[data-pxmd],[data-pxkd]'),function(c){return c.querySelectorAll('[data-pxdoor]').length===1});
+          /* acabamentos prontos */
+          S.tab=10;panel();R.botoes=document.querySelectorAll('#bd [data-acabu]').length;
+          ACABP.forEach(function(a){var n=acabUsar(a[0]);R[a[0]]=n+' '+S.mods.map(function(m){return m.corFId+'/'+m.corId}).filter(function(v,i,A){return A.indexOf(v)===i}).join(',')+' '+(JSON.stringify(snapState()).indexOf(a[4])>0)});
+          document.querySelector('#bd [data-acabu="grafite"]').click();R.toque=TL[TL.length-1];R.tab=S.tab;R.cores=S.mods[0].corF+' '+S.mods[1].corF;
+          /* a lista de corte continua funcionando com as cores novas */var G=cutGroups();R.corte=G.ord.length>5;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cards"] as? String, "8 8", "cada modelo de alça e ponto com a porta desenhada")
+        XCTAssertEqual(o["umPorCard"] as? Bool, true)
+        XCTAssertEqual(o["botoes"] as? Int, 5)
+        XCTAssertEqual(o["grafite"] as? String, "3 arauco-grafito-chess/arauco-louro-freijo-poro true")
+        XCTAssertEqual(o["branco"] as? String, "3 arauco-branco-supremo-matt/arauco-carvalho-poro true")
+        XCTAssertEqual(o["preto"] as? String, "3 arauco-ebano-chess/arauco-nogueira-persa-trend true")
+        XCTAssertEqual(o["freijo"] as? String, "3 arauco-louro-freijo-poro/arauco-branco-supremo-matt true")
+        XCTAssertEqual(o["cinza"] as? String, "3 arauco-cinza-puro-matt/arauco-cumaru-trend true")
+        XCTAssertEqual(o["toque"] as? String, "✨ Acabamento Grafite + Freijó no projeto inteiro · portas, armários e piso")
+        XCTAssertEqual(o["tab"] as? Int, 10, "continua na aba Cores")
+        XCTAssertEqual(o["cores"] as? String, "#48494e #48494e", "todos os módulos")
+        XCTAssertEqual(o["corte"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

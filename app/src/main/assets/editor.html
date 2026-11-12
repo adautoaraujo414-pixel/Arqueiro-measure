@@ -10504,4 +10504,39 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{var bd=document.getElementById('bd');if(window.RO||!bd||bd.querySelector('[data-tzamb]'))return r;var mk=[].filter.call(bd.querySelectorAll('.sec'),function(e){return /^Medidas das paredes/.test(e.textContent.trim())})[0];if(!mk)return r;var w=cur(),Z=(S.tz||[]).filter(function(z){return (z.wall||'f')===w}),d=document.createElement('div');d.dataset.tzamb='1';d.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin:6px 0';d.innerHTML='<button data-tzadd="'+w+'">🏠 ＋ Rebaixo do teto (gesso, viga)</button>'+Z.map(function(z,i){return '<button data-tzed="'+z.id+'">✏️ Rebaixo '+(i+1)+' · '+Math.round(z.w)+' × '+Math.round(z.hc)+' do chão</button>'}).join('');mk.parentNode.insertBefore(d,mk)}catch(_){}return r};
 })();
 </script>
+<script>
+/* ===== lista de puxadores (alça e ponto): cada modelo aparece NA PORTA, do jeito que fica (porta + puxador na cor escolhida) ===== */
+(function(){if(typeof panel!=='function')return;
+ var FE={luce:'arco',stivo:'arco',mano:'reta',bono:'chata',libero:'chata',casuale:'chata',cog:'r',gazza:'q'},LN={luce:30,stivo:22,mano:20,bono:26,libero:28,casuale:30};
+ function door(id,c){var D='#e6d9be',B='#8d7f63',sk='#2b2d31',h='<svg data-pxdoor="1" viewBox="0 0 46 62" width="46" height="62" style="display:block;margin:0 auto 3px"><rect x="3" y="2" width="40" height="58" rx="1.5" fill="'+D+'" stroke="'+B+'" stroke-width="1.2"/>',f=FE[id],x=35,y0=10;
+  if(f==='r')h+='<circle cx="'+x+'" cy="16" r="4.6" fill="'+c+'" stroke="'+sk+'" stroke-width=".8"/><circle cx="'+x+'" cy="16" r="2.6" fill="none" stroke="'+sk+'" stroke-width=".5" opacity=".6"/><circle cx="'+(x-1.4)+'" cy="14.6" r="1.1" fill="#fff" opacity=".65"/>';
+  else if(f==='q')h+='<rect x="'+(x-3.6)+'" y="12.4" width="7.2" height="7.2" rx="1.1" fill="'+c+'" stroke="'+sk+'" stroke-width=".8"/><rect x="'+(x-2)+'" y="14" width="4" height="4" fill="#fff" opacity=".28"/>';
+  else{var L=LN[id]||24,y1=y0+L;
+   if(f==='arco')h+='<path d="M'+x+' '+y0+'Q'+(x-6.5)+' '+((y0+y1)/2)+' '+x+' '+y1+'" fill="none" stroke="'+sk+'" stroke-width="4.2" stroke-linecap="round"/><path d="M'+x+' '+y0+'Q'+(x-6.5)+' '+((y0+y1)/2)+' '+x+' '+y1+'" fill="none" stroke="'+c+'" stroke-width="2.8" stroke-linecap="round"/><circle cx="'+x+'" cy="'+y0+'" r="1.9" fill="'+c+'" stroke="'+sk+'" stroke-width=".6"/><circle cx="'+x+'" cy="'+y1+'" r="1.9" fill="'+c+'" stroke="'+sk+'" stroke-width=".6"/>';
+   else if(f==='reta')h+='<rect x="'+(x-1.6)+'" y="'+y0+'" width="3.2" height="'+L+'" fill="'+c+'" stroke="'+sk+'" stroke-width=".8"/><rect x="'+(x-2.4)+'" y="'+(y0+1.5)+'" width="4.8" height="2.6" fill="'+c+'" stroke="'+sk+'" stroke-width=".6"/><rect x="'+(x-2.4)+'" y="'+(y1-4.1)+'" width="4.8" height="2.6" fill="'+c+'" stroke="'+sk+'" stroke-width=".6"/>';
+   else h+='<rect x="'+(x-2.4)+'" y="'+y0+'" width="4.8" height="'+L+'" rx="2.4" fill="'+c+'" stroke="'+sk+'" stroke-width=".8"/><rect x="'+(x-.9)+'" y="'+(y0+2.5)+'" width="1.8" height="'+(L-5)+'" rx=".9" fill="#fff" opacity=".3"/>'}
+  return h+'</svg>'}
+ window.pxDoorSvg=door;
+ var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{var bx=document.querySelector('#bd [data-pxbox]');if(!bx)return r;var c='#3a3d42';try{var v=S.m&&S.m.v&&S.m.v[S.sv||0];c=pxCol((v&&v.pxc)||(S.pxDef&&S.pxDef.pxc)||'preto')[1]}catch(_){}
+   [].forEach.call(bx.querySelectorAll('[data-pxmd],[data-pxkd]'),function(b){if(b.querySelector('[data-pxdoor]'))return;var id=b.dataset.pxmd||b.dataset.pxkd,old=b.querySelector('svg');b.insertAdjacentHTML('afterbegin',door(id,c));if(old){old.setAttribute('width','56');old.setAttribute('height','22');old.style.opacity='.85'}})}catch(_){}return r};
+})();
+</script>
+<script>
+/* ===== ✨ Acabamentos prontos pra apresentação: 1 toque pinta portas, armários e piso do projeto inteiro com chapas e porcelanato de verdade do catálogo ===== */
+(function(){if(typeof panel!=='function'||typeof window.__cores!=='function')return;
+ var AC=[['grafite','Grafite + Freijó','arauco-grafito-chess','arauco-louro-freijo-poro','piso-calacata-altissimo','#48494e','#b98d5e'],
+  ['branco','Branco + Carvalho','arauco-branco-supremo-matt','arauco-carvalho-poro','piso-carvalho-natural','#f9f9f9','#c9a77c'],
+  ['preto','Preto + Nogueira','arauco-ebano-chess','arauco-nogueira-persa-trend','piso-cemento-grigio','#191919','#7a5236'],
+  ['freijo','Freijó + Branco','arauco-louro-freijo-poro','arauco-branco-supremo-matt','piso-branco-cristal','#b98d5e','#f9f9f9'],
+  ['cinza','Cinza + Cumaru','arauco-cinza-puro-matt','arauco-cumaru-trend','piso-cemento-grafite','#d1d2d6','#8e5a35']];
+ window.ACABP=AC;
+ function clk(sel){var b=document.querySelector('#bd '+sel);if(b){b.click();return 1}return 0}
+ window.acabUsar=function(id){var a=AC.filter(function(q){return q[0]===id})[0];if(!a||window.RO)return 0;var t0=S.tab,c0=__cores(),n=0;try{snap()}catch(_){}
+  try{__cores('port','all');S.tab=10;panel();n+=clk('[data-cs^="corF|"][data-cs$="|'+a[2]+'"]');__cores('arm','all');panel();n+=clk('[data-cs^="cor|"][data-cs$="|'+a[3]+'"]');__cores('pp',null,'piso');panel();n+=clk('[data-cfm="'+a[4]+'"]')}catch(_){}
+  try{__cores(c0.tab,c0.sc,c0.pp)}catch(_){}S.tab=t0;try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}try{toast(n===3?'✨ Acabamento '+a[1]+' no projeto inteiro · portas, armários e piso':'Acabamento aplicado em parte ('+n+' de 3)')}catch(_){}return n};
+ var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{var bd=document.getElementById('bd');if(window.RO||!bd||S.tab!==10||bd.querySelector('[data-acab]')||!(S.mods||[]).length)return r;var d=document.createElement('div');d.dataset.acab='1';d.style.cssText='margin:6px 0 10px;padding:8px;border-radius:12px;background:#f3f6fb;border:1px solid #d5dbe5';
+   d.innerHTML='<div style="font-weight:700;font-size:14px">✨ Acabamentos prontos</div><div style="font-size:11px;color:#667;margin:2px 0 6px">Um toque pinta o projeto inteiro pra apresentar: portas, armários e piso. Depois dá pra trocar qualquer cor aqui embaixo.</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+AC.map(function(a){return '<button data-acabu="'+a[0]+'" style="display:inline-flex;align-items:center;gap:6px;min-height:40px"><span style="display:inline-flex;border:1px solid #777;border-radius:6px;overflow:hidden;pointer-events:none"><i style="width:16px;height:22px;background:'+a[5]+'"></i><i style="width:16px;height:22px;background:'+a[6]+'"></i></span>'+a[1]+'</button>'}).join('')+'</div>';bd.insertBefore(d,bd.firstChild)}catch(_){}return r};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-acabu]');if(!t)return;e.stopPropagation();acabUsar(t.dataset.acabu)},true);
+})();
+</script>
 </body></html>

@@ -1529,6 +1529,7 @@ final class EditorWebKitTests: XCTestCase {
           S.room='sala';S.env='livre';S.W=3841;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.stones=[];S.st=null;S.m=null;
           /* vão e porta no fundo, porta e vão na esquerda, janela no fundo e na direita */
           S.ops=[{id:1,t:'porta',st:'vao',w:800,h:2100,x:1500,b:0,wall:'f'},{id:2,t:'porta',w:800,h:2100,x:2600,b:0,wall:'f'},{id:3,t:'janela',w:1000,h:1000,x:300,b:1100,wall:'f'},{id:4,t:'porta',w:800,h:2100,x:900,b:0,wall:'e'},{id:5,t:'porta',st:'vao',w:900,h:2100,x:2000,b:0,wall:'e'},{id:6,t:'janela',w:1200,h:1000,x:700,b:1100,wall:'d'}];
+          wallSet('L','len',3000);/* parede de 3000: sobra 100 de parede depois do vão */
           draw();open3D();await new Promise(function(q){setTimeout(q,400)});__build();
           var pol=function(b){return b.pf?b.pf.pts:b.poly?b.poly:[[b.x0,b.y0],[b.x1,b.y0],[b.x1,b.y1],[b.x0,b.y1]]},area=function(P){var a=0;for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2};
           var chk=function(wl,ow){var ps=__bg().filter(function(b){return b.wl===wl&&!b.cs&&b.c&&(b.pf||b.poly||b.x1-b.x0>50)&&(wl==='F'?b.z1<=0.01&&b.z0<-50:true)}),ds=S.ops.filter(function(o){return o.t==='porta'&&(o.wall||'f')===ow}),risco=0,jamb=0;
@@ -5173,7 +5174,7 @@ final class EditorWebKitTests: XCTestCase {
           P(0,900,2700,1);P(900,900,2700,1);draw();
           wvGo('d');await W(40);R.dir=wvCur()+' '+S.W+'x'+S.H+' · '+document.getElementById('wvbar').textContent.slice(0,34);P(0,700,2600,1);P(700,700,2600,1);P(1400,700,2600,1);draw();
           wvGo('e');await W(40);R.esq=wvCur()+' '+S.W+'x'+S.H+' · '+document.getElementById('wvbar').textContent.slice(0,35);P(500,1000,2000,0);draw();
-          wvGo('f');await W(40);R.fundo=String(wvCur())+' '+S.W+'x'+S.H+' barra escondida='+document.getElementById('wvbar').hidden;
+          wvGo('f');await W(40);R.fundo=String(wvCur())+' '+S.W+'x'+S.H+' · '+document.getElementById('wvbar').textContent.slice(0,32);
           var por=function(){var c={f:0,e:0,d:0};S.rp.forEach(function(a){c[a.wall||'f']++});return JSON.stringify(c).replace(/"/g,'')},canon=function(){return JSON.stringify(S.rp.map(function(a){return [a.id,a.wall||'f',a.x,a.b,a.w,a.h]}))};
           R.porParede=por();var c0=canon();
           /* 3D: cada painel só na parede dele; nada no 3D sem dono no projeto */
@@ -5192,7 +5193,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["dir"] as? String, "d 3170x3400 · 🧱 Parede da direita · 3170 × 3400")
         XCTAssertEqual(o["esq"] as? String, "e 3170x3400 · 🧱 Parede da esquerda · 3170 × 3400")
-        XCTAssertEqual(o["fundo"] as? String, "null 4140x3400 barra escondida=true")
+        XCTAssertEqual(o["fundo"] as? String, "null 4140x3400 · 🧱 Parede do fundo · 4140 × 3400", "no fundo, com coisa nas laterais, a faixa diz que é o fundo")
         XCTAssertEqual(o["porParede"] as? String, "{f:2,e:1,d:3}")
         XCTAssertEqual(o["tresD"] as? String, "caixas 21 · sem dono 0 · na parede errada 0 · painéis sem 3D 0", "3D: cada painel só na parede dele, nada sem dono")
         XCTAssertEqual(o["corte"] as? String, "5 placas no corte · 5 no projeto")
@@ -5264,6 +5265,62 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue(l.contains("cutb ciclo 2 com peça: vista=d W=3170 real={d:4}"), l)
         XCTAssertEqual(o["novo"] as? String, "d ddddd", "continuou editando: o painel novo nasceu na parede direita")
         XCTAssertEqual(o["semCliente"] as? Bool, true, "diagnóstico só com dados técnicos")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// DEFEITO 1 (parede direita virando 4140): com um móvel no fim da parede lateral, ela crescia 300 a cada vez que se saía e voltava nela.
+    func testParedeLateralNaoCresceSozinha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];S.wall={};draw();
+          var bar=function(){var b=document.getElementById('wvbar');return b&&!b.hidden?b.textContent.slice(0,36):'(fundo)'};
+          wvGo('d');await W(60);R.a=bar();
+          /* 4 placas de 781 como as dele */[0,781.3,1562.6,2343.9].forEach(function(x){var a=rpNew({x:x,b:0,w:781,h:2700});a.liso=true});draw();
+          /* um toque em "Superior" (ou Inferior) nessa parede */newTpl({n:'Aéreo',w:1000,h:750,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});draw();await W(100);R.mods=S.mods.map(function(m){return 'x'+m.x+' w'+m.w+' d'+m.d+(m.sup?' sup':'')}).join(' | ');R.b=bar()+' · '+TL.slice(-2).join(' / ');
+          wvGo('f');await W(60);R.fundo='fundo W='+S.W+' roomD='+roomD()+' mods='+S.mods.map(function(m){return (m.wing||'f')+':x'+m.x+'+'+m.w}).join(',');
+          wvGo('d');await W(60);R.c=bar();
+          /* arrasta o módulo pro fim da parede */var m=S.mods[0];if(m){m.x=S.W-m.w;draw()}wvGo('f');await W(60);wvGo('d');await W(60);R.d=bar()+' roomD='+roomD();
+          /* e de novo: cresce a cada volta? */if(S.mods[0]){S.mods[0].x=S.W-S.mods[0].w;draw()}wvGo('f');await W(60);wvGo('d');await W(60);R.e=bar();
+          R.errs=__errs;/* projeto antigo (gravado pela versão anterior, com o móvel no fim da parede): abre com a medida real */
+          var st=snapState();loadState(JSON.parse(JSON.stringify(st)));draw();wvGo('d');await W(60);R.antigo=bar()+' · móvel '+S.mods.map(function(m){return m.x+'+'+m.w}).join(',');wvGo('f');await W(60);R.medidas=S.W+' · direita '+wallCfg('R').len+' · esquerda '+wallCfg('L').len+' · profundidade '+roomD();
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["a"] as? String, "🧱 Parede da direita · 3170 × 3400◀ ")
+        XCTAssertEqual(o["d"] as? String, "🧱 Parede da direita · 3170 × 3400◀  roomD=3170", "móvel no fim da parede: ela continua com 3170 (antes virava 3435)")
+        XCTAssertEqual(o["e"] as? String, "🧱 Parede da direita · 3170 × 3400◀ ", "segunda volta: continua 3170 (antes 3700, depois 4140…)")
+        XCTAssertEqual(o["antigo"] as? String, "🧱 Parede da direita · 3170 × 3400◀  · móvel 2135+1000", "projeto gravado antes da correção abre com a medida real e o móvel no lugar")
+        XCTAssertEqual(o["medidas"] as? String, "4140 · direita 3170 · esquerda 3170 · profundidade 3170")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// DEFEITO 2 (painel igual em duas paredes): parede direita → trena → Criar → Lista → peça (3D) → fechar → Criar de novo caía no fundo e copiava os painéis.
+    func testPainelNaoDuplicaEmOutraParedeDepoisDaLista() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];S.wall={};draw();
+          var faixa=function(){var b=document.getElementById('wvbar');return b&&!b.hidden&&b.offsetParent!==null?b.textContent.replace(/◀.*/,'').replace(/(Esquerda|Direita)+$/,'').trim():'(sem faixa)'};
+          var por=function(){var c={f:0,e:0,d:0};snapState().rp.forEach(function(a){c[a.wall||'f']++});return JSON.stringify(c).replace(/"/g,'')};
+          /* o passo a passo dele: parede direita → trena → Criar painéis → Lista → toca na peça (3D rosa) → fecha o 3D → Criar painéis de novo */
+          wvGo('d');await W(80);trOn(true);await W(50);document.querySelector('#trbar input')&&0;S.trena={x0:0,x1:3170};trCreate();await W(150);draw();R.criou=por()+' · '+faixa();
+          document.getElementById('cutb').click();await W(650);var row=document.querySelector('#cutm:not([hidden]) [data-src]');row.click();await W(800);document.getElementById('v3x').click();await W(700);['cutm','mcm'].forEach(function(k){var m=document.getElementById(k);if(m&&!m.hidden)m.hidden=true});await W(700);
+          R.depoisDaLista='app na parede '+(wvCur()||'f')+' · faixa: '+faixa()+' · trena '+JSON.stringify(S.trena&&[S.trena.x0,S.trena.x1])+' · parede '+S.W;
+          try{trOn(true)}catch(_){}await W(50);trCreate();await W(150);draw();R.criouDeNovo=por();
+          var st=snapState(),dup=0;st.rp.forEach(function(a){st.rp.forEach(function(b){if(a!==b&&(a.wall||'f')<(b.wall||'f')&&a.x===b.x&&a.b===b.b&&a.w===b.w&&a.h===b.h)dup++})});R.iguaisEmDuasParedes=dup;
+          open3D();await W(600);__build();var B=__boxes().filter(function(b){return b.rpid}),c={fundo:0,direita:0};B.forEach(function(b){if(b.z1<=120&&b.x1<=S.W+1)c.fundo++;else if(b.x0>=S.W-120)c.direita++});R.no3D=JSON.stringify(c).replace(/"/g,'');
+          R.errs=__errs;R.aviso=/já tem painel nesta parede/.test(TL.join(' | '));
+          /* fundo com coisa na lateral: a faixa mostra que é o fundo; e a trena não leva a área de uma parede pra outra */
+          document.getElementById('v3x').click();await W(300);wvGo('f');await W(80);R.noFundo=faixa()+' · trena '+JSON.stringify(S.trena);
+          return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["criou"] as? String, "{f:0,e:0,d:6} · 🧱 Parede da direita · 3170 × 3400")
+        XCTAssertEqual(o["depoisDaLista"] as? String, "app na parede d · faixa: 🧱 Parede da direita · 3170 × 3400 · trena [0,3170] · parede 3170", "depois da Lista e do 3D continua na parede direita (antes caía no fundo sem faixa)")
+        XCTAssertEqual(o["criouDeNovo"] as? String, "{f:0,e:0,d:6}", "Criar de novo não copia pro fundo nem empilha na mesma parede (antes ficava {f:6,d:6})")
+        XCTAssertEqual(o["iguaisEmDuasParedes"] as? Int, 0)
+        XCTAssertEqual(o["no3D"] as? String, "{fundo:0,direita:6}", "3D: os 6 só na direita (antes 6 no fundo e 6 na direita)")
+        XCTAssertEqual(o["aviso"] as? Bool, true, "avisa que a área já tem painel")
+        XCTAssertEqual(o["noFundo"] as? String, "🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}", "no fundo a faixa diz fundo e a trena volta pra parede toda")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

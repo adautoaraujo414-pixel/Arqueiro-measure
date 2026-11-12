@@ -1171,7 +1171,7 @@ function stoneLim(m){if(m.sup||m.corner||S.env==='livre'||!S.stones.length)retur
  var c=m.x+m.w/2,best=null,bd=1e18;S.stones.forEach(function(q){var d=c<q.x?q.x-c:c>q.x+q.w?c-q.x-q.w:0;if(d<bd){bd=d;best=q}});if(!best)return null;var a2=best.x+lt(m),b2=best.x+best.w-m.w-rt(m);return {a:a2,b:Math.max(a2,b2),st:best}}
 function stLimX(m,x){var L=stoneLim(m);x=L?Math.max(L.a,Math.min(L.b,x)):x;try{x=stPush(m,x)}catch(_){}return x}
 
-function roomD(){var need=0;S.mods.forEach(function(m){if(m.wing)need=Math.max(need,m.x+m.w+300);if(m.corner)need=Math.max(need,Math.max(m.d+200,m.cw2||900)+300);need=Math.max(need,m.d+300)});S.stones.forEach(function(q){var d6=function(v){return v===undefined?600:v},sh=q.shape||'reta';need=Math.max(need,q.d+300);if(sh!=='reta')need=Math.max(need,q.d+Math.max(sh==='Ld'?0:d6(q.lenA),sh==='Le'?0:d6(q.lenB))+300)});(S.ops||[]).forEach(function(o){if(o.wall==='e'||o.wall==='d')need=Math.max(need,o.x+o.w+100)});(S.isl||[]).forEach(function(a){try{need=Math.max(need,islExt(a).z1+300)}catch(e){}});return Math.round(Math.max(+S.RD||2600,need))}
+function roomD(){var need=0;S.mods.forEach(function(m){/* a parede lateral tem a medida real: só passa da profundidade do ambiente se o móvel de fato passar dela (antes somava 300 de folga e a parede crescia a cada volta: 3170 → 3435 → 3700 → 4140) */if(m.wing)need=Math.max(need,m.x+m.w);if(m.corner)need=Math.max(need,Math.max(m.d+200,m.cw2||900)+300);need=Math.max(need,m.d+300)});S.stones.forEach(function(q){var d6=function(v){return v===undefined?600:v},sh=q.shape||'reta';need=Math.max(need,q.d+300);if(sh!=='reta')need=Math.max(need,q.d+Math.max(sh==='Ld'?0:d6(q.lenA),sh==='Le'?0:d6(q.lenB))+300)});(S.ops||[]).forEach(function(o){if(o.wall==='e'||o.wall==='d')need=Math.max(need,o.x+o.w)});(S.isl||[]).forEach(function(a){try{need=Math.max(need,islExt(a).z1+300)}catch(e){}});return Math.round(Math.max(+S.RD||2600,need))}
 /* ===== Ilha, península e bancada livre (criadas no 3D) · pedra em cima (mármore) · paredes do lado ===== */
 /* a ilha guarda só a medida e o tipo; o móvel dela é montado com as mesmas regras dos módulos (Ajustes: folgas, corrediça, puxador) */
 S.isl=S.isl||[];S.wl=S.wl||null;var ISLID=1;
@@ -10161,7 +10161,7 @@ function toCanon(){if(!WV)return;var st=WV.st,w=WV.w,nL=Math.round(+S.W||0),nH=M
  WV=null;try{document.body.classList.remove('wv')}catch(_){}}
 function re(){try{draw();panel()}catch(_){}bar()}
 window.wvCur=function(){return WV?WV.w:null};
-window.wvGo=function(w){var was=WV?WV.w:'f';if(w==='f')WVP=null;if(was===w)return;try{if(typeof RPSEL!=='undefined')RPSEL=0}catch(_){}toCanon();if(w==='e'||w==='d')toView(w);re();try{var nm={f:'do fundo',e:'da esquerda',d:'da direita'};toast('🧱 2D na parede '+nm[w]+(w!=='f'?' · '+S.W+' × '+S.H+' mm':''))}catch(_){}};
+window.wvGo=function(w){var was=WV?WV.w:'f';if(w==='f')WVP=null;if(was===w)return;try{S.trena=null}catch(_){}try{if(typeof RPSEL!=='undefined')RPSEL=0}catch(_){}toCanon();if(w==='e'||w==='d')toView(w);re();try{var nm={f:'do fundo',e:'da esquerda',d:'da direita'};toast('🧱 2D na parede '+nm[w]+(w!=='f'?' · '+S.W+' × '+S.H+' mm':''))}catch(_){}};
 window.wvExit=function(){if(WV){toCanon();re()}};
 window.__wvTo=toView;window.__wvCanon=toCanon;
 /* salvar / desfazer / mandar: sempre o projeto real */
@@ -10180,10 +10180,10 @@ function resume(){if(!WVP||WV||window.AMBSET||vis3()||anyModal())return;var w=WV
 document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('#clb,#ntb,#prb,#shb,#cutb,#mcb,#vlb,#ok,#cx,[data-cfg],[data-cfggo],[data-room],[data-ambopen]');if(!t||!WV)return;var w=WV.w;toCanon();try{draw();panel()}catch(_){}bar();WVP=/^(ok|cx)$/.test(t.id)||t.dataset.room!==undefined?null:w;if(t.dataset.ambopen!==undefined)window.WVLAST=w;setTimeout(resume,500)},true);
 try{var mo=new MutationObserver(function(){setTimeout(resume,30)});MODS.forEach(function(id){var e=document.getElementById(id);if(e)mo.observe(e,{attributes:true,attributeFilter:['hidden']})})}catch(_){}
 /* faixa em cima do 2D: em qual parede está e troca rápida */
-function bar(){var cv=document.querySelector('.main .cv');if(!cv)return;var b=document.getElementById('wvbar');if(!WV){if(b)b.hidden=true;return}
+function bar(){var cv=document.querySelector('.main .cv');if(!cv)return;var b=document.getElementById('wvbar');var lado_=!WV&&KEYS.some(function(q){return (S[q[0]]||[]).some(function(o){return o&&(o[q[1]]==='e'||o[q[1]]==='d')})});if(!WV&&!lado_){if(b)b.hidden=true;return}
  if(!b){b=document.createElement('div');b.id='wvbar';b.style.cssText='display:flex;gap:5px;align-items:center;flex-wrap:wrap;background:#1f6feb;color:#fff;border-radius:10px;padding:4px 6px 4px 9px;font-size:13px;margin:0 0 6px';cv.parentNode.insertBefore(b,cv);
   b.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-wvg]');if(!t||window.RO)return;e.stopPropagation();wvGo(t.dataset.wvg)})}
- var nm={e:'da esquerda',d:'da direita'},st=WV.st,sw=st.wl||{},on=function(sd){return sw[sd]!=='n'},B=function(w,t){return '<button data-wvg="'+w+'" style="padding:3px 8px;min-height:30px;font-size:12px;background:#fff;color:#1b1f27;border-color:#fff">'+t+'</button>'};
+ var B=function(w,t){return '<button data-wvg="'+w+'" style="padding:3px 8px;min-height:30px;font-size:12px;background:#fff;color:#1b1f27;border-color:#fff">'+t+'</button>'};if(!WV){/* no fundo, com coisa nas laterais: a faixa diz que é o fundo (sempre dá pra ver em qual parede se está) */b.style.background='#475569';b.innerHTML='<b style="pointer-events:none;flex:1;min-width:150px">🧱 Parede do fundo · '+S.W+' × '+S.H+'</b>'+B('e','Esquerda')+B('d','Direita');b.hidden=false;return}b.style.background='#1f6feb';var nm={e:'da esquerda',d:'da direita'},st=WV.st,sw=st.wl||{},on=function(sd){return sw[sd]!=='n'};
  b.innerHTML='<b style="pointer-events:none;flex:1;min-width:150px">🧱 Parede '+nm[WV.w]+' · '+S.W+' × '+S.H+'</b>'+B('f','◀ Fundo')+(WV.w!=='e'&&on('L')?B('e','Esquerda'):'')+(WV.w!=='d'&&on('R')?B('d','Direita'):'');b.hidden=false}
 var dr0=draw;draw=function(){var r=dr0.apply(this,arguments);try{bar()}catch(_){}return r};window.draw=draw;
 (function(){var st=document.createElement('style');st.textContent='body.wv #planwrap{display:none!important}';document.head.appendChild(st)})();
@@ -10804,5 +10804,9 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-pdopen]');if(b)open()});
  if(typeof panel==='function'){var p0=panel;window.panel=panel=function(){var r=p0.apply(this,arguments);try{var bd=document.getElementById('bd');if(bd&&S.tab===9&&!bd.querySelector('[data-pdopen]')){var d=document.createElement('div');d.style.cssText='margin:6px 0';d.innerHTML='<button data-pdopen="1" style="width:100%">🔎 Diagnóstico das paredes e peças (encontros em L e U)</button>';bd.appendChild(d)}}catch(_){}return r}}
 })();
+</script>
+<script>
+/* ===== trena: não cria painel em cima de painel que já existe na mesma parede (painel é sólido) ===== */
+(function(){if(typeof trCreate!=='function')return;var t0=trCreate;trCreate=window.trCreate=function(){var antes=(S.rp||[]).slice(),r=t0.apply(this,arguments);try{var novos=(S.rp||[]).filter(function(a){return antes.indexOf(a)<0});var bate=novos.some(function(n){return antes.some(function(o){return !o.prat&&(o.wall||'')===(n.wall||'')&&Math.min(n.x+n.w,o.x+o.w)-Math.max(n.x,o.x)>1&&Math.min(n.b+n.h,o.b+o.h)-Math.max(n.b,o.b)>1})});if(bate){S.rp=antes;try{draw();panel()}catch(_){}try{toast('🧱 Essa área já tem painel nesta parede: nada foi criado. Apague o painel de lá ou mude a área da trena.')}catch(_){}return null}}catch(_){}return r}})();
 </script>
 </body></html>

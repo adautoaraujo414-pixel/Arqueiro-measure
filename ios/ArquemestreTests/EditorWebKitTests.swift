@@ -5530,4 +5530,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["existente"] as? Bool, true)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Projeto antigo: um botão corrige de uma vez os módulos com divisória na beira. Sem o toque nada muda; a versão de antes fica no Histórico.
+    func testProjetoAntigoCorrigeDivisoriasNaBeiraComUmToque() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          try{STD().supPedra=0}catch(_){}
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+          var p=newProjFor({nome:'Projeto Antigo'});S.mods=[];
+          /* projeto antigo: 3 aéreos, 2 com divisória na beira (95% e 5%) e prateleira, 1 certo com divisória no meio */
+          for(var i=0;i<3;i++){newTpl(CATS[1].it[2]);}S.mods.forEach(function(m,i){m.x=i*700;m.w=666.8;m.shv=[.5];m.div=[i===0?0.95:i===1?0.05:0.5];m.v.push(JSON.parse(JSON.stringify(m.v[0])))});draw();saveNow();
+          var res=function(){return S.mods.map(function(m){var P=partsOf(m);return 'div'+JSON.stringify(m.div)+' v'+m.v.length+' prat '+P.filter(function(q){return /^Prateleira/.test(q.name)}).map(function(q){return Math.round(q.w)}).join('/')+' porta mín '+Math.min.apply(null,P.filter(function(q){return q.name==='Porta'}).map(function(q){return Math.round(q.w)}))}).join(' || ')};
+          R.antes=res();var b=document.getElementById('pfixbar');R.faixa=b&&!b.hidden?b.textContent.slice(0,24):'sem faixa';
+          /* abrir, desenhar e gravar não corrige sozinho */
+          draw();saveNow();await W(700);R.sozinho=res()===R.antes;
+          var h0=projHist.list(CUR).length;await W(700);try{histTick()}catch(_){}
+          document.querySelector('[data-pfix]').click();await W(200);
+          R.depois=res();b=document.getElementById('pfixbar');R.faixaSome=!b||b.hidden;R.hist=projHist.list(CUR).length>h0;
+          await W(700);try{histTick()}catch(_){}document.getElementById('und').click();await W(120);R.desfez=res()===R.antes;
+          /* módulo travado fica de fora */
+          S.mods[0].lock=true;draw();R.travado=(document.getElementById('pfixbar').textContent.match(/[0-9]+ módulo/)||[''])[0];
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["antes"] as? String, "div[0.95] v2 prat 597/24 porta mín 17 || div[0.05] v2 prat 24/597 porta mín 17 || div[0.5] v2 prat 311/311 porta mín 160")
+        XCTAssertEqual(o["faixa"] as? String, "⚠ 2 módulo(s) com divisó")
+        XCTAssertEqual(o["sozinho"] as? Bool, true, "abrir, desenhar e gravar não corrige sozinho")
+        XCTAssertEqual(o["depois"] as? String, "div[] v1 prat 637 porta mín 323 || div[] v1 prat 637 porta mín 323 || div[0.5] v2 prat 311/311 porta mín 160", "prateleira e portas até o final; o módulo certo não muda")
+        XCTAssertEqual(o["faixaSome"] as? Bool, true)
+        XCTAssertEqual(o["hist"] as? Bool, true, "a versão de antes fica no Histórico")
+        XCTAssertEqual(o["desfez"] as? Bool, true)
+        XCTAssertEqual(o["travado"] as? String, "1 módulo", "módulo travado fica de fora")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

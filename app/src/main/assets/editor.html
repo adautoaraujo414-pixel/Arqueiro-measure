@@ -10882,4 +10882,24 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-slv]');if(!t||window.RO)return;var m=S.m,f=fino(m);if(!m||!f)return;if(m.lock){try{toast('🔒 Módulo travado')}catch(_){}return}try{snap()}catch(_){}tirar(m,f);S.sv=Math.min(S.sv||0,Math.max(0,m.v.length-1));try{draw();panel()}catch(_){}try{toast('Divisória tirada · o vão voltou inteiro · Desfazer volta')}catch(_){}});
 })();
 </script>
+<script>
+/* ===== Projeto antigo: um botão corrige de uma vez os módulos com divisória encostada na lateral (o app não faz sozinho: é no toque) ===== */
+(function(){
+ if(typeof draw!=='function'||!window.vaoFino)return;
+ function lista(){try{return (S.mods||[]).filter(function(m){return !m.lock&&vaoFino(m)})}catch(_){return []}}
+ function tirar(m){var g=0;while(g++<12){var f=vaoFino(m);if(!f)break;var ord=m.div.map(function(r,i){return [r,i]}).sort(function(a,b){return a[0]-b[0]}),k=f.i===0?0:(f.i>=ord.length?ord.length-1:f.i),di=ord[k][1];m.div.splice(di,1);if(m.dr&&m.dr.length>di)m.dr.splice(di,1);if(m.v&&m.v.length>f.i&&m.v.length>1)m.v.splice(f.i,1)}}
+ function bar(){var cv=document.getElementById('svg');if(!cv||!cv.parentNode)return;var b=document.getElementById('pfixbar'),L=window.RO?[]:lista();
+  if(!L.length){if(b)b.hidden=true,b.style.display='none';return}
+  if(!b){b=document.createElement('div');b.id='pfixbar';cv.parentNode.insertBefore(b,cv)}
+  b.hidden=false;b.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff7ed;border:2px solid #d97706;color:#1b1f27;border-radius:10px;padding:5px 8px;font-size:13px;margin:0 0 6px';
+  b.innerHTML='<b style="flex:1;min-width:170px">⚠ '+L.length+' módulo(s) com divisória encostada na lateral (prateleira e porta não vão até o final)</b><button data-pfix="1" style="min-height:32px;padding:3px 10px;background:#d97706;color:#fff;border-color:#d97706">Corrigir todos</button>'}
+ var d0=draw;window.draw=draw=function(){var r=d0.apply(this,arguments);try{bar()}catch(_){}return r};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-pfix]');if(!t||window.RO)return;var L=lista();if(!L.length)return;
+  try{if(window.projHist&&typeof CUR!=='undefined'&&CUR)projHist.push(CUR,snapState(),'antes de corrigir as divisórias na lateral')}catch(_){}
+  try{snap();if(typeof histTick==='function')histTick()}catch(_){}
+  L.forEach(tirar);S.sv=0;try{draw();panel()}catch(_){}try{if(window.re3)window.re3()}catch(_){}
+  try{toast('✔ '+L.length+' módulo(s) corrigido(s): prateleiras e portas até o final · Desfazer volta · a versão de antes ficou no Histórico')}catch(_){}});
+ window.projFix={lista:lista};
+})();
+</script>
 </body></html>

@@ -6487,5 +6487,19 @@
 "Fendi (tudo na cor)": "Fendi (todo en color)",
 "✂ Dividir a pedra no fogão": "✂ Dividir la piedra en la estufa",
 "A pedra já está dividida no fogão": "La piedra ya está dividida en la estufa",
-"Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está": "Coloca primero la estufa de piso: la piedra se divide donde está"
+"Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está": "Coloca primero la estufa de piso: la piedra se divide donde está",
+"Altura na esquerda": "Altura a la izquierda",
+"Altura na direita": "Altura a la derecha",
+"Altura no fundo": "Altura al fondo",
+"Altura na frente": "Altura al frente",
+"· 2 toques no canto de cima da parede muda a altura daquele lado (caimento)": "· 2 toques en la esquina de arriba de la pared cambia la altura de ese lado (caída)",
+"📐 Canto da parede: digite a altura deste lado · o teto faz o caimento e os painéis acompanham": "📐 Esquina de la pared: escribe la altura de este lado · el techo hace la caída y los paneles acompañan",
+"Quanto sai da parede (0 = o ambiente todo)": "Cuánto sale de la pared (0 = todo el ambiente)",
+"📏 Trena: do chão até embaixo do gesso": "📏 Cinta: del piso hasta debajo del yeso",
+"✓ Ajustar teto": "✓ Ajustar techo",
+"Arraste a régua pra subir ou descer o gesso, ou digite a medida e toque em ✓ Ajustar teto.": "Arrastra la regla para subir o bajar el yeso, o escribe la medida y toca ✓ Ajustar techo.",
+"na parede": "en la pared",
+"saindo da parede": "saliendo de la pared",
+"do teto": "del techo",
+"Roda-teto (lateral do degrau)": "Cierre de techo (lateral del escalón)"
 }

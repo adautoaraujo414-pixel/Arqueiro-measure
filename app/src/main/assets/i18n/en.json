@@ -6487,5 +6487,19 @@
 "Fendi (tudo na cor)": "Fendi (all in colour)",
 "✂ Dividir a pedra no fogão": "✂ Split the countertop at the stove",
 "A pedra já está dividida no fogão": "The countertop is already split at the stove",
-"Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está": "Place the freestanding stove first: the countertop is split where it stands"
+"Ponha o fogão de piso no lugar primeiro: a pedra é dividida onde ele está": "Place the freestanding stove first: the countertop is split where it stands",
+"Altura na esquerda": "Height on the left",
+"Altura na direita": "Height on the right",
+"Altura no fundo": "Height at the back",
+"Altura na frente": "Height at the front",
+"· 2 toques no canto de cima da parede muda a altura daquele lado (caimento)": "· double-tap the top corner of the wall to change the height on that side (slope)",
+"📐 Canto da parede: digite a altura deste lado · o teto faz o caimento e os painéis acompanham": "📐 Wall corner: type the height on this side · the ceiling slopes and the panels follow",
+"Quanto sai da parede (0 = o ambiente todo)": "How far it comes out from the wall (0 = whole room)",
+"📏 Trena: do chão até embaixo do gesso": "📏 Tape: from the floor to the underside of the drywall ceiling",
+"✓ Ajustar teto": "✓ Set ceiling",
+"Arraste a régua pra subir ou descer o gesso, ou digite a medida e toque em ✓ Ajustar teto.": "Drag the slider to raise or lower the drywall ceiling, or type the measurement and tap ✓ Set ceiling.",
+"na parede": "along the wall",
+"saindo da parede": "out from the wall",
+"do teto": "from the ceiling",
+"Roda-teto (lateral do degrau)": "Ceiling filler (step side)"
 }

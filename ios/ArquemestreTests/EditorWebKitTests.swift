@@ -4054,7 +4054,7 @@ final class EditorWebKitTests: XCTestCase {
           var cv=__cv3(),r=cv.getBoundingClientRect(),pt=null;for(var y=r.height*.45;y<r.height&&!pt;y+=10)for(var x=25;x<r.width;x+=10){var h=__wallHit3(x,y);if(h&&h.w==='e'){pt=[x,y];break}}
           var tap=function(x,y){['pointerdown','pointerup'].forEach(function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,clientX:r.left+x,clientY:r.top+y,pointerId:1,isPrimary:true,pointerType:'touch'}))})};
           if(pt){tap(pt[0],pt[1]);await W(120);tap(pt[0],pt[1]);await W(300)}
-          var card=P.querySelector('[data-ambw]');R.card=card?card.dataset.ambw+' '+/livre \(sem painel\)/.test(card.textContent)+' '+[].map.call(card.querySelectorAll('input'),function(i){return i.dataset.ambs+'='+i.value}).join(','):'';
+          var card=P.querySelector('[data-ambw]');R.card=card?card.dataset.ambw+' '+/sem painel/.test(card.textContent)+' '+[].map.call(card.querySelectorAll('input'),function(i){return i.dataset.ambs+'='+i.value}).join(','):'';
           var full=P.getBoundingClientRect().height;P.querySelector('[data-ambsb="hide"]').click();R.min=P.getBoundingClientRect().height<70&&full>150;P.querySelector('[data-ambsb="hide"]').click();
           P.querySelector('[data-ambsb="wvrp"]').click();await W(500);R.vista=wvCur()+' '+S.W+' '+S.rp.length+' '+(!document.getElementById('catm').hidden)+' '+(!document.getElementById('wvbar').hidden);
           document.querySelector('#catm [data-cati="sala|'+ix+'"]').click();await W(300);M=document.getElementById('rwm');R.semPergunta=!(M&&!M.hidden);R.naVista=S.rp.length+' '+S.W;
@@ -4073,7 +4073,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["btn"] as? Bool, true, "botão com o nome novo")
         XCTAssertEqual(o["aba"] as? String, "Ambiente|Módulos prontos|Medidas das paredes|Porta / vão da sala (medida real)|Janelas e portas da parede", "Ambiente só com o útil")
         XCTAssertEqual(o["tit"] as? Bool, true)
-        XCTAssertEqual(o["card"] as? String, "e true Llen=3000,Lh=2700", "2 toques na parede livre: mostra a medida dela")
+        XCTAssertEqual(o["card"] as? String, "e true Llen=3000,Lh0=2700,Lh1=2700", "2 toques na parede livre: comprimento e a altura de cada ponta")
         XCTAssertEqual(o["min"] as? Bool, true, "minimiza e volta")
         XCTAssertEqual(o["vista"] as? String, "e 3000 0 true true", "2D na parede da esquerda, catálogo aberto")
         XCTAssertEqual(o["semPergunta"] as? Bool, true, "na parede escolhida não pergunta de novo")
@@ -4605,7 +4605,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["maisBaixo"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+800x2700", "mudou a altura: o painel de baixo acompanha")
         XCTAssertEqual(o["novo"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+800x2700 | 3000+500x2700 | 3500+500x2500", "painel novo já nasce em volta do rebaixo")
         XCTAssertEqual(o["prat"] as? Int, 2350, "prateleira não mexe")
-        XCTAssertEqual(o["b3"] as? String, "2 1000,2200,2300,2700,0,600 / 3500,4000,2500,2700,0,600", "3D: caixa pendurada no teto")
+        XCTAssertEqual(o["b3"] as? String, "4 1000,2200,2314,2700,0,2600 / 1000,2200,2300,2314,0,2600 / 3500,4000,2514,2700,0,2600 / 3500,4000,2500,2514,0,2600", "3D: rebaixo total (vai até a frente do ambiente)")
         XCTAssertEqual(o["toque"] as? String, "true true", "toque no rebaixo no 3D abre o quadro dele")
         XCTAssertEqual(o["salva"] as? Int, 2)
         XCTAssertEqual(o["volta"] as? Int, 2)
@@ -4706,7 +4706,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["sel"] as? Bool, true)
         XCTAssertEqual(o["painel"] as? String, "0+1000x2700 | 1000+1200x2300 | 2200+600x2500 | 2800+1200x2700", "painel acompanha os dois níveis")
         XCTAssertEqual(o["esq"] as? String, "2900+600@2550", "sem parede na direita: dente sai pra esquerda")
-        XCTAssertEqual(o["b3"] as? Int, 4)
+        XCTAssertEqual(o["b3"] as? Int, 8)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
@@ -4741,6 +4741,138 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["b3"] as? Bool, true, "3D: nenhuma pedra em cima do fogão")
         XCTAssertEqual(o["emL"] as? String, "0+1228 Le 2000 | 2012+778", "a perna do L fica no pedaço da ponta")
         XCTAssertEqual(o["salva"] as? Int, 2)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Edição ambiente 3D menor: com a parede escolhida fica só o cartão dela (largura e altura de cada ponta);
+    /// 2 toques no canto de cima marca a altura daquele lado (caimento) e os painéis acompanham alinhados embaixo;
+    /// rebaixo do teto nasce total, medido do chão; o dente fica só depois do fim do rebaixo.
+    func testAmbienteMenorCaimentoNoCantoERebaixoTotal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.mods=[];S.tz=[];S.env='livre';S.room='sala';S.W=4000;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.wall={};var R={};draw();
+          open3D();await new Promise(function(r){setTimeout(r,500)});ambSetOpen();await new Promise(function(r){setTimeout(r,200)});var P=document.getElementById('ambset');
+          R.semParede=!!P.querySelector('[data-ambs="RD"]');var h0=P.getBoundingClientRect().height;
+          ambSelWall('f');R.comParede=!P.querySelector('[data-ambs="RD"]')+' '+!!P.querySelector('[data-ambw="f"]')+' '+[].map.call(P.querySelectorAll('[data-ambw] [data-ambs]'),function(i){return i.dataset.ambs+'='+i.value}).join(',');R.menor=P.getBoundingClientRect().height<h0+60;
+          /* altura de cada ponta: caimento */
+          var set=function(k,v){var i=P.querySelector('[data-ambs="'+k+'"]');i.value=v;i.dispatchEvent(new Event('change',{bubbles:true}))};set('Fh1','2500');R.caimento=S.H+' '+wallCfg('F').h1+' '+Math.round(Hx_(2000));
+          /* 2 toques no canto de cima da direita: destaca o campo daquela ponta */
+          var c=__cv3(),rc=c.getBoundingClientRect(),p=__p3(S.W*0.93,S.H*0.82,0),X=rc.left+p[0],Y=rc.top+p[1],ev=function(n){c.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:3,clientX:X,clientY:Y,isPrimary:true}))};
+          ev('pointerdown');ev('pointerup');ev('pointerdown');ev('pointerup');R.canto=window.AMBCORNER+' '+TL[TL.length-1];
+          /* ambiente inteiro abre de novo */
+          [].filter.call(P.querySelectorAll('[data-ambsb="min"]'),function(b){return true})[0].click();R.inteiro=!!P.querySelector('[data-ambs="RD"]');
+          /* painéis acompanham o caimento, todos alinhados embaixo */
+          S.rp=[{id:1,liso:true,x:0,b:0,w:1000,h:2700},{id:2,liso:true,x:1000,b:0,w:1000,h:2700},{id:3,liso:true,x:2000,b:0,w:1000,h:2700}];draw();R.paineis=S.rp.map(function(a){return a.x+'+'+a.w+'x'+a.h+'@'+a.b}).join(' | ');
+          /* rebaixo: nasce total (parede inteira, ambiente todo), medido do chão */
+          var z=tzAdd('f');R.rebaixo=[z.x,z.w,z.d].join(' ')+' '+JSON.stringify(tzGeo(z)).replace(/"/g,'');var i=document.querySelector('#tzbox [data-tzf="hc"]');i.value='2300';i.dispatchEvent(new Event('change',{bubbles:true}));R.marcado=z.hc+' '+S.rp.map(function(a){return a.h}).join(',');
+          /* dente: o rebaixo termina 600 antes e o teto sobe só depois dele */
+          document.querySelector('#tzbox [data-tzb="dente"]').click();R.dente=S.tz.map(function(q){return q.x+'+'+q.w+'@'+q.hc}).join(' | ');R.paineis2=S.rp.map(function(a){return a.x+'+'+a.w+'x'+a.h}).join(' | ');
+          __build();R.transp=__boxes().filter(function(b){return b.tz}).map(function(b){return b.a}).join(',');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["semParede"] as? Bool, true)
+        XCTAssertEqual(o["comParede"] as? String, "true true W=4000,H0=2700,Fh1=2700", "só o cartão da parede, com a altura de cada ponta")
+        XCTAssertEqual(o["menor"] as? Bool, true)
+        XCTAssertEqual(o["caimento"] as? String, "2700 2500 2600", "teto com caimento")
+        XCTAssertEqual(o["canto"] as? String, "Fh1 📐 Canto da parede: digite a altura deste lado · o teto faz o caimento e os painéis acompanham")
+        XCTAssertEqual(o["inteiro"] as? Bool, true, "ambiente inteiro abre de novo")
+        XCTAssertEqual(o["rebaixo"] as? String, "0 4000 0 {x0:0,x1:4000,y0:2500,y1:2600,z0:0,z1:3000,tot:true}", "rebaixo total")
+        XCTAssertEqual(o["marcado"] as? String, "2300 2300,2300,2300", "altura medida do chão; painéis na altura do rebaixo")
+        XCTAssertEqual(o["dente"] as? String, "0+3400@2300 | 3400+600@2450", "o teto sobe só depois do fim do rebaixo")
+        XCTAssertEqual(o["transp"] as? String, "0.42,0.42,0.42,0.42", "rebaixo total transparente (gesso + tabica) pra ver o ambiente")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Gesso do teto: mede com a trena do chão, digita e toca em Ajustar teto, ou arrasta a régua; medidas dos 4 lados.
+    func testGessoTrenaAjustarTetoArrastarEMedidasDosQuatroLados() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.mods=[];S.tz=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.wall={};var R={};draw();
+          open3D();await new Promise(function(r){setTimeout(r,500)});
+          S.rp=[{id:1,liso:true,x:0,b:0,w:1380,h:3400},{id:2,liso:true,x:1380,b:0,w:1380,h:3400},{id:3,liso:true,x:2760,b:0,w:1380,h:3400}];
+          var z=tzAdd('f');var bx=document.getElementById('tzbox');R.quadro=!!bx.querySelector('[data-tzb="aj"]')+' '+!!bx.querySelector('[data-tzr]')+' '+bx.querySelector('[data-tzf="hc"]').value;
+          /* digita a medida da trena e toca em Ajustar teto */
+          var i=bx.querySelector('[data-tzf="hc"]');i.value='3000';bx.querySelector('[data-tzb="aj"]').click();R.ajustou=z.hc+' '+TL[TL.length-1]+' | '+S.rp.map(function(a){return a.h}).join(',');
+          /* +10 e −10 */
+          document.querySelector('#tzbox [data-tzb="p10"]').click();document.querySelector('#tzbox [data-tzb="m10"]').click();document.querySelector('#tzbox [data-tzb="m10"]').click();R.passo=z.hc;
+          /* arrastar a régua: muda ao vivo */
+          var rg=document.querySelector('#tzbox [data-tzr]');rg.value='2800';rg.dispatchEvent(new Event('input',{bubbles:true}));R.arrasta=z.hc+' '+document.querySelector('#tzbox [data-tzf="hc"]').value;rg.dispatchEvent(new Event('change',{bubbles:true}));R.solta=S.rp.map(function(a){return a.h}).join(',');
+          /* medidas dos 4 lados no quadro e em cima do 3D */
+          R.med=document.querySelector('#tzbox [data-tzmed]').textContent.replace(/\s+/g,' ').trim();__tzLab();R.rotulos=[].map.call(document.querySelectorAll('#tzlab > div'),function(d){return d.textContent}).join(' | ');
+          /* 3D: gesso + tabica + trena laranja do chão até ele */
+          __build();var B=__boxes().filter(function(b){return b.g==='tz'});R.b3=B.length+' '+B.filter(function(b){return b.tz}).map(function(b){return Math.round(b.y0)+'-'+Math.round(b.y1)+'@'+b.a}).join(',')+' trena '+B.filter(function(b){return b.nol&&b.y1>100}).map(function(b){return Math.round(b.y0)+'-'+Math.round(b.y1)}).join(',');
+          /* não passa do teto */
+          i=document.querySelector('#tzbox [data-tzf="hc"]');i.value='9000';document.querySelector('#tzbox [data-tzb="aj"]').click();R.limite=z.hc;
+          document.querySelector('#tzbox [data-tzb="ok"]').click();__tzLab();R.fecha=document.getElementById('tzlab').hidden;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["quadro"] as? String, "true true 3200")
+        XCTAssertEqual(o["ajustou"] as? String, "3000 ✓ Teto ajustado · gesso a 3000 do chão (desce 400) | 3000,3000,3000", "o gesso morre na altura digitada e os painéis acompanham")
+        XCTAssertEqual(o["passo"] as? Double, 2990)
+        XCTAssertEqual(o["arrasta"] as? String, "2800 2800", "arrastar a régua muda ao vivo")
+        XCTAssertEqual(o["solta"] as? String, "2800,2800,2800")
+        XCTAssertEqual(o["med"] as? String, "↔ 4140 na parede⤢ 3170 saindo da parede↕ 2800 do chão⇣ desce 600 do teto")
+        XCTAssertEqual(o["rotulos"] as? String, "↔ 4140 | ↔ 3170 | ↕ 2800 do chão | ⇣ 600", "medidas reais dos 4 lados em cima do 3D")
+        XCTAssertEqual(o["b3"] as? String, "4 2814-3400@0.42,2800-2814@0.42 trena 0-2800", "gesso + tabica + trena do chão até ele")
+        XCTAssertEqual(o["limite"] as? Double, 3395, "não passa do teto")
+        XCTAssertEqual(o["fecha"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Aéreo com cava: a porta vai do topo até o final do caixote (não sobe 5 nem para 5 antes).
+    func testPortaDoAereoVaiAteOFinal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          PR.setupDone=1;S.stones=[];S.rp=[];S.mods=[];S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;var R={};draw();
+          var D=function(t){S.mods=[];newTpl(t);var m=S.mods[0],ps=partsOf(m).filter(function(p){return p.name==='Porta'});return ps.map(function(p){return p.y+'..'+(p.y+p.h)+' corte '+p.cw}).join(' | ')};
+          R.aereo=D({n:'Aéreo',w:800,h:910,d:350,b:1500,sup:true,v:[{k:'door',n:2,cava:true}]});
+          R.base=D({n:'Base',w:800,h:720,d:560,b:0,v:[{k:'door',n:2,cava:true}]});
+          var bad=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(!q||!q.sup||!q.v||q.act)return;S.mods=[];newTpl(JSON.parse(JSON.stringify(q)));var m=S.mods[S.mods.length-1];partsOf(m).forEach(function(p){if(p.name==='Porta'&&/cava/.test(p.note||'')&&!/basculante/i.test(p.note||'')&&(p.y<-0.01||p.y+p.h>m.h+0.01))bad.push(q.n+' '+p.y+'..'+(p.y+p.h)+' de '+m.h)})})});R.bad=bad;
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["aereo"] as? String, "0..910 corte 910 | 0..910 corte 910", "do topo até o final do aéreo")
+        XCTAssertEqual((o["bad"] as? [Any])?.count ?? -1, 0, "nenhum aéreo do catálogo com porta passando ou faltando: \(o["bad"] ?? "")")
+        XCTAssertNotNil(o["base"] as? String)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Ripado em cima e roda-teto seguem o caminho do móvel: frente reta nos módulos iguais, lateral só no degrau.
+    func testRipadoERodaTetoSeguemOCaminhoDoMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4000;S.RD=3000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={};draw();
+          var mk=function(x,w,d){newTpl({n:'Torre',w:w,h:2200,d:d,b:0,v:[{k:'door',n:2,cava:false,px:'externo'}]});var m=S.mods[S.mods.length-1];m.x=x;m.w=w;m.d=d;m.tl=m.tr=false;m.rtt={on:true};return m};
+          var a=mk(0,800,560),b=mk(800,800,560),g=mk(1600,900,700),c=mk(2500,800,560);c.tr=false;draw();
+          var inf=function(m){return partsOf(m).filter(function(p){return /^Roda-teto/.test(p.name)}).map(function(p){return (/lateral/.test(p.name)?'lat':'frente')+' '+p.cl+'x'+p.cw+' z'+p.cxz.join('..')}).join(' | ')};
+          R.rt=[inf(a),inf(b),inf(g),inf(c)].join(' // ');
+          var G=cutGroups();R.corte=G.ord.map(function(k){return G.map[k]}).filter(function(q){return q.names.some(function(n){return /^Roda-teto \(lateral/.test(n)})}).map(function(l){return l.L+'x'+l.W+' q'+l.qty}).join(', ');
+          [a,b,g,c].forEach(function(m){delete m.rtt;m.rpTop='frente'});draw();
+          var ri=function(m){var P=partsOf(m);return P.filter(function(p){return p.name==='Ripa do ripado (em cima)'}).length+' lat['+P.filter(function(p){return /^Chapa.*curva/.test(p.name)}).map(function(p){return p.name.replace(/.*curva /,'').replace(')','')+' '+p.cl}).join(';')+']'};
+          R.rp=[ri(a),ri(b),ri(g),ri(c)].join(' // ');
+          var xs=[];[a,b].forEach(function(m){partsOf(m).forEach(function(p){if(p.name==='Ripa do ripado (em cima)')xs.push(Math.round((m.x+p.x)*10)/10)})});xs.sort(function(p,q){return p-q});var ds={};for(var i=1;i<xs.length;i++)ds[Math.round((xs[i]-xs[i-1])*10)/10]=1;R.passos=Object.keys(ds).join(',');
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["rt"] as? String, "frente 800x500 z-25..-10 // frente 800x500 z-25..-10 // frente 900x500 z-25..-10 | lat 125x500 z-10..115 | lat 125x500 z-10..115 // frente 830x500 z-25..-10", "fechamento só na frente; lateral só no degrau do módulo mais fundo")
+        XCTAssertEqual(o["corte"] as? String, "125x500 q2", "as laterais do degrau entram no plano de corte")
+        XCTAssertEqual(o["rp"] as? String, "12 lat[] // 12 lat[] // 12 lat[esquerda 119;direita 119] // 11 lat[direita 489]", "ripado: frente reta nos iguais, lateral só no degrau, recuada 5 cm igual à frente")
+        XCTAssertEqual(o["passos"] as? String, "65", "mesmo espaçamento de ponta a ponta nos módulos iguais")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Catálogo: item que depende de outro móvel entra mesmo assim (o app coloca/escolhe o móvel) e nunca diz "adicionado" sem ter entrado.
+    func testCatalogoTodoItemTocadoEntraNoDesenho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={same:[],n:0};
+          var reset=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.tz=[];S.room='cozinha';S.env='cozinha';S.W=3200;S.RD=3000;S.H=2600;S.Wm=1;S.Hm=1;S.m=null;draw()};
+          for(var ci=0;ci<CATS.length;ci++){var c=CATS[ci];for(var i=0;i<c.it.length;i++){var it=c.it[i];if(!it||!/^(nichoTopo|nichoVidro|fechTeto|espCanto|fchL|fchR|fchT|lixemb|nichoMw)$/.test(it.act||''))continue;reset();var s0=__catSig();TL.length=0;CATALL=true;window.CATQ='';catOpen(c.id);var b=document.querySelector('#catm [data-cati="'+c.id+'|'+i+'"]');if(!b){R.same.push('sem botão '+it.n);continue}b.click();await new Promise(function(r){setTimeout(r,5)});R.n++;if(__catSig()===s0)R.same.push(it.n+' → '+TL[TL.length-1]);var cm=document.getElementById('catm');if(cm)cm.hidden=true}}
+          /* sem pé-direito medido o nicho até o teto avisa o motivo (não diz "adicionado") */
+          reset();S.Hm=0;TL.length=0;var sc=CATS.filter(function(c){return c.id==='sup'})[0],k=-1;sc.it.forEach(function(q,i){if(q&&q.act==='nichoTopo')k=i});catOpen('sup');document.querySelector('#catm [data-cati="sup|'+k+'"]').click();await new Promise(function(r){setTimeout(r,5)});R.aviso=TL.some(function(t){return /adicionado$/.test(t)&&/Nicho em cima/.test(t)})+' '+/pé-direito/.test(TL.join(' '));
+          R.errs=__errs;return JSON.stringify(R);
+          """#)
+        XCTAssertGreaterThan(o["n"] as? Int ?? 0, 9)
+        XCTAssertEqual((o["same"] as? [Any])?.count ?? -1, 0, "todo item tocado muda o desenho: \(o["same"] ?? "")")
+        XCTAssertEqual(o["aviso"] as? String, "false true", "quando não dá, avisa o motivo e não diz adicionado")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

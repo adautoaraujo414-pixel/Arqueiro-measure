@@ -58,11 +58,14 @@
  /* guarda o código: depois de instalar, o app encontra e já abre o projeto */
  function keep(){try{if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText('https://adautoaraujo414-pixel.github.io/Arqueiro-measure/corte.html#d='+d).catch(function(){})}catch(e){}return Promise.resolve()}
  function store(){location.href=ios?APPSTORE:PLAY}
- document.getElementById('abrir').onclick=function(){keep().then(function(){
+ function abrir(){keep().then(function(){
   if(android){location.href='intent://corte?d='+d+'#Intent;scheme=arquemestre;S.browser_fallback_url='+encodeURIComponent(PLAY)+';end';return}
   var t=Date.now();location.href='arquemestre://corte?d='+d;
-  setTimeout(function(){if(Date.now()-t<2200&&!document.hidden)store()},1600)})};
+  setTimeout(function(){if(Date.now()-t<2200&&!document.hidden)store()},1600)})}
+ document.getElementById('abrir').onclick=abrir;
  document.getElementById('baixar').onclick=function(){keep().then(store)};
+ /* no celular já tenta abrir sozinho: com o app instalado vai direto pra ele; sem o app, cai na loja */
+ if(android||ios)setTimeout(abrir,350);
 })();
 </script>
 </body>

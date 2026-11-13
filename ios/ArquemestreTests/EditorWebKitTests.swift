@@ -5639,14 +5639,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ripSoma"] as? String, "310 = 310", "ripas + vãos fecham a largura do recorte")
         XCTAssertEqual(o["corte"] as? String, "Porta 2× 490×705 | Ripa da porta ripada 8× 405×45", "lista de corte: as portas e as ripas")
         XCTAssertEqual(o["svg2d"] as? String, "2 recortes no desenho")
-        XCTAssertEqual(o["usiV"] as? String, "8 rasgos 12×585 entre 35 margem 60 início 74.5 · ripas 0 · simétrico=true")
-        XCTAssertEqual(o["usiH"] as? String, "h 13 rasgos 12×370")
+        XCTAssertEqual(o["usiV"] as? String, "9 rasgos 12×584 entre 35 margem 50 início 51 · ripas 0 · simétrico=true")
+        XCTAssertEqual(o["usiH"] as? String, "h 13 rasgos 12×390")
         XCTAssertEqual(o["ajuste"] as? String, "10 rasgos com 50 entre eles · guardou 50", "a medida vale pra todas e fica guardada")
         XCTAssertEqual(o["palha"] as? String, "{\"t\":\"pal\",\"d\":\"v\"} · recorte 70,70,350,565 · tela 380×595 · ripas 0 · PORTA PALHA: recorte de 350 × 565 mm no meio da porta · moldura de 70 mm em volta · tela de palhinha de 380 × 595 mm fixada por trás (passa 15 mm de cada lado)")
         XCTAssertEqual(o["solidos"] as? String, "4 pedaços da frente sem linha=true · ripas atrás com linha 4 · área frente 238500 = 238500", "3D: a porta é uma peça só (sem risco de emenda), a frente é a porta menos o recorte e as ripas ficam por trás")
         XCTAssertEqual(o["reabriu"] as? String, "{\"t\":\"rip\",\"d\":\"v\"}", "gravar e reabrir mantém o modelo")
         XCTAssertEqual(o["voltou"] as? String, "lisa,lisa ripas 0")
         XCTAssertEqual(o["ajustes"] as? String, "true 11 campos", "as medidas também ficam em Ajustes")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Porta usinada: os rasgos se ajustam sozinhos — 5 cm de cada borda, contados a partir da cava ou do puxador.
+    func testRasgosDaUsinadaDeixamFolgaDaCavaEDoPuxador() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+          S.room='sala';S.env='livre';S.W=3600;S.mods=[];S.stones=[];newTpl(CATS[0].it[1]);var m=S.mods[0];m.x=300;m.w=600;m.v[0].n=1;S.m=m;S.sv=0;
+          var g=function(){draw();var d=partsOf(m).filter(function(p){return p.name==='Porta'})[0],G=d.vz;return d.w+'×'+d.h+' · '+G.n+' rasgos '+G.sw+'×'+G.len+' · cima '+G.mt+' baixo '+G.mb+' esq '+G.ml+' dir '+G.mr+' · '+(G.res||'sem puxador na área')+(G.pul?' pulou '+G.pul:'')+' · dentro='+G.holes.every(function(h){return h[0]>=G.ml-.01&&h[1]>=G.mt-.01&&h[0]+h[2]<=d.w-G.mr+.01&&h[1]+h[3]<=d.h-G.mb+.01})};
+          var v=m.v[0];
+          v.vz={t:'usi',d:'v'};v.cava=true;delete v.px;R.cavaBase=g();
+          v.vz={t:'usi',d:'h'};R.cavaBaseH=g();
+          v.cava=false;v.px='toque';v.vz={t:'usi',d:'v'};R.semPuxador=g();
+          v.px='concha';R.concha=g()+' · '+JSON.stringify(chCfg());
+          v.px='externo';R.externo=g();
+          /* aéreo: cava embaixo */
+          S.mods=[];newTpl(CATS[1].it[2]);m=S.mods[0];m.w=600;m.v[0].n=1;S.m=m;v=m.v[0];v.vz={t:'usi',d:'v'};v.cava=true;delete v.px;R.cavaAereo=g();
+          var d=partsOf(m).filter(function(p){return p.name==='Porta'})[0];R.nota=(d.note||'').slice((d.note||'').indexOf('PORTA USINADA'));
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cavaBase"] as? String, "584×705 · 11 rasgos 12×584 · cima 71 baixo 50 esq 50 dir 50 · cava em cima · dentro=true")
+        XCTAssertEqual(o["cavaBaseH"] as? String, "584×705 · 13 rasgos 12×484 · cima 71 baixo 50 esq 50 dir 50 · cava em cima · dentro=true")
+        XCTAssertEqual(o["semPuxador"] as? String, "584×705 · 11 rasgos 12×605 · cima 50 baixo 50 esq 50 dir 50 · sem puxador na área · dentro=true")
+        XCTAssertEqual(o["concha"] as? String, "584×705 · 6 rasgos 12×605 · cima 50 baixo 50 esq 50 dir 50 · puxador no meio pulou 5 · dentro=true · {\"v\":\"meio\",\"d\":60,\"h\":\"centro\",\"l\":60}")
+        XCTAssertEqual(o["externo"] as? String, "584×705 · 6 rasgos 12×605 · cima 50 baixo 50 esq 50 dir 50 · puxador no meio pulou 5 · dentro=true")
+        XCTAssertEqual(o["cavaAereo"] as? String, "582×750 · 11 rasgos 12×629 · cima 50 baixo 71 esq 50 dir 50 · cava embaixo · dentro=true")
+        XCTAssertEqual(o["nota"] as? String, "PORTA USINADA (vertical): 11 rasgos de 12 × 629 mm fresados na própria peça · 35 mm entre rasgos · primeiro rasgo a 50 mm da borda esquerda · área dos rasgos a 50 mm de cima, 71 de baixo, 50 da esquerda e 50 da direita (folga de 50 mm contada a partir do fim da cava embaixo) · pontas arredondadas (raio da fresa)")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

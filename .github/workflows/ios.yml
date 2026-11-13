@@ -17,7 +17,7 @@ permissions:
 jobs:
   ios:
     runs-on: macos-26
-    timeout-minutes: 110
+    timeout-minutes: 150
     steps:
       - name: Baixar código
         uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
 
       - name: Compilar e rodar os testes no simulador
         id: build_tests
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py iphone)
@@ -66,7 +66,7 @@ jobs:
       - name: Testes no iPad (mesma bateria do iPhone)
         id: ipad_tests
         if: steps.build_tests.outcome == 'success'
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py ipad)

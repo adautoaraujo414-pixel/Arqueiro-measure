@@ -6126,4 +6126,74 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["grManual"] as? String, "0 4")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Porta, vão, janela e blindex nas paredes criadas: 2 toques na parede abrem a escolha ali (antes a porta ia parar na parede
+    /// da direita). A abertura fica na própria parede, fura a parede no 3D sem risco de emenda, não entra em outra abertura,
+    /// seleciona no toque, apaga só à mão (com desfazer) e fica salva no projeto. Meia parede e parede torta não aceitam.
+    func testPortaJanelaEBlindexNasParedesCriadas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        window.__ovl=function(){
+         var vw=innerWidth,vh=innerHeight,out=[];
+         var isCtl=function(e){return e&&e.nodeType===1&&(/^(BUTTON|INPUT|SELECT|TEXTAREA|A)$/i.test(e.tagName)||(e.hasAttribute&&e.hasAttribute('data-q')))};
+         var vis=function(e){if(!e.getClientRects().length)return false;var cs=getComputedStyle(e);return !(cs.visibility==='hidden'||cs.display==='none'||+cs.opacity===0||cs.pointerEvents==='none')};
+         var clipOk=function(e,x,y){for(var p=e.parentElement;p&&p!==document.documentElement;p=p.parentElement){var cs=getComputedStyle(p);if(/(auto|scroll|hidden|clip)/.test(cs.overflowX+' '+cs.overflowY)){var r=p.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return false}}return true};
+         var lab=function(e){var t=(e.getAttribute&&(e.getAttribute('aria-label')||e.getAttribute('title')))||e.textContent||e.value||'';return (e.id?'#'+e.id+' ':'')+String(e.tagName).toLowerCase()+' "'+String(t).trim().replace(/\s+/g,' ').slice(0,30)+'"'};
+         [].slice.call(document.querySelectorAll('button,input,select,textarea,[data-q]')).forEach(function(a){
+          if(!vis(a))return;var r=a.getBoundingClientRect();if(r.width<10||r.height<10)return;var x=r.left+r.width/2,y=r.top+r.height/2;if(x<0||y<0||x>=vw||y>=vh)return;if(!clipOk(a,x,y))return;
+          var t=document.elementFromPoint(x,y);if(!t||t===a||a.contains(t)||t.contains(a))return;
+          var c=t;while(c&&c!==document.body&&!isCtl(c)){if(/fixed|absolute|sticky/.test(getComputedStyle(c).position))break;c=c.parentElement}
+          if(!c||c===document.body||c===document.documentElement)c=t;
+          for(var p=c;p&&p!==document.documentElement;p=p.parentElement){var pr=p.getBoundingClientRect(),ps=getComputedStyle(p);if(/fixed|absolute/.test(ps.position)&&pr.width*pr.height>vw*vh*.6)return}
+          out.push(lab(a)+' ← '+lab(c))});
+         return out};
+        S.mods=[];S.stones=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;newTpl(3);S.mods[0].x=200;
+        S.xw=[{id:1,a:[2500,400],b:[2500,2900],t:150}];draw();await W(800);open3D();await W(500);__cam(0.75,0.45,0.9);await W(150);re3();
+        var cv=document.getElementById('cv3'),free=function(s,y){var p=org3api.proj([2425,y,400+s]);var h=p&&xop3api.hit(p[0],p[1]);return h&&h.w==='x'?p:null};
+        var p1=free(1300,1400),h1=xop3api.hit(p1[0],p1[1]);R.onde=h1.w+' '+h1.wid+' '+Math.round(h1.a);R.outrosFluxos=window.__wallHit3(p1[0],p1[1])===null;
+        __sel3(p1[0],p1[1]);await W(200);var ch=document.getElementById('xoch3');R.escolha=[].map.call(ch.querySelectorAll('button'),function(b){return b.dataset.xoch}).join();
+        ch.querySelector('[data-xoch="porta"]').click();await W(900);var w=S.xw[0];R.porta=[w.ops[0].t,w.ops[0].w,w.ops[0].h,w.ops[0].x].join()+' ops '+S.ops.length;
+        var bx=function(id){return __boxes().filter(function(b){return b.xop===id})},rg=function(a,k0,k1){return Math.round(Math.min.apply(null,a.map(function(b){return b[k0]})))+'..'+Math.round(Math.max.apply(null,a.map(function(b){return b[k1]})))};
+        R.lugar='x'+rg(bx(1),'x0','x1')+' y'+rg(bx(1),'y0','y1')+' z'+rg(bx(1),'z0','z1');R.furo=JSON.stringify(xop3api.holes(1));
+        R.quadro=document.querySelector('#xob3 b').textContent;R.botoes=__ovl().length;
+        var setv=function(k,v){var i=document.querySelector('#xob3 [data-xof="'+k+'"]');i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}))};
+        setv('w',900);await W(800);setv('x',300);await W(800);R.medidas=w.ops[0].w+' '+w.ops[0].x;
+        document.querySelector('#xob3 [data-xob="open"]').click();await W(700);R.aberta=w.ops[0].open===true;document.querySelector('#xob3 [data-xob="open"]').click();await W(300);
+        var p2=free(1900,1500);__sel3(p2[0],p2[1]);await W(200);document.querySelector('#xoch3 [data-xoch="blxj"]').click();await W(600);R.naoCabe=(S.xw[0].ops||[]).length;
+        __sel3(p2[0],p2[1]);await W(200);document.querySelector('#xoch3 [data-xoch="janela"]').click();await W(900);w=S.xw[0];R.duas=w.ops.map(function(q){return q.t+' x'+q.x+' w'+q.w}).join(' | ');
+        var x0=w.ops[1].x;setv('x',600);await W(300);R.naoEntra=w.ops[1].x===x0;R.furos=JSON.stringify(xop3api.holes(1));
+        var pcs=(window.__bgAll?__bgAll():[]);
+        document.querySelector('#xob3 [data-xob="x"]').click();await W(200);var d=bx(1).sort(function(a,b){return (b.y1-b.y0)*(b.z1-b.z0)-(a.y1-a.y0)*(a.z1-a.z0)})[0],pc=org3api.proj([d.x0,(d.y0+d.y1)/2,(d.z0+d.z1)/2]),r=cv.getBoundingClientRect();
+        ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:5,pointerType:'touch',isPrimary:true,clientX:r.left+pc[0],clientY:r.top+pc[1],buttons:n==='pointerup'?0:1}))});await W(900);R.toque=xop3api.sel();
+        document.querySelector('#xob3 [data-xob="del"]').click();await W(900);R.apagou=(S.xw[0].ops||[]).length;document.getElementById('v3und').click();await W(500);R.desfez=S.xw[0]?(S.xw[0].ops||[]).length:-1;
+        R.salvo=(JSON.parse(JSON.stringify(snapState())).xw[0].ops||[]).length;
+        var pf=org3api.proj([1800,1500,0]),hf=xop3api.hit(pf[0],pf[1]);R.fundo=hf?hf.w:'';
+        S.xw.push({id:3,a:[300,2200],b:[2300,2200],t:150,ops:[{id:9,t:'porta',st:'blindex',w:800,h:2100,b:0,x:200},{id:10,t:'janela',st:'blindex',w:700,h:1100,b:1000,x:1200}]});S.xw.push({id:4,a:[600,1500],b:[1900,1500],t:150,tp:'meia'});S.xw.push({id:5,a:[3000,500],b:[3600,1400],t:150});draw();re3();
+        R.blindex=(bx(9).length>0)+' '+(bx(10).length>0);R.aceita=[1,3,4,5].map(function(id){return xop3api.ok(id)}).join();
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["onde"] as? String, "x 1 1300")
+        XCTAssertEqual(o["outrosFluxos"] as? Bool, true)
+        XCTAssertEqual(o["escolha"] as? String, "porta,vao,janela,blxp,blxj,x")
+        XCTAssertEqual(o["porta"] as? String, "porta,800,2100,900 ops 0")
+        XCTAssertEqual(o["lugar"] as? String, "x2335..2425 y0..2160 z1240..2160")
+        XCTAssertEqual(o["furo"] as? String, "[[900,1700,0,2100]]")
+        XCTAssertEqual(o["quadro"] as? String, "Porta na parede criada · 800 × 2100")
+        XCTAssertEqual(o["botoes"] as? Int, 0)
+        XCTAssertEqual(o["medidas"] as? String, "900 300")
+        XCTAssertEqual(o["aberta"] as? Bool, true)
+        XCTAssertEqual(o["naoCabe"] as? Int, 1)
+        XCTAssertEqual(o["duas"] as? String, "porta x300 w900 | janela x1300 w1200")
+        XCTAssertEqual(o["naoEntra"] as? Bool, true)
+        XCTAssertEqual(o["furos"] as? String, "[[300,1200,0,2100],[1300,2500,1000,2000]]")
+        XCTAssertEqual(o["toque"] as? Int, 1)
+        XCTAssertEqual(o["apagou"] as? Int, 1)
+        XCTAssertEqual(o["desfez"] as? Int, 2)
+        XCTAssertEqual(o["salvo"] as? Int, 2)
+        XCTAssertEqual(o["fundo"] as? String, "f")
+        XCTAssertEqual(o["blindex"] as? String, "true true")
+        XCTAssertEqual(o["aceita"] as? String, "true,true,false,false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

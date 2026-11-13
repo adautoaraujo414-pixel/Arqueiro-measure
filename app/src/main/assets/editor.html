@@ -9841,10 +9841,17 @@ function parentPath(p){var a=String(p).split('.');a.pop();return a.join('.')}
 /* engrosso da prateleira: réguas de 15 ou 25 mm só na frente e atrás, quantas camadas quiser, pra baixo ou pra cima; opção de outra prateleira encostada cobrindo */
 function engOk(g){if(!g||!(+g.n>0))return null;return {n:Math.max(1,Math.min(6,Math.round(+g.n))),t:+g.t===25?25:15,dir:g.dir==='up'?'up':'down',w:Math.max(20,Math.min(400,+g.w||80)),top:g.top?1:0}}
 function engT(g,e){g=engOk(g);return g?g.n*g.t+(g.top?e:0):0}
+/* prateleira encostada na outra: o vão entre duas divisões deitadas pode fechar (0 mm) quando está vazio (sem porta, gaveta, eletro nem outra divisão).
+   As duas prateleiras ficam uma em cima da outra, rentes, sem entrar uma na outra. Entre 1 e 39 mm não existe vão útil: ou encosta ou fica com 40. */
+function zOk(c){return !!(c&&!c.c&&!c.t&&!c.p)}
+function divPut(n,i,H,s0,s1,a){var ci=n.c[i],nx=n.c[i+1],tot=s0+s1,zA=H&&zOk(ci),zB=H&&zOk(nx);a=cl(a,zA?0:40,tot-(zB?0:40));if(zA&&a<40)a=a<20?0:40;if(zB&&tot-a<40)a=tot-a<20?tot:tot-40;
+ if(a<=0){ci.z=0;ci.z0=1}else{delete ci.z0;ci.z=r1(a)}
+ if(tot-a<=0){nx.z=0;nx.z0=1}else{var was=nx.z0;delete nx.z0;if(was||(nx.z!=null&&nx.z!==''&&+nx.z>0))nx.z=r1(tot-a)}}
+window.rgDivPut=divPut;
 function lay(m){var e=E_(m),rg=(vaoRanges(m)||[])[0]||[e,m.w-e],X0=rg[0],X1=rg[1],Y0=vTop(m),Y1=vBot(m),regs=[],divs=[];
  function rec(n,x0,y0,x1,y1,path,par,ci){var R={n:n,x0:x0,y0:y0,x1:x1,y1:y1,path:path,par:par,ci:ci,leaf:!(n.s&&n.c&&n.c.length>1)};regs.push(R);if(R.leaf)return;
-  var H=n.s==='h',L=H?y1-y0:x1-x0,k=n.c.length,th=n.c.map(function(c,i){return i<k-1?(H?e+engT(c.eng,e):e):0}),av=L-th.reduce(function(a,b){return a+b},0),sz=n.c.map(function(c){return (c.z!=null&&c.z!==''&&+c.z>0)?+c.z:null});
-  if(sz.every(function(s){return s!=null}))sz[k-1]=null;
+  var H=n.s==='h',L=H?y1-y0:x1-x0,k=n.c.length,th=n.c.map(function(c,i){return i<k-1?(H?e+engT(c.eng,e):e):0}),av=L-th.reduce(function(a,b){return a+b},0),sz=n.c.map(function(c){return c.z0?0:((c.z!=null&&c.z!==''&&+c.z>0)?+c.z:null)});
+  if(sz.every(function(s){return s!=null})){var jl_=k-1;for(var q_=k-1;q_>=0;q_--)if(!n.c[q_].z0){jl_=q_;break}sz[jl_]=null}
   var fx=0,nf=0;sz.forEach(function(s){if(s==null)nf++;else fx+=s});var each=(av-fx)/nf;if(each<20)R.bad=1;sz=sz.map(function(s){return s==null?each:s});
   var p=H?y0:x0;for(var i=0;i<k;i++){var a=p,b=p+sz[i];if(H)rec(n.c[i],x0,a,x1,b,path+'.'+i,R,i);else rec(n.c[i],a,y0,b,y1,path+'.'+i,R,i);
    if(i<k-1){var t_=th[i];divs.push({n:n,R:R,i:i,H:H,a:b,b:b+t_,path:path,x0:H?x0:b,x1:H?x1:b+t_,y0:H?b:y0,y1:H?b+t_:y1,eng:H?engOk(n.c[i].eng):null});p=b+t_}else p=b}}
@@ -10028,7 +10035,7 @@ window.addEventListener('pointerdown',function(ev){var t=ev.target;if(!t||!t.clo
  else{m.rtt=m.rtt||{on:1};DR={t:'x',m:m,sd:q[1],e0:+(q[1]==='L'?m.rtt.eL:m.rtt.eR)||0,p0:p0,k:k,mv:0}}
  if(DR)DR.pid=ev.pointerId;try{draw();panel()}catch(_){}},true);
 window.addEventListener('pointermove',function(ev){if(!DR)return;if(DR.pid!=null&&ev.pointerId!==DR.pid)return;ev.stopImmediatePropagation();ev.preventDefault();var q=svPt(ev),dx=(q.x-DR.p0.x)/DR.k,dy=(q.y-DR.p0.y)/DR.k;if(!DR.mv){if(Math.hypot(dx*DR.k,dy*DR.k)<2)return;DR.mv=1;snap()}
- if(DR.t==='d'){var d=Math.round((DR.H?dy:dx)/10)*10,a=cl(DR.s0+d,40,DR.s0+DR.s1-40),n=DR.n;n.c[DR.i].z=r1(a);var nx=n.c[DR.i+1];if(nx.z!=null&&nx.z!==''&&+nx.z>0)nx.z=r1(DR.s0+DR.s1-a)}
+ if(DR.t==='d'){var d=Math.round((DR.H?dy:dx)/10)*10,n=DR.n;divPut(n,DR.i,DR.H,DR.s0,DR.s1,DR.s0+d)}
  else if(DR.t==='e'){DR.n.el.ox=Math.round(DR.ox+dx);DR.n.el.oy=Math.round(DR.oy+dy)}
  else{var v=Math.max(0,Math.round((DR.sd==='L'?-dx:dx)/10)*10+DR.e0);if(DR.sd==='L')DR.m.rtt.eL=v;else DR.m.rtt.eR=v}
  if(typeof rafDraw==='function')rafDraw(function(){});else draw()},true);
@@ -10088,7 +10095,7 @@ var pn0=panel;panel=window.panel=function(){var m=window.SOLO2,solo=!!(m&&isRg(m
  if(solo&&(RG.tab==='cor'||RG.tab==='leg')){S.tab=RG.tab==='cor'?10:(+RG.legT||0);var r0=pn0.apply(this,arguments);try{$('tabs').innerHTML=tabsHtml(m);if(RG.tab==='leg'){var bd0=$('bd');bd0.insertAdjacentHTML('afterbegin','<div style="margin:4px 0 8px">'+B('back','↩ Voltar pro editor por vãos',false,'font-weight:700')+'</div>')}}catch(_){}return r0}
  if(solo){var t0=S.tab;S.tab=0}var r=pn0.apply(this,arguments);if(solo)S.tab=t0;
  try{if(solo){$('tabs').innerHTML=tabsHtml(m);$('bd').innerHTML=body(m)}else if(S.m&&S.m.corner&&S.tab===0){var bx2=document.createElement('div');bx2.innerHTML=cshHtml(S.m);var nt=[].filter.call(document.querySelectorAll('#bd .note'),function(x){return /Canto em L com porta articulada/.test(x.textContent)})[0];if(nt)nt.insertAdjacentElement('afterend',bx2);else $('bd').appendChild(bx2)}else if(S.m&&!S.m.sup&&+S.m.h>=1500&&S.tab===3&&!isRg(S.m)){var bx=document.createElement('div');bx.innerHTML=slrHtml(baseOf(S.m));$('bd').appendChild(bx)}else if(S.m&&isRg(S.m)&&[1,2,3].indexOf(S.tab)>=0){$('bd').innerHTML=modBar()+'<div style="border-radius:10px;padding:8px 10px;margin:6px 0;border:1px solid #d6dbe3;margin-top:10px;text-align:left"><b>Este módulo é montado por vãos no desenho</b><div class="note">Toque no vão e escolha divisão, gavetas, porta ou eletro.</div><button data-rga="solo" style="width:100%;padding:12px;font-weight:700;margin-top:6px">✏️ Editar só ele no 2D</button></div>'+(S.tab===3&&!S.m.sup&&+S.m.h>=1500?slrHtml(baseOf(S.m)):'')}}catch(_){}return r};
-function setD(m,path,i,side,val){var n=nodeAt(m,path),L=lay(m),A=regOf(L,path+'.'+i),Bb=regOf(L,path+'.'+(i+1));if(!n||!A||!Bb)return;var H=n.s==='h',s0=H?A.y1-A.y0:A.x1-A.x0,s1=H?Bb.y1-Bb.y0:Bb.x1-Bb.x0,tot=s0+s1,a=side?tot-val:val;a=cl(a,40,tot-40);n.c[i].z=r1(a);var nx=n.c[i+1];if(nx.z!=null&&nx.z!==''&&+nx.z>0)nx.z=r1(tot-a)}
+function setD(m,path,i,side,val){var n=nodeAt(m,path),L=lay(m),A=regOf(L,path+'.'+i),Bb=regOf(L,path+'.'+(i+1));if(!n||!A||!Bb)return;var H=n.s==='h',s0=H?A.y1-A.y0:A.x1-A.x0,s1=H?Bb.y1-Bb.y0:Bb.x1-Bb.x0,tot=s0+s1,a=side?tot-val:val;divPut(n,i,H,s0,s1,a)}
 function setSize(m,path,dim,val){var p=String(path);while(p.indexOf('.')>0){var par=parentPath(p),pn=nodeAt(m,par);if(pn&&pn.c&&pn.c.length>1&&pn.s===(dim==='h'?'h':'v')){var ci=+p.split('.').pop(),k=pn.c.length;if(ci<k-1)setD(m,par,ci,0,val);else setD(m,par,ci-1,1,val);return true}p=par}return false}
 function canSize(m,path,dim){var p=String(path);while(p.indexOf('.')>0){var par=parentPath(p),pn=nodeAt(m,par);if(pn&&pn.c&&pn.c.length>1&&pn.s===(dim==='h'?'h':'v'))return true;p=par}return false}
 window.rgSetSize=setSize;window.rgDelDiv=function(m,p,i){return delDiv(m,p,i)};window.rgNode=nodeAt;

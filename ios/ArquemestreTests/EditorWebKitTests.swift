@@ -6338,4 +6338,91 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["seletor"] as? String, "1 · file · image/* · várias=true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Editor por vãos: uma prateleira pode encostar na outra. O vão vazio entre as duas fecha (0 mm) e elas ficam uma em cima da outra,
+    /// rentes dos lados, sem entrar uma na outra. Entre 1 e 39 mm não existe: ou encosta ou fica com 40. Vão com gaveta não fecha.
+    /// Salvar e reabrir mantém; puxando de volta o vão abre de novo.
+    func testPrateleiraEncostaNaOutraSemEntrarUmaNaOutra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=800;m.h=2600;m.d=560;draw();
+        soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='div';panel();document.querySelector('[data-rga="sp|h|4"]').click();await W(100);
+        var SH=function(){return partsOf(m).filter(function(p){return /^Prateleira/.test(p.name)}).map(function(p){return Math.round(p.y)+'..'+Math.round(p.y+p.h)+' corte '+p.cl+'×'+p.cw}).join(' / ')},Z=function(){return m.rt.c.map(function(c){return (c.z0?'F':'')+(c.z==null?'livre':c.z)}).join(',')},V=function(){return rgLay(m).regs.filter(function(r){return r.leaf}).map(function(r){return Math.round(r.y1-r.y0)}).join(',')};
+        R.antes=Z()+' | vãos '+V()+' | '+SH();
+        var pe=function(t,n,x,y,id){t.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:y,buttons:n==='pointerup'?0:1}))};
+        var drag=async function(i,mm){var h=document.querySelector('#svg [data-rgd="0|r|'+i+'"]'),r=h.getBoundingClientRect(),k=+h.dataset.k||1,cx=r.left+r.width/2,cy=r.top+r.height/2,st=mm>0?6:-6,n=Math.ceil(Math.abs(mm*k)/6)+2;pe(h,'pointerdown',cx,cy,5);for(var q=1;q<=n;q++)pe(document.body,'pointermove',cx,cy+Math.sign(mm)*Math.min(Math.abs(mm*k)+12,q*6),5);pe(document.body,'pointerup',cx,cy+mm*k,5);await W(120)};
+        /* desce a 2ª divisão até encostar na 3ª (o vão do meio fecha) */
+        await drag(1,900);R.encostou=Z()+' | vãos '+V()+' | '+SH();R.bad=rgLay(m).regs.filter(function(r){return r.bad}).length;
+        var P=partsOf(m).filter(function(p){return /^Prateleira/.test(p.name)}).sort(function(a,b){return a.y-b.y});R.rente=Math.abs((P[1].y+P[1].h)-P[2].y)<.01&&P[1].x===P[2].x&&P[1].w===P[2].w;R.semEntrar=P.every(function(p,i){return i===0||p.y>=P[i-1].y+P[i-1].h-.01});
+        /* salvar e reabrir mantém encostado · desfazer volta */
+        loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];S.m=m;soloOn(m);draw();R.reabriu=Z()+' | '+V();
+        /* puxa de volta: o vão abre de novo */
+        await drag(1,-200);R.abriu=!m.rt.c[2].z0&&+V().split(',')[2]>=40;
+        /* medida digitada no vão do meio: 15 encosta, 30 vira 40, 0 encosta */
+        var put=function(v){var L=rgLay(m),A=L.regs.filter(function(r){return r.path==='r.1'})[0],B=L.regs.filter(function(r){return r.path==='r.2'})[0],s0=A.y1-A.y0,s1=B.y1-B.y0;rgDivPut(m.rt,1,true,s0,s1,s0+s1-v);draw();return V().split(',')[2]};
+        R.digitado=[put(15),put(30),put(250),put(0)].join(',');put(300);
+        /* vão com gaveta não fecha: para em 40 */
+        RG.sel={mi:0,path:'r.2'};RG.dsel=null;RG.tab='gav';panel();var bi=document.querySelector('[data-rga^="ins|gav"]');R.temBotaoGaveta=!!bi;if(bi){bi.click();await W(100)}
+        await drag(1,2000);R.comGaveta=Z()+' | vãos '+V();
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "livre,livre,livre,livre | vãos 606,606,606,606 | 621..636 corte 770×530 / 1243..1258 corte 770×530 / 1864..1879 corte 770×530")
+        XCTAssertEqual(o["encostou"] as? String, "livre,1212.5,F0,livre | vãos 606,1213,0,606 | 621..636 corte 770×530 / 1849..1864 corte 770×530 / 1864..1879 corte 770×530")
+        XCTAssertEqual(o["bad"] as? Int, 0)
+        XCTAssertEqual(o["rente"] as? Bool, true)
+        XCTAssertEqual(o["semEntrar"] as? Bool, true)
+        XCTAssertEqual(o["reabriu"] as? String, "livre,1212.5,F0,livre | 606,1213,0,606")
+        XCTAssertEqual(o["abriu"] as? Bool, true)
+        XCTAssertEqual(o["digitado"] as? String, "0,40,250,0")
+        XCTAssertEqual(o["temBotaoGaveta"] as? Bool, true)
+        XCTAssertEqual(o["comGaveta"] as? String, "livre,1172.5,40,livre | vãos 606,1173,40,606")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// Transferência e backup levam o projeto inteiro, com o que foi criado por último: depurador nas duas montagens, prateleira
+    /// encostada na outra, porta e janela em parede criada. Vale pra salvar e reabrir, enviar pro cortador (sem preço),
+    /// enviar pro cliente e ler de volta um backup no formato do app. O formato é o mesmo no Android, no iPhone e no Windows.
+    func testTransferenciaEBackupLevamOProjetoInteiro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        window.ArqueApp=Object.assign(window.ArqueApp||{},{shareCut:function(c){window.__shared={code:c}},shareClient:function(c){window.__sharedCl={code:c}}});
+        /* projeto com o que foi criado nos últimos dias: depurador nas duas montagens, prateleira encostada, porta e janela em parede criada */
+        var pj=newProjFor({nome:'Cliente Transferência'});S.room='cozinha';S.env='livre';S.W=4000;S.mods=[];S.stones=[];
+        newTpl(CATS[1].it[2]);var a1=S.mods[0];a1.x=100;newTpl(CATS[1].it[2]);var a2=S.mods[1];a2.x=1300;
+        S.m=a1;dpSet(a1,'on',1);['cw',600,'ch',215,'cd',280,'vh',40,'fw',900,'pa',470,'du',120,'fh',150,'rf',2].forEach(function(v,i,a){if(i%2===0)dpSet(a1,v,a[i+1])});
+        S.m=a2;dpSet(a2,'on',1);dpSet(a2,'md','r');['cw',600,'ch',40,'cd',335,'rw',230,'rd',220,'rz',60,'mh',252].forEach(function(v,i,a){if(i%2===0)dpSet(a2,v,a[i+1])});
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var t=S.m;t.w=800;t.h=2400;t.x=2600;draw();
+        soloOn(t);RG.sel={mi:2,path:'r'};RG.tab='div';panel();document.querySelector('[data-rga="sp|h|4"]').click();await W(80);
+        var L=rgLay(t),A=L.regs.filter(function(r){return r.path==='r.1'})[0],B=L.regs.filter(function(r){return r.path==='r.2'})[0];rgDivPut(t.rt,1,true,A.y1-A.y0,B.y1-B.y0,9999);try{soloOff()}catch(_){}
+        S.xw=[{id:1,x0:1500,z0:1200,x1:3500,z1:1200,h:2600,t:100,tp:'normal',ops:[{id:1,t:'porta',x:300,b:0,w:800,h:2100},{id:2,t:'janela',x:1300,b:1000,w:600,h:1000}]}];
+        draw();saveNow();
+        var sig=function(st){return JSON.stringify({dep:(st.mods||[]).map(function(m){return m.dep||null}),z:((st.mods||[])[2]&&(st.mods[2].rt||{}).c||[]).map(function(c){return [c.z0||0,c.z==null?null:c.z]}),xw:(st.xw||[]).map(function(w){return (w.ops||[]).map(function(o){return o.t+o.w+'x'+o.h})}),n:(st.mods||[]).length})};
+        var pecas=function(){return S.mods.map(function(m){return partsOf(m).filter(function(p){return !p.noCut}).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(',')}).join('|')};
+        var S0=sig(snapState()),P0=pecas();R.projeto=S0.length>120&&dpStatus(a1).ok&&dpStatus(a2).ok;
+        /* 1. salvar e abrir de novo */
+        loadState(JSON.parse(JSON.stringify(snapState())));draw();R.reabrir=sig(snapState())===S0&&pecas()===P0;
+        /* 2. enviar pro cortador (código compacto, sem preço) e abrir do outro lado */
+        window.__shared=null;openCut();cutSend();await new Promise(function(r){var t0=Date.now();(function w(){if(__shared||Date.now()-t0>6000)r();else setTimeout(w,50)})()});
+        var code=__shared?__shared.code:'',back=code?await cutDecode(code):null;R.cortador=!!back&&sig(back.st)===S0&&!('preco' in back.st);
+        /* 2b. enviar pro cliente (link) e abrir do outro lado */
+        window.__sharedCl=null;clientSend();await new Promise(function(r){var t0=Date.now();(function w(){if(window.__sharedCl||Date.now()-t0>6000)r();else setTimeout(w,50)})()});
+        var bc=window.__sharedCl?await cutDecode(window.__sharedCl.code):null;R.cliente=!!bc&&sig(bc.st)===S0;
+        /* 3. backup no formato do app (zip com files/moveis/projects.json) lido de volta: o projeto vem inteiro */
+        var enc=new TextEncoder();async function defl(u){return new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer())}
+        async function mkzip(ents){var parts=[],cd=[],off=0;for(var i=0;i<ents.length;i++){var e=ents[i],nm=enc.encode(e.n),raw=enc.encode(e.t),dat=e.m===8?await defl(raw):raw,h=new Uint8Array(30+nm.length),v=new DataView(h.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(8,e.m,true);v.setUint32(18,dat.length,true);v.setUint32(22,raw.length,true);v.setUint16(26,nm.length,true);h.set(nm,30);parts.push(h,dat);var cc=new Uint8Array(46+nm.length),cv=new DataView(cc.buffer);cv.setUint32(0,0x02014b50,true);cv.setUint16(10,e.m,true);cv.setUint32(20,dat.length,true);cv.setUint32(24,raw.length,true);cv.setUint16(28,nm.length,true);cv.setUint32(42,off,true);cc.set(nm,46);cd.push(cc);off+=h.length+dat.length}var cs=cd.reduce(function(s,q){return s+q.length},0),eo=new Uint8Array(22),ev=new DataView(eo.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,ents.length,true);ev.setUint16(10,ents.length,true);ev.setUint32(12,cs,true);ev.setUint32(16,off,true);return new File(parts.concat(cd,[eo]),'ArqueMeasure-backup-automatico.zip')}
+        var todos=pLoadAll(),meu=JSON.parse(JSON.stringify(todos.filter(function(p){return p.id===pj.id})[0]));meu.id='pOUTRO';meu.client={nome:'Veio do backup'};
+        var r=await projBk.ler(await mkzip([{n:'backup-completo.txt',m:0,t:'Arque Measure'},{n:'files/moveis/projects.json',m:8,t:JSON.stringify([meu])}]));
+        R.backup=r.projs.length===1&&r.erros.length===0&&sig(r.projs[0].p.current)===S0;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["projeto"] as? Bool, true)
+        XCTAssertEqual(o["reabrir"] as? Bool, true)
+        XCTAssertEqual(o["cortador"] as? Bool, true)
+        XCTAssertEqual(o["cliente"] as? Bool, true)
+        XCTAssertEqual(o["backup"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

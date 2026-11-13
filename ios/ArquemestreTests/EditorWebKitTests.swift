@@ -5726,4 +5726,62 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["d3"] as? String, "4 módulos no 3D de 4", "o 3D mostra tudo")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Fotos do projeto pro orçamento: modo foto no 3D — 📷 tira várias, ✕ exclui, OK devolve a lista pro app. O projeto não muda.
+    func testModoFotoDoOrcamentoNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+          var FILES={},DONE=null;window.ArqueApp=Object.assign(window.ArqueApp||{},{putFile:function(n,b){FILES[n]=b},getFile:function(n){return FILES[n]||''},quotePhotos:function(j){DONE=j}});
+          var p=newProjFor({nome:'Dona Maria'});S.room='cozinha';S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[1]);draw();saveNow();
+          var antes=JSON.stringify(snapState().mods.length);
+          arquePhotoMode([]);await W(900);
+          R.modo=arquePhotoState().on+' · barra '+(!!document.querySelector('#fotobar [data-fotoshot]'))+' · 3D aberto '+!document.getElementById('v3m')?.hidden;
+          document.querySelector('#fotobar [data-fotoshot]').click();await W(300);try{__cam(1.2,.5,1)}catch(_){}await W(200);
+          document.querySelector('#fotobar [data-fotoshot]').click();await W(300);document.querySelector('#fotobar [data-fotoshot]').click();await W(300);
+          var ns=Object.keys(FILES).filter(function(n){return /^orcfoto_/.test(n)});R.tirou=ns.length+' arquivos · nomes ok='+ns.every(function(n){return /^orcfoto_[A-Za-z0-9_.-]{1,80}\.jpg$/.test(n)})+' · miniaturas '+document.querySelectorAll('#fotobar img').length;
+          /* a foto não é em branco: tem desenho de verdade */
+          var im=new Image();await new Promise(function(r){im.onload=r;im.onerror=r;im.src='data:image/jpeg;base64,'+FILES[ns[0]]});var c=document.createElement('canvas');c.width=64;c.height=48;var x=c.getContext('2d');x.drawImage(im,0,0,64,48);var d=x.getImageData(0,0,64,48).data,cols={};for(var i=0;i<d.length;i+=4)cols[(d[i]>>4)+','+(d[i+1]>>4)+','+(d[i+2]>>4)]=1;
+          R.foto='cores diferentes>8='+(Object.keys(cols).length>8)+' · iguais entre si='+(FILES[ns[0]]===FILES[ns[1]]);
+          /* ✕ tira a segunda */
+          document.querySelectorAll('#fotobar [data-fotodel]')[1].click();await W(100);R.excluiu=arquePhotoState().fotos.length+' fotos';
+          /* OK devolve pro orçamento */
+          document.querySelector('#fotobar [data-fotook]').click();await W(100);var o=JSON.parse(DONE);
+          R.ok='pid certo='+(o.pid===p.id)+' · '+o.photos.length+' fotos · são a 1ª e a 3ª='+(o.photos[0]===ns[0]&&o.photos[1]===ns[2])+' · barra some='+(document.getElementById('fotobar').style.display==='none');
+          R.projeto=(JSON.stringify(snapState().mods.length)===antes)+' · projetos '+pLoadAll().length;
+          /* reabrir o modo com as fotos que já existem */
+          arquePhotoMode(o.photos);await W(300);R.reabriu=arquePhotoState().fotos.length+' fotos · miniaturas '+document.querySelectorAll('#fotobar img').length;
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["modo"] as? String, "true · barra true · 3D aberto true")
+        XCTAssertEqual(o["tirou"] as? String, "3 arquivos · nomes ok=true · miniaturas 3")
+        XCTAssertEqual(o["foto"] as? String, "cores diferentes>8=true · iguais entre si=false", "a foto tem o desenho do 3D (não sai em branco) e cada ângulo dá uma foto diferente")
+        XCTAssertEqual(o["excluiu"] as? String, "2 fotos")
+        XCTAssertEqual(o["ok"] as? String, "pid certo=true · 2 fotos · são a 1ª e a 3ª=true · barra some=true")
+        XCTAssertEqual(o["projeto"] as? String, "true · projetos 1", "tirar foto não muda nem cria projeto")
+        XCTAssertEqual(o["reabriu"] as? String, "2 fotos · miniaturas 2", "reabrindo, as fotos que já existem aparecem")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// 🧠 avisos do cérebro: dá pra desativar no painel dele e ativar de novo em Ajustes; fica guardado.
+    func testAvisosDoCerebroDesativarEAtivar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+          try{STD().supPedra=0}catch(_){}S.mods=[];newTpl(CATS[1].it[2]);var m=S.mods[0];m.shv=[.5];m.div=[0.95];m.v.push(JSON.parse(JSON.stringify(m.v[0])));draw();await W(500);
+          var vis=function(){return document.body.classList.contains('brainoff')?'escondido':'aparece'};
+          R.inicio=vis();
+          brainOpen();await W(100);var b=document.querySelector('#brainm [data-brtog]');R.noPainel=!!b+' · '+(b?b.textContent.slice(0,30):'');
+          b.click();await W(150);draw();await W(500);R.desativou=vis()+' · guardado '+STD().brainOff+' · painel fechou '+document.getElementById('brainm').hidden;
+          stdOpen(0);await W(150);var a=document.querySelector('#stdbody [data-brtog]');R.ajustes=!!a+' · '+(a?a.textContent.slice(0,32):'');a.click();await W(150);document.getElementById('stdm').hidden=true;draw();await W(500);
+          R.ativou=vis()+' · guardado '+STD().brainOff;
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["inicio"] as? String, "aparece")
+        XCTAssertEqual(o["noPainel"] as? String, "true · 🧠 Avisos do cérebro: ATIVADOS")
+        XCTAssertEqual(o["desativou"] as? String, "escondido · guardado 1 · painel fechou true")
+        XCTAssertEqual(o["ajustes"] as? String, "true · 🧠 Avisos do cérebro: DESATIVADO")
+        XCTAssertEqual(o["ativou"] as? String, "aparece · guardado 0")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

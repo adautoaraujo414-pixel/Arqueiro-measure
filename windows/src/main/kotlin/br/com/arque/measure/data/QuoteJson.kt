@@ -25,6 +25,7 @@ object QuoteJson {
             }))
             .put("addenda", JSONArray(q.addenda.map { a -> JSONObject().put("id", a.id).put("desc", a.desc).put("value", a.value).put("date", a.dateMs) }))
             .put("photos", JSONArray(q.photos))
+            .put("pid", q.projId ?: JSONObject.NULL)
     }).toString()
 
     fun quotesFromJson(s: String): List<Quote> {
@@ -46,6 +47,7 @@ object QuoteJson {
                     (0 until ad.length()).map { n -> val a = ad.getJSONObject(n); QuoteAddendum(a.getString("id"), a.optString("desc"), a.optDouble("value", 0.0), a.optLong("date", System.currentTimeMillis())) }
                 },
                 photos = (j.optJSONArray("photos") ?: JSONArray()).let { ph -> (0 until ph.length()).map { n -> ph.getString(n) } },
+                projId = if (j.isNull("pid")) null else j.optString("pid").ifBlank { null },
             )
         }
     }

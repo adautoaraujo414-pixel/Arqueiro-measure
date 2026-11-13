@@ -260,7 +260,7 @@ object Browser {
   window.ArqueApp={
     isApp:function(){return true},isWindows:function(){return true},
     companyName:A('companyName'),listNotes:A('listNotes'),contextNote:A('contextNote'),
-    linkNote:A('linkNote'),openNoteOf:A('openNoteOf'),makeQuote:A('makeQuote'),setCurrent:A('setCurrent'),
+    linkNote:A('linkNote'),openNoteOf:A('openNoteOf'),makeQuote:A('makeQuote'),quotePhotos:A('quotePhotos'),setCurrent:A('setCurrent'),
     openTrena:A('openTrena'),shareStart:A('shareStart'),isSharing:B('isSharing'),isViewer:B('isViewer'),
     shareUpdate:function(){},shareCut:A('shareCut'),shareClient:A('shareClient'),close:A('close'),
     putFile:A('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')

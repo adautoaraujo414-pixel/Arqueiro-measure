@@ -872,6 +872,38 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Orçamento criado pelo editor de móveis: abre direto nele; ao sair, volta pro projeto. */
     var pendingQuoteId by mutableStateOf<String?>(null)
+
+    // ---- fotos do projeto no orçamento: abre o projeto no 3D em modo foto e volta com as fotos ----
+    var pendingPhotoMode by mutableStateOf(false)
+    var photoQuoteId: String? = null
+    /** Arquivo de uma foto do orçamento (fica junto dos arquivos do editor de móveis). */
+    fun quotePhotoFile(name: String): File = File(File(getApplication<Application>().filesDir, "moveis"), name)
+    private val photoNameRx = Regex("^orcfoto_[A-Za-z0-9_.-]{1,80}\\.jpg$")
+    fun addQuotePhotos(q: br.com.arque.measure.model.Quote, pid: String) {
+        photoQuoteId = q.id
+        if (q.projId != pid) saveQuote(q.copy(projId = pid))
+        pendingNewProject = false
+        pendingProject = pid
+        pendingPhotoMode = true
+        screen = Screen.Moveis
+    }
+    /** O editor devolve a lista de fotos (as que ficaram depois de tirar e excluir no modo foto). */
+    fun quotePhotosFromMoveis(json: String) {
+        runCatching {
+            val o = org.json.JSONObject(json)
+            val arr = o.optJSONArray("photos") ?: org.json.JSONArray()
+            val names = (0 until arr.length()).map { arr.getString(it) }.filter { photoNameRx.matches(it) && quotePhotoFile(it).exists() }
+            val q = quotes.firstOrNull { it.id == photoQuoteId }
+            if (q != null) { saveQuote(q.copy(photos = names)); pendingQuoteId = q.id }
+        }
+        photoQuoteId = null
+        pendingPhotoMode = false
+        screen = Screen.Quotes
+    }
+    /** Tira uma foto do orçamento (o X em cima dela). O arquivo fica no aparelho; só sai da lista do orçamento. */
+    fun removeQuotePhoto(q: br.com.arque.measure.model.Quote, name: String) = saveQuote(q.copy(photos = q.photos.filter { it != name }))
+    /** Lista das fotos em JSON, pro editor abrir o modo foto já mostrando as que existem. */
+    fun quotePhotosJson(): String = org.json.JSONArray(quotes.firstOrNull { it.id == photoQuoteId }?.photos ?: emptyList<String>()).toString()
     var quotesBackProject by mutableStateOf<String?>(null)
 
     /** "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações. */
@@ -894,6 +926,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 noteId = pid?.let { notesOfProject(it).firstOrNull() },
                 // desconto (%) dado no valor do projeto: o PDF mostra o desconto e o valor com desconto
                 discountPct = o.optDouble("discountPct", 0.0).let { if (it.isNaN()) 0.0 else it.coerceIn(0.0, 100.0) },
+                projId = pid,
             )
             saveQuote(q)
             pendingQuoteId = q.id
@@ -938,7 +971,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     dir.listFiles()?.forEach { it.delete() }
                     val safe = q.clientName.ifBlank { "cliente" }.replace(Regex("[^A-Za-z0-9À-ÿ]+"), "_").take(30)
                     val f = File(dir, "Orcamento_$safe.pdf")
-                    f.outputStream().use { QuotePdf.write(comp, q, note, renderer, it, logo) }
+                    val fotos = q.photos.mapNotNull { n -> runCatching { BitmapFactory.decodeFile(quotePhotoFile(n).path) }.getOrNull() }
+                    f.outputStream().use { QuotePdf.write(comp, q, note, renderer, it, logo, fotos) }
                     FileProvider.getUriForFile(app, "${app.packageName}.fileprovider", f)
                 }
             }

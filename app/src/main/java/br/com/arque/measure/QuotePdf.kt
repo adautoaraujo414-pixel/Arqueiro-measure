@@ -72,7 +72,7 @@ object QuotePdf {
         fun finish() { if (no > 0) doc.finishPage(page) }
     }
 
-    fun write(company: Company, q: Quote, note: Note?, renderer: SheetRenderer?, out: OutputStream, logo: android.graphics.Bitmap? = null) {
+    fun write(company: Company, q: Quote, note: Note?, renderer: SheetRenderer?, out: OutputStream, logo: android.graphics.Bitmap? = null, photos: List<android.graphics.Bitmap> = emptyList()) {
         val doc = PdfDocument()
         try {
             val pg = Pager(doc)
@@ -209,6 +209,23 @@ object QuotePdf {
             wrapped.forEach { l ->
                 pg.ensure(16f) {}
                 pg.c.drawText(l, M, pg.y + 11f, vp); pg.y += if (l.isEmpty()) 6f else 15f
+            }
+
+            // fotos do projeto: duas por página, na largura da folha
+            if (photos.isNotEmpty()) {
+                val fp = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+                val maxW = W - 2 * M
+                val maxH = (H - 2 * M - 40f) / 2f - 12f
+                photos.forEachIndexed { i, b ->
+                    if (i % 2 == 0) { pg.next(); pg.c.drawText(tr("FOTOS DO PROJETO"), M, pg.y + 14f, paint(14f, true)); pg.y += 28f }
+                    if (b.width > 0 && b.height > 0) {
+                        val k = minOf(maxW / b.width, maxH / b.height)
+                        val bw = b.width * k; val bh = b.height * k
+                        val bx = M + (maxW - bw) / 2f
+                        pg.c.drawBitmap(b, null, android.graphics.RectF(bx, pg.y, bx + bw, pg.y + bh), fp)
+                        pg.y += bh + 14f
+                    }
+                }
             }
 
             // desenho (folhas da nota), uma página cada

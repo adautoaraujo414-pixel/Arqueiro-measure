@@ -6,6 +6,7 @@ import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -223,6 +224,35 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
         }
 
         Field(q.notes, tr("Observações (opcional)"), Modifier.fillMaxWidth()) { upd(q.copy(notes = it)) }
+
+        // fotos do projeto: tiradas no 3D do projeto, saem no PDF
+        Text(tr("Fotos do projeto"), color = Ui.text, fontSize = 16.sp)
+        if (q.photos.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                q.photos.forEach { name ->
+                    val bmp = remember(name) { runCatching { android.graphics.BitmapFactory.decodeFile(vm.quotePhotoFile(name).path) }.getOrNull() }
+                    Box(Modifier.width(150.dp).height(100.dp).clip(RoundedCornerShape(10.dp)).background(Ui.panel)) {
+                        if (bmp != null) androidx.compose.foundation.Image(bmp.asImageBitmap(), tr("Foto do projeto"), Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                        Box(Modifier.align(Alignment.TopEnd).padding(4.dp).clip(RoundedCornerShape(50)).background(Color(0xCC000000)).clickable { vm.removeQuotePhoto(q, name) }.padding(horizontal = 9.dp, vertical = 3.dp)) {
+                            Text("✕", color = Color.White, fontSize = 14.sp)
+                        }
+                    }
+                }
+            }
+        }
+        var projMenu by remember { mutableStateOf(false) }
+        Box {
+            OutlinedButton(onClick = {
+                val pid = q.projId
+                if (pid != null && vm.moveisProjects().any { it.id == pid }) vm.addQuotePhotos(q, pid) else projMenu = true
+            }, modifier = Modifier.fillMaxWidth()) { Text(tr("📷 Adicionar fotos do projeto")) }
+            DropdownMenu(expanded = projMenu, onDismissRequest = { projMenu = false }) {
+                val ps = vm.moveisProjects()
+                if (ps.isEmpty()) DropdownMenuItem(text = { Text(tr("Nenhum projeto de móveis ainda")) }, onClick = { projMenu = false })
+                ps.forEach { p -> DropdownMenuItem(text = { Text(p.name.ifBlank { tr("(sem cliente)") } + " · " + p.label) }, onClick = { projMenu = false; vm.addQuotePhotos(q, p.id) }) }
+            }
+        }
+        Text(tr("Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento."), color = Ui.dim, fontSize = 12.sp)
 
         // aditivos: itens que entram depois do orçamento fechado, sem mexer no original
         Text(tr("Aditivos"), color = Ui.text, fontSize = 16.sp)

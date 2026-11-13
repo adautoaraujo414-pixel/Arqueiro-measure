@@ -10982,4 +10982,47 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  if(typeof wvGo==='function'){var g0=wvGo;window.wvGo=wvGo=function(w){var r=g0.apply(this,arguments);try{if(!wvCur()&&S.m&&S.m.wing&&!S.m.corner){var f=S.mods.filter(function(m){return !m.wing||m.corner});if(f.length){S.m=f[f.length-1];draw();try{panel()}catch(_){}}}}catch(_){}return r}}
 })();
 </script>
+<script>
+/* ===== Fotos do projeto pro orçamento: o app abre o projeto no 3D em "modo foto". 📷 tira quantas fotos quiser do ângulo
+   que estiver na tela; ✕ tira uma; OK volta pro orçamento com as fotos. As fotos ficam nos arquivos do app. ===== */
+(function(){
+ var FOT=[],TH={},ON=false;
+ function A(){return window.ArqueApp||null}
+ function thumb(n){if(TH[n])return TH[n];try{var b=A()&&A().getFile&&A().getFile(n);if(b){TH[n]='data:image/jpeg;base64,'+b;return TH[n]}}catch(_){}return ''}
+ function el(){var b=document.getElementById('fotobar');if(!b){b=document.createElement('div');b.id='fotobar';b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:34px;z-index:100005;background:#fff;border:2px solid #1f6feb;border-radius:14px;padding:8px 10px;box-shadow:0 6px 24px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:6px;max-width:94vw';document.body.appendChild(b)}return b}
+ function show(){var b=el();b.hidden=!ON;b.style.display=ON?'flex':'none';if(!ON)return;
+  b.innerHTML='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button data-fotoshot="1" style="background:#1f6feb;color:#fff;border-color:#1f6feb;font-weight:700;min-height:44px;padding:6px 14px">📷 Tirar foto</button><span style="font-size:13px;color:#1b1f27;flex:1;min-width:120px"><b>'+FOT.length+'</b> foto(s) · gire o 3D e toque na câmera</span><button data-fotook="1" style="background:#1f8a5b;color:#fff;border-color:#1f8a5b;font-weight:700;min-height:44px;padding:6px 18px">OK</button></div>'+
+   (FOT.length?'<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">'+FOT.map(function(n,i){var t=thumb(n);return '<div style="position:relative;flex:0 0 auto;width:96px;height:64px;border-radius:8px;overflow:hidden;background:#e8ebf0;border:1px solid #c9d0da">'+(t?'<img src="'+t+'" style="width:100%;height:100%;object-fit:cover" alt="">':'')+'<button data-fotodel="'+i+'" title="Tirar esta foto" style="position:absolute;top:2px;right:2px;min-height:0;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(0,0,0,.75);color:#fff;border:0;font-size:13px;line-height:1">✕</button></div>'}).join('')+'</div>':'')}
+ function shoot(){try{if(window.re3)window.re3()}catch(_){}var c=document.getElementById('cv3');if(!c||!c.width){try{toast('Abra o 3D pra tirar a foto')}catch(_){}return null}
+  var k=Math.min(1,1600/c.width),t=document.createElement('canvas');t.width=Math.max(1,Math.round(c.width*k));t.height=Math.max(1,Math.round(c.height*k));var x=t.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,t.width,t.height);x.drawImage(c,0,0,t.width,t.height);
+  var d=t.toDataURL('image/jpeg',.88),n='orcfoto_'+String((typeof CUR!=='undefined'&&CUR)||'p').replace(/[^A-Za-z0-9]/g,'').slice(0,30)+'_'+Date.now()+'.jpg';
+  try{if(A()&&A().putFile)A().putFile(n,d.split(',')[1])}catch(_){try{toast('Não consegui guardar a foto')}catch(__){}return null}
+  FOT.push(n);TH[n]=d;show();try{toast('📷 Foto '+FOT.length+' guardada')}catch(_){}return n}
+ window.arquePhotoMode=function(ex){FOT=Array.isArray(ex)?ex.filter(function(n){return typeof n==='string'}):[];ON=true;try{if(typeof open3D==='function')open3D()}catch(_){}show();try{toast('📷 Modo foto: gire o 3D e toque em Tirar foto · OK volta pro orçamento')}catch(_){}};
+ window.arquePhotoState=function(){return {on:ON,fotos:FOT.slice()}};
+ window.arquePhotoShoot=shoot;
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-fotoshot],[data-fotook],[data-fotodel]');if(!t)return;e.stopPropagation();e.preventDefault();
+  if(t.dataset.fotoshot){shoot();return}
+  if(t.dataset.fotodel!==undefined){FOT.splice(+t.dataset.fotodel,1);show();return}
+  ON=false;show();var j=JSON.stringify({pid:(typeof CUR!=='undefined'&&CUR)||'',photos:FOT});try{if(typeof saveNow==='function')saveNow()}catch(_){}
+  try{if(A()&&A().quotePhotos){A().quotePhotos(j);return}}catch(_){}
+  try{toast('As fotos do orçamento ainda não estão disponíveis neste aparelho.')}catch(_){}},true);
+})();
+</script>
+<style>body.brainoff #brainchip{display:none!important}</style>
+<script>
+/* ===== 🧠 avisos do cérebro: dá pra desativar e ativar (fica guardado nos Ajustes). Desativado, o botão de avisos some do desenho. ===== */
+(function(){
+ function off(){try{return +STD().brainOff===1}catch(_){return false}}
+ function aplica(){try{document.body.classList.toggle('brainoff',off())}catch(_){}}
+ function set(v){try{STD().brainOff=v?1:0;prSave()}catch(_){}aplica();try{toast(v?'🧠 Avisos desativados · pra ativar de novo: ⚙ Ajustes → Avisos do cérebro':'🧠 Avisos ativados')}catch(_){}}
+ window.brainOff=off;window.brainSetOff=set;
+ function btn(){return '<button data-brtog="1" style="width:100%;margin-top:8px">'+(off()?'🧠 Avisos do cérebro: DESATIVADOS · tocar pra ativar':'🧠 Avisos do cérebro: ATIVADOS · tocar pra desativar')+'</button>'}
+ if(typeof window.brainOpen==='function'){var bo=window.brainOpen;window.brainOpen=function(){var r=bo.apply(this,arguments);try{var m=document.getElementById('brainm'),h=m&&m.firstElementChild;if(h&&!h.querySelector('[data-brtog]')){var d=document.createElement('div');d.innerHTML=btn();h.appendChild(d)}}catch(_){}return r}}
+ function ajustes(){try{var b=document.getElementById('stdbody');if(!b||window.WIZ!=null)return;var o=b.querySelector('[data-braj]');if(o){o.innerHTML='<div class="sec">Avisos do cérebro<span>⌃</span></div>'+btn()+'<div class="note">O 🧠 confere o projeto e mostra avisos em cima do desenho. Desativado, o botão de avisos não aparece.</div>';return}var d=document.createElement('div');d.setAttribute('data-braj','1');d.innerHTML='<div class="sec">Avisos do cérebro<span>⌃</span></div>'+btn()+'<div class="note">O 🧠 confere o projeto e mostra avisos em cima do desenho. Desativado, o botão de avisos não aparece.</div>';var sv=b.querySelector('[data-stdsave]');var host=sv&&sv.parentNode&&sv.parentNode.parentNode===b?sv.parentNode:null;if(host)b.insertBefore(d,host);else b.appendChild(d)}catch(_){}}
+ if(typeof stdOpen==='function'){var so=stdOpen;window.stdOpen=stdOpen=function(){var r=so.apply(this,arguments);ajustes();return r}}
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-brtog]');if(t){e.stopPropagation();set(!off());var m=document.getElementById('brainm');if(m&&!m.hidden&&m.contains(t)){if(off())m.hidden=true;else{t.outerHTML=btn()}}ajustes();return}var sm=document.getElementById('stdm');if(sm&&!sm.hidden&&sm.contains(e.target))setTimeout(function(){var b=document.getElementById('stdbody');if(b&&!b.querySelector('[data-braj]'))ajustes()},60)},true);
+ aplica();setTimeout(aplica,400);
+})();
+</script>
 </body></html>

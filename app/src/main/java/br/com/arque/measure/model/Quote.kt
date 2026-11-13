@@ -41,4 +41,6 @@ data class Quote(
     val addenda: List<QuoteAddendum> = emptyList(),
     /** Fotos do projeto (arquivos em projects/images/), tiradas no 3D. */
     val photos: List<String> = emptyList(),
+    /** Projeto do editor de móveis ligado a este orçamento (de onde saem as fotos). */
+    val projId: String? = null,
 )

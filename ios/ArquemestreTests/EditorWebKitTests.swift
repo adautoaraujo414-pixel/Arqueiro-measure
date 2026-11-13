@@ -5866,4 +5866,58 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desceu"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Zoom do 3D chega bem perto da peça (80×, 16 vezes mais perto que o limite antigo) e o arrasto acompanha o zoom;
+    /// de longe o limite de arrasto continua o mesmo. Antes a câmera travava em 5× (15 mm = 13 pontos).
+    func testZoomDo3DChegaBemPertoDaPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(3);var m=S.mods[0];draw();open3D();await W(400);
+        var sc=function(){var a=org3api.proj([m.x,1000,m.d]),b=org3api.proj([m.x+15,1000,m.d]);return a&&b?Math.hypot(b[0]-a[0],b[1]-a[1]):0};
+        __cam(0,0,5);var s5=sc();__cam(0,0,40);R.z40=org3api.cam().zoom;__cam(0,0,500);R.zmax=org3api.cam().zoom;var s80=sc();
+        R.razao=Math.round(s80/s5);
+        var cv=document.getElementById('cv3'),cw=cv.clientWidth,lim=Math.max(300,cw*.7);
+        org3api.setCam(80,1e7,0);R.panPerto=Math.round(org3api.cam().px/lim);org3api.setCam(1,1e7,0);R.panLonge=Math.round(org3api.cam().px/lim);
+        __cam(0,0,1);var r=cv.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+        var pe=function(n,id,x,y,prim){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',isPrimary:prim,clientX:x,clientY:y,buttons:1}))};
+        for(var k0=0;k0<6;k0++){pe('pointerdown',21,cx-10,cy,true);pe('pointerdown',22,cx+10,cy,false);for(var k=1;k<=20;k++)pe('pointermove',22,cx+10+k*15,cy,false);pe('pointerup',21,cx-10,cy,true);pe('pointerup',22,cx+310,cy,false)}
+        R.pinca=Math.round(org3api.cam().zoom);R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["z40"] as? Int, 40)
+        XCTAssertEqual(o["zmax"] as? Int, 80)
+        XCTAssertEqual(o["razao"] as? Int, 16)
+        XCTAssertEqual(o["panPerto"] as? Int, 80)
+        XCTAssertEqual(o["panLonge"] as? Int, 1)
+        XCTAssertEqual(o["pinca"] as? Int, 80)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// Divisões: escolhe com recuo (vai 30 mm pra trás) ou sem recuo (rente na frente) antes de dividir; vale pra prateleira
+    /// e pra divisória em pé, e dá pra mudar uma só depois. Sem escolher, continua como era (prateleira com recuo, divisória rente).
+    func testDivisoesComRecuoOuSemRecuo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;
+        var C=function(s){document.querySelector(s).click()};
+        var dv=function(){return partsOf(m).filter(function(p){return /^(Prateleira|Prateleira fixa|Divisória)$/.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw+(p.cxz?' z'+p.cxz.join('..'):'')}).join(' | ')};
+        var bt=function(q){return [].map.call(document.querySelectorAll('#bd [data-rga^="'+q+'|"]'),function(b){return b.textContent+(b.classList.contains('sel')?'*':'')}).join(' / ')};
+        soloOn(m);RG.rcN=undefined;RG.sel={mi:0,path:'r'};RG.tab='div';panel();R.botoes=bt('rcn');
+        C('[data-rga="sp|h|2"]');RG.sel={mi:0,path:'r.0'};RG.dsel=null;panel();C('[data-rga="sp|v|2"]');R.padrao=dv();
+        RG.sel={mi:0,path:'r.1'};RG.dsel=null;panel();C('[data-rga="rcn|0"]');R.selSem=bt('rcn');C('[data-rga="sp|h|2"]');
+        RG.sel={mi:0,path:'r.1.1'};RG.dsel=null;panel();C('[data-rga="rcn|1"]');C('[data-rga="sp|v|2"]');R.tudo=dv();
+        RG.sel=null;RG.dsel={mi:0,path:'r.0',i:0};panel();R.painelV=bt('rc');C('[data-rga="rc|30"]');R.umaSo=dv().split(' | ')[0];C('[data-rga="rc|0"]');R.voltou=dv().split(' | ')[0];
+        RG.rcN=undefined;R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botoes"] as? String, "Com recuo · 30 mm pra trás / Sem recuo · rente na frente")
+        XCTAssertEqual(o["padrao"] as? String, "Divisória 1127.5×550 | Prateleira 870×520 z30..550")
+        XCTAssertEqual(o["selSem"] as? String, "Com recuo · 30 mm pra trás / Sem recuo · rente na frente*")
+        XCTAssertEqual(o["tudo"] as? String, "Divisória 1127.5×550 | Prateleira 870×520 z30..550 | Prateleira fixa 870×550 z0..550 | Divisória 556.3×520 z30..550")
+        XCTAssertEqual(o["painelV"] as? String, "Com recuo · 30 mm pra trás / Sem recuo (rente na frente)*")
+        XCTAssertEqual(o["umaSo"] as? String, "Divisória 1127.5×520 z30..550")
+        XCTAssertEqual(o["voltou"] as? String, "Divisória 1127.5×550")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

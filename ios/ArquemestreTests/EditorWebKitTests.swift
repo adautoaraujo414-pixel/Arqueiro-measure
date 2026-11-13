@@ -5784,4 +5784,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ativou"] as? String, "aparece · guardado 0")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Módulo de chão sem base: a opção de tamponamento inferior aparece e a peça fecha embaixo
+    /// (no chão entra entre as laterais; suspenso passa por baixo, rente na frente). Com base, segue escondida.
+    func testTamponamentoInferiorEmModuloSemBase() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.room='sala';S.env='livre';S.W=3600;S.mods=[];S.stones=[];newTpl(CATS[0].it[0]);var m=S.mods[0];m.x=600;m.w=900;S.m=m;draw();
+        var tb=function(){var p=partsOf(m).filter(function(q){return q.name==='Tamponamento de baixo'})[0];return p?('x'+p.x+' y'+p.y+' '+p.w+'×'+p.h+' corte '+p.cl+'×'+p.cw):'sem peça'};
+        var opt=function(){S.tab=4;panel();var c=document.querySelector('#bd input[data-c="tb"]');return c?(getComputedStyle(c.closest('.chk')).display!=='none'?'aparece':'escondida'):'não existe'};
+        R.comBase=opt()+' · '+tb();
+        m.base=false;draw();R.semBase=opt()+' · '+tb();
+        m.tb=true;draw();R.chao=tb();
+        m.b=300;draw();R.suspenso=tb();
+        m.tpass=true;m.tl=true;m.tr=true;draw();R.passaReto=tb();
+        m.tpass=false;m.b=0;m.base=true;draw();R.voltouBase=opt()+' · '+tb();
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["comBase"] as? String, "escondida · sem peça")
+        XCTAssertEqual(o["semBase"] as? String, "aparece · sem peça")
+        XCTAssertEqual(o["chao"] as? String, "x15 y690 870×30 corte 870×560")
+        XCTAssertEqual(o["suspenso"] as? String, "x0 y820 900×30 corte 900×560")
+        XCTAssertEqual(o["passaReto"] as? String, "x-30 y820 960×30 corte 960×560")
+        XCTAssertEqual(o["voltouBase"] as? String, "escondida · sem peça")
+    }
 }

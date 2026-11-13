@@ -6033,7 +6033,7 @@ final class EditorWebKitTests: XCTestCase {
         for(var i=0;i<ids.length;i++){m.rt.c[1].el={mdl:ids[i],fr:(i%2?'nicho':'rec'),ox:0,oy:0};draw();re3();var q=bb();if(!q.n){R.nao.push(ids[i]+' sem aparelho');continue}var p=org3api.proj([(q.x0+q.x1)/2,(q.y0+q.y1)/2,q.z1]),a0=ele3api.ang(q.k);org3api.one(p[0],p[1]);await W(220);if(ele3api.ang(q.k)===a0)R.nao.push(ids[i]);else{ele3api.toggle(q.k);await W(60)}}
         /* toque de verdade na tela, na beirada esquerda (em cima da frente fixa) */
         m.rt.c[1].el={mdl:'f_el80',fr:'rec',ox:0,oy:0};draw();re3();await W(700);var fr_=__boxes().filter(function(b){return /^0:Frente com recorte do forno/.test(String(b.nm))});R.semEmenda=fr_.filter(function(b){return !b.nol}).length+' '+fr_.filter(function(b){return b.rec1}).length+' '+fr_.filter(function(b){return b.recLn}).length;var q=bb(),p=org3api.proj([q.x0+(q.x1-q.x0)*.04,(q.y0+q.y1)/2,q.z1]),r=cv.getBoundingClientRect(),a0=ele3api.ang(q.k);
-        ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:5,pointerType:'touch',isPrimary:true,clientX:r.left+p[0],clientY:r.top+p[1],buttons:n==='pointerup'?0:1}))});await W(900);R.beirada=ele3api.ang(q.k)!==a0;
+        ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:5,pointerType:'touch',isPrimary:true,clientX:r.left+p[0],clientY:r.top+p[1],buttons:n==='pointerup'?0:1}))});await W(300);for(var t_=0;t_<24&&ele3api.ang(q.k)===a0;t_++)await W(200);R.beirada=ele3api.ang(q.k)!==a0;
         R.errs=(window.__errs||[]).length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["total"] as? Int, 18)

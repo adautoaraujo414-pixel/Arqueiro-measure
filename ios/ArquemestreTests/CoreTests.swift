@@ -131,6 +131,16 @@ final class JsonCompatTests: XCTestCase {
         XCTAssertEqual(back, [a])
         let q = Quote(clientName: "Ana", items: [QuoteItem(desc: "Cozinha", qty: 1, unit: "un", unitValue: 9800)], discountPct: 5)
         XCTAssertEqual(try JsonCodec.quotesFromJson(JsonCodec.quotesToJson([q])), [q])
+        // aditivos e fotos (feitos no Android/Windows) ida e volta sem perder; arquivo antigo abre com as listas vazias
+        var qa = q
+        qa.addenda = [QuoteAddendum(id: "a1", desc: "Nicho a mais", value: 450, dateMs: 1_700_000_000_000)]
+        qa.photos = ["orc-1.jpg"]
+        XCTAssertEqual(try JsonCodec.quotesFromJson(JsonCodec.quotesToJson([qa])), [qa])
+        XCTAssertEqual(QuoteMath.grandTotal(qa), QuoteMath.finalValue(qa) + 450, accuracy: 0.001)
+        let old = #"[{"id":"x1","client":"Maria","city":"","date":1700000000000,"discount":0,"validity":15,"drawing":false,"noteId":null,"notes":"","items":[{"id":"i1","desc":"Cozinha","qty":1,"unit":"un","value":1000}]}]"#
+        let o = try JsonCodec.quotesFromJson(old)[0]
+        XCTAssertEqual(o.addenda.count, 0)
+        XCTAssertEqual(o.photos.count, 0)
     }
 }
 

@@ -14,6 +14,11 @@ object QuoteMath {
     fun discountValue(q: Quote): Double = cents(original(q) * q.discountPct.coerceIn(0.0, 100.0) / 100.0)
     fun finalValue(q: Quote): Double = cents(original(q) - discountValue(q))
 
+    /** Soma dos aditivos (não entra no desconto: o desconto é só do orçamento original). */
+    fun addendaTotal(q: Quote): Double = cents(q.addenda.sumOf { cents(it.value) })
+    /** Total geral: orçamento (já com o desconto) + aditivos. */
+    fun grandTotal(q: Quote): Double = cents(finalValue(q) + addendaTotal(q))
+
     /** 1234.5 → "R$ 1.234,50" (no Brasil; fora, na moeda do país do telefone). */
     fun brl(v: Double): String = br.com.arque.measure.i18n.I18n.money(cents(v))
 

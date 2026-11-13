@@ -5695,4 +5695,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ponteira"] as? String, "15.6 15.6 17.1 18.3 19.8 21.4 22.9 24.1 25.1 25.5 · sobe em curva=true · espelhada=true")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// REGRA: no 2D de cada parede aparece só o que é daquela parede. O fundo não desenha os módulos das laterais; nada é apagado e o 3D mostra tudo.
+    func testFundoMostraSoOQueEDoFundo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+          S.room='cozinha';S.env='cozinha';S.W=3600;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[0].it[1]);var nF=S.mods.length;
+          /* módulos na parede esquerda (cozinha em L) e uma torre */
+          addWing('e');addWing('e');draw();await W(80);
+          var vis=function(){return [].slice.call(document.querySelectorAll('#svg g#mod[data-mi]')).filter(function(g){return g.style.display!=='none'}).map(function(g){var m=S.mods[+g.getAttribute('data-mi')];return (m.corner?'canto':m.wing||'f')}).sort().join('')};
+          S.m=S.mods[0];draw();await W(60);
+          R.mods=S.mods.map(function(m){return m.corner?'canto':(m.wing||'f')}).sort().join('');
+          R.fundo=vis();
+          var st0=JSON.stringify(snapState().mods.map(function(m){return [m.wing||'f',m.x,m.w]}));
+          wvGo('e');await W(80);R.esquerda=S.mods.length+' módulos na vista da esquerda';
+          wvGo('f');await W(80);R.voltou=vis();
+          R.dados=JSON.stringify(snapState().mods.map(function(m){return [m.wing||'f',m.x,m.w]}))===st0;
+          /* módulo da lateral escolhido continua aparecendo no fundo */
+          var wm=S.mods.filter(function(m){return m.wing&&!m.corner})[0];if(wm){S.m=wm;draw();await W(60);R.escolhido=vis()}
+          open3D();await W(700);R.d3=[...new Set(dbg3all().map(function(b){return String(b.nm||'').split(':')[0]}).filter(function(x){return /^\d+$/.test(x)}))].length+' módulos no 3D de '+S.mods.length;document.getElementById('v3x').click();
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["mods"] as? String, "eeff", "projeto: 2 módulos no fundo e 2 na parede esquerda")
+        XCTAssertEqual(o["fundo"] as? String, "ff", "no fundo aparecem só os 2 do fundo")
+        XCTAssertEqual(o["esquerda"] as? String, "2 módulos na vista da esquerda")
+        XCTAssertEqual(o["voltou"] as? String, "ff", "voltando da esquerda, o fundo continua só com os do fundo")
+        XCTAssertEqual(o["dados"] as? Bool, true, "nada mudou no projeto: mesmas paredes, posições e larguras")
+        XCTAssertEqual(o["escolhido"] as? String, "eff", "módulo da lateral escolhido de propósito continua visível (não fica escolhido escondido)")
+        XCTAssertEqual(o["d3"] as? String, "4 módulos no 3D de 4", "o 3D mostra tudo")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

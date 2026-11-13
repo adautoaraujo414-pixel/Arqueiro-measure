@@ -142,6 +142,10 @@ enum QuoteMath {
     static func original(_ q: Quote) -> Double { cents(q.items.reduce(0) { $0 + lineTotal($1) }) }
     static func discountValue(_ q: Quote) -> Double { cents(original(q) * min(max(q.discountPct, 0), 100) / 100) }
     static func finalValue(_ q: Quote) -> Double { cents(original(q) - discountValue(q)) }
+    /// Soma dos aditivos (não entra no desconto: o desconto é só do orçamento original).
+    static func addendaTotal(_ q: Quote) -> Double { cents(q.addenda.reduce(0) { $0 + cents($1.value) }) }
+    /// Total geral: orçamento (já com o desconto) + aditivos.
+    static func grandTotal(_ q: Quote) -> Double { cents(finalValue(q) + addendaTotal(q)) }
 
     private static let brlF: NumberFormatter = {
         let f = NumberFormatter()

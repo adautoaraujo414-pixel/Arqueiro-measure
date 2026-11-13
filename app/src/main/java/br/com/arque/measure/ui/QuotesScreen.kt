@@ -101,7 +101,7 @@ fun QuotesScreen(vm: AppViewModel) {
                             Text(it.clientName.ifBlank { tr("(sem cliente)") }, color = Ui.text, fontSize = 16.sp)
                             Text(dateFmt.format(Date(it.dateMs)) + (if (it.city.isNotBlank()) " · ${it.city}" else ""), color = Ui.dim, fontSize = 12.sp)
                         }
-                        Text(QuoteMath.brl(QuoteMath.finalValue(it)), color = Ui.text, fontSize = 15.sp)
+                        Text(QuoteMath.brl(QuoteMath.grandTotal(it)), color = Ui.text, fontSize = 15.sp)
                         IconButton(onClick = { confirmDel = it }) { Icon(Icons.Filled.Delete, tr("Apagar"), tint = Ui.dim) }
                     }
                 }
@@ -223,6 +223,30 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
         }
 
         Field(q.notes, tr("Observações (opcional)"), Modifier.fillMaxWidth()) { upd(q.copy(notes = it)) }
+
+        // aditivos: itens que entram depois do orçamento fechado, sem mexer no original
+        Text(tr("Aditivos"), color = Ui.text, fontSize = 16.sp)
+        Text(tr("Item a mais combinado depois do orçamento fechado. O orçamento original não muda; o aditivo sai separado no PDF, com a data."), color = Ui.dim, fontSize = 12.sp)
+        q.addenda.forEachIndexed { idx, a ->
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Field(a.desc, tr("Descrição do aditivo {0}", idx + 1), Modifier.weight(1f)) { s -> upd(q.copy(addenda = q.addenda.map { x -> if (x.id == a.id) x.copy(desc = s) else x })) }
+                    IconButton(onClick = { upd(q.copy(addenda = q.addenda.filter { x -> x.id != a.id })) }) {
+                        Icon(Icons.Filled.Delete, tr("Remover aditivo"), tint = Ui.dim)
+                    }
+                }
+                NumField(a.id + "av", a.value, tr("Valor do aditivo ({0})", br.com.arque.measure.i18n.I18n.currencySymbol()), Modifier.fillMaxWidth()) { v -> upd(q.copy(addenda = q.addenda.map { x -> if (x.id == a.id) x.copy(value = v) else x })) }
+                Text(tr("Data do aditivo: ") + dateFmt.format(Date(a.dateMs)), color = Ui.dim, fontSize = 13.sp)
+            }
+        }
+        OutlinedButton(onClick = { upd(q.copy(addenda = q.addenda + br.com.arque.measure.model.QuoteAddendum())) }, modifier = Modifier.fillMaxWidth()) { Text(tr("+ Adicionar aditivo")) }
+        if (q.addenda.isNotEmpty()) {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(tr("Orçamento: ") + QuoteMath.brl(QuoteMath.finalValue(q)), color = Ui.dim, fontSize = 14.sp)
+                Text(tr("Aditivos: ") + QuoteMath.brl(QuoteMath.addendaTotal(q)), color = Ui.dim, fontSize = 14.sp)
+                Text(tr("Total com aditivos: ") + QuoteMath.brl(QuoteMath.grandTotal(q)), color = Ui.text, fontSize = 17.sp)
+            }
+        }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(tr("Incluir o desenho (nota) no PDF"), color = Ui.text, fontSize = 15.sp, modifier = Modifier.weight(1f))

@@ -88,6 +88,14 @@ struct QuoteItem: Equatable, Identifiable {
     var unitValue: Double = 0
 }
 
+/// Aditivo: item acrescentado depois do orçamento fechado, com descrição, valor e data próprios. Não mexe no orçamento original.
+struct QuoteAddendum: Equatable, Identifiable {
+    var id: String = newId()
+    var desc: String = ""
+    var value: Double = 0
+    var dateMs: Int64 = nowMs()
+}
+
 struct Quote: Equatable, Identifiable {
     var id: String = newId()
     var clientName: String = ""
@@ -100,4 +108,8 @@ struct Quote: Equatable, Identifiable {
     var includeDrawing: Bool = false
     var noteId: String? = nil
     var notes: String = ""
+    /// Aditivos (entram depois do orçamento fechado; somam no total geral, separados do original).
+    var addenda: [QuoteAddendum] = []
+    /// Fotos do projeto (arquivos em projects/images/), tiradas no 3D.
+    var photos: [String] = []
 }

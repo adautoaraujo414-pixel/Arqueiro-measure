@@ -280,7 +280,9 @@ enum JsonCodec {
         string(list.map { q -> J in
             ["id": q.id, "client": q.clientName, "city": q.city, "date": q.dateMs, "discount": q.discountPct, "validity": q.validityDays,
              "drawing": q.includeDrawing, "noteId": nul(q.noteId), "notes": q.notes,
-             "items": q.items.map { i -> J in ["id": i.id, "desc": i.desc, "qty": i.qty, "unit": i.unit, "value": i.unitValue] }]
+             "items": q.items.map { i -> J in ["id": i.id, "desc": i.desc, "qty": i.qty, "unit": i.unit, "value": i.unitValue] },
+             "addenda": q.addenda.map { a -> J in ["id": a.id, "desc": a.desc, "value": a.value, "date": a.dateMs] },
+             "photos": q.photos]
         })
     }
 
@@ -289,9 +291,15 @@ enum JsonCodec {
             let items = try ((j["items"] as? [Any]) ?? []).compactMap { $0 as? J }.map {
                 QuoteItem(id: try str($0, "id"), desc: s($0, "desc"), qty: dbl($0, "qty", 1), unit: s($0, "unit", "un"), unitValue: dbl($0, "value", 0))
             }
+            // aditivos e fotos (feitos no Android/Windows): o iPhone guarda e devolve igual, pra não perder ao sincronizar
+            let addenda = try ((j["addenda"] as? [Any]) ?? []).compactMap { $0 as? J }.map {
+                QuoteAddendum(id: try str($0, "id"), desc: s($0, "desc"), value: dbl($0, "value", 0), dateMs: int64($0, "date", nowMs()))
+            }
+            let photos = ((j["photos"] as? [Any]) ?? []).compactMap { $0 as? String }
             return Quote(id: try str(j, "id"), clientName: s(j, "client"), city: s(j, "city"), dateMs: int64(j, "date", nowMs()),
                          items: items, discountPct: dbl(j, "discount", 0), validityDays: int(j, "validity", 15),
-                         includeDrawing: bool(j, "drawing", false), noteId: optStr(j, "noteId"), notes: s(j, "notes"))
+                         includeDrawing: bool(j, "drawing", false), noteId: optStr(j, "noteId"), notes: s(j, "notes"),
+                         addenda: addenda, photos: photos)
         }
     }
 }

@@ -17,6 +17,14 @@ data class QuoteItem(
     val unitValue: Double = 0.0,
 )
 
+/** Aditivo: item acrescentado depois do orçamento fechado, com descrição, valor e data próprios. Não mexe no orçamento original. */
+data class QuoteAddendum(
+    val id: String = newId(),
+    val desc: String = "",
+    val value: Double = 0.0,
+    val dateMs: Long = System.currentTimeMillis(),
+)
+
 data class Quote(
     val id: String = newId(),
     val clientName: String = "",
@@ -29,4 +37,8 @@ data class Quote(
     val includeDrawing: Boolean = false,
     val noteId: String? = null,
     val notes: String = "",
+    /** Aditivos (entram depois do orçamento fechado; somam no total geral, separados do original). */
+    val addenda: List<QuoteAddendum> = emptyList(),
+    /** Fotos do projeto (arquivos em projects/images/), tiradas no 3D. */
+    val photos: List<String> = emptyList(),
 )

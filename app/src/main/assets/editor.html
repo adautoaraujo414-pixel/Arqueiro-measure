@@ -10967,4 +10967,19 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  document.addEventListener('click',function(e){var m=document.getElementById('stdm');if(m&&!m.hidden&&m.contains(e.target))setTimeout(ajustes,60)},true);
 })();
 </script>
+<script>
+/* ===== REGRA: no desenho 2D de cada parede aparece só o que é daquela parede. No fundo, os módulos e eletros das paredes
+   laterais não são desenhados (continuam no projeto, nas vistas Esquerda/Direita e no 3D). O canto em L é das duas paredes: fica. ===== */
+(function(){
+ if(typeof draw!=='function'||typeof wvCur!=='function')return;
+ function soFundo(){try{if(wvCur())return 0;var sv=document.getElementById('svg');if(!sv)return 0;var n=0;
+   sv.querySelectorAll('g#mod[data-mi]').forEach(function(g){var m=S.mods[+g.getAttribute('data-mi')];if(m&&m.wing&&!m.corner&&m!==S.m){g.style.display='none';g.setAttribute('data-outra','1');n++}});
+   sv.querySelectorAll('g[opacity=".45"]').forEach(function(g){if(g.querySelector('[data-ap]')){g.style.display='none';g.setAttribute('data-outra','1')}});
+   return n}catch(_){return 0}}
+ window.__soFundo=soFundo;
+ var d0=draw;window.draw=draw=function(){var r=d0.apply(this,arguments);soFundo();return r};
+ /* voltou pro fundo com um módulo da lateral escolhido: a escolha passa pra um módulo do fundo (nada muda no projeto) */
+ if(typeof wvGo==='function'){var g0=wvGo;window.wvGo=wvGo=function(w){var r=g0.apply(this,arguments);try{if(!wvCur()&&S.m&&S.m.wing&&!S.m.corner){var f=S.mods.filter(function(m){return !m.wing||m.corner});if(f.length){S.m=f[f.length-1];draw();try{panel()}catch(_){}}}}catch(_){}return r}}
+})();
+</script>
 </body></html>

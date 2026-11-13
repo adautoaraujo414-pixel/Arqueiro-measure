@@ -170,6 +170,35 @@ object QuotePdf {
             pg.c.drawText(QuoteMath.brl(QuoteMath.finalValue(q)), right3 - 8f, pg.y + 19f, paint(14f, true, Color.WHITE, Paint.Align.RIGHT))
             pg.y += 46f
 
+            // aditivos: separados do orçamento original, com data, e o total geral
+            val ads = q.addenda.filter { it.desc.isNotBlank() || it.value != 0.0 }
+            if (ads.isNotEmpty()) {
+                pg.ensure(60f) {}
+                pg.c.drawText(tr("ADITIVOS"), M, pg.y + 12f, paint(13f, true))
+                pg.y += 20f
+                val ap = paint(11f)
+                ads.forEach { a ->
+                    val lines = wrap(a.desc.ifBlank { "—" }, ap, right2 - 80f - M)
+                    val rowH = lines.size * 14f + 8f
+                    pg.ensure(rowH + 4f) {}
+                    pg.c.drawText(dateFmt.format(Date(a.dateMs)), M + 6f, pg.y + 14f, paint(10f, color = GRAY))
+                    var ty = pg.y + 14f
+                    lines.forEach { l -> pg.c.drawText(l, M + 80f, ty, ap); ty += 14f }
+                    pg.c.drawText(QuoteMath.brl(a.value), right3 - 6f, pg.y + 14f, paint(11f, true, align = Paint.Align.RIGHT))
+                    pg.y += rowH
+                    pg.c.drawLine(M, pg.y, W - M, pg.y, line)
+                }
+                pg.y += 10f
+                pg.ensure(70f) {}
+                pg.c.drawText(tr("Total dos aditivos"), right2, pg.y + 12f, rp)
+                pg.c.drawText(QuoteMath.brl(QuoteMath.addendaTotal(q)), right3 - 6f, pg.y + 12f, paint(11f, align = Paint.Align.RIGHT))
+                pg.y += 20f
+                pg.c.drawRect(300f, pg.y, W - M, pg.y + 28f, Paint().apply { color = INK })
+                pg.c.drawText(tr("TOTAL COM ADITIVOS"), 308f, pg.y + 18.5f, paint(10.5f, true, Color.WHITE))
+                pg.c.drawText(QuoteMath.brl(QuoteMath.grandTotal(q)), right3 - 8f, pg.y + 19f, paint(14f, true, Color.WHITE, Paint.Align.RIGHT))
+                pg.y += 46f
+            }
+
             // validade e observações
             val until = Date(q.dateMs + q.validityDays * 86_400_000L)
             val vp = paint(11f)

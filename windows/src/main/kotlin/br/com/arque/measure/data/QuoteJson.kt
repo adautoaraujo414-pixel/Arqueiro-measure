@@ -2,6 +2,7 @@ package br.com.arque.measure.data
 
 import br.com.arque.measure.model.Company
 import br.com.arque.measure.model.Quote
+import br.com.arque.measure.model.QuoteAddendum
 import br.com.arque.measure.model.QuoteItem
 import org.json.JSONArray
 import org.json.JSONObject
@@ -22,6 +23,8 @@ object QuoteJson {
             .put("items", JSONArray(q.items.map { i ->
                 JSONObject().put("id", i.id).put("desc", i.desc).put("qty", i.qty).put("unit", i.unit).put("value", i.unitValue)
             }))
+            .put("addenda", JSONArray(q.addenda.map { a -> JSONObject().put("id", a.id).put("desc", a.desc).put("value", a.value).put("date", a.dateMs) }))
+            .put("photos", JSONArray(q.photos))
     }).toString()
 
     fun quotesFromJson(s: String): List<Quote> {
@@ -39,6 +42,10 @@ object QuoteJson {
                 discountPct = j.optDouble("discount", 0.0), validityDays = j.optInt("validity", 15),
                 includeDrawing = j.optBoolean("drawing", false),
                 noteId = if (j.isNull("noteId")) null else j.optString("noteId"), notes = j.optString("notes"),
+                addenda = (j.optJSONArray("addenda") ?: JSONArray()).let { ad ->
+                    (0 until ad.length()).map { n -> val a = ad.getJSONObject(n); QuoteAddendum(a.getString("id"), a.optString("desc"), a.optDouble("value", 0.0), a.optLong("date", System.currentTimeMillis())) }
+                },
+                photos = (j.optJSONArray("photos") ?: JSONArray()).let { ph -> (0 until ph.length()).map { n -> ph.getString(n) } },
             )
         }
     }

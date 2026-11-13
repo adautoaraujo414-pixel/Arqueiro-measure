@@ -6683,5 +6683,14 @@
 "📷 Adicionar fotos do projeto": "📷 Add project photos",
 "Foto do projeto": "Project photo",
 "Nenhum projeto de móveis ainda": "No furniture project yet",
-"Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento.": "Opens the project in 3D with the camera button. Take the photos, tap OK and they come back here. The ✕ removes the photo from the quote."
+"Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento.": "Opens the project in 3D with the camera button. Take the photos, tap OK and they come back here. The ✕ removes the photo from the quote.",
+"Este ambiente está sem pedra": "This room has no countertop",
+"Em Sala, Quarto, Escritório e Livre o projeto começa sem pedra. Se aqui vai pedra (bancada, aparador, bar), ligue no botão abaixo.": "In Living room, Bedroom, Office and Free the project starts without a countertop. If there is stone here (counter, sideboard, bar), turn it on with the button below.",
+"🪨 Usar pedra neste ambiente": "🪨 Use a countertop in this room",
+"Com a pedra ligada, a aba Pedra e a pedra no desenho funcionam igual à cozinha. Dá pra desligar depois, sem apagar nada.": "With the countertop on, the Countertop tab and the stone in the drawing work the same as in the kitchen. You can turn it off later; nothing is deleted.",
+"Deixar este ambiente sem pedra": "Leave this room without a countertop",
+"A pedra não é apagada: fica guardada e volta quando você ligar de novo.": "The countertop is not deleted: it is kept and comes back when you turn it on again.",
+"Pedra ligada: apareceu a pedra que estava guardada neste projeto. Ajuste as medidas ou tire pela lixeira.": "Countertop on: the stone that was stored in this project is showing again. Adjust its measurements or remove it with the bin.",
+"Pedra ligada neste ambiente. Toque em \"＋ Pedra\".": "Countertop on in this room. Tap \"＋ Countertop\".",
+"Ambiente sem pedra. A pedra ficou guardada, nada foi apagado.": "Room without a countertop. The stone was kept; nothing was deleted."
 }

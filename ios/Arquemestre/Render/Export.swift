@@ -339,19 +339,28 @@ private final class QuotePdfLayout {
         }
     }
 
+    /// Nome do cliente / cidade no cartão: encolhe a letra pra caber; nome muito comprido desce pra uma segunda linha em vez de ser cortado.
+    private func name2(_ text: String, _ x: CGFloat, _ w: CGFloat, _ t: CGFloat) {
+        var z: CGFloat = 13
+        while qpW(text, z, true) > w && z > 9 { z -= 0.5 }
+        if qpW(text, z, true) <= w { qpText(text, x, t + 34, z, bold: true); return }
+        let ls = qpWrap(text, z, true, w)
+        qpText(ls[0], x, t + 29.5, z, bold: true)
+        let (s2, z2) = qpFit(ls.dropFirst().joined(separator: " "), z, true, w, 7)
+        qpText(s2, x, t + 39.5, z2, bold: true)
+    }
+
     private func client() {
         let t = y, b = y + 46
         let mid: CGFloat = 300
         qpFill(UIBezierPath(roundedRect: CGRect(x: QM, y: t, width: QW - 2 * QM, height: 46), cornerRadius: 8), QCARD)
         qpIcon("user", QM + 20, t + 12, 22, QINK)
         qpText(tr("CLIENTE"), QM + 56, t + 18, 8.5, color: QGRAY)
-        let (cs, cz) = qpFit(qpBlank(q.clientName) ? "—" : q.clientName, 13, true, mid - 12 - (QM + 56), 9)
-        qpText(cs, QM + 56, t + 34, cz, bold: true)
+        name2(qpBlank(q.clientName) ? "—" : q.clientName, QM + 56, mid - 12 - (QM + 56), t)
         qpRect(mid, t + 10, mid + 0.8, b - 10, UIColor(argb: argb(0xFFC6C9CF)))
         qpIcon("pin", mid + 24, t + 12, 22, QINK)
         qpText(tr("CIDADE"), mid + 60, t + 18, 8.5, color: QGRAY)
-        let (ys, yz) = qpFit(qpBlank(q.city) ? "—" : q.city, 13, true, QW - QM - 12 - (mid + 60), 9)
-        qpText(ys, mid + 60, t + 34, yz, bold: true)
+        name2(qpBlank(q.city) ? "—" : q.city, mid + 60, QW - QM - 12 - (mid + 60), t)
         y = b + 14
     }
 
@@ -408,7 +417,15 @@ private final class QuotePdfLayout {
                 for l in r.sub { qpText(l, descX, ty, 9.5, color: QGRAY); ty += 12 }
                 let by = ry + r.h / 2 + 3.8
                 qpText(r.qty, qtyX, by, 10.5, align: .center)
-                qpText(r.unit, unX, by, 10.5, align: .center)
+                // unidade comprida ("metros lineares"): encolhe e, se precisar, vai em duas linhas
+                var nz: CGFloat = 10.5
+                while qpW(r.unit, nz) > 40 && nz > 8 { nz -= 0.5 }
+                if qpW(r.unit, nz) <= 40 { qpText(r.unit, unX, by, nz, align: .center) } else {
+                    let ul = qpWrap(r.unit, nz, false, 44)
+                    qpText(ul[0], unX, by - 4.5, nz, align: .center)
+                    let (u2, z2) = qpFit(ul.dropFirst().joined(separator: " "), nz, false, 44, 6)
+                    qpText(u2, unX, by + 4.5, z2, align: .center)
+                }
                 let (us, uz) = qpFit(r.unitV, 10.5, false, unitR - 384, 7)
                 qpText(us, unitR, by, uz, align: .right)
                 let (ss, sz) = qpFit(r.tot, 10.5, true, subR - subL - 4, 7)

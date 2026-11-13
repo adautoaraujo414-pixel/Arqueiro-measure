@@ -312,19 +312,27 @@ object QuotePdf {
             }
         }
 
+        /** Nome do cliente / cidade no cartão: encolhe a letra pra caber; nome muito comprido desce pra uma segunda linha em vez de ser cortado. */
+        private fun name2(text: String, x: Float, w: Float, t: Float) {
+            val p = paint(13f, true)
+            while (p.measureText(text) > w && p.textSize > 9f) p.textSize -= 0.5f
+            if (p.measureText(text) <= w) { c.drawText(text, x, t + 34f, p); return }
+            val ls = wrap(text, p, w)
+            c.drawText(ls[0], x, t + 29.5f, p)
+            c.drawText(fit(ls.drop(1).joinToString(" "), p, w, 7f), x, t + 39.5f, p)
+        }
+
         private fun client() {
             val t = y; val b = y + 46f
             val mid = 300f
             c.drawRoundRect(M, t, W - M, b, 8f, 8f, fill(CARD))
             icon(c, "user", M + 20f, t + 12f, 22f, INK)
             c.drawText(tr("CLIENTE"), M + 56f, t + 18f, paint(8.5f, color = GRAY))
-            val cp = paint(13f, true)
-            c.drawText(fit(q.clientName.ifBlank { "—" }, cp, mid - 12f - (M + 56f), 9f), M + 56f, t + 34f, cp)
+            name2(q.clientName.ifBlank { "—" }, M + 56f, mid - 12f - (M + 56f), t)
             c.drawRect(mid, t + 10f, mid + 0.8f, b - 10f, fill(0xFFC6C9CF.toInt()))
             icon(c, "pin", mid + 24f, t + 12f, 22f, INK)
             c.drawText(tr("CIDADE"), mid + 60f, t + 18f, paint(8.5f, color = GRAY))
-            val yp = paint(13f, true)
-            c.drawText(fit(q.city.ifBlank { "—" }, yp, W - M - 12f - (mid + 60f), 9f), mid + 60f, t + 34f, yp)
+            name2(q.city.ifBlank { "—" }, mid + 60f, W - M - 12f - (mid + 60f), t)
             y = b + 14f
         }
 
@@ -377,7 +385,14 @@ object QuotePdf {
                     r.sub.forEach { l -> c.drawText(l, descX, ty, sp); ty += 12f }
                     val by = ry + r.h / 2f + 3.8f
                     c.drawText(r.qty, qtyX, by, paint(10.5f, align = Paint.Align.CENTER))
-                    c.drawText(r.unit, unX, by, paint(10.5f, align = Paint.Align.CENTER))
+                    // unidade comprida ("metros lineares"): encolhe e, se precisar, vai em duas linhas
+                    val np = paint(10.5f, align = Paint.Align.CENTER)
+                    while (np.measureText(r.unit) > 40f && np.textSize > 8f) np.textSize -= 0.5f
+                    if (np.measureText(r.unit) <= 40f) c.drawText(r.unit, unX, by, np) else {
+                        val ul = wrap(r.unit, np, 44f)
+                        c.drawText(ul[0], unX, by - 4.5f, np)
+                        c.drawText(fit(ul.drop(1).joinToString(" "), np, 44f, 6f), unX, by + 4.5f, np)
+                    }
                     val up = paint(10.5f, align = Paint.Align.RIGHT)
                     c.drawText(fit(r.unitV, up, unitR - 384f, 7f), unitR, by, up)
                     val sb = paint(10.5f, true, align = Paint.Align.RIGHT)

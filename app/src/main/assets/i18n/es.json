@@ -6683,5 +6683,14 @@
 "📷 Adicionar fotos do projeto": "📷 Añadir fotos del proyecto",
 "Foto do projeto": "Foto del proyecto",
 "Nenhum projeto de móveis ainda": "Todavía no hay proyectos de muebles",
-"Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento.": "Abre el proyecto en 3D con el botón de la cámara. Toma las fotos, toca OK y vuelven aquí. La ✕ quita la foto del presupuesto."
+"Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento.": "Abre el proyecto en 3D con el botón de la cámara. Toma las fotos, toca OK y vuelven aquí. La ✕ quita la foto del presupuesto.",
+"Este ambiente está sem pedra": "Este ambiente está sin encimera",
+"Em Sala, Quarto, Escritório e Livre o projeto começa sem pedra. Se aqui vai pedra (bancada, aparador, bar), ligue no botão abaixo.": "En Sala, Recámara, Oficina y Libre el proyecto empieza sin encimera. Si aquí va encimera (aparador, bar), actívala con el botón de abajo.",
+"🪨 Usar pedra neste ambiente": "🪨 Usar encimera en este ambiente",
+"Com a pedra ligada, a aba Pedra e a pedra no desenho funcionam igual à cozinha. Dá pra desligar depois, sem apagar nada.": "Con la encimera activada, la pestaña Encimera y la encimera en el dibujo funcionan igual que en la cocina. Se puede desactivar después, sin borrar nada.",
+"Deixar este ambiente sem pedra": "Dejar este ambiente sin encimera",
+"A pedra não é apagada: fica guardada e volta quando você ligar de novo.": "La encimera no se borra: queda guardada y vuelve cuando la actives de nuevo.",
+"Pedra ligada: apareceu a pedra que estava guardada neste projeto. Ajuste as medidas ou tire pela lixeira.": "Encimera activada: apareció la encimera que estaba guardada en este proyecto. Ajusta las medidas o quítala con la papelera.",
+"Pedra ligada neste ambiente. Toque em \"＋ Pedra\".": "Encimera activada en este ambiente. Toca \"＋ Encimera\".",
+"Ambiente sem pedra. A pedra ficou guardada, nada foi apagado.": "Ambiente sin encimera. La encimera quedó guardada, no se borró nada."
 }

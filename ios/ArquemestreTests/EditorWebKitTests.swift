@@ -6773,32 +6773,6 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    func testTVJuntoComEletrodomesticosEPedrasNoCabecalhoDo3D() async throws {
-        let web = try await editor()
-        let o = try await run(web, #"""
-        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
-        /* sala: a TV fica na aba Eletrodomésticos, junto com os outros (uma aba só, sem aba separada de TV) */
-        demoSala();await W(500);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
-        S.room='sala';S.env='livre';S.tab=7;draw();panel();var tipos=function(){var o=[];[].forEach.call(document.querySelectorAll('#bd [data-apadd]'),function(b){var t=b.dataset.apadd.split('|')[0];if(o.indexOf(t)<0)o.push(t)});return o};var tabs=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent.trim()});
-        R.salaAbas=(tabs.indexOf('Eletrodomésticos')>=0)+' · aba só de TV '+tabs.some(function(t){return /TV/.test(t)});
-        var grupos=tipos();R.salaGrupos=grupos.slice(0,4).join(' | ')+' … TV em primeiro '+(grupos[0]==='tv')+' · tem geladeira '+(grupos.indexOf('geladeira')>=0);
-        var n0=S.fr.length,btv=document.querySelector('#bd [data-apadd^="tv|"]');btv.click();await W(100);R.salaPoeTV=(S.fr.length-n0)+' '+S.fr[S.fr.length-1].t;
-        /* cozinha: mesma aba, com a TV junto */
-        demoScene();await W(500);try{var v=document.getElementById('v3');if(v&&!v.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
-        S.tab=7;draw();panel();var g2=tipos();R.cozinha='tem TV '+(g2.indexOf('tv')>=0)+' · mesmos da sala '+(g2.slice().sort().join()===grupos.slice().sort().join());
-        /* 3D: o botão 🪨 Pedras está no cabeçalho e abre o quadro das pedras */
-        open3D();await W(400);var bp=document.getElementById('v3pd'),r=bp.getBoundingClientRect();R.pedras3D=(getComputedStyle(bp).display!=='none'&&r.width>20)+' '+bp.textContent.trim();bp.click();await W(200);var q=document.getElementById('pd3');R.quadro=!!q&&!q.hidden&&q.querySelectorAll('[data-pda]').length>=6;
-        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
-        """#)
-        XCTAssertEqual(o["salaAbas"] as? String, "true · aba só de TV false")
-        XCTAssertEqual(o["salaGrupos"] as? String, "tv | geladeira | microondas | forno … TV em primeiro true · tem geladeira true")
-        XCTAssertEqual(o["salaPoeTV"] as? String, "1 tv")
-        XCTAssertEqual(o["cozinha"] as? String, "tem TV true · mesmos da sala true")
-        XCTAssertEqual(o["pedras3D"] as? String, "true 🪨 Pedras")
-        XCTAssertEqual(o["quadro"] as? Bool, true)
-        XCTAssertEqual(o["errs"] as? Int, 0)
-    }
-
     func testObservacoesDoOrcamentoNoFormatoQueOPdfSepara() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -6826,6 +6800,91 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cores"] as? String, "Cores do projeto: Canela")
         XCTAssertEqual(o["coresPorUltimo"] as? Bool, true)
         XCTAssertEqual(o["itens"] as? String, "3 · todos com a contagem no fim true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTVJuntoComEletrodomesticosNumaAbaSo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        /* sala: a TV fica na aba Eletrodomésticos, junto com os outros (uma aba só, sem aba separada de TV) */
+        demoSala();await W(500);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        S.room='sala';S.env='livre';S.tab=7;draw();panel();var tipos=function(){var o=[];[].forEach.call(document.querySelectorAll('#bd [data-apadd]'),function(b){var t=b.dataset.apadd.split('|')[0];if(o.indexOf(t)<0)o.push(t)});return o};var tabs=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent.trim()});
+        R.salaAbas=(tabs.indexOf('Eletrodomésticos')>=0)+' · aba só de TV '+tabs.some(function(t){return /TV/.test(t)});
+        var grupos=tipos();R.salaGrupos=grupos.slice(0,4).join(' | ')+' … TV em primeiro '+(grupos[0]==='tv')+' · tem geladeira '+(grupos.indexOf('geladeira')>=0);
+        var n0=S.fr.length,btv=document.querySelector('#bd [data-apadd^="tv|"]');btv.click();await W(100);R.salaPoeTV=(S.fr.length-n0)+' '+S.fr[S.fr.length-1].t;
+        /* cozinha: mesma aba, com a TV junto */
+        demoScene();await W(500);try{var v=document.getElementById('v3');if(v&&!v.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        S.tab=7;draw();panel();var g2=tipos();R.cozinha='tem TV '+(g2.indexOf('tv')>=0)+' · mesmos da sala '+(g2.slice().sort().join()===grupos.slice().sort().join());
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["salaAbas"] as? String, "true · aba só de TV false")
+        XCTAssertEqual(o["salaGrupos"] as? String, "tv | geladeira | microondas | forno … TV em primeiro true · tem geladeira true")
+        XCTAssertEqual(o["salaPoeTV"] as? String, "1 tv")
+        XCTAssertEqual(o["cozinha"] as? String, "tem TV true · mesmos da sala true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testAbaPedraNoCabecalhoEmTodoAmbienteEPedraLigadaNaSala() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={},TOA=[];var t0_=window.toast;window.toast=function(t){TOA.push(String(t));try{return t0_.apply(this,arguments)}catch(_){}};
+        var abas=function(){return [].map.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent.trim()}).join('|')};
+        var p2=function(){draw();return document.querySelectorAll('#svg [data-st]').length>0};
+        var p3=function(){try{window.re3&&window.re3()}catch(e){}return window.__boxes().filter(function(b){return b.g==='stc'}).length>0};
+        var fecha3=function(){try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click()}}catch(e){}};
+        var aba=function(n){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent.trim()===n})[0].click()};
+        /* cozinha: a aba Pedra está no cabeçalho e a pedra aparece no 2D e no 3D, como sempre */
+        demoScene();await W(500);fecha3();await W(200);
+        S.tab=9;panel();R.abasCozinha=abas();var st0=JSON.stringify(S.stones),m0=JSON.stringify(S.mods);open3D();await W(300);R.cozinha='2D '+p2()+' · 3D '+p3();fecha3();await W(150);
+        /* sala: a aba Pedra continua no cabeçalho; o projeto fica sem pedra até a pessoa ligar (nada muda sozinho) */
+        S.tab=9;panel();document.querySelector('[data-room="sala"]').click();await W(200);R.abasSala=abas();
+        open3D();await W(300);R.sala=S.env+' · 2D '+p2()+' · 3D '+p3();fecha3();await W(150);
+        aba('Pedra');await W(150);R.abaPedraNaSala=(document.querySelector('#bd .box b')||{}).textContent+' · botão de ligar '+!!document.querySelector('#bd [data-stlv="1"]')+' · ferramentas da pedra '+!!document.querySelector('#bd [data-stadd]');
+        R.vistaDeCimaEscondida=!!document.getElementById('planwrap').hidden;R.nadaMudouSozinho=(JSON.stringify(S.stones)===st0)&&(JSON.stringify(S.mods)===m0);
+        /* liga a pedra: aparece no 2D e no 3D, a aba vira a da cozinha, nada é apagado */
+        TOA.length=0;document.querySelector('#bd [data-stlv="1"]').click();await W(200);
+        R.ligou=S.env+' · '+roomOf()+' · '+TOA[0];R.abaComPedra='ferramentas da pedra '+!!document.querySelector('#bd [data-stadd]')+' · botão de desligar '+!!document.querySelector('#bd [data-stlv="0"]');
+        R.vistaDeCimaComPedra=!document.getElementById('planwrap').hidden&&document.querySelectorAll('#plan [data-st]').length>0;open3D();await W(300);R.salaComPedra='2D '+p2()+' · 3D '+p3();fecha3();await W(150);R.abasSalaComPedra=abas();
+        R.nadaApagado=(JSON.stringify(S.stones)===st0)&&(JSON.stringify(S.mods)===m0);
+        /* a posição do módulo (da esquerda / do chão) continua na aba Estrutura da sala com pedra */
+        S.tab=0;panel();R.posicaoDoModulo=/Posição do módulo/.test(document.getElementById('bd').textContent);
+        /* trocar de Sala pra Quarto não desliga a pedra; desligar esconde sem apagar */
+        S.tab=9;panel();document.querySelector('[data-room="quarto"]').click();await W(150);R.quartoMantem=S.env;
+        S.tab=6;panel();TOA.length=0;document.querySelector('#bd [data-stlv="0"]').click();await W(200);R.desligou=S.env+' · '+TOA[0]+' · pedras guardadas '+S.stones.length;
+        open3D();await W(300);R.semPedraDeNovo='2D '+p2()+' · 3D '+p3();fecha3();await W(150);
+        /* desfazer volta a pedra ligada */
+        await W(900);document.getElementById('und').click();await W(200);R.desfez=S.env+' · 2D '+p2();
+        /* cozinha de novo: sem botão de desligar (lá a pedra é de fábrica) */
+        S.tab=9;panel();document.querySelector('[data-room="cozinha"]').click();await W(150);S.tab=6;panel();R.cozinhaSemBotao=!document.querySelector('#bd [data-stlv]')+' · '+S.env+' · 2D '+p2();
+        /* gravar e abrir de novo: a sala com pedra ligada volta com pedra */
+        S.tab=9;panel();document.querySelector('[data-room="sala"]').click();await W(150);S.tab=6;panel();document.querySelector('#bd [data-stlv="1"]').click();await W(150);
+        var snap1=snapState();loadState(JSON.parse(JSON.stringify(snap1)));await W(150);R.reabriu=S.env+' · '+roomOf()+' · 2D '+p2();
+        /* 3D: o atalho 🪨 Pedras continua fora */
+        open3D();await W(400);var bp=document.getElementById('v3pd');R.atalho3DFora=!bp||getComputedStyle(bp).display==='none';
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["abasCozinha"] as? String, "Ambiente|🎨 Cores|Estrutura|Divisões|Portas|Internos|Tamponamentos|Fundos|Pedra|Eletrodomésticos|Ripado")
+        XCTAssertEqual(o["cozinha"] as? String, "2D true · 3D true")
+        XCTAssertEqual(o["abasSala"] as? String, "Ambiente|🎨 Cores|Estrutura|Divisões|Portas|Internos|Tamponamentos|Fundos|Pedra|Eletrodomésticos|Painéis")
+        XCTAssertEqual(o["sala"] as? String, "livre · 2D false · 3D false")
+        XCTAssertEqual(o["abaPedraNaSala"] as? String, "Este ambiente está sem pedra · botão de ligar true · ferramentas da pedra false")
+        XCTAssertEqual(o["vistaDeCimaEscondida"] as? Bool, true)
+        XCTAssertEqual(o["nadaMudouSozinho"] as? Bool, true)
+        XCTAssertEqual(o["ligou"] as? String, "cozinha · sala · Pedra ligada: apareceu a pedra que estava guardada neste projeto. Ajuste as medidas ou tire pela lixeira.")
+        XCTAssertEqual(o["abaComPedra"] as? String, "ferramentas da pedra true · botão de desligar true")
+        XCTAssertEqual(o["vistaDeCimaComPedra"] as? Bool, true)
+        XCTAssertEqual(o["salaComPedra"] as? String, "2D true · 3D true")
+        XCTAssertEqual(o["abasSalaComPedra"] as? String, "Ambiente|🎨 Cores|Estrutura|Divisões|Portas|Internos|Tamponamentos|Fundos|Pedra|Eletrodomésticos|Painéis")
+        XCTAssertEqual(o["nadaApagado"] as? Bool, true)
+        XCTAssertEqual(o["posicaoDoModulo"] as? Bool, true)
+        XCTAssertEqual(o["quartoMantem"] as? String, "cozinha")
+        XCTAssertEqual(o["desligou"] as? String, "livre · Ambiente sem pedra. A pedra ficou guardada, nada foi apagado. · pedras guardadas 1")
+        XCTAssertEqual(o["semPedraDeNovo"] as? String, "2D false · 3D false")
+        XCTAssertEqual(o["desfez"] as? String, "cozinha · 2D true")
+        XCTAssertEqual(o["cozinhaSemBotao"] as? String, "true · cozinha · 2D true")
+        XCTAssertEqual(o["reabriu"] as? String, "cozinha · sala · 2D true")
+        XCTAssertEqual(o["atalho3DFora"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

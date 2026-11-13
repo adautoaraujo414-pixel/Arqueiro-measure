@@ -6425,4 +6425,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["backup"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Editor por vãos: apagar divisão em QUALQUER ordem, só escolhendo e tocando na lixeira. A de fora sai primeiro sem pedir pra
+    /// apagar as de dentro; as outras não saem do lugar e o forno fica. Prateleira em cima de divisória em pé: a divisória estica.
+    /// Só recusa (e diz por quê, sem apagar nada) quando ia sumir gaveta, cabideiro, sapateira ou eletro. A lixeira responde na hora.
+    func testApagarDivisaoEmQualquerOrdem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={},TOA=[];var t0_=window.toast;window.toast=function(t){TOA.push(String(t));try{return t0_.apply(this,arguments)}catch(_){}};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=5610;S.H=3270;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();soloOn(m);
+        var sp=async function(path,dir,k){RG.sel={mi:0,path:path};RG.dsel=null;RG.tab='div';panel();document.querySelector('[data-rga="sp|'+dir+'|'+k+'"]').click();await W(60)};
+        var DV=function(){var L=rgLay(m);return L.divs.filter(function(d){return d.H}).map(function(d){return Math.round(d.y0)}).sort(function(a,b){return a-b}).join(',')+(L.divs.some(function(d){return !d.H})?' | em pé '+L.divs.filter(function(d){return !d.H}).map(function(d){return Math.round(d.x0)+'@'+Math.round(d.y0)+'-'+Math.round(d.y1)}).join(','):'')};
+        var del=async function(path,i){TOA.length=0;RG.sel=null;RG.dsel={mi:0,path:path,i:i};draw();panel();var t=performance.now();document.getElementById('delMod').click();var ms=performance.now()-t;await W(40);return {ms:ms,t:TOA.join(' / ')}};
+        /* divisões uma dentro da outra: r → [0, 1 → [1.0, 1.1 → [1.1.0, 1.1.1]]] e um forno no vão 1.1.0 */
+        await sp('r','h',2);await sp('r.1','h',2);await sp('r.1.1','h',2);
+        RG.sel={mi:0,path:'r.1.1.0'};RG.dsel=null;RG.tab='ele';panel();var be=document.querySelector('[data-rga^="ele|"]');if(be){be.click();await W(80)}
+        R.antes=DV();var el0=JSON.stringify(rgNode(m,'r.1.1.0').el);
+        /* apaga PRIMEIRO a de fora (a de cima), que antes era recusada: só ela some, as outras ficam no lugar */
+        var d1=await del('r',0);R.apagouDeFora=DV()+' | '+d1.t.split(' / ')[0];R.rapido=d1.ms<1500;
+        var temForno=function(){return JSON.stringify(m.rt).indexOf(el0.slice(0,30))>=0};R.fornoFicou=temForno();
+        /* agora a do meio, depois a que sobrou: qualquer ordem */
+        var L=rgLay(m),ps=L.divs.filter(function(d){return d.H});var d2=await del(ps[0].path,ps[0].i);R.segunda=DV()+' | '+d2.t;
+        await W(900);L=rgLay(m);ps=L.divs.filter(function(d){return d.H});var d3=await del(ps[0].path,ps[0].i);R.terceira=(DV()||'sem divisão')+' | '+d3.t+' | forno '+temForno();
+        /* desfazer volta */
+        await W(900);document.getElementById('und').click();await W(150);m=S.mods[0];R.desfez=(m&&m.rt)?DV():'sem módulo';
+        /* prateleira em cima de divisórias em pé: apagar a prateleira estica as divisórias; com gaveta em cima não apaga e diz por quê */
+        S.mods=[];S.m=null;newTpl(fo);m=S.m;m.w=830;m.h=2600;m.d=560;draw();soloOn(m);await sp('r','h',2);await sp('r.1','v',2);R.emPe=DV();
+        var d4=await del('r',0);R.esticou=DV()+' | '+d4.t;
+        S.mods=[];S.m=null;newTpl(fo);m=S.m;m.w=830;m.h=2600;m.d=560;draw();soloOn(m);await sp('r','h',2);await sp('r.1','v',2);RG.sel={mi:0,path:'r.0'};RG.dsel=null;RG.tab='gav';panel();var bg=document.querySelector('[data-rga^="ins|gav"]');if(bg){bg.click();await W(80)}
+        var d5=await del('r',0);R.comGaveta=DV()+' | '+d5.t+' | gaveta '+(rgNode(m,'r.0').t==='gav');
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "1243,1864,2174")
+        XCTAssertEqual(o["apagouDeFora"] as? String, "1864,2174 | 🗑 Divisão apagada (só ela) · Desfazer volta")
+        XCTAssertEqual(o["rapido"] as? Bool, true)
+        XCTAssertEqual(o["fornoFicou"] as? Bool, true)
+        XCTAssertEqual(o["segunda"] as? String, "2174 | 🗑 Divisão apagada (só ela) · Desfazer volta")
+        XCTAssertEqual(o["terceira"] as? String, "sem divisão | 🗑 Divisão apagada (só ela) · Desfazer volta | forno true")
+        XCTAssertEqual(o["desfez"] as? String, "2174")
+        XCTAssertEqual(o["emPe"] as? String, "1243 | em pé 408@1258-2485")
+        XCTAssertEqual(o["esticou"] as? String, " | em pé 408@15-2485 | 🗑 Divisão apagada (só ela) · Desfazer volta")
+        XCTAssertEqual(o["comGaveta"] as? String, "1243 | em pé 408@1258-2485 | Tire primeiro o que está dentro do vão ao lado (gaveta, cabideiro, sapateira ou eletro). | gaveta true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

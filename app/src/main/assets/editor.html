@@ -10101,7 +10101,29 @@ function canSize(m,path,dim){var p=String(path);while(p.indexOf('.')>0){var par=
 window.rgSetSize=setSize;window.rgDelDiv=function(m,p,i){return delDiv(m,p,i)};window.rgNode=nodeAt;
 function split(m,path,dir,k){var n=nodeAt(m,path);if(!n)return;var cont={};['t','g','sp','el','tb'].forEach(function(q){if(n[q]!==undefined){cont[q]=n[q];delete n[q]}});n.s=dir;n.c=[];for(var q=0;q<k;q++)n.c.push(q===0?JSON.parse(JSON.stringify(cont)):{});if(cont.t==='gav'||cont.t==='sap'){n.c[0]={};n.c[k-1]=cont}RG.sel={mi:S.mods.indexOf(m),path:path+'.'+(cont.t==='gav'||cont.t==='sap'?k-1:0)}}
 function unsplit(m,path){var n=nodeAt(m,path);if(!n)return;var keep=null;(function walk(x){if(!x)return;if(x.t&&!keep)keep=x;(x.c||[]).forEach(walk)})(n);delete n.s;delete n.c;if(keep&&keep!==n)['t','g','sp','el','tb'].forEach(function(q){if(keep[q]!==undefined)n[q]=keep[q]})}
-function delDiv(m,path,i){var n=nodeAt(m,path);if(!n||!n.c)return false;var a=n.c[i],b=n.c[i+1];if(!a||!b)return false;if((a.s&&a.c&&a.c.length>1)||(b.s&&b.c&&b.c.length>1)){toast('Tire primeiro as divisões de dentro desses vãos');return false}var L=lay(m),A=regOf(L,path+'.'+i),Bb=regOf(L,path+'.'+(i+1)),H=n.s==='h',keep=(a.t||a.p)?a:b,nw=JSON.parse(JSON.stringify(keep));delete nw.z;delete nw.rc;
+/* apagar divisão em QUALQUER ordem: quando um dos lados já tem divisões por dentro, só a divisão escolhida some e o vão vizinho se junta
+   com a parte que encostava nela. As outras divisões não saem do lugar (as medidas ficam fixas). Só recusa quando não tem como juntar
+   sem apagar outra coisa: conteúdo (gaveta, cabideiro, sapateira, eletro) que iria sumir, ou dois conjuntos em sentidos diferentes. */
+function delDivN(m,path,i){var n=nodeAt(m,path),ax=n.s,H=ax==='h',L=lay(m),a=n.c[i],b=n.c[i+1],isS=function(x){return !!(x&&x.s&&x.c&&x.c.length>1)},
+ sz=function(p){var r=regOf(L,p);return r?(H?r.y1-r.y0:r.x1-r.x0):0},pa=path+'.'+i,pb=path+'.'+(i+1),A=regOf(L,pa),B=regOf(L,pb);if(!A||!B)return false;
+ var th=H?B.y0-A.y1:B.x0-A.x1,no=function(t){toast(t);return null},dv=function(t,f){if(f.rc!=null)t.rc=f.rc;else delete t.rc;if(f.eng!=null)t.eng=f.eng;else delete t.eng},
+ frz=function(x,sizes){x.c.forEach(function(c,j){if(c.z0&&!(sizes[j]>0))return;delete c.z0;c.z=r1(sizes[j])})},
+ leaf=function(x,y){var keep=(x.t||x.p)?x:y,nw=JSON.parse(JSON.stringify(keep));delete nw.z;delete nw.z0;dv(nw,y);return nw},
+ into=function(t,pt,f,sf,antes){if(!isS(t))return antes?leaf(f,t):leaf(t,f);
+  if(t.s===ax){var k=antes?0:t.c.length-1,szs=t.c.map(function(c,j){return sz(pt+'.'+j)}),r=into(t.c[k],pt+'.'+k,f,sf,antes);if(!r)return null;t.c[k]=r;szs[k]+=sf+th;frz(t,szs);if(!antes)dv(t,f);return t}
+  if(isS(f))return no('Essa divisão separa dois conjuntos de divisões em sentidos diferentes. Apague as de dentro de um dos lados primeiro.');
+  if(f.t)return no('Tire primeiro o que está dentro do vão ao lado (gaveta, cabideiro, sapateira ou eletro).');
+  if(f.p&&!t.p)t.p=f.p;if(!antes)dv(t,f);return t},
+ szN=n.c.map(function(c,j){return sz(path+'.'+j)}),r;
+ if(!isS(a))r=into(b,pb,a,szN[i],true);
+ else if(!isS(b))r=into(a,pa,b,szN[i+1],false);
+ else if(a.s===ax&&b.s===ax){var ka=a.c.length-1,la=a.c[ka],fb=b.c[0],sa=a.c.map(function(c,j){return sz(pa+'.'+j)}),sb=b.c.map(function(c,j){return sz(pb+'.'+j)}),mg=(!isS(la)&&!isS(fb))?leaf(la,fb):!isS(la)?into(fb,pb+'.0',la,sa[ka],true):!isS(fb)?into(la,pa+'.'+ka,fb,sb[0],false):no('Essa divisão separa dois conjuntos de divisões em sentidos diferentes. Apague as de dentro de um dos lados primeiro.');
+  if(mg){r=a;r.c=a.c.slice(0,ka).concat([mg],b.c.slice(1));frz(r,sa.slice(0,ka).concat([sa[ka]+th+sb[0]],sb.slice(1)));if(!r.p&&b.p)r.p=b.p;dv(r,b)}}
+ else r=no('Essa divisão separa dois conjuntos de divisões em sentidos diferentes. Apague as de dentro de um dos lados primeiro.');
+ if(!r)return false;
+ szN.splice(i,2,szN[i]+th+szN[i+1]);n.c.splice(i,2,r);frz(n,szN);
+ if(n.c.length===1){var only=n.c[0],z=n.z,p=n.p;delete n.s;delete n.c;Object.keys(only).forEach(function(k){if(k!=='z')n[k]=only[k]});if(z!=null)n.z=z;if(p&&!n.p)n.p=p}return true}
+function delDiv(m,path,i){var n=nodeAt(m,path);if(!n||!n.c)return false;var a=n.c[i],b=n.c[i+1];if(!a||!b)return false;if((a.s&&a.c&&a.c.length>1)||(b.s&&b.c&&b.c.length>1))return delDivN(m,path,i);var L=lay(m),A=regOf(L,path+'.'+i),Bb=regOf(L,path+'.'+(i+1)),H=n.s==='h',keep=(a.t||a.p)?a:b,nw=JSON.parse(JSON.stringify(keep));delete nw.z;delete nw.rc;
  var flex=(a.z==null||a.z===''||!(+a.z>0))||(b.z==null||b.z===''||!(+b.z>0));if(!flex&&A&&Bb)nw.z=r1((H?A.y1-A.y0+Bb.y1-Bb.y0:A.x1-A.x0+Bb.x1-Bb.x0)+E_(m));if(b.rc!=null)nw.rc=b.rc;n.c.splice(i,2,nw);if(n.c.length===1){var only=n.c[0],z=n.z,p=n.p;delete n.s;delete n.c;Object.keys(only).forEach(function(k){if(k!=='z')n[k]=only[k]});if(z!=null)n.z=z;if(p&&!n.p)n.p=p}return true}
 function clearDoors(n){(function w(x){if(!x)return;delete x.p;(x.c||[]).forEach(w)})(n)}
 function redo(m){try{draw();panel();if(window.re3)re3()}catch(_){}}
@@ -10237,7 +10259,7 @@ var nm=window.newMod||newMod;newMod=window.newMod=function(){try{if(window.SOLO2
 (function(){var dm=document.getElementById('delMod');if(!dm)return;var d0=dm.onclick,arm=0;dm.onclick=function(ev){var m=window.SOLO2,R=window.RG,mi=m?S.mods.indexOf(m):-1;
  if(m&&mi>=0&&window.rgIs&&rgIs(m)&&R){if(m.lock){toast('🔒 Módulo travado');return}
   var ds=R.dsel&&R.dsel.mi===mi?R.dsel:null,gs=R.gsel&&R.gsel.mi===mi?R.gsel:null,sl=R.sel&&R.sel.mi===mi?R.sel:null,go=function(lab){try{draw();panel();if(window.re3)re3()}catch(_){}toast(lab+' · Desfazer volta')};
-  if(ds){var b=document.querySelector('[data-rga="ddel"]');snap();if(window.rgDelDiv&&rgDelDiv(m,ds.path,ds.i)){R.dsel=null;R.sel={mi:mi,path:ds.path}}go('🗑 Divisão apagada (só ela)');return}
+  if(ds){var b=document.querySelector('[data-rga="ddel"]');snap();if(window.rgDelDiv&&rgDelDiv(m,ds.path,ds.i)){R.dsel=null;R.sel={mi:mi,path:ds.path};go('🗑 Divisão apagada (só ela)')}return}
   if(gs){var gn=rgNode(m,gs.path);if(gn&&gn.p){snap();gn.p.gx=gn.p.gx||{};gn.p.gx[gs.k]=1;R.gsel=null;go('🗑 Puxador gola apagado (a porta aumentou)')}return}
   if(sl){var n=rgNode(m,sl.path);if(n){var has=n.t||n.p||n.g||n.sp||n.el;if(has){snap();['t','g','sp','el','tb','p'].forEach(function(q){delete n[q]});go('🗑 Tirado o que tinha no vão (gaveta, porta, cabideiro…) · o módulo fica');return}
    if(sl.path!=='r'){var par=sl.path.split('.');var ci=+par.pop(),pp=par.join('.'),pn=rgNode(m,pp);if(pn&&pn.c){snap();var ok=window.rgDelDiv&&rgDelDiv(m,pp,ci>0?ci-1:0);if(ok){R.sel={mi:mi,path:pp};go('🗑 Parte apagada: juntou com a do lado')}return}}}

@@ -11148,4 +11148,23 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
   }catch(_){}return r};
 })();
 </script>
+<script>
+/* ===== Orçamento em PDF: lista dos móveis do projeto, organizada por parede e por tipo (torre, aéreo, balcão, cristaleira, canto…),
+   com a medida real de cada um, quantas portas e gavetas tem, e as cores escolhidas. Sai junto com as observações do orçamento
+   (o PDF já imprime as observações linha por linha). Nada é inventado: tudo vem das peças do projeto. ===== */
+(function(){
+ function kindOf(m){var P=[];try{P=partsOf(m)}catch(_){}var n=function(re){return P.filter(function(p){return re.test(p.name)}).length},nd=n(/^Porta( de correr)?$/),ng=n(/^(Frente de gaveta|Gaveta interna · frente)$/),nf=n(/^Corte do forno$/),nw=n(/^Corte do micro-ondas$/),vid=P.some(function(p){return /^Porta/.test(p.name)&&p.glass}),tall=!m.sup&&+m.h>=1500,coz=/^(cozinha|gourmet)$/.test(typeof roomOf==='function'?roomOf():''),nm;
+  var qto=/^(quarto|closet)$/.test(typeof roomOf==='function'?roomOf():'');
+  if(m.rt)nm=m.rgNm||(m.stkB?'Maleiro (em cima)':m.sup?(vid?'Cristaleira aérea':'Aéreo'):tall?(vid?'Cristaleira':coz?'Torre':qto?'Guarda-roupa':'Armário'):'Módulo');
+  else nm=m.islN?'Ilha':m.nicho?'Nicho':m.rack?'Rack':m.corner?(m.sup?'Canto em L aéreo':tall?'Canto em L alto':'Canto em L'):m.sup?(vid?'Cristaleira aérea':'Aéreo'):tall?(vid?'Cristaleira':(nf||nw)?'Torre':qto?'Guarda-roupa':'Armário alto'):'Balcão';
+  var ft=[];if(nd)ft.push(nd+' '+TQ(nd===1?'porta':'portas'));if(ng)ft.push(ng+' '+TQ(ng===1?'gaveta':'gavetas'));if(nf)ft.push(TQ('forno'));if(nw)ft.push(TQ('micro-ondas'));return {nm:nm,ft:ft.join(', ')}}
+ window.furnList=function(){var mods=(S.mods||[]).filter(Boolean);if(!mods.length)return '';var WN={f:'Parede do fundo',e:'Parede da esquerda',d:'Parede da direita'},G={},ord=[],walls={};
+  mods.forEach(function(m){var k=kindOf(m),wl=m.wing==='e'?'e':m.wing==='d'?'d':'f',line=TQ(k.nm)+' · '+m.w+(m.corner&&+m.cw2?' + '+m.cw2:'')+' × '+m.h+' × '+m.d+' mm'+(k.ft?' · '+k.ft:''),key=wl+'|'+line;walls[wl]=1;if(!G[key]){G[key]={wl:wl,line:line,n:0};ord.push(key)}G[key].n++});
+  var out=[TQ('Móveis do projeto')+' ('+mods.length+') · '+TQ('largura × altura × profundidade')+':'],many=Object.keys(walls).length>1;
+  ['f','e','d'].forEach(function(wl){var ks=ord.filter(function(k){return G[k].wl===wl});if(!ks.length)return;if(many)out.push(TQ(WN[wl])+':');ks.forEach(function(k){out.push('• '+G[k].n+' × '+G[k].line)})});
+  var cs=[];mods.forEach(function(m){['corF','cor'].forEach(function(k){var c='';try{c=typeof swName==='function'?swName(k,m):''}catch(_){}c=c||m[k+'N']||'';if(c&&cs.indexOf(c)<0)cs.push(c)})});if(cs.length)out.push(TQ('Cores do projeto')+': '+cs.join(' · '));
+  return out.join('\n')};
+ var quoteData_fl=quoteData;quoteData=function(){var q=quoteData_fl.apply(this,arguments);try{var L=window.furnList();if(L&&q){q.notes=(q.notes?q.notes+'\n':'')+L;q.furniture=L.split('\n')}}catch(_){}return q};
+})();
+</script>
 </body></html>

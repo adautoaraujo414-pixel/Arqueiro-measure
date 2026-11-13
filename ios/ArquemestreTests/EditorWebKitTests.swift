@@ -6196,4 +6196,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aceita"] as? String, "true,true,false,false")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Orçamento em PDF: sai a lista dos móveis do projeto, por parede e por tipo (balcão, aéreo, cristaleira, torre, canto…),
+    /// com a medida de cada um, portas, gavetas e as cores. Vem tudo do projeto; projeto vazio não inventa lista.
+    func testListaDeMoveisNoOrcamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={};S.room='cozinha';S.env='livre';S.W=6000;S.mods=[];S.stones=[];S.m=null;
+        var add=function(c,i){newTpl(CATS[c].it[i]);return S.mods[S.mods.length-1]};
+        add(0,0);add(0,0);add(0,3);add(1,2);add(1,6);add(3,4);add(3,1);mkCorner('e');var a=add(0,1);a.wing='e';draw();
+        var L=furnList().split('\n');R.titulo=L[0];R.linhas=L.length;R.fundo=L.slice(2,9).join(' / ');R.esq=L.slice(9).join(' / ');
+        var q=quoteData();R.noOrcamento=q.notes.indexOf(L.join('\n'))>0&&/^Material: /.test(q.notes);R.itens=q.items.length>0;
+        S.mods[0].corF=SWW[3][1];draw();R.cores=furnList().split('\n').pop();
+        S.mods=[S.mods[5]];S.m=S.mods[0];draw();R.umaParede=furnList().replace(/\n/g,' / ');
+        S.mods=[];S.m=null;draw();R.vazio=furnList()===''&&quoteData().notes.indexOf('Móveis do projeto')<0;
+        S.room='quarto';add(4,3);draw();R.quarto=furnList().split('\n')[1];
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["titulo"] as? String, "Móveis do projeto (9) · largura × altura × profundidade:")
+        XCTAssertEqual(o["linhas"] as? Int, 11)
+        XCTAssertEqual(o["fundo"] as? String, "• 2 × Balcão · 900 × 820 × 560 mm · 2 portas / • 1 × Balcão · 600 × 820 × 560 mm · 3 gavetas / • 1 × Aéreo · 1000 × 750 × 350 mm · 2 portas / • 1 × Cristaleira aérea · 900 × 750 × 350 mm · 2 portas / • 1 × Torre · 635 × 2200 × 560 mm · 2 portas, forno, micro-ondas / • 1 × Armário alto · 900 × 2400 × 550 mm · 2 portas / • 1 × Canto em L · 900 + 900 × 820 × 560 mm · 2 portas")
+        XCTAssertEqual(o["esq"] as? String, "Parede da esquerda: / • 1 × Balcão · 450 × 820 × 560 mm · 1 porta")
+        XCTAssertEqual(o["noOrcamento"] as? Bool, true)
+        XCTAssertEqual(o["itens"] as? Bool, true)
+        XCTAssertEqual(o["cores"] as? String, "Cores do projeto: Louro Freijó")
+        XCTAssertEqual(o["umaParede"] as? String, "Móveis do projeto (1) · largura × altura × profundidade: / • 1 × Torre · 635 × 2200 × 560 mm · 2 portas, forno, micro-ondas")
+        XCTAssertEqual(o["vazio"] as? Bool, true)
+        XCTAssertEqual(o["quarto"] as? String, "• 1 × Guarda-roupa · 1800 × 2400 × 550 mm · 4 portas")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

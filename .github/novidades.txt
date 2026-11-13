@@ -1,0 +1,21 @@
+# Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
+# se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Paredes criadas: agora aceitam porta, vão aberto, janela e blindex (porta e janela). Dê dois toques na parede criada, escolha o que colocar e ajuste largura, altura, posição e altura do chão. No modo pessoa a porta abre. A parede furada aparece inteira, sem risco de emenda.
+• Orçamento em PDF: sai a lista dos móveis do projeto por parede (balcão, aéreo, cristaleira, torre, canto…), com a medida de cada um (largura × altura × profundidade), quantas portas e gavetas tem, e as cores do projeto.
+• Orçamento: fotos do projeto (botão "Adicionar fotos do projeto": tire as fotos no 3D, elas saem no PDF, duas por página) e aditivos (item a mais depois do orçamento fechado, com descrição, valor e data, somado à parte no total geral).
+• Torre da cozinha (editor por vãos): gaveta nova entra com a frente por fora, alinhada com as portas, com cava ou sem cava. No guarda-roupa a gaveta continua por dentro.
+• Frente com recorte do forno e do micro-ondas: aparece como uma peça só no 3D, sem riscos de emenda. O forno da torre abre tocando em qualquer ponto da frente.
+• Divisor de talheres: só aparece como colocado quando cabe de verdade na gaveta; se não couber, o app avisa e não conta a peça.
+• Opções que não mudavam nada no módulo deixaram de aparecer (ou explicam por que não valem ali).
+• Aba Internos reorganizada: o que mais se usa (divisórias e prateleiras) vem primeiro.
+• Quadro das gavetas fica dentro do painel, sem cobrir botões e medidas. Botão de minimizar não fica mais em cima de outro botão.
+• 3D: o zoom chega bem perto da peça (até 80×) e as peças ganharam ajuste fino de 0,5 e 1 mm.
+• Divisões (editor por vãos): escolha com recuo (vai pra trás) ou sem recuo (rente à frente), também na divisória em pé.
+• Engrosso acompanha a prateleira quando ela é puxada pra frente.
+• Nicho do eletro pode ser arrastado pra cima e pra baixo.
+• Corrigido: a tela parava de rolar no 2D e no 3D depois de um arraste interrompido.
+• Tamponamento de baixo em módulo de chão sem base.
+• Puxador facetado: ponteira de 70 × 15 mm em curva nas pontas, com metros de perfil e quantidade de ponteiras na lista de ferragens.
+• No 2D, a parede do fundo mostra só o que é do fundo (as laterais continuam nas vistas delas e no 3D).
+• Faixa "Corrigir todos" fica fora do quadro do desenho.
+• Avisos do cérebro podem ser desativados no painel dele e reativados em Ajustes.

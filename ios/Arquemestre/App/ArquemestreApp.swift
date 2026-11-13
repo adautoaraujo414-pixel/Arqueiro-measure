@@ -66,6 +66,8 @@ struct ArquemestreApp: App {
                 }
                 // convite do plano de corte (WhatsApp → página → app): arquemestre://corte?d=...
                 .onOpenURL { url in
+                    // o próprio link do convite (…/corte.html#d=… ou …/p.html#d=…) aberto direto no app
+                    if url.scheme == "https", url.host == "adautoaraujo414-pixel.github.io" { app.openCutLink(url.absoluteString); return }
                     guard url.scheme == "arquemestre", url.host == "corte",
                           let d = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "d" })?.value else { return }
                     app.openCutLink(d)

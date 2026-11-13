@@ -46,6 +46,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="arquemestre" android:host="corte" />
             </intent-filter>
+            <!-- o link do convite (https) aberto direto no app: com o arquivo de verificação na raiz do endereço
+                 (/.well-known/assetlinks.json), o toque no link do WhatsApp nem passa pelo navegador -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="adautoaraujo414-pixel.github.io" />
+                <data android:pathPrefix="/Arqueiro-measure/corte.html" />
+                <data android:pathPrefix="/Arqueiro-measure/p.html" />
+            </intent-filter>
         </activity>
 
         <receiver android:name=".agenda.ReminderReceiver" android:exported="false" />

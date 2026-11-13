@@ -1,7 +1,9 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
-• Depurador de embutir no aéreo (aba Estrutura): escolha a montagem, digite as medidas do seu aparelho e o app confere se cabe. A base fica com o recorte por onde passa o corpo (a medida do recorte sai escrita na peça), entra a prateleira fixa com o furo do duto e a frente do painel fica por baixo do aéreo. Portas, laterais e tamponamentos não mudam. Se faltar medida, não couber ou tiver peça no lugar, ele não coloca e diz o motivo.
-• Depurador no 3D: toque nele pra puxar o painel e acender a luz.
-• Orçamento: agora dá pra adicionar fotos da galeria do aparelho junto com as fotos tiradas no 3D (botão 🖼 no modo foto).
-• Modo foto do orçamento: a barra ficou pequena e discreta (Foto, galeria, quantidade e OK), ocupando bem menos a tela.
-• Editor por vãos: uma prateleira pode encostar na outra. Arraste a divisão até a outra: elas ficam uma em cima da outra, rentes, sem entrar uma na outra. Vão com porta, gaveta ou eletro não fecha.
+• Depurador de embutir: agora é só escolher no catálogo de coifas e depuradores. Ele já entra embutido no aéreo da cozinha, em cima do cooktop, do jeito da instalação de verdade: base com o recorte, prateleira em cima do corpo e a frente por baixo das portas, rente com elas. As medidas ficam na aba Estrutura desse aéreo. Confira a largura do corpo no aparelho antes de cortar.
+• A caixa do depurador não aparece mais em todos os módulos: só no aéreo que tem depurador. Depurador de embutir só entra em aéreo de cozinha.
+• Depurador de embutir que já estava solto num projeto: toque nele no 3D e use "Embutir no aéreo de cima".
+• Aéreo e módulo superior, inclusive de home: na aba Estrutura, junto da moldura, entrou o Frontal embaixo (a régua do cava), com liga e desliga e o tamanho de cada um.
+• Editor por vãos: toque em qualquer medida do desenho (vão de cima, de baixo, dos lados, distância até a divisão, largura e altura do vão) e digite a medida que quer.
+• Editor por vãos: a lixeira apaga a divisão tocada em qualquer ordem, sem precisar tirar as outras antes.
+• Link do plano de corte e do projeto: preparado pra abrir direto no Arquemestre quando o endereço do link estiver verificado.

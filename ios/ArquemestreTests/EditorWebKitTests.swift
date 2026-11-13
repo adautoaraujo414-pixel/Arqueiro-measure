@@ -6240,7 +6240,7 @@ final class EditorWebKitTests: XCTestCase {
         var PP=function(re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' '+p.x+','+p.y+' '+p.w+'×'+p.h+(p.noCut?' não é peça':' corte '+p.cl+'×'+p.cw)}).join(' / ')},ST=function(){var g=dpStatus(m);return g?(g.ok?'ok':g.why):'desligado'};
         var q=function(s){return document.querySelector('#bd '+s)},typ=function(k,v){var i=q('[data-dpf="'+k+'"]');i.value=v;i.dispatchEvent(new Event('change',{bubbles:true}))};
         var portas0=PP(/^(Porta|Tamponamento)/),corte0=cutLines(m).length;
-        q('[data-dpa="on|1"]').click();R.semMedida=ST()+' | '+q('[data-dpst]').dataset.dpst+' | '+PP(/epurador/);
+        dpSet(m,'on',1);R.aereoComDep=!!document.querySelector('#bd [data-dpbox]');R.semMedida=ST()+' | '+q('[data-dpst]').dataset.dpst+' | '+PP(/epurador/);
         typ('cw',990);typ('ch',175);typ('cd',280);R.largo=ST();typ('cw',600);typ('cd',400);R.fundo=ST();typ('cd',280);
         R.p=ST()+' | '+q('[data-dpst]').dataset.dpst;R.pecasP=PP(/^(Base inferior|Lateral esquerda|Prateleira fixa do depurador|Depurador)/);R.portasIguais=PP(/^(Porta|Tamponamento)/)===portas0;R.recorte=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0].note;
         typ('rf',2);R.folga=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0].note.split(' · ')[1];typ('rf','');typ('cw',970);R.vaoTodo=ST()+' | '+PP(/^(Base inferior|Lateral esquerda)/);typ('cw',600);
@@ -6267,7 +6267,8 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=(window.__errs||[]).length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["balcao"] as? Bool, false)
-        XCTAssertEqual(o["aereo"] as? Bool, true)
+        XCTAssertEqual(o["aereo"] as? Bool, false)
+        XCTAssertEqual(o["aereoComDep"] as? Bool, true)
         XCTAssertEqual(o["semMedida"] as? String, "Digite a largura, a altura e a profundidade do corpo do depurador. | no | ")
         XCTAssertEqual(o["largo"] as? String, "Não cabe: o corpo tem 990 mm de largura e o vão entre as laterais tem 970 mm.")
         XCTAssertEqual(o["fundo"] as? String, "Não cabe: o corpo tem 400 mm de profundidade e o aéreo tem 350 mm.")
@@ -6295,8 +6296,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["p2"] as? String, "ok | Prateleira fixa do depurador 15,560 970×15 corte 970×350 / Depurador (corpo) 200,575 600×175 não é peça / Depurador (frente do painel) 50,750 900×40 não é peça")
         XCTAssertEqual(o["lateral"] as? String, "1765,2485,6,356")
         XCTAssertEqual(o["base3d"] as? String, "900,1900,1750,1765,6,356 em U, peça única")
-        XCTAssertEqual(o["fechado"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,76,356 / 962,1838,1709,1710,88,316 / 1112,1688,1709,1710,322,344 / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
-        XCTAssertEqual(o["aberto"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,266,546 / 962,1838,1709,1710,278,506 / 1112,1688,1709,1710,512,534 luz / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["fechado"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,76,371 / 962,1838,1709,1710,88,316 / 1112,1688,1709,1710,322,344 / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["aberto"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,266,561 / 962,1838,1709,1710,278,506 / 1112,1688,1709,1710,512,534 luz / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
         XCTAssertEqual(o["sel"] as? Bool, false)
         XCTAssertEqual(o["projetoIgual"] as? String, "{\"on\":1,\"md\":\"p\",\"cw\":600,\"ch\":215,\"cd\":280,\"du\":120,\"fh\":150,\"rw\":230,\"rd\":220,\"rz\":60,\"mh\":252,\"vh\":40,\"fw\":900,\"pa\":470}")
         XCTAssertEqual(o["fechou"] as? Int, 0)
@@ -6467,6 +6468,206 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["emPe"] as? String, "1243 | em pé 408@1258-2485")
         XCTAssertEqual(o["esticou"] as? String, " | em pé 408@15-2485 | 🗑 Divisão apagada (só ela) · Desfazer volta")
         XCTAssertEqual(o["comGaveta"] as? String, "1243 | em pé 408@1258-2485 | Tire primeiro o que está dentro do vão ao lado (gaveta, cabideiro, sapateira ou eletro). | gaveta true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testDepuradorDeEmbutirDoCatalogoEntraEmbutidoNoAereo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TT=[];var toast0=toast;toast=function(t){TT.push(String(t));return toast0.apply(this,arguments)};
+        demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        var FI=apModels('depurador').findIndex(function(q){return /Fischer/.test(q[0])}),IN=apModels('depurador').findIndex(function(q){return /Incasso 75 \(/.test(q[0])}),SL=apModels('depurador').findIndex(function(q){return /Slim 80/.test(q[0])});
+        var PP=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' '+p.x+','+p.y+' '+p.w+'×'+p.h+(p.noCut?' não é peça':' corte '+p.cl+'×'+p.cw)}).join(' / ')};
+        var nDep=function(){return S.fr.filter(function(f){return f.t==='depurador'}).length},last=function(){return TT[TT.length-1]||''};
+        /* 1. nenhuma caixa de depurador nos aéreos · sem cooktop e sem aéreo escolhido: pede pra tocar no aéreo, não coloca nada */
+        S.m=S.mods[6];S.tab=0;draw();panel();R.semCaixa=!document.querySelector('#bd [data-dpbox]');
+        S.m=S.mods[1];var r0=apAdd('depurador',FI);R.semLugar=(r0===null)+' | soltos '+nDep()+' | com depurador '+S.mods.filter(function(m){return m.dep&&m.dep.on}).length+' | '+last();
+        /* 2. com cooktop: entra no aéreo de cima dele, no meio do cooktop, igual ao vídeo */
+        S.stones[0].items.push({id:901,k:"cook",x:2250,y:60,w:580,d:510});draw();
+        /* aéreo com tamponamento de baixo: não coloca e diz o motivo (nada de aplicação falsa) */
+        S.m=S.mods[1];apAdd("depurador",FI);R.comTampBaixo=last()+" | peças "+PP(S.mods[8],/epurador/).length;delete S.mods[8].dep;S.mods.forEach(function(m){if(m.sup)m.tb=false});draw();
+        S.m=S.mods[1];var r1=apAdd('depurador',FI);await W(50);var h=S.mods.filter(function(m){return m.dep&&m.dep.on})[0],hi=S.mods.indexOf(h);
+        R.entrou=(r1===null)+' | soltos '+nDep()+' | aéreo '+hi+' | escolhido '+S.mods.indexOf(S.m)+' | '+last();
+        R.dep=JSON.stringify(h.dep);var g=dpStatus(h);R.ok=g.ok+' '+g.why;
+        R.meio=(h.x+g.xc)+' = cooktop '+(S.stones[0].x+2250+290);
+        R.pecas=PP(h,/^(Prateleira fixa do depurador|Depurador)/);R.base=partsOf(h).filter(function(p){return p.name==='Base inferior'})[0].note;
+        R.prat=partsOf(h).filter(function(p){return p.dpp})[0].note;
+        R.corte=cutLines(h).map(function(l){return l.name}).filter(function(n){return /epurador/.test(n)}).join(' / ');
+        S.tab=0;draw();panel();R.caixa=!!document.querySelector('#bd [data-dpbox]')+' | '+(document.querySelector('#bd [data-dpnome]')||{}).textContent+' | '+((document.querySelector('#bd [data-dpref]')||{}).textContent||'').slice(0,70)+' | '+(document.querySelector('#bd [data-dpst]')||{dataset:{}}).dataset.dpst+' | botão de colocar '+!!document.querySelector('#bd [data-dpa="on|1"]');
+        S.m=S.mods[6];draw();panel();R.outroAereo=!document.querySelector('#bd [data-dpbox]');
+        /* 3. 3D: corpo entre as laterais, dentro do recorte; frente por baixo do aéreo, rente com a face das portas; nada dentro de peça */
+        open3D();await W(350);re3();
+        var B=__boxes(),D=B.filter(function(b){return b.dpm}),por=B.filter(function(b){return b.nm===hi+':Porta'&&b.y1-b.y0>200}),fb=fBack(h);
+        var corpo=D[0],frente=D[1];R.corpo3=[corpo.x0-h.x,corpo.x1-h.x,corpo.y0-h.b,corpo.y1-h.b,corpo.z0-fb,corpo.z1-fb].map(function(v){return Math.round(v*10)/10}).join(',');
+        R.frente3=[frente.x0-h.x,frente.x1-h.x,frente.y0-h.b,frente.y1-h.b,frente.z0-fb,frente.z1-fb].map(function(v){return Math.round(v*10)/10}).join(',');
+        R.porta3=por.length+' portas · embaixo '+Math.round((Math.min.apply(null,por.map(function(b){return b.y0}))-h.b)*10)/10+' · face '+Math.round((Math.max.apply(null,por.map(function(b){return b.z1}))-fb)*10)/10;
+        var pan=B.filter(function(b){return String(b.nm||'').indexOf(hi+':')===0&&!b.dpm&&!/^\d+:Porta/.test(b.nm)&&!b.pf&&b.x1-b.x0>.9&&b.y1-b.y0>.9&&b.z1-b.z0>.9}),bad=[];
+        D.slice(0,2).forEach(function(d,k){pan.forEach(function(p){var ox=Math.min(d.x1,p.x1)-Math.max(d.x0,p.x0),oy=Math.min(d.y1,p.y1)-Math.max(d.y0,p.y0),oz=Math.min(d.z1,p.z1)-Math.max(d.z0,p.z0);if(ox>.6&&oy>.6&&oz>.6)bad.push((k?'frente':'corpo')+'∩'+p.nm)})});R.dentroDePeca=bad.join(',')||'nada';
+        /* base desenhada em U (peça só) e prateleira inteira em cima do corpo */
+        R.base3=B.filter(function(b){return b.nm===hi+':Base inferior'}).map(function(b){return (b.pf?'peça só com o recorte em U':'caixa')}).join(',');
+        /* 4. modelo sem medida de corpo (Incasso 75): corpo fica com a largura total, avisa pra conferir · num aéreo estreito não cabe e diz o motivo */
+        try{[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}catch(e){}
+        S.m=S.mods[1];apAdd('depurador',IN);var g2=dpStatus(h);R.incasso=g2.ok+' '+g2.cw+'×'+g2.ch+'×'+g2.cd+' ref '+JSON.stringify(h.dep.ref)+' | '+PP(h,/^Depurador/);
+        h.w=700;draw();var g3=dpStatus(h);R.estreito=g3.ok+' | '+g3.why+' | '+PP(h,/epurador/);h.w=1000;draw();
+        /* digitou a largura do corpo: deixa de ser medida de referência */
+        S.m=h;S.tab=0;draw();panel();var i=document.querySelector('#bd [data-dpf="cw"]');i.value=700;i.dispatchEvent(new Event('change',{bubbles:true}));R.digitou=JSON.stringify(h.dep.ref||null)+' '+dpStatus(h).ok+' aviso '+!!document.querySelector('#bd [data-dpref]');
+        /* 5. depurador que NÃO é de embutir continua entrando solto como antes */
+        var n0=nDep();var r5=apAdd('depurador',SL);R.slim=(!!r5)+' soltos '+(nDep()-n0);
+        /* 6. fora da cozinha não entra */
+        var rm=S.room,ev=S.env;S.room='quarto';S.env='livre';var before=JSON.stringify(S.mods.map(function(m){return m.dep||null}));var r6=apAdd('depurador',FI);R.quarto=(r6===null)+' | igual '+(JSON.stringify(S.mods.map(function(m){return m.dep||null}))===before)+' | soltos '+(nDep()-n0-1)+' | '+last();S.room=rm;S.env=ev;
+        /* 7. depurador de embutir solto de projeto antigo: botão do quadro embute no aéreo de cima */
+        h.dep={on:0,md:'p'};var f={id:777,t:'depurador',nome:'Depurador de embutir Slim 60 (tipo Fischer) · 600 × 175 × 280',w:600,h:175,d:280,x:S.stones[0].x+2250+290-300,y:0,b:1500};S.fr.push(f);draw();
+        open3D();await W(300);re3();
+        var rE=dpEmbed(f);R.embutiu=rE.ok+' | '+rE.msg.slice(0,40)+' | solto ainda existe '+(S.fr.indexOf(f)>=0)+' | aéreo '+S.mods.indexOf(S.mods.filter(function(m){return m.dep&&m.dep.on})[0])+' ok '+dpStatus(h).ok;
+        var f2={id:778,t:'depurador',nome:'Depurador de embutir Slim 60 (tipo Fischer)',w:600,h:175,d:280,x:5,y:0,b:1500};S.fr.push(f2);S.mods[6].tb=true;var rF=dpEmbed(f2);R.naoDeu=rF.ok+' | '+rF.msg+' | solto continua '+(S.fr.indexOf(f2)>=0)+' | aéreo sem depurador '+!(S.mods[6].dep&&S.mods[6].dep.on);S.mods[6].tb=false;
+        /* 8. salvar e reabrir */
+        loadState(JSON.parse(JSON.stringify(snapState())));var h2=S.mods[hi];R.reabriu=JSON.stringify(h2.dep).slice(0,120)+' '+dpStatus(h2).ok;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["semCaixa"] as? Bool, true)
+        XCTAssertEqual(o["semLugar"] as? String, "true | soltos 0 | com depurador 0 | Toque no aéreo onde o depurador vai embutido e escolha o depurador de novo.")
+        XCTAssertEqual(o["comTampBaixo"] as? String, "Depurador não colocado. Tem tamponamento de baixo neste aéreo. Desmarque o tamponamento de baixo pra colocar o depurador. | peças 0")
+        XCTAssertEqual(o["entrou"] as? String, "true | soltos 0 | aéreo 8 | escolhido 8 | Depurador embutido no aéreo: base recortada, prateleira em cima do corpo e frente por baixo das portas. Medidas na aba Estrutura do aéreo.")
+        XCTAssertEqual(o["dep"] as? String, "{\"on\":1,\"md\":\"p\",\"nome\":\"Depurador de embutir Slim 60 (tipo Fischer)\",\"fw\":600,\"ch\":175,\"cd\":280,\"cw\":550,\"ref\":{\"cw\":2,\"vh\":2},\"vh\":40,\"dl\":230}")
+        XCTAssertEqual(o["ok"] as? String, "true ")
+        XCTAssertEqual(o["meio"] as? String, "2540 = cooktop 2540")
+        XCTAssertEqual(o["pecas"] as? String, "Prateleira fixa do depurador 15,600 970×15 corte 970×350 / Depurador (corpo) 230,615 550×135 não é peça / Depurador (frente do painel) 205,750 600×40 não é peça")
+        XCTAssertEqual(o["base"] as? String, "inteiriça, sob as laterais · só a base inferior leva o recorte: 550 × 280 mm começando a 230 mm da ponta esquerda da base, aberto na frente (corpo do depurador) · sobra uma tira de 230 mm na esquerda e 220 mm na direita · confira a largura do corpo no aparelho antes de cortar")
+        XCTAssertEqual(o["prat"] as? String, "fixa, entre as laterais · 135 mm acima da borda de baixo do aéreo (vão do depurador) · sem furo (sem duto) · o corpo passa pelo recorte da base")
+        XCTAssertEqual(o["corte"] as? String, "Prateleira fixa do depurador · BRANCO")
+        XCTAssertEqual(o["caixa"] as? String, "true | Depurador de embutir Slim 60 (tipo Fischer) | Confira no aparelho antes de cortar: a largura do corpo e a altura da  | ok | botão de colocar false")
+        XCTAssertEqual(o["outroAereo"] as? Bool, true)
+        XCTAssertEqual(o["corpo3"] as? String, "230,780,0,135,70,350")
+        XCTAssertEqual(o["frente3"] as? String, "205,805,-40,0,70,365")
+        XCTAssertEqual(o["porta3"] as? String, "2 portas · embaixo 0 · face 365")
+        XCTAssertEqual(o["dentroDePeca"] as? String, "nada")
+        XCTAssertEqual(o["base3"] as? String, "peça só com o recorte em U")
+        XCTAssertEqual(o["incasso"] as? String, "true 750×300×300 ref {\"cw\":1} | Depurador (corpo) 130,450 750×300 não é peça")
+        XCTAssertEqual(o["estreito"] as? String, "false | Não cabe: o corpo tem 750 mm de largura e o vão entre as laterais tem 670 mm. Digite a largura do corpo do seu depurador. Ela é menor que a frente. | ")
+        XCTAssertEqual(o["digitou"] as? String, "null true aviso false")
+        XCTAssertEqual(o["slim"] as? String, "true soltos 1")
+        XCTAssertEqual(o["quarto"] as? String, "true | igual true | soltos 0 | O depurador de embutir vai num aéreo de cozinha.")
+        XCTAssertEqual(o["embutiu"] as? String, "true | Depurador embutido no aéreo: base recort | solto ainda existe false | aéreo 8 ok true")
+        XCTAssertEqual(o["naoDeu"] as? String, "false | Não deu pra embutir. Tem tamponamento de baixo neste aéreo. Desmarque o tamponamento de baixo pra colocar o depurador. | solto continua true | aéreo sem depurador true")
+        XCTAssertEqual(o["reabriu"] as? String, "{\"on\":1,\"md\":\"p\",\"nome\":\"Depurador de embutir Slim 60 (tipo Fischer)\",\"fw\":600,\"ch\":175,\"cd\":280,\"cw\":550,\"ref\":{\"cw\":2, true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testFrontalEmbaixoEMolduraNaEstruturaDoSuperior() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};var R={};PR.setupDone=1;window.MINI3OFF=1;S.room='sala';S.env='livre';S.W=4000;S.mods=[];S.stones=[];S.fr=[];
+        function mk(cid,re){var c=CATS.filter(function(x){return x.id===cid})[0],it=c.it.filter(function(q){return re.test(q.n)})[0];newTpl(JSON.parse(JSON.stringify(it)));return S.m}
+        var q=function(s){return document.querySelector('#bd '+s)},PP=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' y'+p.y+' '+p.w+'×'+p.h+' corte '+p.cl+'×'+p.cw}).join(' / ')};
+        var typ=function(k,v){var i=q('input[data-r="'+k+'"]');i.value=v;i.dispatchEvent(new Event('change',{bubbles:true}));i.dispatchEvent(new Event('input',{bubbles:true}))};
+        /* superior de home (sala) e aéreo de cozinha: a Estrutura mostra moldura e frontal embaixo, cada um com liga/desliga e tamanho */
+        var a=mk('sup',/Aéreo 2 portas/);S.m=a;S.tab=0;draw();panel();
+        R.opcoes=!!q('input[data-rc="mold"]')+' '+!!q('[data-frb] input[data-rc="regua"]')+' | tamanhos antes '+!!q('input[data-r="moldMm"]')+' '+!!q('input[data-r="regMm"]');
+        var p0=PP(a,/^(Porta|Engrosso cava|Moldura)/),c0=cutLines(a).length;
+        q('[data-frb] input[data-rc="regua"]').click();await W(60);R.frontal=a.regua+' | '+PP(a,/^(Porta|Engrosso cava)/);R.campos=!!q('input[data-r="regMm"]')+' '+!!q('input[data-r="regN"]')+' '+q('input[data-r="regMm"]').value+' '+q('input[data-r="regN"]').value;
+        R.corte=cutLines(a).filter(function(l){return /Engrosso cava/.test(l.name)}).map(function(l){return l.name+' '+l.qty+'× '+l.L+'×'+l.W}).join(' / ');
+        open3D();await W(300);re3();R.no3d=__boxes().filter(function(b){return /^0:Engrosso cava/.test(b.nm)&&b.y1-b.y0>5}).length;
+        [].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200);
+        S.m=a;S.tab=0;draw();panel();q('input[data-rc="mold"]').click();await W(60);R.moldura=a.mold+' | '+!!q('input[data-r="moldMm"]')+' '+q('input[data-r="moldMm"]').value+' | '+PP(a,/^Moldura/);
+        q('[data-frb] input[data-rc="regua"]').click();await W(60);q('input[data-rc="mold"]').click();await W(60);R.desligou=(PP(a,/^(Porta|Engrosso cava|Moldura)/)===p0)+' '+(cutLines(a).length===c0)+' campos '+!!q('input[data-r="regMm"]')+' '+!!q('input[data-r="moldMm"]');
+        /* balcão de baixo continua com a travessa frontal dele, sem a caixa do frontal embaixo */
+        S.room='cozinha';S.env='cozinha';var b=mk('inf',/2 portas/);S.m=b;S.tab=0;draw();panel();R.balcao=!!q('input[data-rc="trav"]')+' frontal embaixo '+!!q('[data-frb]');
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["opcoes"] as? String, "true true | tamanhos antes false false")
+        XCTAssertEqual(o["frontal"] as? String, "true | Porta y0 490×780 corte 490×780 / Porta y0 490×780 corte 490×780 / Engrosso cava · régua da frente 1 y750 1000×15 corte 1000×70 / Engrosso cava · régua de trás 1 y750 1000×15 corte 1000×70 / Engrosso cava · régua da frente 2 y765 1000×15 corte 1000×70 / Engrosso cava · régua de trás 2 y765 1000×15 corte 1000×70")
+        XCTAssertEqual(o["campos"] as? String, "true true 70 2")
+        XCTAssertEqual(o["corte"] as? String, "Engrosso cava (régua) · NA COR 4× 1000×70")
+        XCTAssertEqual(o["no3d"] as? Int, 4)
+        XCTAssertEqual(o["moldura"] as? String, "true | true 30 | Moldura de acabamento y0 1000×30 corte 1000×30")
+        XCTAssertEqual(o["desligou"] as? String, "true true campos false false")
+        XCTAssertEqual(o["balcao"] as? String, "true frontal embaixo false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTocarEmQualquerMedidaDoVaoEDigitar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=5610;S.H=3270;draw();
+        var c=CATS.filter(function(x){return x.id==='alto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário alto livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();soloOn(m);await W(400);
+        m.rt={s:'h',c:[{z:1646.3},{s:'h',c:[{z:516.2},{}]}]};draw();
+        var szs=function(){var L=rgLay(S.mods[0]);return L.regs.filter(function(r){return r.leaf}).map(function(r){return (Math.round((r.x1-r.x0)*10)/10)+'×'+(Math.round((r.y1-r.y0)*10)/10)}).join(' | ')};
+        var selD=function(path,i){RG.sel=null;RG.dsel={mi:0,path:path,i:i};RG.tab='div';draw();panel()},selV=function(path){RG.dsel=null;RG.sel={mi:0,path:path};draw();panel()};
+        var qs=function(){return [].map.call(document.querySelectorAll('#svg text[data-q^="rgv|"]'),function(e){return e.dataset.q.split('|')[1].split(';')[3]+'='+e.textContent}).join(' ')};
+        var inp=function(){return document.getElementById('qein')};
+        var tap=async function(w){var e=[].filter.call(document.querySelectorAll('#svg rect[data-q^="rgv|"]'),function(q){return q.dataset.q.split(';')[3]===w})[0];if(!e)return 'sem medida '+w;var r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch'};var t=document.elementFromPoint(x,y);if(!t||!t.closest('[data-q]')){return 'medida '+w+' tapada por '+(t?(t.id||t.tagName)+' '+(t.className&&t.className.baseVal!==undefined?'':t.className):'nada')+' em '+Math.round(x)+','+Math.round(y)+' tela '+innerWidth+'×'+innerHeight}t.dispatchEvent(new PointerEvent('pointerdown',o));t.dispatchEvent(new PointerEvent('pointerup',o));await W(60);return document.getElementById('qelab').textContent+' = '+inp().value};
+        var key=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        var typ=async function(v){if(document.getElementById('calcbar').hidden)return 'teclado fechado';String(v).split('').forEach(key);await W(40);key('ok');await W(80);return document.getElementById('calcbar').hidden&&document.getElementById('qebox').hidden};
+        R.antes=szs();
+        /* prateleira escolhida: as 4 medidas dela dão pra tocar e digitar */
+        selD('r',0);R.medidas=qs();
+        R.cima=await tap('A');R.fechouNoOK=await typ(1500);R.cimaDepois=szs();
+        selD('r',0);R.baixo=await tap('B');await typ(1000);R.baixoDepois=szs();
+        selD('r',0);R.ateDiv=await tap('P');await typ(1700);R.ateDivDepois=szs();
+        selD('r',0);R.depoisDiv=await tap('Q');await typ(900);R.depoisDivDepois=szs();
+        /* a de baixo também, e o limite: não deixa passar por cima da outra peça */
+        selD('r.1',0);R.medidas2=qs();R.b2=await tap('A');await typ(300);R.b2Depois=szs();selD('r.1',0);await tap('A');await typ(5000);R.limite=szs();
+        /* divisão em pé */
+        m.rt={s:'v',c:[{z:400},{}]};draw();selD('r',0);R.emPe=qs();R.esq=await tap('A');await typ(250);R.esqDepois=szs();selD('r',0);R.dir=await tap('B');await typ(300);R.dirDepois=szs();
+        /* vão escolhido: largura × altura, cada número dá pra tocar quando tem divisão que manda nele */
+        m.rt={s:'h',c:[{z:1000},{s:'v',c:[{z:300},{}]}]};draw();selV('r.1.1');R.vao=qs();R.larg=await tap('W');await typ(350);R.largDepois=szs();await W(900);selV('r.1.1');R.alt=await tap('H');await typ(1200);R.altDepois=szs();
+        selV('r.0');R.vaoSemDivisaoEmPe=qs();
+        /* desfazer volta */
+        await W(900);document.getElementById('und').click();await W(200);R.desfez=szs();
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "800×1646.3 | 800×516.2 | 800×277.5")
+        XCTAssertEqual(o["medidas"] as? String, "A=1646,3 B=808,7 P=1646,3 Q=808,7")
+        XCTAssertEqual(o["cima"] as? String, "Vão de cima (mm) = 1646")
+        XCTAssertEqual(o["fechouNoOK"] as? Bool, true)
+        XCTAssertEqual(o["cimaDepois"] as? String, "800×1500 | 800×516.2 | 800×423.8")
+        XCTAssertEqual(o["baixo"] as? String, "Vão de baixo (mm) = 955")
+        XCTAssertEqual(o["baixoDepois"] as? String, "800×1455 | 800×516.2 | 800×468.8")
+        XCTAssertEqual(o["ateDiv"] as? String, "De cima até a divisão (mm) = 1455")
+        XCTAssertEqual(o["ateDivDepois"] as? String, "800×1700 | 800×516.2 | 800×223.8")
+        XCTAssertEqual(o["depoisDiv"] as? String, "Da divisão até embaixo (mm) = 755")
+        XCTAssertEqual(o["depoisDivDepois"] as? String, "800×1555 | 800×516.2 | 800×368.8")
+        XCTAssertEqual(o["medidas2"] as? String, "A=516,2 B=368,8 P=2086,2 Q=368,8")
+        XCTAssertEqual(o["b2"] as? String, "Vão de cima (mm) = 516")
+        XCTAssertEqual(o["b2Depois"] as? String, "800×1555 | 800×300 | 800×585")
+        XCTAssertEqual(o["limite"] as? String, "800×1555 | 800×885 | 800×0")
+        XCTAssertEqual(o["emPe"] as? String, "A=400 B=385 P=400 Q=385")
+        XCTAssertEqual(o["esq"] as? String, "Vão da esquerda (mm) = 400")
+        XCTAssertEqual(o["esqDepois"] as? String, "250×2470 | 535×2470")
+        XCTAssertEqual(o["dir"] as? String, "Vão da direita (mm) = 535")
+        XCTAssertEqual(o["dirDepois"] as? String, "485×2470 | 300×2470")
+        XCTAssertEqual(o["vao"] as? String, "W=485 H=1455")
+        XCTAssertEqual(o["larg"] as? String, "Largura do vão (mm) = 485")
+        XCTAssertEqual(o["largDepois"] as? String, "800×1000 | 435×1455 | 350×1455")
+        XCTAssertEqual(o["alt"] as? String, "Altura do vão (mm) = 1455")
+        XCTAssertEqual(o["altDepois"] as? String, "800×1255 | 435×1200 | 350×1200")
+        XCTAssertEqual(o["vaoSemDivisaoEmPe"] as? String, "H=1255")
+        XCTAssertEqual(o["desfez"] as? String, "800×1000 | 435×1455 | 350×1455")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTodaReguaDoEngrossoDaPrateleiraApareceNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={bad:[],n:0};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='alto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário alto livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;
+        m.rt={s:'h',c:[{},{s:'h',c:[{},{}]}]};draw();open3D();await W(300);
+        var re=/^0:(Engrosso da prateleira|Prateleira)/;
+        function chk(tag){draw();re3();var P=partsOf(m).filter(function(p){return /^(Engrosso da prateleira|Prateleira)/.test(p.name)}),B=__boxes().filter(function(b){return re.test(b.nm)&&(b.y1-b.y0)>5&&(b.z1-b.z0)>5});
+         R.n++;var miss=[];P.forEach(function(p){var y1=m.b+m.h-p.y,y0=y1-p.h;var hit=B.filter(function(b){return String(b.pk)===p.pk&&Math.abs(b.y0-y0)<.6&&Math.abs(b.y1-y1)<.6&&Math.abs((b.x1-b.x0)-p.w)<.6});if(hit.length!==1)miss.push(p.pk+'×'+hit.length)});
+         /* camadas uma em cima da outra, sem buraco e sem uma dentro da outra: faixas da frente, de cima pra baixo */
+         var fr=B.filter(function(b){return /régua da frente|Prateleira/.test(b.nm)}),ov=[];for(var i=0;i<fr.length;i++)for(var j=i+1;j<fr.length;j++){var a=fr[i],b=fr[j];if(Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.6&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.6)ov.push(a.pk+'∩'+b.pk)}
+         if(miss.length||ov.length||P.length!==B.length)R.bad.push(tag+' P'+P.length+' B'+B.length+' falta['+miss.join(',')+'] dentro['+ov.join(',')+']')}
+        var A=m.rt.c[0],Bn=m.rt.c[1].c[0];
+        [15,25].forEach(function(t){[1,2,3].forEach(function(n){['down','up'].forEach(function(dir){[0,1].forEach(function(top){[0,30].forEach(function(rc){[80,120].forEach(function(w){
+         A.rc=rc;A.eng={n:n,dir:dir,w:w,t:t};if(top)A.eng.top=1;Bn.rc=30;Bn.eng={n:(n%3)+1,dir:dir==='up'?'down':'up',w:80,t:15};
+         chk('t'+t+' n'+n+' '+dir+' top'+top+' rc'+rc+' w'+w)})})})})})});
+        R.bad=R.bad.slice(0,12).join(' | ');R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["bad"] as? String, "")
+        XCTAssertEqual(o["n"] as? Int, 96)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

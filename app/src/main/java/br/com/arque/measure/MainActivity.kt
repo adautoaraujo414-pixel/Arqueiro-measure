@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
             if (u.scheme == "arquemestre" && u.host == "corte") {
                 u.getQueryParameter("d")?.let { vm.openCutLink(it) }
                 i.data = null
+            } else if (u.scheme == "https" && u.host == "adautoaraujo414-pixel.github.io") {
+                // o próprio link do convite (…/corte.html#d=… ou …/p.html#d=…) aberto direto no app
+                vm.openCutLink(u.toString())
+                i.data = null
             }
         }
         i?.getStringExtra(br.com.arque.measure.agenda.AgendaReminders.EXTRA_APPT)?.let { vm.openAppointment(it) }

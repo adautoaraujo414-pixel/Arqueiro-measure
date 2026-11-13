@@ -5677,4 +5677,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["nota"] as? String, "PORTA USINADA (vertical): 11 rasgos de 12 × 629 mm fresados na própria peça · 35 mm entre rasgos · primeiro rasgo a 50 mm da borda esquerda · área dos rasgos a 50 mm de cima, 71 de baixo, 50 da esquerda e 50 da direita (folga de 50 mm contada a partir do fim da cava embaixo) · pontas arredondadas (raio da fresa)")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
+
+    /// Puxador facetado: perfil no topo + ponteira de 70 × 15 mm com a curva em cada ponta (3D, anotação da peça e lista de ferragens).
+    func testFacetadoComPonteiraCurvaNasPontas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+          S.room='sala';S.env='livre';S.W=3600;S.mods=[];S.stones=[];newTpl(CATS[0].it[0]);var m=S.mods[0];m.x=600;m.w=1000;S.m=m;S.sv=0;m.v[0].cava=false;m.v[0].px='facetado';m.v[0].pxc='dourado';draw();
+          var d=partsOf(m).filter(function(p){return p.name==='Porta'})[0];R.porta=d.w+'×'+d.h+' cw='+d.cw+' pxD='+d.pxD;R.nota=(d.note||'').slice((d.note||'').indexOf('Perfil facetado'));
+          var r=mCost(m);R.orc=Math.round(r.pxF*1000)+' mm de perfil · '+r.pxFP+' ponteiras';
+          open3D();await W(700);var bx=dbg3all().filter(function(q){return /^0:Porta/.test(String(q.nm||''))});var md=m.x,pf=bx.filter(function(q){return q.x1-q.x0<=7.01||(q.x1-q.x0>300&&q.z1-q.z0<30&&q.y1-q.y0<20)}).filter(function(q){return q.x0>=md+8-1&&q.x1<=md+8+490+1}).map(function(q){return [Math.round((q.x0-md-8)*10)/10,Math.round((q.x1-md-8)*10)/10,Math.round((q.z1-q.z0)*10)/10]}).sort(function(a,b){return a[0]-b[0]});var big=pf.filter(function(q){return q[2]>10});R.meio=big.filter(function(q){return q[1]-q[0]>300}).map(function(q){return q[0]+'-'+q[1]+':'+q[2]}).join();var pe=big.filter(function(q){return q[1]<=72}).map(function(q){return q[2]}),pd=big.filter(function(q){return q[0]>=420}).map(function(q){return q[2]});R.ponteira=pe.join(' ')+' · sobe em curva='+pe.every(function(v,i){return !i||v>=pe[i-1]})+' · espelhada='+(pe.join()===pd.slice().reverse().join());R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["porta"] as? String, "490×689.5 cw=689.5 pxD=15.5")
+        XCTAssertEqual(o["nota"] as? String, "Perfil facetado · dourado · encaixado no topo da peça · ponteira de 70 × 15 mm com a curva em cada ponta · MDF 689,5 + perfil 15,5 = 705 (desconto do perfil na altura) · perfil de 350 mm entre as 2 ponteiras de 70 mm (perfil + ponteiras = 490) · FURO DE DOBRADIÇA: lado ESQUERDO (porta vista de frente) · 2 furos Ø35 a 100 mm das pontas · centro a 22 mm da borda")
+        XCTAssertEqual(o["orc"] as? String, "700 mm de perfil · 4 ponteiras")
+        XCTAssertEqual(o["meio"] as? String, "71-421:25.6")
+        XCTAssertEqual(o["ponteira"] as? String, "15.6 15.6 17.1 18.3 19.8 21.4 22.9 24.1 25.1 25.5 · sobe em curva=true · espelhada=true")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
 }

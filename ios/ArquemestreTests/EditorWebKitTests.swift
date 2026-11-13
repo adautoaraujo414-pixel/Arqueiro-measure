@@ -4542,7 +4542,7 @@ final class EditorWebKitTests: XCTestCase {
           /* com vidro ligado as opções já vêm abertas */m.v[0].open=false;m.v[0].vidro=true;panel();R.abertoComVidro=document.querySelector('#bd [data-pmais]').open;
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["ordem"] as? String, "5<7<8<9<10", "vão, quantas portas, mais opções, puxador")
+        XCTAssertEqual(o["ordem"] as? String, "6<8<9<10<11", "vão, quantas portas, mais opções, puxador")
         XCTAssertEqual(o["fechado"] as? Bool, true)
         XCTAssertEqual(o["dentro"] as? Bool, true, "abrir, vidro, furo e basculante guardados")
         XCTAssertEqual(o["umaPorta"] as? Int, 1)
@@ -5590,6 +5590,63 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aplicou"] as? String, "floraplac-nogueira-nobre-natura · Nogueira Nobre · Floraplac Natura · #8e735d")
         XCTAssertEqual(o["corte"] as? String, "Nogueira Nobre · Floraplac Natura", "o nome da cor vai pro plano de corte")
         XCTAssertEqual(o["imagens"] as? String, "42 ok ", "as 42 texturas existem (512×512)")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
+    }
+
+    /// Aba Portas: modelos com desenho — porta ripada (recorte + ripas por dentro), usinada (rasgos na peça) e palha, no 2D, no 3D e na lista de corte.
+    func testPortaRipadaUsinadaEPalha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+          S.room='cozinha';S.mods=[];newTpl(CATS[0].it[0]);var m=S.mods[0];m.x=300;m.w=1000;S.m=m;S.sv=0;draw();
+          S.tab=3;panel();await W(80);
+          var bd=document.getElementById('bd');R.cartoes=[].slice.call(bd.querySelectorAll('[data-vzm]')).map(function(b){return b.querySelector('b').textContent+(b.classList.contains('sel')?'*':'')}).join(' | ');
+          var doors=function(){return partsOf(m).filter(function(p){return p.name==='Porta'})},rip=function(){return partsOf(m).filter(function(p){return /^Ripa da porta/.test(p.name)})};
+          R.lisa=doors().map(function(p){return Math.round(p.w)+'x'+Math.round(p.h)+(p.vz?' vz':'')}).join(',');
+          /* ripada vertical */
+          bd.querySelector('[data-vzm="rip|v"]').click();await W(120);var d=doors()[0],G=d.vz;
+          R.ripV=JSON.stringify(m.v[0].vz)+' · recorte '+G.win.join(',')+' · '+G.n+' ripas '+G.rw+'×'+G.len+' vão '+G.gp+' · peças de ripa '+rip().length+' ('+rip()[0].cl+'×'+rip()[0].cw+')';
+          R.ripNota=(d.note||'').slice((d.note||'').indexOf('PORTA RIPADA'));
+          R.ripSoma=Math.round((G.n*G.rw+(G.n+1)*G.gp)*10)/10+' = '+G.win[2];
+          R.corte=cutLines(m).filter(function(l){return /Ripa da porta|^Porta/.test((l.names||[])[0]||l.name||'')}).map(function(l){return ((l.names||[])[0]||l.name)+' '+l.qty+'× '+l.L+'×'+l.W}).join(' | ');
+          R.svg2d=document.querySelectorAll('#svg rect[fill="#26211c"]').length+' recortes no desenho';
+          /* usinada vertical e horizontal */
+          document.getElementById('bd').querySelector('[data-vzm="usi|v"]').click();await W(120);d=doors()[0];G=d.vz;
+          R.usiV=G.n+' rasgos '+G.sw+'×'+G.len+' entre '+G.gp+' margem '+G.mg+' início '+G.ini+' · ripas '+rip().length+' · simétrico='+(Math.abs(G.holes[0][0]-(d.w-(G.holes[G.n-1][0]+G.sw)))<0.2);
+          document.getElementById('bd').querySelector('[data-vzm="usi|h"]').click();await W(120);d=doors()[0];G=d.vz;R.usiH=G.d+' '+G.n+' rasgos '+G.sw+'×'+G.len;
+          /* medida em Ajustes muda todas */
+          var inp=document.getElementById('bd').querySelector('[data-vzs="vzUsiGap"]');inp.value='50';inp.dispatchEvent(new Event('change',{bubbles:true}));await W(120);R.ajuste=doors()[0].vz.n+' rasgos com 50 entre eles · guardou '+STD().vzUsiGap;
+          STD().vzUsiGap=35;
+          /* palha */
+          document.getElementById('bd').querySelector('[data-vzm="pal|v"]').click();await W(120);d=doors()[0];G=d.vz;R.palha=JSON.stringify(m.v[0].vz)+' · recorte '+G.win.join(',')+' · tela '+G.tela.join('×')+' · ripas '+rip().length+' · '+(d.note||'').slice((d.note||'').indexOf('PORTA PALHA'));
+          R.palha2d=document.querySelectorAll('#svg pattern').length+' tramas no desenho';
+          /* 3D: sólidos com vão de verdade */
+          document.getElementById('bd').querySelector('[data-vzm="rip|v"]').click();await W(100);
+          var So=vzSolids(doors()[0].vz,doors()[0].w,doors()[0].h);var Fr=So.filter(function(q){return q[4]===0&&q[5]===15});R.solidos=Fr.length+' pedaços da frente sem linha='+Fr.every(function(q){return q[8]===3})+' · ripas atrás com linha '+So.filter(function(q){return q[4]<0&&q[8]!==3}).length+' · área frente '+Math.round(Fr.reduce(function(t,q){return t+(q[1]-q[0])*(q[3]-q[2])},0))+' = '+Math.round(doors()[0].w*doors()[0].h-doors()[0].vz.win[2]*doors()[0].vz.win[3]);
+          open3D();await W(700);var bx=window.dbg3all?dbg3all():[];R.d3=bx.length>0?bx.filter(function(b){return /:Porta$/.test(String(b.nm||''))}).length+' caixas de porta no 3D':'sem dbg';
+          document.getElementById('v3x').click();await W(100);
+          /* volta pra lisa · salvar e reabrir mantém */
+          var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();m=S.mods[0];S.m=m;R.reabriu=JSON.stringify(m.v[0].vz);
+          S.tab=3;panel();await W(60);document.getElementById('bd').querySelector('[data-vzm="0"]').click();await W(100);R.voltou=doors().map(function(p){return p.vz?'vz':'lisa'}).join(',')+' ripas '+rip().length;
+          /* Ajustes tem a seção */
+          stdOpen(0);await W(120);R.ajustes=!!document.querySelector('#stdbody [data-vzaj]')+' '+document.querySelectorAll('#stdbody [data-vzs]').length+' campos';document.getElementById('stdm').hidden=true;
+          R.errs=window.__errs||[];return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["cartoes"] as? String, "Lisa* | Ripada vertical | Ripada horizontal | Usinada vertical | Usinada horizontal | Palha")
+        XCTAssertEqual(o["lisa"] as? String, "490x705,490x705")
+        XCTAssertEqual(o["ripV"] as? String, "{\"t\":\"rip\",\"d\":\"v\"} · recorte 90,220,310,345 · 4 ripas 45×405 vão 26 · peças de ripa 8 (405×45)")
+        XCTAssertEqual(o["ripNota"] as? String, "PORTA RIPADA (vertical, ripas por dentro): recorte de 310 × 345 mm · a 90 das laterais, 220 de cima e 140 de baixo · 4 ripas de 45 × 405 fixadas por trás, 26 mm entre elas")
+        XCTAssertEqual(o["ripSoma"] as? String, "310 = 310", "ripas + vãos fecham a largura do recorte")
+        XCTAssertEqual(o["corte"] as? String, "Porta 2× 490×705 | Ripa da porta ripada 8× 405×45", "lista de corte: as portas e as ripas")
+        XCTAssertEqual(o["svg2d"] as? String, "2 recortes no desenho")
+        XCTAssertEqual(o["usiV"] as? String, "8 rasgos 12×585 entre 35 margem 60 início 74.5 · ripas 0 · simétrico=true")
+        XCTAssertEqual(o["usiH"] as? String, "h 13 rasgos 12×370")
+        XCTAssertEqual(o["ajuste"] as? String, "10 rasgos com 50 entre eles · guardou 50", "a medida vale pra todas e fica guardada")
+        XCTAssertEqual(o["palha"] as? String, "{\"t\":\"pal\",\"d\":\"v\"} · recorte 70,70,350,565 · tela 380×595 · ripas 0 · PORTA PALHA: recorte de 350 × 565 mm no meio da porta · moldura de 70 mm em volta · tela de palhinha de 380 × 595 mm fixada por trás (passa 15 mm de cada lado)")
+        XCTAssertEqual(o["solidos"] as? String, "4 pedaços da frente sem linha=true · ripas atrás com linha 4 · área frente 238500 = 238500", "3D: a porta é uma peça só (sem risco de emenda), a frente é a porta menos o recorte e as ripas ficam por trás")
+        XCTAssertEqual(o["reabriu"] as? String, "{\"t\":\"rip\",\"d\":\"v\"}", "gravar e reabrir mantém o modelo")
+        XCTAssertEqual(o["voltou"] as? String, "lisa,lisa ripas 0")
+        XCTAssertEqual(o["ajustes"] as? String, "true 11 campos", "as medidas também ficam em Ajustes")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 }

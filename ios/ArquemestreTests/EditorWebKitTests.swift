@@ -5809,4 +5809,61 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["passaReto"] as? String, "x-30 y820 960×30 corte 960×560")
         XCTAssertEqual(o["voltouBase"] as? String, "escondida · sem peça")
     }
+
+    /// Prateleira com engrosso puxada pra frente no 3D: a régua da frente do engrosso vai junto (mesma medida)
+    /// e a prateleira encostada cresce igual; a régua de trás fica. Ajuste fino anda 0,5 / 1 mm por toque, sem grudar.
+    func testEngrossoAcompanhaAPrateleiraEAjusteFinoNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;
+        var C=function(s){document.querySelector(s).click()},CK=function(s,on){var i=document.querySelector(s);i.checked=on;i.dispatchEvent(new Event('change',{bubbles:true}))};
+        soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|2"]');RG.sel=null;RG.dsel={mi:0,path:'r',i:0};RG.tab='div';panel();C('[data-rga="eng|15"]');C('[data-rga="engn|1"]');CK('[data-rgc="etop"]',true);try{soloOff()}catch(e){}
+        var P=function(){return partsOf(m)},sh=P().filter(function(p){return /^Prateleira( fixa)?$/.test(p.name)&&p.rgd&&/com engrosso/.test(p.note||'')})[0];
+        var ks=function(){return P().filter(function(p){return p.rgd===sh.rgd}).map(function(p){return p.cl+'×'+p.cw}).join(' ')};
+        open3D();await W(300);re3();
+        var zz=function(n){var a=1e9,b=-1e9;__boxes().forEach(function(q){if(q.pk===n&&String(q.nm).indexOf('0:')===0){a=Math.min(a,q.z0);b=Math.max(b,q.z1)}});return Math.round(a)+'..'+Math.round(b)};
+        var F='Engrosso da prateleira · régua da frente#1',T='Engrosso da prateleira · régua de trás#1';
+        R.antes=ks()+' | '+zz(F)+' | '+zz(T);
+        m.po=m.po||{};m.po[sh.pk]={v2:1,el:0,er:0,eb:0,et:0,ek:0,ef:40};draw();re3();
+        R.depois=ks()+' | '+zz(F)+' | '+zz(T);R.po=Object.keys(m.po).join();
+        __e3open(0,sh.pk);var row=document.querySelector('[data-e3fine]');R.lados=[].map.call(row.querySelectorAll('[data-e3fk]'),function(b){return b.textContent}).join();
+        row.querySelector('[data-e3fk="ef"]').click();document.querySelector('[data-e3fine] [data-e3fd="0.5"]').click();var v1=m.po[sh.pk].ef;document.querySelector('[data-e3fine] [data-e3fd="-1"]').click();R.fino=v1+' '+m.po[sh.pk].ef;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "870×520 870×80 870×80 870×80 870×80 870×520 | 446..526 | 6..86")
+        XCTAssertEqual(o["depois"] as? String, "870×560 870×80 870×80 870×80 870×80 870×560 | 486..566 | 6..86")
+        XCTAssertEqual(o["po"] as? String, "Prateleira#1")
+        XCTAssertEqual(o["lados"] as? String, "Esquerda,Direita,Frente,Trás")
+        XCTAssertEqual(o["fino"] as? String, "40.5 39.5")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// Eletro no vão: arrasta pra baixo (não deixa o sistema roubar o gesto) e um arraste que termina sem aviso
+    /// não trava mais o 2D e o 3D: o toque seguinte solta o arraste antigo.
+    func testNichoDoEletroArrastaEArrastePresoNaoTravaATela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();
+        soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='ele';panel();document.querySelector('[data-rga^="ele|"]').click();await W(100);
+        var got=0;document.addEventListener('pointermove',function(){got++});
+        var pe=function(t,n,x,y,id){t.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id,pointerType:'touch',isPrimary:true,clientX:x,clientY:y,buttons:n==='pointerup'?0:1}))};
+        var e=document.querySelector('#svg [data-rge]'),r=e.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+        R.touchAction=e.style.touchAction;
+        pe(e,'pointerdown',cx,cy,7);pe(e,'pointercancel',cx,cy,7);
+        got=0;for(var k=0;k<5;k++)pe(document.body,'pointermove',300+k*10,300,8);R.outroDedo=got;
+        pe(document.body,'pointerdown',300,300,8);got=0;for(var k=0;k<5;k++)pe(document.body,'pointermove',300+k*10,300,8);pe(document.body,'pointerup',340,300,8);R.toqueNovo=got;R.soltou=window.__rgStuck||0;
+        e=document.querySelector('#svg [data-rge]');r=e.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;var k0=+e.dataset.k||1;pe(e,'pointerdown',cx,cy,9);for(var k=1;k<=6;k++)pe(document.body,'pointermove',cx,cy+k*10,9);pe(document.body,'pointerup',cx,cy+60,9);await W(150);
+        R.desceu=m.rt.el.oy>0&&m.rt.el.ox===0;R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["touchAction"] as? String, "none")
+        XCTAssertEqual(o["outroDedo"] as? Int, 5)
+        XCTAssertEqual(o["toqueNovo"] as? Int, 5)
+        XCTAssertEqual(o["soltou"] as? Int, 1)
+        XCTAssertEqual(o["desceu"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

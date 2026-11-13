@@ -4018,12 +4018,17 @@ function ledStrip(L,x0,x1,y,zc,up,o){if(x1-x0<40)return;var col=ledCol(L),on=L.o
 var DPA=new WeakMap(),DPT=new WeakMap(),DPR=0,DPL=[];
 function dpAnim(){if(DPR)return;DPR=1;(function f(){var more=false;DPL=DPL.filter(function(m){return S.mods.indexOf(m)>=0});DPL.forEach(function(m){var a=DPA.get(m)||0,t=DPT.get(m)||0;if(Math.abs(a-t)>.001){a=t>a?Math.min(t,a+.07):Math.max(t,a-.07);DPA.set(m,a);more=true}});build();render();if(more&&!M.hidden)requestAnimationFrame(f);else DPR=0})()}
 function dpToggle(m,on){if(typeof m==='number')m=S.mods[m];if(!m)return false;var t=on===undefined?((DPT.get(m)||0)>.5?0:1):(on?1:0);DPT.set(m,t);if(DPL.indexOf(m)<0)DPL.push(m);dpAnim();return t>.5}
-function dep3m(m){var g=window.dpGeoOk?dpGeoOk(m):null;if(!g)return;var n0d=boxes.length,av=DPA.get(m)||0,a=ease(av),on=av>.02,IN='#b9bcc0',x0=m.x+(m.w-g.cw)/2,x1=x0+g.cw,zf=g.dep,yt=g.md==='p'?m.b+g.va:m.b,yb=yt-g.ch,hp=g.vh&&g.pa?g.vh:0,sl=hp?(g.pa-g.cd)*a:0,T=function(o){o.dpm=m;return lastB(o)};
+function dep3m(m){var g=window.dpGeoOk?dpGeoOk(m):null;if(!g)return;var n0d=boxes.length,mi=S.mods.indexOf(m),av=DPA.get(m)||0,a=ease(av),on=av>.02,x0=m.x+(m.w-g.cw)/2,x1=x0+g.cw,zf=g.dep,yt=g.md==='p'?m.b+g.va:m.b,yb=yt-g.ch,hp=g.vh||0,sl=hp&&g.pa?(g.pa-g.cd)*a:0,fw=g.md==='p'?(g.fw||g.cw):g.cw,f0=m.x+(m.w-fw)/2,f1=f0+fw,T=function(o){o.dpm=m;return lastB(o)};
+ /* base com o recorte aberto na frente: uma peça só (contorno em U), continua sendo a peça "Base inferior" no toque */
+ if(g.md==='p'&&!g.sb){var bs=null;try{partsOf(m).forEach(function(p){if(p.dpb)bs=p})}catch(_){}if(bs){try{paintCol(m,bs)}catch(_){}var bx0=m.x+bs.x,bx1=bx0+bs.w,by1=m.b+m.h-bs.y,by0=by1-bs.h,n0=m.x+(m.w-g.rw)/2,n1=n0+g.rw,zr=g.dep-g.rd,bc=(window.SEL3&&SEL3.mi===mi&&SEL3.pk===bs.pk)?'#ff9f1a':bs.col;
+   window.CURN=mi+':'+bs.name;window.CURK=bs.pk;window.CURV=undefined;window.CURQ=undefined;
+   if(g.rd>=g.dep){B(boxes,bx0,n0,by0,by1,0,g.dep,bc);B(boxes,n1,bx1,by0,by1,0,g.dep,bc)}
+   else BH(boxes,[[bx0,0],[bx1,0],[bx1,g.dep],[n1,g.dep],[n1,zr],[n0,zr],[n0,g.dep],[bx0,g.dep]],by0,by1,bc)}}
  window.CURN=null;window.CURK=null;window.CURV=undefined;window.CURQ=undefined;
- B(boxes,x0,x1,yb+hp,yt,zf-g.cd,zf,IN);T({});
- if(hp){B(boxes,x0,x1,yb,yb+hp,zf-g.cd+sl,zf+sl,IN);T({})}
- B(boxes,x0+12,x1-12,yb-.8,yb,zf-g.cd+sl+12,zf+sl-40,'#3a3d42');T({nol:1});
- B(boxes,x0+g.cw*.18,x1-g.cw*.18,yb-.8,yb,zf+sl-34,zf+sl-12,on?'#fff3cf':'#e3e5e8');T(on?{em:1,nol:1}:{nol:1});
+ B(boxes,x0,x1,yb+hp,yt,zf-g.cd,zf,'#3a3d42');T({});
+ if(hp){B(boxes,f0,f1,yb,yb+hp,zf-g.cd+sl,zf+sl,'#22252a');T({})}
+ B(boxes,f0+12,f1-12,yb-.8,yb,zf-g.cd+sl+12,zf+sl-40,'#8d9197');T({nol:1});
+ B(boxes,f0+fw*.18,f1-fw*.18,yb-.8,yb,zf+sl-34,zf+sl-12,on?'#fff3cf':'#e3e5e8');T(on?{em:1,nol:1}:{nol:1});
  if(g.md==='r'&&g.mh){var rx=m.x+(m.w-g.rw)/2;B(boxes,rx,rx+g.rw,m.b+g.e,m.b+g.e+g.mh,zf-g.rz-g.rd,zf-g.rz,'#9aa0a6');T({})}
  if(g.md==='p'&&g.fh){var cx=m.x+m.w/2,cz=g.dep/2,ys=m.b+g.va+g.e,ring=function(r){var q=[];for(var i=0;i<20;i++){var t=i/20*Math.PI*2;q.push([cx+Math.cos(t)*r,cz+Math.sin(t)*r])}return q};
   BH(boxes,ring(g.fh/2),ys,ys+.8,'#1f2226');T({nol:1});BH(boxes,ring(g.du/2),ys+.8,m.b+m.h-g.e,'#c9ccd1');T({})}
@@ -11207,7 +11212,7 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  var INT=/^(Prateleira|Divis|Engrosso|Lateral de gaveta|Frente\/costa de gaveta|Fundo de gaveta|Gaveta|Corte d|Nicho d)/;
  /* só as medidas: o que foi digitado e se cabe no aéreo */
  function geo(m){var d=m&&m.dep;if(!d||!d.on||!elig(m))return null;
-  var e=+m.esp||15,iw=m.w-2*e,dep=+m.d,g={md:d.md==='r'?'r':'p',e:e,iw:iw,dep:dep,cw:num(d.cw),ch:num(d.ch),cd:num(d.cd),vh:num(d.vh),pa:num(d.pa),du:num(d.du),fh:num(d.fh),ok:false,why:''},no=function(w){g.why=w;return g};
+  var e=+m.esp||15,iw=m.w-2*e,dep=+m.d,g={md:d.md==='r'?'r':'p',e:e,iw:iw,dep:dep,cw:num(d.cw),ch:num(d.ch),cd:num(d.cd),vh:num(d.vh),pa:num(d.pa),du:num(d.du),fh:num(d.fh),fw:num(d.fw),rf:num(d.rf),ok:false,why:''},no=function(w){g.why=w;return g};
   if(!g.cw||!g.ch||!g.cd)return no('Digite a largura, a altura e a profundidade do corpo do depurador.');
   if(g.vh&&g.vh>=g.ch)return no('A frente do painel retrátil tem que ser menor que a altura do corpo.');
   if(g.pa&&g.pa<=g.cd)return no('A profundidade com o painel aberto tem que ser maior que a profundidade do corpo.');
@@ -11217,8 +11222,11 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
   if(m.led&&(m.led.pos||'base')==='base')return no('Tem LED embaixo deste aéreo. Mude o LED de lugar pra colocar o depurador.');
   if(g.md==='p'){
    try{if(m.base&&typeof baseRunOf==='function'&&baseRunOf(m))return no('Este aéreo usa a base inteiriça junto com o vizinho. Separe a base pra colocar o depurador nesta montagem.')}catch(_){}
-   if(g.cw>iw)return no('Não cabe: o corpo tem '+g.cw+' mm de largura e o vão entre as laterais tem '+iw+' mm.');
-   g.va=num(d.va)||g.ch;
+   g.rw=g.cw+2*g.rf;g.rd=Math.min(dep,g.cd+g.rf);
+   if(g.rw>iw)return no('Não cabe: o corpo tem '+g.cw+' mm de largura'+(g.rf?' (mais a folga)':'')+' e o vão entre as laterais tem '+iw+' mm.');
+   if(g.fw&&g.fw>m.w)return no('Não cabe: a frente do painel tem '+g.fw+' mm de largura e o aéreo tem '+m.w+' mm.');
+   g.sb=!m.base||g.rw>iw-1;/* recorte que pega o vão todo: não sobra base, as laterais descem */
+   g.gs=(m.w-g.rw)/2;g.va=num(d.va)||(g.vh?g.ch-g.vh:g.ch);
    if(g.va+2*e>m.h)return no('Não cabe: o vão do depurador mais a prateleira passam da altura do aéreo.');
    if(g.du||g.fh){if(!g.du||!g.fh)return no('Duto: digite o diâmetro do duto e o do furo da prateleira, ou deixe os dois em branco.');
     if(g.fh<g.du)return no('O furo da prateleira tem que ser maior ou igual ao duto.');
@@ -11242,29 +11250,32 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  function status(m){var g=geo(m);if(g&&g.ok){try{fin(m,g,partsOf_dp(m))}catch(_){g.ok=false}}return g}
  var partsOf_dp=partsOf;
  partsOf=function(m){var P=partsOf_dp.apply(this,arguments);try{var g=fin(m,geo(m),P);if(g&&g.ok){var lat=null,bs=null;P.forEach(function(p){if(p.name==='Lateral esquerda')lat=p;if(p.name==='Base inferior')bs=p});var col=(lat&&lat.col)||'#cdb98f',xc=(m.w-g.cw)/2;
-   if(g.md==='p'){if(bs){var bh=bs.h;P.splice(P.indexOf(bs),1);P.forEach(function(p){if(p.name==='Lateral esquerda'||p.name==='Lateral direita'){p.h+=bh;p.cl+=bh;p.note=(p.note?p.note+' · ':'')+'desce até embaixo (aéreo sem base por causa do depurador)'}})}
+   var hb=g.vh?g.ch-g.vh:g.ch,fw=g.fw||g.cw;
+   if(g.md==='p'){if(bs&&g.sb){var bh=bs.h;P.splice(P.indexOf(bs),1);P.forEach(function(p){if(p.name==='Lateral esquerda'||p.name==='Lateral direita'){p.h+=bh;p.cl+=bh;p.note=(p.note?p.note+' · ':'')+'desce até embaixo (aéreo sem base por causa do depurador)'}})}
+    else if(bs){bs.note=(bs.note?bs.note+' · ':'')+'só a base inferior leva o recorte: '+g.rw+' × '+g.rd+' mm no meio da largura, aberto na frente (corpo do depurador)'+(g.rd>=g.dep?' · a base vira duas tiras de '+g.gs+' mm, uma de cada lado':' · sobra uma tira de '+g.gs+' mm de cada lado');bs.dpb=1;bs.cxz=[0,g.dep];bs.hide3=1}
     P.push({name:'Prateleira fixa do depurador',x:g.e,y:g.ys,w:g.iw,h:g.e,col:col,cl:g.iw,cw:g.dep,qty:1,cxz:[0,g.dep],pk:'Prateleira fixa do depurador#1',dpp:1,
-      note:'fixa, entre as laterais · '+g.va+' mm acima da borda de baixo do aéreo (vão do depurador) · '+(g.fh?'furo Ø '+g.fh+' mm no centro pro duto de Ø '+g.du+' mm':'sem furo (sem duto)')+' · o aéreo fica sem base'});
-    P.push({name:'Depurador (corpo)',x:xc,y:m.h-g.va,w:g.cw,h:g.ch,col:'#b9bcc0',cl:g.cw,cw:g.ch,qty:1,noCut:true,hide3:1,cxz:[0,g.cd],pk:'Depurador (corpo)#1',dpa:1,note:'depurador de embutir, não é peça · '+g.cw+' × '+g.ch+' × '+g.cd+' mm'})}
-   else{if(bs)bs.note=(bs.note?bs.note+' · ':'')+'recorte de '+g.rw+' × '+g.rd+' mm no meio da largura, a '+g.rz+' mm da frente (motor do depurador)';
+      note:'fixa, entre as laterais · '+g.va+' mm acima da borda de baixo do aéreo (vão do depurador) · '+(g.fh?'furo Ø '+g.fh+' mm no centro pro duto de Ø '+g.du+' mm':'sem furo (sem duto)')+(g.sb?' · o aéreo fica sem base':' · o corpo passa pelo recorte da base')});
+    P.push({name:'Depurador (corpo)',x:xc,y:m.h-g.va,w:g.cw,h:hb,col:'#3a3d42',cl:g.cw,cw:hb,qty:1,noCut:true,hide3:1,cxz:[0,g.cd],pk:'Depurador (corpo)#1',dpa:1,note:'depurador de embutir, não é peça · '+g.cw+' × '+g.ch+' × '+g.cd+' mm'});
+    if(g.vh)P.push({name:'Depurador (frente do painel)',x:(m.w-fw)/2,y:m.h-g.va+hb,w:fw,h:g.vh,col:'#22252a',cl:fw,cw:g.vh,qty:1,noCut:true,hide3:1,cxz:[0,g.cd],pk:'Depurador (frente do painel)#1',dpa:1,note:'frente do painel retrátil, não é peça · '+fw+' × '+g.vh+' mm'})}
+   else{if(bs)bs.note=(bs.note?bs.note+' · ':'')+'só a base inferior leva o recorte: '+g.rw+' × '+g.rd+' mm no meio da largura, a '+g.rz+' mm da frente (motor do depurador)';
     P.push({name:'Depurador (corpo)',x:xc,y:m.h,w:g.cw,h:g.ch,col:'#b9bcc0',cl:g.cw,cw:g.ch,qty:1,noCut:true,hide3:1,cxz:[0,g.cd],pk:'Depurador (corpo)#1',dpa:1,note:'depurador de embutir (bandeja por baixo da base), não é peça · '+g.cw+' × '+g.ch+' × '+g.cd+' mm'});
     if(g.mh)P.push({name:'Depurador (motor)',x:(m.w-g.rw)/2,y:m.h-g.e-g.mh,w:g.rw,h:g.mh,col:'#9aa0a6',cl:g.rw,cw:g.mh,qty:1,noCut:true,hide3:1,cxz:[g.rz,g.rz+g.rd],pk:'Depurador (motor)#1',dpa:1,note:'motor do depurador dentro do aéreo, não é peça'})}}}catch(_){}return P};
  window.dpElig=elig;window.dpStatus=status;window.dpGeoOk=function(m){var g=status(m);return g&&g.ok?g:null};
  /* liga/desliga e montagem: a base do aéreo acompanha a montagem escolhida (sem base na prateleira furada; com base no recorte) */
  function setD(m,fn){if(!m||window.RO||!elig(m))return;if(!m.dep)m.dep={on:0,md:'p'};fn(m.dep);try{draw();panel()}catch(_){}}
  window.dpSet=function(m,k,v){setD(m,function(d){if(k==='on')d.on=v?1:0;else if(k==='md')d.md=v==='r'?'r':'p';else{if(blank(v))delete d[k];else d[k]=Math.max(0,Math.round(+v*10)/10||0)}})};
- var FP=[['cw','Largura do corpo'],['ch','Altura do corpo'],['cd','Profundidade do corpo'],['vh','Frente do painel retrátil (altura)'],['pa','Profundidade com o painel aberto']],
-     FA=[['va','Vão do depurador (em branco fica igual à altura do corpo)'],['du','Duto (diâmetro)'],['fh','Furo da prateleira (diâmetro)']],
+ var FP=[['cw','Largura do corpo'],['ch','Altura do corpo'],['cd','Profundidade do corpo'],['vh','Frente do painel retrátil (altura)'],['fw','Frente do painel retrátil (largura)'],['pa','Profundidade com o painel aberto']],
+     FA=[['rf','Folga do recorte da base (cada lado e atrás)'],['va','Vão do depurador (em branco a frente do painel fica por baixo do aéreo)'],['du','Duto (diâmetro)'],['fh','Furo da prateleira (diâmetro)']],
      FR=[['rw','Recorte da base (largura)'],['rd','Recorte da base (profundidade)'],['rz','Recorte: distância até a frente'],['mh','Motor (altura dentro do aéreo)']];
  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
- function fld(d,f){var v=blank(d[f[0]])?'':d[f[0]],ph=f[0]==='va'&&!blank(d.ch)?' placeholder="'+esc(d.ch)+'"':'';return '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0"><span>'+esc(f[1])+'</span><span style="white-space:nowrap"><input type="number" inputmode="decimal" min="0" step="0.5" data-dpf="'+f[0]+'" value="'+esc(v)+'"'+ph+' style="width:84px;padding:6px;border:1px solid #c9d1dc;border-radius:8px;text-align:right"> mm</span></label>'}
+ function fld(d,f){var v=blank(d[f[0]])?'':d[f[0]],ph=f[0]==='va'&&!blank(d.ch)?' placeholder="'+esc(num(d.vh)&&num(d.vh)<num(d.ch)?num(d.ch)-num(d.vh):d.ch)+'"':f[0]==='fw'&&!blank(d.cw)?' placeholder="'+esc(d.cw)+'"':f[0]==='rf'?' placeholder="0"':'';return '<label style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:4px 0"><span>'+esc(f[1])+'</span><span style="white-space:nowrap"><input type="number" inputmode="decimal" min="0" step="0.5" data-dpf="'+f[0]+'" value="'+esc(v)+'"'+ph+' style="width:84px;padding:6px;border:1px solid #c9d1dc;border-radius:8px;text-align:right"> mm</span></label>'}
  function html(m){var d=m.dep||{on:0,md:'p'},g=d.on?status(m):null,bt=function(md,t){var on=d.md===md||(md==='p'&&d.md!=='r');return '<button type="button" data-dpa="md|'+md+'" style="flex:1;min-width:130px;padding:8px;border-radius:8px;border:1px solid '+(on?'#2f6fed':'#c9d1dc')+';background:'+(on?'#2f6fed':'#fff')+';color:'+(on?'#fff':'#1f2937')+'">'+t+'</button>'};
   var h='<div data-dpbox="1" style="margin:12px 0 4px;padding:10px;border:1px solid #d8dee9;border-radius:10px"><div style="font-weight:700;margin-bottom:4px">Depurador de embutir</div>'+(d.on?'':'<button type="button" data-dpa="on|1" style="width:100%;padding:8px;border-radius:8px;border:1px solid #c9d1dc;background:#fff;color:#1f2937">Colocar depurador neste aéreo</button>');
-  if(d.on){h+='<div style="margin:8px 0 4px;font-weight:600">Montagem</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+bt('p','Prateleira furada, sem base')+bt('r','Base com recorte')+'</div>'
-   +'<div class="note" style="margin:6px 0">'+(d.md==='r'?'O aéreo fica com a base. O motor sobe por um recorte nela e a bandeja do depurador fica por baixo.':'O aéreo fica sem a base e as laterais descem até embaixo. O depurador fica preso embaixo de uma prateleira fixa, entre as laterais. Portas e tamponamentos não mudam.')+'</div>'
+  if(d.on){h+='<div style="margin:8px 0 4px;font-weight:600">Montagem</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+bt('p','Recorte na frente da base')+bt('r','Recorte fechado na base')+'</div>'
+   +'<div class="note" style="margin:6px 0">'+(d.md==='r'?'A base fica inteira, só com um recorte fechado por onde o motor sobe. A bandeja do depurador fica por baixo do aéreo.':'A base fica com um recorte aberto na frente, por onde passa o corpo, e sobra uma tira de cada lado. Em cima do corpo vai uma prateleira fixa com o furo do duto. A frente do painel fica por baixo do aéreo. Portas, laterais e tamponamentos não mudam. Se o corpo pegar o vão todo, o aéreo fica sem a base e as laterais descem.')+'</div>'
    +'<div style="margin:8px 0 2px;font-weight:600">Medidas do seu depurador</div><div class="note" style="margin:0 0 4px">Digite as medidas do manual do aparelho. O app confere se cabe no aéreo.</div>'
    +FP.map(function(f){return fld(d,f)}).join('')+(d.md==='r'?FR:FA).map(function(f){return fld(d,f)}).join('');
-   if(g&&g.ok)h+='<div data-dpst="ok" style="margin:8px 0 4px;padding:8px;border-radius:8px;background:#e8f7ee;color:#14532d">Depurador colocado e centralizado no aéreo.</div><button type="button" data-dpa="tg" style="width:100%;padding:8px;border-radius:8px;border:1px solid #c9d1dc;background:#fff;color:#1f2937">Abrir ou fechar no 3D</button>'+(g.vh&&g.pa?'':'<div class="note" style="margin:4px 0">Sem a frente do painel e a profundidade aberto, o toque no 3D só acende a luz.</div>');
+   if(g&&g.ok)h+='<div data-dpst="ok" style="margin:8px 0 4px;padding:8px;border-radius:8px;background:#e8f7ee;color:#14532d">Depurador colocado e centralizado no aéreo.</div><button type="button" data-dpa="tg" style="width:100%;padding:8px;border-radius:8px;border:1px solid #c9d1dc;background:#fff;color:#1f2937">Abrir ou fechar no 3D</button>'+(g.vh&&g.pa?'':'<div class="note" style="margin:4px 0">Sem a altura da frente do painel e a profundidade aberto, o toque no 3D só acende a luz.</div>');
    else h+='<div data-dpst="no" style="margin:8px 0 4px;padding:8px;border-radius:8px;background:#fdecec;color:#7f1d1d">Depurador não colocado. '+esc(g?g.why:'')+'</div>';
    h+='<button type="button" data-dpa="on|0" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid #e3b4b4;background:#fff;color:#7f1d1d">Tirar o depurador</button>'}
   return h+'</div>'}

@@ -6226,10 +6226,11 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    /// Depurador de embutir no aéreo, nas duas montagens: prateleira fixa furada (aéreo sem base, laterais descem, portas não mudam)
-    /// e base com recorte (motor sobe, bandeja por baixo). As medidas são digitadas; sem medida, sem caber ou com peça no lugar
-    /// NÃO coloca e diz o motivo. A prateleira entra no corte, o aparelho não. No 3D o toque puxa o painel e acende a luz,
-    /// sem mexer no projeto. Desligou, o aéreo volta como era.
+    /// Depurador de embutir no aéreo, igual à instalação de verdade: a base fica com um recorte aberto na frente por onde passa o corpo
+    /// (peça única em U no 3D, sobra uma tira de cada lado), prateleira fixa com furo em cima, frente do painel por baixo do aéreo com a
+    /// largura dela, portas e laterais sem mudar. Se o corpo pega o vão todo, fica sem base e as laterais descem. Na outra montagem a base
+    /// leva um recorte fechado (motor sobe, bandeja por baixo). As medidas são digitadas; sem medida, sem caber ou com peça no lugar NÃO
+    /// coloca e diz o motivo. A prateleira entra no corte, o aparelho não. O toque no 3D puxa o painel e acende a luz sem mexer no projeto.
     func testDepuradorDeEmbutirNasDuasMontagens() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -6241,7 +6242,8 @@ final class EditorWebKitTests: XCTestCase {
         var portas0=PP(/^(Porta|Tamponamento)/),corte0=cutLines(m).length;
         q('[data-dpa="on|1"]').click();R.semMedida=ST()+' | '+q('[data-dpst]').dataset.dpst+' | '+PP(/epurador/);
         typ('cw',990);typ('ch',175);typ('cd',280);R.largo=ST();typ('cw',600);typ('cd',400);R.fundo=ST();typ('cd',280);
-        R.p=ST()+' | '+q('[data-dpst]').dataset.dpst;R.pecasP=PP(/^(Base inferior|Lateral esquerda|Prateleira fixa do depurador|Depurador)/);R.portasIguais=PP(/^(Porta|Tamponamento)/)===portas0;
+        R.p=ST()+' | '+q('[data-dpst]').dataset.dpst;R.pecasP=PP(/^(Base inferior|Lateral esquerda|Prateleira fixa do depurador|Depurador)/);R.portasIguais=PP(/^(Porta|Tamponamento)/)===portas0;R.recorte=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0].note;
+        typ('rf',2);R.folga=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0].note.split(' · ')[1];typ('rf','');typ('cw',970);R.vaoTodo=ST()+' | '+PP(/^(Base inferior|Lateral esquerda)/);typ('cw',600);
         R.corte=cutLines(m).length-corte0+' '+cutLines(m).map(function(l){return l.name}).filter(function(n){return /epurador/.test(n)}).join();
         typ('du',120);R.duto=ST();typ('fh',100);R.furo=ST();typ('fh',150);R.nota=partsOf(m).filter(function(p){return p.dpp})[0].note;
         typ('va',135);R.vao=PP(/^(Prateleira fixa do depurador|Depurador)/);typ('va','');
@@ -6252,11 +6254,11 @@ final class EditorWebKitTests: XCTestCase {
         m.base=false;R.semBase=ST();m.base=true;
         /* salvar e reabrir · prateleira furada de novo */
         loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[1];S.m=m;S.tab=0;draw();panel();R.reabriu=ST()+' '+m.dep.md+' '+m.dep.rw;
-        q('[data-dpa="md|p"]').click();typ('ch',175);typ('cd',280);typ('vh',40);typ('pa',470);R.p2=ST();
+        q('[data-dpa="md|p"]').click();typ('ch',215);typ('cd',280);typ('vh',40);typ('fw',900);typ('pa',470);R.p2=ST()+' | '+PP(/^(Prateleira fixa do depurador|Depurador)/);
         /* 3D: fechado, toque abre o painel e acende a luz, toque fecha */
         open3D();await W(300);var sd=document.getElementById('v3d');if(sd&&sd.checked){sd.checked=false;sd.dispatchEvent(new Event('change',{bubbles:true}))}__cam(.75,-.12,2.2);re3();await W(200);
         var bx=function(){return __boxes().filter(function(b){return b.dpm}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].map(Math.round).join(',')+(b.em?' luz':'')+(b.pf?' redondo':'')}).join(' / ')};
-        var lat=__boxes().filter(function(b){return b.nm==='1:Lateral esquerda'})[0];R.lateral=[lat.y0,lat.y1,lat.z0,lat.z1].join(',');R.fechado=bx();
+        var lat=__boxes().filter(function(b){return b.nm==='1:Lateral esquerda'})[0];R.lateral=[lat.y0,lat.y1,lat.z0,lat.z1].join(',');R.base3d=__boxes().filter(function(b){return b.nm==='1:Base inferior'}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].map(Math.round).join(',')+(b.pf?' em U, peça única':'')}).join(' / ');R.fechado=bx();
         var b=__boxes().filter(function(z){return z.dpm})[1],pr=org3api.proj([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);org3api.one(pr[0],pr[1]);for(var i=0;i<40&&dep3api.a(m)<1;i++)await W(100);
         R.aberto=bx();R.sel=!!window.SEL3;R.projetoIgual=JSON.stringify(m.dep);
         b=__boxes().filter(function(z){return z.dpm})[1];pr=org3api.proj([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);org3api.one(pr[0],pr[1]);for(i=0;i<40&&dep3api.a(m)>0;i++)await W(100);R.fechou=dep3api.a(m);
@@ -6270,12 +6272,15 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["largo"] as? String, "Não cabe: o corpo tem 990 mm de largura e o vão entre as laterais tem 970 mm.")
         XCTAssertEqual(o["fundo"] as? String, "Não cabe: o corpo tem 400 mm de profundidade e o aéreo tem 350 mm.")
         XCTAssertEqual(o["p"] as? String, "ok | ok")
-        XCTAssertEqual(o["pecasP"] as? String, "Lateral esquerda 0,15 15×735 corte 735×350 / Prateleira fixa do depurador 15,560 970×15 corte 970×350 / Depurador (corpo) 200,575 600×175 não é peça")
+        XCTAssertEqual(o["pecasP"] as? String, "Base inferior 0,735 1000×15 corte 1000×350 / Lateral esquerda 0,15 15×720 corte 720×350 / Prateleira fixa do depurador 15,560 970×15 corte 970×350 / Depurador (corpo) 200,575 600×175 não é peça")
         XCTAssertEqual(o["portasIguais"] as? Bool, true)
+        XCTAssertEqual(o["recorte"] as? String, "inteiriça, sob as laterais · só a base inferior leva o recorte: 600 × 280 mm no meio da largura, aberto na frente (corpo do depurador) · sobra uma tira de 200 mm de cada lado")
+        XCTAssertEqual(o["folga"] as? String, "só a base inferior leva o recorte: 604 × 282 mm no meio da largura, aberto na frente (corpo do depurador)")
+        XCTAssertEqual(o["vaoTodo"] as? String, "ok | Lateral esquerda 0,15 15×735 corte 735×350")
         XCTAssertEqual(o["corte"] as? String, "1 Prateleira fixa do depurador · BRANCO")
         XCTAssertEqual(o["duto"] as? String, "Duto: digite o diâmetro do duto e o do furo da prateleira, ou deixe os dois em branco.")
         XCTAssertEqual(o["furo"] as? String, "O furo da prateleira tem que ser maior ou igual ao duto.")
-        XCTAssertEqual(o["nota"] as? String, "fixa, entre as laterais · 175 mm acima da borda de baixo do aéreo (vão do depurador) · furo Ø 150 mm no centro pro duto de Ø 120 mm · o aéreo fica sem base")
+        XCTAssertEqual(o["nota"] as? String, "fixa, entre as laterais · 175 mm acima da borda de baixo do aéreo (vão do depurador) · furo Ø 150 mm no centro pro duto de Ø 120 mm · o corpo passa pelo recorte da base")
         XCTAssertEqual(o["vao"] as? String, "Prateleira fixa do depurador 15,600 970×15 corte 970×350 / Depurador (corpo) 200,615 600×175 não é peça")
         XCTAssertEqual(o["tb"] as? String, "Tem tamponamento de baixo neste aéreo. Desmarque o tamponamento de baixo pra colocar o depurador.")
         XCTAssertEqual(o["regua"] as? String, "Tem régua de engrosso da cava embaixo deste aéreo. Desmarque a régua pra colocar o depurador.")
@@ -6283,16 +6288,17 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["r0"] as? String, "Digite o recorte da base: largura, profundidade e distância até a frente.")
         XCTAssertEqual(o["r"] as? String, "ok")
         XCTAssertEqual(o["pecasR"] as? String, "Base inferior 0,735 1000×15 corte 1000×350 / Lateral esquerda 0,15 15×720 corte 720×350 / Depurador (corpo) 200,750 600×40 não é peça / Depurador (motor) 385,483 230×252 não é peça")
-        XCTAssertEqual(o["notaBase"] as? String, "inteiriça, sob as laterais · recorte de 230 × 220 mm no meio da largura, a 60 mm da frente (motor do depurador)")
+        XCTAssertEqual(o["notaBase"] as? String, "inteiriça, sob as laterais · só a base inferior leva o recorte: 230 × 220 mm no meio da largura, a 60 mm da frente (motor do depurador)")
         XCTAssertEqual(o["passa"] as? String, "Não cabe: o recorte passa do fundo da base.")
         XCTAssertEqual(o["semBase"] as? String, "Esta montagem precisa da base do aéreo. Marque a base ou escolha a montagem com prateleira furada.")
         XCTAssertEqual(o["reabriu"] as? String, "ok r 230")
-        XCTAssertEqual(o["p2"] as? String, "ok")
-        XCTAssertEqual(o["lateral"] as? String, "1750,2485,6,356")
-        XCTAssertEqual(o["fechado"] as? String, "1100,1700,1790,1925,76,356 / 1100,1700,1750,1790,76,356 / 1112,1688,1749,1750,88,316 / 1208,1592,1749,1750,322,344 / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
-        XCTAssertEqual(o["aberto"] as? String, "1100,1700,1790,1925,76,356 / 1100,1700,1750,1790,266,546 / 1112,1688,1749,1750,278,506 / 1208,1592,1749,1750,512,534 luz / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["p2"] as? String, "ok | Prateleira fixa do depurador 15,560 970×15 corte 970×350 / Depurador (corpo) 200,575 600×175 não é peça / Depurador (frente do painel) 50,750 900×40 não é peça")
+        XCTAssertEqual(o["lateral"] as? String, "1765,2485,6,356")
+        XCTAssertEqual(o["base3d"] as? String, "900,1900,1750,1765,6,356 em U, peça única")
+        XCTAssertEqual(o["fechado"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,76,356 / 962,1838,1709,1710,88,316 / 1112,1688,1709,1710,322,344 / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["aberto"] as? String, "1100,1700,1750,1925,76,356 / 950,1850,1710,1750,266,546 / 962,1838,1709,1710,278,506 / 1112,1688,1709,1710,512,534 luz / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
         XCTAssertEqual(o["sel"] as? Bool, false)
-        XCTAssertEqual(o["projetoIgual"] as? String, "{\"on\":1,\"md\":\"p\",\"cw\":600,\"ch\":175,\"cd\":280,\"du\":120,\"fh\":150,\"rw\":230,\"rd\":220,\"rz\":60,\"mh\":252,\"vh\":40,\"pa\":470}")
+        XCTAssertEqual(o["projetoIgual"] as? String, "{\"on\":1,\"md\":\"p\",\"cw\":600,\"ch\":215,\"cd\":280,\"du\":120,\"fh\":150,\"rw\":230,\"rd\":220,\"rz\":60,\"mh\":252,\"vh\":40,\"fw\":900,\"pa\":470}")
         XCTAssertEqual(o["fechou"] as? Int, 0)
         XCTAssertEqual(o["desligado"] as? String, "desligado | Base inferior 0,735 1000×15 corte 1000×350 / Lateral esquerda 0,15 15×720 corte 720×350 | caixas 0")
         XCTAssertEqual(o["errs"] as? Int, 0)

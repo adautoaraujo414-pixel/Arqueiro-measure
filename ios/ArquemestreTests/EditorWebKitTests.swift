@@ -2966,8 +2966,8 @@ final class EditorWebKitTests: XCTestCase {
           document.getElementById('v3x').click();
           /* botão do módulo: desliga só nele; "aplicar em todos" liga em todos os de baixo */
           newTpl(tpl('Balcão 2 portas'));try{soloOff()}catch(_){}var n2=S.mods[2];n2.x=200;n2.latPiso=false;draw();
-          /* a regra da base é uma só, em Ajustes: no módulo não tem mais botão; lateral aparece marcada (todo módulo tem as duas) */
-          S.m=m;S.tab=0;panel();R.botao=!document.querySelector('#bd [data-latop="latPiso"]')&&!document.querySelector('#bd [data-latall]')&&!!document.querySelector('#bd [data-cfggo2]');R.lat=[].map.call(document.querySelectorAll('#bd [data-latop]'),function(b){return b.textContent}).join('|')+' '+/Tamponamento \(acabamento por fora\) é outra peça/.test(document.getElementById('bd').textContent);
+          /* a regra da base é uma só, em Ajustes: no módulo não tem mais botão; e não tem mais botão de tirar a lateral do módulo pronto */
+          S.m=m;S.tab=0;panel();R.botao=!document.querySelector('#bd [data-latop="latPiso"]')&&!document.querySelector('#bd [data-latall]')&&!!document.querySelector('#bd [data-cfggo2]');R.lat='botões de lateral '+document.querySelectorAll('#bd [data-latop]').length+' · texto antigo '+/Laterais da caixa|Só desmarque/.test(document.getElementById('bd').textContent);
           document.querySelector('#bd [data-cfggo2]').click();var c=document.querySelector('#stdm [data-std="latPiso"][data-v="nao"]');R.ajustes=!!c&&/Lateral até a base/.test(c.textContent);c.click();await new Promise(function(r){setTimeout(r,60)});R.desliga=STD().latPiso==='nao'&&S.mods.filter(function(q){return !q.sup}).every(function(q){return !q.latPiso});
           var Lb=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.sobreBase=Lb.h<m.h-100;
           c=document.querySelector('#stdm [data-std="latPiso"][data-v="sim"]');R.todos=!!c&&/descendo até o chão/.test(c.textContent);c.click();await new Promise(function(r){setTimeout(r,60)});R.ligouTodos=STD().latPiso==='sim'&&S.mods.filter(function(q){return !q.sup}).every(function(q){return q.latPiso});document.getElementById('stdm').hidden=true;
@@ -2985,7 +2985,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["corteRod"] as? Bool, true, "corte: rodapé da frente na chapa da cor")
         XCTAssertEqual(o["corteAereo"] as? Bool, true, "corte: base do aéreo na chapa da cor")
         XCTAssertEqual(o["botao"] as? Bool, true, "no módulo não tem mais botão de lateral até o piso: é regra dos Ajustes")
-        XCTAssertEqual(o["lat"] as? String, "✓ Esquerda|✓ Direita true", "todo módulo tem as duas laterais; tamponamento é outra peça")
+        XCTAssertEqual(o["lat"] as? String, "botões de lateral 0 · texto antigo false", "módulo pronto não tem mais botão de tirar a lateral")
         XCTAssertEqual(o["ajustes"] as? Bool, true, "Ajustes: lateral até a base")
         XCTAssertEqual(o["desliga"] as? Bool, true, "em cima da base em todos os módulos de uma vez")
         XCTAssertEqual(o["sobreBase"] as? Bool, true, "a lateral para na base, não desce até o chão")
@@ -4090,7 +4090,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["corte"] as? String, "2 e", "lista de corte com os painéis de todas as paredes")
         XCTAssertEqual(o["tres"] as? String, "fed 3800 null", "painel nas 3 paredes")
         XCTAssertEqual(o["conf"] as? Bool, false, "sem a conferência da soma na aba")
-        XCTAssertEqual(o["est"] as? String, "Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo|Componentes")
+        XCTAssertEqual(o["est"] as? String, "Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
         XCTAssertEqual(o["obra"] as? Bool, true, "medidas das paredes e esquadro no Ajustes")
         XCTAssertEqual((o["W"] as? NSNumber)?.intValue, 3300)
         XCTAssertEqual(o["lim"] as? String, "2700")
@@ -7091,6 +7091,209 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["arrastandoMarca"] as? String, "nenhum · áreas marcadas 1 · botão criar true")
         XCTAssertEqual(o["confirmou"] as? String, "1 criado")
         XCTAssertEqual(o["sala"] as? String, "revestir parede: true · aba Painéis")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoInvertidoAPecaEAMesmaSoViraNaAbaENos3Toques() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=1000;m.tl=true;m.tr=true;m.tlA='full';m.trA='full';m.tlM=m.trM=1;m.tb=true;m.tt=true;S.m=m;S.tab=4;draw();panel();
+                  var bd=function(){return document.getElementById('bd')};
+                  /* onde fica a face (a peça de 15 inteira) e a moldura de réguas de cada tamponamento no 3D */
+                  open3D();await W(500);
+                  var lado=function(nome){re3();var B=__boxes().filter(function(b){return String(b.nm)==='0:Tamponamento '+nome}),face=B.filter(function(b){return !/engrosso/.test(String(b.pk))})[0],eng=B.filter(function(b){return /engrosso/.test(String(b.pk))});if(!face||!eng.length)return 'sem moldura';var ax=/esquerdo|direito/.test(nome)?'x':'y',fc=(face[ax+'0']+face[ax+'1'])/2,ec=(eng[0][ax+'0']+eng[0][ax+'1'])/2;return (B.length-1)+' réguas · face '+(ax==='x'?(fc<ec?'à esquerda':'à direita'):(fc<ec?'embaixo':'em cima'))+' da moldura · espessura total '+Math.round(Math.max.apply(null,B.map(function(b){return b[ax+'1']}))-Math.min.apply(null,B.map(function(b){return b[ax+'0']})))};
+                  R.normal=['esquerdo','direito','de cima','de baixo'].map(function(n){return n+': '+lado(n)}).join(' | ');
+                  var cor=function(){return cutLines(S.mods[0]).filter(function(l){return /^Tamponamento esquerdo/.test(l.names[0])}).map(function(l){return l.qty+'× '+l.L+'×'+l.W+' '+String(l.note).split(' · ')[0].slice(0,34)}).join(' | ')};var c0=cor();
+                  /* 1. aba Tamponamentos: cada tamponamento de 30 tem a opção de inverter */
+                  R.opcoesNaAba=[].map.call(bd().querySelectorAll('input[data-rc$="Inv"]'),function(i){return i.dataset.rc+(i.checked?'*':'')}).join(' ');
+                  bd().querySelector('input[data-rc="tlInv"]').click();await W(80);R.inverteuEsquerdo=!!S.mods[0].tlInv+' · '+lado('esquerdo')+' · direito '+lado('direito').replace(/^.*face/,'face');
+                  /* no 2D: tocando na peça, a informação diz qual está invertido */
+                  draw();var pi2=function(n){var i=partsOf(S.mods[0]).map(function(p){return p.name}).indexOf('Tamponamento '+n);return /INVERTIDO: parte lisa pra dentro, moldura pra fora$/.test(PI[0][i])};R.no2D='esquerdo '+pi2('esquerdo')+' · direito '+pi2('direito')+' · '+PI[0][partsOf(S.mods[0]).map(function(p){return p.name}).indexOf('Tamponamento esquerdo')].split(' · ').slice(0,3).join(' · ');
+                  /* 2. a peça é a mesma: mesmas medidas e quantidades no corte, só a observação diz que é invertido */
+                  var c1=cor(),med=function(t){return t.split(' | ').map(function(x){return x.split(' ').slice(0,2).join(' ')}).join(' | ')};R.corteIgual=(med(c0)===med(c1))+' · '+med(c1)+' · '+((cutLines(S.mods[0]).filter(function(l){return /^Tamponamento esquerdo/.test(l.names[0])})[0].note.match(/ATENÇÃO[^·]*/)||[''])[0].trim());
+                  /* 3. 3 toques em cima do tamponamento direito no 3D: o quadro do módulo abre com ele em primeiro e o botão de inverter */
+                  re3();var b=__boxes().filter(function(q){return String(q.nm)==='0:Tamponamento direito'&&!/engrosso/.test(String(q.pk))})[0];__cam(-0.9,0.2,1.4);await W(150);
+                  var p=org3api.proj([b.x1,(b.y0+b.y1)/2,(b.z0+b.z1)/2]);__size3(p[0],p[1]);await W(200);
+                  var bts=[].map.call(document.querySelectorAll('[data-qtinv]'),function(x){return x.dataset.qtinv+': '+x.textContent});R.tresToques=JSON.stringify(org3api.isx())+' · '+bts.join(' | ')+' · '+((document.body.textContent.match(/você tocou no (esquerdo|direito|de cima|de baixo)/)||[''])[0]);
+                  var bt=document.querySelector('[data-qtinv="tr"]');if(bt){bt.click();await W(150)}R.inverteuDireitoPelo3D=!!S.mods[0].trInv+' · '+lado('direito')+' · botão '+((document.querySelector('[data-qtinv="tr"]')||{}).textContent||'');
+                  /* 4. desfaz e volta ao normal · de baixo e de cima também invertem */
+                  S.mods[0].tbInv=true;S.mods[0].ttInv=true;draw();R.cimaEBaixo='de cima: '+lado('de cima').replace(/^.*face/,'face')+' | de baixo: '+lado('de baixo').replace(/^.*face/,'face');
+                  ['tlInv','trInv','ttInv','tbInv'].forEach(function(k){delete S.mods[0][k]});draw();R.voltou=['esquerdo','direito','de cima','de baixo'].map(function(n){return n+': '+lado(n)}).join(' | ')===R.normal;
+                  /* 5. tamponamento de 15 (uma chapa só) não tem o que inverter: a opção não aparece */
+                  try{document.getElementById('v3x').click()}catch(e){}S.mods[0].tlW=15;S.m=S.mods[0];S.tab=4;draw();panel();R.de15=!bd().querySelector('input[data-rc="tlInv"]')+' · direito de 30 continua '+!!bd().querySelector('input[data-rc="trInv"]');
+                  /* 6. "só até a cava" é régua estreita (2 peças iguais coladas): inverter não mudaria nada, então a opção não aparece */
+                  S.mods[0].tlW=30;S.mods[0].tlA='cava';S.m=S.mods[0];S.tab=4;draw();panel();var pe_=partsOf(S.mods[0]).filter(function(p){return p.name==='Tamponamento esquerdo'})[0];R.soAteACava='largura da peça '+pe_.cw+' · opção no esquerdo '+!!bd().querySelector('input[data-rc="tlInv"]')+' · no direito (lateral inteira) '+!!bd().querySelector('input[data-rc="trInv"]');
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "esquerdo: 4 réguas · face à esquerda da moldura · espessura total 30 | direito: 4 réguas · face à direita da moldura · espessura total 30 | de cima: 4 réguas · face em cima da moldura · espessura total 30 | de baixo: 4 réguas · face embaixo da moldura · espessura total 30")
+        XCTAssertEqual(o["opcoesNaAba"] as? String, "tlInv trInv ttInv tbInv")
+        XCTAssertEqual(o["inverteuEsquerdo"] as? String, "true · 4 réguas · face à direita da moldura · espessura total 30 · direito face à direita da moldura · espessura total 30")
+        XCTAssertEqual(o["no2D"] as? String, "esquerdo true · direito false · Tamponamento esquerdo · 800 × 375 mm · MDF 30")
+        XCTAssertEqual(o["corteIgual"] as? String, "true · 2× 800×375 | 4× 800×80 | 4× 215×80 · ATENÇÃO: INVERTIDO (parte lisa pra dentro, réguas por fora) só em: Tamponamento esquerdo")
+        XCTAssertEqual(o["tresToques"] as? String, "{\"k\":\"mod\",\"mi\":0,\"tp\":\"tr\"} · tr: ⇄ Inverter o direito | tl: ✓ Invertido · esquerdo | tt: ⇄ Inverter o de cima | tb: ⇄ Inverter o de baixo · você tocou no direito")
+        XCTAssertEqual(o["inverteuDireitoPelo3D"] as? String, "true · 4 réguas · face à esquerda da moldura · espessura total 30 · botão ✓ Invertido · direito")
+        XCTAssertEqual(o["cimaEBaixo"] as? String, "de cima: face embaixo da moldura · espessura total 30 | de baixo: face em cima da moldura · espessura total 30")
+        XCTAssertEqual(o["voltou"] as? Bool, true)
+        XCTAssertEqual(o["de15"] as? String, "true · direito de 30 continua true")
+        XCTAssertEqual(o["soAteACava"] as? String, "largura da peça 80 · opção no esquerdo false · no direito (lateral inteira) true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+    func testEstruturaSemComponentesESemTirarLateralDoModuloPronto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  var bd=function(){return document.getElementById('bd')},secs=function(){return [].map.call(bd().querySelectorAll('.sec'),function(s){return s.textContent.replace(/[⌃\s]+$/,'')}).join('|')};
+                  var lat=function(m){return partsOf(m).filter(function(p){return /^Lateral (esquerda|direita)$/.test(p.name)}).map(function(p){return p.name.replace('Lateral ','')}).join('+')};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;
+                  /* 1. aéreo: sem a lista Componentes e sem botão de lateral */
+                  newTpl(T('Aéreo 2 portas'));var a=S.mods[0];a.x=100;S.m=a;S.tab=0;draw();panel();
+                  R.aereo='Componentes '+/Componentes/.test(secs())+' · botões de lateral '+bd().querySelectorAll('[data-latop]').length+' · texto "Laterais da caixa" '+/Laterais da caixa|Só desmarque/.test(bd().textContent)+' · laterais '+lat(a);
+                  R.secoes=secs();
+                  /* 2. balcão: continua só o atalho da base dos módulos (regra de todos, em Ajustes) */
+                  newTpl(T('Balcão 2 portas'));var b=S.mods[1];b.x=1200;S.m=b;S.tab=0;draw();panel();
+                  R.balcao='Componentes '+/Componentes/.test(secs())+' · botões de lateral '+bd().querySelectorAll('[data-latop]').length+' · atalho da base '+!!bd().querySelector('[data-cfggo2="latPiso"]')+' · laterais '+lat(b);
+                  /* 3. não dá mais pra tirar lateral de módulo pronto: mesmo um clique forçado não tira */
+                  var fk=document.createElement('button');fk.dataset.latop='semLE';bd().appendChild(fk);fk.click();await W(60);R.naoTira=!b.semLE+' · laterais '+lat(b);
+                  /* 4. módulo que JÁ está sem uma lateral (modelo do catálogo / projeto antigo): não muda sozinho; aparece só o botão de pôr de volta */
+                  newTpl(T('Balcão sem lateral direita (usa a do vizinho)'));var c=S.mods[2];c.x=2100;S.m=c;S.tab=0;draw();panel();
+                  var bw=function(m){return partsOf(m).filter(function(q){return /^(Travessa|Prateleira|Teto)/.test(q.name)}).map(function(q){return q.name+' '+Math.round(q.w)}).join(', ')};
+                  var bt=bd().querySelector('[data-latop="semLD"]');R.jaSem='continua sem '+!!c.semLD+' · laterais '+lat(c)+' · '+bw(c)+' · aviso '+((bd().querySelector('[data-semlat]')||{}).textContent||'')+' · botão '+(bt?bt.textContent:'')+' · botão da esquerda '+!!bd().querySelector('[data-latop="semLE"]');
+                  await W(900);bt.click();await W(80);R.voltou='sem '+!!c.semLD+' · laterais '+lat(c)+' · '+bw(c)+' · botões '+bd().querySelectorAll('[data-latop]').length+' · '+TL.slice(-1)[0];
+                  await W(900);document.getElementById('und').click();await W(200);var c2=S.mods[2];R.desfez=S.mods.length+' módulos · sem '+!!c2.semLD+' · laterais '+lat(c2);
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["aereo"] as? String, "Componentes false · botões de lateral 0 · texto \"Laterais da caixa\" false · laterais esquerda+direita")
+        XCTAssertEqual(o["secoes"] as? String, "Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
+        XCTAssertEqual(o["balcao"] as? String, "Componentes false · botões de lateral 0 · atalho da base true · laterais esquerda+direita")
+        XCTAssertEqual(o["naoTira"] as? String, "true · laterais esquerda+direita")
+        XCTAssertEqual(o["jaSem"] as? String, "continua sem true · laterais esquerda · Travessa frontal 800, Travessa deitada do pedestal (fixação) 100, Travessa deitada do pedestal (fixação) 115 · aviso Este módulo está sem a lateral direita (usa a do vizinho). · botão ＋ Pôr a lateral direita de volta · botão da esquerda false")
+        XCTAssertEqual(o["voltou"] as? String, "sem false · laterais esquerda+direita · Travessa frontal 800, Travessa deitada do pedestal (fixação) 100, Travessa deitada do pedestal (fixação) 100 · botões 0 · ✓ Lateral direita de volta no módulo")
+        XCTAssertEqual(o["desfez"] as? String, "3 módulos · sem true · laterais esquerda")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testImaDoTopoAlinhaAereoComOVizinhoNo2DSemEntrarNemPassarDoTeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  try{STD().supPedra=0}catch(_){}
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=3200;S.H=2985;
+                  newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));var A=S.mods[0],B=S.mods[1];A.x=100;A.w=900;A.h=750;A.b=1820;B.x=1060;B.w=800;B.h=600;B.b=1950;S.m=A;S.tab=0;draw();panel();await W(150);
+                  var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
+                  var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
+                  /* arrasta o módulo mi no 2D: dy em mm (pra cima = positivo) · devolve se a linha verde no topo do ímã apareceu durante o arrasto */
+                  var drag2=async function(mi,dx,dy){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+dx*cpm*i/5,y-dy*cpm*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+dx*cpm,y-dy*cpm);await W(80);return g-gh()>0};
+                  /* 1. B com o topo 20 mm abaixo do A: subiu 10 → o ímã alinha em cima (não fica torto) */
+                  R.antes='A '+top(A)+' · B '+top(B);
+                  var g1=await drag2(1,0,10);R.alinhou='A '+top(A)+' · B '+top(B)+' · linha verde no topo '+g1+' · do chão '+B.b;
+                  /* 2. vizinho travado também serve de referência; e longe (100 mm) não gruda */
+                  A.lock=true;var g2=await drag2(1,0,-100);R.longe='B '+top(B)+' · linha verde no topo '+g2;var g3=await drag2(1,0,85);R.voltouComTravado='B '+top(B)+' · linha verde no topo '+g3;A.lock=false;
+                  /* 3. topo = o que se vê: A com tamponamento de cima (30) → B alinha com o topo do tamponamento */
+                  A.tt=true;draw();var g4=await drag2(1,0,20);R.comTamponamentoNoA='A '+top(A)+' · B '+top(B)+' · do chão '+B.b;
+                  B.tt=true;B.b=B.b-10;draw();await drag2(1,0,-5);R.osDoisComTamponamento='A '+top(A)+' · B '+top(B)+' · caixa A '+(A.b+A.h)+' · caixa B '+(B.b+B.h);
+                  A.tt=false;B.tt=false;B.b=1950;draw();
+                  /* 4. não entra em outro móvel: C em cima, pegando só um pedaço do B → o ímã não puxa o B pra dentro dele */
+                  newTpl(T('Aéreo 2 portas'));var C=S.mods[2];C.w=800;C.h=300;C.x=1660;C.b=2560;B.b=1940;S.m=A;draw();await W(100);
+                  await drag2(1,0,10);R.naoEntra='B '+top(B)+' · C começa em '+C.b+' · dentro de outro '+modHit(B);
+                  S.mods.splice(2,1);B.b=1950;S.m=A;draw();await W(100);
+                  /* 5. não passa do teto: A encostado no teto com tamponamento de cima (o topo que se vê fica acima do limite) → o B para no teto, não passa */
+                  var lim=S.H-fgh();A.b=lim-A.h;A.tt=true;B.b=lim-B.h-20;draw();await W(60);await drag2(1,0,10);R.teto='limite '+lim+' · caixa B '+(B.b+B.h)+' · passou '+(B.b+B.h>lim+.01);A.tt=false;A.b=1820;B.b=1950;draw();await W(60);
+                  /* 6. módulo de baixo não sobe pra alinhar (não fica flutuando) */
+                  newTpl(T('Balcão 2 portas'));var D=S.mods[2];D.x=2000;D.b=0;S.m=A;draw();await W(100);D.h=820;B.b=850-B.h;draw();await W(60);/* topo do B 30 acima do topo do balcão: o balcão não sobe pra alinhar */var d0=D.b;await drag2(2,0,3);R.balcao='do chão '+D.b+' (antes '+d0+')';
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "A 2570 · B 2550")
+        XCTAssertEqual(o["alinhou"] as? String, "A 2570 · B 2570 · linha verde no topo true · do chão 1970")
+        XCTAssertEqual(o["longe"] as? String, "B 2470 · linha verde no topo false")
+        XCTAssertEqual(o["voltouComTravado"] as? String, "B 2570 · linha verde no topo true")
+        XCTAssertEqual(o["comTamponamentoNoA"] as? String, "A 2600 · B 2600 · do chão 2000")
+        XCTAssertEqual(o["osDoisComTamponamento"] as? String, "A 2600 · B 2600 · caixa A 2570 · caixa B 2570")
+        XCTAssertEqual(o["naoEntra"] as? String, "B 2550 · C começa em 2560 · dentro de outro false")
+        XCTAssertEqual(o["teto"] as? String, "limite 2985 · caixa B 2985 · passou false")
+        XCTAssertEqual(o["balcao"] as? String, "do chão 0 (antes 0)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testImaDoTopoNo3DAlinhaPeloTopoQueSeVeComTamponamentoDeCima() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  try{STD().supPedra=0}catch(_){}
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=3200;S.H=2985;
+                  newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));var A=S.mods[0],B=S.mods[1];A.x=100;A.w=900;A.h=750;A.b=1820;A.tt=true;B.x=1160;B.w=800;B.h=600;B.b=1950;S.m=A;S.tab=0;draw();panel();await W(150);
+                  var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
+                  open3D();await W(500);__cam(0,0.1,1);await W(200);
+                  var cvs=document.querySelector('canvas'),cr=cvs.getBoundingClientRect();
+                  var c=[B.x+B.w/2,B.b+B.h/2,B.d],p=org3api.proj(c),p2=org3api.proj([c[0],c[1]+100,c[2]]),ppm=(p[1]-p2[1])/100;R.ppm=Math.round(ppm*1000)/1000;
+                  var pe=function(t,x,y){cvs.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:cr.left+x,clientY:cr.top+y,pointerId:7,isPrimary:true,pointerType:'touch',button:0}))};
+                  pe('pointerdown',p[0],p[1]);await W(450);pe('pointermove',p[0],p[1]-12);await W(40);
+                  /* depois que o arrasto começou: sobe 50 mm */
+                  pe('pointermove',p[0],p[1]-12-50*ppm);await W(120);R.durante='B do chão '+B.b+' · topo B '+top(B)+' · topo A '+top(A);
+                  pe('pointerup',p[0],p[1]-12-50*ppm);await W(150);R.soltou='B do chão '+B.b+' · topo B '+top(B)+' · topo A '+top(A);
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["durante"] as? String, "B do chão 2000 · topo B 2600 · topo A 2600")
+        XCTAssertEqual(o["soltou"] as? String, "B do chão 2000 · topo B 2600 · topo A 2600")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testLupaDeBuscaEmCoresParedesEPisosPorNomeMarcaMedidaETipo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;newTpl(T('Balcão 2 portas'));S.m=S.mods[0];
+                  var bd=function(){return document.getElementById('bd')},Q=function(s){return [].slice.call(bd().querySelectorAll(s))},vis=function(s){return Q(s).filter(function(b){return !b.hidden&&!b.closest('[hidden]')})};
+                  var busca=async function(t){var i=bd().querySelector('[data-ppq]');i.value=t;i.dispatchEvent(new Event('input',{bubbles:true}));await W(30)};
+                  var res=function(){return 'revestimentos '+vis('.rvb').length+' de '+Q('.rvb').length+' · cores '+vis('.corsw button').length+' de '+Q('.corsw button').length+' · tipos '+vis('.rvc').map(function(c){return c.textContent}).join('/')};
+                  S.tab=10;__cores('pp',null,'piso');draw();panel();await W(100);
+                  /* 1. Paredes e pisos › Piso tem a lupa (uma só) e, sem busca, mostra tudo */
+                  R.piso='lupas '+Q('[data-ppq]').length+' · '+res().replace(/ · tipos.*/,'');
+                  /* 2. pedaço do nome, sem acento */
+                  await busca('carval');R.nome=res()+' · '+vis('.rvb').map(function(b){return b.title.split(' · ')[0]}).join(', ');
+                  /* 3. marca · medida (90x90 escrito de qualquer jeito) · tipo */
+                  await busca('DECORTILES');R.marca=res().replace(/ · cores.*/,'')+' · todos da marca '+vis('.rvb').every(function(b){return /decortiles/i.test(b.textContent)});
+                  await busca('90x90');var a90=vis('.rvb').length;await busca('90 × 90');R.medida='90x90 '+a90+' · 90 × 90 '+vis('.rvb').length+' · todos 90 × 90 '+vis('.rvb').every(function(b){return /90 × 90/.test(b.title)});
+                  await busca('amadeirado');R.tipo=res();
+                  /* 4. cor de pintura pelo nome */
+                  await busca('cinz');R.cor=vis('.corsw button').map(function(b){return b.textContent}).join(', ')+' · '+res().replace(/ · cores.*/,'');
+                  /* 5. nada: avisa, sem lista */
+                  await busca('xyzw');R.nada=((bd().querySelector('[data-ppq0]')||{}).textContent||'')+' · '+res().replace(/ · tipos.*/,'');
+                  /* 6. escolheu com a busca feita: a busca continua e o piso muda de verdade */
+                  await busca('carval');var b1=vis('.rvb')[0],id1=b1.getAttribute('data-cfm');b1.click();await W(120);R.escolheu=(S.fm===id1)+' · busca '+bd().querySelector('[data-ppq]').value+' · '+res().replace(/ · cores.*/,'')+' · marcado '+vis('.rvb.on').length;
+                  /* 7. apagou a busca: volta tudo */
+                  await busca('');R.limpou=res().replace(/ · tipos.*/,'')+' · aviso '+!!bd().querySelector('[data-ppq0]');
+                  /* 8. Paredes: mesma lupa, com as cores de pintura da parede · Rodapé "só espaçamento" não tem lista, então não tem lupa */
+                  await busca('carval');Q('[data-corpp="parede"]')[0].click();await W(100);R.paredes='lupas '+Q('[data-ppq]').length+' · busca '+bd().querySelector('[data-ppq]').value+' · '+res().replace(/ · tipos.*/,'');await busca('off');R.paredeCor=vis('.corsw button').map(function(b){return b.textContent}).join(', ');
+                  Q('[data-corpp="rodape"]')[0].click();await W(100);var rk0=S.rdk;Q('[data-crk="vao"]')[0].click();await W(100);R.rodapeVao='lupas '+Q('[data-ppq]').length;Q('[data-crk="az"]')[0].click();await W(100);R.rodapeAzulejo='lupas '+Q('[data-ppq]').length;
+                  /* 9. trocou de grupo e voltou: a busca começa vazia · Armários, Portas e Painéis continuam com a lupa deles (uma só) */
+                  Q('[data-cortab="arm"]')[0].click();await W(100);R.armarios='lupas de cor '+Q('[data-csq]').length+' · lupa de piso '+Q('[data-ppq]').length;
+                  Q('[data-cortab="port"]')[0].click();await W(100);R.portas='lupas de cor '+Q('[data-csq]').length;
+                  Q('[data-cortab="pp"]')[0].click();await W(100);R.voltou='busca "'+bd().querySelector('[data-ppq]').value+'" · '+res().replace(/ · tipos.*/,'');
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["piso"] as? String, "lupas 1 · revestimentos 15 de 15 · cores 6 de 6")
+        XCTAssertEqual(o["nome"] as? String, "revestimentos 1 de 15 · cores 0 de 6 · tipos Amadeirado · Carvalho Natural")
+        XCTAssertEqual(o["marca"] as? String, "revestimentos 1 de 15 · todos da marca true")
+        XCTAssertEqual(o["medida"] as? String, "90x90 2 · 90 × 90 2 · todos 90 × 90 true")
+        XCTAssertEqual(o["tipo"] as? String, "revestimentos 2 de 15 · cores 0 de 6 · tipos Amadeirado")
+        XCTAssertEqual(o["cor"] as? String, "Cinza · revestimentos 0 de 15")
+        XCTAssertEqual(o["nada"] as? String, "Nada encontrado com \"xyzw\" · confira o nome ou apague a busca · revestimentos 0 de 15 · cores 0 de 6")
+        XCTAssertEqual(o["escolheu"] as? String, "true · busca carval · revestimentos 1 de 15 · marcado 1")
+        XCTAssertEqual(o["limpou"] as? String, "revestimentos 15 de 15 · cores 6 de 6 · aviso false")
+        XCTAssertEqual(o["paredes"] as? String, "lupas 1 · busca carval · revestimentos 1 de 15 · cores 0 de 8")
+        XCTAssertEqual(o["paredeCor"] as? String, "Off white")
+        XCTAssertEqual(o["rodapeVao"] as? String, "lupas 0")
+        XCTAssertEqual(o["rodapeAzulejo"] as? String, "lupas 1")
+        XCTAssertEqual(o["armarios"] as? String, "lupas de cor 1 · lupa de piso 0")
+        XCTAssertEqual(o["portas"] as? String, "lupas de cor 1")
+        XCTAssertEqual(o["voltou"] as? String, "busca \"\" · revestimentos 15 de 15 · cores 0 de 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

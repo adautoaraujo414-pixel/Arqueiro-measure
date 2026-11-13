@@ -6991,4 +6991,56 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["planoDaCozinha"] as? String, "true · erros 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testTamponamentoInferiorReconheceACavaSozinhoSemSecaoPosCava() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=1000;m.tl=false;m.tr=false;m.tlM=1;m.trM=1;S.m=m;S.tab=4;draw();panel();
+                  var bd=function(){return document.getElementById('bd')},txt=function(){return bd().textContent},q=function(s){return bd().querySelector(s)},clk=function(s){var e=q(s);e.click();return e};
+                  var pc=function(n){var p=partsOf(S.mods[0]).filter(function(p){return p.name===n})[0];return p?'y'+Math.round(p.y)+'..'+Math.round(p.y+p.h)+' corte '+p.cl+'×'+p.cw:'não tem'};
+                  var rot=function(){var c=q('input[data-c="tb"]');return c?c.parentNode.textContent.trim():''},chips=function(sd){return [].map.call(bd().querySelectorAll('[data-al^="'+sd+'|"]'),function(b){return (b.classList.contains('sel')?'*':'')+b.textContent.replace(/\s*\(.*$/,'')}).join(' / ')};
+                  /* 1. a seção "Pós cava" não existe mais */
+                  R.semPosCava=!/ós cava/i.test(txt())&&!q('[data-pc]')&&!/ós cava/i.test(bd().innerHTML);
+                  /* 2. aéreo sem cava (engrosso cava desligado): o tamponamento inferior fica logo abaixo da base */
+                  R.semCava_rotulo=rot()+' | reconheceu cava: '+q('[data-tbcava]').dataset.tbcava;clk('input[data-c="tb"]');await W(60);
+                  R.semCava_peca=pc('Tamponamento de baixo')+' · base '+pc('Base inferior').replace(/ corte.*/,'');
+                  /* 3. liga o engrosso cava: o app reconhece a cava e o tamponamento passa pra depois dela, rente com a régua (sem mexer em mais nada) */
+                  clk('input[data-rc="regua"]');await W(60);R.comCava_rotulo=rot()+' | reconheceu cava: '+q('[data-tbcava]').dataset.tbcava;
+                  R.comCava_peca=pc('Tamponamento de baixo')+' · régua '+pc('Engrosso cava · régua da frente 2').replace(/ corte.*/,'')+' · porta '+pc('Porta').replace(/ corte.*/,'');
+                  /* 4. lateral: só "Lateral inteira" e "Só até a cava"; a inteira fica rente embaixo; "quanto passa pra baixo" não aparece (com cava é rente) */
+                  clk('input[data-c="tl"]');await W(60);R.lateral_opcoes=chips('tl');clk('[data-al="tl|full"]');await W(60);
+                  R.lateralInteira_comCava=pc('Tamponamento esquerdo')+' · '+chips('tl')+' · passa pra baixo na tela: '+!!q('[data-latpassa]')+' · resumo: '+(txt().match(/Esquerdo \([^)]*\)/)||[''])[0];
+                  /* 5. sem cava de novo: tamponamento inferior volta pra baixo da base; a lateral inteira passa 20 e dá pra mudar pra 25 */
+                  clk('input[data-rc="regua"]');await W(60);R.voltouSemCava=pc('Tamponamento de baixo')+' · lateral '+pc('Tamponamento esquerdo')+' · passa pra baixo na tela: '+!!q('[data-latpassa]');
+                  clk('[data-tpmm="25"]');await W(60);R.passa25=pc('Tamponamento esquerdo');S.mods[0].tpMm=20;
+                  /* 6. projeto que já tinha "pós cava" guardado: mesma peça, mesma medida, aparece como lateral inteira; nada some */
+                  var M=S.mods[0];M.regua=true;M.tlA='tamp';draw();var a=pc('Tamponamento esquerdo');M.tlA='full';draw();var b=pc('Tamponamento esquerdo');M.tlA='tamp';draw();panel();
+                  R.antigoPosCava=(a===b)+' · '+a+' · '+chips('tl')+' · guardado '+M.tlA+' · obs: '+(partsOf(M).filter(function(p){return p.name==='Tamponamento esquerdo'})[0].note||'');
+                  /* 7. corte e 3D acompanham */
+                  var cl=cutLines(M).filter(function(l){return /^Tamponamento de baixo/.test(l.names[0])}).map(function(l){return l.qty+'× '+l.L+'×'+l.W}).join(' + ');
+                  open3D();await W(400);re3();var bx=__boxes().filter(function(b){return /^0:Tamponamento de baixo/.test(String(b.nm))}),rg=__boxes().filter(function(b){return /^0:Engrosso cava · régua da frente/.test(String(b.nm))});
+                  R.corteE3D=cl+' · 3D '+bx.length+' peça · encostada embaixo da régua: '+(bx.length&&rg.length?Math.abs(Math.max.apply(null,bx.map(function(b){return b.y1}))-Math.min.apply(null,rg.map(function(b){return b.y0})))<0.6:'?');
+                  var nota=function(){return (((cutLines(S.mods[0]).filter(function(l){return /^Tamponamento de baixo/.test(l.names[0])})[0]||{}).note||'').match(/uma peça só [^·]*/)||[''])[0].trim()};R.notaCorte=nota();M.regua=false;draw();R.notaCorte+=' | '+nota();M.regua=true;draw();
+                  try{document.getElementById('v3x').click()}catch(e){}
+                  /* 8. balcão: a aba continua igual (sem aviso de cava) */
+                  S.mods=[];newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.tab=4;draw();panel();R.balcao=rot()+' | aviso de cava: '+!!q('[data-tbcava]')+' | pós cava: '+/ós cava/i.test(txt());
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["semPosCava"] as? Bool, true)
+        XCTAssertEqual(o["semCava_rotulo"] as? String, "Usar (abaixo da base) | reconheceu cava: 0")
+        XCTAssertEqual(o["semCava_peca"] as? String, "y750..780 corte 1000×375 · base y735..750")
+        XCTAssertEqual(o["comCava_rotulo"] as? String, "Usar (depois da cava, rente com a régua) (já existe) | reconheceu cava: 1")
+        XCTAssertEqual(o["comCava_peca"] as? String, "y780..810 corte 1000×375 · régua y765..780 · porta y0..780")
+        XCTAssertEqual(o["lateral_opcoes"] as? String, "Lateral inteira / *Só até a cava")
+        XCTAssertEqual(o["lateralInteira_comCava"] as? String, "y0..810 corte 810×375 · *Lateral inteira / Só até a cava · passa pra baixo na tela: false · resumo: Esquerdo (lateral inteira)")
+        XCTAssertEqual(o["voltouSemCava"] as? String, "y750..780 corte 1000×375 · lateral y0..800 corte 800×375 · passa pra baixo na tela: true")
+        XCTAssertEqual(o["passa25"] as? String, "y0..805 corte 805×375")
+        XCTAssertEqual(o["antigoPosCava"] as? String, "true · y0..810 corte 810×375 · *Lateral inteira / Só até a cava · guardado tamp · obs: prof. 350 (módulo) + 25 (frente) = 375 · lateral inteira, rente com a régua embaixo")
+        XCTAssertEqual(o["corteE3D"] as? String, "1× 1000×381 + 2× 1000×80 + 2× 221×80 · 3D 5 peça · encostada embaixo da régua: true")
+        XCTAssertEqual(o["notaCorte"] as? String, "uma peça só depois da cava | uma peça só abaixo da base")
+        XCTAssertEqual(o["balcao"] as? String, "Usar (fica abaixo da base) | aviso de cava: false | pós cava: false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

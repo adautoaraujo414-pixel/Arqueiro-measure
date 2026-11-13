@@ -6225,4 +6225,111 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["quarto"] as? String, "• 1 × Guarda-roupa · 1800 × 2400 × 550 mm · 4 portas")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Depurador de embutir no aéreo, nas duas montagens: prateleira fixa furada (aéreo sem base, laterais descem, portas não mudam)
+    /// e base com recorte (motor sobe, bandeja por baixo). As medidas são digitadas; sem medida, sem caber ou com peça no lugar
+    /// NÃO coloca e diz o motivo. A prateleira entra no corte, o aparelho não. No 3D o toque puxa o painel e acende a luz,
+    /// sem mexer no projeto. Desligou, o aéreo volta como era.
+    func testDepuradorDeEmbutirNasDuasMontagens() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;S.room='cozinha';S.env='livre';S.W=3000;S.mods=[];S.stones=[];S.m=null;var R={};
+        newTpl(CATS[0].it[0]);S.m=S.mods[0];S.tab=0;draw();panel();R.balcao=!!document.querySelector('#bd [data-dpbox]');
+        newTpl(CATS[1].it[2]);var m=S.mods[1];m.x=900;S.m=m;S.tab=0;draw();panel();R.aereo=!!document.querySelector('#bd [data-dpbox]');
+        var PP=function(re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' '+p.x+','+p.y+' '+p.w+'×'+p.h+(p.noCut?' não é peça':' corte '+p.cl+'×'+p.cw)}).join(' / ')},ST=function(){var g=dpStatus(m);return g?(g.ok?'ok':g.why):'desligado'};
+        var q=function(s){return document.querySelector('#bd '+s)},typ=function(k,v){var i=q('[data-dpf="'+k+'"]');i.value=v;i.dispatchEvent(new Event('change',{bubbles:true}))};
+        var portas0=PP(/^(Porta|Tamponamento)/),corte0=cutLines(m).length;
+        q('[data-dpa="on|1"]').click();R.semMedida=ST()+' | '+q('[data-dpst]').dataset.dpst+' | '+PP(/epurador/);
+        typ('cw',990);typ('ch',175);typ('cd',280);R.largo=ST();typ('cw',600);typ('cd',400);R.fundo=ST();typ('cd',280);
+        R.p=ST()+' | '+q('[data-dpst]').dataset.dpst;R.pecasP=PP(/^(Base inferior|Lateral esquerda|Prateleira fixa do depurador|Depurador)/);R.portasIguais=PP(/^(Porta|Tamponamento)/)===portas0;
+        R.corte=cutLines(m).length-corte0+' '+cutLines(m).map(function(l){return l.name}).filter(function(n){return /epurador/.test(n)}).join();
+        typ('du',120);R.duto=ST();typ('fh',100);R.furo=ST();typ('fh',150);R.nota=partsOf(m).filter(function(p){return p.dpp})[0].note;
+        typ('va',135);R.vao=PP(/^(Prateleira fixa do depurador|Depurador)/);typ('va','');
+        m.tb=true;R.tb=ST();m.tb=false;m.regua=true;R.regua=ST();m.regua=false;m.led={on:1};R.led=ST();delete m.led;
+        /* base com recorte */
+        q('[data-dpa="md|r"]').click();R.r0=ST();typ('ch',40);typ('cd',335);typ('rw',230);typ('rd',220);typ('rz',60);typ('mh',252);R.r=ST();
+        R.pecasR=PP(/^(Base inferior|Lateral esquerda|Depurador)/);R.notaBase=partsOf(m).filter(function(p){return p.name==='Base inferior'})[0].note;typ('rz',200);R.passa=ST();typ('rz',60);
+        m.base=false;R.semBase=ST();m.base=true;
+        /* salvar e reabrir · prateleira furada de novo */
+        loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[1];S.m=m;S.tab=0;draw();panel();R.reabriu=ST()+' '+m.dep.md+' '+m.dep.rw;
+        q('[data-dpa="md|p"]').click();typ('ch',175);typ('cd',280);typ('vh',40);typ('pa',470);R.p2=ST();
+        /* 3D: fechado, toque abre o painel e acende a luz, toque fecha */
+        open3D();await W(300);var sd=document.getElementById('v3d');if(sd&&sd.checked){sd.checked=false;sd.dispatchEvent(new Event('change',{bubbles:true}))}__cam(.75,-.12,2.2);re3();await W(200);
+        var bx=function(){return __boxes().filter(function(b){return b.dpm}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].map(Math.round).join(',')+(b.em?' luz':'')+(b.pf?' redondo':'')}).join(' / ')};
+        var lat=__boxes().filter(function(b){return b.nm==='1:Lateral esquerda'})[0];R.lateral=[lat.y0,lat.y1,lat.z0,lat.z1].join(',');R.fechado=bx();
+        var b=__boxes().filter(function(z){return z.dpm})[1],pr=org3api.proj([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);org3api.one(pr[0],pr[1]);for(var i=0;i<40&&dep3api.a(m)<1;i++)await W(100);
+        R.aberto=bx();R.sel=!!window.SEL3;R.projetoIgual=JSON.stringify(m.dep);
+        b=__boxes().filter(function(z){return z.dpm})[1];pr=org3api.proj([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);org3api.one(pr[0],pr[1]);for(i=0;i<40&&dep3api.a(m)>0;i++)await W(100);R.fechou=dep3api.a(m);
+        /* desligar: tudo volta */
+        S.m=m;S.tab=0;draw();panel();q('[data-dpa="on|0"]').click();re3();R.desligado=ST()+' | '+PP(/^(Base inferior|Lateral esquerda|Prateleira fixa do depurador|Depurador)/)+' | caixas '+__boxes().filter(function(z){return z.dpm}).length;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? Bool, false)
+        XCTAssertEqual(o["aereo"] as? Bool, true)
+        XCTAssertEqual(o["semMedida"] as? String, "Digite a largura, a altura e a profundidade do corpo do depurador. | no | ")
+        XCTAssertEqual(o["largo"] as? String, "Não cabe: o corpo tem 990 mm de largura e o vão entre as laterais tem 970 mm.")
+        XCTAssertEqual(o["fundo"] as? String, "Não cabe: o corpo tem 400 mm de profundidade e o aéreo tem 350 mm.")
+        XCTAssertEqual(o["p"] as? String, "ok | ok")
+        XCTAssertEqual(o["pecasP"] as? String, "Lateral esquerda 0,15 15×735 corte 735×350 / Prateleira fixa do depurador 15,560 970×15 corte 970×350 / Depurador (corpo) 200,575 600×175 não é peça")
+        XCTAssertEqual(o["portasIguais"] as? Bool, true)
+        XCTAssertEqual(o["corte"] as? String, "1 Prateleira fixa do depurador · BRANCO")
+        XCTAssertEqual(o["duto"] as? String, "Duto: digite o diâmetro do duto e o do furo da prateleira, ou deixe os dois em branco.")
+        XCTAssertEqual(o["furo"] as? String, "O furo da prateleira tem que ser maior ou igual ao duto.")
+        XCTAssertEqual(o["nota"] as? String, "fixa, entre as laterais · 175 mm acima da borda de baixo do aéreo (vão do depurador) · furo Ø 150 mm no centro pro duto de Ø 120 mm · o aéreo fica sem base")
+        XCTAssertEqual(o["vao"] as? String, "Prateleira fixa do depurador 15,600 970×15 corte 970×350 / Depurador (corpo) 200,615 600×175 não é peça")
+        XCTAssertEqual(o["tb"] as? String, "Tem tamponamento de baixo neste aéreo. Desmarque o tamponamento de baixo pra colocar o depurador.")
+        XCTAssertEqual(o["regua"] as? String, "Tem régua de engrosso da cava embaixo deste aéreo. Desmarque a régua pra colocar o depurador.")
+        XCTAssertEqual(o["led"] as? String, "Tem LED embaixo deste aéreo. Mude o LED de lugar pra colocar o depurador.")
+        XCTAssertEqual(o["r0"] as? String, "Digite o recorte da base: largura, profundidade e distância até a frente.")
+        XCTAssertEqual(o["r"] as? String, "ok")
+        XCTAssertEqual(o["pecasR"] as? String, "Base inferior 0,735 1000×15 corte 1000×350 / Lateral esquerda 0,15 15×720 corte 720×350 / Depurador (corpo) 200,750 600×40 não é peça / Depurador (motor) 385,483 230×252 não é peça")
+        XCTAssertEqual(o["notaBase"] as? String, "inteiriça, sob as laterais · recorte de 230 × 220 mm no meio da largura, a 60 mm da frente (motor do depurador)")
+        XCTAssertEqual(o["passa"] as? String, "Não cabe: o recorte passa do fundo da base.")
+        XCTAssertEqual(o["semBase"] as? String, "Esta montagem precisa da base do aéreo. Marque a base ou escolha a montagem com prateleira furada.")
+        XCTAssertEqual(o["reabriu"] as? String, "ok r 230")
+        XCTAssertEqual(o["p2"] as? String, "ok")
+        XCTAssertEqual(o["lateral"] as? String, "1750,2485,6,356")
+        XCTAssertEqual(o["fechado"] as? String, "1100,1700,1790,1925,76,356 / 1100,1700,1750,1790,76,356 / 1112,1688,1749,1750,88,316 / 1208,1592,1749,1750,322,344 / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["aberto"] as? String, "1100,1700,1790,1925,76,356 / 1100,1700,1750,1790,266,546 / 1112,1688,1749,1750,278,506 / 1208,1592,1749,1750,512,534 luz / 1325,1475,1940,1941,106,256 redondo / 1340,1460,1941,2485,121,241 redondo")
+        XCTAssertEqual(o["sel"] as? Bool, false)
+        XCTAssertEqual(o["projetoIgual"] as? String, "{\"on\":1,\"md\":\"p\",\"cw\":600,\"ch\":175,\"cd\":280,\"du\":120,\"fh\":150,\"rw\":230,\"rd\":220,\"rz\":60,\"mh\":252,\"vh\":40,\"pa\":470}")
+        XCTAssertEqual(o["fechou"] as? Int, 0)
+        XCTAssertEqual(o["desligado"] as? String, "desligado | Base inferior 0,735 1000×15 corte 1000×350 / Lateral esquerda 0,15 15×720 corte 720×350 | caixas 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// Fotos do orçamento também vêm da galeria do aparelho (render feito fora, foto da obra): entram junto com as do 3D,
+    /// reduzidas pra 1600 px no lado maior, deitadas ou em pé. Arquivo que não é imagem fica de fora. O projeto não muda.
+    func testFotosDaGaleriaNoOrcamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};PR.setupDone=1;var R={};
+        var FILES={},DONE=null;window.ArqueApp=Object.assign(window.ArqueApp||{},{putFile:function(n,b){FILES[n]=b},getFile:function(n){return FILES[n]||''},quotePhotos:function(j){DONE=j}});
+        var p=newProjFor({nome:'Dona Maria'});S.room='cozinha';S.mods=[];newTpl(CATS[0].it[0]);draw();saveNow();var antes=JSON.stringify(snapState());
+        arquePhotoMode([]);await W(900);R.botao=!!document.querySelector('#fotobar [data-fotogal]');
+        /* duas fotos "da galeria": uma deitada grande (3200×1800) e uma em pé (900×1600), mais um arquivo que não é imagem */
+        var mk=function(w,h,cor,tp){return new Promise(function(r){var c=document.createElement('canvas');c.width=w;c.height=h;var x=c.getContext('2d');x.fillStyle=cor;x.fillRect(0,0,w,h);x.fillStyle='#123456';x.fillRect(w*.2,h*.2,w*.3,h*.3);c.toBlob(function(b){r(new File([b],'foto.'+(tp==='image/png'?'png':'jpg'),{type:tp}))},tp,.9)})};
+        var f1=await mk(3200,1800,'#d8c7a0','image/jpeg'),f2=await mk(900,1600,'#a0c7d8','image/png'),f3=new File(['texto'],'nota.txt',{type:'text/plain'}),f4=new File(['não é imagem de verdade'],'quebrada.jpg',{type:'image/jpeg'});
+        R.n=await arquePhotoGallery([f1,f2,f3,f4]);await W(100);
+        var ns=arquePhotoState().fotos;R.nomes=ns.length+' · ok='+ns.every(function(n){return /^orcfoto_[A-Za-z0-9_.-]{1,80}\.jpg$/.test(n)})+' · diferentes='+(ns[0]!==ns[1])+' · miniaturas '+document.querySelectorAll('#fotobar img').length;
+        var dim=async function(n){var im=new Image();await new Promise(function(r){im.onload=r;im.onerror=r;im.src='data:image/jpeg;base64,'+FILES[n]});return im.naturalWidth+'×'+im.naturalHeight};
+        R.tam=(await dim(ns[0]))+' e '+(await dim(ns[1]));
+        /* junto com foto do 3D, e o OK devolve tudo pro orçamento */
+        document.querySelector('#fotobar [data-fotoshot]').click();await W(300);document.querySelector('#fotobar [data-fotook]').click();await W(100);var o=JSON.parse(DONE);
+        R.ok=o.photos.length+' fotos · pid certo='+(o.pid===p.id)+' · galeria primeiro='+(o.photos[0]===ns[0]&&o.photos[1]===ns[1]);
+        R.projetoIgual=JSON.stringify(snapState())===antes;
+        /* o botão abre o seletor de arquivos de imagem */
+        arquePhotoMode(o.photos);await W(200);var clicou=0,ic=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.id==='fotogalf'){clicou++;return}return ic.apply(this,arguments)};document.querySelector('#fotobar [data-fotogal]').click();HTMLInputElement.prototype.click=ic;
+        var inp=document.getElementById('fotogalf');R.seletor=clicou+' · '+inp.type+' · '+inp.accept+' · várias='+inp.multiple;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["n"] as? Int, 2)
+        XCTAssertEqual(o["nomes"] as? String, "2 · ok=true · diferentes=true · miniaturas 2")
+        XCTAssertEqual(o["tam"] as? String, "1600×900 e 900×1600")
+        XCTAssertEqual(o["ok"] as? String, "3 fotos · pid certo=true · galeria primeiro=true")
+        XCTAssertEqual(o["projetoIgual"] as? Bool, true)
+        XCTAssertEqual(o["seletor"] as? String, "1 · file · image/* · várias=true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

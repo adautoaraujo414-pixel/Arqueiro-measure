@@ -6670,4 +6670,130 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["n"] as? Int, 96)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testSalvarSozinhoSoGravaQuandoMudaERespondeRapido() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* salvar sozinho: só grava quando o projeto mudou · e quando grava, é uma gravação só da lista (bateria de tempo de resposta) */
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        var N=40,st=snapState(),a=pLoadAll(),old=Date.now()-3*24*3600000;
+        for(var i=0;i<N;i++)a.push({id:'pf'+i,client:{nome:'Cliente '+i,end:'',cidade:'',tel:''},titulo:'',created:old,updated:old+i,original:JSON.parse(JSON.stringify(st)),current:JSON.parse(JSON.stringify(st))});
+        pSaveAll(a);CUR='pf3';loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);draw();await W(900);
+        var C={put:0,putKb:0,sf:0},pf0=ArqueApp.putFile,js0=JSON.stringify;ArqueApp.putFile=function(n,b){if(n==='projects.json'){C.put++;C.putKb+=String(b).length/1024}return pf0.apply(this,arguments)};
+        var cnt=function(){var c={put:C.put,sf:C.sf};return c},arq=function(){return JSON.parse(decodeURIComponent(escape(atob(__files['projects.json']))))};
+        /* 0. parado: nada lê a lista de projetos (antes um contador lia a lista inteira a cada segundo) */
+        var pl0=pLoadAll,nl=0;pLoadAll=function(){nl++;return pl0.apply(this,arguments)};await W(2300);R.parado='leituras da lista '+nl;pLoadAll=pl0;
+        /* 1. tocar em módulos, trocar de aba, redesenhar: nada mudou no projeto, não grava a lista */
+        var c0=cnt();for(var k=0;k<6;k++){S.m=S.mods[k%S.mods.length];S.tab=k%3;draw();panel();await W(120)}await W(900);R.soOlhar='gravações '+(cnt().put-c0.put);
+        /* 2. mexeu de verdade: grava uma vez, e o arquivo fica igual ao que está na tela */
+        JSON.stringify=function(){var r=js0.apply(JSON,arguments);if(r&&r.length>200000)C.sf++;return r};
+        var c1=cnt();S.mods[1].x+=7;draw();await W(900);JSON.stringify=js0;R.mexeu='gravações '+(cnt().put-c1.put)+' · serializações da lista inteira '+(C.sf-c1.sf);
+        var cur=arq().filter(function(p){return p.id==='pf3'})[0],agora=snapState();cur.current.mi=agora.mi;cur.current.m=agora.m;cur.current.sti=agora.sti;R.arquivoIgualATela=JSON.stringify(cur.current)===JSON.stringify(agora);
+        R.outrosIntactos=arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).length===N-1&&arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).every(function(p){return JSON.stringify(p.current)===JSON.stringify(st)&&JSON.stringify(p.original)===JSON.stringify(st)});
+        /* 3. várias mexidas seguidas (arrastar): uma gravação só, no fim */
+        var c2=cnt();for(var q=0;q<10;q++){S.mods[1].x+=3;draw();await W(40)}await W(900);R.arrastou='gravações '+(cnt().put-c2.put)+' · x gravado '+arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x+' = tela '+S.mods[1].x;
+        /* 4. desfazer também grava (o projeto mudou) */
+        var c3=cnt(),x0=S.mods[1].x;snap();S.mods[1].x+=50;draw();await W(900);document.getElementById('und').click();await W(900);R.desfazer='gravações '+(cnt().put-c3.put)+' · voltou '+(S.mods[1].x===x0)+' · gravado '+(arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x===x0);
+        /* 5. outra gravação da lista no meio (voltar ao original de outro projeto) não deixa o salvar sozinho pular a próxima mexida */
+        var b=pLoadAll(),o5=b.filter(function(p){return p.id==='pf7'})[0];o5.titulo='mudou';pSaveAll(b);var c4=cnt();draw();await W(900);R.depoisDeOutraGravacao='gravações '+(cnt().put-c4.put)+' · título guardado '+(arq().filter(function(p){return p.id==='pf7'})[0].titulo==='mudou');
+        /* 6. reabrir: tudo de volta */
+        var fim=snapState();loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);var re=snapState();re.mi=fim.mi;re.m=fim.m;re.sti=fim.sti;R.reabriuIgual=JSON.stringify(re)===JSON.stringify(fim);
+        /* tempo de resposta do salvar com 40 projetos guardados */
+        var T=[];for(var z=0;z<5;z++){S.mods[2].x+=1;var t0=performance.now();saveNow();T.push(performance.now()-t0)}T.sort(function(x,y){return x-y});R.salvarMs=Math.round(T[2]);R.rapido=T[2]<1500;
+        ArqueApp.putFile=pf0;R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["parado"] as? String, "leituras da lista 0")
+        XCTAssertEqual(o["soOlhar"] as? String, "gravações 0")
+        XCTAssertEqual(o["mexeu"] as? String, "gravações 1 · serializações da lista inteira 1")
+        XCTAssertEqual(o["arquivoIgualATela"] as? Bool, true)
+        XCTAssertEqual(o["outrosIntactos"] as? Bool, true)
+        XCTAssertEqual(o["arrastou"] as? String, "gravações 1 · x gravado 942 = tela 942")
+        XCTAssertEqual(o["desfazer"] as? String, "gravações 2 · voltou true · gravado true")
+        XCTAssertEqual(o["depoisDeOutraGravacao"] as? String, "gravações 1 · título guardado true")
+        XCTAssertEqual(o["reabriuIgual"] as? Bool, true)
+        XCTAssertEqual(o["rapido"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testAjusteCorEPecaApagadaAcompanhamAPecaNoEditorPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* o ajuste feito no 3D, a cor e a peça tirada do corte acompanham a PEÇA: mexer numa prateleira de cima não muda as de baixo */
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='alto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário alto livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;
+        m.rt={s:'h',c:[{z:1646.3,eng:{n:1,dir:'down',w:80,t:15}},{s:'h',c:[{z:516.2,eng:{n:1,dir:'down',w:80,t:15}},{}]}]};draw();soloOn(m);await W(300);
+        var RF='Engrosso da prateleira · régua da frente';
+        /* onde está cada peça da frente no 3D, de cima pra baixo: o número é quanto a frente dela está recuada da frente do móvel (0 rente · 30 recuo da prateleira · 130 = a régua ajustada 100 mm pra trás) */
+        var cx=function(){var M=S.mods[0];re3();return __boxes().filter(function(b){return /^0:(Engrosso da prateleira · régua da frente|Prateleira)/.test(b.nm)&&(b.y1-b.y0)>5&&(b.z1-b.z0)>5}).sort(function(a,b){return b.y0-a.y0}).map(function(b){var nome=b.nm.slice(2).replace(RF,'régua'),rec=Math.round((M.d+6)-b.z1);return nome+' '+rec}).join(' / ')};
+        var sel=function(path,i){RG.sel=null;RG.dsel={mi:0,path:path,i:i};RG.tab='div';draw();panel()},clk=function(a){document.querySelector('#bd [data-rga="'+a+'"]').click()};
+        open3D();await W(300);R.antes=cx();
+        /* 1. ajuste no 3D na régua da prateleira de BAIXO (100 mm pra trás) · depois 2 camadas na de CIMA: a de baixo continua ajustada e a camada nova da de cima entra no lugar certo */
+        m.po={};m.po[RF+'#2']={v2:1,ek:-100,ef:-100};draw();R.ajustouADeBaixo=cx();
+        sel('r',0);clk('engn|1');await W(80);R.duasCamadasEmCima=cx();
+        /* 2. "sem recuo (fixa)" na de cima troca o nome dela: o ajuste da de baixo não sai do lugar */
+        sel('r',0);[].filter.call(document.querySelectorAll('#bd [data-rga]'),function(b){return /Sem recuo/.test(b.textContent)})[0].click();await W(80);R.semRecuoEmCima=cx();
+        /* 3. tira a camada de cima e põe de novo: nada pula de peça */
+        sel('r',0);clk('engn|-1');await W(80);R.tirouCamada=cx();sel('r',0);clk('engn|1');await W(80);R.posDeNovo=cx();
+        /* 4. divisão nova lá em cima (muda o número de todas as de baixo): o ajuste continua na mesma régua */
+        RG.dsel=null;RG.sel={mi:0,path:'r.0'};RG.tab='div';draw();panel();clk('sp|h|2');await W(120);R.divisaoNovaEmCima=cx();
+        /* 5. tira o engrosso da de baixo (a régua ajustada some) e a de cima não herda o ajuste · volta o engrosso: o ajuste volta com a régua */
+        var baixo=function(){var L=rgLay(S.mods[0]),d=L.divs.filter(function(q){return q.H}).sort(function(a,b){return b.a-a.a})[0];return d};
+        var db=baixo();sel(db.path,db.i);clk('eng|0');await W(80);R.semEngrossoEmbaixo=cx();db=baixo();sel(db.path,db.i);clk('eng|15');await W(80);R.engrossoDeVolta=cx();
+        /* 6. cor por peça e peça apagada na lixeira também acompanham a peça */
+        var M=S.mods[0],RFs=partsOf(M).filter(function(p){return p.name===RF}).sort(function(a,b){return a.y-b.y}),ult=RFs[RFs.length-1],seg=RFs[1];M.pc=M.pc||{};M.pc[ult.pk]='#ff0000';M.xp=[{pk:seg.pk,vi:seg.vi===undefined?-1:seg.vi,n:seg.name}];draw();
+        var yCor=ult.y,ySeg=seg.y,nAntes=partsOf(M).filter(function(p){return p.name===RF}).length;
+        await W(900);RG.dsel=null;RG.sel={mi:0,path:'r.0.0'};draw();panel();clk('sp|h|2');await W(120);var dt=rgLay(S.mods[0]).divs.filter(function(q){return q.H}).sort(function(a,b){return a.a-b.a})[0];sel(dt.path,dt.i);clk('eng|15');await W(120);R.maisUmaReguaLaEmCima=cx();
+        var M2=S.mods[0],P2=partsOf(M2).filter(function(p){return p.name===RF}),kc=Object.keys(M2.pc||{}),dono=P2.filter(function(p){return p.pk===kc[0]})[0];
+        R.corAcompanha=kc.length===1&&!!dono&&Math.abs(dono.y-yCor)<.6&&kc[0]!==ult.pk;
+        R.apagadaAcompanha=M2.xp.length===1&&M2.xp[0].pk!==seg.pk&&P2.length===nAntes+1&&!P2.some(function(p){return Math.abs(p.y-ySeg)<.6});
+        /* 7. tudo que está no corte aparece no 3D, uma vez só */
+        var PP=partsOf(S.mods[0]).filter(function(p){return /^(Engrosso da prateleira|Prateleira)/.test(p.name)});re3();var BB=__boxes().filter(function(b){return /^0:(Engrosso da prateleira|Prateleira)/.test(b.nm)&&(b.y1-b.y0)>5&&(b.z1-b.z0)>5});R.corteE3D=PP.length+' peças · '+BB.length+' no 3D · '+(PP.every(function(p){return BB.filter(function(b){return String(b.pk)===p.pk}).length===1})?'todas aparecem':'FALTA');
+        /* 8. desfazer volta, com o ajuste e a cor na régua certa */
+        await W(900);document.getElementById('und').click();await W(400);R.desfez=cx()+' | cor em '+Object.keys(S.mods[0].pc||{}).map(function(k){return k.replace(RF,'régua')}).join(',');
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "Prateleira 30 / régua 30 / Prateleira 30 / régua 30")
+        XCTAssertEqual(o["ajustouADeBaixo"] as? String, "Prateleira 30 / régua 30 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["duasCamadasEmCima"] as? String, "Prateleira 30 / régua 30 / régua 30 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["semRecuoEmCima"] as? String, "Prateleira fixa 0 / régua 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["tirouCamada"] as? String, "Prateleira fixa 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["posDeNovo"] as? String, "Prateleira fixa 0 / régua 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["divisaoNovaEmCima"] as? String, "Prateleira 30 / Prateleira fixa 0 / régua 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["semEngrossoEmbaixo"] as? String, "Prateleira 30 / Prateleira fixa 0 / régua 0 / régua 0 / Prateleira 30")
+        XCTAssertEqual(o["engrossoDeVolta"] as? String, "Prateleira 30 / Prateleira fixa 0 / régua 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["maisUmaReguaLaEmCima"] as? String, "Prateleira 30 / régua 30 / Prateleira 30 / Prateleira fixa 0 / régua 0 / Prateleira 30 / régua 130")
+        XCTAssertEqual(o["corAcompanha"] as? Bool, true)
+        XCTAssertEqual(o["apagadaAcompanha"] as? Bool, true)
+        XCTAssertEqual(o["corteE3D"] as? String, "11 peças · 11 no 3D · todas aparecem")
+        XCTAssertEqual(o["desfez"] as? String, "Prateleira 30 / Prateleira fixa 0 / régua 0 / Prateleira 30 / régua 130 | cor em régua#3")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTVJuntoComEletrodomesticosEPedrasNoCabecalhoDo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        /* sala: a TV fica na aba Eletrodomésticos, junto com os outros (uma aba só, sem aba separada de TV) */
+        demoSala();await W(500);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        S.room='sala';S.env='livre';S.tab=7;draw();panel();var tipos=function(){var o=[];[].forEach.call(document.querySelectorAll('#bd [data-apadd]'),function(b){var t=b.dataset.apadd.split('|')[0];if(o.indexOf(t)<0)o.push(t)});return o};var tabs=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent.trim()});
+        R.salaAbas=(tabs.indexOf('Eletrodomésticos')>=0)+' · aba só de TV '+tabs.some(function(t){return /TV/.test(t)});
+        var grupos=tipos();R.salaGrupos=grupos.slice(0,4).join(' | ')+' … TV em primeiro '+(grupos[0]==='tv')+' · tem geladeira '+(grupos.indexOf('geladeira')>=0);
+        var n0=S.fr.length,btv=document.querySelector('#bd [data-apadd^="tv|"]');btv.click();await W(100);R.salaPoeTV=(S.fr.length-n0)+' '+S.fr[S.fr.length-1].t;
+        /* cozinha: mesma aba, com a TV junto */
+        demoScene();await W(500);try{var v=document.getElementById('v3');if(v&&!v.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        S.tab=7;draw();panel();var g2=tipos();R.cozinha='tem TV '+(g2.indexOf('tv')>=0)+' · mesmos da sala '+(g2.slice().sort().join()===grupos.slice().sort().join());
+        /* 3D: o botão 🪨 Pedras está no cabeçalho e abre o quadro das pedras */
+        open3D();await W(400);var bp=document.getElementById('v3pd'),r=bp.getBoundingClientRect();R.pedras3D=(getComputedStyle(bp).display!=='none'&&r.width>20)+' '+bp.textContent.trim();bp.click();await W(200);var q=document.getElementById('pd3');R.quadro=!!q&&!q.hidden&&q.querySelectorAll('[data-pda]').length>=6;
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["salaAbas"] as? String, "true · aba só de TV false")
+        XCTAssertEqual(o["salaGrupos"] as? String, "tv | geladeira | microondas | forno … TV em primeiro true · tem geladeira true")
+        XCTAssertEqual(o["salaPoeTV"] as? String, "1 tv")
+        XCTAssertEqual(o["cozinha"] as? String, "tem TV true · mesmos da sala true")
+        XCTAssertEqual(o["pedras3D"] as? String, "true 🪨 Pedras")
+        XCTAssertEqual(o["quadro"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

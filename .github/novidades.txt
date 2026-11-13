@@ -6,4 +6,8 @@
 • Aéreo e módulo superior, inclusive de home: na aba Estrutura, junto da moldura, entrou o Frontal embaixo (a régua do cava), com liga e desliga e o tamanho de cada um.
 • Editor por vãos: toque em qualquer medida do desenho (vão de cima, de baixo, dos lados, distância até a divisão, largura e altura do vão) e digite a medida que quer.
 • Editor por vãos: a lixeira apaga a divisão tocada em qualquer ordem, sem precisar tirar as outras antes.
-• Link do plano de corte e do projeto: preparado pra abrir direto no Arquemestre quando o endereço do link estiver verificado.
+• Editor por vãos: o ajuste feito no 3D, a cor da peça e a peça apagada agora acompanham a peça certa. Antes, colocar mais uma camada de régua, uma divisão ou marcar "sem recuo" numa prateleira de cima fazia o ajuste pular pra outra peça, e a régua aparecia fora do lugar no 3D.
+• Mais leve com muitos projetos guardados: o app não fica mais lendo a lista de projetos o tempo todo e só grava quando o projeto muda. Acabam as travadinhas depois de cada mexida.
+• TV agora fica junto com os Eletrodomésticos, numa aba só, em qualquer ambiente. Na sala a TV aparece primeiro na lista.
+• O botão 🪨 Pedras voltou pro cabeçalho do 3D.
+• Link do plano de corte enviado pelo WhatsApp: ao tocar no celular, a página do link já chama o Arquemestre sozinha. Sem o app instalado, leva pra loja.

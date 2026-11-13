@@ -10889,7 +10889,7 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  if(typeof draw!=='function'||!window.vaoFino)return;
  function lista(){try{return (S.mods||[]).filter(function(m){return !m.lock&&vaoFino(m)})}catch(_){return []}}
  function tirar(m){var g=0;while(g++<12){var f=vaoFino(m);if(!f)break;var ord=m.div.map(function(r,i){return [r,i]}).sort(function(a,b){return a[0]-b[0]}),k=f.i===0?0:(f.i>=ord.length?ord.length-1:f.i),di=ord[k][1];m.div.splice(di,1);if(m.dr&&m.dr.length>di)m.dr.splice(di,1);if(m.v&&m.v.length>f.i&&m.v.length>1)m.v.splice(f.i,1)}}
- function bar(){var cv=document.getElementById('svg');if(!cv||!cv.parentNode)return;var b=document.getElementById('pfixbar'),L=window.RO?[]:lista();
+ function bar(){var cv=document.querySelector('.main .cv')||document.getElementById('svg');if(!cv||!cv.parentNode)return;/* fica fora do quadro do desenho (como a faixa da parede), pra não ficar embaixo dos botões */var b=document.getElementById('pfixbar'),L=window.RO?[]:lista();
   if(!L.length){if(b)b.hidden=true,b.style.display='none';return}
   if(!b){b=document.createElement('div');b.id='pfixbar';cv.parentNode.insertBefore(b,cv)}
   b.hidden=false;b.style.cssText='display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff7ed;border:2px solid #d97706;color:#1b1f27;border-radius:10px;padding:5px 8px;font-size:13px;margin:0 0 6px';

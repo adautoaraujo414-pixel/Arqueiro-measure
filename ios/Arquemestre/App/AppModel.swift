@@ -738,6 +738,41 @@ final class AppModel: ObservableObject {
     var pendingQuoteId: String?
     var quotesBackProject: String?
 
+    // ---- fotos do projeto no orçamento: abre o projeto no 3D em modo foto e volta com as fotos ----
+    var pendingPhotoMode = false
+    var photoQuoteId: String?
+    /// Arquivo de uma foto do orçamento (fica junto dos arquivos do editor de móveis).
+    func quotePhotoFile(_ name: String) -> URL { AppPaths.moveis.appendingPathComponent(name) }
+    /// Nome de foto do orçamento que o editor grava: orcfoto_<letras, números, _ . ->.jpg
+    nonisolated static func quotePhotoNameOk(_ n: String) -> Bool {
+        guard n.hasPrefix("orcfoto_"), n.hasSuffix(".jpg") else { return false }
+        let mid = n.dropFirst(8).dropLast(4)
+        return mid.count >= 1 && mid.count <= 80 && mid.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "_" || $0 == "." || $0 == "-") }
+    }
+    func addQuotePhotos(_ q: Quote, _ pid: String) {
+        photoQuoteId = q.id
+        if q.projId != pid { var n = q; n.projId = pid; saveQuote(n) }
+        pendingNewProject = false
+        pendingProject = pid
+        pendingPhotoMode = true
+        screen = .moveis
+    }
+    /// O editor devolve a lista de fotos (as que ficaram depois de tirar e excluir no modo foto).
+    func quotePhotosFromMoveis(_ json: String) {
+        if let d = json.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] {
+            let names = ((o["photos"] as? [Any]) ?? []).compactMap { $0 as? String }
+                .filter { AppModel.quotePhotoNameOk($0) && FileManager.default.fileExists(atPath: quotePhotoFile($0).path) }
+            if var q = quotes.first(where: { $0.id == photoQuoteId }) { q.photos = names; saveQuote(q); pendingQuoteId = q.id }
+        }
+        photoQuoteId = nil
+        pendingPhotoMode = false
+        screen = .quotes
+    }
+    /// Tira uma foto do orçamento (o X em cima dela). O arquivo fica no aparelho; só sai da lista do orçamento.
+    func removeQuotePhoto(_ q: Quote, _ name: String) { var n = q; n.photos.removeAll { $0 == name }; saveQuote(n) }
+    /// Lista das fotos em JSON, pro editor abrir o modo foto já mostrando as que existem.
+    func quotePhotosJson() -> String { JsonCodec.string(quotes.first(where: { $0.id == photoQuoteId })?.photos ?? []) }
+
     /// "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações.
     func quoteFromMoveis(_ json: String) {
         guard let d = json.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else {
@@ -758,6 +793,7 @@ final class AppModel: ObservableObject {
         q.noteId = pid.flatMap { notesOfProject($0).first }
         // desconto (%) dado no valor do projeto: o PDF mostra o desconto e o valor com desconto
         q.discountPct = min(max(num(o["discountPct"]), 0), 100)
+        q.projId = pid
         saveQuote(q)
         pendingQuoteId = q.id
         quotesBackProject = pid
@@ -789,7 +825,8 @@ final class AppModel: ObservableObject {
         let note = q.includeDrawing ? q.noteId.flatMap { store.loadNote($0) } : nil
         let safe = (q.clientName.isEmpty ? "cliente" : q.clientName).components(separatedBy: CharacterSet.alphanumerics.inverted).filter { !$0.isEmpty }.joined(separator: "_")
         let url = Export.tempURL("Orcamento_\(String(safe.prefix(30))).pdf")
-        do { try QuotePdf.write(company: company, quote: q, note: note, logo: logo, to: url); return url }
+        let fotos = q.photos.compactMap { UIImage(contentsOfFile: quotePhotoFile($0).path) }
+        do { try QuotePdf.write(company: company, quote: q, note: note, logo: logo, photos: fotos, to: url); return url }
         catch { toast = tr("Falhou: {0}", error.localizedDescription); return nil }
     }
 

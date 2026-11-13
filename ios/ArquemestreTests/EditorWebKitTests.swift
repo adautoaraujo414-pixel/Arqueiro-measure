@@ -6796,4 +6796,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["quadro"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testObservacoesDoOrcamentoNoFormatoQueOPdfSepara() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
+        /* O PDF do orçamento separa as observações pelas linhas que o editor escreve (Material, Móveis do projeto com a lista por parede, Cores do projeto).
+           Este teste trava esse formato: se o editor mudar o jeito de escrever, o PDF deixaria de mostrar os detalhes da proposta. */
+        demoScene();await W(500);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+        S.mods[0].corFN='Canela';
+        var q=quoteData(),L=q.notes.split('\n');
+        R.material=/^Material: MDF \d+ mm · /.test(L[0])+' · termina com ponto '+/\.$/.test(L[0])+' · partes '+L[0].replace(/^Material: /,'').replace(/\.$/,'').split(' · ').length;
+        var hi=L.findIndex(function(l){return /^Móveis do projeto \(\d+\) · largura × altura × profundidade:$/.test(l)});R.cabecalhoDaLista=hi;
+        var rest=L.slice(hi+1),cores=rest.filter(function(l){return /^Cores do projeto: /.test(l)}),walls=rest.filter(function(l){return /^(Parede do fundo|Parede da esquerda|Parede da direita):$/.test(l)}),bul=rest.filter(function(l){return /^• \d+ × .+ · \d+( \+ \d+)? × \d+ × \d+ mm/.test(l)});
+        R.linhas='paredes '+walls.length+' · móveis '+bul.length+' · cores '+cores.length+' · outras '+(rest.length-walls.length-bul.length-cores.length);
+        R.somaDosMoveis=bul.reduce(function(a,l){return a+parseInt(l.replace(/^• /,''),10)},0)===S.mods.length;
+        R.totalNoCabecalho=+(L[hi].match(/\((\d+)\)/)||[])[1]===S.mods.length;
+        R.cores=cores[0]||'';R.coresPorUltimo=L[L.length-1]===cores[0];
+        R.itens=q.items.length+' · todos com a contagem no fim '+q.items.every(function(i){return / · \d+ (módulo|módulos)$/.test(i.desc)});
+        R.errs=(window.__errs||[]).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["material"] as? String, "true · termina com ponto true · partes 7")
+        XCTAssertEqual(o["cabecalhoDaLista"] as? Int, 1)
+        XCTAssertEqual(o["linhas"] as? String, "paredes 3 · móveis 6 · cores 1 · outras 0")
+        XCTAssertEqual(o["somaDosMoveis"] as? Bool, true)
+        XCTAssertEqual(o["totalNoCabecalho"] as? Bool, true)
+        XCTAssertEqual(o["cores"] as? String, "Cores do projeto: Canela")
+        XCTAssertEqual(o["coresPorUltimo"] as? Bool, true)
+        XCTAssertEqual(o["itens"] as? String, "3 · todos com a contagem no fim true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -11,3 +11,4 @@
 • TV agora fica junto com os Eletrodomésticos, numa aba só, em qualquer ambiente. Na sala a TV aparece primeiro na lista.
 • O botão 🪨 Pedras voltou pro cabeçalho do 3D.
 • Link do plano de corte enviado pelo WhatsApp: ao tocar no celular, a página do link já chama o Arquemestre sozinha. Sem o app instalado, leva pra loja.
+• Orçamento em PDF com layout novo: cabeçalho com os dados da empresa (nome, CNPJ, telefone, endereço e a logo) e o selo ORÇAMENTO com a data; cartão do cliente e da cidade; tabela dos itens; valor original, desconto e o valor final em destaque; aditivos; detalhes da proposta (validade, material, móveis e cores do projeto); fotos do projeto inteiras, sem cortar o móvel; especificações técnicas; observações; rodapé com o número da página. Só sai o que está no orçamento: o que você digitou em Observações sai em Observações.

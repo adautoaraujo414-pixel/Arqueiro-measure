@@ -38,7 +38,7 @@ struct QuotesView: View {
                                     Text(dateFmt.string(from: Date(timeIntervalSince1970: Double(q.dateMs) / 1000)) + (q.city.isEmpty ? "" : " · \(q.city)")).font(.caption).foregroundColor(Ui.dim)
                                 }
                                 Spacer()
-                                Text(QuoteMath.brl(QuoteMath.finalValue(q))).foregroundColor(Ui.text)
+                                Text(QuoteMath.brl(QuoteMath.grandTotal(q))).foregroundColor(Ui.text)
                                 Button { confirmDel = q } label: { Image(systemName: "trash").foregroundColor(Ui.dim) }.buttonStyle(.borderless)
                             }
                             .padding(14).background(RoundedRectangle(cornerRadius: 12).fill(Ui.panel))
@@ -126,8 +126,46 @@ private struct QuoteEditor: View {
     @EnvironmentObject var app: AppModel
     var q: Quote
     @State private var shareURL: URL?
+    @State private var projMenu = false
+    @State private var projList: [MoveisProjects.P] = []
 
     private func upd(_ f: (inout Quote) -> Void) { var n = q; f(&n); app.saveQuote(n) }
+
+    /// Fotos do orçamento lado a lado, cada uma com o ✕ pra tirar da lista.
+    @ViewBuilder private var photoStrip: some View {
+        if !q.photos.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(q.photos, id: \.self) { name in photoCell(name) }
+                }
+            }
+        }
+    }
+
+    private func photoCell(_ name: String) -> some View {
+        ZStack(alignment: .topTrailing) {
+            QuotePhotoThumb(url: app.quotePhotoFile(name))
+            Button { app.removeQuotePhoto(q, name) } label: {
+                Text("✕").font(.subheadline).foregroundColor(.white)
+                    .padding(.horizontal, 9).padding(.vertical, 3)
+                    .background(Capsule().fill(Color.black.opacity(0.8)))
+            }
+            .buttonStyle(.borderless).padding(4)
+        }
+        .frame(width: 150, height: 100).clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// Um aditivo: descrição, valor e a data em que entrou.
+    private func addendumRow(_ idx: Int, _ a: QuoteAddendum) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                TextField(tr("Descrição do aditivo {0}", idx + 1), text: Binding(get: { a.desc }, set: { v in upd { qq in if let k = qq.addenda.firstIndex(where: { $0.id == a.id }) { qq.addenda[k].desc = v } } }), axis: .vertical)
+                Button { upd { qq in qq.addenda.removeAll { $0.id == a.id } } } label: { Image(systemName: "trash") }.buttonStyle(.borderless)
+            }
+            NumPadField(value: a.value == 0 ? "" : QuoteMath.numStr(a.value), label: tr("Valor do aditivo ({0})", I18n.shared.currencySymbol())) { v in upd { qq in if let k = qq.addenda.firstIndex(where: { $0.id == a.id }) { qq.addenda[k].value = v } } }
+            Text(tr("Data do aditivo: ") + dateFmt.string(from: Date(timeIntervalSince1970: Double(a.dateMs) / 1000))).font(.footnote).foregroundColor(.secondary)
+        }
+    }
 
     var body: some View {
         let notes = app.index.notes.filter { !$0.trash }
@@ -166,6 +204,43 @@ private struct QuoteEditor: View {
             }
             Section {
                 TextField(tr("Observações (opcional)"), text: Binding(get: { q.notes }, set: { v in upd { $0.notes = v } }), axis: .vertical)
+            }
+            // fotos do projeto: tiradas no 3D do projeto (ou da galeria), saem no PDF
+            Section {
+                photoStrip
+                Button(tr("📷 Adicionar fotos do projeto")) {
+                    // orçamento que já nasceu de um projeto abre direto nele; senão, a pessoa escolhe o projeto
+                    let ps = app.moveisProjects()
+                    if let pid = q.projId, ps.contains(where: { $0.id == pid }) { app.addQuotePhotos(q, pid) } else { projList = ps; projMenu = true }
+                }
+                .confirmationDialog(tr("📷 Adicionar fotos do projeto"), isPresented: $projMenu, titleVisibility: .visible) {
+                    ForEach(projList) { p in
+                        Button((p.name.isEmpty ? tr("(sem cliente)") : p.name) + " · " + p.label) { app.addQuotePhotos(q, p.id) }
+                    }
+                    Button(tr("Cancelar"), role: .cancel) {}
+                } message: {
+                    if projList.isEmpty { Text(tr("Nenhum projeto de móveis ainda")) }
+                }
+            } header: {
+                Text(tr("Fotos do projeto"))
+            } footer: {
+                Text(tr("Abre o projeto no 3D com o botão da câmera. Tire as fotos, toque em OK e elas voltam pra cá. O ✕ tira a foto do orçamento."))
+            }
+            // aditivos: itens que entram depois do orçamento fechado, sem mexer no original
+            Section {
+                ForEach(Array(q.addenda.enumerated()), id: \.element.id) { idx, a in addendumRow(idx, a) }
+                Button(tr("+ Adicionar aditivo")) { upd { $0.addenda.append(QuoteAddendum()) } }
+                if !q.addenda.isEmpty {
+                    Text(tr("Orçamento: ") + QuoteMath.brl(QuoteMath.finalValue(q))).foregroundColor(.secondary)
+                    Text(tr("Aditivos: ") + QuoteMath.brl(QuoteMath.addendaTotal(q))).foregroundColor(.secondary)
+                    Text(tr("Total com aditivos: ") + QuoteMath.brl(QuoteMath.grandTotal(q))).font(.headline)
+                }
+            } header: {
+                Text(tr("Aditivos"))
+            } footer: {
+                Text(tr("Item a mais combinado depois do orçamento fechado. O orçamento original não muda; o aditivo sai separado no PDF, com a data."))
+            }
+            Section {
                 Toggle(tr("Incluir o desenho (nota) no PDF"), isOn: Binding(get: { q.includeDrawing }, set: { v in upd { $0.includeDrawing = v } }))
                 if q.includeDrawing {
                     Picker(tr("Nota do desenho"), selection: Binding(get: { q.noteId ?? "" }, set: { v in upd { $0.noteId = v.isEmpty ? nil : v } })) {
@@ -183,5 +258,19 @@ private struct QuoteEditor: View {
             }
         }
         .sheet(item: $shareURL) { ShareSheet(items: [$0]) }
+    }
+}
+
+/// Miniatura de uma foto do orçamento (lida do arquivo uma vez só).
+private struct QuotePhotoThumb: View {
+    let url: URL
+    @State private var img: UIImage?
+    var body: some View {
+        ZStack {
+            Ui.panel
+            if let i = img { Image(uiImage: i).resizable().scaledToFill() }
+        }
+        .frame(width: 150, height: 100).clipped()
+        .onAppear { if img == nil { img = UIImage(contentsOfFile: url.path) } }
     }
 }

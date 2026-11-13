@@ -1,4 +1,5 @@
 import XCTest
+import PDFKit
 @testable import Arquemestre
 
 /// Mesmos casos dos testes do Android: o iPhone tem de medir e salvar igual.
@@ -419,4 +420,126 @@ final class StoneFitTests: XCTestCase {
         XCTAssertEqual(c.gapY ?? -1, 1, accuracy: 0.01)
     }
     func testSemMedidaNaoMexe() { XCTAssertNil(StoneFit.fit(pts, closed: true, mm: [nil, nil, nil, nil, nil, nil])) }
+}
+
+/// PDF do orçamento no layout novo: só o que existe no orçamento entra (nada inventado), igual ao Android e ao Windows.
+final class QuotePdfTests: XCTestCase {
+    private let notas = "Material: MDF 15 mm · caixa Branco · por fora Canela · fundo 6 mm · puxador cava usinada · dobradiças com amortecimento · corrediças telescópicas.\n" +
+        "Móveis do projeto (4) · largura × altura × profundidade:\nParede do fundo:\n• 1 × Aéreo · 1640 × 320 × 275 mm · 3 portas\n• 2 × Balcão · 800 × 870 × 550 mm · 2 portas\n" +
+        "Parede da esquerda:\n• 1 × Torre · 600 × 2200 × 580 mm · 2 portas, forno\nCores do projeto: Canela · Branco\n" +
+        "Entrega em 30 dias depois da medição final.\n• Instalação incluída"
+    private let empresa = Company(name: "Arque Planejados", cnpj: "67.605.644/0001-84", address: "Avenida Rio de Janeiro, 2981", city: "Frutal/MG", phone: "34 99644-5518")
+
+    func testLinhasDoEditorViramDetalhesEOQueAPessoaDigitouFicaEmObservacoes() {
+        let p = QuotePdf.parseNotes(notas)
+        XCTAssertEqual(p.rows.map { $0.label }, ["Material", "Móveis do projeto", "Cores do projeto"])
+        XCTAssertEqual(p.rows[0].lines.count, 1)
+        XCTAssertEqual(p.rows[1].lines, ["(4) · largura × altura × profundidade:", "Parede do fundo:", "• 1 × Aéreo · 1640 × 320 × 275 mm · 3 portas", "• 2 × Balcão · 800 × 870 × 550 mm · 2 portas",
+                                         "Parede da esquerda:", "• 1 × Torre · 600 × 2200 × 580 mm · 2 portas, forno"])
+        XCTAssertEqual(p.rows[2].lines, ["Canela · Branco"])
+        XCTAssertEqual(p.free, ["Entrega em 30 dias depois da medição final.", "• Instalação incluída"])
+        XCTAssertEqual(QuotePdf.specParts(p.rows), ["MDF 15 mm", "Caixa Branco", "Por fora Canela", "Fundo 6 mm", "Puxador cava usinada", "Dobradiças com amortecimento", "Corrediças telescópicas"])
+        // texto digitado nunca vira detalhe nem especificação
+        let d = QuotePdf.parseNotes("Pagamento: 3 vezes, sem juros.\nFrete por conta do cliente\n• 2 × por semana eu passo na obra\nObs: medir de novo")
+        XCTAssertTrue(d.rows.isEmpty)
+        XCTAssertEqual(d.free, ["Pagamento: 3 vezes, sem juros.", "Frete por conta do cliente", "• 2 × por semana eu passo na obra", "Obs: medir de novo"])
+        XCTAssertTrue(QuotePdf.specParts(d.rows).isEmpty)
+        let v = QuotePdf.parseNotes("")
+        XCTAssertTrue(v.rows.isEmpty); XCTAssertTrue(v.free.isEmpty)
+    }
+
+    func testTodaFotoEntraNumaLinhaSemSumirNemRepetir() {
+        for n in 0...40 {
+            let g = QuotePdf.photoGroups(n)
+            XCTAssertEqual(g.reduce(0, +), n)
+            XCTAssertTrue(g.allSatisfy { $0 >= 1 && $0 <= 3 })
+        }
+        XCTAssertEqual(QuotePdf.photoGroups(5), [2, 3])
+        XCTAssertEqual(QuotePdf.photoGroups(7), [2, 2, 3])
+    }
+
+    private func foto(_ w: CGFloat, _ h: CGFloat) -> UIImage {
+        let f = UIGraphicsImageRendererFormat()
+        f.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: w, height: h), format: f).image { c in
+            UIColor(white: 0.9, alpha: 1).setFill(); c.fill(CGRect(x: 0, y: 0, width: w, height: h))
+            UIColor.brown.setFill(); c.fill(CGRect(x: w * 0.2, y: h * 0.3, width: w * 0.6, height: h * 0.5))
+        }
+    }
+
+    private func gerar(_ c: Company, _ q: Quote, _ fotos: [UIImage], _ nome: String) throws -> PDFDocument {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("orcamento-\(nome).pdf")
+        try QuotePdf.write(company: c, quote: q, note: nil, logo: nil, photos: fotos, to: url)
+        return try XCTUnwrap(PDFDocument(url: url))
+    }
+
+    /// Texto do PDF sem espaços nem quebras (a extração do PDF pode quebrar a linha em qualquer lugar).
+    private func texto(_ d: PDFDocument) -> String { (d.string ?? "").filter { !$0.isWhitespace } }
+    private func tem(_ t: String, _ s: String) -> Bool { t.contains(s.filter { !$0.isWhitespace }) }
+
+    func testOrcamentoSimplesSaiNumaFolhaSoComOQueExiste() throws {
+        var q = Quote(clientName: "Alexandre Lanche", city: "Frutal", items: [QuoteItem(desc: "Cozinha · Módulos de cima (aéreos) · 1 módulo", qty: 1, unit: "un", unitValue: 3360.28)], discountPct: 5)
+        q.dateMs = 1_794_528_000_000
+        let d = try gerar(empresa, q, [], "simples")
+        XCTAssertEqual(d.pageCount, 1)
+        XCTAssertEqual(d.page(at: 0)?.bounds(for: .mediaBox).width ?? 0, 595, accuracy: 0.5)
+        let t = texto(d)
+        for s in ["ARQUE PLANEJADOS", "CNPJ 67.605.644/0001-84", "34 99644-5518", "Avenida Rio de Janeiro, 2981", "Frutal/MG", "ORÇAMENTO", "CLIENTE", "Alexandre Lanche", "CIDADE",
+                  "DESCRIÇÃO", "SUBTOTAL", "Módulos de cima (aéreos)", "1 módulo", "R$ 3.360,28", "Valor original", "Desconto (5%)", "R$ 168,01", "VALOR COM DESCONTO", "R$ 3.192,27",
+                  "DETALHES DA PROPOSTA", "Validade da proposta:", "15 dias (até"] {
+            XCTAssertTrue(tem(t, s), "falta no PDF: \(s)")
+        }
+        // nada inventado: sem número de orçamento e sem seção que o orçamento não tem
+        for s in ["Nº", "FOTOS DO PROJETO", "ESPECIFICAÇÕES TÉCNICAS", "OBSERVAÇÕES", "ADITIVOS", "Material:", "Padrão de fabricação"] {
+            XCTAssertFalse(tem(t, s), "sobrando no PDF: \(s)")
+        }
+        // orçamento em branco também sai, numa folha
+        let v = try gerar(Company(), Quote(), [], "vazio")
+        XCTAssertEqual(v.pageCount, 1)
+        XCTAssertTrue(tem(texto(v), "MINHA EMPRESA"))
+    }
+
+    func testOrcamentoCheioPassaPraOutrasFolhasSemPerderNada() throws {
+        var q = Quote(clientName: "Alexandre Lanche", city: "Frutal",
+                      items: (1...30).map { QuoteItem(desc: "Item \($0) do orçamento, com descrição comprida pra quebrar a linha no meio da tabela de itens", qty: 1, unit: "un", unitValue: 100 * Double($0)) },
+                      discountPct: 5)
+        q.notes = notas
+        q.addenda = [QuoteAddendum(id: "a1", desc: "Prateleira a mais no aéreo", value: 250, dateMs: 1_794_700_800_000)]
+        let d = try gerar(empresa, q, (0..<7).map { _ in foto(860, 1386) }, "cheio")
+        let n = d.pageCount
+        XCTAssertTrue(n >= 3 && n <= 7, "orçamento cheio em várias folhas (\(n))")
+        let t = texto(d)
+        for i in 1...30 { XCTAssertTrue(tem(t, "Item \(i) do orçamento,"), "falta o item \(i)") }
+        for s in ["ADITIVOS", "Prateleira a mais no aéreo", "R$ 250,00", "Total dos aditivos", "TOTAL COM ADITIVOS",
+                  "DETALHES DA PROPOSTA", "Material:", "Móveis do projeto:", "Balcão", "2 portas, forno", "Parede da esquerda:", "Cores do projeto:", "Canela",
+                  "FOTOS DO PROJETO", "(CONTINUAÇÃO)", "ESPECIFICAÇÕES TÉCNICAS", "MDF 15 mm", "Caixa Branco", "Corrediças telescópicas",
+                  "OBSERVAÇÕES", "Entrega em 30 dias depois da medição final.", "Instalação incluída", "1/\(n)", "\(n)/\(n)"] {
+            XCTAssertTrue(tem(t, s), "falta no PDF: \(s)")
+        }
+        XCTAssertFalse(tem(t, "Nº"))
+        // fotos deitadas (tablet/computador): 3 cabem numa linha e o orçamento fecha em duas folhas
+        var s3 = Quote(clientName: "Ana", city: "Frutal", items: [QuoteItem(desc: "Cozinha", qty: 1, unit: "un", unitValue: 9800)], discountPct: 0)
+        s3.notes = notas
+        let d3 = try gerar(empresa, s3, (0..<3).map { _ in foto(1180, 697) }, "fotos3")
+        XCTAssertTrue(d3.pageCount >= 1 && d3.pageCount <= 2)
+        XCTAssertTrue(tem(texto(d3), "FOTOS DO PROJETO"))
+        XCTAssertTrue(tem(texto(d3), "TOTAL"))
+        XCTAssertFalse(tem(texto(d3), "VALOR COM DESCONTO"))
+    }
+
+    func testFotosDoProjetoNoOrcamentoIgualAoAndroid() throws {
+        // o projeto ligado ao orçamento vai e volta na gravação com o mesmo nome de campo do Android ("pid")
+        var q = Quote(clientName: "Ana", items: [QuoteItem(desc: "Cozinha", qty: 1, unit: "un", unitValue: 9800)])
+        q.projId = "p123"
+        q.photos = ["orcfoto_p123_1700000000000.jpg"]
+        let json = JsonCodec.quotesToJson([q])
+        XCTAssertTrue(json.contains("\"pid\""))
+        XCTAssertEqual(try JsonCodec.quotesFromJson(json), [q])
+        // só entra na lista foto gravada pelo modo foto do editor
+        XCTAssertTrue(AppModel.quotePhotoNameOk("orcfoto_p123_1700000000000.jpg"))
+        XCTAssertTrue(AppModel.quotePhotoNameOk("orcfoto_p1_1700000000000g2.jpg"))
+        for ruim in ["orcfoto_.jpg", "foto.jpg", "orcfoto_a/b.jpg", "orcfoto_abc.png", "../orcfoto_a.jpg", "orcfoto_a b.jpg"] {
+            XCTAssertFalse(AppModel.quotePhotoNameOk(ruim), ruim)
+        }
+    }
 }

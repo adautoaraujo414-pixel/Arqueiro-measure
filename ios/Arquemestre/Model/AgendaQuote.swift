@@ -110,6 +110,8 @@ struct Quote: Equatable, Identifiable {
     var notes: String = ""
     /// Aditivos (entram depois do orçamento fechado; somam no total geral, separados do original).
     var addenda: [QuoteAddendum] = []
-    /// Fotos do projeto (arquivos em projects/images/), tiradas no 3D.
+    /// Fotos do projeto (arquivos junto dos do editor de móveis), tiradas no 3D ou escolhidas da galeria.
     var photos: [String] = []
+    /// Projeto do editor de móveis ligado a este orçamento (de onde saem as fotos).
+    var projId: String? = nil
 }

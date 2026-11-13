@@ -145,6 +145,7 @@ struct MoveisWeb: UIViewRepresentable {
         delFile:function(n){post({op:'delFile',name:String(n)})},
         listFiles:function(){return sync('listFiles','')||'[]'},
         makeQuote:function(j){post({op:'makeQuote',json:String(j)})},
+        quotePhotos:function(j){post({op:'quotePhotos',json:String(j)})},
         listNotes:function(){return sync('listNotes','')||'[]'},
         contextNote:function(){return sync('contextNote','')},
         linkNote:function(n,p){post({op:'linkNote',note:String(n),id:String(p)})},
@@ -233,6 +234,7 @@ struct MoveisWeb: UIViewRepresentable {
                 }
             case "delFile": if let n = m["name"] as? String { try? FileManager.default.removeItem(at: dir.appendingPathComponent(safe(n))) }
             case "makeQuote": if let j = m["json"] as? String { app.quoteFromMoveis(j) }
+            case "quotePhotos": if let j = m["json"] as? String { app.quotePhotosFromMoveis(j) }
             case "printPage":
                 // "🖨 Imprimir / PDF" no plano de corte: impressão nativa (a folha de compartilhar permite salvar em PDF)
                 if let w = message.webView {
@@ -290,6 +292,10 @@ struct MoveisWeb: UIViewRepresentable {
             if let id = app.pendingProject {
                 app.pendingProject = nil
                 w.evaluateJavaScript("window.arqueOpenClient&&window.arqueOpenClient('\(id.replacingOccurrences(of: "'", with: ""))')")
+            }
+            if app.pendingPhotoMode {
+                app.pendingPhotoMode = false
+                w.evaluateJavaScript("window.arquePhotoMode&&window.arquePhotoMode(\(app.quotePhotosJson()))")
             }
             loaded = true; parent.holder.loaded = true
             parent.holder.done()

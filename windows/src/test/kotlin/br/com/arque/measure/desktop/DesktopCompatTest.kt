@@ -104,6 +104,52 @@ class DesktopCompatTest {
         org.apache.pdfbox.Loader.loadPDF(q.toByteArray()).use { assertTrue(it.numberOfPages >= 1) }
     }
 
+    private fun fotoDeTeste(w: Int, h: Int, cor: Int): Bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also { b ->
+        val c = Canvas(b); c.drawColor(cor)
+        c.drawRect(w * 0.2f, h * 0.3f, w * 0.8f, h * 0.8f, Paint().apply { color = 0xFF8A5A2B.toInt() })
+    }
+
+    /** Orçamento no layout novo: só o que existe no orçamento entra, as fotos saem inteiras e o PDF fecha nas páginas certas. */
+    @Test fun orcamentoNoLayoutNovoSoComDadosDoProjeto() {
+        val notas = "Material: MDF 15 mm · caixa Branco · por fora Canela · fundo 6 mm · puxador cava usinada · dobradiças com amortecimento · corrediças telescópicas.\n" +
+            "Móveis do projeto (4) · largura × altura × profundidade:\nParede do fundo:\n• 1 × Aéreo · 1640 × 320 × 275 mm · 3 portas\n• 2 × Balcão · 800 × 870 × 550 mm · 2 portas\n" +
+            "Parede da esquerda:\n• 1 × Torre · 600 × 2200 × 580 mm · 2 portas, forno\nCores do projeto: Canela · Branco\n" +
+            "Entrega em 30 dias depois da medição final.\n• Instalação incluída"
+        val (linhas, livre) = QuotePdf.parseNotes(notas)
+        assertEquals(listOf("Material", "Móveis do projeto", "Cores do projeto"), linhas.map { it.label })
+        assertEquals(1, linhas[0].lines.size)
+        assertEquals(listOf("(4) · largura × altura × profundidade:", "Parede do fundo:", "• 1 × Aéreo · 1640 × 320 × 275 mm · 3 portas", "• 2 × Balcão · 800 × 870 × 550 mm · 2 portas",
+            "Parede da esquerda:", "• 1 × Torre · 600 × 2200 × 580 mm · 2 portas, forno"), linhas[1].lines)
+        assertEquals(listOf("Canela · Branco"), linhas[2].lines)
+        assertEquals(listOf("Entrega em 30 dias depois da medição final.", "• Instalação incluída"), livre)
+        assertEquals(listOf("MDF 15 mm", "Caixa Branco", "Por fora Canela", "Fundo 6 mm", "Puxador cava usinada", "Dobradiças com amortecimento", "Corrediças telescópicas"), QuotePdf.specParts(linhas))
+        // observação digitada sem rótulo não vira detalhe nem especificação
+        val (l2, f2) = QuotePdf.parseNotes("Pagamento: 3 vezes, sem juros.\nFrete por conta do cliente\n• 2 × por semana eu passo na obra\nObs: medir de novo")
+        assertTrue(l2.isEmpty()); assertEquals(4, f2.size); assertTrue(QuotePdf.specParts(l2).isEmpty())
+        // toda foto entra numa linha: nenhuma some, nenhuma repete
+        for (n in 0..40) { val g = QuotePdf.photoGroups(n); assertEquals(n, g.sum()); assertTrue(g.all { it in 1..3 }) }
+        assertEquals(listOf(2, 3), QuotePdf.photoGroups(5)); assertEquals(listOf(2, 2, 3), QuotePdf.photoGroups(7))
+
+        fun paginas(q: Quote, fotos: List<Bitmap> = emptyList(), nome: String): Int {
+            val o = ByteArrayOutputStream()
+            QuotePdf.write(Company("Arque Planejados", "67.605.644/0001-84", "Avenida Rio de Janeiro, 2981", "Frutal/MG", "34 99644-5518"), q, null, null, o, null, fotos)
+            File(ctx.cacheDir, "orcamento-$nome.pdf").apply { parentFile.mkdirs() }.writeBytes(o.toByteArray())
+            return org.apache.pdfbox.Loader.loadPDF(o.toByteArray()).use { d -> assertEquals(595f, d.getPage(0).mediaBox.width, 0.5f); d.numberOfPages }
+        }
+        val simples = Quote(clientName = "Alexandre", city = "Frutal", items = listOf(QuoteItem(desc = "Cozinha · Módulos de cima (aéreos) · 1 módulo", unitValue = 3360.28)), discountPct = 5.0)
+        assertEquals(1, paginas(simples, nome = "simples"))
+        // sem nada preenchido também sai (uma folha, sem inventar dado nenhum)
+        assertEquals(1, paginas(Quote(), nome = "vazio"))
+        val paisagem = (0 until 3).map { fotoDeTeste(1180, 697, 0xFFE9E4DC.toInt()) }
+        assertEquals(2, paginas(simples.copy(notes = notas), paisagem, "fotos3"))
+        // muitas fotos em pé (celular) e muitos itens: passa pra outras folhas sem perder nada
+        val emPe = (0 until 7).map { fotoDeTeste(860, 1386, 0xFFE9E4DC.toInt()) }
+        val cheio = simples.copy(notes = notas, items = (1..30).map { QuoteItem(desc = "Item $it do orçamento, com descrição comprida pra quebrar a linha no meio da tabela de itens", unitValue = 100.0 * it) },
+            addenda = listOf(br.com.arque.measure.model.QuoteAddendum(desc = "Prateleira a mais no aéreo", value = 250.0)))
+        val n = paginas(cheio, emPe, "cheio")
+        assertTrue("orçamento cheio em várias folhas ($n)", n in 3..6)
+    }
+
     @Test fun pdfDocumentDoAndroid() {
         val d = PdfDocument()
         val pg = d.startPage(PdfDocument.PageInfo.Builder(595, 842, 1).create())

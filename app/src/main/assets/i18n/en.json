@@ -6692,5 +6692,14 @@
 "A pedra não é apagada: fica guardada e volta quando você ligar de novo.": "The countertop is not deleted: it is kept and comes back when you turn it on again.",
 "Pedra ligada: apareceu a pedra que estava guardada neste projeto. Ajuste as medidas ou tire pela lixeira.": "Countertop on: the stone that was stored in this project is showing again. Adjust its measurements or remove it with the bin.",
 "Pedra ligada neste ambiente. Toque em \"＋ Pedra\".": "Countertop on in this room. Tap \"＋ Countertop\".",
-"Ambiente sem pedra. A pedra ficou guardada, nada foi apagado.": "Room without a countertop. The stone was kept; nothing was deleted."
+"Ambiente sem pedra. A pedra ficou guardada, nada foi apagado.": "Room without a countertop. The stone was kept; nothing was deleted.",
+"sem décimo": "no tenths",
+"Arredondar as medidas das peças": "Round the part sizes",
+"Arredondar as medidas": "Round the sizes",
+"peça inteira": "whole part",
+"não cabe na chapa": "does not fit on the board",
+"partes de": "parts of",
+"emenda": "joint",
+"passa da chapa": "larger than the board",
+"altura inteira": "full height"
 }

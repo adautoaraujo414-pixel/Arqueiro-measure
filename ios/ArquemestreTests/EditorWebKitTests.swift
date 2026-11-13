@@ -4893,8 +4893,8 @@ final class EditorWebKitTests: XCTestCase {
           /* painel liso pelo toque no vão: mesma forma do ripado */
           saStart(true);R.ini=document.getElementById('rpsabar').querySelector('b').textContent;
           var sv=document.getElementById('svg'),rc=sv.getBoundingClientRect(),ctm=sv.getScreenCTM(),pt=function(x,y){var p=sv.createSVGPoint();p.x=OX+x*K;p.y=OY+(S.H-y)*K;var q=p.matrixTransform(ctm);return [q.x,q.y]},ev=function(t,n,x,y,id){var c=pt(x,y);t.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id||5,clientX:c[0],clientY:c[1],isPrimary:true,pointerType:'touch'}))};
-          ev(sv,'pointerdown',3000,3000);ev(sv,'pointerup',3000,3000);R.toque=RPSA.areas.map(function(r){return [r.x0,r.x1,r.y0,r.y1].join(',')}).join(' | ')+' · '+document.getElementById('rpsabar').querySelector('b').textContent;
-          document.querySelector('#rpsabar [data-sab="go"]').click();R.criou=F();
+          ev(sv,'pointerdown',3000,3000);ev(sv,'pointerup',3000,3000);R.toque=(window.RPSA?'só marcou':'criou na hora')+' · '+String(TL[TL.length-1]).split(' · ')[0]+' · barra fechada '+document.getElementById('rpsabar').hidden;
+          R.criou=F();
           /* arrastar a bolinha da esquerda pra diminuir até onde quiser */
           await new Promise(function(r){setTimeout(r,50)});var a=S.rp[S.rp.length-1];RPSEL=a.id;LAST='rp';draw();var h=document.querySelector('[data-rph="'+a.id+'|l"]');R.bolinha=h?h.getAttribute('r'):null;
           ev(h,'pointerdown',a.x,a.b+a.h/2,7);ev(sv,'pointermove',a.x+300,a.b+a.h/2,7);ev(sv,'pointermove',a.x+600,a.b+a.h/2,7);ev(window,'pointerup',a.x+600,a.b+a.h/2,7);await new Promise(function(r){setTimeout(r,60)});R.diminuiu=(a.x>2090&&a.w<2050&&Math.abs(a.x+a.w-4140)<1)+' '+a.h;
@@ -4906,8 +4906,8 @@ final class EditorWebKitTests: XCTestCase {
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["acima"] as? String, "1075,2680 1015x720 liso", "preencher acima: só o vão livre em cima do aéreo (não passa por dentro dele)")
-        XCTAssertEqual(o["ini"] as? String, "🎯 Toque no vão ou arraste no desenho: marque onde vai o painel liso")
-        XCTAssertEqual(o["toque"] as? String, "2090,4140,2680,3400 · 🎯 1 área livre pro painel liso", "toque no vão acha a área livre, desviando do painel que já existe")
+        XCTAssertEqual(o["ini"] as? String, "🎯 Toque no vão do desenho: o painel liso já entra ali · arrastando você marca uma área maior")
+        XCTAssertEqual(o["toque"] as? String, "criou na hora · ▭ Painel liso criado: 2050 × 720 · barra fechada true", "toque no vão acha a área livre (desviando do painel que já existe) e já cria")
         XCTAssertEqual(o["criou"] as? String, "1075,2680 1015x720 liso | 2090,2680 2050x720 liso")
         XCTAssertEqual(o["bolinha"] as? String, "17", "bolinha grande pra pegar com o dedo")
         XCTAssertEqual(o["diminuiu"] as? String, "true 720", "arrastar a bolinha diminui o painel")
@@ -7041,6 +7041,56 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["corteE3D"] as? String, "1× 1000×381 + 2× 1000×80 + 2× 221×80 · 3D 5 peça · encostada embaixo da régua: true")
         XCTAssertEqual(o["notaCorte"] as? String, "uma peça só depois da cava | uma peça só abaixo da base")
         XCTAssertEqual(o["balcao"] as? String, "Usar (fica abaixo da base) | aviso de cava: false | pós cava: false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testRipadoOuPainelLisoTocaNoVaoEJaCriaNaFrenteOuNaParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.tz=[];S.geo=[];S.env='cozinha';S.room='cozinha';S.W=3200;S.RD=3000;S.H=2985;S.Hm=1;S.Wm=1;S.mods=[];draw();
+                  /* a parede da foto do pedido: 4 aéreos com o topo a 2570 e 415 livres até o teto */
+                  [[0,900],[900,900],[1800,400],[2200,900]].forEach(function(q){newTpl({n:'Aéreo',w:q[1],h:900,d:350,b:1670,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=q[0];m.tl=m.tr=false;m.tlM=m.trM=1});S.m=S.mods[0];S.tab=8;draw();panel();
+                  var bd=function(){return document.getElementById('bd')},F=function(){return S.rp.map(function(a){return a.x+','+a.b+' '+a.w+'x'+a.h+(a.liso?' liso':' ripado')+(a.af?' af'+a.af:'')}).join(' | ')||'nenhum'};
+                  var sv=document.getElementById('svg'),pt=function(x,y){var p=sv.createSVGPoint();p.x=OX+x*K;p.y=OY+(S.H-y)*K;var q=p.matrixTransform(sv.getScreenCTM());return [q.x,q.y]},ev=function(t,n,x,y,id){var c=pt(x,y);t.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:id||5,clientX:c[0],clientY:c[1],isPrimary:true,pointerType:'touch'}))},tap=function(x,y){sv=document.getElementById('svg');ev(sv,'pointerdown',x,y);ev(sv,'pointerup',x,y)};
+                  /* 1. na cozinha a aba não tem mais "Revestir a parede com painéis"; tem a escolha de onde o painel fica */
+                  R.cozinha='revestir parede: '+/Revestir a parede com painéis/.test(bd().textContent)+' · onde fica: '+[].map.call(bd().querySelectorAll('[data-rppos]'),function(b){return (b.classList.contains('on')?'*':'')+b.textContent}).join(' / ');
+                  /* 2. escolhe ripado + encostado na parede e toca no vão em cima dos armários: já cria, até o teto, e fica escolhido com as bolinhas */
+                  bd().querySelector('[data-rpk="rip"]').click();bd().querySelector('[data-rppos="parede"]').click();R.pronto=!!(window.RPSA&&RPSA.arm)+' · '+document.getElementById('rpsabar').querySelector('b').textContent;
+                  tap(1600,2800);await W(60);var a=S.rp[0];R.tocou=F()+' · marcando ainda: '+!!window.RPSA+' · escolhido: '+(a&&RPSEL===a.id)+' · bolinhas: '+document.querySelectorAll('[data-rph^="'+(a?a.id:'x')+'|"]').length+' · '+String(TL[TL.length-1]).split(' · ').slice(0,2).join(' · ');
+                  /* 3. arrastar a bolinha da direita diminui */
+                  var h=document.querySelector('[data-rph="'+a.id+'|r"]');ev(h,'pointerdown',a.x+a.w,a.b+a.h/2,7);ev(sv,'pointermove',a.x+a.w-400,a.b+a.h/2,7);ev(sv,'pointermove',a.x+a.w-800,a.b+a.h/2,7);ev(window,'pointerup',a.x+a.w-800,a.b+a.h/2,7);await W(60);R.arrastou=(a.w<3200&&a.w>=1000)+' · altura '+a.h+' · começa em '+a.x;
+                  /* 4. desfazer tira o que o toque criou */
+                  S.rp=[];S.tab=8;draw();panel();await W(900);bd().querySelector('[data-rpk="rip"]').click();tap(1600,2800);await W(900);var n1=S.rp.length;document.getElementById('und').click();await W(400);R.desfez=n1+' criado → '+F()+' · armários '+S.mods.length+' · pé-direito '+S.H;
+                  /* 5. na frente: fica 5 cm atrás da frente do armário de baixo (350 − 50 = frente a 300 da parede), com a estrutura atrás; no 3D e no corte */
+                  S.rp=[];S.tab=8;draw();panel();bd().querySelector('[data-rppos="frente"]').click();tap(1600,2800);await W(60);a=S.rp[0];R.naFrente=F()+' · '+String(TL[TL.length-1]).split(' · ')[1];
+                  var G=cutGroups(),est=0,rip=0;G.ord.forEach(function(k){var g=G.map[k];if(/estrutura/.test(g.names[0]))est+=g.qty;if(/^Ripa /.test(g.names[0]))rip+=g.qty});open3D();await W(400);re3();var B=__boxes().filter(function(b){return b.rpid===a.id});
+                  R.frente3D='frente das ripas a '+Math.round(Math.max.apply(null,B.map(function(b){return b.z1})))+' da parede · de '+Math.round(Math.min.apply(null,B.map(function(b){return b.y0})))+' a '+Math.round(Math.max.apply(null,B.map(function(b){return b.y1})))+' · corte: '+rip+' ripas + '+est+' peças de estrutura';try{document.getElementById('v3x').click()}catch(e){}
+                  var dentro=0;S.rp.forEach(function(p){S.mods.forEach(function(m){if(Math.min(p.x+p.w,m.x+m.w)-Math.max(p.x,m.x)>1&&Math.min(p.b+p.h,m.b+m.h)-Math.max(p.b,m.b)>1)dentro++})});R.dentroDeMovel=dentro;
+                  /* 6. painel liso na frente num pedaço de parede sem armário embaixo: fica na parede e avisa */
+                  S.rp=[];S.mods=S.mods.slice(0,2);S.m=S.mods[0];S.tab=8;draw();panel();bd().querySelector('[data-rpk="liso"]').click();tap(2600,1500);await W(60);R.lisoSemArmario=F()+' · '+String(TL[TL.length-1]).split(' · ')[1];
+                  /* 7. tocar num armário com a marcação ligada não cria nada (o toque escolhe o armário) */
+                  var n0=S.rp.length;saStart(false);var g=document.querySelector('#mod')||sv;ev(g,'pointerdown',400,2100);ev(g,'pointerup',400,2100);await W(60);R.tocouNoArmario=(S.rp.length===n0)+' · marcação '+(window.RPSA?'ligada':'desligou');
+                  /* 8. arrastando no desenho marca uma área maior e pede a confirmação (não cria na hora) */
+                  S.rp=[];draw();saStart(false);sv=document.getElementById('svg');ev(sv,'pointerdown',1900,200);ev(sv,'pointermove',2500,900);ev(sv,'pointermove',3100,1500);ev(sv,'pointerup',3100,1500);await W(60);R.arrastandoMarca=F()+' · áreas marcadas '+(window.RPSA?RPSA.areas.length:0)+' · botão criar '+!!document.querySelector('#rpsabar [data-sab="go"]');
+                  document.querySelector('#rpsabar [data-sab="go"]').click();await W(60);R.confirmou=S.rp.length+' criado';
+                  /* 9. na sala a seção de revestir a parede continua na aba (que lá se chama Painéis) */
+                  S.rp=[];S.mods=[];S.room='sala';S.env='livre';S.tab=8;draw();panel();R.sala='revestir parede: '+/Revestir a parede com painéis/.test(bd().textContent)+' · aba '+[].map.call(document.querySelectorAll('#tabs [data-t]'),function(e){return e.textContent}).filter(function(t){return /Pain|Ripado/.test(t)}).join();
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cozinha"] as? String, "revestir parede: false · onde fica: *Encostado na parede / Na frente (em cima do armário)")
+        XCTAssertEqual(o["pronto"] as? String, "true · 🎯 Toque no vão do desenho: o ripado já entra ali · arrastando você marca uma área maior")
+        XCTAssertEqual(o["tocou"] as? String, "0,2570 3200x415 ripado · marcando ainda: false · escolhido: true · bolinhas: 8 · ▥ Ripado criado: 3200 × 415 · encostado na parede")
+        XCTAssertEqual(o["arrastou"] as? String, "true · altura 415 · começa em 0")
+        XCTAssertEqual(o["desfez"] as? String, "1 criado → nenhum · armários 4 · pé-direito 2985")
+        XCTAssertEqual(o["naFrente"] as? String, "0,2570 3200x415 ripado af272 · na frente, 5 cm atrás da frente do armário")
+        XCTAssertEqual(o["frente3D"] as? String, "frente das ripas a 300 da parede · de 2570 a 2985 · corte: 48 ripas + 6 peças de estrutura")
+        XCTAssertEqual(o["dentroDeMovel"] as? Int, 0)
+        XCTAssertEqual(o["lisoSemArmario"] as? String, "1805,0 1395x2985 liso · aí não tem armário embaixo: ficou encostado na parede")
+        XCTAssertEqual(o["tocouNoArmario"] as? String, "true · marcação desligou")
+        XCTAssertEqual(o["arrastandoMarca"] as? String, "nenhum · áreas marcadas 1 · botão criar true")
+        XCTAssertEqual(o["confirmou"] as? String, "1 criado")
+        XCTAssertEqual(o["sala"] as? String, "revestir parede: true · aba Painéis")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

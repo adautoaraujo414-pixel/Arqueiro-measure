@@ -149,6 +149,8 @@ jobs:
           OUT=$(mktemp -d)
           mkdir -p "$OUT/capturas"
           cp -R build/capturas/. "$OUT/capturas/" 2>/dev/null || true
+          # páginas do PDF do orçamento geradas pelos testes (pra conferir o desenho do iPhone de olho)
+          mkdir -p "$OUT/orcamento"; cp -R build/orcamento/. "$OUT/orcamento/" 2>/dev/null || true
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
             grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
             echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;

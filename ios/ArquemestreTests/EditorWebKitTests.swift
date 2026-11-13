@@ -147,7 +147,9 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({tabs:tabs,tvMeio:Math.abs(tv.x+tv.w/2-(S.rp[0].x+S.rp[0].w/2)),tvCentro:tv.b+tv.h/2,tvTop:tvTop,
             lock:!!S.mods[0].lock,msg:msg,cadeado:!!document.querySelector('[data-lockmark]'),salvo:!!(st.mods&&st.mods[0]&&st.mods[0].lock),errs:__errs});
           """#)
-        XCTAssertTrue((o["tabs"] as? String ?? "").contains("TV"), "aba TV na sala: \(o["tabs"] ?? "")")
+        // a TV fica junto com os eletrodomésticos (uma aba só): na sala não tem mais aba separada de TV
+        let tabs = o["tabs"] as? String ?? ""
+        XCTAssertTrue(tabs.contains("Eletrodomésticos") && !tabs.contains("TV"), "aba Eletrodomésticos (com a TV dentro) na sala: \(tabs)")
         XCTAssertLessThanOrEqual(o["tvMeio"] as? Double ?? 99, 1, "TV no meio do painel")
         XCTAssertEqual(o["tvCentro"] as? Double ?? 0, 1150, accuracy: 1, "centro da TV a 1150 mm do chão")
         XCTAssertEqual(o["tvTop"] as? Bool, true, "TV desenhada por cima do painel")
@@ -6438,7 +6440,7 @@ final class EditorWebKitTests: XCTestCase {
         var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();soloOn(m);
         var sp=async function(path,dir,k){RG.sel={mi:0,path:path};RG.dsel=null;RG.tab='div';panel();document.querySelector('[data-rga="sp|'+dir+'|'+k+'"]').click();await W(60)};
         var DV=function(){var L=rgLay(m);return L.divs.filter(function(d){return d.H}).map(function(d){return Math.round(d.y0)}).sort(function(a,b){return a-b}).join(',')+(L.divs.some(function(d){return !d.H})?' | em pé '+L.divs.filter(function(d){return !d.H}).map(function(d){return Math.round(d.x0)+'@'+Math.round(d.y0)+'-'+Math.round(d.y1)}).join(','):'')};
-        var del=async function(path,i){TOA.length=0;RG.sel=null;RG.dsel={mi:0,path:path,i:i};draw();panel();var t=performance.now();document.getElementById('delMod').click();var ms=performance.now()-t;await W(40);return {ms:ms,t:TOA.join(' / ')}};
+        var del=async function(path,i){TOA.length=0;RG.sel=null;RG.dsel={mi:0,path:path,i:i};draw();panel();var t=performance.now();document.getElementById('delMod').click();var ms=performance.now()-t;await W(40);return {ms:ms,t:TOA.filter(function(x){return x.indexOf('🧩')!==0}).join(' / ')}};
         /* divisões uma dentro da outra: r → [0, 1 → [1.0, 1.1 → [1.1.0, 1.1.1]]] e um forno no vão 1.1.0 */
         await sp('r','h',2);await sp('r.1','h',2);await sp('r.1.1','h',2);
         RG.sel={mi:0,path:'r.1.1.0'};RG.dsel=null;RG.tab='ele';panel();var be=document.querySelector('[data-rga^="ele|"]');if(be){be.click();await W(80)}

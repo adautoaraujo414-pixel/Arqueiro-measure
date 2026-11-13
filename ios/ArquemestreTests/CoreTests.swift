@@ -473,6 +473,17 @@ final class QuotePdfTests: XCTestCase {
         return try XCTUnwrap(PDFDocument(url: url))
     }
 
+    /// Guarda as páginas do PDF como imagem na pasta de resultados do CI (ios/build/orcamento), pra conferir o desenho de olho.
+    private func guardar(_ d: PDFDocument, _ nome: String, file: String = #filePath) {
+        let dir = URL(fileURLWithPath: file).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("build/orcamento", isDirectory: true)
+        guard (try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)) != nil else { return }
+        for i in 0..<min(d.pageCount, 7) {
+            guard let pg = d.page(at: i) else { continue }
+            let img = pg.thumbnail(of: CGSize(width: 893, height: 1263), for: .mediaBox)
+            try? img.jpegData(compressionQuality: 0.8)?.write(to: dir.appendingPathComponent("\(nome)-\(i + 1).jpg"))
+        }
+    }
+
     /// Texto do PDF sem espaços nem quebras (a extração do PDF pode quebrar a linha em qualquer lugar).
     private func texto(_ d: PDFDocument) -> String { (d.string ?? "").filter { !$0.isWhitespace } }
     private func tem(_ t: String, _ s: String) -> Bool { t.contains(s.filter { !$0.isWhitespace }) }
@@ -481,6 +492,7 @@ final class QuotePdfTests: XCTestCase {
         var q = Quote(clientName: "Alexandre Lanche", city: "Frutal", items: [QuoteItem(desc: "Cozinha · Módulos de cima (aéreos) · 1 módulo", qty: 1, unit: "un", unitValue: 3360.28)], discountPct: 5)
         q.dateMs = 1_794_528_000_000
         let d = try gerar(empresa, q, [], "simples")
+        guardar(d, "simples")
         XCTAssertEqual(d.pageCount, 1)
         XCTAssertEqual(d.page(at: 0)?.bounds(for: .mediaBox).width ?? 0, 595, accuracy: 0.5)
         let t = texto(d)
@@ -506,6 +518,7 @@ final class QuotePdfTests: XCTestCase {
         q.notes = notas
         q.addenda = [QuoteAddendum(id: "a1", desc: "Prateleira a mais no aéreo", value: 250, dateMs: 1_794_700_800_000)]
         let d = try gerar(empresa, q, (0..<7).map { _ in foto(860, 1386) }, "cheio")
+        guardar(d, "cheio")
         let n = d.pageCount
         XCTAssertTrue(n >= 3 && n <= 7, "orçamento cheio em várias folhas (\(n))")
         let t = texto(d)
@@ -521,6 +534,7 @@ final class QuotePdfTests: XCTestCase {
         var s3 = Quote(clientName: "Ana", city: "Frutal", items: [QuoteItem(desc: "Cozinha", qty: 1, unit: "un", unitValue: 9800)], discountPct: 0)
         s3.notes = notas
         let d3 = try gerar(empresa, s3, (0..<3).map { _ in foto(1180, 697) }, "fotos3")
+        guardar(d3, "fotos3")
         XCTAssertTrue(d3.pageCount >= 1 && d3.pageCount <= 2)
         XCTAssertTrue(tem(texto(d3), "FOTOS DO PROJETO"))
         XCTAssertTrue(tem(texto(d3), "TOTAL"))

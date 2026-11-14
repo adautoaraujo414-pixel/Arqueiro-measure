@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.CabinetTest" tests="24" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:11.319Z" hostname="runnervmm7ud1" time="0.093">
+  <properties/>
+  <testcase name="tamponamentoBothSidesDiscounts70" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="tamponamentoAlignedAtTopAndEndsAtBase" classname="br.com.arque.measure.CabinetTest" time="0.003"/>
+  <testcase name="liveDragMovesDividerAsOneUndoStep" classname="br.com.arque.measure.CabinetTest" time="0.003"/>
+  <testcase name="baseIsOnePieceFullWidthUnderLaterals" classname="br.com.arque.measure.CabinetTest" time="0.001"/>
+  <testcase name="stoneWidthMinus40" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="drawerFrontMatchesPromobFormula" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="twoDoorsOverlapFormula" classname="br.com.arque.measure.CabinetTest" time="0.002"/>
+  <testcase name="frontCrossbarSameWidthAs70mm" classname="br.com.arque.measure.CabinetTest" time="0.001"/>
+  <testcase name="normalizeFixesVaoCount" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="updateAndJsonRoundTrip" classname="br.com.arque.measure.CabinetTest" time="0.018"/>
+  <testcase name="ovenCutoutCentered" classname="br.com.arque.measure.CabinetTest" time="0.001"/>
+  <testcase name="looseShelfAtChosenHeight" classname="br.com.arque.measure.CabinetTest" time="0.002"/>
+  <testcase name="fitCabToPageShrinksOnlyWhenTooBig" classname="br.com.arque.measure.CabinetTest" time="0.003"/>
+  <testcase name="moldingIsWidthBy30AndOptional" classname="br.com.arque.measure.CabinetTest" time="0.003"/>
+  <testcase name="baseAndPedestalAreOptional" classname="br.com.arque.measure.CabinetTest" time="0.004"/>
+  <testcase name="splitVaoIntoEqualParts" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="changingWidthRecentersDivider" classname="br.com.arque.measure.CabinetTest" time="0.001"/>
+  <testcase name="oldJsonWithoutNewFieldsStillLoads" classname="br.com.arque.measure.CabinetTest" time="0.007"/>
+  <testcase name="addDividerAtTap" classname="br.com.arque.measure.CabinetTest" time="0.0"/>
+  <testcase name="oneDoorAndDrawerFrontOverlap" classname="br.com.arque.measure.CabinetTest" time="0.004"/>
+  <testcase name="tamponamentoSizeAndDrawerBox" classname="br.com.arque.measure.CabinetTest" time="0.014"/>
+  <testcase name="cavaBatentesBetweenDrawers" classname="br.com.arque.measure.CabinetTest" time="0.005"/>
+  <testcase name="partsAndCutList" classname="br.com.arque.measure.CabinetTest" time="0.005"/>
+  <testcase name="drawersWithShelvesAbove" classname="br.com.arque.measure.CabinetTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

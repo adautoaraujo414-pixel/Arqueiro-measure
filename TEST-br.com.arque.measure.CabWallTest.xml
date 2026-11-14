@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.CabWallTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:11.250Z" hostname="runnervmm7ud1" time="0.027">
+  <properties/>
+  <testcase name="overflowWhenWiderThanWall" classname="br.com.arque.measure.CabWallTest" time="0.025"/>
+  <testcase name="slidesAlongWallAndClamps" classname="br.com.arque.measure.CabWallTest" time="0.001"/>
+  <testcase name="footprintUsesMeasuredScale" classname="br.com.arque.measure.CabWallTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.EraserTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:11.593Z" hostname="runnervmm7ud1" time="0.02">
+  <properties/>
+  <testcase name="quadradinho em pe troca largura por altura e salva" classname="br.com.arque.measure.EraserTest" time="0.007"/>
+  <testcase name="borracha longe da parede nao muda nada" classname="br.com.arque.measure.EraserTest" time="0.003"/>
+  <testcase name="retangulo vira contorno fechado e a borracha corta um pedaco" classname="br.com.arque.measure.EraserTest" time="0.004"/>
+  <testcase name="borracha numa parede tira so aquele trecho e o resto fica aberto com as medidas" classname="br.com.arque.measure.EraserTest" time="0.002"/>
+  <testcase name="contorno aberto apagado no meio vira dois pedacos" classname="br.com.arque.measure.EraserTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

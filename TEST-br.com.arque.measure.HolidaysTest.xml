@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.HolidaysTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:11.629Z" hostname="runnervmm7ud1" time="0.011">
+  <properties/>
+  <testcase name="pascoa e os feriados que dependem dela" classname="br.com.arque.measure.HolidaysTest" time="0.008"/>
+  <testcase name="dia das maes e dos pais no segundo domingo" classname="br.com.arque.measure.HolidaysTest" time="0.0"/>
+  <testcase name="novembro igual ao google agenda e filtro das comemorativas" classname="br.com.arque.measure.HolidaysTest" time="0.002"/>
+  <testcase name="os 10 feriados nacionais de 2027" classname="br.com.arque.measure.HolidaysTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

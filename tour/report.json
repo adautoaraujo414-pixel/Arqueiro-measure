@@ -1,0 +1,110 @@
+{
+  "falhas": 0,
+  "passos": [
+    {
+      "detalhe": "",
+      "passo": "abre na biblioteca",
+      "ok": true
+    },
+    {
+      "detalhe": "C:\\Users\\runneradmin\\AppData\\Local\\Arque\\Arquemestre",
+      "passo": "pastas de dados",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "cria e abre nota",
+      "ok": true
+    },
+    {
+      "detalhe": "60386",
+      "passo": "exporta PDF da nota",
+      "ok": true
+    },
+    {
+      "detalhe": "51600",
+      "passo": "exporta PNG da folha",
+      "ok": true
+    },
+    {
+      "detalhe": "nota;folha;cota;valor_mm;valor_exibido;origem;ultima_leitura\n\"Note 1\";1;1;2450.0;\"245,0 cm\";;\n",
+      "passo": "exporta CSV das medidas",
+      "ok": true
+    },
+    {
+      "detalhe": "1",
+      "passo": "PDF da nota abre (páginas)",
+      "ok": true
+    },
+    {
+      "detalhe": "1588x2246 escuros=5540",
+      "passo": "PNG tem o desenho (pixels escuros)",
+      "ok": true
+    },
+    {
+      "detalhe": "file:/C:/Users/runneradmin/AppData/Local/Arque/Arquemestre/cache/quotes/Orcamento_Cliente_Teste.pdf",
+      "passo": "gera PDF do orçamento",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "agenda salva o compromisso",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "aviso da agenda (notificação do Windows)",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "abre o editor de móveis",
+      "ok": true
+    },
+    {
+      "detalhe": "https://arque.app/editor.html?lang=en&cur=%24&win=1",
+      "passo": "editor carregou a página",
+      "ok": true
+    },
+    {
+      "detalhe": "{\"app\":true,\"win\":true,\"notas\":1,\"mods\":1,\"inf\":17,\"infAereo\":false,\"arq\":\"ok-windows\",\"lista\":true}",
+      "passo": "editor responde pela ponte",
+      "ok": true
+    },
+    {
+      "detalhe": "{\"app\":true,\"inf\":17,\"lista\":true,\"arq\":\"ok-windows\",\"mods\":1,\"notas\":1,\"win\":true,\"infAereo\":false}",
+      "passo": "editor: ponte ArqueApp",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "editor: módulo adicionado",
+      "ok": true
+    },
+    {
+      "detalhe": "17 itens",
+      "passo": "editor: botão Inferior só com módulos de baixo",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "editor: arquivos pela ponte",
+      "ok": true
+    },
+    {
+      "detalhe": "7212",
+      "passo": "editor: projeto salvo em arquivo",
+      "ok": true
+    },
+    {
+      "detalhe": "61308",
+      "passo": "backup completo (zip)",
+      "ok": true
+    },
+    {
+      "detalhe": "",
+      "passo": "troca para inglês",
+      "ok": true
+    }
+  ]
+}

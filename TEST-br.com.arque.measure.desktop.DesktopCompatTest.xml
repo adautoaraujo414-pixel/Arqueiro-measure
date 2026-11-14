@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.desktop.DesktopCompatTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:15.136Z" hostname="runnervmm7ud1" time="11.181">
+  <properties/>
+  <testcase name="desenhoComTextoEFormas" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.149"/>
+  <testcase name="numeroDaVersaoNoApp" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.003"/>
+  <testcase name="ponteDoEditorDeMoveis" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.007"/>
+  <testcase name="preferenciasGravamEVoltam" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.002"/>
+  <testcase name="matrizGiraAFoto" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.003"/>
+  <testcase name="pdfDaNotaEDoOrcamento" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="2.18"/>
+  <testcase name="uriDeArquivoELink" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.005"/>
+  <testcase name="pdfDocumentDoAndroid" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.716"/>
+  <testcase name="backupCompletoERestauracao" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.028"/>
+  <testcase name="orcamentoNoLayoutNovoSoComDadosDoProjeto" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="8.056"/>
+  <testcase name="preferenciasDoCelularNoBackupSaoLidas" classname="br.com.arque.measure.desktop.DesktopCompatTest" time="0.03"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

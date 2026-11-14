@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.GeoTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:11.617Z" hostname="runnervmm7ud1" time="0.009">
+  <properties/>
+  <testcase name="cota vinculada acompanha mover redimensionar e girar a foto" classname="br.com.arque.measure.GeoTest" time="0.001"/>
+  <testcase name="redimensionar pelo canto mantem proporcao e canto oposto" classname="br.com.arque.measure.GeoTest" time="0.003"/>
+  <testcase name="local para folha e de volta e identidade mesmo girado" classname="br.com.arque.measure.GeoTest" time="0.0"/>
+  <testcase name="folha mantem o tamanho do papel" classname="br.com.arque.measure.GeoTest" time="0.0"/>
+  <testcase name="alinha na horizontal e vertical perto do eixo" classname="br.com.arque.measure.GeoTest" time="0.0"/>
+  <testcase name="contem pontos dentro e fora da foto girada" classname="br.com.arque.measure.GeoTest" time="0.001"/>
+  <testcase name="teste de toque acha a cota e respeita a ordem de camadas" classname="br.com.arque.measure.GeoTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

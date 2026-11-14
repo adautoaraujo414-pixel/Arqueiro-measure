@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.UnitsTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-11-14T09:40:15.129Z" hostname="runnervmm7ud1" time="0.003">
+  <properties/>
+  <testcase name="medida da trena sai igual ao visor" classname="br.com.arque.measure.UnitsTest" time="0.001"/>
+  <testcase name="converte entre unidades sem perder o valor em mm" classname="br.com.arque.measure.UnitsTest" time="0.0"/>
+  <testcase name="formata com virgula decimal e sufixo" classname="br.com.arque.measure.UnitsTest" time="0.0"/>
+  <testcase name="digitadoEmMmComTelaEmMetroOuCm" classname="br.com.arque.measure.UnitsTest" time="0.0"/>
+  <testcase name="rejeita texto invalido ou nao positivo" classname="br.com.arque.measure.UnitsTest" time="0.0"/>
+  <testcase name="interpreta texto digitado" classname="br.com.arque.measure.UnitsTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

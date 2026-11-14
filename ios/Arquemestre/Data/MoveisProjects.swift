@@ -71,8 +71,39 @@ enum MoveisProjects {
 
     static var file: URL { AppPaths.moveis.appendingPathComponent("projects.json") }
 
+    /// A lista é pedida a cada redesenho de tela (caderno, biblioteca, orçamentos). Ler e interpretar o projects.json inteiro
+    /// toda vez travava o caderno (a cada movimento do dedo) quando a nota estava ligada a um projeto: o resultado fica guardado
+    /// enquanto o arquivo não muda (data, tamanho e número do arquivo no disco).
+    private static var listCache: (sig: String, list: [P])?
+    private static let listLock = NSLock()
+    /// Quantas vezes o arquivo foi lido e interpretado de verdade (conferido nos testes).
+    private(set) static var listParses = 0
+
+    private static func fileSig(_ url: URL) -> String? {
+        guard let at = try? FileManager.default.attributesOfItem(atPath: url.path) else { return nil }
+        let d = (at[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0
+        let n = (at[.size] as? NSNumber)?.int64Value ?? -1
+        let ino = (at[.systemFileNumber] as? NSNumber)?.int64Value ?? -1
+        return "\(url.path)|\(d.bitPattern)|\(n)|\(ino)|\(I18n.shared.lang)"
+    }
+
     static func list() -> [P] {
-        guard let txt = try? String(contentsOf: file, encoding: .utf8), let a = try? JsonCodec.parseArray(txt) else { return [] }
+        let url = file
+        // sem assinatura (arquivo ainda não existe): não guarda nada
+        let sig = fileSig(url)
+        listLock.lock()
+        if let s = sig, let c = listCache, c.sig == s { listLock.unlock(); return c.list }
+        listLock.unlock()
+        let out = parseList(url)
+        listLock.lock()
+        listParses += 1
+        listCache = sig.map { (sig: $0, list: out) }
+        listLock.unlock()
+        return out
+    }
+
+    private static func parseList(_ url: URL) -> [P] {
+        guard let txt = try? String(contentsOf: url, encoding: .utf8), let a = try? JsonCodec.parseArray(txt) else { return [] }
         return a.compactMap { $0 as? [String: Any] }.compactMap { p -> P? in
             let id = JsonCodec.s(p, "id")
             if id.isEmpty { return nil }

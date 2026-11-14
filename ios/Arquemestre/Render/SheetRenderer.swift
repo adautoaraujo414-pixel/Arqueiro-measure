@@ -29,7 +29,12 @@ func roomSegColor(_ o: RoomObj, _ kind: SegKind) -> Int {
 /// Coordenadas: unidades de folha (794 × 1123, 1 unidade = 1/96 pol).
 final class SheetRenderer {
     var images: (String) -> UIImage?
+    /// Só na tela: devolve a foto já no tamanho em pixels em que vai aparecer (exportar e miniatura continuam com [images]).
+    var sized: ((String, CGFloat) -> UIImage?)?
+    /// Alguma foto não abriu no último desenho (aparece "carregando…"): quem guarda a imagem da folha não pode confiar nela.
+    private(set) var missingPhoto = false
     init(images: @escaping (String) -> UIImage? = { ImageCache.shared.image($0) }) { self.images = images }
+    func resetMissing() { missingPhoto = false }
 
     private func withAlpha(_ c: Int, _ a: Int) -> Int { argb((UInt32(truncatingIfNeeded: c) & 0x00FFFFFF) | (UInt32(a & 0xFF) << 24)) }
 
@@ -151,11 +156,19 @@ final class SheetRenderer {
         c.translateBy(x: p.cx, y: p.cy)
         c.rotate(by: Geo.rad(p.rot))
         let r = CGRect(x: -p.w / 2, y: -p.h / 2, width: p.w, height: p.h)
-        if let img = images(p.file) {
+        let img: UIImage?
+        if let pick = sized {
+            // pixels por unidade de folha neste desenho (zoom × densidade da tela)
+            let t = c.ctm
+            let k = max(hypot(t.a, t.b), hypot(t.c, t.d))
+            img = pick(p.file, max(p.w, p.h) * k)
+        } else { img = images(p.file) }
+        if let img = img {
             UIGraphicsPushContext(c)
             img.draw(in: r)
             UIGraphicsPopContext()
         } else {
+            missingPhoto = true
             fill(c, argb(0xFFDDDDDD)); c.fill(r)
             text(c, tr("carregando…"), 0, 6, size: 18, color: argb(0xFF777777), align: .center)
         }

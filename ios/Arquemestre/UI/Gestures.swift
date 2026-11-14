@@ -52,6 +52,8 @@ final class GestureController {
     var liveId: String? { (mode == .STROKE || mode == .ROOM) ? createdId : nil }
     /// Só traço, borracha e laço usam os pontos intermediários.
     var wantsHistory: Bool { mode == .STROKE || mode == .ROOM || mode == .ERASE || mode == .LASSO || mode == .ERASE_LASSO }
+    /// Só a câmera está mexendo (arrastando a folha com um dedo).
+    var panning: Bool { mode == .PAN }
 
     private var st: EditorState { s.state }
     private let slop: CGFloat = 8
@@ -607,9 +609,7 @@ final class GestureController {
             ph.w *= k; ph.h *= k; ph.rot += applyAng
             st.live(replace(.photo(ph)))
         } else {
-            s.view.ox += c.x - prevC.x
-            s.view.oy += c.y - prevC.y
-            s.zoomAround(zoom, c.x, c.y)
+            s.zoomAround(zoom, c.x, c.y, panX: c.x - prevC.x, panY: c.y - prevC.y)
         }
         prevC = c; prevSpan = span; prevAng = ang(a, b)
     }

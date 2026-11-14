@@ -128,20 +128,87 @@ final class ImageCache {
     static let shared = ImageCache()
     private let cache = NSCache<NSString, UIImage>()
     private let store = Store()
-    init() { cache.countLimit = 60 }
+    private let warmQueue = DispatchQueue(label: "arque.fotos", qos: .utility)
+    private var warming = Set<String>()
+    private let warmLock = NSLock()
+    init() {
+        cache.countLimit = 60
+        // limite também em memória: 60 fotos de 2400 px passariam de 1 GB e o iOS fecharia o app
+        cache.totalCostLimit = 240 * 1024 * 1024
+    }
 
-    func image(_ name: String, maxPx: CGFloat = 2400) -> UIImage? {
-        let key = "\(name)#\(Int(maxPx))" as NSString
-        if let i = cache.object(forKey: key) { return i }
+    private static func cost(_ img: UIImage) -> Int { img.cgImage.map { $0.bytesPerRow * $0.height } ?? 0 }
+
+    private func decode(_ name: String, _ maxPx: CGFloat) -> UIImage? {
         let url = store.imageFile(name)
         guard let src = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
         let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
                                      kCGImageSourceCreateThumbnailWithTransform: true,
                                      kCGImageSourceThumbnailMaxPixelSize: maxPx]
         guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else { return nil }
-        let img = UIImage(cgImage: cg)
-        cache.setObject(img, forKey: key)
+        return UIImage(cgImage: cg)
+    }
+
+    func image(_ name: String, maxPx: CGFloat = 2400) -> UIImage? {
+        let key = "\(name)#\(Int(maxPx))" as NSString
+        if let i = cache.object(forKey: key) { return i }
+        guard let img = decode(name, maxPx) else { return nil }
+        cache.setObject(img, forKey: key, cost: Self.cost(img))
         return img
+    }
+
+    /// Degrau de tamanho (lado maior, em pixels) que cobre o que a tela pede.
+    static func step(_ px: CGFloat) -> Int {
+        var side = 256
+        while CGFloat(side) < px && side < 2048 { side *= 2 }
+        return CGFloat(side) < px ? 2400 : side
+    }
+
+    private static func dkey(_ name: String, _ side: Int) -> NSString { "\(name)@\(side)" as NSString }
+
+    /// Foto pronta pra tela: no tamanho em que aparece (degraus de 2×) e já no formato de cor da tela.
+    /// Desenhar a foto de 2400 px a cada quadro (reduzindo e convertendo a cor toda vez) pesava ao mover a folha e ao escrever.
+    func display(_ name: String, px: CGFloat, warm: Bool = true) -> UIImage? {
+        let side = Self.step(px)
+        if let i = cache.object(forKey: Self.dkey(name, side)) { return i }
+        // já tem uma maior pronta: usa ela agora (não para pra abrir a foto de novo) e deixa o tamanho certo pra depois
+        var big = side
+        while big < 2400 {
+            big = big >= 2048 ? 2400 : big * 2
+            if let i = cache.object(forKey: Self.dkey(name, big)) { warmUp(name, side); return i }
+        }
+        guard let img = makeDisplay(name, side) else { return nil }
+        cache.setObject(img, forKey: Self.dkey(name, side), cost: Self.cost(img))
+        // a lupa da medida mostra a foto 3,4× maior e o zoom pede o degrau seguinte: deixa pronto em segundo plano
+        if warm { warmUp(name, Self.step(px * 3.4)) }
+        return img
+    }
+
+    private func makeDisplay(_ name: String, _ side: Int) -> UIImage? {
+        guard let raw = decode(name, CGFloat(side)), let cg = raw.cgImage else { return nil }
+        let size = CGSize(width: cg.width, height: cg.height)
+        let fmt = UIGraphicsImageRendererFormat()
+        fmt.scale = 1
+        fmt.preferredRange = .standard
+        let a = cg.alphaInfo
+        fmt.opaque = a == .none || a == .noneSkipLast || a == .noneSkipFirst
+        return UIGraphicsImageRenderer(size: size, format: fmt).image { _ in raw.draw(in: CGRect(origin: .zero, size: size)) }
+    }
+
+    private func warmUp(_ name: String, _ side: Int) {
+        let k = Self.dkey(name, side) as String
+        if cache.object(forKey: k as NSString) != nil { return }
+        warmLock.lock()
+        let fresh = warming.insert(k).inserted
+        warmLock.unlock()
+        if !fresh { return }
+        warmQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.cache.object(forKey: k as NSString) == nil, let img = self.makeDisplay(name, side) {
+                self.cache.setObject(img, forKey: k as NSString, cost: Self.cost(img))
+            }
+            self.warmLock.lock(); self.warming.remove(k); self.warmLock.unlock()
+        }
     }
 
     /// Tamanho já girado conforme o EXIF.

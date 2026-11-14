@@ -10,8 +10,20 @@ final class SheetCanvasView: UIView {
         }
     }
     var onAction: ((GestureAction) -> Void)?
-    private var controller: GestureController!
-    private let renderer = SheetRenderer()
+    /// Os gestos da folha (os testes conduzem o traço por aqui, igual ao dedo).
+    private(set) var controller: GestureController!
+    /// Na tela a foto entra no tamanho em que aparece (a de 2400 px a cada quadro pesava).
+    private let renderer: SheetRenderer = {
+        let r = SheetRenderer()
+        r.sized = { ImageCache.shared.display($0, px: $1) }
+        return r
+    }()
+    /// A lupa amplia 3,4×: pede a foto no tamanho da lupa (que já foi deixado pronto em segundo plano).
+    private let loupeRenderer: SheetRenderer = {
+        let r = SheetRenderer()
+        r.sized = { ImageCache.shared.display($0, px: $1, warm: false) }
+        return r
+    }()
 
     private var active: UITouch?
     private var pen = false
@@ -24,9 +36,20 @@ final class SheetCanvasView: UIView {
     private var lockedTouchMoved = false
     /// Toques de mão/punho apoiados: ignorados até soltar.
     private var palms = Set<UITouch>()
-    /// Imagem do que está parado na folha enquanto se escreve (só o traço novo é redesenhado).
+    /// Imagem do que está parado na folha, guardada de um quadro pro outro: enquanto nada muda (escrevendo, abrindo um menu,
+    /// trocando a cor) a folha inteira não é desenhada de novo; só o traço novo entra por cima.
     private var cache: UIImage?
     private var cacheKey = ""
+    /// A imagem guardada foi feita com alguma foto ainda sem abrir ("carregando…"): fora do traço é refeita a cada desenho.
+    private var cacheStale = false
+    /// Traço que estava sendo escrito no último quadro: ao soltar, ele é somado à imagem guardada (a folha não é redesenhada).
+    private var liveMark: (id: String, cam: String, rev: Int, count: Int)?
+    /// Conferidos nos testes: folha inteira desenhada, imagem guardada aproveitada, traço somado à imagem.
+    private(set) var fullRenders = 0
+    private(set) var cacheHits = 0
+    private(set) var bakes = 0
+    /// Testes: desliga a imagem guardada pra comparar com o desenho direto.
+    var cacheOff = false
 
     /// Contato grande (mão, punho) e não é o Apple Pencil.
     /// Só no iPad (onde se apoia a mão pra escrever com o Pencil). No iPhone o dedo grande (polegar na pinça) não pode virar "mão".
@@ -164,36 +187,36 @@ final class SheetCanvasView: UIView {
         c.setFillColor(backgroundColor?.cgColor ?? UIColor.darkGray.cgColor)
         c.fill(bounds)
         let v = s.view
+        let st = s.state
         let visible = CGRect(x: -v.ox / v.scale, y: -v.oy / v.scale, width: bounds.width / v.scale, height: bounds.height / v.scale)
-        if let lid = controller?.liveId, s.state.inGesture {
-            // escrevendo: o resto da folha vira uma imagem (feita uma vez); só o traço novo é desenhado a cada quadro
-            let key = "\(s.staticRev)|\(v.ox)|\(v.oy)|\(v.scale)|\(bounds.width)|\(bounds.height)|\(lid)|\(s.state.pageIdx)"
-            if cache == nil || cacheKey != key {
-                let fmt = UIGraphicsImageRendererFormat.default()
-                fmt.opaque = true
-                cache = UIGraphicsImageRenderer(size: bounds.size, format: fmt).image { ctx in
-                    let cc = ctx.cgContext
-                    cc.setFillColor(backgroundColor?.cgColor ?? UIColor.darkGray.cgColor)
-                    cc.fill(CGRect(origin: .zero, size: bounds.size))
-                    cc.translateBy(x: v.ox, y: v.oy)
-                    cc.scaleBy(x: v.scale, y: v.scale)
-                    drawScene(cc, s, v.scale, selected: true, visible: visible, skipId: lid)
-                }
-                cacheKey = key
-            }
+        let live: String? = st.inGesture ? controller?.liveId : nil
+        // câmera mexendo (arrastando a folha ou pinça): desenha direto; a imagem guardada é refeita uma vez ao soltar
+        let moving = active != nil && !s.screenLocked && (multi || (controller?.panning ?? false))
+        // outros gestos (mover, alça, borracha, forma) e o laço mudam a folha a cada quadro: desenho direto
+        let usable = !cacheOff && !moving && (live != nil || !st.inGesture) && s.lasso.isEmpty && bounds.width >= 1 && bounds.height >= 1
+        if usable {
+            let cam = "\(v.ox)|\(v.oy)|\(v.scale)|\(bounds.width)|\(bounds.height)|\(st.pageIdx)"
+            let key = "\(s.staticRev)|\(cam)"
+            if cache == nil || cacheKey != key || (cacheStale && live == nil) {
+                if !bake(s, v, cam, key) { rebuild(s, v, visible, key, skip: live) }
+            } else { cacheHits += 1 }
             cache?.draw(in: bounds)
-            c.saveGState()
-            c.translateBy(x: v.ox, y: v.oy)
-            c.scaleBy(x: v.scale, y: v.scale)
-            c.translateBy(x: 0, y: CGFloat(s.state.pageIdx) * (Sheet.H + Sheet.GAP))
-            renderer.drawOne(c, s.state.sheet, s.state.unit, id: lid)
-            c.restoreGState()
+            if let lid = live {
+                // escrevendo: só o traço novo é desenhado a cada quadro, por cima da imagem guardada
+                c.saveGState()
+                c.translateBy(x: v.ox, y: v.oy)
+                c.scaleBy(x: v.scale, y: v.scale)
+                c.translateBy(x: 0, y: CGFloat(st.pageIdx) * (Sheet.H + Sheet.GAP))
+                renderer.drawOne(c, st.sheet, st.unit, id: lid)
+                c.restoreGState()
+                liveMark = (id: lid, cam: cam, rev: s.staticRev, count: st.sheet.objs.count)
+            } else { liveMark = nil }
         } else {
-            cache = nil
+            if !cacheOff { liveMark = nil }
             c.saveGState()
             c.translateBy(x: v.ox, y: v.oy)
             c.scaleBy(x: v.scale, y: v.scale)
-            drawScene(c, s, v.scale, selected: true, visible: visible)
+            drawScene(c, s, v.scale, selected: true, visible: visible, with: renderer)
             c.restoreGState()
         }
         // rastro da borracha: faixa clara por onde passou + o círculo dela
@@ -230,7 +253,7 @@ final class SheetCanvasView: UIView {
             c.translateBy(x: lcx, y: lcy)
             c.scaleBy(x: v.scale * 3.4, y: v.scale * 3.4)
             c.translateBy(x: -fw.x, y: -fw.y)
-            drawScene(c, s, v.scale * 3.4, selected: false, visible: CGRect(x: fw.x - 60, y: fw.y - 60, width: 120, height: 120))
+            drawScene(c, s, v.scale * 3.4, selected: false, visible: CGRect(x: fw.x - 60, y: fw.y - 60, width: 120, height: 120), with: loupeRenderer)
             c.restoreGState()
             c.setStrokeColor(UIColor(white: 0.13, alpha: 1).cgColor); c.setLineWidth(1)
             c.strokeLineSegments(between: [CGPoint(x: lcx - r * 0.35, y: lcy), CGPoint(x: lcx + r * 0.35, y: lcy), CGPoint(x: lcx, y: lcy - r * 0.35), CGPoint(x: lcx, y: lcy + r * 0.35)])
@@ -239,7 +262,57 @@ final class SheetCanvasView: UIView {
         }
     }
 
-    private func drawScene(_ c: CGContext, _ s: EditorSession, _ scale: CGFloat, selected: Bool, visible: CGRect, skipId: String? = nil) {
+    /// Desenha a folha inteira na imagem guardada (sem o traço que está sendo escrito).
+    private func rebuild(_ s: EditorSession, _ v: ViewState, _ visible: CGRect, _ key: String, skip: String?) {
+        let fmt = UIGraphicsImageRendererFormat.default()
+        fmt.opaque = true
+        let size = bounds.size
+        let bg = backgroundColor?.cgColor ?? UIColor.darkGray.cgColor
+        renderer.resetMissing()
+        cache = UIGraphicsImageRenderer(size: size, format: fmt).image { ctx in
+            let cc = ctx.cgContext
+            cc.setFillColor(bg)
+            cc.fill(CGRect(origin: .zero, size: size))
+            cc.translateBy(x: v.ox, y: v.oy)
+            cc.scaleBy(x: v.scale, y: v.scale)
+            drawScene(cc, s, v.scale, selected: true, visible: visible, skipId: skip, with: renderer)
+        }
+        cacheKey = key
+        cacheStale = renderer.missingPhoto
+        fullRenders += 1
+    }
+
+    /// Soltou o traço e mais nada mudou: o traço pronto é somado à imagem guardada, sem desenhar a folha inteira de novo
+    /// (com a folha cheia ou com fotos, redesenhar tudo a cada traço era o que atrasava a escrita).
+    private func bake(_ s: EditorSession, _ v: ViewState, _ cam: String, _ key: String) -> Bool {
+        guard let m = liveMark, let old = cache, !cacheStale, m.cam == cam, cacheKey == "\(m.rev)|\(cam)", s.staticRev == m.rev &+ 1 else { return false }
+        let st = s.state
+        guard !st.inGesture, st.selectedId == nil, st.groupIds.isEmpty else { return false }
+        let objs = st.sheet.objs
+        // o traço ficou como o último da folha, ou o gesto foi cancelado e a folha voltou ao que era
+        let kept = objs.count == m.count && objs.last?.id == m.id && objs.last?.asStroke != nil
+        let gone = objs.count == m.count - 1 && !objs.contains(where: { $0.id == m.id })
+        guard kept || gone else { return false }
+        if kept {
+            let fmt = UIGraphicsImageRendererFormat.default()
+            fmt.opaque = true
+            let size = bounds.size
+            let sheet = st.sheet, unit = st.unit, page = st.pageIdx
+            cache = UIGraphicsImageRenderer(size: size, format: fmt).image { ctx in
+                old.draw(in: CGRect(origin: .zero, size: size))
+                let cc = ctx.cgContext
+                cc.translateBy(x: v.ox, y: v.oy)
+                cc.scaleBy(x: v.scale, y: v.scale)
+                cc.translateBy(x: 0, y: CGFloat(page) * (Sheet.H + Sheet.GAP))
+                renderer.drawOne(cc, sheet, unit, id: m.id)
+            }
+        }
+        cacheKey = key
+        bakes += 1
+        return true
+    }
+
+    private func drawScene(_ c: CGContext, _ s: EditorSession, _ scale: CGFloat, selected: Bool, visible: CGRect, skipId: String? = nil, with renderer: SheetRenderer) {
         let st = s.state
         let step = Sheet.H + Sheet.GAP
         for (i, page) in st.note.pages.enumerated() {

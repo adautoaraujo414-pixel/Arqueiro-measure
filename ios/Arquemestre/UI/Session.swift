@@ -87,7 +87,7 @@ struct TextEdit: Equatable { var id: String?; var at: Pt }
 final class EditorSession: ObservableObject {
     @Published var rev = 0
     let state: EditorState
-    var view = ViewState() { didSet { staticRev &+= 1; rev &+= 1 } }
+    var view = ViewState() { didSet { viewChanged(oldValue) } }
     /// A folha desenha direto (sem passar pelo SwiftUI) a cada ponto do traço.
     var onCanvas: (() -> Void)?
     /// Muda quando o que está parado na folha mudou (fora do gesto): a imagem guardada é refeita.
@@ -123,12 +123,30 @@ final class EditorSession: ObservableObject {
     private var tapPos: [CGPoint] = []
     private var tapSelId: String?
     private var tapSelSeg = -1
+    /// O que os painéis (SwiftUI) mostram e depende da câmera: zoom e folha visível.
+    private var shownZoom = Int.min
+    private var shownPage = -1
+
+    /// A câmera mexeu: a folha redesenha direto. Os painéis só são recalculados quando o que eles mostram muda
+    /// (o número do zoom, a folha visível, ou uma barra presa ao que está selecionado). Antes a tela inteira era
+    /// recalculada a cada movimento do dedo.
+    private func viewChanged(_ old: ViewState) {
+        if old.scale == view.scale && old.ox == view.ox && old.oy == view.oy && old.pageOffsetY == view.pageOffsetY { return }
+        staticRev &+= 1
+        onCanvas?()
+        let z = zoomPercent, p = visiblePage()
+        let follow = state.selectedId != nil || !state.groupIds.isEmpty || textEdit != nil
+        if follow || z != shownZoom || p != shownPage { shownZoom = z; shownPage = p; rev &+= 1 }
+    }
 
     init(_ note: Note, onCommit: @escaping (Note) -> Void) {
         state = EditorState(note, onCommit: onCommit)
         // durante o traço só a folha redesenha; os painéis (SwiftUI) só no começo e no fim do gesto
         state.onChange = { [weak self] in
             guard let self = self else { return }
+            // a folha ativa e a câmera andam juntas (desfazer, duplicar folha, próxima medida em outra folha):
+            // sem isso a barra do que está selecionado aparecia na altura da folha antiga até o próximo toque
+            self.updateActivePage()
             self.onCanvas?()
             if !self.state.inGesture { self.staticRev &+= 1; self.rev &+= 1 }
         }
@@ -181,8 +199,8 @@ final class EditorSession: ObservableObject {
         updateActivePage()
     }
 
-    func clampView(allowPull: Bool = false) {
-        var v = view
+    func clampView(allowPull: Bool = false, from: ViewState? = nil) {
+        var v = from ?? view
         let s = v.scale
         let sw = Sheet.W * s
         v.ox = sw <= canvasW ? (canvasW - sw) / 2 : clamp(v.ox, canvasW - sw - 24, 24)
@@ -191,26 +209,28 @@ final class EditorSession: ObservableObject {
         let lowest = min(top, minOy)
         var oy = min(v.oy, top)
         if oy < lowest {
-            if allowPull { pull = lowest - oy; oy = lowest - pull * 0.5 } else { oy = lowest; pull = 0 }
+            if allowPull { let np = lowest - oy; if np != pull { pull = np }; oy = lowest - np * 0.5 } else { oy = lowest; if pull != 0 { pull = 0 } }
         } else if pull != 0 { pull = 0 }
         v.oy = oy
         view = v
     }
 
+    /// Uma mudança só na câmera por movimento do dedo (antes eram três: x, y e o ajuste).
     func panBy(_ dx: CGFloat, _ dy: CGFloat) {
-        view.ox += dx; view.oy += dy
-        clampView(allowPull: true)
+        var v = view
+        v.ox += dx; v.oy += dy
+        clampView(allowPull: true, from: v)
     }
 
-    func zoomAround(_ factor: CGFloat, _ cx: CGFloat, _ cy: CGFloat) {
+    func zoomAround(_ factor: CGFloat, _ cx: CGFloat, _ cy: CGFloat, panX: CGFloat = 0, panY: CGFloat = 0) {
         var v = view
+        v.ox += panX; v.oy += panY
         let ns = clamp(v.scale * factor, fitScale * 0.25, fitScale * 10)
         let real = ns / v.scale
         v.ox = cx - (cx - v.ox) * real
         v.oy = cy - (cy - v.oy) * real
         v.scale = ns
-        view = v
-        clampView()
+        clampView(from: v)
     }
 
     /// Ao soltar: se puxou bastante além do fim, cria uma folha.
@@ -222,8 +242,10 @@ final class EditorSession: ObservableObject {
             added = true
             updateActivePage()
         }
-        pull = 0
+        if pull != 0 { pull = 0 }
         clampView()
+        // soltou o dedo: os painéis acertam o que mostram (zoom, folha) uma vez
+        rev &+= 1
         return added
     }
 
@@ -231,10 +253,14 @@ final class EditorSession: ObservableObject {
         let w = view.toWorld(screen)
         let i = clamp(Int(floor(w.y / pageStep)), 0, state.note.pages.count - 1)
         if i != state.pageIdx { state.setPage(i) }
-        view.pageOffsetY = CGFloat(i) * pageStep
+        let off = CGFloat(i) * pageStep
+        if view.pageOffsetY != off { view.pageOffsetY = off }
     }
 
-    func updateActivePage() { view.pageOffsetY = CGFloat(state.pageIdx) * pageStep }
+    func updateActivePage() {
+        let off = CGFloat(state.pageIdx) * pageStep
+        if view.pageOffsetY != off { view.pageOffsetY = off }
+    }
 
     func goToPage(_ i: Int) {
         let n = clamp(i, 0, state.note.pages.count - 1)

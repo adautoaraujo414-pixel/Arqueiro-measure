@@ -4070,7 +4070,7 @@ final class EditorWebKitTests: XCTestCase {
           var G=cutGroups();R.corte=G.ord.filter(function(k){return /painel liso/i.test(G.map[k].names[0])}).reduce(function(s,k){return s+G.map[k].qty},0)+' '+wvCur();
           wvGo('d');await ADD();wvGo('f');R.tres=WL()+' '+S.W+' '+wvCur();
           S.tab=8;panel();R.conf=!!document.querySelector('#bd [data-rpconf]');
-          S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3000;newTpl(0);S.tab=0;panel();R.est=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace('⌃','').trim()}).join('|');
+          S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3000;newTpl(0);S.tab=0;panel();R.est=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()}).join('|');
           stdOpen(0,'obra');await W(100);var o=document.getElementById('cfgobra');R.obra=!!o&&/Paredes \(modo fácil\)/.test(o.textContent)&&/Esquadro/.test(o.textContent);var i=o.querySelector('[data-pf="F|w"]');i.value='3300';i.dispatchEvent(new Event('change',{bubbles:true}));R.W=S.W;
           var q=document.querySelector('#stdbody [data-stdq="limH"]');R.lim=q.value;var l0=PR.limH;q.value='2600';q.dispatchEvent(new Event('input',{bubbles:true}));q.dispatchEvent(new Event('change',{bubbles:true}));R.plLim=plLim().h+' '+plLim().w;PR.limH=l0;document.getElementById('stdm').hidden=true;
           R.errs=__errs;return JSON.stringify(R);
@@ -4090,7 +4090,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["corte"] as? String, "2 e", "lista de corte com os painéis de todas as paredes")
         XCTAssertEqual(o["tres"] as? String, "fed 3800 null", "painel nas 3 paredes")
         XCTAssertEqual(o["conf"] as? Bool, false, "sem a conferência da soma na aba")
-        XCTAssertEqual(o["est"] as? String, "Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
+        // a seção Rodapé (rodapé de MDF ou pés de metal) fica logo abaixo das medidas do módulo
+        XCTAssertEqual(o["est"] as? String, "Dimensões|Rodapé|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
         XCTAssertEqual(o["obra"] as? Bool, true, "medidas das paredes e esquadro no Ajustes")
         XCTAssertEqual((o["W"] as? NSNumber)?.intValue, 3300)
         XCTAssertEqual(o["lim"] as? String, "2700")
@@ -8294,14 +8295,20 @@ final class EditorWebKitTests: XCTestCase {
         newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
         S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=S.mods[0].tt=true;draw();
         var seta=function(h){var sp=h.lastElementChild;return sp&&sp.tagName==='SPAN'&&/^[⌃⌄]$/.test(sp.textContent.trim())?sp:null},vis=function(e){return e.getClientRects().length>0};
-        var bloco=function(h){var o=[],n=h.nextElementSibling;while(n&&!n.classList.contains('sec')){o.push(n);n=n.nextElementSibling}return o};
-        var abas=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(x){return [+x.dataset.t,x.textContent.trim()]}),tot=0,semSeta=[],ruins=[],lista=[];
+        var bloco=function(h){var o=[],n=h.nextElementSibling;while(n&&!n.classList.contains('sec')&&!n.hasAttribute('data-secfim')){o.push(n);n=n.nextElementSibling}return o};
+        var abas=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(x){return [+x.dataset.t,x.textContent.trim()]}),tot=0,semSeta=[],ruins=[],lista=[],nasc=[];
         var foto=function(){var z=snapState();delete z.mi;delete z.m;delete z.sti;delete z.trena;return JSON.stringify(z)};S.m=S.mods[0];draw();var z0=foto();
         for(var a=0;a<abas.length;a++){S.m=S.mods[0];S.tab=abas[a][0];draw();panel();await W(60);
           var hs=[].slice.call(document.querySelectorAll('#bd .sec')).filter(vis),n=0;
           for(var i=0;i<hs.length;i++){var nome=hs[i].textContent.replace(/[⌃⌄]\s*$/,'').trim();if(!seta(hs[i])){semSeta.push(abas[a][1]+' › '+nome);continue}
             /* pega de novo pelo nome (o painel pode ter sido redesenhado) */
             var H=function(){return [].slice.call(document.querySelectorAll('#bd .sec')).filter(function(h){return h.textContent.replace(/[⌃⌄]\s*$/,'').trim()===nome})[0]},h=H();if(!h)continue;
+            /* seção que já nasce fechada (Rodapé): começa só com o título, abre no toque, continua aberta ao redesenhar e fecha de novo no toque */
+            if(h.getAttribute('data-secdef')==='f'){var eu=abas[a][1]+' › '+nome;nasc.push(eu);n++;tot++;var Bf=bloco(h),ff0=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return Bf.indexOf(e)<0&&vis(e)}).length;
+              if(Bf.filter(vis).length!==0||seta(h).textContent.trim()!=='⌄')ruins.push(eu+': devia nascer fechada');seta(h).click();await W(30);h=H();var Ba=bloco(h),va=Ba.filter(vis).length,ff1=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return Ba.indexOf(e)<0&&vis(e)}).length;
+              if(va===0)ruins.push(eu+': não abriu');if(seta(h).textContent.trim()!=='⌃')ruins.push(eu+': setinha não virou');if(ff1!==ff0)ruins.push(eu+': mexeu em outra seção ('+ff0+'→'+ff1+')');
+              panel();await W(30);h=H();if(!h||bloco(h).filter(vis).length!==va)ruins.push(eu+': fechou sozinha ao redesenhar');
+              if(h){h.click();await W(30);h=H();if(bloco(h).filter(vis).length!==0)ruins.push(eu+': não fechou de novo');if(!vis(h))ruins.push(eu+': o título sumiu');if(seta(h).textContent.trim()!=='⌄')ruins.push(eu+': setinha não voltou')}continue}
             var B0=bloco(h),v0=B0.filter(vis).length,fora0=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return B0.indexOf(e)<0&&vis(e)}).length;n++;tot++;
             seta(h).click();await W(30);h=H();var B1=bloco(h),v1=B1.filter(vis).length,fora1=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return B1.indexOf(e)<0&&vis(e)}).length;
             if(v1!==0)ruins.push(abas[a][1]+' › '+nome+': fechou e ainda aparecem '+v1+' de '+v0);if(!vis(h))ruins.push(abas[a][1]+' › '+nome+': o título sumiu');if(seta(h).textContent.trim()!=='⌄')ruins.push(abas[a][1]+' › '+nome+': setinha não virou');if(fora1!==fora0)ruins.push(abas[a][1]+' › '+nome+': mexeu em outra seção ('+fora0+'→'+fora1+')');
@@ -8311,7 +8318,7 @@ final class EditorWebKitTests: XCTestCase {
             if(h){h.click();await W(30);h=H();var v2=bloco(h).filter(vis).length;if(v2!==v0)ruins.push(abas[a][1]+' › '+nome+': abriu com '+v2+' em vez de '+v0);if(seta(h).textContent.trim()!=='⌃')ruins.push(abas[a][1]+' › '+nome+': setinha não voltou')}}
           lista.push(abas[a][1]+' '+n)}
         R.abas=abas.length;R.secoesComSetinha=tot;R.porAba=lista.join(' | ');R.ruins=ruins.length+(ruins.length?': '+ruins.slice(0,8).join(' || '):'');R.tituloSemSetinha=semSeta.length+(semSeta.length?': '+semSeta.slice(0,8).join(' | '):'');
-        R.projetoNaoMudou=foto()===z0;R.nadaFicouFechado=secFech().length;/* fora do painel do módulo: ⚙ Ajustes e 👤 Clientes também têm seção com setinha */
+        R.nascemFechadas=nasc.join(' | ');R.projetoNaoMudou=foto()===z0;R.nadaFicouFechado=secFech().filter(function(k){return !nasc.some(function(q){return q.split(' › ')[1]===k})}).length;/* fora do painel do módulo: ⚙ Ajustes e 👤 Clientes também têm seção com setinha */
         var fora=async function(){var nm=function(h){return h.textContent.replace(/[⌃⌄]\s*$/,'').trim().slice(0,40)},L=function(){return [].slice.call(document.querySelectorAll('.sec')).filter(function(h){return vis(h)&&seta(h)&&!h.closest('#bd')})},nomes=L().map(nm),rz=[];
           for(var i=0;i<nomes.length;i++){var H=function(){return L().filter(function(h){return nm(h)===nomes[i]})[0]},h=H();if(!h)continue;var v0=bloco(h).filter(vis).length;seta(h).click();await W(50);h=H();if(!h||bloco(h).filter(vis).length!==0){rz.push(nomes[i]+' não fechou');continue}h.click();await W(50);h=H();if(!h||bloco(h).filter(vis).length!==v0)rz.push(nomes[i]+' não abriu igual')}
           return nomes.length+' seções · com defeito '+rz.length+(rz.length?': '+rz.join(' | '):'')};
@@ -8319,17 +8326,17 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 47)
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 6 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 48)
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 7 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
+        XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")
         XCTAssertEqual(o["projetoNaoMudou"] as? Bool, true)
         XCTAssertEqual(o["nadaFicouFechado"] as? Int, 0)
         XCTAssertEqual(o["ajustes"] as? String, "4 seções · com defeito 0")
         XCTAssertEqual(o["clientes"] as? String, "3 seções · com defeito 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
-
     func testNadaDeEnfeiteAbasDoModuloParte1TodoControleFazAlgumaCoisa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -8942,6 +8949,335 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["campoApagadoTiraOItem"] as? Bool, true)
         XCTAssertEqual(o["semNadaVoltaAoQueEra"] as? Bool, true)
         XCTAssertEqual(o["telaValoresVoltaAoQueEra"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPesDeMetalNoLugarDoRodapeDesenho3DMateriaisEForaDoPlanoDeCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
+        var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        var digita=async function(sel,tx){var i=bd().querySelector(sel);if(!i)return false;i.focus();await W(90);if(document.getElementById('calcbar').hidden)return false;tx.split('').forEach(kb);kb('ok');await W(170);return true};
+        var toca=async function(sel){var b=bd().querySelector(sel);if(!b)return false;b.click();await W(90);return true};
+        var pes=function(m){return partsOf(m).filter(function(p){return p.pe})},onde=function(m){var F=pes(m);return F.length+' pés · x '+F.filter(function(p){return !p.noDraw}).map(function(p){return p.x}).join('/')+' · z '+[F[0]&&F[0].pz,F[1]&&F[1].pz].join('/')+' · '+(F[0]?F[0].w+'×'+F[0].pd+' alt '+F[0].h:'')};
+        var rodN=function(m){return partsOf(m).filter(function(p){return /^Rodapé|pedestal/.test(p.name)}).length};
+        var c3=async function(){document.getElementById('b3d').click();await W(700);var L=__boxes().filter(function(q){return /^0:Pé de metal/.test(String(q.nm))}),r=L.length+' · y '+(L[0]?Math.round(L[0].y0)+'→'+Math.round(L[0].y1):'')+' · '+(L[0]&&L[0].pf?'redondo':'quadrado')+' · cor '+(L[0]?L[0].c.map(function(v){return Math.round(v)}).join(','):'');document.getElementById('v3x').click();await W(120);return r};
+        var d2=function(){return [].filter.call(document.querySelectorAll('#svg g[data-mi="0"] rect[data-p]'),function(r){var p=partsOf(S.mods[0])[+r.getAttribute('data-p')];return p&&p.pe}).map(function(r){return r.getAttribute('fill')}).join(' ')};
+        limpa();PR.mdfB=300;PR.mdfC=430;PR.mdfM=430;PR.fundo=200;PR.pesQ=10;PR.pesR=14;var m=await novo('Balcão 2 portas');m.x=1000;S.m=m;S.tab=0;draw();panel();await W(80);
+        var rodJ=function(q){return JSON.stringify(partsOf(q).filter(function(p){return /^Rodapé|pedestal/.test(p.name)}))},p0=rodJ(m),b0=budget(),latH0=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0].h;R.antesTemRodapeDeMdf=rodN(m)>0&&pes(m).length===0&&b0.T.pesQ===0;
+        /* 1. liga os pés de metal no lugar do rodapé */
+        bd().querySelector('[data-rdsec]').click();await W(60);await toca('[data-rdp="tipo|pes"]');m=S.mods[0];
+        R.pesNoLugarDoRodape=onde(m);R.rodapeDeMdfSaiu=rodN(m)===0;R.nomeDaPeca=pes(m)[0].name+' · '+pes(m)[0].note;
+        R.noDesenho2D=d2();R.no3D=await c3();
+        R.foraDoPlanoDeCorte=!cutLines(m).some(function(l){return l.names.some(function(n){return /Rodapé|pedestal|Pé de/.test(n)})});
+        var b1=budget(),row=prAuto(b1).filter(function(r){return r[0]==='pesQ'})[0];R.naListaDeMateriais=row[1]+' · '+qtyU(row)+' · '+row[4];
+        var pq=PR.pesQ;PR.pesQ=0;var bz=budget();PR.pesQ=pq;R.entraNoValorDoMaterial=Math.abs((b1.tot-bz.tot)-60)<0.006&&b1.cB<b0.cB;
+        document.getElementById('vlb').click();await W(400);var tv=document.getElementById('vlbody').textContent;R.naTelaValores=/Pé de metal quadrado/.test(tv)&&/6 un/.test(tv);document.getElementById('vlm').hidden=true;
+        R.resumoNaAba=bd().querySelector('[data-rdres]').textContent.trim().slice(0,62);
+        /* 2. redondo e cor */
+        await toca('[data-rdp="pt|r"]');await toca('[data-rdp="pc|cromado"]');m=S.mods[0];R.redondoCromado=pes(m)[0].name+' · '+pes(m)[0].col+' · 2D '+d2().split(' ')[0];R.redondoNo3D=await c3();
+        var b2=budget();R.linhaDoRedondo=b2.T.pesQ+' quadrados · '+b2.T.pesR+' redondos';
+        /* 3. altura, medida do tubo e distância da borda (teclado do app) */
+        await digita('input[data-r="rodMm"]','150');m=S.mods[0];var le=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.altura150=onde(m)+' · módulo '+m.h+' · lateral '+(latH0-le.h)+' mais curta';
+        await digita('[data-rdn="l"]','40');await digita('[data-rdn="r"]','60');m=S.mods[0];R.tubo40Borda60=onde(m);R.alturaNo3D=await c3();
+        /* 4. dois pés no meio: desliga e liga */
+        var ck=bd().querySelector('[data-rdck="meio"]');R.meioMarcado=ck.checked&&!ck.disabled;ck.click();await W(100);m=S.mods[0];R.semOsDoMeio=onde(m);bd().querySelector('[data-rdck="meio"]').click();await W(100);m=S.mods[0];R.comOsDoMeioDeNovo=pes(m).length;
+        /* 5. vizinho com rodapé de MDF: o corrido não passa por baixo do módulo com pés; rodapé de pedra só no vizinho; lateral até o piso não desce no módulo com pés */
+        var v=await novo('Balcão 1 porta');draw();await W(60);m=S.mods[0];R.vizinhoEncostado=Math.abs(m.x+m.w-v.x)<1;R.corridoSoNoVizinho=JSON.stringify(moldRuns('rod').map(function(q){return q.idx}));R.vizinhoComAsDuasLaterais=partsOf(v).filter(function(p){return /^Rodapé lateral/.test(p.name)}).length;
+        S.rpp={on:1};draw();await W(60);R.rodapeDePedraSoNoVizinho=!partsOf(m).some(function(p){return /Rodapé de pedra/.test(p.name)})&&partsOf(v).some(function(p){return /Rodapé de pedra/.test(p.name)});S.rpp=null;
+        m.latPiso=true;m.latFora=true;draw();await W(40);var l2=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.lateralNaoDesceAteOChao=l2.y+l2.h<=m.h-150+0.6;delete m.latPiso;m.latFora=false;S.mods.splice(1,1);S.m=m;draw();panel();await W(80);
+        /* 6. volta pro rodapé de MDF: a configuração dos pés fica guardada; liga de novo e volta igual */
+        var antes=onde(m);await toca('[data-rdp="tipo|mdf"]');m=S.mods[0];R.voltaProMdf=rodN(m)>0&&pes(m).length===0&&m.pes.on===0&&m.pes.cor==='cromado';await toca('[data-rdp="tipo|pes"]');m=S.mods[0];R.pesDeVoltaIguais=onde(m)===antes;
+        /* 7. desligado: direto no chão, sem rodapé e sem pés */
+        bd().querySelector('input[data-rc="rod"]').click();await W(120);m=S.mods[0];R.desligadoDiretoNoChao=!m.rod&&rodN(m)===0&&pes(m).length===0&&/direto no chão/.test(bd().querySelector('[data-rdbox]').textContent)&&!bd().querySelector('[data-rdp]');
+        document.getElementById('und').click();await W(150);m=S.mods[0];R.desfazerDevolveOsPes=onde(m)===antes;
+        /* 8. salvar e abrir, e copiar o módulo */
+        var st=snapState();loadState(JSON.parse(JSON.stringify(st)));await W(150);m=S.mods[0];R.salvaEAbre=onde(m)===antes&&pes(m)[0].col==='#c5cbd1';
+        S.m=m;var n0=S.mods.length;modCopy(m);draw();await W(80);var cp=S.mods[S.mods.length-1];R.copiaLevaOsPes=S.mods.length===n0+1&&cp!==m&&pes(cp).length===pes(m).length&&pes(cp)[0].col==='#c5cbd1';
+        /* 9. o rodapé de MDF de antes continua igual quando volta tudo (altura 100, sem pés) */
+        S.mods=[m];S.m=m;m.rodMm=100;m.pes.on=0;draw();await W(60);R.mdfIgualAoDeAntes=rodJ(m)===p0&&rodN(m)===7;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antesTemRodapeDeMdf"] as? Bool, true)
+        XCTAssertEqual(o["pesNoLugarDoRodape"] as? String, "6 pés · x 100/425/750 · z 410/100 · 50×50 alt 100")
+        XCTAssertEqual(o["rodapeDeMdfSaiu"] as? Bool, true)
+        XCTAssertEqual(o["nomeDaPeca"] as? String, "Pé de metal quadrado · 50 × 50 mm · altura 100 mm · Preto · ponta esquerda · frente")
+        XCTAssertEqual(o["noDesenho2D"] as? String, "#1b1b1d #1b1b1d #1b1b1d")
+        XCTAssertEqual(o["no3D"] as? String, "6 · y 0→100 · quadrado · cor 27,27,29")
+        XCTAssertEqual(o["foraDoPlanoDeCorte"] as? Bool, true)
+        XCTAssertEqual(o["naListaDeMateriais"] as? String, "Pé de metal quadrado · 6 un · 50 × 50 mm · altura 100 mm · Preto")
+        XCTAssertEqual(o["entraNoValorDoMaterial"] as? Bool, true)
+        XCTAssertEqual(o["naTelaValores"] as? Bool, true)
+        XCTAssertEqual(o["resumoNaAba"] as? String, "6 pés · quadrados · 50 × 50 mm · altura 100 mm · PretoEntram n")
+        XCTAssertEqual(o["redondoCromado"] as? String, "Pé de metal redondo · #c5cbd1 · 2D #c5cbd1")
+        XCTAssertEqual(o["redondoNo3D"] as? String, "6 · y 0→100 · redondo · cor 197,203,209")
+        XCTAssertEqual(o["linhaDoRedondo"] as? String, "0 quadrados · 6 redondos")
+        XCTAssertEqual(o["altura150"] as? String, "6 pés · x 100/425/750 · z 410/100 · 50×50 alt 150 · módulo 820 · lateral 50 mais curta")
+        XCTAssertEqual(o["tubo40Borda60"] as? String, "6 pés · x 60/430/800 · z 460/60 · 40×40 alt 150")
+        XCTAssertEqual(o["alturaNo3D"] as? String, "6 · y 0→150 · redondo · cor 197,203,209")
+        XCTAssertEqual(o["meioMarcado"] as? Bool, true)
+        XCTAssertEqual(o["semOsDoMeio"] as? String, "4 pés · x 60/800 · z 460/60 · 40×40 alt 150")
+        XCTAssertEqual(o["comOsDoMeioDeNovo"] as? Int, 6)
+        XCTAssertEqual(o["vizinhoEncostado"] as? Bool, true)
+        XCTAssertEqual(o["corridoSoNoVizinho"] as? String, "[[1]]")
+        XCTAssertEqual(o["vizinhoComAsDuasLaterais"] as? Int, 2)
+        XCTAssertEqual(o["rodapeDePedraSoNoVizinho"] as? Bool, true)
+        XCTAssertEqual(o["lateralNaoDesceAteOChao"] as? Bool, true)
+        XCTAssertEqual(o["voltaProMdf"] as? Bool, true)
+        XCTAssertEqual(o["pesDeVoltaIguais"] as? Bool, true)
+        XCTAssertEqual(o["desligadoDiretoNoChao"] as? Bool, true)
+        XCTAssertEqual(o["desfazerDevolveOsPes"] as? Bool, true)
+        XCTAssertEqual(o["salvaEAbre"] as? Bool, true)
+        XCTAssertEqual(o["copiaLevaOsPes"] as? Bool, true)
+        XCTAssertEqual(o["mdfIgualAoDeAntes"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPesDeMetalEmTodoTipoDeModuloEstreitoCantoParedeLateralAltoEPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&!it.act&&t&&t.n===n)r=t})});if(!r)r=TPL.filter(function(t){return t.n===n})[0];return JSON.parse(JSON.stringify(r))};
+        var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
+        var pes=function(m){return partsOf(m).filter(function(p){return p.pe})},rodN=function(m){return partsOf(m).filter(function(p){return /^Rodapé|pedestal/.test(p.name)}).length};
+        var abre=async function(m){S.m=m;S.tab=0;draw();panel();await W(80);var s=bd().querySelector('[data-rdsec]');if(s&&s.getAttribute('data-secf')==='1'){s.click();await W(60)}return !!s};
+        var toca=async function(sel){var b=bd().querySelector(sel);if(!b)return false;b.click();await W(90);return true};
+        var b3=async function(){document.getElementById('b3d').click();await W(700);var L=__boxes().filter(function(q){return /Pé de metal/.test(String(q.nm))}).map(function(q){return {x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1}});document.getElementById('v3x').click();await W(120);return L};
+        /* 0. editor por vãos (guarda-roupa): a mesma seção, fechada, com as mesmas opções (primeiro, com a tela recém-aberta: nada foi aberto ainda) */
+        limpa();var mr=await novo('Armário alto 2 portas');rgConvert(mr);draw();await W(80);soloOn(mr);await W(200);R.entrouNoEditorPorVaos=!!window.SOLO2&&rgIs(mr);
+        var te=document.querySelector('#tabs [data-rgt="est"]');if(te){te.click();await W(150)}var sr=bd().querySelector('[data-rdsec]');
+        R.porVaosSecaoFechada=!!sr&&sr.getAttribute('data-secf')==='1'&&!vis(bd().querySelector('[data-rgc="rod"]'))&&vis([].filter.call(bd().querySelectorAll('button'),function(x){return /Mais opções do módulo/.test(x.textContent)})[0]);
+        if(sr){sr.click();await W(80)}R.porVaosAbre=vis(bd().querySelector('[data-rgc="rod"]'))&&vis(bd().querySelector('[data-rdp="tipo|pes"]'));await toca('[data-rdp="tipo|pes"]');mr=S.mods[S.mods.length-1];
+        R.porVaosComPes=pes(mr).length+' pés · sem rodapé '+(rodN(mr)===0)+' · continua aberta '+vis(bd().querySelector('[data-rdp="pt|r"]'));await toca('[data-rdp="pt|r"]');mr=S.mods[S.mods.length-1];R.porVaosRedondo=pes(mr)[0].name;
+        await toca('[data-rdp="tipo|mdf"]');await toca('[data-rdp="emb|2"]');mr=S.mods[S.mods.length-1];var rp=partsOf(mr).filter(function(p){return /^Rodapé \(pedestal\)$/.test(p.name)})[0];R.porVaosRodapeEmbutido=rp?Math.round(rp.x)+'→'+Math.round(rp.x+rp.w)+' de '+mr.w:'sem rodapé';try{soloOff()}catch(_){}await W(80);
+        /* 1. módulo estreito e módulo médio: quantos pés e se os do meio cabem */
+        limpa();var a=await novo('Porta-tempero');await abre(a);await toca('[data-rdp="tipo|pes"]');a=S.mods[0];var ck=bd().querySelector('[data-rdck="meio"]');
+        R.portaTempero200=pes(a).length+' pés · x '+pes(a).filter(function(p){return !p.noDraw}).map(function(p){return p.x}).join('/')+' · do meio '+(ck.disabled?'não cabem':'cabem');
+        R.estreitoNenhumPeEncostaNoOutro=pes(a).every(function(p,i,L){return L.every(function(q,j){return i===j||!(p.x<q.x+q.w+10&&q.x<p.x+p.w+10&&p.pz<q.pz+q.pd+10&&q.pz<p.pz+p.pd+10)})});
+        limpa();var b=await novo('Balcão 1 porta');await abre(b);await toca('[data-rdp="tipo|pes"]');b=S.mods[0];ck=bd().querySelector('[data-rdck="meio"]');R.balcao450=pes(b).length+' pés · do meio '+(ck.disabled?'não cabem':ck.checked?'ligados':'desligados, dá pra ligar');
+        ck.click();await W(100);b=S.mods[0];R.balcao450ComOsDoMeio=pes(b).length+' pés · x '+pes(b).filter(function(p){return !p.noDraw}).map(function(p){return p.x}).join('/');
+        limpa();var g=await novo('Gaveteiro 4 gavetas');await abre(g);await toca('[data-rdp="tipo|pes"]');g=S.mods[0];R.gaveteiro800=pes(g).length+' pés · x '+pes(g).filter(function(p){return !p.noDraw}).map(function(p){return p.x}).join('/');
+        /* 2. canto em L: pés nas pontas das duas pernas e nos cantos; no 3D ficam dentro da planta do canto */
+        limpa();var c=await novo('Canto em L (base)');R.cantoTemRodapeAntes=rodN(c)>0;await abre(c);await toca('[data-rdp="tipo|pes"]');c=S.mods[0];
+        R.cantoEmL=pes(c).length+' pés · sem rodapé de MDF '+(rodN(c)===0)+' · sem opção do meio '+(!bd().querySelector('[data-rdck="meio"]'));
+        var L3=await b3(),D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900);R.cantoNo3D=L3.length+' · no chão '+L3.every(function(q){return Math.abs(q.y0)<0.6&&Math.abs(q.y1-(+c.rodMm||100))<0.6})+' · dentro do L '+L3.every(function(q){var u0=c.corner==='d'?c.x+c.w-q.x1:q.x0-c.x,u1=c.corner==='d'?c.x+c.w-q.x0:q.x1-c.x;return u0>=-0.6&&q.z0>=-0.6&&((u1<=c.w+0.6&&q.z1<=D+0.6)||(u1<=D+0.6&&q.z1<=W2+0.6))});
+        /* 3. módulo na parede lateral: os pés giram junto com ele (ficam embaixo do módulo, não soltos no ambiente) */
+        limpa();var w=await novo('Balcão 2 portas');w.wing='e';try{confineAll()}catch(_){}draw();await W(80);await abre(w);await toca('[data-rdp="tipo|pes"]');w=S.mods[0];var Lw=await b3();
+        document.getElementById('b3d').click();await W(700);var cx=__boxes().filter(function(q){return /^0:(Lateral|Base inferior)/.test(String(q.nm))}),X0=Math.min.apply(null,cx.map(function(q){return q.x0})),X1=Math.max.apply(null,cx.map(function(q){return q.x1})),Z0=Math.min.apply(null,cx.map(function(q){return q.z0})),Z1=Math.max.apply(null,cx.map(function(q){return q.z1}));document.getElementById('v3x').click();await W(120);
+        R.paredeLateral=Lw.length+' pés · embaixo do módulo '+(Lw.length>0&&Lw.every(function(q){return q.x0>=X0-0.6&&q.x1<=X1+0.6&&q.z0>=Z0-0.6&&q.z1<=Z1+0.6&&Math.abs(q.y0)<0.6}));
+        /* 4. armário alto e torre: mesma coisa */
+        limpa();var t=await novo('Armário alto 2 portas');await abre(t);R.armarioAltoTemASecao=!!bd().querySelector('[data-rdsec]');await toca('[data-rdp="tipo|pes"]');t=S.mods[0];R.armarioAlto=pes(t).length+' pés · sem rodapé '+(rodN(t)===0)+' · altura do módulo '+t.h;
+        /* 5. aéreo não tem rodapé nem pés */
+        limpa();var s=await novo('Superior (aéreo)');S.m=s;S.tab=0;draw();panel();await W(80);R.aereoSemASecao=!bd().querySelector('[data-rdsec]')&&!bd().querySelector('[data-rdp]');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["entrouNoEditorPorVaos"] as? Bool, true)
+        XCTAssertEqual(o["porVaosSecaoFechada"] as? Bool, true)
+        XCTAssertEqual(o["porVaosAbre"] as? Bool, true)
+        XCTAssertEqual(o["porVaosComPes"] as? String, "6 pés · sem rodapé true · continua aberta true")
+        XCTAssertEqual(o["porVaosRedondo"] as? String, "Pé de metal redondo")
+        XCTAssertEqual(o["porVaosRodapeEmbutido"] as? String, "30→870 de 900")
+        XCTAssertEqual(o["portaTempero200"] as? String, "4 pés · x 40/110 · do meio não cabem")
+        XCTAssertEqual(o["estreitoNenhumPeEncostaNoOutro"] as? Bool, true)
+        XCTAssertEqual(o["balcao450"] as? String, "4 pés · do meio desligados, dá pra ligar")
+        XCTAssertEqual(o["balcao450ComOsDoMeio"] as? String, "6 pés · x 100/200/300")
+        XCTAssertEqual(o["gaveteiro800"] as? String, "6 pés · x 100/375/650")
+        XCTAssertEqual(o["cantoTemRodapeAntes"] as? Bool, true)
+        XCTAssertEqual(o["cantoEmL"] as? String, "6 pés · sem rodapé de MDF true · sem opção do meio true")
+        XCTAssertEqual(o["cantoNo3D"] as? String, "6 · no chão true · dentro do L true")
+        XCTAssertEqual(o["paredeLateral"] as? String, "6 pés · embaixo do módulo true")
+        XCTAssertEqual(o["armarioAltoTemASecao"] as? Bool, true)
+        XCTAssertEqual(o["armarioAlto"] as? String, "6 pés · sem rodapé true · altura do módulo 2400")
+        XCTAssertEqual(o["aereoSemASecao"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testRodapeDeMdfFaceandoOuEmbutidoDosDoisLadosOuDeUmSoESecaoFechada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.rpp=null;draw()};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0},bd=function(){return document.getElementById('bd')};
+        var rod=function(m){return partsOf(m).filter(function(p){return /^Rodapé/.test(p.name)}).map(function(p){return p.name.replace(/ \(pedestal\)/,'').replace('Rodapé','R')+' '+Math.round(p.x)+'→'+Math.round(p.x+p.w)}).join(' | ')};
+        var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        var toca=async function(sel){var b=bd().querySelector(sel);if(!b)return false;b.click();await W(90);return true};
+        limpa();var m=await novo('Balcão 2 portas');m.x=1000;S.m=m;S.tab=0;draw();panel();await W(80);
+        /* 1. a seção Rodapé fica logo abaixo das medidas e nasce fechada: só o título aparece */
+        var F=[].slice.call(bd().children),iD=F.findIndex(function(e){return e.classList.contains('sec')&&/^Dimensões/.test(e.textContent)}),iR=F.findIndex(function(e){return e.hasAttribute('data-rdsec')}),iP=F.findIndex(function(e){return e.classList.contains('sec')&&/^Posição e tipo/.test(e.textContent)});
+        R.secaoLogoAbaixoDasMedidas=iD>=0&&iR>iD&&iR<iP&&F.slice(iD+1,iR).every(function(e){return !e.classList.contains('sec')});
+        var sec=bd().querySelector('[data-rdsec]'),box=bd().querySelector('[data-rdbox]');R.nasceFechadaSoOTitulo=vis(sec)&&!vis(box)&&sec.textContent.replace(/[⌃⌄]/,'').trim()==='Rodapé';
+        sec.click();await W(60);box=bd().querySelector('[data-rdbox]');R.abreNaSetinha=vis(box)&&vis(box.querySelector('[data-rdp="emb|0"]'))&&vis(box.querySelector('input[data-rc="rod"]'))&&vis(box.querySelector('input[data-r="rodMm"]'));
+        R.opcoes=[].map.call(box.querySelectorAll('[data-rdp]'),function(b){return b.textContent.trim()+(b.classList.contains('on')?' ✓':'')}).join(' | ');
+        /* 2. faceando (padrão), embutido dos dois lados, só na esquerda, só na direita */
+        R.faceando=rod(m);var p0=JSON.stringify(partsOf(m));
+        await toca('[data-rdp="emb|2"]');R.embutidoDosDoisLados=rod(m);R.continuaAbertaDepoisDeMexer=vis(bd().querySelector('[data-rdbox]'));
+        await toca('[data-rdp="emb|e"]');R.embutidoSoNaEsquerda=rod(m);await toca('[data-rdp="emb|d"]');R.embutidoSoNaDireita=rod(m);
+        R.marcadoNaTela=[].map.call(bd().querySelectorAll('[data-rdp^="emb|"].on'),function(b){return b.textContent.trim()}).join('|');
+        /* 3. quanto embute: digita no teclado do app */
+        var cp=bd().querySelector('[data-rdn="emb"]');cp.focus();await W(90);R.tecladoAbreNoCampo=!document.getElementById('calcbar').hidden;'50'.split('').forEach(kb);kb('ok');await W(160);R.embute50NaDireita=rod(m);
+        /* 4. lista de corte e 3D batem com o desenho */
+        var cl=cutLines(m).filter(function(l){return l.names.some(function(n){return /^Rodapé( traseiro)? \(pedestal\)$/.test(n)})}).map(function(l){return l.qty+'× '+l.L+'×'+l.W}).join(' | ');R.listaDeCorte=cl;
+        document.getElementById('b3d').click();await W(700);var b3=__boxes().filter(function(q){return /^0:Rodapé \(pedestal\)$/.test(String(q.nm))})[0];R.no3D=b3?Math.round(b3.x0-m.x)+'→'+Math.round(b3.x1-m.x):'sem caixa';document.getElementById('v3x').click();await W(120);
+        /* 5. volta a facear: fica igual ao que era */
+        await toca('[data-rdp="emb|0"]');R.voltaAFacear=JSON.stringify(partsOf(m))===p0&&m.rodEmb===undefined;
+        /* 6. desfazer devolve o embutido */
+        document.getElementById('und').click();await W(120);R.desfazer=rod(S.mods[0]);m=S.mods[0];
+        /* 7. salvar e abrir de novo mantém */
+        var st=snapState();loadState(JSON.parse(JSON.stringify(st)));await W(120);m=S.mods[0];R.salvaEAbre=rod(m);
+        /* 8. três módulos encostados: rodapé corrido, só as pontas embutem; nada de vão entre os rodapés */
+        limpa();var a=await novo('Balcão 2 portas'),b=await novo('Balcão 1 porta'),c=await novo('Gaveteiro 3 gavetas');draw();await W(60);
+        R.encostados=Math.abs(a.x+a.w-b.x)<1&&Math.abs(b.x+b.w-c.x)<1;[a,b,c].forEach(function(q){q.rodEmb='2';q.rodRecL=30});draw();await W(60);
+        R.corridoSoAsPontasEmbutem=[a,b,c].map(function(q){return rodLados(q).join('/')}).join(' · ');
+        var tot=a.w+b.w+c.w,cg=cutGroups(),gk=cg.ord.filter(function(k){return /contínuo/.test(cg.map[k].names.join())})[0],gg=gk&&cg.map[gk];R.pecaCorrida=gg?gg.qty+'× '+gg.L+'×'+gg.W:'sem peça corrida';R.pecaCorridaBate=!!gg&&gg.L===tot-60;
+        var seg=[];[a,b,c].forEach(function(q){partsOf(q).forEach(function(p){if(/^Rodapé \(pedestal\)$/.test(p.name))seg.push([q.x+p.x,q.x+p.x+p.w])})});seg.sort(function(u,v){return u[0]-v[0]});
+        R.semVaoEntreOsRodapes=seg.length===3&&Math.abs(seg[0][1]-seg[1][0])<0.6&&Math.abs(seg[1][1]-seg[2][0])<0.6&&Math.abs(seg[0][0]-(a.x+30))<0.6&&Math.abs(seg[2][1]-(c.x+c.w-30))<0.6;
+        document.getElementById('b3d').click();await W(700);var r3=__boxes().filter(function(q){return /:Rodapé \(pedestal\)$/.test(String(q.nm))}).map(function(q){return Math.round(q.x0-a.x)+'→'+Math.round(q.x1-a.x)}).join(' | ');R.corridoNo3D=r3;document.getElementById('v3x').click();await W(120);
+        /* 9. módulo com as laterais até o piso: o rodapé fica entre as laterais, sem opção de embutir de lado */
+        limpa();m=await novo('Balcão 2 portas');m.latPiso=true;m.latFora=true;S.m=m;S.tab=0;draw();panel();await W(80);R.lateralAteOPisoSemOpcaoDeLado=!bd().querySelector('[data-rdp^="emb|"]')&&/entre as laterais/.test(bd().querySelector('[data-rdbox]').textContent);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["secaoLogoAbaixoDasMedidas"] as? Bool, true)
+        XCTAssertEqual(o["nasceFechadaSoOTitulo"] as? Bool, true)
+        XCTAssertEqual(o["abreNaSetinha"] as? Bool, true)
+        XCTAssertEqual(o["opcoes"] as? String, "Rodapé de MDF ✓ | Pés de metal | Faceando com as laterais ✓ | Embutido dos dois lados | Embutido só na esquerda | Embutido só na direita")
+        XCTAssertEqual(o["faceando"] as? String, "R 0→900 | R traseiro 0→900 | R lateral esquerdo 0→15 | R lateral direito 885→900")
+        XCTAssertEqual(o["embutidoDosDoisLados"] as? String, "R 30→870 | R traseiro 30→870 | R lateral esquerdo 30→45 | R lateral direito 855→870")
+        XCTAssertEqual(o["continuaAbertaDepoisDeMexer"] as? Bool, true)
+        XCTAssertEqual(o["embutidoSoNaEsquerda"] as? String, "R 30→900 | R traseiro 30→900 | R lateral esquerdo 30→45 | R lateral direito 885→900")
+        XCTAssertEqual(o["embutidoSoNaDireita"] as? String, "R 0→870 | R traseiro 0→870 | R lateral esquerdo 0→15 | R lateral direito 855→870")
+        XCTAssertEqual(o["marcadoNaTela"] as? String, "Embutido só na direita")
+        XCTAssertEqual(o["tecladoAbreNoCampo"] as? Bool, true)
+        XCTAssertEqual(o["embute50NaDireita"] as? String, "R 0→850 | R traseiro 0→850 | R lateral esquerdo 0→15 | R lateral direito 835→850")
+        XCTAssertEqual(o["listaDeCorte"] as? String, "1× 850×100 | 1× 850×100")
+        XCTAssertEqual(o["no3D"] as? String, "0→850")
+        XCTAssertEqual(o["voltaAFacear"] as? Bool, true)
+        XCTAssertEqual(o["desfazer"] as? String, "R 0→850 | R traseiro 0→850 | R lateral esquerdo 0→15 | R lateral direito 835→850")
+        XCTAssertEqual(o["salvaEAbre"] as? String, "R 0→850 | R traseiro 0→850 | R lateral esquerdo 0→15 | R lateral direito 835→850")
+        XCTAssertEqual(o["encostados"] as? Bool, true)
+        XCTAssertEqual(o["corridoSoAsPontasEmbutem"] as? String, "30/0 · 0/0 · 0/30")
+        XCTAssertEqual(o["pecaCorrida"] as? String, "2× 1890×100")
+        XCTAssertEqual(o["pecaCorridaBate"] as? Bool, true)
+        XCTAssertEqual(o["semVaoEntreOsRodapes"] as? Bool, true)
+        XCTAssertEqual(o["corridoNo3D"] as? String, "30→1920")
+        XCTAssertEqual(o["lateralAteOPisoSemOpcaoDeLado"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testDepoisDeDigitarOPrimeiroToqueNoBotaoPegaAPaginaNaoDesceNoMeioDoToque() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.m=null;S.env='cozinha';S.room='cozinha';S.W=4200;S.RD=3500;S.H=2700;draw();
+        newTpl(T('Balcão 2 portas'));draw();await W(60);if(window.SOLO2){soloOff();await W(60)}var m=S.mods[0];m.x=1000;S.m=m;S.tab=0;draw();panel();await W(100);
+        var bd=function(){return document.getElementById('bd')},tecl=function(){return !document.getElementById('calcbar').hidden},folga=function(){return document.body.classList.contains('kp')};
+        var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        /* 1. digita a profundidade e, sem dar OK, toca em "Travar módulo": o teclado fecha, mas a folga de baixo da página fica até o toque terminar (a página não desce no meio do toque) */
+        var f=bd().querySelector('[data-k="d"]');f.focus();await W(900);R.tecladoAbreComAFolga=tecl()&&folga();'600'.split('').forEach(kb);
+        var bt=bd().querySelector('[data-mlock]'),y0=Math.round(bt.getBoundingClientRect().top),sy0=Math.round(window.scrollY);bt.focus();
+        R.tecladoFechaNoToque=!tecl();R.folgaFicaAteOToqueTerminar=folga();await Promise.resolve();await Promise.resolve();
+        R.paginaNaoDesceNoMeioDoToque=Math.abs(Math.round(bt.getBoundingClientRect().top)-y0)<=1&&Math.abs(Math.round(window.scrollY)-sy0)<=1;
+        bt.click();await W(260);R.botaoPegaDePrimeiraEAMedidaEntra=S.mods[0].lock===true&&S.mods[0].d===600;R.folgaSaiDepoisDoToque=!folga();
+        /* 2. com o dedo ainda na tela (toque demorado ou mouse apertado) a folga espera; soltou, sai */
+        if(S.mods[0].lock){bd().querySelector('[data-mlock]').click();await W(150)}
+        f=bd().querySelector('[data-k="d"]');f.focus();await W(500);'560'.split('').forEach(kb);bt=bd().querySelector('[data-mlock]');
+        document.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:5,isPrimary:true}));bt.focus();await W(150);R.dedoNaTelaAFolgaEspera=!tecl()&&folga();
+        document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:5,isPrimary:true}));await W(200);R.soltouAFolgaSai=!folga()&&S.mods[0].d===560;
+        /* 3. passar de um campo pro outro: o teclado continua aberto e a folga também */
+        f=bd().querySelector('[data-k="w"]');f.focus();await W(400);'800'.split('').forEach(kb);var g=bd().querySelector('[data-k="h"]');g.focus();await W(260);
+        R.deCampoPraCampoContinuaAberto=tecl()&&folga()&&document.activeElement===g&&S.mods[0].w===800;kb('ok');await W(200);R.okFechaTudo=!tecl()&&!folga();
+        /* 4. as barras que não redesenham com o teclado aberto voltam a redesenhar assim que ele fecha (não esperam a folga sair) */
+        R.barraLivreQuandoOTecladoFecha=(typeof kpBusy==='function')?!kpBusy(bd()):true;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["tecladoAbreComAFolga"] as? Bool, true)
+        XCTAssertEqual(o["tecladoFechaNoToque"] as? Bool, true)
+        XCTAssertEqual(o["folgaFicaAteOToqueTerminar"] as? Bool, true)
+        XCTAssertEqual(o["paginaNaoDesceNoMeioDoToque"] as? Bool, true)
+        XCTAssertEqual(o["botaoPegaDePrimeiraEAMedidaEntra"] as? Bool, true)
+        XCTAssertEqual(o["folgaSaiDepoisDoToque"] as? Bool, true)
+        XCTAssertEqual(o["dedoNaTelaAFolgaEspera"] as? Bool, true)
+        XCTAssertEqual(o["soltouAFolgaSai"] as? Bool, true)
+        XCTAssertEqual(o["deCampoPraCampoContinuaAberto"] as? Bool, true)
+        XCTAssertEqual(o["okFechaTudo"] as? Bool, true)
+        XCTAssertEqual(o["barraLivreQuandoOTecladoFecha"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTelaValoresTodaFerragemQueEntraNoTotalTemLinhaNaTabela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var pk0=localStorage.getItem(PRK);S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.m=null;S.preco=0;delete S.desc;S.vlHide=0;S.env='cozinha';S.room='cozinha';S.W=4200;S.RD=3500;S.H=2700;draw();
+        PR.mdfB=300;PR.mdfC=430;PR.mdfM=430;PR.mdf25=500;PR.fundo=200;PR.fitaB=1.5;PR.fitaC=1.5;PR.fitaT=2;PR.dob=8;PR.cor=18;PR.coro=45;PR.pux=12;PR.concha=9;PR.perfilG=30;PR.perfil=28;PR.facetado=33;PR.toque=7;PR.pesQ=10;PR.pesR=14;PR.mult=2;['moR','cfR','dxR'].forEach(function(k){delete PR[k]});
+        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(30)}return S.mods[S.mods.length-1]};
+        var linhasNaTela=async function(){document.getElementById('vlb').click();await W(450);var B=document.getElementById('vlbody'),tb=[].filter.call(B.querySelectorAll('table'),function(t){return /Item/.test((t.querySelector('th')||{}).textContent||'')})[0],soma=0,n=0,nomes=[];[].forEach.call(tb.querySelectorAll('tr'),function(r){var c=r.querySelectorAll('td');if(c.length===4){soma+=pnum(c[3].textContent.replace(/[^\d.,]/g,''));n++;nomes.push(c[0].firstChild.textContent.trim())}});var tot=pnum(((B.textContent.match(/Total do material\s*R\$\s*([\d.,]+)/)||[])[1])||'0');document.getElementById('vlm').hidden=true;return {soma:Math.round(soma*100)/100,tot:tot,n:n,nomes:nomes}};
+        /* gaveteiro com corrediça oculta + balcão com pés de metal: tudo que entra no total tem linha na tabela */
+        var g=await novo('Gaveteiro 3 gavetas');g.corr='oc';var b=await novo('Balcão 2 portas');b.pes={on:1,t:'r',l:50,r:100,cor:'preto'};draw();await W(60);
+        var bd=budget(),L=prAuto(bd).filter(function(r){return r[3]>0.0001&&(+PR[r[0]]||0)>0}),q=await linhasNaTela();
+        R.corredicaOcultaTemLinha=q.nomes.some(function(n){return /^Corrediça oculta/.test(n)});R.peDeMetalTemLinha=q.nomes.some(function(n){return /^Pé de metal redondo/.test(n)});
+        R.todaLinhaComValorApareceNaTela=L.every(function(r){return q.nomes.some(function(n){return n===r[1]})});
+        R.somaDasLinhasBateComOTotal=Math.abs(q.soma-q.tot)<=0.01*q.n+0.011&&Math.abs(q.tot-Math.round(bd.tot*100)/100)<0.011;
+        /* cada tipo de puxador: a linha dele aparece e a soma continua batendo */
+        var tipos=[['externo','Puxador (barra)'],['concha','Puxador concha'],['g','Perfil G (no topo)'],['perfil','Cava de perfil (alumínio)'],['facetado','Perfil facetado (no topo)'],['toque','Fecho toque']],ruim=[],s0=STD().pux;
+        for(var i=0;i<tipos.length;i++){STD().pux=tipos[i][0];S.mods.forEach(function(m){(m.v||[]).forEach(function(v){delete v.px;v.cava=false})});try{SPC={}}catch(_){}draw();await W(40);var bx=budget(),qx=await linhasNaTela(),tem=prAuto(bx).filter(function(r){return r[1]===tipos[i][1]&&r[3]>0.0001})[0];
+         if(!tem)ruim.push(tipos[i][1]+': não entrou na conta');else if(!qx.nomes.some(function(n){return n===tipos[i][1]}))ruim.push(tipos[i][1]+': sem linha na tela');if(Math.abs(qx.soma-qx.tot)>0.01*qx.n+0.011)ruim.push(tipos[i][1]+': soma '+qx.soma+' ≠ total '+qx.tot)}
+        STD().pux=s0;R.puxadoresTestados=tipos.length;R.puxadoresComDefeito=ruim.length+(ruim.length?': '+ruim.join(' | '):'');
+        if(pk0===null)localStorage.removeItem(PRK);else localStorage.setItem(PRK,pk0);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["corredicaOcultaTemLinha"] as? Bool, true)
+        XCTAssertEqual(o["peDeMetalTemLinha"] as? Bool, true)
+        XCTAssertEqual(o["todaLinhaComValorApareceNaTela"] as? Bool, true)
+        XCTAssertEqual(o["somaDasLinhasBateComOTotal"] as? Bool, true)
+        XCTAssertEqual(o["puxadoresTestados"] as? Int, 6)
+        XCTAssertEqual(o["puxadoresComDefeito"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testDigitarETocarEmOutroCampoOuBotaoNaoPerdeOToqueNoEditorPorVaosENaAbaPedra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&!it.act&&t&&t.n===n)r=t})});if(!r)r=TPL.filter(function(t){return t.n===n})[0];return JSON.parse(JSON.stringify(r))};
+        var limpa=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var novo=async function(n){newTpl(T(n));draw();await W(40);if(window.SOLO2){soloOff();await W(40)}return S.mods[S.mods.length-1]};
+        var bd=function(){return document.getElementById('bd')},tecl=function(){return !document.getElementById('calcbar').hidden},lab=function(){return document.getElementById('kplab').textContent.trim()};
+        var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        /* 1. editor por vãos (guarda-roupa): digita a largura e, sem dar OK, passa pra altura: o teclado vai pra altura (o painel não é redesenhado debaixo do dedo) */
+        limpa();var m=await novo('Armário alto 2 portas');rgConvert(m);draw();await W(80);soloOn(m);await W(220);var te=document.querySelector('#tabs [data-rgt="est"]');te.click();await W(160);
+        var f=bd().querySelector('[data-rgi="mw"]');f.focus();await W(400);R.porVaosTecladoAbre=tecl();'950'.split('').forEach(kb);var g=bd().querySelector('[data-rgi="mh"]');g.focus();await W(260);
+        R.porVaosDeCampoPraCampo=S.mods[0].w===950&&tecl()&&document.activeElement===g&&g.isConnected&&lab()==='Altura';R.painelEsperaOToque=painelPendente();
+        '2300'.split('').forEach(kb);kb('ok');await W(260);R.porVaosDepoisDoOkRedesenha=S.mods[0].h===2300&&!painelPendente()&&!g.isConnected&&bd().querySelector('[data-rgi="mh"]').value==='2300'&&bd().querySelector('[data-rgi="mw"]').value==='950';
+        /* 2. digita a profundidade e, sem dar OK, toca no botão "Maleiro em cima": o botão continua na tela na hora do toque, pega de primeira e a medida entra */
+        f=bd().querySelector('[data-rgi="md"]');f.focus();await W(400);'600'.split('').forEach(kb);var bt=bd().querySelector('[data-rga="stk|mal"]');bt.focus();
+        R.botaoContinuaNaTelaNoToque=bt.isConnected&&S.mods[0].d===600;bt.click();await W(320);R.botaoPegaDePrimeira=S.mods.length===2&&S.mods[0].d===600&&!painelPendente();try{soloOff()}catch(_){}await W(100);
+        /* 3. aba Pedra do módulo normal: altura da pedra e, sem OK, outro campo */
+        limpa();var a=await novo('Balcão 2 portas');S.m=a;S.tab=6;draw();panel();await W(80);var ad=bd().querySelector('[data-stadd]');if(ad){ad.click();await W(150)}
+        var cs=[].filter.call(bd().querySelectorAll('input[data-calc]'),function(e){return e.getClientRects().length>0}),c1=cs.filter(function(e){return e.dataset.k==='stT'})[0],i1=cs.indexOf(c1),c2=cs[i1+1]||cs[i1-1];R.abaPedraTemOsCampos=!!c1&&!!c2;
+        if(c1&&c2){var t0=+S.stT||+c1.value;c1.focus();await W(400);String(t0+10).split('').forEach(kb);c2.focus();await W(260);R.abaPedraDeCampoPraCampo=tecl()&&document.activeElement===c2&&c2.isConnected;kb('ok');await W(260)}
+        /* 4. fora do toque (valor aplicado no OK) o painel redesenha na hora, como sempre */
+        S.m=S.mods[0];S.tab=0;draw();panel();await W(80);var n0=bd().firstElementChild;panel();R.semToqueRedesenhaNaHora=bd().firstElementChild!==n0&&!painelPendente();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["porVaosTecladoAbre"] as? Bool, true)
+        XCTAssertEqual(o["porVaosDeCampoPraCampo"] as? Bool, true)
+        XCTAssertEqual(o["painelEsperaOToque"] as? Bool, true)
+        XCTAssertEqual(o["porVaosDepoisDoOkRedesenha"] as? Bool, true)
+        XCTAssertEqual(o["botaoContinuaNaTelaNoToque"] as? Bool, true)
+        XCTAssertEqual(o["botaoPegaDePrimeira"] as? Bool, true)
+        XCTAssertEqual(o["abaPedraTemOsCampos"] as? Bool, true)
+        XCTAssertEqual(o["abaPedraDeCampoPraCampo"] as? Bool, true)
+        XCTAssertEqual(o["semToqueRedesenhaNaHora"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

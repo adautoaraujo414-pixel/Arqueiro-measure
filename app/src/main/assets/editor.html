@@ -11595,4 +11595,23 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
     var f=g.querySelector('[data-plwall]');if(f)f.insertAdjacentHTML('beforebegin',h);else g.insertAdjacentHTML('beforeend',h)}}}catch(_){}return r};
 })();
 </script>
+<script>
+/* ===== setinha ⌃ dos títulos das seções: tocar no título fecha a seção (esconde o que está embaixo dele, até o próximo título) e tocar de novo abre. Vale pra toda seção com setinha, em qualquer aba, quadro ou janela. O que você fechou continua fechado enquanto mexe (o painel é redesenhado a cada mudança). Só esconde na tela: não muda nada no projeto. ===== */
+(function(){
+ try{var st=document.createElement('style');st.textContent='.secx{display:none!important}.sec.secarr{cursor:pointer;-webkit-user-select:none;user-select:none}.sec.secarr>span:last-child{padding:0 4px;min-width:22px;text-align:center}';document.head.appendChild(st)}catch(_){}
+ var FECH={},VIG=typeof WeakMap==='function'?new WeakMap():null,AP=0;
+ function seta(h){var sp=h&&h.lastElementChild;return sp&&sp.tagName==='SPAN'&&/^[⌃⌄]$/.test((sp.textContent||'').trim())?sp:null}
+ function chave(h){return (h.textContent||'').replace(/[⌃⌄]\s*$/,'').replace(/\s+/g,' ').trim()}
+ function bloco(h){var o=[],n=h.nextElementSibling;while(n&&!(n.classList&&n.classList.contains('sec'))){o.push(n);n=n.nextElementSibling}return o}
+ function poe(h,f){var sp=seta(h);if(!sp)return;h.classList.add('secarr');bloco(h).forEach(function(e){if(f)e.classList.add('secx');else e.classList.remove('secx')});var c=f?'⌄':'⌃';if(sp.textContent!==c)sp.textContent=c;if(f)h.setAttribute('data-secf','1');else h.removeAttribute('data-secf')}
+ function aplica(root){if(AP)return;AP=1;try{[].forEach.call((root||document).querySelectorAll('.sec'),function(h){if(seta(h))poe(h,!!FECH[chave(h)])})}catch(_){}AP=0}
+ function vigia(c){try{if(!c||!VIG||VIG.has(c)||typeof MutationObserver!=='function')return;var t=0,mo=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=0;aplica(c)},0)});mo.observe(c,{childList:true});VIG.set(c,mo)}catch(_){}}
+ window.secFech=function(){return Object.keys(FECH)};window.secAplica=aplica;
+ document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;var h=t.closest('.sec');if(!h)return;var sp=seta(h);if(!sp)return;
+  var ctl=t.closest('button,input,select,textarea,a');if(ctl&&h.contains(ctl))return;/* botão dentro do título faz o que é dele */
+  var k=chave(h),f=!FECH[k];if(f)FECH[k]=1;else delete FECH[k];poe(h,f);vigia(h.parentNode)});
+ if(typeof panel==='function'){var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{aplica(document.getElementById('bd'))}catch(_){}return r}}
+ try{aplica(document)}catch(_){}
+})();
+</script>
 </body></html>

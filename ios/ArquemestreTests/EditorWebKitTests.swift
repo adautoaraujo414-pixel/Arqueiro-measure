@@ -8284,4 +8284,49 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semPedra"] as? Int, 900)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testSetinhaDoTituloDaSecaoFechaEAbreEmTodasAsAbas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=S.mods[0].tt=true;draw();
+        var seta=function(h){var sp=h.lastElementChild;return sp&&sp.tagName==='SPAN'&&/^[⌃⌄]$/.test(sp.textContent.trim())?sp:null},vis=function(e){return e.getClientRects().length>0};
+        var bloco=function(h){var o=[],n=h.nextElementSibling;while(n&&!n.classList.contains('sec')){o.push(n);n=n.nextElementSibling}return o};
+        var abas=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(x){return [+x.dataset.t,x.textContent.trim()]}),tot=0,semSeta=[],ruins=[],lista=[];
+        var foto=function(){var z=snapState();delete z.mi;delete z.m;delete z.sti;delete z.trena;return JSON.stringify(z)};S.m=S.mods[0];draw();var z0=foto();
+        for(var a=0;a<abas.length;a++){S.m=S.mods[0];S.tab=abas[a][0];draw();panel();await W(60);
+          var hs=[].slice.call(document.querySelectorAll('#bd .sec')).filter(vis),n=0;
+          for(var i=0;i<hs.length;i++){var nome=hs[i].textContent.replace(/[⌃⌄]\s*$/,'').trim();if(!seta(hs[i])){semSeta.push(abas[a][1]+' › '+nome);continue}
+            /* pega de novo pelo nome (o painel pode ter sido redesenhado) */
+            var H=function(){return [].slice.call(document.querySelectorAll('#bd .sec')).filter(function(h){return h.textContent.replace(/[⌃⌄]\s*$/,'').trim()===nome})[0]},h=H();if(!h)continue;
+            var B0=bloco(h),v0=B0.filter(vis).length,fora0=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return B0.indexOf(e)<0&&vis(e)}).length;n++;tot++;
+            seta(h).click();await W(30);h=H();var B1=bloco(h),v1=B1.filter(vis).length,fora1=[].slice.call(document.querySelectorAll('#bd > *')).filter(function(e){return B1.indexOf(e)<0&&vis(e)}).length;
+            if(v1!==0)ruins.push(abas[a][1]+' › '+nome+': fechou e ainda aparecem '+v1+' de '+v0);if(!vis(h))ruins.push(abas[a][1]+' › '+nome+': o título sumiu');if(seta(h).textContent.trim()!=='⌄')ruins.push(abas[a][1]+' › '+nome+': setinha não virou');if(fora1!==fora0)ruins.push(abas[a][1]+' › '+nome+': mexeu em outra seção ('+fora0+'→'+fora1+')');
+            /* redesenhar o painel: continua fechada */
+            panel();await W(30);h=H();if(h&&bloco(h).filter(vis).length!==0)ruins.push(abas[a][1]+' › '+nome+': abriu sozinha ao redesenhar');
+            /* tocar no título (não só na setinha) abre de novo, igual a antes */
+            if(h){h.click();await W(30);h=H();var v2=bloco(h).filter(vis).length;if(v2!==v0)ruins.push(abas[a][1]+' › '+nome+': abriu com '+v2+' em vez de '+v0);if(seta(h).textContent.trim()!=='⌃')ruins.push(abas[a][1]+' › '+nome+': setinha não voltou')}}
+          lista.push(abas[a][1]+' '+n)}
+        R.abas=abas.length;R.secoesComSetinha=tot;R.porAba=lista.join(' | ');R.ruins=ruins.length+(ruins.length?': '+ruins.slice(0,8).join(' || '):'');R.tituloSemSetinha=semSeta.length+(semSeta.length?': '+semSeta.slice(0,8).join(' | '):'');
+        R.projetoNaoMudou=foto()===z0;R.nadaFicouFechado=secFech().length;/* fora do painel do módulo: ⚙ Ajustes e 👤 Clientes também têm seção com setinha */
+        var fora=async function(){var nm=function(h){return h.textContent.replace(/[⌃⌄]\s*$/,'').trim().slice(0,40)},L=function(){return [].slice.call(document.querySelectorAll('.sec')).filter(function(h){return vis(h)&&seta(h)&&!h.closest('#bd')})},nomes=L().map(nm),rz=[];
+          for(var i=0;i<nomes.length;i++){var H=function(){return L().filter(function(h){return nm(h)===nomes[i]})[0]},h=H();if(!h)continue;var v0=bloco(h).filter(vis).length;seta(h).click();await W(50);h=H();if(!h||bloco(h).filter(vis).length!==0){rz.push(nomes[i]+' não fechou');continue}h.click();await W(50);h=H();if(!h||bloco(h).filter(vis).length!==v0)rz.push(nomes[i]+' não abriu igual')}
+          return nomes.length+' seções · com defeito '+rz.length+(rz.length?': '+rz.join(' | '):'')};
+        stdOpen(0);await W(250);R.ajustes=await fora();document.getElementById('stdm').hidden=true;document.getElementById('clb').click();await W(300);R.clientes=await fora();document.getElementById('clm').hidden=true;await W(60);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["abas"] as? Int, 11)
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 47)
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 6 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["ruins"] as? String, "0")
+        XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
+        XCTAssertEqual(o["projetoNaoMudou"] as? Bool, true)
+        XCTAssertEqual(o["nadaFicouFechado"] as? Int, 0)
+        XCTAssertEqual(o["ajustes"] as? String, "4 seções · com defeito 0")
+        XCTAssertEqual(o["clientes"] as? String, "3 seções · com defeito 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

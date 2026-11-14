@@ -59,8 +59,10 @@ struct LibraryView: View {
         let now = nowMs()
         return app.appointments.contains { !$0.done && $0.startMs >= now && $0.startMs <= now + 86_400_000 }
     }
-    /// Mesma regra do selo do teste grátis: teste, renovação desligada ou cobrança com problema.
-    private var showTrial: Bool { lic.hasAccess && (lic.status == .trial || !lic.willRenew || lic.inGrace) }
+    /// Faixa da tela inicial: só no teste grátis ou quando a cobrança da renovação falhou.
+    /// Assinatura ativa não mostra data de vencimento ("Assinatura até …"): a Apple cuida da renovação e do fim do período,
+    /// e a faixa só atrapalhava o layout. Quando o período acaba, a tela de assinatura aparece sozinha (LockView).
+    private var showTrial: Bool { lic.hasAccess && (lic.status == .trial || lic.inGrace) }
 
     var body: some View {
         dialogs(sheets(layout))

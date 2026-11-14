@@ -8246,4 +8246,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["temRefazer"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testModuloDeBaixoSeAdaptaAAlturaDaPedraNaoEJogadoProLado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var campo=async function(mi,k,v){S.m=S.mods[mi];S.tab=0;draw();panel();await W(40);var i=document.querySelector('#bd input[data-k="'+k+'"]');i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));await W(150)};
+        var est=function(){return S.mods.map(function(m){return m.x+'–'+(m.x+m.w)+' alt '+m.h}).join(' | ')+' · pedra '+S.stones.map(function(q){return q.x+'–'+(q.x+q.w)+' a '+q.t}).join(',')};
+        /* 1. balcões com pedra em cima: aumentar a altura de um pelo campo → ele fica na altura da pedra, no mesmo lugar; a pedra e o vizinho não mudam; avisa */
+        clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);var a0=est();TO=[];
+        await campo(0,'h',900);R.maisAltoQueAPedra='tudo como estava '+(est()===a0)+' · avisou '+TO.some(function(t){return /fica na altura da pedra/.test(t)})+' · '+est();
+        await W(60);S.m=S.mods[0];S.tab=0;draw();panel();await W(40);R.campoMostraAAlturaDeVerdade=+document.querySelector('#bd input[data-k="h"]').value===S.mods[0].h;
+        /* 2. mais baixo que a pedra continua podendo (fica o vão que a pessoa pediu) e voltar pra altura da pedra também */
+        await campo(0,'h',700);R.maisBaixo=S.mods[0].h+' · no lugar '+(S.mods[0].x===5)+' · pedra a '+S.stones[0].t;await campo(0,'h',820);R.voltou=S.mods[0].h;
+        /* 3. a pedra desce: os balcões encostados nela acompanham (já era assim) · a pedra sobe: acompanham também */
+        S.tab=6;panel();await W(40);var b0=S.mods.map(function(m){return m.h}).join(',');setv('stT',780);await W(80);R.pedraDesceu=S.mods.map(function(m){return m.h}).join(',')+' · pedra a '+S.stones[0].t+' · no lugar '+S.mods.map(function(m){return m.x}).join(',');setv('stT',850);await W(80);R.pedraSubiu=S.mods.map(function(m){return m.h}).join(',')+' · pedra a '+S.stones[0].t;
+        /* 4. no 3D: nada do módulo dentro da pedra depois de tentar aumentar */
+        await campo(1,'h',1000);var x1_=S.mods[1].x;await campo(1,'h',1500);R.alturaDeTorreEmbaixoDaPedra=S.mods[1].h+' · no lugar '+(S.mods[1].x===x1_);draw();open3D();await W(450);__build();var B=__boxes().filter(function(q){return q.a>=0.99&&!q.gl}),st=B.filter(function(q){return q.sid!=null&&(q.g==='lo'||q.g==='stc')}),n=0;B.forEach(function(q){if(!/^\d+:/.test(String(q.nm||'')))return;st.forEach(function(p){if(Math.min(p.x1,q.x1)-Math.max(p.x0,q.x0)>2&&Math.min(p.y1,q.y1)-Math.max(p.y0,q.y0)>2&&Math.min(p.z1,q.z1)-Math.max(p.z0,q.z0)>2)n++})});document.getElementById('v3x').click();await W(120);R.pecaDentroDaPedraNo3D=n;R.depoisDeTentar1000=est();
+        /* 5. torre (alta) do lado da pedra não é mexida na altura; balcão sem pedra em cima muda de altura normal */
+        clr();await add('Balcão 2 portas');await add('Torre quente (forno)');S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);await campo(1,'h',2300);R.torre=S.mods[1].h;
+        clr();await add('Balcão 2 portas');await campo(0,'h',900);R.semPedra=S.mods[0].h;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["maisAltoQueAPedra"] as? String, "tudo como estava true · avisou true · 5–905 alt 820 | 905–1505 alt 820 · pedra 0–1535 a 820")
+        XCTAssertEqual(o["campoMostraAAlturaDeVerdade"] as? Bool, true)
+        XCTAssertEqual(o["maisBaixo"] as? String, "700 · no lugar true · pedra a 820")
+        XCTAssertEqual(o["voltou"] as? Int, 820)
+        XCTAssertEqual(o["pedraDesceu"] as? String, "780,780 · pedra a 780 · no lugar 5,905")
+        XCTAssertEqual(o["pedraSubiu"] as? String, "850,850 · pedra a 850")
+        XCTAssertEqual(o["alturaDeTorreEmbaixoDaPedra"] as? String, "850 · no lugar true")
+        XCTAssertEqual(o["pecaDentroDaPedraNo3D"] as? Int, 0)
+        XCTAssertEqual(o["depoisDeTentar1000"] as? String, "5–905 alt 850 | 905–1505 alt 850 · pedra 0–1535 a 850")
+        XCTAssertEqual(o["torre"] as? Int, 2300)
+        XCTAssertEqual(o["semPedra"] as? Int, 900)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

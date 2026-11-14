@@ -8765,4 +8765,183 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["prateleiras"] as? String, "3 novas · alturas diferentes true · 3 peças · uma em cima da outra 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.preco=0;draw();
+        PR.mdfB=300;PR.mdfC=430;PR.mdfM=430;PR.mdf25=500;PR.fundo=200;PR.fitaB=1.5;PR.fitaC=1.5;PR.dob=8;PR.cor=18;PR.mult=2;
+        newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        var r2=function(v){return Math.round(v*100)/100},b=budget(),G=b.plan.groups,linhas=prAuto(b).filter(function(r){return r[2]==='chapa'&&r[5]>0});
+        /* cada chapa do plano entra no valor pelo que foi usado dela (aproveitamento), não inteira */
+        var esperado=0,inteiro=0;G.forEach(function(g){esperado+=g.n*g.use*g.price;inteiro+=g.n*g.price});
+        R.chapasDoPlano=G.map(function(g){return g.n+' × '+Math.round(g.use*100)+'%'}).join(' | ');
+        R.custoDasChapas=r2(b.cB+b.cC+b.cF)+' · pelo aproveitamento '+r2(esperado)+' · chapa inteira seria '+r2(inteiro);
+        R.cobraSoOUsado=Math.abs((b.cB+b.cC+b.cF)-esperado)<0.005&&esperado<inteiro-1;
+        /* as linhas da tela Valores somam o mesmo que o total, e mostram quanto da chapa entrou */
+        var somaLinhas=linhas.reduce(function(s,r){return s+r[3]*(+PR[r[0]]||0)},0);R.linhasBatemComOTotal=Math.abs(somaLinhas-(b.cB+b.cC+b.cF))<0.005;
+        R.qtdNaTela=linhas.map(function(r){return qtyU(r)+' · '+r[4]}).join(' | ');
+        document.getElementById('vlb').click();await W(400);var tx=document.getElementById('vlbody').textContent;R.telaValores=/% de 1 chapa/.test(tx)&&/Total do material/.test(tx);
+        var tot=(tx.match(/Total do material\s*R\$\s*([\d.,]+)/)||[])[1];R.totalDoMaterialNaTela=tot===brl(b.tot).replace(/^R\$\s*/,'');document.getElementById('vlm').hidden=true;
+        /* valor do projeto continua material × multiplicador, e a soma "por módulo" fecha com o material */
+        R.valorDoProjeto=Math.abs(b.sale-b.tot*PR.mult)<0.005;R.porModuloFecha=Math.abs(b.rows.reduce(function(s,x){return s+x.c},0)+b.cat.t+(b.rpC||0)-b.tot)<0.01;
+        /* chapa cheia (aproveitamento perto de 100%) cobra quase a chapa inteira; mais módulos = mais uso, nunca mais que a chapa */
+        for(var i=0;i<5;i++){newTpl(T('Balcão 2 portas'));draw();await W(20);if(window.SOLO2){soloOff();await W(30)}}
+        var b2=budget(),e2=0,i2=0;b2.plan.groups.forEach(function(g){e2+=g.n*g.use*g.price;i2+=g.n*g.price});R.seisBalcoes='bate com o aproveitamento '+(Math.abs((b2.cB+b2.cC+b2.cF)-e2)<0.005)+' · nunca passa da chapa inteira '+(e2<=i2+0.001)+' · subiu com mais módulos '+(e2>esperado);
+        /* Ajustes › Preços: cada linha mostra a quantidade e o total dela (duas linhas de chapa com o mesmo preço não trocam a conta uma da outra) */
+        prRender();document.getElementById('prm').hidden=false;await W(300);var La=prAuto(budget()),okA=true,nA=0,vistos={},rep=0;La.forEach(function(r){if(vistos[r[0]])rep++;vistos[r[0]]=1});
+        [].forEach.call(document.querySelectorAll('#prbody .mt tr'),function(r){var q=r.querySelector('[data-prq]'),t=r.querySelector('[data-prt]');if(!q)return;var x=La[nA++];if(!x||q.textContent.trim()!==qtyU(x)||t.textContent.trim()!==brl(x[3]*(+PR[x[0]]||0)))okA=false});
+        R.linhasDeChapaComOMesmoPreco=rep;R.ajustesCadaLinhaComAContaDela=okA&&nA===La.length;document.getElementById('prm').hidden=true;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["chapasDoPlano"] as? String, "1 × 32% | 1 × 28% | 1 × 15%")
+        XCTAssertEqual(o["custoDasChapas"] as? String, "245.06 · pelo aproveitamento 245.06 · chapa inteira seria 930")
+        XCTAssertEqual(o["cobraSoOUsado"] as? Bool, true)
+        XCTAssertEqual(o["linhasBatemComOTotal"] as? Bool, true)
+        XCTAssertEqual(o["qtdNaTela"] as? String, "32% de 1 chapa · 32% aproveit. | 28% de 1 chapa · 28% aproveit. | 15% de 1 chapa · 15% aproveit.")
+        XCTAssertEqual(o["telaValores"] as? Bool, true)
+        XCTAssertEqual(o["totalDoMaterialNaTela"] as? Bool, true)
+        XCTAssertEqual(o["valorDoProjeto"] as? Bool, true)
+        XCTAssertEqual(o["porModuloFecha"] as? Bool, true)
+        XCTAssertEqual(o["seisBalcoes"] as? String, "bate com o aproveitamento true · nunca passa da chapa inteira true · subiu com mais módulos true")
+        XCTAssertEqual(o["linhasDeChapaComOMesmoPreco"] as? Int, 1)
+        XCTAssertEqual(o["ajustesCadaLinhaComAContaDela"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+    func testMaoDeObraCustoFixoEDespesasExtrasSomamNoValorDoProjeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var pk0=localStorage.getItem(PRK),KS=['moR','cfR','dxR'];KS.forEach(function(k){delete PR[k]});
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;S.preco=0;delete S.desc;S.vlHide=0;S.vlTot=0;draw();
+        PR.mdfB=300;PR.mdfC=430;PR.mdfM=430;PR.mdf25=500;PR.fundo=200;PR.fitaB=1.5;PR.fitaC=1.5;PR.dob=8;PR.cor=18;PR.mult=2.5;
+        newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        var r2=function(v){return Math.round(v*100)/100},perto=function(a,b){return Math.abs(a-b)<0.006},vis=function(el){return !!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0};
+        /* digita pelo teclado do app (o mesmo que a pessoa usa): toca no campo, aperta as teclas e o OK */
+        var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
+        var tecl=function(){return !document.getElementById('calcbar').hidden},lab=function(){return document.getElementById('kplab').textContent.trim()};
+        var abre=async function(sel){var i=document.querySelector(sel);if(!i)return false;i.focus();await W(90);return tecl()&&document.activeElement===i};
+        var digita=async function(sel,teclas,ok){if(!(await abre(sel)))return false;teclas.split('').forEach(kb);if(ok!==false){kb('ok');await W(150)}return true};
+        var B=function(){return document.getElementById('vlbody')},vp=function(){var t=B().querySelector('.tot'),k=t.querySelectorAll('b.big');return k[k.length-1].textContent.trim()},margem=function(){var r=B().querySelector('tr[data-vlmo]');return r?r.firstElementChild.textContent.replace(/\s*\(.*$/,'').trim()+' = '+r.lastElementChild.textContent.trim():'sem linha'};
+        /* 1. quem não preenche nada: o valor continua material × multiplicador, igualzinho */
+        var b0=budget(),mat=b0.tot,proj0=JSON.stringify(snapState());R.materialMaiorQueZero=mat>0;R.semPreencherOValorNaoMuda=b0.ext.t===0&&b0.sale===mat*PR.mult;
+        document.getElementById('vlb').click();await W(400);
+        R.camposNaTelaValores=[].map.call(B().querySelectorAll('[data-vlxbox] .g'),function(g){return g.querySelector('label').textContent.trim()+(g.querySelector('input[data-vlx]')?'':' sem campo')}).join(' | ');
+        R.semPreencherNaoApareceLinha=B().querySelectorAll('[data-vlxl]').length===0;R.margemSemPreencher=margem().replace(/ = .*/,'');R.valorNaTelaSemPreencher=vp()===brl(mat*PR.mult);
+        /* 2. mão de obra em R$ soma no valor do projeto */
+        R.tocarNoCampoAbreOTeclado=(await abre('#vlm [data-vlx="moR"]'))&&lab()==='Mão de obra (R$)';'800'.split('').forEach(kb);R.soEntraNoOk=PR.moR===undefined;kb('ok');await W(150);var b1=budget();
+        R.maoDeObraSomaNoValor=PR.moR===800&&b1.ext.L[0].v===800&&perto(b1.sale,mat*2.5+800);R.valorNaTelaComMaoDeObra=vp()===brl(b1.sale);R.tecladoFechaNoOk=!tecl()&&document.activeElement.tagName!=='INPUT';
+        var l1=B().querySelector('tr[data-vlxl="mo"]');R.linhaDaMaoDeObra=!!l1&&l1.firstElementChild.textContent.trim()==='Mão de obra'&&l1.lastElementChild.textContent.trim()===brl(800);
+        R.margemViraLucro=margem()==='Lucro = '+brl(mat*1.5);R.botaoDoPdfComOValorNovo=B().querySelector('[data-vlq]').textContent.indexOf(brl(b1.sale))>=0;
+        R.tocarDeNovoNoCampoAbreDeNovo=await abre('#vlm [data-vlx="moR"]');
+        /* 3. sem dar OK, passa direto pro campo do lado: o primeiro entra e o teclado vai pro segundo (a tela não é redesenhada debaixo dele) */
+        '900'.split('').forEach(kb);var c2=document.querySelector('#vlm [data-vlx="cfR"]');c2.focus();await W(260);
+        R.passarProCampoDoLadoSemOk=PR.moR===900&&tecl()&&lab()==='Custo fixo (R$)'&&document.activeElement===c2&&c2.isConnected;'1500'.split('').forEach(kb);kb('ok');await W(150);
+        await digita('#vlm [data-vlx="dxR"]','250,5');var b2=budget(),ext=2650.5;
+        R.custoFixo=PR.cfR===1500&&b2.ext.L[1].v===1500;R.despesasExtrasComCentavos=PR.dxR===250.5&&b2.ext.L[2].v===250.5;
+        R.osTresSomamNoValorDoProjeto=b2.ext.t===ext&&perto(b2.sale,mat*2.5+ext)&&vp()===brl(b2.sale);
+        R.linhasNaTela=[].map.call(B().querySelectorAll('tr[data-vlxl]'),function(r){return r.firstElementChild.textContent.trim()+' '+r.lastElementChild.textContent.trim()}).join(' | ');
+        R.ordemNaTela=[].map.call(B().querySelector('tr[data-vlmo]').parentNode.querySelectorAll('tr'),function(r){return r.firstElementChild.textContent.replace(/\s*\(.*$/,'').trim()}).join(' | ');R.ordemNoQuadro=[].map.call(B().querySelectorAll('.tot span'),function(e){return e.textContent.trim()}).join(' | ');
+        R.margemContinuaSoOMultiplicador=margem()==='Lucro = '+brl(mat*1.5);R.camposFormatados=[].map.call(B().querySelectorAll('[data-vlxbox] input[data-vlx]'),function(i){return i.value}).join(' | ');
+        /* por módulo e orçamento em PDF acompanham o valor do projeto */
+        var tb=[].filter.call(B().querySelectorAll('table'),function(t){return /Módulo/.test((t.querySelector('th')||{}).textContent||'')})[0],lm=[].filter.call(tb.querySelectorAll('tr'),function(r){return r.querySelectorAll('td').length===3});
+        R.porModuloAcompanhaOValor=lm.length===b2.rows.length&&lm.every(function(r,i){return r.lastElementChild.textContent.trim()===brl(b2.rows[i].c*(vlFin(b2)/mat))});
+        var q=quoteData(),si=q.items.reduce(function(s,i){return s+i.value*(i.qty||1)},0);R.orcamentoPdfFechaComOValor=perto(q.total,b2.sale)&&Math.abs(si-q.total)<0.011;
+        /* 4. fica guardado junto dos preços e não mexe no projeto */
+        var o=JSON.parse(localStorage.getItem(PRK)||'{}');R.ficaGuardado=o.moR===900&&o.cfR===1500&&o.dxR===250.5;R.naoMexeNoProjeto=JSON.stringify(snapState())===proj0;
+        /* 5. digita num campo e, sem OK, toca num botão da tela: a janela não desce no meio do toque e o botão pega de primeira */
+        await abre('#vlm [data-vlx="dxR"]');'300'.split('').forEach(kb);var chip=document.querySelector('#vlm [data-vmx="3"]'),y0=chip.getBoundingClientRect().top;chip.focus();await Promise.resolve();await Promise.resolve();var y1=chip.getBoundingClientRect().top;
+        R.janelaNaoDesceNoMeioDoToque=Math.abs(y1-y0)<1;chip.click();await W(260);R.botaoPegaDePrimeiraEOValorEntra=PR.mult===3&&PR.dxR===300&&vp()===brl(mat*3+2700)&&!tecl();
+        R.janelaVoltaProLugar=(document.getElementById('vlm').style.transform||'')==='';
+        /* botão que não tira o foco do campo (acontece em alguns aparelhos): o que foi digitado entra do mesmo jeito e o teclado fecha */
+        await abre('#vlm [data-vlx="dxR"]');'400'.split('').forEach(kb);B().querySelector('[data-vmx="2.5"]').click();await W(320);R.botaoSemTirarOFocoTambemAplica=PR.mult===2.5&&PR.dxR===400&&vp()===brl(mat*2.5+2800)&&!tecl();await digita('#vlm [data-vlx="dxR"]','250,5');
+        /* 6. valor fechado sem OK e toca num campo novo: o campo novo abre e os dois valores entram */
+        await abre('#vlm [data-vlp]');'9000'.split('').forEach(kb);var c3=document.querySelector('#vlm [data-vlx="moR"]');c3.focus();await W(260);
+        R.valorFechadoEDepoisCampoNovo=S.preco===9000&&tecl()&&lab()==='Mão de obra (R$)'&&document.activeElement===c3&&c3.isConnected;'800'.split('').forEach(kb);kb('ok');await W(150);ext=2550.5;
+        R.valorFechadoPorCima=PR.moR===800&&vp()===brl(9000)&&B().querySelectorAll('tr[data-vlxl]').length===3&&margem()==='Lucro = '+brl(9000-mat-ext);
+        B().querySelector('[data-vlpx]').click();await W(120);b2=budget();R.voltaAoSugerido=S.preco===0&&vp()===brl(b2.sale)&&perto(b2.sale,mat*2.5+ext);
+        /* 7. desconto: OK e tocar de novo abre o teclado; desconto sem OK e tocar num campo novo abre o campo novo */
+        await digita('#vlm [data-vdesci]','10');R.descontoDe10=S.desc===10&&vp()===brl(r2(b2.sale*0.9))&&!tecl();R.descontoAbreDeNovoDepoisDoOk=await abre('#vlm [data-vdesci]');
+        '5'.split('').forEach(kb);var c4=document.querySelector('#vlm [data-vlx="cfR"]');c4.focus();await W(260);R.descontoEDepoisCampoNovo=S.desc===5&&tecl()&&lab()==='Custo fixo (R$)'&&document.activeElement===c4&&c4.isConnected;kb('ok');await W(150);
+        await digita('#vlm [data-vdesci]','0');R.semDesconto=!S.desc&&vp()===brl(b2.sale);
+        /* 8. "Esconder o valor do material": some o bloco e as linhas, fica o valor do projeto */
+        B().querySelector('[data-vlhide]').click();await W(150);R.escondido=!vis(B().querySelector('[data-vlxbox]'))&&[].every.call(B().querySelectorAll('[data-vlxl],[data-vlmo]'),function(e){return !vis(e)})&&vp()===brl(b2.sale);
+        B().querySelector('[data-vlhide]').click();await W(150);R.mostraDeNovo=vis(B().querySelector('[data-vlxbox]'))&&vis(B().querySelector('tr[data-vlxl="cf"]'));document.getElementById('vlm').hidden=true;
+        /* 9. Ajustes › Materiais e valor a cobrar: mesmos campos, mesmos valores, recalcula ao aplicar */
+        document.getElementById('prb').click();await W(350);var bp=document.querySelector('[data-propen]');R.botaoDosPrecosNoAjustes=!!bp;if(bp)bp.click();else{prRender();document.getElementById('prm').hidden=false}await W(350);
+        var P=document.getElementById('prm');R.valoresNoAjustes=[].map.call(P.querySelectorAll('[data-vlxbox] input[data-vlx]'),function(i){return i.getAttribute('data-vlx')+'='+i.value}).join(' ');
+        /* (abrir o Ajustes salva os padrões e pode acertar preço de chapa: a conta daqui pra frente é com o material de agora) */
+        var bA=budget();R.contaNoAjustes=bA.ext.t===ext&&perto(bA.sale,bA.tot*2.5+ext);
+        R.somaNoAjustes=vis(document.getElementById('prX'))&&document.getElementById('prX').textContent.trim()===brl(ext)&&document.getElementById('prV').textContent.trim()===brl(bA.sale);
+        await abre('#prm [data-vlx="moR"]');'1200'.split('').forEach(kb);var c5=P.querySelector('[data-vlx="cfR"]');c5.focus();await W(200);var b3=budget();
+        R.noAjustesPassaProCampoDoLado=PR.moR===1200&&tecl()&&lab()==='Custo fixo (R$)'&&document.activeElement===c5&&perto(b3.sale,bA.sale+400)&&document.getElementById('prV').textContent.trim()===brl(b3.sale)&&document.getElementById('prX').textContent.trim()===brl(ext+400);kb('ok');await W(150);
+        R.resumoDoMaterialComAsTresLinhas=[].map.call(document.getElementById('prsum').querySelectorAll('tr[data-vlxl]'),function(r){return r.firstElementChild.textContent.trim()+' '+r.lastElementChild.textContent.trim()}).join(' | ');R.campoFormatadoNoAjustes=P.querySelector('[data-vlx="moR"]').value;
+        /* 10. conta que dá negativo não vira valor; zero ou campo apagado tira o item */
+        await digita('#prm [data-vlx="moR"]','100-150');R.contaNegativaNaoViraValor=PR.moR===undefined&&budget().ext.L[0].v===0;
+        await digita('#prm [data-vlx="cfR"]','0');R.zeroTiraOItem=PR.cfR===undefined;await abre('#prm [data-vlx="dxR"]');for(var nb=P.querySelector('[data-vlx="dxR"]').value.length;nb>0;nb--)kb('b');kb('ok');await W(150);R.campoApagadoTiraOItem=PR.dxR===undefined&&P.querySelector('[data-vlx="dxR"]').value==='';
+        /* 11. sem nada preenchido volta a ser material × multiplicador */
+        var b4=budget(),o2=JSON.parse(localStorage.getItem(PRK)||'{}');
+        R.semNadaVoltaAoQueEra=b4.ext.t===0&&b4.sale===b4.tot*PR.mult&&KS.every(function(k){return PR[k]===undefined&&o2[k]===undefined})&&!vis(document.getElementById('prX'))&&document.getElementById('prV').textContent.trim()===brl(b4.sale)&&document.getElementById('prsum').querySelectorAll('tr[data-vlxl]').length===0;
+        P.hidden=true;try{document.getElementById('stdm').hidden=true}catch(_){}document.getElementById('vlb').click();await W(300);R.telaValoresVoltaAoQueEra=B().querySelectorAll('[data-vlxl]').length===0&&margem()==='Mão de obra e lucro = '+brl(b4.tot*1.5)&&vp()===brl(b4.sale);document.getElementById('vlm').hidden=true;
+        if(pk0===null)localStorage.removeItem(PRK);else localStorage.setItem(PRK,pk0);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["materialMaiorQueZero"] as? Bool, true)
+        XCTAssertEqual(o["semPreencherOValorNaoMuda"] as? Bool, true)
+        XCTAssertEqual(o["camposNaTelaValores"] as? String, "Mão de obra (R$) | Custo fixo (R$) | Despesas extras (R$)")
+        XCTAssertEqual(o["semPreencherNaoApareceLinha"] as? Bool, true)
+        XCTAssertEqual(o["margemSemPreencher"] as? String, "Mão de obra e lucro")
+        XCTAssertEqual(o["valorNaTelaSemPreencher"] as? Bool, true)
+        XCTAssertEqual(o["tocarNoCampoAbreOTeclado"] as? Bool, true)
+        XCTAssertEqual(o["soEntraNoOk"] as? Bool, true)
+        XCTAssertEqual(o["maoDeObraSomaNoValor"] as? Bool, true)
+        XCTAssertEqual(o["valorNaTelaComMaoDeObra"] as? Bool, true)
+        XCTAssertEqual(o["tecladoFechaNoOk"] as? Bool, true)
+        XCTAssertEqual(o["linhaDaMaoDeObra"] as? Bool, true)
+        XCTAssertEqual(o["margemViraLucro"] as? Bool, true)
+        XCTAssertEqual(o["botaoDoPdfComOValorNovo"] as? Bool, true)
+        XCTAssertEqual(o["tocarDeNovoNoCampoAbreDeNovo"] as? Bool, true)
+        XCTAssertEqual(o["passarProCampoDoLadoSemOk"] as? Bool, true)
+        XCTAssertEqual(o["custoFixo"] as? Bool, true)
+        XCTAssertEqual(o["despesasExtrasComCentavos"] as? Bool, true)
+        XCTAssertEqual(o["osTresSomamNoValorDoProjeto"] as? Bool, true)
+        XCTAssertEqual(o["linhasNaTela"] as? String, "Mão de obra R$ 900,00 | Custo fixo R$ 1.500,00 | Despesas extras R$ 250,50")
+        XCTAssertEqual(o["ordemNaTela"] as? String, "Material | Mão de obra | Custo fixo | Despesas extras | Lucro | Valor do projeto")
+        XCTAssertEqual(o["ordemNoQuadro"] as? String, "Material | Mão de obra | Custo fixo | Despesas extras | Lucro | Valor do projeto")
+        XCTAssertEqual(o["margemContinuaSoOMultiplicador"] as? Bool, true)
+        XCTAssertEqual(o["camposFormatados"] as? String, "900,00 | 1.500,00 | 250,50")
+        XCTAssertEqual(o["porModuloAcompanhaOValor"] as? Bool, true)
+        XCTAssertEqual(o["orcamentoPdfFechaComOValor"] as? Bool, true)
+        XCTAssertEqual(o["ficaGuardado"] as? Bool, true)
+        XCTAssertEqual(o["naoMexeNoProjeto"] as? Bool, true)
+        XCTAssertEqual(o["janelaNaoDesceNoMeioDoToque"] as? Bool, true)
+        XCTAssertEqual(o["botaoPegaDePrimeiraEOValorEntra"] as? Bool, true)
+        XCTAssertEqual(o["janelaVoltaProLugar"] as? Bool, true)
+        XCTAssertEqual(o["botaoSemTirarOFocoTambemAplica"] as? Bool, true)
+        XCTAssertEqual(o["valorFechadoEDepoisCampoNovo"] as? Bool, true)
+        XCTAssertEqual(o["valorFechadoPorCima"] as? Bool, true)
+        XCTAssertEqual(o["voltaAoSugerido"] as? Bool, true)
+        XCTAssertEqual(o["descontoDe10"] as? Bool, true)
+        XCTAssertEqual(o["descontoAbreDeNovoDepoisDoOk"] as? Bool, true)
+        XCTAssertEqual(o["descontoEDepoisCampoNovo"] as? Bool, true)
+        XCTAssertEqual(o["semDesconto"] as? Bool, true)
+        XCTAssertEqual(o["escondido"] as? Bool, true)
+        XCTAssertEqual(o["mostraDeNovo"] as? Bool, true)
+        XCTAssertEqual(o["botaoDosPrecosNoAjustes"] as? Bool, true)
+        XCTAssertEqual(o["valoresNoAjustes"] as? String, "moR=800,00 cfR=1.500,00 dxR=250,50")
+        XCTAssertEqual(o["contaNoAjustes"] as? Bool, true)
+        XCTAssertEqual(o["somaNoAjustes"] as? Bool, true)
+        XCTAssertEqual(o["noAjustesPassaProCampoDoLado"] as? Bool, true)
+        XCTAssertEqual(o["resumoDoMaterialComAsTresLinhas"] as? String, "Mão de obra R$ 1.200,00 | Custo fixo R$ 1.500,00 | Despesas extras R$ 250,50")
+        XCTAssertEqual(o["campoFormatadoNoAjustes"] as? String, "1.200,00")
+        XCTAssertEqual(o["contaNegativaNaoViraValor"] as? Bool, true)
+        XCTAssertEqual(o["zeroTiraOItem"] as? Bool, true)
+        XCTAssertEqual(o["campoApagadoTiraOItem"] as? Bool, true)
+        XCTAssertEqual(o["semNadaVoltaAoQueEra"] as? Bool, true)
+        XCTAssertEqual(o["telaValoresVoltaAoQueEra"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

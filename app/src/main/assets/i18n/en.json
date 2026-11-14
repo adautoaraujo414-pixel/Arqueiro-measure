@@ -6868,5 +6868,17 @@
 "o módulo fica na altura da pedra": "the module stays at the countertop height",
 "Pra mudar essa altura": "To change this height",
 "mude a altura da pedra na aba Pedra.": "change the countertop height in the Countertop tab.",
-"Não cabe outra divisória nesse vão": "There is no room for another divider in this bay"
+"Não cabe outra divisória nesse vão": "There is no room for another divider in this bay",
+"Custo fixo": "Fixed cost",
+"Despesas extras": "Extra expenses",
+"Lucro": "Profit",
+"Mão de obra, custo fixo e despesas extras": "Labor, fixed cost and extra expenses",
+"custo fixo e despesas extras": "fixed cost and extra expenses",
+"Valores em R$ que somam no valor do projeto. Ficam guardados pros próximos projetos.": "Amounts in R$ that are added to the project value. They stay saved for the next projects.",
+"Valores em R$ que somam no valor do projeto.": "Amounts in R$ that are added to the project value.",
+"Ficam guardados pros próximos projetos.": "They stay saved for the next projects.",
+"Mão de obra (R$)": "Labor (R$)",
+"Custo fixo (R$)": "Fixed cost (R$)",
+"Despesas extras (R$)": "Extra expenses (R$)",
+"R$": "R$"
 }

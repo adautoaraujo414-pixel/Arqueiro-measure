@@ -6868,5 +6868,17 @@
 "o módulo fica na altura da pedra": "el módulo queda a la altura de la encimera",
 "Pra mudar essa altura": "Para cambiar esta altura",
 "mude a altura da pedra na aba Pedra.": "cambie la altura de la encimera en la pestaña Encimera.",
-"Não cabe outra divisória nesse vão": "No cabe otra división en este hueco"
+"Não cabe outra divisória nesse vão": "No cabe otra división en este hueco",
+"Custo fixo": "Costo fijo",
+"Despesas extras": "Gastos extra",
+"Lucro": "Ganancia",
+"Mão de obra, custo fixo e despesas extras": "Mano de obra, costo fijo y gastos extra",
+"custo fixo e despesas extras": "costo fijo y gastos extra",
+"Valores em R$ que somam no valor do projeto. Ficam guardados pros próximos projetos.": "Valores en R$ que se suman al valor del proyecto. Quedan guardados para los próximos proyectos.",
+"Valores em R$ que somam no valor do projeto.": "Valores en R$ que se suman al valor del proyecto.",
+"Ficam guardados pros próximos projetos.": "Quedan guardados para los próximos proyectos.",
+"Mão de obra (R$)": "Mano de obra (R$)",
+"Custo fixo (R$)": "Costo fijo (R$)",
+"Despesas extras (R$)": "Gastos extra (R$)",
+"R$": "R$"
 }

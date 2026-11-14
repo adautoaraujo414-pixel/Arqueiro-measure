@@ -1,5 +1,14 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Pedra em qualquer parede: trocando de parede no 2D (faixa "Parede do fundo · Esquerda · Direita"), a aba Pedra agora cria a pedra naquela parede. Ela fica guardada na parede dela, aparece no 3D e na planta em cima dos módulos de lá (com cuba e cooktop) e é salva com o projeto. Antes a pedra criada na parede do lado ia parar na parede do fundo e sumia ao voltar pra parede.
+• Planta: com a parede esquerda ou direita escolhida, "＋ Bancada (pedra)" cria a pedra só daquela parede quando a parede do fundo não tem pedra nem balcão (com pedra ou balcão no fundo continua fazendo a pedra em L).
+• Parede do lado: módulo novo nasce depois do canto. Antes nascia colado no canto e entrava no módulo da parede do fundo.
+• Pedra nova com torre, caixa de geladeira ou geladeira no meio dos balcões: a pedra nasce em pedaços, um de cada lado do móvel alto, e nada sai do lugar. Antes ela nascia atravessando o móvel alto e ele era jogado pra ponta (podia passar da parede ou entrar em outro módulo).
+• "＋ pedra" de novo: a pedra seguinte vai pro trecho de balcões que ainda está sem pedra.
+• Tamponamento de cima em balcão com a pedra encostada em cima: não vai mais (entrava 30 mm na pedra). A caixinha fica travada e diz quanto subir a pedra pra poder usar.
+• Tamponamento esquerdo ou direito sem espaço: não liga e avisa. Antes ligava e um módulo entrava no outro. Com a pedra encaixada, é a pedra que acompanha a régua nova; antes o módulo encolhia 30 mm sozinho pra caber embaixo dela.
+• Armários e torres com porta de cava e tamponamento de cima (34 modelos): a porta para no topo do módulo e não entra mais no tamponamento; o corte da porta sai com essa medida.
+# abaixo: o que já estava na publicação anterior do commit 85d67cc (ver com o Adauto antes de publicar: tirar o que cada versão já recebeu)
 • "Abrir portas e gavetas" (quadro do módulo no 3D) e "abrir todas" agora abrem tudo que abre no toque: portas e gavetas da torre de forno e micro-ondas, portas de cima da caixa da geladeira, gaveta que fica dentro de porta, gaveta interna e gavetas do caixote. Antes só abriam porta e gaveteiro comuns.
 • Caixote de gavetas (guarda-roupa e closet): as gavetas agora abrem no 3D, no toque e no "abrir tudo". Antes o toque não fazia nada. Fechar a porta fecha junto a gaveta de dentro, pra ela não atravessar a porta.
 • Gaveta interna (atrás da porta) do guarda-roupa: agora abre no 3D, no toque e no "abrir tudo".

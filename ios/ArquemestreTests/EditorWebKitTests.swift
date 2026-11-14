@@ -7978,4 +7978,272 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfazer"] as? String, "voltou true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testPlanoDeCorteTodaPecaEntraUmaVezDentroDaChapaSemUmaEmCimaDaOutra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};
+                  var seed=777,rnd=function(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff},ri=function(a,b){return Math.round(a+rnd()*(b-a))};
+                  var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+                  var SW=2730,SH=1820,kf=4,met0=PR.metodo,prob=[],casos=0,pecas=0;
+                  /* confere um plano: toda peça entrou uma vez só, no tamanho dela (com a serra), dentro da chapa, sem uma em cima da outra, e só virou quem podia virar */
+                  var confere=function(nome,P,r,rot){casos++;pecas+=P.length;var vis=new Map(),n=0,er=function(t){if(prob.length<12)prob.push(nome+': '+t)};
+                    (r.sheets||[]).forEach(function(s,si){var U=s.used||[];U.forEach(function(u,i){n++;var p=u.p;if(!p){er('peça sem dono na chapa '+(si+1));return}if(vis.has(p))er('a mesma peça entrou 2 vezes');vis.set(p,1);
+                        var w=u.r?p.h:p.w,h=u.r?p.w:p.h;if(Math.abs(u.w-w)>0.01||Math.abs(u.h-h)>0.01)er('peça '+p.w+'×'+p.h+' entrou como '+u.w+'×'+u.h+(u.r?' (virada)':''));
+                        if(u.r&&p.fx!==2&&(!rot||p.fx===1))er('virou peça que não pode virar ('+p.w+'×'+p.h+')');if(!u.r&&p.fx===2)er('não virou peça que tinha que virar');
+                        if(u.x<-0.01||u.y<-0.01||u.x+u.w>SW+0.01||u.y+u.h>SH+0.01)er('peça fora da chapa: '+[u.x,u.y,u.w,u.h].join(','));
+                        for(var j=0;j<i;j++){var v=U[j],ox=Math.min(u.x+u.w,v.x+v.w)-Math.max(u.x,v.x),oy=Math.min(u.y+u.h,v.y+v.h)-Math.max(u.y,v.y);if(ox>0.01&&oy>0.01)er('duas peças uma em cima da outra na chapa '+(si+1)+' ('+Math.round(ox)+'×'+Math.round(oy)+')');else if(ox>-kf+0.01&&oy>-kf+0.01)er('duas peças sem o espaço da serra entre elas na chapa '+(si+1)+' (folga '+Math.round(-Math.min(ox,oy)*10)/10+' mm, serra '+kf+')')}})});
+                    var big=(r.big||[]).length;if(n+big!==P.length)er('faltou ou sobrou peça: entraram '+n+' + grandes '+big+' de '+P.length);
+                    (r.big||[]).forEach(function(p){var cabe=(p.w<=SW&&p.h<=SH&&p.fx!==2)||((rot&&p.fx!==1||p.fx===2)&&p.h<=SW&&p.w<=SH);if(cabe)er('peça que cabe ficou de fora: '+p.w+'×'+p.h)});
+                    P.forEach(function(p){if(!vis.has(p)&&(r.big||[]).indexOf(p)<0)er('peça sumiu: '+p.w+'×'+p.h)})};
+                  var METS=['max','opt','comp','larg'];
+                  try{
+                  /* 1. peças de verdade: a lista de corte de módulos do catálogo (cozinhas e guarda-roupas sorteados) */
+                  for(var c=0;c<10;c++){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=12000;S.H=3000;var P=[];for(var k=0;k<6;k++){var it=its[Math.floor(rnd()*its.length)];newTpl(JSON.parse(JSON.stringify(it)));if(window.SOLO2)soloOff()}
+                    S.mods.forEach(function(m){cutLines(m).forEach(function(l){if((+l.mat||15)>9)for(var q=0;q<(l.qty||1);q++)P.push({w:+l.L,h:+l.W,lab:l.name,src:null})})});
+                    METS.forEach(function(mt){PR.metodo=mt;[true,false].forEach(function(rot){SPC={};confere('catálogo '+c+' '+mt+(rot?' vira':' não vira'),P,packSheets(P,SW,SH,kf,rot),rot)})})}
+                  /* 2. peças sorteadas, com peça grande demais, peça do tamanho exato da chapa, tiras finas e peças que não podem (ou têm que) virar */
+                  for(var c2=0;c2<24;c2++){var n2=ri(5,70),P2=[];for(var i=0;i<n2;i++){var t=rnd(),p=t<.08?{w:SW,h:ri(100,SH)}:t<.12?{w:ri(100,SW),h:SH}:t<.16?{w:SW,h:SH}:t<.2?{w:ri(2740,3200),h:ri(300,900)}:t<.45?{w:ri(300,2500),h:ri(40,120)}:{w:ri(150,2400),h:ri(150,900)};p.lab='p'+i;p.src=null;if(rnd()<.2)p.fx=1;else if(rnd()<.06)p.fx=2;P2.push(p)}
+                    METS.forEach(function(mt){PR.metodo=mt;var rot=rnd()<.7;SPC={};confere('sorteio '+c2+' '+mt+(rot?' vira':' não vira'),P2,packSheets(P2,SW,SH,kf,rot),rot)})}
+                  }finally{PR.metodo=met0;SPC={}}
+                  R.planosConferidos=casos>=150;R.pecasConferidas=pecas>3000;R.problemas=prob.length+(prob.length?': '+prob.slice(0,8).join(' | '):'');R.numeros=casos+' planos · '+pecas+' peças';R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["planosConferidos"] as? Bool, true)
+        XCTAssertEqual(o["pecasConferidas"] as? Bool, true)
+        XCTAssertEqual(o["problemas"] as? String, "0")
+        XCTAssertEqual(o["numeros"] as? String, "176 planos · 14100 peças")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPortaNaoEntraNoTamponamentoDeCimaEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return r?JSON.parse(JSON.stringify(r)):null};
+        var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=6000;S.RD=3500;S.H=2700;S.m=null};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+        /* catálogo inteiro com tamponamento de cima: nenhuma porta/frente passa do topo do módulo (não entra no tamponamento) e o corte da porta é a altura que ela tem no desenho */
+        var acima=[],corte=[],n=0;its.forEach(function(it){try{clr();newTpl(JSON.parse(JSON.stringify(it)));if(window.SOLO2)soloOff();var q=S.mods[S.mods.length-1];if(!q||q.corner)return;q.tt=true;q.ttM=1;SPC={};draw();var P=partsOf(q);if(!P.some(function(p){return p.name==='Tamponamento de cima'}))return;n++;P.forEach(function(p){if(!/^(Porta|Frente de gaveta|Frente \(porta tempero\))$/.test(p.name)||p.noDraw||p.cxz)return;if(p.y<-0.5)acima.push(it.n+': '+p.name+' y'+p.y);if(Math.abs(p.cw-p.h)>1.6&&Math.abs(p.cl-p.h)>1.6)corte.push(it.n+': '+p.name+' desenho '+p.h+' corte '+p.cl+'×'+p.cw)})}catch(e){acima.push(it.n+' EXC '+String(e).slice(0,80))}});
+        R.modelosComTamponamentoDeCima=n>=100;R.frentePassaDoTopo=acima.length+(acima.length?': '+acima.slice(0,6).join(' | '):'');R.corteDiferenteDoDesenho=corte.length+(corte.length?': '+corte.slice(0,6).join(' | '):'');
+        /* exemplo: armário alto com porta de cava: sem tamponamento a porta sobe 5 acima do topo; com ele, para no topo e o corte diminui os mesmos 5 */
+        var d=function(m){var p=partsOf(m).filter(function(p){return /^Porta$/.test(p.name)})[0];return 'de cima '+p.y+' · altura '+p.h+' · corte '+p.cl+' × '+p.cw};
+        clr();newTpl(T('Armário alto 2 portas (arquivo)'));if(window.SOLO2)soloOff();var m=S.mods[0];R.semTamponamento=d(m);m.tt=true;SPC={};draw();R.comTamponamento=d(m)+' · avisa na peça '+/encosta no tamponamento de cima/.test(partsOf(m).filter(function(p){return /^Porta$/.test(p.name)})[0].note||'');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelosComTamponamentoDeCima"] as? Bool, true)
+        XCTAssertEqual(o["frentePassaDoTopo"] as? String, "0")
+        XCTAssertEqual(o["corteDiferenteDoDesenho"] as? String, "0")
+        XCTAssertEqual(o["semTamponamento"] as? String, "de cima -10 · altura 2000 · corte 440 × 2000")
+        XCTAssertEqual(o["comTamponamento"] as? String, "de cima 0 · altura 1990 · corte 440 × 1990 · avisa na peça true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPedraNovaNaoAtravessaMovelAltoNasceDivididaENadaSaiDoLugar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var clr=function(w){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=w||4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var pos=function(){return S.mods.map(function(m){return m.x+'–'+(m.x+m.w)}).join(' | ')},ped=function(){return S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(' | ')};
+        var pedra=async function(){S.tab=6;panel();await W(30);document.querySelector('#bd [data-stadd]').click();await W(80)};
+        /* pedra × peça dos móveis altos e geladeira no 3D: nada da pedra dentro deles */
+        var cruza=async function(){draw();open3D();await W(450);__build();var B=__boxes().filter(function(q){return q.a>=0.99&&!q.gl}),st=B.filter(function(q){return q.sid!=null&&(q.g==='lo'||q.g==='stc')}),n=0;B.forEach(function(q){var alto=false,nm=String(q.nm||'');if(/^\d+:/.test(nm)){var m=S.mods[parseInt(nm,10)];alto=m&&!m.sup&&m.h>=1200}else if(q.fr!=null)alto=true;if(!alto)return;st.forEach(function(p){if(Math.min(p.x1,q.x1)-Math.max(p.x0,q.x0)>2&&Math.min(p.y1,q.y1)-Math.max(p.y0,q.y0)>2&&Math.min(p.z1,q.z1)-Math.max(p.z0,q.z0)>2)n++})});document.getElementById('v3x').click();await W(120);return n};
+        /* 1. torre no meio dos balcões */
+        clr();await add('Balcão 2 portas');await add('Torre quente (forno)');await add('Gaveteiro 3 gavetas');var a0=pos();await pedra();
+        R.torreNoMeio='móveis ficaram no lugar '+(pos()===a0)+' · pedras '+ped();R.torreNoMeio3D=await cruza();
+        /* 2. caixa de geladeira no meio */
+        clr();await add('Balcão 2 portas');await add('Caixa da geladeira duplex / inverse (laterais + aéreo)');await add('Balcão 2 portas');var b0=pos();await pedra();
+        R.geladeiraNoMeio='móveis ficaram no lugar '+(pos()===b0)+' · pedras '+ped();R.geladeiraNoMeio3D=await cruza();
+        /* 3. torre na ponta: uma pedra só, em cima dos balcões */
+        clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');await add('Torre quente (forno)');var c0=pos();await pedra();R.torreNaPonta='móveis ficaram no lugar '+(pos()===c0)+' · pedras '+ped();
+        /* 4. duas torres e três trechos de balcão: três pedaços · tocar em ＋ pedra de novo não põe pedra em cima de torre */
+        clr(6000);await add('Balcão 2 portas');await add('Torre quente (forno)');await add('Balcão 2 portas');await add('Torre quente (forno)');await add('Gaveteiro 3 gavetas');var d0=pos();await pedra();R.duasTorres='móveis ficaram no lugar '+(pos()===d0)+' · pedras '+ped();
+        /* 5. só balcões: continua uma pedra só, de ponta a ponta */
+        clr();await add('Balcão 2 portas');await add('Balcão da pia (cuba)');await add('Gaveteiro 3 gavetas');await pedra();R.soBalcoes=ped()+' · cuba na pedra '+S.stones.reduce(function(a,q){return a+(q.items||[]).filter(function(i){return i.k==='cuba'}).length},0);
+        /* 6. a pia fica no pedaço dela quando a pedra nasce dividida */
+        clr();await add('Balcão 2 portas');await add('Torre quente (forno)');await add('Balcão da pia (cuba)');await pedra();R.piaNoPedacoDela=S.stones.map(function(q){return q.x+'–'+(q.x+q.w)+':'+(q.items||[]).filter(function(i){return i.k==='cuba'}).length}).join(' | ');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["torreNoMeio"] as? String, "móveis ficaram no lugar true · pedras 0–905 | 1565–2195")
+        XCTAssertEqual(o["torreNoMeio3D"] as? Int, 0)
+        XCTAssertEqual(o["geladeiraNoMeio"] as? String, "móveis ficaram no lugar true · pedras 0–905 | 1725–2655")
+        XCTAssertEqual(o["geladeiraNoMeio3D"] as? Int, 0)
+        XCTAssertEqual(o["torreNaPonta"] as? String, "móveis ficaram no lugar true · pedras 0–1505")
+        XCTAssertEqual(o["duasTorres"] as? String, "móveis ficaram no lugar true · pedras 0–905 | 1565–2465 | 3125–3755")
+        XCTAssertEqual(o["soBalcoes"] as? String, "0–2735 · cuba na pedra 1")
+        XCTAssertEqual(o["piaNoPedacoDela"] as? String, "0–905:0 | 1565–2795:1")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var clr=function(w){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=w||4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var caixa=function(mi,c){S.m=S.mods[mi];S.tab=4;draw();panel();return document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]')},toca=async function(mi,c,on){var cb=caixa(mi,c);if(!cb||cb.disabled)return 'travada';if(cb.checked!==on){cb.click();await W(80)}return S.mods[mi][c]?'ligado':'desligado'};
+        var tem=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).length},noCorte=function(m,re){return cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return re.test(n)})}).length};
+        var TC=/^Tamponamento de cima/;
+        /* 1. balcão com a pedra encostada em cima: tamponamento de cima não vai (entraria na pedra) e a caixinha avisa */
+        clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);var m=S.mods[1];
+        m.tt=true;draw();var cb=caixa(1,'tt');R.embaixoDaPedra='peça '+tem(m,TC)+' · no corte '+noCorte(m,TC)+' · caixinha travada '+!!(cb&&cb.disabled)+' e desmarcada '+!!(cb&&!cb.checked)+' · aviso '+!!document.querySelector('#bd [data-ttped]');
+        draw();open3D();await W(450);__build();R.no3D=__boxes().filter(function(q){return /^1:Tamponamento de cima/.test(String(q.nm||''))}).length;document.getElementById('v3x').click();await W(120);
+        /* subiu a pedra o que faltava: o tamponamento volta e não entra nela */
+        var falta=ttFalta(m);S.stones[0].t+=falta;draw();var p=partsOf(m).filter(function(q){return TC.test(q.name)})[0];R.subiuAPedra='faltava '+falta+' · peça '+tem(m,TC)+' · topo do tamponamento '+(p?m.b+m.h-p.y:'—')+' · pedra começa em '+S.stones[0].t;
+        /* sem pedra: liga normal */
+        clr();await add('Gaveteiro 3 gavetas');R.semPedra=await toca(0,'tt',true)+' · peça '+tem(S.mods[0],TC);
+        /* 2. ligar tamponamento do lado sem espaço: não liga, nada entra em nada, nada muda de medida, e avisa */
+        clr(1810);await add('Balcão 2 portas');await add('Balcão 2 portas');await toca(0,'tl',false);await toca(0,'tr',false);await toca(1,'tl',false);await toca(1,'tr',false);S.mods[0].x=5;S.mods[1].x=905;S.mods[0].w=900;S.mods[1].w=900;draw();
+        var antes=S.mods.map(function(q){return q.x+'/'+q.w}).join(' | ');TO=[];var r1=await toca(1,'tl',true);
+        R.semEspaco=r1+' · tudo como estava '+(S.mods.map(function(q){return q.x+'/'+q.w}).join(' | ')===antes)+' · avisou '+TO.some(function(t){return /Não cabe/.test(t)});
+        /* com espaço: liga e o módulo anda a régua */
+        clr(3000);await add('Balcão 2 portas');await add('Balcão 2 portas');await toca(0,'tl',false);await toca(0,'tr',false);await toca(1,'tl',false);await toca(1,'tr',false);var x1=S.mods[1].x;TO=[];var r2=await toca(1,'tl',true);
+        R.comEspaco=r2+' · andou '+(S.mods[1].x-x1)+' · larguras '+S.mods.map(function(q){return q.w}).join(',')+' · avisou '+TO.some(function(t){return /Não cabe/.test(t)});
+        /* 3. pedra encaixada: ligar o tamponamento da ponta faz a PEDRA acompanhar; o módulo não encolhe sozinho */
+        clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');await toca(1,'tr',false);S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);var w0=S.mods.map(function(q){return q.w}).join(','),s0=S.stones[0].x+S.stones[0].w;var r3=await toca(1,'tr',true);
+        R.pedraAcompanha=r3+' · larguras iguais '+(S.mods.map(function(q){return q.w}).join(',')===w0)+' · pedra cresceu '+(S.stones[0].x+S.stones[0].w-s0);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["embaixoDaPedra"] as? String, "peça 0 · no corte 0 · caixinha travada true e desmarcada true · aviso true")
+        XCTAssertEqual(o["no3D"] as? Int, 0)
+        XCTAssertEqual(o["subiuAPedra"] as? String, "faltava 30 · peça 1 · topo do tamponamento 850 · pedra começa em 850")
+        XCTAssertEqual(o["semPedra"] as? String, "ligado · peça 1")
+        XCTAssertEqual(o["semEspaco"] as? String, "desligado · tudo como estava true · avisou true")
+        XCTAssertEqual(o["comEspaco"] as? String, "ligado · andou 30 · larguras 900,900 · avisou false")
+        XCTAssertEqual(o["pedraAcompanha"] as? String, "ligado · larguras iguais true · pedra cresceu 30")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPedraEmQualquerParedeCriaNaParedeEscolhidaSalvaEApareceNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var add=async function(n){newTpl(T(n));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}};
+        var maisPedra=async function(){S.tab=6;panel();await W(30);document.querySelector('#bd [data-stadd]').click();await W(90)};
+        var lado=function(){return (S.stw||[]).map(function(q){return q.wall+':'+q.x+'–'+(q.x+q.w)+' sai '+q.d}).join(' | ')},mods=function(){return S.mods.map(function(m){return (m.wing||'f')+':'+m.x+'–'+(m.x+m.w)}).join(' | ')};
+        var cx3=function(){__build();var B=__boxes().filter(function(q){return q.a>=0.99&&!q.gl}),by={};B.forEach(function(q){var nm=String(q.nm||'');if(/^\d+:/.test(nm)){var mi=parseInt(nm,10);(by[mi]=by[mi]||[]).push(q)}});var ov=function(p,q){return Math.min(p.x1,q.x1)-Math.max(p.x0,q.x0)>2&&Math.min(p.y1,q.y1)-Math.max(p.y0,q.y0)>2&&Math.min(p.z1,q.z1)-Math.max(p.z0,q.z0)>2},mm=0,ks=Object.keys(by);ks.forEach(function(a){ks.forEach(function(b){if(+b<=+a)return;by[a].forEach(function(p){by[b].forEach(function(q){if(ov(p,q))mm++})})})});
+          var lo=B.filter(function(q){return q.g==='lo'}),pm=0,pp=0;lo.forEach(function(p){ks.forEach(function(a){by[a].forEach(function(q){if(ov(p,q))pm++})});lo.forEach(function(q){if(q!==p&&ov(p,q))pp++})});
+          return {txt:lo.map(function(q){return (q.stw||'f')+': x'+Math.round(q.x0)+'–'+Math.round(q.x1)+' z'+Math.round(q.z0)+'–'+Math.round(q.z1)+' y'+Math.round(q.y0)+'–'+Math.round(q.y1)}).sort().join(' | '),mm:mm,pm:pm,pp:pp/2}};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=3000;S.RD=3500;S.H=2700;S.m=null;draw();
+        /* parede do fundo: balcões e pedra */
+        await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');await maisPedra();R.fundo=mods()+' · pedra '+S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(',');
+        /* muda pra parede esquerda: os balcões nascem depois do canto (não entram no balcão do fundo) e a pedra nasce NAQUELA parede */
+        wvGo('e');await W(80);R.naEsquerdaComecaVazia=S.mods.length+' módulos · '+S.stones.length+' pedras';
+        await add('Balcão 2 portas');await add('Balcão da pia (cuba)');await maisPedra();
+        R.pedraNaEsquerda=S.stones.map(function(q){return q.x+'–'+(q.x+q.w)+' sai '+q.d+' · cuba '+(q.items||[]).filter(function(i){return i.k==='cuba'}).length}).join(' | ')+' · módulos '+S.mods.map(function(m){return m.x+'–'+(m.x+m.w)}).join(' | ')+' · embaixo da pedra '+S.mods.every(function(m){return underStone(m)});
+        /* volta pro fundo: a pedra da esquerda não aparece no fundo, está guardada na parede dela */
+        wvGo('f');await W(80);R.noProjeto='do fundo '+S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(',')+' · do lado '+lado()+' · módulos '+mods();
+        R.faixaDasParedes=(document.getElementById('wvbar')||{}).hidden===false;
+        /* salvar, reabrir e desfazer */
+        var z=snapState();R.salvo=(z.stw||[]).length+' de lado · '+z.stones.length+' do fundo';loadState(JSON.parse(JSON.stringify(z)));draw();await W(60);R.reaberto=lado()+' · do fundo '+S.stones.length;
+        wvGo('e');await W(80);R.voltouNaEsquerda=S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(',')+' · escolhida '+!!(S.st&&S.stones.indexOf(S.st)>=0);
+        snap();S.stones=S.stones.filter(function(q){return q!==S.st});S.st=null;draw();await W(40);R.apagouNaVista=S.stones.length;wvGo('f');await W(60);R.apagouNoProjeto=lado();
+        document.getElementById('und').click();await W(120);R.desfez=lado();
+        /* 3D: cada pedra na parede dela, em cima dos módulos dela, sem entrar em módulo nem em outra pedra */
+        draw();open3D();await W(600);var c=cx3();R.pedrasNo3D=c.txt;R.moduloDentroDeModulo=c.mm;R.pedraDentroDeModulo=c.pm;R.pedraDentroDePedra=c.pp;
+        try{var sw=__boxes().filter(function(q){return q.stw==='e'&&q.g==='lo'})[0],s=org3api.proj([(sw.x0+sw.x1)/2,sw.y1+1,(sw.z0+sw.z1)/2]);if(s){__tap3(s[0],s[1]);await W(300)}}catch(e){}
+        document.getElementById('v3x').click();await W(200);
+        document.getElementById('plv').click();await W(150);R.naPlanta=document.querySelectorAll('#plg [data-stw]').length;document.getElementById('plv').click();await W(100);
+        /* parede direita sem nada no fundo, pela planta (parede direita escolhida · ＋ Módulo de baixo · ＋ Bancada): a pedra nasce só na direita, em cima do módulo de lá, e no 3D fica encostada na parede direita */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.W=3000;S.m=null;draw();PLWS='d';plwAdd('base');await W(80);if(window.SOLO2){soloOff();await W(30)}PLWS='d';plwAdd('pedra');await W(80);PLWS=null;draw();
+        R.direitaPelaPlanta=lado()+' · do fundo '+S.stones.length+' · módulo '+mods();draw();open3D();await W(600);var c2=cx3();R.direitaNo3D=c2.txt+' · dentro de módulo '+c2.pm;document.getElementById('v3x').click();await W(200);
+        wvGo('d');await W(80);R.direitaNaVistaDela=S.stones.map(function(q){return q.x+'–'+(q.x+q.w)}).join(',')+' · embaixo da pedra '+S.mods.every(function(m){return underStone(m)});wvGo('f');await W(60);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fundo"] as? String, "f:5–905 | f:905–1505 · pedra 0–1535")
+        XCTAssertEqual(o["naEsquerdaComecaVazia"] as? String, "0 módulos · 0 pedras")
+        XCTAssertEqual(o["pedraNaEsquerda"] as? String, "606–2766 sai 606 · cuba 1 · módulos 636–1536 | 1536–2736 · embaixo da pedra true")
+        XCTAssertEqual(o["noProjeto"] as? String, "do fundo 0–1535 · do lado e:606–2766 sai 606 · módulos f:5–905 | f:905–1505 | e:636–1536 | e:1536–2736")
+        XCTAssertEqual(o["faixaDasParedes"] as? Bool, true)
+        XCTAssertEqual(o["salvo"] as? String, "1 de lado · 1 do fundo")
+        XCTAssertEqual(o["reaberto"] as? String, "e:606–2766 sai 606 · do fundo 1")
+        XCTAssertEqual(o["voltouNaEsquerda"] as? String, "606–2766 · escolhida true")
+        XCTAssertEqual(o["apagouNaVista"] as? Int, 0)
+        XCTAssertEqual(o["apagouNoProjeto"] as? String, "")
+        XCTAssertEqual(o["desfez"] as? String, "e:606–2766 sai 606")
+        XCTAssertEqual(o["pedrasNo3D"] as? String, "e: x0–606 z606–2766 y820–860 | f: x0–1535 z0–606 y820–860")
+        XCTAssertEqual(o["moduloDentroDeModulo"] as? Int, 0)
+        XCTAssertEqual(o["pedraDentroDeModulo"] as? Int, 0)
+        XCTAssertEqual(o["pedraDentroDePedra"] as? Int, 0)
+        XCTAssertEqual(o["naPlanta"] as? Int, 1)
+        XCTAssertEqual(o["direitaPelaPlanta"] as? String, "d:600–1530 sai 606 · do fundo 0 · módulo d:600–1500")
+        XCTAssertEqual(o["direitaNo3D"] as? String, "d: x2394–3000 z600–1530 y820–860 · dentro de módulo 0")
+        XCTAssertEqual(o["direitaNaVistaDela"] as? String, "600–1530 · embaixo da pedra true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTampaCegaNaoAbreDeJeitoNenhumEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+        var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=6000;S.RD=3500;S.H=3000;S.m=null};
+        var cegas=function(m){return partsOf(m).filter(function(p){var v=(m.v||[])[p.vi]||{};return /^(Porta|Frente)/.test(p.name)&&(p.cego||p.rgfx||v.fixa)})};
+        var pos=function(pk){return __boxes().filter(function(q){return q.pk===pk}).map(function(q){return [q.x0,q.x1,q.y0,q.y1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')}).join(';')};
+        clr();draw();open3D();await W(500);
+        var n=0,botao=[],toque=[],dedo=[],dentro=[],ferr=[],escr=[],marc=[];
+        for(var i=0;i<its.length;i++){var it=its[i];clr();newTpl(JSON.parse(JSON.stringify(it)));await W(5);var m=S.mods[S.mods.length-1];if(!m||!temCego(m))continue;if(window.SOLO2){await W(1100);try{soloOff()}catch(_){}await W(60)}
+          n++;S.m=m;draw();__build();var C=cegas(m),p0={};C.forEach(function(p){p0[p.pk]=pos(p.pk);if(!/CEG[OA]/.test(p.note||'')||!/não abre|fixa/.test(p.note||''))escr.push(it.n);if((p.px&&p.px!=='nenhum')||p.gola||/cava usinada/.test(p.note||''))ferr.push(it.n);if(p.open)botao.push(it.n+' (nasce aberta)')});
+          var mexeu=function(){__build();return cegas(m).some(function(p){return p.open||pos(p.pk)!==p0[p.pk]})};
+          /* botão "Abrir portas e gavetas" */org3api.open(m,true);await W(1300);if(mexeu())botao.push(it.n);org3api.open(m,false);await W(1300);
+          /* 1 toque na própria tampa */C.forEach(function(p){try{__open1(S.mods.indexOf(m),p.pk)}catch(_){}});await W(1300);if(mexeu())toque.push(it.n);
+          /* toque de dedo no meio dela, no 3D */try{var b=__boxes().filter(function(q){return q.pk===C[0].pk})[0],s=b&&org3api.proj([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1+1]);if(s){__tap3(s[0],s[1]);await W(1300);if(mexeu())dedo.push(it.n)}}catch(_){}
+          /* marcar o vão como aberto na mão: a tampa cega continua fechada */(m.v||[]).forEach(function(v){if(v&&v.fixa){v.open=true;v.od={0:1,1:1}}});SPC={};draw();if(cegas(m).some(function(p){return p.open})||(m.v||[]).some(function(v){return v&&v.fixa&&(v.open||(v.od&&Object.keys(v.od).length))}))marc.push(it.n);
+          /* dentro do "2D só dele" (por vãos): continua cega, mesmo com "abrir as portas" ligado */
+          document.getElementById('v3x').click();await W(120);S.m=m;draw();document.getElementById('plsolo').click();await W(80);var mm=window.SOLO2||S.m,c1=cegas(mm).length;try{if(mm.v&&mm.v[0]){mm.v[0].open=1;SPC={};draw()}}catch(_){}
+          if(c1!==C.length||cegas(mm).some(function(p){return p.open||(p.px&&p.px!=='nenhum')}))dentro.push(it.n);try{if(mm.v&&mm.v[0])mm.v[0].open=0}catch(_){}if(window.SOLO2)soloOff();await W(60);open3D();await W(250)}
+        var f=function(a){return a.length+(a.length?': '+a.slice(0,5).join(' | '):'')};
+        R.modelosComTampaCega=n>=8;R.abriuNoBotaoAbrirPortas=f(botao);R.abriuNoToque=f(toque);R.abriuNoToqueDeDedo=f(dedo);R.abriuMarcandoAberto=f(marc);R.abriuDentroDo2DSoDele=f(dentro);R.comPuxadorOuCava=f(ferr);R.semEscritoDeCegaFixa=f(escr);
+        /* frente fixa com recorte (forno / micro-ondas): também não abre */
+        clr();var tq=its.filter(function(q){return q.n==='Torre por vãos · forno + micro com porta de recorte'})[0];newTpl(JSON.parse(JSON.stringify(tq)));await W(1200);try{if(window.SOLO2)soloOff()}catch(_){}await W(80);var m2=S.mods[0];S.m=m2;draw();__build();
+        var fr=partsOf(m2).filter(function(p){return /não abre/.test(p.note||'')}).map(function(p){return p.pk}),a2=fr.map(pos).join('|');org3api.open(m2,true);await W(1300);__build();R.frenteFixaComRecorte=fr.length+' frentes · mexeu '+(fr.map(pos).join('|')!==a2);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelosComTampaCega"] as? Bool, true)
+        XCTAssertEqual(o["abriuNoBotaoAbrirPortas"] as? String, "0")
+        XCTAssertEqual(o["abriuNoToque"] as? String, "0")
+        XCTAssertEqual(o["abriuNoToqueDeDedo"] as? String, "0")
+        XCTAssertEqual(o["abriuMarcandoAberto"] as? String, "0")
+        XCTAssertEqual(o["abriuDentroDo2DSoDele"] as? String, "0")
+        XCTAssertEqual(o["comPuxadorOuCava"] as? String, "0")
+        XCTAssertEqual(o["semEscritoDeCegaFixa"] as? String, "0")
+        XCTAssertEqual(o["frenteFixaComRecorte"] as? String, "2 frentes · mexeu false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testDesfazerERefazerDevolvemOProjetoIgualPassoAPasso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var seed=777,rnd=function(){seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff},pick=function(a){return a[Math.floor(rnd()*a.length)]};
+        var cat=function(id){var c=CATS.filter(function(c){return c.id===id})[0];return (c?c.it:[]).filter(function(it){return !it.act&&it.w&&it.h&&!it.corner&&!/[Cc]anto/.test(it.n)})};
+        var INF=cat('inf'),SUP=cat('sup'),ALT=cat('alto').filter(function(it){return !/por vãos|livre/i.test(it.n)});
+        var foto=function(){var z=snapState();delete z.mi;delete z.m;delete z.sti;delete z.trena;if(z.amb&&!Object.keys(z.amb).length)delete z.amb;(z.mods||[]).forEach(function(m){if(!m.wing)delete m.wing});return JSON.stringify(z)};
+        var und=document.getElementById('und'),red=document.getElementById(window.__REDID||'red');
+        var ruins=[],passos=0;
+        for(var c=0;c<2;c++){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=5200;S.RD=3500;S.H=2700;S.m=null;draw();try{HIST=[];FUT=[];LASTS=null}catch(_){}await W(900);
+          newTpl(JSON.parse(JSON.stringify(pick(INF))));draw();await W(20);if(window.SOLO2){soloOff();await W(30)}await W(900);
+          var F=[foto()],N=[];
+          var acts=[
+           function(){newTpl(JSON.parse(JSON.stringify(pick(INF))));return 'módulo de baixo'},
+           function(){newTpl(JSON.parse(JSON.stringify(pick(SUP))));return 'aéreo'},
+           function(){newTpl(JSON.parse(JSON.stringify(pick(ALT))));return 'alto'},
+           function(){S.tab=6;panel();var b=document.querySelector('#bd [data-stadd]');if(b)b.click();return '＋ pedra'},
+           function(){var mi=Math.floor(rnd()*S.mods.length);S.m=S.mods[mi];S.tab=4;draw();panel();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+pick(['tl','tr','tt','tb'])+'"]');if(cb&&!cb.disabled)cb.click();return 'tamponamento'},
+           function(){var mi=Math.floor(rnd()*S.mods.length);S.m=S.mods[mi];S.tab=0;draw();panel();var i=document.querySelector('#bd input[data-k="w"]');if(i){i.value=String(Math.round(S.m.w+pick([-100,-50,50,100])));i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}))}return 'largura pelo campo'},
+           function(){if(S.mods.length<3)return '';S.m=S.mods[Math.floor(rnd()*S.mods.length)];draw();document.getElementById('delMod').click();return 'apagar módulo'}
+          ];
+          for(var k=0;k<9;k++){var nome='';try{nome=pick(acts)()}catch(e){nome='EXC '+e}draw();await W(60);if(window.SOLO2){await W(1100);try{soloOff()}catch(_){}await W(60)}draw();await W(900);var f=foto();if(f!==F[F.length-1]){F.push(f);N.push(nome)}}
+          /* desfaz tudo, conferindo cada passo; refaz tudo, conferindo cada passo */
+          for(var i=F.length-2;i>=0;i--){und.click();await W(70);passos++;if(foto()!==F[i]){var A=JSON.parse(foto()),B=JSON.parse(F[i]),df=[];Object.keys(Object.assign({},A,B)).forEach(function(k){if(JSON.stringify(A[k])===JSON.stringify(B[k]))return;if(k==='mods'||k==='stones'){var n=Math.max((A[k]||[]).length,(B[k]||[]).length);if((A[k]||[]).length!==(B[k]||[]).length)df.push(k+' '+(A[k]||[]).length+'≠'+(B[k]||[]).length);for(var q=0;q<n;q++){var a=(A[k]||[])[q]||{},b=(B[k]||[])[q]||{};Object.keys(Object.assign({},a,b)).forEach(function(kk){if(JSON.stringify(a[kk])!==JSON.stringify(b[kk]))df.push(k+'['+q+'].'+kk+': depois de desfazer '+JSON.stringify(a[kk])+' · era '+JSON.stringify(b[kk]))})}}else df.push(k+': '+String(JSON.stringify(A[k])).slice(0,60)+' · era '+String(JSON.stringify(B[k])).slice(0,60))});ruins.push('cen '+c+': desfazer "'+N[i]+'" (passo '+i+' de '+N.join(' › ')+') → '+df.slice(0,6).join(' ; '));break}}
+          if(red){for(var j=1;j<F.length;j++){red.click();await W(70);passos++;if(foto()!==F[j]){ruins.push('cen '+c+': refazer "'+N[j-1]+'" não ficou igual (passo '+j+' de '+N.join(' › ')+')');break}}}}
+        R.passos=passos;R.ruins=ruins.length+(ruins.length?': '+ruins.slice(0,5).join(' || '):'');R.temRefazer=!!red;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ruins"] as? String, "0")
+        XCTAssertEqual(o["temRefazer"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

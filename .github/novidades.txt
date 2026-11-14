@@ -1,6 +1,8 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
 • Setinha ⌃ dos títulos das seções (Tamponamento esquerdo, Portas, Pedra e as outras): agora funciona. Tocar no título fecha a seção e tocar de novo abre. Vale em todas as abas do módulo, nos Ajustes e em Clientes. Antes a setinha era só desenho e não fechava nada.
+• "Lista de peças (ao vivo)" na aba Fundos: tocar numa linha agora mostra a peça no 3D, em rosa (igual à linha da Lista de corte). Antes a linha tinha a mãozinha de tocar e não fazia nada.
+• Divisória vertical e prateleira novas: quando já tinha uma no meio do módulo, a nova caía em cima dela (duas peças no mesmo lugar e um vão com medida negativa). Agora a divisória entra no meio do vão escolhido, dividindo ele em dois, e a prateleira vai pro maior espaço livre.
 # guardado pra publicação do Windows (já saiu nas outras versões; tirar o # antes de publicar o Windows):
 # • "Abrir portas e gavetas" (quadro do módulo no 3D) e "abrir todas" agora abrem tudo que abre no toque: portas e gavetas da torre de forno e micro-ondas, portas de cima da caixa da geladeira, gaveta que fica dentro de porta, gaveta interna e gavetas do caixote. Antes só abriam porta e gaveteiro comuns.
 # • Caixote de gavetas (guarda-roupa e closet): as gavetas agora abrem no 3D, no toque e no "abrir tudo". Antes o toque não fazia nada. Fechar a porta fecha junto a gaveta de dentro, pra ela não atravessar a porta.

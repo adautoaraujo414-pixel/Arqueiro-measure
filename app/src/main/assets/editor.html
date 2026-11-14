@@ -1592,7 +1592,7 @@ document.addEventListener('click',function(ev){var t=ev.target;
  if(t.dataset.selm!==undefined){var sm=S.mods[+t.dataset.selm];if(sm){S.m=sm;S.sv=0;S.armed=false;$('tipo').textContent=sm.sup?'Superior':'Base';panel();draw()}return}
  if(t.dataset.t){S.tab=+t.dataset.t;panel()}
  if(t.dataset.s&&t.closest('.sub')){sub=+t.dataset.s;panel()}
- if(t.closest&&t.closest('[data-add]')){var a=t.closest('[data-add]').dataset.add;snap();var rcv=t.closest('[data-add]').dataset.rc;if(a==='d'){S.m.dr=S.m.dr||[];S.m.dr[S.m.div.length]=rcv===undefined?0:+rcv;S.m.div.push(.5);if(+rcv<0){montSplit(S.m);toast('Montante de 7 cm no meio · a prateleira passa por trás')}}else{S.m.sr=S.m.sr||[];if(rcv!==undefined)S.m.sr[S.m.shv.length]=+rcv;S.m.shv.push(.5)}draw()}
+ if(t.closest&&t.closest('[data-add]')){var a=t.closest('[data-add]').dataset.add;snap();var rcv=t.closest('[data-add]').dataset.rc;if(a==='d'){if(S.m.div.length){/* já tem divisória: a nova entra no meio do vão escolhido (ou do mais largo) e o vão é dividido em dois — nunca em cima de outra divisória */var R_=vaoRanges(S.m),vi_=(S.sv>=0&&S.sv<R_.length&&R_[S.sv][1]-R_[S.sv][0]>=120)?S.sv:-1;if(vi_<0){var bw_=0;R_.forEach(function(r,i){if(r[1]-r[0]>bw_){bw_=r[1]-r[0];vi_=i}})}var d0_=S.m.div.slice(),m0_=S.m;splitV(S.m,vi_,2);var ni_=-1;m0_.div.forEach(function(x,i){if(ni_<0&&d0_.indexOf(x)<0)ni_=i});if(ni_>=0){m0_.dr=m0_.dr||[];m0_.dr[ni_]=rcv===undefined?0:+rcv;panel()}else toast('⚠ Não cabe outra divisória nesse vão')}else{S.m.dr=S.m.dr||[];S.m.dr[S.m.div.length]=rcv===undefined?0:+rcv;S.m.div.push(.5);if(+rcv<0){montSplit(S.m);toast('Montante de 7 cm no meio · a prateleira passa por trás')}}}else{S.m.sr=S.m.sr||[];/* prateleira nova: no meio; se já tem uma ali, vai pro meio do maior espaço livre (nunca em cima de outra) */var p_=.5;if(S.m.shv.some(function(x){return Math.abs(x-.5)<0.02})){var q_=[0].concat(S.m.shv.slice().sort(function(x,y){return x-y})).concat([1]),bg_=0;for(var i_=0;i_<q_.length-1;i_++){if(q_[i_+1]-q_[i_]>bg_){bg_=q_[i_+1]-q_[i_];p_=Math.round((q_[i_]+q_[i_+1])/2*1000)/1000}}}if(rcv!==undefined)S.m.sr[S.m.shv.length]=+rcv;S.m.shv.push(p_)}draw()}
  if(t.dataset.cs!==undefined){var cq=t.dataset.cs.split('|');snap();if(cq[1]){S.m[cq[0]]=cq[1];if(cq[2])S.m[cq[0]+'N']=cq[2];else delete S.m[cq[0]+'N'];if(cq[3])S.m[cq[0]+'Id']=cq[3];else delete S.m[cq[0]+'Id']}else{delete S.m[cq[0]];delete S.m[cq[0]+'N'];delete S.m[cq[0]+'Id']}panel();draw();return}
  if(t.dataset.wing!==undefined){snap();var wv=t.dataset.wing==='0'?0:t.dataset.wing,wo_=S.m.wing||0,xo_=S.m.x;S.m.wing=wv;if(wv){wingShape(wv);if(S.m.x<400)S.m.x=wingStart()}if(modHit(S.m)&&!modSlide(S.m,S.m.x)){S.m.wing=wo_;S.m.x=xo_;toast('⚠ Nessa parede ele entraria dentro de outro módulo · libere espaço primeiro')}panel();draw();return}
  if(t.dataset.addwing){addWing(t.dataset.addwing);return}
@@ -6478,6 +6478,7 @@ it4Box().addEventListener('click',function(e){var t=e.target&&e.target.closest?e
  document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;
   if(t.closest('#v3x')){clearHL();return}
   if(t.closest('[data-hlx]')){clearHL();try{window.re3()}catch(_){}return}
+  /* linha de peça fora da Lista de corte (ex.: "Lista de peças (ao vivo)" no painel do módulo): faz a mesma coisa, mostra a peça no 3D em rosa */var r0=t.closest('tr[data-src]');if(r0&&!t.closest('#cutm')&&!t.closest('button,input,a,select')){show3D(r0.dataset.src,r0.dataset.lab);return}
   if(!t.closest('#cutm'))return;
   var c=t.closest('[data-cutclr]');if(c){if(c.dataset.ok){S.cutOk={};saveCut();keepScroll(openCut)}else{c.dataset.ok='1';c.textContent='Toque de novo pra limpar'}return}
   if(t.closest('[data-cedit]')){window.CUTEDIT=!window.CUTEDIT;keepScroll(openCut);if(window.CUTEDIT)toast('Toque na peça pra tirar do plano');return}
@@ -11598,18 +11599,18 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
 <script>
 /* ===== setinha ⌃ dos títulos das seções: tocar no título fecha a seção (esconde o que está embaixo dele, até o próximo título) e tocar de novo abre. Vale pra toda seção com setinha, em qualquer aba, quadro ou janela. O que você fechou continua fechado enquanto mexe (o painel é redesenhado a cada mudança). Só esconde na tela: não muda nada no projeto. ===== */
 (function(){
- try{var st=document.createElement('style');st.textContent='.secx{display:none!important}.sec.secarr{cursor:pointer;-webkit-user-select:none;user-select:none}.sec.secarr>span:last-child{padding:0 4px;min-width:22px;text-align:center}';document.head.appendChild(st)}catch(_){}
+ try{var st=document.createElement('style');st.textContent='.secx{display:none!important}.sec{cursor:pointer}.sec.secarr{-webkit-user-select:none;user-select:none}.sec.secarr>span:last-child{padding:0 4px;min-width:22px;text-align:center}';document.head.appendChild(st)}catch(_){}
  var FECH={},VIG=typeof WeakMap==='function'?new WeakMap():null,AP=0;
  function seta(h){var sp=h&&h.lastElementChild;return sp&&sp.tagName==='SPAN'&&/^[⌃⌄]$/.test((sp.textContent||'').trim())?sp:null}
  function chave(h){return (h.textContent||'').replace(/[⌃⌄]\s*$/,'').replace(/\s+/g,' ').trim()}
  function bloco(h){var o=[],n=h.nextElementSibling;while(n&&!(n.classList&&n.classList.contains('sec'))){o.push(n);n=n.nextElementSibling}return o}
- function poe(h,f){var sp=seta(h);if(!sp)return;h.classList.add('secarr');bloco(h).forEach(function(e){if(f)e.classList.add('secx');else e.classList.remove('secx')});var c=f?'⌄':'⌃';if(sp.textContent!==c)sp.textContent=c;if(f)h.setAttribute('data-secf','1');else h.removeAttribute('data-secf')}
- function aplica(root){if(AP)return;AP=1;try{[].forEach.call((root||document).querySelectorAll('.sec'),function(h){if(seta(h))poe(h,!!FECH[chave(h)])})}catch(_){}AP=0}
- function vigia(c){try{if(!c||!VIG||VIG.has(c)||typeof MutationObserver!=='function')return;var t=0,mo=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=0;aplica(c)},0)});mo.observe(c,{childList:true});VIG.set(c,mo)}catch(_){}}
- window.secFech=function(){return Object.keys(FECH)};window.secAplica=aplica;
- document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;var h=t.closest('.sec');if(!h)return;var sp=seta(h);if(!sp)return;
+ function poe(h,f){var sp=seta(h);h.classList.add('secarr');bloco(h).forEach(function(e){if(f)e.classList.add('secx');else e.classList.remove('secx')});var c=f?'⌄':'⌃';if(sp&&sp.textContent!==c)sp.textContent=c;if(f)h.setAttribute('data-secf','1');else h.removeAttribute('data-secf')}
+ function aplica(root){if(AP)return;AP=1;try{[].forEach.call((root||document).querySelectorAll('.sec'),function(h){poe(h,!!FECH[chave(h)])})}catch(_){}AP=0}
+ function vigia(c){try{if(!c||!VIG||VIG.has(c)||typeof MutationObserver!=='function')return;var t=0,mo=new MutationObserver(function(){if(t)return;t=setTimeout(function(){t=0;aplica(c)},0)});mo.observe(c,{childList:true,subtree:true});VIG.set(c,mo)}catch(_){}}
+ window.secFech=function(){return Object.keys(FECH)};window.secAplica=aplica;window.secAbreTudo=function(){FECH={};aplica(document)};
+ document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;var h=t.closest('.sec');if(!h)return;var sp=seta(h);
   var ctl=t.closest('button,input,select,textarea,a');if(ctl&&h.contains(ctl))return;/* botão dentro do título faz o que é dele */
-  var k=chave(h),f=!FECH[k];if(f)FECH[k]=1;else delete FECH[k];poe(h,f);vigia(h.parentNode)});
+  /* vale o que está na tela: fechada abre, aberta fecha */var k=chave(h),f=h.getAttribute('data-secf')!=='1';if(f)FECH[k]=1;else delete FECH[k];poe(h,f);/* janela que se redesenha (Clientes, Ajustes…): continua fechada */var rz=h.parentNode;while(rz&&rz!==document.body&&!rz.id)rz=rz.parentNode;vigia(rz&&rz!==document.body?rz:h.parentNode)});
  if(typeof panel==='function'){var pn=panel;panel=window.panel=function(){var r=pn.apply(this,arguments);try{aplica(document.getElementById('bd'))}catch(_){}return r}}
  try{aplica(document)}catch(_){}
 })();

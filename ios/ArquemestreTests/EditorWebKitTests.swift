@@ -487,8 +487,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pb"] as? String, "107,74,47,107,74,47", "as duas portas pintadas")
         XCTAssertEqual(o["fc2"] as? String, "244,242,238", "tirar a pintura volta pro branco")
         XCTAssertEqual(o["off"] as? Bool, true)
-        XCTAssertEqual(o["at1"] as? String, "true,true,true", "ponta exposta ganha tamponamento sozinha")
-        XCTAssertEqual(o["at0"] as? String, "false,false", "automático desligado nos ajustes: tira os automáticos")
+        XCTAssertEqual(o["at1"] as? String, "true,true,true", "ao criar o módulo, a ponta exposta ganha tamponamento")
+        XCTAssertEqual(o["at0"] as? String, "true,true", "automático desligado nos ajustes: daqui pra frente só manual, mas o que já existe não é apagado sozinho")
         XCTAssertEqual(o["at2"] as? String, "true,true", "ligando de novo, volta")
         XCTAssertEqual(o["chips"] as? Int, 2, "opção nos ajustes (seção e assistente)")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
@@ -5386,7 +5386,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["achou"] as? String, "Cliente Sala:igual | Cliente Cozinha:falta | Cliente Antigo:falta · erros 0")
         XCTAssertEqual(o["botao"] as? Bool, true, "botão dentro do Histórico e recuperação")
         XCTAssertEqual(o["tela"] as? String, "3 botões · true")
-        XCTAssertEqual(o["depois"] as? String, "Cliente Sala 2mód 1pn | Cliente Cozinha [(recuperado do backup)] 2mód 0pn", "a cozinha volta como cópia")
+        XCTAssertEqual(o["depois"] as? String, "Cliente Sala 0mód 1pn | Cliente Cozinha [(recuperado do backup)] 2mód 0pn", "a cozinha volta como cópia (a sala é projeto novo: começa limpo, só com o painel que o teste pôs)")
         XCTAssertEqual(o["salaIntacta"] as? Bool, true, "o projeto que já estava no app não muda")
         XCTAssertEqual(o["idNovo"] as? Bool, true)
         XCTAssertEqual(o["marcou"] as? Bool, true)
@@ -6676,29 +6676,29 @@ final class EditorWebKitTests: XCTestCase {
     func testSalvarSozinhoSoGravaQuandoMudaERespondeRapido() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        /* salvar sozinho: só grava quando o projeto mudou · e quando grava, é uma gravação só da lista (bateria de tempo de resposta) */
+        /* salvar sozinho: só grava quando o projeto mudou · cada mexida grava só o arquivo pequeno do projeto aberto; a lista inteira é gravada quando para de mexer (bateria de tempo de resposta) */
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
         demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
         var N=40,st=snapState(),a=pLoadAll(),old=Date.now()-3*24*3600000;
         for(var i=0;i<N;i++)a.push({id:'pf'+i,client:{nome:'Cliente '+i,end:'',cidade:'',tel:''},titulo:'',created:old,updated:old+i,original:JSON.parse(JSON.stringify(st)),current:JSON.parse(JSON.stringify(st))});
         pSaveAll(a);CUR='pf3';loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);draw();await W(900);
-        var C={put:0,putKb:0,sf:0},pf0=ArqueApp.putFile,js0=JSON.stringify;ArqueApp.putFile=function(n,b){if(n==='projects.json'){C.put++;C.putKb+=String(b).length/1024}return pf0.apply(this,arguments)};
+        var C={put:0,putKb:0,sf:0,cur:0},pf0=ArqueApp.putFile,js0=JSON.stringify;ArqueApp.putFile=function(n,b){if(n==='projects.json'){C.put++;C.putKb+=String(b).length/1024}if(/^cur_/.test(n))C.cur++;return pf0.apply(this,arguments)};try{svFlush()}catch(e){}
         var cnt=function(){var c={put:C.put,sf:C.sf};return c},arq=function(){return JSON.parse(decodeURIComponent(escape(atob(__files['projects.json']))))};
         /* 0. parado: nada lê a lista de projetos (antes um contador lia a lista inteira a cada segundo) */
         var pl0=pLoadAll,nl=0;pLoadAll=function(){nl++;return pl0.apply(this,arguments)};await W(2300);R.parado='leituras da lista '+nl;pLoadAll=pl0;
         /* 1. tocar em módulos, trocar de aba, redesenhar: nada mudou no projeto, não grava a lista */
         var c0=cnt();for(var k=0;k<6;k++){S.m=S.mods[k%S.mods.length];S.tab=k%3;draw();panel();await W(120)}await W(900);R.soOlhar='gravações '+(cnt().put-c0.put);
-        /* 2. mexeu de verdade: grava uma vez, e o arquivo fica igual ao que está na tela */
+        /* 2. mexeu de verdade: não regrava a lista inteira (grava o arquivo pequeno); parou de mexer: a lista é gravada e fica igual ao que está na tela */
         JSON.stringify=function(){var r=js0.apply(JSON,arguments);if(r&&r.length>200000)C.sf++;return r};
-        var c1=cnt();S.mods[1].x+=7;draw();await W(900);JSON.stringify=js0;R.mexeu='gravações '+(cnt().put-c1.put)+' · serializações da lista inteira '+(C.sf-c1.sf);
+        var c1=cnt(),k1=C.cur;S.mods[1].x+=7;draw();await W(900);JSON.stringify=js0;R.mexeu='gravações da lista '+(cnt().put-c1.put)+' · serializações da lista inteira '+(C.sf-c1.sf)+' · arquivo pequeno '+(C.cur-k1);svFlush();R.parou='gravações da lista '+(cnt().put-c1.put);
         var cur=arq().filter(function(p){return p.id==='pf3'})[0],agora=snapState();cur.current.mi=agora.mi;cur.current.m=agora.m;cur.current.sti=agora.sti;R.arquivoIgualATela=JSON.stringify(cur.current)===JSON.stringify(agora);
         R.outrosIntactos=arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).length===N-1&&arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).every(function(p){return JSON.stringify(p.current)===JSON.stringify(st)&&JSON.stringify(p.original)===JSON.stringify(st)});
-        /* 3. várias mexidas seguidas (arrastar): uma gravação só, no fim */
-        var c2=cnt();for(var q=0;q<10;q++){S.mods[1].x+=3;draw();await W(40)}await W(900);R.arrastou='gravações '+(cnt().put-c2.put)+' · x gravado '+arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x+' = tela '+S.mods[1].x;
+        /* 3. várias mexidas seguidas (arrastar): nenhuma gravação da lista enquanto mexe; uma só quando para */
+        var c2=cnt();for(var q=0;q<10;q++){S.mods[1].x+=3;draw();await W(40)}await W(900);var g3=cnt().put-c2.put;svFlush();R.arrastou='gravações da lista mexendo '+g3+' · parou '+(cnt().put-c2.put)+' · x gravado '+arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x+' = tela '+S.mods[1].x;
         /* 4. desfazer também grava (o projeto mudou) */
-        var c3=cnt(),x0=S.mods[1].x;snap();S.mods[1].x+=50;draw();await W(900);document.getElementById('und').click();await W(900);R.desfazer='gravações '+(cnt().put-c3.put)+' · voltou '+(S.mods[1].x===x0)+' · gravado '+(arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x===x0);
+        var c3=cnt(),x0=S.mods[1].x;snap();S.mods[1].x+=50;draw();await W(900);document.getElementById('und').click();await W(900);svFlush();R.desfazer='gravações da lista '+(cnt().put-c3.put)+' · voltou '+(S.mods[1].x===x0)+' · gravado '+(arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x===x0);
         /* 5. outra gravação da lista no meio (voltar ao original de outro projeto) não deixa o salvar sozinho pular a próxima mexida */
-        var b=pLoadAll(),o5=b.filter(function(p){return p.id==='pf7'})[0];o5.titulo='mudou';pSaveAll(b);var c4=cnt();draw();await W(900);R.depoisDeOutraGravacao='gravações '+(cnt().put-c4.put)+' · título guardado '+(arq().filter(function(p){return p.id==='pf7'})[0].titulo==='mudou');
+        var b=pLoadAll(),o5=b.filter(function(p){return p.id==='pf7'})[0];o5.titulo='mudou';pSaveAll(b);var c4=cnt(),k4=C.cur;S.mods[1].x+=2;draw();await W(900);R.depoisDeOutraGravacao='salvou a mexida '+((C.cur-k4)+(cnt().put-c4.put)>0)+' · título guardado '+(arq().filter(function(p){return p.id==='pf7'})[0].titulo==='mudou');
         /* 6. reabrir: tudo de volta */
         var fim=snapState();loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);var re=snapState();re.mi=fim.mi;re.m=fim.m;re.sti=fim.sti;R.reabriuIgual=JSON.stringify(re)===JSON.stringify(fim);
         /* tempo de resposta do salvar com 40 projetos guardados */
@@ -6707,12 +6707,13 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["parado"] as? String, "leituras da lista 0")
         XCTAssertEqual(o["soOlhar"] as? String, "gravações 0")
-        XCTAssertEqual(o["mexeu"] as? String, "gravações 1 · serializações da lista inteira 1")
+        XCTAssertEqual(o["mexeu"] as? String, "gravações da lista 0 · serializações da lista inteira 0 · arquivo pequeno 1", "cada mexida grava só o projeto aberto")
+        XCTAssertEqual(o["parou"] as? String, "gravações da lista 1", "parou de mexer: a lista inteira é gravada uma vez")
         XCTAssertEqual(o["arquivoIgualATela"] as? Bool, true)
         XCTAssertEqual(o["outrosIntactos"] as? Bool, true)
-        XCTAssertEqual(o["arrastou"] as? String, "gravações 1 · x gravado 942 = tela 942")
-        XCTAssertEqual(o["desfazer"] as? String, "gravações 2 · voltou true · gravado true")
-        XCTAssertEqual(o["depoisDeOutraGravacao"] as? String, "gravações 1 · título guardado true")
+        XCTAssertEqual(o["arrastou"] as? String, "gravações da lista mexendo 0 · parou 1 · x gravado 942 = tela 942")
+        XCTAssertEqual(o["desfazer"] as? String, "gravações da lista 1 · voltou true · gravado true")
+        XCTAssertEqual(o["depoisDeOutraGravacao"] as? String, "salvou a mexida true · título guardado true")
         XCTAssertEqual(o["reabriuIgual"] as? Bool, true)
         XCTAssertEqual(o["rapido"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
@@ -7187,19 +7188,19 @@ final class EditorWebKitTests: XCTestCase {
                   var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
                   /* arrasta o módulo mi no 2D: dy em mm (pra cima = positivo) · devolve se a linha verde no topo do ímã apareceu durante o arrasto */
                   var drag2=async function(mi,dx,dy){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+dx*cpm*i/5,y-dy*cpm*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+dx*cpm,y-dy*cpm);await W(80);return g-gh()>0};
+                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
                   /* 1. B com o topo 20 mm abaixo do A: subiu 10 → o ímã alinha em cima (não fica torto) */
                   R.antes='A '+top(A)+' · B '+top(B);
                   var g1=await drag2(1,0,10);R.alinhou='A '+top(A)+' · B '+top(B)+' · linha verde no topo '+g1+' · do chão '+B.b;
                   /* 2. vizinho travado também serve de referência; e longe (100 mm) não gruda */
-                  A.lock=true;var g2=await drag2(1,0,-100);R.longe='B '+top(B)+' · linha verde no topo '+g2;var g3=await drag2(1,0,85);R.voltouComTravado='B '+top(B)+' · linha verde no topo '+g3;A.lock=false;
+                  A.lock=true;var g2=await drag2(1,0,-100);R.longe='B ficou uns 100 abaixo '+(top(B)<=2490&&top(B)>=2440)+' · linha verde no topo '+g2;var g3=await drag2(1,0,85);R.voltouComTravado='B '+top(B)+' · linha verde no topo '+g3;A.lock=false;
                   /* 3. topo = o que se vê: A com tamponamento de cima (30) → B alinha com o topo do tamponamento */
                   A.tt=true;draw();var g4=await drag2(1,0,20);R.comTamponamentoNoA='A '+top(A)+' · B '+top(B)+' · do chão '+B.b;
                   B.tt=true;B.b=B.b-10;draw();await drag2(1,0,-5);R.osDoisComTamponamento='A '+top(A)+' · B '+top(B)+' · caixa A '+(A.b+A.h)+' · caixa B '+(B.b+B.h);
                   A.tt=false;B.tt=false;B.b=1950;draw();
                   /* 4. não entra em outro móvel: C em cima, pegando só um pedaço do B → o ímã não puxa o B pra dentro dele */
                   newTpl(T('Aéreo 2 portas'));var C=S.mods[2];C.w=800;C.h=300;C.x=1660;C.b=2560;B.b=1940;S.m=A;draw();await W(100);
-                  await drag2(1,0,10);R.naoEntra='B '+top(B)+' · C começa em '+C.b+' · dentro de outro '+modHit(B);
+                  await drag2(1,0,10);R.naoEntra='B não passou do C '+(top(B)<=C.b)+' · não foi puxado pro topo do A '+(top(B)!==2570)+' · dentro de outro '+modHit(B);
                   S.mods.splice(2,1);B.b=1950;S.m=A;draw();await W(100);
                   /* 5. não passa do teto: A encostado no teto com tamponamento de cima (o topo que se vê fica acima do limite) → o B para no teto, não passa */
                   var lim=S.H-fgh();A.b=lim-A.h;A.tt=true;B.b=lim-B.h-20;draw();await W(60);await drag2(1,0,10);R.teto='limite '+lim+' · caixa B '+(B.b+B.h)+' · passou '+(B.b+B.h>lim+.01);A.tt=false;A.b=1820;B.b=1950;draw();await W(60);
@@ -7209,16 +7210,15 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["antes"] as? String, "A 2570 · B 2550")
         XCTAssertEqual(o["alinhou"] as? String, "A 2570 · B 2570 · linha verde no topo true · do chão 1970")
-        XCTAssertEqual(o["longe"] as? String, "B 2470 · linha verde no topo false")
+        XCTAssertEqual(o["longe"] as? String, "B ficou uns 100 abaixo true · linha verde no topo false")
         XCTAssertEqual(o["voltouComTravado"] as? String, "B 2570 · linha verde no topo true")
         XCTAssertEqual(o["comTamponamentoNoA"] as? String, "A 2600 · B 2600 · do chão 2000")
         XCTAssertEqual(o["osDoisComTamponamento"] as? String, "A 2600 · B 2600 · caixa A 2570 · caixa B 2570")
-        XCTAssertEqual(o["naoEntra"] as? String, "B 2550 · C começa em 2560 · dentro de outro false")
+        XCTAssertEqual(o["naoEntra"] as? String, "B não passou do C true · não foi puxado pro topo do A true · dentro de outro false")
         XCTAssertEqual(o["teto"] as? String, "limite 2985 · caixa B 2985 · passou false")
         XCTAssertEqual(o["balcao"] as? String, "do chão 0 (antes 0)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
-
     func testImaDoTopoNo3DAlinhaPeloTopoQueSeVeComTamponamentoDeCima() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -7295,5 +7295,442 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portas"] as? String, "lupas de cor 1")
         XCTAssertEqual(o["voltou"] as? String, "busca \"\" · revestimentos 15 de 15 · cores 0 de 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testModuloNaoFazNadaSozinhoTamponamentoSoAoCriarEArrastoPorEixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  /* estado de todos: posição e tamponamentos (a = automático, m = manual) */
+                  var st=function(semB){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+(semB?'':' b'+m.b)+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
+                  var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
+                  /* arrasto de verdade no 2D: dx, dy em mm além da zona morta (0 = o dedo não anda nesse eixo; tremida = px soltos) */
+                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                  var monta=async function(gap,gapT,A2w){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=5610;S.H=3270;newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Armário alto 2 portas'));var A2=S.mods[0],Sx=S.mods[1],Tq=S.mods[2];A2.x=1500;A2.w=A2w;A2.h=520;A2.b=2190;Sx.w=1220;Sx.h=1080;Sx.b=1720;Sx.x=A2.x+A2.w+gap;Tq.x=Sx.x+Sx.w+30+30+gapT;[A2,Sx,Tq].forEach(function(m){['tl','tr'].forEach(function(k){m[k]=false;delete m[k+'Auto'];delete m[k+'M']})});Tq.tl=Tq.tr=true;Tq.tlM=Tq.trM=1;return [A2,Sx,Tq]};
+                  /* 1. o caso do vídeo (antes: a cada toque o tamponamento do vizinho ligava e desligava, o módulo pulava 30 e a torre era empurrada) */
+                  var M=await monta(35,10,920);M[1].tl=true;M[1].tlM=1;M[1].tr=true;M[1].trAuto=1;M[0].tl=true;M[0].tlAuto=1;await W(30);S.m=M[1];draw();panel();await W(60);
+                  var a0=st(1),b0=M[1].b;await drag2(1,0,-10,2);var a1=st(1);await drag2(1,0,-20,-3);var a2=st(1);await drag2(1,0,10,1);var a3=st(1);
+                  R.video='parado: '+a0+' · depois de 3 toques pra cima e pra baixo com a caneta tremendo: igual '+(a0===a1&&a1===a2&&a2===a3)+' · a altura mudou '+(M[1].b!==b0);
+                  /* 2. destravar não faz aparecer tamponamento */
+                  M=await monta(60,10,920);M[1].lock=true;await W(30);S.m=M[0];draw();draw();var l0=st();delete M[1].lock;S.m=M[1];draw();panel();draw();await W(60);R.destravou='igual '+(st()===l0)+' · '+st(1);
+                  /* 3. arrasto só na vertical não mexe de lado (antes o x arredondava e o ímã grudava em outra borda) */
+                  M=await monta(25,0,850);M[0].x=1505;M[1].x=1505+850+25;M[1].tr=true;M[1].trM=1;M[2].x=M[1].x+1220+60;await W(30);S.m=M[1];draw();panel();await W(60);var x0=M[1].x,v0=st(1);await drag2(1,0,-30,3);await drag2(1,0,20,-2);R.soVertical='x antes '+x0+' · depois '+M[1].x+' · resto igual '+(st(1)===v0);
+                  /* 4. arrasto de lado: só o módulo arrastado anda, e só de lado; tamponamento de ninguém muda */
+                  M=await monta(300,400,850);M[1].tr=true;M[1].trM=1;await W(30);S.m=M[1];draw();panel();await W(60);x0=M[1].x;var h0=st(),hb=M[1].b;await drag2(1,-100,0);R.deLado='andou uns 100 pra esquerda '+(M[1].x-x0<=-90&&M[1].x-x0>=-120)+' · altura igual '+(M[1].b===hb)+' · vizinhos e tamponamentos iguais '+(st().replace(/1:x[\d.]+/,'')===h0.replace(/1:x[\d.]+/,''));
+                  /* 5. desligar o automático nos Ajustes não apaga tamponamento que já existe */
+                  M=await monta(0,0,920);M[1].tr=true;M[1].trAuto=1;M[0].tl=true;M[0].tlAuto=1;await W(30);var o0=st();var sd=STD(),av0=sd.autoTamp;sd.autoTamp=0;draw();draw();R.desligou='igual '+(st()===o0);sd.autoTamp=1;draw();R.religou='igual '+(st()===o0);sd.autoTamp=av0;
+                  /* 6. apagar um módulo, desfazer e abrir projeto: ninguém ganha nem perde tamponamento */
+                  var snp=JSON.stringify(snapState());S.mods.splice(2,1);S.m=S.mods[1];draw();draw();await W(30);R.apagou=st();loadState(JSON.parse(snp));draw();draw();await W(30);R.abriu='igual '+(st()===o0);
+                  /* 7. a regra de sempre continua: ao CRIAR um módulo na ponta da fileira, ele ganha o tamponamento da ponta e o que ficou no meio sai */
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.W=4000;S.H=2700;newTpl(T('Balcão 2 portas'));var c1=st(1);newTpl(T('Balcão 2 portas'));R.criou='1 módulo: '+c1+' · 2 módulos: '+st(1)+' · encostados '+(Math.abs(S.mods[1].x-(S.mods[0].x+S.mods[0].w))<0.5);
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["video"] as? String, "parado: 0:x1500 tl1 tr0 | 1:x2455 tl1 tr1 | 2:x3745 tl1 tr1 · depois de 3 toques pra cima e pra baixo com a caneta tremendo: igual true · a altura mudou true")
+        XCTAssertEqual(o["destravou"] as? String, "igual true · 0:x1500 tl0 tr0 | 1:x2480 tl0 tr0 | 2:x3770 tl1 tr1")
+        XCTAssertEqual(o["soVertical"] as? String, "x antes 2380 · depois 2380 · resto igual true")
+        XCTAssertEqual(o["deLado"] as? String, "andou uns 100 pra esquerda true · altura igual true · vizinhos e tamponamentos iguais true")
+        XCTAssertEqual(o["desligou"] as? String, "igual true")
+        XCTAssertEqual(o["religou"] as? String, "igual true")
+        XCTAssertEqual(o["apagou"] as? String, "0:x1500 b2190 tl1 tr0 | 1:x2420 b1720 tl0 tr1")
+        XCTAssertEqual(o["abriu"] as? String, "igual true")
+        XCTAssertEqual(o["criou"] as? String, "1 módulo: 0:x5 tl0 tr1 · 2 módulos: 0:x5 tl0 tr0 | 1:x905 tl0 tr1 · encostados true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTampaCegaContinuaCegaNoEditorPorVaosNaoAbreSemDobradicaNemPuxador() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var items=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(it&&!it.act&&it.v&&JSON.stringify(it.v).indexOf('"fixa"')>=0)items.push(it)})});
+                  R.modelos=items.length;var ruim=[];
+                  /* retrato do que importa da tampa cega: quantas, medida de corte, dobradiças, puxadores, régua espaçadora */
+                  var ret=function(m){var P=partsOf(m),cg=P.filter(function(p){return p.cego}),c=mCost(m),rg=P.filter(function(p){return /^Régua espaçadora do canto/.test(p.name)});return 'cegas '+cg.length+' · '+cg.map(function(p){return 'largura '+Math.round(p.cl)+' px '+p.px+(/PAINEL CEGO/.test(p.note||'')?' nota':' SEM NOTA')+(/cava usinada/.test(p.note||'')?' CAVA':'')}).join(',')+' · portas que abrem '+c.doors+' · dobradiças '+c.dob+' · régua espaçadora '+rg.length};
+                  var abertas=function(m){return partsOf(m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return (p.cego?'CEGA':'porta')+':'+(p.open?'aberta':'fechada')}).join(' ')};
+                  for(var i=0;i<items.length;i++){var it=items[i];S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];S.m=m;draw();
+                    var r0=ret(m);open3D();await W(200);org3api.open(m,true);await W(250);var a0=abertas(m);org3api.open(m,false);
+                    /* vira módulo por vãos (é o que acontece ao abrir o "2D só dele" num armário alto) */
+                    var conv=rgConvert(m);draw();var r1=ret(m);org3api.open(m,true);await W(250);var a1=abertas(m);
+                    /* toque na tampa cega no 3D: avisa e não abre */
+                    org3api.open(m,false);await W(100);re3();var cgp=partsOf(m).filter(function(p){return p.cego})[0],bx=cgp&&__boxes().filter(function(b){return String(b.nm).indexOf('0:Porta')===0&&b.pk===cgp.pk})[0],tq='sem caixa';
+                    if(bx){__cam(0,0.1,1);await W(900);/* espera: 2 toques seguidos é outro gesto (mudar de lugar) */var pp=org3api.proj([(bx.x0+bx.x1)/2,(bx.y0+bx.y1)/2,bx.z1]);var am=document.getElementById('amsg');if(am)am.textContent='';org3api.one(pp[0],pp[1]);await W(250);am=document.getElementById('amsg');tq=((am&&am.textContent)||'')+' · '+abertas(m).replace(/porta:\w+ ?/g,'').trim()}
+                    var ok=conv&&r0===r1&&/cegas 1 /.test(r1)&&!/SEM NOTA|CAVA/.test(r1)&&/régua espaçadora 1$/.test(r1)&&a0===a1&&/CEGA:fechada/.test(a1)&&!/porta:fechada/.test(a1)&&tq==='Painel cego (fixo): não abre · CEGA:fechada';
+                    if(!ok)ruim.push(it.n+'\n   clássico: '+r0+' · '+a0+'\n   por vãos: '+r1+' · '+a1+'\n   toque: '+tq);
+                    if(i===4)R.exemplo=it.n+' · '+r1+' · abrindo tudo: '+a1+' · toque na cega: '+tq;
+                    document.getElementById('v3x').click();await W(40)}
+                  R.ruins=ruim.length;R.lista=ruim.join('\n');
+                  /* no editor por vãos dá pra marcar e desmarcar a tampa cega na porta única */
+                  S.mods=[];var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(!r&&!q.act&&q.n===n)r=q})});return JSON.parse(JSON.stringify(r))};newTpl(T('Armário alto 2 portas'));var w=S.mods[0];S.m=w;rgConvert(w);draw();
+                  R.semCego='cegas '+partsOf(w).filter(function(p){return p.cego}).length+' · dobradiças '+mCost(w).dob;
+                  /* marcar e desmarcar na mão, na porta única (aba Portas do editor por vãos) */
+                  S.mods=[];newTpl(T('Torre de prateleiras do guarda-roupa'));var u=S.mods[0];S.m=u;rgConvert(u);draw();try{soloOn(u)}catch(_){}await W(300);RG.sel={mi:0,path:'r'};RG.tab='por';panel();await W(100);
+                  var q0='cegas '+partsOf(u).filter(function(p){return p.cego}).length+' · dobradiças '+mCost(u).dob,ck=document.querySelector('#bd input[data-rgc="fx"]');if(ck){ck.click();await W(150)}var q1='cegas '+partsOf(u).filter(function(p){return p.cego}).length+' · dobradiças '+mCost(u).dob+' · puxador '+(partsOf(u).filter(function(p){return p.cego})[0]||{}).px;
+                  ck=document.querySelector('#bd input[data-rgc="fx"]');if(ck){ck.click();await W(150)}R.naMao='antes '+q0+' · marcou '+q1+' · desmarcou cegas '+partsOf(u).filter(function(p){return p.cego}).length+' · dobradiças '+mCost(u).dob;try{soloOff()}catch(_){}
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? Int, 8)
+        XCTAssertEqual(o["exemplo"] as? String, "Canto reto (CR) · esquerdo · 1 porta 1000mm (cego na esquerda) · cegas 1 · largura 538 px nenhum nota · portas que abrem 1 · dobradiças 5 · régua espaçadora 1 · abrindo tudo: CEGA:fechada porta:aberta · toque na cega: Painel cego (fixo): não abre · CEGA:fechada")
+        XCTAssertEqual(o["ruins"] as? Int, 0)
+        XCTAssertEqual(o["lista"] as? String, "")
+        XCTAssertEqual(o["semCego"] as? String, "cegas 0 · dobradiças 10")
+        XCTAssertEqual(o["naMao"] as? String, "antes cegas 0 · dobradiças 5 · marcou cegas 1 · dobradiças 0 · puxador nenhum · desmarcou cegas 0 · dobradiças 5")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testAbrirPortasEGavetasDoQuadroNo3DFuncionaEmModuloPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(T('Armário alto 2 portas'));var m=S.mods[0];S.m=m;draw();
+                  var ops=function(){return partsOf(m).filter(function(p){return /^(Porta|Frente)/.test(p.name)}).map(function(p){return p.name+':'+(p.open?'aberta':'fechada')}).join(' ')};
+                  open3D();await W(250);R.classico0=ops();org3api.open(m,true);await W(300);R.classicoAbriu=ops();org3api.open(m,false);await W(100);
+                  R.conv=rgConvert(m);draw();R.rg0=ops();org3api.open(m,true);await W(300);R.rgAbriu=ops();R.any=JSON.stringify(m.v);
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["classico0"] as? String, "Porta:fechada Porta:fechada")
+        XCTAssertEqual(o["classicoAbriu"] as? String, "Porta:aberta Porta:aberta")
+        XCTAssertEqual(o["conv"] as? Bool, true)
+        XCTAssertEqual(o["rg0"] as? String, "Porta:fechada Porta:fechada")
+        XCTAssertEqual(o["rgAbriu"] as? String, "Porta:aberta Porta:aberta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testCaixaDaGeladeiraPrateleiraSoNoNichoDeCimaEmTodosOsCaminhos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2900;newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.h=2780;S.m=m;draw();panel();await W(100);
+                  var P=function(){return partsOf(m)},nic=P().filter(function(p){return p.gelN})[0];
+                  R.caixa='altura '+m.h+' · espaço da geladeira: de '+Math.round(nic.y)+' até '+Math.round(nic.y+nic.h)+' (de cima pra baixo) · nicho de cima livre '+Math.round(shZoneH(m));
+                  /* prateleiras de dentro (tudo que não é a prateleira fixa em cima da geladeira): onde ficou o meio de cada uma */
+                  var meio=function(){return P().filter(function(p){return /^Prateleira/.test(p.name)&&!/em cima da geladeira/.test(p.name)}).map(function(p){return Math.round(p.y+p.h/2)}).sort(function(a,b){return a-b})},
+                      onde=function(L){return L.length+' prateleira'+(L.length===1?'':'s')+' em '+L.join(', ')+' · todas no nicho de cima '+L.every(function(y){return y>vTop(m)&&y<nic.y-15})+' · alguma no espaço da geladeira '+L.some(function(y){return y>=nic.y-15})};
+                  /* 1. aba Divisões › Prateleiras no vão: 1 (o caminho da foto: antes dava 1367 + 1367, com a prateleira no meio da caixa) */
+                  S.tab=1;S.sv=0;panel();await W(60);document.querySelector('#bd [data-shn="1"]').click();await W(120);R.umaPrateleira=onde(meio());
+                  /* 2. três prateleiras: espaço igual dentro do nicho de cima */
+                  document.querySelector('#bd [data-shn="3"]').click();await W(120);var L3=meio();R.tresPrateleiras=onde(L3)+' · espaços '+L3.map(function(y,i){return y-(i?L3[i-1]:vTop(m))}).join('/');
+                  /* 3. nenhuma: sai tudo e a prateleira fixa em cima da geladeira continua */
+                  document.querySelector('#bd [data-shn="0"]').click();await W(120);R.nenhuma=meio().length+' · fixa em cima da geladeira '+P().filter(function(p){return /em cima da geladeira/.test(p.name)}).length;
+                  /* 4. aba Internos › Nicho (prateleira) e Maleiro: também só no nicho de cima */
+                  S.tab=2;S.sv=0;panel();await W(60);var bi=document.querySelector('#bd [data-intadd="nic"]');if(bi){bi.click();await W(120)}bi=document.querySelector('#bd [data-intadd="nic"]');if(bi){bi.click();await W(120)}R.internos=onde(meio());
+                  var v0=m.v[0];v0.int=[];
+                  /* 5. prateleira solta (posição livre): presa no nicho de cima até no limite */
+                  m.shv=[.5];draw();var s5=onde(meio());m.shv=[.95];draw();R.solta=s5+' · no limite de baixo: '+onde(meio());m.shv=[];draw();
+                  /* 6. 3D e plano de corte acompanham */
+                  S.tab=1;panel();await W(60);document.querySelector('#bd [data-shn="1"]').click();await W(120);open3D();await W(300);re3();var b3=__boxes().filter(function(b){return /^0:Prateleira/.test(String(b.nm))&&!/em cima da geladeira/.test(String(b.nm))});R.no3D='tem prateleira no 3D '+(b3.length>0)+' · acima do espaço da geladeira '+b3.every(function(b){return (b.y0+b.y1)/2>m.b+m.h-nic.y});document.getElementById('v3x').click();
+                  R.corte=cutLines(m).filter(function(l){return /^Prateleira/.test(l.names[0])}).map(function(l){return l.qty+'× '+l.names[0]+' '+l.L+'×'+l.W}).join(' | ');
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["caixa"] as? String, "altura 2780 · espaço da geladeira: de 950 até 2780 (de cima pra baixo) · nicho de cima livre 920")
+        XCTAssertEqual(o["umaPrateleira"] as? String, "1 prateleira em 468 · todas no nicho de cima true · alguma no espaço da geladeira false")
+        XCTAssertEqual(o["tresPrateleiras"] as? String, "3 prateleiras em 238, 468, 698 · todas no nicho de cima true · alguma no espaço da geladeira false · espaços 223/230/230")
+        XCTAssertEqual(o["nenhuma"] as? String, "0 · fixa em cima da geladeira 1")
+        XCTAssertEqual(o["internos"] as? String, "2 prateleiras em 358, 708 · todas no nicho de cima true · alguma no espaço da geladeira false")
+        XCTAssertEqual(o["solta"] as? String, "1 prateleira em 475 · todas no nicho de cima true · alguma no espaço da geladeira false · no limite de baixo: 1 prateleira em 889 · todas no nicho de cima true · alguma no espaço da geladeira false")
+        XCTAssertEqual(o["no3D"] as? String, "tem prateleira no 3D true · acima do espaço da geladeira true")
+        XCTAssertEqual(o["corte"] as? String, "1× Prateleira interna 930×670 | 1× Prateleira fixa (em cima da geladeira) 930×700")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPintarNo3DTemAsPedrasEPintaVidroEPerfilDaJanela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.ops=[{id:77,t:'janela',x:1900,b:1200,w:1200,h:600}];S.m=m;draw();panel();await W(100);
+                  var st=S.stones[0],cor0=stC(st),msg=function(){var a=document.getElementById('amsg');return (a&&a.textContent)||''};
+                  open3D();await W(400);__cam(0.25,0.45,1);await W(200);document.getElementById('v3pt').click();await W(200);var box=document.getElementById('pt3');
+                  /* 1. o quadro Pintar tem o grupo Pedras, com as cores da aba Pedra */
+                  var gp=box.querySelector('details[data-mgb="Pedras"]'),bs=[].slice.call(box.querySelectorAll('[data-ptst]'));R.grupo=!!gp+' · '+bs.length+' cores · iguais às da aba Pedra '+(bs.length===STS.length)+' · marcas de MDF continuam '+box.querySelectorAll('details[data-mgb]').length;
+                  /* 2. a lupa do quadro acha a pedra pelo nome */
+                  var inp=box.querySelector('[data-csq]');inp.value='carrara';inp.dispatchEvent(new Event('input',{bubbles:true}));await W(80);var vis=bs.filter(function(b){return !b.hidden&&!b.closest('[hidden]')});R.lupa=vis.map(function(b){return b.title}).join(' | ');inp.value='';inp.dispatchEvent(new Event('input',{bubbles:true}));await W(60);
+                  /* 3. escolhe o mármore e toca na pedra da bancada: a cor da pedra muda de verdade */
+                  var alvo=STS.filter(function(c){return /Carrara/.test(c[0])})[0];box.querySelector('[data-ptst="'+alvo[1]+'"]').click();await W(120);R.escolheu=(box.querySelector('[data-pth]')||{}).textContent+' · '+msg();
+                  re3();var sb=__boxes().filter(function(b){return b.sid===st.id&&b.g!=='lo'&&b.g!=='sh'}).sort(function(a,b){return (b.x1-b.x0)*(b.z1-b.z0)-(a.x1-a.x0)*(a.z1-a.z0)})[0],p=org3api.proj([(sb.x0+sb.x1)/2,sb.y1,(sb.z0+sb.z1)/2]);
+                  paintTap(p[0],p[1]);await W(200);R.pintouPedra='antes '+cor0+' · agora '+stC(st)+' · é o mármore '+(stC(st)===alvo[1])+' · '+msg();
+                  /* 4. com cor de pedra, tocar no armário não pinta o armário */
+                  re3();var mb=__boxes().filter(function(b){return /^0:Porta/.test(String(b.nm))})[0],pc0=JSON.stringify([m.pc||{},m.cor,m.corF]),pd=org3api.proj([(mb.x0+mb.x1)/2,(mb.y0+mb.y1)/2,mb.z1]);paintTap(pd[0],pd[1]);await W(150);R.naoPintaArmario=(JSON.stringify([m.pc||{},m.cor,m.corF])===pc0)+' · '+msg();
+                  /* 5. janela: com cor de alumínio escolhida, tocar na janela pinta o perfil; com cor de vidro, pinta o vidro */
+                  var o=S.ops[0];__cam(0.1,0.25,1);await W(200);var pj=org3api.proj([o.x+o.w*.25,o.b+o.h*.3,3]);box.querySelector('[data-ptal="preto"]').click();await W(100);paintTap(pj[0],pj[1]);await W(200);var m1=msg();box.querySelector('[data-ptvi="fume"]').click();await W(100);paintTap(pj[0],pj[1]);await W(200);
+                  R.janela='perfil '+o.alCor+' · vidro '+o.viCor+' · '+m1+' · '+msg();
+                  re3();var jb=__boxes().filter(function(b){return b.op===77});R.janela3D='peças '+jb.length+' · alguma na cor do perfil '+jb.some(function(b){return b.c&&b.c.join()===[38,38,38].join()})+' · vidro na cor '+jb.some(function(b){return b.c&&b.c.join()===[58,61,66].join()&&b.a<1});
+                  document.getElementById('v3x').click();await W(100);draw();var g2=document.querySelector('#svg [data-op2="77"] rect');R.janela2D='vidro '+g2.getAttribute('fill')+' · perfil '+g2.getAttribute('stroke');
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["grupo"] as? String, "true · 19 cores · iguais às da aba Pedra true · marcas de MDF continuam 5")
+        XCTAssertEqual(o["lupa"] as? String, "Mármore Carrara · Alto")
+        XCTAssertEqual(o["escolheu"] as? String, "🖌 Mármore Carrara · Pedra: Mármore Carrara · toque na pedra no 3D (bancada ou pedra da ilha)")
+        XCTAssertEqual(o["pintouPedra"] as? String, "antes #27372c · agora #ecebe7 · é o mármore true · Pedra pintada: Mármore Carrara")
+        XCTAssertEqual(o["naoPintaArmario"] as? String, "true · Cor de pedra: toque na pedra (bancada ou pedra da ilha)")
+        XCTAssertEqual(o["janela"] as? String, "perfil preto · vidro fume · Perfil da janela: Preto fosco · Vidro da janela: Fumê")
+        XCTAssertEqual(o["janela3D"] as? String, "peças 7 · alguma na cor do perfil true · vidro na cor true")
+        XCTAssertEqual(o["janela2D"] as? String, "vidro #9da1a6 · perfil #262626")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testSalvarLeveCadaMexidaGravaSoOProjetoAbertoEABibliotecaQuandoPara() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};window.toast=function(){};
+                  demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+                  var N=40,st=snapState(),a=pLoadAll(),old=Date.now()-3*24*3600000;
+                  for(var i=0;i<N;i++)a.push({id:'pf'+i,client:{nome:'Cliente '+i,end:'',cidade:'',tel:''},titulo:'',created:old,updated:old+i,original:JSON.parse(JSON.stringify(st)),current:JSON.parse(JSON.stringify(st))});
+                  pSaveAll(a);CUR='pf3';loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);draw();await W(900);try{svFlush()}catch(e){}await W(100);
+                  var C={lib:0,cur:0},pf0=ArqueApp.putFile;ArqueApp.putFile=function(n,b){if(n==='projects.json')C.lib++;if(/^cur_/.test(n))C.cur++;return pf0.apply(this,arguments)};
+                  var dec=function(n){return JSON.parse(decodeURIComponent(escape(atob(__files[n]))))},arq=function(){return dec('projects.json')},noArq=function(){return arq().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x},tem=function(n){return Object.prototype.hasOwnProperty.call(__files,n)&&!!__files[n]};
+                  /* 1. mexeu: grava só o arquivo pequeno do projeto aberto; a biblioteca inteira ainda não é regravada, mas quem lê a lista já vê o estado novo */
+                  var c0={lib:C.lib,cur:C.cur},x0=S.mods[1].x;S.mods[1].x+=7;draw();await W(900);
+                  R.mexeu='biblioteca gravada '+(C.lib-c0.lib)+'× · arquivo pequeno '+(C.cur-c0.cur)+'× · arquivo pequeno = tela '+(dec('cur_pf3.json').st.mods[1].x===S.mods[1].x)+' · quem lê a lista vê a tela '+(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current.mods[1].x===S.mods[1].x)+' · biblioteca no disco ainda antiga '+(noArq()===x0);
+                  /* 2. arrastando (10 mexidas seguidas): continua sem regravar a biblioteca */
+                  var c1={lib:C.lib,cur:C.cur};for(var q=0;q<10;q++){S.mods[1].x+=3;draw();await W(40)}await W(900);R.arrastou='biblioteca gravada '+(C.lib-c1.lib)+'× · arquivo pequeno '+(C.cur-c1.cur)+'×';
+                  /* 3. parou de mexer (4 s): a biblioteca inteira é gravada UMA vez, fica igual à tela, o arquivo pequeno sai e os outros projetos ficam intactos */
+                  var c2=C.lib;await W(4400);var cur=arq().filter(function(p){return p.id==='pf3'})[0],agora=snapState();cur.current.mi=agora.mi;cur.current.m=agora.m;cur.current.sti=agora.sti;
+                  R.parou='biblioteca gravada '+(C.lib-c2)+'× · igual à tela '+(JSON.stringify(cur.current)===JSON.stringify(agora))+' · arquivo pequeno saiu '+!tem('cur_pf3.json')+' · pendente '+(svPend()?'sim':'não')+' · outros intactos '+(arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).length===N-1&&arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).every(function(p){return JSON.stringify(p.current)===JSON.stringify(st)&&JSON.stringify(p.original)===JSON.stringify(st)}));
+                  /* 4. Pronto/Fechar logo depois de mexer (menos de meio segundo): grava antes de sair */
+                  var cl=0,cl0=ArqueApp.close;ArqueApp.close=function(){cl++};S.mods[1].x+=11;draw();await W(60);document.getElementById('ok').click();await W(60);R.pronto='fechou '+cl+' · biblioteca tem a última mexida '+(noArq()===S.mods[1].x)+' · pendente '+(svPend()?'sim':'não');ArqueApp.close=cl0;
+                  /* 5. Voltar do aparelho com pendente: grava a biblioteca na hora */
+                  S.mods[1].x+=5;draw();await W(900);var p5=!!svPend();try{arqueBack()}catch(e){}R.voltar='tinha pendente '+p5+' · depois do Voltar a biblioteca tem a mexida '+(noArq()===S.mods[1].x)+' · pendente '+(svPend()?'sim':'não');
+                  /* 6. projeto perdeu peças: grava inteiro na hora e guarda a versão de antes no histórico */
+                  var nm=S.mods.length,c6=C.lib;S.mods.splice(0,Math.max(3,Math.ceil(nm*.5)));S.m=S.mods[0];draw();await W(900);var H=projHist.list('pf3');
+                  R.perdeu='módulos '+nm+' → '+S.mods.length+' · biblioteca gravada '+(C.lib-c6)+'× · histórico guardou a versão de antes '+H.some(function(h){return /antes de perder peças/.test(h.why||'')&&(h.st.mods||[]).length===nm});
+                  /* 7. trocou de projeto com mexida pendente no outro: nada se perde */
+                  S.mods[0].x+=9;draw();await W(900);var xA=S.mods[0].x,pA=!!svPend();CUR='pf5';loadState(pLoadAll().filter(function(p){return p.id==='pf5'})[0].current);draw();await W(200);S.mods[1].x+=13;draw();await W(900);try{svFlush()}catch(e){}
+                  R.trocou='pendente do pf3 '+pA+' · pf3 na biblioteca com a mexida '+(arq().filter(function(p){return p.id==='pf3'})[0].current.mods[0].x===xA)+' · pf5 na biblioteca com a mexida '+(arq().filter(function(p){return p.id==='pf5'})[0].current.mods[1].x===S.mods[1].x)+' · arquivos pequenos sobrando '+Object.keys(__files).filter(function(n){return /^cur_/.test(n)&&__files[n]}).length;
+                  R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["mexeu"] as? String, "biblioteca gravada 0× · arquivo pequeno 1× · arquivo pequeno = tela true · quem lê a lista vê a tela true · biblioteca no disco ainda antiga true")
+        XCTAssertEqual(o["arrastou"] as? String, "biblioteca gravada 0× · arquivo pequeno 1×")
+        XCTAssertEqual(o["parou"] as? String, "biblioteca gravada 1× · igual à tela true · arquivo pequeno saiu true · pendente não · outros intactos true")
+        XCTAssertEqual(o["pronto"] as? String, "fechou 1 · biblioteca tem a última mexida true · pendente não")
+        XCTAssertEqual(o["voltar"] as? String, "tinha pendente true · depois do Voltar a biblioteca tem a mexida true · pendente não")
+        XCTAssertEqual(o["perdeu"] as? String, "módulos 9 → 4 · biblioteca gravada 1× · histórico guardou a versão de antes true")
+        XCTAssertEqual(o["trocou"] as? String, "pendente do pf3 true · pf3 na biblioteca com a mexida true · pf5 na biblioteca com a mexida true · arquivos pequenos sobrando 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testSalvarLeveRecuperaNaAberturaAMexidaQueNaoChegouNaBiblioteca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};window.toast=function(){};
+                  demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
+                  var N=8,st=snapState(),a=pLoadAll(),old=Date.now()-3*24*3600000;
+                  for(var i=0;i<N;i++)a.push({id:'pf'+i,client:{nome:'Cliente '+i,end:'',cidade:'',tel:''},titulo:'',created:old,updated:old+i,original:JSON.parse(JSON.stringify(st)),current:JSON.parse(JSON.stringify(st))});
+                  pSaveAll(a);CUR='pf3';loadState(pLoadAll().filter(function(p){return p.id==='pf3'})[0].current);draw();await W(900);try{svFlush()}catch(e){}await W(100);
+                  var enc=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},dec=function(n){return JSON.parse(decodeURIComponent(escape(atob(__files[n]))))},arq=function(){return dec('projects.json')},pj=function(id){return arq().filter(function(p){return p.id===id})[0]},tem=function(n){return !!__files[n]};
+                  /* 1. mexeu e o app fechou no meio (sem gravar a biblioteca): na próxima abertura a mexida volta do arquivo pequeno */
+                  var x0=S.mods[1].x;S.mods[1].x+=37;draw();await W(900);var xN=S.mods[1].x,antes='biblioteca no disco '+(pj('pf3').current.mods[1].x===x0?'antiga':'nova')+' · arquivo pequeno '+tem('cur_pf3.json');
+                  __svCrash();var n1=svRecuperar();R.fechouNoMeio=antes+' → recuperou '+n1+' · biblioteca com a mexida '+(pj('pf3').current.mods[1].x===xN)+' · arquivo pequeno saiu '+!tem('cur_pf3.json')+' · outros intactos '+arq().filter(function(p){return /^pf/.test(p.id)&&p.id!=='pf3'}).every(function(p){return JSON.stringify(p.current)===JSON.stringify(st)});
+                  /* 2. arquivo pequeno mais VELHO que a biblioteca (ex.: a sincronização trouxe versão mais nova): não passa por cima, e sai */
+                  var velho=JSON.parse(JSON.stringify(pj('pf4').current));velho.mods[0].x+=500;ArqueApp.putFile('cur_pf4.json',enc({id:'pf4',t:pj('pf4').updated-5000,st:velho}));var n2=svRecuperar();
+                  R.maisVelho='recuperou '+n2+' · biblioteca não mudou '+(JSON.stringify(pj('pf4').current)===JSON.stringify(st))+' · arquivo velho saiu '+!tem('cur_pf4.json');
+                  /* 3. arquivo pequeno mais NOVO de um projeto que não estava aberto: entra */
+                  var novo=JSON.parse(JSON.stringify(pj('pf6').current));novo.mods[0].x+=123;var tN=Date.now();ArqueApp.putFile('cur_pf6.json',enc({id:'pf6',t:tN,st:novo}));var n3=svRecuperar();
+                  R.maisNovo='recuperou '+n3+' · biblioteca com o estado novo '+(pj('pf6').current.mods[0].x===novo.mods[0].x&&pj('pf6').updated===tN)+' · arquivo saiu '+!tem('cur_pf6.json');
+                  /* 4. arquivo de projeto que não está na lista e arquivo estragado: nada quebra, nada é apagado, a biblioteca não muda */
+                  var libA=__files['projects.json'];ArqueApp.putFile('cur_naoexiste.json',enc({id:'naoexiste',t:Date.now(),st:novo}));ArqueApp.putFile('cur_pf7.json','%%%lixo%%%');var n4=svRecuperar();
+                  R.estranhos='recuperou '+n4+' · biblioteca igual '+(__files['projects.json']===libA)+' · arquivos continuam '+(tem('cur_naoexiste.json')&&tem('cur_pf7.json'))+' · projetos na lista '+arq().length;
+                  ArqueApp.delFile('cur_naoexiste.json');ArqueApp.delFile('cur_pf7.json');
+                  R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fechouNoMeio"] as? String, "biblioteca no disco antiga · arquivo pequeno true → recuperou 1 · biblioteca com a mexida true · arquivo pequeno saiu true · outros intactos true")
+        XCTAssertEqual(o["maisVelho"] as? String, "recuperou 0 · biblioteca não mudou true · arquivo velho saiu true")
+        XCTAssertEqual(o["maisNovo"] as? String, "recuperou 1 · biblioteca com o estado novo true · arquivo saiu true")
+        XCTAssertEqual(o["estranhos"] as? String, "recuperou 0 · biblioteca igual true · arquivos continuam true · projetos na lista 9")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTocarOuSegurarOModuloNaoFechaFolgaSozinhoSoArrastandoDeLado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  var st=function(){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+' b'+m.b+' w'+m.w+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
+                  var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
+                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                  S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(50);
+                  var A=S.mods[0],B=S.mods[1],C=S.mods[2];R.criou=st();
+                  /* folga de 30 deixada de propósito (ex.: digitou a posição) */
+                  B.x=A.x+A.w+30;C.x=B.x+B.w+200;['tl','tr'].forEach(function(k){[A,B,C].forEach(function(m){m[k]=false;delete m[k+'Auto']})});S.m=A;draw();panel();await W(900);var s0=st();
+                  S.m=B;draw();await W(50);var s1=st();
+                  await drag2(1,0,0,0);var s2=st();R.toque='antes '+s0+' · selecionou igual '+(s1===s0)+' · tocou igual '+(s2===s0)+(s2===s0?'':' → '+s2);
+                  await drag2(1,0,0,2);var s3=st();R.tremida='igual '+(s3===s0)+(s3===s0?'':' → '+s3);
+                  await drag2(0,0,0,1);var s4=st();R.toqueNoVizinho='igual '+(s4===s0)+(s4===s0?'':' → '+s4);
+                  /* arrastou de lado na direção do vizinho: aí sim encosta (a operação é sua) */
+                  await drag2(1,-12,0);R.arrastouDeLado='B encostou no A '+(Math.abs(B.x-(A.x+A.w))<0.5)+' · A e C iguais '+(A.x===5&&C.x===2035);
+                  /* no 3D: segurar o dedo no módulo e soltar sem levar de lado também não fecha folga */
+                  B.x=A.x+A.w+30;draw();await W(900);var z0=st();open3D();await W(500);__cam(0,0.1,1);await W(200);
+                  var cvs=document.querySelector('canvas'),cr=cvs.getBoundingClientRect(),c3=[B.x+B.w/2,B.b+B.h/2,B.d],p3=org3api.proj(c3);
+                  var p3e=function(t,x,y){cvs.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:cr.left+x,clientY:cr.top+y,pointerId:7,isPrimary:true,pointerType:'touch',button:0}))};
+                  p3e('pointerdown',p3[0],p3[1]);await W(450);p3e('pointermove',p3[0],p3[1]-12);await W(60);p3e('pointerup',p3[0],p3[1]-12);await W(200);
+                  R.segurou3D='igual '+(st()===z0)+(st()===z0?'':' → '+st());
+                  R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["criou"] as? String, "0:x5 b0 w900 tl0 tr0 | 1:x905 b0 w900 tl0 tr0 | 2:x1805 b0 w900 tl0 tr1")
+        XCTAssertEqual(o["toque"] as? String, "antes 0:x5 b0 w900 tl0 tr0 | 1:x935 b0 w900 tl0 tr0 | 2:x2035 b0 w900 tl0 tr0 · selecionou igual true · tocou igual true")
+        XCTAssertEqual(o["tremida"] as? String, "igual true")
+        XCTAssertEqual(o["toqueNoVizinho"] as? String, "igual true")
+        XCTAssertEqual(o["arrastouDeLado"] as? String, "B encostou no A true · A e C iguais true")
+        XCTAssertEqual(o["segurou3D"] as? String, "igual true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testProjetoNovoComecaLimpoESoPerguntaOAmbiente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};
+                  var sum=function(){return 'módulos '+S.mods.length+' · pedras '+(S.stones||[]).length+' · eletros '+(S.fr||[]).length+' · painéis '+(S.rp||[]).length+' · aberturas '+(S.ops||[]).length+' · ilhas '+(S.isl||[]).length+' · colunas '+(S.geo||[]).length};
+                  var q=function(){var e=document.getElementById('ambq');return !!(e&&!e.hidden)},v3=function(){return !document.getElementById('v3').hidden};
+                  var outras=function(){return ['gdm','mcm','stdm','vlm','catm','phm','lzm','clm','cutm','prm'].filter(function(i){var e=document.getElementById(i);return e&&!e.hidden}).join(',')};
+                  R.paginaCrua='módulos '+S.mods.length+' · pedras '+S.stones.length;
+                  /* 1. projeto novo (como o app chama no Android, no iPhone e no Windows): limpo, e a única pergunta é o ambiente */
+                  arqueNewProject();await W(300);
+                  R.novo=sum()+' · ambiente '+(S.room||'não escolhido')+' · pergunta aberta '+q()+' · outras telas ['+outras()+'] · 3D aberto '+v3();
+                  R.opcoes=[].map.call(document.querySelectorAll('#ambq [data-room]'),function(b){return b.dataset.room}).join(',');
+                  R.telaVazia=/Nenhum módulo no ambiente/.test(document.getElementById('bd').textContent);
+                  /* 2. cada resposta: fica o ambiente escolhido e NADA entra sozinho (nem pedra, nem módulo, nem eletro) */
+                  var rs=R.opcoes.split(','),out=[];
+                  for(var i=0;i<rs.length;i++){arqueNewProject();await W(200);var b=document.querySelector('#ambq [data-room="'+rs[i]+'"]');b.click();await W(500);var d3=v3();
+                    if(d3){/* cozinha, banheiro, gourmet e sala em projeto vazio abrem a Edição ambiente 3D (regra que já existia): fecha por "pular" */try{var sk=[].filter.call(document.querySelectorAll('button'),function(x){return x.offsetParent!==null&&x.dataset&&x.dataset.amb==='skip'})[0];if(sk)sk.click();else document.getElementById('v3x').click()}catch(e){}await W(400)}
+                    out.push(rs[i]+': ambiente '+S.room+' · '+sum()+' · pergunta fechou '+!q()+(d3?' · abriu a edição do ambiente':''))}
+                  R.respostas=out.join(' || ');
+                  /* 3. com cliente (vem da nota): projeto salvo já limpo */
+                  arqueNewProject('Maria',null);await W(300);var pj=pLoadAll().filter(function(p){return p.id===CUR})[0];
+                  R.comCliente='cliente '+(pj&&pj.client.nome)+' · guardado: módulos '+(pj?pj.current.mods.length:'?')+' · pedras '+(pj?pj.current.stones.length:'?')+' · pergunta aberta '+q();
+                  /* 4. Voltar fecha a pergunta e o projeto continua limpo */
+                  var bk=arqueBack();await W(100);R.voltar='voltar tratou '+bk+' · pergunta aberta '+q()+' · '+sum();
+                  /* 5. primeiro módulo num projeto limpo de cozinha: entra só ele (pedra não aparece sozinha) */
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  newTpl(T('Balcão 2 portas'));draw();await W(200);R.primeiroModulo=sum();
+                  /* 6. projeto novo pelo quadro de clientes (👤 → + projeto): também limpo e pergunta */
+                  saveNow();document.getElementById('clb').click();await W(300);var pn=document.querySelector('#clbody [data-pnew]');R.temBotaoNovo=!!pn;if(pn){pn.click();await W(300);R.peloQuadro=sum()+' · pergunta aberta '+q();arqueBack();await W(100)}
+                  /* 7. excluir o projeto aberto: a tela fica limpa (antes voltava a cozinha de exemplo) */
+                  newTpl(T('Balcão 2 portas'));draw();saveNow();var id=CUR;document.getElementById('clb').click();await W(300);var px=document.querySelector('#clbody [data-px="'+id+'"]');R.temExcluir=!!px;if(px){px.click();await W(150);px=document.querySelector('#clbody [data-px="'+id+'"]');if(px)px.click();await W(300);R.excluiu='projeto na lista '+pLoadAll().some(function(p){return p.id===id})+' · tela: '+sum()}
+                  try{document.getElementById('clx').click()}catch(e){}
+                  /* 8. primeira vez no app (padrões ainda não salvos): a tela dos padrões fica por cima e a pergunta do ambiente espera atrás */
+                  PR.setupDone=0;arqueNewProject();stdOpen(1);await W(300);var zs=+getComputedStyle(document.getElementById('stdm')).zIndex,za=+getComputedStyle(document.getElementById('ambq')).zIndex;R.primeiraVez='padrões por cima '+(zs>za)+' · pergunta esperando '+q();document.getElementById('stdm').hidden=true;PR.setupDone=1;arqueBack();
+                  R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["paginaCrua"] as? String, "módulos 2 · pedras 1")
+        XCTAssertEqual(o["novo"] as? String, "módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · ambiente não escolhido · pergunta aberta true · outras telas [] · 3D aberto false")
+        XCTAssertEqual(o["opcoes"] as? String, "cozinha,gourmet,banho,sala,quarto,escr,livre")
+        XCTAssertEqual(o["telaVazia"] as? Bool, true)
+        XCTAssertEqual(o["respostas"] as? String, "cozinha: ambiente cozinha · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true · abriu a edição do ambiente || gourmet: ambiente gourmet · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true · abriu a edição do ambiente || banho: ambiente banho · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true · abriu a edição do ambiente || sala: ambiente sala · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true · abriu a edição do ambiente || quarto: ambiente quarto · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true || escr: ambiente escr · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true || livre: ambiente livre · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta fechou true")
+        XCTAssertEqual(o["comCliente"] as? String, "cliente Maria · guardado: módulos 0 · pedras 0 · pergunta aberta true")
+        XCTAssertEqual(o["voltar"] as? String, "voltar tratou true · pergunta aberta false · módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0")
+        XCTAssertEqual(o["primeiroModulo"] as? String, "módulos 1 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0")
+        XCTAssertEqual(o["temBotaoNovo"] as? Bool, true)
+        XCTAssertEqual(o["peloQuadro"] as? String, "módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0 · pergunta aberta true")
+        XCTAssertEqual(o["temExcluir"] as? Bool, true)
+        XCTAssertEqual(o["excluiu"] as? String, "projeto na lista false · tela: módulos 0 · pedras 0 · eletros 0 · painéis 0 · aberturas 0 · ilhas 0 · colunas 0")
+        XCTAssertEqual(o["primeiraVez"] as? String, "padrões por cima true · pergunta esperando true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testSetinhasDoPisoAparecemEFuncionamEmQualquerFormatoDeTela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.toast=function(){};
+                  window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(CATS[0].it[0]);newTpl(CATS[1].it[2]);S.m=S.mods[0];draw();apAdd('geladeira',0);draw();
+                  window.open3D();await W(500);
+                  /* piso escolhido na edição do ambiente: as 3 setinhas (mover, largura, profundidade) aparecem em qualquer formato de tela (em tela deitada 2 delas caíam fora da vista e sumiam) */
+                  fx3api.open({k:'wall',s:'P'});await W(300);var sp=ah3api.specs(),els=[].slice.call(document.querySelectorAll('#ah3 [data-ah]')),cvr=document.querySelector('#v3 canvas').getBoundingClientRect();
+                  R.setinhas=sp.join()+' · na tela '+els.map(function(e){return e.dataset.ah}).join();
+                  R.dentroDaTela=els.every(function(e){var r=e.getBoundingClientRect();return r.left>=cvr.left-1&&r.top>=cvr.top-1&&r.right<=cvr.right+1&&r.bottom<=cvr.bottom+1});
+                  var cx=function(e){var r=e.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2]},sep=true;for(var i=0;i<els.length;i++)for(var j=0;j<i;j++){var a=cx(els[i]),b=cx(els[j]);if(Math.hypot(a[0]-b[0],a[1]-b[1])<30)sep=false}R.semUmaEmCimaDaOutra=sep;
+                  /* e funcionam: puxar a setinha da profundidade muda a profundidade do piso */
+                  var pz=els.filter(function(e){return e.dataset.ah==='pz'})[0],d0=roomD(),w0=S.W;
+                  if(pz){var c=cx(pz),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'mouse',button:0}))};
+                    var cvs=document.querySelector('#v3 canvas');pe('pointerdown',pz,c[0],c[1]);await W(40);for(var k=1;k<=4;k++){pe('pointermove',cvs,c[0]-10*k,c[1]+12*k);await W(30)}pe('pointerup',cvs,c[0]-40,c[1]+48);await W(300)}
+                  R.puxouAProfundidade='mudou '+(roomD()!==d0)+' · largura igual '+(S.W===w0);
+                  R.errs=(window.__errs||[]).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["setinhas"] as? String, "pc,px,pz · na tela pc,px,pz")
+        XCTAssertEqual(o["dentroDaTela"] as? Bool, true)
+        XCTAssertEqual(o["semUmaEmCimaDaOutra"] as? Bool, true)
+        XCTAssertEqual(o["puxouAProfundidade"] as? String, "mudou true · largura igual true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testOlharOModuloNoDoisDSoDeleNaoMudaNadaNoCatalogoInteiro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+                  var sig=function(m){return partsOf(m).map(function(p){return p.name+' '+p.pk+' '+Math.round(p.w*10)/10+'×'+Math.round(p.h*10)/10+' c'+Math.round((p.cl||0)*10)/10+'×'+Math.round((p.cw||0)*10)/10+' q'+(p.qty||1)+' '+(p.mat||'')+' '+(p.note||'')}).sort().join(';')};
+                  var solo=function(){document.getElementById('plsolo').click()};
+                  /* 1. catálogo inteiro: abrir o "2D só dele" e voltar SEM mexer não muda nenhuma peça, medida ou posição (antes o armário alto virava "por vãos" e a lista de corte saía outra) */
+                  var mud=[],conv=0,e0=__errs.length;
+                  for(var i=0;i<its.length;i++){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='livre';S.W=6000;S.H=3000;newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();panel();await W(15);
+                    var a=sig(m),j0=JSON.stringify(m),rg0=!!rgIs(m);solo();await W(50);if(!rg0&&rgIs(S.m))conv++;solo();await W(50);var m2=S.mods[S.mods.length-1];
+                    if(sig(m2)!==a||JSON.stringify(m2)!==j0)mud.push(its[i].n)}
+                  R.modelos=its.length>100;R.abremPorVaos=conv>20;R.mudaramSoDeOlhar=mud.length+(mud.length?': '+mud.slice(0,6).join(' | '):'');
+                  /* 2. dentro do "2D só dele" o armário alto continua no editor por vãos (pra editar vão por vão) */
+                  var T=function(n){return JSON.parse(JSON.stringify(its.filter(function(q){return q.n===n})[0]))};
+                  S.mods=[];newTpl(T('Armário alto 2 portas (arquivo)'));var A=S.mods[0];S.m=A;draw();panel();await W(30);var jA=JSON.stringify(A),sA=sig(A);
+                  solo();await W(80);R.dentro='por vãos '+rgIs(A);
+                  /* 3. mexeu lá dentro (mudou a largura): aí fica por vãos, com a mexida */
+                  A.w-=20;draw();await W(50);solo();await W(80);R.mexeuLaDentro='continua por vãos '+rgIs(A)+' · largura '+A.w;
+                  /* 4. Voltar do aparelho e o ✕ Fechar (que no 2D só dele voltam pro projeto) também devolvem o módulo igual */
+                  S.mods=[];newTpl(T('Armário alto 2 portas (arquivo)'));var B=S.mods[0];S.m=B;draw();panel();await W(30);var jB=JSON.stringify(B);
+                  solo();await W(60);arqueBack();await W(60);var v1=JSON.stringify(B)===jB;solo();await W(60);document.getElementById('cx').click();await W(60);R.voltarEFechar='igual '+v1+' e '+(JSON.stringify(B)===jB)+' · ainda no editor '+!window.__closed;
+                  /* 5. trocar de módulo dentro do "2D só dele": o que ficou pra trás sem mexida volta como era */
+                  newTpl(T('Balcão 2 portas'));var C=S.mods[1];S.m=B;draw();await W(30);solo();await W(60);var era=rgIs(B);S.m=C;draw();await W(60);R.trocouDeModulo='estava por vãos '+era+' · voltou igual '+(JSON.stringify(B)===jB);if(window.SOLO2)soloOff();
+                  R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? Bool, true)
+        XCTAssertEqual(o["abremPorVaos"] as? Bool, true)
+        XCTAssertEqual(o["mudaramSoDeOlhar"] as? String, "0")
+        XCTAssertEqual(o["dentro"] as? String, "por vãos true")
+        XCTAssertEqual(o["mexeuLaDentro"] as? String, "continua por vãos true · largura 880")
+        XCTAssertEqual(o["voltarEFechar"] as? String, "igual true e true · ainda no editor true")
+        XCTAssertEqual(o["trocouDeModulo"] as? String, "estava por vãos true · voltou igual true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testOlharTocarEAbrirTelasNaoMudaOProjetoSozinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+                  var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+                  S.mods=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=5610;S.H=3270;
+                  ['Balcão 2 portas','Balcão 2 portas','Balcão 1 porta','Balcão 2 portas','Aéreo 2 portas','Aéreo 2 portas','Aéreo 1 porta','Aéreo 2 portas','Aéreo 2 portas','Armário alto 2 portas','Caixa da geladeira side by side (laterais + aéreo)','Aéreo 2 portas','Balcão 2 portas','Aéreo 2 portas'].forEach(function(n){newTpl(T(n))});
+                  if(!window.__SEMPINTAR){try{acabUsar('grafite')}catch(e){}var mt=MAT.filter(function(c){return c.cat==='wood'}).slice(0,6);S.mods.forEach(function(m,i){m.pc=m.pc||{};partsOf(m).forEach(function(p,j){if(p.pk){var c=mt[(i+j)%mt.length];m.pc[p.pk]={c:c.hex,n:c.n,id:c.id}}})})}
+                  S.m=S.mods[0];S.tab=0;draw();panel();await W(500);
+        var R={};var svg=document.getElementById('svg');
+        var limpa=function(o){return JSON.parse(JSON.stringify(o,function(k,v){return (k==='od'||k==='dop'||k==='open'||k==='po'||k==='_gel')?undefined:v}))};
+        var est=function(){var st=snapState();return JSON.stringify(limpa({mods:st.mods,stones:st.stones,fr:st.fr,rp:st.rp,ops:st.ops,isl:st.isl,W:st.W,H:st.H,RD:st.RD,env:st.env,room:st.room,geo:st.geo,wall:st.wall}))};
+        var corte=function(){return S.mods.map(function(m){return partsOf(m).map(function(p){return p.name+Math.round(p.w)+'x'+Math.round(p.h)+'q'+(p.qty||1)}).join(',')}).join('|')};
+        var pe=function(t,el,x,y,pt){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:pt||'touch'}))};
+        await W(900);var e0=est(),c0=corte(),mud=[],chk=async function(nome){await W(120);var e=est(),c=corte();if(e!==e0||c!==c0){var a=JSON.parse(e0),b=JSON.parse(e),onde=[];Object.keys(a).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k])){if(k==='mods'){a.mods.forEach(function(m,i){if(JSON.stringify(m)!==JSON.stringify(b.mods[i])){var ks=Object.keys(Object.assign({},m,b.mods[i]||{})).filter(function(q){return JSON.stringify(m[q])!==JSON.stringify((b.mods[i]||{})[q])});onde.push('mód '+i+' ['+ks.join(',')+']')}})}else onde.push(k)}});mud.push(nome+' → '+(onde.join(' ')||'corte'));e0=e;c0=c}};
+        /* 1. tocar em cada módulo no 2D (toque de verdade, sem arrastar) */
+        for(var i=0;i<S.mods.length;i++){var r=document.querySelector('#mod[data-mi="'+i+'"] rect[data-mi]');if(!r)continue;var rc=r.getBoundingClientRect(),x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,el=document.elementFromPoint(x,y)||r;pe('pointerdown',el,x,y);await W(30);pe('pointerup',svg,x,y);await W(60);await chk('tocar no módulo '+i)}
+        /* 2. passar por todas as abas com cada tipo de módulo escolhido */
+        var tabs=[].slice.call(document.querySelectorAll('#tabs [data-t]')).map(function(t){return t.dataset.t});
+        for(var k=0;k<S.mods.length;k+=3){S.m=S.mods[k];draw();for(var j=0;j<tabs.length;j++){var tb=document.querySelector('#tabs [data-t="'+tabs[j]+'"]');if(!tb)continue;tb.click();await W(40);await chk('aba '+tb.textContent.trim()+' no módulo '+k)}}
+        document.querySelector('#tabs [data-t="0"]').click();
+        /* 3. abrir e fechar: 3D, Lista, Valores, Clientes, Ajustes, Catálogo, Planta */
+        open3D();await W(700);await chk('abrir o 3D');try{re3()}catch(e){}await chk('3D redesenhar');
+        try{var bx=__boxes().filter(function(b){return b.mi===4})[0];if(bx){var p=org3api.proj([(bx.x0+bx.x1)/2,(bx.y0+bx.y1)/2,bx.z1]);org3api.one(p[0],p[1]);await W(300);await chk('1 toque no 3D (abre porta)');org3api.one(p[0],p[1]);await W(300);await chk('1 toque de novo no 3D')}}catch(e){mud.push('3D toque EXC '+String(e).slice(0,80))}
+        document.getElementById('v3x').click();await W(300);await chk('fechar o 3D');
+        var ab=[['cutb','cutx','Lista'],['vlb','vlx','Valores'],['clb','clx','Clientes'],['prb','prx','Ajustes'],['mcb','mcx','ArqueCut']];
+        for(var q=0;q<ab.length;q++){try{document.getElementById(ab[q][0]).click();await W(500);await chk('abrir '+ab[q][2]);var xx=document.getElementById(ab[q][1]);if(xx&&xx.offsetParent)xx.click();['stdx','prx'].forEach(function(id){var e=document.getElementById(id);if(e&&e.offsetParent)e.click()});await W(200);await chk('fechar '+ab[q][2])}catch(e){mud.push(ab[q][2]+' EXC '+String(e).slice(0,80))}}
+        document.getElementById('addCat').click();await W(300);await chk('abrir o catálogo');try{document.querySelector('#catm [data-catx]').click()}catch(e){}await W(200);
+        document.getElementById('plv').click();await W(300);await chk('abrir a Planta');document.getElementById('plv').click();await W(300);await chk('fechar a Planta');
+        /* 4. 2D só dele em cada módulo: entrar e sair */
+        for(var i2=0;i2<S.mods.length;i2++){S.m=S.mods[i2];draw();document.getElementById('plsolo').click();await W(80);document.getElementById('plsolo').click();await W(80);await chk('2D só dele no módulo '+i2)}
+        /* 5. travar e destravar tudo */
+        try{document.getElementById('lockAll').click();await W(150);document.getElementById('lockAll').click();await W(150);var st2=JSON.parse(est());st2.mods.forEach(function(m){delete m.lock});var a0=JSON.parse(e0);a0.mods.forEach(function(m){delete m.lock});if(JSON.stringify(st2)!==JSON.stringify(a0))mud.push('travar/destravar tudo mudou mais que a trava');e0=est();c0=corte()}catch(e){}
+        R.modulos=S.mods.length;R.mudouSozinho=mud.length;R.lista=mud.slice(0,25).join(' || ');R.errs=__errs.length;R.errList=__errs.slice(0,4).map(function(e){return String(e).slice(0,140)}).join(' || ');
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modulos"] as? Int, 14)
+        XCTAssertEqual(o["mudouSozinho"] as? Int, 0)
+        XCTAssertEqual(o["lista"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+        XCTAssertEqual(o["errList"] as? String, "")
     }
 }

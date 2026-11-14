@@ -90,6 +90,8 @@ object Browser {
             System.getenv("ARQUE_CDP_PORT")?.toIntOrNull()?.let { s.remote_debugging_port = it }
             b.addJcefArgs("--disable-features=Translate", "--autoplay-policy=no-user-gesture-required")
             if (!System.getProperty("os.name").lowercase().contains("win")) b.addJcefArgs("--no-sandbox", "--disable-gpu")
+            // só na bateria de testes (computador do GitHub não tem placa de vídeo): 3D por software e porta de depuração liberada
+            if (System.getenv("ARQUE_BATERIA") == "1") b.addJcefArgs("--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--remote-allow-origins=*")
             b.setAppHandler(object : MavenCefAppHandlerAdapter() {})
             val a = b.build()
             app = a

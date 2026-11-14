@@ -117,6 +117,11 @@ fun main(args: Array<String>) {
             }
             // teste de ponta a ponta do app instalado (GitHub Actions)
             LaunchedEffect(Unit) { System.getenv("ARQUE_TOUR")?.takeIf { it.isNotBlank() }?.let { br.com.arque.measure.desktop.Tour.run(vm, java.io.File(it)) } }
+            // bateria do editor no motor do Windows (GitHub Actions, ARQUE_BATERIA=1): abre direto no editor de móveis e fica
+            // esperando; os testes entram pela porta de depuração (ARQUE_CDP_PORT) com tools/bateria_editor.py
+            LaunchedEffect(Unit) {
+                if (System.getenv("ARQUE_BATERIA") == "1") { kotlinx.coroutines.delay(2500); vm.showWelcome = false; vm.newMoveisProject() }
+            }
             // avisos que vêm de fora das telas (abrir link, salvar arquivo...)
             val dt = DesktopApp.toast
             LaunchedEffect(dt) { if (dt != null) { vm.toast = dt; DesktopApp.toast = null } }

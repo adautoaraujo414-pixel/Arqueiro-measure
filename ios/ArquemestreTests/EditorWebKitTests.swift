@@ -28,10 +28,19 @@ final class EditorWebKitTests: XCTestCase {
     private var hold: [WKWebView] = []
 
     override func tearDown() async throws {
+        // solta o editor de verdade no fim de cada teste: para a página, troca por uma em branco e tira da tela.
+        // Sem isso os processos do WebKit de cada teste iam se acumulando e o simulador derrubava o app de teste no meio da bateria.
         await MainActor.run {
-            hold.forEach { $0.removeFromSuperview() }
+            hold.forEach { w in
+                w.stopLoading()
+                w.navigationDelegate = nil
+                w.configuration.userContentController.removeAllUserScripts()
+                w.loadHTMLString("", baseURL: nil)
+                w.removeFromSuperview()
+            }
             hold = []
         }
+        try? await Task.sleep(nanoseconds: 150_000_000)
         try await super.tearDown()
     }
 

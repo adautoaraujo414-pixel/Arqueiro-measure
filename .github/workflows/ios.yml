@@ -60,6 +60,8 @@ jobs:
           RC=$?
           grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
           echo "==== FALHAS ===="; grep -E "error:|Test Case .*failed" build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 80
+          # teste que derrubou o app de teste (não aparece como "failed"): mostra qual estava rodando e o que o xcodebuild disse
+          echo "==== QUEDAS ===="; grep -n -E "Restarting after unexpected exit|crashed|unexpected exit|Test crashed|Testing failed|lost connection|was interrupted|Test Case .*started" build/xcodebuild-test.log | grep -B1 -E "Restarting|crash|unexpected|Testing failed|lost connection|interrupted" | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 60
           # medidas do Caderno (tempo de escrever/mover a folha) que os CadernoTests imprimem: saem aqui pra não se perderem no corte das últimas linhas
           echo "==== CADERNO (medidas) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test.log | head -n 80
           exit $RC

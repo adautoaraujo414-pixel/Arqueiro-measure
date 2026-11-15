@@ -162,7 +162,7 @@ final class AppModel: ObservableObject {
                 case "agenda": screen = .agenda
                 case "quotes": screen = .quotes
                 case "moveis": screen = .moveis
-                case "moveis3d", "moveisplanta", "moveissala", "moveiscores", "moveiscloset", "moveiscorte", "moveis2d": screen = .moveis
+                case "moveis3d", "moveisplanta", "moveissala", "moveiscores", "moveiscloset", "moveiscorte", "moveis2d", "moveisled", "moveisledbar": screen = .moveis
                 default: break
                 }
             }

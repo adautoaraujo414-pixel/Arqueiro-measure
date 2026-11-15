@@ -4522,7 +4522,7 @@ final class EditorWebKitTests: XCTestCase {
           """#)
         XCTAssertEqual(o["lista"] as? String, "cava*,facetado*,concha*,g*,gv*,perfil*,externo*,bola*,toque*,nenhum*", "todos com desenho")
         XCTAssertEqual(o["gv"] as? String, "Porta x9 w410 cl410 cw705 G30 l | Porta x481 w410 cl410 cw705 G30 r | Puxador gola x419 w30 cl30 cw705  | Puxador gola x451 w30 cl30 cw705 ", "porta 30 mais estreita + perfil na borda que abre")
-        XCTAssertEqual(o["corte"] as? [String], ["410x705 q2", "490x750 q2"])
+        XCTAssertEqual(o["corte"] as? [String], ["410x705 q2", "460x746 q2"], "a gola vertical vale pro projeto todo (15/11): as portas do aéreo também ficam 30 mais estreitas")
         XCTAssertEqual(o["svg"] as? Int, 4, "perfil desenhado no 2D · o puxador escolhido vale pro projeto todo (15/11): as 2 portas do balcão e as 2 do aéreo")
         XCTAssertEqual(o["b3"] as? Int, 12, "perfil G no 3D junto com a porta")
         XCTAssertEqual(o["g"] as? String, "Porta x9 w440 cl440 cw676 l | Porta x451 w440 cl440 cw676 r 676", "gola horizontal: porta mais baixa pro perfil no topo")
@@ -9554,7 +9554,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ateOPiso"] as? String, "x885–900 y0–805 z6–566 · dentro 0 · Lateral direita 805×560 [inteira, por fora da base e do teto · até o piso (o rodapé fica entre as laterais)]")
         XCTAssertEqual(o["aereo"] as? String, "por dentro: x985–1000 y1765–2485 z6–356 · dentro 0 → por fora: x985–1000 y1750–2500 z6–356 · dentro 0 · travessa não tem (teto inteiro) · réguas do cava 4 · moldura 1 · régua 100 e moldura 50: lateral x985–1000 y1750–2500 z6–356 · Moldura de acabamento 1000×50 [acabamento na frente do teto do superior] | Engrosso cava · régua da frente 1 1000×100 [alinhada na frente da base · 100 × 1000 (largura do módulo, fora tamponamento)] · dentro 0")
         XCTAssertEqual(o["naParedeDoLado"] as? String, "por dentro: 2 caixas (com rebaixo) · dentro 0 → por fora: 1 caixa (quadrada) · dentro 0 · Lateral direita 705×560 [inteira, por fora da base e do teto] | Travessa frontal 870×70 [entre as laterais, parafusada de lado (pelas laterais) · lateral quadrada, sem rebaixo]")
-        XCTAssertEqual(o["catalogo"] as? String, "137 modelos · 266 montagens · 74 com travessa")
+        XCTAssertEqual(o["catalogo"] as? String, "142 modelos · 276 montagens · 74 com travessa", "+5 montar do zero (15/11)")
         XCTAssertEqual(o["catalogoPorForaComDente"] as? String, "0")
         XCTAssertEqual(o["catalogoPorDentroSemRebaixo"] as? String, "0")
         XCTAssertEqual(o["catalogoPecaDentroDePeca"] as? String, "0")
@@ -9739,8 +9739,8 @@ final class EditorWebKitTests: XCTestCase {
         R.cliqueDepoisDoToque='depois do toque '+s1+' · depois do click '+JSON.stringify(RG.sel)+' · click mandado pelo app quando o iPhone não manda: '+((window.__tapClick||0)>c0?'sim':'não');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["modelosComEditorPorVaos"] as? String, "45 de 137 do catálogo")
-        XCTAssertEqual(o["toquesNoVaoSemClick"] as? String, "114 de 114 escolheram o vão certo")
+        XCTAssertEqual(o["modelosComEditorPorVaos"] as? String, "50 de 142 do catálogo", "+5 montar do zero (15/11)")
+        XCTAssertEqual(o["toquesNoVaoSemClick"] as? String, "119 de 119 escolheram o vão certo")
         XCTAssertEqual(o["falhas"] as? String, "0")
         XCTAssertEqual(o["cliqueDepoisDoToque"] as? String, "depois do toque {\"mi\":0,\"path\":\"r\"} · depois do click {\"mi\":0,\"path\":\"r\"} · click mandado pelo app quando o iPhone não manda: sim")
         XCTAssertEqual(o["erros"] as? String, "")

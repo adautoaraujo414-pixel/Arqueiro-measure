@@ -9280,4 +9280,372 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semToqueRedesenhaNaHora"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    func testLedNoRipadoEmPeNoMeioDoVaoEscolhidoPorDesenhoTamanhosCascataCorEListas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TOASTS=[];window.toast=function(t){TOASTS.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* projeto limpo, igual ao que o app abre num projeto novo */loadState(initLimpo());S.env='livre';S.room='sala';S.W=3600;S.RD=3500;S.H=2700;S.rs.w=40;S.rs.gap=15;draw();
+        var a=rpNew({x:1200,b:0,w:1200,h:2600});draw();panel();await W(80);
+        var G=rledGaps(a),gap=function(i){return G.filter(function(q){return q.i===i})[0]};
+        R.vaos=G.length+' vãos de '+Math.round(G[0].g*10)/10+' mm entre '+rpLayout(a).n+' ripas';
+        open3D();await W(500);re3();await W(120);
+        var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),pid=30;
+        var tap=function(x,y){pid++;var o={bubbles:true,cancelable:true,pointerId:pid,isPrimary:true,clientX:rc.left+x,clientY:rc.top+y,pointerType:'touch'};cv.dispatchEvent(new PointerEvent('pointerdown',o));cv.dispatchEvent(new PointerEvent('pointerup',o))};
+        var P=function(gi,f){return rled3api.pt(a.id,gi,f)},bar=function(){return document.getElementById('rledbar')},aberta=function(){var b=bar();return !!b&&!b.hidden&&b.style.display!=='none'},tit=function(){return bar().querySelector('[data-rlt]').textContent},cnt=function(){return bar().querySelector('[data-rln]').textContent},
+         bt=function(k){return bar().querySelector('[data-rlk="'+k+'"]')},aceso=function(){return [].filter.call(bar().querySelectorAll('[data-rlk]'),function(b){return /76, ?154, ?255|4c9aff/i.test(b.style.borderColor)}).map(function(b){return b.dataset.rlk}).join(',')},
+         lista=function(){return rledList(a).map(function(q){return q.i+':'+q.k+' '+Math.round(q.y0)+'–'+Math.round(q.y1)}).join(' | ')};
+        /* 1. um toque no ripado: o quadro dele aparece com o botão 💡 LED (as medidas continuam lá) */
+        var p=P(5,.5);tap(p[0],p[1]);await W(600);var bx=document.getElementById('rp3b');
+        R.quadro=bx&&!bx.hidden?'campos '+bx.querySelectorAll('input[data-r3f]').length+' · '+[].map.call(bx.querySelectorAll('button'),function(b){return b.textContent.trim()}).filter(function(t){return /LED/.test(t)}).join('|'):'(sem quadro)';
+        bx.querySelector('[data-r3led]').click();await W(200);
+        /* 2. barra do LED: só desenhos (cada um com o nome pra leitor de tela), cores da luz, cores do perfil, sem perfil de 45° */
+        var ds=[].slice.call(bar().querySelectorAll('[data-rlk]'));
+        R.barra=aberta()+' · '+tit()+' · '+cnt()+' · quadro do painel '+(bx.hidden?'fechado':'ABERTO');
+        R.desenhos=ds.map(function(b){return b.dataset.rlk+(b.querySelector('svg')?'✓':'✗')+':'+b.querySelector('span').textContent}).join(' ');
+        R.nomes=ds.map(function(b){return b.getAttribute('aria-label')}).join(' | ');
+        R.cores=bar().querySelectorAll('[data-rlc]').length+' luz · '+bar().querySelectorAll('[data-rlp]').length+' perfil · 45° '+/45/.test(bar().textContent+[].map.call(bar().querySelectorAll('button'),function(b){return b.getAttribute('aria-label')||''}).join(' '));
+        /* sem vão escolhido, o desenho não põe LED em lugar nenhum */
+        bt('t').click();await W(80);R.semVao=(a.rled?JSON.stringify(a.rled.v):'nada')+' · '+(document.getElementById('amsg').textContent||'');
+        /* 3. toque num vão: fica escolhido; cada desenho põe o LED do tamanho do desenho */
+        p=P(5,.5);tap(p[0],p[1]);await W(150);R.escolhido=tit()+' · '+JSON.stringify(rled3api.st().g);
+        var tam=[];for(var k of ['t','mb','mt','qb','qt']){bt(k).click();await W(90);tam.push(k+'='+lista().replace('5:'+k+' ','')+'['+aceso()+']')}R.tamanhos=tam.join(' ');
+        /* 4. a fita fica no MEIO do vão, encostada na chapa base, sem entrar em nenhuma ripa */
+        bt('t').click();await W(90);var B=__boxes(),led=B.filter(function(b){return b.rled&&!b.em&&b.a===1})[0],rip=B.filter(function(b){return b.rpart==='ripa'&&b.rpid===a.id}),g5=gap(5);
+        var entra=rip.filter(function(r){return led.x0<r.x1-.01&&led.x1>r.x0+.01&&led.y0<r.y1&&led.y1>r.y0&&led.z0<r.z1-.01&&led.z1>r.z0+.01}).length;
+        R.fita='meio do vão '+(Math.abs((led.x0+led.x1)/2-(a.x+g5.x))<.01)+' · largura '+Math.round((led.x1-led.x0)*10)/10+' no vão de '+Math.round(g5.g*10)/10+' · encostada na base '+(Math.abs(led.z0-(rpAf(a)+rpBt(a)))<.01)+' · dentro de ripa '+entra+' · altura '+Math.round(led.y0)+'–'+Math.round(led.y1);
+        /* 5. outro vão: meio de cima · cascata a partir do vão 9 · tirar o do vão 10 */
+        p=P(2,.4);tap(p[0],p[1]);await W(150);bt('mt').click();await W(90);
+        p=P(8,.6);tap(p[0],p[1]);await W(150);bt('c').click();await W(90);R.cascata=lista();
+        p=P(9,.3);tap(p[0],p[1]);await W(150);R.vao10=tit()+' ['+aceso()+']';bt('x').click();await W(90);R.tirou=lista()+' · '+cnt();
+        /* 6. cor da luz e do perfil valem pro ripado inteiro; apagar e acender */
+        var corDe=function(){var q=__boxes().filter(function(b){return b.rled&&b.ledp})[0];return q?q.c.join(','):'apagado'};
+        var c0=corDe();bar().querySelector('[data-rlc="azul"]').click();await W(90);bar().querySelector('[data-rlp="preto"]').click();await W(90);
+        R.cor=a.rled.c+'/'+a.rled.pf+' · luz mudou '+(corDe()!==c0)+' · perfil '+__boxes().filter(function(b){return b.rled&&!b.em&&b.a===1&&b.z1-b.z0>5})[0].c.join(',');
+        bar().querySelector('[data-rlon]').click();await W(90);var ap=a.rled.on+':'+corDe();bar().querySelector('[data-rlon]').click();await W(90);R.apagaAcende=ap+' → '+a.rled.on+':'+(corDe()!=='apagado');
+        /* 7. fita no total do projeto e na lista do ripado (não vai pro plano de corte) */
+        var soma=Math.round(rledLen(a));R.fitaTotal=soma+' mm = '+fx3api.len()+' m no projeto';
+        R.listaRipado=(rpCutHtml().match(/<b>\d+<\/b><\/td><td>Fita de LED em pé[^<]*<\/td><td>[^<]*/g)||[]).map(function(t){return t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}).join(' | ');
+        R.planoDeCorte=rpPieces().filter(function(q){return /LED/i.test(q.name||q.n||'')}).length;
+        /* 8. tirar de todos pede 2 toques */
+        await W(900);var del=bar().querySelector('[data-rldel]');del.click();await W(80);var n1=rledN(a);bar().querySelector('[data-rldel]').click();await W(900);R.tirarTodos=n1+' → '+rledN(a)+' · '+cnt()+' · botão de tirar todos '+(bar().querySelector('[data-rldel]')?'continua':'some');
+        /* 9. desfazer traz de volta; OK fecha; o quadro do ripado mostra quantos vãos têm LED */
+        document.getElementById('v3und').click();await W(250);a=S.rp[0];R.desfez=lista()+' · '+cnt()+' · barra '+aberta();
+        if(aberta()){bar().querySelector('[data-rlok]').click();await W(150)}R.ok='barra '+aberta()+' · '+JSON.stringify(rled3api.st());
+        re3();await W(100);p=P(14,.5);tap(p[0],p[1]);await W(600);R.quadroDepois=bx&&!bx.hidden&&bx.querySelector('[data-r3led]')?bx.querySelector('[data-r3led]').textContent:'(sem)';
+        /* 10. desenho de frente: um risco em cada vão com LED, dentro do vão · painel do ripado com o botão do LED */
+        document.getElementById('v3x').click();await W(150);RPSEL=a.id;LAST='rp';S.tab=8;draw();panel();await W(120);
+        var rs=[].slice.call(document.querySelectorAll('[data-rled]')),k2=+document.querySelector('rect[data-rp="'+a.id+'"]').getAttribute('width')/a.w,x02=+document.querySelector('rect[data-rp="'+a.id+'"]').getAttribute('x');
+        R.desenho2d=rs.length+' riscos · no vão '+rs.every(function(e){var q=e.getAttribute('data-rled').split('|'),g=gap(+q[1]),x=+e.getAttribute('x'),w=+e.getAttribute('width'),cx=x02+g.x*k2;return Math.abs(x+w/2-cx)<.6&&w<=Math.max(2.01,g.g*k2)})+' · '+rs.map(function(e){return e.getAttribute('data-rled').split('|').slice(1).join(':')}).join(' ');
+        var b2=document.querySelector('#bd [data-rpled]');R.painel2d=b2?b2.textContent:'(sem botão)';
+        /* 11. salvar e abrir: o LED volta igual */
+        var st=snapState(),antes=lista();S.rp=[];loadState(st);await W(100);a=S.rp[0];R.salvou=(lista()===antes)+' · '+JSON.stringify(a.rled);
+        R.erros=__errs.slice(e0).join(' | ');
+        return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["vaos"] as? String, "21 vãos de 15.2 mm entre 22 ripas")
+        XCTAssertEqual(o["quadro"] as? String, "campos 4 · 💡 LED")
+        XCTAssertEqual(o["barra"] as? String, "true · Toque num vão do ripado · 0 com LED · quadro do painel fechado")
+        XCTAssertEqual(o["desenhos"] as? String, "t✓:Inteiro mb✓:Meio ⬆ mt✓:Meio ⬇ qb✓:¼ ⬆ qt✓:¼ ⬇ c✓:Cascata x✓:Tirar")
+        XCTAssertEqual(o["nomes"] as? String, "LED inteiro, de baixo até em cima | LED até o meio, começando de baixo | LED até o meio, começando de cima | LED de um quarto, começando de baixo | LED de um quarto, começando de cima | Cascata: inteiro, meio e um quarto em 3 vãos seguidos | Tirar o LED deste vão")
+        XCTAssertEqual(o["cores"] as? String, "9 luz · 3 perfil · 45° false")
+        XCTAssertEqual(o["semVao"] as? String, "nada · Toque primeiro no vão do ripado onde vai o LED")
+        XCTAssertEqual(o["escolhido"] as? String, "Vão 6 · 5")
+        XCTAssertEqual(o["tamanhos"] as? String, "t=0–2600[t] mb=0–1300[mb] mt=1300–2600[mt] qb=0–650[qb] qt=1950–2600[qt]")
+        XCTAssertEqual(o["fita"] as? String, "meio do vão true · largura 12.2 no vão de 15.2 · encostada na base true · dentro de ripa 0 · altura 0–2600")
+        XCTAssertEqual(o["cascata"] as? String, "2:mt 1300–2600 | 5:t 0–2600 | 8:t 0–2600 | 9:mb 0–1300 | 10:qb 0–650")
+        XCTAssertEqual(o["vao10"] as? String, "Vão 10 [mb]")
+        XCTAssertEqual(o["tirou"] as? String, "2:mt 1300–2600 | 5:t 0–2600 | 8:t 0–2600 | 10:qb 0–650 · 4 com LED")
+        XCTAssertEqual(o["cor"] as? String, "azul/preto · luz mudou true · perfil 42,44,48")
+        XCTAssertEqual(o["apagaAcende"] as? String, "0:apagado → 1:true")
+        XCTAssertEqual(o["fitaTotal"] as? String, "7150 mm = 7.15 m no projeto")
+        XCTAssertEqual(o["listaRipado"] as? String, "2 Fita de LED em pé no vão do ripado 1 (perfil reto + fita) 2600 mm | 1 Fita de LED em pé no vão do ripado 1 (perfil reto + fita) 1300 mm | 1 Fita de LED em pé no vão do ripado 1 (perfil reto + fita) 650 mm")
+        XCTAssertEqual(o["planoDeCorte"] as? Int, 0)
+        XCTAssertEqual(o["tirarTodos"] as? String, "4 → 0 · 0 com LED · botão de tirar todos some")
+        XCTAssertEqual(o["desfez"] as? String, "2:mt 1300–2600 | 5:t 0–2600 | 8:t 0–2600 | 10:qb 0–650 · 4 com LED · barra true")
+        XCTAssertEqual(o["ok"] as? String, "barra false · null")
+        XCTAssertEqual(o["quadroDepois"] as? String, "💡 LED · 4 vãos")
+        XCTAssertEqual(o["desenho2d"] as? String, "4 riscos · no vão true · 2:mt 5:t 8:t 10:qb")
+        XCTAssertEqual(o["painel2d"] as? String, "💡 LED em 4 vãos · 7,2 m de fita")
+        XCTAssertEqual(o["salvou"] as? String, "true · {\"c\":\"azul\",\"pf\":\"preto\",\"on\":1,\"v\":{\"2\":\"mt\",\"5\":\"t\",\"8\":\"t\",\"10\":\"qb\"}}")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+    func testLedNoRipadoDoisToquesDePertoPortaRecorteParedeDoLadoPrateleiraENaoConfundeComOutrasOpcoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TOASTS=[];window.toast=function(t){TOASTS.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        loadState(initLimpo());S.env='livre';S.room='sala';S.W=3600;S.RD=3500;S.H=2700;S.rs.w=40;S.rs.gap=15;draw();
+        var a=rpNew({x:1200,b:0,w:1200,h:2600});draw();panel();await W(80);open3D();await W(500);re3();await W(120);
+        var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),pid=30;
+        var tap=function(x,y){pid++;var o={bubbles:true,cancelable:true,pointerId:pid,isPrimary:true,clientX:rc.left+x,clientY:rc.top+y,pointerType:'touch'};cv.dispatchEvent(new PointerEvent('pointerdown',o));cv.dispatchEvent(new PointerEvent('pointerup',o))};
+        var bar=function(){return document.getElementById('rledbar')},aberta=function(){var b=bar();return !!b&&!b.hidden&&b.style.display!=='none'},amsg=function(){var e=document.getElementById('amsg');return e&&!e.hidden?e.textContent:''},
+         longe=function(A,gi){return (async function(){for(var z=0;z<40&&rled3api.near(A.id);z++){var p=rled3api.pt(A.id,gi,.5);cv.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:100,clientX:rc.left+p[0],clientY:rc.top+p[1]}));await W(25)}return z})()},
+         perto=function(A,gi){return (async function(){for(var z=0;z<40&&!rled3api.near(A.id);z++){var p=rled3api.pt(A.id,gi,.5);cv.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-100,clientX:rc.left+p[0],clientY:rc.top+p[1]}));await W(25)}return z})()},
+         /* 2 toques seguidos no mesmo ponto (os dois saem juntos: não depende da pressa da máquina) e espera o app decidir */
+         dois=function(A,gi,f){return (async function(){var p=rled3api.pt(A.id,gi,f===undefined?.5:f);tap(p[0],p[1]);tap(p[0],p[1]);for(var t=0;t<40&&!aberta();t++)await W(50);if(!aberta())await W(300);return aberta()?JSON.stringify(rled3api.st().g):'não abriu'})()},
+         fecha=function(){return (async function(){if(aberta()){bar().querySelector('[data-rlok]').click();await W(120)}})()},vista=function(){return (async function(){document.querySelector('#v3 [data-v="iso"]').click();await W(150)})()};
+        /* 1. sala: 2 toques no vão — de longe não abre o LED; de perto abre já naquele vão */
+        await longe(a,7);R.salaLonge=rled3api.near(a.id)+' → '+await dois(a,7);await vista();await longe(a,7);
+        var z=await perto(a,7);R.salaPerto=rled3api.near(a.id)+' → vão '+await dois(a,7)+' · '+(bar().querySelector('[data-rlt]').textContent);
+        /* com o LED aberto: tocar em outro vão troca o vão; 2 toques seguidos não fazem outra coisa; nada de quadro do painel, nem seleção azul */
+        var p=rled3api.pt(a.id,9,.5);tap(p[0],p[1]);await W(110);tap(p[0],p[1]);await W(650);var bx=document.getElementById('rp3b');
+        R.abertoOutroVao=JSON.stringify(rled3api.st().g)+' · quadro do painel '+(bx&&!bx.hidden?'ABERTO':'fechado')+' · peça em edição '+(window.SEL3?'SIM':'não')+' · quadro de item '+(fx3api.isx()?'ABERTO':'fechado');
+        /* toque fora do ripado (parede): continua no LED, avisa, não cria nada */
+        var n0=S.rp.length+S.mods.length+S.fr.length;tap(20,rc.height*.45);await W(200);R.toqueFora=aberta()+' · '+amsg().slice(0,44)+' · criou '+(S.rp.length+S.mods.length+S.fr.length-n0);
+        /* os botões da barra não ficam um em cima do outro nem em cima dos botões de cima do 3D, e cabem na tela */
+        var bs=[].slice.call(bar().querySelectorAll('button')).map(function(b){return b.getBoundingClientRect()}),sob=0;for(var i=0;i<bs.length;i++)for(var j=i+1;j<bs.length;j++){var A=bs[i],B=bs[j];if(A.left<B.right-1&&A.right>B.left+1&&A.top<B.bottom-1&&A.bottom>B.top+1)sob++}
+        var br=bar().getBoundingClientRect(),tops=[].slice.call(document.querySelectorAll('#v3 button')).filter(function(b){return !bar().contains(b)&&b.offsetParent!==null}).map(function(b){return b.getBoundingClientRect()}).filter(function(q){return q.width>0&&q.left<br.right&&q.right>br.left&&q.top<br.bottom&&q.bottom>br.top}).length;
+        R.barraLayout=bs.length+' botões · sobrepostos '+sob+' · em cima de outros botões do 3D '+tops+' · dentro da tela '+(br.left>=0&&br.right<=innerWidth+.5&&br.bottom<=innerHeight)+' · menor botão '+Math.round(Math.min.apply(null,bs.map(function(q){return Math.min(q.width,q.height)})))+' px';
+        /* ▁ minimizar: a barra vira uma faixa (o ripado aparece inteiro), tocar num vão continua escolhendo, ▢ abre de novo */
+        var h0=Math.round(bar().getBoundingClientRect().height),mb=bar().querySelector('[data-rlmin]'),m0=mb.textContent;mb.click();await W(120);var h1=Math.round(bar().getBoundingClientRect().height),bm=[].map.call(bar().querySelectorAll('button'),function(q){return q.textContent}).join(' ');
+        p=rled3api.pt(a.id,11,.5);tap(p[0],p[1]);await W(150);var t1=bar().querySelector('[data-rlt]').textContent+', '+bar().querySelectorAll('[data-rlk]').length+' desenhos';bar().querySelector('[data-rlmin]').click();await W(120);
+        R.minimizar=m0+' · vira faixa '+(h1<60&&h1<h0/3)+' · botões '+bm+' · toque com ela minimizada: '+t1+' · aberta de novo: '+bar().querySelectorAll('[data-rlk]').length+' desenhos '+bar().querySelector('[data-rlmin]').textContent;
+        p=rled3api.pt(a.id,9,.5);tap(p[0],p[1]);await W(120);
+        /* escolher o tamanho não mexe em mais nada do ripado */
+        var antes=JSON.stringify({x:a.x,b:a.b,w:a.w,h:a.h,pt:a.pt,rc:a.rc,cor:a.cor,af:a.af,lock:a.lock});bar().querySelector('[data-rlk="mb"]').click();await W(100);
+        R.soOLed=(JSON.stringify({x:a.x,b:a.b,w:a.w,h:a.h,pt:a.pt,rc:a.rc,cor:a.cor,af:a.af,lock:a.lock})===antes)+' · '+JSON.stringify(a.rled.v);await fecha();
+        /* fechado: 1 toque em cima da fita acesa seleciona o ripado (quadro dele), não abre quadro de LED de módulo */
+        p=rled3api.pt(a.id,9,.2);tap(p[0],p[1]);await W(600);R.toqueNaFita='quadro do painel '+(bx&&!bx.hidden?'aberto':'fechado')+' · quadro de item '+(fx3api.isx()?JSON.stringify(fx3api.isx()):'fechado')+' · LED '+aberta();
+        bx.querySelector('[data-r3x]').click();await W(100);
+        /* 2. cozinha: ripado de 40 cm não abre nos 2 toques (mas o botão 💡 LED do quadro continua valendo); com mais de 50 cm abre */
+        S.room='cozinha';S.rp=[];var c1=rpNew({x:300,b:0,w:400,h:2600}),c2=rpNew({x:1400,b:0,w:900,h:2600});draw();re3();await W(150);await vista();
+        await perto(c1,3);var r1=await dois(c1,3);tap(rled3api.pt(c1.id,3,.5)[0],rled3api.pt(c1.id,3,.5)[1]);await W(600);var temBotao=!!(bx&&!bx.hidden&&bx.querySelector('[data-r3led]'));if(bx&&!bx.hidden)bx.querySelector('[data-r3x]').click();await W(80);
+        await vista();await perto(c2,5);var r2=await dois(c2,5);R.cozinha='40 cm: '+r1+' (botão no quadro '+temBotao+') · 90 cm: vão '+r2;await fecha();
+        /* 3. ripado com porta embutida: em cima da porta o LED começa onde a ripa fixa começa · recorte de porta do ambiente igual */
+        S.room='sala';S.rp=[];var rd=rpNew({x:600,b:0,w:1800,h:2600});rd.pt={x:0,w:800,h:2100,tipo:'abrir'};draw();var dd=rpDoor(rd),gs=rledGaps(rd),em=gs.filter(function(g){return g.y0>100}),fo=gs.filter(function(g){return g.y0<1});
+        rd.rled={c:'3000',pf:'alu',on:1,v:{}};rd.rled.v[em[0].i]='t';rd.rled.v[em[1].i]='mb';rd.rled.v[fo[0].i]='t';var L=rledList(rd);
+        R.porta='porta '+Math.round(dd.x0)+'–'+Math.round(dd.x1)+' × '+dd.h+' · vãos em cima da porta '+em.length+' (começam em '+Math.round(em[0].y0)+') · fora '+fo.length+' · LEDs '+L.map(function(q){return q.k+' '+Math.round(q.y0)+'–'+Math.round(q.y1)}).join(' | ');
+        re3();await W(150);var folha=__boxes().filter(function(b){return b.rpd===rd.id}),leds=__boxes().filter(function(b){return b.rled&&!b.em&&b.rpid===rd.id});
+        R.portaNaoBate=leds.length+' caixas de LED · dentro da folha da porta '+leds.filter(function(l){return folha.some(function(f){return l.x0<f.x1-.01&&l.x1>f.x0+.01&&l.y0<f.y1-.01&&l.y1>f.y0+.01&&l.z0<f.z1-.01&&l.z1>f.z0+.01})}).length;
+        S.rp=[];var rr=rpNew({x:0,b:0,w:1500,h:2600});rr.rc={lado:'e',w:800,h:2100};draw();var rcx=rpRec(rr);gs=rledGaps(rr);R.recorte='recorte '+rcx.x0+'–'+rcx.x1+' × '+rcx.h+' · em cima '+gs.filter(function(g){return g.y0>100}).length+' (começam em '+Math.round(gs.filter(function(g){return g.y0>100})[0].y0)+') · fora '+gs.filter(function(g){return g.y0<1}).length;
+        /* 4. ripado na parede do lado: o toque acerta o vão e a fita vai junto pra parede */
+        S.rp=[];var rw=rpNew({x:600,b:0,w:1200,h:2600});rw.wall='d';draw();re3();await W(150);R.paredeLado=[2,6,11,15].map(function(gi){var q=rled3api.pt(rw.id,gi,.5);return gi+'→'+(q?rled3api.at(q[0],q[1],rw.id):'sem ponto')}).join(' ');
+        rled3api.open(rw.id,6);rled3api.set('qt');await W(100);var bw=__boxes().filter(function(b){return b.rled&&!b.em})[0],sw=sideWalls();R.paredeLadoFita='encostada na parede direita '+(Math.abs(bw.x1-((sw.R===null?S.W:sw.R)-rpAf(rw)-rpBt(rw)))<.01)+' · no vão (z) '+(Math.abs((bw.z0+bw.z1)/2-(rw.x+rledGaps(rw).filter(function(g){return g.i===6})[0].x))<.01)+' · '+Math.round(bw.y0)+'–'+Math.round(bw.y1);rled3api.close();
+        /* 5. painel liso não tem vão; prateleira: o quadro dela no 3D tem 💡 Pôr LED, que põe a fita embaixo e abre cor e perfil */
+        S.rp=[];var li=rpNew({x:100,b:0,w:900,h:2400});li.liso=true;var pr=rpNew({x:1400,b:1500,w:1400,h:50});pr.prat=true;pr.pd=250;draw();re3();await W(150);await vista();
+        R.lisoPrat='liso '+rledGaps(li).length+' vãos, abre '+rled3api.open(li.id,null)+' · prateleira '+rledGaps(pr).length+' vãos, abre '+rled3api.open(pr.id,null);
+        var q3=__p3(li.x+li.w/2,1200,rpAf(li)+rpBt(li));tap(q3[0],q3[1]);await W(600);R.lisoQuadro=bx&&!bx.hidden?'sem botão de LED '+!bx.querySelector('[data-r3led],[data-r3pled]'):'(sem quadro)';if(bx&&!bx.hidden)bx.querySelector('[data-r3x]').click();await W(80);
+        q3=__p3(pr.x+pr.w/2,pr.b+25,250);tap(q3[0],q3[1]);await W(600);var bp=bx&&!bx.hidden?bx.querySelector('[data-r3pled]'):null;R.pratBotao=bp?bp.textContent:'(sem botão)';
+        if(bp){bp.click();await W(250);R.pratLed=JSON.stringify(pr.led)+' · quadro '+JSON.stringify(fx3api.isx()&&fx3api.isx().k)+' · fita '+fx3api.len()+' m · luz no 3D '+(fx3api.leds()>0)}
+        /* 6. painel 2D: prateleira com botão de LED (liga/desliga) e ripado com botão que abre o 3D no LED */
+        document.getElementById('v3x').click();await W(150);RPSEL=pr.id;LAST='rp';S.tab=8;draw();panel();await W(120);var b2=document.querySelector('#bd [data-rppl]');R.prat2d=b2?b2.textContent:'(sem botão)';
+        if(b2){b2.click();await W(150);R.prat2dTira=(pr.led?'com':'sem')+' LED · '+document.querySelector('#bd [data-rppl]').textContent;document.querySelector('#bd [data-rppl]').click();await W(150);R.prat2dPoe=pr.led?'com LED':'sem LED'}
+        var rz=rpNew({x:2900,b:0,w:600,h:2400});RPSEL=rz.id;draw();panel();await W(120);var b3=document.querySelector('#bd [data-rpled]');R.rip2d=b3?b3.textContent:'(sem botão)';
+        if(b3){b3.click();await W(700);R.rip2dAbre='3D '+!document.getElementById('v3').hidden+' · LED '+aberta()+' · '+JSON.stringify(rled3api.st()&&rled3api.st().id===rz.id)}
+        R.erros=__errs.slice(e0).join(' | ');
+        return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["salaLonge"] as? String, "false → não abriu")
+        XCTAssertEqual(o["salaPerto"] as? String, "true → vão 7 · Vão 8")
+        XCTAssertEqual(o["abertoOutroVao"] as? String, "9 · quadro do painel fechado · peça em edição não · quadro de item fechado")
+        XCTAssertEqual(o["toqueFora"] as? String, "true · Toque num vão do ripado · OK fecha o LED · criou 0")
+        XCTAssertEqual(o["barraLayout"] as? String, "23 botões · sobrepostos 0 · em cima de outros botões do 3D 0 · dentro da tela true · menor botão 32 px")
+        XCTAssertEqual(o["minimizar"] as? String, "▁ · vira faixa true · botões ▢ OK · toque com ela minimizada: Vão 12, 0 desenhos · aberta de novo: 7 desenhos ▁")
+        XCTAssertEqual(o["soOLed"] as? String, "true · {\"9\":\"mb\"}")
+        XCTAssertEqual(o["toqueNaFita"] as? String, "quadro do painel aberto · quadro de item fechado · LED false")
+        XCTAssertEqual(o["cozinha"] as? String, "40 cm: não abriu (botão no quadro true) · 90 cm: vão 5")
+        XCTAssertEqual(o["porta"] as? String, "porta 0–818 × 2100 · vãos em cima da porta 16 (começam em 2120) · fora 16 · LEDs t 2120–2600 | mb 2120–2360 | t 0–2600")
+        XCTAssertEqual(o["portaNaoBate"] as? String, "3 caixas de LED · dentro da folha da porta 0")
+        XCTAssertEqual(o["recorte"] as? String, "recorte 0–800 × 2100 · em cima 15 (começam em 2100) · fora 11")
+        XCTAssertEqual(o["paredeLado"] as? String, "2→2 6→6 11→11 15→15")
+        XCTAssertEqual(o["paredeLadoFita"] as? String, "encostada na parede direita true · no vão (z) true · 1950–2600")
+        XCTAssertEqual(o["lisoPrat"] as? String, "liso 0 vãos, abre false · prateleira 0 vãos, abre false")
+        XCTAssertEqual(o["lisoQuadro"] as? String, "sem botão de LED true")
+        XCTAssertEqual(o["pratBotao"] as? String, "💡 Pôr LED")
+        XCTAssertEqual(o["pratLed"] as? String, "{\"k\":\"emb\",\"c\":\"3000\",\"pf\":\"alu\",\"on\":1} · quadro \"led\" · fita 1.36 m · luz no 3D true")
+        XCTAssertEqual(o["prat2d"] as? String, "✓ Tem LED embaixo")
+        XCTAssertEqual(o["prat2dTira"] as? String, "sem LED · ＋ Pôr LED embaixo")
+        XCTAssertEqual(o["prat2dPoe"] as? String, "com LED")
+        XCTAssertEqual(o["rip2d"] as? String, "💡 Pôr LED nos vãos")
+        XCTAssertEqual(o["rip2dAbre"] as? String, "3D true · LED true · true")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+    func testLedNoRipadoAbertoUmModoDeCadaVezTrocaDeRipadoLuzesDoProjetoEDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TOASTS=[];window.toast=function(t){TOASTS.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        loadState(initLimpo());S.env='livre';S.room='sala';S.W=4200;S.RD=3500;S.H=2700;S.rs.w=40;S.rs.gap=15;draw();
+        var a=rpNew({x:600,b:0,w:1000,h:2600}),b=rpNew({x:2200,b:0,w:1000,h:2600});a.rled={c:'3000',pf:'alu',on:1,v:{3:'t',16:'mb'}};draw();panel();await W(80);open3D();await W(500);re3();await W(120);
+        var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),pid=30,tap=function(x,y){pid++;var o={bubbles:true,cancelable:true,pointerId:pid,isPrimary:true,clientX:rc.left+x,clientY:rc.top+y,pointerType:'touch'};cv.dispatchEvent(new PointerEvent('pointerdown',o));cv.dispatchEvent(new PointerEvent('pointerup',o))};
+        var bar=function(){return document.getElementById('rledbar')},aberta=function(){var q=bar();return !!q&&!q.hidden&&q.style.display!=='none'},amsg=function(){var e=document.getElementById('amsg');return e&&!e.hidden?e.textContent:''},lst=function(x){return rledList(x).map(function(q){return q.i+':'+q.k}).join(',')};
+        /* 1. LED aberto no ripado da esquerda; tocar num vão do ripado da direita passa o LED pra ele (o da esquerda não muda) */
+        rled3api.open(a.id,3);await W(100);var p=rled3api.pt(b.id,4,.5);tap(p[0],p[1]);await W(150);R.trocaRipado=(rled3api.st().id===b.id)+' · vão '+rled3api.st().g;
+        bar().querySelector('[data-rlk="t"]').click();await W(100);R.cadaUmComOSeu='direita '+lst(b)+' · esquerda '+lst(a);
+        /* 2. girar a vista não fecha; outro comando do 3D (Pintar) fecha a barra antes de entrar no outro modo */
+        document.querySelector('#v3 [data-v="front"]').click();await W(150);var v1=aberta();document.getElementById('v3pt').click();await W(250);R.umModoDeCadaVez='vista: barra '+v1+' · Pintar: barra '+aberta()+', pincel '+!!window.PT3+', LED '+JSON.stringify(rled3api.st());
+        if(window.PT3){document.getElementById('v3pt').click();await W(150)}
+        /* 3. encolher o ripado: o vão que sumiu não aparece (fica guardado); alargar de novo: volta */
+        var n0=rledN(a);a.w=600;draw();re3();await W(120);var n1=rledN(a),g1=rledGaps(a).length;a.w=1000;draw();re3();await W(120);R.encolheEVolta=n0+' → '+n1+' (em '+g1+' vãos) → '+rledN(a)+' · guardado '+JSON.stringify(a.rled.v);
+        /* 4. trocar o vão entre ripas do projeto: a fita continua no meio do vão novo, sem entrar em ripa */
+        S.rs.gap=25;draw();re3();await W(120);var B=__boxes(),rip=B.filter(function(q){return q.rpart==='ripa'&&q.rpid===a.id}),led=B.filter(function(q){return q.rled&&!q.em&&q.rpid===a.id}),g3=rledGaps(a).filter(function(q){return q.i===3})[0];
+        R.vaoNovo=rledGaps(a).length+' vãos de '+Math.round(g3.g*10)/10+' · LEDs '+rledN(a)+' · no meio '+(Math.abs((led[0].x0+led[0].x1)/2-(a.x+g3.x))<.01)+' · dentro de ripa '+led.filter(function(l){return rip.some(function(r){return l.x0<r.x1-.01&&l.x1>r.x0+.01&&l.z0<r.z1-.01&&l.z1>r.z0+.01&&l.y0<r.y1&&l.y1>r.y0})}).length;S.rs.gap=15;draw();re3();await W(120);
+        /* 5. ligar e desligar todas as luzes do projeto vale pro LED do ripado também */
+        var pr=rpNew({x:300,b:1500,w:3000,h:50});pr.prat=true;pr.pd=250;pr.led={k:'emb',c:'3000',pf:'alu',on:1};draw();re3();await W(120);
+        var acesas=function(){return __boxes().filter(function(q){return q.rled&&q.em}).length},criar=[].filter.call(document.querySelectorAll('#v3 button'),function(q){return /Criar/.test(q.textContent)&&q.offsetParent!==null})[0];
+        var l0=acesas();criar.click();await W(250);var bt_=document.querySelector('#v3 [data-clon]');R.botaoDeTodas=bt_?bt_.textContent:'(sem botão)';bt_.click();await W(250);var l1=acesas(),on1=S.rp.map(function(q){return q.rled?q.rled.on:q.led?q.led.on:'-'}).join('');
+        document.querySelector('#v3 [data-clon]').click();await W(250);R.todasAsLuzes='acesas '+(l0>0)+' → apagou tudo '+(l1===0)+' ('+on1+') → acendeu de novo '+(acesas()===l0)+' · fita no botão do orçamento: '+(document.querySelector('#v3 [data-corc]')||{textContent:''}).textContent;
+        criar.click();await W(150);
+        /* 6. só quem criou muda: no projeto recebido o LED não abre nem pelos 2 toques */
+        window.RO=1;var r1=rled3api.open(a.id,3);window.RO=0;R.somenteLeitura='abre '+r1+' · '+amsg().slice(0,40);
+        /* 7. 2 toques num ponto que ficaria atrás da barra: a vista sobe e o vão tocado continua à vista */
+        document.querySelector('#v3 [data-v="iso"]').click();await W(150);
+        /* chega perto até o pé do ripado ficar na faixa de baixo da tela (onde a barra abre), em qualquer tamanho de tela */for(var z=0;z<60&&(!rled3api.near(a.id)||rled3api.pt(a.id,7,.03)[1]<rc.height-200);z++){p=rled3api.pt(a.id,7,.75);cv.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,deltaY:-100,clientX:rc.left+p[0],clientY:rc.top+p[1]}));await W(25)}
+        p=rled3api.pt(a.id,7,.03);tap(p[0],p[1]);tap(p[0],p[1]);for(var t7=0;t7<60&&!aberta();t7++)await W(50);await W(100);var br=bar().getBoundingClientRect(),q2=rled3api.pt(a.id,7,.03);
+        R.vaoAVista='abriu no vão '+JSON.stringify(rled3api.st()&&rled3api.st().g)+' · ponto tocado acima da barra '+(q2[1]<br.top-rc.top-10)+' · antes estava atrás '+(p[1]>br.top-rc.top);
+        /* 8. desfazer e refazer com a barra aberta: ela acompanha */
+        bar().querySelector('[data-rlk="qb"]').click();await W(900);var d0=lst(a)+'|'+bar().querySelector('[data-rln]').textContent;document.getElementById('v3und').click();await W(250);a=S.rp.filter(function(q){return q.id===a.id})[0];var d1=lst(a)+'|'+bar().querySelector('[data-rln]').textContent+'|barra '+aberta();
+        document.getElementById('v3red').click();await W(250);a=S.rp.filter(function(q){return q.id===a.id})[0];R.desfazRefaz=d0+' → '+d1+' → '+lst(a)+'|'+bar().querySelector('[data-rln]').textContent;
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["trocaRipado"] as? String, "true · vão 4")
+        XCTAssertEqual(o["cadaUmComOSeu"] as? String, "direita 4:t · esquerda 3:t,16:mb")
+        XCTAssertEqual(o["umModoDeCadaVez"] as? String, "vista: barra true · Pintar: barra false, pincel true, LED null")
+        XCTAssertEqual(o["encolheEVolta"] as? String, "2 → 1 (em 10 vãos) → 2 · guardado {\"3\":\"t\",\"16\":\"mb\"}")
+        XCTAssertEqual(o["vaoNovo"] as? String, "14 vãos de 28.6 · LEDs 1 · no meio true · dentro de ripa 0")
+        XCTAssertEqual(o["botaoDeTodas"] as? String, "💡 Apagar todos")
+        XCTAssertEqual(o["todasAsLuzes"] as? String, "acesas true → apagou tudo true (000) → acendeu de novo true · fita no botão do orçamento: Pôr 9,5 m no orçamento")
+        XCTAssertEqual(o["somenteLeitura"] as? String, "abre false · 🔒 Só quem criou o projeto muda o LED")
+        XCTAssertEqual(o["vaoAVista"] as? String, "abriu no vão 7 · ponto tocado acima da barra true · antes estava atrás true")
+        XCTAssertEqual(o["desfazRefaz"] as? String, "3:t,7:qb,16:mb|3 com LED → 3:t,16:mb|2 com LED|barra true → 3:t,7:qb,16:mb|3 com LED")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testLateraisPorForaLateralQuadradaSemRebaixoTravessaDeLadoReguaMolduraEngrossoECatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.RD=3500;S.H=2700;draw();open3D();await W(400);
+        var vol=function(a,b){var x=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),y=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),z=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);return x>0.05&&y>0.05&&z>0.05?x*y*z:0};
+        var cx=function(m,re){re3();var mi=S.mods.indexOf(m);return __boxes().filter(function(b){var q=String(b.nm||'').split(':');return +q[0]===mi&&re.test(q[1]||'')&&(b.z1-b.z0>2)&&(b.x1-b.x0>2)&&(b.y1-b.y0>2)&&!b.pf&&!b.poly})};
+        var r1=function(v){return Math.round(v*10)/10},fmt=function(m,b){return 'x'+r1(b.x0-m.x)+'–'+r1(b.x1-m.x)+' y'+r1(b.y0)+'–'+r1(b.y1)+' z'+r1(b.z0)+'–'+r1(b.z1)};
+        var lat=function(m){return cx(m,/^Lateral direita$/).map(function(b){return fmt(m,b)}).join(' + ')},trv=function(m){return cx(m,/^Travessa frontal$/).map(function(b){return fmt(m,b)}).join(' + ')};
+        var pec=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw+(p.note?' ['+p.note+']':'')}).join(' | ')};
+        var dentro=function(m){var B=cx(m,/^(Lateral (esquerda|direita)|Travessa frontal|Base superior|Base inferior|Engrosso lateral (esquerda|direita)|Moldura.*|Régua.*)$/),n=0;for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++){if(String(B[i].nm)===String(B[j].nm))continue;if(vol(B[i],B[j])>50)n++}return n};
+        newTpl(T('Balcão 2 portas'));draw();await W(60);var m=S.mods[0];m.x=600;S.m=m;m.latPiso=false;
+        /* 1. laterais por DENTRO (como era): a lateral tem o rebaixo de 15 na frente, em cima, e a travessa embute nele de ponta a ponta */
+        m.latFora=false;draw();R.porDentro=lat(m)+' · travessa '+trv(m)+' · peça dentro de peça '+dentro(m);
+        R.porDentroCorte=pec(m,/^(Lateral direita|Travessa frontal)$/);
+        /* 2. laterais por FORA: a lateral é uma peça quadrada, sem o dente; a travessa fica entre as laterais, encostada nelas, parafusada de lado */
+        m.latFora=true;draw();var L=cx(m,/^Lateral direita$/),Tv=cx(m,/^Travessa frontal$/)[0];
+        R.porFora=lat(m)+' · travessa '+trv(m)+' · encosta na lateral '+(Math.abs(Tv.x1-L[0].x0)<.01)+' · peça dentro de peça '+dentro(m);
+        R.porForaCorte=pec(m,/^(Lateral direita|Travessa frontal)$/);
+        /* 3. aumentar a régua (altura da travessa) de 70 pra 120: nas duas montagens tudo acompanha */
+        m.travMm=120;draw();var f120=lat(m)+' · travessa '+trv(m)+' · dentro '+dentro(m)+' · '+pec(m,/^Travessa frontal$/);m.latFora=false;draw();R.regua120PorDentro=lat(m)+' · travessa '+trv(m)+' · dentro '+dentro(m);R.regua120PorFora=f120;m.travMm=70;m.latFora=true;draw();
+        /* 4. moldura: continua na frente, do mesmo tamanho, com as laterais por fora ou por dentro; mudar a altura dela não mexe na lateral */
+        var mo=function(){return cx(m,/^Moldura/).map(function(b){return fmt(m,b)}).join(' + ')};m.mold=true;m.moldOn=true;m.moldMm=30;draw();var mF=mo(),lF=lat(m),pF=pec(m,/^Moldura/);m.moldMm=50;draw();var mF50=mo(),lF50=lat(m);m.latFora=false;draw();var mD50=mo();m.moldMm=30;draw();var mD=mo();m.latFora=true;draw();
+        R.moldura='30: '+mF+' · 50: '+mF50+' · igual por dentro '+(mD===mF&&mD50===mF50)+' · lateral não mudou '+(lF===lF50)+' · dentro '+dentro(m)+' · '+pF;m.mold=false;m.moldOn=false;draw();
+        /* 5. engrosso das laterais (tira de 70 colada por dentro da lateral, ligado nos Ajustes): por fora a tira fica em cima da base (e embaixo do teto, sem travessa) — antes entrava 15 mm neles; a travessa passa na frente dela; por dentro fica como era */
+        var eg0=STD().egOn;STD().egOn=1;var egx=function(){return cx(m,/^Engrosso lateral direita$/).map(function(b){return fmt(m,b)}).join(' + ')},egp=function(){return pec(m,/^Engrosso lateral direita$/)};
+        m.egR=1;m.egL=1;draw();R.engrossoPorFora=egx()+' · lateral '+lat(m)+' · travessa '+trv(m)+' · dentro '+dentro(m)+' · '+egp();
+        m.egR=2;m.egL=2;draw();R.engrossoPorFora2Camadas=egx()+' · dentro '+dentro(m);m.egR=1;m.egL=1;
+        m.trav=false;draw();R.engrossoPorForaSemTravessa=egx()+' · teto '+cx(m,/^Base superior$/).map(function(b){return fmt(m,b)}).join(' + ')+' · dentro '+dentro(m)+' · '+egp();m.trav=true;
+        m.latFora=false;draw();R.engrossoPorDentro=egx()+' · lateral '+lat(m)+' · dentro '+dentro(m)+' · '+egp();m.latFora=true;m.egR=0;m.egL=0;draw();
+        /* 6. lateral até o piso (sempre por fora): quadrada do chão ao topo */
+        m.latPiso=true;draw();R.ateOPiso=lat(m)+' · dentro '+dentro(m)+' · '+pec(m,/^Lateral direita$/);m.latPiso=false;draw();
+        /* 7. aéreo com travessa no lugar do teto e régua do cava embaixo: por fora a lateral também fica quadrada */
+        S.mods=[];newTpl(T('Aéreo 2 portas'));draw();await W(60);var a=S.mods[0];a.x=600;S.m=a;a.regua=true;a.regMm=70;a.mold=true;a.moldMm=30;
+        a.latFora=false;draw();var aD=lat(a)+' · dentro '+dentro(a);a.latFora=true;draw();var aF=lat(a)+' · dentro '+dentro(a);a.regMm=100;a.moldMm=50;draw();R.aereo='por dentro: '+aD+' → por fora: '+aF+' · travessa '+(a.trav?'tem':'não tem (teto inteiro)')+' · réguas do cava '+cx(a,/^Engrosso cava/).length+' · moldura '+cx(a,/^Moldura/).length+' · régua 100 e moldura 50: lateral '+lat(a)+' · '+pec(a,/^(Moldura de acabamento|Engrosso cava · régua da frente 1)$/)+' · dentro '+dentro(a);
+        /* 7b. módulo na parede do lado: mesma regra (a caixa gira, as contas são as mesmas) */
+        var cxw=function(q,re){re3();var mi=S.mods.indexOf(q);return __boxes().filter(function(b){var s=String(b.nm||'').split(':');return +s[0]===mi&&re.test(s[1]||'')&&(b.z1-b.z0>2)&&(b.x1-b.x0>2)&&(b.y1-b.y0>2)&&!b.poly})};
+        var dw=function(q){var B=cxw(q,/^(Lateral (esquerda|direita)|Travessa frontal|Base inferior)$/),n=0;for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++){if(String(B[i].nm)===String(B[j].nm))continue;if(vol(B[i],B[j])>50)n++}return n};
+        S.mods=[];S.m=null;newTpl(T('Balcão 2 portas'));draw();addWing('d');draw();var wg=S.mods[S.mods.length-1];
+        wg.latFora=false;draw();var wD=cxw(wg,/^Lateral direita$/).length+' caixas (com rebaixo) · dentro '+dw(wg);wg.latFora=true;draw();
+        R.naParedeDoLado='por dentro: '+wD+' → por fora: '+cxw(wg,/^Lateral direita$/).length+' caixa (quadrada) · dentro '+dw(wg)+' · '+pec(wg,/^(Lateral direita|Travessa frontal)$/);
+        /* 7c. canto em L: tem teste só dele (as duas montagens, seguindo os Ajustes) */
+        /* 8. o catálogo inteiro: todo modelo com travessa, nas duas montagens */
+        var todos=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.v)todos.push(it)})});
+        var n=0,ct=0,ne=0,fd=[],ds=[],so=[],se=[],er=[];
+        for(var k=0;k<todos.length;k++){for(var lf=0;lf<2;lf++){try{S.mods=[];S.m=null;newTpl(JSON.parse(JSON.stringify(todos[k])));var q=S.mods[S.mods.length-1];if(!q||q.corner||q.wing)continue;q.x=600;q.latFora=!!lf;if(!lf)q.latPiso=false;S.m=q;draw();n++;if(!q.trav)continue;ct++;
+          var LL=cx(q,/^Lateral (esquerda|direita)$/),zm=Math.max.apply(null,LL.map(function(b){return b.z1})),dt=LL.filter(function(b){return b.z1<zm-1}).length;
+          if(lf&&dt)fd.push(todos[k].n);if(!lf&&!dt&&LL.length)ds.push(todos[k].n);if(dentro(q))so.push((lf?'fora:':'dentro:')+todos[k].n);q.egL=1;q.egR=1;draw();ne++;if(dentro(q))se.push((lf?'fora:':'dentro:')+todos[k].n)}catch(e){er.push(todos[k].n+': '+e.message)}}}
+        R.catalogo=todos.length+' modelos · '+n+' montagens · '+ct+' com travessa';
+        R.catalogoPorForaComDente=fd.length+(fd.length?': '+fd.slice(0,5).join(' | '):'');
+        R.catalogoPorDentroSemRebaixo=ds.length+(ds.length?': '+ds.slice(0,5).join(' | '):'');
+        R.catalogoPecaDentroDePeca=so.length+(so.length?': '+so.slice(0,5).join(' | '):'');
+        R.catalogoComEngrossoPecaDentroDePeca=se.length+' de '+ne+(se.length?': '+se.slice(0,5).join(' | '):'');
+        R.catalogoFalhas=er.length+(er.length?': '+er.slice(0,3).join(' | '):'');
+        STD().egOn=eg0;R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["porDentro"] as? String, "x885–900 y115–735 z6–566 + x885–900 y735–805 z6–551 · travessa x0–900 y735–805 z551–566 · peça dentro de peça 0")
+        XCTAssertEqual(o["porDentroCorte"] as? String, "Lateral direita 690×560 [rebaixo 15 × 70 na frente, em cima] | Travessa frontal 900×70 [embute 15 no rebaixo das laterais]")
+        XCTAssertEqual(o["porFora"] as? String, "x885–900 y100–805 z6–566 · travessa x15–885 y735–805 z551–566 · encosta na lateral true · peça dentro de peça 0")
+        XCTAssertEqual(o["porForaCorte"] as? String, "Lateral direita 705×560 [inteira, por fora da base e do teto] | Travessa frontal 870×70 [entre as laterais, parafusada de lado (pelas laterais) · lateral quadrada, sem rebaixo]")
+        XCTAssertEqual(o["regua120PorDentro"] as? String, "x885–900 y115–685 z6–566 + x885–900 y685–805 z6–551 · travessa x0–900 y685–805 z551–566 · dentro 0")
+        XCTAssertEqual(o["regua120PorFora"] as? String, "x885–900 y100–805 z6–566 · travessa x15–885 y685–805 z551–566 · dentro 0 · Travessa frontal 870×120 [entre as laterais, parafusada de lado (pelas laterais) · lateral quadrada, sem rebaixo]")
+        XCTAssertEqual(o["moldura"] as? String, "30: x0–900 y790–820 z566–581 · 50: x0–900 y770–820 z566–581 · igual por dentro true · lateral não mudou true · dentro 0 · Moldura de acabamento 900×30 [acabamento, cobre a folga do topo]")
+        XCTAssertEqual(o["engrossoPorFora"] as? String, "x870–885 y115–735 z496–566 + x870–885 y735–805 z496–551 · lateral x885–900 y100–805 z6–566 · travessa x15–885 y735–805 z551–566 · dentro 0 · Engrosso lateral direita 690×70 [tira de 70 mm na frente da lateral · camada 1 de 1 · em cima da base (laterais por fora)]")
+        XCTAssertEqual(o["engrossoPorFora2Camadas"] as? String, "x870–885 y115–735 z496–566 + x870–885 y735–805 z496–551 + x855–870 y115–735 z496–566 + x855–870 y735–805 z496–551 · dentro 0")
+        XCTAssertEqual(o["engrossoPorForaSemTravessa"] as? String, "x870–885 y115–805 z496–566 · teto x15–885 y805–820 z6–566 · dentro 0 · Engrosso lateral direita 690×70 [tira de 70 mm na frente da lateral · camada 1 de 1 · em cima da base e embaixo do teto (laterais por fora)]")
+        XCTAssertEqual(o["engrossoPorDentro"] as? String, "x870–885 y115–735 z496–566 + x870–885 y735–805 z496–551 · lateral x885–900 y115–735 z6–566 + x885–900 y735–805 z6–551 · dentro 0 · Engrosso lateral direita 690×70 [tira de 70 mm na frente da lateral · camada 1 de 1]")
+        XCTAssertEqual(o["ateOPiso"] as? String, "x885–900 y0–805 z6–566 · dentro 0 · Lateral direita 805×560 [inteira, por fora da base e do teto · até o piso (o rodapé fica entre as laterais)]")
+        XCTAssertEqual(o["aereo"] as? String, "por dentro: x985–1000 y1765–2485 z6–356 · dentro 0 → por fora: x985–1000 y1750–2500 z6–356 · dentro 0 · travessa não tem (teto inteiro) · réguas do cava 4 · moldura 1 · régua 100 e moldura 50: lateral x985–1000 y1750–2500 z6–356 · Moldura de acabamento 1000×50 [acabamento na frente do teto do superior] | Engrosso cava · régua da frente 1 1000×100 [alinhada na frente da base · 100 × 1000 (largura do módulo, fora tamponamento)] · dentro 0")
+        XCTAssertEqual(o["naParedeDoLado"] as? String, "por dentro: 2 caixas (com rebaixo) · dentro 0 → por fora: 1 caixa (quadrada) · dentro 0 · Lateral direita 705×560 [inteira, por fora da base e do teto] | Travessa frontal 870×70 [entre as laterais, parafusada de lado (pelas laterais) · lateral quadrada, sem rebaixo]")
+        XCTAssertEqual(o["catalogo"] as? String, "137 modelos · 266 montagens · 74 com travessa")
+        XCTAssertEqual(o["catalogoPorForaComDente"] as? String, "0")
+        XCTAssertEqual(o["catalogoPorDentroSemRebaixo"] as? String, "0")
+        XCTAssertEqual(o["catalogoPecaDentroDePeca"] as? String, "0")
+        XCTAssertEqual(o["catalogoComEngrossoPecaDentroDePeca"] as? String, "0 de 74")
+        XCTAssertEqual(o["catalogoFalhas"] as? String, "0")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testCantoEmLLateraisPorDentroEPorForaSeguindoOsAjustes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length,cx0=STD().caixa;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var vol=function(a,b){var x=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),y=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),z=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);return x>0.05&&y>0.05&&z>0.05?x*y*z:0};
+        var r1=function(v){return Math.round(v*10)/10};
+        var bx=function(q,re){re3();var mi=S.mods.indexOf(q);return __boxes().filter(function(b){var s=String(b.nm||'').split(':');return +s[0]===mi&&re.test(s[1]||'')&&!b.poly&&(b.x1-b.x0>2)&&(b.y1-b.y0>2)&&(b.z1-b.z0>2)})};
+        var f3=function(q,re){return bx(q,re).map(function(b){return 'x'+r1(b.x0-q.x)+'–'+r1(b.x1-q.x)+' y'+r1(b.y0)+'–'+r1(b.y1)+' z'+r1(b.z0)+'–'+r1(b.z1)}).join(' + ')};
+        /* peça dentro de peça entre tudo que é estrutura do canto (laterais, bases, teto, travessas, prateleiras, rodapé, fundo) */
+        var dentro=function(q){var B=bx(q,/^(Lateral|Travessa frontal|Base superior|Base inferior|Prateleira|Rodapé|Fundo)/),n=0;for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++){if(String(B[i].nm)===String(B[j].nm))continue;if(vol(B[i],B[j])>50)n++}return n};
+        var pec=function(q,re){return partsOf(q).filter(function(p){return re.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw+(p.note?' ['+p.note+']':'')}).join(' | ')};
+        var EST=/^(Lateral|Base inferior|Base superior|Travessa frontal)/,resto=function(q){return partsOf(q).filter(function(p){return !EST.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw+' x'+p.x+' y'+p.y}).join(' | ')};
+        var novo=function(cx,lado){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.RD=3500;S.H=2700;draw();STD().caixa=cx;mkCorner(lado);draw();open3D();return S.mods[S.mods.length-1]};
+        /* 1. Ajustes › Montagem da caixa = laterais por DENTRO: o canto novo sai como sempre saiu (lateral em cima da base, com o rebaixo onde a travessa embute) */
+        var c=novo('dentro','e');await W(300);
+        R.porDentro='latFora '+!!c.latFora+' · '+pec(c,EST);
+        R.porDentro3D='lateral '+f3(c,/^Lateral$/)+' · travessa '+f3(c,/^Travessa frontal$/)+' · base '+f3(c,/^Base inferior$/)+' · dentro '+dentro(c);
+        var restoD=resto(c),baseD=partsOf(c).filter(function(p){return p.name==='Base inferior'})[0].cl;
+        /* 2. Ajustes = laterais por FORA: o canto novo já nasce por fora — lateral inteira e quadrada, base e travessa param nela (1 espessura mais curtas) */
+        c=novo('fora','e');
+        R.porFora='latFora '+!!c.latFora+' · '+pec(c,EST);
+        R.porFora3D='lateral '+f3(c,/^Lateral$/)+' · travessa '+f3(c,/^Travessa frontal$/)+' · base '+f3(c,/^Base inferior$/)+' · dentro '+dentro(c);
+        var baseF=partsOf(c).filter(function(p){return p.name==='Base inferior'})[0].cl;
+        R.somaIgual='base por dentro '+baseD+' = base por fora '+baseF+' + lateral '+c.esp+': '+(baseD===baseF+c.esp);
+        /* 3. o resto do canto (portas, prateleira, rodapé, fundo) é igual nas duas montagens */
+        R.restoIgual=(resto(c)===restoD)+' · '+partsOf(c).filter(function(p){return !EST.test(p.name)}).length+' peças';
+        /* 4. aumentar a régua (travessa) de 70 pra 120 no canto por fora: a travessa cresce, a lateral continua quadrada */
+        c.travMm=120;draw();R.regua120PorFora='lateral '+f3(c,/^Lateral$/)+' · travessa '+f3(c,/^Travessa frontal$/)+' · dentro '+dentro(c)+' · '+pec(c,/^Travessa frontal$/);c.travMm=70;draw();
+        /* 5. moldura no canto por fora: entra na frente, igual */
+        c.mold=true;c.moldOn=true;c.moldMm=30;draw();R.molduraPorFora=pec(c,/^Moldura/)+' · 3D '+bx(c,/^Moldura/).length+' · lateral '+f3(c,/^Lateral$/)+' · dentro '+dentro(c);c.mold=false;c.moldOn=false;draw();
+        /* 6. canto direito por fora: espelhado */
+        c=novo('fora','d');R.direitoPorFora=pec(c,/^(Lateral|Travessa frontal$)/)+' · 3D lateral '+f3(c,/^Lateral$/)+' · travessa '+f3(c,/^Travessa frontal$/)+' · dentro '+dentro(c);
+        /* 7. projeto que já existe: canto feito por dentro; muda nos Ajustes pra por fora e "Aplicar a todos" → o canto acompanha, junto com os outros módulos; voltando, fica como era */
+        c=novo('dentro','e');newTpl(T('Balcão 2 portas'));draw();var b2=S.mods[S.mods.length-1],antes=pec(c,EST);
+        STD().caixa='fora';var semAplicar=!!c.latFora;stdApplyAll(true);draw();
+        R.aplicarATodos='sem aplicar o canto não muda sozinho '+(!semAplicar)+' → aplicou: canto por fora '+!!c.latFora+' · balcão por fora '+!!b2.latFora+' · '+pec(c,/^(Lateral direita|Travessa frontal)$/)+' · dentro '+dentro(c);
+        STD().caixa='dentro';stdApplyAll(true);draw();R.voltarPorDentro='igual a antes '+(pec(c,EST)===antes)+' · latFora '+!!c.latFora+' · dentro '+dentro(c);
+        /* 8. canto aéreo e canto de guarda-roupa do catálogo: as duas montagens */
+        var cat=function(nm,cx){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.RD=3500;S.H=2700;draw();STD().caixa=cx;newTpl(T(nm));draw();open3D();return S.mods[S.mods.length-1]};
+        ['Canto em L (aéreo) · esquerdo','Canto L guarda-roupa · direito'].forEach(function(nm,i){var q=cat(nm,'dentro'),a=pec(q,/^(Lateral (direita|esquerda)|Base inferior|Base superior)$/)+' · dentro '+dentro(q);q=cat(nm,'fora');R[i?'guardaRoupaCanto':'aereoCanto']='por dentro: '+a+' → por fora (latFora '+!!q.latFora+'): '+pec(q,/^(Lateral (direita|esquerda)|Base inferior|Base superior)$/)+' · 3D lateral '+f3(q,/^Lateral$/)+' · dentro '+dentro(q)});
+        STD().caixa=cx0;R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["porDentro"] as? String, "latFora false · Base inferior 894×560 [canto · parte do fundo] | Base inferior (lado do canto) 334×560 [canto · parte do lado] | Lateral direita 690×560 [fim do canto (parede do fundo) · rebaixo 15 × 70 na frente, em cima] | Lateral do canto (fim do lado) 690×560 [fim do canto (parede lateral) · rebaixo 15 × 70 na frente, em cima] | Travessa frontal 334×70 [canto · frente do fundo · embute 15 no rebaixo da lateral e parafusa pela frente (igual ao módulo reto)] | Travessa frontal (lado do canto) 334×70 [canto · frente do lado · embute 15 no rebaixo da lateral do fim do lado e parafusa pela frente (igual ao módulo reto)]")
+        XCTAssertEqual(o["porDentro3D"] as? String, "lateral x885–900 y115–735 z6–566 + x885–900 y735–805 z6–551 + x6–566 y115–735 z885–900 + x6–551 y735–805 z885–900 · travessa x566–900 y735–805 z551–566 + x551–566 y735–805 z566–900 · base x6–900 y100–115 z6–566 + x6–566 y100–115 z566–900 · dentro 0")
+        XCTAssertEqual(o["porFora"] as? String, "latFora true · Base inferior 879×560 [canto · parte do fundo · para na lateral do fim (laterais por fora) · − 15 no comprimento] | Base inferior (lado do canto) 319×560 [canto · parte do lado · para na lateral do fim (laterais por fora) · − 15 no comprimento] | Lateral direita 705×560 [fim do canto (parede do fundo) · inteira, por fora da base e do teto] | Lateral do canto (fim do lado) 705×560 [fim do canto (parede lateral) · inteira, por fora da base e do teto] | Travessa frontal 319×70 [canto · frente do fundo · encosta na lateral do fim, parafusada de lado (pela lateral) · lateral quadrada, sem rebaixo] | Travessa frontal (lado do canto) 319×70 [canto · frente do lado · encosta na lateral do fim do lado, parafusada de lado (pela lateral) · lateral quadrada, sem rebaixo]")
+        XCTAssertEqual(o["porFora3D"] as? String, "lateral x885–900 y100–805 z6–566 + x6–566 y100–805 z885–900 · travessa x566–885 y735–805 z551–566 + x551–566 y735–805 z566–885 · base x6–885 y100–115 z6–566 + x6–566 y100–115 z566–885 · dentro 0")
+        XCTAssertEqual(o["somaIgual"] as? String, "base por dentro 894 = base por fora 879 + lateral 15: true")
+        XCTAssertEqual(o["restoIgual"] as? String, "true · 9 peças")
+        XCTAssertEqual(o["regua120PorFora"] as? String, "lateral x885–900 y100–805 z6–566 + x6–566 y100–805 z885–900 · travessa x566–885 y685–805 z551–566 + x551–566 y685–805 z566–885 · dentro 0 · Travessa frontal 319×120 [canto · frente do fundo · encosta na lateral do fim, parafusada de lado (pela lateral) · lateral quadrada, sem rebaixo]")
+        XCTAssertEqual(o["molduraPorFora"] as? String, "Moldura de acabamento 334×30 [canto · frente do fundo · acabamento, cobre a folga do topo] | Moldura de acabamento (lado do canto) 334×30 [canto · frente do lado · emenda no canto] · 3D 2 · lateral x885–900 y100–805 z6–566 + x6–566 y100–805 z885–900 · dentro 0")
+        XCTAssertEqual(o["direitoPorFora"] as? String, "Lateral esquerda 705×560 [fim do canto (parede do fundo) · inteira, por fora da base e do teto] | Lateral do canto (fim do lado) 705×560 [fim do canto (parede lateral) · inteira, por fora da base e do teto] | Travessa frontal 319×70 [canto · frente do fundo · encosta na lateral do fim, parafusada de lado (pela lateral) · lateral quadrada, sem rebaixo] · 3D lateral x0–15 y100–805 z6–566 + x334–894 y100–805 z885–900 · travessa x15–334 y735–805 z551–566 + x334–349 y735–805 z566–885 · dentro 0")
+        XCTAssertEqual(o["aplicarATodos"] as? String, "sem aplicar o canto não muda sozinho true → aplicou: canto por fora true · balcão por fora true · Lateral direita 705×560 [fim do canto (parede do fundo) · inteira, por fora da base e do teto] | Travessa frontal 319×70 [canto · frente do fundo · encosta na lateral do fim, parafusada de lado (pela lateral) · lateral quadrada, sem rebaixo] · dentro 0")
+        XCTAssertEqual(o["voltarPorDentro"] as? String, "igual a antes true · latFora false · dentro 0")
+        XCTAssertEqual(o["aereoCanto"] as? String, "por dentro: Base inferior 694×350 [canto · parte do fundo] | Lateral direita 720×350 [fim do canto (parede do fundo)] | Base superior 694×350 [canto · parte do fundo] · dentro 0 → por fora (latFora true): Base inferior 679×350 [canto · parte do fundo · para na lateral do fim (laterais por fora) · − 15 no comprimento] | Lateral direita 750×350 [fim do canto (parede do fundo) · inteira, por fora da base e do teto] | Base superior 679×350 [canto · parte do fundo · para na lateral do fim (laterais por fora) · − 15 no comprimento] · 3D lateral x685–700 y1750–2500 z6–356 + x6–356 y1750–2500 z685–700 · dentro 0")
+        XCTAssertEqual(o["guardaRoupaCanto"] as? String, "por dentro: Base inferior 994×550 [canto · parte do fundo] | Lateral esquerda 2270×550 [fim do canto (parede do fundo)] | Base superior 994×550 [canto · parte do fundo] · dentro 0 → por fora (latFora true): Base inferior 979×550 [canto · parte do fundo · para na lateral do fim (laterais por fora) · − 15 no comprimento] | Lateral esquerda 2300×550 [fim do canto (parede do fundo) · inteira, por fora da base e do teto] | Base superior 979×550 [canto · parte do fundo · para na lateral do fim (laterais por fora) · − 15 no comprimento] · 3D lateral x0–15 y100–2400 z6–556 + x444–994 y100–2400 z985–1000 · dentro 0")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

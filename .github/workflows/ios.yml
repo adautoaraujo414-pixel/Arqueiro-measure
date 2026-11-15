@@ -60,6 +60,8 @@ jobs:
           RC=$?
           grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
           echo "==== FALHAS ===="; grep -E "error:|Test Case .*failed" build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 80
+          # medidas do Caderno (tempo de escrever/mover a folha) que os CadernoTests imprimem: saem aqui pra não se perderem no corte das últimas linhas
+          echo "==== CADERNO (medidas) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test.log | head -n 80
           exit $RC
 
       # a mesma bateria de testes também no iPad (tela grande, toques e 3D): o que roda no iPhone tem que rodar no iPad
@@ -79,6 +81,7 @@ jobs:
             test-without-building > build/xcodebuild-test-ipad.log 2>&1
           RC=$?
           grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-ipad.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 120
+          echo "==== CADERNO (medidas) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test-ipad.log | head -n 80
           exit $RC
 
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
@@ -153,6 +156,7 @@ jobs:
           mkdir -p "$OUT/orcamento"; cp -R build/orcamento/. "$OUT/orcamento/" 2>/dev/null || true
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
             grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
+            echo "==== Caderno (medidas, iPhone e iPad) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test.log build/xcodebuild-test-ipad.log 2>/dev/null | head -n 160;
             echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;
             echo "==== Conferência App Store ===="; cat build/appstore-check.txt 2>/dev/null;
             echo "==== Capturas vazias? ===="; cat build/blank-check.txt 2>/dev/null;

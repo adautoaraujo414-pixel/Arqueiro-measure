@@ -1,17 +1,19 @@
-✨ NOVO: LED no painel ripado
+NOVO: LED NO PAINEL RIPADO
 • Toque no ripado no 3D e ponha a fita de LED em pé, no vão que você escolher.
 • Escolha o tamanho pelo desenho: inteiro, meio ou um quarto, de cima ou de baixo.
 • Um toque em Cascata e o efeito sai pronto em 3 vãos.
 • 9 cores de luz, 3 cores de perfil e o botão de ver à noite.
 • A fita já entra na lista de materiais, com a medida de cada uma.
 
-💡 LED na prateleira: um toque e ela acende.
+LED NA PRATELEIRA
+• Um toque e ela acende.
 
-🪚 Marcenaria do jeito que você monta
+MARCENARIA DO JEITO QUE VOCÊ MONTA
 • Laterais por fora: lateral quadrada, sem rebaixo, com o frontal parafusado de lado.
 • Armário de canto nas duas montagens: laterais por dentro ou por fora.
 • Rodapé com ajustes próprios e opção de pés de metal.
 
-⚡ Notas mais rápidas: escrever e mover a folha ficou mais leve.
+NOTAS MAIS RÁPIDAS
+• Escrever e mover a folha ficou mais leve.
 
 E mais correções e melhorias em todo o editor.

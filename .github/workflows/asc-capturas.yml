@@ -4,6 +4,15 @@ name: App Store - enviar capturas de tela
 # Roda em Linux (sem fila de Mac) e também serve pra testar se a chave da API (segredos ASC_*) está certa.
 on:
   workflow_dispatch:
+    inputs:
+      acrescentar:
+        description: "Só ACRESCENTAR estas capturas, sem apagar as que já estão (ex.: 9-moveisled,10-moveisledbar) · vazio = repõe todas"
+        type: string
+        default: ''
+      posicao:
+        description: "Posição na loja onde as novas entram (1 = primeira)"
+        type: string
+        default: '2'
 
 jobs:
   capturas:
@@ -19,4 +28,6 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ACRESCENTAR: ${{ inputs.acrescentar }}
+          POSICAO: ${{ inputs.posicao }}
         run: python .github/scripts/asc_screenshots.py /tmp/res/capturas 6829800820

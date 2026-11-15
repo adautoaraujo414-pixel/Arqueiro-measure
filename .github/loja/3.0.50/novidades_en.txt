@@ -1,0 +1,17 @@
+✨ NEW: LED lighting on slatted panels
+• Tap the slatted panel in 3D and place a vertical LED strip in any gap you choose.
+• Pick the length from a drawing: full, half or a quarter, from the top or from the bottom.
+• One tap on Cascade builds the effect across 3 gaps.
+• 9 light colors, 3 profile colors and a night view button.
+• Every strip goes straight into the materials list with its length.
+
+💡 LED on shelves: one tap and it lights up.
+
+🪚 Cabinetmaking the way you build
+• Sides on the outside: square side panel, no rabbet, with the front rail screwed from the side.
+• Corner cabinets in both builds: sides on the inside or on the outside.
+• Toe kick with its own settings and a metal feet option.
+
+⚡ Faster notes: writing and moving the page is smoother.
+
+Plus more fixes and improvements across the editor.

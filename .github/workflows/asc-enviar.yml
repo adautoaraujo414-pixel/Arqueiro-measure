@@ -11,6 +11,10 @@ on:
         description: "Texto de Novidades da versão (o que mudou)"
         type: string
         default: ''
+      textos:
+        description: "Pasta com os textos por idioma (novidades_pt/en/es.txt e promo_pt/en/es.txt) · ex.: .github/loja/3.0.50"
+        type: string
+        default: ''
       enviar:
         description: "Enviar pra revisão da Apple agora"
         type: boolean
@@ -41,4 +45,5 @@ jobs:
           LIBERAR: ${{ inputs.liberar && '1' || '0' }}
           VERSAO: ${{ inputs.versao }}
           NOVIDADES: ${{ inputs.novidades }}
+          TEXTOS: ${{ inputs.textos }}
         run: python .github/scripts/asc_submit.py 6829800820

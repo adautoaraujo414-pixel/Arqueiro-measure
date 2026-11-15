@@ -2,6 +2,10 @@
 
 Usa a chave da API (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8). Substitui as capturas que já estiverem
 nos tamanhos enviados. Uso: python asc_screenshots.py <pasta-capturas> <app_id>
+
+Modo ACRESCENTAR (variável ACRESCENTAR="9-moveisled,10-moveisledbar"): NÃO apaga nenhuma captura que já está na
+versão; só sobe as novas (pula a que já estiver lá com o mesmo nome) e põe elas a partir da posição POSICAO
+(1 = primeira; padrão 2), mantendo a ordem das que já estavam. A loja aceita no máximo 10 por conjunto.
 """
 import hashlib, os, sys, time, glob
 import jwt, requests
@@ -21,6 +25,8 @@ SETS = [
     ("APP_IPHONE_67", IPHONE, None),                  # 1320 x 2868 (tela grande)
     ("APP_IPAD_PRO_3GEN_129", IPAD, None),            # 2064 x 2752 (iPad 13")
 ]
+ADD = [n.strip() for n in (os.environ.get("ACRESCENTAR") or "").split(",") if n.strip()]
+POS = max(1, int((os.environ.get("POSICAO") or "2").strip() or 2))
 # pasta por idioma da loja (as capturas em pt ficam na raiz)
 LOCALES = {"pt-BR": "", "en-US": "en", "es-ES": "es", "es-MX": "es"}
 
@@ -45,6 +51,62 @@ def call(method, path, **kw):
     return r.json() if r.text else {}
 
 
+def enviar(f, set_id, lang, dtype, size):
+    """Sobe um arquivo pro conjunto e devolve o id da captura criada."""
+    name = os.path.basename(f)
+    path = os.path.join(out, f"{lang}-{dtype}-{name}")
+    im = Image.open(f).convert("RGB")
+    if size and im.size != size:
+        im = im.resize(size, Image.LANCZOS)
+    im.save(path)
+    data = open(path, "rb").read()
+    shot = call("POST", "/appScreenshots", json={"data": {"type": "appScreenshots",
+                "attributes": {"fileName": name, "fileSize": len(data)},
+                "relationships": {"appScreenshotSet": {"data": {"type": "appScreenshotSets", "id": set_id}}}}})["data"]
+    for op in shot["attributes"]["uploadOperations"]:
+        hdr = {h["name"]: h["value"] for h in op["requestHeaders"]}
+        chunk = data[op["offset"]: op["offset"] + op["length"]]
+        r = requests.request(op["method"], op["url"], headers=hdr, data=chunk, timeout=120)
+        r.raise_for_status()
+    call("PATCH", f"/appScreenshots/{shot['id']}", json={"data": {"type": "appScreenshots", "id": shot["id"],
+         "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
+    print("ok", lang, dtype, name, Image.open(path).size)
+    return shot["id"]
+
+
+def acrescentar(loc, lang, folder, sets):
+    """Só acrescenta as capturas novas (ADD) em cada conjunto que já existe, sem apagar nada, e põe na posição POS."""
+    for dtype, names, size in SETS:
+        kind = names[0].split("-")[0]  # iphone | ipad
+        if dtype not in sets:
+            print(f"::warning::{lang} {dtype}: a versão não tem esse conjunto · nada acrescentado")
+            continue
+        sid = sets[dtype]
+        atuais = call("GET", f"/appScreenshotSets/{sid}/appScreenshots", params={"limit": 50})["data"]
+        nomes = [x["attributes"].get("fileName") for x in atuais]
+        print(lang, dtype, "já tinha", len(atuais), ":", ", ".join(n or "?" for n in nomes))
+        novas, subidas = [], 0
+        for n in ADD:
+            fn = f"{kind}-{n}.png"
+            f = os.path.join(folder, fn)
+            ja = next((x["id"] for x in atuais if x["attributes"].get("fileName") == fn), None)
+            if ja:
+                print(lang, dtype, fn, "já estava na versão · não subi de novo")
+                novas.append(ja)
+                continue
+            if not os.path.exists(f):
+                sys.exit(f"::error::não achei a captura {f}")
+            if len(atuais) + subidas >= 10:
+                sys.exit(f"::error::{lang} {dtype}: a loja aceita no máximo 10 capturas por conjunto")
+            novas.append(enviar(f, sid, lang, dtype, size))
+            subidas += 1
+        antigas = [x["id"] for x in atuais if x["id"] not in novas]
+        ordem = antigas[:POS - 1] + novas + antigas[POS - 1:]
+        call("PATCH", f"/appScreenshotSets/{sid}/relationships/appScreenshots",
+             json={"data": [{"type": "appScreenshots", "id": i} for i in ordem]})
+        print(lang, dtype, "agora com", len(ordem), "capturas · as novas a partir da posição", POS)
+
+
 versions = call("GET", f"/apps/{APP_ID}/appStoreVersions", params={"filter[platform]": "IOS", "limit": 20})["data"]
 ver = next((v for v in versions if v["attributes"]["appStoreState"] in
             ("PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", "REJECTED", "METADATA_REJECTED")), None)
@@ -63,6 +125,9 @@ for loc in locs:
     folder = os.path.join(SRC, LOCALES[lang])
     sets = {s["attributes"]["screenshotDisplayType"]: s["id"] for s in
             call("GET", f"/appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]}
+    if ADD:
+        acrescentar(loc, lang, folder, sets)
+        continue
     for dtype, names, size in SETS:
         files = [os.path.join(folder, n + ".png") for n in names if os.path.exists(os.path.join(folder, n + ".png"))]
         if not files:
@@ -77,23 +142,6 @@ for loc in locs:
                           "attributes": {"screenshotDisplayType": dtype},
                           "relationships": {"appStoreVersionLocalization": {"data": {"type": "appStoreVersionLocalizations", "id": loc["id"]}}}}})["data"]["id"]
         for f in files:
-            name = os.path.basename(f)
-            path = os.path.join(out, f"{lang}-{dtype}-{name}")
-            im = Image.open(f).convert("RGB")
-            if size and im.size != size:
-                im = im.resize(size, Image.LANCZOS)
-            im.save(path)
-            data = open(path, "rb").read()
-            shot = call("POST", "/appScreenshots", json={"data": {"type": "appScreenshots",
-                        "attributes": {"fileName": name, "fileSize": len(data)},
-                        "relationships": {"appScreenshotSet": {"data": {"type": "appScreenshotSets", "id": set_id}}}}})["data"]
-            for op in shot["attributes"]["uploadOperations"]:
-                hdr = {h["name"]: h["value"] for h in op["requestHeaders"]}
-                chunk = data[op["offset"]: op["offset"] + op["length"]]
-                r = requests.request(op["method"], op["url"], headers=hdr, data=chunk, timeout=120)
-                r.raise_for_status()
-            call("PATCH", f"/appScreenshots/{shot['id']}", json={"data": {"type": "appScreenshots", "id": shot["id"],
-                 "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(data).hexdigest()}}})
-            print("ok", lang, dtype, name, Image.open(path).size)
+            enviar(f, set_id, lang, dtype, size)
 
 print("Capturas enviadas. A Apple processa em alguns minutos.")

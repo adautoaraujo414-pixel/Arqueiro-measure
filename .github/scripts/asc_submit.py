@@ -88,17 +88,39 @@ def nova_versao(versions):
     return r["data"]
 
 
+TEXTOS = (os.environ.get("TEXTOS") or "").strip()  # pasta com novidades_pt.txt, novidades_en.txt, novidades_es.txt, promo_pt.txt…
+
+
+def texto(nome, locale):
+    """Texto do idioma da loja (pt-BR → pt, en-US → en, es-ES/es-MX → es) lido da pasta TEXTOS; None se não tiver."""
+    if not TEXTOS:
+        return None
+    f = os.path.join(TEXTOS, f"{nome}_{locale.split('-')[0].lower()}.txt")
+    return open(f, encoding="utf-8").read().strip() if os.path.exists(f) else None
+
+
 def novidades(v):
-    """Texto de "Novidades" (whatsNew) em todos os idiomas da versão · a 1ª versão do app não tem esse campo."""
+    """Texto de "Novidades" (whatsNew) e texto promocional (o do topo da página) em cada idioma da versão.
+    Com a pasta TEXTOS cada idioma recebe o seu; sem ela vale o NOVIDADES pra todos · a 1ª versão do app não tem "Novidades"."""
     for loc in call("GET", f"/appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]:
         a = loc["attributes"]
-        txt = NOVIDADES or a.get("whatsNew") or "Correções e melhorias no editor 3D, nos eletrodomésticos e na pintura das peças."
-        if a.get("whatsNew") == txt:
+        txt = texto("novidades", a["locale"]) or NOVIDADES or a.get("whatsNew") or "Correções e melhorias no editor 3D, nos eletrodomésticos e na pintura das peças."
+        novo = {}
+        if a.get("whatsNew") != txt:
+            novo["whatsNew"] = txt
+        promo = texto("promo", a["locale"])
+        if promo and a.get("promotionalText") != promo:
+            if len(promo) > 170:
+                sys.exit(f"::error::texto promocional de {a['locale']} tem {len(promo)} letras (máximo 170)")
+            novo["promotionalText"] = promo
+        if not novo:
+            print("textos", a["locale"], ": já estavam certos")
             continue
         r = call("PATCH", f"/appStoreVersionLocalizations/{loc['id']}", ok=True,
-                 json={"data": {"type": "appStoreVersionLocalizations", "id": loc["id"], "attributes": {"whatsNew": txt}}})
+                 json={"data": {"type": "appStoreVersionLocalizations", "id": loc["id"], "attributes": novo}})
         if r:
-            print("novidades", a["locale"], ":", txt)
+            for k, t in novo.items():
+                print(("novidades" if k == "whatsNew" else "texto promocional"), a["locale"], ":", t.replace("\n", " ⏎ ")[:400])
 
 
 versions, ver = versao_em_preparo()
@@ -191,7 +213,7 @@ if ver["attributes"]["appStoreState"] == "READY_FOR_REVIEW":
 else:
     call("PATCH", f"/appStoreVersions/{ver['id']}/relationships/build", json={"data": {"type": "builds", "id": build["id"]}})
     print("build colocado na versão", vs)
-if VERSAO or NOVIDADES or len(versions) > 1:
+if VERSAO or NOVIDADES or TEXTOS or len(versions) > 1:
     novidades(ver)
 
 # 3) conferência do que a Apple pede

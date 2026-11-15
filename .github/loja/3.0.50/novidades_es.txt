@@ -1,0 +1,17 @@
+✨ NUEVO: LED en el panel ranurado
+• Toca el panel ranurado en 3D y coloca la tira LED vertical en el hueco que elijas.
+• Elige el tamaño por el dibujo: entero, medio o un cuarto, desde arriba o desde abajo.
+• Un toque en Cascada y el efecto queda listo en 3 huecos.
+• 9 colores de luz, 3 colores de perfil y el botón para ver de noche.
+• Cada tira entra directo en la lista de materiales, con su medida.
+
+💡 LED en la repisa: un toque y se enciende.
+
+🪚 Carpintería como tú la armas
+• Laterales por fuera: lateral cuadrado, sin rebaje, con el frontal atornillado de lado.
+• Mueble de esquina en los dos armados: laterales por dentro o por fuera.
+• Zócalo con ajustes propios y opción de patas de metal.
+
+⚡ Notas más rápidas: escribir y mover la hoja va más fluido.
+
+Y más correcciones y mejoras en todo el editor.

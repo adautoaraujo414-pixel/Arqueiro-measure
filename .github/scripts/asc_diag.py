@@ -39,6 +39,23 @@ print("== VERSÕES ==")
 for v in get(f"/apps/{APP_ID}/appStoreVersions", **{"filter[platform]": "IOS", "limit": 10})["data"]:
     print("  versão", a(v).get("versionString"), a(v).get("appStoreState"), "· lançamento", a(v).get("releaseType"), "· criada", a(v).get("createdDate"))
 
+print("== VERSÃO EM PREPARO / EM REVISÃO (build, textos e capturas) ==")
+for v in get(f"/apps/{APP_ID}/appStoreVersions", **{"filter[platform]": "IOS", "limit": 10})["data"]:
+    if a(v).get("appStoreState") in ("READY_FOR_SALE", "REPLACED_WITH_NEW_VERSION", "REMOVED_FROM_SALE"):
+        continue
+    print("  versão", a(v).get("versionString"), a(v).get("appStoreState"))
+    b = get(f"/appStoreVersions/{v['id']}/build").get("data")
+    print("    build na versão:", a(b).get("version") if b else "NENHUM")
+    for loc in get(f"/appStoreVersions/{v['id']}/appStoreVersionLocalizations")["data"]:
+        la = a(loc)
+        print("    idioma", la.get("locale"))
+        print("      texto promocional:", la.get("promotionalText"))
+        print("      novidades:", (la.get("whatsNew") or "").replace("\n", " ⏎ "))
+        for st in get(f"/appStoreVersionLocalizations/{loc['id']}/appScreenshotSets")["data"]:
+            shots = get(f"/appScreenshotSets/{st['id']}/appScreenshots", limit=50)["data"]
+            print("      capturas", a(st).get("screenshotDisplayType"), "·", len(shots), ":",
+                  ", ".join((a(x).get("fileName") or "?") + "[" + str((a(x).get("assetDeliveryState") or {}).get("state")) + "]" for x in shots))
+
 print("== GRUPOS DE ASSINATURA ==")
 grupos = get(f"/apps/{APP_ID}/subscriptionGroups", limit=20)["data"]
 if not grupos:

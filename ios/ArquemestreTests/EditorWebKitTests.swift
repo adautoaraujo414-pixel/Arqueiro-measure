@@ -9948,9 +9948,12 @@ final class EditorWebKitTests: XCTestCase {
         /* 2. ripado na frente */
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];await dois(m);bt('rip');bt('rip|f');R.ripadoFrente=pn();
         open3D();await W(200);bx=__boxes().filter(function(b){return b.rpid===(S.rp[0]||{}).id});R.ripadoFrente3D=bx.length?'frente em z '+Math.round(Math.max.apply(null,bx.map(function(b){return b.z1})))+' · caixa do módulo até z '+m.d:'não aparece';
+        /* PEDIDO 56: na frente não cria caixote/estrutura atrás do painel (só o painel que foi pedido), e continua assim depois de salvar e abrir */
+        var cx=function(){var a=S.rp[0],bb=__boxes().filter(function(b){return b.rpid===a.id||b.rpd===a.id});return 'corte '+(rpEstr(a).map(function(e){return e[0]+' '+e[1]+' '+e[2]+'x'+e[3]}).join(',')||'nada')+' · L '+(rpTamp(a).map(function(q){return q.nm}).join(',')||'nada')+' · peças 3D começam em z '+Math.round(Math.min.apply(null,bb.map(function(b){return b.z0})))};
+        R.ripadoFrenteSemCaixote=cx();loadState(JSON.parse(JSON.stringify(snapState())));draw();open3D();await W(200);R.semCaixoteDepoisDeAbrir=cx();
         /* 3. painel liso nas costas e na frente */
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];await dois(m);bt('liso');bt('liso|c');R.lisoCostas=pn();
-        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];await dois(m);bt('liso');bt('liso|f');R.lisoFrente=pn();open3D();await W(200);bx=__boxes().filter(function(b){return b.rpid===(S.rp[0]||{}).id});R.lisoFrente3D=bx.length?'frente em z '+Math.round(Math.max.apply(null,bx.map(function(b){return b.z1})))+' · caixa até z '+S.mods[0].d:'não aparece';
+        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];await dois(m);bt('liso');bt('liso|f');R.lisoFrente=pn();open3D();await W(200);bx=__boxes().filter(function(b){return b.rpid===(S.rp[0]||{}).id});R.lisoFrente3D=bx.length?'frente em z '+Math.round(Math.max.apply(null,bx.map(function(b){return b.z1})))+' · caixa até z '+S.mods[0].d:'não aparece';R.lisoFrenteSemCaixote=cx();
         /* 4. depois de pôr o painel o vão de cima não abre de novo (já está ocupado) */
         R.ocupadoNaoAbre=(await dois(S.mods[0]))?'abriu':'não abre';try{vmenuClose()}catch(_){}
         /* 5. fechamento: rente, 20 mm e digitando 35 */
@@ -9963,6 +9966,12 @@ final class EditorWebKitTests: XCTestCase {
         /* 7. um toque só não abre · 2 toques em cima do módulo abre o menu do vão (portas), não este */
         novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];var c=cli(m.x+m.w/2,(m.b+m.h+S.H)/2);tap(c);await W(500);R.umToqueNaoAbre=menu()?'abriu':'não abre';
         c=cli(m.x+m.w/2,m.b+m.h/2);tap(c);await W(120);tap(c);await W(450);R.emCimaDoModulo=menu()?'abriu o do teto (errado)':(document.getElementById('vmenu')?'menu do vão do módulo':'nada');try{vmenuClose()}catch(_){}
+        /* 7b. guarda-roupa (a foto): ripado na frente em cima não monta caixote */
+        novo();S.env='quarto';S.room='quarto';S.H=2700;draw();newTpl(T('Guarda-roupa 2 vãos'));draw();if(window.SOLO2)soloOff();topGapMenu(0,200,300);bt('rip');bt('rip|f');draw();open3D();await W(200);R.guardaRoupaSemCaixote=cx();
+        /* 7c. PEDIDO 56b: atrás nada; lado aberto vira L até a parede · encostado na parede ou em módulo alto, sem L */
+        novo();newTpl(T('Aéreo 2 portas'));draw();if(window.SOLO2)soloOff();m=S.mods[0];m.x=1000;draw();await dois(m);bt('rip');bt('rip|f');draw();R.noMeioDaParede=cx();open3D();await W(200);var bb=__boxes().filter(function(b){return b.rpid===S.rp[0].id});R.ladoRipado3D=bb.filter(function(b){return b.z1<=S.rp[0].af+0.5&&Math.round(b.x1-b.x0)===22}).length+' ripas nas laterais · nada encostado na parede atrás do painel: '+(bb.some(function(b){return b.z0<1&&b.x1-b.x0>100})?'tem':'nada');
+        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=S.W-m.w;draw();await dois(m);bt('rip');bt('rip|f');draw();R.encostadoNaDireita=cx();
+        novo();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[0];m.x=1000;draw();newTpl(T('Aéreo 2 portas'));draw();var m2=S.mods[1];m2.x=m.x+m.w;m2.b=0;m2.h=S.H;draw();await dois(m);bt('rip');bt('rip|f');draw();R.coladoEmModuloAlto=cx();
         /* 8. na parede da esquerda também */
         novo();wvGo('e');draw();newTpl(T('Aéreo 2 portas'));draw();m=S.mods[S.mods.length-1];await dois(m);bt('rip');bt('rip|c');R.paredeEsquerda=pn();wvGo('f');draw();R.guardadoNaEsquerda=snapState().rp.map(function(a){return (a.wall||'f')}).join(',');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
@@ -9974,9 +9983,12 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ripadoCostas3D"] as? String, "z 0..28")
         XCTAssertEqual(o["ripadoFrente"] as? String, "ripado 5..1005 de 2500 até 2600 · afastado da parede 322")
         XCTAssertEqual(o["ripadoFrente3D"] as? String, "frente em z 350 · caixa do módulo até z 350")
+        XCTAssertEqual(o["ripadoFrenteSemCaixote"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral direita · peças 3D começam em z 0")
+        XCTAssertEqual(o["semCaixoteDepoisDeAbrir"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral direita · peças 3D começam em z 0")
         XCTAssertEqual(o["lisoCostas"] as? String, "liso 5..1005 de 2500 até 2600 · afastado da parede 0")
         XCTAssertEqual(o["lisoFrente"] as? String, "liso 5..1005 de 2500 até 2600 · afastado da parede 332")
         XCTAssertEqual(o["lisoFrente3D"] as? String, "frente em z 350 · caixa até z 350")
+        XCTAssertEqual(o["lisoFrenteSemCaixote"] as? String, "corte 1 Lateral do L (do painel até a parede) 100x332 · L lateral direita · peças 3D começam em z 0")
         XCTAssertEqual(o["ocupadoNaoAbre"] as? String, "não abre")
         XCTAssertEqual(o["fctPergunta"] as? String, "Vão de cima até o teto Fechamento até o teto: rente ou quanto pra dentro?Rente com a frente das portas10 mm20 mm30 mm50 mmOKaté 341 mm (a profundidade do módulo)◀ Voltar")
         XCTAssertEqual(o["fctRente"] as? String, "fct 1 · embutido 0 · peça 1")
@@ -9986,11 +9998,15 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["vaosDeCima"] as? String, "aéreo 100")
         XCTAssertEqual(o["umToqueNaoAbre"] as? String, "não abre")
         XCTAssertEqual(o["emCimaDoModulo"] as? String, "menu do vão do módulo")
+        XCTAssertEqual(o["guardaRoupaSemCaixote"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 300x522,8 Ripa da lateral do L 300x40 · L lateral direita · peças 3D começam em z 0")
+        XCTAssertEqual(o["noMeioDaParede"] as? String, "corte 2 Base da lateral do L ripada (do painel até a parede) 100x322,8 Ripa da lateral do L 100x40 · L lateral esquerda,lateral direita · peças 3D começam em z Infinity")
+        XCTAssertEqual(o["ladoRipado3D"] as? String, "8 ripas nas laterais · nada encostado na parede atrás do painel: nada")
+        XCTAssertEqual(o["encostadoNaDireita"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
+        XCTAssertEqual(o["coladoEmModuloAlto"] as? String, "corte 1 Base da lateral do L ripada (do painel até a parede) 100x322,4 Ripa da lateral do L 100x40 · L lateral esquerda · peças 3D começam em z Infinity")
         XCTAssertEqual(o["paredeEsquerda"] as? String, "ripado 35..1035 de 2500 até 2600 · afastado da parede 0")
         XCTAssertEqual(o["guardadoNaEsquerda"] as? String, "e")
         XCTAssertEqual(o["erros"] as? String, "")
     }
-
     func testPortaNoFornoViraFrenteComRecorteEFornoNoMeio() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

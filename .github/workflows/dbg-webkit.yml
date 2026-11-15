@@ -1,0 +1,21 @@
+name: dbg-webkit (bateria do editor no simulador)
+on:
+  push:
+    branches: [dbg/webkit-45]
+jobs:
+  t:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n1); [ -n "$X" ] || X=/Applications/Xcode.app; sudo xcode-select -s "$X/Contents/Developer"
+          brew install xcodegen; cd ios && xcodegen generate
+      - run: |
+          cd ios && mkdir -p build; UDID=$(python3 scripts/pick_sim.py iphone)
+          set +e
+          xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -destination "id=$UDID" -derivedDataPath build/dd \
+            -test-timeouts-enabled YES -default-test-execution-time-allowance 240 -maximum-test-execution-time-allowance 400 -retry-tests-on-failure -test-iterations 2 \
+            -only-testing:ArquemestreTests/EditorWebKitTests \
+            CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= test > build/log.txt 2>&1
+          RC=$?; grep -E "Executed|\*\* " build/log.txt | tail -5; echo "==== FALHAS ===="; grep -E "error:|Test Case .*failed" build/log.txt | grep -v ProcessAssertion | head -80; exit $RC

@@ -483,3 +483,67 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **CATALOGO-SOBREPOE (I7):** módulo novo do catálogo em parede cheia entra por cima dos vizinhos.
 - **TAMP-2D-ALVO-PARCIAL:** o teste do 38ed268 falha em 1366×768. Erguer até uma altura que atravessa a pedra faz o módulo pular 875 mm de lado ao soltar (`confineAll`→`stPush`).
 - **VAO-3D-ABERTO:** trocar o vão por gavetas com o 3D aberto não atualiza o 3D.
+
+
+## P0-01 / ARQ-VAZIO: projects.json vazio ou quebrado apagava a cópia boa do navegador (corrigido em 16/11, commit 73ec2f3)
+- **Como reproduzir:** navegador com projetos, `projects.json` = `[]`. Ao abrir, a lista fica vazia e o navegador é sobrescrito com `[]` (sonda s08a: 1 → 0).
+- **Causa raiz:** na abertura o arquivo vencia sempre que era uma lista, mesmo vazia (`PJS`). Depois, a linha 3085 copiava o arquivo para o `localStorage` quando a lista estava vazia.
+- **Correção** (`editor.html`, `pjsEscolhe`/`pjsDecide`/`pjsCopia`):
+  - arquivo com projetos vale como antes;
+  - arquivo vazio, ilegível, que não é lista ou ausente, com o navegador cheio: vale o navegador, e a próxima gravação devolve a lista ao arquivo;
+  - os dois vazios: vazio de verdade;
+  - a cópia do arquivo ilegível não sobrescreve a anterior.
+- **Testes:** `testArquivoDeProjetosVazioOuQuebradoNaoApagaACopiaBoaDoNavegador`. Falha antes, passa depois. Sonda s08a agora dá 1 → 1.
+- **Outros módulos:** `prices.json` e `apmodels.json` só são copiados quando o `localStorage` não tem nada. Não sobrescrevem dado bom.
+
+## P0-03 / ENGROSSO-APARELHO: engrosso do projeto zerado pelo ajuste do aparelho (corrigido em 16/11, commit 37c9915)
+- **Como reproduzir:** projeto com `egL=1`, ajuste "Engrosso" desligado no aparelho (é o padrão). Desenhar, abrir ou reabrir grava `egL=0`, e religar não devolve.
+- **Causa raiz:** `defs()` (274) e `partsOf()` (509) faziam `m.egL=0;m.egR=0` com `!ENGON()`. O ajuste é do aparelho, não do projeto.
+- **Correção:** o dado fica. `egEf(m,lado)` dá 0 com o ajuste desligado e é usado em `vaoRanges`, nas peças de engrosso e na conversão para o editor por vãos.
+- **Regra de fabricação não mudou:** com o ajuste desligado não sai peça de engrosso e os vãos têm a medida de sem engrosso.
+- **Testes:** `testEngrossoDoProjetoNaoSomeComOAjusteDesligadoNoAparelho`. Falha antes (egL 1 → 0 gravado), passa depois. Sonda s08b: arquivo 30 → 30.
+
+## P0-03 (continuação) / ABRIR-REGRAVA: abrir sem mexer regravava e mudava a data (corrigido em 16/11, commit 0e353e3)
+- **Causa raiz:** o `draw()` da abertura chama `schedSave()`, e o `SVSIG` era nulo ou de outro projeto.
+- **Correção:** quando o que é aberto é igual ao guardado do projeto atual, `SVSIG` passa a ser o do projeto aberto. Desfazer, refazer e mexidas gravam como antes.
+- **Teste:** `testAbrirProjetoSemMexerNaoRegravaNemMudaAData`. Falha antes (1–2 gravações e `updated` mudado), passa depois.
+
+## P0-02 / BKP-RESTAURA: restauração de backup destrutiva no Android e no Windows (corrigido em 16/11, commit f96b3e5)
+- **Como reproduzir** (código real, `tools/sondas/backup`):
+  - falha de escrita no meio da extração: projetos trocados e notas apagadas;
+  - backup só com a marca: tudo apagado.
+- **Causa raiz:** `applyPending` apagava as pastas antes de extrair, sem cópia, e engolia o erro. O `stage` só conferia a marca.
+- **Correção:**
+  - `check()` confere o ZIP inteiro (índice, CRC, caminhos, lista de projetos, não vazio);
+  - extração em `restore_staging`;
+  - `swapIn()` guarda o estado atual em `restore_previous_<hora>`, que não é apagado e não entra no backup, com volta em qualquer falha;
+  - recuperação se o app fechar no meio da troca;
+  - recusa avisada, sem cair na restauração antiga;
+  - resultado avisado ao reabrir.
+- **iOS:** já tinha área de preparo e volta. Agora recusa backup sem nenhuma nota e sem nenhum projeto, e guarda o anterior em `files.restore-previous-<hora>`.
+- **Testes:**
+  - 13 casos JVM passando;
+  - 2 testes novos em `BackupSafetyTests`, **não executados aqui** (sem Xcode);
+  - compilação completa do Android e do Windows **não feita aqui**: o servidor dl.google.com está bloqueado na rede deste ambiente.
+
+## GEO-AVISA: o ambiente modificava os móveis (regra aprovada em 16/11; corrigido em 16/11, commit desta entrada)
+- **Como reproduzir:** P1-A da auditoria (s11, s13).
+  - pé-direito −400 e volta: torre 2400 → 2300 e aéreos subidos;
+  - parede −300 e volta: torre da parede lateral +30;
+  - espessura +3 e volta: forno 600 → 606;
+  - alargar e voltar: vizinho e pedra empurrados.
+- **Causa raiz:** as passadas de restrição (`confineAll`: `confine`, `stPush`, `placeFree`; `roomClamp`), o `wallFollow` (aéreo no teto) e o `sanM` (largura mínima do forno) gravavam medida e posição a cada desenho, e só num sentido.
+- **Correção:** guarda de fabricação no fim do `editor.html`.
+  - **Medidas:** largura, altura e profundidade nunca mudam por essas passadas.
+  - **Posição:** x e b só mudam no módulo que a pessoa está mexendo, no eixo mexido, ou no módulo recém-criado, na própria criação.
+  - **Pedra e móveis soltos:** não são cortados pela parede.
+  - **`wallFollow`:** não move o aéreo.
+  - **Forno:** não alarga.
+  - **Conflito:** vira aviso pelo toast existente, com módulo, medida, disponível, diferença e "Nenhuma medida foi alterada". `fgConflitos()` lista os conflitos.
+  - **Fica igual (regra aprovada):** o armário embaixo da pedra acompanha a saia e a espessura (`stAdapta`).
+- **Mudança de comportamento:** alargar um módulo contra o vizinho não empurra mais o vizinho. A regra que já existia ("medida não aplicada, diminua ou mova o vizinho primeiro") passa a aparecer.
+- **Teste:** `testAmbienteNaoModificaOsMoveisSoAvisa`. Falha antes, passa depois.
+- **Não coberto ainda:**
+  - painéis "até o teto" que acompanham o pé-direito (`wallFollow`, parte dos painéis): ver a pergunta no relatório;
+  - `confine` chamado direto no arrasto do módulo (só o módulo arrastado);
+  - `sanBase` (`trav=false`).

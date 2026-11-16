@@ -1,5 +1,9 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Medidas e posições são suas: mudar a parede, o pé-direito ou a espessura não muda mais nenhum móvel. Se algo não couber, o app avisa qual móvel, qual medida, quanto cabe e a diferença, e não altera nada. Antes, diminuir e voltar o pé-direito deixava a torre mais baixa e os aéreos fora do lugar.
+• Backup: restaurar um backup confere o arquivo inteiro antes. Arquivo cortado, danificado ou vazio é recusado e nada muda. O que estava no aparelho fica guardado. Antes, uma falha no meio podia apagar notas e um backup vazio apagava tudo.
+• Projetos: um arquivo de projetos vazio ou danificado não apaga mais a cópia boa guardada no app.
+• Abrir um projeto e não mexer não grava nada nem muda a data. O engrosso das laterais não some mais ao abrir com o engrosso desligado nos Ajustes.
 • Caixa da geladeira: trocar as portas (aba Portas ou 2 toques no vão) mexe só nas portas do aéreo em cima da geladeira. Antes, os botões gerais de porta trocavam a caixa toda e a porta ia do teto ao chão, tampando a geladeira. Caixa que já ficou assim mostra um aviso com ↺ Voltar a caixa da geladeira.
 • Tamponamento no 2D: tocar no tamponamento de um módulo que não está escolhido só escolhe o módulo. Com ele escolhido, arrastar muda só a altura do tamponamento, que no módulo de baixo vai no máximo até o chão. Antes o toque podia mover o módulo inteiro pra cima, pra fora da pedra, e apagar rodapé, travessa e moldura.
 • Módulo de baixo erguido e depois devolvido pro chão: o rodapé, a travessa e a moldura voltam como eram.

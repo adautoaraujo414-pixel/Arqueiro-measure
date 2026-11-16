@@ -28,6 +28,7 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 - O 3D não inventa peça. O plano de corte não calcula peça diferente da cadastrada.
 - Não criar segunda lógica para corrigir a primeira. Achar a causa real.
 - Painéis e módulos são sólidos: nada entra dentro de outra coisa.
+- **Medida e posição são do marceneiro** (Adauto, 16/11/2026): o app avisa a incompatibilidade (módulo, medida, disponível, diferença) e nunca altera sozinho medida ou posição de fabricação. Mudar o ambiente não modifica os móveis. Desenhar não modifica o projeto. Ver `engenharia/DECISOES_TECNICAS.md`.
 
 ## 5. Marcenaria
 - Medida de peça só em cm e mm, sem décimo (o décimo vira folga; a peça nunca fica maior que o desenho).

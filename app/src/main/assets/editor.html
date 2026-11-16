@@ -11423,6 +11423,8 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  var b64=function(t){return btoa(unescape(encodeURIComponent(t)))},unb=function(t){return decodeURIComponent(escape(atob(t)))},arq=function(id){return 'cur_'+id+'.json'};
  var PEND=null,BASE=null,REC={},flT=0,capT=0,pl0=pLoadAll,ps0=pSaveAll,IDLE=4000,CAP=60000;
  function cnt(st){st=st||{};return ((st.mods||[]).length)+((st.rp||[]).length)+((st.stones||[]).length)+((st.fr||[]).length)}
+ /* P0-03 (continuação): projeto aberto sem regravar tem a mesma base que a primeira gravação inteira daria (a próxima mexida já vai pelo arquivo pequeno) */
+ window.svBaseAberto=function(id,st){try{if(id&&!(PEND&&PEND.id!==id))BASE={id:id,n:cnt(st)}}catch(_){}};
  function acha(a,id){if(!Array.isArray(a))return null;for(var i=0;i<a.length;i++)if(a[i]&&a[i].id===id)return a[i];return null}
  function semTimer(){clearTimeout(flT);flT=0;clearTimeout(capT);capT=0}
  /* quem lê a biblioteca já enxerga o que está pendente (e o que foi recuperado na abertura) */
@@ -12262,7 +12264,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   if(TQ_.k===k&&now-TQ_.t<450&&Math.hypot(e.clientX-TQ_.x,e.clientY-TQ_.y)<34){TQ_.k=null;var x=e.clientX,y=e.clientY;setTimeout(function(){/* o vão tocado fica escolhido (rosa) e o menu mostra os botões dele */try{if(typeof rgPick==='function'&&!(window.RG&&RG.sel&&(RG.sel.mi+'|'+RG.sel.path)===k))rgPick(k)}catch(_){}setTimeout(function(){rgQuickOpen(x,y)},40)},120);return}TQ_={k:k,t:now,x:e.clientX,y:e.clientY}},true)})();
 
 /* P0-03 (continuação, auditoria de 16/11): abrir um projeto e não mexer não regrava o arquivo nem muda a data. Quando o que está sendo aberto é exatamente o que está guardado pro projeto atual, a assinatura da gravação (SVSIG) fica sendo a do projeto aberto: a gravação automática só acontece se algo mudar depois. Desfazer/refazer (UNDOING) e qualquer outro loadState continuam gravando como antes. */
-(function(){if(typeof loadState!=='function'||window.__svAbreOk)return;window.__svAbreOk=1;var l0=loadState;window.loadState=loadState=function(o){var abre=false;try{if(!UNDOING&&typeof CUR!=='undefined'&&CUR&&o){var p=pLoadAll().filter(function(q){return q&&q.id===CUR})[0];abre=!!(p&&p.current&&JSON.stringify(p.current)===JSON.stringify(o))}}catch(_){abre=false}var r=l0.apply(this,arguments);if(abre){try{SVSIG=svSig(snapState());window.__svAberto=CUR}catch(_){}}return r}})();
+(function(){if(typeof loadState!=='function'||window.__svAbreOk)return;window.__svAbreOk=1;var l0=loadState;window.loadState=loadState=function(o){var abre=false;try{if(!UNDOING&&typeof CUR!=='undefined'&&CUR&&o){var p=pLoadAll().filter(function(q){return q&&q.id===CUR})[0];abre=!!(p&&p.current&&JSON.stringify(p.current)===JSON.stringify(o))}}catch(_){abre=false}var r=l0.apply(this,arguments);if(abre){try{var st_=snapState();SVSIG=svSig(st_);window.__svAberto=CUR;if(window.svBaseAberto)svBaseAberto(CUR,st_)}catch(_){}}return r}})();
 
 /* ===== GEO-AVISA: guarda de fabricação (regra aprovada pelo Adauto em 16/11/2026) =====
    "O Arquemestre deve avisar quando existir incompatibilidade geométrica, mas nunca alterar automaticamente as medidas ou posições de fabricação definidas pelo usuário."

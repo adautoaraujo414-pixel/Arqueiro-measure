@@ -10673,4 +10673,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabre3D"] as? String, "desenha")
         XCTAssertEqual(o["errs"] as? String, "")
     }
+
+    func testFaixaDaParedeMinimizaEAbreDeNovo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 61: faixa da parede minimiza numa linha só (—) e abre de novo (▸ Paredes); minimizada continua dizendo em qual parede está */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        try{localStorage.removeItem('arque.wvmin')}catch(_){}window.WVMIN=0;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();wvGo('e');draw();newTpl(T('Balcão 2 portas'));draw();wvGo('f');draw();
+        var b=function(){return document.getElementById('wvbar')},h=function(){return Math.round(b().getBoundingClientRect().height)};
+        R.aberta=b().innerText.replace(/\s+/g,' ')+' · altura '+(h()>30?'normal':'baixa');var h0=h();
+        b().querySelector('[data-wvmin]').click();await W(80);R.minimizada=b().innerText.replace(/\s+/g,' ')+' · '+(h()<h0?'menor':'igual');
+        draw();R.continuaMinimizadaDepoisDeDesenhar=b().querySelector('[data-wvmax]')?'sim':'não';
+        wvGo('e');draw();R.naEsquerda=b().innerText.replace(/\s+/g,' ');wvGo('f');draw();
+        b().querySelector('[data-wvmax]').click();await W(80);R.abriuDeNovo=b().querySelector('[data-wvg="e"]')&&b().querySelector('[data-wvmin]')?'Esquerda/Direita de volta':'não';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["aberta"] as? String, "🧱 Parede do fundo · 3200 × 2600 Esquerda Direita — · altura normal")
+        XCTAssertEqual(o["minimizada"] as? String, "🧱 Fundo · 3200 × 2600 ▸ Paredes · menor")
+        XCTAssertEqual(o["continuaMinimizadaDepoisDeDesenhar"] as? String, "sim")
+        XCTAssertEqual(o["naEsquerda"] as? String, "🧱 Esquerda · 2600 × 2600 ▸ Paredes")
+        XCTAssertEqual(o["abriuDeNovo"] as? String, "Esquerda/Direita de volta")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

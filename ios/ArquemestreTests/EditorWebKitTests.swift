@@ -11652,4 +11652,61 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abrirOutro"] as? String, "updated 1001 · gravações 0")
         XCTAssertEqual(o["mexeu"] as? String, "mudou a data true · gravou true")
     }
+
+    /* GEO-AVISA (regra aprovada pelo Adauto em 16/11/2026): o ambiente não modifica os móveis. Quando não cabe, avisa (módulo, medida, disponível, diferença) e não muda nada.
+       Antes (auditoria de 16/11, P1-A): pé-direito −400 e volta deixava a torre com 2300 e os aéreos subidos; parede −300 e volta empurrava a torre da parede do lado 30 mm;
+       espessura +3 e volta deixava o forno com 606; alargar um módulo e voltar deixava o vizinho e a pedra empurrados. */
+    func testAmbienteNaoModificaOsMoveisSoAvisa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        draw();demoScene();await W(500);draw();var base=JSON.stringify(snapState());
+        var dims=function(){return S.mods.map(function(m){return [Math.round(m.x),m.w,m.h,m.d,m.b||0].join('/')}).join(' ')};
+        var pedra=function(){return (S.stones||[]).map(function(q){return q.x+'+'+q.w}).join(' ')};
+        var avisos=function(){return (window.fgConflitos?fgConflitos():[]).map(function(c){return c.texto})};
+        var a0=dims(),p0=pedra();R.torre='h '+S.mods[5].h;
+        /* 1. pé-direito 2700 → 2300: a torre de 2400 continua 2400, os aéreos não andam, e avisa */
+        S.m=S.mods[0];TL=[];setv('H',2300);R.peDireito2300_igual=(dims()===a0);R.peDireito2300_aviso=avisos().filter(function(t){return /2\.400 mm/.test(t)})[0]||'(sem aviso) '+avisos().join(' | ');R.peDireito2300_toast=TL.some(function(t){return /Nenhuma medida foi alterada/.test(t)});
+        setv('H',2700);R.peDireitoVolta_igual=(dims()===a0);R.peDireitoVolta_semAviso=avisos().length;
+        /* 2. parede do fundo 3600 → 3300 e volta: nada anda (inclusive a torre da parede do lado) */
+        setv('W',3300);R.parede3300_igual=(dims()===a0)+' · pedra '+(pedra()===p0);setv('W',3600);R.paredeVolta_igual=(dims()===a0)+' · pedra '+(pedra()===p0);
+        /* 3. parede muito curta: o módulo do fim passa da parede → avisa, não empurra nem corta */
+        setv('W',2500);R.paredeCurta_igual=(dims()===a0);R.paredeCurta_aviso=avisos().length>0;setv('W',3600);
+        /* 4. espessura do forno 15 → 18 e volta: o módulo do forno não muda de largura */
+        loadState(JSON.parse(base));draw();var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        newTpl(T('Balcão forno embutido'));var fo=S.mods[S.mods.length-1];S.m=fo;draw();var fw=fo.w;snap();fo.esp=18;draw();R.forno18='w '+fo.w+' (era '+fw+') · aviso '+(avisos().filter(function(t){return /forno/.test(t)})[0]||'nenhum');fo.esp=15;draw();R.forno15='w '+fo.w+' · avisos '+avisos().length;
+        /* 5. alargar um módulo +300 e voltar: o vizinho e a pedra não ficam empurrados */
+        loadState(JSON.parse(base));draw();a0=dims();p0=pedra();S.m=S.mods[1];var w1=S.mods[1].w;TL=[];setv('w',w1+300);R.alargouContraOVizinho='w '+S.mods[1].w+' · vizinho x '+S.mods[2].x+' · '+(TL.filter(function(t){return /medida não aplicada/.test(t)}).length?'avisou: medida não aplicada':'sem aviso');setv('w',w1);R.alargouEVoltou=(dims()===a0)+' · pedra '+(pedra()===p0);
+        /* 5b. alargar onde tem espaço (módulo do fim, pra direita): aplica e não empurra ninguém */
+        S.m=S.mods[2];var w2=S.mods[2].w;setv('w',w2+200);R.alargouComEspaco='w '+S.mods[2].w+' · outros iguais '+(dims().split(' ').filter(function(x,i){return i!==2}).join(' ')===a0.split(' ').filter(function(x,i){return i!==2}).join(' '));setv('w',w2);
+        /* 6. salvar e reabrir com o pé-direito baixo: tudo igual, o aviso continua */
+        loadState(JSON.parse(base));draw();setv('H',2300);var t=JSON.stringify(snapState());loadState(JSON.parse(t));draw();R.reabriu=(dims()===a0)+' · avisos '+avisos().length;
+        /* 7. desfazer e refazer a mudança do pé-direito */
+        loadState(JSON.parse(base));draw();histTick();LASTT=0;setv('H',2300);LASTT=0;histTick();document.getElementById('und').onclick();R.desfez='pé-direito '+S.H+' · '+(dims()===a0);document.getElementById('red').onclick();R.refez='pé-direito '+S.H+' · '+(dims()===a0);
+        /* 8. o que a pessoa mexe continua funcionando: digitar a posição encaixa o módulo (posição), digitar a altura não é cortado */
+        loadState(JSON.parse(base));draw();S.m=S.mods[0];setv('x',3000);R.digitouX='x '+S.mods[0].x;S.m=S.mods[5];setv('h',2900);R.digitouAltura='h '+S.mods[5].h+' · aviso '+(avisos().length>0);
+        R.semAvisoNaCozinhaDemo=(function(){loadState(JSON.parse(base));draw();return avisos().length})();
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["torre"] as? String, "h 2400")
+        XCTAssertEqual(o["peDireito2300_igual"] as? Bool, true)
+        XCTAssertEqual(o["peDireito2300_aviso"] as? String, "Atenção: Base 800 × 2400: a altura é 2.400 mm, mas o ambiente permite apenas 2.300 mm. Diferença: 100 mm. Nenhuma medida foi alterada.")
+        XCTAssertEqual(o["peDireito2300_toast"] as? Bool, true)
+        XCTAssertEqual(o["peDireitoVolta_igual"] as? Bool, true)
+        XCTAssertEqual(o["peDireitoVolta_semAviso"] as? Int, 0)
+        XCTAssertEqual(o["parede3300_igual"] as? String, "true · pedra true")
+        XCTAssertEqual(o["paredeVolta_igual"] as? String, "true · pedra true")
+        XCTAssertEqual(o["paredeCurta_igual"] as? Bool, true)
+        XCTAssertEqual(o["paredeCurta_aviso"] as? Bool, true)
+        XCTAssertEqual(o["forno18"] as? String, "w 600 (era 600) · aviso Atenção: Base 600 × 820: o forno de 560 mm mais as laterais precisa de 606 mm de largura, e o módulo tem 600 mm. Diferença: 6 mm. Nenhuma medida foi alterada.")
+        XCTAssertEqual(o["alargouContraOVizinho"] as? String, "w 1200 · vizinho x 2105 · avisou: medida não aplicada")
+        XCTAssertEqual(o["alargouEVoltou"] as? String, "true · pedra true")
+        XCTAssertEqual(o["alargouComEspaco"] as? String, "w 800 · outros iguais true")
+        XCTAssertEqual(o["reabriu"] as? String, "true · avisos 4")
+        XCTAssertEqual(o["desfez"] as? String, "pé-direito 2700 · true")
+        XCTAssertEqual(o["refez"] as? String, "pé-direito 2300 · true")
+        XCTAssertEqual(o["digitouAltura"] as? String, "h 2900 · aviso true")
+        XCTAssertEqual(o["semAvisoNaCozinhaDemo"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

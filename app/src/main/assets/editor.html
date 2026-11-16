@@ -505,7 +505,7 @@ function capot(m){return !!(m.tl||m.tr||m.tb||m.tt)}
 var CURM=null;
 function lockAx(pk){var n=String(pk||'').replace(/#\d+$/,''),r=[],t=tampLock(n);if(t>=0)r.push(t);if(/^Cabideiro/.test(n))r.push(1,2);if(/^Sapateira · prateleira inclinada/.test(n))r.push(1);return r}
 function tampLock(n){return /^Tamponamento (de cima|de baixo)/.test(n)?1:/^Tamponamento do lado do canto/.test(n)?2:/^Tamponamento/.test(n)?0:-1}
-function sanM(m){var sn_=function(v){v=+v;return [15,25,30].indexOf(v)>=0?v:30};try{var ovn_=(m.v||[]).filter(function(v){return v&&v.k==='oven'})[0];if(ovn_){var wmin_=(+ovn_.ow||560)+2*(+m.esp||15)+10;if(+m.w<wmin_){m.w=wmin_;try{toast('Módulo do forno: largura mínima '+wmin_+' mm (forno de '+(+ovn_.ow||560)+' + laterais).')}catch(_){}}}}catch(_){}m.tlW=sn_(m.tlW);m.trW=sn_(m.trW);m.tbW=sn_(m.tbW===undefined?30:m.tbW);if(!(+m.fundoMm>=2&&+m.fundoMm<=30))m.fundoMm=6;if(!(+m.rasgoP>=2&&+m.rasgoP<=20))m.rasgoP=8;if(!(+m.rasgoR>=0&&+m.rasgoR<=200))m.rasgoR=10;if(!m.sup&&+m.b>0&&!m.corner&&!m.wing){/* TAMP-2D-ALVO (16/11): erguer o módulo guarda o que ele tinha no chão; voltar pro chão devolve (antes um arrasto pra cima apagava rodapé, travessa e moldura de vez) */if(!m._noChao&&(m.rod||(!m.rack&&(m.trav||m.mold))))m._noChao={rod:!!m.rod,trav:!!m.trav,mold:!!m.mold};m.rod=false;/* rack suspenso: moldura e régua continuam de escolha (liga e desliga) */if(!m.rack){m.trav=false;m.mold=false}}else if(!m.sup&&!(+m.b>0)&&m._noChao){var nc_=m._noChao;delete m._noChao;m.rod=!!nc_.rod;if(!m.rack){m.trav=!!nc_.trav;m.mold=!!nc_.mold}}if(m.rack&&!m.sup&&m.trav&&!m.corner&&(+m.folga||0)<(+m.esp||15))m.folga=+m.esp||15;if(!m.trav&&noTop(m))m.trav=true;/* regra: sem régua de 70 e sem moldura, fecha em cima com a base igual à de baixo (sem folga) */if(!m.sup&&!m.trav&&!m.mold){if(+m.folga){m._fg=+m.folga;m.folga=0}}else if(!m.sup&&m._fg!==undefined&&!+m.folga){m.folga=m._fg;delete m._fg}function c(k,lo,hi,df){var v=+m[k];if(!isFinite(v))v=df;m[k]=Math.max(lo,Math.min(hi,v))}c('w',100,6000,600);c('h',100,3000,700);c('d',100,1200,550);c('esp',3,50,15);c('x',-6000,20000,0);c('b',0,3000,0);m.h=Math.max(m.h,(m.rod?(+m.rodMm||0):0)+(+m.folga||0)+3*m.esp+(m.trav?(+m.travMm||0):0)+((m.regua&&m.sup)?4*m.esp:0)+60);if(m.corner){if(m.d2!==undefined&&m.d2!==null&&m.d2!==''){var d2_=+m.d2;if(!isFinite(d2_))delete m.d2;else m.d2=Math.round(Math.max(150,Math.min(1200,d2_)))}m.w=Math.max(m.w,cD2(m)+200);m.cw2=Math.max(isFinite(+m.cw2)?+m.cw2:900,m.d+200)}}
+function sanM(m){var sn_=function(v){v=+v;return [15,25,30].indexOf(v)>=0?v:30};try{var ovn_=(m.v||[]).filter(function(v){return v&&v.k==='oven'})[0];if(ovn_){var wmin_=(+ovn_.ow||560)+2*(+m.esp||15)+10;if(+m.w<wmin_){/* GEO-AVISA (regra de 16/11): a largura do módulo não muda sozinha; a guarda avisa a falta */try{if(window.fgFalta)fgFalta(m,'forno',+m.w,wmin_,'o forno de '+(+ovn_.ow||560)+' mm mais as laterais precisa de '+wmin_+' mm de largura')}catch(_){}}}}catch(_){}m.tlW=sn_(m.tlW);m.trW=sn_(m.trW);m.tbW=sn_(m.tbW===undefined?30:m.tbW);if(!(+m.fundoMm>=2&&+m.fundoMm<=30))m.fundoMm=6;if(!(+m.rasgoP>=2&&+m.rasgoP<=20))m.rasgoP=8;if(!(+m.rasgoR>=0&&+m.rasgoR<=200))m.rasgoR=10;if(!m.sup&&+m.b>0&&!m.corner&&!m.wing){/* TAMP-2D-ALVO (16/11): erguer o módulo guarda o que ele tinha no chão; voltar pro chão devolve (antes um arrasto pra cima apagava rodapé, travessa e moldura de vez) */if(!m._noChao&&(m.rod||(!m.rack&&(m.trav||m.mold))))m._noChao={rod:!!m.rod,trav:!!m.trav,mold:!!m.mold};m.rod=false;/* rack suspenso: moldura e régua continuam de escolha (liga e desliga) */if(!m.rack){m.trav=false;m.mold=false}}else if(!m.sup&&!(+m.b>0)&&m._noChao){var nc_=m._noChao;delete m._noChao;m.rod=!!nc_.rod;if(!m.rack){m.trav=!!nc_.trav;m.mold=!!nc_.mold}}if(m.rack&&!m.sup&&m.trav&&!m.corner&&(+m.folga||0)<(+m.esp||15))m.folga=+m.esp||15;if(!m.trav&&noTop(m))m.trav=true;/* regra: sem régua de 70 e sem moldura, fecha em cima com a base igual à de baixo (sem folga) */if(!m.sup&&!m.trav&&!m.mold){if(+m.folga){m._fg=+m.folga;m.folga=0}}else if(!m.sup&&m._fg!==undefined&&!+m.folga){m.folga=m._fg;delete m._fg}function c(k,lo,hi,df){var v=+m[k];if(!isFinite(v))v=df;m[k]=Math.max(lo,Math.min(hi,v))}c('w',100,6000,600);c('h',100,3000,700);c('d',100,1200,550);c('esp',3,50,15);c('x',-6000,20000,0);c('b',0,3000,0);m.h=Math.max(m.h,(m.rod?(+m.rodMm||0):0)+(+m.folga||0)+3*m.esp+(m.trav?(+m.travMm||0):0)+((m.regua&&m.sup)?4*m.esp:0)+60);if(m.corner){if(m.d2!==undefined&&m.d2!==null&&m.d2!==''){var d2_=+m.d2;if(!isFinite(d2_))delete m.d2;else m.d2=Math.round(Math.max(150,Math.min(1200,d2_)))}m.w=Math.max(m.w,cD2(m)+200);m.cw2=Math.max(isFinite(+m.cw2)?+m.cw2:900,m.d+200)}}
 function partsOf(m){sanM(m);if(m&&+m.tpMm===2&&!m.tpMm20){m.tpMm=20;m.tpMm20=1}var pm0=CURM;CURM=m;try{pxSync(m);return montMerge(m,pxPost(m,partsOf0(m)))}finally{CURM=pm0}}
 /* ajuste livre de peça no 3D: deslocamento de cada face (mm). x esq/dir, y baixo/cima, z trás/frente */
 function fE(m){return poEdges((m.po&&m.po['Fundo#1'])||{v2:1})}
@@ -2800,7 +2800,7 @@ function salaHtml(){var o=salaDoor(),g=function(k,l,v){return '<div class="g"><l
 function wallFollow(oW,oH,oCeil){var nW=S.W,nH=S.H,r={teto:0,parede:0,mod:0,falta:0};try{var fg=fgh(),fv=fgv(),lim=plLim(),oC=(oCeil!==undefined&&oCeil!==null)?oCeil:oH-fg,nC=nH-fg;(S.rp||[]).forEach(function(a){if(!a||a.prat)return;var wl=String(a.wall||'f').toLowerCase();if(wl!=='f'&&wl!=='')return;
   if(oC!==nC&&Math.abs((+a.b)+(+a.h)-oC)<1){var nh=Math.round((nC-a.b)*10)/10;if(nh>=50&&nh<=lim.h+0.01){a.h=nh;r.teto++}else if(nh>lim.h){a.h=lim.h;r.teto++;r.falta+=nh-lim.h}}
   if(oW!==nW&&Math.abs((+a.x)+(+a.w)-(oW-fv))<1){var nw=Math.round(((nW-fv)-a.x)*10)/10;if(nw>=50&&nw<=lim.w+0.01){a.w=nw;r.parede++}else if(nw>lim.w){a.w=lim.w;r.parede++;r.falta+=nw-lim.w}}});
-  if(oC!==nC)S.mods.forEach(function(m){if(m.sup&&!m.corner&&Math.abs(m.b+m.h-oC)<1){m.b=Math.max(0,Math.round(nC-m.h));r.mod++}});
+  /* GEO-AVISA (regra de 16/11): mudar o pé-direito não move o aéreo; se ele passar do teto, a guarda de fabricação avisa */
   var msg=[];if(r.teto)msg.push(r.teto+' painel'+(r.teto>1?'is':'')+' até o teto');if(r.parede)msg.push(r.parede+' até a parede');if(r.mod)msg.push(r.mod+' aéreo'+(r.mod>1?'s':'')+' no teto');if(msg.length)toast('Parede mudou: '+msg.join(' · ')+' acompanh'+(r.teto+r.parede+r.mod>1?'aram':'ou')+(r.falta>0?' · ⚠ falta '+Math.round(r.falta)+' mm (placa no máximo) — use "Trena no que falta"':''))}catch(_){}return r}
 function rodSet(v){var r0=+S.rodape||0,r1=Math.max(0,Math.round(+v||0)),d=r1-r0;if(!d)return 0;var n=0,lim=plLim(),ceil=S.H-fgh(),wallOf=function(a){return String(a.wall||'f').toLowerCase()},P=(S.rp||[]).filter(function(a){return a&&!a.prat&&(wallOf(a)==='f'||wallOf(a)==='')});
  /* cada coluna de placas (mesma posição e largura) que começa no rodapé: a placa de baixo mantém a altura (ex.: 2700 da chapa) e sobe junto; a placa de cima, que vai até o teto, é que diminui/aumenta */
@@ -12263,5 +12263,53 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 
 /* P0-03 (continuação, auditoria de 16/11): abrir um projeto e não mexer não regrava o arquivo nem muda a data. Quando o que está sendo aberto é exatamente o que está guardado pro projeto atual, a assinatura da gravação (SVSIG) fica sendo a do projeto aberto: a gravação automática só acontece se algo mudar depois. Desfazer/refazer (UNDOING) e qualquer outro loadState continuam gravando como antes. */
 (function(){if(typeof loadState!=='function'||window.__svAbreOk)return;window.__svAbreOk=1;var l0=loadState;window.loadState=loadState=function(o){var abre=false;try{if(!UNDOING&&typeof CUR!=='undefined'&&CUR&&o){var p=pLoadAll().filter(function(q){return q&&q.id===CUR})[0];abre=!!(p&&p.current&&JSON.stringify(p.current)===JSON.stringify(o))}}catch(_){abre=false}var r=l0.apply(this,arguments);if(abre){try{SVSIG=svSig(snapState());window.__svAberto=CUR}catch(_){}}return r}})();
+
+/* ===== GEO-AVISA: guarda de fabricação (regra aprovada pelo Adauto em 16/11/2026) =====
+   "O Arquemestre deve avisar quando existir incompatibilidade geométrica, mas nunca alterar automaticamente as medidas ou posições de fabricação definidas pelo usuário."
+   As passadas que rodam no desenho e no 3D (confineAll: confine, stPush, placeFree; roomClamp) continuam calculando onde cada módulo caberia,
+   mas não gravam mais: largura, altura e profundidade nunca mudam por elas; posição (x, altura do chão b) só muda no módulo que a pessoa está
+   mexendo naquele instante e só no eixo que ela mexeu (arrasto, campo "Da esquerda"/"Do chão", criação pelo catálogo).
+   O que não cabe vira aviso: módulo, medida, disponível, necessário e diferença. Mudar parede, pé-direito ou outra coisa do ambiente não autoriza nada.
+   Fica de fora (regra aprovada antes): o armário embaixo da pedra acompanha a saia e a espessura da pedra (stAdapta). */
+(function(){if(window.__fgOk)return;window.__fgOk=1;
+ var F=['x','b','w','h','d'],DIM={w:1,h:1,d:1},prof=0,CF={},SIG='';window.__fgAut=null;
+ var nome=function(m){return (m.n||(m.sup?'Superior':'Base'))+' '+Math.round(m.w)+' × '+Math.round(m.h)};
+ var mm=function(v){return String(Math.round(+v||0)).replace(/\B(?=(\d{3})+(?!\d))/g,'.')};
+ /* o que a pessoa está mexendo agora: só esses campos podem ser encaixados */
+ var KN=new WeakSet(),CARR=0,PEND=0;
+ /* móvel que acabou de ser criado (catálogo, demonstração, canto, colar, duplicar…) ainda não tem lugar escolhido: o lugar dele (x e altura) é encaixado na criação. Móvel que veio do arquivo, do desfazer ou que já foi desenhado é "conhecido" */
+ var novo=function(q){return !CARR&&!KN.has(q)};
+ var aut=function(q){if(novo(q))return {x:true,b:true};var a=window.__fgAut;if(a&&(a.m===q||(a.novos&&a.novos.indexOf(q)>=0)))return a.f||{};try{if(typeof drag!=='undefined'&&drag&&drag.t==='m'&&S.m===q)return {x:!!drag.ux,b:!!drag.uy}}catch(_){}return {}};
+ var guarda=function(fn,th,args){if(prof++>0){try{return fn.apply(th,args)}finally{prof--}}
+  var mods=(S.mods||[]).slice(),k=mods.map(function(q){var o={};F.forEach(function(f){o[f]=q[f]});return o}),r;
+  try{r=fn.apply(th,args)}finally{prof--;
+   mods.forEach(function(q,i){if(S.mods.indexOf(q)<0)return;var A=aut(q);F.forEach(function(f){var a=k[i][f],b=q[f];if(a===b||(+a===+b))return;if(!DIM[f]&&A[f])return;
+    var c=CF[q.uid||('i'+i)]=CF[q.uid||('i'+i)]||{m:q,f:{}};c.f[f]={tem:+a,cabe:+b};q[f]=a})});/* fica "novo" até o fim da ação em que foi criado (criar, pôr no lugar e desenhar é uma ação só) */if(!PEND){PEND=1;setTimeout(function(){PEND=0;(S.mods||[]).forEach(function(q){KN.add(q)})},0)}}
+  return r};
+ /* abrir projeto, desfazer, refazer: tudo que entra é conhecido (nada é encaixado sozinho) */
+ if(typeof loadState==='function'){var ls0=loadState;window.loadState=loadState=function(){CARR++;try{return ls0.apply(this,arguments)}finally{CARR--;(S.mods||[]).forEach(function(q){KN.add(q)})}}}
+ /* falta de medida avisada por outra regra (ex.: forno) */
+ window.fgFalta=function(q,f,tem,precisa,txt){var c=CF[q.uid||('f'+S.mods.indexOf(q))]=CF[q.uid||('f'+S.mods.indexOf(q))]||{m:q,f:{}};c.f[f]={tem:+tem,precisa:+precisa,txt:txt}};
+ var frase=function(c){var m=c.m,o=[];Object.keys(c.f).forEach(function(f){var v=c.f[f],d=Math.abs(Math.round((v.precisa!==undefined?v.precisa:v.tem)-(v.precisa!==undefined?v.tem:v.cabe)));
+   if(f==='h')o.push('a altura é '+mm(v.tem)+' mm, mas o ambiente permite apenas '+mm(v.cabe)+' mm. Diferença: '+mm(d)+' mm');
+   else if(f==='w')o.push('a largura é '+mm(v.tem)+' mm, mas cabem apenas '+mm(v.cabe)+' mm. Diferença: '+mm(d)+' mm');
+   else if(f==='d')o.push('a profundidade é '+mm(v.tem)+' mm, mas cabem apenas '+mm(v.cabe)+' mm. Diferença: '+mm(d)+' mm');
+   else if(f==='b')o.push('está a '+mm(v.tem)+' mm do chão e passa do teto (o máximo é '+mm(v.cabe)+' mm). Diferença: '+mm(d)+' mm');
+   else if(f==='x')o.push('não cabe onde está (parede, pedra ou outro móvel): precisaria andar '+mm(d)+' mm');
+   else if(v.txt)o.push(v.txt+', e o módulo tem '+mm(v.tem)+' mm. Diferença: '+mm(d)+' mm')});
+  return 'Atenção: '+nome(m)+': '+o.join(' · ')+'. Nenhuma medida foi alterada.'};
+ window.fgConflitos=function(){return Object.keys(CF).map(function(k){return {modulo:nome(CF[k].m),mi:S.mods.indexOf(CF[k].m),campos:JSON.parse(JSON.stringify(CF[k].f)),texto:frase(CF[k])}}).filter(function(c){return c.mi>=0})};
+ if(typeof confineAll==='function'){var ca0=confineAll;window.confineAll=confineAll=function(){try{if(typeof stAdapta==='function')stAdapta()}catch(_){}return guarda(ca0,this,arguments)}}
+ if(typeof roomClamp==='function'){var rc0=roomClamp;window.roomClamp=roomClamp=function(){
+   /* pedra e móveis soltos também não são cortados nem empurrados pela parede */var st=(S.stones||[]).map(function(q){return [q,q.w,q.x]}),fr=(S.fr||[]).map(function(q){return [q,q.x]});
+   var r=guarda(rc0,this,arguments);st.forEach(function(a){a[0].w=a[1];a[0].x=a[2]});fr.forEach(function(a){a[0].x=a[1]});return r}}
+ /* campo do módulo: só o campo digitado pode ser encaixado (posição). Medida digitada nunca é cortada. Ambiente: nada. */
+ if(typeof setv==='function'){var sv0=setv;window.setv=setv=function(k,v){var pos={x:{x:true},r:{x:true},b:{b:true},t:{b:true}}[k],ant=window.__fgAut;window.__fgAut=pos&&S.m?{m:S.m,f:pos}:{m:null,f:{}};try{return sv0.apply(this,arguments)}finally{window.__fgAut=ant}}}
+ /* módulo novo pelo catálogo: o lugar dele é escolhido na criação (x e altura), as medidas não */
+ if(typeof newTpl==='function'){var nt0=newTpl;window.newTpl=newTpl=function(){var antes=(S.mods||[]).slice(),ant=window.__fgAut;window.__fgAut={m:null,novos:[],f:{x:true,b:true}};var pega=function(){(S.mods||[]).forEach(function(q){if(antes.indexOf(q)<0&&window.__fgAut.novos.indexOf(q)<0)window.__fgAut.novos.push(q)})};
+   try{var r=nt0.apply(this,arguments);pega();try{confineAll()}catch(_){}return r}finally{window.__fgAut=ant}}}
+ /* aviso: só quando o conjunto de conflitos muda (o desenho roda muitas vezes) */
+ if(typeof draw==='function'){var dr0=draw;window.draw=draw=function(){CF={};var r=dr0.apply(this,arguments);try{var L=fgConflitos(),sg=L.map(function(c){return c.texto}).join('|');if(sg!==SIG){SIG=sg;if(L.length)toast(L[0].texto+(L.length>1?' (+'+(L.length-1)+' outro'+(L.length>2?'s':'')+')':''))}}catch(_){}return r}}
+})();
 </script>
 </body></html>

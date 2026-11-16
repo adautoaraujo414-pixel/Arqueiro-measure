@@ -20,7 +20,7 @@ try{ambSet(1);feito.push('editor de ambiente')}catch(e){feito.push('amb: '+e)}
 try{window.PSEL={mi:2,pk:'Porta#1'};window.DIVI=0;window.LAST='div';feito.push('peça e divisória escolhidas')}catch(e){}
 S.tab=3;S.sv=1;draw();await W(200);
 /* abre B como o app faz (mesma página) */
-var a=JSON.parse(JSON.stringify(B));loadState(a);draw();await W(300);var x2=document.getElementById('v3x');var g1=glob(),v1=vis();
+/* abre B como o app abre (lista do editor: CUR=p.id; loadState) */var a_=pLoadAll().filter(function(q){return q.id!=='pS21'});a_.push({id:'pS21',client:{nome:'B'},created:1,updated:1,current:B});pSaveAll(a_);var pb_=pLoadAll().filter(function(q){return q.id==='pS21'})[0];CUR=pb_.id;loadState(pb_.current);draw();await W(300);var x2=document.getElementById('v3x');var g1=glob(),v1=vis();
 var dif={};Object.keys(v0).forEach(function(k){if(String(v0[k])!==String(v1[k]))dif[k]=v0[k]+' → '+v1[k]});
 var gd=[];Object.keys(g1).forEach(function(k){if(!(k in g0)||g0[k]!==g1[k])gd.push(k+'='+JSON.stringify(g1[k]).slice(0,40)+(k in g0?' (limpo: '+JSON.stringify(g0[k]).slice(0,30)+')':' (não existia)'))});
-return JSON.stringify({feitoEmA:feito,B_limpo:v0,B_depoisDeA:v1,diferencas:dif,globaisQueFicaramDeA:gd.slice(0,60),totalGlobaisDiferentes:gd.length});
+pSaveAll(pLoadAll().filter(function(q){return q.id!=='pS21'}));return JSON.stringify({feitoEmA:feito,B_limpo:v0,B_depoisDeA:v1,diferencas:dif,globaisQueFicaramDeA:gd.slice(0,60),totalGlobaisDiferentes:gd.length});

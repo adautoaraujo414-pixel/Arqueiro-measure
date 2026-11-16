@@ -10,7 +10,7 @@ var B=mk();var A=mk();
 var c=sv.querySelector('[data-d="0"]'),b=c.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;ev('pointerdown',x,y);ev('pointerup',x,y,sv);ev('pointerup',x,y,window);await W(500);
 var R={A_LAST:window.LAST,A_DIVI:window.DIVI};
 /* abre B como na lista do editor e toca no 🗑 */
-loadState(JSON.parse(JSON.stringify(B)));draw();S.m=S.mods[0];draw();await W(300);R.B_LAST=window.LAST;R.B_DIVI=window.DIVI;var d0=JSON.stringify(S.mods[0].div);
+/* abre B como o app abre (lista do editor: CUR=p.id; loadState) */var a_=pLoadAll().filter(function(q){return q.id!=='pS22'});a_.push({id:'pS22',client:{nome:'B'},created:1,updated:1,current:B});pSaveAll(a_);var pb_=pLoadAll().filter(function(q){return q.id==='pS22'})[0];CUR=pb_.id;loadState(pb_.current);draw();S.m=S.mods[0];draw();await W(300);R.B_LAST=window.LAST;R.B_DIVI=window.DIVI;var d0=JSON.stringify(S.mods[0].div);
 window.__delConfirma=1;var del=document.getElementById('delMod');if(del){del.click();await W(150);del.click();await W(300)}window.__delConfirma=0;
 R.B_div_antes=d0;R.B_div_depois=S.mods[0]?JSON.stringify(S.mods[0].div):'(módulo apagado)';R.B_modulos=S.mods.length;R.avisos=TL.slice(-3);
-return JSON.stringify(R);
+pSaveAll(pLoadAll().filter(function(q){return q.id!=='pS22'}));return JSON.stringify(R);

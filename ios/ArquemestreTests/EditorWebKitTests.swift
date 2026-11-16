@@ -11674,7 +11674,7 @@ final class EditorWebKitTests: XCTestCase {
         setv('W',2500);R.paredeCurta_igual=(dims()===a0);R.paredeCurta_aviso=avisos().length>0;setv('W',3600);
         /* 4. espessura do forno 15 → 18 e volta: o módulo do forno não muda de largura */
         loadState(JSON.parse(base));draw();var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
-        newTpl(T('Balcão forno embutido'));var fo=S.mods[S.mods.length-1];S.m=fo;draw();var fw=fo.w;snap();fo.esp=18;draw();R.forno18='w '+fo.w+' (era '+fw+') · aviso '+(avisos().filter(function(t){return /forno/.test(t)})[0]||'nenhum');fo.esp=15;draw();R.forno15='w '+fo.w+' · avisos '+avisos().length;
+        newTpl(T('Balcão forno embutido'));var fo=S.mods[S.mods.length-1];S.m=fo;draw();await W(30);var fw=fo.w;snap();fo.esp=18;draw();R.forno18='w '+fo.w+' (era '+fw+') · aviso '+(avisos().filter(function(t){return /forno/.test(t)})[0]||'nenhum');fo.esp=15;draw();R.forno15='w '+fo.w+' · avisos '+avisos().length;
         /* 5. alargar um módulo +300 e voltar: o vizinho e a pedra não ficam empurrados */
         loadState(JSON.parse(base));draw();a0=dims();p0=pedra();S.m=S.mods[1];var w1=S.mods[1].w;TL=[];setv('w',w1+300);R.alargouContraOVizinho='w '+S.mods[1].w+' · vizinho x '+S.mods[2].x+' · '+(TL.filter(function(t){return /medida não aplicada/.test(t)}).length?'avisou: medida não aplicada':'sem aviso');setv('w',w1);R.alargouEVoltou=(dims()===a0)+' · pedra '+(pedra()===p0);
         /* 5b. alargar onde tem espaço (módulo do fim, pra direita): aplica e não empurra ninguém */

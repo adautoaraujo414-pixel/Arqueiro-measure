@@ -4193,7 +4193,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tipos"] as? String, "externo", "vale pra todas as portas e gavetas")
         XCTAssertEqual(o["sizes"] as? String, "luce192,luce288,luce384")
         XCTAssertEqual(o["pxm2"] as? String, "luce192")
-        XCTAssertEqual(o["note"] as? String, "Luce | furos a 192 mm um do outro | 2 furos Ø35 a 100 mm das pontas")
+        /* PEDIDO de 16/11 08:07 (aprovado): furação da dobradiça passou de 100 para 120 mm do topo e do pé da porta; antes esperava "a 100 mm das pontas" */
+        XCTAssertEqual(o["note"] as? String, "Luce | furos a 192 mm um do outro | 2 furos Ø35 a 120 mm das pontas")
         XCTAssertEqual(o["pxa"] as? String, "{\"du\":60,\"dt\":150}")
         XCTAssertEqual(o["base"] as? [String], ["l:380/60 cima150 baixo555 L214", "r:60/380 cima150 baixo555 L214"], "porta par: espelhado, mesma altura")
         XCTAssertEqual(o["aereo"] as? [String], ["l:430/60 cima596 baixo150 L214", "r:60/430 cima596 baixo150 L214"], "aéreo: de baixo pra cima")
@@ -5677,7 +5678,8 @@ final class EditorWebKitTests: XCTestCase {
           open3D();await W(700);var bx=dbg3all().filter(function(q){return /^0:Porta/.test(String(q.nm||''))});var md=m.x,pf=bx.filter(function(q){return q.x1-q.x0<=7.01||(q.x1-q.x0>300&&q.z1-q.z0<30&&q.y1-q.y0<20)}).filter(function(q){return q.x0>=md+8-1&&q.x1<=md+8+490+1}).map(function(q){return [Math.round((q.x0-md-8)*10)/10,Math.round((q.x1-md-8)*10)/10,Math.round((q.z1-q.z0)*10)/10]}).sort(function(a,b){return a[0]-b[0]});var big=pf.filter(function(q){return q[2]>10});R.meio=big.filter(function(q){return q[1]-q[0]>300}).map(function(q){return q[0]+'-'+q[1]+':'+q[2]}).join();var pe=big.filter(function(q){return q[1]<=72}).map(function(q){return q[2]}),pd=big.filter(function(q){return q[0]>=420}).map(function(q){return q[2]});R.ponteira=pe.join(' ')+' · sobe em curva='+pe.every(function(v,i){return !i||v>=pe[i-1]})+' · espelhada='+(pe.join()===pd.slice().reverse().join());R.errs=window.__errs||[];return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["porta"] as? String, "490×689.5 cw=689 pxD=15.5")
-        XCTAssertEqual(o["nota"] as? String, "Perfil facetado · dourado · encaixado no topo da peça · ponteira de 70 × 15 mm com a curva em cada ponta · MDF 689 + perfil 15,5 = 704,5 (desconto do perfil na altura · altura inteira 705) · perfil de 350 mm entre as 2 ponteiras de 70 mm (perfil + ponteiras = 490) · FURO DE DOBRADIÇA: lado ESQUERDO (porta vista de frente) · 2 furos Ø35 a 100 mm das pontas · centro a 22 mm da borda")
+        /* PEDIDO de 16/11 08:07 (aprovado): furação da dobradiça passou de 100 para 120 mm do topo e do pé da porta; antes esperava "a 100 mm das pontas" */
+        XCTAssertEqual(o["nota"] as? String, "Perfil facetado · dourado · encaixado no topo da peça · ponteira de 70 × 15 mm com a curva em cada ponta · MDF 689 + perfil 15,5 = 704,5 (desconto do perfil na altura · altura inteira 705) · perfil de 350 mm entre as 2 ponteiras de 70 mm (perfil + ponteiras = 490) · FURO DE DOBRADIÇA: lado ESQUERDO (porta vista de frente) · 2 furos Ø35 a 120 mm das pontas · centro a 22 mm da borda")
         XCTAssertEqual(o["orc"] as? String, "700 mm de perfil · 4 ponteiras")
         XCTAssertEqual(o["meio"] as? String, "71-421:25.6")
         XCTAssertEqual(o["ponteira"] as? String, "15.6 15.6 17.1 18.3 19.8 21.4 22.9 24.1 25.1 25.5 · sobe em curva=true · espelhada=true")
@@ -10877,6 +10879,105 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["campoAjustes"] as? String, "tem · 120")
         XCTAssertEqual(o["com110"] as? String, "110 · corte 110, 595 · 3D 110, 595")
         XCTAssertEqual(o["basculante"] as? String, "Aéreo basculante · porta 882 · furo a 120, 762 · 3D a 120, 762 da ponta")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testTamponamentoDoAereoEsticaPelaSetaDo3DMesmoTocandoNaReguaListaCorteE3DReabre() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* VÍDEO 16/11 08:30: no aéreo, 2 toques no tamponamento (régua de 80) mostravam as setas, o rótulo subia (95, 310, 675 "tampou até o fundo") e a peça não mudava.
+           Causa: o toque escolhe só a régua (PEDIDO 37, pra apagar só ela) e a seta gravava o ajuste na régua, que não é peça da lista. Agora a seta estica o tamponamento de verdade */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=800;m.tl=true;m.tlW=30;draw();
+        var pk='Tamponamento esquerdo#1',pc=function(mm){var p=partsOf(mm||m).filter(function(q){return q.pk===pk})[0];return p?p.cl+'×'+p.cw:'sem peça'};
+        var prof3=function(){var bb=__boxes().filter(function(q){return (q.pk===pk||q.ppk===pk)&&String(q.nm).indexOf('0:')===0});return Math.round(Math.max.apply(null,bb.map(function(q){return q.z1}))-Math.min.apply(null,bb.map(function(q){return q.z0})))};
+        var corte=function(){return cutLines(m).filter(function(l){return /Tamponamento esquerdo/.test(String(l.names||l.name))}).map(function(l){return l.L+'×'+l.W+' ×'+l.qty}).join(' | ')};
+        R.antes='lista '+pc()+' · corte '+corte();
+        open3D();await W(300);__cam(.75,.12,1.3);await W(200);__build();R.prof3DAntes=prof3();
+        /* 2 toques no meio do tamponamento, como o dedo */var bs=__boxes().filter(function(b){return (b.pk===pk||b.ppk===pk)&&String(b.nm).indexOf('0:')===0}),b=bs[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1-1);
+        __sel3(c[0],c[1]);await W(100);__cam(.76,.12,1.3);await W(150);R.escolheuARegua=/régua/.test(String((window.SEL3||{}).pk));R.setas=[].map.call(document.querySelectorAll('[data-hk]'),function(q){return q.dataset.hk}).join(',');
+        var h=document.querySelector('[data-hk="ek"]'),o=document.querySelector('[data-hk="ef"]'),lab='';if(h&&o){var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,ro=o.getBoundingClientRect(),dx=x-(ro.left+15),dy=y-(ro.top+15),L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk=\"'+h.dataset.hk+'\"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:41,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev('pointerdown',x,y);for(var i=1;i<=40;i++){ev('pointermove',x+dx*15*i,y+dy*15*i);await W(20);var l=[].filter.call(document.querySelectorAll('div'),function(d){return /^(Largura|Altura|Profundidade) \d/.test(d.textContent)})[0];if(l)lab=l.textContent}ev('pointerup',x+dx*600,y+dy*600);await W(150)}
+        __build();var rot=+(String(lab).match(/(\d+(?:,\d+)?) mm/)||[0,'0'])[1].replace(',','.');
+        R.rotuloIgualAPeca=(rot>80&&Math.round(rot)===+pc().split('×')[1])+' · rótulo '+Math.round(rot);
+        R.depois='lista '+pc()+' · 3D '+prof3()+' · corte '+corte();R.ajusteNaPecaDeVerdade=!!(m.po&&m.po[pk])&&!Object.keys(m.po).some(function(k){return /régua|engrosso/.test(k)});
+        /* salvar, fechar e reabrir */var sv=JSON.stringify(snapState());document.getElementById('v3x').click();loadState(JSON.parse(sv));draw();R.reaberto='lista '+pc(S.mods[0]);
+        /* 🗑 da régua continua apagando só a régua (PEDIDO 37) */R.apagaSoARegua=String(pcDelAt(0,'Tamponamento esquerdo (régua)#1')).slice(0,20);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "lista 750×80 · corte 750×80 ×4")
+        XCTAssertEqual(o["prof3DAntes"] as? Int, 80)
+        XCTAssertEqual(o["escolheuARegua"] as? Bool, true)
+        XCTAssertEqual(o["setas"] as? String, "et,eb,ef,ek")
+        XCTAssertEqual(o["rotuloIgualAPeca"] as? String, "true · rótulo 381")
+        XCTAssertEqual(o["depois"] as? String, "lista 750×381 · 3D 381 · corte 750×381 ×1 | 750×80 ×2 | 221×80 ×2")
+        XCTAssertEqual(o["ajusteNaPecaDeVerdade"] as? Bool, true)
+        XCTAssertEqual(o["reaberto"] as? String, "lista 750×381")
+        XCTAssertEqual(o["apagaSoARegua"] as? String, "🗑 Só a régua saiu: ")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+    func testTamponamentoDoAereoAfastadoDaParedeEsticaAteOFundoPelaSeta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* (aéreo afastado 300 mm da parede: o tamponamento vai até o fundo) VÍDEO 16/11 08:30: no aéreo, 2 toques no tamponamento (régua de 80) mostravam as setas, o rótulo subia (95, 310, 675 "tampou até o fundo") e a peça não mudava.
+           Causa: o toque escolhe só a régua (PEDIDO 37, pra apagar só ela) e a seta gravava o ajuste na régua, que não é peça da lista. Agora a seta estica o tamponamento de verdade */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=800;m.tl=true;m.tlW=30;m.zo=300;draw();
+        var pk='Tamponamento esquerdo#1',pc=function(mm){var p=partsOf(mm||m).filter(function(q){return q.pk===pk})[0];return p?p.cl+'×'+p.cw:'sem peça'};
+        var prof3=function(){var bb=__boxes().filter(function(q){return (q.pk===pk||q.ppk===pk)&&String(q.nm).indexOf('0:')===0});return Math.round(Math.max.apply(null,bb.map(function(q){return q.z1}))-Math.min.apply(null,bb.map(function(q){return q.z0})))};
+        var corte=function(){return cutLines(m).filter(function(l){return /Tamponamento esquerdo/.test(String(l.names||l.name))}).map(function(l){return l.L+'×'+l.W+' ×'+l.qty}).join(' | ')};
+        R.antes='lista '+pc()+' · corte '+corte();
+        open3D();await W(300);__cam(.75,.12,1.3);await W(200);__build();R.prof3DAntes=prof3();
+        /* 2 toques no meio do tamponamento, como o dedo */var bs=__boxes().filter(function(b){return (b.pk===pk||b.ppk===pk)&&String(b.nm).indexOf('0:')===0}),b=bs[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1-1);
+        __sel3(c[0],c[1]);await W(100);__cam(.76,.12,1.3);await W(150);R.escolheuARegua=/régua/.test(String((window.SEL3||{}).pk));R.setas=[].map.call(document.querySelectorAll('[data-hk]'),function(q){return q.dataset.hk}).join(',');
+        var h=document.querySelector('[data-hk="ek"]'),o=document.querySelector('[data-hk="ef"]'),lab='';if(h&&o){var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,ro=o.getBoundingClientRect(),dx=x-(ro.left+15),dy=y-(ro.top+15),L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk=\"'+h.dataset.hk+'\"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:41,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev('pointerdown',x,y);for(var i=1;i<=40;i++){ev('pointermove',x+dx*15*i,y+dy*15*i);await W(20);var l=[].filter.call(document.querySelectorAll('div'),function(d){return /^(Largura|Altura|Profundidade) \d/.test(d.textContent)})[0];if(l)lab=l.textContent}ev('pointerup',x+dx*600,y+dy*600);await W(150)}
+        __build();var rot=+(String(lab).match(/(\d+(?:,\d+)?) mm/)||[0,'0'])[1].replace(',','.');
+        R.rotuloIgualAPeca=(rot>80&&Math.round(rot)===+pc().split('×')[1])+' · rótulo '+Math.round(rot);
+        R.depois='lista '+pc()+' · 3D '+prof3()+' · corte '+corte();R.ajusteNaPecaDeVerdade=!!(m.po&&m.po[pk])&&!Object.keys(m.po).some(function(k){return /régua|engrosso/.test(k)});
+        /* salvar, fechar e reabrir */var sv=JSON.stringify(snapState());document.getElementById('v3x').click();loadState(JSON.parse(sv));draw();R.reaberto='lista '+pc(S.mods[0]);
+        /* 🗑 da régua continua apagando só a régua (PEDIDO 37) */R.apagaSoARegua=String(pcDelAt(0,'Tamponamento esquerdo (régua)#1')).slice(0,20);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "lista 750×80 · corte 750×80 ×4")
+        XCTAssertEqual(o["prof3DAntes"] as? Int, 80)
+        XCTAssertEqual(o["escolheuARegua"] as? Bool, true)
+        XCTAssertEqual(o["setas"] as? String, "et,eb,ef,ek")
+        XCTAssertEqual(o["rotuloIgualAPeca"] as? String, "true · rótulo 681")
+        XCTAssertEqual(o["depois"] as? String, "lista 750×681 · 3D 681 · corte 750×681 ×1 | 750×80 ×2 | 521×80 ×2")
+        XCTAssertEqual(o["ajusteNaPecaDeVerdade"] as? Bool, true)
+        XCTAssertEqual(o["reaberto"] as? String, "lista 750×681")
+        XCTAssertEqual(o["apagaSoARegua"] as? String, "🗑 Só a régua saiu: ")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+    func testSetasDo3DNaParedeLateralMexemNaMedidaCertaEModuloTravadoNaoEstica() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length,MSG=[];window.toast=function(t){MSG.push(String(t))};var am0=window.ambMsg;window.ambMsg=function(t){MSG.push(String(t));try{return am0&&am0.apply(this,arguments)}catch(_){}};
+        /* setas do 3D (2 toques na peça) em módulo da parede da esquerda/direita: o 3D gira o módulo, então a seta tem que mexer na medida certa da peça (antes a de profundidade mudava a largura e o rótulo mostrava outra medida)
+           · tamponamento de módulo na parede lateral ganha a seta da profundidade · módulo travado não estica */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        var run=async function(nm,wing,pkRx,k,lock){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T(nm));var m=S.mods[0];m.x=900;if(wing)m.wing=wing;m.tl=true;m.tr=true;if(lock)m.lock=1;draw();
+         var pk=partsOf(m).filter(function(q){return pkRx.test(q.name)})[0].pk,pc=function(){var p=partsOf(m).filter(function(q){return q.pk===pk})[0];return p.cl+'×'+p.cw};
+         open3D();await W(300);__cam(wing==='e'?-1.2:wing==='d'?1.2:.5,.3,1.3);await W(200);__e3open(0,pk);await W(100);var a0=pc(),hs=[].map.call(document.querySelectorAll('[data-hk]'),function(q){return q.dataset.hk}).sort().join(',');
+         var h=document.querySelector('[data-hk="'+k+'"]'),opp={ek:'ef',ef:'ek',et:'eb',eb:'et',el:'er',er:'el'}[k],o=document.querySelector('[data-hk="'+opp+'"]');if(!h||!o){document.getElementById('v3x').click();return 'setas '+hs+' · sem '+k}
+         var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,ro=o.getBoundingClientRect(),dx=x-(ro.left+15),dy=y-(ro.top+15),L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk=\"'+h.dataset.hk+'\"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:51,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};MSG=[];ev('pointerdown',x,y);var lab='';for(var i=1;i<=10;i++){ev('pointermove',x+dx*6*i,y+dy*6*i);await W(20);var l=[].filter.call(document.querySelectorAll('div'),function(d){return /^(Largura|Altura|Profundidade) \d/.test(d.textContent)})[0];if(l)lab=l.textContent}ev('pointerup',x+dx*60,y+dy*60);await W(120);
+         var a1=pc(),A=a0.split('×').map(Number),B=a1.split('×').map(Number),mud=(A[0]!==B[0]?'largura':'')+(A[1]!==B[1]?'profundidade':'')||'nada',lk=(lab.match(/^(Largura|Altura|Profundidade)/)||[''])[0],lv=+(lab.match(/(\d+(?:,\d+)?) mm/)||[0,'0'])[1].replace(',','.'),pv=lk==='Largura'?B[0]:B[1];
+         var r='setas '+hs+' · '+(lk?'seta de '+lk.toLowerCase():'sem rótulo')+' · mudou '+mud+(lk&&mud!=='nada'?' · rótulo = peça '+(Math.abs(lv-pv)<=12):'')+(lock?' · aviso '+(/Módulo travado/.test(document.body.textContent)?'módulo travado':'nenhum'):'');document.getElementById('v3x').click();return r};
+        R.fundoPrateleiraProfundidade=await run('Balcão aberto (prateleira)',null,/^Prateleira/,'ef');
+        R.esquerdaPrateleiraSetaDoMundoZ=await run('Balcão aberto (prateleira)','e',/^Prateleira/,'ef');
+        R.esquerdaPrateleiraSetaDoMundoX=await run('Balcão aberto (prateleira)','e',/^Prateleira/,'er');
+        R.direitaPrateleiraSetaDoMundoX=await run('Balcão aberto (prateleira)','d',/^Prateleira/,'el');
+        R.esquerdaTamponamentoProfundidade=await run('Armário alto 2 portas','e',/^Tamponamento esquerdo/,'el');
+        R.travado=await run('Balcão aberto (prateleira)',null,/^Prateleira/,'ef',true);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["fundoPrateleiraProfundidade"] as? String, "setas ef,ek,el,er · seta de profundidade · mudou profundidade · rótulo = peça true")
+        XCTAssertEqual(o["esquerdaPrateleiraSetaDoMundoZ"] as? String, "setas ef,ek,el,er · seta de largura · mudou largura · rótulo = peça true")
+        XCTAssertEqual(o["esquerdaPrateleiraSetaDoMundoX"] as? String, "setas ef,ek,el,er · seta de profundidade · mudou profundidade · rótulo = peça true")
+        XCTAssertEqual(o["direitaPrateleiraSetaDoMundoX"] as? String, "setas ef,ek,el,er · seta de profundidade · mudou profundidade · rótulo = peça true")
+        XCTAssertEqual(o["esquerdaTamponamentoProfundidade"] as? String, "setas eb,el,er,et · seta de profundidade · mudou profundidade · rótulo = peça true")
+        XCTAssertEqual(o["travado"] as? String, "setas ef,ek,el,er · sem rótulo · mudou nada · aviso módulo travado")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 }

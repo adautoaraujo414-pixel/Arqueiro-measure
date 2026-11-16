@@ -26,6 +26,31 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Risco de voltar:** baixo, porque o teste falha se a orientação inverter.
 - **Status:** resolvido no simulador e na bateria. **Não testado em aparelho real.** A "sobra malfeita" ainda depende da confirmação do Adauto (ver `especificacoes/puxador-gola.md`, pendência 7).
 
+## TAMP-SETA: tamponamento não aumentava pela seta do 3D (vídeo de 16/11 às 08:30)
+- **Relatado:** vídeo no tablet. Com 2 toques no tamponamento, apareciam as setas. Arrastando, o rótulo subia ("Profundidade 95… 310… 675 mm · tampou até o fundo"), mas a peça não mudava. Ao soltar, ficava igual.
+- **Reproduzido:** no editor atual e na versão do iPhone (97b6eef).
+  - Aéreo com tamponamento de 80 mm: o toque escolhe `Tamponamento esquerdo (régua)#1`.
+  - A seta grava o ajuste nessa chave. Rótulo 155, peça 750×80, 3D 80.
+- **Causa raiz:**
+  - O PEDIDO 37 (15/11) fez o toque na régua do tamponamento escolher só a régua, pra poder apagar só ela.
+  - Só que a régua é um pedaço do desenho, não uma peça da lista (`partsOf`).
+  - O quadro da peça sumia (`e3Part` nulo). As setas (`e3Handles`, chamadas a cada redesenho) apareciam mesmo assim.
+  - O arraste gravava `m.po['… (régua)#1']`, que nenhuma peça lê.
+- **Correção** (`editor.html`, perto de `e3Fine` e `e3Bounds`):
+  - `e3K()`: esticar, digitar a medida e "Original" sempre mexem na peça de verdade (o tamponamento inteiro, `SEL3.ppk`).
+  - O 🗑 continua apagando só a régua (PEDIDO 37) e agora diz "Só esta régua".
+  - A seta só grava se a peça existir na lista.
+- **Achados na mesma investigação (mesma ferramenta de setas):**
+  - **Módulo na parede da esquerda ou da direita:** o 3D gira o módulo, mas as setas usavam o eixo do mundo. A seta de profundidade mudava a largura, e o rótulo mostrava uma medida que não era a da peça. O tamponamento desses módulos não tinha seta de profundidade. Corrigido com `e3Ax` e `e3LAx`.
+  - **Módulo travado (🔒):** as setas do 3D esticavam a peça mesmo travado. Agora avisam "Módulo travado", igual às outras edições.
+  - **Puxando pra trás passava da parede do fundo.** Agora para na parede ("tampou até o fundo").
+- **Testes (falham na versão anterior e passam agora):**
+  - `testTamponamentoDoAereoEsticaPelaSetaDo3DMesmoTocandoNaReguaListaCorteE3DReabre`: 4 falhas antes.
+  - `testTamponamentoDoAereoAfastadoDaParedeEsticaAteOFundoPelaSeta`: 4 falhas antes.
+  - `testSetasDo3DNaParedeLateralMexemNaMedidaCertaEModuloTravadoNaoEstica`: 5 falhas antes.
+  - O que eles conferem: o toque de verdade na régua, a seta arrastada, a lista de peças, o 3D, o plano de corte (`cutLines`), salvar e reabrir, e o 🗑 da régua.
+- **Status:** corrigido no Chromium. **Não testado no aparelho.** Falta o Adauto conferir no tablet.
+
 ## GOLA-002: madeira aparecendo dentro do perfil G (perfil parecia transparente)
 - **Relatado:** 16/11 às 07:45, com a referência do perfil sólido: "não pode só encostar no corpo do armário, ficar transparente e mostrando as costas do armário".
 - **Causa raiz** (auditoria das 07:38):

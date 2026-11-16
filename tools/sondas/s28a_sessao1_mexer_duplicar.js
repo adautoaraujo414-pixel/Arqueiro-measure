@@ -10,7 +10,7 @@ histTick();LASTT=0;document.getElementById('und').onclick();await W(50);R.desfez
 R.dims=S.mods.map(function(m){return [Math.round(m.x),m.w,m.h,m.d].join('/')}).join(' ');
 await W(4500);try{svFechar()}catch(_){}try{svFlush()}catch(_){}await W(200);
 /* duplicar pela lista de clientes */
-var b=document.createElement('button');b.dataset.pd='pS';document.body.appendChild(b);b.click();b.remove();await W(200);
+/* o botão de duplicar fica na lista de clientes (#clm), que é quem escuta o clique */clRender();var b=document.createElement('button');b.dataset.pd='pS';document.getElementById('clm').appendChild(b);b.click();b.remove();await W(200);
 var L=pLoadAll();R.copias=L.filter(function(q){return /^Sessão/.test(q.client.nome)}).map(function(q){return q.client.nome+' '+q.current.mods.length}).join(' | ');
 R.files=JSON.stringify(__files);R.ls=localStorage.getItem('arque.projects.v1');
 return JSON.stringify(R);

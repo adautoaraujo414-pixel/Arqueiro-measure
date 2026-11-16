@@ -3,7 +3,7 @@
    Cada mudança é uma ação separada (espera entre elas), como a pessoa faz. */
 window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
 var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
-var NRM=function(o){(o.mods||[]).concat(o.m?[o.m]:[]).forEach(function(m){if(m&&m.wing===undefined)m.wing=0});if(o.amb===undefined)o.amb={};return o};
+/* compara o projeto, não a escolha na tela (mi/m/sti: qual módulo está escolhido) */var NRM=function(o){delete o.mi;delete o.m;delete o.sti;(o.mods||[]).forEach(function(m){if(m&&m.wing===undefined)m.wing=0});if(o.amb===undefined)o.amb={};return o};
 var SN=function(){return JSON.stringify(NRM(JSON.parse(JSON.stringify(snapState()))))};
 var sigP=function(){return S.mods.map(function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')}).join('#')};
 var sigC=function(){return JSON.stringify(cutGroups())};

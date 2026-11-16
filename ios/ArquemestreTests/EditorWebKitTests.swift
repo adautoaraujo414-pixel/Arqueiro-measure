@@ -432,13 +432,13 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;var all=TPL.concat(CATS.flatMap(function(c){return c.it})).filter(function(i){return i.w&&i.v});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),esp=RNDC(c.w-e-D-12.9)+'x650,'+RNDC(W2-e-D-10)+'x650';/* medida de corte sem o décimo *//* dobradiça 165°: fundo = vão − 12,9 (3,4 mm da folha do lado) · lado = vão − 10 (3 mm do armário) *//* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
+          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),esp=RNDC(c.w-e-D-12.5)+'x650,'+RNDC(W2-e-D-10)+'x650';/* medida de corte sem o décimo *//* dobradiça 165°: fundo = vão − 12,9 (3,4 mm da folha do lado) · lado = vão − 10 (3 mm do armário) *//* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
           /* toda porta tem marcação (dobradiça ou roldana) */var tot=0,ok=0;all.forEach(function(t){S.mods=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(_){return}var m=S.mods[0];if(!m)return;partsOf(m).forEach(function(p){if(!/^Porta/.test(p.name)||p.glass||p.noCut)return;tot++;if(p.fur)ok++})});
           /* 🗑 apaga só a divisória selecionada; 🗑 na porta tira as portas do vão */S.mods=[];newTpl(T('Rack de TV'));var m=S.mods[0];S.m=m;draw();var d0=m.div.length,v0=m.v.length;window.DIVI=1;LAST='div';$('delMod').click();var d1=m.div.length,v1=m.v.length,n1=S.mods.length;S.sv=0;LAST='porta';$('delMod').click();var k0=m.v[0].k,n2=S.mods.length;
           var cat=CATS.filter(function(q){return q.id==='painel'})[0].it.some(function(i){return /superior livre/.test(i.n)});
           return JSON.stringify({canto:canto,esp:esp,tot:tot,ok:ok,d:d0+'>'+d1,v:v0+'>'+v1,mods:n1+'/'+n2,k0:k0,cat:cat,errs:__errs});
           """#)
-        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto (165°): vão − 12,9 e vão − 10, altura do vão + 30")
+        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto (165°): vão − 12,5 (3 mm da folha do lado) e vão − 10, altura do vão + 30")
         XCTAssertEqual(o["ok"] as? Int, o["tot"] as? Int, "toda porta (abrir, basculante, camarão, canto, correr) tem marcação no plano")
         XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 90, "auditou o catálogo inteiro")
         XCTAssertEqual(o["d"] as? String, "2>1", "🗑 com divisória selecionada apaga só ela")
@@ -10333,6 +10333,87 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["cameraLonge"] as? String, "quadro do módulo inteiro aberto com a medida e altura · peça nenhuma")
         XCTAssertEqual(o["cameraPerto"] as? String, "quadro do módulo inteiro fechado · peça escolhida (Rodapé (pedestal))")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testParedeCriadaNo3DSelecionaEApagaNoModoParedes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 57: 3D › Ambiente › Desenhar ou apagar paredes: tocar numa parede (criada no 3D ou a do lado) seleciona e o 🗑 Apagar apaga · antes, depois de sair e voltar, o toque não selecionava e o Apagar ficava travado */
+        var cv=document.getElementById('cv3');
+        var tela=function(x,y,z){var q=[x,y,z,1],M=PM3,d=function(a){return a[0]*q[0]+a[1]*q[1]+a[2]*q[2]+a[3]*q[3]},cw=d(M.W),r=cv.getBoundingClientRect();return [r.left+(d(M.X)/cw+1)/2*r.width,r.top+(1-d(M.Y)/cw)/2*r.height]};
+        var toque=async function(p){['pointerdown','pointerup'].forEach(function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:p[0],clientY:p[1],pointerId:3,isPrimary:true,pointerType:'touch',button:0}))});await W(450)};
+        var bt=function(k){return document.querySelector('#v3wb [data-wb="'+k+'"]')};
+        var est=function(){var t=(document.getElementById('v3wb')||{}).innerText||'';return (bt('del')&&!bt('del').disabled?'Apagar liberado':'Apagar travado')+(/Parede \d+ mm/.test(t)?' · '+t.match(/Parede \d+ mm/)[0]:'')};
+        var entra=async function(){var b=[].slice.call(document.querySelectorAll('button')).filter(function(x){return /Desenhar ou apagar/.test(x.textContent)})[0];if(!b){document.getElementById('v3wal').click();await W(150);b=[].slice.call(document.querySelectorAll('button')).filter(function(x){return /Desenhar ou apagar/.test(x.textContent)})[0]}b.click();await W(300)};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();open3D();await W(300);
+        /* parede criada (como se tivesse desenhado) */S.xw=[{id:1,a:[730,680],b:[2680,680],t:150}];__build();
+        await entra();R.entrou=est();
+        await toque(tela(1705,1200,680));R.tocouNaParedeCriada=est();
+        bt('del').click();await W(200);R.apagou='paredes criadas '+(S.xw||[]).length+' · '+est();
+        /* a parede do lado também */
+        await toque(tela(0,1200,1200));R.tocouNaParedeEsquerda=est();
+        /* parede do fundo: seleciona, mas não apaga (é onde os módulos ficam) */
+        await toque(tela(1600,1500,0));R.paredeDoFundo=est();
+        bt('ok').click();await W(200);
+        /* fora do modo Paredes: tocar na parede continua sem abrir nada */
+        S.xw=[{id:2,a:[730,680],b:[2680,680],t:150}];__build();await toque(tela(1705,1200,680));R.foraDoModoParedes=document.getElementById('v3wb')&&document.getElementById('v3wb').parentNode?'abriu':'nada abre';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["entrou"] as? String, "Apagar travado")
+        XCTAssertEqual(o["tocouNaParedeCriada"] as? String, "Apagar liberado · Parede 1950 mm")
+        XCTAssertEqual(o["apagou"] as? String, "paredes criadas 0 · Apagar travado")
+        XCTAssertEqual(o["tocouNaParedeEsquerda"] as? String, "Apagar liberado · Parede 2600 mm")
+        XCTAssertEqual(o["paredeDoFundo"] as? String, "Apagar travado")
+        XCTAssertEqual(o["foraDoModoParedes"] as? String, "nada abre")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testArmarioDeCantoFolgaDe3mmEntreAsFolhasAbreUmaDepoisAOutra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 57: armário de canto em L · folga de 3 mm entre as duas folhas (no corte, no 2D e no 3D) · abre primeiro a do fundo, depois a do lado · abertas, uma não entra na outra */
+        var ALL=[{n:'Canto de baixo · esquerdo',mk:'e'},{n:'Canto de baixo · direito',mk:'d'}];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.corner)ALL.push(it)})});
+        var folhas=function(mi){var bx=__boxes().filter(function(b){return String(b.nm)===mi+':Porta'&&!b.nol});var A=bx.filter(function(b){return b.dq===0}),B=bx.filter(function(b){return b.dq===1});return {A:A,B:B}};
+        var ext=function(L){return {x0:Math.min.apply(null,L.map(function(b){return b.x0})),x1:Math.max.apply(null,L.map(function(b){return b.x1})),z0:Math.min.apply(null,L.map(function(b){return b.z0})),z1:Math.max.apply(null,L.map(function(b){return b.z1}))}};
+        var cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0.5&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>0.5};
+        var res=[];
+        for(var i=0;i<ALL.length;i++){var it=ALL[i];var G0=__ang();Object.keys(G0.g).forEach(function(k){delete G0.g[k]});Object.keys(G0.t).forEach(function(k){delete G0.t[k]});loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();if(it.mk)mkCorner(it.mk);else newTpl(JSON.parse(JSON.stringify(it)));draw();var m=S.mods[S.mods.length-1],mi=S.mods.indexOf(m);
+         var ds=partsOf(m).filter(function(p){return p.name==='Porta'});open3D();await W(150);__build();var f=folhas(mi);if(!f.A.length||!f.B.length){res.push(it.n+': sem as 2 folhas no 3D');continue}
+         var a=ext(f.A),b=ext(f.B),esq=m.corner==='e',gap=esq?Math.round((a.x0-b.x1)*10)/10:Math.round((b.x0-a.x1)*10)/10;
+         /* abre (as duas marcadas) e acompanha a animação: a do lado só sai depois que a do fundo abriu o caminho, e nunca uma entra na outra */
+         m.v[0].open=1;draw();anim3();var bat=0,ordem='ok',t0=Date.now();while(Date.now()-t0<3500){await W(50);var g=__ang().g,ka=Object.keys(g).filter(function(k){return k.indexOf('p'+mi+'|0|0')===0})[0],kb=Object.keys(g).filter(function(k){return /\|0\|1$/.test(k)&&k.indexOf('p'+mi+'|')===0})[0];if(kb&&ka&&g[kb]>1&&g[ka]<59)ordem='a do lado saiu antes';var f2=folhas(mi);f2.A.forEach(function(x){f2.B.forEach(function(y){if(cruza(x,y))bat++})})}
+         var g2=__ang().g;res.push(it.n+': corte '+ds.map(function(p){return p.cl}).join('+')+' · folga entre as folhas '+gap+' mm · ordem '+ordem+' · bateu '+bat+' · abertas '+Object.keys(g2).filter(function(k){return k.indexOf('p'+mi+'|')===0}).map(function(k){return Math.round(g2[k])}).join('/'))}
+        R.cantos=res.join(' ; ');R.n=ALL.length;
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["cantos"] as? String, "Canto de baixo · esquerdo: corte 306+309 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 165/165 ; Canto de baixo · direito: corte 306+309 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 165/165 ; Canto em L (aéreo) · esquerdo: corte 316+319 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 165/165 ; Canto em L (aéreo) · direito: corte 316+319 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 165/165 ; Canto L guarda-roupa · esquerdo: corte 416+419 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 90/70 ; Canto L guarda-roupa · direito: corte 416+419 · folga entre as folhas 3 mm · ordem ok · bateu 0 · abertas 90/70")
+        XCTAssertEqual(o["n"] as? Int, 6)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testTudoQueSeCriaNo3DSelecionaEApagaDepoisDeSairEVoltar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 57 (varredura "tem mais algum assim?"): tudo que se cria no 3D (caixa/pilar, ilha, parede nova) tem que poder ser tocado, selecionado e apagado depois de sair e voltar */
+        var cv=document.getElementById('cv3');
+        var tela=function(x,y,z){var q=[x,y,z,1],M=PM3,d=function(a){return a[0]*q[0]+a[1]*q[1]+a[2]*q[2]+a[3]*q[3]},cw=d(M.W),r=cv.getBoundingClientRect();return [r.left+(d(M.X)/cw+1)/2*r.width,r.top+(1-d(M.Y)/cw)/2*r.height]};
+        var toque=async function(p){['pointerdown','pointerup'].forEach(function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:p[0],clientY:p[1],pointerId:3,isPrimary:true,pointerType:'touch',button:0}))});await W(450)};
+        var it4=function(){var e=document.getElementById('it4');return e&&!e.hidden?e:null};
+        var apaga=async function(){var e=it4();if(!e)return 'quadro não abriu';var b=e.querySelector('[data-qgdel],[data-qdel],[data-isdel],[data-qidel]');if(!b)return 'sem 🗑 no quadro';b.click();await W(150);var e2=it4(),b2=e2&&e2.querySelector('[data-qgdel],[data-qdel],[data-isdel],[data-qidel]');if(b2){b2.click();await W(150)}return 'apagou'};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.RD=3000;draw();
+        S.geo=[{id:1,x:1450,z:1300,w:300,d:300,b:0,h:S.H,c:'#d9d4ca',col:1}];open3D();await W(300);__cam(.35,.45,1);await W(150);
+        await toque(tela(1600,1200,1600));R.caixa=(it4()?'abriu o quadro':'não abriu')+' · '+(await apaga())+' · sobrou '+(S.geo||[]).length;
+        document.getElementById('v3x').click();await W(150);open3D();await W(300);
+        S.geo=[{id:2,x:1450,z:1300,w:300,d:300,b:0,h:S.H,c:'#d9d4ca',col:1}];__build();__cam(.35,.45,1);await W(150);
+        await toque(tela(1600,1200,1600));R.caixaDepoisDeFecharEAbrir=(it4()?'abriu o quadro':'não abriu')+' · '+(await apaga())+' · sobrou '+(S.geo||[]).length;
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["caixa"] as? String, "abriu o quadro · apagou · sobrou 0")
+        XCTAssertEqual(o["caixaDepoisDeFecharEAbrir"] as? String, "abriu o quadro · apagou · sobrou 0")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 }

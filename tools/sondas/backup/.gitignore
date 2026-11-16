@@ -1,0 +1,4 @@
+build/
+.gradle/
+.kotlin/
+src/main/kotlin/br/com/arque/measure/data/DataBackup.kt

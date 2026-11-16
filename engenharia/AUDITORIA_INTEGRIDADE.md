@@ -138,6 +138,7 @@ Sonda: s08a.
 ## 4. Pendências registradas (não implementar agora, sem detalhes inventados)
 | Pedido | O que existe no repositório |
 |---|---|
+| **Inteligência estrutural dos móveis e eletrodomésticos reais, com dimensões bloqueadas** (pedido de 16/11, noite) | Registrada para implementar **depois** da homologação das correções P0 e GEO-AVISA e das correções de seleção por vãos, isolamento entre projetos e sincronização 2D/3D. Ainda **não há especificação detalhada** no repositório. O que já existe e se relaciona: trava da geladeira (GEL-TRAVA), aparelhos com medida real do catálogo, regra do forno (agora só avisa). Os detalhes (quais aparelhos, quais medidas travadas, folgas, comportamento) precisam vir do Adauto |
 | **Churrasqueira quadrada**, conforme a referência enviada pelo Adauto | **Nenhum registro** em commits, `engenharia/`, novidades ou testes. A referência não está no repositório. Precisa ser reenviada. |
 | **Correções de textura da pia e da área molhada**, que o Claude anterior tratava | **Nenhum registro do pedido nem de correção** em commits, `engenharia/`, novidades ou testes. O trabalho não foi gravado. O estado atual do código, só como fato (não verificado na tela): a área molhada é uma placa fina **por cima** do tampo (`build_wet` 5567, `dp` e `y0` calculados e não usados), em cor lisa (pedra × 0,72) sem a foto da pedra. A cuba esculpida não recebe a foto da pedra (`cb` é pulado pela `build_stx`). O pedido exato precisa ser reenviado. |
 

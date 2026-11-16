@@ -4450,7 +4450,7 @@ final class EditorWebKitTests: XCTestCase {
           var P=function(){return partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.dq+':'+p.cl+':'+p.open}).join(' ')};
           var bx=function(){return __boxes().filter(function(b){return /:Porta$/.test(String(b.nm))&&!b.nol&&!b.hg&&b.pf}).sort(function(a,b){return a.dq-b.dq})};
           var inst=function(){var A=__ang();Object.keys(A.g).forEach(function(k){delete A.g[k]});Object.keys(A.t).forEach(function(k){delete A.t[k]});__build()};
-          R.medidas=P();var F=bx();/* fechada: a do lado vai até 3 mm do armário; a do fundo fica 3,4 mm dela */R.folgaArmario=Math.round((F[1].z0-(m.d+6))*10)/10;R.folgaPorta=Math.round((F[0].x0-F[1].x1)*10)/10;
+          R.medidas=P();var F=bx();/* fechada: a do lado vai até 3 mm do armário; a do fundo fica 3 mm dela */R.folgaArmario=Math.round((F[1].z0-(m.d+6))*10)/10;R.folgaPorta=Math.round((F[0].x0-F[1].x1)*10)/10;
           /* abrir a do lado abre primeiro a do fundo */m.v[0].od={1:true};draw();R.abreAsDuas=P();anim3();var A=__ang(),t0_=Date.now();while(!(A.g['p0|0|0']>0)&&Date.now()-t0_<4000)await new Promise(function(r){setTimeout(r,16)});R.primeiro=(A.g['p0|0|0']>0)+' '+(A.g['p0|0|0']<60?(A.g['p0|0|1']||0):0);
           var t1_=Date.now();while(!(A.g['p0|0|0']>=164.5&&A.g['p0|0|1']>=164.5)&&Date.now()-t1_<9000)await new Promise(function(r){setTimeout(r,50)});R.fim=Math.round(A.g['p0|0|0'])+' '+Math.round(A.g['p0|0|1']);
           var hit=function(){var C=__boxes().filter(function(b){return /^\d+:(Lateral|Base|Fundo|Prateleira|Tamponamento)/.test(String(b.nm))&&!b.pf&&!b.gp}),D=bx(),h=0;D.forEach(function(a){C.concat(D).forEach(function(b){if(a===b)return;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1.2&&oy>1.2&&oz>1.2)h++})});return h};
@@ -4464,9 +4464,9 @@ final class EditorWebKitTests: XCTestCase {
           S.mods=[];var tw=null;CATS.forEach(function(c){c.it.forEach(function(q){if(q&&q.n==='Torre por vãos · forno + micro com porta de recorte')tw=q})});newTpl(JSON.parse(JSON.stringify(tw)));var T2=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'||/^Frente com recorte/.test(p.name)}).sort(function(a,b){return a.y-b.y}),gs=[];for(var i=0;i<T2.length-1;i++)gs.push(Math.round((T2[i+1].y-(T2[i].y+T2[i].h))*10)/10);R.torre=gs.join(' ');
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["medidas"] as? String, "0:306:0 1:309:0", "fundo = vão − 12,9 (sem o décimo) · lado = vão − 10")
+        XCTAssertEqual(o["medidas"] as? String, "0:306:0 1:309:0", "fundo = vão − 12,5 (sem o décimo) · lado = vão − 10")
         XCTAssertEqual(o["folgaArmario"] as? Double, 3, "a folha do lado para a 3 mm do armário")
-        XCTAssertEqual(o["folgaPorta"] as? Double, 3.4, "a do fundo fica 3,4 mm da folha do lado")
+        XCTAssertEqual(o["folgaPorta"] as? Double, 3, "a do fundo fica 3 mm da folha do lado (folga pedida: 3 mm)")
         XCTAssertEqual(o["abreAsDuas"] as? String, "0:306:1 1:309:1", "abrir a do lado abre a do fundo junto")
         XCTAssertEqual(o["primeiro"] as? String, "true 0", "primeiro sai a do fundo; a do lado espera")
         XCTAssertEqual(o["fim"] as? String, "165 165")

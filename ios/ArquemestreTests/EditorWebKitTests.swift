@@ -10458,4 +10458,21 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["nasceuPelaPedra"] as? String, "fundo 554 · lateral 604")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func test3DSemAFaixaDeDicasEmbaixoSoOCabecalho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 58: no 3D não aparece mais a faixa preta de dicas embaixo ("No vazio, um dedo gira…"): fica só o cabeçalho e o 3D ocupa a tela até embaixo */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();open3D();await W(300);
+        var t=document.getElementById('v3tips'),cv=document.getElementById('cv3'),v3=document.getElementById('v3'),rc=cv.getBoundingClientRect(),rv=v3.getBoundingClientRect();
+        R.faixaDeDicas=t&&t.offsetParent?'aparece':'não aparece';R.tresDAteEmbaixo=Math.abs(Math.round(rv.bottom-rc.bottom))<=2?'sim':'sobra '+Math.round(rv.bottom-rc.bottom)+' px';
+        R.cabecalho=document.getElementById('v3x')&&document.getElementById('v3x').offsetParent?'aparece':'sumiu';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["faixaDeDicas"] as? String, "não aparece")
+        XCTAssertEqual(o["tresDAteEmbaixo"] as? String, "sim")
+        XCTAssertEqual(o["cabecalho"] as? String, "aparece")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

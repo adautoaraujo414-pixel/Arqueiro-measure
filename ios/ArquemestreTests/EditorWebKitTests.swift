@@ -4158,8 +4158,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["iguais"] as? Bool, true, "frentes das gavetas continuam iguais")
         XCTAssertEqual((o["pegaPorta"] as? NSNumber)?.intValue, 30)
         XCTAssertEqual((o["golaSolta"] as? NSNumber)?.intValue, 0, "sem a régua chapada solta no armário")
-        XCTAssertEqual(o["golaPerfil"] as? String, "12 true false", "perfil G (6 peças por porta) na cor escolhida")
-        XCTAssertEqual(o["golaAbre"] as? String, "12 true", "o perfil abre junto com a porta")
+        XCTAssertEqual(o["golaPerfil"] as? String, "10 true false", "perfil G (5 peças por porta desde 16/11: sem a placa escura que fechava o vão) na cor escolhida")
+        XCTAssertEqual(o["golaAbre"] as? String, "10 true", "o perfil abre junto com a porta (5 peças por porta desde 16/11)")
         XCTAssertEqual((o["aereo"] as? NSNumber)?.intValue, 2)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
@@ -4533,7 +4533,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["gv"] as? String, "Porta x9 w410 cl410 cw705 G30 l | Porta x481 w410 cl410 cw705 G30 r | Puxador gola x419 w30 cl30 cw705  | Puxador gola x451 w30 cl30 cw705 ", "porta 30 mais estreita + perfil na borda que abre")
         XCTAssertEqual(o["corte"] as? [String], ["410x705 q2", "460x746 q2"], "a gola vertical vale pro projeto todo (15/11): as portas do aéreo também ficam 30 mais estreitas")
         XCTAssertEqual(o["svg"] as? Int, 4, "perfil desenhado no 2D · o puxador escolhido vale pro projeto todo (15/11): as 2 portas do balcão e as 2 do aéreo")
-        XCTAssertEqual(o["b3"] as? Int, 12, "perfil G no 3D junto com a porta")
+        XCTAssertEqual(o["b3"] as? Int, 10, "perfil G no 3D junto com a porta (5 peças por porta desde 16/11: sem a placa escura)")
         XCTAssertEqual(o["g"] as? String, "Porta x9 w440 cl440 cw676 l | Porta x451 w440 cl440 cw676 r 676", "gola horizontal: porta mais baixa pro perfil no topo")
         XCTAssertEqual(o["volta"] as? Bool, true)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
@@ -10587,5 +10587,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["forno3D"] as? String, "aparece")
         XCTAssertEqual(o["semValorUsaPadrao"] as? String, "3 mm")
         XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /// GOLA (16/11, pedido do Adauto com a referência de 12/11 01:30): o perfil G estava ESPELHADO (parede de 42 na frente, abertura dos dedos pra dentro, placa escura fechando o vão).
+    /// Agora: abertura pra FRENTE, parede de 42 ATRÁS abraçando 13 na face de dentro, 5 peças, sem placa; vale na porta, na gaveta, no aéreo (embaixo), na gola vertical e na gola do editor por vãos.
+    /// Descontos (29), medidas, metros de perfil e salvar/reabrir não mudam. Ver engenharia/especificacoes/puxador-gola.md.
+    func testPerfilGolaAberturaPraFrenteParedeDe42AtrasSemPlacaEmPortaGavetaAereoEGolaVertical() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* GOLA (16/11): perfil G com a ABERTURA DOS DEDOS PRA FRENTE e a parede de 42 ATRÁS (abraça 13 na face de dentro), sem placa fechando o vão · porta, gaveta, aéreo, gola vertical e gola do editor por vãos · descontos e materiais iguais */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        var r1=function(v){return Math.round(v*10)/10};
+        /* lê o perfil de cada frente no 3D: placa (porta/gaveta) e as peças do perfil grudadas nela */
+        var ler=function(rx,vert,baixo){var B=__boxes(),S0=B.filter(function(b){return rx.test(String(b.nm))&&!b.nol&&!b.pf&&(b.y1-b.y0)>60&&(b.x1-b.x0)>60&&Math.abs((b.z1-b.z0)-15)<.6}),out=[];
+         var gap=function(b,s){var dx=Math.max(0,s.x0-b.x1,b.x0-s.x1);if(vert)return dx+Math.max(0,s.y0-b.y1,b.y0-s.y1);var cy=(b.y0+b.y1)/2;/* perfil deitado: fica na borda de cima (balcão, gaveta) ou de baixo (aéreo) da própria frente */return dx+(baixo?Math.abs(cy-(s.y0-8)):Math.abs(cy-(s.y1+8)))};
+         var dono=function(b){var best=null,bd=1e9;S0.forEach(function(s){if(String(s.nm)!==String(b.nm))return;var g=gap(b,s);if(g<bd){bd=g;best=s}});return bd<=40?best:null};
+         S0.forEach(function(s){var P=B.filter(function(b){return b.nol&&!b.pf&&String(b.nm)===String(s.nm)&&dono(b)===s&&(vert?(b.y1-b.y0)>(s.y1-s.y0)*.9:(b.x1-b.x0)>(s.x1-s.x0)*.9)});if(!P.length)return;
+          var cores={};P.forEach(function(b){cores[String(b.c)]=1});
+          var tras=P.filter(function(b){return b.z1<=s.z0+.01}),frente=P.filter(function(b){return b.z0>=s.z1-1}),alto=function(b){return vert?(b.x1-b.x0):(b.y1-b.y0)};
+          var parede=tras.filter(function(b){return Math.abs(alto(b)-(vert?13+(+s.__dg||0):42))<.6||alto(b)>=40}).map(alto),fr=frente.map(alto);
+          out.push({pecas:P.length,cores:Object.keys(cores).length,parede:parede.length?r1(Math.max.apply(null,parede)):0,frenteMax:fr.length?r1(Math.max.apply(null,fr)):0,fundo:r1(Math.max.apply(null,P.map(function(b){return b.z1}))-Math.min.apply(null,P.map(function(b){return b.z0})))})});return out};
+        var resumo=function(L){var k={};L.forEach(function(o){var s='pecas '+o.pecas+' · cores '+o.cores+' · parede atrás '+o.parede+' · frente maior '+o.frenteMax+' · fundo '+o.fundo;k[s]=(k[s]||0)+1});return Object.keys(k).map(function(s){return k[s]+'× '+s}).join(' | ')};
+        var fr=function(m){return partsOf(m).filter(function(p){return /^(Porta|Frente de gaveta$)/.test(p.name)}).map(function(p){return r1(p.w)+'×'+r1(p.h)}).join(',')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();
+        newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 4 gavetas'));newTpl(T('Aéreo 2 portas'));var A=S.mods[0],G=S.mods[1],U=S.mods[2];
+        S.m=A;S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxt="g"]').click();draw();
+        R.medidas=fr(A)+' | '+fr(G)+' | '+fr(U);R.perfilM=[mCost(A).pxG,mCost(G).pxG,mCost(U).pxG].join(',');
+        open3D();await W(500);__build();
+        R.balcao=resumo(ler(/^0:Porta$/));R.gaveta=resumo(ler(/^1:Frente de gaveta$/));R.aereo=resumo(ler(/^2:Porta$/,false,true));
+        /* salvar e reabrir: o perfil continua igual */
+        var b0=R.balcao+R.gaveta+R.aereo;var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();__build();R.reabre=(resumo(ler(/^0:Porta$/))+resumo(ler(/^1:Frente de gaveta$/))+resumo(ler(/^2:Porta$/,false,true)))===b0;
+        document.getElementById('v3x').click();
+        /* gola vertical na porta comum */
+        S.mods=[];draw();newTpl(T('Balcão 2 portas'));var V=S.mods[0];S.m=V;S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxt="gv"]').click();draw();R.gvMedidas=fr(V);
+        open3D();await W(400);__build();R.golaVertical=resumo(ler(/^0:Porta$/,true));document.getElementById('v3x').click();
+        /* gola lateral do editor por vãos (armário do quarto) */
+        S.mods=[];S.env='quarto';S.room='quarto';draw();var cq=CATS.filter(function(x){return x.id==='quarto'})[0];newTpl(JSON.parse(JSON.stringify(cq.it.filter(function(q){return /Armário livre/.test(q.n)})[0])));await W(200);var Q=S.m;Q.w=1060;Q.h=450;Q.b=1100;Q.golaCor='preto';Q.rt={p:{n:2,gl:1}};draw();
+        open3D();await W(400);__build();R.golaPorVaos=resumo(ler(/^0:Porta$/,true));
+        R.errs=__errs.slice(e0).join(' | ');return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["medidas"] as? String, "440×676,440×676 | 785×144.3,785×144.3,785×144.3,785×144.3 | 490×721,490×721")
+        XCTAssertEqual(o["perfilM"] as? String, "0.88,3.14,0.98")
+        XCTAssertEqual(o["balcao"] as? String, "2× pecas 5 · cores 1 · parede atrás 42 · frente maior 8 · fundo 18")
+        XCTAssertEqual(o["gaveta"] as? String, "4× pecas 5 · cores 1 · parede atrás 42 · frente maior 8 · fundo 18")
+        XCTAssertEqual(o["aereo"] as? String, "2× pecas 5 · cores 1 · parede atrás 42 · frente maior 8 · fundo 18")
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["gvMedidas"] as? String, "410×705,410×705")
+        XCTAssertEqual(o["golaVertical"] as? String, "2× pecas 5 · cores 1 · parede atrás 43 · frente maior 8 · fundo 17.4")
+        XCTAssertEqual(o["golaPorVaos"] as? String, "2× pecas 5 · cores 1 · parede atrás 43 · frente maior 8 · fundo 17.4")
+        XCTAssertEqual(o["errs"] as? String, "")
     }
 }

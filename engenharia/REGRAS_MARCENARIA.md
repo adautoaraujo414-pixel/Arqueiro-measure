@@ -1,0 +1,29 @@
+# Regras de marcenaria confirmadas
+
+Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é conferido no `editor.html`. Regra sem fonte não entra aqui.
+
+## Medidas e chapas
+- **Peça sem décimo de milímetro.** A medida de corte é a medida real com o décimo cortado (o décimo vira folga) e a peça nunca fica maior que o desenho. (A, 13/11) (código: `RNDC`)
+- **Painéis em MDF 15.** Engrosso são duas camadas de 15 coladas, não chapa de 18. (A, conversa de 09/11)
+- **Plano de corte:** aproveitamento máximo da chapa. (A)
+
+## Portas, gavetas e folgas
+- **Armário de canto em L:** 3 mm entre as duas folhas. Abre uma e depois a outra; nunca batem. (A, 15/11)
+- **Canto em L, profundidade de cada lado:** vem da pedra em cima daquele lado, menos o mesmo desconto dos módulos retos. Exemplo: pedra de 600 de um lado e 650 do outro, cada lado com o seu desconto. (A, 15/11)
+- **Forno embutido:** 3 mm entre a parte de cima (travessa) e o topo do forno. O forno é de embutir, então tem que ser preciso. (A, 16/11) (código: `ot=3`)
+- **Puxador gola (perfil G):** desconto de 29 mm na altura da porta e da frente (42 de perfil − 13 que abraçam a MDF). Abertura para a frente. Ver `especificacoes/puxador-gola.md`. (A, 11/11, 12/11, 16/11) (código: `gDesc=29`)
+- **Puxador escolhido numa porta vale para todas as portas e gavetas do projeto:** de baixo, de cima e de canto. (A, 15/11)
+- **Tampa cega e painel cego não abrem:** sem dobradiça e sem puxador. (A, 14/11)
+
+## Tamponamento e caixa
+- **Tamponamento nunca entra no módulo:** peça inteira por fora. As réguas de 8 cm são coladas só no tamponamento. (A, 15/11)
+- **Painéis e módulos são sólidos:** nada entra dentro de outra coisa. (A)
+- **Módulo não age sozinho:** não tira tamponamento nem se afasta do vizinho sem o Adauto mandar. (A)
+- **Nenhum armário com vão, peça solta, erro de seleção ou erro de porta.** Porta e prateleira vão até o fim. (A)
+
+## Pedra
+- **Armário embaixo da pedra com saia:** a frente do armário para na saia e não passa dela. (A, 16/11) (código: `fitNew`, `cornerStoneFit`)
+
+## Pendentes de confirmação (não usar como regra ainda)
+- Perfil G encostando na caixa (1,5 mm). Ver a pendência 1 da especificação do gola.
+- Engrosso do tamponamento "entrando no módulo": não reproduzido (HISTORICO_ERROS, TAMP-ENGROSSO).

@@ -1,13 +1,0 @@
-�CASO troca que falha no 5º passo · erro=true · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0
-�CASO aceitou=true · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: falha ao preparar os arquivos. Nada foi alterado.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o arquivo de backup está incompleto ou danificado. Nada foi alterado.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o arquivo de backup está incompleto ou danificado. Nada foi alterado.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: a lista de projetos do backup está ilegível. Nada foi alterado.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o backup está vazio (sem projetos e sem notas). Nada foi alterado.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o backup tem um caminho inválido. Nada foi alterado.
-	�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o arquivo de backup está incompleto ou danificado. Nada foi alterado.
-
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o arquivo de backup está incompleto ou danificado. Nada foi alterado.
-�CASO aceitou=true · projects=[{"id":"VELHO"}] · notas=["nota velha"] · licença=true · anteriores=1 · aviso: Backup restaurado · 1 projeto(s). O que estava antes ficou guardado no aparelho.
-�CASO aceitou=false · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true · anteriores=0 · aviso: Backup não restaurado: o backup está vazio (sem projetos e sem notas). Nada foi alterado.
-CASO app fechado no meio da troca · projects=[{"id":"A"},{"id":"B"},{"id":"C"}] · notas=["nota importante"] · licença=true

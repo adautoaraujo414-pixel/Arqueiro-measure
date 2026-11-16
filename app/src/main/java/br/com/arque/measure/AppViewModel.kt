@@ -107,6 +107,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch { ble.readings.collect { onReading(it) } }
+        // resultado da restauração aplicada neste início (restaurado, ou recusado sem mexer em nada)
+        runCatching { br.com.arque.measure.data.DataBackup.takeResult(getApplication<android.app.Application>()) }.getOrNull()?.let { toast = it }
     }
 
     // ---------- biblioteca ----------
@@ -1040,6 +1042,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 br.com.arque.measure.data.DataBackup.restart(app)
                 return@launch
             }
+            // backup completo que não passou na conferência (cortado, danificado, vazio): avisa e não tenta restaurar de outro jeito
+            br.com.arque.measure.data.DataBackup.lastReject?.let { toast = it; return@launch }
             val ok = withContext(io) {
                 val input = app.contentResolver.openInputStream(uri) ?: return@withContext false
                 store.restoreFrom(input)

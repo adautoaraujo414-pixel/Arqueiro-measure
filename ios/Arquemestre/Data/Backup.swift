@@ -92,7 +92,7 @@ enum DataBackup {
         let fm = FileManager.default
         let idx = files.appendingPathComponent("projects/index.json")
         let moveis = files.appendingPathComponent("moveis/projects.json")
-        var valid = false
+        var valid = false, items = 0
         if fm.fileExists(atPath: idx.path) {
             guard let data = try? Data(contentsOf: idx),
                   let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
@@ -100,14 +100,18 @@ enum DataBackup {
                   let text = String(data: data, encoding: .utf8),
                   (try? JsonCodec.indexFromJson(text)) != nil else { throw RestoreError.invalid }
             valid = true
+            items += (obj["notes"] as? [[String: Any]])?.count ?? 0
         }
         if fm.fileExists(atPath: moveis.path) {
             guard let data = try? Data(contentsOf: moveis),
                   let projects = (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]],
                   projects.allSatisfy({ ($0["id"] as? String)?.isEmpty == false }) else { throw RestoreError.invalid }
             valid = true
+            items += projects.count
         }
         guard valid else { throw RestoreError.invalid }
+        // P0-02 (auditoria de 16/11): backup sem nenhuma nota e sem nenhum projeto (ex.: projects.json "[]") não troca o que está no aparelho
+        guard items > 0 else { throw RestoreError.invalid }
     }
 
     private static func swapIn(_ staging: URL) throws {
@@ -161,7 +165,11 @@ enum BackupFileSwap {
             if hadFiles { try? fm.moveItem(at: backup, to: files) }
             throw error
         }
-        try? fm.removeItem(at: backup)
+        // P0-02 (auditoria de 16/11): o que estava antes fica guardado ao lado (files.restore-previous-<hora>), não é apagado sozinho
+        if hadFiles {
+            let kept = files.deletingLastPathComponent().appendingPathComponent(files.lastPathComponent + ".restore-previous-\(Int(Date().timeIntervalSince1970 * 1000))")
+            try? fm.moveItem(at: backup, to: kept)
+        }
     }
 }
 

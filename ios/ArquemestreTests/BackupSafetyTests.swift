@@ -122,4 +122,32 @@ final class BackupSafetyTests: XCTestCase {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"))
         XCTAssertTrue(try String(contentsOf: url, encoding: .utf8).contains("window.phPut"))
     }
+    /// P0-02 (auditoria de 16/11): backup completo sem nenhum projeto e sem nenhuma nota (projects.json "[]") é recusado e não troca nada.
+    func testEmptyFullBackupIsRejectedAndKeepsCurrentData() throws {
+        let originalBase = AppPaths.base
+        AppPaths.base = root.appendingPathComponent("app")
+        defer { AppPaths.base = originalBase }
+        try FileManager.default.createDirectory(at: AppPaths.moveis, withIntermediateDirectories: true)
+        try Data(#"[{"id":"p1"}]"#.utf8).write(to: AppPaths.moveis.appendingPathComponent("projects.json"))
+        let url = root.appendingPathComponent("vazio.zip"), writer = try ZipWriter(url: url)
+        try writer.add(name: DataBackup.MARK, data: Data([1]))
+        try writer.add(name: "files/moveis/projects.json", data: Data("[]".utf8))
+        try writer.add(name: "files/projects/index.json", data: Data(#"{"v":2,"folders":[],"notes":[]}"#.utf8))
+        try writer.finish()
+        XCTAssertThrowsError(try DataBackup.restore(from: url))
+        XCTAssertEqual(try String(contentsOf: AppPaths.moveis.appendingPathComponent("projects.json"), encoding: .utf8), #"[{"id":"p1"}]"#)
+    }
+    /// P0-02 (auditoria de 16/11): depois de restaurar, o que estava antes fica guardado ao lado (não é apagado sozinho).
+    func testSuccessfulSwapKeepsPreviousCopy() throws {
+        let files = root.appendingPathComponent("files"), stage = root.appendingPathComponent("stage")
+        try FileManager.default.createDirectory(at: files, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: stage, withIntermediateDirectories: true)
+        try Data("old".utf8).write(to: files.appendingPathComponent("saved.txt"))
+        try Data("new".utf8).write(to: stage.appendingPathComponent("saved.txt"))
+        try BackupFileSwap.install(stage, at: files)
+        XCTAssertEqual(try String(contentsOf: files.appendingPathComponent("saved.txt"), encoding: .utf8), "new")
+        let kept = try FileManager.default.contentsOfDirectory(atPath: root.path).filter { $0.hasPrefix("files.restore-previous-") }
+        XCTAssertEqual(kept.count, 1)
+        XCTAssertEqual(try String(contentsOf: root.appendingPathComponent(kept[0]).appendingPathComponent("saved.txt"), encoding: .utf8), "old")
+    }
 }

@@ -23,6 +23,8 @@ object DataBackup {
     private fun skip(rel: String): Boolean {
         val top = rel.substringBefore('/')
         if (top in SKIP_TOP) return true
+        // área da restauração e cópias do estado anterior: ficam no aparelho, não entram no backup
+        if (top == STAGING || top.startsWith(PREV_PREFIX) || rel == SWAP_MARK) return true
         val low = rel.lowercase()
         // licença (teste de 3 dias, senha, mensalidade) é do aparelho: não vai no backup nem vem de um backup de outro
         if (low.startsWith("shared_prefs/arque.lic.")) return true
@@ -67,38 +69,98 @@ object DataBackup {
 
     private fun pending(ctx: Context) = File(ctx.noBackupFilesDir, "restaurar.zip")
 
-    /** Copia o ZIP escolhido e deixa marcado pra aplicar no próximo início. */
+    // ---- restauração segura (P0-02, auditoria de 16/11) ----
+    // Antes: applyPending apagava files/app_webview/shared_prefs/databases ANTES de extrair, sem cópia do estado atual,
+    // e um erro no meio caía num catch vazio (projetos trocados, notas sumidas). stage só conferia a marca (backup vazio apagava tudo).
+    // Agora: confere o ZIP inteiro → extrai numa área separada → guarda o estado atual inteiro (não é apagado sozinho) →
+    // troca → se qualquer passo falhar, volta tudo como estava. App fechado no meio da troca: volta o anterior no próximo início.
+    private const val STAGING = "restore_staging"
+    private const val PREV_PREFIX = "restore_previous_"
+    private const val SWAP_MARK = "restore_swap.txt"
+    private const val RESULT = "restaurar.resultado.txt"
+    private val TOPS = listOf("files", "app_webview", "shared_prefs", "databases")
+
+    /** Motivo da última recusa de um backup completo (o app mostra e não tenta restaurar de outro jeito). */
+    @Volatile var lastReject: String? = null
+
+    /** Resultado da conferência de um backup completo. */
+    class Check(val ok: Boolean, val reason: String, val files: Int, val projects: Int?)
+
+    /**
+     * Confere o backup de ponta a ponta sem mexer em nada: tem a marca, o índice do ZIP existe (arquivo cortado não tem),
+     * cada item é lido até o fim (bytes trocados dão erro de CRC), nenhum caminho sai da pasta, a lista de projetos abre,
+     * e o backup tem projetos ou notas (backup vazio é recusado).
+     */
+    fun check(file: File): Check {
+        var mark = false; var files = 0; var projects: Int? = null; var notes = 0; var streamed = 0
+        val total = try { java.util.zip.ZipFile(file).use { it.size() } } catch (_: Exception) { return Check(false, "o arquivo de backup está incompleto ou danificado", 0, null) }
+        try {
+            ZipInputStream(file.inputStream().buffered()).use { z ->
+                val buf = ByteArray(64 * 1024)
+                var e = z.nextEntry
+                while (e != null) {
+                    streamed++
+                    val n = e.name
+                    if (n.contains("..") || n.startsWith("/") || n.startsWith("\\") || n.contains(':')) return Check(false, "o backup tem um caminho inválido", files, projects)
+                    val keep = n == "files/moveis/projects.json"
+                    val bo = if (keep) java.io.ByteArrayOutputStream() else null
+                    while (true) { val r = z.read(buf); if (r < 0) break; bo?.write(buf, 0, r) }
+                    if (n == MARK) mark = true
+                    else if (!e.isDirectory && !skip(n)) {
+                        files++
+                        if (keep) {
+                            projects = try { org.json.JSONArray(String(bo!!.toByteArray(), Charsets.UTF_8)).length() } catch (_: Exception) { return Check(false, "a lista de projetos do backup está ilegível", files, null) }
+                        } else if (n.startsWith("files/")) notes++
+                    }
+                    e = z.nextEntry
+                }
+            }
+        } catch (_: Exception) { return Check(false, "o arquivo de backup está incompleto ou danificado", files, projects) }
+        if (streamed != total) return Check(false, "o arquivo de backup está incompleto ou danificado", files, projects)
+        if (!mark) return Check(false, "não é um backup completo do Arquemestre", files, projects)
+        if (files == 0 || ((projects ?: 0) == 0 && notes == 0)) return Check(false, "o backup está vazio (sem projetos e sem notas)", files, projects)
+        return Check(true, "", files, projects)
+    }
+
+    /** Copia o ZIP escolhido e deixa marcado pra aplicar no próximo início, só se ele passar na conferência inteira. */
     fun stage(ctx: Context, input: InputStream): Boolean {
+        lastReject = null
         val f = pending(ctx)
         f.parentFile?.mkdirs()
         input.use { i -> f.outputStream().use { i.copyTo(it) } }
         if (!isFull(f)) { f.delete(); return false }
+        val c = check(f)
+        if (!c.ok) { f.delete(); lastReject = "Backup não restaurado: " + c.reason + ". Nada foi alterado."; return false }
         return true
     }
 
+    /** Mensagem da última restauração (aplicada no início do app), uma vez só. */
+    fun takeResult(ctx: Context): String? = runCatching {
+        val r = File(ctx.noBackupFilesDir, RESULT)
+        if (!r.exists()) return@runCatching null
+        val t = r.readText(); r.delete(); t.ifBlank { null }
+    }.getOrNull()
+
+    private fun result(ctx: Context, msg: String) { runCatching { File(ctx.noBackupFilesDir, RESULT).writeText(msg) } }
+
     /** Chamado no onCreate, antes de qualquer tela. Aplica uma restauração pendente. */
     fun applyPending(ctx: Context) {
+        val root = dataDir(ctx)
+        runCatching { recoverSwap(root) }
         val f = pending(ctx)
         if (!f.exists()) return
-        val root = dataDir(ctx)
-        val canon = root.canonicalPath + File.separator
+        val staging = File(root, STAGING)
         try {
-            // valida antes de apagar qualquer coisa
-            ZipInputStream(f.inputStream().buffered()).use { z ->
-                var e = z.nextEntry
-                while (e != null) {
-                    if (!File(root, e.name).canonicalPath.startsWith(canon)) throw SecurityException(e.name)
-                    e = z.nextEntry
-                }
-            }
-            // a licença deste aparelho fica como está (restaurar backup não zera nem copia o teste/senha)
-            val lic = File(root, "shared_prefs").listFiles { x -> x.name.startsWith("arque.lic.") }?.associate { it.name to it.readBytes() } ?: emptyMap()
-            listOf("files", "app_webview", "shared_prefs", "databases").forEach { File(root, it).deleteRecursively() }
+            val c = check(f)
+            if (!c.ok) { result(ctx, "Backup não restaurado: " + c.reason + ". Nada foi alterado."); return }
+            staging.deleteRecursively(); staging.mkdirs()
+            val canon = staging.canonicalPath + File.separator
             ZipInputStream(f.inputStream().buffered()).use { z ->
                 var e = z.nextEntry
                 while (e != null) {
                     if (e.name != MARK && !skip(e.name)) {
-                        val t = File(root, e.name)
+                        val t = File(staging, e.name)
+                        if (!t.canonicalPath.startsWith(canon)) throw SecurityException(e.name)
                         if (e.isDirectory) t.mkdirs() else {
                             t.parentFile?.mkdirs()
                             t.outputStream().use { z.copyTo(it) }
@@ -107,11 +169,47 @@ object DataBackup {
                     e = z.nextEntry
                 }
             }
-            lic.forEach { (n, b) -> File(root, "shared_prefs").mkdirs(); File(File(root, "shared_prefs"), n).writeBytes(b) }
+            // a licença deste aparelho fica como está (restaurar backup não zera nem copia o teste/senha)
+            File(root, "shared_prefs").listFiles { x -> x.name.startsWith("arque.lic.") }?.forEach { lf ->
+                File(staging, "shared_prefs").mkdirs(); lf.copyTo(File(File(staging, "shared_prefs"), lf.name), overwrite = true)
+            }
+            swapIn(root, staging)
+            result(ctx, "Backup restaurado" + (c.projects?.let { " · $it projeto(s)" } ?: "") + ". O que estava antes ficou guardado no aparelho.")
         } catch (_: Exception) {
+            result(ctx, "Backup não restaurado: falha ao preparar os arquivos. Nada foi alterado.")
         } finally {
+            staging.deleteRecursively()
             f.delete()
         }
+    }
+
+    /** Troca com volta: o estado atual vai inteiro pra restore_previous_<hora> (fica guardado), o preparado entra no lugar. */
+    internal fun swapIn(root: File, staging: File, move: (File, File) -> Boolean = { a, b -> a.renameTo(b) }) {
+        val prev = File(root, PREV_PREFIX + System.currentTimeMillis())
+        prev.mkdirs()
+        val mark = File(root, SWAP_MARK)
+        mark.writeText(prev.name)
+        val moved = mutableListOf<String>(); val placed = mutableListOf<String>()
+        try {
+            for (t in TOPS) { val cur = File(root, t); if (cur.exists()) { if (!move(cur, File(prev, t))) throw java.io.IOException("não guardou $t"); moved += t } }
+            for (t in TOPS) { val s = File(staging, t); if (s.exists()) { if (!move(s, File(root, t))) throw java.io.IOException("não pôs $t"); placed += t } }
+        } catch (x: Exception) {
+            placed.forEach { File(root, it).deleteRecursively() }
+            moved.forEach { File(prev, it).renameTo(File(root, it)) }
+            if (prev.list().isNullOrEmpty()) prev.delete()
+            mark.delete()
+            throw x
+        }
+        mark.delete()
+    }
+
+    /** App fechado no meio da troca: devolve o estado que estava antes. */
+    private fun recoverSwap(root: File) {
+        val mark = File(root, SWAP_MARK)
+        if (!mark.exists()) return
+        val prev = File(root, mark.readText().trim())
+        if (prev.isDirectory) TOPS.forEach { t -> val p = File(prev, t); if (p.exists()) { File(root, t).deleteRecursively(); p.renameTo(File(root, t)) } }
+        mark.delete()
     }
 
     /** Reinicia o app (usado depois de marcar uma restauração): abre de novo e fecha este. */

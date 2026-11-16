@@ -447,3 +447,24 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
   - salvar e reabrir.
   - Falha em 9f3dc3e (b1410, rodapé 0) e passa agora.
 - **Status:** resolvido na bateria. **Não testado no aparelho.**
+
+## AMB-RD: a profundidade do ambiente ficava presa no maior comprimento já digitado na parede do lado (auditoria de 16/11, 14:29)
+- **Achado na auditoria** (não relatado assim). Ponto de partida: as medidas da imagem de 14:29 (parede direita 3170, altura 3400 no fundo e na frente, rebaixos 3170 e 1000). A imagem não veio anexada; usei as medidas escritas no pedido.
+- **Reproduzir:** editor do ambiente no 3D, parede da direita, digitar 31700 no comprimento e corrigir pra 3170. Cada número digitado conta (o campo grava a cada tecla).
+  - Antes: a sala ficava com 31700 de profundidade, mesmo depois de corrigir. Encurtando a parede pra 2000 também continuava 31700.
+- **Causa:** `setV` (`editor.html`), ramo do comprimento da parede do lado: `if(n>(+S.RD||0))S.RD=n`. Só aumentava, nunca voltava.
+- **Correção:** a profundidade passa a ser a maior entre a que você tinha e as duas paredes do lado.
+  - A sua fica guardada enquanto a parede passa dela (`S.RDw`), e volta quando a parede encurta.
+  - Mexer no campo "Profundidade" apaga essa lembrança: vale o que você digitou.
+- **Limite conhecido:** `S.RDw` não é gravado no arquivo. Depois de reabrir, a profundidade fica a que estava (não muda nada sozinho). Pra diminuir, é pelo campo Profundidade.
+- **Teste:** `testAmbienteParedeDoLadoProfundidadeNaoFicaPresaERebaixoNaoPassaDaParede`. Falha em 9f3dc3e (31700) e passa agora (3170; parede 2000 → 2600).
+
+## AMB-TZ: rebaixo do teto passava do fim da parede no 3D (auditoria de 16/11, 14:29)
+- **Achado na auditoria.** Parede da direita 3170 com rebaixo 1 (0 + 3170) e rebaixo 2 (2400 + 1000).
+  - Antes: o rebaixo 2 ia até 3400 no 3D, 230 mm pra fora da parede. Encurtando a parede pra 2500, os dois continuavam até 3170 e 3400.
+- **Causa:** `zs()` e `tzGeo()` (`editor.html`, rebaixo do teto) desenhavam `x + w` sem olhar o comprimento da parede.
+- **Correção:** na hora de desenhar e medir, o rebaixo é cortado no fim da parede (`tzClamp`).
+  - A medida guardada não muda. Se a parede volta a crescer, o rebaixo volta.
+  - Rebaixo que fica todo fora da parede não é desenhado, mas também não é apagado.
+- **Teste:** o mesmo de AMB-RD. Falha em 9f3dc3e (fim 3400) e passa agora (3170; parede 2500 → 2500; guardado 0+3170 e 2400+1000).
+- **Família conferida:** 81 testes da bateria que mexem em paredes, profundidade, rebaixo, painel na parede e vista da parede.

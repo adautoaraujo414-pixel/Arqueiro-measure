@@ -9447,9 +9447,12 @@ function re(){try{if(window.re3)re3()}catch(_){}}
 function wallL(s){try{return wallCfg(s)}catch(_){return {len:2600,h0:S.H,h1:S.H}}}
 function sideOn(s){var w=S.wl||{};return w[s]!=='n'}
 function setV(k,v,fin){var n=num(v);if(!(n>0)&&!(n===0&&/\.(x|z)$/.test(k)))return;try{snap()}catch(_){}
- if(k==='W')S.W=Math.max(1000,Math.min(12000,n));else if(k==='RD')S.RD=Math.max(1200,Math.min(15000,n));else if(k==='H'){S.H=Math.max(1800,Math.min(4500,n));try{wallSet('F','h1',S.H)}catch(_){}}
+ if(k==='W')S.W=Math.max(1000,Math.min(12000,n));else if(k==='RD'){S.RD=Math.max(1200,Math.min(15000,n));delete S.RDw;delete S.RDs}else if(k==='H'){S.H=Math.max(1800,Math.min(4500,n));try{wallSet('F','h1',S.H)}catch(_){}}
  else if(k==='H0'){S.H=Math.max(1800,Math.min(4500,n))}else if(k==='Fh1'){wallSet('F','h1',Math.max(1800,Math.min(4500,n)))}else if(/^[LR]h[01]$/.test(k)){wallSet(k[0],k.slice(1),Math.max(1800,Math.min(4500,n)))}
- else if(/^[LR](len|h)$/.test(k)){var s=k[0];if(/len$/.test(k)){wallSet(s,'len',n);if(n>(+S.RD||0))S.RD=n}else{wallSet(s,'h0',n);wallSet(s,'h1',n)}}
+ else if(/^[LR](len|h)$/.test(k)){var s=k[0];if(/len$/.test(k)){wallSet(s,'len',n);/* AMB-RD (auditoria de 16/11): a profundidade do ambiente crescia junto com o comprimento digitado na parede do lado e nunca mais voltava
+   (cada número digitado conta: errou 31700 e corrigiu pra 3170, a sala ficava com 31,7 m). Agora ela é a maior entre a profundidade que você tinha e as duas paredes do lado */
+   var rd_=+S.RD||0,b_=(+S.RDw>0&&+S.RDs===rd_)?+S.RDw:rd_,ow_=wallRaw(s==='L'?'R':'L'),ol_=+ow_.len>0?+ow_.len:0,nd_=Math.max(b_,n,ol_);if(nd_>b_){S.RDw=b_;S.RDs=nd_}else{delete S.RDw;delete S.RDs}S.RD=nd_;
+   /* AMB-TZ: o rebaixo do teto não passa do fim da parede (sem apagar a medida guardada: a parede voltando a crescer, ele volta) */}else{wallSet(s,'h0',n);wallSet(s,'h1',n)}}
  else{var q=k.split('.'),L=q[0].replace(/\d+$/,''),i=+q[0].replace(/^\D+/,''),f=q[1];
   if(L==='g'){var g=(S.geo||[])[i];if(!g)return;g[f]=n;if(f==='h')g.b=0}
   else if(L==='xw'){var w=(S.xw||[])[i];if(!w)return;if(f==='t'||f==='h'){if(f==='t')w.t=n;else{w.h0=n;w.h1=n}}else{w['s'+f]=n;xwFix(w)}}
@@ -11130,11 +11133,14 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  function cur(){try{return (window.wvCur&&wvCur())||'f'}catch(_){return 'f'}}
  function wallLen(w){try{if(w===cur())return S.W;if(w==='f')return S.W;var c=wallCfg(w==='e'?'L':'R');return +c.len>0?+c.len:(typeof roomD==='function'?roomD():2600)}catch(_){return S.W}}
  function baseH(w,x){try{if(w===cur())return typeof Hx_==='function'?Hx_(x):S.H;if(w==='f')return S.H;var c=wallCfg(w==='e'?'L':'R'),L=wallLen(w),h0=+c.h0>0?+c.h0:S.H,h1=+c.h1>0?+c.h1:h0;return h0+(h1-h0)*Math.max(0,Math.min(1,x/L))}catch(_){return S.H}}
- function zs(w){return (S.tz||[]).filter(function(z){return (z.wall||'f')===w&&+z.w>0&&+z.hc>0})}
+ /* AMB-TZ (auditoria de 16/11): parede encurtada depois de marcar o rebaixo → o rebaixo passava do fim da parede (2D e 3D). Agora ele é usado só até o fim da parede;
+    o que foi digitado fica guardado (a parede voltando a crescer, ele volta) */
+ function zc(z){var w=z.wall||'f',L=wallLen(w),x=Math.max(0,Math.min(+z.x||0,L)),ww=Math.min(+z.w||0,L-x);return (x===+z.x&&ww===+z.w)?z:Object.assign({},z,{x:x,w:ww})}window.tzClamp=zc;
+ function zs(w){return (S.tz||[]).filter(function(z){return (z.wall||'f')===w&&+z.w>0&&+z.hc>0}).map(zc).filter(function(z){return z.w>=1})}
  /* até onde pode subir uma peça que ocupa de x0 a x1 naquela parede */
  function lim(w,x0,x1){var g=0;try{g=typeof fgh==='function'?fgh():0}catch(_){}var h=Math.min(baseH(w,x0),baseH(w,x1))-g;zs(w).forEach(function(z){if(Math.min(x1,z.x+z.w)-Math.max(x0,z.x)>0.5)h=Math.min(h,z.hc)});return h}
  window.tzLim=lim;
- function fundoT(w){try{return w==='f'?(typeof roomD==='function'?roomD():(+S.RD||2600)):S.W}catch(_){return 2600}}window.tzGeo=function(z){var w=z.wall||'f',tot=!(+z.d>0),d=tot?fundoT(w):Math.max(20,+z.d),top=baseH(w,z.x+z.w/2);if(!(z.hc<top-1))return null;if(w==='f')return {x0:z.x,x1:z.x+z.w,y0:z.hc,y1:top,z0:0,z1:d,tot:tot};if(w==='e')return {x0:0,x1:d,y0:z.hc,y1:top,z0:z.x,z1:z.x+z.w,tot:tot};return {x0:S.W-d,x1:S.W,y0:z.hc,y1:top,z0:z.x,z1:z.x+z.w,tot:tot}};
+ function fundoT(w){try{return w==='f'?(typeof roomD==='function'?roomD():(+S.RD||2600)):S.W}catch(_){return 2600}}window.tzGeo=function(z){z=zc(z);if(!(z.w>=1))return null;var w=z.wall||'f',tot=!(+z.d>0),d=tot?fundoT(w):Math.max(20,+z.d),top=baseH(w,z.x+z.w/2);if(!(z.hc<top-1))return null;if(w==='f')return {x0:z.x,x1:z.x+z.w,y0:z.hc,y1:top,z0:0,z1:d,tot:tot};if(w==='e')return {x0:0,x1:d,y0:z.hc,y1:top,z0:z.x,z1:z.x+z.w,tot:tot};return {x0:S.W-d,x1:S.W,y0:z.hc,y1:top,z0:z.x,z1:z.x+z.w,tot:tot}};
  /* painéis acompanham o rebaixo: corta na altura e divide na quina */
  function fit(){var n=0;try{if(!(S.rp||[]).length)return 0;if(!(S.tz||[]).length)return 0;/* teto com caimento sem rebaixo: vale a regra de sempre (a peça de cima do painel é cortada no ângulo do teto) */var out=[];(S.rp||[]).forEach(function(a){if(!a||a.prat||a.lock){out.push(a);return}var w=a.wall||cur(),x0=a.x,x1=a.x+a.w,top=a.b+a.h,Z=zs(w).filter(function(z){return Math.min(x1,z.x+z.w)-Math.max(x0,z.x)>0.5&&z.hc<top-0.05});if(!Z.length){out.push(a);return}
     /* o painel só é dividido na ponta do rebaixo quando vale a pena: as duas partes com 300 mm ou mais e o gesso descendo 50 mm ou mais · senão a placa fica inteira e para embaixo do gesso (não nasce tira que você não criou) */var ed=[x0,x1];Z.forEach(function(z){if(top-z.hc<50)return;[z.x,z.x+z.w].forEach(function(e){if(e>x0+299.9&&e<x1-299.9)ed.push(e)})});ed=ed.sort(function(p,q){return p-q}).filter(function(e,i,A){return !i||e-A[i-1]>0.5});

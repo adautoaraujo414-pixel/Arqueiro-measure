@@ -12324,5 +12324,17 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  /* aviso: só quando o conjunto de conflitos muda (o desenho roda muitas vezes) */
  if(typeof draw==='function'){var dr0=draw;window.draw=draw=function(){CF={};var r=dr0.apply(this,arguments);try{var L=fgConflitos(),sg=L.map(function(c){return c.texto}).join('|');if(sg!==SIG){SIG=sg;if(L.length)toast(L[0].texto+(L.length>1?' (+'+(L.length-1)+' outro'+(L.length>2?'s':'')+')':''))}}catch(_){}return r}}
 })();
+
+/* ===== Fase 2 · SEL-PROJ / SEL-ESTADO (16/11): nenhum projeto interfere em outro =====
+   As escolhas de tela (peça, divisória, prateleira, peça do 3D, foco do 3D, alvo da lixeira, "Só a pedra no 3D") são de quem está na tela.
+   Abrir OUTRO projeto (CUR mudou, fora do desfazer) zera essas escolhas; os dados do projeto não mudam.
+   Desfazer/refazer e recarga do mesmo projeto mantêm as escolhas que ainda existem e só descartam as que apontam pra algo que não existe mais. */
+(function(){if(window.__selIsoOk||typeof loadState!=='function')return;window.__selIsoOk=1;var l0=loadState,cur0=(typeof CUR!=='undefined')?CUR:null;
+ var vaoOk=function(){try{var m=S.m;if(m&&!(S.sv>=0&&S.sv<((m.v||[]).length||1)))S.sv=0}catch(_){}};
+ var limpa=function(){try{LAST='mod'}catch(_){}window.LAST='mod';window.DIVI=undefined;window.PSEL=null;window.SEL3=null;window.FOC3=null;window.RPSEL=null;window.SELAP=null;window.ST3ONLY=0;window.__delArm=null;try{S.selS=-1}catch(_){}vaoOk()};
+ var valida=function(){try{var m=S.m;if(window.DIVI!==undefined&&!(m&&m.div&&m.div[window.DIVI]!==undefined)){window.DIVI=undefined;try{if(LAST==='div')LAST='mod'}catch(_){}}
+   if(window.PSEL&&!S.mods[window.PSEL.mi])window.PSEL=null;if(window.SEL3&&!S.mods[window.SEL3.mi])window.SEL3=null;if(m&&S.selS>=0&&!(m.shv&&m.shv[S.selS]!==undefined))S.selS=-1;if(window.__delArm&&S.mods.indexOf(window.__delArm.m)<0)window.__delArm=null;vaoOk()}catch(_){}};
+ window.loadState=loadState=function(){var r=l0.apply(this,arguments);try{var c=(typeof CUR!=='undefined')?CUR:null,und=(typeof UNDOING!=='undefined'&&UNDOING);if(c!==cur0&&!und){cur0=c;limpa()}else valida()}catch(_){}return r};
+})();
 </script>
 </body></html>

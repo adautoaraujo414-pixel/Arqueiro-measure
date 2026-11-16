@@ -11871,4 +11871,121 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["refez"] as? String, "35,935 · tamponamento true · igual ao ligado true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* FASE 2 · SEL-DIV (P1-E da auditoria de 16/11): tocar e arrastar a divisória de um módulo NÃO escolhido só escolhe aquele módulo; não mexe na divisória de ninguém.
+       Antes (9ec0869): a divisória do módulo escolhido andava (0,5 → 0,876) e a do tocado ficava. Causa: o toque arma drag {t:'d',i} pelo número da divisória sem conferir
+       o módulo (linhas 1225 e 12181), e o arrasto aplica em S.m.div[i]. Mesma regra já aprovada do tamponamento (TAMP-2D-ALVO). */
+    func testSelecaoDivisoriaDeOutroModuloSoEscolheEleENaoMexeEmNinguem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var AB=dois(),A=AB[0],B=AB[1];await W(200);
+        var hs=[].slice.call(sv.querySelectorAll('[data-d="0"]')).map(function(c){var b=c.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2,mi:+(c.closest('#mod')||{dataset:{mi:-1}}).dataset.mi}}).filter(function(o){return o.x>0}).sort(function(p,q){return q.x-p.x});
+        var h=hs[0],x=h.x,y=h.y;ev('pointerdown',x,y);for(var k=1;k<=6;k++){ev('pointermove',x+k*8,y,sv);ev('pointermove',x+k*8,y,window);await W(16)}ev('pointerup',x+48,y,sv);ev('pointerup',x+48,y,window);await W(500);draw();
+        R.resultado='escolhido '+(S.m===B?'B':S.m===A?'A':'?')+' · A.div '+A.div[0]+' · B.div '+B.div[0];
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["resultado"] as? String, "escolhido B · A.div 0.5 · B.div 0.5")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FASE 2 · SEL-PROJ (P1-G da auditoria): a peça escolhida num projeto não vale no outro. Abrir o projeto B pela lista do editor e tocar no 🗑
+       não apaga a divisória do B que ninguém tocou (tem que pedir confirmação do módulo inteiro, como sem nada escolhido).
+       Antes (9ec0869): LAST='div'/DIVI ficavam do A e o 1º toque no 🗑 apagava a divisória do B. */
+    func testSelecaoLixeiraNaoUsaPecaEscolhidaNoOutroProjeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var mk=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var m=S.mods[0];m.x=35;m.div=[0.5];m.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=m;S.tab=0;panel();draw();return JSON.parse(JSON.stringify(snapState()))};
+        var B=mk();mk();var c=sv.querySelector('[data-d="0"]'),b=c.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;ev('pointerdown',x,y);ev('pointerup',x,y,sv);ev('pointerup',x,y,window);await W(500);
+        R.emA='LAST '+window.LAST+' · DIVI '+window.DIVI;
+        var a=pLoadAll().filter(function(q){return q.id!=='pSelB'});a.push({id:'pSelB',client:{nome:'B'},created:1,updated:1,current:B});pSaveAll(a);var pb=pLoadAll().filter(function(q){return q.id==='pSelB'})[0];CUR=pb.id;loadState(pb.current);draw();S.m=S.mods[0];draw();await W(300);
+        window.__delConfirma=1;TL=[];document.getElementById('delMod').click();await W(200);window.__delConfirma=0;
+        R.noB='divisória '+JSON.stringify(S.mods[0].div)+' · módulos '+S.mods.length+' · pediu confirmação do módulo inteiro '+TL.some(function(t){return /MÓDULO INTEIRO/.test(t)});
+        pSaveAll(pLoadAll().filter(function(q){return q.id!=='pSelB'}));R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["noB"] as? String, "divisória [0.5] · módulos 1 · pediu confirmação do módulo inteiro true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FASE 2 · SEL-ESTADO: abrir outro projeto na mesma página zera as escolhas de tela do anterior (peça, divisória, prateleira, peça do 3D, foco do 3D,
+       "só ele no 2D", "só a pedra no 3D"), sem mexer em nada do projeto. Antes (9ec0869): LAST, DIVI, PSEL, FOC3, SOLOSIG e ST3ONLY ficavam do projeto A. */
+    func testSelecaoEscolhasDeTelaZeramAoAbrirOutroProjeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var AB=dois();var B=JSON.parse(JSON.stringify(snapState()));
+        draw();demoScene();await W(400);draw();open3D();await W(300);try{focOn(1)}catch(_){}try{S.m=S.mods[2];soloOn(S.mods[2])}catch(_){}window.PSEL={mi:2,pk:'Porta#1'};window.DIVI=0;window.LAST='div';S.selS=0;window.ST3ONLY=1;try{SEL3={mi:2,pk:'Porta#1'}}catch(_){}var x3=document.getElementById('v3x');if(x3)x3.click();await W(100);
+        var a=pLoadAll().filter(function(q){return q.id!=='pSelE'});a.push({id:'pSelE',client:{nome:'E'},created:1,updated:1,current:B});pSaveAll(a);var pb=pLoadAll().filter(function(q){return q.id==='pSelE'})[0];CUR=pb.id;loadState(pb.current);draw();await W(200);
+        var sel3=null;try{sel3=SEL3}catch(_){}
+        R.estado='LAST '+window.LAST+' · DIVI '+(window.DIVI===undefined?'-':window.DIVI)+' · PSEL '+(window.PSEL?'sim':'-')+' · SEL3 '+(sel3?'sim':'-')+' · FOC3 '+(window.FOC3?'sim':'-')+' · SOLO2 '+(window.SOLO2?'sim':'-')+' · ST3ONLY '+(+window.ST3ONLY||0)+' · selS '+(S.selS===undefined||S.selS===null||S.selS<0?'-':S.selS);
+        R.projetoIgual=JSON.stringify(histKey(snapState()))===JSON.stringify(histKey(JSON.parse(JSON.stringify(pb.current))))||'dif';
+        pSaveAll(pLoadAll().filter(function(q){return q.id!=='pSelE'}));R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["estado"] as? String, "LAST mod · DIVI - · PSEL - · SEL3 - · FOC3 - · SOLO2 - · ST3ONLY 0 · selS -")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FASE 2 · SEL-VAO: depois de escolher outro módulo (2D ou 3D), o vão escolhido (S.sv) é um vão que existe nesse módulo.
+       Antes (9ec0869): tocar no módulo B pelo 3D deixava S.sv=2 (o 3º vão do A) num B de 1 vão; os painéis corrigem ao abrir, mas o número fica inválido. */
+    func testSelecaoVaoEscolhidoExisteNoModuloEscolhidoDepoisDoToqueNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 1 porta'));draw();var A=S.mods[0],B=S.mods[1];A.div=[1/3,2/3];A.v=[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1}];B.div=[];B.x=A.x+A.w+400;draw();S.m=A;S.sv=2;panel();draw();
+        open3D();await W(400);__build();var p=org3api.proj([B.x+B.w/2,B.b+B.h/2,B.d+20]);__sel3(p[0],p[1]);await W(600);
+        R.depois='escolhido B '+(S.m===B)+' · vão '+S.sv+' de '+B.v.length+' · vãos de B '+B.v.length;var x3=document.getElementById('v3x');if(x3)x3.click();
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["depois"] as? String, "escolhido B true · vão 0 de 1 · vãos de B 1")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FASE 2 · SEL-TORRE: tocar na porta de cima da torre de forno/micro-ondas e trocar a porta (aba Portas 1 ou 2 portas, ou 2 toques no vão "1 porta")
+       muda só a porta de cima: o forno, o micro-ondas e os nichos continuam, e nenhuma porta fica mais alta que a porta de cima era.
+       Antes (9ec0869): nos 10 modelos de torre a torre inteira virava uma porta de 2100 mm e o forno/micro sumiam. Mesmo mecanismo já corrigido na caixa da geladeira (TORRE-GEL-PORTA). */
+    func testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h&&(it.v||[]).some(function(v){return v.k==='oven'})&&/^Torre/.test(it.n))its.push(it)})});
+        var portas=function(m){return partsOf(m).filter(function(p){return /^Porta/.test(p.name)})},eletro=function(m){return partsOf(m).filter(function(p){return /forno|micro|Nicho|Forno|Micro/.test(p.name)}).length};
+        var erros=[],n=0;
+        for(var i=0;i<its.length;i++){for(var cam of ['aba1','aba2','menu1']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[0];m.x=1500;S.m=m;S.sv=0;S.tab=0;draw();panel();await W(20);
+          var P=partsOf(m),best=-1,top=-1;P.forEach(function(p,k){if(/^Porta/.test(p.name)&&p.y+p.h>top){top=p.y+p.h;best=k}});if(best<0)continue;var alto=Math.round(P[best].h),e0=eletro(m);
+          var r=sv.querySelector('#mod[data-mi="0"] rect[data-p="'+best+'"]');if(!r)continue;var b=r.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;ev('pointerdown',x,y,r);ev('pointerup',x,y,sv);ev('pointerup',x,y,window);await W(450);n++;
+          if(cam!=='menu1'){S.tab=3;panel();var bt=[].filter.call(document.querySelectorAll('#bd [data-door="'+(cam==='aba2'?2:1)+'"]'),function(q){return q.offsetParent!==null})[0];if(bt){bt.click();await W(200)}}
+          else{vmenuOpen(0,S.sv||0,200,300);await W(40);var bm=document.querySelector('#vmenu [data-vk="door1"]');if(bm){bm.click();await W(200)}vmenuClose()}
+          m=S.mods[0];var maior=portas(m).reduce(function(a,q){return Math.max(a,Math.round(q.h))},0);if(eletro(m)!==e0||maior>alto+1)erros.push(its[i].n+' ('+cam+'): forno/micro '+e0+'→'+eletro(m)+' · maior porta '+maior+' (a de cima tinha '+alto+')')}}
+        R.tentativas=n>=27;R.erros=erros.length+(erros.length?': '+erros.slice(0,3).join(' | '):'');R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["tentativas"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

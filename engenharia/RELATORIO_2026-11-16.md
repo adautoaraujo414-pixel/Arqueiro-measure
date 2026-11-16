@@ -126,3 +126,48 @@ O que **falhou**:
    - Não deu para confirmar se é instável: os commits seguintes só mudaram documentação e o CI do iOS não rodou de novo. Fica pendente rodar o CI do iOS outra vez.
 
 **Aparelho real:** não testado.
+
+---
+
+# Segunda rodada (16/11, depois das 05:43, com a autorização nova)
+
+## Corrigido
+| Item | O que mudou | Evidência | Status |
+|---|---|---|---|
+| WEBGL-001 (3D apagado) | O 3D volta sozinho quando o sistema devolve o contexto gráfico. Projeto, câmera e edição não mudam | Teste novo. Na versão anterior: `apagado`. Agora: `desenha`, mesmo projeto, mesmas caixas, foto do padrão de volta | Resolvido no Chromium e na bateria. Aparelho: não testado |
+| Teste do PEDIDO 45 no Safari | Causa: limite de pilha do Chrome (10). O teste agora roda com a pilha sem limite e espera os 2 erros. O app não mudou | No Chromium, com a pilha sem limite, dá o mesmo resultado do log do iPhone | Teste corrigido |
+| Teste do canto 67/70 | Causa: o teste lia a animação em 3,5 s fixos, e o simulador dá poucos quadros. Agora espera a animação terminar. O app não mudou (o alvo é 70° pela fórmula) | Reproduzido com quadros a cada 1,2 s: o teste antigo leu 0; o novo dá 90/70 | Teste corrigido |
+
+## Investigado e não corrigido
+- **PEDIDO 45 (módulo some no 3D):** não reproduzido.
+  - Testados os 119 módulos de cozinha e a cena dos prints, na versão que estava no iPhone (97b6eef) e na atual.
+  - Para achar a causa, falta o "🔎 Diagnóstico do 3D", que só existe na versão nova. Ela ainda não está no iPhone, porque subir depende da sua autorização.
+- **Gola, interferência de 1,5 mm:** validada peça por peça (ver a especificação do gola, pendência 1).
+  - O perfil real também tem parede atrás da porta: 18 de fundo para encaixe de 15,5.
+  - Para resolver sem mexer em porta ou caixa, falta saber como você instala: folga da dobradiça ou rebaixo na caixa. **Pergunta aberta.**
+- **Gola, comparação com a referência** (pontas, cantos, gancho, porta de correr): está na especificação. Os cantos arredondados, o gancho de uns 6 mm e a porta de correr ficaram como estavam, porque não há cota na referência.
+
+## Pedidos 61 e 62
+- A branch `wip/pedidos-61-62` foi rebaseada em cima de tudo isso.
+- **Teste novo do 62:** `testEditorPorVaosDoisToquesNoVaoAbreMenuRapidoComAsAbasEBotoesDoPainel`.
+  - 1 toque não abre.
+  - 2 toques abrem com as 7 abas.
+  - "Horizontal" divide igual ao painel.
+  - A aba Gavetas mostra 12 botões.
+- **Imagem:** faixa minimizada e menu de 2 toques aberto.
+- Linhas de novidades acrescentadas.
+- Bateria completa: ver abaixo.
+
+## Auditoria de projeto (criar, editar, salvar, fechar o app, reabrir)
+- Feita com um harness que recarrega a página, como se fechasse e abrisse o app. O arquivo nativo continua guardado.
+- **Projeto criado pelo caminho do app (`newProjFor`) com:** balcão, gaveteiro, aéreo, pedra, gola aplicada numa porta (vai para todas), gaveteiro mudado para 700 de largura e 3 gavetas. Salvo com `saveNow`.
+- **Depois de reabrir:**
+  - O projeto está na lista.
+  - Igual ao salvo: módulos, peças, plano de corte (20 grupos), materiais (Perfil G 3,92 m) e pedra.
+  - 3D com todos os módulos (110, 70 e 103 caixas) e sem erro.
+  - Gola certo nas 7 frentes (2 portas do balcão, 3 gavetas e 2 portas do aéreo).
+- **Achado pequeno:** ao salvar de novo sem mexer, o módulo ganha `wing: 0` no lugar de "sem valor". As duas formas valem "não é módulo de parede lateral", então nada muda no projeto. Anotado para conferir quando mexer em gravação.
+- A recuperação de backup está coberta pelo teste da bateria `testRecuperarProjetosDeUmBackupSemTrocarNada`.
+
+## Não feito nesta rodada
+- **Protótipo de materiais (metal, vidro, luz de profundidade).** Para ser de verdade (reflexo e Fresnel), precisa de normais nos vértices, o que é mudança estrutural no motor 3D (formato do vértice de 32 para 44 bytes). Não quis fazer um efeito "falso" de brilho que não corresponde ao material. Proposta e custo estão em `MOTOR_3D_AUDITORIA.md`, seção 5. **Preciso do seu ok para mexer no formato do vértice** (em cópia separada, com antes e depois e medição).

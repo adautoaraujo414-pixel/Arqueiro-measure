@@ -36,11 +36,23 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
   - Há o botão "🔎 Diagnóstico do 3D".
 - **Status:** mitigado. **Causa raiz desconhecida.** Para achar, falta o texto do diagnóstico ou o backup do projeto.
 
-## WEBGL-001: perda do contexto gráfico não é tratada
-- **Achado:** auditoria de 16/11. O código não escuta `webglcontextlost` nem `webglcontextrestored`.
-- **Reproduzido no Chromium:** depois de `WEBGL_lose_context.loseContext()`, o 3D fica de uma cor só, mesmo fechando e abrindo o 3D de novo. O contexto não volta porque o app não chama `preventDefault`. Só recarregar a página resolve.
-- **Risco:** no iOS e no Android o sistema pode tirar o contexto quando o app vai para o fundo ou falta memória.
-- **Status:** pendente. Corrigir exige autorização (é mudança no motor 3D). Não testado em aparelho.
+- **Investigação de 16/11:**
+  - Versão que estava no iPhone dele (TestFlight do commit 97b6eef): cada um dos 119 módulos do catálogo de cozinha, criado sozinho e aberto no 3D, apareceu (0 falhas).
+  - Mesma versão, cena dos prints de 00:44 (gaveteiro + balcão 1 porta + balcão forno + pedra + aéreo, com "Só ele no 2D" e voltar): todos aparecem.
+  - A mesma cena na versão atual também aparece.
+  - **Não reproduzido.** Hipótese, não comprovada: algum campo do módulo recém-criado ficava inválido até o projeto ser reaberto (a reabertura normaliza os dados). O diagnóstico e o refazer automático do commit e3d68b8 ainda não estão no iPhone dele, porque é preciso subir uma versão nova, e isso depende de autorização.
+## WEBGL-001: perda do contexto gráfico não era tratada
+- **Achado:** auditoria de 16/11. O código não escutava `webglcontextlost` nem `webglcontextrestored`.
+- **Reproduzido no Chromium:** depois de `WEBGL_lose_context.loseContext()` e `restoreContext()`, o 3D ficava de uma cor só, mesmo fechando e abrindo o 3D. Só recarregar o app resolvia.
+- **Correção** (autorizada em 16/11 às 05:43):
+  - O app segura o contexto (`preventDefault`).
+  - Quando o contexto volta, refaz shader, texturas e buffers e desenha de novo.
+  - Não mexe no projeto (`S`), na câmera nem na edição.
+  - Código: logo depois de `glInit()` em `editor.html`.
+- **Teste:** `test3DVoltaSozinhoQuandoOSistemaTiraEDevolveOContextoGrafico`.
+  - Na versão anterior: `voltou false · depois apagado · reabre3D apagado`.
+  - Agora: `desenha`, mesmo projeto, mesmas caixas, foto do padrão de volta.
+- **Status:** resolvido no Chromium e no CI. **Não testado em aparelho real.** Para testar no aparelho, é preciso forçar a perda de memória gráfica.
 
 ## TAMP-ENGROSSO: engrosso do tamponamento entrando no módulo
 - **Relatado:** 16/11 às 00:55 ("erro gravíssimo").
@@ -56,6 +68,17 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Pedido:** 15/11 às 21:50, folga de 3 mm entre as folhas.
 - **Correção:** 97b6eef e anteriores. Teste `testArmarioDeCantoFolgaDe3mmEntreAsFolhasAbreUmaDepoisAOutra`.
 - **Status:** resolvido.
+
+## TESTE-45-WEBKIT: teste do PEDIDO 45 dava resultado diferente no Safari
+- **Causa real:** o teste dispara um erro olhando se `DRM` está na pilha de chamadas. O Chrome guarda só 10 chamadas (`Error.stackTraceLimit=10`). Como o `partsOf` é embrulhado 18 vezes, `DRM` sai da pilha e o erro não cai dentro das peças. O Safari guarda mais e cai.
+- Comprovado: no Chromium, com `Error.stackTraceLimit=Infinity`, o resultado fica igual ao do iPhone.
+- **Correção (só no teste):** pilha sem limite durante o teste e expectativa com os 2 erros ("(peças)" e o geral), igual nos dois. O app não mudou.
+
+## TESTE-CANTO-67: armário de canto do guarda-roupa abria 67° em vez de 70° no CI do iPhone
+- **Causa real:** o teste lia o ângulo da animação em 3,5 s fixos. No simulador do iPhone (WebView fora da tela) os quadros de animação vêm espaçados, e a folha do lado ainda estava abrindo.
+  - O alvo do app é calculado por fórmula (`cnAng_`) e é 70°.
+  - Reproduzido no Chromium com quadros a cada 1,2 s: o teste antigo leu 0.
+- **Correção (só no teste):** espera a animação chegar ao alvo, até 10 s, continuando a conferir que as folhas não se cruzam. Com quadros a cada 1,2 s agora dá 90/70. O app não mudou.
 
 ## BAT-FLAKY: testes que falham só com carga
 - `testSoOModulo3DE2DComPortaGavetaEDivisoriaSoNele`: falhou na bateria de 16/11 (e3d68b8) e passou rodando sozinho, com resultado igual ao da versão anterior.

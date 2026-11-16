@@ -10697,4 +10697,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abriuDeNovo"] as? String, "Esquerda/Direita de volta")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testEditorPorVaosDoisToquesNoVaoAbreMenuRapidoComAsAbasEBotoesDoPainel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 62: editor por vãos (Só ele no 2D: torre, armário alto…) · 2 toques no vão abrem o menu rápido com as abas do painel e os botões delas; o botão do menu faz o mesmo que o do painel */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(/Armário alto|Torre/.test(it.n)&&!it.act&&c.id==='quarto')L.push(it.n)})});
+        loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=3200;S.H=2700;draw();newTpl(T(L[0]||'Armário alto 2 portas'));draw();soloOn(S.mods[0]);await W(200);
+        var g=document.querySelector('#svg [data-rgr]');g.scrollIntoView({block:'center'});await W(80);var r=g.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*0.5;
+        var tq=async function(){var el=document.elementFromPoint(x,y);['pointerdown','pointerup'].forEach(function(t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,isPrimary:true,pointerType:'touch'}))});try{el.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:x,clientY:y}))}catch(_){}await W(110)};
+        await tq();R.umToque=document.getElementById('rgqk')&&!document.getElementById('rgqk').hidden?'abriu (errado)':'não abre';await tq();await W(300);
+        var m=document.getElementById('rgqk');R.doisToques=m&&!m.hidden?'abriu · abas: '+[].slice.call(m.querySelectorAll('[data-rqt]')).map(function(b){return b.textContent.trim()}).join(', '):'não abriu';
+        var nb=m?[].slice.call(m.querySelectorAll('[data-rqb]')).filter(function(b){return /Horizontal/.test(b.textContent)})[0]:null;var s0=JSON.stringify(S.mods[0]);if(nb){nb.click();await W(200)}R.botaoHorizontal=nb?(JSON.stringify(S.mods[0])!==s0?'dividiu o vão (igual ao painel)':'não fez nada'):'sem botão Horizontal';
+        var tl_=m?[].slice.call(m.querySelectorAll('[data-rqt]')):[],t2=tl_[1];if(t2){var k2=t2.dataset.rqt;t2.click();await W(150);R.trocouDeAba=k2+' · botões '+m.querySelectorAll('[data-rqb]').length}
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["umToque"] as? String, "não abre")
+        XCTAssertEqual(o["doisToques"] as? String, "abriu · abas: ▦Divisões, 🗄️Gavetas, 👔Internos, 🚪Portas, 🔌Eletros, 📐Estrutura, 🎨Cores")
+        XCTAssertEqual(o["botaoHorizontal"] as? String, "dividiu o vão (igual ao painel)")
+        XCTAssertEqual(o["trocouDeAba"] as? String, "gav · botões 12")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

@@ -11709,4 +11709,166 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semAvisoNaCozinhaDemo"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* GEO-AVISA × tamponamento (16/11): ligar o tamponamento pelo "Usar" é ação explícita e segue a regra aprovada (régua inteira por fora do módulo).
+       Os 6 testes abaixo separam: móvel existente que não é empurrado sozinho · ligar esquerdo · ligar direito · desligar e religar · sem espaço · salvar/reabrir/desfazer/refazer. */
+    func testTamponamentoMovelExistenteNaoEEmpurradoSozinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(4000,['Balcão 2 portas','Balcão 1 porta']);await W(50);var p0=pos(),m0=med();
+        for(var i=0;i<3;i++)draw();R.desenhar=pos()===p0&&med()===m0;
+        S.m=S.mods[0];setv('W',3900);await W(20);setv('W',4000);await W(20);R.parede=pos()===p0&&med()===m0;
+        S.m=S.mods[0];setv('H',2400);await W(20);setv('H',2700);await W(20);R.peDireito=pos()===p0&&med()===m0;
+        open3D();await W(300);__build();document.getElementById('v3x').click();R.tresD=pos()===p0&&med()===m0;
+        loadState(JSON.parse(JSON.stringify(snapState())));draw();R.reabrir=pos()===p0&&med()===m0;R.pos=p0;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["desenhar"] as? Bool, true)
+        XCTAssertEqual(o["parede"] as? Bool, true)
+        XCTAssertEqual(o["peDireito"] as? Bool, true)
+        XCTAssertEqual(o["tresD"] as? Bool, true)
+        XCTAssertEqual(o["reabrir"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoEsquerdoLigadoNoModuloEncostadoNaParedeSegueARegra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(4000,['Balcão 2 portas','Balcão 1 porta','Aéreo 2 portas']);await W(50);var p0=pos(),m0=med();
+        R.antes=p0;R.achou=await usar(0,'tl',true);R.depois=pos();R.medidas=med()===m0;R.tamp=tp(0,'Tamponamento esquerdo');R.ligado=!!S.mods[0].tl;R.espessura=S.mods[0].tlW;R.aviso=TL.filter(function(t){return /Não cabe|Atenção/.test(t)}).length;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "5,905,5s")
+        XCTAssertEqual(o["depois"] as? String, "35,935,5s", "a fileira de baixo anda a espessura do tamponamento; o aéreo (outra fileira) não anda")
+        XCTAssertEqual(o["medidas"] as? Bool, true)
+        XCTAssertEqual(o["tamp"] as? String, "2D/peça -30+30 · 3D 5→35 · corte 3 linha(s)", "régua inteira por fora da lateral, igual no 2D, no 3D e no corte")
+        XCTAssertEqual(o["ligado"] as? Bool, true)
+        XCTAssertEqual(o["espessura"] as? Int, 30)
+        XCTAssertEqual(o["aviso"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoDireitoLigadoNoModuloEncostadoNaParedeSegueARegra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(4000,['Balcão 2 portas','Balcão 2 portas']);await W(50);S.mods[1].x=4000-5-S.mods[1].w;S.m=S.mods[1];draw();await W(50);var p0=pos(),m0=med();
+        R.antes=p0;R.achou=await usar(1,'tr',true);R.fimDaLateral=lado(1,'d');R.depois=pos();R.medidas=med()===m0;R.tamp=tp(1,'Tamponamento direito');R.ligado=!!S.mods[1].tr;R.espessura=S.mods[1].trW;R.aviso=TL.filter(function(t){return /Não cabe|Atenção/.test(t)}).length;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "5,3095")
+        XCTAssertEqual(o["depois"] as? String, "5,3065", "o módulo encostado na parede da direita anda a espessura pra esquerda; o outro não anda")
+        XCTAssertEqual(o["medidas"] as? Bool, true)
+        XCTAssertEqual(o["tamp"] as? String, "2D/peça 900+30 · 3D 3965→3995 · corte 3 linha(s)")
+        XCTAssertEqual(o["ligado"] as? Bool, true)
+        XCTAssertEqual(o["espessura"] as? Int, 30)
+        XCTAssertEqual(o["aviso"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoDesligarERelegarNaoDesfazOutraMudanca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(4000,['Balcão 2 portas','Balcão 1 porta']);await W(50);var p0=pos();
+        await usar(0,'tl',true);R.ligou=pos();S.m=S.mods[1];setv('h',780);await W(20);var h1=S.mods[1].h;
+        await usar(0,'tl',false);R.desligou=pos()+' · altura do vizinho '+S.mods[1].h+' (era '+h1+')';await usar(0,'tl',true);R.religou=pos()+' · altura do vizinho '+S.mods[1].h;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ligou"] as? String, "35,935")
+        XCTAssertEqual(o["desligou"] as? String, "5,905 · altura do vizinho 780 (era 780)", "tirar o tamponamento devolve a posição e não desfaz a altura mudada depois")
+        XCTAssertEqual(o["religou"] as? String, "35,935 · altura do vizinho 780")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoSemEspacoAvisaEDeixaOProjetoIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(1810,['Balcão 2 portas','Balcão 2 portas']);S.mods[1].w=900;S.mods[1].x=905;draw();await W(50);R.parede='módulos '+pos()+' · larguras '+S.mods.map(function(m){return m.w}).join(',')+' · parede 1810';var st0=histKey(snapState());TL=[];
+        await usar(0,'tl',true);R.ligado=!!S.mods[0].tl;R.igual=histKey(snapState())===st0;R.aviso=TL.filter(function(t){return /Não cabe/.test(t)}).length>0;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["parede"] as? String, "módulos 5,905 · larguras 900,900 · parede 1810")
+        XCTAssertEqual(o["ligado"] as? Bool, false)
+        XCTAssertEqual(o["igual"] as? Bool, true, "sem espaço: o projeto fica exatamente como estava")
+        XCTAssertEqual(o["aviso"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoLigadoSalvarReabrirDesfazerRefazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
+        var usar=async function(mi,c,on){S.m=S.mods[mi];draw();panel();await tab();var cb=document.querySelector('#bd input[type=checkbox][data-c="'+c+'"]');if(cb&&cb.checked!==on){cb.click();await W(700)}return !!cb};
+        var pos=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.sup?'s':'')}).join(',')};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d,m.esp,m.b||0].join('/')}).join(' ')};
+        var tp=function(mi,nome){var m=S.mods[mi],p=partsOf(m).filter(function(q){return q.name===nome})[0],cl=cutLines(m).filter(function(l){return (l.names||[]).some(function(n){return n.indexOf(nome)===0})});__build();var bx=__boxes().filter(function(q){return String(q.nm).indexOf(mi+':')===0&&String(q.pk||'').indexOf(nome)===0}),x0=Math.min.apply(null,bx.map(function(q){return q.x0})),x1=Math.max.apply(null,bx.map(function(q){return q.x1}));
+          return p?('2D/peça '+Math.round(p.x)+'+'+Math.round(p.w)+' · 3D '+(bx.length?Math.round(x0)+'→'+Math.round(x1):'FALTA')+' · corte '+cl.length+' linha(s)'):'sem peça'};
+        var lado=function(mi,d){var m=S.mods[mi];return d==='e'?Math.round(m.x):Math.round(m.x+m.w)};
+        var cena=function(W_,itens){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_;S.H=2700;S.stones=[];draw();itens.forEach(function(n){newTpl(T(n))});['tl','tr'].forEach(function(k){S.mods.forEach(function(m){m[k]=false;delete m[k+'Auto'];m[k+'M']=1})});draw()};
+        cena(4000,['Balcão 2 portas','Balcão 1 porta']);await W(50);var p0=pos();histTick();LASTT=0;
+        await usar(0,'tl',true);LASTT=0;histTick();var p1=pos(),c1=JSON.stringify(cutGroups()),t1=tp(0,'Tamponamento esquerdo');
+        loadState(JSON.parse(JSON.stringify(snapState())));draw();await W(20);R.reabriu=(pos()===p1)+' · corte '+(JSON.stringify(cutGroups())===c1)+' · tamponamento '+(tp(0,'Tamponamento esquerdo')===t1);
+        /* desfazer e refazer o ligar pelos botões ↶ ↷ */
+        cena(4000,['Balcão 2 portas','Balcão 1 porta']);await W(900);LASTT=0;histTick();await usar(0,'tl',true);await W(900);LASTT=0;histTick();var pl=pos();
+        document.getElementById('und').onclick();await W(50);R.desfez=pos()+' · tamponamento '+!!S.mods[0].tl;document.getElementById('red').onclick();await W(50);R.refez=pos()+' · tamponamento '+!!S.mods[0].tl+' · igual ao ligado '+(pos()===pl);
+        R.p0=p0;R.p1=p1;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["p0"] as? String, "5,905")
+        XCTAssertEqual(o["p1"] as? String, "35,935")
+        XCTAssertEqual(o["reabriu"] as? String, "true · corte true · tamponamento true")
+        XCTAssertEqual(o["desfez"] as? String, "5,905 · tamponamento false")
+        XCTAssertEqual(o["refez"] as? String, "35,935 · tamponamento true · igual ao ligado true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

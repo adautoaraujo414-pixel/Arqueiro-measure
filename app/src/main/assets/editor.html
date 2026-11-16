@@ -12278,19 +12278,28 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var nome=function(m){return (m.n||(m.sup?'Superior':'Base'))+' '+Math.round(m.w)+' × '+Math.round(m.h)};
  var mm=function(v){return String(Math.round(+v||0)).replace(/\B(?=(\d{3})+(?!\d))/g,'.')};
  /* o que a pessoa está mexendo agora: só esses campos podem ser encaixados */
- var KN=new WeakSet(),CARR=0,PEND=0;
+ var KN=new WeakSet(),CARR=0,PEND=0,LX=new Map(),MOV=null,ID=function(q){return q&&q.uid?'u'+q.uid:q};
+ /* encaixe da posição que acabou de mudar: o módulo escolhido (S.m) cuja posição mudou fora das passadas de restrição (campo, arrasto, encaixe do canto do
+    PEDIDO 52, posição posta pelo app ao mexer) tem o x encaixado na primeira passada seguinte (canto: "módulo de baixo na parede do lado começa depois do canto").
+    Mudança de ambiente não muda o x de ninguém, então não autoriza nada; abrir projeto e desfazer marcam tudo como visto. */
  /* móvel que acabou de ser criado (catálogo, demonstração, canto, colar, duplicar…) ainda não tem lugar escolhido: o lugar dele (x e altura) é encaixado na criação. Móvel que veio do arquivo, do desfazer ou que já foi desenhado é "conhecido" */
  var novo=function(q){return !CARR&&!KN.has(q)};
  var TUDO={x:true,b:true,w:true,h:true,d:true};window.fgNovo=function(q){return !!q&&novo(q)};
+ /* ação explícita da pessoa: ligar o tamponamento (esquerdo ou direito) pelo "Usar". A regra aprovada põe a régua inteira por fora do módulo: o módulo e os
+    vizinhos encostados da MESMA fileira andam no máximo a espessura do tamponamento, só em x; medidas nunca mudam; se não couber, tpNaoCabe volta tudo e avisa.
+    Vale só dentro dessa ação (acaba no fim dela); desenho, 3D, abertura de projeto e tamponamento automático não usam. */
+ var TP=null;var tpFim=function(){TP=null};
+ if(typeof tpAntes==='function'){var ta0=tpAntes;window.tpAntes=tpAntes=function(m,c){var r=ta0.apply(this,arguments);try{var lim=(+m.tlW||30)+(+m.trW||30)+1;TP={m:m,lim:lim,row:(S.mods||[]).filter(function(o){return o===m||(typeof sameRow==='function'&&sameRow(m,o))})};setTimeout(tpFim,0)}catch(_){TP=null}return r}}
+ var tpAut=function(q,f,a,b){return !!TP&&f==='x'&&TP.row.indexOf(q)>=0&&Math.abs((+b)-(+a))<=TP.lim};
  var aut=function(q){if(novo(q))return TUDO;var a=window.__fgAut;if(a&&(a.m===q||(a.novos&&a.novos.indexOf(q)>=0)))return a.f||{};try{if(typeof drag!=='undefined'&&drag&&drag.t==='m'&&S.m===q)return {x:!!drag.ux,b:!!drag.uy}}catch(_){}return {}};
- var guarda=function(fn,th,args){if(prof++>0){try{return fn.apply(th,args)}finally{prof--}}
-  var mods=(S.mods||[]).slice(),k=mods.map(function(q){var o={};F.forEach(function(f){o[f]=q[f]});return o}),r;
+ var guarda=function(fn,th,args,pos){if(prof++>0){try{return fn.apply(th,args)}finally{prof--}}
+  MOV=null;try{var sm_=S.m;if(pos&&sm_&&!CARR&&LX.has(ID(sm_))&&LX.get(ID(sm_))!==sm_.x)MOV=ID(sm_)}catch(_){}var mods=(S.mods||[]).slice(),k=mods.map(function(q){var o={};F.forEach(function(f){o[f]=q[f]});return o}),r;
   try{r=fn.apply(th,args)}finally{prof--;
-   mods.forEach(function(q,i){if(S.mods.indexOf(q)<0)return;var A=aut(q);F.forEach(function(f){var a=k[i][f],b=q[f];if(a===b||(+a===+b))return;if(A[f]&&(!DIM[f]||A===TUDO))return;
-    var c=CF[q.uid||('i'+i)]=CF[q.uid||('i'+i)]||{m:q,f:{}};c.f[f]={tem:+a,cabe:+b};q[f]=a})});/* fica "novo" até o fim da ação em que foi criado (criar, pôr no lugar e desenhar é uma ação só) */if(!PEND){PEND=1;setTimeout(function(){PEND=0;(S.mods||[]).concat(S.stones||[],S.fr||[]).forEach(function(q){if(q&&typeof q==='object')KN.add(q)})},0)}}
+   mods.forEach(function(q,i){if(S.mods.indexOf(q)<0)return;var A=aut(q);F.forEach(function(f){var a=k[i][f],b=q[f];if(a===b||(+a===+b))return;if(A[f]&&(!DIM[f]||A===TUDO))return;if(tpAut(q,f,a,b))return;if(f==='x'&&MOV!==null&&MOV===ID(q))return;
+    var c=CF[q.uid||('i'+i)]=CF[q.uid||('i'+i)]||{m:q,f:{}};c.f[f]={tem:+a,cabe:+b};q[f]=a})});/* só a passada de posicionamento (confineAll) registra a posição vista; a do 3D (roomClamp) não consome a mudança */if(pos)(S.mods||[]).forEach(function(q){LX.set(ID(q),q.x)});MOV=null;/* fica "novo" até o fim da ação em que foi criado (criar, pôr no lugar e desenhar é uma ação só) */if(!PEND){PEND=1;setTimeout(function(){PEND=0;(S.mods||[]).concat(S.stones||[],S.fr||[]).forEach(function(q){if(q&&typeof q==='object')KN.add(q)})},0)}}
   return r};
  /* abrir projeto, desfazer, refazer: tudo que entra é conhecido (nada é encaixado sozinho) */
- if(typeof loadState==='function'){var ls0=loadState;window.loadState=loadState=function(){CARR++;try{return ls0.apply(this,arguments)}finally{CARR--;(S.mods||[]).concat(S.stones||[],S.fr||[]).forEach(function(q){if(q&&typeof q==='object')KN.add(q)})}}}
+ if(typeof loadState==='function'){var ls0=loadState;window.loadState=loadState=function(){CARR++;TP=null;try{return ls0.apply(this,arguments)}finally{CARR--;(S.mods||[]).concat(S.stones||[],S.fr||[]).forEach(function(q){if(q&&typeof q==='object')KN.add(q)});(S.mods||[]).forEach(function(q){LX.set(ID(q),q.x)})}}}
  /* falta de medida avisada por outra regra (ex.: forno) */
  window.fgFalta=function(q,f,tem,precisa,txt){var c=CF[q.uid||('f'+S.mods.indexOf(q))]=CF[q.uid||('f'+S.mods.indexOf(q))]||{m:q,f:{}};c.f[f]={tem:+tem,precisa:+precisa,txt:txt}};
  var frase=function(c){var m=c.m,o=[];Object.keys(c.f).forEach(function(f){var v=c.f[f],d=Math.abs(Math.round((v.precisa!==undefined?v.precisa:v.tem)-(v.precisa!==undefined?v.tem:v.cabe)));
@@ -12302,7 +12311,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    else if(v.txt)o.push(v.txt+', e o módulo tem '+mm(v.tem)+' mm. Diferença: '+mm(d)+' mm')});
   return 'Atenção: '+nome(m)+': '+o.join(' · ')+'. Nenhuma medida foi alterada.'};
  window.fgConflitos=function(){return Object.keys(CF).map(function(k){return {modulo:nome(CF[k].m),mi:S.mods.indexOf(CF[k].m),campos:JSON.parse(JSON.stringify(CF[k].f)),texto:frase(CF[k])}}).filter(function(c){return c.mi>=0})};
- if(typeof confineAll==='function'){var ca0=confineAll;window.confineAll=confineAll=function(){try{if(typeof stAdapta==='function')stAdapta()}catch(_){}return guarda(ca0,this,arguments)}}
+ if(typeof confineAll==='function'){var ca0=confineAll;window.confineAll=confineAll=function(){try{if(typeof stAdapta==='function')stAdapta()}catch(_){}return guarda(ca0,this,arguments,true)}}
  if(typeof roomClamp==='function'){var rc0=roomClamp;window.roomClamp=roomClamp=function(){
    /* pedra e móveis soltos também não são cortados nem empurrados pela parede */var st=(S.stones||[]).map(function(q){return [q,q.w,q.x]}),fr=(S.fr||[]).map(function(q){return [q,q.x]});
    if(!PEND){PEND=1;setTimeout(function(){PEND=0;(S.mods||[]).concat(S.stones||[],S.fr||[]).forEach(function(q){if(q&&typeof q==='object')KN.add(q)})},0)}

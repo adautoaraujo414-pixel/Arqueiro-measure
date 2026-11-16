@@ -12,6 +12,13 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 | 15/11 12:28 | Print de aéreos com perfil embaixo (PEDIDO 51) | Sim |
 | 16/11 00:57 | Print do erro: porta vista por dentro, abertura para dentro | Sim |
 
+## Churrasqueira e área molhada (16/11). Ver `ESPEC_CHURRASQUEIRA_QUADRADA.md` e `ESPEC_TEXTURAS_PIA_AREA_MOLHADA.md`
+| Data e hora | Conteúdo | Analisada |
+|---|---|---|
+| 16/11 14:34 | Foto de uma coluna revestida (efeito mármore escuro) com a boca da churrasqueira de embutir e a moldura de 4 peças em 45°; caixa de inox com grelha dentro (anexo `4bde29b0-image.png`) | Sim (16/11 15:15). Sem escala: só proporções, nenhuma medida |
+| 16/11 14:41 | Foto do tablet: área molhada como placa lisa verde-escura no granito (anexo `e996adc5-image.jpg`) | Sim. Reproduzida no editor (AM-1) |
+| 16/11 (internet) | Tipos de rebaixo da área molhada: tradicional e americano ~2 cm, italiano ~0,5 cm (Bella Granitos) | Sim |
+
 ## Outras referências desta conversa (de 02/11 a 16/11)
 - No total são 435 imagens e alguns vídeos e PDFs (catálogos Duratex, Arauco e lançamentos 2026).
 - Em 16/11, todas as imagens foram vistas em miniatura, procurando o gola. Só as da tabela acima eram sobre o gola.

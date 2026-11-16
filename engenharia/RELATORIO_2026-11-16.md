@@ -82,4 +82,34 @@ Ver `HISTORICO_ERROS.md`. Os principais:
 - Branch `wip/pedidos-61-62`: trabalho anterior (pedidos 61 e 62) guardado à parte.
 
 ## 8. Resultado da bateria
-(preenchido abaixo depois da bateria completa)
+**Bateria completa no harness Chromium, com a correção do gola** (commit fcfcf28): 296 execuções em 35 minutos.
+
+**O que passou:**
+- O teste novo do gola.
+- As 3 expectativas atualizadas: `golaPerfil "10 true false"`, `golaAbre "10 true"` e `b3 10`.
+- `testPuxadoresDescontamCertoEConchaNoMeio`, com desconto de 29.
+- `testPortasNaoEntramEmNada…`.
+- `testBateriaGeralCatalogoNo3DEPedraNaoEntraEmNada`.
+
+**Falhas conhecidas e aceitas** (iguais na versão anterior):
+- `onl`
+- `pinkR`
+- `depois`
+
+**Falha só com carga:**
+- `testOrganizacao3DClienteEModoPessoa` (`clv`, `ro`): rodando sozinho, deu `clv: true, ro: true`.
+
+**Para revisar:**
+- `quarto`: o resultado novo é o que o teste espera (`"quarto true true"`). A diferença é da versão antiga de comparação.
+
+**Nenhuma regressão nova.**
+
+**Bateria da versão anterior (e3d68b8, antes do gola):**
+- As mesmas falhas conhecidas.
+- `testSoOModulo3DE2D…`, que só falha com carga (sozinho passa igual à versão antiga).
+
+**CI do iOS (WebKit de verdade):**
+- O commit e3d68b8 ficou vermelho por causa do teste do PEDIDO 45 (ver a seção 4).
+- O commit fcfcf28 está rodando. O resultado do teste do gola no WebKit fica anotado aqui quando terminar.
+
+**Aparelho real:** não testado.

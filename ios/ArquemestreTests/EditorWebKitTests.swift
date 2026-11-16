@@ -11591,4 +11591,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["vazioSemNavegador"] as? String, "lista 0 · navegador 0")
         XCTAssertEqual(o["gravouDeVolta"] as? String, "arquivo 2")
     }
+
+    /* P0-03 (auditoria de 16/11, achado P1-C): abrir, desenhar, salvar ou reabrir com o engrosso desligado nos Ajustes do aparelho não apaga o engrosso gravado no projeto.
+       Antes: defs() e partsOf() faziam m.egL=0/m.egR=0 sempre que o ajuste estava desligado (o padrão), e a abertura gravava isso no arquivo.
+       A regra de fabricação não muda: com o ajuste desligado não sai peça de engrosso e os vãos têm a medida de sem engrosso; religando, o engrosso do projeto volta. */
+    func testEngrossoDoProjetoNaoSomeComOAjusteDesligadoNoAparelho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        PR.std=PR.std||{};var eg0=PR.std.egOn;
+        var est=function(m){var n=partsOf(m).filter(function(p){return /^Engrosso lateral/.test(p.name)}).length;return 'egL '+m.egL+' egR '+m.egR+' · peças de engrosso '+n+' · vãos '+vaoRanges(m).map(function(v){return Math.round(v[0])+'-'+Math.round(v[1])}).join(',')};
+        loadState(initLimpo());S.env='cozinha';S.W=3000;draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;
+        PR.std.egOn=1;m.egL=1;m.egR=1;draw();R.ligado=est(m);
+        /* desliga nos Ajustes do aparelho e desenha */
+        PR.std.egOn=0;draw();R.desligadoDesenha=est(m);
+        /* salvar e reabrir com o ajuste desligado */
+        loadState(JSON.parse(JSON.stringify(snapState())));draw();m=S.mods[0];R.desligadoReabre=est(m);
+        /* abrir pela lista do editor (como o app) e esperar a gravação automática */
+        var a=pLoadAll();a.push({id:'pEg',client:{nome:'Teste engrosso'},created:1,updated:1,current:JSON.parse(JSON.stringify(snapState()))});pSaveAll(a);
+        var p=pLoadAll().filter(function(q){return q.id==='pEg'})[0];CUR=p.id;loadState(p.current);draw();await W(900);
+        var g=pLoadAll().filter(function(q){return q.id==='pEg'})[0];R.gravado='egL '+g.current.mods[0].egL+' egR '+g.current.mods[0].egR;
+        /* religa: o engrosso do projeto volta como era */
+        PR.std.egOn=1;m=S.mods[0];draw();R.religado=est(m);
+        /* sem engrosso no projeto: desligado e ligado dão o mesmo de sempre */
+        m.egL=0;m.egR=0;draw();R.semEngrossoLigado=est(m);PR.std.egOn=0;draw();R.semEngrossoDesligado=est(m);
+        PR.std.egOn=eg0;pSaveAll(pLoadAll().filter(function(q){return q.id!=='pEg'}));
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ligado"] as? String, "egL 1 egR 1 · peças de engrosso 2 · vãos 30-870")
+        XCTAssertEqual(o["desligadoDesenha"] as? String, "egL 1 egR 1 · peças de engrosso 0 · vãos 15-885")
+        XCTAssertEqual(o["desligadoReabre"] as? String, "egL 1 egR 1 · peças de engrosso 0 · vãos 15-885")
+        XCTAssertEqual(o["gravado"] as? String, "egL 1 egR 1")
+        XCTAssertEqual(o["religado"] as? String, "egL 1 egR 1 · peças de engrosso 2 · vãos 30-870")
+        XCTAssertEqual(o["semEngrossoLigado"] as? String, "egL 0 egR 0 · peças de engrosso 0 · vãos 15-885")
+        XCTAssertEqual(o["semEngrossoDesligado"] as? String, "egL 0 egR 0 · peças de engrosso 0 · vãos 15-885")
+    }
 }

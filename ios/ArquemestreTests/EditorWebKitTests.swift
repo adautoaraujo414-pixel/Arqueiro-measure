@@ -10475,4 +10475,117 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cabecalho"] as? String, "aparece")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testPedraVistaDeCimaDoisToquesNaCubaECooktopGirarTrocarTirar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 59: vista de cima da pedra · 2 toques na cuba ou no cooktop abre o menu rápido: girar, trocar, medidas e tirar */
+        var novo=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();addStone();S.st.w=2000;S.stW=2000;draw();stItemAdd('cuba',CUBM.filter(function(c){return c.w<=600&&c.d<=450})[0]||CUBM[0]);stItemAdd('cook',COOKM[0]);var k_=S.items.filter(function(a){return a.k==='cook'})[0];k_.x=80;S.items.filter(function(a){return a.k==='cuba'})[0].x=900;S.tab=6;draw();panel()};
+        var el=function(id){return document.querySelector('#plan [data-i="'+id+'"]')};
+        var dois=async function(id){var e=el(id);if(!e)return 'sem desenho';e.scrollIntoView({block:'center'});await W(80);var r=e.getBoundingClientRect(),x=r.left+r.width*.25,y=r.top+r.height*.88;for(var k=0;k<2;k++){e=document.elementFromPoint(x,y)||el(id);e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch'}));e.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch'}));await W(120)}await W(150);var m=document.getElementById('itqk');return m&&!m.hidden?'abriu: '+[].slice.call(m.querySelectorAll('button')).map(function(b){return b.textContent}).join(' | '):'não abriu'};
+        var bt=function(a){var b=document.querySelector('#itqk [data-iq="'+a+'"]');if(b)b.click();return !!b};
+        novo();var cu=S.items.filter(function(a){return a.k==='cuba'})[0],ck=S.items.filter(function(a){return a.k==='cook'})[0];
+        R.cuba2Toques=await dois(cu.id);
+        var w0=cu.w,d0=cu.d,c0=[cu.x+cu.w/2,cu.y+cu.d/2];bt('gira');await W(100);R.girouCuba=w0+'x'+d0+' → '+cu.w+'x'+cu.d+' · centro '+(Math.abs(cu.x+cu.w/2-c0[0])<1?'igual':'mudou')+' · rot '+cu.rot+' · '+(TT[TT.length-1]||'');
+        R.cooktop2Toques=await dois(ck.id);var kw=ck.w,kd=ck.d;bt('gira');await W(100);R.girouCooktop=kw+'x'+kd+' → '+ck.w+'x'+ck.d;
+        await dois(cu.id);bt('troca');await W(150);var bx=document.getElementById('cbpk');R.trocarAbre=bx&&!bx.hidden?'abriu a lista de cubas (trocando a '+bx.dataset.rep+')':'não abriu';var bb=bx&&bx.querySelector('[data-cbm]:not([data-cbm="'+cu.cm+'"])');var n0=S.items.length;if(bb){bb.click();await W(150)}R.trocou='modelo '+cu.cm+' · '+Math.round(cu.w)+'x'+Math.round(cu.d)+' · itens na pedra '+n0+'→'+S.items.length;
+        await dois(ck.id);bt('tira');await W(80);R.tiraPedeConfirmacao=document.getElementById('itqk').hidden?'fechou':document.querySelector('#itqk [data-iq="tira"]').textContent;bt('tira');await W(150);R.tirou='itens '+S.items.length+' · cooktop '+(S.items.some(function(a){return a.k==='cook'})?'ainda tem':'saiu');
+        document.getElementById('und').click();await W(150);R.desfez='itens '+S.items.length;
+        /* 3D continua mostrando a cuba girada */
+        open3D();await W(250);__build();R.no3D=__boxes().filter(function(b){return b.sid!=null}).length>0?'aparece':'não aparece';
+        document.getElementById("v3x").click();await W(100);S.tab=6;draw();panel();document.getElementById("plan").scrollIntoView({block:"center"});await W(200);R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["cuba2Toques"] as? String, "abriu: ⟳ Girar 90° | 🔁 Trocar a cuba | 📏 Medidas | 🗑 Tirar")
+        XCTAssertEqual(o["girouCuba"] as? String, "580x440 → 440x580 · centro igual · rot 90 · ⟳ Cuba girada: 440 × 580 mm")
+        XCTAssertEqual(o["cooktop2Toques"] as? String, "abriu: ⟳ Girar 90° | 🔁 Trocar o cooktop | 📏 Medidas | 🗑 Tirar")
+        XCTAssertEqual(o["girouCooktop"] as? String, "302x514 → 514x302")
+        XCTAssertEqual(o["trocarAbre"] as? String, "abriu a lista de cubas (trocando a 2)")
+        XCTAssertEqual(o["trocou"] as? String, "modelo mar25 · 940x440 · itens na pedra 2→2")
+        XCTAssertEqual(o["tiraPedeConfirmacao"] as? String, "Toque de novo pra tirar")
+        XCTAssertEqual(o["tirou"] as? String, "itens 1 · cooktop saiu")
+        XCTAssertEqual(o["desfez"] as? String, "itens 2")
+        XCTAssertEqual(o["no3D"] as? String, "aparece")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testSaiaDaPedraSemDivisaoNo3DENo2DEJuntaDoLEscondida() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 59: a saia da pedra não tem divisão: no 3D a borda de baixo da pedra não risca a saia e a junta do L não aparece; no 2D não tem risco entre a pedra e a saia */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();addStone();var st=S.stones[0];st.w=2000;st.shape='Le';st.widA=600;st.lenA=900;st.saia=true;st.saiaH=70;st.x=0;draw();
+        open3D();await W(250);__build();var lo=__boxes().filter(function(b){return b.g==='lo'&&b.sid===st.id});
+        R.contornos3D=lo.length+' · fundo sem risco embaixo: '+(lo[0]&&[0,4,8,9].every(function(k){return (lo[0].nes||[]).indexOf(k)>=0})?'sim':'não')+' · junta do L escondida: '+(lo[1]&&[0,2].every(function(k){return (lo[1].nes||[]).indexOf(k)>=0})?'sim':'não');
+        st.saia=false;__build();lo=__boxes().filter(function(b){return b.g==='lo'&&b.sid===st.id});R.semSaiaTemBordaEmbaixo=lo[0]&&(lo[0].nes||[]).indexOf(8)<0?'sim':'não';
+        document.getElementById('v3x').click();await W(100);st.saia=true;st.shape='reta';draw();var r=[].slice.call(document.querySelectorAll('#svg rect[data-st="'+st.id+'"]')).filter(function(e){return e.getAttribute('stroke')==='none'});R.saia2D=r.length?'sem risco entre pedra e saia':'tem risco';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["contornos3D"] as? String, "3 · fundo sem risco embaixo: sim · junta do L escondida: sim")
+        XCTAssertEqual(o["semSaiaTemBordaEmbaixo"] as? String, "sim")
+        XCTAssertEqual(o["saia2D"] as? String, "sem risco entre pedra e saia")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testModuloQueNaoApareceNo3DViraAvisoERefazSozinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 45: módulo que não aparece no 3D nunca fica calado: o 3D relê o projeto na hora (o que fechar e abrir fazia) e, se precisar, mostra o aviso com o diagnóstico pra copiar */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var fecha=function(){try{document.getElementById('v3x').click()}catch(_){}var d=document.getElementById('d3dg');if(d)d.hidden=true;window.__diag3Antes=null};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4940;S.H=2930;draw();newTpl(T('Balcão 2 portas'));draw();newTpl(T('Aéreo 2 portas'));draw();addStone();draw();
+        open3D();await W(1300);var d=diag3();R.normal=d.mods.map(function(m){return m.caixas>0&&m.visiveis===m.caixas?'ok':'falta'}).join(',')+' · aviso '+(document.getElementById('d3dg')&&!document.getElementById('d3dg').hidden?'apareceu':'não');fecha();
+        /* erro nas peças de um módulo: antes sumia calado; agora vira aviso */
+        var po=partsOf,bad=S.mods[0];partsOf=function(m){if(m===bad)throw new Error('teste');return po.apply(this,arguments)};open3D();await W(200);R.erroNasPecas=(window.ERR3||[]).join(' | ');
+        /* depois de reler o projeto (o módulo novo é outro objeto) ele aparece: 3D refeito sozinho e avisado */
+        await W(1200);var bx=document.getElementById('d3dg');R.refez=(bx&&!bx.hidden?bx.querySelector('b').textContent:'sem aviso')+' · módulo 1 agora '+(diag3().mods[0].caixas>0?'aparece':'não aparece');partsOf=po;fecha();
+        /* o diagnóstico tem só dados técnicos */var t=JSON.stringify(diag3());R.semDadosDoCliente=/cliente|telefone|nome/i.test(t)?'tem':'não tem';
+        document.querySelector('[data-dg3]')?0:0;
+        R.erros=__errs.slice(e0).filter(function(x){return !/teste/.test(x)}).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "ok,ok · aviso não")
+        XCTAssertEqual(o["erroNasPecas"] as? String, "módulo 1 (peças): teste")
+        XCTAssertEqual(o["refez"] as? String, "🔄 3D refeito: os módulos que não tinham aparecido agora aparecem · módulo 1 agora aparece")
+        XCTAssertEqual(o["semDadosDoCliente"] as? String, "não tem")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testArmarioEmbaixoDaPedraComSaiaNaoPassaDaSaia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 59: armário colocado embaixo da pedra com saia vai só até a saia (porta + folga atrás da saia), sem passar dela · sem saia continua o desconto da pingadeira */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var novo=function(saia){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();addStone();var st=S.stones[0];st.x=0;st.w=2000;st.d=650;st.e=30;if(saia){st.saia=true;st.saiaH=100}draw();return st};
+        var st=novo(true);TT=[];newTpl(T('Balcão 2 portas'));draw();await W(150);var m=S.mods[S.mods.length-1];R.comSaia='prof. '+m.d+' · frente das portas em '+(m.d+23+zoOf(m))+' · saia por dentro em '+(st.d-st.e)+' · '+((m.d+23+zoOf(m))<=(st.d-st.e)?'não passa da saia':'PASSA da saia')+' · '+(TT.filter(function(t){return /ajustado/.test(t)})[0]||'sem aviso');
+        open3D();await W(200);__build();var sx=__boxes().filter(function(b){return b.sid===st.id&&b.g==='stc'&&b.y0<st.t-5});R.saia3D=sx.length?'saia desce na frente inteira ('+Math.round(Math.min.apply(null,sx.map(function(b){return b.z0})))+' a '+Math.round(Math.max.apply(null,sx.map(function(b){return b.z1})))+')':'sem saia';document.getElementById('v3x').click();await W(80);
+        st=novo(false);TT=[];newTpl(T('Balcão 2 portas'));draw();await W(150);m=S.mods[S.mods.length-1];R.semSaia='prof. '+m.d+' · '+(TT.filter(function(t){return /ajustado/.test(t)})[0]||'sem aviso');
+        st=novo(true);mkCorner('e');draw();var c=S.mods.filter(function(q){return q.corner})[0];R.cantoComSaia='fundo '+c.d+' · lateral '+cD2(c);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["comSaia"] as? String, "prof. 597 · frente das portas em 620 · saia por dentro em 620 · não passa da saia · Módulo ajustado pra caber embaixo da pedra: profundidade 597 mm (pedra 650 − saia 30 − porta e folga 23)")
+        XCTAssertEqual(o["saia3D"] as? String, "saia desce na frente inteira (0 a 650)")
+        XCTAssertEqual(o["semSaia"] as? String, "prof. 604 · sem aviso")
+        XCTAssertEqual(o["cantoComSaia"] as? String, "fundo 597 · lateral 597")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testFornoEmbutidoNoBalcaoA3mmDaTravessaESemNaN() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 59 (00:55): forno embutido no balcão fica a 3 mm da travessa/frente de cima (antes 25 mm de folga em cima) · no catálogo, no "Forno" do 2 toques e no vão novo */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var folga=function(m){var P=partsOf(m),tv=P.filter(function(p){return p.name==='Travessa frontal'})[0],co=P.filter(function(p){return /^Corte do forno/.test(p.name)})[0];return tv&&co?Math.round((co.y-(tv.y+tv.h))*10)/10+' mm':'sem forno'};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão forno embutido'));draw();R.catalogo=folga(S.mods[0]);
+        open3D();await W(200);__build();var m=S.mods[0],ov=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&/Forno|forno/.test(String(b.nm))});R.forno3D=ov.length?'aparece':'não aparece';document.getElementById('v3x').click();await W(80);
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();m=S.mods[0];m.v[0]={k:'oven',n:1,ow:560,oh:595,cava:false};delete m.v[0].ot;m.v[0].ot=undefined;draw();R.semValorUsaPadrao=folga(m);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "3 mm")
+        XCTAssertEqual(o["forno3D"] as? String, "aparece")
+        XCTAssertEqual(o["semValorUsaPadrao"] as? String, "3 mm")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

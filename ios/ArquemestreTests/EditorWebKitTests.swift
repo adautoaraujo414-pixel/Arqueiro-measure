@@ -11872,9 +11872,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    /* FASE 2 · SEL-DIV (P1-E da auditoria de 16/11): tocar e arrastar a divisória de um módulo NÃO escolhido só escolhe aquele módulo; não mexe na divisória de ninguém.
+    /* FASE 2 · SEL-DIV (P1-E da auditoria de 16/11): tocar e arrastar a divisória de um módulo NÃO escolhido escolhe aquele módulo e arrasta só a divisória dele
+       (pedido do Adauto de 16/11, noite: "a seleção acompanha o componente realmente tocado e o arrasto atua só sobre ele"); a do outro módulo não muda.
        Antes (9ec0869): a divisória do módulo escolhido andava (0,5 → 0,876) e a do tocado ficava. Causa: o toque arma drag {t:'d',i} pelo número da divisória sem conferir
        o módulo (linhas 1225 e 12181), e o arrasto aplica em S.m.div[i]. Mesma regra já aprovada do tamponamento (TAMP-2D-ALVO). */
+    /* FASE 2 · SEL-DIV (prateleira): arrastar a prateleira de um módulo NÃO escolhido escolhe aquele módulo e arrasta só a prateleira dele; a do outro não muda.
+       Antes (9ec0869): drag {t:'s',i} pelo número da prateleira, aplicado em S.m.shv[i] (a prateleira do módulo escolhido andava). */
+    func testSelecaoPrateleiraDeOutroModuloMexeSoNela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var AB=dois(),A=AB[0],B=AB[1];A.div=[];B.div=[];A.v=[{k:'shelves',n:1}];B.v=[{k:'shelves',n:1}];A.shv=[0.5];B.shv=[0.5];draw();S.m=A;S.tab=1;/* aba Divisões: é onde a alça da prateleira fica por cima das peças */panel();draw();await W(200);
+        var hs=[].slice.call(sv.querySelectorAll('rect[data-s="0"]')).map(function(c){var b=c.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}}).filter(function(o){return o.x>0}).sort(function(p,q){return q.x-p.x});
+        var h=hs[0],x=h.x,y=h.y;ev('pointerdown',x,y);for(var k=1;k<=6;k++){ev('pointermove',x,y+k*8,sv);ev('pointermove',x,y+k*8,window);await W(16)}ev('pointerup',x,y+48,sv);ev('pointerup',x,y+48,window);await W(500);draw();
+        R.resultado='escolhido '+(S.m===B?'B':S.m===A?'A':'?')+' · A.shv '+A.shv[0]+' · B.shv '+(B.shv[0]>0.52?'desceu':B.shv[0]);
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["resultado"] as? String, "escolhido B · A.shv 0.5 · B.shv desceu", "antes (9ec0869): A.shv 0.907 (a do módulo escolhido andava)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testSelecaoDivisoriaDeOutroModuloSoEscolheEleENaoMexeEmNinguem() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -11887,10 +11909,15 @@ final class EditorWebKitTests: XCTestCase {
         var AB=dois(),A=AB[0],B=AB[1];await W(200);
         var hs=[].slice.call(sv.querySelectorAll('[data-d="0"]')).map(function(c){var b=c.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2,mi:+(c.closest('#mod')||{dataset:{mi:-1}}).dataset.mi}}).filter(function(o){return o.x>0}).sort(function(p,q){return q.x-p.x});
         var h=hs[0],x=h.x,y=h.y;ev('pointerdown',x,y);for(var k=1;k<=6;k++){ev('pointermove',x+k*8,y,sv);ev('pointermove',x+k*8,y,window);await W(16)}ev('pointerup',x+48,y,sv);ev('pointerup',x+48,y,window);await W(500);draw();
-        R.resultado='escolhido '+(S.m===B?'B':S.m===A?'A':'?')+' · A.div '+A.div[0]+' · B.div '+B.div[0];
+        R.resultado='escolhido '+(S.m===B?'B':S.m===A?'A':'?')+' · A.div '+A.div[0]+' · B.div '+(B.div[0]>0.52?'andou pra direita':B.div[0]);
+        /* arrasto válido no próprio módulo continua: com A escolhido, arrastar a divisória do A mexe só no A */
+        S.m=A;draw();await W(100);var ha=[].slice.call(sv.querySelectorAll('rect[data-d="0"]')).map(function(c){var b=c.getBoundingClientRect();return {x:b.left+b.width/2,y:b.top+b.height/2}}).sort(function(p,q){return p.x-q.x})[0],bB=B.div[0];
+        ev('pointerdown',ha.x,ha.y);for(var k2=1;k2<=6;k2++){ev('pointermove',ha.x-k2*8,ha.y,sv);ev('pointermove',ha.x-k2*8,ha.y,window);await W(16)}ev('pointerup',ha.x-48,ha.y,sv);ev('pointerup',ha.x-48,ha.y,window);await W(500);draw();
+        R.proprio='A.div '+(A.div[0]<0.48?'andou pra esquerda':A.div[0])+' · B.div igual '+(B.div[0]===bB);
         R.errs=__errs.length;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["resultado"] as? String, "escolhido B · A.div 0.5 · B.div 0.5")
+        XCTAssertEqual(o["resultado"] as? String, "escolhido B · A.div 0.5 · B.div andou pra direita")
+        XCTAssertEqual(o["proprio"] as? String, "A.div andou pra esquerda · B.div igual true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

@@ -12336,5 +12336,14 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    if(window.PSEL&&!S.mods[window.PSEL.mi])window.PSEL=null;if(window.SEL3&&!S.mods[window.SEL3.mi])window.SEL3=null;if(m&&S.selS!=null&&S.selS>=0&&!(m.shv&&m.shv[S.selS]!==undefined))S.selS=null;if(window.__delArm&&S.mods.indexOf(window.__delArm.m)<0)window.__delArm=null;vaoOk()}catch(_){}};
  window.loadState=loadState=function(){var r=l0.apply(this,arguments);try{var c=(typeof CUR!=='undefined')?CUR:null,und=(typeof UNDOING!=='undefined'&&UNDOING);if(c!==cur0&&!und){cur0=c;limpa()}else valida()}catch(_){}return r};
 })();
+
+/* ===== Fase 2 · SEL-VAO (16/11): o vão escolhido é um vão que existe no módulo escolhido =====
+   Quando o módulo escolhido muda — por qualquer caminho: 2D, 3D, catálogo, lixeira, desfazer, outro projeto — o vão escolhido (S.sv, estado de tela, não vai pro
+   arquivo) é conferido contra os vãos do módulo novo (divisórias + 1) e volta pro 1º se não existir. Antes: tocar no módulo B pelo 3D deixava S.sv=2 (o 3º vão do A)
+   num B de 1 vão; ler gv(S.sv) aí criaria vãos fantasma. A troca de módulo passa por um acessor em S.m (o valor guardado é o mesmo de sempre). */
+(function(){if(window.__svOkV||typeof S!=='object'||!S)return;window.__svOkV=1;
+ var nvOf=function(m){return ((m&&m.div)||[]).length+1},confere=function(m){try{if(m&&!(S.sv>=0&&S.sv<nvOf(m)))S.sv=0}catch(_){}};window.svConfere=function(){confere(S.m)};
+ try{var d=Object.getOwnPropertyDescriptor(S,'m');if(d&&d.configurable!==false&&!d.get){var cur=S.m;Object.defineProperty(S,'m',{configurable:true,enumerable:true,get:function(){return cur},set:function(v){var mudou=v!==cur;cur=v;if(mudou)confere(v)}})}}catch(_){}
+})();
 </script>
 </body></html>

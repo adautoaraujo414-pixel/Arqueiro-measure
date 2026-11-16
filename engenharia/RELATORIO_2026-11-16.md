@@ -171,3 +171,11 @@ O que **falhou**:
 
 ## Não feito nesta rodada
 - **Protótipo de materiais (metal, vidro, luz de profundidade).** Para ser de verdade (reflexo e Fresnel), precisa de normais nos vértices, o que é mudança estrutural no motor 3D (formato do vértice de 32 para 44 bytes). Não quis fazer um efeito "falso" de brilho que não corresponde ao material. Proposta e custo estão em `MOTOR_3D_AUDITORIA.md`, seção 5. **Preciso do seu ok para mexer no formato do vértice** (em cópia separada, com antes e depois e medição).
+
+## Bateria completa da segunda rodada (harness Chromium, 299 testes, 36 min)
+- **Base testada:** gola + 3D que volta sozinho + os 2 testes do iPhone corrigidos + pedidos 61 e 62.
+- **Passaram:** os testes novos (gola, contexto do 3D, menu de 2 toques, faixa da parede) e os corrigidos (PEDIDO 45 e canto).
+- **Falhas conhecidas e aceitas:** `onl`, `pinkR` e `depois`.
+- **Instáveis com carga, que passaram rodando sozinhos:** `testOrganizacao3DClienteEModoPessoa` e `testSoOModulo3DE2D…`.
+- **Um teste ajustado:** `testPainelNaoDuplicaEmOutraParedeDepoisDaLista` lia o texto da faixa da parede, e o botão "—" de minimizar (PEDIDO 61) entrou no texto. O teste agora tira o "—" como já tirava Esquerda/Direita. O que ele confere não mudou. Sozinho passou.
+- **Resultado:** sem regressão. Os pedidos 61 e 62 foram integrados à branch `feature/arque-measure-kotlin` (commit 1730073). **Não publicado.**

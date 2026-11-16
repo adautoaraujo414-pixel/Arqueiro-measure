@@ -468,3 +468,13 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
   - Rebaixo que fica todo fora da parede não é desenhado, mas também não é apagado.
 - **Teste:** o mesmo de AMB-RD. Falha em 9f3dc3e (fim 3400) e passa agora (3170; parede 2500 → 2500; guardado 0+3170 e 2400+1000).
 - **Família conferida:** 81 testes da bateria que mexem em paredes, profundidade, rebaixo, painel na parede e vista da parede.
+
+## Auditoria de integridade (16/11, tarde): achados ainda sem correção
+Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`. **Nada corrigido ainda: depende de aprovação.**
+- **DRAW-CATRACA (P1-A):** o desenho (`confineAll`, `roomClamp`, `placeFree`, `stFitApply`, `sanM`, `sanBase`) grava posição e medida quando a entrada muda, e o dado não volta quando a entrada volta.
+  - Exemplos: torre 2400 → 2300 depois de mexer no pé-direito; forno 600 → 606 depois de mudar a espessura.
+- **TAMP-CAMINHO (P1-B):** pelo campo digitado, a mesma posição dá resultados diferentes conforme o valor anterior, e fica vão de até 35 mm sem tamponamento junto à parede. Pelo arrasto real: determinístico.
+- **ABRIR-REGRAVA / ENGROSSO-APARELHO (P1-C):** abrir o projeto regrava o arquivo e muda `updated`. Com `egOn=0` no aparelho (padrão), o `egL/egR` do projeto é zerado e gravado.
+- **3D-045 (P1-D, provável causa):** `ST3ONLY` ("👁 Só a pedra no 3D") fica ligado entre projetos até recarregar o editor.
+- **DIV-OUTRO-MODULO (P1-E):** arrastar a divisória de um módulo não escolhido muda a do módulo escolhido.
+- **ARQ-VAZIO (P1-F):** `projects.json` vazio grava `[]` por cima do `localStorage` (linha 3085).

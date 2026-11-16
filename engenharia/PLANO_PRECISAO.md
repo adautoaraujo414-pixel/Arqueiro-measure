@@ -11,7 +11,7 @@ Pedidos de 16/11 às 13:48: "Auditoria de regressões e integridade" e "Motor de
   - Em 8dbc7ae: um vão trocado por uma cópia igual continua sendo o mesmo vão.
 - **Toques:** 69 tratadores de `pointerdown` e 255 de `click`, empilhados em camadas (cada função nova embrulha a anterior). A escolha do que um toque faz está espalhada; não existe um lugar que decida "qual é o alvo deste toque".
   - É daí que vêm os erros de "um toque, duas ações": tamponamento que move o módulo, a ✏️ que abria duas coisas, o 2º toque que não contava.
-- **Desfazer:** `snap()` guarda só o módulo escolhido (`S.m`), até 40 passos. Mudanças em outros módulos (vizinho empurrado, pedra que acompanha) não entram no mesmo passo.
+- **Desfazer (corrigido em 16/11 à tarde, ver `AUDITORIA_INTEGRIDADE.md`):** o histórico de verdade é `histTick`/`histGo`, com o projeto inteiro, até 100 passos, juntando mexidas em menos de 700 ms. `snap()` é o legado do módulo escolhido. Conferido: mexer em vários módulos e na parede e depois ↶/↷ volta idêntico. Não substituir.
 - **Regras que mudam o projeto sozinhas:** o cálculo das peças também corrige dados. Exemplo achado hoje: módulo de baixo erguido perdia rodapé, travessa e moldura de vez (TAMP-2D-ALVO). Outras regras desse tipo existem e não foram todas auditadas.
 
 ## 2. Por que erros antigos voltam

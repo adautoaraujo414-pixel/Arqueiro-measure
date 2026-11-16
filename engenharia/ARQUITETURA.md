@@ -23,8 +23,8 @@ Só o que foi conferido no código. O que não foi conferido está marcado como 
 
   | Função | Redefinições |
   |---|---|
-  | `partsOf` | 18 |
-  | `draw` | 41 |
+  | `partsOf` | 20 (recontado em 16/11 à tarde: faltavam 1943 e 12127) |
+  | `draw` | 39 na cadeia (+2 `draw` locais de outro escopo) |
   | `panel` | 43 |
   | `build` | 27 |
   | `open3D` | 14 |
@@ -33,6 +33,12 @@ Só o que foi conferido no código. O que não foi conferido está marcado como 
   | `newTpl` | 9 |
 
   **Risco:** a regra final depende da ordem dos embrulhos, e a mesma regra pode estar em mais de um lugar. Ver `PLANO_EVOLUCAO.md`.
+
+## Desfazer
+- `histTick` (linha 263) guarda o projeto inteiro a cada `draw`, até 100 passos. `histGo` volta por `loadState`. `snap()` (259) é o legado do módulo escolhido, usado na pinça.
+
+## Achados de integridade
+- Ver `AUDITORIA_INTEGRIDADE.md`: o desenho grava posição e medida (catraca), abrir regrava o arquivo, "Só a pedra" fica ligado, e outros.
 
 ## Gravação (verificado em parte)
 - **Projetos:** todos ficam numa lista, gravada no `localStorage` (`pSaveAll`) e também no arquivo `projects.json` pela ponte nativa.

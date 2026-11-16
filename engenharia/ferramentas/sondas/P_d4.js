@@ -1,0 +1,11 @@
+window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+var digita=async function(k,val){var i=document.querySelector('[data-ambs="'+k+'"]');if(!i)return 'sem campo '+k;i.value='';for(var c of String(val)){i.value+=c;i.dispatchEvent(new Event('input',{bubbles:true}))}i.dispatchEvent(new Event('change',{bubbles:true}));await W(60);return 'ok'};
+S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];S.wall={};wallSet('R','len',3170);draw();
+wvGo('d');await W(60);var a=rpNew({x:1800,b:0,w:1000,h:2700});a.liso=true;newTpl({n:'Aéreo',w:1000,h:750,d:350,b:1800,sup:true,v:[{k:'door',n:2,cava:true}]});var m=S.mods[S.mods.length-1];m.x=2000;newTpl({n:'Base',w:800,h:720,d:560,b:0,v:[{k:'door',n:1,cava:true}]});var m2=S.mods[S.mods.length-1];m2.x=2300;draw();wvGo('f');await W(60);
+var foto=function(){return 'mods '+S.mods.map(function(q){return (q.wing||'f')+':x'+q.x+'+'+q.w+' b'+q.b+' h'+q.h}).join(',')+' · painéis '+(S.rp||[]).map(function(p){return (p.wall||p.wl||'?')+':x'+Math.round(p.x)+'+'+Math.round(p.w)+' h'+Math.round(p.h)}).join(',')+' · R '+JSON.stringify(wallRaw('R'))+' · RD '+S.RD+' H '+S.H};
+R.antes=foto();var j0=JSON.stringify(S.mods)+JSON.stringify(S.rp);
+ambSetOpen();await W(150);ambSelWall('d');await W(60);await digita('Rlen',3170);R.digitouComprimento=foto();R.mesmoComprimento=(JSON.stringify(S.mods)+JSON.stringify(S.rp))===j0;
+await digita('Rh0',3400);await digita('Rh1',3400);R.digitouAltura=foto();R.mesmoAltura=(JSON.stringify(S.mods)+JSON.stringify(S.rp))===j0;
+/* altura menor que o aéreo: 2400 */await digita('Rh0',2400);await digita('Rh1',2400);R.alturaMenor=foto();await digita('Rh0',3400);await digita('Rh1',3400);R.alturaVoltou=foto();R.mesmoVoltou=(JSON.stringify(S.mods)+JSON.stringify(S.rp))===j0;
+ambSetClose(true);await W(60);wvGo('d');await W(60);R.naParede=foto();R.mesmoNaParede=(JSON.stringify(S.mods)+JSON.stringify(S.rp))===j0;
+R.toasts=TL.slice(-4).join(' / ');R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);

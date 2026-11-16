@@ -27,10 +27,16 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 - **Painéis e módulos são sólidos:** nada entra dentro de outra coisa. (A)
 - **Módulo não age sozinho:** não tira tamponamento nem se afasta do vizinho sem o Adauto mandar. (A)
 - **Nenhum armário com vão, peça solta, erro de seleção ou erro de porta.** Porta e prateleira vão até o fim. (A)
+- **Caixa da geladeira:** a porta pertence ao vão de cima, em cima da geladeira, e nunca desce. O tamponamento pertence à estrutura e desce até o chão. (A, 16/11 13:34) (código: vão `gel`, ver HISTORICO TORRE-GEL-PORTA)
 
 ## Pedra
 - **Armário embaixo da pedra com saia:** a frente do armário para na saia e não passa dela. (A, 16/11) (código: `fitNew`, `cornerStoneFit`)
 - **Altura do armário embaixo da pedra com saia:** folga de 15 mm embaixo da saia; o armário inteiro (caixa e frentes) começa dali pra baixo e a pedra fica por cima. Embaixo da saia = embaixo da pedra + espessura − saia. Ex.: pedra a 820, 30 de espessura, saia de 100 → saia até 750 → armário até 735. Sem saia: armário até embaixo da pedra, sem a folga. A folga entra uma vez só; portas e gavetas seguem as folgas normais a partir do topo do módulo. Mudar a saia ou a espessura da pedra: o armário encaixado acompanha. Vale pra pedra em que a saia foi ligada ou mudada a partir de 16/11; projeto antigo não muda ao abrir. (A, 16/11 10:39 e 10:56) (código: `stArmTop`, `STFOLGA_SAIA`, `stAdapta`, `underStone`)
+
+- **Área molhada da pia:** rebaixo de **2 cm**. É a mesma pedra num nível mais baixo, como na marmoraria (rebaixo tradicional ou americano). (A, 16/11 14:42) (código: só na branch `wip/area-molhada-2026-11-16`, não validado; ver `CHECKPOINT_2026-11-16.md`, seção 3). Projeto antigo fica com o rebaixo que tem.
+
+## Ambiente
+- **Parede do ambiente:** profundidade (espessura) de **15 cm**, fixa; "não se mexe… é regra". (A, 16/11: mensagem de 14:42 e resposta à pergunta logo depois) (código: o padrão é 150 em `wallCfg`. O campo "Espessura (mm)" do quadro Paredes no 3D ainda deixa mudar; **implementação pendente**)
 
 ## Pendentes de confirmação (não usar como regra ainda)
 - Perfil G encostando na caixa (1,5 mm). Ver a pendência 1 da especificação do gola.

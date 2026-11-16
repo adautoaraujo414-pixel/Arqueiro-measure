@@ -1,0 +1,22 @@
+// Comprovação visual do pedido das 10:56 (saia e tamponamento de baixo), no editor atual.
+import { chromium } from '/opt/npm-tools/node_modules/playwright/index.mjs';
+const [ED, DIR] = process.argv.slice(2);
+const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--use-gl=swiftshader', '--enable-webgl', '--ignore-gpu-blocklist', '--allow-file-access-from-files'] });
+const p = await b.newPage({ viewport: { width: 440, height: 760 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true });
+await p.addInitScript(`window.__noSetup=1;window.__files={};window.ArqueApp={isApp:function(){return true},isViewer:function(){return false},setCurrent:function(){},putFile:function(n,b){__files[n]=b},getFile:function(n){return __files[n]||''},delFile:function(n){delete __files[n]},listFiles:function(){return JSON.stringify(Object.keys(__files))},companyName:function(){return 'Marcenaria Teste'},shareCut:function(){},shareClient:function(){},listNotes:function(){return '[]'},contextNote:function(){return ''},linkNote:function(){},openNoteOf:function(){}};`);
+await p.goto('file://' + ED); await p.waitForTimeout(1500);
+const PRE = `window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+var clk=function(st,k,v){S.st=st;var b=document.createElement('button');b.dataset[k]=v;b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();draw()};
+var base=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2000;S.H=2600;S.stones=[];S.mods=[];draw();addStone();var st=S.stones[0];st.x=200;st.w=1500;st.d=650;st.t=820;st.e=30;draw();return st};`;
+const shot2d = async (nome) => { await p.evaluate(`document.getElementById('svg').scrollIntoView({block:'start'})`); await p.waitForTimeout(250); await (await p.$('#svg')).screenshot({ path: DIR + '/' + nome + '.png' }); };
+const shot3d = async (nome, cam, sel) => { await p.evaluate(`(async function(){open3D();await new Promise(r=>setTimeout(r,1500));__cam(${cam});${sel ? "window.SEL3={mi:0,pk:'" + sel + "'};re3();" : ''}})()`); await p.waitForTimeout(1500); await (await p.$('#cv3')).screenshot({ path: DIR + '/' + nome + '.png' }); await p.evaluate(`document.getElementById('v3x').click()`); await p.waitForTimeout(200); };
+const out = {};
+out.comSaia = await p.evaluate(`(async function(){${PRE};var st=base();clk(st,'stsaiah','100');newTpl(T('Balcão 2 portas'));S.mods[0].x=250;newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].x=1050;draw();panel();await W(300);return S.mods.map(function(m){return m.n+' até '+((+m.b||0)+(+m.h))}).join(' · ')+' · saia embaixo em 750'})()`);
+await shot2d('saia_com_2d'); await shot3d('saia_com_3d', '.25,.12,1.45');
+out.semSaia = await p.evaluate(`(async function(){${PRE};var st=base();newTpl(T('Balcão 2 portas'));S.mods[0].x=250;newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].x=1050;draw();panel();await W(300);return S.mods.map(function(m){return m.n+' até '+((+m.b||0)+(+m.h))}).join(' · ')})()`);
+await shot2d('saia_sem_2d'); await shot3d('saia_sem_3d', '.25,.12,1.45');
+out.tb = await p.evaluate(`(async function(){${PRE};loadState(initLimpo());S.env='banheiro';S.room='banheiro';S.W=2000;S.H=2600;S.stones=[];S.mods=[];newTpl(T('Gabinete suspenso 2 gavetas'));var m=S.mods[0];m.x=600;m.tb=true;m.tbM=1;draw();panel();await W(300);var p=partsOf(m).filter(function(q){return q.name==='Tamponamento de baixo'})[0];return 'base suspenso a '+m.b+' mm · peça '+(p?p.cl+' × '+p.cw+' mm':'não tem')+' · no corte: '+cutLines(m).some(function(l){return (l.names||[l.name]).join().indexOf('Tamponamento de baixo')>=0})})()`);
+await shot3d('tb_suspenso_3d', '.55,-.2,1.6', 'Tamponamento de baixo#1');
+console.log(JSON.stringify(out, null, 1));
+await b.close();

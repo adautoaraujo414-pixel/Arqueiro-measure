@@ -11627,4 +11627,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semEngrossoLigado"] as? String, "egL 0 egR 0 · peças de engrosso 0 · vãos 15-885")
         XCTAssertEqual(o["semEngrossoDesligado"] as? String, "egL 0 egR 0 · peças de engrosso 0 · vãos 15-885")
     }
+
+    /* P0-03 (continuação, auditoria de 16/11): abrir um projeto e não mexer não regrava o arquivo nem muda a data "atualizado".
+       Antes: o draw() da abertura chamava schedSave() e 500 ms depois o projeto era regravado com updated=agora (o aviso "a mais nova" da sincronização apontava pro que só foi aberto).
+       Mexeu de verdade: grava como sempre. */
+    func testAbrirProjetoSemMexerNaoRegravaNemMudaAData() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.W=3000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 1 porta'));draw();var st=JSON.parse(JSON.stringify(snapState()));
+        var a=pLoadAll().filter(function(q){return q.id!=='pAb'&&q.id!=='pAc'});a.push({id:'pAb',client:{nome:'Abrir sem mexer'},created:1000,updated:1000,current:st});a.push({id:'pAc',client:{nome:'Outro'},created:1001,updated:1001,current:st});pSaveAll(a);await W(50);
+        var C={lib:0,cur:0},pf0=ArqueApp.putFile;ArqueApp.putFile=function(n,b){if(n==='projects.json')C.lib++;if(/^cur_/.test(n))C.cur++;return pf0.apply(this,arguments)};
+        var abre=function(id){var p=pLoadAll().filter(function(q){return q.id===id})[0];CUR=p.id;loadState(p.current);draw()};
+        var up=function(id){return pLoadAll().filter(function(q){return q.id===id})[0].updated};
+        abre('pAb');await W(900);draw();draw();await W(900);R.soAbrir='updated '+up('pAb')+' · gravações '+(C.lib+C.cur);
+        abre('pAc');await W(900);R.abrirOutro='updated '+up('pAc')+' · gravações '+(C.lib+C.cur);
+        /* mexeu: grava */
+        S.m=S.mods[0];setv('w',S.m.w+50);await W(900);R.mexeu='mudou a data '+(up('pAc')>1001)+' · gravou '+((C.lib+C.cur)>0);
+        ArqueApp.putFile=pf0;pSaveAll(pLoadAll().filter(function(q){return q.id!=='pAb'&&q.id!=='pAc'}));
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["soAbrir"] as? String, "updated 1000 · gravações 0")
+        XCTAssertEqual(o["abrirOutro"] as? String, "updated 1001 · gravações 0")
+        XCTAssertEqual(o["mexeu"] as? String, "mudou a data true · gravou true")
+    }
 }

@@ -10813,4 +10813,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semGranulado"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testFuracaoDaDobradicaNoMesmoLugarComExternoCavaOuGolaNoCorteENo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length,keep=JSON.stringify(PR.std||{});
+        /* REGRA (16/11 07:53): "Dobradiça continua a furação no mesmo lugar ... seja cava ou gola". O furo fica a furD do topo e do pé da PORTA (MDF), igual com puxador externo, cava ou gola; o gola só encurta a porta (desconto de 29) e o furo de baixo acompanha o pé da porta */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        var med=async function(px,nome){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];(m.v||[]).forEach(function(v){v.px=px});draw();
+         var P=partsOf(m).filter(function(p){return p.name==='Porta'})[0],f=P.fur||{};
+         open3D();await W(300);__build();var B=__boxes().filter(function(b){return String(b.nm)==='0:Porta'&&!b.nol&&!b.pf}),slab=B.filter(function(b){return (b.y1-b.y0)>300})[0],cups=B.filter(function(b){return (b.y1-b.y0)>30&&(b.y1-b.y0)<60&&b.x0<slab.x0+60});
+         var topo=slab.y1,ys=cups.map(function(b){return Math.round(topo-(b.y0+b.y1)/2)}).sort(function(a,b){return a-b});document.getElementById('v3x').click();
+         return {c:'porta '+P.cw+' · furo a '+f.D+' das pontas ('+(f.pos||[]).join(', ')+')',d:'3D a '+ys.join(', ')+' do topo do MDF'}};var J=function(o){return o.c+' · '+o.d};
+        R.balcaoExterno=J(await med('externo','Balcão 2 portas'));R.balcaoCava=J(await med('cava','Balcão 2 portas'));R.balcaoGola=J(await med('g','Balcão 2 portas'));
+        R.aereoExterno=J(await med('externo','Aéreo 2 portas'));R.aereoGola=J(await med('g','Aéreo 2 portas'));
+        /* o valor de Ajustes (furD) vale igual pra cava e gola no plano de corte (só o teste muda o ajuste, e depois volta). O 3D ainda desenha a 100 fixo (pendente de autorização, ver puxador-gola.md seção 9) e por isso não entra aqui */
+        PR.std=PR.std||{};PR.std.furD=120;R.corte120Cava=(await med('cava','Balcão 2 portas')).c;R.corte120Gola=(await med('g','Balcão 2 portas')).c;
+        PR.std=JSON.parse(keep);try{prSave()}catch(_){}R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["balcaoExterno"] as? String, "porta 705 · furo a 100 das pontas (100, 605) · 3D a 100, 605 do topo do MDF")
+        XCTAssertEqual(o["balcaoCava"] as? String, "porta 705 · furo a 100 das pontas (100, 605) · 3D a 100, 605 do topo do MDF")
+        XCTAssertEqual(o["balcaoGola"] as? String, "porta 676 · furo a 100 das pontas (100, 576) · 3D a 100, 576 do topo do MDF")
+        XCTAssertEqual(o["aereoExterno"] as? String, "porta 746 · furo a 100 das pontas (100, 646) · 3D a 100, 646 do topo do MDF")
+        XCTAssertEqual(o["aereoGola"] as? String, "porta 721 · furo a 100 das pontas (100, 621) · 3D a 100, 621 do topo do MDF")
+        XCTAssertEqual(o["corte120Cava"] as? String, "porta 705 · furo a 120 das pontas (120, 585)")
+        XCTAssertEqual(o["corte120Gola"] as? String, "porta 676 · furo a 120 das pontas (120, 556)")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

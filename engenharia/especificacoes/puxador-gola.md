@@ -133,3 +133,11 @@ Regras:
   - Externo e cava: dobradiças a 100 e 605 mm do topo da porta de 705.
   - Gola: dobradiças a 100 e 576 mm do topo da porta de 676.
 - **Em aberto:** o padrão do app é 100 mm, e a mensagem fala em 12 cm. Não foi mudado. Falta o Adauto dizer se o padrão passa a ser 120 mm e se o "topo" é o topo da porta (MDF) ou o topo do perfil.
+- **Achado ao medir (DOB-3D-FURD):**
+  - Mudando a distância do furo em Ajustes (`furD`) para 120, o plano de corte fura a 120 (120 e 585 na porta de 705; 120 e 556 com gola).
+  - O 3D continua desenhando a dobradiça a 100: `hinges3` usa `off = 100` fixo, não o `furD`.
+  - É o 3D diferente do plano de corte (regra 4 do `CLAUDE.md`). Não corrigido: falta autorização.
+  - A correção seria o 3D usar a mesma posição do furo da lista (`p.fur.pos`).
+- **Teste que trava a regra:** `testFuracaoDaDobradicaNoMesmoLugarComExternoCavaOuGolaNoCorteENo3D`.
+  - Balcão e aéreo, com externo, cava e gola: furo a `furD` das pontas da porta, igual no plano de corte e no 3D.
+  - Com 120 em Ajustes: cava e gola furam a 120 no plano de corte. O 3D fica fora desta parte até a correção ser autorizada.

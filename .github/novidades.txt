@@ -1,5 +1,8 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Tocar e arrastar a divisória ou a prateleira de outro módulo agora escolhe aquele módulo e mexe só nela. Antes, mexia na divisória do módulo que estava escolhido.
+• Ao abrir outro projeto, nada do projeto anterior fica escolhido: a 🗑 não apaga mais peça de outro projeto e o "Só a pedra no 3D" volta ao normal.
+• Torre de forno e micro-ondas: trocar a porta de cima mexe só nela (pelos botões do vão da torre). Antes, os botões gerais transformavam a torre inteira numa porta e o forno e o micro-ondas sumiam.
 • Medidas e posições são suas: mudar a parede, o pé-direito ou a espessura não muda mais nenhum móvel. Se algo não couber, o app avisa qual móvel, qual medida, quanto cabe e a diferença, e não altera nada. Antes, diminuir e voltar o pé-direito deixava a torre mais baixa e os aéreos fora do lugar.
 • Backup: restaurar um backup confere o arquivo inteiro antes. Arquivo cortado, danificado ou vazio é recusado e nada muda. O que estava no aparelho fica guardado. Antes, uma falha no meio podia apagar notas e um backup vazio apagava tudo.
 • Projetos: um arquivo de projetos vazio ou danificado não apaga mais a cópia boa guardada no app.

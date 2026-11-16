@@ -547,3 +547,32 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - painéis "até o teto" que acompanham o pé-direito (`wallFollow`, parte dos painéis): ver a pergunta no relatório;
   - `confine` chamado direto no arrasto do módulo (só o módulo arrastado);
   - `sanBase` (`trav=false`).
+
+
+## Fase 2 · seleção inteligente (16/11, noite) — branch `claude/arquemestre-fase2-selecao` (de `9ec0869`)
+### SEL-DIV: divisória ou prateleira de outro módulo mexia na do módulo escolhido (commit d77ff63)
+- **Reproduzir:** dois balcões, A escolhido; arrastar a alça de divisória do B (A.div 0,5 → 0,876); com a aba Divisões, arrastar a prateleira do B (A.shv 0,5 → 0,907).
+- **Causa raiz:** as alças (`data-d`/`data-s`) ficam fora do grupo do módulo e só têm o número da peça; o toque armava `drag {t:'d'|'s', i}` sem o módulo e o arrasto aplicava em `S.m` (linhas 1225/1226); a camada 12181 escolhia a alça mais perto do dedo e calculava o deslocamento com `circle[data-d=i]` entre TODOS os módulos (o 1º do DOM era o do outro módulo).
+- **Correção:** cada alça leva o módulo dono (`data-dm`); tocar na de outro módulo escolhe o dono (`S.m`, `S.sv=0`) e o arrasto guarda o dono (`drag.mo`); o movimento só age no dono; a camada 12181 só olha as alças do módulo escolhido.
+- **Testes:** `testSelecaoDivisoriaDeOutroModuloSoEscolheEleENaoMexeEmNinguem` (inclui o arrasto no próprio módulo) e `testSelecaoPrateleiraDeOutroModuloMexeSoNela`: falham em 9ec0869, passam agora. Família: 27 testes de divisória/prateleira passando.
+
+### SEL-PROJ / SEL-ESTADO: escolha de tela do projeto A agindo no B (commits 7db71af e d612d17)
+- **Reproduzir:** tocar numa divisória em A, abrir o B pela lista do editor, tocar no 🗑 → apagava a divisória do B. Ficavam do A: `LAST`, `DIVI`, `PSEL`, `S.selS`, `ST3ONLY`.
+- **Causa raiz:** escolha de tela em variáveis globais e em `S`, e o `loadState` não limpava.
+- **Correção:** `loadState` de OUTRO projeto (CUR mudou, fora do desfazer) zera `LAST`, `DIVI`, `PSEL`, `SEL3`, `FOC3`, `RPSEL`, `SELAP`, `ST3ONLY`, alvo armado do 🗑 e `S.selS` (null, como no resto do editor), e o vão escolhido; desfazer/refazer/recarga só descartam escolha que não existe mais. Dados do projeto não mudam.
+- **Regressão achada e corrigida no caminho (d612d17):** com `S.selS=-1` o 2D tratava como prateleira escolhida e perdia o 1º toque (`testDoisToquesNoVaoDeCima…`). Agora `null`.
+- **Testes:** `testSelecaoLixeiraNaoUsaPecaEscolhidaNoOutroProjeto`, `testSelecaoEscolhasDeTelaZeramAoAbrirOutroProjeto`: falham em 9ec0869, passam agora. Sondas s21/s22 (abrindo como o app: `CUR=p.id; loadState`).
+
+### SEL-VAO: vão escolhido inválido depois de escolher outro módulo pelo 3D (commit 7a95037)
+- **Reproduzir:** A com 3 vãos e o 3º escolhido; tocar no B (1 vão) pelo 3D → `S.sv=2`. Ler o vão escolhido nesse estado criava vãos fantasma no B (sonda s42: 1 → 3 em 9ec0869).
+- **Causa raiz:** o caminho do 3D troca `S.m` dentro do bloco do 3D sem conferir `S.sv`.
+- **Correção:** acessor em `S.m` — trocou o módulo escolhido (qualquer caminho), `S.sv` é conferido contra divisórias + 1 do módulo novo. `S.sv` é estado de tela.
+- **Risco que fica (para aprovação):** `gv(i)` com `i` fora de divisórias + 1 ainda cria vãos (s42, `gv(5)`: 1 → 6). O caminho comprovado que chegava lá está fechado; nenhum modelo do catálogo tem vãos além de divisórias + 1.
+- **Teste:** `testSelecaoVaoEscolhidoExisteNoModuloEscolhidoDepoisDoToqueNo3D`: falha em 9ec0869, passa agora.
+
+### SEL-TORRE: porta de cima virava a torre inteira (opção A aprovada pelo Adauto; commit desta entrada)
+- **Reproduzir:** nos 9 modelos de torre de forno/micro-ondas, tocar na porta de cima e escolher 1 ou 2 portas (aba Portas ou 2 toques no vão "1 porta") → uma porta de 2100 mm, forno/micro/nichos somem (27 erros).
+- **Causa raiz:** a torre é um vão `k:'oven'`; os comandos gerais de porta trocam o tipo do vão inteiro. Mesmo mecanismo já corrigido na geladeira (TORRE-GEL-PORTA).
+- **Correção (opção A):** `torreForno(m,v)` = vão 'oven' em módulo de baixo com 1500 mm ou mais. Na torre, a seção geral de portas da aba Portas e "1 porta / 2 portas / correr" do menu do vão não aparecem; clique geral que ainda chegue é recusado com aviso ("Nada foi alterado"). A porta de cada vão se troca pelos botões que já existem ("Só este vão da torre"; torre antiga pelo "🚪 Trocar a porta", que é a conversão manual existente — nada é convertido sozinho). Balcão de forno (mais baixo) continua como era (frente com recorte).
+- **Testes:** `testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima` (9 torres × 3 caminhos; falha em 9ec0869, passa agora) e `testSelecaoTorrePortaDeCimaPeloVaoDaTorreMudaSoEla` (o caminho certo: só a porta de cima vira 2 folhas, forno/micro no lugar, medidas externas iguais, outras portas iguais, 3D e corte com as mesmas portas, desfazer/refazer e reabrir certos — passa nas duas versões, é garantia do caminho certo).
+- **Correção de contagem:** o diagnóstico dizia 10 modelos; são 9.

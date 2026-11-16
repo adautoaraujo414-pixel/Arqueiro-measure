@@ -13,7 +13,7 @@
 | **SEL-PROJ** | Depois de tocar numa divisória no projeto A, abrir o B e tocar no 🗑 **apaga a divisória do B** | toque real em A, abrir B pela lista, 🗑 | `LAST`/`DIVI` (o que o 🗑 apaga) são globais e o `loadState` não os zera | lixeira 2247 (`LAST==='div'&&…DIVI`), `loadState` |
 | **SEL-ESTADO** | Ao abrir outro projeto ficam do anterior: `LAST`, `DIVI`, `PSEL` (peça escolhida), `S.selS` (prateleira), `ST3ONLY` ("Só a pedra") | abrir B depois de mexer em A | escolha de tela guardada em variáveis globais e em `S`, sem limpeza ao trocar de projeto | `loadState` e as variáveis citadas |
 | **SEL-VAO** | Tocar no módulo B pelo 3D deixa `S.sv=2` (o 3º vão do A) num B de 1 vão | `__sel3` real | O caminho do 3D troca `S.m` sem conferir `S.sv`. Os painéis corrigem ao abrir (`if(S.sv>=nv())S.sv=0`), então **nenhuma ação caiu no vão errado** nos testes: é risco (número inválido) | `sel3`/`itOpen` (3D) |
-| **SEL-TORRE** | Tocar na **porta de cima** da torre de forno ou micro-ondas e escolher 1 ou 2 portas (aba Portas ou "1 porta" no menu do vão) faz **a torre inteira virar uma porta de 2100 mm**, e o forno, o micro-ondas e os nichos somem | 10 modelos × 3 caminhos = 27 erros | A torre é **um vão** `k:'oven'`. A porta de cima é calculada em `partsOf`. Os botões gerais (`data-door`, menu `door1`/`door2`/`slide`) trocam o tipo do vão inteiro. A estrutura certa já existe: torre por vãos (`v.tw`, botões `data-twd`, menu "Só este vão da torre") | tratador `data-door` (1699), menu do vão (`vmenuOpen`), igual ao já corrigido na geladeira (TORRE-GEL-PORTA) |
+| **SEL-TORRE** | Tocar na **porta de cima** da torre de forno ou micro-ondas e escolher 1 ou 2 portas (aba Portas ou "1 porta" no menu do vão) faz **a torre inteira virar uma porta de 2100 mm**, e o forno, o micro-ondas e os nichos somem | 9 modelos × 3 caminhos = 27 erros (no diagnóstico de 16/11 saiu "10 modelos" por erro de contagem: são 9) | A torre é **um vão** `k:'oven'`. A porta de cima é calculada em `partsOf`. Os botões gerais (`data-door`, menu `door1`/`door2`/`slide`) trocam o tipo do vão inteiro. A estrutura certa já existe: torre por vãos (`v.tw`, botões `data-twd`, menu "Só este vão da torre") | tratador `data-door` (1699), menu do vão (`vmenuOpen`), igual ao já corrigido na geladeira (TORRE-GEL-PORTA) |
 
 **Risco identificado (não comprovado):** `gv(i)` **cria vãos** no módulo quando `i` passa do número de vãos (`while(m.v.length<=i) m.v.push(...)`). Com `S.sv` inválido isso mudaria o projeto, mas nenhum caminho testado chegou lá.
 
@@ -34,7 +34,7 @@
 - `testSelecaoLixeiraNaoUsaPecaEscolhidaNoOutroProjeto`
 - `testSelecaoEscolhasDeTelaZeramAoAbrirOutroProjeto`
 - `testSelecaoVaoEscolhidoExisteNoModuloEscolhidoDepoisDoToqueNo3D`
-- `testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima` (10 torres × 3 caminhos)
+- `testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima` (9 torres × 3 caminhos)
 
 Depois de cada correção, também rodam a bateria completa e as sondas s01–s31, s40 e s41.
 

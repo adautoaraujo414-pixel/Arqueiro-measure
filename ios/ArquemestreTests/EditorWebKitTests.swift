@@ -11989,8 +11989,9 @@ final class EditorWebKitTests: XCTestCase {
     }
 
     /* FASE 2 · SEL-TORRE: tocar na porta de cima da torre de forno/micro-ondas e trocar a porta (aba Portas 1 ou 2 portas, ou 2 toques no vão "1 porta")
-       muda só a porta de cima: o forno, o micro-ondas e os nichos continuam, e nenhuma porta fica mais alta que a porta de cima era.
-       Antes (9ec0869): nos 10 modelos de torre a torre inteira virava uma porta de 2100 mm e o forno/micro sumiam. Mesmo mecanismo já corrigido na caixa da geladeira (TORRE-GEL-PORTA). */
+       não troca a torre inteira: o forno, o micro-ondas e os nichos continuam, e nenhuma porta fica maior que a maior porta que já existia (opção A: os comandos gerais não
+       aparecem na torre; clique geral que chegue é recusado com aviso).
+       Antes (9ec0869): nos 9 modelos de torre a torre inteira virava uma porta de 2100 mm e o forno/micro sumiam. Mesmo mecanismo já corrigido na caixa da geladeira (TORRE-GEL-PORTA). */
     func testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -12004,15 +12005,53 @@ final class EditorWebKitTests: XCTestCase {
         var portas=function(m){return partsOf(m).filter(function(p){return /^Porta/.test(p.name)})},eletro=function(m){return partsOf(m).filter(function(p){return /forno|micro|Nicho|Forno|Micro/.test(p.name)}).length};
         var erros=[],n=0;
         for(var i=0;i<its.length;i++){for(var cam of ['aba1','aba2','menu1']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[0];m.x=1500;S.m=m;S.sv=0;S.tab=0;draw();panel();await W(20);
-          var P=partsOf(m),best=-1,top=-1;P.forEach(function(p,k){if(/^Porta/.test(p.name)&&p.y+p.h>top){top=p.y+p.h;best=k}});if(best<0)continue;var alto=Math.round(P[best].h),e0=eletro(m);
+          /* y das peças conta de cima pra baixo: a porta de cima é a de menor y */var P=partsOf(m),best=-1,top=1e9;P.forEach(function(p,k){if(/^Porta/.test(p.name)&&p.y<top){top=p.y;best=k}});if(best<0)continue;var alto=portas(m).reduce(function(a,q){return Math.max(a,Math.round(q.h))},0),e0=eletro(m);
           var r=sv.querySelector('#mod[data-mi="0"] rect[data-p="'+best+'"]');if(!r)continue;var b=r.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;ev('pointerdown',x,y,r);ev('pointerup',x,y,sv);ev('pointerup',x,y,window);await W(450);n++;
           if(cam!=='menu1'){S.tab=3;panel();var bt=[].filter.call(document.querySelectorAll('#bd [data-door="'+(cam==='aba2'?2:1)+'"]'),function(q){return q.offsetParent!==null})[0];if(bt){bt.click();await W(200)}}
           else{vmenuOpen(0,S.sv||0,200,300);await W(40);var bm=document.querySelector('#vmenu [data-vk="door1"]');if(bm){bm.click();await W(200)}vmenuClose()}
-          m=S.mods[0];var maior=portas(m).reduce(function(a,q){return Math.max(a,Math.round(q.h))},0);if(eletro(m)!==e0||maior>alto+1)erros.push(its[i].n+' ('+cam+'): forno/micro '+e0+'→'+eletro(m)+' · maior porta '+maior+' (a de cima tinha '+alto+')')}}
-        R.tentativas=n>=27;R.erros=erros.length+(erros.length?': '+erros.slice(0,3).join(' | '):'');R.errs=__errs.length;return JSON.stringify(R);
+          m=S.mods[0];var maior=portas(m).reduce(function(a,q){return Math.max(a,Math.round(q.h))},0);if(eletro(m)!==e0||maior>alto+1)erros.push(its[i].n+' ('+cam+'): forno/micro '+e0+'→'+eletro(m)+' · maior porta '+maior+' (a maior antes era '+alto+')')}}
+        R.tentativas=n>=27;/* 9 torres × 3 caminhos */R.erros=erros.length+(erros.length?': '+erros.slice(0,3).join(' | '):'');R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["tentativas"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }
+    /* FASE 2 · SEL-TORRE (opção A, exemplo do Adauto de 16/11): torre com porta de cima, micro-ondas e forno — tocar na porta de cima e escolher 2 portas PARA AQUELE VÃO
+       (botões do vão da torre; torre antiga passa por "🚪 Trocar a porta", que é a ação manual que já existe). Só a porta de cima muda: forno e micro no lugar, medidas
+       externas iguais, as outras portas iguais, 2D e 3D com as mesmas portas, corte com a porta nova, desfazer/refazer e salvar/reabrir certos. Nos 9 modelos de torre. */
+    func testSelecaoTorrePortaDeCimaPeloVaoDaTorreMudaSoEla() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var dois=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();
+          var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];draw();S.m=A;S.tab=0;panel();draw();return [A,B]};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h&&(it.v||[]).some(function(v){return v.k==='oven'})&&/^Torre/.test(it.n))its.push(it)})});
+        var portas=function(m){return partsOf(m).filter(function(p){return /^Porta/.test(p.name)})},eletro=function(m){return partsOf(m).filter(function(p){return /forno|micro|Nicho|Forno|Micro/.test(p.name)}).map(function(p){return p.name+' '+Math.round(p.y)+'+'+Math.round(p.h)}).sort().join(';')};
+        var erros=[],n=0,semPortaEmCima=[];
+        for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[0];m.x=1500;S.m=m;S.sv=0;S.tab=0;draw();panel();await W(20);
+          /* y das peças conta de cima pra baixo: a porta de cima é a de menor y */var P=partsOf(m),best=-1,top=1e9;P.forEach(function(p,k){if(/^Porta/.test(p.name)&&p.y<top){top=p.y;best=k}});if(best<0){semPortaEmCima.push(its[i].n+' (sem porta)');continue}var cima=P[best],e0=eletro(m),ext0=[m.w,m.h,m.d].join('x');
+          var r=sv.querySelector('#mod[data-mi="0"] rect[data-p="'+best+'"]');var b=r.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;ev('pointerdown',x,y,r);ev('pointerup',x,y,sv);ev('pointerup',x,y,window);await W(450);
+          S.tab=3;panel();var cv=document.querySelector('#bd [data-twd="0|0|conv"]');if(cv){cv.click();await W(150)}m=S.mods[0];
+          /* o 1º vão da torre é o de cima (a lista vai de cima pra baixo); torre cujo vão de cima não é porta fica de fora */var tw=m.v[0].tw||[],ti=(tw[0]&&tw[0].k==='door')?0:-1;P=partsOf(m);var pc=null;P.forEach(function(p){if(/^Porta/.test(p.name)&&(!pc||p.y<pc.y))pc=p});
+          if(ti<0){semPortaEmCima.push(its[i].n+' ('+(tw[0]&&tw[0].k)+')');continue}var outras0=portas(m).filter(function(p){return Math.abs(p.y-pc.y)>=2}).map(function(p){return Math.round(p.y)+'+'+Math.round(p.h)}).sort().join(';'),ec=eletro(m);
+          LASTT=0;histTick();S.tab=3;panel();var b2=document.querySelector('#bd [data-twd="0|0|n|'+ti+'|2"]');if(!b2){erros.push(its[i].n+': sem botão 2 portas do vão');continue}b2.click();await W(200);LASTT=0;histTick();m=S.mods[0];n++;
+          var ps=portas(m),noTopo=ps.filter(function(p){return Math.abs(p.y-pc.y)<2}),outras=ps.filter(function(p){return Math.abs(p.y-pc.y)>=2}).map(function(p){return Math.round(p.y)+'+'+Math.round(p.h)}).sort().join(';');
+          __build();var b3=__boxes().filter(function(q){return String(q.nm).indexOf('0:')===0&&/^Porta#/.test(q.pk||'')}).map(function(q){return q.pk}).filter(function(v,ix,a){return a.indexOf(v)===ix}).length;
+          var corte=cutLines(m).filter(function(l){return (l.names||[]).some(function(nm){return /^Porta/.test(nm)})}).reduce(function(a,l){return a+(l.qty||0)},0);
+          var p_=[];if(eletro(m)!==ec)p_.push('forno/micro mudou');if([m.w,m.h,m.d].join('x')!==ext0)p_.push('medida externa mudou');if(noTopo.length!==2)p_.push('porta de cima com '+noTopo.length+' folha(s)');if(outras!==outras0)p_.push('outras portas mudaram');if(b3!==ps.length)p_.push('3D '+b3+' portas × 2D '+ps.length);if(corte!==ps.length)p_.push('corte '+corte+' portas × '+ps.length);
+          /* desfazer e refazer (antes de reabrir: reabrir começa um histórico novo) */
+          var st=JSON.stringify(snapState());document.getElementById('und').onclick();await W(50);if(portas(S.mods[0]).filter(function(p){return Math.abs(p.y-pc.y)<2}).length!==1||eletro(S.mods[0])!==ec)p_.push('desfazer não voltou');
+          document.getElementById('red').onclick();await W(50);if(portas(S.mods[0]).filter(function(p){return Math.abs(p.y-pc.y)<2}).length!==2)p_.push('refazer não voltou');
+          loadState(JSON.parse(st));draw();if(portas(S.mods[0]).length!==ps.length||eletro(S.mods[0])!==ec||[S.mods[0].w,S.mods[0].h,S.mods[0].d].join('x')!==ext0)p_.push('reabrir mudou');
+          if(p_.length)erros.push(its[i].n+': '+p_.join(', '))}
+        R.torres=n;R.semPortaEmCima=semPortaEmCima.join(' | ');R.erros=erros.length+(erros.length?': '+erros.slice(0,4).join(' | '):'');R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["torres"] as? Int, 9, "os 9 modelos de torre do catálogo (todos têm porta no vão de cima)")
+        XCTAssertEqual(o["erros"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+

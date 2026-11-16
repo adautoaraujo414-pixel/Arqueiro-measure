@@ -273,7 +273,7 @@ function gv(i,mm){var m=mm||S.m;while(m.v.length<=i)m.v.push(S.pxDef?{k:'free',n
 function nv(){return S.m.div.length+1}
 function defs(m){var d={esp:15,frUp:5,regN:2,rod:!m.sup,rodMm:100,base:true,mold:!m.sup,moldMm:30,trav:!m.sup,travMm:70,regua:false,regMm:70,tbMm:30,tpass:false,tlW:30,trW:30,tlA:'cava',trA:'cava',tlAdj:0,trAdj:0,cavaD:80,tbL:0,tbR:0,fundoMm:6,fundoTipo:'sobre',rasgoP:8,rasgoR:10,tbW:30,tpMm:20,tt:false,folga:m.sup?0:15,pm:30,egL:0,egR:0,egD:70,wing:0,pS1:7,pSn:6,pGap:2,pDv:4,pTop:4,pV:15,gS1:7.5,gGap:4,corr:'tel',ocF:6,ocL:10,ocR:13};if(m.sup)m.trav=false;for(var k in d)if(m[k]===undefined)m[k]=d[k];if(!ENGON()){m.egL=0;m.egR=0}return m}
 function topo(m){return m.trav?m.travMm:m.esp}function rodH(m){return m.rod?m.rodMm:0}function baseT(m){return m.base?m.esp:0}
-function vTop(m){return m.folga+topo(m)}function vBot(m){return m.h-rodH(m)-baseT(m)}function vhm(m){return Math.max(10,vBot(m)-vTop(m))}
+function vTop(m){return m.folga+topo(m)}/* quanto a frente sobe pra cobrir a travessa frontal (mesma conta das portas e gavetas do módulo comum e do editor por vãos) */function tXOf(m,vT){var e=m.esp,t=(m.trav&&!m.sup)?Math.max(0,topo(m)-e):0;if(t>0&&m.mold&&(m.rack||m.moldOn)){var mh=Math.min(+m.moldMm||30,m.folga+topo(m));t=Math.max(0,Math.min(t,vT-mv(m,'pV',15)-mh-2-(+m.frUp||0)))}return t}function vBot(m){return m.h-rodH(m)-baseT(m)}function vhm(m){return Math.max(10,vBot(m)-vTop(m))}
 /* altura onde as prateleiras soltas podem ficar: o vão inteiro; na caixa da geladeira, só o nicho de cima (acima da prateleira fixa) */
 function shZoneH(m){var A=vhm(m);try{var g=(m.v||[]).filter(function(v){return v&&v.k==='gel'})[0];if(g){var gh=Math.max(1200,Math.min(A-150,+g.gh||1850));return Math.max(10,A-gh-(+m.esp||15))}}catch(_){}return A}
 /* altura de dentro de UM vão pra pôr coisas (prateleira, nicho, cabideiro…): o vão inteiro; no vão da geladeira, só o nicho de cima */
@@ -567,7 +567,7 @@ function partsOf0(m){if(!m.cv31){m.cv31=1;(m.v||[]).forEach(function(v){if(v.k==
     for(var z=0;z<2;z++)add('Régua (porta tempero)',tx0,by(q),tp.w,tp.rg,W,tp.d,tp.rg,{noDraw:true,vi:i,tq:q,side:z,note:'grade lateral '+tp.d+' × '+tp.rg+' · em pé sobre a base, '+(z?'lado direito':'lado esquerdo')+' · 2 na base de cima e 2 na de baixo'})}
    add('Corrediça do porta tempero (visual)',tx0,vT+20,tp.w,ch,'#9aa3ad',tp.d,40,{noCut:true,noDraw:true,vi:i,note:'2 corrediças telescópicas no mesmo lado: uma em cima e uma embaixo'})}
   /* travessa frontal: a porta/frente sobe e cobre a travessa (ela fica atrás, só estrutura) · antes sobrava uma faixa do corpo em cima das portas */
-  var tX_=(m.trav&&!m.sup)?Math.max(0,topo(m)-e):0;/* rack: a moldura fica (é o acabamento de cima), então as frentes sobem só até ela, com 2 mm de folga */if(tX_>0&&m.mold&&(m.rack||m.moldOn)){var mh0_=Math.min(+m.moldMm||30,top+topo(m));tX_=Math.max(0,Math.min(tX_,vT-mv(m,'pV',15)-mh0_-2-(+m.frUp||0)))}
+  /* rack: a moldura fica (é o acabamento de cima), então as frentes sobem só até ela, com 2 mm de folga */var tX_=tXOf(m,vT);
   var tX0_=tX_,tXv_=function(v,vT){if(!(v&&v.cava&&!m.sup&&moldEff(m)))return tX0_;var mh=Math.min(+m.moldMm||30,top+topo(m));return Math.min(tX0_,vT-mv(m,'pV',15)-mh-30-(+m.frUp||0))};
   var DRW_=function(v,vT,vH){var tX_=tXv_(v,vT);var fh=v.gh_?v.gh_:drawerH(v),pV_=mv(m,'pV',15),gS_=mv(m,'gS1',7.5),gG_=mv(m,'gGap',6),br=v.cava?(cbRv(v)):gG_,gap=br,gsd_=dvPass(m,vr,i,gS_),fw=vw+gsd_[0]+gsd_[1],bt=v.cava?(cbTv(v)):0,cg=cbGv(v);/* gavetas de fora com altura dada (guarda-roupa): com cava o vão entre caixas é a régua, não 6 — senão as caixas estouravam pra cima da prateleira */if(v.gh_&&v.n*fh+(v.n-1)*gap>vH+0.5)fh=Math.round((vH-(v.n-1)*gap)/v.n*10)/10;var y0=vT+vH-(v.n*fh+(v.n-1)*gap);
    var btY_=[];if(v.cava){if(bt>0){btY_.push([vT,vT+bt]);add('Batente superior (cava)',vx,vT,vw,bt,F,vw,bt,{vi:i,note:'cor do móvel · '+bt+' mm'})}var fh20=(vH+2*pV_+tX_-(v.n-1)*cg)/v.n;for(var q=0;q<v.n-1;q++){var gcn=vT-pV_-tX_+(q+1)*fh20+q*cg+cg/2;btY_.push([gcn-br/2-(+m.frUp||0),gcn+br/2-(+m.frUp||0)]);add('Batente (cava)',vx,gcn-br/2,vw,br,F,vw,br,{vi:i,note:'embutido atrás do vão de '+cg+' entre as frentes · centrado · régua '+br+' (vão '+cg+' + 15 de sobreposição em cada frente)'})}}
@@ -1521,7 +1521,7 @@ function tampOpt(sd){var m=S.m,A=m[sd+'A']||'cava',nm=sd==='tl'?'Tamponamento es
  return h}
 function R(k,l){return '<div class="g"><label>'+l+'</label><input type="text" inputmode="none" data-calc="1" data-r="'+k+'" value="'+S.m[k]+'"></div>'}
 /* moldura de acabamento que entra de verdade: marcada pela pessoa (moldOn) entra sempre e as frentes param embaixo dela; marcada só por padrão, num balcão com travessa e portas/gavetas, as frentes cobrem a travessa e a moldura não entra (era o comportamento antigo — projetos antigos não mudam sozinhos) */
-function moldFr(m){return (m.v||[]).some(function(o){return o&&(o.k==='door'||o.k==='drawers'||o.k==='slide'||o.k==='tempero')})}
+function moldFr(m){if(m&&m.rgFr&&m.rt&&m.v&&m.v[0]&&m.v[0].k==='rt'){var tem=false;(function w(n){if(!n||tem)return;if((n.p&&+n.p.n>0)||(n.t==='gav'&&n.g&&n.g.ext))tem=true;(n.c||[]).forEach(w)})(m.rt);return tem}return (m.v||[]).some(function(o){return o&&(o.k==='door'||o.k==='drawers'||o.k==='slide'||o.k==='tempero')})}
 function moldEff(m){if(!m||!m.mold)return false;if(m.moldOn)return true;var us=false;try{us=!m.sup&&typeof underStone==='function'&&underStone(m)}catch(_){}return !!((m.sup||m.rack||!m.trav||!moldFr(m))&&!us)}
 window.moldEff=moldEff;
 function RT(k,l){return '<div class="chk"><input type="checkbox" data-rc="'+k+'" '+(S.m[k]?'checked':'')+'> '+l+'</div>'}
@@ -10169,7 +10169,11 @@ window.rgGv=function(m){return {R:gvR(m),D:gvD(m)}};
 function gCx(m,n){var g=(n&&n.g)||{};if(g.cx!=null)return !!g.cx;return /^(quarto|closet)$/.test(roomOf())}
 window.rgGCx=gCx;
 function gvF(m){var f=m.gvF;return (f!=null&&f!==''&&isFinite(+f)&&+f>=0)?+f:2.5}
-function doorBox(m,L,R,nd,cava,dn){var e=L.e,pV=mv(m,'pV',15),pS=(nd>1||m.sup)?mv(m,'pSn',6):mv(m,'pS1',7),pDv=mv(m,'pDv',4),atL=Math.abs(R.x0-L.X0)<.6,atR=Math.abs(R.x1-L.X1)<.6,atT=Math.abs(R.y0-L.Y0)<.6,atB=Math.abs(R.y1-L.Y1)<.6,dv=Math.min(pS,(e-pDv)/2),cL=atL?pS:dv,cR=atR?pS:dv,up=cava?(dn?10:20):pV,dw=cava?(dn?20:10):pV,cT=atT?up:-3,cB=atB?dw:-3;
+function doorBox(m,L,R,nd,cava,dn,vv){var e=L.e,pV=mv(m,'pV',15),pS=(nd>1||m.sup)?mv(m,'pSn',6):mv(m,'pS1',7),pDv=mv(m,'pDv',4),atL=Math.abs(R.x0-L.X0)<.6,atR=Math.abs(R.x1-L.X1)<.6,atT=Math.abs(R.y0-L.Y0)<.6,atB=Math.abs(R.y1-L.Y1)<.6,dv=Math.min(pS,(e-pDv)/2),cL=atL?pS:dv,cR=atR?pS:dv,up=cava?(dn?10:20):pV,dw=cava?(dn?20:10):pV,cT=atT?up:-3,cB=atB?dw:-3;
+ /* 16/11 (editor por vãos em todos os módulos): módulo que veio do editor comum (rgFr) segue a regra de altura das frentes dele: cobre a travessa frontal, 4 mm abaixo do topo sem puxador de borda, cava passa 20/10 (aéreo: espessura), réguas do engrosso cava do aéreo */
+ if(m.rgFr&&!dn){var vq_=vv||(m.v&&m.v[0])||{},px_='';try{px_=pxOf(vq_)}catch(_){}var bas_=!!(vv&&vv.bas),vid_=!!(vv&&vv.vidro),cvR_=(cava||px_==='cava')&&!vid_&&!bas_;
+  if(atT){var tX_=tXOf(m,L.Y0),yd_=R.y0-(cvR_?(m.sup?e:20):pV)-tX_,tg_=(!vid_&&(!/^(cava|facetado|g|perfil)$/.test(px_)||(bas_&&px_==='cava'&&!m.regua)))?mv(m,'pTop',0):0;if(tg_&&yd_<tg_)yd_=tg_;cT=R.y0-yd_}
+  if(atB){var rgB_=(m.sup&&m.regua&&Math.abs(R.y1+e-m.h)<1)?Math.max(1,Math.min(3,Math.round(+m.regN||2)))*e:0;cB=(cvR_?(m.sup?e:10):pV)+rgB_}}
  return {x:R.x0-cL,y:R.y0-cT,w:R.x1-R.x0+cL+cR,h:R.y1-R.y0+cT+cB,cT:cT,cB:cB,atT:atT,atB:atB}}
 /* ---------- peças (chamado de dentro do partsOf) ---------- */
 window.rgParts=function(c){var m=c.m,add=c.add,e=c.e,dep=c.dep,W=c.W,F=c.F,i=c.i,v=c.v,L=lay(m),ghost=!!(window.SOLO2===m&&RG.ghost!==false),cava=!!v.cava,GD=gvD(m),RC=gvR(m),ST=stoneTop(),gi=0;
@@ -10306,7 +10310,13 @@ function rgFrom(m){if(!m||m.corner||isRg(m)||m.nicho)return null;if((m.shv||[]).
  for(var i=0;i<vr.length;i++){var n=colNode(m,gv(i,m),A,e);if(!n)return null;if(i<vr.length-1)n.z=r1(vr[i][1]-vr[i][0]);cols.push(n)}
  return cols.length>1?{s:'v',c:cols}:cols[0]}
 function rgInit(m,rt){var v0=(m.v&&m.v[0])||{},cv=(m.v||[]).some(function(v){return v&&v.cava});m.rt=rt||{};m.v=[{k:'rt',n:1,cava:cv,px:v0.px,pxc:v0.pxc}];m.div=[];m.dr=[];m.shv=[]}
-window.rgConvert=function(m){if(isRg(m))return true;var r=rgFrom(m);if(!r)return false;snap();rgInit(m,r);return true};
+/* 16/11 (editor por vãos em todos os módulos): só passa pro editor por vãos se as peças ficarem IGUAIS (nome, medida de corte, material, posição, puxador e dobradiça).
+   Se mudar qualquer peça, continua no editor de antes e nada muda no projeto (antes "Só ele no 2D" convertia e trocava peças sem avisar) */
+function rgSig(m){try{return partsOf(m).filter(function(p){return p.name!=='Decoração'}).map(function(p){return [p.name,p.cl,p.cw,p.mat||'',p.noCut?1:0,r1(p.x),r1(p.y),r1(p.w),r1(p.h),p.hinge||'',p.px||''].join('|')}).sort().join('\n')}catch(_){return 'erro'}}
+window.rgSig=rgSig;
+window.rgConvert=function(m){if(isRg(m))return true;var r=rgFrom(m);if(!r)return false;var K=['rt','v','div','dr','shv','rgFr'],bk={};K.forEach(function(k){bk[k]=m[k]===undefined?undefined:JSON.parse(JSON.stringify(m[k]))});var volta=function(){K.forEach(function(k){if(bk[k]===undefined)delete m[k];else m[k]=JSON.parse(JSON.stringify(bk[k]))})};
+ var s0=rgSig(m);rgInit(m,JSON.parse(JSON.stringify(r)));m.rgFr=1;var s1=rgSig(m);volta();if(s0!==s1){window.RGDIF=s0.split('\n').filter(function(x){return s1.split('\n').indexOf(x)<0}).slice(0,6);return false}
+ snap();rgInit(m,r);m.rgFr=1;return true};
 var so0=window.soloOn;soloOn=window.soloOn=function(m){try{if(m&&!isRg(m)&&((!m.sup&&+m.h>=1500)||m.stkB)&&!m.corner){if(window.rgConvert(m))setTimeout(function(){try{toast('✏️ Toque no vão do desenho: ele fica rosa e só ele muda')}catch(_){}},900)}}catch(_){}RG.sel=null;RG.dsel=null;return so0.apply(this,arguments)};
 var nt0=window.newTpl||newTpl;newTpl=window.newTpl=function(i){var t=typeof i==='object'?i:TPL[i],r=nt0.apply(this,arguments);try{var m=S.m;if(t&&m&&S.mods.indexOf(m)>=0){if(t.rt){m.rt=JSON.parse(JSON.stringify(t.rt));m.v=[{k:'rt',n:1,cava:!!(t.v&&t.v[0]&&t.v[0].cava)}];m.div=[]}else if(t.free0){rgInit(m,{});setTimeout(function(){try{if(S.mods.indexOf(m)>=0)soloOn(m)}catch(_){}},60)}}}catch(_){}return r};
 var vmo=window.vmenuOpen;if(vmo){vmenuOpen=window.vmenuOpen=function(mi){var m=S.mods[mi];if(isRg(m)){S.m=m;if(window.SOLO2!==m)soloOn(m);return}return vmo.apply(this,arguments)}}

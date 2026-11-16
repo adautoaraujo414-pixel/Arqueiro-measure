@@ -123,6 +123,6 @@ O que **falhou**:
    - No Chromium, antes e depois do gola, dá `90/70`.
    - Esse teste mede a porta abrindo com espera de 150 ms. **Hipótese** (não comprovada): a animação ainda não tinha terminado no simulador lento.
    - A correção do gola não mexe em porta de canto, nem no ângulo, nem na colisão das folhas. Conferido: as portas do "Canto L guarda-roupa" do catálogo não têm gola (`gola 0`, puxador padrão).
-   - O CI do commit 0ce8771 roda o mesmo teste de novo e confirma se é instável.
+   - Não deu para confirmar se é instável: os commits seguintes só mudaram documentação e o CI do iOS não rodou de novo. Fica pendente rodar o CI do iOS outra vez.
 
 **Aparelho real:** não testado.

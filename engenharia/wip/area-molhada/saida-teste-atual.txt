@@ -1,0 +1,15 @@
+{
+ "botao": true,
+ "criou": "rebaixo 20 mm · cantos curvo r40",
+ "pedra": "dentro -20 · fora 0 · no fundo da área -20",
+ "semMancha": "placa de outra cor 0 · pedra de outra cor 0 · cantos curvos 4",
+ "cubaSobrepor": "borda da cuba em — (o topo da pedra é 0)",
+ "quadrado": "cantos curvos 4 · dentro -20",
+ "rebaixo8": "dentro -20",
+ "pedra2cm": "dentro -15 (sobra pedra embaixo)",
+ "antigo": "guardado 8 mm · dentro -8",
+ "reabriu": "rebaixo 20 · dentro -20 · fora 0",
+ "tirou": "dentro 0 · fora 0",
+ "resumo": "sem resumo",
+ "errs": 0
+}

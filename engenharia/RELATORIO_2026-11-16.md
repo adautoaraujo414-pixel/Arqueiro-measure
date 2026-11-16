@@ -179,3 +179,54 @@ O que **falhou**:
 - **Instáveis com carga, que passaram rodando sozinhos:** `testOrganizacao3DClienteEModoPessoa` e `testSoOModulo3DE2D…`.
 - **Um teste ajustado:** `testPainelNaoDuplicaEmOutraParedeDepoisDaLista` lia o texto da faixa da parede, e o botão "—" de minimizar (PEDIDO 61) entrou no texto. O teste agora tira o "—" como já tirava Esquerda/Direita. O que ele confere não mudou. Sozinho passou.
 - **Resultado:** sem regressão. Os pedidos 61 e 62 foram integrados à branch `feature/arque-measure-kotlin` (commit 1730073). **Não publicado.**
+
+---
+
+# Terceira rodada (16/11, depois das 07:03)
+
+## 1. Gola: afastamento e rebaixo configuráveis
+- Ajustes › Puxadores › Perfil G ganhou dois campos:
+  - Afastamento da porta até a caixa (`gAfast`).
+  - Rebaixo na caixa atrás do perfil (`gReb`).
+- Os dois **começam em 0**, que é o comportamento de antes ("a folga do caixote mantém o padrão").
+- A nota embaixo mostra quanto o perfil encosta: `1,5 − afastamento − rebaixo`.
+- **Afastamento:** move no 3D só a porta ou frente com G (e o perfil dela). A porta sem G fica onde estava.
+- **Não mudam:** medidas das peças, desconto de 29 e plano de corte. Teste: `testPerfilGAfastamentoERebaixoConfiguraveisPadraoZeroSemMudarPecas`.
+- **Medido com afastamento de 1,5:** o perfil deixa de entrar na travessa e nas laterais do balcão. No aéreo ainda encosta 0,8 mm na fita de borda, mas a **porta** do aéreo já entrava 0,8 mm nessa fita antes, sem gola (FITA-08, pendente).
+- **Rebaixo:** só entra na conta. A usinagem não sai no plano de corte nem no 3D, porque falta definir as peças e a altura. **Pendente.**
+- **Pendente de confirmação:** a folga real da dobradiça com G e se existe rebaixo.
+
+## 2. PEDIDO 45: teste "módulo cadastrado = módulo no 3D"
+- **Teste novo:** `testTodoModuloCadastradoApareceNo3DEmQualquerCaminho`. Confere a contagem e se a tela desenha em 8 caminhos:
+  1. Abrir com a foto do padrão carregando.
+  2. Depois de a foto carregar.
+  3. Refazer a cena.
+  4. Perder e voltar o contexto gráfico.
+  5. Trocar de parede no 2D.
+  6. Abrir a lista de peças.
+  7. Fechar e reabrir o projeto, e restaurar o estado.
+  8. Criar módulos depois de já ter aberto o 3D.
+- **Versão atual:** todos dão N de N e desenham.
+- **Versão que estava no iPhone (97b6eef):** a contagem dá certo, mas depois da perda de contexto **a tela inteira apaga**, paredes inclusive. Era o WEBGL-001, já corrigido.
+  - O sintoma dos seus prints é outro: paredes e pedra aparecendo e os módulos não.
+  - **Esse sintoma continua sem reproduzir. Não está resolvido.**
+  - O diagnóstico novo só chega ao iPhone numa versão de teste, que depende de autorização.
+
+## 3. Projetos antigos e novos (fechar e reabrir o app)
+- Projeto salvo na versão de 05/11 (bd920b8) e na versão do iPhone (97b6eef), aberto na versão atual depois de fechar o app:
+  - Na lista.
+  - Mesmos módulos (medidas, posição e cores).
+  - Mesma pedra.
+  - Plano de corte gerado.
+  - Todos os módulos no 3D.
+  - Salva de novo sem perder nada.
+- Projeto novo: igual à rodada anterior.
+- Harness: `aud2.mjs` (abre a versão velha, salva, abre a versão nova com o mesmo armazenamento).
+
+## 4. Protótipo AQRender (cópia isolada, fora do app)
+- Ver `prototipos/aqrender/LEIAME.md`. Imagens antes e depois com mesmo projeto, mesma câmera e mesmas peças (562 caixas nos dois).
+- **Faz:** luz com normal, sombra suave, metal com brilho e reflexo, vidro com Fresnel, MDF com a mesma cor e veio, e LED só onde a peça é LED.
+- **No Chromium sem GPU:** quadro uns 3× mais lento (1,1 s contra 0,3–0,4 s), memória JS igual, mapa de sombra de 6 MB.
+- **Não medido em aparelho.**
+- **Não faz:** refração, luz do LED nas peças em volta, acabamento do metal como dado do projeto.
+- **O motor do app não foi mexido.**

@@ -51,6 +51,19 @@ Antes = commit 93495d1. Depois = esta versão. Cozinha grande no celular (15 mó
   - Cozinha com 3 padrões de foto: 72 envios, a mesma assinatura.
   - Quarto: 40 envios, a mesma assinatura.
 
+### Gestos completos por cenário (`perf.mjs`, 1 rodada de cada, máquina parada)
+FPS medido pelo navegador. No 3D a placa de vídeo é simulada pelo processador, então os FPS do 3D aqui **não representam o aparelho**: servem só para ver que nada piorou.
+
+| Cenário | Arrastar no 2D (antes → depois) | 1 toque numa porta: pior 5% do quadro (antes → depois) | Girar 3D (antes → depois) |
+|---|---|---|---|
+| Cozinha 18 módulos, celular | 60 → 60 FPS | 16,8 → 50 ms | 11,5 → 11,3 FPS |
+| Cozinha 18 módulos, tablet | 60 → 59,6 FPS | 683 → 50 ms | 6,0 → 6,4 FPS |
+| Closet 6 módulos, celular | 60 → 60 FPS | 50 → 33 ms | 8,8 → 8,5 FPS |
+| Torre, computador | 60 → 60 FPS | 16,8 → 16,8 ms | 23,7 → 24,1 FPS |
+
+- Arrastar no 2D fica em 60 FPS em todos os cenários, antes e depois.
+- O pior quadro do toque na porta varia muito de uma rodada para outra. A comparação que vale é a da tabela do 3D acima, com 3 rodadas.
+
 ### 2D (arrastar um módulo)
 | Medida | Antes | Depois |
 |---|---|---|
@@ -63,7 +76,7 @@ Antes = commit 93495d1. Depois = esta versão. Cozinha grande no celular (15 mó
 | Tocar num módulo até o próximo quadro (mediana) | 25,4 ms | 27,8 ms (igual, dentro da variação) |
 
 - O tempo total de montagem da página ficou parecido (95 ms nos 40 movimentos, antes e depois): são menos montagens, cada uma um pouco maior. **O ganho de tempo no 2D é pequeno** (cerca de 1 a 3 ms por movimento) e fica perto da variação entre rodadas.
-- O desenho final é o mesmo. Os rótulos ficam no mesmo lugar (conferido texto a texto).
+- O desenho final é o mesmo. Os rótulos ficam no mesmo lugar (conferido texto a texto: 43 rótulos iguais). A imagem do 2D e a do 3D parado são iguais pixel a pixel, antes e depois.
 
 ### Caderno (Android e Windows)
 | Medida (folha com 600 traços + 2 fotos, 1200 × 1700) | Antes | Depois |

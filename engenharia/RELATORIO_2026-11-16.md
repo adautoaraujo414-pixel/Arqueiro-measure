@@ -293,3 +293,21 @@ Commits: b3c1e74, 93495d1 e o desta rodada. **Nada publicado.** Detalhes em `HIS
 - **XP-PK-SOLO:** entrar e sair do "2D só dele" apagava a cor, o ajuste e a peça tirada das portas. Atingia 34 dos 142 modelos (armários altos, torres, guarda-roupas, closets). Agora são 0. Nunca foi publicado.
 - **TB-ROTULO:** o texto da caixinha do tamponamento de baixo mudou sem pedido. Voltou ao que era.
 - **TB-INV-NUM:** 9 modelos com base suspenso entraram na conferência do tamponamento invertido, por causa do pedido. A expectativa foi atualizada com o comentário do pedido.
+
+## 3. Testes desta rodada
+- **Rodados aqui um por um, no editor atual:** os 3 que falharam no Windows, os 2 novos e mais 7 da manhã (saia, tamponamento de baixo, XP-PK, lateral e base, catálogo salvar e reabrir, "só o módulo", laterais até o piso). **12 de 12 passaram.**
+- **Bateria do Windows e do iPhone em 93495d1:** as mesmas 3 falhas, e só elas: 314 de 317 no Windows e 8 asserções no iPhone, todas desses 3 testes.
+- **CI de 8dbc7ae:** o Android passou; o Windows e o iPhone ainda rodam (ver mensagem final).
+- **Comprovação visual** (imagens enviadas na conversa):
+  - saia: armário até 735 com saia e 820 sem saia, no 2D e no 3D;
+  - tamponamento de baixo no gabinete suspenso: 800 × 30 × 450;
+  - "só ele" antes e depois;
+  - 2D e 3D iguais pixel a pixel antes e depois da mudança de desempenho.
+
+## 4. Pendências que dependem do Adauto
+1. Aprovar a fase 2 do motor 3D (refazer só o que mudou). É o que falta para a seleção ficar sempre abaixo de 50 ms e a animação perto de 60 FPS.
+2. Aprovar o medidor de quadros escondido no "🔎 Diagnóstico do 3D", para medir no iPhone, no iPad, no Tab S9 FE e no Windows.
+3. Continua: "só ele no 2D" converte o módulo alto para o editor por vãos (trava no ramo `exp/editor-vaos-universal`). A cor, o ajuste e as peças tiradas agora ficam, mas a conversão em si ainda depende da sua decisão.
+4. "Corte do forno" e "Nicho do micro-ondas (aberto)" saem pelo 🗑 com o aparelho ainda no lugar.
+5. Profundidade do PEDIDO 59 com a saia (opção A).
+6. `testRodape…amort` continua intermitente com a máquina carregada.

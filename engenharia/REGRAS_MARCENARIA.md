@@ -14,6 +14,13 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 - **Puxador gola (perfil G):** desconto de 29 mm na altura da porta e da frente (42 de perfil − 13 que abraçam a MDF). Abertura para a frente. Ver `especificacoes/puxador-gola.md`. (A, 11/11, 12/11, 16/11) (código: `gDesc=29`)
 - **Puxador escolhido numa porta vale para todas as portas e gavetas do projeto:** de baixo, de cima e de canto. (A, 15/11)
 - **Tampa cega e painel cego não abrem:** sem dobradiça e sem puxador. (A, 14/11)
+- **Furação da dobradiça:**
+  - Padrão inicial de **120 mm** do topo e do pé do **MDF da porta**, nunca do perfil gola. A medida é o **centro do caneco** (furo Ø35 de 102,5 a 137,5).
+  - Vale para toda porta de giro, com qualquer puxador: externo, cava, gola ou outro. O puxador nunca muda a distância.
+  - Exemplos: porta de 705 com furos a 120 e 585 do topo; porta de 676 (com gola) a 120 e 556.
+  - Ajustável em Ajustes.
+  - Projeto antigo não muda sozinho.
+  - (A, 16/11 07:53 e 08:07) (código: `STDD.furD=120`, `furInfo`; o 3D lê `p.fur.pos`)
 
 ## Tamponamento e caixa
 - **Tamponamento nunca entra no módulo:** peça inteira por fora. As réguas de 8 cm são coladas só no tamponamento. (A, 15/11)

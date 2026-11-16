@@ -126,18 +126,32 @@ Regras:
 - **Evidência:** imagens antes e depois, de perto dentro da abertura, fechada, a 30° e a 90°.
 - **Status:** feito e testado no Chromium (testes do gola e do 3D; bateria completa: ver o relatório de 16/11). **Não testado em aparelho real.**
 
-## 9. Dobradiça com gola (pedido de 16/11 às 07:53)
-- **Regra dele:** "Dobradiça continua a furação no mesmo lugar não altera 12 cm do topo pra baixo seja cava ou gola".
-- **O que o app faz hoje:** a furação fica a `furD` do topo e do pé da porta (Ajustes, padrão 100 mm). É a mesma com puxador externo, cava ou gola.
-- **Medido no balcão do catálogo:**
-  - Externo e cava: dobradiças a 100 e 605 mm do topo da porta de 705.
-  - Gola: dobradiças a 100 e 576 mm do topo da porta de 676.
-- **Em aberto:** o padrão do app é 100 mm, e a mensagem fala em 12 cm. Não foi mudado. Falta o Adauto dizer se o padrão passa a ser 120 mm e se o "topo" é o topo da porta (MDF) ou o topo do perfil.
-- **Achado ao medir (DOB-3D-FURD):**
-  - Mudando a distância do furo em Ajustes (`furD`) para 120, o plano de corte fura a 120 (120 e 585 na porta de 705; 120 e 556 com gola).
-  - O 3D continua desenhando a dobradiça a 100: `hinges3` usa `off = 100` fixo, não o `furD`.
-  - É o 3D diferente do plano de corte (regra 4 do `CLAUDE.md`). Não corrigido: falta autorização.
-  - A correção seria o 3D usar a mesma posição do furo da lista (`p.fur.pos`).
-- **Teste que trava a regra:** `testFuracaoDaDobradicaNoMesmoLugarComExternoCavaOuGolaNoCorteENo3D`.
-  - Balcão e aéreo, com externo, cava e gola: furo a `furD` das pontas da porta, igual no plano de corte e no 3D.
-  - Com 120 em Ajustes: cava e gola furam a 120 no plano de corte. O 3D fica fora desta parte até a correção ser autorizada.
+## 9. Dobradiça com gola (pedidos de 16/11 às 07:53 e 08:07)
+- **Regra:**
+  - Padrão inicial de 120 mm do topo e do pé do MDF da porta, nunca do perfil gola.
+  - A medida é o centro do caneco.
+  - Igual para externo, cava, gola e qualquer outro puxador.
+  - Ajustável em Ajustes.
+  - Projeto antigo não muda sozinho.
+- **Com gola:** a porta fica 29 mm mais curta, por causa do desconto. O furo de cima continua a 120 do topo do MDF, e o de baixo a 120 do pé.
+  - Balcão: porta de 676 com furos a 120 e 556.
+  - Sem gola: porta de 705 com furos a 120 e 585.
+- **Implementado em 16/11 (p201):**
+  - `STDD.furD` passou de 100 para 120.
+  - **Instalação que já existia:** se o ajuste salvo não tem `furD`, fica com 100 (o padrão de antes, `PR.furMig`). Quem tem um valor gravado continua com ele. Instalação nova começa em 120.
+  - **3D (era o DOB-3D-FURD):** a dobradiça é desenhada no centro do furo da lista de corte (`p.fur.pos`), também na basculante. Antes ficava sempre a 100, ou a 110 na basculante.
+- **Interferência** (catálogo inteiro: 142 modelos, 172 portas, `pj/dobint.js`):
+  - **Travessa frontal do balcão:** a travessa ocupa de 10 a 80 mm do topo da porta.
+    - Com 100, o calço da dobradiça (76 a 124) encostava 4 mm nela, em 10 modelos de balcão.
+    - Com 120, o calço (96 a 144) fica 16 mm livre. Com gola, fica 50 mm livre.
+  - **Prateleiras e sapateira:** o desvio que já existia (`hAdjust`) continua. Quando há prateleira na altura do furo, a dobradiça anda de 10 em 10 mm até ficar livre (ex.: furo do meio de 1150 para 1160). Na "Sapateira torre 1 porta", o furo de cima vai de 120 para 250. Isso não depende do puxador.
+  - **Divisória e montante:** em 16 modelos, o calço da dobradiça que fica na divisória do meio entra na divisória no 3D. Acontece igual com 100 e com 120, então não é desta mudança. **Pendente, anotado.**
+  - **Porta pequena (novo com 120):** duas portas do catálogo ficam com as dobradiças muito perto.
+    - "Torre micro-ondas de embutir (sem forno)", porta de 292: furos a 120 e 172.
+    - "Torre nicho aberto do micro-ondas", porta de 282: furos a 120 e 162.
+    - Com 100 ficavam a 100 e 192, e 100 e 182.
+    - **Pendente:** falta a regra do Adauto para porta baixa.
+- **Testes:**
+  - `testFuracaoDaDobradicaNoMesmoLugarComExternoCavaOuGolaNoCorteENo3D`.
+  - `testFuracaoPadrao120NoCentroDoCanecoAjustavelEInstalacaoAntigaFicaCom100`. Na versão anterior falha: instalação nova com 100, 3D a 100 com Ajustes em 110, basculante a 110.
+- **Decidido (A, 16/11 às 08:18, opção A):** a furação continua sendo um ajuste geral, sem guardar em cada projeto. Quem já usava o app passa para 120 trocando em Ajustes, e isso vale para todos os projetos. O app não troca sozinho.

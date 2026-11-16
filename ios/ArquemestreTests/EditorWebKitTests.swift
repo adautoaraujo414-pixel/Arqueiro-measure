@@ -7759,25 +7759,27 @@ final class EditorWebKitTests: XCTestCase {
                   var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
                   var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=6000;S.RD=3500;S.H=3000;S.m=null};
                   clr();draw();open3D();await W(500);
+                  /* 16/11: no simulador do iPhone a animação anda devagar (poucos quadros) e o tempo fixo pegava a gaveta ainda parada. Depois do tempo de sempre, espera também a animação chegar no alvo (até 10 s) */
+                  var fimAnim=async function(){__build();var t_=Date.now();while(Date.now()-t_<10000){var A_=__ang(),ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}};
                   var ehFrente=function(p){return /^(Porta|Frente de gaveta|Frente \(porta tempero\)|Gaveta interna · frente)/.test(p.name)&&!(p.noDraw&&!p.cxz)},frentes=function(m){return partsOf(m).filter(ehFrente)};
                   var cx=function(){var o={};__boxes().forEach(function(q){if(q.pk&&/^(Porta|Frente|Gaveta interna)/.test(q.pk))o[q.pk]=(o[q.pk]||'')+[q.x0,q.x1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')+';'});return o};
                   /* 1 módulo de cada jeito de abrir que existe no catálogo (porta, gaveta, tempero, torre de forno, caixa da geladeira, caixote, gaveta por fora, gaveta interna, basculante, correr, painel cego, por vãos) */
                   var vistos={},esc=[];its.forEach(function(it){var t=JSON.stringify(it),k=(it.v||[]).map(function(v){return v.k+(v.fixa?'F':'')+(v.basc?'B':'')+((v.int||[]).map(function(o){return String(o.t).replace(/\d/g,'')}).filter(function(x){return /cxg|gav/.test(x)}).join(''))+(v.gext||v.ge?'E':'')}).sort().join('+')+(/Ext /.test(it.n)?'+ext':'')+(it.corner?'+canto':'');if(!vistos[k]){vistos[k]=1;esc.push(it)}});
                   R.jeitos=esc.length>=12;window.__nj=esc.length;var naoAbre=[],naoFecha=[],cegoAbriu=[],e0=__errs.length;
                   for(var i=0;i<esc.length;i++){var it=esc[i];clr();newTpl(JSON.parse(JSON.stringify(it)));draw();await W(600)/* módulo de mais de 2700 vira continuação (15/11): espera dividir antes de medir */;var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();__build();var f0=frentes(m);if(!f0.length)continue;var c0=cx();
-                    org3api.open(m,true);await W(1300);__build();var c1=cx();
+                    org3api.open(m,true);await W(1300);await fimAnim();__build();var c1=cx();
                     frentes(m).forEach(function(p){var v=(m.v||[])[p.vi]||{},fixa=!!(p.cego||p.rgfx||v.fixa);if(fixa){if(p.open||c0[p.pk]!==c1[p.pk])cegoAbriu.push(it.n);return}if(v.k==='slide'||/^Porta de correr/.test(p.name))return;if(c0[p.pk]===c1[p.pk]&&!p.open)naoAbre.push(it.n+': '+p.name)});
-                    org3api.open(m,false);await W(2200);__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}
+                    org3api.open(m,false);await W(2200);await fimAnim();__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}
                   R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
                   /* caixote de gavetas (guarda-roupa): 1 toque na gaveta abre ela de verdade, e fechar a porta fecha a gaveta junto (não atravessa a porta) */
                   var T=function(n){return JSON.parse(JSON.stringify(its.filter(function(q){return q.n===n})[0]))},zf=function(pk){var b=__boxes().filter(function(q){return q.pk===pk})[0];return b?Math.round(b.z1):-1};
                   clr();newTpl(T('Torre do guarda-roupa · maleiro, cabideiro e gavetas'));var g=S.mods[0];S.m=g;draw();__build();var z0=zf('Frente de gaveta (caixote)#1'),l0=zf('Caixote · gaveta · lateral#1');
-                  __open1(0,'Porta#1');__open1(0,'Porta#2');__open1(0,'Frente de gaveta (caixote)#1');await W(1400);__build();var z1=zf('Frente de gaveta (caixote)#1'),l1=zf('Caixote · gaveta · lateral#1');
+                  __open1(0,'Porta#1');__open1(0,'Porta#2');__open1(0,'Frente de gaveta (caixote)#1');await W(1400);await fimAnim();__build();var z1=zf('Frente de gaveta (caixote)#1'),l1=zf('Caixote · gaveta · lateral#1');
                   R.caixote='gaveta saiu '+(z1-z0>300)+' · a caixa foi junto com a frente '+(z1-z0===l1-l0)+' · as outras ficaram '+(zf('Frente de gaveta (caixote)#2')===z0);
-                  __open1(0,"Porta#1");await W(2200);__build();R.caixoteFechouAPorta='gaveta fechou junto '+(zf('Frente de gaveta (caixote)#1')===z0)+' · guardado '+JSON.stringify(g.v[0].dop||{});
+                  __open1(0,"Porta#1");await W(2200);await fimAnim();__build();R.caixoteFechouAPorta='gaveta fechou junto '+(zf('Frente de gaveta (caixote)#1')===z0)+' · guardado '+JSON.stringify(g.v[0].dop||{});
                   /* gaveta interna (atrás da porta) do guarda-roupa clássico: abre no toque e no "abrir tudo" */
-                  clr();newTpl(T('2P c/ Cab+Gav Int 600mm'));var h=S.mods[0];S.m=h;draw();__build();var i0=zf('Gaveta interna · frente#1');org3api.open(h,true);await W(1400);__build();var i1=zf('Gaveta interna · frente#1');
-                  __open1(0,"Porta#1");await W(2200);__build();R.gavetaInterna='abriu com o botão '+(i1-i0>200)+' · fechou a porta, fechou junto '+(zf('Gaveta interna · frente#1')===i0);
+                  clr();newTpl(T('2P c/ Cab+Gav Int 600mm'));var h=S.mods[0];S.m=h;draw();__build();var i0=zf('Gaveta interna · frente#1');org3api.open(h,true);await W(1400);await fimAnim();__build();var i1=zf('Gaveta interna · frente#1');
+                  __open1(0,"Porta#1");await W(2200);await fimAnim();__build();R.gavetaInterna='abriu com o botão '+(i1-i0>200)+' · fechou a porta, fechou junto '+(zf('Gaveta interna · frente#1')===i0);
                   R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["jeitos"] as? Bool, true)
@@ -10818,26 +10820,63 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length,keep=JSON.stringify(PR.std||{});
-        /* REGRA (16/11 07:53): "Dobradiça continua a furação no mesmo lugar ... seja cava ou gola". O furo fica a furD do topo e do pé da PORTA (MDF), igual com puxador externo, cava ou gola; o gola só encurta a porta (desconto de 29) e o furo de baixo acompanha o pé da porta */
+        /* REGRA (16/11 07:53 e 08:07): a furação da dobradiça fica no mesmo lugar com qualquer puxador (externo, cava, gola). Padrão 120 mm do topo e do pé do MDF da PORTA (nunca do perfil gola), no centro do caneco. O gola só encurta a porta (desconto de 29) e o furo de baixo acompanha o pé da porta. O 3D desenha a dobradiça no mesmo lugar do furo do plano de corte */
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
         var med=async function(px,nome){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T(nome));var m=S.mods[0];(m.v||[]).forEach(function(v){v.px=px});draw();
          var P=partsOf(m).filter(function(p){return p.name==='Porta'})[0],f=P.fur||{};
          open3D();await W(300);__build();var B=__boxes().filter(function(b){return String(b.nm)==='0:Porta'&&!b.nol&&!b.pf}),slab=B.filter(function(b){return (b.y1-b.y0)>300})[0],cups=B.filter(function(b){return (b.y1-b.y0)>30&&(b.y1-b.y0)<60&&b.x0<slab.x0+60});
          var topo=slab.y1,ys=cups.map(function(b){return Math.round(topo-(b.y0+b.y1)/2)}).sort(function(a,b){return a-b});document.getElementById('v3x').click();
-         return {c:'porta '+P.cw+' · furo a '+f.D+' das pontas ('+(f.pos||[]).join(', ')+')',d:'3D a '+ys.join(', ')+' do topo do MDF'}};var J=function(o){return o.c+' · '+o.d};
-        R.balcaoExterno=J(await med('externo','Balcão 2 portas'));R.balcaoCava=J(await med('cava','Balcão 2 portas'));R.balcaoGola=J(await med('g','Balcão 2 portas'));
-        R.aereoExterno=J(await med('externo','Aéreo 2 portas'));R.aereoGola=J(await med('g','Aéreo 2 portas'));
-        /* o valor de Ajustes (furD) vale igual pra cava e gola no plano de corte (só o teste muda o ajuste, e depois volta). O 3D ainda desenha a 100 fixo (pendente de autorização, ver puxador-gola.md seção 9) e por isso não entra aqui */
-        PR.std=PR.std||{};PR.std.furD=120;R.corte120Cava=(await med('cava','Balcão 2 portas')).c;R.corte120Gola=(await med('g','Balcão 2 portas')).c;
+         return 'porta '+P.cw+' · furo a '+f.D+' das pontas ('+(f.pos||[]).join(', ')+') · 3D a '+ys.join(', ')+' do topo do MDF'};
+        R.padrao=STD().furD;
+        R.balcaoExterno=await med('externo','Balcão 2 portas');R.balcaoCava=await med('cava','Balcão 2 portas');R.balcaoGola=await med('g','Balcão 2 portas');
+        R.aereoExterno=await med('externo','Aéreo 2 portas');R.aereoGola=await med('g','Aéreo 2 portas');
+        /* o valor de Ajustes continua mudando a furação, igual pra cava e gola, no plano de corte e no 3D (só o teste muda o ajuste, e depois volta) */
+        PR.std=PR.std||{};PR.std.furD=100;R.com100Cava=await med('cava','Balcão 2 portas');R.com100Gola=await med('g','Balcão 2 portas');
         PR.std=JSON.parse(keep);try{prSave()}catch(_){}R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["balcaoExterno"] as? String, "porta 705 · furo a 100 das pontas (100, 605) · 3D a 100, 605 do topo do MDF")
-        XCTAssertEqual(o["balcaoCava"] as? String, "porta 705 · furo a 100 das pontas (100, 605) · 3D a 100, 605 do topo do MDF")
-        XCTAssertEqual(o["balcaoGola"] as? String, "porta 676 · furo a 100 das pontas (100, 576) · 3D a 100, 576 do topo do MDF")
-        XCTAssertEqual(o["aereoExterno"] as? String, "porta 746 · furo a 100 das pontas (100, 646) · 3D a 100, 646 do topo do MDF")
-        XCTAssertEqual(o["aereoGola"] as? String, "porta 721 · furo a 100 das pontas (100, 621) · 3D a 100, 621 do topo do MDF")
-        XCTAssertEqual(o["corte120Cava"] as? String, "porta 705 · furo a 120 das pontas (120, 585)")
-        XCTAssertEqual(o["corte120Gola"] as? String, "porta 676 · furo a 120 das pontas (120, 556)")
+        /* PEDIDO de 16/11 08:07 (aprovado): padrão da furação passou de 100 para 120 mm; antes este teste esperava 100 */
+        XCTAssertEqual(o["padrao"] as? Int, 120)
+        XCTAssertEqual(o["balcaoExterno"] as? String, "porta 705 · furo a 120 das pontas (120, 585) · 3D a 120, 585 do topo do MDF")
+        XCTAssertEqual(o["balcaoCava"] as? String, "porta 705 · furo a 120 das pontas (120, 585) · 3D a 120, 585 do topo do MDF")
+        XCTAssertEqual(o["balcaoGola"] as? String, "porta 676 · furo a 120 das pontas (120, 556) · 3D a 120, 556 do topo do MDF")
+        XCTAssertEqual(o["aereoExterno"] as? String, "porta 746 · furo a 120 das pontas (120, 626) · 3D a 120, 626 do topo do MDF")
+        XCTAssertEqual(o["aereoGola"] as? String, "porta 721 · furo a 120 das pontas (120, 601) · 3D a 120, 601 do topo do MDF")
+        XCTAssertEqual(o["com100Cava"] as? String, "porta 705 · furo a 100 das pontas (100, 605) · 3D a 100, 605 do topo do MDF")
+        XCTAssertEqual(o["com100Gola"] as? String, "porta 676 · furo a 100 das pontas (100, 576) · 3D a 100, 576 do topo do MDF")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testFuracaoPadrao120NoCentroDoCanecoAjustavelEInstalacaoAntigaFicaCom100() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length,keepPR=JSON.stringify(PR);
+        /* PADRÃO DA FURAÇÃO (16/11 08:07): 120 mm como padrão inicial · medido no CENTRO do caneco · ajustável em Ajustes · quem já usava o app sem o valor gravado fica com 100 (projeto antigo não muda sozinho) */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        var mig=function(std){var o=JSON.parse(keepPR);delete o.furMig;o.std=std;Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,o);return STD().furD};
+        R.instalacaoNova=mig({});R.jaUsavaSemValorGravado=mig({pux:'cava',gDesc:29});R.jaUsavaCom100=mig({pux:'cava',furD:100});R.jaUsavaCom110=mig({pux:'cava',furD:110});
+        Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,JSON.parse(keepPR));PR.setupDone=1;PR.std=PR.std||{};PR.std.furD=120;
+        /* centro do caneco: o desenho do plano de corte põe o círculo de Ø35 com o centro na medida */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];draw();
+        var p=partsOf(m).filter(function(q){return q.name==='Porta'})[0],sv=furSvg({p:{src:[{mi:0,pk:p.pk}]},r:false,w:+p.cl,h:+p.cw},0,0),cs=[];sv.replace(/<circle cx="([\d.]+)" cy="([\d.]+)" r="17\.5"/g,function(_,x,y){cs.push(+y)});
+        R.centroDoCaneco='círculos Ø35 com centro a '+cs.join(' e ')+' do topo da porta '+p.cw+' · borda do furo de '+(cs[0]-17.5)+' a '+(cs[0]+17.5)+' · texto: '+(String(p.note).match(/FURO DE DOBRADIÇA[^·]*·[^·]*·[^·]*/)||[''])[0];
+        /* campo de Ajustes continua: digitar 110 muda o plano de corte e o 3D */
+        document.getElementById('prb').click();await W(150);var inp=document.querySelector('#stdm [data-stdn="furD"]');R.campoAjustes=inp?'tem · '+inp.value:'sumiu';if(inp){inp.value='110';inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}))}document.getElementById('stdm').hidden=true;await W(100);
+        draw();p=partsOf(m).filter(function(q){return q.name==='Porta'})[0];open3D();await W(300);__build();var B=__boxes().filter(function(b){return String(b.nm)==='0:Porta'&&!b.nol&&!b.pf}),slab=B.filter(function(b){return (b.y1-b.y0)>300})[0],cups=B.filter(function(b){return (b.y1-b.y0)>30&&(b.y1-b.y0)<60&&b.x0<slab.x0+60});
+        R.com110=STD().furD+' · corte '+p.fur.pos.join(', ')+' · 3D '+cups.map(function(b){return Math.round(slab.y1-(b.y0+b.y1)/2)}).sort(function(a,b){return a-b}).join(', ');document.getElementById('v3x').click();PR.std.furD=120;
+        /* basculante (dobradiça em cima): no 3D, o mesmo lugar do furo, a 120 das pontas da largura */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();var it=T('Aéreo basculante')||T('Aéreo 1 porta basculante');if(it){newTpl(it);m=S.mods[0];draw();var pb=partsOf(m).filter(function(q){return q.name==='Porta'})[0];var vb=m.v[pb.vi]||{};vb.od={0:1};vb.oa={0:90};(m.v||[]).forEach(function(v){if(v.bas){v.od={0:1};v.oa={0:90}}});draw();open3D();await W(300);var Ag=__ang();Object.keys(Ag.g).forEach(function(k){Ag.g[k]=Ag.t[k]});__build();
+         var hb=__boxes().filter(function(b){return /Ferragem da basculante/.test(String(b.nm))&&(b.x1-b.x0)>47&&(b.x1-b.x0)<49}),db=__boxes().filter(function(b){return String(b.nm)==='0:Porta'&&b.pf}).sort(function(a,b){return (b.x1-b.x0)-(a.x1-a.x0)})[0];
+         R.basculante=it.n+' · porta '+pb.cl+' · furo a '+pb.fur.pos.join(', ')+' · 3D a '+hb.map(function(b){return Math.round((b.x0+b.x1)/2-db.x0)}).sort(function(a,b){return a-b}).join(', ')+' da ponta';document.getElementById('v3x').click()}else R.basculante='sem basculante no catálogo';
+        Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,JSON.parse(keepPR));try{prSave()}catch(_){}R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["instalacaoNova"] as? Int, 120)
+        XCTAssertEqual(o["jaUsavaSemValorGravado"] as? Int, 100)
+        XCTAssertEqual(o["jaUsavaCom100"] as? Int, 100)
+        XCTAssertEqual(o["jaUsavaCom110"] as? Int, 110)
+        XCTAssertEqual(o["centroDoCaneco"] as? String, "círculos Ø35 com centro a 120 e 585 do topo da porta 705 · borda do furo de 102.5 a 137.5 · texto: FURO DE DOBRADIÇA: lado ESQUERDO (porta vista de frente) · 2 furos Ø35 a 120 mm das pontas · centro a 22 mm da borda")
+        XCTAssertEqual(o["campoAjustes"] as? String, "tem · 120")
+        XCTAssertEqual(o["com110"] as? String, "110 · corte 110, 595 · 3D 110, 595")
+        XCTAssertEqual(o["basculante"] as? String, "Aéreo basculante · porta 882 · furo a 120, 762 · 3D a 120, 762 da ponta")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 }

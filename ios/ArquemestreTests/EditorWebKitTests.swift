@@ -5314,7 +5314,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var R={};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
           S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];S.wall={};draw();
-          var faixa=function(){var b=document.getElementById('wvbar');return b&&!b.hidden&&b.offsetParent!==null?b.textContent.replace(/◀.*/,'').replace(/(Esquerda|Direita)+$/,'').trim():'(sem faixa)'};
+          var faixa=function(){var b=document.getElementById('wvbar');return b&&!b.hidden&&b.offsetParent!==null?b.textContent.replace(/◀.*/,'').replace(/(Esquerda|Direita|—)+$/,'')/* 16/11: a faixa ganhou o botão — de minimizar (PEDIDO 61); ele é tirado do texto como os botões Esquerda/Direita */.trim():'(sem faixa)'};
           var por=function(){var c={f:0,e:0,d:0};snapState().rp.forEach(function(a){c[a.wall||'f']++});return JSON.stringify(c).replace(/"/g,'')};
           /* o passo a passo dele: parede direita → trena → Criar painéis → Lista → toca na peça (3D rosa) → fecha o 3D → Criar painéis de novo */
           wvGo('d');await W(80);trOn(true);await W(50);document.querySelector('#trbar input')&&0;S.trena={x0:0,x1:3170};trCreate();await W(150);draw();R.criou=por()+' · '+faixa();

@@ -95,7 +95,11 @@ class EditorSession(initial: Note, onCommit: (Note) -> Unit) {
     /** Muda a cada alteração: quem lê isto recompõe/redesenha. */
     var rev by mutableIntStateOf(0)
 
-    val state = EditorState(initial, onCommit) { rev++ }
+    val state = EditorState(initial, onCommit) { rev++; staticChanged() }
+    /** Muda quando o que está parado na folha mudou (fora do gesto): a imagem guardada da folha é refeita (SheetCache). Igual ao iPhone. */
+    var staticRev = 0
+        private set
+    private fun staticChanged() { if (!state.inGesture) staticRev++ }
     /** Muda só quando os painéis precisam mudar (não a cada ponto do traço). */
     var uiRev by mutableIntStateOf(0)
     init { state.onUi = { uiRev++ } }

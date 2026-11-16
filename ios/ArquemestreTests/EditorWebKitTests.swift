@@ -1114,7 +1114,7 @@ final class EditorWebKitTests: XCTestCase {
           window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();var R={};var mi=1,m=S.mods[mi];var others=JSON.stringify(S.mods.filter(function(q){return q!==m}));
           open3D();await new Promise(function(r){setTimeout(r,300)});focOn(mi,'front');await new Promise(function(r){setTimeout(r,200)});
           var b2=document.querySelector('#foc3 [data-fc2d]');R.btn2d=!!b2&&b2.offsetParent!==null;
-          b2.click();await new Promise(function(r){setTimeout(r,300)});R.solo=window.SOLO2===m;R.v3=getComputedStyle(document.getElementById('v3')).display;R.foc=!window.FOC3;
+          /* 16/11 (BAT-FLAKY): espera o estado chegar em vez de um tempo fixo · com o computador carregado o tempo fixo não bastava; as expectativas não mudaram */var ate_=async function(f,ms){var t0=Date.now();while(!f()&&Date.now()-t0<(ms||5000))await new Promise(function(r){setTimeout(r,50)})};b2.click();await new Promise(function(r){setTimeout(r,300)});await ate_(function(){return window.SOLO2===m&&getComputedStyle(document.getElementById('v3')).display==='none'});R.solo=window.SOLO2===m;R.v3=getComputedStyle(document.getElementById('v3')).display;R.foc=!window.FOC3;
           var chips=[].slice.call(document.querySelectorAll('#solobar [data-sov]'));R.chips=chips.map(function(c){return c.textContent});
           R.v0=m.v.map(function(v){return v.k+(v.n||'')}).join();
           /* vão 2: 1 porta */
@@ -1129,7 +1129,7 @@ final class EditorWebKitTests: XCTestCase {
           R.othersSame=JSON.stringify(S.mods.filter(function(q){return q!==m}))===others;
           /* 3D só ele */
           document.querySelector('#solobar [data-so3]').click();await new Promise(function(r){setTimeout(r,400)});R.foc3=window.FOC3&&window.FOC3.mi===mi;R.so3=__boxes().every(function(b){return String(b.nm).indexOf(mi+':')===0});
-          document.getElementById('v3x').click();await new Promise(function(r){setTimeout(r,200)});R.backSolo=window.SOLO2===m;
+          document.getElementById('v3x').click();await new Promise(function(r){setTimeout(r,200)});await ate_(function(){return window.SOLO2===m});R.backSolo=window.SOLO2===m;
           document.querySelector('#solobar [data-sox]').click();R.geral=!window.SOLO2;
           R.errs=__errs;return JSON.stringify(R);
           """#)
@@ -2698,7 +2698,7 @@ final class EditorWebKitTests: XCTestCase {
           window.pux3api.open(0);document.querySelector('#it4 [data-pxt="bola"]').click();window.pux3api.set(60,120);var px=S.mods[0].v[0].px;
           var bq=apAdd('banqueta',1);
           window.fp3api.start();var teto=window.org3api.teto();window.fp3api.walk(1,0);var fp=!!window.fp3api.st();window.fp3api.stop();
-          var code=await cutEncode(window.clientPayload());window.arqueCutOpen(code);await new Promise(function(r){setTimeout(r,900)});
+          var code=await cutEncode(window.clientPayload());window.arqueCutOpen(code);await new Promise(function(r){setTimeout(r,900)});/* 16/11 (BAT-FLAKY): espera o estado chegar em vez de um tempo fixo · com o computador carregado o tempo fixo não bastava; as expectativas não mudaram */var ate_=async function(f,ms){var t0=Date.now();while(!f()&&Date.now()-t0<(ms||5000))await new Promise(function(r){setTimeout(r,50)})};await ate_(function(){return !!window.CLV&&!!window.RO});
           return JSON.stringify({ledBase:ledBase,ledSup:ledSup,w:w,nx:nx,teto:teto,ang:ang,px:px,bq:bq.t,fp:fp,clv:!!window.CLV,ro:!!window.RO,errs:__errs});
           """#)
         XCTAssertEqual(o["ledBase"] as? Bool, false, "LED não vai no módulo de baixo")
@@ -9683,7 +9683,7 @@ final class EditorWebKitTests: XCTestCase {
         var cb=document.querySelector('input[data-rc="fct"]');R.painelAereo='fechamento '+!!cb+' · moldura '+!!document.querySelector('input[data-rc="mold"]');
         S.m=b;panel();R.painelBalcao='fechamento '+!!document.querySelector('input[data-rc="fct"]');S.m=m;panel();
         /* 2. marcar: começa rente com a frente das portas, placa lisa em pé em cima da base superior até o teto (2700 − 2500 = 200) */
-        document.querySelector('input[data-rc="fct"]').click();await W(100);
+        document.querySelector('input[data-rc="fct"]').click();await W(100);/* 16/11 (BAT-FLAKY): espera o estado chegar em vez de um tempo fixo · com o computador carregado o tempo fixo não bastava; as expectativas não mudaram */var t0_=Date.now();while(!bx(m,/^Fechamento até o teto$/).length&&Date.now()-t0_<5000)await W(50);
         R.marcar='ligado '+!!m.fct+' · embutir '+m.fctEmb+' · campo '+!!document.querySelector('input[data-r="fctEmb"]')+' · '+pc(m);
         R.nota=[].map.call(document.querySelectorAll('#bd .note'),function(n){return n.textContent}).filter(function(t){return /^Placa|Não sobra/.test(t)}).join(' | ');
         R.rente3D=f3(m)+' · frente da placa = frente das portas (caixa + 15) '+(Math.round(bx(m,/^Fechamento até o teto$/)[0].z1)===caixa(m)+15)+' · caixa z'+caixa(m)+' · base superior em cima y'+r1(Math.max.apply(null,bx(m,/^Base superior$/).map(function(q){return q.y1})))+' · peça dentro de peça '+dentro(m);
@@ -11107,13 +11107,13 @@ final class EditorWebKitTests: XCTestCase {
         var cnt=function(m,nm){return partsOf(m).filter(function(p){return p.name===nm}).length};
         open3D();await W(200);window.SEL3={mi:0,pk:'x'};try{__sel3(-99999,-99999)}catch(_){}
         var lixo3D=function(pk){window.SEL3={mi:0,pk:pk};MSG=[];var b=document.createElement('button');b.dataset.e3del='1';document.getElementById('e3').appendChild(b);b.click();b.remove();return MSG.join(' / ')};
-        var feito={},naoSai=[],fantasma=[],n=0;
+        var feito={},naoSai=[],fantasma=[],bloq=[],n=0;
         for(var ii=0;ii<items.length;ii++){var it=items[ii][1],base=null;try{loadState(initLimpo());S.room=RM[items[ii][0]];S.env=S.room;S.W=5000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=1500;m.tl=m.tr=true;S.m=m;draw();base=JSON.stringify(snapState())}catch(e){continue}
          var B0=bx();Object.keys(B0).forEach(function(k){if(k==='__tot')return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
           loadState(JSON.parse(base));var m2=S.mods[0];S.m=m2;draw();var b0=bx();if(!b0[k])return;var tira_=/ · engrosso \d+$|\(régua\)$/.test(nm),noCorte=function(){var o=0;cutLines(S.mods[0]).forEach(function(l){(l.pks||[]).forEach(function(q){if(q===k)o++})});return o},c0=tira_?noCorte():cnt(m2,nm),fundo0=m2.fundo;var msg=lixo3D(k);m2=S.mods[0];var b1=bx();n++;
           var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=b1.__tot<=b0.__tot-b0[k];
-          if(!saiuLista&&!saiu3D)naoSai.push(nm+' ('+it.n+': '+msg.slice(0,60)+')');else if(saiuLista!==saiu3D)fantasma.push(nm+' ('+it.n+(saiuLista?': saiu da lista e ficou no 3D':': saiu do 3D e ficou na lista')+')')})}
-        R.pecasConferidasMaisDe60=n>60;R.naoSai=naoSai.join(' | ')||'nenhuma';R.fantasma=fantasma.join(' | ')||'nenhuma';
+          if(!saiuLista&&!saiu3D&&/^⚠/.test(msg))bloq.push(nm);else if(!saiuLista&&!saiu3D)naoSai.push(nm+' ('+it.n+': '+msg.slice(0,60)+')');else if(saiuLista!==saiu3D)fantasma.push(nm+' ('+it.n+(saiuLista?': saiu da lista e ficou no 3D':': saiu do 3D e ficou na lista')+')')})}
+        R.pecasConferidasMaisDe60=n>60;R.naoSai=naoSai.join(' | ')||'nenhuma';/* 16/11 10:56: peça da estrutura que não pode sair não some calada: o 🗑 explica o motivo */R.naoSaiComMotivo=bloq.join(', ')||'nenhuma';R.fantasma=fantasma.join(' | ')||'nenhuma';
         /* fundo: sai do 3D, da lista de corte, volta no ↶ e continua fora depois de salvar e reabrir */
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;m.fundo=true;m.fundoMan=1;S.m=m;draw();
         var fundoNoCorte=function(){return cutLines(S.mods[0]).filter(function(l){return /^Fundo/.test(String((l.names||[l.name])[0]))}).length};histTick();await W(800);histTick();
@@ -11128,6 +11128,7 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["pecasConferidasMaisDe60"] as? Bool, true)
         XCTAssertEqual(o["naoSai"] as? String, "nenhuma")
+        XCTAssertEqual(o["naoSaiComMotivo"] as? String, "Lateral esquerda, Lateral direita, Base superior, Base superior (lado do canto), Lateral do canto (fim do lado)")
         XCTAssertEqual(o["fantasma"] as? String, "nenhuma")
         XCTAssertEqual(o["fundoAntes"] as? String, "corte 1 · 3D 1")
         XCTAssertEqual(o["fundoMsg"] as? String, "🗑 Fundo tirado · é o mesmo que desmarcar \"Fundo\" na aba Fundos · ↶ desfaz")
@@ -11136,10 +11137,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
         XCTAssertEqual(o["gaveta"] as? String, "caixas 65 → 64 · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
         XCTAssertEqual(o["gavLateral"] as? String, "caixas 64 → 63 · lateral #2 no 3D 0 · #1 1")
-        XCTAssertEqual(o["canto"] as? String, "caixas 22 → 20 · base do lado no 3D 0 · base do fundo 2 (antes 2)")
+        XCTAssertEqual(o["canto"] as? String, "caixas 22 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 2)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
-
     func testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -11193,35 +11193,153 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
-        /* PEDIDO 16/11 10:34 ("quando tiver saia, a altura a considerar é a da saia pra fazer o armário") · resposta "A" às 10:39: o armário inteiro (caixa e frentes) vai até embaixo da saia, a pedra fica por cima.
-           Exemplo: embaixo da pedra 820, pedra 30, saia 100 → saia de 750 a 850 → armário até 750. Projeto antigo com saia não muda sozinho; muda quando mexer na saia. */
+        /* PEDIDO 16/11 10:34 + resposta "A" (10:39) + regra definitiva (10:56): com saia, folga de 15 mm embaixo da saia e o armário inteiro (caixa e frentes) começa dali pra baixo.
+           Exemplo: embaixo da pedra 820, pedra 30, saia 100 → saia até 750 → armário até 735. Sem saia: até embaixo da pedra (820), sem a folga.
+           Mexer na saia ou na espessura da pedra: o armário encaixado acompanha. Projeto antigo com saia não muda ao abrir. */
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
-        var info=function(m,st){var P=partsOf(m),dr=P.filter(function(p){return p.name==='Porta'})[0],top=(+m.b||0)+(+m.h||0);open3D();__build();var sb=__boxes().filter(function(b){return b.sid===st.id}),sbot=Math.min.apply(null,sb.map(function(b){return b.y0}));var mb=__boxes().filter(function(b){return String(b.nm).indexOf(S.mods.indexOf(m)+':')===0}),mtop=Math.max.apply(null,mb.map(function(b){return b.y1}));document.getElementById('v3x').click();
-         return 'módulo até '+top+' · porta em cima a '+(dr?Math.round(top-dr.y):'-')+' · 3D: módulo até '+Math.round(mtop)+', saia até embaixo em '+Math.round(sbot)+' · moldura '+P.some(function(p){return /^Moldura/.test(p.name)})+' · embaixo da pedra '+underStone(m)};
-        var base=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.stones=[];S.mods=[];draw();addStone();var st=S.stones[0];st.x=0;st.w=2000;st.d=650;st.t=820;st.e=30;draw();return st};
-        /* 1) pedra nova: liga a saia de 10 cm pelo botão da aba Pedra e põe o balcão embaixo */
-        var st=base();S.st=st;var b=document.createElement('button');b.dataset.stsaiah='100';b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();TT=[];newTpl(T('Balcão 2 portas'));draw();await W(150);var m=S.mods[S.mods.length-1];
-        R.pedraNovaComSaia=info(m,st);R.aviso=TT.filter(function(t){return /embaixo da saia/.test(t)}).slice(-1)[0]||'sem aviso';
-        /* salva e reabre */
-        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabriu='módulo até '+((+S.mods[0].b||0)+(+S.mods[0].h||0));
-        /* 2) projeto antigo: pedra com saia sem a marca nova → continua como estava */
-        st=base();st.saia=true;st.saiaH=100;newTpl(T('Balcão 2 portas'));draw();await W(150);m=S.mods[S.mods.length-1];var old=JSON.stringify(snapState());loadState(JSON.parse(old));draw();m=S.mods[0];st=S.stones[0];
-        R.projetoAntigo=info(m,st);
-        /* mexeu na saia (escolheu 10 cm de novo): passa pra regra nova */
-        S.st=st;b=document.createElement('button');b.dataset.stsaiah='100';b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();draw();R.antigoDepoisDeMexerNaSaia=info(S.mods[0],st);
-        /* 3) sem saia: igual antes (até embaixo da pedra) */
-        st=base();newTpl(T('Balcão 2 portas'));draw();await W(150);R.semSaia=info(S.mods[S.mods.length-1],st);
-        /* 4) canto em L de baixo embaixo da pedra com saia: também vai até embaixo da saia */
-        st=base();st.saia=true;st.saiaH=100;st.saiaArm=1;draw();newTpl(T('Balcão 2 portas'));var c_=S.mods[S.mods.length-1];c_.x=0;c_.corner='e';c_.cw2=900;draw();draw();R.cantoEmL='canto até '+((+c_.b||0)+(+c_.h||0));
+        var clk=function(st,k,v){S.st=st;var b=document.createElement('button');b.dataset[k]=v;b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();draw()};
+        var topo=function(m){return (+m.b||0)+(+m.h||0)};
+        var info=function(m,st){var P=partsOf(m),dr=P.filter(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)}).sort(function(a,b){return a.y-b.y})[0],lat=P.filter(function(p){return p.name==='Lateral esquerda'})[0],top=topo(m);open3D();__build();var sb=__boxes().filter(function(b){return b.sid===st.id}),sbot=Math.min.apply(null,sb.map(function(b){return b.y0}));var mb=__boxes().filter(function(b){return String(b.nm).indexOf(S.mods.indexOf(m)+':')===0}),mtop=Math.max.apply(null,mb.map(function(b){return b.y1}));document.getElementById('v3x').click();
+         var corteLat=cutLines(m).filter(function(l){return (l.pks||[]).indexOf('Lateral esquerda#1')>=0}).map(function(l){return l.L})[0];
+         return 'armário até '+top+' · frente em cima a '+(dr?Math.round(top-dr.y):'-')+' · 3D: armário até '+Math.round(mtop)+', pedra embaixo em '+Math.round(sbot)+' · folga '+Math.round(sbot-mtop)+' · lateral '+(lat?lat.cl:'-')+' (corte '+corteLat+')'};
+        var base=function(n){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.stones=[];S.mods=[];draw();addStone();var st=S.stones[0];st.x=0;st.w=2400;st.d=650;st.t=820;st.e=30;draw();return st};
+        /* 1) pedra nova com saia de 10 cm: balcão de portas e gaveteiro */
+        var st=base();clk(st,'stsaiah','100');TT=[];newTpl(T('Balcão 2 portas'));draw();await W(100);var m=S.mods[S.mods.length-1];newTpl(T('Gaveteiro 3 gavetas'));draw();await W(100);var g=S.mods[S.mods.length-1];
+        R.comSaia_portas=info(m,st);R.comSaia_gavetas=info(g,st);R.aviso=TT.filter(function(t){return /embaixo da saia/.test(t)}).slice(-1)[0]||'sem aviso';
+        /* 2) muda a altura da saia (7 cm) e a espessura da pedra (40) */
+        clk(st,'stsaiah','70');R.saia7cm='armário até '+topo(m)+' e '+topo(g);
+        st.e=40;draw();R.pedra40='armário até '+topo(m)+' e '+topo(g);st.e=30;draw();
+        /* 3) tira a saia: volta pra embaixo da pedra (820), sem a folga · põe de novo: 735 */
+        clk(st,'stsaia','1');R.semSaiaDepoisDeTirar=info(m,st);clk(st,'stsaiah','100');R.saiaDeNovo='armário até '+topo(m)+' e '+topo(g);
+        /* 4) salva, fecha e reabre */
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabriu='armário até '+topo(S.mods[0])+' e '+topo(S.mods[1]);
+        /* 5) bancada sem saia: até embaixo da pedra, sem folga */
+        st=base();newTpl(T('Balcão 2 portas'));draw();await W(100);R.semSaia=info(S.mods[S.mods.length-1],st);
+        /* 6) projeto antigo com saia: abre igual (não muda sozinho) */
+        st=base();st.saia=true;st.saiaH=100;newTpl(T('Balcão 2 portas'));draw();await W(100);var old=JSON.stringify(snapState());loadState(JSON.parse(old));draw();draw();R.projetoAntigo='armário até '+topo(S.mods[0]);clk(S.stones[0],'stsaiah','100');R.antigoDepoisDeMexerNaSaia='armário até '+topo(S.mods[0]);
+        /* 7) canto em L de baixo e pedra em L */
+        st=base();st.shape='Le';st.widA=650;st.lenA=1200;clk(st,'stsaiah','100');newTpl(T('Balcão 2 portas'));var c_=S.mods[S.mods.length-1];c_.x=0;c_.corner='e';c_.cw2=900;draw();draw();R.cantoEmL='canto até '+topo(c_);
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["pedraNovaComSaia"] as? String, "módulo até 750 · porta em cima a 745 · 3D: módulo até 750, saia até embaixo em 750 · moldura false · embaixo da pedra true")
-        XCTAssertEqual(o["aviso"] as? String, "🪨 Pedra com saia em cima: o módulo vai até embaixo da saia (750 mm). Pra mudar, mude a altura da pedra ou da saia na aba Pedra.")
-        XCTAssertEqual(o["reabriu"] as? String, "módulo até 750")
-        XCTAssertEqual(o["projetoAntigo"] as? String, "módulo até 820 · porta em cima a 815 · 3D: módulo até 820, saia até embaixo em 750 · moldura false · embaixo da pedra true")
-        XCTAssertEqual(o["antigoDepoisDeMexerNaSaia"] as? String, "módulo até 750 · porta em cima a 745 · 3D: módulo até 750, saia até embaixo em 750 · moldura false · embaixo da pedra true")
-        XCTAssertEqual(o["semSaia"] as? String, "módulo até 820 · porta em cima a 815 · 3D: módulo até 820, saia até embaixo em 820 · moldura false · embaixo da pedra true")
-        XCTAssertEqual(o["cantoEmL"] as? String, "canto até 750")
+        XCTAssertEqual(o["comSaia_portas"] as? String, "armário até 735 · frente em cima a 730 · 3D: armário até 735, pedra embaixo em 750 · folga 15 · lateral 605 (corte 605)")
+        XCTAssertEqual(o["comSaia_gavetas"] as? String, "armário até 735 · frente em cima a 725 · 3D: armário até 735, pedra embaixo em 750 · folga 15 · lateral 605 (corte 605)")
+        XCTAssertEqual(o["aviso"] as? String, "🪨 Pedra com saia em cima: o módulo vai até embaixo da saia (735 mm). Pra mudar, mude a altura da pedra ou da saia na aba Pedra.")
+        XCTAssertEqual(o["saia7cm"] as? String, "armário até 765 e 765")
+        XCTAssertEqual(o["pedra40"] as? String, "armário até 775 e 775")
+        XCTAssertEqual(o["semSaiaDepoisDeTirar"] as? String, "armário até 820 · frente em cima a 815 · 3D: armário até 820, pedra embaixo em 820 · folga 0 · lateral 690 (corte 690)")
+        XCTAssertEqual(o["saiaDeNovo"] as? String, "armário até 735 e 735")
+        XCTAssertEqual(o["reabriu"] as? String, "armário até 735 e 735")
+        XCTAssertEqual(o["semSaia"] as? String, "armário até 820 · frente em cima a 815 · 3D: armário até 820, pedra embaixo em 820 · folga 0 · lateral 690 (corte 690)")
+        XCTAssertEqual(o["projetoAntigo"] as? String, "armário até 820")
+        XCTAssertEqual(o["antigoDepoisDeMexerNaSaia"] as? String, "armário até 735")
+        XCTAssertEqual(o["cantoEmL"] as? String, "canto até 735")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testTamponamentoDeBaixoSoOndeViraPecaComBaseSuspensoTemPecaNoChaoNaoSeAplica() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* 16/11 10:56 (TB-BASE): "tamponamento inferior" marcado em módulo de baixo com base não gerava peça (83 módulos do catálogo), mas descia o tamponamento lateral 30 mm,
+           somava 25 na profundidade externa e o "aumentar comprimento" contava na medida. Agora: com base e suspenso (sem rodapé) a peça existe (fecha por baixo da base);
+           no chão com base e no canto em L a opção fica desligada, e o projeto antigo marcado não ganha nem perde peça nem medida. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var novo=function(cfg){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1500;m.tl=false;m.tr=true;m.tlM=1;m.trM=1;Object.assign(m,cfg);S.m=m;draw();return m};
+        var pc=function(m,nm){var p=partsOf(m).filter(function(q){return q.name===nm})[0];return p?p.cl+'x'+p.cw+(nm==='Tamponamento de baixo'?' em y'+Math.round(p.y)+' (caixa até '+Math.round(m.h-(m.rod?m.rodMm:0))+')':''):'sem peça'};
+        var corte=function(m,nm){var o=0;cutLines(m).forEach(function(l){(l.pks||[]).forEach(function(k){if(String(k).indexOf(nm+'#')===0)o++})});return o};
+        var b3=function(m,nm){open3D();__build();var bs=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0&&String(b.pk||'').indexOf(nm+'#')===0});document.getElementById('v3x').click();return bs.length?'3D y'+Math.round(Math.min.apply(null,bs.map(function(b){return b.y0})))+'..'+Math.round(Math.max.apply(null,bs.map(function(b){return b.y1}))):'fora do 3D'};
+        var TT=TABORD.filter(function(i){return /Tampon/.test(TABS[i])})[0];
+        var quadro=function(m){S.m=m;S.tab=TT;panel();var c=document.querySelector('#bd input[data-c="tb"]'),n=document.querySelector('#bd [data-tbna]');return 'caixinha '+(c?(c.disabled?'desligada':'ligada')+(c.checked?' marcada':''):'-')+(n?' · aviso: '+n.textContent.slice(0,60):'')+' · aumentar comprimento '+(document.querySelector('#bd [data-r="tbR"]')?'aparece':'não aparece')};
+        /* 1) no chão com base (rodapé): projeto antigo com a caixinha marcada */
+        var a=novo({tb:false});var lat0=pc(a,'Tamponamento direito'),ext0=JSON.stringify(dimExt(a));a.tb=true;a.tbR=100;draw();
+        R.chaoComBase='peça '+pc(a,'Tamponamento de baixo')+' · corte '+corte(a,'Tamponamento de baixo')+' · lateral '+(pc(a,'Tamponamento direito')===lat0?'igual':'MUDOU '+pc(a,'Tamponamento direito'))+' · externa '+(JSON.stringify(dimExt(a))===ext0?'igual':'MUDOU')+' · medida direita '+rt(a);
+        R.chaoComBase_quadro=quadro(a);a.tb=false;draw();R.chaoComBase_quadroDesmarcado=quadro(a);
+        /* 2) com base, suspenso, sem rodapé: a peça existe embaixo da base */
+        var s=novo({b:300,rod:false,tb:true});R.suspensoComBase='peça '+pc(s,'Tamponamento de baixo')+' · corte '+corte(s,'Tamponamento de baixo')+' · '+b3(s,'Tamponamento de baixo')+' · módulo de '+s.b+' a '+(s.b+s.h);
+        s.tbR=100;draw();R.suspensoAumenta='peça '+pc(s,'Tamponamento de baixo')+' · medida direita '+rt(s)+' (tamponamento '+s.trW+')';R.suspenso_quadro=quadro(s);
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.suspensoReabriu=pc(S.mods[0],'Tamponamento de baixo');
+        /* 3) sem base (já existia) continua igual */
+        var n=novo({base:false,b:300,rod:false,tb:true});R.semBaseSuspenso=pc(n,'Tamponamento de baixo');
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["chaoComBase"] as? String, "peça sem peça · corte 0 · lateral igual · externa igual · medida direita 30")
+        XCTAssertEqual(o["chaoComBase_quadro"] as? String, "caixinha ligada marcada · aviso: Não se aplica: módulo no chão com base (a base já fecha emba · aumentar comprimento não aparece")
+        XCTAssertEqual(o["chaoComBase_quadroDesmarcado"] as? String, "caixinha desligada · aviso: Não se aplica: módulo no chão com base (a base já fecha emba · aumentar comprimento não aparece")
+        XCTAssertEqual(o["suspensoComBase"] as? String, "peça 900x560 em y820 (caixa até 820) · corte 1 · 3D y270..285 · módulo de 300 a 1120")
+        XCTAssertEqual(o["suspensoAumenta"] as? String, "peça 1000x560 em y820 (caixa até 820) · medida direita 100 (tamponamento 30)")
+        XCTAssertEqual(o["suspenso_quadro"] as? String, "caixinha ligada marcada · aumentar comprimento aparece")
+        XCTAssertEqual(o["suspensoReabriu"] as? String, "1000x560 em y820 (caixa até 820)")
+        XCTAssertEqual(o["semBaseSuspenso"] as? String, "900x560 em y820 (caixa até 820)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testPecaApagadaEAjusteDo3DSeguemAPecaQuandoOutroVaoMuda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* XP-PK (16/11, autorizado às 10:56): a chave da peça era nome + número no módulo inteiro; mexer num vão mudava a numeração dos outros e a peça apagada (🗑)
+           voltava, outra sumia, e o ajuste do 3D pulava de porta. Agora a peça é seguida pelo vão dela. Projeto aberto não muda nada. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.room='quarto';S.env='quarto';S.W=4000;S.H=2700;S.mods=[];S.fr=[];draw();newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];m.x=1000;S.m=m;draw();
+        var portas=function(mm){mm=mm||S.mods[0];var P=partsOf(mm).filter(function(p){return p.name==='Porta'});return P.map(function(p){return 'x'+Math.round(p.x)+(p.y>0?' encurtada':'')}).join(' | ')};
+        var vm=function(vi,k,k2){vmenuOpen(0,vi,200,300);document.querySelector('#vmenu [data-vk="'+k+'"]').click();if(k2){var b=document.querySelector('#vmenu [data-vk="'+k2+'"]');if(b)b.click()}try{vmenuClose()}catch(_){}draw()};
+        /* apaga a porta esquerda do vão 2 e encurta 100 mm a direita do vão 2 (ajuste do 3D) */
+        var P=partsOf(m).filter(function(p){return p.name==='Porta'&&p.vi===1});pcDelAt(0,P[0].pk);m.po=m.po||{};m.po[P[1].pk]={v2:1,et:-100};draw();
+        R.antes=portas();
+        vm(0,'door1');R.vao1ComUmaPorta=portas();
+        vm(0,'split','dv|1');R.vao1Dividido=portas();
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.salvouReabriu=portas();
+        /* projeto antigo (cópia): abrir, desenhar e abrir o 3D não muda nada nos dados */
+        var antes=JSON.stringify({xp:S.mods[0].xp,po:S.mods[0].po});loadState(JSON.parse(sv));draw();open3D();await W(150);__build();document.getElementById('v3x').click();draw();var depois=JSON.stringify({xp:S.mods[0].xp,po:S.mods[0].po});R.abrirNaoMuda=antes===depois;
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "x9 | x455 | x1348 encurtada")
+        XCTAssertEqual(o["vao1ComUmaPorta"] as? String, "x8 | x1348 encurtada")
+        XCTAssertEqual(o["vao1Dividido"] as? String, "x8 | x456 | x1348 encurtada")
+        XCTAssertEqual(o["salvouReabriu"] as? String, "x8 | x456 | x1348 encurtada")
+        XCTAssertEqual(o["abrirNaoMuda"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testLateralBaseEDivisoriaSaemPelaRegraDoMovelOuNaoSaemComMotivo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* 16/11 10:56 (XP-ESTRUTURAL): o 🗑 tirava lateral, base ou divisória "só a peça" e as outras continuavam descontando ela (base com largura − 2 × 15 sem a lateral).
+           Agora: lateral com módulo encostado → "sem lateral" (usa a do vizinho, base/teto/prateleiras vão até a ponta) · lateral sem vizinho → não sai e explica ·
+           base de baixo → módulo sem base · base de cima → não sai e explica · divisória → os 2 vãos viram 1. Sem peça fantasma no 3D e no corte. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var pc=function(m,nm){return partsOf(m).filter(function(q){return q.name===nm}).map(function(q){return q.cl+'x'+q.cw}).join(',')||'sem peça'};
+        var b3=function(mi,nm){open3D();__build();var n=__boxes().filter(function(b){return String(b.nm).indexOf(mi+':')===0&&String(b.pk||'').indexOf(nm+'#')===0}).length;document.getElementById('v3x').click();return n};
+        var corte=function(m,nm){var o=0;cutLines(m).forEach(function(l){(l.pks||[]).forEach(function(k){if(String(k).indexOf(nm+'#')===0)o++})});return o};
+        var amb=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw()};
+        /* 1) dois balcões encostados: tira a lateral direita do da esquerda */
+        amb();newTpl(T('Balcão aberto (prateleira)'));var a=S.mods[0];a.x=1000;newTpl(T('Balcão 2 portas'));var b=S.mods[1];b.x=a.x+a.w;S.m=a;draw();var base0=pc(a,'Travessa frontal')+' / prat '+pc(a,'Prateleira'),bv0=pc(b,'Lateral esquerda');
+        R.encostado_msg=pcDelAt(0,'Lateral direita#1');draw();R.encostado='semLD '+!!a.semLD+' · lateral direita '+pc(a,'Lateral direita')+' · 3D '+b3(0,'Lateral direita')+' · corte '+corte(a,'Lateral direita')+' · travessa e prateleira '+base0+' → '+pc(a,'Travessa frontal')+' / prat '+pc(a,'Prateleira')+' · vizinho '+(pc(b,'Lateral esquerda')===bv0?'igual':'MUDOU');
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.encostadoReabriu='semLD '+!!S.mods[0].semLD+' · lateral direita '+pc(S.mods[0],'Lateral direita');
+        /* 2) balcão sozinho: a lateral não sai e explica */
+        amb();newTpl(T('Balcão 2 portas'));var c=S.mods[0];c.x=1000;S.m=c;draw();R.sozinho_msg=pcDelAt(0,'Lateral esquerda#1');draw();R.sozinho='lateral esquerda '+pc(c,'Lateral esquerda')+' · tiradas '+(c.xp||[]).length+' · semLE '+!!c.semLE;
+        /* 3) base de baixo: módulo sem base */
+        R.base_msg=pcDelAt(0,'Base inferior#1');draw();R.base='base '+c.base+' · peça '+pc(c,'Base inferior')+' · 3D '+b3(0,'Base inferior')+' · tiradas '+(c.xp||[]).length;
+        /* 4) aéreo: a base de cima não sai */
+        amb();newTpl(T('Aéreo 2 portas'));var d=S.mods[0];S.m=d;draw();R.baseCima_msg=pcDelAt(0,'Base superior#1');R.baseCima='peça '+pc(d,'Base superior')+' · tiradas '+(d.xp||[]).length;
+        /* 5) guarda-roupa: tira a divisória, os 2 vãos viram 1 */
+        loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Guarda-roupa 2 vãos'));var g=S.mods[0];S.m=g;draw();R.div_antes='vãos '+g.v.length+' · divisórias '+(g.div||[]).length;
+        R.div_msg=pcDelAt(0,'Divisória 1#1');draw();R.div='vãos '+g.v.length+' · divisórias '+(g.div||[]).length+' · peça '+pc(g,'Divisória 1')+' · 3D '+b3(0,'Divisória 1')+' · tiradas '+(g.xp||[]).length;
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["encostado_msg"] as? String, "🗑 Lateral direita tirada: o módulo usa a lateral do módulo encostado (sem lateral) · base, teto e prateleiras vão até a ponta e a lista acompanha · ↶ desfaz")
+        XCTAssertEqual(o["encostado"] as? String, "semLD true · lateral direita sem peça · 3D 0 · corte 0 · travessa e prateleira 600x70 / prat 570x530 → 600x70 / prat 585x530 · vizinho igual")
+        XCTAssertEqual(o["encostadoReabriu"] as? String, "semLD true · lateral direita sem peça")
+        XCTAssertEqual(o["sozinho_msg"] as? String, "⚠ A lateral esquerda não sai: ela segura a base, o teto e as prateleiras, e não tem módulo encostado desse lado pra emprestar a lateral. Encoste um módulo desse lado (sem vão) pra usar a lateral dele.")
+        XCTAssertEqual(o["sozinho"] as? String, "lateral esquerda 690x560 · tiradas 0 · semLE false")
+        XCTAssertEqual(o["base_msg"] as? String, "🗑 Base de baixo tirada: módulo sem base (o mesmo que desmarcar \"Base inferior\" no módulo) · laterais e medidas recalculadas · ↶ desfaz")
+        XCTAssertEqual(o["base"] as? String, "base false · peça sem peça · 3D 0 · tiradas 0")
+        XCTAssertEqual(o["baseCima_msg"] as? String, "⚠ A base de cima fecha a caixa e segura as laterais: não sai pelo 🗑.")
+        XCTAssertEqual(o["baseCima"] as? String, "peça 1000x350 · tiradas 0")
+        XCTAssertEqual(o["div_antes"] as? String, "vãos 2 · divisórias 1")
+        XCTAssertEqual(o["div_msg"] as? String, "🗑 Divisória tirada: os dois vãos viraram um (fica a frente do vão da esquerda) · ↶ desfaz")
+        XCTAssertEqual(o["div"] as? String, "vãos 1 · divisórias 0 · peça sem peça · 3D 0 · tiradas 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

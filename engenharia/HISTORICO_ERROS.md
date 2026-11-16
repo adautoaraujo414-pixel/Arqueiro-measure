@@ -211,19 +211,51 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 ## TB-BASE: tamponamento inferior marcado em módulo de baixo COM base não gera peça nenhuma (achado em 16/11)
 - 83 módulos do catálogo (balcões, gaveteiros, torres, guarda-roupas). A caixinha diz "Usar (fica abaixo da base)", mas a lista não tem a peça.
 - Mesmo assim, os tamponamentos laterais descem mais 30 mm (`tEnd`), e até o TB-MED a medida contava o "aumentar comprimento".
-- **Status:** erro comprovado, **pendente de decisão do Adauto**. Falta definir a construção (onde a peça fica com rodapé, se o módulo sobe 30 mm, profundidade) ou se a opção sai desse tipo de módulo. Nada foi mudado na geração.
+- **Decisão (16/11 10:56):** onde existe peça real, ela entra no modelo, no 3D, na lista e no corte; onde não se aplica, a opção fica desligada sem prejudicar projeto antigo.
+- **Correção:**
+  - `tbAplica`, `tbBaseSusp` e `tbPeca` decidem.
+  - Módulo com base, **suspenso e sem rodapé**: gera a peça, que fecha por baixo da base e das laterais (mesma conta do módulo sem base suspenso).
+  - **No chão com base** e **canto em L**: a caixinha fica desligada, com o motivo escrito.
+  - Projeto antigo que já estava marcado continua marcado (dá pra desmarcar), mas não gera peça.
+  - O tamponamento lateral não desce mais 30 mm por causa de peça que não existe (`tEnd`), e a profundidade externa não soma 25 (`dimExt`).
+- **Teste:** `testTamponamentoDeBaixoSoOndeViraPecaComBaseSuspensoTemPecaNoChaoNaoSeAplica`.
+  - Antes: no chão, a lateral passava de 720 para 750 sem a peça; suspenso, "sem peça".
+  - Depois: no chão a lateral fica igual; suspenso, a peça vai na lista, no corte e no 3D, e o "aumentar comprimento" estica a peça e a medida juntos.
+- **Varredura:** 196 cenários.
+  - No chão: 76 módulos com base ficam sem peça e sem efeito.
+  - Suspensos: todos com peça.
+  - `testMedidaComTamponamentoEhAPontaDasPecasEmTodoOCatalogo` continua sem diferença.
+- **Status:** resolvido na bateria.
 
 ## XP-PK: mexer num vão faz a peça apagada de outro vão voltar, e o ajuste do 3D pular de porta (achado em 16/11)
 - **Reproduzir:** guarda-roupa 2 vãos. Apagar (🗑) a porta esquerda do vão 2 e trocar o vão 1 de 2 portas pra 1. A porta apagada volta e a direita do vão 2 some.
   - Varredura: 33 de 183 casos de balcões, aéreos, torres e guarda-roupas.
   - Mesmo jeito com o ajuste do 3D (`m.po`): a porta do vão 2 encurtada 100 mm em cima passa o ajuste para a outra porta.
 - **Causa raiz:** a peça é identificada por `pk` = nome + número de ordem no módulo inteiro (`Porta#3`). A lista de tiradas (`m.xp`), os ajustes do 3D (`m.po`) e outros mapas usam essa chave. Quando um vão ganha ou perde peça, a numeração dos outros muda. O editor por vãos (`isRg`) já segue as peças (`rgPoFollow`), o módulo comum não.
-- **Status:** erro comprovado, **não corrigido nesta rodada**. A correção mexe em identificadores gravados no projeto (CLAUDE.md seção 3) e depende de autorização. Proposta: seguir as peças do módulo comum pelo vão (como o `rgPoFollow`), sem mudar o formato do arquivo.
+- **Correção (autorizada às 10:56):** `clPoFollow` faz no módulo comum o mesmo que o `rgPoFollow` faz no editor por vãos.
+  - Cada peça é reconhecida pelo objeto do vão dela (continua o mesmo quando outro vão muda ou ganha divisória) e pela ordem dentro do vão.
+  - Quando a numeração muda, andam junto com a peça: a lista de tiradas (`m.xp`, inclusive o `vi`), os ajustes (`po`), as cores (`pc`) e as fitas (`pf`).
+  - Peça que sai guarda o que era dela na sessão e, se voltar, volta com ela.
+  - O formato do arquivo não mudou.
+- **Projetos:** abrir, desenhar e abrir o 3D não muda nada nos dados. A 1ª vez só guarda as chaves; o teste confere `xp` e `po` iguais.
+- **Testes:**
+  - `testPecaApagadaEAjusteDo3DSeguemAPecaQuandoOutroVaoMuda`. Antes, a porta apagada voltava e a encurtada perdia o ajuste; depois, ficam certas mesmo depois de dividir o vão e de salvar e reabrir.
+  - Varredura de 183 casos: antes 33 com erro, agora 0.
+- **Status:** resolvido na bateria.
 
 ## XP-ESTRUTURAL: o 🗑 tira lateral, base ou divisória e as outras peças continuam descontando ela (risco, 16/11)
 - O 🗑 aceita lateral, base, base superior, divisória, rodapé e travessa. A peça sai, mas as vizinhas não mudam (a base continua `largura − 2 × 15` sem a lateral).
 - A regra "lateral não se desliga em módulo pronto" (Laterais do módulo) contradiz isso.
-- **Status:** risco identificado, **pendente de decisão**. O 🗑 numa peça estrutural pode ficar bloqueado, virar a opção certa ("sem lateral" usa a do vizinho), ou ficar como está.
+- **Decisão (16/11 10:56):** recalcular quando a remoção vale construtivamente; senão bloquear e explicar; oferecer "sem lateral" quando dá.
+- **Correção:** `pcEstrutural`, chamado pelo `pcDelAt` (2D e 3D).
+  - **Lateral com módulo encostado** (mesma altura de começo, cobrindo a altura e a profundidade): vira "sem lateral" (`semLE`/`semLD`). O módulo usa a lateral do vizinho, e base, teto, travessas e prateleiras vão até a ponta. Ex.: prateleira 570 → 585.
+  - **Lateral sem vizinho**, vizinho também sem lateral ou vizinho que não cobre: não sai, e a mensagem diz o porquê.
+  - **Lateral do canto em L:** não sai.
+  - **Base de baixo:** módulo sem base, igual a desmarcar "Base inferior". No canto saem os 2 lados.
+  - **Base de cima:** não sai e explica. Em balcão, sugere travessas.
+  - **Divisória:** os 2 vãos viram 1; no editor por vãos, pelo `rgDelDiv`.
+- **Teste:** `testLateralBaseEDivisoriaSaemPelaRegraDoMovelOuNaoSaemComMotivo`. Antes, tudo saía "só a peça"; depois, sai pela regra ou não sai com motivo, sem fantasma no 3D nem no corte, e continua certo depois de salvar e reabrir.
+- **Status:** resolvido na bateria.
 
 ## RGQK-LARGA: "2 toques no vão" do editor por vãos não abria o menu rápido em tela larga (CI do Windows, 16/11)
 - **Achado:** a bateria do Windows falhava em `testEditorPorVaosDoisToquesNoVaoAbreMenuRapidoComAsAbasEBotoesDoPainel` desde d9b9240. As execuções anteriores tinham sido canceladas.
@@ -258,7 +290,7 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Reproduzir:** gaveteiro 3 gavetas, 🗑 na contra-frente da 1ª gaveta. Ela sai da lista e do corte, mas o 3D continua com 65 caixas e a chave `#3` aparece 2 vezes. Com a lateral é igual.
 - **Causa raiz:** o 3D desenhava a caixa da gaveta inteira (2 laterais, contra-frente e traseira) a partir da 1ª peça que aparecia, e a chave da traseira era "a próxima" (`#n+1`). Sem uma das peças, a vizinha virava a de referência.
 - **Correção:**
-  - As peças da caixa da gaveta ganharam marca de lado e de gaveta (`gbs`, `gvi`, `gdq`, `gbd`, `gbh`; não vão pro arquivo do projeto, são calculadas).
+  - As peças da caixa da gaveta ganharam marca de lado e de gaveta (`cgS`, `cgVi`, `cgDq`, `cgD`, `cgH`; não vão pro arquivo do projeto, são calculadas).
   - O 3D desenha cada lado só se a peça dele está na lista, com a chave dela. Vale pro módulo comum e pro editor por vãos, com corrediça normal e oculta.
 - **Teste:** o mesmo. Antes: 65 → 65 caixas, `#3×2`. Depois: 65 → 64, chaves únicas.
 - **Status:** resolvido na bateria.
@@ -294,7 +326,11 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 
 ## SAIA-ALTURA: com saia na pedra, o armário ia até embaixo da pedra e a saia ficava na frente da porta (pedido de 16/11 às 10:34, resposta "A" às 10:39)
 - **Antes:** bancada com o embaixo da pedra a 820, pedra de 30 e saia de 100. A saia fica de 750 a 850, mas o módulo ia até 820 e a porta até 815, atrás da saia, que bate nela ao abrir.
-- **Regra confirmada (A):** o armário inteiro (caixa e frentes) vai até embaixo da saia, e a pedra fica por cima. No exemplo, o armário vai até 750 e a porta até 745.
+- **Regra confirmada:** opção A às 10:39 e regra definitiva às 10:56.
+  - O armário inteiro (caixa e frentes) fica embaixo da saia, com 15 mm de folga (`STFOLGA_SAIA`, aplicada uma vez só), e a pedra fica por cima.
+  - No exemplo, a saia vai até 750, o armário até 735, a porta até 730 e a gaveta até 725 (folgas normais).
+  - Sem saia: até 820, sem a folga.
+  - Mudar a altura da saia, a espessura da pedra, tirar ou pôr a saia: o armário encaixado acompanha (`stAdapta`, limite guardado por pedra). Mudar a altura da pedra continua como era.
 - **Código:**
   - `stArmTop(st)` calcula o embaixo da saia, com a mesma conta do desenho da saia (`stSaiaGeo`).
   - `stAdapta` passa a usar esse limite, inclusive no canto em L de baixo, só quando há saia nova.
@@ -303,6 +339,29 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Projetos antigos:**
   - Pedra com saia de projeto antigo não muda sozinha. A regra vale quando a saia é ligada ou tem a altura escolhida (`st.saiaArm`).
   - Em projeto antigo, basta tocar de novo no tamanho da saia na aba Pedra.
-- **Teste:** `testComSaiaNaPedraOArmarioInteiroVaiAteEmbaixoDaSaia`. Cobre pedra nova, salvar e reabrir, projeto antigo, mexer na saia, sem saia e canto em L. Falha antes e passa depois.
+- **Teste:** `testComSaiaNaPedraOArmarioInteiroVaiAteEmbaixoDaSaia`. Falha antes e passa depois. Cobre:
+  - portas e gavetas;
+  - folga medida no 3D (15);
+  - lateral na lista e no corte;
+  - saia de 7 cm e pedra de 40;
+  - tirar e pôr a saia;
+  - salvar e reabrir;
+  - sem saia;
+  - projeto antigo;
+  - canto em L.
 - **Status:** resolvido na bateria. **Não testado em aparelho real.**
 - **Pendente:** a frente do armário continua parando atrás da saia na profundidade (PEDIDO 59). Com o armário inteiro embaixo da saia, a porta poderia vir mais pra frente, mas isso não foi pedido e não mudou.
+
+## GAV-MARCA-GDQ: a marca nova da caixa da gaveta usava o nome `gdq`, que já era do gola lateral (achado na bateria de b3c1e74, 16/11)
+- **Sintoma:** a contra-frente da 1ª gaveta ia pra altura da porta (y 5, h 705) e entrava na travessa e no batente. Acusado por `testBateriaNovaCatalogoSalvarReabrirPecaNaoEntraEmPecaECorteIgualAo3D` (pecaDentroDeOutra).
+- **Causa:** `stkParts` trata peça com `gdq` como perfil gola lateral: copia a altura da porta e, no maleiro embaixo de porta inteira, tira a peça.
+- **Correção:** as marcas viraram `cgS`, `cgVi`, `cgDq`, `cgD` e `cgH`, nomes que não existiam no editor.
+- **Status:** corrigido e conferido no teste que acusou. Só ficou no commit b3c1e74 (não publicado).
+
+## BAT-FLAKY (16/11, continuação): testes que falham só com o computador carregado
+- **Causa comum:** o teste espera um tempo fixo (150 a 900 ms) depois de um clique que abre 3D, "só ele no 2D" ou o projeto do cliente. Com 3 navegadores ao mesmo tempo em 2 processadores, o tempo não basta.
+- **Correção (só nos testes):** esperar o estado chegar (até 5 s) em vez do relógio. As expectativas não mudaram.
+  - `testSoOModulo3DE2DComPortaGavetaEDivisoriaSoNele`: solo e backSolo.
+  - `testOrganizacao3DClienteEModoPessoa`: clv e ro.
+  - `testAereoFechamentoAteOTetoEmCimaDaBaseEmbutirMuduloDeCimaListaETirarMolduraAntiga`: a caixa do fechamento.
+- **Continua intermitente:** `testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida` (amort). Ele mede o tempo da animação da porta com amostras a cada 40 ms; com carga, as amostras ficam espaçadas. Corrigir sem afrouxar exige medir a curva do amortecedor pela própria animação. Fica pendente; passa rodando sozinho.

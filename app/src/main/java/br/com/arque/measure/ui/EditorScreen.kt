@@ -212,6 +212,8 @@ private val overlayPaint = android.graphics.Paint(android.graphics.Paint.ANTI_AL
     color = 0xFF2F80ED.toInt()
 }
 private val overlayPath = android.graphics.Path()
+/** Cor do fundo atrás das folhas (Ui.paperBg), pra imagem guardada da folha. */
+private val PAPER_BG = 0xFF1E2025.toInt()
 private val eraserPaint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
     strokeCap = android.graphics.Paint.Cap.ROUND
     strokeJoin = android.graphics.Paint.Join.ROUND
@@ -225,6 +227,7 @@ private fun drawScene(
     selected: Boolean,
     visTop: Float = -Float.MAX_VALUE,
     visBot: Float = Float.MAX_VALUE,
+    skipId: String? = null,
 ) {
     val st = session.state
     val step = Sheet.H + Sheet.GAP
@@ -234,7 +237,7 @@ private fun drawScene(
         if (y0 > visBot || y0 + Sheet.H < visTop) return@forEachIndexed
         nc.save()
         nc.translate(0f, i * step)
-        renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg)
+        renderer.draw(nc, page, st.unit, if (selected && i == st.pageIdx) st.selectedId else null, scale, selectedSeg = st.selectedSeg, skipId = if (i == st.pageIdx) skipId else null)
         if (i == st.pageIdx) {
             overlayPaint.strokeWidth = 2f / scale
             overlayPaint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f / scale, 6f / scale), 0f)
@@ -284,6 +287,8 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
     session.density = density
     val renderer = remember { vm.renderer() }
     val controller = remember(session) { GestureController(session, density) }
+    // imagem guardada da folha (igual ao iPhone): escrevendo, só o traço novo é desenhado a cada ponto
+    val sheetCache = remember(session) { SheetCache() }
     val loupePath = remember { APath() }
     // entrega os toques da caneta/dedo sem esperar o quadro da tela: traço responde mais rápido
     val hostView = androidx.compose.ui.platform.LocalView.current
@@ -419,11 +424,29 @@ fun SheetCanvas(vm: AppViewModel, session: EditorSession, modifier: Modifier = M
         val v = session.view
         drawIntoCanvas { c ->
             val nc = c.nativeCanvas
-            nc.save()
-            nc.translate(v.ox, v.oy)
-            nc.scale(v.scale, v.scale)
-            drawScene(nc, session, renderer, v.scale, selected = true, visTop = -v.oy / v.scale - 20f, visBot = if (session.canvasH > 0f) (-v.oy + session.canvasH) / v.scale + 20f else Float.MAX_VALUE)
-            nc.restore()
+            val visTop = -v.oy / v.scale - 20f
+            val visBot = if (session.canvasH > 0f) (-v.oy + session.canvasH) / v.scale + 20f else Float.MAX_VALUE
+            val st = session.state
+            val cached = sheetCache.paint(
+                nc, size.width.toInt(), size.height.toInt(), session, controller.liveId, vm.images.version, PAPER_BG,
+                full = { cc, skip ->
+                    cc.save(); cc.translate(v.ox, v.oy); cc.scale(v.scale, v.scale)
+                    drawScene(cc, session, renderer, v.scale, selected = true, visTop = visTop, visBot = visBot, skipId = skip)
+                    cc.restore()
+                },
+                one = { cc, id ->
+                    cc.save(); cc.translate(v.ox, v.oy); cc.scale(v.scale, v.scale); cc.translate(0f, st.pageIdx * (Sheet.H + Sheet.GAP))
+                    renderer.drawOne(cc, st.sheet, st.unit, id)
+                    cc.restore()
+                },
+            )
+            if (!cached) {
+                nc.save()
+                nc.translate(v.ox, v.oy)
+                nc.scale(v.scale, v.scale)
+                drawScene(nc, session, renderer, v.scale, selected = true, visTop = visTop, visBot = visBot)
+                nc.restore()
+            }
 
             // lupa circular com mira, ≈124 dp, zoom 3,4×
             val f = session.loupe

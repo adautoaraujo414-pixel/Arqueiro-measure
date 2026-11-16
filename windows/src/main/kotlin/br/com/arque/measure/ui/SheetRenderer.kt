@@ -120,7 +120,16 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         p.reset()
     }
 
-    fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true, selectedSeg: Int = -1) {
+    /** Desenha só um objeto da folha (o traço que está sendo escrito), por cima da imagem guardada do resto (igual ao iPhone). */
+    fun drawOne(c: Canvas, sheet: Sheet, unit: LengthUnit, id: String) {
+        val o = sheet.obj(id) ?: return
+        c.save()
+        c.clipRect(0f, 0f, sheet.width, sheet.height)
+        if (o is br.com.arque.measure.model.WallObj) drawWall(c, o, sheet) else drawObj(c, o, sheet.photos(), unit, false)
+        c.restore()
+    }
+
+    fun draw(c: Canvas, sheet: Sheet, unit: LengthUnit, selectedId: String?, viewScale: Float, withPaper: Boolean = true, selectedSeg: Int = -1, skipId: String? = null) {
         if (withPaper) {
             c.drawRect(5f, 6f, sheet.width + 5f, sheet.height + 6f, paperShadow)
         }
@@ -129,7 +138,7 @@ class SheetRenderer(private val images: (String) -> Bitmap?) {
         c.save()
         c.clipRect(0f, 0f, sheet.width, sheet.height)
         val photos = sheet.photos()
-        for (o in sheet.objs) { if (o is br.com.arque.measure.model.WallObj) drawWall(c, o, sheet) else drawObj(c, o, photos, unit, selectedId == o.id) }
+        for (o in sheet.objs) { if (o.id == skipId) continue; if (o is br.com.arque.measure.model.WallObj) drawWall(c, o, sheet) else drawObj(c, o, photos, unit, selectedId == o.id) }
         c.restore()
         if (withPaper) c.drawRect(0f, 0f, sheet.width, sheet.height, paperBorder)
         sheet.obj(selectedId)?.let { drawSelection(c, sheet, it, viewScale, selectedSeg) }

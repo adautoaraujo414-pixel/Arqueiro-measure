@@ -43,6 +43,8 @@ class GestureController(private val s: EditorSession, private val density: Float
     private enum class H { CORNER, ROTATE, A, B, VERTEX, CAB_W, CAB_H }
 
     private var mode = Mode.NONE
+    /** Traço (ou contorno de cômodo) sendo escrito agora: só ele é desenhado por cima da imagem guardada da folha. */
+    val liveId: String? get() = if (mode == Mode.STROKE || mode == Mode.ROOM) createdId else null
     private var handle = H.A
     private var handleIdx = 0
     private var activeId: String? = null

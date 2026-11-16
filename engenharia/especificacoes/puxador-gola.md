@@ -87,3 +87,19 @@ Regras:
    - **Pergunta para o Adauto:** na sua marcenaria, com perfil G, a dobradiça deixa a porta afastada da caixa (quantos mm), ou a travessa e as laterais têm rebaixo atrás do perfil?
      - Com a folga da dobradiça: vale para todas as portas com G, mexe na posição da porta e precisa de aprovação.
      - Com o rebaixo: mexe na caixa e no plano de corte, também com aprovação.
+
+## 7. Auditoria de 16/11 às 07:38 (nada foi corrigido)
+- **Geometria real:** 5 caixas de alumínio, extrudadas na largura da porta (`pxParts`, bloco `t==='g'`). Seção na tabela da seção 2. Não é textura: são peças 3D com medida.
+- **Simplificações:**
+  - Cantos retos.
+  - Parede de 1,5 mm (espessura não confirmada pela referência).
+  - Gancho de 8 mm (não está na referência).
+  - Encaixe sem folga: as paredes encostam no MDF.
+- **Superfícies:** as 5 peças são do alumínio, na cor escolhida (inox, preto, dourado, bronze, grafite ou branco). O MDF é só a porta, que fica abaixo do piso do perfil e 13 mm por trás da parede.
+- **Por que aparece madeira "dentro" do gola:**
+  - A porta encosta na caixa (`z = d`). A parede de trás do perfil (1,5 mm) fica dentro da travessa frontal, e a face de dentro da parede fica no **mesmo plano** da frente da travessa.
+  - No 3D as duas superfícies disputam o mesmo pixel, e aparecem **listras da madeira da travessa** no fundo da abertura.
+  - Prova: com afastamento de 1,5 mm (Ajustes), a mesma vista mostra só alumínio.
+  - Causa: **geometria (interferência)**. Não é textura nem câmera.
+- **Textura aplicada errada (achado):** `matTx` dá o código 6 ("MDF liso com granulado") às peças do perfil quando a cor é clara (inox ou branco), porque elas têm o nome da porta (`N:Porta`) e cor quase cinza. No 3D aparece como um pontilhado leve no alumínio.
+- **Imagens do motor** (sem retoque): frente, de cima, lateral, dentro da abertura (com e sem afastamento), perfil isolado, porta + perfil pela frente e por trás. Corte com medidas desenhado a partir das caixas do 3D.

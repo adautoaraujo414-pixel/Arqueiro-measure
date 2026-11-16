@@ -7080,5 +7080,16 @@
 "em todas as portas e gavetas do projeto": "on every door and drawer of the project",
 "Lateral do L (do painel até a parede)": "L side panel (from the panel to the wall)",
 "Base da lateral do L ripada (do painel até a parede)": "Base of the slatted L side (from the panel to the wall)",
-"Ripa da lateral do L": "Slat of the L side"
+"Ripa da lateral do L": "Slat of the L side",
+"Profundidade na parede do fundo": "Depth on the back wall",
+"Profundidade na parede lateral": "Depth on the side wall",
+"Profundidade de cada lado pela pedra": "Depth of each side from the countertop",
+"Largura na parede do fundo": "Width on the back wall",
+"Largura na parede lateral": "Width on the side wall",
+"Não tem pedra em cima do canto": "There is no countertop over the corner",
+"coloque a pedra e toque de novo": "add the countertop and tap again",
+"O canto já está na medida da pedra": "The corner already matches the countertop",
+"Canto pela pedra": "Corner from the countertop",
+"pedra −": "countertop −",
+"da pingadeira −": "of the drip edge −"
 }

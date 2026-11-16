@@ -10416,4 +10416,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["caixaDepoisDeFecharEAbrir"] as? String, "abriu o quadro · apagou · sobrou 0")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testCantoEmLProfundidadeDeCadaLadoPelaPedraComODescontoPadrao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 57: canto em L com profundidade separada em cada lado · cada lado pela pedra que está em cima dele, com o mesmo desconto do módulo reto (pedra − pingadeira − fundo) */
+        var pc=function(m){return partsOf(m).filter(function(p){return !p.noCut}).map(function(p){return p.name+' '+p.cl+'x'+p.cw}).join(' | ')};
+        var novo=function(){try{if(!document.getElementById('v3').hidden)document.getElementById('v3x').click()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw()};
+        /* 1. sem mexer na lateral: tudo igual a antes (a lateral segue a do fundo) */
+        novo();mkCorner('e');draw();var m=S.mods[0],P0=pc(m);m.d2=m.d;draw();R.semMexerIgualAntes=pc(m)===P0;delete m.d2;draw();
+        /* 2. pedra do fundo 600 e pedra da lateral 650 → cada lado com o desconto padrão */
+        addStone();draw();wvGo('e');draw();addStone();draw();wvGo('f');draw();S.stones[0].d=600;S.stw[0].d=650;draw();TT=[];
+        document.querySelector('[data-cnfit]')?0:0;cornerStoneFit(m,false);R.pelaPedra='fundo '+m.d+' · lateral '+cD2(m)+' · aviso: '+TT.join(' / ');
+        R.corte=pc(m);
+        /* 3. 3D: o lado da lateral vai até a profundidade dele; as folhas ficam na frente de cada lado com 3 mm entre elas */
+        open3D();await W(250);__build();var bx=__boxes().filter(function(b){return /^0:/.test(String(b.nm))&&!b.nol});var f=m.fundo?(m.fundoMm||6):0;
+        var bl=bx.filter(function(b){return /Base inferior/.test(b.nm)}),ext=function(L,k){return Math.round(Math.max.apply(null,L.map(function(b){return b[k]})))};
+        var A=bx.filter(function(b){return /Porta/.test(b.nm)&&b.dq===0}),B=bx.filter(function(b){return /Porta/.test(b.nm)&&b.dq===1});
+        R.tresD='bases até x '+ext(bl,'x1')+' e z '+ext(bl,'z1')+' · folha do lado no x '+Math.round(Math.min.apply(null,B.map(function(b){return b.x0})))+' · folha do fundo no z '+Math.round(Math.min.apply(null,A.map(function(b){return b.z0})))+' · folga entre as folhas '+Math.round((Math.min.apply(null,A.map(function(b){return b.x0}))-Math.max.apply(null,B.map(function(b){return b.x1})))*10)/10+' mm · lado do fundo prof. '+(m.d+f)+' · lado da lateral prof. '+(cD2(m)+f);
+        /* 4. quadro do módulo no 3D: os dois lados com largura e profundidade */
+        document.getElementById('v3x').click();await W(100);open3D();await W(250);S.m=m;try{__itOpen({k:'mod',mi:0})}catch(e){R.exc=e.message}await W(150);var Q=document.getElementById('it4');var lab=Q&&!Q.hidden?[].slice.call(Q.querySelectorAll('[data-qmf]')).map(function(i){return i.dataset.qmf}).join(','):'quadro não abriu';R.quadro=lab+' · pedra '+(Q&&Q.querySelector('[data-cnfit]')?'tem':'não tem');
+        var inp=Q&&Q.querySelector('[data-qmf="d2"]');if(inp){inp.value='580';inp.dispatchEvent(new Event('change',{bubbles:true}));inp.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await W(150)}R.digitouNoQuadro='lateral '+cD2(m);
+        document.getElementById('v3x').click();await W(100);
+        /* 5. painel do 2D tem os dois campos de profundidade */
+        S.tab=0;S.m=m;try{panel()}catch(_){}R.painel=['d','d2','cw2','w'].map(function(k){return k+':'+(document.querySelector('#bd [data-r="'+k+'"]')?'sim':'não')}).join(' ');
+        /* 6. salvar e abrir de novo guarda a lateral */
+        var sn=JSON.parse(JSON.stringify(snapState()));loadState(sn);draw();R.salvouEAbriu='lateral '+cD2(S.mods[0])+' · fundo '+S.mods[0].d;
+        /* 7. canto criado com a pedra já posta nasce pela pedra */
+        novo();addStone();draw();wvGo('e');draw();addStone();draw();wvGo('f');draw();S.stw[0].d=650;draw();mkCorner('e');draw();var c2=S.mods.filter(function(q){return q.corner})[0];R.nasceuPelaPedra=c2?'fundo '+c2.d+' · lateral '+cD2(c2):'não criou';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["semMexerIgualAntes"] as? Bool, true)
+        XCTAssertEqual(o["pelaPedra"] as? String, "fundo 554 · lateral 604 · aviso: 🪨 Canto pela pedra · parede do fundo 554 mm · parede lateral 604 mm (pedra − 40 da pingadeira − 6 do fundo)")
+        XCTAssertEqual(o["corte"] as? String, "Base inferior 894x554 | Base inferior (lado do canto) 340x604 | Lateral direita 690x554 | Lateral do canto (fim do lado) 690x604 | Travessa frontal 290x70 | Travessa frontal (lado do canto) 340x70 | Prateleira 879x524 | Prateleira (lado do canto) 355x574 | Porta 262x650 | Porta 315x650 | Rodapé (pedestal) 320x100 | Rodapé (pedestal) do lado 355x100 | Rodapé traseiro (pedestal) 864x100 | Rodapé traseiro (pedestal) do lado 834x100")
+        XCTAssertEqual(o["tresD"] as? String, "bases até x 905 e z 901 · folha do lado no x 616 · folha do fundo no z 561 · folga entre as folhas 3 mm · lado do fundo prof. 560 · lado da lateral prof. 610")
+        XCTAssertEqual(o["quadro"] as? String, "w,cw2,h,d,d2 · pedra tem")
+        XCTAssertEqual(o["digitouNoQuadro"] as? String, "lateral 580")
+        XCTAssertEqual(o["painel"] as? String, "d:sim d2:sim cw2:sim w:sim")
+        XCTAssertEqual(o["salvouEAbriu"] as? String, "lateral 580 · fundo 554")
+        XCTAssertEqual(o["nasceuPelaPedra"] as? String, "fundo 554 · lateral 604")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

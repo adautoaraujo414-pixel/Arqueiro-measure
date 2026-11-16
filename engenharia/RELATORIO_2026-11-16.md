@@ -230,3 +230,44 @@ O que **falhou**:
 - **Não medido em aparelho.**
 - **Não faz:** refração, luz do LED nas peças em volta, acabamento do metal como dado do projeto.
 - **O motor do app não foi mexido.**
+
+---
+
+# Quarta rodada (16/11, das 07:45 às 09:40)
+
+## 1. Corrigido e testado no Chromium (falta testar no aparelho)
+| O quê | Commit | Teste (falha na versão anterior) |
+|---|---|---|
+| Perfil G sólido: sem madeira dentro e sem granulado | 328f602 | `testPerfilGolaSolidoPassadaPropriaSemGranuladoAbertoEFechado` |
+| Furação da dobradiça com padrão de 120 do MDF da porta, no centro do caneco, igual com qualquer puxador. Quem já usava continua com o valor gravado (opção A) | eb6ed5b | `testFuracaoPadrao120…`, `testFuracaoDaDobradicaNoMesmoLugar…` |
+| 3D da dobradiça no mesmo lugar do furo do plano de corte (era 100 fixo; 110 na basculante) | eb6ed5b | idem |
+| Tamponamento do vídeo: a seta estica a peça de verdade | 7b9bb3a | `testTamponamentoDoAereoEstica…`, `…AfastadoDaParede…` |
+| Setas certas em módulo na parede lateral; travado não estica; para na parede do fundo | 7b9bb3a | `testSetasDo3DNaParedeLateral…` |
+| Trava da geladeira (2D e 3D, abre normal) | 0f4644d | `testGeladeiraTravada…` |
+| Seta só aparece quando a peça existe na lista | ddb41c8 | auditoria abaixo |
+
+## 2. Auditoria das setas do 3D (136 modelos, 2845 peças)
+- Toda peça que dá pra escolher no 3D existe na lista de peças.
+- **2786 peças** mudam na lista e no 3D quando esticadas.
+- **Que não mudam:**
+  - **Lateral de gaveta (40):** por projeto, a caixa da gaveta é ajustada inteira (`gbox`), não lateral por lateral.
+  - **Régua espaçadora do canto (8):** as setas de altura aparecem, mas não mexem (a altura vem da porta). **Pendente.**
+  - **Rodapé entre laterais até o piso (4):** as setas aparecem e não mexem. **Pendente.**
+- **Gaveta interna, frente:** a lista e o 3D mudam juntos pela seta. A medida no 3D é maior que a de corte (inclui o puxador ou recorte?). **A conferir.**
+
+## 3. Editor por vãos em todos os módulos (ramo `exp/editor-vaos-universal`, **não integrado**)
+- Ver `especificacoes/editor-por-vaos-universal.md`.
+- Fase 1: a conversão só acontece com peças idênticas, e as frentes seguem a regra do módulo comum. 29 modelos convertem idênticos, incluindo os balcões e aéreos simples.
+- **Fora desta subida.** Gavetas de cozinha, basculante, vidro, forno, canto e outros ficam para as próximas fases.
+- **Erro que já existe no app:** "Só ele no 2D" converte módulo alto e muda peças sem avisar. A trava que corrige isso está no ramo. Falta a decisão do Adauto de trazer pra versão principal antes.
+
+## 4. CI do iPhone
+- Em d9b9240, **os 326 testes passaram**. O CI ficou vermelho porque o simulador reiniciou uma vez no meio ("Restarting after unexpected exit, crash, or test timeout"), o que faz o xcodebuild terminar com 65.
+- Isso já acontecia em rodadas anteriores, em testes diferentes a cada vez. É instabilidade do simulador. **Pendente investigar.**
+
+## 5. Pendências que dependem do Adauto
+1. Porta baixa com 120: na torre do micro-ondas, as portas de 292 e 282 ficam com as dobradiças a 120/172 e 120/162. Falta a regra para porta baixa.
+2. Calço da dobradiça entrando na divisória do meio no 3D (16 modelos, já era assim com 100).
+3. FITA-08: porta do aéreo 0,8 mm dentro da fita.
+4. Folga e rebaixo reais do perfil G.
+5. Trazer a trava de conversão do editor por vãos pra versão principal agora?

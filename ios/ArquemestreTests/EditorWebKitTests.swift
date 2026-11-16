@@ -11555,4 +11555,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["paredeVoltou"] as? String, "parede 3170 · fim no 3D: 3170,3170")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* P0-01 (auditoria de 16/11, achado P1-F): projects.json vazio, ilegível ou que não é lista nunca apaga a cópia boa do navegador.
+       Antes: na abertura o arquivo "[]" vencia e a linha que copia o arquivo pro navegador gravava "[]" por cima da única cópia que sobrou.
+       Vazio de verdade (os dois vazios) continua vazio. Arquivo com projetos continua valendo como antes. */
+    func testArquivoDeProjetosVazioOuQuebradoNaoApagaACopiaBoaDoNavegador() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};
+        var b=function(s){return btoa(unescape(encodeURIComponent(s)))},PKK='arque.projects.v1';
+        var P=JSON.stringify([{id:'pA',client:{nome:'Cliente A'},created:1,updated:1,current:{mods:[]}},{id:'pB',client:{nome:'Cliente B'},created:2,updated:2,current:{mods:[]}}]);
+        var guardaArq=__files['projects.json'],guardaLoc=localStorage.getItem(PKK);
+        var caso=function(arq,loc){if(arq===null)delete __files['projects.json'];else __files['projects.json']=b(arq);if(loc===null)localStorage.removeItem(PKK);else localStorage.setItem(PKK,loc);
+          var ok=typeof window.__pjsBoot==='function';if(ok)window.__pjsBoot();var nl=0;try{nl=JSON.parse(localStorage.getItem(PKK)||'[]').length}catch(_){nl=-1}
+          return (ok?'':'sem __pjsBoot · ')+'lista '+pLoadAll().length+' · navegador '+nl};
+        R.arquivoVazio=caso('[]',P);
+        R.arquivoQuebrado=caso('[{"id":"pA",',P);
+        R.arquivoNaoELista=caso('{"id":"pA"}',P);
+        R.semArquivo=caso(null,P);
+        R.arquivoComProjetos=caso(P,'[]');
+        R.osDoisVazios=caso('[]','[]');
+        R.vazioSemNavegador=caso('[]',null);
+        /* a primeira gravação depois de abrir com o arquivo vazio põe a lista boa de volta no arquivo */
+        caso('[]',P);pSaveAll(pLoadAll());var fa=JSON.parse(decodeURIComponent(escape(atob(__files['projects.json'])))).length;R.gravouDeVolta='arquivo '+fa;
+        /* volta como estava */
+        if(guardaArq===undefined)delete __files['projects.json'];else __files['projects.json']=guardaArq;if(guardaLoc===null)localStorage.removeItem(PKK);else localStorage.setItem(PKK,guardaLoc);try{window.__pjsBoot&&window.__pjsBoot()}catch(_){}
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["arquivoVazio"] as? String, "lista 2 · navegador 2")
+        XCTAssertEqual(o["arquivoQuebrado"] as? String, "lista 2 · navegador 2")
+        XCTAssertEqual(o["arquivoNaoELista"] as? String, "lista 2 · navegador 2")
+        XCTAssertEqual(o["semArquivo"] as? String, "lista 2 · navegador 2")
+        XCTAssertEqual(o["arquivoComProjetos"] as? String, "lista 2 · navegador 0")
+        XCTAssertEqual(o["osDoisVazios"] as? String, "lista 0 · navegador 0")
+        XCTAssertEqual(o["vazioSemNavegador"] as? String, "lista 0 · navegador 0")
+        XCTAssertEqual(o["gravouDeVolta"] as? String, "arquivo 2")
+    }
 }

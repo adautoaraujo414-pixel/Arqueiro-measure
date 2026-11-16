@@ -11014,4 +11014,214 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabreTravada"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testTamponamentoDaTorreNoLixoDesmarcaAMedidaSegueAPecaEProjetoAntigoSoAvisa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 16/11 09:15 e 09:32 (print da torre: "Usar (já existe)" marcado, medida 890 com tamponamento e sem "Peça:" no quadro).
+           Causa (TAMP-XP): o 🗑 "apaga só a peça" mandava o tamponamento pra lista de peças tiradas (m.xp) e deixava a marcação ligada:
+           a medida contava a espessura, a peça sumia do 2D/3D/lista/corte e marcar "Usar" de novo não trazia a peça.
+           Agora o 🗑 no tamponamento = desmarcar "Usar"; marcar/desmarcar limpa a lista de tiradas; projeto antigo já estragado só ganha aviso (nada muda sozinho). */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=3270;S.stones=[];S.rp=[];S.mods=[];S.fr=[];draw();newTpl(T('Torre forno + micro-ondas (embutir)'));var m=S.mods[0];m.w=800;m.h=2600;m.x=1500;m.tl=true;m.tr=true;m.tlW=30;m.trW=30;S.m=m;draw();
+        var pc=function(nm){var p=partsOf(m).filter(function(q){return q.name===nm})[0];return p?p.cl+'x'+p.cw+' esp '+p.mat:'sem peça'};
+        var corte=function(nm){var o=[];cutLines(m).forEach(function(l){(l.pks||[]).forEach(function(k){if(String(k).indexOf(nm+'#')===0||String(k).indexOf(nm+' · ')===0)o.push(l.L+'x'+l.W)})});return o.join('|')||'fora do corte'};
+        var b3=function(nm){open3D();__build();return __boxes().filter(function(q){return String(q.nm).indexOf('0:')===0&&String(q.pk||'').indexOf(nm+'#')===0}).length};
+        var medida=function(){return m.w+lt(m)+rt(m)};
+        var TT=TABORD.filter(function(i){return /Tampon/.test(TABS[i])})[0];
+        R.antes=pc('Tamponamento direito')+' · corte '+corte('Tamponamento direito')+' · medida '+medida();
+        /* 1) 2D: escolhe a peça (1 toque) e 🗑 */
+        histTick();await W(800);histTick();pcSel(0,'Tamponamento direito#1');document.getElementById('delMod').onclick();draw();
+        R.lixo2D='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · corte '+corte('Tamponamento direito')+' · 3D '+b3('Tamponamento direito')+' · tiradas '+(m.xp||[]).length+' · medida '+medida();
+        /* ↶ desfaz traz a peça e a medida juntas */
+        histTick();await W(800);document.getElementById('und').click();await W(50);m=S.mods[0];S.m=m;R.desfaz='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · medida '+medida();
+        /* 2) 3D: escolhe o tamponamento esquerdo e 🗑 */
+        open3D();await W(300);__cam(.75,.12,1.3);await W(200);__build();var bs=__boxes().filter(function(b){return String(b.pk)==='Tamponamento esquerdo#1'&&String(b.nm).indexOf('0:')===0}),b=bs[0],c=b&&__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z0+1);
+        if(c){__sel3(c[0],c[1]);await W(150)}R.escolheu3D=String((window.SEL3||{}).pk);var bt=document.querySelector('[data-e3del]');if(bt)bt.click();await W(100);
+        R.lixo3D='tl '+m.tl+' · lt '+lt(m)+' · '+pc('Tamponamento esquerdo')+' · 3D '+b3('Tamponamento esquerdo')+' · tiradas '+(m.xp||[]).length;
+        document.getElementById('v3x').click();await W(100);
+        /* 3) projeto antigo que já ficou estragado (marcado + peça na lista de tiradas): abre igual, sem mudar nada sozinho, e avisa */
+        m.tl=true;m.tr=true;m.xp=[{pk:'Tamponamento direito#1',vi:-1,n:'Tamponamento direito'}];var velho=JSON.stringify(snapState());loadState(JSON.parse(velho));m=S.mods[0];S.m=m;S.tab=TT;draw();panel();
+        var av=document.querySelector('#bd [data-tpapag="tr"]');R.antigo='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · tiradas '+(m.xp||[]).length+' · aviso '+(av?av.textContent:'nenhum');
+        /* desmarca e marca "Usar" de novo: a peça volta de verdade (lista, corte, 3D e quadro) */
+        var cb=document.querySelector('#bd input[data-c="tr"]');cb.click();await W(30);R.desmarcou='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · medida '+medida();
+        cb=document.querySelector('#bd input[data-c="tr"]');cb.click();await W(30);R.marcou='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · corte '+corte('Tamponamento direito')+' · 3D '+b3('Tamponamento direito')+' · tiradas '+(m.xp||[]).length+' · quadro '+/Peça: /.test(tampOpt('tr'))+' · medida '+medida();
+        /* 4) salva, fecha e reabre */
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));m=S.mods[0];R.reabriu='tr '+m.tr+' · rt '+rt(m)+' · '+pc('Tamponamento direito')+' · medida '+medida();
+        /* 5) superior e canto: o 🗑 também desmarca */
+        m.tt=true;draw();pcSel(0,'Tamponamento de cima#1');document.getElementById('delMod').onclick();R.cima='tt '+m.tt+' · '+pc('Tamponamento de cima')+' · tiradas '+(m.xp||[]).length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];S.stones=[];draw();var ic=null;CATS.forEach(function(c){(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(!ic&&t&&t.corner&&!t.sup)ic=t})});newTpl(JSON.parse(JSON.stringify(ic)));var k=S.mods[0];k.tl=true;k.tr=true;S.m=k;draw();var sk_=k.corner==='d'?'tr':'tl';pcSel(0,'Tamponamento do lado do canto#1');document.getElementById('delMod').onclick();
+        R.canto='lado do canto '+k[sk_]+' · peça '+partsOf(k).filter(function(q){return q.name==='Tamponamento do lado do canto'}).length+' · tiradas '+(k.xp||[]).length;
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "2500x585 esp 30 · corte 2500x585|2500x80|2500x80|425x80|425x80 · medida 860")
+        XCTAssertEqual(o["lixo2D"] as? String, "tr false · rt 0 · sem peça · corte fora do corte · 3D 0 · tiradas 0 · medida 830")
+        XCTAssertEqual(o["desfaz"] as? String, "tr true · rt 30 · 2500x585 esp 30 · medida 860")
+        XCTAssertEqual(o["escolheu3D"] as? String, "Tamponamento esquerdo#1")
+        XCTAssertEqual(o["lixo3D"] as? String, "tl false · lt 0 · sem peça · 3D 0 · tiradas 0")
+        XCTAssertEqual(o["antigo"] as? String, "tr true · rt 30 · sem peça · tiradas 1 · aviso ⚠ A peça foi apagada pelo 🗑, mas o tamponamento continua marcado e a medida ainda conta 30 mm. Desmarque \"Usar\" pra tirar de vez, ou desmarque e marque de novo pra peça voltar.")
+        XCTAssertEqual(o["desmarcou"] as? String, "tr false · rt 0 · sem peça · medida 830")
+        XCTAssertEqual(o["marcou"] as? String, "tr true · rt 30 · 2500x585 esp 30 · corte 2500x585|2500x80|2500x80|425x80|425x80 · 3D 1 · tiradas 0 · quadro true · medida 860")
+        XCTAssertEqual(o["reabriu"] as? String, "tr true · rt 30 · 2500x585 esp 30 · medida 860")
+        XCTAssertEqual(o["cima"] as? String, "tt false · sem peça · tiradas 0")
+        XCTAssertEqual(o["canto"] as? String, "lado do canto false · peça 0 · tiradas 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testMedidaComTamponamentoEhAPontaDasPecasEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* PROTOCOLO 16/11 09:33 · regra universal: a medida "com tamponamento" (lt/rt) é a ponta das peças de tamponamento que existem de verdade na lista.
+           Todo o catálogo (menos canto) × tamponamento esquerdo, direito, de cima, de baixo (com "aumentar comprimento") em módulo com base, sem base no chão e suspenso,
+           e depois do 🗑 em cada tamponamento. Antes: o 🗑 deixava a medida contando (TAMP-XP) e o aumentar comprimento do de baixo contava sem a peça (TB-MED). */
+        var RM={inf:'cozinha',sup:'cozinha',alto:'cozinha',quarto:'quarto',dArm:'quarto',dCan:'quarto',dFec:'quarto',dEsp:'quarto',dPas:'quarto',banho:'banho',sala:'sala',salaT:'sala',tv:'sala',escr:'escr'};
+        var items=[];CATS.forEach(function(c){if(!RM[c.id])return;(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(t&&!t.act&&t.w&&t.h&&!t.corner)items.push([c.id,t])})});
+        var cfg=[{tl:1,tr:1},{tl:1,tr:1,tt:1},{tr:1,tb:1,tbR:100,tbL:50},{tr:1,tb:1,tbR:100,base:false,b:400,rod:false},{tb:1,tbR:80,base:false,b:0},{tl:1,tr:1,tt:1,lixo:'Tamponamento direito'},{tl:1,tr:1,lixo:'Tamponamento esquerdo'},{tr:1,tb:1,tbR:100,base:false,b:400,rod:false,lixo:'Tamponamento de baixo'}];
+        var bad=[],n=0,lix=0;
+        for(var ii=0;ii<items.length;ii++){var it=items[ii][1];for(var ci=0;ci<cfg.length;ci++){try{loadState(initLimpo());S.room=RM[items[ii][0]];S.env=S.room;S.W=5000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=1500;m.tl=false;m.tr=false;m.tt=false;m.tb=false;m.tlM=1;m.trM=1;var c=cfg[ci];Object.keys(c).forEach(function(k){if(k==='lixo')return;m[k]=/^(tl|tr|tt|tb)$/.test(k)?true:c[k]});S.m=m;draw();
+         if(c.lixo){var q=partsOf(m).filter(function(p){return p.name===c.lixo})[0];if(!q)continue;pcDelAt(0,q.pk);draw();lix++}n++;
+         var P=partsOf(m).filter(function(p){return /^Tamponamento/.test(p.name)&&!(m.sup&&p.name==='Tamponamento de baixo')});var L=0,Rr=0;P.forEach(function(p){L=Math.max(L,-p.x);Rr=Math.max(Rr,p.x+p.w-m.w)});L=Math.round(L*10)/10;Rr=Math.round(Rr*10)/10;
+         if(!(Math.abs(L-lt(m))<0.6&&Math.abs(Rr-rt(m))<0.6)&&bad.length<8)bad.push(it.n+' '+JSON.stringify(c)+' · medida L'+lt(m)+'/R'+rt(m)+' · peças L'+L+'/R'+Rr)}catch(e){bad.push(it.n+' ERRO '+e.message)}}}
+        R.cenariosMaisDe800=n>800;R.comLixoMaisDe200=lix>200;R.medidaDiferenteDasPecas=bad.join(' || ')||'nenhum';R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["cenariosMaisDe800"] as? Bool, true)
+        XCTAssertEqual(o["comLixoMaisDe200"] as? Bool, true)
+        XCTAssertEqual(o["medidaDiferenteDasPecas"] as? String, "nenhum")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 16/11 10:07 (print do fundo no 3D: "🗑 Só esta peça" não tirava): toda peça que o 3D oferece pra apagar tem que sair do 2D, do 3D, da lista e do corte,
+           sem peça fantasma e sem mexer em outra. Achados: FUNDO-LIXO (o fundo respondia "não sai sozinha"), GAV-FANTASMA (lateral e contra-frente da caixa da gaveta
+           continuavam no 3D com a chave da vizinha), CANTO-FANTASMA (peças do lado do canto em L continuavam no 3D). Varre o catálogo (1 de cada tipo de peça) pelo 🗑 do quadro do 3D. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var MSG=[];var pd0=window.pcDelAt;window.pcDelAt=function(){var r=pd0.apply(this,arguments);MSG.push(r);return r};
+        var RM={inf:'cozinha',sup:'cozinha',canto:'cozinha',alto:'cozinha',quarto:'quarto',dArm:'quarto',dCan:'quarto',banho:'banho',sala:'sala',escr:'escr'};
+        var items=[];CATS.forEach(function(c){if(!RM[c.id])return;(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(t&&!t.act&&t.w&&t.h)items.push([c.id,t])})});
+        var bx=function(){__build();var o={__tot:0};__boxes().forEach(function(b){if(String(b.nm).indexOf('0:')!==0)return;o.__tot++;var k=b.ppk&&/ · engrosso \d+#\d+$|\(régua\)#\d+$/.test(String(b.pk))?b.pk:(b.ppk||b.pk);if(k)o[k]=(o[k]||0)+1});return o};
+        var cnt=function(m,nm){return partsOf(m).filter(function(p){return p.name===nm}).length};
+        open3D();await W(200);window.SEL3={mi:0,pk:'x'};try{__sel3(-99999,-99999)}catch(_){}
+        var lixo3D=function(pk){window.SEL3={mi:0,pk:pk};MSG=[];var b=document.createElement('button');b.dataset.e3del='1';document.getElementById('e3').appendChild(b);b.click();b.remove();return MSG.join(' / ')};
+        var feito={},naoSai=[],fantasma=[],n=0;
+        for(var ii=0;ii<items.length;ii++){var it=items[ii][1],base=null;try{loadState(initLimpo());S.room=RM[items[ii][0]];S.env=S.room;S.W=5000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=1500;m.tl=m.tr=true;S.m=m;draw();base=JSON.stringify(snapState())}catch(e){continue}
+         var B0=bx();Object.keys(B0).forEach(function(k){if(k==='__tot')return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
+          loadState(JSON.parse(base));var m2=S.mods[0];S.m=m2;draw();var b0=bx();if(!b0[k])return;var tira_=/ · engrosso \d+$|\(régua\)$/.test(nm),noCorte=function(){var o=0;cutLines(S.mods[0]).forEach(function(l){(l.pks||[]).forEach(function(q){if(q===k)o++})});return o},c0=tira_?noCorte():cnt(m2,nm),fundo0=m2.fundo;var msg=lixo3D(k);m2=S.mods[0];var b1=bx();n++;
+          var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=b1.__tot<=b0.__tot-b0[k];
+          if(!saiuLista&&!saiu3D)naoSai.push(nm+' ('+it.n+': '+msg.slice(0,60)+')');else if(saiuLista!==saiu3D)fantasma.push(nm+' ('+it.n+(saiuLista?': saiu da lista e ficou no 3D':': saiu do 3D e ficou na lista')+')')})}
+        R.pecasConferidasMaisDe60=n>60;R.naoSai=naoSai.join(' | ')||'nenhuma';R.fantasma=fantasma.join(' | ')||'nenhuma';
+        /* fundo: sai do 3D, da lista de corte, volta no ↶ e continua fora depois de salvar e reabrir */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;m.fundo=true;m.fundoMan=1;S.m=m;draw();
+        var fundoNoCorte=function(){return cutLines(S.mods[0]).filter(function(l){return /^Fundo/.test(String((l.names||[l.name])[0]))}).length};histTick();await W(800);histTick();
+        R.fundoAntes='corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);R.fundoMsg=lixo3D('Fundo#1');R.fundoDepois='fundo '+S.mods[0].fundo+' · corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.fundoReabriu='fundo '+S.mods[0].fundo+' · 3D '+(bx()['Fundo#1']||0);
+        /* caixa da gaveta: tira a contra-frente da 1ª gaveta · o 3D fica com 1 caixa a menos e nenhuma chave repetida */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caixas '+g0.__tot+' → '+g1.__tot+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
+        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caixas '+g1.__tot+' → '+g2.__tot+' · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
+        /* canto em L: a base do lado do canto sai do 3D */
+        var ic=null;CATS.forEach(function(c){(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(!ic&&t&&t.corner&&t.sup)ic=t})});loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(ic)));S.m=S.mods[0];draw();var k0=bx();lixo3D('Base inferior (lado do canto)#1');var k1=bx();R.canto='caixas '+k0.__tot+' → '+k1.__tot+' · base do lado no 3D '+(k1['Base inferior (lado do canto)#1']||0)+' · base do fundo '+(k1['Base inferior#1']||0)+' (antes '+(k0['Base inferior#1']||0)+')';
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["pecasConferidasMaisDe60"] as? Bool, true)
+        XCTAssertEqual(o["naoSai"] as? String, "nenhuma")
+        XCTAssertEqual(o["fantasma"] as? String, "nenhuma")
+        XCTAssertEqual(o["fundoAntes"] as? String, "corte 1 · 3D 1")
+        XCTAssertEqual(o["fundoMsg"] as? String, "🗑 Fundo tirado · é o mesmo que desmarcar \"Fundo\" na aba Fundos · ↶ desfaz")
+        XCTAssertEqual(o["fundoDepois"] as? String, "fundo false · corte 0 · 3D 0")
+        XCTAssertEqual(o["fundoReabriu"] as? String, "fundo false · 3D 0")
+        XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
+        XCTAssertEqual(o["gaveta"] as? String, "caixas 65 → 64 · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
+        XCTAssertEqual(o["gavLateral"] as? String, "caixas 64 → 63 · lateral #2 no 3D 0 · #1 1")
+        XCTAssertEqual(o["canto"] as? String, "caixas 22 → 20 · base do lado no 3D 0 · base do fundo 2 (antes 2)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        /* print de 16/11 10:07 (fundo no módulo da parede lateral: "Fundo (6 mm) 161 × 999 × 965"): o quadro da peça mostrava as medidas do mundo.
+           No módulo da parede lateral (girado) a "Larg." mostrava a profundidade e digitar nela mexia na largura com a conta errada. Agora Larg./Alt./Prof. são da peça */
+        var L=[];loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.mods=[];draw();newTpl(T('Balcão aberto (prateleira)'));var m=S.mods[0];m.x=600;m.wing='e';m.fundo=true;m.fundoMan=1;S.m=m;draw();
+        open3D();await W(250);__build();var pks=['Lateral esquerda#1','Base inferior#1','Fundo#1'];var out={};
+        for(var i=0;i<pks.length;i++){var pk=pks[i];var b=__boxes().filter(function(q){return String(q.nm).indexOf('0:')===0&&q.pk===pk})[0];if(!b){out[pk.replace(/#1$/,'')]='sem caixa';continue}var ok=false;
+         for(var yw=-3.1;yw<3.2&&!ok;yw+=0.15){for(var pt=0.1;pt<1.3&&!ok;pt+=0.4){__cam(yw,pt,1.4);await W(15);var c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,(b.z0+b.z1)/2);if(!c)continue;__sel3(c[0],c[1]);await W(25);if(window.SEL3&&SEL3.pk===pk)ok=true}}
+         if(!ok){out[pk.replace(/#1$/,'')]='não peguei';continue}var tx=(document.getElementById('e3')||{}).textContent||'';out[pk.replace(/#1$/,'')]='parede '+S.mods[0].wing+' · quadro '+((tx.match(/[\d,]+ × [\d,]+ × [\d,]+ mm/)||['?'])[0])+' · campos '+[].map.call(document.querySelectorAll('#e3 [data-e3d]'),function(i){return i.value}).join('/')}
+        return JSON.stringify(out,null,1)
+        """#)
+        XCTAssertEqual(o["Lateral esquerda"] as? String, "parede e · quadro 15 × 690 × 560,8 mm · campos 15/690/560.8")
+        XCTAssertEqual(o["Base inferior"] as? String, "parede e · quadro 600 × 15 × 560,8 mm · campos 600/15/560.8")
+        XCTAssertEqual(o["Fundo"] as? String, "parede e · quadro 600 × 820 × 6 mm · campos 600/820/6")
+    }
+
+    func testMenuDoVaoDoBalcaoDaCozinhaSemQuadroRepetidoELixeiraNaLista() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 16/11 10:23 (print do balcão da cozinha, 2 toques no vão): o quadro "Só esta parte" repetia gavetas e prateleira da lista de baixo.
+           Agora, no módulo de baixo da cozinha, o menu tem só a lista, com a Lixeira junto das outras opções. Guarda-roupa e armário alto continuam com o quadro. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;S.m=m;draw();
+        var lista=function(){return [].map.call(document.querySelectorAll('#vmenu > button'),function(b){return b.textContent.trim().replace(/\s+/g,' ')}).join(' | ')};
+        /* vão sem nada por dentro */
+        vmenuOpen(0,0,200,300);R.semNadaDentro='quadro '+!!document.getElementById('vmib')+' · '+lista();
+        /* toca na Lixeira: entra a lixeira por dentro e pede a medida */
+        var lb=document.querySelector('#vmenu [data-ibm="a|lix"]');lb.click();await W(50);R.depoisDaLixeira='peças por dentro: '+(gv(0,m).int||[]).map(function(o){return o.t}).join(',')+' · frente '+gv(0,m).k+' · lixeira na lista '+partsOf(m).filter(function(p){return /Lixeira/i.test(p.name)}).length+' · pede medida '+(ISB.cf===1);
+        try{document.querySelector('[data-ibok]')&&document.querySelector('[data-ibok]').click()}catch(_){}try{closeQ&&closeQ()}catch(_){}await W(30);
+        /* com parte por dentro: o quadro não aparece mais e a lixeira mostra que já tem */
+        vmenuOpen(0,0,200,300);R.comParteDentro='quadro '+!!document.getElementById('vmib')+' · '+lista();var lb2=document.querySelector('#vmenu [data-ibm="a|lix"]');lb2.click();await W(30);R.segundoToque=(gv(0,m).int||[]).length+' parte(s) · '+TL.slice(-1)[0];
+        /* guarda-roupa: o quadro continua */
+        loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Guarda-roupa 2 vãos'));S.m=S.mods[0];draw();vmenuOpen(0,0,200,300);R.guardaRoupa='quadro '+!!document.getElementById('vmib')+' · lixeira na lista '+!!document.querySelector('#vmenu > [data-ibm="a|lix"]');try{vmenuClose()}catch(_){}
+        /* torre da cozinha (alta): o quadro continua */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Despenseiro'));S.m=S.mods[0];draw();vmenuOpen(0,0,200,300);R.torre='quadro '+!!document.getElementById('vmib');try{vmenuClose()}catch(_){}
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["semNadaDentro"] as? String, "quadro false · 1 porta | 2 portas | Porta de correr (2 folhas) | Gavetas · quantas… | Prateleiras (deitadas) · quantas… | Porta tempero | 🗑Lixeira embutida | Forno / nicho | Livre (vazio) | Divisórias (em pé) · quantas… | Fechar")
+        XCTAssertEqual(o["depoisDaLixeira"] as? String, "peças por dentro: lix · frente door · lixeira na lista 1 · pede medida true")
+        XCTAssertEqual(o["comParteDentro"] as? String, "quadro false · 1 porta | 2 portas | Porta de correr (2 folhas) | Gavetas · quantas… | Prateleiras (deitadas) · quantas… | Porta tempero | 🗑Lixeira embutida (já tem) | Forno / nicho | Livre (vazio) | Divisórias (em pé) · quantas… | Fechar")
+        XCTAssertEqual(o["segundoToque"] as? String, "1 parte(s) · 🗑 Este vão já tem lixeira · a medida e o tirar ficam na aba Internos")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "quadro true · lixeira na lista false")
+        XCTAssertEqual(o["torre"] as? String, "quadro true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testComSaiaNaPedraOArmarioInteiroVaiAteEmbaixoDaSaia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 16/11 10:34 ("quando tiver saia, a altura a considerar é a da saia pra fazer o armário") · resposta "A" às 10:39: o armário inteiro (caixa e frentes) vai até embaixo da saia, a pedra fica por cima.
+           Exemplo: embaixo da pedra 820, pedra 30, saia 100 → saia de 750 a 850 → armário até 750. Projeto antigo com saia não muda sozinho; muda quando mexer na saia. */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var info=function(m,st){var P=partsOf(m),dr=P.filter(function(p){return p.name==='Porta'})[0],top=(+m.b||0)+(+m.h||0);open3D();__build();var sb=__boxes().filter(function(b){return b.sid===st.id}),sbot=Math.min.apply(null,sb.map(function(b){return b.y0}));var mb=__boxes().filter(function(b){return String(b.nm).indexOf(S.mods.indexOf(m)+':')===0}),mtop=Math.max.apply(null,mb.map(function(b){return b.y1}));document.getElementById('v3x').click();
+         return 'módulo até '+top+' · porta em cima a '+(dr?Math.round(top-dr.y):'-')+' · 3D: módulo até '+Math.round(mtop)+', saia até embaixo em '+Math.round(sbot)+' · moldura '+P.some(function(p){return /^Moldura/.test(p.name)})+' · embaixo da pedra '+underStone(m)};
+        var base=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.stones=[];S.mods=[];draw();addStone();var st=S.stones[0];st.x=0;st.w=2000;st.d=650;st.t=820;st.e=30;draw();return st};
+        /* 1) pedra nova: liga a saia de 10 cm pelo botão da aba Pedra e põe o balcão embaixo */
+        var st=base();S.st=st;var b=document.createElement('button');b.dataset.stsaiah='100';b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();TT=[];newTpl(T('Balcão 2 portas'));draw();await W(150);var m=S.mods[S.mods.length-1];
+        R.pedraNovaComSaia=info(m,st);R.aviso=TT.filter(function(t){return /embaixo da saia/.test(t)}).slice(-1)[0]||'sem aviso';
+        /* salva e reabre */
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabriu='módulo até '+((+S.mods[0].b||0)+(+S.mods[0].h||0));
+        /* 2) projeto antigo: pedra com saia sem a marca nova → continua como estava */
+        st=base();st.saia=true;st.saiaH=100;newTpl(T('Balcão 2 portas'));draw();await W(150);m=S.mods[S.mods.length-1];var old=JSON.stringify(snapState());loadState(JSON.parse(old));draw();m=S.mods[0];st=S.stones[0];
+        R.projetoAntigo=info(m,st);
+        /* mexeu na saia (escolheu 10 cm de novo): passa pra regra nova */
+        S.st=st;b=document.createElement('button');b.dataset.stsaiah='100';b.dataset.stid=st.id;document.body.appendChild(b);b.click();b.remove();draw();R.antigoDepoisDeMexerNaSaia=info(S.mods[0],st);
+        /* 3) sem saia: igual antes (até embaixo da pedra) */
+        st=base();newTpl(T('Balcão 2 portas'));draw();await W(150);R.semSaia=info(S.mods[S.mods.length-1],st);
+        /* 4) canto em L de baixo embaixo da pedra com saia: também vai até embaixo da saia */
+        st=base();st.saia=true;st.saiaH=100;st.saiaArm=1;draw();newTpl(T('Balcão 2 portas'));var c_=S.mods[S.mods.length-1];c_.x=0;c_.corner='e';c_.cw2=900;draw();draw();R.cantoEmL='canto até '+((+c_.b||0)+(+c_.h||0));
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["pedraNovaComSaia"] as? String, "módulo até 750 · porta em cima a 745 · 3D: módulo até 750, saia até embaixo em 750 · moldura false · embaixo da pedra true")
+        XCTAssertEqual(o["aviso"] as? String, "🪨 Pedra com saia em cima: o módulo vai até embaixo da saia (750 mm). Pra mudar, mude a altura da pedra ou da saia na aba Pedra.")
+        XCTAssertEqual(o["reabriu"] as? String, "módulo até 750")
+        XCTAssertEqual(o["projetoAntigo"] as? String, "módulo até 820 · porta em cima a 815 · 3D: módulo até 820, saia até embaixo em 750 · moldura false · embaixo da pedra true")
+        XCTAssertEqual(o["antigoDepoisDeMexerNaSaia"] as? String, "módulo até 750 · porta em cima a 745 · 3D: módulo até 750, saia até embaixo em 750 · moldura false · embaixo da pedra true")
+        XCTAssertEqual(o["semSaia"] as? String, "módulo até 820 · porta em cima a 815 · 3D: módulo até 820, saia até embaixo em 820 · moldura false · embaixo da pedra true")
+        XCTAssertEqual(o["cantoEmL"] as? String, "canto até 750")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

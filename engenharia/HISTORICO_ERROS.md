@@ -174,3 +174,135 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Medido no 3D:** no aéreo, a porta vai de `z = 356` a `z = 371`, e a fita de borda das laterais e da base vai de `z = 356` a `z = 356,8`. A porta entra 0,8 mm na fita. No balcão isso não acontece, porque a porta fica na frente da travessa.
 - Só no 3D. O plano de corte não muda.
 - **Status:** pendente. Precisa de decisão: a porta do aéreo deve ficar na frente da fita? Isso muda a posição de todas as portas do aéreo no 3D.
+
+## TAMP-XP: tamponamento da torre marcado, contado na medida e sem a peça (print de 16/11 às 09:15 · pedido prioritário 09:32)
+- **Relatado:** torre 800 × 2600 com forno e micro-ondas. Aba Tamponamentos: direito com "Usar (já existe)" marcado, medida "890 com tamponamento", mas sem a linha "Peça:" e sem "Inverter". Marcar de novo não punha a peça.
+- **Módulo:** torre (achado), mas o mecanismo é de todos os módulos com tamponamento.
+- **Reproduzir:** tamponamento direito marcado → 1 toque na peça → 🗑 (ou ✏️ no 3D → 🗑). Resultado antigo: `tr true · rt 30 · sem peça · tiradas 1`; desmarcar e marcar "Usar" continuava sem peça.
+- **Causa raiz:** o 🗑 "apaga só a peça" (`pcDelAt`) põe qualquer peça na lista de peças tiradas `m.xp`, que o `partsOf` esconde do 2D, 3D, lista, corte e orçamento. Para o tamponamento, a marcação `m.tr` continuava ligada, e é ela que a medida (`lt`/`rt`), o encaixe na parede e os vizinhos usam. Duas fontes de verdade: a marcação contava, a lista de tiradas escondia. A caixinha "Usar" não limpava a lista.
+- **Arquivos e funções:** `editor.html`: `pcDelAt`, filtro `partsOf_xp`, `lt`/`rt`, handler `data-c`, `tampOpt`, `tampHtml`.
+- **Outros afetados (investigados):**
+  - tamponamento esquerdo, de cima e de baixo: mesmo erro comprovado;
+  - lado do canto: a peça sumia e a marcação ficava;
+  - régua/engrosso do tamponamento: o 🗑 tira só a régua, de propósito (PEDIDO 37), e continua igual.
+  - Catálogo inteiro com o 🗑 em cada tamponamento: ver o teste universal.
+- **Correção:**
+  - O 🗑 num tamponamento passa a ser o mesmo que desmarcar "Usar" (`tpDesliga`), pelo mesmo caminho da caixinha: sai a peça e sai a espessura da medida, o módulo volta o que tinha sido empurrado, e ↶ desfaz.
+  - Marcar ou desmarcar "Usar" limpa da lista de tiradas o que era daquele tamponamento (`tpXpLimpa`): marcou, a peça existe de verdade.
+  - Projeto antigo que já ficou assim não muda sozinho: a aba mostra o aviso (`tpApagadaNota`) e a pessoa decide.
+- **Testes:**
+  - `testTamponamentoDaTorreNoLixoDesmarcaAMedidaSegueAPecaEProjetoAntigoSoAvisa`: 2D, 3D, desfazer, projeto antigo, desmarcar/marcar, lista, corte, 3D, salvar/reabrir, superior e canto.
+  - `testMedidaComTamponamentoEhAPontaDasPecasEmTodoOCatalogo`: regra universal com o 🗑.
+  - Os dois falham na versão anterior (`editor.pre204`) e passam depois.
+- **Status:** resolvido na bateria (Chromium). **Não testado em aparelho real.** Commit: ver o log ("Tamponamento: 🗑 = desmarcar…").
+
+## TB-MED: "aumentar comprimento" do tamponamento de baixo contava na medida sem peça (achado na investigação do TAMP-XP, 16/11)
+- **Reproduzir:** balcão com tamponamento inferior marcado e "aumentar à direita" 100. Resultados:
+  - medida +100 com a caixinha desmarcada;
+  - medida +100 em módulo com base, que não gera a peça;
+  - medida +100 em módulo sem base no chão, onde a peça fica entre as laterais e não estica.
+  - Antes: `rt 100` nos três.
+- **Causa raiz:** `lt`/`rt` somavam `tbL`/`tbR` em todo módulo de baixo, sem olhar se a peça existe e se estica. A peça só estica quando o módulo de baixo não tem base e está suspenso (`partsOf`, 'Tamponamento de baixo', `sus_`).
+- **Correção:** `tbEstica(o)` (de baixo, marcado, sem base, sem canto, suspenso) decide se `tbL`/`tbR` contam. No suspenso nada muda (peça 1000 = 900 + 100, medida +100). Aéreo continua igual (já não contava).
+- **Projetos antigos:** a medida só diminui onde não havia peça. Nenhum módulo é empurrado, porque a restrição de espaço só fica mais folgada.
+- **Teste:** `testMedidaComTamponamentoEhAPontaDasPecasEmTodoOCatalogo` (875 cenários do catálogo; mais de 200 deles com 🗑). Falha antes com 3 grupos de cenários e passa depois.
+- **Status:** resolvido na bateria. **Não testado em aparelho real.**
+
+## TB-BASE: tamponamento inferior marcado em módulo de baixo COM base não gera peça nenhuma (achado em 16/11)
+- 83 módulos do catálogo (balcões, gaveteiros, torres, guarda-roupas). A caixinha diz "Usar (fica abaixo da base)", mas a lista não tem a peça.
+- Mesmo assim, os tamponamentos laterais descem mais 30 mm (`tEnd`), e até o TB-MED a medida contava o "aumentar comprimento".
+- **Status:** erro comprovado, **pendente de decisão do Adauto**. Falta definir a construção (onde a peça fica com rodapé, se o módulo sobe 30 mm, profundidade) ou se a opção sai desse tipo de módulo. Nada foi mudado na geração.
+
+## XP-PK: mexer num vão faz a peça apagada de outro vão voltar, e o ajuste do 3D pular de porta (achado em 16/11)
+- **Reproduzir:** guarda-roupa 2 vãos. Apagar (🗑) a porta esquerda do vão 2 e trocar o vão 1 de 2 portas pra 1. A porta apagada volta e a direita do vão 2 some.
+  - Varredura: 33 de 183 casos de balcões, aéreos, torres e guarda-roupas.
+  - Mesmo jeito com o ajuste do 3D (`m.po`): a porta do vão 2 encurtada 100 mm em cima passa o ajuste para a outra porta.
+- **Causa raiz:** a peça é identificada por `pk` = nome + número de ordem no módulo inteiro (`Porta#3`). A lista de tiradas (`m.xp`), os ajustes do 3D (`m.po`) e outros mapas usam essa chave. Quando um vão ganha ou perde peça, a numeração dos outros muda. O editor por vãos (`isRg`) já segue as peças (`rgPoFollow`), o módulo comum não.
+- **Status:** erro comprovado, **não corrigido nesta rodada**. A correção mexe em identificadores gravados no projeto (CLAUDE.md seção 3) e depende de autorização. Proposta: seguir as peças do módulo comum pelo vão (como o `rgPoFollow`), sem mudar o formato do arquivo.
+
+## XP-ESTRUTURAL: o 🗑 tira lateral, base ou divisória e as outras peças continuam descontando ela (risco, 16/11)
+- O 🗑 aceita lateral, base, base superior, divisória, rodapé e travessa. A peça sai, mas as vizinhas não mudam (a base continua `largura − 2 × 15` sem a lateral).
+- A regra "lateral não se desliga em módulo pronto" (Laterais do módulo) contradiz isso.
+- **Status:** risco identificado, **pendente de decisão**. O 🗑 numa peça estrutural pode ficar bloqueado, virar a opção certa ("sem lateral" usa a do vizinho), ou ficar como está.
+
+## RGQK-LARGA: "2 toques no vão" do editor por vãos não abria o menu rápido em tela larga (CI do Windows, 16/11)
+- **Achado:** a bateria do Windows falhava em `testEditorPorVaosDoisToquesNoVaoAbreMenuRapidoComAsAbasEBotoesDoPainel` desde d9b9240. As execuções anteriores tinham sido canceladas.
+- O script da bateria caía ao imprimir "▦" no console cp1252 e escondia o motivo da falha.
+- **Reproduzido** no Chromium com tela 1366 × 768 e cliques de mouse de verdade: o 1º clique deixa o vão rosa e o 2º não abre o menu.
+  - No celular (440 de largura) abre.
+  - Afeta Windows e, provavelmente, tablet deitado. **No iPad, não verificado.**
+- **Causa raiz:** em tela larga, o 1º toque escolhe o vão e o desenho é refeito antes de o detector de 2 toques rodar. O alvo do toque já saiu da página, `closest('#svg …')` dá nulo e o toque não é contado.
+- **Correção:**
+  - `editor.html`, detector do PEDIDO 62: com o alvo fora da página, acha o vão pelo ponto do toque (`elementsFromPoint`), como já fazia quando o alvo era outra coisa do desenho.
+  - `tools/bateria_editor.py`: imprime em UTF-8.
+- **Teste:** o mesmo teste do PEDIDO 62.
+  - Antes, com tela larga: "não abriu".
+  - Depois: abre com as 7 abas na tela larga e no celular.
+- **Status:** resolvido no Chromium. **Falta confirmar no CI do Windows** (próximo push).
+
+## FUNDO-LIXO: o fundo mostrava "🗑 Só esta peça" no 3D e não saía (print de 16/11 às 10:07 · pedido "peças que não podem ser removidas")
+- **Reproduzir:**
+  - No 3D, 1 toque no fundo e "🗑 Só esta peça". Resposta: "Essa peça não sai sozinha (ela faz parte de um conjunto)". O fundo continuava no 2D, no 3D e no corte.
+  - Igual em todo módulo com fundo, inclusive no editor por vãos e no "Fundo (lado do canto)".
+- **Causa raiz:**
+  - O fundo não é peça do `partsOf`. Ele sai da regra "Fundo" do módulo (`m.fundo`, `fundoDims`).
+  - O quadro do 3D monta uma peça de mentira pro fundo (`e3Part`, que oferece o 🗑).
+  - O 🗑 (`pcDelAt`) procura a peça no `partsOf`, não acha e recusa.
+- **Correção:** o 🗑 no fundo faz o mesmo que desmarcar "Fundo" na aba Fundos (`m.fundo=false`, `fundoMan`). Sai do 2D, 3D, lista e corte, e ↶ desfaz.
+  - No canto em L o fundo é uma regra só, então saem os 2 lados. O botão diz "🗑 Tirar o fundo (os 2 lados)".
+  - A mensagem de recusa que sobrou explica o motivo e manda pra aba do módulo.
+- **Teste:** `testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma` (fundo, corte, salvar e reabrir).
+- **Status:** resolvido na bateria. **Não testado em aparelho.**
+
+## GAV-FANTASMA: lateral ou contra-frente da caixa da gaveta apagada continuava no 3D com a chave da vizinha (achado em 16/11)
+- **Reproduzir:** gaveteiro 3 gavetas, 🗑 na contra-frente da 1ª gaveta. Ela sai da lista e do corte, mas o 3D continua com 65 caixas e a chave `#3` aparece 2 vezes. Com a lateral é igual.
+- **Causa raiz:** o 3D desenhava a caixa da gaveta inteira (2 laterais, contra-frente e traseira) a partir da 1ª peça que aparecia, e a chave da traseira era "a próxima" (`#n+1`). Sem uma das peças, a vizinha virava a de referência.
+- **Correção:**
+  - As peças da caixa da gaveta ganharam marca de lado e de gaveta (`gbs`, `gvi`, `gdq`, `gbd`, `gbh`; não vão pro arquivo do projeto, são calculadas).
+  - O 3D desenha cada lado só se a peça dele está na lista, com a chave dela. Vale pro módulo comum e pro editor por vãos, com corrediça normal e oculta.
+- **Teste:** o mesmo. Antes: 65 → 65 caixas, `#3×2`. Depois: 65 → 64, chaves únicas.
+- **Status:** resolvido na bateria.
+
+## CANTO-FANTASMA: peça do lado do canto em L apagada continuava no 3D (achado em 16/11)
+- **Afeta:** base inferior, base superior, lateral do fim do lado e prateleira do lado.
+- **Causa raiz:** o 3D do canto desenha as peças do lado por conta própria e acha a chave pelo nome (`pkFix3`). Com a peça tirada, o nome não estava na lista e a caixa ganhava a chave da peça do fundo.
+- **Correção:** `pkFix3` acha a chave certa também para as peças tiradas, e nenhuma caixa cuja peça está na lista de tiradas (`m.xp`) é desenhada, em nenhum módulo.
+- **Teste:** o mesmo (22 → 20 caixas, a base do fundo continua com 2).
+- **Status:** resolvido na bateria.
+
+## E3-EIXO-ALA: no módulo da parede lateral, o quadro da peça no 3D mostrava as medidas trocadas (print de 16/11 às 10:07)
+- **Reproduzir:** balcão na parede esquerda, 1 toque no fundo. Mostrava "6 × 820 × 600"; o certo é "600 × 820 × 6". A lateral mostrava 560 × 690 × 15.
+  - Digitar em "Larg." mexia na largura usando a profundidade como base.
+  - O print do fundo "161 × 999 × 965" é esse caso: Larg. e Prof. trocadas.
+- **Causa raiz:** `e3DimsOf` e o texto do quadro usavam as medidas do mundo. O módulo da parede lateral é girado: a largura dele é o eixo z do mundo.
+- **Correção:** `e3Loc` devolve Larg., Alt. e Prof. da peça, com o giro desfeito no módulo da parede lateral. Digitar a medida usa a mesma conta.
+- **Teste:** `testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca`. Falha antes e passa depois.
+- **Status:** resolvido na bateria.
+
+## Auditoria do 🗑 (16/11): o que foi conferido
+- **Como:** catálogo inteiro, no módulo comum (193 peças) e no editor por vãos (104 peças). Cada peça que o 3D deixa escolher passou pelo 🗑 do quadro do 3D.
+- **O que foi conferido:**
+  - sai da lista, sai do 3D, sem peça repetida, sem mexer nas outras;
+  - no fundo, sai do corte e continua fora depois de salvar e reabrir.
+- **Resultado depois das correções:**
+  - **Nenhuma peça "não sai" e nenhuma fantasma.**
+  - Prateleira interna: as 2 partes viram 1, como no pedido anterior.
+- **Riscos que dependem de decisão** (o 🗑 tira a peça e só ela; as vizinhas não são recalculadas):
+  - XP-ESTRUTURAL (lateral, base, divisória, rodapé);
+  - XP-PK (mexer num vão pode trocar qual peça fica apagada);
+  - "Corte do forno" e "Nicho do micro-ondas (aberto)", que somem do desenho mas o aparelho continua.
+
+## SAIA-ALTURA: com saia na pedra, o armário ia até embaixo da pedra e a saia ficava na frente da porta (pedido de 16/11 às 10:34, resposta "A" às 10:39)
+- **Antes:** bancada com o embaixo da pedra a 820, pedra de 30 e saia de 100. A saia fica de 750 a 850, mas o módulo ia até 820 e a porta até 815, atrás da saia, que bate nela ao abrir.
+- **Regra confirmada (A):** o armário inteiro (caixa e frentes) vai até embaixo da saia, e a pedra fica por cima. No exemplo, o armário vai até 750 e a porta até 745.
+- **Código:**
+  - `stArmTop(st)` calcula o embaixo da saia, com a mesma conta do desenho da saia (`stSaiaGeo`).
+  - `stAdapta` passa a usar esse limite, inclusive no canto em L de baixo, só quando há saia nova.
+  - `underStone` aceita o módulo que vai até a saia, então a moldura não aparece.
+  - Esticar no 3D respeita o mesmo limite.
+- **Projetos antigos:**
+  - Pedra com saia de projeto antigo não muda sozinha. A regra vale quando a saia é ligada ou tem a altura escolhida (`st.saiaArm`).
+  - Em projeto antigo, basta tocar de novo no tamanho da saia na aba Pedra.
+- **Teste:** `testComSaiaNaPedraOArmarioInteiroVaiAteEmbaixoDaSaia`. Cobre pedra nova, salvar e reabrir, projeto antigo, mexer na saia, sem saia e canto em L. Falha antes e passa depois.
+- **Status:** resolvido na bateria. **Não testado em aparelho real.**
+- **Pendente:** a frente do armário continua parando atrás da saia na profundidade (PEDIDO 59). Com o armário inteiro embaixo da saia, a porta poderia vir mais pra frente, mas isso não foi pedido e não mudou.

@@ -30,6 +30,7 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 
 ## Pedra
 - **Armário embaixo da pedra com saia:** a frente do armário para na saia e não passa dela. (A, 16/11) (código: `fitNew`, `cornerStoneFit`)
+- **Altura do armário embaixo da pedra com saia:** o armário inteiro (caixa e frentes) vai até embaixo da saia; a pedra fica por cima. Embaixo da saia = embaixo da pedra − saia + espessura (ex.: pedra a 820, 30 de espessura, saia de 100 → armário até 750). Vale pra pedra em que a saia foi ligada ou mudada a partir de 16/11; projeto antigo continua como estava até mexer na saia. (A, 16/11 10:39) (código: `stArmTop`, `stAdapta`, `underStone`)
 
 ## Pendentes de confirmação (não usar como regra ainda)
 - Perfil G encostando na caixa (1,5 mm). Ver a pendência 1 da especificação do gola.

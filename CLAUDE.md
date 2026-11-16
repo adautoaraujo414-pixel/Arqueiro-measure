@@ -52,7 +52,7 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 2. Ler este arquivo, `engenharia/HISTORICO_ERROS.md` e a especificação da área (`engenharia/especificacoes/`).
 3. Recuperar as referências.
 4. Reproduzir o comportamento atual.
-5. Ver dependências e definir o escopo exato.
+5. Ver dependências e definir o escopo exato. Procurar o mesmo erro nos módulos da mesma família (seção 11).
 6. Fazer a menor alteração autorizada.
 7. Rodar o teste novo e a bateria completa.
 8. Comparar com o pedido e a referência.
@@ -65,3 +65,46 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 - Português informal e curto.
 - Não citar Android, Play, APK ou beta na interface do editor nem nas novidades.
 - Cada atualização tem em `.github/novidades.txt` o que mudou, com precisão.
+
+## 11. Protocolo global de correção (pedido do Adauto, 16/11/2026 09:33 · vale para toda sessão)
+**Um erro encontrado → causa identificada → módulos semelhantes investigados → correções comprovadas → testes permanentes → prevenção de regressões.**
+
+1. **Registro técnico permanente** em `engenharia/HISTORICO_ERROS.md`, um por erro, com: identificação e descrição, módulo, como reproduzir, causa raiz comprovada, arquivos e funções, outros módulos possivelmente afetados, correção, testes de regressão, resultado da validação e commit. Consultar antes de implementar ou corrigir algo parecido. Não depender da memória da conversa.
+2. **Família de módulos.** Todo defeito é procurado em todos os módulos que usam o mesmo componente, cálculo ou mecanismo:
+   - inferiores (pia, gaveteiros, porta-temperos, com portas, canto, com divisórias);
+   - superiores (aéreos, basculantes, com portas, nichos, maleiros);
+   - torres (quente, forno e micro, despensa, com maleiro, com gavetas, com divisões);
+   - guarda-roupas e closets (portas, gavetas, cabideiros, maleiros, prateleiras, divisórias, canto);
+   - demais (painéis, racks, cristaleiras, balcões, curvos, personalizados).
+   Não aplicar regra de torre em guarda-roupa sem conferir se a construção é compatível.
+3. **Erros semelhantes.** Peça contada na medida tem que existir e aparecer de acordo com a configuração. Peça adicionada, removida ou mudada atualiza tudo que depende dela. Conferir tamponamentos (esquerdo, direito, superior, inferior, com engrosso), laterais, prateleiras (engrosso, com e sem recuo), divisórias, fundos, réguas, batentes, portas, gavetas, basculantes, puxadores e perfis.
+4. **Sincronização.** Comando → configuração → cálculo → peças (`partsOf`) → 2D → 3D → lista → plano de corte → orçamento. Conferir os 14 erros:
+   1. contada e não gerada;
+   2. gerada e não desenhada;
+   3. no 3D e fora da lista;
+   4. na lista e fora do corte;
+   5. removida e ainda contada;
+   6. desconto duas vezes;
+   7. desconto não aplicado;
+   8. duplicada depois de editar;
+   9. medida errada depois de salvar e reabrir;
+   10. peça antiga que fica depois de mudar a configuração;
+   11. 2D que não atualiza o 3D;
+   12. um vão mexendo em outro;
+   13. diferença entre o módulo isolado e o projeto inteiro;
+   14. peça que some depois de atualizar.
+   Não inventar geometria para esconder inconsistência.
+5. **Causa, não sintoma.** Nada de peça visual fictícia, renderização forçada ou desconto artificial. Corrigir no componente compartilhado quando a causa está nele. Evitar refatoração grande sem necessidade.
+6. **Testes obrigatórios por erro corrigido:**
+   1. teste que reproduz o defeito;
+   2. prova de que ele falha antes (rodar na versão anterior);
+   3. correção;
+   4. teste passando;
+   5. módulos semelhantes;
+   6. bateria completa;
+   7. outras funções afetadas.
+   Cobrir adicionar/remover peça, espessura, largura/altura/profundidade, divisões, salvar e reabrir, duplicar, projeto antigo, módulo isolado, projeto inteiro, plano de corte e troca 2D/3D. Validar geometria, medida e presença nos dados, não só se apareceu.
+7. **Projetos existentes.** Ver formatos, compatibilidade e identificadores antes de mexer em dados. Testar salvar e recuperar com cópias. Sem migração destrutiva, sem sobrescrever backup e sem apagar projeto para resolver incompatibilidade. Projeto antigo que já ficou inconsistente não muda sozinho: avisa e deixa a pessoa decidir.
+8. **Auditoria preventiva.** Ao corrigir, procurar falhas no mesmo mecanismo. Classificar cada achado como **erro comprovado**, **risco identificado**, **comportamento correto** ou **não foi possível verificar**. Nunca dizer que corrigiu o que não foi reproduzido.
+9. **Publicação.** Só ambiente de desenvolvimento. Não mudar ponteiros de atualização de produção nem aplicativos instalados. Nada no Android, Windows, TestFlight ou App Store sem autorização explícita (ver seção 7).
+10. **Relatório de cada investigação:** ERRO ORIGINAL · CAUSA RAIZ · MÓDULOS INVESTIGADOS · ERROS SEMELHANTES · CORREÇÕES · TESTES · SEGURANÇA · PENDÊNCIAS.

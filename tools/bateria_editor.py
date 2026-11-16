@@ -168,6 +168,11 @@ def pagina(cdp_http, espera=240):
 
 
 def main():
+    # o console do Windows (cp1252) não imprime ▦, 🗄️… e o script caía no meio da bateria escondendo a falha (CI de 16/11)
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
     ap = argparse.ArgumentParser()
     ap.add_argument('--cdp', default='http://127.0.0.1:9333')
     ap.add_argument('--swift', default=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'ios', 'ArquemestreTests', 'EditorWebKitTests.swift'))

@@ -49,6 +49,14 @@ Regras:
 
 ## 5. Pendências (precisam de decisão do Adauto)
 1. **O perfil encosta na caixa.** A parede de trás (1,5 mm) fica entre a porta e a caixa, e no 3D entra até 1,5 mm na travessa frontal, nas laterais, na base e na caixa da gaveta. Isso já acontecia antes da correção, em áreas menores: o gancho e a aba ficavam atrás. Na prática, a porta precisa ficar 1,5 mm afastada da caixa, ou a caixa precisa de um rebaixo. Não decidido.
+1b. **Configuração (16/11, pedido das 07:03).** Em Ajustes › Puxadores › Perfil G:
+   - `gAfast`: afastamento da porta até a caixa, em mm. Padrão 0, que é a porta encostada, como sempre foi.
+   - `gReb`: rebaixo na caixa atrás do perfil, em mm. Padrão 0.
+   - Uma nota mostra quanto o perfil encosta na caixa: `1,5 − afastamento − rebaixo`.
+   - **Afastamento > 0:** no 3D, a porta ou frente com G e o perfil dela vêm para a frente essa medida. Porta sem G não muda. Medidas das peças, desconto de 29 e plano de corte não mudam. Teste: `testPerfilGAfastamentoERebaixoConfiguraveisPadraoZeroSemMudarPecas`.
+   - **Rebaixo:** por enquanto só entra na conta da nota. A usinagem do rebaixo **não** sai no plano de corte e **não** aparece no 3D, porque falta definir em quais peças e com qual altura. **Pendente.**
+   - **Achado ao medir:** no aéreo, a porta já ficava 0,8 mm dentro da fita de borda da frente das laterais e da base (fita desenhada com 0,8 mm em `z = d … d+0,8`). Isso acontece **sem** gola, então não é do gola. Com afastamento de 1,5, o perfil também encosta 0,8 mm nessa fita. Anotado em `HISTORICO_ERROS.md` (FITA-08). Não corrigido: fora do escopo.
+   - **Medidas reais pendentes de confirmação:** a folga da dobradiça que você usa com G e o rebaixo, se existir.
 2. **Cantos arredondados.** A foto mostra cantos internos arredondados e a ponta do gancho arredondada. No app são retos. Não alterado.
 3. **Tamanho do gancho.** No desenho ele parece ter uns 6 mm, mas não há cota. No app tem 8 mm (valor de 12/11). Não alterado.
 4. **Folga do encaixe.** A referência diz encaixe de 15,5 para MDF 15. No app as paredes encostam na MDF. Não alterado.

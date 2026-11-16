@@ -102,3 +102,8 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 
 ## VALORES-FERRAGEM: tabela Material sem linha da corrediça oculta e do facetado (notas, p153)
 - **Status:** resolvido. Teste `testTelaValoresTodaFerragemQueEntraNoTotalTemLinhaNaTabela`.
+
+## FITA-08: porta do aéreo encosta 0,8 mm na fita de borda da caixa (achado em 16/11)
+- **Medido no 3D:** no aéreo, a porta vai de `z = 356` a `z = 371`, e a fita de borda das laterais e da base vai de `z = 356` a `z = 356,8`. A porta entra 0,8 mm na fita. No balcão isso não acontece, porque a porta fica na frente da travessa.
+- Só no 3D. O plano de corte não muda.
+- **Status:** pendente. Precisa de decisão: a porta do aéreo deve ficar na frente da fita? Isso muda a posição de todas as portas do aéreo no 3D.

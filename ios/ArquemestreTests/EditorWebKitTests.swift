@@ -10720,4 +10720,72 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["trocouDeAba"] as? String, "gav · botões 12")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 45 (16/11): todo módulo cadastrado tem que estar no 3D, em qualquer caminho: abrir com foto de padrão carregando, refazer a cena, perder e voltar o contexto gráfico, trocar de parede no 2D, abrir a lista de peças, fechar e reabrir o projeto */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        var no3D=function(){var c={};__boxes().forEach(function(b){var m=String(b.nm||'').match(/^(\d+):/);if(m&&(typeof wvis!=='function'||wvis(b)))c[m[1]]=(c[m[1]]||0)+1});var vis=S.mods.filter(function(m,i){return (c[i]||0)>0}).length;var tela='?';try{__cam(.62,.35,1);var g=document.getElementById('cv3').getContext('webgl'),w=g.drawingBufferWidth,h=g.drawingBufferHeight,px=new Uint8Array(4),cor={};for(var i=1;i<10;i++)for(var j=1;j<10;j++){g.readPixels(Math.round(w*i/10),Math.round(h*j/10),1,1,g.RGBA,g.UNSIGNED_BYTE,px);cor[px[0]+','+px[1]+','+px[2]]=1}tela=Object.keys(cor).length>6?'desenha':'apagado'}catch(_){}return vis+' de '+S.mods.length+' · '+tela+((window.ERR3||[]).length?' · erro '+ERR3.join('|'):'')};
+        var abre=async function(){try{document.getElementById('v3x').click()}catch(_){}await W(80);open3D();await W(350);return no3D()};
+        newProjFor({nome:'Pedido 45',tel:''});var id=CUR;S.env='cozinha';S.room='cozinha';S.W=4940;S.H=2930;draw();
+        ['Gaveteiro 3 gavetas','Balcão 1 porta','Balcão forno embutido','Aéreo 2 portas'].forEach(function(n){var t=T(n);if(t){newTpl(t);draw()}});try{addStone();draw()}catch(_){}
+        /* módulo na parede esquerda (troca de parede no 2D) */var be=document.querySelector('[data-wvg="e"]');if(be){be.click();await W(80);newTpl(T('Balcão 2 portas'));draw();var bf=document.querySelector('[data-wvg="f"]');if(bf)bf.click();await W(80)}
+        R.cadastrados=S.mods.length;
+        /* 1. foto do padrão carregando (assíncrono) */var mat=(window.MAT||[]).filter(function(q){return q.cat==='wood'&&q.id})[3];if(mat)S.mods.forEach(function(m){m.corF=mat.hex;m.corFId=mat.id});draw();open3D();R.abrindoComFotoCarregando=no3D();await W(900);R.fotoCarregou=no3D();
+        /* 2. refazer a cena e mexer um módulo */__build();S.mods[1].x+=10;draw();__build();R.refazendo=no3D();
+        /* 3. contexto gráfico perdido e devolvido */var gl=document.getElementById('cv3').getContext('webgl'),ex=gl&&gl.getExtension('WEBGL_lose_context');if(ex){ex.loseContext();await W(250);ex.restoreContext();await W(700)}R.contextoVoltou=no3D();
+        /* 4. trocar de parede no 2D e voltar pro 3D */document.getElementById('v3x').click();await W(80);['d','e','f'].forEach(function(w){var b=document.querySelector('[data-wvg="'+w+'"]');if(b)b.click()});R.trocandoParede=await abre();
+        /* 5. abrir a lista de peças e voltar pro 3D */document.getElementById('v3x').click();await W(80);try{var bl=[].filter.call(document.querySelectorAll('button'),function(b){return /^Lista$/.test(b.textContent.trim())})[0];if(bl){bl.click();await W(250);R.lista='abriu'}else R.lista='sem botão'}catch(e){R.lista='erro '+e.message}try{if(typeof closeAll==='function')closeAll()}catch(_){}R.depoisDaLista=await abre();
+        /* 6. salvar, abrir outro projeto, reabrir este */document.getElementById('v3x').click();saveNow();newProjFor({nome:'Outro',tel:''});draw();var p=pLoadAll().filter(function(q){return q.id===id})[0];CUR=p.id;loadState(p.current);draw();R.reaberto=await abre();
+        /* 7. restaurar do jeito do app (estado salvo → carregar de novo) */var st=JSON.parse(JSON.stringify(snapState()));loadState(st);draw();R.restaurado=await abre();
+        /* 8. com o 3D já aberto antes: fecha, cria módulo novo no 2D (de baixo e de cima) e abre o 3D de novo */document.getElementById('v3x').click();await W(80);newTpl(T('Balcão 2 portas'));draw();newTpl(T('Aéreo 2 portas'));draw();R.criadoDepois=await abre();
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["cadastrados"] as? Int, 5)
+        XCTAssertEqual(o["abrindoComFotoCarregando"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["fotoCarregou"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["refazendo"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["contextoVoltou"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["trocandoParede"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["lista"] as? String, "abriu")
+        XCTAssertEqual(o["depoisDaLista"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["reaberto"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["restaurado"] as? String, "5 de 5 · desenha")
+        XCTAssertEqual(o["criadoDepois"] as? String, "7 de 7 · desenha")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testPerfilGAfastamentoERebaixoConfiguraveisPadraoZeroSemMudarPecas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* GOLA (16/11 07:03): afastamento da porta e rebaixo do perfil G configuráveis em Ajustes · padrão 0 = como sempre foi · interferência perfil × caixa medida no 3D · desconto e peças não mudam */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();
+        ['Balcão 2 portas','Gaveteiro 4 gavetas','Aéreo 2 portas'].forEach(function(n){newTpl(T(n))});S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxt="g"]').click();newTpl(T('Balcão 2 portas'));var N=S.mods[3];(N.v||[]).forEach(function(v){v.px='externo'});draw();
+        var corte=function(){var G=cutGroups();return G.ord.map(function(k){var l=G.map[k];return l.L+'x'+l.W+'x'+l.qty}).sort().join(',')};
+        var entra=function(){var B=__boxes(),prof=B.filter(function(b){return b.nol&&!b.pf&&/:(Porta|Frente de gaveta)$/.test(String(b.nm))&&(b.x1-b.x0)>200&&(b.y1-b.y0)<=43}),outros=B.filter(function(b){return !b.nol&&!/:(Porta|Frente de gaveta)$/.test(String(b.nm))&&b.g!=='lo'&&b.g!=='sh'&&/^\d+:/.test(String(b.nm))}),mx=0;prof.forEach(function(p){outros.forEach(function(o){var dx=Math.min(p.x1,o.x1)-Math.max(p.x0,o.x0),dy=Math.min(p.y1,o.y1)-Math.max(p.y0,o.y0),dz=Math.min(p.z1,o.z1)-Math.max(p.z0,o.z0);if(dx>.05&&dy>.05&&dz>.05)mx=Math.max(mx,Math.round(dz*10)/10)})});return mx};
+        var zPorta=function(mi){var b=__boxes().filter(function(b){return String(b.nm)===mi+':Porta'&&!b.nol&&!b.pf&&(b.y1-b.y0)>300})[0];return b?Math.round(b.z1*10)/10:null};
+        var c0=corte(),pd0=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'}).map(function(p){return p.h}).join(',');
+        open3D();await W(400);__build();R.padrao='entra '+entra()+' mm · porta G z '+zPorta(0)+' · porta sem G z '+zPorta(3);
+        /* Ajustes: os 2 campos e a nota */try{stdOpen();await W(200)}catch(e){R.ajustesErr=e.message}var iA=document.querySelector('[data-stdn="gAfast"]'),iR=document.querySelector('[data-stdn="gReb"]');R.campos=(!!iA)+' '+(!!iR)+' · '+(iA?iA.value:'')+'/'+(iR?iR.value:'');var nt=document.querySelector('[data-ginterf]');R.notaPadrao=nt?nt.textContent.slice(0,60):'sem nota';
+        if(iA){iA.value='1,5';iA.dispatchEvent(new Event('input',{bubbles:true}));iA.dispatchEvent(new Event('change',{bubbles:true}));await W(80)}nt=document.querySelector('[data-ginterf]');R.notaCom15=nt?nt.textContent.slice(0,45):'sem nota';
+        try{document.querySelector('#v3x')&&0}catch(_){}__build();R.com15='entra '+entra()+' mm · porta G z '+zPorta(0)+' · porta sem G z '+zPorta(3);
+        R.corteIgual=corte()===c0;R.portaIgual=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'}).map(function(p){return p.h}).join(',')===pd0;
+        STD().gAfast=0;if(iR){iR.value='1,5';iR.dispatchEvent(new Event('input',{bubbles:true}));iR.dispatchEvent(new Event('change',{bubbles:true}));await W(80)}nt=document.querySelector('[data-ginterf]');R.notaRebaixo=nt?nt.textContent.slice(0,45):'sem nota';__build();R.soRebaixo='porta G z '+zPorta(0);
+        STD().gReb=0;prSave();R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["padrao"] as? String, "entra 1.5 mm · porta G z 581 · porta sem G z 581")
+        XCTAssertEqual(o["campos"] as? String, "true true · 0/0")
+        XCTAssertEqual(o["notaPadrao"] as? String, "⚠ O perfil G tem parede de 1,5 mm atrás da porta: com estes ")
+        XCTAssertEqual(o["notaCom15"] as? String, "✓ Perfil G sem encostar na caixa com estes va")
+        XCTAssertEqual(o["com15"] as? String, "entra 0.8 mm · porta G z 582.5 · porta sem G z 581")
+        XCTAssertEqual(o["corteIgual"] as? Bool, true)
+        XCTAssertEqual(o["portaIgual"] as? Bool, true)
+        XCTAssertEqual(o["notaRebaixo"] as? String, "✓ Perfil G sem encostar na caixa com estes va")
+        XCTAssertEqual(o["soRebaixo"] as? String, "porta G z 581")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

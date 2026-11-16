@@ -10980,4 +10980,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["travado"] as? String, "setas ef,ek,el,er · sem rótulo · mudou nada · aviso módulo travado")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    func testGeladeiraTravadaNaoSaiDoLugarNemMudaDeMedidaMasAbreNormal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(t){window.__T=String(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PEDIDO 16/11 08:32: travar a geladeira · travada não sai do lugar nem muda de medida (2D e 3D), mas abre normal · salva travada */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];draw();
+        var g=apAdd('geladeira',0);if(S.fr.indexOf(g)<0)S.fr.push(g);g.x=2000;draw();var id=g.id,G=function(){return S.fr.filter(function(q){return q.id===id})[0]},med=function(){var f=G();return f.x+'|'+f.w+'×'+f.h+'×'+f.d};
+        SELAP=id;LAST='ap';showBox();var bt=document.querySelector('[data-aplk]');R.botaoNoQuadro=bt?bt.textContent:'sem botão';if(bt)bt.click();else G().lock=1;await W(50);R.travou=!!G().lock+' · '+(document.querySelector('[data-aplk]')||{}).textContent;
+        draw();R.cadeadoNoDesenho=!!document.querySelector('#svg [data-ap="'+id+'"] [data-lockmark]');
+        var m0=med(),sv=document.getElementById('svg'),el=sv.querySelector('[data-ap="'+id+'"]'),rc=el.getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height/2,pe=function(tg,n,X,Y){tg.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:61,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};
+        var tg0=document.elementFromPoint(x,y)||el;pe(tg0,'pointerdown',x,y);for(var i=1;i<=8;i++){pe(sv,'pointermove',x-i*20,y);await W(15)}pe(sv,'pointerup',x-160,y);await W(50);R.arrastar2D=(med()===m0?'não saiu do lugar':'MOVEU '+m0+' → '+med())+' · aviso '+(/travada/.test(window.__T||'')?'sim':'não');
+        SELAP=id;LAST='ap';showBox();draw();var hw=sv.querySelector('[data-aph="w"]');if(hw){var r2=hw.getBoundingClientRect(),hx=r2.left+r2.width/2,hy=r2.top+r2.height/2;pe(hw,'pointerdown',hx,hy);for(var j=1;j<=6;j++){pe(sv,'pointermove',hx+j*15,hy);await W(15)}pe(sv,'pointerup',hx+90,hy);await W(50)}R.esticar2D=hw?(med()===m0?'não mudou':'MUDOU '+med()):'sem bolinha';
+        showBox();var iw=document.querySelector('[data-apb="x"]');iw.value='1200';iw.dispatchEvent(new Event('input',{bubbles:true}));iw.dispatchEvent(new Event('change',{bubbles:true}));await W(30);R.digitarDaEsquerda=(med()===m0?'não mudou':'MUDOU '+med())+' · campo volta pra '+iw.value;
+        /* 3D */open3D();await W(300);var io=__itOpen({k:'fr',id:id});await W(100);R.setas3D=io.h;var q3=document.querySelector('[data-qlk]');R.botao3D=q3?q3.textContent:'sem botão';
+        var ab=document.querySelector('[data-qfro="1"]');if(ab)ab.click();await W(900);var fe=document.querySelector('[data-qfro="0"]');R.abreNormal=ab?(fe?'abriu ('+fe.textContent.trim()+')':'não abriu'):'sem botão de abrir';if(fe)fe.click();await W(600);
+        /* destrava no 3D e aí mexe de novo */q3=document.querySelector('[data-qlk]');if(q3)q3.click();else delete G().lock;await W(50);R.destravou3D=!G().lock;document.getElementById('v3x').click();
+        SELAP=id;LAST='ap';showBox();var iw2=document.querySelector('[data-apb="x"]');iw2.value='1500';iw2.dispatchEvent(new Event('input',{bubbles:true}));iw2.dispatchEvent(new Event('change',{bubbles:true}));await W(30);R.destravadaMuda=G().x===1500;
+        /* trava de novo, salva e reabre */showBox();var bl_=document.querySelector('[data-aplk]');if(bl_)bl_.click();else G().lock=1;var sv2=JSON.stringify(snapState());loadState(JSON.parse(sv2));draw();R.reabreTravada=!!(S.fr[0]&&S.fr[0].lock);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["botaoNoQuadro"] as? String, "🔓 Travar")
+        XCTAssertEqual(o["travou"] as? String, "true · 🔒 Travada")
+        XCTAssertEqual(o["cadeadoNoDesenho"] as? Bool, true)
+        XCTAssertEqual(o["arrastar2D"] as? String, "não saiu do lugar · aviso sim")
+        XCTAssertEqual(o["esticar2D"] as? String, "não mudou")
+        XCTAssertEqual(o["digitarDaEsquerda"] as? String, "não mudou · campo volta pra 2000")
+        XCTAssertEqual(o["setas3D"] as? Int, 0)
+        XCTAssertEqual(o["botao3D"] as? String, "🔒")
+        XCTAssertEqual(o["abreNormal"] as? String, "abriu (🚪 Fechar a porta)")
+        XCTAssertEqual(o["destravou3D"] as? Bool, true)
+        XCTAssertEqual(o["destravadaMuda"] as? Bool, true)
+        XCTAssertEqual(o["reabreTravada"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

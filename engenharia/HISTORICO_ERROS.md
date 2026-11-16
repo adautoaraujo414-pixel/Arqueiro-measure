@@ -51,6 +51,19 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
   - O que eles conferem: o toque de verdade na régua, a seta arrastada, a lista de peças, o 3D, o plano de corte (`cutLines`), salvar e reabrir, e o 🗑 da régua.
 - **Status:** corrigido no Chromium. **Não testado no aparelho.** Falta o Adauto conferir no tablet.
 
+## GEL-TRAVA: travar a geladeira (pedido de 16/11 às 08:32)
+- **Pedido:** "opção de travar geladeiras também, pra não ficar mexendo; aí só abre normal mas não mexe". Veio com print do 2D: os módulos têm cadeado e a geladeira não.
+- **O que já existia:** o campo `lock` do eletro era respeitado no arraste do 3D e nos números do 3D, mas não havia botão pra travar, e o 2D não conferia.
+- **Feito:**
+  - Botão 🔓 Travar / 🔒 Travada no quadro da geladeira no 2D e no 3D.
+  - Cadeado no desenho do 2D.
+  - Travada, nada mexe nela:
+    - 2D: arrastar, as bolinhas de esticar, os campos digitados (quadro e painel), centralizar, girar e remover;
+    - 3D: setas, 2 toques pra mudar de lugar, girar e tirar.
+  - A porta abre e fecha normal.
+- **Teste:** `testGeladeiraTravadaNaoSaiDoLugarNemMudaDeMedidaMasAbreNormal`. Na versão anterior, a geladeira "travada" saía do lugar arrastando (de 2000 pra 0) e pelo número digitado.
+- **Status:** feito no Chromium. **Não testado no aparelho.**
+
 ## GOLA-002: madeira aparecendo dentro do perfil G (perfil parecia transparente)
 - **Relatado:** 16/11 às 07:45, com a referência do perfil sólido: "não pode só encostar no corpo do armário, ficar transparente e mostrando as costas do armário".
 - **Causa raiz** (auditoria das 07:38):

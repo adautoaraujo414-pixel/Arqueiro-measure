@@ -68,7 +68,11 @@ Regras:
 - 31/10 (14bdc37): primeiro perfil G, desenho simplificado.
 - 12/11 00:07 (41fab29): "perfil G de verdade" com as medidas da referência, **mas espelhado**: o desenho foi lido com a frente do lado errado (parede de 42 na frente, abertura para dentro, mais uma placa escura de "sombra").
 - 12/11 01:28 (b3760c8) e 205603a: gola lateral e gola vertical copiaram a mesma seção espelhada.
-- 16/11: corrigido (GOLA-001).1. **Perfil encostando na caixa: validado em 16/11 e ainda sem correção.**
+- 16/11: corrigido (GOLA-001).
+- 16/11 07:45: perfil sólido no 3D (GOLA-002), ver seção 8.
+
+### Detalhe da pendência 1
+1. **Perfil encostando na caixa: validado em 16/11 e ainda sem correção.**
    - **Geometria do app:** a porta fechada fica **encostada** na frente da caixa. A face de dentro da porta está em `z = d` (a profundidade do módulo), com folga 0. É assim em todas as portas do app, com ou sem gola.
    - **O que a parede de trás do perfil (1,5 mm) atravessa no 3D:**
 
@@ -103,3 +107,29 @@ Regras:
   - Causa: **geometria (interferência)**. Não é textura nem câmera.
 - **Textura aplicada errada (achado):** `matTx` dá o código 6 ("MDF liso com granulado") às peças do perfil quando a cor é clara (inox ou branco), porque elas têm o nome da porta (`N:Porta`) e cor quase cinza. No 3D aparece como um pontilhado leve no alumínio.
 - **Imagens do motor** (sem retoque): frente, de cima, lateral, dentro da abertura (com e sem afastamento), perfil isolado, porta + perfil pela frente e por trás. Corte com medidas desenhado a partir das caixas do 3D.
+
+## 8. Perfil sólido no 3D (pedido de 16/11 às 07:45, GOLA-002)
+- **Pedido:** "o puxador é sólido… aberto e fechado sem erro de edição do 3d ao abrir fechar ou encostar no armário". Não pode ficar transparente mostrando a caixa atrás.
+- **Causa** (auditoria das 07:38): a parede de trás do perfil fica no mesmo plano da frente da travessa e das laterais (porta encostada, `z = d`). As duas superfícies disputavam o mesmo pixel e apareciam listras da madeira. E o perfil claro recebia o granulado do MDF (`matTx` = 6).
+- **Correção (só no desenho do 3D):**
+  - As caixas do perfil (`px3`, quando `p.px==='g'` ou `p.gola`) ganham a marca `gola`.
+  - Elas vão para um buffer próprio (`GB.g`), desenhado depois das peças opacas com `polygonOffset(-1,-2)`. Onde coincide com a caixa, o alumínio ganha.
+  - `matTx` e `woodT` devolvem 0 para `gola`: o alumínio não recebe granulado nem veio.
+- **Não mudou:**
+  - A geometria do perfil (seção 2).
+  - A posição da porta, as medidas da caixa e a folga do caixote.
+  - O desconto de 29 mm, a furação das dobradiças, o plano de corte e a lista de materiais.
+  - A parede de 1,5 mm continua ocupando o mesmo lugar da travessa no 3D (pendência 1). Só o desenho passou a mostrar o alumínio na frente.
+- **Teste:** `testPerfilGolaSolidoPassadaPropriaSemGranuladoAbertoEFechado`.
+  - Na versão anterior: `não · 0 peças de alumínio`.
+  - Agora: `sim · 40 peças de alumínio` (balcão 2 portas, gaveteiro 4 gavetas e aéreo 2 portas). Com a porta aberta a 90°, as 5 peças giram com a porta.
+- **Evidência:** imagens antes e depois, de perto dentro da abertura, fechada, a 30° e a 90°.
+- **Status:** feito e testado no Chromium (testes do gola e do 3D; bateria completa: ver o relatório de 16/11). **Não testado em aparelho real.**
+
+## 9. Dobradiça com gola (pedido de 16/11 às 07:53)
+- **Regra dele:** "Dobradiça continua a furação no mesmo lugar não altera 12 cm do topo pra baixo seja cava ou gola".
+- **O que o app faz hoje:** a furação fica a `furD` do topo e do pé da porta (Ajustes, padrão 100 mm). É a mesma com puxador externo, cava ou gola.
+- **Medido no balcão do catálogo:**
+  - Externo e cava: dobradiças a 100 e 605 mm do topo da porta de 705.
+  - Gola: dobradiças a 100 e 576 mm do topo da porta de 676.
+- **Em aberto:** o padrão do app é 100 mm, e a mensagem fala em 12 cm. Não foi mudado. Falta o Adauto dizer se o padrão passa a ser 120 mm e se o "topo" é o topo da porta (MDF) ou o topo do perfil.

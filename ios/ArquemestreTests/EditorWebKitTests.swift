@@ -9802,17 +9802,18 @@ final class EditorWebKitTests: XCTestCase {
         for(var x of ['quarto','sala','banho','livre']){loadState(initLimpo());S.env=x;S.room=x;draw();panel();await W(120);R['ambiente_'+x]=bar()}
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["projetoVazio"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita")
+        /* PEDIDO 61 (16/11/2026, aprovado): a faixa da parede ganhou o botão "—" de minimizar, por isso o texto termina em "—" */
+        XCTAssertEqual(o["projetoVazio"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
         XCTAssertEqual(o["painel"] as? String, "seção Paredes do ambiente saiu · botões de parede no painel 0")
-        XCTAssertEqual(o["esquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita")
-        XCTAssertEqual(o["direita"] as? String, "🧱 Parede da direita · 2600 × 2600◀ FundoEsquerda")
-        XCTAssertEqual(o["naEsquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita · painéis vistos 0")
-        XCTAssertEqual(o["fundo"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita · painéis vistos 1")
+        XCTAssertEqual(o["esquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita—")
+        XCTAssertEqual(o["direita"] as? String, "🧱 Parede da direita · 2600 × 2600◀ FundoEsquerda—")
+        XCTAssertEqual(o["naEsquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita— · painéis vistos 0")
+        XCTAssertEqual(o["fundo"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita— · painéis vistos 1")
         XCTAssertEqual(o["guardado"] as? String, "d:900")
-        XCTAssertEqual(o["ambiente_quarto"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita")
-        XCTAssertEqual(o["ambiente_sala"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita")
-        XCTAssertEqual(o["ambiente_banho"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita")
-        XCTAssertEqual(o["ambiente_livre"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita")
+        XCTAssertEqual(o["ambiente_quarto"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
+        XCTAssertEqual(o["ambiente_sala"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
+        XCTAssertEqual(o["ambiente_banho"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
+        XCTAssertEqual(o["ambiente_livre"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -10682,11 +10683,12 @@ final class EditorWebKitTests: XCTestCase {
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         try{localStorage.removeItem('arque.wvmin')}catch(_){}window.WVMIN=0;
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();wvGo('e');draw();newTpl(T('Balcão 2 portas'));draw();wvGo('f');draw();
+        /* o Safari devolve um espaço a mais no fim do innerText ("— ", "Paredes "): o texto é comparado sem espaço sobrando */
         var b=function(){return document.getElementById('wvbar')},h=function(){return Math.round(b().getBoundingClientRect().height)};
-        R.aberta=b().innerText.replace(/\s+/g,' ')+' · altura '+(h()>30?'normal':'baixa');var h0=h();
-        b().querySelector('[data-wvmin]').click();await W(80);R.minimizada=b().innerText.replace(/\s+/g,' ')+' · '+(h()<h0?'menor':'igual');
+        R.aberta=b().innerText.replace(/\s+/g,' ').trim()+' · altura '+(h()>30?'normal':'baixa');var h0=h();
+        b().querySelector('[data-wvmin]').click();await W(80);R.minimizada=b().innerText.replace(/\s+/g,' ').trim()+' · '+(h()<h0?'menor':'igual');
         draw();R.continuaMinimizadaDepoisDeDesenhar=b().querySelector('[data-wvmax]')?'sim':'não';
-        wvGo('e');draw();R.naEsquerda=b().innerText.replace(/\s+/g,' ');wvGo('f');draw();
+        wvGo('e');draw();R.naEsquerda=b().innerText.replace(/\s+/g,' ').trim();wvGo('f');draw();
         b().querySelector('[data-wvmax]').click();await W(80);R.abriuDeNovo=b().querySelector('[data-wvg="e"]')&&b().querySelector('[data-wvmin]')?'Esquerda/Direita de volta':'não';
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
@@ -10786,6 +10788,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portaIgual"] as? Bool, true)
         XCTAssertEqual(o["notaRebaixo"] as? String, "✓ Perfil G sem encostar na caixa com estes va")
         XCTAssertEqual(o["soRebaixo"] as? String, "porta G z 581")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    func testPerfilGolaSolidoPassadaPropriaSemGranuladoAbertoEFechado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* GOLA SÓLIDO (16/11 07:45): olhando dentro da abertura do perfil, aparece o alumínio — nunca a madeira da travessa ou da lateral que fica atrás (porta encostada na caixa) · porta, gaveta e aéreo · fechada e aberta */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();
+        ['Balcão 2 portas','Gaveteiro 4 gavetas','Aéreo 2 portas'].forEach(function(n){newTpl(T(n))});var mat=(window.MAT||[]).filter(function(q){return q.cat==='wood'&&q.id})[3];S.mods.forEach(function(m){if(mat){m.corF=mat.hex;m.corFId=mat.id;m.cor=mat.hex;m.corId=mat.id}});
+        S.m=S.mods[0];S.sv=0;draw();S.tab=3;panel();document.querySelector('#bd [data-pxt="g"]').click();S.mods.forEach(function(m){(m.v||[]).forEach(function(v){v.pxc='inox'})});draw();
+        open3D();await W(1200);__build();await W(500);var gl=document.getElementById('cv3').getContext('webgl');
+        /* o perfil é desenhado numa passada própria, na frente das superfícies da caixa que coincidem com ele (antes as duas disputavam o mesmo lugar e aparecia a madeira da travessa dentro do gola) */
+        var GLP=WebGLRenderingContext.prototype,po0=GLP.polygonOffset,da0=GLP.drawArrays,uni=0,vg=0;GLP.polygonOffset=function(f,u){uni=u;return po0.apply(this,arguments)};GLP.drawArrays=function(md,f,c){if(uni<0&&md===this.TRIANGLES)vg+=c;return da0.apply(this,arguments)};
+        __cam(.4,.3,1);GLP.polygonOffset=po0;GLP.drawArrays=da0;var nG=__boxes().filter(function(b){return b.gola}).length;R.passadaDoPerfil=(vg>0&&vg===nG*36?'sim':'não')+' · '+nG+' peças de alumínio';
+        /* aberta: o perfil continua preso na porta e inteiro */var v0=S.mods[0].v[0];v0.od={0:1};v0.oa={0:90};draw();var Ag=__ang();Object.keys(Ag.g).forEach(function(k){delete Ag.g[k]});__build();await W(200);
+        var gp=__boxes().filter(function(b){return b.gola&&/^0:Porta$/.test(String(b.nm))});var gir=gp.filter(function(b){return !!(b.pf||b.gp||b.poly)}).length;R.abertaPecas=gir+' peças giram com a porta aberta · '+(gp.length-gir)+' na porta fechada';
+        R.semGranulado=__boxes().filter(function(b){return b.gola}).length>0;R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["passadaDoPerfil"] as? String, "sim · 40 peças de alumínio")
+        XCTAssertEqual(o["abertaPecas"] as? String, "5 peças giram com a porta aberta · 5 na porta fechada")
+        XCTAssertEqual(o["semGranulado"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")
     }
 }

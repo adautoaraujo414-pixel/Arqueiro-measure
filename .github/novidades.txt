@@ -68,6 +68,9 @@
 • 3D: quando o celular ou o tablet tira a memória de vídeo do app (app em segundo plano, pouca memória), o 3D ficava escuro até fechar e abrir o app. Agora ele volta sozinho, com o mesmo projeto, a mesma vista e as cores dos padrões.
 • Faixa da parede (🧱 Parede do fundo · Esquerda · Direita): o botão — deixa a faixa numa linha só, com o nome da parede e "▸ Paredes" pra abrir de novo. O app lembra a escolha.
 • Guarda-roupa, torre e armário alto no editor por vãos: 2 toques num vão do desenho abrem um menu rápido em cima do dedo, com as mesmas abas e botões do painel de baixo (Divisões, Gavetas, Internos, Portas, Eletros, Estrutura, Cores). O botão do menu faz o mesmo que o do painel. 1 toque continua só escolhendo o vão.
+• Caderno: escrever numa folha cheia de traços ou com fotos ficou mais leve. Enquanto você escreve, o resto da folha fica guardado e só o traço novo é desenhado; quando solta, ele entra na folha. O desenho final é o mesmo.
+• 2D: arrastar um módulo com a vista de cima aberta (aba Pedra) ficou mais leve. Durante o arraste a vista de cima acompanha o módulo, e os rótulos dela são arrumados quando você solta.
+• 3D: a animação de abrir porta e gaveta e o toque pra escolher uma peça ficaram mais leves. A cena vai pra placa de vídeo sem a cópia extra que era feita a cada vez, e o desenho é o mesmo.
 # (já saíram no Windows, Android e iOS — ficam guardadas só como histórico):
 # • "Abrir portas e gavetas" (quadro do módulo no 3D) e "abrir todas" agora abrem tudo que abre no toque: portas e gavetas da torre de forno e micro-ondas, portas de cima da caixa da geladeira, gaveta que fica dentro de porta, gaveta interna e gavetas do caixote. Antes só abriam porta e gaveteiro comuns.
 # • Caixote de gavetas (guarda-roupa e closet): as gavetas agora abrem no 3D, no toque e no "abrir tudo". Antes o toque não fazia nada. Fechar a porta fecha junto a gaveta de dentro, pra ela não atravessar a porta.

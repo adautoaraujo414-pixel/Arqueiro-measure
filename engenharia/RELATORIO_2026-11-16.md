@@ -271,3 +271,25 @@ O que **falhou**:
 3. FITA-08: porta do aéreo 0,8 mm dentro da fita.
 4. Folga e rebaixo reais do perfil G.
 5. Trazer a trava de conversão do editor por vãos pra versão principal agora?
+
+# Quinta rodada (16/11, das 09:32 às 13:00)
+Commits: b3c1e74, 93495d1 e o desta rodada. **Nada publicado.** Detalhes em `HISTORICO_ERROS.md` e `PERFORMANCE.md`.
+
+## 1. Pedidos desta manhã
+| Pedido | O que foi feito | Teste principal |
+|---|---|---|
+| 09:32 tamponamento da torre | 🗑 do tamponamento = desmarcar Usar: a medida e a peça saem juntas | `testTamponamentoDaTorreNoLixo…` |
+| 09:33 protocolo de correção | CLAUDE.md, seção 11 | — |
+| 10:07 peças que não saem | fundo, gaveta e canto sem fantasma; quadro com as medidas certas na parede lateral | `testToPecaQueO3DOfereceApagar…` |
+| 10:23 menu do vão | só o 🗑 junto com os outros; Lixeira embutida na lista | `testMenuDoVaoDoBalcao…` |
+| 10:34 / 10:39 / 10:56 saia | armário inteiro 15 mm abaixo da saia (850/100 → 735); sem saia até embaixo da pedra (820) | `testComSaiaNaPedra…` |
+| 10:56 tamponamento de baixo | vira peça com base suspenso; travado onde não se aplica | `testTamponamentoDeBaixoSoOnde…` |
+| 10:56 chaves das peças (XP-PK) | peça apagada, ajuste, cor e fita seguem a peça | `testPecaApagadaEAjusteDo3D…` |
+| 10:56 lateral, base e divisória | saem pela regra do móvel ou ficam bloqueadas com o motivo | `testLateralBaseEDivisoria…` |
+| 10:56 testes intermitentes | esperam o estado em vez do relógio | BAT-FLAKY |
+| 10:01 desempenho | ver `PERFORMANCE.md` | `testDesempenho…`, `CadernoDesempenhoTest` |
+
+## 2. Erros achados pela bateria do Windows em 93495d1 (corrigidos nesta rodada)
+- **XP-PK-SOLO:** entrar e sair do "2D só dele" apagava a cor, o ajuste e a peça tirada das portas. Atingia 34 dos 142 modelos (armários altos, torres, guarda-roupas, closets). Agora são 0. Nunca foi publicado.
+- **TB-ROTULO:** o texto da caixinha do tamponamento de baixo mudou sem pedido. Voltou ao que era.
+- **TB-INV-NUM:** 9 modelos com base suspenso entraram na conferência do tamponamento invertido, por causa do pedido. A expectativa foi atualizada com o comentário do pedido.

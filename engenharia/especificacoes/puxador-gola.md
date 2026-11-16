@@ -60,4 +60,22 @@ Regras:
 - 31/10 (14bdc37): primeiro perfil G, desenho simplificado.
 - 12/11 00:07 (41fab29): "perfil G de verdade" com as medidas da referência, **mas espelhado**: o desenho foi lido com a frente do lado errado (parede de 42 na frente, abertura para dentro, mais uma placa escura de "sombra").
 - 12/11 01:28 (b3760c8) e 205603a: gola lateral e gola vertical copiaram a mesma seção espelhada.
-- 16/11: corrigido (GOLA-001).
+- 16/11: corrigido (GOLA-001).1. **Perfil encostando na caixa: validado em 16/11 e ainda sem correção.**
+   - **Geometria do app:** a porta fechada fica **encostada** na frente da caixa. A face de dentro da porta está em `z = d` (a profundidade do módulo), com folga 0. É assim em todas as portas do app, com ou sem gola.
+   - **O que a parede de trás do perfil (1,5 mm) atravessa no 3D:**
+
+     | Peça | Ocorrências | Profundidade | Altura |
+     |---|---|---|---|
+     | Travessa frontal | 6 | 1,5 mm | até 37 mm |
+     | Laterais | 18 + 18 | 1,5 mm | até 42 mm |
+     | Laterais de gaveta | 10 | — | até 21,8 mm |
+     | Contra-frente | 2 | — | 15,8 mm |
+     | Fundo de gaveta | 3 | — | 6 mm |
+     | Base inferior | 6 | — | 15 mm |
+
+     Antes da correção da orientação, a profundidade já era a mesma (1,5 mm), com alturas menores: até 26 mm. Medido com o script `pj/golaint.js`.
+   - **Referência:** o desenho dá 18 de fundo em cima e encaixe de 15,5. Ou seja, o perfil sai por trás da face de dentro da porta, mais ou menos 1 a 1,5 mm. **No perfil real isso também acontece.** A instalação precisa de uma folga entre a porta e a caixa naquela altura, ou de um rebaixo na caixa.
+   - **O Adauto proibiu** (16/11 05:43) mudar sozinho a posição da porta ou as medidas da caixa. Não achei referência técnica (catálogo ou manual do perfil G) que diga a folga ou o rebaixo usado de verdade. Procurei no site da Rometal e não achei.
+   - **Pergunta para o Adauto:** na sua marcenaria, com perfil G, a dobradiça deixa a porta afastada da caixa (quantos mm), ou a travessa e as laterais têm rebaixo atrás do perfil?
+     - Com a folga da dobradiça: vale para todas as portas com G, mexe na posição da porta e precisa de aprovação.
+     - Com o rebaixo: mexe na caixa e no plano de corte, também com aprovação.

@@ -9917,6 +9917,9 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TT=[];window.toast=function(t){TT.push(t)};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        /* 16/11: o erro de teste é disparado olhando a pilha de chamadas (DRM). O Chrome guarda só 10 chamadas na pilha (Error.stackTraceLimit=10) e o Safari guarda mais,
+           então no Safari o erro também caía dentro das peças e o teste dava resultado diferente nos dois. Pilha sem limite = mesmo resultado nos dois */
+        var STL0=Error.stackTraceLimit;Error.stackTraceLimit=Infinity;
         var nMod=function(i){return __boxes().filter(function(b){return String(b.nm||'').indexOf(i+':')===0}).length};
         /* PEDIDO 45: no iPhone o 3D mostrava só a pedra · um erro ao montar um módulo (ou a pedra) no 3D fazia sumir TODOS os módulos.
            Agora: cada módulo é montado separado · se um der erro, fica a caixa dele no lugar, os outros aparecem e o aviso diz o motivo */
@@ -9928,11 +9931,11 @@ final class EditorWebKitTests: XCTestCase {
         TT=[];QB=true;try{__build()}catch(e){R.buildQuebrou=e.message}QB=false;var bx=__boxes().filter(function(b){return String(b.nm||'').indexOf('0:')===0});
         R.comErroNoBalcao='balcão '+(bx.length?'fica a caixa ('+bx.length+' peça · '+Math.round(bx[0].x1-bx[0].x0)+' × '+Math.round(bx[0].y1-bx[0].y0)+')':'some')+' · aéreo '+(nMod(1)>20?'aparece':'some')+' · erros '+JSON.stringify(window.ERR3);
         QB=true;open3D();await W(200);QB=false;R.aviso=TT.filter(function(t){return /3D: erro/.test(t)}).join(' ');delete m0.fundoMm;
-        QB=false;R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        QB=false;Error.stackTraceLimit=STL0;R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         XCTAssertEqual(o["normal"] as? String, "balcão aparece · aéreo aparece · aviso 0")
-        XCTAssertEqual(o["comErroNoBalcao"] as? String, "balcão fica a caixa (1 peça · 900 × 820) · aéreo aparece · erros [\"módulo 1: teste de erro\"]")
-        XCTAssertEqual(o["aviso"] as? String, "⚠ 3D: erro no módulo 1: teste de erro · mande um print desse aviso")
+        XCTAssertEqual(o["comErroNoBalcao"] as? String, "balcão fica a caixa (1 peça · 900 × 820) · aéreo aparece · erros [\"módulo 1 (peças): teste de erro\",\"módulo 1: teste de erro\"]", "com a pilha inteira o erro aparece nas peças e no módulo (igual no Chrome e no Safari)")
+        XCTAssertEqual(o["aviso"] as? String, "⚠ 3D: erro no módulo 1 (peças): teste de erro (+1) · mande um print desse aviso")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -10385,6 +10388,9 @@ final class EditorWebKitTests: XCTestCase {
          var a=ext(f.A),b=ext(f.B),esq=m.corner==='e',gap=esq?Math.round((a.x0-b.x1)*10)/10:Math.round((b.x0-a.x1)*10)/10;
          /* abre (as duas marcadas) e acompanha a animação: a do lado só sai depois que a do fundo abriu o caminho, e nunca uma entra na outra */
          m.v[0].open=1;draw();anim3();var bat=0,ordem='ok',t0=Date.now();while(Date.now()-t0<3500){await W(50);var g=__ang().g,ka=Object.keys(g).filter(function(k){return k.indexOf('p'+mi+'|0|0')===0})[0],kb=Object.keys(g).filter(function(k){return /\|0\|1$/.test(k)&&k.indexOf('p'+mi+'|')===0})[0];if(kb&&ka&&g[kb]>1&&g[ka]<59)ordem='a do lado saiu antes';var f2=folhas(mi);f2.A.forEach(function(x){f2.B.forEach(function(y){if(cruza(x,y))bat++})})}
+         /* 16/11: o simulador do iPhone dá poucos quadros de animação (WebView fora da tela) e a leitura em 3,5 s pegava a folha do lado ainda abrindo (67 em vez de 70).
+            Agora espera a animação terminar (ângulo = alvo), continuando a conferir que uma folha não entra na outra */
+         var t1=Date.now();while(Date.now()-t1<10000){var A_=__ang(),fim_=Object.keys(A_.t).filter(function(k){return k.indexOf('p'+mi+'|')===0}).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(fim_)break;await W(100);var f3=folhas(mi);f3.A.forEach(function(x){f3.B.forEach(function(y){if(cruza(x,y))bat++})})}
          var g2=__ang().g;res.push(it.n+': corte '+ds.map(function(p){return p.cl}).join('+')+' · folga entre as folhas '+gap+' mm · ordem '+ordem+' · bateu '+bat+' · abertas '+Object.keys(g2).filter(function(k){return k.indexOf('p'+mi+'|')===0}).map(function(k){return Math.round(g2[k])}).join('/'))}
         R.cantos=res.join(' ; ');R.n=ALL.length;
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
@@ -10636,6 +10642,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["gvMedidas"] as? String, "410×705,410×705")
         XCTAssertEqual(o["golaVertical"] as? String, "2× pecas 5 · cores 1 · parede atrás 43 · frente maior 8 · fundo 17.4")
         XCTAssertEqual(o["golaPorVaos"] as? String, "2× pecas 5 · cores 1 · parede atrás 43 · frente maior 8 · fundo 17.4")
+        XCTAssertEqual(o["errs"] as? String, "")
+    }
+
+    func test3DVoltaSozinhoQuandoOSistemaTiraEDevolveOContextoGrafico() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* WEBGL-001 (16/11): o sistema tira o contexto gráfico do 3D e devolve → o 3D volta sozinho, com o mesmo projeto, a mesma câmera e as fotos dos padrões */
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));
+        var MB=window.MATBY||{},id=(window.MAT||[]).filter(function(q){return q.cat==='wood'&&q.id})[0];if(id){S.mods[0].corF=id.hex;S.mods[0].corFId=id.id}draw();
+        open3D();await W(900);__build();await W(300);
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl');
+        var amostra=function(){__cam(.62,.35,1);var w=gl.drawingBufferWidth,h=gl.drawingBufferHeight,px=new Uint8Array(4),cor={};for(var i=1;i<12;i++)for(var j=1;j<12;j++){gl.readPixels(Math.round(w*i/12),Math.round(h*j/12),1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);cor[px[0]+','+px[1]+','+px[2]]=1}return Object.keys(cor).length};
+        var proj0=JSON.stringify(snapState()),cx=__boxes().length;R.antes=amostra()>8?'desenha':'apagado';
+        var ext=gl.getExtension('WEBGL_lose_context');ext.loseContext();await W(300);R.perdeu=gl.isContextLost()+' · '+(window.GLPERDIDO||0);
+        ext.restoreContext();await W(900);R.voltou=(!gl.isContextLost())+' · '+(window.GLVOLTOU||0);await W(600);
+        R.depois=amostra()>8?'desenha':'apagado';R.mesmoProjeto=JSON.stringify(snapState())===proj0;R.mesmasCaixas=__boxes().length===cx;R.fotoPadrao=__mtex().join(',')||'nenhuma';
+        /* fecha e abre o 3D de novo: continua desenhando */document.getElementById('v3x').click();await W(200);open3D();await W(600);R.reabre3D=amostra()>8?'desenha':'apagado';
+        R.errs=__errs.slice(e0).join(' | ');return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "desenha")
+        XCTAssertEqual(o["perdeu"] as? String, "true · 1")
+        XCTAssertEqual(o["voltou"] as? String, "true · 1")
+        XCTAssertEqual(o["depois"] as? String, "desenha")
+        XCTAssertEqual(o["mesmoProjeto"] as? Bool, true)
+        XCTAssertEqual(o["mesmasCaixas"] as? Bool, true)
+        XCTAssertEqual(o["fotoPadrao"] as? String, "arauco-cumaru-trend:ok")
+        XCTAssertEqual(o["reabre3D"] as? String, "desenha")
         XCTAssertEqual(o["errs"] as? String, "")
     }
 }

@@ -3614,7 +3614,10 @@ function glInit(){try{
  function sh(t,s){var o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(o);return o}
  GP=gl.createProgram();gl.attachShader(GP,sh(gl.VERTEX_SHADER,vs));gl.attachShader(GP,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(GP);if(!gl.getProgramParameter(GP,gl.LINK_STATUS))throw 'link';
  mkTex();try{mkTex2()}catch(_){}try{mkTex3()}catch(_){}GB={f:gl.createBuffer(),l:gl.createBuffer(),t:gl.createBuffer(),tl:gl.createBuffer()};glOK=true}catch(e){glOK=false}}
-if(gl)glInit();window.gl3ok=function(){return glOK};window.__boxes=function(){return boxes};
+if(gl)glInit();window.gl3ok=function(){return glOK};/* 16/11 (WEBGL-001): o sistema pode tirar o contexto gráfico do 3D (app no fundo, falta de memória). Antes o 3D ficava apagado até reabrir o app.
+ Agora: segura o contexto (preventDefault) e, quando ele volta, refaz shader, texturas e buffers e desenha de novo o MESMO projeto — nada do projeto (S), da câmera ou da edição é tocado */
+if(gl){cv.addEventListener('webglcontextlost',function(e){try{e.preventDefault()}catch(_){}window.GLPERDIDO=(window.GLPERDIDO||0)+1},false);
+ cv.addEventListener('webglcontextrestored',function(){try{MTEX={};WTEX=null;FXBUF=null;GB=null;GP=null;glInit();gDirty=true;window.GLVOLTOU=(window.GLVOLTOU||0)+1;if(!M.hidden)render()}catch(_){}},false)}window.__boxes=function(){return boxes};
 var WFA=[.3,.3,.1,.1,.2,.2],/* face z,z,x,x,y,y → qual coordenada vira o veio no shader */QF=[[0,1,2,3],[4,5,6,7],[0,3,7,4],[1,2,6,5],[0,1,5,4],[3,2,6,7]],ED=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
 function polyFill(b,V,LL,e){var P=b.poly,n=P.length,z0=b.z0,z1=b.z1,y0=b.y0,y1=b.y1,sz=z1-z0,sy=y1-y0;if(sz<=2*e||sy<=2*e)e=0;
  var Q=P.map(function(p){return [z0+e+(p[0]-z0)*(sz-2*e)/sz,y0+e+(p[1]-y0)*(sy-2*e)/sy]}),xa=b.x0+e,xb=Math.max(xa,b.x1-e),wd=woodT(b),c=wd===7?[255,255,255]:b.c,al=b.a,tf=0,wb=wd===7?7:5;

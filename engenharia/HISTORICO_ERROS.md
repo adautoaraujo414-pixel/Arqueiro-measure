@@ -478,3 +478,8 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **3D-045 (P1-D, provável causa):** `ST3ONLY` ("👁 Só a pedra no 3D") fica ligado entre projetos até recarregar o editor.
 - **DIV-OUTRO-MODULO (P1-E):** arrastar a divisória de um módulo não escolhido muda a do módulo escolhido.
 - **ARQ-VAZIO (P1-F):** `projects.json` vazio grava `[]` por cima do `localStorage` (linha 3085).
+- **BKP-RESTAURA (P0):** Android e Windows apagam os dados antes de extrair o backup. Falha no meio = estado misturado (notas somem). Backup só com a marca apaga tudo. No iOS, `projects.json` vazio passa na validação.
+- **SEL-ENTRE-PROJETOS (P1-G):** a escolha de divisória em A faz o 🗑 apagar a divisória do B.
+- **CATALOGO-SOBREPOE (I7):** módulo novo do catálogo em parede cheia entra por cima dos vizinhos.
+- **TAMP-2D-ALVO-PARCIAL:** o teste do 38ed268 falha em 1366×768. Erguer até uma altura que atravessa a pedra faz o módulo pular 875 mm de lado ao soltar (`confineAll`→`stPush`).
+- **VAO-3D-ABERTO:** trocar o vão por gavetas com o 3D aberto não atualiza o 3D.

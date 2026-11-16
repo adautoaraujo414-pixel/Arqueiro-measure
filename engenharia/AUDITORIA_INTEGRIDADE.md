@@ -166,3 +166,170 @@ Uma correção por vez, cada uma com teste que falha antes, bateria completa dep
 6. **3D:** depois de "Só a pedra", fechar ou abrir outro projeto mostra todos os módulos.
 7. **Toque:** alvo de outro módulo (divisória, prateleira, tamponamento, lateral) só escolhe. Nenhum toque gera duas ações (2 toques na lateral).
 8. **Salvar e reabrir em sequências longas:** criar → base → tamponamento → altura pelo 2D → 3D → porta → salvar → fechar → reabrir → corte, em cada família (balcão, aéreo, torre, guarda-roupa), comparando peças, corte e caixas do 3D.
+
+
+---
+
+# Segunda rodada (16/11, noite): detecção automática, backup, isolamento, desempenho e arquitetura
+
+## 7. Resultado real da bateria
+- **Bateria completa no checkpoint `0aa152c`:** Chromium 153 sem interface, 1366×768, WebGL por SwiftShader, `tools/bateria_editor.py`.
+- **Resultado: 323 testes, 322 passaram e 1 falhou, em 2108 s.**
+- **A falha:** `testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase`. É o teste do commit 38ed268, que **não passou pelo CI**.
+  - Falhou 3 de 3 vezes com a máquina parada: não é instabilidade.
+- **Causa** (sonda s25):
+  - o teste arrasta 90 px;
+  - em 1366×768 isso ergue o módulo até b=590, e no simulador do iPhone até b=1410;
+  - em 590 o módulo atravessa a pedra, e ao soltar `confineAll`→`stPush` o empurra **875 mm para o lado** (3800 → 4730 → 4675 pelo `confine`);
+  - descer de volta não devolve a posição.
+- **É defeito do app, da família P1-A.** A correção do 38ed268 vale só quando o arrasto passa da pedra. A bateria do Windows usa 1366×768 e deve acusar o mesmo (não conferido).
+- **Medição anterior no CI do iOS:** 344 testes e 0 falhas no e28a490.
+- **Sondas desta auditoria:** 26 roteiros em `tools/sondas/`, mais o teste JVM da restauração. Resultados abaixo.
+
+## 8. P0: restauração de backup (testes com falha simulada)
+**Android e Windows.** O código de `DataBackup.stage`/`applyPending` é idêntico nos dois. A sonda `tools/sondas/backup` roda esse código de verdade contra pastas temporárias.
+
+| Caso | Resultado |
+|---|---|
+| ZIP válido (controle) | restaura |
+| ZIP truncado (15% e 60%) e bytes trocados | **aceito pelo `stage`**, nada é restaurado e **não avisa**: a pessoa pensa que voltou o backup. Os dados atuais ficam |
+| **Falha de escrita no meio da extração** | **COMPROVADO:** os projetos são trocados pelos do backup e as **notas somem**. Estado misturado, sem volta |
+| **Backup só com a marca (sem projetos)** | **COMPROVADO:** aceito e **apaga tudo**. Projetos e notas somem |
+
+- **Causa:** `applyPending` apaga `files`, `app_webview`, `shared_prefs` e `databases` **antes** de extrair, não guarda cópia do estado atual, e um erro cai num `catch` vazio. O `stage` só confere se a marca existe.
+
+**iOS** (`Data/Backup.swift`, lido no código, não executado aqui):
+- extrai para uma área de preparo, valida `index.json`/`projects.json` e troca com cópia `restore-previous` e volta se falhar. É o modelo certo.
+- **Brecha:** `projects.json` = `[]` passa na validação (`allSatisfy` em lista vazia dá verdadeiro), então um backup vazio troca todos os projetos por nenhum.
+- A cópia anterior é apagada logo depois da troca: não existe "desfazer restauração".
+
+**Regra proposta (P0):**
+1. Extrair para uma área de preparo.
+2. Validar completo: ZIP íntegro, JSON que abre, projetos com peças e contagem.
+3. Mostrar o resumo do que vai entrar e do que vai sair.
+4. Guardar cópia completa do estado atual, que não é apagada sozinha.
+5. Trocar com volta automática.
+
+**Testes a criar junto com a correção:** ZIP truncado, bytes trocados, sem marca, só com a marca, `projects.json` vazio, `projects.json` ilegível, falha de escrita no meio, backup de outra plataforma e backup antigo (só notas).
+
+## 9. Detecção automática: sequências aleatórias com invariantes (s20)
+- **Execução:** 8 sementes × 30 passos, todas as ações misturadas, invariantes conferidas a cada passo.
+  - Ações: adicionar e apagar módulo, largura, altura, profundidade, posição, erguer, parede, pé-direito, ligar e tirar tamponamento, trocar o vão, espessura, 3D, salvar e reabrir, outro projeto, corte e ↶/↷.
+- **Passaram em todos os passos:**
+  - sem erro de JS;
+  - desenhar de novo não muda nada;
+  - salvar e reabrir dá as mesmas peças, o mesmo corte e o mesmo 3D;
+  - todo módulo aparece no 3D;
+  - peça sem décimo e com medida positiva;
+  - módulo dentro da parede;
+  - ↶/↷ voltam exatos.
+- **Falhou: I7 "módulos sobrepostos", 63 ocorrências (COMPROVADO).** Adicionar um módulo do catálogo (`newTpl`) numa parede cheia o coloca **por cima** dos vizinhos.
+  - Exemplo: parede de 3600 com 4240 mm de móveis, o Bar entra em x=2665 por cima de dois módulos (260 e 520 mm).
+  - Contraria "nada entra em nada".
+- Reproduzir: `s20` com semente 2, passo 19.
+
+## 10. Isolamento entre projetos (s21, s22)
+Os testes abrem o projeto B na mesma página, como faz a lista de clientes do editor (`CUR=p.id;loadState`), depois de mexer em A. O que a pessoa vê de B (2D, 3D, peças, corte) saiu igual. **Ficam de A:**
+- **P1-G, COMPROVADO (s22): a escolha de peça passa de um projeto para o outro.**
+  - Tocar numa divisória em A deixa `LAST='div'`/`DIVI=0`.
+  - Ao abrir B, o **primeiro toque no 🗑 apaga a divisória do módulo do B**, que ninguém tocou.
+  - O desfazer volta.
+- **Sobram também:** `S.tab` (aba aberta), `FOC3` (foco do 3D), `PSEL` (peça escolhida), `SOLOSIG`, `CAM3` (câmera do 3D), `RG` (editor por vãos) e `ST3ONLY` (P1-D).
+  - **Correção proposta:** o `loadState` de outro projeto zera as escolhas de tela (`LAST`, `DIVI`, `PSEL`, `SEL3`, `FOC3`, `SOLO2`, `ST3ONLY`, `AMBSET`), sem tocar nos dados.
+- No iPhone, abrir pela lista nativa cria um WebView novo e zera tudo. O vazamento vale dentro do editor e onde o WebView é reaproveitado. Isso **não foi verificado** no Android e no Windows.
+
+## 11. Atualização imediata com o 3D aberto (s23)
+- **Atualizam na hora:** largura, altura, posição, parede, pé-direito, tamponamento, apagar módulo, desfazer e pedra.
+- **COMPROVADO:** **trocar o vão por gavetas** (`v.k`) com o 3D aberto não muda o 3D. A tela fica com o estado de antes até remontar o 3D.
+  - **Camada:** atualização de estado ou renderização, não o modelo. O modelo está certo, porque o 3D montado do zero mostra as gavetas.
+- **Lista do que só aparece depois de reabrir:**
+
+| Defeito | Camada |
+|---|---|
+| P1-D "Só a pedra" | renderização, chave global que não volta |
+| Troca do vão com o 3D aberto | atualização |
+| Edições que montam o 3D sem `draw` (área molhada, porta/janela, `lRedo`) | atualização (ver P2 3D, só código) |
+
+## 12. Fabricação: medida → 2D → 3D → peças → corte (s26, 142 modelos)
+- **Sem achado:**
+  - nenhuma peça de corte maior que o módulo;
+  - nenhuma com décimo ou menor que 1 mm;
+  - o corte nunca tem menos peças que `partsOf`;
+  - largura e altura do 3D batem com a informada, exceto na pia (abaixo).
+- **Profundidade do 3D = informada + 6/7 mm em 135 modelos.** É o fundo **sobreposto, parafusado atrás** (6 mm, nota do corte): **coerente com a regra cadastrada.**
+  - **Pergunta ao Adauto:** a profundidade informada é da caixa sem o fundo? Se for, está certo. Não muda nada sem a sua resposta.
+- **Balcão da pia: corpo de 805 contra 820 informados.** Sem teto por causa da cuba, igual no corte e no 3D: coerente.
+- **Observação de arquitetura (fato):** o **fundo não sai de `partsOf`**. Ele é gerado no corte (`cutLines`) e no 3D por conta própria. É exceção à regra "partsOf é a fonte das peças", e qualquer regra nova do fundo precisa ser feita em dois lugares.
+
+## 13. Desempenho e memória (s24, Chromium desta máquina, não é celular)
+- **Projeto grande:** 40 módulos, 860 peças, 3915 caixas no 3D, projeto de 37 KB.
+
+| Operação | Tempo |
+|---|---|
+| `draw` | 25 ms |
+| `partsOf` de todos | 3 ms |
+| corte | 16 ms |
+| montar o 3D | 35 ms |
+| escolher módulo | 22 ms |
+| reabrir | 52 ms |
+
+- **Sem vazamento medido:** em 20× abrir/fechar o 3D, 20× reabrir o projeto e 30× trocar de módulo e painel, ficaram estáveis:
+  - ouvintes de evento: 574 → 575;
+  - texturas: 3;
+  - buffers: 5;
+  - temporizadores: 7;
+  - memória: 26 → 25 MB;
+  - nós do DOM: 1864 → 1873.
+- **Ouvintes registrados:** click 220, pointerdown 68, pointerup 60, change 58, pointercancel 44, pointermove 34.
+- **Riscos de desempenho (código, não medidos no celular):**
+  - o 3D é refeito inteiro a cada mudança;
+  - `hwOf` chama `partsOf` 4 ou mais vezes;
+  - a camada do forno dobra a cadeia;
+  - texturas nunca são liberadas: estável aqui com poucas cores, mas cresce com muitos padrões.
+- **Falta medir no aparelho:** iPhone, iPad, Tab S9 FE e Windows real.
+
+## 14. Plano de arquitetura (só proposta, nada implementado)
+**Ideia:** não reescrever. Criar **fronteiras** dentro do `editor.html`, uma por vez, cada uma com a bateria e as sondas antes e depois (A/B), sem mudar o resultado.
+
+| Camada | Hoje (onde está) | Fronteira proposta | Depende de | Risco |
+|---|---|---|---|---|
+| **Modelo de dados** | `S`, `snapState` (lista fechada de campos), `loadState` (11 camadas), `defs`, `sanM` | `modelo.ler()`/`modelo.gravar()`: lista de campos com versão, migrações registradas e reversíveis, nenhum campo desconhecido apagado | todos | Médio: mexe na abertura de todo projeto. Exige o teste de projetos antigos |
+| **Regras de marcenaria** | espalhadas nas 20 camadas de `partsOf`, em `sanM`, `pxPost`, `cutLines` e no 3D (fundo, moldura em fila) | uma tabela de regras por peça (fonte, condição, conta), chamada por `partsOf`, sem gravar no módulo | modelo | Alto se feito de uma vez. Baixo se for uma família de peça por vez, com comparação de todas as peças do catálogo |
+| **Motor geométrico** | `partsOf` (posição e medida), `DRM`/`cornerBoxes` (3D), `modSvg` (2D), `stSlab` (pedra) | `geo(m)` → caixas com medida, usado igual pelo 2D, pelo 3D e pela colisão | regras | Alto: é o coração do 2D/3D |
+| **Restrições** (parede, pedra, vizinho) | `confineAll`, `stPush`, `placeFree`, `roomClamp`, `autoTamp` dentro do `draw` | **fora do desenho**: rodam só quando a pessoa edita, guardando o valor pedido. O desenho só lê | modelo, geométrico | Médio. É a correção do P1-A e do P1-B |
+| **Seleção** | 9 detectores de 2 toques, 69 pointerdown, `LAST`/`DIVI`/`PSEL`/`SEL3` soltos | um decisor de alvo (peça → alça → vão → módulo) e um objeto de seleção único, zerado ao abrir projeto | geométrico | Médio. O PLANO_PRECISAO fase 1 já começou no tamponamento |
+| **Renderização 2D/3D** | `draw` (39 camadas), `build` (28), `re3` em cerca de 168 pontos | "projeto mudou" → 2D e 3D atualizam pela mesma notificação | geométrico, seleção | Médio |
+| **Persistência** | `pSaveAll` (3 camadas), `schedSave` no `draw`, ponte sem retorno de erro, `DataBackup` | gravação só quando o dado muda, com confirmação da ponte e erro visível. Restauração com área de preparo e volta nas 3 plataformas | modelo | **Alto: dados do usuário.** Backup verificável antes, sem migração destrutiva |
+| **Plano de corte** | `cutLines` (13 camadas), `cutGroups` (9) | lê só do motor de regras (inclusive o fundo) | regras | Baixo a médio |
+
+**Ordem segura proposta:**
+1. Correções P0 e P1 pequenas (seção 15), cada uma com teste.
+2. Restrições fora do desenho.
+3. Seleção única.
+4. Notificação única de atualização.
+5. Regras de marcenaria por família de peça.
+6. Motor geométrico único.
+
+Os passos 5 e 6 só depois de 1 a 4 estáveis.
+
+## 15. Correções recomendadas por prioridade (para aprovação)
+| Prioridade | Erro | Gravidade | Arquivos e funções |
+|---|---|---|---|
+| **P0** | Restauração destrutiva no Android e no Windows; backup vazio aceito nas 3 plataformas | perda total de projetos | `DataBackup.kt` (`stage`, `applyPending`) ×2, `Backup.swift` (`validate`, `install`) |
+| **P0** | P1-F: arquivo vazio apaga o `localStorage` | perda da última cópia | `editor.html` 3085 |
+| **P0** | P1-C: abrir regrava e zera o engrosso | dado do projeto perdido ao abrir | `schedSave` 2436, `defs` 274, `partsOf` 509 |
+| P1 | P1-A, incluindo o arrasto vertical que pula 875 mm: o desenho grava posição e medida | medida de fabricação alterada | `confineAll` 1174, `stPush`, `placeFree` 1148, `roomClamp` 3011, `stFitApply` 2276, `sanM` 508, `sanBase` 10389 |
+| P1 | P1-E, P1-G: alvo e escolha de outro módulo ou projeto | edição no lugar errado | tratador 1219/1225, 12181, lixeira 2247, `loadState` |
+| P1 | P1-D: "Só a pedra" fica ligado | módulos "somem" | `build_stOnly` 6449 |
+| P1 | I7: módulo do catálogo entra por cima em parede cheia | peça dentro de peça | `newTpl` / colocação |
+| P1 | P1-B: vão de até 35 mm pelo campo digitado | vão no móvel | `autoTamp` 5664, `setv` 1608 |
+| P2 | Troca do vão sem atualizar o 3D aberto | tela desatualizada | caminho do vão (1700) |
+| P2 | Gravação sem confirmação da ponte, campos fora do `snapState`, migrações que gravam ao abrir | risco | ver seção 3, P2 |
+
+## 16. Próxima etapa mais segura
+**Começar pelos três P0, um por vez.** Cada um é pequeno, protege projetos e não muda layout, regra de marcenaria nem medida:
+1. Arquivo vazio não apaga o `localStorage` (P1-F).
+2. Restauração de backup com área de preparo, validação completa, cópia do estado atual e volta (Android e Windows), e `[]` recusado nas 3 plataformas.
+3. Abrir não regrava, e o engrosso não é apagado pelo ajuste do aparelho (P1-C).
+
+Cada correção segue o mesmo roteiro: teste que falha antes, correção, teste passando, bateria completa e sondas, registro em `HISTORICO_ERROS.md`.

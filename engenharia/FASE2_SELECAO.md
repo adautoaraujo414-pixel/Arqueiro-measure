@@ -56,3 +56,55 @@ Depois de cada correção, também rodam a bateria completa e as sondas s01–s3
 - Teste antigo de tamponamento no 2D que depende do tamanho da tela (`testTamponamentoNo2D…`).
 - Validação futura de peças flutuantes, interseções e consistência entre 2D, 3D e plano de corte.
 - Inteligência estrutural: eletrodomésticos reais com medidas travadas, requisitos de instalação e movimento de abertura de cada modelo.
+
+## Resultado da implementação (16/11, noite)
+**Versão validada:** `9561fcd`, congelada (a bateria e todas as sondas rodaram nesse mesmo arquivo).
+
+**Commits:**
+| Commit | O que é |
+|---|---|
+| `d77ff63` | SEL-DIV |
+| `7db71af` | SEL-PROJ/ESTADO |
+| `d612d17` | ajuste de `S.selS` e vão válido |
+| `7a95037` | SEL-VAO |
+| `9561fcd` | SEL-TORRE, opção A |
+| `e723744` | sondas s21/s22 abrindo como o app |
+
+### Bateria
+- **340 testes: 339 passaram e 1 falhou.** A falha é `testTamponamentoNo2D…` ("ergueu" b590 × b1410). Já falhava na linha de base e depende do tamanho da tela.
+- **Testes da Fase 2 e onde falham antes:**
+
+| Teste | Falha em `9ec0869` |
+|---|---|
+| Divisória de outro módulo | sim |
+| Prateleira de outro módulo | sim |
+| Lixeira em outro projeto | sim |
+| Escolhas de tela ao abrir outro projeto | sim |
+| Vão escolhido depois do toque no 3D | sim |
+| Comandos gerais na torre (9 modelos × 3 caminhos) | sim |
+| Caminho certo da torre, "Só este vão da torre" (9 modelos) | não: passa nas duas versões e fica como garantia de que o caminho certo continua funcionando |
+
+- **Bateria completa de `d77ff63`:** 334 de 339. As 5 falhas eram a da linha de base e 4 testes de correções que ainda não existiam ali.
+- **Regressão achada e corrigida no caminho:** `S.selS=-1` fazia o 2D perder o 1º toque (`d612d17`).
+
+### Sondas em `9561fcd`
+- **s09:** a divisória do B anda e a do A fica.
+- **s14 ("Só a pedra"):** passar para outro projeto mostra os 922 itens de novo (antes, 0).
+- **s21/s22:** nada do projeto A fica escolhido no B, e o 🗑 pede confirmação do módulo inteiro.
+- **s40:** o vão escolhido é válido por todos os caminhos.
+- **s41:** sem comando geral de porta nas torres.
+- **s42:** pelo caminho do 3D, nenhum vão fantasma (antes, 1 → 3). O risco do `gv(5)` continua.
+- **Iguais à homologação:**
+  - s01, s02, s07, s08a/b, s10, s11, s12, s15, s24, s25, s26, s28, s30, s31;
+  - backup JVM, 13/13.
+- **Defeitos antigos que continuam iguais:**
+  - s13 (posição digitada);
+  - s20 I7 (sobreposição no catálogo);
+  - s23 (vão → gavetas no 3D aberto);
+  - s27 (folga do rack; módulo lateral ao alargar);
+  - s29 (catálogo encaixa a largura do novo na parede cheia).
+
+### Riscos que continuam
+- `gv(i)` fora de divisórias + 1 ainda cria vãos. A mudança da função está para aprovação.
+- **Balcão de forno, aba Portas:** os botões gerais trocam o vão do forno para porta (comportamento antigo, fora da opção A, que é só das torres). No menu do vão ele já vira "frente com recorte".
+- Testado no Chromium. **Não testado em aparelho real nem no CI do iOS.**

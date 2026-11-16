@@ -108,8 +108,21 @@ Ver `HISTORICO_ERROS.md`. Os principais:
 - As mesmas falhas conhecidas.
 - `testSoOModulo3DE2D…`, que só falha com carga (sozinho passa igual à versão antiga).
 
-**CI do iOS (WebKit de verdade):**
-- O commit e3d68b8 ficou vermelho por causa do teste do PEDIDO 45 (ver a seção 4).
-- O commit fcfcf28 está rodando. O resultado do teste do gola no WebKit fica anotado aqui quando terminar.
+**CI do iOS (simulador iPhone, WebKit de verdade), commit fcfcf28 (run 43822406584): 366 testes, 5 asserções falhando.**
+
+O que **passou** no WebKit:
+- `testPerfilGolaAberturaPraFrente…` (teste novo do gola).
+- `testGolaVerticalEHorizontalEDesenhoDeCadaPuxador`.
+- `testPortasNaoEntramEmNada…`, com `golaPerfil 10`.
+- `testPuxadoresDescontamCertoEConchaNoMeio`.
+- Todos os outros testes de puxador.
+
+O que **falhou**:
+1. `testErroNoMontarUmModuloNo3DNaoSomeComTodosFicaACaixaEAvisa`: o mesmo problema do teste já descrito na seção 4. Já falhava antes do gola.
+2. `testArmarioDeCantoFolgaDe3mmEntreAsFolhasAbreUmaDepoisAOutra`: no WebKit, o canto L do guarda-roupa, lado esquerdo, deu `abertas 90/67` em vez de `90/70`.
+   - No Chromium, antes e depois do gola, dá `90/70`.
+   - Esse teste mede a porta abrindo com espera de 150 ms. **Hipótese** (não comprovada): a animação ainda não tinha terminado no simulador lento.
+   - A correção do gola não mexe em porta de canto, nem no ângulo, nem na colisão das folhas. Conferido: as portas do "Canto L guarda-roupa" do catálogo não têm gola (`gola 0`, puxador padrão).
+   - O CI do commit 0ce8771 roda o mesmo teste de novo e confirma se é instável.
 
 **Aparelho real:** não testado.

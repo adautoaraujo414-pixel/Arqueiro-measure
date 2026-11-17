@@ -12016,7 +12016,6 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["erros"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
-}
     /* FASE 2 · SEL-TORRE (opção A, exemplo do Adauto de 16/11): torre com porta de cima, micro-ondas e forno — tocar na porta de cima e escolher 2 portas PARA AQUELE VÃO
        (botões do vão da torre; torre antiga passa por "🚪 Trocar a porta", que é a ação manual que já existe). Só a porta de cima muda: forno e micro no lugar, medidas
        externas iguais, as outras portas iguais, 2D e 3D com as mesmas portas, corte com a porta nova, desfazer/refazer e salvar/reabrir certos. Nos 9 modelos de torre. */

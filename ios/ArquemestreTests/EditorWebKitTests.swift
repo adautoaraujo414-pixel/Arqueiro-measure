@@ -12052,7 +12052,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["torres"] as? Int, 9, "os 9 modelos de torre do catálogo (todos têm porta no vão de cima)")
         XCTAssertEqual(o["erros"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
-    
+    }
 
     /* GV-P1 (pedido do Adauto 17/11): ler um vão que não existe (negativo, quebrado, NaN, vazio ou ≥ divisórias + 1) não grava nada no módulo.
        Antes (9561fcd): gv(99) num módulo sem divisórias deixava 100 vãos gravados (vãos fantasma). Editar a cópia devolvida não muda o projeto. */

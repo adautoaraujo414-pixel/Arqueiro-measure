@@ -135,3 +135,24 @@ Depois de cada correção, também rodam a bateria completa e as sondas s01–s3
 - **Falha preexistente registrada:** `testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase` (b590 × b1410). Depende do tamanho da área de desenho no Chromium sem janela; falha igual em `9ec0869`. Continua na bateria sem mudança de expectativa.
 - **Pendente em aparelho real:** iPhone/iPad, Android e Windows. Seleção e arrasto por toque, desfazer/refazer, portas das 9 torres, salvar, fechar e reabrir. CI do iOS e compilação completa Android/Windows também não rodaram aqui.
 - Publicação: nenhuma.
+
+## Homologação da versão integrada P1 + C (`5a468bf`, 17/11, cópia congelada md5 6f197f2e…)
+- **Bateria:** 348 testes (340 + 8 novos) · 347 passaram. A única falha é a preexistente do tamponamento (b590 × b1410).
+- **Testes novos, prova antes/depois:**
+  - os 3 de vão inválido falham em `9561fcd` e passam;
+  - os 4 de garantia passam nas duas versões;
+  - o do C falha só com a P1 e passa com o C.
+- **Sondas, comparadas uma a uma com `9561fcd`:** 22 idênticas. As 5 diferentes:
+  - s10 e s25: só os números de linha (+5) na trilha de quem gravou; mesmas gravações;
+  - s21: só horários e ids;
+  - s24: tempos e memória. A memória sobe a cada rodada no mesmo navegador nas duas versões (antiga: 43 → 84 MB). Ouvintes, texturas e buffers iguais;
+  - s42: `gv(5)` agora 1 → 1 (antes 1 → 6).
+- **s43, caminhos que reduzem vãos:**
+  - Limpar divisões: vão escolhido 0 na hora e "2 portas" cai no vão 1.
+  - "Mexer direto em `m.div`" (camadas): `S.sv` ainda fica velho até a próxima aba. É risco fora do escopo, mas com a P1 a leitura não grava nada.
+  - Projeto antigo com sobra: peças, corte e 3D iguais e nada tirado.
+- **s44 com o `gv` do app:** igual ao modo P1 da proposta, e com o C o Limpar deixa `S.sv 0`. As 10 chamadas inválidas anotadas são as que a própria sonda faz de propósito.
+- **Uso normal (cozinha demo, 142 modelos × vãos × abas, 3D):** 0 chamadas inválidas, 0 erros.
+- **Backup JVM:** 13 de 13, BUILD SUCCESSFUL.
+- **Salvar, fechar e reabrir · desfazer e refazer · portas · projetos antigos:** s11, s28, s30, s08a/b e s41 idênticas; testes 3, 5, 6 e C.
+- **Não verificado:** aparelho real, CI do iOS, compilação completa Android/Windows.

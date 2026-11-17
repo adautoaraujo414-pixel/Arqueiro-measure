@@ -22,3 +22,10 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 ## Conversas anteriores
 - As conversas de outubro (Star Note, Arque Measure e os primeiros puxadores) só podem ser buscadas por texto. As fotos delas não estão acessíveis.
 - Commits que citam fotos dessa época: 660582b ("cava de perfil com a foto dela") e 14bdc37 ("puxadores com foto real… perfil G 35 mm"). Essas fotos não foram reencontradas.
+
+## Régua do batente do puxador cava (Adauto, 17/11)
+- **Imagem:** print do 3D do app enviado na conversa de 17/11 (não gravado no repositório, que é público).
+- **O que mostra:** gaveteiro com 4 gavetas abertas, frentes puxadas para a esquerda, caixas brancas com corrediças. As **placas cinza na frente**, uma por nível de gaveta, deitadas na largura do vão até a lateral, são as "réguas de batente do cava" que o Adauto quer poder medir à mão.
+- **Leitura técnica (a confirmar com o Adauto):** são as peças `Batente (cava)` (entre gavetas) e, em cima, `Batente superior (cava)`. Na imagem há 4 placas para 4 gavetas, mas o app gera 3 entre gavetas mais a de cima só com o batente superior ligado.
+- **Sem escala na imagem:** nenhuma medida foi tirada dela.
+- **Proposta ligada:** `engenharia/PROPOSTA_BATENTE_CAVA.md`.

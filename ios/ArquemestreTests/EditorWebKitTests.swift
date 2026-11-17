@@ -2716,7 +2716,7 @@ final class EditorWebKitTests: XCTestCase {
     }
     /// iPad/iPhone: cuba e cooktop arrastam na vista de cima (toque), de novo e de novo, com zoom, e seguem pelos eventos de toque
     /// se o WebKit cancelar o ponteiro (pointercancel); teclado do campo só aplica no OK (125+120+120+120 = 485 sem bagunçar a cuba);
-    /// lixeira no 3D; parede encolhida leva pedra e móveis junto; altura da pedra puxa os módulos; tamponamento automático não pisca
+    /// lixeira no 3D; parede encolhida não mexe na pedra nem nos móveis (GEO-AVISA, 16/11); altura da pedra puxa os módulos; tamponamento automático não pisca
     @MainActor
     func testCubaArrastaNoTouchTecladoSomaLixeiraEParedeEncolhida() async throws {
         let web = try await editor()
@@ -2749,8 +2749,10 @@ final class EditorWebKitTests: XCTestCase {
         let lix = o["lix"] as? [String: Any]
         XCTAssertEqual(lix?["n"] as? Int, 5); XCTAssertEqual(lix?["b"] as? Double, 0); XCTAssertGreaterThanOrEqual((lix?["caixas"] as? Int) ?? 0, 3, "lixeira aparece no 3D")
         let enc = o["enc"] as? [String: Any]
-        XCTAssertLessThanOrEqual((enc?["stFim"] as? Double) ?? 9e9, 2400, "pedra dentro da parede encolhida · \(enc ?? [:])")
-        XCTAssertLessThanOrEqual((enc?["lixFim"] as? Double) ?? 9e9, 2400, "lixeira dentro da parede encolhida")
+        // GEO-AVISA (regra do Adauto de 16/11: o ambiente não modifica móveis; "pedra e móveis soltos não são cortados pela parede"):
+        // encolher a parede não move nem corta a pedra nem a lixeira. Antes desta regra o teste esperava as duas puxadas pra dentro (≤ 2400).
+        XCTAssertEqual(enc?["stFim"] as? Double, 2950, "pedra fica onde estava com a parede encolhida · \(enc ?? [:])")
+        XCTAssertEqual(enc?["lixFim"] as? Double, 2955, "lixeira fica onde estava com a parede encolhida")
         XCTAssertEqual(o["tops1"] as? [Double], [900, 900], "módulos acompanham a pedra a 900 · \(o["tops0"] ?? "")")
         XCTAssertEqual(o["pisca"] as? [Int], [0, 0, 0, 0], "a 25 mm da parede o tamponamento automático não liga e desliga")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")

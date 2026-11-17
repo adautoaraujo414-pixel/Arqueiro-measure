@@ -616,3 +616,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `BackupCaminhoTest` (Android e Windows): nomes com pontos aceitos; `../`, `files/../..`, `files\\..\\`, `..`, `files/..`, raiz, `\\` e `C:` recusados;
   - sonda `tools/sondas/backup`: `nomesComPontosRestauram`, `projetoAntigoComFotoDePontosRestauraIgual` e `travessiasContinuamRecusadas`.
   - Antes da correção: `nomesComPontosSaoAceitos`, `nomesComPontosRestauram`, `projetoAntigoComFotoDePontosRestauraIgual` e `DesktopCompatTest.backupCompletoERestauracao` falham. Depois: sonda 16/16 e Windows JVM 134/134. Android JVM: na CI.
+
+## TESTE-CUBA-PAREDE: expectativa velha contra a regra GEO-AVISA (achado na CI do iOS, 17/11)
+- **Como apareceu:** a CI do iOS do `a17bcbf` (run 597) foi a primeira a compilar desde `9561fcd`. Dos 348 testes, 347 passaram no iPhone. Falhou só `testCubaArrastaNoTouchTecladoSomaLixeiraEParedeEncolhida`, nas duas tentativas: pedra em 2950 e lixeira em 2955 com a parede encolhida a 2400. O teste esperava as duas em 2400 ou menos.
+- **Causa raiz:** comportamento mudado de propósito pela regra GEO-AVISA (Adauto, 16/11): "pedra e móveis soltos não são cortados pela parede".
+  - Reproduzido aqui com o mesmo código do teste: em `0aa152c` (antes da regra) dá 2400/2400; no atual, 2950/2955.
+  - A bateria daqui não lia esse formato (`(enc?["stFim"] as? Double) ?? 9e9`). Por isso o GEO-AVISA não atualizou a expectativa.
+  - Medido: das 3.334 verificações dos testes, 380 só são conferidas pelo Xcode.
+- **Correção (só o teste):** a expectativa passa a ser a regra aprovada: a pedra e a lixeira ficam **exatamente** onde estavam (2950 e 2955). O comentário do teste cita a regra e a data. O app não muda.
+- **Risco registrado, não corrigido:** com a pedra ou a lixeira fora da parede encolhida, o app **não avisa** (`fgConflitos` só confere módulos). A regra GEO-AVISA pede aviso. É do editor, compartilhado com Android (apk-632) e Windows (win-143), e fica para decisão do Adauto.

@@ -1,17 +1,27 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
-• Tocar e arrastar a divisória ou a prateleira de outro módulo agora escolhe aquele módulo e mexe só nela. Antes, mexia na divisória do módulo que estava escolhido.
-• Ao abrir outro projeto, nada do projeto anterior fica escolhido: a 🗑 não apaga mais peça de outro projeto e o "Só a pedra no 3D" volta ao normal.
-• Torre de forno e micro-ondas: trocar a porta de cima mexe só nela (pelos botões do vão da torre). Antes, os botões gerais transformavam a torre inteira numa porta e o forno e o micro-ondas sumiam.
-• Medidas e posições são suas: mudar a parede, o pé-direito ou a espessura não muda mais nenhum móvel. Se algo não couber, o app avisa qual móvel, qual medida, quanto cabe e a diferença, e não altera nada. Antes, diminuir e voltar o pé-direito deixava a torre mais baixa e os aéreos fora do lugar.
-• Backup: restaurar um backup confere o arquivo inteiro antes. Arquivo cortado, danificado ou vazio é recusado e nada muda. O que estava no aparelho fica guardado. Antes, uma falha no meio podia apagar notas e um backup vazio apagava tudo.
-• Projetos: um arquivo de projetos vazio ou danificado não apaga mais a cópia boa guardada no app.
-• Abrir um projeto e não mexer não grava nada nem muda a data. O engrosso das laterais não some mais ao abrir com o engrosso desligado nos Ajustes.
-• Caixa da geladeira: trocar as portas (aba Portas ou 2 toques no vão) mexe só nas portas do aéreo em cima da geladeira. Antes, os botões gerais de porta trocavam a caixa toda e a porta ia do teto ao chão, tampando a geladeira. Caixa que já ficou assim mostra um aviso com ↺ Voltar a caixa da geladeira.
-• Tamponamento no 2D: tocar no tamponamento de um módulo que não está escolhido só escolhe o módulo. Com ele escolhido, arrastar muda só a altura do tamponamento, que no módulo de baixo vai no máximo até o chão. Antes o toque podia mover o módulo inteiro pra cima, pra fora da pedra, e apagar rodapé, travessa e moldura.
-• Módulo de baixo erguido e depois devolvido pro chão: o rodapé, a travessa e a moldura voltam como eram.
-• Medidas da parede no editor do ambiente: se você digitar errado o comprimento da parede do lado (31700 em vez de 3170) e corrigir, a profundidade da sala volta. Antes ela ficava presa no número errado.
-• Rebaixo do teto: no 3D, ele não passa mais do fim da parede. Se a parede encurtar, o rebaixo encurta junto; se ela voltar a crescer, o rebaixo volta. A medida que você digitou não muda.
+• Parede e pé-direito: digitar a medida da parede ou do pé-direito (no desenho ou no ambiente) não muda mais nenhum móvel. Antes, uma medida digitada errada (por exemplo 320 em vez de 3600) esmagava a largura, a posição e a altura de todos os móveis, e eles não voltavam ao corrigir. Agora os móveis ficam como estão e, se algum ficar fora da parede, o app avisa. Parede ou pé-direito abaixo de 500 mm ficam em 500, com aviso. Desfazer e refazer funcionam.
+• Primeiro toque num móvel que não estava escolhido só escolhe. Antes, um arrasto curto do dedo já levava o móvel junto (até 29 cm).
+• Divisória: só fica escolhida quando o toque é nela, em qualquer zoom. Tocar no vão ao lado escolhe o vão. Arrastar a divisória não conta mais como toque.
+• Dois toques: o segundo toque não se perde quando o dedo demora um pouco ou treme. Dois toques abrem a edição sem mover o móvel e sem fechar o vão.
+• Medida digitada fora do possível é recusada com um aviso dizendo o limite. Nada é arredondado nem trocado sem avisar.
+• No 3D, a seta de trás volta a diminuir depois de "tampou até o fundo".
+• Réguas por lado: aceita 1, 2 ou 3. Fora disso o app avisa e não muda nada (antes 4 virava 3 e 0 virava 2 sem aviso).
+• Abas e menus na mesma ordem em todos os móveis (Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros).
+• Azul da seleção mais suave, sem deixar de mostrar o que está escolhido.
+# (já saíram na versão anterior — ficam guardadas só como histórico):
+# • Tocar e arrastar a divisória ou a prateleira de outro módulo agora escolhe aquele módulo e mexe só nela. Antes, mexia na divisória do módulo que estava escolhido.
+# • Ao abrir outro projeto, nada do projeto anterior fica escolhido: a 🗑 não apaga mais peça de outro projeto e o "Só a pedra no 3D" volta ao normal.
+# • Torre de forno e micro-ondas: trocar a porta de cima mexe só nela (pelos botões do vão da torre). Antes, os botões gerais transformavam a torre inteira numa porta e o forno e o micro-ondas sumiam.
+# • Medidas e posições são suas: mudar a parede, o pé-direito ou a espessura não muda mais nenhum móvel. Se algo não couber, o app avisa qual móvel, qual medida, quanto cabe e a diferença, e não altera nada. Antes, diminuir e voltar o pé-direito deixava a torre mais baixa e os aéreos fora do lugar.
+# • Backup: restaurar um backup confere o arquivo inteiro antes. Arquivo cortado, danificado ou vazio é recusado e nada muda. O que estava no aparelho fica guardado. Antes, uma falha no meio podia apagar notas e um backup vazio apagava tudo.
+# • Projetos: um arquivo de projetos vazio ou danificado não apaga mais a cópia boa guardada no app.
+# • Abrir um projeto e não mexer não grava nada nem muda a data. O engrosso das laterais não some mais ao abrir com o engrosso desligado nos Ajustes.
+# • Caixa da geladeira: trocar as portas (aba Portas ou 2 toques no vão) mexe só nas portas do aéreo em cima da geladeira. Antes, os botões gerais de porta trocavam a caixa toda e a porta ia do teto ao chão, tampando a geladeira. Caixa que já ficou assim mostra um aviso com ↺ Voltar a caixa da geladeira.
+# • Tamponamento no 2D: tocar no tamponamento de um módulo que não está escolhido só escolhe o módulo. Com ele escolhido, arrastar muda só a altura do tamponamento, que no módulo de baixo vai no máximo até o chão. Antes o toque podia mover o módulo inteiro pra cima, pra fora da pedra, e apagar rodapé, travessa e moldura.
+# • Módulo de baixo erguido e depois devolvido pro chão: o rodapé, a travessa e a moldura voltam como eram.
+# • Medidas da parede no editor do ambiente: se você digitar errado o comprimento da parede do lado (31700 em vez de 3170) e corrigir, a profundidade da sala volta. Antes ela ficava presa no número errado.
+# • Rebaixo do teto: no 3D, ele não passa mais do fim da parede. Se a parede encurtar, o rebaixo encurta junto; se ela voltar a crescer, o rebaixo volta. A medida que você digitou não muda.
 # (já saíram no Windows, Android e iOS — ficam guardadas só como histórico):
 # • LED no ripado: toque no ripado no 3D e depois em 💡 LED. A fita fica em pé, no meio do vão entre as ripas. Toque no vão e escolha o tamanho pelo desenho: inteiro, meio (começando de baixo ou de cima) ou um quarto (de baixo ou de cima). Cada vão pode ter um tamanho, e o atalho Cascata põe inteiro, meio e um quarto em 3 vãos seguidos. A cor da luz e a cor do perfil valem pro ripado inteiro; dá pra apagar, ver à noite e tirar. A barra do LED tem o ▁ pra minimizar e deixar o ripado todo à vista (▢ abre de novo). Em ripado de sala ou com mais de 50 cm, 2 toques no vão, de perto, já abrem o LED naquele vão. A fita aparece no desenho de frente, entra na lista do ripado com o comprimento de cada uma e soma nos metros de fita do projeto. Em cima de porta embutida ou de recorte, o LED começa onde a ripa começa.
 # • Prateleira: tocou nela no 3D, o quadro mostra 💡 Pôr LED (fita embaixo, com cor da luz e perfil). No painel da prateleira também dá pra pôr e tirar o LED.

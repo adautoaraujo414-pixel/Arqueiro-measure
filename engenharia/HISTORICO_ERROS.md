@@ -658,3 +658,18 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** `git revert` de `890e06e` (commit `0fad7ef`). O código ficou idêntico ao de `c2951f0`. Nada de 1 toque foi alterado nas gavetas (A6-LATGAV e A6-PECA só mexem no quadro de 2 toques e no ajuste da contra-frente).
 - **Regressão do 1 toque:** a porta da parede abre com 1 toque nas duas versões (sonda). Os testes da bateria de toque, abrir, gestos, porta, gaveta e janela estão rodando nas duas versões para comparar.
 - **Teste de regressão do 1 toque:** `testUmToqueNaPortaDaParedeAbreEFechaComoAntes` (1 toque abre, outro fecha, posição igual). Passa na versão pública e na atual; **falha na versão com a mudança revertida (890e06e)**, então protege contra ela.
+
+## A6-MOVER: 2 toques de longe também escolhem o módulo inteiro e preparam o mover de 2 toques (item 6, opção A aprovada pelo Adauto, 17/11)
+- **Já existia e foi preservado:**
+  - 2 toques de longe abrem o quadro do módulo (`size3` → `itOpen`);
+  - o mover de 2 toques (`MDMV` + `mdDropAt`: chão, parede, troca de parede, `mdFree` encosta do lado, `modHit`/`modSlide`, volta se bater), preparado pelos 2 toques de perto;
+  - 3, 4 e 5 toques.
+- **Acrescentado:**
+  - Depois do `size3` dos 2 toques de longe, `mdArmAt` destaca o módulo (`MZ3I`, o azul que já existe) e prepara o `MDMV` (12 s). Os próximos 2 toques num destino válido movem o módulo inteiro pelo `mdDropAt` existente.
+  - Aviso quando não cabe: "⚠ Não cabe ali: bate em outro módulo · o módulo ficou onde estava". A volta já existia; o aviso é novo.
+- **Regressão achada e corrigida antes do commit:** depois dos 2 toques de longe, 2 toques de perto no próprio módulo eram tomados como destino, e o módulo ia para o chão atrás dele. Isso fazia falhar `testDoisToquesNo3DLongeAbreOModuloPertoAbreSoAPeca`.
+  - **Correção:** se o mover foi preparado de longe e os 2 toques caem no próprio módulo, cancela e segue como sempre (escolhe a peça).
+  - O caminho antigo (preparado de perto) não mudou.
+- **Testes:**
+  - `testA6DoisToquesDeLongeEscolhemOModuloEDoisNoDestinoMovem` (toques de verdade): quadro + destaque, vai para a parede da direita com as peças iguais, reabrir mantém, encosta do lado, sem espaço volta com aviso, 3 toques não preparam mover. Falha na versão pública e passa agora.
+  - Passam também: `testDoisToquesNo3DLonge…`, `testTorrePortas…MoverDe2Toques…`, `testGestosNoEletro…`, `testUmToqueNaPortaDaParede…`.

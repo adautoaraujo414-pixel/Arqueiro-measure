@@ -12308,4 +12308,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["posicao"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-MOVER (Adauto 17/11, opção A): 2 toques de longe continuam abrindo o quadro do módulo e agora também destacam o módulo inteiro e preparam o mover
+       que já existia (MDMV/mdDropAt): 2 toques na parede da direita levam o módulo inteiro (peças iguais), salvar/reabrir mantém; outro módulo lá → encosta do lado;
+       sem espaço → volta pro lugar com aviso. 3 toques só abrem o quadro (não preparam mover). Toques de verdade no 3D. */
+    func testA6DoisToquesDeLongeEscolhemOModuloEDoisNoDestinoMovem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var AM=[];var am0=window.ambMsg;window.ambMsg=function(t){AM.push(String(t).slice(0,60));try{return am0&&am0.apply(this,arguments)}catch(_){}};var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var cena=async function(){try{document.getElementById('v3x').click()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;S.stones=[];draw();newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();newTpl(T('Balcão 1 porta'));draw();if(window.SOLO2)soloOff();open3D();await W(300);__cam(.2,.3,1);await W(150);__build()};
+        var cv=document.getElementById('cv3');
+        var tela=function(c){var P=window.PM3,d=function(r){return r[0]*c[0]+r[1]*c[1]+r[2]*c[2]+r[3]},w=d(P.W),r=cv.getBoundingClientRect();return [r.left+(d(P.X)/w+1)/2*P.w,r.top+(1-d(P.Y)/w)/2*P.h]};
+        var centro=function(mi){var x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;__boxes().forEach(function(b){if(String(b.nm||'')!==mi+':Rodapé (pedestal)')return;var p=tela([(b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1]);x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])});return [(x0+x1)/2,(y0+y1)/2]};
+        var toque=function(p){['pointerdown','pointerup'].forEach(function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:p[0],clientY:p[1],pointerId:3,isPrimary:true,pointerType:'touch'}))})};
+        var n=async function(p,k){for(var i=0;i<k;i++){toque(p);await W(120)}await W(650)};
+        var quadro=function(){var q=document.getElementById('it4');return q&&!q.hidden&&q.getClientRects().length>0?'quadro aberto':'quadro fechado'};var fecha=function(){try{var q4=document.getElementById('it4');if(q4)q4.hidden=true}catch(_){}};
+        var est=function(m){return 'parede '+(m.wing||'f')+' x'+m.x};
+        /* 1. 2 toques de longe: quadro (como antes) + destaque + preparado pra mover; 2 toques na parede da direita levam o módulo inteiro pra lá */
+        await cena();var A=S.mods[0],pA=JSON.stringify(partsOf(A)),e0_=est(A);await n(centro(0),2);R.doisLonge=quadro()+' · destaque '+(window.MZ3I===0?'sim':'não');fecha();
+        var dest=tela([S.W-2,900,1200]);AM=[];await n(dest,2);R.moveu=e0_+' → '+est(A);R.mesmasPecas=JSON.stringify(partsOf(A))===pA?'sim':'não';
+        /* 1b. salvar e reabrir; desfazer volta */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reaberto=est(S.mods[0]);
+        /* 1c. colisão: o B já está na parede da direita; mover o A pra cima dele não encavala (encosta do lado ou volta) */await cena();A=S.mods[0];var B=S.mods[1];B.wing='d';B.x=600;draw();try{re3()}catch(_){}await W(100);__build();await n(centro(0),2);fecha();await n(tela([S.W-2,1500,600+B.w/2]),2);var ov=(A.wing||'f')===(B.wing||'f')&&A.x<B.x+B.w-1&&B.x<A.x+A.w-1;R.encostaDoLado=(ov?'ENCAVALOU':'sem encavalar')+' · '+est(A)+' · B '+est(B);
+        /* 1d. sem espaço na parede: volta pro lugar e avisa */await cena();A=S.mods[0];B=S.mods[1];B.wing='d';B.x=0;B.w=roomD();draw();try{re3()}catch(_){}await W(100);__build();TO=[];await n(centro(0),2);fecha();await n(tela([S.W-2,1500,900]),2);ov=(A.wing||'f')===(B.wing||'f')&&A.x<B.x+B.w-1&&B.x<A.x+A.w-1;R.colisao=(ov?'ENCAVALOU':'sem encavalar')+' · '+est(A)+' · B '+est(B)+' · aviso '+(TO.filter(function(t){return /Não cabe ali/.test(t)}).length?'sim':'não');
+        /* 2. 3 toques: só o quadro (não prepara mover) */
+        await cena();A=S.mods[0];e0_=est(A);await n(centro(0),3);R.tresToques=quadro();fecha();await n(tela([S.W-2,900,1200]),2);R.tresNaoMove=est(A)===e0_?'não moveu':'MOVEU';
+        R.errs=__errs.slice(e0).length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["doisLonge"] as? String, "quadro aberto · destaque sim")
+        XCTAssertEqual(o["moveu"] as? String, "parede f x5 → parede d x745")
+        XCTAssertEqual(o["mesmasPecas"] as? String, "sim")
+        XCTAssertEqual(o["reaberto"] as? String, "parede d x745")
+        XCTAssertEqual(o["encostaDoLado"] as? String, "sem encavalar · parede d x1050 · B parede d x600")
+        XCTAssertEqual(o["colisao"] as? String, "sem encavalar · parede f x5 · B parede d x0 · aviso sim")
+        XCTAssertEqual(o["tresToques"] as? String, "quadro aberto")
+        XCTAssertEqual(o["tresNaoMove"] as? String, "não moveu")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

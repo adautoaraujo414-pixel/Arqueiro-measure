@@ -12267,7 +12267,7 @@ final class EditorWebKitTests: XCTestCase {
 
     /* F3-SEL (Adauto 17/11, Fase 3 itens 2, 3 e 5): limites de toque iguais em qualquer zoom.
        Divisória pega só até 12 px de cada lado (antes 22 px e a área crescia com o zoom, então um toque no vão virava divisória);
-       2 toques valem até 500 ms (antes 430 ms, e 2 toques normais não abriam o menu); tremida de até 10 px não move nem anula os 2 toques.
+       2 toques valem até 350 ms do 1º soltar ao 2º encostar (antes 430 ms de soltar a soltar, e 2 toques com o dedo apertado não abriam o menu); tremida de até 10 px não move nem anula os 2 toques.
        O relógio é controlado no teste (Date.now) para não depender da velocidade do aparelho. */
     func testF3SelecaoDivisoriaDoisToquesETremidaIguaisEmQualquerZoom() async throws {
         let web = try await editor()
@@ -12276,7 +12276,7 @@ final class EditorWebKitTests: XCTestCase {
         var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
         var sv=document.getElementById('svg'),dn0=Date.now,falso=0,rel=dn0.call(Date);Date.now=function(){return rel+falso};
         var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
-        var tap=async function(x,y,mv){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=30;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
+        var tap=async function(x,y,mv,pr){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=(pr||70)-40;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
         var fecha=function(){try{vmenuClose()}catch(_){}var v=document.getElementById('vmenu');if(v&&v.parentNode)v.parentNode.removeChild(v)};
         var cena=function(){fecha();falso+=5000;TQK.k=null;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];S.m=A;S.sv=0;S.tab=0;VB={x:0,y:0,w:900,h:560};setVB();panel();draw();LAST='mod';return A};
         var zoomEm=function(m,w){var cx=OX+(m.x+m.w/2)*K,cy=OY+(S.H-(m.b+m.h/2))*K;VB={x:cx-w/2,y:cy-w*560/900/2,w:w,h:w*560/900};setVB();draw()};
@@ -12285,8 +12285,9 @@ final class EditorWebKitTests: XCTestCase {
         var menu=async function(){await W(450);return document.getElementById('vmenu')?'menu':'sem menu'};
         /* 1. divisória: a 6 px pega, a 16 px é o vão · em 3 zooms */
         var dv=[];for(var zw of [900,450,225]){for(var d of [6,16]){var A=cena();zoomEm(A,zw);await W(60);var x=linhaDiv(0)+d,y=yMod(0),d0=A.div[0];await tap(x,y);await W(30);dv.push(zw+'/'+d+'px:'+(LAST==='div'?'divisória':'vão')+(A.div[0]!==d0?' MUDOU':''));fecha()}}R.divisoria=dv.join(' ');
-        /* 2. 2 toques no vão com 460 ms entre um soltar e o outro: abre o menu do vão */
-        var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y);falso+=390;await tap(x,y);R.doisToques460ms=await menu();fecha();
+        /* 2. 2 toques com o dedo apertado 150 ms e 330 ms do 1º soltar ao 2º encostar: abre o menu do vão (antes contava de soltar a soltar, 430 ms, e não abria) */
+        var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y,null,150);falso+=330;await tap(x,y,null,150);R.doisToquesDedoApertado=await menu();fecha();
+        /* 2b. 2 pares de 2 toques com 400 ms entre eles não viram 4 toques (4 toques travam o módulo) */A=cena();await W(60);await tap(x,y);falso+=120;await tap(x,y);await W(450);fecha();falso+=400;await tap(x,y);falso+=120;await tap(x,y);await W(450);R.doisParesNaoTravam=(A.lock?'travou':'não travou')+' · '+(document.getElementById('vmenu')?'menu':'sem menu');fecha();
         /* 3. 2 toques a 16 px da divisória: menu do vão, divisória parada */
         A=cena();await W(60);x=linhaDiv(0)+16;var d0=A.div[0];await tap(x,y);falso+=150;await tap(x,y);R.doisToquesPertoDaDivisoria=(await menu())+' · divisória '+(A.div[0]===d0?'parada':'MUDOU');fecha();
         /* 4. tremida de 8 px no módulo escolhido não move; arrastar 60 px move (garantia) */
@@ -12298,7 +12299,8 @@ final class EditorWebKitTests: XCTestCase {
         Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["divisoria"] as? String, "900/6px:divisória 900/16px:vão 450/6px:divisória 450/16px:vão 225/6px:divisória 225/16px:vão")
-        XCTAssertEqual(o["doisToques460ms"] as? String, "menu")
+        XCTAssertEqual(o["doisToquesDedoApertado"] as? String, "menu")
+        XCTAssertEqual(o["doisParesNaoTravam"] as? String, "não travou · menu")
         XCTAssertEqual(o["doisToquesPertoDaDivisoria"] as? String, "menu · divisória parada")
         XCTAssertEqual(o["tremida8px"] as? String, "B andou x 0 b 0")
         XCTAssertEqual(o["arrasta60px"] as? String, "andou")

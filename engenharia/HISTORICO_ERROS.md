@@ -688,3 +688,15 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
 - **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
 - **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+
+## F3-SEL-REGRESSÃO: 2 pares de toques viravam 4 toques (podia travar o módulo) e a divisória não pegava logo depois de arrastar (achado na bateria final da Fase 3, 17/11)
+- **Testes que pegaram:** `testDoisToquesNoVaoDeCimaAteOTetoRipadoPainelOuFechamento` (versão pública 3/3; F3-SEL 0 a 1 de 3, intermitente) e `testDivisoriaArrastaComODedoEmQualquerProjetoECaminho` (12 px do lado não arrastava).
+- **Causa 1 (commit 469c0d0):** a janela dos 2 toques passou a 500 ms contados de soltar a soltar. Dois pares de 2 toques com ~450 ms entre eles somavam 3 e 4 toques (4 toques travam o módulo).
+  - **Correção:** contar do 1º soltar ao 2º encostar, até 350 ms (é o número da proposta aprovada). O tempo do dedo apertado não conta, e pares separados não se somam.
+- **Causa 2:** arrastar uma divisória contava como toque. O toque seguinte, em até 500 ms, virava "2º toque" e não pegava a divisória.
+  - **Correção:** se a divisória andou, o soltar não conta como toque.
+- **Causa 3:** a área da divisória ficou estreita demais em vão estreito: só até metade do vão menor, e com 12 px exatos de fora por arredondamento.
+  - **Correção:** até 12 px de cada lado, contando a borda. Em vão estreito, até 35% do espaço entre as divisórias, como no pedido antigo do dedo que errava a divisória.
+- **Teste F3 ajustado:**
+  - "2 toques com o dedo apertado 150 ms e 330 ms entre soltar e encostar" abre o menu (falha na versão pública);
+  - "2 pares com 400 ms entre eles" não trava o módulo.

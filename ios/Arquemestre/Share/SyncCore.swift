@@ -115,7 +115,8 @@ enum SyncCore {
     static func safeId(_ id: String) -> Bool {
         !id.isEmpty && id.count <= 80 && !id.contains("..") && id.unicodeScalars.allSatisfy { CharacterSet.alphanumerics.contains($0) || $0 == "-" || $0 == "_" || $0 == "." }
     }
-    static func safeName(_ n: String) -> Bool { !n.isEmpty && n.count <= 120 && !n.contains("/") && !n.contains("\\") && !n.contains("..") }
+    /// SEG-NOMES (17/11): nome de um arquivo só (sem pasta); "." e ".." sozinhos são recusados, "foto..jpg" é válido.
+    static func safeName(_ n: String) -> Bool { !n.isEmpty && n.count <= 120 && !n.contains("/") && !n.contains("\\") && n != "." && n != ".." }
 
     private static func int64(_ v: Any?) -> Int64 { (v as? NSNumber)?.int64Value ?? 0 }
     private static func dateLabel(_ ms: Int64) -> String {

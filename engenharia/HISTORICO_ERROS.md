@@ -730,3 +730,19 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste F3 ajustado:**
   - "2 toques com o dedo apertado 150 ms e 330 ms entre soltar e encostar" abre o menu (falha na versão pública);
   - "2 pares com 400 ms entre eles" não trava o módulo.
+
+## SEG-NOMES — iOS pulava no backup, e as 3 plataformas na sincronização, arquivos com ".." no nome (17/11/2026, auditoria geral, P0)
+- **Defeito:**
+  - **Backup no iOS:** `ios/Arquemestre/Data/Backup.swift` restaurava pulando, **sem avisar**, todo nome com ".." (`contains("..")`). Uma foto `foto..jpg`, vinda do backup do Android, sumia no iPhone.
+  - **Sincronização Wi-Fi:** `safeName` (SyncCore no Android, no Windows e no iOS) recusava qualquer nome com "..". A foto não era enviada nem recebida.
+- **Causa:** a regra confundia "dois pontos seguidos no nome" com "subir uma pasta".
+  - O Android e o Windows já tinham corrigido isso no backup (BKP-PONTOS: só um pedaço do caminho igual a ".." é travessia).
+  - O iOS e a sincronização não acompanharam.
+- **Correção (decisão do Adauto em 17/11: aceitar nomes válidos e bloquear só caminhos inseguros):**
+  - **Backup do iOS:** recusa só um pedaço do caminho igual a "..", ou caminho que começa por "/" ou "\". A conferência de que o arquivo cai dentro da pasta de restauração continua.
+  - **Sincronização:** o nome é de um arquivo só. Recusa vazio, mais de 120 caracteres, barra, contrabarra e os nomes "." e ".." sozinhos.
+- **Testes (commit `a215f60`, antes da correção):**
+  - **iOS:** `BackupSafetyTests.testRestoreKeepsNamesWithDoubleDotsAndStillBlocksTraversal` restaura `foto..jpg`, `a..b/c.json` e `projeto..v2.json` com o conteúdo certo. `files/../fora.txt` e `files/projects/../../../fora2.txt` não são gravados fora.
+  - **iOS:** `SyncInteropTests.testCodigoDaTelaEPacoteInvalido` confere `safeName`.
+  - **Android e Windows:** `SyncTest`, "foto com dois pontos seguidos no nome passa" (mesmos bytes) e ".." recusado.
+- **Prova:** CI no `a215f60` (só os testes), que deve falhar, e no commit da correção, que deve passar.

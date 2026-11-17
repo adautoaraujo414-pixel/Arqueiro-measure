@@ -652,3 +652,10 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `testP0ParedeDesfazRefazReabreEGuardaRoupa`: desfazer, refazer, salvar/reabrir, voltar a parede, guarda-roupa de 2400 com pé-direito 2000.
 - **Contorno na versão pública até atualizar:** ↶ Desfazer antes de fechar o projeto.
 - **Regressão achada e corrigida na homologação:** a 1ª assinatura (`6a319d7`) só tinha medidas e posição dos módulos, então ligar o tamponamento não fazia mais a pedra crescer 30 (`testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga`). Agora a assinatura leva tudo que o `stFitCalc` lê, menos a parede: tamponamentos, recuo, fundo, nicho, lava-louças solta e as outras pedras. Os 36 testes de pedra e de P0 passam.
+- **Homologação da P0 (`b9da40b`, 17/11):**
+  - **Bateria:** 349 de 351. As 2 falhas não são da P0:
+    - tamponamento b590 × b1410: já documentada, falha igual na versão pública;
+    - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: oscila neste ambiente. Com a máquina livre, 3 rodadas seguidas falharam 3/3 na versão pública `7c939bc`, 2/3 na P0 antiga e 3/3 na atual. Passou na CI do iOS (iPhone). Fica como teste instável, para investigar à parte.
+  - **Sondas:** 25 de 29 idênticas às de `d669be5`. As diferentes: s10 e s25 só nos números de linha (+7); s21 só em horários e ids; s24 só nos tempos, com os contadores de vazamento iguais.
+  - **Backup:** 16 de 16.
+  - **Custo da assinatura da pedra:** 0,06 ms por desenho com 36 módulos.

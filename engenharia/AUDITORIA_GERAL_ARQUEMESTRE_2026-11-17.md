@@ -85,7 +85,7 @@ Os destacados no pedido:
 | Exclusão de fundo (FUNDO-LIXO) | `b3c1e74` | `testToPecaQueO3DOfereceApagar…` | sim |
 | Saia e porta (SAIA-ALTURA) | `b3c1e74`, `93495d1` | `testComSaiaNaPedraOArmarioInteiroVaiAteEmbaixoDaSaia` | sim |
 | 3D inventando peças / gaveta fantasma (GAV-FANTASMA) | `b3c1e74`, `93495d1` | `testToPecaQueO3DOfereceApagar…` | sim |
-| Seleção entre módulos | (ver anexo 2) | teste nomeado no anexo | sim |
+| Seleção entre módulos (divisória/prateleira de outro módulo; 🗑 de outro projeto) | `d77ff63`, `7db71af`, `d612d17` | `testSelecaoDivisoriaDeOutroModuloSoEscolheEleENaoMexeEmNinguem`, `testSelecaoPrateleiraDeOutroModuloMexeSoNela`, `testSelecaoLixeiraNaoUsaPecaEscolhidaNoOutroProjeto` | sim |
 | Parede/pé-direito esmagando móveis (P0) | `6a319d7`, `b9da40b` | 3 testes `testP0…` | **não**: só na candidata |
 | Perda de projetos (arquivo vazio; restauração) | `73ec2f3`, `f96b3e5` | `testArquivoDeProjetosVazio…` + JVM `BackupCaminhoTest`/restauração | sim |
 

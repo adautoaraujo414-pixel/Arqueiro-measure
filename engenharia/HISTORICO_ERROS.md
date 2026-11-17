@@ -785,3 +785,23 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **Ao salvar:** o campo vai junto só quando existe, então projeto antigo não ganha nada.
   - **Ao abrir:** volta o que está no arquivo e apaga o que vier do projeto anterior.
 - **Teste:** falha antes (commit do teste) e passa depois.
+
+## N13 — vídeos do editor fora do backup no Android e no Windows (17/11/2026, auditoria geral, P0)
+- **Encontrado na auditoria:** no iOS, cada vídeo do editor (IndexedDB `arque-photos`, `kind:"video"`) é copiado para `video_<id>.json` pelo `EditorMediaBackup.js` e entra no backup completo. No Android e no Windows o script não era carregado e a ponte não tinha `putVideo`. O vídeo ficava só no IndexedDB do WebView, fora do backup, e se perdia ao trocar de aparelho ou restaurar.
+- **Causa:** o espelhamento dos vídeos foi feito só no iOS. Fotos já iam pelos três (`photo_<id>.json`).
+- **Correção (sem mudar o editor):**
+  - **Script:** o mesmo `EditorMediaBackup.js` fica agora também em `app/src/main/assets/`, com cópia idêntica conferida por teste.
+  - **Vídeos grandes:** vídeo acima de 64 MB fica no aparelho, com o aviso "não vai no backup". No iOS, com `window.__mediaKeepBig` ausente, nada muda.
+  - **Android:** `MoveisBridge.putVideo` → `EditorVideo.save`; o script é injetado no `onPageFinished`.
+  - **Windows:** a ponte ganha `putVideo:B('putVideo')`, o script vai no `editorHtml()` e o asset entra no `build.gradle.kts`.
+  - **`EditorVideo.save`:**
+    - id só `[A-Za-z0-9_-]`, até 120 caracteres;
+    - `kind` precisa ser `"video"`;
+    - `data:` precisa estar em base64 válido;
+    - até 64 MB;
+    - gravação atômica (temporário + troca de nome).
+- **Testes:**
+  - `EditorVideoTest` (Android e Windows): vídeo válido grava; id que sobe pasta, id com barra, outro tipo, base64 quebrado e texto que não é JSON não gravam nada; o script é igual ao do iPhone.
+  - `DesktopCompatTest.ponteDoEditorDeMoveis`: a ponte responde true/false.
+- **Validação:** CI Android 641 e Windows 150 (commit 2089f26).
+- **Pendente:** teste de ponta a ponta no aparelho (gravar vídeo no editor → backup → restaurar em outro aparelho). Precisa de aparelho real; ainda não verificado.

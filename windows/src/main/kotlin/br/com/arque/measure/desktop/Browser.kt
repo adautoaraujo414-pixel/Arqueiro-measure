@@ -248,7 +248,12 @@ object Browser {
         val html = Browser::class.java.classLoader.getResourceAsStream("assets/editor.html")!!.use { it.readBytes().toString(Charsets.UTF_8) }
         val i = html.indexOf("<head>")
         val at = if (i >= 0) i + 6 else 0
-        return (html.substring(0, at) + "<script>" + BRIDGE_JS + "</script>" + html.substring(at)).toByteArray(Charsets.UTF_8)
+        // N13 (17/11): o mesmo script do iOS no fim do editor (grava os vídeos em arquivo e devolve os de um backup)
+        val media = Browser::class.java.classLoader.getResourceAsStream("assets/EditorMediaBackup.js")?.use { it.readBytes().toString(Charsets.UTF_8) } ?: ""
+        val withBridge = html.substring(0, at) + "<script>" + BRIDGE_JS + "</script>" + html.substring(at)
+        val end = withBridge.lastIndexOf("</body>")
+        val full = if (media.isEmpty()) withBridge else if (end >= 0) withBridge.substring(0, end) + "<script>window.__mediaKeepBig=true;" + media + "</script>" + withBridge.substring(end) else withBridge + "<script>window.__mediaKeepBig=true;" + media + "</script>"
+        return full.toByteArray(Charsets.UTF_8)
     }
 
     /** A mesma interface ArqueApp que o Android injeta no WebView (chamadas síncronas). */
@@ -265,7 +270,7 @@ object Browser {
     linkNote:A('linkNote'),openNoteOf:A('openNoteOf'),makeQuote:A('makeQuote'),quotePhotos:A('quotePhotos'),setCurrent:A('setCurrent'),
     openTrena:A('openTrena'),shareStart:A('shareStart'),isSharing:B('isSharing'),isViewer:B('isViewer'),
     shareUpdate:function(){},shareCut:A('shareCut'),shareClient:A('shareClient'),close:A('close'),
-    putFile:B('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
+    putFile:B('putFile'),putVideo:B('putVideo'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
   };
   window.addEventListener('load',function(){setTimeout(function(){call('pageReady',[typeof S])},0)});
   document.addEventListener('DOMContentLoaded',function(){var st=document.createElement('style');st.textContent='#shb{display:none!important}';document.head.appendChild(st)});

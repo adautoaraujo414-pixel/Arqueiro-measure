@@ -730,3 +730,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste F3 ajustado:**
   - "2 toques com o dedo apertado 150 ms e 330 ms entre soltar e encostar" abre o menu (falha na versão pública);
   - "2 pares com 400 ms entre eles" não trava o módulo.
+
+## N03 — gravação do arquivo dos projetos que falhava sem aviso e fazia voltar o projeto velho (17/11/2026, auditoria geral, P0)
+- **Reproduzido** na versão publicada, com o teste `testGravacaoDoArquivoDeProjetosQueFalhaAvisaENaoVoltaOProjetoVelhoAoAbrir`:
+  1. O aparelho recusa gravar o `projects.json` (sem espaço).
+  2. Nenhum aviso aparece.
+  3. Na abertura seguinte, o app carrega o arquivo velho (v1) por cima do que foi feito (v2), que ficou só na cópia do navegador.
+  4. O próximo salvamento automático grava o velho de novo.
+- **Causa:**
+  - Os 3 nativos engoliam o erro do `putFile`:
+    - Android: `runCatching` sem retorno;
+    - Windows: devolvia `""`;
+    - iOS: `try?` assíncrono.
+  - Na abertura, o `pjsEscolhe` sempre prefere o arquivo quando ele tem projetos.
+- **Correção:**
+  - **Android:** `putFile` devolve Boolean.
+  - **Windows:** responde `"true"`/`"false"` e a ponte usa `B('putFile')`.
+  - **iOS:** o `projects.json` passa pelo canal síncrono e responde `"ok"`. Os outros arquivos seguem assíncronos, para não pesar no toque.
+  - **Editor:** quando a gravação falha, avisa uma vez e guarda uma marca (`arque.projects.v1.pend`) com a assinatura do arquivo velho. Na abertura:
+    - se a marca existe e o arquivo é o mesmo de então, vale a cópia mais nova do navegador;
+    - se o arquivo mudou por fora (restauração de backup), vale o arquivo, como sempre.
+
+    A marca sai quando uma gravação dá certo.
+- **Teste:** falha na versão publicada e passa na correção.
+- **Ainda não testado:** a falha real de espaço no aparelho. O retorno nativo é conferido na compilação e no fluxo de teste do Windows.
+- **Aviso à pessoa:** é um texto curto (toast). Não muda o layout.

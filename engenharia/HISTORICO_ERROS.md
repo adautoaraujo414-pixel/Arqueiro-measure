@@ -650,3 +650,11 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Outros módulos (§11.2):** o mecanismo é o mesmo para todos os módulos do 2D comum (inferiores, superiores, torres, painéis). O editor por vãos (guarda-roupa, armário alto) tem a sua própria seleção (~9 px) e não foi mexido.
 - **Testes:** `testF3SelecaoDivisoriaDoisToquesETremidaIguaisEmQualquerZoom` (relógio controlado no teste): falha na versão pública em 5 de 6 conferências e passa agora.
 - **Expectativa adaptada (pedido do Adauto de 17/11):** o ajudante `drag2` de `testImaDoTopoAlinhaAereo…`, `testModuloNaoFazNadaSozinho…` e `testTocarOuSegurarOModulo…` tinha a zona morta antiga (6,5 px) escrita no teste. Agora lê `SEL.mov` do app (10 px; 6 na versão pública). O que eles conferem não muda, e passam nas duas versões.
+
+## F3-MED: medida digitada fora do limite trocada em silêncio e campo arredondado (Fase 3 item 6; decisão do Adauto em 17/11: recusar com aviso)
+- **Reproduzir (versão pública, Balcão 2 portas 900×820×560):** digitar largura 3 → vira 100; altura 3 → 290; profundidade 99999 → 1200; largura 99999 → 3160 (encaixa na parede). Nenhum aviso, e o campo mostra o que foi digitado. Largura 605,5 grava 605,5, mas o campo mostra 606.
+- **Causa:** o `sanM` corta a medida no limite (`c('w',100,6000)`, `c('d',100,1200)`, altura mínima pelas peças) a cada desenho, sem avisar; `inp`/`syncInputs` usam `Math.round`.
+- **Correção (`editor.html`):** `setv` testa a medida numa **cópia** do módulo com o próprio `sanM` (mesma conta, sem segunda regra de limite). Se o `sanM` mudaria o valor, a medida é recusada: nada muda, nenhum passo novo no desfazer, aviso com o mínimo ou o máximo, e o campo volta a mostrar o valor gravado. Enquanto digita (tecla a tecla) não avisa; avisa no OK ou ao sair do campo. O campo mostra o décimo gravado.
+- **Fica igual:** medidas válidas, décimo virando folga na peça, a parede e o pé-direito (P0, outra branch), "Do chão" e o encaixe na parede de largura válida (perguntas 8 da Fase 3, sem decisão).
+- **Outros módulos (§11.2):** o caminho é o mesmo para todos os módulos que usam os campos do painel (`data-k` w/h/d e as medidas externas wE/hE/dE).
+- **Teste:** `testF3MedidaInvalidaRecusadaComAvisoECampoMostraODecimo`: falha na versão pública (6 de 8 conferências) e passa agora.

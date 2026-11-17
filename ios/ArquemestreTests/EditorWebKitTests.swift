@@ -12305,4 +12305,37 @@ Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
         XCTAssertEqual(o["doisToquesComTremida7px"] as? String, "menu · A x 35 b 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* F3-MED (Adauto 17/11, Fase 3 item 6): medida inválida digitada é recusada com aviso e nada muda (antes virava o limite em silêncio:
+       largura 3 → 100, altura 3 → 290, profundidade 99999 → 1200). O campo mostra a medida gravada com o décimo (605,5 não aparece 606). */
+    func testF3MedidaInvalidaRecusadaComAvisoECampoMostraODecimo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();var m=S.mods[0];S.m=m;S.tab=0;panel();draw();
+var campo=function(k){return document.querySelector('#bd [data-k="'+k+'"]')||document.querySelector('[data-k="'+k+'"]')};
+var digita=async function(k,txt){var c=campo(k);if(!c)return 'sem campo '+k;TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo(k);return 'campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+var sig=function(){return [m.w,m.h,m.d].join('x')+' · peças '+partsOf(m).length};
+var w0=m.w,h0=m.h,d0=m.d,p0=sig(),hk0=histKey(snapState());
+R.w3=(await digita('w','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+R.h3=(await digita('h','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+R.d99999=(await digita('d','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+R.w99999=(await digita('w','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+R.desfazerSemPassoNovo=histKey(snapState())===hk0?'sim':'não';
+R.avisoTexto=(await digita('w','3'),TL.filter(function(t){return /não pode/.test(t)})[0]||'').replace(/\d+/g,'N');
+/* válidas continuam: 605,5 grava e o campo mostra 605.5 depois de redesenhar o painel; 700 grava */
+await digita('w','605,5');panel();await W(20);R.w605_5='m.w '+m.w+' · campo '+campo('w').value;
+await digita('w','700');panel();await W(20);R.w700='m.w '+m.w+' · campo '+campo('w').value+' · aviso '+(TL.length?'sim':'não');
+R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["w3"] as? String, "campo 900 · aviso sim · igual")
+        XCTAssertEqual(o["h3"] as? String, "campo 820 · aviso sim · igual")
+        XCTAssertEqual(o["d99999"] as? String, "campo 560 · aviso sim · igual")
+        XCTAssertEqual(o["w99999"] as? String, "campo 900 · aviso sim · igual")
+        XCTAssertEqual(o["desfazerSemPassoNovo"] as? String, "sim")
+        XCTAssertEqual(o["w605_5"] as? String, "m.w 605.5 · campo 605.5")
+        XCTAssertEqual(o["w700"] as? String, "m.w 700 · campo 700 · aviso não")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

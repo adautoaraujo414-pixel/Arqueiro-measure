@@ -625,3 +625,7 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Medido: das 3.334 verificações dos testes, 380 só são conferidas pelo Xcode.
 - **Correção (só o teste):** a expectativa passa a ser a regra aprovada: a pedra e a lixeira ficam **exatamente** onde estavam (2950 e 2955). O comentário do teste cita a regra e a data. O app não muda.
 - **Risco registrado, não corrigido:** com a pedra ou a lixeira fora da parede encolhida, o app **não avisa** (`fgConflitos` só confere módulos). A regra GEO-AVISA pede aviso. É do editor, compartilhado com Android (apk-632) e Windows (win-143), e fica para decisão do Adauto.
+- **Decisão do Adauto (17/11):**
+  - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
+  - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
+  - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).

@@ -638,3 +638,26 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste:** `testLateralDoMeioJuntoDasGavetasNoInferiorDaCozinha` (numérico: lista, corte, 3D, vãos, gavetas, antigo, reabrir, 8 gavetas, guarda-roupa, torre, aviso de profundidade): falha na versão pública e passa agora.
 - **Expectativa adaptada (pedido do Adauto 17/11):** `testDivisoriaEPrateleiraNovasNaoCaemEmCimaDeOutra` conta "Divisória" e "Lateral do meio" (continua conferindo 3 peças e nenhuma em cima da outra). Passa nas duas versões.
 - **Testes relacionados (gavetas, divisórias, fundo, rodapé, catálogo, laterais: 69):** sem outra falha nova; 3 falhas da 1ª rodada eram de navegador compartilhado e passaram isoladas.
+
+## TRAVESSÃO: travessão superior interno/externo, com e sem Frontal (decisões do Adauto, 17/11) — branch `claude/arquemestre-travessao` (sobre a da lateral inteira)
+- **Novo (`m.tvs` = 'int' | 'ext', `m.tvsD` = profundidade, padrão 70):** 2 réguas deitadas, frente e trás, no lugar do teto ("Base superior"), porque as duas ocupariam o mesmo lugar.
+  - **Interno:** entre as laterais. As laterais vão até o topo, sem rebaixo do travessão. A lateral do meio também vai até o topo e divide as réguas. Cada pedaço é calculado pela geometria; o décimo vira folga.
+  - **Externo:** réguas da largura toda, por cima das laterais. Laterais e lateral do meio ficam mais baixas na espessura do travessão. A altura total não muda.
+  - **Com o Frontal:** a régua da frente fica atrás dele (recuo = espessura). No externo, o rebaixo do Frontal nas laterais fica mais baixo (travMm − e).
+- **Conferido (Balcão porta + gavetas 900×820×560, MDF 15):**
+
+  | Montagem | Laterais | Réguas do travessão |
+  |---|---|---|
+  | interno | 705 | 4 × 427 (855 ÷ 2 = 427,5) |
+  | interno, módulo de 1000 | 705 | 4 × 477 |
+  | interno + Frontal | 690 | régua da frente em z 481–551, Frontal em 551–566 |
+  | externo | 690 | 2 × 900 |
+  | externo + Frontal | 675 | 2 × 900 |
+  | interno, sem lateral do meio | 705 | 2 × 870 |
+
+  - Em todas as montagens: 0 sobreposições do travessão com outras peças no 3D, vãos e portas iguais, 3D = lista = corte.
+- **Painel (Regras do módulo):** Moldura → Travessão (ligar/desligar, Interno/Externo, profundidade) → Frontal. O nome mudou de "Travessa frontal (régua)" para "Frontal (travessa em pé, embutida no rebaixo das laterais)" e de "Altura da travessa" para "Altura do frontal" (só nos módulos de baixo).
+- **Família:** só módulos de baixo, sem canto, sem laterais por fora, fora do editor por vãos, abaixo de 1500. Torre e guarda-roupa não mostram a opção. Projeto antigo (sem `m.tvs`) não muda.
+- **Achado à parte (já existe na versão pública, não é do travessão):** no 3D, a travessa frontal se sobrepõe 1 mm às laterais (e à lateral do meio). Não muda o corte. Fica como risco para corrigir com autorização.
+- **Teste:** `testTravessaoInternoExternoComESemFrontalPelaGeometria`: falha sem o travessão e passa agora.
+- **Testes relacionados (68: travessa, moldura, tampo, rack, lateral, engrosso, regras, teto, estrutura):** 67/68. A única falha, `testTamponamentoNo2D…`, falha igual na versão pública. Sem regressão.

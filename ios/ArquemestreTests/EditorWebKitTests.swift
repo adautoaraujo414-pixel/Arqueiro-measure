@@ -12278,4 +12278,54 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["medidasIguais"] as? String, "sim")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* TRAVESSÃO (decisões do Adauto 17/11): só Interno e Externo; o Frontal (travessa em pé embutida) é outra peça e pode ficar junto.
+       Balcão porta + gavetas 900×820×560, MDF 15, sem moldura. Interno: réguas entre as laterais (705, sem rebaixo), divididas na lateral do meio
+       pela geometria real (900 − 15 − 15 − 15 = 855 → 427,5 cada → 427 no corte); Externo: réguas de 900 por cima, laterais 690.
+       Com o Frontal: a régua da frente fica 15 mm atrás dele, sem sobreposição. Vãos e portas iguais. 3D, lista e corte pela mesma fonte. */
+    func testTravessaoInternoExternoComESemFrontalPelaGeometria() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var est=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|do meio)|Travess(ão|a frontal)|Base superior|Divisória \d)/.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw}).join(' | ')};
+        var corte=function(m){return cutLines(m).filter(function(l){return /Travess|Lateral|Base superior|Divisória \d/.test(l.names.join())&&!/gaveta|pedestal/i.test(l.names.join())}).map(function(l){return l.names[0]+' '+l.L+'×'+l.W+' ×'+l.qty}).join(' | ')};
+        var tres=function(){__build();return __boxes().filter(function(q){return /^0:Travessão/.test(String(q.nm))}).map(function(q){return 'x'+Math.round(q.x1-q.x0)+' y'+Math.round(q.y1-q.y0)+' z'+Math.round(q.z0)+'..'+Math.round(q.z1)}).join(',')};
+        var sobre=function(){__build();var B=__boxes().filter(function(q){return /^0:/.test(String(q.nm))&&/Travessão/.test(String(q.nm))});var A=__boxes().filter(function(q){return /^0:/.test(String(q.nm))&&!/Travessão/.test(String(q.nm))&&!q.poly});var n=0;B.forEach(function(a){A.forEach(function(b){var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>0.5&&oy>0.5&&oz>0.5)n++})});return n};
+        var vaos=function(m){return JSON.stringify(vaoRanges(m))+' portas '+partsOf(m).filter(function(p){return /^(Porta|Frente)/.test(p.name)}).map(function(p){return p.cl+'×'+p.cw}).join(',')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão porta + gavetas'));var m=S.mods[0];m.mold=false;m.trav=false;draw();var v0=vaos(m),p0=est(m);open3D();await W(300);
+        R.semTravessao=p0;
+        m.tvs='ext';draw();R.ext=est(m);R.extCorte=corte(m);R.ext3D=tres()+' · sobrepõe '+sobre();R.extVaosIguais=vaos(m)===v0?'sim':'não';
+        m.tvs='int';draw();R.int=est(m);R.intCorte=corte(m);R.int3D=tres()+' · sobrepõe '+sobre();R.intVaosIguais=vaos(m)===v0?'sim':'não';
+        m.trav=true;draw();R.intFrontal=est(m);R.intFrontal3D=tres()+' · sobrepõe '+sobre();
+        m.tvs='ext';draw();R.extFrontal=est(m);R.extFrontal3D=tres()+' · sobrepõe '+sobre();
+        /* largura 1000: as réguas acompanham a geometria */m.tvs='int';m.trav=false;m.w=1000;draw();R.int1000=partsOf(m).filter(function(p){return /^Travessão/.test(p.name)}).map(function(p){return p.cl}).join('+');m.w=900;draw();
+        /* sem lateral do meio: travessão interno numa peça só */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão 2 portas'));var b=S.mods[0];b.mold=false;b.trav=false;draw();var bp=est(b);b.tvs='int';draw();R.balcao2portasInt=est(b);
+        /* painel: Moldura → Travessão → Frontal */S.m=b;S.tab=0;panel();var txt=document.getElementById('bd').textContent,iM=txt.indexOf('Moldura de acabamento'),iT=txt.indexOf('Travessão (2 réguas'),iF=txt.indexOf('Frontal (travessa em pé');R.ordemPainel=(iM>=0&&iT>iM&&iF>iT)?'Moldura, Travessão, Frontal':'ordem '+[iM,iT,iF].join(',');
+        /* salvar e reabrir, desligar */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reaberto=est(S.mods[0])===R.balcao2portasInt?'igual':'mudou';S.mods[0].tvs='';delete S.mods[0].tvs;draw();R.desligado=est(S.mods[0])===bp?'igual ao original':'diferente';
+        /* torre e guarda-roupa: sem a opção */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Despenseiro'));S.m=S.mods[0];S.tab=0;panel();R.torre=document.querySelector('#bd [data-tvson]')?'tem a opção':'sem a opção';
+        R.errs=__errs.length;
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["semTravessao"] as? String, "Lateral esquerda 690×560 | Base superior 900×560 | Lateral do meio 1 690×560")
+        XCTAssertEqual(o["ext"] as? String, "Lateral esquerda 690×560 | Lateral do meio 1 690×560 | Travessão (frente) 900×70 | Travessão (trás) 900×70")
+        XCTAssertEqual(o["extCorte"] as? String, "Lateral esquerda 690×560 ×3 | Travessão (frente) 900×70 ×2")
+        XCTAssertEqual(o["ext3D"] as? String, "x900 y15 z496..566,x900 y15 z6..76 · sobrepõe 0")
+        XCTAssertEqual(o["extVaosIguais"] as? String, "sim")
+        XCTAssertEqual(o["int"] as? String, "Lateral esquerda 705×560 | Lateral do meio 1 705×560 | Travessão (frente) 427×70 | Travessão (frente) 427×70 | Travessão (trás) 427×70 | Travessão (trás) 427×70")
+        XCTAssertEqual(o["intCorte"] as? String, "Lateral esquerda 705×560 ×3 | Travessão (frente) 427×70 ×4")
+        XCTAssertEqual(o["int3D"] as? String, "x428 y15 z496..566,x428 y15 z496..566,x428 y15 z6..76,x428 y15 z6..76 · sobrepõe 0")
+        XCTAssertEqual(o["intVaosIguais"] as? String, "sim")
+        XCTAssertEqual(o["intFrontal"] as? String, "Lateral esquerda 690×560 | Travessa frontal 900×70 | Lateral do meio 1 690×560 | Travessão (frente) 427×70 | Travessão (frente) 427×70 | Travessão (trás) 427×70 | Travessão (trás) 427×70")
+        XCTAssertEqual(o["intFrontal3D"] as? String, "x428 y15 z481..551,x428 y15 z481..551,x428 y15 z6..76,x428 y15 z6..76 · sobrepõe 0")
+        XCTAssertEqual(o["extFrontal"] as? String, "Lateral esquerda 675×560 | Travessa frontal 900×70 | Lateral do meio 1 675×560 | Travessão (frente) 900×70 | Travessão (trás) 900×70")
+        XCTAssertEqual(o["extFrontal3D"] as? String, "x900 y15 z481..551,x900 y15 z6..76 · sobrepõe 0")
+        XCTAssertEqual(o["int1000"] as? String, "477+477+477+477")
+        XCTAssertEqual(o["balcao2portasInt"] as? String, "Lateral esquerda 705×560 | Travessão (frente) 870×70 | Travessão (trás) 870×70")
+        XCTAssertEqual(o["ordemPainel"] as? String, "Moldura, Travessão, Frontal")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["desligado"] as? String, "igual ao original")
+        XCTAssertEqual(o["torre"] as? String, "sem a opção")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

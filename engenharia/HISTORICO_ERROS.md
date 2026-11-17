@@ -669,3 +669,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Reproduzir (versão pública):** aéreo com engrosso cava; digitar 4 → grava 4 e gera 3; 0 → grava 0 e gera 2; 1,5 → grava 1,5. Sem aviso.
 - **Correção:** só 1, 2 ou 3 são gravados; outro número avisa, não muda nada e o campo volta ao valor que vale.
 - **Teste:** `testF3CamadasDoEngrossoCavaSo1a3ComAviso`: falha na versão pública e passa agora.
+
+## F3-MENU: menus mudando de lugar entre os módulos (Fase 3 item 1; decisão do Adauto em 17/11: ordem fixa)
+- **Reproduzir (versão pública):**
+  - abas do editor por vãos: Divisões › Gavetas › Internos › Portas › Eletros › Estrutura › Cores, diferente do editor normal (Cores › Estrutura › Divisões › Portas › Internos › … › Eletros);
+  - menu de 2 toques: "1 porta" a 31 px do topo no balcão, 260 px no armário alto e 316 px no guarda-roupa, porque o quadro "Por dentro deste vão" entra antes dos botões de frente.
+- **Correção:** abas do editor por vãos na ordem do editor normal (Gavetas junto de Divisões); o quadro "Por dentro / Só esta parte" vai para depois dos botões de frente. Nenhum botão novo ou tirado.
+- **Não reproduzido:** o vazamento da aba Portas para o editor por vãos (FASE3 1.B). Na sonda, entrar no editor por vãos com a aba Portas aberta não mostrou "Modelo da porta" fora da aba Portas. Fica como risco.
+- **Teste:** `testF3MenusNaMesmaOrdemEmTodosOsModulos`: falha na versão pública e passa agora.
+- **Expectativa adaptada (pedido do Adauto de 17/11, ordem fixa):** a ordem das abas no menu rápido de `testDoisToques…` (linha com "abas:").

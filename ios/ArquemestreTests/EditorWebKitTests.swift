@@ -10721,11 +10721,11 @@ final class EditorWebKitTests: XCTestCase {
         await tq();R.umToque=document.getElementById('rgqk')&&!document.getElementById('rgqk').hidden?'abriu (errado)':'não abre';await tq();await W(300);
         var m=document.getElementById('rgqk');R.doisToques=m&&!m.hidden?'abriu · abas: '+[].slice.call(m.querySelectorAll('[data-rqt]')).map(function(b){return b.textContent.trim()}).join(', '):'não abriu';
         var nb=m?[].slice.call(m.querySelectorAll('[data-rqb]')).filter(function(b){return /Horizontal/.test(b.textContent)})[0]:null;var s0=JSON.stringify(S.mods[0]);if(nb){nb.click();await W(200)}R.botaoHorizontal=nb?(JSON.stringify(S.mods[0])!==s0?'dividiu o vão (igual ao painel)':'não fez nada'):'sem botão Horizontal';
-        var tl_=m?[].slice.call(m.querySelectorAll('[data-rqt]')):[],t2=tl_[1];if(t2){var k2=t2.dataset.rqt;t2.click();await W(150);R.trocouDeAba=k2+' · botões '+m.querySelectorAll('[data-rqb]').length}
+        var tl_=m?[].slice.call(m.querySelectorAll('[data-rqt]')):[],t2=tl_.filter(function(b){return b.dataset.rqt==='gav'})[0]/* F3-MENU 17/11: escolhe a aba Gavetas pelo nome (a ordem mudou) */;if(t2){var k2=t2.dataset.rqt;t2.click();await W(150);R.trocouDeAba=k2+' · botões '+m.querySelectorAll('[data-rqb]').length}
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         XCTAssertEqual(o["umToque"] as? String, "não abre")
-        XCTAssertEqual(o["doisToques"] as? String, "abriu · abas: ▦Divisões, 🗄️Gavetas, 👔Internos, 🚪Portas, 🔌Eletros, 📐Estrutura, 🎨Cores")
+        /* F3-MENU (pedido do Adauto 17/11, ordem fixa): abas na ordem do editor normal */XCTAssertEqual(o["doisToques"] as? String, "abriu · abas: 🎨Cores, 📐Estrutura, ▦Divisões, 🗄️Gavetas, 🚪Portas, 👔Internos, 🔌Eletros")
         XCTAssertEqual(o["botaoHorizontal"] as? String, "dividiu o vão (igual ao painel)")
         XCTAssertEqual(o["trocouDeAba"] as? String, "gav · botões 12")
         XCTAssertEqual(o["erros"] as? String, "")
@@ -12389,6 +12389,30 @@ R.errs=__errs.length;return JSON.stringify(R);
         XCTAssertEqual(o["c0"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
         XCTAssertEqual(o["c1_5"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
         XCTAssertEqual(o["c3"] as? String, "regN 3 · campo 3 · aviso não · peças mudaram")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-MENU (Adauto 17/11, Fase 3 item 1: menus em ordem fixa entre todos os módulos).
+       Abas do editor por vãos na mesma ordem do editor normal; no menu de 2 toques o quadro "Por dentro deste vão" vem depois dos botões de frente,
+       então "1 porta" fica no mesmo lugar no balcão, no armário alto e no guarda-roupa (antes descia ~230 px). */
+    func testF3MenusNaMesmaOrdemEmTodosOsModulos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){all.push(q)})});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(q){return q.n===n})[0]))};
+var cena=function(amb,n){loadState(initLimpo());S.env=amb;S.room=amb;S.W=3000;S.H=2700;draw();newTpl(T(n));var m=S.mods[0];S.m=m;draw();return m};
+var porta1=async function(amb,n){cena(amb,n);vmenuOpen(0,0,300,120,-1);await W(150);var d=document.getElementById('vmenu');if(!d)return 'sem menu';var b=d.querySelector('[data-vk="door1"]'),ib=document.getElementById('vmib'),fr=d.querySelector('[data-vk="free"]');
+  var y=Math.round(b.getBoundingClientRect().top-d.getBoundingClientRect().top),ordem=ib?(fr&&(fr.compareDocumentPosition(ib)&Node.DOCUMENT_POSITION_FOLLOWING)?'quadro depois da frente':'quadro antes da frente'):'sem quadro';try{vmenuClose()}catch(_){}return {y:y,o:ordem}};
+var a=await porta1('cozinha','Balcão 2 portas'),b=await porta1('cozinha','Armário alto 2 portas'),c=await porta1('quarto','Guarda-roupa 2 vãos');
+R.balcao=a.o;R.alto=b.o;R.guardaRoupa=c.o;R.portaNoMesmoLugar=(Math.abs(b.y-a.y)<=30&&Math.abs(c.y-a.y)<=30)?'sim':'não · '+a.y+'/'+b.y+'/'+c.y;
+/* abas do editor por vãos */var m=cena('cozinha','Armário alto 2 portas');try{soloOn(m)}catch(_){}await W(200);R.abasPorVaos=[].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(q){return q.textContent.replace(/^\W+/,'').trim()}).join(' › ');try{soloOff()}catch(_){}
+R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "sem quadro")
+        XCTAssertEqual(o["alto"] as? String, "quadro depois da frente")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "quadro depois da frente")
+        XCTAssertEqual(o["portaNoMesmoLugar"] as? String, "sim")
+        XCTAssertEqual(o["abasPorVaos"] as? String, "Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

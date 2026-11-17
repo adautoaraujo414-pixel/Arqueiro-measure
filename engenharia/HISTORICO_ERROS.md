@@ -651,3 +651,4 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `testP0ParedeMenorQueOsMoveisSoAvisa`: nada muda, o aviso do mínimo e o de conflito aparecem;
   - `testP0ParedeDesfazRefazReabreEGuardaRoupa`: desfazer, refazer, salvar/reabrir, voltar a parede, guarda-roupa de 2400 com pé-direito 2000.
 - **Contorno na versão pública até atualizar:** ↶ Desfazer antes de fechar o projeto.
+- **Regressão achada e corrigida na homologação:** a 1ª assinatura (`6a319d7`) só tinha medidas e posição dos módulos, então ligar o tamponamento não fazia mais a pedra crescer 30 (`testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga`). Agora a assinatura leva tudo que o `stFitCalc` lê, menos a parede: tamponamentos, recuo, fundo, nicho, lava-louças solta e as outras pedras. Os 36 testes de pedra e de P0 passam.

@@ -706,7 +706,7 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   | 390×844 | 7/12 | 12/13 |
   | 844×390 | 6/13 | 11/13 |
   | 1024×1366 (iPad) | 8/13 | **13/13** |
-  | 1920×1080 | rodando no fim da sessão | rodando no fim da sessão |
+  | 1920×1080 | 8/13 | **13/13** |
 
   - Os testes novos do item 6 passam em todas as telas.
   - As falhas da versão nova também acontecem na pública, nas mesmas telas:

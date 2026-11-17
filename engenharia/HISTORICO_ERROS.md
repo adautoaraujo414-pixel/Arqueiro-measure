@@ -679,3 +679,11 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste que pegou:** `testEditorPorVaosLixeiraEngrossoPortasEAlinhamento` ("alturas" 688 705 | 705 705 em vez de 688 688 | 688 688). Passa na versão pública; falhava a partir do `c2951f0` (bisect: `8c0ce76` ok, `a9b1da7` ok, `c2951f0` falha).
 - **Correção mínima:** o gancho da contra-frente agora **chama primeiro o `poAlign` original**, com o mesmo retorno, e só depois marca a contra-frente. O alinhamento das portas voltou: 688 688 | 688 688, retorno 3.
 - **Lição para os testes locais:** o navegador pode usar o `editor.html` antigo guardado em cache. As rodadas passam a usar o endereço com `&v=<número>` para forçar o arquivo novo. As rodadas anteriores desta branch serão repetidas assim.
+
+## A6-PISCA (opção A, testada em alteração isolada e NÃO aprovada, 17/11)
+- **Ideia testada:** o 2º toque numa porta desfaz o 1º como antes, mas o ângulo volta na hora ao de antes do 1º toque, sem a animação de fechar. O 1º toque continua imediato.
+- **Medição (Chromium sem tela, toques de verdade no 3D):**
+  - 1 toque: o alvo de 90° é dado no mesmo toque, em 25–30 ms nas duas versões; aos 0,9 s a porta está a 90°.
+  - 2 toques com 150 ms: o ângulo fica em **0° o tempo todo na versão pública e na opção A**. O fim é igual nas duas (porta fechada, peça escolhida).
+- **Conclusão:** neste ambiente não há diferença mensurável, então o ganho não foi comprovado. Pela regra do Adauto, a alteração **não foi mantida** (nem commitada) e a implementação anterior fica. O efeito de piscar depende dos quadros do aparelho real.
+- **Pendente:** medir ou filmar no aparelho (Tab S9 FE, iPhone, iPad, Windows) antes de qualquer decisão.

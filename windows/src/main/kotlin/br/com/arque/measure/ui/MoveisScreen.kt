@@ -202,6 +202,8 @@ class MoveisBridge(
             "shareClient" -> { ui { onShareClient(arg(0), arg(1), arg(2)) }; "" }
             "close" -> { ui(onClose); "" }
             "putFile" -> { runCatching { val f = File(dir, safe(arg(0))); val t = File(dir, f.name + ".tmp"); t.writeBytes(android.util.Base64.decode(arg(1), android.util.Base64.DEFAULT)); runCatching { java.nio.file.Files.move(t.toPath(), f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }.onFailure { f.writeBytes(t.readBytes()); t.delete() } }; "" }
+            /* N13 (17/11): vídeo do editor também em arquivo, igual ao iOS */
+            "putVideo" -> br.com.arque.measure.data.EditorVideo.save(arg(0), dir).toString()
             "getFile" -> runCatching {
                 val f = File(dir, safe(arg(0)))
                 if (f.exists()) android.util.Base64.encodeToString(f.readBytes(), android.util.Base64.NO_WRAP) else ""

@@ -177,6 +177,8 @@ fun MoveisScreen(vm: AppViewModel) {
                     addJavascriptInterface(bridge, "ArqueApp")
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView, url: String?) {
+                            // N13 (17/11): mesmo script do iOS: grava os vídeos do editor em arquivo e devolve os que vieram de um backup
+                            runCatching { view.evaluateJavascript("window.__mediaKeepBig=true;" + view.context.assets.open("EditorMediaBackup.js").bufferedReader().use { it.readText() }, null) }
                             if (vm.moveisView) {
                                 view.evaluateJavascript("window.arqueViewMode&&window.arqueViewMode()", null)
                                 br.com.arque.measure.share.BtShare.frame.value?.let { f -> view.evaluateJavascript("window.arqueView&&window.arqueView($f)", null) }
@@ -347,6 +349,9 @@ class MoveisBridge(
         // gravação atômica: escreve num temporário e troca de nome; se o app morrer no meio, o arquivo anterior continua inteiro
         runCatching { val f = File(dir, safe(name)); val t = File(dir, f.name + ".tmp"); t.writeBytes(Base64.decode(b64, Base64.DEFAULT)); if (!t.renameTo(f)) { f.writeBytes(t.readBytes()); t.delete() } }
     }
+
+    /** N13 (17/11): vídeo do editor também em arquivo (entra no backup e passa pro iOS/Windows), igual ao iOS. */
+    @JavascriptInterface fun putVideo(json: String): Boolean = br.com.arque.measure.data.EditorVideo.save(json, dir)
 
     @JavascriptInterface fun getFile(name: String): String = runCatching {
         val f = File(dir, safe(name))

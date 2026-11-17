@@ -185,6 +185,10 @@ class DesktopCompatTest {
         assertTrue(b.call("listFiles", emptyList()).contains("projects.json"))
         b.call("delFile", listOf("projects.json"))
         assertEquals("", b.call("getFile", listOf("projects.json")))
+        // N13 (17/11): vídeo do editor vai pra arquivo pela ponte; registro inválido não grava
+        assertEquals("true", b.call("putVideo", listOf("{\"id\":\"v9\",\"kind\":\"video\",\"videoData\":\"data:video/mp4;base64,AQID\"}")))
+        assertTrue(File(dir, "video_v9.json").isFile)
+        assertEquals("false", b.call("putVideo", listOf("{\"id\":\"../v\",\"kind\":\"video\",\"videoData\":\"data:video/mp4;base64,AQID\"}")))
         assertEquals("false", b.call("isSharing", emptyList()))
         // nome perigoso não sai da pasta
         b.call("putFile", listOf("../fora.txt", java.util.Base64.getEncoder().encodeToString("x".toByteArray())))

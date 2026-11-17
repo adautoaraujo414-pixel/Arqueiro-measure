@@ -11183,6 +11183,10 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  /* guarda junto com o projeto */
  var ss=snapState;snapState=window.snapState=function(){var o=ss.apply(this,arguments);try{if((S.tz||[]).length)o.tz=JSON.parse(JSON.stringify(S.tz))}catch(_){}return o};
  if(typeof loadState==='function'){var ls=loadState;loadState=window.loadState=function(o){var r=ls.apply(this,arguments);try{S.tz=o&&Array.isArray(o.tz)?JSON.parse(JSON.stringify(o.tz)):[]}catch(_){}return r}}
+ /* N04 (auditoria geral 17/11): dados do projeto que não iam no arquivo salvo — medidas do gerador de painéis (pw), profundidade original da sala esticada pela parede lateral (RDw/RDs),
+    última altura do rodapé (rodLast) e escolhas do 3D (deco, tvLogo, tvAnim). Vão junto só quando existem (projeto antigo não muda) e, ao abrir outro projeto, não ficam os do anterior */
+ var N04K_=['pw','RDw','RDs','rodLast','deco','tvLogo','tvAnim'],ssN04_=snapState;snapState=window.snapState=function(){var o=ssN04_.apply(this,arguments);try{N04K_.forEach(function(k){if(S[k]!==undefined&&S[k]!==null)o[k]=JSON.parse(JSON.stringify(S[k]))})}catch(_){}return o};
+ if(typeof loadState==='function'){var lsN04_=loadState;loadState=window.loadState=function(o){var r=lsN04_.apply(this,arguments);try{N04K_.forEach(function(k){if(o&&o[k]!==undefined&&o[k]!==null)S[k]=JSON.parse(JSON.stringify(o[k]));else delete S[k]})}catch(_){}return r}}
  /* quadro pra criar/editar */
  function upd(){try{fit()}catch(_){}try{draw()}catch(_){}try{panel()}catch(_){}try{if(window.re3)re3()}catch(_){}}
  function box(id){var z=(S.tz||[]).filter(function(q){return q.id===id})[0],b=document.getElementById('tzbox');if(!z){if(b)b.hidden=true;window.TZSEL=null;return}if(!b){b=document.createElement('div');b.id='tzbox';b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));z-index:99991;background:#fff;color:#1b1f27;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.45);padding:10px 12px;width:min(440px,calc(100% - 16px));font-size:13px';document.body.appendChild(b)}

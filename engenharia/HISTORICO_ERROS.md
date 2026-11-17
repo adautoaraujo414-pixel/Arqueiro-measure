@@ -730,3 +730,17 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste F3 ajustado:**
   - "2 toques com o dedo apertado 150 ms e 330 ms entre soltar e encostar" abre o menu (falha na versão pública);
   - "2 pares com 400 ms entre eles" não trava o módulo.
+
+## N04 — dados do projeto que não iam no arquivo salvo (17/11/2026, auditoria geral, P0)
+- **Reproduzido:** sonda e teste `testDadosDoAmbienteEEscolhasDo3DVoltamDepoisDeSalvarEReabrir`. Ao salvar e abrir de novo, 7 dados voltavam ao padrão:
+  - `S.pw`: medidas do gerador de painéis de parede;
+  - `S.RDw` e `S.RDs`: profundidade original da sala quando a parede lateral a estica;
+  - `S.rodLast`: última altura do rodapé, usada ao religar;
+  - `S.deco`, `S.tvLogo` e `S.tvAnim`: escolhas do 3D.
+- **Também:** o desfazer não voltava a escolha de decoração.
+- **Causa:** esses campos não estavam no `snapState` (nem nos embrulhos dele). Enquanto o app ficava aberto, eles continuavam na memória e passavam até para o próximo projeto aberto.
+- **Não afeta:** peças, móveis e painéis já criados (`S.rp`), que sempre foram salvos.
+- **Correção:** mais um embrulho de `snapState`/`loadState`, no mesmo padrão dos outros (`tz`, `pxk`…).
+  - **Ao salvar:** o campo vai junto só quando existe, então projeto antigo não ganha nada.
+  - **Ao abrir:** volta o que está no arquivo e apaga o que vier do projeto anterior.
+- **Teste:** falha antes (commit do teste) e passa depois.

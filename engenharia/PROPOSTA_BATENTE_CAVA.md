@@ -1,4 +1,4 @@
-# Régua do batente do puxador cava: diagnóstico e proposta (17/11) — para aprovação, nada implementado
+# Régua do batente do puxador cava: diagnóstico e proposta (17/11) — implementada a regra do Adauto (altura do batente → frentes) na branch claude/arquemestre-batente-cava; ver HISTORICO_ERROS (BATENTE-CAVA)
 
 Pedido do Adauto (17/11): escolher à mão o tamanho das réguas de batente do cava das gavetas, com opção automática e restaurar padrão, no menu de ajustes que já existe. Aplicar em "só esta régua", "todas do módulo" e "todas do projeto", nessa ordem. Avisar antes de aplicar medida inviável. Valer em todos os módulos com gaveta cava e nas três plataformas.
 

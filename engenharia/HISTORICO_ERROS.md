@@ -629,3 +629,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
   - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
   - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).
+
+## BATENTE-CAVA: altura do batente cava escolhida pela pessoa, frentes recalculadas (pedido do Adauto, 17/11; branch `claude/arquemestre-batente-cava`, não publicado)
+- **Pedido:** a pessoa escolhe a altura do batente cava (a régua entre as gavetas). O app calcula a abertura visível, as frentes e a posição dos batentes. A parte da régua escondida atrás das frentes não é descontada duas vezes.
+- **Conta atual (antes):**
+  - frente = (vão + 2 × pV + travessa − (n−1) × abertura) ÷ n, com abertura `cbG` (padrão 25);
+  - a régua `cbR` (padrão `cbG` + 30) ficava fora da conta. Mudar a régua não mexia nas frentes;
+  - no editor por vãos não havia campo nenhum.
+- **Correção (sem trocar fórmula):** nova medida `cbA`, a altura do batente.
+  - Quando existe: abertura = `cbA` − 2 × 15 e régua = `cbA`. A fórmula das frentes é a mesma de sempre, só que com essa abertura.
+  - Sem `cbA` (projeto antigo, ou automático): igual a antes.
+- **Onde:**
+  - vão comum: os mesmos dois campos da aba das gavetas. "Régua entre gavetas" virou "Altura do batente cava"; o campo da abertura grava batente = abertura + 30. Mais o botão "↺ Medida automática";
+  - editor por vãos: um campo novo no painel "Gavetas · frente por fora" quando é cava.
+- **Limites (avisa e não aplica):**
+  - abertura maior que 0 (batente > 30);
+  - a caixa da gaveta cabendo pela regra que já existe em `gbox`: 40 mm (telescópica) ou 60 (oculta), mais 35 de folga.
+- **Testes novos:** 5, todos falham em `7c939bc` e passam agora:
+  - `testBatenteCavaRecalculaAsFrentesEPosicionaOsBatentes` (2, 3 e 4 gavetas; lista, corte e 3D);
+  - `testBatenteCavaForaDoLimiteAvisaENaoMudaNada`;
+  - `testBatenteCavaSalvaReabreDesfazRefazEAutomatica`;
+  - `testBatenteCavaNoEditorPorVaos`;
+  - `testBatenteCavaEmTodosOsModelosSoMexeNasPecasDaGaveta`.
+- **Garantia de projeto antigo:** os 142 modelos com as gavetas em cava (26 vãos) dão peças idênticas às de `7c939bc` sem a medida nova.
+- **Compatibilidade:** um projeto com `cbA` aberto num app ainda sem esta versão mostra o padrão (55/25). As três plataformas precisam receber juntas.
+- **Pendente:** uma linha em `.github/novidades.txt` na hora da publicação.

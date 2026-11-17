@@ -12236,4 +12236,153 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["invalidos"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* BATENTE-CAVA (pedido do Adauto 17/11): a altura do batente cava é a entrada; a abertura visível entre as frentes é batente − 2 × 15
+       (escondidos atrás das frentes) e as frentes dividem o resto igualmente (a parte escondida não é descontada duas vezes). Padrão 55 → abertura 25,
+       igual a antes. 2, 3 e 4 gavetas; o campo da abertura grava batente = abertura + 30; lista, corte e 3D acompanham. Antes: mudar a régua não mexia nas frentes. */
+    func testBatenteCavaRecalculaAsFrentesEPosicionaOsBatentes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+var campo=function(sel,val){var ip=document.querySelector('#bd '+sel);for(var t=0;t<7&&!ip;t++){S.tab=t;panel();ip=document.querySelector('#bd '+sel)}if(!ip)return 'sem campo';ip.value=String(val);ip.dispatchEvent(new Event('input',{bubbles:true}));return 'ok'};
+var mk=function(nome){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;var vi=m.v.findIndex(function(v){return v.k==='drawers'});m.v[vi].cava=true;S.m=m;S.sv=vi;draw();return vi};
+var est=function(vi){var P=partsOf(S.mods[0]),fr=P.filter(function(p){return p.name==='Frente de gaveta'&&p.vi===vi}).sort(function(a,b){return a.y-b.y}),bt=P.filter(function(p){return p.name==='Batente (cava)'&&p.vi===vi}).sort(function(a,b){return a.y-b.y});var ab=[],es=[];
+ for(var q=0;q<bt.length;q++){var t=fr[q].y+fr[q].h,b=fr[q+1].y;ab.push(Math.round(b-t));es.push(Math.round(t-bt[q].y)+'/'+Math.round(bt[q].y+bt[q].h-b))}
+ return 'frentes '+fr.map(function(p){return p.cw}).join('/')+' · batentes '+bt.map(function(p){return p.cw}).join('/')+' · abertura '+ab.join('/')+' · escondido '+es.join(' ')};
+var corte=function(){return cutLines(S.mods[0]).filter(function(l){return /^(Batente \(cava\)|Frente de gaveta)$/.test(String(l.names))}).map(function(l){return l.names+' '+l.qty+'×'+l.L+'x'+l.W}).join(' | ')};
+var r3=function(){__build();return __boxes().filter(function(b){return /^0:Batente \(cava\)/.test(String(b.nm))}).map(function(b){return Math.round(b.y1-b.y0)}).join('/')};
+var vi=mk('Gaveteiro 4 gavetas');R.g4padrao=est(vi);R.c=campo('[data-cba="r"]',75);R.g4b75=est(vi);R.g4lista=corte();open3D();await W(300);R.g4tresD=r3();var x3=document.getElementById('v3x');if(x3)x3.click();
+campo('[data-cba="g"]',35);R.g4ab35=est(vi)+' · batente gravado '+S.mods[0].v[vi].cbA;
+vi=mk('Balcão 2 gavetas');R.g2padrao=est(vi);campo('[data-cba="r"]',95);R.g2b95=est(vi);
+vi=mk('Gaveteiro 3 gavetas');R.g3padrao=est(vi);campo('[data-cba="r"]',61);R.g3b61=est(vi);
+R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["g4padrao"] as? String, "frentes 157/157/157/157 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["g4b75"] as? String, "frentes 142/142/142/142 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["g4lista"] as? String, "Batente (cava) 3×770x75 | Frente de gaveta 4×785x142")
+        XCTAssertEqual(o["g4tresD"] as? String, "75/75/75")
+        XCTAssertEqual(o["g4ab35"] as? String, "frentes 150/150/150/150 · batentes 65/65/65 · abertura 35/35/35 · escondido 15/15 15/15 15/15 · batente gravado 65")
+        XCTAssertEqual(o["g2padrao"] as? String, "frentes 340/340 · batentes 55 · abertura 25 · escondido 15/15")
+        XCTAssertEqual(o["g2b95"] as? String, "frentes 320/320 · batentes 95 · abertura 65 · escondido 15/15")
+        XCTAssertEqual(o["g3padrao"] as? String, "frentes 218/218/218 · batentes 55/55 · abertura 25/25 · escondido 15/15 15/15")
+        XCTAssertEqual(o["g3b61"] as? String, "frentes 214/214/214 · batentes 61/61 · abertura 31/31 · escondido 15/15 15/15")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* BATENTE-CAVA (17/11): medida fora do limite construtivo avisa e não muda nada (nem o desfazer ganha passo). Limites: abertura entre as frentes
+       maior que 0 (batente > 30) e a caixa da gaveta cabendo pela regra que já existe (40 mm de caixa + 35 de folga com corrediça telescópica). */
+    func testBatenteCavaForaDoLimiteAvisaENaoMudaNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+var campo=function(sel,val){var ip=document.querySelector('#bd '+sel);for(var t=0;t<7&&!ip;t++){S.tab=t;panel();ip=document.querySelector('#bd '+sel)}if(!ip)return 'sem campo';ip.value=String(val);ip.dispatchEvent(new Event('input',{bubbles:true}));return 'ok'};
+var mk=function(nome){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;var vi=m.v.findIndex(function(v){return v.k==='drawers'});m.v[vi].cava=true;S.m=m;S.sv=vi;draw();return vi};
+var est=function(vi){var P=partsOf(S.mods[0]),fr=P.filter(function(p){return p.name==='Frente de gaveta'&&p.vi===vi}).sort(function(a,b){return a.y-b.y}),bt=P.filter(function(p){return p.name==='Batente (cava)'&&p.vi===vi}).sort(function(a,b){return a.y-b.y});var ab=[],es=[];
+ for(var q=0;q<bt.length;q++){var t=fr[q].y+fr[q].h,b=fr[q+1].y;ab.push(Math.round(b-t));es.push(Math.round(t-bt[q].y)+'/'+Math.round(bt[q].y+bt[q].h-b))}
+ return 'frentes '+fr.map(function(p){return p.cw}).join('/')+' · batentes '+bt.map(function(p){return p.cw}).join('/')+' · abertura '+ab.join('/')+' · escondido '+es.join(' ')};
+var corte=function(){return cutLines(S.mods[0]).filter(function(l){return /^(Batente \(cava\)|Frente de gaveta)$/.test(String(l.names))}).map(function(l){return l.names+' '+l.qty+'×'+l.L+'x'+l.W}).join(' | ')};
+var r3=function(){__build();return __boxes().filter(function(b){return /^0:Batente \(cava\)/.test(String(b.nm))}).map(function(b){return Math.round(b.y1-b.y0)}).join('/')};
+var vi=mk('Gaveteiro 4 gavetas');HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;var k0=histKey(snapState());
+var tenta=function(sel,v){TL=[];campo(sel,v);return (histKey(snapState())===k0?'igual':'MUDOU')+' · '+(/Nada foi alterado/.test(TL.slice(-1)[0]||'')?'avisou':'sem aviso')};
+R.b30=tenta('[data-cba="r"]',30);R.b250=tenta('[data-cba="r"]',250);R.b500=tenta('[data-cba="r"]',500);R.ab0=tenta('[data-cba="g"]',0);R.abNeg=tenta('[data-cba="g"]',-5);
+R.aviso250=(function(){TL=[];campo('[data-cba="r"]',250);return TL.slice(-1)[0]||''})();
+R.historico=HIST.length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["b30"] as? String, "igual · avisou")
+        XCTAssertEqual(o["b250"] as? String, "igual · avisou")
+        XCTAssertEqual(o["b500"] as? String, "igual · avisou")
+        XCTAssertEqual(o["ab0"] as? String, "igual · avisou")
+        XCTAssertEqual(o["abNeg"] as? String, "igual · avisou")
+        XCTAssertTrue((o["aviso250"] as? String ?? "").contains("a caixa precisa de pelo menos 75 mm"))
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* BATENTE-CAVA (17/11): a altura escolhida entra no desfazer/refazer, fica gravada ao salvar, fechar e reabrir; projeto antigo (sem a altura
+       gravada) abre igual a antes; "↺ Medida automática" volta ao padrão (55 / abertura 25). */
+    func testBatenteCavaSalvaReabreDesfazRefazEAutomatica() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+var campo=function(sel,val){var ip=document.querySelector('#bd '+sel);for(var t=0;t<7&&!ip;t++){S.tab=t;panel();ip=document.querySelector('#bd '+sel)}if(!ip)return 'sem campo';ip.value=String(val);ip.dispatchEvent(new Event('input',{bubbles:true}));return 'ok'};
+var mk=function(nome){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;var vi=m.v.findIndex(function(v){return v.k==='drawers'});m.v[vi].cava=true;S.m=m;S.sv=vi;draw();return vi};
+var est=function(vi){var P=partsOf(S.mods[0]),fr=P.filter(function(p){return p.name==='Frente de gaveta'&&p.vi===vi}).sort(function(a,b){return a.y-b.y}),bt=P.filter(function(p){return p.name==='Batente (cava)'&&p.vi===vi}).sort(function(a,b){return a.y-b.y});var ab=[],es=[];
+ for(var q=0;q<bt.length;q++){var t=fr[q].y+fr[q].h,b=fr[q+1].y;ab.push(Math.round(b-t));es.push(Math.round(t-bt[q].y)+'/'+Math.round(bt[q].y+bt[q].h-b))}
+ return 'frentes '+fr.map(function(p){return p.cw}).join('/')+' · batentes '+bt.map(function(p){return p.cw}).join('/')+' · abertura '+ab.join('/')+' · escondido '+es.join(' ')};
+var corte=function(){return cutLines(S.mods[0]).filter(function(l){return /^(Batente \(cava\)|Frente de gaveta)$/.test(String(l.names))}).map(function(l){return l.names+' '+l.qty+'×'+l.L+'x'+l.W}).join(' | ')};
+var r3=function(){__build();return __boxes().filter(function(b){return /^0:Batente \(cava\)/.test(String(b.nm))}).map(function(b){return Math.round(b.y1-b.y0)}).join('/')};
+var vi=mk('Gaveteiro 4 gavetas');HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;
+campo('[data-cba="r"]',75);LASTT=0;histTick();R.aplicou=est(vi);
+document.getElementById('und').onclick();await W(60);R.desfez=est(vi);document.getElementById('red').onclick();await W(60);R.refez=est(vi);
+var a_=pLoadAll().filter(function(q){return q.id!=='pCAVA'});a_.push({id:'pCAVA',client:{nome:'Cava'},created:1,updated:1,current:JSON.parse(JSON.stringify(snapState()))});pSaveAll(a_);
+loadState(initLimpo());draw();var pb=pLoadAll().filter(function(q){return q.id==='pCAVA'})[0];CUR=pb.id;loadState(pb.current);draw();S.m=S.mods[0];S.sv=vi;R.reabriu=est(vi)+' · gravado '+S.mods[0].v[vi].cbA;
+var antigo=JSON.parse(JSON.stringify(snapState()));delete antigo.mods[0].v[vi].cbA;loadState(antigo);draw();R.projetoAntigo=est(vi);
+loadState(pb.current);draw();S.m=S.mods[0];S.sv=vi;var au=null;for(var t=0;t<7&&!au;t++){S.tab=t;panel();au=document.querySelector('#bd [data-cbauto]')}if(au){au.click();await W(50)}R.automatica=est(vi)+' · gravado '+S.mods[0].v[vi].cbA;
+pSaveAll(pLoadAll().filter(function(q){return q.id!=='pCAVA'}));R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["aplicou"] as? String, "frentes 142/142/142/142 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["desfez"] as? String, "frentes 157/157/157/157 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["refez"] as? String, "frentes 142/142/142/142 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["reabriu"] as? String, "frentes 142/142/142/142 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15 · gravado 75")
+        XCTAssertEqual(o["projetoAntigo"] as? String, "frentes 157/157/157/157 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15")
+        XCTAssertEqual(o["automatica"] as? String, "frentes 157/157/157/157 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15 · gravado undefined")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* BATENTE-CAVA (17/11) no editor por vãos (torre da cozinha, gaveta com frente por fora e cava): o mesmo campo no painel das gavetas recalcula
+       frentes, batentes e caixa só do grupo de gavetas; fora do limite avisa e não muda; salva/reabre; "↺ Medida automática" volta ao padrão. */
+    func testBatenteCavaNoEditorPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TL=[];window.toast=function(t){TL.push(String(t))};
+var mk=function(room){S.mods=[];S.stones=[];S.fr=[];S.env=room;S.room=room;S.W=3600;S.H=2700;draw();var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();return m};
+var C=function(s){document.querySelector(s).click()};
+var m=mk('cozinha');RG.gd=undefined;soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|3"]');
+RG.sel={mi:0,path:'r.0'};RG.dsel=null;RG.tab='por';panel();C('[data-rga="door|2"]');
+RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();C('[data-rga="ins|gav"]');m.v[0].cava=true;draw();
+var rg=function(re){return partsOf(m).filter(function(p){return re.test(p.name)&&p.rgp==='r.2'})};
+var est=function(){var fr=rg(/^Frente de gaveta$/),bt=rg(/^Batente \(cava\)$/),la=rg(/^Lateral de gaveta$/);fr.sort(function(a,b){return a.y-b.y});bt.sort(function(a,b){return a.y-b.y});
+ var ab=[],esc=[];for(var q=0;q<bt.length;q++){var t=fr[q].y+fr[q].h,b=fr[q+1].y;ab.push(Math.round((b-t)*10)/10);esc.push(Math.round((t-bt[q].y)*10)/10+'/'+Math.round((bt[q].y+bt[q].h-b)*10)/10)}
+ return 'frentes '+fr.map(function(p){return p.cw}).join('/')+' · batentes '+bt.map(function(p){return p.cw}).join('/')+' · abertura '+ab.join('/')+' · escondido '+esc.join(' ')+' · caixa '+(la[0]?la[0].cw:'-')};
+var outros=function(){return partsOf(m).filter(function(p){return p.rgp!=='r.2'}).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(';')};
+R.antes=est();var o0=outros();
+RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();var ip=document.querySelector('#bd [data-rgcba]');R.campo=!!ip;
+if(ip){ip.value='75';ip.dispatchEvent(new Event('input',{bubbles:true}));R.b75=est();R.outrosIguais=outros()===o0;
+ TL=[];var k=histKey(snapState());RG.sel={mi:0,path:'r.2'};panel();ip=document.querySelector('#bd [data-rgcba]');ip.value='900';ip.dispatchEvent(new Event('input',{bubbles:true}));R.b900={igual:histKey(snapState())===k,aviso:(TL.slice(-1)[0]||'(aceitou)').slice(0,110)};
+ var s1=JSON.parse(JSON.stringify(snapState()));loadState(initLimpo());draw();loadState(s1);draw();m=S.mods[0];R.reabriu=est();
+ S.m=m;soloOn(m);RG.sel={mi:0,path:'r.2'};RG.dsel=null;RG.tab='gav';panel();var au=document.querySelector('#bd [data-rgcbauto]');if(au){au.click();await W(50)}R.automatica=est()}
+try{soloOff()}catch(e){}R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "frentes 186/186/186/186 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15 · caixa 106")
+        XCTAssertEqual(o["campo"] as? Bool, true)
+        XCTAssertEqual(o["b75"] as? String, "frentes 171/171/171/171 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15 · caixa 91")
+        XCTAssertEqual(o["outrosIguais"] as? Bool, true)
+        XCTAssertEqual(o["reabriu"] as? String, "frentes 171/171/171/171 · batentes 75/75/75 · abertura 45/45/45 · escondido 15/15 15/15 15/15 · caixa 91")
+        XCTAssertEqual(o["automatica"] as? String, "frentes 186/186/186/186 · batentes 55/55/55 · abertura 25/25/25 · escondido 15/15 15/15 15/15 · caixa 106")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* BATENTE-CAVA (17/11), família (§11.2): em todos os modelos do catálogo com gaveta cava, o padrão continua 55 e mudar a altura do batente
+       só mexe nas peças da própria gaveta (frente, batente, caixa e o fundo que sobe/desce com ela); tirar a medida volta tudo exatamente como era. */
+    func testBatenteCavaEmTodosOsModelosSoMexeNasPecasDaGaveta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var R={};
+var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});var n=0,nomes={},fora=[],padrao=[];
+for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=8000;S.H=3000;draw();newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[0];if(!m)continue;
+ var j=(m.v||[]).findIndex(function(v){return v.k==='drawers'});if(j<0)continue;m.v[j].cava=true;draw();if(!partsOf(m).some(function(p){return p.name==='Batente (cava)'}))continue;n++;
+ var bt0=partsOf(m).filter(function(p){return p.name==='Batente (cava)'}).map(function(p){return p.cw});if(bt0.some(function(h){return h!==55}))padrao.push(its[i].n);
+ var sig=function(){return partsOf(m).map(function(p){return p.name+'|'+p.cl+'x'+p.cw+'@'+Math.round(p.x)+','+Math.round(p.y)})};var a=sig();m.v[j].cbA=65;var b=sig();delete m.v[j].cbA;
+ a.filter(function(x){return b.indexOf(x)<0}).concat(b.filter(function(x){return a.indexOf(x)<0})).forEach(function(x){nomes[x.split('|')[0]]=1});
+ if(sig().join(';')!==a.join(';'))fora.push(its[i].n+' (não voltou)')}
+R.modelos=n;R.mudaram=Object.keys(nomes).sort().join(' · ');R.padrao55=padrao.length?padrao.join(', '):'todos 55';R.voltou=fora.length?fora.join(', '):'todos';R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? Int, 18)
+        XCTAssertEqual(o["mudaram"] as? String, "Batente (cava) · Frente de gaveta · Frente/costa de gaveta (contra-frente e traseira) · Fundo de gaveta (6 mm) · Lateral de gaveta")
+        XCTAssertEqual(o["padrao55"] as? String, "todos 55")
+        XCTAssertEqual(o["voltou"] as? String, "todos")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

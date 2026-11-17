@@ -678,3 +678,8 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não reproduzido:** o vazamento da aba Portas para o editor por vãos (FASE3 1.B). Na sonda, entrar no editor por vãos com a aba Portas aberta não mostrou "Modelo da porta" fora da aba Portas. Fica como risco.
 - **Teste:** `testF3MenusNaMesmaOrdemEmTodosOsModulos`: falha na versão pública e passa agora.
 - **Expectativa adaptada (pedido do Adauto de 17/11, ordem fixa):** a ordem das abas no menu rápido de `testDoisToques…` (linha com "abas:").
+
+## F3-AZUL: azul de seleção forte (Fase 3 item 4; decisão do Adauto em 17/11: mais suave sem perder a identificação)
+- **Mudança:** módulo escolhido no 3D (Tamanho) de 40% para 25% de azul; divisórias do editor por vãos sem escolha de 0,35 para 0,22 de opacidade. A divisória escolhida continua vermelha e a cor continua #2f6be0.
+- **Não mexido:** botões escolhidos (`.sel`), contorno do módulo no 2D e tamponamento. Se o azul forte for outro, um print resolve.
+- **Teste:** só visual (imagens antes e depois no relatório). Nenhum teste da bateria depende dessas opacidades.

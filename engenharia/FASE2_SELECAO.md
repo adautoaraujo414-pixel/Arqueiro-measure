@@ -156,3 +156,21 @@ Depois de cada correção, também rodam a bateria completa e as sondas s01–s3
 - **Backup JVM:** 13 de 13, BUILD SUCCESSFUL.
 - **Salvar, fechar e reabrir · desfazer e refazer · portas · projetos antigos:** s11, s28, s30, s08a/b e s41 idênticas; testes 3, 5, 6 e C.
 - **Não verificado:** aparelho real, CI do iOS, compilação completa Android/Windows.
+
+## Publicação Android e Windows (autorizada pelo Adauto em 17/11; iOS não publicado)
+- **Commit publicado:** `7c939bc` (Fase 2 + GV-P1 + GV-C + BKP-PONTOS). Android e Windows com código idêntico ao `d669be5`: o `7c939bc` só mexe no arquivo de testes do iOS.
+- **Android:** run 632, modo publicar, "PUBLICAR 7c939bc" → release **apk-632**, ponteiro `apk-latest` = 632.
+  - APK `br.com.arque.measure` 1.0.632, não é o de teste;
+  - certificado SHA-256 `460e477c…` igual ao da apk-626, então atualiza por cima sem desinstalar;
+  - editor igual ao homologado (md5 6f197f2e…).
+  - AAB da Play: só guardado na release, não enviado à loja.
+- **Windows:** run 143 → release **win-143**, ponteiro `win-latest` = 143, com o instalador normal e o do Windows 7/8.
+  - A própria publicação rodou os testes JVM e instalou o MSI e testou o app instalado, antes de mexer no ponteiro;
+  - editor igual ao homologado (diferença só de fim de linha CRLF, como já era na win-140).
+- **Versões anteriores (rollback):** apk-626 e win-140 continuam nas releases, sem mudança.
+  - Para voltar: disparar `android.yml` / `windows.yml` em modo publicar no commit `9f3dc3e` (o das 626/140), com "PUBLICAR 9f3dc3e". Isso gera apk-N/win-N novos com o código anterior; o ponteiro sempre sobe de número, então o app aceita.
+- **Antes de publicar:**
+  - bateria 347/348 aqui e no app do Windows (a falha é a antiga do tamponamento);
+  - 29 sondas sem regressão;
+  - backup 16/16 na sonda, Windows JVM 134/134, Android CI com `BackupCaminhoTest`.
+- **iOS:** não publicado. A CI não compilava desde `9561fcd` por erro de chaves no arquivo de testes; foi corrigido em `7c939bc` e `a17bcbf` (só chaves). A CI do `a17bcbf` está rodando.

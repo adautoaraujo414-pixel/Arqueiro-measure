@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Release da versão anterior (padrão: a publicada agora, apk-latest)'
-        default: 'apk-latest'
+        description: 'Release da versão anterior (padrão: apk-636, a publicada em 17/11)'
+        default: 'apk-636'
 
 permissions:
   contents: read
@@ -49,7 +49,7 @@ jobs:
       - name: Baixar a versão anterior publicada
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download "${{ inputs.anterior || 'apk-latest' }}" -p ArqueMeasure-debug.apk -O anterior.apk
+        run: gh release download "${{ inputs.anterior || 'apk-636' }}" -p ArqueMeasure-debug.apk -O anterior.apk
 
       - name: Ativar aceleração do emulador (KVM)
         run: |

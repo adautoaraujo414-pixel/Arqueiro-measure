@@ -109,3 +109,34 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 8. **Auditoria preventiva.** Ao corrigir, procurar falhas no mesmo mecanismo. Classificar cada achado como **erro comprovado**, **risco identificado**, **comportamento correto** ou **não foi possível verificar**. Nunca dizer que corrigiu o que não foi reproduzido.
 9. **Publicação.** Só ambiente de desenvolvimento. Não mudar ponteiros de atualização de produção nem aplicativos instalados. Nada no Android, Windows, TestFlight ou App Store sem autorização explícita (ver seção 7).
 10. **Relatório de cada investigação:** ERRO ORIGINAL · CAUSA RAIZ · MÓDULOS INVESTIGADOS · ERROS SEMELHANTES · CORREÇÕES · TESTES · SEGURANÇA · PENDÊNCIAS.
+
+## 12. Engenharia cirúrgica: evoluir sem reconstruir (Adauto, 17/11/2026 · vale para toda sessão)
+**Não alterar o que já funciona. Implementar só o que foi pedido. Corrigir só o que tem defeito.**
+
+1. **Antes de qualquer código:** investigar o funcionamento atual e o que já está implementado. Não presumir que algo falta sem ler o código e testar o comportamento.
+2. **Não reescrever, substituir ou reorganizar** funções existentes sem necessidade comprovada. Nada de refatoração geral durante uma correção específica.
+3. **Não mudar sem pedido expresso:**
+   - 1 toque;
+   - abrir/fechar portas e gavetas;
+   - câmera, zoom e navegação;
+   - seleção e edição existentes;
+   - cálculos, medidas, folgas e descontos;
+   - montagem dos móveis e regras de ferragens;
+   - plano de corte;
+   - salvar e restaurar;
+   - layout, botões, menus e identidade visual.
+4. **Implementar só o que falta**, aproveitando a estrutura existente. Não substituir comando antigo por botão ou menu novo.
+5. **Erro:** causa raiz e a menor correção possível, sem mexer em outras funções.
+6. **Conflito** entre o novo e o existente: não decidir sozinho. Parar, explicar causa, alternativas e impacto, e esperar a autorização.
+7. **Preservar** todas as regras de marcenaria, geometria sólida e cálculos já homologados. Peça estrutural (lateral, base, divisória) nunca se solta do módulo.
+8. **Testar antes e depois.** Testes novos passando não bastam: os antigos também têm que passar. Comparar com a versão anterior. Regressão = não concluído.
+9. **Gestos:**
+   - 1 toque: exatamente o original.
+   - 2 toques com a câmera próxima: peça individual, edição de 1 em 1 mm, com os vínculos.
+   - 2 toques com a câmera afastada: módulo inteiro; outros 2 toques num destino válido movem o módulo, inclusive para outra parede.
+   - 3 toques: dimensionamento geral do móvel, sem mudar medida antes de confirmar.
+10. **Procedimento:** INVESTIGAR → IDENTIFICAR O QUE FALTA → IMPLEMENTAR O MÍNIMO → TESTAR → COMPARAR COM A VERSÃO ANTERIOR → RELATAR.
+11. **Relatório de cada tarefa:** SOLICITAÇÃO · JÁ EXISTIA · ALTERAÇÃO · ARQUIVOS · TESTES · REGRESSÕES · STATUS · PUBLICAÇÃO.
+12. **Branches separadas.** Não misturar tarefas não homologadas. Não publicar sem autorização expressa (seção 7).
+
+**Regra definitiva:** não reconstruir o Arquemestre a cada função nova. Evoluir o sistema existente, preservando a engenharia já desenvolvida.

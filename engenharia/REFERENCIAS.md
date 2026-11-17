@@ -38,3 +38,14 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 - **Leitura do pedido (a confirmar):** a lateral descendente sai de baixo do tamponamento superior, numa das pontas, e desce até a medida escolhida, formando um nicho/vão ao lado do módulo; o app mostra a medida livre real desse vão.
 - **Pedido completo:** "ARQUEMESTRE — TAMPONAMENTOS EDITÁVEIS E LATERAIS DESCENDENTES" (17/11): 2 toques no tamponamento no 3D com ajuste numérico e fino de 1 mm; no "Tamponamento superior do módulo": descer lateral esquerda/direita com altura; "Mostrar vão livre" no 2D e no 3D; plano de corte com identidade estável (PC-ID); salvar modelo; desfazer; só módulos inferiores compatíveis; 15 testes obrigatórios.
 - **Fila:** depois dos itens já aprovados (1 P0 · 2 iOS · 3 Fase 3 · 4 Plano de Corte · 5 lateral inteira com gavetas · 6 ajustes 3D por 2 toques · 7 estrutura paramétrica), branch própria. Primeiro passo: investigar a geometria atual dos tamponamentos (`tlAdj`/`trAdj`, `tbL`/`tbR`, `tt`, tamponamento superior "passa reto") e se a descida é extensão do tamponamento lateral existente ou peça nova, sem gerar peça duplicada.
+
+## Dois toques com a câmera afastada escolhem e movem o MÓDULO inteiro (Adauto, 17/11) — na fila, nada implementado
+- **Pedido:** com a câmera um pouco afastada, 2 toques no móvel escolhem o módulo inteiro (destaque discreto); 2 toques em outro lugar válido movem o módulo inteiro, sem desmontar, redimensionar, apagar ou mudar peça. Câmera perto: peças individuais como hoje. Decidir pelo zoom e pela geometria real do módulo (tamanho dele na tela), não por distância fixa. Não pegar vizinho. 2D, 3D e coordenadas atualizados; plano de corte e cálculos iguais.
+- **Fila:** soma-se ao pedido de mover por 2 toques já registrado; depois das prioridades aprovadas, branch própria, 3 plataformas.
+
+## Biblioteca: completar "Cantos e cozinha em L" com 8 modelos (Adauto, 17/11) — na fila, nada implementado
+- **Imagem citada no pedido: não chegou.** Pedir de novo antes de implementar.
+- **O que já existe hoje (conferido no código, sem mudar nada):**
+  - em "◣ Cantos e cozinha em L": Canto em L (baixo) · esquerdo/direito e Canto em L (aéreo) · esquerdo/direito (os 4 de canto em L já existem);
+  - em outra categoria de cantos (acrescentados por código, `CG(...)`): Balcão canto cego · cego na direita (porta na esquerda) / cego na esquerda (porta na direita), e Aéreo canto cego · cego na direita / cego na esquerda.
+- **Leitura (a confirmar):** os 8 modelos parecem existir; falta reuni-los na categoria "Cantos e cozinha em L" na ordem pedida (L: inferiores e depois aéreos; cego: inferiores e depois aéreos), com os nomes pedidos, sem duplicar, e conferir cada um (peças, corte, 3D, lado). Confirmar com a imagem.

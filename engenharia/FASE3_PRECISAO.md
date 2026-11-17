@@ -99,3 +99,16 @@
 8. "Do chão" que passa do teto: encaixa ou mantém e avisa? E o `rowFix`: pode reduzir a largura digitada ou empurrar vizinhos?
 9. O campo deve mostrar o décimo?
 10. "Réguas": as setas do 3D, as réguas do tamponamento ou a régua do engrosso?
+
+## Homologação local da Fase 3 (17/11, commit 759ccf0)
+- **Bateria completa (Chromium):** 353/354.
+  - A única falha, `testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase`, falha igual na versão pública (7c939bc), no P0 e no Windows 38.
+  - `testFitaDaBase…`, instável também na versão pública, passou nesta rodada.
+- **Correções (um commit cada):**
+  - F3-TOQUE, F3-SEL e a regressão dela corrigida;
+  - F3-MED, F3-SETA, F3-REGN, F3-MENU e F3-AZUL.
+  - Cada uma tem teste que falha na versão pública e passa agora.
+- **Não reproduzido:** vazamento da aba Portas para o editor por vãos (risco).
+- **Pendente de decisão do Adauto:** "Do chão" que passa do teto; encaixe da largura na parede; limite do tamponamento digitado.
+- **iOS:** `janelaNaoDesceNoMeioDoToque` (`testMaoDeObra…`) é intermitente no simulador também sem a Fase 3 (CI 598 e 605 falharam, 599 passou). Fica para investigar.
+- **CI:** iOS 606 e Windows 40 rodando no 759ccf0.

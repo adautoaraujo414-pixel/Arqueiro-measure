@@ -12236,4 +12236,80 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["invalidos"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* P0-PAREDE (pedido do Adauto 17/11, regra GEO-AVISA): digitar a parede ou o pé-direito (cota do 2D, "até o teto" sem pé-direito medido, setv,
+       campo da parede do ambiente) e voltar deixa módulos, pedra, cuba e fundo da pia exatamente iguais. Antes (versão pública 1.0.632/win-143): a cota
+       gravava largura/posição/altura de todos os módulos (parede 320 esmagava a cozinha e não voltava) com o aviso "Nenhuma medida foi alterada". */
+    func testP0ParedeEPeDireitoDigitadosNaoMexemNosMoveis() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var med=function(){return S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b||0].join('/')}).join(' ')+' | pedras '+JSON.stringify((S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t,s.widA,s.widB,s.lenA,s.lenB,(s.items||[]).map(function(i){return [i.x,i.y]})]}))+' fundos '+S.mods.map(function(m){return (m.fundo?1:0)+''+(m.fundoPia?1:0)}).join('')};
+        var cena=async function(){loadState(initLimpo());draw();demoScene();await W(250);draw();S.Hm=1;S.Wm=1;return med()};
+        var cota=function(k,v){openQ(k);var ip=document.querySelector('input[data-k="'+(k==='mt'?'H':k==='mr'?'W':k)+'"]');if(!ip)return false;ip.value=String(v);ip.dispatchEvent(new Event('change',{bubbles:true}));return true};
+        var caso=async function(nome,acao){var m0=await cena(),W0=S.W,H0=S.H;TL=[];var ok=await acao(W0,H0);await W(30);var m1=med();R[nome]=(ok===false?'sem campo · ':'')+(m1===m0?'móveis e pedra iguais':'MUDARAM')+' · parede '+S.W+' · pé-direito '+S.H+(TL.some(function(t){return /Nenhuma medida foi alterada/.test(t)})&&m1!==m0?' · AVISO FALSO':'')};
+        await caso('w320',async function(W0){var a=cota('W',320);cota('W',W0);return a});
+        await caso('w1500',async function(W0){var a=cota('W',1500);cota('W',W0);return a});
+        await caso('h1500',async function(W0,H0){var a=cota('H',1500);cota('H',H0);return a});
+        await caso('h260',async function(W0,H0){var a=cota('H',260);cota('H',H0);return a});
+        await caso('teto',async function(W0,H0){S.Hm=0;S.m=S.mods[6];var a=cota('mt',500);S.Hm=0;cota('mt',H0);return a});
+        await caso('setv',async function(W0,H0){setv('W',1500);setv('H',1500);setv('W',W0);setv('H',H0)});
+        await caso('ambiente',async function(W0){var f=function(v){var i=document.createElement('input');i.dataset.pf='F|w';i.value=String(v);document.body.appendChild(i);i.dispatchEvent(new Event('change',{bubbles:true}));i.remove()};f(1500);f(W0)});
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        for k in ["w320", "w1500", "h1500", "h260", "teto", "setv", "ambiente"] { XCTAssertEqual(o[k] as? String, "móveis e pedra iguais · parede 3600 · pé-direito 2700", k) }
+        XCTAssertEqual(o["w320"] as? String, "móveis e pedra iguais · parede 3600 · pé-direito 2700")
+        XCTAssertEqual(o["h260"] as? String, "móveis e pedra iguais · parede 3600 · pé-direito 2700")
+        XCTAssertEqual(o["teto"] as? String, "móveis e pedra iguais · parede 3600 · pé-direito 2700")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* P0-PAREDE (17/11): parede menor que os móveis não corta a pedra nem anda a cuba; o aviso de conflito é verdadeiro (nada mudou) e o mínimo de
+       500 mm do ambiente avisa em vez de corrigir calado. */
+    func testP0ParedeMenorQueOsMoveisSoAvisa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var med=function(){return S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b||0].join('/')}).join(' ')+' | pedras '+JSON.stringify((S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t,s.widA,s.widB,s.lenA,s.lenB,(s.items||[]).map(function(i){return [i.x,i.y]})]}))+' fundos '+S.mods.map(function(m){return (m.fundo?1:0)+''+(m.fundoPia?1:0)}).join('')};
+        var cena=async function(){loadState(initLimpo());draw();demoScene();await W(250);draw();S.Hm=1;S.Wm=1;return med()};
+        var cota=function(k,v){openQ(k);var ip=document.querySelector('input[data-k="'+(k==='mt'?'H':k==='mr'?'W':k)+'"]');if(!ip)return false;ip.value=String(v);ip.dispatchEvent(new Event('change',{bubbles:true}));return true};
+        var m0=await cena();TL=[];cota('W',320);await W(30);R.parede320=med()===m0?'nada mudou':'MUDOU';R.paredeFicou=S.W;R.avisoMinimo=TL.some(function(t){return /mínimo é 500 mm, ficou 500 mm/.test(t)});
+        R.avisoConflito=TL.some(function(t){return /cabem apenas|não cabe onde está/.test(t)});
+        await cena();m0=med();cota('H',1500);await W(30);R.peDireito1500=med()===m0?'nada mudou':'MUDOU';R.conflitos=(window.fgConflitos?fgConflitos().length:-1)>0;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["parede320"] as? String, "nada mudou")
+        XCTAssertEqual(o["paredeFicou"] as? Int, 500)
+        XCTAssertEqual(o["avisoMinimo"] as? Bool, true)
+        XCTAssertEqual(o["avisoConflito"] as? Bool, true)
+        XCTAssertEqual(o["peDireito1500"] as? String, "nada mudou")
+        XCTAssertEqual(o["conflitos"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* P0-PAREDE (17/11): desfazer/refazer, salvar/fechar/reabrir com a parede encolhida e voltar a parede deixam tudo igual; guarda-roupa de
+       2400 com pé-direito 2000 e volta também. */
+    func testP0ParedeDesfazRefazReabreEGuardaRoupa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var med=function(){return S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b||0].join('/')}).join(' ')+' | pedras '+JSON.stringify((S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t,s.widA,s.widB,s.lenA,s.lenB,(s.items||[]).map(function(i){return [i.x,i.y]})]}))+' fundos '+S.mods.map(function(m){return (m.fundo?1:0)+''+(m.fundoPia?1:0)}).join('')};
+        var cena=async function(){loadState(initLimpo());draw();demoScene();await W(250);draw();S.Hm=1;S.Wm=1;return med()};
+        var cota=function(k,v){openQ(k);var ip=document.querySelector('input[data-k="'+(k==='mt'?'H':k==='mr'?'W':k)+'"]');if(!ip)return false;ip.value=String(v);ip.dispatchEvent(new Event('change',{bubbles:true}));return true};
+        var m0=await cena(),W0=S.W;HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;cota('W',320);await W(30);LASTT=0;histTick();
+        document.getElementById('und').onclick();await W(60);R.desfez='parede '+S.W+' · '+(med()===m0?'iguais':'MUDARAM');document.getElementById('red').onclick();await W(60);R.refez='parede '+S.W+' · '+(med()===m0?'iguais':'MUDARAM');
+        var a_=pLoadAll().filter(function(q){return q.id!=='pP0'});a_.push({id:'pP0',client:{nome:'P0'},created:1,updated:1,current:JSON.parse(JSON.stringify(snapState()))});pSaveAll(a_);
+        loadState(initLimpo());draw();var pb=pLoadAll().filter(function(q){return q.id==='pP0'})[0];CUR=pb.id;loadState(pb.current);draw();await W(60);R.reabriu='parede '+S.W+' · '+(med()===m0?'iguais':'MUDARAM');
+        cota('W',W0);await W(30);R.voltouParede='parede '+S.W+' · '+(med()===m0?'iguais':'MUDARAM');
+        pSaveAll(pLoadAll().filter(function(q){return q.id!=='pP0'}));
+        /* guarda-roupa de 2400 no quarto: pé-direito 2000 e volta */loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=3600;S.H=2700;S.Hm=1;draw();var c=CATS.filter(function(x){return x.id==='quarto'})[0],gr=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Guarda-roupa 2 vãos/.test(q.n)})[0]));newTpl(gr);draw();await W(80);var g0=med();cota('H',2000);cota('H',2700);R.guardaRoupa=med()===g0?'iguais':'MUDARAM';
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["desfez"] as? String, "parede 3600 · iguais")
+        XCTAssertEqual(o["refez"] as? String, "parede 500 · iguais")
+        XCTAssertEqual(o["reabriu"] as? String, "parede 500 · iguais")
+        XCTAssertEqual(o["voltouParede"] as? String, "parede 3600 · iguais")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -629,3 +629,25 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
   - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
   - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).
+
+## P0-PAREDE: digitar a parede ou o pé-direito esmagava os móveis e cortava a pedra (autorizado pelo Adauto em 17/11; branch `claude/arquemestre-p0-parede`)
+- **Versões afetadas:** públicas Android 1.0.632 e Windows win-143, e as anteriores. A homologação de 16/11 não pegou porque as sondas mudavam a parede pelo `setv`, sem passar pela cota.
+- **Como reproduzir (versão pública):** cozinha demo, cota da parede no 2D, digitar 320 e depois 3600.
+  - Todos os módulos ficam com largura 500 e x 0, e não voltam.
+  - O aviso diz "Nenhuma medida foi alterada" (falso).
+  - O mesmo com pé-direito 1500 ou 260, com "até o teto" sem pé-direito medido, e com guarda-roupa de 2400 e pé-direito 2000 (fica 2000).
+  - O desfazer precisava de 2 toques.
+- **Causa raiz (3 pontos):**
+  1. `change` dos campos W/H/stT (`editor.html` ~2391): depois do `setv`, um laço gravava `o.w`, `o.x`, `o.h` e `o.b` de todos os módulos e cortava `S.stW`, fora da guarda GEO-AVISA.
+  2. `stFollowAll`, chamado no `draw`: a conta do encaixe da pedra (`stFitCalc`) limita a pedra à parede. Mudar só a parede recalculava a pedra, que era cortada; a cuba andava e o fundo da pia trocava de módulo (`baseSemFundo`).
+  3. Guarda do `roomClamp`: devolvia só largura e posição da pedra, não as pernas do L/U (`widA`/`widB`/`lenA`/`lenB`) nem a posição das cubas.
+- **Correção:**
+  1. Laço tirado. O mínimo de 500 mm do ambiente continua, mas avisa.
+  2. A pedra acompanha só os módulos: assinatura `stModSig` dos módulos e móveis soltos; se só a parede mudou, a pedra não é recalculada.
+  3. A guarda devolve a pedra inteira (pernas e cubas).
+- **O que não mudou:** a regra aprovada "a pedra acompanha os módulos" (mexer nos módulos ainda reencaixa a pedra), os outros caminhos de parede, layout e fórmulas.
+- **Testes:** os 3 falham na versão pública e passam agora.
+  - `testP0ParedeEPeDireitoDigitadosNaoMexemNosMoveis`: 7 caminhos — cota W 320/1500, cota H 1500/260, "até o teto", `setv` e campo da parede do ambiente;
+  - `testP0ParedeMenorQueOsMoveisSoAvisa`: nada muda, o aviso do mínimo e o de conflito aparecem;
+  - `testP0ParedeDesfazRefazReabreEGuardaRoupa`: desfazer, refazer, salvar/reabrir, voltar a parede, guarda-roupa de 2400 com pé-direito 2000.
+- **Contorno na versão pública até atualizar:** ↶ Desfazer antes de fechar o projeto.

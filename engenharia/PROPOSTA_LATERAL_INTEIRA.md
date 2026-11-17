@@ -66,3 +66,24 @@ Numéricos, com as medidas do exemplo e de `Balcão 2 portas + 4 gavetas` e `+ 8
 - salvar e reabrir, desfazer;
 - guarda-roupa e torre sem mudança;
 - aviso de profundidade.
+
+## Respostas do Adauto (17/11) e o que foi feito
+- **Base:** "A lateral acompanha as outras, que é por cima da base, com o rebaixo do frontal." → lateral do meio 690, em cima da base, com o rebaixo 15 × 70. **A base continua inteira.**
+- **Travessa (pergunta 2) e duas divisórias (pergunta 3): puladas.** Ficou o que menos muda, como **pendente de confirmação**:
+  - a travessa continua uma peça só (900), passando pelo rebaixo, como já passa nas laterais de fora;
+  - toda divisória sem recuo que encosta num vão de gavetas vira lateral do meio. No gaveteiro nas duas pontas, são as 2.
+- **Divisória com recuo ou montante (pergunta 4):** sem resposta. Não mudam (continuam divisória/montante).
+- **Nome:** "Lateral do meio N". Entra em "Laterais" na lista. No corte, junta com as laterais de mesma medida (3 × 690 × 560).
+- **Implementado (LAT-MEIO, branch `claude/arquemestre-lateral-inteira`):**
+  - **Módulo novo** de baixo da cozinha/gourmet nasce com `m.latMeio=1`.
+  - **Módulo antigo** (sem a marca) não muda: o painel avisa e oferece "Usar lateral inteira" ou "Manter divisória". As duas escolhas passam pelo desfazer.
+  - **Código que dependia do nome "Divisória", acompanhado:**
+    - rebaixo no 3D;
+    - caixa do 3D;
+    - junta do fundo grande;
+    - 🗑 (tirar a lateral do meio tira a divisória do `m.div`, como antes).
+  - **Aviso de profundidade diferente:** aparece no painel (Estrutura e Divisões) para módulos de baixo encostados. Nada muda.
+- **Catálogo (sonda, todos os 142 modelos na cozinha):**
+  - Mudaram só os modelos com divisória junto de gavetas: balcões com gavetas, e também escrivaninhas, racks, aparador, gabinete e penteadeira **quando postos num ambiente cozinha**.
+  - Em todos, a única diferença é Divisória → Lateral do meio. O resto das peças é idêntico.
+  - Nos ambientes deles (quarto, sala, banho) a regra não vale.

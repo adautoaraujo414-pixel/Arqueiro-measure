@@ -592,3 +592,10 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - falham em `9561fcd` e passam com a correção: `testGvVaoQueNaoExisteSemDivisoriasNaoGravaNada`, `testGvVaoQueNaoExisteComTresDivisoriasNaoGravaNadaEOsQueExistemSaoOsCertos` e `testGvVaoQueNaoExisteNaoGravaNadaEmTodaAFamiliaDeModulos`;
   - de garantia, passam nas duas versões: `testGvLimparDivisoesDesfazerRefazerEPorDeNovoNaoTrazVaoAntigo`, `testGvTrocarDeModuloPeloDoisDETresDNaoCriaVao`, `testGvProjetoAntigoComVaosSobrandoAbreSalvaEReabreSemMudarNada` e `testGvEditarVaoQueExisteSemConfiguracaoGravadaContinuaValendo`.
 - **Não aparece para o usuário:** sem linha nova em `.github/novidades.txt`.
+
+## GV-C: vão escolhido inválido depois de "Limpar divisões" (aprovado pelo Adauto em 17/11; commit separado da P1)
+- **Reproduzir:** 3 vãos, o 3º escolhido, aba Divisões → Limpar divisões → `S.sv=2` num módulo de 1 vão até trocar de aba. Com a P1, ler esse vão devolve o padrão solto e fica anotado (1 chamada inválida); antes da P1, lia a sobra parada em `m.v[2]`.
+- **Causa raiz:** o botão `#clr` zera `div/shv/dr/sr` e não ajusta o vão escolhido.
+- **Correção:** `S.sv=0` no próprio botão (sem divisórias só existe o vão 1). É estado de tela: não muda peça, medida, configuração nem o que é gravado. `m.v` não é cortado, então o desfazer continua igual.
+- **Fora do escopo autorizado (fica como risco):** outras camadas que mudam `m.div` direto no mesmo módulo. Com a P1, ler um vão que não existe nelas não grava nada.
+- **Teste:** `testGvLimparDivisoesVoltaOVaoEscolhidoProPrimeiroNaHora` falha só com a P1 (`vão escolhido 2 de 1`, 1 inválida) e passa com o C.

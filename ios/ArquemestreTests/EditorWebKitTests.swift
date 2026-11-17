@@ -12210,4 +12210,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["familia"] as? String, "Balcão 2 portas: nada mudou | Aéreo 2 portas: nada mudou | Torre quente (forno): nada mudou | Guarda-roupa 2 vãos: nada mudou | Rack de TV: nada mudou | Estante aberta: nada mudou")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* GV-C (pedido do Adauto 17/11): depois de "Limpar divisões" o vão escolhido volta na hora pro vão 1 (o único que sobra), sem esperar trocar de aba.
+       Antes (9561fcd): ficava S.sv=2 num módulo de 1 vão até a próxima aba. Desfazer e refazer continuam iguais; ler e editar caem no vão 1. */
+    func testGvLimparDivisoesVoltaOVaoEscolhidoProPrimeiroNaHora() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var m=cena('Balcão 2 portas',[1/3,2/3],[{k:'door',n:1},{k:'shelves',n:1},{k:'drawers',n:3}]);S.sv=2;HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;
+        [].filter.call(document.querySelectorAll('#bd button'),function(q){return /Limpar divis/.test(q.textContent)})[0].click();await W(50);LASTT=0;histTick();
+        m=S.mods[0];R.limpou='vão escolhido '+S.sv+' de '+(m.div.length+1)+' · lê '+gv(S.sv).k+' · m.v '+m.v.length;
+        document.getElementById('und').onclick();await W(50);m=S.mods[0];R.desfez='divisórias '+m.div.length+' · '+m.v.slice(0,3).map(function(v){return v.k}).join(',');
+        document.getElementById('red').onclick();await W(50);m=S.mods[0];R.refez='divisórias '+m.div.length+' · vão escolhido '+S.sv;
+        S.m=m;S.tab=3;panel();var b=[].filter.call(document.querySelectorAll('#bd [data-door="2"]'),function(q){return q.offsetParent!==null})[0];if(b){b.click();await W(50)}m=S.mods[0];
+        R.duasPortas='vão 1 '+m.v[0].k+m.v[0].n+' · m.v '+m.v.length;R.invalidos=(window.__gvInvalidos||[]).length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["limpou"] as? String, "vão escolhido 0 de 1 · lê door · m.v 3")
+        XCTAssertEqual(o["desfez"] as? String, "divisórias 2 · door,shelves,drawers")
+        XCTAssertEqual(o["refez"] as? String, "divisórias 0 · vão escolhido 0")
+        XCTAssertEqual(o["duasPortas"] as? String, "vão 1 door2 · m.v 3")
+        XCTAssertEqual(o["invalidos"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

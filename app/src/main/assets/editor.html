@@ -1736,7 +1736,7 @@ document.addEventListener('click',function(ev){var t=ev.target;
  if(t.dataset.cava!==undefined){gv(S.sv).cava=t.checked;delete gv(S.sv).px;panel();draw()}
  if(t.dataset.cv!==undefined){snap();gv(S.sv).cava=t.dataset.cv==='1';delete gv(S.sv).px;panel();draw()}
  var pxb=t.closest&&t.closest('[data-pxt],[data-pxk],[data-pxall]');if(pxb){var v_=gv(S.sv),tp_=v_.k==='tempero';snap();if(pxb.dataset.pxt||pxb.dataset.pxk){/* puxador escolhido numa porta vale pro projeto todo: portas e gavetas de baixo, de cima e de canto (pedido 15/11) */var P1_=pxb.dataset.pxt||pxOf(v_,tp_),C1_=pxb.dataset.pxk||v_.pxc||pxcDef();var n1_=pxApplyAll(P1_,C1_);S.pxDef={px:P1_,pxc:C1_};try{toast('Puxador '+pxName(P1_)+' em todas as portas e gavetas do projeto ('+n1_+')')}catch(_){}}else{var P_=pxOf(v_,tp_),C_=v_.pxc||pxcDef();pxApplyAll(P_,C_);S.pxDef={px:P_,pxc:C_};toast('Puxador aplicado em todas as portas e gavetas.')}panel();draw();try{if(window.re3)window.re3()}catch(_){}return}
- if(t.id==='clr'){snap();S.m.div=[];S.m.shv=[];S.m.dr=[];S.m.sr=[];draw()}});
+ if(t.id==='clr'){snap();S.m.div=[];S.m.shv=[];S.m.dr=[];S.m.sr=[];S.sv=0/* GV-C (17/11): sem divisórias só existe o vão 1 — o escolhido volta pra ele na hora */;draw()}});
 document.addEventListener('input',function(ev){var t=ev.target;if(t.dataset.r){var n=+t.value;if(!isNaN(n)){S.m[t.dataset.r]=n;if(/^(tlW|trW|tbL|tbR)$/.test(t.dataset.r))tidy(S.m);draw()}}
  if(t.dataset.k){var v=+t.value;/* parede (W/H): só aplica no OK/change — enquanto digita "41" de 4140 os módulos seriam espremidos e o campo sumiria */if(!isNaN(v)&&t.dataset.k!=='W'&&t.dataset.k!=='H'&&t.dataset.k!=='stT')setv(t.dataset.k,v)}});
 

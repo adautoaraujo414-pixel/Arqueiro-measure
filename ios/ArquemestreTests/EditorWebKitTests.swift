@@ -12345,4 +12345,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tresNaoMove"] as? String, "não moveu")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-COLISAO (Adauto 17/11): mover por 2 toques confere a geometria 3D real. Geladeira no chão encavalando o balcão volta com aviso; em lugar livre vai.
+       Porta/janela da parede não encavala outra abertura; porta atrás do balcão volta com aviso; janela atrás do aéreo vai, com aviso (sem colisão física); porta em lugar livre vai. */
+    func testA6MoverPor2ToquesConfereColisaoDeEletroEPortaJanela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=7000;S.H=2700;S.Hm=1;S.Wm=1;
+        var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+        newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1600;newTpl(tpl('Aéreo 2 portas'));var a=S.mods[1];a.x=3000;a.b=1500;draw();
+        var gl=apAdd('geladeira',0);gl.x=300;draw();open3D();await W(400);__build();
+        var ctr=function(f){var bb=__boxes().filter(function(q){return q.fr===f.id});var p=[0,1,2].map(function(i){var k=['x','y','z'][i];return (Math.min.apply(null,bb.map(function(q){return q[k+'0']}))+Math.max.apply(null,bb.map(function(q){return q[k+'1']})))/2});return org3api.proj(p)};
+        var est=function(f){return 'x'+f.x+' y'+f.y+' b'+f.b+(f.wall?' '+f.wall:'')};
+        /* 1. geladeira no chão encavalando o balcão: volta e avisa */var e0=est(gl);var s0=ctr(gl);__sel3(s0[0],s0[1]);var fp=org3api.proj([b.x-150,1,700]);TO=[];__sel3(fp[0],fp[1]);R.geladeiraNoBalcao=(est(gl)===e0?'ficou':'MOVEU '+est(gl))+' · aviso '+(TO.filter(function(t){return /Não cabe ali/.test(t)})[0]||'nenhum');
+        /* 2. geladeira no chão livre: vai */s0=ctr(gl);__sel3(s0[0],s0[1]);fp=org3api.proj([1000,1,1800]);TO=[];__sel3(fp[0],fp[1]);R.geladeiraLivre=(est(gl)!==e0?'moveu':'ficou')+' · aviso '+(TO.length?TO[0].slice(0,30):'nenhum');
+        /* 3. porta e janela da parede */S.ops=[{id:801,t:'porta',w:800,h:2100,x:400,b:0,wall:'f'},{id:802,t:'janela',w:1000,h:1000,x:4500,b:1100,wall:'f'}];draw();try{re3()}catch(_){}await W(150);__build();var po=S.ops[0],ja=S.ops[1];
+        /* 3a. porta sobre a janela: não encavala */__opSel(801);var c=__p3(5000,1000,0);TO=[];__sel3(c[0],c[1]);R.portaNaJanela=(po.x===400?'ficou':'MOVEU x'+po.x)+' · '+(TO.filter(function(t){return /encavala/.test(t)}).length?'aviso':'sem aviso');
+        /* 3b. porta atrás do balcão: não deixa */__opSel(801);c=__p3(b.x+b.w/2,1000,0);TO=[];__sel3(c[0],c[1]);R.portaAtrasDoBalcao=(po.x===400?'ficou':'MOVEU x'+po.x)+' · '+(TO.filter(function(t){return /atrás do módulo/.test(t)}).length?'aviso':'sem aviso');
+        /* 3c. janela atrás do aéreo: deixa, com aviso */__opSel(802);c=__p3(a.x+a.w/2,a.b+a.h+60,0);TO=[];__sel3(c[0],c[1]);R.janelaAtrasDoAereo=(ja.x!==4500?'moveu':'ficou')+' · '+(TO.filter(function(t){return /sem colisão física/.test(t)}).length?'aviso':'sem aviso');
+        /* 3d. porta em lugar livre: vai */__opSel(801);c=__p3(6200,1000,0);TO=[];__sel3(c[0],c[1]);R.portaLivre=(po.x!==400?'moveu':'ficou')+' · '+(TO.length?'aviso':'sem aviso');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["geladeiraNoBalcao"] as? String, "ficou · aviso ⚠ Não cabe ali: bate no módulo 1 · ficou onde estava")
+        XCTAssertEqual(o["geladeiraLivre"] as? String, "moveu · aviso nenhum")
+        XCTAssertEqual(o["portaNaJanela"] as? String, "ficou · aviso")
+        XCTAssertEqual(o["portaAtrasDoBalcao"] as? String, "ficou · aviso")
+        XCTAssertEqual(o["janelaAtrasDoAereo"] as? String, "moveu · aviso")
+        XCTAssertEqual(o["portaLivre"] as? String, "moveu · sem aviso")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

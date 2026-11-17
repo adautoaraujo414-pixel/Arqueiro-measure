@@ -687,3 +687,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - 2 toques com 150 ms: o ângulo fica em **0° o tempo todo na versão pública e na opção A**. O fim é igual nas duas (porta fechada, peça escolhida).
 - **Conclusão:** neste ambiente não há diferença mensurável, então o ganho não foi comprovado. Pela regra do Adauto, a alteração **não foi mantida** (nem commitada) e a implementação anterior fica. O efeito de piscar depende dos quadros do aparelho real.
 - **Pendente:** medir ou filmar no aparelho (Tab S9 FE, iPhone, iPad, Windows) antes de qualquer decisão.
+
+## A6-COLISAO: mover por 2 toques confere a geometria 3D real de eletros e portas/janelas (decisão 2 do Adauto, 17/11)
+- **Antes:** `frDropAt` (eletro) e `opPlace` (porta/janela da parede) só limitavam à sala e à parede. A geladeira passava por dentro do balcão, a porta encavalava a janela, e a porta ia para trás do balcão.
+- **Agora** (o lugar continua sendo calculado pelas mesmas funções; só se acrescenta a conferência):
+  - **Eletro no chão ou na parede:** as peças 3D dele não podem invadir módulo, pedra ou outro eletro (sobreposição > 2 mm nos 3 eixos). Se invadirem, voltam ao lugar e avisam ("⚠ Não cabe ali: bate no módulo N · ficou onde estava"). "Em cima" (bancada, pedra) continua liberado, assim como a coifa acima do cooktop, que não tem colisão física.
+  - **Porta/janela:** não pode encavalar outra abertura na mesma parede. Porta atrás de módulo, com a moldura invadindo a frente da parede em 40 mm, volta com aviso. **Janela atrás de aéreo é liberada, com aviso** ("sem colisão física: o móvel fica na frente da parede"), como o Adauto decidiu.
+- **Achados na montagem do teste (código certo, roteiro errado):** a porta "em lugar livre" estava embaixo do aéreo (2100 × 1500 de altura: colisão real); atrás do balcão, a porta encavalava a janela vizinha; um toque caía na geladeira que estava na frente da parede.
+- **Teste:** `testA6MoverPor2ToquesConfereColisaoDeEletroEPortaJanela`: falha na versão pública e passa agora. Os 33 testes de gestos, eletro, LED, torre, porta e janela passam na versão nova.
+- **Bateria comparativa (forçando o arquivo novo, 109 testes):** 107/109. As 2 falhas são da versão pública (`testFitaDaBase…`, instável, e `testTamponamentoNo2D…`, arrasto em pixels). O alinhamento das portas (`testEditorPorVaosLixeiraEngrossoPortasEAlinhamento`) passa.

@@ -27,7 +27,15 @@ Antes de mudar, investigar se já existe. Conflito: parar só a parte conflitant
    - **Fita:** 1 mm como padrão. Antes, levantar onde está o 0,8 e o que ele representa (físico, cálculo, 3D, desconto). Sem troca às cegas, projetos preservados, impacto apresentado antes.
    - **Menu Pintar:** mesmo menu, mesmas opções e funções. Cabeçalho menor, grupos na ordem Fitas → Peça → Módulo → Geral, botões confortáveis para o dedo, rolagem organizada.
    - **Testes:** iPhone, iPad, Android, tablets e Windows; menu aberto e minimizado; todas as opções; salvar e reabrir; cores já aplicadas.
-   - **Situação:** proposta apresentada em 17/11 (página "Menu Pintar compacto"). Aguarda aprovação; nada implementado.
+   - **Aprovado pelo Adauto (17/11), para implementar nesta posição da fila:**
+     - **Ordem:** mantém a ordem dinâmica atual: o que foi tocado vem primeiro (fita, peça ou módulo); os demais grupos seguem por finalidade.
+     - **Cabeçalho:** título e cor na 1ª linha; peça e módulo na 2ª; ▁ e ✕ menores, alinhados e fáceis de tocar; cabeçalho fixo e opções com rolagem interna.
+     - **Tablet:** 2 colunas se continuar legível.
+     - **Outros quadros:** **não mexer** nos que usam o mesmo componente de minimizar.
+     - **Descrições:** até 2 linhas, sem reticências que escondam informação; nomes, descrições e funções preservados.
+     - **Nome da peça:** tirar o "#1" **só da apresentação**, quando não for preciso para distinguir; identificadores internos e seleção intactos.
+     - **Fita de 1 mm:** separar a medida de corte do MDF, a espessura da fita, a medida acabada e o desenho 3D. O quadro de medidas mostra **corte e acabada sem confundir** (ex.: MDF 560 + fita 1 numa ponta = acabada 561 nessa direção). Não mudar sozinho corte, fórmulas homologadas nem projetos.
+     - **Commits:** a parte visual e a parte dimensional em commits separados, cada uma com teste próprio.
 9. **Auditoria master final (por último):** precisão, desempenho, estabilidade e confiabilidade de todas as ferramentas. Medição, 2D/3D, fabricação, desempenho, bugs e multiplataforma, **sem mudar aparência, nome, lugar, comandos ou finalidade**. Método: auditar → esperado → medir → reproduzir → causa → mínimo → antes/depois → regressão → salvar/reabrir → registrar.
 
 ## Controle

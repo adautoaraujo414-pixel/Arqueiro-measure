@@ -165,6 +165,15 @@ jobs:
             echo "==== Capturas vazias? ===="; cat build/blank-check.txt 2>/dev/null;
             echo "==== Simuladores ===="; cat build/runtimes.txt 2>/dev/null; } > "$OUT/RESUMO.txt" || true
           grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
+          # N07 (17/11): quando o app de teste cai, guarda o que aconteceu antes da queda e o relatório de crash do macOS,
+          # pra achar a causa (o pacote de resultados do Actions não é acessível de fora). Só leitura; não muda nenhum teste.
+          { for L in build/xcodebuild-test.log build/xcodebuild-test-ipad.log; do [ -f "$L" ] || continue; echo "######## $L";
+              grep -n -E "Restarting after unexpected exit|crashed|Test crashed|lost connection" "$L" | cut -d: -f1 | head -n 6 | while read N; do
+                echo "==== linhas $((N>80?N-80:1))..$((N+5))"; sed -n "$((N>80?N-80:1)),$((N+5))p" "$L" | grep -v -E "makeImagePlus|WEBP|CHHapticPattern" | cut -c1-400; done; done;
+            echo "######## xcresult (iPhone)"; xcrun xcresulttool get test-results summary --path build/Testes.xcresult 2>&1 | head -n 120;
+          } > "$OUT/QUEDAS.txt" 2>&1 || true
+          mkdir -p "$OUT/crash"
+          find ~/Library/Logs/DiagnosticReports -maxdepth 2 -type f \( -name "*.ips" -o -name "*.crash" \) -mmin -240 2>/dev/null | grep -i -E "Arquemestre|WebContent|xctest|WebKit" | head -n 8 | while read F; do head -c 400000 "$F" > "$OUT/crash/$(basename "$F")"; done || true
           cd "$OUT"
           git init -q && git checkout -q -b ci/ios-resultados
           git config user.name "github-actions"; git config user.email "actions@github.com"

@@ -11143,8 +11143,8 @@ final class EditorWebKitTests: XCTestCase {
         R.fundoAntes='corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);R.fundoMsg=lixo3D('Fundo#1');R.fundoDepois='fundo '+S.mods[0].fundo+' · corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);
         var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.fundoReabriu='fundo '+S.mods[0].fundo+' · 3D '+(bx()['Fundo#1']||0);
         /* caixa da gaveta: tira a contra-frente da 1ª gaveta · o 3D fica com 1 caixa a menos e nenhuma chave repetida */
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caixas '+g0.__tot+' → '+g1.__tot+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
-        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caixas '+g1.__tot+' → '+g2.__tot+' · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caiu do 3D '+(g0.__tot-g1.__tot)+' (a peça tinha '+(g0[gk+'#1']||0)+') · outras caixas que não são fita '+(g0.__nf-(g0[gk+'#1']-(g0.__ftk[gk+'#1']||0))===g1.__nf?'iguais':'MUDARAM')+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
+        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caiu do 3D '+(g1.__tot-g2.__tot)+' (a peça tinha '+(g1['Lateral de gaveta#2']||0)+') · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
         /* canto em L: a base do lado do canto sai do 3D */
         var ic=null;CATS.forEach(function(c){(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(!ic&&t&&t.corner&&t.sup)ic=t})});loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(ic)));S.m=S.mods[0];draw();var k0=bx();lixo3D('Base inferior (lado do canto)#1');var k1=bx();R.canto='caixas '+k0.__tot+' → '+k1.__tot+' · base do lado no 3D '+(k1['Base inferior (lado do canto)#1']||0)+' · base do fundo '+(k1['Base inferior#1']||0)+' (antes '+(k0['Base inferior#1']||0)+')';
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
@@ -11158,9 +11158,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundoDepois"] as? String, "fundo false · corte 0 · 3D 0")
         XCTAssertEqual(o["fundoReabriu"] as? String, "fundo false · 3D 0")
         XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
-        XCTAssertEqual(o["gaveta"] as? String, "caixas 63 → 62 · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
-        XCTAssertEqual(o["gavLateral"] as? String, "caixas 62 → 61 · lateral #2 no 3D 0 · #1 1")
-        /* Adauto 17/11/2026 (FT-REBAIXO): o Gaveteiro tem 2 caixas a menos no 3D (as tiras de fita que ficavam dentro da travessa); antes 65 → 64 e 64 → 63 */
+        XCTAssertEqual(o["gaveta"] as? String, "caiu do 3D 1 (a peça tinha 1) · outras caixas que não são fita iguais · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
+        XCTAssertEqual(o["gavLateral"] as? String, "caiu do 3D 1 (a peça tinha 1) · lateral #2 no 3D 0 · #1 1")
+        /* Adauto 17/11/2026: os totais da gaveta não são mais números fixos (eram 65 → 64 e 64 → 63, e mudam com o desenho da fita): o 3D cai exatamente as caixas da peça apagada, tiradas da geometria desta versão */
         XCTAssertEqual(o["travAntes"] as? String, "3D 1 · lista 1 · corte 1")
         XCTAssertEqual(o["travDepois"] as? String, "3D 0 · lista 0 · corte 0")
         XCTAssertEqual(o["travOutras"] as? String, "lista das outras igual · caixas das outras que diminuíram: nenhuma")

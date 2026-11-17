@@ -129,3 +129,9 @@ Depois de cada correção, também rodam a bateria completa e as sondas s01–s3
   - s29: o catálogo encaixa a largura.
   - s21: `S.tab` passa de um projeto para outro. Já era assim antes da Fase 2; só muda a aba.
 - **Não verificado:** aparelho real, CI do iOS, compilação completa Android/Windows (dl.google.com bloqueado).
+
+## Aprovação (Adauto, 17/11)
+- `9561fcd` aprovado tecnicamente: 339/340, sondas aprovadas, sem regressão nova.
+- **Falha preexistente registrada:** `testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase` (b590 × b1410). Depende do tamanho da área de desenho no Chromium sem janela; falha igual em `9ec0869`. Continua na bateria sem mudança de expectativa.
+- **Pendente em aparelho real:** iPhone/iPad, Android e Windows. Seleção e arrasto por toque, desfazer/refazer, portas das 9 torres, salvar, fechar e reabrir. CI do iOS e compilação completa Android/Windows também não rodaram aqui.
+- Publicação: nenhuma.

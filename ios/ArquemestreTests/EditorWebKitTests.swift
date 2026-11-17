@@ -12053,5 +12053,161 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["torres"] as? Int, 9, "os 9 modelos de torre do catálogo (todos têm porta no vão de cima)")
         XCTAssertEqual(o["erros"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    
+
+    /* GV-P1 (pedido do Adauto 17/11): ler um vão que não existe (negativo, quebrado, NaN, vazio ou ≥ divisórias + 1) não grava nada no módulo.
+       Antes (9561fcd): gv(99) num módulo sem divisórias deixava 100 vãos gravados (vãos fantasma). Editar a cópia devolvida não muda o projeto. */
+    func testGvVaoQueNaoExisteSemDivisoriasNaoGravaNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var m=cena('Balcão 2 portas',[],[{k:'door',n:2}]);draw();var p0=sig(m),c0=JSON.stringify(cutLines(m)),k0=histKey(snapState());
+        [-1,1.5,NaN,undefined,null,'',1,99].forEach(function(i){var v=gv(i,m);v.k='drawers';v.n=4});
+        R.depois='m.v '+m.v.length+' · vão 1 '+m.v[0].k+m.v[0].n+' · peças iguais '+(sig(m)===p0)+' · corte igual '+(JSON.stringify(cutLines(m))===c0)+' · projeto igual '+(histKey(snapState())===k0);
+        R.anotados=(window.__gvInvalidos||[]).length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["depois"] as? String, "m.v 1 · vão 1 door2 · peças iguais true · corte igual true · projeto igual true")
+        XCTAssertEqual(o["anotados"] as? Int, 8, "cada chamada inválida fica anotada pra diagnóstico")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* GV-P1 (17/11): com 3 divisórias (4 vãos), gv(4) e gv(99) não gravam nada; gv(0..3) devolvem os vãos certos (o mesmo objeto gravado).
+       Antes (9561fcd): gv(4) e gv(99) acrescentavam vãos fantasma (m.v 4 → 100). */
+    func testGvVaoQueNaoExisteComTresDivisoriasNaoGravaNadaEOsQueExistemSaoOsCertos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var m=cena('Balcão 2 portas',[0.25,0.5,0.75],[{k:'door',n:1},{k:'shelves',n:1},{k:'drawers',n:3},{k:'door',n:2}]);draw();var p0=sig(m),k0=histKey(snapState());
+        gv(4,m);gv(99,m);R.invalidos='m.v '+m.v.length+' · peças iguais '+(sig(m)===p0)+' · projeto igual '+(histKey(snapState())===k0);
+        R.validos=[0,1,2,3].map(function(i){var v=gv(i,m);return (v===m.v[i])+' '+v.k+v.n}).join(' | ');
+        S.m=m;S.sv=2;R.escolhido=gv(S.sv).k;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["invalidos"] as? String, "m.v 4 · peças iguais true · projeto igual true")
+        XCTAssertEqual(o["validos"] as? String, "true door1 | true shelves1 | true drawers3 | true door2")
+        XCTAssertEqual(o["escolhido"] as? String, "drawers")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* GV-P1 · garantia (17/11): Limpar divisões, desfazer, refazer e pôr divisórias de novo. O desfazer volta as configurações certas, o refazer limpa,
+       e as divisórias novas saem do vão dividido (nenhum vão antigo reaparece). Passa antes e depois da P1: a P1 não pode mudar isso. */
+    func testGvLimparDivisoesDesfazerRefazerEPorDeNovoNaoTrazVaoAntigo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var tipos=function(m){return 'divisórias '+m.div.length+' · '+m.v.slice(0,m.div.length+1).map(function(v){return v.k+(v.n||'')}).join(',')};
+        var m=cena('Balcão 2 portas',[1/3,2/3],[{k:'door',n:1},{k:'shelves',n:1},{k:'drawers',n:3}]);S.sv=2;HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;
+        [].filter.call(document.querySelectorAll('#bd button'),function(q){return /Limpar divis/.test(q.textContent)})[0].click();await W(50);LASTT=0;histTick();
+        R.limpou=tipos(S.mods[0]);gv(S.sv);R.leu=tipos(S.mods[0]);
+        document.getElementById('und').onclick();await W(50);R.desfez=tipos(S.mods[0]);document.getElementById('red').onclick();await W(50);R.refez=tipos(S.mods[0]);
+        S.m=S.mods[0];S.sv=0;S.tab=1;panel();document.querySelector('#bd [data-dvq="2"]').click();await W(50);R.repos=tipos(S.mods[0]);
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["limpou"] as? String, "divisórias 0 · door1")
+        XCTAssertEqual(o["leu"] as? String, "divisórias 0 · door1")
+        XCTAssertEqual(o["desfez"] as? String, "divisórias 2 · door1,shelves1,drawers3")
+        XCTAssertEqual(o["refez"] as? String, "divisórias 0 · door1")
+        XCTAssertEqual(o["repos"] as? String, "divisórias 2 · door1,door1,door1")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* GV-P1 · garantia (17/11): com o 3º vão do módulo A escolhido, tocar no módulo B (1 vão) pelo 2D e pelo 3D: o vão escolhido existe em B,
+       ler o vão escolhido não cria vão e nenhuma chamada inválida acontece no caminho. */
+    func testGvTrocarDeModuloPeloDoisDETresDNaoCriaVao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 1 porta'));draw();if(window.SOLO2)soloOff();
+        var A=S.mods[0],B=S.mods[1];A.div=[1/3,2/3];A.v=[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1}];B.div=[];B.x=A.x+A.w+400;draw();S.m=A;S.sv=2;panel();draw();
+        var sv_=document.getElementById('svg'),g=[].filter.call(sv_.querySelectorAll('#mod'),function(q){return +q.dataset.mi===1})[0].querySelector('rect[data-mi]').getBoundingClientRect(),xx=g.left+g.width/2,yy=g.top+g.height/2;
+        [['pointerdown',null],['pointerup',sv_],['pointerup',window]].forEach(function(q){(q[1]||document.elementFromPoint(xx,yy)||sv_).dispatchEvent(new PointerEvent(q[0],{bubbles:true,cancelable:true,clientX:xx,clientY:yy,pointerId:5,isPrimary:true,pointerType:'touch'}))});await W(400);
+        gv(S.sv);R.doisD='B escolhido '+(S.m===B)+' · vão '+S.sv+' · vãos de B '+B.v.length;
+        S.m=A;S.sv=2;panel();draw();open3D();await W(400);__build();var p=org3api.proj([B.x+B.w/2,B.b+B.h/2,B.d+20]);__sel3(p[0],p[1]);await W(500);gv(S.sv);
+        R.tresD='B escolhido '+(S.m===B)+' · vão '+S.sv+' · vãos de B '+B.v.length+' · vãos de A '+A.v.length;var x3=document.getElementById('v3x');if(x3)x3.click();
+        R.invalidos=(window.__gvInvalidos||[]).length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["doisD"] as? String, "B escolhido true · vão 0 · vãos de B 1")
+        XCTAssertEqual(o["tresD"] as? String, "B escolhido true · vão 0 · vãos de B 1 · vãos de A 3")
+        XCTAssertEqual(o["invalidos"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* GV-P1 · garantia (17/11, §3 e §11.7): projeto antigo com vãos sobrando gravados (1 divisória, 4 vãos). Abrir, desenhar, 3D, salvar, fechar e reabrir
+       pela lista de projetos: a sobra continua gravada (nada apagado, sem migração), e peças, corte e 3D são os mesmos de um projeto sem a sobra. */
+    func testGvProjetoAntigoComVaosSobrandoAbreSalvaEReabreSemMudarNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var cx3=function(){__build();return __boxes().filter(function(q){return /^0:/.test(String(q.nm))}).map(function(q){return q.pk+'@'+[q.x0,q.x1,q.y0,q.y1,q.z0,q.z1].map(Math.round).join(',')}).sort().join(';')};
+        cena('Balcão 2 portas',[0.5],[{k:'door',n:1},{k:'drawers',n:2},{k:'free',n:1},{k:'door',n:4}]);draw();var velho=JSON.parse(JSON.stringify(snapState()));
+        var limpo=JSON.parse(JSON.stringify(velho));limpo.mods[0].v=limpo.mods[0].v.slice(0,2);loadState(limpo);draw();open3D();await W(300);var pl=sig(S.mods[0]),cl=JSON.stringify(cutLines(S.mods[0])),bl=cx3();
+        var a_=pLoadAll().filter(function(q){return q.id!=='pGV5'});a_.push({id:'pGV5',client:{nome:'Antigo'},created:1,updated:1,current:velho});pSaveAll(a_);
+        var pb=pLoadAll().filter(function(q){return q.id==='pGV5'})[0];CUR=pb.id;loadState(pb.current);draw();await W(200);var m=S.mods[0];S.m=m;for(var t=0;t<6;t++){S.tab=t;panel()}
+        R.abriu='m.v '+m.v.length+' · divisórias '+m.div.length+' · peças iguais '+(sig(m)===pl)+' · corte igual '+(JSON.stringify(cutLines(m))===cl)+' · 3D igual '+(cx3()===bl);
+        var x3=document.getElementById('v3x');if(x3)x3.click();
+        var a2=pLoadAll().filter(function(q){return q.id!=='pGV5'});a2.push({id:'pGV5',client:{nome:'Antigo'},created:1,updated:2,current:JSON.parse(JSON.stringify(snapState()))});pSaveAll(a2);
+        loadState(initLimpo());draw();var pc=pLoadAll().filter(function(q){return q.id==='pGV5'})[0];loadState(pc.current);draw();m=S.mods[0];
+        R.reabriu='m.v '+m.v.length+' · tipos '+m.v.map(function(v){return v.k+(v.n||'')}).join(',')+' · peças iguais '+(sig(m)===pl)+' · corte igual '+(JSON.stringify(cutLines(m))===cl);
+        pSaveAll(pLoadAll().filter(function(q){return q.id!=='pGV5'}));R.invalidos=(window.__gvInvalidos||[]).length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["abriu"] as? String, "m.v 4 · divisórias 1 · peças iguais true · corte igual true · 3D igual true")
+        XCTAssertEqual(o["reabriu"] as? String, "m.v 4 · tipos door1,drawers2,free1,door4 · peças iguais true · corte igual true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* GV-P1 · garantia (17/11): editar um vão que existe mas ainda não tem configuração gravada (o 2º de 2) continua valendo:
+       "2 portas" na aba Portas, prateleira + e "Gavetas → 3" no menu do vão. A P1 só recusa vão que não existe. */
+    func testGvEditarVaoQueExisteSemConfiguracaoGravadaContinuaValendo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var vis=function(sel){return [].filter.call(document.querySelectorAll(sel),function(q){return q.offsetParent!==null})[0]};
+        var m=cena('Balcão 2 portas',[0.5],[{k:'free',n:1}]);m.v=[{k:'free',n:1}];S.sv=1;S.tab=3;panel();var b=vis('#bd [data-door="2"]');if(b){b.click();await W(50)}m=S.mods[0];
+        R.portas=(b?'':'sem botão · ')+'vão 2 '+(m.v[1]?m.v[1].k+m.v[1].n:'nada')+' · vão 1 '+m.v[0].k+' · m.v '+m.v.length;
+        m=cena('Balcão 2 portas',[0.5],[{k:'free',n:1}]);m.v=[{k:'free',n:1}];S.sv=1;var sb=null;for(var t=0;t<6&&!sb;t++){S.tab=t;panel();sb=vis('#bd [data-shn="+"]')}if(sb){sb.click();await W(50)}m=S.mods[0];
+        R.prateleira=(sb?'':'sem botão · ')+'vão 2 prateleiras '+(m.v[1]?shelfCount(m.v[1]):'nada')+' · vão 1 '+m.v[0].k+' · m.v '+m.v.length;
+        m=cena('Balcão 2 portas',[0.5],[{k:'free',n:1}]);m.v=[{k:'free',n:1}];draw();vmenuOpen(0,1,200,200);await W(50);var gb=document.querySelector('#vmenu [data-vk="drawers"]');if(gb){gb.click();await W(50);var g3=document.querySelector('#vmenu [data-vk="gv|3"]');if(g3){g3.click();await W(80)}else gb=null}m=S.mods[0];
+        R.gavetas=(gb?'':'sem botão · ')+'vão 2 '+(m.v[1]?m.v[1].k+m.v[1].n:'nada')+' · vão 1 '+m.v[0].k+' · m.v '+m.v.length;
+        R.invalidos=(window.__gvInvalidos||[]).length;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["portas"] as? String, "vão 2 door2 · vão 1 free · m.v 2")
+        XCTAssertEqual(o["prateleira"] as? String, "vão 2 prateleiras 1 · vão 1 free · m.v 2")
+        XCTAssertEqual(o["gavetas"] as? String, "vão 2 drawers3 · vão 1 free · m.v 2")
+        XCTAssertEqual(o["invalidos"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* GV-P1 · família (§11.2, 17/11): o mesmo teste do vão que não existe em inferior, superior, torre, guarda-roupa, rack e estante do catálogo.
+       Antes (9561fcd): em todos, gv(divisórias + 1) e gv(divisórias + 6) acrescentavam vãos fantasma. */
+    func testGvVaoQueNaoExisteNaoGravaNadaEmTodaAFamiliaDeModulos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};window.__gvInvalidos=[];
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw+' q'+(p.qty||1)}).sort().join(';')};
+        var cena=function(nome,div,v){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nome));var m=S.mods[0];m.x=800;if(div){m.div=div;m.v=v}S.m=m;S.sv=0;S.tab=1;draw();panel();return m};
+        var out=[];['Balcão 2 portas','Aéreo 2 portas','Torre quente (forno)','Guarda-roupa 2 vãos','Rack de TV','Estante aberta'].forEach(function(nome){var m=cena(nome);draw();var n=m.div.length+1,l0=m.v.length,p0=sig(m),k0=histKey(snapState());
+          gv(n,m);gv(n+5,m);gv(-1,m);out.push(nome+': '+(m.v.length===l0&&sig(m)===p0&&histKey(snapState())===k0?'nada mudou':'m.v '+l0+' → '+m.v.length))});
+        R.familia=out.join(' | ');R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["familia"] as? String, "Balcão 2 portas: nada mudou | Aéreo 2 portas: nada mudou | Torre quente (forno): nada mudou | Guarda-roupa 2 vãos: nada mudou | Rack de TV: nada mudou | Estante aberta: nada mudou")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+}

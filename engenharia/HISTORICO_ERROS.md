@@ -576,3 +576,19 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção (opção A):** `torreForno(m,v)` = vão 'oven' em módulo de baixo com 1500 mm ou mais. Na torre, a seção geral de portas da aba Portas e "1 porta / 2 portas / correr" do menu do vão não aparecem; clique geral que ainda chegue é recusado com aviso ("Nada foi alterado"). A porta de cada vão se troca pelos botões que já existem ("Só este vão da torre"; torre antiga pelo "🚪 Trocar a porta", que é a conversão manual existente — nada é convertido sozinho). Balcão de forno (mais baixo) continua como era (frente com recorte).
 - **Testes:** `testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima` (9 torres × 3 caminhos; falha em 9ec0869, passa agora) e `testSelecaoTorrePortaDeCimaPeloVaoDaTorreMudaSoEla` (o caminho certo: só a porta de cima vira 2 folhas, forno/micro no lugar, medidas externas iguais, outras portas iguais, 3D e corte com as mesmas portas, desfazer/refazer e reabrir certos — passa nas duas versões, é garantia do caminho certo).
 - **Correção de contagem:** o diagnóstico dizia 10 modelos; são 9.
+
+## GV-P1: ler um vão que não existe gravava vãos fantasma (aprovado pelo Adauto em 17/11; branch `claude/arquemestre-fase2-selecao`)
+- **Módulo:** todos os módulos com vãos (`m.v`), em todas as famílias.
+- **Reproduzir:** `gv(99)` num balcão sem divisórias → `m.v` 1 → 100 (s42/s44). Também `gv(divisórias + 1)` em inferior, superior, torre, guarda-roupa, rack e estante (1 → 7, 2 → 8, 3 → 9). `gv(undefined)` devolvia `undefined` (erro em quem usasse).
+- **Causa raiz:** `gv(i)` preenchia `m.v` até `i` sem conferir se o vão `i` existe (0 a divisórias). Investigação completa em `engenharia/GV_INVESTIGACAO.md`, proposta em `GV_PROPOSTA.md`.
+- **Arquivos e funções:** `editor.html`, `gv` (linha 274), nova `gvPadrao` (o mesmo vão padrão de antes).
+- **Correção:**
+  - índice que não existe (negativo, quebrado, `NaN`, vazio, ou ≥ divisórias + 1) não grava nada e devolve um vão padrão solto (editar ele não muda o projeto e nenhum outro vão é usado no lugar);
+  - fica anotado em `window.__gvInvalidos` (últimos 50) e no console;
+  - índice que existe: igual a antes.
+  - Sem migração: a sobra que já está gravada em projeto antigo fica como está.
+- **Uso normal:** cozinha demo (todos os módulos, vãos e abas), os 142 modelos do catálogo (vãos × abas, peças, corte) e 3D → 0 chamadas inválidas, 0 erros.
+- **Testes:**
+  - falham em `9561fcd` e passam com a correção: `testGvVaoQueNaoExisteSemDivisoriasNaoGravaNada`, `testGvVaoQueNaoExisteComTresDivisoriasNaoGravaNadaEOsQueExistemSaoOsCertos` e `testGvVaoQueNaoExisteNaoGravaNadaEmTodaAFamiliaDeModulos`;
+  - de garantia, passam nas duas versões: `testGvLimparDivisoesDesfazerRefazerEPorDeNovoNaoTrazVaoAntigo`, `testGvTrocarDeModuloPeloDoisDETresDNaoCriaVao`, `testGvProjetoAntigoComVaosSobrandoAbreSalvaEReabreSemMudarNada` e `testGvEditarVaoQueExisteSemConfiguracaoGravadaContinuaValendo`.
+- **Não aparece para o usuário:** sem linha nova em `.github/novidades.txt`.

@@ -49,3 +49,6 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
   - em "◣ Cantos e cozinha em L": Canto em L (baixo) · esquerdo/direito e Canto em L (aéreo) · esquerdo/direito (os 4 de canto em L já existem);
   - em outra categoria de cantos (acrescentados por código, `CG(...)`): Balcão canto cego · cego na direita (porta na esquerda) / cego na esquerda (porta na direita), e Aéreo canto cego · cego na direita / cego na esquerda.
 - **Leitura (a confirmar):** os 8 modelos parecem existir; falta reuni-los na categoria "Cantos e cozinha em L" na ordem pedida (L: inferiores e depois aéreos; cego: inferiores e depois aéreos), com os nomes pedidos, sem duplicar, e conferir cada um (peças, corte, 3D, lado). Confirmar com a imagem.
+## Porta de canto em L que não cobre a lateral do fim (Adauto, 17/11)
+- **Fotos (2, da tela do app):** aéreo de canto em L visto de baixo. A folha do lado (a que fica no lado do canto) para antes da lateral do fim e deixa a borda dela à mostra. A outra folha está certa. Não gravadas no repositório (público).
+- **Pedido:** "essa porta do canto deve cobrir 5 mm do topo atrás e ficar uma folga de 4 mm para não relar a frente no 45 · essa porta em específico, a outra tá certa". Vale para os 4 cantos em L (aéreo e baixo, esquerdo e direito).

@@ -1470,3 +1470,18 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - Só a ferragem da dobradiça (o braço reto) passa 1 mm pelo canto da frente da lateral ou da divisória (A05).
   - É cosmético, sem peça nem corte.
 - **Desfazer 3× e refazer 3×** em 142 modelos: corte igual. A única diferença nos dados é `wing` vazio → `0`, tratados igual em todo o código.
+## CANTO-FOLHA: folha do lado do canto em L não cobria a lateral do fim (fotos do Adauto, 17/11)
+- **Reproduzir (versão pública, Canto em L (aéreo) · esquerdo 700×750×350):** no 3D, a lateral do fim ocupa z 685–700. A folha do lado (319) vai de z 359 a 678: começa 3 mm atrás da frente da caixa do fundo e para 7 mm antes da lateral. A borda de 15 mm da lateral fica à mostra.
+- **Causa:** a regra antiga da folha do lado era "vão − 10, vai até 3 mm do armário" (`partsOf0`, porta de canto). No 3D, `z0 = D + 3`.
+- **Correção (pedido do Adauto):** a folha do lado começa 4 mm atrás da frente da caixa do fundo e cobre 5 mm da lateral do fim.
+  - Largura: `vão + 1`. No exemplo: 330 (360 → 690). Canto de baixo: 309 → 320.
+  - No 3D: `z0 = D + 4`.
+  - A folha do fundo não muda: 3 mm da folha do lado.
+- **Família:** os 4 cantos em L de cozinha (aéreo e baixo, esquerdo e direito; altura < 1500). O **canto do guarda-roupa** pegava a mesma conta e foi deixado como estava (416 + 419).
+- **Abrir:** as duas folhas abrem 165/165 sem bater (teste de colisão do 3D).
+- **Expectativas atualizadas (pedido do Adauto 17/11, comentário em cada teste):**
+  - `testPortaDeCantoMarcacao…`;
+  - `testPortasDeCantoRobocop…`: lado 320; começa 4 mm;
+  - `testArmarioDeCantoFolgaDe3mm…`: baixo 306 + 320, aéreo 316 + 330, guarda-roupa igual;
+  - `testCantoEmLProfundidade…`: Porta 326.
+  - Elas falham na versão pública e passam agora. Os outros 12 testes de canto passam nas duas.

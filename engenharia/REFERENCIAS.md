@@ -29,3 +29,7 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 - **Leitura técnica (a confirmar com o Adauto):** são as peças `Batente (cava)` (entre gavetas) e, em cima, `Batente superior (cava)`. Na imagem há 4 placas para 4 gavetas, mas o app gera 3 entre gavetas mais a de cima só com o batente superior ligado.
 - **Sem escala na imagem:** nenhuma medida foi tirada dela.
 - **Proposta ligada:** `engenharia/PROPOSTA_BATENTE_CAVA.md`.
+
+## Porta de canto em L que não cobre a lateral do fim (Adauto, 17/11)
+- **Fotos (2, da tela do app):** aéreo de canto em L visto de baixo. A folha do lado (a que fica no lado do canto) para antes da lateral do fim e deixa a borda dela à mostra. A outra folha está certa. Não gravadas no repositório (público).
+- **Pedido:** "essa porta do canto deve cobrir 5 mm do topo atrás e ficar uma folga de 4 mm para não relar a frente no 45 · essa porta em específico, a outra tá certa". Vale para os 4 cantos em L (aéreo e baixo, esquerdo e direito).

@@ -11,10 +11,12 @@ adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 10; adb shell am f
 echo "== 2. põe os dados do backup de referência"
 rm -rf ref && mkdir ref && unzip -q tests/backup-referencia/android-backup-referencia.zip -d ref
 adb shell rm -rf /data/local/tmp/ref; (cd ref/files && find . -type f | sed 's#^\./##') > $OUT/lista.txt
-while read -r rel; do adb shell mkdir -p "/data/local/tmp/ref/$(dirname "$rel")"; adb push "ref/files/$rel" "/data/local/tmp/ref/$rel" >/dev/null; done < $OUT/lista.txt
+# dentro do while, todo adb lê de /dev/null: senão ele come o resto da lista e só o 1º arquivo é tratado
+while read -r rel; do adb shell mkdir -p "/data/local/tmp/ref/$(dirname "$rel")" </dev/null; adb push "ref/files/$rel" "/data/local/tmp/ref/$rel" </dev/null >/dev/null; done < $OUT/lista.txt
 adb shell chmod -R a+rX /data/local/tmp/ref
-while read -r rel; do adb shell run-as $PKG sh -c "mkdir -p 'files/$(dirname "$rel")' && cat '/data/local/tmp/ref/$rel' > 'files/$rel'" || falha "não gravou $rel"; done < $OUT/lista.txt
-hashes(){ while read -r rel; do echo "$(adb shell run-as $PKG sha256sum "files/$rel" 2>/dev/null | cut -d' ' -f1)  $rel"; done < $OUT/lista.txt; }
+# o adb shell junta os argumentos numa linha só: o comando vai inteiro numa string, com aspas simples por dentro
+while read -r rel; do adb shell "run-as $PKG sh -c 'mkdir -p files/$(dirname "$rel") && cat /data/local/tmp/ref/$rel > files/$rel'" </dev/null || falha "não gravou $rel"; done < $OUT/lista.txt
+hashes(){ while read -r rel; do echo "$(adb shell "run-as $PKG sha256sum files/$rel" </dev/null 2>/dev/null | cut -d' ' -f1)  $rel"; done < $OUT/lista.txt; }
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 12; adb shell am force-stop $PKG
 hashes > $OUT/antes.txt; cat $OUT/antes.txt
 adb logcat -c

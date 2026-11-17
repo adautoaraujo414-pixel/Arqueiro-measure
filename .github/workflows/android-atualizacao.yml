@@ -43,6 +43,9 @@ jobs:
       - name: Compilar a versão nova (site, mesma chave fixa do app publicado)
         run: |
           chmod +x gradlew
+          # o número da versão vem do GITHUB_RUN_NUMBER, que aqui é o contador DESTE workflow (1, 2, 3…) e daria versão menor que a publicada
+          # (o Android recusa instalar por cima: INSTALL_FAILED_VERSION_DOWNGRADE). Só nesta compilação de teste, soma 90000.
+          export GITHUB_RUN_NUMBER=$((90000 + GITHUB_RUN_NUMBER)); echo "versionCode de teste: $GITHUB_RUN_NUMBER"
           ./gradlew --no-daemon assembleSiteDebug
           cp app/build/outputs/apk/site/debug/*.apk novo.apk
 

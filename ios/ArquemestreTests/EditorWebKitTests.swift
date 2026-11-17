@@ -11472,6 +11472,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* FT-PORTA (Adauto, 17/11/2026: "investigar e corrigir cirurgicamente a representação visual da fita de 0,8 mm que aparece dentro das portas e frentes fechadas"):
+       a frente do corpo fica em z = profundidade + 6 e a porta/frente fechada começa ali, encostada; a tira de 0,8 mm desenhada na frente do corpo ficava dentro da folha.
+       Só o desenho muda: nenhuma tira dentro de folha fechada, a área da tira que aparece igual à da versão publicada (7c939bc), peças e corte iguais (assinaturas dela),
+       porta aberta mostra a tira inteira e, ao fechar, o recorte volta. Falha antes (tiras dentro da folha) e passa depois. */
+    func testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,a){return o[AX[a][1]]-o[AX[a][0]]};
+        var leaf=function(o){return !o.ft&&/^0:(Porta|Frente|Basculante)/.test(o.nm)&&ex(o,0)>=50&&ex(o,1)>=50&&ex(o,2)>=10};
+        var ovv=function(a,b){var v=1;for(var k=0;k<3;k++){var d=Math.min(a[AX[k][1]],b[AX[k][1]])-Math.max(a[AX[k][0]],b[AX[k][0]]);if(d<=.05)return 0;v*=d}return v};
+        var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(16)};
+        /* área da tira que fica fora das folhas (no plano da tira) */
+        /* área exata da tira fora das folhas (no plano da tira), por compressão de coordenadas */
+        var fora=function(F,L){var tot=0;F.forEach(function(t){var th=[0,1,2].sort(function(a,c){return ex(t,a)-ex(t,c)})[0],pl=[0,1,2].filter(function(a){return a!==th}),A0=AX[pl[0]],B0=AX[pl[1]];var cv=L.filter(function(o){return Math.min(o[AX[th][1]],t[AX[th][1]])-Math.max(o[AX[th][0]],t[AX[th][0]])>.05}).map(function(o){return [Math.max(o[A0[0]],t[A0[0]]),Math.min(o[A0[1]],t[A0[1]]),Math.max(o[B0[0]],t[B0[0]]),Math.min(o[B0[1]],t[B0[1]])]}).filter(function(r){return r[1]>r[0]&&r[3]>r[2]});
+          var xs=[t[A0[0]],t[A0[1]]],ys=[t[B0[0]],t[B0[1]]];cv.forEach(function(r){xs.push(r[0],r[1]);ys.push(r[2],r[3])});xs.sort(function(a,b){return a-b});ys.sort(function(a,b){return a-b});
+          for(var i=0;i<xs.length-1;i++)for(var j=0;j<ys.length-1;j++){var cx=(xs[i]+xs[i+1])/2,cy=(ys[j]+ys[j+1])/2;if(!cv.some(function(r){return cx>r[0]&&cx<r[1]&&cy>r[2]&&cy<r[3]}))tot+=(xs[i+1]-xs[i])*(ys[j+1]-ys[j])}});return Math.round(tot*10)/10};
+        var NM=['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Aéreo basculante','Guarda-roupa 3 vãos','Torre do banheiro (armário alto)','Balcão porta + gavetas'];
+        for(var k=0;k<NM.length;k++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(NM[k]));var m=S.mods[0];draw();open3D();await W(150);__build();
+          var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),F=B.filter(function(b){return b.ft}),L=B.filter(leaf);
+          R['m'+k]='dentro de folha fechada '+F.filter(function(t){return L.some(function(o){return ovv(t,o)>0})}).length+' · tira que aparece '+fora(F,L)+' mm² · peças+corte '+hs(JSON.stringify(partsOf(m))+'|'+JSON.stringify(cutGroups().map));document.getElementById('v3x').click()}
+        /* abrir e fechar pela porta de verdade (1 toque): a tira da lateral volta inteira com a porta aberta e o recorte volta ao fechar */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();open3D();await W(300);__cam(.3,.2,1.2);await W(200);__build();
+        var la=function(){return __boxes().filter(function(b){return b.ft&&b.nm==='0:Lateral esquerda'}).reduce(function(s,b){return s+(b.x1-b.x0)*(b.y1-b.y0)},0).toFixed(1)};
+        var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),p=org3api.proj([230,450,590]);var pe=function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:rc.left+p[0],clientY:rc.top+p[1],pointerId:9,isPrimary:true,pointerType:'touch'}))};
+        var a0=la();pe('pointerdown');await W(30);pe('pointerup');await W(900);var a1=la();p=org3api.proj([21,450,800]);pe('pointerdown');await W(30);pe('pointerup');await W(2000);R.abreFecha='fechada '+a0+' · aberta '+a1+' · fechou '+la();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 22360 mm² · peças+corte c2ff642a")
+        XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 15320.5 mm² · peças+corte 509acae1")
+        XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m3"] as? String, "dentro de folha fechada 0 · tira que aparece 10728 mm² · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
+        XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 21750.5 mm² · peças+corte 9f35813d")
+        XCTAssertEqual(o["abreFecha"] as? String, "fechada 6630.0 · aberta 10350.0 · fechou 6630.0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

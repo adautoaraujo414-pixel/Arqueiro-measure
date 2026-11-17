@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import Arquemestre
 
 final class BackupSafetyTests: XCTestCase {
@@ -122,6 +123,32 @@ final class BackupSafetyTests: XCTestCase {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"))
         XCTAssertTrue(try String(contentsOf: url, encoding: .utf8).contains("window.phPut"))
     }
+    /// N06 (auditoria geral de 17/11): o backup de referência no formato do Android (tests/backup-referencia, o mesmo usado no Windows e no Android)
+    /// restaura no iPhone/iPad arquivo por arquivo igual ao manifesto (sha256), inclusive foto..jpg e as fotos do editor; o vínculo nota → projeto vira links.json.
+    func testAndroidReferenceBackupRestoresIdenticalFilesOnIOS() throws {
+        let originalBase = AppPaths.base
+        AppPaths.base = root.appendingPathComponent("app")
+        defer { AppPaths.base = originalBase }
+        let repo = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let dir = repo.appendingPathComponent("tests/backup-referencia")
+        let zip = dir.appendingPathComponent("android-backup-referencia.zip")
+        let man = try String(contentsOf: dir.appendingPathComponent("manifesto.json"), encoding: .utf8)
+        let rx = try NSRegularExpression(pattern: "\"([^\"]+)\": \"([0-9a-f]{64})\"")
+        var esperado: [String: String] = [:]
+        for r in rx.matches(in: man, range: NSRange(man.startIndex..., in: man)) {
+            if let a = Range(r.range(at: 1), in: man), let b = Range(r.range(at: 2), in: man) { esperado[String(man[a])] = String(man[b]) }
+        }
+        XCTAssertGreaterThanOrEqual(esperado.count, 8)
+        try DataBackup.restore(from: zip)
+        for (rel, h) in esperado {
+            let d = try Data(contentsOf: AppPaths.files.appendingPathComponent(rel))
+            let got = SHA256.hash(data: d).map { String(format: "%02x", $0) }.joined()
+            XCTAssertEqual(got, h, "igual: \(rel)")
+        }
+        let links = try String(contentsOf: AppPaths.files.appendingPathComponent("projects/links.json"), encoding: .utf8)
+        XCTAssertTrue(links.contains("\"n1\"") && links.contains("p1"))
+    }
+
     /// SEG-NOMES (auditoria geral de 17/11, P0; Adauto: "aceitar nomes válidos como foto..jpg, bloquear só caminhos inseguros"):
     /// o iOS pulava, sem avisar, todo arquivo com ".." no nome (contains("..")); uma foto "foto..jpg" vinda do backup do Android sumia.
     /// Agora: nome com dois pontos seguidos é restaurado; só um pedaço do caminho igual a ".." (subir pasta) continua barrado e nada é gravado fora.

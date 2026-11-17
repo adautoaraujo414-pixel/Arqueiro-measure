@@ -85,6 +85,8 @@ class SyncTest {
     // pacote malicioso
     t("pacote com caminho perigoso é recusado", !SyncCore.apply(B, JSONObject().put("k", "note").put("id", "../x").put("obj", JSONObject().put("id", "../x").put("pages", JSONArray()))))
     t("foto com nome perigoso é ignorada", SyncCore.apply(B, JSONObject().put("k", "note").put("id", "n-z").put("obj", note("n-z", "z", null, null)).put("images", JSONObject().put("../../evil", "AAAA"))) && !File(B, "evil").exists() && !File(root, "evil").exists())
+    // SEG-NOMES (auditoria de 17/11): "foto..jpg" é nome válido e passa com os mesmos bytes; ".." sozinho (subir pasta) continua recusado
+    t("foto com dois pontos seguidos no nome passa", SyncCore.apply(B, JSONObject().put("k", "note").put("id", "n-y").put("obj", note("n-y", "y", null, null)).put("images", JSONObject().put("foto..jpg", "AQID").put("..", "AAAA"))) && File(B, "projects/images/foto..jpg").let { it.isFile && it.readBytes().contentEquals(byteArrayOf(1, 2, 3)) } && !File(B, "projects/AAAA").exists())
     t("eventos no host", events.containsAll(listOf("conectou", "recebeu", "enviou", "fim")), events.distinct())
     host.stop()
         assertTrue(falhas.joinToString("\n"), falhas.isEmpty())

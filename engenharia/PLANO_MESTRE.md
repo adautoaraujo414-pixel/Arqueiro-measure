@@ -23,6 +23,11 @@ Antes de mudar, investigar se já existe. Conflito: parar só a parte conflitant
 6. **Biblioteca de cantos:** conferir o que existe, completar as variantes que faltam (L e cego, inferior e superior, esquerda e direita), sem duplicar e sem reorganizar sem autorização; medidas e corte.
 7. **Exclusão e inconsistências:** a lixeira apaga exatamente o item; sem fantasma; nada no corte; nada recriado. Cadeia seleção → exclusão → geometria → lista → corte → salvar → reabrir; desfazer e refazer.
 8. **Demais solicitações aprovadas:** inventário (solicitação, estado, branch e commit, o que funciona, o que falta, testes, dependências, autorização). Só concluir as de escopo aprovado.
+8b. **Padronização das fitas (1 mm) e menu Pintar compacto** (pedido do Adauto, 17/11, depois das prioridades anteriores e antes da auditoria master):
+   - **Fita:** 1 mm como padrão. Antes, levantar onde está o 0,8 e o que ele representa (físico, cálculo, 3D, desconto). Sem troca às cegas, projetos preservados, impacto apresentado antes.
+   - **Menu Pintar:** mesmo menu, mesmas opções e funções. Cabeçalho menor, grupos na ordem Fitas → Peça → Módulo → Geral, botões confortáveis para o dedo, rolagem organizada.
+   - **Testes:** iPhone, iPad, Android, tablets e Windows; menu aberto e minimizado; todas as opções; salvar e reabrir; cores já aplicadas.
+   - **Situação:** proposta apresentada em 17/11 (página "Menu Pintar compacto"). Aguarda aprovação; nada implementado.
 9. **Auditoria master final (por último):** precisão, desempenho, estabilidade e confiabilidade de todas as ferramentas. Medição, 2D/3D, fabricação, desempenho, bugs e multiplataforma, **sem mudar aparência, nome, lugar, comandos ou finalidade**. Método: auditar → esperado → medir → reproduzir → causa → mínimo → antes/depois → regressão → salvar/reabrir → registrar.
 
 ## Controle

@@ -49,7 +49,9 @@ enum DataBackup {
         let full = zip.has(MARK)
         var wrote = 0
         for e in zip.entries where !e.isDir {
-            if e.name == MARK || e.name.contains("..") || e.name.hasPrefix("/") { continue }
+            /* SEG-NOMES (17/11): só um pedaço do caminho igual a ".." é subir pasta; "foto..jpg" é nome válido (igual ao BKP-PONTOS do Android/Windows).
+               A conferência de que o arquivo cai dentro da pasta de restauração (standardizedFileURL, logo abaixo) continua. */
+            if e.name == MARK || e.name.split(whereSeparator: { $0 == "/" || $0 == "\\" }).contains("..") || e.name.hasPrefix("/") || e.name.hasPrefix("\\") { continue }
             let rel: String
             if full {
                 // do Android só interessa "files/" (preferências e WebView ficam de fora)

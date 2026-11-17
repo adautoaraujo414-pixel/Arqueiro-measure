@@ -122,6 +122,33 @@ final class BackupSafetyTests: XCTestCase {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"))
         XCTAssertTrue(try String(contentsOf: url, encoding: .utf8).contains("window.phPut"))
     }
+    /// SEG-NOMES (auditoria geral de 17/11, P0; Adauto: "aceitar nomes válidos como foto..jpg, bloquear só caminhos inseguros"):
+    /// o iOS pulava, sem avisar, todo arquivo com ".." no nome (contains("..")); uma foto "foto..jpg" vinda do backup do Android sumia.
+    /// Agora: nome com dois pontos seguidos é restaurado; só um pedaço do caminho igual a ".." (subir pasta) continua barrado e nada é gravado fora.
+    func testRestoreKeepsNamesWithDoubleDotsAndStillBlocksTraversal() throws {
+        let originalBase = AppPaths.base
+        AppPaths.base = root.appendingPathComponent("app")
+        defer { AppPaths.base = originalBase }
+        let url = root.appendingPathComponent("pontos.zip"), writer = try ZipWriter(url: url)
+        try writer.add(name: DataBackup.MARK, data: Data([1]))
+        try writer.add(name: "files/moveis/projects.json", data: Data(#"[{"id":"p1"}]"#.utf8))
+        try writer.add(name: "files/projects/index.json", data: Data(#"{"v":2,"folders":[],"notes":[]}"#.utf8))
+        try writer.add(name: "files/projects/images/foto..jpg", data: Data([9, 8, 7, 6]))
+        try writer.add(name: "files/projects/images/a..b/c.json", data: Data("{}".utf8))
+        try writer.add(name: "files/moveis/projeto..v2.json", data: Data("[1]".utf8))
+        try writer.add(name: "files/../fora.txt", data: Data("x".utf8))
+        try writer.add(name: "files/projects/../../../fora2.txt", data: Data("y".utf8))
+        try writer.finish()
+        try DataBackup.restore(from: url)
+        XCTAssertEqual(try Data(contentsOf: AppPaths.files.appendingPathComponent("projects/images/foto..jpg")), Data([9, 8, 7, 6]))
+        XCTAssertEqual(try String(contentsOf: AppPaths.files.appendingPathComponent("projects/images/a..b/c.json"), encoding: .utf8), "{}")
+        XCTAssertEqual(try String(contentsOf: AppPaths.moveis.appendingPathComponent("projeto..v2.json"), encoding: .utf8), "[1]")
+        let fm = FileManager.default
+        XCTAssertFalse(fm.fileExists(atPath: AppPaths.base.appendingPathComponent("fora.txt").path))
+        XCTAssertFalse(fm.fileExists(atPath: AppPaths.base.deletingLastPathComponent().appendingPathComponent("fora.txt").path))
+        XCTAssertFalse(fm.fileExists(atPath: root.appendingPathComponent("fora2.txt").path))
+        XCTAssertFalse(fm.fileExists(atPath: AppPaths.base.deletingLastPathComponent().appendingPathComponent("fora2.txt").path))
+    }
     /// P0-02 (auditoria de 16/11): backup completo sem nenhum projeto e sem nenhuma nota (projects.json "[]") é recusado e não troca nada.
     func testEmptyFullBackupIsRejectedAndKeepsCurrentData() throws {
         let originalBase = AppPaths.base

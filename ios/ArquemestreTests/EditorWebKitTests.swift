@@ -12338,4 +12338,32 @@ R.errs=__errs.length;return JSON.stringify(R);
         XCTAssertEqual(o["w700"] as? String, "m.w 700 · campo 700 · aviso não")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* F3-SETA (Adauto 17/11, Fase 3 item 7): depois de "tampou até o fundo", empurrar a seta de trás pra dentro diminui a peça.
+       Antes a peça grudava na parede em qualquer ponto até 120 mm dela, e empurrar 60 mm não mudava nada. Puxar até a parede continua grudando. */
+    func testF3SetaDeTrasDo3DDiminuiDepoisDeTamparAteOFundo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=800;m.tl=true;m.tlW=30;m.zo=300;draw();
+        var pk='Tamponamento esquerdo#1',larg=function(){var p=partsOf(m).filter(function(q){return q.pk===pk})[0];return p?+p.cw:0};
+        open3D();await W(300);__cam(.75,.12,1.3);await W(200);__build();
+        var bs=__boxes().filter(function(b){return (b.pk===pk||b.ppk===pk)&&String(b.nm).indexOf('0:')===0}),b=bs[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1-1);
+        __sel3(c[0],c[1]);await W(100);__cam(.76,.12,1.3);await W(150);
+        var puxa=async function(n,passo,praFora){var h=document.querySelector('[data-hk="ek"]'),o=document.querySelector('[data-hk="ef"]');if(!h||!o)return 'sem seta';var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,ro=o.getBoundingClientRect(),dx=x-(ro.left+15),dy=y-(ro.top+15),L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;if(!praFora){dx=-dx;dy=-dy}
+          var ev=function(t,X,Y){var tg_=t==='pointerdown'?h:(document.querySelector('[data-hk="ek"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:43,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};
+          ev('pointerdown',x,y);for(var i=1;i<=n;i++){ev('pointermove',x+dx*passo*i,y+dy*passo*i);await W(20)}ev('pointerup',x+dx*passo*n,y+dy*passo*n);await W(250);__build();await W(50);return 'ok'};
+        R.antes=larg();
+        R.puxouAteOFundo=(await puxa(40,15,true))+' · '+larg();var fundo=larg();
+        R.empurrou=(await puxa(6,2,false))+' · '+(larg()<fundo&&larg()>R.antes?'diminuiu':'igual '+larg());var menor=larg();
+        R.puxouDeNovo=(await puxa(6,2,true))+' · '+(larg()===fundo?'gruda no fundo':'parou em '+larg());
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? Int, 80)
+        XCTAssertEqual(o["puxouAteOFundo"] as? String, "ok · 681")
+        XCTAssertEqual(o["empurrou"] as? String, "ok · diminuiu")
+        XCTAssertEqual(o["puxouDeNovo"] as? String, "ok · gruda no fundo")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

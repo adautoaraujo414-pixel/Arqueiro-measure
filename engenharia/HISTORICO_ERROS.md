@@ -658,3 +658,9 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Fica igual:** medidas válidas, décimo virando folga na peça, a parede e o pé-direito (P0, outra branch), "Do chão" e o encaixe na parede de largura válida (perguntas 8 da Fase 3, sem decisão).
 - **Outros módulos (§11.2):** o caminho é o mesmo para todos os módulos que usam os campos do painel (`data-k` w/h/d e as medidas externas wE/hE/dE).
 - **Teste:** `testF3MedidaInvalidaRecusadaComAvisoECampoMostraODecimo`: falha na versão pública (6 de 8 conferências) e passa agora.
+
+## F3-SETA: seta de trás do 3D não diminui depois de "tampou até o fundo" (Fase 3 item 7)
+- **Reproduzir (versão pública):** aéreo afastado 300 mm da parede, tamponamento esquerdo; puxar a seta de trás até "tampou até o fundo" (681). Empurrar a seta pra dentro ~60 mm: a peça continua 681.
+- **Causa:** `pointermove` das setas do 3D (`editor.html`, seta `ek`): qualquer posição até 120 mm da parede grudava na parede, também empurrando pra dentro.
+- **Correção:** só gruda na parede quando o dedo puxa em direção a ela (ou se passaria da parede). Empurrando pra dentro, diminui.
+- **Teste:** `testF3SetaDeTrasDo3DDiminuiDepoisDeTamparAteOFundo`: falha na versão pública (fica 681) e passa agora (621). Puxar de novo continua grudando no fundo.

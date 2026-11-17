@@ -11497,7 +11497,9 @@ final class EditorWebKitTests: XCTestCase {
         /* 3) arrastar pra cima encurta; o móvel continua no lugar */
         q=ponto('Tamponamento direito',0.2);await arr(q[0],q[1],0,-60);R.encurta=st();
         /* 4) erguer o módulo e descer de novo: rodapé, travessa e moldura voltam */
-        var bx=gm().querySelector('rect[data-mi]').getBoundingClientRect();await arr(bx.left+bx.width*0.6,bx.top+bx.height*0.5,0,-90);R.ergueu='b'+(+m.b||0)+' · rodapé '+partsOf(m).filter(function(q){return /^Rodapé/.test(q.name)}).length;
+        /* P0 (Adauto, 17/11/2026): o arrasto fixo de 90 px virava mm diferentes em cada tela (Windows 560/590, iPhone 1450, notebook 590). Agora o teste ergue 1410 mm pela escala real
+           (px por mm = largura do módulo na tela ÷ largura em mm) + os 6 px que o arrasto do app espera antes de começar a mover. Só o teste mudou; o app não. */
+        var bx=gm().querySelector('rect[data-mi]').getBoundingClientRect(),ppm_=bx.width/m.w;await arr(bx.left+bx.width*0.6,bx.top+bx.height*0.5,0,-((1410+3)*ppm_+6));R.ergueu='b'+(+m.b||0)+' · rodapé '+partsOf(m).filter(function(q){return /^Rodapé/.test(q.name)}).length;
         bx=gm().querySelector('rect[data-mi]').getBoundingClientRect();await arr(bx.left+bx.width*0.6,bx.top+bx.height*0.5,0,400);R.voltouProChao=st();
         /* 5) 3D: base e tamponamento com as medidas das peças */
         open3D();await W(300);__build();var b3=__boxes().filter(function(b){return String(b.nm).indexOf('3:')===0}),h3=function(re){var a=b3.filter(function(b){return re.test(String(b.nm).slice(2))&&(b.y1-b.y0)>10}).map(function(b){return Math.round(b.y1-b.y0)});return a.length?Math.max.apply(null,a):0};

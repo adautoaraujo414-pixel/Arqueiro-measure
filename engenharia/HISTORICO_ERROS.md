@@ -629,3 +629,15 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
   - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
   - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).
+
+## FT-REBAIXO — fita de 0,8 mm do rebaixo da lateral desenhada dentro da travessa frontal no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: correção cirúrgica só do defeito visual, com teste antes e depois.
+- **Causa:** o `build_ft` põe uma tira de 0,8 mm na frente de cada caixa da lateral. A caixa de cima (o rebaixo, z até 551) ganha a tira de 551 a 551,8, dentro da travessa (de 551 a 566). Sobreposição de 15 × 70 × 0,8 mm.
+- **Correção:** a tira que cairia dentro de uma Travessa, Travessão ou Frontal do mesmo módulo não é desenhada. Peças, lista e corte iguais aos da versão publicada (assinaturas no teste `testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam`).
+- **Bateria local completa:** 347/349.
+  - `testTamponamentoNo2D…` é a falha antiga; a correção dela está na branch do P0.
+  - `testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma` **aguarda decisão do Adauto**:
+    - O teste confere pelo **total de caixas** do módulo no 3D. Com a correção há 2 caixas a menos (as tiras escondidas), então "caixas 65 → 64" vira "63 → 62".
+    - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
+    - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
+    - **O teste não foi alterado.**

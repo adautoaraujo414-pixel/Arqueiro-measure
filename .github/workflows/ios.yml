@@ -67,9 +67,10 @@ jobs:
           exit $RC
 
       # a mesma bateria de testes também no iPad (tela grande, toques e 3D): o que roda no iPhone tem que rodar no iPad
+      # Adauto 17/11: o iPad roda mesmo quando o iPhone falha (antes, qualquer falha no iPhone pulava o iPad e ele nunca tinha resultado)
       - name: Testes no iPad (mesma bateria do iPhone)
         id: ipad_tests
-        if: steps.build_tests.outcome == 'success'
+        if: always() && (steps.build_tests.outcome == 'success' || steps.build_tests.outcome == 'failure')
         timeout-minutes: 75
         run: |
           cd ios && mkdir -p build

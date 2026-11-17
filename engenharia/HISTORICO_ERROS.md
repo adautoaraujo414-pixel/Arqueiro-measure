@@ -648,3 +648,7 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
 - **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
 - **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+- **Bateria do Windows (run 41, 17/11):** 349/351.
+  - `testTamponamentoNo2D…` também falha na versão pública.
+  - `testOpcaoMarcadaSempreMudaAlgumaCoisa` acusou o "Incluir no plano de corte" do rodapé como opção que não muda nada. Esse teste só olhava peças, `cutLines` e custo, e a opção muda o plano de corte (`S.cutOff`).
+  - **Expectativa adaptada (pedido do Adauto 17/11):** o teste também olha o `S.cutOff`. Continua exigindo que toda opção marcada mude algo. Passa nas duas versões.

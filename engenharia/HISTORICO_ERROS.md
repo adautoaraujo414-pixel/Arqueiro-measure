@@ -659,3 +659,74 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **Sondas:** 25 de 29 idênticas às de `d669be5`. As diferentes: s10 e s25 só nos números de linha (+7); s21 só em horários e ids; s24 só nos tempos, com os contadores de vazamento iguais.
   - **Backup:** 16 de 16.
   - **Custo da assinatura da pedra:** 0,06 ms por desenho com 36 módulos.
+
+## F3-TOQUE: o 1º toque num módulo não escolhido movia o módulo (Fase 3 item 1; decisão do Adauto em 17/11; branch `claude/arquemestre-fase3-precisao`)
+- **Reproduzir (versão pública):** 2 balcões, A escolhido. Encostar o dedo no B e deslizar 60 px. B fica escolhido e já sobe 290 mm (vertical) ou anda 290 mm de lado (horizontal).
+- **Causa:** `pointerdown` do 2D (`editor.html` ~1246–1250). Com o módulo não escolhido (`!was`), o app escolhia e armava `drag={t:'m'}` no mesmo gesto.
+- **Correção:** com `!was`, o resto do gesto vira `drag={t:'pan'}`, o mesmo do toque no fundo, e só rola a vista. Com o módulo já escolhido, arrastar move como antes.
+- **Testes:**
+  - `testF3PrimeiroToqueEmModuloNaoEscolhidoSoEscolheNuncaMove`: falha na versão pública e passa agora.
+  - **Expectativa adaptada (pedido do Adauto de 17/11):** o ajudante `drag2` de `testImaDoTopoAlinhaAereo…`, `testTocarOuSegurarOModulo…` e `testModuloNaoFazNadaSozinho…` agora escolhe o módulo antes de medir e arrastar. O que eles verificam (ímã, encostar, não fechar folga) não muda, e eles passam nas duas versões.
+  - 20 testes de toque e arrasto passam nas duas versões.
+
+## F3-SEL: divisória escolhida sem tocar nela, 2 toques que não abrem o menu e tremida que move (Fase 3 itens 2, 3 e 5; decisão do Adauto em 17/11)
+- **Reproduzir (versão pública, 2 balcões de 2 vãos):**
+  - toque a 16 px da divisória escolhe a divisória em qualquer zoom (o alcance era 22 px, e a área da divisória crescia com o zoom: 40 px no VB 450, 78 px no VB 225);
+  - 2 toques no vão com 460 ms de um soltar ao outro não abrem o menu (limite 430 ms, contando o tempo do dedo apertado);
+  - 2 toques a 16 px da divisória: o 1º escolhe a divisória e o menu não abre;
+  - tremida de 8 px no módulo escolhido anda 15 mm; 7 px no 1º de 2 toques cancela os 2 toques.
+- **Causa:** limites soltos e em unidades diferentes: `tapCount` (430 ms, 34 px), `pointerup` (6 unidades do SVG), zona morta do arrasto (6 px), alça da divisória `Math.max(18, …40 px…)` e a camada da divisória (22 px fixos).
+- **Correção (`editor.html`):** uma constante `SEL` em px de tela: toque até 10 px; 2 toques até 500 ms de um soltar ao outro e 40 px; divisória só dentro da própria área (12 px de cada lado, nunca mais que metade do vão menor); o 2º de 2 toques no vão não vira divisória. Sem mudança de layout, peça ou medida.
+- **Outros módulos (§11.2):** o mecanismo é o mesmo para todos os módulos do 2D comum (inferiores, superiores, torres, painéis). O editor por vãos (guarda-roupa, armário alto) tem a sua própria seleção (~9 px) e não foi mexido.
+- **Testes:** `testF3SelecaoDivisoriaDoisToquesETremidaIguaisEmQualquerZoom` (relógio controlado no teste): falha na versão pública em 5 de 6 conferências e passa agora.
+- **Expectativa adaptada (pedido do Adauto de 17/11):** o ajudante `drag2` de `testImaDoTopoAlinhaAereo…`, `testModuloNaoFazNadaSozinho…` e `testTocarOuSegurarOModulo…` tinha a zona morta antiga (6,5 px) escrita no teste. Agora lê `SEL.mov` do app (10 px; 6 na versão pública). O que eles conferem não muda, e passam nas duas versões.
+
+## F3-MED: medida digitada fora do limite trocada em silêncio e campo arredondado (Fase 3 item 6; decisão do Adauto em 17/11: recusar com aviso)
+- **Reproduzir (versão pública, Balcão 2 portas 900×820×560):** digitar largura 3 → vira 100; altura 3 → 290; profundidade 99999 → 1200; largura 99999 → 3160 (encaixa na parede). Nenhum aviso, e o campo mostra o que foi digitado. Largura 605,5 grava 605,5, mas o campo mostra 606.
+- **Causa:** o `sanM` corta a medida no limite (`c('w',100,6000)`, `c('d',100,1200)`, altura mínima pelas peças) a cada desenho, sem avisar; `inp`/`syncInputs` usam `Math.round`.
+- **Correção (`editor.html`):** `setv` testa a medida numa **cópia** do módulo com o próprio `sanM` (mesma conta, sem segunda regra de limite). Se o `sanM` mudaria o valor, a medida é recusada: nada muda, nenhum passo novo no desfazer, aviso com o mínimo ou o máximo, e o campo volta a mostrar o valor gravado. Enquanto digita (tecla a tecla) não avisa; avisa no OK ou ao sair do campo. O campo mostra o décimo gravado.
+- **Fica igual:** medidas válidas, décimo virando folga na peça, a parede e o pé-direito (P0, outra branch), "Do chão" e o encaixe na parede de largura válida (perguntas 8 da Fase 3, sem decisão).
+- **Outros módulos (§11.2):** o caminho é o mesmo para todos os módulos que usam os campos do painel (`data-k` w/h/d e as medidas externas wE/hE/dE).
+- **Teste:** `testF3MedidaInvalidaRecusadaComAvisoECampoMostraODecimo`: falha na versão pública (6 de 8 conferências) e passa agora.
+
+## F3-SETA: seta de trás do 3D não diminui depois de "tampou até o fundo" (Fase 3 item 7)
+- **Reproduzir (versão pública):** aéreo afastado 300 mm da parede, tamponamento esquerdo; puxar a seta de trás até "tampou até o fundo" (681). Empurrar a seta pra dentro ~60 mm: a peça continua 681.
+- **Causa:** `pointermove` das setas do 3D (`editor.html`, seta `ek`): qualquer posição até 120 mm da parede grudava na parede, também empurrando pra dentro.
+- **Correção:** só gruda na parede quando o dedo puxa em direção a ela (ou se passaria da parede). Empurrando pra dentro, diminui.
+- **Teste:** `testF3SetaDeTrasDo3DDiminuiDepoisDeTamparAteOFundo`: falha na versão pública (fica 681) e passa agora (621). Puxar de novo continua grudando no fundo.
+
+## F3-REGN: "Réguas por lado (camadas: 1 a 3)" aceitava qualquer número (Fase 3 item 7)
+- **Reproduzir (versão pública):** aéreo com engrosso cava; digitar 4 → grava 4 e gera 3; 0 → grava 0 e gera 2; 1,5 → grava 1,5. Sem aviso.
+- **Correção:** só 1, 2 ou 3 são gravados; outro número avisa, não muda nada e o campo volta ao valor que vale.
+- **Teste:** `testF3CamadasDoEngrossoCavaSo1a3ComAviso`: falha na versão pública e passa agora.
+
+## F3-MENU: menus mudando de lugar entre os módulos (Fase 3 item 1; decisão do Adauto em 17/11: ordem fixa)
+- **Reproduzir (versão pública):**
+  - abas do editor por vãos: Divisões › Gavetas › Internos › Portas › Eletros › Estrutura › Cores, diferente do editor normal (Cores › Estrutura › Divisões › Portas › Internos › … › Eletros);
+  - menu de 2 toques: "1 porta" a 31 px do topo no balcão, 260 px no armário alto e 316 px no guarda-roupa, porque o quadro "Por dentro deste vão" entra antes dos botões de frente.
+- **Correção:** abas do editor por vãos na ordem do editor normal (Gavetas junto de Divisões); o quadro "Por dentro / Só esta parte" vai para depois dos botões de frente. Nenhum botão novo ou tirado.
+- **Não reproduzido:** o vazamento da aba Portas para o editor por vãos (FASE3 1.B). Na sonda, entrar no editor por vãos com a aba Portas aberta não mostrou "Modelo da porta" fora da aba Portas. Fica como risco.
+- **Teste:** `testF3MenusNaMesmaOrdemEmTodosOsModulos`: falha na versão pública e passa agora.
+- **Expectativa adaptada (pedido do Adauto de 17/11, ordem fixa):** a ordem das abas no menu rápido de `testDoisToques…` (linha com "abas:").
+
+## F3-AZUL: azul de seleção forte (Fase 3 item 4; decisão do Adauto em 17/11: mais suave sem perder a identificação)
+- **Mudança:** módulo escolhido no 3D (Tamanho) de 40% para 25% de azul; divisórias do editor por vãos sem escolha de 0,35 para 0,22 de opacidade. A divisória escolhida continua vermelha e a cor continua #2f6be0.
+- **Não mexido:** botões escolhidos (`.sel`), contorno do módulo no 2D e tamponamento. Se o azul forte for outro, um print resolve.
+- **Teste:** só visual (imagens antes e depois no relatório). Nenhum teste da bateria depende dessas opacidades.
+
+## TESTE-RECUO: testes novos não compilavam no iOS (CI 604, 17/11)
+- **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
+- **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
+- **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+
+## F3-SEL-REGRESSÃO: 2 pares de toques viravam 4 toques (podia travar o módulo) e a divisória não pegava logo depois de arrastar (achado na bateria final da Fase 3, 17/11)
+- **Testes que pegaram:** `testDoisToquesNoVaoDeCimaAteOTetoRipadoPainelOuFechamento` (versão pública 3/3; F3-SEL 0 a 1 de 3, intermitente) e `testDivisoriaArrastaComODedoEmQualquerProjetoECaminho` (12 px do lado não arrastava).
+- **Causa 1 (commit 469c0d0):** a janela dos 2 toques passou a 500 ms contados de soltar a soltar. Dois pares de 2 toques com ~450 ms entre eles somavam 3 e 4 toques (4 toques travam o módulo).
+  - **Correção:** contar do 1º soltar ao 2º encostar, até 350 ms (é o número da proposta aprovada). O tempo do dedo apertado não conta, e pares separados não se somam.
+- **Causa 2:** arrastar uma divisória contava como toque. O toque seguinte, em até 500 ms, virava "2º toque" e não pegava a divisória.
+  - **Correção:** se a divisória andou, o soltar não conta como toque.
+- **Causa 3:** a área da divisória ficou estreita demais em vão estreito: só até metade do vão menor, e com 12 px exatos de fora por arredondamento.
+  - **Correção:** até 12 px de cada lado, contando a borda. Em vão estreito, até 35% do espaço entre as divisórias, como no pedido antigo do dedo que errava a divisória.
+- **Teste F3 ajustado:**
+  - "2 toques com o dedo apertado 150 ms e 330 ms entre soltar e encostar" abre o menu (falha na versão pública);
+  - "2 pares com 400 ms entre eles" não trava o módulo.

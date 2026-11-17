@@ -7175,8 +7175,8 @@ final class EditorWebKitTests: XCTestCase {
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
                   /* arrasta o módulo mi no 2D: dy em mm (pra cima = positivo) · devolve se a linha verde no topo do ímã apareceu durante o arrasto */
-                  var drag2=async function(mi,dx,dy){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
+                  var drag2=async function(mi,dx,dy){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
                   /* 1. B com o topo 20 mm abaixo do A: subiu 10 → o ímã alinha em cima (não fica torto) */
                   R.antes='A '+top(A)+' · B '+top(B);
                   var g1=await drag2(1,0,10);R.alinhou='A '+top(A)+' · B '+top(B)+' · linha verde no topo '+g1+' · do chão '+B.b;
@@ -7294,8 +7294,8 @@ final class EditorWebKitTests: XCTestCase {
                   var st=function(semB){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+(semB?'':' b'+m.b)+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   /* arrasto de verdade no 2D: dx, dy em mm além da zona morta (0 = o dedo não anda nesse eixo; tremida = px soltos) */
-                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                  var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   var monta=async function(gap,gapT,A2w){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=5610;S.H=3270;newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Armário alto 2 portas'));var A2=S.mods[0],Sx=S.mods[1],Tq=S.mods[2];A2.x=1500;A2.w=A2w;A2.h=520;A2.b=2190;Sx.w=1220;Sx.h=1080;Sx.b=1720;Sx.x=A2.x+A2.w+gap;Tq.x=Sx.x+Sx.w+30+30+gapT;[A2,Sx,Tq].forEach(function(m){['tl','tr'].forEach(function(k){m[k]=false;delete m[k+'Auto'];delete m[k+'M']})});Tq.tl=Tq.tr=true;Tq.tlM=Tq.trM=1;return [A2,Sx,Tq]};
                   /* 1. o caso do vídeo (antes: a cada toque o tamponamento do vizinho ligava e desligava, o módulo pulava 30 e a torre era empurrada) */
                   var M=await monta(35,10,920);M[1].tl=true;M[1].tlM=1;M[1].tr=true;M[1].trAuto=1;M[0].tl=true;M[0].tlAuto=1;await W(30);S.m=M[1];draw();panel();await W(60);
@@ -7537,8 +7537,8 @@ final class EditorWebKitTests: XCTestCase {
                   var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
                   var st=function(){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+' b'+m.b+' w'+m.w+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
-                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                  var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(50);
                   var A=S.mods[0],B=S.mods[1],C=S.mods[2];R.criou=st();
                   /* folga de 30 deixada de propósito (ex.: digitou a posição) */
@@ -10721,11 +10721,11 @@ final class EditorWebKitTests: XCTestCase {
         await tq();R.umToque=document.getElementById('rgqk')&&!document.getElementById('rgqk').hidden?'abriu (errado)':'não abre';await tq();await W(300);
         var m=document.getElementById('rgqk');R.doisToques=m&&!m.hidden?'abriu · abas: '+[].slice.call(m.querySelectorAll('[data-rqt]')).map(function(b){return b.textContent.trim()}).join(', '):'não abriu';
         var nb=m?[].slice.call(m.querySelectorAll('[data-rqb]')).filter(function(b){return /Horizontal/.test(b.textContent)})[0]:null;var s0=JSON.stringify(S.mods[0]);if(nb){nb.click();await W(200)}R.botaoHorizontal=nb?(JSON.stringify(S.mods[0])!==s0?'dividiu o vão (igual ao painel)':'não fez nada'):'sem botão Horizontal';
-        var tl_=m?[].slice.call(m.querySelectorAll('[data-rqt]')):[],t2=tl_[1];if(t2){var k2=t2.dataset.rqt;t2.click();await W(150);R.trocouDeAba=k2+' · botões '+m.querySelectorAll('[data-rqb]').length}
+        var tl_=m?[].slice.call(m.querySelectorAll('[data-rqt]')):[],t2=tl_.filter(function(b){return b.dataset.rqt==='gav'})[0]/* F3-MENU 17/11: escolhe a aba Gavetas pelo nome (a ordem mudou) */;if(t2){var k2=t2.dataset.rqt;t2.click();await W(150);R.trocouDeAba=k2+' · botões '+m.querySelectorAll('[data-rqb]').length}
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         XCTAssertEqual(o["umToque"] as? String, "não abre")
-        XCTAssertEqual(o["doisToques"] as? String, "abriu · abas: ▦Divisões, 🗄️Gavetas, 👔Internos, 🚪Portas, 🔌Eletros, 📐Estrutura, 🎨Cores")
+        /* F3-MENU (pedido do Adauto 17/11, ordem fixa): abas na ordem do editor normal */XCTAssertEqual(o["doisToques"] as? String, "abriu · abas: 🎨Cores, 📐Estrutura, ▦Divisões, 🗄️Gavetas, 🚪Portas, 👔Internos, 🔌Eletros")
         XCTAssertEqual(o["botaoHorizontal"] as? String, "dividiu o vão (igual ao painel)")
         XCTAssertEqual(o["trocouDeAba"] as? String, "gav · botões 12")
         XCTAssertEqual(o["erros"] as? String, "")
@@ -12314,6 +12314,187 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabriu"] as? String, "parede 500 · iguais")
         XCTAssertEqual(o["voltouParede"] as? String, "parede 3600 · iguais")
         XCTAssertEqual(o["guardaRoupa"] as? String, "iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-TOQUE (pedido do Adauto 17/11, Fase 3 item 1): o 1º toque num módulo que não estava escolhido só escolhe, nunca move — deslizar o dedo
+       (60 px na vertical ou na horizontal) deixa o módulo parado. Com o módulo já escolhido, arrastar continua movendo.
+       Antes (versão pública 1.0.632): 60 px de dedo subiam o balcão 290 mm ou andavam 290 mm de lado. */
+    func testF3PrimeiroToqueEmModuloNaoEscolhidoSoEscolheNuncaMove() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var pe=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=200;B.x=1600;S.m=A;draw();return [A,B]};
+        var centro=function(mi){var g=[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0].querySelector('rect[data-mi]')||[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0];var b=g.getBoundingClientRect();return [b.left+b.width/2,b.top+b.height*0.3]};
+        var arrasta=async function(mi,dx,dy){var c=centro(mi),x=c[0],y=c[1];pe('pointerdown',x,y);for(var i=1;i<=6;i++){pe('pointermove',x+dx*i/6,y+dy*i/6,sv);await W(16)}pe('pointerup',x+dx,y+dy,sv);pe('pointerup',x+dx,y+dy,window);await W(80)};
+        /* 1. B não escolhido: dedo desliza 60 px na vertical e na horizontal → só escolhe B, B não anda */
+        var ab=cena(),A=ab[0],B=ab[1];await arrasta(1,0,-60);R.vertical='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+        ab=cena();A=ab[0];B=ab[1];await arrasta(1,60,0);R.horizontal='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+        /* 2. B já escolhido: arrastar continua movendo (comportamento de sempre) */
+        ab=cena();A=ab[0];B=ab[1];S.m=B;draw();await arrasta(1,60,0);R.jaEscolhidoMove='B x '+(B.x!==1600?'andou':'parado');
+        /* 3. A não muda em nenhum caso */R.aParado='A x '+A.x;
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["vertical"] as? String, "escolheu B true · B x 1600 b 0")
+        XCTAssertEqual(o["horizontal"] as? String, "escolheu B true · B x 1600 b 0")
+        XCTAssertEqual(o["jaEscolhidoMove"] as? String, "B x andou")
+        XCTAssertEqual(o["aParado"] as? String, "A x 200")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-SEL (Adauto 17/11, Fase 3 itens 2, 3 e 5): limites de toque iguais em qualquer zoom.
+       Divisória pega só até 12 px de cada lado (antes 22 px e a área crescia com o zoom, então um toque no vão virava divisória);
+       2 toques valem até 350 ms do 1º soltar ao 2º encostar (antes 430 ms de soltar a soltar, e 2 toques com o dedo apertado não abriam o menu); tremida de até 10 px não move nem anula os 2 toques.
+       O relógio é controlado no teste (Date.now) para não depender da velocidade do aparelho. */
+    func testF3SelecaoDivisoriaDoisToquesETremidaIguaisEmQualquerZoom() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+        var sv=document.getElementById('svg'),dn0=Date.now,falso=0,rel=dn0.call(Date);Date.now=function(){return rel+falso};
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var tap=async function(x,y,mv,pr){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=(pr||70)-40;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
+        var fecha=function(){try{vmenuClose()}catch(_){}var v=document.getElementById('vmenu');if(v&&v.parentNode)v.parentNode.removeChild(v)};
+        var cena=function(){fecha();falso+=5000;TQK.k=null;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];S.m=A;S.sv=0;S.tab=0;VB={x:0,y:0,w:900,h:560};setVB();panel();draw();LAST='mod';return A};
+        var zoomEm=function(m,w){var cx=OX+(m.x+m.w/2)*K,cy=OY+(S.H-(m.b+m.h/2))*K;VB={x:cx-w/2,y:cy-w*560/900/2,w:w,h:w*560/900};setVB();draw()};
+        var linhaDiv=function(mi){var c=sv.querySelector('circle[data-d="0"][data-dm="'+mi+'"]').getBoundingClientRect();return c.left+c.width/2};
+        var xVao=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.left+r.width*0.25};var yMod=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.top+r.height*0.3};
+        var menu=async function(){await W(450);return document.getElementById('vmenu')?'menu':'sem menu'};
+        /* 1. divisória: a 6 px pega, a 16 px é o vão · em 3 zooms */
+        var dv=[];for(var zw of [900,450,225]){for(var d of [6,16]){var A=cena();zoomEm(A,zw);await W(60);var x=linhaDiv(0)+d,y=yMod(0),d0=A.div[0];await tap(x,y);await W(30);dv.push(zw+'/'+d+'px:'+(LAST==='div'?'divisória':'vão')+(A.div[0]!==d0?' MUDOU':''));fecha()}}R.divisoria=dv.join(' ');
+        /* 2. 2 toques com o dedo apertado 150 ms e 330 ms do 1º soltar ao 2º encostar: abre o menu do vão (antes contava de soltar a soltar, 430 ms, e não abria) */
+        var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y,null,150);falso+=330;await tap(x,y,null,150);R.doisToquesDedoApertado=await menu();fecha();
+        /* 2b. 2 pares de 2 toques com 400 ms entre eles não viram 4 toques (4 toques travam o módulo) */A=cena();await W(60);await tap(x,y);falso+=120;await tap(x,y);await W(450);fecha();falso+=400;await tap(x,y);falso+=120;await tap(x,y);await W(450);R.doisParesNaoTravam=(A.lock?'travou':'não travou')+' · '+(document.getElementById('vmenu')?'menu':'sem menu');fecha();
+        /* 3. 2 toques a 16 px da divisória: menu do vão, divisória parada */
+        A=cena();await W(60);x=linhaDiv(0)+16;var d0=A.div[0];await tap(x,y);falso+=150;await tap(x,y);R.doisToquesPertoDaDivisoria=(await menu())+' · divisória '+(A.div[0]===d0?'parada':'MUDOU');fecha();
+        /* 4. tremida de 8 px no módulo escolhido não move; arrastar 60 px move (garantia) */
+        var B;A=cena();B=S.mods[1];S.m=B;draw();await W(60);var rb=sv.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),xb=rb.left+rb.width*0.75,yb=rb.top+rb.height*0.4,bx=B.x,bb=B.b;
+        await tap(xb,yb,[0,-8]);await W(30);await tap(xb+20,yb,[8,0]);await W(30);R.tremida8px='B andou x '+(B.x-bx)+' b '+(B.b-bb);
+        await tap(xb,yb,[60,0]);await W(30);R.arrasta60px=B.x!==bx?'andou':'parado';
+        /* 5. 2 toques com tremida de 7 px no 1º: abre o menu e não mexe */
+        A=cena();await W(60);x=xVao(0);y=yMod(0);await tap(x,y,[0,-7]);falso+=120;await tap(x,y);R.doisToquesComTremida7px=(await menu())+' · A x '+A.x+' b '+(A.b||0);fecha();
+        Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["divisoria"] as? String, "900/6px:divisória 900/16px:vão 450/6px:divisória 450/16px:vão 225/6px:divisória 225/16px:vão")
+        XCTAssertEqual(o["doisToquesDedoApertado"] as? String, "menu")
+        XCTAssertEqual(o["doisParesNaoTravam"] as? String, "não travou · menu")
+        XCTAssertEqual(o["doisToquesPertoDaDivisoria"] as? String, "menu · divisória parada")
+        XCTAssertEqual(o["tremida8px"] as? String, "B andou x 0 b 0")
+        XCTAssertEqual(o["arrasta60px"] as? String, "andou")
+        XCTAssertEqual(o["doisToquesComTremida7px"] as? String, "menu · A x 35 b 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-MED (Adauto 17/11, Fase 3 item 6): medida inválida digitada é recusada com aviso e nada muda (antes virava o limite em silêncio:
+       largura 3 → 100, altura 3 → 290, profundidade 99999 → 1200). O campo mostra a medida gravada com o décimo (605,5 não aparece 606). */
+    func testF3MedidaInvalidaRecusadaComAvisoECampoMostraODecimo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();var m=S.mods[0];S.m=m;S.tab=0;panel();draw();
+        var campo=function(k){return document.querySelector('#bd [data-k="'+k+'"]')||document.querySelector('[data-k="'+k+'"]')};
+        var digita=async function(k,txt){var c=campo(k);if(!c)return 'sem campo '+k;TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo(k);return 'campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+        var sig=function(){return [m.w,m.h,m.d].join('x')+' · peças '+partsOf(m).length};
+        var w0=m.w,h0=m.h,d0=m.d,p0=sig(),hk0=histKey(snapState());
+        R.w3=(await digita('w','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.h3=(await digita('h','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.d99999=(await digita('d','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.w99999=(await digita('w','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.desfazerSemPassoNovo=histKey(snapState())===hk0?'sim':'não';
+        R.avisoTexto=(await digita('w','3'),TL.filter(function(t){return /não pode/.test(t)})[0]||'').replace(/\d+/g,'N');
+        /* válidas continuam: 605,5 grava e o campo mostra 605.5 depois de redesenhar o painel; 700 grava */
+        await digita('w','605,5');panel();await W(20);R.w605_5='m.w '+m.w+' · campo '+campo('w').value;
+        await digita('w','700');panel();await W(20);R.w700='m.w '+m.w+' · campo '+campo('w').value+' · aviso '+(TL.length?'sim':'não');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["w3"] as? String, "campo 900 · aviso sim · igual")
+        XCTAssertEqual(o["h3"] as? String, "campo 820 · aviso sim · igual")
+        XCTAssertEqual(o["d99999"] as? String, "campo 560 · aviso sim · igual")
+        XCTAssertEqual(o["w99999"] as? String, "campo 900 · aviso sim · igual")
+        XCTAssertEqual(o["desfazerSemPassoNovo"] as? String, "sim")
+        XCTAssertEqual(o["w605_5"] as? String, "m.w 605.5 · campo 605.5")
+        XCTAssertEqual(o["w700"] as? String, "m.w 700 · campo 700 · aviso não")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-SETA (Adauto 17/11, Fase 3 item 7): depois de "tampou até o fundo", empurrar a seta de trás pra dentro diminui a peça.
+       Antes a peça grudava na parede em qualquer ponto até 120 mm dela, e empurrar 60 mm não mudava nada. Puxar até a parede continua grudando. */
+    func testF3SetaDeTrasDo3DDiminuiDepoisDeTamparAteOFundo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.x=800;m.tl=true;m.tlW=30;m.zo=300;draw();
+        var pk='Tamponamento esquerdo#1',larg=function(){var p=partsOf(m).filter(function(q){return q.pk===pk})[0];return p?+p.cw:0};
+        open3D();await W(300);__cam(.75,.12,1.3);await W(200);__build();
+        var bs=__boxes().filter(function(b){return (b.pk===pk||b.ppk===pk)&&String(b.nm).indexOf('0:')===0}),b=bs[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1-1);
+        __sel3(c[0],c[1]);await W(100);__cam(.76,.12,1.3);await W(150);
+        var puxa=async function(n,passo,praFora){var h=document.querySelector('[data-hk="ek"]'),o=document.querySelector('[data-hk="ef"]');if(!h||!o)return 'sem seta';var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,ro=o.getBoundingClientRect(),dx=x-(ro.left+15),dy=y-(ro.top+15),L=Math.hypot(dx,dy)||1;dx/=L;dy/=L;if(!praFora){dx=-dx;dy=-dy}
+          var ev=function(t,X,Y){var tg_=t==='pointerdown'?h:(document.querySelector('[data-hk="ek"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:43,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};
+          ev('pointerdown',x,y);for(var i=1;i<=n;i++){ev('pointermove',x+dx*passo*i,y+dy*passo*i);await W(20)}ev('pointerup',x+dx*passo*n,y+dy*passo*n);await W(250);__build();await W(50);return 'ok'};
+        R.antes=larg();
+        R.puxouAteOFundo=(await puxa(40,15,true))+' · '+larg();var fundo=larg();
+        R.empurrou=(await puxa(6,2,false))+' · '+(larg()<fundo&&larg()>R.antes?'diminuiu':'igual '+larg());var menor=larg();
+        R.puxouDeNovo=(await puxa(6,2,true))+' · '+(larg()===fundo?'gruda no fundo':'parou em '+larg());
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? Int, 80)
+        XCTAssertEqual(o["puxouAteOFundo"] as? String, "ok · 681")
+        XCTAssertEqual(o["empurrou"] as? String, "ok · diminuiu")
+        XCTAssertEqual(o["puxouDeNovo"] as? String, "ok · gruda no fundo")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /* F3-REGN (Adauto 17/11, Fase 3 item 7): "Réguas por lado (camadas: 1 a 3)" do engrosso cava recusa outro número com aviso.
+       Antes 4 gravava 4 e gerava 3 camadas, e 0 gerava 2, sem aviso. */
+    func testF3CamadasDoEngrossoCavaSo1a3ComAviso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.regua=true;m.regN=2;S.m=m;S.tab=0;panel();draw();
+        var campo=function(){return [].filter.call(document.querySelectorAll('[data-r="regN"]'),function(q){return q.offsetParent!==null})[0]||document.querySelector('[data-r="regN"]')};
+        var sig=function(){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw}).sort().join(';')};
+        var digita=async function(txt){var c=campo();if(!c)return 'sem campo';TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo();return 'regN '+m.regN+' · campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+        var p2=sig();
+        R.c4=(await digita('4'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c0=(await digita('0'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c1_5=(await digita('1,5'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c3=(await digita('3'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["c4"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c0"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c1_5"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c3"] as? String, "regN 3 · campo 3 · aviso não · peças mudaram")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-MENU (Adauto 17/11, Fase 3 item 1: menus em ordem fixa entre todos os módulos).
+       Abas do editor por vãos na mesma ordem do editor normal; no menu de 2 toques o quadro "Por dentro deste vão" vem depois dos botões de frente,
+       então "1 porta" fica no mesmo lugar no balcão, no armário alto e no guarda-roupa (antes descia ~230 px). */
+    func testF3MenusNaMesmaOrdemEmTodosOsModulos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){all.push(q)})});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(q){return q.n===n})[0]))};
+        var cena=function(amb,n){loadState(initLimpo());S.env=amb;S.room=amb;S.W=3000;S.H=2700;draw();newTpl(T(n));var m=S.mods[0];S.m=m;draw();return m};
+        var porta1=async function(amb,n){cena(amb,n);vmenuOpen(0,0,300,120,-1);await W(150);var d=document.getElementById('vmenu');if(!d)return 'sem menu';var b=d.querySelector('[data-vk="door1"]'),ib=document.getElementById('vmib'),fr=d.querySelector('[data-vk="free"]');
+        var y=Math.round(b.getBoundingClientRect().top-d.getBoundingClientRect().top),ordem=ib?(fr&&(fr.compareDocumentPosition(ib)&Node.DOCUMENT_POSITION_FOLLOWING)?'quadro depois da frente':'quadro antes da frente'):'sem quadro';try{vmenuClose()}catch(_){}return {y:y,o:ordem}};
+        var a=await porta1('cozinha','Balcão 2 portas'),b=await porta1('cozinha','Armário alto 2 portas'),c=await porta1('quarto','Guarda-roupa 2 vãos');
+        R.balcao=a.o;R.alto=b.o;R.guardaRoupa=c.o;R.portaNoMesmoLugar=(Math.abs(b.y-a.y)<=30&&Math.abs(c.y-a.y)<=30)?'sim':'não · '+a.y+'/'+b.y+'/'+c.y;
+        /* abas do editor por vãos */var m=cena('cozinha','Armário alto 2 portas');try{soloOn(m)}catch(_){}await W(200);R.abasPorVaos=[].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(q){return q.textContent.replace(/^\W+/,'').trim()}).join(' › ');try{soloOff()}catch(_){}
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "sem quadro")
+        XCTAssertEqual(o["alto"] as? String, "quadro depois da frente")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "quadro depois da frente")
+        XCTAssertEqual(o["portaNoMesmoLugar"] as? String, "sim")
+        XCTAssertEqual(o["abasPorVaos"] as? String, "Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

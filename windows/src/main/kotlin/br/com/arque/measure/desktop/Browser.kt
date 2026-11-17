@@ -265,7 +265,7 @@ object Browser {
     linkNote:A('linkNote'),openNoteOf:A('openNoteOf'),makeQuote:A('makeQuote'),quotePhotos:A('quotePhotos'),setCurrent:A('setCurrent'),
     openTrena:A('openTrena'),shareStart:A('shareStart'),isSharing:B('isSharing'),isViewer:B('isViewer'),
     shareUpdate:function(){},shareCut:A('shareCut'),shareClient:A('shareClient'),close:A('close'),
-    putFile:A('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
+    putFile:B('putFile'),getFile:A('getFile'),delFile:A('delFile'),listFiles:A('listFiles'),tourResult:A('tourResult')
   };
   window.addEventListener('load',function(){setTimeout(function(){call('pageReady',[typeof S])},0)});
   document.addEventListener('DOMContentLoaded',function(){var st=document.createElement('style');st.textContent='#shb{display:none!important}';document.head.appendChild(st)});

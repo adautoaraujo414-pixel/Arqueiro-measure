@@ -139,7 +139,8 @@ struct MoveisWeb: UIViewRepresentable {
         isSharing:function(){return !!window.__arqueSharing},
         isViewer:function(){return !!window.__arqueViewer},
         shareUpdate:function(j){post({op:'shareUpdate',json:String(j)})},
-        putFile:function(n,b){post({op:'putFile',name:String(n),b64:String(b)})},
+        /* N03 (17/11): o arquivo dos projetos responde na hora se gravou; os outros (desfazer, preços) seguem assíncronos pra não pesar no toque */
+        putFile:function(n,b){if(String(n)==='projects.json')return sync('putFile',JSON.stringify({name:String(n),b64:String(b)}))==='ok';post({op:'putFile',name:String(n),b64:String(b)})},
         putVideo:function(j){return sync('putVideo',String(j))==='ok'},
         getFile:function(n){return sync('getFile',n)},
         delFile:function(n){post({op:'delFile',name:String(n)})},
@@ -252,7 +253,14 @@ struct MoveisWeb: UIViewRepresentable {
 
         // ponte síncrona (o editor espera a resposta na hora): getFile e listFiles
         func webView(_ w: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
-            if prompt == "__arque__:putVideo" {
+            // N03 (17/11): gravação de arquivo do editor responde se gravou (o editor avisa e não carrega o arquivo velho na próxima abertura)
+            if prompt == "__arque__:putFile" {
+                guard let d0 = (defaultText ?? "").data(using: .utf8),
+                      let o = (try? JSONSerialization.jsonObject(with: d0)) as? [String: Any],
+                      let n = o["name"] as? String, let b = o["b64"] as? String,
+                      let d = Data(base64Encoded: b, options: .ignoreUnknownCharacters) else { completionHandler("error"); return }
+                do { try d.write(to: dir.appendingPathComponent(safe(n)), options: [.atomic]); completionHandler("ok") } catch { completionHandler("error") }
+            } else if prompt == "__arque__:putVideo" {
                 do {
                     try EditorVideoBackup.save(defaultText ?? "", in: dir)
                     completionHandler("ok")

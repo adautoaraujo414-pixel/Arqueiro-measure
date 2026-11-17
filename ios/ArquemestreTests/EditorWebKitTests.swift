@@ -12264,4 +12264,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reaberto"] as? String, "v1:460×58")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-PECA (Adauto 17/11, item 6, "somente a peça que eu selecionar"): +1 mm na contra-frente pelo quadro do 3D muda só ela (lista, corte e 3D),
+       com aviso de encaixe; a caixa e a traseira não mudam. Ajuste antigo (sem a marca) continua mudando a caixa inteira, como antes. */
+    func testA6AjusteDe1mmSoNaPecaEscolhidaDaGaveta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t).slice(0,140))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão 2 gavetas'));var m=S.mods[0];m.v[0].open=true;draw();
+        var cx=function(){return partsOf(m).filter(function(p){return /^(Lateral de gaveta|Frente\/costa|Fundo de gaveta)/.test(p.name)&&/#[12]$/.test(p.pk)}).map(function(p){return p.pk.replace('Frente/costa de gaveta (contra-frente e traseira)','FC').replace('Lateral de gaveta','LG').replace('Fundo de gaveta (6 mm)','FD')+' '+p.cl+'×'+p.cw}).join(', ')};
+        open3D();await W(300);var b3=function(){__build();return __boxes().filter(function(q){return /^0:/.test(String(q.nm))&&/Frente\/costa/.test(String(q.pk||''))}).map(function(q){return (q.pk||'').replace(/.*#/,'#')+':'+Math.round(q.x1-q.x0)+'x'+Math.round(q.y1-q.y0)}).slice(0,2).join(',')};
+        R.antes=cx()+' · 3D '+b3();
+        var fc=partsOf(m).filter(function(p){return /^Frente\/costa/.test(p.name)})[0].pk;window.SEL3={mi:0,pk:fc};E3A6.render();await W(50);
+        var k=document.querySelector('[data-e3fk="et"]');if(k){k.click();await W(30)}var d=document.querySelector('[data-e3fd="1"]');R.temBotoes=(k?'lado':'sem lado')+' '+(d?'+1':'sem +1');if(d){d.click();await W(80)}
+        R.depois=cx()+' · 3D '+b3();R.aviso=TL.filter(function(t){return /Só esta peça/.test(t)})[0]||'sem aviso';
+        /* ajuste antigo (sem a marca) continua mudando a caixa inteira */delete m.po[fc];m.po[fc]={v2:1,et:5};draw();R.antigo=cx();
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "LG#1 460×226, LG#2 460×226, FC#1 714×211, FC#2 714×211, FD#1 729×460, FD#2 729×460 · 3D #1:714x211,#2:714x211")
+        XCTAssertEqual(o["temBotoes"] as? String, "lado +1")
+        XCTAssertEqual(o["depois"] as? String, "LG#1 460×226, LG#2 460×226, FC#1 714×212, FC#2 714×211, FD#1 729×460, FD#2 729×460 · 3D #1:714x212,#2:714x211")
+        XCTAssertEqual(o["aviso"] as? String, "⚠ Só esta peça (Frente/costa de gaveta): altura +1 mm: passa da altura das laterais. As outras peças não mudaram.")
+        XCTAssertEqual(o["antigo"] as? String, "LG#1 460×231, LG#2 460×231, FC#1 714×216, FC#2 714×216, FD#1 729×460, FD#2 729×460")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

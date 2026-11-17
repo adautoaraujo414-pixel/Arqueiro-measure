@@ -639,3 +639,16 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Altura fora da regra da caixa (folga de 35 em cima, mínimo 40) é recusada com aviso, e nada muda.
 - **Código:** gancho `a6Row` no fim do `e3Render` (o `e3Render` original virou `e3Render0`). Acesso por `window.E3A6`, porque o nome `__e3` já existia.
 - **Teste:** `testA6AlturaDasLateraisDaGavetaPor2ToquesDe1em1mm` (lista, contra-frente, 3D, recusa, desfazer, reabrir): falha na versão pública e passa agora.
+
+## A6-PECA: ajuste de 1 mm só na peça escolhida da gaveta (item 6, "somente a peça que eu selecionar", Adauto 17/11)
+- **Antes:**
+  - Frente de gaveta (a de fora): o ajuste já era só da peça.
+  - Contra-frente e traseira da caixa: o ajuste (setas, fino ±1, digitado) somava no `gbOv` e mudava a caixa inteira daquela gaveta (laterais, contra-frente, traseira, fundo).
+- **Agora:** o gancho `window.poAlign`, que já era chamado depois de todo ajuste do 3D mas não existia, marca o ajuste da contra-frente/traseira como `ind`.
+  - O `gbOv` não soma ajustes `ind`.
+  - O `partsOf` aplica o ajuste só àquela peça (cl/cw sem o décimo).
+  - O 3D desenha a peça com o ajuste dela; a base da caixa usa a medida sem ajuste.
+  - Aviso de encaixe: largura (não encaixa entre as laterais) e altura (passa ou fica mais baixa que as laterais).
+- **Compatibilidade:** ajuste antigo (sem `ind`) continua mudando a caixa inteira, como antes. Nenhum projeto muda ao abrir.
+- **Teste:** `testA6AjusteDe1mmSoNaPecaEscolhidaDaGaveta`: falha na versão pública e passa agora.
+- **Testes de gaveta, caixa e ajuste (28):** todos passam. Na versão pública só falham os 2 testes novos.

@@ -182,7 +182,8 @@ class DesktopCompatTest {
         assertEquals("[{\"id\":\"n1\"}]", b.call("listNotes", emptyList()))
         // N03 (17/11): a ponte responde se gravou ("true"/"false"), pro editor avisar e não carregar o arquivo velho
         assertEquals("true", b.call("putFile", listOf("projects.json", java.util.Base64.getEncoder().encodeToString("[1,2]".toByteArray()))))
-        File(dir, "travado.json").mkdirs()
+        // destino é uma pasta com coisa dentro: no Windows o Java troca pasta VAZIA pelo arquivo, então precisa ter conteúdo pra falhar de verdade
+        File(dir, "travado.json").mkdirs(); File(dir, "travado.json/dentro.txt").writeText("x")
         assertEquals("false", b.call("putFile", listOf("travado.json", java.util.Base64.getEncoder().encodeToString("x".toByteArray()))))
         assertEquals("[1,2]", String(java.util.Base64.getDecoder().decode(b.call("getFile", listOf("projects.json")))))
         assertTrue(b.call("listFiles", emptyList()).contains("projects.json"))

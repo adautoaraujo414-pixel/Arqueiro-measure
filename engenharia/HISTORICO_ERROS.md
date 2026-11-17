@@ -599,3 +599,15 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** `S.sv=0` no próprio botão (sem divisórias só existe o vão 1). É estado de tela: não muda peça, medida, configuração nem o que é gravado. `m.v` não é cortado, então o desfazer continua igual.
 - **Fora do escopo autorizado (fica como risco):** outras camadas que mudam `m.div` direto no mesmo módulo. Com a P1, ler um vão que não existe nelas não grava nada.
 - **Teste:** `testGvLimparDivisoesVoltaOVaoEscolhidoProPrimeiroNaHora` falha só com a P1 (`vão escolhido 2 de 1`, 1 inválida) e passa com o C.
+
+## BKP-PONTOS: restaurar backup recusava o backup inteiro se algum arquivo tivesse ".." no nome (achado na validação da publicação, 17/11) — NÃO CORRIGIDO, aguarda autorização
+- **Módulo:** backup completo, Android e Windows (`DataBackup.check`, introduzido na correção P0-02 de 16/11). iOS não tem: lá a entrada com ".." é só pulada, como antes.
+- **Como apareceu:** a CI do Windows em modo teste (run 141, código do `5a468bf`) falhou em `DesktopCompatTest.backupCompletoERestauracao`. Esse teste passava na versão pública win-140 (`9f3dc3e`).
+- **Reproduzido aqui:** `gradle test --tests '*DesktopCompatTest*'` com o cache `win-dev-deps`. Rodando sozinho ele passa; com a classe inteira ele falha.
+- **Causa raiz comprovada:**
+  - outro teste (`ponteDoEditorDeMoveis`) deixa na pasta de dados o arquivo `moveis-teste/.._fora.txt`. É um nome válido: a ponte do editor troca `../` por `.._`;
+  - `check` recusa qualquer entrada cujo nome **contenha** `..` (`n.contains("..")`). Com isso o backup inteiro sai como "caminho inválido" e `stage` devolve false;
+  - antes de 16/11 a proteção era por caminho canônico (só bloqueava sair da pasta).
+- **Efeito para o usuário:** backup feito num aparelho que tenha qualquer arquivo com ".." no nome (ex.: "foto..jpg") não pode ser restaurado ("Nada foi alterado"). Não apaga nada, mas impede a restauração.
+- **Correção proposta (mínima):** recusar só quando um **pedaço** do caminho for exatamente `..` (`n.split('/', '\\').any { it == ".." }`), mantendo as outras proteções, nos dois `DataBackup.kt`. Teste novo: backup com `notas/foto..jpg` restaura, e backup com `../fora.txt` continua recusado.
+- **Publicação:** interrompida em Android, Windows e iOS até a autorização da correção.

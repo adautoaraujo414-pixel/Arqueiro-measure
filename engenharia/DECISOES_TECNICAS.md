@@ -30,3 +30,19 @@ Só entra aqui o que o Adauto aprovou. Sugestões ficam em `PLANO_EVOLUCAO.md`.
   - sem recriar peça sozinho.
 - **Gravidade:** P0 perda ou corrupção de projeto; P1 exclusão errada ou divergência de medidas e peças; P2 visual ou interação.
 - **Procedimento:** primeiro auditar e reproduzir; corrigir só o comprovado, com teste. | Adauto | fila |
+
+## Fita de borda: 1 mm como padrão (Adauto, 17/11/2026)
+- **Especificação do Adauto:** todas as fitas de borda usam **1 mm** como espessura padrão.
+- **Hoje (levantado em 17/11):** o 0,8 mm existe só no **desenho** do 3D (a tira na frente das peças).
+  - Ele aparece também no quadro da peça do 3D: uma lateral de 560 é mostrada como 560,8 mm.
+  - Contas, lista, corte e orçamento **não usam** a espessura. A fita entra em metros, com largura de 22, 35, 45 ou 64 mm.
+  - Os projetos salvos **não guardam** espessura de fita.
+- **Regra:**
+  - não alterar medidas nem projetos antigos silenciosamente;
+  - aplicar o 1 mm **só com a etapa aprovada** (fila: padronização das fitas e menu Pintar, antes da auditoria master);
+  - apresentar o impacto antes.
+- **Em aberto:** o quadro da peça com 1 mm mostra 561 (peça + fita) ou 560 (só a peça)?
+
+## Botão de minimizar dos quadros do 3D (Adauto, 17/11/2026)
+- O botão ▁ é **um componente só, usado por 9 quadros** (`it4`, `pt3q`, `gvbox`, `crgbox`, `slcfg`, `trbox`, `rpfbox`, `qebox`, `det3bar`).
+- **Não modificar agora.** A reorganização do menu Pintar fica na fila e não pode mexer nesse componente compartilhado.

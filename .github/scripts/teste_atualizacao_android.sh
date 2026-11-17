@@ -22,7 +22,9 @@ hashes > $OUT/antes.txt; cat $OUT/antes.txt
 adb logcat -c
 echo "== 3. instala a versão nova por cima (sem desinstalar)"; adb install -r "$NEW" || falha "a versão nova não instalou por cima (assinatura?)"
 V1=$(adb shell dumpsys package $PKG | grep -m1 versionCode | tr -s ' ' | cut -d' ' -f2 | cut -d= -f2); echo "versão nova: $V1"
-adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 20; adb shell am force-stop $PKG
+# sai do app pelo botão Início (como a pessoa faz): é no onStop que o app grava as cópias em Download/ArqueMeasure.
+# O force-stop direto mata o processo sem passar pelo onStop e a cópia nunca seria feita.
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 20; adb shell input keyevent 3; sleep 15; adb shell am force-stop $PKG
 hashes > $OUT/depois.txt
 echo "== 4. confere"
 diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização"

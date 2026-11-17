@@ -108,3 +108,24 @@ Depois de cada correção, também rodam a bateria completa e as sondas s01–s3
 - `gv(i)` fora de divisórias + 1 ainda cria vãos. A mudança da função está para aprovação.
 - **Balcão de forno, aba Portas:** os botões gerais trocam o vão do forno para porta (comportamento antigo, fora da opção A, que é só das torres). No menu do vão ele já vira "frente com recorte".
 - Testado no Chromium. **Não testado em aparelho real nem no CI do iOS.**
+
+## Homologação final de `9561fcd` (17/11, cópia congelada md5 c3a11255…)
+- **Bateria:** 340 testes · 339 passaram · 1 falhou. A falha é `testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase` (b590 × b1410), a mesma de antes: depende do tamanho da janela no Chromium sem tela e já falha igual no `9ec0869`.
+- **Sondas, sem regressão:**
+  - s01 · s02 · s07 · s08a/b · s11 · s12 · s15 · s28 · s30 · s40 · s42: iguais ao `9ec0869` ou melhores.
+  - s09: arrasta só a divisória do módulo B; o A fica parado.
+  - s14: 922 caixas no 3D depois de "Só a pedra"; a escolha não passa para outro projeto.
+  - s21/s22: o projeto B fica limpo. A 🗑 no B pede confirmação de módulo inteiro, não apaga a divisória escolhida no A.
+  - s31: 10/10.
+  - s41: os comandos gerais escondidos nas 9 torres.
+  - s24: sem vazamento (ouvintes 574 → 575, texturas e buffers iguais).
+  - Backup JVM: BUILD SUCCESSFUL.
+- **Defeitos anteriores, que continuam:**
+  - s13: posição digitada perto da parede.
+  - s20: I7 sobreposição no catálogo e I6 fora da parede.
+  - s23: vão → gavetas atrasado no 3D.
+  - s26: profundidade 3D de 567 contra 560.
+  - s27: espessura do rack e largura do módulo 3 da demo.
+  - s29: o catálogo encaixa a largura.
+  - s21: `S.tab` passa de um projeto para outro. Já era assim antes da Fase 2; só muda a aba.
+- **Não verificado:** aparelho real, CI do iOS, compilação completa Android/Windows (dl.google.com bloqueado).

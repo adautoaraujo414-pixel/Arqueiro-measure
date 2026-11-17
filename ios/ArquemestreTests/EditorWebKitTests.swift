@@ -947,7 +947,14 @@ final class EditorWebKitTests: XCTestCase {
             __boxes().filter(function(b){return b.ft&&/^(Base|Lateral)/.test(String(b.nm).split(':')[1])}).forEach(function(b){[.15,.5,.85].forEach(function(t){var big=(b.x1-b.x0)>(b.y1-b.y0),p=big?[b.x0+(b.x1-b.x0)*t,(b.y0+b.y1)/2,b.z1]:[(b.x0+b.x1)/2,b.y0+(b.y1-b.y0)*t,b.z1],c=org3api.proj(p);if(!c)return;paintTap(c[0],c[1]);var st=__pt3state(),k=st.pv?st.pv.mi+':'+String(st.pv.key).replace(/#\d+$/,''):'none';if(k!==String(b.nm))erra.push(b.nm+'@'+t+'->'+k);if(Q())Q().hidden=true})});pt3(false)};
           probe();org3api.open(m,true);org3api.open(a,true);await new Promise(function(r){setTimeout(r,1500)});probe();org3api.open(m,false);org3api.open(a,false);await new Promise(function(r){setTimeout(r,1500)});__build();
           /* a fita da base do balcão (a tirinha embaixo da porta) pinta de verdade · a porta fica no botão "Era a peça?" e o botão troca */
-          pt3(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};var bi=fb(/^0:Base inferior/),c=org3api.proj([(bi.x0+bi.x1)/2,102,bi.z1]);paintTap(c[0],c[1]);var pv1=__pt3state().pv.key,alt1=(Q().querySelector('[data-ptalt]')||{}).textContent||'';
+          pt3(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};
+          /* mira (Adauto, 17/11/2026 — só o teste): o centro da parte da fita da base que aparece embaixo da 1ª porta, tirado da geometria desenhada (a fita pode estar em pedaços
+             quando a porta fechada esconde parte dela); antes era a 1ª caixa da fita e y = 102 mm fixo */
+          var folha_=function(){__build();return __boxes().filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.ft&&(b.x1-b.x0)>=50&&(b.y1-b.y0)>=50&&(b.z1-b.z0)>=10}).sort(function(a,b){return a.x0-b.x0})[0]};
+          /* espera a porta terminar de fechar (no lugar dos 1,5 s fixos, que num aparelho ocupado não bastavam) */for(var w_=0;w_<30&&!folha_();w_++)await new Promise(function(r){setTimeout(r,200)});
+          var lf_=folha_(),
+            bi=__boxes().filter(function(b){return b.ft&&/^0:Base inferior/.test(b.nm)&&Math.min(b.x1,lf_.x1)-Math.max(b.x0,lf_.x0)>1&&b.y0<lf_.y0-.5}).sort(function(a,b){return (b.x1-b.x0)-(a.x1-a.x0)})[0],
+            c=org3api.proj([(Math.max(bi.x0,lf_.x0)+Math.min(bi.x1,lf_.x1))/2,(bi.y0+Math.min(bi.y1,lf_.y0))/2,bi.z1]);paintTap(c[0],c[1]);var pv1=__pt3state().pv.key,alt1=(Q().querySelector('[data-ptalt]')||{}).textContent||'';
           Q().querySelector('[data-ptq="fita"]').click();var base=fb(/^0:Base inferior/).c.slice(0,3).join(),lat=fb(/^0:Lateral esquerda/).c.slice(0,3).join();var x=Q().querySelector('[data-ptq="x"]');if(x)x.click();
           paintTap(c[0],c[1]);Q().querySelector('[data-ptalt]').click();var pv2=__pt3state().pv.key,alt2=(Q().querySelector('[data-ptalt]')||{}).textContent||'';Q().querySelector('[data-ptq="x"]').click();
           /* fita pintada de propósito ganha da cor da peça pintada (fitas do módulo inteiro) */

@@ -11472,6 +11472,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* FT-REBAIXO (Adauto, 17/11/2026: "autorizo a correção cirúrgica exclusivamente do defeito visual"): no 3D a tira de fita de 0,8 mm da frente do rebaixo da lateral
+       ficava dentro da travessa frontal (sobreposição 15 × 70 × 0,8). Só o desenho muda: peças, lista e corte iguais aos da versão publicada (7c939bc; assinaturas tiradas dela).
+       Falha antes (2 tiras dentro da travessa por inferior) e passa depois. A tira da parte de baixo da lateral, que aparece, continua. */
+    func testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.05&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.05&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.05};
+        var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(16)};
+        var NM=['Balcão 2 portas','Balcão porta + gavetas','Gaveteiro 3 gavetas','Aéreo 2 portas','Aéreo basculante','Torre do banheiro (armário alto)','Guarda-roupa 3 vãos','Canto em L (baixo) · direito'];
+        for(var k=0;k<NM.length;k++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(NM[k]));var m=S.mods[0];draw();open3D();await W(150);__build();
+          var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),F=B.filter(function(b){return b.ft}),Sd=B.filter(function(b){return !b.ft&&b.g!=='sh'});
+          var dT=F.filter(function(f){return Sd.some(function(o){return /^0:(Travessa|Travessão|Frontal)/.test(o.nm)&&ov(f,o)})}).length;
+          var frente=F.some(function(f){return f.nm==='0:Lateral esquerda'&&f.y1-f.y0>300});
+          R['m'+k]='fitas '+F.length+' · dentro da travessa '+dT+' · tira da frente da lateral '+(frente?'sim':'não')+' · peças+corte '+hs(JSON.stringify(partsOf(m))+'|'+JSON.stringify(cutGroups().map));document.getElementById('v3x').click()}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["m0"] as? String, "fitas 3 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
+        XCTAssertEqual(o["m1"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
+        XCTAssertEqual(o["m2"] as? String, "fitas 3 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
+        XCTAssertEqual(o["m3"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m4"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m5"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "fitas 6 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
+        XCTAssertEqual(o["m7"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

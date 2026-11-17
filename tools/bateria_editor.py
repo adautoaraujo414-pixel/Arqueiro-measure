@@ -218,6 +218,13 @@ def main():
             if not c.espera_evento('Page.loadEventFired', 90):
                 raise TimeoutError('a página não carregou')
             time.sleep(1.5)
+            # a página anterior (com alteração não salva) pode segurar a navegação: o teste rodaria na página velha. Confere o endereço.
+            try:
+                hr = c.chama('Runtime.evaluate', {'expression': 'location.href', 'returnByValue': True}, 20)['result'].get('value') or ''
+            except Exception:
+                hr = ''
+            if hr.split('?')[0] != url.split('?')[0]:
+                raise RuntimeError('a página não trocou para %s (ficou em %s)' % (url.split('?')[0], hr.split('?')[0]))
             if not info:
                 r = c.chama('Runtime.evaluate', {'expression': "JSON.stringify({ua:navigator.userAgent,janela:innerWidth+'x'+innerHeight,escala:devicePixelRatio,editor:typeof S,ponte:!!(window.ArqueApp&&ArqueApp.isApp()),webgl:(function(){try{var t=document.createElement('canvas');return !!(t.getContext('webgl')||t.getContext('experimental-webgl'))}catch(e){return false}})()})", 'returnByValue': True}, 30)
                 info = json.loads(r['result']['value'])

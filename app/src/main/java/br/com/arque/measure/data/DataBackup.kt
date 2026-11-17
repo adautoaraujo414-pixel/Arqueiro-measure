@@ -106,7 +106,8 @@ object DataBackup {
                 while (e != null) {
                     streamed++
                     val n = e.name
-                    if (n.contains("..") || n.startsWith("/") || n.startsWith("\\") || n.contains(':')) return Check(false, "o backup tem um caminho inválido", files, projects)
+                    /* BKP-PONTOS (17/11): só um pedaço do caminho igual a ".." é travessia; "foto..jpg" é nome válido */
+                    if (n.split('/', '\\').any { it == ".." } || n.startsWith("/") || n.startsWith("\\") || n.contains(':')) return Check(false, "o backup tem um caminho inválido", files, projects)
                     val keep = n == "files/moveis/projects.json"
                     val bo = if (keep) java.io.ByteArrayOutputStream() else null
                     while (true) { val r = z.read(buf); if (r < 0) break; bo?.write(buf, 0, r) }

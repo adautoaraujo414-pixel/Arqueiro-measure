@@ -105,4 +105,28 @@ class RestauracaoTest {
         assertTrue(nomes.none { it.startsWith("restore_") }, "cópias de restauração não entram no backup: $nomes")
         root.deleteRecursively()
     }
+
+    // BKP-PONTOS (17/11): nome de arquivo com pontos é válido; só um pedaço do caminho igual a ".." é travessia.
+    // Antes: n.contains("..") recusava o backup inteiro por causa de "foto..jpg".
+    @Test fun nomesComPontosRestauram() {
+        val (ok, st, root) = restaura(zip("files/moveis/projects.json" to """[{"id":"VELHO"}]""".toByteArray(), "files/fotos/foto..jpg" to grande,
+            "files/notas...txt" to "n".toByteArray(), "files/a..b/c.json" to "{}".toByteArray(), "files/..oculto" to "o".toByteArray(), "files/notas.json" to """["nota velha"]""".toByteArray()))
+        assertTrue(ok); assertEquals("projects=[{\"id\":\"VELHO\"}] · notas=[\"nota velha\"] · licença=true", st)
+        assertTrue(grande.contentEquals(File(root, "files/fotos/foto..jpg").readBytes()))
+        assertEquals("n", File(root, "files/notas...txt").readText()); assertEquals("{}", File(root, "files/a..b/c.json").readText()); assertEquals("o", File(root, "files/..oculto").readText())
+        root.deleteRecursively()
+    }
+    @Test fun projetoAntigoComFotoDePontosRestauraIgual() {
+        val antigo = """[{"id":"p1","client":{"nome":"Maria"},"created":1,"updated":2,"current":{"W":3600,"H":2700,"mods":[{"n":"Balcão 2 portas","w":900,"div":[0.5],"v":[{"k":"door","n":1},{"k":"drawers","n":2},{"k":"free","n":1}]}]}}]"""
+        val (ok, st, root) = restaura(zip("files/moveis/projects.json" to antigo.toByteArray(), "files/moveis/fotos/cozinha..maria.jpg" to grande))
+        assertTrue(ok); assertEquals("projects=$antigo · notas=SUMIU · licença=true", st)
+        assertTrue(grande.contentEquals(File(root, "files/moveis/fotos/cozinha..maria.jpg").readBytes()))
+        root.deleteRecursively()
+    }
+    @Test fun travessiasContinuamRecusadas() {
+        for (n in listOf("../fora.txt", "files/../../fora.txt", "files\\..\\fora.txt", "..", "files/..", "files/../notas.json", "/abs.txt", "\\abs.txt", "C:/fora.txt")) {
+            val (ok, st, r) = restaura(zip(n to "x".toByteArray(), "files/notas.json" to """["nota velha"]""".toByteArray()))
+            assertEquals(false, ok, "aceitou $n"); assertEquals(INTACTO, st, "mudou com $n"); assertTrue(!File(r.parentFile, "fora.txt").exists(), "escreveu fora com $n"); r.deleteRecursively()
+        }
+    }
 }

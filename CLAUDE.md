@@ -140,3 +140,22 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 12. **Branches separadas.** Não misturar tarefas não homologadas. Não publicar sem autorização expressa (seção 7).
 
 **Regra definitiva:** não reconstruir o Arquemestre a cada função nova. Evoluir o sistema existente, preservando a engenharia já desenvolvida.
+
+## 13. Desempenho: resposta imediata (Adauto, 17/11/2026 · vale para toda sessão)
+**Precisão de marcenaria + estabilidade + resposta imediata. Nenhuma pode ser sacrificada pela outra.**
+
+1. Toques, portas, gavetas, seleção, edição, movimentação, botões e menus respondem com a menor latência possível. **Sem atrasos artificiais** (ex.: esperar 0,4 s para separar gestos) sem autorização.
+2. 3D fluido: zoom, rotação, arrasto, abrir portas e mover módulos sem congelar nem saltar. Cálculos (peças, geometria, corte) não bloqueiam a tela.
+3. Sem toques perdidos nem ações duplicadas. Sem peças piscando, sumindo, se sobrepondo errado ou seleção de objeto escondido.
+4. **Medir de verdade** e comparar com a versão homologada, sempre que der:
+   - latência toque → resposta;
+   - abrir porta e gaveta;
+   - quadros por segundo do 3D;
+   - selecionar, editar e mover;
+   - memória;
+   - projeto grande.
+
+   Não declarar desempenho perfeito sem comprovação.
+5. Não reescrever o motor, não mudar a geometria e não mexer no que funciona para otimizar. Primeiro achar o gargalo real; depois otimização pontual, comprovada e sem regressão.
+6. Conflito entre reconhecer vários toques e a resposta imediata do toque simples: apresentar as alternativas **com os tempos medidos** antes de mudar.
+7. Validar Android, iPhone, iPad e Windows, considerando aparelhos mais fracos.

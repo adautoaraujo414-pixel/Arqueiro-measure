@@ -7176,7 +7176,7 @@ final class EditorWebKitTests: XCTestCase {
                   var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
                   /* arrasta o módulo mi no 2D: dy em mm (pra cima = positivo) · devolve se a linha verde no topo do ímã apareceu durante o arrasto */
                   var drag2=async function(mi,dx,dy){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
                   /* 1. B com o topo 20 mm abaixo do A: subiu 10 → o ímã alinha em cima (não fica torto) */
                   R.antes='A '+top(A)+' · B '+top(B);
                   var g1=await drag2(1,0,10);R.alinhou='A '+top(A)+' · B '+top(B)+' · linha verde no topo '+g1+' · do chão '+B.b;
@@ -7295,7 +7295,7 @@ final class EditorWebKitTests: XCTestCase {
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   /* arrasto de verdade no 2D: dx, dy em mm além da zona morta (0 = o dedo não anda nesse eixo; tremida = px soltos) */
                   var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   var monta=async function(gap,gapT,A2w){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=5610;S.H=3270;newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Armário alto 2 portas'));var A2=S.mods[0],Sx=S.mods[1],Tq=S.mods[2];A2.x=1500;A2.w=A2w;A2.h=520;A2.b=2190;Sx.w=1220;Sx.h=1080;Sx.b=1720;Sx.x=A2.x+A2.w+gap;Tq.x=Sx.x+Sx.w+30+30+gapT;[A2,Sx,Tq].forEach(function(m){['tl','tr'].forEach(function(k){m[k]=false;delete m[k+'Auto'];delete m[k+'M']})});Tq.tl=Tq.tr=true;Tq.tlM=Tq.trM=1;return [A2,Sx,Tq]};
                   /* 1. o caso do vídeo (antes: a cada toque o tamponamento do vizinho ligava e desligava, o módulo pulava 30 e a torre era empurrada) */
                   var M=await monta(35,10,920);M[1].tl=true;M[1].tlM=1;M[1].tr=true;M[1].trAuto=1;M[0].tl=true;M[0].tlAuto=1;await W(30);S.m=M[1];draw();panel();await W(60);
@@ -7538,7 +7538,7 @@ final class EditorWebKitTests: XCTestCase {
                   var st=function(){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+' b'+m.b+' w'+m.w+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
-                    var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
+                    var ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5;/* F3-SEL (Adauto 17/11): a zona morta do arrasto vem do app (10 px; antes 6) */var tx=dx?(dx>0?1:-1)*(ZM_+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(ZM_+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(50);
                   var A=S.mods[0],B=S.mods[1],C=S.mods[2];R.criou=st();
                   /* folga de 30 deixada de propósito (ex.: digitou a posição) */
@@ -12262,6 +12262,47 @@ R.errs=__errs.length;return JSON.stringify(R);
         XCTAssertEqual(o["horizontal"] as? String, "escolheu B true · B x 1600 b 0")
         XCTAssertEqual(o["jaEscolhidoMove"] as? String, "B x andou")
         XCTAssertEqual(o["aParado"] as? String, "A x 200")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-SEL (Adauto 17/11, Fase 3 itens 2, 3 e 5): limites de toque iguais em qualquer zoom.
+       Divisória pega só até 12 px de cada lado (antes 22 px e a área crescia com o zoom, então um toque no vão virava divisória);
+       2 toques valem até 500 ms (antes 430 ms, e 2 toques normais não abriam o menu); tremida de até 10 px não move nem anula os 2 toques.
+       O relógio é controlado no teste (Date.now) para não depender da velocidade do aparelho. */
+    func testF3SelecaoDivisoriaDoisToquesETremidaIguaisEmQualquerZoom() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+var sv=document.getElementById('svg'),dn0=Date.now,falso=0,rel=dn0.call(Date);Date.now=function(){return rel+falso};
+var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+var tap=async function(x,y,mv){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=30;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
+var fecha=function(){try{vmenuClose()}catch(_){}var v=document.getElementById('vmenu');if(v&&v.parentNode)v.parentNode.removeChild(v)};
+var cena=function(){fecha();falso+=5000;TQK.k=null;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];S.m=A;S.sv=0;S.tab=0;VB={x:0,y:0,w:900,h:560};setVB();panel();draw();LAST='mod';return A};
+var zoomEm=function(m,w){var cx=OX+(m.x+m.w/2)*K,cy=OY+(S.H-(m.b+m.h/2))*K;VB={x:cx-w/2,y:cy-w*560/900/2,w:w,h:w*560/900};setVB();draw()};
+var linhaDiv=function(mi){var c=sv.querySelector('circle[data-d="0"][data-dm="'+mi+'"]').getBoundingClientRect();return c.left+c.width/2};
+var xVao=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.left+r.width*0.25};var yMod=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.top+r.height*0.3};
+var menu=async function(){await W(450);return document.getElementById('vmenu')?'menu':'sem menu'};
+/* 1. divisória: a 6 px pega, a 16 px é o vão · em 3 zooms */
+var dv=[];for(var zw of [900,450,225]){for(var d of [6,16]){var A=cena();zoomEm(A,zw);await W(60);var x=linhaDiv(0)+d,y=yMod(0),d0=A.div[0];await tap(x,y);await W(30);dv.push(zw+'/'+d+'px:'+(LAST==='div'?'divisória':'vão')+(A.div[0]!==d0?' MUDOU':''));fecha()}}R.divisoria=dv.join(' ');
+/* 2. 2 toques no vão com 460 ms entre um soltar e o outro: abre o menu do vão */
+var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y);falso+=390;await tap(x,y);R.doisToques460ms=await menu();fecha();
+/* 3. 2 toques a 16 px da divisória: menu do vão, divisória parada */
+A=cena();await W(60);x=linhaDiv(0)+16;var d0=A.div[0];await tap(x,y);falso+=150;await tap(x,y);R.doisToquesPertoDaDivisoria=(await menu())+' · divisória '+(A.div[0]===d0?'parada':'MUDOU');fecha();
+/* 4. tremida de 8 px no módulo escolhido não move; arrastar 60 px move (garantia) */
+var B;A=cena();B=S.mods[1];S.m=B;draw();await W(60);var rb=sv.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),xb=rb.left+rb.width*0.75,yb=rb.top+rb.height*0.4,bx=B.x,bb=B.b;
+await tap(xb,yb,[0,-8]);await W(30);await tap(xb+20,yb,[8,0]);await W(30);R.tremida8px='B andou x '+(B.x-bx)+' b '+(B.b-bb);
+await tap(xb,yb,[60,0]);await W(30);R.arrasta60px=B.x!==bx?'andou':'parado';
+/* 5. 2 toques com tremida de 7 px no 1º: abre o menu e não mexe */
+A=cena();await W(60);x=xVao(0);y=yMod(0);await tap(x,y,[0,-7]);falso+=120;await tap(x,y);R.doisToquesComTremida7px=(await menu())+' · A x '+A.x+' b '+(A.b||0);fecha();
+Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["divisoria"] as? String, "900/6px:divisória 900/16px:vão 450/6px:divisória 450/16px:vão 225/6px:divisória 225/16px:vão")
+        XCTAssertEqual(o["doisToques460ms"] as? String, "menu")
+        XCTAssertEqual(o["doisToquesPertoDaDivisoria"] as? String, "menu · divisória parada")
+        XCTAssertEqual(o["tremida8px"] as? String, "B andou x 0 b 0")
+        XCTAssertEqual(o["arrasta60px"] as? String, "andou")
+        XCTAssertEqual(o["doisToquesComTremida7px"] as? String, "menu · A x 35 b 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

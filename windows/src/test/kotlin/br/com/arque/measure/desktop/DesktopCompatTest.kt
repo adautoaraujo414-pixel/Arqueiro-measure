@@ -180,7 +180,10 @@ class DesktopCompatTest {
         val b = MoveisBridge(dir, onClose = { closed = true }, notes = { "[{\"id\":\"n1\"}]" }, company = { "Marcenaria" })
         assertEquals("Marcenaria", b.call("companyName", emptyList()))
         assertEquals("[{\"id\":\"n1\"}]", b.call("listNotes", emptyList()))
-        b.call("putFile", listOf("projects.json", java.util.Base64.getEncoder().encodeToString("[1,2]".toByteArray())))
+        // N03 (17/11): a ponte responde se gravou ("true"/"false"), pro editor avisar e não carregar o arquivo velho
+        assertEquals("true", b.call("putFile", listOf("projects.json", java.util.Base64.getEncoder().encodeToString("[1,2]".toByteArray()))))
+        File(dir, "travado.json").mkdirs()
+        assertEquals("false", b.call("putFile", listOf("travado.json", java.util.Base64.getEncoder().encodeToString("x".toByteArray()))))
         assertEquals("[1,2]", String(java.util.Base64.getDecoder().decode(b.call("getFile", listOf("projects.json")))))
         assertTrue(b.call("listFiles", emptyList()).contains("projects.json"))
         b.call("delFile", listOf("projects.json"))

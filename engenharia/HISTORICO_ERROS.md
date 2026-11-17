@@ -712,6 +712,7 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - As falhas da versão nova também acontecem na pública, nas mesmas telas:
     - `testUmToqueNaPortaDaParede…` no celular: o ponto tocado pelo teste não cai na porta na tela pequena. Corrigir o **teste** para mirar pela projeção da porta.
     - `testToqueNo3DAchaAPecaCertaEBordaFina` no celular deitado.
+- **Windows CI 45** (`2ca030a`, motor do Windows): 353/354. A única falha é a antiga `testTamponamentoNo2D…` (ergueu b590); a correção desse teste está na branch do P0 (`32154d4`, `790a990`), não nesta.
 - **Comparativa** (109 testes, 1366×768): 107/109; as 2 falhas são antigas.
 - **Desempenho** (40 módulos, mediana): sem piora em relação à versão pública.
   - peças: 3,5–4,1 ms (pública 3,6–7,0);

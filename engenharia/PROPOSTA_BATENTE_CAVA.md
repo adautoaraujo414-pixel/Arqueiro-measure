@@ -72,3 +72,35 @@ Pedido do Adauto (17/11): escolher à mão o tamanho das réguas de batente do c
 5. Sobreposição mínima atrás de cada frente (para o limite mínimo).
 6. "Restaurar padrão" é igual a "automática" (`cbG + 30`) ou é um valor fixo?
 7. Ao diminuir o número de gavetas, a régua personalizada que sobra: some, ou fica guardada para quando voltar?
+
+## Comparação da fórmula com o exemplo do Adauto (17/11) — regra construtiva NÃO aprovada ainda, nada muda até decidir
+- **Medido no app** (branch do batente, gaveteiro 4 gavetas com o vão útil ajustado para exatamente 600 mm):
+  - frentes + aberturas = **685 mm**;
+  - corte sem décimo (o décimo vira folga).
+
+### O que o app faz hoje (regra atual, "topo e pé alinhados com a porta")
+- **Área das frentes** = vão útil + `pV` embaixo + `pV` em cima + travessa = 600 + 15 + 15 + 55 = **685**.
+  - `pV` = 15: a frente **cobre 15 mm da base** e **15 mm de cima** (como as portas).
+  - **travessa** = 55: no módulo com travessa frontal, a frente de cima **sobe e cobre a travessa** (`tX_` = altura do topo − espessura).
+- **Único desconto:** as aberturas entre as frentes (espaço dos dedos), (n − 1) × abertura.
+- **Batente:** abertura + 2 × 15. Os 15 de cada lado ficam escondidos atrás das frentes e **não são descontados**.
+- **Frente** = (685 − 3 × abertura) ÷ 4:
+
+| Batente | Abertura (dedos) | Desconto total | Frente (desenho) | Frente (corte) |
+|---|---|---|---|---|
+| 55 (padrão) | 25 | 75 | 152,5 | 152 |
+| 80 | 50 | 150 | 133,75 | 133 |
+| 90 | 60 | 180 | 126,25 | 126 |
+| 100 | 70 | 210 | 118,75 | 118 |
+
+### O exemplo do Adauto
+- (600 − 150) ÷ 4 = **112,5**: as frentes ficam **dentro do vão de 600** e o desconto de 150 inclui tudo.
+- **De onde vem a diferença:**
+  - no app, as frentes **saem do vão**: cobrem 15 da base, 15 de cima e a travessa (+85 mm no total);
+  - no app, o desconto é só a soma das aberturas.
+- Com o mesmo desconto de 150 (batente 80, abertura 50), o app dá **133,75** (corte 133), e não 112,5. Os 85 mm a mais (15 + 15 + 55) divididos por 4 dão os 21,25 de diferença.
+
+### Para decidir (Adauto)
+1. **As frentes do gaveteiro cava continuam por fora**, cobrindo 15 da base, 15 de cima e a travessa (alinhadas com as portas)? Ou passam a ficar **dentro do vão**?
+2. Se ficarem dentro: quais folgas entram no desconto (embaixo, em cima, entre as frentes) e de quanto?
+3. A sobreposição do batente atrás de cada frente fica 15 mm?

@@ -120,7 +120,8 @@ object SyncCore {
     }
 
     private fun safeId(id: String) = id.isNotBlank() && id.length <= 80 && id.all { it.isLetterOrDigit() || it == '-' || it == '_' || it == '.' } && !id.contains("..")
-    private fun safeName(n: String) = n.isNotBlank() && n.length <= 120 && !n.contains("/") && !n.contains("\\") && !n.contains("..")
+    /* SEG-NOMES (17/11): nome de um arquivo só (sem pasta); "." e ".." sozinhos são recusados, "foto..jpg" é válido */
+    private fun safeName(n: String) = n.isNotBlank() && n.length <= 120 && !n.contains("/") && !n.contains("\\") && n != "." && n != ".."
 
     private fun dateLabel(ms: Long): String = if (ms <= 0) "" else runCatching {
         java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.ROOT).format(java.util.Date(ms))

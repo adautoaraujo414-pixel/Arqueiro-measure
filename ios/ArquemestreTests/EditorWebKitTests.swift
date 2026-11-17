@@ -11479,6 +11479,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* N04 (auditoria geral 17/11, P0): 7 dados do projeto não iam no arquivo salvo e voltavam ao padrão ao fechar e abrir o app:
+       medidas do gerador de painéis de parede (S.pw), profundidade original da sala esticada pela parede lateral (S.RDw/S.RDs),
+       última altura do rodapé (S.rodLast) e as escolhas de decoração e da TV no 3D (S.deco, S.tvLogo, S.tvAnim).
+       Agora vão junto; projeto que não tem esses dados abre como antes (não ganha nada) e não herda os do projeto anterior. */
+    func testDadosDoAmbienteEEscolhasDo3DVoltamDepoisDeSalvarEReabrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='sala';S.room='sala';S.W=4000;S.H=2700;draw();
+        var V={pw:{x0:200,x1:3800,b0:100,hl:2600,hr:2600},RDw:3100,RDs:3500,rodLast:150,deco:false,tvLogo:0,tvAnim:0},K=Object.keys(V);
+        K.forEach(function(k){S[k]=JSON.parse(JSON.stringify(V[k]))});
+        var js=JSON.stringify(snapState());
+        /* fechar e abrir o app: a memória começa sem esses dados */K.forEach(function(k){delete S[k]});loadState(JSON.parse(js));draw();
+        R.voltam=K.map(function(k){return k+' '+(JSON.stringify(S[k])===JSON.stringify(V[k])?'ok':'PERDEU')}).join(' · ');
+        /* projeto sem esses dados (antigo ou novo) abre igual e não herda os do anterior */
+        var limpo=initLimpo();loadState(limpo);draw();R.projetoSemDados=K.filter(function(k){return S[k]!==undefined}).join(',')||'nada herdado';
+        R.semCampoNovo=K.filter(function(k){return JSON.parse(JSON.stringify(snapState())).hasOwnProperty(k)}).join(',')||'nenhum';
+        /* desfazer também mantém */loadState(JSON.parse(js));draw();S.rodLast=150;histTick();await new Promise(function(r){setTimeout(r,800)});histTick();S.deco=true;snap();S.deco=true;draw();document.getElementById('und').click();await new Promise(function(r){setTimeout(r,150)});R.desfaz='deco '+S.deco+' · rodLast '+S.rodLast;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["voltam"] as? String, "pw ok · RDw ok · RDs ok · rodLast ok · deco ok · tvLogo ok · tvAnim ok")
+        XCTAssertEqual(o["projetoSemDados"] as? String, "nada herdado")
+        XCTAssertEqual(o["semCampoNovo"] as? String, "nenhum")
+        XCTAssertEqual(o["desfaz"] as? String, "deco false · rodLast 150")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

@@ -3,6 +3,9 @@ name: Android · teste de atualização (emulador)
 # N05 (auditoria de 17/11, autorizado pelo Adauto): instala a versão publicada, põe os dados do backup de referência,
 # instala por cima a versão deste commit e confere que nada foi perdido. Só teste: não cria release nem mexe em ponteiro.
 on:
+  # roda sozinho só quando o próprio teste muda (o GitHub precisa disso pra liberar o disparo manual numa branch)
+  push:
+    paths: [ '.github/workflows/android-atualizacao.yml', '.github/scripts/teste_atualizacao_android.sh' ]
   workflow_dispatch:
     inputs:
       anterior:
@@ -46,7 +49,7 @@ jobs:
       - name: Baixar a versão anterior publicada
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download "${{ inputs.anterior }}" -p ArqueMeasure-debug.apk -O anterior.apk
+        run: gh release download "${{ inputs.anterior || 'apk-latest' }}" -p ArqueMeasure-debug.apk -O anterior.apk
 
       - name: Ativar aceleração do emulador (KVM)
         run: |

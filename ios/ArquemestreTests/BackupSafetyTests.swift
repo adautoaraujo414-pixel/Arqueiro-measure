@@ -147,6 +147,8 @@ final class BackupSafetyTests: XCTestCase {
         }
         let links = try String(contentsOf: AppPaths.files.appendingPathComponent("projects/links.json"), encoding: .utf8)
         XCTAssertTrue(links.contains("\"n1\"") && links.contains("p1"))
+    }
+
     /// SEG-NOMES (auditoria geral de 17/11, P0; Adauto: "aceitar nomes válidos como foto..jpg, bloquear só caminhos inseguros"):
     /// o iOS pulava, sem avisar, todo arquivo com ".." no nome (contains("..")); uma foto "foto..jpg" vinda do backup do Android sumia.
     /// Agora: nome com dois pontos seguidos é restaurado; só um pedaço do caminho igual a ".." (subir pasta) continua barrado e nada é gravado fora.

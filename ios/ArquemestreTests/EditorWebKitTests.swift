@@ -11495,7 +11495,9 @@ final class EditorWebKitTests: XCTestCase {
         /* 2) escolhido: arrastar o tamponamento pra baixo estica até o chão e para (não passa do piso) */
         q=ponto('Tamponamento direito',0.2);await arr(q[0],q[1],0,240);var tp=partsOf(m).filter(function(q){return q.name==='Tamponamento direito'})[0];R.esticaAteOChao=st()+' · fim do tamponamento '+Math.round(tp.y+tp.h)+' · chão '+(m.h+(+m.b||0));
         /* 3) arrastar pra cima encurta; o móvel continua no lugar */
-        q=ponto('Tamponamento direito',0.2);await arr(q[0],q[1],0,-60);R.encurta=st();
+        /* P0 (Adauto, 17/11/2026): os −60 px fixos davam 267 mm em 1920×1080 e passavam de 400 mm nas telas pequenas. Agora encurta 400 mm (820 → 420) pela escala real
+           da tela (px por mm = largura do módulo na tela ÷ largura em mm); o arrasto do tamponamento é linear, sem folga inicial. Só o teste mudou; o app não. */
+        var ppE_=gm().querySelector('rect[data-mi]').getBoundingClientRect().width/m.w;q=ponto('Tamponamento direito',0.2);await arr(q[0],q[1],0,-400*ppE_);R.encurta=st();
         /* 4) erguer o módulo e descer de novo: rodapé, travessa e moldura voltam */
         /* P0 (Adauto, 17/11/2026): o arrasto fixo de 90 px virava mm diferentes em cada tela (Windows 560/590, iPhone 1450, notebook 590). Agora o teste ergue 1410 mm pela escala real
            (px por mm = largura do módulo na tela ÷ largura em mm) + os 6 px que o arrasto do app espera antes de começar a mover. Só o teste mudou; o app não. */

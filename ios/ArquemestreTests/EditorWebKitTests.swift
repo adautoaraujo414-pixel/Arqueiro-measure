@@ -12366,4 +12366,29 @@ R.errs=__errs.length;return JSON.stringify(R);
         XCTAssertEqual(o["puxouDeNovo"] as? String, "ok · gruda no fundo")
         XCTAssertEqual(o["erros"] as? String, "")
     }
+
+    /* F3-REGN (Adauto 17/11, Fase 3 item 7): "Réguas por lado (camadas: 1 a 3)" do engrosso cava recusa outro número com aviso.
+       Antes 4 gravava 4 e gerava 3 camadas, e 0 gerava 2, sem aviso. */
+    func testF3CamadasDoEngrossoCavaSo1a3ComAviso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.regua=true;m.regN=2;S.m=m;S.tab=0;panel();draw();
+var campo=function(){return [].filter.call(document.querySelectorAll('[data-r="regN"]'),function(q){return q.offsetParent!==null})[0]||document.querySelector('[data-r="regN"]')};
+var sig=function(){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw}).sort().join(';')};
+var digita=async function(txt){var c=campo();if(!c)return 'sem campo';TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo();return 'regN '+m.regN+' · campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+var p2=sig();
+R.c4=(await digita('4'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+R.c0=(await digita('0'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+R.c1_5=(await digita('1,5'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+R.c3=(await digita('3'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["c4"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c0"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c1_5"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
+        XCTAssertEqual(o["c3"] as? String, "regN 3 · campo 3 · aviso não · peças mudaram")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

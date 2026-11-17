@@ -664,3 +664,8 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Causa:** `pointermove` das setas do 3D (`editor.html`, seta `ek`): qualquer posição até 120 mm da parede grudava na parede, também empurrando pra dentro.
 - **Correção:** só gruda na parede quando o dedo puxa em direção a ela (ou se passaria da parede). Empurrando pra dentro, diminui.
 - **Teste:** `testF3SetaDeTrasDo3DDiminuiDepoisDeTamparAteOFundo`: falha na versão pública (fica 681) e passa agora (621). Puxar de novo continua grudando no fundo.
+
+## F3-REGN: "Réguas por lado (camadas: 1 a 3)" aceitava qualquer número (Fase 3 item 7)
+- **Reproduzir (versão pública):** aéreo com engrosso cava; digitar 4 → grava 4 e gera 3; 0 → grava 0 e gera 2; 1,5 → grava 1,5. Sem aviso.
+- **Correção:** só 1, 2 ou 3 são gravados; outro número avisa, não muda nada e o campo volta ao valor que vale.
+- **Teste:** `testF3CamadasDoEngrossoCavaSo1a3ComAviso`: falha na versão pública e passa agora.

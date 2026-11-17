@@ -652,3 +652,14 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Compatibilidade:** ajuste antigo (sem `ind`) continua mudando a caixa inteira, como antes. Nenhum projeto muda ao abrir.
 - **Teste:** `testA6AjusteDe1mmSoNaPecaEscolhidaDaGaveta`: falha na versão pública e passa agora.
 - **Testes de gaveta, caixa e ajuste (28):** todos passam. Na versão pública só falham os 2 testes novos.
+
+## A6-OP: porta/janela da parede no 3D: 1 toque escolhe, 2 toques abrem a configuração (item 6, Adauto 17/11)
+- **Antes:** encostar o dedo já escolhia e abria o quadro; soltar sem mover abria ou fechava a porta. O 2º toque não fazia nada.
+- **Agora:**
+  - 1 toque só escolhe (aviso "2 toques abrem a configuração");
+  - 2 toques em até 500 ms abrem o quadro;
+  - abrir/fechar a porta é o botão "🚪 Abrir porta / Fechar porta" no quadro;
+  - arrastar continua movendo e mostra o quadro;
+  - no modo primeira pessoa nada muda.
+- **Teste:** `testA6PortaDaParedeUmToqueEscolheDoisAbremOQuadro`: falha na versão pública (1 toque abria a porta) e passa agora.
+- **Pendente:** a rodada dos testes relacionados (janela, parede, ambiente) foi interrompida antes do fim. Rodar de novo.

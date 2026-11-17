@@ -12289,4 +12289,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "LG#1 460×231, LG#2 460×231, FC#1 714×216, FC#2 714×216, FD#1 729×460, FD#2 729×460")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-OP (Adauto 17/11, item 6): porta/janela da parede no 3D: 1 toque só escolhe (antes já abria a porta e o quadro), 2 toques abrem a configuração,
+       abrir/fechar a porta num botão próprio do quadro. Arrastar continua movendo. */
+    func testA6PortaDaParedeUmToqueEscolheDoisAbremOQuadro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t).slice(0,80))};var am0=window.ambMsg;window.ambMsg=function(t){TL.push('amb:'+String(t).slice(0,80));try{return am0&&am0.apply(this,arguments)}catch(_){}};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];S.ops=[{id:901,t:'porta',w:800,h:2100,x:1500,b:0,wall:'f'}];draw();open3D();await W(400);__cam(.5,.1,1.4);await W(200);__build();
+        var cv=document.getElementById('cv3'),o=S.ops[0];var p=org3api.proj([o.x+o.w/2,1000,2]);var x=p[0],y=p[1];var r=cv.getBoundingClientRect();if(x<r.left||x>r.right){x=x+r.left;y=y+r.top}
+        var pe=function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:21,isPrimary:true,pointerType:'touch'}))};
+        var tap=async function(){pe('pointerdown');await W(40);pe('pointerup');await W(60)};
+        var box=function(){var b=[].filter.call(document.querySelectorAll('div[data-oid]'),function(d){return !d.hidden&&d.offsetParent!==null})[0];return b?'quadro aberto':'sem quadro'};
+        TL=[];await tap();await W(600);R.umToque=box()+' · porta '+(o.open?'abriu':'fechada')+' · '+TL.join('/');
+        TL=[];await tap();await W(100);await tap();await W(200);R.doisToques=box()+' · porta '+(o.open?'abriu':'fechada');
+        var bt=document.querySelector('div[data-oid] [data-otog]');R.botao=bt?bt.textContent:'sem botão';if(bt){bt.click();await W(100)}R.depoisBotao='porta '+(o.open?'aberta':'fechada');
+        R.umToque=R.umToque.split(' · ').slice(0,2).join(' · ');R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["umToque"] as? String, "sem quadro · porta fechada")
+        XCTAssertEqual(o["doisToques"] as? String, "quadro aberto · porta fechada")
+        XCTAssertEqual(o["botao"] as? String, "🚪 Abrir porta")
+        XCTAssertEqual(o["depoisBotao"] as? String, "porta aberta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

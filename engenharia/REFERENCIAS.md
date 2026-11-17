@@ -29,3 +29,9 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 - **Leitura técnica (a confirmar com o Adauto):** são as peças `Batente (cava)` (entre gavetas) e, em cima, `Batente superior (cava)`. Na imagem há 4 placas para 4 gavetas, mas o app gera 3 entre gavetas mais a de cima só com o batente superior ligado.
 - **Sem escala na imagem:** nenhuma medida foi tirada dela.
 - **Proposta ligada:** `engenharia/PROPOSTA_BATENTE_CAVA.md`.
+
+## Travessão superior dos módulos (Adauto, 17/11)
+- **Imagens:** foto de um caixote em MDF branco com borda crua e print de um 3D de outro programa, enviados na conversa de 17/11. Não foram gravados no repositório, que é público.
+- **O que mostram:** duas réguas horizontais no topo do corpo, **uma na frente e outra atrás, apoiadas por cima das laterais** (travessão por cima). As laterais vão inteiras, sem rebaixo em cima. A base fica entre as laterais.
+- **Sem escala:** nenhuma medida foi tirada. As medidas vêm da especificação do Adauto (L, E e P: por dentro L−2E × P × E; por cima L × P × E; 2 peças).
+- **Especificação ligada:** "Arquitetura definitiva das regras e estruturas dos módulos" (17/11). Ver `DECISOES_TECNICAS.md`.

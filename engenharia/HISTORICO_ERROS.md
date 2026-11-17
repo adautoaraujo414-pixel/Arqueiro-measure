@@ -697,3 +697,26 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste:** `testA6MoverPor2ToquesConfereColisaoDeEletroEPortaJanela`: falha na versão pública e passa agora. Os 33 testes de gestos, eletro, LED, torre, porta e janela passam na versão nova.
 - **Bateria comparativa (forçando o arquivo novo, 109 testes):** 107/109. As 2 falhas são da versão pública (`testFitaDaBase…`, instável, e `testTamponamentoNo2D…`, arrasto em pixels). O alinhamento das portas (`testEditorPorVaosLixeiraEngrossoPortasEAlinhamento`) passa.
 - **Sem estado preso** (pedido do Adauto): `testA6DepoisDeBloquearNadaFicaPresoEOLugarLivreFunciona`. Depois de bloquear, o eletro sai do preparado e do laranja; escolhendo de novo, vai para o lugar livre. O módulo bloqueado fica, e a próxima tentativa para um lugar livre funciona.
+
+## ITEM 6 — estado no fim da sessão de 17/11 (NÃO homologado; nada publicado)
+- **Telas** (13 testes de gestos; `--janela`; arquivo novo forçado):
+
+  | Tela | Versão pública | Item 6 |
+  |---|---|---|
+  | 390×844 | 7/12 | 12/13 |
+  | 844×390 | 6/13 | 11/13 |
+  | 1024×1366 (iPad) | 8/13 | **13/13** |
+  | 1920×1080 | rodando no fim da sessão | rodando no fim da sessão |
+
+  - Os testes novos do item 6 passam em todas as telas.
+  - As falhas da versão nova também acontecem na pública, nas mesmas telas:
+    - `testUmToqueNaPortaDaParede…` no celular: o ponto tocado pelo teste não cai na porta na tela pequena. Corrigir o **teste** para mirar pela projeção da porta.
+    - `testToqueNo3DAchaAPecaCertaEBordaFina` no celular deitado.
+- **Comparativa** (109 testes, 1366×768): 107/109; as 2 falhas são antigas.
+- **Desempenho** (40 módulos, mediana): sem piora em relação à versão pública.
+  - peças: 3,5–4,1 ms (pública 3,6–7,0);
+  - 2D: 21–26 ms (pública 22–24);
+  - 3D: 33–43 ms (pública 31–48);
+  - 1 toque na porta: 61–64 ms (pública 62–76).
+- **Salvar e reabrir:** coberto nos testes de A6-LATGAV, A6-MOVER e PC; reabrir mantém.
+- **Falta para homologar:** iOS e Windows desta branch (disparar pela branch; iOS com `testflight: false`); corrigir a mira do teste de 1 toque na porta da parede no celular; medir a porta piscando no aparelho real.

@@ -12375,4 +12375,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portaLivre"] as? String, "moveu · sem aviso")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-COLISAO, sem estado preso (Adauto 17/11): depois de uma tentativa bloqueada, o eletro fica no lugar, sai do "preparado pra mover" e do laranja;
+       escolhendo de novo, vai pro lugar livre. Módulo bloqueado (sem espaço) fica; a próxima tentativa pra um lugar livre funciona. */
+    func testA6DepoisDeBloquearNadaFicaPresoEOLugarLivreFunciona() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.ops=[];S.env='cozinha';S.room='cozinha';S.W=7000;S.H=2700;S.Hm=1;S.Wm=1;
+        var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};
+        newTpl(tpl('Balcão 2 portas'));var b=S.mods[0];b.x=1600;draw();var gl=apAdd('geladeira',0);gl.x=300;draw();open3D();await W(400);__build();
+        var ctr=function(f){var bb=__boxes().filter(function(q){return q.fr===f.id});var p=[0,1,2].map(function(i){var k=['x','y','z'][i];return (Math.min.apply(null,bb.map(function(q){return q[k+'0']}))+Math.max.apply(null,bb.map(function(q){return q[k+'1']})))/2});return org3api.proj(p)};
+        var lar=function(){return __boxes().filter(function(q){return q.fr===gl.id&&q.c&&q.c[0]>200&&q.c[1]<200&&q.c[2]<150}).length>0?'laranja':'normal'};
+        var e0='x'+gl.x+' y'+gl.y;var s0=ctr(gl);__sel3(s0[0],s0[1]);R.escolhida=(__frmv()===gl.id?'preparada':'não')+' · '+lar();
+        var fp=org3api.proj([b.x-150,1,700]);__sel3(fp[0],fp[1]);R.bloqueada='x'+gl.x+' y'+gl.y+(('x'+gl.x+' y'+gl.y)===e0?' (ficou)':' (MOVEU)')+' · preparada depois: '+(__frmv()?'SIM':'não')+' · '+lar();
+        /* sem escolher de novo, 2 toques num lugar livre não move (como depois de um movimento normal) */fp=org3api.proj([1000,1,1800]);__sel3(fp[0],fp[1]);R.semEscolherDeNovo=('x'+gl.x+' y'+gl.y)===e0?'não moveu':'MOVEU';
+        /* escolhendo de novo, vai pro lugar livre */s0=ctr(gl);__sel3(s0[0],s0[1]);fp=org3api.proj([1000,1,1800]);__sel3(fp[0],fp[1]);R.escolhendoDeNovo=('x'+gl.x+' y'+gl.y)!==e0?'moveu':'ficou';
+        /* módulo: bloqueado (sem espaço) e depois livre */var B=S.mods[0];newTpl(tpl('Balcão 1 porta'));var C=S.mods[1];C.wing='d';C.x=0;C.w=roomD();draw();try{re3()}catch(_){}await W(100);__build();
+        var e1='parede '+(B.wing||'f')+' x'+B.x;var cv=document.getElementById('cv3'),rr=cv.getBoundingClientRect();var c=__p3(B.x+B.w/2,400,B.d+20);window.mdArmAt(c[0],c[1]);var wd=__p3(S.W-2,1500,900);__sel3(wd[0],wd[1]);R.moduloBloqueado=('parede '+(B.wing||'f')+' x'+B.x)===e1?'ficou':'MOVEU';
+        window.mdArmAt(c[0],c[1]);var wf=__p3(5000,1200,0);__sel3(wf[0],wf[1]);R.moduloDepoisLivre=('parede '+(B.wing||'f')+' x'+B.x)!==e1?'moveu '+(B.wing||'f')+' x'+B.x:'ficou';
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["escolhida"] as? String, "preparada · laranja")
+        XCTAssertEqual(o["bloqueada"] as? String, "x300 y0 (ficou) · preparada depois: não · normal")
+        XCTAssertEqual(o["semEscolherDeNovo"] as? String, "não moveu")
+        XCTAssertEqual(o["escolhendoDeNovo"] as? String, "moveu")
+        XCTAssertEqual(o["moduloBloqueado"] as? String, "ficou")
+        XCTAssertEqual(o["moduloDepoisLivre"] as? String, "moveu f x4550")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -657,3 +657,4 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Erro meu:** o commit `890e06e` mudou o 1 toque: a porta da parede deixava de abrir/fechar com 1 toque e o quadro só abria com 2. O Adauto não pediu isso. "1 toque continua abrindo e fechando portas".
 - **Correção:** `git revert` de `890e06e` (commit `0fad7ef`). O código ficou idêntico ao de `c2951f0`. Nada de 1 toque foi alterado nas gavetas (A6-LATGAV e A6-PECA só mexem no quadro de 2 toques e no ajuste da contra-frente).
 - **Regressão do 1 toque:** a porta da parede abre com 1 toque nas duas versões (sonda). Os testes da bateria de toque, abrir, gestos, porta, gaveta e janela estão rodando nas duas versões para comparar.
+- **Teste de regressão do 1 toque:** `testUmToqueNaPortaDaParedeAbreEFechaComoAntes` (1 toque abre, outro fecha, posição igual). Passa na versão pública e na atual; **falha na versão com a mudança revertida (890e06e)**, então protege contra ela.

@@ -12244,19 +12244,19 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
-var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
-var sv=document.getElementById('svg');
-var pe=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
-var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=200;B.x=1600;S.m=A;draw();return [A,B]};
-var centro=function(mi){var g=[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0].querySelector('rect[data-mi]')||[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0];var b=g.getBoundingClientRect();return [b.left+b.width/2,b.top+b.height*0.3]};
-var arrasta=async function(mi,dx,dy){var c=centro(mi),x=c[0],y=c[1];pe('pointerdown',x,y);for(var i=1;i<=6;i++){pe('pointermove',x+dx*i/6,y+dy*i/6,sv);await W(16)}pe('pointerup',x+dx,y+dy,sv);pe('pointerup',x+dx,y+dy,window);await W(80)};
-/* 1. B não escolhido: dedo desliza 60 px na vertical e na horizontal → só escolhe B, B não anda */
-var ab=cena(),A=ab[0],B=ab[1];await arrasta(1,0,-60);R.vertical='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
-ab=cena();A=ab[0];B=ab[1];await arrasta(1,60,0);R.horizontal='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
-/* 2. B já escolhido: arrastar continua movendo (comportamento de sempre) */
-ab=cena();A=ab[0];B=ab[1];S.m=B;draw();await arrasta(1,60,0);R.jaEscolhidoMove='B x '+(B.x!==1600?'andou':'parado');
-/* 3. A não muda em nenhum caso */R.aParado='A x '+A.x;
-R.errs=__errs.length;return JSON.stringify(R);
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var sv=document.getElementById('svg');
+        var pe=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=200;B.x=1600;S.m=A;draw();return [A,B]};
+        var centro=function(mi){var g=[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0].querySelector('rect[data-mi]')||[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0];var b=g.getBoundingClientRect();return [b.left+b.width/2,b.top+b.height*0.3]};
+        var arrasta=async function(mi,dx,dy){var c=centro(mi),x=c[0],y=c[1];pe('pointerdown',x,y);for(var i=1;i<=6;i++){pe('pointermove',x+dx*i/6,y+dy*i/6,sv);await W(16)}pe('pointerup',x+dx,y+dy,sv);pe('pointerup',x+dx,y+dy,window);await W(80)};
+        /* 1. B não escolhido: dedo desliza 60 px na vertical e na horizontal → só escolhe B, B não anda */
+        var ab=cena(),A=ab[0],B=ab[1];await arrasta(1,0,-60);R.vertical='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+        ab=cena();A=ab[0];B=ab[1];await arrasta(1,60,0);R.horizontal='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+        /* 2. B já escolhido: arrastar continua movendo (comportamento de sempre) */
+        ab=cena();A=ab[0];B=ab[1];S.m=B;draw();await arrasta(1,60,0);R.jaEscolhidoMove='B x '+(B.x!==1600?'andou':'parado');
+        /* 3. A não muda em nenhum caso */R.aParado='A x '+A.x;
+        R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["vertical"] as? String, "escolheu B true · B x 1600 b 0")
         XCTAssertEqual(o["horizontal"] as? String, "escolheu B true · B x 1600 b 0")
@@ -12273,29 +12273,29 @@ R.errs=__errs.length;return JSON.stringify(R);
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
-var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-var sv=document.getElementById('svg'),dn0=Date.now,falso=0,rel=dn0.call(Date);Date.now=function(){return rel+falso};
-var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
-var tap=async function(x,y,mv){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=30;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
-var fecha=function(){try{vmenuClose()}catch(_){}var v=document.getElementById('vmenu');if(v&&v.parentNode)v.parentNode.removeChild(v)};
-var cena=function(){fecha();falso+=5000;TQK.k=null;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];S.m=A;S.sv=0;S.tab=0;VB={x:0,y:0,w:900,h:560};setVB();panel();draw();LAST='mod';return A};
-var zoomEm=function(m,w){var cx=OX+(m.x+m.w/2)*K,cy=OY+(S.H-(m.b+m.h/2))*K;VB={x:cx-w/2,y:cy-w*560/900/2,w:w,h:w*560/900};setVB();draw()};
-var linhaDiv=function(mi){var c=sv.querySelector('circle[data-d="0"][data-dm="'+mi+'"]').getBoundingClientRect();return c.left+c.width/2};
-var xVao=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.left+r.width*0.25};var yMod=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.top+r.height*0.3};
-var menu=async function(){await W(450);return document.getElementById('vmenu')?'menu':'sem menu'};
-/* 1. divisória: a 6 px pega, a 16 px é o vão · em 3 zooms */
-var dv=[];for(var zw of [900,450,225]){for(var d of [6,16]){var A=cena();zoomEm(A,zw);await W(60);var x=linhaDiv(0)+d,y=yMod(0),d0=A.div[0];await tap(x,y);await W(30);dv.push(zw+'/'+d+'px:'+(LAST==='div'?'divisória':'vão')+(A.div[0]!==d0?' MUDOU':''));fecha()}}R.divisoria=dv.join(' ');
-/* 2. 2 toques no vão com 460 ms entre um soltar e o outro: abre o menu do vão */
-var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y);falso+=390;await tap(x,y);R.doisToques460ms=await menu();fecha();
-/* 3. 2 toques a 16 px da divisória: menu do vão, divisória parada */
-A=cena();await W(60);x=linhaDiv(0)+16;var d0=A.div[0];await tap(x,y);falso+=150;await tap(x,y);R.doisToquesPertoDaDivisoria=(await menu())+' · divisória '+(A.div[0]===d0?'parada':'MUDOU');fecha();
-/* 4. tremida de 8 px no módulo escolhido não move; arrastar 60 px move (garantia) */
-var B;A=cena();B=S.mods[1];S.m=B;draw();await W(60);var rb=sv.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),xb=rb.left+rb.width*0.75,yb=rb.top+rb.height*0.4,bx=B.x,bb=B.b;
-await tap(xb,yb,[0,-8]);await W(30);await tap(xb+20,yb,[8,0]);await W(30);R.tremida8px='B andou x '+(B.x-bx)+' b '+(B.b-bb);
-await tap(xb,yb,[60,0]);await W(30);R.arrasta60px=B.x!==bx?'andou':'parado';
-/* 5. 2 toques com tremida de 7 px no 1º: abre o menu e não mexe */
-A=cena();await W(60);x=xVao(0);y=yMod(0);await tap(x,y,[0,-7]);falso+=120;await tap(x,y);R.doisToquesComTremida7px=(await menu())+' · A x '+A.x+' b '+(A.b||0);fecha();
-Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
+        var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+        var sv=document.getElementById('svg'),dn0=Date.now,falso=0,rel=dn0.call(Date);Date.now=function(){return rel+falso};
+        var ev=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:5,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        var tap=async function(x,y,mv){mv=mv||[0,0];ev('pointerdown',x,y,document.elementFromPoint(x,y));falso+=30;await W(20);if(mv[0]||mv[1]){for(var k=1;k<=4;k++){ev('pointermove',x+mv[0]*k/4,y+mv[1]*k/4,sv);falso+=16;await W(10)}}falso+=40;ev('pointerup',x+mv[0],y+mv[1],document.elementFromPoint(x+mv[0],y+mv[1])||sv)};
+        var fecha=function(){try{vmenuClose()}catch(_){}var v=document.getElementById('vmenu');if(v&&v.parentNode)v.parentNode.removeChild(v)};
+        var cena=function(){fecha();falso+=5000;TQK.k=null;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=35;B.x=A.x+A.w+400;A.div=[0.5];B.div=[0.5];A.v=[{k:'door',n:1},{k:'door',n:1}];B.v=[{k:'door',n:1},{k:'door',n:1}];S.m=A;S.sv=0;S.tab=0;VB={x:0,y:0,w:900,h:560};setVB();panel();draw();LAST='mod';return A};
+        var zoomEm=function(m,w){var cx=OX+(m.x+m.w/2)*K,cy=OY+(S.H-(m.b+m.h/2))*K;VB={x:cx-w/2,y:cy-w*560/900/2,w:w,h:w*560/900};setVB();draw()};
+        var linhaDiv=function(mi){var c=sv.querySelector('circle[data-d="0"][data-dm="'+mi+'"]').getBoundingClientRect();return c.left+c.width/2};
+        var xVao=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.left+r.width*0.25};var yMod=function(mi){var r=sv.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect();return r.top+r.height*0.3};
+        var menu=async function(){await W(450);return document.getElementById('vmenu')?'menu':'sem menu'};
+        /* 1. divisória: a 6 px pega, a 16 px é o vão · em 3 zooms */
+        var dv=[];for(var zw of [900,450,225]){for(var d of [6,16]){var A=cena();zoomEm(A,zw);await W(60);var x=linhaDiv(0)+d,y=yMod(0),d0=A.div[0];await tap(x,y);await W(30);dv.push(zw+'/'+d+'px:'+(LAST==='div'?'divisória':'vão')+(A.div[0]!==d0?' MUDOU':''));fecha()}}R.divisoria=dv.join(' ');
+        /* 2. 2 toques no vão com 460 ms entre um soltar e o outro: abre o menu do vão */
+        var A=cena();await W(60);var x=xVao(0),y=yMod(0);await tap(x,y);falso+=390;await tap(x,y);R.doisToques460ms=await menu();fecha();
+        /* 3. 2 toques a 16 px da divisória: menu do vão, divisória parada */
+        A=cena();await W(60);x=linhaDiv(0)+16;var d0=A.div[0];await tap(x,y);falso+=150;await tap(x,y);R.doisToquesPertoDaDivisoria=(await menu())+' · divisória '+(A.div[0]===d0?'parada':'MUDOU');fecha();
+        /* 4. tremida de 8 px no módulo escolhido não move; arrastar 60 px move (garantia) */
+        var B;A=cena();B=S.mods[1];S.m=B;draw();await W(60);var rb=sv.querySelector('#mod[data-mi="1"] rect[data-mi]').getBoundingClientRect(),xb=rb.left+rb.width*0.75,yb=rb.top+rb.height*0.4,bx=B.x,bb=B.b;
+        await tap(xb,yb,[0,-8]);await W(30);await tap(xb+20,yb,[8,0]);await W(30);R.tremida8px='B andou x '+(B.x-bx)+' b '+(B.b-bb);
+        await tap(xb,yb,[60,0]);await W(30);R.arrasta60px=B.x!==bx?'andou':'parado';
+        /* 5. 2 toques com tremida de 7 px no 1º: abre o menu e não mexe */
+        A=cena();await W(60);x=xVao(0);y=yMod(0);await tap(x,y,[0,-7]);falso+=120;await tap(x,y);R.doisToquesComTremida7px=(await menu())+' · A x '+A.x+' b '+(A.b||0);fecha();
+        Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["divisoria"] as? String, "900/6px:divisória 900/16px:vão 450/6px:divisória 450/16px:vão 225/6px:divisória 225/16px:vão")
         XCTAssertEqual(o["doisToques460ms"] as? String, "menu")
@@ -12312,22 +12312,22 @@ Date.now=dn0;R.errs=__errs.length;return JSON.stringify(R);
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
-var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();var m=S.mods[0];S.m=m;S.tab=0;panel();draw();
-var campo=function(k){return document.querySelector('#bd [data-k="'+k+'"]')||document.querySelector('[data-k="'+k+'"]')};
-var digita=async function(k,txt){var c=campo(k);if(!c)return 'sem campo '+k;TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo(k);return 'campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
-var sig=function(){return [m.w,m.h,m.d].join('x')+' · peças '+partsOf(m).length};
-var w0=m.w,h0=m.h,d0=m.d,p0=sig(),hk0=histKey(snapState());
-R.w3=(await digita('w','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
-R.h3=(await digita('h','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
-R.d99999=(await digita('d','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
-R.w99999=(await digita('w','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
-R.desfazerSemPassoNovo=histKey(snapState())===hk0?'sim':'não';
-R.avisoTexto=(await digita('w','3'),TL.filter(function(t){return /não pode/.test(t)})[0]||'').replace(/\d+/g,'N');
-/* válidas continuam: 605,5 grava e o campo mostra 605.5 depois de redesenhar o painel; 700 grava */
-await digita('w','605,5');panel();await W(20);R.w605_5='m.w '+m.w+' · campo '+campo('w').value;
-await digita('w','700');panel();await W(20);R.w700='m.w '+m.w+' · campo '+campo('w').value+' · aviso '+(TL.length?'sim':'não');
-R.errs=__errs.length;return JSON.stringify(R);
+        var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();var m=S.mods[0];S.m=m;S.tab=0;panel();draw();
+        var campo=function(k){return document.querySelector('#bd [data-k="'+k+'"]')||document.querySelector('[data-k="'+k+'"]')};
+        var digita=async function(k,txt){var c=campo(k);if(!c)return 'sem campo '+k;TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo(k);return 'campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+        var sig=function(){return [m.w,m.h,m.d].join('x')+' · peças '+partsOf(m).length};
+        var w0=m.w,h0=m.h,d0=m.d,p0=sig(),hk0=histKey(snapState());
+        R.w3=(await digita('w','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.h3=(await digita('h','3'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.d99999=(await digita('d','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.w99999=(await digita('w','99999'))+' · '+(sig()===p0?'igual':'MUDOU '+sig());
+        R.desfazerSemPassoNovo=histKey(snapState())===hk0?'sim':'não';
+        R.avisoTexto=(await digita('w','3'),TL.filter(function(t){return /não pode/.test(t)})[0]||'').replace(/\d+/g,'N');
+        /* válidas continuam: 605,5 grava e o campo mostra 605.5 depois de redesenhar o painel; 700 grava */
+        await digita('w','605,5');panel();await W(20);R.w605_5='m.w '+m.w+' · campo '+campo('w').value;
+        await digita('w','700');panel();await W(20);R.w700='m.w '+m.w+' · campo '+campo('w').value+' · aviso '+(TL.length?'sim':'não');
+        R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["w3"] as? String, "campo 900 · aviso sim · igual")
         XCTAssertEqual(o["h3"] as? String, "campo 820 · aviso sim · igual")
@@ -12373,17 +12373,17 @@ R.errs=__errs.length;return JSON.stringify(R);
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
-var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
-loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.regua=true;m.regN=2;S.m=m;S.tab=0;panel();draw();
-var campo=function(){return [].filter.call(document.querySelectorAll('[data-r="regN"]'),function(q){return q.offsetParent!==null})[0]||document.querySelector('[data-r="regN"]')};
-var sig=function(){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw}).sort().join(';')};
-var digita=async function(txt){var c=campo();if(!c)return 'sem campo';TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo();return 'regN '+m.regN+' · campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
-var p2=sig();
-R.c4=(await digita('4'))+' · peças '+(sig()===p2?'iguais':'mudaram');
-R.c0=(await digita('0'))+' · peças '+(sig()===p2?'iguais':'mudaram');
-R.c1_5=(await digita('1,5'))+' · peças '+(sig()===p2?'iguais':'mudaram');
-R.c3=(await digita('3'))+' · peças '+(sig()===p2?'iguais':'mudaram');
-R.errs=__errs.length;return JSON.stringify(R);
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;draw();newTpl(T('Aéreo 2 portas'));var m=S.mods[0];m.regua=true;m.regN=2;S.m=m;S.tab=0;panel();draw();
+        var campo=function(){return [].filter.call(document.querySelectorAll('[data-r="regN"]'),function(q){return q.offsetParent!==null})[0]||document.querySelector('[data-r="regN"]')};
+        var sig=function(){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw}).sort().join(';')};
+        var digita=async function(txt){var c=campo();if(!c)return 'sem campo';TL=[];c.value=txt;c.dispatchEvent(new Event('input',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));await W(40);var c2=campo();return 'regN '+m.regN+' · campo '+(c2?c2.value:'?')+' · aviso '+(TL.filter(function(t){return /não pode/.test(t)}).length?'sim':'não')};
+        var p2=sig();
+        R.c4=(await digita('4'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c0=(await digita('0'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c1_5=(await digita('1,5'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.c3=(await digita('3'))+' · peças '+(sig()===p2?'iguais':'mudaram');
+        R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["c4"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
         XCTAssertEqual(o["c0"] as? String, "regN 2 · campo 2 · aviso sim · peças iguais")
@@ -12399,14 +12399,14 @@ R.errs=__errs.length;return JSON.stringify(R);
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
-var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){all.push(q)})});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(q){return q.n===n})[0]))};
-var cena=function(amb,n){loadState(initLimpo());S.env=amb;S.room=amb;S.W=3000;S.H=2700;draw();newTpl(T(n));var m=S.mods[0];S.m=m;draw();return m};
-var porta1=async function(amb,n){cena(amb,n);vmenuOpen(0,0,300,120,-1);await W(150);var d=document.getElementById('vmenu');if(!d)return 'sem menu';var b=d.querySelector('[data-vk="door1"]'),ib=document.getElementById('vmib'),fr=d.querySelector('[data-vk="free"]');
-  var y=Math.round(b.getBoundingClientRect().top-d.getBoundingClientRect().top),ordem=ib?(fr&&(fr.compareDocumentPosition(ib)&Node.DOCUMENT_POSITION_FOLLOWING)?'quadro depois da frente':'quadro antes da frente'):'sem quadro';try{vmenuClose()}catch(_){}return {y:y,o:ordem}};
-var a=await porta1('cozinha','Balcão 2 portas'),b=await porta1('cozinha','Armário alto 2 portas'),c=await porta1('quarto','Guarda-roupa 2 vãos');
-R.balcao=a.o;R.alto=b.o;R.guardaRoupa=c.o;R.portaNoMesmoLugar=(Math.abs(b.y-a.y)<=30&&Math.abs(c.y-a.y)<=30)?'sim':'não · '+a.y+'/'+b.y+'/'+c.y;
-/* abas do editor por vãos */var m=cena('cozinha','Armário alto 2 portas');try{soloOn(m)}catch(_){}await W(200);R.abasPorVaos=[].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(q){return q.textContent.replace(/^\W+/,'').trim()}).join(' › ');try{soloOff()}catch(_){}
-R.errs=__errs.length;return JSON.stringify(R);
+        var all=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){all.push(q)})});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(q){return q.n===n})[0]))};
+        var cena=function(amb,n){loadState(initLimpo());S.env=amb;S.room=amb;S.W=3000;S.H=2700;draw();newTpl(T(n));var m=S.mods[0];S.m=m;draw();return m};
+        var porta1=async function(amb,n){cena(amb,n);vmenuOpen(0,0,300,120,-1);await W(150);var d=document.getElementById('vmenu');if(!d)return 'sem menu';var b=d.querySelector('[data-vk="door1"]'),ib=document.getElementById('vmib'),fr=d.querySelector('[data-vk="free"]');
+        var y=Math.round(b.getBoundingClientRect().top-d.getBoundingClientRect().top),ordem=ib?(fr&&(fr.compareDocumentPosition(ib)&Node.DOCUMENT_POSITION_FOLLOWING)?'quadro depois da frente':'quadro antes da frente'):'sem quadro';try{vmenuClose()}catch(_){}return {y:y,o:ordem}};
+        var a=await porta1('cozinha','Balcão 2 portas'),b=await porta1('cozinha','Armário alto 2 portas'),c=await porta1('quarto','Guarda-roupa 2 vãos');
+        R.balcao=a.o;R.alto=b.o;R.guardaRoupa=c.o;R.portaNoMesmoLugar=(Math.abs(b.y-a.y)<=30&&Math.abs(c.y-a.y)<=30)?'sim':'não · '+a.y+'/'+b.y+'/'+c.y;
+        /* abas do editor por vãos */var m=cena('cozinha','Armário alto 2 portas');try{soloOn(m)}catch(_){}await W(200);R.abasPorVaos=[].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(q){return q.textContent.replace(/^\W+/,'').trim()}).join(' › ');try{soloOff()}catch(_){}
+        R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["balcao"] as? String, "sem quadro")
         XCTAssertEqual(o["alto"] as? String, "quadro depois da frente")

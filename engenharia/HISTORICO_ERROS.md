@@ -629,3 +629,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
   - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
   - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).
+
+## F3-TOQUE: o 1º toque num módulo não escolhido movia o módulo (Fase 3 item 1; decisão do Adauto em 17/11; branch `claude/arquemestre-fase3-precisao`)
+- **Reproduzir (versão pública):** 2 balcões, A escolhido. Encostar o dedo no B e deslizar 60 px. B fica escolhido e já sobe 290 mm (vertical) ou anda 290 mm de lado (horizontal).
+- **Causa:** `pointerdown` do 2D (`editor.html` ~1246–1250). Com o módulo não escolhido (`!was`), o app escolhia e armava `drag={t:'m'}` no mesmo gesto.
+- **Correção:** com `!was`, o resto do gesto vira `drag={t:'pan'}`, o mesmo do toque no fundo, e só rola a vista. Com o módulo já escolhido, arrastar move como antes.
+- **Testes:**
+  - `testF3PrimeiroToqueEmModuloNaoEscolhidoSoEscolheNuncaMove`: falha na versão pública e passa agora.
+  - **Expectativa adaptada (pedido do Adauto de 17/11):** o ajudante `drag2` de `testImaDoTopoAlinhaAereo…`, `testTocarOuSegurarOModulo…` e `testModuloNaoFazNadaSozinho…` agora escolhe o módulo antes de medir e arrastar. O que eles verificam (ímã, encostar, não fechar folga) não muda, e eles passam nas duas versões.
+  - 20 testes de toque e arrasto passam nas duas versões.

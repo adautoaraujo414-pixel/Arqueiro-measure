@@ -7175,7 +7175,7 @@ final class EditorWebKitTests: XCTestCase {
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   var top=function(m){return Math.round(((+m.b||0)+m.h+(m.tt?(+m.tbW||30):0))*10)/10};
                   /* arrasta o módulo mi no 2D: dy em mm (pra cima = positivo) · devolve se a linha verde no topo do ímã apareceu durante o arrasto */
-                  var drag2=async function(mi,dx,dy){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                  var drag2=async function(mi,dx,dy){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6],[.6,.15]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
                     var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):0,ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;/* 6,5 px = passa da zona morta do eixo */pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=5;i++){pe('pointermove',svg,x+tx*i/5,y-ty*i/5);await W(20)}await W(80);var gh=function(){return [].filter.call(document.querySelectorAll('#svg line[stroke="#1f9d55"]'),function(l){return l.getAttribute('y1')===l.getAttribute('y2')&&Math.abs(+l.getAttribute('x2')-(+l.getAttribute('x1')))>200}).length},g=gh();pe('pointerup',svg,x+tx,y-ty);await W(80);return g-gh()>0};
                   /* 1. B com o topo 20 mm abaixo do A: subiu 10 → o ímã alinha em cima (não fica torto) */
                   R.antes='A '+top(A)+' · B '+top(B);
@@ -7294,7 +7294,7 @@ final class EditorWebKitTests: XCTestCase {
                   var st=function(semB){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+(semB?'':' b'+m.b)+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
                   /* arrasto de verdade no 2D: dx, dy em mm além da zona morta (0 = o dedo não anda nesse eixo; tremida = px soltos) */
-                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                  var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
                     var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   var monta=async function(gap,gapT,A2w){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=5610;S.H=3270;newTpl(T('Aéreo 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Armário alto 2 portas'));var A2=S.mods[0],Sx=S.mods[1],Tq=S.mods[2];A2.x=1500;A2.w=A2w;A2.h=520;A2.b=2190;Sx.w=1220;Sx.h=1080;Sx.b=1720;Sx.x=A2.x+A2.w+gap;Tq.x=Sx.x+Sx.w+30+30+gapT;[A2,Sx,Tq].forEach(function(m){['tl','tr'].forEach(function(k){m[k]=false;delete m[k+'Auto'];delete m[k+'M']})});Tq.tl=Tq.tr=true;Tq.tlM=Tq.trM=1;return [A2,Sx,Tq]};
                   /* 1. o caso do vídeo (antes: a cada toque o tamponamento do vizinho ligava e desligava, o módulo pulava 30 e a torre era empurrada) */
@@ -7537,7 +7537,7 @@ final class EditorWebKitTests: XCTestCase {
                   var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
                   var st=function(){return S.mods.map(function(m,i){return i+':x'+Math.round(m.x*10)/10+' b'+m.b+' w'+m.w+' tl'+(m.tl?1:0)+' tr'+(m.tr?1:0)}).join(' | ')};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse'}))};
-                  var drag2=async function(mi,dx,dy,tremX){var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
+                  var drag2=async function(mi,dx,dy,tremX){/* F3-TOQUE (Adauto 17/11): o 1º toque num módulo não escolhido só escolhe; o arrasto vale com ele escolhido. O teste escolhe o módulo antes de medir e arrastar */if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var m=S.mods[mi],rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.height/m.h,x=0,y=0,el=null;[[.85,.9],[.78,.82],[.3,.8],[.7,.3],[.3,.3],[.5,.6]].some(function(f){x=rc.left+rc.width*f[0];y=rc.top+rc.height*f[1];el=document.elementFromPoint(x,y);return !!(el&&el.closest('#mod[data-mi="'+mi+'"]'))});if(!el||!el.closest('#mod')){el=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]');x=rc.left+rc.width/2;y=rc.top+rc.height/2}
                     var tx=dx?(dx>0?1:-1)*(6.5+Math.abs(dx)*cpm):(tremX||0),ty=dy?(dy>0?1:-1)*(6.5+Math.abs(dy)*cpm):0;pe('pointerdown',el,x,y);await W(20);for(var i=1;i<=3;i++){pe('pointermove',svg,x+tx*i/3,y-ty*i/3);await W(12)}await W(30);pe('pointerup',svg,x+tx,y-ty);await W(80)};
                   S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='livre';S.room='';S.W=4000;S.H=2700;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(50);
                   var A=S.mods[0],B=S.mods[1],C=S.mods[2];R.criou=st();
@@ -12234,6 +12234,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["refez"] as? String, "divisórias 0 · vão escolhido 0")
         XCTAssertEqual(o["duasPortas"] as? String, "vão 1 door2 · m.v 3")
         XCTAssertEqual(o["invalidos"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* F3-TOQUE (pedido do Adauto 17/11, Fase 3 item 1): o 1º toque num módulo que não estava escolhido só escolhe, nunca move — deslizar o dedo
+       (60 px na vertical ou na horizontal) deixa o módulo parado. Com o módulo já escolhido, arrastar continua movendo.
+       Antes (versão pública 1.0.632): 60 px de dedo subiam o balcão 290 mm ou andavam 290 mm de lado. */
+    func testF3PrimeiroToqueEmModuloNaoEscolhidoSoEscolheNuncaMove() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+var sv=document.getElementById('svg');
+var pe=function(t,x,y,el){(el||document.elementFromPoint(x,y)||sv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();if(window.SOLO2)soloOff();var A=S.mods[0],B=S.mods[1];A.x=200;B.x=1600;S.m=A;draw();return [A,B]};
+var centro=function(mi){var g=[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0].querySelector('rect[data-mi]')||[].filter.call(sv.querySelectorAll('#mod'),function(q){return +q.dataset.mi===mi})[0];var b=g.getBoundingClientRect();return [b.left+b.width/2,b.top+b.height*0.3]};
+var arrasta=async function(mi,dx,dy){var c=centro(mi),x=c[0],y=c[1];pe('pointerdown',x,y);for(var i=1;i<=6;i++){pe('pointermove',x+dx*i/6,y+dy*i/6,sv);await W(16)}pe('pointerup',x+dx,y+dy,sv);pe('pointerup',x+dx,y+dy,window);await W(80)};
+/* 1. B não escolhido: dedo desliza 60 px na vertical e na horizontal → só escolhe B, B não anda */
+var ab=cena(),A=ab[0],B=ab[1];await arrasta(1,0,-60);R.vertical='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+ab=cena();A=ab[0];B=ab[1];await arrasta(1,60,0);R.horizontal='escolheu B '+(S.m===B)+' · B x '+B.x+' b '+(B.b||0);
+/* 2. B já escolhido: arrastar continua movendo (comportamento de sempre) */
+ab=cena();A=ab[0];B=ab[1];S.m=B;draw();await arrasta(1,60,0);R.jaEscolhidoMove='B x '+(B.x!==1600?'andou':'parado');
+/* 3. A não muda em nenhum caso */R.aParado='A x '+A.x;
+R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["vertical"] as? String, "escolheu B true · B x 1600 b 0")
+        XCTAssertEqual(o["horizontal"] as? String, "escolheu B true · B x 1600 b 0")
+        XCTAssertEqual(o["jaEscolhidoMove"] as? String, "B x andou")
+        XCTAssertEqual(o["aParado"] as? String, "A x 200")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

@@ -1247,7 +1247,10 @@ $('svg').addEventListener('pointerdown',function(ev){var t=ev.target,p=px(ev),m=
   if(was&&(S.tab===9||S.tab===6||S.tab===7)){S.tab=0;panel();draw()}
   if(was&&t.dataset.vi!==undefined&&S.sv!==+t.dataset.vi&&S.m===m){S.sv=+t.dataset.vi;panel();draw()}
   try{var pn_=t.dataset.p!==undefined?((partsOf(m)[+t.dataset.p]||{}).name||''):'';if(/^(Porta|Frente de gaveta|Porta de correr|Frente \(porta tempero)/.test(pn_)){LAST='porta';if(t.dataset.vi!==undefined)S.sv=+t.dataset.vi}}catch(_){}
-  drag={t:'m',p:p,m:JSON.parse(JSON.stringify(m))}}
+  /* F3-TOQUE (Adauto 17/11): o 1º toque num módulo que não estava escolhido só escolhe; o resto do gesto rola a vista (como no fundo), nunca move o móvel.
+     Com o módulo já escolhido, arrastar move como sempre. Antes: 12 px de dedo já subiam o balcão 30 mm. */
+  if(!was){drag={t:'pan',onMod:true,cx:ev.clientX,cy:ev.clientY,vb:Object.assign({},VB),moved:false,touch:ev.pointerType!=='mouse',st0:(document.scrollingElement||document.documentElement).scrollTop}}
+  else drag={t:'m',p:p,m:JSON.parse(JSON.stringify(m))}}
  else if(RPARM){RPARM=false;var xm=(p.x-OX)/K,ym=S.H-(p.y-OY)/K;snap();var na_=rpFromPoint(xm,ym);if(na_&&RPLISO)na_.liso=true;RPLISO=false;LAST='rp';S.tab=8;panel();draw();drag={t:'none'};if(roomOf()==='sala'&&na_)setTimeout(function(){rcAsk(na_)},60)}
 
  else{if(RPSEL&&LAST==='rp'){RPSEL=0;LAST='';panel();draw()}if(SELAP){SELAP=0;if(LAST==='ap'){LAST='';showBox()}}drag={t:'pan',onMod:false,cx:ev.clientX,cy:ev.clientY,vb:Object.assign({},VB),moved:false,touch:ev.pointerType!=='mouse',st0:(document.scrollingElement||document.documentElement).scrollTop}}

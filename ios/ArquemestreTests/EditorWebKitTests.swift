@@ -11479,6 +11479,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* N03 (auditoria geral 17/11, P0): a gravação do arquivo dos projetos podia falhar em silêncio (o aparelho engolia o erro) e, na próxima abertura,
+       o app carregava o arquivo velho por cima do que foi feito. Agora: o aparelho diz se gravou; se não gravou, a pessoa é avisada e a abertura seguinte
+       usa a cópia mais nova do app; quando grava de novo, volta ao normal; se o arquivo mudou por fora (restaurar backup), vale o arquivo como sempre. */
+    func testGravacaoDoArquivoDeProjetosQueFalhaAvisaENaoVoltaOProjetoVelhoAoAbrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var R={},e0=__errs.length;
+        var PKK='arque.projects.v1',b=function(x){return btoa(unescape(encodeURIComponent(x)))};
+        var guardaArq=__files['projects.json'],guardaLoc=localStorage.getItem(PKK),pf0=ArqueApp.putFile;
+        var P=function(v){return [{id:'pA',client:{nome:'Cliente A'},created:1,updated:v,current:{mods:[],marca:'v'+v}}]},marca=function(){var a=pLoadAll();return a.length?a[0].current.marca:'-'};
+        try{
+          /* 1. tudo normal: grava nos dois */localStorage.removeItem(PKK+'.pend');window.__pjsBoot&&__pjsBoot();pSaveAll(P(1));R.normal='arquivo '+(__files['projects.json']===b(JSON.stringify(P(1)))?'gravado':'NÃO')+' · aviso '+TL.length;
+          /* 2. o aparelho recusa gravar o arquivo dos projetos (sem espaço) */ArqueApp.putFile=function(n,x){if(String(n)==='projects.json')return false;return pf0.apply(this,arguments)};
+          TL=[];pSaveAll(P(2));R.falhou='aviso '+(TL.filter(function(t){return /não deixou gravar|Não consegui gravar/.test(t)}).length?'sim':'não')+' · arquivo continua v'+(__files['projects.json']===b(JSON.stringify(P(1)))?'1':'?');
+          /* 3. fechar e abrir: vale o que foi feito (v2), não o arquivo velho (v1) */var f_=window.__pjsBoot&&__pjsBoot();R.reabriu='abre '+marca()+' · '+f_;
+          /* 4. o aparelho volta a gravar: arquivo atualizado e marca limpa */ArqueApp.putFile=pf0;pSaveAll(P(3));R.voltou='arquivo v'+(__files['projects.json']===b(JSON.stringify(P(3)))?'3':'?')+' · marca '+(localStorage.getItem(PKK+'.pend')?'ficou':'limpa');
+          /* 5. falhou de novo, mas depois o arquivo mudou por fora (restaurar backup): vale o arquivo */ArqueApp.putFile=function(n){if(String(n)==='projects.json')return false;return pf0.apply(this,arguments)};pSaveAll(P(4));ArqueApp.putFile=pf0;
+          __files['projects.json']=b(JSON.stringify(P(9)));__pjsBoot();R.restaurou='abre '+marca()+' · marca '+(localStorage.getItem(PKK+'.pend')?'ficou':'limpa');
+        }finally{ArqueApp.putFile=pf0;if(guardaArq==null)delete __files['projects.json'];else __files['projects.json']=guardaArq;if(guardaLoc==null)localStorage.removeItem(PKK);else localStorage.setItem(PKK,guardaLoc);localStorage.removeItem(PKK+'.pend');try{__pjsBoot()}catch(_){}}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "arquivo gravado · aviso 0")
+        XCTAssertEqual(o["falhou"] as? String, "aviso sim · arquivo continua v1")
+        XCTAssertEqual(o["reabriu"] as? String, "abre v2 · navegador (o arquivo não tinha sido gravado)")
+        XCTAssertEqual(o["voltou"] as? String, "arquivo v3 · marca limpa")
+        XCTAssertEqual(o["restaurou"] as? String, "abre v9 · marca limpa")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

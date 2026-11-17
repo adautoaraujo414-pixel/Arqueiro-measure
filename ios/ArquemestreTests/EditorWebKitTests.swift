@@ -12236,4 +12236,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["invalidos"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* A6-LATGAV (Adauto 17/11, item 6): 2 toques na lateral de gaveta no 3D → altura das laterais de 1 em 1 mm, pela medida de corte (57 → 58).
+       Grava a altura da caixa do vão (v.gH): todas as laterais do vão acompanham, a contra-frente acompanha (− 15), comprimento 460 igual.
+       Medida fora da regra da caixa é recusada com aviso. 3D = lista. Desfazer e reabrir. */
+    func testA6AlturaDasLateraisDaGavetaPor2ToquesDe1em1mm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t).slice(0,90))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão 2 portas + 4 gavetas'));var m=S.mods[0];draw();
+        var lat=function(){return partsOf(m).filter(function(p){return /^Lateral de gaveta/.test(p.name)}).map(function(p){return 'v'+p.vi+':'+p.cl+'×'+p.cw}).join(',')};
+        var cf=function(){return partsOf(m).filter(function(p){return /^Frente\/costa/.test(p.name)}).map(function(p){return p.cl+'×'+p.cw}).join(',')};
+        R.antes=lat()+' · contra '+cf();open3D();await W(300);
+        var p=partsOf(m).filter(function(q){return /^Lateral de gaveta/.test(q.name)})[0];window.SEL3={mi:0,pk:p.pk};E3A6.render();await W(50);var row=document.querySelector('[data-a6lg]');R.linha=row?row.textContent.replace(/\s+/g,' ').slice(0,80)+' · valor '+row.querySelector('[data-a6v]').value:'sem linha';
+        var b=document.querySelector('[data-a6d="1"]');if(b){b.click();await W(50)}R.mais1=lat()+' · contra '+cf();
+        var inp=document.querySelector('[data-a6v]');if(inp){inp.value='999';inp.dispatchEvent(new Event('change',{bubbles:true}));await W(50)}var lat3=function(){m.v[1].open=true;draw();try{re3()}catch(_){}__build();var H=__boxes().filter(function(q){return /^0:Lateral de gaveta/.test(String(q.nm))}).map(function(q){return Math.round(q.y1-q.y0)});return H.length+' caixas no 3D · altura '+H.filter(function(v,i,a){return a.indexOf(v)===i}).join('/')};R.tresD=lat3();R.recusa999=lat()+' · aviso '+(TL.filter(function(t){return /não cabe/.test(t)}).length?'sim':'não');
+        HIST=[];FUT=[];LASTS=null;histTick();await W(800);var bb=document.querySelector('[data-a6d="1"]');if(bb){bb.click();await W(50)}histTick();R.maisUmDeNovo=lat().split(',')[0];document.getElementById('und').onclick();await W(60);m=S.mods[0];R.desfez=lat().split(',')[0];var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();m=S.mods[0];R.reaberto=lat().split(',')[0];R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "v1:460×57,v1:460×57,v1:460×57,v1:460×57,v1:460×57,v1:460×57,v1:460×57,v1:460×57 · contra 326×42,326×42,326×42,326×42,326×42,326×42,326×42,326×42")
+        XCTAssertEqual(o["linha"] as? String, "Altura das laterais deste vão · todas as gavetas do vão acompanham · comprimento · valor 57")
+        XCTAssertEqual(o["mais1"] as? String, "v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58 · contra 326×43,326×43,326×43,326×43,326×43,326×43,326×43,326×43")
+        XCTAssertEqual(o["tresD"] as? String, "8 caixas no 3D · altura 58")
+        XCTAssertEqual(o["recusa999"] as? String, "v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58,v1:460×58 · aviso sim")
+        XCTAssertEqual(o["maisUmDeNovo"] as? String, "v1:460×59")
+        XCTAssertEqual(o["desfez"] as? String, "v1:460×58")
+        XCTAssertEqual(o["reaberto"] as? String, "v1:460×58")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

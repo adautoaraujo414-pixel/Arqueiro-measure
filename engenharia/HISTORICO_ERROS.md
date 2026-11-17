@@ -629,3 +629,13 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - a geometria atual da pedra, da lixeira e dos móveis soltos não muda;
   - a falta do aviso de objeto fora da parede fica como **melhoria pendente para as três plataformas**, fora desta homologação;
   - a correção do teste vale desde que o comportamento real siga a regra aprovada (a CI do iOS confere).
+
+## A6-LATGAV: altura das laterais da gaveta por 2 toques no 3D (item 6, pedido do Adauto 17/11) — branch `claude/arquemestre-ajustes-3d`
+- **Antes:** 2 toques numa peça da caixa abriam o ajuste por peça (`m.po`), que muda a caixa inteira daquela gaveta só. Não havia como mudar a altura das laterais de 1 em 1 mm para o vão todo pelo 3D.
+- **Agora:** com a lateral de gaveta escolhida (2 toques), o quadro da peça mostra "Altura das laterais deste vão" com −1/+1 e o valor digitado.
+  - Grava `v.gH`, a mesma altura do quadro da gaveta do 2D, então todas as laterais do vão acompanham.
+  - O passo parte da medida de corte (57,8 → 57 → 58). A contra-frente acompanha (altura − 15).
+  - Comprimento 460 e corrediça não mudam.
+  - Altura fora da regra da caixa (folga de 35 em cima, mínimo 40) é recusada com aviso, e nada muda.
+- **Código:** gancho `a6Row` no fim do `e3Render` (o `e3Render` original virou `e3Render0`). Acesso por `window.E3A6`, porque o nome `__e3` já existia.
+- **Teste:** `testA6AlturaDasLateraisDaGavetaPor2ToquesDe1em1mm` (lista, contra-frente, 3D, recusa, desfazer, reabrir): falha na versão pública e passa agora.

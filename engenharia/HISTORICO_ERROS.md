@@ -652,3 +652,8 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Compatibilidade:** ajuste antigo (sem `ind`) continua mudando a caixa inteira, como antes. Nenhum projeto muda ao abrir.
 - **Teste:** `testA6AjusteDe1mmSoNaPecaEscolhidaDaGaveta`: falha na versão pública e passa agora.
 - **Testes de gaveta, caixa e ajuste (28):** todos passam. Na versão pública só falham os 2 testes novos.
+
+## A6-OP REVERTIDO (17/11): o 1 toque das portas da parede volta a ser o original (ordem do Adauto)
+- **Erro meu:** o commit `890e06e` mudou o 1 toque: a porta da parede deixava de abrir/fechar com 1 toque e o quadro só abria com 2. O Adauto não pediu isso. "1 toque continua abrindo e fechando portas".
+- **Correção:** `git revert` de `890e06e` (commit `0fad7ef`). O código ficou idêntico ao de `c2951f0`. Nada de 1 toque foi alterado nas gavetas (A6-LATGAV e A6-PECA só mexem no quadro de 2 toques e no ajuste da contra-frente).
+- **Regressão do 1 toque:** a porta da parede abre com 1 toque nas duas versões (sonda). Os testes da bateria de toque, abrir, gestos, porta, gaveta e janela estão rodando nas duas versões para comparar.

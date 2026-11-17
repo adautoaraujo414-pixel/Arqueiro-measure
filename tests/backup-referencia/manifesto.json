@@ -1,0 +1,23 @@
+{
+  "arquivos": {
+    "moveis/photo_f900.json": "9da66e6c95aff3b3791c6e29d6942485ea2df5146e954d44975acbab8954f235",
+    "moveis/prices.json": "99bffa709ddb29e1dc48cc0688322e49d6007c01fb89b1184072e6da66652a8d",
+    "moveis/projects.json": "55d13718dd7349064a0256c829b4e23f88be87372dad42f8074fb7e394cc287c",
+    "projects/images/foto..jpg": "aa4f182336e966a27ff5740573af2733480d1dfc3edbd6d1cdb755e0a7873144",
+    "projects/images/obra1.jpg": "e143d19ad6fb4916a9c941d1d681c2878d415b6c88096133175053ba853423fb",
+    "projects/index.json": "ef73474b7be4157fce3df0d510a5608a79a7b468b0000504939b1718420bdfb8",
+    "projects/notes/n1.json": "b1246156a44085a7487fbb38a33d066e48e22e2b98baf9e4f72263cb4cbac366",
+    "projects/notes/n2.json": "93d1af38c79cfc810e70e4f55d1901f8da1da0ccc4ad6ffc17e993e733ba9812"
+  },
+  "projetos": [
+    "p1",
+    "p2"
+  ],
+  "notas": [
+    "n1",
+    "n2"
+  ],
+  "vinculos": {
+    "n1": "p1"
+  }
+}

@@ -174,6 +174,25 @@ class DesktopCompatTest {
         assertTrue(File(DataBackup.autoDir(), "Arquemestre-backup-automatico.zip").length() > 100)
     }
 
+    /** N06 (17/11): o backup de referência no formato do Android (tests/backup-referencia) restaura no Windows arquivo por arquivo,
+     *  igual ao manifesto (sha256), inclusive foto..jpg, fotos do editor e o vínculo nota → projeto. */
+    @Test fun backupDeReferenciaDoAndroidRestauraIgualNoWindows() {
+        val zip = File("../tests/backup-referencia/android-backup-referencia.zip")
+        assertTrue("arquivo de referência existe", zip.isFile)
+        val man = File("../tests/backup-referencia/manifesto.json").readText()
+        val esperado = Regex("\"([^\"]+)\": \"([0-9a-f]{64})\"").findAll(man).associate { it.groupValues[1] to it.groupValues[2] }
+        assertTrue("manifesto tem os arquivos", esperado.size >= 8)
+        assertTrue(DataBackup.stage(ctx, zip.inputStream()))
+        DataBackup.applyPending(ctx)
+        val sha = { f: File -> java.security.MessageDigest.getInstance("SHA-256").digest(f.readBytes()).joinToString("") { "%02x".format(it) } }
+        for ((rel, h) in esperado) {
+            val f = File(ctx.filesDir, rel)
+            assertTrue("voltou $rel", f.isFile)
+            assertEquals("igual: $rel", h, sha(f))
+        }
+        assertTrue("vínculo nota → projeto voltou", File(Paths.data, "shared_prefs/arque.links.xml").readText().contains("p1"))
+    }
+
     @Test fun ponteDoEditorDeMoveis() {
         val dir = File(Paths.data, "moveis-teste").apply { mkdirs() }
         var closed = false

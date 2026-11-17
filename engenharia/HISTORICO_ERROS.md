@@ -673,3 +673,9 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Testes:**
   - `testA6DoisToquesDeLongeEscolhemOModuloEDoisNoDestinoMovem` (toques de verdade): quadro + destaque, vai para a parede da direita com as peças iguais, reabrir mantém, encosta do lado, sem espaço volta com aviso, 3 toques não preparam mover. Falha na versão pública e passa agora.
   - Passam também: `testDoisToquesNo3DLonge…`, `testTorrePortas…MoverDe2Toques…`, `testGestosNoEletro…`, `testUmToqueNaPortaDaParede…`.
+
+## A6-PECA-REGRESSÃO: o gancho da contra-frente substituía o `poAlign` existente (achado na bateria comparativa, 17/11)
+- **Erro meu:** escrevi acima que o `window.poAlign` "não existia". **Existia** (versão pública, linha ~10781): ele alinha a altura das portas vizinhas depois de um ajuste. O A6-PECA (commit `c2951f0`) definiu outro `window.poAlign` e **substituiu** o original. Esse é o erro que o protocolo da seção 12 do CLAUDE.md proíbe.
+- **Teste que pegou:** `testEditorPorVaosLixeiraEngrossoPortasEAlinhamento` ("alturas" 688 705 | 705 705 em vez de 688 688 | 688 688). Passa na versão pública; falhava a partir do `c2951f0` (bisect: `8c0ce76` ok, `a9b1da7` ok, `c2951f0` falha).
+- **Correção mínima:** o gancho da contra-frente agora **chama primeiro o `poAlign` original**, com o mesmo retorno, e só depois marca a contra-frente. O alinhamento das portas voltou: 688 688 | 688 688, retorno 3.
+- **Lição para os testes locais:** o navegador pode usar o `editor.html` antigo guardado em cache. As rodadas passam a usar o endereço com `&v=<número>` para forçar o arquivo novo. As rodadas anteriores desta branch serão repetidas assim.

@@ -871,3 +871,14 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Com gola marcada, a gola vale; a conta já fazia assim.
 - **Teste:** `testPortaCavaNaAbaPortasDoEditorPorVaos`, cobrindo ligar, plano de corte, salvar e reabrir, desligar, basculante e vidro. Falha antes e passa depois.
 - **Risco anotado:** escolher o puxador "cava" pro projeto todo (Ajustes) não chega nas torres por vãos, porque a regra da linha 1764 só olha vãos `door`, `drawers`, `tempero` e `free`; a torre é `rt`. Fica pra decisão do Adauto se deve chegar.
+
+## MENU-ARRASTA — menu rápido do vão arrasta pro lado e minimiza (pedido do Adauto, 18/11, foto do iPad)
+- **Pedido:** "Opção de arrastar pro lado ou minimizar para não atrapalhar a visão", no quadro "Vão escolhido" (`#rgqk`, menu de 2 toques do editor por vãos, PEDIDO 62) que cobre o desenho.
+- **Correção (no código do próprio menu):**
+  - Faixa do título com ⠿: segurar e arrastar move o quadro, sempre dentro da tela. O lugar fica guardado enquanto o app está aberto, e o menu abre ali da próxima vez.
+  - `▁` minimiza (fica só a faixa) e `▢ abrir` mostra tudo de novo. Ao abrir de novo com 2 toques, abre inteiro.
+- **Componente compartilhado:** o minimizar dos outros 9 quadros (`IDS` da linha "▁ minimizar: todo quadro…") não foi modificado, pela regra do Adauto. O menu usa o mesmo jeito (`▁` / `▢ abrir`).
+- **Teste:** `testMenuRapidoDoVaoArrastaPraLadoEMinimiza`, em 1366×768 e 390×844.
+  - Confere: arrasta junto com o dedo, fica dentro da tela, não fecha, não mexe no móvel; minimiza; abre de novo; reabre inteiro no lugar escolhido; as abas continuam funcionando.
+  - Falha antes e passa depois.
+  - O `testEditorPorVaosDoisToquesNoVaoAbreMenuRapido…` continua passando.

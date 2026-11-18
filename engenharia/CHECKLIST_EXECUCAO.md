@@ -300,6 +300,7 @@
 | N20 | PAREDE-ESPELHADA: parede da esquerda invertida no 2D (pedido 18/11) | erro comprovado (medido no 3D × 2D) | P1 | corrigir só a projeção da parede da esquerda | — | — | — | — | — | **aguarda a imagem e o sim do Adauto** |
 | N21 | PORTA-CAVA: porta cava na aba Portas do editor por vãos (pedido 18/11, foto) | NÃO FEITO | P2 | opção ligando a cava do móvel já usada na conta | gavetas-paredes (2 commits: teste e correção) | `testPortaCavaNaAbaPortasDoEditorPorVaos` (antes falha, depois passa) | CI a rodar | iOS a rodar | bateria Windows a rodar | corrigido; em validação |
 | N22 | Puxador cava do projeto (Ajustes) não chega nas torres por vãos (tipo `rt`) | risco identificado (código) | P2 | decisão do Adauto | — | — | — | — | — | aguarda decisão |
+| N23 | MENU-ARRASTA: menu rápido do vão arrasta pro lado e minimiza (pedido 18/11, foto) | NÃO FEITO | P2 | no código do próprio menu, sem mexer no minimizar compartilhado | gavetas-paredes (teste e correção) | `testMenuRapidoDoVaoArrastaPraLadoEMinimiza` (antes falha, depois passa; 1366×768 e 390×844) | CI a rodar | iOS a rodar | bateria Windows a rodar | feito; precisa de aparelho real (arrastar com o dedo) |
 
 ## Contagem inicial
 

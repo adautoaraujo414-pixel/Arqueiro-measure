@@ -11038,8 +11038,9 @@ final class EditorWebKitTests: XCTestCase {
 
     /* TAMP-LIVRE-CORTE (pergunta do Adauto, 18/11: "calcule se essas formas livres já sobem e atualiza em tempo real o plano de corte"): o
        tamponamento livre que desce entra no plano de corte, no plano de chapas e no número de chapas do orçamento na hora que é criado, muda
-       de medida na hora que é esticado/encolhido e some na hora que é tirado. Fita de borda da peça solta não entra na conta de fita (já era
-       assim pra toda peça solta; anotado no HISTORICO pra decisão do Adauto). */
+       de medida na hora que é esticado/encolhido e some na hora que é tirado.
+       FITA (Adauto, 18/11: "Fita de borda no orçamento pode aplicar sim do tamponamento"): mesma regra do tamponamento do móvel (mCost/edgeMm):
+       tamponamento com 25 mm ou mais leva a fita larga 35 mm nas 4 bordas (2 × (comprimento + largura)); mais fino, a fita da cor. */
     func testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -11049,18 +11050,23 @@ final class EditorWebKitTests: XCTestCase {
         var livre=function(){var G=cutGroups(),o=[];G.ord.forEach(function(k){var g=G.map[k];if(/Tamponamento \d+ \(3D\)/.test((g.names||[]).join()))o.push(g.qty+'×'+g.L+'x'+g.W)});return o.join(' | ')||'nenhum'};
         var tot=function(){var G=cutGroups(),n=0;G.ord.forEach(function(k){n+=+G.map[k].qty||0});return n};
         var chapasCor=function(){return budget().nC};
-        var linha=function(){return livre()+' · '+tot()+' peças · '+chapasCor()+' chapa(s) na cor'};
-        R.antes=linha();
+        var fitaT=function(){return Math.round(budget().T.tT*100)/100};var linha=function(){return livre()+' · '+tot()+' peças · '+chapasCor()+' chapa(s) na cor'};var f0;
+        R.antes=linha();f0=fitaT();
         var pi=partsOf(a).findIndex(function(p){return /^Tamponamento de cima/.test(p.name)}),tt=document.querySelector('#mod[data-mi="0"] [data-p="'+pi+'"]'),r=tt.getBoundingClientRect();
-        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.desceu=linha();
-        var g=S.geo[0];g.h=g.h-200;g.b=g.b+200;draw();R.encolheu=linha();
-        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.tirou=linha();
+        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.desceu=linha();R.fitaDesceu=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
+        var g=S.geo[0];g.h=g.h-200;g.b=g.b+200;draw();R.encolheu=linha();R.fitaEncolheu=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
+        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.tirou=linha();R.fitaTirou=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
+        /* tamponamento livre fino (15 mm): fita da cor, não a larga */S.geo=[];var bN=budget().T;S.geo=[{id:9,tp:'tamp',x:100,b:0,z:6,w:15,h:700,d:500,c:'#e6d9be'}];var bF=budget().T;S.geo=[];R.fino=Math.round((bF.tC-bN.tC)*100)/100+' m na fita da cor · '+Math.round((bF.tT-bN.tT)*100)/100+' m na larga';
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["antes"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor")
         XCTAssertEqual(o["desceu"] as? String, "2×820x585 · 21 peças · 2 chapa(s) na cor", "entra no corte e nas chapas na hora (30 mm = 2 × 15)")
         XCTAssertEqual(o["encolheu"] as? String, "2×620x585 · 21 peças · 2 chapa(s) na cor", "esticar/encolher muda a medida no corte na hora")
         XCTAssertEqual(o["tirou"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor", "tirar some do corte na hora")
+        XCTAssertEqual(o["fitaDesceu"] as? String, "2.81 m de fita larga a mais", "2 × (820 + 585) mm: fita larga nas 4 bordas do tamponamento de 30")
+        XCTAssertEqual(o["fitaEncolheu"] as? String, "2.41 m de fita larga a mais", "2 × (620 + 585)")
+        XCTAssertEqual(o["fitaTirou"] as? String, "0 m de fita larga a mais")
+        XCTAssertEqual(o["fino"] as? String, "2.4 m na fita da cor · 0 m na larga", "tamponamento livre de 15 mm: 2 × (700 + 500) na fita da cor")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

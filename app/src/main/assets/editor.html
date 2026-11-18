@@ -12479,4 +12479,37 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var p0=window.panel;if(typeof p0==='function'){panel=window.panel=function(){var r=p0.apply(this,arguments);try{if(naEsquerda(S.m)){aplica(document.getElementById('bd'))}}catch(_){}return r}}
 })();
 </script>
+<script>
+/* ===== TAMP-DESCE (pedido do Adauto, 18/11, item 7): "seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o
+   app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto".
+   - 2 toques no tamponamento de cima (no 2D): pergunta "Descer tamponamento esquerdo / direito" e "Inverter o de cima". O lado da ponta tocada fica em destaque.
+   - Descer = a mesma caixa "Tamponamento esquerdo/direito" do painel (o mesmo tratador: confere espaço, avisa se não cabe). Tocar de novo tira.
+   - Inverter = o inverter que já existe (tpInvSet: a peça vira, parte lisa pra dentro).
+   - Aumentar/diminuir = o arrasto do lateral que já existe (escolhe o tamponamento e arrasta).
+   - 2 toques no corpo do móvel continuam abrindo o vão. ===== */
+(function(){
+ var sv=document.getElementById('svg');if(!sv)return;var TQ={k:-1,t:0,x:0,y:0};
+ var NM={tl:'esquerdo',tr:'direito'};
+ function deCima(el){try{var p=el&&el.closest&&el.closest('[data-p]'),g=p&&p.closest('#mod');if(!p||!g)return null;var mi=+g.dataset.mi,m=S.mods[mi];if(!m)return null;var P=partsOf(m)[+p.dataset.p];if(!P||!/^Tamponamento de cima/.test(P.name))return null;return {m:m,mi:mi,el:p}}catch(_){return null}}
+ function fecha(){var q=document.getElementById('ttq');if(q)q.hidden=true}
+ function abre(o,x,y){var q=document.getElementById('ttq');if(!q){q=document.createElement('div');q.id='ttq';q.style.cssText='position:fixed;z-index:96;background:#fff;color:#1b1f24;border:1px solid #d6dbe3;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px;max-width:min(92vw,360px);font:14px system-ui,sans-serif';document.body.appendChild(q);
+   q.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-ttq],[data-ttqx]');if(!b)return;e.stopPropagation();if(b.dataset.ttqx!==undefined){fecha();return}var m=S.mods[+q.dataset.mi];if(!m){fecha();return}
+    if(m.lock){toast('🔒 Módulo travado · 4 toques em cima destrava');return}var k=b.dataset.ttq;S.m=m;
+    if(k==='inv'){snap();tpInvSet(m,'tt',!tpInv(m,'Tamponamento de cima'));try{tidy(m)}catch(_){}draw();panel();fecha();toast(tpInv(m,'Tamponamento de cima')?'⇄ Tamponamento de cima invertido: parte lisa pra dentro':'Tamponamento de cima do jeito normal: parte lisa pra fora');return}
+    /* mesma caixa do painel: o mesmo tratador faz tudo (espaço, empurrar, aviso de não cabe) */var era=!!m[k],ck=document.createElement('input');ck.type='checkbox';ck.dataset.c=k;ck.checked=era;ck.style.display='none';document.body.appendChild(ck);try{ck.click()}finally{ck.remove()}
+    fecha();try{panel()}catch(_){}if(!!m[k]!==era)toast(m[k]?'⬇ Tamponamento '+NM[k]+' desceu · toque nele e arraste pra aumentar ou diminuir':'Tamponamento '+NM[k]+' tirado')});
+   document.addEventListener('pointerdown',function(e){var q2=document.getElementById('ttq');if(q2&&!q2.hidden&&!q2.contains(e.target))fecha()},true)}
+  var m=o.m,r=o.el.getBoundingClientRect(),lado=x<r.left+r.width/2?'tl':'tr',bt=function(k,t,on){return '<button data-ttq="'+k+'" style="display:block;width:100%;text-align:left;margin:4px 0;padding:10px 12px;border-radius:9px;border:'+(on?'2px solid #1f6feb':'1px solid #c9d1db')+';background:#fff;font-weight:'+(on?800:600)+'">'+t+'</button>'};
+  q.dataset.mi=o.mi;q.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>▮ Tamponamento de cima</b><button data-ttqx="1" style="border:0;background:none;font-size:18px">✕</button></div>'
+   +['tl','tr'].map(function(k){return bt(k,m[k]?'✓ Tamponamento '+NM[k]+' descido · tocar tira':'⬇ Descer tamponamento '+NM[k],k===lado)}).join('')
+   +(tpInvOk(m,'tt')?bt('inv',tpInv(m,'Tamponamento de cima')?'✓ Invertido · de cima':'⇄ Inverter o de cima',false):'')
+   +'<div style="font-size:12px;color:#555;margin-top:4px">Depois de descer: toque no tamponamento e arraste pra aumentar ou diminuir.</div>';
+  q.hidden=false;var vw=window.innerWidth,vh=window.innerHeight,b=q.getBoundingClientRect(),lx=Math.max(8,Math.min(vw-b.width-8,x-b.width/2)),ly=y+18;if(ly+b.height>vh-8)ly=Math.max(8,y-b.height-18);q.style.left=lx+'px';q.style.top=ly+'px'}
+ /* 2 toques no tamponamento de cima: antes do toque do módulo (que abriria o vão) */
+ sv.addEventListener('pointerup',function(e){if(window.RO)return;var o=deCima(document.elementFromPoint(e.clientX,e.clientY));if(!o){TQ.k=-1;return}var now=Date.now();
+  if(TQ.k===o.mi&&now-TQ.t<450&&Math.hypot(e.clientX-TQ.x,e.clientY-TQ.y)<34){TQ.k=-1;e.stopImmediatePropagation();var x=e.clientX,y=e.clientY;setTimeout(function(){abre(o,x,y)},60);return}
+  TQ={k:o.mi,t:now,x:e.clientX,y:e.clientY}},true);
+ window.ttqAbre=abre;
+})();
+</script>
 </body></html>

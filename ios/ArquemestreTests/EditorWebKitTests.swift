@@ -10796,6 +10796,11 @@ final class EditorWebKitTests: XCTestCase {
         /* minimiza, fecha e abre de novo com 2 toques: inteiro e no lugar escolhido */
         var lp=m.style.left,tp=m.style.top;m.querySelector('[data-rqmin]').click();await W(50);m.querySelector('[data-rqx]').click();await W(400);await tq();await tq();await W(300);
         var lugar_=(m.style.left===lp&&m.style.top===tp);R.reabreDetalhe='antes '+lp+','+tp+' · depois '+m.style.left+','+m.style.top+' · guardado '+JSON.stringify(window.RGQPOS||null)+' · tela '+innerWidth+'x'+innerHeight+' · quadro '+Math.round(m.getBoundingClientRect().width)+'x'+Math.round(m.getBoundingClientRect().height)+' · aberto '+!m.hidden;R.reabre=(!m.hidden&&!m.querySelector('[data-rqbody]').hidden?'inteiro':'minimizado')+(lugar_?' · no lugar escolhido':' · em outro lugar ('+R.reabreDetalhe+')');
+        /* arrastado lá pra baixo (só a faixa na tela): ▢ abrir e abrir de novo com 2 toques põem o quadro inteiro no MESMO lugar, dentro da tela (Windows 52: um usava 8 px de margem e o outro 0) */
+        var h3=m.querySelector('[data-rqh]'),q3=h3.getBoundingClientRect(),x3=q3.left+40,y3=q3.top+q3.height/2;pe('pointerdown',h3,x3,y3);for(var k3=1;k3<=6;k3++)pe('pointermove',h3,x3,y3+(innerHeight-60-y3)*k3/6);pe('pointerup',h3,x3,innerHeight-60);await W(100);
+        m.querySelector('[data-rqmin]').click();await W(50);m.querySelector('[data-rqmin]').click();await W(80);var pA=m.style.left+','+m.style.top,rA=m.getBoundingClientRect();
+        m.querySelector('[data-rqx]').click();await W(400);await tq();await tq();await W(300);var pB=m.style.left+','+m.style.top;
+        R.embaixo=(pA===pB?'mesmo lugar':'abrir '+pA+' · 2 toques '+pB)+(rA.bottom<=innerHeight+0.5&&rA.top>=0?' · inteiro na tela':' · saiu da tela');
         /* as abas e botões continuam funcionando */var t2=m.querySelector('[data-rqt="gav"]');t2.click();await W(150);R.aba=m.querySelectorAll('[data-rqb]').length>0;
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
@@ -10809,6 +10814,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abriuDeNovo"] as? Bool, true)
         XCTAssertEqual(o["reabre"] as? String, "inteiro · no lugar escolhido", "\(o["reabreDetalhe"] ?? "")")
         XCTAssertEqual(o["aba"] as? Bool, true)
+        XCTAssertEqual(o["embaixo"] as? String, "mesmo lugar · inteiro na tela")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 

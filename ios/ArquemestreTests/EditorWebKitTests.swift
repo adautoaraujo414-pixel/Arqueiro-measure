@@ -11047,16 +11047,18 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
         var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.geo=[];newTpl(achar('inf','Balcão 2 portas'));var a=S.m;a.x=1200;a.tt=true;a.tl=false;a.tlM=1;a.tr=false;a.trM=1;S.m=a;draw();panel();
+        /* isola o valor da fita para provar que o orçamento soma o livre uma única vez */PR.mdfB=PR.mdfC=PR.mdfM=PR.mdf25=PR.fundo=0;PR.fitaT=10;PR.fPerda=0;
         var livre=function(){var G=cutGroups(),o=[];G.ord.forEach(function(k){var g=G.map[k];if(/Tamponamento \d+ \(3D\)/.test((g.names||[]).join()))o.push(g.qty+'×'+g.L+'x'+g.W)});return o.join(' | ')||'nenhum'};
         var tot=function(){var G=cutGroups(),n=0;G.ord.forEach(function(k){n+=+G.map[k].qty||0});return n};
         var chapasCor=function(){return budget().nC};
         var fitaT=function(){return Math.round(budget().T.tT*100)/100};var linha=function(){return livre()+' · '+tot()+' peças · '+chapasCor()+' chapa(s) na cor'};var f0;
-        R.antes=linha();f0=fitaT();
+        R.antes=linha();f0=fitaT();var custo0=budget().tot;
         var pi=partsOf(a).findIndex(function(p){return /^Tamponamento de cima/.test(p.name)}),tt=document.querySelector('#mod[data-mi="0"] [data-p="'+pi+'"]'),r=tt.getBoundingClientRect();
-        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.desceu=linha();R.fitaDesceu=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
+        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.desceu=linha();R.fitaDesceu=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';var bd1=budget(),bd2=budget();R.totalSemDuplicar=Math.round((bd1.tot-custo0)*100)/100+' reais · repetir '+Math.round((bd2.tot-bd1.tot)*100)/100;
         var g=S.geo[0];g.h=g.h-200;g.b=g.b+200;draw();R.encolheu=linha();R.fitaEncolheu=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
         ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.tirou=linha();R.fitaTirou=Math.round((fitaT()-f0)*100)/100+' m de fita larga a mais';
         /* tamponamento livre fino (15 mm): fita da cor, não a larga */S.geo=[];var bN=budget().T;S.geo=[{id:9,tp:'tamp',x:100,b:0,z:6,w:15,h:700,d:500,c:'#e6d9be'}];var bF=budget().T;S.geo=[];R.fino=Math.round((bF.tC-bN.tC)*100)/100+' m na fita da cor · '+Math.round((bF.tT-bN.tT)*100)/100+' m na larga';
+        /* placa solta continua com a regra própria: entra no corte, mas não ganha fita de tamponamento */var bP0=budget().T;S.geo=[{id:10,tp:'placa',x:100,b:0,z:6,w:15,h:700,d:500,c:'#e6d9be'}];var bP1=budget().T;S.geo=[];R.placaSemFita=Math.round((bP1.tC-bP0.tC)*100)/100+' m na fita da cor · '+Math.round((bP1.tT-bP0.tT)*100)/100+' m na larga';
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["antes"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor")
@@ -11064,9 +11066,11 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["encolheu"] as? String, "2×620x585 · 21 peças · 2 chapa(s) na cor", "esticar/encolher muda a medida no corte na hora")
         XCTAssertEqual(o["tirou"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor", "tirar some do corte na hora")
         XCTAssertEqual(o["fitaDesceu"] as? String, "2.81 m de fita larga a mais", "2 × (820 + 585) mm: fita larga nas 4 bordas do tamponamento de 30")
+        XCTAssertEqual(o["totalSemDuplicar"] as? String, "28.1 reais · repetir 0", "2,81 m × R$ 10 entram uma vez; recalcular o orçamento não acumula nem duplica o total")
         XCTAssertEqual(o["fitaEncolheu"] as? String, "2.41 m de fita larga a mais", "2 × (620 + 585)")
         XCTAssertEqual(o["fitaTirou"] as? String, "0 m de fita larga a mais")
         XCTAssertEqual(o["fino"] as? String, "2.4 m na fita da cor · 0 m na larga", "tamponamento livre de 15 mm: 2 × (700 + 500) na fita da cor")
+        XCTAssertEqual(o["placaSemFita"] as? String, "0 m na fita da cor · 0 m na larga", "a placa solta mantém a regra própria e não recebe a fita do tamponamento livre")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

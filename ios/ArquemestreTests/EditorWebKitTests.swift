@@ -10854,6 +10854,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
+    /* FITA-CORTE (regra do Adauto, 18/11): "Não aplicar desconto da fita de 1 mm no plano de corte". O corte sai com a medida da peça de MDF.
+       Em todo o catálogo, nenhuma medida do plano de corte pode ser 1 a 4 mm menor que a peça cadastrada (partsOf). */
+    func testPlanoDeCorteNaoDescontaAFitaDeBorda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+          var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&t.w&&t.h)its.push(t)})});
+          var dif=[],n=0,pc=0;its.forEach(function(it){S.mods=[];S.fr=[];S.stones=[];S.env='cozinha';S.room='cozinha';S.W=6000;S.H=3000;try{newTpl(JSON.parse(JSON.stringify(it)))}catch(_){return}var m=S.mods[S.mods.length-1];if(!m)return;n++;
+            var P={};partsOf(m).forEach(function(p){if(p.noCut||!(p.cl>0&&p.cw>0))return;var a=Math.max(p.cl,p.cw),b=Math.min(p.cl,p.cw),k=a+'x'+b;P[k]=(P[k]||0)+1;pc++});
+            var C={};cutLines(m).forEach(function(l){var a=Math.max(l.L,l.W),b=Math.min(l.L,l.W),k=a+'x'+b;C[k]=(C[k]||0)+(+l.qty||1)});
+            var d=[];Object.keys(C).forEach(function(k){if(P[k])return;var q=k.split('x').map(Number);Object.keys(P).forEach(function(pk){var r=pk.split('x').map(Number),da=r[0]-q[0],db=r[1]-q[1];if((da>=0&&da<=4&&db>=0&&db<=4)&&(da+db)>0)d.push(k+' ~ peça '+pk)})});if(d.length)dif.push(it.n+': '+d.slice(0,4).join(', '))});
+          R.modulos=n>=100;R.pecas=pc>=2000;R.descontoDeFita=dif.length?dif.slice(0,6).join(' | '):'nenhum';R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modulos"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["descontoDeFita"] as? String, "nenhum", "o plano de corte não desconta a fita")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

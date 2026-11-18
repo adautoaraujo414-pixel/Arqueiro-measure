@@ -10878,6 +10878,44 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDE-ESPELHADA (pedido do Adauto, 18/11): olhando cada parede de frente, de dentro do ambiente, os módulos aparecem na sequência e na
+       orientação de verdade. Antes, a parede da ESQUERDA saía espelhada no 2D (o canto do fundo à esquerda da tela) e, no 3D, o lado
+       "esquerdo" do móvel ficava à direita de quem olha. Os dados salvos (x a partir do canto do fundo), as peças e o corte não mudam. */
+    func testParedeDaEsquerdaNaoFicaEspelhadaNo2DNemNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
+        /* fundo: A no canto esquerdo, B no direito · esquerda: C perto do canto do fundo, D mais pra frente · direita: E perto do canto, F mais pra frente
+           todos com tamponamento só do lado ESQUERDO do móvel */
+        var put=function(w,x,tag){newTpl(achar('inf','Balcão 1 porta'));var m=S.mods[S.mods.length-1];if(w!=='f')m.wing=w;m.x=x;m.tl=true;m.tr=false;m.__t=tag;return m};
+        put('f',1200,'A');put('f',2400,'B');put('e',900,'C');put('e',2100,'D');put('d',900,'E');put('d',2100,'F');draw();
+        var tags=S.mods.map(function(m){return m.__t}),dados0=JSON.stringify(S.mods.map(function(m){return [m.__t,m.wing||'f',m.x,m.w,m.tl,m.tr]})),corte0=JSON.stringify(S.mods.map(function(m){return cutLines(m).map(function(l){return l.qty+'×'+l.L+'x'+l.W}).sort()}));
+        /* 3D: de que lado de quem olha a parede fica o tamponamento esquerdo */
+        open3D();await W(400);__build();var bx={};__boxes().forEach(function(q){var k=String(q.nm||'').split(':');if(!/^\d+$/.test(k[0]))return;var t=tags[+k[0]];var key=t+(/^Tamponamento esquerdo/.test(k[1]||'')?'T':'M');var e=bx[key]||(bx[key]=[1e9,-1e9,1e9,-1e9]);e[0]=Math.min(e[0],q.x0);e[1]=Math.max(e[1],q.x1);e[2]=Math.min(e[2],q.z0);e[3]=Math.max(e[3],q.z1)});
+        var lado=function(t,w){var T=bx[t+'T'],M=bx[t+'M'];if(!T||!M)return '?';var c=function(e,a){return a==='x'?(e[0]+e[1])/2:(e[2]+e[3])/2};/* esquerda de quem olha: fundo = −x · parede esquerda = +z · parede direita = −z */var d=w==='f'?c(M,'x')-c(T,'x'):w==='e'?c(T,'z')-c(M,'z'):c(M,'z')-c(T,'z');return d>0?'esquerda':'direita'};
+        R.tamponamento3D=['A','f','C','e','E','d'].reduce(function(a,_,i,arr){if(i%2)return a;return a.concat(arr[i]+' '+lado(arr[i],arr[i+1]))},[]).join(' · ');
+        document.getElementById('v3x').click();await W(150);
+        /* 2D de cada parede: ordem na tela, da esquerda pra direita */
+        var tela=function(w){wvGo(w);draw();var o=[];document.querySelectorAll('#mod').forEach(function(g){var m=S.mods[+g.dataset.mi];if(w==='f'&&m.wing)return;/* no 2D do fundo os móveis das paredes do lado aparecem tracejados, só de referência */var r=g.querySelector('rect[data-mi]').getBoundingClientRect();o.push([m.__t,r.left])});o.sort(function(a,b){return a[1]-b[1]});return w+': '+o.map(function(q){return q[0]}).join(' ')};
+        R.ordem2D=[tela('f'),tela('e'),tela('d'),tela('f')].join(' | ');
+        /* no 2D da parede esquerda, o tamponamento esquerdo do móvel aparece à esquerda dele na tela */
+        wvGo('e');draw();var m=S.mods.filter(function(q){return q.__t==='C'})[0],mi=S.mods.indexOf(m),P=partsOf(m),tp=P.filter(function(p){return /^Tamponamento esquerdo/.test(p.name)})[0];R.tamp2D=tp&&tp.x<0?'à esquerda do móvel':'outro lado';wvGo('f');draw();
+        /* dados e corte iguais depois de trocar de parede, salvar e reabrir */
+        var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();
+        R.dados=JSON.stringify(S.mods.map(function(m){return [m.__t,m.wing||'f',m.x,m.w,m.tl,m.tr]}))===dados0.replace(/"__t":"[A-F]",?/g,'')||JSON.stringify(S.mods.map(function(m){return [m.wing||'f',m.x,m.w,m.tl,m.tr]}))===JSON.stringify(JSON.parse(dados0).map(function(q){return q.slice(1)}));
+        R.corte=JSON.stringify(S.mods.map(function(m){return cutLines(m).map(function(l){return l.qty+'×'+l.L+'x'+l.W}).sort()}))===corte0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["tamponamento3D"] as? String, "A esquerda · C esquerda · E esquerda", "o lado esquerdo do móvel fica à esquerda de quem olha a parede, nas 3 paredes")
+        XCTAssertEqual(o["ordem2D"] as? String, "f: A B | e: D C | d: E F | f: A B", "parede esquerda: o canto do fundo fica à direita de quem olha (C perto do canto aparece à direita)")
+        XCTAssertEqual(o["tamp2D"] as? String, "à esquerda do móvel")
+        XCTAssertEqual(o["dados"] as? Bool, true, "dados salvos não mudam (x a partir do canto)")
+        XCTAssertEqual(o["corte"] as? Bool, true, "peças e corte não mudam")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

@@ -957,6 +957,17 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Só não entra dentro de um móvel (peça sólida, CLAUDE.md §4).
   - Tocar de novo no menu tira o livre daquele lado, mesmo depois de movido (marca `dm` do móvel).
   - Falha em `efa5aaa` e passa na correção. Os 47 testes (tamponamento, peças soltas, cenário, catálogo) passam em notebook e 440x956.
+- **Plano de corte em tempo real (conferido em 18/11, teste `testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte`):** `cutGroups` soma `geoCutPieces` a cada chamada, e o plano de chapas (`sheetPlan`), a lista de corte (`cutAll`) e o número de chapas do orçamento (`budget().nC`) leem dele.
+  - Num balcão 2 portas:
+
+    | Momento | Corte | Peças | Chapas na cor |
+    |---|---|---|---|
+    | Antes | — | 19 | 1 |
+    | Desceu | 2×820x585 | 21 | 2 |
+    | Encolheu 200 | 2×620x585 | 21 | 2 |
+    | Tirou | — | 19 | 1 |
+
+  - **Risco identificado (já existia pra toda peça solta, não mexido):** a fita de borda da peça solta não entra nos metros de fita do orçamento (`tC`/`tT` não mudam). Decisão do Adauto.
 - **Limite:** só na parede do fundo, porque o tamponamento solto só é desenhado no 2D da parede do fundo. Na parede do lado o app avisa.
 - **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
   - Verifica: pergunta, sem menu do vão, livre com x1170, w30, z6, d375, b1750, h780 e móvel igual, corte 2×780x375, inverter, direito, arrasto aumenta com o topo no lugar e o móvel parado, tocar tira, corpo abre o vão, salvar e reabrir.

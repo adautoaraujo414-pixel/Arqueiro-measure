@@ -7763,7 +7763,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    func testAbrirPortasEGavetasFuncionaEmTodoJeitoDeModuloDoCatalogo() async throws {
+    /* N07/N10 (18/11): este teste levava 113 s e o limite do iOS é 120 s por teste; no simulador carregado passava do limite, o app de teste
+       era derrubado e a etapa ficava vermelha sem nenhuma conferência falhar (CI 613–626). Dividido em 2 partes com as MESMAS conferências:
+       parte 1 = primeira metade dos jeitos de abrir do catálogo; parte 2 = segunda metade + caixote e gaveta interna. Nada foi afrouxado. */
+    func testAbrirPortasEGavetasFuncionaEmTodoJeitoDeModuloDoCatalogoParte1() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
                   window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
@@ -7777,7 +7780,35 @@ final class EditorWebKitTests: XCTestCase {
                   /* 1 módulo de cada jeito de abrir que existe no catálogo (porta, gaveta, tempero, torre de forno, caixa da geladeira, caixote, gaveta por fora, gaveta interna, basculante, correr, painel cego, por vãos) */
                   var vistos={},esc=[];its.forEach(function(it){var t=JSON.stringify(it),k=(it.v||[]).map(function(v){return v.k+(v.fixa?'F':'')+(v.basc?'B':'')+((v.int||[]).map(function(o){return String(o.t).replace(/\d/g,'')}).filter(function(x){return /cxg|gav/.test(x)}).join(''))+(v.gext||v.ge?'E':'')}).sort().join('+')+(/Ext /.test(it.n)?'+ext':'')+(it.corner?'+canto':'');if(!vistos[k]){vistos[k]=1;esc.push(it)}});
                   R.jeitos=esc.length>=12;window.__nj=esc.length;var naoAbre=[],naoFecha=[],cegoAbriu=[],e0=__errs.length;
-                  for(var i=0;i<esc.length;i++){var it=esc[i];clr();newTpl(JSON.parse(JSON.stringify(it)));draw();await W(600)/* módulo de mais de 2700 vira continuação (15/11): espera dividir antes de medir */;var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();__build();var f0=frentes(m);if(!f0.length)continue;var c0=cx();
+                  for(var i=0;i<Math.ceil(esc.length/2);i++){var it=esc[i];clr();newTpl(JSON.parse(JSON.stringify(it)));draw();await W(600)/* módulo de mais de 2700 vira continuação (15/11): espera dividir antes de medir */;var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();__build();var f0=frentes(m);if(!f0.length)continue;var c0=cx();
+                    org3api.open(m,true);await W(1300);await fimAnim();__build();var c1=cx();
+                    frentes(m).forEach(function(p){var v=(m.v||[])[p.vi]||{},fixa=!!(p.cego||p.rgfx||v.fixa);if(fixa){if(p.open||c0[p.pk]!==c1[p.pk])cegoAbriu.push(it.n);return}if(v.k==='slide'||/^Porta de correr/.test(p.name))return;if(c0[p.pk]===c1[p.pk]&&!p.open)naoAbre.push(it.n+': '+p.name)});
+                    org3api.open(m,false);await W(2200);await fimAnim();__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}
+                  R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
+                  R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["jeitos"] as? Bool, true)
+        XCTAssertEqual(o["botaoAbrirNaoAbriu"] as? String, "0")
+        XCTAssertEqual(o["fecharNaoVoltou"] as? String, "0")
+        XCTAssertEqual(o["painelCegoAbriu"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testAbrirPortasEGavetasFuncionaEmTodoJeitoDeModuloDoCatalogoParte2() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+                  window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+                  var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+                  var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=6000;S.RD=3500;S.H=3000;S.m=null};
+                  clr();draw();open3D();await W(500);
+                  /* 16/11: no simulador do iPhone a animação anda devagar (poucos quadros) e o tempo fixo pegava a gaveta ainda parada. Depois do tempo de sempre, espera também a animação chegar no alvo (até 10 s) */
+                  var fimAnim=async function(){__build();var t_=Date.now();while(Date.now()-t_<10000){var A_=__ang(),ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}};
+                  var ehFrente=function(p){return /^(Porta|Frente de gaveta|Frente \(porta tempero\)|Gaveta interna · frente)/.test(p.name)&&!(p.noDraw&&!p.cxz)},frentes=function(m){return partsOf(m).filter(ehFrente)};
+                  var cx=function(){var o={};__boxes().forEach(function(q){if(q.pk&&/^(Porta|Frente|Gaveta interna)/.test(q.pk))o[q.pk]=(o[q.pk]||'')+[q.x0,q.x1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')+';'});return o};
+                  /* 1 módulo de cada jeito de abrir que existe no catálogo (porta, gaveta, tempero, torre de forno, caixa da geladeira, caixote, gaveta por fora, gaveta interna, basculante, correr, painel cego, por vãos) */
+                  var vistos={},esc=[];its.forEach(function(it){var t=JSON.stringify(it),k=(it.v||[]).map(function(v){return v.k+(v.fixa?'F':'')+(v.basc?'B':'')+((v.int||[]).map(function(o){return String(o.t).replace(/\d/g,'')}).filter(function(x){return /cxg|gav/.test(x)}).join(''))+(v.gext||v.ge?'E':'')}).sort().join('+')+(/Ext /.test(it.n)?'+ext':'')+(it.corner?'+canto':'');if(!vistos[k]){vistos[k]=1;esc.push(it)}});
+                  R.jeitos=esc.length>=12;window.__nj=esc.length;var naoAbre=[],naoFecha=[],cegoAbriu=[],e0=__errs.length;
+                  for(var i=Math.ceil(esc.length/2);i<esc.length;i++){var it=esc[i];clr();newTpl(JSON.parse(JSON.stringify(it)));draw();await W(600)/* módulo de mais de 2700 vira continuação (15/11): espera dividir antes de medir */;var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();__build();var f0=frentes(m);if(!f0.length)continue;var c0=cx();
                     org3api.open(m,true);await W(1300);await fimAnim();__build();var c1=cx();
                     frentes(m).forEach(function(p){var v=(m.v||[])[p.vi]||{},fixa=!!(p.cego||p.rgfx||v.fixa);if(fixa){if(p.open||c0[p.pk]!==c1[p.pk])cegoAbriu.push(it.n);return}if(v.k==='slide'||/^Porta de correr/.test(p.name))return;if(c0[p.pk]===c1[p.pk]&&!p.open)naoAbre.push(it.n+': '+p.name)});
                     org3api.open(m,false);await W(2200);await fimAnim();__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}

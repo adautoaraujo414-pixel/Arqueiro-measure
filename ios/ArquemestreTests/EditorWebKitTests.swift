@@ -10795,7 +10795,7 @@ final class EditorWebKitTests: XCTestCase {
         m.querySelector('[data-rqmin]').click();await W(80);R.abriuDeNovo=!m.querySelector('[data-rqbody]').hidden&&m.querySelectorAll('[data-rqt]').length===7;
         /* minimiza, fecha e abre de novo com 2 toques: inteiro e no lugar escolhido */
         var lp=m.style.left,tp=m.style.top;m.querySelector('[data-rqmin]').click();await W(50);m.querySelector('[data-rqx]').click();await W(400);await tq();await tq();await W(300);
-        R.reabre=(!m.hidden&&!m.querySelector('[data-rqbody]').hidden?'inteiro':'minimizado')+(m.style.left===lp&&m.style.top===tp?' · no lugar escolhido':' · em outro lugar');
+        R.reabre=(!m.hidden&&!m.querySelector('[data-rqbody]').hidden?'inteiro':'minimizado')+(m.style.left===lp&&m.style.top===tp?' · no lugar escolhido':' · em outro lugar');R.reabreDetalhe='antes '+lp+','+tp+' · depois '+m.style.left+','+m.style.top+' · guardado '+JSON.stringify(window.RGQPOS||null)+' · tela '+innerWidth+'x'+innerHeight+' · quadro '+Math.round(m.getBoundingClientRect().width)+'x'+Math.round(m.getBoundingClientRect().height)+' · aberto '+!m.hidden;
         /* as abas e botões continuam funcionando */var t2=m.querySelector('[data-rqt="gav"]');t2.click();await W(150);R.aba=m.querySelectorAll('[data-rqb]').length>0;
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
@@ -10807,7 +10807,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["minimizado"] as? String, "só a faixa")
         XCTAssertEqual(o["botaoAbre"] as? String, "▢ abrir")
         XCTAssertEqual(o["abriuDeNovo"] as? Bool, true)
-        XCTAssertEqual(o["reabre"] as? String, "inteiro · no lugar escolhido")
+        XCTAssertEqual(o["reabre"] as? String, "inteiro · no lugar escolhido", "\(o["reabreDetalhe"] ?? "")")
         XCTAssertEqual(o["aba"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")
     }

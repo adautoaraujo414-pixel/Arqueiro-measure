@@ -35,3 +35,12 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 ## Pendentes de confirmação (não usar como regra ainda)
 - Perfil G encostando na caixa (1,5 mm). Ver a pendência 1 da especificação do gola.
 - Engrosso do tamponamento "entrando no módulo": não reproduzido (HISTORICO_ERROS, TAMP-ENGROSSO).
+
+## Fundo (confirmado pelo Adauto em 18/11/2026, com foto de uma torre no 3D)
+- **Regra:** o fundo dos armários é **parafusado por fora**, sobreposto e não embutido. O único fundo embutido é o da gaveta.
+- **Como o app está hoje (medido em 18/11, torre do forno, balcão 2 portas e torre por vãos):**
+  - o padrão é "Sobreposto (parafusado atrás)";
+  - o corte sai com a largura e a altura do módulo inteiras;
+  - no 3D, o fundo fica atrás das laterais (z 0–6) e as laterais começam na frente dele;
+  - o fundo da gaveta é encaixado (6 mm).
+- **Pendente (decisão do Adauto):** a aba Estrutura e os Ajustes ainda deixam escolher "Rasgo nas laterais" e "Rasgo nos 4 lados" (embutido). Falta decidir se essas opções saem ou ficam. Projeto antigo com rasgo não muda sozinho; o app avisa.

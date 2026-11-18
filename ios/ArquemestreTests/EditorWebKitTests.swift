@@ -10954,6 +10954,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* AUDITORIA-GEOMETRIA (pedido do Adauto, 18/11, item 9 "precisão das medidas e plano de corte"): no catálogo inteiro, a mesma peça nas 3 saídas.
+       Toda peça de corte tem medida > 0 e sem décimo (regra: peça só em mm inteiro; o décimo vira folga); toda peça do corte existe no 3D; nenhuma
+       caixa do 3D sem peça de origem (o 3D não inventa peça); toda peça de corte está numa linha do corte (chave pk). Tamponamento de 30 mm do
+       aéreo sai como 2 réguas de 15 (chave "(régua)"), engrosso e face são partes da mesma peça: contam como a mesma. */
+    func testCatalogoInteiroMesmaPecaNo2DNo3DENoCorteSemDecimo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=8000;S.H=2700;open3D();await W(400);
+        var nm=0,zero=[],dec=[],semCorte=[],fora3D=[],inventada=[];var T=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act)T.push(t)})});
+        var base=function(k){return String(k).replace(/#\d+$/,'').replace(/ \(régua\)$/,'').replace(/ · (face|engrosso.*)$/,'')};
+        for(var i=0;i<T.length;i++){var t=T[i];S.mods=[];S.fr=[];S.stones=[];newTpl(JSON.parse(JSON.stringify(t)));var m=S.m;if(!m)continue;nm++;SPC={};__build();var P=partsOf(m),L=cutLines(m),bx=__boxes(),bp={},bb={},pp={},pb={},cpk={};
+          bx.forEach(function(q){if(q.pk){bp[q.pk]=1;bb[base(q.pk)]=1}});P.forEach(function(p){if(p.pk)pp[p.pk]=1});L.forEach(function(l){(l.pks||[]).forEach(function(k){cpk[k]=1;cpk[base(k)]=1;pp[k]=1})});Object.keys(pp).forEach(function(k){pb[base(k)]=1});
+          P.forEach(function(p){if(p.noCut)return;if(!(+p.cl>0&&+p.cw>0)){if(!p.noDraw&&!/vidro|Puxador|perfil|alumínio|Decoração|Corrediça|Dobradiça/i.test(p.name))zero.push(t.n+': '+p.name);return}if(Math.abs(p.cl-Math.round(p.cl))>0.001||Math.abs(p.cw-Math.round(p.cw))>0.001)dec.push(t.n+': '+p.name+' '+p.cl+'x'+p.cw);
+            if(p.pk&&!cpk[p.pk]&&!cpk[base(p.pk)]&&!/Puxador|perfil|vidro/i.test(p.name))semCorte.push(t.n+': '+p.name);if(p.pk&&!p.noDraw&&!bp[p.pk]&&!bb[base(p.pk)])fora3D.push(t.n+': '+p.name)});
+          L.forEach(function(l){if(Math.abs(l.L-Math.round(l.L))>0.001||Math.abs(l.W-Math.round(l.W))>0.001)dec.push(t.n+' (corte): '+l.names.join('+'))});
+          Object.keys(bp).forEach(function(k){if(!pp[k]&&!pb[base(k)])inventada.push(t.n+': '+k)})}
+        document.getElementById('v3x').click();await W(100);
+        var lst=function(a){return a.length+(a.length?': '+a.slice(0,6).join(' ; '):'')};
+        R.modelos=nm>=140?'catálogo inteiro':'só '+nm;R.zero=lst(zero);R.decimo=lst(dec);R.semCorte=lst(semCorte);R.fora3D=lst(fora3D);R.inventada=lst(inventada);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? String, "catálogo inteiro")
+        XCTAssertEqual(o["zero"] as? String, "0", "peça de corte com medida zero")
+        XCTAssertEqual(o["decimo"] as? String, "0", "peça só em mm inteiro (o décimo vira folga)")
+        XCTAssertEqual(o["semCorte"] as? String, "0", "peça que não entra no plano de corte")
+        XCTAssertEqual(o["fora3D"] as? String, "0", "peça do corte que não aparece no 3D")
+        XCTAssertEqual(o["inventada"] as? String, "0", "o 3D não inventa peça")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* TAMP-DESCE (pedido do Adauto, 18/11, item 7): "Eu seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o
        app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto".
        "Inverter" = o inverter que já existe (a peça vira: parte lisa pra dentro). Descer = ligar o tamponamento lateral do mesmo jeito da caixa

@@ -951,6 +951,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - O de cima passa por cima do livre também: a conta dele (`if(m.tt)` no `partsOf`), que já somava os laterais do móvel, soma `ttExL`/`ttExR`, a espessura do livre. Exemplo: de 1000 vai a 1030 com o esquerdo e a 1060 com os dois.
   - Tirar o livre apaga o campo e o de cima volta ao que era.
   - Falha em `2d50eaa` e passa na correção. Os 38 testes de tamponamento, o cenário e a auditoria passam em notebook e 440x956.
+- **Ajuste 2 (18/11):** "A ideia é criar um tamponamento flutuante ou separado do corpo do módulo, como se fosse uma extensão que vira mesa" e "Livre eu controlo como quiser, sem dependência, sem puxar o outro".
+  - Saiu o esticamento automático do de cima (`ttExL`/`ttExR`, do ajuste anterior). O de cima e o móvel não mudam.
+  - O livre começa embaixo do de cima e, no 2D, é independente: pelo meio anda pra qualquer lado; pelas pontas de cima ou de baixo muda o tamanho.
+  - Só não entra dentro de um móvel (peça sólida, CLAUDE.md §4).
+  - Tocar de novo no menu tira o livre daquele lado, mesmo depois de movido (marca `dm` do móvel).
+  - Falha em `efa5aaa` e passa na correção. Os 47 testes (tamponamento, peças soltas, cenário, catálogo) passam em notebook e 440x956.
 - **Limite:** só na parede do fundo, porque o tamponamento solto só é desenhado no 2D da parede do fundo. Na parede do lado o app avisa.
 - **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
   - Verifica: pergunta, sem menu do vão, livre com x1170, w30, z6, d375, b1750, h780 e móvel igual, corte 2×780x375, inverter, direito, arrasto aumenta com o topo no lugar e o móvel parado, tocar tira, corpo abre o vão, salvar e reabrir.

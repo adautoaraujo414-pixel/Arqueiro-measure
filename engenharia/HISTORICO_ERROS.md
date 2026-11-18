@@ -931,22 +931,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não verificado:** balcão de pia com cuba na pedra (só o `m.pia` está no teste); aéreo (não pedido).
 - **Commits:** `6a21984` (teste), `6a3b26f` (correção). Ramo `claude/arquemestre-vaos-balcao`.
 
-## TAMP-DESCE — 2 toques na ponta do tamponamento de cima descem o lateral (pedido do Adauto, 18/11, item 7)
-- **Pedido:** "Eu seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto". O "inverter" é o que já existe ("Esse inverter tamponamento é mesmo").
-- **Correção (bloco TAMP-DESCE no fim do `editor.html`):** 2 toques no "Tamponamento de cima" no 2D abrem `#ttq` com três opções:
-  - "⬇ Descer tamponamento esquerdo";
-  - "⬇ Descer tamponamento direito";
-  - "⇄ Inverter o de cima".
-  - O lado da ponta tocada fica em destaque.
-- **Reaproveitado, sem conta nova:**
-  - **Descer:** dispara o mesmo tratador da caixa `data-c="tl|tr"` do painel (`tpAntes`, `tpNaoCabe`, `confineAll`, `rowJoin`, aviso de não cabe). Tocar de novo tira.
-  - **Inverter:** `tpInvSet`.
-  - **Aumentar/diminuir:** o arrasto do lateral que já existe (TAMP-2D-ALVO).
+## TAMP-DESCE — 2 toques na ponta do tamponamento de cima descem um tamponamento livre (pedido do Adauto, 18/11, item 7)
+- **Pedido:** "Eu seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto".
+- **Esclarecimento dele (18/11):**
+  - "Tamponamento lateral é um tamponamento livre descendo esquerda ou direita";
+  - "não mudar forma que já existe, apenas implementar";
+  - "inverter é o mesmo dos outros já existente";
+  - "procure ferramentas que já estão funcionando e agregue".
+- **1ª versão (`7a54293`, substituída):** descer ligava o tamponamento esquerdo/direito do próprio móvel (`tl`/`tr`). Não era isso.
+- **Correção (bloco TAMP-DESCE no fim do `editor.html`):** 2 toques no "Tamponamento de cima" no 2D abrem `#ttq`.
+  - **Descer esquerdo/direito:** cria o **tamponamento solto que já existe** (`S.geo`, tipo `tamp`, o mesmo do "Tamponamento criado · arraste pra mover" do 3D), que já entra no corte (`geoCutPieces`, 30 mm = 2 × 15) e no 3D.
+  - Ele fica encostado na ponta do de cima (posição tirada das caixas do 3D, `__build`), com a mesma profundidade, do topo do de cima até a base do móvel.
+  - O tamponamento do móvel e o móvel não mudam. Tocar de novo tira.
+  - **Inverter:** o `tpInvSet` que já existe, no de cima.
+  - **Aumentar/diminuir:** no 2D, o tamponamento livre que desceu ganha uma alça por cima do desenho. A ponta de baixo anda com o dedo e o topo fica no lugar.
+  - Os outros tamponamentos soltos continuam só desenho no 2D.
   - 2 toques no corpo do móvel continuam abrindo o vão.
+- **Limite:** só na parede do fundo, porque o tamponamento solto só é desenhado no 2D da parede do fundo. Na parede do lado o app avisa.
 - **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
-  - Verifica: pergunta, sem menu do vão, desce o esquerdo com as mesmas peças da caixa do painel, inverte, desce o direito, arrasto aumenta, corpo abre o vão, salvar e reabrir.
-  - Falha antes e passa depois. Os 35 testes de tamponamento passam.
-- **Commits:** `2b1ba4c` e `7907232` (teste), `7a54293` (correção).
+  - Verifica: pergunta, sem menu do vão, livre com x1170, w30, z6, d375, b1750, h780 e móvel igual, corte 2×780x375, inverter, direito, arrasto aumenta com o topo no lugar e o móvel parado, tocar tira, corpo abre o vão, salvar e reabrir.
+  - Falha em `7907232` e em `7a54293`; passa na correção.
+  - Os 36 testes de tamponamento e o do cenário completo passam em notebook e 440x956.
+- **Commits:** `2b1ba4c`, `7907232` e o teste do esclarecimento; `7a54293` (1ª versão) e a correção do tamponamento livre.
 
 ## TORRE-DIRETO — torre / armário alto por vãos: painel por vãos sem ir pro 2D isolado (pedido do Adauto, 18/11, 2 fotos)
 - **Pedido:** "Ao clicar em torre/armário alto não aparece somente essa cabeçalho lateral… aparecer esse [painel] sem precisar de ir pro 2D isolado dele". Escolha dele (18/11): **painel por vãos + vão tocável no desenho do projeto**; 1 dedo arrastando continua movendo o móvel.

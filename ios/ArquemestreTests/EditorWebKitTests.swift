@@ -10954,6 +10954,51 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* VAOS-BALCAO (pedido do Adauto, 18/11, item 8 "editor de vãos padronizado"; resposta: "Aplicar isso para balcões de pia também"): o balcão
+       de pia (o "Balcão da pia", ou balcão com cuba na pedra em cima) entra no editor por vãos pelo "Editar só ele no 2D", igual à torre.
+       Exemplo do pedido: gaveta no vão de baixo e porta basculante no vão de cima, cada mudança só no vão escolhido.
+       Regra: só converte quando dá exatamente as mesmas peças do editor de hoje (corte e posição de cada peça; a frente de cima sobe e cobre a
+       travessa, sem moldura, como no editor normal). Balcão que não é de pia continua no editor de hoje. Sem mexer, sair volta igual. */
+    func testBalcaoDaPiaNoEditorPorVaosGavetaEmbaixoBasculanteEmCima() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var clk=function(a){var b=document.querySelector('#bd [data-rga="'+a+'"]');if(!b)return 'sem '+a;b.click();return 'ok'};
+        var corte=function(m){SPC={};return cutLines(m).map(function(l){return [l.qty,l.L,l.W,l.mat,l.names.join('+')].join('x')}).sort().join(',')};
+        var geo=function(m){SPC={};return partsOf(m).map(function(p){return p.name+'@'+[p.x,p.y,p.w,p.h].map(function(v){return Math.round(v*10)/10}).join(',')}).sort().join(',')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
+        newTpl(achar('inf','Balcão da pia (cuba)'));var a=S.m;a.x=1000;newTpl(achar('inf','Balcão 2 portas'));var b=S.m;b.x=2600;S.m=null;draw();await W(100);
+        var a0=JSON.stringify(a),ca=corte(a),ga=geo(a),cb=corte(b);
+        /* entrar e sair sem mexer: volta igual */S.m=a;soloOn(a);await W(80);R.entrou=(rgIs(a)?'por vãos':'editor de hoje')+' · corte '+(corte(a)===ca?'igual':'mudou')+' · peças '+(geo(a)===ga?'no mesmo lugar':'mudaram');soloOff();await W(80);R.saiuSemMexer=JSON.stringify(a)===a0?'igual':'mudou';
+        /* exemplo do pedido: vão de baixo com 2 gavetas de frente por fora, vão de cima com basculante */S.m=a;soloOn(a);await W(80);var mi=S.mods.indexOf(a);
+        var pk=function(path,tab){RG.sel={mi:mi,path:path};RG.dsel=null;RG.gsel=null;RG.tab=tab;panel()};
+        var passos=[];pk('r','div');passos.push(clk('sp|h|2'));pk('r','por');passos.push(clk('door|0'));pk('r.1','gav');passos.push(clk('ins|gav'));pk('r.1','gav');passos.push(clk('gex|1'));pk('r.1','gav');passos.push(clk('gn|-1'));pk('r.1','gav');passos.push(clk('gn|-1'));pk('r.0','por');passos.push(clk('dbas|up'));R.passos=passos.join(',');
+        SPC={};var P=partsOf(a),port=P.filter(function(p){return p.name==='Porta'}),fr=P.filter(function(p){return p.name==='Frente de gaveta'}).sort(function(x,y){return x.y-y.y});
+        R.portas=port.length+' '+(port[0]&&/BASCULANTE/.test(port[0].note||'')?'basculante':'comum')+' · y '+(port[0]?Math.round(port[0].y):'-');
+        R.gavetas=fr.length+' frentes · embaixo termina em '+(fr.length?Math.round(fr[fr.length-1].y+fr[fr.length-1].h):'-')+' · em cima começa em '+(fr.length?Math.round(fr[0].y):'-');
+        R.ordem=port[0]&&fr[0]&&port[0].y+port[0].h<fr[0].y?'basculante em cima, gavetas embaixo':'errado';
+        R.corte=cutLines(a).some(function(l){return /Frente de gaveta/.test(l.names.join())&&l.qty===2})&&cutLines(a).some(function(l){return l.names.indexOf('Porta')>=0&&l.qty===1})?'no corte':'faltou no corte';
+        R.outroBalcao=corte(b)===cb?'não mudou':'mudou';
+        /* salvar e reabrir: mesmas peças */var g1=geo(a),js=JSON.stringify(snapState());soloOff();loadState(JSON.parse(js));draw();await W(100);var a2=S.mods.filter(function(m){return rgIs(m)})[0];R.reaberto=a2&&geo(a2)===g1?'igual':'mudou';
+        /* balcão que não é de pia: continua no editor de hoje */var b2=S.mods.filter(function(m){return !rgIs(m)&&!m.pia})[0];var bj=JSON.stringify(b2);S.m=b2;soloOn(b2);await W(80);R.balcaoComum=(rgIs(b2)?'por vãos':'editor de hoje')+' · '+(JSON.stringify(b2)===bj?'igual':'mudou');soloOff();
+        /* torre continua indo pro editor por vãos */newTpl(achar('alto','Armário alto 2 portas'));var t=S.m;t.x=200;S.m=t;soloOn(t);await W(80);R.torre=rgIs(t)?'por vãos':'editor de hoje';soloOff();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["entrou"] as? String, "por vãos · corte igual · peças no mesmo lugar", "balcão de pia no 2D isolado: editor por vãos sem mudar nenhuma peça")
+        XCTAssertEqual(o["saiuSemMexer"] as? String, "igual")
+        XCTAssertEqual(o["passos"] as? String, "ok,ok,ok,ok,ok,ok,ok")
+        XCTAssertEqual(o["portas"] as? String, "1 basculante · y 10", "basculante no vão de cima cobrindo a travessa (frente sobe como no editor normal)")
+        XCTAssertEqual(o["gavetas"] as? String, "2 frentes · embaixo termina em 710 · em cima começa em 401", "gavetas por fora no vão de baixo, terminando onde termina a porta normal")
+        XCTAssertEqual(o["ordem"] as? String, "basculante em cima, gavetas embaixo")
+        XCTAssertEqual(o["corte"] as? String, "no corte")
+        XCTAssertEqual(o["outroBalcao"] as? String, "não mudou", "só o vão escolhido do balcão escolhido muda")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["balcaoComum"] as? String, "editor de hoje · igual", "balcão que não é de pia fica no editor de hoje")
+        XCTAssertEqual(o["torre"] as? String, "por vãos")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* TORRE-DIRETO (pedido do Adauto, 18/11, 2 fotos: "aparecer esse painel sem precisar ir pro 2D isolado"; escolha dele: "Painel por vãos + vão
        no desenho"): tocou na torre / armário alto no desenho do projeto, o painel do lado já mostra as abas por vãos (Divisões, Gavetas, Portas,
        Internos, Eletros) e os vãos ficam tocáveis no próprio desenho (fica rosa). 1 dedo arrastando continua movendo o móvel; 2 toques no vão abrem

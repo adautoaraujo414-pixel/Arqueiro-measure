@@ -12493,26 +12493,47 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 (function(){
  var sv=document.getElementById('svg');if(!sv)return;var TQ={k:-1,t:0,x:0,y:0};
  var NM={tl:'esquerdo',tr:'direito'};
+ /* caixa do tamponamento de cima no 3D (as peças dele: face e réguas) */function caixaDeCima(m){try{__build()}catch(_){}var mi=S.mods.indexOf(m),B=(window.__boxes?__boxes():[]).filter(function(q){return String(q.nm||'')===mi+':Tamponamento de cima'||String(q.nm||'')===mi+':Tamponamento de cima (peça única)'});if(!B.length)return null;
+  return {x0:Math.min.apply(null,B.map(function(q){return q.x0})),x1:Math.max.apply(null,B.map(function(q){return q.x1})),z0:Math.min.apply(null,B.map(function(q){return q.z0})),z1:Math.max.apply(null,B.map(function(q){return q.z1})),y1:Math.max.apply(null,B.map(function(q){return q.y1}))}}
+ function livreNovo(m,k){if(!m||m.wing)return null;var c=caixaDeCima(m);if(!c)return null;var t=30,b0=+m.b||0,top=Math.round(c.y1);
+  return {tp:'tamp',desce:k,x:Math.round(k==='tl'?c.x0-t:c.x1),w:t,z:Math.round(c.z0),d:Math.round(c.z1-c.z0),b:b0,h:Math.max(100,top-b0),c:(typeof projCor==='function'?projCor():'#e6d9be')}}
+ function livreDe(m,k){var n=livreNovo(m,k);if(!n)return null;return (S.geo||[]).filter(function(g){return g&&g.tp==='tamp'&&g.desce===k&&Math.abs(g.x-n.x)<1})[0]||null}
+ window.ttqLivre=livreDe;
  function deCima(el){try{var p=el&&el.closest&&el.closest('[data-p]'),g=p&&p.closest('#mod');if(!p||!g)return null;var mi=+g.dataset.mi,m=S.mods[mi];if(!m)return null;var P=partsOf(m)[+p.dataset.p];if(!P||!/^Tamponamento de cima/.test(P.name))return null;return {m:m,mi:mi,el:p}}catch(_){return null}}
  function fecha(){var q=document.getElementById('ttq');if(q)q.hidden=true}
  function abre(o,x,y){var q=document.getElementById('ttq');if(!q){q=document.createElement('div');q.id='ttq';q.style.cssText='position:fixed;z-index:96;background:#fff;color:#1b1f24;border:1px solid #d6dbe3;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:10px;max-width:min(92vw,360px);font:14px system-ui,sans-serif';document.body.appendChild(q);
    q.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-ttq],[data-ttqx]');if(!b)return;e.stopPropagation();if(b.dataset.ttqx!==undefined){fecha();return}var m=S.mods[+q.dataset.mi];if(!m){fecha();return}
     if(m.lock){toast('🔒 Módulo travado · 4 toques em cima destrava');return}var k=b.dataset.ttq;S.m=m;
     if(k==='inv'){snap();tpInvSet(m,'tt',!tpInv(m,'Tamponamento de cima'));try{tidy(m)}catch(_){}draw();panel();fecha();toast(tpInv(m,'Tamponamento de cima')?'⇄ Tamponamento de cima invertido: parte lisa pra dentro':'Tamponamento de cima do jeito normal: parte lisa pra fora');return}
-    /* mesma caixa do painel: o mesmo tratador faz tudo (espaço, empurrar, aviso de não cabe) */var era=!!m[k],ck=document.createElement('input');ck.type='checkbox';ck.dataset.c=k;ck.checked=era;ck.style.display='none';document.body.appendChild(ck);try{ck.click()}finally{ck.remove()}
-    fecha();try{panel()}catch(_){}if(!!m[k]!==era)toast(m[k]?'⬇ Tamponamento '+NM[k]+' desceu · toque nele e arraste pra aumentar ou diminuir':'Tamponamento '+NM[k]+' tirado')});
+    /* descer = tamponamento LIVRE (o "tamponamento solto" que já existe: S.geo tp 'tamp', entra no corte e no 3D) encostado na ponta do de
+       cima, descendo até a base do móvel; o tamponamento esquerdo/direito do próprio móvel não muda (Adauto, 18/11) */
+    fecha();var ja=livreDe(m,k);if(ja){snap();S.geo.splice(S.geo.indexOf(ja),1);try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}toast('Tamponamento livre '+NM[k]+' tirado');return}
+    var g=livreNovo(m,k);if(!g){toast('Descer tamponamento livre: por enquanto só nos móveis da parede do fundo');return}
+    snap();S.geo=S.geo||[];g.id=S.geo.reduce(function(a_,q){return Math.max(a_,+q.id||0)},0)+1;S.geo.push(g);try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}toast('⬇ Tamponamento livre '+NM[k]+' desceu · arraste a ponta de baixo pra aumentar ou diminuir')});
    document.addEventListener('pointerdown',function(e){var q2=document.getElementById('ttq');if(q2&&!q2.hidden&&!q2.contains(e.target))fecha()},true)}
   var m=o.m,r=o.el.getBoundingClientRect(),lado=x<r.left+r.width/2?'tl':'tr',bt=function(k,t,on){return '<button data-ttq="'+k+'" style="display:block;width:100%;text-align:left;margin:4px 0;padding:10px 12px;border-radius:9px;border:'+(on?'2px solid #1f6feb':'1px solid #c9d1db')+';background:#fff;font-weight:'+(on?800:600)+'">'+t+'</button>'};
   q.dataset.mi=o.mi;q.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>▮ Tamponamento de cima</b><button data-ttqx="1" style="border:0;background:none;font-size:18px">✕</button></div>'
-   +['tl','tr'].map(function(k){return bt(k,m[k]?'✓ Tamponamento '+NM[k]+' descido · tocar tira':'⬇ Descer tamponamento '+NM[k],k===lado)}).join('')
+   +['tl','tr'].map(function(k){return bt(k,livreDe(m,k)?'✓ Tamponamento '+NM[k]+' descido · tocar tira':'⬇ Descer tamponamento '+NM[k],k===lado)}).join('')
    +(tpInvOk(m,'tt')?bt('inv',tpInv(m,'Tamponamento de cima')?'✓ Invertido · de cima':'⇄ Inverter o de cima',false):'')
-   +'<div style="font-size:12px;color:#555;margin-top:4px">Depois de descer: toque no tamponamento e arraste pra aumentar ou diminuir.</div>';
+   +'<div style="font-size:12px;color:#555;margin-top:4px">Desce um tamponamento livre. Depois: arraste a ponta de baixo dele pra aumentar ou diminuir.</div>';
   q.hidden=false;var vw=window.innerWidth,vh=window.innerHeight,b=q.getBoundingClientRect(),lx=Math.max(8,Math.min(vw-b.width-8,x-b.width/2)),ly=y+18;if(ly+b.height>vh-8)ly=Math.max(8,y-b.height-18);q.style.left=lx+'px';q.style.top=ly+'px'}
  /* 2 toques no tamponamento de cima: antes do toque do módulo (que abriria o vão) */
  sv.addEventListener('pointerup',function(e){if(window.RO)return;var o=deCima(document.elementFromPoint(e.clientX,e.clientY));if(!o){TQ.k=-1;return}var now=Date.now();
   if(TQ.k===o.mi&&now-TQ.t<450&&Math.hypot(e.clientX-TQ.x,e.clientY-TQ.y)<34){TQ.k=-1;e.stopImmediatePropagation();var x=e.clientX,y=e.clientY;setTimeout(function(){abre(o,x,y)},60);return}
   TQ={k:o.mi,t:now,x:e.clientX,y:e.clientY}},true);
  window.ttqAbre=abre;
+ /* aumentar/diminuir no 2D: só o tamponamento livre que desceu por aqui ganha uma alça (os outros soltos continuam como estão: só desenho no 2D) */
+ /* a alça vai por cima de tudo (depois do desenho), senão o móvel do lado pegava o toque */
+ var GA=null,g0=window.geo2D;if(typeof g0==='function')geo2D=window.geo2D=function(L,B,k){GA=[L,B,k];return g0.apply(this,arguments)};
+ var dw0=window.draw;if(typeof dw0==='function')draw=window.draw=function(){GA=null;var r=dw0.apply(this,arguments);try{var ex=document.getElementById('gdesce');if(ex)ex.remove();if(!GA||window.RO||(window.wvCur&&/^[ed]$/.test(wvCur()||''))||window.SOLO2D)return r;var L=GA[0],B=GA[1],k=GA[2],h='';
+   (S.geo||[]).forEach(function(g){if(!g||g.tp!=='tamp'||!g.desce)return;var x=L+g.x*k,y=B-(g.b+g.h)*k,w=Math.max(10,g.w*k),x0=g.desce==='tl'?x+g.w*k-w:x;/* alça mínima de 10 cresce pra fora do móvel, não em cima dele */h+='<rect data-gdesce="'+g.id+'" x="'+x0+'" y="'+y+'" width="'+w+'" height="'+Math.max(10,g.h*k)+'" fill="#000" fill-opacity="0" style="cursor:ns-resize;touch-action:none"/>'});
+   if(h)sv.insertAdjacentHTML('beforeend','<g id="gdesce">'+h+'</g>')}catch(_){}return r};
+ var DG=null;
+ sv.addEventListener('pointerdown',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-gdesce]');if(!t||window.RO)return;var g=(S.geo||[]).filter(function(q){return String(q.id)===t.dataset.gdesce})[0];if(!g)return;e.stopImmediatePropagation();e.preventDefault();
+  if(g.lock){toast('🔒 Travado · destrave no 3D');return}var p=px(e);DG={g:g,pid:e.pointerId,y0:p.y,b0:+g.b||0,top:(+g.b||0)+(+g.h||0),mv:0};try{sv.setPointerCapture(e.pointerId)}catch(_){}},true);
+ sv.addEventListener('pointermove',function(e){if(!DG||e.pointerId!==DG.pid)return;e.stopImmediatePropagation();e.preventDefault();var p=px(e),dmm=(p.y-DG.y0)/K;if(!DG.mv){if(Math.abs(dmm*K)<2)return;DG.mv=1;snap()}
+  /* a ponta de cima fica no tamponamento de cima; a de baixo anda com o dedo */var b=Math.round(Math.max(0,Math.min(DG.top-100,DG.b0-dmm)));DG.g.b=b;DG.g.h=DG.top-b;if(typeof rafDraw==='function')rafDraw(function(){});else draw()},true);
+ ['pointerup','pointercancel'].forEach(function(n){sv.addEventListener(n,function(e){if(!DG||e.pointerId!==DG.pid)return;e.stopImmediatePropagation();var mv=DG.mv,g=DG.g;DG=null;try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}if(mv)toast('Tamponamento livre: '+g.h+' mm')},true)});
 })();
 </script>
 </body></html>

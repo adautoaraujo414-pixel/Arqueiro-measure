@@ -10781,6 +10781,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
+    /* FUNDO-SOBRE (regra do Adauto, 18/11, foto de uma torre com fundo embutido): fundo de armário é sempre sobreposto, parafusado atrás;
+       rasgo (embutido) só no fundo das gavetas. Módulo novo sai sobreposto mesmo se o Ajustes guardado estiver com rasgo; a aba Estrutura e os
+       Ajustes não oferecem mais rasgo; módulo antigo com rasgo não muda sozinho ao abrir: avisa e passa pra sobreposto com um toque (desfaz). */
+    func testFundoDoArmarioSempreSobrepostoRasgoSoNaGaveta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var acha=function(sel){for(var t=0;t<12;t++){S.tab=t;try{panel()}catch(_){}var b=document.getElementById('bd');if(b&&b.querySelector(sel))return b}return null};
+        var fundo=function(m){var d=fundoDims(m);return d.t+' '+Math.round(d.L)+'x'+Math.round(d.W)};
+        /* 1. Ajustes guardado com rasgo: módulo novo sai sobreposto */
+        PR.std=PR.std||{};PR.std.fundoTipo='rasgoL';loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;newTpl(achar('inf','Balcão 2 portas'));var m=S.mods[0];draw();
+        R.novo=fundo(m);
+        /* 2. aba Estrutura e Ajustes: sem botão de rasgo */
+        var bd=acha('.note');R.estruturaSemRasgo=!document.querySelector('[data-fti="rasgoL"],[data-fti="rasgo4"]')&&/Fundo sobreposto/.test((acha('[data-c="fundo"]')||{}).textContent||'');
+        R.ajustesSoSobreposto=JSON.stringify(STDOPT.fundoTipo.map(function(q){return q[0]}));
+        /* 3. projeto antigo com rasgo: abre igual, avisa, passa pra sobreposto com um toque e desfaz */
+        var js=JSON.parse(JSON.stringify(snapState()));js.mods[0].fundoTipo='rasgoL';loadState(js);draw();m=S.mods[0];S.m=m;R.antigoAoAbrir=fundo(m);
+        var b2=acha('[data-c="fundo"]');R.aviso=!!b2&&/ainda está com o fundo embutido/.test(b2.textContent)&&!!b2.querySelector('[data-fti="sobre"]');
+        histTick();await W(900);histTick();b2.querySelector('[data-fti="sobre"]').click();await W(100);R.passou=fundo(S.mods[0]);
+        document.getElementById('und').click();await W(250);R.desfez=fundo(S.mods[0]);
+        /* 4. gaveta continua com o fundo encaixado */
+        S.mods=[];newTpl(achar('inf','Gaveteiro 4 gavetas'));R.gaveta=/encaixa/.test((partsOf(S.mods[0]).filter(function(p){return /^Fundo de gaveta/.test(p.name)})[0]||{}).note||'');
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "sobre 900x820", "módulo novo: fundo sobreposto do tamanho do móvel")
+        XCTAssertEqual(o["estruturaSemRasgo"] as? Bool, true)
+        XCTAssertEqual(o["ajustesSoSobreposto"] as? String, "[\"sobre\"]")
+        XCTAssertEqual(o["antigoAoAbrir"] as? String, "rasgoL 884x689", "projeto antigo não muda sozinho ao abrir")
+        XCTAssertEqual(o["aviso"] as? Bool, true)
+        XCTAssertEqual(o["passou"] as? String, "sobre 900x820")
+        XCTAssertEqual(o["desfez"] as? String, "rasgoL 884x689", "desfazer volta o rasgo de antes (conta do rasgo não mudou)")
+        XCTAssertEqual(o["gaveta"] as? Bool, true, "fundo da gaveta continua encaixado")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

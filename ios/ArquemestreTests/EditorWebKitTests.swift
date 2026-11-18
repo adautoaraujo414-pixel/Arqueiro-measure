@@ -10968,7 +10968,7 @@ final class EditorWebKitTests: XCTestCase {
         var tap=function(x,y){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y)})};
         var tamp=function(m){SPC={};return partsOf(m).filter(function(p){return /^Tamponamento/.test(p.name)}).map(function(p){return p.name.replace(' (peça única)','')+'@'+[p.x,p.y,p.w,p.h].map(Math.round).join(',')}).sort().join(' | ')};
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
-        newTpl(achar('sup','Aéreo 2 portas'));var a=S.m;a.x=1200;a.tt=true;a.tl=false;a.tr=false;S.m=a;draw();panel();VB={x:0,y:0,w:900,h:560};setVB();draw();await W(200);
+        newTpl(achar('sup','Aéreo 2 portas'));/* laterais desmarcados no painel (tlM/trM = escolha da pessoa; senão o app liga sozinho no lado exposto) */var a=S.m;a.x=1200;a.tt=true;a.tl=false;a.tlM=1;a.tr=false;a.trM=1;S.m=a;draw();panel();VB={x:0,y:0,w:900,h:560};setVB();draw();await W(200);
         var mi=S.mods.indexOf(a),pi=partsOf(a).findIndex(function(p){return /^Tamponamento de cima/.test(p.name)});
         var tt=document.querySelector('#mod[data-mi="'+mi+'"] [data-p="'+pi+'"]');R.temDeCima=tt?'desenhado':'não';
         var r=tt.getBoundingClientRect(),xL=r.left+Math.min(12,r.width*0.08),yy=r.top+r.height/2;
@@ -10976,7 +10976,7 @@ final class EditorWebKitTests: XCTestCase {
         R.pergunta=q&&!q.hidden?[].map.call(q.querySelectorAll('[data-ttq]'),function(b){return b.textContent.trim()}).join(' / '):'sem pergunta';
         R.vaoNaoAbriu=document.getElementById('vmenu')?'abriu o vão':'ok';
         var antes=tamp(a);document.querySelector('#ttq [data-ttq="tl"]').click();await W(200);R.desceuEsq=(a.tl?'tl ligado':'tl desligado')+' · '+tamp(a);
-        /* mesmas peças da caixa "Tamponamento esquerdo" do painel */var b=JSON.parse(JSON.stringify(achar('sup','Aéreo 2 portas')));S.m=null;newTpl(b);var c=S.m;c.x=2600;c.tt=true;c.tl=false;c.tr=false;draw();S.m=c;S.tab=0;panel();var vias=(function(){for(var t=0;t<12;t++){S.tab=t;panel();var k_=document.querySelector('#bd [data-c="tl"]');if(k_){k_.click();return 'painel'}}return 'sem caixa'})();R.igualAoPainel=vias+' · '+(tamp(c)===tamp(a)?'mesmas peças':'diferente: '+tamp(c)+' ≠ '+tamp(a));
+        /* mesmas peças da caixa "Tamponamento esquerdo" do painel */var b=JSON.parse(JSON.stringify(achar('sup','Aéreo 2 portas')));S.m=null;newTpl(b);var c=S.m;c.x=2600;c.tt=true;c.tl=false;c.tlM=1;c.tr=false;c.trM=1;draw();S.m=c;S.tab=0;panel();var vias=(function(){for(var t=0;t<12;t++){S.tab=t;panel();var k_=document.querySelector('#bd [data-c="tl"]');if(k_){k_.click();return 'painel'}}return 'sem caixa'})();R.igualAoPainel=vias+' · '+(tamp(c)===tamp(a)?'mesmas peças':'diferente: '+tamp(c)+' ≠ '+tamp(a));
         var norm=function(s){return s.replace(/@-?\d+,/g,'@')};R.igualAoPainel=vias+' · '+(norm(tamp(c)).replace(/\d+,(-?\d+),/g,'$1,')===norm(tamp(a)).replace(/\d+,(-?\d+),/g,'$1,')?'mesmas peças':'diferente: '+tamp(c)+' ≠ '+tamp(a));
         /* inverter o de cima */S.m=a;draw();panel();await W(80);r=document.querySelector('#mod[data-mi="'+mi+'"] [data-p="'+partsOf(a).findIndex(function(p){return /^Tamponamento de cima/.test(p.name)})+'"]').getBoundingClientRect();var xR=r.right-Math.min(12,r.width*0.08);tap(xR,yy);await W(120);tap(xR,yy);await W(500);
         var bi=document.querySelector('#ttq [data-ttq="inv"]');var iv0=tpInv(a,'Tamponamento de cima'),bt=bi?bi.textContent.trim():'sem botão';if(bi)bi.click();await W(150);R.inverteu=(tpInv(a,'Tamponamento de cima')!==iv0?'virou':'não virou')+' · '+bt;

@@ -8858,7 +8858,7 @@ final class EditorWebKitTests: XCTestCase {
         var o=JSON.parse(localStorage.getItem(PRK)||'{}');R.ficaGuardado=o.moR===900&&o.cfR===1500&&o.dxR===250.5;R.naoMexeNoProjeto=JSON.stringify(snapState())===proj0;
         /* 5. digita num campo e, sem OK, toca num botão da tela: a janela não desce no meio do toque e o botão pega de primeira */
         await abre('#vlm [data-vlx="dxR"]');'300'.split('').forEach(kb);var chip=document.querySelector('#vlm [data-vmx="3"]'),y0=chip.getBoundingClientRect().top;chip.focus();await Promise.resolve();await Promise.resolve();var y1=chip.getBoundingClientRect().top;
-        R.janelaNaoDesceNoMeioDoToque=Math.abs(y1-y0)<1;chip.click();await W(260);R.botaoPegaDePrimeiraEOValorEntra=PR.mult===3&&PR.dxR===300&&vp()===brl(mat*3+2700)&&!tecl();
+        R.janelaNaoDesceNoMeioDoToque=Math.abs(y1-y0)<1;chip.click();await W(260);R.botaoPegaDePrimeiraEOValorEntra=PR.mult===3&&PR.dxR===300&&vp()===brl(mat*3+2700)&&!tecl();R.botaoPegaDetalhe='mult '+PR.mult+' · dxR '+PR.dxR+' · valor '+vp()+' (esperado '+brl(mat*3+2700)+') · teclado aberto '+tecl();
         R.janelaVoltaProLugar=(document.getElementById('vlm').style.transform||'')==='';
         /* botão que não tira o foco do campo (acontece em alguns aparelhos): o que foi digitado entra do mesmo jeito e o teclado fecha */
         await abre('#vlm [data-vlx="dxR"]');'400'.split('').forEach(kb);B().querySelector('[data-vmx="2.5"]').click();await W(320);R.botaoSemTirarOFocoTambemAplica=PR.mult===2.5&&PR.dxR===400&&vp()===brl(mat*2.5+2800)&&!tecl();await digita('#vlm [data-vlx="dxR"]','250,5');
@@ -8922,7 +8922,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ficaGuardado"] as? Bool, true)
         XCTAssertEqual(o["naoMexeNoProjeto"] as? Bool, true)
         XCTAssertEqual(o["janelaNaoDesceNoMeioDoToque"] as? Bool, true)
-        XCTAssertEqual(o["botaoPegaDePrimeiraEOValorEntra"] as? Bool, true)
+        // N15 (18/11): no iOS falha às vezes na 1ª tentativa e passa na repetição; o detalhe mostra qual parte falhou (a conferência é a mesma)
+        XCTAssertEqual(o["botaoPegaDePrimeiraEOValorEntra"] as? Bool, true, "\(o["botaoPegaDetalhe"] ?? "")")
         XCTAssertEqual(o["janelaVoltaProLugar"] as? Bool, true)
         XCTAssertEqual(o["botaoSemTirarOFocoTambemAplica"] as? Bool, true)
         XCTAssertEqual(o["valorFechadoEDepoisCampoNovo"] as? Bool, true)

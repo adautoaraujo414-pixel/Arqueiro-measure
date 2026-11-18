@@ -1583,7 +1583,7 @@ function tampOpt(sd){var m=S.m,A=m[sd+'A']||'cava',nm=sd==='tl'?'Tamponamento es
  return h}
 function R(k,l){return '<div class="g"><label>'+l+'</label><input type="text" inputmode="none" data-calc="1" data-r="'+k+'" value="'+S.m[k]+'"></div>'}
 /* moldura de acabamento que entra de verdade: marcada pela pessoa (moldOn) entra sempre e as frentes param embaixo dela; marcada só por padrão, num balcão com travessa e portas/gavetas, as frentes cobrem a travessa e a moldura não entra (era o comportamento antigo — projetos antigos não mudam sozinhos) */
-function moldFr(m){return (m.v||[]).some(function(o){return o&&(o.k==='door'||o.k==='drawers'||o.k==='slide'||o.k==='tempero')})}
+function moldFr(m){if(m&&!m.sup&&+m.h<1500&&!m.stkB&&window.rgIs&&window.rgIs(m)){/* VAOS-BALCAO: balcão por vãos tem frente quando algum vão tem porta ou gaveta (mesma regra do editor normal) */var tem=function(n){return !!n&&((n.p&&+n.p.n>0)||n.t==='gav'||(n.c||[]).some(tem))};return tem(m.rt)}return (m.v||[]).some(function(o){return o&&(o.k==='door'||o.k==='drawers'||o.k==='slide'||o.k==='tempero')})}
 function moldEff(m){if(!m||!m.mold)return false;if(m.moldOn)return true;var us=false;try{us=!m.sup&&typeof underStone==='function'&&underStone(m)}catch(_){}return !!((m.sup||m.rack||!m.trav||!moldFr(m))&&!us)}
 window.moldEff=moldEff;
 function RT(k,l){return '<div class="chk"><input type="checkbox" data-rc="'+k+'" '+(S.m[k]?'checked':'')+'> '+l+'</div>'}
@@ -10320,7 +10320,12 @@ window.rgGv=function(m){return {R:gvR(m),D:gvD(m)}};
 function gCx(m,n){var g=(n&&n.g)||{};if(g.cx!=null)return !!g.cx;return /^(quarto|closet)$/.test(roomOf())}
 window.rgGCx=gCx;
 function gvF(m){var f=m.gvF;return (f!=null&&f!==''&&isFinite(+f)&&+f>=0)?+f:2.5}
-function doorBox(m,L,R,nd,cava,dn){var e=L.e,pV=mv(m,'pV',15),pS=(nd>1||m.sup)?mv(m,'pSn',6):mv(m,'pS1',7),pDv=mv(m,'pDv',4),atL=Math.abs(R.x0-L.X0)<.6,atR=Math.abs(R.x1-L.X1)<.6,atT=Math.abs(R.y0-L.Y0)<.6,atB=Math.abs(R.y1-L.Y1)<.6,dv=Math.min(pS,(e-pDv)/2),cL=atL?pS:dv,cR=atR?pS:dv,up=cava?(dn?10:20):pV,dw=cava?(dn?20:10):pV,cT=atT?up:-3,cB=atB?dw:-3;
+/* VAOS-BALCAO (pedido do Adauto, 18/11: editor por vãos também no balcão de pia): no balcão a frente de cima sobe e cobre a travessa frontal,
+   com a mesma conta do editor normal (partsOf: tX_ e tXv_). Só balcão (não superior, abaixo de 1500, não "em cima"); torre não muda */
+function rgBalTx(m,L,cava){if(!m||m.sup||+m.h>=1500||m.stkB||!m.trav)return 0;var e=L.e,top=+m.folga||0,vT=L.Y0,tX=Math.max(0,topo(m)-e);
+ if(tX>0&&m.mold&&(m.rack||m.moldOn)){var mh0=Math.min(+m.moldMm||30,top+topo(m));tX=Math.max(0,Math.min(tX,vT-mv(m,'pV',15)-mh0-2-(+m.frUp||0)))}
+ if(cava&&moldEff(m)){var mh=Math.min(+m.moldMm||30,top+topo(m));tX=Math.min(tX,vT-mv(m,'pV',15)-mh-30-(+m.frUp||0))}return Math.max(0,tX)}
+function doorBox(m,L,R,nd,cava,dn){var e=L.e,pV=mv(m,'pV',15),pS=(nd>1||m.sup)?mv(m,'pSn',6):mv(m,'pS1',7),pDv=mv(m,'pDv',4),atL=Math.abs(R.x0-L.X0)<.6,atR=Math.abs(R.x1-L.X1)<.6,atT=Math.abs(R.y0-L.Y0)<.6,atB=Math.abs(R.y1-L.Y1)<.6,dv=Math.min(pS,(e-pDv)/2),cL=atL?pS:dv,cR=atR?pS:dv,up=cava?(dn?10:20):pV,dw=cava?(dn?20:10):pV,cT=atT?up+rgBalTx(m,L,cava):-3,cB=atB?dw:-3;
  return {x:R.x0-cL,y:R.y0-cT,w:R.x1-R.x0+cL+cR,h:R.y1-R.y0+cT+cB,cT:cT,cB:cB,atT:atT,atB:atB}}
 /* ---------- peças (chamado de dentro do partsOf) ---------- */
 window.rgParts=function(c){var m=c.m,add=c.add,e=c.e,dep=c.dep,W=c.W,F=c.F,i=c.i,v=c.v,L=lay(m),ghost=!!(window.SOLO2===m&&RG.ghost!==false),cava=!!v.cava,GD=gvD(m),RC=gvR(m),ST=stoneTop(),gi=0;
@@ -10458,7 +10463,16 @@ function rgFrom(m){if(!m||m.corner||isRg(m)||m.nicho)return null;if((m.shv||[]).
  return cols.length>1?{s:'v',c:cols}:cols[0]}
 function rgInit(m,rt){var v0=(m.v&&m.v[0])||{},cv=(m.v||[]).some(function(v){return v&&v.cava});m.rt=rt||{};m.v=[{k:'rt',n:1,cava:cv,px:v0.px,pxc:v0.pxc}];m.div=[];m.dr=[];m.shv=[]}
 window.rgConvert=function(m){if(isRg(m))return true;var r=rgFrom(m);if(!r)return false;snap();rgInit(m,r);return true};
-var so0=window.soloOn;soloOn=window.soloOn=function(m){try{if(m&&!isRg(m)&&((!m.sup&&+m.h>=1500)||m.stkB)&&!m.corner){if(window.rgConvert(m))setTimeout(function(){try{toast('✏️ Toque no vão do desenho: ele fica rosa e só ele muda')}catch(_){}},900)}}catch(_){}RG.sel=null;RG.dsel=null;return so0.apply(this,arguments)};
+/* VAOS-BALCAO (pedido do Adauto, 18/11: "aplicar isso para balcões de pia também"): balcão de pia = balcão (não superior, abaixo de 1500, não canto)
+   marcado como pia (m.pia, o "Balcão da pia") ou com cuba na pedra em cima dele. No "Editar só ele no 2D" ele vira editor por vãos, mas só se a conversão der exatamente as
+   mesmas peças (corte: quantidade, medidas, espessura e nome; e a posição de cada peça). Se mudaria alguma, fica o editor de hoje, com aviso. */
+window.rgBalPia=function(m){try{if(!m||m.sup||m.corner||m.stkB||+m.h>=1500||isRg(m))return false;if(m.pia)return true;var x0=m.x,x1=m.x+m.w,top=(+m.b||0)+(+m.h||0);
+ return (m.wing?(S.stw||[]).filter(function(q){return q&&q.wall===m.wing}):(S.stones||[])).some(function(st){if(!(Math.abs((+st.t||0)-top)<60))return false;return (st.items||[]).some(function(it){if(it.k!=='cuba'||(typeof isLix==='function'&&isLix(it)))return false;var a=(+st.x||0)+(+it.x||0),b=a+(+it.w||0);return a<x1-1&&x0<b-1})})}catch(_){return false}};
+function rgBalSig(m){try{SPC={}}catch(_){}try{return cutLines(m).map(function(l){return [l.qty,l.L,l.W,l.mat,(l.names||[]).join('+')].join('x')}).sort().join(',')+'#'+partsOf(m).map(function(p){return p.name+'@'+[p.x,p.y,p.w,p.h].map(function(v){return Math.round((+v||0)*10)/10}).join(',')}).sort().join(',')}catch(_){return '?'}}
+window.rgBalTenta=function(m){var bak=JSON.stringify(m),s0=rgBalSig(m),sn=window.snap,ok=false;try{snap=window.snap=function(){}}catch(_){}try{ok=!!window.rgConvert(m)}catch(_){ok=false}finally{try{snap=window.snap=sn}catch(_){}}
+ if(!ok)return false;if(rgBalSig(m)!==s0){var o=JSON.parse(bak);Object.keys(m).forEach(function(k){delete m[k]});Object.keys(o).forEach(function(k){m[k]=o[k]});try{SPC={}}catch(_){}setTimeout(function(){try{toast('Este balcão fica no editor de sempre: no editor por vãos alguma peça do corte mudaria')}catch(_){}},900);return false}
+ try{window.__edited=1;hs.push(bak);if(hs.length>40)hs.shift()}catch(_){}setTimeout(function(){try{toast('✏️ Toque no vão do desenho: ele fica rosa e só ele muda')}catch(_){}},900);return true};
+var so0=window.soloOn;soloOn=window.soloOn=function(m){try{if(m&&!isRg(m)&&((!m.sup&&+m.h>=1500)||m.stkB)&&!m.corner){if(window.rgConvert(m))setTimeout(function(){try{toast('✏️ Toque no vão do desenho: ele fica rosa e só ele muda')}catch(_){}},900)}else if(window.rgBalPia(m))window.rgBalTenta(m)}catch(_){}RG.sel=null;RG.dsel=null;return so0.apply(this,arguments)};
 var nt0=window.newTpl||newTpl;newTpl=window.newTpl=function(i){var t=typeof i==='object'?i:TPL[i],r=nt0.apply(this,arguments);try{var m=S.m;if(t&&m&&S.mods.indexOf(m)>=0){if(t.rt){m.rt=JSON.parse(JSON.stringify(t.rt));m.v=[{k:'rt',n:1,cava:!!(t.v&&t.v[0]&&t.v[0].cava)}];m.div=[]}else if(t.free0){rgInit(m,{});setTimeout(function(){try{if(S.mods.indexOf(m)>=0)soloOn(m)}catch(_){}},60)}}}catch(_){}return r};
 var vmo=window.vmenuOpen;if(vmo){vmenuOpen=window.vmenuOpen=function(mi){var m=S.mods[mi];if(isRg(m)){/* no projeto (TORRE-DIRETO): os 2 toques no vão já abrem o menu do vão; não entra no 2D isolado */if(window.rgDir(m))return;S.m=m;if(window.SOLO2!==m)soloOn(m);return}return vmo.apply(this,arguments)}}
 var ib0=window.ibOverlay;window.ibOverlay=function(m){if(isRg(m))return '';return ib0?ib0.apply(this,arguments):''};

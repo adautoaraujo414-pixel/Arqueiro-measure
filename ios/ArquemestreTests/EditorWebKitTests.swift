@@ -9983,7 +9983,8 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["normal"] as? String, "balcão aparece · aéreo aparece · aviso 0")
         XCTAssertEqual(o["comErroNoBalcao"] as? String, "balcão fica a caixa (1 peça · 900 × 820) · aéreo aparece · erros [\"módulo 1 (peças): teste de erro\",\"módulo 1: teste de erro\"]", "com a pilha inteira o erro aparece nas peças e no módulo (igual no Chrome e no Safari)")
-        XCTAssertEqual(o["aviso"] as? String, "⚠ 3D: erro no módulo 1 (peças): teste de erro (+1) · mande um print desse aviso")
+        /* SEM-AVISO-ERRO (pedido do Adauto, 18/11): o erro continua guardado (window.ERR3, usado no diagnóstico), mas não aparece mais o aviso "mande um print" */
+        XCTAssertEqual(o["aviso"] as? String, "")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -10594,13 +10595,17 @@ final class EditorWebKitTests: XCTestCase {
         var po=partsOf,bad=S.mods[0];partsOf=function(m){if(m===bad)throw new Error('teste');return po.apply(this,arguments)};open3D();await W(200);R.erroNasPecas=(window.ERR3||[]).join(' | ');
         /* depois de reler o projeto (o módulo novo é outro objeto) ele aparece: 3D refeito sozinho e avisado */
         await W(1200);var bx=document.getElementById('d3dg');R.refez=(bx&&!bx.hidden?bx.querySelector('b').textContent:'sem aviso')+' · módulo 1 agora '+(diag3().mods[0].caixas>0?'aparece':'não aparece');partsOf=po;fecha();
+        R.manual=(diag3Show(true)&&!document.getElementById('d3dg').hidden)?'abre quando pede':'não abre';fecha();
         /* o diagnóstico tem só dados técnicos */var t=JSON.stringify(diag3());R.semDadosDoCliente=/cliente|telefone|nome/i.test(t)?'tem':'não tem';
         document.querySelector('[data-dg3]')?0:0;
         R.erros=__errs.slice(e0).filter(function(x){return !/teste/.test(x)}).join(' | ');return JSON.stringify(R,null,1);
         """#)
         XCTAssertEqual(o["normal"] as? String, "ok,ok · aviso não")
         XCTAssertEqual(o["erroNasPecas"] as? String, "módulo 1 (peças): teste")
-        XCTAssertEqual(o["refez"] as? String, "🔄 3D refeito: os módulos que não tinham aparecido agora aparecem · módulo 1 agora aparece")
+        /* SEM-AVISO-ERRO (pedido do Adauto, 18/11: "remova o aviso sobre erro de códigos no app"): o 3D continua se refazendo sozinho, mas o quadro amarelo
+           com "Copiar diagnóstico" não abre mais sozinho; o diagnóstico continua no botão 🔎 do menu (abre só quando a pessoa pede) */
+        XCTAssertEqual(o["refez"] as? String, "sem aviso · módulo 1 agora aparece")
+        XCTAssertEqual(o["manual"] as? String, "abre quando pede")
         XCTAssertEqual(o["semDadosDoCliente"] as? String, "não tem")
         XCTAssertEqual(o["erros"] as? String, "")
     }

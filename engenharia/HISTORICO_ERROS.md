@@ -805,3 +805,59 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `DesktopCompatTest.ponteDoEditorDeMoveis`: a ponte responde true/false.
 - **Validação:** CI Android 641 e Windows 150 (commit 2089f26).
 - **Pendente:** teste de ponta a ponta no aparelho (gravar vídeo no editor → backup → restaurar em outro aparelho). Precisa de aparelho real; ainda não verificado.
+
+## GAV-SET e GAV-EXCESSO — altura da lateral da gaveta vale pro conjunto todo (pedido do Adauto, 18/11)
+- **Pedido:** mudar a altura da lateral de uma gaveta muda as laterais de todas as gavetas do mesmo conjunto (acima e abaixo), não só as duas da gaveta tocada.
+- **Reproduzido:**
+  - gaveteiro de 4: a lateral da gaveta 3 em 100 deixava só a gaveta 3 com 100; as outras continuavam com 57;
+  - corte antes: 2× 107, 2× 57, 2× 100, 2× 70.
+- **Causa:** o ajuste à mão (`m.po` da lateral) entra só na caixa daquela gaveta (`gbOv` soma as 2 laterais da mesma gaveta).
+- **Achado junto (GAV-EXCESSO):** pedir mais que o máximo da frente guardava o excesso (pediu 120, ficou 107,8, mas guardou +63). A redução seguinte saía errada (pediu 70, dava 83,8). Já acontecia com 1 gaveta, antes deste pedido.
+- **Correção:** `gavSetSync`, ligado no `poAlign`, que já roda depois de digitar, dos botões finos e do arrasto no 3D.
+  - Lê a altura que o `partsOf` deu e põe o mesmo ajuste de altura em todas as gavetas do mesmo vão do mesmo módulo, inclusive a editada, com a diferença exata.
+  - Não mexe em frente, largura, profundidade, posição, folgas nem corrediça.
+  - Se alguma não cabe, o conjunto volta pra altura anterior e avisa.
+  - Desfazer e refazer: uma operação só.
+  - Quando a altura pedida passa do máximo em todas, todas ficam no máximo, como já era com 1 gaveta.
+- **Teste:** `testLateralDeUmaGavetaMudaTodasAsGavetasDoConjunto`.
+  - Cobre 2, 3, 4 e 5 gavetas, mexendo na primeira, numa do meio e na última; aumentar, passar do máximo e diminuir; desfazer e refazer; frentes; salvar e reabrir; plano de corte; outro conjunto do mesmo módulo; outro módulo.
+  - Falha antes (fab3d8b) e passa depois (0f45970).
+- **Fora deste pedido (sugestão):** a altura da frente/costa da gaveta também é altura da caixa e não foi ligada ao conjunto. A caixa interna do guarda-roupa (caixote) usa outras peças.
+
+## DUPLO-TOQUE — 2 toques não funcionavam na geladeira e nas torres altas (pedido do Adauto, 18/11)
+- **Auditoria:** 2 toques em todos os itens do catálogo (567 itens, um editor novo por item).
+  - Falhavam 8: as 2 caixas da geladeira, a Torre do banheiro e 5 torres da sala (torre 2 portas, torre 1 porta, armário alto de correr, cristaleira, estante torre).
+  - Os demais abrem o que já era aprovado: menu do vão, ajustes das gavetas, configuração da porta de correr.
+- **Causa (2 classes, mesmo mecanismo):** o `pointerup` dos 2 toques procura o módulo com `closest('#mod')`. Dois desenhos ficam por cima do módulo, fora do grupo dele:
+  - o eletro no nicho (`data-ap`, a geladeira);
+  - o puxador invisível da prateleira interna do módulo selecionado (`data-ish`, faixa de 20 px).
+- **Correção:** só para os 2 toques, quando o toque cai num desses dois, vale o módulo que está embaixo (`elementsFromPoint`).
+  - 1 toque continua igual: pega a geladeira ou a prateleira.
+  - 4 toques não travam por cima.
+  - Sem tratamento por tipo de móvel.
+- **Teste:** `testDoisToquesFuncionamNaGeladeiraENasTorresComPrateleira`, com toque e mouse, zoom normal e com zoom; o módulo não sai do lugar. Falha antes (7a2b277) e passa depois (f18e74f).
+- **Regressão:** auditoria por categoria antes e depois, sem nenhum item que funcionava parando de funcionar.
+
+## CANTO-SOZINHO — abrir o projeto empurrava o móvel da parede do lado (achado no pedido das paredes, 18/11, P0)
+- **Reproduzido:** projeto salvo com o balcão da parede da esquerda a 49 mm do canto. Só de abrir e esperar 0,25 s, ele ia de 630 para 581 e ficava salvo assim.
+  - Em 15 projetos gerados (abrir, tocar, trocar de parede), 7 tinham móveis mudando sozinhos. Um armário foi de 1034 para 558 e uma geladeira de 100 para 715.
+- **Causa:** o encosto no canto entre paredes (A55, 15/11: "chegou perto, encostam") não sabia quem foi mexido. Na 1ª conferência depois de abrir, empurrava o módulo da parede do lado (ou o do fundo).
+  - Isso fere a decisão de 16/11: o app nunca muda posição sozinho.
+- **Correção:** cada módulo tem a posição anotada.
+  - Abrir o projeto e desfazer só anotam onde cada um está.
+  - Só o módulo que mudou de posição ou medida, ou acabou de entrar, anda até encostar.
+- **Testes:**
+  - `testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel`: abrir; geladeira com 1 e 2 toques; fundo → esquerda → direita → fundo pela barra; escolher um módulo na esquerda e trocar; salvar e reabrir. Nada muda. Falha antes (84e7db9) e passa depois (062a536).
+  - O `testModulosDeParedesDiferentesEncostamNoCantoSemEntrar` (A55) continua passando.
+  - Sonda com 15 projetos: 0 mudanças depois da correção.
+- **Risco anotado:** posição digitada perto do canto ainda encosta (a pessoa mexeu). Fica pra decisão do Adauto se a posição digitada deve valer exatamente.
+
+## PAREDE-ESPELHADA — a parede da esquerda aparece invertida no 2D (pedido do Adauto, 18/11) · diagnóstico, sem correção ainda
+- **Medido:**
+  - No 3D, o fundo fica em z = 0. O balcão C da esquerda, perto do canto do fundo, está em z 846; o D, mais pra frente, em z 2225.
+  - Olhando a parede da esquerda de dentro do ambiente, o canto do fundo fica à **direita**. O 2D mostra C à esquerda e D à direita: **invertido**.
+  - Fundo e direita estão certos.
+- **Causa:** as paredes do lado guardam x a partir do canto do fundo. O 2D desenha x = 0 à esquerda da tela nas duas paredes; na da esquerda devia ser o contrário.
+- **Proposta (aguarda a imagem e o sim do Adauto):** corrigir só a projeção da parede da esquerda (tela = comprimento − x − largura), sem mudar os dados salvos.
+  - Cada móvel continua desenhado igual: portas, dobradiças e gavetas não espelham.
+  - Junto: o canto ocupado (`wvOcc`, `confineAll`) e as pedras (`wvStCorner`, forma em L e recortes) passam pro outro lado.

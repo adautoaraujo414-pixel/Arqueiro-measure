@@ -1118,7 +1118,8 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           /* 🎯 só o módulo no 3D tem o ✏️ 2D só ele; no 2D só dele: vãos com porta, gaveta, divisória e 🧊 3D só ele */
-          window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();var R={};var mi=1,m=S.mods[mi];var others=JSON.stringify(S.mods.filter(function(q){return q!==m}));
+          /* VAOS-BALCAO (pedido do Adauto, 18/11: "aplicar isso para balcões de pia também"): o módulo 1 do demo é o balcão da pia, que agora entra no editor por vãos no 2D isolado (coberto em testBalcaoDaPiaNoEditorPorVaos…). Este teste continua conferindo o editor de vão de sempre num balcão comum: o módulo 3 (balcão 2 portas) */
+          window.MINI3OFF=1;PR.setupDone=1;demoScene();draw();var R={};var mi=3,m=S.mods[mi];var others=JSON.stringify(S.mods.filter(function(q){return q!==m}));
           open3D();await new Promise(function(r){setTimeout(r,300)});focOn(mi,'front');await new Promise(function(r){setTimeout(r,200)});
           var b2=document.querySelector('#foc3 [data-fc2d]');R.btn2d=!!b2&&b2.offsetParent!==null;
           /* 16/11 (BAT-FLAKY): espera o estado chegar em vez de um tempo fixo · com o computador carregado o tempo fixo não bastava; as expectativas não mudaram */var ate_=async function(f,ms){var t0=Date.now();while(!f()&&Date.now()-t0<(ms||5000))await new Promise(function(r){setTimeout(r,50)})};b2.click();await new Promise(function(r){setTimeout(r,300)});await ate_(function(){return window.SOLO2===m&&getComputedStyle(document.getElementById('v3')).display==='none'});R.solo=window.SOLO2===m;R.v3=getComputedStyle(document.getElementById('v3')).display;R.foc=!window.FOC3;
@@ -9797,8 +9798,9 @@ final class EditorWebKitTests: XCTestCase {
         R.cliqueDepoisDoToque='depois do toque '+s1+' · depois do click '+JSON.stringify(RG.sel)+' · click mandado pelo app quando o iPhone não manda: '+((window.__tapClick||0)>c0?'sim':'não');
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["modelosComEditorPorVaos"] as? String, "50 de 142 do catálogo", "+5 montar do zero (15/11)")
-        XCTAssertEqual(o["toquesNoVaoSemClick"] as? String, "119 de 119 escolheram o vão certo")
+        /* +1 (pedido do Adauto, 18/11: "aplicar isso para balcões de pia também"): o Balcão da pia entra no editor por vãos (VAOS-BALCAO) */
+        XCTAssertEqual(o["modelosComEditorPorVaos"] as? String, "51 de 142 do catálogo", "+5 montar do zero (15/11) · +1 balcão da pia (18/11)")
+        XCTAssertEqual(o["toquesNoVaoSemClick"] as? String, "120 de 120 escolheram o vão certo")
         XCTAssertEqual(o["falhas"] as? String, "0")
         XCTAssertEqual(o["cliqueDepoisDoToque"] as? String, "depois do toque {\"mi\":0,\"path\":\"r\"} · depois do click {\"mi\":0,\"path\":\"r\"} · click mandado pelo app quando o iPhone não manda: sim")
         XCTAssertEqual(o["erros"] as? String, "")

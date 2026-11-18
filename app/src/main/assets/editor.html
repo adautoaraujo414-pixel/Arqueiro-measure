@@ -12432,7 +12432,9 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    Nada salvo muda; fundo e direita não mudam. */
 (function(){
  var NS='http://www.w3.org/2000/svg';window.WVMIRX=null;
- function eixo(){/* L e R do desenho da parede: L = OX, R = OX + S.W·K (mesma conta do draw) */try{if(typeof OX==='number'&&typeof K==='number'&&K>0)return OX+OX+(+S.W||0)*K}catch(_){}return null}
+ function eixo(){/* espelha o quadro inteiro (0 a 900, a largura do desenho do setVB): o que cabe no desenho normal cabe no espelhado. Espelhar só em volta
+     da parede jogava pra fora do quadro o que fica à direita dela (cota, "⚠ pé-direito não medido" do móvel no fim da parede). Valor fixo: o desenho
+     não anda ao escolher um móvel (o 2º toque cai no mesmo lugar) */return 900}
  function desvira(sv,ax){/* cada texto: espelha de volta em volta do próprio centro, no espaço do pai (fica legível, no lugar espelhado) */
   [].forEach.call(sv.querySelectorAll('#wvmir text'),function(t){try{var bb=t.getBBox(),m=t.transform&&t.transform.baseVal&&t.transform.baseVal.numberOfItems?t.transform.baseVal.consolidate().matrix:null,
     xs=[bb.x,bb.x+bb.width].map(function(x){return m?m.a*x+m.c*(bb.y+bb.height/2)+m.e:x}),c=(xs[0]+xs[1])/2,old=t.getAttribute('transform')||'';

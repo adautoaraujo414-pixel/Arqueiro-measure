@@ -882,6 +882,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Confere: arrasta junto com o dedo, fica dentro da tela, não fecha, não mexe no móvel; minimiza; abre de novo; reabre inteiro no lugar escolhido; as abas continuam funcionando.
   - Falha antes e passa depois.
   - O `testEditorPorVaosDoisToquesNoVaoAbreMenuRapido…` continua passando.
+- **Achado na bateria do Windows (51–53), corrigido:** com o quadro arrastado até embaixo, o `▢ abrir` e o abrir de novo com 2 toques punham o quadro inteiro em lugares diferentes (8 px).
+  - **Causa:** um usava 8 px de margem da borda de baixo e o outro 0.
+  - **Correção:** a mesma regra nos dois.
+  - **Teste:** cenário "arrastado até embaixo" (antes 306 × 314, depois igual).
+  - **Validação:** Windows 54 com 366/366 e local com 366/366.
+- **CI:** a bateria do Windows ganhou o filtro opcional `so` no disparo manual, pra investigar um teste sem rodar os 366.
 
 ## N07/N10 — etapa do iPhone/iPad vermelha sem nenhuma conferência falhar (CI 613–626) · causa achada em 18/11
 - **Sintoma:** o app de teste "caía" no começo da bateria do editor e o xcodebuild repetia e passava, mas marcava a etapa como falha.

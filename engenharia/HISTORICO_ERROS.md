@@ -947,6 +947,10 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **Aumentar/diminuir:** no 2D, o tamponamento livre que desceu ganha uma alça por cima do desenho. A ponta de baixo anda com o dedo e o topo fica no lugar.
   - Os outros tamponamentos soltos continuam só desenho no 2D.
   - 2 toques no corpo do móvel continuam abrindo o vão.
+- **Ajuste (18/11, "ela começa por baixo do tamponamento superior"):** o lateral livre começa embaixo do de cima e vai do fundo dele até a base do móvel (no aéreo 2 portas: h750, não 780).
+  - O de cima passa por cima do livre também: a conta dele (`if(m.tt)` no `partsOf`), que já somava os laterais do móvel, soma `ttExL`/`ttExR`, a espessura do livre. Exemplo: de 1000 vai a 1030 com o esquerdo e a 1060 com os dois.
+  - Tirar o livre apaga o campo e o de cima volta ao que era.
+  - Falha em `2d50eaa` e passa na correção. Os 38 testes de tamponamento, o cenário e a auditoria passam em notebook e 440x956.
 - **Limite:** só na parede do fundo, porque o tamponamento solto só é desenhado no 2D da parede do fundo. Na parede do lado o app avisa.
 - **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
   - Verifica: pergunta, sem menu do vão, livre com x1170, w30, z6, d375, b1750, h780 e móvel igual, corte 2×780x375, inverter, direito, arrasto aumenta com o topo no lugar e o móvel parado, tocar tira, corpo abre o vão, salvar e reabrir.

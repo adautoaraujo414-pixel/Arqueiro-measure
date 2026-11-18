@@ -11620,6 +11620,47 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDES (pedido do Adauto, 18/11): projeto com fundo, esquerda e direita e a geladeira. Selecionar a geladeira, 2 toques nela, trocar
+       fundo → esquerda → direita → fundo (pela barra da parede), editar um módulo numa parede do lado, salvar e reabrir: nenhum móvel muda de
+       lugar, de parede ou de medida. CANTO-SOZINHO: antes, o 1º toque depois de abrir o projeto (até na geladeira) empurrava o balcão da parede
+       do lado que estava a menos de 8 cm do canto (decisão de 16/11: o app nunca muda posição sozinho). */
+    func testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var ev=function(n,x,y){var el=document.elementFromPoint(x,y);var o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0};el.dispatchEvent(n==='click'?new MouseEvent(n,o):new PointerEvent(n,o))};
+        var tap=function(x,y){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y)})};
+        var foto=function(){var a=[];(S.mods||[]).forEach(function(o){a.push('m:'+[o.n||'',Math.round(o.x),o.w,o.h,o.d,+o.b||0,o.wing||'f'].join(','))});(S.fr||[]).forEach(function(o){a.push('g:'+[Math.round(o.x),o.w,o.h,+o.b||0,o.wall||'f'].join(','))});return a.sort().join(' | ')};
+        var cur=function(){return (typeof wvCur==='function'&&wvCur())||'f'},bt=function(w){var b=document.querySelector('#wvbar [data-wvg="'+w+'"]');if(b)b.click();return !!b};
+        /* projeto salvo: balcão no canto do fundo, caixa da geladeira, balcão na esquerda a 49 mm do canto (sem encostar), aéreo na direita */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};newTpl(achar('inf','Balcão 2 portas'));S.m.x=5;newTpl(achar('alto','Caixa da geladeira duplex / inverse (laterais + aéreo)'));
+        var e_=achar('inf','Balcão 1 porta'),d_=achar('sup','Aéreo 2 portas');newTpl(e_);S.m.wing='e';S.m.x=630;newTpl(d_);S.m.wing='d';S.m.x=500;
+        var js=JSON.stringify(snapState());loadState(JSON.parse(js));var f0=foto();draw();await W(400);R.aoAbrir=foto()===f0?'nada mudou':foto();
+        /* 1. selecionar a geladeira e dar 2 toques nela */
+        var a=document.querySelector('[data-ap]').getBoundingClientRect(),x=a.left+a.width/2,y=a.top+a.height/2;tap(x,y);await W(450);R.selecionou=window.SELAP!=null;
+        tap(x,y);await W(120);tap(x,y);await W(480);R.doisToques=!!document.getElementById('vmenu');try{vmenuClose()}catch(_){}await W(400);
+        R.depoisDaGeladeira=foto()===f0?'nada mudou':foto();
+        /* 2. fundo → esquerda → direita → fundo → direita → esquerda → fundo */
+        var seq=[];for(const w of ['e','d','f','d','e','f']){bt(w);await W(350);seq.push(w+(cur()===w?'':'≠'+cur()))}R.paredes=seq.join(' ');R.depoisDasParedes=foto()===f0?'nada mudou':foto();
+        /* 3. editar (escolher) um módulo na parede da esquerda e ir pra direita */
+        bt('e');await W(300);S.m=S.mods[0];draw();try{panel()}catch(_){}await W(400);bt('d');await W(300);R.editouETrocou=cur();bt('f');await W(400);R.depoisDeEditar=foto()===f0?'nada mudou':foto();
+        /* 4. salvar e reabrir */
+        var js2=JSON.stringify(snapState());loadState(JSON.parse(js2));draw();await W(400);R.reaberto=foto()===f0?'nada mudou':foto();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["aoAbrir"] as? String, "nada mudou", "abrir o projeto e esperar não empurra o balcão que está perto do canto")
+        XCTAssertEqual(o["selecionou"] as? Bool, true, "1 toque pega a geladeira")
+        XCTAssertEqual(o["doisToques"] as? Bool, true, "2 toques na geladeira abrem o menu do módulo")
+        XCTAssertEqual(o["depoisDaGeladeira"] as? String, "nada mudou", "tocar na geladeira não empurra o balcão da parede do lado")
+        XCTAssertEqual(o["paredes"] as? String, "e d f d e f", "cada toque na barra deixa ativa a parede escolhida")
+        XCTAssertEqual(o["depoisDasParedes"] as? String, "nada mudou")
+        XCTAssertEqual(o["editouETrocou"] as? String, "d", "troca de parede depois de escolher um módulo")
+        XCTAssertEqual(o["depoisDeEditar"] as? String, "nada mudou")
+        XCTAssertEqual(o["reaberto"] as? String, "nada mudou")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

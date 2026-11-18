@@ -43,7 +43,7 @@ Este documento serve para outra conta ou sessão do Claude continuar **exatament
 | Branch | Para quê | Estado |
 |---|---|---|
 | `integracao` (68c132b) | Base de integração. Tem a etapa de segurança (N01–N06, N09, N13) e N07/N10 | Android 642 ok, Windows 152 ok, iOS 625 **verde inteira** (iPhone, iPad, Release, capturas, StoreKit), bateria 359/359 |
-| `gavetas-paredes` (1626b57) | Pedidos de 18/11 em cima da integração: GAV-SET, DUPLO-TOQUE, CANTO-SOZINHO, PORTA-CAVA, MENU-ARRASTA, FUNDO-SOBRE, FITA-CORTE | Bateria 366/366 local e Windows 54 (366/366), Android 645 ok. iOS 628 rodando (commit 76bb82c, sem MENU-ARRASTA/FUNDO-SOBRE): rodar iOS de novo no topo |
+| `gavetas-paredes` (1626b57) | Pedidos de 18/11 em cima da integração: GAV-SET, DUPLO-TOQUE, CANTO-SOZINHO, PORTA-CAVA, MENU-ARRASTA, FUNDO-SOBRE, FITA-CORTE | Bateria 366/366 local e Windows 54 (366/366), Android 645 ok. iOS 628 **verde inteira** (76bb82c); iOS 629 no topo (com MENU-ARRASTA/FUNDO-SOBRE/FITA-CORTE) rodando |
 | `candidata-android` (6b0e9cd) | O que está publicado no Android | Congelada |
 | `seg-nomes`, `seg-backup-ref`, `seg-salvar`, `seg-estado`, `seg-videos`, `win-testes` | Correções isoladas da etapa de segurança | Já integradas na `integracao` |
 | `protocolo-cirurgico` | Tem `AUDITORIA_GERAL_ARQUEMESTRE_2026-11-17.md`, `PLANO_EXECUCAO_2026-11-17.md`, `AUDITORIA_LINHAS.md`, `PLANO_MESTRE` | Documentação; trazer pra integração quando autorizado |
@@ -111,7 +111,7 @@ O resto está em `REGRAS_MARCENARIA.md`.
 | N04 | 7 dados fora do `snapState` (painéis da parede, sala, rodapé, escolhas do 3D) | Corrigido pela causa (embrulho de `snapState`/`loadState` no mesmo padrão; desfazer inclusive). Bateria ok |
 | N05 | Atualização por cima da versão anterior | Android ok (636 → 90005, 8/8 sha256, cópia antes-de-usar). Windows ok (win-143 → 60001, 8/8, 1 instalação). **iOS pendente** (falta o commit publicado) |
 | N06 | Backup entre plataformas | Validado nas 3 (Android 640, Windows 149, iOS 621) |
-| N07/N10 | iOS vermelho sem falha | **Causa comprovada:** limite de 120 s por teste. Teste dividido (113 s → 54 + 61 s). Falta uma CI iOS confirmar |
+| N07/N10 | iOS vermelho sem falha | **Causa comprovada:** limite de 120 s por teste. Teste dividido (113 s → 54 + 61 s). **Confirmado no iOS 628** (verde inteira, 0 quedas) |
 | N08 | iPad nunca rodava | Corrigido (iPad passou na 621, 622 e 625) |
 | N09 | Testes do Windows (pedra, PDF, aditivos) | Corrigido (CI 153) |
 | N12 | Teste de licença | **Bloqueado:** regra de licença não pode ir pro repositório público |
@@ -143,7 +143,7 @@ O resto está em `REGRAS_MARCENARIA.md`.
 8. **N14, N22 e a posição digitada perto do canto:** decisões do Adauto.
 
 ## 9. Próximos passos exatos
-1. Conferir o iOS 628 (iPad, StoreKit, e se ainda houve queda com o teste dividido). Depois rodar o iOS no topo da `gavetas-paredes`.
+1. Conferir o iOS 629 (topo da `gavetas-paredes`). O 628 já passou inteiro, sem queda.
 2. Integrar a `gavetas-paredes` na `integracao` só depois do iOS verde: bateria e CI das 3 plataformas.
 3. N20 (paredes espelhadas) em branch nova a partir da `gavetas-paredes`, com teste que falha antes.
 4. Perguntar ao Adauto: o commit do iOS publicado (N05), a pergunta do §8.2, N14, N22, a posição digitada no canto e a régua de acabamento (referência).

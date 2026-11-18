@@ -12449,13 +12449,16 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    Nada salvo muda; fundo e direita não mudam. */
 (function(){
  var NS='http://www.w3.org/2000/svg';window.WVMIRX=null;
- function eixo(){/* espelha o quadro inteiro (0 a 900, a largura do desenho do setVB): o que cabe no desenho normal cabe no espelhado. Espelhar só em volta
-     da parede jogava pra fora do quadro o que fica à direita dela (cota, "⚠ pé-direito não medido" do móvel no fim da parede). Valor fixo: o desenho
-     não anda ao escolher um móvel (o 2º toque cai no mesmo lugar) */return 900}
+ function eixo(){/* L e R do desenho da parede: L = OX, R = OX + S.W·K (mesma conta do draw). Espelha em volta da própria parede: no celular a vista é
+     enquadrada na parede, e espelhar o quadro inteiro (0–900, 18/11 cedo) jogava a parede pra fora da vista (CI iOS 630, iPhone). Valor fixo pra
+     parede: o desenho não anda ao escolher um móvel */try{if(typeof OX==='number'&&typeof K==='number'&&K>0)return OX+OX+(+S.W||0)*K}catch(_){}return null}
  function desvira(sv,ax){/* cada texto: espelha de volta em volta do próprio centro, no espaço do pai (fica legível, no lugar espelhado) */
   [].forEach.call(sv.querySelectorAll('#wvmir text'),function(t){try{var bb=t.getBBox(),m=t.transform&&t.transform.baseVal&&t.transform.baseVal.numberOfItems?t.transform.baseVal.consolidate().matrix:null,
     xs=[bb.x,bb.x+bb.width].map(function(x){return m?m.a*x+m.c*(bb.y+bb.height/2)+m.e:x}),c=(xs[0]+xs[1])/2,old=t.getAttribute('transform')||'';
-    t.setAttribute('transform','translate('+(2*c)+',0) scale(-1,1)'+(old?' '+old:''))}catch(_){}})}
+    /* texto que passaria da borda esquerda do desenho (ex.: "⚠ pé-direito não medido" do móvel no fim da parede, que fica à direita da linha
+       dele): vai pro outro lado da linha, no espaço de cima do móvel (só o texto anda; o desenho fica parado) */
+    var w=Math.abs(xs[1]-xs[0]),esq=ax-(c+w/2),d=esq<4?w+12:0;
+    t.setAttribute('transform','translate('+(2*c-d)+',0) scale(-1,1)'+(old?' '+old:''))}catch(_){}})}
  function aplica(){var sv=document.getElementById('svg');window.WVMIRX=null;if(!sv)return;var on=!!(window.wvCur&&wvCur()==='e'&&!window.SOLO2D);if(!on)return;var ax=eixo();if(ax===null)return;
   if(sv.querySelector('#wvmir'))return;var g=document.createElementNS(NS,'g');g.setAttribute('id','wvmir');g.setAttribute('transform','matrix(-1 0 0 1 '+ax+' 0)');
   [].slice.call(sv.childNodes).forEach(function(n){if(n.nodeType===1&&/^(defs|style)$/i.test(n.tagName))return;g.appendChild(n)});sv.appendChild(g);window.WVMIRX=ax;desvira(sv,ax)}

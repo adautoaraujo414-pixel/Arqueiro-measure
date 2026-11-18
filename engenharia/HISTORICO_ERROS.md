@@ -897,3 +897,16 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Causa:** esse teste abre e fecha um módulo de cada jeito de abrir do catálogo, com esperas fixas da animação. Levava 113 s no Chromium, e o limite do iOS é 120 s por teste (`-default-test-execution-time-allowance 120`). No simulador carregado passava do limite, o sistema derrubava o app de teste e a queda aparecia no teste seguinte (`testArmarioDeCanto…`).
 - **Correção:** o teste foi dividido em 2 partes, com as mesmas conferências e os mesmos itens (54 s e 61 s). Nada foi afrouxado.
 - **Risco anotado:** outros testes de varrer o catálogo estão entre 91 e 94 s. Um deles (`testNadaDeEnfeiteTelaPrincipal3D…`) caiu na 618. Dividir do mesmo jeito se algum passar de 100 s ou cair de novo.
+
+## SEM-AVISO-ERRO — tirar o aviso de erro de código que abria sozinho (pedido do Adauto, 18/11)
+- **Pedido:** "Remova também o texto de aviso"; na pergunta, ele respondeu "Aviso sobre erro de códigos no app". É o quadro amarelo com "Copiar diagnóstico" que aparece numa das fotos dele.
+- **O que abria sozinho:**
+  - o quadro do PEDIDO 45, com "⚠ 3D: N módulo(s) sem aparecer" ou "🔄 3D refeito…" e "Copiar diagnóstico";
+  - o mesmo quadro quando o desenho do 3D falhava;
+  - o aviso "⚠ 3D: erro no … · mande um print desse aviso".
+- **Mudança:**
+  - nada disso abre mais sozinho;
+  - o 3D continua se refazendo sozinho quando um módulo não aparece;
+  - o erro continua guardado (`ERR3`, `__diag3Antes`);
+  - o diagnóstico continua no botão 🔎 do menu, quando a pessoa pede.
+- **Testes:** `testModuloQueNaoApareceNo3DViraAvisoERefazSozinho` e `testErroNoMontarUmModuloNo3D…`, com as expectativas atualizadas por este pedido. Falham antes e passam depois. O diagnóstico manual foi conferido.

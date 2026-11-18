@@ -7705,7 +7705,9 @@ final class EditorWebKitTests: XCTestCase {
         for(var i=0;i<S.mods.length;i++){var r=document.querySelector('#mod[data-mi="'+i+'"] rect[data-mi]');if(!r)continue;var rc=r.getBoundingClientRect(),x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,el=document.elementFromPoint(x,y)||r;pe('pointerdown',el,x,y);await W(30);pe('pointerup',svg,x,y);await W(60);await chk('tocar no módulo '+i)}
         /* 2. passar por todas as abas com cada tipo de módulo escolhido */
         var tabs=[].slice.call(document.querySelectorAll('#tabs [data-t]')).map(function(t){return t.dataset.t});
-        for(var k=0;k<S.mods.length;k+=3){S.m=S.mods[k];draw();for(var j=0;j<tabs.length;j++){var tb=document.querySelector('#tabs [data-t="'+tabs[j]+'"]');if(!tb)continue;tb.click();await W(40);await chk('aba '+tb.textContent.trim()+' no módulo '+k)}}
+        /* TORRE-DIRETO (pedido do Adauto, 18/11): escolher o módulo refaz o painel, como o toque faz (antes o roteiro só redesenhava e o painel ficava o do
+           módulo anterior). A torre escolhida no projeto mostra as abas por vãos: o roteiro passa por elas também (olhar não muda) */
+        for(var k=0;k<S.mods.length;k+=3){S.m=S.mods[k];draw();panel();var rgT=[].slice.call(document.querySelectorAll('#tabs [data-rgt]')).map(function(t){return t.dataset.rgt});for(var j2=0;j2<rgT.length;j2++){var tr=document.querySelector('#tabs [data-rgt="'+rgT[j2]+'"]');if(!tr)continue;tr.click();await W(40);await chk('aba por vãos '+tr.textContent.trim()+' no módulo '+k)}if(rgT.length)R.abasPorVaos=(R.abasPorVaos||0)+rgT.length;for(var j=0;j<tabs.length;j++){var tb=document.querySelector('#tabs [data-t="'+tabs[j]+'"]');if(!tb)continue;tb.click();await W(40);await chk('aba '+tb.textContent.trim()+' no módulo '+k)}}
         document.querySelector('#tabs [data-t="0"]').click();
         /* 3. abrir e fechar: 3D, Lista, Valores, Clientes, Ajustes, Catálogo, Planta */
         open3D();await W(700);await chk('abrir o 3D');try{re3()}catch(e){}await chk('3D redesenhar');

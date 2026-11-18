@@ -885,6 +885,30 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Risco visual anotado:** na parede esquerda o desenho fica mais à direita do quadro. Com parede larga, a ponta da cota "Parede X" passa por baixo dos botões flutuantes (cadeado, lixeira, calculadora), como já acontece com o lado direito no desenho normal.
 - **Commits:** `19ae71e`, `df6ea18`, `e2c1272`, `8896510`, `4460b2e`, `44553aa`, `4079a63`, `6bcdf6e`.
 
+## AUDITORIA-GEOMETRIA e CENARIO-COMPLETO — itens 9 e 11 do pedido de 18/11 (auditoria, sem defeito novo)
+- **Item 9, motor geométrico e plano de corte** (`testCatalogoInteiroMesmaPecaNo2DNo3DENoCorteSemDecimo`): no catálogo inteiro (142 modelos, 2971 peças de corte), nenhum problema:
+  - nenhuma peça de corte com medida zero;
+  - nenhuma com décimo (peça só em mm inteiro);
+  - nenhuma fora do plano de corte;
+  - nenhuma do corte fora do 3D;
+  - nenhuma caixa do 3D sem peça de origem.
+  - Comportamento correto conferido: o tamponamento de 30 mm do aéreo sai no corte como 2 réguas de 15 (chave "(régua)"); face e engrosso são partes da mesma peça.
+  - O guarda da fita (`374faea`, "não aplicar desconto da fita de 1 mm no corte") continua valendo.
+  - Teste de guarda: não houve defeito pra reproduzir antes.
+- **Item 11, cenário completo** (`testCenarioCompletoDoClienteAoBackupTudoCoerente`), passando em notebook, 440x956 (iPhone) e 1032x1376 (iPad). Passos:
+  1. cliente e projeto, paredes medidas;
+  2. 4 módulos;
+  3. gaveteiro pra parede esquerda;
+  4. balcão da pia por vãos (basculante e 2 gavetas) e torre em 3 partes;
+  5. tamponamento de cima e esquerdo;
+  6. medida interna (vão 1170 = 1200 − 2×15);
+  7. 3D sem peça faltando nem inventada;
+  8. corte sem décimo;
+  9. salvar, fechar e reabrir com peças e corte iguais;
+  10. backup lido e restaurado com peças e corte iguais;
+  11. o projeto original continua.
+- **Regra que já existia, registrada (decisão do Adauto se quiser mudar):** ao passar um móvel pra outra parede, o lado que fica exposto ganha o tamponamento automático (`tlAuto`/`trAuto`). Medida e posição não mudam; só entra essa peça.
+
 ## VAOS-BALCAO — editor por vãos também no balcão de pia (pedido do Adauto, 18/11, item 8; resposta: "Aplicar isso para balcões de pia também")
 - **Pedido (item 8):** escolher qualquer vão e pôr porta (comum ou basculante), gaveta (uma ou conjunto), prateleira (com engrosso ou sem recuo), divisória e puxador. Cada mudança só no vão escolhido. Exemplo dele: no balcão da pia, gaveta no vão de baixo e basculante no de cima.
 - **Antes:** o editor por vãos (`rgFrom`/`rgInit`/`rgParts`) só ligava em torres (`soloOn`: altura ≥ 1500 ou "em cima").

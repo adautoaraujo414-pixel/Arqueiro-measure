@@ -147,7 +147,7 @@
 | D23 | Identidade estável única de módulo e peça (corte, editor, 3D) | PARCIAL | P1 | estender ao editor e ao 3D | modUid/pcIds só na branch plano-corte | só no plano de corte | | | | = inicial |
 | D24 | Testes numéricos 3D = lista = corte em todas as montagens | PARCIAL | P1 | moldura, frontal, modelos | travessao a862927 | só o travessão tem teste numérico | | | | = inicial |
 | D25 | Tamponamento editável por 2 toques no 3D, campo numérico e ±1 mm | NÃO FEITO | P1 | fila; aguarda referência | — | nenhuma (só a seta antiga, A06) | | | | = inicial |
-| D26 | Tamponamento superior com lateral descendo à esquerda/direita | NÃO FEITO | P1 | fila; vídeo não chegou | — | grep no editor: inexistente | | | | = inicial |
+| D26 | Tamponamento superior com lateral descendo à esquerda/direita | FEITO (18/11) | P1 | 2 toques na ponta do de cima perguntam descer esquerdo/direito e inverter (TAMP-DESCE) | 7a54293 | testDoisToquesNaPontaDoTamponamentoDeCima… | | | | ramo vaos-balcao |
 | D27 | Mostrar medida livre real do vão (largura e altura) | NÃO FEITO | P1 | fila | — | grep no editor: inexistente | | | | = inicial |
 | D28 | 2 toques de longe: quadro + destaque do módulo; 2 toques no destino movem | VALIDADO | — | — | ajustes-3d 9d3bcce | testA6DoisToquesDeLonge… 13/13 em 1024 e 1920; Windows 45; iOS 611 | | | | = inicial |
 | D29 | Mover entre paredes (módulo, geladeira, eletro, porta/janela) bloqueando só colisão real; nada preso | VALIDADO | — | — | ajustes-3d 2ac1ddc, 6aacd8a | testA6MoverPor2ToquesConfereColisao…, testA6DepoisDeBloquear… (telas.log 8812) | | | | = inicial |

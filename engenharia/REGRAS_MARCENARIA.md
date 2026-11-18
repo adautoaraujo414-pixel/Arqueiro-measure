@@ -49,3 +49,12 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
   - Módulo antigo que já está com rasgo não muda sozinho ao abrir: a aba Estrutura avisa e tem o botão "Passar pra sobreposto", que pode ser desfeito.
   - As contas do sobreposto e do rasgo não mudaram.
   - Teste: `testFundoDoArmarioSempreSobrepostoRasgoSoNaGaveta`.
+
+## Fita de borda no plano de corte (Adauto, 18/11/2026)
+- **Regra:** "Não aplicar desconto da fita de 1 mm no plano de corte". O corte sai com a medida da peça de MDF, e a fita não diminui a peça.
+- **Conferido em 18/11:**
+  - nenhuma branch desconta a espessura da fita no corte, na lista nem no orçamento; a fita entra só em metros;
+  - o 0,8 mm existe só no desenho do 3D, na tira na frente da peça;
+  - 142 módulos do catálogo e 2971 peças: nenhuma medida de corte de 1 a 4 mm menor que a peça.
+- **Teste permanente:** `testPlanoDeCorteNaoDescontaAFitaDeBorda`.
+- **Decisão anterior (DECISOES, 17/11):** a fita de 1 mm como padrão continua valendo só pro desenho e pro acabamento, nunca pra encurtar a peça de corte.

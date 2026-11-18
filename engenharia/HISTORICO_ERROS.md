@@ -852,15 +852,32 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Sonda com 15 projetos: 0 mudanças depois da correção.
 - **Risco anotado:** posição digitada perto do canto ainda encosta (a pessoa mexeu). Fica pra decisão do Adauto se a posição digitada deve valer exatamente.
 
-## PAREDE-ESPELHADA — a parede da esquerda aparece invertida no 2D (pedido do Adauto, 18/11) · diagnóstico, sem correção ainda
-- **Medido:**
-  - No 3D, o fundo fica em z = 0. O balcão C da esquerda, perto do canto do fundo, está em z 846; o D, mais pra frente, em z 2225.
-  - Olhando a parede da esquerda de dentro do ambiente, o canto do fundo fica à **direita**. O 2D mostra C à esquerda e D à direita: **invertido**.
-  - Fundo e direita estão certos.
-- **Causa:** as paredes do lado guardam x a partir do canto do fundo. O 2D desenha x = 0 à esquerda da tela nas duas paredes; na da esquerda devia ser o contrário.
-- **Proposta (aguarda a imagem e o sim do Adauto):** corrigir só a projeção da parede da esquerda (tela = comprimento − x − largura), sem mudar os dados salvos.
-  - Cada móvel continua desenhado igual: portas, dobradiças e gavetas não espelham.
-  - Junto: o canto ocupado (`wvOcc`, `confineAll`) e as pedras (`wvStCorner`, forma em L e recortes) passam pro outro lado.
+## PAREDE-ESPELHADA — a parede da esquerda aparece invertida no 2D (pedido do Adauto, 18/11) · corrigido na representação
+- **Medido:** no 3D o fundo fica em z = 0. Olhando a parede da esquerda de dentro do ambiente, o canto do fundo fica à **direita**. O 2D mostrava o canto à esquerda: **invertido**. Fundo e direita estavam certos.
+- **Causa raiz:** as paredes do lado guardam x a partir do canto do fundo. O `draw()` desenha x = 0 à esquerda da tela nas duas paredes laterais; na da esquerda devia ser o contrário.
+- **1ª tentativa (revertida, `c10930d`):** virar as coordenadas (`wvFlipE`) e espelhar o 3D por dentro.
+  - Quebrou 4 testes aprovados: pedra, encosto entre paredes, canto em L e espaçador.
+  - No 3D isolado, deu 32 sobreposições de módulo dentro de módulo.
+- **Decisão do Adauto (18/11):** "Manter físico, corrigir nomes". O 3D, as posições, os dados e o corte não mudam. Só o 2D da parede esquerda é desenhado como visto de dentro, e os nomes dos lados no painel seguem quem olha.
+- **Correção (só representação, bloco no fim do `editor.html`):**
+  - Depois de `draw()`, na parede `e` (fora do "Só ele no 2D"), o conteúdo do `#svg` vai pro grupo `#wvmir` com `matrix(-1 0 0 1 900 0)`. Espelha o quadro inteiro (0–900), então o que cabe no desenho normal cabe no espelhado.
+  - Cada texto é desvirado em volta do próprio centro e continua legível.
+  - `px(ev)` devolve o ponto espelhado. Toque, 2 toques no vão e arrasto usam as contas de sempre, a partir do canto.
+  - Nomes: o painel (`#bd`) troca esquerdo↔direito nos móveis da parede esquerda (`ladoNaEsquerda`). Não troca nomes de parede, nem "lado do canto", nem os seletores de parede.
+- **Ajuste (18/11):** a 1ª versão espelhava em volta da parede (eixo `2·OX + W·K`). Com o móvel no fim da parede, o "⚠ pé-direito não medido" do móvel saía 108 px pra fora do quadro.
+  - Medir o texto e empurrar o desenho não serve: o aviso some e aparece conforme o móvel escolhido, e o desenho andava entre o 1º e o 2º toque (o 2º toque caía fora do vão).
+  - Correção: eixo fixo 900, a largura do quadro (`setVB`).
+- **Não mudou:** `S.mods`, `m.x`, `m.wing`, `tl`/`tr`, `pk`, o ajuste por peça (`po`), `partsOf`, `cutLines`, lista, plano de corte, orçamento e 3D.
+- **Fica com o nome guardado (pendente de decisão):** a lista e o plano de corte. Lá o nome da peça faz parte da chave da marca "✓ cortada" (`offKey`/`ck`), e trocar apagaria marcas já salvas.
+- **Testes:**
+  - `testParedeDaEsquerdaNaoFicaEspelhadaNo2DNemNo3D`: ordem 2D × 3D, tamponamento, texto legível, dados e corte iguais.
+  - `testParedeEsquerdaToqueDoisToquesEArrastoSeguemODesenho`
+  - `testParedeEsquerdaNomesDosLadosSeguemQuemOlha`
+  - `testProjetoAntigoComMoveisNaParedeEsquerdaAbreIgual`: posições, peças, corte, pedra com cuba, orçamento, 3D caixa a caixa, salvar e reabrir.
+  - `testParedeEsquerdaAvisoNaoSaiDoQuadroEDesenhoNaoAndaAoEscolher`
+  - Cada um falha antes da sua correção e passa depois. Os 4 testes que quebraram na 1ª tentativa passam.
+- **Risco visual anotado:** na parede esquerda o desenho fica mais à direita do quadro. Com parede larga, a ponta da cota "Parede X" passa por baixo dos botões flutuantes (cadeado, lixeira, calculadora), como já acontece com o lado direito no desenho normal.
+- **Commits:** `19ae71e`, `df6ea18`, `e2c1272`, `8896510`, `4460b2e`, `44553aa`, `4079a63`, `6bcdf6e`.
 
 ## PORTA-CAVA — porta cava na aba Portas das torres (pedido do Adauto, 18/11, foto do iPad)
 - **Pedido:** "Adicionar portas cava aqui também", na aba Portas do editor por vãos (torre 780 × 2600 × 560).

@@ -967,7 +967,10 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
     | Encolheu 200 | 2×620x585 | 21 | 2 |
     | Tirou | — | 19 | 1 |
 
-  - **Risco identificado (já existia pra toda peça solta, não mexido):** a fita de borda da peça solta não entra nos metros de fita do orçamento (`tC`/`tT` não mudam). Decisão do Adauto.
+  - **Fita no orçamento:** a fita de borda da peça solta não entrava nos metros de fita do orçamento. O Adauto decidiu (18/11): "Fita de borda no orçamento pode aplicar sim do tamponamento".
+    - **Regra:** a mesma do tamponamento do móvel (`mCost`/`edgeMm`): 4 bordas, 2 × (comprimento + largura). Com 25 mm ou mais vai na fita larga 35 mm; mais fino, na fita da cor. Só tamponamento, não a placa.
+    - **Validação:** livre 820 × 585 de 30 mm dá +2,81 m de fita larga; encolhido 620 dá +2,41 m; tirado volta a 0; livre de 15 mm 700 × 500 dá +2,4 m na fita da cor.
+    - Falha antes (0 m) e passa depois.
 - **Limite:** só na parede do fundo, porque o tamponamento solto só é desenhado no 2D da parede do fundo. Na parede do lado o app avisa.
 - **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
   - Verifica: pergunta, sem menu do vão, livre com x1170, w30, z6, d375, b1750, h780 e móvel igual, corte 2×780x375, inverter, direito, arrasto aumenta com o topo no lugar e o móvel parado, tocar tira, corpo abre o vão, salvar e reabrir.

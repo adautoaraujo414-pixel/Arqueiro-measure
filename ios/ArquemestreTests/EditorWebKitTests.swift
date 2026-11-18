@@ -10950,6 +10950,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDE-ESPELHADA · NOMES (decisão do Adauto, 18/11: "manter físico, corrigir nomes"): na parede ESQUERDA, o lado guardado como "esquerdo"
+       do móvel fica à direita de quem olha. O app passa a CHAMAR esse lado de "direito" no painel, nos botões, na lista e no plano de corte,
+       sem mudar os dados (m.tl continua true), a chave interna da peça (pk) nem o ajuste guardado por peça. Fundo e direita: nomes como sempre.
+       Nome de parede ("Parede da esquerda") não muda. */
+    func testParedeEsquerdaNomesDosLadosSeguemQuemOlha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var troca=function(s){return String(s).replace(/esquerd|direit/gi,function(w){var d=/^e/i.test(w)?'direit':'esquerd';return w[0]===w[0].toUpperCase()?d[0].toUpperCase()+d.slice(1):d})};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
+        newTpl(achar('inf','Balcão 1 porta'));var F=S.m;F.x=1500;wvGo('e');newTpl(achar('inf','Balcão 1 porta'));var E=S.m;E.x=1500;E.po={'Tamponamento esquerdo#1':{v2:1,et:-50}};draw();wvGo('f');draw();var d0=[E.tl,E.tr].join();
+        /* nomes na lista e no corte (cutLines): fundo = nomes internos; parede esquerda = esquerdo/direito trocados */
+        /* por peça: a linha do corte que vem da peça guardada como "Tamponamento esquerdo#1" (chave pk) mostra que nome */
+        var nomeDe=function(m,pk){var l=cutLines(m).filter(function(l){return (l.pks||[]).indexOf(pk)>=0})[0];return l?String(l.names[0]).split(' · ')[0]:'(sem linha)'};
+        R.fundo=nomeDe(F,'Tamponamento esquerdo#1');R.esquerda=nomeDe(E,'Tamponamento esquerdo#1');R.esquerdaOutro=nomeDe(E,'Tamponamento direito#1');
+        /* painel: o título da seção do tamponamento guardado em tl */
+        var titulo=function(){for(var t=0;t<12;t++){S.tab=t;panel();var ck=document.querySelector('#bd [data-c="tl"]');if(ck){var c=ck.closest('.chk'),h=c&&c.previousElementSibling;return h?h.textContent.replace('⌃','').trim():'?'}}return 'sem o controle'};
+        S.m=F;R.painelFundo=titulo();wvGo('e');S.m=S.mods[0];R.painelEsquerda=titulo();R.nomeDaParede=/Parede da esquerda|Parede esquerda|Esquerda/.test((document.getElementById('wvbar')||{}).textContent||'')?'mantido':'sumiu';wvGo('f');draw();
+        /* dados, chave da peça e ajuste por peça iguais */R.dados=[E.tl,E.tr].join()===d0&&!!E.po['Tamponamento esquerdo#1'];R.pk=partsOf(E).filter(function(p){return /^Tamponamento esquerdo/.test(p.name)}).length>0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fundo"] as? String, "Tamponamento esquerdo", "parede do fundo: nome como sempre")
+        XCTAssertEqual(o["esquerda"] as? String, "Tamponamento direito", "parede esquerda: a peça guardada como esquerda (lado do canto) se chama direita")
+        XCTAssertEqual(o["esquerdaOutro"] as? String, "Tamponamento esquerdo", "e a guardada como direita se chama esquerda")
+        XCTAssertEqual(o["painelFundo"] as? String, "Tamponamento esquerdo")
+        XCTAssertEqual(o["painelEsquerda"] as? String, "Tamponamento direito", "parede esquerda: o tamponamento guardado em tl fica à direita de quem olha")
+        XCTAssertEqual(o["nomeDaParede"] as? String, "mantido", "nome de parede não muda")
+        XCTAssertEqual(o["dados"] as? Bool, true, "dados e ajuste guardado por peça não mudam")
+        XCTAssertEqual(o["pk"] as? Bool, true, "nome interno da peça (chave) não muda")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

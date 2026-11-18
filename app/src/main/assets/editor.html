@@ -12424,4 +12424,26 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    (ficam os botões de "Só este vão da torre"). Igual ao que já é feito na caixa da geladeira (TORRE-GEL-PORTA). Nada muda nos projetos. */
 (function(){if(window.__selTorreOk||typeof vmenuOpen!=='function')return;window.__selTorreOk=1;var v0=vmenuOpen;window.vmenuOpen=vmenuOpen=function(mi,vi){var r=v0.apply(this,arguments);try{var m=S.mods[mi],v=m&&m.v&&m.v[vi],d=document.getElementById('vmenu');if(d&&torreForno(m,v))[].forEach.call(d.querySelectorAll('[data-vk="door1"],[data-vk="door2"],[data-vk="slide"]'),function(b){b.remove()})}catch(_){}return r}})();
 </script>
+<script>
+/* PAREDE-ESPELHADA (pedido do Adauto, 18/11; decisão dele: "manter físico, corrigir nomes").
+   Olhando a parede da ESQUERDA de dentro do ambiente, o canto do fundo fica à DIREITA. Os dados, o 3D e todas as contas continuam
+   contando a partir do canto (como sempre); só o DESENHO do 2D dessa parede é espelhado em volta do eixo da própria parede
+   (x' = L + R − x), os textos são desvirados no lugar (continuam legíveis) e o toque é convertido do mesmo jeito (px).
+   Nada salvo muda; fundo e direita não mudam. */
+(function(){
+ var NS='http://www.w3.org/2000/svg';window.WVMIRX=null;
+ function eixo(){/* L e R do desenho da parede: L = OX, R = OX + S.W·K (mesma conta do draw) */try{if(typeof OX==='number'&&typeof K==='number'&&K>0)return OX+OX+(+S.W||0)*K}catch(_){}return null}
+ function desvira(sv,ax){/* cada texto: espelha de volta em volta do próprio centro, no espaço do pai (fica legível, no lugar espelhado) */
+  [].forEach.call(sv.querySelectorAll('#wvmir text'),function(t){try{var bb=t.getBBox(),m=t.transform&&t.transform.baseVal&&t.transform.baseVal.numberOfItems?t.transform.baseVal.consolidate().matrix:null,
+    xs=[bb.x,bb.x+bb.width].map(function(x){return m?m.a*x+m.c*(bb.y+bb.height/2)+m.e:x}),c=(xs[0]+xs[1])/2,old=t.getAttribute('transform')||'';
+    t.setAttribute('transform','translate('+(2*c)+',0) scale(-1,1)'+(old?' '+old:''))}catch(_){}})}
+ function aplica(){var sv=document.getElementById('svg');window.WVMIRX=null;if(!sv)return;var on=!!(window.wvCur&&wvCur()==='e'&&!window.SOLO2D);if(!on)return;var ax=eixo();if(ax===null)return;
+  if(sv.querySelector('#wvmir'))return;var g=document.createElementNS(NS,'g');g.setAttribute('id','wvmir');g.setAttribute('transform','matrix(-1 0 0 1 '+ax+' 0)');
+  [].slice.call(sv.childNodes).forEach(function(n){if(n.nodeType===1&&/^(defs|style)$/i.test(n.tagName))return;g.appendChild(n)});sv.appendChild(g);window.WVMIRX=ax;desvira(sv,ax)}
+ var d0=window.draw;if(typeof d0==='function'){draw=window.draw=function(){var r=d0.apply(this,arguments);try{aplica()}catch(_){}return r}}
+ /* toque: o ponto do desenho é o espelhado (as contas e os dados ficam a partir do canto) */
+ var p0=window.px;if(typeof p0==='function'){px=window.px=function(ev){var p=p0.apply(this,arguments);try{if(window.WVMIRX!==null&&document.getElementById('wvmir'))p.x=window.WVMIRX-p.x}catch(_){}return p}}
+ window.__wvMirAplica=aplica;
+})();
+</script>
 </body></html>

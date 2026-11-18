@@ -861,3 +861,13 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Proposta (aguarda a imagem e o sim do Adauto):** corrigir só a projeção da parede da esquerda (tela = comprimento − x − largura), sem mudar os dados salvos.
   - Cada móvel continua desenhado igual: portas, dobradiças e gavetas não espelham.
   - Junto: o canto ocupado (`wvOcc`, `confineAll`) e as pedras (`wvStCorner`, forma em L e recortes) passam pro outro lado.
+
+## PORTA-CAVA — porta cava na aba Portas das torres (pedido do Adauto, 18/11, foto do iPad)
+- **Pedido:** "Adicionar portas cava aqui também", na aba Portas do editor por vãos (torre 780 × 2600 × 560).
+- **Situação:** as portas do vão (`n.p`) já eram calculadas com a cava do móvel (`m.v[0].cava`: `doorBox` com cava, nota "cava usinada a 30°", sem marca de puxador). A torre já herdava a cava do módulo original ao virar "por vãos". Faltava só a opção na tela.
+- **Correção:** "Porta cava" (`data-rgc="dcava"`) na aba Portas, que liga e desliga `m.v[0].cava`.
+  - Vale pra todas as portas e frentes do móvel, porque a conta é por móvel.
+  - Não aparece em basculante, vidro ou tampa cega.
+  - Com gola marcada, a gola vale; a conta já fazia assim.
+- **Teste:** `testPortaCavaNaAbaPortasDoEditorPorVaos`, cobrindo ligar, plano de corte, salvar e reabrir, desligar, basculante e vidro. Falha antes e passa depois.
+- **Risco anotado:** escolher o puxador "cava" pro projeto todo (Ajustes) não chega nas torres por vãos, porque a regra da linha 1764 só olha vãos `door`, `drawers`, `tempero` e `free`; a torre é `rt`. Fica pra decisão do Adauto se deve chegar.

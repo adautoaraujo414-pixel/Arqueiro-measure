@@ -10953,7 +10953,10 @@ final class EditorWebKitTests: XCTestCase {
     /* PAREDE-ESPELHADA · NOMES (decisão do Adauto, 18/11: "manter físico, corrigir nomes"): na parede ESQUERDA, o lado guardado como "esquerdo"
        do móvel fica à direita de quem olha. O app passa a CHAMAR esse lado de "direito" no painel, nos botões, na lista e no plano de corte,
        sem mudar os dados (m.tl continua true), a chave interna da peça (pk) nem o ajuste guardado por peça. Fundo e direita: nomes como sempre.
-       Nome de parede ("Parede da esquerda") não muda. */
+       Nome de parede ("Parede da esquerda") não muda.
+       ESCOPO (18/11): painel e botões do móvel. Lista e plano de corte ficam com o nome guardado: lá o nome faz parte da chave da marca
+       "✓ cortada" e do agrupamento das peças iguais; trocar ali apagaria marcas já salvas (pendente de decisão do Adauto, ver HISTORICO).
+       O teste confere que o corte NÃO muda (as marcas continuam valendo). */
     func testParedeEsquerdaNomesDosLadosSeguemQuemOlha() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -10973,8 +10976,8 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["fundo"] as? String, "Tamponamento esquerdo", "parede do fundo: nome como sempre")
-        XCTAssertEqual(o["esquerda"] as? String, "Tamponamento direito", "parede esquerda: a peça guardada como esquerda (lado do canto) se chama direita")
-        XCTAssertEqual(o["esquerdaOutro"] as? String, "Tamponamento esquerdo", "e a guardada como direita se chama esquerda")
+        XCTAssertEqual(o["esquerda"] as? String, "Tamponamento esquerdo", "plano de corte com o nome guardado (a marca ✓ cortada usa o nome na chave)")
+        XCTAssertEqual(o["esquerdaOutro"] as? String, "Tamponamento direito", "plano de corte com o nome guardado")
         XCTAssertEqual(o["painelFundo"] as? String, "Tamponamento esquerdo")
         XCTAssertEqual(o["painelEsquerda"] as? String, "Tamponamento direito", "parede esquerda: o tamponamento guardado em tl fica à direita de quem olha")
         XCTAssertEqual(o["nomeDaParede"] as? String, "mantido", "nome de parede não muda")

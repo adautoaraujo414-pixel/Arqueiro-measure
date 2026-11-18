@@ -11536,6 +11536,55 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* GAV-SET (pedido do Adauto, 18/11): mudar a altura da lateral de uma gaveta muda as laterais de TODAS as gavetas do mesmo conjunto
+       (acima e abaixo), não só as duas da gaveta tocada. Outro conjunto do mesmo módulo, outro módulo e as frentes não mudam; desfazer e
+       refazer é uma operação só; salvar e reabrir mantém; o plano de corte acompanha.
+       GAV-EXCESSO (achado no mesmo teste): pedir mais que o máximo guardava o excesso e a redução seguinte saía errada (pediu 70, dava 83). */
+    func testLateralDeUmaGavetaMudaTodasAsGavetasDoConjunto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.fr=[];S.stones=[];S.isl=[];S.rp=[];S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;draw();window.toast=function(){};
+        var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return it};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        open3D();await W(300);
+        /* altura de corte das laterais, por gaveta: "1:90/90 2:90/90 ..." */
+        var alt=function(m,vi){var o={};partsOf(m).forEach(function(p){if(/^Lateral de gaveta$/.test(p.name)&&p.vi===vi)(o[p.dq+1]=o[p.dq+1]||[]).push(p.cw)});return Object.keys(o).map(function(k){return k+':'+o[k].join('/')}).join(' ')};
+        var lk=function(m,vi,dq,s){return (partsOf(m).filter(function(p){return /^Lateral de gaveta$/.test(p.name)&&p.vi===vi&&p.dq===dq})[s]||{}).pk};
+        var igual=function(m,vi,h,n){var a=alt(m,vi).split(' ');return a.length===n&&a.every(function(x){return x.split(':')[1]===h+'/'+h})};
+        /* 1. conjuntos de 2, 3, 4 e 5 gavetas: mexe na primeira, numa do meio e na última (lateral esquerda ou direita) */
+        S.mods=[];newTpl(tpl('Gaveteiro 4 gavetas'));var m=S.mods[0];var ok=[];
+        [2,3,4,5].forEach(function(n){m.v[0].n=n;m.po={};__build();[0,Math.floor(n/2),n-1].forEach(function(dq,j){__e3t(0,lk(m,0,dq,j%2),1,66+j*4);var h=66+j*4;ok.push(n+'g/'+(dq+1)+':'+(igual(m,0,h,n)?'ok':alt(m,0)))})});
+        R.conjuntos=ok.join(' ');
+        /* 2. aumenta, passa do máximo (fica no máximo em todas), diminui; desfazer/refazer; frentes iguais */
+        m.v[0].n=4;m.po={};__build();var fr0=partsOf(m).filter(function(p){return p.name==='Frente de gaveta'}).map(function(p){return p.w+'x'+p.h}).join(',');histTick();await W(900);histTick();
+        __e3t(0,lk(m,0,2,0),1,100);R.aumenta=alt(m,0);histTick();await W(900);histTick();
+        __e3t(0,lk(m,0,0,1),1,400);R.maximo=alt(m,0);histTick();await W(900);histTick();
+        __e3t(0,lk(m,0,3,0),1,70);R.diminui=alt(S.mods[0],0);histTick();await W(900);histTick();
+        document.getElementById('und').click();await W(250);R.desfaz=alt(S.mods[0],0);document.getElementById('red').click();await W(250);R.refaz=alt(S.mods[0],0);
+        m=S.mods[0];R.frentes=partsOf(m).filter(function(p){return p.name==='Frente de gaveta'}).map(function(p){return p.w+'x'+p.h}).join(',')===fr0;
+        /* 3. salvar e reabrir; plano de corte */
+        var js=JSON.stringify(snapState());S.mods=[];loadState(JSON.parse(js));draw();m=S.mods[0];R.reaberto=alt(m,0);
+        R.corte=cutLines(m).filter(function(l){return /^Lateral de gaveta/.test(l.name)}).map(function(l){return l.qty+'× '+l.L+'x'+l.W}).join(',');
+        /* 4. outro conjunto do mesmo módulo e outro módulo não mudam */
+        S.mods=[];newTpl(tpl('Balcão 2 portas + 8 gavetas (gaveteiro nas duas pontas)'));newTpl(tpl('Gaveteiro 3 gavetas'));var a=S.mods[0],b=S.mods[1];__build();
+        var vs=a.v.map(function(v,k){return v.k==='drawers'?k:-1}).filter(function(k){return k>=0}),outro0=alt(a,vs[1]),mod0=alt(b,0);
+        __e3t(0,lk(a,vs[0],1,0),1,90);R.conjuntoTocado=igual(a,vs[0],90,4);R.outroConjunto=alt(a,vs[1])===outro0;R.outroModulo=alt(b,0)===mod0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["conjuntos"] as? String, "2g/1:ok 2g/2:ok 2g/2:ok 3g/1:ok 3g/2:ok 3g/3:ok 4g/1:ok 4g/3:ok 4g/4:ok 5g/1:ok 5g/3:ok 5g/5:ok")
+        XCTAssertEqual(o["aumenta"] as? String, "1:100/100 2:100/100 3:100/100 4:100/100")
+        XCTAssertEqual(o["maximo"] as? String, "1:107/107 2:107/107 3:107/107 4:107/107", "passou do máximo da frente: todas no máximo, nenhuma diferente")
+        XCTAssertEqual(o["diminui"] as? String, "1:70/70 2:70/70 3:70/70 4:70/70", "GAV-EXCESSO: a redução sai certa depois de pedir mais que o máximo")
+        XCTAssertEqual(o["desfaz"] as? String, "1:107/107 2:107/107 3:107/107 4:107/107", "desfazer volta o conjunto todo de uma vez")
+        XCTAssertEqual(o["refaz"] as? String, "1:70/70 2:70/70 3:70/70 4:70/70")
+        XCTAssertEqual(o["frentes"] as? Bool, true, "frentes não mudam")
+        XCTAssertEqual(o["reaberto"] as? String, "1:70/70 2:70/70 3:70/70 4:70/70")
+        XCTAssertEqual(o["corte"] as? String, "8× 460x70", "plano de corte: as 8 laterais iguais numa linha só")
+        XCTAssertEqual(o["conjuntoTocado"] as? Bool, true)
+        XCTAssertEqual(o["outroConjunto"] as? Bool, true, "o gaveteiro da outra ponta não muda")
+        XCTAssertEqual(o["outroModulo"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

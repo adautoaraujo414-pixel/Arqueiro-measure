@@ -301,6 +301,7 @@
 | N21 | PORTA-CAVA: porta cava na aba Portas do editor por vãos (pedido 18/11, foto) | NÃO FEITO | P2 | opção ligando a cava do móvel já usada na conta | gavetas-paredes (2 commits: teste e correção) | `testPortaCavaNaAbaPortasDoEditorPorVaos` (antes falha, depois passa) | CI a rodar | iOS a rodar | bateria Windows a rodar | corrigido; em validação |
 | N22 | Puxador cava do projeto (Ajustes) não chega nas torres por vãos (tipo `rt`) | risco identificado (código) | P2 | decisão do Adauto | — | — | — | — | — | aguarda decisão |
 | N23 | MENU-ARRASTA: menu rápido do vão arrasta pro lado e minimiza (pedido 18/11, foto) | NÃO FEITO | P2 | no código do próprio menu, sem mexer no minimizar compartilhado | gavetas-paredes (teste e correção) | `testMenuRapidoDoVaoArrastaPraLadoEMinimiza` (antes falha, depois passa; 1366×768 e 390×844) | CI a rodar | iOS a rodar | bateria Windows a rodar | feito; precisa de aparelho real (arrastar com o dedo) |
+| N24 | FUNDO-SOBRE: fundo de armário sempre sobreposto, rasgo só na gaveta (regra 18/11, foto) | regra nova | P1 | tirar as opções de rasgo do armário; antigo avisa | gavetas-paredes (teste e correção) | `testFundoDoArmarioSempreSobrepostoRasgoSoNaGaveta` (antes falha, depois passa) | CI a rodar | iOS a rodar | bateria Windows a rodar | feito; em validação |
 
 ## Contagem inicial
 

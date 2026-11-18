@@ -43,4 +43,9 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
   - o corte sai com a largura e a altura do módulo inteiras;
   - no 3D, o fundo fica atrás das laterais (z 0–6) e as laterais começam na frente dele;
   - o fundo da gaveta é encaixado (6 mm).
-- **Pendente (decisão do Adauto):** a aba Estrutura e os Ajustes ainda deixam escolher "Rasgo nas laterais" e "Rasgo nos 4 lados" (embutido). Falta decidir se essas opções saem ou ficam. Projeto antigo com rasgo não muda sozinho; o app avisa.
+- **Decisão do Adauto (18/11): "Rasgo é somente gavetas, o resto é sobreposto".** A torre da foto estava marcada com rasgo.
+  - A aba Estrutura e os Ajustes não oferecem mais rasgo pro fundo do armário.
+  - O Ajustes guardado com rasgo vale como sobreposto pros módulos novos.
+  - Módulo antigo que já está com rasgo não muda sozinho ao abrir: a aba Estrutura avisa e tem o botão "Passar pra sobreposto", que pode ser desfeito.
+  - As contas do sobreposto e do rasgo não mudaram.
+  - Teste: `testFundoDoArmarioSempreSobrepostoRasgoSoNaGaveta`.

@@ -11039,8 +11039,9 @@ final class EditorWebKitTests: XCTestCase {
        Esclarecido (18/11): "Tamponamento lateral é um tamponamento livre descendo esquerda ou direita · não mudar forma que já existe, apenas
        implementar · inverter é o mesmo dos outros já existente · procure ferramentas que já estão funcionando e agregue".
        Descer = o tamponamento solto que já existe (S.geo, tipo 'tamp', entra no corte e no 3D) na ponta do de cima, começando EMBAIXO dele
-       ("ela começa por baixo do tamponamento superior", 18/11): o de cima passa por cima do livre também (mesma regra de quando cobre os
-       laterais do móvel) e o livre desce do fundo dele até a base do móvel; o tamponamento esquerdo/direito do móvel não muda. Inverter = o inverter que já existe (o de cima). Aumentar/diminuir = arrastar
+       ("ela começa por baixo do tamponamento superior", 18/11) e desce do fundo dele até a base do móvel. É livre, separado do corpo, "como uma
+       extensão que vira mesa": "Livre eu controlo como quiser, sem dependência, sem puxar o outro" (18/11) → o de cima e o móvel não mudam;
+       arrastar pelo meio move o livre pra qualquer lado, pelas pontas muda o tamanho; só não entra dentro de um móvel. Inverter = o inverter que já existe (o de cima). Aumentar/diminuir = arrastar
        a ponta de baixo no 2D. Tocar de novo tira. 2 toques no corpo do móvel continuam abrindo o vão. */
     func testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte() async throws {
         let web = try await editor()
@@ -11064,6 +11065,11 @@ final class EditorWebKitTests: XCTestCase {
         /* arrastar a ponta de baixo do esquerdo: aumenta, o topo fica */draw();await W(80);var ge=(S.geo||[]).filter(function(g){return g.desce==='tl'})[0],he=document.querySelector('#svg [data-gdesce="'+ge.id+'"]'),hr=he.getBoundingClientRect(),hx=hr.left+hr.width/2,hy=hr.bottom-4,h0=ge.h,top0=ge.b+ge.h,sv=document.getElementById('svg');
         var pe=function(n,el,y){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:hx,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))};pe('pointerdown',document.elementFromPoint(hx,hy),hy);await W(30);for(var s_=1;s_<=5;s_++){pe('pointermove',sv,hy+30*s_/5);await W(20)}pe('pointerup',sv,hy+30);await W(250);
         R.arrasto=(ge.h>h0?'aumentou':'não aumentou '+h0+'→'+ge.h)+' · '+(ge.b+ge.h===top0?'topo no lugar':'topo mudou')+' · '+(a.tl||a.tr?'móvel ganhou tamponamento':'móvel sem tamponamento lateral')+(a.x===1200&&a.b===JSON.parse(m0).b?'':' · móvel andou');
+        /* pelo meio: anda pra longe do móvel (vira o pé da extensão); o de cima e o móvel não mudam */draw();await W(80);var dc0=deCima(),mv0=JSON.stringify([a.x,a.w,a.h,a.b]);he=document.querySelector('#svg [data-gdesce="'+ge.id+'"]');hr=he.getBoundingClientRect();hx=hr.left+hr.width/2;var hm=hr.top+hr.height/2,ppm=hr.height/ge.h,x0g=ge.x,h1g=ge.h;
+        var pm=function(n,el,x){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:hm,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))};pm('pointerdown',document.elementFromPoint(hx,hm),hx);await W(30);for(var s2=1;s2<=5;s2++){pm('pointermove',sv,hx-400*ppm*s2/5);await W(20)}pm('pointerup',sv,hx-400*ppm);await W(250);
+        R.mover=(ge.x<x0g-300?'andou '+(x0g-ge.x)+' pra esquerda':'não andou '+(x0g-ge.x))+' · altura '+(ge.h===h1g?'igual':'mudou')+' · '+(deCima()===dc0?'de cima igual':'de cima mudou')+' · '+(JSON.stringify([a.x,a.w,a.h,a.b])===mv0?'móvel parado':'móvel mexeu');
+        /* pra dentro do móvel: não entra (peça sólida) */draw();await W(80);he=document.querySelector('#svg [data-gdesce="'+ge.id+'"]');hr=he.getBoundingClientRect();hx=hr.left+hr.width/2;hm=hr.top+hr.height/2;pm('pointerdown',document.elementFromPoint(hx,hm),hx);await W(30);for(var s3=1;s3<=8;s3++){pm('pointermove',sv,hx+900*ppm*s3/8);await W(20)}pm('pointerup',sv,hx+900*ppm);await W(250);
+        R.naoEntra=ge.x+ge.w<=a.x+0.5?'parou fora do móvel':'entrou no móvel (x '+ge.x+')';
         /* tocar de novo tira */await dois(xL);var bl=document.querySelector('#ttq [data-ttq="tl"]');R.tirar=(bl?bl.textContent.trim():'sem botão');if(bl)bl.click();await W(200);R.depoisDeTirar=(S.geo||[]).filter(function(g){return g.desce}).map(function(g){return g.desce}).join(',')+' · '+deCima();
         /* 2 toques no corpo do móvel: continua abrindo o vão */var qq=document.getElementById('ttq');if(qq)qq.hidden=true;var vi=[],vo=window.vmenuOpen;window.vmenuOpen=function(m_,v){vi.push(v);return vo.apply(this,arguments)};var g=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cx=g.left+g.width*0.3,cy=g.top+g.height*0.6;tap(cx,cy);await W(120);tap(cx,cy);await W(600);window.vmenuOpen=vo;try{vmenuClose()}catch(_){}R.corpo=vi.length?'abre o vão':'não abriu';
         /* salvar e reabrir */var t1=livres(),js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();R.reaberto=livres()===t1?'igual':'mudou';
@@ -11072,13 +11078,15 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["temDeCima"] as? String, "desenhado")
         XCTAssertEqual(o["pergunta"] as? String, "⬇ Descer tamponamento esquerdo / ⬇ Descer tamponamento direito / ⇄ Inverter o de cima", "2 toques na ponta: o app pergunta qual lado desce e oferece inverter")
         XCTAssertEqual(o["vaoNaoAbriu"] as? String, "ok", "2 toques no tamponamento de cima não abrem o menu do vão")
-        XCTAssertEqual(o["desceuEsq"] as? String, "tl x1170 w30 z6 d375 b1750 h750 · de cima x-30 1030x375 · resto do móvel igual · tamponamentos do móvel iguais", "livre embaixo do de cima (que passa a cobrir ele), do fundo do de cima até a base do móvel")
+        XCTAssertEqual(o["desceuEsq"] as? String, "tl x1170 w30 z6 d375 b1750 h750 · de cima x0 1000x375 · resto do móvel igual · tamponamentos do móvel iguais", "livre embaixo do de cima, do fundo dele até a base do móvel; o de cima não muda")
         XCTAssertEqual(o["corte"] as? String, "2×750x375", "o livre entra no plano de corte (30 mm = 2 × 15, como o tamponamento solto que já existe)")
         XCTAssertEqual(o["inverteu"] as? String, "virou · ⇄ Inverter o de cima")
-        XCTAssertEqual(o["desceuDir"] as? String, "tl x1170,tr x2200 · de cima x-30 1060x375")
+        XCTAssertEqual(o["desceuDir"] as? String, "tl x1170,tr x2200 · de cima x0 1000x375")
         XCTAssertEqual(o["arrasto"] as? String, "aumentou · topo no lugar · móvel sem tamponamento lateral", "arrastar a ponta de baixo aumenta; o móvel continua sem os tamponamentos dele")
         XCTAssertEqual(o["tirar"] as? String, "✓ Tamponamento esquerdo descido · tocar tira")
-        XCTAssertEqual(o["depoisDeTirar"] as? String, "tr · de cima x0 1030x375", "tirou o esquerdo: o de cima volta a não cobrir aquele lado")
+        XCTAssertEqual(o["mover"] as? String, "andou 400 pra esquerda · altura igual · de cima igual · móvel parado", "livre: anda sozinho, não puxa o outro")
+        XCTAssertEqual(o["naoEntra"] as? String, "parou fora do móvel")
+        XCTAssertEqual(o["depoisDeTirar"] as? String, "tr · de cima x0 1000x375", "tocar de novo tira o livre (mesmo depois de movido)")
         XCTAssertEqual(o["corpo"] as? String, "abre o vão")
         XCTAssertEqual(o["reaberto"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)

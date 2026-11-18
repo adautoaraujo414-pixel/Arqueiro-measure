@@ -10,6 +10,7 @@
 • Torre e armário alto (editor por vãos): aba Portas com a opção Porta cava (puxador usinado na porta, sem peça de puxador).
 • O menu do vão (2 toques no vão da torre) pode ser arrastado pro lado segurando na faixa do título e minimizado (▁ / ▢ abrir), pra ver o móvel. Abre de novo no lugar escolhido.
 • Fundo do armário sempre sobreposto, parafusado atrás. Rasgo só no fundo das gavetas. Móvel antigo que estava com rasgo mostra um aviso com o botão Passar pra sobreposto; nada muda sozinho.
+• Parede da esquerda: o desenho 2D agora mostra a parede como você vê de dentro do ambiente (o canto com a parede do fundo fica à direita), igual ao 3D. No painel do móvel dessa parede, "esquerdo" e "direito" seguem o lado que você vê. Posições, medidas, 3D, lista e plano de corte não mudam; projetos salvos abrem iguais.
 # (já saíram na versão anterior — ficam guardadas só como histórico):
 # • Parede e pé-direito: digitar a medida da parede ou do pé-direito (no desenho ou no ambiente) não muda mais nenhum móvel. Antes, uma medida digitada errada (por exemplo 320 em vez de 3600) esmagava a largura, a posição e a altura de todos os móveis, e eles não voltavam ao corrigir. Agora os móveis ficam como estão e, se algum ficar fora da parede, o app avisa. Parede ou pé-direito abaixo de 500 mm ficam em 500, com aviso. Desfazer e refazer funcionam.
 # • Primeiro toque num móvel que não estava escolhido só escolhe. Antes, um arrasto curto do dedo já levava o móvel junto (até 29 cm).

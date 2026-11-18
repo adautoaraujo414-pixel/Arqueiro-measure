@@ -10739,6 +10739,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
+    /* MENU-ARRASTA (pedido do Adauto, 18/11, foto do iPad): o menu rápido do vão (2 toques no vão do editor por vãos) cobria o desenho.
+       Agora: segurar na faixa do título arrasta o quadro pro lado (o desenho não mexe); ▁ minimiza (fica só a faixa) e ▢ abre de novo;
+       fechar e abrir de novo: abre inteiro, no lugar escolhido. O minimizar compartilhado dos outros quadros não muda. */
+    func testMenuRapidoDoVaoArrastaPraLadoEMinimiza() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(/Armário alto|Torre/.test(it.n)&&!it.act&&c.id==='quarto')L.push(it.n)})});
+        loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=3200;S.H=2700;draw();newTpl(T(L[0]||'Armário alto 2 portas'));draw();soloOn(S.mods[0]);await W(200);
+        var g=document.querySelector('#svg [data-rgr]');g.scrollIntoView({block:'center'});await W(80);var r=g.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height*0.5;
+        var tq=async function(){var el=document.elementFromPoint(x,y);['pointerdown','pointerup'].forEach(function(t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,isPrimary:true,pointerType:'touch'}))});try{el.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:x,clientY:y}))}catch(_){}await W(110)};
+        await tq();await tq();await W(300);var m=document.getElementById('rgqk');R.abriu=!!m&&!m.hidden;
+        /* arrastar pela faixa do título: 260 px pra direita e 120 px pra baixo (ou até a borda da tela) */
+        var h=m.querySelector('[data-rqh]'),hr=h.getBoundingClientRect(),r0=m.getBoundingClientRect(),hx=hr.left+40,hy=hr.top+hr.height/2,s0=JSON.stringify(S.mods[0]);
+        var pe=function(t,el,cx,cy){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:cx,clientY:cy,pointerId:7,isPrimary:true,pointerType:'touch'}))};
+        pe('pointerdown',h,hx,hy);for(var k=1;k<=6;k++)pe('pointermove',h,hx+260*k/6,hy+120*k/6);pe('pointerup',h,hx+260,hy+120);await W(120);
+        var r1=m.getBoundingClientRect(),dx=Math.round(r1.left-r0.left),dy=Math.round(r1.top-r0.top),ex=Math.round(Math.min(260,innerWidth-r0.width-r0.left)),ey=Math.round(Math.min(120,innerHeight-40-r0.top));
+        R.arrastou=(Math.abs(dx-ex)<=1&&Math.abs(dy-ey)<=1)?'andou junto com o dedo':'andou '+dx+','+dy+' (esperado '+ex+','+ey+')';R.dentroDaTela=r1.left>=0&&r1.right<=innerWidth+0.5&&r1.top>=0;
+        R.aberto=!m.hidden;R.desenhoParado=JSON.stringify(S.mods[0])===s0;
+        /* ▁ minimiza: só a faixa; ▢ abre de novo */
+        m.querySelector('[data-rqmin]').click();await W(80);var hm=Math.round(m.getBoundingClientRect().height);R.minimizado=m.querySelector('[data-rqbody]').hidden&&hm<80?'só a faixa':'não minimizou ('+hm+' px)';R.botaoAbre=m.querySelector('[data-rqmin]').textContent.trim();
+        m.querySelector('[data-rqmin]').click();await W(80);R.abriuDeNovo=!m.querySelector('[data-rqbody]').hidden&&m.querySelectorAll('[data-rqt]').length===7;
+        /* minimiza, fecha e abre de novo com 2 toques: inteiro e no lugar escolhido */
+        var lp=m.style.left,tp=m.style.top;m.querySelector('[data-rqmin]').click();await W(50);m.querySelector('[data-rqx]').click();await W(400);await tq();await tq();await W(300);
+        R.reabre=(!m.hidden&&!m.querySelector('[data-rqbody]').hidden?'inteiro':'minimizado')+(m.style.left===lp&&m.style.top===tp?' · no lugar escolhido':' · em outro lugar');
+        /* as abas e botões continuam funcionando */var t2=m.querySelector('[data-rqt="gav"]');t2.click();await W(150);R.aba=m.querySelectorAll('[data-rqb]').length>0;
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["abriu"] as? Bool, true)
+        XCTAssertEqual(o["arrastou"] as? String, "andou junto com o dedo")
+        XCTAssertEqual(o["dentroDaTela"] as? Bool, true)
+        XCTAssertEqual(o["aberto"] as? Bool, true, "arrastar não fecha o quadro")
+        XCTAssertEqual(o["desenhoParado"] as? Bool, true, "arrastar o quadro não mexe no móvel")
+        XCTAssertEqual(o["minimizado"] as? String, "só a faixa")
+        XCTAssertEqual(o["botaoAbre"] as? String, "▢ abrir")
+        XCTAssertEqual(o["abriuDeNovo"] as? Bool, true)
+        XCTAssertEqual(o["reabre"] as? String, "inteiro · no lugar escolhido")
+        XCTAssertEqual(o["aba"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

@@ -10952,6 +10952,59 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* TORRE-DIRETO (pedido do Adauto, 18/11, 2 fotos: "aparecer esse painel sem precisar ir pro 2D isolado"; escolha dele: "Painel por vãos + vão
+       no desenho"): tocou na torre / armário alto no desenho do projeto, o painel do lado já mostra as abas por vãos (Divisões, Gavetas, Portas,
+       Internos, Eletros) e os vãos ficam tocáveis no próprio desenho (fica rosa). 1 dedo arrastando continua movendo o móvel; 2 toques no vão abrem
+       o menu do vão; o "Editar só ele no 2D" continua no painel. Olhar não muda: sem mexer, nada muda no projeto, na gravação nem no desfazer.
+       Segurança: só liga sozinho quando a conversão pro editor por vãos dá exatamente as mesmas peças no corte; quando mudaria (guarda-roupa de
+       3 vãos, por exemplo), fica como antes (botão pro 2D isolado). */
+    func testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var ev=function(n,x,y){var el=document.elementFromPoint(x,y);var o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0};el.dispatchEvent(n==='click'?new MouseEvent(n,o):new PointerEvent(n,o))};
+        var tap=function(x,y){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y)})};
+        var caixa=function(m){return document.querySelector('#mod[data-mi="'+S.mods.indexOf(m)+'"] rect[data-mi]').getBoundingClientRect()};
+        var abas=function(){return [].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(x){return x.textContent.replace(/[^A-Za-zÀ-ú]/g,'')}).join(',')};
+        var corte=function(m){return cutLines(m).map(function(l){return [l.qty,l.L,l.W,l.mat].join('x')}).sort().join(',')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
+        newTpl(achar('alto','Armário alto 2 portas'));var a=S.m;a.x=600;newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=2600;S.m=null;draw();try{panel()}catch(_){}VB={x:0,y:0,w:900,h:560};setVB();draw();await W(300);
+        var a0=JSON.stringify(a),c0=corte(a),h0=HIST.length,s0=JSON.stringify(snapState().mods);
+        /* 1 toque na torre: escolhe e o painel já vem por vãos, sem o 2D isolado */var g=caixa(a);tap(g.left+g.width/2,g.top+g.height*0.5);await W(500);
+        R.painel=(S.m===a?'escolhida':'outra')+' · '+(window.SOLO2?'2D isolado':'projeto')+' · '+abas();
+        R.vaosNoDesenho=document.querySelectorAll('#svg [data-rgr^="'+S.mods.indexOf(a)+'|"]').length>0?'tocáveis':'não';
+        R.botao2DIsolado=document.querySelector('#bd [data-rga="solo"]')?'tem':'não tem';
+        R.olhar=(corte(a)===c0?'corte igual':'corte mudou')+' · '+(JSON.stringify(snapState().mods)===s0?'gravação igual':'gravação mudou');await W(800);try{draw()}catch(_){}R.desfazer=HIST.length===h0?'sem passo novo':'passo novo '+(HIST.length-h0);
+        /* 1 toque num vão: fica rosa, continua no projeto */var vr=document.querySelector('#svg [data-rgr^="'+S.mods.indexOf(a)+'|"]');var rv=vr?vr.getBoundingClientRect():null;if(rv){tap(rv.left+rv.width/2,rv.top+rv.height/2);await W(450)}
+        R.vao=(RG.sel&&RG.sel.mi===S.mods.indexOf(a)?'vão escolhido':'nada')+' · '+(window.SOLO2?'2D isolado':'projeto');
+        /* 2 toques no vão: menu do vão */if(rv){tap(rv.left+rv.width/2,rv.top+rv.height/2);await W(120);tap(rv.left+rv.width/2,rv.top+rv.height/2);await W(700)}var mq=document.getElementById('rgqk');R.doisToques=(mq&&!mq.hidden?'menu do vão':'sem menu')+' · '+(window.SOLO2?'2D isolado':'projeto');if(mq)mq.hidden=true;
+        /* 1 dedo arrastando em cima do vão: move o móvel inteiro, medidas iguais */S.m=a;draw();panel();await W(80);var ga=caixa(a),x0=ga.left+ga.width*0.5,y0=ga.top+ga.height*0.45,el2=document.elementFromPoint(x0,y0),sv_=document.getElementById('svg'),med=JSON.stringify([a.w,a.h,a.d,+a.b||0]),ax0=a.x;
+        var pe_=function(n,el,x){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y0,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))};
+        pe_('pointerdown',el2,x0);await W(30);for(var s_=1;s_<=5;s_++){pe_('pointermove',sv_,x0+120*s_/5);await W(20)}await W(80);pe_('pointerup',sv_,x0+120);await W(250);
+        R.arrasto=(a.x>ax0+50?'moveu':'não moveu '+(a.x-ax0))+' · '+(JSON.stringify([a.w,a.h,a.d,+a.b||0])===med?'medidas iguais':'medidas mudaram')+' · '+(window.SOLO2?'2D isolado':'projeto');
+        /* sair sem editar a torre: volta exatamente como era (só a posição do arrasto) */S.m=b;draw();panel();await W(200);var a1=JSON.parse(a0);a1.x=a.x;R.saiu=JSON.stringify(a)===JSON.stringify(a1)?'igual':'mudou';R.saiuCorte=corte(a)===c0?'igual':'mudou';
+        /* balcão comum: painel normal */R.balcao=abas()===''?'normal':'por vãos';
+        /* guarda-roupa de 3 vãos: a conversão mudaria as peças · fica como antes (sem converter, botão do 2D isolado) */
+        S.m=null;newTpl(achar('quarto','Guarda-roupa 3 vãos'));var q=S.m;q.x=0;S.m=null;draw();await W(100);var q0=JSON.stringify(q);S.m=q;S.tab=1;draw();panel();await W(200);
+        R.guardaRoupa=(JSON.stringify(q)===q0?'não converteu':'converteu')+' · '+(abas()===''?'painel normal':'por vãos');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["painel"] as? String, "escolhida · projeto · Cores,Estrutura,Divisões,Gavetas,Portas,Internos,Eletros", "tocou na torre: painel por vãos sem o 2D isolado")
+        XCTAssertEqual(o["vaosNoDesenho"] as? String, "tocáveis")
+        XCTAssertEqual(o["botao2DIsolado"] as? String, "tem", "o 2D isolado continua disponível")
+        XCTAssertEqual(o["olhar"] as? String, "corte igual · gravação igual", "só tocar não muda o projeto")
+        XCTAssertEqual(o["desfazer"] as? String, "sem passo novo", "só tocar não cria passo no desfazer")
+        XCTAssertEqual(o["vao"] as? String, "vão escolhido · projeto")
+        XCTAssertEqual(o["doisToques"] as? String, "menu do vão · projeto")
+        XCTAssertEqual(o["arrasto"] as? String, "moveu · medidas iguais · projeto", "1 dedo continua movendo o móvel")
+        XCTAssertEqual(o["saiu"] as? String, "igual", "sem editar, a torre volta exatamente como era")
+        XCTAssertEqual(o["saiuCorte"] as? String, "igual")
+        XCTAssertEqual(o["balcao"] as? String, "normal")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "não converteu · painel normal", "conversão que mudaria peças não liga sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* PAREDE-ESPELHADA · BORDA (18/11): no desenho espelhado da parede ESQUERDA, o que ficava à direita da parede (aviso "pé-direito não medido",
        cota da parede) passa pra esquerda. Antes o aviso saía cortado pra fora do quadro. O texto tem que caber inteiro no quadro, e o desenho não
        pode andar ao escolher um móvel (o aviso some com móvel escolhido; se o desenho andasse, o 2º toque cairia em outro lugar). */

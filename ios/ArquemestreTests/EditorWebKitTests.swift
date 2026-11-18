@@ -9995,7 +9995,9 @@ final class EditorWebKitTests: XCTestCase {
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         /* PEDIDO 47: 2 toques no vão de cima (do módulo até o teto) no 2D → Ripado / Painel liso (na frente ou nas costas) / Fechamento até o teto (rente ou X mm pra dentro) */
         var novo=function(){try{if(!document.getElementById('v3').hidden)document.getElementById('v3x').click()}catch(_){}loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw()};
-        var cli=function(xm,ym){var sv=document.getElementById('svg'),pt=sv.createSVGPoint();pt.x=OX+xm*K;pt.y=OY+S.H*K-ym*K;var q=pt.matrixTransform(sv.getScreenCTM());return [q.x,q.y]};
+        /* PAREDE-ESPELHADA (Adauto, 18/11): na parede esquerda o desenho fica dentro do grupo espelhado #wvmir; o ponto em mm vira ponto da tela
+           pelo grupo (onde o vão aparece de verdade pra quem toca). Nas outras paredes não existe o grupo e a conta é a de sempre. */
+        var cli=function(xm,ym){var sv=document.getElementById('svg'),g=document.getElementById('wvmir')||sv,pt=sv.createSVGPoint();pt.x=OX+xm*K;pt.y=OY+S.H*K-ym*K;var q=pt.matrixTransform(g.getScreenCTM());return [q.x,q.y]};
         var tap=function(c){var el=document.elementFromPoint(c[0],c[1])||document.getElementById('svg');['pointerdown','pointerup'].forEach(function(t){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:c[0],clientY:c[1],pointerId:7,isPrimary:true,pointerType:'touch'}))})};
         var menu=function(){var d=document.getElementById('vmenu');return d&&d.dataset.topgap!==undefined?d:null};
         var dois=async function(m){if(window.SOLO2)soloOff();draw();var top=m.b+m.h,c=cli(m.x+m.w/2,(top+S.H)/2);tap(c);await W(120);tap(c);await W(450);return menu()};
@@ -10983,6 +10985,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["nomeDaParede"] as? String, "mantido", "nome de parede não muda")
         XCTAssertEqual(o["dados"] as? Bool, true, "dados e ajuste guardado por peça não mudam")
         XCTAssertEqual(o["pk"] as? Bool, true, "nome interno da peça (chave) não muda")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* PAREDE-ESPELHADA · PROJETO ANTIGO (pedido do Adauto, 18/11): projeto salvo com móveis na parede ESQUERDA (tamponamento só esquerdo, só
+       direito, porta com dobradiça esquerda e direita, canto em L e pedra com cuba) abre igual: posições, medidas, configurações, peças, corte,
+       orçamento e o 3D (caixa por caixa) não mudam ao abrir, trocar de parede, entrar e sair da parede esquerda, salvar e reabrir. */
+    func testProjetoAntigoComMoveisNaParedeEsquerdaAbreIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        /* monta o "projeto antigo" e guarda do jeito que o app salva */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2700;S.wl={L:'p',R:'p'};
+        newTpl(achar('canto','Canto em L (baixo) · esquerdo'));newTpl(achar('inf','Balcão 2 portas'));S.m.x=1500;addStone();draw();
+        wvGo('e');newTpl(achar('inf','Balcão 1 porta'));var a=S.m;a.x=1300;a.tl=true;a.tr=false;a.v[0].hg='l';newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=2300;b.tl=false;b.tr=true;b.v[0].hg='r';newTpl(achar('inf','Gaveteiro 3 gavetas'));S.m.x=3000;addStone();draw();wvGo('f');draw();
+        var antigo=JSON.stringify(snapState());
+        /* foto de tudo que tem que ficar igual */
+        var foto=function(){var o={};o.mods=S.mods.map(function(m){return [m.n||'',m.wing||'f',m.corner||'',m.x,m.w,m.h,m.d,+m.b||0,!!m.tl,!!m.tr,(m.v||[]).map(function(v){return v.k+(v.hg||'')}).join('/')]});
+          o.pecas=S.mods.map(function(m){return partsOf(m).map(function(p){return p.pk+':'+p.cl+'x'+p.cw}).sort().join(',')});
+          o.corte=S.mods.map(function(m){return cutLines(m).map(function(l){return l.qty+'×'+l.L+'x'+l.W+':'+l.names.join('+')}).sort().join(',')});
+          o.pedras=(S.stones||[]).concat(S.stw||[]).map(function(q){return [q.x,q.w,q.d,q.shape||'',q.wall||'f',(q.items||[]).map(function(it){return it.k+'@'+it.x+'/'+it.w}).join(';')]});
+          try{o.orc=JSON.stringify(quoteData().items.map(function(i){return [i.desc,i.qty,i.value]}))}catch(_){o.orc='-'}return JSON.stringify(o)};
+        var tres=async function(){open3D();await W(350);__build();var b_=__boxes().map(function(q){return String(q.nm||'')+':'+[q.x0,q.x1,q.y0,q.y1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')}).sort().join('|');document.getElementById('v3x').click();await W(120);return b_};
+        loadState(JSON.parse(antigo));draw();await W(400);var f0=foto(),b0=await tres();
+        /* roteiro: trocar de parede, entrar e sair da esquerda, escolher um móvel da esquerda, salvar e reabrir */
+        for(const w of ['e','d','f','e','f']){wvGo(w);draw();await W(150)}wvGo('e');S.m=S.mods[0];draw();try{panel()}catch(_){}await W(200);wvGo('f');draw();await W(300);
+        R.depoisDasParedes=foto()===f0?'igual':'mudou';
+        var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();await W(400);R.reaberto=foto()===f0?'igual':'mudou';R.tres3D=(await tres())===b0?'igual':'mudou';
+        /* "wing" ausente e wing 0 são a mesma coisa (parede do fundo); trocar de parede grava 0 nos do fundo desde antes desta correção */
+        var nw=function(t){return JSON.stringify(JSON.parse(t).mods.map(function(m){m.wing=m.wing||0;return m}))};R.salvoIgualAoAntigo=nw(js)===nw(antigo)?'igual':'mudou';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["depoisDasParedes"] as? String, "igual", "posições, medidas, configurações, peças, corte, pedra e orçamento iguais depois de trocar de parede")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["tres3D"] as? String, "igual", "3D caixa por caixa igual")
+        XCTAssertEqual(o["salvoIgualAoAntigo"] as? String, "igual", "o que é salvo dos móveis é igual ao antigo")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

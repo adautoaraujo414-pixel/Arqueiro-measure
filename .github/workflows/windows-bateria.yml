@@ -6,6 +6,10 @@ name: Windows · bateria do editor
 # Só testa: não gera instalador pra ninguém, não cria release e não mexe na versão dos usuários.
 on:
   workflow_dispatch:
+    inputs:
+      so:
+        description: 'Só os testes cujo nome casa com esta expressão (vazio = bateria inteira)'
+        default: ''
   push:
     branches: [ 'feature/**' ]
     paths:
@@ -57,7 +61,9 @@ jobs:
           $env:ARQUE_BATERIA = "1"
           $env:ARQUE_CDP_PORT = "9333"
           $p = Start-Process $exe.FullName -PassThru
-          python tools/bateria_editor.py --cdp http://127.0.0.1:9333 --saida bateria-windows
+          # filtro opcional (disparo manual): roda só os testes pedidos, pra investigar uma falha sem esperar a bateria inteira
+          $so = '${{ github.event.inputs.so }}'
+          if ($so) { python tools/bateria_editor.py --cdp http://127.0.0.1:9333 --saida bateria-windows --so $so } else { python tools/bateria_editor.py --cdp http://127.0.0.1:9333 --saida bateria-windows }
           $code = $LASTEXITCODE
           Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
           Get-Process Arquemestre, jcef_helper -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue

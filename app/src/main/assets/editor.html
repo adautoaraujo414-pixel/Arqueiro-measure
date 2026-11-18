@@ -11998,12 +11998,9 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
  var rgq=function(m){try{return !!(window.rgIs&&window.rgIs(m))}catch(_){return false}};
  var so1=window.soloOn;
  if(typeof so1==='function')soloOn=window.soloOn=function(m){var bak=null;try{if(window.RGAUTO)window.rgAutoBack();if(m&&!rgq(m))bak=JSON.stringify(m)}catch(_){bak=null}var r=so1.apply(this,arguments);try{if(bak&&m&&rgq(m))window.RGAUTO={m:m,bak:bak,after:JSON.stringify(m)}}catch(_){}return r};
- /* TORRE-DIRETO (18/11): mudar só a posição (arrastar, digitar x, trocar de parede) não é mexer nos vãos: volta como era, na posição nova */
- var POS=['x','b','wing'],semPos=function(o){var c=typeof o==='string'?JSON.parse(o):JSON.parse(JSON.stringify(o));POS.forEach(function(k){delete c[k]});return JSON.stringify(c)};window.rgSemPos=semPos;window.rgPosKeys=POS;
- window.rgAutoBack=function(){var a=window.RGAUTO;if(!a)return false;window.RGAUTO=null;try{var m=a.m;if(!m||S.mods.indexOf(m)<0)return false;if(JSON.stringify(m)!==a.after&&semPos(m)!==semPos(a.after))return false;var o=JSON.parse(a.bak);POS.forEach(function(k){if(m[k]===undefined)delete o[k];else o[k]=m[k]});Object.keys(m).forEach(function(k){delete m[k]});Object.keys(o).forEach(function(k){m[k]=o[k]});try{SPC={}}catch(_){}return true}catch(_){return false}};
+ window.rgAutoBack=function(){var a=window.RGAUTO;if(!a)return false;window.RGAUTO=null;try{var m=a.m;if(!m||S.mods.indexOf(m)<0)return false;if(JSON.stringify(m)!==a.after)return false;var o=JSON.parse(a.bak);Object.keys(m).forEach(function(k){delete m[k]});Object.keys(o).forEach(function(k){m[k]=o[k]});try{SPC={}}catch(_){}return true}catch(_){return false}};
  var d0=window.draw;
- /* TORRE-DIRETO: a torre escolhida no projeto (painel por vãos sem o 2D isolado) também conta como "aberta" */var fora=function(a){return window.SOLO2!==a.m&&!(S.m===a.m&&window.rgDir&&window.rgDir(a.m))};
- if(typeof d0==='function')window.draw=draw=function(){try{if(window.RGAUTO&&fora(window.RGAUTO))window.rgAutoBack()}catch(_){}var r=d0.apply(this,arguments);/* o desenho pode ter trocado o módulo do 2D só dele (a pessoa tocou em outro): o que ficou pra trás sem mexida volta como era */try{if(window.RGAUTO&&fora(window.RGAUTO)&&window.rgAutoBack())r=d0.apply(this,arguments)}catch(_){}return r};
+ if(typeof d0==='function')window.draw=draw=function(){try{if(window.RGAUTO&&window.SOLO2!==window.RGAUTO.m)window.rgAutoBack()}catch(_){}var r=d0.apply(this,arguments);/* o desenho pode ter trocado o módulo do 2D só dele (a pessoa tocou em outro): o que ficou pra trás sem mexida volta como era */try{if(window.RGAUTO&&window.SOLO2!==window.RGAUTO.m&&window.rgAutoBack())r=d0.apply(this,arguments)}catch(_){}return r};
  /* Pronto/Fechar com o 2D só dele ainda aberto e nada mexido: também volta antes de gravar */
  var sf0=window.svFechar;
  if(typeof sf0==='function')window.svFechar=function(){try{if(window.RGAUTO)window.rgAutoBack()}catch(_){}return sf0.apply(this,arguments)};
@@ -12466,33 +12463,6 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  function aplica(root){if(!root)return;var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),n,L=[];while((n=w.nextNode()))L.push(n);
   L.forEach(function(t){var v=t.nodeValue;if(!v||!/esquerd|direit|\besq\.|\bdir\./i.test(v))return;/* nome de parede e controles de parede ficam como estão */if(/parede|lado do canto|◧|◨/i.test(v))return;var el=t.parentNode;if(el&&el.closest&&el.closest('[data-wing],[data-ambwv],[data-wvg],#wvbar'))return;t.nodeValue=troca(v)})}
  var p0=window.panel;if(typeof p0==='function'){panel=window.panel=function(){var r=p0.apply(this,arguments);try{if(naEsquerda(S.m)){aplica(document.getElementById('bd'))}}catch(_){}return r}}
-})();
-</script>
-<script>
-/* ===== TORRE-DIRETO (pedido do Adauto, 18/11: "aparecer esse painel sem precisar ir pro 2D isolado"; escolha: painel por vãos + vão no desenho) =====
-   Tocou numa torre / armário alto no desenho do projeto: ele passa pro editor por vãos do mesmo jeito do 2D isolado (rgConvert), o painel mostra as
-   abas por vãos e os vãos ficam tocáveis no desenho. Segurança:
-   - só liga sozinho quando a conversão dá exatamente as mesmas peças no corte (quantidade, comprimento, largura, espessura e nome, que entra na
-     marca "✓ cortada"); quando mudaria alguma
-     peça (ex.: guarda-roupa de 3 vãos), desfaz na hora e fica como antes (botão "Editar só ele no 2D");
-   - olhar não muda: enquanto não mexer, a gravação e o desfazer guardam o módulo como era (snapState devolve o original), e ao escolher outra coisa
-     ele volta exatamente como era (RGAUTO, o mesmo do 2D isolado). */
-(function(){
- var NAO=typeof WeakMap==='function'?new WeakMap():null;
- var sig=function(m){/* sem o cache das peças (SPC): depois da conversão ele ainda guardava as peças de antes */try{SPC={}}catch(_){}try{return cutLines(m).map(function(l){return [l.qty,l.L,l.W,l.mat,(l.names||[]).join('+')].join('x')}).sort().join(',')}catch(_){return '?'}};
- var volta=function(m,bak){var o=JSON.parse(bak);Object.keys(m).forEach(function(k){delete m[k]});Object.keys(o).forEach(function(k){m[k]=o[k]});try{SPC={}}catch(_){}};
- var podeTentar=function(m){try{return !!(m&&!window.SOLO2&&!window.RO&&!(typeof PLV!=='undefined'&&PLV)&&S.mods.indexOf(m)>=0&&!m.corner&&!window.rgIs(m)&&((!m.sup&&+m.h>=1500)||m.stkB))}catch(_){return false}};
- var liga=function(){var m=S.m;if(!podeTentar(m))return;var bak=JSON.stringify(m);if(NAO&&NAO.get(m)===bak)return;
-  try{if(window.RGAUTO&&window.RGAUTO.m!==m)window.rgAutoBack()}catch(_){}
-  var s0=sig(m),sn=window.snap,ok=false;try{snap=window.snap=function(){}}catch(_){}
-  try{ok=!!window.rgConvert(m)}catch(_){ok=false}finally{try{snap=window.snap=sn}catch(_){}}
-  if(!ok){if(NAO)NAO.set(m,bak);return}
-  if(sig(m)!==s0){volta(m,bak);if(NAO)NAO.set(m,bak);return}
-  window.RGAUTO={m:m,bak:bak,after:JSON.stringify(m)};NOVO=window.RGAUTO;try{RG.sel=null;RG.dsel=null}catch(_){}};
- /* o desenho logo depois da conversão acerta alguns campos (posição, parede, pilha): a referência do "sem mexer" é tirada depois dele */
- var NOVO=null,d0=window.draw;if(typeof d0==='function')draw=window.draw=function(){try{liga()}catch(_){}var r=d0.apply(this,arguments);try{if(NOVO&&window.RGAUTO===NOVO&&S.mods.indexOf(NOVO.m)>=0)NOVO.after=JSON.stringify(NOVO.m)}catch(_){}NOVO=null;return r};
- /* gravação e desfazer: a torre só olhada (convertida e sem mexer) é guardada como era */
- var ss=window.snapState;if(typeof ss==='function')snapState=window.snapState=function(){var o=ss.apply(this,arguments);try{var a=window.RGAUTO;if(a&&a.m&&!window.SOLO2&&(JSON.stringify(a.m)===a.after||window.rgSemPos(a.m)===window.rgSemPos(a.after))){var i=S.mods.indexOf(a.m);if(i>=0&&o&&o.mods&&o.mods[i]){var g=JSON.parse(a.bak);window.rgPosKeys.forEach(function(k){if(a.m[k]===undefined)delete g[k];else g[k]=JSON.parse(JSON.stringify(a.m[k]))});o.mods[i]=g;if(o.m&&S.m===a.m)o.m=JSON.parse(JSON.stringify(g))}}}catch(_){}return o};
 })();
 </script>
 </body></html>

@@ -11585,6 +11585,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* DUPLO-TOQUE (pedido do Adauto, 18/11): auditoria dos 2 toques em todo o catálogo (567 itens). Falhavam 8, em 2 classes:
+       a geladeira dentro da caixa da geladeira (o eletro, data-ap, fica por cima do módulo) e as torres altas selecionadas (o puxador da
+       prateleira interna, data-ish, fica por cima). Agora os 2 toques valem pro módulo de baixo; 1 toque continua pegando o eletro / a prateleira.
+       Toque e mouse, zoom normal e com zoom; o módulo não sai do lugar nem muda de medida. */
+    func testDoisToquesFuncionamNaGeladeiraENasTorresComPrateleira() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;S.fr=[];S.stones=[];S.isl=[];S.rp=[];S.Hm=1;S.Wm=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var ev=function(n,x,y,pt){var el=document.elementFromPoint(x,y);var o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,pointerType:pt,isPrimary:true,button:0};el.dispatchEvent(n==='click'?new MouseEvent(n,o):new PointerEvent(n,o))};
+        var tap=function(x,y,pt){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y,pt)})};
+        var dois=async function(x,y,pt){tap(x,y,pt);await W(120);tap(x,y,pt);await W(480);var ok=!!document.getElementById('vmenu');try{vmenuClose()}catch(_){}return ok};
+        var med=function(m){return [m.x,m.w,m.h,m.d,+m.b||0].join(',')};
+        /* geladeira na caixa da geladeira: 1 toque pega a geladeira; 2 toques abrem o menu do vão do módulo */
+        var res=[];for(const nm of ['Caixa da geladeira duplex / inverse (laterais + aéreo)','Caixa da geladeira side by side (laterais + aéreo)'])for(const pt of ['touch','mouse']){
+          S.mods=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;newTpl(achar('alto',nm));S.m=null;draw();await W(60);var m=S.mods[0],m0=med(m),f0=JSON.stringify(S.fr);
+          var a=document.querySelector('[data-ap]').getBoundingClientRect(),x=a.left+a.width/2,y=a.top+a.height/2;tap(x,y,pt);await W(450);var um=window.SELAP!=null&&!document.getElementById('vmenu');
+          var ok=await dois(x,y,pt);res.push((/side/.test(nm)?'side by side':'duplex')+' '+pt+': 1 toque '+(um?'pega a geladeira':'?')+' · 2 toques '+(ok?'menu':'NADA')+' · '+(med(S.mods[0])===m0&&JSON.stringify(S.fr)===f0?'parado':'MEXEU'))}
+        R.geladeira=res.join(' | ');
+        /* torres altas selecionadas: 2 toques em cima da prateleira interna, zoom normal e com zoom */
+        res=[];for(const c of [['salaT','Cristaleira torre (porta de vidro)'],['banho','Torre do banheiro (armário alto)'],['salaT','Torre da sala · 1 porta, prateleiras + gavetas']])for(const z of [1,2]){
+          S.mods=[];S.fr=[];S.env='sala';S.room='sala';newTpl(achar(c[0],c[1]));draw();VB={x:0,y:0,w:900,h:560};setVB();if(z>1){var g0=document.querySelector('#mod[data-mi="0"] rect[data-mi]').getBBox();zoom(z,g0.x+g0.width/2,g0.y+g0.height/2)}draw();await W(60);var m=S.mods[0],m0=med(m);
+          var sh=document.querySelector('[data-ish]');if(!sh){res.push(c[1].slice(0,14)+' sem prateleira');continue}var b=sh.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;var em=document.elementFromPoint(x,y);
+          var ok=await dois(x,y,'touch');res.push(c[1].slice(0,14)+' zoom'+z+': '+(em&&em.closest('[data-ish]')?'na prateleira':'fora')+' · '+(ok?'menu':'NADA')+' · '+(med(S.mods[0])===m0?'parado':'MEXEU'))}
+        R.torres=res.join(' | ');
+        /* módulo comum continua igual */
+        S.mods=[];S.env='cozinha';S.room='cozinha';newTpl(achar('inf','Balcão 2 portas'));S.m=null;draw();VB={x:0,y:0,w:900,h:560};setVB();await W(60);var g=document.querySelector('#mod[data-mi="0"] rect[data-mi]').getBoundingClientRect();R.comum=await dois(g.left+g.width/2,g.top+g.height/2,'touch');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["geladeira"] as? String, "duplex touch: 1 toque pega a geladeira · 2 toques menu · parado | duplex mouse: 1 toque pega a geladeira · 2 toques menu · parado | side by side touch: 1 toque pega a geladeira · 2 toques menu · parado | side by side mouse: 1 toque pega a geladeira · 2 toques menu · parado")
+        XCTAssertEqual(o["torres"] as? String, "Cristaleira to zoom1: na prateleira · menu · parado | Cristaleira to zoom2: na prateleira · menu · parado | Torre do banhe zoom1: na prateleira · menu · parado | Torre do banhe zoom2: na prateleira · menu · parado | Torre da sala  zoom1: na prateleira · menu · parado | Torre da sala  zoom2: na prateleira · menu · parado")
+        XCTAssertEqual(o["comum"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

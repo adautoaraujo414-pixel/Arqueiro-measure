@@ -10804,6 +10804,25 @@ var nm=window.newMod||newMod;newMod=window.newMod=function(){try{if(window.SOLO2
 window.poAlign=function(mi,pk){var m=S.mods[mi];if(!m)return 0;var P=partsOf(m),d=P.filter(function(p){return p.pk===pk})[0];if(!d||!/^Porta$/.test(d.name)||!d.base)return 0;var o=(m.po&&m.po[pk])||{},et=+o.et||0,eb=+o.eb||0,top=function(q,p){return (+q.b||0)+q.h-p.base.y},T=top(m,d),Bt=T-d.base.h,n=0;
  S.mods.forEach(function(q,qi){if(q.lock)return;var ps=[];try{ps=partsOf(q)}catch(_){}ps.forEach(function(p){if(!/^Porta$/.test(p.name)||!p.base||!p.pk||(qi===mi&&p.pk===pk))return;var t=top(q,p),b=t-p.base.h,hitT=Math.abs(t-T)<3,hitB=Math.abs(b-Bt)<3;if(!hitT&&!hitB)return;q.po=q.po||{};var r=q.po[p.pk]||{v2:1};if(hitT)r.et=et;if(hitB)r.eb=eb;if(!['el','er','eb','et','ek','ef'].some(function(k){return r[k]}))delete q.po[p.pk];else q.po[p.pk]=r;n++})});
  if(n)try{toast('↕ '+n+' porta'+(n>1?'s':'')+' alinhada'+(n>1?'s':'')+' junto: mesma folga em cima e embaixo')}catch(_){}return n};
+/* GAV-SET (pedido do Adauto, 18/11): mudar a altura da lateral de uma gaveta muda a caixa de TODAS as gavetas do mesmo conjunto (mesmo vão do mesmo módulo).
+   Usa o mesmo ajuste à mão que já faz as duas laterais da gaveta andarem juntas (m.po + gbOv); a altura que vale é a que o partsOf calcula.
+   Frente, largura, profundidade, posição, folgas e corrediça não mudam. Se alguma gaveta não comporta a altura, o conjunto todo fica como estava e avisa. */
+(function(){var pa0=window.poAlign,GL_=/^Lateral de gaveta$/,GK_=/^(Lateral de gaveta|Frente\/costa de gaveta|Fundo de gaveta)/;
+ function grupo(m,vi){var g={};partsOf(m).forEach(function(p){if(p.vi!==vi||!p.pk||!GK_.test(p.name)||p.dq==null)return;var q=g[p.dq]||(g[p.dq]={dq:p.dq,lat:[],keys:[],h:null});q.keys.push(p.pk);if(GL_.test(p.name)){q.lat.push(p.pk);if(q.h==null)q.h=p.h}});return Object.keys(g).map(function(k){return g[k]}).sort(function(a,b){return a.dq-b.dq})}
+ function limpaAltura(m,q){q.keys.forEach(function(k){var o=m.po&&m.po[k];if(!o)return;delete o.et;delete o.eb;if(!['el','er','eb','et','ek','ef'].some(function(x){return o[x]}))delete m.po[k]})}
+ /* põe a caixa de cada gaveta da lista na altura H (só o ajuste de altura; o resto do ajuste à mão fica) */
+ function aplica(m,vi,dqs,H){var G=grupo(m,vi).filter(function(q){return dqs.indexOf(q.dq)>=0});G.forEach(function(q){limpaAltura(m,q)});var B=grupo(m,vi);
+  G.forEach(function(q){var b=B.filter(function(x){return x.dq===q.dq})[0];if(!b||!b.lat.length)return;var d=Math.round((H-b.h)*10)/10;if(!d)return;if(!m.po)m.po={};var k=b.lat[0],o=poEdges(m.po[k]||{v2:1});o.et=d;m.po[k]=o})}
+ window.gavSetSync=function(mi,pk){var m=S.mods[mi];if(!m||!pk)return 0;var p=partsOf(m).filter(function(x){return x.pk===pk})[0];if(!p||!GL_.test(p.name)||p.dq==null)return 0;
+  var G=grupo(m,p.vi);if(!G.length)return 0;var H=p.h,ou=G.filter(function(q){return q.dq!==p.dq}),Ho=ou.length?ou[0].h:H;
+  /* a gaveta editada também é regravada com a diferença exata: quando a medida pedida passava do máximo, o ajuste guardava o excesso
+     (ex.: pediu 120, ficou 107,8, mas guardou +63) e a próxima redução saía errada (pediu 70, ficava 83,8) · GAV-EXCESSO, 18/11 */
+  aplica(m,p.vi,G.map(function(q){return q.dq}),H);if(!ou.length)return 1;var ruins=grupo(m,p.vi).filter(function(q){return Math.abs(q.h-H)>=0.05});
+  if(!ruins.length){try{ambMsg('Gavetas do conjunto: caixa de '+nf1(H)+' mm em todas as '+G.length+' (laterais iguais)')}catch(_){}return G.length}
+  /* não coube em alguma: o conjunto todo volta pra altura que tinha (sem alteração parcial) e diz o máximo de cada gaveta que não coube */
+  var lim=ruins.map(function(q){return 'gaveta '+(q.dq+1)+' aceita até '+nf1(q.h)+' mm'});aplica(m,p.vi,G.map(function(q){return q.dq}),Ho);
+  try{toast('⚠ A caixa de '+nf1(H)+' mm não cabe em todas as gavetas do conjunto ('+lim.join(' · ')+'). Nada foi mudado.')}catch(_){}return -1};
+ window.poAlign=function(mi,pk){var r=0;try{r=pa0?pa0.apply(this,arguments):0}catch(_){}try{gavSetSync(mi,pk)}catch(_){}return r}})();
 </script>
 <script>
 /* ===== 🧱 Parede no 2D: na ✏️ Edição ambiente 3D, 2 toques numa parede (ou num painel) e o 2D passa a mostrar aquela parede

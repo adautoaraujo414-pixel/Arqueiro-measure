@@ -10920,6 +10920,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDE-ESPELHADA (18/11): na parede esquerda o desenho é espelhado; o TOQUE tem que acompanhar: 1 toque escolhe o móvel embaixo do dedo,
+       2 toques em cada vão abrem o menu DAQUELE vão (o desenhado embaixo do dedo), arrastar pra direita na tela leva o móvel pra direita na tela
+       e só muda a posição dele. Mesmo roteiro na parede do fundo pra comparar. */
+    func testParedeEsquerdaToqueDoisToquesEArrastoSeguemODesenho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var ev=function(n,x,y){var el=document.elementFromPoint(x,y);var o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0};el.dispatchEvent(n==='click'?new MouseEvent(n,o):new PointerEvent(n,o))};
+        var tap=function(x,y){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y)})};
+        var roteiro=async function(w){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};if(w!=='f')wvGo(w);
+          /* espaço dos dois lados do A (até o canto/fim da parede e até o B), pra o arrasto não bater em limite */newTpl(achar('inf','Balcão porta + gavetas'));var a=S.m;a.x=1200;newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=3000;S.m=null;draw();VB={x:0,y:0,w:900,h:560};setVB();draw();await W(60);var out=[];
+          /* 1 toque no B escolhe o B */var gb=document.querySelector('#mod[data-mi="'+S.mods.indexOf(b)+'"] rect[data-mi]').getBoundingClientRect();tap(gb.left+gb.width/2,gb.top+gb.height*0.7);await W(450);out.push('toque '+(S.m===b?'B':'outro'));
+          /* 2 toques em cada vão do A: abre o vão desenhado embaixo do dedo */var vi=[],vo=window.vmenuOpen;window.vmenuOpen=function(mi,v){vi.push(v);return vo.apply(this,arguments)};
+          var ia=S.mods.indexOf(a),L_=vaoRanges(a);for(var k=0;k<L_.length;k++){var el=[].slice.call(document.querySelectorAll('#mod[data-mi="'+ia+'"] [data-vi="'+k+'"]')).map(function(e){return e.getBoundingClientRect()}).filter(function(r){return r.width>8&&r.height>8})[0];if(!el){out.push('vão '+k+' sem desenho');continue}var x=el.left+el.width/2,y=el.top+el.height/2;tap(x,y);await W(120);tap(x,y);await W(480);try{vmenuClose()}catch(_){}out.push('vão '+k+'→'+(vi.length?vi[vi.length-1]:'nada'))}
+          window.vmenuOpen=vo;
+          /* arrastar o A 150 px pra direita na tela (mesmo jeito do drag2 dos testes aprovados: escolhido antes, ponto dentro do móvel, movimentos no desenho) */S.m=a;draw();panel();await W(60);
+          var ga=document.querySelector('#mod[data-mi="'+ia+'"] rect[data-mi]').getBoundingClientRect(),sa=JSON.stringify([a.w,a.h,a.d,+a.b||0]),x0=0,y0=0,el2=null;[[.85,.9],[.78,.82],[.3,.8],[.5,.6]].some(function(f){x0=ga.left+ga.width*f[0];y0=ga.top+ga.height*f[1];el2=document.elementFromPoint(x0,y0);return !!(el2&&el2.closest('#mod[data-mi="'+ia+'"]'))});
+          var pe_=function(n,el,x){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y0,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))},sv_=document.getElementById('svg');
+          pe_('pointerdown',el2,x0);await W(30);for(var s_=1;s_<=5;s_++){pe_('pointermove',sv_,x0+150*s_/5);await W(20)}await W(80);pe_('pointerup',sv_,x0+150);await W(200);
+          var ga2=document.querySelector('#mod[data-mi="'+ia+'"] rect[data-mi]').getBoundingClientRect();out.push('arrasto '+(ga2.left-ga.left>60?'pra direita na tela':'errado '+Math.round(ga2.left-ga.left))+' · '+(JSON.stringify([a.w,a.h,a.d,+a.b||0])===sa?'só a posição':'mudou medida'));
+          if(w!=='f')wvGo('f');return w+': '+out.join(' · ')};
+        R.fundo=await roteiro('f');R.esquerda=await roteiro('e');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fundo"] as? String, "f: toque B · vão 0→0 · vão 1→1 · arrasto pra direita na tela · só a posição")
+        XCTAssertEqual(o["esquerda"] as? String, "e: toque B · vão 0→0 · vão 1→1 · arrasto pra direita na tela · só a posição", "parede esquerda: o toque acompanha o desenho espelhado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTodoModuloCadastradoApareceNo3DEmQualquerCaminho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

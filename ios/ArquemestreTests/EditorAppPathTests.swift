@@ -21,6 +21,10 @@ final class EditorAppPathTests: XCTestCase {
             case "__arque__:listNotes": completionHandler("[]")
             case "__arque__:companyName": completionHandler("Marcenaria Teste")
             case "__arque__:putVideo": completionHandler("ok")
+            // N03 (17/11): igual ao app, a gravação do projects.json é síncrona e responde se gravou
+            case "__arque__:putFile":
+                if let d = (defaultText ?? "").data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any],
+                   let n = o["name"] as? String, let b = o["b64"] as? String { files[n] = b; completionHandler("ok") } else { completionHandler("error") }
             default: completionHandler("")
             }
         }

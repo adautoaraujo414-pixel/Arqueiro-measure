@@ -11661,6 +11661,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PORTA-CAVA (pedido do Adauto, 18/11, foto da aba Portas da torre no iPad): porta cava também no editor por vãos.
+       A conta das portas do vão já usava a cava do móvel; faltava a opção na aba Portas. Ligar: porta com cava usinada, sem puxador;
+       desligar: volta o puxador; salvar e reabrir mantém; não aparece em basculante, vidro ou tampa cega. */
+    func testPortaCavaNaAbaPortasDoEditorPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var R={};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();
+        var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;soloOn(m);m.v[0].cava=false;
+        var C=function(s){document.querySelector(s).click()},CK=function(s,on){var i=document.querySelector(s);if(!i)return false;i.checked=on;i.dispatchEvent(new Event('change',{bubbles:true}));return true};
+        var por=function(){var P=partsOf(m).filter(function(p){return p.name==='Porta'});return P.length+' portas · '+(P.every(function(p){return /cava usinada/.test(p.note||'')&&!p.mark})?'cava':P.every(function(p){return !/cava usinada/.test(p.note||'')&&p.mark})?'com puxador':'misturado')};
+        RG.sel={mi:0,path:'r'};RG.tab='por';panel();C('[data-rga="door|2"]');R.antes=por();
+        R.liga=CK('[data-rgc="dcava"]',true)?por():'sem a opção';R.corte=cutLines(m).filter(function(l){return /Porta/.test(l.names.join())}).map(function(l){return l.qty+'× '+l.L+'x'+l.W}).join(', ');
+        var js=JSON.stringify(snapState());loadState(JSON.parse(js));m=S.mods[0];R.reaberto=por();
+        soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='por';panel();R.desliga=CK('[data-rgc="dcava"]',false)?por():'sem a opção';
+        C('[data-rga="dbas|up"]');R.basculante=!document.querySelector('[data-rgc="dcava"]');C('[data-rga="door|2"]');CK('[data-rgc="vid"]',true);R.vidro=!document.querySelector('[data-rgc="dcava"]');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "2 portas · com puxador")
+        XCTAssertEqual(o["liga"] as? String, "2 portas · cava", "a opção existe na aba Portas e liga a cava das portas")
+        XCTAssertEqual(o["corte"] as? String, "2× 440x2300")
+        XCTAssertEqual(o["reaberto"] as? String, "2 portas · cava")
+        XCTAssertEqual(o["desliga"] as? String, "2 portas · com puxador")
+        XCTAssertEqual(o["basculante"] as? Bool, true, "basculante não mostra a opção")
+        XCTAssertEqual(o["vidro"] as? Bool, true, "porta de vidro não mostra a opção")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

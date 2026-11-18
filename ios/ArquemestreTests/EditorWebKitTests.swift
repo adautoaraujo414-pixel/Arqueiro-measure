@@ -11038,8 +11038,9 @@ final class EditorWebKitTests: XCTestCase {
        app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto".
        Esclarecido (18/11): "Tamponamento lateral é um tamponamento livre descendo esquerda ou direita · não mudar forma que já existe, apenas
        implementar · inverter é o mesmo dos outros já existente · procure ferramentas que já estão funcionando e agregue".
-       Descer = o tamponamento solto que já existe (S.geo, tipo 'tamp', entra no corte e no 3D), encostado na ponta do de cima e descendo até a
-       base do móvel; o tamponamento esquerdo/direito do móvel não muda. Inverter = o inverter que já existe (o de cima). Aumentar/diminuir = arrastar
+       Descer = o tamponamento solto que já existe (S.geo, tipo 'tamp', entra no corte e no 3D) na ponta do de cima, começando EMBAIXO dele
+       ("ela começa por baixo do tamponamento superior", 18/11): o de cima passa por cima do livre também (mesma regra de quando cobre os
+       laterais do móvel) e o livre desce do fundo dele até a base do móvel; o tamponamento esquerdo/direito do móvel não muda. Inverter = o inverter que já existe (o de cima). Aumentar/diminuir = arrastar
        a ponta de baixo no 2D. Tocar de novo tira. 2 toques no corpo do móvel continuam abrindo o vão. */
     func testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte() async throws {
         let web = try await editor()
@@ -11055,14 +11056,15 @@ final class EditorWebKitTests: XCTestCase {
         var tt=ttEl();R.temDeCima=tt?'desenhado':'não';var r=tt.getBoundingClientRect(),xL=r.left+Math.min(12,r.width*0.08),xR=r.right-Math.min(12,r.width*0.08),yy=r.top+r.height/2;
         var dois=async function(x){tap(x,yy);await W(120);tap(x,yy);await W(500)};
         await dois(xL);var q=document.getElementById('ttq');R.pergunta=q&&!q.hidden?[].map.call(q.querySelectorAll('[data-ttq]'),function(b){return b.textContent.trim()}).join(' / '):'sem pergunta';R.vaoNaoAbriu=document.getElementById('vmenu')?'abriu o vão':'ok';
-        document.querySelector('#ttq [data-ttq="tl"]').click();await W(200);R.desceuEsq=livres()+' · '+(JSON.stringify(a)===m0?'móvel igual':'móvel mudou');
+        var deCima=function(){SPC={};var p=partsOf(a).filter(function(p){return /^Tamponamento de cima/.test(p.name)})[0];return p?'de cima x'+p.x+' '+p.cl+'x'+p.cw:'sem'};var resto=function(){var o=JSON.parse(JSON.stringify(a)),b0=JSON.parse(m0);delete o.ttExL;delete o.ttExR;return JSON.stringify(o)===JSON.stringify(b0)?'resto do móvel igual':'móvel mudou'};
+        document.querySelector('#ttq [data-ttq="tl"]').click();await W(200);R.desceuEsq=livres()+' · '+deCima()+' · '+resto()+' · '+(a.tl||a.tr?'ligou tamponamento do móvel':'tamponamentos do móvel iguais');
         R.corte=geoCutPieces().map(function(c){return c.qty+'×'+c.L+'x'+c.W}).join(' | ');
         /* inverter o de cima (o que já existe) */await dois(xR);var bi=document.querySelector('#ttq [data-ttq="inv"]'),iv0=tpInv(a,'Tamponamento de cima'),bt=bi?bi.textContent.trim():'sem botão';if(bi)bi.click();await W(150);R.inverteu=(tpInv(a,'Tamponamento de cima')!==iv0?'virou':'não virou')+' · '+bt;
-        /* direito */await dois(xR);document.querySelector('#ttq [data-ttq="tr"]').click();await W(200);R.desceuDir=(S.geo||[]).filter(function(g){return g.desce}).map(function(g){return g.desce}).sort().join(',');
+        /* direito */await dois(xR);document.querySelector('#ttq [data-ttq="tr"]').click();await W(200);R.desceuDir=(S.geo||[]).filter(function(g){return g.desce}).map(function(g){return g.desce+' x'+g.x}).sort().join(',')+' · '+deCima();
         /* arrastar a ponta de baixo do esquerdo: aumenta, o topo fica */draw();await W(80);var ge=(S.geo||[]).filter(function(g){return g.desce==='tl'})[0],he=document.querySelector('#svg [data-gdesce="'+ge.id+'"]'),hr=he.getBoundingClientRect(),hx=hr.left+hr.width/2,hy=hr.bottom-4,h0=ge.h,top0=ge.b+ge.h,sv=document.getElementById('svg');
         var pe=function(n,el,y){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:hx,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))};pe('pointerdown',document.elementFromPoint(hx,hy),hy);await W(30);for(var s_=1;s_<=5;s_++){pe('pointermove',sv,hy+30*s_/5);await W(20)}pe('pointerup',sv,hy+30);await W(250);
         R.arrasto=(ge.h>h0?'aumentou':'não aumentou '+h0+'→'+ge.h)+' · '+(ge.b+ge.h===top0?'topo no lugar':'topo mudou')+' · '+(a.tl||a.tr?'móvel ganhou tamponamento':'móvel sem tamponamento lateral')+(a.x===1200&&a.b===JSON.parse(m0).b?'':' · móvel andou');
-        /* tocar de novo tira */await dois(xL);var bl=document.querySelector('#ttq [data-ttq="tl"]');R.tirar=(bl?bl.textContent.trim():'sem botão');if(bl)bl.click();await W(200);R.depoisDeTirar=(S.geo||[]).filter(function(g){return g.desce}).map(function(g){return g.desce}).join(',');
+        /* tocar de novo tira */await dois(xL);var bl=document.querySelector('#ttq [data-ttq="tl"]');R.tirar=(bl?bl.textContent.trim():'sem botão');if(bl)bl.click();await W(200);R.depoisDeTirar=(S.geo||[]).filter(function(g){return g.desce}).map(function(g){return g.desce}).join(',')+' · '+deCima();
         /* 2 toques no corpo do móvel: continua abrindo o vão */var qq=document.getElementById('ttq');if(qq)qq.hidden=true;var vi=[],vo=window.vmenuOpen;window.vmenuOpen=function(m_,v){vi.push(v);return vo.apply(this,arguments)};var g=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cx=g.left+g.width*0.3,cy=g.top+g.height*0.6;tap(cx,cy);await W(120);tap(cx,cy);await W(600);window.vmenuOpen=vo;try{vmenuClose()}catch(_){}R.corpo=vi.length?'abre o vão':'não abriu';
         /* salvar e reabrir */var t1=livres(),js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();R.reaberto=livres()===t1?'igual':'mudou';
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -11070,13 +11072,13 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["temDeCima"] as? String, "desenhado")
         XCTAssertEqual(o["pergunta"] as? String, "⬇ Descer tamponamento esquerdo / ⬇ Descer tamponamento direito / ⇄ Inverter o de cima", "2 toques na ponta: o app pergunta qual lado desce e oferece inverter")
         XCTAssertEqual(o["vaoNaoAbriu"] as? String, "ok", "2 toques no tamponamento de cima não abrem o menu do vão")
-        XCTAssertEqual(o["desceuEsq"] as? String, "tl x1170 w30 z6 d375 b1750 h780 · móvel igual", "tamponamento livre encostado na ponta esquerda do de cima, do topo dele até a base do móvel; o móvel não muda")
-        XCTAssertEqual(o["corte"] as? String, "2×780x375", "o livre entra no plano de corte (30 mm = 2 × 15, como o tamponamento solto que já existe)")
+        XCTAssertEqual(o["desceuEsq"] as? String, "tl x1170 w30 z6 d375 b1750 h750 · de cima x-30 1030x375 · resto do móvel igual · tamponamentos do móvel iguais", "livre embaixo do de cima (que passa a cobrir ele), do fundo do de cima até a base do móvel")
+        XCTAssertEqual(o["corte"] as? String, "2×750x375", "o livre entra no plano de corte (30 mm = 2 × 15, como o tamponamento solto que já existe)")
         XCTAssertEqual(o["inverteu"] as? String, "virou · ⇄ Inverter o de cima")
-        XCTAssertEqual(o["desceuDir"] as? String, "tl,tr")
+        XCTAssertEqual(o["desceuDir"] as? String, "tl x1170,tr x2200 · de cima x-30 1060x375")
         XCTAssertEqual(o["arrasto"] as? String, "aumentou · topo no lugar · móvel sem tamponamento lateral", "arrastar a ponta de baixo aumenta; o móvel continua sem os tamponamentos dele")
         XCTAssertEqual(o["tirar"] as? String, "✓ Tamponamento esquerdo descido · tocar tira")
-        XCTAssertEqual(o["depoisDeTirar"] as? String, "tr")
+        XCTAssertEqual(o["depoisDeTirar"] as? String, "tr · de cima x0 1030x375", "tirou o esquerdo: o de cima volta a não cobrir aquele lado")
         XCTAssertEqual(o["corpo"] as? String, "abre o vão")
         XCTAssertEqual(o["reaberto"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)

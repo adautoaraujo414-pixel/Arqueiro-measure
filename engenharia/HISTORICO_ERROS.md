@@ -879,6 +879,45 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Risco visual anotado:** na parede esquerda o desenho fica mais à direita do quadro. Com parede larga, a ponta da cota "Parede X" passa por baixo dos botões flutuantes (cadeado, lixeira, calculadora), como já acontece com o lado direito no desenho normal.
 - **Commits:** `19ae71e`, `df6ea18`, `e2c1272`, `8896510`, `4460b2e`, `44553aa`, `4079a63`, `6bcdf6e`.
 
+## VAOS-BALCAO — editor por vãos também no balcão de pia (pedido do Adauto, 18/11, item 8; resposta: "Aplicar isso para balcões de pia também")
+- **Pedido (item 8):** escolher qualquer vão e pôr porta (comum ou basculante), gaveta (uma ou conjunto), prateleira (com engrosso ou sem recuo), divisória e puxador. Cada mudança só no vão escolhido. Exemplo dele: no balcão da pia, gaveta no vão de baixo e basculante no de cima.
+- **Antes:** o editor por vãos (`rgFrom`/`rgInit`/`rgParts`) só ligava em torres (`soloOn`: altura ≥ 1500 ou "em cima").
+- **Medido (18/11):** converter um balcão com a conta da torre mudava peças de fabricação:
+  - porta 705 → 650;
+  - "Moldura de acabamento" de 30 mm a mais;
+  - em Balcão da pia, Balcão 2 portas e Balcão 1 porta.
+- **Causa raiz:**
+  - **Porta:** no editor normal, com travessa frontal a frente sobe e cobre a travessa (`tX_`/`tXv_` no `partsOf`); o `doorBox` do editor por vãos não aplicava essa regra.
+  - **Moldura:** `moldFr` (tem frente?) só olhava `m.v`, e no editor por vãos as frentes ficam na árvore `m.rt`.
+- **Correção (só balcão: não superior, abaixo de 1500, não "em cima"; torre não muda):**
+  - `rgBalTx`: a frente de cima sobe com a mesma conta do editor normal (inclui rack/moldura e cava).
+  - `moldFr` enxerga porta e gaveta na árvore.
+  - Resultado: corte e posição de cada peça idênticos ao converter (Balcão da pia, 2 portas, 1 porta).
+- **Entrada:** `soloOn` ("Editar só ele no 2D") converte o **balcão de pia**: `m.pia` (o "Balcão da pia") ou cuba na pedra em cima dele (`rgBalPia`). Só fica convertido se o corte (medidas, espessura, nome) e a posição de cada peça forem idênticos (`rgBalTenta`); senão volta e avisa. Sem mexer, sair do 2D volta igual (RGAUTO).
+- **Não muda:** balcão que não é de pia, aéreo e o editor de hoje.
+- **Teste:** `testBalcaoDaPiaNoEditorPorVaosGavetaEmbaixoBasculanteEmCima`.
+  - Verifica: entrar sem mudar peça, sair igual, o exemplo do pedido (basculante em y 10 cobrindo a travessa; 2 gavetas por fora terminando em 710, como a porta normal), corte, outro balcão sem mudar, salvar e reabrir, balcão comum fica no editor de hoje, torre continua.
+  - Falha em `e39e655` e passa na correção.
+- **Não verificado:** balcão de pia com cuba na pedra (só o `m.pia` está no teste); aéreo (não pedido).
+- **Commits:** `6a21984` (teste), `6a3b26f` (correção). Ramo `claude/arquemestre-vaos-balcao`.
+
+## TAMP-DESCE — 2 toques na ponta do tamponamento de cima descem o lateral (pedido do Adauto, 18/11, item 7)
+- **Pedido:** "Eu seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto". O "inverter" é o que já existe ("Esse inverter tamponamento é mesmo").
+- **Correção (bloco TAMP-DESCE no fim do `editor.html`):** 2 toques no "Tamponamento de cima" no 2D abrem `#ttq` com três opções:
+  - "⬇ Descer tamponamento esquerdo";
+  - "⬇ Descer tamponamento direito";
+  - "⇄ Inverter o de cima".
+  - O lado da ponta tocada fica em destaque.
+- **Reaproveitado, sem conta nova:**
+  - **Descer:** dispara o mesmo tratador da caixa `data-c="tl|tr"` do painel (`tpAntes`, `tpNaoCabe`, `confineAll`, `rowJoin`, aviso de não cabe). Tocar de novo tira.
+  - **Inverter:** `tpInvSet`.
+  - **Aumentar/diminuir:** o arrasto do lateral que já existe (TAMP-2D-ALVO).
+  - 2 toques no corpo do móvel continuam abrindo o vão.
+- **Teste:** `testDoisToquesNaPontaDoTamponamentoDeCimaDesceOLateralEInverte`.
+  - Verifica: pergunta, sem menu do vão, desce o esquerdo com as mesmas peças da caixa do painel, inverte, desce o direito, arrasto aumenta, corpo abre o vão, salvar e reabrir.
+  - Falha antes e passa depois. Os 35 testes de tamponamento passam.
+- **Commits:** `2b1ba4c` e `7907232` (teste), `7a54293` (correção).
+
 ## TORRE-DIRETO — torre / armário alto por vãos: painel por vãos sem ir pro 2D isolado (pedido do Adauto, 18/11, 2 fotos)
 - **Pedido:** "Ao clicar em torre/armário alto não aparece somente essa cabeçalho lateral… aparecer esse [painel] sem precisar de ir pro 2D isolado dele". Escolha dele (18/11): **painel por vãos + vão tocável no desenho do projeto**; 1 dedo arrastando continua movendo o móvel.
 - **Antes:** numa torre que já é por vãos (editada antes no 2D isolado, ou "montar do zero"), o painel do projeto só mostrava o quadro "Este módulo é montado por vãos no desenho… ✏️ Editar só ele no 2D" (o "cabeçalho"). O editor por vãos (`rgOverlay`, `tabsHtml`/`body`, menu de 2 toques) só ligava com `window.SOLO2 === m`, e 2 toques entravam no 2D isolado.

@@ -10878,9 +10878,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    /* PAREDE-ESPELHADA (pedido do Adauto, 18/11): olhando cada parede de frente, de dentro do ambiente, os módulos aparecem na sequência e na
-       orientação de verdade. Antes, a parede da ESQUERDA saía espelhada no 2D (o canto do fundo à esquerda da tela) e, no 3D, o lado
-       "esquerdo" do móvel ficava à direita de quem olha. Os dados salvos (x a partir do canto do fundo), as peças e o corte não mudam. */
+    /* PAREDE-ESPELHADA (pedido do Adauto, 18/11; decisão dele: "manter físico, corrigir nomes"): olhando a parede da ESQUERDA de dentro do
+       ambiente, o canto do fundo fica à direita. O 2D dela passa a mostrar igual a quem olha (antes saía espelhado: canto do fundo à esquerda).
+       O 3D, as posições, as peças e o corte NÃO mudam: projetos antigos ficam fisicamente iguais (o lado guardado como "esquerdo" de um móvel
+       da parede esquerda continua do lado do canto, que é à direita de quem olha). Os nomes dos lados na tela seguem quem olha (outro teste). */
     func testParedeDaEsquerdaNaoFicaEspelhadaNo2DNemNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -10900,17 +10901,20 @@ final class EditorWebKitTests: XCTestCase {
         /* 2D de cada parede: ordem na tela, da esquerda pra direita */
         var tela=function(w){wvGo(w);draw();var o=[];document.querySelectorAll('#mod').forEach(function(g){var m=S.mods[+g.dataset.mi];if(w==='f'&&m.wing)return;/* no 2D do fundo os móveis das paredes do lado aparecem tracejados, só de referência */var r=g.querySelector('rect[data-mi]').getBoundingClientRect();o.push([m.__t,r.left])});o.sort(function(a,b){return a[1]-b[1]});return w+': '+o.map(function(q){return q[0]}).join(' ')};
         R.ordem2D=[tela('f'),tela('e'),tela('d'),tela('f')].join(' | ');
-        /* no 2D da parede esquerda, o tamponamento esquerdo do móvel aparece à esquerda dele na tela */
-        wvGo('e');draw();var m=S.mods.filter(function(q){return q.__t==='C'})[0],mi=S.mods.indexOf(m),P=partsOf(m),tp=P.filter(function(p){return /^Tamponamento esquerdo/.test(p.name)})[0];R.tamp2D=tp&&tp.x<0?'à esquerda do móvel':'outro lado';wvGo('f');draw();
+        /* no 2D da parede esquerda, o desenho fica igual ao 3D visto de dentro: o tamponamento guardado como esquerdo (do lado do canto) aparece à DIREITA do móvel na tela */
+        wvGo('e');draw();var mi=-1;S.mods.forEach(function(q,i){if(q.__t==='C')mi=i});var g=document.querySelector('#mod[data-mi="'+mi+'"]'),gr=g.querySelector('rect[data-mi]').getBoundingClientRect(),tpe=[].slice.call(g.querySelectorAll('[data-p]')).filter(function(el){var p=partsOf(S.mods[mi])[+el.dataset.p];return p&&/^Tamponamento esquerdo/.test(p.name)})[0],tr_=tpe?tpe.getBoundingClientRect():null;
+        R.tamp2D=!tr_?'sem tamponamento':(tr_.left+tr_.width/2>gr.left+gr.width/2?'à direita do móvel (igual ao 3D)':'à esquerda do móvel');
+        /* o texto das medidas continua legível (não espelhado) */var tx=[].slice.call(document.querySelectorAll('#svg text')).filter(function(t){return /\d/.test(t.textContent)})[0];R.textoLegivel=!!tx&&(function(){var m_=tx.getScreenCTM();return m_&&m_.a>0})();wvGo('f');draw();
         /* dados e corte iguais depois de trocar de parede, salvar e reabrir */
         var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();
         R.dados=JSON.stringify(S.mods.map(function(m){return [m.__t,m.wing||'f',m.x,m.w,m.tl,m.tr]}))===dados0.replace(/"__t":"[A-F]",?/g,'')||JSON.stringify(S.mods.map(function(m){return [m.wing||'f',m.x,m.w,m.tl,m.tr]}))===JSON.stringify(JSON.parse(dados0).map(function(q){return q.slice(1)}));
         R.corte=JSON.stringify(S.mods.map(function(m){return cutLines(m).map(function(l){return l.qty+'×'+l.L+'x'+l.W}).sort()}))===corte0;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["tamponamento3D"] as? String, "A esquerda · C esquerda · E esquerda", "o lado esquerdo do móvel fica à esquerda de quem olha a parede, nas 3 paredes")
+        XCTAssertEqual(o["tamponamento3D"] as? String, "A esquerda · C direita · E esquerda", "3D igual ao de hoje: na parede esquerda, o lado guardado como esquerdo fica do lado do canto (à direita de quem olha)")
         XCTAssertEqual(o["ordem2D"] as? String, "f: A B | e: D C | d: E F | f: A B", "parede esquerda: o canto do fundo fica à direita de quem olha (C perto do canto aparece à direita)")
-        XCTAssertEqual(o["tamp2D"] as? String, "à esquerda do móvel")
+        XCTAssertEqual(o["tamp2D"] as? String, "à direita do móvel (igual ao 3D)")
+        XCTAssertEqual(o["textoLegivel"] as? Bool, true, "texto da tela não fica espelhado")
         XCTAssertEqual(o["dados"] as? Bool, true, "dados salvos não mudam (x a partir do canto)")
         XCTAssertEqual(o["corte"] as? Bool, true, "peças e corte não mudam")
         XCTAssertEqual(o["errs"] as? Int, 0)

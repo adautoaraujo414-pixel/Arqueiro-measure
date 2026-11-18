@@ -867,6 +867,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Ajuste (18/11):** a 1ª versão espelhava em volta da parede (eixo `2·OX + W·K`). Com o móvel no fim da parede, o "⚠ pé-direito não medido" do móvel saía 108 px pra fora do quadro.
   - Medir o texto e empurrar o desenho não serve: o aviso some e aparece conforme o móvel escolhido, e o desenho andava entre o 1º e o 2º toque (o 2º toque caía fora do vão).
   - Correção: eixo fixo 900, a largura do quadro (`setVB`).
+- **Ajuste 2 (18/11, CI iOS 630):** o eixo fixo 900 tirava a parede esquerda da vista no celular, que enquadra a vista na parede.
+  - **Sintoma:** no iPhone, `testDoisToquesNoVaoDeCima…` não achou o vão ("nenhum"). Reproduzido na janela 440x956.
+  - **Correção:** volta o eixo da própria parede. Só o texto que passaria da borda esquerda (como o aviso do pé-direito) vai pro outro lado da sua linha, no espaço acima do móvel. O desenho não anda.
+  - O teste do arrasto passou a usar a distância na escala da tela (800 mm). No iPhone e no iPad, 150 px fixos batiam no limite, inclusive na parede do fundo.
+  - **Validação:** passa em 440x956, 1032x1376 e notebook.
+  - **Commits:** `a6d7cc1` (teste), `7d7fd3c` (correção).
 - **Não mudou:** `S.mods`, `m.x`, `m.wing`, `tl`/`tr`, `pk`, o ajuste por peça (`po`), `partsOf`, `cutLines`, lista, plano de corte, orçamento e 3D.
 - **Fica com o nome guardado (pendente de decisão):** a lista e o plano de corte. Lá o nome da peça faz parte da chave da marca "✓ cortada" (`offKey`/`ck`), e trocar apagaria marcas já salvas.
 - **Testes:**

@@ -1072,3 +1072,32 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
     - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
     - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
     - **O teste não foi alterado.**
+
+## FT-PORTA — fita de 0,8 mm desenhada dentro da porta/frente fechada no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: investigar e corrigir cirurgicamente só a representação visual. Separado da branch da travessa e do frontal.
+- **Reproduzido** na versão publicada `7c939bc`:
+  - a frente do corpo fica em z = profundidade + 6, e a porta/frente fechada começa exatamente ali;
+  - a tira de topo (`build_ft`) é desenhada de z1 a z1 + 0,8, ou seja, dentro da folha;
+  - as tiras afetadas: 3 no Balcão 2 portas, 4 no Aéreo 2 portas, 6 no Guarda-roupa 3 vãos (laterais, bases, divisórias).
+- **Causa:** desenho só. A posição da porta não considera a espessura da fita, e mudar a posição da porta está fora do escopo.
+- **Correção (`editor.html`, `ftClipAll`, depois do `build_ft`):**
+  - uma passada por desenho, agrupada por módulo;
+  - recorta das tiras a parte que fica atrás de uma folha fechada (Porta, Frente ou Basculante, com pelo menos 50 × 50 × 10 mm);
+  - a parte que aparece continua;
+  - com a porta aberta, a folha sai da frente e a tira volta inteira; ao fechar, o recorte volta.
+- **O que não muda:** peças, lista, corte, medidas, posição e movimento das portas. As assinaturas do teste são da versão publicada.
+- **Teste novo:** `testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`. Falha na publicada e passa depois. Confere:
+  - 7 módulos, com a área da tira visível idêntica;
+  - abrir e fechar pelo toque.
+- **Desempenho** (40 módulos, `__build`, Chromium headless): mediana de 52 ms passou para 56–61 ms. A primeira versão, que filtrava as caixas por tira, ia a ~127 ms e foi descartada.
+- **Efeito num teste existente: aguarda decisão do Adauto.**
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` pega a **primeira** caixa da fita da base (`[0]`). Com o recorte, essa é a lasca de 9 mm na ponta, então o teste toca outro lugar.
+  - No mesmo ponto real (centro da tirinha embaixo da porta), o app faz igual nas duas versões: pega a fita da base e oferece "Era a peça «Porta»?".
+  - Com o teste escolhendo o pedaço embaixo do centro da porta, **todas as conferências dele passam** na correção.
+  - **O teste não foi alterado.**
+  - Na publicada, ele continua com a falha instável antiga (linha 13, `click` em `null`).
+- **Fora do escopo, só registrado:** canto em L (prateleira/base de um braço dentro da do outro braço, base superior dentro da moldura).
+- **Bateria local completa (`1454596`):** 346/349.
+  - `testTamponamentoNo2D…`: falha antiga. A correção está na branch do P0.
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: o teste pega a primeira caixa da tira, que agora é a lasca da ponta. **Aguarda decisão do Adauto.**
+  - `testToPecaQueO3DOfereceApagar…`: total de caixas 65 → 71, porque as tiras viram pedaços. Corrigido **só no teste**, com a mesma mudança autorizada para a branch da fita do rebaixo (`288e0e2`, `1a499eb`, por cherry-pick): conferência pela identidade da peça e totais tirados da geometria da versão testada. Passa nesta branch.

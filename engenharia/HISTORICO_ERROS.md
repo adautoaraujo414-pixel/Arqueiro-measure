@@ -910,3 +910,19 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - o erro continua guardado (`ERR3`, `__diag3Antes`);
   - o diagnóstico continua no botão 🔎 do menu, quando a pessoa pede.
 - **Testes:** `testModuloQueNaoApareceNo3DViraAvisoERefazSozinho` e `testErroNoMontarUmModuloNo3D…`, com as expectativas atualizadas por este pedido. Falham antes e passam depois. O diagnóstico manual foi conferido.
+
+## PAREDE-ESPELHADA (N20) — em andamento (18/11), branch `claude/arquemestre-parede-espelhada`, NÃO integrar
+- **Defeito comprovado** (`testParedeDaEsquerdaNaoFicaEspelhadaNo2DNemNo3D`, falha antes):
+  - na parede da esquerda, o 3D põe o lado "esquerdo" do móvel (tamponamento, dobradiça, ordem dos vãos) à direita de quem olha a parede;
+  - o 2D mostra o canto do fundo à esquerda da tela.
+  - Fundo e direita estão certos.
+  - O espelhamento é só de projeção: os dados guardam x a partir do canto do fundo, e peças e corte estão certos.
+- **Feito no commit em andamento:**
+  - 3D: em `wingX`, o móvel da parede esquerda é espelhado por dentro em volta do meio dele (ocupa o mesmo trecho). O teste novo confirma.
+  - 2D: `wvFlipE` inverte o x na tela (inclusive a cuba e o cooktop da pedra), e `extOf` e a linha do canto usam o lado direito do móvel na esquerda.
+- **Quebrou 4 testes aprovados** (passam na base): `testPedraEmQualquerParede…`, `testModulosDeParedesDiferentesEncostam…`, `testCantoEmLProfundidade…`, `testEspacadorDeCanto…`.
+  - **Causa:** com o x invertido na tela, as regras que contam a partir do canto passaram a contar a partir da frente: onde o módulo novo nasce, onde a pedra nova nasce, profundidade do canto em L, espaçador do canto e encosto no canto. Os módulos criados no teste ficaram em outra posição nos dados.
+- **Próximo passo (escolher um):**
+  - **(a) recomendado:** manter toda a conta da parede esquerda em "a partir do canto", como era, e inverter só o desenho e o toque. Isso exige espelhar a posição de cada grupo do desenho (sem espelhar o móvel por dentro nem os textos) e o x do toque/arrasto.
+  - **(b):** manter o x invertido e inverter junto cada regra que conta a partir do canto.
+- **Depois:** rodar a bateria inteira, conferir projeto antigo da parede esquerda (o tamponamento/dobradiça "esquerdo" passa a aparecer do lado da frente da sala no 3D; peças e corte iguais) e mostrar imagens das 3 paredes.

@@ -805,3 +805,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `DesktopCompatTest.ponteDoEditorDeMoveis`: a ponte responde true/false.
 - **Validação:** CI Android 641 e Windows 150 (commit 2089f26).
 - **Pendente:** teste de ponta a ponta no aparelho (gravar vídeo no editor → backup → restaurar em outro aparelho). Precisa de aparelho real; ainda não verificado.
+
+## N07/N10 — etapa do iPhone/iPad vermelha sem nenhuma conferência falhar (CI 613–626) · causa achada em 18/11
+- **Sintoma:** o app de teste "caía" no começo da bateria do editor e o xcodebuild repetia e passava, mas marcava a etapa como falha.
+  - Na 618 caiu duas vezes e o resto não contou (só 181 testes, N10).
+  - O `SubscriptionTests.test05` não tinha nada a ver: passou 10/10 na 621.
+- **Como achei:** a CI passou a guardar o resumo do xcresult no `ci/ios-resultados` (6725aa4). Na 626 ele disse: "Test exceeded execution time allowance of 2 minutes" em `testAbrirPortasEGavetasFuncionaEmTodoJeitoDeModuloDoCatalogo`.
+- **Causa:** esse teste abre e fecha um módulo de cada jeito de abrir do catálogo, com esperas fixas da animação. Levava 113 s no Chromium, e o limite do iOS é 120 s por teste (`-default-test-execution-time-allowance 120`). No simulador carregado passava do limite, o sistema derrubava o app de teste e a queda aparecia no teste seguinte (`testArmarioDeCanto…`).
+- **Correção:** o teste foi dividido em 2 partes, com as mesmas conferências e os mesmos itens (54 s e 61 s). Nada foi afrouxado.
+- **Risco anotado:** outros testes de varrer o catálogo estão entre 91 e 94 s. Um deles (`testNadaDeEnfeiteTelaPrincipal3D…`) caiu na 618. Dividir do mesmo jeito se algum passar de 100 s ou cair de novo.

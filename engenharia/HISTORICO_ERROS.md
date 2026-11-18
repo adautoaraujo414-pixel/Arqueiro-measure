@@ -879,30 +879,23 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Risco visual anotado:** na parede esquerda o desenho fica mais à direita do quadro. Com parede larga, a ponta da cota "Parede X" passa por baixo dos botões flutuantes (cadeado, lixeira, calculadora), como já acontece com o lado direito no desenho normal.
 - **Commits:** `19ae71e`, `df6ea18`, `e2c1272`, `8896510`, `4460b2e`, `44553aa`, `4079a63`, `6bcdf6e`.
 
-## TORRE-DIRETO — torre / armário alto: painel por vãos sem ir pro 2D isolado (pedido do Adauto, 18/11, 2 fotos)
-- **Pedido:** "Ao clicar em torre/armário alto… aparecer esse [painel] sem precisar de ir pro 2D isolado dele". Escolha dele (18/11): **painel por vãos + vão tocável no desenho do projeto**; 1 dedo arrastando continua movendo o móvel.
-- **Antes:** o editor por vãos (`rgOverlay`, painel com `tabsHtml`/`body`, menu de 2 toques) só ligava com `window.SOLO2 === m` (2D isolado). No projeto, a torre mostrava o painel comum ou o aviso "Este módulo é montado por vãos… ✏️ Editar só ele no 2D", e 2 toques entravam no 2D isolado.
+## TORRE-DIRETO — torre / armário alto por vãos: painel por vãos sem ir pro 2D isolado (pedido do Adauto, 18/11, 2 fotos)
+- **Pedido:** "Ao clicar em torre/armário alto não aparece somente essa cabeçalho lateral… aparecer esse [painel] sem precisar de ir pro 2D isolado dele". Escolha dele (18/11): **painel por vãos + vão tocável no desenho do projeto**; 1 dedo arrastando continua movendo o móvel.
+- **Antes:** numa torre que já é por vãos (editada antes no 2D isolado, ou "montar do zero"), o painel do projeto só mostrava o quadro "Este módulo é montado por vãos no desenho… ✏️ Editar só ele no 2D" (o "cabeçalho"). O editor por vãos (`rgOverlay`, `tabsHtml`/`body`, menu de 2 toques) só ligava com `window.SOLO2 === m`, e 2 toques entravam no 2D isolado.
 - **Correção:**
-  - `window.rgDir(m)`: torre por vãos escolhida no projeto (sem 2D isolado, sem Planta, sem só-leitura). Liga o painel por vãos (com o botão "✏️ Editar só ele no 2D" no topo) e os vãos tocáveis.
-  - Os retângulos dos vãos ficam num grupo `#mod` do próprio móvel (`data-rgdir`). Assim o arrasto de 1 dedo move o móvel, e o toque sem arrastar escolhe o vão.
+  - `window.rgDir(m)`: torre por vãos escolhida no projeto (sem 2D isolado, sem Planta, sem só-leitura). Liga o painel por vãos, com "✏️ Editar só ele no 2D" no topo, e os vãos tocáveis.
+  - No projeto, os retângulos dos vãos ficam num grupo `#mod` do móvel (`data-rgdir`): o arrasto de 1 dedo move o móvel, e o toque sem arrastar escolhe o vão.
   - 2 toques no vão abrem o menu do vão (`#rgqk`), sem entrar no 2D isolado.
-  - Conversão ao escolher (bloco TORRE-DIRETO no fim do `editor.html`): usa a mesma `rgConvert` do 2D isolado, sem passo de desfazer, e **só fica convertida se o corte sair idêntico** (quantidade, comprimento, largura, espessura e nome).
-- **Medição no catálogo (18/11):**
-  - das 93 torres e armários altos que convertem, 66 dão o mesmo corte (medidas); 27 mudam peças, entre eles guarda-roupas, cantos retos e torres da sala;
-  - a conferência dos 66 foi só por medidas; a regra que liga sozinho exige também o nome, então o número que liga pode ser menor;
-  - os que mudam não ligam sozinhos e ficam como antes, com o botão do 2D isolado.
-- **Olhar não muda:**
-  - enquanto não mexer, `snapState` (gravação, desfazer, salvar) devolve o módulo original;
-  - ao escolher outra coisa, `rgAutoBack` volta exatamente como era.
-- **Dependências corrigidas no caminho:**
-  - `rgAutoBack` agora ignora só a posição (`x`, `b`, `wing`). Antes, arrastar a torre fazia a conversão ficar permanente. A posição nova é mantida.
-  - A referência de "sem mexer" é tirada depois do desenho, que acerta campos logo após a conversão.
-  - A comparação do corte limpa o cache `SPC`, que guardava as peças de antes.
+- **Tentativa descartada (`e4992a8`, revertida em `e39e655`):** converter sozinha toda torre comum ao ser tocada.
+  - A bateria deu 359/373, com 14 falhas: o editor normal das torres (torre por dentro, abas, modelos reais) mudava, e só olhar o 2D isolado passou a mudar 32 modelos.
+  - **Torre comum continua com o editor de hoje** e só vira por vãos pelo 2D isolado, como antes.
+- **Risco identificado (já existia, não mexido):** a conversão pro editor por vãos (`rgFrom`/`rgInit`) muda peças em 27 modelos do catálogo, entre eles guarda-roupas, cantos retos e torres da sala (medido em 18/11). Acontece ao editar esses modelos no 2D isolado. Fica pra decisão do Adauto.
 - **Testes:**
-  - `testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado`: painel, vão tocável, botão do 2D isolado, corte e gravação iguais, sem passo no desfazer, vão rosa, menu de 2 toques, arrasto move, sair volta igual, balcão normal, guarda-roupa que mudaria não liga. Falha antes e passa depois.
-  - `testOlharTocarEAbrirTelasNaoMudaOProjetoSozinho`: o roteiro passou a refazer o painel ao escolher o módulo (como o toque) e a percorrer as abas por vãos. Passa antes e depois.
-- **Risco identificado (não corrigido, já existia):** a conversão pro editor por vãos (`rgFrom`/`rgInit`) muda peças em 27 modelos do catálogo, entre eles guarda-roupas e cantos retos. Isso já acontece hoje ao editar esses modelos no 2D isolado. Fica pra decisão do Adauto.
-- **Commits:** `b58b769` (teste), `40d987e` (roteiro do teste), `e4992a8` (correção). Ramo `claude/arquemestre-torre-direto`.
+  - `testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado`: painel, vão tocável, botão do 2D isolado, corte e gravação iguais, sem passo no desfazer, vão rosa, menu de 2 toques, arrasto move, sair igual, balcão normal, torre comum sem conversão. Falha em `635299a` e passa na correção.
+  - `testOlharTocarEAbrirTelasNaoMudaOProjetoSozinho`: o roteiro passou a refazer o painel ao escolher o módulo (como o toque). Passa antes e depois.
+- **Commits:** ramo `claude/arquemestre-torre-direto`.
+  - Testes: `b58b769`, `40d987e`, `d6b9aed`.
+  - Correção: `e4992a8` e `e39e655`.
 
 ## PORTA-CAVA — porta cava na aba Portas das torres (pedido do Adauto, 18/11, foto do iPad)
 - **Pedido:** "Adicionar portas cava aqui também", na aba Portas do editor por vãos (torre 780 × 2600 × 560).

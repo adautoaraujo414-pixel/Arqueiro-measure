@@ -10952,6 +10952,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDE-ESPELHADA · BORDA (18/11): no desenho espelhado da parede ESQUERDA, o que ficava à direita da parede (aviso "pé-direito não medido",
+       cota da parede) passa pra esquerda. Antes o aviso saía cortado pra fora do quadro. O texto tem que caber inteiro no quadro, e o desenho não
+       pode andar ao escolher um móvel (o aviso some com móvel escolhido; se o desenho andasse, o 2º toque cairia em outro lugar). */
+    func testParedeEsquerdaAvisoNaoSaiDoQuadroEDesenhoNaoAndaAoEscolher() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        var aviso=function(){var sv=document.getElementById('svg').getBoundingClientRect(),t=[].slice.call(document.querySelectorAll('#svg text')).filter(function(t){return /pé-direito não medido/.test(t.textContent)})[0];if(!t)return 'sem aviso';var r=t.getBoundingClientRect();return r.left>=sv.left-0.5&&r.right<=sv.right+0.5?'inteiro':'cortado '+Math.round(r.left-sv.left)};
+        var ondeB=function(b){var r=document.querySelector('#mod[data-mi="'+S.mods.indexOf(b)+'"] rect[data-mi]').getBoundingClientRect();return Math.round(r.left)+','+Math.round(r.top)};
+        for(const w of ['f','e','d']){var r_=[];for(const ponta of ['canto','fim']){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2600;S.H=2700;S.wl={L:'p',R:'p'};S.Hm=false;if(w!=='f')wvGo(w);
+          newTpl(achar('inf','Balcão 1 porta'));var a=S.m;a.x=ponta==='canto'?0:S.W-a.w;newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=1100;S.m=null;draw();await W(80);
+          var p0=ondeB(b);S.m=a;draw();panel();await W(80);var av=aviso(),p1=ondeB(b);S.m=null;draw();await W(80);var p2=ondeB(b);
+          r_.push(ponta+' '+av+' '+(p0===p1&&p1===p2?'parado':'andou '+p0+' → '+p1+' → '+p2));if(w!=='f')wvGo('f')}R[w]=r_.join(' · ')}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["f"] as? String, "canto sem aviso parado · fim sem aviso parado", "parede do fundo: esse aviso não aparece nesse desenho (como antes desta correção)")
+        XCTAssertEqual(o["e"] as? String, "canto inteiro parado · fim inteiro parado", "parede esquerda: aviso inteiro e desenho parado ao escolher um móvel")
+        XCTAssertEqual(o["d"] as? String, "canto inteiro parado · fim inteiro parado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* PAREDE-ESPELHADA · NOMES (decisão do Adauto, 18/11: "manter físico, corrigir nomes"): na parede ESQUERDA, o lado guardado como "esquerdo"
        do móvel fica à direita de quem olha. O app passa a CHAMAR esse lado de "direito" no painel, nos botões, na lista e no plano de corte,
        sem mudar os dados (m.tl continua true), a chave interna da peça (pk) nem o ajuste guardado por peça. Fundo e direita: nomes como sempre.

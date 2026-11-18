@@ -1,15 +1,25 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
-• Parede e pé-direito: digitar a medida da parede ou do pé-direito (no desenho ou no ambiente) não muda mais nenhum móvel. Antes, uma medida digitada errada (por exemplo 320 em vez de 3600) esmagava a largura, a posição e a altura de todos os móveis, e eles não voltavam ao corrigir. Agora os móveis ficam como estão e, se algum ficar fora da parede, o app avisa. Parede ou pé-direito abaixo de 500 mm ficam em 500, com aviso. Desfazer e refazer funcionam.
-• Primeiro toque num móvel que não estava escolhido só escolhe. Antes, um arrasto curto do dedo já levava o móvel junto (até 29 cm).
-• Divisória: só fica escolhida quando o toque é nela, em qualquer zoom. Tocar no vão ao lado escolhe o vão. Arrastar a divisória não conta mais como toque.
-• Dois toques: o segundo toque não se perde quando o dedo demora um pouco ou treme. Dois toques abrem a edição sem mover o móvel e sem fechar o vão.
-• Medida digitada fora do possível é recusada com um aviso dizendo o limite. Nada é arredondado nem trocado sem avisar.
-• No 3D, a seta de trás volta a diminuir depois de "tampou até o fundo".
-• Réguas por lado: aceita 1, 2 ou 3. Fora disso o app avisa e não muda nada (antes 4 virava 3 e 0 virava 2 sem aviso).
-• Abas e menus na mesma ordem em todos os móveis (Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros).
-• Azul da seleção mais suave, sem deixar de mostrar o que está escolhido.
+• Projetos mais seguros: se o aparelho não conseguir gravar o arquivo dos projetos (pouco espaço, por exemplo), o app avisa e, ao abrir de novo, não volta o projeto antigo por cima do que você fez.
+• Ficam salvos no projeto (antes voltavam ao padrão ao fechar e abrir): medidas do gerador de painéis da parede, profundidade da sala esticada pela parede do lado, última altura do rodapé e as escolhas de decoração e da TV no 3D. Desfazer também guarda.
+• Vídeos do projeto entram no backup e passam pra outro aparelho junto com as fotos. Vídeo maior que 64 MB continua guardado no aparelho, com aviso de que não vai no backup.
+• Sincronização pelo Wi-Fi: fotos com dois pontos seguidos no nome (ex.: foto..jpg) passam normalmente.
+• Abrir um projeto ou tocar em qualquer coisa não move mais o móvel que está perto do canto entre duas paredes. Só encosta no canto o móvel que você mexeu.
+• Gavetas: mudar a altura da lateral de uma gaveta muda as laterais de todas as gavetas do mesmo conjunto (acima e abaixo). Frentes, profundidade e folgas não mudam; outro gaveteiro não muda; desfazer volta tudo de uma vez. Pedir mais que cabe e depois diminuir agora dá a medida certa.
+• Dois toques funcionam na geladeira dentro da caixa da geladeira e nas torres altas (também em cima da prateleira). Um toque continua igual.
+• Torre e armário alto (editor por vãos): aba Portas com a opção Porta cava (puxador usinado na porta, sem peça de puxador).
+• O menu do vão (2 toques no vão da torre) pode ser arrastado pro lado segurando na faixa do título e minimizado (▁ / ▢ abrir), pra ver o móvel. Abre de novo no lugar escolhido.
+• Fundo do armário sempre sobreposto, parafusado atrás. Rasgo só no fundo das gavetas. Móvel antigo que estava com rasgo mostra um aviso com o botão Passar pra sobreposto; nada muda sozinho.
 # (já saíram na versão anterior — ficam guardadas só como histórico):
+# • Parede e pé-direito: digitar a medida da parede ou do pé-direito (no desenho ou no ambiente) não muda mais nenhum móvel. Antes, uma medida digitada errada (por exemplo 320 em vez de 3600) esmagava a largura, a posição e a altura de todos os móveis, e eles não voltavam ao corrigir. Agora os móveis ficam como estão e, se algum ficar fora da parede, o app avisa. Parede ou pé-direito abaixo de 500 mm ficam em 500, com aviso. Desfazer e refazer funcionam.
+# • Primeiro toque num móvel que não estava escolhido só escolhe. Antes, um arrasto curto do dedo já levava o móvel junto (até 29 cm).
+# • Divisória: só fica escolhida quando o toque é nela, em qualquer zoom. Tocar no vão ao lado escolhe o vão. Arrastar a divisória não conta mais como toque.
+# • Dois toques: o segundo toque não se perde quando o dedo demora um pouco ou treme. Dois toques abrem a edição sem mover o móvel e sem fechar o vão.
+# • Medida digitada fora do possível é recusada com um aviso dizendo o limite. Nada é arredondado nem trocado sem avisar.
+# • No 3D, a seta de trás volta a diminuir depois de "tampou até o fundo".
+# • Réguas por lado: aceita 1, 2 ou 3. Fora disso o app avisa e não muda nada (antes 4 virava 3 e 0 virava 2 sem aviso).
+# • Abas e menus na mesma ordem em todos os móveis (Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros).
+# • Azul da seleção mais suave, sem deixar de mostrar o que está escolhido.
 # • Tocar e arrastar a divisória ou a prateleira de outro módulo agora escolhe aquele módulo e mexe só nela. Antes, mexia na divisória do módulo que estava escolhido.
 # • Ao abrir outro projeto, nada do projeto anterior fica escolhido: a 🗑 não apaga mais peça de outro projeto e o "Só a pedra no 3D" volta ao normal.
 # • Torre de forno e micro-ondas: trocar a porta de cima mexe só nela (pelos botões do vão da torre). Antes, os botões gerais transformavam a torre inteira numa porta e o forno e o micro-ondas sumiam.

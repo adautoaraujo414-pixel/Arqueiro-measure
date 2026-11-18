@@ -12446,4 +12446,18 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  window.__wvMirAplica=aplica;
 })();
 </script>
+<script>
+/* PAREDE-ESPELHADA · NOMES (decisão do Adauto, 18/11: "manter físico, corrigir nomes"). Na parede ESQUERDA, o lado guardado como
+   "esquerdo" do móvel fica à direita de quem olha. Só no PAINEL do móvel (textos e botões) o app troca esquerdo↔direito pra seguir quem olha.
+   Dados, chave da peça (pk), ajuste por peça, lista e plano de corte não mudam (lá o nome é chave da marca ✓ cortada). Nome de parede não muda. */
+(function(){
+ function troca(s){return String(s).replace(/\b(esquerd|direit)([oa]s?)\b|\b(esq|dir)\./gi,function(w,a,b,c){var t=a?a:c,es=/^e/i.test(t),d=a?(es?'direit':'esquerd'):(es?'dir':'esq'),r=d+(a?b:'.');return t[0]===t[0].toUpperCase()?r[0].toUpperCase()+r.slice(1):r})}
+ window.ladoTroca=troca;
+ function naEsquerda(m){try{if(!m)return false;if(m.wing==='e')return true;return !!(window.wvCur&&wvCur()==='e'&&!m.wing&&S.mods.indexOf(m)>=0)}catch(_){return false}}
+ window.ladoNaEsquerda=naEsquerda;
+ function aplica(root){if(!root)return;var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null),n,L=[];while((n=w.nextNode()))L.push(n);
+  L.forEach(function(t){var v=t.nodeValue;if(!v||!/esquerd|direit|\besq\.|\bdir\./i.test(v))return;/* nome de parede e controles de parede ficam como estão */if(/parede|lado do canto|◧|◨/i.test(v))return;var el=t.parentNode;if(el&&el.closest&&el.closest('[data-wing],[data-ambwv],[data-wvg],#wvbar'))return;t.nodeValue=troca(v)})}
+ var p0=window.panel;if(typeof p0==='function'){panel=window.panel=function(){var r=p0.apply(this,arguments);try{if(naEsquerda(S.m)){aplica(document.getElementById('bd'))}}catch(_){}return r}}
+})();
+</script>
 </body></html>

@@ -11034,6 +11034,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* TAMP-LIVRE-CORTE (pergunta do Adauto, 18/11: "calcule se essas formas livres já sobem e atualiza em tempo real o plano de corte"): o
+       tamponamento livre que desce entra no plano de corte, no plano de chapas e no número de chapas do orçamento na hora que é criado, muda
+       de medida na hora que é esticado/encolhido e some na hora que é tirado. Fita de borda da peça solta não entra na conta de fita (já era
+       assim pra toda peça solta; anotado no HISTORICO pra decisão do Adauto). */
+    func testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.geo=[];newTpl(achar('inf','Balcão 2 portas'));var a=S.m;a.x=1200;a.tt=true;a.tl=false;a.tlM=1;a.tr=false;a.trM=1;S.m=a;draw();panel();
+        var livre=function(){var G=cutGroups(),o=[];G.ord.forEach(function(k){var g=G.map[k];if(/Tamponamento \d+ \(3D\)/.test((g.names||[]).join()))o.push(g.qty+'×'+g.L+'x'+g.W)});return o.join(' | ')||'nenhum'};
+        var tot=function(){var G=cutGroups(),n=0;G.ord.forEach(function(k){n+=+G.map[k].qty||0});return n};
+        var chapasCor=function(){return budget().nC};
+        var linha=function(){return livre()+' · '+tot()+' peças · '+chapasCor()+' chapa(s) na cor'};
+        R.antes=linha();
+        var pi=partsOf(a).findIndex(function(p){return /^Tamponamento de cima/.test(p.name)}),tt=document.querySelector('#mod[data-mi="0"] [data-p="'+pi+'"]'),r=tt.getBoundingClientRect();
+        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.desceu=linha();
+        var g=S.geo[0];g.h=g.h-200;g.b=g.b+200;draw();R.encolheu=linha();
+        ttqAbre({m:a,mi:0,el:tt},r.left+5,r.top);document.querySelector('#ttq [data-ttq="tl"]').click();await W(100);R.tirou=linha();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor")
+        XCTAssertEqual(o["desceu"] as? String, "2×820x585 · 21 peças · 2 chapa(s) na cor", "entra no corte e nas chapas na hora (30 mm = 2 × 15)")
+        XCTAssertEqual(o["encolheu"] as? String, "2×620x585 · 21 peças · 2 chapa(s) na cor", "esticar/encolher muda a medida no corte na hora")
+        XCTAssertEqual(o["tirou"] as? String, "nenhum · 19 peças · 1 chapa(s) na cor", "tirar some do corte na hora")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* TAMP-DESCE (pedido do Adauto, 18/11, item 7): "Eu seleciono o lado que quero descer um tamponamento clicando na ponta duas vezes no 2D e o
        app pergunta descer tamponamento direito ou esquerdo, opção de inverter, aumentar ou diminuir ele também ao selecionar pelo arrasto".
        Esclarecido (18/11): "Tamponamento lateral é um tamponamento livre descendo esquerda ou direita · não mudar forma que já existe, apenas

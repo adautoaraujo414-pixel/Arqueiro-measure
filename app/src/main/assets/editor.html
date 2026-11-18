@@ -12251,20 +12251,27 @@ window.vaoAbre=function(m,vi,alvo){try{var e=+m.esp||15,iw=Math.max(1,m.w-2*e),R
 try{['10auts3fippv5','fmorbb134o9yl','ozzjm373p7c5','15xze0b12e9ed9','1nr2frdtnpocl'].forEach(function(k){FOTOS[k]=1})}catch(_){}
 /* ===== canto entre paredes: módulo do fundo e módulo da parede do lado nunca entram um no outro · chegou perto (menos de 8 cm), encostam certinho
    (conta pela peça de verdade no 3D: caixa, portas, tamponamento; o puxador não conta) ===== */
-(function(){var DN=0,tm=null,busy=false,SNAP=80;
+(function(){var DN=0,tm=null,busy=false,SNAP=80,POS=new WeakMap();
+ /* CANTO-SOZINHO (18/11): só o módulo que a pessoa mexeu (posição ou medida mudou desde a última conferência, ou acabou de entrar) anda até encostar.
+    Antes, na 1ª conferência depois de abrir o projeto, qualquer toque (até na geladeira de outra parede) empurrava o módulo da parede do lado.
+    Abrir um projeto (loadState, também o desfazer) só anota onde cada um está: nada se mexe sozinho (CLAUDE.md §4, decisão de 16/11). */
+ var sgM=function(m){return [m.wing||'',m.x,m.w,m.b,m.h,m.d,m.tl?m.tlW:0,m.tr?m.trW:0,m.sup?1:0].join(',')};
+ var anota=function(){(S.mods||[]).forEach(function(m){if(m)POS.set(m,sgM(m))})};
+ try{var lsC_=loadState;loadState=window.loadState=function(){var r=lsC_.apply(this,arguments);try{anota()}catch(_){}return r}}catch(_){}
  window.addEventListener('pointerdown',function(){DN++},true);window.addEventListener('pointerup',function(){DN=Math.max(0,DN-1)},true);window.addEventListener('pointercancel',function(){DN=Math.max(0,DN-1)},true);
  function ext(){var E={};(window.__boxes?__boxes():[]).forEach(function(q){var k=String(q.nm||'').split(':');if(!/^\d+$/.test(k[0]))return;if(/Puxador|LED|Dobradi|Corrediça/.test(k[1]||'')||q.rled)return;var e=E[k[0]]||(E[k[0]]=[1e9,-1e9,1e9,-1e9,1e9,-1e9]);e[0]=Math.min(e[0],q.x0);e[1]=Math.max(e[1],q.x1);e[2]=Math.min(e[2],q.z0);e[3]=Math.max(e[3],q.z1);e[4]=Math.min(e[4],q.y0);e[5]=Math.max(e[5],q.y1)});return E}
  var SIG='';function rodar(){busy=true;var w=window.wvCur?wvCur():null,n=0;try{if(w&&window.__wvCanon)__wvCanon();var M=S.mods||[],sel=S.m;if(!M.some(function(m){return (m.wing==='e'||m.wing==='d')&&!m.corner}))return 0;/* só remonta o 3D pra conferir quando mudou posição ou medida de algum módulo (antes conferia a cada desenho: atraso no 2D) */var sg=M.map(function(m){return [m.wing||'',m.x,m.w,m.b,m.h,m.d,m.tl?m.tlW:0,m.tr?m.trW:0,m.sup?1:0].join(',')}).join('|')+'#'+S.W;if(sg===SIG)return 0;SIG=sg;
+   var MEX=new Set();M.forEach(function(m){if(m&&POS.get(m)!==sgM(m))MEX.add(m)});if(!MEX.size){anota();return 0}
    for(var volta=0;volta<3;volta++){try{__build()}catch(_){break}var E=ext(),mexeu=false;
     M.forEach(function(F,fi){if(F.wing||F.corner)return;var a=E[fi];if(!a)return;M.forEach(function(Wm,wi){if(!(Wm.wing==='e'||Wm.wing==='d')||Wm.corner||mexeu)return;var b=E[wi];if(!b)return;
      if(Math.min(a[5],b[5])-Math.max(a[4],b[4])<=1)return;/* alturas diferentes (balcão e aéreo): não se tocam */
      var ox=Math.min(a[1],b[1])-Math.max(a[0],b[0]),oz=Math.min(a[3],b[3])-Math.max(a[2],b[2]);if(ox<=-SNAP||oz<=-SNAP)return;if(ox<-0.5&&oz<-0.5)return;
      /* estão no canto (encostando ou entrando): quem foi mexido anda pelo seu próprio comprimento até encostar */
-     var anda=(sel===F)?F:Wm,d;
+     if(!MEX.has(F)&&!MEX.has(Wm))return;/* nenhum dos dois foi mexido: fica onde está */var anda=(MEX.has(F)&&MEX.has(Wm))?((sel===F)?F:Wm):(MEX.has(F)?F:Wm),d;
      var sobre=ox>0.5&&oz>0.5;
      if(anda===Wm){/* o do lado anda no comprimento dele (z): só se estão de frente um pro outro nesse sentido (cruzam no x) */if(!sobre&&!(ox>0.5))return;d=a[3]-b[2];if(Math.abs(d)<0.5)return;if(!sobre&&Math.abs(d)>SNAP)return;Wm.x=Math.round((+Wm.x+d)*10)/10}
      else{/* o do fundo anda no x: só se cruzam no z */if(!sobre&&!(oz>0.5))return;if(Wm.wing==='e'){d=b[1]-a[0]}else{d=b[0]-a[1]}if(Math.abs(d)<0.5)return;if(!sobre&&Math.abs(d)>SNAP)return;F.x=Math.round((+F.x+d)*10)/10}
-     mexeu=true;n++})});if(!mexeu)break}}finally{try{if(w&&w!=='f'&&window.__wvTo)__wvTo(w)}catch(_){}busy=false}
+     mexeu=true;n++})});if(!mexeu)break}anota()}finally{try{if(w&&w!=='f'&&window.__wvTo)__wvTo(w)}catch(_){}busy=false}
   if(n){try{d0.call(window)}catch(_){}try{if(window.re3)window.re3()}catch(_){}}return n}
  window.cantoEncosta=rodar;
  function agenda(){if(busy)return;clearTimeout(tm);tm=setTimeout(function(){var kb=document.getElementById('calcbar'),ae=document.activeElement;if(DN>0||(typeof drag!=='undefined'&&drag)||(kb&&!kb.hidden)||(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName))){agenda();return}rodar()},250)}

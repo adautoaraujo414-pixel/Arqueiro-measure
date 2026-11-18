@@ -10958,8 +10958,9 @@ final class EditorWebKitTests: XCTestCase {
        no desenho"): tocou na torre / armário alto no desenho do projeto, o painel do lado já mostra as abas por vãos (Divisões, Gavetas, Portas,
        Internos, Eletros) e os vãos ficam tocáveis no próprio desenho (fica rosa). 1 dedo arrastando continua movendo o móvel; 2 toques no vão abrem
        o menu do vão; o "Editar só ele no 2D" continua no painel. Olhar não muda: sem mexer, nada muda no projeto, na gravação nem no desfazer.
-       Segurança: só liga sozinho quando a conversão pro editor por vãos dá exatamente as mesmas peças no corte; quando mudaria (guarda-roupa de
-       3 vãos, por exemplo), fica como antes (botão pro 2D isolado). */
+       Escopo (18/11, depois da bateria): vale pra torre que já é por vãos (era nela que só aparecia o quadro "Este módulo é montado por vãos…").
+       A torre comum (Armário alto 2 portas) continua com o editor de hoje e não é convertida sozinha: converter ao tocar mudava o editor normal
+       das torres (torre por dentro, abas) e quebrou 14 testes aprovados. */
     func testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -10971,7 +10972,7 @@ final class EditorWebKitTests: XCTestCase {
         var abas=function(){return [].map.call(document.querySelectorAll('#tabs [data-rgt]'),function(x){return x.textContent.replace(/[^A-Za-zÀ-ú]/g,'')}).join(',')};
         var corte=function(m){return cutLines(m).map(function(l){return [l.qty,l.L,l.W,l.mat].join('x')}).sort().join(',')};
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
-        newTpl(achar('alto','Armário alto 2 portas'));var a=S.m;a.x=600;newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=2600;S.m=null;draw();try{panel()}catch(_){}VB={x:0,y:0,w:900,h:560};setVB();draw();await W(300);
+        /* torre que já é por vãos (editada antes no 2D isolado) */newTpl(achar('alto','Armário alto 2 portas'));var a=S.m;a.x=600;rgConvert(a);newTpl(achar('inf','Balcão 1 porta'));var b=S.m;b.x=2600;S.m=null;draw();try{panel()}catch(_){}VB={x:0,y:0,w:900,h:560};setVB();draw();await W(300);
         var a0=JSON.stringify(a),c0=corte(a),h0=HIST.length,s0=JSON.stringify(snapState().mods);
         /* 1 toque na torre: escolhe e o painel já vem por vãos, sem o 2D isolado */var g=caixa(a);tap(g.left+g.width/2,g.top+g.height*0.5);await W(500);
         R.painel=(S.m===a?'escolhida':'outra')+' · '+(window.SOLO2?'2D isolado':'projeto')+' · '+abas();
@@ -10987,9 +10988,9 @@ final class EditorWebKitTests: XCTestCase {
         R.arrasto=(a.x>ax0+50?'moveu':'não moveu '+(a.x-ax0))+' · '+(JSON.stringify([a.w,a.h,a.d,+a.b||0])===med?'medidas iguais':'medidas mudaram')+' · '+(window.SOLO2?'2D isolado':'projeto');
         /* sair sem editar a torre: volta exatamente como era (só a posição do arrasto) */S.m=b;draw();panel();await W(200);var a1=JSON.parse(a0);a1.x=a.x;R.saiu=JSON.stringify(a)===JSON.stringify(a1)?'igual':'mudou';R.saiuCorte=corte(a)===c0?'igual':'mudou';
         /* balcão comum: painel normal */R.balcao=abas()===''?'normal':'por vãos';
-        /* guarda-roupa de 3 vãos: a conversão mudaria as peças · fica como antes (sem converter, botão do 2D isolado) */
-        S.m=null;newTpl(achar('quarto','Guarda-roupa 3 vãos'));var q=S.m;q.x=0;S.m=null;draw();await W(100);var q0=JSON.stringify(q);S.m=q;S.tab=1;draw();panel();await W(200);
-        R.guardaRoupa=(JSON.stringify(q)===q0?'não converteu':'converteu')+' · '+(abas()===''?'painel normal':'por vãos');
+        /* torre comum (não é por vãos): editor de hoje, sem converter sozinha */
+        S.m=null;newTpl(achar('alto','Armário alto 2 portas'));var q=S.m;q.x=0;S.m=null;draw();await W(100);var q0=JSON.stringify(q);S.m=q;S.tab=1;draw();panel();await W(200);
+        R.torreComum=(JSON.stringify(q)===q0?'não converteu':'converteu')+' · '+(abas()===''?'painel normal':'por vãos');
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["painel"] as? String, "escolhida · projeto · Cores,Estrutura,Divisões,Gavetas,Portas,Internos,Eletros", "tocou na torre: painel por vãos sem o 2D isolado")
@@ -11003,7 +11004,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["saiu"] as? String, "igual", "sem editar, a torre volta exatamente como era")
         XCTAssertEqual(o["saiuCorte"] as? String, "igual")
         XCTAssertEqual(o["balcao"] as? String, "normal")
-        XCTAssertEqual(o["guardaRoupa"] as? String, "não converteu · painel normal", "conversão que mudaria peças não liga sozinha")
+        XCTAssertEqual(o["torreComum"] as? String, "não converteu · painel normal", "torre comum: editor de hoje, sem conversão sozinha")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

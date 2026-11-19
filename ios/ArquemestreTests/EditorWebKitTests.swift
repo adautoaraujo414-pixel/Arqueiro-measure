@@ -11036,6 +11036,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* B05 / TAMP-CAMINHO (auditoria de 16/11, P1-B; corrigido na rodada de 19/11 aprovada pelo Adauto): digitar a mesma posição tem que dar o mesmo
+       resultado, venha de onde vier, e não pode sobrar vão sem tamponamento junto à parede. Antes: digitar 25 vindo de 800 ou de 45 dava x=35 sem
+       tamponamento (o encaixe na parede ainda contava o tamponamento automático do lado exposto, que depois era tirado). Manual (tlM) não muda. */
+    func testPosicaoDigitadaPertoDaParedeDaOMesmoResultadoSemVaoSemTamponamento() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var st=function(m){return 'x='+Math.round(m.x*10)/10+' tl='+(m.tl?1:0)};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));draw();var m=S.mods[0];S.m=m;setv('x',800);return m};
+        var fire=function(k){var i=document.querySelector('[data-k="'+k+'"]');if(i){i.dispatchEvent(new Event('change',{bubbles:true}))}};var typ=function(k,v){setv(k,v);fire(k)};
+        var r=[];cena();typ('x',25);r.push(st(S.mods[0]));cena();typ('x',45);typ('x',25);r.push(st(S.mods[0]));cena();typ('x',5);typ('x',25);r.push(st(S.mods[0]));R.mesma25=r.join(' | ');
+        cena();typ('x',5);R.de800para5=st(S.mods[0]);cena();typ('x',800);R.longe=st(S.mods[0]);
+        /* manual: tamponamento ligado à mão continua, e o encaixe conta ele */var m=cena();m.tl=true;m.tlM=1;typ('x',25);R.manual=st(S.mods[0])+(S.mods[0].tlM?' manual':'');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["mesma25"] as? String, "x=25 tl=0 | x=25 tl=0 | x=25 tl=0", "mesma posição digitada, mesmo resultado, venha de onde vier")
+        XCTAssertEqual(o["de800para5"] as? String, "x=5 tl=0", "junto à parede sem vão de 35 mm")
+        XCTAssertEqual(o["longe"] as? String, "x=800 tl=1", "longe da parede: lado exposto continua ganhando o tamponamento")
+        XCTAssertEqual(o["manual"] as? String, "x=35 tl=1 manual", "tamponamento ligado à mão não muda (o corpo + 30 mm encostam na parede)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* AUDITORIA-DUPLICAR (auditoria geral pedida pelo Adauto, 18/11: "não duplicar peças, chapas, fitas ou valores · recalcular após adicionar,
        editar ou excluir · placas soltas mantendo suas regras próprias"): num projeto com balcão da pia por vãos, torre, aéreo, tamponamento
        livre e placa solta, o plano de corte, as chapas e o orçamento dão o mesmo resultado chamados várias vezes; pôr e tirar peça (porta,

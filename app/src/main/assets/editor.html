@@ -12549,4 +12549,11 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  ['pointerup','pointercancel'].forEach(function(n){sv.addEventListener(n,function(e){if(!DG||e.pointerId!==DG.pid)return;e.stopImmediatePropagation();var mv=DG.mv,g=DG.g;DG=null;try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}if(mv)toast('Tamponamento livre: '+g.w+' × '+g.h+' · do chão '+g.b+' · da esquerda '+g.x)},true)});
 })();
 </script>
+<script>
+/* ===== B05 / TAMP-CAMINHO (auditoria 16/11 P1-B; corrigido 19/11): ao digitar a posição, o tamponamento AUTOMÁTICO (tlAuto/trAuto, nunca o manual)
+   é decidido de novo depois da posição nova. Antes o encaixe na parede ainda contava o automático do lado exposto e empurrava o móvel 30 mm;
+   depois o automático saía e ficava vão sem tamponamento junto à parede (25 digitado virava 35). ===== */
+(function(){var sv0=window.setv;if(typeof sv0!=='function')return;
+ setv=window.setv=function(k,v){try{var m=S.m;if(k==='x'&&m&&S.mods.indexOf(m)>=0&&!m.lock){['tl','tr'].forEach(function(c){if(m[c]&&m[c+'Auto']&&!m[c+'M']){m[c]=false;delete m[c+'Auto']}})}}catch(_){}return sv0.apply(this,arguments)}})();
+</script>
 </body></html>

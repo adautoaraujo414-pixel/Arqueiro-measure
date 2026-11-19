@@ -6049,7 +6049,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var R={falsas:[],n:0,mods:0};window.toast=function(){};
         var r=function(v){return Math.round((+v||0)*10)/10};
-        var sig=function(m){var P='';try{P=partsOf(m).map(function(p){return [p.name,r(p.x),r(p.y),r(p.w),r(p.h),r(p.cl),r(p.cw),p.noDraw?1:0,p.noCut?1:0,p.note||'',p.col||'',(p.cxz||[]).join(),p.open?1:0,p.glass?1:0,p.op||''].join('~')}).join('|')}catch(e){P='E'+e}var C='';try{C=JSON.stringify(cutLines(m).map(function(l){return [l.names,l.L,l.W,l.qty,l.mat,l.fin,l.note]}))}catch(e){C='E'+e}var K='';try{K=JSON.stringify(mCost(m))}catch(e){K='E'+e}return P+'#'+C+'#'+K};
+        var sig=function(m){var P='';try{P=partsOf(m).map(function(p){return [p.name,r(p.x),r(p.y),r(p.w),r(p.h),r(p.cl),r(p.cw),p.noDraw?1:0,p.noCut?1:0,p.note||'',p.col||'',(p.cxz||[]).join(),p.open?1:0,p.glass?1:0,p.op||''].join('~')}).join('|')}catch(e){P='E'+e}var C='';try{C=JSON.stringify(cutLines(m).map(function(l){return [l.names,l.L,l.W,l.qty,l.mat,l.fin,l.note]}))}catch(e){C='E'+e}var K='';try{K=JSON.stringify(mCost(m))}catch(e){K='E'+e}/* PC-ROD (pedido do Adauto 17/11): "Incluir no plano de corte" do rodapé muda só o plano de corte (S.cutOff), não as peças: conta como mudança */return P+'#'+C+'#'+K+'#'+JSON.stringify(S.cutOff||{})};
         var NAMES=[/^Aéreo 2 portas$/,/^Nicho aéreo$/,/^Armário alto 2 portas$/,/^Canto em L \(aéreo\) · esquerdo/,/^Canto L guarda-roupa · esquerdo/,/^Cristaleira torre/,/^Gabinete 2 portas$/,/^Rack suspenso$/];var items=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(NAMES.some(function(re){return re.test(it.n||'')})&&!items.some(function(q){return q.n===it.n}))items.push(it)})});
         items.forEach(function(it){S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;try{newTpl(JSON.parse(JSON.stringify(it)))}catch(e){return}var m=S.mods[0];if(!m||m.rt)return;R.mods++;S.m=m;
          [0,1,3,2,4].forEach(function(tab){S.tab=tab;S.sv=0;draw();panel();var n=document.querySelectorAll('#bd input[type=checkbox]').length;
@@ -8787,7 +8787,7 @@ final class EditorWebKitTests: XCTestCase {
         var emCima=function(m,re){var P=partsOf(m).filter(function(p){return re.test(p.name)}),n=0;P.forEach(function(a,i){P.forEach(function(b,j){if(j<=i)return;if(Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x)>1&&Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y)>1)n++})});return P.length+' peças · uma em cima da outra '+n};
         /* 1. balcão que já tem divisória no meio: "Divisória vertical" de novo entra no meio do vão escolhido, o vão vira dois (as gavetas ficam onde estavam) e nenhum vão fica com largura negativa */
         var m=await novo('Balcão porta + gavetas');R.antes=m.div.length+' divisória · vãos '+vaos(m).join(',')+' · '+m.v.map(function(v){return v.k}).join(',');
-        bot('d').click();await W(100);R.maisUma=m.div.length+' divisórias · vãos '+vaos(m).join(',')+' · '+m.v.map(function(v){return v.k}).join(',')+' · repetida '+m.div.some(function(x,i){return m.div.indexOf(x)!==i});R.divisoriasNoDesenho=emCima(m,/^Divisória/);
+        bot('d').click();await W(100);R.maisUma=m.div.length+' divisórias · vãos '+vaos(m).join(',')+' · '+m.v.map(function(v){return v.k}).join(',')+' · repetida '+m.div.some(function(x,i){return m.div.indexOf(x)!==i});R.divisoriasNoDesenho=emCima(m,/^(Divisória|Lateral do meio)/);/* LAT-MEIO (pedido do Adauto 17/11): a divisória junto das gavetas no inferior da cozinha é "Lateral do meio"; conta as duas */
         S.sv=2;panel();await W(30);bot('d').click();await W(100);R.maisOutra=m.div.length+' divisórias · vãos '+vaos(m).join(',')+' · '+m.v.map(function(v){return v.k}).join(',')+' · menor vão '+Math.min.apply(null,vaos(m));
         /* 2. módulo sem divisória: a primeira continua indo pro meio */
         var a=await novo('Balcão 2 portas');bot('d').click();await W(100);R.primeira=JSON.stringify(a.div)+' · vãos '+vaos(a).join(',');
@@ -11701,25 +11701,44 @@ final class EditorWebKitTests: XCTestCase {
         var MSG=[];var pd0=window.pcDelAt;window.pcDelAt=function(){var r=pd0.apply(this,arguments);MSG.push(r);return r};
         var RM={inf:'cozinha',sup:'cozinha',canto:'cozinha',alto:'cozinha',quarto:'quarto',dArm:'quarto',dCan:'quarto',banho:'banho',sala:'sala',escr:'escr'};
         var items=[];CATS.forEach(function(c){if(!RM[c.id])return;(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(t&&!t.act&&t.w&&t.h)items.push([c.id,t])})});
-        var bx=function(){__build();var o={__tot:0};__boxes().forEach(function(b){if(String(b.nm).indexOf('0:')!==0)return;o.__tot++;var k=b.ppk&&/ · engrosso \d+#\d+$|\(régua\)#\d+$/.test(String(b.pk))?b.pk:(b.ppk||b.pk);if(k)o[k]=(o[k]||0)+1});return o};
+        var bx=function(){__build();var o={__tot:0,__nf:0,__ftk:{}};__boxes().forEach(function(b){if(String(b.nm).indexOf('0:')!==0)return;o.__tot++;var k=b.ppk&&/ · engrosso \d+#\d+$|\(régua\)#\d+$/.test(String(b.pk))?b.pk:(b.ppk||b.pk);if(b.ft){if(k)o.__ftk[k]=(o.__ftk[k]||0)+1}else o.__nf++;if(k)o[k]=(o[k]||0)+1});return o};
         var cnt=function(m,nm){return partsOf(m).filter(function(p){return p.name===nm}).length};
         open3D();await W(200);window.SEL3={mi:0,pk:'x'};try{__sel3(-99999,-99999)}catch(_){}
         var lixo3D=function(pk){window.SEL3={mi:0,pk:pk};MSG=[];var b=document.createElement('button');b.dataset.e3del='1';document.getElementById('e3').appendChild(b);b.click();b.remove();return MSG.join(' / ')};
+        /* FANTASMA PELA IDENTIDADE (Adauto, 17/11/2026, autorizado): a conferência era pelo total de caixas do módulo. Com a fita escondida dentro da travessa (FT-REBAIXO),
+           apagar a travessa descobre a frente do rebaixo e as 2 tiras dela voltam (com a chave da lateral), e o total enganava. Agora: saiu do 3D = as caixas com a chave da
+           própria peça (mesmo nome, qualquer nº) caem pelo menos o que ela tinha, e as caixas que não são tira de fita caem o que ela tinha (pega caixa que sobrasse com outro nome). As outras peças são conferidas no caso da travessa, logo abaixo. */
+        var bnm=function(q){return String(q).replace(/#\d+$/,'')},c3=function(o,nm_){var t=0;Object.keys(o).forEach(function(q){if(!/^__/.test(q)&&bnm(q)===nm_)t+=o[q]});return t};
         var feito={},naoSai=[],fantasma=[],bloq=[],n=0;
         for(var ii=0;ii<items.length;ii++){var it=items[ii][1],base=null;try{loadState(initLimpo());S.room=RM[items[ii][0]];S.env=S.room;S.W=5000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=1500;m.tl=m.tr=true;S.m=m;draw();base=JSON.stringify(snapState())}catch(e){continue}
-         var B0=bx();Object.keys(B0).forEach(function(k){if(k==='__tot')return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
+         var B0=bx();Object.keys(B0).forEach(function(k){if(/^__/.test(k))return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
           loadState(JSON.parse(base));var m2=S.mods[0];S.m=m2;draw();var b0=bx();if(!b0[k])return;var tira_=/ · engrosso \d+$|\(régua\)$/.test(nm),noCorte=function(){var o=0;cutLines(S.mods[0]).forEach(function(l){(l.pks||[]).forEach(function(q){if(q===k)o++})});return o},c0=tira_?noCorte():cnt(m2,nm),fundo0=m2.fundo;var msg=lixo3D(k);m2=S.mods[0];var b1=bx();n++;
-          var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=b1.__tot<=b0.__tot-b0[k];
+          var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=c3(b1,nm)<=c3(b0,nm)-b0[k]&&b1.__nf<=b0.__nf-(b0[k]-(b0.__ftk[k]||0));
           if(!saiuLista&&!saiu3D&&/^⚠/.test(msg))bloq.push(nm);else if(!saiuLista&&!saiu3D)naoSai.push(nm+' ('+it.n+': '+msg.slice(0,60)+')');else if(saiuLista!==saiu3D)fantasma.push(nm+' ('+it.n+(saiuLista?': saiu da lista e ficou no 3D':': saiu do 3D e ficou na lista')+')')})}
         R.pecasConferidasMaisDe60=n>60;R.naoSai=naoSai.join(' | ')||'nenhuma';/* 16/11 10:56: peça da estrutura que não pode sair não some calada: o 🗑 explica o motivo */R.naoSaiComMotivo=bloq.join(', ')||'nenhuma';R.fantasma=fantasma.join(' | ')||'nenhuma';
+        /* travessa frontal pelo 🗑 (Adauto 17/11/2026): nenhuma caixa dela fica no 3D, sai da lista e do corte, as outras peças ficam iguais (lista) e não perdem caixa no 3D
+           (as 2 tiras da frente do rebaixo podem voltar, porque ela ficou descoberta); ↶ volta tudo, ↷ tira de novo, salvar e reabrir mantém; e o detector acusa um fantasma de verdade */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.mods[0].x=1000;draw();
+        var tvK='Travessa frontal',daTv=function(b){return /^\d+:Travessa frontal/.test(String(b.nm||''))||String(b.pk||'').indexOf(tvK)===0||String(b.ppk||'').indexOf(tvK)===0},
+            tv3=function(){return __boxes().filter(function(b){return String(b.nm).indexOf('0:')===0&&daTv(b)}).length},tvL=function(){return partsOf(S.mods[0]).filter(function(p){return p.name.indexOf(tvK)===0}).length},
+            tvC=function(){return cutLines(S.mods[0]).filter(function(l){return (l.names||[l.name]).some(function(n){return String(n).indexOf(tvK)===0})}).length},
+            outrasL=function(){return JSON.stringify(partsOf(S.mods[0]).filter(function(p){return p.name.indexOf(tvK)!==0}).map(function(p){return [p.name,p.w,p.h,p.cl,p.cw]}))},
+            est=function(){__build();return '3D '+tv3()+' · lista '+tvL()+' · corte '+tvC()};
+        histTick();await W(800);histTick();var tb0=bx(),tL0=outrasL();R.travAntes=est();R.travMsg=lixo3D(tvK+'#1');var tb1=bx();R.travDepois=est();
+        R.travOutras='lista das outras '+(outrasL()===tL0?'igual':'MUDOU')+' · caixas das outras que diminuíram: '+(Object.keys(tb0).filter(function(q){return !/^__/.test(q)&&bnm(q)!==tvK&&(tb1[q]||0)<tb0[q]}).join(', ')||'nenhuma');
+        histTick();await W(800);histTick();document.getElementById('und').click();await W(150);R.travDesfez=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
+        document.getElementById('red').click();await W(150);R.travRefez=est();
+        var svT=JSON.stringify(snapState());loadState(JSON.parse(svT));draw();R.travReabriu=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
+        /* o detector continua achando fantasma de verdade: uma caixa com a chave da travessa enfiada no 3D depois de apagar */
+        __build();var fk=Object.assign({},__boxes().filter(function(b){return String(b.nm).indexOf('0:Lateral esquerda')===0})[0]);fk.nm='0:'+tvK;fk.pk=tvK+'#1';delete fk.ppk;__boxes().push(fk);R.travDetector='fantasma de teste achado '+tv3();__build();
         /* fundo: sai do 3D, da lista de corte, volta no ↶ e continua fora depois de salvar e reabrir */
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;m.fundo=true;m.fundoMan=1;S.m=m;draw();
         var fundoNoCorte=function(){return cutLines(S.mods[0]).filter(function(l){return /^Fundo/.test(String((l.names||[l.name])[0]))}).length};histTick();await W(800);histTick();
         R.fundoAntes='corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);R.fundoMsg=lixo3D('Fundo#1');R.fundoDepois='fundo '+S.mods[0].fundo+' · corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);
         var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.fundoReabriu='fundo '+S.mods[0].fundo+' · 3D '+(bx()['Fundo#1']||0);
         /* caixa da gaveta: tira a contra-frente da 1ª gaveta · o 3D fica com 1 caixa a menos e nenhuma chave repetida */
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caixas '+g0.__tot+' → '+g1.__tot+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
-        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caixas '+g1.__tot+' → '+g2.__tot+' · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caiu do 3D '+(g0.__tot-g1.__tot)+' (a peça tinha '+(g0[gk+'#1']||0)+') · outras caixas que não são fita '+(g0.__nf-(g0[gk+'#1']-(g0.__ftk[gk+'#1']||0))===g1.__nf?'iguais':'MUDARAM')+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
+        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caiu do 3D '+(g1.__tot-g2.__tot)+' (a peça tinha '+(g1['Lateral de gaveta#2']||0)+') · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
         /* canto em L: a base do lado do canto sai do 3D */
         var ic=null;CATS.forEach(function(c){(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(!ic&&t&&t.corner&&t.sup)ic=t})});loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(ic)));S.m=S.mods[0];draw();var k0=bx();lixo3D('Base inferior (lado do canto)#1');var k1=bx();R.canto='caixas '+k0.__tot+' → '+k1.__tot+' · base do lado no 3D '+(k1['Base inferior (lado do canto)#1']||0)+' · base do fundo '+(k1['Base inferior#1']||0)+' (antes '+(k0['Base inferior#1']||0)+')';
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
@@ -11733,8 +11752,16 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundoDepois"] as? String, "fundo false · corte 0 · 3D 0")
         XCTAssertEqual(o["fundoReabriu"] as? String, "fundo false · 3D 0")
         XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
-        XCTAssertEqual(o["gaveta"] as? String, "caixas 65 → 64 · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
-        XCTAssertEqual(o["gavLateral"] as? String, "caixas 64 → 63 · lateral #2 no 3D 0 · #1 1")
+        XCTAssertEqual(o["gaveta"] as? String, "caiu do 3D 1 (a peça tinha 1) · outras caixas que não são fita iguais · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
+        XCTAssertEqual(o["gavLateral"] as? String, "caiu do 3D 1 (a peça tinha 1) · lateral #2 no 3D 0 · #1 1")
+        /* Adauto 17/11/2026: os totais da gaveta não são mais números fixos (eram 65 → 64 e 64 → 63, e mudam com o desenho da fita): o 3D cai exatamente as caixas da peça apagada, tiradas da geometria desta versão */
+        XCTAssertEqual(o["travAntes"] as? String, "3D 1 · lista 1 · corte 1")
+        XCTAssertEqual(o["travDepois"] as? String, "3D 0 · lista 0 · corte 0")
+        XCTAssertEqual(o["travOutras"] as? String, "lista das outras igual · caixas das outras que diminuíram: nenhuma")
+        XCTAssertEqual(o["travDesfez"] as? String, "3D 1 · lista 1 · corte 1 · outras iguais")
+        XCTAssertEqual(o["travRefez"] as? String, "3D 0 · lista 0 · corte 0")
+        XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais")
+        XCTAssertEqual(o["travDetector"] as? String, "fantasma de teste achado 1")
         XCTAssertEqual(o["canto"] as? String, "caixas 22 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 2)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -12271,6 +12298,84 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desliga"] as? String, "2 portas · com puxador")
         XCTAssertEqual(o["basculante"] as? Bool, true, "basculante não mostra a opção")
         XCTAssertEqual(o["vidro"] as? Bool, true, "porta de vidro não mostra a opção")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FT-REBAIXO (Adauto, 17/11/2026: "autorizo a correção cirúrgica exclusivamente do defeito visual"): no 3D a tira de fita de 0,8 mm da frente do rebaixo da lateral
+       ficava dentro da travessa frontal (sobreposição 15 × 70 × 0,8). Só o desenho muda: peças, lista e corte iguais aos da versão publicada (7c939bc; assinaturas tiradas dela).
+       Falha antes (2 tiras dentro da travessa por inferior) e passa depois. A tira da parte de baixo da lateral, que aparece, continua. */
+    func testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.05&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.05&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.05};
+        var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(16)};
+        var NM=['Balcão 2 portas','Balcão porta + gavetas','Gaveteiro 3 gavetas','Aéreo 2 portas','Aéreo basculante','Torre do banheiro (armário alto)','Guarda-roupa 3 vãos','Canto em L (baixo) · direito'];
+        for(var k=0;k<NM.length;k++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(NM[k]));var m=S.mods[0];draw();open3D();await W(150);__build();
+          var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),F=B.filter(function(b){return b.ft}),Sd=B.filter(function(b){return !b.ft&&b.g!=='sh'});
+          var dT=F.filter(function(f){return Sd.some(function(o){return /^0:(Travessa|Travessão|Frontal)/.test(o.nm)&&ov(f,o)})}).length;
+          var frente=F.some(function(f){return f.nm==='0:Lateral esquerda'&&f.y1-f.y0>300});
+          R['m'+k]='fitas '+F.length+' · dentro da travessa '+dT+' · tira da frente da lateral '+(frente?'sim':'não')+' · peças+corte '+hs(JSON.stringify(partsOf(m))+'|'+JSON.stringify(cutGroups().map));document.getElementById('v3x').click()}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        /* Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026, aprovado pelo Adauto): o FT-PORTA recorta cada tira em volta das portas/frentes fechadas,
+           então nos módulos com folha o número de caixas de fita sobe (pedaços da mesma tira): m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7,
+           m5 8 → 11, m6 6 → 24 (m7, canto em L, igual). As outras conferências
+           (dentro da travessa 0, tira da frente da lateral, assinatura de peças+corte da versão publicada) não mudam. */
+        XCTAssertEqual(o["m0"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
+        XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
+        XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
+        XCTAssertEqual(o["m3"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "fitas 24 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
+        XCTAssertEqual(o["m7"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FT-PORTA (Adauto, 17/11/2026: "investigar e corrigir cirurgicamente a representação visual da fita de 0,8 mm que aparece dentro das portas e frentes fechadas"):
+       a frente do corpo fica em z = profundidade + 6 e a porta/frente fechada começa ali, encostada; a tira de 0,8 mm desenhada na frente do corpo ficava dentro da folha.
+       Só o desenho muda: nenhuma tira dentro de folha fechada, a área da tira que aparece igual à da versão publicada (7c939bc), peças e corte iguais (assinaturas dela),
+       porta aberta mostra a tira inteira e, ao fechar, o recorte volta. Falha antes (tiras dentro da folha) e passa depois. */
+    func testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,a){return o[AX[a][1]]-o[AX[a][0]]};
+        var leaf=function(o){return !o.ft&&/^0:(Porta|Frente|Basculante)/.test(o.nm)&&ex(o,0)>=50&&ex(o,1)>=50&&ex(o,2)>=10};
+        var ovv=function(a,b){var v=1;for(var k=0;k<3;k++){var d=Math.min(a[AX[k][1]],b[AX[k][1]])-Math.max(a[AX[k][0]],b[AX[k][0]]);if(d<=.05)return 0;v*=d}return v};
+        var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(16)};
+        /* área da tira que fica fora das folhas (no plano da tira) */
+        /* área exata da tira fora das folhas (no plano da tira), por compressão de coordenadas */
+        var fora=function(F,L){var tot=0;F.forEach(function(t){var th=[0,1,2].sort(function(a,c){return ex(t,a)-ex(t,c)})[0],pl=[0,1,2].filter(function(a){return a!==th}),A0=AX[pl[0]],B0=AX[pl[1]];var cv=L.filter(function(o){return Math.min(o[AX[th][1]],t[AX[th][1]])-Math.max(o[AX[th][0]],t[AX[th][0]])>.05}).map(function(o){return [Math.max(o[A0[0]],t[A0[0]]),Math.min(o[A0[1]],t[A0[1]]),Math.max(o[B0[0]],t[B0[0]]),Math.min(o[B0[1]],t[B0[1]])]}).filter(function(r){return r[1]>r[0]&&r[3]>r[2]});
+          var xs=[t[A0[0]],t[A0[1]]],ys=[t[B0[0]],t[B0[1]]];cv.forEach(function(r){xs.push(r[0],r[1]);ys.push(r[2],r[3])});xs.sort(function(a,b){return a-b});ys.sort(function(a,b){return a-b});
+          for(var i=0;i<xs.length-1;i++)for(var j=0;j<ys.length-1;j++){var cx=(xs[i]+xs[i+1])/2,cy=(ys[j]+ys[j+1])/2;if(!cv.some(function(r){return cx>r[0]&&cx<r[1]&&cy>r[2]&&cy<r[3]}))tot+=(xs[i+1]-xs[i])*(ys[j+1]-ys[j])}});return Math.round(tot*10)/10};
+        var NM=['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Aéreo basculante','Guarda-roupa 3 vãos','Torre do banheiro (armário alto)','Balcão porta + gavetas'];
+        for(var k=0;k<NM.length;k++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(NM[k]));var m=S.mods[0];draw();open3D();await W(150);__build();
+          var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),F=B.filter(function(b){return b.ft}),L=B.filter(leaf);
+          R['m'+k]='dentro de folha fechada '+F.filter(function(t){return L.some(function(o){return ovv(t,o)>0})}).length+' · tira que aparece '+fora(F,L)+' mm² · peças+corte '+hs(JSON.stringify(partsOf(m))+'|'+JSON.stringify(cutGroups().map));document.getElementById('v3x').click()}
+        /* abrir e fechar pela porta de verdade (1 toque): a tira da lateral volta inteira com a porta aberta e o recorte volta ao fechar */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();open3D();await W(300);__cam(.3,.2,1.2);await W(200);__build();
+        var la=function(){return __boxes().filter(function(b){return b.ft&&b.nm==='0:Lateral esquerda'}).reduce(function(s,b){return s+(b.x1-b.x0)*(b.y1-b.y0)},0).toFixed(1)};
+        var cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),p=org3api.proj([230,450,590]);var pe=function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:rc.left+p[0],clientY:rc.top+p[1],pointerId:9,isPrimary:true,pointerType:'touch'}))};
+        var a0=la();pe('pointerdown');await W(30);pe('pointerup');await W(900);var a1=la();p=org3api.proj([21,450,800]);pe('pointerdown');await W(30);pe('pointerup');await W(2000);R.abreFecha='fechada '+a0+' · aberta '+a1+' · fechou '+la();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        /* Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026, aprovado pelo Adauto): com o FT-REBAIXO, as 2 tiras da frente do rebaixo das laterais
+           (15 × 70 × 0,8 mm cada, 1050 mm² visíveis cada, medidas pela geometria) não são desenhadas, porque ficam dentro da travessa. Nos 3 módulos
+           com travessa a tira que aparece fica exatamente 2100 mm² menor: m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5. Os outros
+           módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. abreFecha (só a Lateral esquerda do Balcão 2 portas):
+           −1050 mm² nos 3 momentos (6630/10350/6630 → 5580/9300/5580) = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada. */
+        XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 20260 mm² · peças+corte c2ff642a")
+        XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte 509acae1")
+        XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m3"] as? String, "dentro de folha fechada 0 · tira que aparece 10728 mm² · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
+        XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 9f35813d")
+        XCTAssertEqual(o["abreFecha"] as? String, "fechada 5580.0 · aberta 9300.0 · fechou 5580.0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -13297,6 +13402,147 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["guardaRoupa"] as? String, "quadro depois da frente")
         XCTAssertEqual(o["portaNoMesmoLugar"] as? String, "sim")
         XCTAssertEqual(o["abasPorVaos"] as? String, "Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* PC-TOQUE + PC-ID (Adauto 17/11): segurar 1,5 s (ou clique direito) na peça do plano abre o menu; 🗑 Remover tira só aquela peça, pela identidade (uid do módulo + pk + ocorrência). A lateral igual do outro balcão fica. 2D/3D/projeto iguais; apagar o módulo, desfazer, refazer, salvar e reabrir, cópia do módulo e o "− tirar" antigo por contagem */
+    func testPlanoDeCorteToqueLongoTiraSoAquelaPecaPelaIdentidade() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));var A=S.mods[0],B=S.mods[1];B.x=A.x+A.w+300;A.rod=false;B.rod=false;draw();
+        var pecas=function(){var pl=sheetPlan(),n=0,L=[];pl.groups.forEach(function(g){g.sheets.forEach(function(sh){(sh.used||[]).forEach(function(u){n++;if(u.p&&u.p.pq)u.p.pq.forEach(function(q){var m=S.mods[q.mi];L.push((m===A?'A':m===B?'B':m===window.C_?'C':'?')+':'+q.pk)})})})});return {n:n,L:L,off:pl.off}};
+        var tem=function(r,x){return r.L.filter(function(s){return s===x}).length};
+        HIST=[];FUT=[];LASTS=null;histTick();LASTT=0;var p0=pecas();R.antes=p0.n+' peças · A lateral esq '+tem(p0,'A:Lateral esquerda#1')+' · B lateral esq '+tem(p0,'B:Lateral esquerda#1');var pA=JSON.stringify(partsOf(A)),pB=JSON.stringify(partsOf(B));
+        openCut();await W(400);var g=[].filter.call(document.querySelectorAll('#cutm [data-cp][data-pq]'),function(q){var pq=JSON.parse(q.dataset.pq);return pq.length===1&&pq[0].mi===0&&pq[0].pk==='Lateral esquerda#1'})[0];
+        if(!g){R.v0='sem peça no plano';return JSON.stringify(R)}g.scrollIntoView();await W(50);var b=g.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2;
+        var pe=function(t,el){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,isPrimary:true,pointerType:'touch'}))};
+        /* toque curto (0,6 s) não abre o menu */pe('pointerdown',g.querySelector('rect')||g);await W(600);pe('pointerup',g.querySelector('rect')||g);await W(100);R.toqueCurto=document.getElementById('pcmenu')?'abriu':'não abriu';try{pcMenuClose()}catch(_){};await W(600);
+        /* segurar 1,5 s */g=[].filter.call(document.querySelectorAll('#cutm [data-cp][data-pq]'),function(q){var pq=JSON.parse(q.dataset.pq);return pq.length===1&&pq[0].mi===0&&pq[0].pk==='Lateral esquerda#1'})[0];b=g.getBoundingClientRect();x=b.left+b.width/2;y=b.top+b.height/2;
+        pe('pointerdown',g.querySelector('rect')||g);await W(1650);var mn=document.getElementById('pcmenu');R.menu=mn?mn.textContent.replace(/\s+/g,' ').trim():'sem menu';pe('pointerup',g.querySelector('rect')||g);g.dispatchEvent(new MouseEvent('click',{bubbles:true}));await W(60);R.menuFicaAberto=document.getElementById('pcmenu')?'sim':'não';try{pcMenuClose()}catch(_){}g.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,cancelable:true,clientX:x,clientY:y,button:2}));await W(60);R.cliqueDireito=document.getElementById('pcmenu')?'abriu':'não abriu';
+        var rm=document.querySelector('#pcmenu [data-pcrm]');R.antesDeRemover=pecas().n===p0.n?'nada mudou':'mudou';if(rm)rm.click();await W(300);
+        await W(800);histTick();var p1=pecas();R.depois=p1.n+' peças · A lateral esq '+tem(p1,'A:Lateral esquerda#1')+' · B lateral esq '+tem(p1,'B:Lateral esquerda#1')+' · fora '+p1.off.map(function(o){return o.lab+' '+o.q}).join(',');
+        R.projetoIgual=(JSON.stringify(partsOf(A))===pA&&JSON.stringify(partsOf(B))===pB)?'sim':'não';R.chave=Object.keys(S.cutOff).map(function(k){return k.replace(/^@u[0-9a-z]+/,'@uid')}).join(',');
+        /* apagar o módulo A: B continua com a lateral; a remoção não passa pro B */await W(800);S.mods.splice(0,1);S.m=B;draw();histTick();var p2=pecas();R.apagouA=p2.n+' peças · B lateral esq '+tem(p2,'B:Lateral esquerda#1');
+        try{document.getElementById('cutx').click()}catch(_){}
+        /* desfazer (apagar o A) e desfazer (a remoção) */document.getElementById('und').onclick();await W(60);A=S.mods[0];B=S.mods[1];var p3=pecas();R.desfezApagar=p3.n+' peças · A lateral esq '+tem(p3,'A:Lateral esquerda#1');
+        document.getElementById('und').onclick();await W(60);A=S.mods[0];B=S.mods[1];var p4=pecas();R.desfezRemocao=p4.n+' peças · A lateral esq '+tem(p4,'A:Lateral esquerda#1');
+        document.getElementById('red').onclick();await W(60);A=S.mods[0];B=S.mods[1];
+        /* salvar, fechar e reabrir */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();A=S.mods[0];B=S.mods[1];var p5=pecas();R.reaberto=p5.n+' peças · A lateral esq '+tem(p5,'A:Lateral esquerda#1')+' · B lateral esq '+tem(p5,'B:Lateral esquerda#1');
+        /* cópia do A (mesmo uid) não herda a remoção */var C=JSON.parse(JSON.stringify(A));C.x=B.x+B.w+300;S.mods.push(C);window.C_=C;draw();var p6=pecas();R.copia='C lateral esq '+tem(p6,'C:Lateral esquerda#1')+' · A lateral esq '+tem(p6,'A:Lateral esquerda#1');S.mods.pop();draw();
+        /* projeto antigo: S.cutOff de contagem ("− tirar") continua valendo */var k0=Object.keys(S.cutOff)[0];S.cutOff={};var ok=sheetPlan().groups.map(function(g){return g.sheets}).length;var any=null;sheetPlan().groups.forEach(function(g){g.sheets.forEach(function(sh){(sh.used||[]).forEach(function(u){if(!any&&/Lateral direita/.test(u.p.lab))any=u.p.ok})})});S.cutOff[any]=1;var p7=pecas();R.antigo=(p7.n===p0.n-1)?'tirou 1 pela contagem':'não · '+p7.n;
+        R.errs=__errs.length;return JSON.stringify(R);
+
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "29 peças · A lateral esq 1 · B lateral esq 1")
+        XCTAssertEqual(o["toqueCurto"] as? String, "não abriu")
+        XCTAssertEqual(o["menu"] as? String, "Lateral esquerda · 790 × 560Base 1🗑 Remover peçaCancelar")
+        XCTAssertEqual(o["menuFicaAberto"] as? String, "sim")
+        XCTAssertEqual(o["cliqueDireito"] as? String, "abriu")
+        XCTAssertEqual(o["antesDeRemover"] as? String, "nada mudou")
+        XCTAssertEqual(o["depois"] as? String, "28 peças · A lateral esq 0 · B lateral esq 1 · fora Lateral esquerda 1")
+        XCTAssertEqual(o["projetoIgual"] as? String, "sim")
+        XCTAssertEqual(o["chave"] as? String, "@uid|Lateral esquerda#1|1")
+        XCTAssertEqual(o["apagouA"] as? String, "17 peças · B lateral esq 1")
+        XCTAssertEqual(o["desfezApagar"] as? String, "28 peças · A lateral esq 0")
+        XCTAssertEqual(o["desfezRemocao"] as? String, "29 peças · A lateral esq 1")
+        XCTAssertEqual(o["reaberto"] as? String, "28 peças · A lateral esq 0 · B lateral esq 1")
+        XCTAssertEqual(o["copia"] as? String, "C lateral esq 1 · A lateral esq 0")
+        XCTAssertEqual(o["antigo"] as? String, "tirou 1 pela contagem")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* PC-ROD (Adauto 17/11, opção A): "Incluir no plano de corte" no rodapé. 3 balcões juntos (800+600+700): tirar o rodapé do meio divide o rodapé contínuo (2100) em 800 e 700, na frente e/ou atrás. 2D e 3D iguais; reabrir; voltar */
+    func testPlanoDeCorteRodapeForaDoCorteRodapeContinuoFicaSoComOsTrechos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.confirm=function(){return true};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='livre';S.room='sala';S.W=5000;S.H=2700;S.stones=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));var A=S.mods[0],B=S.mods[1],C=S.mods[2];A.x=100;A.w=800;B.x=900;B.w=600;C.x=1500;C.w=700;[A,B,C].forEach(function(m){m.tl=false;m.tr=false;m.rod=true});draw();
+        var rod=function(){var L=[];sheetPlan().groups.forEach(function(g){g.sheets.forEach(function(sh){(sh.used||[]).forEach(function(u){if(/^Rodapé/.test(u.p.lab))L.push(u.p.lab.replace('Rodapé (pedestal) ','').replace('Rodapé ','')+' '+u.p.w+'×'+u.p.h)})})});return L.sort().join(' | ')};
+        var sig=function(){return JSON.stringify([A,B,C].map(function(m){return partsOf(m).map(function(p){return p.pk+p.w+'x'+p.h+'x'+p.d})}))+JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}))},s0=sig();
+        R.antes=rod();
+        /* só o rodapé da frente do B (o escolhido) */S.m=B;rodSetCut(B,['Rodapé (pedestal)#1'],false);R.soFrenteDoB=rod();
+        /* todos os do B */rodSetCut(B,rodPks(B),false);R.todosDoB=rod();
+        R.projeto2D3DIgual=sig()===s0?'sim':'não';
+        /* salvar, fechar e reabrir */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();A=S.mods[0];B=S.mods[1];C=S.mods[2];R.reaberto=rod()===R.todosDoB?'igual':'mudou '+rod();
+        /* desfazer volta */rodSetCut(B,rodPks(B),true);R.voltou=rod()===R.antes?'igual ao antes':'diferente '+rod();
+        /* o painel mostra a opção */S.m=B;S.tab=0;panel();var cb=document.querySelector('#bd [data-rdcut="mod"]');R.opcaoNoPainel=cb?('sim · marcada '+cb.checked):'não';
+        /* projeto antigo com S.cutOff de contagem continua valendo */
+        R.errs=__errs.length;return JSON.stringify(R);
+
+        """#)
+        XCTAssertEqual(o["antes"] as? String, "contínuo · frente e trás 2100×100 | contínuo · frente e trás 2100×100 | lateral direito (pedestal) 450×100 | lateral esquerdo (pedestal) 450×100")
+        XCTAssertEqual(o["soFrenteDoB"] as? String, "contínuo · frente 700×100 | contínuo · frente 800×100 | contínuo · frente e trás 2100×100 | lateral direito (pedestal) 450×100 | lateral esquerdo (pedestal) 450×100")
+        XCTAssertEqual(o["todosDoB"] as? String, "contínuo · frente 700×100 | contínuo · frente 800×100 | contínuo · trás 700×100 | contínuo · trás 800×100 | lateral direito (pedestal) 450×100 | lateral esquerdo (pedestal) 450×100")
+        XCTAssertEqual(o["projeto2D3DIgual"] as? String, "sim")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["voltou"] as? String, "igual ao antes")
+        XCTAssertEqual(o["opcaoNoPainel"] as? String, "sim · marcada true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* PC-BRANCO (Adauto 17/11, "qualquer branco fica junto"): cor de fora Branco Supremo com caixa branca: as peças vão pras mesmas chapas da caixa. O total de peças não muda */
+    func testPlanoDeCortePecaBrancaDeQualquerBrancoVaiProMesmoGrupoDaCaixaBranca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
+
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();
+        var res=function(){return sheetPlan().groups.map(function(g){return g.label+' ['+g.t+'] '+g.pieces+'p '+g.n+'ch'}).join(' | ')};
+        R.padrao=res();
+        var w=MAT.filter(function(q){return /branco/i.test(q.n)})[0];S.acab=S.acab||{};S.acab.ext=w.id;S.acab.extNome='';draw();R.extBranco=res();var nP=0;sheetPlan().groups.forEach(function(g){nP+=g.pieces});R.totalPecas=nP;S.acab.ext='cor';draw();var nP0=0;sheetPlan().groups.forEach(function(g){nP0+=g.pieces});R.mesmasPecas=nP===nP0?'sim':'não';
+        R.errs=__errs.length;return JSON.stringify(R);
+
+        """#)
+        XCTAssertEqual(o["padrao"] as? String, "MDF 15 mm · chapa branca (interno) [b] 19p 1ch | MDF 15 mm · chapa cor [c] 1p 1ch | MDF 15 mm · Cor [c] 13p 1ch | Fundo 6 mm [f] 3p 1ch")
+        XCTAssertEqual(o["extBranco"] as? String, "MDF 15 mm · chapa branca (interno) [b] 32p 2ch | MDF 15 mm · chapa cor [c] 1p 1ch | Fundo 6 mm [f] 3p 1ch")
+        XCTAssertEqual(o["totalPecas"] as? Int, 36)
+        XCTAssertEqual(o["mesmasPecas"] as? String, "sim")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* LAT-MEIO (Adauto 17/11): no armário de baixo da cozinha a divisória junto das gavetas é lateral inteira, igual às outras (por cima da base, 690, com o rebaixo do frontal 15 × 70).
+       Balcão porta + gavetas 900×820×560: antes Divisória 1 620×560; agora Lateral do meio 1 690×560. Base e travessa continuam inteiras; vãos e gavetas iguais.
+       Projeto antigo não muda sozinho (aviso + botão). Guarda-roupa e torre não mudam. Aviso de profundidade diferente do vizinho (só avisa). */
+    func testLateralDoMeioJuntoDasGavetasNoInferiorDaCozinha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var est=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita|do meio)|Divisória|Base inferior|Travessa frontal)/.test(p.name)}).map(function(p){return p.name+' '+p.cl+'×'+p.cw+(p.name.indexOf('meio')>0||/^Divis/.test(p.name)?' y'+Math.round(p.y)+' h'+Math.round(p.h):'')}).join(' | ')};
+        var gav=function(m){return partsOf(m).filter(function(p){return /^(Lateral de gaveta|Frente\/costa|Fundo de gaveta|Frente de gaveta|Frente)/.test(p.name)}).map(function(p){return p.cl+'×'+p.cw}).sort().join(',')};
+        var corte=function(m){return cutLines(m).filter(function(l){return /Lateral|Divis/.test(l.names.join())&&!/gaveta/.test(l.names.join())}).map(function(l){return l.names[0].replace(/ \d+$/,'')+' '+l.L+'×'+l.W+' ×'+l.qty}).join(' | ')};
+        var box3=function(){__build();return __boxes().filter(function(q){return /^0:(Lateral do meio|Divisória)/.test(String(q.nm))}).map(function(q){return Math.round(q.y1-q.y0)+'h '+Math.round(q.z1-q.z0)+'d'}).join(',')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão porta + gavetas'));var m=S.mods[0];draw();
+        R.novo=est(m);R.corte=corte(m);R.gavetas=gav(m);R.vaos=JSON.stringify(vaoRanges(m));open3D();await W(300);R.tresD=box3();try{document.getElementById('v3x').click()}catch(_){}
+        /* projeto antigo (sem a marca): não muda e o painel avisa */var sv=JSON.parse(JSON.stringify(snapState()));delete sv.mods[0].latMeio;loadState(sv);draw();var mo=S.mods[0];S.m=mo;S.tab=0;panel();R.antigo=est(mo);R.avisoAntigo=document.querySelector('#bd [data-lmav]')?'sim':'não';
+        var b=document.querySelector('#bd [data-lmsim]');if(b){b.click();await W(50)}R.antigoDepoisDoSim=est(S.mods[0]);R.gavetasIguais=gav(S.mods[0])===R.gavetas?'sim':'não';
+        /* reabrir */var s2=JSON.stringify(snapState());loadState(JSON.parse(s2));draw();R.reaberto=est(S.mods[0])===R.antigoDepoisDoSim?'igual':'mudou';
+        /* 8 gavetas nas pontas */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas + 8 gavetas (gaveteiro nas duas pontas)'));R.oitoGavetas=est(S.mods[0]);
+        /* guarda-roupa e torre: não mudam */loadState(initLimpo());S.env='quarto';S.room='quarto';S.W=4000;S.H=2700;draw();newTpl(T('Guarda-roupa 2 vãos'));R.guardaRoupa='marca '+S.mods[0].latMeio+' · '+(partsOf(S.mods[0]).some(function(p){return /Lateral do meio/.test(p.name)})?'tem lateral do meio':'sem lateral do meio');
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Despenseiro'));R.torre='marca '+S.mods[0].latMeio+' · '+(partsOf(S.mods[0]).some(function(p){return /Lateral do meio/.test(p.name)})?'tem':'sem')+' lateral do meio';
+        /* profundidade diferente */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));var A=S.mods[0],B=S.mods[1];B.x=A.x+A.w;B.d=500;draw();S.m=A;S.tab=0;panel();var vp=document.querySelector('#bd [data-vpav]');R.avisoProfundidade=vp?vp.textContent.trim():'sem aviso';R.medidasIguais=(A.d===560&&B.d===500)?'sim':'não';
+        R.errs=__errs.length;
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "Base inferior 900×560 | Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 900×70 | Lateral do meio 1 690×560 y15 h690 | Divisória do pedestal (meio) 450×100 y720 h100")
+        XCTAssertEqual(o["corte"] as? String, "Lateral esquerda 690×560 ×3 | Rodapé lateral esquerdo (pedestal) 450×100 ×5")
+        XCTAssertEqual(o["gavetas"] as? String, "372×99,372×99,372×99,372×99,372×99,372×99,387×460,387×460,387×460,440×218,440×218,440×218,460×114,460×114,460×114,460×114,460×114,460×114")
+        XCTAssertEqual(o["vaos"] as? String, "[[15,442.5],[457.5,885]]")
+        XCTAssertEqual(o["tresD"] as? String, "620h 560d,70h 545d,100h 450d,620h 1d,70h 1d")
+        XCTAssertEqual(o["antigo"] as? String, "Base inferior 900×560 | Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 900×70 | Divisória 1 620×560 y85 h620 | Divisória do pedestal (meio) 450×100 y720 h100")
+        XCTAssertEqual(o["avisoAntigo"] as? String, "sim")
+        XCTAssertEqual(o["antigoDepoisDoSim"] as? String, "Base inferior 900×560 | Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 900×70 | Lateral do meio 1 690×560 y15 h690 | Divisória do pedestal (meio) 450×100 y720 h100")
+        XCTAssertEqual(o["gavetasIguais"] as? String, "sim")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["oitoGavetas"] as? String, "Base inferior 1600×560 | Lateral esquerda 690×560 | Lateral direita 690×560 | Travessa frontal 1600×70 | Lateral do meio 1 690×560 y15 h690 | Lateral do meio 2 690×560 y15 h690 | Divisória do pedestal (meio) 450×100 y720 h100")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "marca undefined · sem lateral do meio")
+        XCTAssertEqual(o["torre"] as? String, "marca undefined · sem lateral do meio")
+        XCTAssertEqual(o["avisoProfundidade"] as? String, "⚠ Profundidade diferente do vizinho: este módulo 560 mm · Base 2 500 mm · diferença 60 mm. Nada foi alterado.")
+        XCTAssertEqual(o["medidasIguais"] as? String, "sim")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

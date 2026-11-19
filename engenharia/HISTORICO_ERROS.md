@@ -714,10 +714,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não mexido:** botões escolhidos (`.sel`), contorno do módulo no 2D e tamponamento. Se o azul forte for outro, um print resolve.
 - **Teste:** só visual (imagens antes e depois no relatório). Nenhum teste da bateria depende dessas opacidades.
 
+## PLANO DE CORTE (Adauto 17/11): peça tirada por identidade, toque longo, rodapé fora do corte (opção A) e brancos juntos — branch `claude/arquemestre-plano-corte`
+- **Como era (versão pública):**
+  - "− tirar" guardava em `S.cutOff` só tipo|material|cor|nome|medida com uma contagem. Duas peças iguais (a lateral de dois balcões iguais) não tinham como sair uma específica: saía "uma delas".
+  - Não havia toque longo nem clique direito na peça do plano.
+  - Não havia como tirar o rodapé do corte. O rodapé contínuo (módulos encostados) é uma peça só, ligada a todos os módulos do trecho.
+  - Cor de fora branca (ex.: Branco Supremo) ia para chapas separadas da caixa branca (`sameFin` era calculado e não usado).
+- **Identidade (PC-ID, decisão do Adauto: uma só, compartilhada):** `uid` do módulo (o `m.uid` que já existia, usado no empilhamento) + `pk` da peça + nº da ocorrência dessa `pk` no módulo (o fundo grande de guarda-roupa sai em 2 peças com o mesmo `pk`: achado em 6 modelos do catálogo). Sem índice de módulo. Cópia de módulo com o mesmo `uid`: só o primeiro fica com ele (mesma regra do `stkSync`) e a cópia não herda o que foi tirado. O `uid` só é criado quando a pessoa tira uma peça (nenhum projeto muda ao abrir).
+- **`S.cutOff` reaproveitado:** chave nova `@uid|pk|n` (valor 1) ao lado das chaves antigas de contagem, que continuam valendo. Mesmo `offAdd`, mesmo "Fora do plano · ↩ Voltar". Passa pelo desfazer (histórico por estado). Orçamento usa `sheetPlan(1)`, que já ignora o que foi tirado: não muda.
+- **Toque longo (PC-TOQUE):** 1,5 s parado (até 10 px) abre o menu com a peça, o módulo, 🗑 Remover peça (pede confirmação) e Cancelar; o clique direito abre o mesmo menu. Rolar, arrastar ou soltar antes não abre; o "click" depois do toque longo não vira 3D nem "cortada".
+- **Rodapé (PC-ROD, opção A):** aba Estrutura › Rodapé: "Incluir no plano de corte · todos os rodapés deste módulo" e, com um rodapé escolhido no 2D ou no 3D, "· só este". Rodapé contínuo com o trecho de um módulo fora: o corte fica com os trechos que sobraram (3 balcões 800+600+700: 2100 → 800 e 700), frente e trás separados. 2D, 3D e medidas não mudam.
+- **Brancos (PC-BRANCO):** peça de cor branca (qualquer branco, pelo nome) vai para as chapas da caixa quando a caixa é branca; sem caixa branca, os brancos de cor se juntam entre si. As chaves antigas de "− tirar" continuam com o tipo original (não reaparecem peças tiradas).
+- **Testes (falham na versão pública e passam agora):** `testPlanoDeCorteToqueLongoTiraSoAquelaPecaPelaIdentidade`, `testPlanoDeCorteRodapeForaDoCorteRodapeContinuoFicaSoComOsTrechos`, `testPlanoDeCortePecaBrancaDeQualquerBrancoVaiProMesmoGrupoDaCaixaBranca`. Os 4 testes antigos do plano de corte passam nas duas versões.
+- **Pendente / risco:** rodapé corrido das fileiras em L (`cutGroups_lr`): tirar um trecho só tira o rodapé inteiro quando todos os trechos estão fora (não divide). Peça grande dividida em partes ("em n partes"): cada parte tem a própria ocorrência.
+
 ## TESTE-RECUO: testes novos não compilavam no iOS (CI 604, 17/11)
 - **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
 - **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
 - **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+- **Bateria do Windows (run 41, 17/11):** 349/351.
+  - `testTamponamentoNo2D…` também falha na versão pública.
+  - `testOpcaoMarcadaSempreMudaAlgumaCoisa` acusou o "Incluir no plano de corte" do rodapé como opção que não muda nada. Esse teste só olhava peças, `cutLines` e custo, e a opção muda o plano de corte (`S.cutOff`).
+  - **Expectativa adaptada (pedido do Adauto 17/11):** o teste também olha o `S.cutOff`. Continua exigindo que toda opção marcada mude algo. Passa nas duas versões.
 
 ## F3-SEL-REGRESSÃO: 2 pares de toques viravam 4 toques (podia travar o módulo) e a divisória não pegava logo depois de arrastar (achado na bateria final da Fase 3, 17/11)
 - **Testes que pegaram:** `testDoisToquesNoVaoDeCimaAteOTetoRipadoPainelOuFechamento` (versão pública 3/3; F3-SEL 0 a 1 de 3, intermitente) e `testDivisoriaArrastaComODedoEmQualquerProjetoECaminho` (12 px do lado não arrastava).
@@ -1060,3 +1078,64 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **(a) recomendado:** manter toda a conta da parede esquerda em "a partir do canto", como era, e inverter só o desenho e o toque. Isso exige espelhar a posição de cada grupo do desenho (sem espelhar o móvel por dentro nem os textos) e o x do toque/arrasto.
   - **(b):** manter o x invertido e inverter junto cada regra que conta a partir do canto.
 - **Depois:** rodar a bateria inteira, conferir projeto antigo da parede esquerda (o tamponamento/dobradiça "esquerdo" passa a aparecer do lado da frente da sala no 3D; peças e corte iguais) e mostrar imagens das 3 paredes.
+
+## FT-REBAIXO — fita de 0,8 mm do rebaixo da lateral desenhada dentro da travessa frontal no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: correção cirúrgica só do defeito visual, com teste antes e depois.
+- **Causa:** o `build_ft` põe uma tira de 0,8 mm na frente de cada caixa da lateral. A caixa de cima (o rebaixo, z até 551) ganha a tira de 551 a 551,8, dentro da travessa (de 551 a 566). Sobreposição de 15 × 70 × 0,8 mm.
+- **Correção:** a tira que cairia dentro de uma Travessa, Travessão ou Frontal do mesmo módulo não é desenhada. Peças, lista e corte iguais aos da versão publicada (assinaturas no teste `testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam`).
+- **Bateria local completa:** 347/349.
+  - `testTamponamentoNo2D…` é a falha antiga; a correção dela está na branch do P0.
+  - `testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma` **aguarda decisão do Adauto**:
+    - O teste confere pelo **total de caixas** do módulo no 3D. Com a correção há 2 caixas a menos (as tiras escondidas), então "caixas 65 → 64" vira "63 → 62".
+    - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
+    - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
+    - **O teste não foi alterado.**
+
+## FT-PORTA — fita de 0,8 mm desenhada dentro da porta/frente fechada no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: investigar e corrigir cirurgicamente só a representação visual. Separado da branch da travessa e do frontal.
+- **Reproduzido** na versão publicada `7c939bc`:
+  - a frente do corpo fica em z = profundidade + 6, e a porta/frente fechada começa exatamente ali;
+  - a tira de topo (`build_ft`) é desenhada de z1 a z1 + 0,8, ou seja, dentro da folha;
+  - as tiras afetadas: 3 no Balcão 2 portas, 4 no Aéreo 2 portas, 6 no Guarda-roupa 3 vãos (laterais, bases, divisórias).
+- **Causa:** desenho só. A posição da porta não considera a espessura da fita, e mudar a posição da porta está fora do escopo.
+- **Correção (`editor.html`, `ftClipAll`, depois do `build_ft`):**
+  - uma passada por desenho, agrupada por módulo;
+  - recorta das tiras a parte que fica atrás de uma folha fechada (Porta, Frente ou Basculante, com pelo menos 50 × 50 × 10 mm);
+  - a parte que aparece continua;
+  - com a porta aberta, a folha sai da frente e a tira volta inteira; ao fechar, o recorte volta.
+- **O que não muda:** peças, lista, corte, medidas, posição e movimento das portas. As assinaturas do teste são da versão publicada.
+- **Teste novo:** `testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`. Falha na publicada e passa depois. Confere:
+  - 7 módulos, com a área da tira visível idêntica;
+  - abrir e fechar pelo toque.
+- **Desempenho** (40 módulos, `__build`, Chromium headless): mediana de 52 ms passou para 56–61 ms. A primeira versão, que filtrava as caixas por tira, ia a ~127 ms e foi descartada.
+- **Efeito num teste existente: aguarda decisão do Adauto.**
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` pega a **primeira** caixa da fita da base (`[0]`). Com o recorte, essa é a lasca de 9 mm na ponta, então o teste toca outro lugar.
+  - No mesmo ponto real (centro da tirinha embaixo da porta), o app faz igual nas duas versões: pega a fita da base e oferece "Era a peça «Porta»?".
+  - Com o teste escolhendo o pedaço embaixo do centro da porta, **todas as conferências dele passam** na correção.
+  - **O teste não foi alterado.**
+  - Na publicada, ele continua com a falha instável antiga (linha 13, `click` em `null`).
+- **Fora do escopo, só registrado:** canto em L (prateleira/base de um braço dentro da do outro braço, base superior dentro da moldura).
+- **Bateria local completa (`1454596`):** 346/349.
+  - `testTamponamentoNo2D…`: falha antiga. A correção está na branch do P0.
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: o teste pega a primeira caixa da tira, que agora é a lasca da ponta. **Aguarda decisão do Adauto.**
+  - `testToPecaQueO3DOfereceApagar…`: total de caixas 65 → 71, porque as tiras viram pedaços. Corrigido **só no teste**, com a mesma mudança autorizada para a branch da fita do rebaixo (`288e0e2`, `1a499eb`, por cherry-pick): conferência pela identidade da peça e totais tirados da geometria da versão testada. Passa nesta branch.
+
+## Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026) · expectativas de 2 testes ajustadas (aprovado pelo Adauto, opção a)
+- **Bateria da junção 2 (`829d64b`):** 378/380. As 2 falhas vinham das duas correções juntas, cada teste calibrado na sua branch sem a outra. O app não muda.
+- **Conferido pela geometria** (variante temporária com só o corte do FT-REBAIXO desligado, fora do repositório):
+  - sem o corte: nos 3 módulos com travessa (Balcão 2 portas, Gaveteiro 3 gavetas, Balcão porta + gavetas) há 2 tiras dentro da travessa, Lateral esquerda e direita, 15 × 70 × 0,8 mm, 1050 mm² visíveis cada = 2100 mm²;
+  - com o corte: 0 tiras dentro da travessa e a área visível exatamente 2100 mm² menor; aéreos, guarda-roupa e torre iguais;
+  - assinaturas de peças+corte idênticas nas duas e iguais às da versão publicada guardadas nos testes.
+- **`testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`:** m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5; abrir/fechar (Lateral esquerda do Balcão 2 portas) 6630/10350/6630 → 5580/9300/5580, −1050 mm² = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada.
+- Na 1ª leitura só vi o começo das mensagens de falha (cortadas); a lista completa saiu do JSON da bateria e foi conferida com a mesma geometria.
+- **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7, m5 8 → 11, m6 6 → 24, m7 igual (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
+- Nenhuma conferência saiu; o motivo está no comentário de cada teste.
+
+## LAT-MEIO: divisória junto das gavetas no inferior da cozinha era mais baixa e sem rebaixo (pedido e decisão do Adauto, 17/11)
+- **Como era (Balcão porta + gavetas 900×820×560):** Divisória 1 620×560, de cima da base até embaixo da travessa, sem rebaixo; as laterais de fora têm 690 com rebaixo 15×70.
+- **Correção:** com `m.latMeio===1` (módulo novo do catálogo, ou a pessoa escolheu no aviso), a divisória sem recuo ao lado de um vão de gavetas vira "Lateral do meio N" 690×560, com o rebaixo do frontal, igual às de fora. Base e travessa iguais (pendente de confirmação a travessa em 2 peças). Vãos e gavetas idênticos.
+- **Família:** só módulo de baixo, sem canto, fora do editor por vãos, < 1500, em cozinha/gourmet. Guarda-roupa e torre conferidos sem mudança.
+- **Projetos antigos:** não mudam sozinhos; aviso + botão.
+- **Teste:** `testLateralDoMeioJuntoDasGavetasNoInferiorDaCozinha` (numérico: lista, corte, 3D, vãos, gavetas, antigo, reabrir, 8 gavetas, guarda-roupa, torre, aviso de profundidade): falha na versão pública e passa agora.
+- **Expectativa adaptada (pedido do Adauto 17/11):** `testDivisoriaEPrateleiraNovasNaoCaemEmCimaDeOutra` conta "Divisória" e "Lateral do meio" (continua conferindo 3 peças e nenhuma em cima da outra). Passa nas duas versões.
+- **Testes relacionados (gavetas, divisórias, fundo, rodapé, catálogo, laterais: 69):** sem outra falha nova; 3 falhas da 1ª rodada eram de navegador compartilhado e passaram isoladas.

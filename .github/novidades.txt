@@ -4,6 +4,7 @@
 • Ficam salvos no projeto (antes voltavam ao padrão ao fechar e abrir): medidas do gerador de painéis da parede, profundidade da sala esticada pela parede do lado, última altura do rodapé e as escolhas de decoração e da TV no 3D. Desfazer também guarda.
 • Vídeos do projeto entram no backup e passam pra outro aparelho junto com as fotos. Vídeo maior que 64 MB continua guardado no aparelho, com aviso de que não vai no backup.
 • Sincronização pelo Wi-Fi: fotos com dois pontos seguidos no nome (ex.: foto..jpg) passam normalmente.
+• Posição digitada junto à parede: o móvel fica exatamente onde foi digitado, sem sobrar vão sem tamponamento.
 • Abrir um projeto ou tocar em qualquer coisa não move mais o móvel que está perto do canto entre duas paredes. Só encosta no canto o móvel que você mexeu.
 • Gavetas: mudar a altura da lateral de uma gaveta muda as laterais de todas as gavetas do mesmo conjunto (acima e abaixo). Frentes, profundidade e folgas não mudam; outro gaveteiro não muda; desfazer volta tudo de uma vez. Pedir mais que cabe e depois diminuir agora dá a medida certa.
 • Dois toques funcionam na geladeira dentro da caixa da geladeira e nas torres altas (também em cima da prateleira). Um toque continua igual.

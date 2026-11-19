@@ -168,3 +168,28 @@ GAV-SET · DUPLO-TOQUE · CANTO-SOZINHO · PORTA-CAVA · MENU-ARRASTA · FUNDO-S
 - Nenhuma mudança de formato que apague ou reescreva projeto; campos novos só aparecem quando a pessoa usa a função (ex.: `desce`/`dm` no tamponamento livre).
 - Projeto antigo com móveis na parede esquerda abre igual (`testProjetoAntigoComMoveisNaParedeEsquerdaAbreIgual`); salvar/fechar/reabrir e backup/restauração conferidos no cenário completo; atualização por cima com 8/8 arquivos iguais no Android e ok no Windows.
 - Nada foi publicado. Ponteiro público do Android continua no apk-636.
+
+## Os 14 defeitos antigos — rodada de 19/11 (economia de créditos, aprovada pelo Adauto)
+| ID | Resultado |
+|---|---|
+| B05 | **Corrigido.** Reproduzido (25 digitado virava 35 sem tamponamento). Causa: o encaixe na parede contava o tamponamento automático antes de ele ser reavaliado. Teste `testPosicaoDigitadaPertoDaParedeDaOMesmoResultadoSemVaoSemTamponamento` falha antes e passa depois. |
+| B24 | Reproduzido pela sonda s27 (rack com espessura +3 e volta; módulo 3 do demo com largura +100 e volta não ficam iguais). **Adiado:** não muda nada sozinho; só não desfaz quando a pessoa volta a medida. |
+| B21 | Reproduzido pela sonda s23 (o 3D aberto atualiza só no próximo desenho em 3 casos). **Adiado:** só visual; dados e corte corretos. |
+| B22, B23 | Reproduzidos pela sonda s29 (móvel novo do catálogo encolhido pra caber em parede cheia). **Adiados:** afetam só o móvel novo, nunca os existentes; a regra de onde pôr o móvel que não cabe precisa de decisão. |
+| B25 | Não reproduzido nesta rodada. Adiado. |
+| A31, D10 | Não reproduzidos nesta rodada (setas da régua espaçadora; "Achar peça"). Adiados. |
+| A05, A30 | Aguardam decisão do Adauto (registro original). |
+| D18 | Revertido por ordem do Adauto (preservar o 1 toque): não é defeito. |
+| D30, D31 | Precisam de aparelho real (não reproduzidos no Chromium). |
+| B27 | Melhoria (aviso novo): fora desta versão. |
+
+## Versão publicada do iOS
+- App Store: **3.0.50, build 548**, código `3799060`.
+  - O build subiu ao TestFlight em 13/11 (ios.yml execução 548 no `main`, com a entrada `ref`).
+  - Foi colocado na versão e enviado pra revisão em 15/11 (asc-enviar 64).
+  - Se a Apple já liberou não dá pra ver daqui.
+- Atualização por cima no iOS:
+  - os caminhos e as chaves dos arquivos dos projetos não mudaram entre `3799060` e a candidata;
+  - o backup agora guarda a cópia anterior em vez de apagar;
+  - a compatibilidade do editor com projetos antigos é coberta pelos testes de projeto antigo da bateria;
+  - **não há teste de instalação por cima no iOS** (sem workflow; não foi feito em aparelho).

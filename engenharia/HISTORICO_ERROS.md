@@ -1130,3 +1130,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - Na 1ª leitura só vi o começo das mensagens de falha (cortadas); a lista completa saiu do JSON da bateria e foi conferida com a mesma geometria.
 - **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7, m5 8 → 11, m6 6 → 24, m7 igual (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
 - Nenhuma conferência saiu; o motivo está no comentário de cada teste.
+
+## LAT-MEIO: divisória junto das gavetas no inferior da cozinha era mais baixa e sem rebaixo (pedido e decisão do Adauto, 17/11)
+- **Como era (Balcão porta + gavetas 900×820×560):** Divisória 1 620×560, de cima da base até embaixo da travessa, sem rebaixo; as laterais de fora têm 690 com rebaixo 15×70.
+- **Correção:** com `m.latMeio===1` (módulo novo do catálogo, ou a pessoa escolheu no aviso), a divisória sem recuo ao lado de um vão de gavetas vira "Lateral do meio N" 690×560, com o rebaixo do frontal, igual às de fora. Base e travessa iguais (pendente de confirmação a travessa em 2 peças). Vãos e gavetas idênticos.
+- **Família:** só módulo de baixo, sem canto, fora do editor por vãos, < 1500, em cozinha/gourmet. Guarda-roupa e torre conferidos sem mudança.
+- **Projetos antigos:** não mudam sozinhos; aviso + botão.
+- **Teste:** `testLateralDoMeioJuntoDasGavetasNoInferiorDaCozinha` (numérico: lista, corte, 3D, vãos, gavetas, antigo, reabrir, 8 gavetas, guarda-roupa, torre, aviso de profundidade): falha na versão pública e passa agora.
+- **Expectativa adaptada (pedido do Adauto 17/11):** `testDivisoriaEPrateleiraNovasNaoCaemEmCimaDeOutra` conta "Divisória" e "Lateral do meio" (continua conferindo 3 peças e nenhuma em cima da outra). Passa nas duas versões.
+- **Testes relacionados (gavetas, divisórias, fundo, rodapé, catálogo, laterais: 69):** sem outra falha nova; 3 falhas da 1ª rodada eram de navegador compartilhado e passaram isoladas.

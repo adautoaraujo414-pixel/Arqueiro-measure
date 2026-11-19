@@ -12320,15 +12320,16 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         /* Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026, aprovado pelo Adauto): o FT-PORTA recorta cada tira em volta das portas/frentes fechadas,
-           então nos módulos com folha o número de caixas de fita sobe (pedaços da mesma tira): m0 3 → 7, m1 4 → 12, m2 3 → 9. As outras conferências
+           então nos módulos com folha o número de caixas de fita sobe (pedaços da mesma tira): m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7,
+           m5 8 → 11, m6 6 → 24 (m7, canto em L, igual). As outras conferências
            (dentro da travessa 0, tira da frente da lateral, assinatura de peças+corte da versão publicada) não mudam. */
         XCTAssertEqual(o["m0"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
         XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
         XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
-        XCTAssertEqual(o["m3"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
-        XCTAssertEqual(o["m4"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
-        XCTAssertEqual(o["m5"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
-        XCTAssertEqual(o["m6"] as? String, "fitas 6 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
+        XCTAssertEqual(o["m3"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "fitas 24 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
         XCTAssertEqual(o["m7"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -12365,7 +12366,8 @@ final class EditorWebKitTests: XCTestCase {
         /* Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026, aprovado pelo Adauto): com o FT-REBAIXO, as 2 tiras da frente do rebaixo das laterais
            (15 × 70 × 0,8 mm cada, 1050 mm² visíveis cada, medidas pela geometria) não são desenhadas, porque ficam dentro da travessa. Nos 3 módulos
            com travessa a tira que aparece fica exatamente 2100 mm² menor: m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5. Os outros
-           módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. */
+           módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. abreFecha (só a Lateral esquerda do Balcão 2 portas):
+           −1050 mm² nos 3 momentos (6630/10350/6630 → 5580/9300/5580) = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada. */
         XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 20260 mm² · peças+corte c2ff642a")
         XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte 509acae1")
         XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
@@ -12373,7 +12375,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
         XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
         XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 9f35813d")
-        XCTAssertEqual(o["abreFecha"] as? String, "fechada 6630.0 · aberta 10350.0 · fechou 6630.0")
+        XCTAssertEqual(o["abreFecha"] as? String, "fechada 5580.0 · aberta 9300.0 · fechou 5580.0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

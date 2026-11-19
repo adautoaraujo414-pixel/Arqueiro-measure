@@ -11036,6 +11036,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* AUDITORIA-DUPLICAR (auditoria geral pedida pelo Adauto, 18/11: "não duplicar peças, chapas, fitas ou valores · recalcular após adicionar,
+       editar ou excluir · placas soltas mantendo suas regras próprias"): num projeto com balcão da pia por vãos, torre, aéreo, tamponamento
+       livre e placa solta, o plano de corte, as chapas e o orçamento dão o mesmo resultado chamados várias vezes; pôr e tirar peça (porta,
+       tamponamento livre, placa) volta exatamente ao total de antes; a placa solta não ganhou fita (só o tamponamento livre ganhou, 18/11). */
+    func testCorteChapasEOrcamentoNaoDuplicamEVoltamIguaisAoTirar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.geo=[];PR.mdfB=260;PR.mdfC=360;PR.fitaB=0.6;PR.fitaC=1.1;PR.fitaT=1.9;PR.dob=9;
+        newTpl(achar('inf','Balcão da pia (cuba)'));var pia=S.m;pia.x=400;newTpl(achar('alto','Armário alto 2 portas'));S.m.x=2000;newTpl(achar('sup','Aéreo 2 portas'));var ae=S.m;ae.x=400;ae.tt=true;S.m=null;draw();
+        S.m=pia;soloOn(pia);await W(60);RG.sel={mi:S.mods.indexOf(pia),path:'r'};RG.tab='div';panel();var b_=document.querySelector('#bd [data-rga="sp|h|2"]');if(b_)b_.click();soloOff();
+        S.geo.push({id:1,tp:'tamp',desce:'tl',x:370,b:0,z:6,w:30,h:850,d:585,c:'#e6d9be'});S.geo.push({id:2,tp:'placa',x:3200,b:0,z:300,w:600,h:1200,d:15,c:'#e6d9be'});draw();
+        var foto=function(){SPC={};var G=cutGroups(),q=0,lin=[];G.ord.forEach(function(k){var g=G.map[k];q+=+g.qty||0;lin.push(g.qty+'x'+g.L+'x'+g.W)});var P=sheetPlan(1),nch=0;P.groups.forEach(function(g){nch+=g.n});var b=budget();
+          return JSON.stringify({pecas:q,linhas:lin.sort(),chapas:nch,tB:Math.round(b.T.tB*1000),tC:Math.round(b.T.tC*1000),tT:Math.round(b.T.tT*1000),tot:Math.round(b.tot*100)})};
+        var f1=foto(),f2=foto(),f3=foto();R.repetir=f1===f2&&f2===f3?'igual nas 3 vezes':'mudou: '+f1+' ≠ '+f3;
+        /* pôr e tirar: porta a mais no aéreo, tamponamento livre, placa solta */var v0=JSON.stringify(ae.v);ae.v[0].n=1;draw();var fp=foto();ae.v=JSON.parse(v0);draw();R.porta=(fp!==f1?'mudou ao editar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var tl=S.geo.splice(0,1)[0];draw();var ft=foto();S.geo.unshift(tl);draw();R.livre=(ft!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        var pl=S.geo.splice(1,1)[0];draw();var fpl=foto();S.geo.push(pl);draw();R.placa=(fpl!==f1?'mudou ao tirar':'não mudou')+' · '+(foto()===f1?'voltou igual':'não voltou');
+        /* placa solta: regra própria (sem fita, como antes) · tamponamento livre: fita */var bA=budget().T;S.geo=S.geo.filter(function(g){return g.tp!=='placa'});var bS=budget().T;S.geo.push(pl);R.placaFita=Math.round(((bA.tB+bA.tC+bA.tT)-(bS.tB+bS.tC+bS.tT))*1000)+' mm de fita da placa';
+        /* salvar e reabrir: mesma foto */var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();R.reaberto=foto()===f1?'igual':'mudou';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["repetir"] as? String, "igual nas 3 vezes", "plano de corte, chapas, fitas e valores não acumulam")
+        XCTAssertEqual(o["porta"] as? String, "mudou ao editar · voltou igual")
+        XCTAssertEqual(o["livre"] as? String, "mudou ao tirar · voltou igual")
+        XCTAssertEqual(o["placa"] as? String, "mudou ao tirar · voltou igual")
+        XCTAssertEqual(o["placaFita"] as? String, "0 mm de fita da placa", "placa solta mantém a regra dela (sem fita no orçamento)")
+        XCTAssertEqual(o["reaberto"] as? String, "igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* TAMP-LIVRE-CORTE (pergunta do Adauto, 18/11: "calcule se essas formas livres já sobem e atualiza em tempo real o plano de corte"): o
        tamponamento livre que desce entra no plano de corte, no plano de chapas e no número de chapas do orçamento na hora que é criado, muda
        de medida na hora que é esticado/encolhido e some na hora que é tirado.

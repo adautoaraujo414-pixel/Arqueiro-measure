@@ -1101,3 +1101,13 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `testTamponamentoNo2D…`: falha antiga. A correção está na branch do P0.
   - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: o teste pega a primeira caixa da tira, que agora é a lasca da ponta. **Aguarda decisão do Adauto.**
   - `testToPecaQueO3DOfereceApagar…`: total de caixas 65 → 71, porque as tiras viram pedaços. Corrigido **só no teste**, com a mesma mudança autorizada para a branch da fita do rebaixo (`288e0e2`, `1a499eb`, por cherry-pick): conferência pela identidade da peça e totais tirados da geometria da versão testada. Passa nesta branch.
+
+## Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026) · expectativas de 2 testes ajustadas (aprovado pelo Adauto, opção a)
+- **Bateria da junção 2 (`829d64b`):** 378/380. As 2 falhas vinham das duas correções juntas, cada teste calibrado na sua branch sem a outra. O app não muda.
+- **Conferido pela geometria** (variante temporária com só o corte do FT-REBAIXO desligado, fora do repositório):
+  - sem o corte: nos 3 módulos com travessa (Balcão 2 portas, Gaveteiro 3 gavetas, Balcão porta + gavetas) há 2 tiras dentro da travessa, Lateral esquerda e direita, 15 × 70 × 0,8 mm, 1050 mm² visíveis cada = 2100 mm²;
+  - com o corte: 0 tiras dentro da travessa e a área visível exatamente 2100 mm² menor; aéreos, guarda-roupa e torre iguais;
+  - assinaturas de peças+corte idênticas nas duas e iguais às da versão publicada guardadas nos testes.
+- **`testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`:** m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5.
+- **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9 (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
+- Nenhuma conferência saiu; o motivo está no comentário de cada teste.

@@ -13417,4 +13417,51 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["abasPorVaos"] as? String, "Cores › Estrutura › Divisões › Gavetas › Portas › Internos › Eletros")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// ETAPA B (pedido do Adauto, 20/11/2026): móvel livre, fora das paredes, girando 0°/90°/180°/270°, na Planta 2D e no 3D;
+    /// escolher, arrastar, bater (é sólido), encostar de costas com ímã, mudar parede/pé-direito sem mexer nele, salvar e reabrir.
+    func testMovelLivreNoMeioDaSalaGiraArrastaSalvaENaoMexeEmNinguem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var pecas=function(m){SPC={};return partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(',')+'#'+cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')};
+        /* linhas finas do cava (menos de 5 mm) ficam de fora: o 3D já não desenha elas fora da parede do fundo (igual nas paredes do lado; só visual) */var caixas=function(i){__build();return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&Math.min(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0)>=5}).map(function(b){var d=[b.x1-b.x0,b.z1-b.z0].map(function(v){return Math.round(v)}).sort(function(a,c){return a-c});return d.join('x')+'x'+Math.round(b.y1-b.y0)}).sort().join(',')};
+        var cx3=function(i){__build();return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&b.a>=.95}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1]})};
+        /* girar 180 em volta do centro (cx,cz) = espelhar x e z: cada caixa do 3D tem que cair exatamente no espelho de onde estava (1 mm) */var espelho=function(B0,B1,cx,cz){if(B0.length!==B1.length)return false;var k=function(q){return q.map(function(v){return Math.round(v)}).join(',')},m0=B0.map(function(q){return [2*cx-q[1],2*cx-q[0],q[2],q[3],2*cz-q[5],2*cz-q[4]]}),u=B1.slice();return m0.every(function(q){var h=-1;u.some(function(r,n){if(q.every(function(v,t){return Math.abs(v-r[t])<=1})){h=n;return true}});if(h<0)return false;u.splice(h,1);return true})};
+        var dentro=function(i,m){__build();var f=lvFoot(m);return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&b.a>=.95}).every(function(b){return b.x0>=f.x0-31&&b.x1<=f.x1+31&&b.z0>=f.z0-31&&b.z1<=f.z1+31})};
+        var aba=function(sel){for(var t=0;t<12;t++){S.tab=t;panel();var k=document.querySelector('#bd '+sel);if(k)return k}return null};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.wl={L:'p',R:'p'};
+        newTpl(T('Balcão 2 portas'));var parede=S.m;parede.x=300;newTpl(T('Balcão 2 portas'));var a=S.m;a.x=1500;S.m=null;draw();open3D();await W(300);
+        var pa=pecas(a),ca=caixas(1),outro=JSON.stringify(parede),fx=function(m){return [m.x,m.w,m.h,m.d,m.b||0].join('/')};
+        /* passar pra livre pelo painel */S.m=a;var bt=aba('[data-wing="L"]');R.botao=bt?bt.textContent.trim():'sem botão';if(bt)bt.click();draw();await W(100);
+        R.livre=(lvIs(a)?'livre':'na parede')+' · giro '+(+a.rot||0)+' · '+(pecas(a)===pa?'peças iguais':'peças mudaram')+' · '+(JSON.stringify(parede)===outro?'outro igual':'outro mudou');
+        R.tresD=(caixas(1)===ca?'mesmas peças':'peças diferentes')+' · '+(dentro(1,a)?'no lugar':'fora do lugar');
+        R.parede2D=document.querySelector('#svg [data-mi="1"]')?'aparece na parede':'fora da parede';
+        /* girar 180 e 90 */var f0=lvFoot(a),c0=[(f0.x0+f0.x1)/2,(f0.z0+f0.z1)/2];var B0=cx3(1);lvGira(a,180);var f1=lvFoot(a);R.gira180=a.rot+'° · '+(pecas(a)===pa&&caixas(1)===ca?'medidas iguais':'medidas mudaram')+' · '+(Math.abs((f1.x0+f1.x1)/2-c0[0])<1&&Math.abs((f1.z0+f1.z1)/2-c0[1])<1?'centro no lugar':'centro andou')+' · '+(espelho(B0,cx3(1),c0[0],c0[1])?'3D no lugar':'3D fora');/* a régua da frente do engrosso (#1) gira junto: depois de 180° ela fica do lado da frente (z menor), não atrás */__build();var rg=__boxes().filter(function(b){return parseInt(String(b.nm),10)===1&&/^Tamponamento esquerdo · engrosso 80#1$/.test(String(b.pk))})[0],ff=lvFoot(a);R.regua180=rg?(rg.z0<ff.z0+40?'régua da frente na frente':'régua da frente atrás'):'sem régua';
+        lvGira(a,90);var f2=lvFoot(a);R.gira90=a.rot+'° · pegada '+Math.round(f2.x1-f2.x0)+'x'+Math.round(f2.z1-f2.z0)+' · '+(pecas(a)===pa?'peças iguais':'peças mudaram');lvGira(a,90);
+        /* Planta: aparece, escolhe e arrasta 300 mm pra direita */PLV=true;draw();await W(80);var g=document.querySelector('#svg [data-lv="1"]');R.planta=g?'aparece':'não aparece';
+        if(g){var r=g.getBoundingClientRect(),sv=document.getElementById('svg'),rc=sv.getBoundingClientRect(),vb=sv.viewBox.baseVal,px=300*PLK*rc.width/vb.width,x=r.left+r.width/2,y=r.top+r.height/2,lx0=a.lx;var pe=function(n,el,xx){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:xx,clientY:y,pointerId:1,pointerType:'touch',isPrimary:true,button:0}))};pe('pointerdown',g.querySelector('rect'),x);for(var s_=1;s_<=6;s_++){pe('pointermove',sv,x+px*s_/6)}pe('pointerup',sv,x+px);await W(80);R.arrasto=Math.round(a.lx-lx0)+' mm · '+(pecas(a)===pa?'peças iguais':'peças mudaram')+' · '+(JSON.stringify(parede)===outro?'outro igual':'outro mudou')}
+        /* não entra no móvel da parede */var lx1=a.lx,lz1=a.lz,ok=lvTenta(a,parede.x,0);R.naoBate=ok?'entrou em cima do outro':'bloqueado · ficou em '+(a.lx===lx1&&a.lz===lz1?'mesmo lugar':'outro lugar');
+        /* segundo balcão de costas: o de trás girado 180, encostado pelas costas */newTpl(T('Balcão 2 portas'));var b=S.m;draw();/* referência: o mesmo balcão sozinho no projeto (encostado no da parede ele divide base e rodapé corridos com o vizinho; solto, volta a ter as dele) */var mods0=S.mods;S.mods=[b];var pb=pecas(b);S.mods=mods0;S.m=b;aba('[data-wing="L"]').click();draw();lvGira(b,180);var fa=lvFoot(a),fb0=lvFoot(b);/* encosta as costas com 10 mm de sobra: o ímã fecha */var okb=lvTenta(b,b.lx+(fa.x0-fb0.x0),b.lz+((fa.z0-10)-fb0.z1));var fb=lvFoot(b);R.costas=(okb?'encaixou':'não encaixou')+' · folga '+Math.round(fa.z0-fb.z1)+' mm · '+b.rot+'° e '+a.rot+'° · '+(pecas(b)===pb?'mesmas peças':'peças mudaram');
+        /* parede e pé-direito não mexem no livre */var la=JSON.stringify([a.lx,a.lz,a.rot,fx(a)]);S.m=parede;setv('W',3800,true);setv('H',2500,true);draw();R.ambiente=JSON.stringify([a.lx,a.lz,a.rot,fx(a)])===la?'livre igual':'livre mudou';
+        /* salvar e reabrir */var js=JSON.stringify(snapState());loadState(JSON.parse(js));draw();var a2=S.mods.filter(function(m){return lvIs(m)})[0];R.reaberto=a2?((a2.lx+'/'+a2.lz+'/'+a2.rot)===(a.lx+'/'+a.lz+'/'+a.rot)?'posição e giro iguais':'mudou')+' · '+(pecas(a2)===pa?'peças iguais':'peças mudaram'):'sumiu';
+        PLV=false;document.getElementById('v3x').click();await W(80);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botao"] as? String, "Livre (no meio da sala)")
+        XCTAssertEqual(o["livre"] as? String, "livre · giro 0 · peças iguais · outro igual", "passar pra livre não muda peças nem os outros")
+        XCTAssertEqual(o["tresD"] as? String, "mesmas peças · no lugar")
+        XCTAssertEqual(o["parede2D"] as? String, "fora da parede")
+        XCTAssertEqual(o["gira180"] as? String, "180° · medidas iguais · centro no lugar · 3D no lugar")
+        XCTAssertEqual(o["regua180"] as? String, "régua da frente na frente", "girado 180°: o nome das réguas do engrosso acompanha o giro (apagar a da frente não apaga a de trás)")
+        XCTAssertEqual(o["gira90"] as? String, "270° · pegada 560x960 · peças iguais")
+        XCTAssertEqual(o["planta"] as? String, "aparece")
+        XCTAssertEqual(o["arrasto"] as? String, "300 mm · peças iguais · outro igual")
+        XCTAssertEqual(o["naoBate"] as? String, "bloqueado · ficou em mesmo lugar", "peça é sólida: não entra em outro móvel")
+        XCTAssertEqual(o["costas"] as? String, "encaixou · folga 0 mm · 180° e 0° · mesmas peças", "dois balcões de costas: o ímã encosta as costas; o de trás tem as mesmas peças dele sozinho")
+        XCTAssertEqual(o["ambiente"] as? String, "livre igual", "mudar parede e pé-direito não mexe no móvel livre")
+        XCTAssertEqual(o["reaberto"] as? String, "posição e giro iguais · peças iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -11036,6 +11036,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* B22/B23 (aprovado pelo Adauto, 20/11: "não redimensionar móveis existentes nem encolher automaticamente móveis novos. Avisar quando não
+       houver espaço e solicitar decisão do usuário"): móvel novo do catálogo entra com a medida do catálogo; numa parede sem espaço ele não é
+       encolhido nem entra por cima dos vizinhos (B23): o app pergunta "Usar N mm" (o maior espaço livre) ou "Não colocar". Os outros não mudam. */
+    func testMovelNovoNaoEncolheSozinhoNemEntraPorCimaEPerguntaQuandoNaoCabe() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var dims=function(L){return L.map(function(m){return [Math.round(m.x),m.w,m.h,m.d].join('/')}).join(' ')};
+        var sobrepoe=function(){var a=S.mods.filter(function(m){return !m.wing&&!m.sup});for(var i=0;i<a.length;i++)for(var j=i+1;j<a.length;j++){var e1=extOf(a[i]),e2=extOf(a[j]);if(e1[0]<e2[1]-0.5&&e2[0]<e1[1]-0.5)return 'sobrepõe'}return 'sem sobrepor'};
+        var cena=function(Wp){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=Wp;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 1 porta'));draw()};
+        /* parede cheia */cena(2700);var antes=S.mods.slice(),d0=dims(antes);newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);var q=document.getElementById('fitq');
+        R.cheia=(S.mods.length===antes.length?'não entrou sozinho':'entrou ('+S.mods[S.mods.length-1].w+')')+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta');
+        R.botoes=q?[].map.call(q.querySelectorAll('[data-fitq]'),function(b){return b.textContent.trim()}).join(' / '):'';
+        /* a pessoa escolhe usar o espaço livre */var bu=q&&q.querySelector('[data-fitq="usar"]');if(bu)bu.click();await W(100);var nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];R.usar=(nv?'entrou com '+nv.w:'não entrou')+' · '+sobrepoe()+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram');
+        /* "Não colocar" */cena(2700);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);q=document.getElementById('fitq');var bn=q&&q.querySelector('[data-fitq="nao"]');if(bn)bn.click();R.naoColocar=(S.mods.length===antes.length?'não colocou':'colocou')+' · '+(q&&q.hidden?'fechou':'aberta');
+        /* parede livre: medida do catálogo, sem pergunta */cena(8000);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];q=document.getElementById('fitq');R.livre=(nv?nv.w:'-')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta')+' · '+sobrepoe();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cheia"] as? String, "não entrou sozinho · outros iguais · perguntou", "sem espaço: não encolhe, não entra por cima, pergunta")
+        XCTAssertEqual(o["botoes"] as? String, "Usar 1310 mm / Não colocar")
+        XCTAssertEqual(o["usar"] as? String, "entrou com 1310 · sem sobrepor · outros iguais", "encolher só quando a pessoa escolhe")
+        XCTAssertEqual(o["naoColocar"] as? String, "não colocou · fechou")
+        XCTAssertEqual(o["livre"] as? String, "1600 · sem pergunta · sem sobrepor", "com espaço: medida do catálogo")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B24 (aprovado pelo Adauto, 20/11: "alterar uma medida e depois restaurá-la deve recuperar exatamente a geometria original"): no catálogo inteiro,
        mudar largura, altura, profundidade, altura do chão e espessura e voltar ao valor original deixa o móvel, as peças e o corte iguais ao início.
        Antes: rack com espessura +3 e volta ficava com a folga 18 (catraca); módulo 3 da cozinha demo com largura +100 e volta ficava 100 mm

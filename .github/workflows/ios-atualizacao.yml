@@ -2,6 +2,9 @@ name: iOS · teste de atualização (simulador)
 # Compila a versão publicada e a nova para o SIMULADOR e testa a instalação por cima com os dados do backup de referência.
 # Não assina, não envia ao TestFlight, não publica.
 on:
+  push:
+    branches: [ 'claude/**' ]
+    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh' ]
   workflow_dispatch:
     inputs:
       anterior:
@@ -21,7 +24,7 @@ jobs:
         run: cd novo && python3 .github/scripts/trava_publicacao.py
       - name: Baixar a versão publicada
         uses: actions/checkout@v4
-        with: { path: anterior, ref: '${{ inputs.anterior }}' }
+        with: { path: anterior, ref: "${{ inputs.anterior || 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f' }}" }
       - name: Compilar as duas para o simulador
         run: |
           brew install xcodegen

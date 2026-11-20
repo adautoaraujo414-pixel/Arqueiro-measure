@@ -11036,6 +11036,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* B24 (aprovado pelo Adauto, 20/11: "alterar uma medida e depois restaurá-la deve recuperar exatamente a geometria original"): no catálogo inteiro,
+       mudar largura, altura, profundidade, altura do chão e espessura e voltar ao valor original deixa o móvel, as peças e o corte iguais ao início.
+       Antes: rack com espessura +3 e volta ficava com a folga 18 (catraca); módulo 3 da cozinha demo com largura +100 e volta ficava 100 mm
+       deslocado (o encaixe empurrou e não devolveu). Nenhum outro móvel muda. */
+    func testMudarMedidaEVoltarDeixaOMovelExatamenteComoEra() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var foto=function(){SPC={};return JSON.stringify(S.mods.map(function(m){return [JSON.stringify(m),partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(','),cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')]}))};
+        var difs=[],T=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act)T.push(t)})});
+        T.forEach(function(t){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=8000;S.H=3000;newTpl(JSON.parse(JSON.stringify(t)));draw();var m=S.mods[0];if(!m)return;var base=JSON.stringify(snapState());loadState(JSON.parse(base));draw();var f0=foto();
+          [['w',100],['h',100],['d',50],['b',300],['esp',3]].forEach(function(q){loadState(JSON.parse(base));draw();m=S.mods[0];S.m=m;var v0=+m[q[0]]||0;if(q[0]==='esp'){m.esp=v0+3;draw();m.esp=v0;draw()}else{setv(q[0],v0+q[1],true);S.m=m;setv(q[0],v0,true)}if(foto()!==f0)difs.push(t.n+' '+q[0])})});
+        R.catalogo=difs.length+(difs.length?': '+difs.slice(0,8).join(' ; '):'');
+        /* cozinha demo: cada módulo largura +100 e volta; os outros não mudam */var dm=[];demoScene();draw();var b0=JSON.stringify(snapState());loadState(JSON.parse(b0));draw();var z0=foto();for(var j=0;j<S.mods.length;j++){loadState(JSON.parse(b0));draw();var mm=S.mods[j];S.m=mm;var w0=mm.w;setv('w',w0+100,true);S.m=mm;setv('w',w0,true);if(foto()!==z0)dm.push('módulo '+j)}R.demo=dm.length?dm.join(', '):'tudo igual';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "0", "mudar e voltar a medida devolve o móvel igual (catálogo inteiro)")
+        XCTAssertEqual(o["demo"] as? String, "tudo igual", "cozinha demo: largura +100 e volta, todos os módulos iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B05 / TAMP-CAMINHO (auditoria de 16/11, P1-B; corrigido na rodada de 19/11 aprovada pelo Adauto): digitar a mesma posição tem que dar o mesmo
        resultado, venha de onde vier, e não pode sobrar vão sem tamponamento junto à parede. Antes: digitar 25 vindo de 800 ou de 45 dava x=35 sem
        tamponamento (o encaixe na parede ainda contava o tamponamento automático do lado exposto, que depois era tirado). Manual (tlM) não muda. */

@@ -1,0 +1,34 @@
+name: iOS · teste de atualização (simulador)
+# Compila a versão publicada e a nova para o SIMULADOR e testa a instalação por cima com os dados do backup de referência.
+# Não assina, não envia ao TestFlight, não publica.
+on:
+  workflow_dispatch:
+    inputs:
+      anterior:
+        description: 'Commit da versão publicada (App Store 3.0.12 = d861fbd)'
+        default: 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f'
+permissions:
+  contents: read
+jobs:
+  atualizacao:
+    runs-on: macos-26
+    timeout-minutes: 120
+    steps:
+      - name: Baixar a versão nova
+        uses: actions/checkout@v4
+        with: { path: novo }
+      - name: Trava de publicação (compilar nunca publica)
+        run: cd novo && python3 .github/scripts/trava_publicacao.py
+      - name: Baixar a versão publicada
+        uses: actions/checkout@v4
+        with: { path: anterior, ref: '${{ inputs.anterior }}' }
+      - name: Compilar as duas para o simulador
+        run: |
+          brew install xcodegen
+          for d in anterior novo; do (cd $d/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -40 build.log; exit 1; }); done
+      - name: Atualizar por cima no simulador e conferir os dados
+        run: bash novo/.github/scripts/teste_atualizacao_ios.sh "anterior/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app" "novo/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app"
+      - name: Guardar o resultado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: teste-atualizacao-ios, path: atualizacao, if-no-files-found: ignore }

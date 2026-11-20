@@ -11044,7 +11044,8 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
-        var foto=function(){SPC={};return JSON.stringify(S.mods.map(function(m){return [JSON.stringify(m),partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(','),cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')]}))};
+        /* mesma informação em outra ordem de chaves (o app tira e põe de volta rod/trav/mold) não é diferença: compara ordenado */var can=function(o){return JSON.stringify(o,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})};
+        var foto=function(){SPC={};return JSON.stringify(S.mods.map(function(m){return [can(m),partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(','),cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')]}))};
         var difs=[],T=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act)T.push(t)})});
         T.forEach(function(t){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=8000;S.H=3000;newTpl(JSON.parse(JSON.stringify(t)));draw();var m=S.mods[0];if(!m)return;var base=JSON.stringify(snapState());loadState(JSON.parse(base));draw();var f0=foto();
           [['w',100],['h',100],['d',50],['b',300],['esp',3]].forEach(function(q){loadState(JSON.parse(base));draw();m=S.mods[0];S.m=m;var v0=+m[q[0]]||0;if(q[0]==='esp'){m.esp=v0+3;draw();m.esp=v0;draw()}else{setv(q[0],v0+q[1],true);S.m=m;setv(q[0],v0,true)}if(foto()!==f0)difs.push(t.n+' '+q[0])})});

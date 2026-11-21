@@ -12,9 +12,13 @@ PROJ = [
     {"id": "p2", "client": {"nome": "Cliente Referência 2"}, "created": 1700000200000, "updated": 1700000300000,
      "current": {"W": 3200, "H": 2600, "mods": [MOD(0, 800)], "stones": []}},
 ]
+# 21/11 (teste de abrir as notas depois da atualização): a medida e a foto no formato que o app grava de verdade (Json.kt / JsonCodec.swift:
+# medida com a, b, valueMm, color e width; foto com cx, cy, w e h). Antes era um formato inventado (x1, y1, value) que nenhum app abre.
 NOTA = lambda nid, foto: {"v": 3, "id": nid, "name": "Nota " + nid, "folderId": "f1", "createdMs": 1700000000000, "pinned": False, "locked": False, "trash": False, "unit": "M",
-                          "pages": [{"id": "pg1", "tpl": "ARAUJO", "objs": [{"id": "o1", "type": "dim", "x1": 10.5, "y1": 20, "value": 1234.0},
-                                                                        {"id": "o2", "type": "photo", "file": foto, "pxW": 100, "pxH": 80}]}]}
+                          "pages": [{"id": "pg1", "tpl": "ARAUJO", "objs": [
+                              {"id": "o2", "type": "photo", "file": foto, "pxW": 100, "pxH": 80, "cx": 397.0, "cy": 300.0, "w": 500.0, "h": 400.0, "rot": 0.0, "locked": False},
+                              {"id": "o1", "type": "dim", "photoId": "o2", "a": [150.0, 300.0], "b": [650.0, 300.0], "valueMm": 1234.0, "source": None, "history": [],
+                               "color": -1762269, "width": 2.1, "labelScale": 1.0, "labelAlpha": 1.0, "labelIntensity": 1.0, "refSize": 0.0, "locked": False}]}]}
 IDX = {"v": 3, "folders": [{"id": "f1", "name": "Obras"}],
        "notes": [{"id": n, "name": "Nota " + n, "folderId": "f1", "createdMs": 1, "pinned": False, "locked": False, "trash": False, "pageCount": 1, "dimCount": 1} for n in ("n1", "n2")]}
 FOTO = bytes((i * 7) % 251 for i in range(6000))

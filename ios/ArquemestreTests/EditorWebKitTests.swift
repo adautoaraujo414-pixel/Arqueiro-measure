@@ -13553,4 +13553,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["gaveteiro"] as? String, "Gaveteiro 3 gavetas: fundo 3 linhas | 0° igual ao fundo girado | 90° igual ao fundo girado | 180° igual ao fundo girado | 270° igual ao fundo girado | lado e igual ao fundo girado | lado d igual ao fundo girado | volta pro fundo igual | peças iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* ETAPA C (Adauto, 21/11: "Segurar o móvel por 2 segundos deverá abrir seu menu de edição. Não movimentar o móvel durante o acionamento.
+       Funcionar em todos os módulos compatíveis. Preservar o comportamento dos toques simples, duplos e do arrasto."; decisão do Adauto 21/11:
+       abre o mesmo menu dos toques — 2D/Planta o menu do vão, 3D o quadro do módulo — e no mouse só segurar o botão esquerdo).
+       Confere com toques de verdade (pointerdown/move/up): inferior, gaveteiro, aéreo, torre e guarda-roupa; dedo tremendo não leva o móvel; soltar
+       depois não conta toque; segurar pouco, arrastar e 2 toques continuam como eram; clique direito e 2 dedos não abrem; Planta; 3D sem abrir porta. */
+    func testSegurarOMovel2SegundosAbreOMenuSemMexerEPreservaToqueEArrasto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y,o){o=o||{};el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:o.id||1,isPrimary:o.id?o.id===1:true,pointerType:o.tp||'touch',button:o.bt||0,buttons:t==='pointerup'?0:1}))};
+        /* o menu do vão é position:fixed (offsetParent é sempre nulo): vale a área na tela */var menu=function(){var d=document.getElementById('vmenu'),r=d&&!d.hidden?d.getBoundingClientRect():null;return !!(r&&r.width>0&&r.height>0)},fecha=function(){try{vmenuClose()}catch(_){}};
+        var pos=function(){return JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d,m.wing||0,m.lx||0,m.lz||0,m.rot||0]}))};
+        var ponto=function(mi){var rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),r={x:0,y:0,el:null};[[.5,.55],[.3,.5],[.7,.5],[.5,.3],[.5,.8]].some(function(f){r.x=rc.left+rc.width*f[0];r.y=rc.top+rc.height*f[1];r.el=document.elementFromPoint(r.x,r.y);return !!(r.el&&r.el.closest('#mod[data-mi="'+mi+'"]'))});return r};
+        var segura=async function(p,ms,o){pe('pointerdown',p.el,p.x,p.y,o);var t=0;while(t<ms){await W(Math.min(250,ms-t));t+=250;if(o&&o.treme)pe('pointermove',svg,p.x+(t%500?4:-3),p.y+(t%500?-3:4),o)}};
+        loadState(initLimpo());S.env='livre';S.room='';S.W=8000;S.H=2700;draw();
+        var NOMES=['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Armário alto 2 portas','Guarda-roupa 2 vãos'];NOMES.forEach(function(n){newTpl(T(n))});S.mods.forEach(function(m,i){m.x=200+i*1500});S.m=null;draw();panel();await W(300);
+        var fam=[];for(var i=0;i<S.mods.length;i++){fecha();S.m=null;draw();await W(80);var p=ponto(i),p0=pos();await segura(p,2150,{treme:1});var ab=menu(),igual=pos()===p0;pe('pointerup',svg,p.x,p.y);await W(450);fam.push(NOMES[i]+': '+(ab?'abriu':'não abriu')+' '+(igual?'parado':'mexeu')+' '+(menu()?'continua aberto':'fechou ao soltar')+' '+(pos()===p0?'igual depois':'mudou depois'))}
+        R.familias=fam.join(' | ');
+        /* o clique que o navegador manda logo depois de soltar não aperta botão do menu (o menu abre perto do dedo) */fecha();S.m=null;draw();await W(80);var pc=ponto(0),pv=JSON.stringify(S.mods[0].v);await segura(pc,2150);pe('pointerup',svg,pc.x,pc.y);var bq=document.querySelector('#vmenu [data-vk]');if(bq)bq.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,clientX:pc.x,clientY:pc.y}));await W(300);R.cliqueDepois=(JSON.stringify(S.mods[0].v)===pv?'vão igual':'vão mudou')+' '+(menu()?'menu aberto':'menu fechou');fecha();await W(400);
+        /* segurar pouco: não abre (é toque simples, só escolhe) */fecha();S.m=null;draw();await W(80);var p=ponto(0);await segura(p,800);pe('pointerup',svg,p.x,p.y);await W(500);R.seguraPouco=(menu()?'abriu':'não abriu')+' '+(S.m===S.mods[0]?'escolheu':'não escolheu');
+        /* arrastar (módulo escolhido): anda como sempre e não abre depois */fecha();S.m=S.mods[0];draw();await W(80);p=ponto(0);var x0=S.mods[0].x;pe('pointerdown',p.el,p.x,p.y);for(var k=1;k<=4;k++){pe('pointermove',svg,p.x+15*k,p.y);await W(15)}await W(2200);var abA=menu();pe('pointerup',svg,p.x+60,p.y);await W(300);R.arrastar=(S.mods[0].x!==x0?'andou':'não andou')+' '+(abA||menu()?'abriu':'não abriu');S.mods[0].x=x0;draw();
+        /* 2 toques: menu do vão como sempre */fecha();S.m=null;draw();await W(500);p=ponto(0);pe('pointerdown',p.el,p.x,p.y);await W(40);pe('pointerup',svg,p.x,p.y);await W(90);pe('pointerdown',p.el,p.x,p.y);await W(40);pe('pointerup',svg,p.x,p.y);await W(500);R.doisToques=menu()?'abriu':'não abriu';fecha();await W(400);
+        /* mouse: segurar o botão esquerdo abre; clique direito segurado não */S.m=null;draw();await W(80);p=ponto(2);var q0=pos();await segura(p,2150,{tp:'mouse'});var mE=menu();pe('pointerup',svg,p.x,p.y,{tp:'mouse'});await W(450);fecha();await W(400);await segura(p,2150,{tp:'mouse',bt:2});var mD=menu();pe('pointerup',svg,p.x,p.y,{tp:'mouse',bt:2});await W(300);R.mouse='esquerdo '+(mE?'abriu':'não abriu')+' · direito '+(mD?'abriu':'não abriu')+' · '+(pos()===q0?'parado':'mexeu');fecha();
+        /* 2 dedos: é pinça, não abre */await W(400);p=ponto(3);pe('pointerdown',p.el,p.x,p.y,{id:1});await W(100);pe('pointerdown',svg,p.x+80,p.y+40,{id:2});await W(2200);R.doisDedos=menu()?'abriu':'não abriu';pe('pointerup',svg,p.x,p.y,{id:1});pe('pointerup',svg,p.x+80,p.y+40,{id:2});await W(300);fecha();
+        /* Planta (vista de cima) */await W(400);PLV=true;draw();await W(150);var g=document.querySelector('#svg [data-pm="4"]'),gr=g?g.getBoundingClientRect():null,pl0=pos();
+        var pp=null;if(gr)[[.5,.5],[.3,.5],[.7,.5],[.5,.3],[.5,.7],[.2,.3],[.8,.7]].some(function(f){var q={x:gr.left+gr.width*f[0],y:gr.top+gr.height*f[1]};q.el=document.elementFromPoint(q.x,q.y);if(q.el&&q.el.closest&&q.el.closest('[data-pm="4"]')){pp=q;return true}});if(pp){await segura(pp,2150);var mp=menu();pe('pointerup',svg,pp.x,pp.y);await W(400);R.planta=(mp?'abriu':'não abriu')+' '+(pos()===pl0?'parado':'mexeu')}else R.planta='sem módulo na planta';fecha();PLV=false;draw();
+        /* 3D: segurar no módulo abre o quadro dele, a porta não abre, o móvel não anda nem depois de abrir */
+        open3D();await W(700);var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),alvo=null;for(var yy=.2;yy<.95&&!alvo;yy+=.05)for(var xx=.05;xx<.95&&!alvo;xx+=.03){var mi3=-1;try{mi3=__modAt3(cr.width*xx,cr.height*yy)}catch(_){}if(mi3>=0)alvo={x:cr.left+cr.width*xx,y:cr.top+cr.height*yy,mi:mi3}}
+        if(alvo){try{__geoT().close()}catch(_){}var s3=JSON.stringify(snapState().mods);pe('pointerdown',cv,alvo.x,alvo.y);await W(2150);var ix=fx3api.isx();for(var k2=1;k2<=4;k2++){pe('pointermove',cv,alvo.x+20*k2,alvo.y);await W(15)}pe('pointerup',cv,alvo.x+80,alvo.y);/* o 3D age 400 ms depois do toque: espera passar pra ver se a porta não abriu */await W(900);
+          R.tresD=(ix&&ix.k==='mod'&&ix.mi===alvo.mi?'abriu o quadro do módulo':'não abriu ('+JSON.stringify(ix)+')')+' · '+(JSON.stringify(snapState().mods)===s3?'nada mudou (porta não abriu, móvel parado)':'mudou');
+          /* toques do 3D como eram: 1 toque escolhe o módulo e não abre o quadro; 3 toques abrem o quadro */try{__geoT().close()}catch(_){}S.m=null;await W(600);var tq=async function(n){for(var z=0;z<n;z++){pe('pointerdown',cv,alvo.x,alvo.y);await W(40);pe('pointerup',cv,alvo.x,alvo.y);await W(90)}/* o 3D espera pra ver se vêm mais toques antes de agir */await W(1200)};await tq(1);var ix1=fx3api.isx(),es1=S.m===S.mods[alvo.mi];try{__geoT().close()}catch(_){}await W(600);await tq(3);var ix2=fx3api.isx();R.tresDToque='1 toque '+(es1?'escolhe':'não escolhe')+' '+(ix1&&ix1.k==='mod'?'e abre o quadro':'sem quadro')+' · 3 toques '+(ix2&&ix2.k==='mod'?'abrem o quadro':'não abrem');try{__geoT().close()}catch(_){}}else R.tresD='sem módulo na tela';
+        try{document.getElementById('v3x').click()}catch(_){}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["familias"] as? String, "Balcão 2 portas: abriu parado continua aberto igual depois | Gaveteiro 3 gavetas: abriu parado continua aberto igual depois | Aéreo 2 portas: abriu parado continua aberto igual depois | Armário alto 2 portas: abriu parado continua aberto igual depois | Guarda-roupa 2 vãos: abriu parado continua aberto igual depois")
+        XCTAssertEqual(o["cliqueDepois"] as? String, "vão igual menu aberto")
+        XCTAssertEqual(o["seguraPouco"] as? String, "não abriu escolheu")
+        XCTAssertEqual(o["arrastar"] as? String, "andou não abriu")
+        XCTAssertEqual(o["doisToques"] as? String, "abriu")
+        XCTAssertEqual(o["mouse"] as? String, "esquerdo abriu · direito não abriu · parado")
+        XCTAssertEqual(o["doisDedos"] as? String, "não abriu")
+        XCTAssertEqual(o["planta"] as? String, "abriu parado")
+        XCTAssertEqual(o["tresD"] as? String, "abriu o quadro do módulo · nada mudou (porta não abriu, móvel parado)")
+        XCTAssertEqual(o["tresDToque"] as? String, "1 toque escolhe sem quadro · 3 toques abrem o quadro")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

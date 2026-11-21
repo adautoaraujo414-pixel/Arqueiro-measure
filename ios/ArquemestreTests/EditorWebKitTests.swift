@@ -13715,4 +13715,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["b22"] as? String, "não entrou sozinho · perguntou", "a B22 continua valendo pra quem põe móvel")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* FOTO-BANCO-LENTO (21/11, achado no teste de atualização por cima do iOS: CI 44910617585): o banco das fotos (IndexedDB) só é esperado
+       1,5 s; no iOS ele abriu depois disso, a foto devolvida do backup (photo_*.json) ficou só na memória (PHMEM) e, quando o banco abriu,
+       a lista passou a ler só dele: a foto não aparecia (arquivo intacto). Confere com o banco abrindo em 2,2 s: foto guardada nesse meio
+       tempo aparece na lista, vai pro banco quando ele abre e a lista não repete. */
+    func testFotoGuardadaComOBancoDasFotosLentoNaoSomeDaLista() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var nome='arque-photos-lento-'+Date.now(),o0=indexedDB.open.bind(indexedDB);
+        /* o banco de verdade, só que abrindo devagar (2,2 s, mais que a espera de 1,5 s do app) */indexedDB.open=function(n,v){var r=o0(nome,v),fake={result:null};r.onupgradeneeded=function(){fake.result=r.result;fake.onupgradeneeded&&fake.onupgradeneeded()};r.onsuccess=function(){setTimeout(function(){fake.result=r.result;fake.onsuccess&&fake.onsuccess()},2200)};r.onerror=function(){fake.onerror&&fake.onerror()};return fake};
+        PH.db=null;PH.off=false;PHMEM.length=0;
+        var foto={id:'flento',pid:'p1',kind:'obra',data:'data:image/jpeg;base64,AQIDBAU=',w:10,h:8,marks:[],created:1};
+        var cnt=function(){return new Promise(function(r){phAll(function(L){r((L||[]).filter(function(x){return x.id==='flento'}).length)})})};
+        await new Promise(function(r){phPut(foto,r)});R.naHora=await cnt();await W(2600);R.depoisDoBanco=await cnt();
+        R.noBanco=await new Promise(function(r){try{PH.db.transaction('p').objectStore('p').get('flento').onsuccess=function(e){r(!!e.target.result)}}catch(e){r('erro '+e)}});
+        indexedDB.open=o0;try{indexedDB.deleteDatabase(nome)}catch(_){}PH.db=null;PH.off=false;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["naHora"] as? Int, 1, "com o banco ainda fechado a foto aparece")
+        XCTAssertEqual(o["depoisDoBanco"] as? Int, 1, "depois que o banco abre a foto continua na lista (uma vez só)")
+        XCTAssertEqual(o["noBanco"] as? Bool, true, "a foto vai pro banco quando ele abre")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

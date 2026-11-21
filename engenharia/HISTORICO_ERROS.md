@@ -1075,3 +1075,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Causa raiz:** `fitNew` tinha tentativas que encolhiam o módulo (85% / mínimo) e aceitava a última tentativa mesmo sem caber.
 - **Correção:** as tentativas que encolhem só rodam com `window.FITENCOLHE`, que fica ligado apenas quando a pessoa escolhe. Se não couber, o móvel novo não fica. O app mostra "Usar N mm" (o maior espaço livre, simulado sem mexer em ninguém) e "Não colocar". Os móveis existentes não mudam.
 - **Testes:** `testMovelNovoNaoEncolheSozinhoNemEntraPorCimaEPerguntaQuandoNaoCabe` (pergunta "Usar 1310 mm / Não colocar", entra com 1310 só depois de escolher, com espaço livre entra 1600 sem pergunta). Falhou antes (488ed65), passa depois (fb972ec). Bateria completa: 364 passaram direto e 18 falharam só pela pergunta nova; com o jeito antigo os 18 passam. Esses 18 usam a colocação só como preparação e passaram a fazer como quem escolhe "Usar N mm" (0e3143e). Resultado: 382/382.
+
+## ETAPA B — móvel livre no meio da sala (implementado 20/11)
+- **Pedido:** "móvel livre, com posicionamento independente das paredes e rotação de 0°, 90°, 180° e 270°", na Planta 2D e no 3D, com seleção, movimentação, salvamento e reabertura; arquitetura pronta pra outros ângulos.
+- **Representação:** `m.wing='L'`, `m.lx`/`m.lz` (canto de trás-esquerdo no chão, mm) e `m.rot` em graus (`ang(m)`). As peças continuam vindo de `partsOf(m)` e não mudam. Só o 3D gira e posiciona as caixas (`lvX`, depois do `DRM`). Na Planta aparece a pegada com uma linha vermelha na frente; o móvel some das vistas de parede.
+- **Defeitos achados e corrigidos durante a etapa (causa → correção):**
+  1. Tamponamento do livre desligava ao mudar a parede ou o pé-direito. `autoTamp` é local e o invólucro global não pegava → o livre fica de fora do laço do `autoTamp`, como canto, nicho, TV e travado. O tamponamento dele é só manual.
+  2. Fita da frente (0,8 mm) ficava sempre em z1, atrás depois de 180° → passa a ir na face que ficou de frente (`lvFt`).
+  3. A divisão do tamponamento de 30 em face de 15 + réguas de 80 era feita no mundo. Depois de 180° a face de fora ia pra dentro e a régua "#1 frente" ficava atrás, e apagar a régua da frente apagaria a de trás → o livre divide no próprio referencial (`lvLoc`) e volta pro mundo.
+  4. A colisão e o ímã usavam só o corpo (sem portas e tamponamento, que saem 31 mm). Dois livres de frente podiam entrar um no outro → passam a usar o sólido real do 3D (`real(m)`).
+- **Regras mantidas:** base e rodapé corridos entre balcões vizinhos na parede (o livre sai da corrida e volta a ter as próprias peças); nada muda sozinho nos outros móveis.
+- **Limitações (risco registrado):** as tiras finas do cava (1×3 mm) não aparecem no 3D fora da parede do fundo. Já era assim nas paredes do lado; é só visual, e o corte está certo.
+- **Testes:** `testMovelLivreNoMeioDaSalaGiraArrastaSalvaENaoMexeEmNinguem`. Confere:
+  - botão "Livre (no meio da sala)";
+  - peças iguais ao passar pra livre;
+  - 3D com as mesmas peças;
+  - fora da vista da parede;
+  - 180° com o 3D no espelho exato e a régua da frente na frente;
+  - 270° com a pegada girada;
+  - Planta: aparece, arrasta 300 mm, bloqueia ao bater;
+  - dois balcões de costas encostados pelo ímã (folga 0);
+  - parede e pé-direito não mexem no livre;
+  - salvar e reabrir iguais;
+  - 0 erros.
+
+  Falhou antes (0909fe9, `lvIs` não existe), passa depois. Bateria completa com a Etapa B: 383/383 (365 direto + os 18 do B22 com a preparação "Usar N mm").

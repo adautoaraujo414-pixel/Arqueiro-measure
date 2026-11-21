@@ -129,3 +129,4 @@
 # • Balcão embaixo da pedra: se a altura dele for aumentada acima da pedra, ele fica na altura da pedra e avisa. Antes era jogado pro lado. Mais baixo que a pedra continua podendo, e a pedra não muda sozinha.
 • Móvel novo do catálogo não encolhe mais sozinho pra caber. Se não houver espaço, o app pergunta: usar o espaço que sobra (mostra a medida) ou não colocar. Os móveis que já estão no projeto não mudam.
 • Mudar uma medida e voltar deixa o móvel exatamente como era (folga do rack e posição voltam).
+• Móvel livre: no painel do módulo, "Livre (no meio da sala)" tira o móvel da parede. Na Planta você arrasta e gira de 90 em 90 graus, com ímã pra encostar em outro móvel (por exemplo, dois balcões de costas). O móvel não entra em outro e fica salvo do jeito que deixou. As peças e o plano de corte não mudam.

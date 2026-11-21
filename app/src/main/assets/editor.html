@@ -1225,13 +1225,16 @@ $('svg').addEventListener('wheel',function(ev){ev.preventDefault();var p=px(ev);
 var ptrs={},pinch0=null;
 function px(ev){var r=$('svg').getBoundingClientRect(),f=VB.w/r.width;return{x:VB.x+(ev.clientX-r.left)*f,y:VB.y+(ev.clientY-r.top)*f}}
 var drag=null;
+/* vão e item interno no ponto tocado (a conta dos 2 toques; também usada pelo segurar 2 s da Etapa C) */
+function vaoNoPonto(m,rc,ev){var pt=px(ev),bx=+rc.getAttribute('x'),bw=+rc.getAttribute('width'),xm=(pt.x-bx)/bw*m.w,R=vaoRanges(m),vi=-1;R.forEach(function(r,i){if(xm>=r[0]-2&&xm<=r[1]+2)vi=i});if(vi<0){var bd=1e9;R.forEach(function(r,i){var dd=Math.min(Math.abs(xm-r[0]),Math.abs(xm-r[1]));if(dd<bd){bd=dd;vi=i}})}var kb_=-1;try{var by_=+rc.getAttribute('y'),bh_=+rc.getAttribute('height');window.__vmY=bh_>0?(pt.y-by_)/bh_*m.h:undefined;if(vi>=0&&window.ibAt&&bh_>0)kb_=ibAt(m,vi,(pt.y-by_)/bh_*m.h)}catch(_){}return {vi:vi,kb:kb_}}
+window.vaoNoPonto=vaoNoPonto;
 var EGT={k:'',t:0};
 $('svg').addEventListener('pointerdown',function(ev){if(window.RO){var g_=ev.target.closest&&ev.target.closest('#mod');if(g_){ev.stopImmediatePropagation();ev.preventDefault();var mm_=S.mods[+g_.dataset.mi];if(mm_&&mm_!==S.m){S.m=mm_;S.sv=0;draw();panel()}}return}},true);
 $('svg').addEventListener('pointerup',function(ev){if(window.RO)return;var tg_=document.elementFromPoint(ev.clientX,ev.clientY),g_=tg_&&tg_.closest&&tg_.closest('#mod'),cima_=false;
  /* DUPLO-TOQUE (Adauto, 18/11): o puxador das prateleiras internas (data-ish, por cima do módulo selecionado) e o eletro dentro do nicho (data-ap, ex. geladeira na caixa da geladeira)
     ficam por cima do módulo e engoliam os 2 toques. Só pros 2 toques, vale o módulo que está embaixo deles; 1 toque continua igual (pega a prateleira ou o eletro) e 4 toques não travam por cima. */
  if(!g_&&tg_&&tg_.closest&&tg_.closest('[data-ish],[data-ap]')){try{var st_=document.elementsFromPoint(ev.clientX,ev.clientY);for(var si_=0;si_<st_.length&&!g_;si_++){var gg_=st_[si_].closest&&st_[si_].closest('#mod');if(gg_){g_=gg_;cima_=true}}}catch(_){}}
- if(!g_){VT2=null;return}if(drag&&drag.p&&(drag.t==='m'||drag.t==='h')){var pp_=px(ev);if(Math.hypot(pp_.x-drag.p.x,pp_.y-drag.p.y)>SEL.mov*svgPorPx()){TQK.k=null;VT2=null;return}}var now=Date.now(),mi=+g_.dataset.mi,n4=tapCount('m'+mi,ev);if(cima_&&n4!==2){VT2=null;return}if(n4>=4){TQK.k=null;VT2=null;toast(lockToggle(S.mods[mi]));return}if(n4===2){VT2=null;var m=S.mods[mi],rc=g_.querySelector('rect[data-mi]');if(!m||!rc)return;var pt=px(ev),bx=+rc.getAttribute('x'),bw=+rc.getAttribute('width'),xm=(pt.x-bx)/bw*m.w,R=vaoRanges(m),vi=-1;R.forEach(function(r,i){if(xm>=r[0]-2&&xm<=r[1]+2)vi=i});if(vi<0){var bd=1e9;R.forEach(function(r,i){var dd=Math.min(Math.abs(xm-r[0]),Math.abs(xm-r[1]));if(dd<bd){bd=dd;vi=i}})}var cx_=ev.clientX,cy_=ev.clientY,kb_=-1;try{var by_=+rc.getAttribute('y'),bh_=+rc.getAttribute('height');window.__vmY=bh_>0?(pt.y-by_)/bh_*m.h:undefined;if(vi>=0&&window.ibAt&&bh_>0)kb_=ibAt(m,vi,(pt.y-by_)/bh_*m.h)}catch(_){}if(vi>=0)TQK.tm=setTimeout(function(){if(TQK.k==='m'+mi&&TQK.n===2)vmenuOpen(mi,vi,cx_,cy_,kb_)},330)}else{VT2={t:now,mi:mi,x:ev.clientX,y:ev.clientY};try{if(window.ibTapQ)ibTapQ(g_,mi,ev,tg_)}catch(_){}}});
+ if(!g_){VT2=null;return}if(drag&&drag.p&&(drag.t==='m'||drag.t==='h')){var pp_=px(ev);if(Math.hypot(pp_.x-drag.p.x,pp_.y-drag.p.y)>SEL.mov*svgPorPx()){TQK.k=null;VT2=null;return}}var now=Date.now(),mi=+g_.dataset.mi,n4=tapCount('m'+mi,ev);if(cima_&&n4!==2){VT2=null;return}if(n4>=4){TQK.k=null;VT2=null;toast(lockToggle(S.mods[mi]));return}if(n4===2){VT2=null;var m=S.mods[mi],rc=g_.querySelector('rect[data-mi]');if(!m||!rc)return;var q_=vaoNoPonto(m,rc,ev),vi=q_.vi,kb_=q_.kb,cx_=ev.clientX,cy_=ev.clientY;if(vi>=0)TQK.tm=setTimeout(function(){if(TQK.k==='m'+mi&&TQK.n===2)vmenuOpen(mi,vi,cx_,cy_,kb_)},330)}else{VT2={t:now,mi:mi,x:ev.clientX,y:ev.clientY};try{if(window.ibTapQ)ibTapQ(g_,mi,ev,tg_)}catch(_){}}});
 $('svg').addEventListener('pointerdown',function(ev){var te=ev.target,mg=te.closest&&te.closest('#mod');if(mg&&te.dataset&&(te.dataset.p!==undefined||te.dataset.egs)){var mo=S.mods[+mg.dataset.mi],pp=te.dataset.p!==undefined&&mo&&partsOf(mo)[+te.dataset.p],mt=te.dataset.egs?[0,0,te.dataset.egs]:(pp&&/^(Lateral|Engrosso lateral) (esquerda|direita)/.exec(pp.name));if(mt){var key=mg.dataset.mi+'|'+mt[2],now=Date.now();if(EGT.k===key&&now-EGT.t<450){EGT={k:'',t:0};snap();var f=mt[2]==='esquerda'?'egL':'egR';if(ENGON())mo[f]=((mo[f]||0)+1)%3;S.m=mo;S.sv=0;$('tipo').textContent=mo.sup?'Superior':'Base';S.tab=0;panel();draw();var ef_=egEf(mo,f==='egL'?'L':'R');toast('Engrosso '+mt[2]+': '+(ef_?ef_+'×':'sem')+(ef_?' · '+(mo.egD||70)+' mm de profundidade':''));return}EGT={k:key,t:now}}}
 });
 $('svg').addEventListener('pointerdown',function(ev){var t=ev.target,p=px(ev),m=S.m;if(ev.isPrimary){ptrs={};pinch0=null}if(ev.pointerType==='touch')ptrs[ev.pointerId]=ev;try{$('svg').setPointerCapture(ev.pointerId)}catch(e){}
@@ -5983,7 +5986,7 @@ window.__tvCar=function(){var n=0;Object.keys(TVS).forEach(function(k){var sp=TV
 var itRender_tv=itRender;itRender=function(){itRender_tv();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||f.t!=='tv'||E.querySelector('[data-qtvl]'))return;var on=S.tvLogo!==0,hdr=E.firstElementChild;if(hdr)hdr.insertAdjacentHTML('afterend','<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0"><button data-qtvl="'+(on?0:1)+'" style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">🎬 Abertura com a logo '+(on?'✓':'')+'</button><button data-qtva="'+(S.tvAnim===0?1:0)+'" style="padding:4px 9px;min-height:32px;font-size:13px'+(S.tvAnim!==0?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">🚗 Marceneiro passando '+(S.tvAnim!==0?'✓':'')+'</button></div>')};
 document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qtva]');if(!t)return;e.stopImmediatePropagation();S.tvAnim=t.dataset.qtva==='1'?1:0;build();render();itRender();if(S.tvAnim)try{fxKick()}catch(_){}ambMsg(S.tvAnim?'🚗 Com a TV ligada, o marceneiro passa de carro com a escada e a logo':'TV só com a imagem parada')},true);
 document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qtvl]');if(!t)return;e.stopImmediatePropagation();S.tvLogo=t.dataset.qtvl==='1'?1:0;if(S.tvLogo&&ISX&&ISX.k==='fr'){var k=String(ISX.id);if(OVL[k]){delete TVS[k]}}build();render();itRender();ambMsg(S.tvLogo?'🎬 A TV abre com a logo do Arquemestre ao ligar':'Sem abertura: a TV liga direto')},true);
-window.__tvs=function(){return JSON.parse(JSON.stringify(TVS))};window.__lbt=function(){return LBT.map(function(q){return {mi:q.mi,s:proj3(q.p)}})};window.__sel3=function(x,y){sel3(x,y)};window.__size3=function(x,y){size3(x,y)};window.__frmv=function(){return FRMV};window.__ray=function(x,y,w){var h=lbtRay(x,y,!!w);return h?{nm:h.b.nm||'',lbt:h.b.lbt,p:h.p.map(Math.round),n:h.n}:null};window.__lbtp=function(){return LBT.map(function(q){return {mi:q.mi,p:q.p.map(Math.round)}})};window.__rayMod=function(x,y){var h=lbtRay(x,y,false,function(b){return !b.nm||!/^\d+:/.test(b.nm)});return h?{nm:h.b.nm||''}:null};window.__pick=function(x,y){var f=null;try{f=pickFace(x,y,null)}catch(_){}return f?{nm:f.nm||'',lbt:f.lbt}:null};
+window.__tvs=function(){return JSON.parse(JSON.stringify(TVS))};window.__lbt=function(){return LBT.map(function(q){return {mi:q.mi,s:proj3(q.p)}})};window.__sel3=function(x,y){sel3(x,y)};window.__size3=function(x,y){size3(x,y)};window.__modAt3=function(x,y){return modAt(x,y)};window.__frmv=function(){return FRMV};window.__ray=function(x,y,w){var h=lbtRay(x,y,!!w);return h?{nm:h.b.nm||'',lbt:h.b.lbt,p:h.p.map(Math.round),n:h.n}:null};window.__lbtp=function(){return LBT.map(function(q){return {mi:q.mi,p:q.p.map(Math.round)}})};window.__rayMod=function(x,y){var h=lbtRay(x,y,false,function(b){return !b.nm||!/^\d+:/.test(b.nm)});return h?{nm:h.b.nm||''}:null};window.__pick=function(x,y){var f=null;try{f=pickFace(x,y,null)}catch(_){}return f?{nm:f.nm||'',lbt:f.lbt}:null};
 /* ===== pedra: lateral descendo até o chão (nas pontas, no fim das pernas do L/U ou em qualquer ponto) ===== */
 function stLatGeo(st){var W=st.w,D=st.d,sh=st.shape||'reta',d6=function(v){return v===undefined?600:v},lA=d6(st.lenA),wA=Math.min(d6(st.widA),W),lB=d6(st.lenB),wB=Math.min(d6(st.widB),W),e=Math.max(10,+st.e||30),o=[];
  (st.lat||[]).forEach(function(l,i){var x0,x1,z0,z1;if(l.at==='x')return;/* lateral no meio da pedra não existe mais: só nas pontas */if(l.at==='e'){x0=0;x1=e;z0=0;z1=D+((sh==='Le'||sh==='U')?lA:0)}else if(l.at==='d'){x0=W-e;x1=W;z0=0;z1=D+((sh==='Ld'||sh==='U')?lB:0)}else if(l.at==='pe'){if(sh!=='Le'&&sh!=='U')return;x0=0;x1=wA;z0=D+lA-e;z1=D+lA}else if(l.at==='pd'){if(sh!=='Ld'&&sh!=='U')return;x0=W-wB;x1=W;z0=D+lB-e;z1=D+lB}else{var px=Math.max(0,Math.min(W-e,+l.x||0));x0=px;x1=px+e;z0=0;z1=D}o.push({i:i,x0:st.x+x0,x1:st.x+x1,z0:z0,z1:z1,y1:st.t,at:l.at})});return o}
@@ -12686,6 +12689,55 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('#bd [data-wing]');if(!t||window.RO)return;var m=S.m;if(!m)return;
   if(t.dataset.wing==='L'){e.stopImmediatePropagation();if(lvSolta(m)){try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}toast('Móvel livre no meio da sala · arraste e gire na Planta (vista de cima)')}return}
   if(LV(m)){/* voltar pra uma parede: o tratador de sempre põe ele lá; aqui só limpa a posição livre */delete m.lx;delete m.lz;delete m.rot;m.wing=undefined;delete m.wing}},true);
+})();
+</script>
+<script>
+/* ===== ETAPA C — segurar o móvel 2 s abre o menu de edição (Adauto, 21/11: "Segurar o móvel por 2 segundos deverá abrir seu menu de edição.
+   Não movimentar o móvel durante o acionamento. Preservar o comportamento dos toques simples, duplos e do arrasto.")
+   Decisão do Adauto (21/11): abre o MESMO menu dos toques — 2D e Planta: o menu rápido do vão segurado (o dos 2 toques); 3D: o quadro de opções
+   do módulo (o dos 3 toques, size3), mesmo segurando numa porta (a porta não abre). Mouse: só segurar o botão esquerdo 2 s (clique direito não faz nada).
+   - Mexeu mais que SEL.mov px (o mesmo limite do toque) antes dos 2 s: é arrasto, o segurar cancela e nada muda no arrasto.
+   - Segundo dedo (pinça): cancela.
+   - Nos 2 s: se o dedo tremeu (menos de SEL.mov) e o módulo andou, ele volta exatamente pro lugar; o arrasto em andamento é cancelado; abre o menu.
+     Depois disso, até soltar, o movimento daquele dedo não chega no 2D/3D (não leva o móvel nem gira a vista) e soltar não conta como toque
+     (nem abre a porta embaixo do dedo no 3D, nem aperta um botão do menu). ===== */
+(function(){
+ var MS=2000,LP=null,T0=null,lim=function(){try{return (typeof SEL!=='undefined'&&SEL.mov)||10}catch(_){return 10}};
+ var POS=['x','b','wing','lx','lz','rot'],pos=function(m){var o={};POS.forEach(function(k){o[k]=m[k]});return o},volta=function(m,o){var mudou=false;POS.forEach(function(k){if(m[k]!==o[k]){mudou=true;if(o[k]===undefined)delete m[k];else m[k]=o[k]}});return mudou};
+ function cv3(t){return !!(t&&(t.id==='cv3'||(t.tagName==='CANVAS'&&t.closest&&t.closest('#v3'))))}
+ /* outro tratador pode redesenhar o 2D/Planta no mesmo toque antes deste: o alvo antigo sai da página; vale o que está agora no ponto */
+ function alvo(ev){var t=ev.target;if(t&&t.isConnected===false)t=document.elementFromPoint(ev.clientX,ev.clientY);if(!t||!t.closest)return null;
+  if(cv3(t)){var r=t.getBoundingClientRect(),cx=ev.clientX-r.left,cy=ev.clientY-r.top,mi=-1;try{mi=window.__modAt3?__modAt3(cx,cy):-1}catch(_){}return mi>=0&&S.mods[mi]?{v:'3d',mi:mi,cx:cx,cy:cy}:null}
+  if(!t.closest('#svg'))return null;
+  if(window.PLV){var gp=t.closest('[data-pm]');return gp&&S.mods[+gp.dataset.pm]?{v:'pl',mi:+gp.dataset.pm}:null}
+  var tg=document.elementFromPoint(ev.clientX,ev.clientY),g=tg&&tg.closest&&tg.closest('#mod');
+  /* igual aos 2 toques: puxador da prateleira e eletro por cima do módulo valem pro módulo de baixo */
+  if(!g&&tg&&tg.closest&&tg.closest('[data-ish],[data-ap]')){try{var st=document.elementsFromPoint(ev.clientX,ev.clientY);for(var i=0;i<st.length&&!g;i++)g=st[i].closest&&st[i].closest('#mod')}catch(_){}}
+  return g&&S.mods[+g.dataset.mi]?{v:'2d',mi:+g.dataset.mi,g:g}:null}
+ /* vão na Planta: posição ao longo da largura do módulo (parede do fundo, paredes do lado e livre) */
+ function vaoPl(m,ev){try{var p=px(ev),X=(p.x-OX)/PLK,Y=(p.y-(OY+10))/PLK,u;
+   if(m.wing==='L'&&window.lvLoc){var q=lvLoc(m,{x0:X,x1:X,z0:Y,z1:Y},-1);u=q.x0-(+m.x||0)}else if(m.wing==='e'||m.wing==='d')u=Y-(+m.x||0);else u=X-(+m.x||0);
+   var R=vaoRanges(m),vi=-1,bd=1e9;R.forEach(function(r,i){if(u>=r[0]-2&&u<=r[1]+2&&vi<0)vi=i});if(vi<0)R.forEach(function(r,i){var d=Math.min(Math.abs(u-r[0]),Math.abs(u-r[1]));if(d<bd){bd=d;vi=i}});return vi}catch(_){return 0}}
+ function abre(){var L=LP;if(!L)return;L.fired=1;var m=S.mods[L.mi];if(!m)return;
+  try{if(L.v==='2d')drag=null;if(L.v==='pl')PLD=null}catch(_){}
+  if(volta(m,L.p0)){try{draw()}catch(_){}try{if(window.re3)re3()}catch(_){}}
+  try{TQK.k=null;clearTimeout(TQK.tm)}catch(_){}
+  /* 3D: o quadro de opções do módulo, o mesmo dos 3 toques (size3) */if(L.v==='3d'){try{__size3(L.cx,L.cy)}catch(_){}return}
+  var vi=0,kb=-1;if(L.v==='2d'){var rc=L.g&&L.g.querySelector('rect[data-mi]');if(rc&&window.vaoNoPonto){var q=vaoNoPonto(m,rc,L.ev);vi=q.vi;kb=q.kb}}else vi=vaoPl(m,L.ev);
+  if(vi>=0)try{vmenuOpen(L.mi,vi,L.x,L.y,kb)}catch(_){}}
+ function fim(){clearTimeout(T0);T0=null;LP=null}
+ window.addEventListener('pointerdown',function(ev){if(LP&&ev.pointerId!==LP.id){fim();return}/* segundo dedo */fim();if(window.RO||!ev.isPrimary||(ev.pointerType==='mouse'&&ev.button!==0))return;var a=alvo(ev);if(!a)return;var m=S.mods[a.mi];
+  LP={id:ev.pointerId,x:ev.clientX,y:ev.clientY,v:a.v,mi:a.mi,g:a.g,cx:a.cx,cy:a.cy,p0:pos(m),ev:{clientX:ev.clientX,clientY:ev.clientY,target:ev.target}};T0=setTimeout(abre,MS)},true);
+ window.addEventListener('pointermove',function(ev){if(!LP||ev.pointerId!==LP.id)return;if(LP.fired){ev.stopImmediatePropagation();if(ev.cancelable)ev.preventDefault();return}if(Math.hypot(ev.clientX-LP.x,ev.clientY-LP.y)>lim())fim()},true);
+ /* soltar depois do menu: não é toque (no 3D o canvas contava como 1 toque e abria a porta embaixo do dedo; no 2D contava pros 2/4 toques).
+    O soltar vira "cancelado" pro 2D/3D (eles limpam o dedo e o arrasto sem agir) e o clique que o navegador manda logo depois não chega
+    (o menu abre perto do dedo e esse clique cairia num botão dele) */
+ var NOCLK=0;
+ ['pointerup','pointercancel'].forEach(function(n){window.addEventListener(n,function(ev){if(!LP||ev.pointerId!==LP.id)return;var f=LP.fired,v=LP.v;fim();if(!f||n!=='pointerup')return;
+  ev.stopImmediatePropagation();if(ev.cancelable)ev.preventDefault();NOCLK=Date.now();var tg=v==='3d'?document.getElementById('cv3'):document.getElementById('svg');
+  try{if(tg)tg.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,cancelable:false,pointerId:ev.pointerId,pointerType:ev.pointerType,isPrimary:ev.isPrimary,clientX:ev.clientX,clientY:ev.clientY}))}catch(_){}},true)});
+ window.addEventListener('click',function(ev){if(NOCLK&&Date.now()-NOCLK<700){NOCLK=0;ev.stopImmediatePropagation();ev.preventDefault()}},true);
+ window.__lp={ms:MS,ativo:function(){return LP?{v:LP.v,mi:LP.mi,fired:!!LP.fired}:null}};
 })();
 </script>
 </body></html>

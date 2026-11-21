@@ -130,3 +130,7 @@
 • Móvel novo do catálogo não encolhe mais sozinho pra caber. Se não houver espaço, o app pergunta: usar o espaço que sobra (mostra a medida) ou não colocar. Os móveis que já estão no projeto não mudam.
 • Mudar uma medida e voltar deixa o móvel exatamente como era (folga do rack e posição voltam).
 • Móvel livre: no painel do módulo, "Livre (no meio da sala)" tira o móvel da parede. Na Planta você arrasta e gira de 90 em 90 graus, com ímã pra encostar em outro móvel (por exemplo, dois balcões de costas). O móvel não entra em outro e fica salvo do jeito que deixou. As peças e o plano de corte não mudam.
+• Canto L: não empurra mais os móveis da parede. Se não tiver espaço, o app pergunta se usa o espaço que sobra (mostra a medida) ou não coloca; se não der pra um canto que funcione, explica e não coloca. Os móveis que já estão não mudam.
+• Segurar o móvel 2 segundos abre o menu de edição dele (no 2D e na Planta, o do vão; no 3D, as opções do módulo). O móvel não sai do lugar. Toque, 2 toques e arrastar continuam iguais.
+• Móvel livre e móveis nas paredes do lado: a linha fina do puxador cava aparece no 3D em qualquer posição.
+• Projeto antigo sem a lista de prateleiras soltas abre normal, com as mesmas medidas.

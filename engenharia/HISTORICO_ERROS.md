@@ -1110,8 +1110,83 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Outra falha no mesmo CI, que não é erro:** `testEditorAbreComoNoAppSemTelaBranca` levou 32,9 s para abrir no iPad (limite 20 s) e passou na repetição. É lentidão do simulador e o teste não mudou.
 - **Também não é erro:** `testMaoDeObra…` (N15) falhou uma vez no iPhone e passou na repetição, como já registrado.
 
-## R-CANTO — pôr "Canto L guarda-roupa" empurra os armários da parede (erro comprovado, anterior; aguarda decisão)
+## R-CANTO — pôr "Canto L guarda-roupa" empurra os armários da parede (erro comprovado, anterior; **corrigido 21/11**)
 - **Reproduzir:** quarto vazio, 3 armários (x = 35, 335, 935), depois "Canto L guarda-roupa · esquerdo". Os 3 vão para x = 1060, 1360, 1960 (+1025 mm) e o canto fica em x = 0. Com a parede cheia, a fileira inteira troca de ordem (espelho). O "· direito" desfaz.
 - **Não foi causado pela B22 nem pela Etapa B:** o resultado é igual em e655aa9^ (antes da B22) e na versão atual.
 - **Conflito:** a regra de 16/11 diz "o app nunca altera sozinho medida ou posição de fabricação".
-- **Situação:** não corrigido. Precisa da decisão do Adauto (por exemplo, perguntar como na B22). Fica junto do pedido "paredes espelhadas, preservando a sequência".
+- **Situação em 20/11:** não corrigido, aguardando decisão.
+- **Decisão do Adauto (21/11):** "O módulo Canto L nunca poderá empurrar, deslocar, inverter, redimensionar ou reorganizar móveis existentes automaticamente." Sem espaço: "Usar espaço disponível" ou "Não colocar"; a primeira só se o canto adaptado continuar válido; sem espaço pra um canto válido, não coloca e explica.
+- **Causa raiz:** `cornerPack` (chamado só ao criar o canto: catálogo `newTpl` e botão da Planta `mkCorner`) encostava a fileira do lado do canto mudando o `x` dos vizinhos. `mkCorner` e o botão "Módulo de canto" do painel também empurravam os módulos da parede lateral pra depois do canto. Com a parede cheia, os empurrões seguidos invertiam a ordem.
+- **Família investigada:** inferiores (canto de base pelo botão da Planta e do painel), superiores (canto aéreo esquerdo/direito), guarda-roupas (canto L esquerdo/direito). Torres e demais não têm canto L.
+- **Correção (`editor.html`):** `cornerPack` não mexe em ninguém (devolve 0). `cnChk` mede sem mexer o espaço até o 1º vizinho da mesma altura (com a folga da parede de `limX`) e o lado. Os 3 caminhos passam por ela.
+  - Cabe: entra com a medida do catálogo.
+  - Não cabe mas o canto adaptado é válido: pergunta "Usar espaço disponível (N mm)" / "Não colocar".
+  - Sem espaço pra canto válido, ou já tem canto daquele lado: explica o mínimo e não coloca.
+  - "Não colocar" deixa o projeto igual (inclusive o desfazer).
+  - Canto válido (regra que a construção já usa no lado: W2 = máx(prof. + 200, cw2); espelhada no fundo): fundo ≥ prof. do lado + 200; lado ≥ prof. + 200. **A confirmar pelo Adauto** (`DECISOES_TECNICAS.md`).
+  - Tamponamento AUTOMÁTICO da ponta da fileira virado pro canto: sai quando o canto encosta (regra que já existe pra qualquer módulo que encosta). Então "usar o espaço" vai até o corpo do vizinho e tira esse tamponamento antes, pra não deixar vão. Sem isso, outra regra levava o canto pra outro vão. Tamponamento escolhido pela pessoa conta sempre.
+- **Testes:** `testCantoLNuncaEmpurraOsMoveisPerguntaOuImpedeEmParedeVaziaParcialECheia`.
+  - Paredes vazia, com espaço, com espaço curto, cheia e lateral ocupada; base, aéreo e guarda-roupa, esquerdo e direito; catálogo, Planta e painel.
+  - Confere: ninguém muda; sem sobrepor; peças iguais às do canto da mesma medida na parede vazia; salvar e reabrir.
+  - Falha antes (7e0c5b1) e passa depois (7d0476b).
+- **Testes que mudaram por esta decisão:** `testCantoEncostaPlantaEmAnguloComPedraECooktopPorCimaDo3D` e `testListaDeMoveisNoOrcamento` punham o canto onde já tinha módulo e contavam com o empurrão. Agora a preparação deixa o lugar livre; as conferências continuam (9aa2afd).
+- **Projetos salvos:** não mudam (`cornerPack` só rodava ao criar o canto).
+
+## CAVA NO LIVRE — linha fina do cava sumia fora da parede do fundo (pedido do Adauto 21/11; corrigido)
+- **Pedido:** "Corrigir as faixas da cava no móvel livre em todas as orientações."
+- **Reproduzir:** balcão de 2 portas com cava. Na parede do fundo saem 75 caixas finas; na parede do lado e no livre (0/90/180/270) saem 73. Faltam as 2 linhas de sombra do cava (0,6 × 3 mm na frente de cada porta).
+- **Causa raiz:** a passada do fim (`build_cava`) achava a porta pelo perfil `b.poly`. Fora da parede do fundo, o giro (`lvX` no livre, `wingX` nas paredes do lado) já tinha trocado `poly` por `pf`, e a linha não saía. O chanfro continuava certo; só a linha faltava.
+- **Correção:**
+  - A conta da linha virou `cvLinha(b)`.
+  - Fora da parede do fundo ela roda no referencial do módulo antes do giro (`cavaLin`, chamado no DRM), e o giro leva a linha junto.
+  - Parede do fundo: 3D idêntico (cozinha demo com cava: 566 caixas, mesmo hash). Peças e corte não mudam.
+  - Paredes do lado: mesmo defeito, mesma família, corrigido no componente compartilhado.
+- **Teste:** `testCavaDoMovelLivreTemALinhaNasQuatroPosicoesENasParedesDoLado`.
+  - Cada linha no livre e nas paredes do lado é a da parede do fundo levada pela conta do giro (1 mm), no balcão e no gaveteiro.
+  - Falha antes (0/2 e 0/3) e passa depois (cfcbdb0 → b5594a5).
+
+## ETAPA C — segurar o móvel 2 s abre o menu de edição (pedido do Adauto 21/11; implementado)
+- **Decisão do Adauto (21/11, perguntas):** abre o mesmo menu dos toques; mouse só segurando o botão esquerdo.
+- **Implementação:** bloco próprio no fim do `editor.html`, na captura da janela. A conta do vão dos 2 toques virou `vaoNoPonto` (mesma conta). `__modAt3` expõe o `modAt` do 3D. Ver `GESTOS_CONTROLES.md`.
+- **Defeitos achados no caminho e corrigidos antes de fechar:**
+  1. Na Planta o segurar não armava quando outro tratador redesenhava a planta no mesmo toque: o alvo do toque saía da página. Agora vale o elemento que está no ponto.
+  2. No 3D, soltar depois do menu contava como 1 toque (o canvas não olha o tempo) e abria a porta embaixo do dedo. Agora o soltar vira cancelado pro 2D/3D.
+  3. O clique que o navegador manda logo depois de soltar caía num botão do menu (o menu abre perto do dedo) e mudava o vão. Agora esse clique não chega. Provado: sem o bloqueio, o teste mostra "vão mudou".
+- **Teste:** `testSegurarOMovel2SegundosAbreOMenuSemMexerEPreservaToqueEArrasto`.
+  - 2D com inferior, gaveteiro, aéreo, torre e guarda-roupa; Planta; 3D.
+  - Confere: dedo tremendo; soltar; clique depois; segurar pouco; arrastar; 2 toques; 2 dedos; mouse esquerdo e direito; 1 e 3 toques do 3D.
+  - Falha antes (7e0c5b1: segurar não abre nada) e passa depois.
+- **Registro:** o `GESTOS_CONTROLES.md` dizia "1 toque no módulo abre o quadro" no 3D. No código, 1 toque escolhe e 3 toques abrem. Corrigido no inventário.
+
+## PROJETO-SEM-SHV — projeto antigo/mínimo sem a lista de prateleiras soltas não abria (achado 21/11; corrigido)
+- **Como achei:** simulando o teste de atualização (abrir os projetos do backup de referência no editor).
+- **Reproduzir:** `loadState` de um módulo `{id,x,w,h,d,b,div,v}` sem `shv`. O `partsOf` dá `TypeError ... reading 'forEach'` e o projeto não abre. Igual na 7e0c5b1.
+- **Causa raiz:** `defs` (o que completa os campos de projeto antigo ao abrir) não tinha a lista `shv`, e o resto do código conta com ela. A 3.0.12 sempre grava `shv`, então afeta projeto mínimo ou antigo.
+- **Correção:** `defs` completa `shv`, `div` e `v` vazios quando faltam. Lista vazia é o que o campo ausente significa. Medidas e arquivo salvo não mudam.
+- **Teste:** `testProjetoAntigoSemPrateleirasSoltasAbreComAsMesmasMedidasEGeraPecas`. Falha antes e passa depois (50344d7 → 8f644d4).
+
+## BACKUP-REF — notas do backup de referência em formato que nenhum app abre (achado 21/11; corrigido no gerador)
+- `tools/gerar_backup_referencia.py` (N06, 17/11) gravava a medida da nota como `x1/y1/value` e a foto sem `cx/cy/w/h`. Android (`Json.kt`) e iOS (`JsonCodec.swift`) exigem `a`, `b`, `color`, `width` e `cx`, `cy`, `w`, `h`. Servia só pra conferir arquivos por hash.
+- Agora grava no formato real, com os mesmos ids, nomes, fotos e vínculo. ZIP e manifesto foram gerados juntos (31b761c). Os testes de restauração e atualização das 3 plataformas comparam com o manifesto, então seguem valendo.
+
+## ATUALIZACAO-IOS-ABRE — teste de atualização do iOS abre os projetos no editor (pedido do Adauto 21/11)
+- `AtualizacaoAbreProjetosTests` (só com `ARQ_ATUALIZACAO=1`): depois de instalar por cima da 3.0.12, abre o editor como o app, lendo os arquivos que ficaram, e abre cada projeto pelo `arqueOpenClient`. Confere:
+  - medidas e posições iguais às salvas;
+  - peças e corte em todo módulo, sem erro;
+  - foto da galeria de volta;
+  - notas abertas pelo `Store` com as medidas e a foto.
+- Nada é gravado no aparelho. O script confere os arquivos de novo depois (passo 6) (0e25f29).
+- Simulado antes no Chromium com a ponte do app e o backup de referência: p1 com 2 módulos e p2 com 1, medidas iguais, 13 peças e 7 linhas de corte por módulo, 1 foto do p1, só `prices.json` gravado ao abrir.
+
+## N15 / animação — falhas intermitentes do iOS (investigação 21/11)
+- **testMaoDeObra…:** a falha do CI (linha 8973) é `janelaNaoDesceNoMeioDoToque`, não o `botaoPega`.
+  - Hipótese: a janela ainda está subindo com o teclado. A animação dura 0,15 s e há reajustes em 60…1200 ms depois de abrir o campo; o teste mede 90 ms depois. Não comprovada: só acontece no simulador do iOS.
+  - O teste agora mostra y antes/depois, transform e ms desde que o campo abriu. Nenhuma espera foi acrescentada, pra não esconder defeito real: no iOS, tocar num botão não tira o foco do campo, e um reajuste atrasado mexeria a janela debaixo do dedo.
+- **testAbrirPortasEGavetas… parte 1:** gaveta que não abriu e porta que não fechou depois da espera de até 10 s pela animação; passa na repetição.
+  - Hipótese: o simulador segura os quadros de animação quando está carregado.
+  - O teste agora diz se a espera esgotou e se a animação andou ou ficou parada.
+- As conferências são as mesmas (49aca08). Classificação: **não foi possível verificar** até o próximo CI do iOS trazer o detalhe.
+
+## Ferramenta da bateria local — editor velho do cache (21/11)
+- O Chrome da bateria local tem perfil fixo e às vezes servia o `editor.html` antigo do cache: um teste falhava com o código já corrigido.
+- A partir daqui as rodadas locais usam endereço único (`?v=...`). As provas de "falha antes" usaram a porta 8836 (editor fixo da 7e0c5b1), sem esse problema. O CI do Windows abre um navegador novo e não é afetado.

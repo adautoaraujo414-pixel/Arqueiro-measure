@@ -61,7 +61,7 @@ Referência: `claude/arquemestre-gavetas-paredes`, commit `63b65c5` (código igu
 ### BLOQUEADO (2)
 | ID | Pedido | Justificativa / evidência |
 |---|---|---|
-| N05 | Atualização por cima da versão anterior sem teste (3 plataformas) | atualização por cima no iOS: falta saber qual commit está publicado no iOS (Android e Windows ok: atualização 10 e 5 verdes) |
+| N05 | Atualização por cima da versão anterior sem teste (3 plataformas) | **atualizado 21/11:** o commit publicado do iOS é conhecido (3.0.12 = `d861fbd`). Atualização por cima no simulador: 8/8 arquivos iguais (20/11). Desde 21/11 o mesmo teste também abre os projetos no editor e as notas (`AtualizacaoAbreProjetosTests`); resultado no CI da rodada. Android e Windows ok. Falta aparelho real |
 | N12 | Licença 3 dias/relógio voltado sem teste (Android site e Windows); Play/Billing sem teste | regra de licença não pode ir pro repositório público (CLAUDE.md) |
 
 ### PRECISA DE APARELHO REAL (1)
@@ -162,7 +162,7 @@ GAV-SET · DUPLO-TOQUE · CANTO-SOZINHO · PORTA-CAVA · MENU-ARRASTA · FUNDO-S
 - 27 modelos (guarda-roupas, cantos retos, torres da sala) mudam peças ao entrar no editor por vãos pelo 2D isolado (já era assim).
 - Ao passar um móvel pra outra parede, o lado exposto ganha o tamponamento automático (regra antiga).
 - Tamponamento livre que desce: só na parede do fundo.
-- Sem teste em aparelho real nesta rodada; atualização por cima no iOS sem o commit publicado.
+- Sem teste em aparelho real nesta rodada. A atualização por cima no iOS já usa o commit publicado (3.0.12 = `d861fbd`, ver abaixo), mas só no simulador.
 
 ## Segurança dos dados
 - Nenhuma mudança de formato que apague ou reescreva projeto; campos novos só aparecem quando a pessoa usa a função (ex.: `desce`/`dm` no tamponamento livre).
@@ -187,4 +187,16 @@ GAV-SET · DUPLO-TOQUE · CANTO-SOZINHO · PORTA-CAVA · MENU-ARRASTA · FUNDO-S
 - **Na App Store (ao público): 3.0.12, build 321, código `d861fbd`** (07/11, branch `feature/arque-measure-kotlin`).
 - 3.0.50 (build 548, `3799060`): está em **PREPARE_FOR_SUBMISSION**, nunca foi enviada à revisão. A anotação antiga ("enviada pra revisão em 15/11") estava errada.
 - TestFlight: builds até 574 (teste interno, não é publicação).
-- **Atualização por cima no iOS:** `ios-atualizacao.yml` (só simulador, não publica). Instala a 3.0.12 (`d861fbd`), põe o backup de referência, instala a nova por cima e abre. Execução 44836226818 (20/11): **8/8 arquivos iguais** (sha256 de projetos, índice, imagens, notas, preços, foto do móvel), 0 falhas. Não abre os projetos dentro do editor e não foi feito em aparelho real.
+- **Atualização por cima no iOS:** `ios-atualizacao.yml` (só simulador, não publica). Instala a 3.0.12 (`d861fbd`), põe o backup de referência, instala a nova por cima e abre. Execução 44836226818 (20/11): **8/8 arquivos iguais** (sha256 de projetos, índice, imagens, notas, preços, foto do móvel), 0 falhas. Nessa execução não abria os projetos dentro do editor. **21/11:** o teste passou a abrir cada projeto no editor da versão nova (medidas, peças, corte, foto) e as notas (medida e foto), e confere os arquivos de novo depois. O backup de referência ganhou notas no formato real (as antigas não abriam em nenhum app). Continua sem aparelho real.
+
+## Rodada de 21/11 (autorização do Adauto de 21/11)
+| Item | Situação | Evidência |
+|---|---|---|
+| Etapa B no `gavetas-paredes` | **integrada** (avanço direto até `7e0c5b1`, já verde no CI), B22/B23/B24 preservadas | CIs de 20/11 |
+| R-CANTO | **corrigido** (canto não empurra; pergunta ou impede) | teste novo falha antes e passa depois; 2 testes com a preparação ajustada pela decisão |
+| Faixas da cava no móvel livre | **corrigido** (0/90/180/270 e paredes do lado) | teste novo; 3D da parede do fundo idêntico |
+| Etapa C (segurar 2 s) | **implementado** (decisão: o mesmo menu dos toques; mouse só segurar) | teste novo com toques de verdade; 3 defeitos achados e corrigidos no caminho |
+| Projeto sem `shv` | **corrigido** (abria quebrado) | teste novo |
+| Atualização por cima no iOS abrindo os projetos | **implementado**; resultado no CI da rodada | `AtualizacaoAbreProjetosTests` + passos 5 e 6 do script |
+| N15 e teste da animação | **não foi possível verificar** (só no simulador do iOS); o teste agora mostra a causa quando falha | 49aca08 |
+| Regra do canto mínimo (fundo ≥ prof. do lado + 200; lado ≥ prof. + 200) | **a confirmar pelo Adauto** (deduzida da construção atual) | `DECISOES_TECNICAS.md` |

@@ -134,3 +134,4 @@
 • Segurar o móvel 2 segundos abre o menu dele. No 2D e na Planta, o menu do vão. No 3D, o módulo fica destacado e aparece: girar (móvel livre), tirar da parede, pôr numa parede, mover, medidas e excluir (pergunta antes). O móvel não sai do lugar e os outros não mudam. Toque, 2 toques e arrastar continuam iguais.
 • Móvel livre e móveis nas paredes do lado: a linha fina do puxador cava aparece no 3D em qualquer posição.
 • Projeto antigo sem a lista de prateleiras soltas abre normal, com as mesmas medidas.
+• Mover no 3D: no menu de segurar, arraste o móvel no chão do 3D. Chegando a 2 cm da parede (de costas pra ela) aparece uma guia azul e, ao soltar, ele encaixa na parede; puxando mais de 2 cm, sai dela. Embaixo da pedra só encaixa se couber. Os outros móveis nunca mudam. O ímã liga e desliga nos Ajustes.

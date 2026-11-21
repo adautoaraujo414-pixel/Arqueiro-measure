@@ -1229,3 +1229,32 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** `demoScene` monta o exemplo com `FITENCOLHE` ligado só durante a montagem, como quem escolhe "Usar N mm", e volta o valor de antes. `demoSala`, `demoCloset` e `demoLed` não mudaram. A B22 continua pra quem põe móvel.
 - **Teste:** `testCenaDeExemploDasCapturasIgualAntesDaB22SemPergunta`. Falha antes e passa depois (165c82e → fb8b789).
 - **Efeito nos testes:** os testes que usam a cozinha de exemplo voltam a ver os 9 módulos de antes da B22, que é o que tinham sido escritos pra ver.
+
+## ETAPA C2 — Mover no 3D com encaixe magnético (pedido do Adauto 21/11; ramo `claude/arquemestre-etapa-c-arraste3d`, separado da homologação)
+- **Auditoria antes de fazer:**
+  - Arrasto do 3D (`MDRG`): move o módulo de parede ao longo dela e na altura, com `mvSnap`, `stoneLim` e colisão. No móvel livre não funcionava (mexe no `x` da parede).
+  - O livre só andava na Planta (`lvTenta`: `bate` + `imanta`). O `imanta` puxava pras paredes da sala a 25 mm.
+  - Pedra: corpo = pedra − 40 (`dSobPedra`) ao criar.
+  - Achado: no 3D, o móvel da parede **esquerda** é guardado espelhado. Medido: livre de costas pra ela tem a porta à esquerda; como módulo da esquerda, à direita. É a decisão de 18/11 (manter físico, corrigir nomes).
+- **Decisões do Adauto (perguntas de 21/11):**
+  - encaixa só de costas pra parede (nada gira sozinho);
+  - só a pedra da parede;
+  - puxado mais de 20 mm sai da parede;
+  - ímã liga/desliga nos Ajustes, guardado;
+  - parede esquerda: só fundo e direita encaixam/soltam arrastando; na esquerda continua "Vincular à parede" do menu.
+- **Implementação (reuso):**
+  - "Mover no 3D" no menu dos 2 s.
+  - Livre:
+    - anda no chão com `lvTenta` em mm inteiros, sem bater, com ímã entre móveis (no arrasto do 3D o `imanta` não puxa pras paredes: `__lvSemParede`; Planta igual);
+    - guia azul a até 20 mm, medida no sólido real do 3D;
+    - ao soltar, vira módulo da parede no mesmo lugar e confere colisão no sólido do 3D e com `modOverlaps`. Se bater, volta e diz em quem.
+  - Pedra: confere o fundo ≤ pedra − 40 e a altura até a pedra; se não couber, explica e não muda.
+  - De parede: o arrasto de sempre; puxado mais de 20 mm pra fora vira livre de costas (`__mdrgStop` para o arrasto de sempre).
+  - Canto L: não encaixa arrastando (precisa ficar no canto; R-CANTO).
+  - Barra com X/Z (livre) ou "da parede" (`setv('x')`) em mm.
+  - Ímã: `PR.ima` (o `LVSNAP` da Etapa B passa a ler dele).
+- **Defeito achado no caminho:** a função nova `alvo(m)` tinha o mesmo nome da `alvo(ev)` do segurar 2 s, no mesmo bloco, e tomava o lugar dela: o segurar parou de abrir o menu. Renomeada `paredeAlvo`. Pego pelos testes da Etapa C antes do commit.
+- **Teste:** `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem` (19/20/21 mm, orientação, esquerda, colisão, pedra cabe/não cabe, soltar, arrasto real, posição digitada, ímã desligado e guardado, lado a lado, desfazer/refazer, reabrir, tipos). Falha antes (`__mv3` não existe) e passa depois (cd0cb1f → 6b8cbf2).
+- **Riscos registrados:**
+  - A colisão do livre (`bate`) só olha módulos, não a pedra (já era assim na Etapa B).
+  - No 3D, o módulo de parede ainda anda pelo arrasto de sempre ("segure um instante e arraste").

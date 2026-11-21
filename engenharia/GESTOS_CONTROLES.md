@@ -36,6 +36,12 @@ Este inventário traz só o que foi conferido. As duas primeiras seções são o
 - Mouse (Windows): só segurar o botão esquerdo 2 s; clique direito não faz nada.
 - Teste: `testSegurarOMovel2SegundosAbreOMenuSemMexerEPreservaToqueEArrasto`.
 
+## Mover no 3D (Etapa C2, Adauto 21/11)
+- Menu dos 2 s › "Mover no 3D": barra no alto com a posição em mm (digitável), o estado do ímã e "Pronto". Enquanto ela está aberta, segurar 2 s não abre o menu.
+- Livre: 1 dedo no móvel arrasta no chão (mm inteiros), sem entrar em outro móvel. A até 20 mm da parede do fundo ou da direita, de costas pra ela: guia azul; soltar encaixa. Esquerda e canto L: não encaixa (aviso).
+- De parede: segure um instante e arraste (como sempre); puxar mais de 20 mm pra fora solta (não na esquerda).
+- Ímã: Ajustes › 🧲 Ímã ligado/desligado (guardado).
+
 ## A levantar (não verificado)
 - Gestos simultâneos (pinça + arrasto).
 - Caneta (Apple Pencil e S Pen).

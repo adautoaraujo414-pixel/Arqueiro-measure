@@ -1219,3 +1219,13 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
     - salva sozinho.
   - Falha antes (`lp3Open` não existe) e passa depois (5566d98 → 60b4b4f).
 - **Detalhe do teste:** a comparação dos vizinhos ignora a ordem das chaves do JSON (como no da B24). Uma regra tira e põe de volta o mesmo campo com o mesmo valor; campo por campo, nada muda.
+
+## DEMO-B22 — cozinha de exemplo das capturas com 6 módulos e a pergunta aberta (achado 21/11; corrigido)
+- **Como achei:** na captura do menu do 3D, a pergunta "Não tem espaço livre" aparecia atrás do menu.
+- **Reproduzir:** `demoScene()` (usada por `?demo3d=1`, `demoCores`, `demoCorte`, `demo2D`, pelas capturas da loja e por vários testes).
+  - Antes da B22: 9 módulos (900, 1200, 600, 860, 860, 800 e 3 aéreos de 1000).
+  - Desde a B22 (já na 7e0c5b1): 6 módulos e a pergunta aberta.
+- **Causa raiz:** o exemplo contava com o encolher automático dos balcões da lateral (900 → 860/860/800), que a B22 tirou.
+- **Correção:** `demoScene` monta o exemplo com `FITENCOLHE` ligado só durante a montagem, como quem escolhe "Usar N mm", e volta o valor de antes. `demoSala`, `demoCloset` e `demoLed` não mudaram. A B22 continua pra quem põe móvel.
+- **Teste:** `testCenaDeExemploDasCapturasIgualAntesDaB22SemPergunta`. Falha antes e passa depois (165c82e → fb8b789).
+- **Efeito nos testes:** os testes que usam a cozinha de exemplo voltam a ver os 9 módulos de antes da B22, que é o que tinham sido escritos pra ver.

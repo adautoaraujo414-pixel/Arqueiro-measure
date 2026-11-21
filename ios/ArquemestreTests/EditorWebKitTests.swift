@@ -1046,6 +1046,7 @@ final class EditorWebKitTests: XCTestCase {
     func testFocarSoNoModuloEArrastarJanelaNo2D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;var R={};
           /* 🎯 só este módulo: câmera fixa nele, só o corpo dele aparece; ↩ volta pro ambiente */
           demoScene();draw();var wi=S.mods.findIndex(function(m){return m.wing==='e'});open3D();await new Promise(function(r){setTimeout(r,300)});var n0=__boxes().length;
@@ -1302,6 +1303,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSolidoNadaEntraEmNadaEPainelSaiEmPlacasDaChapa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
           var fresh=function(room){S.room=room;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw()};
           var clk=function(cid,re){window.CATALL=true;catOpen(cid);var c=CATS.filter(function(x){return x.id===cid})[0],k=-1;c.it.forEach(function(it,i){var t=typeof it==='number'?TPL[it]:it;if(k<0&&t&&re.test(t.n))k=i});document.querySelector('#catm [data-cati="'+cid+'|'+k+'"]').click();var m=document.getElementById('catm');if(m)m.hidden=true};
@@ -1354,6 +1356,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAreaDoPainelDesviaDosSolidosComLarguraFinal() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           try{STD().supPedra=0}catch(_){}/* teste antigo: aéreo pela altura do chão (sem a regra dos 700 acima da pedra) */
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
           S.room='cozinha';S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
@@ -2525,6 +2528,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBasculanteComCavaSemEngrossoFolga4NoTopo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;S.Hm=1;S.Wm=1;
           newTpl({n:'Rack de TV',w:1800,h:500,d:450,b:400,keep:true,div:[1/3,2/3],v:[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}]});var m=S.mods[S.mods.length-1];
           m.v.forEach(function(v){if(v.k==='door')v.bas=1});draw();var top=function(){return Math.round(Math.max.apply(null,dbg3all().filter(function(q){return /^\d+:Porta/.test(q.nm)}).map(function(q){return q.y1})))};
@@ -3037,6 +3041,7 @@ final class EditorWebKitTests: XCTestCase {
     func testNichoDaParedeDoLadoNaoEntraNoAereoESemNumeracao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=2960;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
           /* cabeçalho e abas na ordem do trabalho, sem os números */
@@ -4428,6 +4433,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTamponamentoEsticadoNo3DEntraNoPlanoDeCorteNaHora() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=5000;S.H=2700;S.mods=[];S.fr=[];var R={};
           var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
           newTpl(T('Rack suspenso'));newTpl(T('Rack suspenso'));var a=S.mods[0],b=S.mods[1];a.x=600;a.w=900;b.w=900;b.x=1500;S.mods.forEach(function(m){m.tt=true});draw();
@@ -5515,6 +5521,7 @@ final class EditorWebKitTests: XCTestCase {
     func testModuloNovoNaoEntraEspremidoComPortaMinuscula() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TL=[];var t0=window.toast;window.toast=toast=function(m){TL.push(String(m));try{return t0.apply(this,arguments)}catch(_){}};
           var cid=null,ix=-1;CATS.forEach(function(c){(c.it||[]).forEach(function(it,i){if(cid===null&&/^Guarda-roupa 3 vãos/.test(it.n||'')){cid=c.id;ix=i}})});
           var add=async function(){CATALL=true;catOpen(cid);await W(80);document.querySelector('#catm [data-cati="'+cid+'|'+ix+'"]').click();await W(250)};
@@ -6472,6 +6479,7 @@ final class EditorWebKitTests: XCTestCase {
     func testDepuradorDeEmbutirDoCatalogoEntraEmbutidoNoAereo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TT=[];var toast0=toast;toast=function(t){TT.push(String(t));return toast0.apply(this,arguments)};
         demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
         var FI=apModels('depurador').findIndex(function(q){return /Fischer/.test(q[0])}),IN=apModels('depurador').findIndex(function(q){return /Incasso 75 \(/.test(q[0])}),SL=apModels('depurador').findIndex(function(q){return /Slim 80/.test(q[0])});
@@ -6773,6 +6781,7 @@ final class EditorWebKitTests: XCTestCase {
     func testObservacoesDoOrcamentoNoFormatoQueOPdfSepara() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};
         /* O PDF do orçamento separa as observações pelas linhas que o editor escreve (Material, Móveis do projeto com a lista por parede, Cores do projeto).
            Este teste trava esse formato: se o editor mudar o jeito de escrever, o PDF deixaria de mostrar os detalhes da proposta. */
@@ -6888,6 +6897,7 @@ final class EditorWebKitTests: XCTestCase {
     func testMedidaDePecaSemDecimoEPartesSomamAPecaInteira() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
                   window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.CUTFAST=0;var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
                   var frac=function(v){return typeof v==='number'&&isFinite(v)&&Math.abs(v-Math.round(v))>1e-6},bad=[],npc=0,cresc=0,crEx=[];
                   var scanM=function(tag){S.mods.forEach(function(m){var P=[];try{P=partsOf(m)}catch(e){bad.push('ERRO partsOf '+tag);return}P.forEach(function(p){if(p.noCut)return;npc++;if(frac(p.cl)||frac(p.cw))bad.push('peça '+p.name+' '+tag+' '+p.cl+'×'+p.cw);/* a medida de corte nunca passa da medida do desenho (o décimo vira folga) */[p.cl,p.cw].forEach(function(c){[p.w,p.h].forEach(function(d){if(c>d+1e-6&&c-d<1){cresc++;if(crEx.length<6)crEx.push(p.name+' '+tag+' corte '+c+' desenho '+Math.round(d*100)/100)}})})});
@@ -6951,6 +6961,7 @@ final class EditorWebKitTests: XCTestCase {
     func testPlanoDeCorteApertaAChapaSemPiorarNoJeitoDeCortarEscolhido() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
                   window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.CUTFAST=0;var R={};
                   var kf=4,SW=2730,SH=1820,MIN=+(PR.sobraMin||100),A=SW*SH;
                   var met=function(r){var a=0,b=0;r.sheets.forEach(function(s){s.free.forEach(function(f){var w=f.w-kf,h=f.h-kf;if(w>=MIN&&h>=MIN){a+=w*h;if(w*h>b)b=w*h}})});return {n:r.sheets.length,a:a,b:b}};
@@ -7470,6 +7481,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSalvarLeveCadaMexidaGravaSoOProjetoAbertoEABibliotecaQuandoPara() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
                   var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};window.toast=function(){};
                   demoScene();await W(400);try{var v3=document.getElementById('v3');if(v3&&!v3.hidden){[].filter.call(document.querySelectorAll('#v3 button'),function(b){return /Fechar/.test(b.textContent)})[0].click();await W(200)}}catch(e){}
                   var N=40,st=snapState(),a=pLoadAll(),old=Date.now()-3*24*3600000;
@@ -7690,6 +7702,7 @@ final class EditorWebKitTests: XCTestCase {
     func testOlharTocarEAbrirTelasNaoMudaOProjetoSozinho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
                   window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
                   var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
                   S.mods=[];S.fr=[];S.rp=[];S.env='cozinha';S.room='cozinha';S.W=5610;S.H=3270;
@@ -7840,6 +7853,7 @@ final class EditorWebKitTests: XCTestCase {
     func testMesmoRoteiroEmTodosOsAmbientesProjetoLimpoNadaEntraNemMudaSozinho() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
                   window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
                   var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'touch'}))};
                   var CATR={cozinha:['inf','sup','alto'],gourmet:['inf','sup'],banho:['banho'],sala:['sala','tv','painel'],quarto:['quarto'],escr:['escr'],livre:['inf','sup']};
@@ -8111,6 +8125,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         window.MINI3OFF=1;PR.setupDone=1;var TO=[];window.toast=function(t){TO.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var clr=function(w){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=w||4200;S.RD=3500;S.H=2700;S.m=null;draw()};
@@ -12567,6 +12582,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAmbienteNaoModificaOsMoveisSoAvisa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
         draw();demoScene();await W(500);draw();var base=JSON.stringify(snapState());
         var dims=function(){return S.mods.map(function(m){return [Math.round(m.x),m.w,m.h,m.d,m.b||0].join('/')}).join(' ')};
@@ -12730,6 +12746,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTamponamentoSemEspacoAvisaEDeixaOProjetoIgual() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var tab=async function(){[].filter.call(document.querySelectorAll('#tabs [data-t]'),function(x){return /Tamponamento/.test(x.textContent)})[0].click();await W(60)};
@@ -13149,6 +13166,7 @@ final class EditorWebKitTests: XCTestCase {
     func testP0ParedeEPeDireitoDigitadosNaoMexemNosMoveis() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
+        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
         window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
         var med=function(){return S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b||0].join('/')}).join(' ')+' | pedras '+JSON.stringify((S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t,s.widA,s.widB,s.lenA,s.lenB,(s.items||[]).map(function(i){return [i.x,i.y]})]}))+' fundos '+S.mods.map(function(m){return (m.fundo?1:0)+''+(m.fundoPia?1:0)}).join('')};
         var cena=async function(){loadState(initLimpo());draw();demoScene();await W(250);draw();S.Hm=1;S.Wm=1;return med()};

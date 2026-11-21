@@ -36,7 +36,12 @@ final class EditorAppPathTests: XCTestCase {
         func userContentController(_ uc: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let m = message.body as? [String: Any], let op = m["op"] as? String else { return }
             if op == "putFile", let n = m["name"] as? String, let b = m["b64"] as? String { host?.files[n] = b }
+            // diagnóstico da abertura (21/11): quando a página começou a rodar e quando o DOM ficou pronto
+            if op == "__tIni" { tIni = Date() }
+            if op == "__tDcl" { tDcl = Date() }
         }
+        var tIni: Date?
+        var tDcl: Date?
     }
 
     private var hold: [WKWebView] = []
@@ -57,6 +62,8 @@ final class EditorAppPathTests: XCTestCase {
         let uc = WKUserContentController()
         uc.addUserScript(WKUserScript(source: "window.__errs=[];window.addEventListener('error',function(e){__errs.push(String(e.message||e)+' @'+(e.lineno||''))});window.addEventListener('unhandledrejection',function(e){__errs.push('promise: '+String(e.reason))});", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         uc.addUserScript(WKUserScript(source: MoveisWeb.bridgeJS, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        // diagnóstico da abertura (21/11, lentidão de 25–60 s só no simulador do CI): marca o início da página e o DOM pronto
+        uc.addUserScript(WKUserScript(source: "try{webkit.messageHandlers.arque.postMessage({op:'__tIni'})}catch(_){};document.addEventListener('DOMContentLoaded',function(){try{webkit.messageHandlers.arque.postMessage({op:'__tDcl'})}catch(_){}});", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let media = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"), "EditorMediaBackup.js tem que ir dentro do app")
         uc.addUserScript(WKUserScript(source: try String(contentsOf: media, encoding: .utf8), injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let host = Host(), sink = Sink()
@@ -75,6 +82,9 @@ final class EditorAppPathTests: XCTestCase {
         await fulfillment(of: [ready], timeout: 60)
         XCTAssertNil(host.failed, "o editor não abriu: \(host.failed ?? "")")
         let dt = Date().timeIntervalSince(t0)
+        // ABERTURA-DIAG: separa o tempo do WebKit/simulador (até a página começar) do tempo do próprio editor (página → pronto)
+        let fmt: (Date?) -> String = { d in d.map { String(format: "%.2f s", $0.timeIntervalSince(t0)) } ?? "não chegou" }
+        print("ABERTURA-DIAG \(lang): página começou em \(fmt(sink.tIni)) · DOM pronto em \(fmt(sink.tDcl)) · carregou em \(String(format: "%.2f s", dt)) · editor sozinho \(sink.tIni.map { String(format: "%.2f s", dt - $0.timeIntervalSince(t0)) } ?? "?")")
         try await Task.sleep(nanoseconds: 1_500_000_000)
         return (w, dt)
     }

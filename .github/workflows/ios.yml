@@ -87,6 +87,24 @@ jobs:
           echo "==== CADERNO (medidas) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test-ipad.log | head -n 80
           exit $RC
 
+      # Adauto 21/11 ("não esconda falhas com repetição automática"): todo teste que falhou na 1ª tentativa e só passou
+      # na repetição aparece aqui como aviso, com o tempo de abertura do editor medido por fase (ABERTURA-DIAG)
+      - name: Testes que só passaram na repetição
+        if: always()
+        run: |
+          cd ios && mkdir -p build
+          : > build/repetidos.txt
+          for L in build/xcodebuild-test.log build/xcodebuild-test-ipad.log; do [ -f "$L" ] || continue
+            D=iPhone; case "$L" in *ipad*) D=iPad;; esac
+            grep -oE "Test Case '-\[[^]]+\]' failed" "$L" | sed -E "s/Test Case '-\[(.*)\]' failed/\1/" | sort -u | while read T; do
+              if grep -qF "Test Case '-[$T]' passed" "$L"; then echo "$D · só passou na repetição · $T"; else echo "$D · FALHOU nas duas · $T"; fi
+            done >> build/repetidos.txt
+            grep -hE "ABERTURA-DIAG" "$L" | sed "s/^/$D · /" | head -n 40 >> build/abertura.txt || true
+          done
+          echo "==== REPETIDOS ===="; cat build/repetidos.txt
+          echo "==== ABERTURA DO EDITOR ===="; cat build/abertura.txt 2>/dev/null
+          while read X; do echo "::warning title=Teste repetido::$X"; done < build/repetidos.txt
+
       - name: Compilar para iPhone de verdade (Release, sem assinatura)
         run: |
           cd ios && mkdir -p build
@@ -159,6 +177,8 @@ jobs:
           mkdir -p "$OUT/orcamento"; cp -R build/orcamento/. "$OUT/orcamento/" 2>/dev/null || true
           { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER"; xcodebuild -version;
             grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|StoreKit|storekit|\*\* " build/xcodebuild-test.log build/xcodebuild-release.log 2>/dev/null | tail -n 500;
+            echo "==== Repetidos (falharam na 1ª tentativa) ===="; cat build/repetidos.txt 2>/dev/null;
+            echo "==== Abertura do editor (ABERTURA-DIAG) ===="; cat build/abertura.txt 2>/dev/null;
             echo "==== Caderno (medidas, iPhone e iPad) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test.log build/xcodebuild-test-ipad.log 2>/dev/null | head -n 160;
             echo "==== Assinatura (StoreKit) ===="; grep -hE "Test Case .*(passed|failed)|Executed [0-9]+ test|error:|SKT:|SKInternal|\*\* " build/xcodebuild-storekit.log 2>/dev/null | tail -n 300;
             echo "==== Conferência App Store ===="; cat build/appstore-check.txt 2>/dev/null;

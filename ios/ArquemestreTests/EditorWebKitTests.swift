@@ -55,8 +55,12 @@ final class EditorWebKitTests: XCTestCase {
         hold.append(web)
         let ready = expectation(description: "editor carregado"), d = Loaded(ready)
         web.navigationDelegate = d
+        let t0 = Date()
         web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         await fulfillment(of: [ready], timeout: 60)
+        // ABERTURA-DIAG (21/11): registra aberturas lentas (o critério do teste não muda)
+        let dt = Date().timeIntervalSince(t0)
+        if dt > 8 { print("ABERTURA-DIAG bateria: \(name) abriu o editor em \(String(format: "%.2f", dt)) s") }
         web.navigationDelegate = nil
         _ = d
         try await Task.sleep(nanoseconds: 700_000_000)

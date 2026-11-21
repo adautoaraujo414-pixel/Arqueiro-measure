@@ -1075,3 +1075,19 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Causa raiz:** `fitNew` tinha tentativas que encolhiam o módulo (85% / mínimo) e aceitava a última tentativa mesmo sem caber.
 - **Correção:** as tentativas que encolhem só rodam com `window.FITENCOLHE`, que fica ligado apenas quando a pessoa escolhe. Se não couber, o móvel novo não fica. O app mostra "Usar N mm" (o maior espaço livre, simulado sem mexer em ninguém) e "Não colocar". Os móveis existentes não mudam.
 - **Testes:** `testMovelNovoNaoEncolheSozinhoNemEntraPorCimaEPerguntaQuandoNaoCabe` (pergunta "Usar 1310 mm / Não colocar", entra com 1310 só depois de escolher, com espaço livre entra 1600 sem pergunta). Falhou antes (488ed65), passa depois (fb972ec). Bateria completa: 364 passaram direto e 18 falharam só pela pergunta nova; com o jeito antigo os 18 passam. Esses 18 usam a colocação só como preparação e passaram a fazer como quem escolhe "Usar N mm" (0e3143e). Resultado: 382/382.
+
+## B22/B23 · iOS — `testTudoNoEditorSemErro` com 10 armários no quarto (21/11)
+- **Onde:** `ios/ArquemestreTests/EditorAppPathTests.swift` (abre o editor pelo caminho do app). O executor local não roda esse arquivo, então a falha só apareceu no iOS CI 44844711866 (gavetas-paredes bd26713) e 44844714225 (vaos-balcao 262a9b7). Falhou no iPhone e no iPad, nas duas tentativas.
+- **Causa comprovada (mesma da B22):** o teste enche o quarto com 40 itens do catálogo.
+  - Antes da B22 (e655aa9^): entravam 40.
+  - Agora: 10 entram direto e 30 abrem a pergunta "Não tem espaço livre… Usar N mm". Nenhum some sem pergunta, e "Usar" coloca com a medida do espaço livre.
+  - Com `FITENCOLHE=1`: 40 de novo, 0 erros.
+- **Ajuste:** só a preparação, igual aos 18 testes (commit do teste). A expectativa (>=20) continua a mesma.
+- **Outra falha no mesmo CI, que não é erro:** `testEditorAbreComoNoAppSemTelaBranca` levou 32,9 s para abrir no iPad (limite 20 s) e passou na repetição. É lentidão do simulador e o teste não mudou.
+- **Também não é erro:** `testMaoDeObra…` (N15) falhou uma vez no iPhone e passou na repetição, como já registrado.
+
+## R-CANTO — pôr "Canto L guarda-roupa" empurra os armários da parede (erro comprovado, anterior; aguarda decisão)
+- **Reproduzir:** quarto vazio, 3 armários (x = 35, 335, 935), depois "Canto L guarda-roupa · esquerdo". Os 3 vão para x = 1060, 1360, 1960 (+1025 mm) e o canto fica em x = 0. Com a parede cheia, a fileira inteira troca de ordem (espelho). O "· direito" desfaz.
+- **Não foi causado pela B22 nem pela Etapa B:** o resultado é igual em e655aa9^ (antes da B22) e na versão atual.
+- **Conflito:** a regra de 16/11 diz "o app nunca altera sozinho medida ou posição de fabricação".
+- **Situação:** não corrigido. Precisa da decisão do Adauto (por exemplo, perguntar como na B22). Fica junto do pedido "paredes espelhadas, preservando a sequência".

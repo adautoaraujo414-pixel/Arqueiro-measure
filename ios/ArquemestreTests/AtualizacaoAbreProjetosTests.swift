@@ -120,6 +120,16 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
             let r = try await w.callAsyncJavaScript("var n=-1,t0=Date.now();while(Date.now()-t0<10000){n=await new Promise(function(res){try{phAll(function(L){res((L||[]).length)})}catch(e){res(-1)}});if(n>=quer)break;await new Promise(function(r){setTimeout(r,250)})}return JSON.stringify({n:n,ms:Date.now()-t0,idb:typeof indexedDB});", arguments: ["quer": fotosArq.count], in: nil, contentWorld: .page)
             let fo = (try? JSONSerialization.jsonObject(with: Data(((r as? String) ?? "{}").utf8))) as? [String: Any] ?? [:]
             print("ATUALIZACAO-ABRE: fotos da galeria nos arquivos \(fotosArq.count) · no editor \(fo["n"] ?? "?") · esperou \(fo["ms"] ?? "?") ms · indexedDB \(fo["idb"] ?? "?")")
+            // diagnóstico (21/11): a volta não aconteceu no iOS em 10 s; mostra cada passo do caminho (ponte, banco, gravar à mão)
+            if (fo["n"] as? NSNumber)?.intValue != fotosArq.count {
+                let d = try await w.callAsyncJavaScript("""
+                  var A=window.ArqueApp,o={};try{var L=JSON.parse(A.listFiles()||'[]');o.lista=L.filter(function(n){return /^photo_/.test(n)});var g=A.getFile(o.lista[0]||'');o.arquivo=g?g.length:0;var j=JSON.parse(decodeURIComponent(escape(atob(g))));o.id=j.id;o.temData=!!j.data}catch(e){o.erroArquivo=String(e)}
+                  o.banco=await new Promise(function(r){try{phDB(function(db){r(db?'abriu':'nulo')})}catch(e){r('erro '+e)}});
+                  try{o.antes=await new Promise(function(r){phAll(function(L){r((L||[]).length)})});var jj=JSON.parse(decodeURIComponent(escape(atob(A.getFile(o.lista[0])))));o.gravar=await new Promise(function(r){var t=setTimeout(function(){r('sem resposta')},4000);try{phPut(jj,function(){clearTimeout(t);r('ok')})}catch(e){r('erro '+e)}});o.depois=await new Promise(function(r){phAll(function(L){r((L||[]).length)})})}catch(e){o.erroGravar=String(e)}
+                  return JSON.stringify(o);
+                  """, arguments: [:], in: nil, contentWorld: .page)
+                print("ATUALIZACAO-ABRE: diagnóstico da foto \(d ?? "?")")
+            }
             XCTAssertEqual((fo["n"] as? NSNumber)?.intValue, fotosArq.count, "as fotos da galeria voltam no editor")
         }
         // notas (caderno) com medida e foto: abrem pelo Store do app e a foto existe com o mesmo tamanho

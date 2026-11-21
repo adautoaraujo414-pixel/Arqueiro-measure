@@ -13587,8 +13587,8 @@ final class EditorWebKitTests: XCTestCase {
         /* 3D: segurar no módulo abre o quadro dele, a porta não abre, o móvel não anda nem depois de abrir */
         open3D();await W(700);var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),alvo=null;for(var yy=.2;yy<.95&&!alvo;yy+=.05)for(var xx=.05;xx<.95&&!alvo;xx+=.03){var mi3=-1;try{mi3=__modAt3(cr.width*xx,cr.height*yy)}catch(_){}if(mi3>=0)alvo={x:cr.left+cr.width*xx,y:cr.top+cr.height*yy,mi:mi3}}
         if(alvo){try{__geoT().close()}catch(_){}var s3=JSON.stringify(snapState().mods);pe('pointerdown',cv,alvo.x,alvo.y);await W(2150);var ix=fx3api.isx();for(var k2=1;k2<=4;k2++){pe('pointermove',cv,alvo.x+20*k2,alvo.y);await W(15)}pe('pointerup',cv,alvo.x+80,alvo.y);/* o 3D age 400 ms depois do toque: espera passar pra ver se a porta não abriu */await W(900);
-          R.tresD=(ix&&ix.k==='mod'&&ix.mi===alvo.mi?'abriu o quadro do módulo':'não abriu ('+JSON.stringify(ix)+')')+' · '+(JSON.stringify(snapState().mods)===s3?'nada mudou (porta não abriu, móvel parado)':'mudou');
-          /* toques do 3D como eram: 1 toque escolhe o módulo e não abre o quadro; 3 toques abrem o quadro */try{__geoT().close()}catch(_){}S.m=null;await W(600);var tq=async function(n){for(var z=0;z<n;z++){pe('pointerdown',cv,alvo.x,alvo.y);await W(40);pe('pointerup',cv,alvo.x,alvo.y);await W(90)}/* o 3D espera pra ver se vêm mais toques antes de agir */await W(1200)};await tq(1);var ix1=fx3api.isx(),es1=S.m===S.mods[alvo.mi];try{__geoT().close()}catch(_){}await W(600);await tq(3);var ix2=fx3api.isx();R.tresDToque='1 toque '+(es1?'escolhe':'não escolhe')+' '+(ix1&&ix1.k==='mod'?'e abre o quadro':'sem quadro')+' · 3 toques '+(ix2&&ix2.k==='mod'?'abrem o quadro':'não abrem');try{__geoT().close()}catch(_){}}else R.tresD='sem módulo na tela';
+          /* pedido do Adauto 21/11 ("Etapa C: menu interativo no 3D"): segurar no 3D abre o menu de 8 opções (antes: o quadro dos 3 toques) */var mz=window.__lp3&&__lp3.aberto()&&__lp3.mi()===alvo.mi;R.tresD=(mz?'abriu o menu do módulo':'não abriu ('+JSON.stringify(ix)+')')+' · '+(JSON.stringify(snapState().mods)===s3?'nada mudou (porta não abriu, móvel parado)':'mudou');
+          /* toques do 3D como eram: 1 toque escolhe o módulo e não abre o quadro; 3 toques abrem o quadro */try{__lp3.fecha()}catch(_){}try{__geoT().close()}catch(_){}S.m=null;await W(600);var tq=async function(n){for(var z=0;z<n;z++){pe('pointerdown',cv,alvo.x,alvo.y);await W(40);pe('pointerup',cv,alvo.x,alvo.y);await W(90)}/* o 3D espera pra ver se vêm mais toques antes de agir */await W(1200)};await tq(1);var ix1=fx3api.isx(),es1=S.m===S.mods[alvo.mi];try{__geoT().close()}catch(_){}await W(600);await tq(3);var ix2=fx3api.isx();R.tresDToque='1 toque '+(es1?'escolhe':'não escolhe')+' '+(ix1&&ix1.k==='mod'?'e abre o quadro':'sem quadro')+' · 3 toques '+(ix2&&ix2.k==='mod'?'abrem o quadro':'não abrem');try{__geoT().close()}catch(_){}}else R.tresD='sem módulo na tela';
         try{document.getElementById('v3x').click()}catch(_){}
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -13600,7 +13600,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mouse"] as? String, "esquerdo abriu · direito não abriu · parado")
         XCTAssertEqual(o["doisDedos"] as? String, "não abriu")
         XCTAssertEqual(o["planta"] as? String, "abriu parado")
-        XCTAssertEqual(o["tresD"] as? String, "abriu o quadro do módulo · nada mudou (porta não abriu, móvel parado)")
+        XCTAssertEqual(o["tresD"] as? String, "abriu o menu do módulo · nada mudou (porta não abriu, móvel parado)")
         XCTAssertEqual(o["tresDToque"] as? String, "1 toque escolhe sem quadro · 3 toques abrem o quadro")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -13627,6 +13627,71 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["prateleirasSoltas"] as? String, "0,0", "sem o campo = sem prateleira solta")
         XCTAssertEqual(o["guardadoIgual"] as? Bool, true)
         XCTAssertEqual(o["erro"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* ETAPA C · MENU DO 3D (pedido do Adauto 21/11: "Ao pressionar e segurar um módulo por 2 segundos na visualização 3D, abrir um menu
+       flutuante" com girar 90°/−90°/180°, tirar da parede, vincular à parede, mover livremente, editar medidas e excluir com confirmação;
+       decisões nas perguntas de 21/11: girar só no móvel livre; 2D e Planta seguem com o menu do vão).
+       Confere: todo módulo do catálogo abre o menu com destaque e nada muda; segurar de verdade nos tipos (balcão, gaveteiro, geladeira,
+       canto L, torre, aéreo, guarda-roupa, rack, livre); cada ação usa a regra já homologada, ninguém mais muda, medidas/peças/corte iguais,
+       sem sobrepor (girar que bateria não gira e oferece "Mover livremente"); excluir só confirmando; travado não sai; salva sozinho. */
+    func testMenuDoSegurarNo3DGiraTiraVinculaMoveMedeExcluiSemMexerEmNinguem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.FITENCOLHE=1;/* B22: aqui pôr os módulos é só preparação */var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var pecas=function(m){SPC={};return partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(',')+'#'+cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')};
+        /* mesma informação em outra ordem de chaves não é diferença (como no teste da B24) */var js=function(m){return JSON.stringify(m,function(k,v){return v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce(function(a,x){a[x]=v[x];return a},{}):v})},med=function(m){return [m.w,m.h,m.d,m.b].join('/')};
+        var botoes=function(){return [].map.call(document.querySelectorAll('#lp3m [data-l3]'),function(b){return b.dataset.l3+(b.disabled?'-':'')}).join(',')};
+        var dest=function(){__build();return __boxes().filter(function(b){return b.lp3}).length};
+        var cv=document.getElementById('cv3'),pe=function(t,x,y){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};
+        /* 1. o catálogo inteiro: o menu abre com destaque e nada muda */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();open3D();await W(300);var its=[],ruins=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});
+        its.forEach(function(it){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(it)));var mi=S.mods.length-1;if(mi<0){ruins.push(it.n+': não entrou');return}var s0=js(snapState().mods);lp3Open(mi,300,300);var ok=__lp3.aberto()&&__lp3.mi()===mi&&dest()===1&&/r90.*solta.*parede.*mover.*medidas.*del/.test(botoes());__lp3.fecha();if(!ok)ruins.push(it.n+': '+botoes()+' destaque '+dest());if(js(snapState().mods)!==s0)ruins.push(it.n+': mudou');if(dest()!==0)ruins.push(it.n+': destaque ficou')});
+        R.catalogo=its.length>100?(ruins.length?ruins.length+': '+ruins.slice(0,5).join(' | '):'todos'):'catálogo curto '+its.length;
+        /* 2. segurar de verdade 2 s em cada tipo */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=9000;S.H=2700;S.wl={L:'p',R:'p'};draw();
+        var NOM=['Canto em L (aéreo) · esquerdo','Balcão 2 portas','Gaveteiro 3 gavetas','Caixa da geladeira duplex / inverse (laterais + aéreo)','Torre quente (forno)','Aéreo 2 portas','Rack 2 portas + 2 gavetas'];NOM.forEach(function(n){var t=T(n);if(t)newTpl(t)});
+        var g=T('Guarda-roupa 2 vãos');if(g){newTpl(g)}var lv=T('Balcão 1 porta');newTpl(lv);var mL=S.mods[S.mods.length-1];lvSolta(mL);S.m=null;draw();open3D();await W(700);
+        var cr=cv.getBoundingClientRect(),achar=function(mi){for(var yy=.1;yy<.97;yy+=.03)for(var xx=.03;xx<.97;xx+=.02){if(__modAt3(cr.width*xx,cr.height*yy)===mi)return {x:cr.left+cr.width*xx,y:cr.top+cr.height*yy}}return null};
+        var tipos=[];for(var i=0;i<S.mods.length;i++){var m=S.mods[i],nm=m.n||('módulo '+i);__lp3.fecha();await W(150);var pt=achar(i);if(!pt){org3api.setCam(.6,0,0);re3();await W(200);cr=cv.getBoundingClientRect();pt=achar(i)}if(!pt){tipos.push(nm+': fora da tela');continue}
+          var s0=js(snapState().mods);pe('pointerdown',pt.x,pt.y);await W(2150);var ab=__lp3.aberto()&&__lp3.mi()===i,ds=dest();for(var k=1;k<=3;k++){pe('pointermove',pt.x+20*k,pt.y);await W(15)}pe('pointerup',pt.x+60,pt.y);await W(900);
+          var giro=/r90-/.test(botoes())?'girar apagado':'girar ativo';tipos.push((lvIs(m)?'livre':'parede')+': '+(ab?'menu':'sem menu')+' · destaque '+ds+' · '+giro+' · '+(js(snapState().mods)===s0?'nada mudou':'mudou'))}
+        __lp3.fecha();R.tipos=tipos.filter(function(x){return !/^parede: menu · destaque 1 · girar apagado · nada mudou$|^livre: menu · destaque 1 · girar ativo · nada mudou$/.test(x)}).join(' | ')||'todos ('+tipos.length+')';
+        /* 3. as ações, com 2 vizinhos que não podem mudar */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.wl={L:'p',R:'p'};draw();newTpl(T('Balcão 2 portas'));var a=S.m;a.x=1500;newTpl(T('Balcão 1 porta'));var b=S.m;b.x=300;S.m=null;draw();open3D();await W(300);
+        var ai=function(){return S.mods.indexOf(a)},pa=pecas(a),ma=med(a),jb=js(b);
+        lp3Open(ai(),300,300);R.paredeGira=botoes().indexOf('r90-,r-90-,r180-')>=0&&!!document.querySelector('#lp3m').textContent.match(/Tire da parede para girar/);
+        __lp3.acao('solta');R.tirar=(lvIs(a)?'livre':'na parede')+' · '+(med(a)===ma?'medidas iguais':'medidas mudaram')+' · '+(pecas(a)===pa?'peças e corte iguais':'peças mudaram')+' · '+(js(b)===jb?'vizinho igual':'vizinho mudou');
+        var f0=lvFoot(a),c0=[(f0.x0+f0.x1)/2,(f0.z0+f0.z1)/2],gir=[];[['r90',90],['r-90',0],['r180',180],['r-90',90],['r90',180],['r180',0]].forEach(function(q){__lp3.acao(q[0]);var f=lvFoot(a),c=[(f.x0+f.x1)/2,(f.z0+f.z1)/2];gir.push(Math.round(+a.rot||0)===q[1]&&Math.abs(c[0]-c0[0])<=1&&Math.abs(c[1]-c0[1])<=1&&med(a)===ma&&pecas(a)===pa&&js(b)===jb)});
+        R.girar=gir.every(Boolean)?'90/0/180/90/180/0 · centro no lugar · medidas, peças e corte iguais · vizinho igual':'falhou '+gir.join(',');
+        /* salva sozinho */await W(1600);var L=pLoadAll(),pj=L.filter(function(x){return x.id===CUR})[0];R.salvou=pj?(JSON.stringify(pj.current.mods.map(function(m){return [m.w,m.wing||0,m.rot||0]}))===JSON.stringify(S.mods.map(function(m){return [m.w,m.wing||0,m.rot||0]}))?'salvo igual':'salvo diferente'):'não salvou';
+        /* girar que bateria: não gira e oferece mover */newTpl(T('Balcão 1 porta'));var c=S.m;lvSolta(c);var fa=lvFoot(a);lvTenta(c,fa.x0+100,fa.z1+60,0);var jc=js(c),r0=a.rot;lp3Open(ai(),300,300);__lp3.acao('r90');var msg=(document.querySelector('#lp3m [data-l3msg]')||{}).textContent||'';
+        R.bateria=(+(a.rot||0)===+(r0||0)?'não girou':'girou')+' · '+(/Mover livremente/.test(msg)?'oferece mover':'sem alternativa')+' · '+(js(c)===jc&&js(b)===jb?'outros iguais':'outros mudaram');
+        /* vincular à parede esquerda */lp3Open(ai(),300,300);__lp3.acao('parede');var op=botoes();__lp3.acao('we');var row=S.mods.filter(function(m){return m.wing==='e'}),sob=false;row.forEach(function(p,i){row.forEach(function(q,j){if(j>i&&sameRow(p,q)){var e1=extOf(p),e2=extOf(q);if(e1[0]<e2[1]-.5&&e2[0]<e1[1]-.5)sob=true}})});
+        R.vincular=(/w0.*we.*wd/.test(op)?'3 paredes':'paredes '+op)+' · '+(a.wing==='e'&&!lvIs(a)&&a.rot===undefined?'na esquerda':'wing '+a.wing+' rot '+a.rot)+' · '+(med(a)===ma?'medidas iguais':'medidas mudaram')+' · '+(sob?'sobrepõe':'sem sobrepor')+' · '+(js(b)===jb&&js(c)===jc?'outros iguais':'outros mudaram');
+        /* medidas e mover */lp3Open(ai(),300,300);__lp3.acao('medidas');R.medidas=window.MZ3I===ai()?'abriu o quadro de medidas':'não abriu ('+window.MZ3I+')';try{mz3Close()}catch(_){}
+        lp3Open(ai(),300,300);__lp3.acao('mover');R.mover=(PLV&&S.m===a?'Planta com ele escolhido':'não foi pra Planta')+' · '+(js(b)===jb?'vizinho igual':'vizinho mudou');if(PLV)document.getElementById('plv').click();open3D();await W(200);
+        /* excluir: só confirmando; travado não sai */var n0=S.mods.length,bi=S.mods.indexOf(b);lp3Open(bi,300,300);__lp3.acao('del');var pergunta=/Excluir este módulo\?/.test(document.querySelector('#lp3m').textContent)&&S.mods.length===n0;__lp3.acao('delok');
+        R.excluir=(pergunta?'pergunta antes':'sem pergunta')+' · '+(S.mods.indexOf(b)<0&&S.mods.length===n0-1?'excluiu só ele':'não excluiu certo')+' · '+(S.mods.indexOf(a)>=0&&S.mods.indexOf(c)>=0?'outros ficaram':'sumiu outro');
+        c.lock=true;var ci=S.mods.indexOf(c);lp3Open(ci,300,300);__lp3.acao('del');var lm=(document.querySelector('#lp3m [data-l3msg]')||{}).textContent||'';R.travado=(/travado/.test(lm)&&S.mods.indexOf(c)>=0?'travado não sai':'travado saiu');__lp3.fecha();
+        R.destaqueSai=dest()===0;try{document.getElementById('v3x').click()}catch(_){}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "todos")
+        XCTAssertEqual(o["tipos"] as? String, "todos (9)")
+        XCTAssertEqual(o["paredeGira"] as? Bool, true, "módulo de parede: girar apagado com o aviso")
+        XCTAssertEqual(o["tirar"] as? String, "livre · medidas iguais · peças e corte iguais · vizinho igual")
+        XCTAssertEqual(o["girar"] as? String, "90/0/180/90/180/0 · centro no lugar · medidas, peças e corte iguais · vizinho igual")
+        XCTAssertEqual(o["salvou"] as? String, "salvo igual")
+        XCTAssertEqual(o["bateria"] as? String, "não girou · oferece mover · outros iguais")
+        XCTAssertEqual(o["vincular"] as? String, "3 paredes · na esquerda · medidas iguais · sem sobrepor · outros iguais")
+        XCTAssertEqual(o["medidas"] as? String, "abriu o quadro de medidas")
+        XCTAssertEqual(o["mover"] as? String, "Planta com ele escolhido · vizinho igual")
+        XCTAssertEqual(o["excluir"] as? String, "pergunta antes · excluiu só ele · outros ficaram")
+        XCTAssertEqual(o["travado"] as? String, "travado não sai")
+        XCTAssertEqual(o["destaqueSai"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

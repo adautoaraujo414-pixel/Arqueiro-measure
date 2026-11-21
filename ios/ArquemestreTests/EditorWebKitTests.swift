@@ -13604,4 +13604,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tresDToque"] as? String, "1 toque escolhe sem quadro · 3 toques abrem o quadro")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* PROJETO-SEM-SHV (21/11, achado no teste de atualização por cima pedido pelo Adauto): os projetos do backup de referência
+       (tests/backup-referencia, formato mínimo: id, x, w, h, d, b, div, v) abriam no editor, mas o módulo ficava sem a lista de
+       prateleiras soltas (shv) e partsOf quebrava ("Cannot read properties of undefined (reading 'forEach')"): sem peças, sem corte.
+       A 3.0.12 sempre gravava shv, mas projeto antigo/mínimo sem ele não pode quebrar. Abre pelo caminho do app (loadState do
+       projects.json), medidas iguais, peças e corte, e o projeto guardado não muda só por abrir. */
+    func testProjetoAntigoSemPrateleirasSoltasAbreComAsMesmasMedidasEGeraPecas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var antigo={W:4000,H:2700,mods:[{id:'m0',x:0,w:900,h:820,d:560,b:0,div:[],v:[{k:'door',n:2}]},{id:'m1',x:1000,w:600,h:820,d:560,b:0,div:[],v:[{k:'door',n:2}]}],stones:[]};
+        var guardado=JSON.stringify(antigo),erro='';loadState(JSON.parse(guardado));try{draw()}catch(e){erro='desenho: '+e.message}
+        R.medidas=S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b].join('/')}).join(' ');
+        var pc=[],cl=[];S.mods.forEach(function(m){try{SPC={};pc.push(partsOf(m).filter(function(q){return !q.noCut&&q.cl>0&&q.cw>0}).length);cl.push(cutLines(m).length)}catch(e){erro=erro||('peças: '+e.message);pc.push(0);cl.push(0)}});
+        R.pecas=pc.every(function(n){return n>0})&&cl.every(function(n){return n>0})?'peças e corte em todos':'sem peças: '+erro;
+        R.prateleirasSoltas=S.mods.map(function(m){return Array.isArray(m.shv)?m.shv.length:'sem lista'}).join(',');
+        R.guardadoIgual=guardado===JSON.stringify(antigo);R.erro=erro;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["medidas"] as? String, "0/900/820/560/0 1000/600/820/560/0", "abre com as medidas e posições salvas")
+        XCTAssertEqual(o["pecas"] as? String, "peças e corte em todos")
+        XCTAssertEqual(o["prateleirasSoltas"] as? String, "0,0", "sem o campo = sem prateleira solta")
+        XCTAssertEqual(o["guardadoIgual"] as? Bool, true)
+        XCTAssertEqual(o["erro"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

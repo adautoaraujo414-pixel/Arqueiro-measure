@@ -148,6 +148,7 @@ final class EditorAppPathTests: XCTestCase {
         let o = try await run(w, #"""
           var R={};var step=function(n,f){try{f()}catch(e){__errs.push(n+': '+(e&&e.message||e))}};var cat=function(id){return CATS.filter(function(x){return x.id===id})[0]||{it:[]}};
           window.MINI3OFF=1;PR.setupDone=1;
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui encher os ambientes é só preparação, então o teste faz como a pessoa que escolhe \"Usar N mm\" */
           step('cozinha',function(){S.room='cozinha';S.env='cozinha';S.mods=[];draw();panel();
            ['inf','sup','canto','alto','csob','ccoz','ccook','cforno','ccoifa','cgel','ctanq','cacc'].forEach(function(id){catOpen(id);var c=cat(id);R['cat_'+id]=document.querySelectorAll('#catb [data-cati]').length;(c.it||[]).forEach(function(it){if(it.act==='ap')apAdd(it.ap,it.mi);else if(it.act==='cuba'||it.act==='cook')catAct2(it);else if(!it.act&&it.w&&S.mods.length<40)newTpl(it)});document.getElementById('catm').hidden=true});
            draw();panel();R.cozinha=[S.mods.length,S.fr.length,(S.st&&S.st.items||[]).length]});

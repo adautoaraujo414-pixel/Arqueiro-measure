@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.CutOptimizerTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:04:51.404Z" hostname="runnervmbpeip" time="0.012">
+  <properties/>
+  <testcase name="reportsPieceBiggerThanSheet" classname="br.com.arque.measure.CutOptimizerTest" time="0.002"/>
+  <testcase name="fitsSimpleCaseAndKeepsKerf" classname="br.com.arque.measure.CutOptimizerTest" time="0.007"/>
+  <testcase name="rotationOnlyWhenAllowed" classname="br.com.arque.measure.CutOptimizerTest" time="0.001"/>
+  <testcase name="cutsAreFullWidthGuillotineSteps" classname="br.com.arque.measure.CutOptimizerTest" time="0.001"/>
+  <testcase name="opensSecondSheetAndNeverOverlaps" classname="br.com.arque.measure.CutOptimizerTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

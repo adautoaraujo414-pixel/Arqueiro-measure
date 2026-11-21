@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.EditorVideoTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:04:51.469Z" hostname="runnervmbpeip" time="0.018">
+  <properties/>
+  <testcase name="registroInvalidoNaoGravaNada" classname="br.com.arque.measure.EditorVideoTest" time="0.009"/>
+  <testcase name="scriptDosVideosIgualAoDoIPhone" classname="br.com.arque.measure.EditorVideoTest" time="0.003"/>
+  <testcase name="videoValidoVaiProArquivo" classname="br.com.arque.measure.EditorVideoTest" time="0.006"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.CalcTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:04:51.396Z" hostname="runnervmbpeip" time="0.005">
+  <properties/>
+  <testcase name="precedenceAndComma" classname="br.com.arque.measure.CalcTest" time="0.002"/>
+  <testcase name="formats" classname="br.com.arque.measure.CalcTest" time="0.001"/>
+  <testcase name="invalid" classname="br.com.arque.measure.CalcTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

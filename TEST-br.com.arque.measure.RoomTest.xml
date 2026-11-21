@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="br.com.arque.measure.RoomTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-11-21T14:04:51.533Z" hostname="runnervmbpeip" time="0.014">
+  <properties/>
+  <testcase name="straightensWobblyLShape" classname="br.com.arque.measure.RoomTest" time="0.001"/>
+  <testcase name="doorInsideWallKeepsVerticesAndSense" classname="br.com.arque.measure.RoomTest" time="0.003"/>
+  <testcase name="doorUsesMeasuredWallForWidth" classname="br.com.arque.measure.RoomTest" time="0.0"/>
+  <testcase name="readingsFillSegmentsInOrder" classname="br.com.arque.measure.RoomTest" time="0.004"/>
+  <testcase name="newWallAlignsWithExistingCorners" classname="br.com.arque.measure.RoomTest" time="0.001"/>
+  <testcase name="closesRectangle" classname="br.com.arque.measure.RoomTest" time="0.002"/>
+  <testcase name="jsonRoundTrip" classname="br.com.arque.measure.RoomTest" time="0.001"/>
+  <testcase name="tinyStrokeIgnored" classname="br.com.arque.measure.RoomTest" time="0.0"/>
+  <testcase name="mergesCollinearPointInClosedL" classname="br.com.arque.measure.RoomTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

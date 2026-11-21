@@ -1046,7 +1046,7 @@ final class EditorWebKitTests: XCTestCase {
     func testFocarSoNoModuloEArrastarJanelaNo2D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;var R={};
           /* 🎯 só este módulo: câmera fixa nele, só o corpo dele aparece; ↩ volta pro ambiente */
           demoScene();draw();var wi=S.mods.findIndex(function(m){return m.wing==='e'});open3D();await new Promise(function(r){setTimeout(r,300)});var n0=__boxes().length;
@@ -1303,7 +1303,7 @@ final class EditorWebKitTests: XCTestCase {
     func testSolidoNadaEntraEmNadaEPainelSaiEmPlacasDaChapa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
           var fresh=function(room){S.room=room;S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw()};
           var clk=function(cid,re){window.CATALL=true;catOpen(cid);var c=CATS.filter(function(x){return x.id===cid})[0],k=-1;c.it.forEach(function(it,i){var t=typeof it==='number'?TPL[it]:it;if(k<0&&t&&re.test(t.n))k=i});document.querySelector('#catm [data-cati="'+cid+'|'+k+'"]').click();var m=document.getElementById('catm');if(m)m.hidden=true};
@@ -1356,7 +1356,7 @@ final class EditorWebKitTests: XCTestCase {
     func testAreaDoPainelDesviaDosSolidosComLarguraFinal() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           try{STD().supPedra=0}catch(_){}/* teste antigo: aéreo pela altura do chão (sem a regra dos 700 acima da pedra) */
           window.MINI3OFF=1;PR.setupDone=1;window.confirm=function(){return true};var R={};
           S.room='cozinha';S.env='cozinha';S.W=4200;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.fr=[];S.rp=[];S.isl=[];S.ops=[];S.stones=[];S.st=null;S.m=null;draw();
@@ -2528,7 +2528,7 @@ final class EditorWebKitTests: XCTestCase {
     func testBasculanteComCavaSemEngrossoFolga4NoTopo() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           PR.setupDone=1;window.toast=function(){};S.mods=[];S.rp=[];S.env='sala';S.room='sala';S.W=3400;S.H=2890;S.Hm=1;S.Wm=1;
           newTpl({n:'Rack de TV',w:1800,h:500,d:450,b:400,keep:true,div:[1/3,2/3],v:[{k:'door',n:1},{k:'door',n:1},{k:'door',n:1}]});var m=S.mods[S.mods.length-1];
           m.v.forEach(function(v){if(v.k==='door')v.bas=1});draw();var top=function(){return Math.round(Math.max.apply(null,dbg3all().filter(function(q){return /^\d+:Porta/.test(q.nm)}).map(function(q){return q.y1})))};
@@ -3041,7 +3041,7 @@ final class EditorWebKitTests: XCTestCase {
     func testNichoDaParedeDoLadoNaoEntraNoAereoESemNumeracao() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=2960;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
           var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
           /* cabeçalho e abas na ordem do trabalho, sem os números */
@@ -4433,7 +4433,7 @@ final class EditorWebKitTests: XCTestCase {
     func testTamponamentoEsticadoNo3DEntraNoPlanoDeCorteNaHora() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.stones=[];S.rp=[];S.W=5000;S.H=2700;S.mods=[];S.fr=[];var R={};
           var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r)r=q})});return JSON.parse(JSON.stringify(r))};
           newTpl(T('Rack suspenso'));newTpl(T('Rack suspenso'));var a=S.mods[0],b=S.mods[1];a.x=600;a.w=900;b.w=900;b.x=1500;S.mods.forEach(function(m){m.tt=true});draw();
@@ -5521,7 +5521,7 @@ final class EditorWebKitTests: XCTestCase {
     func testModuloNovoNaoEntraEspremidoComPortaMinuscula() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
-        window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
+          window.FITENCOLHE=1;/* B22/B23 (Adauto, 20/11: móvel novo não encolhe sozinho, o app pergunta): aqui a colocação é só preparação, então o teste faz como a pessoa que escolhe "Usar N mm" */
           var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={};var TL=[];var t0=window.toast;window.toast=toast=function(m){TL.push(String(m));try{return t0.apply(this,arguments)}catch(_){}};
           var cid=null,ix=-1;CATS.forEach(function(c){(c.it||[]).forEach(function(it,i){if(cid===null&&/^Guarda-roupa 3 vãos/.test(it.n||'')){cid=c.id;ix=i}})});
           var add=async function(){CATALL=true;catOpen(cid);await W(80);document.querySelector('#catm [data-cati="'+cid+'|'+ix+'"]').click();await W(250)};

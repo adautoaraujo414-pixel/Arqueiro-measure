@@ -2847,7 +2847,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var W=function(ms){return new Promise(function(r){setTimeout(r,ms||300)})};
-          S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.W=3200;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=900+i*900}addStone();S.st.x=0;S.st.w=S.W;S.m=S.mods[1];mkCorner('d');draw();
+          /* R-CANTO (Adauto, 21/11: o canto L nunca empurra os móveis): antes os balcões ficavam onde o canto entra e ele empurrava; agora a preparação deixa o lugar do canto livre e confere que ele entra sem entrar em ninguém */S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.W=3200;for(var i=0;i<2;i++){newTpl(CATS[0].it[0]);S.mods[i].x=300+i*900}addStone();S.st.x=0;S.st.w=S.W;S.m=S.mods[1];mkCorner('d');draw();
           var row=S.mods.filter(function(m){return !m.sup&&!m.wing}),bad=0;row.forEach(function(a,i){row.forEach(function(c,j){if(j<=i)return;var A=extOf(a),C=extOf(c);if(A[0]<C[1]-0.5&&C[0]<A[1]-0.5)bad++})});
           var c=S.mods.filter(function(m){return m.corner})[0],mold=partsOf(c).some(function(p){return /Moldura/.test(p.name)});
           S.mods=[];S.stones=[];for(var k=0;k<2;k++){newTpl(CATS[0].it[0]);S.mods[k].x=300+k*900}addStone();S.st.cor='#123456';S.m=S.mods[0];draw();panel();
@@ -2857,7 +2857,7 @@ final class EditorWebKitTests: XCTestCase {
           var cb=document.createElement('button');cb.dataset.additem='cuba';document.body.appendChild(cb);cb.click();var cbx=document.getElementById('cbpk'),cbn=cbx.querySelectorAll('[data-cbm]').length,cbf=cbx.querySelectorAll('[data-cbm] img').length;cbx.querySelector('[data-cbm]').click();
           return JSON.stringify({bad:bad,mold:mold,pedra:pedra,topo:topo,cbn:cbn,cbf:cbf,cubas:S.stones[0].items.filter(function(i){return i.k==='cuba'}).length,errs:__errs});
           """#)
-        XCTAssertEqual(o["bad"] as? Int, 0, "canto novo: os módulos encostam do lado, sem entrar um no outro")
+        XCTAssertEqual(o["bad"] as? Int, 0, "canto novo entra sem entrar em ninguém (R-CANTO 21/11: não empurra mais)")
         XCTAssertEqual(o["mold"] as? Bool, false, "balcão de canto embaixo da pedra sem moldura deitada em cima")
         XCTAssertGreaterThan(o["pedra"] as? Int ?? 0, 0, "planta em ângulo mostra a pedra depois do só o módulo")
         XCTAssertEqual(o["topo"] as? Bool, true, "quadro do cooktop por cima do 3D")
@@ -6209,7 +6209,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var R={};S.room='cozinha';S.env='livre';S.W=6000;S.mods=[];S.stones=[];S.m=null;
         var add=function(c,i){/* o montar do zero agora fica no fim da categoria (15/11): o índice aqui é o da ordem antiga, com ele em primeiro nas torres (3) e no quarto (4) */var L=CATS[c].it,O=(c===3||c===4)?L.filter(function(x){return x.free0}).concat(L.filter(function(x){return !x.free0})):L;newTpl(O[i]);return S.mods[S.mods.length-1]};
-        add(0,0);add(0,0);add(0,3);add(1,2);add(1,6);add(3,4);add(3,1);mkCorner('e');var a=add(0,1);a.wing='e';draw();
+        add(0,0);add(0,0);add(0,3);add(1,2);add(1,6);add(3,4);add(3,1);/* R-CANTO (Adauto, 21/11: o canto L nunca empurra os móveis): a preparação abre o lugar do canto na esquerda antes de pôr ele (antes ele empurrava a fileira) */S.mods.forEach(function(m){if(!m.wing)m.x+=1000});draw();mkCorner('e');var a=add(0,1);a.wing='e';draw();
         var L=furnList().split('\n');R.titulo=L[0];R.linhas=L.length;R.fundo=L.slice(2,9).join(' / ');R.esq=L.slice(9).join(' / ');
         var q=quoteData();R.noOrcamento=q.notes.indexOf(L.join('\n'))>0&&/^Material: /.test(q.notes);R.itens=q.items.length>0;
         S.mods[0].corF=SWW[3][1];draw();R.cores=furnList().split('\n').pop();

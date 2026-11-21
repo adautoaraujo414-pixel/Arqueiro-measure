@@ -13464,4 +13464,63 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reaberto"] as? String, "posição e giro iguais · peças iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* R-CANTO (aprovado pelo Adauto, 21/11: "O módulo Canto L nunca poderá empurrar, deslocar, inverter, redimensionar ou reorganizar móveis
+       existentes automaticamente. Se não houver espaço suficiente, apresentar as opções 'Usar espaço disponível' ou 'Não colocar'. Só permitir a
+       primeira opção quando a adaptação preservar a geometria válida do canto L... Se não houver espaço suficiente para um canto L válido, impedir a
+       inserção e explicar o motivo"). Antes: pôr o canto empurrava a fileira inteira (+1025 mm) e, com a parede cheia, invertia a ordem.
+       Mínimo válido do canto = a regra que o app já usa no lado da parede lateral (prof. + 200): na parede do fundo, prof. do lado + fundo + 200.
+       Paredes vazia, com espaço, com espaço curto, cheia e com a lateral ocupada; catálogo (base, aéreo, guarda-roupa, esquerdo e direito),
+       botão da Planta e botão "Módulo de canto" do painel; "Não colocar" deixa o projeto igual; salvar e reabrir. */
+    func testCantoLNuncaEmpurraOsMoveisPerguntaOuImpedeEmParedeVaziaParcialECheia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});if(!r)r=TPL.filter(function(x){return x.n===n})[0];return JSON.parse(JSON.stringify(r))};
+        var dims=function(L){return L.map(function(m){return [Math.round(m.x),m.w,m.h,m.d,m.b,m.wing||0,m.cw2||0].join('/')}).join(' ')};
+        var sob=function(){var a=S.mods;for(var i=0;i<a.length;i++)for(var j=i+1;j<a.length;j++){if(!sameRow(a[i],a[j]))continue;var e1=extOf(a[i]),e2=extOf(a[j]);if(e1[0]<e2[1]-0.5&&e2[0]<e1[1]-0.5)return 'sobrepõe'}return 'sem sobrepor'};
+        var q=function(){var e=document.getElementById('cnq');return e&&!e.hidden?e:null};
+        var bts=function(){var e=q();return e?[].map.call(e.querySelectorAll('[data-cnq]'),function(b){return b.textContent.trim().replace(/[0-9]+ mm/,'N mm')}).join(' / '):'sem pergunta'};
+        var clica=function(k){var e=q(),b=e&&e.querySelector('[data-cnq="'+k+'"]');if(b)b.click();return !!b};
+        var fecha=function(){var c=document.getElementById('cnq');if(c)c.hidden=true};
+        /* vizinho com a borda (tamponamento incluído) a "gap" mm da parede do canto; outro longe, do outro lado */
+        var cena=function(room,viz,cv,gaps,Wp){loadState(initLimpo());S.env=room==='quarto'?'livre':'cozinha';S.room=room;S.W=Wp||4000;S.H=2700;draw();fecha();
+          gaps.forEach(function(g){newTpl(T(viz));var m=S.mods[S.mods.length-1];m.x=cv==='e'?g+lt(m):S.W-g-rt(m)-m.w});draw();fecha()};
+        var CASOS=[['Canto em L (base)','cozinha','Balcão 1 porta','e'],['Canto em L (aéreo) · esquerdo','cozinha','Aéreo 1 porta','e'],['Canto em L (aéreo) · direito','cozinha','Aéreo 1 porta','d'],
+          ['Canto L guarda-roupa · esquerdo','quarto','Armário alto 2 portas','e'],['Canto L guarda-roupa · direito','quarto','Armário alto 2 portas','d']];
+        var res=[];
+        CASOS.forEach(function(k){var t=T(k[0]),cw=t.w,lin=[];
+          /* vazia */cena(k[1],k[2],k[3],[]);newTpl(T(k[0]));var c=S.mods.filter(function(m){return m.corner})[0];lin.push('vazia '+(c?c.w===cw?'entrou com a medida do catálogo':'entrou com '+c.w:'não entrou')+' '+bts());fecha();
+          /* com espaço: vizinho a cw+400 da parede e outro longe */cena(k[1],k[2],k[3],[cw+400,2600]);var a0=S.mods.slice(),d0=dims(a0);newTpl(T(k[0]));c=S.mods.filter(function(m){return m.corner})[0];lin.push('espaço '+(c?c.w===cw?'entrou com a medida do catálogo':'entrou com '+c.w:'não entrou')+' '+bts()+' '+(dims(a0)===d0?'outros iguais':'outros mudaram')+' '+sob());fecha();
+          /* espaço curto (válido): pergunta; "Não colocar" deixa igual; "Usar" encaixa sem mexer em ninguém */cena(k[1],k[2],k[3],[cw-120,2600]);a0=S.mods.slice();d0=dims(a0);var p0=JSON.stringify(snapState().mods);newTpl(T(k[0]));
+          lin.push('curto '+(S.mods.length===a0.length?'não entrou sozinho':'entrou sozinho')+' '+bts()+' '+(dims(a0)===d0?'outros iguais':'outros mudaram'));clica('nao');lin.push('nao '+(JSON.stringify(snapState().mods)===p0?'projeto igual':'projeto mudou')+' '+(q()?'aberta':'fechou'));
+          newTpl(T(k[0]));var txt=(q()&&q().querySelector('[data-cnq="usar"]')||{}).textContent||'';clica('usar');c=S.mods.filter(function(m){return m.corner})[0];
+          var ec=c?extOf(c):[0,0],ev=extOf(a0[0]),cola=c?(k[3]==='e'?Math.abs(ev[0]-ec[1]):Math.abs(ec[0]-ev[1])):-1,pc=c?partsOf(c):[];
+          lin.push('usar '+(c?(c.w<cw?'menor':'igual')+' '+(txt.indexOf(c.w+' mm')>=0?'medida do botão':'medida diferente do botão ('+txt+' / '+c.w+')')+' '+(cola<=1?'encostado':'folga '+cola):'não entrou')+' '+(dims(a0)===d0?'outros iguais':'outros mudaram')+' '+sob()+' '+(pc.length&&pc.every(function(p){return p.cl>0&&p.cw>0})?'peças válidas':'peça inválida'));
+          /* salvar e reabrir */var sv=JSON.stringify(snapState()),pz=c?partsOf(c).map(function(p){return p.name+p.cl+'x'+p.cw}).join(','):'';loadState(JSON.parse(sv));draw();var c2=S.mods.filter(function(m){return m.corner})[0];lin.push('reabrir '+(c2&&c2.w===c.w&&partsOf(c2).map(function(p){return p.name+p.cl+'x'+p.cw}).join(',')===pz?'igual':'diferente'));
+          /* cheia: só 200 mm livres, menos que o canto mínimo */cena(k[1],k[2],k[3],[200,2600]);a0=S.mods.slice();d0=dims(a0);p0=JSON.stringify(snapState().mods);newTpl(T(k[0]));var tx=q()?q().textContent:'';
+          lin.push('cheia '+(S.mods.length===a0.length?'não entrou':'entrou')+' '+bts()+' '+(/pelo menos [0-9]+ mm/.test(tx)?'explica o mínimo':'sem explicar')+' '+(dims(a0)===d0?'outros iguais':'outros mudaram'));clica('ok');lin.push('ok '+(JSON.stringify(snapState().mods)===p0?'projeto igual':'projeto mudou'));
+          R['c'+res.length]=k[0]+': '+lin.join(' | ');res.push(1)});
+        /* botão da Planta (◣ + Canto esquerdo) e botão "Módulo de canto" do painel, parede com espaço curto e cheia */
+        cena('cozinha','Balcão 1 porta','e',[780,2600]);var a1=S.mods.slice(),d1=dims(a1);mkCorner('e');R.planta=(S.mods.length===a1.length?'não entrou sozinho':'entrou sozinho')+' '+bts()+' '+(dims(a1)===d1?'outros iguais':'outros mudaram');clica('usar');var c3=S.mods.filter(function(m){return m.corner})[0];R.plantaUsar=(c3?'entrou '+c3.w:'não entrou')+' '+(dims(a1)===d1?'outros iguais':'outros mudaram')+' '+sob();
+        cena('cozinha','Balcão 1 porta','e',[200,2600]);a1=S.mods.slice();d1=dims(a1);mkCorner('e');R.plantaCheia=(S.mods.length===a1.length?'não entrou':'entrou')+' '+bts()+' '+(dims(a1)===d1?'outros iguais':'outros mudaram');fecha();
+        cena('cozinha','Balcão 1 porta','e',[200,2600]);a1=S.mods.slice();var alvo=a1[1];S.m=alvo;var pa=JSON.stringify(snapState().mods);var bt=document.createElement('button');bt.dataset.corner='e';document.body.appendChild(bt);bt.click();bt.remove();
+        R.painelCheia=(alvo.corner?'virou canto':'não virou')+' '+bts()+' '+(JSON.stringify(snapState().mods)===pa?'projeto igual':'projeto mudou');fecha();
+        /* lateral ocupada: módulo na parede lateral onde o canto precisa entrar */
+        cena('cozinha','Balcão 1 porta','e',[]);addWing('e');var wg=S.mods.filter(function(m){return m.wing==='e'})[0];a1=S.mods.slice();d1=dims(a1);newTpl(T('Canto em L (base)'));
+        R.lateral=(wg?'tem lateral':'sem lateral')+' '+(S.mods.length===a1.length?'não entrou':'entrou')+' '+bts()+' '+(dims(a1)===d1?'outros iguais':'outros mudaram');fecha();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["c0"] as? String, "Canto em L (base): vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças válidas | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c1"] as? String, "Canto em L (aéreo) · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças válidas | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c2"] as? String, "Canto em L (aéreo) · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças válidas | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c3"] as? String, "Canto L guarda-roupa · esquerdo: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças válidas | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["c4"] as? String, "Canto L guarda-roupa · direito: vazia entrou com a medida do catálogo sem pergunta | espaço entrou com a medida do catálogo sem pergunta outros iguais sem sobrepor | curto não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais | nao projeto igual fechou | usar menor medida do botão encostado outros iguais sem sobrepor peças válidas | reabrir igual | cheia não entrou Entendi explica o mínimo outros iguais | ok projeto igual")
+        XCTAssertEqual(o["planta"] as? String, "não entrou sozinho Usar espaço disponível (N mm) / Não colocar outros iguais")
+        XCTAssertEqual(o["plantaUsar"] as? String, "entrou 780 outros iguais sem sobrepor")
+        XCTAssertEqual(o["plantaCheia"] as? String, "não entrou Entendi outros iguais")
+        XCTAssertEqual(o["painelCheia"] as? String, "não virou Entendi projeto igual")
+        XCTAssertEqual(o["lateral"] as? String, "tem lateral não entrou Entendi outros iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

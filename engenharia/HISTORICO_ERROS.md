@@ -1190,3 +1190,32 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 ## Ferramenta da bateria local — editor velho do cache (21/11)
 - O Chrome da bateria local tem perfil fixo e às vezes servia o `editor.html` antigo do cache: um teste falhava com o código já corrigido.
 - A partir daqui as rodadas locais usam endereço único (`?v=...`). As provas de "falha antes" usaram a porta 8836 (editor fixo da 7e0c5b1), sem esse problema. O CI do Windows abre um navegador novo e não é afetado.
+
+## ETAPA C · MENU DO 3D — segurar 2 s no 3D abre menu de 8 opções (pedido do Adauto 21/11; implementado)
+- **Pedido:** girar 90°/−90°/180°, tirar da parede, vincular à parede, mover livremente, editar medidas e excluir com confirmação. Módulo destacado, ninguém mais muda, sem sobrepor (com alternativa), salva sozinho, sem sistema novo de movimento.
+- **Decisões do Adauto (perguntas de 21/11):** girar só no móvel livre (no de parede fica apagado com "Tire da parede para girar"); 2D e Planta seguem com o menu do vão.
+- **Reuso (nada novo de geometria):**
+
+  | Opção | Função usada |
+  |---|---|
+  | Girar | `lvGira` (em volta do centro, `bate`/`imanta`) |
+  | Tirar da parede | `lvSolta` |
+  | Vincular | o tratador dos botões "Em qual parede" do painel (`modHit`/`modSlide`) |
+  | Mover | a Planta (arrasto com as regras de colisão) |
+  | Medidas | `mz3Open` |
+  | Excluir | `delMod` com `LAST='mod'`, como no quadro do 3D |
+
+- **Destaque:** caixa azul translúcida sem nome de peça e com `nol`. Não é pega pelo `pickFace`/`tap3`, não entra em `solidos`, lista nem corte. Hook `build_lp3` dentro do 3D, ao lado do `__size3`.
+- **Mudança de expectativa (pedido de 21/11):** `testSegurarOMovel2…` esperava o quadro dos 3 toques no 3D; agora espera o menu. Os 3 toques continuam abrindo o quadro (o mesmo teste confere).
+- **Teste:** `testMenuDoSegurarNo3DGiraTiraVinculaMoveMedeExcluiSemMexerEmNinguem`.
+  - O catálogo inteiro abre o menu com destaque, e nada muda.
+  - Segurar de verdade em 9 tipos (balcão, gaveteiro, geladeira, canto L aéreo e de guarda-roupa, torre, aéreo, guarda-roupa, rack, livre).
+  - Ações:
+    - girar: centro no lugar; medidas, peças e corte iguais; vizinho igual;
+    - girar que bateria: não gira e oferece mover;
+    - vincular: sem sobrepor;
+    - medidas e mover;
+    - excluir: só confirmando; o travado não sai;
+    - salva sozinho.
+  - Falha antes (`lp3Open` não existe) e passa depois (5566d98 → 60b4b4f).
+- **Detalhe do teste:** a comparação dos vizinhos ignora a ordem das chaves do JSON (como no da B24). Uma regra tira e põe de volta o mesmo campo com o mesmo valor; campo por campo, nada muda.

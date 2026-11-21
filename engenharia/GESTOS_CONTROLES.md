@@ -29,7 +29,8 @@ Este inventário traz só o que foi conferido. As duas primeiras seções são o
 - **Editor por vãos:** 2 toques no vão abrem o menu rápido com as abas do painel. Valem se os toques vierem em até 450 ms e a até 34 px um do outro. **Isso está só na branch `wip/pedidos-61-62`, ainda não aprovado na bateria.**
 
 ## Segurar 2 s (Etapa C, Adauto 21/11)
-- 2D e Planta: segurar o móvel 2 s parado abre o menu do vão segurado (o mesmo dos 2 toques). 3D: abre o quadro de opções do módulo (o mesmo dos 3 toques), mesmo segurando numa porta (ela não abre).
+- 2D e Planta: segurar o móvel 2 s parado abre o menu do vão segurado (o mesmo dos 2 toques).
+- 3D (pedido de 21/11, menu interativo): abre o menu flutuante do módulo, com o módulo destacado em azul, mesmo segurando numa porta (ela não abre). Opções: girar 90°/−90°/180° (só móvel livre), tirar da parede, vincular à parede, mover livremente (Planta), editar medidas, excluir (com confirmação). Os 3 toques continuam abrindo o quadro de opções.
 - Mexer mais que `SEL.mov` (10 px, o mesmo limite do toque) antes dos 2 s: é arrasto, nada muda. Segundo dedo: cancela (pinça).
 - Nos 2 s o móvel volta exatamente pro lugar se o dedo tremeu; depois, até soltar, o movimento daquele dedo não leva o móvel nem gira a vista; soltar não conta como toque e o clique seguinte não aperta botão do menu.
 - Mouse (Windows): só segurar o botão esquerdo 2 s; clique direito não faz nada.

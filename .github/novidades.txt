@@ -135,3 +135,4 @@
 • Móvel livre e móveis nas paredes do lado: a linha fina do puxador cava aparece no 3D em qualquer posição.
 • Projeto antigo sem a lista de prateleiras soltas abre normal, com as mesmas medidas.
 • Mover no 3D: no menu de segurar, arraste o móvel no chão do 3D. Chegando a 2 cm da parede (de costas pra ela) aparece uma guia azul e, ao soltar, ele encaixa na parede; puxando mais de 2 cm, sai dela. Embaixo da pedra só encaixa se couber. Os outros móveis nunca mudam. O ímã liga e desliga nos Ajustes.
+• Móvel livre não entra mais na pedra nem na parede: embaixo da pedra ele fica 4 cm pra dentro da frente dela. Quando não dá, ele para e o app diz o motivo. Nenhum outro móvel muda.

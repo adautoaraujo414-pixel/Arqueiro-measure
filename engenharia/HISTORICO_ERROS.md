@@ -1256,7 +1256,7 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Defeito achado no caminho:** a função nova `alvo(m)` tinha o mesmo nome da `alvo(ev)` do segurar 2 s, no mesmo bloco, e tomava o lugar dela: o segurar parou de abrir o menu. Renomeada `paredeAlvo`. Pego pelos testes da Etapa C antes do commit.
 - **Teste:** `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem` (19/20/21 mm, orientação, esquerda, colisão, pedra cabe/não cabe, soltar, arrasto real, posição digitada, ímã desligado e guardado, lado a lado, desfazer/refazer, reabrir, tipos). Falha antes (`__mv3` não existe) e passa depois (cd0cb1f → 6b8cbf2).
 - **Riscos registrados:**
-  - A colisão do livre (`bate`) só olha módulos, não a pedra (já era assim na Etapa B).
+  - ~~A colisão do livre (`bate`) só olha módulos, não a pedra (já era assim na Etapa B).~~ Resolvido em PEDRA-LIVRE (21/11).
   - No 3D, o módulo de parede ainda anda pelo arrasto de sempre ("segure um instante e arraste").
 ## FOTO-BANCO-LENTO — foto da galeria do editor sumia quando o banco das fotos abria devagar (achado 21/11 no teste de atualização do iOS; corrigido)
 - **Como achei:** `AtualizacaoAbreProjetosTests` (CIs 44906277546, 44909214405, 44910617585). Depois de atualizar por cima da 3.0.12, a foto do `photo_f900.json` não voltava pro editor, nem esperando 10 s.
@@ -1266,3 +1266,26 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Família:** só as fotos do editor usam `phDB`. Os vídeos (`EditorMediaBackup.js`) passam pelo mesmo `phPut`/`phAll` e ficam cobertos pela correção.
 - **Correção:** ao abrir atrasado, copia `PHMEM` pro banco; até terminar, `phAll` junta banco e memória sem repetir. Nada é apagado.
 - **Teste:** `testFotoGuardadaComOBancoDasFotosLentoNaoSomeDaLista` (banco real abrindo em 2,2 s). Falha antes e passa depois. Os 5 testes de foto passam.
+
+## PEDRA-LIVRE — móvel livre atravessava a pedra e passava do recuo de 40 mm (pedido do Adauto 21/11; corrigido)
+- **Pedido:** "corrija o movimento do módulo livre para respeitar a pedra, os móveis existentes e o recuo de 40 mm, sem alterar medidas ou posições de outros módulos".
+- **Como reproduzir (antes):** pedra 2400 × 606 a 820 mm; livre de 900 mm de altura arrastado pra baixo dela → entrava na pedra. Livre de 820 mm com o corpo indo até 570 ou 590 mm → passava do recuo (limite 606 − 40 = 566).
+- **Módulo:** bloco ETAPA B (`lvTenta`, `lvSolta`), usado pela Planta, pelo arrasto do 3D, pelas caixas X/Z do Mover no 3D e pelo girar.
+- **Causa raiz:** `bate` só olhava as caixas dos módulos (`nm` `índice:peça`); a pedra (`sid`, sem `nm`) ficava de fora. O recuo só era conferido no encaixe na parede (`pedra(m,s)` da C2), não no movimento livre.
+- **Correção:** `porque(m)` = outro móvel → parede → pedra. Pedra: a placa e a cuba do 3D são sólidas (altura); embaixo da placa o corpo (`lvFoot`) fica até a frente − 40 (a mesma regra do encaixe), com a frente do lado da sala (fundo → z; perna do L → x). Bloqueia e mostra o motivo (`__lvMotivo`) no toast da Planta, na barra do Mover no 3D e no girar. Só confere: nenhum móvel, pedra ou medida muda.
+- **Família:** módulo de parede embaixo da pedra já tinha `stoneLim`/`stLimX` (não mudou). Superior acima da pedra: não conta (fica em cima). Ilha sem parede: só a colisão, sem recuo.
+- **Teste:** `testMovelLivreNaoEntraNaPedraERespeitaORecuoDe40mm` (fora, rente, 30 mm, 566/570 mm sem ímã, 900 mm de altura, girado 90°, caixa Z, outro módulo/peças/corte/pedra iguais). Falha antes e passa depois; 39 testes de pedra e de livre passam.
+- **Commits:** `0893a57` (teste), `7d5acdf` (correção).
+
+## LIVRE-PAREDE — girar o livre levava as costas pra dentro da parede (achado na revisão do arraste, 21/11; corrigido)
+- **Como reproduzir (antes):** livre de 900 mm encostado na parede do fundo, girar 90° → gira em volta do meio e fica com as costas 185 mm dentro da parede. Arrastar sem ímã também passava das paredes.
+- **Causa raiz:** nenhuma conferência de parede no movimento livre (só o ímã puxava pra ela).
+- **Correção:** `naParede(m)`: parede do fundo e paredes do lado (quando existem, `sideWalls`) são sólidas. No ambiente livre (sem paredes) não há limite. Giro bloqueado fica como estava e diz o motivo.
+- **Teste:** `testMovelLivreNaoEntraNaParedeAoArrastarOuGirar`. Falha antes e passa depois.
+- **Projeto antigo:** nada é conferido ao abrir; um livre que já estava dentro da parede ou da pedra continua igual até a pessoa mover.
+- **Commits:** `0893a57` (teste), `7d5acdf` (correção).
+
+## ABERTURA-LENTA — editor levando 25,6 s / 39,4 s / mais de 60 s pra abrir nos testes do iOS (investigando, 21/11)
+- **Visto:** `testEditorAbreComoNoAppSemTelaBranca` no iPad do CI (25,6 s na homologação, 39,4 s na C2; limite 20 s) e `testTamponamentoInferiorReconheceACava…` no iPhone (passou de 60 s). Os dois passaram só na repetição automática do CI (`-retry-tests-on-failure`), e o resumo do xcresult mostra "0 failed".
+- **Medido aqui (Chromium, mesmo editor.html de 2,9 MB):** 0,3–0,7 s; com a CPU 6× mais lenta, 2,4–3,1 s. O código do editor sozinho não explica 25–60 s.
+- **Diagnóstico ligado (`840aa74`):** `ABERTURA-DIAG` mede quando a página começou a rodar e quando o DOM ficou pronto. O CI agora lista como aviso todo teste que só passou na repetição (pedido do Adauto 21/11: "não esconda falhas com repetição automática"). O critério dos testes não mudou.

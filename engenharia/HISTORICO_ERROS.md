@@ -1060,3 +1060,18 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **(a) recomendado:** manter toda a conta da parede esquerda em "a partir do canto", como era, e inverter só o desenho e o toque. Isso exige espelhar a posição de cada grupo do desenho (sem espelhar o móvel por dentro nem os textos) e o x do toque/arrasto.
   - **(b):** manter o x invertido e inverter junto cada regra que conta a partir do canto.
 - **Depois:** rodar a bateria inteira, conferir projeto antigo da parede esquerda (o tamponamento/dobradiça "esquerdo" passa a aparecer do lado da frente da sala no 3D; peças e corte iguais) e mostrar imagens das 3 paredes.
+
+## B24 — mudar medida e voltar não devolvia o móvel igual (corrigido 20/11)
+- **Módulo:** rack (folga) e qualquer módulo empurrado ao mudar largura, altura, profundidade ou base; família: todos (inferiores, superiores, torres, guarda-roupas, demais).
+- **Reproduzir:** rack com espessura +3 e voltar; módulo 3 da cozinha demo com largura +100 e voltar. A folga do rack e o `x` não voltavam.
+- **Causa raiz:** (1) a regra do rack subia a folga até a espessura e não lembrava a folga anterior (catraca); (2) ao aumentar uma medida o módulo era empurrado pra caber e, voltando a medida, ficava no lugar empurrado.
+- **Correção (`editor.html`):** a folga do rack guarda a original (`_fgR`/`_fgR0`) e volta quando a espessura volta. Um invólucro de `setv` guarda o `x` de antes do empurrão (WeakMap), mas só nas mudanças de w, h, d e b. Ele devolve esse `x` só quando o lugar está livre e os outros módulos não mudaram. Não altera nenhuma medida.
+- **Testes:** `testMudarMedidaEVoltarDeixaOMovelExatamenteComoEra` (catálogo inteiro + demo; comparação sem depender da ordem das chaves). Falhou antes (d43552c/83f7714), passa depois (470e4de).
+
+## B22/B23 — móvel novo do catálogo encolhia sozinho ou entrava por cima (corrigido 20/11)
+- **Decisão do Adauto (20/11):** "não redimensionar móveis existentes nem encolher automaticamente móveis novos. Avisar quando não houver espaço e solicitar decisão do usuário".
+- **Módulo:** colocação de móvel novo do catálogo (`fitNew`/`newTpl`); todas as famílias que entram pelo catálogo.
+- **Reproduzir:** parede cheia, sobrando 1310 mm, e pôr um balcão de 1600. Ele entrava encolhido, ou por cima dos vizinhos.
+- **Causa raiz:** `fitNew` tinha tentativas que encolhiam o módulo (85% / mínimo) e aceitava a última tentativa mesmo sem caber.
+- **Correção:** as tentativas que encolhem só rodam com `window.FITENCOLHE`, que fica ligado apenas quando a pessoa escolhe. Se não couber, o móvel novo não fica. O app mostra "Usar N mm" (o maior espaço livre, simulado sem mexer em ninguém) e "Não colocar". Os móveis existentes não mudam.
+- **Testes:** `testMovelNovoNaoEncolheSozinhoNemEntraPorCimaEPerguntaQuandoNaoCabe` (pergunta "Usar 1310 mm / Não colocar", entra com 1310 só depois de escolher, com espaço livre entra 1600 sem pergunta). Falhou antes (488ed65), passa depois (fb972ec). Bateria completa: 364 passaram direto e 18 falharam só pela pergunta nova; com o jeito antigo os 18 passam. Esses 18 usam a colocação só como preparação e passaram a fazer como quem escolhe "Usar N mm" (0e3143e). Resultado: 382/382.

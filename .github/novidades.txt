@@ -127,3 +127,5 @@
 # • Tamponamento esquerdo ou direito sem espaço: não liga e avisa. Antes ligava e um módulo entrava no outro. Com a pedra encaixada, é a pedra que acompanha a régua nova; antes o módulo encolhia 30 mm sozinho pra caber embaixo dela.
 # • Armários e torres com porta de cava e tamponamento de cima (34 modelos): a porta para no topo do módulo e não entra mais no tamponamento; o corte da porta sai com essa medida.
 # • Balcão embaixo da pedra: se a altura dele for aumentada acima da pedra, ele fica na altura da pedra e avisa. Antes era jogado pro lado. Mais baixo que a pedra continua podendo, e a pedra não muda sozinha.
+• Móvel novo do catálogo não encolhe mais sozinho pra caber. Se não houver espaço, o app pergunta: usar o espaço que sobra (mostra a medida) ou não colocar. Os móveis que já estão no projeto não mudam.
+• Mudar uma medida e voltar deixa o móvel exatamente como era (folga do rack e posição voltam).

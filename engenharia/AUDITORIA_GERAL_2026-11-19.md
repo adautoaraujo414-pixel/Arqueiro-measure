@@ -183,13 +183,8 @@ GAV-SET · DUPLO-TOQUE · CANTO-SOZINHO · PORTA-CAVA · MENU-ARRASTA · FUNDO-S
 | D30, D31 | Precisam de aparelho real (não reproduzidos no Chromium). |
 | B27 | Melhoria (aviso novo): fora desta versão. |
 
-## Versão publicada do iOS
-- App Store: **3.0.50, build 548**, código `3799060`.
-  - O build subiu ao TestFlight em 13/11 (ios.yml execução 548 no `main`, com a entrada `ref`).
-  - Foi colocado na versão e enviado pra revisão em 15/11 (asc-enviar 64).
-  - Se a Apple já liberou não dá pra ver daqui.
-- Atualização por cima no iOS:
-  - os caminhos e as chaves dos arquivos dos projetos não mudaram entre `3799060` e a candidata;
-  - o backup agora guarda a cópia anterior em vez de apagar;
-  - a compatibilidade do editor com projetos antigos é coberta pelos testes de projeto antigo da bateria;
-  - **não há teste de instalação por cima no iOS** (sem workflow; não foi feito em aparelho).
+## Versão publicada do iOS (corrigido em 20/11, conferido no App Store Connect pelo asc-diag)
+- **Na App Store (ao público): 3.0.12, build 321, código `d861fbd`** (07/11, branch `feature/arque-measure-kotlin`).
+- 3.0.50 (build 548, `3799060`): está em **PREPARE_FOR_SUBMISSION**, nunca foi enviada à revisão. A anotação antiga ("enviada pra revisão em 15/11") estava errada.
+- TestFlight: builds até 574 (teste interno, não é publicação).
+- **Atualização por cima no iOS:** `ios-atualizacao.yml` (só simulador, não publica). Instala a 3.0.12 (`d861fbd`), põe o backup de referência, instala a nova por cima e abre. Execução 44836226818 (20/11): **8/8 arquivos iguais** (sha256 de projetos, índice, imagens, notas, preços, foto do móvel), 0 falhas. Não abre os projetos dentro do editor e não foi feito em aparelho real.

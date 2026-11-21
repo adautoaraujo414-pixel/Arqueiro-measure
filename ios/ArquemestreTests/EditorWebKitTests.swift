@@ -7790,7 +7790,7 @@ final class EditorWebKitTests: XCTestCase {
                   var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=6000;S.RD=3500;S.H=3000;S.m=null};
                   clr();draw();open3D();await W(500);
                   /* 16/11: no simulador do iPhone a animação anda devagar (poucos quadros) e o tempo fixo pegava a gaveta ainda parada. Depois do tempo de sempre, espera também a animação chegar no alvo (até 10 s) */
-                  var fimAnim=async function(){__build();var t_=Date.now();while(Date.now()-t_<10000){var A_=__ang(),ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}};
+                  var fimAnim=async function(){__build();var t_=Date.now(),ok_=false,q0=JSON.stringify(__ang().g);while(Date.now()-t_<10000){var A_=__ang();ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}/* N15 (21/11): se esgotar, guarda onde e se a animação andou nesses 10 s (pra separar quadro parado de conta errada) */if(!ok_)(window.__esgA=window.__esgA||[]).push((S.m&&S.m.n||'?')+(JSON.stringify(__ang().g)===q0?' · animação parada':' · animação andou mas não chegou'))};
                   var ehFrente=function(p){return /^(Porta|Frente de gaveta|Frente \(porta tempero\)|Gaveta interna · frente)/.test(p.name)&&!(p.noDraw&&!p.cxz)},frentes=function(m){return partsOf(m).filter(ehFrente)};
                   var cx=function(){var o={};__boxes().forEach(function(q){if(q.pk&&/^(Porta|Frente|Gaveta interna)/.test(q.pk))o[q.pk]=(o[q.pk]||'')+[q.x0,q.x1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')+';'});return o};
                   /* 1 módulo de cada jeito de abrir que existe no catálogo (porta, gaveta, tempero, torre de forno, caixa da geladeira, caixote, gaveta por fora, gaveta interna, basculante, correr, painel cego, por vãos) */
@@ -7800,12 +7800,13 @@ final class EditorWebKitTests: XCTestCase {
                     org3api.open(m,true);await W(1300);await fimAnim();__build();var c1=cx();
                     frentes(m).forEach(function(p){var v=(m.v||[])[p.vi]||{},fixa=!!(p.cego||p.rgfx||v.fixa);if(fixa){if(p.open||c0[p.pk]!==c1[p.pk])cegoAbriu.push(it.n);return}if(v.k==='slide'||/^Porta de correr/.test(p.name))return;if(c0[p.pk]===c1[p.pk]&&!p.open)naoAbre.push(it.n+': '+p.name)});
                     org3api.open(m,false);await W(2200);await fimAnim();__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}
-                  R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
+                  R.animEsgotou=(window.__esgA||[]).length+((window.__esgA||[]).length?': '+window.__esgA.slice(0,6).join(' | '):'');R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
                   R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["jeitos"] as? Bool, true)
-        XCTAssertEqual(o["botaoAbrirNaoAbriu"] as? String, "0")
-        XCTAssertEqual(o["fecharNaoVoltou"] as? String, "0")
+        // N15 (21/11): no iOS falha às vezes na 1ª tentativa e passa na repetição; a mensagem diz se a espera da animação esgotou (a conferência é a mesma)
+        XCTAssertEqual(o["botaoAbrirNaoAbriu"] as? String, "0", "espera da animação esgotou: \(o["animEsgotou"] ?? "")")
+        XCTAssertEqual(o["fecharNaoVoltou"] as? String, "0", "espera da animação esgotou: \(o["animEsgotou"] ?? "")")
         XCTAssertEqual(o["painelCegoAbriu"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -7818,7 +7819,7 @@ final class EditorWebKitTests: XCTestCase {
                   var clr=function(){S.stones=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='livre';S.env='livre';S.W=6000;S.RD=3500;S.H=3000;S.m=null};
                   clr();draw();open3D();await W(500);
                   /* 16/11: no simulador do iPhone a animação anda devagar (poucos quadros) e o tempo fixo pegava a gaveta ainda parada. Depois do tempo de sempre, espera também a animação chegar no alvo (até 10 s) */
-                  var fimAnim=async function(){__build();var t_=Date.now();while(Date.now()-t_<10000){var A_=__ang(),ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}};
+                  var fimAnim=async function(){__build();var t_=Date.now(),ok_=false,q0=JSON.stringify(__ang().g);while(Date.now()-t_<10000){var A_=__ang();ok_=Object.keys(A_.t).every(function(k){return Math.abs((A_.g[k]||0)-A_.t[k])<.5});if(ok_)break;await W(100)}/* N15 (21/11): se esgotar, guarda onde e se a animação andou nesses 10 s (pra separar quadro parado de conta errada) */if(!ok_)(window.__esgA=window.__esgA||[]).push((S.m&&S.m.n||'?')+(JSON.stringify(__ang().g)===q0?' · animação parada':' · animação andou mas não chegou'))};
                   var ehFrente=function(p){return /^(Porta|Frente de gaveta|Frente \(porta tempero\)|Gaveta interna · frente)/.test(p.name)&&!(p.noDraw&&!p.cxz)},frentes=function(m){return partsOf(m).filter(ehFrente)};
                   var cx=function(){var o={};__boxes().forEach(function(q){if(q.pk&&/^(Porta|Frente|Gaveta interna)/.test(q.pk))o[q.pk]=(o[q.pk]||'')+[q.x0,q.x1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')+';'});return o};
                   /* 1 módulo de cada jeito de abrir que existe no catálogo (porta, gaveta, tempero, torre de forno, caixa da geladeira, caixote, gaveta por fora, gaveta interna, basculante, correr, painel cego, por vãos) */
@@ -7828,7 +7829,7 @@ final class EditorWebKitTests: XCTestCase {
                     org3api.open(m,true);await W(1300);await fimAnim();__build();var c1=cx();
                     frentes(m).forEach(function(p){var v=(m.v||[])[p.vi]||{},fixa=!!(p.cego||p.rgfx||v.fixa);if(fixa){if(p.open||c0[p.pk]!==c1[p.pk])cegoAbriu.push(it.n);return}if(v.k==='slide'||/^Porta de correr/.test(p.name))return;if(c0[p.pk]===c1[p.pk]&&!p.open)naoAbre.push(it.n+': '+p.name)});
                     org3api.open(m,false);await W(2200);await fimAnim();__build();var c2=cx();if(Object.keys(c0).some(function(k){return c0[k]!==c2[k]}))naoFecha.push(it.n)}
-                  R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
+                  R.animEsgotou=(window.__esgA||[]).length+((window.__esgA||[]).length?': '+window.__esgA.slice(0,6).join(' | '):'');R.botaoAbrirNaoAbriu=naoAbre.length+(naoAbre.length?': '+naoAbre.slice(0,6).join(' | '):'');R.fecharNaoVoltou=naoFecha.length+(naoFecha.length?': '+naoFecha.slice(0,6).join(' | '):'');R.painelCegoAbriu=cegoAbriu.length;
                   /* caixote de gavetas (guarda-roupa): 1 toque na gaveta abre ela de verdade, e fechar a porta fecha a gaveta junto (não atravessa a porta) */
                   var T=function(n){return JSON.parse(JSON.stringify(its.filter(function(q){return q.n===n})[0]))},zf=function(pk){var b=__boxes().filter(function(q){return q.pk===pk})[0];return b?Math.round(b.z1):-1};
                   clr();newTpl(T('Torre do guarda-roupa · maleiro, cabideiro e gavetas'));var g=S.mods[0];S.m=g;draw();__build();var z0=zf('Frente de gaveta (caixote)#1'),l0=zf('Caixote · gaveta · lateral#1');
@@ -7841,8 +7842,9 @@ final class EditorWebKitTests: XCTestCase {
                   R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["jeitos"] as? Bool, true)
-        XCTAssertEqual(o["botaoAbrirNaoAbriu"] as? String, "0")
-        XCTAssertEqual(o["fecharNaoVoltou"] as? String, "0")
+        // N15 (21/11): no iOS falha às vezes na 1ª tentativa e passa na repetição; a mensagem diz se a espera da animação esgotou (a conferência é a mesma)
+        XCTAssertEqual(o["botaoAbrirNaoAbriu"] as? String, "0", "espera da animação esgotou: \(o["animEsgotou"] ?? "")")
+        XCTAssertEqual(o["fecharNaoVoltou"] as? String, "0", "espera da animação esgotou: \(o["animEsgotou"] ?? "")")
         XCTAssertEqual(o["painelCegoAbriu"] as? Int, 0)
         XCTAssertEqual(o["caixote"] as? String, "gaveta saiu true · a caixa foi junto com a frente true · as outras ficaram true")
         XCTAssertEqual(o["caixoteFechouAPorta"] as? String, "gaveta fechou junto true · guardado {}")
@@ -8876,7 +8878,7 @@ final class EditorWebKitTests: XCTestCase {
         /* digita pelo teclado do app (o mesmo que a pessoa usa): toca no campo, aperta as teclas e o OK */
         var kb=function(c){var b=document.querySelector('#calcbar button[data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}));b.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerId:9,isPrimary:true}))};
         var tecl=function(){return !document.getElementById('calcbar').hidden},lab=function(){return document.getElementById('kplab').textContent.trim()};
-        var abre=async function(sel){var i=document.querySelector(sel);if(!i)return false;i.focus();await W(90);return tecl()&&document.activeElement===i};
+        var abre=async function(sel){var i=document.querySelector(sel);if(!i)return false;window.__abreT=Date.now();i.focus();await W(90);return tecl()&&document.activeElement===i};
         var digita=async function(sel,teclas,ok){if(!(await abre(sel)))return false;teclas.split('').forEach(kb);if(ok!==false){kb('ok');await W(150)}return true};
         var B=function(){return document.getElementById('vlbody')},vp=function(){var t=B().querySelector('.tot'),k=t.querySelectorAll('b.big');return k[k.length-1].textContent.trim()},margem=function(){var r=B().querySelector('tr[data-vlmo]');return r?r.firstElementChild.textContent.replace(/\s*\(.*$/,'').trim()+' = '+r.lastElementChild.textContent.trim():'sem linha'};
         /* 1. quem não preenche nada: o valor continua material × multiplicador, igualzinho */
@@ -8907,7 +8909,7 @@ final class EditorWebKitTests: XCTestCase {
         var o=JSON.parse(localStorage.getItem(PRK)||'{}');R.ficaGuardado=o.moR===900&&o.cfR===1500&&o.dxR===250.5;R.naoMexeNoProjeto=JSON.stringify(snapState())===proj0;
         /* 5. digita num campo e, sem OK, toca num botão da tela: a janela não desce no meio do toque e o botão pega de primeira */
         await abre('#vlm [data-vlx="dxR"]');'300'.split('').forEach(kb);var chip=document.querySelector('#vlm [data-vmx="3"]'),y0=chip.getBoundingClientRect().top;chip.focus();await Promise.resolve();await Promise.resolve();var y1=chip.getBoundingClientRect().top;
-        R.janelaNaoDesceNoMeioDoToque=Math.abs(y1-y0)<1;chip.click();await W(260);R.botaoPegaDePrimeiraEOValorEntra=PR.mult===3&&PR.dxR===300&&vp()===brl(mat*3+2700)&&!tecl();R.botaoPegaDetalhe='mult '+PR.mult+' · dxR '+PR.dxR+' · valor '+vp()+' (esperado '+brl(mat*3+2700)+') · teclado aberto '+tecl();
+        R.janelaNaoDesceNoMeioDoToque=Math.abs(y1-y0)<1;R.janelaDetalhe='y '+Math.round(y0*10)/10+' → '+Math.round(y1*10)/10+' · transform '+(document.getElementById('vlm').style.transform||'nenhum')+' · '+(Date.now()-(window.__abreT||Date.now()))+' ms depois de abrir o campo';chip.click();await W(260);R.botaoPegaDePrimeiraEOValorEntra=PR.mult===3&&PR.dxR===300&&vp()===brl(mat*3+2700)&&!tecl();R.botaoPegaDetalhe='mult '+PR.mult+' · dxR '+PR.dxR+' · valor '+vp()+' (esperado '+brl(mat*3+2700)+') · teclado aberto '+tecl();
         R.janelaVoltaProLugar=(document.getElementById('vlm').style.transform||'')==='';
         /* botão que não tira o foco do campo (acontece em alguns aparelhos): o que foi digitado entra do mesmo jeito e o teclado fecha */
         await abre('#vlm [data-vlx="dxR"]');'400'.split('').forEach(kb);B().querySelector('[data-vmx="2.5"]').click();await W(320);R.botaoSemTirarOFocoTambemAplica=PR.mult===2.5&&PR.dxR===400&&vp()===brl(mat*2.5+2800)&&!tecl();await digita('#vlm [data-vlx="dxR"]','250,5');
@@ -8970,7 +8972,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["orcamentoPdfFechaComOValor"] as? Bool, true)
         XCTAssertEqual(o["ficaGuardado"] as? Bool, true)
         XCTAssertEqual(o["naoMexeNoProjeto"] as? Bool, true)
-        XCTAssertEqual(o["janelaNaoDesceNoMeioDoToque"] as? Bool, true)
+        // N15 (21/11): a falha intermitente do iOS é esta (linha do CI); a mensagem mostra quanto a janela andou, o transform e o tempo desde que o campo abriu (a conferência é a mesma)
+        XCTAssertEqual(o["janelaNaoDesceNoMeioDoToque"] as? Bool, true, "\(o["janelaDetalhe"] ?? "")")
         // N15 (18/11): no iOS falha às vezes na 1ª tentativa e passa na repetição; o detalhe mostra qual parte falhou (a conferência é a mesma)
         XCTAssertEqual(o["botaoPegaDePrimeiraEOValorEntra"] as? Bool, true, "\(o["botaoPegaDetalhe"] ?? "")")
         XCTAssertEqual(o["janelaVoltaProLugar"] as? Bool, true)

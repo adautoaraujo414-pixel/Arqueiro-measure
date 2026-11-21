@@ -71,6 +71,9 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         let uc = WKUserContentController()
         uc.addUserScript(WKUserScript(source: "window.__errs=[];window.addEventListener('error',function(e){__errs.push(String(e.message||e))});", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         uc.addUserScript(WKUserScript(source: MoveisWeb.bridgeJS, injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        // igual ao app (MoveisWeb.makeUIView): o script que guarda e devolve as fotos e vídeos do editor nos arquivos
+        let media = try XCTUnwrap(Bundle.main.url(forResource: "EditorMediaBackup", withExtension: "js"), "EditorMediaBackup.js tem que ir dentro do app")
+        uc.addUserScript(WKUserScript(source: try String(contentsOf: media, encoding: .utf8), injectionTime: .atDocumentEnd, forMainFrameOnly: true))
         let host = Host(dir: dir), sink = Sink()
         sink.host = host
         uc.add(sink, name: "arque")
@@ -113,9 +116,11 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         // foto da galeria do editor que o backup traz (photo_f900.json, do projeto p1)
         let fotosArq = ((try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []).filter { $0.hasPrefix("photo_") }
         if !fotosArq.isEmpty {
-            let r = try await w.callAsyncJavaScript("return await new Promise(function(res){try{phAll(function(L){res((L||[]).length)})}catch(e){res(-1)}});", arguments: [:], in: nil, contentWorld: .page)
-            print("ATUALIZACAO-ABRE: fotos da galeria nos arquivos \(fotosArq.count) · no editor \(r ?? "?")")
-            XCTAssertEqual((r as? NSNumber)?.intValue, fotosArq.count, "as fotos da galeria voltam no editor")
+            // a volta das fotos pro IndexedDB é assíncrona e o simulador é lento: espera até 10 s (a conferência é a mesma: tem que voltar)
+            let r = try await w.callAsyncJavaScript("var n=-1,t0=Date.now();while(Date.now()-t0<10000){n=await new Promise(function(res){try{phAll(function(L){res((L||[]).length)})}catch(e){res(-1)}});if(n>=quer)break;await new Promise(function(r){setTimeout(r,250)})}return JSON.stringify({n:n,ms:Date.now()-t0,idb:typeof indexedDB});", arguments: ["quer": fotosArq.count], in: nil, contentWorld: .page)
+            let fo = (try? JSONSerialization.jsonObject(with: Data(((r as? String) ?? "{}").utf8))) as? [String: Any] ?? [:]
+            print("ATUALIZACAO-ABRE: fotos da galeria nos arquivos \(fotosArq.count) · no editor \(fo["n"] ?? "?") · esperou \(fo["ms"] ?? "?") ms · indexedDB \(fo["idb"] ?? "?")")
+            XCTAssertEqual((fo["n"] as? NSNumber)?.intValue, fotosArq.count, "as fotos da galeria voltam no editor")
         }
         // notas (caderno) com medida e foto: abrem pelo Store do app e a foto existe com o mesmo tamanho
         let st = Store()

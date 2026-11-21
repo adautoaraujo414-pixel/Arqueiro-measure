@@ -1258,3 +1258,11 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Riscos registrados:**
   - A colisão do livre (`bate`) só olha módulos, não a pedra (já era assim na Etapa B).
   - No 3D, o módulo de parede ainda anda pelo arrasto de sempre ("segure um instante e arraste").
+## FOTO-BANCO-LENTO — foto da galeria do editor sumia quando o banco das fotos abria devagar (achado 21/11 no teste de atualização do iOS; corrigido)
+- **Como achei:** `AtualizacaoAbreProjetosTests` (CIs 44906277546, 44909214405, 44910617585). Depois de atualizar por cima da 3.0.12, a foto do `photo_f900.json` não voltava pro editor, nem esperando 10 s.
+- **Diagnóstico no iOS (CI 44910617585):** a ponte lista e lê o arquivo (192 bytes, com imagem), o banco abre, e gravar a foto à mão funciona (0 → 1). O defeito era só na volta automática.
+- **Causa raiz:** `phDB` espera o IndexedDB 1,5 s e depois usa a memória (`PHMEM`). Quando o banco abre atrasado, ele passa a ser usado, mas o que ficou em `PHMEM` nunca ia pra ele, e `phAll` lia só do banco.
+- **Afeta:** fotos da galeria do editor devolvidas do backup ao abrir, e foto tirada nesse intervalo num aparelho lento (o arquivo nativo fica; some da lista naquela sessão).
+- **Família:** só as fotos do editor usam `phDB`. Os vídeos (`EditorMediaBackup.js`) passam pelo mesmo `phPut`/`phAll` e ficam cobertos pela correção.
+- **Correção:** ao abrir atrasado, copia `PHMEM` pro banco; até terminar, `phAll` junta banco e memória sem repetir. Nada é apagado.
+- **Teste:** `testFotoGuardadaComOBancoDasFotosLentoNaoSomeDaLista` (banco real abrindo em 2,2 s). Falha antes e passa depois. Os 5 testes de foto passam.

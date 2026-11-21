@@ -13694,4 +13694,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["destaqueSai"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* DEMO-B22 (21/11, achado nas capturas): a cozinha de exemplo das capturas da loja (demoScene, usada por ?demo3d=1, demoCores, demoCorte,
+       demo2D) foi montada contando com o encolher automático; depois da B22 (móvel novo não encolhe sozinho) ela ficava com 6 módulos em vez de 9
+       e com a pergunta "Não tem espaço livre" aberta por cima. O exemplo volta a ser o de antes da B22 (9 módulos: 900, 1200, 600, 860, 860, 800 e
+       3 aéreos de 1000), sem pergunta; a B22 continua valendo pra quem põe móvel (confere aqui também). */
+    func testCenaDeExemploDasCapturasIgualAntesDaB22SemPergunta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;
+        demoScene();draw();var q=document.getElementById('fitq');R.exemplo=S.mods.length+' · '+S.mods.map(function(m){return m.w}).join(',')+' · '+(q&&!q.hidden?'pergunta aberta':'sem pergunta');
+        R.encolheDepois=window.FITENCOLHE?'ligado':'desligado';
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=2700;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 1 porta'));var n0=S.mods.length;newTpl(T('Balcão 3 portas + 4 gavetas'));q=document.getElementById('fitq');
+        R.b22=(S.mods.length===n0?'não entrou sozinho':'entrou')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta');if(q)q.hidden=true;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["exemplo"] as? String, "9 · 900,1200,600,860,860,800,1000,1000,1000 · sem pergunta")
+        XCTAssertEqual(o["encolheDepois"] as? String, "desligado")
+        XCTAssertEqual(o["b22"] as? String, "não entrou sozinho · perguntou", "a B22 continua valendo pra quem põe móvel")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -13720,6 +13720,86 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PEDRA-LIVRE (pedido do Adauto 21/11: "corrija o movimento do módulo livre para respeitar a pedra, os móveis existentes e o recuo de 40 mm,
+       sem alterar medidas ou posições de outros módulos"). Antes o livre atravessava a pedra (só os móveis contavam). Agora: mais alto que a pedra
+       não entra nela; embaixo dela o corpo fica 40 mm pra dentro da frente (pedra 606 → corpo até 566); fora da pedra anda livre. Vale no arrasto
+       da Planta, no arrasto do 3D (sem ímã de parede), nas caixas X/Z e ao girar. Ninguém mais muda: posição, medida, peças e a pedra. */
+    func testMovelLivreNaoEntraNaPedraERespeitaORecuoDe40mm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.FITENCOLHE=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+        newTpl(3);var m0=S.mods[0];S.stones=[{id:2,x:0,w:2400,d:606,t:820,e:40,items:[]}];
+        newTpl(3);var L=S.mods[1];S.m=L;L.wing='L';L.rot=0;L.w=600;L.d=560;L.h=820;L.b=0;L.lx=1200;L.lz=1200;draw();open3D();
+        var j0=JSON.stringify(m0),p0=JSON.stringify(partsOf(m0)),c0=JSON.stringify(cutLines(m0)),st0=JSON.stringify(S.stones),pL=JSON.stringify(partsOf(L));
+        function tenta(lx,lz,rot,semIma){if(semIma)window.__lvSemParede=1;var r;try{r=lvTenta(L,lx,lz,rot)}finally{window.__lvSemParede=0}return {ok:r,lx:Math.round(L.lx),lz:Math.round(L.lz),rot:Math.round(+L.rot||0),mo:String(window.__lvMotivo||'')}}
+        var o={};
+        o.fora=tenta(1200,700);
+        o.rente=tenta(1200,0);
+        o.passa30=tenta(1200,30);
+        /* precisão em mm sem ímã nenhum (ímã desligado nos Ajustes): 566 vai, 570 não */
+        PR.ima=0;o.limite3d=tenta(1200,6,undefined,1);
+        o.passa3d=tenta(1200,10,undefined,1);delete PR.ima;
+        L.h=900;o.alto=tenta(1600,0);L.h=820;
+        /* girado 90°: a largura (500 + tamponamentos) fica no fundo e cabe no recuo */
+        L.lx=1200;L.lz=1200;L.w=500;draw();
+        o.gira90=tenta(1700,0,90);
+        L.rot=0;L.w=600;L.lx=1200;L.lz=1200;draw();
+        /* caixa Z do Mover no 3D (o mesmo lvTenta): 30 mm pra frente embaixo da pedra não vai */
+        tenta(1200,0);mv3On(1);var bz=document.querySelector('#mv3bar [data-mv3="z"]');if(bz){bz.value='30';bz.dispatchEvent(new Event('change',{bubbles:true}))}
+        o.caixaZ={lz:Math.round(L.lz),msg:window.__mv3?__mv3.msg():''};mv3Off();
+        o.outro=JSON.stringify(m0)===j0;o.pecas=JSON.stringify(partsOf(m0))===p0;o.corte=JSON.stringify(cutLines(m0))===c0;o.pedra=JSON.stringify(S.stones)===st0;o.pecasL=JSON.stringify(partsOf(L))===pL;o.medL=[L.w,L.d,L.h,L.b].join(',');o.errs=(window.__errs||[]).length;
+        var F={};Object.keys(o).forEach(function(k){var v=o[k];if(v&&typeof v==='object'){Object.keys(v).forEach(function(q){F[k+'_'+q]=v[q]})}else F[k]=v});return JSON.stringify(F);
+        """#)
+        XCTAssertEqual(o["fora_ok"] as? Bool, true, "fora da pedra anda livre: \(o)")
+        XCTAssertEqual(o["rente_ok"] as? Bool, true, "embaixo da pedra com o corpo em 560 (≤ 606 − 40) vai: \(o)")
+        XCTAssertEqual(o["passa30_ok"] as? Bool, false, "30 mm pra frente o corpo passa do recuo de 40 mm: \(o)")
+        XCTAssertEqual(o["passa30_lz"] as? Int, 0, "e fica onde estava")
+        XCTAssertTrue((o["passa30_mo"] as? String ?? "").contains("40 mm"), "explica o recuo: \(o["passa30_mo"] ?? "")")
+        XCTAssertEqual(o["limite3d_ok"] as? Bool, true, "no arrasto do 3D: corpo em 566 mm (exatamente 40 mm pra dentro) vai: \(o)")
+        XCTAssertEqual(o["passa3d_ok"] as? Bool, false, "no arrasto do 3D: corpo em 570 mm passa 4 mm do recuo: \(o)")
+        XCTAssertEqual(o["passa3d_lz"] as? Int, 6, "e fica no último lugar certo")
+        XCTAssertEqual(o["alto_ok"] as? Bool, false, "900 mm de altura não entra na pedra que está a 820: \(o)")
+        XCTAssertTrue((o["alto_mo"] as? String ?? "").contains("pedra"), "explica a pedra: \(o["alto_mo"] ?? "")")
+        XCTAssertEqual(o["gira90_ok"] as? Bool, true, "girado 90° embaixo da pedra cabendo no recuo vai: \(o)")
+        XCTAssertEqual(o["caixaZ_lz"] as? Int, 0, "caixa Z: não passa do recuo: \(o)")
+        XCTAssertTrue((o["caixaZ_msg"] as? String ?? "").contains("40 mm"), "caixa Z explica: \(o)")
+        XCTAssertEqual(o["outro"] as? Bool, true, "o módulo da parede não mudou")
+        XCTAssertEqual(o["pecas"] as? Bool, true, "peças do módulo da parede iguais")
+        XCTAssertEqual(o["corte"] as? Bool, true, "plano de corte igual")
+        XCTAssertEqual(o["pedra"] as? Bool, true, "a pedra não mudou")
+        XCTAssertEqual(o["pecasL"] as? Bool, true, "peças do livre iguais (só a posição muda)")
+        XCTAssertEqual(o["medL"] as? String, "600,560,820,0", "medidas do livre iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* LIVRE-PAREDE (achado na revisão do arraste, 21/11 · regra "nada entra dentro de outra coisa"): girar o livre em volta do meio levava as costas
+       185 mm pra dentro da parede do fundo, e o arrasto sem ímã passava das paredes. Agora parede do fundo e paredes do lado (quando existem) são
+       sólidas pro livre; no ambiente livre (sem paredes) não há limite. Ninguém mais muda. */
+    func testMovelLivreNaoEntraNaParedeAoArrastarOuGirar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.FITENCOLHE=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;
+        newTpl(3);var m0=S.mods[0];newTpl(3);var L=S.mods[1];S.m=L;L.wing='L';L.rot=0;L.w=900;L.d=560;L.h=820;L.b=0;L.lx=1200;L.lz=1200;draw();open3D();var j0=JSON.stringify(m0);
+        function tenta(lx,lz,rot){window.__lvSemParede=1;var r;try{r=lvTenta(L,lx,lz,rot)}finally{window.__lvSemParede=0}return {ok:r,lx:Math.round(L.lx),lz:Math.round(L.lz),mo:String(window.__lvMotivo||'')}}
+        var o={};o.fundo=tenta(1200,-30);o.esq=tenta(-40,1200);o.dir=tenta(S.W-800,1200);o.encostado=tenta(1200,0);
+        var f=function(){var q=lvFoot(L);return Math.round(q.z0)};o.gira={ok:lvGira(L,90),z0:f(),rot:Math.round(+L.rot||0),mo:String(window.__lvMotivo||'')};
+        L.rot=0;L.lx=1200;L.lz=1200;S.env='livre';draw();o.livre=tenta(1200,-30);S.env='cozinha';
+        o.outro=JSON.stringify(m0)===j0;o.med=[L.w,L.d,L.h].join(',');o.errs=(window.__errs||[]).length;var F={};Object.keys(o).forEach(function(k){var v=o[k];if(v&&typeof v==='object'){Object.keys(v).forEach(function(q){F[k+'_'+q]=v[q]})}else F[k]=v});return JSON.stringify(F);
+        """#)
+        XCTAssertEqual(o["fundo_ok"] as? Bool, false, "30 mm dentro da parede do fundo não vai: \(o)")
+        XCTAssertTrue((o["fundo_mo"] as? String ?? "").contains("parede do fundo"), "explica: \(o)")
+        XCTAssertEqual(o["esq_ok"] as? Bool, false, "dentro da parede esquerda não vai: \(o)")
+        XCTAssertEqual(o["dir_ok"] as? Bool, false, "dentro da parede direita não vai: \(o)")
+        XCTAssertEqual(o["encostado_ok"] as? Bool, true, "encostado na parede do fundo vai: \(o)")
+        XCTAssertEqual(o["gira_ok"] as? Bool, false, "girar encostado faria as costas entrarem na parede: \(o)")
+        XCTAssertEqual(o["gira_z0"] as? Int, 0, "e fica como estava")
+        XCTAssertEqual(o["gira_rot"] as? Int, 0)
+        XCTAssertEqual(o["livre_ok"] as? Bool, true, "no ambiente livre (sem paredes) não há limite: \(o)")
+        XCTAssertEqual(o["outro"] as? Bool, true, "o outro módulo não mudou")
+        XCTAssertEqual(o["med"] as? String, "900,560,820")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* ETAPA C2 · MOVER NO 3D (pedido do Adauto 21/11: arraste livre e encaixe magnético no 3D). Decisões nas perguntas de 21/11: encaixa só de
        costas pra parede; só a pedra da parede; puxado mais de 20 mm sai da parede; ímã nos Ajustes, guardado; parede esquerda não encaixa nem
        solta arrastando (guardada espelhada, decisão de 18/11). Confere 19/20/21 mm (fundo e direita), orientação, esquerda e canto L sem encaixe,

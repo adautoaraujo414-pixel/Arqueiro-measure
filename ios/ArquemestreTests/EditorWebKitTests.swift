@@ -13426,7 +13426,7 @@ final class EditorWebKitTests: XCTestCase {
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
         var pecas=function(m){SPC={};return partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(',')+'#'+cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')};
-        /* linhas finas do cava (menos de 5 mm) ficam de fora: o 3D já não desenha elas fora da parede do fundo (igual nas paredes do lado; só visual) */var caixas=function(i){__build();return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&Math.min(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0)>=5}).map(function(b){var d=[b.x1-b.x0,b.z1-b.z0].map(function(v){return Math.round(v)}).sort(function(a,c){return a-c});return d.join('x')+'x'+Math.round(b.y1-b.y0)}).sort().join(',')};
+        /* linhas finas do cava (menos de 5 mm) ficam de fora desta comparação: a posição delas é conferida em testCavaDoMovelLivreTemALinhaNasQuatroPosicoesENasParedesDoLado (21/11) */var caixas=function(i){__build();return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&Math.min(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0)>=5}).map(function(b){var d=[b.x1-b.x0,b.z1-b.z0].map(function(v){return Math.round(v)}).sort(function(a,c){return a-c});return d.join('x')+'x'+Math.round(b.y1-b.y0)}).sort().join(',')};
         var cx3=function(i){__build();return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&b.a>=.95}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1]})};
         /* girar 180 em volta do centro (cx,cz) = espelhar x e z: cada caixa do 3D tem que cair exatamente no espelho de onde estava (1 mm) */var espelho=function(B0,B1,cx,cz){if(B0.length!==B1.length)return false;var k=function(q){return q.map(function(v){return Math.round(v)}).join(',')},m0=B0.map(function(q){return [2*cx-q[1],2*cx-q[0],q[2],q[3],2*cz-q[5],2*cz-q[4]]}),u=B1.slice();return m0.every(function(q){var h=-1;u.some(function(r,n){if(q.every(function(v,t){return Math.abs(v-r[t])<=1})){h=n;return true}});if(h<0)return false;u.splice(h,1);return true})};
         var dentro=function(i,m){__build();var f=lvFoot(m);return __boxes().filter(function(b){return parseInt(String(b.nm),10)===i&&b.a>=.95}).every(function(b){return b.x0>=f.x0-31&&b.x1<=f.x1+31&&b.z0>=f.z0-31&&b.z1<=f.z1+31})};
@@ -13521,6 +13521,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["plantaCheia"] as? String, "não entrou Entendi outros iguais")
         XCTAssertEqual(o["painelCheia"] as? String, "não virou Entendi projeto igual")
         XCTAssertEqual(o["lateral"] as? String, "tem lateral não entrou Entendi outros iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* CAVA NO LIVRE (Adauto, 21/11: "Corrigir as faixas da cava no móvel livre em todas as orientações"): a linha fina de sombra do cava (0,6 × 3 mm
+       na frente da porta/gaveta) só era feita na parede do fundo; no livre (0/90/180/270) e nas paredes do lado o giro já tinha trocado o perfil
+       da porta e a linha não saía. Agora ela é feita no referencial do módulo antes do giro. Confere: no livre cada linha é exatamente a da parede
+       do fundo levada pela mesma conta do giro (lvP, 1 mm); nas paredes do lado a mesma quantidade; cada linha encostada por fora na frente da sua
+       peça; peças e plano de corte iguais. */
+    func testCavaDoMovelLivreTemALinhaNasQuatroPosicoesENasParedesDoLado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var pecas=function(m){SPC={};return partsOf(m).map(function(p){return p.name+p.cl+'x'+p.cw}).sort().join(',')+'#'+cutLines(m).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort().join(',')};
+        var lin=function(){__build();return __boxes().filter(function(b){return b.cvl&&parseInt(String(b.nm),10)===0})};
+        /* mesmas caixas (1 mm), sem sobrar nem faltar */var mesmas=function(Lr,esp){var u=Lr.slice();return Lr.length===esp.length&&esp.every(function(e){var h=-1;u.some(function(q,k){if([q.x0,q.x1,q.y0,q.y1,q.z0,q.z1].every(function(v,t){return Math.abs(v-e[t])<=1})){h=k;return true}});if(h<0)return false;u.splice(h,1);return true})};
+        var res=[];['Balcão 2 portas','Gaveteiro 3 gavetas'].forEach(function(nm){
+          loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;S.wl={L:'p',R:'p'};newTpl(T(nm));var m=S.m;m.x=1500;(m.v||[]).forEach(function(v){v.cava=true});S.m=null;draw();open3D();
+          var p0=pecas(m),L0=lin(),n0=L0.length,lc=[];
+          /* livre: a linha da parede do fundo levada pela conta do giro */
+          [0,90,180,270].forEach(function(r){m.wing='L';m.lx=1800;m.lz=1400;m.rot=r;draw();var Lr=lin(),esp=L0.map(function(q){var a=lvP(m,q.x0,q.z0),b=lvP(m,q.x1,q.z1);return [Math.min(a[0],b[0]),Math.max(a[0],b[0]),q.y0,q.y1,Math.min(a[1],b[1]),Math.max(a[1],b[1])]});
+            lc.push(r+'° '+(mesmas(Lr,esp)?'igual ao fundo girado':'diferente ('+Lr.length+'/'+n0+')'))});
+          /* parede do lado: a mesma conta do wingX (sem pedra: canto da sala em x=0 ou x=S.W; z do módulo vira x e x vira z) */
+          ['e','d'].forEach(function(w){m.wing=w;m.x=1500;delete m.rot;draw();var Lw=lin(),wx=w==='e'?0:S.W,esp=L0.map(function(q){return w==='e'?[wx+q.z0,wx+q.z1,q.y0,q.y1,q.x0,q.x1]:[wx-q.z1,wx-q.z0,q.y0,q.y1,q.x0,q.x1]});lc.push('lado '+w+' '+(mesmas(Lw,esp)?'igual ao fundo girado':'diferente ('+Lw.length+'/'+n0+')'))});
+          delete m.wing;m.x=1500;draw();var Lb=lin();
+          res.push(nm+': fundo '+(n0>0?n0+' linhas':'sem linha')+' | '+lc.join(' | ')+' | volta pro fundo '+(Lb.length===n0?'igual':'diferente')+' | peças '+(pecas(m)===p0?'iguais':'mudaram'))});
+        R.balcao=res[0];R.gaveteiro=res[1];R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "Balcão 2 portas: fundo 2 linhas | 0° igual ao fundo girado | 90° igual ao fundo girado | 180° igual ao fundo girado | 270° igual ao fundo girado | lado e igual ao fundo girado | lado d igual ao fundo girado | volta pro fundo igual | peças iguais")
+        XCTAssertEqual(o["gaveteiro"] as? String, "Gaveteiro 3 gavetas: fundo 3 linhas | 0° igual ao fundo girado | 90° igual ao fundo girado | 180° igual ao fundo girado | 270° igual ao fundo girado | lado e igual ao fundo girado | lado d igual ao fundo girado | volta pro fundo igual | peças iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

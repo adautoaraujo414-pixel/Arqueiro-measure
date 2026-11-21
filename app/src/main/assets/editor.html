@@ -7474,7 +7474,8 @@ var plantaSvg_pw=plantaSvg;plantaSvg=function(){var s=plantaSvg_pw.apply(this,ar
 /* cliente: nome da placa na lista com a parede */
 
 /* ===== Cena de exemplo pras capturas da loja (?demo3d=1 abre o 3D, ?demoplanta=1 abre a planta em ângulo) ===== */
-function demoScene(){try{PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
+function demoScene(){/* DEMO-B22 (21/11): a cozinha de exemplo das capturas foi desenhada com os balcões da lateral ajustados ao espaço; montada pelo próprio app, ela faz como quem escolhe "Usar N mm" (a B22 continua valendo pra quem põe móvel) */var fe_=window.FITENCOLHE;window.FITENCOLHE=1;try{demoScene0()}finally{window.FITENCOLHE=fe_}}
+function demoScene0(){try{PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3600;S.H=2700;var all=TPL.concat(CATS.flatMap(function(c){return c.it})),T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
  mkCorner('e');newTpl(T('Balcão da pia (cuba)'));newTpl(T('Gaveteiro 3 gavetas'));PLWS='e';plwAdd('base');plwAdd('base');plwAdd('pedra');PLWS='d';plwAdd('torre');PLWS=null;
  newTpl(4);newTpl(4);newTpl(4);var U=S.mods.filter(function(m){return m.sup&&!m.wing});U.forEach(function(m,i){m.tb=true;m.tl=i===0;m.tr=i===U.length-1});for(var i=1;i<U.length;i++)U[i].x=U[i-1].x+U[i-1].w;S.m=S.mods[0];draw()}catch(e){}}
 /* capturas da loja: projetos prontos com cor (cozinha, sala com home e sofá, quarto, paleta de cores) */

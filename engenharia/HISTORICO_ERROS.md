@@ -1285,7 +1285,12 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Projeto antigo:** nada é conferido ao abrir; um livre que já estava dentro da parede ou da pedra continua igual até a pessoa mover.
 - **Commits:** `0893a57` (teste), `7d5acdf` (correção).
 
-## ABERTURA-LENTA — editor levando 25,6 s / 39,4 s / mais de 60 s pra abrir nos testes do iOS (investigando, 21/11)
+## ABERTURA-LENTA — editor levando 25,6 s / 39,4 s / mais de 60 s pra abrir nos testes do iOS (medido 21/11; falta aparelho real)
 - **Visto:** `testEditorAbreComoNoAppSemTelaBranca` no iPad do CI (25,6 s na homologação, 39,4 s na C2; limite 20 s) e `testTamponamentoInferiorReconheceACava…` no iPhone (passou de 60 s). Os dois passaram só na repetição automática do CI (`-retry-tests-on-failure`), e o resumo do xcresult mostra "0 failed".
 - **Medido aqui (Chromium, mesmo editor.html de 2,9 MB):** 0,3–0,7 s; com a CPU 6× mais lenta, 2,4–3,1 s. O código do editor sozinho não explica 25–60 s.
 - **Diagnóstico ligado (`840aa74`):** `ABERTURA-DIAG` mede quando a página começou a rodar e quando o DOM ficou pronto. O CI agora lista como aviso todo teste que só passou na repetição (pedido do Adauto 21/11: "não esconda falhas com repetição automática"). O critério dos testes não mudou.
+- **Resultado do diagnóstico (iOS CI 44933773950, `840aa74`):** só a **primeira** abertura depois que o simulador liga é lenta. iPhone: página começou em 8,30 s, DOM pronto em 13,99 s (editor sozinho 5,79 s). iPad: 8,12 s / 11,98 s (3,89 s). Da 2ª abertura em diante: página em 0,4–1,3 s, editor sozinho 0,4–0,7 s. Na bateria, um único teste passou de 8 s (9,02 s). Nenhum teste do editor precisou de repetição nessa rodada.
+- **Causa provável (risco identificado, não comprovado em aparelho):** os ~8 s antes da página começar são o simulador criando o processo do WebKit a frio; os 4–6 s seguintes são o primeiro parse/compilação do editor.html (2,9 MB) com cache frio. Os 25–60 s eram esse começo a frio com a máquina do CI mais carregada. Não é laço nem travamento no editor (depois de aquecido ele abre em ~1 s).
+- **Correção:** nenhuma no app nesta etapa (não há defeito comprovado no código). A repetição automática continua, mas agora todo teste que só passou na repetição aparece como aviso no CI.
+- **Pendente:** medir a primeira abertura no iPhone/iPad real pela build de teste do TestFlight. Se lá passar de ~3 s, investigar o tamanho do editor.html (carregamento em partes).
+- **Visto também:** `SubscriptionTests.test05_CancelarMantemAcessoAteOFimDoPeriodo` (StoreKit no simulador) falhou na 1ª tentativa por tempo (22,6 s esperando "renovação desligada") e passou na repetição (1,5 s). É o ambiente de teste do StoreKit; o aviso de repetidos ainda não lê esse log.

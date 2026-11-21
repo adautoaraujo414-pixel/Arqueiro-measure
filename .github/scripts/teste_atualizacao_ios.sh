@@ -1,6 +1,7 @@
 #!/bin/bash
 # Atualização por cima no simulador do iOS (pedido do Adauto, 20/11): instala a versão publicada, põe os dados do backup de referência,
-# instala a nova POR CIMA (sem desinstalar), abre, e confere arquivo por arquivo (hash) que nada sumiu nem mudou. Só simulador: não publica.
+# instala a nova POR CIMA (sem desinstalar), abre, e confere arquivo por arquivo (hash) que nada sumiu nem mudou; depois abre cada projeto no
+# editor da versão nova (AtualizacaoAbreProjetosTests) e confere de novo os arquivos. Só simulador: não publica.
 set -u
 BID=br.com.arque.measure; OLD=$1; NEW=$2; OUT=atualizacao; mkdir -p $OUT; FALHAS=0
 falha(){ echo "FALHA: $*"; FALHAS=$((FALHAS+1)); }
@@ -20,4 +21,15 @@ hashes > $OUT/depois.txt
 echo "== 4. confere"; diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização"
 grep -q '^  ' $OUT/depois.txt && falha "algum arquivo sumiu"
 xcrun simctl spawn "$UDID" log show --last 5m --predicate "process == 'Arquemestre'" 2>/dev/null | grep -iE "fatal|crash|exception" | head -5 > $OUT/quedas.txt; [ -s $OUT/quedas.txt ] && falha "o app registrou erro grave: $(head -1 $OUT/quedas.txt)"
+echo "== 5. abre os projetos no editor da versão nova (Adauto, 21/11): medidas, peças, corte, foto do projeto e notas"
+XTR=$(ls novo/ios/build/dd/Build/Products/*.xctestrun 2>/dev/null | head -1)
+if [ -z "$XTR" ]; then falha "não achei o pacote de testes da versão nova (build-for-testing)"; else
+  TEST_RUNNER_ARQ_ATUALIZACAO=1 xcodebuild test-without-building -xctestrun "$XTR" -destination "id=$UDID" -only-testing:ArquemestreTests/AtualizacaoAbreProjetosTests > $OUT/abre.log 2>&1; RA=$?
+  grep -E "ATUALIZACAO-ABRE|error:|Test Case .*(passed|failed|skipped)|Executed" $OUT/abre.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -40
+  [ $RA -eq 0 ] || falha "os projetos não abriram iguais no editor (veja abre.log)"
+  grep -q "ATUALIZACAO-ABRE: projeto" $OUT/abre.log || falha "o teste de abrir os projetos não rodou (pulado?)"
+fi
+echo "== 6. confere de novo os arquivos: abrir no editor não mexeu em nada"
+DATA3=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA3/Library/Application Support/Arquemestre/files"; hashes > $OUT/depois_abrir.txt
+diff $OUT/antes.txt $OUT/depois_abrir.txt && echo "arquivos iguais depois de abrir: $(wc -l < $OUT/depois_abrir.txt)" || falha "abrir os projetos mudou ou apagou arquivo"
 echo "RESULTADO: falhas $FALHAS"; exit $FALHAS

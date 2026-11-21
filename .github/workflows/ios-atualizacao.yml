@@ -4,7 +4,7 @@ name: iOS · teste de atualização (simulador)
 on:
   push:
     branches: [ 'claude/**' ]
-    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh' ]
+    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh', 'ios/ArquemestreTests/AtualizacaoAbreProjetosTests.swift' ]
   workflow_dispatch:
     inputs:
       anterior:
@@ -28,7 +28,9 @@ jobs:
       - name: Compilar as duas para o simulador
         run: |
           brew install xcodegen
-          for d in anterior novo; do (cd $d/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -40 build.log; exit 1; }); done
+          (cd anterior/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -40 build.log; exit 1; })
+          # a nova também com os testes (21/11): depois da atualização, o teste AtualizacaoAbreProjetosTests abre os projetos no editor
+          (cd novo/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build-for-testing > build.log 2>&1 || { tail -40 build.log; exit 1; })
       - name: Atualizar por cima no simulador e conferir os dados
         run: bash novo/.github/scripts/teste_atualizacao_ios.sh "anterior/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app" "novo/ios/build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app"
       - name: Guardar o resultado

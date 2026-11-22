@@ -10992,7 +10992,7 @@ final class EditorWebKitTests: XCTestCase {
         var b7=poe(t2,'e');F.ordem2D_novo=ord(b7);cena();newTpl(JSON.parse(JSON.stringify(t2)));var o7=S.m;delete o7.espN;delete o7.espE;loadState(JSON.parse(JSON.stringify(snapState())));var o7b=S.mods[0];o7b.wing='e';o7b.x=1500;draw();F.ordem2D_antigo=ord(o7b);
         F.errs=__errs.length-e0;
         return JSON.stringify(F);
-        """#)        """#)
+        """#)
         XCTAssertEqual(o["antigo_igual"] as? Bool, true, "móvel antigo continua exatamente como era")
         XCTAssertEqual(o["antigo_aviso"] as? Bool, true, "aviso com botão Desespelhar no móvel antigo")
         XCTAssertEqual(o["desesp_espelho"] as? Bool, true, "Desespelhar deixa o lado esquerdo à esquerda de quem olha")

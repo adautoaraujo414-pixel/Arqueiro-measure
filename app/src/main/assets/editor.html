@@ -12989,8 +12989,10 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    projeto fica exatamente como era e mostra o aviso com o antes/depois de cada peça de porta que muda; só muda pelo botão, com desfazer. Nada muda sozinho. ===== */
 (function(){if(typeof newTpl!=='function')return;
  var marca=function(f){return function(){var antes=new Set(S.mods||[]),r=f.apply(this,arguments);try{(S.mods||[]).forEach(function(m){if(m&&m.corner&&!antes.has(m))m.cnP=1})}catch(_){}return r}};
- /* canto criado agora (catálogo do modelo ou botão Canto em L) leva a marca */newTpl=window.newTpl=marca(newTpl);if(typeof mkCorner==='function'){mkCorner=window.mkCorner=marca(mkCorner)}
- var antigo=function(m){return !!m&&!!m.corner&&+m.h<1500&&!m.cnP&&S.mods.indexOf(m)>=0};
+ /* canto criado agora leva a marca: modelo do catálogo (newTpl), botão Canto em L (mkCorner), cozinha em L automática (mkL) */newTpl=window.newTpl=marca(newTpl);if(typeof mkCorner==='function'){mkCorner=window.mkCorner=marca(mkCorner)}if(typeof mkL==='function'){mkL=window.mkL=marca(mkL)}
+ /* módulo virado em canto agora pelo botão "Módulo de canto" do painel (cnVira) também */if(typeof cnVira==='function'){var cv0=cnVira;cnVira=window.cnVira=function(){var m=S.m,era=!!(m&&m.corner),r=cv0.apply(this,arguments);try{if(m&&m.corner&&!era)m.cnP=1}catch(_){}return r}}
+ /* ícone do catálogo desenha o canto com a regra nova (é sempre um canto novo) */if(typeof tplIcon==='function'){var ti0=tplIcon;tplIcon=window.tplIcon=function(t){if(t&&t.corner&&!t.cnP){var c={};for(var k in t)c[k]=t[k];c.cnP=1;arguments[0]=c}return ti0.apply(this,arguments)}}
+ /* antigo = todo canto sem marca (cozinha, aéreo e guarda-roupa: as regras do Code 2 valem pra todos; o h<1500 fica só no wB/z0 da folha do lado) */var antigo=function(m){return !!m&&!!m.corner&&!m.cnP&&S.mods.indexOf(m)>=0};
  /* antes/depois genérico: as peças de porta (e painel/cava/puxador do canto) com a marca e sem ela */
  var NM=/^(Porta|Painel|Cava|Puxador)/,pecas=function(m){try{return partsOf(m).filter(function(q){return NM.test(q.name||'')}).map(function(q){return {k:q.name+'#'+(q.dq===undefined?'':q.dq),n:q.name,dq:q.dq,cl:Math.round(+q.cl||+q.w||0),cw:Math.round(+q.cw||+q.h||0)}})}catch(_){return []}};
  var nome=function(q){return q.n==='Porta'?(q.dq===1?'folha do lado':q.dq===0?'folha do fundo':'porta'):q.n.toLowerCase()};

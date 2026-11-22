@@ -14286,4 +14286,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1", "móvel antigo da esquerda continua como era")
         XCTAssertEqual(o["errs"] as? String, "0")
     }
+
+    /* GAV-TORRE + GAV-FUNDO (22/11, auditoria corte × 3D do catálogo): na torre com gavetas (v.tw) as laterais das gavetas estavam no corte e não
+       apareciam no 3D (o código da gaveta da contra-frente não era renumerado); o fundo da gaveta no 3D não tinha o "a mais por lado" (529 no corte, 526 no 3D). */
+    func testLateralDeGavetaDoCorteApareceNo3DEmTodoOCatalogoTambemNaTorre() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var itens=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&itens.indexOf(t)<0)itens.push(t)})});
+        open3D();var n=0,nl=0,falta=[],caixa=[],dentro=0,nf=0,fundo=[];
+        for(var k=0;k<itens.length;k++){var t=itens[k];loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.RD=4000;S.stones=[];draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[S.mods.length-1];if(!m)continue;
+          var P=partsOf(m);if(!P.some(function(p){return p.name==='Lateral de gaveta'}))continue;n++;var mi=S.mods.indexOf(m);__build();var BX={};__boxes().forEach(function(b){if(String(b.nm||'').indexOf(mi+':')===0&&b.pk)(BX[b.pk]=BX[b.pk]||[]).push(b)});
+          P.forEach(function(p){if(p.name!=='Lateral de gaveta')return;nl++;var b=(BX[p.pk]||[])[0];if(!b){if(falta.length<6)falta.push(t.n+' · '+p.pk);return}
+            /* a lateral do 3D tem a medida da peça: comprimento (profundidade) × altura */var d=[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].sort(function(a,c){return a-c});if(Math.abs(d[2]-p.cl)>1.01||Math.abs(d[1]-p.cw)>1.01)caixa.push(t.n+' · '+p.pk+' 3D '+d.map(Math.round).join('×')+' corte '+p.cl+'×'+p.cw)});
+          /* fundo da gaveta no 3D com a medida da peça (inclui o "a mais por lado" dos Ajustes, regra de 09/11) */P.forEach(function(p){if(!/^Fundo de gaveta \(6 mm\)/.test(p.name)||!p.pk)return;var b=(BX[p.pk]||[])[0];if(!b)return;nf++;var d=[b.x1-b.x0,b.y1-b.y0,b.z1-b.z0].sort(function(a,c){return a-c}),c=[p.cl,p.cw].sort(function(a,c2){return a-c2});if(Math.abs(d[2]-c[1])>1.01||Math.abs(d[1]-c[0])>1.01)fundo.push(t.n+' 3D '+d.map(function(x){return Math.round(x*10)/10}).join('×')+' corte '+c.join('×'))})}
+        R.modelos=n>=10?'ok':'poucos '+n;R.laterais=nl>=40?'ok':'poucas '+nl;R.semDesenho=falta.length+(falta.length?': '+falta.join(' | '):'');R.medida=caixa.length+(caixa.length?': '+caixa.slice(0,4).join(' | '):'');R.fundo=(nf>=20?'':'poucos '+nf+' · ')+fundo.length+(fundo.length?': '+fundo.slice(0,3).join(' | '):'');R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? String, "ok")
+        XCTAssertEqual(o["laterais"] as? String, "ok")
+        XCTAssertEqual(o["semDesenho"] as? String, "0", "toda lateral de gaveta que está no corte aparece no 3D")
+        XCTAssertEqual(o["medida"] as? String, "0", "com a medida da peça")
+        XCTAssertEqual(o["fundo"] as? String, "0", "fundo da gaveta no 3D com a medida da peça")
+        XCTAssertEqual(o["errs"] as? String, "0")
+    }
 }

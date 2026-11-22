@@ -14412,4 +14412,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["duasPortas"] as? String, "portas 2 · frentes de gaveta 0 · prateleiras 0")
         XCTAssertEqual(o["errs"] as? String, "0")
     }
+
+    /// Junção 6 · proteção do projeto antigo (Adauto 22/11: "projetos antigos permanecem protegidos e só recebem as novas medidas mediante confirmação do
+    /// usuário"): a regra CANTO-FOLHA de 17/11 (folha do lado = vão + 1) vale pro canto criado agora (marca cfl). O canto que já estava no projeto continua com
+    /// a medida de antes (vão − 10), mostra o aviso e só muda pelo botão "Atualizar portas do canto", com desfazer.
+    func testCantoFolhaNovaSoNoCantoNovoOAntigoAvisaEAtualizaComConfirmacao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(f){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&f(t))r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var lado=function(m){var p=partsOf(m).filter(function(q){return q.name==='Porta'&&q.dq===1})[0];return p?Math.round(p.cl||p.w):-1};
+        var z3=function(mi){__build();var B=__boxes().filter(function(q){return String(q.nm||'').indexOf(mi+':')===0&&/Porta/.test(q.nm)});return B.length};
+        var caixa=function(){return !!document.getElementById('cflbox')};
+        /* 1. canto novo: pelo modelo do catálogo e pelo botão Canto em L */
+        clr();newTpl(T(function(t){return t.corner&&t.sup}));var a=S.mods.filter(function(m){return m.corner})[0];draw();R.novoModelo='marca '+(a.cfl||0)+' · folha do lado '+lado(a);
+        clr();mkCorner('e');await W(80);var b=S.mods.filter(function(m){return m.corner})[0];R.novoBotao=b?('marca '+(b.cfl||0)+' · folha do lado '+lado(b)):'sem canto';
+        /* 2. projeto antigo: canto sem a marca abre igual (regra de antes) e mostra o aviso */
+        clr();mkCorner('e');await W(80);var c=S.mods.filter(function(m){return m.corner})[0];delete c.cfl;draw();var z=JSON.stringify(snapState());clr();UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}draw();await W(40);var o=S.mods.filter(function(m){return m.corner})[0];
+        var cut0=JSON.stringify(cutLines(o));S.m=o;S.tab=0;draw();panel();await W(40);R.antigo='marca '+(o.cfl||0)+' · folha do lado '+lado(o)+' · aviso '+caixa()+' · botão «'+((document.querySelector('[data-cflup]')||{}).textContent||'')+'»';
+        /* 3. botão: atualiza com desfazer */
+        await W(1000);var bt_=document.querySelector('[data-cflup]');if(bt_)bt_.click();await W(60);R.atualizou='marca '+(o.cfl||0)+' · folha do lado '+lado(o)+' · aviso '+caixa()+' · corte mudou '+(JSON.stringify(cutLines(o))!==cut0)+' · '+(TL.filter(function(t){return /Portas do canto/.test(t)})[0]||'');
+        await W(1000);document.getElementById('und').click();await W(80);var o2=S.mods[0];R.desfez='marca '+(o2.cfl||0)+' · folha do lado '+lado(o2)+' · corte igual ao de antes '+(JSON.stringify(cutLines(o2))===cut0);
+        await W(1000);document.getElementById('red').click();await W(80);var o3=S.mods[0];var z2=JSON.stringify(snapState());clr();UNDOING=true;try{loadState(JSON.parse(z2))}finally{UNDOING=false}draw();await W(40);R.reabriu='marca '+(S.mods[0].cfl||0)+' · folha do lado '+lado(S.mods[0]);
+        /* 4. canto do guarda-roupa (alto): regra de sempre, sem aviso */
+        clr();S.room='quarto';S.env='quarto';S.W=6000;var g=T(function(t){return t.corner&&+t.h>=1500});if(g){newTpl(g);var q=S.mods.filter(function(m){return m.corner})[0];delete q.cfl;S.m=q;draw();panel();await W(40);R.guardaRoupa='folha do lado '+lado(q)+' · aviso '+caixa()}else R.guardaRoupa='sem modelo';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["novoModelo"] as? String, "marca 1 · folha do lado 330", "canto novo do catálogo (aéreo) já sai com a regra de 17/11")
+        XCTAssertEqual(o["novoBotao"] as? String, "marca 1 · folha do lado 320", "canto novo pelo botão Canto em L (baixo) também")
+        XCTAssertEqual(o["antigo"] as? String, "marca 0 · folha do lado 309 · aviso true · botão «Atualizar portas do canto (309 → 320 mm)»", "canto de projeto antigo abre igual (regra de antes) e avisa com as duas medidas")
+        XCTAssertEqual(o["atualizou"] as? String, "marca 1 · folha do lado 320 · aviso false · corte mudou true · Portas do canto atualizadas: folha do lado 309 → 320 mm (cobre a lateral do fim). Desfazer volta como era.", "só muda quando a pessoa toca no botão")
+        XCTAssertEqual(o["desfez"] as? String, "marca 0 · folha do lado 309 · corte igual ao de antes true", "desfazer volta exatamente como era")
+        XCTAssertEqual(o["reabriu"] as? String, "marca 1 · folha do lado 320", "salvar e reabrir mantém a atualização")
+        XCTAssertEqual(o["guardaRoupa"] as? String, "folha do lado 419 · aviso false", "canto do guarda-roupa (alto) não muda e não avisa")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -14193,4 +14193,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mesmasPecas"] as? String, "sim")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* PC-ESQ (22/11, achado na integração da Etapa 3): no móvel novo da parede esquerda o plano de corte mostra o lado de quem olha, igual à lista;
+       peça tirada do plano pela identidade (PC-ID) continua a mesma peça física quando o móvel antigo é desespelhado (antes voltava pro plano: 38 → 39 peças). */
+    func testPlanoDeCorteParedeEsquerdaNomeDeQuemOlhaEPecaTiradaSegueAoDesespelhar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.RD=5000;S.wl={L:'p',R:'p'};S.stones=[];S.cutOff={}};
+        var plano=function(m){var mi=S.mods.indexOf(m),L=[],pl=sheetPlan();pl.groups.forEach(function(g){g.sheets.forEach(function(sh){(sh.used||[]).forEach(function(u){if(u.p&&u.p.pq&&u.p.pq.some(function(q){return q.mi===mi}))L.push(u.p.lab)})})});return {L:L.sort(),off:pl.off.length}};
+        /* 1. móvel NOVO na parede esquerda: o nome da peça no plano de corte é o mesmo da lista (lado de quem olha) */
+        cena();wvGo('e');newTpl(T('Balcão porta + gavetas'));var a=S.m;wvGo('f');a.tl=true;a.tr=false;a.tlM=a.trM=1;delete a.tlAuto;delete a.trAuto;a.x=1500;draw();
+        var base=function(n){return String(n).split(' · ')[0]},nomes={};cutLines(a).forEach(function(l){(l.names||[]).forEach(function(n){nomes[base(n)]=1})});var p1=plano(a),fora=p1.L.filter(function(n){return /esquerd|direit/.test(n)&&!nomes[base(n)]});
+        R.novo_espE=String(!!a.espE);R.novo_nomes_iguais=fora.length?'diferente: '+fora.join(', '):'igual';
+        /* 2. móvel ANTIGO na esquerda com o tamponamento tirado do corte pela identidade: Desespelhar não traz a peça de volta nem tira outra */
+        cena();newTpl(T('Balcão porta + gavetas'));var o=S.m;delete o.espN;delete o.espE;o.tl=true;o.tr=false;o.tlM=o.trM=1;delete o.tlAuto;delete o.trAuto;o.wing='e';o.x=1500;loadState(JSON.parse(JSON.stringify(snapState())));draw();o=S.mods[0];
+        var pk=partsOf(o).filter(function(p){return /^Tamponamento/.test(p.name)})[0].pk;var ids=pcIds([{mi:0,pk:pk,n:1}],true);ids.forEach(function(id){S.cutOff[id]=1});
+        var q0=plano(o),cl0=JSON.stringify(cutLines(o).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort());
+        window.espDesespelhar(o);draw();var q1=plano(o),cl1=JSON.stringify(cutLines(o).map(function(l){return l.qty+'x'+l.L+'x'+l.W}).sort());
+        R.antigo_fora=q0.off+' → '+q1.off;R.antigo_pecas=q0.L.length+' → '+q1.L.length;R.antigo_tamp_volta=String(q1.L.some(function(n){return /^Tamponamento (esquerdo|direito)$/.test(n)}));R.antigo_corte_igual=String(cl0===cl1);
+        R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["novo_espE"] as? String, "true")
+        XCTAssertEqual(o["novo_nomes_iguais"] as? String, "igual")
+        XCTAssertEqual(o["antigo_fora"] as? String, "1 → 1")
+        XCTAssertEqual(o["antigo_tamp_volta"] as? String, "false")
+        XCTAssertEqual(o["antigo_pecas"] as? String, "38 → 38")
+        XCTAssertEqual(o["antigo_corte_igual"] as? String, "true")
+        XCTAssertEqual(o["errs"] as? String, "0")
+    }
 }

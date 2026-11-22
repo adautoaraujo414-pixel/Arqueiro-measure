@@ -14437,6 +14437,9 @@ final class EditorWebKitTests: XCTestCase {
         await W(1000);document.getElementById('red').click();await W(80);var o3=S.mods[0];var z2=JSON.stringify(snapState());clr();UNDOING=true;try{loadState(JSON.parse(z2))}finally{UNDOING=false}draw();await W(40);R.reabriu='marca '+(S.mods[0].cnP||0)+' · folha do lado '+lado(S.mods[0]);
         /* 4. canto do guarda-roupa (alto): regra de sempre, sem aviso */
         clr();S.room='quarto';S.env='quarto';S.W=6000;var g=T(function(t){return t.corner&&+t.h>=1500});if(g){newTpl(g);var q=S.mods.filter(function(m){return m.corner})[0];delete q.cnP;S.m=q;draw();panel();await W(40);R.guardaRoupa='folha do lado '+lado(q)+' · aviso '+caixa()}else R.guardaRoupa='sem modelo';
+        /* 5. outros caminhos que criam canto (pedido do Code 2 no acordo de 22/11): botão "Módulo de canto" do painel (cnVira) e cozinha em L automática (mkL) */
+        clr();newTpl(T(function(t){return t.n==='Balcão 2 portas'}));S.m=S.mods[0];draw();cnVira('e');await W(60);var cv_=S.mods.filter(function(m){return m.corner})[0];R.viraCanto=cv_?('marca '+(cv_.cnP||0)):'sem canto';
+        clr();mkL('e',2400,1800,600);await W(60);R.cozinhaL=S.mods.filter(function(m){return m.corner}).map(function(m){return 'marca '+(m.cnP||0)}).join(',');
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["novoModelo"] as? String, "marca 1 · folha do lado 330", "canto novo do catálogo (aéreo) já sai com a regra de 17/11")
@@ -14446,6 +14449,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfez"] as? String, "marca 0 · folha do lado 309 · corte igual ao de antes true", "desfazer volta exatamente como era")
         XCTAssertEqual(o["reabriu"] as? String, "marca 1 · folha do lado 320", "salvar e reabrir mantém a atualização")
         XCTAssertEqual(o["guardaRoupa"] as? String, "folha do lado 419 · aviso não", "canto do guarda-roupa (alto) não muda e não avisa")
+        XCTAssertEqual(o["viraCanto"] as? String, "marca 1", "módulo virado em canto agora pelo painel é canto novo")
+        XCTAssertEqual(o["cozinhaL"] as? String, "marca 1", "cozinha em L automática: o canto é novo")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

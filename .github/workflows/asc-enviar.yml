@@ -1,0 +1,45 @@
+name: App Store - colocar build na versão e enviar pra revisão
+
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Versão nova pra criar depois que a anterior foi pra loja (ex.: 3.0.1 · auto = a última da loja + 1)"
+        type: string
+        default: ''
+      novidades:
+        description: "Texto de Novidades da versão (o que mudou)"
+        type: string
+        default: ''
+      enviar:
+        description: "Enviar pra revisão da Apple agora"
+        type: boolean
+        default: false
+      tirar:
+        description: "Se a versão estiver 'Aguardando revisão', tirar da fila antes (pra trocar build/capturas)"
+        type: boolean
+        default: false
+      liberar:
+        description: "Lançar na loja automaticamente quando a Apple aprovar (se já estiver aprovada, libera agora)"
+        type: boolean
+        default: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyjwt cryptography requests
+      - name: Build na versão (e envio)
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          ASC_KEY_P8_B64: ${{ secrets.ASC_KEY_P8_B64 }}
+          ENVIAR: ${{ inputs.enviar && '1' || '0' }}
+          TIRAR: ${{ inputs.tirar && '1' || '0' }}
+          LIBERAR: ${{ inputs.liberar && '1' || '0' }}
+          VERSAO: ${{ inputs.versao }}
+          NOVIDADES: ${{ inputs.novidades }}
+        run: python .github/scripts/asc_submit.py 6829800820

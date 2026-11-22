@@ -4342,7 +4342,9 @@ final class EditorWebKitTests: XCTestCase {
           R.sel=S.mods.indexOf(S.m);R.semAzul=!document.querySelector('#svg text[fill="#1f6feb"]');
           var st=snapState();R.salvo=JSON.stringify(st.pxa)===JSON.stringify(S.pxa);var antes=JSON.stringify(S.pxa);
           /* toque sem arrastar não muda nada */
-          g=document.querySelectorAll('#svg [data-pxg]')[0];r=g.getBoundingClientRect();ev('pointerdown',r.left+5,r.top+5,g);ev('pointerup',r.left+5,r.top+5,document.body);R.toque=(JSON.stringify(S.pxa)===antes)+' '+TL[TL.length-1];
+          /* pedido 22/11 ("corrigir módulos que não reconhecem seleção por toque"): a 1ª bolinha é do aéreo, que não está escolhido · o toque curto escolhe o aéreo; com ele escolhido, o toque curto só avisa (como antes) */
+          g=document.querySelectorAll('#svg [data-pxg]')[0];r=g.getBoundingClientRect();ev('pointerdown',r.left+5,r.top+5,g);ev('pointerup',r.left+5,r.top+5,document.body);R.escolheu=S.mods.indexOf(S.m);
+          g=document.querySelector('#svg [data-pxg][data-gm="1"]')||document.querySelectorAll('#svg [data-pxg]')[0];r=g.getBoundingClientRect();ev('pointerdown',r.left+5,r.top+5,g);ev('pointerup',r.left+5,r.top+5,document.body);R.toque=(JSON.stringify(S.pxa)===antes)+' '+TL[TL.length-1];
           document.getElementById('und')?document.getElementById('und').click():0;R.desfez=JSON.stringify(S.pxa||null);
           R.errs=__errs;return JSON.stringify(R);
           """#)
@@ -4353,6 +4355,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["par"] as? Bool, true, "porta par espelhada")
         XCTAssertEqual(o["segue"] as? Bool, true, "todas as portas no mesmo lugar")
         XCTAssertEqual(o["salvo"] as? Bool, true, "guardado no projeto")
+        XCTAssertEqual(o["escolheu"] as? Int, 1, "pedido 22/11: toque curto na bolinha do aéreo não escolhido escolhe o aéreo")
         XCTAssertEqual(o["toque"] as? String, "true Segure a bolinha e arraste pra pôr o puxador no lugar")
         XCTAssertEqual(o["desfez"] as? String, "null", "desfazer volta")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")

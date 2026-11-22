@@ -1300,3 +1300,35 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Causa:** `ios/project.yml` está com `MARKETING_VERSION: "1.0.0"` nesse ramo, e a loja só aceita versão maior que a 3.0.12 publicada.
 - **Resultado:** nada chegou ao TestFlight e nada foi pra App Store.
 - **Pendente:** o número da versão é decisão do Adauto. A auditoria de 19/11 cita a 3.0.13 como candidata. Não mudei.
+
+## PAREDE-ESQ-NOVO — móvel novo da parede esquerda saía espelhado pra quem olha (pedido do Adauto 22/11: "Resolva o espelhamento da parede esquerda, sem prejudicar as outras paredes"; resposta: "Só móveis novos")
+- **Módulo:** todos os módulos de parede na parede esquerda (inferiores, superiores, torres, guarda-roupas e closets, demais). O canto (corner) fica de fora, porque o lado do canto é da parede.
+- **Como reproduzir (antes):** colocar "Balcão porta + gavetas" na parede esquerda. No 2D e no 3D as gavetas ficavam à esquerda de quem olha e a porta à direita, o contrário do fundo e da direita. O plano de corte chamava de "esquerdo" o tamponamento que o marceneiro vê à direita. No 3D, a esquerda não encaixava nem soltava arrastando.
+- **Causa raiz:** as paredes do lado guardam x a partir do canto. Na esquerda, o canto fica à direita de quem olha, então o lado guardado como esquerdo do móvel aparecia à direita. A decisão de 18/11 ("manter físico, corrigir nomes") trocou só os nomes no painel.
+- **Correção (`editor.html`, bloco PAREDE-ESQ-NOVO):**
+  - Móvel criado a partir desta versão leva a marca `espN`. Enquanto ele está na parede esquerda, os dados ficam guardados virados (`espE`):
+    - tamponamento escolhido ou do modelo (o automático, do lado exposto, é do lugar e não vira);
+    - tamponamento de baixo, engrosso, "sem lateral";
+    - ordem dos vãos e divisórias (`1 − r`, com o valor original guardado pra voltar exato);
+    - árvore de vãos, dobradiça (1 folha, grupo ímpar, camarão, torre), folhas de correr e corrediça do porta-tempero;
+    - ajuste por peça (`po`) e peça fora do corte (`xp`), que acham a mesma peça pela posição espelhada.
+  - As contas (colisão, pedra, canto, corte) não mudaram: leem um móvel virado.
+  - O nome de quem olha só aparece na saída (`cutLines`: plano de corte, lista, orçamento). Dentro do app o nome guardado continua, porque várias contas leem o lado pelo nome.
+  - Troca de parede: vira e desvira sozinho, e os dados voltam iguais.
+  - Móvel que aparece por outro caminho (duplicar, completar fileira): fica como nasceu (`espE` sem virar).
+  - Móvel ANTIGO (sem `espN`): fica exatamente como era. O painel mostra o aviso e o botão manual "Desespelhar", com desfazer.
+  - Mover no 3D: encaixa e solta na esquerda só o móvel novo (270°, x = lz − largura).
+- **Não muda de propósito:** forno e micro-ondas (eletrodoméstico de verdade). A divisória do pedestal, quando duas divisórias do módulo estão à mesma distância do meio, fica embaixo da primeira (mesma medida e corte).
+- **Achado no caminho e corrigido:** na 1ª versão a virada trocava também o tamponamento automático. O `autoTamp` refazia a conta e o `rowJoin` empurrava o móvel 60 mm (rastreado no `testParedeEsquerdaToqueDoisToquesEArrasto…`). Agora o automático fica no lugar.
+- **Testes:**
+  - `testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar` confere:
+    - catálogo inteiro (587 itens): esquerda = espelho da direita;
+    - medidas iguais e nome do lado = lado de quem olha;
+    - antigo igual, aviso, Desespelhar, desfazer e tamponamento automático no lugar;
+    - salvar e reabrir, ida e volta de parede, `po`/`xp`;
+    - encaixar e soltar no 3D;
+    - ordem dos vãos no 2D (novo e antigo).
+  - Na versão anterior (`e3f34cc`) ele falha: 55 itens espelhados, 2341 nomes de lado errados, sem aviso, sem encaixe e 2D invertido.
+  - Adaptados, com comentário do pedido de 22/11: `testMoverNo3D…` e `testParedeEsquerdaNomesDosLados…`. A regra antiga continua conferida num móvel antigo, e entrou a conferência do novo.
+- **Projetos:** nenhum projeto salvo muda ao abrir. Projeto salvo nesta versão e aberto numa versão anterior mostra o móvel novo com o mesmo desenho. Só o nome do lado no corte volta a ser o guardado.
+- **Pendente:** aparelho real; ordem "Vão 1, Vão 2" no painel do móvel novo da esquerda continua contando a partir do canto.

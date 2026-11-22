@@ -10906,6 +10906,74 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* PAREDE-ESQ-NOVO (pedido do Adauto 22/11: "Resolva o espelhamento da parede esquerda, sem prejudicar as outras paredes"; resposta dele: "Só móveis novos").
+       Móvel NOVO na parede esquerda fica como nas outras paredes: o lado esquerdo dele à esquerda de quem olha (catálogo inteiro: igual ao espelho do mesmo
+       móvel na parede direita), mesmas medidas, nome do lado certo no corte. Móvel ANTIGO fica exatamente como era, com aviso e "Desespelhar" manual (com desfazer).
+       Salvar e reabrir, ida e volta de parede, ajuste por peça, peça fora do corte, encaixar/soltar no 3D e ordem dos vãos no 2D. */
+    func testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var F={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.RD=6000;S.wl={L:'p',R:'p'};S.stones=[]};
+        var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+        /* eletrodoméstico de verdade (forno, micro) não espelha; a divisória do pedestal fica embaixo da divisória do módulo mais perto do meio (empate: pode ser a outra, mesma medida) */
+        var IGN=/^(Corte do (forno|micro-ondas)|Nicho do micro-ondas \(aberto\)|Divisória do pedestal \(meio\))/;
+        var caixas=function(m,w){__build();var mi=S.mods.indexOf(m),o=[];__boxes().forEach(function(b){var nm=String(b.nm||'');if(nm.indexOf(mi+':')!==0||IGN.test(nm.split(':')[1]||''))return;var x0=b.z0-m.x,x1=b.z1-m.x,d0=w==='e'?b.x0:S.W-b.x1,d1=w==='e'?b.x1:S.W-b.x0;if(w==='f'){x0=b.x0-m.x;x1=b.x1-m.x;d0=b.z0;d1=b.z1}o.push([x0,x1,b.y0,b.y1,d0,d1])});return o};
+        var perto=function(A,B){if(A.length!==B.length)return false;var u={};return A.every(function(a){for(var i=0;i<B.length;i++){if(u[i])continue;var b=B[i],ok=true;for(var k=0;k<6;k++)if(Math.abs(a[k]-b[k])>1.01){ok=false;break}if(ok){u[i]=1;return true}}return false})};
+        var espelho=function(L,w){return L.map(function(q){return [w-q[1],w-q[0],q[2],q[3],q[4],q[5]]})};
+        var medidas=function(m){return cutLines(m).map(function(l){return l.qty+'×'+l.L+'x'+l.W}).sort().join(';')};
+        var ladoOk=function(m,w){var ruim=0;partsOf(m).forEach(function(p){var n=window.espNomeVe?espNomeVe(m,p.name):p.name;if(!/^(Tamponamento|Lateral) (esquerd|direit)[oa]$/.test(n))return;var c=(+p.x||0)+(+p.w||0)/2,esq=/esquerd/.test(n),vEsq=w==='e'?c>m.w/2:c<m.w/2;if(esq!==vEsq)ruim++});cutLines(m).forEach(function(l){(l.names||[]).forEach(function(n){if(/^Tamponamento (esquerdo|direito)$/.test(n)&&!partsOf(m).some(function(p){var v=window.espNomeVe?espNomeVe(m,p.name):p.name;return v===n}))ruim++})});return ruim};
+        var poe=function(t,w){cena();if(w!=='f')wvGo(w);newTpl(JSON.parse(JSON.stringify(t)));var m=S.m;wvGo('f');if(!m||(m.wing||'f')!==w)return null;m.x=1500;draw();return m};
+        open3D();await W(300);
+        /* 1. catálogo inteiro: móvel novo na esquerda = espelho do mesmo móvel na direita (o lado esquerdo dele à esquerda de quem olha), mesmas medidas, nome do lado certo */
+        var itens=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.corner)itens.push(t)})});var n=0,g3=[],gm=[],gn=0;
+        for(var i=0;i<itens.length;i++){var t=itens[i],a=poe(t,'d');if(!a)continue;var A=caixas(a,'d'),w=+a.w,mA=medidas(a);gn+=ladoOk(a,'d');var b=poe(t,'e');if(!b)continue;n++;var B=caixas(b,'e');if(!perto(espelho(A,w),B))g3.push(t.n);if(medidas(b)!==mA)gm.push(t.n);gn+=ladoOk(b,'e')}
+        F.cat_n=n>=500;F.cat_3d=g3.length;F.cat_3d_quais=g3.slice(0,6).join(' / ');F.cat_medidas=gm.length;F.cat_nomes=gn;
+        /* 2. móvel ANTIGO (sem a marca de novo) na esquerda: fica exatamente como antes (espelhado pra quem olha), com aviso e botão manual */
+        var t2=achar('Balcão porta + gavetas');
+        cena();newTpl(JSON.parse(JSON.stringify(t2)));var o=S.m;delete o.espN;delete o.espE;/* tamponamento escolhido pela pessoa (vira junto com o móvel) */o.tl=true;o.tr=false;o.tlM=o.trM=1;delete o.tlAuto;delete o.trAuto;o.wing='e';o.x=1500;var proj=JSON.stringify(snapState());
+        /* referência: os mesmos dados na parede direita (lá nunca foi espelhado) */var ref=JSON.parse(JSON.stringify(o));cena();ref.wing='d';S.mods.push(ref);draw();var A2=caixas(S.mods[0],'d'),w2=+ref.w,m2=medidas(S.mods[0]);
+        loadState(JSON.parse(proj));draw();var b2=S.mods[0];F.antigo_igual=perto(A2,caixas(b2,'e'))&&!b2.espN&&JSON.stringify(b2.v)===JSON.stringify(JSON.parse(proj).mods[0].v);
+        await W(200);S.m=b2;panel();F.antigo_aviso=!!document.querySelector('#espbox [data-espdes]');
+        var bt_=document.querySelector('#espbox [data-espdes]');if(bt_)bt_.click();await W(80);F.desesp_espelho=perto(espelho(A2,w2),caixas(S.mods[0],'e'));F.desesp_medidas=medidas(S.mods[0])===m2;
+        document.getElementById('und').click();await W(150);F.desfazer=perto(A2,caixas(S.mods[0],'e'))&&!S.mods[0].espN;
+        /* tamponamento que o app ligou sozinho (lado exposto) é do lugar: fica onde está ao desespelhar */cena();newTpl(JSON.parse(JSON.stringify(t2)));var o2=S.m;delete o2.espN;delete o2.espE;o2.tl=true;o2.tr=false;o2.tlAuto=1;delete o2.tlM;delete o2.trM;o2.wing='e';o2.x=1500;loadState(JSON.parse(JSON.stringify(snapState())));draw();var q2=S.mods[0],t0_=[q2.tl,q2.tr].join();window.espDesespelhar(q2);F.desesp_auto_fica=!!q2.espN&&[q2.tl,q2.tr].join()===t0_;
+        /* 3. salvar e reabrir o novo da esquerda */var b3=poe(t2,'e'),B3=caixas(b3,'e'),j3=JSON.stringify(snapState());loadState(JSON.parse(j3));draw();F.reabre=perto(B3,caixas(S.mods[0],'e'))&&S.mods[0].espN===1&&S.mods[0].espE===1;
+        /* 4. ida e volta de parede: dados voltam iguais */var a4=poe(t2,'f'),d4=JSON.stringify(a4);a4.wing='e';draw();var noE=JSON.stringify(a4)!==d4;delete a4.wing;draw();var q4=JSON.parse(JSON.stringify(a4)),r4=JSON.parse(d4);F.ida_volta=noE&&JSON.stringify(q4)===JSON.stringify(r4);
+        /* 5. ajuste por peça e peça fora do corte acompanham a mesma peça */var a5=poe(t2,'d'),pk5=partsOf(a5).filter(function(p){return p.name==='Tamponamento esquerdo'})[0].pk;a5.po={};a5.po[pk5]={v2:1,el:-4,er:0,eb:0,et:0,ek:0,ef:0};a5.xp=[{pk:'Prateleira#1',vi:0,n:'Prateleira'}];draw();var A5=caixas(a5,'d'),m5=medidas(a5),j5=JSON.parse(JSON.stringify(a5));
+        cena();S.mods.push(j5);var b5=S.mods[0];b5.wing='e';draw();F.po_xp_3d=perto(espelho(A5,+b5.w),caixas(b5,'e'));F.po_xp_corte=medidas(b5)===m5;
+        /* 6. no 3D: livre de costas pra esquerda encaixa sem trocar de lado e solta de novo */cena();newTpl(JSON.parse(JSON.stringify(t2)));var c6=S.m;/* tamponamento manual (o automático liga o lado exposto ao encaixar, igual nas outras paredes) */c6.tl=c6.tr=false;c6.tlM=c6.trM=1;c6.wing='L';c6.rot=270;c6.lx=0;c6.lz=2400;draw();__build();var mi6=S.mods.indexOf(c6),w6=function(){__build();return __boxes().filter(function(b){return String(b.nm||'').indexOf(mi6+':')===0&&!IGN.test(String(b.nm).split(':')[1]||'')}).map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1]})},L6=w6();
+        var al6=window.__mv3?__mv3.alvo(c6):null;F.c2_alvo=al6?String(al6.w):'nenhum';var r6=al6?__mv3.encaixa(c6,al6):'';F.c2_encaixa=String(r6);F.c2_igual=c6.wing==='e'&&perto(L6,w6());var s6=window.__mv3?__mv3.solta(c6,300):'';F.c2_solta=String(s6)+' '+c6.wing+' '+c6.rot+' '+c6.lx;F.c2_solta_igual=perto(L6.map(function(q){return [q[0]+300,q[1]+300,q[2],q[3],q[4],q[5]]}),w6());
+        /* 7. 2D da parede esquerda: o novo mostra a porta à esquerda e as gavetas à direita (igual ao fundo); o antigo continua espelhado */
+        var ord=function(m){wvGo('e');draw();var mi=S.mods.indexOf(m),r={};(m.v||[]).forEach(function(v,k){var el=[].slice.call(document.querySelectorAll('#mod[data-mi="'+mi+'"] [data-vi="'+k+'"]')).map(function(e){return e.getBoundingClientRect()}).filter(function(q){return q.width>4})[0];if(el)r[v.k]=el.left});wvGo('f');return r.door!=null&&r.drawers!=null?(r.door<r.drawers?'porta, gavetas':'gavetas, porta'):'?'};
+        var b7=poe(t2,'e');F.ordem2D_novo=ord(b7);cena();newTpl(JSON.parse(JSON.stringify(t2)));var o7=S.m;delete o7.espN;delete o7.espE;loadState(JSON.parse(JSON.stringify(snapState())));var o7b=S.mods[0];o7b.wing='e';o7b.x=1500;draw();F.ordem2D_antigo=ord(o7b);
+        F.errs=__errs.length-e0;
+        return JSON.stringify(F);
+        """#)
+        XCTAssertEqual(o["cat_n"] as? Bool, true, "catálogo inteiro conferido")
+        XCTAssertEqual(o["cat_3d"] as? Int, 0, "móvel novo na esquerda = espelho do mesmo móvel na direita (forno/micro de verdade não espelham)")
+        XCTAssertEqual(o["cat_medidas"] as? Int, 0, "mesmas medidas de corte")
+        XCTAssertEqual(o["cat_nomes"] as? Int, 0, "esquerdo/direito do nome = lado de quem olha")
+        XCTAssertEqual(o["antigo_igual"] as? Bool, true, "móvel antigo continua exatamente como era")
+        XCTAssertEqual(o["antigo_aviso"] as? Bool, true, "aviso com botão Desespelhar no móvel antigo")
+        XCTAssertEqual(o["desesp_espelho"] as? Bool, true, "Desespelhar deixa o lado esquerdo à esquerda de quem olha")
+        XCTAssertEqual(o["desesp_medidas"] as? Bool, true, "Desespelhar não muda medida")
+        XCTAssertEqual(o["desfazer"] as? Bool, true, "Desfazer volta o antigo")
+        XCTAssertEqual(o["desesp_auto_fica"] as? Bool, true, "tamponamento automático (lado exposto) fica no lugar")
+        XCTAssertEqual(o["reabre"] as? Bool, true, "salvar e reabrir igual")
+        XCTAssertEqual(o["ida_volta"] as? Bool, true, "fundo → esquerda → fundo: dados voltam iguais")
+        XCTAssertEqual(o["po_xp_3d"] as? Bool, true, "ajuste por peça vai com a mesma peça")
+        XCTAssertEqual(o["po_xp_corte"] as? Bool, true, "peça fora do corte continua fora")
+        XCTAssertEqual(o["c2_alvo"] as? String, "e")
+        XCTAssertTrue((o["c2_encaixa"] as? String ?? "").contains("Na parede esquerda"))
+        XCTAssertEqual(o["c2_igual"] as? Bool, true, "livre de costas pra esquerda encaixa sem trocar de lado")
+        XCTAssertTrue((o["c2_solta"] as? String ?? "").contains("ok L 270 300"))
+        XCTAssertEqual(o["c2_solta_igual"] as? Bool, true, "solta de novo inteiro, 300 mm pra frente")
+        XCTAssertEqual(o["ordem2D_novo"] as? String, "porta, gavetas", "2D da esquerda igual ao fundo pro móvel novo")
+        XCTAssertEqual(o["ordem2D_antigo"] as? String, "gavetas, porta", "móvel antigo continua como era no 2D")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* PAREDE-ESPELHADA (pedido do Adauto, 18/11; decisão dele: "manter físico, corrigir nomes"): olhando a parede da ESQUERDA de dentro do
        ambiente, o canto do fundo fica à direita. O 2D dela passa a mostrar igual a quem olha (antes saía espelhado: canto do fundo à esquerda).
        O 3D, as posições, as peças e o corte NÃO mudam: projetos antigos ficam fisicamente iguais (o lado guardado como "esquerdo" de um móvel

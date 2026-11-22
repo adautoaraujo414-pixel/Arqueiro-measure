@@ -714,10 +714,28 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não mexido:** botões escolhidos (`.sel`), contorno do módulo no 2D e tamponamento. Se o azul forte for outro, um print resolve.
 - **Teste:** só visual (imagens antes e depois no relatório). Nenhum teste da bateria depende dessas opacidades.
 
+## PLANO DE CORTE (Adauto 17/11): peça tirada por identidade, toque longo, rodapé fora do corte (opção A) e brancos juntos — branch `claude/arquemestre-plano-corte`
+- **Como era (versão pública):**
+  - "− tirar" guardava em `S.cutOff` só tipo|material|cor|nome|medida com uma contagem. Duas peças iguais (a lateral de dois balcões iguais) não tinham como sair uma específica: saía "uma delas".
+  - Não havia toque longo nem clique direito na peça do plano.
+  - Não havia como tirar o rodapé do corte. O rodapé contínuo (módulos encostados) é uma peça só, ligada a todos os módulos do trecho.
+  - Cor de fora branca (ex.: Branco Supremo) ia para chapas separadas da caixa branca (`sameFin` era calculado e não usado).
+- **Identidade (PC-ID, decisão do Adauto: uma só, compartilhada):** `uid` do módulo (o `m.uid` que já existia, usado no empilhamento) + `pk` da peça + nº da ocorrência dessa `pk` no módulo (o fundo grande de guarda-roupa sai em 2 peças com o mesmo `pk`: achado em 6 modelos do catálogo). Sem índice de módulo. Cópia de módulo com o mesmo `uid`: só o primeiro fica com ele (mesma regra do `stkSync`) e a cópia não herda o que foi tirado. O `uid` só é criado quando a pessoa tira uma peça (nenhum projeto muda ao abrir).
+- **`S.cutOff` reaproveitado:** chave nova `@uid|pk|n` (valor 1) ao lado das chaves antigas de contagem, que continuam valendo. Mesmo `offAdd`, mesmo "Fora do plano · ↩ Voltar". Passa pelo desfazer (histórico por estado). Orçamento usa `sheetPlan(1)`, que já ignora o que foi tirado: não muda.
+- **Toque longo (PC-TOQUE):** 1,5 s parado (até 10 px) abre o menu com a peça, o módulo, 🗑 Remover peça (pede confirmação) e Cancelar; o clique direito abre o mesmo menu. Rolar, arrastar ou soltar antes não abre; o "click" depois do toque longo não vira 3D nem "cortada".
+- **Rodapé (PC-ROD, opção A):** aba Estrutura › Rodapé: "Incluir no plano de corte · todos os rodapés deste módulo" e, com um rodapé escolhido no 2D ou no 3D, "· só este". Rodapé contínuo com o trecho de um módulo fora: o corte fica com os trechos que sobraram (3 balcões 800+600+700: 2100 → 800 e 700), frente e trás separados. 2D, 3D e medidas não mudam.
+- **Brancos (PC-BRANCO):** peça de cor branca (qualquer branco, pelo nome) vai para as chapas da caixa quando a caixa é branca; sem caixa branca, os brancos de cor se juntam entre si. As chaves antigas de "− tirar" continuam com o tipo original (não reaparecem peças tiradas).
+- **Testes (falham na versão pública e passam agora):** `testPlanoDeCorteToqueLongoTiraSoAquelaPecaPelaIdentidade`, `testPlanoDeCorteRodapeForaDoCorteRodapeContinuoFicaSoComOsTrechos`, `testPlanoDeCortePecaBrancaDeQualquerBrancoVaiProMesmoGrupoDaCaixaBranca`. Os 4 testes antigos do plano de corte passam nas duas versões.
+- **Pendente / risco:** rodapé corrido das fileiras em L (`cutGroups_lr`): tirar um trecho só tira o rodapé inteiro quando todos os trechos estão fora (não divide). Peça grande dividida em partes ("em n partes"): cada parte tem a própria ocorrência.
+
 ## TESTE-RECUO: testes novos não compilavam no iOS (CI 604, 17/11)
 - **Erro:** `insufficient indentation of next N lines in multi-line string literal`. O JavaScript dos testes novos começava na coluna 0; no Swift, o texto entre `#"""` e `"""#` tem que estar pelo menos tão recuado quanto o `"""#`. A bateria do Windows/Chromium lê o JS direto e não acusa.
 - **Correção:** só recuo (8 espaços) nas linhas do JS dos testes novos. Nenhuma conferência mudou.
 - **Prevenção:** conferir o recuo dos blocos `#"""` antes de cada commit de teste (script na pasta de rascunho da sessão).
+- **Bateria do Windows (run 41, 17/11):** 349/351.
+  - `testTamponamentoNo2D…` também falha na versão pública.
+  - `testOpcaoMarcadaSempreMudaAlgumaCoisa` acusou o "Incluir no plano de corte" do rodapé como opção que não muda nada. Esse teste só olhava peças, `cutLines` e custo, e a opção muda o plano de corte (`S.cutOff`).
+  - **Expectativa adaptada (pedido do Adauto 17/11):** o teste também olha o `S.cutOff`. Continua exigindo que toda opção marcada mude algo. Passa nas duas versões.
 
 ## F3-SEL-REGRESSÃO: 2 pares de toques viravam 4 toques (podia travar o módulo) e a divisória não pegava logo depois de arrastar (achado na bateria final da Fase 3, 17/11)
 - **Testes que pegaram:** `testDoisToquesNoVaoDeCimaAteOTetoRipadoPainelOuFechamento` (versão pública 3/3; F3-SEL 0 a 1 de 3, intermitente) e `testDivisoriaArrastaComODedoEmQualquerProjetoECaminho` (12 px do lado não arrastava).

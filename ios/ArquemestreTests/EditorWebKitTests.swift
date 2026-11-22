@@ -14437,7 +14437,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ids"] as? Bool, true, "cada peça com identificação própria")
         XCTAssertEqual(o["fita"] as? String, "Régua vertical:LRTB:1740 | Prateleira:B:870 | Lateral de acabamento:B:820")
         XCTAssertEqual(o["orcAreaSobe"] as? Bool, true, "entram no orçamento")
-        XCTAssertEqual(o["vaos"] as? String, "atrasE,atrasD,ladoE")
+        // VAO-FISICO (supervisor 22/11): sem limite fixo de 60 cm; o vão vai até o primeiro sólido (aqui a parede da direita e o teto também entram)
+        XCTAssertEqual(o["vaos"] as? String, "atrasE,atrasD,ladoE,ladoD,cima")
         XCTAssertEqual(o["fv"] as? String, "x,15,820,100", "lateral de 15 fechando os 10 cm atrás")
         XCTAssertEqual(o["parcial"] as? Int, 400, "fechamento parcial: pode ficar menor que o vão")
         XCTAssertEqual(o["bate"] as? String, "false módulo 1 (Régua vertical · livre)", "não entra em outra peça")
@@ -14563,6 +14564,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["prateleira"] as? String, "15,1170", "a prateleira presa nas laterais acompanha")
         XCTAssertEqual(o["corte"] as? String, "1170x560 mdf15", "e vai pro corte com a medida nova")
         XCTAssertEqual(o["salvoIgual"] as? Bool, true, "o modelo salvo não muda")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// PECAS-DESEMPENHO e PECA15-ORIENT (supervisor 22/11): arrastar/esticar/encostar uma peça livre reconstrói o 3D uma vez por gesto (não a cada
+    /// passo), com o mesmo resultado de conferir tudo de novo; e a orientação da Peça 15 mm sai do espaço real do ponto (só uma cabe → nasce direto).
+    @MainActor
+    func testPecasLivresArrastoSemReconstruir3DACadaPassoEOrientacaoPeloEspaco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.W=12000;for(var i=0;i<10;i++)newTpl(i%3===2?4:3);draw();var m=S.mods[0];S.m=m;var o={};
+          var nb=0,b0=window.__build;window.__build=function(){nb++;return b0.apply(this,arguments)};__build=window.__build;
+          var q=EM.criaPecaNoPonto(m,450,300).q,q2=JSON.parse(JSON.stringify(q));
+          /* um gesto de arrasto (30 passos) reconstrói o 3D uma vez só */
+          nb=0;var B=q.x;EM.gestoIni(m,q);for(var k=1;k<=30;k++)EM.arrasta(m,q,'m',{x:B,y:q.y,w:q.w,h:q.h},k*3,0);EM.gestoFim();o.reconstrucoesArrasto=nb;
+          /* bater e parar encostada: com o cache dá o mesmo lugar que conferindo tudo de novo */
+          nb=0;EM.gestoIni(m,q);EM.arrasta(m,q,'m',{x:q.x,y:q.y,w:q.w,h:q.h},-5000,0);EM.gestoFim();o.reconstrucoesBate=nb;var xCache=q.x;
+          var gi=EM.gestoIni;EM.gestoIni=function(){EM.gesto=null;return null};q.x=B+90;EM.arrasta(m,q,'m',{x:q.x,y:q.y,w:q.w,h:q.h},-5000,0);EM.gestoIni=gi;o.mesmoLugar=xCache===q.x;
+          /* multivistas: arrastar com o desenho da vista também não reconstrói a cada passo */
+          EM.mvVista('cima');EM.st.modo='peca';var c=EM.mvCria(m.x+1150,300).q;nb=0;EM.gestoIni(m,c);var B0=EM.l2w(m,c);for(var k=1;k<=20;k++){EM.mvArrasta(m,c,'m',B0,5*k,0);EM.mvRender()}EM.gestoFim();o.reconstrucoesVista=nb;EM.mvVista('');
+          /* orientação pelo espaço: na frente das gavetas só a placa de frente cabe → nasce direto, sem perguntar */
+          S.mods=[];newTpl(2);m=S.mods[0];m.x=300;draw();S.m=m;S.tab=0;panel();EM.st.modo='peca';
+          var n=EM.orienta(0,0,'z',function(ax){var r=EM.criaPecaNoPonto(m,450,300,'peca',ax);if(r.ok)EM.pecaApaga(m,r.q.id);return r},function(ax){EM.criarEm(450,300,ax)});
+          o.gavetas=n+' '+!!document.getElementById('emori')+' '+(m.pl||[]).map(function(p){return p.ax}).join();
+          window.__build=b0;__build=b0;o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["reconstrucoesArrasto"] as? Int, 1, "30 passos de arrasto: 1 reconstrução (antes 1 por passo)")
+        XCTAssertEqual(o["reconstrucoesBate"] as? Int, 1, "bater e procurar o encosto: 1 reconstrução (antes ~24)")
+        XCTAssertEqual(o["mesmoLugar"] as? Bool, true, "o cache para a peça no mesmo lugar que a conferência completa")
+        XCTAssertEqual(o["reconstrucoesVista"] as? Int, 1, "multivistas: 20 passos com o desenho da vista: 1 reconstrução")
+        XCTAssertEqual(o["gavetas"] as? String, "1 false z", "na frente das gavetas só cabe a placa: cria direto, sem perguntar")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 }

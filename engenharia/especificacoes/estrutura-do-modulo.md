@@ -70,3 +70,18 @@ logo acima da barra da parede (o seletor de paredes continua o de sempre, `wvGo`
 - Teste: `testMultivistasCameraECriarPecaEmCadaVistaSemMexerMovel`.
 - Enquadramento: ao entrar numa vista e no 1º toque em ⌂ a câmera mostra o módulo escolhido com 60 cm em volta; 2º toque em ⌂ mostra o ambiente.
   O contorno/medida da peça escolhida vem da peça cadastrada (`l2w`), não das caixas do 3D (que desenham a fita de 1 mm por fora).
+
+## 4. Correções de arquitetura e desempenho (pedido do supervisor, 22/11)
+- **Integração explícita**: os blocos registram ganchos (`EM.G.pre/post/panel/parts/wv/myIns`) e um instalador único (`EM.instala`) põe as camadas
+  por fora de tudo no `DOMContentLoaded`, independente da ordem dos `<script>`. Cor/fita das peças livres entram por `ARQ_EXT.fin/edgeSides/edgeMm`,
+  chamados no começo de `finOf`/`edgeSides`/`edgeMm` (1 linha em cada). As peças livres entram no `partsOf` na camada de fora **de propósito**:
+  dentro do núcleo, regras automáticas do módulo mexeriam nelas (ex.: o embrulho "sem lateral" estica peça horizontal que começa com "Prateleira").
+- **Desempenho** (20 módulos, 2023 caixas, 1 reconstrução do 3D ≈ 31 ms): antes do cache, arrastar = 1 reconstrução por passo (21 ms) e bater/encostar
+  = ~24 reconstruções por passo (275 ms); multivistas 2 por passo (36 ms) e 31 ao bater (300 ms). Agora: o gesto lê as caixas dos outros 1 vez
+  (`EM.gestoIni`), a peça vem da própria conta (`l2w` + a fita que o 3D desenha por fora) → 0 reconstruções por passo: 9,5 ms / 11 ms / 19 ms / 21–28 ms.
+  Teste `testPecasLivresArrastoSemReconstruir3DACadaPassoEOrientacaoPeloEspaco` (1 reconstrução por gesto, mesmo lugar que a conferência completa).
+- **Fechar Vão sem limite fixo**: o vão vai até o primeiro sólido de verdade (outros móveis, pedra, peças livres, paredes, chão, teto), calculado
+  no sistema do módulo (`EM.w2l` das caixas do 3D). Nada é movido.
+- **Orientação da Peça 15 mm pelo espaço**: o app confere quais orientações cabem no ponto (de frente, em pé, deitada); só uma → nasce direto;
+  mais de uma → escolha simples só com as que cabem, a do plano da vista primeiro (Frente: de frente; Esquerda/Direita: em pé; Superior: deitada);
+  nenhuma → diz em quê bateria.

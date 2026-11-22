@@ -14677,4 +14677,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabriuRepetido"] as? String, "true · medidas iguais true", "id repetido no arquivo: ganha id novo, medidas iguais")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// PECAS-ORCAMENTO (Adauto 22/11): medidas das peças livres no orçamento (área, fita, custo do módulo, total do PDF) e no plano de corte/lista,
+    /// num projeto de 18 mm (as peças livres são de 15: chapa de 15 separada, com nome e medida de cada peça).
+    @MainActor
+    func testPecasLivresNoOrcamentoNoPDFENoPlanoDeCorteComAsMedidasReais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var o={};PR.mdfB=250;PR.mdfC=320;PR.mdfM=380;PR.fitaB=1;PR.fitaC=2;PR.mult=2;
+          S.mods=[];S.stones=[];newTpl(3);var m=S.mods[0];m.x=300;m.esp=18;draw();S.m=m;
+          var b0=budget(),q0=quoteData(),c0=b0.rows[0].c,T0=JSON.parse(JSON.stringify(b0.T));
+          var rv=EM.criaPecaNoPonto(m,-60,300,'rv').q,pr=EM.criaPecaNoPonto(m,450,450,'prat').q;draw();
+          var b1=budget(),q1=quoteData();
+          /* fita: régua 4 lados = 2×(820+50) = 1,74 m na fita da cor · prateleira 1 lado (frente) = 0,87 m na fita branca */
+          o.fita=Math.round((b1.T.tC-T0.tC)*1000)+' mm cor · '+Math.round((b1.T.tB-T0.tB)*1000)+' mm branca';
+          /* área: régua na cor 0,82×0,05 · prateleira no branco 0,87×0,56 */
+          o.area=Math.round((b1.T.aC-T0.aC)*1e4)/1e4+' cor · '+Math.round((b1.T.aB-T0.aB)*1e4)/1e4+' branca';
+          /* chapa de 15 separada no plano (projeto de 18), com o nome e a medida de cada peça */
+          var ach=[];b1.plan.groups.forEach(function(g){g.sheets.forEach(function(sh){sh.used.forEach(function(u){if(/ · livre/.test(u.p.lab))ach.push(g.key+' '+u.p.lab+' '+Math.max(u.p.w,u.p.h)+'x'+Math.min(u.p.w,u.p.h))})})});o.plano=ach.sort().join(' | ');
+          /* custo do módulo e total do orçamento (PDF) sobem; o PDF não lista peça por peça, entra no valor do grupo do módulo */
+          o.custoSobe=b1.rows[0].c>c0;o.pdfSobe=q1.total>q0.total;o.pdfItens=q1.items.map(function(i){return i.desc}).join(' | ');
+          /* lista de peças (corte agrupado) com a medida real */
+          var CG=cutGroups(),L=[];Object.keys(CG.map).forEach(function(k){var g=CG.map[k];if(g.names.some(function(n){return / · livre$/.test(n)}))L.push(g.names.join('/')+' '+g.L+'x'+g.W+' mdf'+g.mat+' x'+g.qty)});o.lista=L.sort().join(' | ');
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["fita"] as? String, "1740 mm cor · 864 mm branca", "fita: régua 4 lados, prateleira 1 lado")
+        XCTAssertEqual(o["area"] as? String, "0.041 cor · 0.4838 branca", "área real: 820×50 e 864×560")
+        XCTAssertEqual(o["plano"] as? String, "b|15| Prateleira · livre 864x560 | c|15|Cor Régua vertical · livre 820x50", "chapa de 15, nome e medida")
+        XCTAssertEqual(o["custoSobe"] as? Bool, true)
+        XCTAssertEqual(o["pdfSobe"] as? Bool, true, "o total do PDF do orçamento inclui as peças livres")
+        XCTAssertEqual(o["pdfItens"] as? String, "Cozinha · Módulos de baixo (balcões) · 1 módulo", "o PDF agrupa por módulo (não lista peça por peça)")
+        XCTAssertEqual(o["lista"] as? String, "Prateleira · livre 864x560 mdf15 x1 | Régua vertical · livre 820x50 mdf15 x1")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
 }

@@ -14261,4 +14261,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["arrasta"] as? String, "arrastou · escolhido true", "móvel escolhido: segurar e arrastar a bolinha continua mudando o puxador")
         XCTAssertEqual(o["errs"] as? String, "0")
     }
+
+    /* VAO-ESQ (22/11, pedido "corrigir a numeração dos vãos na parede esquerda"): móvel novo da parede esquerda (dados guardados virados) mostrava
+       "Vão 1" no vão da direita de quem olha (painel, menu dos 2 toques, Editar só ele). Agora conta da esquerda de quem olha; fundo e móvel antigo iguais. */
+    func testParedeEsquerdaMovelNovoNumeraOsVaosDaEsquerdaPraDireitaDeQuemOlha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.RD=5000;S.wl={L:'p',R:'p'};S.stones=[]};
+        var KN={door:'porta',drawers:'gavetas'};
+        var botoes=function(m){S.m=m;S.tab=3;S.sv=0;panel();return [].map.call(document.querySelectorAll('#bd [data-sv]'),function(b){var v=m.v[+b.dataset.sv];return b.textContent.split(' · ')[0]+'='+(KN[v.k]||v.k)}).join(', ')};
+        var menu=function(m,k){var vi=m.v.map(function(v){return v.k}).indexOf(k);vmenuOpen(S.mods.indexOf(m),vi,200,200);var d=document.getElementById('vmenu'),t=d?d.firstChild.textContent.split(' (')[0]:'-';try{vmenuClose()}catch(_){}return t};
+        /* móvel NOVO na parede esquerda: quem olha vê a porta à esquerda e as gavetas à direita → Vão 1 é a porta */
+        cena();wvGo('e');newTpl(T('Balcão porta + gavetas'));var a=S.m;a.x=1500;draw();R.novo=botoes(a)+' · menu porta: '+menu(a,'door')+' · menu gavetas: '+menu(a,'drawers');try{soloOn(a)}catch(_){}draw();await W(60);R.so=[].map.call(document.querySelectorAll('[data-sov]'),function(b){var v=a.v[+b.dataset.sov];return b.textContent.replace(/^\S+ /,'').split(' · ')[0]+'='+(KN[v.k]||v.k)}).join(', ');try{soloOff()}catch(_){}wvGo('f');
+        /* na parede do fundo e no móvel antigo da esquerda (espelhado como era): igual a antes */
+        cena();newTpl(T('Balcão porta + gavetas'));var b=S.m;b.x=1500;draw();R.fundo=botoes(b)+' · menu porta: '+menu(b,'door');
+        cena();newTpl(T('Balcão porta + gavetas'));var o=S.m;delete o.espN;delete o.espE;o.wing='e';o.x=1500;loadState(JSON.parse(JSON.stringify(snapState())));o=S.mods[0];wvGo('e');draw();R.antigo=botoes(o)+' · menu porta: '+menu(o,'door');wvGo('f');
+        R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1 · menu gavetas: Base · vão 2", "Vão 1 é o da esquerda de quem olha")
+        XCTAssertEqual(o["so"] as? String, "Vão 1=porta, Vão 2=gavetas", "Editar só ele no 2D: mesma numeração")
+        XCTAssertEqual(o["fundo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1", "parede do fundo não muda")
+        XCTAssertEqual(o["antigo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1", "móvel antigo da esquerda continua como era")
+        XCTAssertEqual(o["errs"] as? String, "0")
+    }
 }

@@ -13010,14 +13010,16 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   return EM.tenta(m,function(){m.zo=mm},function(){if(tinha)m.zo=z0;else delete m.zo})};
  function secao(){var bd=document.getElementById('bd');if(!bd||S.tab!==0||!S.m||window.RO||bd.querySelector('[data-em]'))return;var m=S.m;
   /* o aviso antigo "Afastado da parede: N mm" vira o campo daqui */
+  if(![].some.call(bd.querySelectorAll('.sec'),function(s){return /^Dimensões/.test(s.textContent||'')}))return;
   var ov=bd.querySelector('[data-zo-clear]');if(ov){var nt=ov.closest('.note');if(nt)nt.remove()}
   var h='<div class="sec" data-em="1">Estrutura do Módulo<span>⌃</span></div><div data-embox="1">';
   if(EM.podeAfastar(m)){var ex=m.zo!==undefined&&m.zo!==null&&m.zo!=='';
    h+='<div class="g"><label>Afastamento da parede (cm)</label><input type="text" inputmode="none" data-calc="1" data-emzo="1" value="'+cmTxt(zoOf(m))+'"></div>'+
     '<div class="note">Da parede até a traseira deste módulo. As medidas do móvel não mudam.'+(ex?' <button data-zo-clear="1">Usar o padrão</button>':'')+'</div>'}
   h+=(EM.ferramentas?EM.ferramentas(m):'')+'</div>';
+  /* só na aba Estrutura de sempre (a que tem Dimensões): o painel do editor por vãos é outro e não recebe esta seção */
   var ref=[].filter.call(bd.querySelectorAll('.sec'),function(s){return /^Dimensões/.test(s.textContent||'')})[0];
-  if(ref)ref.insertAdjacentHTML('beforebegin',h);else bd.insertAdjacentHTML('afterbegin',h)}
+  if(ref)ref.insertAdjacentHTML('beforebegin',h)}
  EM.secao=secao;
  var p0=window.panel;if(typeof p0==='function')panel=window.panel=function(){var r=p0.apply(this,arguments);try{secao()}catch(e){try{console.warn('EM',e)}catch(_){}}return r};
  var re=function(){try{draw()}catch(_){}try{if(window.re3)re3()}catch(_){}};

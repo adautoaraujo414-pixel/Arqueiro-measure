@@ -8383,8 +8383,9 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 47, "Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 4 | 🎨 Cores 1 | Estrutura 7 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 48, "ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
+        // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 4 | 🎨 Cores 1 | Estrutura 8 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")

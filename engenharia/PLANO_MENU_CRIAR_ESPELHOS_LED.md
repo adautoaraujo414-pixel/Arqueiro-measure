@@ -71,16 +71,33 @@ M1 e M2 dependem da imagem (B1). E1 em diante pode andar sem a imagem: entra na 
 - **Contorno orgânico**: exige triangulação nova (E6 isolada).
 - **Tempo do teste do iOS**: `testNadaDeEnfeiteAbasDoModuloParte1` já estoura 2 min no iPhone (execução 663). Qualquer controle novo no painel do módulo aumenta esse tempo. O painel do espelho é próprio (não entra nas abas do módulo) para não piorar.
 
-## 5. Perguntas ao Adauto (as das propostas, juntas)
-- **Menu e espelhos**:
-  1. Reenviar a imagem do menu.
-  2. A distribuição nas 6 categorias está certa?
-  3. Quais contornos ornamentais entram primeiro?
-  4. Preço por m² por acabamento, e lapidação ou bisotê por metro?
-  5. Moldura de quê, e como entra no orçamento?
-- **LED**:
-  1. Quais perfis entram na biblioteca inicial (ou ela começa vazia)?
-  2. A usinagem entra no orçamento?
-  3. Fonte por botão ou por LED, e qual potência?
-  4. O `m.led` atual fica ao lado do novo?
-  5. Margem mínima do rasgo (proposta 3 mm)?
+## 5. Decisões aprovadas pelo Adauto (22/11/2026) — substituem as perguntas anteriores
+**Menu**: 6 categorias em 2 colunas, nesta ordem: Móveis | LED · Espelhos | Pedras · Paredes | Outros. Layout pela imagem de referência (será reenviada;
+M1 espera ela). Nenhuma ferramenta existente é removida.
+**Espelhos** (progressivo): retangular/quadrado → redondo/oval → arco → orgânico simples e assimétrico. Em vãos, painéis e paredes; mover, girar,
+medidas editáveis.
+**Orçamento da vidraçaria** (separado do MDF, materiais e serviços): preço por m² configurável **por acabamento**; lapidação e bisotê **por metro linear**,
+valores editáveis; moldura em **MDF, alumínio ou perfil personalizado**. **Nenhum preço inventado**: campos começam vazios e o orçamento avisa
+"preço não cadastrado" em vez de pôr zero escondido ou valor de exemplo.
+**LED**:
+- Biblioteca inicial **editável** de perfis embutidos e sobrepostos (estrutura pronta; medidas e preços só os informados — sem valor inventado).
+- Todas as funções atuais de LED preservadas (`m.led`, botão, cores, noite, "Pôr no orçamento").
+- Custo de **usinagem de rasgo** configurável (por metro).
+- **Fontes por circuito**: soma da potência de todos os LEDs do circuito (W/m × m de cada perfil), com **tensão** (12/24 V), **capacidade da fonte**
+  e **margem de segurança configurável**; nº de fontes = ⌈potência × (1 + margem) ÷ capacidade⌉, conferindo a tensão de fita e fonte. Não é uma fonte
+  por LED nem por botão. Circuito = grupo que o usuário define (padrão: o botão do LED).
+- **Rasgo sem margem universal**: valida pela espessura real da peça hospedeira e pela especificação do perfil (largura, profundidade do rasgo e
+  espessura mínima de material que o fabricante exige, campo do perfil). Perfil sem esse dado → embutido bloqueado com aviso pra completar o cadastro.
+**Responsabilidades**: Code 1 corrige o botão duplicado das panelas. Code 2 só implementa depois da auditoria do Chefe e da autorização específica do
+Adauto, em etapas pequenas, cada uma com teste próprio e regressão completa. Candidata atual intocada. Sem merge nem publicação.
+**Homologação da Política B**: NÃO homologada até o iOS 665 e a repetição do Windows 81 terminarem verdes.
+
+## 6. Ajustes no plano por causa das decisões
+- E5 passa a ter: preços por acabamento, lapidação/bisotê por metro, moldura (MDF/alumínio/personalizada), aviso de preço não cadastrado.
+- E6 (orgânico) = "simples e assimétrico" (contornos editáveis por pontos), não biblioteca ornamental grande.
+- L1 ganha os campos do perfil: tensão, W/m, espessura mínima de material, rasgo (larg × prof); cadastro de fontes (tensão, W, preço); margem de segurança.
+- L7 (orçamento LED) = fontes por circuito pela fórmula acima + usinagem por metro.
+- L5 (embutido) = validação pela espessura e pelo perfil, sem 3 mm fixo.
+
+## 7. Pendente
+Imagem do menu (só pra M1/M2) · auditoria do Chefe · correção do `data-cpan` (Code 1) · iOS 665 e Windows 81 (repetição) · autorização específica.

@@ -20,3 +20,31 @@ Código: bloco `ESTRUTURA DO MÓDULO` no fim de `app/src/main/assets/editor.html
   vizinho — afastar só o 1º faria a peça entrar no vizinho, então não deixa.
 - O aviso antigo "Afastado da parede: N mm … Usar o padrão" virou este campo (o botão "Usar o padrão" continua).
 - Teste: `testEstruturaAfastamentoDaParedeEmCmSemMudarMedidaENemEntrarNoVizinho`.
+
+## 2. Peças livres em MDF 15 mm (ESTRUTURA-PECA15, ESTRUTURA-REGUA, ESTRUTURA-VAO)
+Modelo: lista `m.pl` no próprio módulo (projeto antigo não tem → nada muda). Cada peça:
+`{id, n, k, ax, x, y, w, h, z, d}` em mm inteiro, no sistema do módulo: `x` da esquerda do módulo, `y` de cima pra baixo
+(igual `partsOf`), `z` da traseira do corpo pra frente (no 3D: z do mundo = afastamento + fundo sobreposto + z).
+`ax` é o eixo da espessura 15: `z` de frente · `x` em pé de lado · `y` deitada. A espessura não é editável.
+- Entra no fim do `partsOf` (wrapper), com nome "`<tipo> · livre`", `mat:15`, `rpz` (profundidade) e pk "`<nome>#N`"
+  (N fixo da peça; apagar outra não muda o N). Com isso 2D, 3D, lista, plano de corte (chapa de 15 separada no projeto de 18),
+  fita e orçamento leem a peça sem lógica paralela.
+- Cor/fita só pras peças "· livre" (wrappers de `finOf`/`edgeSides`/`edgeMm`): peça de frente, réguas, travessa e fechamentos
+  na cor de fora com fita nos 4 lados; prateleira na cor de dentro com fita na frente; lateral de acabamento e fechamento do vão
+  na cor de fora com fita na frente.
+- Tela: seção Estrutura do Módulo › "＋ Criar Peça 15 mm", "＋ Criar Régua" (Régua vertical, Régua horizontal, Prateleira,
+  Travessa, Lateral de acabamento, Fechamento superior, Fechamento inferior) e "⬚ Fechar Vão". Ferramenta ligada → capa
+  transparente sobre o desenho (o segurar 2 s do módulo e o toque no vão não abrem por baixo) → segurar 2 s no ponto.
+- Onde nasce: Peça 15 mm de frente, encostada na superfície do ponto (porta, fundo…), 300 × 300 ou o que couber.
+  Réguas/travessa/fechamentos no plano da frente (rente às portas se ali tem lugar; senão na frente delas), do tamanho do módulo.
+  Lateral de acabamento em pé, do fundo até a frente (se bater na porta, só a caixa). Prateleira deitada entre o que estiver dos lados.
+- Fechar Vão lista os vãos do módulo: atrás (quando afastado da parede), dos lados até a parede/vizinho (até 60 cm),
+  em cima até o teto/módulo de cima e embaixo (suspenso) até o chão/o que estiver embaixo. A peça nasce do tamanho do vão
+  e pode ser diminuída (fechamento parcial).
+- Editar: tocar na peça seleciona; arrastar move; bordas aumentam/diminuem; campos de medida exata (mm). Ao bater para encostada
+  (busca o maior passo que cabe, primeiro no x e depois no y). Sem girar e sem duplicar (pedido).
+- Testes: `testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata`, `testEstruturaReguasEFecharVaoComCorteFitaOrcamentoESalvar`.
+
+### Interpretações (a confirmar com o Adauto)
+- "Peça 15 mm" = placa de frente (espessura na profundidade); as peças em pé/deitadas ficam no "Criar Régua".
+- A referência do Promob não chegou nesta sessão: os tipos seguem a lista escrita do pedido.

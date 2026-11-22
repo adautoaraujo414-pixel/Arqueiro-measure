@@ -4119,7 +4119,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tres"] as? String, "fed 3800 null", "painel nas 3 paredes")
         XCTAssertEqual(o["conf"] as? Bool, false, "sem a conferência da soma na aba")
         // a seção Rodapé (rodapé de MDF ou pés de metal) fica logo abaixo das medidas do módulo
-        XCTAssertEqual(o["est"] as? String, "Dimensões|Rodapé|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
+        // ESTRUTURA-AFASTA (pedido do Adauto 22/11): a seção "Estrutura do Módulo" entra antes de Dimensões; o resto continua igual
+        XCTAssertEqual(o["est"] as? String, "Estrutura do Módulo|Dimensões|Rodapé|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
         XCTAssertEqual(o["obra"] as? Bool, true, "medidas das paredes e esquadro no Ajustes")
         XCTAssertEqual((o["W"] as? NSNumber)?.intValue, 3300)
         XCTAssertEqual(o["lim"] as? String, "2700")
@@ -14328,6 +14329,114 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["bate"] as? Bool, false, "entraria no vizinho: não deixa")
         XCTAssertEqual(o["zoBate"] as? Bool, true, "bloqueado: nada foi gravado")
         XCTAssertEqual(o["outroIgual"] as? Bool, true, "o outro móvel não se mexe")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// ESTRUTURA-PECA15 (Adauto 22/11, Estrutura do Módulo › Criar Peça 15 mm): ferramenta → segurar 2 s no desenho → peça sólida de MDF 15
+    /// encostada na superfície que está ali; arrasta, aumenta/diminui pelas bordas, para encostada (não entra em nada), medida exata digitada; sem girar nem duplicar.
+    @MainActor
+    func testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];newTpl(3);draw();var m=S.mods[0];S.m=m;S.tab=0;panel();var o={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var bd=document.getElementById('bd'),sv=document.getElementById('svg');o.botoes=[].map.call(bd.querySelectorAll('[data-emtool]'),function(b){return b.textContent}).join('|');
+          var cl=function(x,y){var G=EM.geo(0),c=sv.getScreenCTM(),p=sv.createSVGPoint();p.x=G.x0+x*G.k;p.y=G.y0+y*G.k;var q=p.matrixTransform(c);return {x:q.x,y:q.y}};
+          var ev=function(t,p){return new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:7,clientX:p.x,clientY:p.y,isPrimary:true,pointerType:'touch'})};
+          bd.querySelector('[data-emtool="peca"]').click();o.capa=!!document.getElementById('emcapa');
+          /* toque curto não cria */
+          var pt=cl(200,200),el=document.elementFromPoint(pt.x,pt.y);el.dispatchEvent(ev('pointerdown',pt));await W(500);el.dispatchEvent(ev('pointerup',pt));o.curto=(m.pl||[]).length;
+          /* segurar 2 s cria a peça de MDF 15 encostada na superfície (a porta) e não abre o menu do vão */
+          el=document.elementFromPoint(pt.x,pt.y);el.dispatchEvent(ev('pointerdown',pt));await W(2300);document.dispatchEvent(ev('pointerup',pt));await W(100);
+          var q=(m.pl||[])[0];o.criou=(m.pl||[]).length+' · '+(q?[q.ax,q.w,q.h,q.d].join(','):'');o.menuVao=!!document.querySelector('.vmenu:not([hidden]),#vmenu:not([hidden])');
+          __build();var bx=__boxes().filter(function(b){return b.pk===EM.pkDe(q)});var porta=__boxes().filter(function(b){return String(b.nm).indexOf('0:Porta')===0&&b.a>=.95});o.naFrenteDaPorta=bx.length>0&&Math.round(bx[0].z0)===Math.round(Math.max.apply(null,porta.map(function(b){return b.z1})));
+          o.mdf=partsOf(m).filter(function(p){return p.livre===q.id}).map(function(p){return p.mat+' '+p.cl+'×'+p.cw})[0]||'';
+          /* arrastar 100 mm pra direita */
+          var x0=q.x,a=cl(q.x+q.w/2,q.y+q.h/2),b=cl(q.x+q.w/2+100,q.y+q.h/2),t=document.elementFromPoint(a.x,a.y);o.pegou=!!(t&&t.dataset&&t.dataset.empl);
+          t.dispatchEvent(ev('pointerdown',a));document.dispatchEvent(ev('pointermove',{x:a.x+5,y:a.y}));await W(50);document.dispatchEvent(ev('pointermove',b));await W(100);document.dispatchEvent(ev('pointerup',b));o.andou=q.x-x0;
+          /* arrastar demais pra esquerda: para encostado na parede (módulo a 5 mm da parede) */
+          a=cl(q.x+q.w/2,q.y+q.h/2);b=cl(q.x+q.w/2-900,q.y+q.h/2);t=document.elementFromPoint(a.x,a.y);t.dispatchEvent(ev('pointerdown',a));document.dispatchEvent(ev('pointermove',{x:a.x-5,y:a.y}));await W(50);document.dispatchEvent(ev('pointermove',b));await W(200);document.dispatchEvent(ev('pointerup',b));o.encostou=q.x+m.x;
+          /* borda da direita: aumenta 50 */
+          var w0=q.w,hr=document.querySelector('[data-emh="'+q.id+'|r"]'),r=hr.getBoundingClientRect(),c={x:r.x+r.width/2,y:r.y+r.height/2},c2=cl(q.x+q.w+50,q.y+q.h/2);hr.dispatchEvent(ev('pointerdown',c));document.dispatchEvent(ev('pointermove',{x:c.x+5,y:c.y}));await W(50);document.dispatchEvent(ev('pointermove',{x:c2.x,y:c.y}));await W(100);document.dispatchEvent(ev('pointerup',c));o.aumentou=q.w-w0;
+          /* medidas exatas */
+          var i1=document.querySelector('[data-empk="'+q.id+'|w"]');i1.value='250';i1.dispatchEvent(new Event('change',{bubbles:true}));var i2=document.querySelector('[data-empk="'+q.id+'|b"]');i2.value='300';i2.dispatchEvent(new Event('change',{bubbles:true}));
+          o.exatas=q.w+' · do chão '+Math.round((+m.b||0)+(+m.h||0)-q.y-q.h);
+          /* sem rotação nem duplicar */
+          o.semGirar=!/girar|rota|duplic/i.test(document.getElementById('bd').textContent);
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["botoes"] as? String, "＋ Criar Peça 15 mm|＋ Criar Régua|⬚ Fechar Vão")
+        XCTAssertEqual(o["capa"] as? Bool, true, "com a ferramenta ligada o dedo vai pra ferramenta, não pro módulo")
+        XCTAssertEqual(o["curto"] as? Int, 0, "toque curto não cria")
+        XCTAssertEqual(o["criou"] as? String, "1 · z,300,300,15", "segurar 2 s cria 300 × 300 de frente, 15 de espessura")
+        XCTAssertEqual(o["menuVao"] as? Bool, false, "soltar o dedo não abre o menu do vão")
+        XCTAssertEqual(o["naFrenteDaPorta"] as? Bool, true, "nasce encostada na porta (superfície do ponto), sem entrar nela")
+        XCTAssertEqual(o["mdf"] as? String, "15 300×300")
+        XCTAssertEqual(o["pegou"] as? Bool, true)
+        XCTAssertEqual(o["andou"] as? Int, 100, "arrasta 100 mm")
+        XCTAssertEqual(o["encostou"] as? Int, 0, "arrastou demais: para encostada na parede")
+        XCTAssertEqual(o["aumentou"] as? Int, 50, "pela borda aumenta")
+        XCTAssertEqual(o["exatas"] as? String, "250 · do chão 300", "medidas digitadas")
+        XCTAssertEqual(o["semGirar"] as? Bool, true, "sem rotação nem duplicar")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// ESTRUTURA-REGUA e ESTRUTURA-VAO (Adauto 22/11, Estrutura do Módulo › Criar Régua e Fechar Vão, referência Promob): réguas vertical/horizontal,
+    /// prateleira, travessa, lateral de acabamento e fechamentos, com espessura e medidas reais; fechar o vão de 10 cm atrás com lateral de 15, parcial;
+    /// tudo no corte (MDF 15, id único), na fita e no orçamento; não entra em outra peça; desfaz/refaz; salva e reabre sem mexer.
+    @MainActor
+    func testEstruturaReguasEFecharVaoComCorteFitaOrcamentoESalvar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];newTpl(3);var m=S.mods[0];m.x=300;draw();S.m=m;S.tab=0;panel();var o={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var bd=function(){return document.getElementById('bd')},clk=function(sel){var b=bd().querySelector(sel);if(b)b.click();return !!b};
+          /* régua: tipos da referência */
+          clk('[data-emtool="regua"]');o.tipos=[].map.call(bd().querySelectorAll('[data-emrg]'),function(b){return b.textContent}).join('|');
+          var cria=function(k,x,y){clk('[data-emrg="'+k+'"]');var r=EM.criarEm(x,y);return r&&r.ok?r.q:null};
+          var rv=cria('rv',-60,300);o.rv=rv?[rv.ax,rv.w,rv.h,rv.d].join(','):'nao';
+          clk('[data-emtool="regua"]');var pr=cria('prat',450,450);o.prat=pr?[pr.ax,pr.w,pr.h,pr.d,pr.z].join(','):'nao';
+          clk('[data-emtool="regua"]');var la=cria('latac',-200,300);o.latac=la?la.ax:'nao';
+          /* medida conforme a orientação: régua vertical não tem campo de profundidade (é a espessura) */
+          EM.st.sel=rv.id;panel();o.camposRv=[].map.call(bd().querySelectorAll('[data-empk^="'+rv.id+'|"]'),function(i){return i.dataset.empk.split('|')[1]}).join(',');
+          EM.st.sel=pr.id;panel();o.camposPrat=[].map.call(bd().querySelectorAll('[data-empk^="'+pr.id+'|"]'),function(i){return i.dataset.empk.split('|')[1]}).join(',');
+          /* corte, fita e orçamento: cada peça com o próprio id, MDF 15 e a medida certa */
+          var cl=[];cutLines(m).forEach(function(l){l.names.forEach(function(n){if(/ · livre$/.test(n))cl.push(n+' '+l.L+'×'+l.W+' mdf'+l.mat+' x'+l.qty)})});o.corte=cl.sort().join(' | ');
+          var ps=partsOf(m).filter(function(p){return p.livre});o.ids=ps.map(function(p){return p.pk}).filter(function(v,i,a){return a.indexOf(v)===i}).length===ps.length&&ps.length===3;
+          o.fita=ps.map(function(p){return p.name.replace(' · livre','')+':'+edgeSides(p.name)+':'+edgeMm(p)}).join(' | ');
+          var semPl=JSON.parse(JSON.stringify(m));delete semPl.pl;var a1=mCost(m),a0=mCost(semPl);o.orcAreaSobe=(a1.aB+a1.aC)>(a0.aB+a0.aC);
+          /* fechar vão: afasta 10 cm e fecha atrás do lado esquerdo com lateral de 15 */
+          EM.afastar(m,100);draw();EM.st.sel=null;panel();clk('[data-emtool="vao"]');o.vaos=[].map.call(bd().querySelectorAll('[data-emvao]'),function(b){return b.dataset.emvao}).join(',');
+          clk('[data-emvao="atrasE"]');var fv=(m.pl||[]).filter(function(q){return q.vao==='atrasE'})[0];o.fv=fv?[fv.ax,fv.w,fv.h,fv.d].join(','):'nao';
+          /* fechamento parcial: diminui a altura pra 400 */
+          await W(900);EM.st.sel=fv.id;panel();var hi=bd().querySelector('[data-empk="'+fv.id+'|h"]');hi.value='400';hi.dispatchEvent(new Event('change',{bubbles:true}));o.parcial=fv.h;await W(900);
+          /* não entra em outra peça: aumentar a largura da régua vertical até entrar na lateral de acabamento não deixa */
+          m=S.m;la=EM.peca(m,la.id);rv=EM.peca(m,rv.id);var r=EM.pecaMuda(m,la,{x:rv.x});o.bate=r.ok+' '+(r.com||'');
+          /* desfazer volta a altura do fechamento (820) e refazer põe 400 de novo */
+          document.getElementById('und').click();await W(80);var f2=(S.m.pl||[]).filter(function(q){return q.vao==='atrasE'})[0];o.desfez=f2?f2.h:-1;
+          document.getElementById('red').click();await W(80);var f3=(S.m.pl||[]).filter(function(q){return q.vao==='atrasE'})[0];o.refez=f3?f3.h:-1;
+          /* salva, fecha e reabre: posições iguais, nada se mexe sozinho */
+          var antes=JSON.stringify(m.pl);var st=snapState();S.mods=[];loadState(JSON.parse(JSON.stringify(st)));draw();o.reabriu=JSON.stringify(S.mods[0].pl)===antes;
+          /* projeto em 18 mm: a peça de 15 vai pra chapa de 15, com o nome dela no plano de corte */
+          S.m.esp=18;draw();var sp=sheetPlan(),ach='';sp.groups.forEach(function(g){g.sheets.forEach(function(sh){sh.used.forEach(function(u){if(/^Régua vertical · livre/.test(u.p.lab))ach=g.key+' '+u.p.lab+' '+u.p.w+'x'+u.p.h})})});o.chapa=ach;
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["tipos"] as? String, "Régua vertical|Régua horizontal|Prateleira|Travessa|Lateral de acabamento|Fechamento superior|Fechamento inferior")
+        XCTAssertEqual(o["rv"] as? String, "z,50,820,15", "régua vertical de frente, 50 de largura, altura do módulo")
+        XCTAssertEqual(o["prat"] as? String, "y,870,15,560,0", "prateleira deitada entre as laterais, na profundidade da caixa")
+        XCTAssertEqual(o["latac"] as? String, "x", "lateral de acabamento em pé")
+        XCTAssertEqual(o["camposRv"] as? String, "w,h,x,b,z", "régua: largura e altura (a espessura não muda)")
+        XCTAssertEqual(o["camposPrat"] as? String, "w,d,x,b,z", "prateleira: comprimento e profundidade")
+        XCTAssertEqual(o["corte"] as? String, "Lateral de acabamento · livre 820×585 mdf15 x1 | Prateleira · livre 870×560 mdf15 x1 | Régua vertical · livre 820×50 mdf15 x1")
+        XCTAssertEqual(o["ids"] as? Bool, true, "cada peça com identificação própria")
+        XCTAssertEqual(o["fita"] as? String, "Régua vertical:LRTB:1740 | Prateleira:B:870 | Lateral de acabamento:B:820")
+        XCTAssertEqual(o["orcAreaSobe"] as? Bool, true, "entram no orçamento")
+        XCTAssertEqual(o["vaos"] as? String, "atrasE,atrasD,ladoE")
+        XCTAssertEqual(o["fv"] as? String, "x,15,820,100", "lateral de 15 fechando os 10 cm atrás")
+        XCTAssertEqual(o["parcial"] as? Int, 400, "fechamento parcial: pode ficar menor que o vão")
+        XCTAssertEqual(o["bate"] as? String, "false módulo 1 (Régua vertical · livre)", "não entra em outra peça")
+        XCTAssertEqual(o["desfez"] as? Int, 820)
+        XCTAssertEqual(o["refez"] as? Int, 400)
+        XCTAssertEqual(o["reabriu"] as? Bool, true, "salva e reabre com as mesmas posições")
+        XCTAssertEqual(o["chapa"] as? String, "c|15|Cor Régua vertical · livre 820x50", "projeto em 18: a peça de 15 vai pra chapa de 15, com o nome")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 }

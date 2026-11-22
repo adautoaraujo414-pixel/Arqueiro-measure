@@ -13030,4 +13030,182 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   t.value=cmTxt(mm);re();try{panel()}catch(_){}});
 })();
 </script>
+<script>
+/* ===== ESTRUTURA DO MÓDULO · PEÇAS LIVRES MDF 15 mm (peça, réguas, fechar vão) =====
+   Cada peça é do módulo (m.pl), em mm, no sistema do próprio módulo: x da esquerda do módulo, y de cima pra baixo (igual partsOf),
+   z da traseira do módulo pra frente. Espessura 15 no eixo "ax" (x: em pé de lado · y: deitada · z: de frente).
+   Entra no partsOf no fim (pk próprio "nome · livre#N", N fixo da peça): 2D, 3D, plano de corte, lista, fita e orçamento leem dela. */
+(function(){
+ var EM=window.EM;if(!EM)return;var E=15;
+ var TIPOS=EM.TIPOS={
+  peca:{n:'Peça 15 mm',ax:'z',vis:1,fita:'LRTB'},
+  rv:{n:'Régua vertical',ax:'z',vis:1,fita:'LRTB',rg:1},
+  rh:{n:'Régua horizontal',ax:'z',vis:1,fita:'LRTB',rg:1},
+  prat:{n:'Prateleira',ax:'y',vis:0,fita:'B',rg:1},
+  trav:{n:'Travessa',ax:'z',vis:1,fita:'LRTB',rg:1},
+  latac:{n:'Lateral de acabamento',ax:'x',vis:1,fita:'B',rg:1},
+  fsup:{n:'Fechamento superior',ax:'z',vis:1,fita:'LRTB',rg:1},
+  finf:{n:'Fechamento inferior',ax:'z',vis:1,fita:'LRTB',rg:1},
+  vao:{n:'Fechamento do vão',vis:1,fita:'B'}};
+ var SUF=' · livre',ehLivre=function(n){return String(n||'').slice(-SUF.length)===SUF};
+ var tipoDoNome=function(n){n=String(n||'');for(var k in TIPOS)if(n===TIPOS[k].n+SUF)return TIPOS[k];return null};
+ EM.ehLivre=ehLivre;
+ var R=function(v){return Math.round(+v||0)};
+ /* identidade da peça no corte/3D: "nome · livre#N" (N fixo da peça no módulo: não muda quando outra é apagada; o plano de corte mostra o nome) */
+ var pkDe=EM.pkDe=function(q){var T=TIPOS[q.k]||TIPOS.peca;return T.n+SUF+'#'+(q.n>0?q.n:q.id)};/* peça em mm inteiro (sem décimo: REGRAS) */
+ /* espessura no eixo certo */
+ EM.fixa=function(q){if(q.ax==='x')q.w=E;else if(q.ax==='y')q.h=E;else q.d=E;['x','y','w','h','z','d'].forEach(function(k){q[k]=R(q[k])});return q};
+ /* medida de corte: as duas medidas que não são a espessura */
+ var corte=EM.corte=function(q){var a=q.ax==='x'?[q.h,q.d]:q.ax==='y'?[q.w,q.d]:[q.w,q.h];return [Math.max(a[0],a[1]),Math.min(a[0],a[1])]};
+ /* ---------- entra nas peças do módulo ---------- */
+ var pOf=window.partsOf;
+ if(typeof pOf==='function')partsOf=window.partsOf=function(m){var r=pOf.apply(this,arguments);try{if(m&&Array.isArray(m.pl)&&m.pl.length&&Array.isArray(r)){m.pl.forEach(function(q){if(!q||!q.id)return;var T=TIPOS[q.k]||TIPOS.peca,c=corte(q);
+    r.push({name:T.n+SUF,x:q.x,y:q.y,w:q.w,h:q.h,col:'#cdb98f',cl:c[0],cw:c[1],qty:1,mat:E,rpz:[q.z,q.z+q.d],pk:pkDe(q),livre:q.id,note:'MDF 15 mm · peça livre · '+c[0]+' × '+c[1]+' mm',base:{w:q.w,h:q.h,d:q.d,x:q.x,y:q.y}})})}}catch(e){try{console.warn('PL',e)}catch(_){}}return r};
+ /* cor de fora (o que aparece) e fita: só pras peças livres; o resto continua pela regra de sempre */
+ var fo0=window.finOf;if(typeof fo0==='function')finOf=window.finOf=function(n){var T=ehLivre(n)&&tipoDoNome(n);if(T)return T.vis?'c':'b';return fo0.apply(this,arguments)};
+ var es0=window.edgeSides;if(typeof es0==='function')edgeSides=window.edgeSides=function(n){var T=ehLivre(n)&&tipoDoNome(n);if(T)return T.fita;return es0.apply(this,arguments)};
+ var em0=window.edgeMm;if(typeof em0==='function')edgeMm=window.edgeMm=function(p){var T=p&&ehLivre(p.name)&&tipoDoNome(p.name);if(T){var f=T.fita;return f==='LRTB'?2*(p.cl+p.cw):f==='TB'?2*p.cl:f?p.cl:0}return em0.apply(this,arguments)};
+
+ /* ---------- sólido: a peça não entra em nada (outros móveis, peças do próprio módulo, pedra, paredes, chão e teto) ---------- */
+ function caixasTodas(){try{__build()}catch(_){}return (window.__boxes?__boxes():[]).filter(function(b){return b&&b.a>=.95&&b.x1-b.x0>.5&&b.y1-b.y0>.5&&b.z1-b.z0>.5})}
+ function sala(){var sw=(typeof sideWalls==='function')?sideWalls():{L:null,R:null},H=+S.H||2700;try{var wc=wallCfg('F');H=Math.min(+wc.h0||H,+wc.h1||H)}catch(_){}return {x0:sw.L===null?-1e9:sw.L,x1:sw.R===null?1e9:sw.R,y0:0,y1:H,z0:S.env==='livre'?-1e9:0}}
+ /* o que a peça (pk dela, do módulo mi) atravessa agora */
+ EM.pecaBate=function(m,q){var mi=S.mods.indexOf(m),pk=pkDe(q),meu=[],out=[];caixasTodas().forEach(function(b){if(b.pk===pk&&parseInt(String(b.nm),10)===mi)meu.push(b);else out.push(b)});
+  if(!meu.length)return 'a peça ficou sem tamanho';var s=sala(),mx=window.lvIs&&lvIs(m);
+  for(var i=0;i<meu.length;i++){var a=meu[i];if(!mx&&S.env!=='livre'){if(a.x0<s.x0-.5||a.x1>s.x1+.5||a.z0<s.z0-.5)return 'a parede';}if(a.y0<s.y0-.5)return 'o chão';if(a.y1>s.y1+.5&&S.env!=='livre')return 'o teto';
+   for(var j=0;j<out.length;j++)if(EM.cruza(a,out[j]))return EM.nomeDe(out[j].nm)}return ''};
+ /* aplica a mudança na peça; se bater, volta e diz em quê */
+ EM.pecaMuda=function(m,q,novo){var old={};['x','y','w','h','z','d'].forEach(function(k){old[k]=q[k]});Object.keys(novo).forEach(function(k){q[k]=novo[k]});EM.fixa(q);
+  if(q.w<1||q.h<1||q.d<1){Object.assign(q,old);return {ok:false,com:'medida zero'}}var b=EM.pecaBate(m,q);if(b){Object.assign(q,old);try{__build()}catch(_){}return {ok:false,com:b}}return {ok:true}};
+ var uid=function(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36)};
+ /* cria a peça no módulo (pelo mesmo sólido): se não couber, não cria */
+ EM.pecaNova=function(m,q){q.id=q.id||uid();EM.fixa(q);if(!Array.isArray(m.pl))m.pl=[];if(!(q.n>0))q.n=1+m.pl.reduce(function(a,o){return Math.max(a,+o.n||0)},0);m.pl.push(q);var b=EM.pecaBate(m,q);if(b){m.pl.splice(m.pl.indexOf(q),1);if(!m.pl.length)delete m.pl;try{__build()}catch(_){}return {ok:false,com:b}}return {ok:true,q:q}};
+ EM.pecaApaga=function(m,id){if(!m||!Array.isArray(m.pl))return false;var n=m.pl.length;m.pl=m.pl.filter(function(q){return q.id!==id});if(!m.pl.length)delete m.pl;return n!==(m.pl?m.pl.length:0)};
+ EM.peca=function(m,id){return (m&&m.pl||[]).filter(function(q){return q.id===id})[0]||null};
+
+ /* ---------- do 3D pro módulo (z local = da traseira do módulo) ---------- */
+ var zw=EM.zw=function(m){var z=0;try{z=zoOf(m)}catch(_){}try{z+=fBack(m)}catch(_){}return z};/* do 3D: z do mundo = afastamento + fundo sobreposto + z da peça */
+ function frenteLocal(m){var mi=S.mods.indexOf(m),zo=zw(m);var sw=(typeof sideWalls==='function')?sideWalls():{L:null,R:null},f=-1e9;
+  caixasTodas().forEach(function(b){if(parseInt(String(b.nm),10)!==mi||String(b.pk||'').indexOf(SUF+'#')>0)return;var z=m.wing==='e'?b.x1-(sw.L===null?0:sw.L)-zo:m.wing==='d'?(sw.R===null?S.W:sw.R)-b.x0-zo:b.z1-zo;if(z>f)f=z});return f>-1e8?R(f):R(+m.d||0)}
+ EM.frenteLocal=frenteLocal;
+ /* o que está na frente no ponto (x,y do módulo): a peça nasce encostada nela (superfície) */
+ function superficie(m,x,y){var mi=S.mods.indexOf(m),zo=zw(m);var sw=(typeof sideWalls==='function')?sideWalls():{L:null,R:null},top=(+m.b||0)+(+m.h||0),X=m.x+x,Y=top-y,best=null;
+  if(m.wing)return null;/* nas paredes do lado o x do 3D é a profundidade: usa a frente do módulo */
+  caixasTodas().forEach(function(b){if(b.x0<=X&&X<=b.x1&&b.y0<=Y&&Y<=b.y1&&b.z1<8000){var z=b.z1-zo;if(best===null||z>best.z)best={z:z,nm:b.nm}}});return best}
+ /* espaço livre em volta do ponto, no plano da peça (z0..z0+15): até onde dá pra ir pra cada lado */
+ function livreEm(m,x,y,z0,z1){var mi=S.mods.indexOf(m),zo=zw(m);var top=(+m.b||0)+(+m.h||0),X=m.x+x,Y=top-y,s=sala(),l=Math.max(s.x0,X-3000),r=Math.min(s.x1,X+3000),dn=Math.max(s.y0,Y-3000),up=Math.min(s.y1,Y+3000);
+  if(m.wing)return {x0:x-150,x1:x+150,y0:y-150,y1:y+150};
+  var bx=caixasTodas().filter(function(b){return b.z0<z1+zo-.5&&z0+zo<b.z1-.5});
+  bx.forEach(function(b){if(b.y0<Y&&Y<b.y1){if(b.x1<=X)l=Math.max(l,b.x1);if(b.x0>=X)r=Math.min(r,b.x0)}});
+  bx.forEach(function(b){if(b.x0<X&&X<b.x1){if(b.y1<=Y)dn=Math.max(dn,b.y1);if(b.y0>=Y)up=Math.min(up,b.y0)}});
+  return {x0:l-m.x,x1:r-m.x,y0:top-up,y1:top-dn}}
+ /* tem alguma peça bem no ponto, nessa faixa de profundidade? */
+ function ocupado(m,x,y,z0,z1){if(m.wing)return false;var zo=zw(m),top=(+m.b||0)+(+m.h||0),X=m.x+x,Y=top-y;return caixasTodas().some(function(b){return b.x0<X&&X<b.x1&&b.y0<Y&&Y<b.y1&&b.z0<z1+zo-.5&&z0+zo<b.z1-.5})}
+ /* faixa [a,b] no espaço livre [lo,hi]: se a faixa preferida contém o ponto, usa ela (cortada no livre); senão o tamanho len centrado no ponto */
+ var faixa=function(c,len,lo,hi,p0,p1){if(p0!=null&&p0<=c&&c<=p1){var a=Math.max(lo,p0),b=Math.min(hi,p1);if(b-a>=1)return [a,b]}len=Math.max(1,Math.min(len,hi-lo));var a2=Math.max(lo,Math.min(c-len/2,hi-len));return [a2,a2+len]};
+ /* peça nova no ponto (segurar 2 s). Peça 15 mm: de frente, encostada na superfície que está ali, 300 × 300 ou o que couber.
+    Réguas, travessa e fechamentos: no plano da frente (rente às portas se ali estiver livre, senão na frente delas), do tamanho do módulo.
+    Lateral de acabamento: em pé, na profundidade toda do módulo. Prateleira: deitada, dentro da caixa, de lado a lado do espaço livre */
+ EM.criaPecaNoPonto=function(m,x,y,k){k=k||'peca';var T=TIPOS[k]||TIPOS.peca,ax=T.ax,q={k:k,ax:ax},h0=R(+m.h||700),Lt=lt(m),Rt=rt(m),fr=frenteLocal(m),Lf,c;
+  if(ax==='z'){var z0;var W0=R(+m.w||600)+Lt+Rt,dim={peca:[300,300],rv:[50,h0],rh:[W0,50],trav:[W0,70],fsup:[W0,300],finf:[W0,300]}[k]||[300,300];
+   if(k==='peca'){var sf=superficie(m,x,y);z0=sf?R(sf.z):fr;Lf=livreEm(m,x,y,z0,z0+E)}
+   else{z0=fr-E;Lf=livreEm(m,x,y,z0,z0+E);/* rente às portas só se ali tem lugar de verdade (não a fresta entre duas portas) */if(ocupado(m,x,y,z0,z0+E)||Lf.x1-Lf.x0<Math.min(dim[0],30)||Lf.y1-Lf.y0<Math.min(dim[1],30)){z0=fr;Lf=livreEm(m,x,y,z0,z0+E)}}
+   var px_=(k==='rh'||k==='trav'||k==='fsup'||k==='finf')?[-Lt,R(+m.w||0)+Rt]:[null,null],py_=k==='rv'?[0,h0]:[null,null];
+   c=faixa(x,dim[0],Lf.x0,Lf.x1,px_[0],px_[1]);q.x=c[0];q.w=c[1]-c[0];c=faixa(y,dim[1],Lf.y0,Lf.y1,py_[0],py_[1]);q.y=c[0];q.h=c[1]-c[0];q.z=z0;q.d=E}
+  else if(ax==='x'){/* lateral de acabamento: do fundo até a frente (portas), altura do módulo */q.z=0;q.d=Math.max(1,fr);Lf=livreEm(m,x,y,1,fr-1);q.x=x-E/2;q.w=E;c=faixa(y,h0,Lf.y0,Lf.y1,0,h0);q.y=c[0];q.h=c[1]-c[0]}
+  else{/* prateleira: dentro da caixa (do fundo até a frente do corpo) */var zf=R(+m.d||0);q.z=0;q.d=Math.max(1,zf);Lf=livreEm(m,x,y,1,zf-1);q.x=Lf.x0;q.w=Math.max(1,Math.min(Lf.x1,R(+m.w||0)+Rt)-Math.max(Lf.x0,-Lt));q.x=Math.max(Lf.x0,-Lt);q.y=y-E/2;q.h=E}
+  var r=EM.pecaNova(m,q);if(!r.ok&&ax==='x'&&fr>R(+m.d||0)){/* lateral batendo na porta: fica só na profundidade da caixa */q.d=Math.max(1,R(+m.d||0));delete q.id;var r2=EM.pecaNova(m,q);if(r2.ok)return r2}return r};
+
+ /* ---------- vãos pra fechar (módulo × parede, teto, chão e vizinho) ---------- */
+ EM.vaos=function(m){var r=[];if(!m||m.corner||(window.lvIs&&lvIs(m)))return r;var zo=0;try{zo=R(zoOf(m))}catch(_){}var L=lt(m),Rr=rt(m),h=R(m.h),fr=frenteLocal(m),top=(+m.b||0)+(+m.h||0),s=sala();
+  var fb=0;try{fb=R(fBack(m))}catch(_){}if(zo>0){r.push({id:'atrasE',t:'Atrás, lado esquerdo (afastado '+EM.cmTxt(zo)+' cm)',q:{k:'vao',ax:'x',x:-L,y:0,w:E,h:h,z:-zo-fb,d:zo}});r.push({id:'atrasD',t:'Atrás, lado direito (afastado '+EM.cmTxt(zo)+' cm)',q:{k:'vao',ax:'x',x:R(m.w)+Rr-E,y:0,w:E,h:h,z:-zo-fb,d:zo}})}
+  /* do lado: até a parede ou até o vizinho da mesma fileira */
+  var e=extOf(m),viz=S.mods.filter(function(o){return o!==m&&(o.wing||0)===(m.wing||0)&&!(window.lvIs&&lvIs(o))&&(+m.b||0)<(+o.b||0)+(+o.h||0)-1&&(+o.b||0)<top-1}),lim=m.wing?[-1e9,1e9]:[s.x0,s.x1];
+  var esq=lim[0],dir=lim[1];viz.forEach(function(o){var f=extOf(o);if(f[1]<=e[0]+.5)esq=Math.max(esq,f[1]);if(f[0]>=e[1]-.5)dir=Math.min(dir,f[0])});
+  var ge=R(e[0]-esq),gd=R(dir-e[1]);if(ge>0&&ge<=600)r.push({id:'ladoE',t:'Lado esquerdo · '+EM.cmTxt(ge)+' cm até '+(esq===lim[0]?'a parede':'o vizinho'),q:{k:'vao',ax:'z',x:-L-ge,y:0,w:ge,h:h,z:fr-E,d:E}});
+  if(gd>0&&gd<=600)r.push({id:'ladoD',t:'Lado direito · '+EM.cmTxt(gd)+' cm até '+(dir===lim[1]?'a parede':'o vizinho'),q:{k:'vao',ax:'z',x:R(m.w)+Rr,y:0,w:gd,h:h,z:fr-E,d:E}});
+  /* em cima: até o teto (ou até o que estiver em cima) */
+  var cima=s.y1;S.mods.forEach(function(o){if(o===m||(o.wing||0)!==(m.wing||0))return;var f=extOf(o);if(f[0]<e[1]-1&&e[0]<f[1]-1&&(+o.b||0)>=top-.5)cima=Math.min(cima,+o.b||0)});var gc=R(cima-top);
+  if(gc>0&&gc<=800)r.push({id:'cima',t:'Em cima · '+EM.cmTxt(gc)+' cm até '+(cima===s.y1?'o teto':'o módulo de cima'),q:{k:'vao',ax:'z',x:-L,y:-gc,w:R(m.w)+L+Rr,h:gc,z:fr-E,d:E}});
+  /* embaixo: só módulo suspenso, até o chão ou o que estiver embaixo (pedra, módulo) */
+  var bb=+m.b||0;if(bb>0){var baixo=0;S.mods.forEach(function(o){if(o===m||(o.wing||0)!==(m.wing||0))return;var f=extOf(o),t=(+o.b||0)+(+o.h||0);if(f[0]<e[1]-1&&e[0]<f[1]-1&&t<=bb+.5)baixo=Math.max(baixo,t)});(S.stones||[]).forEach(function(st){if(m.wing)return;if(st.x<e[1]-1&&e[0]<st.x+st.w-1){var t=(+st.t||0);if(t<=bb+.5)baixo=Math.max(baixo,t)}});var gb=R(bb-baixo);
+   if(gb>0&&gb<=800)r.push({id:'baixo',t:'Embaixo · '+EM.cmTxt(gb)+' cm até '+(baixo?'o que está embaixo':'o chão'),q:{k:'vao',ax:'z',x:-L,y:h,w:R(m.w)+L+Rr,h:gb,z:fr-E,d:E}})}
+  return r};
+ EM.fechaVao=function(m,id){var v=EM.vaos(m).filter(function(g){return g.id===id})[0];if(!v)return {ok:false,com:'vão não achado'};var q=JSON.parse(JSON.stringify(v.q));q.vao=id;return EM.pecaNova(m,q)};
+})();
+</script>
+<script>
+/* ===== ESTRUTURA DO MÓDULO · tela: ferramentas, segurar 2 s, arrastar/aumentar/diminuir e medidas exatas ===== */
+(function(){
+ var EM=window.EM;if(!EM||!EM.TIPOS)return;var T=EM.TIPOS,E=15;
+ EM.st={modo:'',sel:null,rg:0,vaos:0};/* modo: '' | 'peca' | 'rv' | 'rh' | 'prat' | … ; sel: id da peça do módulo atual */
+ var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+ var mm=function(v){return Math.round(+v||0)};
+ var mi=function(){return S.mods.indexOf(S.m)};
+ /* medidas que a pessoa pode mudar, conforme a orientação (a espessura 15 não muda) */
+ var campos=EM.campos=function(q){var c=[];if(q.ax!=='x')c.push(['w',q.ax==='z'&&/^(rv)$/.test(q.k)?'Largura da régua':'Largura (comprimento)']);if(q.ax!=='y')c.push(['h','Altura']);if(q.ax!=='z')c.push(['d','Profundidade']);
+  c.push(['x','Da esquerda do módulo'],['b','Do chão até embaixo da peça'],['z','Da traseira do módulo até a peça']);return c};
+ var valDe=function(m,q,k){if(k==='b')return mm((+m.b||0)+(+m.h||0)-q.y-q.h);return mm(q[k])};
+ EM.ferramentas=function(m){if(!m||m.corner||(window.lvIs&&lvIs(m)))return '';var st=EM.st,h='<div class="note" style="margin-top:6px"><b>Peças em MDF 15 mm</b> deste módulo (entram no 3D, no plano de corte e no orçamento)</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+  '<button data-emtool="peca" class="'+(st.modo==='peca'?'sel':'')+'">＋ Criar Peça 15 mm</button><button data-emtool="regua" class="'+(st.rg||(st.modo&&T[st.modo]&&T[st.modo].rg)?'sel':'')+'">＋ Criar Régua</button><button data-emtool="vao" class="'+(st.vaos?'sel':'')+'">⬚ Fechar Vão</button></div>';
+  if(st.rg)h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+['rv','rh','prat','trav','latac','fsup','finf'].map(function(k){return '<button data-emrg="'+k+'" class="'+(st.modo===k?'sel':'')+'">'+T[k].n+'</button>'}).join('')+'</div>';
+  if(st.modo)h+='<div class="note" data-emdica="1">✋ Segure 2 segundos no desenho onde a '+(st.modo==='peca'?'peça':T[st.modo].n.toLowerCase())+' começa. <button data-emtool="sair">Cancelar</button></div>';
+  if(st.vaos){var vs=EM.vaos(m);h+='<div style="margin-top:6px">'+(vs.length?vs.map(function(v){return '<button data-emvao="'+v.id+'" style="display:block;width:100%;text-align:left;margin:3px 0">⬚ '+esc(v.t)+'</button>'}).join('')+'<div class="note">A peça nasce do tamanho do vão; depois é só diminuir nas medidas abaixo se quiser menor.</div>':'<div class="note">Este módulo não tem vão livre pra fechar (parede, teto, chão ou vizinho).</div>')+'</div>'}
+  var L=(m.pl||[]);if(L.length){h+='<div style="margin-top:6px">'+L.map(function(q){var c=EM.corte(q),on=st.sel===q.id;return '<div class="box" style="'+(on?'border-color:#ff9f1a':'')+'"><b>'+esc((T[q.k]||T.peca).n)+'</b> · '+c[0]+' × '+c[1]+' mm · MDF 15 '+(on?'':'<button data-emsel="'+q.id+'">Editar</button> ')+'<button data-emdel="'+q.id+'">🗑 Excluir</button>'+
+    (on?campos(q).map(function(f){return '<div class="g"><label>'+f[1]+' (mm)</label><input type="text" inputmode="none" data-calc="1" data-empk="'+q.id+'|'+f[0]+'" value="'+valDe(m,q,f[0])+'"></div>'}).join('')+'<div class="note">Arraste a peça no desenho; pelas bordas aumenta e diminui. Ela não entra em outra peça.</div><button data-emsel="">✓ Pronto</button>':'')+'</div>'}).join('')+'</div>'}
+  return h};
+ var rp=function(){try{panel()}catch(_){}};
+ var avisa=function(r,o){toast('⚠ Não dá: a peça entraria em '+(r.com||'outra peça')+'. '+(o||'Nada foi alterado.'))};
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-emtool],[data-emrg],[data-emvao],[data-emsel],[data-emdel]');if(!b||window.RO||!S.m)return;var bd=document.getElementById('bd');if(!bd||!bd.contains(b))return;e.stopPropagation();var st=EM.st,m=S.m,d=b.dataset;
+  if(d.emtool!==undefined){var t=d.emtool;if(t==='sair'){st.modo='';st.rg=0}else if(t==='peca'){st.modo=st.modo==='peca'?'':'peca';st.rg=0;st.vaos=0}else if(t==='regua'){st.rg=st.rg?0:1;if(!st.rg)st.modo='';else if(st.modo==='peca')st.modo='';st.vaos=0}else if(t==='vao'){st.vaos=st.vaos?0:1;st.modo='';st.rg=0}if(st.modo)toast('✋ Segure 2 segundos no desenho onde a peça começa');rp();EM.re();return}
+  if(d.emrg){st.modo=st.modo===d.emrg?'':d.emrg;if(st.modo)toast('✋ '+T[st.modo].n+': segure 2 segundos no desenho onde ela começa');rp();EM.re();return}
+  if(d.emvao){snap();var r=EM.fechaVao(m,d.emvao);if(!r.ok){hs.pop();avisa(r)}else{st.sel=r.q.id;st.vaos=0;toast('✓ Vão fechado com MDF 15 mm · '+EM.corte(r.q).join(' × ')+' mm')}EM.re();rp();return}
+  if(d.emsel!==undefined){st.sel=d.emsel||null;EM.re();rp();return}
+  if(d.emdel){snap();EM.pecaApaga(m,d.emdel);if(st.sel===d.emdel)st.sel=null;EM.re();rp();toast('Peça excluída (Desfazer volta)');return}},true);
+ /* medida exata */
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.empk||!S.m||window.RO)return;var a=t.dataset.empk.split('|'),m=S.m,q=EM.peca(m,a[0]);if(!q)return;var k=a[1],s=String(t.value).trim().replace(',','.'),v=parseFloat(s);
+  if(!/^-?\d*\.?\d+$/.test(s)||!isFinite(v)){toast('⚠ Digite a medida em mm. Nada foi alterado.');t.value=valDe(m,q,k);return}v=Math.round(v);var nv={};
+  if(k==='b')nv.y=mm((+m.b||0)+(+m.h||0)-v-q.h);else if(k==='h'){nv.h=v;nv.y=q.y+q.h-v}/* a altura cresce pra cima: a base fica onde está */else nv[k]=v;
+  if((k==='w'||k==='h'||k==='d')&&v<1){toast('⚠ Medida tem que ser maior que zero');t.value=valDe(m,q,k);return}
+  snap();var r=EM.pecaMuda(m,q,nv);if(!r.ok){hs.pop();t.value=valDe(m,q,k);avisa(r);return}EM.re();rp()});
+
+ /* ---------- no desenho: alça da peça, segurar 2 s pra criar, arrastar e mudar o tamanho ---------- */
+ var sv=document.getElementById('svg');if(!sv)return;
+ /* onde o módulo está no desenho: o retângulo de fundo dele (mesma conta do modSvg) */
+ function geo(i){var g=sv.querySelector('rect[data-mi="'+i+'"]');if(!g)return null;var m=S.mods[i],k=(+g.getAttribute('width')||0)/Math.max(1,+m.w||1);if(!(k>0))return null;return {x0:+g.getAttribute('x'),y0:+g.getAttribute('y'),k:k}}
+ EM.geo=geo;
+ var d0=window.draw;if(typeof d0==='function')draw=window.draw=function(){var r=d0.apply(this,arguments);try{var ex=document.getElementById('emov');if(ex)ex.remove();var m=S.m,i=mi();if(!m||i<0||window.RO)return r;var G=geo(i);if(!G)return r;var h='';
+   /* ferramenta ligada: uma capa por cima do desenho recebe o dedo (o segurar 2 s do módulo e o toque no vão não abrem por baixo) */
+   if(EM.st.modo)h+='<rect id="emcapa" x="-100000" y="-100000" width="200000" height="200000" fill="#ff9f1a" fill-opacity=".04" style="touch-action:none"/>';
+   (m.pl||[]).forEach(function(q){var x=G.x0+q.x*G.k,y=G.y0+q.y*G.k,w=Math.max(q.w*G.k,8),hh=Math.max(q.h*G.k,8),on=EM.st.sel===q.id;x-= (w-q.w*G.k)/2;y-=(hh-q.h*G.k)/2;
+    h+='<rect data-empl="'+q.id+'" x="'+x+'" y="'+y+'" width="'+w+'" height="'+hh+'" fill="#ff9f1a" fill-opacity="'+(on?.18:0)+'" stroke="'+(on?'#ff9f1a':'none')+'" stroke-width="2" style="cursor:move;touch-action:none"/>';
+    if(on){var H=10;[['l',x-H/2,y,H,hh],['r',x+w-H/2,y,H,hh],['t',x,y-H/2,w,H],['b',x,y+hh-H/2,w,H]].forEach(function(a){if((a[0]==='l'||a[0]==='r')&&q.ax==='x')return;if((a[0]==='t'||a[0]==='b')&&q.ax==='y')return;h+='<rect data-emh="'+q.id+'|'+a[0]+'" x="'+a[1]+'" y="'+a[2]+'" width="'+a[3]+'" height="'+a[4]+'" fill="#ff9f1a" fill-opacity=".55" style="cursor:'+(a[0]==='l'||a[0]==='r'?'ew':'ns')+'-resize;touch-action:none"/>'})}});
+   if(h)sv.insertAdjacentHTML('beforeend','<g id="emov">'+h+'</g>')}catch(e){try{console.warn('EMov',e)}catch(_){}}return r};
+ var LP=null,DG=null,RAF=0,ENG=null;
+ /* o clique que o navegador manda depois do segurar/arrastar não chega no desenho */
+ document.addEventListener('click',function(e){if(ENG&&!ENG.id&&Date.now()-ENG.t<600&&sv.contains(e.target)){e.stopImmediatePropagation();e.preventDefault();ENG=null}},true);
+ var local=function(e){var p=px(e),G=geo(mi());if(!G)return null;return {x:(p.x-G.x0)/G.k,y:(p.y-G.y0)/G.k,k:G.k}};
+ var anel=function(x,y,on){var a=document.getElementById('emlp');if(a)a.remove();if(!on)return;sv.insertAdjacentHTML('beforeend','<g id="emlp" pointer-events="none"><circle cx="'+x+'" cy="'+y+'" r="18" fill="none" stroke="#ff9f1a" stroke-width="4" stroke-dasharray="113" stroke-dashoffset="113"><animate attributeName="stroke-dashoffset" from="113" to="0" dur="2s" fill="freeze"/></circle></g>')};
+ EM.criarEm=function(x,y){var m=S.m,k=EM.st.modo;if(!m||!k)return null;snap();var r=EM.criaPecaNoPonto(m,x,y,k);if(!r.ok){hs.pop();avisa(r,'A peça não foi criada.');return r}EM.st.sel=r.q.id;EM.st.modo='';EM.st.rg=0;EM.re();rp();toast('✓ '+(T[k]||T.peca).n+' em MDF 15 mm · '+EM.corte(r.q).join(' × ')+' mm · arraste ou digite as medidas');return r};
+ document.addEventListener('pointerdown',function(e){if(window.RO||!S.m||!sv.contains(e.target))return;var t=e.target.closest&&e.target.closest('[data-empl],[data-emh]');
+  if(EM.st.modo&&!t){e.stopImmediatePropagation();e.preventDefault();var p=px(e),l=local(e);if(!l)return;LP={id:e.pointerId,cx:e.clientX,cy:e.clientY,x:l.x,y:l.y,tm:setTimeout(function(){var q=LP;LP=null;anel(0,0,false);if(q){ENG={id:q.id,t:Date.now()};EM.criarEm(q.x,q.y)}},2000)};anel(p.x,p.y,true);return}
+  if(!t)return;var q;if(t.dataset.empl){q=EM.peca(S.m,t.dataset.empl);if(!q)return;if(EM.st.sel!==q.id){EM.st.sel=q.id;e.stopImmediatePropagation();e.preventDefault();EM.re();rp();return}}
+  var a=(t.dataset.emh||t.dataset.empl+'|m').split('|');q=EM.peca(S.m,a[0]);if(!q)return;e.stopImmediatePropagation();e.preventDefault();var l2=local(e);if(!l2)return;
+  DG={id:e.pointerId,q:q,md:a[1],x0:l2.x,y0:l2.y,o:{x:q.x,y:q.y,w:q.w,h:q.h},mv:0};try{sv.setPointerCapture(e.pointerId)}catch(_){}},true);
+ document.addEventListener('pointermove',function(e){if(LP&&e.pointerId===LP.id){if(Math.hypot(e.clientX-LP.cx,e.clientY-LP.cy)>10){clearTimeout(LP.tm);LP=null;anel(0,0,false)}e.stopImmediatePropagation();return}
+  if(!DG||e.pointerId!==DG.id)return;e.stopImmediatePropagation();e.preventDefault();var l=local(e);if(!l)return;var dx=Math.round(l.x-DG.x0),dy=Math.round(l.y-DG.y0);if(!DG.mv){if(Math.hypot(dx*l.k,dy*l.k)<3)return;DG.mv=1;snap()}DG.dx=dx;DG.dy=dy;
+  if(!RAF)RAF=requestAnimationFrame(function(){RAF=0;if(DG)EM.arrasta(S.m,DG.q,DG.md,DG.o,DG.dx,DG.dy)})},true);
+ var fim=function(e){if(ENG&&e.pointerId===ENG.id){/* soltou o dedo depois de criar: não vira toque no módulo (abria o menu do vão) */ENG={t:Date.now()};e.stopImmediatePropagation();e.preventDefault();return}if(LP&&e.pointerId===LP.id){ENG={t:Date.now()};clearTimeout(LP.tm);LP=null;anel(0,0,false);toast('✋ Segure 2 segundos (sem soltar) pra criar a peça');e.stopImmediatePropagation();return}if(!DG||e.pointerId!==DG.id)return;e.stopImmediatePropagation();var g=DG;DG=null;ENG={t:Date.now()};if(RAF){cancelAnimationFrame(RAF);RAF=0;EM.arrasta(S.m,g.q,g.md,g.o,g.dx||0,g.dy||0)}if(g.mv){EM.re();rp()}};
+ document.addEventListener('pointerup',fim,true);document.addEventListener('pointercancel',fim,true);
+ /* arrasta (md m) ou muda a borda (l r t b) pelo quanto andou; se bater, para encostado (busca o maior passo que cabe) */
+ EM.arrasta=function(m,q,md,o,dx,dy){var alvo=function(t){var X=Math.round(dx*t),Y=Math.round(dy*t),n={x:o.x,y:o.y,w:o.w,h:o.h};
+   if(md==='m'){n.x=o.x+X;n.y=o.y+Y}else if(md==='l'){n.x=o.x+X;n.w=o.w-X}else if(md==='r'){n.w=o.w+X}else if(md==='t'){n.y=o.y+Y;n.h=o.h-Y}else if(md==='b'){n.h=o.h+Y}if(n.w<E||n.h<E){if(q.ax!=='x'&&n.w<E)return null;if(q.ax!=='y'&&n.h<E)return null}return n};
+  var tenta=function(n){if(!n)return false;return EM.pecaMuda(m,q,n).ok};
+  if(tenta(alvo(1))){draw();return true}
+  /* andou de mais: vai até encostar (maior pedaço do caminho que cabe), primeiro no x e depois no y, pra deslizar encostado */
+  var maior=function(f){var lo=0,hi=1;for(var i=0;i<11;i++){var mid=(lo+hi)/2;if(tenta(f(mid)))lo=mid;else hi=mid}return lo};
+  if(md==='m'){var px_=0;if(dx)px_=maior(function(t){return {x:o.x+Math.round(dx*t),y:o.y,w:o.w,h:o.h}});var X=Math.round(dx*px_);if(dy)maior(function(t){return {x:o.x+X,y:o.y+Math.round(dy*t),w:o.w,h:o.h}})}
+  else maior(alvo);try{__build()}catch(_){}draw();return true};
+})();
+</script>
 </body></html>

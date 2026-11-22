@@ -13476,4 +13476,38 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  ['pecaMuda','pecaApaga'].forEach(function(f){var o=EM[f];EM[f]=function(m){if(EM.novo(m))return f==='pecaMuda'?{ok:false,com:'(peça de versão mais nova do app: atualize pra editar)'}:false;return o.apply(this,arguments)}});
  var pn=EM.pecaNova;EM.pecaNova=function(m){if(EM.novo(m))return {ok:false,com:'(módulo com peças de versão mais nova do app: atualize pra editar)'};return pn.apply(this,arguments)};
 })();
-</script></body></html>
+</script><script>
+/* ===== POLÍTICA B — compatibilidade dos projetos com peças livres (Adauto, 22/11) =====
+   Projeto com peças livres não é compartilhado, exportado, importado nem restaurado em versão incompatível, e nunca perde peça calado:
+   · SAÍDA (link pro cortador e link do cliente): o pacote de projeto com peças livres sai com tipo novo (arque-corte-v2 / arque-cliente-v2) e o
+     formato (fmt). Versão antiga do app não reconhece o tipo e RECUSA o link ("Não consegui abrir…") em vez de abrir sem as peças e cortar errado.
+     Antes de mandar, a pessoa confirma sabendo disso.
+   · ENTRADA (abrir link, recuperar backup, guardar projeto novo na biblioteca): pacote/projeto de formato mais novo que este app é recusado com
+     aviso claro; nada é gravado nem trocado. Os de formato que este app entende entram normalmente.
+   · Projeto já guardado de formato mais novo continua travado pra edição (EM.novo, no bloco de compatibilidade). */
+(function(){var EM=window.EM;if(!EM)return;
+ var tem=function(st){return !!(st&&Array.isArray(st.mods)&&st.mods.some(function(m){return m&&((m.pl&&m.pl.length)||(m.plBad&&m.plBad.length)||(m.plPend&&m.plPend.length))}))};
+ var fmtDe=function(st){var f=+((st&&st.emFmt)||0);((st&&st.mods)||[]).forEach(function(m){if(m&&+m.plv>f)f=+m.plv});return f};
+ var verK=function(k){var r=/^arque-(corte|cliente)(?:-v(\d+))?$/.exec(String(k||''));return r?{t:r[1],v:r[2]?+r[2]:1}:null};
+ var MSG='Este projeto tem peças livres feitas numa versão mais nova do Arquemestre. Atualize o app pra abrir — nada foi alterado.';
+ var C=EM.compat={tem:tem,fmtDe:fmtDe,verK:verK,MSG:MSG,V:2,futuro:function(st,o){return fmtDe(st)>EM.FMT||(o&&(+o.fmt||0)>EM.FMT)}};
+ C.nPecas=function(st){var n=0;((st&&st.mods)||[]).forEach(function(m){n+=((m&&m.pl)||[]).length});return n};
+ /* janela de confirmação antes de mandar */
+ C.dlg=function(n,ok){var old=document.getElementById('emcompat');if(old)old.remove();var d=document.createElement('div');d.id='emcompat';d.style.cssText='position:fixed;inset:0;z-index:100003;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML='<div style="background:#fff;border-radius:12px;padding:14px;max-width:420px;width:100%"><b>Projeto com peças livres</b><div class="note" style="margin:6px 0">Este projeto tem '+n+(n===1?' peça livre':' peças livres')+' (MDF 15). Quem receber precisa do Arquemestre atualizado (com peças livres). Numa versão antiga o link <b>não abre</b> — assim ninguém corta faltando peça.</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px"><button data-emcok="1">Enviar</button><button data-emcno="1">Cancelar</button></div></div>';
+  document.body.appendChild(d);d.addEventListener('click',function(e){var b=e.target.closest('[data-emcok],[data-emcno]');if(!b)return;e.stopPropagation();d.remove();if(b.dataset.emcok)ok()})};
+ function inst(){
+  /* saída: o pacote ganha o tipo novo quando tem peça livre */
+  var ce=window.cutEncode;if(typeof ce==='function')cutEncode=window.cutEncode=function(o){try{var k=verK(o&&o.k);if(k&&k.v===1&&tem(o.st)){/* só sobe o tipo de sempre; tipo mais novo não é mexido */o=JSON.parse(JSON.stringify(o));o.k='arque-'+k.t+'-v'+C.V;o.fmt=EM.FMT}}catch(_){}return ce.call(this,o)};
+  /* entrada: tipo novo que este app entende vira o tipo de sempre; formato mais novo é recusado */
+  var cd=window.cutDecode;if(typeof cd==='function')cutDecode=window.cutDecode=function(){return cd.apply(this,arguments).then(function(o){var k=verK(o&&o.k);if(k&&(k.v>C.V||C.futuro(o.st,o))){var e=new Error('formato');e.emFuturo=1;throw e}if(k&&k.v>1){o.k='arque-'+k.t}return o})};
+  var ao=window.arqueCutOpen;if(typeof ao==='function')arqueCutOpen=window.arqueCutOpen=function(code){var self=this,args=arguments;return cd(code).then(function(o){var k=verK(o&&o.k);if(k&&(k.v>C.V||C.futuro(o.st,o))){toast(MSG);C.ultimo='recusado';return}C.ultimo='aberto';return ao.apply(self,args)},function(){return ao.apply(self,args)})};
+  /* biblioteca: projeto NOVO de formato mais novo (link, backup recuperado) não entra */
+  var ps=window.pSaveAll,K=null;if(typeof ps==='function')pSaveAll=window.pSaveAll=function(a){try{if(!K){K={};(pLoadAll()||[]).forEach(function(p){if(p)K[p.id]=1})}var bad=(a||[]).filter(function(p){return p&&!K[p.id]&&C.futuro(p.current||p.st)});
+    if(bad.length){toast(MSG);C.ultimo='biblioteca recusou';return false}(a||[]).forEach(function(p){if(p)K[p.id]=1})}catch(_){}return ps.apply(this,arguments)};
+  /* confirmar antes de mandar projeto com peça livre */
+  ['cutSend','clientSend'].forEach(function(f){var o0=window[f];if(typeof o0!=='function')return;var w=function(){var self=this,args=arguments,st=null;try{st=snapState()}catch(_){}if(!tem(st)||C.passa)return o0.apply(self,args);C.dlg(C.nPecas(st),function(){C.passa=1;try{o0.apply(self,args)}finally{C.passa=0}})};window[f]=w;try{if(f==='cutSend')cutSend=w;else clientSend=w}catch(_){}})}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inst);else setTimeout(inst,0);
+})();
+</script>
+</body></html>

@@ -14710,4 +14710,45 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lista"] as? String, "Prateleira · livre 864x560 mdf15 x1 | Régua vertical · livre 820x50 mdf15 x1")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// POLITICA-B (Adauto 22/11): projeto com peças livres não é compartilhado/importado/restaurado em versão incompatível nem perde peça calado.
+    /// Link pro cortador e do cliente saem com tipo novo (arque-corte-v2 / arque-cliente-v2) — a versão publicada recusa (só aceita arque-corte);
+    /// confirma antes de mandar; este app abre com as peças; link ou projeto de formato mais novo é recusado com aviso e nada é gravado.
+    @MainActor
+    func testPoliticaBProjetoComPecasLivresNaoAbreEmVersaoIncompativelNemPerdePeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var o={},TL=[],t0=window.toast;window.toast=function(t){TL.push(String(t));try{t0(t)}catch(_){}};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var bruto=async function(c){c=String(c||'').trim();var u=unb64u(c.slice(1));if(c[0]==='j')return JSON.parse(new TextDecoder().decode(u));var s=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();return JSON.parse(s)};
+          var espera=async function(){var t=Date.now();while(!__shared&&Date.now()-t<5000)await W(50)};
+          /* 1. sem peça livre: manda direto, tipo de sempre (abre em qualquer versão) */
+          S.mods=[];S.stones=[];newTpl(3);var m=S.mods[0];m.x=300;draw();ensureProj();window.__shared=null;cutSend();await espera();var r1=await bruto(__shared.code);o.semPeca=r1.k+' · janela '+!!document.getElementById('emcompat');
+          /* 2. com peça livre: pergunta antes; Cancelar não manda */
+          S.m=m;EM.criaPecaNoPonto(m,450,450,'prat');draw();window.__shared=null;cutSend();await W(100);var dl=document.getElementById('emcompat');o.pergunta=dl?/1 peça livre/.test(dl.textContent)&&/não abre/.test(dl.textContent):false;dl.querySelector('[data-emcno]').click();await W(300);o.cancelou=window.__shared===null;
+          /* Enviar: sai com o tipo novo (versão antiga recusa: ela só aceita 'arque-corte') e o formato */
+          cutSend();await W(100);document.querySelector('#emcompat [data-emcok]').click();await espera();var r2=await bruto(__shared.code);o.comPeca=r2.k+' fmt '+r2.fmt+' · peças no pacote '+r2.st.mods[0].pl.length;
+          /* 3. este app abre o link novo com as peças inteiras */
+          var code=__shared.code,nLib=pLoadAll().length;window.arqueCutOpen(code);await W(1500);o.abriu=EM.compat.ultimo+' · peças '+((S.mods[0]&&S.mods[0].pl)||[]).length+' · '+((S.mods[0]&&S.mods[0].pl&&S.mods[0].pl[0])?S.mods[0].pl[0].w+'x'+S.mods[0].pl[0].d:'');
+          /* 4. link de formato mais novo: recusa com aviso, nada gravado */
+          var fut=JSON.parse(JSON.stringify(r2));fut.fmt=99;fut.st.emFmt=99;fut.pid='futuro1';var cf=await cutEncode(fut);var n0=pLoadAll().length;TL=[];window.arqueCutOpen(cf);await W(1200);o.futuro=EM.compat.ultimo+' · biblioteca igual '+(pLoadAll().length===n0)+' · aviso '+TL.some(function(t){return /versão mais nova/.test(t)});
+          var v3=JSON.parse(JSON.stringify(r2));v3.k='arque-corte-v3';v3.pid='futuro2';var c3=await cutEncode(v3);TL=[];window.arqueCutOpen(c3);await W(1200);o.tipoFuturo=EM.compat.ultimo+' · aviso '+TL.some(function(t){return /versão mais nova/.test(t)});
+          /* 5. recuperar/importar projeto de formato mais novo na biblioteca: recusa; o resto continua gravando */
+          var a=pLoadAll(),n1=a.length,nv={id:'pfut'+Date.now(),client:{nome:'X'},created:Date.now(),updated:Date.now(),current:{mods:[{w:600,pl:[{id:'q',k:'peca',ax:'z',x:0,y:0,w:100,h:100,z:0,d:15}],plv:99}],emFmt:99}};a.push(nv);var rs=pSaveAll(a);o.backupFuturo=rs+' · biblioteca '+(pLoadAll().length===n1);
+          var b=pLoadAll(),ok={id:'pok'+Date.now(),client:{nome:'Y'},created:Date.now(),updated:Date.now(),current:{mods:[{w:600}]}};b.push(ok);o.backupNormal=pSaveAll(b)+' · '+(pLoadAll().length===n1+1);
+          /* 6. link do cliente com peça livre: tipo novo */
+          loadState(JSON.parse(JSON.stringify(r2.st)));draw();ensureProj();window.__sharedCl=null;clientSend();await W(150);var dc=document.getElementById('emcompat');if(dc)dc.querySelector('[data-emcok]').click();var t=Date.now();while(!window.__sharedCl&&Date.now()-t<5000)await W(50);var rc=window.__sharedCl?await bruto(__sharedCl.code):null;o.cliente=rc?rc.k+' fmt '+rc.fmt:'nao';
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["semPeca"] as? String, "arque-corte · janela false", "sem peça livre: igual a antes, abre em qualquer versão")
+        XCTAssertEqual(o["pergunta"] as? Bool, true, "com peça livre: avisa antes de mandar")
+        XCTAssertEqual(o["cancelou"] as? Bool, true, "Cancelar não manda nada")
+        XCTAssertEqual(o["comPeca"] as? String, "arque-corte-v2 fmt 1 · peças no pacote 1", "tipo novo: versão antiga recusa em vez de cortar faltando peça")
+        XCTAssertEqual(o["abriu"] as? String, "aberto · peças 1 · 870x560", "este app abre com as peças inteiras")
+        XCTAssertEqual(o["futuro"] as? String, "recusado · biblioteca igual true · aviso true", "formato mais novo: recusa, nada gravado")
+        XCTAssertEqual(o["tipoFuturo"] as? String, "recusado · aviso true", "tipo de pacote mais novo: recusa")
+        XCTAssertEqual(o["backupFuturo"] as? String, "false · biblioteca true", "recuperar/importar projeto de formato mais novo: não entra")
+        XCTAssertEqual(o["backupNormal"] as? String, "true · true", "projeto normal continua gravando")
+        XCTAssertEqual(o["cliente"] as? String, "arque-cliente-v2 fmt 1", "link do cliente com peça livre: tipo novo")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
 }

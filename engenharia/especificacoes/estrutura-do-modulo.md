@@ -98,3 +98,22 @@ logo acima da barra da parede (o seletor de paredes continua o de sempre, `wvGo`
 - **Inserir modelo salvo**: peça livre que entraria em algo no lugar novo não some calada: fica em `m.plPend` e uma janela lista qual e em quê, com
   **Tirar essas peças deste móvel** (o modelo salvo continua com elas) ou **Desfazer a inserção do móvel**.
 - Testes: `testCompatibilidadeDosProjetosComPecasLivresEMarcadorDeFormato`, `testMeusModelosGuardaPecasLivresEAoReusarRecalculaPelaNovaMedida`.
+
+## 6. Política B — versões incompatíveis (pedido de 22/11)
+Objetivo: projeto com peças livres não é compartilhado, exportado, importado nem restaurado em versão incompatível, e nunca perde peça calado.
+- **Saída** (`cutEncode`, usado pelo link pro cortador e pelo link do cliente): pacote com peça livre sai como `arque-corte-v2` / `arque-cliente-v2`
+  com `fmt`. Sem peça livre, nada muda (`arque-corte`), abre em qualquer versão. Antes de mandar (`cutSend`/`clientSend`), janela de confirmação.
+- **Versão publicada (App Store 3.0.12, d861fbd)** — conferido rodando o editor dela no Chromium com links desta versão: sem peça livre "Plano de corte
+  recebido" (abre); com peça livre "Não consegui abrir o plano de corte. Peça pra enviar de novo." e nenhum projeto gravado (não corta faltando peça).
+- **Entrada** (`cutDecode`/`arqueCutOpen`): `-v2` que este app entende vira o tipo de sempre; tipo mais novo (`-v3`…) ou `fmt`/`emFmt`/`plv` maior que
+  `EM.FMT`: recusa com aviso ("feito numa versão mais nova… atualize o app — nada foi alterado").
+- **Biblioteca** (`pSaveAll`, por onde passam o link recebido e "Recuperar projetos de um backup"): projeto **novo** de formato mais novo não entra.
+- Teste: `testPoliticaBProjetoComPecasLivresNaoAbreEmVersaoIncompativelNemPerdePeca`.
+
+### Riscos que sobram (não dá pra resolver só nesta versão)
+1. **Aparelho com app antigo recebendo a biblioteca por sincronização ou restaurando backup pelo app nativo**: o app antigo abre o projeto, guarda
+   as peças livres no arquivo (o módulo é salvo inteiro), mas não as mostra nem as põe no corte. Só um bloqueio no app nativo / versão mínima
+   na sincronização resolve. Recomendação: atualizar todos os aparelhos antes de usar peças livres.
+2. **Atualização ao vivo do link do cliente (`shareUpdate`)**: manda o estado sem tipo de pacote; o visualizador antigo mostraria sem as peças (só visual).
+3. **Meus Modelos sincronizados (`prices.json`) num app antigo**: o modelo entra com as peças guardadas, mas invisíveis.
+4. A mensagem da versão antiga é genérica ("Peça pra enviar de novo"): não diz que é por versão.

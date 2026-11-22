@@ -14439,4 +14439,79 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["chapa"] as? String, "c|15|Cor Régua vertical · livre 820x50", "projeto em 18: a peça de 15 vai pra chapa de 15, com o nome")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// MULTIVISTAS (Adauto 22/11, "Editor 2D Multivistas estilo Promob"): barra Frente | Esquerda | Direita | Superior | Posterior; as vistas são projeções
+    /// das mesmas caixas do 3D; câmera (zoom, arrastar, pinça, rodinha, centralizar) nunca mexe móvel; Peça 15 mm criada na vista de cima (deitada),
+    /// de lado (em pé) e de trás (de frente), encostada na superfície; profundidade ajustável; para encostada; troca de parede; salva e reabre.
+    @MainActor
+    func testMultivistasCameraECriarPecaEmCadaVistaSemMexerMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];newTpl(3);var m=S.mods[0];m.x=300;draw();S.m=m;S.tab=0;panel();var o={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          var sv=document.getElementById('svg'),pos=function(){return JSON.stringify(S.mods.map(function(q){return [q.x,q.b,q.w,q.h,q.d,q.zo,q.wing||'']}))},P0=pos();
+          var tela=function(x,y){var c=sv.getScreenCTM(),p=sv.createSVGPoint();p.x=x;p.y=y;var q=p.matrixTransform(c);return {x:q.x,y:q.y}};
+          var ev=function(t,p,id){return new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:id||5,clientX:p.x,clientY:p.y,isPrimary:(id||5)===5,pointerType:'touch'})};
+          var vb=function(){return sv.getAttribute('viewBox').split(' ').map(Number)};
+          /* 1. barra e as 5 vistas */
+          o.barra=[].map.call(document.querySelectorAll('#mvbar [data-mv]'),function(b){return b.textContent}).join('|');
+          var vs=[];['esq','dir','cima','tras',''].forEach(function(v){document.querySelector('#mvbar [data-mv="'+v+'"]').click();vs.push((v||'frente')+':'+(EM.mv.v===v)+':'+(document.querySelectorAll('#svg rect').length>5))});o.vistas=vs.join(' ');
+          /* 2. câmera: zoom, arrastar, pinça e rodinha mexem só a vista */
+          document.querySelector('#mvbar [data-mv="cima"]').click();var a=vb();EM.mvZoom(2);var b=vb();o.zoom=Math.round(a[2]/b[2]*10)/10;
+          var r=sv.getBoundingClientRect(),c={x:r.left+r.width/2,y:r.top+r.height/2};var v0=vb();sv.dispatchEvent(ev('pointerdown',c));document.dispatchEvent(ev('pointermove',{x:c.x+40,y:c.y+20}));document.dispatchEvent(ev('pointerup',{x:c.x+40,y:c.y+20}));var v1=vb();o.arrastou=Math.round((v0[0]-v1[0])/v1[2]*r.width)+','+Math.round((v0[1]-v1[1])/v1[3]*r.height);
+          var p1={x:c.x-30,y:c.y},p2={x:c.x+30,y:c.y};sv.dispatchEvent(ev('pointerdown',p1,5));sv.dispatchEvent(ev('pointerdown',p2,6));document.dispatchEvent(ev('pointermove',{x:c.x-60,y:c.y},5));document.dispatchEvent(ev('pointermove',{x:c.x+60,y:c.y},6));document.dispatchEvent(ev('pointerup',{x:c.x-60,y:c.y},5));document.dispatchEvent(ev('pointerup',{x:c.x+60,y:c.y},6));var v2=vb();o.pinca=Math.round(v1[2]/v2[2]*10)/10;
+          sv.dispatchEvent(new WheelEvent('wheel',{bubbles:true,cancelable:true,clientX:c.x,clientY:c.y,deltaY:-100,ctrlKey:true}));o.rodinha=vb()[2]<v2[2];
+          EM.mvCentro();var vc=vb(),sa=EM.mvSala(),pr=EM.mvProj({x0:sa.x0,x1:sa.x1,y0:sa.y0,y1:sa.y1,z0:sa.z0,z1:sa.z1},EM.mvEixos('cima'));o.centro=vc[0]<=pr.x&&vc[1]<=pr.y&&vc[0]+vc[2]>=pr.x+pr.w&&vc[1]+vc[3]>=pr.y+pr.h;o.camNaoMexe=pos()===P0;
+          /* 3. criar na vista superior: deitada no piso entre a parede e o módulo */
+          EM.st.modo='peca';var cu=EM.mvCria(150,300);var qc=cu.q;o.cima=cu.ok?[qc.ax,qc.w,qc.h,qc.d].join(','):cu.com;
+          __build();var bc=__boxes().filter(function(x){return x.pk===EM.pkDe(qc)})[0];o.cima3D=Math.round(bc.y0)+'..'+Math.round(bc.y1)+' x '+Math.round(bc.x0)+'..'+Math.round(bc.x1);
+          /* profundidade: esticar a borda de baixo (pra frente da sala) 100 mm na vista de cima */
+          EM.mv.sel=qc.id;var d0=qc.d;EM.mvArrasta(m,qc,'b',EM.l2w(m,qc),0,-100);o.prof=qc.d-d0;
+          /* 4. criar na vista lateral esquerda: em pé, encostada na lateral do módulo */
+          document.querySelector('#mvbar [data-mv="esq"]').click();EM.st.modo='peca';var ce=EM.mvCria(300,-1000);var qe=ce.q;o.lado=ce.ok?[qe.ax,qe.w].join(','):ce.com;
+          __build();var be=__boxes().filter(function(x){return x.pk===EM.pkDe(qe)})[0];o.ladoEncosta=Math.round(be.x1)===Math.round(m.x);
+          /* 5. criar na vista posterior: atrás do módulo afastado 10 cm, encostada no fundo */
+          EM.afastar(m,100);draw();document.querySelector('#mvbar [data-mv="tras"]').click();EM.st.modo='peca';var ct=EM.mvCria(-600,-400);var qt=ct.q;o.tras=ct.ok?[qt.ax,qt.d].join(','):ct.com;
+          __build();var bt=__boxes().filter(function(x){return x.pk===EM.pkDe(qt)})[0];o.trasEntreParedeEFundo=Math.round(bt.z0)+'..'+Math.round(bt.z1);
+          /* 6. alinhar/colidir: arrastar a peça de cima pra direita para encostada no módulo (não entra) */
+          document.querySelector('#mvbar [data-mv="cima"]').click();EM.mv.sel=qc.id;EM.mvArrasta(m,qc,'m',EM.l2w(m,qc),500,0);__build();var bc2=__boxes().filter(function(x){return x.pk===EM.pkDe(qc)})[0];o.encostou=Math.round(bc2.x1)+' (módulo em '+m.x+')';
+          /* empurrar a peça pra dentro do módulo não deixa (nada muda) */
+          var xa=qc.x,rb=EM.pecaMuda(m,qc,{x:qc.x+200});o.bloqueou=rb.ok+' '+(qc.x===xa);
+          /* de cima, segurar em cima do módulo: a peça nasce deitada em cima dele (encostada no topo) */
+          EM.st.modo='peca';var ct2=EM.mvCria(m.x+450,300);__build();var bt2=ct2.ok?__boxes().filter(function(x){return x.pk===EM.pkDe(ct2.q)})[0]:null;o.emCima=bt2?Math.round(bt2.y0)+'':'nao';
+          /* 7. arrastar com o dedo na vista (alça) */
+          EM.mvRender();var hs_=document.querySelector('[data-mvsel="m"]'),hr=hs_.getBoundingClientRect(),hc={x:hr.left+hr.width/2,y:hr.top+hr.height/2},x0=qc.x;
+          var z0_=qc.z;EM.mv.sel=qc.id;EM.mvRender();hs_=document.querySelector('[data-mvsel="m"]');hr=hs_.getBoundingClientRect();hc={x:hr.left+hr.width/2,y:hr.top+hr.height/2};hs_.dispatchEvent(ev('pointerdown',hc));document.dispatchEvent(ev('pointermove',{x:hc.x,y:hc.y+8}));await W(40);var tt=tela(0,0),t2=tela(0,50);document.dispatchEvent(ev('pointermove',{x:hc.x,y:hc.y+(t2.y-tt.y)}));await W(60);document.dispatchEvent(ev('pointerup',{x:hc.x,y:hc.y+(t2.y-tt.y)}));o.dedo=qc.z-z0_;
+          /* 8. a mesma peça na Frente (editor de sempre) e no 3D */
+          document.querySelector('#mvbar [data-mv=""]').click();o.frente=!!document.querySelector('#svg rect[data-mi="0"]')&&partsOf(m).filter(function(p){return p.livre}).length;
+          /* 9. troca de parede com a vista ligada: o projeto não muda */
+          document.querySelector('#mvbar [data-mv="cima"]').click();var st0=JSON.stringify(snapState().mods);wvGo('e');o.paredeE=EM.mv.v+':'+(window.wvCur&&wvCur());wvGo('f');o.paredeVolta=JSON.stringify(snapState().mods)===st0;
+          /* 10. salva e reabre */
+          var antes=JSON.stringify(m.pl),st=snapState();S.mods=[];loadState(JSON.parse(JSON.stringify(st)));draw();o.reabriu=JSON.stringify(S.mods[0].pl)===antes;
+          EM.mvVista('');o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["barra"] as? String, "Frente|Esquerda|Direita|Superior|Posterior")
+        XCTAssertEqual(o["vistas"] as? String, "esq:true:true dir:true:true cima:true:true tras:true:true frente:true:true")
+        XCTAssertEqual(o["zoom"] as? Double, 2)
+        XCTAssertEqual(o["arrastou"] as? String, "40,20", "a vista anda junto com o dedo")
+        XCTAssertEqual(o["pinca"] as? Double, 2, "pinça: dedos 2× mais longe = 2× mais perto")
+        XCTAssertEqual(o["rodinha"] as? Bool, true)
+        XCTAssertEqual(o["centro"] as? Bool, true, "centralizar mostra o ambiente inteiro")
+        XCTAssertEqual(o["camNaoMexe"] as? Bool, true, "mexer a câmera nunca mexe móvel")
+        XCTAssertEqual(o["cima"] as? String, "y,300,15,300", "de cima: peça deitada (espessura na altura)")
+        XCTAssertEqual(o["cima3D"] as? String, "0..15 x 0..300", "no piso, entre a parede e o módulo")
+        XCTAssertEqual(o["prof"] as? Int, 100, "ajuste de profundidade pela vista de cima")
+        XCTAssertEqual(o["lado"] as? String, "x,15", "de lado: peça em pé (espessura na largura)")
+        XCTAssertEqual(o["ladoEncosta"] as? Bool, true, "encostada na lateral do módulo")
+        XCTAssertEqual(o["tras"] as? String, "z,15", "de trás: peça de frente")
+        XCTAssertEqual(o["trasEntreParedeEFundo"] as? String, "85..100", "entre a parede e o fundo do módulo afastado 10 cm")
+        XCTAssertEqual(o["encostou"] as? String, "300 (módulo em 300)", "arrastou demais: para encostada (alinhada) no módulo")
+        XCTAssertEqual(o["bloqueou"] as? String, "false true", "não entra no módulo")
+        XCTAssertEqual(o["emCima"] as? String, "115", "de cima, no meio do balcão: deitada em cima da base (o primeiro que o olhar acerta)")
+        XCTAssertEqual(o["dedo"] as? Int, 50, "arrastar com o dedo na vista: 50 mm")
+        XCTAssertEqual(o["frente"] as? Int, 4, "as peças aparecem na Frente (editor de sempre)")
+        XCTAssertEqual(o["paredeE"] as? String, "cima:e", "troca de parede com a vista ligada")
+        XCTAssertEqual(o["paredeVolta"] as? Bool, true, "voltar pro fundo: projeto igual")
+        XCTAssertEqual(o["reabriu"] as? Bool, true)
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
 }

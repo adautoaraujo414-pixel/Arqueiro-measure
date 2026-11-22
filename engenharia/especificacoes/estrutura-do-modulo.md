@@ -48,3 +48,23 @@ Modelo: lista `m.pl` no próprio módulo (projeto antigo não tem → nada muda)
 ### Interpretações (a confirmar com o Adauto)
 - "Peça 15 mm" = placa de frente (espessura na profundidade); as peças em pé/deitadas ficam no "Criar Régua".
 - A referência do Promob não chegou nesta sessão: os tipos seguem a lista escrita do pedido.
+
+## 3. Editor 2D multivistas (MULTIVISTAS, pedido de 22/11 "estilo Promob")
+Código: bloco `EDITOR 2D MULTIVISTAS` no fim do `editor.html` (`EM.mv*`). Barra compacta "Vista: Frente | Esquerda | Direita | Superior | Posterior | ⌂"
+logo acima da barra da parede (o seletor de paredes continua o de sempre, `wvGo`).
+- **Frente** = o editor 2D de sempre (nada mudou nele). **Esquerda/Direita/Superior/Posterior** = projeção ortográfica das MESMAS caixas do 3D
+  (`__build/__boxes`, que vêm do `partsOf`): nenhuma geometria própria por vista. Desenha do mais longe pro mais perto; pedra a 35 %;
+  módulo escolhido com contorno azul tracejado; peça escolhida em laranja com alças e a medida.
+- As vistas são relativas à parede escolhida: a parede do lado entra como "parede do fundo" (`toView`), então a mesma conta vale nas 3 paredes.
+  Eixos (frente olhando a parede, `fw=-z`): Esquerda `fw=+x`, Direita `fw=-x`, Posterior `fw=+z` (espelhada), Superior `fw=-y` com a parede em cima.
+- **Câmera** = só o `viewBox` (mm): arrastar com 1 dedo/mouse, pinça com 2 dedos, rodinha (Ctrl/pinça do trackpad = zoom; rolar do trackpad = anda),
+  ⌂ centraliza. Nenhum handler da vista mexe em móvel. Tocar num módulo escolhe ele; tocar numa peça livre escolhe a peça.
+- **Criar na vista** (Estrutura do Módulo › Criar Peça 15 mm / Criar Régua, segurar 2 s): o ponto da tela dá 2 coordenadas; a 3ª (profundidade da vista)
+  é a do primeiro sólido que o olhar acerta no ponto (a peça nasce encostada nele, do lado de quem olha). De cima sem acertar nada: o piso.
+  De lado/de trás sem acertar nada: a face do módulo escolhido. **Orientação da Peça 15 mm = plano da vista** (Frente/Posterior: de frente;
+  Esquerda/Direita: em pé de lado; Superior: deitada). As réguas mantêm a orientação do tipo. Sem girar.
+- **Módulo ↔ mundo**: `EM.l2w`/`EM.w2l` (mesma conta do 3D: posição na parede, afastamento + fundo sobreposto, paredes do lado). A peça fica no
+  `m.pl` do módulo escolhido, em coordenadas do módulo: aparece na Frente, nas outras vistas, no 3D, no corte e no orçamento; a vista não muda medida.
+- **Arrastar/esticar na vista**: muda a caixa do mundo nos 2 eixos da tela (a espessura não estica); se bater, para encostada (busca o maior passo
+  que cabe; no arrasto primeiro no eixo horizontal da tela e depois no vertical → desliza alinhada na face da outra peça). Medidas exatas no painel.
+- Teste: `testMultivistasCameraECriarPecaEmCadaVistaSemMexerMovel`.

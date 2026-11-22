@@ -113,5 +113,21 @@ Especificação visual tirada da imagem (M1 segue isto; conferência por captura
 - Teste visual novo: `testMenuCriarIgualAImagemAprovada` (ordem dos 6 nomes, 2 colunas pelas posições na tela, ícones, cabeçalho com chevron) +
   capturas no CI.
 
-## 8. Pendente
+## 8. Auditoria do Claude Chefe (22/11/2026, ~22:45 UTC) — APROVADA com 5 ressalvas obrigatórias
+1. **Colisão do espelho girado**: as caixas de hoje são alinhadas aos eixos. Proposta: espelho girado conferido como **caixa orientada** (retângulo girado
+   no plano do hospedeiro × espessura) contra as caixas do 3D, pelo teorema do eixo separador (2D no plano + intervalo na profundidade); formas
+   curvas usam o polígono do contorno girado. "Encosta pode, entrar não", igual às peças livres. Teste: `testEspelhoGiradoNaoEntraNaPrateleira`
+   (45°, encostado passa; 1 mm dentro é recusado; a caixa reta envolvente daria falso positivo e o teste prova que não dá).
+2. **Desempenho**: meta ≈ **16 ms por passo de arraste com 20 módulos**, cache por gesto; medido e registrado em cada fase (E1…E7, L2…L8) num
+   teste de tempo como o das peças livres.
+3. **Imagem aprovada** = referência visual do M1 — **já recebida** (§7).
+4. Teste antigo afetado só muda com comentário (pedido + data), **nunca afrouxado**.
+5. Teste: **abrir e fechar o menu várias vezes** (e trocar categoria) não duplica nem perde ferramenta (contagem de cada `data-*` igual a cada ciclo).
+
+**Condições para começar o M1**: candidata integrada homologada nas 3 plataformas · Code 1 corrigiu o `data-cpan` · autorização específica do
+Adauto para a fase M1. Ao começar: trazer a candidata integrada para `feature/menu-criar-espelhos-led` **por merge**. Sem merge na main, sem publicação.
+**Política B**: aprovada, condicionada ao iOS 665 e à repetição do Windows 81 verdes (Chefe: 411/411 no 973db09; a publicada c561120 recusa os links
+de corte/cliente com peça livre sem gravar nada e abre os links sem peça livre).
+
+## 9. Pendente
 auditoria do Chefe · correção do `data-cpan` (Code 1) · iOS 665 e Windows 81 (repetição) · autorização específica.

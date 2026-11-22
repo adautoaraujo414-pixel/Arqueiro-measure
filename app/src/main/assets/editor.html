@@ -2522,7 +2522,7 @@ function vmenuOpen(mi,vi,cx,cy){vmenuClose();var m=S.mods[mi];if(!m)return;var v
   else if(k==='oven'&&v2.k==='oven'&&v2.ofr){delete v2.ofr}
   else if(k==='split'){var rr=vaoRanges(m)[vi];if(rr){var c=(rr[0]+rr[1])/2,iw=m.w-2*m.esp,ratio=(c-m.esp+m.esp/2)/iw;if(ratio>0.02&&ratio<0.98){var pairs=m.div.map(function(x,i){return [x,(m.dr&&m.dr[i])||0]});pairs.push([ratio,0]);pairs.sort(function(a,b){return a[0]-b[0]});m.div=pairs.map(function(x){return x[0]});m.dr=pairs.map(function(x){return x[1]});m.v.splice(vi+1,0,JSON.parse(JSON.stringify(v2)))}}}
   else{v2.k=k;if(k==='slide'){v2.n=2;v2.cava=false}if(k==='drawers'&&!v2.cava)v2.cava=true;if(k==='shelves'||k==='drawers')v2.n=Math.max(v2.n||1,k==='drawers'?3:2);if(k==='tempero')v2.n=1}
-  S.m=m;S.sv=vi;vmenuClose();draw();panel()})}
+  S.m=m;S.sv=vi;vmenuClose();draw();panel();/* B21 (22/11): com o 3D aberto, o 3D acompanha na hora (antes só no próximo desenho) */try{if(window.re3)window.re3()}catch(_){}})}
 /* assinatura do último desenho gravado (sem contar qual módulo está escolhido): se o projeto não mudou, o salvar sozinho não lê nem grava a lista de projetos de novo.
    Qualquer outra gravação da lista (voltar ao original, receber projeto, renomear…) zera a assinatura, então a próxima mexida grava sempre. */
 var SVSIG=null;function svSig(st){var mi=st.mi,m=st.m,sti=st.sti,s='';st.mi=-1;st.m=null;st.sti=-1;try{s=JSON.stringify(st)}finally{st.mi=mi;st.m=m;st.sti=sti}return CUR+'|'+s}

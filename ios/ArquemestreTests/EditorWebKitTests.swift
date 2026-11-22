@@ -10910,9 +10910,9 @@ final class EditorWebKitTests: XCTestCase {
        Móvel NOVO na parede esquerda fica como nas outras paredes: o lado esquerdo dele à esquerda de quem olha (catálogo inteiro: igual ao espelho do mesmo
        móvel na parede direita), mesmas medidas, nome do lado certo no corte. Móvel ANTIGO fica exatamente como era, com aviso e "Desespelhar" manual (com desfazer).
        Salvar e reabrir, ida e volta de parede, ajuste por peça, peça fora do corte, encaixar/soltar no 3D e ordem dos vãos no 2D. */
-    func testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar() async throws {
-        let web = try await editor()
-        let o = try await run(web, #"""
+    /* pedido 22/11: o teste da parede esquerda foi dividido em 4 (catálogo em 3 terços + o resto) só pra caber no limite de 2 min por teste do iOS
+       (inteiro levava 136-161 s no simulador e o XCTest derrubava o app). Mesmas conferências, mesmo catálogo inteiro (os 3 terços somam ≥ 500 itens). */
+    private static let paredeEsqBase = #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var F={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
         var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.RD=6000;S.wl={L:'p',R:'p'};S.stones=[]};
         var achar=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
@@ -10925,10 +10925,53 @@ final class EditorWebKitTests: XCTestCase {
         var ladoOk=function(m,w){var ruim=0;partsOf(m).forEach(function(p){var n=window.espNomeVe?espNomeVe(m,p.name):p.name;if(!/^(Tamponamento|Lateral) (esquerd|direit)[oa]$/.test(n))return;var c=(+p.x||0)+(+p.w||0)/2,esq=/esquerd/.test(n),vEsq=w==='e'?c>m.w/2:c<m.w/2;if(esq!==vEsq)ruim++});cutLines(m).forEach(function(l){(l.names||[]).forEach(function(n){if(/^Tamponamento (esquerdo|direito)$/.test(n)&&!partsOf(m).some(function(p){var v=window.espNomeVe?espNomeVe(m,p.name):p.name;return v===n}))ruim++})});return ruim};
         var poe=function(t,w){cena();if(w!=='f')wvGo(w);newTpl(JSON.parse(JSON.stringify(t)));var m=S.m;wvGo('f');if(!m||(m.wing||'f')!==w)return null;m.x=1500;draw();return m};
         open3D();await W(300);
+        """#
+
+    /// PAREDE-ESQ-NOVO · catálogo, 1º terço: móvel novo na esquerda = espelho do mesmo móvel na direita, mesmas medidas, nome do lado certo.
+    func testParedeEsquerdaMovelNovoCatalogoPrimeiroTerco() async throws {
+        let web = try await editor()
+        let o = try await run(web, Self.paredeEsqBase + "var PARTE=0;\n" + Self.paredeEsqCatalogo)
+        XCTAssertEqual(o["cat_n"] as? Bool, true, "terço do catálogo conferido (os 3 somam o catálogo inteiro)")
+        XCTAssertEqual(o["cat_3d"] as? Int, 0, "móvel novo na esquerda = espelho do mesmo móvel na direita (forno/micro de verdade não espelham)")
+        XCTAssertEqual(o["cat_medidas"] as? Int, 0, "mesmas medidas de corte")
+        XCTAssertEqual(o["cat_nomes"] as? Int, 0, "esquerdo/direito do nome = lado de quem olha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// PAREDE-ESQ-NOVO · catálogo, 2º terço: móvel novo na esquerda = espelho do mesmo móvel na direita, mesmas medidas, nome do lado certo.
+    func testParedeEsquerdaMovelNovoCatalogoSegundoTerco() async throws {
+        let web = try await editor()
+        let o = try await run(web, Self.paredeEsqBase + "var PARTE=1;\n" + Self.paredeEsqCatalogo)
+        XCTAssertEqual(o["cat_n"] as? Bool, true, "terço do catálogo conferido (os 3 somam o catálogo inteiro)")
+        XCTAssertEqual(o["cat_3d"] as? Int, 0, "móvel novo na esquerda = espelho do mesmo móvel na direita (forno/micro de verdade não espelham)")
+        XCTAssertEqual(o["cat_medidas"] as? Int, 0, "mesmas medidas de corte")
+        XCTAssertEqual(o["cat_nomes"] as? Int, 0, "esquerdo/direito do nome = lado de quem olha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// PAREDE-ESQ-NOVO · catálogo, 3º terço: móvel novo na esquerda = espelho do mesmo móvel na direita, mesmas medidas, nome do lado certo.
+    func testParedeEsquerdaMovelNovoCatalogoTerceiroTerco() async throws {
+        let web = try await editor()
+        let o = try await run(web, Self.paredeEsqBase + "var PARTE=2;\n" + Self.paredeEsqCatalogo)
+        XCTAssertEqual(o["cat_n"] as? Bool, true, "terço do catálogo conferido (os 3 somam o catálogo inteiro)")
+        XCTAssertEqual(o["cat_3d"] as? Int, 0, "móvel novo na esquerda = espelho do mesmo móvel na direita (forno/micro de verdade não espelham)")
+        XCTAssertEqual(o["cat_medidas"] as? Int, 0, "mesmas medidas de corte")
+        XCTAssertEqual(o["cat_nomes"] as? Int, 0, "esquerdo/direito do nome = lado de quem olha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    private static let paredeEsqCatalogo = #"""
         /* 1. catálogo inteiro: móvel novo na esquerda = espelho do mesmo móvel na direita (o lado esquerdo dele à esquerda de quem olha), mesmas medidas, nome do lado certo */
         var itens=[];CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.corner)itens.push(t)})});var n=0,g3=[],gm=[],gn=0;
-        for(var i=0;i<itens.length;i++){var t=itens[i],a=poe(t,'d');if(!a)continue;var A=caixas(a,'d'),w=+a.w,mA=medidas(a);gn+=ladoOk(a,'d');var b=poe(t,'e');if(!b)continue;n++;var B=caixas(b,'e');if(!perto(espelho(A,w),B))g3.push(t.n);if(medidas(b)!==mA)gm.push(t.n);gn+=ladoOk(b,'e')}
-        F.cat_n=n>=500;F.cat_3d=g3.length;F.cat_3d_quais=g3.slice(0,6).join(' / ');F.cat_medidas=gm.length;F.cat_nomes=gn;
+        for(var i=0;i<itens.length;i++){if(i%3!==PARTE)continue;var t=itens[i],a=poe(t,'d');if(!a)continue;var A=caixas(a,'d'),w=+a.w,mA=medidas(a);gn+=ladoOk(a,'d');var b=poe(t,'e');if(!b)continue;n++;var B=caixas(b,'e');if(!perto(espelho(A,w),B))g3.push(t.n);if(medidas(b)!==mA)gm.push(t.n);gn+=ladoOk(b,'e')}
+        F.cat_n=n>=167;F.cat_3d=g3.length;F.cat_3d_quais=g3.slice(0,6).join(' / ');F.cat_medidas=gm.length;F.cat_nomes=gn;
+        F.errs=__errs.length-e0;
+        return JSON.stringify(F);
+        """#
+
+    func testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar() async throws {
+        let web = try await editor()
+        let o = try await run(web, Self.paredeEsqBase + #"""
         /* 2. móvel ANTIGO (sem a marca de novo) na esquerda: fica exatamente como antes (espelhado pra quem olha), com aviso e botão manual */
         var t2=achar('Balcão porta + gavetas');
         cena();newTpl(JSON.parse(JSON.stringify(t2)));var o=S.m;delete o.espN;delete o.espE;/* tamponamento escolhido pela pessoa (vira junto com o móvel) */o.tl=true;o.tr=false;o.tlM=o.trM=1;delete o.tlAuto;delete o.trAuto;o.wing='e';o.x=1500;var proj=JSON.stringify(snapState());
@@ -10949,11 +10992,7 @@ final class EditorWebKitTests: XCTestCase {
         var b7=poe(t2,'e');F.ordem2D_novo=ord(b7);cena();newTpl(JSON.parse(JSON.stringify(t2)));var o7=S.m;delete o7.espN;delete o7.espE;loadState(JSON.parse(JSON.stringify(snapState())));var o7b=S.mods[0];o7b.wing='e';o7b.x=1500;draw();F.ordem2D_antigo=ord(o7b);
         F.errs=__errs.length-e0;
         return JSON.stringify(F);
-        """#)
-        XCTAssertEqual(o["cat_n"] as? Bool, true, "catálogo inteiro conferido")
-        XCTAssertEqual(o["cat_3d"] as? Int, 0, "móvel novo na esquerda = espelho do mesmo móvel na direita (forno/micro de verdade não espelham)")
-        XCTAssertEqual(o["cat_medidas"] as? Int, 0, "mesmas medidas de corte")
-        XCTAssertEqual(o["cat_nomes"] as? Int, 0, "esquerdo/direito do nome = lado de quem olha")
+        """#)        """#)
         XCTAssertEqual(o["antigo_igual"] as? Bool, true, "móvel antigo continua exatamente como era")
         XCTAssertEqual(o["antigo_aviso"] as? Bool, true, "aviso com botão Desespelhar no móvel antigo")
         XCTAssertEqual(o["desesp_espelho"] as? Bool, true, "Desespelhar deixa o lado esquerdo à esquerda de quem olha")

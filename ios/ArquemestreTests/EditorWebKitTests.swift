@@ -436,13 +436,13 @@ final class EditorWebKitTests: XCTestCase {
         let web = try await editor()
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;var all=TPL.concat(CATS.flatMap(function(c){return c.it})).filter(function(i){return i.w&&i.v});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
-          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),esp=RNDC(c.w-e-D-12.5)+'x650,'+RNDC(W2-e-D+1)+'x650';/* CANTO-FOLHA (pedido do Adauto 17/11, foto do aéreo): folha do lado dos cantos em L de cozinha = vão + 1 (começa 4 mm atrás da frente e cobre 5 mm da lateral do fim); antes vão − 10 *//* medida de corte sem o décimo *//* dobradiça 165°: fundo = vão − 12,9 (3,4 mm da folha do lado) · lado = vão − 10 (3 mm do armário) *//* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
+          /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),/* CANTO-PORTA-L (22/11/2026, pedido do Adauto: a porta do canto tem a mesma altura das retas): 650 era o defeito (sem cobrir a travessa nem a regra da cava); a altura agora é a da porta reta do mesmo módulo, 705 */esp=RNDC(c.w-e-D-12.5)+'x705,'+RNDC(W2-e-D+1)+'x705';/* CANTO-FOLHA (pedido do Adauto 17/11, foto do aéreo): folha do lado dos cantos em L de cozinha = vão + 1 (começa 4 mm atrás da frente e cobre 5 mm da lateral do fim); antes vão − 10 *//* medida de corte sem o décimo *//* dobradiça 165°: fundo = vão − 12,9 (3,4 mm da folha do lado) · lado = vão − 10 (3 mm do armário) *//* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
           /* toda porta tem marcação (dobradiça ou roldana) */var tot=0,ok=0;all.forEach(function(t){S.mods=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(_){return}var m=S.mods[0];if(!m)return;partsOf(m).forEach(function(p){if(!/^Porta/.test(p.name)||p.glass||p.noCut)return;tot++;if(p.fur)ok++})});
           /* 🗑 apaga só a divisória selecionada; 🗑 na porta tira as portas do vão */S.mods=[];newTpl(T('Rack de TV'));var m=S.mods[0];S.m=m;draw();var d0=m.div.length,v0=m.v.length;window.DIVI=1;LAST='div';$('delMod').click();var d1=m.div.length,v1=m.v.length,n1=S.mods.length;S.sv=0;LAST='porta';$('delMod').click();var k0=m.v[0].k,n2=S.mods.length;
           var cat=CATS.filter(function(q){return q.id==='painel'})[0].it.some(function(i){return /superior livre/.test(i.n)});
           return JSON.stringify({canto:canto,esp:esp,tot:tot,ok:ok,d:d0+'>'+d1,v:v0+'>'+v1,mods:n1+'/'+n2,k0:k0,cat:cat,errs:__errs});
           """#)
-        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto (165°): vão − 12,5 (3 mm da folha do lado) e vão − 10, altura do vão + 30")
+        XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto (165°): vão − 12,5 (3 mm da folha do lado) e vão − 10, altura igual à da porta reta (cobre a travessa, cava 20/10)")
         XCTAssertEqual(o["ok"] as? Int, o["tot"] as? Int, "toda porta (abrir, basculante, camarão, canto, correr) tem marcação no plano")
         XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 90, "auditou o catálogo inteiro")
         XCTAssertEqual(o["d"] as? String, "2>1", "🗑 com divisória selecionada apaga só ela")
@@ -10563,6 +10563,68 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
+    /* CANTO-PORTA-L (22/11, pedido do Adauto com foto: "o cava das portas… o desencontro é desigual dos outros"): a porta do canto em L tinha 650 e as retas 705.
+       Com a marca única m.cnP (junção 6) o canto segue a mesma regra vertical das retas em todo canto do catálogo e variações (MDF 15/18/25, sem cava, sem subir, maior),
+       no 3D tem o mesmo perfil da porta reta no mesmo plano (cava com a linha fina, sem a faixa escura) e projeto antigo só muda pelo "Atualizar portas do canto". */
+    func testPortasDoCantoEmLAlinhadasComAsRetasNovoEAntigo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* CANTO-PORTA-L (22/11, pedido do Adauto): porta do canto em L com a mesma regra vertical das portas retas (cobre a travessa, cava 20/10, sobe 5),
+           alinhada no 2D e no 3D, cava e textura como as retas; projeto antigo não muda sozinho (aviso e botão "Atualizar portas do canto" da junção 6, marca única m.cnP) */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var limpa=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw()};
+        var faixa=function(m){return partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){var t=m.b+m.h;return Math.round((t-p.y-p.h)*10)/10+'..'+Math.round((t-p.y)*10)/10})};
+        var reta=function(it,cm){var r={n:'reta',w:900,h:it.h||cm.h,d:it.d||cm.d,b:cm.b,sup:!!cm.sup,v:[{k:'door',n:2}]};limpa();newTpl(r);var m=S.mods[0];['h','trav','tt','rod','mold','regua','esp','frUp','tb'].forEach(function(k){m[k]=cm[k]});m.v[0].cava=cm.v[0].cava;if(cm.v[0].px)m.v[0].px=cm.v[0].px;draw();return faixa(m)[0]};
+        /* 1) todo canto em L do catálogo (e o variado) alinha com a porta reta equivalente */
+        var ALL=[{n:'Canto em L (baixo) · esquerdo',mk:'e'},{n:'Canto em L (baixo) · direito',mk:'d'}];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.corner)ALL.push(it)})});
+        var VAR={'':function(){},' · MDF 18':function(m){m.esp=18},' · MDF 25':function(m){m.esp=25},' · sem cava (puxador)':function(m){m.v[0].cava=false;m.v[0].px='bar'},' · não sobe':function(m){m.frUp=0},' · 1200 × 900':function(m){m.w=1200;m.h=900}};
+        var al=[];ALL.forEach(function(it){Object.keys(VAR).forEach(function(vk){if(vk&&!it.mk)return;limpa();if(it.mk)mkCorner(it.mk);else newTpl(JSON.parse(JSON.stringify(it)));var cm=S.mods[S.mods.length-1];VAR[vk](cm);draw();var fc=faixa(cm),fr=reta(it,cm);al.push(it.n+vk+': '+(fc.length===2&&fc.every(function(x){return x===fr})?'alinha ('+fr+')':'canto '+fc.join('/')+' × reta '+fr)+(cm.cnP?'':' · sem regra nova'))})});
+        R.alinhamento=al.join(' ; ');
+        /* 2) 3D: folha do fundo fechada é o mesmo sólido da porta reta (mesma altura, mesmo plano, sem perfil girado = textura igual), cava com a linha fina igual, sem a faixa escura antiga */
+        limpa();mkCorner('e');newTpl(T('Balcão 2 portas'));S.mods.forEach(function(m){demoPaint(m,'duratex-freijo-puro-essencial-wood')});draw();open3D();await W(200);__build();
+        var bx=__boxes(),fol=function(mi){return bx.filter(function(b){return String(b.nm)===mi+':Porta'&&!b.nol&&b.a>=.95&&b.y1-b.y0>500})},r1=function(v){return Math.round(v)};
+        var A=fol(0).filter(function(b){return b.dq===0})[0],Bf=fol(0).filter(function(b){return b.dq===1})[0],P=fol(1)[0];
+        R.folhaDoFundo3D=A?('y'+r1(A.y0)+'..'+r1(A.y1)+' z'+r1(A.z0)+'..'+r1(A.z1)+(A.pf&&A.pf.ax==='x'&&A.pf.pts.length===5?' · perfil da cava':' · sem perfil da cava')):'sem';R.portaReta3D=P?('y'+r1(P.y0)+'..'+r1(P.y1)+' z'+r1(P.z0)+'..'+r1(P.z1)+(P.poly&&P.poly.length===5?' · perfil da cava':' · sem perfil da cava')):'sem';
+        R.folhaDoLado3D=Bf?('y'+r1(Bf.y0)+'..'+r1(Bf.y1)+(Bf.pf&&Bf.pf.ax==='z'&&Bf.pf.pts.length===5?' · perfil da cava':'')):'sem';
+        R.corDasFolhas=[A,Bf].map(function(b){return b&&b.c.join()===[parseInt(S.mods[0].corF.slice(1,3),16),parseInt(S.mods[0].corF.slice(3,5),16),parseInt(S.mods[0].corF.slice(5,7),16)].join()?'cor das frentes':'outra cor'}).join('/');
+        R.linhaDaCava=bx.filter(function(b){return String(b.nm)==='0:Porta'&&b.cvl}).length+' no canto · '+bx.filter(function(b){return String(b.nm)==='1:Porta'&&b.cvl}).length+' na reta';
+        R.faixaEscuraAntiga=bx.filter(function(b){return /:Porta$/.test(String(b.nm))&&b.c&&b.c.join()==='61,52,43'}).length;
+        /* 3) projeto antigo (canto sem a regra nova): não muda sozinho, nem salvando e reabrindo; "Atualizar portas do canto" mostra antes/depois e só troca confirmando; desfazer volta */
+        var pts=function(m){return partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.cl+'×'+p.cw+' y'+p.y}).join(' | ')};
+        var outras=function(m){return partsOf(m).filter(function(p){return p.name!=='Porta'&&(+p.cl>0||+p.cw>0)}).map(function(p){return [p.name,p.cl,p.cw,p.x,p.y,p.note&&/FURO/.test(p.note)?'furo':''].join('|')}).sort().join('#')};
+        document.getElementById('v3x').click();await W(100);limpa();mkCorner('e');var m=S.mods[0];delete m.cnP;draw();var o0=outras(m);
+        loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.antigoReaberto=pts(m);
+        S.m=m;S.tab=0;draw();panel();await W(150);var bx_=document.getElementById('cnpbox'),tx_=bx_?bx_.textContent.replace(/\s+/g,' '):'';R.aviso=bx_?((/folha do fundo 306×650 → 306×705/.test(tx_)?'fundo 650→705':'fundo ?')+' · '+(/folha do lado 309×650 → 320×705/.test(tx_)?'lado 309×650→320×705':'lado ?')):'sem aviso';R.semTocarNaoMuda=pts(S.mods[0]);
+        var b=document.querySelector('[data-cnpup]');R.botao=!!b;
+        if(b){b.click();await W(200);m=S.mods[0];R.confirmado=pts(m);R.outrasPecasIguais=outras(m)===o0;R.avisoSome=!document.getElementById('cnpbox');
+         document.getElementById('und').click();await W(150);R.desfazer=pts(S.mods[0])}
+        /* aéreo e guarda-roupa antigos também avisam e atualizam (a regra vale para todo canto) */
+        var aa=[];['Canto em L (aéreo) · direito','Canto L guarda-roupa · esquerdo'].forEach(function(n){limpa();newTpl(T(n));var q=S.mods[0];delete q.cnP;draw();var d=window.cnPDifer(q);aa.push(n+': '+(d.length?d.join(' · '):'nada muda'))});R.outrosCantosAntigos=aa.join(' ; ');
+        /* canto novo salvo e reaberto continua com a regra nova */
+        limpa();mkCorner('e');loadState(JSON.parse(JSON.stringify(snapState())));R.novoReaberto=pts(S.mods[0]);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["alinhamento"] as? String, "Canto em L (baixo) · esquerdo: alinha (110..815) ; Canto em L (baixo) · esquerdo · MDF 18: alinha (113..812) ; Canto em L (baixo) · esquerdo · MDF 25: alinha (120..805) ; Canto em L (baixo) · esquerdo · sem cava (puxador): alinha (105..810) ; Canto em L (baixo) · esquerdo · não sobe: alinha (105..810) ; Canto em L (baixo) · esquerdo · 1200 × 900: alinha (110..895) ; Canto em L (baixo) · direito: alinha (110..815) ; Canto em L (baixo) · direito · MDF 18: alinha (113..812) ; Canto em L (baixo) · direito · MDF 25: alinha (120..805) ; Canto em L (baixo) · direito · sem cava (puxador): alinha (105..810) ; Canto em L (baixo) · direito · não sobe: alinha (105..810) ; Canto em L (baixo) · direito · 1200 × 900: alinha (110..895) ; Canto em L (aéreo) · esquerdo: alinha (1750..2500) ; Canto em L (aéreo) · direito: alinha (1750..2500) ; Canto L guarda-roupa · esquerdo: alinha (110..2410) ; Canto L guarda-roupa · direito: alinha (110..2410)")
+        XCTAssertEqual(o["folhaDoFundo3D"] as? String, "y110..815 z566..581 · perfil da cava")
+        XCTAssertEqual(o["portaReta3D"] as? String, "y110..815 z566..581 · perfil da cava")
+        XCTAssertEqual(o["folhaDoLado3D"] as? String, "y110..815 · perfil da cava")
+        XCTAssertEqual(o["corDasFolhas"] as? String, "cor das frentes/cor das frentes")
+        XCTAssertEqual(o["linhaDaCava"] as? String, "2 no canto · 2 na reta")
+        XCTAssertEqual(o["faixaEscuraAntiga"] as? Int, 0)
+        XCTAssertEqual(o["antigoReaberto"] as? String, "306×650 y65 | 309×650 y65")
+        XCTAssertEqual(o["aviso"] as? String, "fundo 650→705 · lado 309×650→320×705")
+        XCTAssertEqual(o["semTocarNaoMuda"] as? String, "306×650 y65 | 309×650 y65")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["confirmado"] as? String, "306×705 y5 | 320×705 y5")
+        XCTAssertEqual(o["outrasPecasIguais"] as? Bool, true)
+        XCTAssertEqual(o["avisoSome"] as? Bool, true)
+        XCTAssertEqual(o["desfazer"] as? String, "306×650 y65 | 309×650 y65")
+        XCTAssertEqual(o["outrosCantosAntigos"] as? String, "Canto em L (aéreo) · direito: folha do lado 319×750 → 330×750 ; Canto L guarda-roupa · esquerdo: nada muda")
+        XCTAssertEqual(o["novoReaberto"] as? String, "306×705 y5 | 320×705 y5")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
     func testTudoQueSeCriaNo3DSelecionaEApagaDepoisDeSairEVoltar() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -10618,8 +10680,8 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["semMexerIgualAntes"] as? Bool, true)
         XCTAssertEqual(o["pelaPedra"] as? String, "fundo 554 · lateral 604 · aviso: 🪨 Canto pela pedra · parede do fundo 554 mm · parede lateral 604 mm (pedra − 40 da pingadeira − 6 do fundo)")
-        /* CANTO-FOLHA (pedido do Adauto 17/11, foto do aéreo): folha do lado dos cantos em L de cozinha = vão + 1 (começa 4 mm atrás da frente e cobre 5 mm da lateral do fim); antes vão − 10 */XCTAssertEqual(o["corte"] as? String, "Base inferior 894x554 | Base inferior (lado do canto) 340x604 | Lateral direita 690x554 | Lateral do canto (fim do lado) 690x604 | Travessa frontal 290x70 | Travessa frontal (lado do canto) 340x70 | Prateleira 879x524 | Prateleira (lado do canto) 355x574 | Porta 262x650 | Porta 326x650 | Rodapé (pedestal) 320x100 | Rodapé (pedestal) do lado 355x100 | Rodapé traseiro (pedestal) 864x100 | Rodapé traseiro (pedestal) do lado 834x100")
-        XCTAssertEqual(o["tresD"] as? String, "bases até x 905 e z 901 · folha do lado no x 616 · folha do fundo no z 561 · folga entre as folhas 3 mm · lado do fundo prof. 560 · lado da lateral prof. 610")
+        /* CANTO-FOLHA (pedido do Adauto 17/11, foto do aéreo): folha do lado dos cantos em L de cozinha = vão + 1 (começa 4 mm atrás da frente e cobre 5 mm da lateral do fim); antes vão − 10 *//* CANTO-PORTA-L (22/11/2026, pedido do Adauto): porta do canto com a altura das retas, 705 (650 era o defeito) */XCTAssertEqual(o["corte"] as? String, "Base inferior 894x554 | Base inferior (lado do canto) 340x604 | Lateral direita 690x554 | Lateral do canto (fim do lado) 690x604 | Travessa frontal 290x70 | Travessa frontal (lado do canto) 340x70 | Prateleira 879x524 | Prateleira (lado do canto) 355x574 | Porta 262x705 | Porta 326x705 | Rodapé (pedestal) 320x100 | Rodapé (pedestal) do lado 355x100 | Rodapé traseiro (pedestal) 864x100 | Rodapé traseiro (pedestal) do lado 834x100")
+        /* CANTO-PORTA-L (22/11/2026, pedido do Adauto): a folha do fundo fechada fica no plano das portas retas, encostada na caixa (z 560); z 561 era o degrau de 1 mm */XCTAssertEqual(o["tresD"] as? String, "bases até x 905 e z 901 · folha do lado no x 616 · folha do fundo no z 560 · folga entre as folhas 3 mm · lado do fundo prof. 560 · lado da lateral prof. 610")
         XCTAssertEqual(o["quadro"] as? String, "w,cw2,h,d,d2 · pedra tem")
         XCTAssertEqual(o["digitouNoQuadro"] as? String, "lateral 580")
         XCTAssertEqual(o["painel"] as? String, "d:sim d2:sim cw2:sim w:sim")
@@ -14444,8 +14506,8 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["novoModelo"] as? String, "marca 1 · folha do lado 330", "canto novo do catálogo (aéreo) já sai com a regra de 17/11")
         XCTAssertEqual(o["novoBotao"] as? String, "marca 1 · folha do lado 320", "canto novo pelo botão Canto em L (baixo) também")
-        /* marca única m.cnP e aviso com o antes/depois de cada peça de porta (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11) */XCTAssertEqual(o["antigo"] as? String, "marca 0 · folha do lado 309 · aviso sim «As portas deste canto estão com a regra antiga. Com a regra nova: folha do lado 309×650 → 320×650 (mm). Nada muda sem você mandar.» · botão «Atualizar portas do canto»", "canto de projeto antigo abre igual (regra de antes) e avisa com as duas medidas")
-        XCTAssertEqual(o["atualizou"] as? String, "marca 1 · folha do lado 320 · aviso não · corte mudou true · Portas do canto atualizadas: folha do lado 309×650 → 320×650. Desfazer volta como era.", "só muda quando a pessoa toca no botão")
+        /* marca única m.cnP e aviso com o antes/depois de cada peça de porta (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11) *//* CANTO-PORTA-L (22/11/2026, pedido do Adauto): o mesmo aviso mostra também a altura das portas (650 → 705, igual às retas) */XCTAssertEqual(o["antigo"] as? String, "marca 0 · folha do lado 309 · aviso sim «As portas deste canto estão com a regra antiga. Com a regra nova: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705 (mm). Nada muda sem você mandar.» · botão «Atualizar portas do canto»", "canto de projeto antigo abre igual (regra de antes) e avisa com as duas medidas")
+        XCTAssertEqual(o["atualizou"] as? String, "marca 1 · folha do lado 320 · aviso não · corte mudou true · Portas do canto atualizadas: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705. Desfazer volta como era.", "só muda quando a pessoa toca no botão")
         XCTAssertEqual(o["desfez"] as? String, "marca 0 · folha do lado 309 · corte igual ao de antes true", "desfazer volta exatamente como era")
         XCTAssertEqual(o["reabriu"] as? String, "marca 1 · folha do lado 320", "salvar e reabrir mantém a atualização")
         XCTAssertEqual(o["guardaRoupa"] as? String, "folha do lado 419 · aviso não", "canto do guarda-roupa (alto) não muda e não avisa")

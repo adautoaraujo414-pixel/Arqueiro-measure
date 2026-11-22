@@ -1409,3 +1409,64 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - Na 1ª leitura só vi o começo das mensagens de falha (cortadas); a lista completa saiu do JSON da bateria e foi conferida com a mesma geometria.
 - **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7, m5 8 → 11, m6 6 → 24, m7 igual (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
 - Nenhuma conferência saiu; o motivo está no comentário de cada teste.
+
+## ETAPA 3 (nova) · integração e auditoria de 22/11/2026 · ramo `claude/arquemestre-etapa3-precisao` (base `d7d9ee3` = app publicado `c561120`)
+- **Junções recuperadas da antiga Etapa 3:**
+  - FT-REBAIXO: `b12b6e0`.
+  - FT-PORTA: `72c36d0`.
+  - PC-ID, PC-TOQUE, PC-ROD e PC-BRANCO: `35a1d7b`.
+  - Conflitos resolvidos mantendo os dois lados (encaixe do móvel livre + corte da fita).
+  - Bateria local completa no `c7429ea`: 399/399.
+- **LAT-MEIO (junção 4) não integrada:** muda regra de fabricação, e as perguntas 2, 3 e 4 de 17/11 continuam sem resposta.
+
+### PC-ESQ · plano de corte da parede esquerda
+- **Defeito 1 (rótulo):** no móvel novo da parede esquerda (`espE`), o plano mostrava o nome guardado ("Tamponamento esquerdo") e a lista mostrava o de quem olha ("direito").
+  - Também acontece na versão publicada. Só o nome; as medidas estão certas.
+- **Defeito 2 (identidade):** peça tirada do plano pela identidade (PC-ID) voltava ao plano quando o móvel antigo era desespelhado (38 → 39 peças).
+- **Causa:**
+  - o `sheetPlan` monta o rótulo pelo pk;
+  - o `vira()` remapeava `po` e `xp`, mas não o `S.cutOff` (uid|pk|ocorrência).
+- **Correção:**
+  - `pcNomeVe` deixa o rótulo com o nome de quem olha; a chave da contagem antiga continua com o nome guardado;
+  - o `vira()` passa a remapear também o `S.cutOff` do módulo.
+- **Teste:** `testPlanoDeCorteParedeEsquerdaNomeDeQuemOlhaEPecaTiradaSegueAoDesespelhar` (`c6419b9`, falha antes) · correção `c7429ea`.
+
+### PX-SEL · bolinha do puxador engolia o toque
+- **Defeito:** com o puxador bola ou externo, tocar no puxador de um móvel não escolhido não o escolhia (só o aviso "Segure a bolinha…"). Os 2 toques em cima dele não abriam o menu do vão.
+  - Afeta 68 de 138 modelos com o puxador bola; no padrão, as 6 torres que já usam bola.
+- **Causa:** o círculo de arrastar (raio ≥ 13 px) parava o pointerdown e o pointerup. O desenho não escolhia o módulo nem contava os toques.
+- **Correção:**
+  - o toque curto escolhe o módulo dono da bolinha (`data-gm`) e segue para o desenho;
+  - arrastar continua igual;
+  - com o móvel escolhido, o toque curto continua só avisando.
+  - Ficam de fora os pontos em cima da área da divisória: lá o toque escolhe a divisória (regra de 18/11).
+- **Testes:**
+  - `testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel` (`c2dce6e`, falha 5 de 5 antes) · correção `d54721d`;
+  - `testPuxadorArrastaABolinha…` adaptado (pedido 22/11).
+
+### VAO-ESQ · numeração dos vãos do móvel novo da parede esquerda
+- **Defeito:** "Vão 1" era o vão da direita de quem olha. Aparecia no painel, no menu dos 2 toques, no Editar só ele, nos títulos de prateleiras e divisórias do vão e nos avisos.
+- **Causa:** os dados do móvel novo ficam guardados virados (PAREDE-ESQ-NOVO), e a tela numerava pelo índice guardado.
+- **Correção:** `vaoN(m,i)` = N − i quando `espE`, com os botões na ordem de quem olha. Só a tela muda. Fundo, lados e móvel antigo ficam iguais.
+- **Teste:** `testParedeEsquerdaMovelNovoNumeraOsVaosDaEsquerdaPraDireitaDeQuemOlha` (`f9588eb`) · correção `f46fae7`.
+
+### GAV-TORRE e GAV-FUNDO · gaveta no 3D diferente do corte
+- **Auditoria corte × 3D:** a lista de corte final comparada com a geometria 3D de cada peça em 284 cenários (catálogo em cozinha e quarto, 7826 peças).
+- **GAV-TORRE:** na torre com gavetas (`v.tw`), as laterais das gavetas estavam no corte e não no 3D.
+  - Causa: o passo da torre renumerava o `dq` (`j*10+dq`) e não o `cgDq` da contra-frente. O 3D não achava as laterais da gaveta e montava a caixa sem elas.
+- **GAV-FUNDO:** o fundo da gaveta no 3D era 3 mm mais estreito que a peça (526 × 529).
+  - Causa: o 3D não usava o "a mais por lado" dos Ajustes (regra de 09/11).
+  - Correção: usa a largura da própria peça (`partsOf`).
+- Corte e medidas não mudam.
+- **Teste:** `testLateralDeGavetaDoCorteApareceNo3DEmTodoOCatalogoTambemNaTorre` (`97f515f`, falha antes: 4 laterais e 74 fundos) · correção `aa2060f`.
+- **Achados da mesma auditoria ainda abertos:**
+  - fundo do lado do canto do Canto L guarda-roupa: corte 2400 × 3D 2300 (pergunta ao Adauto);
+  - "Sapateira · aparador": está no corte e não no 3D (depende da pergunta da prateleira inclinada);
+  - gaveta interna desenhada como bloco (já conhecida).
+
+### Auditoria de colisões
+- 2208 cenários: paredes do fundo, esquerda (novo e antigo) e direita; móvel livre a 0°, 90°, 180° e 270°; portas fechadas e abertas.
+- Nenhuma porta, gaveta ou peça do corpo entra em outra.
+- Só a ferragem da dobradiça (o braço reto) passa 1 mm pelo canto da frente da lateral ou da divisória (A05).
+  - É cosmético, sem peça nem corte.
+- **Desfazer 3× e refazer 3×** em 142 modelos: corte igual. A única diferença nos dados é `wing` vazio → `0`, tratados igual em todo o código.

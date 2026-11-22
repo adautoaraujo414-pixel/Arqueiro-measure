@@ -85,3 +85,16 @@ logo acima da barra da parede (o seletor de paredes continua o de sempre, `wvGo`
 - **Orientação da Peça 15 mm pelo espaço**: o app confere quais orientações cabem no ponto (de frente, em pé, deitada); só uma → nasce direto;
   mais de uma → escolha simples só com as que cabem, a do plano da vista primeiro (Frente: de frente; Esquerda/Direita: em pé; Superior: deitada);
   nenhuma → diz em quê bateria.
+
+## 5. Compatibilidade dos projetos e Meus Modelos sem mudança silenciosa (pedido de 22/11)
+- **Marcador de formato**: `EM.FMT = 1`. O módulo que ganha peça livre recebe `m.plv` (vai junto com o módulo em qualquer versão do app,
+  porque o `snapState` salva o módulo inteiro); o projeto com peças livres recebe `emFmt` no `snapState`. Projeto sem peça livre não ganha campo.
+- **Ao abrir** (`loadState` → `EM.confere`): nenhuma medida/posição muda. Peça com dado estragado (número inválido, eixo inválido, medida < 1)
+  vai pra `m.plBad` — não aparece, não entra no corte, continua guardada no arquivo, nunca é apagada; aviso. `m.plv` maior que `EM.FMT` (projeto
+  de versão mais nova): as peças ficam intactas (aparecem e entram no corte), e criar/mexer/apagar fica travado, com aviso na Estrutura do Módulo.
+- **Medida do módulo mudou** (no app de agora ou num app antigo): as peças livres NÃO acompanham sozinhas. A Estrutura do Módulo mostra a
+  proposta peça a peça ("Prateleira: largura 870 → 1170 mm") com **Adaptar as peças** (confere o sólido; a que bateria fica como estava e diz por quê)
+  e **Manter como estão** (a medida nova vira a referência; nada mexe). Aviso uma vez por mudança.
+- **Inserir modelo salvo**: peça livre que entraria em algo no lugar novo não some calada: fica em `m.plPend` e uma janela lista qual e em quê, com
+  **Tirar essas peças deste móvel** (o modelo salvo continua com elas) ou **Desfazer a inserção do móvel**.
+- Testes: `testCompatibilidadeDosProjetosComPecasLivresEMarcadorDeFormato`, `testMeusModelosGuardaPecasLivresEAoReusarRecalculaPelaNovaMedida`.

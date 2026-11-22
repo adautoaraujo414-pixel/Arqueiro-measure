@@ -14545,11 +14545,16 @@ final class EditorWebKitTests: XCTestCase {
           var pf=(window.__files||{})['prices.json']||'';o.noAparelho=pf?decodeURIComponent(escape(atob(pf))).indexOf('Balcão com peças')>=0:false;
           /* outro projeto: entra pelo catálogo, com as mesmas configurações e peças */
           loadState(initLimpo());S.env='cozinha';S.W=3200;S.H=2600;draw();var it=null;CATS.forEach(function(c){c.it.forEach(function(i){if(i.my===r.id&&!it)it=i})});o.catalogo=!!it;
-          var n=myIns(it.my);await W(500);o.entrou=[n.w,n.h,n.d,n.tl,n.myN].join(',');o.pecas=(n.pl||[]).map(function(q){return q.k}).join(',');o.aviso=TL.filter(function(t){return /Aqui não couberam/.test(t)}).length;
+          var n=myIns(it.my);await W(300);o.entrou=[n.w,n.h,n.d,n.tl,n.myN].join(',');
+          /* a régua de fora entraria na parede aqui: nada some calado, a pessoa decide */
+          var dlg=document.getElementById('empend');o.pergunta=dlg?[].map.call(dlg.querySelectorAll('[data-empend]'),function(b){return b.dataset.empend}).join(',')+' · '+(/Régua vertical/.test(dlg.textContent)&&/parede/.test(dlg.textContent)):'nao';o.guardadaAParte=(n.plPend||[]).length;
+          dlg.querySelector('[data-empend="tira"]').click();await W(80);o.pecas=(n.pl||[]).map(function(q){return q.k}).join(',')+' · pend '+(n.plPend?n.plPend.length:0);
           /* nova medida: as peças do móvel e a prateleira livre (presa nas laterais) acompanham */
           S.m=n;S.tab=0;panel();var wi=document.querySelector('#bd [data-k="w"]');wi.value='1200';wi.dispatchEvent(new Event('input',{bubbles:true}));wi.dispatchEvent(new Event('change',{bubbles:true}));draw();
           o.base=partsOf(n).filter(function(p){return p.name==='Base inferior'}).map(function(p){return p.cl+'x'+p.cw}).join();
-          var pr=(n.pl||[]).filter(function(q){return q.k==='prat'})[0];o.prateleira=pr.x+','+pr.w;o.corte=cutLines(n).filter(function(l){return l.names.some(function(x){return /Prateleira · livre/.test(x)})}).map(function(l){return l.L+'x'+l.W+' mdf'+l.mat})[0]||'';
+          /* nada mexe sozinho: a prateleira continua igual e a Estrutura do Módulo mostra a proposta */
+          var pr=(n.pl||[]).filter(function(q){return q.k==='prat'})[0];o.semConfirmar=pr.x+','+pr.w;S.tab=0;panel();var pb=document.querySelector('#bd [data-emprop]');o.proposta=pb?pb.textContent.replace(/\s+/g,' ').indexOf('Prateleira: largura 870 → 1170 mm')>=0:false;
+          pb.querySelector('[data-emadapta]').click();await W(80);o.prateleira=pr.x+','+pr.w;o.corte=cutLines(n).filter(function(l){return l.names.some(function(x){return /Prateleira · livre/.test(x)})}).map(function(l){return l.L+'x'+l.W+' mdf'+l.mat})[0]||'';
           /* o modelo salvo não mudou */
           o.salvoIgual=(PR.myMods||[]).filter(function(q){return q.id===r.id})[0].t.w===900;
           o.errs=__errs;return JSON.stringify(o);
@@ -14558,10 +14563,14 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["noAparelho"] as? Bool, true, "fica guardado no aparelho (vale em qualquer projeto)")
         XCTAssertEqual(o["catalogo"] as? Bool, true)
         XCTAssertEqual(o["entrou"] as? String, "900,820,560,true,Balcão com peças")
-        XCTAssertEqual(o["pecas"] as? String, "prat", "a régua de fora entraria na parede aqui: fica de fora")
-        XCTAssertEqual(o["aviso"] as? Int, 1, "avisa o que não coube")
+        // MEUS-MODELOS-CONFIRMA (Adauto 22/11): nada some nem muda de medida/posição sem confirmação explícita mostrando a alteração
+        XCTAssertEqual(o["pergunta"] as? String, "tira,volta · true", "peça que não cabe: pergunta (tirar deste móvel ou desfazer a inserção), dizendo qual e em quê")
+        XCTAssertEqual(o["guardadaAParte"] as? Int, 1, "enquanto não decide, fica guardada à parte (não some)")
+        XCTAssertEqual(o["pecas"] as? String, "prat · pend 0", "escolheu tirar: só deste móvel")
         XCTAssertEqual(o["base"] as? String, "1200x560", "nova medida: o móvel é recalculado")
-        XCTAssertEqual(o["prateleira"] as? String, "15,1170", "a prateleira presa nas laterais acompanha")
+        XCTAssertEqual(o["semConfirmar"] as? String, "15,870", "a peça livre não muda sozinha")
+        XCTAssertEqual(o["proposta"] as? Bool, true, "a Estrutura do Módulo mostra a alteração proposta")
+        XCTAssertEqual(o["prateleira"] as? String, "15,1170", "confirmou (Adaptar): acompanha as laterais")
         XCTAssertEqual(o["corte"] as? String, "1170x560 mdf15", "e vai pro corte com a medida nova")
         XCTAssertEqual(o["salvoIgual"] as? Bool, true, "o modelo salvo não muda")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
@@ -14594,6 +14603,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mesmoLugar"] as? Bool, true, "o cache para a peça no mesmo lugar que a conferência completa")
         XCTAssertEqual(o["reconstrucoesVista"] as? Int, 1, "multivistas: 20 passos com o desenho da vista: 1 reconstrução")
         XCTAssertEqual(o["gavetas"] as? String, "1 false z", "na frente das gavetas só cabe a placa: cria direto, sem perguntar")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// COMPAT-PECAS (Adauto/supervisor 22/11): marcador de formato (emFmt no projeto, plv no módulo), projeto antigo abre e salva igual,
+    /// medida mudada fora (app antigo) não reposiciona nada ao abrir, peça estragada vai pra quarentena guardada, versão mais nova fica intacta e travada.
+    @MainActor
+    func testCompatibilidadeDosProjetosComPecasLivresEMarcadorDeFormato() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var o={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          /* 1. projeto antigo (sem peças livres): abre e salva igual, sem campo novo */
+          S.mods=[];S.stones=[];newTpl(3);newTpl(4);draw();var st0=JSON.parse(JSON.stringify(snapState()));delete st0.emFmt;var m0=JSON.stringify(st0.mods);
+          loadState(JSON.parse(JSON.stringify(st0)));draw();var st1=snapState();/* o loadState de sempre já normaliza wing (undefined → 0); o resto do módulo tem que voltar igual */var nw=function(L){return JSON.stringify(L.map(function(m){var c=JSON.parse(JSON.stringify(m));delete c.wing;return c}))};o.antigoIgual=nw(st1.mods)===nw(JSON.parse(m0));o.antigoSemMarca=st1.emFmt===undefined&&!/"pl"|"plv"|"plBad"/.test(JSON.stringify(st1.mods));
+          /* 2. projeto com peça livre e marcador de formato */
+          S.mods=[];newTpl(3);var m=S.mods[0];m.x=300;draw();S.m=m;EM.criaPecaNoPonto(m,450,450,'prat');var st2=snapState();o.marca=st2.emFmt+' · plv '+st2.mods[0].plv;
+          /* 3. alguém mudou a largura num app antigo (sem as peças livres): ao abrir nada se mexe sozinho, só a proposta aparece */
+          var ant=JSON.parse(JSON.stringify(st2));ant.mods[0].w=1200;loadState(ant);draw();S.m=S.mods[0];S.tab=0;panel();var q=S.mods[0].pl[0];o.abriuSemMexer=q.x+','+q.w;o.proposta=!!document.querySelector('#bd [data-emprop]');
+          document.querySelector('#bd [data-emmanter]').click();await W(60);o.manteve=q.x+','+q.w+' · proposta '+!!document.querySelector('#bd [data-emprop]');
+          /* 4. peça com dado estragado: quarentena (não aparece, não vai pro corte, continua guardada) e o resto abre normal */
+          var rui=JSON.parse(JSON.stringify(st2));rui.mods[0].pl.push({id:'x1',k:'peca',ax:'z',x:0,y:0,w:'abc',h:100,z:0,d:15});loadState(rui);draw();var mr=S.mods[0];
+          o.quarentena=(mr.pl||[]).length+' boa · '+(mr.plBad||[]).length+' guardada · corte '+cutLines(mr).filter(function(l){return l.names.some(function(n){return / · livre$/.test(n)})}).length+' · salva '+(snapState().mods[0].plBad||[]).length;
+          /* 5. projeto de versão mais nova do app: peças intactas e travadas */
+          var nov=JSON.parse(JSON.stringify(st2));nov.mods[0].plv=99;nov.mods[0].pl[0].extra='novo';var pl0=JSON.stringify(nov.mods[0].pl);loadState(nov);draw();var mn=S.mods[0];S.m=mn;S.tab=0;panel();
+          o.novo=EM.novo(mn)+' · aviso '+!!document.querySelector('#bd [data-emnovo]')+' · editar '+EM.pecaMuda(mn,mn.pl[0],{x:mn.pl[0].x+10}).ok+' · intactas '+(JSON.stringify(snapState().mods[0].pl)===pl0);
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["antigoIgual"] as? Bool, true, "projeto antigo: os módulos voltam iguais")
+        XCTAssertEqual(o["antigoSemMarca"] as? Bool, true, "projeto sem peça livre não ganha campo novo")
+        XCTAssertEqual(o["marca"] as? String, "1 · plv 1", "marcador de formato no projeto e no módulo")
+        XCTAssertEqual(o["abriuSemMexer"] as? String, "15,870", "ao abrir não reposiciona nem redimensiona")
+        XCTAssertEqual(o["proposta"] as? Bool, true)
+        XCTAssertEqual(o["manteve"] as? String, "15,870 · proposta false", "Manter como estão: nada muda e a proposta some")
+        XCTAssertEqual(o["quarentena"] as? String, "1 boa · 1 guardada · corte 1 · salva 1", "dado estragado: guardado à parte, fora do corte, nunca apagado")
+        XCTAssertEqual(o["novo"] as? String, "true · aviso true · editar false · intactas true", "versão mais nova: intacta e travada")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 }

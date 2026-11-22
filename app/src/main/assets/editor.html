@@ -12992,14 +12992,16 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
     instalador único põe as camadas por fora de tudo no DOMContentLoaded (depois de todos os scripts, seja qual for a ordem dos blocos).
     Fita e cor das peças livres entram por ARQ_EXT, chamado no começo do finOf/edgeSides/edgeMm de sempre. As peças livres entram no partsOf
     na camada de fora de propósito: as regras automáticas do módulo (ex.: "sem lateral" estica prateleira) não podem mudar a peça que a pessoa pôs. */
- var G=EM.G={pre:[],post:[],panel:[],parts:[],wv:[],myIns:[]},run=function(L,a,b){L.forEach(function(f){try{f(a,b)}catch(e){try{console.warn('EM',e)}catch(_){}}})};
+ var G=EM.G={pre:[],post:[],panel:[],parts:[],wv:[],myIns:[],load:[],save:[]},run=function(L,a,b){L.forEach(function(f){try{f(a,b)}catch(e){try{console.warn('EM',e)}catch(_){}}})};
  window.ARQ_EXT=window.ARQ_EXT||{};
  EM.instala=function(){if(EM._inst)return;EM._inst=1;
   var d0=window.draw;if(typeof d0==='function')draw=window.draw=function(){if(!window.__emPre){window.__emPre=1;try{run(G.pre)}finally{window.__emPre=0}}var r=d0.apply(this,arguments);run(G.post);return r};
   var p0=window.panel;if(typeof p0==='function')panel=window.panel=function(){var r=p0.apply(this,arguments);run(G.panel);return r};
   var po=window.partsOf;if(typeof po==='function')partsOf=window.partsOf=function(m){var r=po.apply(this,arguments);if(m&&Array.isArray(r))run(G.parts,m,r);return r};
   var wg=window.wvGo;if(typeof wg==='function')window.wvGo=wvGo=function(){var r=wg.apply(this,arguments);run(G.wv);return r};
-  var mi=window.myIns;if(typeof mi==='function')myIns=window.myIns=function(){var n=mi.apply(this,arguments);if(n)run(G.myIns,n);return n}};
+  var mi=window.myIns;if(typeof mi==='function')myIns=window.myIns=function(){var n=mi.apply(this,arguments);if(n)run(G.myIns,n);return n};
+  var ls=window.loadState;if(typeof ls==='function')loadState=window.loadState=function(){var r=ls.apply(this,arguments);run(G.load);return r};
+  var ss=window.snapState;if(typeof ss==='function')snapState=window.snapState=function(){var r=ss.apply(this,arguments);if(r&&typeof r==='object')run(G.save,r);return r}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',EM.instala);else setTimeout(EM.instala,0);
  var cmTxt=EM.cmTxt=function(mm){return (Math.round(+mm||0)/10).toFixed(1).replace('.',',')};
  /* cm digitado (aceita vírgula, ponto e conta da calculadora) → mm inteiro */
@@ -13183,7 +13185,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var campos=EM.campos=function(q){var c=[];if(q.ax!=='x')c.push(['w',q.ax==='z'&&/^(rv)$/.test(q.k)?'Largura da régua':'Largura (comprimento)']);if(q.ax!=='y')c.push(['h','Altura']);if(q.ax!=='z')c.push(['d','Profundidade']);
   c.push(['x','Da esquerda do módulo'],['b','Do chão até embaixo da peça'],['z','Da traseira do módulo até a peça']);return c};
  var valDe=function(m,q,k){if(k==='b')return mm((+m.b||0)+(+m.h||0)-q.y-q.h);return mm(q[k])};
- EM.ferramentas=function(m){if(!m||m.corner||(window.lvIs&&lvIs(m)))return '';var st=EM.st,h='<div class="note" style="margin-top:6px"><b>Peças em MDF 15 mm</b> deste módulo (entram no 3D, no plano de corte e no orçamento)</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+ EM.ferramentas=function(m){if(!m||m.corner||(window.lvIs&&lvIs(m)))return '';if(EM.novo&&EM.novo(m))return '<div class="note" data-emnovo="1">⚠ As peças livres deste móvel foram feitas numa versão mais nova do app. Elas ficam como estão (aparecem no 3D, no corte e no orçamento); pra mexer nelas, atualize o app.</div>';var st=EM.st,PR_=EM.propostas?EM.propostas(m).filter(function(p){return p.mud.length}):[],h=(PR_.length?'<div data-emprop="1" style="border:1px solid #f0b429;background:#fff8e6;border-radius:8px;padding:8px;margin:6px 0"><b>A medida do módulo mudou</b><div class="note">Peças livres presas no módulo podem acompanhar. Nada muda sem você confirmar:</div>'+PR_.map(function(p){return '<div style="font-size:13px;margin:2px 0">• '+esc(EM.propTxt(p))+'</div>'}).join('')+'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button data-emadapta="1">✓ Adaptar as peças</button><button data-emmanter="1">Manter como estão</button></div></div>':'')+'<div class="note" style="margin-top:6px"><b>Peças em MDF 15 mm</b> deste módulo (entram no 3D, no plano de corte e no orçamento)</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+
   '<button data-emtool="peca" class="'+(st.modo==='peca'?'sel':'')+'">＋ Criar Peça 15 mm</button><button data-emtool="regua" class="'+(st.rg||(st.modo&&T[st.modo]&&T[st.modo].rg)?'sel':'')+'">＋ Criar Régua</button><button data-emtool="vao" class="'+(st.vaos?'sel':'')+'">⬚ Fechar Vão</button></div>';
   if(st.rg)h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">'+['rv','rh','prat','trav','latac','fsup','finf'].map(function(k){return '<button data-emrg="'+k+'" class="'+(st.modo===k?'sel':'')+'">'+T[k].n+'</button>'}).join('')+'</div>';
   if(st.modo)h+='<div class="note" data-emdica="1">✋ Segure 2 segundos no desenho onde a '+(st.modo==='peca'?'peça':T[st.modo].n.toLowerCase())+' começa. <button data-emtool="sair">Cancelar</button></div>';
@@ -13193,6 +13195,8 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   return h};
  var rp=function(){try{panel()}catch(_){}};
  var avisa=function(r,o){toast('⚠ Não dá: a peça entraria em '+(r.com||'outra peça')+'. '+(o||'Nada foi alterado.'))};
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-emadapta],[data-emmanter]');if(!b||window.RO||!S.m)return;e.stopPropagation();var m=S.m;snap();
+  if(b.dataset.emadapta){var r=EM.adapta(m);toast(r.nao.length?'⚠ Adaptadas '+r.ok+'; ficaram como estavam: '+r.nao.join(', '):'✓ '+r.ok+(r.ok===1?' peça adaptada':' peças adaptadas')+' à medida nova')}else{EM.manter(m);toast('Peças livres mantidas como estavam')}EM.re();rp()},true);
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-emtool],[data-emrg],[data-emvao],[data-emsel],[data-emdel]');if(!b||window.RO||!S.m)return;var bd=document.getElementById('bd');if(!bd||!bd.contains(b))return;e.stopPropagation();var st=EM.st,m=S.m,d=b.dataset;
   if(d.emtool!==undefined){var t=d.emtool;if(t==='sair'){st.modo='';st.rg=0}else if(t==='peca'){st.modo=st.modo==='peca'?'':'peca';st.rg=0;st.vaos=0}else if(t==='regua'){st.rg=st.rg?0:1;if(!st.rg)st.modo='';else if(st.modo==='peca')st.modo='';st.vaos=0}else if(t==='vao'){st.vaos=st.vaos?0:1;st.modo='';st.rg=0}if(st.modo)toast('✋ Segure 2 segundos no desenho onde a peça começa');rp();EM.re();return}
   if(d.emrg){st.modo=st.modo===d.emrg?'':d.emrg;if(st.modo)toast('✋ '+T[st.modo].n+': segure 2 segundos no desenho onde ela começa');rp();EM.re();return}
@@ -13409,21 +13413,29 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  function eixo(q,k,len,A0,A1,esp){var a=q[k],b=q[k]+q[len],i=acha(A0,a),j=acha(A0,b),na=a,nb=b;
   if(i>=0&&j>=0&&!esp){na=A1[i];nb=A1[j]}else if(i>=0){na=A1[i];nb=na+(b-a)}else if(j>=0){nb=A1[j];na=nb-(b-a)}
   if(nb-na<1)return null;return [R(na),R(nb-na)]}
- EM.ancora=function(m){if(!m||!Array.isArray(m.pl)||!m.pl.length)return 0;var r1=refDe(m),mud=0,av=[];
-  m.pl.forEach(function(q){if(!q.ref){q.ref=r1;return}var r0=q.ref;if(r0.w===r1.w&&r0.h===r1.h&&r0.d===r1.d&&r0.e===r1.e&&r0.L===r1.L&&r0.R===r1.R)return;
-   var A0=anc(r0),A1=anc(r1),old={x:q.x,y:q.y,w:q.w,h:q.h,z:q.z,d:q.d},n={};
-   /* y é de cima pra baixo: topo 0 e base h */
-   var ex=eixo(q,'x','w',A0.x,A1.x,q.ax==='x'),ey=eixo(q,'y','h',A0.y,A1.y,q.ax==='y'),ez=eixo(q,'z','d',A0.z,A1.z,q.ax==='z');
-   if(ex){n.x=ex[0];n.w=ex[1]}if(ey){n.y=ey[0];n.h=ey[1]}if(ez){n.z=ez[0];n.d=ez[1]}
-   var muda=Object.keys(n).some(function(k){return n[k]!==old[k]});q.ref=r1;if(!muda)return;
-   var res=EM.pecaMuda(m,q,n);if(res.ok)mud++;else av.push((EM.TIPOS[q.k]||EM.TIPOS.peca).n+' (entraria em '+res.com+')')});
-  if(av.length)setTimeout(function(){try{toast('⚠ Medida do módulo mudou: '+av.join(', ')+' ficou como estava. Ajuste a peça.')}catch(_){}},80);return mud};
+ /* proposta (não aplica nada): o que cada peça presa em referência do módulo viraria com a medida atual */
+ EM.propostas=function(m){var L=[];if(!m||!Array.isArray(m.pl)||!m.pl.length)return L;var r1=refDe(m);
+  m.pl.forEach(function(q){var r0=q.ref;if(!r0||(r0.w===r1.w&&r0.h===r1.h&&r0.d===r1.d&&r0.e===r1.e&&r0.L===r1.L&&r0.R===r1.R))return;var A0=anc(r0),A1=anc(r1),n={};
+   var ex=eixo(q,'x','w',A0.x,A1.x,q.ax==='x'),ey=eixo(q,'y','h',A0.y,A1.y,q.ax==='y'),ez=eixo(q,'z','d',A0.z,A1.z,q.ax==='z');if(ex){n.x=ex[0];n.w=ex[1]}if(ey){n.y=ey[0];n.h=ey[1]}if(ez){n.z=ez[0];n.d=ez[1]}
+   var mud=Object.keys(n).filter(function(k){return n[k]!==q[k]});L.push({q:q,n:n,mud:mud})});return L};
+ var NOME_K={x:'posição na largura',y:'posição na altura',z:'posição na profundidade',w:'largura',h:'altura',d:'profundidade'};
+ EM.propTxt=function(p){var T=(EM.TIPOS[p.q.k]||EM.TIPOS.peca).n;if(!p.mud.length)return T+': fica igual';return T+': '+p.mud.map(function(k){return NOME_K[k]+' '+p.q[k]+' → '+p.n[k]+' mm'}).join(', ')};
+ /* aplicar só com o "Adaptar" da pessoa: cada peça confere o sólido; a que bateria fica como estava (e diz por quê) */
+ EM.adapta=function(m){var r1=refDe(m),ok=[],nao=[];EM.propostas(m).forEach(function(p){if(!p.mud.length){p.q.ref=r1;return}var res=EM.pecaMuda(m,p.q,p.n);if(res.ok){p.q.ref=r1;ok.push(p)}else nao.push(EM.propTxt(p)+' (entraria em '+res.com+')')});return {ok:ok.length,nao:nao}};
+ /* "Manter como estão": a medida nova vira a referência, nada mexe */
+ EM.manter=function(m){var r1=refDe(m);(m.pl||[]).forEach(function(q){q.ref=r1})};
+ EM.ancora=function(m){return 0};/* (antes acompanhava sozinho; agora só com confirmação — pedido 22/11) */
  /* peça nova já nasce com a referência do módulo */
- var pn0=EM.pecaNova;EM.pecaNova=function(m,q){if(m&&q&&!q.ref)q.ref=refDe(m);return pn0.apply(this,arguments)};
- EM.G.pre.push(function(){if(window.RO)return;(S.mods||[]).forEach(function(m){if(m&&m.pl&&m.pl.length)EM.ancora(m)})});
+ var pn0=EM.pecaNova;EM.pecaNova=function(m,q){if(m&&q&&!q.ref)q.ref=refDe(m);var r=pn0.apply(this,arguments);if(r&&r.ok&&m)m.plv=EM.FMT;return r};
+ /* mudou a medida do módulo escolhido e tem peça livre presa nele: avisa uma vez (a proposta fica na Estrutura do Módulo) */
+ var AV=typeof WeakMap==='function'?new WeakMap():null;EM.G.pre.push(function(){if(window.RO||!AV)return;var m=S.m;if(!m||!m.pl||!m.pl.length)return;var k=JSON.stringify(refDe(m));if(AV.get(m)===k)return;var P=EM.propostas(m).filter(function(p){return p.mud.length});if(!P.length){AV.set(m,k);return}AV.set(m,k);setTimeout(function(){try{toast('Medida do módulo mudou: '+P.length+(P.length>1?' peças livres podem':' peça livre pode')+' acompanhar · veja em Estrutura do Módulo')}catch(_){}},120)});
  /* inserir modelo salvo: confere as peças livres no lugar em que o módulo entrou */
- EM.G.myIns.push(function(n){try{if(n&&Array.isArray(n.pl)&&n.pl.length){var fora=[];n.pl.slice().forEach(function(q){q.ref=refDe(n);var b=EM.pecaBate(n,q);if(b){fora.push((EM.TIPOS[q.k]||EM.TIPOS.peca).n+' (entraria em '+b+')');n.pl.splice(n.pl.indexOf(q),1)}});if(!n.pl.length)delete n.pl;
-   if(fora.length){try{draw()}catch(_){}setTimeout(function(){try{toast('⚠ Aqui não couberam: '+fora.join(', ')+'. O modelo salvo continua com elas.')}catch(_){}},400)}}}catch(_){}});
+ EM.G.myIns.push(function(n){if(!Array.isArray(n.pl)||!n.pl.length)return;var fora=[];n.pl.slice().forEach(function(q){q.ref=refDe(n);var b=EM.pecaBate(n,q);if(b){fora.push({q:q,com:b});n.pl.splice(n.pl.indexOf(q),1)}});
+  if(!fora.length)return;/* não some nada calado (pedido 22/11): as que não cabem ficam guardadas à parte e a pessoa decide */n.plPend=fora.map(function(f){return f.q});if(!n.pl.length)delete n.pl;try{draw()}catch(_){}setTimeout(function(){EM.dlgPend(n,fora)},50)});
+ EM.dlgPend=function(n,fora){var old=document.getElementById('empend');if(old)old.remove();var d=document.createElement('div');d.id='empend';d.style.cssText='position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML='<div style="background:#fff;border-radius:12px;padding:14px;max-width:420px;width:100%"><b>Peças livres do modelo que não cabem aqui</b><div class="note" style="margin:6px 0">O móvel entrou, mas estas peças entrariam em outra coisa neste lugar:</div>'+fora.map(function(f){return '<div style="margin:3px 0">• '+(EM.TIPOS[f.q.k]||EM.TIPOS.peca).n+' '+EM.corte(f.q).join(' × ')+' mm — entraria em '+String(f.com).replace(/</g,'&lt;')+'</div>'}).join('')+
+   '<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px"><button data-empend="tira">Tirar essas peças deste móvel (o modelo salvo continua com elas)</button><button data-empend="volta">Desfazer a inserção do móvel</button></div></div>';
+  document.body.appendChild(d);d.addEventListener('click',function(e){var b=e.target.closest('[data-empend]');if(!b)return;e.stopPropagation();d.remove();if(b.dataset.empend==='tira'){delete n.plPend;toast('Peças tiradas só deste móvel')}else{var i=S.mods.indexOf(n);if(i>=0){S.mods.splice(i,1);S.m=S.mods[S.mods.length-1]||null}toast('Inserção desfeita')}try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}})};
 })();
 </script>
 <script>
@@ -13443,4 +13455,23 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   d.innerHTML='<div style="font-size:12px;color:#5b616b">Peça 15 mm · como ela nasce?</div>'+L.map(function(o){var on=o[0]===pad;return '<button data-emori="'+o[0]+'" style="min-height:40px;text-align:left'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+o[1]+(on?' · plano da vista':'')+'</button>'}).join('')+'<button data-emori="" style="min-height:34px">Cancelar</button>';
   document.body.appendChild(d);var r=d.getBoundingClientRect(),W=window.innerWidth,H=window.innerHeight;d.style.left=Math.max(8,Math.min(W-r.width-8,cx-r.width/2))+'px';d.style.top=Math.max(8,Math.min(H-r.height-8,cy+16))+'px';
   d.addEventListener('click',function(e){var b=e.target.closest('[data-emori]');if(!b)return;e.stopPropagation();d.remove();if(b.dataset.emori)fn(b.dataset.emori)});return d}})();
+</script><script>
+/* ===== COMPATIBILIDADE DOS PROJETOS (peças livres · pedido 22/11) =====
+   Marcador de formato: m.plv no módulo que tem peças livres (vai junto com o módulo em qualquer versão do app) e emFmt no projeto.
+   Ao abrir: confere cada peça sem mexer em nenhuma medida ou posição. Peça com dado estragado vai pra quarentena m.plBad (não aparece, não entra
+   no corte, continua guardada no arquivo; nunca é apagada). Peças de uma versão mais nova (m.plv > EM.FMT) ficam intactas e travadas pra edição. */
+(function(){var EM=window.EM;if(!EM||!EM.G)return;EM.FMT=1;
+ var NUM=['x','y','w','h','z','d'],okPeca=function(q){if(!q||typeof q!=='object'||!q.id)return false;for(var i=0;i<NUM.length;i++){var v=q[NUM[i]];if(typeof v!=='number'||!isFinite(v))return false}if(!/^[xyz]$/.test(q.ax||''))return false;return q.w>=1&&q.h>=1&&q.d>=1};
+ EM.novo=function(m){return !!m&&+m.plv>EM.FMT};
+ EM.confere=function(){var ruins=0,novos=0;(S.mods||[]).forEach(function(m){if(!m||m.pl===undefined)return;if(EM.novo(m)){novos++;return}
+   if(!Array.isArray(m.pl)){m.plBad=(m.plBad||[]).concat([m.pl]);delete m.pl;ruins++;return}var bom=[],mau=[];m.pl.forEach(function(q){(okPeca(q)?bom:mau).push(q)});
+   if(mau.length){m.plBad=(m.plBad||[]).concat(mau);ruins+=mau.length;if(bom.length)m.pl=bom;else delete m.pl}});
+  if(ruins)setTimeout(function(){try{toast('⚠ '+ruins+(ruins>1?' peças livres com dado estragado ficaram':' peça livre com dado estragado ficou')+' guardada à parte (não entra no corte). O resto do projeto abriu normal.')}catch(_){}},300);
+  if(novos)setTimeout(function(){try{toast('Projeto com peças livres de uma versão mais nova do app: elas ficam como estão. Atualize o app pra editar.')}catch(_){}},600);return {ruins:ruins,novos:novos}};
+ EM.G.load.push(function(){EM.confere()});
+ EM.G.save.push(function(r){if((r.mods||[]).some(function(m){return m&&(m.pl||m.plBad||m.plPend)}))r.emFmt=EM.FMT});
+ /* peças de versão mais nova: nenhuma ferramenta mexe nelas */
+ ['pecaMuda','pecaApaga'].forEach(function(f){var o=EM[f];EM[f]=function(m){if(EM.novo(m))return f==='pecaMuda'?{ok:false,com:'(peça de versão mais nova do app: atualize pra editar)'}:false;return o.apply(this,arguments)}});
+ var pn=EM.pecaNova;EM.pecaNova=function(m){if(EM.novo(m))return {ok:false,com:'(módulo com peças de versão mais nova do app: atualize pra editar)'};return pn.apply(this,arguments)};
+})();
 </script></body></html>

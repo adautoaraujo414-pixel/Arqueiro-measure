@@ -1332,3 +1332,11 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - Adaptados, com comentário do pedido de 22/11: `testMoverNo3D…` e `testParedeEsquerdaNomesDosLados…`. A regra antiga continua conferida num móvel antigo, e entrou a conferência do novo.
 - **Projetos:** nenhum projeto salvo muda ao abrir. Projeto salvo nesta versão e aberto numa versão anterior mostra o móvel novo com o mesmo desenho. Só o nome do lado no corte volta a ser o guardado.
 - **Pendente:** aparelho real; ordem "Vão 1, Vão 2" no painel do móvel novo da esquerda continua contando a partir do canto.
+
+## PAREDE-ESQ-TEMPO (22/11/2026) · teste longo derrubava a bateria do iOS
+- **Módulo:** bateria iOS (`ios/ArquemestreTests/EditorWebKitTests.swift`). O app não foi alterado.
+- **Como apareceu:** no iOS CI 649 (`24a91b8`), o teste novo `testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar` (catálogo inteiro, 587 itens) levou 161 s no iPhone e 136 s no iPad, e o limite é 2 min por teste. O XCTest reiniciou o app de teste logo depois, durante `testPedraDivididaNoFogao`, e a bateria saiu como falha. Esse teste é inocente. No Chrome o teste inteiro levava 40 s.
+- **Causa raiz:** o tempo de um único teste passava do limite do XCTest. Evidência: `QUEDAS.txt` no ramo `ci/ios-resultados`.
+- **Correção:** o teste foi dividido em 4: o catálogo em 3 terços (`i%3`, mínimo de 167 itens por terço, somando o catálogo inteiro) e o resto num teste próprio. As conferências e as expectativas são as mesmas (commits `8e50530` e `3f1c3a5`). O `8e50530` deixou um fechamento `"""#)` duplicado que quebrou a compilação no CI 650, corrigido no `3f1c3a5`.
+- **Validação:** local, 4 de 4 passaram, com cerca de 12 s cada. iOS CI 651: 470 testes (397 do editor), 0 falhas no iPhone e no iPad, nenhum teste repetido, StoreKit OK.
+- **Prevenção:** teste que percorre o catálogo inteiro tem que caber em menos de 2 min no simulador. Medir no Chrome e multiplicar por cerca de 4.

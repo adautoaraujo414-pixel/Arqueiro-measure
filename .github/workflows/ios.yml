@@ -37,9 +37,9 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Trava
-        if: github.event_name == 'workflow_dispatch' && inputs.testflight && github.ref_name == 'main'
+        if: github.event_name == 'workflow_dispatch' && github.ref_name == 'main'
         run: |
-          echo "::error title=TRAVA::TestFlight não sai pela main: sem 'ref' esta ios.yml compila a linha antiga (feature/arque-measure-kotlin). Dispare no ramo da versão candidata."
+          echo "::error title=TRAVA::iOS não roda à mão pela main (com ou sem TestFlight): sem 'ref' esta ios.yml compila a linha antiga (feature/arque-measure-kotlin) e regrava o ramo ci/ios-resultados, de onde saem as capturas da App Store. Dispare no ramo da versão candidata."
           exit 1
       - name: Liberado
         run: echo "Trava ok, pode seguir."

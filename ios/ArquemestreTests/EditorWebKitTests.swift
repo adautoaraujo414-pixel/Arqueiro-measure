@@ -4336,7 +4336,7 @@ final class EditorWebKitTests: XCTestCase {
           var ev=function(n,x,y,el){(el||document.elementFromPoint(x,y)||document.body).dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:7,clientX:x,clientY:y,isPrimary:true}))};
           var und0=(typeof UND!=='undefined'?UND.length:-1);
           ev('pointerdown',cx,cy,g);ev('pointermove',cx+3,cy+2,document.body);R.semMexer=JSON.stringify(S.pxa||null);
-          ev('pointermove',cx+2,cy-9,document.body);await new Promise(r=>setTimeout(r,60));R.txt=(document.querySelector('#svg text[fill="#1f6feb"]')||{}).textContent;ev('pointerup',cx+2,cy-9,document.body);
+          ev('pointermove',cx+2,cy-9,document.body);await new Promise(r=>setTimeout(r,60));/* IMA-QUADRO (22/11): no arrasto o 2D é redesenhado no próximo quadro (rafDraw): espera o quadro do app antes de ler a medida mostrada */await new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r)})});R.txt=(document.querySelector('#svg text[fill="#1f6feb"]')||{}).textContent;ev('pointerup',cx+2,cy-9,document.body);
           R.pxa=!!(S.pxa&&S.pxa.du>=25&&S.pxa.dt>=25);R.igual=R.txt===S.pxa.du+' · '+S.pxa.dt;R.toast=TL[TL.length-1];
           var pos=function(mm){return partsOf(mm).filter(p=>p.name==='Porta').map(p=>{var b=pxBar(p,mm,p.w,p.h);return p.hinge+':'+Math.round(p.hinge==='r'?b.u:p.w-b.u)+' cima'+Math.round(p.h-b.v)+' baixo'+Math.round(b.v)})};var pb=pos(S.mods[0]),pa=pos(S.mods[1]);R.par=pb[0].slice(2)===pb[1].slice(2)&&pa[0].slice(2)===pa[1].slice(2);R.segue=pb[0].indexOf('l:'+S.pxa.du+' cima'+S.pxa.dt+' ')===0&&pa[0].indexOf('l:'+S.pxa.du+' ')===0&&/baixo(\d+)$/.exec(pa[0])[1]==S.pxa.dt;
           R.sel=S.mods.indexOf(S.m);R.semAzul=!document.querySelector('#svg text[fill="#1f6feb"]');

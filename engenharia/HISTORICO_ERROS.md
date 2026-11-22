@@ -1340,3 +1340,14 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** o teste foi dividido em 4: o catálogo em 3 terços (`i%3`, mínimo de 167 itens por terço, somando o catálogo inteiro) e o resto num teste próprio. As conferências e as expectativas são as mesmas (commits `8e50530` e `3f1c3a5`). O `8e50530` deixou um fechamento `"""#)` duplicado que quebrou a compilação no CI 650, corrigido no `3f1c3a5`.
 - **Validação:** local, 4 de 4 passaram, com cerca de 12 s cada. iOS CI 651: 470 testes (397 do editor), 0 falhas no iPhone e no iPad, nenhum teste repetido, StoreKit OK.
 - **Prevenção:** teste que percorre o catálogo inteiro tem que caber em menos de 2 min no simulador. Medir no Chrome e multiplicar por cerca de 4.
+## FT-REBAIXO — fita de 0,8 mm do rebaixo da lateral desenhada dentro da travessa frontal no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: correção cirúrgica só do defeito visual, com teste antes e depois.
+- **Causa:** o `build_ft` põe uma tira de 0,8 mm na frente de cada caixa da lateral. A caixa de cima (o rebaixo, z até 551) ganha a tira de 551 a 551,8, dentro da travessa (de 551 a 566). Sobreposição de 15 × 70 × 0,8 mm.
+- **Correção:** a tira que cairia dentro de uma Travessa, Travessão ou Frontal do mesmo módulo não é desenhada. Peças, lista e corte iguais aos da versão publicada (assinaturas no teste `testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam`).
+- **Bateria local completa:** 347/349.
+  - `testTamponamentoNo2D…` é a falha antiga; a correção dela está na branch do P0.
+  - `testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma` **aguarda decisão do Adauto**:
+    - O teste confere pelo **total de caixas** do módulo no 3D. Com a correção há 2 caixas a menos (as tiras escondidas), então "caixas 65 → 64" vira "63 → 62".
+    - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
+    - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
+    - **O teste não foi alterado.**

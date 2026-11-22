@@ -11930,25 +11930,44 @@ final class EditorWebKitTests: XCTestCase {
         var MSG=[];var pd0=window.pcDelAt;window.pcDelAt=function(){var r=pd0.apply(this,arguments);MSG.push(r);return r};
         var RM={inf:'cozinha',sup:'cozinha',canto:'cozinha',alto:'cozinha',quarto:'quarto',dArm:'quarto',dCan:'quarto',banho:'banho',sala:'sala',escr:'escr'};
         var items=[];CATS.forEach(function(c){if(!RM[c.id])return;(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(t&&!t.act&&t.w&&t.h)items.push([c.id,t])})});
-        var bx=function(){__build();var o={__tot:0};__boxes().forEach(function(b){if(String(b.nm).indexOf('0:')!==0)return;o.__tot++;var k=b.ppk&&/ · engrosso \d+#\d+$|\(régua\)#\d+$/.test(String(b.pk))?b.pk:(b.ppk||b.pk);if(k)o[k]=(o[k]||0)+1});return o};
+        var bx=function(){__build();var o={__tot:0,__nf:0,__ftk:{}};__boxes().forEach(function(b){if(String(b.nm).indexOf('0:')!==0)return;o.__tot++;var k=b.ppk&&/ · engrosso \d+#\d+$|\(régua\)#\d+$/.test(String(b.pk))?b.pk:(b.ppk||b.pk);if(b.ft){if(k)o.__ftk[k]=(o.__ftk[k]||0)+1}else o.__nf++;if(k)o[k]=(o[k]||0)+1});return o};
         var cnt=function(m,nm){return partsOf(m).filter(function(p){return p.name===nm}).length};
         open3D();await W(200);window.SEL3={mi:0,pk:'x'};try{__sel3(-99999,-99999)}catch(_){}
         var lixo3D=function(pk){window.SEL3={mi:0,pk:pk};MSG=[];var b=document.createElement('button');b.dataset.e3del='1';document.getElementById('e3').appendChild(b);b.click();b.remove();return MSG.join(' / ')};
+        /* FANTASMA PELA IDENTIDADE (Adauto, 17/11/2026, autorizado): a conferência era pelo total de caixas do módulo. Com a fita escondida dentro da travessa (FT-REBAIXO),
+           apagar a travessa descobre a frente do rebaixo e as 2 tiras dela voltam (com a chave da lateral), e o total enganava. Agora: saiu do 3D = as caixas com a chave da
+           própria peça (mesmo nome, qualquer nº) caem pelo menos o que ela tinha, e as caixas que não são tira de fita caem o que ela tinha (pega caixa que sobrasse com outro nome). As outras peças são conferidas no caso da travessa, logo abaixo. */
+        var bnm=function(q){return String(q).replace(/#\d+$/,'')},c3=function(o,nm_){var t=0;Object.keys(o).forEach(function(q){if(!/^__/.test(q)&&bnm(q)===nm_)t+=o[q]});return t};
         var feito={},naoSai=[],fantasma=[],bloq=[],n=0;
         for(var ii=0;ii<items.length;ii++){var it=items[ii][1],base=null;try{loadState(initLimpo());S.room=RM[items[ii][0]];S.env=S.room;S.W=5000;S.H=2700;S.stones=[];S.rp=[];S.mods=[];S.fr=[];newTpl(JSON.parse(JSON.stringify(it)));var m=S.mods[0];m.x=1500;m.tl=m.tr=true;S.m=m;draw();base=JSON.stringify(snapState())}catch(e){continue}
-         var B0=bx();Object.keys(B0).forEach(function(k){if(k==='__tot')return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
+         var B0=bx();Object.keys(B0).forEach(function(k){if(/^__/.test(k))return;var nm=k.replace(/#\d+$/,'');if(feito[nm]||/^(Corte do|Nicho do micro|Cabideiro)/.test(nm))return;feito[nm]=1;
           loadState(JSON.parse(base));var m2=S.mods[0];S.m=m2;draw();var b0=bx();if(!b0[k])return;var tira_=/ · engrosso \d+$|\(régua\)$/.test(nm),noCorte=function(){var o=0;cutLines(S.mods[0]).forEach(function(l){(l.pks||[]).forEach(function(q){if(q===k)o++})});return o},c0=tira_?noCorte():cnt(m2,nm),fundo0=m2.fundo;var msg=lixo3D(k);m2=S.mods[0];var b1=bx();n++;
-          var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=b1.__tot<=b0.__tot-b0[k];
+          var saiuLista=/^Fundo( \(lado do canto\))?$/.test(nm)?(fundo0&&!m2.fundo):tira_?(noCorte()<c0):(cnt(m2,nm)<c0),saiu3D=c3(b1,nm)<=c3(b0,nm)-b0[k]&&b1.__nf<=b0.__nf-(b0[k]-(b0.__ftk[k]||0));
           if(!saiuLista&&!saiu3D&&/^⚠/.test(msg))bloq.push(nm);else if(!saiuLista&&!saiu3D)naoSai.push(nm+' ('+it.n+': '+msg.slice(0,60)+')');else if(saiuLista!==saiu3D)fantasma.push(nm+' ('+it.n+(saiuLista?': saiu da lista e ficou no 3D':': saiu do 3D e ficou na lista')+')')})}
         R.pecasConferidasMaisDe60=n>60;R.naoSai=naoSai.join(' | ')||'nenhuma';/* 16/11 10:56: peça da estrutura que não pode sair não some calada: o 🗑 explica o motivo */R.naoSaiComMotivo=bloq.join(', ')||'nenhuma';R.fantasma=fantasma.join(' | ')||'nenhuma';
+        /* travessa frontal pelo 🗑 (Adauto 17/11/2026): nenhuma caixa dela fica no 3D, sai da lista e do corte, as outras peças ficam iguais (lista) e não perdem caixa no 3D
+           (as 2 tiras da frente do rebaixo podem voltar, porque ela ficou descoberta); ↶ volta tudo, ↷ tira de novo, salvar e reabrir mantém; e o detector acusa um fantasma de verdade */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.mods[0].x=1000;draw();
+        var tvK='Travessa frontal',daTv=function(b){return /^\d+:Travessa frontal/.test(String(b.nm||''))||String(b.pk||'').indexOf(tvK)===0||String(b.ppk||'').indexOf(tvK)===0},
+            tv3=function(){return __boxes().filter(function(b){return String(b.nm).indexOf('0:')===0&&daTv(b)}).length},tvL=function(){return partsOf(S.mods[0]).filter(function(p){return p.name.indexOf(tvK)===0}).length},
+            tvC=function(){return cutLines(S.mods[0]).filter(function(l){return (l.names||[l.name]).some(function(n){return String(n).indexOf(tvK)===0})}).length},
+            outrasL=function(){return JSON.stringify(partsOf(S.mods[0]).filter(function(p){return p.name.indexOf(tvK)!==0}).map(function(p){return [p.name,p.w,p.h,p.cl,p.cw]}))},
+            est=function(){__build();return '3D '+tv3()+' · lista '+tvL()+' · corte '+tvC()};
+        histTick();await W(800);histTick();var tb0=bx(),tL0=outrasL();R.travAntes=est();R.travMsg=lixo3D(tvK+'#1');var tb1=bx();R.travDepois=est();
+        R.travOutras='lista das outras '+(outrasL()===tL0?'igual':'MUDOU')+' · caixas das outras que diminuíram: '+(Object.keys(tb0).filter(function(q){return !/^__/.test(q)&&bnm(q)!==tvK&&(tb1[q]||0)<tb0[q]}).join(', ')||'nenhuma');
+        histTick();await W(800);histTick();document.getElementById('und').click();await W(150);R.travDesfez=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
+        document.getElementById('red').click();await W(150);R.travRefez=est();
+        var svT=JSON.stringify(snapState());loadState(JSON.parse(svT));draw();R.travReabriu=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
+        /* o detector continua achando fantasma de verdade: uma caixa com a chave da travessa enfiada no 3D depois de apagar */
+        __build();var fk=Object.assign({},__boxes().filter(function(b){return String(b.nm).indexOf('0:Lateral esquerda')===0})[0]);fk.nm='0:'+tvK;fk.pk=tvK+'#1';delete fk.ppk;__boxes().push(fk);R.travDetector='fantasma de teste achado '+tv3();__build();
         /* fundo: sai do 3D, da lista de corte, volta no ↶ e continua fora depois de salvar e reabrir */
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;m.fundo=true;m.fundoMan=1;S.m=m;draw();
         var fundoNoCorte=function(){return cutLines(S.mods[0]).filter(function(l){return /^Fundo/.test(String((l.names||[l.name])[0]))}).length};histTick();await W(800);histTick();
         R.fundoAntes='corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);R.fundoMsg=lixo3D('Fundo#1');R.fundoDepois='fundo '+S.mods[0].fundo+' · corte '+fundoNoCorte()+' · 3D '+(bx()['Fundo#1']||0);
         var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.fundoReabriu='fundo '+S.mods[0].fundo+' · 3D '+(bx()['Fundo#1']||0);
         /* caixa da gaveta: tira a contra-frente da 1ª gaveta · o 3D fica com 1 caixa a menos e nenhuma chave repetida */
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caixas '+g0.__tot+' → '+g1.__tot+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
-        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caixas '+g1.__tot+' → '+g2.__tot+' · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Gaveteiro 3 gavetas'));S.m=S.mods[0];draw();var g0=bx();var gk='Frente/costa de gaveta (contra-frente e traseira)';R.gavMsg=lixo3D(gk+'#1');var g1=bx();R.gaveta='caiu do 3D '+(g0.__tot-g1.__tot)+' (a peça tinha '+(g0[gk+'#1']||0)+') · outras caixas que não são fita '+(g0.__nf-(g0[gk+'#1']-(g0.__ftk[gk+'#1']||0))===g1.__nf?'iguais':'MUDARAM')+' · chaves da contra-frente/traseira no 3D: '+Object.keys(g1).filter(function(k){return k.indexOf(gk)===0}).map(function(k){return k.slice(gk.length)+'×'+g1[k]}).join(' ');
+        lixo3D('Lateral de gaveta#2');var g2=bx();R.gavLateral='caiu do 3D '+(g1.__tot-g2.__tot)+' (a peça tinha '+(g1['Lateral de gaveta#2']||0)+') · lateral #2 no 3D '+(g2['Lateral de gaveta#2']||0)+' · #1 '+(g2['Lateral de gaveta#1']||0);
         /* canto em L: a base do lado do canto sai do 3D */
         var ic=null;CATS.forEach(function(c){(c.it||[]).forEach(function(x){var t=typeof x==='number'?TPL[x]:x;if(!ic&&t&&t.corner&&t.sup)ic=t})});loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(ic)));S.m=S.mods[0];draw();var k0=bx();lixo3D('Base inferior (lado do canto)#1');var k1=bx();R.canto='caixas '+k0.__tot+' → '+k1.__tot+' · base do lado no 3D '+(k1['Base inferior (lado do canto)#1']||0)+' · base do fundo '+(k1['Base inferior#1']||0)+' (antes '+(k0['Base inferior#1']||0)+')';
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
@@ -11962,8 +11981,16 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundoDepois"] as? String, "fundo false · corte 0 · 3D 0")
         XCTAssertEqual(o["fundoReabriu"] as? String, "fundo false · 3D 0")
         XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
-        XCTAssertEqual(o["gaveta"] as? String, "caixas 65 → 64 · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
-        XCTAssertEqual(o["gavLateral"] as? String, "caixas 64 → 63 · lateral #2 no 3D 0 · #1 1")
+        XCTAssertEqual(o["gaveta"] as? String, "caiu do 3D 1 (a peça tinha 1) · outras caixas que não são fita iguais · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
+        XCTAssertEqual(o["gavLateral"] as? String, "caiu do 3D 1 (a peça tinha 1) · lateral #2 no 3D 0 · #1 1")
+        /* Adauto 17/11/2026: os totais da gaveta não são mais números fixos (eram 65 → 64 e 64 → 63, e mudam com o desenho da fita): o 3D cai exatamente as caixas da peça apagada, tiradas da geometria desta versão */
+        XCTAssertEqual(o["travAntes"] as? String, "3D 1 · lista 1 · corte 1")
+        XCTAssertEqual(o["travDepois"] as? String, "3D 0 · lista 0 · corte 0")
+        XCTAssertEqual(o["travOutras"] as? String, "lista das outras igual · caixas das outras que diminuíram: nenhuma")
+        XCTAssertEqual(o["travDesfez"] as? String, "3D 1 · lista 1 · corte 1 · outras iguais")
+        XCTAssertEqual(o["travRefez"] as? String, "3D 0 · lista 0 · corte 0")
+        XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais")
+        XCTAssertEqual(o["travDetector"] as? String, "fantasma de teste achado 1")
         XCTAssertEqual(o["canto"] as? String, "caixas 22 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 2)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -12500,6 +12527,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desliga"] as? String, "2 portas · com puxador")
         XCTAssertEqual(o["basculante"] as? Bool, true, "basculante não mostra a opção")
         XCTAssertEqual(o["vidro"] as? Bool, true, "porta de vidro não mostra a opção")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FT-REBAIXO (Adauto, 17/11/2026: "autorizo a correção cirúrgica exclusivamente do defeito visual"): no 3D a tira de fita de 0,8 mm da frente do rebaixo da lateral
+       ficava dentro da travessa frontal (sobreposição 15 × 70 × 0,8). Só o desenho muda: peças, lista e corte iguais aos da versão publicada (7c939bc; assinaturas tiradas dela).
+       Falha antes (2 tiras dentro da travessa por inferior) e passa depois. A tira da parte de baixo da lateral, que aparece, continua. */
+    func testFitaDoRebaixoNaoFicaDentroDaTravessaNo3DEPecasECorteNaoMudam() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.05&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.05&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.05};
+        var hs=function(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(16)};
+        var NM=['Balcão 2 portas','Balcão porta + gavetas','Gaveteiro 3 gavetas','Aéreo 2 portas','Aéreo basculante','Torre do banheiro (armário alto)','Guarda-roupa 3 vãos','Canto em L (baixo) · direito'];
+        for(var k=0;k<NM.length;k++){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T(NM[k]));var m=S.mods[0];draw();open3D();await W(150);__build();
+          var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),F=B.filter(function(b){return b.ft}),Sd=B.filter(function(b){return !b.ft&&b.g!=='sh'});
+          var dT=F.filter(function(f){return Sd.some(function(o){return /^0:(Travessa|Travessão|Frontal)/.test(o.nm)&&ov(f,o)})}).length;
+          var frente=F.some(function(f){return f.nm==='0:Lateral esquerda'&&f.y1-f.y0>300});
+          R['m'+k]='fitas '+F.length+' · dentro da travessa '+dT+' · tira da frente da lateral '+(frente?'sim':'não')+' · peças+corte '+hs(JSON.stringify(partsOf(m))+'|'+JSON.stringify(cutGroups().map));document.getElementById('v3x').click()}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["m0"] as? String, "fitas 3 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
+        XCTAssertEqual(o["m1"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
+        XCTAssertEqual(o["m2"] as? String, "fitas 3 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
+        XCTAssertEqual(o["m3"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
+        XCTAssertEqual(o["m4"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
+        XCTAssertEqual(o["m5"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
+        XCTAssertEqual(o["m6"] as? String, "fitas 6 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
+        XCTAssertEqual(o["m7"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

@@ -11457,7 +11457,7 @@ final class EditorWebKitTests: XCTestCase {
         var achar=function(cat,nm){var it=null;CATS.forEach(function(c){if(c.id!==cat)return;c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=q})});return JSON.parse(JSON.stringify(typeof it==='number'?TPL[it]:it))};
         var troca=function(s){return String(s).replace(/esquerd|direit/gi,function(w){var d=/^e/i.test(w)?'direit':'esquerd';return w[0]===w[0].toUpperCase()?d[0].toUpperCase()+d.slice(1):d})};
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.wl={L:'p',R:'p'};
-        newTpl(achar('inf','Balcão 1 porta'));var F=S.m;F.x=1500;wvGo('e');newTpl(achar('inf','Balcão 1 porta'));var E=S.m;E.x=1500;E.po={'Tamponamento esquerdo#1':{v2:1,et:-50}};draw();wvGo('f');draw();var d0=[E.tl,E.tr].join();
+        newTpl(achar('inf','Balcão 1 porta'));var F=S.m;F.x=1500;wvGo('e');newTpl(achar('inf','Balcão 1 porta'));var E=S.m;/* pedido 22/11 ("Só móveis novos"): esta regra (nome guardado no corte, nome de quem olha só no painel) é a do móvel ANTIGO; o novo tem o nome de quem olha também no corte (testParedeEsquerdaMovelNovoSemEspelho…) */if(E.espE)espVira(E);delete E.espN;delete E.espE;E.x=1500;E.po={'Tamponamento esquerdo#1':{v2:1,et:-50}};draw();wvGo('f');draw();var d0=[E.tl,E.tr].join();
         /* nomes na lista e no corte (cutLines): fundo = nomes internos; parede esquerda = esquerdo/direito trocados */
         /* por peça: a linha do corte que vem da peça guardada como "Tamponamento esquerdo#1" (chave pk) mostra que nome */
         var nomeDe=function(m,pk){var l=cutLines(m).filter(function(l){return (l.pks||[]).indexOf(pk)>=0})[0];return l?String(l.names[0]).split(' · ')[0]:'(sem linha)'};
@@ -13885,7 +13885,8 @@ final class EditorWebKitTests: XCTestCase {
         var cena=function(W_){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=W_||4600;S.H=2700;S.wl={L:'p',R:'p'};draw();newTpl(T('Balcão 1 porta'));var b=S.m;b.x=200;newTpl(T('Balcão 2 portas'));var a=S.m;a.x=1600;draw();lvSolta(a);a.rot=0;a.lx=1600;a.lz=900;S.m=null;draw();open3D();return {a:a,b:b}};
         /* 1. 19/20/21 mm na parede do fundo e na direita */var c=cena(),jb=can(c.b),dist=[];[19,20,21].forEach(function(mm){aDist(c.a,0,mm);var q=__mv3.alvo(c.a);dist.push(mm+':'+(q?'guia':'sem'))});c.a.rot=90;draw();[19,20,21].forEach(function(mm){aDist(c.a,'d',mm);var q=__mv3.alvo(c.a);dist.push('d'+mm+':'+(q?'guia':'sem'))});R.distancia=dist.join(' ')+' · vizinho '+(can(c.b)===jb?'igual':'mudou');
         /* 2. só de costas: de frente ou de lado pro fundo não encaixa; esquerda e canto L avisam e não encaixam */c=cena();var ori=[];[[180,0],[90,0],[270,0]].forEach(function(q){c.a.rot=q[0];draw();var s=sol(c.a);c.a.lz=+c.a.lz-s.z0+10;draw();ori.push(q[0]+'°:'+(__mv3.alvo(c.a)&&__mv3.alvo(c.a).w===0?'encaixa':'não'))});
-        c.a.rot=270;draw();aDist(c.a,'e',10);var ge=__mv3.guia(c.a),me=__mv3.msg();ori.push('esquerda:'+(ge?'encaixa':'não')+(/Vincular à parede/.test(me)?' (avisa)':''));R.orientacao=ori.join(' ');
+        /* pedido 22/11 ("Só móveis novos"): a regra de não encaixar na esquerda vale pro móvel ANTIGO (sem a marca espN); o novo encaixa sem trocar de lado (testParedeEsquerdaMovelNovoSemEspelho…) */delete c.a.espN;delete c.a.espE;
+        c.a.rot=270;draw();aDist(c.a,'e',10);var ge=__mv3.guia(c.a),me=__mv3.msg();ori.push('esquerda:'+(ge?'encaixa':'não')+(/Vincular à parede/.test(me)?' (avisa)':''));c.a.espN=1;draw();var gn_=__mv3.guia(c.a);ori.push('esquerda novo:'+(gn_?'encaixa':'não'));R.orientacao=ori.join(' ');
         /* 3. encaixa a 20 mm: parede do fundo, mesmas medidas, ninguém muda; desfazer e refazer; salvar e reabrir */c=cena();jb=can(c.b);var ma=med(c.a),lx0=Math.round(+c.a.lx);aDist(c.a,0,20);await W(800);var r1=__mv3.encaixa(c.a);await W(800);
         R.encaixa=(r1.indexOf('✓')===0?'encaixou':r1)+' · '+(!lvIs(c.a)&&!c.a.wing&&Math.round(c.a.x)===lx0?'no fundo em x '+lx0:'wing '+c.a.wing+' x '+c.a.x)+' · '+(med(c.a)===ma?'medidas iguais':'medidas mudaram')+' · '+(can(c.b)===jb?'vizinho igual':'vizinho mudou');
         document.getElementById('und').click();await W(300);var a2=S.mods.filter(function(m){return m.w===c.a.w&&m!==S.mods[0]})[0]||S.mods[1];var desf=lvIs(a2);document.getElementById('red').click();await W(300);a2=S.mods[1];R.desfazer=(desf?'desfez (livre de novo)':'não desfez')+' · '+(!lvIs(a2)?'refez (na parede)':'não refez');
@@ -13895,7 +13896,8 @@ final class EditorWebKitTests: XCTestCase {
         /* 6. pedra da parede: cabe (corpo 560 ≤ 600 − 40) encaixa embaixo; não cabe (580) avisa e não muda */c=cena();addStone();S.st.x=1000;S.st.w=2400;S.st.d=600;draw();aDist(c.a,0,12);var g6=__mv3.guia(c.a),m6=__mv3.msg(),r6=__mv3.encaixa(c.a);R.pedraCabe=(g6?'guia':'sem guia')+' · '+(/embaixo da pedra/.test(m6)?'diz embaixo da pedra':'')+' · '+(!lvIs(c.a)?'encaixou':'não encaixou')+' · '+(med(c.a)===ma?'medidas iguais':'medidas mudaram');
         c=cena();addStone();S.st.x=1000;S.st.w=2400;S.st.d=600;c.a.d=580;draw();var ma7=med(c.a),j7;aDist(c.a,0,12);j7=can(c.a);var g7=__mv3.guia(c.a),m7=__mv3.msg();R.pedraNaoCabe=(g7?'guia':'sem guia')+' · '+(/580 mm de fundo e embaixo da pedra cabe até 560/.test(m7)?'explica':'sem explicar: '+m7)+' · '+(can(c.a)===j7&&med(c.a)===ma7?'móvel igual':'móvel mudou');
         /* 7. soltar da parede puxando (fundo e direita; esquerda não) */c=cena();var w0=c.b,x0=w0.x;var r8=__mv3.solta(w0,25);var s8=sol(w0);R.soltar=(r8==='ok'&&lvIs(w0)&&+w0.rot===0&&Math.round(+w0.lx)===Math.round(x0)?'livre de costas no mesmo x':'r '+r8)+' · '+(Math.round(s8.z0)>=25?'25 mm pra fora':'z0 '+s8.z0)+' · '+(med(w0)==='450/820/560/0'?'medidas iguais':med(w0));
-        c=cena();c.b.wing='e';c.b.x=800;draw();var je=can(c.b);R.soltarEsquerda=(__mv3.solta(c.b,30)==='esq'&&can(c.b)===je?'esquerda não solta arrastando':'soltou');
+        /* pedido 22/11: móvel ANTIGO na esquerda não solta arrastando; o novo solta */c=cena();delete c.b.espN;delete c.b.espE;c.b.wing='e';c.b.x=800;draw();var je=can(c.b);R.soltarEsquerda=(__mv3.solta(c.b,30)==='esq'&&can(c.b)===je?'esquerda não solta arrastando':'soltou');
+        c=cena();c.b.wing='e';c.b.x=800;draw();var rn_=__mv3.solta(c.b,30);R.soltarEsquerdaNovo=(rn_==='ok'&&lvIs(c.b)&&+c.b.rot===270?'novo solta de costas pra esquerda':'r '+rn_);
         /* 8. arrasto de verdade no 3D (módulo livre) e posição digitada */c=cena();mv3On(S.mods.indexOf(c.a));await W(500);var cv=document.getElementById('cv3'),cr=cv.getBoundingClientRect(),pt=null;for(var yy=.1;yy<.95&&!pt;yy+=.03)for(var xx=.05;xx<.95&&!pt;xx+=.02){if(__modAt3(cr.width*xx,cr.height*yy)===S.mods.indexOf(c.a))pt={x:cr.left+cr.width*xx,y:cr.top+cr.height*yy}}
         var pe=function(t,x,y){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,isPrimary:true,pointerType:'touch',buttons:t==='pointerup'?0:1}))};var L0=[+c.a.lx,+c.a.lz];jb=can(c.b);
         if(pt){pe('pointerdown',pt.x,pt.y);for(var k=1;k<=6;k++){pe('pointermove',pt.x+12*k,pt.y);await W(20)}pe('pointerup',pt.x+72,pt.y);await W(200)}R.arrasto=(pt?((+c.a.lx!==L0[0]||+c.a.lz!==L0[1])?'andou no chão':'não andou'):'sem ponto')+' · '+(med(c.a)===ma?'medidas iguais':'medidas mudaram')+' · '+(Number.isInteger(+c.a.lx)&&Number.isInteger(+c.a.lz)?'mm inteiros':'fração')+' · '+(can(c.b)===jb?'vizinho igual':'vizinho mudou');
@@ -13907,7 +13909,7 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["distancia"] as? String, "19:guia 20:guia 21:sem d19:guia d20:guia d21:sem · vizinho igual")
-        XCTAssertEqual(o["orientacao"] as? String, "180°:não 90°:não 270°:não esquerda:não (avisa)")
+        XCTAssertEqual(o["orientacao"] as? String, "180°:não 90°:não 270°:não esquerda:não (avisa) esquerda novo:encaixa", "pedido 22/11: o antigo avisa, o novo encaixa")
         XCTAssertEqual(o["encaixa"] as? String, "encaixou · no fundo em x 1600 · medidas iguais · vizinho igual")
         XCTAssertEqual(o["desfazer"] as? String, "desfez (livre de novo) · refez (na parede)")
         XCTAssertEqual(o["reabrir"] as? String, "igual")
@@ -13917,6 +13919,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pedraNaoCabe"] as? String, "sem guia · explica · móvel igual")
         XCTAssertEqual(o["soltar"] as? String, "livre de costas no mesmo x · 25 mm pra fora · medidas iguais")
         XCTAssertEqual(o["soltarEsquerda"] as? String, "esquerda não solta arrastando")
+        XCTAssertEqual(o["soltarEsquerdaNovo"] as? String, "novo solta de costas pra esquerda", "pedido 22/11")
         XCTAssertEqual(o["arrasto"] as? String, "andou no chão · medidas iguais · mm inteiros · vizinho igual")
         XCTAssertEqual(o["digitado"] as? String, "x 2222")
         XCTAssertEqual(o["imaDesligado"] as? String, "botão nos Ajustes · não encaixa · guardado")

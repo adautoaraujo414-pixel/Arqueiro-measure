@@ -14639,4 +14639,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["novo"] as? String, "true · aviso true · editar false · intactas true", "versão mais nova: intacta e travada")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// EM-INTEGRACAO e MM-ID (supervisor 22/11): instalador único das camadas (partsOf/panel/draw) — não embrulha 2×, aguenta bloco novo embrulhando
+    /// depois, regra automática do módulo não mexe em peça livre, fita/cor pelas extensões declaradas sem mudar as peças normais; e identificação única
+    /// das peças livres (mesmo modelo inserido 2×; projeto com id repetido reabre com id novo e as mesmas medidas).
+    @MainActor
+    func testIntegracaoDasPecasLivresEIdentificacaoUnicaNosMeusModelos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;var o={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+          /* 1. instalador único: rodar de novo não embrulha outra vez */
+          var pf=window.partsOf,pn=window.panel,dw=window.draw;EM.instala();o.umaVez=EM._inst===1&&window.partsOf===pf&&window.panel===pn&&window.draw===dw;
+          S.mods=[];S.stones=[];S.W=6000;newTpl(3);var m=S.mods[0];m.x=300;draw();S.m=m;S.tab=0;panel();EM.criaPecaNoPonto(m,450,450,'prat');var q=m.pl[0];
+          /* 2. um bloco novo que embrulhe partsOf/panel depois (ordem de carregamento) não perde as peças nem duplica a seção */
+          var p0=window.partsOf;partsOf=window.partsOf=function(mm){return p0.apply(this,arguments)};var n0=window.panel;panel=window.panel=function(){return n0.apply(this,arguments)};
+          panel();panel();o.pecaDepoisDeOutroBloco=partsOf(m).filter(function(p){return p.livre===q.id}).length;o.secaoUmaVez=document.querySelectorAll('#bd [data-em]').length;
+          partsOf=window.partsOf=p0;panel=window.panel=n0;
+          /* 3. regra automática do módulo não mexe na peça livre: "sem lateral" estica peça horizontal presa na lateral, a livre não */
+          var x0=q.x,w0=q.w;m.semLE=true;var lv=partsOf(m).filter(function(p){return p.livre===q.id})[0];o.semLateralNaoMexe=(lv.x===x0&&lv.w===w0&&q.x===x0&&q.w===w0)+' '+lv.x+','+lv.w;delete m.semLE;
+          /* 4. fita e cor pelas extensões declaradas; peça normal continua com a regra de sempre */
+          o.ext=[finOf('Prateleira · livre'),edgeSides('Prateleira · livre'),finOf('Porta'),edgeSides('Porta'),edgeSides('Prateleira'),edgeMm({name:'Porta',cl:700,cw:400})].join('|');
+          /* 5. identificação: o mesmo modelo inserido 2× não repete id de peça; projeto antigo com id repetido ganha id novo sem mexer em medida */
+          document.querySelector('[data-msave]').click();await W(100);document.getElementById('myname').value='Dup';document.querySelector('[data-myok]').click();await W(100);var r=PR.myMods[PR.myMods.length-1];
+          S.W=9000;draw();var a=myIns(r.id);await W(150);var dl=document.getElementById('empend');if(dl)dl.querySelector('[data-empend="tira"]').click();var b=myIns(r.id);await W(150);dl=document.getElementById('empend');if(dl)dl.querySelector('[data-empend="tira"]').click();
+          var ids=[];S.mods.forEach(function(mm){(mm.pl||[]).forEach(function(p){ids.push(p.id)})});o.idsUnicos=ids.length+' '+(ids.filter(function(v,i){return ids.indexOf(v)===i}).length===ids.length);
+          var st=JSON.parse(JSON.stringify(snapState()));st.mods.forEach(function(mm){(mm.pl||[]).forEach(function(p){p.id='igual'})});var g0=JSON.stringify(st.mods.map(function(mm){return (mm.pl||[]).map(function(p){return [p.x,p.y,p.w,p.h,p.z,p.d,p.n]})}));
+          loadState(st);var ids2=[];S.mods.forEach(function(mm){(mm.pl||[]).forEach(function(p){ids2.push(p.id)})});var g1=JSON.stringify(S.mods.map(function(mm){return (mm.pl||[]).map(function(p){return [p.x,p.y,p.w,p.h,p.z,p.d,p.n]})}));
+          o.reabriuRepetido=(ids2.filter(function(v,i){return ids2.indexOf(v)===i}).length===ids2.length)+' · medidas iguais '+(g0===g1);
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["umaVez"] as? Bool, true, "instalador roda uma vez só")
+        XCTAssertEqual(o["pecaDepoisDeOutroBloco"] as? Int, 1, "bloco novo embrulhando partsOf depois: a peça continua")
+        XCTAssertEqual(o["secaoUmaVez"] as? Int, 1, "panel chamado 2× (e embrulhado depois): a seção aparece uma vez")
+        XCTAssertEqual(o["semLateralNaoMexe"] as? String, "true 15,870", "regra 'sem lateral' não estica a prateleira livre")
+        XCTAssertEqual(o["ext"] as? String, "b|B|c|LRTB|B|2200", "livre pela extensão; Porta/Prateleira pela regra de sempre")
+        XCTAssertEqual(o["idsUnicos"] as? String, "3 true", "o mesmo modelo inserido mais de uma vez: cada peça com id próprio")
+        XCTAssertEqual(o["reabriuRepetido"] as? String, "true · medidas iguais true", "id repetido no arquivo: ganha id novo, medidas iguais")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
 }

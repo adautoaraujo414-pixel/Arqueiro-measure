@@ -13106,7 +13106,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  /* aplica a mudança na peça; se bater, volta e diz em quê */
  EM.pecaMuda=function(m,q,novo){var old={};['x','y','w','h','z','d'].forEach(function(k){old[k]=q[k]});Object.keys(novo).forEach(function(k){q[k]=novo[k]});EM.fixa(q);
   if(q.w<1||q.h<1||q.d<1){Object.assign(q,old);return {ok:false,com:'medida zero'}}var b=EM.pecaBate(m,q);if(b){Object.assign(q,old);if(!EM.gesto)try{__build()}catch(_){}return {ok:false,com:b}}return {ok:true}};
- var uid=function(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36)};
+ var uid=EM.novoId=function(){return 'p'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36)+(++EM._idn).toString(36)};EM._idn=0;
  /* cria a peça no módulo (pelo mesmo sólido): se não couber, não cria */
  EM.pecaNova=function(m,q){q.id=q.id||uid();EM.fixa(q);if(!Array.isArray(m.pl))m.pl=[];if(!(q.n>0))q.n=1+m.pl.reduce(function(a,o){return Math.max(a,+o.n||0)},0);m.pl.push(q);var b=EM.pecaBate(m,q);if(b){m.pl.splice(m.pl.indexOf(q),1);if(!m.pl.length)delete m.pl;try{__build()}catch(_){}return {ok:false,com:b}}return {ok:true,q:q}};
  EM.pecaApaga=function(m,id){if(!m||!Array.isArray(m.pl))return false;var n=m.pl.length;m.pl=m.pl.filter(function(q){return q.id!==id});if(!m.pl.length)delete m.pl;return n!==(m.pl?m.pl.length:0)};
@@ -13430,7 +13430,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  /* mudou a medida do módulo escolhido e tem peça livre presa nele: avisa uma vez (a proposta fica na Estrutura do Módulo) */
  var AV=typeof WeakMap==='function'?new WeakMap():null;EM.G.pre.push(function(){if(window.RO||!AV)return;var m=S.m;if(!m||!m.pl||!m.pl.length)return;var k=JSON.stringify(refDe(m));if(AV.get(m)===k)return;var P=EM.propostas(m).filter(function(p){return p.mud.length});if(!P.length){AV.set(m,k);return}AV.set(m,k);setTimeout(function(){try{toast('Medida do módulo mudou: '+P.length+(P.length>1?' peças livres podem':' peça livre pode')+' acompanhar · veja em Estrutura do Módulo')}catch(_){}},120)});
  /* inserir modelo salvo: confere as peças livres no lugar em que o módulo entrou */
- EM.G.myIns.push(function(n){if(!Array.isArray(n.pl)||!n.pl.length)return;var fora=[];n.pl.slice().forEach(function(q){q.ref=refDe(n);var b=EM.pecaBate(n,q);if(b){fora.push({q:q,com:b});n.pl.splice(n.pl.indexOf(q),1)}});
+ EM.G.myIns.push(function(n){/* cada cópia inserida ganha identificação própria nas peças (MM-ID 22/11: o mesmo modelo inserido 2× repetia o id) */(n.pl||[]).concat(n.plPend||[]).forEach(function(q){if(q)q.id=EM.novoId()});if(!Array.isArray(n.pl)||!n.pl.length)return;var fora=[];n.pl.slice().forEach(function(q){q.ref=refDe(n);var b=EM.pecaBate(n,q);if(b){fora.push({q:q,com:b});n.pl.splice(n.pl.indexOf(q),1)}});
   if(!fora.length)return;/* não some nada calado (pedido 22/11): as que não cabem ficam guardadas à parte e a pessoa decide */n.plPend=fora.map(function(f){return f.q});if(!n.pl.length)delete n.pl;try{draw()}catch(_){}setTimeout(function(){EM.dlgPend(n,fora)},50)});
  EM.dlgPend=function(n,fora){var old=document.getElementById('empend');if(old)old.remove();var d=document.createElement('div');d.id='empend';d.style.cssText='position:fixed;inset:0;z-index:98;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;padding:16px';
   d.innerHTML='<div style="background:#fff;border-radius:12px;padding:14px;max-width:420px;width:100%"><b>Peças livres do modelo que não cabem aqui</b><div class="note" style="margin:6px 0">O móvel entrou, mas estas peças entrariam em outra coisa neste lugar:</div>'+fora.map(function(f){return '<div style="margin:3px 0">• '+(EM.TIPOS[f.q.k]||EM.TIPOS.peca).n+' '+EM.corte(f.q).join(' × ')+' mm — entraria em '+String(f.com).replace(/</g,'&lt;')+'</div>'}).join('')+
@@ -13463,9 +13463,11 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 (function(){var EM=window.EM;if(!EM||!EM.G)return;EM.FMT=1;
  var NUM=['x','y','w','h','z','d'],okPeca=function(q){if(!q||typeof q!=='object'||!q.id)return false;for(var i=0;i<NUM.length;i++){var v=q[NUM[i]];if(typeof v!=='number'||!isFinite(v))return false}if(!/^[xyz]$/.test(q.ax||''))return false;return q.w>=1&&q.h>=1&&q.d>=1};
  EM.novo=function(m){return !!m&&+m.plv>EM.FMT};
- EM.confere=function(){var ruins=0,novos=0;(S.mods||[]).forEach(function(m){if(!m||m.pl===undefined)return;if(EM.novo(m)){novos++;return}
+ EM.confere=function(){var ruins=0,novos=0,vistos={},reid=0;(S.mods||[]).forEach(function(m){if(!m||m.pl===undefined)return;if(EM.novo(m)){novos++;return}
    if(!Array.isArray(m.pl)){m.plBad=(m.plBad||[]).concat([m.pl]);delete m.pl;ruins++;return}var bom=[],mau=[];m.pl.forEach(function(q){(okPeca(q)?bom:mau).push(q)});
-   if(mau.length){m.plBad=(m.plBad||[]).concat(mau);ruins+=mau.length;if(bom.length)m.pl=bom;else delete m.pl}});
+   if(mau.length){m.plBad=(m.plBad||[]).concat(mau);ruins+=mau.length;if(bom.length)m.pl=bom;else delete m.pl}
+   /* id repetido no projeto (cópias antigas do mesmo modelo): a repetida ganha id novo — só a identificação; medida, posição e o N do corte não mudam */
+   (m.pl||[]).forEach(function(q){if(vistos[q.id]){q.id=EM.novoId();reid++}vistos[q.id]=1})});EM._reid=reid;
   if(ruins)setTimeout(function(){try{toast('⚠ '+ruins+(ruins>1?' peças livres com dado estragado ficaram':' peça livre com dado estragado ficou')+' guardada à parte (não entra no corte). O resto do projeto abriu normal.')}catch(_){}},300);
   if(novos)setTimeout(function(){try{toast('Projeto com peças livres de uma versão mais nova do app: elas ficam como estão. Atualize o app pra editar.')}catch(_){}},600);return {ruins:ruins,novos:novos}};
  EM.G.load.push(function(){EM.confere()});

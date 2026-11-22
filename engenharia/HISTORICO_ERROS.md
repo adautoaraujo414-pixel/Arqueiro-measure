@@ -1485,3 +1485,16 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - `testArmarioDeCantoFolgaDe3mm…`: baixo 306 + 320, aéreo 316 + 330, guarda-roupa igual;
   - `testCantoEmLProfundidade…`: Porta 326.
   - Elas falham na versão pública e passam agora. Os outros 12 testes de canto passam nas duas.
+
+- **Junção 6 (22/11/2026), branch `claude/arquemestre-juncao6`, base `db35ceb`:**
+  - Integração: testes c6b1975 (4 falham na base, 13 de canto passam); código 3e33ec2.
+  - **Risco achado na integração e corrigido:** como foi escrita em 17/11, a regra mudava a folha do lado de **todo** canto de cozinha, inclusive de projeto antigo. Ficava 309 → 320 no corte, sem aviso.
+    - Isso contraria a regra do Adauto de 22/11: "projetos antigos … só recebem as novas medidas mediante confirmação do usuário".
+  - **Correção (b8b5399):** a regra nova vale só para o canto criado a partir desta versão, que leva a marca `m.cnP` (`newTpl` e `mkCorner`).
+    - O canto antigo continua com vão − 10.
+    - Ele mostra o aviso "Canto de antes da atualização" com as duas medidas e o botão "Atualizar portas do canto", que tem desfazer; o aviso mostra o antes e o depois de cada peça de porta que muda (ex.: folha do lado 309×650 → 320×650).
+  - **Teste:** `testCantoFolhaNovaSoNoCantoNovoOAntigoAvisaEAtualizaComConfirmacao` (864c52c). No 3e33ec2 o canto antigo ia sozinho a 320.
+    - Cobre: novo pelo catálogo e pelo botão; antigo igual e com aviso; botão; desfazer; salvar e reabrir; guarda-roupa inalterado.
+  - **Marca e botão únicos (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11):** `m.cnP` e "Atualizar portas do canto" (`window.cnPAtualiza`, `#cnpbox`, `[data-cnpup]`) servem para TODAS as regras novas das portas do canto; o antes/depois é calculado comparando `partsOf` com e sem a marca.
+  - **Coordenação:** o Code 2 prepara a correção completa das portas do canto (altura, cava, textura, painel cego, dobradiça) em branch isolada, sobre esta junção.
+    - O botão e a marca podem ser os mesmos.

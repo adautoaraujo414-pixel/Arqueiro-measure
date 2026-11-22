@@ -99,5 +99,19 @@ Adauto, em etapas pequenas, cada uma com teste próprio e regressão completa. C
 - L7 (orçamento LED) = fontes por circuito pela fórmula acima + usinagem por metro.
 - L5 (embutido) = validação pela espessura e pelo perfil, sem 3 mm fixo.
 
-## 7. Pendente
-Imagem do menu (só pra M1/M2) · auditoria do Chefe · correção do `data-cpan` (Code 1) · iOS 665 e Windows 81 (repetição) · autorização específica.
+## 7. Imagem aprovada do menu (recebida 22/11/2026) — `engenharia/referencias/menu-criar-aprovado-2026-11-22.jpg`
+Especificação visual tirada da imagem (M1 segue isto; conferência por captura iPhone/iPad/Windows lado a lado com a imagem):
+- Cartão com borda fina arredondada sobre fundo preto; cabeçalho **"+ Criar"** à esquerda, grande, branco, e **chevron ⌄** à direita (abre/fecha
+  o cartão); linha divisória fina abaixo do cabeçalho.
+- Grade **2 colunas × 3 linhas**, espaçamento igual entre botões; botões **cinza-escuro (~#242424)**, cantos bem arredondados (~22–24 px),
+  altura ≈ 40% da largura; **ícone centralizado em cima, nome embaixo**, texto branco grande.
+- Ordem e ícones: **🪚 Móveis | 💡 LED · 🪞 Espelhos | 🪨 Pedras · 🧱 Paredes | ➕ Outros** (o "+" de Outros é cinza, não colorido).
+- Ícones como emoji (o editor já usa emoji nos botões; sem imagem nova no pacote). Diferença de desenho do emoji entre iOS, Android e Windows é
+  aceita; tamanho e posição iguais.
+- Responsivo: no celular a grade ocupa a largura com margem; no iPad/Windows largura máxima fixa centralizada, mesmas proporções.
+- Tocar numa categoria → ferramentas dela + "‹ Voltar" no mesmo cartão. ✕/chevron fecha. Sem reconstruir o 3D.
+- Teste visual novo: `testMenuCriarIgualAImagemAprovada` (ordem dos 6 nomes, 2 colunas pelas posições na tela, ícones, cabeçalho com chevron) +
+  capturas no CI.
+
+## 8. Pendente
+auditoria do Chefe · correção do `data-cpan` (Code 1) · iOS 665 e Windows 81 (repetição) · autorização específica.

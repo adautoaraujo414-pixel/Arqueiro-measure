@@ -14309,4 +14309,24 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundo"] as? String, "0", "fundo da gaveta no 3D com a medida da peça")
         XCTAssertEqual(o["errs"] as? String, "0")
     }
+
+    /* B21 / VAO-3D-ABERTO (22/11, achado pelo Code 2 e reproduzido): com o 3D aberto, trocar o vão pelo menu dos 2 toques (livre, 1 ou 2 portas) mudava os dados
+       e o 3D só mostrava no próximo desenho (o fim do menu chamava draw/panel e não re3). Gavetas já atualizava. */
+    func testMenuDoVaoCom3DAbertoAtualizaO3DNaHora() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=1000;S.m=m;draw();open3D();await W(600);
+        var conta=function(re){return __boxes().filter(function(b){return re.test(String(b.nm))&&(b.y1-b.y0)>100}).length};
+        var passo=async function(k){vmenuOpen(0,0,200,200);await W(30);var b=document.querySelector('#vmenu [data-vk="'+k+'"]');if(b)b.click();await W(60);var q_=document.querySelector('#vmenu [data-vk="gv|3"]');if(q_){q_.click();await W(60)}await W(240);return 'portas '+conta(/^0:Porta$/)+' · frentes de gaveta '+conta(/^0:Frente de gaveta$/)+' · prateleiras '+conta(/^0:Prateleira/)};
+        R.livre=await passo('free');R.umaPorta=await passo('door1');R.gavetas=await passo('drawers');R.duasPortas=await passo('door2');
+        R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["livre"] as? String, "portas 0 · frentes de gaveta 0 · prateleiras 0", "vão livre: o 3D tira as portas na hora")
+        XCTAssertEqual(o["umaPorta"] as? String, "portas 1 · frentes de gaveta 0 · prateleiras 0")
+        XCTAssertEqual(o["gavetas"] as? String, "portas 0 · frentes de gaveta 3 · prateleiras 0")
+        XCTAssertEqual(o["duasPortas"] as? String, "portas 2 · frentes de gaveta 0 · prateleiras 0")
+        XCTAssertEqual(o["errs"] as? String, "0")
+    }
 }

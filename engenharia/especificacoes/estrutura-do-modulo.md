@@ -68,3 +68,5 @@ logo acima da barra da parede (o seletor de paredes continua o de sempre, `wvGo`
 - **Arrastar/esticar na vista**: muda a caixa do mundo nos 2 eixos da tela (a espessura não estica); se bater, para encostada (busca o maior passo
   que cabe; no arrasto primeiro no eixo horizontal da tela e depois no vertical → desliza alinhada na face da outra peça). Medidas exatas no painel.
 - Teste: `testMultivistasCameraECriarPecaEmCadaVistaSemMexerMovel`.
+- Enquadramento: ao entrar numa vista e no 1º toque em ⌂ a câmera mostra o módulo escolhido com 60 cm em volta; 2º toque em ⌂ mostra o ambiente.
+  O contorno/medida da peça escolhida vem da peça cadastrada (`l2w`), não das caixas do 3D (que desenham a fita de 1 mm por fora).

@@ -13246,9 +13246,13 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var hex=function(c){if(!c)return '#cdb98f';if(typeof c==='string')return c;return 'rgb('+R(c[0])+','+R(c[1])+','+R(c[2])+')'};
  function proj(b,X){var a=rng(b,X.r),c=rng(b,X.u),d=rng(b,X.fw);return {x:a[0],y:-c[1],w:a[1]-a[0],h:c[1]-c[0],d0:d[0],d1:d[1]}}
  EM.mvProj=proj;
- function camFit(){var X=EM.mvEixos(MV.v),s=sala(),B={x0:s.x0,x1:s.x1,y0:s.y0,y1:s.y1,z0:s.z0,z1:s.z1},p=proj(B,X),r=sv.getBoundingClientRect(),W=Math.max(50,r.width),H=Math.max(50,r.height),m=1.12;
-  MV.cam={cx:p.x+p.w/2,cy:p.y+p.h/2,s:Math.max(p.w*m/W,p.h*m/H)}}
- EM.mvCentro=function(){camFit();aplicaCam()};
+ /* enquadra o módulo escolhido com 60 cm em volta (ou o ambiente inteiro) */
+ function camFit(tudo){var X=EM.mvEixos(MV.v),s=sala(),B={x0:s.x0,x1:s.x1,y0:s.y0,y1:s.y1,z0:s.z0,z1:s.z1},i=mi();
+  if(!tudo&&i>=0){var M=null;caixas().forEach(function(b){if(parseInt(String(b.nm),10)!==i)return;M=M?{x0:Math.min(M.x0,b.x0),x1:Math.max(M.x1,b.x1),y0:Math.min(M.y0,b.y0),y1:Math.max(M.y1,b.y1),z0:Math.min(M.z0,b.z0),z1:Math.max(M.z1,b.z1)}:{x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1}});
+   if(M){var g=600;B={x0:Math.max(s.x0-50,M.x0-g),x1:Math.min(s.x1+50,M.x1+g),y0:Math.max(s.y0-50,M.y0-g),y1:Math.min(s.y1+50,M.y1+g),z0:Math.max(s.z0-50,M.z0-g),z1:Math.min(s.z1+50,M.z1+g)}}}
+  var p=proj(B,X),r=sv.getBoundingClientRect(),W=Math.max(50,r.width),H=Math.max(50,r.height),m=1.1;MV.cam={cx:p.x+p.w/2,cy:p.y+p.h/2,s:Math.max(p.w*m/W,p.h*m/H),tudo:!!tudo}}
+ /* ⌂: 1º toque o módulo, 2º toque o ambiente inteiro */
+ EM.mvCentro=function(tudo){camFit(tudo===undefined?!!(MV.cam&&MV.cam.foco&&!MV.cam.tudo):tudo);MV.cam.foco=1;aplicaCam();try{render()}catch(_){}};
  function aplicaCam(){if(!MV.v||!MV.cam)return;var r=sv.getBoundingClientRect(),W=Math.max(50,r.width),H=Math.max(50,r.height),c=MV.cam;sv.setAttribute('viewBox',(c.cx-W*c.s/2)+' '+(c.cy-H*c.s/2)+' '+(W*c.s)+' '+(H*c.s))}
  EM.mvCam=function(){return MV.cam};
  var mi=function(){return S.mods.indexOf(S.m)};
@@ -13258,11 +13262,11 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   var L=bx.map(function(b){var p=proj(b,X);p.b=b;return p});L.sort(function(a,b){return (b.d0+b.d1)-(a.d0+a.d1)});/* do mais longe pro mais perto */
   var selB=null,modB=null;
   L.forEach(function(p){var b=p.b,mi_=parseInt(String(b.nm==null?'':b.nm),10),pedra=b.sid!=null,op=pedra?.35:Math.min(1,b.a==null?1:b.a);if(p.w<=0||p.h<=0)return;
-   var meu=b.pk&&pkSel&&b.pk===pkSel&&mi_===i0;if(meu)selB=p;if(mi_===i0&&mi_>=0){modB=modB?{x0:Math.min(modB.x0,p.x),x1:Math.max(modB.x1,p.x+p.w),y0:Math.min(modB.y0,p.y),y1:Math.max(modB.y1,p.y+p.h)}:{x0:p.x,x1:p.x+p.w,y0:p.y,y1:p.y+p.h}}
+   var meu=b.pk&&pkSel&&b.pk===pkSel&&mi_===i0;if(meu)selB=selB?{x:Math.min(selB.x,p.x),y:Math.min(selB.y,p.y),w:Math.max(selB.x+selB.w,p.x+p.w)-Math.min(selB.x,p.x),h:Math.max(selB.y+selB.h,p.y+p.h)-Math.min(selB.y,p.y)}:{x:p.x,y:p.y,w:p.w,h:p.h};/* a peça pode vir em várias caixas (fita): junta */if(mi_===i0&&mi_>=0){modB=modB?{x0:Math.min(modB.x0,p.x),x1:Math.max(modB.x1,p.x+p.w),y0:Math.min(modB.y0,p.y),y1:Math.max(modB.y1,p.y+p.h)}:{x0:p.x,x1:p.x+p.w,y0:p.y,y1:p.y+p.h}}
    var lv=b.pk&&EM.ehLivre(String(b.pk).replace(/#[^#]*$/,''));
    h+='<rect'+(mi_>=0?' data-mvmi="'+mi_+'"':'')+(lv?' data-mvpk="'+String(b.pk).replace(/"/g,'')+'"':'')+' x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" fill="'+hex(b.c)+'" fill-opacity="'+op+'" stroke="#3a3128" stroke-opacity="'+(op<.5?.3:.8)+'" stroke-width=".7" vector-effect="non-scaling-stroke"/>'});
   if(modB)h+='<rect x="'+modB.x0+'" y="'+modB.y0+'" width="'+(modB.x1-modB.x0)+'" height="'+(modB.y1-modB.y0)+'" fill="none" stroke="#1f6feb" stroke-width="1.4" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>';
-  if(selB){var c=MV.cam||{s:1},Hh=Math.max(10*c.s,4),q2=EM.peca(m,MV.sel),i=EM.mvEixosPeca(q2);
+  if(selB){/* contorno e medida pela peça cadastrada (sem a fita que o 3D desenha por fora) */var qq=EM.peca(m,MV.sel);if(qq){var pp=proj(EM.l2w(m,qq),X);selB={x:pp.x,y:pp.y,w:pp.w,h:pp.h}}var c=MV.cam||{s:1},Hh=Math.max(10*c.s,4),q2=EM.peca(m,MV.sel),i=EM.mvEixosPeca(q2);
    h+='<rect data-mvsel="m" x="'+selB.x+'" y="'+selB.y+'" width="'+selB.w+'" height="'+selB.h+'" fill="#ff9f1a" fill-opacity=".25" stroke="#ff9f1a" stroke-width="2.2" vector-effect="non-scaling-stroke" style="cursor:move"/>';
    [['l',selB.x-Hh/2,selB.y,Hh,selB.h,'r'],['r',selB.x+selB.w-Hh/2,selB.y,Hh,selB.h,'r'],['t',selB.x,selB.y-Hh/2,selB.w,Hh,'u'],['b',selB.x,selB.y+selB.h-Hh/2,selB.w,Hh,'u']].forEach(function(a){if(i&&i[a[5]])return;/* espessura 15 não estica */
     h+='<rect data-mvsel="'+a[0]+'" x="'+a[1]+'" y="'+a[2]+'" width="'+a[3]+'" height="'+a[4]+'" fill="#ff9f1a" fill-opacity=".7" style="cursor:'+(a[5]==='r'?'ew':'ns')+'-resize"/>'});

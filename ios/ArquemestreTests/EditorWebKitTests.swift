@@ -14223,4 +14223,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo_corte_igual"] as? String, "true")
         XCTAssertEqual(o["errs"] as? String, "0")
     }
+
+    /* PX-SEL (22/11, auditoria do toque no catálogo, Etapa 3): a bolinha de arrastar o puxador (bola/externo, ≥ 13 px de raio) ficava por cima da porta
+       e engolia o toque: com o puxador bola, 68 dos 138 modelos não eram escolhidos ao tocar no puxador e os 2 toques não abriam o menu do vão. */
+    func testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var ev=function(n,x,y,pt){var el=document.elementFromPoint(x,y);var o={bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,pointerType:pt,isPrimary:true,button:0};el.dispatchEvent(n==='click'?new MouseEvent(n,o):new PointerEvent(n,o))};
+        var tap=function(x,y,pt){['pointerdown','pointerup','click'].forEach(function(n){ev(n,x,y,pt)})};
+        var dois=async function(x,y){tap(x,y,'touch');await W(120);tap(x,y,'touch');await W(480);var ok=!!document.getElementById('vmenu');try{vmenuClose()}catch(_){}return ok};
+        /* um móvel com porta de cada categoria do catálogo, com o puxador bola (a bolinha de arrastar fica em cima da porta) */
+        var itens=[];CATS.forEach(function(c){var u=null;(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!u&&t&&!t.act&&!t.corner&&(t.v||[]).some(function(v){return v&&/door/.test(String(v.k))}))u=t});if(u&&itens.indexOf(u)<0)itens.push(u)});/* metade das categorias, alternadas (cabe no tempo do teste no iPhone) */itens=itens.filter(function(q,i){return i%2===0});
+        var n=0,um=0,doisN=0,doisS=0,ruim=[],mexeu=0;
+        for(var k=0;k<itens.length;k++){var t=itens[k];loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.stones=[];draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[S.mods.length-1];if(!m)continue;m.x=1500;
+          if(!document.querySelector('#svg [data-pxg]')){S.m=m;S.sv=0;draw();S.tab=3;panel();var kd_=document.querySelector('#bd [data-pxkd="cog"]');if(kd_)kd_.click()}
+          S.m=null;draw();await W(10);var g=document.querySelector('#svg [data-pxg]');if(!g)continue;g.scrollIntoView({block:'center',inline:'center'});await W(10);g=document.querySelector('#svg [data-pxg]');var b=g.getBoundingClientRect(),x=b.left+b.width/2,y=b.top+b.height/2,m0=[m.x,m.w,m.h,m.d].join();
+          /* o ponto cai na área da divisória? lá o toque escolhe a divisória (regra de 18/11) e não conta */g.setAttribute('pointer-events','none');var sob=document.elementFromPoint(x,y),naDiv=!!(sob&&sob.dataset&&sob.dataset.d!==undefined);g.setAttribute('pointer-events','all');if(naDiv)continue;n++;
+          tap(x,y,'touch');await W(450);if(S.m===m)um++;else ruim.push('1 toque: '+t.n);
+          S.m=null;draw();await W(10);if(await dois(x,y))doisN++;else ruim.push('2 toques (não escolhido): '+t.n);
+          S.m=m;draw();await W(10);if(await dois(x,y))doisS++;else ruim.push('2 toques (escolhido): '+t.n);
+          if([m.x,m.w,m.h,m.d].join()!==m0)mexeu++}
+        R.modelos=n>=4?'ok':'poucos '+n;R.umToque=(n-um)+' sem escolher';R.doisToques=(n-doisN)+' sem menu (não escolhido) · '+(n-doisS)+' sem menu (escolhido)';R.ruim=ruim.slice(0,4).join(' | ');R.mexeu=String(mexeu);
+        /* com o móvel escolhido, segurar e arrastar a bolinha continua mudando o puxador */
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(itens.filter(function(q){return /^Balcão 2 portas$/.test(q.n)})[0]||itens[0])));var c=S.mods[0];S.m=c;delete S.pxa;S.sv=0;draw();S.tab=3;panel();var kd2=document.querySelector('#bd [data-pxkd="cog"]');if(kd2)kd2.click();draw();await W(10);
+        var g2=document.querySelector('#svg [data-pxg]'),r2=g2.getBoundingClientRect(),cx=r2.left+r2.width/2,cy=r2.top+r2.height/2,pe=function(nm,x,y,el){(el||document.body).dispatchEvent(new PointerEvent(nm,{bubbles:true,cancelable:true,pointerId:7,clientX:x,clientY:y,isPrimary:true}))};
+        pe('pointerdown',cx,cy,g2);pe('pointermove',cx+2,cy-12);pe('pointerup',cx+2,cy-12);R.arrasta=(S.pxa?'arrastou':'não arrastou')+' · escolhido '+(S.m===c);
+        R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? String, "ok")
+        XCTAssertEqual(o["umToque"] as? String, "0 sem escolher", "1º toque em cima do puxador escolhe o móvel")
+        XCTAssertEqual(o["doisToques"] as? String, "0 sem menu (não escolhido) · 0 sem menu (escolhido)", "2 toques em cima do puxador abrem o menu do vão: \(o["ruim"] ?? "")")
+        XCTAssertEqual(o["mexeu"] as? String, "0", "o móvel não sai do lugar nem muda de medida")
+        XCTAssertEqual(o["arrasta"] as? String, "arrastou · escolhido true", "móvel escolhido: segurar e arrastar a bolinha continua mudando o puxador")
+        XCTAssertEqual(o["errs"] as? String, "0")
+    }
 }

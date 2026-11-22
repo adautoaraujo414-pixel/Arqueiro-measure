@@ -12982,4 +12982,52 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 
 })();
 </script>
+<script>
+/* ===== ESTRUTURA DO MÓDULO (2D) · ferramentas do módulo: afastamento da parede, peça MDF 15 mm, réguas, fechar vão =====
+   Tudo neste bloco lê e grava pelos mecanismos que já existem: medida no módulo (S.mods), partsOf (2D, 3D, corte, orçamento),
+   caixas sólidas do 3D (__build/__boxes) pra não entrar em nada, snap() pro desfazer. Nada aqui mexe em outro móvel. */
+(function(){
+ var EM=window.EM={};
+ var cmTxt=EM.cmTxt=function(mm){return (Math.round(+mm||0)/10).toFixed(1).replace('.',',')};
+ /* cm digitado (aceita vírgula, ponto e conta da calculadora) → mm inteiro */
+ EM.cmMm=function(v){var s=String(v==null?'':v).trim().replace(/,/g,'.');if(!/^\d*\.?\d+$/.test(s))return null;var n=parseFloat(s);return isFinite(n)&&n>=0?Math.round(n*10):null};
+ var nomeDe=function(nm){var i=parseInt(String(nm==null?'':nm),10),p=String(nm==null?'':nm).split(':').slice(1).join(':');if(i>=0&&S.mods[i]){var l='';try{l=modLabel(S.mods[i],i)}catch(_){l='módulo '+(i+1)}return l+(p?' ('+p+')':'')}return p||'uma peça do ambiente'};
+ EM.nomeDe=nomeDe;
+ /* caixas sólidas do 3D (o mesmo que o 3D desenha): só as opacas, sem a pedra (a pedra acompanha os módulos pela regra dela) */
+ function caixas(){try{__build()}catch(_){}return (window.__boxes?__boxes():[]).filter(function(b){return b&&b.a>=.95&&b.sid==null&&b.x1-b.x0>.5&&b.y1-b.y0>.5&&b.z1-b.z0>.5})}
+ var cruza=function(a,o){return a.x0<o.x1-.5&&o.x0<a.x1-.5&&a.y0<o.y1-.5&&o.y0<a.y1-.5&&a.z0<o.z1-.5&&o.z0<a.z1-.5};/* encostar (contato exato) pode */
+ EM.cruza=cruza;
+ /* o que as peças do módulo m atravessam agora (peças de outros móveis e do ambiente) */
+ function batidas(m){var mi=S.mods.indexOf(m),meu=[],out=[],r={};caixas().forEach(function(b){var k=parseInt(String(b.nm==null?'':b.nm),10);(k===mi?meu:out).push(b)});
+  meu.forEach(function(a){out.forEach(function(o){if(cruza(a,o)){var k=(o.nm==null?'?':o.nm)+'|'+(o.pk||'')+'|'+Math.round(o.x0)+','+Math.round(o.y0)+','+Math.round(o.z0);if(!r[k])r[k]={o:o,a:a}}})});return r}
+ EM.batidas=batidas;
+ /* mexe (fn) e confere: se alguma peça do módulo passou a entrar em outra, volta como estava e diz em quê. O que já se tocava antes não conta (não é desta mudança) */
+ EM.tenta=function(m,fn,desfaz){var b0=batidas(m);fn();var b1=batidas(m),novo=Object.keys(b1).filter(function(k){return !b0[k]});if(novo.length){var q=b1[novo[0]],pa=String(q.a.nm==null?'':q.a.nm).split(':').slice(1).join(':');desfaz();try{__build()}catch(_){}return {ok:false,com:nomeDe(q.o.nm),peca:pa}}return {ok:true}};
+
+ /* ---------- AFASTAMENTO DA PAREDE ---------- */
+ EM.podeAfastar=function(m){return !!m&&!m.corner&&m.wing!=='L'&&S.env!=='livre'};
+ EM.afastar=function(m,mm){if(!EM.podeAfastar(m))return {ok:false,com:''};mm=Math.max(0,Math.round(+mm||0));var tinha=Object.prototype.hasOwnProperty.call(m,'zo'),z0=m.zo;
+  return EM.tenta(m,function(){m.zo=mm},function(){if(tinha)m.zo=z0;else delete m.zo})};
+ function secao(){var bd=document.getElementById('bd');if(!bd||S.tab!==0||!S.m||window.RO||bd.querySelector('[data-em]'))return;var m=S.m;
+  /* o aviso antigo "Afastado da parede: N mm" vira o campo daqui */
+  var ov=bd.querySelector('[data-zo-clear]');if(ov){var nt=ov.closest('.note');if(nt)nt.remove()}
+  var h='<div class="sec" data-em="1">Estrutura do Módulo<span>⌃</span></div><div data-embox="1">';
+  if(EM.podeAfastar(m)){var ex=m.zo!==undefined&&m.zo!==null&&m.zo!=='';
+   h+='<div class="g"><label>Afastamento da parede (cm)</label><input type="text" inputmode="none" data-calc="1" data-emzo="1" value="'+cmTxt(zoOf(m))+'"></div>'+
+    '<div class="note">Da parede até a traseira deste módulo. As medidas do móvel não mudam.'+(ex?' <button data-zo-clear="1">Usar o padrão</button>':'')+'</div>'}
+  h+=(EM.ferramentas?EM.ferramentas(m):'')+'</div>';
+  var ref=[].filter.call(bd.querySelectorAll('.sec'),function(s){return /^Dimensões/.test(s.textContent||'')})[0];
+  if(ref)ref.insertAdjacentHTML('beforebegin',h);else bd.insertAdjacentHTML('afterbegin',h)}
+ EM.secao=secao;
+ var p0=window.panel;if(typeof p0==='function')panel=window.panel=function(){var r=p0.apply(this,arguments);try{secao()}catch(e){try{console.warn('EM',e)}catch(_){}}return r};
+ var re=function(){try{draw()}catch(_){}try{if(window.re3)re3()}catch(_){}};
+ EM.re=re;
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||t.dataset.emzo===undefined||!S.m||window.RO)return;var m=S.m,mm=EM.cmMm(t.value);
+  if(mm===null){toast('⚠ Afastamento: digite em cm (ex.: 10 ou 2,5). Nada foi alterado.');t.value=cmTxt(zoOf(m));return}
+  if(mm===Math.round(zoOf(m))&&m.zo!==undefined){t.value=cmTxt(mm);return}
+  snap();var r=EM.afastar(m,mm);
+  if(!r.ok){hs.pop();t.value=cmTxt(zoOf(m));toast('⚠ Não dá pra afastar '+cmTxt(mm)+' cm: '+(r.peca?'a peça '+r.peca+' deste módulo':'o módulo')+' entraria em '+r.com+'. Nada foi alterado.');return}
+  t.value=cmTxt(mm);re();try{panel()}catch(_){}});
+})();
+</script>
 </body></html>

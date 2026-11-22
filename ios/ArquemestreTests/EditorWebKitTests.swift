@@ -7181,7 +7181,8 @@ final class EditorWebKitTests: XCTestCase {
                   R.errs=__errs.length;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["aereo"] as? String, "Componentes false · botões de lateral 0 · texto \"Laterais da caixa\" false · laterais esquerda+direita")
-        XCTAssertEqual(o["secoes"] as? String, "Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
+        // ESTRUTURA-AFASTA (pedido do Adauto 22/11): a seção "Estrutura do Módulo" (afastamento da parede e ferramentas de peça) entra antes de Dimensões; o resto continua igual
+        XCTAssertEqual(o["secoes"] as? String, "Estrutura do Módulo|Dimensões|Posição e tipo do módulo|Módulo de canto (cozinha em L)|Em qual parede (cozinha em L)|Tipo do módulo|Regras do módulo")
         XCTAssertEqual(o["balcao"] as? String, "Componentes false · botões de lateral 0 · atalho da base true · laterais esquerda+direita")
         XCTAssertEqual(o["naoTira"] as? String, "true · laterais esquerda+direita")
         XCTAssertEqual(o["jaSem"] as? String, "continua sem true · laterais esquerda · Travessa frontal 800, Travessa deitada do pedestal (fixação) 100, Travessa deitada do pedestal (fixação) 100 · aviso Este módulo está sem a lateral direita (usa a do vizinho). · botão ＋ Pôr a lateral direita de volta · botão da esquerda false")
@@ -14285,5 +14286,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1", "parede do fundo não muda")
         XCTAssertEqual(o["antigo"] as? String, "Vão 1=porta, Vão 2=gavetas · menu porta: Base · vão 1", "móvel antigo da esquerda continua como era")
         XCTAssertEqual(o["errs"] as? String, "0")
+    }
+
+    /// ESTRUTURA-AFASTA (Adauto 22/11, Estrutura do Módulo): "Afastamento da parede: [0,0] cm" — padrão 0, aceita decimal, guarda em mm no módulo,
+    /// vale nas paredes do fundo, esquerda e direita, muda o 3D sem mudar a medida do móvel, desfaz/refaz, salva e reabre, e não deixa entrar em outro móvel.
+    @MainActor
+    func testEstruturaAfastamentoDaParedeEmCmSemMudarMedidaENemEntrarNoVizinho() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];newTpl(3);draw();S.m=S.mods[0];S.tab=0;panel();
+          var z=function(i){__build();var b=__boxes().filter(function(x){return String(x.nm).split(':')[0]===String(i)&&x.a>=.95});return [Math.round(Math.min.apply(null,b.map(function(x){return x.z0}))),Math.round(Math.min.apply(null,b.map(function(x){return x.x0})))]};
+          var o={},f=document.querySelector('[data-emzo]');o.campo0=f?f.value:'';o.rot=(document.querySelector('[data-emzo]').closest('.g').querySelector('label')||{}).textContent||'';
+          var w0=S.mods[0].w,d0=S.mods[0].d,h0=S.mods[0].h,z0=z(0)[0];
+          f.value='10,5';f.dispatchEvent(new Event('change',{bubbles:true}));
+          o.zo=S.mods[0].zo;o.dz=z(0)[0]-z0;o.medidas=S.mods[0].w===w0&&S.mods[0].d===d0&&S.mods[0].h===h0;o.campo1=document.querySelector('[data-emzo]').value;
+          document.getElementById('und').click();await new Promise(function(r){setTimeout(r,80)});o.desfez=S.mods[0].zo===undefined?'padrao':String(S.mods[0].zo);
+          document.getElementById('red').click();await new Promise(function(r){setTimeout(r,80)});o.refez=S.mods[0].zo;
+          var g=document.querySelector('[data-emzo]');g.value='abc';g.dispatchEvent(new Event('change',{bubbles:true}));o.invalido=S.mods[0].zo;
+          /* salva e reabre: o valor fica no módulo */
+          var st=snapState();S.mods=[];loadState(JSON.parse(JSON.stringify(st)));o.reaberto=S.mods[0].zo;
+          /* parede esquerda: afasta pra dentro da sala (x do 3D) */
+          S.mods[0].wing='e';S.mods[0].x=800;delete S.mods[0].zo;draw();var e0=z(0)[0+1];EM.afastar(S.mods[0],200);o.esq=z(0)[1]-e0;
+          S.mods[0].wing='d';delete S.mods[0].zo;draw();__build();var bx=function(){return __boxes().filter(function(x){return String(x.nm).split(':')[0]==='0'&&x.a>=.95})},d1=Math.max.apply(null,bx().map(function(x){return x.x1}));EM.afastar(S.mods[0],150);o.dir=Math.round(d1-Math.max.apply(null,bx().map(function(x){return x.x1})));
+          /* colisão: o rodapé corrido do 1º passa embaixo do 2º · afastar só o 1º entraria no 2º → não deixa, nada muda */
+          S.mods=[];newTpl(3);newTpl(2);draw();var x1=S.mods[1].x,zz=zoOf(S.mods[1]);var r=EM.afastar(S.mods[0],100);o.bate=r.ok;o.com=r.com||'';o.zoBate=S.mods[0].zo===undefined;o.outroIgual=S.mods[1].x===x1&&zoOf(S.mods[1])===zz;
+          /* canto e móvel livre não têm o campo */
+          o.errs=__errs;return JSON.stringify(o);
+          """#)
+        XCTAssertEqual(o["rot"] as? String, "Afastamento da parede (cm)")
+        XCTAssertEqual(o["campo0"] as? String, "0,0", "padrão 0 cm")
+        XCTAssertEqual(o["zo"] as? Int, 105, "10,5 cm = 105 mm no módulo")
+        XCTAssertEqual(o["dz"] as? Int, 105, "o módulo sai 105 mm da parede no 3D")
+        XCTAssertEqual(o["medidas"] as? Bool, true, "largura, altura e profundidade não mudam")
+        XCTAssertEqual(o["campo1"] as? String, "10,5")
+        XCTAssertEqual(o["desfez"] as? String, "padrao", "Desfazer volta ao padrão")
+        XCTAssertEqual(o["refez"] as? Int, 105, "Refazer")
+        XCTAssertEqual(o["invalido"] as? Int, 105, "texto inválido não grava")
+        XCTAssertEqual(o["reaberto"] as? Int, 105, "salva e reabre com o afastamento")
+        XCTAssertEqual(o["esq"] as? Int, 200, "parede esquerda: afasta pra dentro da sala")
+        XCTAssertEqual(o["dir"] as? Int, 150, "parede direita: afasta pra dentro da sala")
+        XCTAssertEqual(o["bate"] as? Bool, false, "entraria no vizinho: não deixa")
+        XCTAssertEqual(o["zoBate"] as? Bool, true, "bloqueado: nada foi gravado")
+        XCTAssertEqual(o["outroIgual"] as? Bool, true, "o outro móvel não se mexe")
+        XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 }

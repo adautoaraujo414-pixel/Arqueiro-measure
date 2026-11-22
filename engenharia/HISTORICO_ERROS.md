@@ -1351,3 +1351,43 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
     - Ao apagar a travessa, a frente do rebaixo fica descoberta e as 2 tiras voltam a aparecer. O total cai menos do que o teste espera, e ele acusa "saiu da lista e ficou no 3D".
     - Conferido peça a peça: depois de apagar, a travessa sai do 3D (0 caixas) e as duas versões ficam **idênticas** (112 caixas, 5 tiras).
     - **O teste não foi alterado.**
+
+## FT-PORTA — fita de 0,8 mm desenhada dentro da porta/frente fechada no 3D (17/11/2026)
+- **Pedido:** Adauto, 17/11: investigar e corrigir cirurgicamente só a representação visual. Separado da branch da travessa e do frontal.
+- **Reproduzido** na versão publicada `7c939bc`:
+  - a frente do corpo fica em z = profundidade + 6, e a porta/frente fechada começa exatamente ali;
+  - a tira de topo (`build_ft`) é desenhada de z1 a z1 + 0,8, ou seja, dentro da folha;
+  - as tiras afetadas: 3 no Balcão 2 portas, 4 no Aéreo 2 portas, 6 no Guarda-roupa 3 vãos (laterais, bases, divisórias).
+- **Causa:** desenho só. A posição da porta não considera a espessura da fita, e mudar a posição da porta está fora do escopo.
+- **Correção (`editor.html`, `ftClipAll`, depois do `build_ft`):**
+  - uma passada por desenho, agrupada por módulo;
+  - recorta das tiras a parte que fica atrás de uma folha fechada (Porta, Frente ou Basculante, com pelo menos 50 × 50 × 10 mm);
+  - a parte que aparece continua;
+  - com a porta aberta, a folha sai da frente e a tira volta inteira; ao fechar, o recorte volta.
+- **O que não muda:** peças, lista, corte, medidas, posição e movimento das portas. As assinaturas do teste são da versão publicada.
+- **Teste novo:** `testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`. Falha na publicada e passa depois. Confere:
+  - 7 módulos, com a área da tira visível idêntica;
+  - abrir e fechar pelo toque.
+- **Desempenho** (40 módulos, `__build`, Chromium headless): mediana de 52 ms passou para 56–61 ms. A primeira versão, que filtrava as caixas por tira, ia a ~127 ms e foi descartada.
+- **Efeito num teste existente: aguarda decisão do Adauto.**
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` pega a **primeira** caixa da fita da base (`[0]`). Com o recorte, essa é a lasca de 9 mm na ponta, então o teste toca outro lugar.
+  - No mesmo ponto real (centro da tirinha embaixo da porta), o app faz igual nas duas versões: pega a fita da base e oferece "Era a peça «Porta»?".
+  - Com o teste escolhendo o pedaço embaixo do centro da porta, **todas as conferências dele passam** na correção.
+  - **O teste não foi alterado.**
+  - Na publicada, ele continua com a falha instável antiga (linha 13, `click` em `null`).
+- **Fora do escopo, só registrado:** canto em L (prateleira/base de um braço dentro da do outro braço, base superior dentro da moldura).
+- **Bateria local completa (`1454596`):** 346/349.
+  - `testTamponamentoNo2D…`: falha antiga. A correção está na branch do P0.
+  - `testFitaDaBaseEmbaixoDaPortaPintaPeloToque`: o teste pega a primeira caixa da tira, que agora é a lasca da ponta. **Aguarda decisão do Adauto.**
+  - `testToPecaQueO3DOfereceApagar…`: total de caixas 65 → 71, porque as tiras viram pedaços. Corrigido **só no teste**, com a mesma mudança autorizada para a branch da fita do rebaixo (`288e0e2`, `1a499eb`, por cherry-pick): conferência pela identidade da peça e totais tirados da geometria da versão testada. Passa nesta branch.
+
+## Junção FT-REBAIXO + FT-PORTA (Etapa 3, 19/11/2026) · expectativas de 2 testes ajustadas (aprovado pelo Adauto, opção a)
+- **Bateria da junção 2 (`829d64b`):** 378/380. As 2 falhas vinham das duas correções juntas, cada teste calibrado na sua branch sem a outra. O app não muda.
+- **Conferido pela geometria** (variante temporária com só o corte do FT-REBAIXO desligado, fora do repositório):
+  - sem o corte: nos 3 módulos com travessa (Balcão 2 portas, Gaveteiro 3 gavetas, Balcão porta + gavetas) há 2 tiras dentro da travessa, Lateral esquerda e direita, 15 × 70 × 0,8 mm, 1050 mm² visíveis cada = 2100 mm²;
+  - com o corte: 0 tiras dentro da travessa e a área visível exatamente 2100 mm² menor; aéreos, guarda-roupa e torre iguais;
+  - assinaturas de peças+corte idênticas nas duas e iguais às da versão publicada guardadas nos testes.
+- **`testFitaNaoFicaDentroDaPortaOuFrenteFechadaNo3D`:** m0 22360 → 20260, m1 15320,5 → 13220,5, m6 21750,5 → 19650,5; abrir/fechar (Lateral esquerda do Balcão 2 portas) 6630/10350/6630 → 5580/9300/5580, −1050 mm² = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada.
+- Na 1ª leitura só vi o começo das mensagens de falha (cortadas); a lista completa saiu do JSON da bateria e foi conferida com a mesma geometria.
+- **`testFitaDoRebaixoNaoFicaDentroDaTravessaNo3D…`:** número de caixas de fita m0 3 → 7, m1 4 → 12, m2 3 → 9, m3 4 → 8, m4 4 → 7, m5 8 → 11, m6 6 → 24, m7 igual (o FT-PORTA corta a mesma tira em pedaços em volta das folhas fechadas).
+- Nenhuma conferência saiu; o motivo está no comentário de cada teste.

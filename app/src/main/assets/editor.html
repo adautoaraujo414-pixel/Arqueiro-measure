@@ -5073,6 +5073,21 @@ var build_d=build;build=function(){build_d();try{moldRuns('rod').forEach(functio
 /* fita de topo no 3D: tira de 0,8 mm na frente de cada peça do caixote (laterais, base, topo, prateleiras, divisórias, montantes) · a cor vem depois da pintura (fitaColOf): cor das portas, branca só onde os Ajustes mandam */
 var build_ft=build;build=function(){build_ft();try{if(window.HL3&&HL3.length)return;var add=[];boxes.forEach(function(b){var nm=String(b.nm||'');if(b.pf||b.poly||b.gp||b.ft||b.nol)return;var mm=/^(\d+):(.*)$/.exec(nm);if(!mm)return;var name=mm[2];if(!/^(Lateral|Base inferior|Base superior|Tampo(?!n)|Prateleira|Divisória|Montante)/.test(name)||/gaveta|emenda/i.test(name)||!edgeSides(name))return;add.push(b)});
  add.forEach(function(b){window.CURN=b.nm;var ck0_=window.CURK;window.CURK=b.pk||null;var mm_=S.mods[+String(b.nm).split(':')[0]],wg_=mm_&&mm_.wing,n0=boxes.length;if(wg_==='L'&&window.lvFt){var r_=window.lvFt(mm_,b);B(boxes,r_[0],r_[1],b.y0,b.y1,r_[2],r_[3],WHITE,b.a)}else if(wg_==='e')B(boxes,b.x1,b.x1+.8,b.y0,b.y1,b.z0,b.z1,WHITE,b.a);else if(wg_==='d')B(boxes,b.x0-.8,b.x0,b.y0,b.y1,b.z0,b.z1,WHITE,b.a);else B(boxes,b.x0,b.x1,b.y0,b.y1,b.z1,b.z1+.8,WHITE,b.a);for(var i=n0;i<boxes.length;i++)boxes[i].ft=1;/* FT-REBAIXO (Adauto, 17/11): a frente do rebaixo fica tapada pela travessa/travessão/frontal; a tira que caísse dentro dessa peça não é desenhada (só o 3D; peças, lista e corte não mudam) */var pre_=String(b.nm).split(':')[0]+':';for(var i2=boxes.length-1;i2>=n0;i2--){var t_=boxes[i2];if(boxes.some(function(o){return o!==t_&&!o.ft&&String(o.nm||'').indexOf(pre_)===0&&/^(Travessa|Travessão|Frontal)/.test(String(o.nm).slice(pre_.length))&&Math.min(o.x1,t_.x1)-Math.max(o.x0,t_.x0)>.05&&Math.min(o.y1,t_.y1)-Math.max(o.y0,t_.y0)>.05&&Math.min(o.z1,t_.z1)-Math.max(o.z0,t_.z0)>.05}))boxes.splice(i2,1)}window.CURN=null;window.CURK=ck0_})}catch(_){}};
+/* FT-PORTA (Adauto, 17/11): a porta/frente fechada encosta na frente do corpo; a parte da tira de fita que ficaria dentro da folha não é desenhada.
+   Só o desenho: a parte que aparece fica, com a porta aberta a tira volta inteira; peças, lista, corte e posição das portas não mudam. Uma passada por desenho (agrupado por módulo). */
+var build_fp=build;build=function(){build_fp.apply(this,arguments);try{ftClipAll()}catch(_){}};
+function ftClipAll(){var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,a){return o[AX[a][1]]-o[AX[a][0]]},cov={},anyF=0;
+ for(var i=0;i<boxes.length;i++){var o=boxes[i];if(o.ft){anyF=1;continue}var mm=/^(\d+):(Porta|Frente|Basculante)/.exec(String(o.nm||''));if(mm&&ex(o,0)>=50&&ex(o,1)>=50&&ex(o,2)>=10)(cov[mm[1]]=cov[mm[1]]||[]).push(o)}
+ if(!anyF)return;var out=[];
+ for(var i2=0;i2<boxes.length;i2++){var t=boxes[i2],L=t.ft?cov[String(t.nm||'').split(':')[0]]:null;if(!L){out.push(t);continue}
+  var th=[0,1,2].sort(function(a,c){return ex(t,a)-ex(t,c)})[0],pl=[0,1,2].filter(function(a){return a!==th}),a0=AX[pl[0]][0],a1=AX[pl[0]][1],b0=AX[pl[1]][0],b1=AX[pl[1]][1],t0=AX[th][0],t1=AX[th][1],parts=[t];
+  L.forEach(function(o){if(Math.min(o[t1],t[t1])-Math.max(o[t0],t[t0])<=.05)return;var nx=[];parts.forEach(function(q){
+   if(Math.min(o[a1],q[a1])-Math.max(o[a0],q[a0])<=.05||Math.min(o[b1],q[b1])-Math.max(o[b0],q[b0])<=.05){nx.push(q);return}
+   var cl=function(v){var r=Object.assign({},q);for(var k in v)r[k]=v[k];return r},v,ia0=Math.max(q[a0],o[a0]),ia1=Math.min(q[a1],o[a1]);
+   if(o[a0]>q[a0]+.05){v={};v[a1]=o[a0];nx.push(cl(v))}if(o[a1]<q[a1]-.05){v={};v[a0]=o[a1];nx.push(cl(v))}
+   if(o[b0]>q[b0]+.05){v={};v[a0]=ia0;v[a1]=ia1;v[b1]=o[b0];nx.push(cl(v))}if(o[b1]<q[b1]-.05){v={};v[a0]=ia0;v[a1]=ia1;v[b0]=o[b1];nx.push(cl(v))}});parts=nx});
+  for(var k2=0;k2<parts.length;k2++)out.push(parts[k2])}
+ if(out.length!==boxes.length||out.some(function(o,i){return o!==boxes[i]})){boxes.length=0;for(var j=0;j<out.length;j++)boxes.push(out[j])}}
 /* ===== 🚶 Modo pessoa (1ª pessoa): andar pela cozinha, olhar em volta com o dedo, agachar, ficar de pé, sentar · tocar abre porta, gaveta, geladeira, forno e liga a torneira ===== */
 window.FPV=null;var FPB=null,FPT=null;
 var EYE={pe:1600,agachar:950,sentar:1180};

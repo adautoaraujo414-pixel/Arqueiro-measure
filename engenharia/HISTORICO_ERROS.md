@@ -1294,3 +1294,9 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** nenhuma no app nesta etapa (não há defeito comprovado no código). A repetição automática continua, mas agora todo teste que só passou na repetição aparece como aviso no CI.
 - **Pendente:** medir a primeira abertura no iPhone/iPad real pela build de teste do TestFlight. Se lá passar de ~3 s, investigar o tamanho do editor.html (carregamento em partes).
 - **Visto também:** `SubscriptionTests.test05_CancelarMantemAcessoAteOFimDoPeriodo` (StoreKit no simulador) falhou na 1ª tentativa por tempo (22,6 s esperando "renovação desligada") e passou na repetição (1,5 s). É o ambiente de teste do StoreKit; o aviso de repetidos ainda não lê esse log.
+
+## TESTFLIGHT-VERSAO — build de teste da C2 recusada pela Apple (22/11)
+- **Visto:** iOS CI 44952837633 (`d85c6d8`, `testflight=true`). Os 466 testes passaram, sem nenhuma repetição, e o archive saiu. O `exportArchive` foi recusado pelo App Store Connect com "CFBundleShortVersionString [1.0.0] ... must contain a higher version than ... [3.0.12]", "train version '1.0.0' is closed" e "version 3.0.9 ... a later version has been closed".
+- **Causa:** `ios/project.yml` está com `MARKETING_VERSION: "1.0.0"` nesse ramo, e a loja só aceita versão maior que a 3.0.12 publicada.
+- **Resultado:** nada chegou ao TestFlight e nada foi pra App Store.
+- **Pendente:** o número da versão é decisão do Adauto. A auditoria de 19/11 cita a 3.0.13 como candidata. Não mudei.

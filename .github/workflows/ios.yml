@@ -31,7 +31,20 @@ permissions:
   contents: write
 
 jobs:
+  # TRAVA (22/11): job separado; os outros jobs dependem dele (needs), então com a trava falhando nenhum passo deles roda, nem os always()
+  trava:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trava
+        if: github.event_name == 'workflow_dispatch' && inputs.testflight && github.ref_name == 'main'
+        run: |
+          echo "::error title=TRAVA::TestFlight não sai pela main: sem 'ref' esta ios.yml compila a linha antiga (feature/arque-measure-kotlin). Dispare no ramo da versão candidata."
+          exit 1
+      - name: Liberado
+        run: echo "Trava ok, pode seguir."
   ios:
+    needs: trava
     runs-on: ${{ inputs.mac || 'macos-26' }}
     timeout-minutes: ${{ inputs.rapido && 120 || 90 }}
     steps:

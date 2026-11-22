@@ -14437,9 +14437,9 @@ final class EditorWebKitTests: XCTestCase {
         var drag2=async function(mi,dxmm){var m=S.mods[mi];if(m!==S.m){S.m=m;draw();panel();await W(60)}var rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.width/m.w,x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,el=document.elementFromPoint(x,y),ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5,tx=(dxmm>0?1:-1)*(ZM_+Math.abs(dxmm)*cpm);pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=8;i++){pe('pointermove',svg,x+tx*i/8,y);await W(20)}await W(60);pe('pointerup',svg,x+tx,y);await W(150);draw();await W(40)};
         var foto=function(f,a){return 'forno '+tp(f)+' · aberto '+tp(a)+' · junta '+junta(a,f)+' · peças '+tampPc(f)+'+'+tampPc(a)+' · lista '+tampCut()+' · plano '+tampPlano()+' · 3D '+tamp3D()};
         /* 0. montado: forno sozinho ganha o automático dos dois lados expostos; aberto longe à esquerda */
-        var fa=await cena();R.montado=foto(fa[0],fa[1]);
+        var fa=await cena();R.montado=foto(fa[0],fa[1]);var bo0=budget().T;
         /* 1. arraste no 2D: o aberto encosta no forno */
-        await drag2(1,1500-30-600-300+5);R.arraste2D='2D: '+foto(fa[0],fa[1]);
+        await drag2(1,1500-30-600-300+5);R.arraste2D='2D: '+foto(fa[0],fa[1]);var bo1=budget().T;/* conferência independente: religando à mão os dois tamponamentos no lugar novo, o orçamento volta exatamente ao de antes (a diferença é só deles) */fa[0].tl=true;fa[1].tr=true;var bo2=budget().T;fa[0].tl=false;fa[1].tr=false;draw();R.orcamento='só os dois tamponamentos '+(Math.abs(bo2.aC-bo0.aC)<1e-6&&Math.abs(bo2.tT-bo0.tT)<1e-6)+' · chapa na cor '+(Math.round((bo1.aC-bo0.aC)*1000)/1000)+' m² · fita '+(Math.round((bo1.tT-bo0.tT)*100)/100)+' m';
         /* 2. posição digitada encostando no corpo do forno */
         fa=await cena();S.m=fa[1];S.tab=0;draw();panel();await W(40);setv('x',fa[0].x-fa[1].w);draw();await W(60);R.digitado='digitado: '+foto(fa[0],fa[1])+' · x '+fa[1].x;
         /* 3. arraste no 3D: o forno vai até o aberto */
@@ -14462,6 +14462,13 @@ final class EditorWebKitTests: XCTestCase {
         R.guardaRoupas='guarda-roupas: '+await par('Guarda-roupa 2 vãos','Guarda-roupa 2 vãos','quarto');
         /* 7. remover o aberto e recolocar pelo catálogo: o forno volta a ter o automático (lado exposto) e, encostando de novo, sai */
         fa=await cena();await drag2(1,1500-30-600-300+5);S.mods.splice(1,1);S.m=null;draw();await W(40);await add('Balcão aberto (prateleira)');var a2=S.mods[1];a2.x=300;draw();var rr='recolocou '+tp(S.mods[0])+'|'+tp(a2);await drag2(1,S.mods[0].x-30-600-300+5);R.removeERecoloca=rr+' → encostou '+foto(S.mods[0],a2);
+        /* 8. desfazer, refazer, salvar e reabrir, separar (Adauto 22/11: ao separar NÃO volta, só manual) */
+        fa=await cena();await W(1000);await drag2(1,1500-30-600-300+5);var dep=foto(fa[0],fa[1]);await W(1000);document.getElementById('und').click();await W(150);var f1=S.mods.filter(function(m){return /forno/i.test(JSON.stringify(m.v||[])+(m.n||''))})[0]||S.mods[0],a1=S.mods[0]===f1?S.mods[1]:S.mods[0];var des=foto(f1,a1);await W(1000);document.getElementById('red').click();await W(150);f1=S.mods[0];a1=S.mods[1];var ref=foto(f1,a1);
+        R.desfez=des;R.refez=ref;
+        var z2=JSON.stringify(snapState());clr();UNDOING=true;try{loadState(JSON.parse(z2))}finally{UNDOING=false}draw();await W(60);R.salvarEReabrir=foto(S.mods[0],S.mods[1])+' · x '+S.mods[1].x;
+        await drag2(1,-400);R.separar='separou: '+foto(S.mods[0],S.mods[1]);
+        /* 9. móvel livre do 3D encaixado de volta na parede, encostando no forno (__mv3.encaixa, o mesmo de soltar o dedo): o Code 2 achou os DOIS automáticos na junta */
+        fa=await cena();var a9=fa[1],f9=fa[0];lvSolta(a9);a9.rot=0;a9.lx=f9.x-lt(f9)-a9.w-rt(a9)-2;a9.lz=8;draw();var r9=__mv3.encaixa(a9);draw();await W(40);R.encaixe3D=String(r9).slice(0,40)+' · '+foto(f9,a9);
         R.errs=__errs.length-e0;R.aviso=TL.filter(function(t){return /amponamento automático tirado/.test(t)})[0]||'';return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["montado"] as? String, "forno Eauto30/- · aberto -/Dauto30 · junta 600 · peças 1+1 · lista 10 · plano 10 · 3D 10", "forno sozinho ganha o automático no lado exposto; o aberto longe também")
@@ -14475,6 +14482,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["torreEBalcao"] as? String, "torre+balcão: E30/D30|-/Dauto30 → 2D E30/D30|-/- junta 30 dentro false · digitado E30/D30|-/- junta 30", "torre: o tamponamento do modelo fica; o automático do balcão sai")
         XCTAssertEqual(o["guardaRoupas"] as? String, "guarda-roupas: E30/D30|E30/D30 · digitado E30/D30|E30/D30 junta 60", "guarda-roupas: tamponamento do modelo não é automático e fica")
         XCTAssertEqual(o["removeERecoloca"] as? String, "recolocou Eauto30/-|-/Dauto30 → encostou forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "removeu e recolocou pelo catálogo: o forno volta com o automático no lado exposto e, encostando, sai")
+        XCTAssertEqual(o["desfez"] as? String, "forno Eauto30/- · aberto -/Dauto30 · junta 600 · peças 1+1 · lista 10 · plano 10 · 3D 10", "desfazer volta o arraste e o tamponamento junto (igual a antes de arrastar)")
+        XCTAssertEqual(o["refez"] as? String, "forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "refazer: encostado, sem o automático na junta")
+        XCTAssertEqual(o["salvarEReabrir"] as? String, "forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0 · x 900", "salvar e reabrir: continua sem o tamponamento e no mesmo lugar")
+        // pedido aprovado 22/11 ~21:10 (Adauto, "siga o que o supervisor disse"): ao separar, o automático VOLTA no lado que ficou exposto (antes, às 21:05, "não volta")
+        XCTAssertEqual(o["separar"] as? String, "separou: forno Eauto30/- · aberto -/Dauto30 · junta 380 · peças 1+1 · lista 10 · plano 10 · 3D 10", "separar: o lado que ficou exposto volta a ter o automático (regra da criação), nos dois")
+        XCTAssertEqual(o["encaixe3D"] as? String, "✓ Na parede do fundo · mesmas medidas · forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "encaixe do 3D encostando: sai o automático dos dois lados e ele encosta")
+        XCTAssertEqual(o["orcamento"] as? String, "só os dois tamponamentos true · chapa na cor -0.962 m² · fita -5.22 m", "orçamento: saem exatamente os dois tamponamentos da junta (2,61 m de fita cada)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// TAMP-25-3D (22/11, achado na investigação do TAMP-JUNTA): o 3D dividia em camadas de 15 qualquer tamponamento de 25 a 45 mm; o de 25
+    /// virava 15+15 = 30 no desenho (o corte é chapa única de 25) e as réguas entravam 5 mm na lateral do módulo. Agora divide só quando é múltiplo de 15,
+    /// igual ao corte. Regra do Adauto 22/11: tamponamento só de 15, 25 (chapa única) e 30 (duas de 15); não existe 35.
+    func testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;window.toast=function(){};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var um=function(w){window.ATGO=0;S.stones=[];S.mods=[];S.env='cozinha';S.room='cozinha';S.W=4200;S.m=null;draw();newTpl(T('Balcão 2 portas'));window.ATGO=0;var m=S.mods[0];m.x=1000;delete m.trAuto;m.tl=true;m.tlM=1;m.tlW=w;m.tr=false;draw();__build();
+          var B=__boxes().filter(function(q){return /^0:Tamponamento esquerdo/.test(q.nm)}),x0=Math.min.apply(null,B.map(function(q){return q.x0})),x1=Math.max.apply(null,B.map(function(q){return q.x1}));
+          var cl=cutLines(m).filter(function(l){return /^Tamponamento esquerdo/.test(l.name||'')}).map(function(l){return l.L+'x'+l.W+' de '+l.mat+' ×'+l.qty});
+          return w+' mm: 3D '+Math.round(x0)+'..'+Math.round(x1)+' ('+B.length+' peças) · entra no módulo '+(x1>m.x+0.5)+' · corte '+cl.join(' + ')};
+        [15,25,30].forEach(function(w){R['t'+w]=um(w)});
+        /* só existem 15, 25 e 30 (Adauto 22/11): o painel oferece esses três */
+        S.m=S.mods[0];var bt=[];[].forEach.call(document.querySelectorAll('#tabs [data-t]'),function(x){if(bt.length)return;S.tab=+x.dataset.t;draw();panel();bt=[].map.call(document.querySelectorAll('#bd [data-tw]'),function(b){return b.dataset.tw})});R.botoes=bt.join(',');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["t15"] as? String, "15 mm: 3D 985..1000 (1 peças) · entra no módulo false · corte 720x585 de 15 ×1", "15: chapa única, por fora")
+        XCTAssertEqual(o["t25"] as? String, "25 mm: 3D 975..1000 (1 peças) · entra no módulo false · corte 720x585 de 25 ×1", "25: chapa única no corte e no 3D (antes o 3D desenhava 15+15 = 30 e as réguas entravam 5 mm na lateral)")
+        XCTAssertEqual(o["t30"] as? String, "30 mm: 3D 970..1000 (5 peças) · entra no módulo false · corte 720x585 de 15 ×1 + 720x80 de 15 ×2 + 425x80 de 15 ×2", "30: duas de 15 (face + moldura de réguas de 80), igual no 3D e no corte (Adauto 22/11: \"tamponamento de 30 e duas de 15 ok\")")
+        XCTAssertEqual(o["botoes"] as? String, "15,25,30", "só 15, 25 e 30 (Adauto 22/11: não existe 35)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

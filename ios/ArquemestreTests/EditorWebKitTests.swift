@@ -16433,4 +16433,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["pc"] as? String ?? "").contains("Lateral esquerda"), "a opção continua pintando: \(o["pc"] ?? "")")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
+
+    // FITA 1 mm · CORTE × ACABADA (Adauto 17/11): o quadro da peça mostra o corte do MDF e, separado, a medida acabada com a fita;
+    // corte, plano de corte e lista não mudam (REGRA: sem desconto da fita no corte)
+    func testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];S.m=m;draw();panel();
+          var lat=partsOf(m).filter(function(q){return /^Lateral esquerda/.test(q.name)})[0],por=partsOf(m).filter(function(q){return /^Porta/.test(q.name)})[0];
+          var cut0=JSON.stringify(cutLines(m).map(function(l){return [l.L,l.W,l.qty]}));
+          var aL=fitaAcab(lat),aP=por?fitaAcab(por):null,ex=fitaAcab({name:'Lateral esquerda',cl:2000,cw:560});
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var b=__boxes().filter(function(q){return !q.ft&&q.pk===por.pk&&/^0:/.test(q.nm)})[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1);__sel3(c[0],c[1]);
+          var E=document.getElementById('e3'),fc=E&&E.querySelector('[data-fcorte]'),fa=E&&E.querySelector('[data-facab]'),txt=E?E.textContent.replace(/\s+/g,' '):'';
+          var cut1=JSON.stringify(cutLines(m).map(function(l){return [l.L,l.W,l.qty]}));
+          document.getElementById('v3x').click();
+          return JSON.stringify({aL:aL,aP:aP,ex:ex,lat:[aP.cl,aP.cw],fc:fc?fc.textContent:'',fa:fa?fa.textContent:'',txt:txt.slice(0,240),same:cut0===cut1,errs:__errs});
+          """#)
+        let ex = o["ex"] as? [String: Any] ?? [:]
+        XCTAssertEqual(ex["acw"] as? Int, 561, "MDF 560 + fita 1 numa ponta = acabada 561 nessa direção")
+        XCTAssertEqual(ex["acl"] as? Int, 2000, "sem fita no comprimento: igual ao corte")
+        XCTAssertEqual(ex["cw"] as? Int, 560, "corte continua 560")
+        let aP = o["aP"] as? [String: Any] ?? [:]
+        XCTAssertEqual((aP["acl"] as? Int ?? 0) - (aP["cl"] as? Int ?? 0), 2, "porta com fita nas 4 bordas: +2 no comprimento")
+        XCTAssertEqual((aP["acw"] as? Int ?? 0) - (aP["cw"] as? Int ?? 0), 2, "porta: +2 na largura")
+        let lat = o["lat"] as? [Int] ?? [0, 0]
+        XCTAssertEqual(o["fc"] as? String, "\(lat[0]) × \(lat[1]) mm", "quadro da porta: corte do MDF igual ao plano de corte · \(o["txt"] ?? "")")
+        XCTAssertEqual(o["fa"] as? String, "\(lat[0] + 2) × \(lat[1] + 2) mm", "quadro da porta: acabada com a fita de 1 mm nas 4 bordas · \(o["txt"] ?? "")")
+        let aL = o["aL"] as? [String: Any] ?? [:]
+        XCTAssertEqual((aL["acw"] as? Int ?? 0) - (aL["cw"] as? Int ?? 0), 1, "lateral: fita só na frente, +1 na largura")
+        XCTAssertEqual(aL["acl"] as? Int, aL["cl"] as? Int, "lateral: comprimento sem fita")
+        XCTAssertEqual(o["same"] as? Bool, true, "plano de corte não muda")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
+    }
 }

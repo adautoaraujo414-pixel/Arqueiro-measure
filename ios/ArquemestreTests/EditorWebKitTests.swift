@@ -15280,4 +15280,74 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ilhaNoLivre"] as? String, "true", "a ilha arrastada por cima do móvel livre é reconhecida como batida (o arrasto para no último lugar livre)")
         XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
     }
+
+    /* FASE3 · ROTAÇÃO (Adauto, 23/11/2026 · "Preservar os comandos atuais de 90° e acrescentar 45° e rotação livre de 0° a 360°, com campo
+       para digitar o ângulo exato… respeitando colisões e limites do ambiente. Não movimentar outros móveis automaticamente.") */
+    func testFASE3_MovelLivreGira45EAnguloExatoSemBaterNemMexerNosOutros() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(40);var a=S.mods[1];lvSolta(a);draw();
+        var pc=function(m){return JSON.stringify(partsOf(m).map(function(p){return [p.name,p.cl,p.cw]}))};var p0=pc(a);
+        var caixas=function(i){__build();var B=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===i});return B};
+        var f0=lvFoot(a),c0=[(f0.x0+f0.x1)/2,(f0.z0+f0.z1)/2];
+        var ok=lvGira(a,45);var B=caixas(1),gp=B.filter(function(b){return b.gp}).length,f1=lvFoot(a);
+        R.v0='45°: '+ok+' · rot '+a.rot+' · caixas giradas '+gp+'/'+B.length+' · centro no lugar '+(Math.abs((f1.x0+f1.x1)/2-c0[0])<1&&Math.abs((f1.z0+f1.z1)/2-c0[1])<1)+' · peças iguais '+(pc(a)===p0);
+        var bb={x0:1e9,x1:-1e9,z0:1e9,z1:-1e9};B.forEach(function(b){bb.x0=Math.min(bb.x0,b.x0);bb.x1=Math.max(bb.x1,b.x1);bb.z0=Math.min(bb.z0,b.z0);bb.z1=Math.max(bb.z1,b.z1)});R.v1='3D envolve '+Math.round(bb.x1-bb.x0)+'×'+Math.round(bb.z1-bb.z0)+' · pegada '+Math.round(f1.x1-f1.x0)+'×'+Math.round(f1.z1-f1.z0);
+        ok=lvAng(a,30);R.v2='30° exato: '+ok+' · rot '+a.rot;ok=lvAng(a,90);B=caixas(1);R.v3='volta 90°: '+ok+' · rot '+a.rot+' · caixas giradas '+B.filter(function(b){return b.gp}).length+' · peças iguais '+(pc(a)===p0);
+        lvAng(a,45);
+        /* colisão pelo polígono: encostar a quina girada no balcão da parede */
+        var w=S.mods[0];w.x=1500;draw();var fw=lvFoot(w)||{x0:w.x,x1:w.x+w.w,z0:0,z1:w.d},pg=__lvPoly(a);var minz=Math.min.apply(null,pg.map(function(q){return q[1]}));
+        var lx0=a.lx,lz0=a.lz;var pcx=pg.reduce(function(s,q){return s+q[0]},0)/4,wcx=w.x+w.w/2;a.lx=Math.round(a.lx+(wcx-pcx));pg=__lvPoly(a);minz=Math.min.apply(null,pg.map(function(q){return q[1]}));__build();var wz1=Math.max.apply(null,__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&b.a>=.95}).map(function(b){return b.z1}));var dz=(wz1+2)-minz;ok=lvTenta(a,a.lx,Math.round(a.lz+dz));R.v4='perto do balcão (2 mm): '+(ok?'pode':'bloqueou '+window.__lvMotivo);
+        ok=lvTenta(a,a.lx,Math.round(a.lz-60));R.v5='60 mm pra dentro do balcão: '+(ok?'ENTROU':'bloqueou · ficou no mesmo lugar');
+        /* quina: a caixa reta que envolve o girado pegaria a quina do balcão, o móvel de verdade não (polígono) */__build();var WB=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&b.a>=.95}),wx1=Math.max.apply(null,WB.map(function(b){return b.x1})),wz1b=Math.max.apply(null,WB.map(function(b){return b.z1}));var P1=__lvPoly(a),cx=P1.reduce(function(s,q){return s+q[0]},0)/4,cz=P1.reduce(function(s,q){return s+q[1]},0)/4,rr=(Math.max.apply(null,P1.map(function(q){return q[0]}))-Math.min.apply(null,P1.map(function(q){return q[0]})))/2;
+        var achou=null;for(var k=40;k>=0&&!achou;k--){var tt=k*0.05;var P2=__lvPoly(a),c2x=P2.reduce(function(s,q){return s+q[0]},0)/4,c2z=P2.reduce(function(s,q){return s+q[1]},0)/4;if(lvTenta(a,Math.round(a.lx+(wx1+tt*rr-c2x)),Math.round(a.lz+(wz1b+tt*rr-c2z)))){var fq=lvFoot(a);if(fq.x0<wx1-1&&fq.z0<wz1b-1)achou=tt}}
+        R.v10='na quina: posição livre em que a caixa reta cruzaria a quina '+(achou!==null?'achada':'não achada');var lxq=a.lx,lzq=a.lz;
+        var P3=__lvPoly(a),c3x=P3.reduce(function(s,q){return s+q[0]},0)/4,c3z=P3.reduce(function(s,q){return s+q[1]},0)/4;var ok2=lvTenta(a,Math.round(a.lx+(wx1-50-c3x)),Math.round(a.lz+(wz1b-50-c3z)));R.v11='centro em cima da quina do balcão: '+(ok2?'ENTROU':'bloqueou')+' · ficou onde estava '+(a.lx===lxq&&a.lz===lzq);
+        /* não bate na parede do fundo */a.lx=lx0;a.lz=lz0;ok=lvTenta(a,a.lx,-200);R.v6='parede do fundo: '+(ok?'ENTROU':'bloqueou');
+        /* salvar e reabrir */var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}draw();var a2=S.mods[1];R.v7='reaberto: rot '+a2.rot+' · girada '+caixas(1).filter(function(b){return b.gp}).length;
+        /* Planta */PLV=true;draw();await W(80);var pl=document.querySelector('#svg [data-lv="1"] polygon');R.v8='Planta: polígono '+!!pl;S.m=S.mods[1];draw();await W(60);R.v12='alças de esticar no livre selecionado: '+document.querySelectorAll('#svg [data-plh]').length;S.m=null;PLV=false;draw();
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "45°: true · rot 45 · caixas giradas 110/110 · centro no lugar true · peças iguais true", "45° gira o móvel inteiro no 3D em volta do centro, sem mudar nenhuma peça")
+        XCTAssertEqual(o["v2"] as? String, "30° exato: true · rot 30", "ângulo digitado (livre de 0 a 360)")
+        XCTAssertEqual(o["v3"] as? String, "volta 90°: true · rot 90 · caixas giradas 0 · peças iguais true", "voltar a 90° usa o caminho de sempre (sem prisma girado)")
+        XCTAssertEqual(o["v4"] as? String, "perto do balcão (2 mm): pode", "a quina girada pode chegar a 2 mm do balcão (colisão pelo polígono real)")
+        XCTAssertEqual(o["v5"] as? String, "60 mm pra dentro do balcão: bloqueou · ficou no mesmo lugar", "não entra no outro móvel e não mexe em nada")
+        XCTAssertEqual(o["v6"] as? String, "parede do fundo: bloqueou", "não atravessa a parede")
+        XCTAssertEqual(o["v7"] as? String, "reaberto: rot 45 · girada 110", "salvar e reabrir mantém o ângulo")
+        XCTAssertEqual(o["v8"] as? String, "Planta: polígono true", "Planta desenha o móvel girado como polígono")
+        XCTAssertEqual(o["v10"] as? String, "na quina: posição livre em que a caixa reta cruzaria a quina achada", "a colisão usa o contorno girado, não a caixa reta que o envolve")
+        XCTAssertEqual(o["v11"] as? String, "centro em cima da quina do balcão: bloqueou · ficou onde estava true", "em cima da quina bloqueia e não mexe")
+        XCTAssertEqual(o["v12"] as? String, "alças de esticar no livre selecionado: 0", "sem alça fantasma de esticar no móvel livre (família PL-FANTASMA)")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    func testFASE3_MovelLivreBotoes45ECampoDeAnguloNaPlantaENo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(40);var a=S.mods[1];lvSolta(a);S.m=a;draw();
+        /* Planta: barra */lvBar(a,400,400);await W(40);var q=document.getElementById('lvbar');var bts=[].map.call(q.querySelectorAll('button'),function(b){return b.textContent.trim()}).join(' | ');R.v0='barra: '+bts+' · campo '+!!q.querySelector('[data-lvang]');
+        q.querySelector('[data-lvg="45"]').click();await W(60);R.v1='⟳ 45°: rot '+a.rot;q.querySelector('[data-lvg="-90"]').click();await W(60);R.v2='⟲ 90° (de sempre): rot '+a.rot;
+        var inp=q.querySelector('[data-lvang]');inp.value='120';q.querySelector('[data-lvangok]').click();await W(60);R.v3='campo 120: rot '+a.rot;
+        /* 3D: menu do segurar */open3D();await W(300);lp3Open(1,300,300);await W(80);var M=document.querySelector('[data-l3ang]');R.v4='menu 3D: campo '+!!M+' · botões 45 '+document.querySelectorAll('[data-l3="r45"],[data-l3="r-45"]').length;
+        __lp3.acao('r45');await W(60);R.v5='menu 3D ↻45: rot '+a.rot;M=document.querySelector('[data-l3ang]');if(M){M.value='0';M.parentNode.querySelector('[data-l3angok]').click();await W(60)}R.v6='menu 3D campo 0: rot '+a.rot;
+        __lp3.acao('r90');await W(60);R.v7='menu 3D ↻90 (de sempre): rot '+a.rot;
+        /* parede: o botão continua apagado com o aviso */lp3Open(0,300,300);await W(60);R.v8='na parede: campo '+!!document.querySelector('[data-l3ang]');
+        try{__lp3.fecha()}catch(_){}try{document.getElementById('v3x').click()}catch(_){}R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "barra: ⟲ 90° | ⟳ 90° | ⟲ 45° | ⟳ 45° | ° Girar | ✕ · campo true", "Planta: os botões de 90° continuam e entram 45° e o campo do ângulo")
+        XCTAssertEqual(o["v1"] as? String, "⟳ 45°: rot 45", "botão 45° da Planta")
+        XCTAssertEqual(o["v2"] as? String, "⟲ 90° (de sempre): rot 315", "botão de 90° de sempre continua")
+        XCTAssertEqual(o["v3"] as? String, "campo 120: rot 120", "campo do ângulo na Planta")
+        XCTAssertEqual(o["v4"] as? String, "menu 3D: campo true · botões 45 2", "menu do segurar no 3D tem 45° e o campo")
+        XCTAssertEqual(o["v5"] as? String, "menu 3D ↻45: rot 165", "45° pelo menu do 3D")
+        XCTAssertEqual(o["v6"] as? String, "menu 3D campo 0: rot 0", "campo do ângulo no 3D")
+        XCTAssertEqual(o["v7"] as? String, "menu 3D ↻90 (de sempre): rot 90", "90° de sempre no 3D continua")
+        XCTAssertEqual(o["v8"] as? String, "na parede: campo false", "módulo de parede não ganha o campo (só móvel livre gira livre)")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

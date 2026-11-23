@@ -16253,4 +16253,35 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lateralNaoSolta"] as? Bool, true, "na parede do lado continua vinculado")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · regra 5 (Adauto 22/11 18:12): acabamento opcional em cima do peitoril — sem, pedra ou MDF/madeira; peça independente (S.geo) com
+    /// espessura e balanços editáveis (começa rente à parede); MDF entra no plano de corte, pedra não (vai pro resumo da marmoraria); a parede não muda.
+    @MainActor
+    func testParedesAcabamentoEmCimaDoPeitorilPedraOuMDF() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES regra 5: acabamento em cima do peitoril — sem, pedra ou MDF; peça independente; MDF no corte; pedra fora do MDF (marmoraria); parede igual */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;draw();var o=opAdd('abertura');o.x=1400;o.w=1800;draw();S.tab=9;panel();await W(30);
+        var paredeSig=function(){return JSON.stringify(S.wall||{})+JSON.stringify(S.ops.map(function(q){return [q.x,q.w,q.b,q.h,q.teto]}))},W0=paredeSig();
+        R.opcoes=[].map.call(document.querySelectorAll('#bd [data-wtopm^="'+o.id+'|"]'),function(b){return b.textContent}).join(',');
+        document.querySelector('#bd [data-wtopm="'+o.id+'|mdf"]').click();await W(40);var g=S.geo.filter(function(q){return q.wtop===o.id})[0];R.mdf=g?(g.tp+' '+g.w+'×'+g.d+'×'+g.h+' em '+g.b+' z'+g.z):'não';
+        var inp=document.querySelector('#bd [data-wtopf="'+o.id+'|bi"]');inp.value=300;inp.dispatchEvent(new Event('change',{bubbles:true}));await W(40);g=S.geo.filter(function(q){return q.wtop===o.id})[0];R.balanco=g.w+'×'+g.d+' z'+g.z;
+        R.noCorte=geoCutPieces().length+' peça(s) · '+geoCutPieces().map(function(p){return p.L+'×'+p.W}).join(',');
+        document.querySelector('#bd [data-wtopm="'+o.id+'|pedra"]').click();await W(40);g=S.geo.filter(function(q){return q.wtop===o.id})[0];R.pedra=g.tp+' pedra '+g.pedra+' · no corte '+geoCutPieces().length+' · marmoraria '+JSON.stringify(wtopM2());
+        R.paredeIgual=paredeSig()===W0;open3D();await W(150);__build();R.tresD=__boxes().filter(function(b){return b.geo===g.id}).length>0;document.getElementById('v3x').click();await W(50);
+        document.querySelector('#bd [data-wtopm="'+o.id+'|sem"]')||(S.tab=9,panel());document.querySelector('#bd [data-wtopm="'+o.id+'|sem"]').click();await W(40);R.sem=S.geo.filter(function(q){return q.wtop===o.id}).length+' '+!o.ac;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["opcoes"] as? String, "Sem,Pedra,MDF / madeira")
+        XCTAssertEqual(o["mdf"] as? String, "placa 1800×150×30 em 1100 z-150")
+        XCTAssertEqual(o["balanco"] as? String, "1800×450 z-150")
+        XCTAssertEqual(o["noCorte"] as? String, "1 peça(s) · 1800×450")
+        XCTAssertEqual(o["pedra"] as? String, "caixa pedra 1 · no corte 0 · marmoraria [{\"w\":1800,\"p\":450,\"e\":30,\"m2\":0.81}]")
+        XCTAssertEqual(o["sem"] as? String, "0 true")
+        XCTAssertEqual(o["paredeIgual"] as? Bool, true, "o acabamento não muda a parede")
+        XCTAssertEqual(o["tresD"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

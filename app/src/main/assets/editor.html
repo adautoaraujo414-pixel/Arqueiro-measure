@@ -13990,6 +13990,31 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 })();
 </script>
 <script>
+/* ===== PAREDES · regra 5 (Adauto 22/11 18:12): ACABAMENTO em cima do peitoril / meia parede da abertura — opcional: sem, pedra ou MDF/madeira.
+   Elemento independente (S.geo, ligado pela abertura em g.wtop): editar espessura, largura (balanço nas pontas), profundidade (balanço pra dentro e pra fora).
+   Não muda a parede. MDF entra no plano de corte e no orçamento (placa de S.geo, geoCutPieces); pedra fica fora do MDF e vai pro resumo da marmoraria (m²).
+   Balanços começam em 0 (rente à parede); a pessoa mede e põe. ===== */
+(function(){if(typeof opAdd!=='function')return;
+ var NM={pedra:'Pedra',mdf:'MDF / madeira'};
+ var geom=function(o,ac){var w=o.wall||'f',e=Math.max(10,+ac.e||30),bi=Math.max(0,+ac.bi||0),bo=Math.max(0,+ac.bo||0),bl=Math.max(0,+ac.bl||0),y=Math.max(0,+o.b||0),r;
+  if(w==='f'){var T=+wallCfg('F').t||150;r={x:+o.x-bl,w:+o.w+2*bl,z:-T-bo,d:T+bo+bi}}
+  else{var s=w==='e'?'L':'R',G=wallGeo()[s],xi=s==='L'?G.x+G.off:G.x-G.off,xa=s==='L'?xi-G.t:xi,xb=s==='L'?xi:xi+G.t,x0=s==='L'?xa-bo:xa-bi,x1=s==='L'?xb+bi:xb+bo;r={x:x0,w:x1-x0,z:+o.x-bl,d:+o.w+2*bl}}
+  r.b=y;r.h=e;return r};
+ window.wtopSet=function(o,ac){if(!o||window.RO)return null;S.geo=S.geo||[];var g=S.geo.filter(function(q){return q.wtop===o.id})[0];if(!ac||!ac.m||ac.m==='sem'){if(g)S.geo=S.geo.filter(function(q){return q!==g});delete o.ac;return null}
+  o.ac={m:ac.m,e:+ac.e||30,bi:+ac.bi||0,bo:+ac.bo||0,bl:+ac.bl||0};var G=geom(o,o.ac),cor=ac.m==='pedra'?((S.stones&&S.stones[0]&&typeof stC==='function')?stC(S.stones[0]):'#27372c'):(typeof projCor==='function'?projCor():'#b88a5a');
+  if(!g){g={id:(typeof nid==='function'?nid(S.geo):Date.now()),wtop:o.id};S.geo.push(g)}g.tp=ac.m==='pedra'?'caixa':'placa';g.pedra=ac.m==='pedra'?1:0;g.c=cor;Object.assign(g,G);return g};
+ window.wtopM2=function(){return (S.geo||[]).filter(function(g){return g.wtop!=null&&g.pedra}).map(function(g){return {w:Math.round(g.wall==='e'||g.wall==='d'?g.d:Math.max(g.w,g.d)),p:Math.round(Math.min(g.w,g.d)),e:g.h,m2:Math.round(g.w*g.d/1e4)/100}})};
+ /* quadro da abertura: escolher o acabamento e as medidas */
+ var pa=window.panel;if(typeof pa==='function'){panel=window.panel=function(){var r=pa.apply(this,arguments);try{if(S.tab!==9)return r;(S.ops||[]).filter(function(o){return o.t==='abertura'&&(+o.b||0)>0}).forEach(function(o){var b=document.querySelector('#bd [data-opfull="'+o.id+'"]');if(!b||document.querySelector('#bd [data-wtop="'+o.id+'"]'))return;var box=b.closest('.box')||b.parentNode,ac=o.ac||{m:'sem'},B=function(m,l){return '<button data-wtopm="'+o.id+'|'+m+'" class="'+((ac.m||'sem')===m?'sel':'')+'"'+(window.RO?' disabled':'')+'>'+l+'</button>'},N=function(k,l,v){return '<div class="g"><label>'+l+'</label><input type="number" inputmode="numeric" data-wtopf="'+o.id+'|'+k+'" value="'+v+'"'+(window.RO?' disabled':'')+'></div>'};
+   box.insertAdjacentHTML('beforeend','<div data-wtop="'+o.id+'" style="margin-top:6px"><div style="font-size:12px;color:#444">Acabamento em cima do peitoril</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0">'+B('sem','Sem')+B('pedra','Pedra')+B('mdf','MDF / madeira')+'</div>'+(ac.m&&ac.m!=='sem'?N('e','Espessura (mm)',ac.e||30)+N('bi','Balanço pra dentro do ambiente (mm)',ac.bi||0)+N('bo','Balanço pro outro lado (mm)',ac.bo||0)+N('bl','Balanço nas pontas (mm)',ac.bl||0)+'<div class="note">Peça independente: não muda a parede. '+(ac.m==='mdf'?'Entra no plano de corte e no orçamento.':'Vai pro resumo da marmoraria (m²), fora do MDF.')+' Depois dá pra ajustar a peça sozinha no 3D.</div>':'')+'</div>')})}catch(_){}return r}}
+ var re=function(){try{panel();draw()}catch(_){}try{if(window.re3)re3()}catch(_){}};
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-wtopm]');if(!b||window.RO)return;var q=b.dataset.wtopm.split('|'),o=(S.ops||[]).filter(function(a){return String(a.id)===q[0]})[0];if(!o)return;try{snap()}catch(_){}wtopSet(o,Object.assign({},o.ac||{},{m:q[1]}));re()});
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.wtopf||window.RO)return;var q=t.dataset.wtopf.split('|'),o=(S.ops||[]).filter(function(a){return String(a.id)===q[0]})[0];if(!o||!o.ac)return;var v=Math.round(+t.value||0);if(q[1]==='e'&&!(v>=10&&v<=200)){try{toast('Espessura entre 10 e 200 mm')}catch(_){}re();return}if(v<0||v>1500){re();return}try{snap()}catch(_){}var ac=Object.assign({},o.ac);ac[q[1]]=v;wtopSet(o,ac);re()});
+ /* abertura movida/esticada pelo quadro: o acabamento acompanha (continua independente se a pessoa mexer nele direto no 3D) */
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.opf)return;setTimeout(function(){try{var id=t.dataset.opf.split('|')[0],o=(S.ops||[]).filter(function(a){return String(a.id)===id})[0];if(o&&o.ac)wtopSet(o,o.ac);draw()}catch(_){}},0)});
+})();
+</script>
+<script>
 /* ===== FASE5 · DXF PARA CNC (23/11/2026, autorizado pelo Adauto) =====
    Gera DXF 2D (R12/AC1009, ASCII, milímetros) a partir da MESMA fonte do plano de corte (cutGroups → partsOf, furInfo, chAt):
    - contorno fechado de cada peça (camada CONTORNO);

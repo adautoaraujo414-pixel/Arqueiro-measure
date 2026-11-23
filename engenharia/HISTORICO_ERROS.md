@@ -1773,3 +1773,9 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - Antes de mandar aparece a mesma janela de confirmação das peças livres. Este app abre normal. Sem LED livre nem espelho, nada muda.
   - **Limite que não tem como corrigir:** projeto copiado à mão (backup/arquivo) pra um aparelho com app antigo ainda abre sem o LED. App antigo não pode ser mudado; a saída é atualizar.
   - Teste `testPoliticaBLedLivreEEspelhoNaoAbremEmVersaoAntigaSemAviso` (4ee3da8, falha antes) · correção 316d3c8.
+
+- **JUNÇÃO 4 · LAT-MEIO (Adauto 23/11):** `21daeffd` (sobre a LAT-MEIO do Code 1, `3991175`). Travessa em uma peça por vão (7,5 mm de cada lado do rebaixo, mm inteiro com a folga no encontro); montante junto das gavetas vira lateral inteira; recuo traseiro mantido. Achado: a peça com décimo quebrava a regra do corte em mm inteiro (testes do catálogo) → corrigido antes do commit. `testJuncao4TravessaEmPecasRebaixoMeioAMeioRecuoMontanteSemSobreposicao`.
+- **BATENTE CAVA (23/11):** `9dde42f5`. Régua por régua, batente superior, conferência pela geometria (5 mm mínimo, sem colisão nova), restaurar a automática do modelo, editor por vãos (não tinha campo). `testBatenteCavaReguaPorReguaComLimitesRestaurarEEditorPorVaos`.
+- **BASE INTEIRA/DIVIDIDA/PERSONALIZADA (23/11):** `a9049cd3`. `testBaseInteiraDivididaOuPersonalizadaPorModuloComDivisoriaDescendo`.
+- **GAVETAS QUE NÃO CABEM (23/11):** colisão que já existia (cava com muitas gavetas num vão baixo: caixa/régua na travessa ou na outra caixa). `b07085a4`: o + não aceita, módulo antigo avisa com botão. `testGavetasQueNaoCabemNaoEntramEModuloAntigoAvisaComBotao`.
+- **Ferramenta:** rodar sonda ou teste no mesmo Chromium em que a bateria completa está rodando derruba testes aleatórios (a bateria pega a 1ª aba do editor). Sempre um navegador só pra bateria.

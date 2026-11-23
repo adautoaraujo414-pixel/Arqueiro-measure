@@ -28,7 +28,9 @@ window.__files={};window.__shared=null;
   listFiles:function(){return JSON.stringify(Object.keys(__files))},companyName:function(){return 'Marcenaria Teste'},
   shareCut:function(c,n,t){__shared={code:c,name:n,title:t}},shareClient:function(c,n,t){window.__sharedCl={code:c,name:n,title:t}},listNotes:function(){return '[]'},
   contextNote:function(){return ''},linkNote:function(){},openNoteOf:function(){},shareUpdate:function(){},shareStart:function(){},
-  makeQuote:function(){},quotePhotos:function(){},openTrena:function(){},tourResult:function(){},close:function(){window.__closed=(window.__closed||0)+1}};
+  makeQuote:function(){},quotePhotos:function(){},openTrena:function(){},tourResult:function(){},close:function(){window.__closed=(window.__closed||0)+1},
+  /* igual à ponte do app do Windows (Browser.kt): CSV e DXF saem pelo shareFile, nunca por download do navegador (o JCEF do app de teste caía às vezes no download de blob) */
+  shareFile:function(n,t,m){window.__sharedFile={name:n,len:String(t||'').length,mime:m}}};
   /* a ponte de verdade do app (que grava em arquivo) é posta depois: aqui ela é ignorada, os testes ficam só na memória */
   try{Object.defineProperty(window,'ArqueApp',{configurable:true,get:function(){return A},set:function(){}})}catch(e){window.ArqueApp=A}})();
 """

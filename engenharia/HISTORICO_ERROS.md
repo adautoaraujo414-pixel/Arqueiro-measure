@@ -1581,7 +1581,13 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Testes:** `testFASE4_EspelhoNaParedeMedidasParede2D3DSalvarEPortaDeCorrerIntacta` (666b222, falha antes: botão não existe) · implementação 42a33eb.
 - **Regressão pega pela bateria e corrigida:** o catálogo monta um item por modelo de `APM`, e a regra do catálogo é todo item com foto (`testCatalogoComFotoDeCadaModuloEEletro`: 7 sem foto, máximo 3). Correção 2ce6c40: o espelho de parede fica fora do catálogo; entra pelo ＋ Criar · Espelhos e pela aba Eletrodomésticos.
 - **Comportamento correto (não é erro):** o Desfazer junta mudanças feitas em menos de 0,7 s (`histTick`, vale para todos os itens).
-- **Risco identificado (comprovado na candidata 80b17c6):** app de versão anterior que abrir projeto com espelho de parede dá erro no desenho 2D (`APM['espelho']` não existe). O dado não se perde (salvar de novo mantém o item). É o mesmo caso de qualquer tipo novo de item. Decisão do Adauto: publicar as plataformas juntas ou aceitar.
-- **Não mexido:** espelho da folha de correr (`v.esp`, `slideCfgOpen`), `partsOf`, plano de corte, `snapState`/`loadState`.
+- **ESP-APP-ANTIGO (erro comprovado e corrigido, 23/11):**
+  - **Medição** (pedido do Chefe, no editor publicado c561120, links gerados no editor novo): com `t:'espelho'` em `fr`, o link de corte e o de cliente **não abrem**. Aparece "Não consegui abrir o plano de corte", o modo corte não liga, e o `draw` quebra em `APM[t].n` (o módulo some do 2D). Os mesmos links sem espelho abrem normal.
+  - **Causa:** o app antigo desenha todo item de `fr` e lê `APM[f.t].n`, que não existe pra tipo novo.
+  - **Correção evolutiva:** envoltório de `snapState`/`loadState` no fim do arquivo (padrão dos outros, sem mexer no corpo). Salvo, o espelho vai em `frx`, campo que o app antigo não lê; ao abrir no app novo, volta pro `S.fr` (sem duplicar). Projeto com espelho dentro do `fr` continua abrindo. Na memória nada muda.
+  - **Depois, no c561120:** corte e cliente com espelho abrem normal (modo corte ligado, 2D e 3D ok, peças iguais, 0 erro), só sem o espelho. No app novo os links trazem os 2 espelhos. Salvar, fechar e reabrir mantém as medidas e a parede.
+  - **Limite conhecido:** projeto aberto e salvo de novo num app antigo perde o `frx` naquela cópia (o app antigo não conhece o campo). Não trava nem estraga o resto.
+  - **Teste:** `testFASE4_EspelhoNaParedeSalvoForaDoFrPraAppAntigoEVoltaAoAbrir` (1fd4a2e, falha antes) · correção ccd2274.
+- **Não mexido:** espelho da folha de correr (`v.esp`, `slideCfgOpen`), `partsOf`, plano de corte. `snapState`/`loadState` só ganharam o envoltório do `frx`.
 - **Sugestão (não feita):** espelho de parede na lista de materiais e no orçamento (m²), como o da porta de correr.
 - **Pendente:** aparelho real (iPhone, Tab S9 FE).

@@ -3,7 +3,7 @@
 Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src/main/assets/editor.html`, módulo no fim do arquivo, mais 4 ganchos pequenos.
 
 ## O que entrou
-- **Aba Portas → "Estilos de porta"** (seção nova, depois do puxador). Estilo: Lisa, Provençal simples, Provençal detalhada, Provençal dupla. Construção: Régua aplicada, Moldura aplicada, Usinada em CNC. Medidas: largura (20 a 70 ou outra), distância da borda, 45° ou encontro reto, espessura, 2ª moldura e distância (dupla), frisos (detalhada), profundidade e Ø da ferramenta (CNC), cor própria.
+- **Aba Portas → "Estilos de porta"** (seção nova, depois do puxador). Estilo: Lisa, Provençal simples, Provençal detalhada, Provençal dupla. Construção: Régua aplicada, Moldura aplicada, Usinada em CNC. Medidas: largura (20 a 70 ou outra), distância da borda (padrão 0: na borda da porta), 45° ou encontro reto, espessura, 2ª moldura e distância (dupla), frisos (detalhada), profundidade e Ø da ferramenta (CNC), cor própria.
 - **Aplicar em**: somente esta porta, este móvel, mesmo modelo, ambiente, projeto. Abre uma prévia com a quantidade antes de confirmar. Porta de vidro e de correr ficam fora. Um desfazer volta tudo. Escolher no quadro não muda o projeto antes de "Aplicar".
 - **Aplicada**: 4 peças reais por quadro, MDF 6 mm, fora da porta (a porta não muda de medida). Vão para lista, corte (na cor de fora, ou linha própria se a régua tiver cor própria), orçamento e DXF (corte a 45° na camada `CORTE_45`). A nota da porta mostra a espessura total.
 - **Usinada**: nenhuma peça aplicada. Frisos fechados no DXF da porta, na camada `FRISO_L{largura}_P{prof}_FERR_D{Ø}_FACE_FRENTE`. Metros de friso no orçamento (preço no Ajustes, linha "Friso usinado em CNC").
@@ -11,9 +11,8 @@ Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src
   - painel do meio abaixo de 40 mm;
   - medida negativa;
   - friso que deixaria menos de 9 mm de MDF;
-  - moldura sobre a cava usinada (menos de 21 mm da borda: a cava de 30° ocupa 12/tan30).
 
-  A porta fica lisa e a nota avisa.
+  A porta fica lisa e a nota avisa. Do lado da cava usinada a moldura começa a 21 mm (a cava de 30° ocupa 12/tan30); no mesmo módulo, frentes com a mesma borda usam a mesma distância, para ficarem alinhadas.
 - **Avisos**:
   - friso a menos de 40 mm da borda das dobradiças (nota);
   - no DXF, CONFLITO quando friso + copo passam da espessura;
@@ -37,3 +36,17 @@ Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src
 - As medidas dos modelos de concha são medidas comerciais comuns. A furação deve ser conferida no puxador comprado (aviso no DXF).
 - A posição da concha (meio/cima/baixo, centro/lado) continua no ⚙ como sempre, para o projeto todo.
 - "Ambiente" é o projeto: um projeto tem um ambiente.
+
+## Correções do Adauto (23/11, foto da tela)
+- **Réguas na borda da porta**: distância da borda padrão 0, sem faixa lisa antes do provençal.
+- **Concha desvirada**: borda reta embaixo (a boca), arco em cima. A concha sai mais na boca e os parafusos ficam na altura dos furos do DXF.
+- **Mais detalhe na concha**: chanfro, filete de brilho, lábio e 16 fatias. O 2D desenha o modelo.
+- **Veio**: nas réguas de cima e de baixo o veio fica deitado (madeira e foto do padrão). Réguas e molduras usam o padrão da frente.
+- **Portas de canto**:
+  - canto cego e canto reto com o estilo alinhado com o módulo do lado;
+  - canto em L com as duas folhas (a do lado usa a medida real, 330) e o estilo no 3D;
+  - o canto em L de baixo do catálogo não tem porta.
+- **Peça livre**: 2 toques abrem Duplicar / Medidas / Apagar. A cópia nasce do lado. Ao arrastar, o ímã (15 mm) encaixa a borda exata na de outra peça ou do módulo; porta e frente só valem se a peça estiver na frente delas.
+- **Espelho leve** (85411be3, achado do Chefe no CI): sem reflexo planar no automático com renderizador por software e depois de perder o contexto WebGL; regex sem "Android".
+
+Capturas: 3d_madeira_regua_na_borda_veio.png, 3d_conchas_desviradas_4_modelos.png, 3d_canto_L_guarda_roupa.png, peca_livre_2_toques_menu.png, quadro_portas_concha.png.

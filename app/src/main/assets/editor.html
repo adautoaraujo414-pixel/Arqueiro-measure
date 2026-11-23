@@ -6360,18 +6360,18 @@ var frSolid_vol=frSolid;frSolid=function(f,s){if(!f||isMob2(f)||!frHard(f))retur
   return r};
 
  /* ＋ Criar › Mobília: panelas e pratos já entram dentro do armário escolhido */
- var cr=crpRender;crpRender=function(){cr.apply(this,arguments);cat();var C=crpBox();if(!C||C.querySelector('[data-cpan]'))return;
+ var cr=crpRender;crpRender=function(){cr.apply(this,arguments);cat();var C=crpBox();/* CPAN-DUPLO (23/11): a louça tem atributo próprio (data-clou); antes usava data-cpan, o mesmo do "🍲 Panelas no cooktop" (o toque nele punha louça e a seção sumia quando tinha cooktop) */if(!C||C.querySelector('[data-clou]'))return;
   var L=[[/^Panela com tampa/,'＋ Panela'],[/^Jogo de panelas/,'＋ Jogo de panelas'],[/^Frigideira/,'＋ Frigideira'],[/^Pilha de pratos/,'＋ Pilha de pratos'],[/^Pratos em p/,'＋ Pratos em pé'],[/^Copos/,'＋ Copos']];
   var ond=window.__panOnde||'inf';
   var h='<div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;margin:10px 0 6px">🍳 Panelas e louça (dentro do armário)</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px">'
-   +L.map(function(q){var i=idx(q[0]);return i<0?'':Bt('data-cpan="'+i+'"',q[1])}).join('')+'</div>'
+   +L.map(function(q){var i=idx(q[0]);return i<0?'':Bt('data-clou="'+i+'"',q[1])}).join('')+'</div>'
    +'<div style="display:flex;gap:6px;align-items:center;margin:2px 0 6px"><span style="font-size:12px;color:#555">Pôr no:</span>'+Bt('data-cpanw="inf"','Inferior',ond==='inf')+Bt('data-cpanw="sup"','Superior',ond==='sup')+'</div><div style="font-size:12px;color:#555;margin-bottom:4px">Vai pra prateleira onde cabe, sem atravessar a de cima. No quadro: Prateleira ↑ ↓.</div>';
   var mob=[].slice.call(C.querySelectorAll('div')).filter(function(dv){return /^Mobília$/.test(dv.textContent.trim())})[0];
   if(mob)mob.insertAdjacentHTML('beforebegin',h);else C.insertAdjacentHTML('beforeend',h)};
  var ct=document.createElement('div');
  M.addEventListener('click',function(e){var w=e.target&&e.target.closest?e.target.closest('[data-cpanw]'):null;if(w){e.stopImmediatePropagation();e.preventDefault();window.__panOnde=w.dataset.cpanw;try{crpRender()}catch(_){}return}
-  var t=e.target&&e.target.closest?e.target.closest('[data-cpan]'):null;if(!t)return;e.stopImmediatePropagation();e.preventDefault();if(window.RO)return;
-  try{snap()}catch(_){}var it=apAdd('deco',+t.dataset.cpan),ond=window.__panOnde||'inf';
+  var t=e.target&&e.target.closest?e.target.closest('[data-clou]'):null;if(!t)return;e.stopImmediatePropagation();e.preventDefault();if(window.RO)return;
+  try{snap()}catch(_){}var it=apAdd('deco',+t.dataset.clou),ond=window.__panOnde||'inf';
   var m=(S.m&&S.mods.indexOf(S.m)>=0&&(!!S.m.sup)===(ond==='sup'))?S.m:(S.mods.filter(function(q){return !q.wing&&(!!q.sup)===(ond==='sup')})[0]||S.mods.filter(function(q){return !q.wing})[0]);
   if(m){it.x=Math.round(m.x+(m.w-it.w)/2);it.b=m.b+20;build();var msg=frPutOn(it,m.sup?'dentro-sup':'dentro-inf')}
   try{var C=crpBox();if(C)C.hidden=true}catch(_){}

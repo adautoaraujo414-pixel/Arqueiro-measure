@@ -16505,4 +16505,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aqEnd"] as? Int, 0)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
+
+    // CHURRASQUEIRA · PORCELANATO REAL (Adauto 23/11): além das cores de revestimento de sempre, porcelanato do catálogo de pisos e revestimentos
+    // com a textura real no 3D (alvenaria e quadrada); as cores antigas continuam; escolher cor tira o porcelanato; salva e reabre; desfaz
+    func testChurrasqueiraComPorcelanatoRealDoCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3200;S.H=2700;draw();var R={},e0=__errs.length;
+          apAdd('churrasqueira',0);var f=S.fr[0];var mar='piso-calacata-altissimo',mad='piso-carvalho-natural';
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();R.semPorc=__boxes().filter(function(b){return b.fr===f.id&&b.mid&&pisoOf(b.mid)}).length;
+          __itOpen({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,80)});var it=document.getElementById('it4');
+          R.coresDeSempre=[].map.call(it.querySelectorAll('[data-qchr]'),function(b){return b.dataset.qchr}).join(',');R.porcelanatos=it.querySelectorAll('[data-qchm]').length;
+          it.querySelector('[data-qchm="'+mar+'"]').click();await new Promise(function(r){setTimeout(r,100)});
+          var bx=__boxes().filter(function(b){return b.fr===f.id});R.comTextura=bx.filter(function(b){return b.mid===mar}).length;R.nome=chRev(f)[1];
+          R.grelhaSemTextura=bx.filter(function(b){return b.mid===mar&&(b.a<1||b.em)}).length;
+          var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();f=S.fr[0];R.reabriu=f.revm;
+          document.getElementById('und')&&0;
+          __itOpen({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,80)});document.querySelector('#it4 [data-qchr="tijolo"]').click();await new Promise(function(r){setTimeout(r,80)});R.corTiraPorc=(f.revm===undefined)+' '+f.rev;
+          __itOpen({k:'fr',id:f.id});await new Promise(function(r){setTimeout(r,80)});document.querySelector('#it4 [data-qchm="'+mad+'"]').click();await new Promise(function(r){setTimeout(r,80)});
+          document.querySelector('#it4 [data-qchm=""]').click();await new Promise(function(r){setTimeout(r,80)});R.tirar=(f.revm===undefined)+' '+f.rev;
+          S.fr=[];apAdd('churrasqueira',0);var q=S.fr[0];q.nome='Quadrada de embutir · alvenaria com moldura 45° · 900 × pé-direito × 600 · boca 680 × 520';q.k='colmold';q.w=900;q.d=600;q.h=2700;q.b=0;q.boca={w:680,h:520,b:900};q.ml=90;q.ms=20;q.ep=100;q.rev='marmore';q.revm=mar;draw();__build();
+          R.quadrada=__boxes().filter(function(b){return b.fr===q.id&&b.mid===mar}).length;
+          document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["semPorc"] as? Int, 0, "sem escolher, nada muda")
+        XCTAssertEqual(o["coresDeSempre"] as? String, "tijolo,concreto,porc,marmore,preto,inox", "as cores de revestimento de sempre continuam")
+        XCTAssertEqual(o["porcelanatos"] as? Int, 15, "os 15 porcelanatos/revestimentos do catálogo")
+        XCTAssertGreaterThanOrEqual(o["comTextura"] as? Int ?? 0, 5, "faces de alvenaria com a textura do porcelanato")
+        XCTAssertEqual(o["grelhaSemTextura"] as? Int, 0, "vidro e brasa não pegam a textura")
+        XCTAssertTrue((o["nome"] as? String ?? "").hasPrefix("Porcelanato Calacata"), "\(o["nome"] ?? "")")
+        XCTAssertEqual(o["reabriu"] as? String, "piso-calacata-altissimo", "salva e reabre")
+        XCTAssertEqual(o["corTiraPorc"] as? String, "true tijolo", "escolher uma cor de sempre tira o porcelanato")
+        XCTAssertEqual(o["tirar"] as? String, "true tijolo", "botão Tirar o porcelanato volta à cor de antes")
+        XCTAssertGreaterThanOrEqual(o["quadrada"] as? Int ?? 0, 3, "churrasqueira quadrada também")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

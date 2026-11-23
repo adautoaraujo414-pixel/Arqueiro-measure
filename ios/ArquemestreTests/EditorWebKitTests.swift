@@ -16481,7 +16481,7 @@ final class EditorWebKitTests: XCTestCase {
           newTpl(4);var m=S.mods[0];S.m=m;draw();panel();
           var cut=function(){return JSON.stringify(S.mods.map(function(q){return cutLines(q).map(function(l){return [l.L,l.W,l.qty]})}))},c0=cut();
           open3D();await new Promise(function(r){setTimeout(r,400)});__build();var nb0=__boxes().length,cv=document.getElementById('cv3');
-          var shot=function(){try{render()}catch(_){}var d=cv.toDataURL('image/png'),h=0;for(var i=0;i<d.length;i+=7)h=(h*31+d.charCodeAt(i))|0;return d.length+':'+h};
+          /* aqSet(estado atual) redesenha o 3D na hora (o render global não é o do 3D); a leitura sai no mesmo passo, antes do navegador limpar o quadro */var shot=function(){try{aqSet(window.AQ)}catch(_){}var d=cv.toDataURL('image/png'),h=0;for(var i=0;i<d.length;i+=7)h=(h*31+d.charCodeAt(i))|0;return d.length+':'+h};
           var b=document.getElementById('v3aq'),lab0=b?b.textContent:'',aq0=window.AQ,img0=shot();
           b.click();await new Promise(function(r){setTimeout(r,300)});var aq1=window.AQ,err1=window.AQERR||'',img1=shot(),lab1=b.textContent,nb1=__boxes().length;
           b.click();await new Promise(function(r){setTimeout(r,300)});var aq2=window.AQ,img2=shot();

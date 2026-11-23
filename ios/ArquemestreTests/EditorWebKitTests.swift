@@ -17151,4 +17151,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["botao"] as? Bool, true, "Passante na lista de puxadores da aba Portas")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ESP-FAIXA (auditoria do Code 1 na 20c11b0): a faixa jateada do espelho com LED sumia de longe e em ângulo (de dia e à noite, nas 3 qualidades):
+    // no passe normal o polygonOffset (+1,+1) empurra a faixa pra trás conforme a inclinação e o vidro (desenhado depois, sem empurrão) ganhava.
+    // A faixa vai no passe puxado pra câmera; o espelho não sai do lugar e nenhuma medida muda
+    func testFaixaDoEspelhoLedApareceDeLongeEEmAngulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2600;S.fr=[];draw();var a=espWallAdd(4);a.x=150;draw();var med=JSON.stringify([a.x,a.b,a.w,a.h,a.d]);open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),cx=a.x+a.w/2,cy=a.b+a.h/2,rr=a.w/2-60;
+        var faixa=function(){var r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),n=0;for(var k=0;k<24;k++){var t=Math.PI*2*k/24,p=__p3(cx+rr*Math.cos(t),cy+rr*Math.sin(t),4.2);gl.readPixels(Math.round(p[0]*r),Math.round(H-p[1]*r),1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);if(px[0]>=235&&px[0]-px[2]>=12)n++}return n};
+        var piores=[];for(var ni=0;ni<2;ni++){fx3api.night(ni);['auto','equil','alta'].forEach(function(q){window.ESPQ=q;var m=24;[[1.05,-.5],[1.05,.5],[1.3,-.5],[1.05,0]].forEach(function(z){__cam(z[1],.12,z[0]);m=Math.min(m,faixa())});piores.push(m)})}
+        window.ESPQ='';fx3api.night(0);R.pior=Math.min.apply(null,piores);R.medidas=med===JSON.stringify([a.x,a.b,a.w,a.h,a.d]);document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["pior"] as? Int ?? 0, 20, "faixa acesa (de 24 pontos) no pior caso: de longe, em ângulo, dia e noite, auto/equil/alta")
+        XCTAssertEqual(o["medidas"] as? Bool, true, "espelho no mesmo lugar e com a mesma medida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

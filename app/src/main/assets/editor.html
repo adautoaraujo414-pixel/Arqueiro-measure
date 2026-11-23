@@ -13774,4 +13774,15 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!document.getElementById('dxfbtn')){var b=document.createElement('button');b.id='dxfbtn';b.textContent='⬇ DXF para CNC';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dxfAbre()});sb.parentNode.insertBefore(b,sb.nextSibling)}}catch(_){}return r}}
 })();
 </script>
+<script>
+/* TOQ-TAMP (Adauto, 23/11/2026 · "precisão absoluta na seleção"): o tamponamento é fino na tela (15 mm ≈ 5 px com a parede inteira no 2D)
+   e o dedo erra por 5–10 px: o toque caía no fundo vazio ou na porta. Agora o toque que cairia no FUNDO VAZIO (sem nada tocável embaixo)
+   a até 12 px de um tamponamento vai pra ele. Dentro do móvel nada muda (porta, frente, vão continuam com prioridade). */
+(function(){var svg=document.getElementById('svg');if(!svg)return;var TOL=12;
+ function vazio(t){for(var e=t;e&&e!==svg.parentNode;e=e.parentNode){if(e.dataset&&Object.keys(e.dataset).length)return false;if(e.id==='mod')return false;if(e===svg)return true}return true}
+ window.__tqAlvo=function(x,y){var best=null,bd=1e9;[].forEach.call(svg.querySelectorAll('[data-p]'),function(e){var g=e.closest('[data-mi]');if(!g)return;var m=S.mods[+g.dataset.mi];if(!m)return;var nm=(partsOf(m)[+e.dataset.p]||{}).name||'';if(!/^Tamponamento /.test(nm))return;var r=e.getBoundingClientRect();if(!r.width&&!r.height)return;var dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=Math.hypot(dx,dy);if(d<=TOL&&d<bd){bd=d;best=e}});return best};
+ svg.addEventListener('pointerdown',function(ev){if(ev.__tq||window.PLV||window.RO)return;var t=ev.target;if(!t||!vazio(t))return;var best=__tqAlvo(ev.clientX,ev.clientY);if(!best)return;
+  ev.stopImmediatePropagation();var n=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,composed:true,clientX:ev.clientX,clientY:ev.clientY,screenX:ev.screenX,screenY:ev.screenY,pointerId:ev.pointerId,pointerType:ev.pointerType,isPrimary:ev.isPrimary,button:ev.button,buttons:ev.buttons,width:ev.width,height:ev.height});n.__tq=1;best.dispatchEvent(n)},true);
+})();
+</script>
 </body></html>

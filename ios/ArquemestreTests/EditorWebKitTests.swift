@@ -15276,4 +15276,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["espelhoAbre"] as? String, "abriu folha true · espelho no quadro true", "e abre o quadro da folha com o espelho")
         XCTAssertEqual(o["erros"] as? String, "erros 0", "sem erro")
     }
+
+    /* FASE4 · ESPELHO NA PAREDE (Adauto, 23/11/2026 · "espelhos independentes nas paredes, com largura, altura, espessura e posição
+       editáveis, visualização correta em 2D/3D e persistência no projeto. Preservar integralmente os espelhos existentes nas portas de correr.") */
+    func testFASE4_EspelhoNaParedeMedidasParede2D3DSalvarEPortaDeCorrerIntacta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.fr=[];S.room='quarto';S.env='livre';S.W=4000;S.RD=3500;S.H=2600;S.m=null;draw();newTpl(T('Guarda-roupa porta de correr'));await W(40);
+        var pc=function(){return JSON.stringify(S.mods.map(function(m){return partsOf(m).map(function(p){return [p.name,p.cl,p.cw,p.q]})}))};var p0=pc();
+        /* ＋ Criar · Espelhos */open3D();await W(300);document.getElementById('v3add').click();await W(120);__crp6.vai('esp');await W(40);var C=document.getElementById('crp3');var bw=[].map.call(C.querySelectorAll('[data-cespw]'),function(b){return b.textContent.trim()});var bs=C.querySelectorAll('[data-cesp]').length;R.v0='Espelhos: porta de correr '+bs+' · na parede '+bw.join(' | ');
+        C.querySelector('[data-cespw="0"]').click();await W(150);var f=S.fr.filter(function(q){return q.t==='espelho'})[0];R.v1=f?('criado: '+f.w+'×'+f.h+'×'+f.d+' · x '+f.x+' · do chão '+f.b+' · parede '+(f.wall||'f')):'NÃO criado';
+        var cx=function(){__build();return __boxes().filter(function(b){return b.fr===f.id})};var B=cx(),mir=B.filter(function(b){return b.mir}).length,bb=function(B){var r={x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z0:1e9,z1:-1e9};B.forEach(function(b){['x','y','z'].forEach(function(k){r[k+'0']=Math.min(r[k+'0'],b[k+'0']);r[k+'1']=Math.max(r[k+'1'],b[k+'1'])})});return r},q=bb(B.filter(function(b){return b.mir}));
+        R.v2='3D: vidro '+mir+' · '+Math.round(q.x1-q.x0)+'×'+Math.round(q.y1-q.y0)+'×'+Math.round(q.z1-q.z0)+' · de '+Math.round(q.x0)+' · do chão '+Math.round(q.y0)+' · na parede (z0) '+Math.round(q.z0);
+        /* editar pelas medidas do 3D */__itOpen({k:'fr',id:f.id});await W(80);var E=document.getElementById('it4');var lab=[].map.call(E.querySelectorAll('[data-qf]'),function(i){return i.parentNode.querySelector('span').textContent+'='+i.value}).join(' · ');R.v3='medidas: '+lab+' · paredes '+E.querySelectorAll('[data-qwl]').length+' · girar '+E.querySelectorAll('[data-qgiro]').length+' · acabamento '+E.querySelectorAll('[data-qfin]').length;
+        var put=function(k,v){var i=E.querySelector('[data-qf="'+k+'"]');i.value=String(v);i.dispatchEvent(new Event('change',{bubbles:true}))};put('w',700);await W(40);put('h',1000);await W(40);put('d',6);await W(40);put('x',300);await W(40);put('b',1200);await W(60);
+        f=S.fr.filter(function(q){return q.t==='espelho'})[0];q=bb(cx().filter(function(b){return b.mir}));R.v4='editado: '+f.w+'×'+f.h+'×'+f.d+' · x '+f.x+' · do chão '+f.b+' · 3D '+Math.round(q.x1-q.x0)+'×'+Math.round(q.y1-q.y0)+'×'+Math.round(q.z1-q.z0)+' de '+Math.round(q.x0)+' a '+Math.round(q.y0);
+        /* parede da esquerda */E=document.getElementById('it4');E.querySelector('[data-qwl="e"]').click();await W(80);q=bb(cx().filter(function(b){return b.mir}));R.v5='parede esquerda: '+(f.wall)+' · 3D fino em x '+Math.round(q.x1-q.x0)+' · largo em z '+Math.round(q.z1-q.z0)+' · x0 '+Math.round(q.x0);
+        E=document.getElementById('it4');E.querySelector('[data-qwl="f"]').click();await W(80);
+        try{__itClose&&__itClose()}catch(_){}try{document.getElementById('v3x').click()}catch(_){}await W(80);
+        /* 2D frente */draw();SELAP=f.id;LAST='ap';showBox();var ib=document.getElementById('itbox');R.v11='caixa 2D: '+[].map.call(ib.querySelectorAll('[data-apb]'),function(i){return i.parentNode.firstChild.nodeValue+'='+i.value}).join(' · ');SELAP=0;LAST='';showBox();await W(40);var g=document.querySelector('#svg [data-ap="'+f.id+'"]');R.v6='2D: '+!!g+' · vidro '+(g?g.querySelectorAll('rect[fill="#d3dde3"]').length:0)+' · rótulo '+([].some.call(document.querySelectorAll('#svg text'),function(t){return /^Espelho 700 × 1000/.test(t.textContent)}));
+        /* planta */PLV=true;draw();await W(60);R.v7='planta: erros '+(__errs.length-e0);PLV=false;draw();
+        /* peças: o espelho de parede não entra em módulo nenhum */R.v8='peças dos módulos iguais '+(pc()===p0);
+        /* salvar e reabrir */var z=JSON.stringify(snapState());S.fr=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}draw();var f2=S.fr.filter(function(q){return q.t==='espelho'})[0];R.v9='reaberto: '+(f2?f2.w+'×'+f2.h+'×'+f2.d+' · x '+f2.x+' · do chão '+f2.b+' · parede '+(f2.wall||'f'):'SUMIU');
+        await W(900);espWallAdd(3);await W(900);var g2=S.fr[S.fr.length-1];R.v13='corpo inteiro: '+g2.w+'×'+g2.h+' do chão '+g2.b+' · total '+S.fr.length;document.getElementById('und').click();await W(80);R.v14='desfazer: total '+S.fr.length;
+        var sc=0,so=window.slideCfgOpen;window.slideCfgOpen=function(){sc++};open3D();await W(300);document.getElementById('v3add').click();await W(120);__crp6.vai('esp');await W(40);document.querySelector('#crp3 [data-cesp]').click();await W(60);window.slideCfgOpen=so;R.v12='espelho da porta de correr: abre a configuração da folha '+sc;try{document.getElementById('v3x').click()}catch(_){}
+        R.v10='erros '+(__errs.length-e0)+' '+__errs.slice(e0).map(function(e){return String(e.m||e.message||e).slice(0,100)}).join('||');return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "Espelhos: porta de correr 1 · na parede 🪞 Espelho 60 × 90 | 🪞 Espelho 50 × 70 | 🪞 Espelho 80 × 120 | 🪞 Espelho de corpo inteiro 50 × 160", "＋ Criar · Espelhos: o da porta de correr continua e entram os espelhos de parede")
+        XCTAssertEqual(o["v1"] as? String, "criado: 600×900×4 · x 1700 · do chão 1000 · parede f", "espelho nasce no meio da parede do fundo, 4 mm")
+        XCTAssertEqual(o["v2"] as? String, "3D: vidro 1 · 600×900×4 · de 1700 · do chão 1000 · na parede (z0) 0", "3D: placa de vidro na medida, encostada na parede")
+        XCTAssertEqual(o["v3"] as? String, "medidas: Largura (mm)=600 · Altura (mm)=900 · Espessura (mm)=4 · Da parede esquerda (mm)=1700 · Do chão (mm)=1000 · paredes 3 · girar 0 · acabamento 0", "editor do 3D: largura, altura, espessura, posição e parede")
+        XCTAssertEqual(o["v4"] as? String, "editado: 700×1000×6 · x 300 · do chão 1200 · 3D 700×1000×6 de 300 a 1200", "medidas digitadas valem no projeto e no 3D (espessura em mm, sem o mínimo de 20 dos eletros)")
+        XCTAssertEqual(o["v5"] as? String, "parede esquerda: e · 3D fino em x 6 · largo em z 700 · x0 0", "na parede da esquerda o espelho vira com ela")
+        XCTAssertEqual(o["v6"] as? String, "2D: true · vidro 1 · rótulo true", "2D de frente mostra o espelho com a medida")
+        XCTAssertEqual(o["v11"] as? String, "caixa 2D: Largura=700 · Altura=1000 · Espessura=6 · Da esquerda=300 · Do chão=1200", "caixa de medidas do 2D")
+        XCTAssertEqual(o["v7"] as? String, "planta: erros 0", "Planta sem erro")
+        XCTAssertEqual(o["v8"] as? String, "peças dos módulos iguais true", "espelho de parede não mexe em peça de módulo")
+        XCTAssertEqual(o["v9"] as? String, "reaberto: 700×1000×6 · x 300 · do chão 1200 · parede f", "salvar e reabrir mantém o espelho")
+        XCTAssertEqual(o["v13"] as? String, "corpo inteiro: 500×1600 do chão 300 · total 2", "modelo de corpo inteiro nasce a 300 do chão")
+        XCTAssertEqual(o["v14"] as? String, "desfazer: total 1", "desfazer tira só o último espelho")
+        XCTAssertEqual(o["v12"] as? String, "espelho da porta de correr: abre a configuração da folha 1", "o espelho da porta de correr continua no mesmo caminho")
+        XCTAssertEqual(o["v10"] as? String, "erros 0 ", "sem erro")
+    }
 }

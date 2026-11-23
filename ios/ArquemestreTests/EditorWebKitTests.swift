@@ -16804,7 +16804,7 @@ final class EditorWebKitTests: XCTestCase {
         var foto=function(f,alt,ate){__cam(.85,0,1.0);alt=alt||.08;ate=ate||.98;var c=__p3(f.x+f.w/2,f.b+f.h*alt,f.d||4),c2=__p3(f.x+f.w*(alt>.5?.04:.45),f.b+f.h*alt,f.d||4),c3=__p3(f.x+f.w*ate,f.b+f.h*alt,f.d||4),r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),cor=[0,0,0],ver=0,n=0;
           var x0=Math.round(Math.min(c2[0],c3[0])*r),x1=Math.round(Math.max(c2[0],c3[0])*r),y=Math.round(H-c[1]*r);for(var x=x0;x<=x1;x+=Math.max(1,Math.round((x1-x0)/40))){gl.readPixels(x,y,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);cor[0]+=px[0];cor[1]+=px[1];cor[2]+=px[2];n++;if(px[0]>px[1]+40&&px[0]>px[2]+40)ver++}
           return {r:Math.round(cor[0]/n),g:Math.round(cor[1]/n),b:Math.round(cor[2]/n),ver:ver,n:n}};
-        var f=cena(true),sv0=JSON.stringify(snapState());open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        /* ESP-LEVE: a máquina da bateria desenha por software (no automático o espelho fica leve); aqui pede o reflexo de propósito */window.ESPQ='equil';var f=cena(true),sv0=JSON.stringify(snapState());open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
         var p=foto(f);R.reflete=p.ver>0;R.planos=Object.keys(MIRS).length+' '+(window.__mirInfo||{}).vis;R.err=window.MIRERR||'';
         f.acab='bronze';draw();re3();await W(100);var bz=foto(f,.85,.9);f.acab='fume';draw();re3();await W(100);var fu=foto(f,.85,.9);f.acab='prata';draw();re3();await W(100);var pr=foto(f,.85,.9);
         R.bronzeQuente=(bz.r-bz.b)>(pr.r-pr.b)+8;R.fumeEscuro=(fu.r+fu.g+fu.b)<(pr.r+pr.g+pr.b)*.7;R.tons='prata '+[pr.r,pr.g,pr.b]+' bronze '+[bz.r,bz.g,bz.b]+' fumê '+[fu.r,fu.g,fu.b];
@@ -17112,6 +17112,63 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfez"] as? Int, 7, "desfazer")
         XCTAssertEqual(o["semCava"] as? String, "5,6,7,8", "sem cava cabem as 8")
         XCTAssertEqual(o["catalogo"] as? Int, 0, "nenhum modelo do catálogo colide")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ESPELHO-REAL nas paredes laterais (auditoria do Code 1, ponto 9 do Adauto): espelho na parede esquerda/direita, também com a parede
+    // em ângulo (75°), tem reflexo planar de verdade, com a normal da parede apontando pra dentro da sala
+    func testEspelhoNaParedeLateralEmAnguloTemReflexo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};/* ESP-LEVE: bateria por software, pede o reflexo de propósito */window.ESPQ='equil';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var caso=async function(wall,ang,yaw){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();newTpl(T('Balcão 2 portas'));if(ang)wallSet(wall==='e'?'L':'R','a',ang);var g=espWallAdd(0);g.wall=wall;g.x=1200;g.w=900;g.h=1200;g.b=900;draw();open3D();await W(400);__cam(yaw,.05,1.0);await W(100);__cam(yaw,.05,1.0);
+          var ks=Object.keys(MIRS).filter(function(k){return MIRS[k].n>0}),o=ks.map(function(k){var m=MIRS[k];return (m.on?'reflete':'sem reflexo')+' N'+m.N.map(function(v){return Math.round(v*100)/100}).join(',')}).join(' | ');document.getElementById('v3x').click();await W(60);return o};
+        R.esquerda=await caso('e',0,-.5);R.direita=await caso('d',0,.5);R.esquerda75=await caso('e',75,-.5);R.err=window.MIRERR||'';R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["esquerda"] as? String, "reflete N1,0,0", "parede da esquerda: normal +x, com reflexo")
+        XCTAssertEqual(o["direita"] as? String, "reflete N-1,0,0", "parede da direita: normal −x, com reflexo")
+        XCTAssertEqual(o["esquerda75"] as? String, "reflete N0.97,0,-0.26", "parede da esquerda em 75°: normal da própria parede, com reflexo")
+        XCTAssertEqual(o["err"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ESPELHO-REAL sem traço preto no reflexo (auditoria do Code 1, "linha escura vertical" no redondo LED jateado): a quina do cômodo refletida
+    // aparece pela diferença de luz entre as paredes, sem o contorno escuro do desenho; o reflexo continua (as duas metades com luz diferente)
+    func testReflexoDoEspelhoSemContornoEscuroNaQuina() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};/* ESP-LEVE: bateria por software, pede o reflexo de propósito */window.ESPQ='equil';window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;draw();var ms=apModels('espelho'),ix=-1;ms.forEach(function(m,i){if(ix<0&&m[0].indexOf('Espelho redondo LED jateado')===0)ix=i});var f=espWallAdd(ix);f.x=150;f.b=900;draw();
+        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,.1,1.05);await W(150);__cam(0,.1,1.05);
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,c=__p3(f.x+f.w/2,f.b+f.h/2,4),a=__p3(f.x+f.w*.3,f.b+f.h/2,4),b=__p3(f.x+f.w*.7,f.b+f.h/2,4),px=new Uint8Array(4),L=[];
+        var x0=Math.round(a[0]*r),x1=Math.round(b[0]*r),y=Math.round(H-c[1]*r);for(var x=x0;x<=x1;x++){gl.readPixels(x,y,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);L.push((px[0]+px[1]+px[2])/3)}
+        var dip=0;for(var i=3;i<L.length-3;i++){var e=Math.min((L[i-3]+L[i-2])/2,(L[i+2]+L[i+3])/2);dip=Math.max(dip,e-L[i])}
+        R.traco=Math.round(dip);R.reflexo=Math.round(Math.max.apply(null,L)-Math.min.apply(null,L));R.planos=Object.keys(MIRS).filter(function(k){return MIRS[k].on}).length;document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertLessThan(o["traco"] as? Int ?? 99, 12, "sem traço escuro atravessando o espelho")
+        XCTAssertGreaterThan(o["reflexo"] as? Int ?? 0, 6, "o reflexo continua (a quina refletida muda a luz)")
+        XCTAssertEqual(o["planos"] as? Int, 1)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ESP-LEVE (Chefe 23/11: WebView2 sem GPU caiu na bateria): no automático, renderizador por software = espelho leve (sem o reflexo planar,
+    // sem textura extra de reflexo); contexto WebGL perdido = sem reflexo em qualquer qualidade; equilibrado/alto escolhidos à mão continuam
+    func testEspelhoLeveNoAutomaticoSemGpuEContextoPerdido() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();var f=espWallAdd(0);f.w=1000;f.h=1700;f.x=900;f.b=150;draw();
+        window.ESPQ='auto';open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(.85,0,1.0);await W(100);var a=window.__mirInfo||{};
+        R.soft=window.__glSoft===/SwiftShader|llvmpipe|softpipe|Basic Render|WARP|Software/i.test(window.__glRen||'');R.auto=window.__glSoft?(a.vis===0&&a.leve==='software'):(a.vis>0&&a.leve==='');
+        window.ESPQ='equil';__cam(.86,0,1.0);var e=window.__mirInfo||{};R.equil=e.vis>0&&e.leve==='';
+        window.GLPERDIDO=1;__cam(.85,0,1.0);var p=window.__mirInfo||{};R.perdido=p.vis===0&&p.leve==='contexto perdido';window.GLPERDIDO=0;window.ESPQ='';
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["soft"] as? Bool, true, "detecção do renderizador")
+        XCTAssertEqual(o["auto"] as? Bool, true, "automático: leve no software, reflexo com GPU")
+        XCTAssertEqual(o["equil"] as? Bool, true, "equilibrado escolhido: reflexo")
+        XCTAssertEqual(o["perdido"] as? Bool, true, "contexto perdido: sem reflexo")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

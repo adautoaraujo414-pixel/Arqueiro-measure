@@ -17207,8 +17207,8 @@ final class EditorWebKitTests: XCTestCase {
         TL=[];var Lg=lvlAdd(1,lat(1).pk,3);R.v3='LED na lateral do gaveteiro (por dentro): '+(Lg?'criou':'recusou')+' · aviso '+TL.filter(function(t){return /corrediça/.test(t)}).length;
         TL=[];var Lp=lvlAdd(0,lat(0).pk,3);R.v4='LED na lateral do balcão de porta (meio da profundidade): '+(Lp?'criou':'recusou');
         if(Lp){var LB=document.getElementById('ledlv');var inp=LB.querySelector('[data-lvlf="v"]');var wid=0;var hb=lat(0);inp.value=String(Math.round(hb.z1-hb.z0-20));TL=[];inp.dispatchEvent(new Event('change',{bubbles:true}));await W(80);R.v5='levar pra frente (faixa da dobradiça): v ficou '+Lp.v+' · aviso '+TL.some(function(t){return /dobradiça/.test(t)})}
-        /* criar espelho com torre no meio da parede */S.mods=[];S.fr=[];draw();var tt=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!tt&&x&&!x.act&&/^Torre|Armário livre|Paneleiro/.test(x.n))tt=x})});newTpl(JSON.parse(JSON.stringify(tt)));var tm=S.mods[0];tm.x=1500;tm.h=1500;draw();TL=[];var fn=espWallAdd(0);R.v6='criar com módulo alto no meio: '+(fn?'criado a '+fn.b+' do chão (topo do módulo '+(tm.b+tm.h)+')':'não criou')+' · dentro '+(fn&&window.espBate?espBate(fn)!==null:'-');
-        tm.h=2000;S.fr=[];draw();TL=[];var fn2=espWallAdd(0);R.v7='módulo alto até 2000: '+(fn2?'criou':'não criou')+' · aviso '+TL.some(function(t){return /Não cabe espelho/.test(t)})+' · espelhos '+S.fr.length;
+        /* criar espelho com torre no meio da parede */S.mods=[];S.fr=[];draw();var tt=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!tt&&x&&!x.act&&/^Torre|Armário livre|Paneleiro/.test(x.n))tt=x})});newTpl(JSON.parse(JSON.stringify(tt)));var tm=S.mods[0];tm.x=1500;tm.h=1500;draw();TL=[];var fn=espWallAdd(0);R.v6='criar com módulo alto no meio: '+(fn?'criado a '+fn.b+' do chão':'não criou')+' · aviso '+TL.some(function(t){return /espelho novo ficou dentro do módulo 1/.test(t)});open3D();await W(300);__itOpen({k:'fr',id:fn.id});await W(80);var E8=document.getElementById('it4');var i8=E8&&E8.querySelector('[data-qf="w"]');var w0=+fn.w;TL=[];if(i8){i8.value=String(w0+10);i8.dispatchEvent(new Event('change',{bubbles:true}))}await W(120);R.v8='já estava dentro, mudar a largura: '+(+fn.w-w0)+' mm · recusou '+TL.some(function(t){return /Nada mudou/.test(t)});
+        tm.x=3200;S.fr=[];draw();TL=[];var fn2=espWallAdd(0);R.v7='sem módulo no lugar: '+(fn2?'criou':'não criou')+' · aviso '+TL.some(function(t){return /espelho novo ficou dentro/.test(t)})+' · espelhos '+S.fr.length;
         R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["v0"] as? String, "espelho levado pra dentro do balcão (do chão 400): ficou em 1200 · aviso true", "espelho levado pra dentro do balcão: recusa com aviso e fica onde estava")
@@ -17217,8 +17217,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v3"] as? String, "LED na lateral do gaveteiro (por dentro): recusou · aviso 1", "LED na lateral do gaveteiro: recusa (corrediça)")
         XCTAssertEqual(o["v4"] as? String, "LED na lateral do balcão de porta (meio da profundidade): criou", "LED no meio da lateral do balcão de porta pode")
         XCTAssertEqual(o["v5"] as? String, "levar pra frente (faixa da dobradiça): v ficou 280 · aviso true", "levar o LED pra faixa da dobradiça: volta com aviso")
-        XCTAssertEqual(o["v6"] as? String, "criar com módulo alto no meio: criado a 1550 do chão (topo do módulo 1500) · dentro false", "espelho novo com módulo no meio: nasce em cima dele")
-        XCTAssertEqual(o["v7"] as? String, "módulo alto até 2000: não criou · aviso true · espelhos 0", "não cabe em cima: não cria e avisa")
+        XCTAssertEqual(o["v6"] as? String, "criar com módulo alto no meio: criado a 1000 do chão · aviso true", "espelho novo dentro do módulo: nasce no lugar de sempre e avisa (CLAUDE.md §4: o app não muda posição sozinho)")
+        XCTAssertEqual(o["v8"] as? String, "já estava dentro, mudar a largura: 10 mm · recusou false", "espelho que já estava dentro: editar não é bloqueado (só avisa ao criar)")
+        XCTAssertEqual(o["v7"] as? String, "sem módulo no lugar: criou · aviso false · espelhos 1", "sem módulo no lugar: cria sem aviso")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 

@@ -12830,8 +12830,8 @@ final class EditorWebKitTests: XCTestCase {
            m5 8 → 11, m6 6 → 24 (m7, canto em L, igual). As outras conferências
            (dentro da travessa 0, tira da frente da lateral, assinatura de peças+corte da versão publicada) não mudam. */
         XCTAssertEqual(o["m0"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
-        XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
-        XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 7973daf5")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4a9121")
         XCTAssertEqual(o["m3"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
         XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
         XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
@@ -15209,5 +15209,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cliente"] as? String, "arque-cliente-v2 fmt 1", "link do cliente com peça livre: tipo novo")
         XCTAssertTrue(["arque-cliente-v2 fmt 1","ponte do app"].contains(o["clienteSemPonte"] as? String ?? ""), "sem a ponte shareClient o link do cliente sai pelo shareCut, também com o tipo novo: \(o["clienteSemPonte"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /* FASE2 (23/11, decisão do Adauto): fundo da gaveta entra exatamente o rebaixo (6 mm) — peça, corte e 3D; projeto antigo só muda confirmando. Rodapé lateral do encontro com rodapé corrido sai da lista de peças. */
+    func testFASE2_FundoDaGavetaEntraORebaixoERodapeDoEncontroForaDaLista() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};/* FASE2 (23/11, decisão do Adauto): 1) fundo da gaveta entra exatamente o rebaixo (6 mm) no módulo novo — peça, corte e 3D iguais; módulo de antes só muda pelo aviso, com desfazer. 2) rodapé lateral do encontro de balcões com rodapé corrido sai também da lista de peças; módulo sozinho mantém os dois */var W=function(t){return new Promise(r=>setTimeout(r,t))};var R={};var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var r=function(v){return Math.round(v*10)/10};
+        var gav=function(m){__build();var B=__boxes(),mi=S.mods.indexOf(m),lat=B.filter(b=>String(b.nm)===mi+':Lateral de gaveta'&&/#1$/.test(b.pk))[0],fd=B.filter(b=>String(b.nm)===mi+':Fundo de gaveta (6 mm)'&&/#1$/.test(b.pk))[0];var p=partsOf(m).filter(q=>/^Fundo de gaveta/.test(q.name))[0];var c=cutLines(m).filter(l=>/Fundo de gaveta/.test(l.names.join()))[0];return 'peça '+p.cl+'×'+p.cw+' · corte '+(c?c.L+'×'+c.W:'-')+' · 3D entra '+(lat&&fd?r(lat.x1-fd.x0):'?')+' na lateral · nota: '+(String(p.note).match(/entra [^·]*/)||[''])[0]};
+        loadState(initLimpo());S.W=4000;newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();R.novo=gav(m)+' gf6='+m.gf6;
+        delete m.gf6;draw();R.antigo=gav(m);loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.reaberto=gav(m);S.m=m;panel();await W(100);var bx=document.getElementById('gfbox');R.aviso=bx?bx.textContent.replace(/\s+/g,' ').slice(0,240):'sem';var b=document.querySelector('[data-gf6up]');if(b){b.click();await W(150)}R.atualizou=gav(S.mods[0]);document.getElementById('und').click();await W(150);R.desfez=gav(S.mods[0]);
+        // rodapé
+        var rod=function(){return S.mods.map(function(m,i){return i+': lista '+partsOf(m).filter(p=>/^Rodapé lateral/.test(p.name)).map(p=>p.name.replace(' (pedestal)','')).join('+')+' | corte '+cutLines(m).filter(l=>/Rodapé lateral/.test(l.names.join())).map(l=>l.names.filter(n=>/Rodapé lateral/.test(n)).join('+')).join('')}).join(' ; ')};
+        loadState(initLimpo());S.W=4000;newTpl(T('Balcão 2 portas'));draw();R.sozinho=rod();newTpl(T('Balcão 2 portas'));draw();R.dois=rod()+' · rodapé corrido '+!!rodRunOf(S.mods[0]);
+        R.errs=__errs.length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "peça 526×460 · corte 526×460 · 3D entra 6 na lateral · nota: entra 6 em cada lateral  gf6=1")
+        XCTAssertEqual(o["antigo"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["reaberto"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["aviso"] as? String, "Gavetas de antes da atualizaçãoO fundo das gavetas deste módulo entra mais do que o rebaixo das laterais (6 mm). Com a regra nova o fundo entra exatamente o rebaixo: 3× fundo de gaveta 529×460 → 526×460 (mm). Nada muda sem você mandar.Atual")
+        XCTAssertEqual(o["atualizou"] as? String, "peça 526×460 · corte 526×460 · 3D entra 6 na lateral · nota: entra 6 em cada lateral ")
+        XCTAssertEqual(o["desfez"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["sozinho"] as? String, "0: lista Rodapé lateral esquerdo+Rodapé lateral direito | corte Rodapé lateral esquerdo (pedestal)+Rodapé lateral direito (pedestal)")
+        XCTAssertEqual(o["dois"] as? String, "0: lista Rodapé lateral esquerdo | corte Rodapé lateral esquerdo (pedestal) ; 1: lista Rodapé lateral direito | corte Rodapé lateral direito (pedestal) · rodapé corrido true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

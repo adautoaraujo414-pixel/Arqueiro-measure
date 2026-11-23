@@ -14698,7 +14698,7 @@ final class EditorWebKitTests: XCTestCase {
         fa=await cena();await W(1000);await drag2(1,1500-30-600-300+5);var dep=foto(fa[0],fa[1]);await W(1000);document.getElementById('und').click();await W(150);var f1=S.mods.filter(function(m){return /forno/i.test(JSON.stringify(m.v||[])+(m.n||''))})[0]||S.mods[0],a1=S.mods[0]===f1?S.mods[1]:S.mods[0];var des=foto(f1,a1);await W(1000);document.getElementById('red').click();await W(150);f1=S.mods[0];a1=S.mods[1];var ref=foto(f1,a1);
         R.desfez=des;R.refez=ref;
         var z2=JSON.stringify(snapState());clr();UNDOING=true;try{loadState(JSON.parse(z2))}finally{UNDOING=false}draw();await W(60);R.salvarEReabrir=foto(S.mods[0],S.mods[1])+' · x '+S.mods[1].x;
-        await drag2(1,-400);R.separar='separou: '+foto(S.mods[0],S.mods[1]);
+        await drag2(1,-400);/* a junta depois de separar depende de quantos mm o arrasto em pixels vira em cada tela (zona morta de ~10 px + passo de 10 mm): no iPhone/iPad dá 390, no Chromium 380. Confere o afastamento e não o número exato (Chefe, 23/11) */R.separar='separou: '+foto(S.mods[0],S.mods[1]).replace(/junta (-?\d+)/,function(_,n){return 'afastou ≥ 350 mm '+(+n>=350)});
         /* 9. móvel livre do 3D encaixado de volta na parede, encostando no forno (__mv3.encaixa, o mesmo de soltar o dedo): o Code 2 achou os DOIS automáticos na junta */
         fa=await cena();var a9=fa[1],f9=fa[0];lvSolta(a9);a9.rot=0;a9.lx=f9.x-lt(f9)-a9.w-rt(a9)-2;a9.lz=8;draw();var r9=__mv3.encaixa(a9);draw();await W(40);R.encaixe3D=String(r9).slice(0,40)+' · '+foto(f9,a9);
         R.errs=__errs.length-e0;R.aviso=TL.filter(function(t){return /amponamento automático tirado/.test(t)})[0]||'';return JSON.stringify(R);
@@ -14718,7 +14718,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["refez"] as? String, "forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "refazer: encostado, sem o automático na junta")
         XCTAssertEqual(o["salvarEReabrir"] as? String, "forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0 · x 900", "salvar e reabrir: continua sem o tamponamento e no mesmo lugar")
         // pedido aprovado 22/11 ~21:10 (Adauto, "siga o que o supervisor disse"): ao separar, o automático VOLTA no lado que ficou exposto (antes, às 21:05, "não volta")
-        XCTAssertEqual(o["separar"] as? String, "separou: forno Eauto30/- · aberto -/Dauto30 · junta 380 · peças 1+1 · lista 10 · plano 10 · 3D 10", "separar: o lado que ficou exposto volta a ter o automático (regra da criação), nos dois")
+        XCTAssertEqual(o["separar"] as? String, "separou: forno Eauto30/- · aberto -/Dauto30 · afastou ≥ 350 mm true · peças 1+1 · lista 10 · plano 10 · 3D 10", "separar: o lado que ficou exposto volta a ter o automático (regra da criação), nos dois")
         XCTAssertEqual(o["encaixe3D"] as? String, "✓ Na parede do fundo · mesmas medidas · forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "encaixe do 3D encostando: sai o automático dos dois lados e ele encosta")
         XCTAssertEqual(o["orcamento"] as? String, "só os dois tamponamentos true · chapa na cor -0.962 m² · fita -5.22 m", "orçamento: saem exatamente os dois tamponamentos da junta (2,61 m de fita cada)")
         XCTAssertEqual(o["errs"] as? Int, 0)

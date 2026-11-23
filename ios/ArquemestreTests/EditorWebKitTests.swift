@@ -6961,7 +6961,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["peca3D"] as? String, "1200×600")
         XCTAssertEqual(o["rnd"] as? Int, 1)
         XCTAssertEqual(o["opcoes"] as? String, "1")
-        XCTAssertEqual(o["pecas"] as? Int, 6288)
+        /* FASE2 (23/11/2026, decisão do Adauto): o rodapé lateral do ENCONTRO de balcões com rodapé corrido sai da lista de peças (já não ia pro corte nem pro 3D): 2 peças a menos */XCTAssertEqual(o["pecas"] as? Int, 6286)
         XCTAssertEqual(o["maiorQueODesenho"] as? Int, 0)
         XCTAssertEqual(o["maiorEx"] as? String, "")
         XCTAssertEqual(o["comDecimo"] as? Int, 0)
@@ -11399,7 +11399,8 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["modulos"] as? Int, 4)
         /* regra que já existia (tlAuto): na parede esquerda o lado esquerdo do gaveteiro fica exposto e ganha o tamponamento automático; nada mais muda */
-        XCTAssertEqual(o["parede"] as? String, "gaveteiro na esquerda · medidas iguais · tirou [] pôs [Tamponamento esquerdo720x585] (automático)", "mudar de parede preserva medidas e peças")
+        /* FASE2 (23/11/2026, decisão do Adauto): o gaveteiro sai da fileira com rodapé corrido: o rodapé lateral esquerdo dele (antes do encontro, fora do corte e do 3D) volta a ser peça necessária */
+        XCTAssertEqual(o["parede"] as? String, "gaveteiro na esquerda · medidas iguais · tirou [] pôs [Rodapé lateral esquerdo (pedestal)450x100 Tamponamento esquerdo720x585] (automático)", "mudar de parede preserva medidas e peças")
         XCTAssertEqual(o["vaos"] as? String, "ok,ok,ok,ok,ok,ok,ok,ok")
         XCTAssertEqual(o["tamp"] as? String, "Tamponamento de cima, Tamponamento direito, Tamponamento esquerdo", "o direito já vem no lado exposto; o de cima e o esquerdo foram pedidos")
         XCTAssertEqual(o["interna"] as? String, "vão 1170 = 1200 − 2×15", "medida interna real (não a externa)")
@@ -12875,12 +12876,12 @@ final class EditorWebKitTests: XCTestCase {
            módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. abreFecha (só a Lateral esquerda do Balcão 2 portas):
            −1050 mm² nos 3 momentos (6630/10350/6630 → 5580/9300/5580) = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada. */
         XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 20260 mm² · peças+corte c2ff642a")
-        XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte 509acae1")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte e4a9121")
         XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
         XCTAssertEqual(o["m3"] as? String, "dentro de folha fechada 0 · tira que aparece 10728 mm² · peças+corte b2eb4cec")
         XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
         XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
-        XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 9f35813d")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 7973daf5")
         XCTAssertEqual(o["abreFecha"] as? String, "fechada 5580.0 · aberta 9300.0 · fechou 5580.0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -12926,9 +12927,9 @@ final class EditorWebKitTests: XCTestCase {
         var a=st(),sv_=JSON.stringify(snapState());loadState(JSON.parse(sv_));draw();m=S.mods[3];R.reabriu=(st()===a)+' · '+st();
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["antes"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+720")
-        XCTAssertEqual(o["toqueSemEscolher"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+720 · escolhido true")
-        XCTAssertEqual(o["esticaAteOChao"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+820 · fim do tamponamento 820 · chão 820")
+        /* FASE2 (23/11/2026, decisão do Adauto): este balcão está colado ao gaveteiro (rodapé corrido): o rodapé lateral do encontro sai da lista (já não ia pro corte nem pro 3D) — 4 → 3 */XCTAssertEqual(o["antes"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720")
+        XCTAssertEqual(o["toqueSemEscolher"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720 · escolhido true")
+        XCTAssertEqual(o["esticaAteOChao"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+820 · fim do tamponamento 820 · chão 820")
         XCTAssertEqual(o["encurta"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["ergueu"] as? String, "b1410 · rodapé 0")
         XCTAssertEqual(o["voltouProChao"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
@@ -15276,5 +15277,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["botao"] as? Bool, true)
         XCTAssertEqual(o["tela"] as? Bool, true)
         XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /* FASE2 (23/11, pedido do Chefe): todo caminho que cria módulo novo (catálogo, módulo vazio, lateral, cozinha em L, empilhar, ilha) nasce com a regra nova do fundo da gaveta. */
+    func testFASE2_ModuloNovoPorTodoCaminhoNasceComARegraDaGaveta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};/* FASE2 (23/11, pedido do Chefe): todo caminho que cria módulo novo marca a regra nova do fundo da gaveta (sem aviso de "antigo"); ilha nova também; ilha antiga não */var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var lim=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw()};
+        var novos=function(f){var a=new Set(S.mods);try{f()}catch(e){return 'erro '+e}var n=S.mods.filter(function(m){return !a.has(m)});return n.length?n.map(function(m){return m.gf6?'1':'0'}).join(''):'nenhum'};
+        lim();R.newTpl=novos(function(){newTpl(T0('Gaveteiro 3 gavetas'))});
+        lim();R.newMod=novos(function(){newMod(false)});
+        lim();R.addWing=novos(function(){addWing('e')});
+        lim();R.mkL=novos(function(){mkL('e')});
+        lim();newTpl(T0('Guarda-roupa 2 vãos'));S.m=S.mods[0];window.SOLO2=S.mods[0];R.addStack=novos(function(){var b=document.createElement('button');b.dataset.rga='stk|mal';document.body.appendChild(b);b.click();b.remove()});window.SOLO2=null;
+        lim();
+        
+        lim();var ia=islNew('pen');R.ilha=(ia&&ia.gf6?'1':'0')+' · módulo da ilha '+(ia&&islVM(ia).gf6?'1':'0');var iv=JSON.parse(JSON.stringify(ia));delete iv.gf6;R.ilhaAntiga=(islVM(iv).gf6?'1':'0');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["newTpl"] as? String, "1")
+        XCTAssertEqual(o["newMod"] as? String, "1")
+        XCTAssertEqual(o["addWing"] as? String, "1")
+        XCTAssertEqual(o["mkL"] as? String, "1")
+        XCTAssertEqual(o["addStack"] as? String, "1")
+        XCTAssertEqual(o["ilha"] as? String, "1 · módulo da ilha 1")
+        XCTAssertEqual(o["ilhaAntiga"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

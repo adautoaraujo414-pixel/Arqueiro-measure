@@ -1795,3 +1795,11 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Defeitos repassados ao Code 2:** espelho em parede lateral sem reflexo e com linha escura (9); espelho redondo jateado com emenda vertical (3).
 - **Compatibilidade (10):** Política B cobre LED livre e espelho nos links; backup copiado à mão pra app antigo perde o LED (não corrigível, aviso registrado).
 - **Não verificado:** FPS/memória em aparelho real, iPhone/iPad/Android/Windows reais (só Chromium e viewports).
+
+## PROJ-SEM-MODULO — abrir projeto sem módulo apagava obra e esquadro ao salvar (23/11/2026, branch `claude/loadstate-sem-modulo`)
+- **Achado na auditoria final da candidata 20c11b0**; já existia na versão publicada `c561120`. Classificação: erro comprovado (perda de dado do projeto, CLAUDE.md §3).
+- **Reproduzir:** projeto sem módulo (só espelho, pedra…) com trava de obra (`S.obra`) e esquadro do ambiente (`S.amb`) → abrir pela lista de projetos → salvar → `obra` some e `amb` vira `{}`.
+- **Causa:** `loadState` fazia `defs(S.m)` e `S.m.sup` sem módulo → TypeError no meio; as camadas seguintes do `loadState` (obra, amb, pxm, Hm/Wm, pxk/pxo, tz, pw/RDw/deco…) e o `showBox/draw/panel` não rodavam; o salvamento seguinte gravava sem eles.
+- **Correção:** guarda mínima (`if(S.m)defs(S.m)`, `S.m&&S.m.sup`). Projeto com módulo não muda. Efeito: `newProjFor`/`arqueNewProject` agora chegam ao `ATGO=2` (com 0 módulo o autoTamp não faz nada).
+- **Teste:** `testAbrirProjetoSemModuloNaoPerdeObraNemAmbiente` (d80c925, falha antes) · correção a4148a2.
+- **Autorização:** Adauto 23/11 ("Sim, colocar agora") para entrar nesta candidata.

@@ -15820,4 +15820,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabreIgual"] as? Bool, true, "salvar e reabrir não muda nada")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// 3D-ACABAMENTO · fechamento (23/11/2026, pedido "CORREÇÃO GLOBAL DO 3D"): o catálogo inteiro (≥ 500 modelos) monta no 3D sem caixa inválida
+    /// ou invertida (normal virada) e sem prisma quebrado; toda peça de MDF tem chave (seleção e destaque azul) e a fita recortada pelo FT-GLOBAL
+    /// continua com a chave da peça; todo MDF tem medida real da textura (UV); móvel livre girado 45° sai com prisma e textura, sem fita recortada.
+    @MainActor
+    func test3D_CatalogoSemCaixaInvalidaSelecaoTexturaEGirado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length;
+        /* 3D-ACABAMENTO · fechamento (23/11): catálogo inteiro no 3D — coordenadas válidas, nenhuma caixa invertida (normal virada), toda peça de MDF com chave
+           (seleção/destaque), fita recortada continua com a chave da peça dela; texturas: todo MDF e pedra com arquivo e medida real; móvel livre girado 45° com textura */
+        var itens=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t)itens.push(t)})});
+        var fin=function(v){return typeof v==='number'&&isFinite(v)};var R={},n=0,cx=0,inv=0,ivt=0,semPk=0,ftSemPk=0,gpR=0;
+        open3D();await W(200);
+        for(var i=0;i<itens.length;i++){var t=itens[i];loadState(initLimpo());S.W=6000;try{newTpl(JSON.parse(JSON.stringify(t)))}catch(e){continue}if(!S.mods[0])continue;n++;__build();
+         __boxes().forEach(function(b){cx++;var nm=String(b.nm||'');if(b.gp){if(!b.gp.a.every(function(p){return p.every(fin)}))gpR++;return}
+          if(!['x0','x1','y0','y1','z0','z1'].every(function(k){return fin(b[k])})){inv++;return}if(b.x1<b.x0-1e-6||b.y1<b.y0-1e-6||b.z1<b.z0-1e-6)ivt++;
+          if(b.ft&&/^0:/.test(nm)&&!b.pk)ftSemPk++;
+          if(/^0:/.test(nm)&&!b.pk&&!b.ft&&!b.nol&&b.g!=='sh'&&b.g!=='lo'&&(b.a||0)>=.95&&!b.em&&!b.gl&&!/Corrediça|trilho|Trilho|Roldana|Perfil/.test(nm))semPk++})}
+        document.getElementById('v3x').click();await W(100);
+        R.catalogo=(n>=500)+' · caixas inválidas '+inv+' · invertidas '+ivt+' · prisma ruim '+gpR+' · peça de MDF sem chave '+semPk+' · fita sem chave '+ftSemPk;
+        R.texturas=MAT.filter(function(c){return !c.nt&&!(Array.isArray(c.mm)&&c.mm[0]>0&&c.mm[1]>0)}).length+' MDF sem medida real';
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;newTpl(T('Gaveteiro 3 gavetas'));var b=S.mods[0];var tex=MAT.filter(function(c){return !c.nt&&/cumaru/i.test(c.id)})[0]||MAT.filter(function(c){return !c.nt})[0];demoPaint(b,tex.id);lvSolta(b);b.lx=2300;b.lz=1500;lvAng(b,45);draw();
+        open3D();await W(300);__build();var B=__boxes().filter(function(x){return String(x.nm).indexOf('0:')===0});R.girado=b.rot+'° · prismas '+(B.filter(function(x){return x.gp}).length>0)+' · com textura '+(B.filter(function(x){return x.mid===tex.id}).length>0)+' · fita girada recortada '+B.filter(function(x){return x.ft&&x.gp&&x.ftCut}).length;document.getElementById('v3x').click();await W(100);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "true · caixas inválidas 0 · invertidas 0 · prisma ruim 0 · peça de MDF sem chave 0 · fita sem chave 0")
+        XCTAssertEqual(o["texturas"] as? String, "0 MDF sem medida real")
+        XCTAssertEqual(o["girado"] as? String, "45° · prismas true · com textura true · fita girada recortada 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -2584,7 +2584,7 @@ function rpStats(a){var R=S.rs,w=+R.w||40,k=+R.kerf||0,L=rpLayout(a),H=a.h,sh=rp
 function pratCorner(a){var r=+a.rd>0;return '<div class="sec">Cantos da frente da prateleira<span>⌃</span></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="'+(r?'':'sel')+'" data-prr="0"><svg viewBox="0 0 28 16" width="28" height="16" style="vertical-align:-3px;pointer-events:none"><rect x="2" y="3" width="24" height="10" fill="none" stroke="currentColor" stroke-width="1.6"/></svg> Canto quadrado</button><button class="'+(r?'sel':'')+'" data-prr="'+(r?Math.round(+a.rd):60)+'"><svg viewBox="0 0 28 16" width="28" height="16" style="vertical-align:-3px;pointer-events:none"><path d="M2 3h24v4a6 6 0 0 1-6 6H8a6 6 0 0 1-6-6z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg> Canto arredondado</button></div><div class="note">'+(r?'Vista de cima: os dois cantos da frente ficam arredondados · raio '+Math.round(+a.rd)+' mm':'Vista de cima: os dois cantos da frente ficam retos · 90°')+'</div>'}
 function cubaGaps(st,it){return {l:Math.round(it.x),r:Math.round(st.w-it.x-it.w),b:Math.round(it.y),f:Math.round(st.d-it.y-it.d)}}
 function cubaDims(st,it,sx1,sy1,sy2,k){var g=cubaGaps(st,it),ix=sx1+it.x*k,iw=it.w*k,yb=sy2+170*k,ym=sy2+170*k*.62,c='#1f6feb';
- return '<g pointer-events="none">'+tx(ix-3,ym,'← '+g.l,c,'end',10,1)+tx(ix+iw+3,ym,g.r+' →',c,'start',10,1)+tx(ix+iw/2,yb+11,'cuba '+Math.round(it.w)+' × '+Math.round(it.d),c,'middle',10,1)+tx(ix+iw/2,yb+22,'fundo '+g.b+' · frente '+g.f,c,'middle',9,1)+'</g>'}
+ return '<g pointer-events="none">'+tx(ix-3,ym,'← '+g.l,c,'end',10,1)+tx(ix+iw+3,ym,g.r+' →',c,'start',10,1)+tx(ix+iw/2,yb+7,'cuba '+Math.round(it.w)+' × '+Math.round(it.d),c,'middle',10,1)+tx(ix+iw/2,yb+21,'fundo '+g.b+' · frente '+g.f,c,'middle',9,1)+'</g>'}
 function cubaPlan(st,it,L,T,k,x,y,w,h){var g=cubaGaps(st,it),c='#5b7fbf',o='<g pointer-events="none" opacity=".85">',xs=L+st.x*k,xe=L+(st.x+st.w)*k,ye=T+st.d*k;
  if(g.l>0)o+=ln(xs,y+h/2,x,y+h/2,c,.8)+tx((xs+x)/2,y+h/2-3,g.l,c,'middle',10,1);if(g.r>0)o+=ln(x+w,y+h/2,xe,y+h/2,c,.8)+tx((x+w+xe)/2,y+h/2-3,g.r,c,'middle',10,1);
  if(g.b>0)o+=ln(x+w/2,T,x+w/2,y,c,.8)+tx(x+w/2+3,(T+y)/2+3,g.b,c,'start',10,1);if(g.f>0)o+=ln(x+w/2,y+h,x+w/2,ye,c,.8)+tx(x+w/2+3,(y+h+ye)/2+3,g.f,c,'start',10,1);
@@ -5206,7 +5206,7 @@ function ftClipAll(){var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,
  window.rebaixoGaveta=function(){if(!Array.isArray(boxes)||!boxes.length)return;var FD=boxes.filter(function(o){return /^\d+:(Fundo de gaveta|Caixote · gaveta · fundo)/.test(String(o.nm||''))&&!o.pf&&!o.poly&&!o.gp&&!o.ft}),mud=new Map();if(!FD.length)return;
   boxes.forEach(function(q){if(q.pf||q.poly||q.gp||q.ft||q.nol)return;var nm=String(q.nm||'');if(!/^\d+:(Lateral de gaveta|Caixote · gaveta · lateral)/.test(nm))return;var mi=nm.split(':')[0],cur=[q],hit=false;FD.forEach(function(f){if(String(f.nm).split(':')[0]!==mi)return;var nx=[];cur.forEach(function(p){if(ov(p,f)){hit=true;sub(p,f).forEach(function(s){if(ex(s,0)>.05&&ex(s,1)>.05&&ex(s,2)>.05)nx.push(s)})}else nx.push(p)});cur=nx});if(hit)mud.set(q,cur)});
   if(!mud.size)return;var out=[];boxes.forEach(function(o){var r=mud.get(o);if(r){for(var k=0;k<r.length;k++)out.push(r[k])}else out.push(o)});boxes.length=0;for(var j=0;j<out.length;j++)boxes.push(out[j])};
- if(typeof build==='function'){var b0_=build;build=function(){var r=b0_.apply(this,arguments);try{if(window.tvs3Fix)tvs3Fix(boxes)}catch(_){}/* JUNÇÃO 5: réguas do travessão na profundidade delas */try{rebaixoGaveta()}catch(_){}try{ftClipGlobal()}catch(_){}return r}}
+ if(typeof build==='function'){var b0_=build;build=function(){var r=b0_.apply(this,arguments);try{if(window.tvs3Fix)tvs3Fix(boxes)}catch(_){}try{if(window.chPorc3)chPorc3(boxes)}catch(_){}/* JUNÇÃO 5: réguas do travessão na profundidade delas */try{rebaixoGaveta()}catch(_){}try{ftClipGlobal()}catch(_){}return r}}
 })();
 /* ===== 🚶 Modo pessoa (1ª pessoa): andar pela cozinha, olhar em volta com o dedo, agachar, ficar de pé, sentar · tocar abre porta, gaveta, geladeira, forno e liga a torneira ===== */
 window.FPV=null;var FPB=null,FPT=null;
@@ -5908,7 +5908,7 @@ var build_nif=build;build=function(){build_nif();try{if(window.__build_ni)__buil
 window.PT3=null;var PTB=null,PTQ=null,PTPV=null;
 function isPink3(c){return c&&Math.abs(c[0]-227)<2&&Math.abs(c[1]-25)<2&&Math.abs(c[2]-123)<2}
 function modMatId(m,b){/* qual padrão real a peça usa: cor igual à das frentes → corFId · igual à do caixote → corId · nicho: módulo de fora */if(!m||!b.c)return '';var bc=b.c.join();if(m.corFId&&m.corF&&hex(m.corF).join()===bc)return m.corFId;if(m.corId&&m.cor&&hex(m.cor).join()===bc)return m.corId;if(m.nicho&&window.nichoHost){try{var hh=nichoHost(m);if(hh&&hh!==m)return modMatId(hh,b)}catch(_){}}return ''}
-var build_pc=build;build=function(){build_pc();try{var pv=PTPV,pt=window.PT3;boxes.forEach(function(b){if(b.rpid==null&&b.rpd==null&&!(b.fr!=null&&/^inox-/.test(b.mid||'')))delete b.mid;/* a textura do painel (cor escolhida nele) fica */var nm=String(b.nm||''),mm=/^(\d+):(.*)$/.exec(nm);if(!mm||b.ft||b.alu||b.gl||b.nol||b.g==='lo'||b.g==='sh'||b.a<.95)return;var m=S.mods[+mm[1]];if(!m)return;var name=mm[2];if(/Vidro|vidro|LED|Puxador|Cava|Dobradi|Corte do forno/.test(name))return;var key=b.ppk||b.pk||name,o=pcOf(m,key);
+var build_pc=build;build=function(){build_pc();try{var pv=PTPV,pt=window.PT3;boxes.forEach(function(b){if(b.rpid==null&&b.rpd==null&&!(b.fr!=null&&(/^inox-/.test(b.mid||'')||(b.mid&&window.pisoOf&&pisoOf(b.mid)))))delete b.mid;/* porcelanato da churrasqueira (f.revm) também fica *//* a textura do painel (cor escolhida nele) fica */var nm=String(b.nm||''),mm=/^(\d+):(.*)$/.exec(nm);if(!mm||b.ft||b.alu||b.gl||b.nol||b.g==='lo'||b.g==='sh'||b.a<.95)return;var m=S.mods[+mm[1]];if(!m)return;var name=mm[2];if(/Vidro|vidro|LED|Puxador|Cava|Dobradi|Corte do forno/.test(name))return;var key=b.ppk||b.pk||name,o=pcOf(m,key);
   if(pv&&!pv.fita&&pv.mi===+mm[1]&&(pv.pk?(b.pk===pv.pk||b.ppk===pv.pk):(!b.pk&&name===pv.key))&&pt&&!pt.erase)o={c:pt.c,id:pt.id};if(isPink3(b.c))return;if(o&&o.c){b.c=hex(o.c);if(b.tx==='wood'&&!isWoodRGB(b.c))delete b.tx;if(o.id)b.mid=o.id}else{var id=modMatId(m,b)||b.fcid;if(id)b.mid=id}});
  /* fita de topo: cor decidida depois da pintura (fitaColOf) · sem cor definida, pega a maior frente do módulo como está no 3D */
  var FC={};boxes.forEach(function(b){var nm=String(b.nm||''),mm=/^(\d+):(.*)$/.exec(nm);if(!mm||b.ft||b.nol||b.a<.95)return;if(/^(Porta|Frente de gaveta|Tamponamento|Travessa|Moldura|Folha da porta)/.test(mm[2])){var vol=(b.x1-b.x0)*(b.y1-b.y0)*(b.z1-b.z0);if(!FC[mm[1]]||vol>FC[mm[1]+'v']){FC[mm[1]]=b;FC[mm[1]+'v']=vol}}});
@@ -6049,11 +6049,12 @@ window.__chg=function(){return Object.keys(CHG).filter(function(k){return CHG[k]
 var one3_ch=one3;one3=function(cx,cy){if(window.FPV||window.CLV||window.PT3||IDRAW)return one3_ch(cx,cy);var h=null;try{h=pickItem(cx,cy)}catch(_){}if(h&&h.k==='fr'){var f=(S.fr||[]).filter(function(q){return q.id===h.id})[0];if(f&&f.t==='churrasqueira'){var kk=String(f.id);OVL[kk]=OVL[kk]?0:1;build();render();if(OVL[kk])try{fxKick()}catch(_){}ambMsg(OVL[kk]?'🔥 Carne assando na brasa · saindo fumaça':'Churrasqueira apagada');return one3_ch(cx,cy)}}return one3_ch(cx,cy)};
 var itRender_gc=itRender;itRender=function(){itRender_gc();var E=it4Box(),x=ISX;if(!x||x.k!=='fr'||E.hidden)return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||E.querySelector('[data-qel],[data-qch]'))return;var hdr=E.firstElementChild,B_=function(a,t,on){return '<button '+a+' style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+t+'</button>'},ro=window.RO?' disabled':'';
  if(f.t==='eletrica'){var hst=elHost(f),dt_=elDentro(f);if(hdr)hdr.insertAdjacentHTML('afterend','<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+B_('data-qel="0"'+ro,'🧱 Na parede',!dt_)+B_('data-qel="1"'+ro,'📦 Dentro do armário',dt_)+'</div><div style="font-size:12px;color:#555;margin:0 0 4px">'+(dt_?(hst?'No fundo do módulo, atrás das portas · aparece com a porta aberta':'Ponha ela em cima de um módulo pra ficar dentro do armário'):'Na parede · '+(hst?'atrás do módulo (fura o fundo pra passar)':'aparente'))+'</div>')}
- if(f.t==='churrasqueira'){var on=!!OVL[String(f.id)];if(hdr)hdr.insertAdjacentHTML('afterend','<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+B_('data-qch="'+(on?0:1)+'"',on?'🔥 Assando · toque pra apagar':'🔥 Acender e pôr a carne',on)+'</div><div style="font-size:12px;color:#444;margin:2px 0">Revestimento</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:3px 0 6px">'+CHREV.map(function(c){var sel=chRev(f)[0]===c[0];return '<button data-qchr="'+c[0]+'"'+ro+' style="min-height:30px;padding:2px 8px;border-radius:8px;background:'+c[2]+';color:'+(/^(preto|tijolo|marmore)$/.test(c[0])?'#fff':'#111')+';border:'+(sel?'3px solid #1f6feb':'1px solid #8a8f98')+';font-size:12px">'+c[1]+'</button>'}).join('')+'</div>')}};
-document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qel],[data-qch],[data-qchr]');if(!t||!ISX||ISX.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f)return;e.stopImmediatePropagation();var d=t.dataset;
+ if(f.t==='churrasqueira'){var on=!!OVL[String(f.id)];if(hdr)hdr.insertAdjacentHTML('afterend','<div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+B_('data-qch="'+(on?0:1)+'"',on?'🔥 Assando · toque pra apagar':'🔥 Acender e pôr a carne',on)+'</div><div style="font-size:12px;color:#444;margin:2px 0">Revestimento</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:3px 0 6px">'+CHREV.map(function(c){var sel=chRev(f)[0]===c[0];return '<button data-qchr="'+c[0]+'"'+ro+' style="min-height:30px;padding:2px 8px;border-radius:8px;background:'+c[2]+';color:'+(/^(preto|tijolo|marmore)$/.test(c[0])?'#fff':'#111')+';border:'+(sel?'3px solid #1f6feb':'1px solid #8a8f98')+';font-size:12px">'+c[1]+'</button>'}).join('')+'</div>'+(window.chPorcH?chPorcH(f,ro):''))}};
+document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qel],[data-qch],[data-qchr],[data-qchm]');if(!t||!ISX||ISX.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f)return;e.stopImmediatePropagation();var d=t.dataset;
  if(d.qel!==undefined){if(window.RO)return;snap();f.dentro=d.qel==='1';f.dfix=1;try{draw()}catch(_){}build();render();itRender();ambMsg(f.dentro?(elHost(f)?'📦 Dentro do armário, no fundo':'Ponha em cima de um módulo pra ficar dentro'):'🧱 Na parede');return}
  if(d.qch!==undefined){OVL[String(f.id)]=d.qch==='1'?1:0;build();render();if(d.qch==='1')try{fxKick()}catch(_){}itRender();ambMsg(d.qch==='1'?'🔥 Carne assando na brasa · saindo fumaça':'Churrasqueira apagada');return}
- if(d.qchr!==undefined){if(window.RO)return;snap();f.rev=d.qchr;try{draw()}catch(_){}build();render();itRender();ambMsg('Revestimento: '+chRev(f)[1]);return}},true);
+ if(d.qchm!==undefined){if(window.RO)return;snap();if(d.qchm)f.revm=d.qchm;else delete f.revm;try{draw()}catch(_){}build();render();itRender();ambMsg('Revestimento: '+chRev(f)[1]);return}
+ if(d.qchr!==undefined){if(window.RO)return;snap();f.rev=d.qchr;delete f.revm;try{draw()}catch(_){}build();render();itRender();ambMsg('Revestimento: '+chRev(f)[1]);return}},true);
 
 /* ===== 🔘 botão do LED (bolinha preta) no armário: embaixo, nos lados ou por dentro · toque nele liga e desliga o LED ===== */
 var LBT=[];
@@ -14375,6 +14376,22 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
   else msg(on()?'✨ Acabamento realista ligado (só a aparência; medidas iguais)':'3D normal');pinta()},true);})();
 </script>
 <script>
+/* CHURRASQUEIRA · PORCELANATO REAL (Adauto 23/11: "opção também de aplicar porcelanato na churrasqueira"). Além das cores de revestimento de sempre
+   (Tijolinho, Concreto, Porcelanato claro, Mármore, Preto, Inox, que continuam iguais), escolhe um porcelanato do catálogo de pisos e revestimentos,
+   com a foto e a medida real da peça: no 3D as faces de alvenaria ganham a textura; no 2D e no quadro a cor do porcelanato. Fica em f.revm;
+   churrasqueira sem f.revm não muda. Escolher uma cor de sempre tira o porcelanato. */
+(function(){var cr0=window.chRev;if(!cr0)return;
+ window.chRev=function(f){var P=f&&f.revm&&window.pisoOf?pisoOf(f.revm):null;if(P)return ['pm:'+P.id,'Porcelanato '+P.n,P.c];return cr0.apply(this,arguments)};
+ var hx=function(h){h=String(h||'').replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]};
+ window.chPorc3=function(boxes){(S.fr||[]).forEach(function(f){if(!f||f.t!=='churrasqueira'||!f.revm||!window.pisoOf)return;var P=pisoOf(f.revm);if(!P)return;var c=hx(P.c).join();
+  boxes.forEach(function(b){if(b&&b.fr===f.id&&b.c&&b.c.slice(0,3).map(Math.round).join()===c&&!b.em&&!(b.a<1))b.mid=f.revm})})};
+ window.chPorcH=function(f,ro){var L=window.PISOS||[];if(!L.length)return '';var cur=f.revm||'';
+  return '<div style="font-size:12px;color:#444;margin:2px 0" data-chporc="1">Porcelanato (catálogo de pisos e revestimentos)</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:3px 0 6px">'
+   +L.map(function(p){var sel=cur===p[0];return '<button data-qchm="'+p[0]+'"'+(ro||'')+' title="'+esc(p[1]+' · '+p[3]+' cm')+'" style="min-height:30px;padding:2px 6px 2px 2px;border-radius:8px;display:flex;align-items:center;gap:5px;background:#fff;color:#111;border:'+(sel?'3px solid #1f6feb':'1px solid #8a8f98')+';font-size:11px"><i style="width:24px;height:24px;border-radius:5px;background:'+p[5]+' url(cores/'+p[0]+'.jpg) center/cover"></i>'+esc(p[1])+'</button>'}).join('')
+   +(cur?'<button data-qchm=""'+(ro||'')+' style="min-height:30px;padding:2px 8px;border-radius:8px;font-size:12px">Tirar o porcelanato</button>':'')+'</div>'};
+})();
+</script>
+<script>
 /* ESP-FORMAS · contorno, área/perímetro de verdade, 2D e orçamento da vidraçaria (Adauto, 23/11/2026). Preços começam em branco (R$ 0, pedido dele):
    espelho por m² por acabamento, lapidação/bisotê e moldura por metro, no Ajustes. Espelho sem campos novos desenha igual. */
 (function(){if(typeof APM==='undefined'||!APM.espelho)return;
@@ -14436,5 +14453,12 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
  /* depois da Política B das peças (ela se instala no carregamento) */
  var go=function(){setTimeout(inst,30)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
 })();
+</script>
+<script>
+/* FOTO-RESERVA (Chefe/Adauto 23/11, CI iOS: "makeImagePlus: 'WEBP' initImage failed"): cada foto do catálogo tem fotos/<chave>.jpg ao lado do .webp.
+   Só quando a .webp não abre (erro de decodificação ou de carga), a mesma imagem troca pra .jpg, uma vez. Onde a .webp abre, nada muda. */
+(function(){var RX=/(^|\/)fotos\/([^\/?#]+?)\.webp\w*([?#].*)?$/;window.__fotoReserva=0;
+ window.fotoReserva=function(im){try{if(!im||im.dataset.fjpg)return false;var src=im.getAttribute('src')||'',m=RX.exec(src);if(!m)return false;im.dataset.fjpg='1';im.src=src.replace(RX,'$1fotos/$2.jpg');window.__fotoReserva++;return true}catch(_){return false}};
+ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG')fotoReserva(t)},true);})();
 </script>
 </body></html>

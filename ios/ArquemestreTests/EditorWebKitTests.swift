@@ -15321,4 +15321,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v12"] as? String, "espelho da porta de correr: abre a configuração da folha 1", "o espelho da porta de correr continua no mesmo caminho")
         XCTAssertEqual(o["v10"] as? String, "erros 0 ", "sem erro")
     }
+
+    /* FASE4 · ESPELHO NA PAREDE × APP ANTIGO (medido 23/11/2026 no editor publicado c561120, pedido do Chefe): com t:'espelho' em fr
+       o 2D do app antigo quebra e o link de corte/cliente não abre. O espelho vai salvo em frx (o app antigo não lê) e volta ao abrir aqui. */
+    func testFASE4_EspelhoNaParedeSalvoForaDoFrPraAppAntigoEVoltaAoAbrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.fr=[];S.room='quarto';S.env='livre';S.W=4000;S.H=2600;S.m=null;draw();newTpl(T('Guarda-roupa porta de correr'));await W(40);
+        espWallAdd(0);var c=espWallAdd(3);c.wall='e';c.w=550;draw();
+        var tipos=function(L){return (L||[]).map(function(f){return f.t+(f.wall?'/'+f.wall:'')}).join(',')};
+        var z=snapState();R.salvo='fr ['+tipos(z.fr)+'] · frx ['+tipos(z.frx)+'] · na memória '+S.fr.length;
+        var pc=cutPayload(),pl=clientPayload();R.links='corte fr ['+tipos(pc.st.fr)+'] frx '+(pc.st.frx||[]).length+' · cliente fr ['+tipos(pl.st.fr)+'] frx '+(pl.st.frx||[]).length;
+        S.fr=[];UNDOING=true;try{loadState(JSON.parse(JSON.stringify(z)))}finally{UNDOING=false}draw();var E=S.fr.filter(function(f){return f.t==='espelho'});R.reaberto='espelhos '+E.length+' · '+E.map(function(f){return f.w+'×'+f.h+'/'+(f.wall||'f')}).join(',');
+        /* projeto salvo antes desta mudança (espelho dentro de fr) continua abrindo igual */var z2=JSON.parse(JSON.stringify(z));z2.fr=z2.fr.concat(z2.frx);delete z2.frx;S.fr=[];UNDOING=true;try{loadState(z2)}finally{UNDOING=false}R.antigoNoFr='espelhos '+S.fr.filter(function(f){return f.t==='espelho'}).length;
+        /* não duplica se vier nos dois */var z3=JSON.parse(JSON.stringify(z));z3.fr=z3.fr.concat(z3.frx);S.fr=[];UNDOING=true;try{loadState(z3)}finally{UNDOING=false}R.nosDois='espelhos '+S.fr.filter(function(f){return f.t==='espelho'}).length;
+        var code=await cutEncode(clientPayload());S.fr=[];arqueCutOpen(code);await W(2500);R.linkAberto='espelhos '+S.fr.filter(function(f){return f.t==='espelho'}).length+' · módulos '+S.mods.length;
+        R.errs='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["salvo"] as? String, "fr [] · frx [espelho,espelho/e] · na memória 2", "salvo: espelho fora do fr (app antigo não lê frx), na memória continua no S.fr")
+        XCTAssertEqual(o["links"] as? String, "corte fr [] frx 2 · cliente fr [] frx 2", "link de corte e de cliente: espelho em frx (app antigo abre o resto)")
+        XCTAssertEqual(o["reaberto"] as? String, "espelhos 2 · 600×900/f,550×1600/e", "reabrir traz os espelhos com medida e parede")
+        XCTAssertEqual(o["antigoNoFr"] as? String, "espelhos 2", "projeto com espelho dentro do fr (antes desta mudança) abre igual")
+        XCTAssertEqual(o["nosDois"] as? String, "espelhos 2", "não duplica")
+        XCTAssertEqual(o["linkAberto"] as? String, "espelhos 2 · módulos 1", "link aberto no app novo traz os espelhos")
+        XCTAssertEqual(o["errs"] as? String, "erros 0", "sem erro")
+    }
 }

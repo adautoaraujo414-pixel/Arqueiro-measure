@@ -16945,14 +16945,14 @@ final class EditorWebKitTests: XCTestCase {
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
         loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));pxApplyAll('concha','inox');var m=S.mods[0];S.m=m;S.sv=0;S.tab=3;draw();
         var d=function(){return partsOf(m).filter(function(p){return p.name==='Porta'})[0]};R.antiga=pxParts(d(),m,d().cl,d().cw).length+' '+(d().chm?1:0);
-        var sig=[],fur=[];Object.keys(CHMOD).forEach(function(id){m.v[0].chm={id:id};var p=d(),ps=pxParts(p,m,p.cl,p.cw),U=ps.map(function(q){return q.u1}).concat(ps.map(function(q){return q.u0})),V=ps.map(function(q){return q.v1}).concat(ps.map(function(q){return q.v0}));
+        var sig=[],fur=[];/* Adauto 23/11 (prompt oficial): na porta a concha fica em pé (automática); aqui cada modelo é conferido deitado (ori h) */Object.keys(CHMOD).forEach(function(id){m.v[0].chm={id:id,ori:'h'};var p=d(),ps=pxParts(p,m,p.cl,p.cw),U=ps.map(function(q){return q.u1}).concat(ps.map(function(q){return q.u0})),V=ps.map(function(q){return q.v1}).concat(ps.map(function(q){return q.v0}));
           sig.push(ps.length+':'+Math.round(Math.max.apply(null,U)-Math.min.apply(null,U))+'>'+Math.round(Math.max.apply(null,V)-Math.min.apply(null,V)));var h=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].furos.filter(function(f){return /^FURO_PUXADOR/.test(f.lay)});fur.push(h.length+':'+Math.round(Math.abs(h[1].x-h[0].x)+Math.abs(h[1].y-h[0].y))+':'+h[0].d)});
         R.n=Object.keys(CHMOD).length;R.sig=sig.filter(function(v,i,a){return a.indexOf(v)===i}).length;R.horiz=sig.every(function(s){var a=s.split(':')[1].split('>');return +a[0]>+a[1]});R.fur=fur.join(' ');
-        var vs=function(){var p=d(),ps=pxParts(p,m,p.cl,p.cw),V=ps.map(function(q){return q.v0});return Math.round(Math.max.apply(null,ps.map(function(q){return q.v1}))-Math.min.apply(null,V))},bd=function(){var p=d();return Math.max.apply(null,pxParts(p,m,p.cl,p.cw).filter(function(q){return q.pts&&q.pts.length>20}).map(function(q){return q.w1}))};m.v[0].chm={id:'cl'};var v0=vs(),b0=bd();m.v[0].chm={id:'cl',cu:50,eb:4};R.curva=(vs()<v0)+' '+b0+'>'+bd();m.v[0].chm={id:'cl'};panel();await W(900);R.campos=['w','h','d','cu','eb','fur','fd'].filter(function(k){return document.querySelector('[data-chmn="'+k+'"]')}).length;var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e};
+        var vs=function(){var p=d(),ps=pxParts(p,m,p.cl,p.cw),V=ps.map(function(q){return q.v0});return Math.round(Math.max.apply(null,ps.map(function(q){return q.v1}))-Math.min.apply(null,V))},bd=function(){var p=d();return Math.max.apply(null,pxParts(p,m,p.cl,p.cw).filter(function(q){return q.pts&&q.pts.length>20}).map(function(q){return q.w1}))};m.v[0].chm={id:'cl',ori:'h'};var v0=vs(),b0=bd();m.v[0].chm={id:'cl',ori:'h',cu:50,eb:4};R.curva=(vs()<v0)+' '+b0+'>'+bd();m.v[0].chm={id:'cl'};panel();await W(900);R.campos=['w','h','d','cu','eb','fur','fd'].filter(function(k){return document.querySelector('[data-chmn="'+k+'"]')}).length;var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e};
         R.mod=document.querySelectorAll('[data-chm^="m|"]').length;R.acab=['grafite','cinzaf','prata','cromado','pretof','branco','dourado','douradoe','bronze','cobre','rose'].filter(function(k){return document.querySelector('[data-pxk="'+k+'"]')}).length+(document.querySelector('[data-pxhex]')?1:0);
-        Q('[data-pxk="cobre"]').click();await W(900);R.proj=S.mods.map(function(x){return x.v[0].pxc}).join(',');
+        /* padrão agora é "Apenas este puxador"; o projeto todo pede confirmação (Adauto 23/11) */Q('[data-pxesc="projeto"]').click();Q('[data-pxk="cobre"]').click();Q('#pxconf [data-pxok]').click();await W(900);R.proj=S.mods.map(function(x){return x.v[0].pxc}).join(',');
         ESTDQ=1;Q('[data-pxesc="porta"]').click();Q('[data-pxk="rose"]').click();await W(900);R.so=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',')+' '+S.mods[1].v[0].pxc;
-        Q('[data-pxesc="movel"]').click();var h=Q('[data-pxhex2]');h.value='#12ab34';h.dispatchEvent(new Event('change',{bubbles:true}));await W(900);R.movel=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',')+' '+S.mods[1].v[0].pxc;
+        Q('[data-pxesc="movel"]').click();var h=Q('[data-pxhex2]');h.value='#12ab34';h.dispatchEvent(new Event('change',{bubbles:true}));Q('#pxconf [data-pxok]').click();await W(900);R.movel=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',')+' '+S.mods[1].v[0].pxc;
         ESTDQ=0;Q('[data-pxesc="porta"]').click();Q('[data-pxk="preto"]').click();R.indiv=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',');R.nome=pxCol('#12ab34')[2];
         open3D();await W(300);__build();R.metal3=__boxes().filter(function(b){return b.mt&&b.nol}).length>0;document.getElementById('v3x').click();
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -17004,7 +17004,7 @@ final class EditorWebKitTests: XCTestCase {
         loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;pxApplyAll('concha','inox');m.v[0].est={t:'simples',c:'regua'};draw();
         var d=partsOf(m).filter(function(p){return p.name==='Porta'})[0],rg=partsOf(m).filter(function(p){return p.estDe===d.pk});R.borda=d.estG.frames[0].r.join(',')+' · régua de cima '+rg[0].cl+' (porta '+d.cl+')';
         m.v[0].chm={id:'cl'};d=partsOf(m).filter(function(p){return p.name==='Porta'})[0];var cp=chAt(d,m,d.cl,d.cw),vc=d.cw-cp.t,ps=conchaPartes3(d.chm,cp.u,vc,'#888888'),pl=ps[0],vs=pl.pts.map(function(a){return a[1]});
-        R.boca=(Math.round(Math.min.apply(null,vs))===Math.round(vc-d.chm.h*.32))+' '+(Math.max.apply(null,vs)>vc+d.chm.h*.5);var fat=ps.filter(function(q){return !q.pts&&q.u1-q.u0>40&&q.v1-q.v0<6}).sort(function(a,b){return a.v0-b.v0});R.funda=fat[0].w1>fat[fat.length-1].w1;
+        R.boca=(Math.round(Math.max.apply(null,vs))===Math.round(vc+d.chm.h*.32))+' '+(Math.min.apply(null,vs)<vc-d.chm.h*.5);var fat=ps.filter(function(q){return !q.pts&&q.u1-q.u0>40&&q.v1-q.v0<6}).sort(function(a,b){return a.v0-b.v0});R.funda=fat[0].w1>fat[fat.length-1].w1;
         var pa=conchaPartes3(Object.assign({},CHMOD.pa,{id:'pa'}),cp.u,vc,'#888888').filter(function(q){return q.pts&&q.pts.length===14});R.parafuso=pa.map(function(q){return Math.round((q.v0+q.v1)/2)===Math.round(vc)}).join(',');
         draw();R.svg=document.querySelectorAll('[data-chm2d]').length;
         open3D();await W(300);__build();var B=__boxes().filter(function(b){return b.estD});R.veio=B.filter(function(b){return b.vr}).length+'/'+B.length;document.getElementById('v3x').click();
@@ -17015,8 +17015,8 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["borda"] as? String, "0,0,440,705 · régua de cima 440 (porta 440)", "moldura na borda da porta (sem faixa lisa antes do provençal)")
-        XCTAssertEqual(o["boca"] as? String, "true true", "concha: borda reta embaixo, arco em cima")
-        XCTAssertEqual(o["funda"] as? Bool, true, "concha sai mais na boca (embaixo)")
+        XCTAssertEqual(o["boca"] as? String, "true true", "concha: borda reta EM CIMA, curva embaixo (Adauto 23/11, prompt oficial: igual às fotos 1, 2 e 4)")
+        XCTAssertEqual(o["funda"] as? Bool, true, "concha sai mais embaixo, na curva (a boca é por baixo)")
         XCTAssertEqual(o["parafuso"] as? String, "true,true", "parafusos na altura dos furos do DXF")
         XCTAssertEqual(o["svg"] as? Int, 2, "2D desenha o modelo da concha")
         XCTAssertEqual(o["veio"] as? String, "4/8", "réguas de cima e de baixo com o veio deitado")
@@ -17087,7 +17087,7 @@ final class EditorWebKitTests: XCTestCase {
         var bs=__boxes().filter(function(q){return q.mt&&q.nol&&/^0:Porta/.test(String(q.nm))&&q.dq===0}),mx=function(k,f){return Math[f].apply(null,bs.map(function(q){return q[k]}))};
         var at=function(){return S.mods.map(function(mm){return partsOf(mm).filter(function(p){return p.name==='Porta'}).map(function(p){var a=chAt(p,mm);return Math.round(a.u)+'/'+Math.round(a.t)}).join(' ')}).join(' | ')},a0=at();
         await toque((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1,2);var pad=document.getElementById('pxpad');R.pad=!!pad;R.fechada=JSON.stringify(S.mods[0].v[0].od||{});
-        var rr=pad.getBoundingClientRect(),ev=function(tp,dx,dy){pad.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+dx,clientY:rr.top+dy,pointerId:5,isPrimary:true}))};ev('pointerdown',rr.width*.3,rr.height*.25);ev('pointermove',rr.width*.35,rr.height*.3);ev('pointerup',rr.width*.35,rr.height*.3);await W(300);
+        /* Adauto 23/11: padrão "Só este puxador"; todas as portas com confirmação */var tb=document.querySelector('[data-pxpos="todas"]');if(tb){tb.click();var ok_=document.querySelector('#pxconf [data-pxok]');if(ok_)ok_.click();await W(300)}pad=document.getElementById('pxpad');var rr=pad.getBoundingClientRect(),ev=function(tp,dx,dy){pad.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+dx,clientY:rr.top+dy,pointerId:5,isPrimary:true}))};ev('pointerdown',rr.width*.3,rr.height*.25);ev('pointermove',rr.width*.35,rr.height*.3);ev('pointerup',rr.width*.35,rr.height*.3);await W(300);
         var a1=at().split(' | ');R.todos=a1[0]===a1[1]&&a1[0]!==a0.split(' | ')[0]&&a1[0].split(' ')[0]!==a1[0].split(' ')[1];
         var D=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0],p0=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'})[0],h=D.furos.filter(function(f){return /PUXADOR/.test(f.lay)});R.dxf=h.length===2&&Math.round(h[0].y)===Math.round(p0.cw-chAt(p0,S.mods[0]).t);
         var q=document.querySelector('[data-qx]');if(q)q.click();await W(100);await toque((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1,1);__build();
@@ -17167,6 +17167,46 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertGreaterThanOrEqual(o["pior"] as? Int ?? 0, 20, "faixa acesa (de 24 pontos) no pior caso: de longe, em ângulo, dia e noite, auto/equil/alta")
         XCTAssertEqual(o["medidas"] as? Bool, true, "espelho no mesmo lugar e com a mesma medida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CONCHA (Adauto 23/11, prompt oficial): parte reta EM CIMA, curva embaixo, abertura por baixo (fotos 1, 2 e 4). Porta: EM PÉ perto da lateral
+    // que abre, parte reta pro lado da dobradiça (decisão registrada no HISTORICO), no meio do montante quando tem régua; gaveta: deitada e no meio.
+    // Escolha por puxador: o padrão é "Apenas este puxador"; os outros escopos pedem confirmação com a contagem (cancelar não muda nada)
+    func testConchaRetaEmCimaEmPeNaPortaDeitadaNaGavetaEEscolhaIndividual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas + 4 gavetas'));newTpl(T('Balcão 2 portas'));var m=S.mods[0],m2=S.mods[1];pxApplyAll('concha','inox');m.v.forEach(function(v){v.chm={id:'pa'}});m2.v[0].chm={id:'cl'};draw();
+        var P=function(mm){return partsOf(mm).filter(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)})},geo=function(p,mm){var O=chmOri(p,mm,p.chm),cp=chAt(p,mm),ps=conchaPartes3(p.chm,cp.u,p.cw-cp.t,'#888888',O);return {O:O,cp:cp,ch:ps.filter(function(q){return q.chapa})[0],sh:ps.filter(function(q){return q.shd})[0],vc:p.cw-cp.t}};
+        var pe=P(m).filter(function(p){return p.name==='Porta'&&p.hinge==='l'})[0],pd=P(m).filter(function(p){return p.name==='Porta'&&p.hinge==='r'})[0],gv=P(m).filter(function(p){return p.name==='Frente de gaveta'})[0];
+        var a=geo(gv,m);R.gaveta=(!a.O.v)+' '+(Math.round(a.ch.v1)===Math.round(a.vc+gv.chm.h*.32))+' '+(a.sh.v1<a.vc)+' '+(Math.abs(a.cp.u-gv.cl/2)<1);
+        var b=geo(pe,m);R.portaEsq=b.O.v+' '+(Math.round(b.cp.u)===Math.round(pe.cl-(+chCfg().l||60)))+' '+(b.ch.u0<b.cp.u&&b.sh.u0>b.cp.u);
+        var c=geo(pd,m);R.portaDir=c.O.v+' '+(Math.round(c.cp.u)===Math.round(+chCfg().l||60))+' '+(c.sh.u1<c.cp.u);
+        var X=dxfPecas({pxD:5,pxP:15}).pecas,fp=function(nm){var pc=X.filter(function(x){return x.nome===nm})[0];return pc.furos.filter(function(f){return /PUXADOR/.test(f.lay)})};var fd=fp('Porta'),fg=fp('Frente de gaveta');R.dxf=(Math.round(fd[0].x)===Math.round(fd[1].x)&&Math.abs(fd[0].y-fd[1].y)>50)+' '+(Math.round(fg[0].y)===Math.round(fg[1].y)&&Math.abs(fg[0].x-fg[1].x)>50);
+        draw();var g2=[].map.call(document.querySelectorAll('[data-chm2d] polygon'),function(e){var bb=e.getBBox();return bb.height>bb.width?'v':'h'});R.d2=g2.filter(function(x){return x==='v'}).length>0&&g2.filter(function(x){return x==='h'}).length>0;
+        m.v[0].est={t:'simples',c:'regua',rw:60,off:0};var b2=geo(P(m).filter(function(p){return p.name==='Porta'&&p.hinge==='l'})[0],m);R.montante=Math.round(b2.cp.u)===Math.round(pe.cl-30);delete m.v[0].est;
+        S.m=m;S.sv=0;S.tab=3;draw();panel();await W(900);var Q=function(sel){var e=document.querySelector(sel);if(!e)throw new Error('sem '+sel);return e};ESTDQ=0;R.padrao=PXESC;
+        Q('[data-pxk="cobre"]').click();await W(300);R.so=JSON.stringify(m.v[0].pxcQ||null)+' '+m.v[0].pxc+' '+m2.v[0].pxc+' modal '+!!document.getElementById('pxconf');
+        Q('[data-pxesc="projeto"]').click();Q('[data-pxk="rose"]').click();R.conta=(document.querySelector('#pxconf [data-pxn]')||{}).textContent||'';Q('#pxconf [data-pxno]').click();R.cancela=m2.v[0].pxc;
+        Q('[data-pxesc="porta"]').click();Q('[data-chori="h"]').click();await W(300);R.ori=P(m).filter(function(p){return p.name==='Porta'}).map(function(p){return chmOri(p,m,p.chm).v?'v':'h'}).join(',');
+        window.PXSEL={mi:0,vi:0,dq:1};PXPOS='porta';pxaSet(m,0,{du:80,dt:150});R.posSo=P(m).filter(function(p){return p.name==='Porta'}).map(function(p){var q=chAt(p,m);return Math.round(q.u)+'/'+Math.round(q.t)}).join(' ');
+        R.medidas=P(m).map(function(p){return p.cl+'x'+p.cw}).join(',');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["gaveta"] as? String, "true true true true", "gaveta: deitada, reta em cima, abertura embaixo, no meio")
+        XCTAssertEqual(o["portaEsq"] as? String, "true true true", "porta da dobradiça à esquerda: em pé, perto da direita, reta pro lado da dobradiça e boca pro lado que abre")
+        XCTAssertEqual(o["portaDir"] as? String, "true true true", "porta da dobradiça à direita: espelhado")
+        XCTAssertEqual(o["dxf"] as? String, "true true", "DXF: furos em pé na porta, deitados na gaveta")
+        XCTAssertEqual(o["d2"] as? Bool, true, "2D desenha em pé e deitada")
+        XCTAssertEqual(o["montante"] as? Bool, true, "com régua de 60: no meio do montante do lado que abre")
+        XCTAssertEqual(o["padrao"] as? String, "porta", "padrão: apenas este puxador")
+        XCTAssertEqual(o["so"] as? String, "{\"0\":\"cobre\"} inox inox modal false", "cor de um puxador não muda os outros, sem perguntar")
+        XCTAssertEqual(o["conta"] as? String, "Troca em 8 puxadores concha (do projeto).", "projeto: confirma com a contagem")
+        XCTAssertEqual(o["cancela"] as? String, "inox", "cancelar não muda nada")
+        XCTAssertEqual(o["ori"] as? String, "h,v", "deitada só nesta porta")
+        XCTAssertEqual(o["posSo"] as? String, "196/353 80/150", "porta 1 deitada fica no lugar do ⚙ (centro); a porta 2 tem lugar só dela (80 do lado que abre, 150 de cima)")
+        XCTAssertEqual(o["medidas"] as? String, "391x705,391x705,395x173,395x173,395x173,395x173", "medida das portas e frentes não muda")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

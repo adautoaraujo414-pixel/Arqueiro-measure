@@ -1845,3 +1845,38 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - **Relatado:** achado do Chefe. Em `testBatenteCavaReguaPorRegua…`, uma linha começava na coluna 0 dentro de `#"""…"""#`. O iOS não compila; o Chromium não pega.
   - **Correção:** `2ec82605` em `claude/juncao4-batente`.
   - **Prevenção:** daqui pra frente, verificador de recuo antes de cada entrega.
+
+## CONCHA-PRUMO e ESCOLHA POR PUXADOR (Adauto, prompt oficial de 23/11, via Code 1)
+- **Pedido:**
+  - concha com a parte reta EM CIMA, curva embaixo, abertura por baixo, como nas fotos;
+  - porta EM PÉ perto da lateral que abre; gaveta deitada e no meio;
+  - "respeitar a orientação física correta de cada modelo";
+  - escolha individual de modelo, cor, posição, orientação e medidas, aplicando só na peça ou em todas as compatíveis com confirmação;
+  - mudar a cor de um puxador não muda os outros;
+  - DXF sem furação inventada.
+- **Erro corrigido:** a 09f18b40 tinha virado a concha (arco em cima) por causa do print das 15h21. Estava de cabeça para baixo em relação às fotos.
+- **Decisão sem resposta do Adauto: para que lado vai a parte reta na porta em pé.**
+  - Decidi pela construção física.
+  - A parte reta é o lado fechado da concha (onde a chapa encosta e os dedos fazem força). A curva é a boca, por onde os dedos entram.
+  - Abrindo a porta, o puxador anda num arco em volta da dobradiça: primeiro para fora, depois para o lado da dobradiça. A mão puxa a parede fechada para esse lado.
+  - Então **a parte reta fica do lado da dobradiça e a boca do lado que abre**. A mão chega pelo lado que abre, que é o natural.
+  - **Fontes consultadas** (guias de instalação; nenhuma norma diz o lado da boca na vertical):
+    - os puxadores vão no lado oposto à dobradiça;
+    - na vertical, a concha fica no meio do montante;
+    - na horizontal, a boca fica para baixo para os dedos engancharem.
+  - Links: housedigest.com "The Right Way To Mount Cup Pulls…", vandykes.com "How to Execute Cabinet Hardware Placement", onton.com "Cabinet knob and pull placement", kitchencabinetkings.com/guides/cabinet-pull-placement.
+  - **A confirmar com o Adauto quando ele puder.** Se for o contrário, é inverter o sinal `O.sg` em `chmOri`.
+- **Correções:**
+  - `7fe0047a`:
+    - geometria num sistema próprio (`conchaPartes3` + `chmOri`), posta em pé ou deitada;
+    - parafusos na linha dos furos do DXF;
+    - porta com régua aplicada: concha no meio do montante quando cabe;
+    - por puxador: automática / deitada / em pé, modelo, cor e medidas;
+    - padrão "Apenas este puxador"; os outros escopos pedem confirmação com a contagem (só concha);
+    - 3D: "Só este puxador" (`v.chuQ`) ou "Todas as portas" (com confirmação).
+  - `f9507178`: o DXF só fura a concha com a furação confirmada. Os entre-furos 64/96/76 dos modelos eram escolha minha (medidas comerciais comuns), o que é furação sem especificação. Até confirmar: sem furo e FALTA no aviso.
+- **Testes:**
+  - `testConchaRetaEmCimaEmPeNaPortaDeitadaNaGavetaEEscolhaIndividual` (novo, falha na 3933f94f).
+  - Atualizados com comentário, todos desta mesma entrega e ainda não homologados: ConchaSete (modelos conferidos deitados e com furação confirmada; escopos com confirmação), ProvencalNaBorda (reta em cima), No3DDuplicar… ("Todas as portas" + confirmação).
+- **Arquivos:** `editor.html`, nos blocos CONCHA e escolha por puxador (módulo das provençais), `px3Panel` (lugar de um puxador) e o despacho dos 2 toques (`PXSEL`).
+- **Status:** resolvido na bateria. Falta o Adauto confirmar o lado da parte reta na porta em pé.

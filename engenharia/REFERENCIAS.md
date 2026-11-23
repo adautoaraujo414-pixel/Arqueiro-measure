@@ -88,8 +88,9 @@ Imagens anexadas ao pedido "IMPLEMENTAÇÃO COMPLETA DE PORTAS PROVENÇAIS E PUX
 - **15h37, porta de madeira:** "até o topo em cima também".
 - **15h49, cabeçalho da peça no 3D:** "aparecer duplicar em qualquer peça".
 
-> **PENDENTE, a confirmar com o Adauto antes de homologar: orientação da concha.**
-> - Nas fotos 1, 2 e 4 a concha tem a **borda reta em cima** e a curva embaixo (a boca fica embaixo, por trás da curva).
-> - A primeira versão (057f8722) seguia isso.
-> - No print das 15h21 o Adauto disse "puxadores estão invertido, é contrário". A versão 09f18b40 passou a mostrar o **arco em cima e a borda reta embaixo**, que é a de hoje.
-> - A versão de hoje segue o pedido dele sobre o print, mas difere das fotos. Não mudar sem a confirmação dele.
+> **Orientação da concha: RESOLVIDO (Adauto, prompt oficial de 23/11, via Code 1).**
+> - Parte **reta em cima**, parte curva embaixo, abertura por baixo, igual às fotos 1, 2 e 4.
+> - A versão 09f18b40 (arco em cima) estava de cabeça para baixo, nas palavras dele.
+> - Porta: em pé, perto da lateral que abre. Gaveta: deitada e no meio.
+> - O lado da parte reta na porta em pé não foi respondido. A decisão e a fonte estão em `HISTORICO_ERROS.md`, em CONCHA-PRUMO.
+> - Commit `7fe0047a`.

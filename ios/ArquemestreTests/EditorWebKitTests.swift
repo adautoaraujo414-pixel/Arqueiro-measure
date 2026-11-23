@@ -12930,12 +12930,12 @@ final class EditorWebKitTests: XCTestCase {
         /* FASE2 (23/11/2026, decisão do Adauto): este balcão está colado ao gaveteiro (rodapé corrido): o rodapé lateral do encontro sai da lista (já não ia pro corte nem pro 3D) — 4 → 3 */XCTAssertEqual(o["antes"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720")
         XCTAssertEqual(o["toqueSemEscolher"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720 · escolhido true")
         XCTAssertEqual(o["esticaAteOChao"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+820 · fim do tamponamento 820 · chão 820")
-        XCTAssertEqual(o["encurta"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        XCTAssertEqual(o["encurta"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["ergueu"] as? String, "b1410 · rodapé 0")
-        XCTAssertEqual(o["voltouProChao"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        XCTAssertEqual(o["voltouProChao"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["tresD"] as? String, "base embaixo true · rodapé embaixo true · tamp 3D 420 = peça 420")
         XCTAssertEqual(o["corte"] as? String, "Base inferior 1500×560 q1 | Base inferior 1800×560 q1 | Porta 440×705 q4 | Porta 884×705 q1 | Rodapé 1500×100 q2 | Rodapé 1800×100 q2 | Tamponamento direito · face 420×585 q1 | Tamponamento direito · face 720×585 q3")
-        XCTAssertEqual(o["reabriu"] as? String, "true · x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        XCTAssertEqual(o["reabriu"] as? String, "true · x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

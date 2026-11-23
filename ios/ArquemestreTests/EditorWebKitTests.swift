@@ -16745,4 +16745,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "Base inferior 1600, Lateral do meio 1 690, Lateral do meio 2 690", "projeto antigo: igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // GAVETAS QUE NÃO CABEM (Adauto 23/11): com cava e muitas gavetas num vão baixo a caixa ou a régua entravam na travessa ou na outra caixa.
+    // O "+" não aceita quantidade que colide; módulo que já está assim avisa e oferece "Usar N gavetas" (não muda sozinho); catálogo sem colisão
+    func testGavetasQueNaoCabemNaoEntramEModuloAntigoAvisaComBotao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={},TL=[],e0=__errs.length;window.toast=function(t){TL.push(String(t))};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();newTpl(T('Balcão porta + gavetas'));var m=S.mods[0],gi=m.v.map(function(v){return v.k}).indexOf('drawers');S.m=m;S.sv=gi;
+        R.colisoes=[2,3,4,5,6,7,8].map(function(n){var c=JSON.parse(JSON.stringify(m));c.v[gi].n=n;return n+':'+gavColide(c,gi).length}).join(' ');
+        S.tab=2;panel();var plus=function(){S.m=S.mods[0];S.sv=gi;S.tab=2;panel();var b=document.querySelector('#bd [data-n="1"]');if(b)b.click();return S.mods[0].v[gi].n};R.mais=[plus(),plus(),plus()].join(',')+' · '+/Cabem até 4/.test(TL.slice(-1)[0]||'');
+        var an=JSON.parse(JSON.stringify(snapState()));an.mods[0].v[gi].n=7;loadState(an);draw();R.antigoAbre=S.mods[0].v[gi].n;S.m=S.mods[0];S.sv=gi;S.tab=2;panel();var w=document.querySelector('#bd [data-gvcol]');R.aviso=!!w&&/não cabem/.test(w.textContent);
+        await W(800);document.querySelector('#bd [data-gvfix]').click();await W(60);R.botao=S.mods[0].v[gi].n+' · '+gavColide(S.mods[0],gi).length;await W(800);document.getElementById('und').click();await W(100);R.desfez=S.mods[0].v[gi].n;
+        m=S.mods[0];m.v[gi].cava=false;m.v[gi].n=4;draw();S.m=m;S.tab=2;panel();var sc=function(){S.m=S.mods[0];S.sv=gi;S.tab=2;panel();var b=document.querySelector('#bd [data-n="1"]');if(b)b.click();return S.mods[0].v[gi].n};R.semCava=[sc(),sc(),sc(),sc()].join(',');
+        var ns=0;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!t||t.act||!t.n)return;loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();try{newTpl(JSON.parse(JSON.stringify(t)))}catch(e){return}var mm=S.mods[0];if(!mm)return;(mm.v||[]).forEach(function(v,vi){if(v&&v.k==='drawers'&&gavColide(mm,vi).length)ns++})})});R.catalogo=ns;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["colisoes"] as? String, "2:0 3:0 4:0 5:1 6:1 7:2 8:10", "Balcão porta + gavetas com cava: cabem até 4")
+        XCTAssertEqual(o["mais"] as? String, "4,4,4 · true", "o + para em 4 e diz quantas cabem")
+        XCTAssertEqual(o["antigoAbre"] as? Int, 7, "projeto antigo não muda sozinho")
+        XCTAssertEqual(o["aviso"] as? Bool, true)
+        XCTAssertEqual(o["botao"] as? String, "4 · 0", "botão: o máximo que cabe, sem colisão")
+        XCTAssertEqual(o["desfez"] as? Int, 7, "desfazer")
+        XCTAssertEqual(o["semCava"] as? String, "5,6,7,8", "sem cava cabem as 8")
+        XCTAssertEqual(o["catalogo"] as? Int, 0, "nenhum modelo do catálogo colide")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

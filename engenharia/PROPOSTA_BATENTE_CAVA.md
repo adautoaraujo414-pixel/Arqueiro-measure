@@ -72,3 +72,17 @@ Pedido do Adauto (17/11): escolher à mão o tamanho das réguas de batente do c
 5. Sobreposição mínima atrás de cada frente (para o limite mínimo).
 6. "Restaurar padrão" é igual a "automática" (`cbG + 30`) ou é um valor fixo?
 7. Ao diminuir o número de gavetas, a régua personalizada que sobra: some, ou fica guardada para quando voltar?
+
+## Decisões do Adauto (23/11) e o que foi feito (Code 2, ramo `claude/juncao4-batente`)
+- **Unidade:** mm. **Comprimento:** continua o vão inteiro, automático.
+- **Régua por régua:** cada régua entre gavetas pode ter a altura dela (`v.cbRq[n]` no vão comum, `g.cbRq[n]` no editor por vãos; n = 1ª, 2ª… de cima pra baixo). Sem valor, vale a régua do vão (`cbR`) ou a automática (vão + 30). Mudar uma não mexe nas outras.
+- **Batente superior:** o campo de sempre (`cbT`) no vão comum; no editor por vãos, que não tinha campo, entrou o campo junto com o da régua do vão.
+- **Conferência antes de aplicar (pela geometria real do `partsOf`, numa cópia do módulo):**
+  - a régua tem que ficar no mínimo 5 mm atrás de cada frente que ela segura (vão entre as frentes + 10);
+  - não pode criar colisão nova com a caixa da gaveta, corrediça, travessa, base ou prateleira (colisão que já existia antes, sem mexer, não bloqueia outra mudança);
+  - fora disso aparece o aviso com o motivo e nada muda. Vale também para os campos de sempre (cbR, cbT, cbG) quando o vão é cava.
+- **Restaurar padrão:** volta a medida automática original do componente (o valor do modelo é guardado na 1ª mudança, em `cbOrig`; régua individual: o ↺ tira só o valor dela). Não assume 55 para tudo.
+- **Menos gavetas:** as réguas que sobram (n ≥ gavetas) saem da configuração.
+- **Na hora:** 2D, 3D, lista, plano de corte e DXF (tudo sai do `partsOf`). Desfazer pelo histórico do projeto. Salva e reabre. Projeto antigo sem `cbRq` abre igual.
+- **Achado:** no Gaveteiro 4 gavetas (vão comum), um batente superior de 20 mm entraria na caixa da gaveta de cima (lá a caixa não diminui com o batente superior, só no editor por vãos): a conferência recusa e avisa.
+- **Teste:** `testBatenteCavaReguaPorReguaComLimitesRestaurarEEditorPorVaos` (2, 4, 6 e 8 gavetas; régua individual; mínimo; colisão; régua do vão; desfazer; reabrir; menos gavetas; restaurar; projeto antigo; editor por vãos). Falha antes, passa depois.

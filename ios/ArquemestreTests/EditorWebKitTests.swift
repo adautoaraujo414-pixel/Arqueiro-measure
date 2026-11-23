@@ -16636,4 +16636,67 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["guardaRoupa"] as? String, "undefined")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // BATENTE DO PUXADOR CAVA (Adauto 23/11): altura de cada régua escolhida à mão (mm), sem mexer nas outras; batente superior também;
+    // comprimento = vão; mínimo 5 mm atrás de cada frente; medida que colide não entra; restaurar = automática original; menos gavetas tira a régua
+    // que sobrou; 2D, 3D, lista, corte e DXF na hora; desfazer; salvar e reabrir; projeto antigo igual; vale no editor por vãos também
+    func testBatenteCavaReguaPorReguaComLimitesRestaurarEEditorPorVaos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={},TL=[],e0=__errs.length;window.toast=function(t){TL.push(String(t))};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Gaveteiro 4 gavetas'));var gi=S.mods[0].v.map(function(v){return v.k}).indexOf('drawers');S.mods[0].v[gi].cava=true;S.m=S.mods[0];S.sv=gi;draw();
+        var M=function(){return S.mods[0]},V=function(){return M().v[gi]},bt=function(){return partsOf(M()).filter(function(p){return /^Batente/.test(p.name)}).map(function(p){return (p.cbq||'s')+':'+p.h}).join(',')};
+        var put=async function(sel,val){await W(800);S.m=M();S.sv=gi;S.tab=2;panel();var i=document.querySelector(sel);if(!i)return 'sem campo';i.value=val;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));await W(60);return 'ok'};
+        var ult=function(){return TL.slice(-1)[0]||''};
+        R.automatica=bt();S.tab=2;panel();R.campos=document.querySelectorAll('#bd [data-cbq]').length;
+        R.so2=(await put('#bd [data-cbq="2"]','70'))+' '+bt();
+        open3D();await W(300);__build();R.tresD=__boxes().filter(function(b){return /^0:Batente \(cava\)/.test(String(b.nm))&&!b.ft}).map(function(b){return Math.round(b.y1-b.y0)}).join(',');document.getElementById('v3x').click();
+        R.corte=cutLines(M()).filter(function(l){return /^Batente/.test(l.names[0])}).map(function(l){return l.L+'×'+l.W+' ×'+l.qty}).join(' | ');R.dxf=dxfPecas().pecas.filter(function(p){return /^Batente/.test(p.nome)}).map(function(p){return p.L+'×'+p.W}).sort().join(',');
+        R.svg=document.querySelectorAll('#svg *').length>0;
+        await put('#bd [data-cbq="1"]','30');R.minimo=bt()+' · '+/5 mm/.test(ult());
+        await put('#bd [data-cbq="1"]','200');R.colisao=bt()+' · '+/colisão/.test(ult());
+        await put('#bd [data-ov="cbT"]','20');R.superior=bt();R.msgSup=ult();
+        await put('#bd [data-ov="cbR"]','60');R.vao=bt();
+        await W(800);document.getElementById('und').click();await W(100);R.desfez=bt();
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();R.reabriu=bt();
+        V().n=2;draw();R.duasGavetas=JSON.stringify(V().cbRq||null)+' '+bt();V().n=4;draw();
+        S.m=M();S.sv=gi;S.tab=2;panel();var rb=document.querySelector('#bd [data-cbauto]');if(rb){await W(800);rb.click();await W(60)}R.restaurar=bt()+' · '+JSON.stringify(V().cbRq||null)+' '+V().cbT+' '+V().cbR;
+        /* 2, 4, 6 e 8 gavetas: uma régua a menos que as gavetas, um campo por régua; mudar a 1ª não mexe nas outras; corte = 3D */
+        var lst=[];for(var nn of [2,4,6,8]){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Gaveteiro 4 gavetas'));V().cava=true;V().n=nn;S.m=M();S.sv=gi;draw();var a0=bt();await put('#bd [data-cbq="1"]','45');
+          open3D();await W(200);__build();var t3=__boxes().filter(function(b){return /^0:Batente \(cava\)/.test(String(b.nm))&&!b.ft}).map(function(b){return Math.round(b.y1-b.y0)}).join(',');document.getElementById('v3x').click();
+          var ct=[];cutLines(M()).forEach(function(l){if(/^Batente \(cava\)/.test(l.names[0]))for(var k=0;k<l.qty;k++)ct.push(l.W)});lst.push(nn+': '+document.querySelectorAll('#bd [data-cbq]').length+' campos · '+bt()+' · 3D '+t3.split(',').sort().join(',')+' = corte '+ct.sort().join(','))}
+        R.quantidades=lst.join(' | ');
+/* projeto antigo (sem cbRq, salvo antes): abre igual */loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Gaveteiro 4 gavetas'));V().cava=true;draw();var an=JSON.parse(JSON.stringify(snapState()));delete an.mods[0].v[gi].cbRq;loadState(an);draw();R.antigo=bt();
+        /* editor por vãos (armário com gaveteiro de frente por fora e cava) */
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=3600;S.H=2700;draw();var c=CATS.filter(function(x){return x.id==='quarto'})[0],fo=JSON.parse(JSON.stringify(c.it.filter(function(q){return /Armário livre/.test(q.n)})[0]));newTpl(fo);var m=S.m;m.w=830;m.h=2600;m.d=560;draw();
+        var C=function(s){document.querySelector(s).click()};RG.gd=undefined;soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|3"]');RG.sel={mi:0,path:'r.0'};RG.dsel=null;RG.tab='por';panel();C('[data-rga="door|2"]');RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();C('[data-rga="ins|gav"]');
+        var rb2=function(){return partsOf(m).filter(function(p){return /^Batente/.test(p.name)&&p.rgp==='r.2'}).map(function(p){return (p.cbq||'s')+':'+p.h}).join(',')};
+        var put2=async function(sel,val){await W(60);RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();var i=document.querySelector(sel);if(!i)return 'sem campo';i.value=val;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));await W(60);return 'ok'};
+        R.rgAntes=rb2();R.rgRegua=(await put2('[data-cbq="2"]','75'))+' '+rb2();R.rgMinimo=(await put2('[data-cbq="1"]','28'))+' '+rb2()+' · '+/5 mm/.test(ult());R.rgSuperior=(await put2('[data-cbt]','20'))+' '+rb2();
+        try{soloOff()}catch(e){}R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["automatica"] as? String, "1:55,2:55,3:55", "automática: vão 25 + 15 de cada lado")
+        XCTAssertEqual(o["campos"] as? Int, 3, "um campo por régua")
+        XCTAssertEqual(o["so2"] as? String, "ok 1:55,2:70,3:55", "só a régua 2 muda")
+        XCTAssertEqual(o["tresD"] as? String, "55,70,55", "3D na hora")
+        XCTAssertEqual(o["corte"] as? String, "770×55 ×2 | 770×70 ×1", "corte: comprimento = vão; só a régua 2 com 70")
+        XCTAssertEqual(o["dxf"] as? String, "770×55,770×55,770×70", "DXF")
+        XCTAssertEqual(o["minimo"] as? String, "1:55,2:70,3:55 · true", "30 com vão de 25 = 2,5 atrás da frente: não entra, avisa")
+        XCTAssertEqual(o["colisao"] as? String, "1:55,2:70,3:55 · true", "200 bate na caixa/travessa: não entra, avisa")
+        XCTAssertEqual(o["superior"] as? String, "1:55,2:70,3:55", "batente superior de 20 neste gaveteiro entraria na caixa da gaveta de cima: não entra")
+        XCTAssertTrue((o["msgSup"] as? String ?? "").contains("colisão"), "\(o["msgSup"] ?? "")")
+        XCTAssertEqual(o["vao"] as? String, "1:60,2:70,3:60", "régua do vão muda as outras; a escolhida fica")
+        XCTAssertEqual(o["desfez"] as? String, "1:55,2:70,3:55", "desfazer")
+        XCTAssertEqual(o["reabriu"] as? String, "1:55,2:70,3:55", "salvar e reabrir")
+        XCTAssertEqual(o["duasGavetas"] as? String, "null 1:55", "menos gavetas: a régua 2 sai da configuração")
+        XCTAssertEqual(o["restaurar"] as? String, "1:55,2:55,3:55 · null undefined undefined", "restaurar: automáticas do modelo")
+        XCTAssertEqual(o["quantidades"] as? String, "2: 1 campos · 1:45 · 3D 45 = corte 45 | 4: 3 campos · 1:45,2:55,3:55 · 3D 45,55,55 = corte 45,55,55 | 6: 5 campos · 1:45,2:55,3:55,4:55,5:55 · 3D 45,55,55,55,55 = corte 45,55,55,55,55 | 8: 7 campos · 1:45,2:55,3:55,4:55,5:55,6:55,7:55 · 3D 45,55,55,55,55,55,55 = corte 45,55,55,55,55,55,55", "2, 4, 6 e 8 gavetas")
+        XCTAssertEqual(o["antigo"] as? String, "1:55,2:55,3:55")
+        XCTAssertEqual(o["rgAntes"] as? String, "1:55,2:55,3:55")
+        XCTAssertEqual(o["rgRegua"] as? String, "ok 1:55,2:75,3:55", "editor por vãos: régua 2")
+        XCTAssertEqual(o["rgMinimo"] as? String, "ok 1:55,2:75,3:55 · true", "editor por vãos: mínimo")
+        XCTAssertEqual(o["rgSuperior"] as? String, "ok s:20,1:55,2:75,3:55", "editor por vãos: batente superior")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

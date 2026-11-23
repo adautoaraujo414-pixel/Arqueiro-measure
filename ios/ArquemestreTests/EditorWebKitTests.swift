@@ -16134,4 +16134,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabre"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · etapa B (Adauto 22/11 18:12): meia parede / balcão com altura padrão 1100 e espessura 150, as duas editáveis (antes a meia parede
+    /// era fixa em 1100); abertura na parede toda ("parede inteira": balcão de ponta a ponta, também no fundo). Móveis não mudam.
+    @MainActor
+    func testParedesEtapaBMeiaParedeComAlturaEEspessuraEditaveisEAberturaNaParedeToda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES etapa B (Adauto 22/11 18:12: meia parede/balcão com altura padrão 1100 e espessura 150, editáveis; abertura parcial ou na parede toda) */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var alturaL=async function(){open3D();await W(150);__build();var B=__bg().filter(function(b){return b.wl==='L'&&b.c&&b.c.join()===[226,222,213].join()}),y=B.reduce(function(a,b){var yy=b.pf&&b.pf.ax==='x'?Math.max.apply(null,b.pf.pts.map(function(p){return p[1]})):b.y1;return Math.max(a,yy)},0),t=B.reduce(function(a,b){return Math.max(a,Math.round(Math.abs(b.x1-b.x0)))},0);document.getElementById('v3x').click();await W(50);return Math.round(y)+' · espessura '+t};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;S.RD=3500;draw();newTpl(T('Balcão 2 portas'));var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}));
+        R.normal=await alturaL();wallSet('L','tp','meia');draw();R.meiaPadrao=await alturaL();R.cfg=wallCfg('L').mh+' '+wallCfg('L').t;
+        wallSet('L','mh',900);wallSet('L','t',200);draw();R.meia900=await alturaL();
+        /* fundo: abertura na parede inteira = balcão de ponta a ponta */var o=opAdd('abertura');S.tab=9;panel();await W(30);var b=document.querySelector('#bd [data-opfull="'+o.id+'"]');if(b)b.click();await W(60);R.paredeInteira=o.x+'–'+(o.x+o.w)+' peitoril '+o.b;
+        R.moveisIguais=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}))===M0;var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.reabre=wallCfg('L').mh+' '+wallCfg('L').tp;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "2700 · espessura 150")
+        XCTAssertEqual(o["meiaPadrao"] as? String, "1100 · espessura 150", "meia parede: padrão 1100 × 150")
+        XCTAssertEqual(o["meia900"] as? String, "900 · espessura 200", "altura e espessura editáveis")
+        XCTAssertEqual(o["paredeInteira"] as? String, "0–4000 peitoril 1100", "abertura de ponta a ponta no fundo")
+        XCTAssertEqual(o["moveisIguais"] as? Bool, true)
+        XCTAssertEqual(o["reabre"] as? String, "900 meia")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

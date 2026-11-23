@@ -6050,7 +6050,7 @@ final class EditorWebKitTests: XCTestCase {
         draw();open3D();await W(400);__cam(0.6,0.35,1.6);await W(100);
         var cv=document.getElementById('cv3'),bb=function(){var o=__boxes().filter(function(b){return /^0:Corte do (forno|micro-ondas)/.test(String(b.nm))}),q={x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z1:-1e9,n:o.length,k:o.length?'mo0|'+o[0].vi+(/forno/.test(o[0].nm)?'':'m'):''};o.forEach(function(b){q.x0=Math.min(q.x0,b.x0);q.x1=Math.max(q.x1,b.x1);q.y0=Math.min(q.y0,b.y0);q.y1=Math.max(q.y1,b.y1);q.z1=Math.max(q.z1,b.z1)});return q};
         var ids=Object.keys(TWM).filter(function(k){return !TWM[k].old});R.total=ids.length;R.nao=[];
-        for(var i=0;i<ids.length;i++){m.rt.c[1].el={mdl:ids[i],fr:(i%2?'nicho':'rec'),ox:0,oy:0};draw();re3();var q=bb();if(!q.n){R.nao.push(ids[i]+' sem aparelho');continue}var p=org3api.proj([(q.x0+q.x1)/2,(q.y0+q.y1)/2,q.z1]),a0=ele3api.ang(q.k);org3api.one(p[0],p[1]);await W(220);if(ele3api.ang(q.k)===a0)R.nao.push(ids[i]);else{ele3api.toggle(q.k);await W(60)}}
+        for(var i=0;i<ids.length;i++){m.rt.c[1].el={mdl:ids[i],fr:(i%2?'nicho':'rec'),ox:0,oy:0};draw();re3();var q=bb();if(!q.n){R.nao.push(ids[i]+' sem aparelho');continue}/* espera o anterior terminar de FECHAR antes de tocar (Chefe/Code 1, 23/11: com 60 ms o toque caía no meio da animação e, com a máquina carregada, fechar + toque se anulavam: intermitente do teste, não do app) */for(var w_=0;w_<30&&ele3api.ang(q.k)>0;w_++)await W(100);var p=org3api.proj([(q.x0+q.x1)/2,(q.y0+q.y1)/2,q.z1]),a0=ele3api.ang(q.k);org3api.one(p[0],p[1]);for(var w2=0;w2<30&&ele3api.ang(q.k)===a0;w2++)await W(100);if(a0!==0||ele3api.ang(q.k)<=a0)R.nao.push(ids[i]+(a0!==0?' (não fechou antes)':''));else{ele3api.toggle(q.k)}}
         /* toque de verdade na tela, na beirada esquerda (em cima da frente fixa) */
         m.rt.c[1].el={mdl:'f_el80',fr:'rec',ox:0,oy:0};draw();re3();await W(700);var fr_=__boxes().filter(function(b){return /^0:Frente com recorte do forno/.test(String(b.nm))});R.semEmenda=fr_.filter(function(b){return !b.nol}).length+' '+fr_.filter(function(b){return b.rec1}).length+' '+fr_.filter(function(b){return b.recLn}).length;var q=bb(),p=org3api.proj([q.x0+(q.x1-q.x0)*.04,(q.y0+q.y1)/2,q.z1]),r=cv.getBoundingClientRect(),a0=ele3api.ang(q.k);
         ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:5,pointerType:'touch',isPrimary:true,clientX:r.left+p[0],clientY:r.top+p[1],buttons:n==='pointerup'?0:1}))});await W(300);for(var t_=0;t_<24&&ele3api.ang(q.k)===a0;t_++)await W(200);R.beirada=ele3api.ang(q.k)!==a0;
@@ -16462,5 +16462,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["moldura"] as? String, "sem frontal: 1 · com frontal: 0", "moldura e Frontal coberto pelas portas não somam")
         XCTAssertEqual(o["ordem"] as? String, "Moldura → Travessão → Frontal")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* CANTO-ESPELHO (achado pelo Code 2, 23/11/2026): na parede esquerda, o cantoEncosta redesenhava pelo d0 guardado antes do envoltório
+       PAREDE-ESPELHADA: o 2D ficava sem espelho e o WVMIRX velho (o toque convertia errado). */
+    func testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        try{wvExit()}catch(_){}S.env='cozinha';S.room='cozinha';S.stones=[];S.stw=[];S.fr=[];S.isl=[];S.mods=[];S.W=4200;S.wl={L:'p',R:'p'};draw();newTpl(T('Balcão 2 portas'));S.mods[0].x=0;draw();await W(400);
+        wvGo('e');await W(300);R.v0='parede esquerda: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        newTpl(T('Balcão 2 portas'));var m=S.mods[S.mods.length-1];m.x=606;draw();await W(900);
+        var mexeu=m.x!==606;R.v1='módulo novo perto do canto: encostou '+mexeu+' (x '+m.x+')';
+        R.v2='depois de encostar: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        /* toque: tocar no móvel novo onde ele está desenhado escolhe ele (com o espelho velho o toque convertia pro lugar errado) */var mi=S.mods.indexOf(m);var g=document.querySelector('#svg [data-mi="'+mi+'"]');S.m=S.mods[0];draw();await W(100);g=document.querySelector('#svg [data-mi="'+mi+'"]');var rc=g?g.getBoundingClientRect():null;if(rc){var x=rc.left+rc.width/2,y=rc.top+rc.height*0.7,t=document.elementFromPoint(x,y),sv=document.getElementById('svg');t.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:1}));sv.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:0}));await W(150)}R.v3='toque no móvel novo (onde está desenhado): escolheu ele '+(S.m===m)+' · ele não andou '+(m.x===630);
+        try{wvExit()}catch(_){}R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "parede esquerda: espelho true · WVMIRX true", "vista da parede esquerda espelhada")
+        XCTAssertEqual(o["v1"] as? String, "módulo novo perto do canto: encostou true (x 630)", "o módulo novo perto do canto encosta (cantoEncosta)")
+        XCTAssertEqual(o["v2"] as? String, "depois de encostar: espelho true · WVMIRX true", "depois de encostar o 2D continua espelhado (antes o redesenho pulava o espelho e o WVMIRX ficava velho)")
+        XCTAssertEqual(o["v3"] as? String, "toque no móvel novo (onde está desenhado): escolheu ele true · ele não andou true", "tocar onde o móvel está desenhado escolhe ele, sem mexer")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 }

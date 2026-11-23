@@ -1706,3 +1706,23 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
 - **Ferramenta:** bateria do Chromium confere asserts com expressão Swift e os testes com JS em `static let` (`8f21fa0`: 3728 → 4166 asserts conferidos).
 - **PAREDES A–F (23/11, "Faça todos"):** abertura com peitoril (antes: vão com "do chão" > 0 deixava buraco embaixo no 3D), meia parede com altura editável (antes fixa 1100), remover/restaurar fundo e laterais (antes o 🗑 da lateral apagava as portas dela; o fundo não saía), menu EDITAR PAREDE, Soltar sem mexer. Detalhes, commits e testes em `PAREDES_ETAPAS_A_F_2026-11-23.md`; compatibilidade com o app publicado medida (nada se perde ao salvar no app antigo).
 - **JUNÇÃO 5 · TRAVESSÃO (23/11):** `a849a43`, `testJuncao5TravessaoDuasReguasDe80PorCimaDasLaterais`. Regra do a862927 (Code 1, 17/11) refeita sem depender da LAT-MEIO; padrão 80 mm.
+
+## Pendências da candidata 5bd11f5 (23/11/2026, branch `claude/abertos-1`)
+- **testFASE3_PlantaAngulo (298 × 274 arestas):** a contagem depende de quantas caixas o 3D gera, e subiu com a auditoria do 3D do Code 2. O teste passa a conferir "desenhadas · alinhadas 0" e reabrir com as mesmas arestas. Continua falhando antes da PL-ANG-GIRADO. Commit 9d0c48a.
+- **iOS CI 674, testFASE3_MovelLivreCameraNaoMexe… — "embaixo do dedo false": comportamento correto, não é defeito.**
+  - Reproduzido em 390×844 (tela do iPhone): 80 px de dedo dão 1620 mm. O móvel bate na parede direita e para ("ele entraria na parede direita").
+  - Medido: dedo 80,40 px; móvel 50,25 px.
+  - O teste passa a arrastar 40% da largura do móvel na tela.
+  - O arrasto 3D confere andou/b/rot/m.x, sem o ponto exato.
+  - Conferido em 390×844, 375×667, 820×1180, 1024×1366 e 1366×768. Commit 31e55b7.
+- **Revisão dos testes do Code 1 nas telas do iPhone e do iPad** (verificador que extrai o JS e as asserções do Swift e roda com Playwright): FASE3_* e FASE4_* passam. O testToqueNoTamponamento (claude/digitacao-toques) dependia da tela e foi corrigido no 6d6ab18.
+- **CANTO-ESPELHO (erro comprovado, achado pelo Code 2):**
+  - Efeito: na parede esquerda, o `cantoEncosta` redesenhava pelo `d0` guardado antes do envoltório PAREDE-ESPELHADA. O 2D ficava sem espelho e o `WVMIRX` velho, e o toque convertia errado.
+  - Repro: balcão no canto, `wvGo('e')`, módulo novo em x=606 → encosta em 630 → `#wvmir` some.
+  - Correção: redesenhar por `window.draw`, com `busy`.
+  - Teste `testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D` (7670248, falha antes) · correção 9fd337d.
+- **testFornoDaTorrePorVaosAbreNoToqueEmQualquerPonto (intermitente): era do teste, não do app.**
+  - Medido: com 60 ms entre fechar e tocar, o toque caía no meio da animação de fechar (ângulo ~0,85). Com a máquina carregada, fechar + toque se anulavam (ângulo ficava 1).
+  - Em todas as rodadas o toque mudou o forno.
+  - O teste agora espera fechar (até 3 s), toca e espera abrir (até 3 s). Continua falhando se o toque não abrir.
+  - 6/6 rodadas (antes 1/6). Commit 2f52a83.

@@ -15466,4 +15466,52 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ilhaAntiga"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* FASE2 (23/11, Adauto — bloqueio da homologação): ilha de antes da regra nova do fundo da gaveta também tem aviso com prévia e "Atualizar fundo das gavetas", com desfazer. */
+    func testFASE2_IlhaAntigaAtualizaFundoDaGavetaComPreviaEDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(r=>setTimeout(r,t))};var R={},e0=__errs.length;
+        /* FASE2 (23/11, Adauto): ilha de antes da regra nova do fundo da gaveta — igual até confirmar; aviso com prévia e botão "Atualizar fundo das gavetas" no quadro da ilha; desfazer volta */
+        var fundos=function(a){return partsOf(islVM(a)).filter(function(p){return /^Fundo de gaveta/.test(p.name)}).map(function(p){return p.cl+'×'+p.cw}).join(' ')};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();var a=islNew('ilha');a.fr='gavetas';S.isl=S.isl||[];S.isl.push(a);delete a.gf6;draw();
+        R.antiga=fundos(a);loadState(JSON.parse(JSON.stringify(snapState())));a=S.isl[0];R.reaberta=fundos(a)+' · marca '+(a.gf6?1:0);
+        open3D();await W(300);__islApi.sel(a.id);__islApi.panel();await W(200);var bx=document.getElementById('gfisl');R.aviso=bx?(/fundo de gaveta \d+×\d+ → \d+×\d+/.test(bx.textContent)?'com prévia':'sem prévia'):'sem aviso';
+        var b=document.querySelector('[data-gf6isl]');if(b){b.click();await W(200)}a=S.isl[0];R.atualizou=fundos(a)+' · marca '+(a.gf6?1:0)+' · aviso '+(document.getElementById('gfisl')?'fica':'some');
+        document.getElementById('v3und').click();await W(250);a=S.isl[0];R.desfez=fundos(a)+' · marca '+(a.gf6?1:0);
+        var n=islNew('ilha');n.fr='gavetas';R.ilhaNova=fundos(n)+' · aviso '+(gf6IslBox(n)?'sim':'não');
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["antiga"] as? String, "807×460 807×460 807×460 807×460 807×460 807×460")
+        XCTAssertEqual(o["reaberta"] as? String, "807×460 807×460 807×460 807×460 807×460 807×460 · marca 0")
+        XCTAssertEqual(o["aviso"] as? String, "com prévia")
+        XCTAssertEqual(o["atualizou"] as? String, "804×460 804×460 804×460 804×460 804×460 804×460 · marca 1 · aviso some")
+        XCTAssertEqual(o["desfez"] as? String, "807×460 807×460 807×460 807×460 807×460 807×460 · marca 0")
+        XCTAssertEqual(o["ilhaNova"] as? String, "804×460 804×460 804×460 804×460 804×460 804×460 · aviso não")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /* FASE5 · ETIQUETA (23/11, auditoria do Chefe): texto das peças no DXF em 2 linhas e com altura que cabe na largura da peça — sem sobrepor texto nem contorno vizinho. */
+    func testFASE5_EtiquetaDoDxfNaoSobrepoePecaVizinha() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* FASE5 · ETIQUETA (23/11, auditoria do Chefe): no DXF do projeto o texto de uma peça não cai em cima do texto nem do contorno de outra (peças estreitas vizinhas) */
+        loadState(initLimpo());S.env='cozinha';S.W=4000;draw();demoScene();draw();PR.dxf={dobP:'13',uniao:'cavilha',cavD:'8',cavPF:'12',cavPT:'25',cavOff:'32',cavEsp:'128',pxOutros:'montagem'};var r=dxfPecas(),t=dxfTexto(r.pecas,'etq'),L=t.split('\r\n'),W=window.__dxfEtqW||0.62;
+        var tx=[],ct=[];for(var i=0;i<L.length-1;i+=2){if(L[i]==='0'&&(L[i+1]==='TEXT'||L[i+1]==='POLYLINE')){var tp=L[i+1],j=i+2,o={};while(j<L.length-1&&L[j]!=='0'){o[L[j]]=L[j+1];j+=2}
+         if(tp==='TEXT'){var x=+o['10'],y=+o['20'],h=+o['40'],s=o['1']||'';tx.push({x0:x,x1:x+s.length*h*W,y0:y,y1:y+h,s:s})}
+         else if(o['8']==='CONTORNO'){var vs=[];var k=j;while(k<L.length-1&&!(L[k]==='0'&&L[k+1]==='SEQEND')){if(L[k]==='0'&&L[k+1]==='VERTEX'){var q=k+2,v={};while(q<L.length-1&&L[q]!=='0'){v[L[q]]=L[q+1];q+=2}vs.push([+v['10'],+v['20']])}k+=2}if(vs.length)ct.push({x0:Math.min.apply(null,vs.map(function(a){return a[0]})),x1:Math.max.apply(null,vs.map(function(a){return a[0]})),y0:Math.min.apply(null,vs.map(function(a){return a[1]})),y1:Math.max.apply(null,vs.map(function(a){return a[1]}))})}}}
+        var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0.01&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>0.01};
+        var tt=0,tc=0,ex=[];for(var a=0;a<tx.length;a++){for(var b=a+1;b<tx.length;b++)if(ov(tx[a],tx[b])){tt++;if(ex.length<3)ex.push(tx[a].s+' × '+tx[b].s)}ct.forEach(function(c){if(ov(tx[a],c))tc++})}
+        R.etiquetas=tx.length+' textos · '+ct.length+' contornos';R.textoSobreTexto=tt;R.textoSobreContorno=tc;R.exemplos=ex.join(' ; ');
+        R.alturaMin=Math.min.apply(null,tx.map(function(q){return q.y1-q.y0}))>=3;
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["etiquetas"] as? String, "284 textos · 142 contornos")
+        XCTAssertEqual(o["textoSobreTexto"] as? Int, 0)
+        XCTAssertEqual(o["textoSobreContorno"] as? Int, 0)
+        XCTAssertEqual(o["exemplos"] as? String, "")
+        XCTAssertEqual(o["alturaMin"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

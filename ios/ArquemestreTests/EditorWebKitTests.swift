@@ -16695,4 +16695,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "reaberto: Prateleira#2 lado 4 300 mm emb 6000", "salvar e reabrir mantém o LED")
         XCTAssertEqual(o["v10"] as? String, "erros 0", "sem erro")
     }
+
+    // ESPELHO-REAL (Adauto 23/11: "espelhos com aparência de espelhos reais, sem prejudicar a velocidade"): reflexo planar de verdade (o balcão vermelho
+    // na frente do espelho aparece vermelho dentro dele); prata neutro, bronze quente, fumê escuro; sem recursão entre espelhos; mesma textura reutilizada
+    // (câmera parada não refaz); qualidade do aparelho (não vai pro projeto); Acabamento realista e dados do projeto iguais
+    func testEspelhoComReflexoRealDaCenaAcabamentosSemRecursaoEQualidade() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var cena=function(comBalcao){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();if(comBalcao){newTpl(T('Balcão 2 portas'));S.mods[0].x=2000;S.mods[0].corF='#c81e1e';S.mods[0].cor='#c81e1e';draw()}var f=espWallAdd(0);f.w=1000;f.h=1700;f.x=900;f.b=150;draw();return f};
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl');
+        var foto=function(f,alt,ate){__cam(.85,0,1.0);alt=alt||.08;ate=ate||.98;var c=__p3(f.x+f.w/2,f.b+f.h*alt,f.d||4),c2=__p3(f.x+f.w*(alt>.5?.04:.45),f.b+f.h*alt,f.d||4),c3=__p3(f.x+f.w*ate,f.b+f.h*alt,f.d||4),r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),cor=[0,0,0],ver=0,n=0;
+          var x0=Math.round(Math.min(c2[0],c3[0])*r),x1=Math.round(Math.max(c2[0],c3[0])*r),y=Math.round(H-c[1]*r);for(var x=x0;x<=x1;x+=Math.max(1,Math.round((x1-x0)/40))){gl.readPixels(x,y,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);cor[0]+=px[0];cor[1]+=px[1];cor[2]+=px[2];n++;if(px[0]>px[1]+40&&px[0]>px[2]+40)ver++}
+          return {r:Math.round(cor[0]/n),g:Math.round(cor[1]/n),b:Math.round(cor[2]/n),ver:ver,n:n}};
+        var f=cena(true),sv0=JSON.stringify(snapState());open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        var p=foto(f);R.reflete=p.ver>0;R.planos=Object.keys(MIRS).length+' '+(window.__mirInfo||{}).vis;R.err=window.MIRERR||'';
+        f.acab='bronze';draw();re3();await W(100);var bz=foto(f,.85,.9);f.acab='fume';draw();re3();await W(100);var fu=foto(f,.85,.9);f.acab='prata';draw();re3();await W(100);var pr=foto(f,.85,.9);
+        R.bronzeQuente=(bz.r-bz.b)>(pr.r-pr.b)+8;R.fumeEscuro=(fu.r+fu.g+fu.b)<(pr.r+pr.g+pr.b)*.7;R.tons='prata '+[pr.r,pr.g,pr.b]+' bronze '+[bz.r,bz.g,bz.b]+' fumê '+[fu.r,fu.g,fu.b];
+        /* câmera parada: o reflexo é reaproveitado */__cam(.85,0,1.0);R.reaproveita=(window.__mirInfo||{}).feitos===0;
+        document.getElementById('v3x').click();R.semBalcao=(function(){var f2=cena(false);open3D();return f2})();await W(400);R.semVermelho=foto(R.semBalcao).ver===0;R.semBalcao=1;
+        /* dois espelhos frente a frente (paredes do lado): sem recursão e sem erro */document.getElementById('v3x').click();cena(false);var a=espWallAdd(0);a.wall='e';a.x=600;a.w=800;a.h=1500;a.b=300;var b=espWallAdd(0);b.wall='d';b.x=600;b.w=800;b.h=1500;b.b=300;draw();open3D();await W(400);__cam(.0,.05,1.0);__cam(.3,.05,1.0);R.frenteAFrente=Object.keys(MIRS).length+' planos · erro '+(window.MIRERR||'nenhum');
+        /* qualidade é do aparelho: muda o reflexo, não o projeto */var s1=JSON.stringify(snapState());espqSet('alta');__cam(.3,.05,1.0);var ia=JSON.stringify(window.__mirInfo);espqSet('equil');__cam(.31,.05,1.0);var ie=window.__mirInfo;R.qualidade=(JSON.parse(ia).w>ie.w)+' · projeto igual '+(JSON.stringify(snapState())===s1)+' · botão '+/Espelhos: equilibrado/.test((document.getElementById('v3esq')||{}).textContent||'');espqSet('auto');
+        /* Acabamento realista: espelho como antes (sem o reflexo planar) e sem erro */window.AQERR='';aqSet(1);await W(200);R.aq=Object.keys(MIRS).length+' '+(window.AQERR||'ok');aqSet(0);
+        document.getElementById('v3x').click();R.dados=JSON.stringify(cena(true))&&JSON.stringify(snapState()).length>0;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["reflete"] as? Bool, true, "o balcão vermelho aparece vermelho dentro do espelho")
+        XCTAssertEqual(o["err"] as? String, "")
+        XCTAssertEqual(o["bronzeQuente"] as? Bool, true, "bronze: reflexo puxado pro bronze · \(o["tons"] ?? "")")
+        XCTAssertEqual(o["fumeEscuro"] as? Bool, true, "fumê: reflexo mais escuro")
+        XCTAssertEqual(o["reaproveita"] as? Bool, true, "câmera parada: o reflexo não é refeito")
+        XCTAssertEqual(o["semVermelho"] as? Bool, true, "sem o balcão, nada vermelho no espelho (não é imagem fixa)")
+        XCTAssertEqual(o["frenteAFrente"] as? String, "3 planos · erro nenhum", "dois espelhos frente a frente (e o do fundo): cada plano com o seu reflexo, sem recursão")
+        XCTAssertEqual(o["qualidade"] as? String, "true · projeto igual true · botão true", "qualidade: do aparelho, não do projeto")
+        XCTAssertEqual(o["aq"] as? String, "0 ok", "Acabamento realista: espelho como antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

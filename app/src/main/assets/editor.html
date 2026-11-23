@@ -14437,4 +14437,11 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest('[data-cledl]');if(!b)return;ev.stopImmediatePropagation();ev.preventDefault();window.LEDPICK=1;try{var c=document.getElementById('crp3');if(c)c.hidden=true}catch(_){}toast('💡 Toque na peça onde vai o LED (a face tocada)')},true);
 })();
 </script>
+<script>
+/* FOTO-RESERVA (Chefe/Adauto 23/11, CI iOS: "makeImagePlus: 'WEBP' initImage failed"): cada foto do catálogo tem fotos/<chave>.jpg ao lado do .webp.
+   Só quando a .webp não abre (erro de decodificação ou de carga), a mesma imagem troca pra .jpg, uma vez. Onde a .webp abre, nada muda. */
+(function(){var RX=/(^|\/)fotos\/([^\/?#]+?)\.webp\w*([?#].*)?$/;window.__fotoReserva=0;
+ window.fotoReserva=function(im){try{if(!im||im.dataset.fjpg)return false;var src=im.getAttribute('src')||'',m=RX.exec(src);if(!m)return false;im.dataset.fjpg='1';im.src=src.replace(RX,'$1fotos/$2.jpg');window.__fotoReserva++;return true}catch(_){return false}};
+ document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG')fotoReserva(t)},true);})();
+</script>
 </body></html>

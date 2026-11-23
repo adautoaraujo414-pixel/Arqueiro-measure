@@ -6883,6 +6883,15 @@ window.rled3api={open:function(id,g){return rledOpen(id,g)},close:rledClose,st:f
  at:function(cx,cy,id){var a=(S.rp||[]).filter(function(q){return q.id===id})[0],g=a?rledAt(cx,cy,a):null;return g?g.i:null},
  /* ponto da tela no meio do vão (f = fração da altura do trecho, 0 embaixo · 1 em cima) */
  pt:function(id,gi,f){var a=(S.rp||[]).filter(function(q){return q.id===id})[0];if(!a)return null;var g=rledGaps(a).filter(function(q){return q.i===gi})[0];if(!g)return null;return proj3(rledW(a,g.x,g.y0+(g.y1-g.y0)*(f===undefined?.5:f),rpAf(a)+rpBt(a)+11))}};
+/* 🪞 ESPELHO NA PAREDE (Adauto, 23/11/2026): item da parede (S.fr, t:'espelho'), mesmo vidro 4 mm lapidado do espelho da porta de correr.
+   3D: placa fina encostada na parede (largura × altura × espessura), na parede escolhida (fundo, esquerda, direita: frWall3 de sempre). */
+try{FRWALL=new RegExp(FRWALL.source.replace(/\)\$$/,'|espelho)$'))}catch(_){}
+function espW3(f,z0){var x0=+f.x||0,w=Math.max(1,+f.w||600),b=+f.b||0,h=Math.max(1,+f.h||900),e=Math.max(1,+f.d||4),z=+z0||0;B(boxes,x0,x0+w,b,b+h,z,z+e,'#d3dde3',1,'f');try{boxes[boxes.length-1].mir=1}catch(_){}var lp=Math.min(8,w/4,h/4);[[x0,x0+w,b,b+lp],[x0,x0+w,b+h-lp,b+h],[x0,x0+lp,b,b+h],[x0+w-lp,x0+w,b,b+h]].forEach(function(q){B(boxes,q[0],q[1],q[2],q[3],z+e,z+e+.3,'#eef3f6',1,'f')})}
+var ap3_esp=ap3model;ap3model=function(f,z0){if(f&&f.t==='espelho'){espW3(f,z0);return true}return ap3_esp.apply(this,arguments)};
+var apF_esp=apFinK;apFinK=function(t){if(t==='espelho')return null;return apF_esp.apply(this,arguments)};
+var itRender_esp=itRender;itRender=function(){itRender_esp.apply(this,arguments);try{var x=ISX;if(!x||x.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||f.t!=='espelho')return;var i=it4Box().querySelector('[data-qf="d"]'),sp=i&&i.parentNode&&i.parentNode.querySelector('span');if(sp)sp.textContent='Espessura (mm)';[].forEach.call(it4Box().querySelectorAll('[data-qin^="d|"]'),function(b){b.setAttribute('data-qin',/\|-/.test(b.getAttribute('data-qin'))?'d|-1':'d|1')})}catch(_){}};
+/* espessura do espelho em mm (4, 5, 6…): o mínimo de 20 mm da profundidade dos eletros não vale pra ele */
+var itSet_esp=itSet;itSet=function(k,v){var x=ISX,f=x&&x.k==='fr'&&k==='d'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(f&&f.t==='espelho'){f.d=Math.round(Math.max(2,Math.min(50,+v||4)));return}return itSet_esp.apply(this,arguments)};
 })();
 </script>
 
@@ -13606,7 +13615,8 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var espBlk=function(){var L=[];(S.mods||[]).forEach(function(m,mi){(m.v||[]).forEach(function(v,vi){if(v&&v.k==='slide')L.push([mi,vi])})});
   var h='<div style="font-weight:700;font-size:14px;margin:6px 0">🪞 Espelho na porta de correr</div><div style="font-size:12px;color:#555;margin-bottom:6px">Espelho 4 mm lapidado colado na folha: escolha a porta, depois "🪞 Colocar espelho nesta folha" (tamanho e posição em mm). Entra na lista e no orçamento.</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
   if(L.length)h+=L.map(function(q){return '<button data-cesp="'+q[0]+'|'+q[1]+'" style="min-height:36px">🪞 Módulo '+(q[0]+1)+' · porta de correr</button>'}).join('');
-  else h+='<button data-cesp="novo" style="min-height:36px">＋ Guarda-roupa com porta de correr e espelho</button>';return h+'</div>'};
+  else h+='<button data-cesp="novo" style="min-height:36px">＋ Guarda-roupa com porta de correr e espelho</button>';h+='</div>';
+  /* espelho na parede (independente, item da parede): um botão por modelo */try{if(window.APM&&APM.espelho)h+='<div style="font-weight:700;font-size:14px;margin:12px 0 6px">🪞 Espelho na parede</div><div style="font-size:12px;color:#555;margin-bottom:6px">Espelho solto na parede (fundo, esquerda ou direita). Depois de pôr, toque nele: largura, altura, espessura, posição e parede.</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+apModels('espelho').map(function(mm,i){return '<button data-cespw="'+i+'" style="min-height:36px">🪞 '+esc(mm[0])+'</button>'}).join('')+'</div>'}catch(_){}return h};
  function aplica(){if(!C||ON)return;ON=1;try{
    var kids=[].slice.call(C.children),c0='outros';
    kids.forEach(function(k,j){if(j===0||k.id==='crpgrid'||k.id==='crpvolta'||k.hasAttribute('data-crpfix'))return;var tx=(k.textContent||'').trim();for(var i=0;i<TIT.length;i++)if(TIT[i][0].test(tx)){c0=TIT[i][1];break}k.setAttribute('data-crpcat',c0)});
@@ -13628,6 +13638,25 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   C.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='crpfind')filtra()},true);aplica()}
  document.addEventListener('click',function(ev){if(ev.target&&ev.target.closest&&ev.target.closest('#v3add'))setTimeout(function(){liga();if(C){window.__crpCat='home';aplica();vai('home')}},0)},true);
  window.__crp6={liga:liga,vai:vai,cat:cat,aplica:aplica};
+})();
+</script>
+<script>
+/* 🪞 ESPELHO NA PAREDE (Adauto, 23/11/2026 · "espelhos independentes nas paredes, com largura, altura, espessura e posição editáveis,
+   visualização correta em 2D/3D e persistência no projeto. Preservar integralmente os espelhos existentes nas portas de correr.")
+   É um item da parede como os outros (S.fr): já vai no salvar/abrir, no desfazer, na vista de cada parede e no editor de medidas.
+   O espelho da folha de correr (v.esp) continua como era: este bloco não mexe nele. */
+(function(){if(typeof APM==='undefined'||APM.espelho)return;
+ APM.espelho={n:'Espelho',b:1000,m:[['Espelho 60 × 90',600,900,4],['Espelho 50 × 70',500,700,4],['Espelho 80 × 120',800,1200,4],['Espelho de corpo inteiro 50 × 160',500,1600,4,{b:300}]]};
+ try{if(typeof GIRO_NAO!=='undefined')GIRO_NAO=new RegExp(GIRO_NAO.source.replace(/\)\$$/,'|espelho)$'))}catch(_){}
+ /* lugar inicial: no meio da parede, na altura do modelo, sem passar do teto */
+ var apA_esp=apAdd;apAdd=function(t,mi){var it=apA_esp.apply(this,arguments);if(t!=='espelho'||!it)return it;var H=+S.H||2600;delete it.fin;it.y=0;it.x=Math.max(0,Math.round(((+S.W||0)-it.w)/2));it.b=Math.max(0,Math.min(H-it.h,+it.b||0));return it};
+ /* 2D: o mesmo desenho do espelho da folha (borda e reflexo) */
+ var apSvg_esp=apSvg;apSvg=function(t,x,y,w,h,dd,nm){if(t!=='espelho')return apSvg_esp.apply(this,arguments);return '<rect x="'+(+x).toFixed(1)+'" y="'+(+y).toFixed(1)+'" width="'+Math.max(.5,+w).toFixed(1)+'" height="'+Math.max(.5,+h).toFixed(1)+'" fill="#d3dde3" stroke="#7f8f9a" stroke-width="1"/>'+(window.slMir2d?slMir2d({x:0,y:0,w:+w,h:+h},+x,+y,1):'')};
+ /* caixa de medidas do 2D: no espelho a terceira medida é a espessura */
+ var showBox_esp=showBox;showBox=function(){showBox_esp.apply(this,arguments);try{if(!(SELAP&&LAST==='ap'))return;var f=(S.fr||[]).filter(function(a){return a.id===SELAP})[0];if(!f||f.t!=='espelho')return;var i=document.querySelector('#itbox [data-apb="d"]'),l=i&&i.parentNode;if(l&&l.firstChild&&l.firstChild.nodeType===3)l.firstChild.nodeValue='Espessura'}catch(_){}};
+ /* ＋ Criar · Espelhos: põe o espelho escolhido na parede (depois é tocar nele pra mudar medida, posição e parede) */
+ window.espWallAdd=function(mi){if(window.RO)return null;try{snap()}catch(_){}var it=apAdd('espelho',+mi||0);try{draw();if(typeof panel==='function')panel();if(window.re3)re3()}catch(_){}try{toast('🪞 Espelho na parede · toque nele pra mudar largura, altura, espessura, posição e parede')}catch(_){}return it};
+ document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest('[data-cespw]');if(!b)return;ev.stopImmediatePropagation();ev.preventDefault();espWallAdd(b.getAttribute('data-cespw'))},true);
 })();
 </script>
 </body></html>

@@ -14396,4 +14396,45 @@ window.latMeioConflito=function(m){var R=[];try{var P=partsOf(m),gl=0;P.forEach(
  window.cbLimpa=limpa;var d0=window.draw;if(typeof d0==='function')window.draw=draw=function(){try{(S.mods||[]).forEach(limpa)}catch(_){}return d0.apply(this,arguments)};
 })();
 </script>
+<script>
+/* ===== BASE INTEIRA / DIVIDIDA / PERSONALIZADA (Adauto 23/11: "o assinante escolhe a forma de fabricação"). Por módulo (m.baseDiv):
+   - sem valor ou 'inteira': como sempre — uma base só, as divisórias e laterais do meio apoiadas em cima dela;
+   - 'dividida': a base sai em peças, uma por vão, em todas as divisórias que podem passar; a divisória desce até a face de baixo da base;
+   - 'pers': o marceneiro escolhe em quais divisórias a base divide (m.baseJ = {número da divisória: 1}).
+   Só divisória de profundidade toda (divisória sem recuo ou lateral do meio). Montante (só na frente) e divisória com recuo traseiro não dividem:
+   a base ficaria sem apoio atrás. Com pés ou com a base contínua com o vizinho, não divide (avisa o motivo). Projeto antigo não muda.
+   Tudo sai do partsOf: 2D, 3D, lista, corte, orçamento e DXF. */
+(function(){var p0=window.partsOf;if(typeof p0!=='function')return;
+ var RX=/^(Divisória|Lateral do meio) (\d+)$/;
+ window.baseJuntas=function(m,P){var r=[];try{if(!m||!m.base||m.corner||m.wing||(m.rt&&m.v&&m.v[0]&&m.v[0].k==='rt'))return r;P=P||p0(m);var B=P.filter(function(p){return p.name==='Base inferior'})[0];if(!B)return r;
+  var dep=(P.filter(function(p){return p.name==='Lateral esquerda'})[0]||{}).cw||m.d,bloq=(typeof baseRunOf==='function'&&baseRunOf(m))?'a base é contínua com o módulo do lado (desligue a base contínua pra dividir)':((typeof pesOn==='function'&&pesOn(m))?'com pés, embaixo da divisória não tem apoio':'');
+  P.forEach(function(p){var mm=RX.exec(p.name);if(!mm)return;var n=+mm[2],w='';if(p.x<=B.x+1||p.x+p.w>=B.x+B.w-1)return;if(p.rcMeio>0)w='tem recuo traseiro: a base ficaria sem apoio atrás';else if(mm[1]==='Divisória'&&(+p.cw)<(+dep)-0.5)w='tem recuo traseiro: a base ficaria sem apoio atrás';r.push({n:n,nome:p.name,x:+p.x,w:+p.w||(+m.esp||15),ok:!w&&!bloq,why:w||bloq})});
+  (P.filter(function(p){return /^Montante \d+/.test(p.name)})).forEach(function(p){var mm=/^Montante (\d+)/.exec(p.name);r.push({n:+mm[1],nome:p.name.replace(/ ·.*$/,''),x:+p.x,w:+p.w,ok:false,why:'montante só na frente: a base ficaria sem apoio atrás'})});r.sort(function(a,b){return a.x-b.x})}catch(_){}return r};
+ window.baseCorte=function(m,j){var md=m&&m.baseDiv;if(!md||md==='inteira')return false;if(md==='dividida')return true;return !!(m.baseJ&&m.baseJ[j.n])};
+ window.partsOf=partsOf=function(m){var r=p0.apply(this,arguments);try{if(!m||!m.baseDiv||m.baseDiv==='inteira'||!Array.isArray(r))return r;var J=baseJuntas(m,r).filter(function(j){return j.ok&&baseCorte(m,j)});if(!J.length)return r;
+  var bi=-1;r.forEach(function(p,k){if(bi<0&&p.name==='Base inferior')bi=k});if(bi<0)return r;var B=r[bi],e=+m.esp||15,x0=+B.x,x1=+B.x+(+B.w),seg=[],st=x0;
+  J.forEach(function(j){seg.push([st,j.x]);st=j.x+j.w});seg.push([st,x1]);var bpk=String(B.pk||'Base inferior#1').replace(/#\d+$/,'');
+  var out=seg.map(function(sg,k){var q=Object.assign({},B),L_=sg[1]-sg[0],w=Math.floor(L_+0.05),ini_=k===0,fim_=k===seg.length-1;/* mm inteiro (REGRAS 13/11): o décimo vira folga junto da divisória */q.x=Math.round((ini_?sg[0]:fim_?sg[1]-w:sg[0]+(L_-w)/2)*10)/10;q.w=w;if(Math.abs((+B.cl)-(+B.w))<0.6)q.cl=w;else q.cw=w;if(q.base)q.base=Object.assign({},q.base,{w:w,x:q.x});q.pk=k?bpk+'#'+(k+1):(B.pk||bpk+'#1');q.bDiv=k+1;q.note='base dividida · peça '+(k+1)+' de '+seg.length+' · encosta na face da divisória';return q});
+  r.splice.apply(r,[bi,1].concat(out));
+  /* a divisória (ou lateral do meio) desce a espessura da base e fica entre as duas peças, apoiada no que está embaixo da base */
+  J.forEach(function(j){r.forEach(function(p){if(p.name!==j.nome)return;p.h=(+p.h)+e;if(Math.abs((+p.cl)-(+p.h)+e)<0.6)p.cl=(+p.cl)+e;else p.cw=(+p.cw)+e;if(p.base)p.base=Object.assign({},p.base,{h:(+p.base.h||0)+e});p.bDesce=e;p.note=(p.note||'')+' · desce até a face de baixo da base (base dividida)'})})}catch(_){}return r};
+})();
+</script>
+<script>
+/* BASE INTEIRA / DIVIDIDA / PERSONALIZADA · quadro logo abaixo de "Base inferior" (aba Estrutura): as 3 opções, e na personalizada uma chave por divisória.
+   Divisória que não pode dividir aparece com o motivo. Cada mudança passa pelo desfazer (histórico do projeto) e vale só para este módulo. */
+(function(){var p0=window.panel;if(typeof p0!=='function')return;
+ function html(m){var J=baseJuntas(m);if(!J.length)return '';var md=m.baseDiv||'inteira',b=function(k,t){return '<button data-bdv="'+k+'" class="'+(md===k?'sel':'')+'" style="flex:1;min-height:36px">'+t+'</button>'};
+  var h='<div data-bdbox="1" style="border:1px solid #d0d5dd;border-radius:8px;padding:6px 8px;margin:4px 0 8px"><div style="font-weight:700;font-size:13px">Fabricação da base</div><div style="display:flex;gap:6px;margin:4px 0">'+b('inteira','Inteira')+b('dividida','Dividida')+b('pers','Personalizada')+'</div>';
+  h+='<div class="note">'+(md==='inteira'?'Uma peça só; as divisórias ficam apoiadas em cima dela.':md==='dividida'?'Uma peça por vão; a divisória desce até a face de baixo da base, entre as peças.':'Escolha em quais divisórias a base divide.')+'</div>';
+  if(md!=='inteira')J.forEach(function(j){var on=j.ok&&baseCorte(m,j);h+='<div style="display:flex;align-items:center;gap:6px;margin-top:3px"><span style="flex:1">'+j.nome+'</span>'+(j.ok?(md==='pers'?'<button data-bdj="'+j.n+'" class="'+(on?'sel':'')+'" style="min-height:32px">'+(on?'✂ Dividida aqui':'▭ Inteira aqui')+'</button>':'<b style="font-size:12px">✂ dividida</b>'):'<small style="color:#b54708">não divide: '+j.why+'</small>')+'</div>'});
+  return h+'</div>'}
+ window.baseDivHtml=html;
+ window.panel=panel=function(){var r=p0.apply(this,arguments);try{var bd=document.getElementById('bd'),m=S.m;if(!bd||!m||window.RO||bd.querySelector('[data-bdbox]'))return r;var c=bd.querySelector('[data-rc="base"]');if(!c||!m.base)return r;var h=html(m);if(!h)return r;var d=document.createElement('div');d.innerHTML=h;var ch=c.closest('.chk')||c;ch.parentNode.insertBefore(d.firstChild,ch.nextSibling)}catch(_){}return r};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-bdv],[data-bdj]');if(!t||window.RO||!S.m)return;e.stopImmediatePropagation();var m=S.m;try{snap()}catch(_){}
+  if(t.dataset.bdv){var k=t.dataset.bdv;if(k==='inteira')delete m.baseDiv;else m.baseDiv=k;if(k==='pers'&&!m.baseJ){m.baseJ={};baseJuntas(m).forEach(function(j){if(j.ok)m.baseJ[j.n]=1})}}
+  else{var n=+t.dataset.bdj;m.baseJ=Object.assign({},m.baseJ||{});if(m.baseJ[n])delete m.baseJ[n];else m.baseJ[n]=1}
+  try{draw();panel();if(window.re3)re3()}catch(_){}try{toast('Base: '+(m.baseDiv==='dividida'?'dividida em todas as divisórias':m.baseDiv==='pers'?'personalizada':'inteira')+' · peças, 3D e corte atualizados · ↶ desfaz')}catch(_){}},true);
+})();
+</script>
 </body></html>

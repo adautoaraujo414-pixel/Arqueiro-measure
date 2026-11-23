@@ -6623,7 +6623,7 @@ window.__e3=function(mi,pk,k,v){SEL3={mi:mi,pk:pk};build();render();var p=null;t
 /* 👁 Só a pedra no 3D: esconde módulos, eletros e móveis; ficam pedras, cubas, cooktops e laterais de pedra (tudo que tem sid) */
 window.ST3ONLY=0;var build_stOnly=build;build=function(){build_stOnly.apply(this,arguments);if(!window.ST3ONLY)return;for(var i=boxes.length-1;i>=0;i--){if(boxes[i].sid==null)boxes.splice(i,1)}};
 document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qstonly]');if(!t)return;e.stopImmediatePropagation();window.ST3ONLY=window.ST3ONLY?0:1;try{build();render()}catch(_){}try{if(ISX)itRender()}catch(_){}try{ambMsg(window.ST3ONLY?'Só a pedra: toque de novo em 👁 pra voltar tudo':'Voltou tudo')}catch(_){}},true);
-window.__build=function(){build()};window.__matTx=function(b){return matTx(b)};
+window.__build=function(){build()};window.__matTx=function(b){return matTx(b)};window.__woodT=function(b){return woodT(b)};/* teste: textura das peças de perfil (pf: porta do canto, portas na parede lateral) vem do woodT no pfFill */
 window.addEventListener('resize',function(){if(!M.hidden)render()});
 /* ===== Peça solta (Caixa · Placa MDF · Tamponamento) =====
    • Minimizar vira uma bolinha flutuante arrastável: o painel some, mas a peça continua

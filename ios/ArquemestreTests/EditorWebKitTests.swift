@@ -15927,4 +15927,24 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["numeroLegivel"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// CANTO-TEXTURA (23/11/2026, conferência da auditoria do pedido das portas do canto: "mesmo material e veio das retas"): a folha da porta do canto
+    /// (perfil pf) e as portas da parede lateral (poly vira pf no wingX) recebem a textura real do MDF pelo woodT do pfFill — a mesma das portas do fundo.
+    @MainActor
+    func testPortaDoCantoEDaParedeLateralComATexturaRealDasRetas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length;
+        /* porta do canto (folha em perfil pf) e portas na parede lateral (poly vira pf no wingX) recebem a mesma textura real das portas retas do fundo (foto, 7) */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;mkCorner('e');newTpl(T('Balcão 2 portas'));wvGo('e');await W(40);newTpl(T('Balcão 2 portas'));wvGo('f');await W(40);
+        var tex=MAT.filter(function(c){return !c.nt&&/cumaru/i.test(c.id)})[0];S.mods.forEach(function(m){demoPaint(m,tex.id)});draw();
+        open3D();await W(300);__build();var R={},por={canto:[],lado:[],fundo:[]};__boxes().forEach(function(b){if(!/:(Porta|Frente)/.test(String(b.nm))||b.ft||b.a<.95||!b.mid)return;var m=S.mods[parseInt(String(b.nm),10)];por[m.corner?'canto':m.wing?'lado':'fundo'].push((b.pf?__woodT(b):__matTx(b))+(b.mid===tex.id?'':'?'))});
+        Object.keys(por).forEach(function(k){R[k]=por[k].filter(function(x,i,a){return a.indexOf(x)===i}).join(',')+' ('+por[k].length+')'});document.getElementById('v3x').click();await W(80);R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["canto"] as? String, "7 (2)", "folha do canto com a foto do MDF")
+        XCTAssertEqual(o["lado"] as? String, "7 (2)", "portas da parede lateral com a foto do MDF")
+        XCTAssertEqual(o["fundo"] as? String, "7 (2)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

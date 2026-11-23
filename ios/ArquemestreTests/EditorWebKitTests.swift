@@ -437,14 +437,16 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
           window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=4140;var all=TPL.concat(CATS.flatMap(function(c){return c.it})).filter(function(i){return i.w&&i.v});var T=function(n){return JSON.parse(JSON.stringify(all.filter(function(i){return i.n===n})[0]))};
           /* porta de canto: folha do fundo = vão − 10, folha do lado = vão − 15, altura vão + 30 */newTpl(T('Canto em L (base)'));var c=S.mods[0];draw();var P=partsOf(c),e=c.esp,D=c.d+(c.fundo?(c.fundoMm||6):0),W2=Math.max(c.d+200,c.cw2||900),ds=P.filter(function(p){return p.name==='Porta'});var canto=ds.map(function(p){return p.cl+'x'+p.cw}).join(','),/* CANTO-PORTA-L (22/11/2026, pedido do Adauto: a porta do canto tem a mesma altura das retas): 650 era o defeito (sem cobrir a travessa nem a regra da cava); a altura agora é a da porta reta do mesmo módulo, 705 */esp=RNDC(c.w-e-D-12.5)+'x705,'+RNDC(W2-e-D+1)+'x705';/* CANTO-FOLHA (pedido do Adauto 17/11, foto do aéreo): folha do lado dos cantos em L de cozinha = vão + 1 (começa 4 mm atrás da frente e cobre 5 mm da lateral do fim); antes vão − 10 *//* medida de corte sem o décimo *//* dobradiça 165°: fundo = vão − 12,9 (3,4 mm da folha do lado) · lado = vão − 10 (3 mm do armário) *//* folha do fundo = vão − 10 (0,5 mm de folga da folha do lado), folha do lado = vão − 15 */
-          /* toda porta tem marcação (dobradiça ou roldana) */var tot=0,ok=0;all.forEach(function(t){S.mods=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(_){return}var m=S.mods[0];if(!m)return;partsOf(m).forEach(function(p){if(!/^Porta/.test(p.name)||p.glass||p.noCut)return;tot++;if(p.fur)ok++})});
+          /* toda porta tem marcação (dobradiça ou roldana) *//* PAINEL-CEGO (23/11/2026, pedido do Adauto): painel cego é peça fixa, não porta — fica fora da conta das portas e NÃO pode ter furo de dobradiça */var tot=0,ok=0,fixos=0,fixoFuro=0;all.forEach(function(t){S.mods=[];try{newTpl(JSON.parse(JSON.stringify(t)))}catch(_){return}var m=S.mods[0];if(!m)return;partsOf(m).forEach(function(p){if(!/^Porta/.test(p.name)||p.glass||p.noCut)return;var vv=(m.v||[])[p.vi];if(p.cego||(vv&&vv.fixa)){fixos++;if(p.fur||/FURO DE DOBRADIÇA/.test(p.note||''))fixoFuro++;return}tot++;if(p.fur)ok++})});
           /* 🗑 apaga só a divisória selecionada; 🗑 na porta tira as portas do vão */S.mods=[];newTpl(T('Rack de TV'));var m=S.mods[0];S.m=m;draw();var d0=m.div.length,v0=m.v.length;window.DIVI=1;LAST='div';$('delMod').click();var d1=m.div.length,v1=m.v.length,n1=S.mods.length;S.sv=0;LAST='porta';$('delMod').click();var k0=m.v[0].k,n2=S.mods.length;
           var cat=CATS.filter(function(q){return q.id==='painel'})[0].it.some(function(i){return /superior livre/.test(i.n)});
-          return JSON.stringify({canto:canto,esp:esp,tot:tot,ok:ok,d:d0+'>'+d1,v:v0+'>'+v1,mods:n1+'/'+n2,k0:k0,cat:cat,errs:__errs});
+          return JSON.stringify({canto:canto,esp:esp,tot:tot,ok:ok,fixos:fixos,fixoFuro:fixoFuro,d:d0+'>'+d1,v:v0+'>'+v1,mods:n1+'/'+n2,k0:k0,cat:cat,errs:__errs});
           """#)
         XCTAssertEqual(o["canto"] as? String, o["esp"] as? String, "porta de canto (165°): vão − 12,5 (3 mm da folha do lado) e vão − 10, altura igual à da porta reta (cobre a travessa, cava 20/10)")
         XCTAssertEqual(o["ok"] as? Int, o["tot"] as? Int, "toda porta (abrir, basculante, camarão, canto, correr) tem marcação no plano")
         XCTAssertGreaterThan(o["tot"] as? Int ?? 0, 90, "auditou o catálogo inteiro")
+        XCTAssertGreaterThan(o["fixos"] as? Int ?? 0, 7, "achou os painéis cegos do catálogo")
+        XCTAssertEqual(o["fixoFuro"] as? Int, 0, "painel cego (peça fixa) sem furo de dobradiça")
         XCTAssertEqual(o["d"] as? String, "2>1", "🗑 com divisória selecionada apaga só ela")
         XCTAssertEqual(o["v"] as? String, "3>2", "os dois vãos viram um")
         XCTAssertEqual(o["mods"] as? String, "1/1", "o módulo pronto continua (não apaga o módulo)")
@@ -10707,6 +10709,48 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfazer"] as? String, "306×650 y65 | 309×650 y65")
         XCTAssertEqual(o["outrosCantosAntigos"] as? String, "Canto em L (aéreo) · direito: folha do lado 319×750 → 330×750 ; Canto L guarda-roupa · esquerdo: nada muda")
         XCTAssertEqual(o["novoReaberto"] as? String, "306×705 y5 | 320×705 y5")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /* PAINEL-CEGO (23/11, decisão de engenharia do Adauto): o painel cego seguia as regras de porta sem puxador (15/15 e 4 mm abaixo do topo) e ficava desalinhado
+       da porta de cava ao lado (balcão 5 mm; aéreo 746 × 750; guarda-roupa 2291 × 2300), com furo de dobradiça e dobradiça no 3D. Agora é peça fixa alinhada com a porta. */
+    func testPainelCegoAlinhadoComAPortaSemFuroDeDobradicaNovoEAntigo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        /* PAINEL-CEGO (23/11, pedido do Adauto): painel cego é peça fixa — acompanha a faixa vertical da porta ao lado (balcão: só posição; aéreo 750; guarda-roupa 2300),
+           sem furo de dobradiça e sem dobradiça no 3D; respeita o tamponamento de cima; projeto antigo só muda pelo "Atualizar painel cego", com prévia e desfazer */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var limpa=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw()};
+        var fx=function(m,p){var v=(m.v||[])[p.vi];return !!(p.cego||(v&&v.fixa))};
+        var resumo=function(m){var t=m.b+m.h,P=partsOf(m).filter(function(p){return p.name==='Porta'}),pa=P.filter(function(p){return fx(m,p)}),po=P.filter(function(p){return !fx(m,p)});var al=pa.every(function(p){return po.some(function(d){return d.y===p.y&&d.h===p.h&&d.cw===p.cw})});return pa.map(function(p){return p.cl+'×'+p.cw+' do chão '+Math.round((t-p.y-p.h)*10)/10+'–'+Math.round((t-p.y)*10)/10}).join(' / ')+(al?' · alinhado':' · DESALINHADO')+' · furo no painel '+pa.filter(function(p){return /FURO DE DOBRADIÇA/.test(p.note||'')}).length+' · furo nas portas '+po.filter(function(p){return /FURO DE DOBRADIÇA/.test(p.note||'')}).length+'/'+po.length};
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var it=typeof q==='number'?TPL[q]:q;if(it&&!it.act&&(it.v||[]).some(function(v){return v&&v.fixa}))L.push(it.n)})});R.modelos=L.length;
+        var res=[];L.forEach(function(n){limpa();newTpl(T(n));var m=S.mods[0];draw();res.push(n+': '+resumo(m))});R.novos=res.join(' ; ');
+        /* tamponamento de cima: o painel encosta como a porta, sem entrar */
+        var tp=[];['Canto reto (CR) · esquerdo · 1 porta 1000mm (cego na esquerda)','Balcão canto cego · cego na direita (porta na esquerda)'].forEach(function(n){limpa();newTpl(T(n));var m=S.mods[0];m.tt=true;draw();tp.push(resumo(m).split(' · furo')[0])});R.comTamponamentoDeCima=tp.join(' ; ');
+        /* 3D: painel na mesma altura da porta e sem dobradiça; a porta móvel continua com as dela */
+        limpa();newTpl(T('Aéreo canto cego · cego na direita'));draw();open3D();await W(200);__build();var bx=__boxes(),fol=bx.filter(function(b){return String(b.nm)==='0:Porta'&&b.a>=.95&&b.y1-b.y0>300&&!b.nol}),hgx=bx.filter(function(b){return String(b.nm).indexOf('0:')===0&&b.hg});
+        var pan=fol.filter(function(b){return b.x0>412})[0],por=fol.filter(function(b){return b.x1<412})[0];R.tresD=pan&&por?('painel '+Math.round(pan.y0)+'–'+Math.round(pan.y1)+' · porta '+Math.round(por.y0)+'–'+Math.round(por.y1)+' · dobradiças no painel '+hgx.filter(function(b){return b.x0>=pan.x0&&b.x1<=pan.x1}).length+' · na porta '+(hgx.filter(function(b){return b.x0>=por.x0-20&&b.x1<=por.x1+20}).length>0?'sim':'não')):'sem';
+        document.getElementById('v3x').click();await W(100);
+        /* projeto antigo: igual até confirmar; aviso com prévia; desfazer volta */
+        var pts=function(m){var t=m.b+m.h;return partsOf(m).filter(function(p){return fx(m,p)}).map(function(p){return p.cl+'×'+p.cw+' '+Math.round((t-p.y-p.h)*10)/10+'–'+Math.round((t-p.y)*10)/10+(/FURO DE DOBRADIÇA/.test(p.note||'')?' furo':'')}).join(' | ')};
+        var outras=function(m){return partsOf(m).filter(function(p){return !fx(m,p)&&!/^Régua espaçadora do canto/.test(p.name)}).map(function(p){return [p.name,p.cl,p.cw,p.x,p.y].join('|')}).sort().join('#')};
+        limpa();newTpl(T('Aéreo canto cego · cego na direita'));var m=S.mods[0];delete m.pcv;draw();var o0=outras(m);loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.antigoReaberto=pts(m);
+        S.m=m;S.tab=0;draw();panel();await W(150);var pb=document.getElementById('pcbox');R.aviso=pb?((/painel cego 482×746 → 482×750/.test(pb.textContent)&&/sem furo de dobradiça/.test(pb.textContent)?'painel 746→750 e sem furo':'sem a prévia do painel')+' · '+(/régua espaçadora do canto 746×40 → 750×40/.test(pb.textContent)?'régua 746→750':'sem a régua')):'sem aviso';
+        var b=document.querySelector('[data-pcvup]');if(b){b.click();await W(150)}m=S.mods[0];R.atualizou=pts(m)+' · outras peças iguais '+(outras(m)===o0)+' · aviso '+(document.getElementById('pcbox')?'fica':'some');
+        document.getElementById('und').click();await W(150);R.desfez=pts(S.mods[0]);
+        limpa();newTpl(T('Aéreo canto cego · cego na direita'));loadState(JSON.parse(JSON.stringify(snapState())));R.novoReaberto=pts(S.mods[0]);
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["modelos"] as? Int, 8)
+        XCTAssertEqual(o["novos"] as? String, "Balcão canto cego · cego na direita (porta na esquerda): 538×705 do chão 110–815 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Balcão canto cego · cego na esquerda (porta na direita): 538×705 do chão 110–815 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Aéreo canto cego · cego na direita: 482×750 do chão 1750–2500 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Aéreo canto cego · cego na esquerda: 482×750 do chão 1750–2500 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Canto reto (CR) · esquerdo · 1 porta 1000mm (cego na esquerda): 538×2300 do chão 110–2410 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Canto reto (CR) · direito · 1 porta 1000mm (cego na direita): 538×2300 do chão 110–2410 · alinhado · furo no painel 0 · furo nas portas 1/1 ; Canto reto (CR) · esquerdo · 2 portas 1416mm (cego na esquerda): 545×2300 do chão 110–2410 · alinhado · furo no painel 0 · furo nas portas 2/2 ; Canto reto (CR) · direito · 2 portas 1416mm (cego na direita): 545×2300 do chão 110–2410 · alinhado · furo no painel 0 · furo nas portas 2/2")
+        XCTAssertEqual(o["comTamponamentoDeCima"] as? String, "538×2290 do chão 110–2400 · alinhado ; 538×705 do chão 110–815 · alinhado")
+        XCTAssertEqual(o["tresD"] as? String, "painel 1750–2500 · porta 1750–2500 · dobradiças no painel 0 · na porta sim")
+        XCTAssertEqual(o["antigoReaberto"] as? String, "482×746 1750–2496 furo")
+        XCTAssertEqual(o["aviso"] as? String, "painel 746→750 e sem furo · régua 746→750")
+        XCTAssertEqual(o["atualizou"] as? String, "482×750 1750–2500 · outras peças iguais true · aviso some")
+        XCTAssertEqual(o["desfez"] as? String, "482×746 1750–2496 furo")
+        XCTAssertEqual(o["novoReaberto"] as? String, "482×750 1750–2500")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 

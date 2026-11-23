@@ -50,3 +50,16 @@ Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src
 - **Espelho leve** (85411be3, achado do Chefe no CI): sem reflexo planar no automático com renderizador por software e depois de perder o contexto WebGL; regex sem "Android".
 
 Capturas: 3d_madeira_regua_na_borda_veio.png, 3d_conchas_desviradas_4_modelos.png, 3d_canto_L_guarda_roupa.png, peca_livre_2_toques_menu.png, quadro_portas_concha.png.
+
+## Pedidos seguintes (23/11)
+- **Duplicar no 3D**: ⧉ Duplicar no cabeçalho de qualquer peça selecionada.
+  - Peça livre: cópia igual.
+  - Outra peça: vira peça livre de MDF 15 com a medida de corte e o sentido da original, do lado dela.
+- **2 toques no puxador** (barra, bola, concha): abrem o reposicionar livre (bolinha vermelha). Todas as portas seguem, espelhado, com os furos do DXF.
+- **Puxador passante**: a porta passa do módulo o tanto de Configurações · Puxadores (padrão 20 mm, confirme o seu), medido da borda do módulo.
+  - No balcão e na torre a porta passa em cima; no aéreo, embaixo.
+  - No gaveteiro só a frente da ponta passa.
+  - Sem ferragem, sem furo e sem puxador no orçamento.
+- **Setas no 3D**: linha "Mover" no cabeçalho da peça livre: ◀ ▶ ▲ ▼, frente e trás, passo de 1, 10 ou 50 mm. Se bater, a peça para encostada; desfazer volta.
+
+Capturas: 3d_puxador_passante_balcao_e_aereo.png, 3d_setas_mover_peca.png.

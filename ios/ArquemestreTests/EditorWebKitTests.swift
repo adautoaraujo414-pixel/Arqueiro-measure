@@ -16765,6 +16765,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
+    /* POLÍTICA B · LED/espelho (Chefe 23/11: o app do Windows (JCEF) cai em testNadaDeEnfeiteListaDeCorte só com o 316d3c8).
+       Projeto sem LED livre nem espelho: a camada nova só repassa, sem tirar foto do projeto (snapState) a mais — a conta lê o S direto.
+       Antes: cortador 4 / cliente 5 chamadas de snapState; agora 3 / 4 (as do envio de sempre e da Política B das peças). */
+    func testPoliticaBSemLedNemEspelhoSoRepassaSemFotoAMais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.fr=[];S.env='cozinha';S.W=4000;draw();newTpl(T('Balcão 2 portas'));draw();await W(50);
+        var A0=window.ArqueApp;window.ArqueApp=Object.assign({},A0||{});var sh=0;ArqueApp.shareCut=function(){sh++};ArqueApp.shareClient=function(){sh++};
+        var n=0,s0=window.snapState;window.snapState=function(){n++;return s0.apply(this,arguments)};
+        try{cutSend();await W(300);R.v0='cortador sem LED nem espelho: snapState '+n+' · enviou '+sh;n=0;sh=0;clientSend();await W(300);R.v1='cliente sem LED nem espelho: snapState '+n+' · dlg '+!!(document.getElementById('emcompat')&&!document.getElementById('emcompat').hidden)}finally{window.snapState=s0;window.ArqueApp=A0}
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "cortador sem LED nem espelho: snapState 3 · enviou 1", "cortador: a camada da Política B do LED/espelho não tira foto a mais")
+        XCTAssertEqual(o["v1"] as? String, "cliente sem LED nem espelho: snapState 4 · dlg false", "cliente: idem, e sem janela")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
     // FOTO-RESERVA (Chefe 23/11, CI iOS com "WEBP initImage failed"): pelo arque:// do app, todas as fotos do catálogo abrem (naturalWidth > 0);
     // conta quantas abriram como .webp, quantas precisaram da reserva .jpg e quantas falharam. E a reserva funciona: .webp que não abre vira .jpg
     func testFotosDoCatalogoAbremPeloCaminhoDoAppComReservaJpg() async throws {

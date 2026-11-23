@@ -17026,4 +17026,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cantoLTopo"] as? Bool, true, "canto em L alinhado com o aéreo do lado (e com estilo no 3D)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // PEÇA LIVRE (Adauto 23/11): 2 toques na peça = Duplicar / Medidas / Apagar; a cópia nasce do lado, no primeiro lugar livre; arrastando,
+    // a borda que chega a menos de 15 mm de outra borda (peça ou módulo) encaixa exata (ímã); Desfazer volta a duplicação
+    func testPecaLivreDoisToquesDuplicarEImaAlinhaAsFaces() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];S.m=m;S.tab=0;draw();panel();await W(300);
+        var r=EM.criaPecaNoPonto(m,250,800,'peca','z');draw();await W(100);var id=r.q.id,ev=function(tp){var el=document.querySelector('[data-empl="'+id+'"]'),bb=el.getBoundingClientRect();el.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:bb.left+bb.width/2,clientY:bb.top+bb.height/2,pointerId:7,isPrimary:true}))};
+        ev('pointerdown');ev('pointerup');await W(120);ev('pointerdown');ev('pointerup');await W(100);var mn=document.getElementById('emmenu');R.menu=mn?[].map.call(mn.querySelectorAll('button'),function(b){return b.textContent}).join('|'):'';
+        await W(800);mn.querySelector('[data-emdup]').click();var q1=m.pl[0],q2=m.pl[1];R.dup=m.pl.length+' '+(q2.x-q1.x)+' '+(q2.y-q1.y)+' '+[q2.w,q2.h].join('x');
+        var o2={x:q2.x,y:q2.y,w:q2.w,h:q2.h};EM.arrasta(m,q2,'m',o2,200,7);R.imaY=q2.y===q1.y;o2={x:q2.x,y:q2.y,w:q2.w,h:q2.h};EM.arrasta(m,q2,'m',o2,(q1.x+5)-q2.x,(q1.y+q1.h+6)-q2.y);R.imaX=(q2.x===q1.x)+' '+(q2.y===q1.y+q1.h);
+        var tx=q2.x+700,B=emBordas(m,q2),near=B.X.some(function(e){return Math.abs(e-tx)<=15||Math.abs(e-tx-q2.w)<=15})||B.Y.some(function(e){return Math.abs(e-q2.y)<=15&&Math.abs(e-q1.y-q1.h)>.5||Math.abs(e-q2.y-q2.h)<=15});o2={x:q2.x,y:q2.y,w:q2.w,h:q2.h};EM.arrasta(m,q2,'m',o2,700,0);R.longe=near?'tem borda perto':q2.x===tx;
+        await W(800);document.getElementById('und').click();await W(200);R.desfaz=(S.mods[0].pl||[]).length;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["menu"] as? String, "⧉ Duplicar|✎ Medidas|🗑 Apagar", "2 toques na peça abre o menu")
+        XCTAssertEqual(o["dup"] as? String, "2 300 0 300x300", "a cópia nasce encostada do lado, mesma medida")
+        XCTAssertEqual(o["imaY"] as? Bool, true, "a 7 mm da borda de cima da outra: encaixa alinhada")
+        XCTAssertEqual(o["imaX"] as? String, "true true", "embaixo da outra, a 6 mm da face e 5 mm da borda da esquerda: encosta e alinha exato")
+        XCTAssertEqual(o["longe"] as? Bool, true, "longe (300 mm): fica onde soltou")
+        XCTAssertEqual(o["desfaz"] as? Int, 1, "desfazer tira a cópia")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

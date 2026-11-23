@@ -16095,4 +16095,43 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["novoSemOpcao"] as? Bool, true, "módulo novo nasce sem o travessão (opção)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · etapa A (aprovada 22/11 18:12; "Faça todos" 23/11): abertura retangular (cozinha americana / balcão) na parede do fundo e nas laterais,
+    /// com o peitoril de pé embaixo (b), até o teto ou com faixa em cima; 2D, Planta e 3D. Móveis, corte e projeto salvo não mudam.
+    /// Antes: não existia (e vão com "do chão" > 0 deixava buraco embaixo).
+    @MainActor
+    func testParedesEtapaAAberturaComPeitorilNoFundoENasLaterais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES etapa A (Adauto 22/11 18:12 e 23/11): abertura com peitoril no fundo e nas laterais; até o teto ou com faixa em cima; móveis intactos; 2D, Planta e 3D */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var ptIn=function(P,u,v){var c=false;for(var i=0,j=P.length-1;i<P.length;j=i++){var xi=P[i][0],yi=P[i][1],xj=P[j][0],yj=P[j][1];if((yi>v)!==(yj>v)&&u<(xj-xi)*(v-yi)/(yj-yi)+xi)c=!c}return c};
+        var parede=async function(wl,pts){open3D();await W(150);__build();var WCs=[[236,233,226].join(),[226,222,213].join()],B=__bg().filter(function(b){return b.wl===wl&&b.cs===undefined&&b.c&&WCs.indexOf(b.c.join())>=0});document.getElementById('v3x').click();await W(50);
+         return pts.map(function(q){return B.some(function(b){if(b.pf&&(b.pf.ax==='x'||b.pf.ax==='z'))return ptIn(b.pf.pts,q[0],q[1]);if(b.pf)return false;return wl==='F'?(q[0]>b.x0&&q[0]<b.x1&&q[1]>b.y0&&q[1]<b.y1):(q[0]>b.z0&&q[0]<b.z1&&q[1]>b.y0&&q[1]<b.y1)})?'■':'□'}).join('')};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;S.RD=3500;draw();newTpl(T('Balcão 2 portas'));var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]})),C0=JSON.stringify(cutGroups().ord);
+        var o=opAdd('abertura');R.nova=o.t+' '+o.w+' peitoril '+o.b+' teto '+(o.teto||0);o.x=1500;o.w=1600;draw();
+        /* pontos: peitoril, meio da abertura, faixa de cima, fora */var P=[[2300,500],[2300,1800],[2300,2500],[800,1800]];
+        R.fundoAteOTeto=await parede('F',P);delete o.teto;o.h=900;draw();R.fundoComFaixa=await parede('F',P);o.b=0;o.teto=1;draw();R.fundoDoChao=await parede('F',P);
+        R.texto2D=[].map.call(document.querySelectorAll('#svg [data-op2="'+o.id+'"] text'),function(t){return t.textContent}).join('|');
+        o.b=1100;o.wall='e';o.x=1500;o.w=1200;draw();R.esquerda=await parede('L',[[2100,500],[2100,1800],[800,1800]]);
+        PLV=1;draw();R.planta=[].map.call(document.querySelectorAll('#svg text'),function(t){return t.textContent}).filter(function(t){return /^Abertura/.test(t)}).join('|');PLV=0;draw();
+        R.moveisIguais=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}))===M0;R.corteIgual=JSON.stringify(cutGroups().ord)===C0;
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.reabre=JSON.stringify(S.ops)===JSON.stringify(JSON.parse(sv).ops);
+        S.tab=9;panel();R.painel=!!document.querySelector('#bd [data-opadd="abertura"]')+' · '+!!document.querySelector('#bd [data-opteto]');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["nova"] as? String, "abertura 1500 peitoril 1100 teto 1")
+        XCTAssertEqual(o["fundoAteOTeto"] as? String, "■□□■", "peitoril de pé, abertura vazia até o teto, parede fora")
+        XCTAssertEqual(o["fundoComFaixa"] as? String, "■□■■", "faixa de parede em cima")
+        XCTAssertEqual(o["fundoDoChao"] as? String, "□□□■", "peitoril 0: abre do chão")
+        XCTAssertEqual(o["texto2D"] as? String, "Abertura 1600 × 2700 · até o teto")
+        XCTAssertEqual(o["esquerda"] as? String, "■□■", "parede esquerda: peitoril, abertura, parede")
+        XCTAssertEqual(o["planta"] as? String, "Abertura 1200")
+        XCTAssertEqual(o["painel"] as? String, "true · true")
+        XCTAssertEqual(o["moveisIguais"] as? Bool, true, "nenhum móvel muda")
+        XCTAssertEqual(o["corteIgual"] as? Bool, true, "plano de corte igual")
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -15466,4 +15466,69 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ilhaAntiga"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PEDRA-L-2D (23/11/2026, pedido do Adauto): a elevação 2D de cada parede mostra o trecho da pedra que encosta nela, mesmo sendo de outra
+    /// parede — braço da pedra em L/U na parede do lado (sobre a lava-louças, sem armário), ponta da pedra reta no canto, pedra da parede do lado
+    /// vista no fundo. Mesma faixa do 3D, mesma altura e espessura; atualiza ao redimensionar/mover/apagar; não grava nada; não pega o toque.
+    /// Antes (candidata e6ec99d): Le_esq "" (a parede esquerda não mostrava o braço da pedra em L).
+    @MainActor
+    func testPedraEmLApareceNaParedeDoLado2DIgualAo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
+        var R={},e0=__errs.length;window.toast=function(){};var tr=function(w){return stTrechosParede(w).map(function(q){return q.fonte+q.n+':'+q.a0+'–'+q.a1+'×'+q.prof}).join(' ')};
+        var svgN=function(){return document.querySelectorAll('#svg [data-stpl]').length};
+        function limpa(){S.mods=[];S.fr=[];S.stones=[];S.stw=[];S.rp=[];S.ops=[];S.W=3000;S.env='cozinha';S.room='cozinha';S.m=null;S.st=null;draw()}
+        /* 3D: faixa de z (lado) ou x (fundo) da pedra encostada na parede, pelos 'lo' do 3D */
+        async function p3(w,sid){open3D();await W(250);__build();var sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R;var B=__boxes().filter(function(b){return b.g==='lo'&&b.sid===sid&&(b.x1-b.x0)>1&&(b.z1-b.z0)>1});
+         var iv=B.filter(function(b){return w==='e'?b.x0<=xl+15:w==='d'?b.x1>=xr-15:b.z0<=15}).map(function(b){return w==='f'?[b.x0,b.x1]:[b.z0,b.z1]});document.getElementById('v3x').click();await W(120);
+         if(!iv.length)return '';return Math.round(Math.min.apply(null,iv.map(function(a){return a[0]})))+'–'+Math.round(Math.max.apply(null,iv.map(function(a){return a[1]})))}
+        /* 1) L esquerda (com dois balcões no fundo, lava-louças sem armário) */
+        limpa();newTpl(CATS[0].it[0]);newTpl(CATS[0].it[0]);addStone();var st=S.st;st.x=0;st.w=2400;st.shape='Le';st.lenA=1870;st.widA=650;draw();
+        var snap0=JSON.stringify(snapState());
+        wvGo('e');await W(80);var ll=apAdd('lavaloucas',0);ll.b=0;ll.x=1200;draw();R.Le_esq=tr('e')+' svg'+svgN()+' 3D '+(await p3('e',st.id));
+        wvGo('e');await W(80);R.Le_dir=tr('d')||'nada';wvGo('d');await W(80);R.Le_dir=(tr('d')||'nada')+' svg'+svgN();wvGo('f');await W(80);R.Le_fundo=(tr('f')||'nada')+' svg'+svgN();
+        /* redimensiona / move / apaga: atualiza na hora */
+        st.lenA=1500;wvGo('e');await W(80);R.redim=tr('e');wvGo('f');await W(60);st.widA=500;wvGo('e');await W(60);R.largura=tr('e');
+        wvGo('f');await W(60);st.t=900;wvGo('e');await W(60);var rc=document.querySelector('#svg [data-stpl] rect');R.altura=rc?Math.round((OY+S.H*K-(+rc.getAttribute('y')+ +rc.getAttribute('height')))/K)+' esp '+Math.round(+rc.getAttribute('height')/K):'sem';
+        wvGo('f');await W(60);st.t=820;st.lenA=1870;st.widA=650;
+        /* 2) L direita */
+        st.shape='Ld';st.widB=600;st.lenB=1200;st.x=600;draw();wvGo('d');await W(80);R.Ld_dir=tr('d')+' svg'+svgN()+' 3D '+(await p3('d',st.id));wvGo('e');await W(60);R.Ld_esq=tr('e')||'nada';
+        /* 3) U */
+        wvGo('f');await W(60);st.shape='U';st.x=0;st.w=3000;draw();wvGo('e');await W(60);R.U_esq=tr('e');wvGo('d');await W(60);R.U_dir=tr('d');wvGo('f');await W(60);
+        /* 4) reta encostada na esquerda e reta solta */
+        st.shape='reta';st.x=0;st.w=1800;draw();wvGo('e');await W(60);R.reta_canto=tr('e')+' 3D '+(await p3('e',st.id));wvGo('f');await W(60);st.x=500;draw();wvGo('e');await W(60);R.reta_solta=tr('e')||'nada';wvGo('f');await W(60);
+        /* 5) pedra da parede esquerda (S.stw) começando no canto e depois do canto, vista no fundo */
+        var s2=stwNova('e');s2.x=0;s2.w=1200;s2.d=600;draw();R.stw_fundo=tr('f')+' svg'+svgN()+' 3D '+(await p3('f',s2.id));wvGo('e');await W(60);R.stw_naPropria=(tr('e')||'só a nativa')+' · nativa '+document.querySelectorAll('#svg [data-st="'+s2.id+'"]').length;wvGo('f');await W(60);s2.x=700;draw();R.stw_longe=tr('f')||'nada';
+        /* 6) apaga a pedra do fundo */
+        S.stones=[];S.st=null;draw();wvGo('e');await W(60);R.apagou=(tr('e')||'nada')+' svg'+svgN();wvGo('f');await W(60);
+        /* 7) dados: ver as paredes não grava nada */
+        limpa();newTpl(CATS[0].it[0]);addStone();var s3=S.st;s3.x=0;s3.w=2400;s3.shape='Le';s3.lenA=1870;s3.widA=650;draw();var a0=JSON.stringify(snapState());wvGo('e');await W(60);wvGo('d');await W(60);wvGo('f');await W(60);R.dadosIguais=a0===JSON.stringify(snapState());
+        /* 8) planta e toque */
+        wvGo('e');await W(60);var g=document.querySelector('#svg [data-stpl]');R.toque=g?g.getAttribute('pointer-events'):'sem';R.espelhado=!!document.querySelector('#wvmir [data-stpl]');wvGo('f');await W(60);
+        R.errs=__errs.length-e0;
+        return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["Le_esq"] as? String, "f1:0–2476×650 svg1 3D 0–2476")
+        XCTAssertEqual(o["Le_dir"] as? String, "nada svg0")
+        XCTAssertEqual(o["Le_fundo"] as? String, "nada svg0")
+        XCTAssertEqual(o["redim"] as? String, "f1:0–2106×650")
+        XCTAssertEqual(o["largura"] as? String, "f1:0–2106×500")
+        XCTAssertEqual(o["altura"] as? String, "900 esp 40")
+        XCTAssertEqual(o["Ld_dir"] as? String, "f1:0–1806×600 svg1 3D 0–1806")
+        XCTAssertEqual(o["Ld_esq"] as? String, "nada")
+        XCTAssertEqual(o["U_esq"] as? String, "f1:0–2476×650")
+        XCTAssertEqual(o["U_dir"] as? String, "f1:0–1806×600")
+        XCTAssertEqual(o["reta_canto"] as? String, "f1:0–606×1800 3D 0–606")
+        XCTAssertEqual(o["reta_solta"] as? String, "nada")
+        XCTAssertEqual(o["stw_fundo"] as? String, "e1:0–600×1200 svg1 3D 0–600")
+        XCTAssertEqual(o["stw_naPropria"] as? String, "só a nativa · nativa 1")
+        XCTAssertEqual(o["stw_longe"] as? String, "nada")
+        XCTAssertEqual(o["apagou"] as? String, "nada svg0")
+        XCTAssertEqual(o["toque"] as? String, "none")
+        XCTAssertEqual(o["dadosIguais"] as? Bool, true, "ver as paredes não muda o projeto salvo")
+        XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

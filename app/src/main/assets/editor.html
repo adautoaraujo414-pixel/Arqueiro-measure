@@ -12366,6 +12366,17 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
 })();
 </script>
 <script>
+/* VAO-LIVRE (D27, transferência §6 "medidas internas"; 23/11/2026): no editor normal o vão escolhido do módulo ativo mostra a medida livre real
+   (largura entre laterais/divisórias × altura entre travessa/base), igual ao editor por vãos. Só texto no desenho, sem toque; nada muda no projeto. */
+(function(){if(typeof draw!=='function')return;var d0=draw;draw=window.draw=function(){var r=d0.apply(this,arguments);try{if((typeof PLV!=='undefined'&&PLV)||S.env==='livre')return r;var m=S.m,sv=document.getElementById('svg');if(!m||!sv||(S.mods||[]).indexOf(m)<0||m.corner||sv.querySelector('[data-vlivre]'))return r;
+  var vr=vaoRanges(m),i=Math.max(0,Math.min(vr.length-1,+S.sv||0)),q=vr[i];if(!q)return r;var lw=Math.round(q[1]-q[0]),lh=Math.round(vhm(m));if(!(lw>0&&lh>0))return r;
+  var k=K,L=OX,B=OY+(+S.H||0)*k,x0=L+m.x*k,y1=B-((+m.b||0)+(+m.h||0))*k,vt=y1+vTop(m)*k,cx=x0+(q[0]+q[1])/2*k,cy=vt+Math.min(18,lh*k/2);
+  var t='vão livre '+lw+' × '+lh;if(t.length*6>(q[1]-q[0])*k+40)t=lw+' × '+lh;
+  sv.insertAdjacentHTML('beforeend','<g data-vlivre="'+i+'" pointer-events="none"><rect x="'+(cx-t.length*3.1)+'" y="'+(cy-9)+'" width="'+(t.length*6.2)+'" height="14" rx="3" fill="#fff" fill-opacity=".85"/><text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f2fd6">'+t+'</text></g>')}catch(_){}return r};
+ window.vaoLivre=function(m,i){var vr=vaoRanges(m),q=vr[Math.max(0,Math.min(vr.length-1,+i||0))];return q?[Math.round(q[1]-q[0]),Math.round(vhm(m))]:null};
+})();
+</script>
+<script>
 /* ===== PEDRA-L-2D (23/11/2026, pedido do Adauto): na elevação 2D de cada parede aparece o trecho da pedra que encosta nela, mesmo quando a pedra
    é de outra parede — o braço da pedra em L (e em U) na parede do lado, a ponta da pedra do fundo no canto, a pedra da parede do lado que chega no fundo.
    Mesma conta do 3D (retângulos da pedra: [0,0,w,d] + braço [0,d,widA,d+lenA] / [w-widB,d,w,d+lenB]; pedra da parede do lado: X = parede + 0..d,

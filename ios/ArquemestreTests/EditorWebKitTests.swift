@@ -15981,4 +15981,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aviso"] as? Bool, true, "rebaixo ≥ espessura da pedra: avisa")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// VAO-LIVRE (D27 "mostrar medida livre real do vão", transferência §6 "medidas internas"; 23/11/2026): no editor normal o vão escolhido do
+    /// módulo ativo mostra "vão livre L × A" (largura entre as laterais/divisórias × altura livre), como no editor por vãos. Só texto, sem toque.
+    @MainActor
+    func testVaoEscolhidoMostraAMedidaLivreReal() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* VAO-LIVRE (D27): o vão escolhido mostra a medida livre real (largura entre laterais/divisórias × altura livre); muda com a divisória e com a parede espelhada */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var txt=function(){var g=document.querySelector('#svg [data-vlivre] text');return g?g.textContent:'sem'};
+        loadState(initLimpo());S.W=4000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;S.sv=0;draw();R.balcao=txt();
+        var P=partsOf(m),la=P.filter(function(p){return p.name==='Lateral esquerda'})[0],lb=P.filter(function(p){return p.name==='Lateral direita'})[0];R.confereLargura=(Math.round(lb.x-(la.x+la.w))===vaoLivre(m,0)[0]);
+        m.div=[0.5];draw();S.sv=1;draw();R.comDivisoria=txt()+' · vãos '+vaoRanges(m).length;
+        var g=document.querySelector('#svg [data-vlivre]');R.toque=g?g.getAttribute('pointer-events'):'';
+        wvGo('e');await W(60);newTpl(T('Balcão 2 portas'));S.m=S.mods[S.mods.length-1];S.sv=0;draw();R.paredeEsquerda=txt()+' · espelhado '+!!document.querySelector('#wvmir [data-vlivre]');wvGo('f');await W(60);
+        var a0=JSON.stringify(snapState());draw();R.naoGrava=a0===JSON.stringify(snapState());
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "vão livre 870 × 620", "900 − 2 × 15 de largura; 620 livres entre a travessa e a base")
+        XCTAssertEqual(o["confereLargura"] as? Bool, true, "mesma medida das peças (entre as laterais)")
+        XCTAssertEqual(o["comDivisoria"] as? String, "vão livre 428 × 620 · vãos 2", "com divisória no meio: (870 − 15) / 2")
+        XCTAssertEqual(o["toque"] as? String, "none")
+        XCTAssertEqual(o["paredeEsquerda"] as? String, "vão livre 870 × 620 · espelhado true", "na parede esquerda entra no desenho espelhado (texto legível)")
+        XCTAssertEqual(o["naoGrava"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

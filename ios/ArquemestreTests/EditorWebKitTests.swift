@@ -17181,7 +17181,7 @@ final class EditorWebKitTests: XCTestCase {
         loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas + 4 gavetas'));newTpl(T('Balcão 2 portas'));var m=S.mods[0],m2=S.mods[1];pxApplyAll('concha','inox');m.v.forEach(function(v){v.chm={id:'pa'}});m2.v[0].chm={id:'cl'};draw();var sem=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return x.nome==='Porta'})[0];R.semConf=sem.furos.filter(function(f){return /PUXADOR/.test(f.lay)}).length+' '+sem.avisos.some(function(a){return /^FALTA: concha .*sem furação confirmada/.test(a)});m.v.forEach(function(v){v.chm.fc=1});
         var P=function(mm){return partsOf(mm).filter(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)})},geo=function(p,mm){var O=chmOri(p,mm,p.chm),cp=chAt(p,mm),ps=conchaPartes3(p.chm,cp.u,p.cw-cp.t,'#888888',O);return {O:O,cp:cp,ch:ps.filter(function(q){return q.chapa})[0],sh:ps.filter(function(q){return q.shd})[0],vc:p.cw-cp.t}};
         var pe=P(m).filter(function(p){return p.name==='Porta'&&p.hinge==='l'})[0],pd=P(m).filter(function(p){return p.name==='Porta'&&p.hinge==='r'})[0],gv=P(m).filter(function(p){return p.name==='Frente de gaveta'})[0];
-        var a=geo(gv,m);R.gaveta=(!a.O.v)+' '+(Math.round(a.ch.v1)===Math.round(a.vc+gv.chm.h*.32))+' '+(a.sh.v1<a.vc)+' '+(Math.abs(a.cp.u-gv.cl/2)<1);
+        var a=geo(gv,m);/* Adauto 23/11 19:56 (print das gavetas): na gaveta estava de cabeça pra baixo → deitada e invertida (curva em cima, reta embaixo) */R.gaveta=(!a.O.v)+' '+(Math.round(a.ch.v0)===Math.round(a.vc-gv.chm.h*.32))+' '+(a.sh.v0>a.vc)+' '+(Math.abs(a.cp.u-gv.cl/2)<1);
         var b=geo(pe,m);R.portaEsq=b.O.v+' '+(Math.round(b.cp.u)===Math.round(pe.cl-(+chCfg().l||60)))+' '+(b.ch.u0<b.cp.u&&b.sh.u0>b.cp.u);
         var c=geo(pd,m);R.portaDir=c.O.v+' '+(Math.round(c.cp.u)===Math.round(+chCfg().l||60))+' '+(c.sh.u1<c.cp.u);
         var X=dxfPecas({pxD:5,pxP:15}).pecas,fp=function(nm){var pc=X.filter(function(x){return x.nome===nm})[0];return pc.furos.filter(function(f){return /PUXADOR/.test(f.lay)})};var fd=fp('Porta'),fg=fp('Frente de gaveta');R.dxf=(Math.round(fd[0].x)===Math.round(fd[1].x)&&Math.abs(fd[0].y-fd[1].y)>50)+' '+(Math.round(fg[0].y)===Math.round(fg[1].y)&&Math.abs(fg[0].x-fg[1].x)>50);
@@ -17194,7 +17194,7 @@ final class EditorWebKitTests: XCTestCase {
         window.PXSEL={mi:0,vi:0,dq:1};PXPOS='porta';pxaSet(m,0,{du:80,dt:150});R.posSo=P(m).filter(function(p){return p.name==='Porta'}).map(function(p){var q=chAt(p,m);return Math.round(q.u)+'/'+Math.round(q.t)}).join(' ');
         R.medidas=P(m).map(function(p){return p.cl+'x'+p.cw}).join(',');R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["gaveta"] as? String, "true true true true", "gaveta: deitada, reta em cima, abertura embaixo, no meio")
+        XCTAssertEqual(o["gaveta"] as? String, "true true true true", "gaveta: deitada, curva em cima e reta embaixo (Adauto 23/11 19:56), no meio")
         XCTAssertEqual(o["portaEsq"] as? String, "true true true", "porta da dobradiça à esquerda: em pé, perto da direita, reta pro lado da dobradiça e boca pro lado que abre")
         XCTAssertEqual(o["portaDir"] as? String, "true true true", "porta da dobradiça à direita: espelhado")
         XCTAssertEqual(o["semConf"] as? String, "0 true", "furação não confirmada: sem furo no DXF e FALTA avisando (sem furação inventada)")
@@ -17208,6 +17208,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ori"] as? String, "h,v", "deitada só nesta porta")
         XCTAssertEqual(o["posSo"] as? String, "196/353 80/150", "porta 1 deitada fica no lugar do ⚙ (centro); a porta 2 tem lugar só dela (80 do lado que abre, 150 de cima)")
         XCTAssertEqual(o["medidas"] as? String, "391x705,391x705,395x173,395x173,395x173,395x173", "medida das portas e frentes não muda")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // Adauto 23/11 19:56 (print): "puxador concha as gavetas estão de cabeça pra baixo, opção de mexer somente neles, colocar inverter e movimentar".
+    // Gaveta: curva em cima por padrão. ⇅ Inverter por puxador (aba Portas e 3D) e "Todas as gavetas" com confirmação; 2 toques no puxador da gaveta
+    // no 3D: bolinha pra mover só ele (ou todas as gavetas, com confirmação); as portas não mudam
+    func testConchaDaGavetaInverterEMoverSoElas() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=1300;newTpl(T('Balcão 2 portas + 4 gavetas'));var m=S.mods[0];pxApplyAll('concha','pretof');m.v.forEach(function(v){v.chm={id:'cl'}});draw();
+        var G=function(){return partsOf(m).filter(function(p){return p.name==='Frente de gaveta'})},D=function(){return partsOf(m).filter(function(p){return p.name==='Porta'})},inv=function(p){return chmOri(p,m,p.chm).inv?'i':'n'},lug=function(p){var q=chAt(p,m);return Math.round(q.u)+'/'+Math.round(q.t)};
+        var vg=m.v.findIndex(function(v){return v.k==='drawers'});R.padrao=G().map(inv).join('')+' '+D().map(function(p){return chmOri(p,m,p.chm).v?'v':'h'}).join('');var portas0=D().map(lug).join(' ');
+        S.m=m;S.tab=2;/* o puxador da gaveta fica na aba Internos (id 2) */draw();S.sv=vg;ESTDQ=1;panel();await W(700);var Q=function(sel){var e=document.querySelector(sel);if(!e)throw new Error('sem '+sel);return e};
+        Q('[data-chinv]').click();await W(200);R.soUma=G().map(inv).join('')+' modal '+!!document.getElementById('pxconf');
+        Q('[data-pxesc="gavetas"]').click();Q('[data-chinv]').click();R.conta=(document.querySelector('#pxconf [data-pxn]')||{}).textContent||'';Q('#pxconf [data-pxok]').click();await W(200);R.todas=G().map(inv).join('');
+        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,0.08,1.9);await W(300);__build();
+        var bs=__boxes().filter(function(b){return b.mt&&b.nol&&/^0:Frente de gaveta/.test(String(b.nm))&&b.dq===2}),mx=function(k,f){return Math[f].apply(null,bs.map(function(b){return b[k]}))},c=__p3((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1),cv=document.getElementById('cv3'),rr=cv.getBoundingClientRect();
+        for(var i=0;i<2;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650);
+        var pad=document.getElementById('pxpad');R.pad=!!pad&&!!document.querySelector('[data-pxinv]')&&/Todas as gavetas/.test((document.querySelector('[data-pxpos="todas"]')||{}).textContent||'');var g0=G().map(lug);
+        if(pad){var r2=pad.getBoundingClientRect(),ev=function(tp,dx,dy){pad.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:r2.left+dx,clientY:r2.top+dy,pointerId:5,isPrimary:true}))};ev('pointerdown',r2.width*.3,r2.height*.4);ev('pointermove',r2.width*.32,r2.height*.42);ev('pointerup',r2.width*.32,r2.height*.42);await W(300)}
+        var g1=G().map(lug);R.moveu=g1.map(function(x,i){return x===g0[i]?'=':'*'}).join('');R.portas=D().map(lug).join(' ')===portas0;
+        document.querySelector('[data-pxinv]').click();await W(200);R.inv3d=G().map(inv).join('');document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["padrao"] as? String, "iiii vv", "gavetas com a curva em cima; portas em pé")
+        XCTAssertEqual(o["soUma"] as? String, "inii modal false", "⇅ Inverter só na gaveta escolhida, sem perguntar")
+        XCTAssertEqual(o["conta"] as? String, "Troca em 4 puxadores concha (das gavetas).", "todas as gavetas: confirma com a contagem")
+        XCTAssertEqual(o["todas"] as? String, "iiii", "todas as gavetas ficam como a escolhida depois de inverter (ela estava normal → todas invertidas)")
+        XCTAssertEqual(o["pad"] as? Bool, true, "2 toques no puxador da gaveta: bolinha, inverter e 'Todas as gavetas'")
+        XCTAssertEqual(o["moveu"] as? String, "==*=", "movimentar só esta gaveta")
+        XCTAssertEqual(o["portas"] as? Bool, true, "as portas não mudam")
+        XCTAssertEqual(o["inv3d"] as? String, "iini", "⇅ Inverter no 3D: só esta gaveta")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

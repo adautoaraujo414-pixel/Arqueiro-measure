@@ -1779,3 +1779,20 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
 - **BASE INTEIRA/DIVIDIDA/PERSONALIZADA (23/11):** `a9049cd3`. `testBaseInteiraDivididaOuPersonalizadaPorModuloComDivisoriaDescendo`.
 - **GAVETAS QUE NÃO CABEM (23/11):** colisão que já existia (cava com muitas gavetas num vão baixo: caixa/régua na travessa ou na outra caixa). `b07085a4`: o + não aceita, módulo antigo avisa com botão. `testGavetasQueNaoCabemNaoEntramEModuloAntigoAvisaComBotao`.
 - **Ferramenta:** rodar sonda ou teste no mesmo Chromium em que a bateria completa está rodando derruba testes aleatórios (a bateria pega a 1ª aba do editor). Sempre um navegador só pra bateria.
+
+## AUDITORIA GERAL · espelhos e LED (23/11/2026, branch `claude/auditoria-1`, base `bfae688`)
+Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `e341bef` (falham antes) · código `d9fc207`.
+- **AUD-ESP-SOLIDO — espelho atravessando móvel (ponto 1, erro comprovado).**
+  - Reproduzir: espelho de parede com altura/posição que cai sobre um módulo → antes ficava dentro do módulo.
+  - Causa: `itSet`/troca de parede/formato/giro/moldura e `espWallAdd` não conferiam colisão com as caixas dos módulos.
+  - Correção: `espBate(f)` (caixas do espelho × caixas do 3D; espelho no vão fica fora de propósito). Edição que entraria volta e avisa; criação nasce acima do módulo se couber até o teto, senão não cria e avisa.
+- **AUD-LED-GIRO — LED livre no móvel livre girado (ponto 8, erro comprovado).**
+  - Causa: `lvlHost` pulava peças `gp` (prisma girado) → LED sumia/não achava face.
+  - Correção: `lvlRot`/`lvlDesgira` desfazem o giro, `lvlDraw1` desenha reto e gira junto; `lvlPickFace` aceita peça girada.
+- **AUD-LED-FERRAGEM — LED atravessando dobradiça/corrediça (ponto 7, erro comprovado).**
+  - Correção: `lvlFerragem` na face de dentro da lateral: faixa das corrediças (altura das laterais de gaveta) e faixa da dobradiça (porta do lado, 95 mm da frente). Recusa com aviso ao criar e ao mudar campo.
+- **AUD-ANGULO-ENTER — ângulo digitado só valia no botão (ponto 6, erro comprovado).** Espelho, móvel livre na Planta e no 3D aplicam no Enter/ao sair.
+- **Comportamento correto:** reflexo não invertido (2); toque/seleção do espelho (5); digitação nos quadros novos (6).
+- **Defeitos repassados ao Code 2:** espelho em parede lateral sem reflexo e com linha escura (9); espelho redondo jateado com emenda vertical (3).
+- **Compatibilidade (10):** Política B cobre LED livre e espelho nos links; backup copiado à mão pra app antigo perde o LED (não corrigível, aviso registrado).
+- **Não verificado:** FPS/memória em aparelho real, iPhone/iPad/Android/Windows reais (só Chromium e viewports).

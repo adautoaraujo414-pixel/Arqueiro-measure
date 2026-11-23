@@ -6999,6 +6999,30 @@ var apF_esp=apFinK;apFinK=function(t){if(t==='espelho')return null;return apF_es
 var itRender_esp=itRender;itRender=function(){itRender_esp.apply(this,arguments);try{var x=ISX;if(!x||x.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||f.t!=='espelho')return;var i=it4Box().querySelector('[data-qf="d"]'),sp=i&&i.parentNode&&i.parentNode.querySelector('span');if(sp)sp.textContent='Espessura (mm)';[].forEach.call(it4Box().querySelectorAll('[data-qin^="d|"]'),function(b){b.setAttribute('data-qin',/\|-/.test(b.getAttribute('data-qin'))?'d|-1':'d|1')})}catch(_){}};
 /* espessura do espelho em mm (4, 5, 6…): o mínimo de 20 mm da profundidade dos eletros não vale pra ele */
 var itSet_esp=itSet;itSet=function(k,v){var x=ISX,f=x&&x.k==='fr'&&k==='d'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(f&&f.t==='espelho'){f.d=Math.round(Math.max(2,Math.min(50,+v||4)));return}return itSet_esp.apply(this,arguments)};
+/* ESP-FORMAS (Adauto, 23/11/2026 · "resto dos espelhos: formatos, girar, acabamentos, orçamento de vidro"). Espelho sem os campos novos
+   (forma, rot, acab, borda, mold) continua no desenho de sempre (espW3). Contorno de verdade (espPts) extrudado na espessura (pf ax z). */
+function espNovo(f){return !!f&&((f.forma&&f.forma!=='ret')||(+f.rot||0)%360!==0||(+f.mold||0)>0||f.borda==='bisotado'||(f.acab&&f.acab!=='prata'))}
+function espDraw3(f,z0){var e=Math.max(1,+f.d||4),z=+z0||0,md=(+f.mold||0)>0?18:0,cor=(window.ESPCOR||{})[f.acab||'prata']||['#d3dde3','#eef3f6'];
+ var add=function(pts,za,zb,col,mir){var xs=pts.map(function(q){return q[0]}),ys=pts.map(function(q){return q[1]});B(boxes,Math.min.apply(null,xs),Math.max.apply(null,xs),Math.min.apply(null,ys),Math.max.apply(null,ys),za,zb,col,1,'f');var bb=boxes[boxes.length-1];bb.pf={ax:'z',pts:pts};if(mir)bb.mir=1};
+ /* moldura atrás do vidro (frente dela no fundo do vidro: sem faces no mesmo plano) */if(md)add(espPts(f,+f.mold),z,z+md,'#3b3029');
+ add(espPts(f,0),z+md,z+md+e,cor[1]);/* borda (lapidada estreita, bisotê larga e mais clara) */
+ add(espPts(f,-(f.borda==='bisotado'?25:8)),z+md+e,z+md+e+.3,cor[0],1)}
+var ap3_espf=ap3model;ap3model=function(f,z0){if(f&&f.t==='espelho'&&espNovo(f)){espDraw3(f,z0);return true}return ap3_espf.apply(this,arguments)};
+var itRender_espf=itRender;itRender=function(){itRender_espf.apply(this,arguments);try{var x=ISX;if(!x||x.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===x.id})[0];if(!f||f.t!=='espelho')return;var E=it4Box();if(E.querySelector('[data-qesp]'))return;
+  var Bt=function(a,t,on){return '<button data-qesp="'+a+'" style="padding:4px 9px;min-height:32px;font-size:13px'+(on?';background:#1f6feb;color:#fff;border-color:#1f6feb':'')+'">'+t+'</button>'},row=function(t,h){return '<div style="font-size:12px;color:#444;margin:4px 0 0">'+t+'</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin:5px 0">'+h+'</div>'},fo=f.forma||'ret',ro=((+f.rot||0)%360+360)%360,ac=f.acab||'prata',bo=f.borda||'lapidado',mo=+f.mold||0;
+  var h=row('🪞 Formato',Bt('forma|ret','▭ Retangular / quadrado',fo==='ret')+Bt('forma|red','◯ Redondo / oval',fo==='red')+Bt('forma|arco','⌓ Arco',fo==='arco'))
+   +row('⟳ Girar',[0,90,180,270].map(function(g){return Bt('rot|'+g,g+'°',ro===g)}).join('')+'<input data-qespang type="text" inputmode="numeric" value="'+ro+'" style="width:56px;text-align:center;min-height:32px">'+Bt('rotok','° Girar',false))
+   +row('Acabamento',[['prata','Prata'],['bronze','Bronze'],['fume','Fumê']].map(function(q){return Bt('acab|'+q[0],q[1],ac===q[0])}).join(''))
+   +row('Borda',Bt('borda|lapidado','Lapidada',bo==='lapidado')+Bt('borda|bisotado','Bisotê',bo==='bisotado'))
+   +row('Moldura',[[0,'Sem moldura'],[30,'Moldura 3 cm'],[50,'Moldura 5 cm']].map(function(q){return Bt('mold|'+q[0],q[1],mo===q[0])}).join(''))
+   +row('',Bt('dup','⧉ Duplicar',false));
+  var del=E.querySelector('[data-qdel]');var rw=del&&del.parentNode;if(rw)rw.insertAdjacentHTML('beforebegin',h);else E.insertAdjacentHTML('beforeend',h)}catch(_){}};
+it4Box().addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qesp]');if(!t||!ISX||ISX.k!=='fr')return;e.stopImmediatePropagation();if(window.RO)return;var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f||f.t!=='espelho')return;
+ var a=t.getAttribute('data-qesp').split('|'),k=a[0],v=a[1];snap();
+ if(k==='rotok'){var inp=it4Box().querySelector('[data-qespang]');var g=parseFloat(String(inp&&inp.value||'0').replace(',','.'));if(isNaN(g))return;f.rot=((Math.round(g)%360)+360)%360}
+ else if(k==='rot')f.rot=+v;else if(k==='mold')f.mold=+v;else if(k==='forma')f.forma=v;else if(k==='acab')f.acab=v;else if(k==='borda')f.borda=v;
+ else if(k==='dup'){var c=JSON.parse(JSON.stringify(f));c.id=Date.now()+Math.floor(Math.random()*999);c.x=Math.round((+f.x||0)+(+f.w||0)+50);S.fr.push(c);ISX={k:'fr',id:c.id}}
+ if(!f.rot)delete f.rot;try{draw();if(typeof panel==='function')panel()}catch(_){}build();render();itRender()},true);
 })();
 </script>
 
@@ -14287,5 +14311,36 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('#v3aq');if(!b||!window.aqSet)return;e.stopPropagation();window.AQERR='';aqSet(on()?0:1);
   if(window.AQERR){try{aqSet(0)}catch(_){}window.AQ=0;msg('Acabamento realista não funcionou neste aparelho: o 3D continua o normal')}
   else msg(on()?'✨ Acabamento realista ligado (só a aparência; medidas iguais)':'3D normal');pinta()},true);})();
+</script>
+<script>
+/* ESP-FORMAS · contorno, área/perímetro de verdade, 2D e orçamento da vidraçaria (Adauto, 23/11/2026). Preços começam em branco (R$ 0, pedido dele):
+   espelho por m² por acabamento, lapidação/bisotê e moldura por metro, no Ajustes. Espelho sem campos novos desenha igual. */
+(function(){if(typeof APM==='undefined'||!APM.espelho)return;
+ window.ESPCOR={prata:['#d3dde3','#eef3f6'],bronze:['#c8b49a','#e6d8c4'],fume:['#8f979e','#b9c0c6']};
+ /* contorno no plano da parede: [X (mm, ao longo da parede), Y (mm do chão)], com off pra fora (+) ou pra dentro (−), girado em volta do centro */
+ window.espPts=function(f,off){off=+off||0;var w=Math.max(1,+f.w||600),h=Math.max(1,+f.h||900),x=+f.x||0,b=+f.b||0,cx=x+w/2,cy=b+h/2,fo=f.forma||'ret',P=[],hw=w/2+off,hh=h/2+off,i;
+  if(fo==='red'){var n=72;for(i=0;i<n;i++){var t=i/n*2*Math.PI;P.push([cx+hw*Math.cos(t),cy+hh*Math.sin(t)])}}
+  else if(fo==='arco'){var r=w/2+off,yb=cy-hh,ya=Math.max(yb,cy+hh-r);P.push([cx-hw,yb],[cx+hw,yb],[cx+hw,ya]);var m=20;for(i=1;i<m;i++){var a=i/m*Math.PI;P.push([cx+r*Math.cos(a),ya+r*Math.sin(a)])}P.push([cx-hw,ya])}
+  else P=[[cx-hw,cy-hh],[cx+hw,cy-hh],[cx+hw,cy+hh],[cx-hw,cy+hh]];
+  var g=((+f.rot||0)%360)*Math.PI/180;if(g){var c=Math.cos(g),sn=Math.sin(g);P=P.map(function(q){var dx=q[0]-cx,dy=q[1]-cy;return [cx+c*dx-sn*dy,cy+sn*dx+c*dy]})}return P};
+ window.espArea=function(f){var P=espPts(f,0),a=0;for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2/1e6};
+ window.espPerim=function(f){var P=espPts(f,0),l=0;for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];l+=Math.hypot(q[0]-p[0],q[1]-p[1])}return l/1000};
+ /* 2D: o desenho de sempre marca onde o espelho está; o acabamento redesenha com o contorno (forma, giro, cor, borda, moldura) */
+ var apSvg_espf=apSvg;apSvg=function(t,x,y,w,h){var o=apSvg_espf.apply(this,arguments);if(t!=='espelho')return o;return '<g data-espsvg="'+[x,y,w,h].map(function(v){return (+v).toFixed(2)}).join(',')+'">'+o+'</g>'};
+ var apFinSvg_espf=apFinSvg;apFinSvg=function(svg,f){if(!(f&&f.t==='espelho'))return apFinSvg_espf.apply(this,arguments);try{var m=/data-espsvg="([^"]+)"/.exec(svg);if(!m||!window.espNovo2||!espNovo2(f))return svg;var q=m[1].split(',').map(Number),X=q[0],Y=q[1],sx=q[2]/Math.max(1,+f.w||1),sy=q[3]/Math.max(1,+f.h||1),top=(+f.b||0)+(+f.h||0),
+   T=function(P){return P.map(function(p){return (X+(p[0]-(+f.x||0))*sx).toFixed(1)+','+(Y+(top-p[1])*sy).toFixed(1)}).join(' ')},cor=ESPCOR[f.acab||'prata']||ESPCOR.prata,o='<g data-espsvg="'+m[1]+'">';
+   if(+f.mold>0)o+='<polygon points="'+T(espPts(f,+f.mold))+'" fill="#3b3029" stroke="#221a15" stroke-width=".8"/>';
+   o+='<polygon points="'+T(espPts(f,0))+'" fill="'+cor[1]+'" stroke="#7f8f9a" stroke-width="1"/><polygon points="'+T(espPts(f,-(f.borda==='bisotado'?25:8)))+'" fill="'+cor[0]+'" stroke="none"/>';
+   return o+'</g>'}catch(_){return svg}};
+ window.espNovo2=function(f){return !!f&&((f.forma&&f.forma!=='ret')||(+f.rot||0)%360!==0||(+f.mold||0)>0||f.borda==='bisotado'||(f.acab&&f.acab!=='prata'))};
+ /* orçamento: vidraçaria separada da marcenaria (não entra no plano de corte) */
+ var NOVOS=[['espPrata','Espelho prata','m²'],['espBronze','Espelho bronze','m²'],['espFume','Espelho fumê','m²'],['espLap','Lapidação de espelho','m'],['espBis','Bisotê de espelho','m'],['espMold','Moldura de espelho','m']];
+ try{NOVOS.forEach(function(x){if(!PRLIST.some(function(y){return y[0]===x[0]}))PRLIST.push(x)})}catch(_){}
+ window.espVidros=function(){var q={espPrata:0,espBronze:0,espFume:0,espLap:0,espBis:0,espMold:0},L=[];(S.fr||[]).forEach(function(f){if(!f||f.t!=='espelho')return;var a=espArea(f),pe=espPerim(f),ac=f.acab||'prata',k=ac==='bronze'?'espBronze':ac==='fume'?'espFume':'espPrata';q[k]+=a;q[f.borda==='bisotado'?'espBis':'espLap']+=pe;if(+f.mold>0){var g={};for(var z in f)g[z]=f[z];q.espMold+=espPerim(Object.assign(g,{w:(+f.w||0)+2*f.mold,h:(+f.h||0)+2*f.mold}))}
+   L.push({f:f,a:a,pe:pe,txt:({ret:'Retangular',red:'Redondo/oval',arco:'Arco'})[f.forma||'ret']+' '+Math.round(f.w)+' × '+Math.round(f.h)+' · '+(f.d||4)+' mm · '+({prata:'prata',bronze:'bronze',fume:'fumê'})[ac]+' · '+(f.borda==='bisotado'?'bisotê':'lapidado')+(+f.mold>0?' · moldura '+f.mold+' mm':'')})});
+  var c=0;Object.keys(q).forEach(function(k){c+=q[k]*(+PR[k]||0)});return {q:q,L:L,c:c}};
+ var prAuto_espf=prAuto;prAuto=function(b){var R=prAuto_espf.apply(this,arguments);try{var v=espVidros();if(v.L.length){var det=v.L.map(function(x){return x.txt}).join(' · ');NOVOS.forEach(function(x){var n=Math.round(v.q[x[0]]*1000)/1000;if(n>0)R.push([x[0],x[1],x[2],n,x[2]==='m²'?'área real do contorno · '+det:'perímetro real'])})}}catch(_){}return R};
+ var budget_espf=budget;budget=function(){var r=budget_espf.apply(this,arguments);try{var v=espVidros();if(v.c>0){r.tot+=v.c;r.sale0=r.tot*PR.mult;r.sale=r.sale0+((r.ext&&r.ext.t)||0)}r.esp=v}catch(_){}return r};
+})();
 </script>
 </body></html>

@@ -1799,11 +1799,11 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - `pasAplica` no `partsOf`: a porta passa da borda do módulo o tanto de `pasMm` (Configurações › Puxadores). No balcão e na torre passa em cima; no aéreo, embaixo. No gaveteiro só a frente da ponta passa.
   - Desenho vetorial do botão em `PXF.passante`.
 - **Defeito achado no caminho:** a primeira conta media o excesso a partir da borda normal da porta (que já fica uns mm dentro), e não da borda do módulo. Corrigido antes do commit.
-- **⚠ Pendente:** o padrão `pasMm = 20` é **escolha minha**, não do Adauto. No app aparece "confirme o seu". Confirmar com ele.
+- **Padrão `pasMm = 20`:** foi escolha minha e o **Adauto confirmou em 23/11** (via Code 1). Cada marceneiro ainda pode mudar em Configurações › Puxadores.
 - **Testes:**
   - `testPuxadorPassantePortaPassaDoModuloPeloAjuste` (novo);
   - `testGolaVerticalEHorizontalEDesenhoDeCadaPuxador`: lista de puxadores +1, com comentário.
-- **Status:** resolvido na bateria. Padrão pendente.
+- **Status:** resolvido na bateria; padrão confirmado.
 
 ## PEÇA LIVRE: 2 toques, Duplicar, ímã e puxador no 3D (23/11/2026)
 - **Pedidos do Adauto, 23/11:**
@@ -1820,7 +1820,7 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - **Correção:** `8eab70a3`. O ímã só age no eixo em que a peça chegou onde foi solta.
   - No mesmo teste, "arrasta 100" passou a dar 99: a borda da peça encaixou na borda da porta, a 1 mm. Expectativa mudada, com comentário (aceita pelo Code 1).
 - **Defeito do teste:** o 2 toques numa peça livre caía no puxador de cava atrás dela (`pickFace` com filtro). Corrigido para usar a face da frente e só puxadores que mudam de lugar.
-- **Setas de mover no 3D:** feitas em `cf4c9aae` e **tiradas a pedido do Adauto** (revert `0cf24e8f`).
+- **Setas de mover no 3D:** feitas em `cf4c9aae` e **tiradas a pedido do Adauto** (revert `0cf24e8f`). Retirada confirmada por ele em 23/11 (via Code 1).
 - **Testes:** `testPecaLivreDoisToquesDuplicarEImaAlinhaAsFaces`, `testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos`, `testNo3DDuplicarQualquerPecaViraPecaLivre`.
 - **Arquivos:** `editor.html`, no bloco PEÇA LIVRE (fim), em `e3Render` (barra do 3D) e no despacho de toques do 3D (`lastTap.pxm`).
 - **Status:** resolvido na bateria.

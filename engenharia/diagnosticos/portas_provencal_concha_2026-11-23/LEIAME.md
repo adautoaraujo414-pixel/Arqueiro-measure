@@ -56,7 +56,7 @@ Capturas: 3d_madeira_regua_na_borda_veio.png, 3d_conchas_desviradas_4_modelos.pn
   - Peça livre: cópia igual.
   - Outra peça: vira peça livre de MDF 15 com a medida de corte e o sentido da original, do lado dela.
 - **2 toques no puxador** (barra, bola, concha): abrem o reposicionar livre (bolinha vermelha). Todas as portas seguem, espelhado, com os furos do DXF.
-- **Puxador passante**: a porta passa do módulo o tanto de Configurações · Puxadores (padrão 20 mm, confirme o seu), medido da borda do módulo.
+- **Puxador passante**: a porta passa do módulo o tanto de Configurações · Puxadores (padrão 20 mm, confirmado pelo Adauto em 23/11, via Code 1), medido da borda do módulo.
   - No balcão e na torre a porta passa em cima; no aéreo, embaixo.
   - No gaveteiro só a frente da ponta passa.
   - Sem ferragem, sem furo e sem puxador no orçamento.

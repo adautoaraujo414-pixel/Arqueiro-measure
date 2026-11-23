@@ -1803,3 +1803,116 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Correção:** guarda mínima (`if(S.m)defs(S.m)`, `S.m&&S.m.sup`). Projeto com módulo não muda. Efeito: `newProjFor`/`arqueNewProject` agora chegam ao `ATGO=2` (com 0 módulo o autoTamp não faz nada).
 - **Teste:** `testAbrirProjetoSemModuloNaoPerdeObraNemAmbiente` (d80c925, falha antes) · correção a4148a2.
 - **Autorização:** Adauto 23/11 ("Sim, colocar agora") para entrar nesta candidata.
+
+
+## PROVENÇAL e CONCHA (23/11/2026, branch `claude/portas-provencal-concha`, base `28e24535`)
+- **Pedido:** Adauto, 23/11 14:40, com 6 fotos (ver `REFERENCIAS.md`): portas provençais e puxador concha.
+- **Entrega inicial:** `057f8722`.
+  - Estilos de porta na aba Portas. Régua ou moldura aplicadas viram peças reais de MDF 6 mm; CNC vira frisos no DXF.
+  - Concha com 7 modelos e furação pelo modelo.
+  - Testes: `testPortaProvencalReguasAplicadasPecasReaisCorteEDxf`, `testPortaProvencalUsinadaCncFrisosNoDxfEConflitoComDobradica`, `testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar`, `testConchaSeteModelosFuracaoPorModeloECorPorEscopo`.
+- **PROV-BORDA (print das 15h21):** "réguas na borda direta, sem essa interferência".
+  - **Causa:** padrão de 50/40 mm de distância da borda. Era escolha minha, não do pedido.
+  - **Correção:** `09f18b40`. Distância padrão 0; veio deitado nas réguas horizontais (`pfFill`, `vr`); portas de canto em L pela medida real da folha (`estCanto`).
+  - **Teste:** `testProvencalNaBordaConchaDesviradaEPortasDeCantoAlinhadas`.
+- **PROV-TOPO (print das 15h37):** "até o topo em cima também".
+  - **Causa:** do lado da cava usinada a régua começava a 21 mm, para não cobrir a cava.
+  - **Correção:** `a34e2d9e`. Vai até a borda; a nota avisa que cobre a cava. Teste do CNC atualizado.
+- **CONCHA-DESVIRADA (print das 15h21):** "puxadores estão invertido, é contrário".
+  - **Antes:** borda reta em cima e arco embaixo, que é o que as fotos 1, 2 e 4 mostram.
+  - **Correção:** `09f18b40` passou para arco em cima e borda reta embaixo. Parafusos na altura dos furos do DXF; antes ficavam 0,16 × altura acima do centro, um desvio entre 3D e fabricação achado nessa mesma correção.
+  - **⚠ Pendente:** confirmar com o Adauto. O pedido dele sobre o print contraria as fotos de referência (ver `REFERENCIAS.md`).
+- **CONCHA-ESCOPO:** a cor "só este puxador" ficava presa quando o vão trocava para outro puxador. Achado no meu código, antes de entregar.
+  - **Correção:** `09f18b40`. O escopo vale só na concha.
+  - **Teste:** `testEscopoDaCorSoNaConchaEPortaEscolhidaDentroDoVao`.
+- **Arquivos:** `app/src/main/assets/editor.html`. Módulo PORTAS PROVENÇAIS no fim, mais ganchos em `px3` (5 chamadas), `cornerBoxes`, `pfFill`, linha do 2D e `pxSvg`.
+- **Status:** resolvido na bateria (485/485 em `8eab70a3`). Orientação da concha pendente de confirmação. **Não testado em aparelho real.**
+
+## PASSANTE (23/11/2026)
+- **Pedido:** Adauto, 23/11: "puxador passante… em configurações… o quanto a pessoa coloca passando do módulo".
+- **Implementado:** `b1a167ba`.
+  - Novo tipo "Passante", sem ferragem.
+  - `pasAplica` no `partsOf`: a porta passa da borda do módulo o tanto de `pasMm` (Configurações › Puxadores). No balcão e na torre passa em cima; no aéreo, embaixo. No gaveteiro só a frente da ponta passa.
+  - Desenho vetorial do botão em `PXF.passante`.
+- **Defeito achado no caminho:** a primeira conta media o excesso a partir da borda normal da porta (que já fica uns mm dentro), e não da borda do módulo. Corrigido antes do commit.
+- **Padrão `pasMm = 20`:** foi escolha minha e o **Adauto confirmou em 23/11** (via Code 1). Cada marceneiro ainda pode mudar em Configurações › Puxadores.
+- **Testes:**
+  - `testPuxadorPassantePortaPassaDoModuloPeloAjuste` (novo);
+  - `testGolaVerticalEHorizontalEDesenhoDeCadaPuxador`: lista de puxadores +1, com comentário.
+- **Status:** resolvido na bateria; padrão confirmado.
+
+## PEÇA LIVRE: 2 toques, Duplicar, ímã e puxador no 3D (23/11/2026)
+- **Pedidos do Adauto, 23/11:**
+  - "ao clicar duas vezes na peça… duplicar… arrastar… imã alinhado as faces";
+  - "Duplicar no 3D… barra minimizar";
+  - "dois cliques sobre o puxador, reposicionar… reposicionando um reposiciona todos";
+  - "ao selecionar qualquer peça… duplicar".
+- **Implementado:**
+  - `8a678565`: 2D com menu Duplicar / Medidas / Apagar e ímã de 15 mm. Porta e frente só servem de ímã se a peça estiver na frente delas.
+  - `c15faffc`: 3D com ⧉ Duplicar na barra e 2 toques no puxador de barra, bola ou concha (`S.pxa`, todas seguem).
+  - `e4f0528c`: Duplicar em qualquer peça; a cópia vira peça livre de MDF 15 com a medida de corte.
+- **Defeito IMÃ-ENCOSTO, achado pela bateria completa:**
+  - `testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata` deu "encostou 5, esperado 0": a peça parava encostada na parede e o ímã puxava 5 mm para a borda do módulo.
+  - **Correção:** `8eab70a3`. O ímã só age no eixo em que a peça chegou onde foi solta.
+  - No mesmo teste, "arrasta 100" passou a dar 99: a borda da peça encaixou na borda da porta, a 1 mm. Expectativa mudada, com comentário (aceita pelo Code 1).
+- **Defeito do teste:** o 2 toques numa peça livre caía no puxador de cava atrás dela (`pickFace` com filtro). Corrigido para usar a face da frente e só puxadores que mudam de lugar.
+- **Setas de mover no 3D:** feitas em `cf4c9aae` e **tiradas a pedido do Adauto** (revert `0cf24e8f`). Retirada confirmada por ele em 23/11 (via Code 1).
+- **Testes:** `testPecaLivreDoisToquesDuplicarEImaAlinhaAsFaces`, `testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos`, `testNo3DDuplicarQualquerPecaViraPecaLivre`.
+- **Arquivos:** `editor.html`, no bloco PEÇA LIVRE (fim), em `e3Render` (barra do 3D) e no despacho de toques do 3D (`lastTap.pxm`).
+- **Status:** resolvido na bateria.
+
+## ESP-FAIXA: faixa jateada do espelho LED sumia de longe e em ângulo (auditoria do Code 1, 23/11)
+- **Relatado:** Code 1, na candidata 20c11b0. Com zoom 1,05 e yaw −0,5 a faixa ficava cinza. Valia de dia e à noite, nas 3 qualidades.
+- **Reproduzir:** S.W 4600, `espWallAdd(4)`, `a.x = 150`, `__cam(-.5,.12,1.05)`. Dá 0 de 24 pontos da faixa acesos.
+- **Causa raiz:** o passe normal desenha com `polygonOffset(+1,+1)`, que empurra a faixa para trás conforme a inclinação. O vidro do espelho vai no passe do espelho, depois e sem empurrão, e ganhava a profundidade.
+  - Não era a espessura de 0,3 mm: subir a resolução de profundidade não resolveu.
+  - Tirar o corpo do vidro resolvia, o que confirma a causa.
+- **Correção:** `13419b70`. A faixa (`espLed`='fr'/'frs') vai no passe puxado para a câmera (o do gola, −1,−2). O espelho não sai do lugar e nenhuma medida muda.
+- **Teste:** `testFaixaDoEspelhoLedApareceDeLongeEEmAngulo`. Pior caso 0/24 antes e 24/24 depois, em dia/noite × auto/equil/alta × 4 vistas.
+- **Status:** resolvido na bateria. Falta o Code 1 reauditar a cena com balcão e 2 espelhos à noite.
+
+## ESP-LEVE e RECUO SWIFT (23/11)
+- **ESP-LEVE:** `85411be3`.
+  - **Relatado:** achados do Chefe no CI. O iOS foi barrado no `appstore_check` pela palavra "Android" na regex de celular. O WebView2 sem GPU caiu na bateria do Windows.
+  - **Correção:** regex `/Andr[o]id|…/`; no automático, sem reflexo planar com renderizador por software ou depois de perder o contexto WebGL.
+  - A causa da queda do WebView2 **não foi comprovada**: a mudança é uma proteção.
+  - **Teste:** `testEspelhoLeveNoAutomaticoSemGpuEContextoPerdido`. Os 3 testes de reflexo pedem 'equil', com comentário.
+- **RECUO SWIFT:**
+  - **Relatado:** achado do Chefe. Em `testBatenteCavaReguaPorRegua…`, uma linha começava na coluna 0 dentro de `#"""…"""#`. O iOS não compila; o Chromium não pega.
+  - **Correção:** `2ec82605` em `claude/juncao4-batente`.
+  - **Prevenção:** daqui pra frente, verificador de recuo antes de cada entrega.
+
+## CONCHA-PRUMO e ESCOLHA POR PUXADOR (Adauto, prompt oficial de 23/11, via Code 1)
+- **Pedido:**
+  - concha com a parte reta EM CIMA, curva embaixo, abertura por baixo, como nas fotos;
+  - porta EM PÉ perto da lateral que abre; gaveta deitada e no meio;
+  - "respeitar a orientação física correta de cada modelo";
+  - escolha individual de modelo, cor, posição, orientação e medidas, aplicando só na peça ou em todas as compatíveis com confirmação;
+  - mudar a cor de um puxador não muda os outros;
+  - DXF sem furação inventada.
+- **Erro corrigido:** a 09f18b40 tinha virado a concha (arco em cima) por causa do print das 15h21. Estava de cabeça para baixo em relação às fotos.
+- **Decisão sem resposta do Adauto: para que lado vai a parte reta na porta em pé.**
+  - Decidi pela construção física.
+  - A parte reta é o lado fechado da concha (onde a chapa encosta e os dedos fazem força). A curva é a boca, por onde os dedos entram.
+  - Abrindo a porta, o puxador anda num arco em volta da dobradiça: primeiro para fora, depois para o lado da dobradiça. A mão puxa a parede fechada para esse lado.
+  - Então **a parte reta fica do lado da dobradiça e a boca do lado que abre**. A mão chega pelo lado que abre, que é o natural.
+  - **Fontes consultadas** (guias de instalação; nenhuma norma diz o lado da boca na vertical):
+    - os puxadores vão no lado oposto à dobradiça;
+    - na vertical, a concha fica no meio do montante;
+    - na horizontal, a boca fica para baixo para os dedos engancharem.
+  - Links: housedigest.com "The Right Way To Mount Cup Pulls…", vandykes.com "How to Execute Cabinet Hardware Placement", onton.com "Cabinet knob and pull placement", kitchencabinetkings.com/guides/cabinet-pull-placement.
+  - **A confirmar com o Adauto quando ele puder.** Se for o contrário, é inverter o sinal `O.sg` em `chmOri`.
+- **Correções:**
+  - `7fe0047a`:
+    - geometria num sistema próprio (`conchaPartes3` + `chmOri`), posta em pé ou deitada;
+    - parafusos na linha dos furos do DXF;
+    - porta com régua aplicada: concha no meio do montante quando cabe;
+    - por puxador: automática / deitada / em pé, modelo, cor e medidas;
+    - padrão "Apenas este puxador"; os outros escopos pedem confirmação com a contagem (só concha);
+    - 3D: "Só este puxador" (`v.chuQ`) ou "Todas as portas" (com confirmação).
+  - `f9507178`: o DXF só fura a concha com a furação confirmada. Os entre-furos 64/96/76 dos modelos eram escolha minha (medidas comerciais comuns), o que é furação sem especificação. Até confirmar: sem furo e FALTA no aviso.
+- **Testes:**
+  - `testConchaRetaEmCimaEmPeNaPortaDeitadaNaGavetaEEscolhaIndividual` (novo, falha na 3933f94f).
+  - Atualizados com comentário, todos desta mesma entrega e ainda não homologados: ConchaSete (modelos conferidos deitados e com furação confirmada; escopos com confirmação), ProvencalNaBorda (reta em cima), No3DDuplicar… ("Todas as portas" + confirmação).
+- **Arquivos:** `editor.html`, nos blocos CONCHA e escolha por puxador (módulo das provençais), `px3Panel` (lugar de um puxador) e o despacho dos 2 toques (`PXSEL`).
+- **Status:** resolvido na bateria. Falta o Adauto confirmar o lado da parte reta na porta em pé.

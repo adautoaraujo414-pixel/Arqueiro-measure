@@ -1537,3 +1537,34 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** o 3D só divide quando a espessura é múltipla de 15, a mesma regra do corte (`mat%15===0`). O de 30 continua face + moldura, duas de 15.
 - **Regra (Adauto 22/11):** tamponamento só de 15, 25 (chapa única) e 30 (duas de 15). Não existe 35 (pedido de 35 cancelado pelo Adauto; nada de 35 entrou no código).
 - **Teste:** `testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo` (fd72cce, falha antes: 975..1005, entra no módulo) · correção a6712f1.
+
+## CPAN-DUPLO — "Panelas no cooktop" e "Panelas e louça" com o mesmo atributo no ＋ Criar (23/11/2026, relato do Code 2)
+- **Reproduzir:** Balcão 2 portas + pedra + cooktop → 3D → ＋ Criar.
+- **Defeito:**
+  - "🍲 Panelas no cooktop" punha um item decorativo (`S.fr` +1) e não ligava as panelas do cooktop;
+  - a seção "Panelas e louça" sumia quando havia cooktop.
+- **Causa:**
+  - os dois usavam `data-cpan`, com o cooktop em `"1"` e a louça com o índice do item;
+  - o tratador da louça, em captura com `stopImmediatePropagation`, pegava o toque do cooktop;
+  - a guarda da seção da louça ("se já tem `[data-cpan]` não monta") achava o do cooktop e não montava.
+- **Correção (001bf4e):** a louça passa a usar `data-clou`. O `data-cpan` fica só no cooktop. Nenhum botão some.
+- **Família (§11):** varridos os 33 `data-*` do `#crp3`. Os repetidos são valores da mesma ferramenta; não há outra colisão entre ferramentas diferentes.
+- **Teste:** `testFASE4_PanelasDoCooktopEPanelasELoucaNoMenuCriarSemConflito` (6905651, falha antes).
+
+## FASE4 · M1 — menu ＋ Criar em 2×3 (23/11/2026)
+- **Pedido:** Adauto, com a imagem `engenharia/referencias/menu-criar-aprovado-2026-11-22.jpg`. Plano do Code 2 (PLANO_MENU_CRIAR_ESPELHOS_LED.md §2/§7/§8).
+- **Feito (8657f4d):** um bloco no fim do `editor.html` mais um `MutationObserver` no `#crp3`. Não mexe no `crpRender` nem nos 12 embrulhos.
+  - **Grade 2×3:** Móveis | LED · Espelhos | Pedras · Paredes | Outros, com cartão preto, botões #242424 e o "+" de Outros em cinza.
+  - **Categoria:** cada uma abre as ferramentas dela com "‹ Voltar".
+  - **🔎:** procura em todas as categorias.
+  - **Classificação:** pelo título da seção. O que não casa cai em Outros, então nada some.
+  - **Pedras:** recebe "Só a pedra" (o mesmo botão, movido), ilha/península e cozinha viva.
+  - **Espelhos:** o espelho que já existe na folha de correr (`slideCfgOpen`). Sem porta de correr no projeto, oferece criar o guarda-roupa de correr.
+  - **Outros:** sofás e consultório.
+- **Conferido:**
+  - 34 `data-*` iguais em 3 ciclos de abrir e fechar;
+  - 0 `__build` ao abrir e ao trocar de categoria;
+  - a ferramenta funciona a 1 toque;
+  - capturas em iPhone 390, iPad 820, Tab S9 FE 800 e Windows 1366 (Chromium, não aparelho real).
+- **Diferença para a imagem:** o título continua "＋ Criar no 3D", com ▁ e ✕ (regra §0, não tirar nada). A imagem tem "+ Criar" com chevron.
+- **Teste:** `testFASE4_MenuCriarSeisCategoriasNenhumaFerramentaSome` (69a6002, falha antes).

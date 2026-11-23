@@ -1768,8 +1768,3 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - zonas proibidas de ferragem (dobradiça, corrediça, sistema 32) na colisão do LED;
   - LED livre em peça girada (gp) do móvel livre.
 - **Compatibilidade:** app antigo ignora `m.leds` (abre o projeto sem o LED livre; salvar de novo naquela cópia perde ele). Os campos novos do espelho vão dentro do item, já salvo em `frx`.
-- **POLÍTICA B · LED livre e espelho (bloqueador pedido pelo Adauto, 23/11):**
-  - O link do cortador e o do cliente de projeto com LED livre ou espelho saem como `arque-corte-v2`/`arque-cliente-v2`. A versão publicada recusa ("Não consegui abrir"), em vez de abrir sem o LED, sem o rasgo do embutido ou sem o espelho.
-  - Antes de mandar aparece a mesma janela de confirmação das peças livres. Este app abre normal. Sem LED livre nem espelho, nada muda.
-  - **Limite que não tem como corrigir:** projeto copiado à mão (backup/arquivo) pra um aparelho com app antigo ainda abre sem o LED. App antigo não pode ser mudado; a saída é atualizar.
-  - Teste `testPoliticaBLedLivreEEspelhoNaoAbremEmVersaoAntigaSemAviso` (4ee3da8, falha antes) · correção 316d3c8.

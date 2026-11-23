@@ -1733,3 +1733,38 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
 - **PINTAR COMPACTO (D44, decisão 17/11):** cabeçalho alto, sem cor, opções sem rolagem própria, "#1" sempre visível. `e314a8b`: cabeçalho fixo em 2 linhas com a cor, rolagem interna, 2 colunas a partir de 700 px, "#1" só some da tela quando a peça é única; ordem dinâmica e todas as opções iguais. `testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao` (falha antes). Ajustado `testAcabamentoNaoMudaAoAbrirPortaEFitaPeloToque` (título sem o "#1").
 - **FITA 1 mm · CORTE × ACABADA (decisão 17/11):** o quadro da peça só mostrava uma medida. `a283ce6`: corte do MDF (igual ao plano, sem desconto) e acabada com a fita de 1 mm por borda (MDF 560 + 1 = 561). `testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte` (falha antes).
 - **AQRENDER (23/11, "Acabamento realista", opção desligada):** `4445cf2`. Defeitos achados ao trazer o protótipo de 16/11: o motor passou a usar buffers tipados (`F.concat is not a function` → convertido), a luz de lado fazia a parede lateral sombrear o móvel em diagonal (luz quase de frente) e a parede de raspão ficava listrada (sombra some em `ndl` baixo). Desligado o 3D é idêntico (imagem igual byte a byte no teste). `testAcabamentoRealistaOpcaoDesligadaPorPadraoSoMudaAAparencia`.
+
+## ESP-FORMAS · ESP-VAO · LED-LIVRE (23/11/2026, branch `claude/espelhos-d33`, base `d33886f`)
+- **Pedido:** Adauto, 23/11: "LED completo e o resto dos espelhos (formatos, espelho no vão, girar, acabamentos, orçamento de vidro)", confirmado direto com ele: fazer agora.
+- **Respostas dele (23/11):**
+  - LED: os modelos de LED que já existem, barra de 2 m; o LED de hoje fica igual (o novo é a mais); fonte por botão, rasgo deixa no mínimo 3 mm, usinagem por metro (R$ 0).
+  - Espelhos: preços em branco; ornamental quando ele mandar o desenho.
+- **ESP-FORMAS** (94095e3 teste · 7555e0f código):
+  - espelho de parede (`S.fr` t:'espelho') com formato retangular/quadrado, redondo/oval ou arco (contorno de verdade, 72 pontos no oval);
+  - girar 0/90/180/270 ou ângulo digitado;
+  - prata, bronze ou fumê; borda lapidada ou bisotê; moldura 3 ou 5 cm atrás do vidro (sem faces no mesmo plano);
+  - duplicar;
+  - 2D desenha o contorno;
+  - orçamento de vidraçaria separado do MDF: m² pela área real por acabamento; lapidação, bisotê e moldura por metro; 6 preços novos no Ajustes (R$ 0). Não entra no plano de corte.
+  - Espelho sem as opções novas desenha igual.
+- **ESP-VAO** (2fd941a teste · 60e5dc8 código):
+  - "Espelho no vão escolhido" no ＋ Criar;
+  - medida e lugar vêm do vão: `vaoRanges`, base de baixo/de cima e frente do fundo pelas caixas do 3D, menos o recuo 0/10/20/50;
+  - preso ao módulo pelo `uid` (outro módulo entrando ou saindo não troca o dono);
+  - anda e acompanha a medida; não muda peça; "Soltar do vão" deixa ele solto na parede;
+  - por enquanto só módulos da parede do fundo (avisa nos outros).
+- **LED-LIVRE** (e4202d3 teste · ddfb3b7 código):
+  - "Adicionar LED numa peça" no ＋ Criar · LED: toque na peça → o LED vai na face tocada, preso pelo `pk` (anda com o módulo);
+  - quadro com lado, comprimento, posições, girar 90°, sobreposto/embutido, cor, perfil, acender, duplicar e tirar;
+  - embutido: rasgo de 12 mm anotado na peça (deixa ≥ 3 mm); a medida da peça não muda;
+  - orçamento: perfil em barras de 2 m, fita, fonte (1 por botão / 1 por módulo), usinagem (m);
+  - o LED de sempre não muda (os 4 testes antigos de LED passam).
+- **Testes:** os 3 falham antes. A expectativa do ＋ Criar passou de 35 para 37 chaves (`data-cespv`, `data-cledl`), com comentário; nenhuma antiga saiu.
+- **Não feito (fica registrado):**
+  - espelho ornamental (aguarda desenho);
+  - espelho em painel/ripado e espelho com LED;
+  - espelho no vão de módulo de parede lateral;
+  - LED magnético (não há perfil magnético entre os modelos de hoje);
+  - zonas proibidas de ferragem (dobradiça, corrediça, sistema 32) na colisão do LED;
+  - LED livre em peça girada (gp) do móvel livre.
+- **Compatibilidade:** app antigo ignora `m.leds` (abre o projeto sem o LED livre; salvar de novo naquela cópia perde ele). Os campos novos do espelho vão dentro do item, já salvo em `frx`.

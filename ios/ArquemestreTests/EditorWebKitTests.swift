@@ -222,14 +222,19 @@ final class EditorWebKitTests: XCTestCase {
           var v=m.v[0],vr=vaoRanges(m)[0],vw=vr[1]-vr[0],fh=drawerH(v);CURM=null;
           var P=partsOf(m),g=function(re){return P.filter(function(p){return re.test(p.name)})[0]},la=g(/^Lateral de gaveta/),cf=g(/^Frente\/costa de gaveta/),fu=g(/^Fundo de gaveta/);
           var L=cutLines(m),cq=L.filter(function(l){return /^Frente\/costa de gaveta/.test(l.names[0])}).reduce(function(a,l){return a+l.qty},0);
-          return JSON.stringify({vw:vw,fh:fh,lh:la.cw,ld:la.cl,cl:cf.cl,ch:cf.cw,fw:fu.cl,fd:fu.cw,fmat:fu.mat,cq:cq,errs:__errs});
+          /* FASE2 (23/11): módulo de antes da regra nova do fundo (sem m.gf6) continua com o fundo de antes */var g6=m.gf6;delete m.gf6;var fwA=partsOf(m).filter(function(p){return /^Fundo de gaveta/.test(p.name)})[0].cl;if(g6)m.gf6=g6;
+          return JSON.stringify({vw:vw,fh:fh,lh:la.cw,ld:la.cl,cl:cf.cl,ch:cf.cw,fw:fu.cl,fwAntigo:fwA,gf6:m.gf6||0,fd:fu.cw,fmat:fu.mat,cq:cq,errs:__errs});
           """#)
         let vw = o["vw"] as? Double ?? 0, fh = o["fh"] as? Double ?? 0, lh = o["lh"] as? Double ?? 0
         let cx = (vw - 26).rounded()
         XCTAssertEqual(lh, fh - 56, accuracy: 0.11, "lateral = vão da gaveta − 56")
         XCTAssertEqual(o["ch"] as? Double ?? 0, lh - 15, accuracy: 0.11, "contra-frente 15 mm menor que a lateral (fica em cima do fundo)")
         XCTAssertEqual(o["cl"] as? Double ?? 0, cx - 30, accuracy: 0.11, "contra-frente entre as laterais = caixa − 30")
-        XCTAssertEqual(o["fw"] as? Double ?? 0, cx - 15, accuracy: 0.11, "fundo no rebaixo 6 × 6 + 1,5 a mais por lado (Ajustes) = caixa − 30 + 12 + 3")
+        /* FASE2 (23/11/2026, pedido do Adauto): gaveta nova (m.gf6) encaixa 6 mm de cada lado no rebaixo, sem a folga de 1,5 → caixa − 30 + 12 = caixa − 18.
+           Módulo de antes (sem gf6) continua caixa − 15 até a pessoa tocar em "Atualizar fundo das gavetas". */
+        XCTAssertEqual(o["gf6"] as? Int, 1, "módulo novo nasce com a regra nova do fundo")
+        XCTAssertEqual(o["fw"] as? Double ?? 0, cx - 18, accuracy: 0.11, "fundo no rebaixo 6 × 6 (encaixe 6 mm por lado) = caixa − 30 + 12")
+        XCTAssertEqual(o["fwAntigo"] as? Double ?? 0, cx - 15, accuracy: 0.11, "módulo de antes: rebaixo 6 × 6 + 1,5 a mais por lado (Ajustes) = caixa − 30 + 12 + 3")
         XCTAssertEqual(o["ld"] as? Double ?? 0, 460, accuracy: 0.11, "regra: caixote acima de 470 → laterais da gaveta com 460")
         XCTAssertEqual(o["fd"] as? Double ?? 0, o["ld"] as? Double ?? -1, accuracy: 0.11, "fundo no comprimento todo da lateral")
         XCTAssertEqual(o["fmat"] as? Double ?? 0, 6, accuracy: 0.01)

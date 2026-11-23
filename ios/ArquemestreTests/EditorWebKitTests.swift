@@ -15796,4 +15796,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* CANTO-ESPELHO (achado pelo Code 2, 23/11/2026): na parede esquerda, o cantoEncosta redesenhava pelo d0 guardado antes do envoltório
+       PAREDE-ESPELHADA: o 2D ficava sem espelho e o WVMIRX velho (o toque convertia errado). */
+    func testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        try{wvExit()}catch(_){}S.env='cozinha';S.room='cozinha';S.stones=[];S.stw=[];S.fr=[];S.isl=[];S.mods=[];S.W=4200;S.wl={L:'p',R:'p'};draw();newTpl(T('Balcão 2 portas'));S.mods[0].x=0;draw();await W(400);
+        wvGo('e');await W(300);R.v0='parede esquerda: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        newTpl(T('Balcão 2 portas'));var m=S.mods[S.mods.length-1];m.x=606;draw();await W(900);
+        var mexeu=m.x!==606;R.v1='módulo novo perto do canto: encostou '+mexeu+' (x '+m.x+')';
+        R.v2='depois de encostar: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        /* toque: tocar no móvel novo onde ele está desenhado escolhe ele (com o espelho velho o toque convertia pro lugar errado) */var mi=S.mods.indexOf(m);var g=document.querySelector('#svg [data-mi="'+mi+'"]');S.m=S.mods[0];draw();await W(100);g=document.querySelector('#svg [data-mi="'+mi+'"]');var rc=g?g.getBoundingClientRect():null;if(rc){var x=rc.left+rc.width/2,y=rc.top+rc.height*0.7,t=document.elementFromPoint(x,y),sv=document.getElementById('svg');t.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:1}));sv.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:0}));await W(150)}R.v3='toque no móvel novo (onde está desenhado): escolheu ele '+(S.m===m)+' · ele não andou '+(m.x===630);
+        try{wvExit()}catch(_){}R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "parede esquerda: espelho true · WVMIRX true", "vista da parede esquerda espelhada")
+        XCTAssertEqual(o["v1"] as? String, "módulo novo perto do canto: encostou true (x 630)", "o módulo novo perto do canto encosta (cantoEncosta)")
+        XCTAssertEqual(o["v2"] as? String, "depois de encostar: espelho true · WVMIRX true", "depois de encostar o 2D continua espelhado (antes o redesenho pulava o espelho e o WVMIRX ficava velho)")
+        XCTAssertEqual(o["v3"] as? String, "toque no móvel novo (onde está desenhado): escolheu ele true · ele não andou true", "tocar onde o móvel está desenhado escolhe ele, sem mexer")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

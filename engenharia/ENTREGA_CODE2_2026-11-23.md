@@ -56,31 +56,27 @@ Status: **integrado** (está na candidata) · **pronto, não integrado** (ramo +
 | 40 | Histórico de versões com peça livre (13:59 §8) | `claude/fecha-pendencias` @ `ffb31ea` | `testHistoricoDeVersoesGuardaERestauraAPecaLivre15mm` |
 | 41 | Registros no HISTORICO_ERROS (CLAUDE.md §8.9/§11.1) | `claude/fecha-pendencias` @ `eeeb002` | seção "CODE 2 · registro consolidado" |
 | 42 | Exportação lendo o `partsOf` cru (condição do Chefe 03:05) | — | conferido: `partsOf0` só é chamado dentro do `partsOf`; não existe exportação CSV; PDF e link de corte leem o `partsOf` |
+| 43 | Junção 5 · TRAVESSÃO (Adauto 23/11: "travessão e régua superior… duas de 8"; "Opção, desligada") | `claude/fecha-pendencias` @ `a849a43` | `testJuncao5TravessaoDuasReguasDe80PorCimaDasLaterais`: opção desligada por padrão, 3D = corte, frontal rebaixa as laterais |
+| 44 | Paredes A–F (Adauto via Chefe 23/11: "Faça todos") | `6df3e3e` (A abertura/peitoril), `bd07280` (B meia-parede e parede inteira), `ab9d030` (C remover/restaurar), `076a1cd` (D editar pelo 3D), `49bbf97` (E soltar módulo aqui), `4b45005` (F doc + compatibilidade com a publicada `c561120`) | `testParedesEtapaA…`, `…EtapaB…`, `…EtapaC…`, `…EtapaD…`, `…EtapaE…`; `PAREDES_ETAPAS_A_F_2026-11-23.md` |
+| 45 | Regra 5 · acabamento do topo da parede (MDF/pedra) | `fb43cb6` | `testParedesAcabamentoEmCimaDoPeitorilPedraOuMDF` |
+| 46 | Geladeira: "Só o tamponamento" (nova caixa com tamponamento dos 2 lados até 100 mm do chão) | `b45a408` (lateral só no aéreo) + `5a48d40` (GEL-TAMP) | `testCaixaDaGeladeiraNovaComTamponamentoCemMilimetrosAcimaDoPiso`; caixa antiga: aviso + prévia + desfazer |
+| 47 | Medida espelhada ao trocar de parede | `d8173fe` (MED-PAREDE) | `testTrenaNaParedeEsquerdaEspelhadaECadaParedeComAsMedidasDela` |
+| 48 | Botão CSV (mesmas linhas do PDF, UTF-8 BOM, ";", compartilhar nativo) | `988986e` | `testPlanoDeCorteListaEmCSVMesmasLinhasDoPDF` |
+| 49 | Churrasqueira quadrada de embutir (padrões aprovados 23/11) | `2cc652d` | `testChurrasqueiraQuadradaDeEmbutirComMolduraA45` |
+| 50 | Moldura/Frontal (ordem Moldura → Travessão → Frontal) | `0714b18` | `testMolduraTravessaoFrontalTresDIgualCorteEOrdemNoPainel` |
+| 51 | Menu Pintar compacto (D44, decisão 17/11) | `e314a8b` | `testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao` (falha antes) |
+| 52 | Fita 1 mm: quadro mostra corte × acabada (decisão 17/11) | `a283ce6` | `testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte` (falha antes); corte sem desconto mantido |
+| 53 | AQRender "Acabamento realista" (opção, desligada) | `4445cf2` | `testAcabamentoRealistaOpcaoDesligadaPorPadraoSoMudaAAparencia` (falha antes); imagens em `diagnosticos/aqrender_2026-11-23` |
 
-## 3. Reatribuído ou suspenso por decisão (não é pendência do Code 2 sem nova ordem)
-
-| Pedido | Decisão |
-|---|---|
-| Junção 4 (LAT-MEIO) | Code 1 (14:46), parada nas perguntas 2–4 de 17/11 |
-| Junção 6 (CANTO-FOLHA) | feita pelo Code 1 (`21443e8`, integrada) |
-| Junção 7, módulos curvos, componentes personalizados, batente cava com altura escolhida | Adauto 15:38: "não invente regras… só o que está especificado"; batente cava tem 7 perguntas abertas (`PROPOSTA_BATENTE_CAVA.md`) |
-| Moldura/Frontal | Adauto 16:52: não iniciar até definir regras e concluir a junção 4 |
-| Correção do tamponamento entre módulos | Adauto 21:04: é do Code 1 (feita, TAMP-JUNTA) |
-| Paredes A–F (implementação) | Adauto 18:13 e 19:57 suspendeu; Chefe 00:37 "paredes ficam parados" |
-| LED (implementação) | Adauto 21:29 "não implemente sem aprovação"; Chefe 00:37 parado |
-| Menu ＋ Criar e Espelhos (fase 4) | Chefe 02:14: passou ao Code 1 (M1 e espelho de parede feitos por ele) |
-| Móveis livres e câmera 2D/3D (01:09) | Chefe 02:14: área do Code 1 (FASE3 feita por ele) |
+## 3. Área do Code 1 (divisão do Adauto 23/11)
+- LED e o restante dos espelhos.
+- Achados repassados: tamponamento 30 do aéreo = 2 réguas (item C); espelhamento perdido depois do encaixe do canto (o "rodar" usa `d0`).
 
 ## 4. Em aberto na área do Code 2
-Nenhum item com especificação ficou aberto. Fita de borda 1 mm: decidida pelo Adauto em 18/11 (fita só em metros, não desconta no corte; `testPlanoDeCorteNaoDescontaAFitaDeBorda`). Menu Pintar: existe e tem teste (`testFitaDeTopoNaCorDasPortasContaGotasEPintarSoAFita`); a versão "compacta" (D44) é fila sem especificação (§5).
+Nenhum. Todos os itens da divisão de 23/11 (junção 5, geladeira, Moldura/Frontal, paredes A–F, fita 1 mm, Pintar, churrasqueira, textura da pia,
+AQRender, medida livre do vão, rodapé L, CSV) têm SHA e teste que falha antes.
 
-## 5. Depende do Adauto (sem isso não dá para fechar sem inventar regra)
-- Churrasqueira quadrada de embutir: especificação de 16/11 (`ESPEC_CHURRASQUEIRA_QUADRADA.md`) traz 11 perguntas abertas (texto original do pedido perdido; "quadrada" × boca retangular da foto; padrões de altura, profundidade, abertura, moldura, paredes, recuo, base; material do interior; lista e orçamento). Só a largura 900 foi dada; o resto não pode ser inventado.
-- Área molhada: rebaixo maior que a espessura da pedra (rebaixo americano é outra peça) e se o campo continua 3–20 mm (especificação §7). Hoje: guarda a medida e avisa.
-- AQRender (luz, metal e vidro realistas): protótipo fora do app; precisa aprovar a mudança do formato do vértice (checklist A33).
-- Menu Pintar compacto (D44): sem especificação/referência.
-- Junção 5 (TRAVESSÃO, `a862927` em `claude/arquemestre-travessao`): ninguém assumiu e depende do TRAV-1MM sem especificação.
-- Retomar ou não: Paredes A–F, implementação do LED (5 perguntas), Moldura/Frontal, escopo restante dos espelhos (formatos, vão, girar, acabamentos, orçamento de vidro) — hoje sem dono.
-- Junção 4 (perguntas 2–4), fontes de TRAV-1MM / CANTO-L-DENTRO / A30.
-- Caixa da geladeira nova já nasce com tamponamento dos dois lados?
-- Teste em aparelho real (iPhone, iPad, Galaxy Tab S9 FE, Windows): o contêiner só roda simulador/Chromium; precisa de alguém com o aparelho.
+## 5. Limites conhecidos (não são pendência de código)
+- Teste em aparelho real (iPhone, iPad, Galaxy Tab S9 FE, Windows): o contêiner só roda Chromium (SwiftShader); a homologação é pelos testes automáticos (Adauto 23/11).
+- AQRender: FPS e temperatura em aparelho não medidos; LED não ilumina o resto; vidro sem ordenação por distância (está no LEIAME do protótipo).
+- Junção 4 (perguntas 2–4), batente cava (7 perguntas), junção 7/módulos curvos: seguem parados por decisão do Adauto.

@@ -1916,3 +1916,11 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - Atualizados com comentário, todos desta mesma entrega e ainda não homologados: ConchaSete (modelos conferidos deitados e com furação confirmada; escopos com confirmação), ProvencalNaBorda (reta em cima), No3DDuplicar… ("Todas as portas" + confirmação).
 - **Arquivos:** `editor.html`, nos blocos CONCHA e escolha por puxador (módulo das provençais), `px3Panel` (lugar de um puxador) e o despacho dos 2 toques (`PXSEL`).
 - **Status:** resolvido na bateria. Falta o Adauto confirmar o lado da parte reta na porta em pé.
+
+## PB-PORTAS — link de projeto com portas provençais/puxadores novos abria na versão antiga sem eles (23/11/2026, branch `claude/politica-b-portas`)
+- **Achado na auditoria do Code 1** da integração 259fef0 + `claude/portas-provencal-concha` b3cf2f3 (erro comprovado, mesma família do bloqueador do LED livre).
+- **Reproduzir:** projeto com régua/moldura provençal (`v.est`/`v.estQ`), concha com modelo (`v.chm`/`v.chmQ`), porta passante (`px:'passante'`) ou cor de um puxador só (`v.pxcQ`, `v.chuQ`) → `cutEncode(cutPayload())` saía `arque-corte`. A versão publicada abriria e recalcularia as peças sem as réguas (8 peças de MDF 6 mm num balcão 2 portas) e com a porta passante na medida antiga (705 em vez de 735).
+- **Causa:** a Política B do LED/espelho só contava `m.leds` e espelhos.
+- **Correção:** `conta` da Política B também conta vãos com porta/puxador novo (`portaNova`); link sai `arque-corte-v2`/`arque-cliente-v2` e a mesma janela avisa antes ("Projeto com portas e puxadores novos"). Concha sem modelo, porta lisa e puxadores de sempre: tipo de sempre, sem janela. Este app abre o link novo com tudo.
+- **Teste:** `testPoliticaBPortasProvencaisEPuxadoresNovosNaoAbremEmVersaoAntiga` (falha antes).
+- **Limite (igual ao LED):** backup copiado à mão pra app antigo abre sem esses campos; app antigo não tem como ser corrigido.

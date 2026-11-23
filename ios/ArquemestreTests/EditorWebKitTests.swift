@@ -15304,8 +15304,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["grade"] as? String, "2 colunas × 3 linhas · lido por linha true", "2 colunas × 3 linhas pelas posições na tela")
         XCTAssertEqual(o["categorias"] as? String, "moveis tem · led tem · esp tem · pedras tem · paredes tem · outros tem", "toda categoria abre ferramenta de verdade (nenhuma vazia ou de enfeite)")
         /* 34 → 35: entra data-cespw (espelho na parede, pedido do Adauto 23/11/2026 "espelhos independentes nas paredes"); nenhuma chave antiga saiu */
-        /* 35 → 36: entra data-cespv (espelho no vão, pedido do Adauto 23/11/2026); nenhuma chave antiga saiu */
-        XCTAssertEqual(o["ciclos"] as? String, "data-* iguais em 3 ciclos true · chaves 36", "abrir e fechar 3 vezes não perde nem duplica ferramenta (ressalva 5 do Chefe)")
+        /* 35 → 36: entra data-cespv (espelho no vão); 36 → 37: data-cledl (LED livre). Pedidos do Adauto 23/11/2026; nenhuma chave antiga saiu */
+        XCTAssertEqual(o["ciclos"] as? String, "data-* iguais em 3 ciclos true · chaves 37", "abrir e fechar 3 vezes não perde nem duplica ferramenta (ressalva 5 do Chefe)")
         XCTAssertEqual(o["busca"] as? String, "busca panela: ＋ Panela | ＋ Jogo de panelas | 🍲 Panelas no cooktop", "a 🔎 acha a ferramenta em qualquer categoria")
         XCTAssertEqual(o["umToque"] as? String, "cooktop pela categoria: visível · panelas [[0]]→[[1]]", "a ferramenta funciona a 1 toque dentro da categoria")
         XCTAssertEqual(o["semRefazer3D"] as? String, "reconstruções do 3D ao abrir e trocar: 0", "abrir e trocar categoria não refaz o 3D")
@@ -16659,5 +16659,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v10"] as? String, "módulo novo antes: dono continua o balcão true · espelho x 1235", "preso ao módulo pelo uid: outro módulo entrando antes não troca o dono")
         XCTAssertEqual(o["v11"] as? String, "tirou o de antes: dono 900 · espelho x 1235", "tirar o de antes também não")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* LED-LIVRE (Adauto, 23/11/2026 · "LED completo"; respostas dele: os modelos de LED que já existem, barra de 2 m, LED de hoje igual,
+       fonte por botão, rasgo deixa 3 mm, usinagem por metro). */
+    func testLedLivreNumaFaceDaPecaTipoCorOrcamentoERasgo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Nicho com prateleiras')t=x})});
+        S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.env='cozinha';S.room='cozinha';S.W=4200;draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];m.x=800;S.m=m;draw();
+        var p0=JSON.stringify(partsOf(m).map(function(p){return [p.name,p.cl,p.cw]}));
+        open3D();await W(400);__cam(0.25,0.55,1.1);await W(200);document.getElementById('v3add').click();await W(150);__crp6.vai('led');await W(40);var bt=document.querySelector('#crp3 [data-cledl]');R.v0='botão na categoria LED: '+!!(bt&&bt.getClientRects().length);bt.click();await W(60);
+        /* toque de verdade na face de cima de uma prateleira */__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))})[1];var pp=__p3((sh.x0+sh.x1)/2,sh.y1,(sh.z0+sh.z1)/2),cv=document.getElementById('cv3'),rc=cv.getBoundingClientRect(),x=rc.left+pp[0],y=rc.top+pp[1];
+        ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:4,pointerType:'touch',isPrimary:true,button:0,buttons:n==='pointerup'?0:1}))});await W(150);
+        var L=(m.leds||[])[0];R.v1=L?('LED na '+L.pk+' · lado '+L.f+' · '+L.L+' mm · tipo '+L.k):'NÃO criou';var E=document.getElementById('ledlv');R.v2='quadro: '+!!(E&&!E.hidden)+' · botões '+(E?E.querySelectorAll('[data-lvl]').length:0);
+        var bx=function(){__build();return __boxes().filter(function(b){return b.ledl&&b.ledl.id===L.id})};var B=bx();R.v3='3D: caixas '+B.length+' · acesas '+B.filter(function(b){return b.em}).length+' · em cima da prateleira '+(Math.min.apply(null,B.map(function(b){return b.y0}))>=sh.y1-0.1);
+        E.querySelector('[data-lvl="f|4"]').click();await W(60);B=bx();R.v4='embaixo: abaixo da prateleira '+(Math.max.apply(null,B.map(function(b){return b.y1}))<=sh.y0+0.1);
+        var inp=document.querySelector('#ledlv [data-lvlf="L"]');inp.value='300';inp.dispatchEvent(new Event('change',{bubbles:true}));await W(60);B=bx();var xs=B.map(function(b){return b.x1-b.x0});R.v5='comprimento 300: '+L.L+' · no 3D '+Math.round(Math.max.apply(null,xs));
+        document.querySelector('#ledlv [data-lvl="k|emb"]').click();document.querySelector('#ledlv [data-lvl="c|6000"]').click();await W(60);var nt=partsOf(m).filter(function(p){return p.pk===L.pk})[0];R.v6='embutido: nota na peça "'+(nt&&nt.note||'').slice(-60)+'" · medida da peça igual '+(JSON.stringify(partsOf(m).map(function(p){return [p.name,p.cl,p.cw]}))===p0);
+        PR.ledPerfil=90;PR.ledFita=20;PR.ledFonte=60;PR.ledUsin=5;var v=lvlTot();R.v7='orçamento: barras '+v.q.ledPerfil+' · fita '+v.q.ledFita+' m · fonte '+v.q.ledFonte+' · usinagem '+v.q.ledUsin+' m · R$ '+v.c.toFixed(2);PR.ledPerfil=0;PR.ledFita=0;PR.ledFonte=0;PR.ledUsin=0;
+        var x0=bx()[0].x0;m.x=1200;draw();R.v8='módulo andou 400: LED andou '+Math.round(bx()[0].x0-x0);
+        var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}m=S.mods[0];var L2=(m.leds||[])[0];R.v9='reaberto: '+(L2?L2.pk+' lado '+L2.f+' '+L2.L+' mm '+L2.k+' '+L2.c:'sumiu');
+        R.v10='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "botão na categoria LED: true", "＋ Criar · LED tem «Adicionar LED numa peça»")
+        XCTAssertEqual(o["v1"] as? String, "LED na Prateleira#2 · lado 5 · 730 mm · tipo sob", "toque de verdade na peça: o LED vai na face tocada, no comprimento da face menos 2 cm de cada lado")
+        XCTAssertEqual(o["v2"] as? String, "quadro: true · botões 25", "quadro do LED livre: lado, comprimento, posição, girar, tipo, cor, perfil, acender, duplicar, tirar")
+        XCTAssertEqual(o["v3"] as? String, "3D: caixas 3 · acesas 2 · em cima da prateleira true", "3D: perfil + difusor aceso em cima da prateleira")
+        XCTAssertEqual(o["v4"] as? String, "embaixo: abaixo da prateleira true", "trocar o lado da peça (embaixo)")
+        XCTAssertEqual(o["v5"] as? String, "comprimento 300: 300 · no 3D 300", "comprimento digitado vale no 3D")
+        XCTAssertEqual(o["v6"] as? String, "embutido: nota na peça \"e · Rasgo p/ LED embutido 300 × 12 × 8 mm (a 20 mm da ponta)\" · medida da peça igual true", "embutido: rasgo anotado na peça (deixa 3 mm), medida da peça não muda")
+        XCTAssertEqual(o["v7"] as? String, "orçamento: barras 1 · fita 0.3 m · fonte 1 · usinagem 0.3 m · R$ 157.50", "orçamento: perfil em barras de 2 m, fita, 1 fonte por botão, usinagem do rasgo")
+        XCTAssertEqual(o["v8"] as? String, "módulo andou 400: LED andou 400", "anda junto com o módulo")
+        XCTAssertEqual(o["v9"] as? String, "reaberto: Prateleira#2 lado 4 300 mm emb 6000", "salvar e reabrir mantém o LED")
+        XCTAssertEqual(o["v10"] as? String, "erros 0", "sem erro")
     }
 }

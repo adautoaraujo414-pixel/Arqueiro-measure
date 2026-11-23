@@ -17631,4 +17631,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["medidas"] as? String, "391x705,391x705,395x173,395x173,395x173,395x173", "medida das portas e frentes não muda")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* POLÍTICA B · portas provençais e puxadores novos (auditoria do Code 1, 23/11/2026; mesma regra do bloqueador do LED livre pedido pelo Adauto):
+       o link do cortador/cliente de projeto com régua/moldura provençal (peças reais de MDF no corte), concha com modelo (furação), porta passante
+       (porta maior) ou cor de um puxador só sai com o tipo novo (arque-corte-v2) e com o aviso antes; a versão publicada recusa em vez de cortar sem as réguas
+       ou com a porta passante na medida antiga. Projeto sem nada disso continua com o tipo de sempre. */
+    func testPoliticaBPortasProvencaisEPuxadoresNovosNaoAbremEmVersaoAntiga() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var bruto=async function(c){c=String(c||'').trim();var u=unb64u(c.slice(1));if(c[0]==='j')return JSON.parse(new TextDecoder().decode(u));try{return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text())}catch(_){return JSON.parse(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text())}};
+        var kind=async function(){return (await bruto(await cutEncode(cutPayload()))).k};
+        var cena=function(){S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.W=3000;draw();newTpl(T('Balcão 2 portas'));draw();return S.mods[0]};
+        var m=cena();R.v0='lisa: '+(await kind());
+        m.v[0].est={t:'simples',c:'regua',rw:50,off:0,j:'45'};draw();R.v1='provençal: '+(await kind());
+        m=cena();m.v[0].estQ={0:{t:'simples',c:'regua',rw:50,off:0,j:'45'}};draw();R.v2='provençal numa porta: '+(await kind());
+        m=cena();pxApplyAll('concha','dourado');m.v.forEach(function(v){v.chm={id:'cl',fc:1}});draw();R.v3='concha com modelo: '+(await kind());
+        m=cena();pxApplyAll('concha','dourado');draw();R.v4='concha sem modelo (a de sempre): '+(await kind());
+        m=cena();m.v.forEach(function(v){v.px='passante'});draw();R.v5='passante: '+(await kind());
+        m=cena();m.v[0].pxcQ={0:'preto'};draw();R.v6='cor de um puxador só: '+(await kind());
+        /* aviso antes de mandar: mesma janela, dizendo o que tem */m=cena();m.v[0].est={t:'simples',c:'regua',rw:50,off:0,j:'45'};draw();window.__shared=null;cutSend();await W(300);var d=document.getElementById('emcompat');R.v7='janela: '+!!(d&&!d.hidden)+' · '+(d?(d.querySelector('b')||{}).textContent:'')+' · mandou '+(window.__shared?1:0);if(d)d.hidden=true;
+        /* sem nada novo: manda direto, sem janela */m=cena();window.__shared=null;cutSend();await W(300);d=document.getElementById('emcompat');R.v8='lisa: janela '+!!(d&&!d.hidden)+' · mandou '+(window.__shared?1:0)
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "lisa: arque-corte", "porta lisa: tipo de sempre")
+        XCTAssertEqual(o["v1"] as? String, "provençal: arque-corte-v2", "provençal: tipo novo")
+        XCTAssertEqual(o["v2"] as? String, "provençal numa porta: arque-corte-v2", "provençal numa porta só: tipo novo")
+        XCTAssertEqual(o["v3"] as? String, "concha com modelo: arque-corte-v2", "concha com modelo: tipo novo")
+        XCTAssertEqual(o["v4"] as? String, "concha sem modelo (a de sempre): arque-corte", "concha de sempre: tipo de sempre")
+        XCTAssertEqual(o["v5"] as? String, "passante: arque-corte-v2", "passante: tipo novo")
+        XCTAssertEqual(o["v6"] as? String, "cor de um puxador só: arque-corte-v2", "cor individual: tipo novo")
+        XCTAssertEqual(o["v7"] as? String, "janela: true · Projeto com portas e puxadores novos · mandou 0", "avisa antes e só manda confirmando")
+        XCTAssertEqual(o["v8"] as? String, "lisa: janela false · mandou 1", "sem nada novo: manda direto, como sempre")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

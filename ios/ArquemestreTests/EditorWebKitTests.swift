@@ -15466,4 +15466,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ilhaAntiga"] as? String, "0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* 3D-ACABAMENTO (23/11, Adauto): nenhum sólido dentro de outro nas cenas de risco (fita de borda cortada onde outro sólido a cobre; rebaixo da gaveta desenhado). Só o desenho muda. */
+    func test3D_SemSolidoDentroDeOutroFitaERebaixo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* 3D-ACABAMENTO (23/11, Adauto: "sem faces sobrepostas, peças atravessando outras, artefatos"): nas cenas de risco nenhum sólido entra em outro
+           (a fita de borda não fica dentro de porta, vidro, moldura do forno, trilho, tamponamento ou módulo vizinho; o fundo da gaveta encaixa no rebaixo desenhado);
+           a fita que aparece continua; peças e corte não mudam (só o desenho) */
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var ok=function(b){return b.a>=.95&&!b.nol&&!b.cvl&&!b.pf&&!b.poly&&!b.gp&&!b.gq&&b.g!=='sh'&&b.g!=='lo'&&!b.em&&/^\d+:/.test(String(b.nm))};
+        var nm=function(b){return String(b.nm).replace(/^\d+:/,'')};
+        var sobre=function(){__build();var B=__boxes().filter(ok),o=[];for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++){var a=B[i],b=B[j];if(a.pk&&a.pk===b.pk&&a.nm===b.nm)continue;var x=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),y=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),z=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(x>.3&&y>.3&&z>.3){var k=[nm(a),nm(b)].sort().join(' × ');/* corrediça encosta 0,8 no batente da cava por dentro (ferragem; fora do escopo) */if(k==='Batente (cava) × Corrediça telescópica')continue;o.push(k)}}return o};
+        var limpa=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw()};
+        var cenas={'cristaleira':function(){newTpl(T0('Cristaleira (porta de vidro)'))},'forno':function(){newTpl(T0('Balcão forno embutido'))},'aéreo em L':function(){newTpl(T0('Canto em L (aéreo) · esquerdo'))},'gaveteiro':function(){newTpl(T0('Gaveteiro 3 gavetas'))},'guarda-roupa de correr':function(){newTpl(T0('Guarda-roupa porta de correr'))},'canto L guarda-roupa':function(){newTpl(T0('Canto L guarda-roupa · esquerdo'))},'cozinha de exemplo':function(){demoScene()}};
+        var res=[],ftv=0,ph={};Object.keys(cenas).forEach(function(k){limpa();cenas[k]();draw();var s=sobre();res.push(k+' '+s.length+(s.length?' ('+s.slice(0,2).join('; ')+')':''));ftv+=__boxes().filter(function(b){return b.ft}).length});
+        R.sobreposicoes=res.join(' · ');R.fitaVisivel=ftv>0;
+        /* rebaixo: a lateral da gaveta não ocupa o volume do fundo */limpa();newTpl(T0('Gaveteiro 3 gavetas'));draw();__build();var B=__boxes(),fd=B.filter(function(b){return /:Fundo de gaveta/.test(b.nm)}),lt=B.filter(function(b){return /:Lateral de gaveta/.test(b.nm)});
+        R.rebaixo=fd.length+' fundos · '+lt.filter(function(l){return fd.some(function(f){return Math.min(l.x1,f.x1)-Math.max(l.x0,f.x0)>.05&&Math.min(l.y1,f.y1)-Math.max(l.y0,f.y0)>.05&&Math.min(l.z1,f.z1)-Math.max(l.z0,f.z0)>.05})}).length+' laterais por dentro do fundo';
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["sobreposicoes"] as? String, "cristaleira 0 · forno 0 · aéreo em L 0 · gaveteiro 0 · guarda-roupa de correr 0 · canto L guarda-roupa 0 · cozinha de exemplo 0")
+        XCTAssertEqual(o["fitaVisivel"] as? Bool, true)
+        XCTAssertEqual(o["rebaixo"] as? String, "3 fundos · 0 laterais por dentro do fundo")
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

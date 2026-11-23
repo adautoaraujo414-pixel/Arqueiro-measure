@@ -5126,6 +5126,33 @@ function ftClipAll(){var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,
    if(o[b0]>q[b0]+.05){v={};v[a0]=ia0;v[a1]=ia1;v[b1]=o[b0];nx.push(cl(v))}if(o[b1]<q[b1]-.05){v={};v[a0]=ia0;v[a1]=ia1;v[b0]=o[b1];nx.push(cl(v))}});parts=nx});
   for(var k2=0;k2<parts.length;k2++)out.push(parts[k2])}
  if(out.length!==boxes.length||out.some(function(o,i){return o!==boxes[i]})){boxes.length=0;for(var j=0;j<out.length;j++)boxes.push(out[j])}}
+/* ===== 3D-ACABAMENTO (23/11/2026, pedido do Adauto: "sem faces sobrepostas, peças atravessando outras, artefatos") =====
+   Só o desenho do 3D — peças, medidas, lista, plano de corte e DXF não mudam.
+   1) FT-GLOBAL: a tira de fita de borda (0,8 mm por fora da peça) nunca é desenhada dentro de outro sólido — porta (inclusive de vidro e
+      perfis estreitos), frente, moldura do corte do forno/micro, trilho, tamponamento, peça do módulo vizinho, base/lateral do lado do canto.
+      Antes só a porta/frente ≥ 50 mm do mesmo módulo cortava a fita (FT-PORTA); o resto ficava sobreposto e piscava (z-fighting).
+   2) REBAIXO DA GAVETA: o fundo da gaveta encaixa no rebaixo da lateral; a lateral passa a ser desenhada com o rebaixo (o volume do fundo
+      é tirado dela), em vez de o fundo ficar dentro da lateral com a face de baixo coplanar. */
+(function(){
+ var AX=[['x0','x1'],['y0','y1'],['z0','z1']],ex=function(o,a){return o[AX[a][1]]-o[AX[a][0]]};
+ var cobre=function(o){return !o.ft&&!o.nol&&!o.cvl&&!o.pf&&!o.gp&&!o.gq&&!o.em&&o.g!=='sh'&&o.g!=='lo'&&(o.a||0)>=.3&&/^\d+:/.test(String(o.nm||''))};
+ var corta=function(t,L,thAx){var th=thAx,pl=[0,1,2].filter(function(a){return a!==th}),a0=AX[pl[0]][0],a1=AX[pl[0]][1],b0=AX[pl[1]][0],b1=AX[pl[1]][1],t0=AX[th][0],t1=AX[th][1],parts=[t];
+  L.forEach(function(o){if(Math.min(o[t1],t[t1])-Math.max(o[t0],t[t0])<=.05)return;var nx=[];parts.forEach(function(q){
+   if(Math.min(o[a1],q[a1])-Math.max(o[a0],q[a0])<=.05||Math.min(o[b1],q[b1])-Math.max(o[b0],q[b0])<=.05){nx.push(q);return}
+   var cl=function(v){var r=Object.assign({},q);for(var k in v)r[k]=v[k];return r},v,ia0=Math.max(q[a0],o[a0]),ia1=Math.min(q[a1],o[a1]);
+   if(o[a0]>q[a0]+.05){v={};v[a1]=o[a0];nx.push(cl(v))}if(o[a1]<q[a1]-.05){v={};v[a0]=o[a1];nx.push(cl(v))}
+   if(o[b0]>q[b0]+.05){v={};v[a0]=ia0;v[a1]=ia1;v[b1]=o[b0];nx.push(cl(v))}if(o[b1]<q[b1]-.05){v={};v[a0]=ia0;v[a1]=ia1;v[b0]=o[b1];nx.push(cl(v))}});parts=nx});return parts};
+ var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.05&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.05&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.05};
+ window.ftClipGlobal=function(){if(!Array.isArray(boxes)||!boxes.length)return;var F=[],C=[];for(var i=0;i<boxes.length;i++){var o=boxes[i];if(o.ft)F.push(o);else if(cobre(o))C.push(o)}if(!F.length)return;
+  var troca=new Map();F.forEach(function(t,ti){var L=C.filter(function(o){return ov(o,t)&&!(o.nm===t.nm&&o.pk&&o.pk===t.pk)}).concat(F.slice(0,ti).filter(function(o){return ov(o,t)&&!(o.nm===t.nm&&o.pk===t.pk)})/* fita com fita de outra peça no encontro: a segunda cede o canto */);if(!L.length)return;var th=[0,1,2].sort(function(a,c){return ex(t,a)-ex(t,c)})[0];troca.set(t,corta(t,L,th))});
+  if(!troca.size)return;var out=[];boxes.forEach(function(o){var r=troca.get(o);if(r){for(var k=0;k<r.length;k++)out.push(r[k])}else out.push(o)});boxes.length=0;for(var j=0;j<out.length;j++)boxes.push(out[j])};
+ /* rebaixo: tira da lateral de gaveta (e da lateral do caixote) o volume do fundo que encaixa nela — subtração de caixa por caixa (eixos alinhados) */
+ var sub=function(q,o){var r=[],rem=Object.assign({},q);[0,1,2].forEach(function(a){var lo=AX[a][0],hi=AX[a][1];if(o[lo]>rem[lo]+.01){var v=Object.assign({},rem);v[hi]=o[lo];r.push(v)}if(o[hi]<rem[hi]-.01){var w=Object.assign({},rem);w[lo]=o[hi];r.push(w)}rem[lo]=Math.max(rem[lo],o[lo]);rem[hi]=Math.min(rem[hi],o[hi])});return r};
+ window.rebaixoGaveta=function(){if(!Array.isArray(boxes)||!boxes.length)return;var FD=boxes.filter(function(o){return /^\d+:(Fundo de gaveta|Caixote · gaveta · fundo)/.test(String(o.nm||''))&&!o.pf&&!o.poly&&!o.ft}),mud=new Map();if(!FD.length)return;
+  boxes.forEach(function(q){if(q.pf||q.poly||q.ft||q.nol)return;var nm=String(q.nm||'');if(!/^\d+:(Lateral de gaveta|Caixote · gaveta · lateral)/.test(nm))return;var mi=nm.split(':')[0],cur=[q],hit=false;FD.forEach(function(f){if(String(f.nm).split(':')[0]!==mi)return;var nx=[];cur.forEach(function(p){if(ov(p,f)){hit=true;sub(p,f).forEach(function(s){if(ex(s,0)>.05&&ex(s,1)>.05&&ex(s,2)>.05)nx.push(s)})}else nx.push(p)});cur=nx});if(hit)mud.set(q,cur)});
+  if(!mud.size)return;var out=[];boxes.forEach(function(o){var r=mud.get(o);if(r){for(var k=0;k<r.length;k++)out.push(r[k])}else out.push(o)});boxes.length=0;for(var j=0;j<out.length;j++)boxes.push(out[j])};
+ if(typeof build==='function'){var b0_=build;build=function(){var r=b0_.apply(this,arguments);try{rebaixoGaveta()}catch(_){}try{ftClipGlobal()}catch(_){}return r}}
+})();
 /* ===== 🚶 Modo pessoa (1ª pessoa): andar pela cozinha, olhar em volta com o dedo, agachar, ficar de pé, sentar · tocar abre porta, gaveta, geladeira, forno e liga a torneira ===== */
 window.FPV=null;var FPB=null,FPT=null;
 var EYE={pe:1600,agachar:950,sentar:1180};

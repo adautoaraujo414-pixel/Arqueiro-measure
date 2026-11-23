@@ -1563,3 +1563,19 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Pendente:**
   - rotação em ângulo livre (hoje só 90°; aguarda o Adauto escolher entre 45° e qualquer ângulo);
   - teste em aparelho real (pinça com dedos de verdade).
+
+## FASE3 · ROTAÇÃO 45° e ângulo livre do móvel livre (23/11/2026, branch `claude/fase3-rotacao`, base `f8e40ab`)
+- **Pedido (Adauto, 23/11):** "Preservar os comandos atuais de 90° e acrescentar 45° e rotação livre de 0° a 360°, com campo para digitar o ângulo exato… respeitando colisões e limites do ambiente. Não movimentar outros móveis automaticamente."
+- **Antes:** o livre só girava de 90 em 90 (`lvGira`, `lvFoot`, `lvX` arredondavam cos/sin). Não existia `lvAng` nem botão de 45°.
+- **Implementado:**
+  - Planta: barra do livre com ⟲/⟳ 90° (os de sempre), ⟲/⟳ 45° e campo do ângulo (`[data-lvang]` + "° Girar").
+  - 3D: menu do segurar com ↺/↻ 45° e o campo (`[data-l3ang]`), só no móvel livre; o de parede fica igual.
+  - `window.lvAng(m,graus)`: ângulo exato, pelo mesmo `lvGira` (mesma colisão, mesmo centro).
+  - Ângulo oblíquo (não múltiplo de 90): `lvFt/lvLoc/lvX` usam o caminho de 0°, e um envoltório do `build` dentro do fechamento do 3D gira todas as caixas do módulo com `rotY` em volta de (lx, lz). Múltiplos de 90 seguem o caminho de sempre (0 caixas giradas).
+  - Colisão do oblíquo pelo contorno real girado (`__lvPoly`, teste SAT): pode encostar a quina a 2 mm do balcão; 60 mm pra dentro bloqueia; parede, pedra, ilha e outros móveis bloqueiam; nada é empurrado. Sem ímã no oblíquo.
+  - Planta desenha o oblíquo como polígono (frente em vermelho). Sem alça ↕ fantasma de esticar no livre selecionado (família PL-FANTASMA).
+- **Peças:** `partsOf` igual em qualquer ângulo (rotação é só posição).
+- **Testes:** `testFASE3_MovelLivreGira45EAnguloExatoSemBaterNemMexerNosOutros` e `testFASE3_MovelLivreBotoes45ECampoDeAnguloNaPlantaENo3D` (3190a88, falham antes: `lvAng` não existe; botão 45° não existe) · implementação c6cda87.
+- **Não mexido:** `partsOf`, `cornerBoxes`, `snapState`/`loadState` (o `m.rot` já era salvo), plano de corte.
+- **Risco identificado:** versões publicadas antes desta arredondam ângulo que não é de 90 ao abrir o projeto (só o desenho; peças iguais). Projeto com livre a 45° aberto num app antigo aparece girado errado.
+- **Pendente:** aparelho real (iPhone, Tab S9 FE).

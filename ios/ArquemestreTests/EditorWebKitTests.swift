@@ -12841,8 +12841,8 @@ final class EditorWebKitTests: XCTestCase {
            m5 8 → 11, m6 6 → 24 (m7, canto em L, igual). As outras conferências
            (dentro da travessa 0, tira da frente da lateral, assinatura de peças+corte da versão publicada) não mudam. */
         XCTAssertEqual(o["m0"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
-        /* JUNÇÃO 4 (23/11): a travessa sai em 2 peças com a lateral do meio (7973daf5 → 9693cedb) · FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9693cedb")
-        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4a9121")
+        /* JUNÇÃO 4 (23/11): a travessa sai em 2 peças com a lateral do meio (7973daf5 → 9693cedb) · BATENTE-CAVA (23/11): cada régua do cava ganhou o número dela na peça (cbq), medidas e corte iguais (9693cedb → d0a7f16, e4a9121 → 4837df86) · FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d0a7f16")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 4837df86")
         XCTAssertEqual(o["m3"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
         XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
         XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
@@ -12886,12 +12886,13 @@ final class EditorWebKitTests: XCTestCase {
            módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. abreFecha (só a Lateral esquerda do Balcão 2 portas):
            −1050 mm² nos 3 momentos (6630/10350/6630 → 5580/9300/5580) = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada. */
         XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 20260 mm² · peças+corte c2ff642a")
-        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte e4a9121")
+        /* JUNÇÃO 4 + BATENTE-CAVA (23/11): travessa em peças com a lateral do meio e o número da régua do cava (cbq) nas peças; medidas e corte conferidos iguais nos outros módulos (e4a9121 → 4837df86, 7973daf5 → d0a7f16) */
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte 4837df86")
         XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
         XCTAssertEqual(o["m3"] as? String, "dentro de folha fechada 0 · tira que aparece 10728 mm² · peças+corte b2eb4cec")
         XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
         XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
-        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 7973daf5")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte d0a7f16")
         XCTAssertEqual(o["abreFecha"] as? String, "fechada 5580.0 · aberta 9300.0 · fechou 5580.0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

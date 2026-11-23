@@ -13974,6 +13974,22 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 })();
 </script>
 <script>
+/* ===== PAREDES · etapa E (Adauto 22/11 18:12): "SOLTAR SEM MEXER" — módulo da parede removida vira móvel livre no MESMO lugar do mundo
+   (o lvSolta de sempre leva pro meio da sala). Confirmação individual. Confere a pegada no 3D antes e depois (±1 mm); se não bater, desfaz e avisa.
+   Só módulo da parede do fundo: na parede do lado o móvel livre (só gira, não espelha) ficaria espelhado — ele continua vinculado, como a regra permite. ===== */
+(function(){
+ var pegada=function(mi){try{__build();var B=__boxes().filter(function(b){return String(b.nm||'').indexOf(mi+':')===0&&!b.ft&&b.g!=='sh'&&b.g!=='lo'&&!b.gp});if(!B.length)return null;return [Math.min.apply(null,B.map(function(b){return b.x0})),Math.max.apply(null,B.map(function(b){return b.x1})),Math.min.apply(null,B.map(function(b){return b.z0})),Math.max.apply(null,B.map(function(b){return b.z1}))].map(function(v){return Math.round(v)})}catch(_){return null}};
+ window.lvSoltaAqui=function(m,semPerguntar){if(!m||window.RO||(window.lvIs&&lvIs(m)))return false;if(m.corner||m.wing==='e'||m.wing==='d'){try{toast('Esse módulo fica vinculado: na parede do lado o móvel livre ficaria espelhado.')}catch(_){}return false}
+  if(!semPerguntar&&!confirm('Soltar este módulo da parede sem mexer? Ele vira móvel livre exatamente no mesmo lugar.'))return false;
+  var mi=(S.mods||[]).indexOf(m),p0=pegada(mi),zb=(typeof zoOf==='function'?zoOf(m):0),bk={wing:m.wing,lx:m.lx,lz:m.lz,rot:m.rot,zo:m.zo};try{snap()}catch(_){}
+  m.wing='L';m.rot=0;m.lx=+m.x;m.lz=zb;var p1=pegada(mi);/* o desenho do móvel livre pode somar o afastamento de novo: corrige pela diferença medida e confere */if(p0&&p1){m.lx=+m.lx-(p1[0]-p0[0]);m.lz=+m.lz-(p1[2]-p0[2]);p1=pegada(mi)}if(!p0||!p1||p0.some(function(v,i){return Math.abs(v-p1[i])>1})){['wing','lx','lz','rot','zo'].forEach(function(k){if(bk[k]===undefined)delete m[k];else m[k]=bk[k]});try{toast('Não deu pra soltar sem mexer (o lugar mudaria): o módulo continua na parede.')}catch(_){}try{draw()}catch(_){}return false}
+  try{draw();panel()}catch(_){}try{if(window.re3)re3()}catch(_){}try{toast('Módulo solto no mesmo lugar · agora é móvel livre · ↶ desfaz')}catch(_){}return true};
+ var pa=window.panel;if(typeof pa==='function'){panel=window.panel=function(){var r=pa.apply(this,arguments);try{var bx=document.getElementById('wrmbox');if(!bx||!(window.wallRm&&wallRm('F')))return r;var L=(S.mods||[]).map(function(m,i){return {m:m,i:i}}).filter(function(q){return !q.m.corner&&!q.m.wing&&!(window.lvIs&&lvIs(q.m))});if(!L.length)return r;
+   bx.insertAdjacentHTML('beforeend','<div class="box"><b>Módulos sem a parede do fundo</b>'+L.map(function(q){return '<div style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="flex:1">'+(q.m.sup?'Superior':'Base')+' '+Math.round(q.m.w)+' mm (x '+Math.round(q.m.x)+')</span><button data-lvaqui="'+q.i+'"'+(window.RO?' disabled':'')+'>Soltar sem mexer</button></div>'}).join('')+'<div class="note">Ficam vinculados e no mesmo lugar. "Soltar sem mexer" transforma em móvel livre exatamente onde está (pergunta antes).</div></div>')}catch(_){}return r}}
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-lvaqui]');if(!b||window.RO)return;e.stopPropagation();var m=(S.mods||[])[+b.dataset.lvaqui];if(m)lvSoltaAqui(m)},true);
+})();
+</script>
+<script>
 /* ===== FASE5 · DXF PARA CNC (23/11/2026, autorizado pelo Adauto) =====
    Gera DXF 2D (R12/AC1009, ASCII, milímetros) a partir da MESMA fonte do plano de corte (cutGroups → partsOf, furInfo, chAt):
    - contorno fechado de cada peça (camada CONTORNO);

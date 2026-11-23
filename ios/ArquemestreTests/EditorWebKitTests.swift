@@ -16227,4 +16227,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["moveisIguais"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · etapa E (Adauto 22/11 18:12): "Soltar sem mexer" — com a parede do fundo removida, o módulo vira móvel livre no mesmo lugar do mundo
+    /// (pegada do 3D igual, inclusive com afastamento), com confirmação individual; cancelar não muda nada; o vizinho fica; o da parede do lado não solta.
+    @MainActor
+    func testParedesEtapaESoltarSemMexerNoMesmoLugar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES etapa E: "Soltar sem mexer" — vira móvel livre no mesmo lugar (pegada do 3D igual), com confirmação; lateral não solta (ficaria espelhado) */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var peg=async function(mi){open3D();await W(120);__build();var B=__boxes().filter(function(b){return String(b.nm||'').indexOf(mi+':')===0&&!b.ft&&b.g!=='sh'&&b.g!=='lo'&&!b.gp}),r=[Math.min.apply(null,B.map(function(b){return b.x0})),Math.max.apply(null,B.map(function(b){return b.x1})),Math.min.apply(null,B.map(function(b){return b.z0})),Math.max.apply(null,B.map(function(b){return b.z1}))].map(Math.round).join(',');document.getElementById('v3x').click();await W(50);return r};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;S.RD=3500;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[1];m.zo=50;draw();var p0=await peg(1);
+        wallRemove('F');S.tab=9;panel();await W(40);var pergunta=0;window.confirm=function(){pergunta++;return true};var b=document.querySelector('#bd [data-lvaqui="1"]');R.botao=!!b;b.click();await W(80);
+        R.livre=(window.lvIs&&lvIs(m))+' · perguntou '+pergunta;R.mesmoLugar=(await peg(1))===p0;R.outroIgual=S.mods[0].wing===undefined||S.mods[0].wing===null||S.mods[0].wing==='';
+        window.confirm=function(){return false};var m2=S.mods[0];var w0=JSON.stringify(m2);R.cancelar=(lvSoltaAqui(m2)===false)&&JSON.stringify(m2)===w0;
+        wvGo('e');await W(40);newTpl(T('Balcão 2 portas'));wvGo('f');await W(40);var mw=S.mods.filter(function(q){return q.wing==='e'})[0];window.confirm=function(){return true};R.lateralNaoSolta=mw?(lvSoltaAqui(mw)===false&&mw.wing==='e'):'sem módulo';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["livre"] as? String, "true · perguntou 1", "vira móvel livre, perguntando antes")
+        XCTAssertEqual(o["mesmoLugar"] as? Bool, true, "mesma pegada no 3D")
+        XCTAssertEqual(o["outroIgual"] as? Bool, true)
+        XCTAssertEqual(o["cancelar"] as? Bool, true, "cancelar não muda nada")
+        XCTAssertEqual(o["lateralNaoSolta"] as? Bool, true, "na parede do lado continua vinculado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

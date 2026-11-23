@@ -16625,4 +16625,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v8"] as? String, "reaberto: red,bronze,bisotado,30,45 · sempre igual true", "salvar e reabrir mantém tudo")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* ESP-VAO (Adauto, 23/11/2026 · "resto dos espelhos: … espelho no vão"): espelho preso num vão do módulo; medida e lugar vêm do vão,
+       anda junto com o módulo e não cria nem muda peça de MDF. */
+    func testEspelhoNoVaoPegaAMedidaDoVaoRecuoEAndaJuntoComOModulo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.fr=[];S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2600;draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=500;S.m=m;S.sv=0;draw();
+        var pc=function(){return JSON.stringify(partsOf(m).map(function(p){return [p.name,p.cl,p.cw]}))},p0=pc();
+        open3D();await W(300);document.getElementById('v3add').click();await W(120);__crp6.vai('esp');await W(40);var bt=document.querySelector('#crp3 [data-cespv]');R.v0='botão no ＋ Criar: '+!!bt;bt.click();await W(200);
+        var f=S.fr.filter(function(q){return q.vao})[0];R.v1=f?('no vão: '+f.w+'×'+f.h+' · x '+f.x+' · do chão '+f.b+' · da parede '+f.y):'NÃO criou';
+        var vr=vaoRanges(m)[0];R.v2='largura do vão '+Math.round(vr[1]-vr[0])+' · começa em '+Math.round(m.x+vr[0]);
+        __build();var B=__boxes().filter(function(b){return b.fr===f.id});var fz=Math.max.apply(null,__boxes().filter(function(b){return /^0:Fundo/.test(String(b.nm))}).map(function(b){return b.z1}));R.v3='3D: atrás do vidro '+Math.round(Math.min.apply(null,B.map(function(b){return b.z0})))+' · frente do fundo '+Math.round(fz);
+        __itOpen({k:'fr',id:f.id});await W(100);var E=document.getElementById('it4');E.querySelector('[data-qespv="r|20"]').click();await W(100);R.v4='recuo 20: '+f.w+'×'+f.h+' · x '+f.x;
+        document.getElementById('v3x').click();await W(80);m.x=1200;draw();__build();R.v5='módulo andou pra 1200: espelho x '+f.x+' (anda junto)';m.w=1000;draw();__build();R.v6='módulo 1000 de largura: espelho '+f.w+' (acompanha)';
+        m.w=900;draw();__build();R.v7='peças do módulo iguais '+(pc()===p0);
+        var z=JSON.stringify(snapState());S.fr=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}__build();var f2=S.fr.filter(function(q){return q.vao})[0];R.v8='reaberto: '+(f2?'vão '+f2.vao.vi+' recuo '+f2.vao.r+' · '+f2.w+'×'+f2.h:'sumiu');
+        /* outro módulo entra antes e depois sai: o espelho fica no mesmo módulo */newTpl(T('Balcão 1 porta'));var mm=S.mods[S.mods.length-1];S.mods.splice(S.mods.indexOf(mm),1);S.mods.unshift(mm);mm.x=50;draw();__build();var dono=S.mods[f2.vao.mi];R.v10='módulo novo antes: dono continua o balcão '+(dono&&dono.w===900)+' · espelho x '+f2.x;S.mods.splice(0,1);draw();__build();R.v11='tirou o de antes: dono '+(S.mods[f2.vao.mi]&&S.mods[f2.vao.mi].w)+' · espelho x '+f2.x;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "botão no ＋ Criar: true", "＋ Criar · Espelhos tem o espelho no vão")
+        XCTAssertEqual(o["v1"] as? String, "no vão: 870×690 · x 515 · do chão 115 · da parede 6", "o espelho pega a medida do vão (largura do vão, entre a base de baixo e a de cima)")
+        XCTAssertEqual(o["v2"] as? String, "largura do vão 870 · começa em 515", "largura e começo do vão pelo vaoRanges do próprio módulo")
+        XCTAssertEqual(o["v3"] as? String, "3D: atrás do vidro 6 · frente do fundo 6", "fica na frente do fundo, sem entrar nele")
+        XCTAssertEqual(o["v4"] as? String, "recuo 20: 830×650 · x 535", "recuo em mm")
+        XCTAssertEqual(o["v5"] as? String, "módulo andou pra 1200: espelho x 1235 (anda junto)", "anda junto com o módulo")
+        XCTAssertEqual(o["v6"] as? String, "módulo 1000 de largura: espelho 930 (acompanha)", "acompanha a largura do módulo")
+        XCTAssertEqual(o["v7"] as? String, "peças do módulo iguais true", "não muda nenhuma peça do módulo")
+        XCTAssertEqual(o["v8"] as? String, "reaberto: vão 0 recuo 20 · 830×650", "salvar e reabrir mantém o vão e o recuo")
+        XCTAssertEqual(o["v10"] as? String, "módulo novo antes: dono continua o balcão true · espelho x 1235", "preso ao módulo pelo uid: outro módulo entrando antes não troca o dono")
+        XCTAssertEqual(o["v11"] as? String, "tirou o de antes: dono 900 · espelho x 1235", "tirar o de antes também não")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

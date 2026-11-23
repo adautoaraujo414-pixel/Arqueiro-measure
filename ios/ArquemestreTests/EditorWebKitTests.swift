@@ -12224,7 +12224,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["travRefez"] as? String, "3D 0 · lista 0 · corte 0")
         XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais")
         XCTAssertEqual(o["travDetector"] as? String, "fantasma de teste achado 1")
-        XCTAssertEqual(o["canto"] as? String, "caixas 22 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 2)")
+        /* CANTO-PORTA-L (23/11/2026, pedido do Adauto): no canto a folha fechada agora encosta na caixa e ganha a linha fina do cava como a porta reta (+2 caixas), e a fita da frente da base que fica atrás da folha é desenhada em 2 pedaços (+1); a conferência é a mesma: a base do lado sai do 3D e nenhuma fica pra trás */XCTAssertEqual(o["canto"] as? String, "caixas 24 → 19 · base do lado no 3D 0 · base do fundo 0 (antes 3)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
     func testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca() async throws {

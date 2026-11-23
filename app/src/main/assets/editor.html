@@ -7143,7 +7143,7 @@ function espBate(f){if(!f||f.t!=='espelho'||f.vao)return null;try{build()}catch(
  boxes.forEach(function(b){if(hit||b.fr!=null||b.ledl)return;var mi=parseInt(String(b.nm||''),10);if(isNaN(mi)||!S.mods[mi])return;if(b.a!=null&&b.a<0.5)return;E.forEach(function(e){if(hit)return;if(Math.min(e.x1,b.x1)-Math.max(e.x0,b.x0)>1&&Math.min(e.y1,b.y1)-Math.max(e.y0,b.y0)>1&&Math.min(e.z1,b.z1)-Math.max(e.z0,b.z0)>0.5)hit=mi})});return hit}
 window.espBate=espBate;
 var ESPK=['x','b','w','h','d','wall','forma','rot','mold','y'];function espFoto(f){var o={};ESPK.forEach(function(k){o[k]=f[k]});return o}function espVolta(f,o){ESPK.forEach(function(k){if(o[k]===undefined)delete f[k];else f[k]=o[k]})}
-window.espGuarda=function(f,o){var mi=espBate(f);if(mi===null)return true;espVolta(f,o);try{build();render()}catch(_){}try{draw()}catch(_){}try{toast('⚠ O espelho entraria no módulo '+(mi+1)+'. Nada mudou: escolha outra altura ou posição.')}catch(_){}return false};
+window.espGuarda=function(f,o){var mi=espBate(f);if(mi===null)return true;var n1=espFoto(f);espVolta(f,o);var m0=espBate(f);if(m0!==null){espVolta(f,n1);try{build();render()}catch(_){}return true}try{build();render()}catch(_){}try{draw()}catch(_){}try{toast('⚠ O espelho entraria no módulo '+(mi+1)+'. Nada mudou: escolha outra altura ou posição.')}catch(_){}return false};
 var itSet_espS=itSet;itSet=function(k,v){var x=ISX,f=x&&x.k==='fr'?(S.fr||[]).filter(function(q){return q.id===x.id})[0]:null;if(!f||f.t!=='espelho')return itSet_espS.apply(this,arguments);var o=espFoto(f);var r=itSet_espS.apply(this,arguments);espGuarda(f,o);return r};
 it4Box().addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-qesp],[data-qwl]');if(!t||!ISX||ISX.k!=='fr')return;var f=(S.fr||[]).filter(function(q){return q.id===ISX.id})[0];if(!f||f.t!=='espelho')return;var o=espFoto(f);setTimeout(function(){if(!espGuarda(f,o))try{itRender()}catch(_){}},0)},true);
 /* AUD-LED-FERRAGEM (auditoria 23/11): LED na face de dentro da lateral não pode passar na faixa da dobradiça (porta do lado, 95 mm da frente) nem na
@@ -14805,12 +14805,9 @@ window.latMeioConflito=function(m){var R=[];try{var P=partsOf(m),gl=0;P.forEach(
 })();
 </script>
 <script>
-/* AUD-ESP-SOLIDO · criar: o espelho novo não nasce dentro de módulo. Se a altura de sempre cair num módulo, sobe pra cima dele (se couber até o teto);
-   se não couber, não cria e avisa. */
-(function(){var a0=window.espWallAdd;if(typeof a0!=='function'||!window.espBate)return;window.espWallAdd=function(){var f=a0.apply(this,arguments);try{if(!f||espBate(f)===null)return f;
- var top=0;(S.mods||[]).forEach(function(m){if(!m||m.wing)return;if(m.x<(+f.x)+(+f.w)&&m.x+m.w>+f.x)top=Math.max(top,(+m.b||0)+(+m.h||0))});var H=+S.H||2600;
- if(top+50+(+f.h)<=H-50){f.b=Math.round(top+50);try{draw();if(window.re3)re3()}catch(_){}if(espBate(f)===null){toast('🪞 Espelho em cima do módulo (a '+f.b+' mm do chão): no meio da parede ele entraria no móvel');return f}}
- S.fr=S.fr.filter(function(q){return q!==f});try{draw();if(window.re3)re3()}catch(_){}toast('⚠ Não cabe espelho aqui sem entrar no móvel. Nada foi criado: mude o espelho de lugar ou escolha um menor.');return null}catch(_){return f}}})();
+/* AUD-ESP-SOLIDO · criar: o espelho novo nasce onde sempre nasceu (medida e posição são do marceneiro, CLAUDE.md §4). Se ele cair dentro de
+   um módulo, avisa qual é e nada muda sozinho. Na edição, a mudança que levaria pra dentro do módulo é recusada (espGuarda). */
+(function(){var a0=window.espWallAdd;if(typeof a0!=='function'||!window.espBate)return;window.espWallAdd=function(){var f=a0.apply(this,arguments);try{var mi=f?espBate(f):null;if(mi!==null)toast('⚠ O espelho novo ficou dentro do módulo '+(mi+1)+'. Nada mudou sozinho: mude a altura ou a posição dele.')}catch(_){}return f}})();
 </script>
 <script>
 /* AUD-ANGULO-ENTER (auditoria 23/11, digitação): o campo do ângulo (espelho, móvel livre na Planta e no 3D) aplica também no Enter / ao sair do campo,

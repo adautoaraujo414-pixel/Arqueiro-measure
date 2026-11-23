@@ -44,11 +44,14 @@ final class EditorWebKitTests: XCTestCase {
         try await super.tearDown()
     }
 
+    /// appScheme: abre o editor pelo arque:// do app (BundleSchemeHandler, igual ao MoveisView) em vez de file://. Precisa quando o teste depende
+    /// de imagem no WebGL (foto do MDF): pelo file:// o WebKit pode tratar a imagem como de outra origem e recusar a textura, o que no app não acontece.
     @MainActor
-    private func editor() async throws -> WKWebView {
+    private func editor(appScheme: Bool = false) async throws -> WKWebView {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "editor", withExtension: "html"), "editor.html tem que ir dentro do app")
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .nonPersistent()
+        if appScheme { config.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque") }
         config.userContentController.addUserScript(WKUserScript(source: Self.bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: config)
         if let w = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first { w.addSubview(web) }
@@ -56,7 +59,8 @@ final class EditorWebKitTests: XCTestCase {
         let ready = expectation(description: "editor carregado"), d = Loaded(ready)
         web.navigationDelegate = d
         let t0 = Date()
-        web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
+        if appScheme { web.load(URLRequest(url: try XCTUnwrap(URL(string: "arque://app/editor.html?lang=pt&cur=R%24&nosetup=1")))) }
+        else { web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent()) }
         await fulfillment(of: [ready], timeout: 60)
         // ABERTURA-DIAG (21/11): registra aberturas lentas (o critério do teste não muda)
         let dt = Date().timeIntervalSince(t0)
@@ -15765,7 +15769,7 @@ final class EditorWebKitTests: XCTestCase {
         limpa();newTpl(CATS[0].it[0]);newTpl(CATS[0].it[0]);addStone();var s4=S.st;s4.x=0;s4.w=2400;s4.shape='Le';s4.lenA=1870;s4.widA=650;s4.saia=1;s4.saiaH=100;s4.rodo=1;s4.rodoH=100;s4.lat=[{at:'pe'}];s4.items=s4.items||[];s4.items.push({id:991,k:'cuba',x:100,y:1200,w:450,d:400});draw();
         wvGo('e');await W(80);R.detalhes=stDetalhesParede('e').map(function(q){return q.k+':'+Math.round(q.a0)+'–'+Math.round(q.a1)+' y'+Math.round(q.y0)+'–'+Math.round(q.y1)}).join(' | ');
         R.textura=(document.querySelector('#svg g[data-stpl] rect')||{getAttribute:function(){return ''}}).getAttribute('fill')+' '+!!document.querySelector('#svg defs[data-stpl] image');
-        wvGo('f');await W(60);open3D();await W(250);__build();R.detalhes3D=__boxes().filter(function(b){return b.sid===s4.id&&b.g==='stc'&&b.x0<649&&!(b.y0===s4.t&&b.y1===s4.t+s4.e)}).map(function(b){return 'z'+Math.round(b.z0)+'–'+Math.round(b.z1)+' y'+Math.round(b.y0)+'–'+Math.round(b.y1)}).sort().join(' | ');document.getElementById('v3x').click();await W(100);
+        wvGo('f');await W(60);open3D();await W(250);__build();R.detalhes3D=__boxes().filter(function(b){return b.sid===s4.id&&b.g==='stc'&&b.x0<649&&!(Math.abs(b.y0-s4.t)<.01&&Math.abs(b.y1-(s4.t+s4.e))<.01)})/* tampo de fora com tolerância: no V8 (Chromium) os pedaços do tampo cortados na cuba saíam com uma fração de diferença e escapavam do filtro; no JavaScriptCore (iPhone) não (CI iOS d33886f) */.map(function(b){return 'z'+Math.round(b.z0)+'–'+Math.round(b.z1)+' y'+Math.round(b.y0)+'–'+Math.round(b.y1)}).sort().join(' | ');document.getElementById('v3x').click();await W(100);
         /* 10) Vistas (Esquerda/Posterior/Superior) na parede do lado: entra a pedra do fundo, com textura; de cima continua transparente */
         var cnt=function(){var sv=document.getElementById('svg');return sv.querySelectorAll('rect[fill^="url(#mvp-"]').length+' com textura'};
         wvGo('e');await W(100);R.vistasExtra=mvPedraOutras().length;EM.mvVista('esq');await W(150);R.vistaEsq=cnt();EM.mvVista('tras');await W(150);R.vistaTras=cnt();
@@ -15795,7 +15799,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["vistaEsq"] as? String, "8 com textura")
         XCTAssertEqual(o["vistaTras"] as? String, "8 com textura")
         XCTAssertEqual(o["vistaCima"] as? String, "0.35")
-        XCTAssertEqual(o["detalhes3D"] as? String, "z1200–1600 y820–860 | z1200–1600 y820–860 | z1600–2476 y820–860 | z2436–2476 y0–820 | z40–2476 y860–960 | z606–1200 y820–860 | z606–2476 y760–820 | z0–40 y860–960".split(separator: " | ").sorted().joined(separator: " | "), "conferência: os mesmos detalhes no 3D")
+        XCTAssertEqual(o["detalhes3D"] as? String, "z0–40 y860–960 | z2436–2476 y0–820 | z40–2476 y860–960 | z606–2476 y760–820".split(separator: " | ").sorted().joined(separator: " | "), "conferência: os mesmos detalhes no 3D")
         XCTAssertEqual(o["vistasExtra"] as? Int, 8, "laje 2 + saia 3 + rodobanca 2 + lateral 1")
         XCTAssertEqual(o["dadosIguais"] as? Bool, true, "ver as paredes não muda o projeto salvo")
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
@@ -16003,17 +16007,17 @@ final class EditorWebKitTests: XCTestCase {
     /// (perfil pf) e as portas da parede lateral (poly vira pf no wingX) recebem a textura real do MDF pelo woodT do pfFill — a mesma das portas do fundo.
     @MainActor
     func testPortaDoCantoEDaParedeLateralComATexturaRealDasRetas() async throws {
-        let web = try await editor()
+        let web = try await editor(appScheme: true)
         let o = try await run(web, #"""
         var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length;
         /* porta do canto (folha em perfil pf) e portas na parede lateral (poly vira pf no wingX) recebem a mesma textura real das portas retas do fundo (foto, 7) */
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
         loadState(initLimpo());S.W=4000;mkCorner('e');newTpl(T('Balcão 2 portas'));wvGo('e');await W(40);newTpl(T('Balcão 2 portas'));wvGo('f');await W(40);
         var tex=MAT.filter(function(c){return !c.nt&&/cumaru/i.test(c.id)})[0];S.mods.forEach(function(m){demoPaint(m,tex.id)});draw();
-        open3D();await W(300);__build();var R={},por={canto:[],lado:[],fundo:[]};__boxes().forEach(function(b){if(!/:(Porta|Frente)/.test(String(b.nm))||b.ft||b.a<.95||!b.mid)return;var m=S.mods[parseInt(String(b.nm),10)];por[m.corner?'canto':m.wing?'lado':'fundo'].push((b.pf?__woodT(b):__matTx(b))+(b.mid===tex.id?'':'?'))});
+        open3D();await W(300);__build();/* a foto do MDF carrega depois (assíncrona): espera ela carregar (ou falhar) antes de conferir */var esp_=0;while(esp_<8000){__build();var mt_=__boxes().filter(function(b){return b.mid===tex.id&&!b.ft})[0];if(mt_&&__matTx(mt_)===7)break;await W(200);esp_+=200}var R={espera:esp_},por={canto:[],lado:[],fundo:[]};__boxes().forEach(function(b){if(!/:(Porta|Frente)/.test(String(b.nm))||b.ft||b.a<.95||!b.mid)return;var m=S.mods[parseInt(String(b.nm),10)];por[m.corner?'canto':m.wing?'lado':'fundo'].push((b.pf?__woodT(b):__matTx(b))+(b.mid===tex.id?'':'?'))});
         Object.keys(por).forEach(function(k){R[k]=por[k].filter(function(x,i,a){return a.indexOf(x)===i}).join(',')+' ('+por[k].length+')'});document.getElementById('v3x').click();await W(80);R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["canto"] as? String, "7 (2)", "folha do canto com a foto do MDF")
+        XCTAssertEqual(o["canto"] as? String, "7 (2)", "folha do canto com a foto do MDF (esperou \(o["espera"] ?? "?") ms pela foto)")
         XCTAssertEqual(o["lado"] as? String, "7 (2)", "portas da parede lateral com a foto do MDF")
         XCTAssertEqual(o["fundo"] as? String, "7 (2)")
         XCTAssertEqual(o["errs"] as? Int, 0)

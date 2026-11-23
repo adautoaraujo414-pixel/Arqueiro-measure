@@ -16305,4 +16305,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antiga"] as? String, "Tamp. esquerdo 2500×725 y0 | Tamp. direito 2500×725 y0 | Lateral esquerda 655×700 y15 | Lateral direita 655×700 y15", "caixa de antes igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// CSV (Adauto 23/11, via Chefe: "Criar o botão CSV"): "⬇ Lista em CSV" no plano de corte, com as mesmas linhas da lista do PDF, UTF-8 com BOM,
+    /// separador ";" e CRLF (abre certo no Excel em português), pelo compartilhar nativo (shareFile) como o DXF.
+    @MainActor
+    func testPlanoDeCorteListaEmCSVMesmasLinhasDoPDF() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length,R={};
+        /* CSV (Adauto 23/11): "⬇ Lista em CSV" no plano de corte, mesmas linhas da lista do PDF (cutAll), UTF-8 com BOM, ";" e CRLF; compartilhar nativo */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));draw();openCut();await W(100);
+        var b=document.getElementById('csvbtn');R.botao=b?b.textContent:'sem';var sh=null;var A=window.ArqueApp,sf=A.shareFile;A.shareFile=function(n,t,m){sh={n:n,t:t,m:m}};try{b.click()}finally{A.shareFile=sf}
+        R.compartilhou=sh?(sh.m+' · '+/\.csv$/.test(sh.n)):'não';var t=sh?sh.t:'';R.bom=t.charCodeAt(0)===0xFEFF;R.crlf=/\r\n/.test(t)&&!/[^\r]\n/.test(t);
+        var L=t.replace(/^﻿/,'').split('\r\n').filter(Boolean);R.cabecalho=L[0];R.linhas=L.length-1;
+        /* mesmas linhas e quantidades da lista do PDF (cutAll) */var G=cutGroups(),tot=0;G.ord.forEach(function(k){tot+=G.map[k].qty});var tc=0;L.slice(1).forEach(function(l){tc+=+l.split(';')[2]});R.mesmaContagem=(L.length-1)===G.ord.length&&tc===tot;
+        var lp=document.querySelector('#cutm table');R.pdfTemAsPecas=L.slice(1).every(function(l){var nm=l.split(';')[1].replace(/^"|"$/g,'').split(' / ')[0];return (document.getElementById('cutm').textContent||'').indexOf(nm)>=0});
+        R.virgula=/;\d+,\d|;\d+;/.test(L[1]);R.semMudanca=JSON.stringify(snapState())===JSON.stringify(snapState());
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botao"] as? String, "⬇ Lista em CSV")
+        XCTAssertEqual(o["compartilhou"] as? String, "text/csv · true")
+        XCTAssertEqual(o["bom"] as? Bool, true)
+        XCTAssertEqual(o["crlf"] as? Bool, true)
+        XCTAssertEqual(o["cabecalho"] as? String, "Grupo;Peça;Quantidade;Comprimento (mm);Largura (mm);Espessura (mm);Cor;Fita;Módulos")
+        XCTAssertEqual(o["mesmaContagem"] as? Bool, true, "mesmas linhas e quantidades da lista do PDF")
+        XCTAssertEqual(o["pdfTemAsPecas"] as? Bool, true)
+        XCTAssertEqual(o["virgula"] as? Bool, true, "número com vírgula decimal")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

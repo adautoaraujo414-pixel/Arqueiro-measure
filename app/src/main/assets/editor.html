@@ -14017,6 +14017,21 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 })();
 </script>
 <script>
+/* ===== CSV (Adauto 23/11, via Chefe: "Criar o botão CSV"): "⬇ Lista em CSV" no plano de corte, com as mesmas linhas da lista do PDF (cutAll: cutGroups na
+   mesma ordem — caixa, chapa cor, fundos; categoria; tamanho). UTF-8 com BOM, separador ";" e CRLF pra abrir certo no Excel em português.
+   No app: compartilhar nativo (shareFile, como o DXF); no navegador: download. Só lê; nada muda no projeto. ===== */
+(function(){
+ var q=function(v){v=String(v==null?'':v);return /[;"\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},nf=function(v){return String(Math.round((+v||0)*10)/10).replace('.',',')};
+ window.csvLinhas=function(){var G=cutGroups(),map=G.map,TY=function(g){return (+g.mat||15)<=9?2:g.fin==='c'?1:0},GN=['Caixa (interno)','Chapa cor','Fundos e chapas finas'];
+  var ord=G.ord.slice().sort(function(a,b){var A=map[a],B=map[b];return TY(A)-TY(B)||pcat(A.names[0])-pcat(B.names[0])||B.L*B.W-A.L*A.W});
+  return ord.map(function(k){var g=map[k],onde=Object.keys(g.where||{}).map(function(w){return w+(g.where[w]>1?' ×'+g.where[w]:'')}).join(', ');return [GN[TY(g)],g.names.join(' / '),g.qty,nf(g.L),nf(g.W),nf(g.mat),g.colN||g.col||'',g.ftN||'',onde]})};
+ window.csvTexto=function(){var cab=['Grupo','Peça','Quantidade','Comprimento (mm)','Largura (mm)','Espessura (mm)','Cor','Fita','Módulos'];return '﻿'+[cab].concat(csvLinhas()).map(function(r){return r.map(q).join(';')}).join('\r\n')+'\r\n'};
+ window.csvBaixa=function(){var nome=((typeof projTitle==='function'&&window.CUR?'':'')||'lista-de-corte').replace(/[^\w\-]+/g,'-')+'.csv',t=csvTexto(),A=window.ArqueApp;try{var p=(typeof pLoadAll==='function'?pLoadAll():[]).filter(function(x){return x.id===window.CUR})[0];if(p&&typeof projTitle==='function')nome=String(projTitle(p)).replace(/[^\wÀ-ú\-]+/g,'-').replace(/^-+|-+$/g,'')+'-lista-de-corte.csv'}catch(_){}
+  if(A&&A.shareFile){A.shareFile(nome,t,'text/csv');return 'app'}try{var b=new Blob([t],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=nome;document.body.appendChild(a);a.click();setTimeout(function(){try{a.remove();URL.revokeObjectURL(u)}catch(_){}},2000);return 'download'}catch(_){return 'erro'}};
+ var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!document.getElementById('csvbtn')){var b=document.createElement('button');b.id='csvbtn';b.textContent='⬇ Lista em CSV';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var w=csvBaixa();try{toast(w==='erro'?'Não deu pra gerar o CSV':'⬇ Lista em CSV (abre no Excel)')}catch(_){}});sb.parentNode.insertBefore(b,sb)}}catch(_){}return r}}
+})();
+</script>
+<script>
 /* ===== FASE5 · DXF PARA CNC (23/11/2026, autorizado pelo Adauto) =====
    Gera DXF 2D (R12/AC1009, ASCII, milímetros) a partir da MESMA fonte do plano de corte (cutGroups → partsOf, furInfo, chAt):
    - contorno fechado de cada peça (camada CONTORNO);

@@ -8557,7 +8557,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    func testNadaDeEnfeiteTelaPrincipal3DClientesEValores() async throws {
+    /* iOS 665 (22/11/2026, pedido do Claude Chefe): o teste da tela principal, 3D, Clientes e Valores passava de 120 s por teste no iPhone (estourou na linha das peças livres;
+       no Chromium 88 s na linha do Code 1 e 90 s nesta). Dividido em 2 partes como a Parte 1 (7080dfd): A = tela principal + Clientes, B = 3D + Valores; as mesmas telas e as mesmas conferências, mínimo de controles 70 = 40 + 30, sem afrouxar nada. */
+    func testNadaDeEnfeiteTelaPrincipalEClientesParteATodoControleFazAlgumaCoisa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
@@ -8623,17 +8625,97 @@ final class EditorWebKitTests: XCTestCase {
         var totc=0,M=[],EX=[],porTela=[];
         var tela=async function(nome,abre,raiz,fora,cap){window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;await olha(nome,0,raiz)};
         var el=function(id){return function(){return [document.getElementById(id)]}};
-        var MINC=70;
+        var MINC=40;
         /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
         await tela('Tela principal',null,function(){return [].filter.call(document.body.children,function(e){return e.dataset&&e.dataset.c30==='0'})},'#bd');
-        await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
         await tela('Clientes',async function(){document.getElementById('clb').click();await W(250)},el('clm'));
+        
+        window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["telas"] as? Int, 2)
+        XCTAssertEqual(o["testouBastante"] as? Bool, true)
+        XCTAssertEqual(o["semFuncao"] as? String, "0")
+        XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
+        XCTAssertEqual(o["quebrou"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    func testNadaDeEnfeite3DEValoresParteBTodoControleFazAlgumaCoisa() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TN=0;var toast0=window.toast;window.toast=function(){TN++};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!r&&!it.act&&it.n===n)r=it})});return JSON.parse(JSON.stringify(r))};
+        var EXT=0;try{window.print=function(){EXT++};window.open=function(){EXT++;return null};var ic0=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type==='file'){EXT++;return}return ic0.apply(this,arguments)};if(window.ArqueApp)Object.keys(window.ArqueApp).forEach(function(k){var f=window.ArqueApp[k];if(typeof f==='function')window.ArqueApp[k]=function(){EXT++;try{return f.apply(window.ArqueApp,arguments)}catch(_){}}});if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText=function(){EXT++;return Promise.resolve()}}}catch(_){}
+        try{var sf0=window.svFechar;window.svFechar=function(){EXT++;try{return sf0&&sf0.apply(this,arguments)}catch(_){}}}catch(_){}try{window.confirm=function(){EXT++;return false};window.alert=function(){EXT++};window.prompt=function(){EXT++;return null};if(navigator.share)navigator.share=function(){EXT++;return Promise.resolve()}}catch(_){}var hs=function(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return h+':'+s.length},vis=function(e){return e.getClientRects().length>0};
+        /* cena: balcão com porta e gavetas, aéreo, pedra com cuba, geladeira e painel */
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão porta + gavetas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Balcão da pia (cuba)'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}newTpl(T('Aéreo 2 portas'));draw();await W(30);if(window.SOLO2){soloOff();await W(30)}
+        S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);try{apAdd('geladeira',0)}catch(_){}S.mods[0].tl=S.mods[0].tr=true;S.m=S.mods[0];draw();await W(900);
+        var Z0=JSON.stringify(snapState());
+        var MI=+(window.C30MI||0),volta=async function(t){try{[].forEach.call(document.body.children,function(e){if(!e.dataset||e.tagName==='SCRIPT'||e.tagName==='STYLE')return;if(!e.dataset.c30)e.dataset.c30='1';/* janela criada depois: fecha */if(e.dataset.c30==='1'){if(!e.hidden)e.hidden=true}else if(e.hidden)e.hidden=false})}catch(_){}/* a troca de parede agora fica sempre no cabeçalho (15/11): volta pra parede do fundo antes de restaurar, senão o teste seguinte fica na parede do lado */try{if(window.wvGo)wvGo('f')}catch(_){}UNDOING=true;try{loadState(JSON.parse(Z0))}finally{UNDOING=false}try{if(window.SOLO2)soloOff()}catch(_){}try{var v3=document.getElementById('v3');if(v3&&!v3.hidden)document.getElementById('v3x').click()}catch(_){}try{if(window.secAbreTudo)secAbreTudo()}catch(_){}S.m=S.mods[MI];S.sv=0;S.tab=t;LAST='mod';draw();panel();await W(25);if(window.ABRE)await window.ABRE()};
+        [].forEach.call(document.body.children,function(e){e.dataset.c30=e.hidden?'1':'0'});
+        var foto=function(){var z=snapState();delete z.trena;return hs(JSON.stringify(z))};
+        var X3=function(){try{var v3=document.getElementById('v3');if(!v3||v3.hidden)return '';var s=0,B=__boxes();for(var i=0;i<B.length;i++){s+=B[i].x0+B[i].y0*3+B[i].z1*7+(B[i].a||0)*11}return JSON.stringify(org3api.cam())+'/'+B.length+'/'+Math.round(s)}catch(_){return 'x'}};var cena=function(){var b=[].map.call(document.body.children,function(e){return (e.id||e.tagName)+(vis(e)?'+':'-')}).join(',');var a=document.activeElement;return [foto(),hs(document.getElementById('bd').innerHTML),hs(document.getElementById('svg').innerHTML),hs(b),TN,EXT,S.tab,S.sv,(a&&a!==document.body?(a.tagName+(a.id||'')+(a.dataset?JSON.stringify(a.dataset):'')):''),(document.getElementById('tabs')||{}).innerHTML?hs(document.getElementById('tabs').innerHTML):'',window.scrollY,RAIZ().map(function(r){return r?hs(r.innerHTML):''}).join(','),X3()].join('|')};
+        var rot=function(e){var d=e.dataset?Object.keys(e.dataset).filter(function(k){return k!=='c30'&&k!=='secf'}).map(function(k){return k+'='+String(e.dataset[k]).slice(0,18)}).join(','):'';var tx=(e.tagName==='INPUT'||e.tagName==='SELECT')?((e.closest('.g,.chk,label')||e.parentNode).textContent||'').trim():(e.textContent||'').trim();var an=e;while(an&&an!==document.body&&!an.id)an=an.parentNode;return e.tagName.toLowerCase()+(e.type?':'+e.type:'')+(e.id?'#'+e.id:(an&&an.id?'@'+an.id:''))+'['+d+'] «'+tx.replace(/\s+/g,' ').slice(0,34)+'»'};
+        var RAIZ=function(){return [document.getElementById('bd')]},FORA=null;var lista=function(){var o=[],seen=new Set();RAIZ().forEach(function(bd){if(!bd)return;[].forEach.call(bd.querySelectorAll('button,input,select,textarea'),function(e){if(vis(e)&&!e.disabled&&!e.readOnly&&!(FORA&&e.closest(FORA))){o.push(e);seen.add(e)}});
+          [].forEach.call(bd.querySelectorAll('*'),function(e){if(seen.has(e)||!vis(e)||e.closest('button,select,label input')||(FORA&&e.closest(FORA))||e.closest('svg'))return;var cs=getComputedStyle(e);if(cs.cursor!=='pointer')return;if(e.querySelector('button,input,select,textarea'))return;var p=e.parentNode;if(p&&p!==bd&&getComputedStyle(p).cursor==='pointer'&&!p.querySelector('button,input,select,textarea'))return;o.push(e)})});return o};
+        var age=async function(e){var tg=e.tagName,ty=e.type;if(tg==='SELECT'){var i=e.selectedIndex,n=e.options.length;if(n<2)return 'select com 1 opção';e.selectedIndex=(i+1)%n;e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&(ty==='checkbox'||ty==='radio'))e.click();
+          else if(tg==='INPUT'&&ty==='range'){var v=+e.value,mx=+e.max||100,mn=+e.min||0;e.value=String(v+(+e.step||1)<=mx?v+(+e.step||1):Math.max(mn,v-(+e.step||1)));e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'&&ty==='color'){e.value=e.value==='#123456'?'#654321':'#123456';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}
+          else if(tg==='INPUT'||tg==='TEXTAREA'){e.focus();try{e.click()}catch(_){}var nv=parseFloat(String(e.value).replace(',','.'));e.value=isFinite(nv)?String(Math.round(nv)+(nv>=60?-20:20)):(e.value+'x');e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));try{e.blur()}catch(_){}}
+          else e.click();return ''};
+        
+        var SUBCAP=20,ORC=8000;/* controles por vista extra e tempo (ms) que uma tela pode gastar com vistas extras */
+        /* varre uma tela: testa cada controle. Se um toque só troca o que aparece (sub-aba, "ver mais"…), os controles novos entram na fila e são testados também (chegando neles pelo mesmo toque) */
+        var varre=async function(nome,aba){var n=0,mortos=[],exc=[],NAV=[],acha=function(L,k,idx){var c=0;for(var j=0;j<L.length;j++){if(rot(L[j])===k){if(c===idx)return L[j];c++}}return null};
+          var chaves=function(e){return e&&e.dataset?Object.keys(e.dataset).filter(function(q){return q!=='c30'&&q!=='secf'}):[]};
+          var pares=function(L){var c={},o=[];L.forEach(function(e){var k=rot(e);c[k]=c[k]||0;o.push([k,c[k]++])});return o};
+          var pega=async function(it){await volta(aba);var el=acha(lista(),it.k,it.idx);if(el)return el;/* refaz o caminho; botão de abrir/fechar pode já estar aberto: confere a cada passo e, se fechou, toca de novo */for(var s=0;s<(it.vias||[]).length;s++){var e=acha(lista(),it.vias[s].k,it.vias[s].idx);if(e){try{await age(e)}catch(_){}await W(120)}el=acha(lista(),it.k,it.idx);if(el)return el}for(var s2=(it.vias||[]).length-1;s2>=0;s2--){var e9=acha(lista(),it.vias[s2].k,it.vias[s2].idx);if(e9){try{await age(e9)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}}if((it.vias||[]).length)return null;
+            /* a tela ficou em outra vista (sub-aba que não volta sozinha): tenta os botões de troca conhecidos e os irmãos deles */
+            var ks=[];NAV.forEach(function(q){q.ks.forEach(function(x){if(ks.indexOf(x)<0)ks.push(x)})});var cand=pares(lista().filter(function(o){var c=chaves(o);return c.length&&c.every(function(x){return ks.indexOf(x)>=0})}));
+            for(var q2=0;q2<cand.length&&q2<8;q2++){var e3=acha(lista(),cand[q2][0],cand[q2][1]);if(!e3)continue;try{await age(e3)}catch(_){}await W(120);el=acha(lista(),it.k,it.idx);if(el)return el}
+            return null};
+          await volta(aba);var fila=pares(lista()).map(function(q){return {k:q[0],idx:q[1],vias:[]}}),visto={},pend={},nb=fila.length,tv0=0;fila.forEach(function(q){visto[q.k+'#'+q.idx]=1});
+          for(var i=0;i<fila.length;i++){var it=fila[i],k=it.k,idx=it.idx;if(i>=nb){if(!tv0)tv0=Date.now();if(Date.now()-tv0>ORC)break}
+            var el=await pega(it);if(!el){/* estava numa vista de dentro (sub-aba) que mudou: fica esperando ser achado de novo pelo caminho certo */if(!it.vias.length)pend[k+'#'+idx]=1;else (window.__na=window.__na||[]).push(nome+' › '+k.slice(0,60));continue}
+            var c0=cena(),obs='';try{obs=await age(el)}catch(e){exc.push(k+': '+String(e).slice(0,80));continue}await W(90);var c1=cena();n++;
+            if(c0===c1){await W(400);c1=cena()}
+            if(c0!==c1&&it.vias.length<2){/* só trocou o que aparece (projeto igual, nenhuma janela nova)? os controles novos entram na fila */var A0=c0.split('|'),A1=c1.split('|');if(A0[0]===A1[0]&&A0[3]===A1[3]&&A0[6]===A1[6]&&A0[12]===A1[12]){var nv=pares(lista()).filter(function(q){return !visto[q[0]+'#'+q[1]]||pend[q[0]+'#'+q[1]]}).slice(0,SUBCAP);if(nv.length){NAV.push({k:k,idx:idx,ks:chaves(el)});nv.forEach(function(q){visto[q[0]+'#'+q[1]]=1;delete pend[q[0]+'#'+q[1]];fila.push({k:q[0],idx:q[1],vias:it.vias.concat([{k:k,idx:idx}])})})}}}
+            if(c0===c1&&el.dataset){var ks0=chaves(el),irm=null;if(ks0.length){var L3=lista();for(var q=0;q<L3.length&&!irm;q++){var o=L3[q];if(o!==el&&o.tagName===el.tagName&&o.dataset&&ks0.every(function(kk){return o.dataset[kk]!==undefined})&&ks0.some(function(kk){return o.dataset[kk]!==el.dataset[kk]}))irm=o}}
+              if(irm){try{await age(irm)}catch(_){}await W(120);var L4=lista(),el2=null;for(var j2=0;j2<L4.length;j2++){if(L4[j2].dataset&&L4[j2].tagName===el.tagName&&ks0.every(function(kk){return L4[j2].dataset[kk]===el.dataset[kk]})){el2=L4[j2];break}}if(el2){var c4=cena();try{await age(el2)}catch(_){}await W(120);if(cena()!==c4)c1='mudou'}else c1='mudou(sumiu)'}
+              else if(/\b(sel|on|ativo)\b/.test(el.className||''))c1='já é a escolhida (única)'}
+            if(c0===c1&&el.tagName==='BUTTON'){/* pode depender do estado (ex.: diminuir o zoom sem ter aumentado): aperta antes cada vizinho e tenta de novo */var viz=[].filter.call((el.parentNode||{}).children||[],function(s){return s!==el&&vis(s)&&(s.tagName==='BUTTON'||getComputedStyle(s).cursor==='pointer')}).slice(0,6).map(rot);
+              for(var v=0;v<viz.length&&c0===c1;v++){var e5=await pega(it);if(!e5)break;var sv=null;lista().forEach(function(o){if(!sv&&rot(o)===viz[v])sv=o});if(!sv)continue;try{await age(sv)}catch(_){}await W(150);if(!document.body.contains(e5)||!vis(e5)){e5=acha(lista(),k,idx);if(!e5)continue}var c6=cena();try{await age(e5)}catch(_){}await W(150);if(cena()!==c6)c1='mudou depois de '+viz[v]}}
+            if(c0===c1&&el.tagName==='BUTTON'){/* botão de ajustar/voltar a vista: só faz diferença se a vista estiver mexida → aumenta o zoom antes */var ez=await pega(it);if(ez){var zm=[].filter.call(document.querySelectorAll('button'),function(b){return vis(b)&&/^[＋+]$/.test((b.textContent||'').trim())})[0];if(zm){try{zm.click();zm.click()}catch(_){}await W(150);if(document.body.contains(ez)&&vis(ez)){var cz=cena();try{await age(ez)}catch(_){}await W(200);if(cena()!==cz)c1='mudou depois do zoom'}}}}
+            if(c0===c1&&el.tagName==='BUTTON'&&/Desfazer|Refazer|[↶↷]/.test((el.title||'')+' '+(el.getAttribute('aria-label')||'')+' '+(el.textContent||''))){/* desfazer/refazer só faz diferença se tiver o que desfazer/refazer: faz uma mexida antes */var eu=await pega(it);if(eu){var refaz=/Refazer|↷/.test((eu.title||'')+(eu.textContent||''));try{snap();S.mods[0].x=S.mods[0].x+10;draw();await W(950);if(refaz){document.getElementById('und').click();await W(150)}}catch(_){}if(document.body.contains(eu)){var cu=cena();try{await age(eu)}catch(_){}await W(200);if(cena()!==cu)c1='mudou com história pra desfazer/refazer'}}}
+            if(c0===c1){/* pode ser botão que só rola a tela até um lugar */var e7=await pega(it);if(e7){var rsig=function(){var o=[];RAIZ().forEach(function(r){if(!r)return;var all=r.querySelectorAll('*');for(var z=0;z<all.length&&o.length<80;z+=Math.max(1,Math.floor(all.length/80))){var b=all[z].getBoundingClientRect();o.push(Math.round(b.top)+','+Math.round(b.left))}});return o.join(';')},q0=rsig();await W(350);if(rsig()===q0){try{await age(e7)}catch(_){}await W(800);if(rsig()!==q0)c1='rolou'}}}
+            if(c0===c1&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA')&&el.id&&!/^(checkbox|radio|range|color)$/.test(el.type||'')){if(!window.__SRC){var sx='';[].forEach.call(document.scripts,function(sc){sx+=sc.textContent||''});window.__SRC=sx}var idq=el.id.replace(/[^A-Za-z0-9_-]/g,'');if(new RegExp("\\$\\('"+idq+"'\\)|getElementById\\('"+idq+"'\\)|#"+idq+"\\b|\\.id===?'"+idq+"'").test(window.__SRC))c1='campo de formulário lido pelo código'}
+            if(c0===c1)mortos.push(nome+' › '+k+(obs?' ('+obs+')':''))}
+          /* controle de sub-aba de dentro que o teste não conseguiu abrir de novo sozinho: fica anotado como não testado (não é defeito do app) */Object.keys(pend).forEach(function(q){(window.__na=window.__na||[]).push(nome+' › '+q.slice(0,60))});
+          return {n:n,mortos:mortos,exc:exc,extras:fila.length-nb}};
+        
+        var CAP=1e9,_l0=lista;lista=function(){return _l0().slice(0,CAP)};
+        /* setas e sinais que parecem de tocar (⌃ ⌄ › ‹ ▸ ▾ ▼ ▲ ► ◀ ⋯ ⋮ ☰ ✕) e não estão dentro de botão nem de coisa clicável: fazem alguma coisa? */
+        var GL=/^[⌃⌄›‹»«▸▾▼▲►◀⋯⋮☰≡✕✖>]$/;
+        var setas=function(roots){var o=[];roots.forEach(function(r){if(!r)return;var tw=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,null),n;while((n=tw.nextNode())){var tx=(n.nodeValue||'').trim();if(!GL.test(tx))continue;var e=n.parentNode;if(!e||!vis(e)||e.closest('svg,canvas,script,style'))continue;if((e.textContent||'').trim()!==tx)continue;o.push(e)}});return o};
+        var clicavel=function(e){for(var k=0,p=e;p&&p!==document.body&&k<4;k++,p=p.parentNode){if(/^(BUTTON|A|LABEL|SELECT|INPUT|SUMMARY)$/.test(p.tagName)||getComputedStyle(p).cursor==='pointer')return p}return null};
+        var out=[],tot=0,enf=[];
+        var olha=async function(nome,aba,roots){RAIZ=roots;await volta(aba);var L=setas(roots()),n=L.length;tot+=n;for(var i=0;i<n;i++){await volta(aba);var e=setas(roots())[i];if(!e)continue;var alvo=clicavel(e),c0=cena();try{(alvo||e).click()}catch(_){}await W(120);var c1=cena();if(c0===c1){await W(400);c1=cena()}if(c0===c1){var ctx=((e.parentNode||e).textContent||'').replace(/\s+/g,' ').trim().slice(0,46);enf.push(nome+' › «'+e.textContent.trim()+'» em "'+ctx+'"'+(alvo?' (dentro de '+alvo.tagName.toLowerCase()+')':' (sem nada clicável em volta)'))}}};
+        
+        var totc=0,M=[],EX=[],porTela=[];
+        var tela=async function(nome,abre,raiz,fora,cap){window.ABRE=abre;RAIZ=raiz;FORA=fora||null;CAP=cap||1e9;var r=await varre(nome,0);totc+=r.n;M=M.concat(r.mortos);EX=EX.concat(r.exc);porTela.push(nome+' '+r.n);CAP=1e9;await olha(nome,0,raiz)};
+        var el=function(id){return function(){return [document.getElementById(id)]}};
+        var MINC=30;
+        /* tela principal (barra de cima, botões do 2D, abas), 3D, Clientes e Valores: todo controle faz alguma coisa e nenhuma seta é só desenho */
+        await tela('3D',async function(){draw();open3D();await W(380)},el('v3'),'canvas');
         await tela('Valores',async function(){document.getElementById('vlb').click();await W(350)},el('vlm'));
         
         window.ABRE=null;FORA=null;RAIZ=function(){return [document.getElementById('bd')]};await volta(0);
-        R.telas=porTela.length;R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;return JSON.stringify(R);
+        R.telas=porTela.length;R.porTela=porTela.join(' · ');R.testouBastante=totc>=MINC;R.semFuncao=M.length+(M.length?': '+M.slice(0,8).join(' || '):'');R.setasSoDeEnfeite=enf.length+(enf.length?': '+enf.slice(0,8).join(' || '):'');R.quebrou=EX.length+(EX.length?': '+EX.slice(0,3).join(' || '):'');R.errs=__errs.length-e0;window.__n23=porTela.join(' | ')+' · setas '+tot;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["telas"] as? Int, 4)
+        XCTAssertEqual(o["telas"] as? Int, 2)
         XCTAssertEqual(o["testouBastante"] as? Bool, true)
         XCTAssertEqual(o["semFuncao"] as? String, "0")
         XCTAssertEqual(o["setasSoDeEnfeite"] as? String, "0")
@@ -14736,7 +14818,7 @@ final class EditorWebKitTests: XCTestCase {
           var a=pLoadAll(),n1=a.length,nv={id:'pfut'+Date.now(),client:{nome:'X'},created:Date.now(),updated:Date.now(),current:{mods:[{w:600,pl:[{id:'q',k:'peca',ax:'z',x:0,y:0,w:100,h:100,z:0,d:15}],plv:99}],emFmt:99}};a.push(nv);var rs=pSaveAll(a);o.backupFuturo=rs+' · biblioteca '+(pLoadAll().length===n1);
           var b=pLoadAll(),ok={id:'pok'+Date.now(),client:{nome:'Y'},created:Date.now(),updated:Date.now(),current:{mods:[{w:600}]}};b.push(ok);o.backupNormal=pSaveAll(b)+' · '+(pLoadAll().length===n1+1);
           /* 6. link do cliente com peça livre: tipo novo */
-          loadState(JSON.parse(JSON.stringify(r2.st)));draw();ensureProj();window.__sharedCl=null;clientSend();await W(150);var dc=document.getElementById('emcompat');if(dc)dc.querySelector('[data-emcok]').click();var t=Date.now();while(!window.__sharedCl&&Date.now()-t<5000)await W(50);var rc=window.__sharedCl?await bruto(__sharedCl.code):null;o.cliente=rc?rc.k+' fmt '+rc.fmt:'nao';
+          /* iOS 665 (22/11/2026): a ponte de teste do iOS não tem shareClient (o app de verdade tem, MoveisView.swift) — sem ela o editor manda o link do cliente pelo shareCut e o teste lia "nao". O teste põe a ponte do app de verdade e confere também o caminho sem ela (os dois saem com o tipo novo) */var sc0_=ArqueApp.shareClient;ArqueApp.shareClient=function(c){window.__sharedCl={code:c}};loadState(JSON.parse(JSON.stringify(r2.st)));draw();ensureProj();window.__sharedCl=null;clientSend();await W(150);var dc=document.getElementById('emcompat');if(dc)dc.querySelector('[data-emcok]').click();var t=Date.now();while(!window.__sharedCl&&Date.now()-t<5000)await W(50);var rc=window.__sharedCl?await bruto(__sharedCl.code):null;o.cliente=rc?rc.k+' fmt '+rc.fmt:'nao';delete ArqueApp.shareClient;if(sc0_)ArqueApp.shareClient=sc0_;else{window.__shared=null;clientSend();await W(150);var dc2=document.getElementById('emcompat');if(dc2)dc2.querySelector('[data-emcok]').click();var t2=Date.now();while(!window.__shared&&Date.now()-t2<5000)await W(50)}var rs2=(!sc0_&&window.__shared)?await bruto(__shared.code):null;o.clienteSemPonte=sc0_?'ponte do app':(rs2?rs2.k+' fmt '+rs2.fmt:'nao');
           o.errs=__errs;return JSON.stringify(o);
           """#)
         XCTAssertEqual(o["semPeca"] as? String, "arque-corte · janela false", "sem peça livre: igual a antes, abre em qualquer versão")
@@ -14749,6 +14831,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["backupFuturo"] as? String, "false · biblioteca true", "recuperar/importar projeto de formato mais novo: não entra")
         XCTAssertEqual(o["backupNormal"] as? String, "true · true", "projeto normal continua gravando")
         XCTAssertEqual(o["cliente"] as? String, "arque-cliente-v2 fmt 1", "link do cliente com peça livre: tipo novo")
+        XCTAssertTrue(["arque-cliente-v2 fmt 1","ponte do app"].contains(o["clienteSemPonte"] as? String ?? ""), "sem a ponte shareClient o link do cliente sai pelo shareCut, também com o tipo novo: \(o["clienteSemPonte"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
 }

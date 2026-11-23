@@ -55,3 +55,67 @@ Mesma cena e mesma câmera, antes (`99860057`) e depois:
 - `bronze_antes/depois.png`
 - `fume_antes/depois.png`
 - `fundo_e_lateral.png`
+
+# Biblioteca de espelhos orgânicos e LED jateado (Code 2, 23/11/2026, com as 4 fotos de referência do Adauto)
+
+## Modelos (＋ Criar · Espelho na parede)
+| # | Modelo | formato | LED |
+|---|---|---|---|
+| 1 | Redondo LED jateado 70 | red (700 × 700) | frontal jateado 4000 K |
+| 2 | Oval LED jateado 60 × 90 | red | frontal jateado |
+| 3 | Retangular faixa jateada 80 × 60 | ret | frontal jateado |
+| 4 | Arco com LED 60 × 100 | arco | traseiro 3000 K |
+| 5 | Orgânico vertical irregular 60 × 100 | orgv | — |
+| 6 | Orgânico horizontal irregular 120 × 70 | orgh | — |
+| 7 | Orgânico gota 60 × 80 | gota | — |
+| 8 | Orgânico ondulado 60 × 100 | onda | — |
+| 9 | Orgânico LED traseiro 120 × 70 | orgh | traseiro |
+| 10 | Orgânico LED frontal jateado 60 × 80 | gota | frontal jateado |
+| 11 | Orgânico LED frontal e traseiro 60 × 100 | orgv | os dois |
+| 12 | Orgânico sem LED 60 × 100 | orgv | — |
+
+Os 4 de antes continuam iguais.
+
+## Geometria
+- **Formato orgânico:** curva fechada de verdade, uma spline Catmull-Rom pelos pontos de controle, ajustada pra largura × altura exatas.
+  - Triangulação real (orelhas): o desenho em leque de antes servia só pra forma convexa.
+  - Cada formato pronto foi conferido em n − 2 triângulos, também girado.
+- **Recuo:** borda, bisotê, faixa e halo recuam ou afastam pela normal da curva.
+- **Giro livre:** campo de graus (o do Code 1).
+- **Editar pontos:** "✎ Editar pontos no 2D" mostra uma alça por ponto de controle. Arrastar muda a curva e o espelho vira "Personalizado" (f.pts). Funciona girado e passa pelo desfazer.
+- **Salvar formato:** "💾 Salvar formato" guarda os pontos no aparelho e aparece em "Meus formatos" de qualquer espelho. O projeto leva os pontos de cada espelho, então abre igual em outro aparelho.
+
+## LED
+- **Frontal jateado:** faixa translúcida iluminada (anel entre dois contornos recuados: distância da borda e largura, em mm). O centro continua espelhado, com o reflexo real.
+  - Brilho suave dos dois lados da faixa, sem ponto de luz.
+  - Desligado: faixa jateada fosca.
+- **Traseiro:** o espelho afasta da parede (afastamento, padrão 30 mm). O halo na parede tem largura 60 + 2,6 × afastamento, em 5 anéis contínuos que somem pra fora.
+- **Cor:** 3000 K quente, 4000 K neutra, 6000 K fria. Intensidade de 10 a 100 % e liga/desliga.
+- **Faixa que não cabe** (distância + largura ≥ meia medida menor − 20): aviso, nada muda.
+
+## Orçamento (vidraçaria; preço em branco no Ajustes, como os outros do espelho)
+- **Jateamento (m²):** área real da faixa.
+- **Fita LED (m):** frontal no meio da faixa; traseiro 30 mm pra dentro da borda.
+- **Fonte (un):** 1 por espelho com LED.
+- Somam-se ao vidro, à lapidação/bisotê e à moldura (Code 1).
+- Nada vai pro plano de corte de MDF.
+
+## DXF da vidraçaria ("⬇ DXF do espelho")
+R12, em mm, um espelho ao lado do outro, com estas camadas:
+- **ESPELHO_CORTE:** contorno real.
+- **ESPELHO_JATEADO:** as duas bordas da faixa.
+- **ESPELHO_LED:** caminho da fita.
+
+## Desempenho
+- A curva tem cerca de 96 pontos e a triangulação é feita só quando o 3D é refeito.
+- Faixa e halo são camadas finas, sem textura.
+- O vidro entra no reflexo real e na qualidade automática da parte anterior.
+
+## Testado
+- Teste: `testEspelhosOrganicosELedJateadoBibliotecaQuadroOrcamentoEDxf`.
+- Capturas: `organico_*_3d.png`, `redondo_led_jateado_3d.png`, `organicos_2d_com_pontos.png`.
+
+## Não coberto (aplicável depois, sem regra inventada)
+- Espelho em cima de painel ou ripado: segue a regra de posição de sempre do item de parede (o Code 1 audita).
+- Espelho em móvel livre: não existe hoje.
+- Medição em aparelho.

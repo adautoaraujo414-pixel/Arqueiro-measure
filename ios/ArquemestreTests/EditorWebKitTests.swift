@@ -16160,4 +16160,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabre"] as? String, "900 meia")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · etapa C (Adauto 22/11 18:12): remover e restaurar a parede do fundo (a linha fica como referência das medidas) e as laterais. Portas e
+    /// janelas da parede removida ficam guardadas e voltam iguais; nenhum móvel muda; aviso dos módulos sem parede atrás; salvar/reabrir guarda o estado.
+    @MainActor
+    func testParedesEtapaCRemoverERestaurarFundoELateraisSemMexerNosMoveis() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES etapa C (Adauto 22/11 18:12): remover e restaurar o fundo e as laterais; portas/janelas guardadas e devolvidas iguais; nenhum móvel muda */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var pecas=async function(wl){open3D();await W(150);__build();var n=__bg().filter(function(b){return b.wl===wl}).length;document.getElementById('v3x').click();await W(50);return n};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;S.RD=3500;draw();newTpl(T('Balcão 2 portas'));opAdd('porta');var dF=S.ops[S.ops.length-1];dF.x=2500;var dL=JSON.parse(JSON.stringify(dF));dL.id=dF.id+100;dL.wall='e';dL.x=900;S.ops.push(dL);draw();
+        var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b,m.wing||'']})),O0=JSON.stringify(S.ops),W0=S.W+'x'+roomD();
+        R.fundoAntes=(await pecas('F'))>0;S.tab=9;panel();var b=document.querySelector('#bd [data-wrem="F"]');R.botaoRemover=!!b;b.click();await W(60);
+        R.fundoRemovido=(await pecas('F'))+' peças · portas no fundo '+S.ops.filter(function(o){return !o.wall||o.wall==='f'}).length+' · guardadas '+((S.wall.F||{}).hops||[]).length+' · aviso '+!!document.querySelector('#wrmbox [data-wrest="F"]');
+        R.semApoio=wallSemApoio('F').length;R.moveisIguais=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b,m.wing||'']}))===M0;R.medidasIguais=(S.W+'x'+roomD())===W0;
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.reabreRemovido=wallRm('F')+' '+((S.wall.F||{}).hops||[]).length;
+        document.querySelector('#bd [data-wrest="F"]')||(S.tab=9,panel());document.querySelector('#bd [data-wrest="F"]').click();await W(60);R.fundoRestaurado=(await pecas('F'))>0;
+        wallRemove('L');R.esquerdaRemovida=(await pecas('L'))+' · portas na esquerda '+S.ops.filter(function(o){return o.wall==='e'}).length;wallRestore('L');R.esquerdaRestaurada=(await pecas('L'))>0;
+        R.portasIguais=JSON.stringify(S.ops.slice().sort(function(a,b){return a.id-b.id}))===JSON.stringify(JSON.parse(O0).sort(function(a,b){return a.id-b.id}));
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["fundoAntes"] as? Bool, true)
+        XCTAssertEqual(o["botaoRemover"] as? Bool, true)
+        XCTAssertEqual(o["fundoRemovido"] as? String, "0 peças · portas no fundo 0 · guardadas 1 · aviso true", "fundo removido: some do 3D, a porta fica guardada")
+        XCTAssertEqual(o["semApoio"] as? Int, 1, "avisa o balcão sem parede atrás")
+        XCTAssertEqual(o["moveisIguais"] as? Bool, true, "nenhum móvel muda")
+        XCTAssertEqual(o["medidasIguais"] as? Bool, true, "medidas do ambiente iguais")
+        XCTAssertEqual(o["reabreRemovido"] as? String, "true 1")
+        XCTAssertEqual(o["fundoRestaurado"] as? Bool, true)
+        XCTAssertEqual(o["esquerdaRemovida"] as? String, "0 · portas na esquerda 0")
+        XCTAssertEqual(o["esquerdaRestaurada"] as? Bool, true)
+        XCTAssertEqual(o["portasIguais"] as? Bool, true, "portas e janelas voltam exatamente iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

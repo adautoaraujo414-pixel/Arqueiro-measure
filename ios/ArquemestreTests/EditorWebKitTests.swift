@@ -16807,4 +16807,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["err"] as? String, "")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ESPELHO-REAL sem traço preto no reflexo (auditoria do Code 1, "linha escura vertical" no redondo LED jateado): a quina do cômodo refletida
+    // aparece pela diferença de luz entre as paredes, sem o contorno escuro do desenho; o reflexo continua (as duas metades com luz diferente)
+    func testReflexoDoEspelhoSemContornoEscuroNaQuina() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2700;draw();var ms=apModels('espelho'),ix=-1;ms.forEach(function(m,i){if(ix<0&&m[0].indexOf('Espelho redondo LED jateado')===0)ix=i});var f=espWallAdd(ix);f.x=150;f.b=900;draw();
+        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,.1,1.05);await W(150);__cam(0,.1,1.05);
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,c=__p3(f.x+f.w/2,f.b+f.h/2,4),a=__p3(f.x+f.w*.3,f.b+f.h/2,4),b=__p3(f.x+f.w*.7,f.b+f.h/2,4),px=new Uint8Array(4),L=[];
+        var x0=Math.round(a[0]*r),x1=Math.round(b[0]*r),y=Math.round(H-c[1]*r);for(var x=x0;x<=x1;x++){gl.readPixels(x,y,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);L.push((px[0]+px[1]+px[2])/3)}
+        var dip=0;for(var i=3;i<L.length-3;i++){var e=Math.min((L[i-3]+L[i-2])/2,(L[i+2]+L[i+3])/2);dip=Math.max(dip,e-L[i])}
+        R.traco=Math.round(dip);R.reflexo=Math.round(Math.max.apply(null,L)-Math.min.apply(null,L));R.planos=Object.keys(MIRS).filter(function(k){return MIRS[k].on}).length;document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertLessThan(o["traco"] as? Int ?? 99, 12, "sem traço escuro atravessando o espelho")
+        XCTAssertGreaterThan(o["reflexo"] as? Int ?? 0, 6, "o reflexo continua (a quina refletida muda a luz)")
+        XCTAssertEqual(o["planos"] as? Int, 1)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

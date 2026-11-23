@@ -12321,12 +12321,49 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
     if(w==='f')iv.push([r.x0,r.x1,r.z1-r.z0]);else iv.push([r.z0,r.z1,r.x1-r.x0])});if(!iv.length)return;
    iv.sort(function(a,b){return a[0]-b[0]});var m=[];iv.forEach(function(q){var l=m[m.length-1];if(l&&q[0]<=l[1]+.5){l[1]=Math.max(l[1],q[1]);if(q[1]-q[0]>l[3]){l[2]=q[2];l[3]=q[1]-q[0]}}else m.push([q[0],q[1],q[2],q[1]-q[0]])});/* profundidade mostrada = a do pedaço mais comprido (no L: a largura do braço, não o comprimento da pedra do fundo que só aparece no canto) */
    m.forEach(function(q){out.push({st:st,a0:q[0],a1:q[1],prof:Math.round(q[2]),fonte:o.fonte,n:(o.fonte==='f'?fr:sw.filter(function(z){return z.wall===o.fonte})).indexOf(st)+1})})});return out};
+ /* detalhes da pedra de outra parede no trecho desta parede — saia, rodobanca, lateral até o chão, cuba e cooktop — pelas mesmas funções do 3D
+    (stSaiaGeo, stRodoGeo, stLatGeo; cuba/cooktop pela posição guardada). Na vista de parede o S está trocado (S.W é o comprimento da parede e S.mods os
+    móveis dela): durante a conta volta o S.W real e os móveis das outras paredes (os desta parede o 3D já ignora, são de lado). */
+ window.stDetalhesParede=function(w){var wst=window.__wvSt?__wvSt():null,cur=(window.wvCur&&wvCur())||'f';if(cur!==w)return [];
+  var fr=(wst?wst.stones:S.stones)||[],sw=(wst?wst.stw:S.stw)||[],xl,xr,out=[];if(wst){xl=+wst.xl||0;xr=+wst.xr||S.W}else{var s0={L:null,R:null};try{s0=sideWalls()}catch(_){}xl=s0.L===null?0:s0.L;xr=s0.R===null?S.W:s0.R}
+  var W0=S.W,M0=S.mods;try{if(wst){S.W=wst.W;S.mods=(wst.mods||[]).filter(function(m){return !wst.V.has(m)})}
+   fr.forEach(function(st){if(!st||w==='f')return;var sh=st.shape||'reta',band=w==='e'?((sh==='Le'||sh==='U')?Math.min(d6(st.widA),+st.w||0):0):((sh==='Ld'||sh==='U')?Math.min(d6(st.widB),+st.w||0):0);
+    var perto=function(x0,x1){return w==='e'?(x0<=xl+TOL||x0<xl+band-1):(x1>=xr-TOL||x1>xr-band+1)};
+    var add=function(g,k){if(!perto(g.x0,g.x1))return;var a0=g.z0,a1=g.z1;if(a1-a0<0.5)return;out.push({st:st,a0:a0,a1:a1,y0:g.y0,y1:g.y1,k:k})};
+    try{stSaiaGeo(st).forEach(function(g){add(g,'saia')})}catch(_){}try{stRodoGeo(st).forEach(function(g){add(g,'rodo')})}catch(_){}
+    try{stLatGeo(st).forEach(function(g){add({x0:g.x0,x1:g.x1,z0:g.z0,z1:g.z1,y0:0,y1:g.y1},'lat')})}catch(_){}
+    (st.items||[]).forEach(function(it){var x0=(+st.x||0)+(+it.x||0),x1=x0+(+it.w||0),z0=+it.y||0,z1=z0+(+it.d||0);if(!perto(x0,x1))return;if(it.k!=='cuba'&&it.k!=='cook')return;out.push({st:st,a0:z0,a1:z1,y0:st.t,y1:st.t+(+st.e||0),k:it.k,it:it})})})}finally{S.W=W0;S.mods=M0}
+  return out};
+ /* Vistas (Esquerda, Direita, Superior, Posterior): na parede do lado o 3D é montado só com o que é dela; aqui entram as pedras das outras paredes
+    (fundo e a outra lateral) — laje, saia, rodobanca e lateral pelas mesmas funções do 3D — passadas pro referencial da parede vista
+    (x = distância do canto do fundo, z = distância da parede). Textura real (600 mm por repetição, igual ao 3D). */
+ window.mvPedraOutras=function(){var wst=window.__wvSt?__wvSt():null;if(!wst||S.env==='livre')return [];var w=wst.w,xl=+wst.xl||0,xr=+wst.xr||S.W,out=[];
+  var tf=function(g){return w==='e'?{x0:g.z0,x1:g.z1,z0:g.x0-xl,z1:g.x1-xl}:{x0:g.z0,x1:g.z1,z0:xr-g.x1,z1:xr-g.x0}};
+  var put=function(st,g,y0,y1){var t=tf(g);if(t.x1-t.x0<0.3||t.z1-t.z0<0.3||y1-y0<0.3)return;var tx='';try{tx=stTex(stC(st))}catch(_){}out.push({x0:t.x0,x1:t.x1,y0:y0,y1:y1,z0:t.z0,z1:t.z1,c:stC(st),a:1,sid:st.id,mid:tx||undefined,g:'stc',stpl:1})};
+  var W0=S.W,M0=S.mods;try{S.W=wst.W;S.mods=(wst.mods||[]).filter(function(m){return !wst.V.has(m)});
+   (wst.stones||[]).concat((wst.stw||[]).filter(function(q){return q&&q.wall&&q.wall!==w&&(wst.SV||[]).indexOf(q)<0})).forEach(function(st){if(!st)return;var t=+st.t||0,e=+st.e||0;
+    window.stRects3(st,xl,xr).forEach(function(r){put(st,r,t,t+e)});
+    if(!st.wall){try{stSaiaGeo(st).forEach(function(g){put(st,g,g.y0,g.y1)})}catch(_){}try{stRodoGeo(st).forEach(function(g){put(st,g,g.y0,g.y1)})}catch(_){}try{stLatGeo(st).forEach(function(g){put(st,g,0,g.y1)})}catch(_){}}})}finally{S.W=W0;S.mods=M0}
+  return out};
+ var MVD={};
+ window.mvPedraOp=function(v){return v==='cima'?.35:1};/* de cima continua transparente (vê os móveis embaixo); de frente/lado a pedra é sólida */
+ window.mvPedraFill=function(b,cor){var t=b&&b.mid&&/^pedra-/.test(String(b.mid))?String(b.mid):'';if(!t){try{t=stTex(typeof b.c==='string'?b.c:cor)}catch(_){}}if(!t)return cor;var id='mvp-'+t;
+  if(!MVD[id])MVD[id]='<pattern id="'+id+'" width="600" height="600" patternUnits="userSpaceOnUse"><rect width="600" height="600" fill="'+cor+'"/><image href="cores/'+t+'.jpg" width="600" height="600" preserveAspectRatio="none"/></pattern>';return 'url(#'+id+')'};
+ window.mvPedraDefs=function(){var k=Object.keys(MVD);return k.length?'<defs>'+k.map(function(i){return MVD[i]}).join('')+'</defs>':''};
  var NM={f:'do fundo',e:'da esquerda',d:'da direita'};
+ /* textura de verdade na escala do 3D (cores/pedra-*.jpg, 600 mm por repetição) */
+ var texF=function(st,k,defs){var t='';try{t=stTex(stC(st))}catch(_){}if(!t)return stC(st);var id='stpr-'+t+'-'+Math.round(k*10000),L=Math.max(8,600*k);
+  if(!defs[id])defs[id]='<pattern id="'+id+'" width="'+L+'" height="'+L+'" patternUnits="userSpaceOnUse"><rect width="'+L+'" height="'+L+'" fill="'+stC(st)+'"/><image href="cores/'+t+'.jpg" width="'+L+'" height="'+L+'" preserveAspectRatio="none"/></pattern>';return 'url(#'+id+')'};
  var d0=draw;draw=window.draw=function(){var r=d0.apply(this,arguments);try{if(typeof PLV!=='undefined'&&PLV)return r;if(window.SOLO2D||S.env==='livre')return r;var sv=document.getElementById('svg');if(!sv||sv.querySelector('[data-stpl]'))return r;
-   var w=(window.wvCur&&wvCur())||'f',T=window.stTrechosParede(w);if(!T.length)return r;var k=K,L=OX,B=OY+(+S.H||0)*k,h='';
-   T.forEach(function(q){var st=q.st,x1=L+q.a0*k,x2=L+q.a1*k,y2=B-(+st.t||0)*k,y1=y2-Math.max((+st.e||0)*k,4),len=Math.round(q.a1-q.a0),sh=st.shape||'reta';
-    h+='<g data-stpl="'+st.id+'" pointer-events="none"><rect x="'+x1+'" y="'+y1+'" width="'+(x2-x1)+'" height="'+(y2-y1)+'" fill="'+stF(st)+'" stroke="#6f685a" stroke-width="1"/>';
-    h+='<text x="'+((x1+x2)/2)+'" y="'+(y2+14)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#6f685a">pedra '+q.n+' '+NM[q.fonte]+(sh!=='reta'&&q.fonte==='f'?' (em '+(sh==='U'?'U':'L')+')':'')+' · '+len+' × '+q.prof+'</text></g>'});
+   var w=(window.wvCur&&wvCur())||'f',T=window.stTrechosParede(w),D=window.stDetalhesParede(w);if(!T.length&&!D.length)return r;var k=K,L=OX,B=OY+(+S.H||0)*k,h='',defs={},Y=function(v){return B-v*k};
+   D.filter(function(q){return q.k!=='cuba'&&q.k!=='cook'}).forEach(function(q){h+='<rect data-stpl="'+q.st.id+'" data-stk="'+q.k+'" pointer-events="none" x="'+(L+q.a0*k)+'" y="'+Y(q.y1)+'" width="'+Math.max(1,(q.a1-q.a0)*k)+'" height="'+Math.max(1,(q.y1-q.y0)*k)+'" fill="'+texF(q.st,k,defs)+'" stroke="#6f685a" stroke-width="1"/>'});
+   T.forEach(function(q){var st=q.st,x1=L+q.a0*k,x2=L+q.a1*k,y2=Y(+st.t||0),y1=y2-Math.max((+st.e||0)*k,4),len=Math.round(q.a1-q.a0),sh=st.shape||'reta';
+    h+='<g data-stpl="'+st.id+'" pointer-events="none"><rect x="'+x1+'" y="'+y1+'" width="'+(x2-x1)+'" height="'+(y2-y1)+'" fill="'+texF(st,k,defs)+'" stroke="#6f685a" stroke-width="1"/>';
+    var topo_=(+st.t||0)+(+st.e||0);D.forEach(function(g){if(g.st===st&&g.k==='rodo'&&g.a1>q.a0&&g.a0<q.a1)topo_=Math.max(topo_,g.y1)});/* texto em cima da pedra (embaixo ficam saia, cuba e eletro) */h+='<text x="'+((x1+x2)/2)+'" y="'+(Y(topo_)-6)+'" text-anchor="middle" font-size="11" font-weight="600" fill="#6f685a">pedra '+q.n+' '+NM[q.fonte]+(sh!=='reta'&&q.fonte==='f'?' (em '+(sh==='U'?'U':'L')+')':'')+' · '+len+' × '+q.prof+' · esp. '+Math.round(+st.e||0)+'</text></g>'});
+   D.filter(function(q){return q.k==='cuba'||q.k==='cook'}).forEach(function(q){var x1=L+q.a0*k,ww=Math.max(1,(q.a1-q.a0)*k),yt=Y(q.y1),yb=Y(q.y0);
+    if(q.k==='cuba')h+='<g data-stpl="'+q.st.id+'" data-stk="cuba" pointer-events="none"><rect x="'+x1+'" y="'+(yt+1)+'" width="'+ww+'" height="'+Math.max(1,yb-yt-2)+'" fill="#fff" stroke="#6f685a"/><rect x="'+x1+'" y="'+yb+'" width="'+ww+'" height="'+(170*k)+'" fill="#8d949c" fill-opacity=".8" stroke="#555"/></g>';
+    else h+='<rect data-stpl="'+q.st.id+'" data-stk="cook" pointer-events="none" x="'+x1+'" y="'+(yt-Math.max(2,8*k))+'" width="'+ww+'" height="'+Math.max(2,8*k)+'" fill="#1d2126" stroke="#000"/>'});
+   var dh=Object.keys(defs).map(function(id){return defs[id]}).join('');if(dh)h='<defs data-stpl="defs">'+dh+'</defs>'+h;
    /* por baixo de eletro, móvel e da pedra desta parede (igual à pedra no 2D normal) */var ref=sv.querySelector('[data-ap],#mod,[data-mi],[data-st]');while(ref&&ref.parentNode!==sv)ref=ref.parentNode;if(ref)ref.insertAdjacentHTML('beforebegin',h);else sv.insertAdjacentHTML('beforeend',h)}catch(_){}return r};
 })();
 </script>
@@ -13389,7 +13426,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  /* eixo do mundo (0 x, 1 y, 2 z) de cada eixo do módulo */
  EM.eixoMundo=function(m,ax){if(ax==='y')return 1;var w=m.wing==='e'||m.wing==='d';return ax==='x'?(w?2:0):(w?0:2)};
  EM.eixoModulo=function(m,i){if(i===1)return 'y';var w=m.wing==='e'||m.wing==='d';return i===0?(w?'z':'x'):(w?'x':'z')};
- var caixas=function(){try{__build()}catch(_){}return (window.__boxes?__boxes():[]).filter(function(b){return b&&b.x1-b.x0>.3&&b.y1-b.y0>.3&&b.z1-b.z0>.3})};
+ var caixas=function(){try{__build()}catch(_){}return (window.__boxes?__boxes():[]).concat(window.mvPedraOutras?mvPedraOutras():[])/* PEDRA-L-2D: na parede do lado, a pedra das outras paredes (mesma conta do 3D) */.filter(function(b){return b&&b.x1-b.x0>.3&&b.y1-b.y0>.3&&b.z1-b.z0>.3})};
  var podeModulo=function(m){return !!m&&!m.corner&&!(window.lvIs&&lvIs(m))};
  /* ---------- desenho da vista ---------- */
  var hex=function(c){if(!c)return '#cdb98f';if(typeof c==='string')return c;return 'rgb('+R(c[0])+','+R(c[1])+','+R(c[2])+')'};
@@ -13410,10 +13447,10 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   h+='<rect x="'+room.x+'" y="'+room.y+'" width="'+room.w+'" height="'+room.h+'" fill="#f6f4ef" stroke="#8a8378" stroke-width="3" vector-effect="non-scaling-stroke"/>';
   var L=bx.map(function(b){var p=proj(b,X);p.b=b;return p});L.sort(function(a,b){return (b.d0+b.d1)-(a.d0+a.d1)});/* do mais longe pro mais perto */
   var selB=null,modB=null;
-  L.forEach(function(p){var b=p.b,mi_=parseInt(String(b.nm==null?'':b.nm),10),pedra=b.sid!=null,op=pedra?.35:Math.min(1,b.a==null?1:b.a);if(p.w<=0||p.h<=0)return;
+  L.forEach(function(p){var b=p.b,mi_=parseInt(String(b.nm==null?'':b.nm),10),pedra=b.sid!=null,op=pedra?(window.mvPedraOp?mvPedraOp(MV.v):.35):Math.min(1,b.a==null?1:b.a);if(p.w<=0||p.h<=0)return;
    var meu=b.pk&&pkSel&&b.pk===pkSel&&mi_===i0;if(meu)selB=selB?{x:Math.min(selB.x,p.x),y:Math.min(selB.y,p.y),w:Math.max(selB.x+selB.w,p.x+p.w)-Math.min(selB.x,p.x),h:Math.max(selB.y+selB.h,p.y+p.h)-Math.min(selB.y,p.y)}:{x:p.x,y:p.y,w:p.w,h:p.h};/* a peça pode vir em várias caixas (fita): junta */if(mi_===i0&&mi_>=0){modB=modB?{x0:Math.min(modB.x0,p.x),x1:Math.max(modB.x1,p.x+p.w),y0:Math.min(modB.y0,p.y),y1:Math.max(modB.y1,p.y+p.h)}:{x0:p.x,x1:p.x+p.w,y0:p.y,y1:p.y+p.h}}
    var lv=b.pk&&EM.ehLivre(String(b.pk).replace(/#[^#]*$/,''));
-   h+='<rect'+(mi_>=0?' data-mvmi="'+mi_+'"':'')+(lv?' data-mvpk="'+String(b.pk).replace(/"/g,'')+'"':'')+' x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" fill="'+hex(b.c)+'" fill-opacity="'+op+'" stroke="#3a3128" stroke-opacity="'+(op<.5?.3:.8)+'" stroke-width=".7" vector-effect="non-scaling-stroke"/>'});
+   h+='<rect'+(mi_>=0?' data-mvmi="'+mi_+'"':'')+(lv?' data-mvpk="'+String(b.pk).replace(/"/g,'')+'"':'')+' x="'+p.x+'" y="'+p.y+'" width="'+p.w+'" height="'+p.h+'" fill="'+(pedra&&window.mvPedraFill?mvPedraFill(b,hex(b.c)):hex(b.c))+'" fill-opacity="'+op+'" stroke="#3a3128" stroke-opacity="'+(op<.5?.3:.8)+'" stroke-width=".7" vector-effect="non-scaling-stroke"/>'});
   if(modB)h+='<rect x="'+modB.x0+'" y="'+modB.y0+'" width="'+(modB.x1-modB.x0)+'" height="'+(modB.y1-modB.y0)+'" fill="none" stroke="#1f6feb" stroke-width="1.4" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>';
   if(selB){/* contorno e medida pela peça cadastrada (sem a fita que o 3D desenha por fora) */var qq=EM.peca(m,MV.sel);if(qq){var pp=proj(EM.l2w(m,qq),X);selB={x:pp.x,y:pp.y,w:pp.w,h:pp.h}}var c=MV.cam||{s:1},Hh=Math.max(10*c.s,4),q2=EM.peca(m,MV.sel),i=EM.mvEixosPeca(q2);
    h+='<rect data-mvsel="m" x="'+selB.x+'" y="'+selB.y+'" width="'+selB.w+'" height="'+selB.h+'" fill="#ff9f1a" fill-opacity=".25" stroke="#ff9f1a" stroke-width="2.2" vector-effect="non-scaling-stroke" style="cursor:move"/>';
@@ -13422,7 +13459,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    h+='<text x="'+(selB.x+selB.w/2)+'" y="'+(selB.y-Hh)+'" text-anchor="middle" font-size="'+(12*c.s)+'" fill="#b54708" font-weight="700" pointer-events="none">'+R(selB.w)+' × '+R(selB.h)+' mm</text>'}
   if(EM.st&&EM.st.modo)h+='<rect id="emcapa" x="-100000" y="-100000" width="200000" height="200000" fill="#ff9f1a" fill-opacity=".04"/>';
   h+='<text data-mvnome="1" x="'+(room.x+8*(MV.cam?MV.cam.s:1))+'" y="'+(room.y+18*(MV.cam?MV.cam.s:1))+'" font-size="'+(13*(MV.cam?MV.cam.s:1))+'" fill="#5b616b" font-weight="700" pointer-events="none">Vista '+NOMES[MV.v]+' · '+({f:'parede do fundo',e:'parede esquerda',d:'parede direita'})[parede()]+'</text>';
-  sv.innerHTML=h;aplicaCam()}
+  sv.innerHTML=(window.mvPedraDefs?mvPedraDefs():'')+h;aplicaCam()}
  EM.mvRender=render;
  /* quais eixos da tela são a espessura da peça (não esticam) */
  EM.mvEixosPeca=function(q){if(!q||!S.m)return null;var X=EM.mvEixos(MV.v),t=EM.eixoMundo(S.m,q.ax);return {r:ix(X.r)===t,u:ix(X.u)===t,fw:ix(X.fw)===t}};

@@ -1800,4 +1800,5 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - Reproduzir: 98904bb passa; com só o 316d3c8 (Política B LED/espelho) o processo cai em ~28 s (WinError 10054), também isolado. Chromium (Linux) passa — não reproduzível aqui.
   - Achado comprovado: sem LED nem espelho a camada tirava `snapState()` a mais a cada envio (cortador 4→3, cliente 5→4), o que serializa o projeto inteiro e troca a vista da parede lateral (toCanon/toView).
   - Correção: conta no `S` direto; foto só com LED livre/espelho. Teste `testPoliticaBSemLedNemEspelhoSoRepassaSemFotoAMais` (falha antes).
-  - **Causa da queda no JCEF: não verificada** (hipótese). Confirmar no CI do Windows antes de dar como corrigido.
+  - **Causa real da queda (Chefe, bisseção no CI, 23/11):** não era a Política B — a árvore idêntica à 98904bb também cai, de forma intermitente, depois do toque em "⬇ Lista em CSV". A ponte em memória do `tools/bateria_editor.py` não tinha `shareFile`; CSV/DXF iam por download de blob, que derruba o JCEF do app de teste (o app real usa `shareFile`). Corrigido só na ferramenta (20c11b0); 10 testes passam no Windows.
+  - O adb9f8a fica como melhoria opcional (C), fora da candidata; não corrige a queda.

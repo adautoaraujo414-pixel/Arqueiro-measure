@@ -49,6 +49,13 @@ Status: **integrado** (está na candidata) · **pronto, não integrado** (ramo +
 | 33 | Intermitente `testPaineisDiferentesEmCadaParede…` (Chefe 06:01, 10:22) | `claude/fecha-pendencias` @ `278e643` | causa achada: id novo de painel/eletro na vista da parede só conferia a lista daquela parede (podia repetir o de outra: peça na parede errada e projeto com id duplicado — defeito real). `testIdNovoNaVistaDaParedeNaoRepeteODeOutraParede` (relógio fixo: antes falha sempre) |
 | 34 | 3D-ACABAMENTO resto: textura/UV, normais, destaque de seleção, móvel girado | `claude/fecha-pendencias` @ `d0092c4` | `test3D_CatalogoSemCaixaInvalidaSelecaoTexturaEGirado`: 591 modelos, 29 440 caixas, 0 inválida/invertida, toda peça de MDF e fita com chave; 239 MDF + 15 pedras com arquivo e medida; gaveteiro livre 45° com textura |
 | 35 | FASE 2 ponto 2 ampliado | `claude/fecha-pendencias` @ `10a0054` | `FASE2_LEVANTAMENTO_MONTADOS_2026-11-23.md`: 7 cenas, 0 sobreposição entre módulos/pedra/ilha; controle 21 |
+| 36 | Área molhada "mancha" (AM-1..4) e canto do furo da cuba sem textura (PIA-1) — pedido 16/11 14:41, especificado em `ESPEC_TEXTURAS_PIA_AREA_MOLHADA` e nunca entregue | `claude/fecha-pendencias` @ `775fcf0` | `testAreaMolhadaMesmaPedraRebaixadaComDegrauECantoDoFuroComTextura`: mesma pedra rebaixada 20 mm (antigo fica com o dele), degrau real, 0 peça de outra cor, cantos de pedra; aviso se o rebaixo não cabe. Captura antes/depois |
+| 37 | Medida livre real do vão no editor normal (transferência §6, D27) | `claude/fecha-pendencias` @ `59129eb` | `testVaoEscolhidoMostraAMedidaLivreReal` (870 × 620; 428 × 620 com divisória; parede espelhada) |
+| 38 | Textura da folha do canto e das portas na parede lateral (achado da auditoria) | `claude/fecha-pendencias` @ `f32837f` | conferido sem defeito: `pfFill` usa `woodT` (foto 7); `testPortaDoCantoEDaParedeLateralComATexturaRealDasRetas` |
+| 39 | Rodapé fora do corte em cozinha em L (exceção citada em 22/11) | `claude/fecha-pendencias` @ `eeeb002` | conferido sem defeito: `testPlanoDeCorteRodapeForaDoCorteNaCozinhaEmL` |
+| 40 | Histórico de versões com peça livre (13:59 §8) | `claude/fecha-pendencias` @ `ffb31ea` | `testHistoricoDeVersoesGuardaERestauraAPecaLivre15mm` |
+| 41 | Registros no HISTORICO_ERROS (CLAUDE.md §8.9/§11.1) | `claude/fecha-pendencias` @ `eeeb002` | seção "CODE 2 · registro consolidado" |
+| 42 | Exportação lendo o `partsOf` cru (condição do Chefe 03:05) | — | conferido: `partsOf0` só é chamado dentro do `partsOf`; não existe exportação CSV; PDF e link de corte leem o `partsOf` |
 
 ## 3. Reatribuído ou suspenso por decisão (não é pendência do Code 2 sem nova ordem)
 
@@ -64,14 +71,14 @@ Status: **integrado** (está na candidata) · **pronto, não integrado** (ramo +
 | Menu ＋ Criar e Espelhos (fase 4) | Chefe 02:14: passou ao Code 1 (M1 e espelho de parede feitos por ele) |
 | Móveis livres e câmera 2D/3D (01:09) | Chefe 02:14: área do Code 1 (FASE3 feita por ele) |
 
-## 4. Em aberto na área do Code 2 (fechando agora)
-- Textura/veio da folha fechada da porta de canto no 3D (achado da auditoria: a folha com `pf` não recebe textura de madeira) — conferir e corrigir.
-- Registros no `HISTORICO_ERROS.md` (CLAUDE.md §8.9/§11.1) de tudo acima.
-- Transferência §2.5/2.6/2.10/2.9 e §6 nunca iniciados: fita de borda 1 mm, menu Pintar, churrasqueira quadrada, textura da pia, AQRender, medida livre do vão — levantar o que já existe e o que foi especificado; implementar o que tem especificação; o resto vai para "depende do Adauto".
-- Rodapé contínuo em L (exceção citada no levantamento) e exportação CSV lendo o `partsOf` (condição do Chefe 03:05) — conferir.
-- Plano do menu/espelhos/LED (`feature/menu-criar-espelhos-led` `c22c946`) não está na candidata — documento, entra se o Chefe quiser.
+## 4. Em aberto na área do Code 2
+Nenhum item com especificação ficou aberto. Fita de borda 1 mm: decidida pelo Adauto em 18/11 (fita só em metros, não desconta no corte; `testPlanoDeCorteNaoDescontaAFitaDeBorda`). Menu Pintar: existe e tem teste (`testFitaDeTopoNaCorDasPortasContaGotasEPintarSoAFita`); a versão "compacta" (D44) é fila sem especificação (§5).
 
 ## 5. Depende do Adauto (sem isso não dá para fechar sem inventar regra)
+- Churrasqueira quadrada de embutir: especificação de 16/11 (`ESPEC_CHURRASQUEIRA_QUADRADA.md`) traz 11 perguntas abertas (texto original do pedido perdido; "quadrada" × boca retangular da foto; padrões de altura, profundidade, abertura, moldura, paredes, recuo, base; material do interior; lista e orçamento). Só a largura 900 foi dada; o resto não pode ser inventado.
+- Área molhada: rebaixo maior que a espessura da pedra (rebaixo americano é outra peça) e se o campo continua 3–20 mm (especificação §7). Hoje: guarda a medida e avisa.
+- AQRender (luz, metal e vidro realistas): protótipo fora do app; precisa aprovar a mudança do formato do vértice (checklist A33).
+- Menu Pintar compacto (D44): sem especificação/referência.
 - Junção 5 (TRAVESSÃO, `a862927` em `claude/arquemestre-travessao`): ninguém assumiu e depende do TRAV-1MM sem especificação.
 - Retomar ou não: Paredes A–F, implementação do LED (5 perguntas), Moldura/Frontal, escopo restante dos espelhos (formatos, vão, girar, acabamentos, orçamento de vidro) — hoje sem dono.
 - Junção 4 (perguntas 2–4), fontes de TRAV-1MM / CANTO-L-DENTRO / A30.

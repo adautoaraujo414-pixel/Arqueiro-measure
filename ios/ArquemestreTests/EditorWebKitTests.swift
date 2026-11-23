@@ -15947,4 +15947,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundo"] as? String, "7 (2)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// ÁREA MOLHADA e PIA-1 (pedido do Adauto 16/11 14:41 "muito feio o acabamento dessa mancha"; especificação ESPEC_TEXTURAS_PIA_AREA_MOLHADA;
+    /// fechado 23/11): a área molhada é a MESMA pedra rebaixada o dp guardado (20 mm nova; antiga fica com o dela), com degrau de verdade e cantos de
+    /// pedra; nenhuma placa de outra cor por cima; o canto do furo da cuba de embutir tem a textura da pedra; rebaixo que não cabe na pedra avisa.
+    /// Antes: rebaixo 8, sem degrau (dentro 0), 12 peças de outra cor por cima, cantos de cilindro.
+    @MainActor
+    func testAreaMolhadaMesmaPedraRebaixadaComDegrauECantoDoFuroComTextura() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* ÁREA MOLHADA (16/11 → 23/11): mesma pedra rebaixada o dp guardado, com degrau; nenhuma peça de outra cor; cantos do furo da cuba com a textura da pedra (PIA-1) */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var cena=async function(cor,cuba){loadState(initLimpo());S.W=3000;newTpl(T('Balcão da pia (cuba)')||T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));addStone();var st=S.st;if(cor)st.cor=cor;if(cuba&&!(st.items||[]).some(function(i){return i.k==='cuba'})){addItem('cuba')}st.wet=wetDefault(st);draw();open3D();await W(150);__build();var Bx=__boxes();document.getElementById('v3x').click();await W(60);return {st:st,B:Bx}};
+        var med=function(st,B){var g=wetGeo(st),y1=st.t+st.e,cx=(g.x0+g.x1)/2,dentro=B.filter(function(b){return b.g==='stc'&&!b.pf&&b.sid===st.id&&b.x0<=cx&&b.x1>=cx&&b.z0<=g.z0+5&&b.z1>=g.z0+5}).map(function(b){return Math.round(b.y1-y1)}),fora=B.filter(function(b){return b.g==='stc'&&!b.pf&&b.sid===st.id&&b.x1<=g.x0+1}).map(function(b){return Math.round(b.y1-y1)});
+         var outraCor=B.filter(function(b){return b.wet!==undefined||(b.y0>=y1-.01&&b.y1<=y1+2&&b.x0>=g.x0-3&&b.x1<=g.x1+3&&b.z0>=g.z0-3&&b.z1<=g.z1+3&&!b.ft&&b.g!=='lo'&&!b.ck&&!b.cb)}).length;
+         var cantos=B.filter(function(b){return b.wetC}).length;return 'rebaixo '+g.dp+' · dentro '+(dentro[0]!==undefined?dentro[0]:'?')+' · fora '+(fora[0]!==undefined?fora[0]:'?')+' · peças de outra cor/por cima '+outraCor+' · cantos curvos de pedra '+cantos};
+        var c1=await cena(null,true);R.verdeUbatuba=med(c1.st,c1.B);
+        var tCanto=c1.B.filter(function(b){return b.pf&&b.g==='stc'&&b.sid===c1.st.id&&!b.wetC}).length;R.cantoDoFuroComPedra=tCanto;
+        var c2=await cena('#25272b',true);R.pretoSaoGabriel=med(c2.st,c2.B);
+        var c3=await cena(STS.filter(function(c){return /branco|siena|claro/i.test(c[0])})[0][1],true);R.pedraClara=med(c3.st,c3.B);
+        /* cantos quadrados: sem peça de canto */var c4=await cena(null,true);c4.st.wet.c='reto';draw();open3D();await W(100);__build();R.quadrados=__boxes().filter(function(b){return b.wetC}).length;document.getElementById('v3x').click();await W(60);
+        /* projeto antigo com 8 mm: dado não muda, degrau de 8 */loadState(initLimpo());newTpl(T('Balcão 2 portas'));addStone();var so=S.st;so.wet={on:1,w:600,x:100,c:'curvo',r:40,dp:8};var sv=JSON.stringify(snapState().stones[0].wet);loadState(JSON.parse(JSON.stringify(snapState())));so=S.stones[0];draw();open3D();await W(100);__build();R.antigo=JSON.stringify(so.wet)===sv?med(so,__boxes()):'dado mudou';document.getElementById('v3x').click();await W(60);
+        /* rebaixo maior que a pedra: avisa */so.e=20;so.wet.dp=20;S.st=so;S.tab=6;panel();await W(60);R.aviso=!!document.querySelector('#bd [data-wetaviso]');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        for k in ["verdeUbatuba", "pretoSaoGabriel", "pedraClara"] {
+            XCTAssertEqual(o[k] as? String, "rebaixo 20 · dentro -20 · fora 0 · peças de outra cor/por cima 0 · cantos curvos de pedra 4", k)
+        }
+        XCTAssertEqual(o["cantoDoFuroComPedra"] as? Int, 4, "PIA-1: os 4 cantos do furo da cuba são pedra (textura da pedra)")
+        XCTAssertEqual(o["quadrados"] as? Int, 0, "cantos quadrados: sem peça de canto")
+        XCTAssertEqual(o["antigo"] as? String, "rebaixo 8 · dentro -8 · fora 0 · peças de outra cor/por cima 0 · cantos curvos de pedra 4", "projeto antigo: dado igual (8), degrau de 8")
+        XCTAssertEqual(o["aviso"] as? Bool, true, "rebaixo ≥ espessura da pedra: avisa")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

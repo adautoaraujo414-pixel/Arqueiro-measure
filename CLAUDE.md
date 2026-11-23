@@ -5,6 +5,13 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 > **Atenção:** este repositório é **público** no GitHub. Não grave aqui senhas, chaves, dados de clientes, preços combinados nem regras de licença.
 > O site público (GitHub Pages) é montado só com a pasta `docs/`. Documentação técnica interna fica em `engenharia/`, **nunca** em `docs/`.
 
+## 0. Desenvolvimento evolutivo (regra permanente do Adauto, 23/11/2026 · vale para toda sessão)
+- O desenvolvimento é **exclusivamente evolutivo**. Nunca desativar, remover, ocultar ou prejudicar uma função que já existe para colocar uma nova.
+- Toda implementação preserva integralmente os recursos anteriores, os projetos salvos e a compatibilidade.
+- Antes de concluir qualquer alteração, rodar os testes de regressão (bateria completa).
+- Conflito entre uma função nova e uma existente: adaptar a implementação para que **as duas** funcionem. Nunca resolver tirando a antiga.
+- Vale para todas as próximas etapas, inclusive móveis livres, editor 2D, câmera 3D e plano de corte.
+
 ## 1. Execução literal
 - Fazer exatamente o que o Adauto pediu. Não inventar funções, peças, telas, botões ou módulos.
 - O que não foi pedido continua igual: layout, menus, gestos, câmera, cálculos, catálogo, configurações padrão e outros puxadores.

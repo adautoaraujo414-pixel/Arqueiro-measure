@@ -16334,4 +16334,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["virgula"] as? Bool, true, "número com vírgula decimal")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// CHURRASQUEIRA QUADRADA DE EMBUTIR (pedido 16/11; padrões aprovados pelo Adauto 23/11: pé-direito, prof. 600, boca 680 × 520 a 900, moldura 90 a 45°
+    /// saliente 20, paredes 100, inox com grelha e barra): modelo novo no catálogo (os antigos continuam); boca vazia de verdade no 3D; moldura de 4 peças;
+    /// fora do corte de MDF; revestimento em m² e as medidas da moldura no quadro; medida que não cabe avisa e não muda nada; salvar/reabrir.
+    @MainActor
+    func testChurrasqueiraQuadradaDeEmbutirComMolduraA45() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* CHURRASQUEIRA QUADRADA (Adauto 16/11 e 23/11): modelo novo com os padrões; boca vazia de verdade; moldura 4 peças a 45°; fora do corte de MDF; m² do revestimento; antigos iguais */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));var C0=JSON.stringify(cutGroups().ord),M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.w]}));
+        var ms=apModels('churrasqueira'),i=ms.findIndex(function(q){return /^Quadrada de embutir/.test(q[0])});R.noCatalogo=i>=0;R.antigosNoCatalogo=ms.length>=20;
+        var f=apAdd('churrasqueira',i);f.x=2500;draw();R.nasce=[f.w,f.h,f.d,JSON.stringify(f.boca),f.ml,f.ms,f.ep,chKind(f)].join(' ');
+        open3D();await W(200);__build();var B=__boxes().filter(function(b){return b.fr===f.id||String(b.nm||'').indexOf('ap:'+f.id)>=0});var all=__boxes();
+        var cheio=function(x,y,z){return all.some(function(b){return x>b.x0+.5&&x<b.x1-.5&&y>b.y0+.5&&y<b.y1-.5&&z>b.z0+.5&&z<b.z1-.5&&b.a>=.95})};var g=colmoldGeo(f),zf=Math.max.apply(null,all.filter(function(b){return Math.abs(b.x0-g.ax0+90)<1}).map(function(b){return b.z1}));
+        R.bocaVazia=!cheio((g.ax0+g.ax1)/2,(g.ay0+g.ay1)/2+60,zf-150);R.moldura=all.filter(function(b){return b.z0>=zf-21&&b.z1<=zf+1&&b.y1>g.ay0-100&&b.y0<g.ay1+100&&(b.x1-b.x0)>=80}).length;document.getElementById('v3x').click();await W(60);
+        R.corteIgual=JSON.stringify(cutGroups().ord)===C0;R.moveisIguais=JSON.stringify(S.mods.map(function(m){return [m.x,m.w]}))===M0;var m2=colmoldM2(f);R.m2=m2.total+' m² · moldura '+m2.moldura.topo.join('/')+' e '+m2.moldura.lado.join('/');
+        SELAP=f.id;LAST='ap';showBox();R.quadro=!!document.querySelector('#itbox [data-cmf="boca.w"]');var inp=document.querySelector('#itbox [data-cmf="boca.w"]');inp.value=900;inp.dispatchEvent(new Event('change',{bubbles:true}));await W(40);R.avisa=/passa da largura/.test(document.getElementById('itbox').textContent)+' · boca guardada '+f.boca.w;
+        
+        var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));R.reabre=JSON.stringify(S.fr.filter(function(q){return q.k==='colmold'})[0].boca);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["noCatalogo"] as? Bool, true)
+        XCTAssertEqual(o["antigosNoCatalogo"] as? Bool, true, "modelos antigos continuam")
+        XCTAssertEqual(o["nasce"] as? String, "900 2700 600 {\"w\":680,\"h\":520,\"b\":900} 90 20 100 colmold")
+        XCTAssertEqual(o["bocaVazia"] as? Bool, true, "a boca é vão de verdade")
+        XCTAssertEqual(o["moldura"] as? Int, 4, "moldura de 4 peças")
+        XCTAssertEqual(o["corteIgual"] as? Bool, true, "fora do plano de corte de MDF")
+        XCTAssertEqual(o["moveisIguais"] as? Bool, true)
+        XCTAssertEqual(o["m2"] as? String, "5.32 m² · moldura 860/680 e 700/520")
+        XCTAssertEqual(o["quadro"] as? Bool, true)
+        XCTAssertEqual(o["avisa"] as? String, "true · boca guardada 900", "não cabe: avisa e guarda o que a pessoa digitou")
+        XCTAssertEqual(o["reabre"] as? String, "{\"w\":900,\"h\":520,\"b\":900}")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

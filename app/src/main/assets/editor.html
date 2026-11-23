@@ -5945,7 +5945,17 @@ function el3(f){var x0=f.x,x1=x0+f.w,y0=f.b||0,y1=y0+f.h,k=f.k||'t1',fin=apFin(f
  else if(k==='i1'){bx(x0+f.w*.25,x1-f.w*.25,y0+f.h*.2,y1-f.h*.2,zf,zf+4,SK)}
  else if(k==='it'){bx(x0+f.w*.25,x1-f.w*.25,y0+f.h*.58,y1-f.h*.12,zf,zf+4,SK);pin(cx,y0+f.h*.3,m*.25,zf)}}
 /* churrasqueira: pré-moldada (base com lenha, bancada, caixa de fogo com grelha, coifa e chaminé) ou unidade de embutir */
-function chur3(f,z0){var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,H=f.h,y1=y0+H,D=f.d||600,k=chKind(f),rv=chRev(f)[2],dk='#1a1612',ix='#c6ccd2',ix2='#aeb5bd',on=!!OVL[String(f.id)],xc=(x0+x1)/2,gr='#2a2b2e';
+/* ===== CHURRASQUEIRA QUADRADA DE EMBUTIR (pedido 16/11 14:34; especificação ESPEC_CHURRASQUEIRA_QUADRADA; padrões aprovados pelo Adauto 23/11):
+   coluna de alvenaria revestida com a boca aberta de verdade (vão), caixa de inox por dentro (fundo, lados, teto, piso) com grelha e barra no meio,
+   moldura de 4 peças com corte a 45° saliente na frente. Só o que está na foto e no pedido: sem chaminé, coifa, porta, bancada ou vão de lenha. */
+function colmold3(f,z0){var g=window.colmoldGeo?colmoldGeo(f):null;if(!g)return;var x0=f.x,x1=f.x+f.w,H=f.h,D=f.d||600,za=z0,zb=z0+D,rv=chRev(f)[2],ix='#c6ccd2',ix2='#aeb5bd',ep=g.ep,ax0=g.ax0,ax1=g.ax1,ay0=g.ay0,ay1=g.ay1;
+ /* corpo em volta da boca */bx(x0,ax0,0,H,za,zb,rv);bx(ax1,x1,0,H,za,zb,rv);bx(ax0,ax1,0,ay0,za,zb,rv);bx(ax0,ax1,ay1,H,za,zb,rv);bx(ax0,ax1,ay0,ay1,za,za+ep,rv);
+ /* caixa de inox (2 mm) */var t=2,zi=za+ep;bx(ax0,ax1,ay0,ay1,zi,zi+t,ix2);bx(ax0,ax0+t,ay0,ay1,zi,zb,ix);bx(ax1-t,ax1,ay0,ay1,zi,zb,ix);bx(ax0,ax1,ay1-t,ay1,zi,zb,ix2);bx(ax0,ax1,ay0,ay0+t,zi,zb,ix);
+ /* grelha embaixo e barra no meio da altura */var gy=ay0+60,n=Math.max(6,Math.round((ax1-ax0)/45));for(var i=1;i<n;i++){var xx=ax0+(ax1-ax0)*i/n;bx(xx-2,xx+2,gy,gy+4,zi+20,zb-20,'#b3bac2')}bx(ax0+t,ax1-t,gy,gy+6,zi+20,zi+28,'#9aa3ad');bx(ax0+t,ax1-t,gy,gy+6,zb-28,zb-20,'#9aa3ad');var by=(ay0+ay1)/2;bx(ax0+t,ax1-t,by-8,by+8,zb-40,zb-24,ix2);
+ /* moldura: 4 peças com corte a 45° (trapézios), saliente na frente */var L=g.l,zm0=zb,zm1=zb+g.s,cm=rv;
+ BZ(boxes,[[ax0-L,ay1+L],[ax1+L,ay1+L],[ax1,ay1],[ax0,ay1]],zm0,zm1,cm);BZ(boxes,[[ax0,ay0],[ax1,ay0],[ax1+L,ay0-L],[ax0-L,ay0-L]],zm0,zm1,cm);
+ BZ(boxes,[[ax0-L,ay0-L],[ax0,ay0],[ax0,ay1],[ax0-L,ay1+L]],zm0,zm1,cm);BZ(boxes,[[ax1,ay0],[ax1+L,ay0-L],[ax1+L,ay1+L],[ax1,ay1]],zm0,zm1,cm)}
+function chur3(f,z0){if(chKind(f)==='colmold'){colmold3(f,z0);return}/* CHURRASQUEIRA QUADRADA (Adauto 16/11 e 23/11): desenho próprio, sem coifa/chaminé/bancada da alvenaria */var x0=f.x,w=f.w,x1=x0+w,y0=f.b||0,H=f.h,y1=y0+H,D=f.d||600,k=chKind(f),rv=chRev(f)[2],dk='#1a1612',ix='#c6ccd2',ix2='#aeb5bd',on=!!OVL[String(f.id)],xc=(x0+x1)/2,gr='#2a2b2e';
  var brasa=function(xa,xb,y,za,zb){bx(xa,xb,y,y+18,za,zb,'#2b2622');if(!on)return;for(var i=0;i<14;i++){var u=(i*0.618)%1,v=(i*0.381)%1,ex=xa+(xb-xa)*(.08+u*.84),ez=za+(zb-za)*(.12+v*.76),e=bx(ex-16,ex+16,y+18,y+26,ez-14,ez+14,i%3?'#ff6a1a':'#ffb347');e.em=1}
   var gl_=bx(xa+20,xb-20,y+26,y+120,za+20,zb-30,'#ff7b2e',.18);gl_.em=1;gl_.nol=1};
  var grelha=function(xa,xb,y,za,zb){var n=Math.max(6,Math.round((xb-xa)/45));for(var i=0;i<=n;i++){var xx=xa+(xb-xa)*i/n;bx(xx-2,xx+2,y,y+4,za,zb,'#b3bac2')}bx(xa,xb,y,y+6,za,za+8,'#9aa3ad');bx(xa,xb,y,y+6,zb-8,zb,'#9aa3ad')};
@@ -7836,6 +7846,7 @@ window.CHUR=window.CHUR||[];if(!CHUR.length)[
  ['Pré-moldada com pré-coifa de vidro 74 (tipo Atacadão Lazer) · 740 × 1900 × 540',740,1900,540,{k:'alvv',rev:'preto'}],
  ['Alvenaria com coifa inox 90 (coifa tipo Elettromec) · 900 × 2250 × 600',900,2250,600,{k:'coifa',rev:'porc'}],
  ['De canto em alvenaria · medida de referência 1000 × 2300 × 1000 (ajuste a sua)',1000,2300,1000,{k:'canto',rev:'tijolo'}],
+ ['Quadrada de embutir · alvenaria com moldura 45° · 900 × pé-direito × 600 · boca 680 × 520',900,2700,600,{k:'colmold',rev:'marmore',pd:1}],
  ['De embutir a carvão CTC 70 na bancada (tipo Largrill) · 700 × 920 × 440',700,920,440,{k:'emb',emb:800}],
  ['Parrilla com manivela Eleva Lite 705 (tipo A3 Grill) · 705 × 440 × 520',705,440,520,{k:'parrilla'}],
  ['Parrilla de piso 1040PR com manivela (tipo Metávila) · 950 × 1080 × 620',950,1080,620,{k:'parrilla',b:0}],
@@ -14029,6 +14040,34 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  window.csvBaixa=function(){var nome=((typeof projTitle==='function'&&window.CUR?'':'')||'lista-de-corte').replace(/[^\w\-]+/g,'-')+'.csv',t=csvTexto(),A=window.ArqueApp;try{var p=(typeof pLoadAll==='function'?pLoadAll():[]).filter(function(x){return x.id===window.CUR})[0];if(p&&typeof projTitle==='function')nome=String(projTitle(p)).replace(/[^\wÀ-ú\-]+/g,'-').replace(/^-+|-+$/g,'')+'-lista-de-corte.csv'}catch(_){}
   if(A&&A.shareFile){A.shareFile(nome,t,'text/csv');return 'app'}try{var b=new Blob([t],{type:'text/csv;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=nome;document.body.appendChild(a);a.click();setTimeout(function(){try{a.remove();URL.revokeObjectURL(u)}catch(_){}},2000);return 'download'}catch(_){return 'erro'}};
  var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!document.getElementById('csvbtn')){var b=document.createElement('button');b.id='csvbtn';b.textContent='⬇ Lista em CSV';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var w=csvBaixa();try{toast(w==='erro'?'Não deu pra gerar o CSV':'⬇ Lista em CSV (abre no Excel)')}catch(_){}});sb.parentNode.insertBefore(b,sb)}}catch(_){}return r}}
+})();
+</script>
+<script>
+/* ===== CHURRASQUEIRA QUADRADA · geometria única (2D, 3D, quadro) e quadro de medidas. Padrões aprovados (Adauto 23/11): altura = pé-direito, prof. 600,
+   boca 680 × 520 a 900 do chão, moldura de 90 a 45° saliente 20, paredes de 100, inox com grelha e barra; fora do plano de corte de MDF; revestimento em m².
+   Medida que não cabe: avisa e não muda as outras (o desenho só limita pra caber). ===== */
+(function(){
+ window.colmoldGeo=function(f){if(!f)return null;var W=+f.w||900,H=+f.h||2700,bo=f.boca||{},bw=+bo.w||680,bh=+bo.h||520,bb=+bo.b||900,l=+f.ml||90,sm=+f.ms||20,ep=+f.ep||100,av=[];
+  if(bw+2*l>W)av.push('a moldura ('+(bw+2*l)+') passa da largura ('+W+')');if(bw>W-2*ep)av.push('a boca ('+bw+') não cabe entre as paredes de '+ep);if(bb-l<0)av.push('a moldura passa do chão');if(bb+bh+l>H)av.push('a moldura passa da altura ('+H+')');
+  var bwD=Math.min(bw,W-2*ep),bhD=Math.max(50,Math.min(bh,H-bb-10)),ax0=(+f.x||0)+(W-bwD)/2;return {ax0:ax0,ax1:ax0+bwD,ay0:(+f.b||0)+bb,ay1:(+f.b||0)+bb+bhD,bw:bw,bh:bh,bb:bb,l:l,s:sm,ep:ep,W:W,H:H,D:+f.d||600,avisos:av}};
+ window.colmoldM2=function(f){var g=colmoldGeo(f);if(!g)return null;var face=(g.W*g.H-g.bw*g.bh)/1e6,lados=2*g.D*g.H/1e6;return {face:Math.round(face*100)/100,laterais:Math.round(lados*100)/100,total:Math.round((face+lados)*100)/100,
+  moldura:{topo:[g.bw+2*g.l,g.bw],base:[g.bw+2*g.l,g.bw],lado:[g.bh+2*g.l,g.bh],largura:g.l,saliencia:g.s}}};
+ /* nasce com a altura do pé-direito e os padrões */
+ if(typeof apAdd==='function'){var a0=apAdd;apAdd=window.apAdd=function(t,mi){var it=a0.apply(this,arguments);try{if(it&&t==='churrasqueira'&&chKind(it)==='colmold'){it.k='colmold';it.h=Math.round(+S.H||2700);it.b=0;it.boca=it.boca||{w:680,h:520,b:900};it.ml=it.ml||90;it.ms=it.ms||20;it.ep=it.ep||100;if(!it.rev)it.rev='marmore';try{draw()}catch(_){}}}catch(_){}return it}}
+ /* 2D de frente: coluna, moldura com as 4 linhas de 45°, boca e grelha */
+ if(typeof churSvg==='function'){var c0=churSvg;churSvg=window.churSvg=function(x,y,w,h,nm,k,f){if(k!=='colmold')return c0.apply(this,arguments);/* o desenho da parede chama sem o item: acha pela churrasqueira com esse nome (ou usa os padrões, ex.: ícone do catálogo) */if(!f){f=(S.fr||[]).filter(function(q){return q&&q.t==='churrasqueira'&&q.nome===nm&&q.k==='colmold'})[0]||{x:0,b:0,w:900,h:2700,d:600,nome:nm,k:'colmold'}}f=Object.assign({},f,{x:0,b:0});var g=colmoldGeo(f),sc=w/(g.W||1),rv=chRev(f)[2],X=function(v){return x+(v-f.x)*sc},Y=function(v){return y+h-(v-(+f.b||0))*sc},o='';
+  o+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+rv+'" stroke="#5b616b"/>';var L=g.l,a0=X(g.ax0),a1=X(g.ax1),t0=Y(g.ay1),b0=Y(g.ay0),Ls=L*sc;
+  o+='<rect x="'+(a0-Ls)+'" y="'+(t0-Ls)+'" width="'+(a1-a0+2*Ls)+'" height="'+(b0-t0+2*Ls)+'" fill="'+rv+'" stroke="#3a3f46" stroke-width="1.2"/>';
+  [[a0-Ls,t0-Ls,a0,t0],[a1+Ls,t0-Ls,a1,t0],[a0-Ls,b0+Ls,a0,b0],[a1+Ls,b0+Ls,a1,b0]].forEach(function(q){o+='<line x1="'+q[0]+'" y1="'+q[1]+'" x2="'+q[2]+'" y2="'+q[3]+'" stroke="#3a3f46" stroke-width="1"/>'});
+  o+='<rect x="'+a0+'" y="'+t0+'" width="'+(a1-a0)+'" height="'+(b0-t0)+'" fill="#2a2b2e" stroke="#c6ccd2" stroke-width="1.5"/><line x1="'+a0+'" y1="'+((t0+b0)/2)+'" x2="'+a1+'" y2="'+((t0+b0)/2)+'" stroke="#aeb5bd" stroke-width="2"/>';
+  for(var i=1;i<8;i++){var xx=a0+(a1-a0)*i/8;o+='<line x1="'+xx+'" y1="'+(b0-60*sc)+'" x2="'+xx+'" y2="'+(b0-56*sc)+'" stroke="#b3bac2" stroke-width="1"/>'}return o}}
+ /* quadro: medidas da boca, moldura e paredes; revestimento em m² e as 4 peças da moldura */
+ var F=[['boca.w','Largura da boca (mm)'],['boca.h','Altura da boca (mm)'],['boca.b','Boca: altura do chão (mm)'],['ml','Largura da faixa da moldura (mm)'],['ms','Moldura saliente (mm)'],['ep','Paredes em volta da boca (mm)']];
+ var sb0=window.showBox;if(typeof sb0==='function'){showBox=window.showBox=function(){var r=sb0.apply(this,arguments);try{if(!(SELAP&&LAST==='ap'))return r;var f=(S.fr||[]).filter(function(a){return a.id===SELAP})[0];if(!f||f.t!=='churrasqueira'||chKind(f)!=='colmold')return r;var b=document.getElementById('itbox');if(!b||b.querySelector('[data-cmbox]'))return r;
+   var g=colmoldGeo(f),m=colmoldM2(f),get=function(k){return k.indexOf('boca.')===0?(f.boca||{})[k.slice(5)]:f[k]};
+   b.insertAdjacentHTML('beforeend','<div data-cmbox="1" style="margin-top:6px;font-size:12px">'+F.map(function(q){return '<div class="g"><label>'+q[1]+'</label><input type="number" inputmode="numeric" data-cmf="'+q[0]+'" value="'+(get(q[0])||'')+'"'+(window.RO?' disabled':'')+'></div>'}).join('')+
+    '<div class="note">Fora do plano de corte de MDF (alvenaria e revestimento). Revestimento ≈ <b>'+String(m.total).replace('.',',')+' m²</b> (face '+String(m.face).replace('.',',')+' + laterais '+String(m.laterais).replace('.',',')+') · moldura de 4 peças a 45°: em cima e embaixo '+m.moldura.topo[0]+' por fora / '+m.moldura.topo[1]+' por dentro; laterais '+m.moldura.lado[0]+' / '+m.moldura.lado[1]+' · faixa '+g.l+', saliente '+g.s+'.</div>'+(g.avisos.length?'<div class="note" style="color:#b3261e">⚠ '+g.avisos.join(' · ')+' — nada foi mudado; ajuste a medida.</div>':'')+'</div>')}catch(_){}return r}}
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.cmf||window.RO)return;var f=(S.fr||[]).filter(function(a){return a.id===SELAP})[0];if(!f)return;var v=Math.round(+t.value||0);if(!(v>=0&&v<=6000))return;try{snap()}catch(_){}var k=t.dataset.cmf;if(k.indexOf('boca.')===0){f.boca=Object.assign({},f.boca||{});f.boca[k.slice(5)]=v}else f[k]=v;try{draw();showBox()}catch(_){}try{if(window.re3)re3()}catch(_){}});
 })();
 </script>
 <script>

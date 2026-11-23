@@ -15235,4 +15235,70 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desfez"] as? String, "6× caixas 4 · faixa escura 2 · linha do cava 0 · folha do fundo em D+1 · marca 0", "desfazer volta o desenho de antes")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// FASE4_ · CPAN-DUPLO (relato do Code 2, 22/11; pré-requisito do menu ＋ Criar): "🍲 Panelas no cooktop" (data-cpan) e os botões de "Panelas e louça"
+    /// usavam o mesmo atributo data-cpan. O tratador da louça (em captura) pegava o toque do cooktop e punha um item decorativo; e a seção da louça não
+    /// aparecia quando tinha cooktop (a guarda achava o data-cpan do cooktop). A louça agora usa data-clou; nenhum botão some.
+    func testFASE4_PanelasDoCooktopEPanelasELoucaNoMenuCriarSemConflito() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão 2 portas'));draw();await W(30);S.m=S.mods[0];S.tab=6;draw();panel();await W(40);document.querySelector('#bd [data-stadd]').click();await W(80);catAct2({act:'cook',cm:'b5t'});await W(80);draw();
+        var cks=function(){var o=[];S.stones.forEach(function(st){(st.items||[]).forEach(function(it){if(it.k==='cook')o.push(it)})});return o},pan=function(){return cks().map(function(it){return it.pan?1:0}).join(',')};
+        open3D();await W(300);document.getElementById('v3add').click();await W(120);var C=document.getElementById('crp3');
+        var bt=function(re){return [].slice.call(C.querySelectorAll('button')).filter(function(b){return re.test(b.textContent)})[0]};
+        R.cooktops=String(cks().length);R.secaoLouca=String(/Panelas e louça/.test(C.textContent));R.botoesLouca=String(['＋ Panela','＋ Jogo de panelas','＋ Frigideira','＋ Pilha de pratos','＋ Pratos em pé','＋ Copos'].filter(function(s){return !!bt(new RegExp('^'+s.replace(/[+＋]/g,'.')+'$'))}).length);
+        var fr0=(S.fr||[]).length,p0=pan(),b=bt(/Panelas no cooktop/);if(b)b.click();await W(120);C=document.getElementById('crp3');
+        R.cooktopPanelas='antes '+p0+' depois '+pan()+' · itens decorativos '+fr0+'→'+(S.fr||[]).length;
+        var b2=bt(/^＋ Panela$/);var fr1=(S.fr||[]).length;if(b2)b2.click();await W(120);R.poeLouca=b2?('itens '+fr1+'→'+(S.fr||[]).length):'sem botão';
+        R.errs=String(__errs.length-e0);try{document.getElementById('v3x').click()}catch(_){}return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cooktops"] as? String, "1", "cena: balcão com pedra e cooktop")
+        XCTAssertEqual(o["secaoLouca"] as? String, "true", ""Panelas e louça" aparece mesmo com cooktop no projeto")
+        XCTAssertEqual(o["botoesLouca"] as? String, "6", "os 6 botões da louça")
+        XCTAssertEqual(o["cooktopPanelas"] as? String, "antes 0 depois 1 · itens decorativos 0→0", ""🍲 Panelas no cooktop" liga as panelas do cooktop e não põe louça")
+        XCTAssertEqual(o["poeLouca"] as? String, "itens 0→1", ""＋ Panela" põe a panela (louça)")
+        XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
+    }
+
+    /// FASE4_ · M1 menu ＋ Criar em 2×3 (Adauto 22/11, imagem engenharia/referencias/menu-criar-aprovado-2026-11-22.jpg; regra §0): Móveis | LED · Espelhos |
+    /// Pedras · Paredes | Outros. Só re-agrupa o que o #crp3 já tem (nenhum data-* sai), a 🔎 procura em tudo, trocar de categoria não refaz o 3D.
+    func testFASE4_MenuCriarSeisCategoriasNenhumaFerramentaSome() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão 2 portas'));draw();await W(30);S.m=S.mods[0];S.tab=6;draw();panel();await W(40);document.querySelector('#bd [data-stadd]').click();await W(80);catAct2({act:'cook',cm:'b5t'});await W(80);draw();
+        open3D();await W(300);
+        var nb=0,b0=window.__build;window.__build=function(){nb++;return b0.apply(this,arguments)};
+        var inv=function(C){var o={};[].forEach.call(C.querySelectorAll('*'),function(e){Object.keys(e.dataset||{}).forEach(function(k){if(/^crp/.test(k))return;o[k]=(o[k]||0)+1})});return o};
+        var vis=function(e){return e.getClientRects().length>0};
+        document.getElementById('v3add').click();await W(150);var C=document.getElementById('crp3');var i0=inv(C);
+        R.abre='abriu na '+(C.dataset.cat||'?')+' · cartões '+[].map.call(C.querySelectorAll('[data-crpgo]'),function(b){return vis(b)?b.textContent.trim():''}).filter(Boolean).join(' | ');
+        var cards=[].filter.call(C.querySelectorAll('#crpgrid [data-crpgo]'),vis).map(function(b){var r=b.getBoundingClientRect();return [Math.round(r.left),Math.round(r.top)]});var xs=cards.map(function(c){return c[0]}).filter(function(v,i,a){return a.indexOf(v)===i}),ys=cards.map(function(c){return c[1]}).filter(function(v,i,a){return a.indexOf(v)===i});R.grade=xs.length+' colunas × '+ys.length+' linhas · lido por linha '+(cards.every(function(c,i){return c[0]===xs[i%2]&&c[1]===ys[Math.floor(i/2)]}));
+        var por={};for(var c of ['moveis','led','esp','pedras','paredes','outros']){C.querySelector('#crpgrid [data-crpgo="'+c+'"]').click();await W(40);var bs=[].filter.call(C.querySelectorAll('[data-crpcat] button'),vis);por[c]=bs.length+':'+bs.slice(0,3).map(function(b){return b.textContent.trim().slice(0,16)}).join('/');C.querySelector('[data-crpgo="home"]').click();await W(30)}
+        R.categorias=['moveis','led','esp','pedras','paredes','outros'].map(function(c){return c+' '+(+por[c].split(':')[0]>0?'tem':'VAZIA')}).join(' · ');
+        /* abrir e fechar 3 vezes: nada some nem duplica */var same=true;for(var k=0;k<3;k++){C.hidden=true;document.getElementById('v3add').click();await W(120);var i1=inv(document.getElementById('crp3'));Object.keys(i0).forEach(function(q){if(i0[q]!==i1[q])same=false});Object.keys(i1).forEach(function(q){if(i0[q]!==i1[q])same=false})}
+        R.ciclos='data-* iguais em 3 ciclos '+same+' · chaves '+Object.keys(i0).length;
+        var f=C.querySelector('#crpfind');f.value='panela';f.dispatchEvent(new Event('input',{bubbles:true}));await W(40);R.busca='busca panela: '+[].filter.call(C.querySelectorAll('[data-crpcat] button'),vis).map(function(b){return b.textContent.trim().slice(0,24)}).join(' | ');
+        f.value='';f.dispatchEvent(new Event('input',{bubbles:true}));await W(30);
+        /* ferramenta funciona a 1 toque: Panelas no cooktop dentro de Pedras */C.querySelector('#crpgrid [data-crpgo="pedras"]').click();await W(30);var pc=[].filter.call(C.querySelectorAll('[data-cpan]'),vis)[0];var pan0=JSON.stringify(S.stones.map(function(s){return (s.items||[]).map(function(i){return i.pan||0})}));if(pc)pc.click();await W(80);R.umToque='cooktop pela categoria: '+(pc?'visível':'não')+' · panelas '+pan0+'→'+JSON.stringify(S.stones.map(function(s){return (s.items||[]).map(function(i){return i.pan||0})}));
+        R.semRefazer3D='reconstruções do 3D ao abrir e trocar: '+nb;
+        /* espelho: cria guarda-roupa de correr e abre a folha */C=document.getElementById('crp3');if(C.hidden)document.getElementById('v3add').click();await W(80);C=document.getElementById('crp3');C.querySelector('#crpgrid [data-crpgo]')&&window.__crp6.vai('esp');await W(30);var eb=[].filter.call(C.querySelectorAll('[data-cesp]'),vis)[0];R.espelhos='espelhos: '+(eb?eb.textContent.trim():'sem botão');if(eb)eb.click();await W(200);var sl=document.getElementById('slcfg');R.espelhoAbre='abriu folha '+!!(sl&&vis(sl))+' · espelho no quadro '+!!(sl&&/Espelho nesta folha/.test(sl.textContent));
+        R.erros='erros '+(__errs.length-e0);window.__build=b0;try{document.getElementById('v3x').click()}catch(_){}return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["abre"] as? String, "abriu na home · cartões 🪚Móveis | 💡LED | 🪞Espelhos | 🪨Pedras | 🧱Paredes | ＋Outros", "abre na grade, na ordem da imagem aprovada")
+        XCTAssertEqual(o["grade"] as? String, "2 colunas × 3 linhas · lido por linha true", "2 colunas × 3 linhas pelas posições na tela")
+        XCTAssertEqual(o["categorias"] as? String, "moveis tem · led tem · esp tem · pedras tem · paredes tem · outros tem", "toda categoria abre ferramenta de verdade (nenhuma vazia ou de enfeite)")
+        XCTAssertEqual(o["ciclos"] as? String, "data-* iguais em 3 ciclos true · chaves 34", "abrir e fechar 3 vezes não perde nem duplica ferramenta (ressalva 5 do Chefe)")
+        XCTAssertEqual(o["busca"] as? String, "busca panela: ＋ Panela | ＋ Jogo de panelas | 🍲 Panelas no cooktop", "a 🔎 acha a ferramenta em qualquer categoria")
+        XCTAssertEqual(o["umToque"] as? String, "cooktop pela categoria: visível · panelas [[0]]→[[1]]", "a ferramenta funciona a 1 toque dentro da categoria")
+        XCTAssertEqual(o["semRefazer3D"] as? String, "reconstruções do 3D ao abrir e trocar: 0", "abrir e trocar categoria não refaz o 3D")
+        XCTAssertEqual(o["espelhos"] as? String, "espelhos: ＋ Guarda-roupa com porta de correr e espelho", "Espelhos usa o espelho que o app já tem (folha de correr)")
+        XCTAssertEqual(o["espelhoAbre"] as? String, "abriu folha true · espelho no quadro true", "e abre o quadro da folha com o espelho")
+        XCTAssertEqual(o["erros"] as? String, "erros 0", "sem erro")
+    }
 }

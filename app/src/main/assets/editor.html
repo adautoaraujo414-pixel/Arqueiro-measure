@@ -12370,9 +12370,11 @@ window.hgInfo=function(m,p){try{if(!m||!p||(p.hinge!=='l'&&p.hinge!=='r'))return
    (largura entre laterais/divisórias × altura entre travessa/base), igual ao editor por vãos. Só texto no desenho, sem toque; nada muda no projeto. */
 (function(){if(typeof draw!=='function')return;var d0=draw;draw=window.draw=function(){var r=d0.apply(this,arguments);try{if((typeof PLV!=='undefined'&&PLV)||S.env==='livre')return r;var m=S.m,sv=document.getElementById('svg');if(!m||!sv||(S.mods||[]).indexOf(m)<0||m.corner||sv.querySelector('[data-vlivre]'))return r;
   var vr=vaoRanges(m),i=Math.max(0,Math.min(vr.length-1,+S.sv||0)),q=vr[i];if(!q)return r;var lw=Math.round(q[1]-q[0]),lh=Math.round(vhm(m));if(!(lw>0&&lh>0))return r;
-  var k=K,L=OX,B=OY+(+S.H||0)*k,x0=L+m.x*k,y1=B-((+m.b||0)+(+m.h||0))*k,vt=y1+vTop(m)*k,cx=x0+(q[0]+q[1])/2*k,cy=vt+Math.min(18,lh*k/2);
+  var k=K,L=OX,B=OY+(+S.H||0)*k,x0=L+m.x*k,y1=B-((+m.b||0)+(+m.h||0))*k,vt=y1+vTop(m)*k,cx=x0+(q[0]+q[1])/2*k,hv=lh*k;
   var t='vão livre '+lw+' × '+lh;if(t.length*6>(q[1]-q[0])*k+40)t=lw+' × '+lh;
-  sv.insertAdjacentHTML('beforeend','<g data-vlivre="'+i+'" pointer-events="none"><rect x="'+(cx-t.length*3.1)+'" y="'+(cy-9)+'" width="'+(t.length*6.2)+'" height="14" rx="3" fill="#fff" fill-opacity=".85"/><text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f2fd6">'+t+'</text></g>')}catch(_){}return r};
+  /* não fica em cima de outro texto (medida da cuba, rótulos): tenta em cima, no meio e embaixo do vão; se todos batem, não mostra */
+  var outros=[].map.call(sv.querySelectorAll('text'),function(x){return x.getBoundingClientRect()}).filter(function(b){return b.width>0}),bate=function(g){var a=g.getBoundingClientRect();return outros.some(function(b){return a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1})};
+  var tenta=[vt+Math.min(18,hv/2),vt+hv/2,vt+hv-12];for(var z=0;z<tenta.length;z++){var cy=tenta[z];sv.insertAdjacentHTML('beforeend','<g data-vlivre="'+i+'" pointer-events="none"><rect x="'+(cx-t.length*3.1)+'" y="'+(cy-9)+'" width="'+(t.length*6.2)+'" height="14" rx="3" fill="#fff" fill-opacity=".85"/><text x="'+cx+'" y="'+(cy+2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="#2f2fd6">'+t+'</text></g>');var g=sv.lastElementChild;if(!bate(g.querySelector('text')))break;g.remove()}}catch(_){}return r};
  window.vaoLivre=function(m,i){var vr=vaoRanges(m),q=vr[Math.max(0,Math.min(vr.length-1,+i||0))];return q?[Math.round(q[1]-q[0]),Math.round(vhm(m))]:null};
 })();
 </script>

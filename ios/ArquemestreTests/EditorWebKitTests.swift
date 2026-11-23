@@ -16195,4 +16195,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["portasIguais"] as? Bool, true, "portas e janelas voltam exatamente iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PAREDES · etapa D (Adauto 22/11 18:12): menu EDITAR PAREDE no quadro da parede do 3D — abertura, meia parede/balcão (no fundo: balcão de ponta a
+    /// ponta com peitoril 1100), remover e restaurar; campo da altura da meia parede. Móveis não mudam.
+    @MainActor
+    func testParedesEtapaDMenuEditarParedeNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var e0=__errs.length,R={};
+        /* PAREDES etapa D (Adauto 22/11 18:12): menu EDITAR PAREDE no quadro da parede do 3D: abertura, meia parede/balcão, remover, restaurar; altura da meia parede */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;S.RD=3500;draw();newTpl(T('Balcão 2 portas'));var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}));
+        open3D();await W(200);var q=function(sel){return document.querySelector('#it4 '+sel)},btns=function(){return [].map.call(document.querySelectorAll('#it4 [data-qwab],#it4 [data-qwmi],#it4 [data-qwrm],#it4 [data-qwrs]'),function(b){return b.textContent}).join(' | ')};
+        __itOpen({k:'wall',s:'F'});await W(60);R.menuFundo=btns();q('[data-qwab]').click();await W(80);R.aberturaNoFundo=S.ops.filter(function(o){return o.t==='abertura'&&(!o.wall||o.wall==='f')}).length;
+        __itOpen({k:'wall',s:'F'});await W(40);q('[data-qwmi]').click();await W(80);var bal=S.ops.filter(function(o){return o.t==='abertura'&&o.x===0&&o.w===S.W})[0];R.balcaoNoFundo=bal?('0–'+bal.w+' peitoril '+bal.b):'não';
+        __itOpen({k:'wall',s:'L'});await W(40);q('[data-qwmi]').click();await W(80);R.meiaNaEsquerda=wallCfg('L').tp+' '+wallCfg('L').mh;__itOpen({k:'wall',s:'L'});await W(40);R.campoAltura=!!q('[data-qf="wmh"]');
+        __itOpen({k:'wall',s:'L'});await W(40);q('[data-qwab]').click();await W(80);var al=S.ops.filter(function(o){return o.t==='abertura'&&o.wall==='e'})[0];R.aberturaNaEsquerda=!!al;
+        __itOpen({k:'wall',s:'R'});await W(40);q('[data-qwrm]').click();await W(80);R.direitaRemovida=wallRm('R');__itOpen({k:'wall',s:'R'});await W(40);R.menuDireitaRemovida=btns();var rs=q('[data-qwrs]');if(rs)rs.click();await W(80);R.direitaVoltou=!wallRm('R');
+        document.getElementById('v3x').click();await W(60);R.moveisIguais=JSON.stringify(S.mods.map(function(m){return [m.x,m.w,m.h,m.d,m.b]}))===M0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["menuFundo"] as? String, "＋ Abertura / balcão | ▭ Meia parede / balcão | 🗑 Remover parede")
+        XCTAssertEqual(o["aberturaNoFundo"] as? Int, 1)
+        XCTAssertEqual(o["balcaoNoFundo"] as? String, "0–4000 peitoril 1100")
+        XCTAssertEqual(o["meiaNaEsquerda"] as? String, "meia 1100")
+        XCTAssertEqual(o["campoAltura"] as? Bool, true)
+        XCTAssertEqual(o["aberturaNaEsquerda"] as? Bool, true)
+        XCTAssertEqual(o["direitaRemovida"] as? Bool, true)
+        XCTAssertEqual(o["menuDireitaRemovida"] as? String, "＋ Abertura / balcão | ▭ Meia parede / balcão | ↺ Restaurar parede")
+        XCTAssertEqual(o["direitaVoltou"] as? Bool, true)
+        XCTAssertEqual(o["moveisIguais"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -15852,4 +15852,43 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["girado"] as? String, "45° · prismas true · com textura true · fita girada recortada 0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// GEL-LAT (23/11/2026, pedido do Adauto, foto da caixa da geladeira): a lateral do armário fica só no aéreo em cima da geladeira e só o
+    /// tamponamento desce até o chão (do lado que tem tamponamento). Caixa nova leva a marca m.gl2; caixa de antes não muda sozinha: aviso com
+    /// prévia e botão "Atualizar laterais da caixa da geladeira" (desfazer volta). Antes: lateral 2485 × 700 até o chão junto com o tamponamento.
+    @MainActor
+    func testCaixaDaGeladeiraLateralSoNoAereoTamponamentoAteOChao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* GEL-LAT (23/11, Adauto): caixa da geladeira — a lateral do armário fica só no aéreo; só o tamponamento desce até o chão */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var pc=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Tamponamento (esquerdo|direito))$/.test(p.name)}).map(function(p){return p.name.replace('Tamponamento','Tamp.')+' '+p.cl+'×'+p.cw}).join(' | ')};
+        loadState(initLimpo());S.W=4000;newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.tl=true;m.tr=true;draw();
+        R.novo=pc(m)+' · gl2='+(m.gl2||0);
+        var sh=partsOf(m).filter(function(p){return /^Prateleira fixa \(em cima da geladeira\)/.test(p.name)})[0],la=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.terminaNaPrateleira=Math.abs((la.y+la.h)-(sh.y+sh.h))<0.01;
+        open3D();await W(250);__build();var B=__boxes().filter(function(b){return !b.ft&&/^0:(Lateral (esquerda|direita)|Tamponamento (esquerdo|direito))$/.test(String(b.nm))&&b.y1-b.y0>100});
+        R.no3D=['Lateral esquerda','Tamponamento esquerdo'].map(function(n){var q=B.filter(function(b){return String(b.nm)==='0:'+n});return n+' '+Math.round(Math.min.apply(null,q.map(function(b){return b.y0})))+'–'+Math.round(Math.max.apply(null,q.map(function(b){return b.y1})))}).join(' | ');document.getElementById('v3x').click();await W(100);
+        R.corte=cutLines(m).filter(function(l){return /^Lateral/.test(l.names[0])}).map(function(l){return l.qty+'× '+l.L+'×'+l.W}).join(' | ');
+        m.tr=false;draw();R.semTampDireito=pc(m);m.tr=true;draw();
+        /* caixa de antes (sem a marca): não muda sozinha; reabrir mantém; aviso com prévia; botão; desfazer volta */
+        delete m.gl2;draw();R.antigo=pc(m);loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.reaberto=pc(m);S.m=m;panel();await W(100);
+        var bx=document.getElementById('glbox');R.aviso=bx?bx.textContent.replace(/\s+/g,' ').slice(0,260):'sem';var b=document.querySelector('[data-gl2up]');if(b){b.click();await W(150)}
+        R.atualizou=pc(S.mods[0])+' · gl2='+(S.mods[0].gl2||0)+' · aviso '+(document.getElementById('glbox')?'fica':'some');document.getElementById('und').click();await W(150);R.desfez=pc(S.mods[0])+' · gl2='+(S.mods[0].gl2||0);
+        /* outros módulos altos não mudam */loadState(initLimpo());newTpl(T('Torre quente (forno + micro)')||CATS[0].it[0]);var o=S.mods[0];o.tl=true;R.outroModulo=(o.gl2||0)+' · '+pc(o).split(' | ').filter(function(x){return /^Lateral/.test(x)}).join(' | ');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "Tamp. esquerdo 2500×725 | Tamp. direito 2500×725 | Lateral esquerda 655×700 | Lateral direita 655×700 · gl2=1", "caixa nova: lateral só no aéreo (até embaixo da prateleira fixa), tamponamento até o chão")
+        XCTAssertEqual(o["no3D"] as? String, "Lateral esquerda 1830–2485 | Tamponamento esquerdo 0–2500", "3D igual à peça")
+        XCTAssertEqual(o["corte"] as? String, "2× 655×700", "plano de corte com a lateral curta")
+        XCTAssertEqual(o["semTampDireito"] as? String, "Tamp. esquerdo 2500×725 | Lateral esquerda 655×700 | Lateral direita 2485×700", "lado sem tamponamento: lateral inteira (o aéreo não fica sem apoio)")
+        XCTAssertEqual(o["antigo"] as? String, "Tamp. esquerdo 2500×725 | Tamp. direito 2500×725 | Lateral esquerda 2485×700 | Lateral direita 2485×700", "caixa de antes não muda sozinha")
+        XCTAssertEqual(o["reaberto"] as? String, "Tamp. esquerdo 2500×725 | Tamp. direito 2500×725 | Lateral esquerda 2485×700 | Lateral direita 2485×700", "reabrir não muda")
+        XCTAssertEqual(o["atualizou"] as? String, "Tamp. esquerdo 2500×725 | Tamp. direito 2500×725 | Lateral esquerda 655×700 | Lateral direita 655×700 · gl2=1 · aviso some", "botão aplica a regra nova")
+        XCTAssertEqual(o["desfez"] as? String, "Tamp. esquerdo 2500×725 | Tamp. direito 2500×725 | Lateral esquerda 2485×700 | Lateral direita 2485×700 · gl2=0", "desfazer volta como era")
+        XCTAssertEqual(o["outroModulo"] as? String, "0 · Lateral esquerda 690×560 | Lateral direita 690×560", "outros módulos não mudam")
+        XCTAssertEqual(o["terminaNaPrateleira"] as? Bool, true, "a lateral termina embaixo da prateleira fixa em cima da geladeira")
+        XCTAssertTrue((o["aviso"] as? String ?? "").contains("lateral esquerda 2485×700 → 655×700"), "aviso mostra a prévia: \(o["aviso"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

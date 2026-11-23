@@ -52,3 +52,44 @@ As imagens ficam nos anexos das conversas, não no repositório. Aqui fica o que
 ## Porta de canto em L que não cobre a lateral do fim (Adauto, 17/11)
 - **Fotos (2, da tela do app):** aéreo de canto em L visto de baixo. A folha do lado (a que fica no lado do canto) para antes da lateral do fim e deixa a borda dela à mostra. A outra folha está certa. Não gravadas no repositório (público).
 - **Pedido:** "essa porta do canto deve cobrir 5 mm do topo atrás e ficar uma folga de 4 mm para não relar a frente no 45 · essa porta em específico, a outra tá certa". Vale para os 4 cantos em L (aéreo e baixo, esquerdo e direito).
+
+## Espelhos orgânicos e LED jateado (Adauto, 23/11 13:09, 4 fotos) — ESP-ORG
+Imagens anexadas ao pedido "BIBLIOTECA DE ESPELHOS ORGÂNICOS E LED JATEADO". Prints de navegador com anúncios. Não gravadas no repositório, que é público. Analisadas em 23/11.
+
+| Foto | O que mostra | O que define |
+|---|---|---|
+| 1 | Espelho orgânico (formato de seixo) com LED traseiro, num lavabo; anúncio "Espelho Orgânico com Led 80 cm × 60 c…" | Contorno orgânico fechado e suave; halo de LED na parede, atrás do vidro |
+| 2 | Espelho orgânico vertical irregular, LED traseiro, banheiro escuro | Formato "orgânico vertical irregular" e halo coerente com a distância da parede |
+| 3 | Espelho orgânico horizontal assimétrico com LED traseiro | Formato "orgânico horizontal irregular" |
+| 4 | Espelho redondo com faixa jateada iluminada perto da borda, centro espelhado; anúncio "Espelho redondo jateado camarim luminoso" | Faixa jateada translúcida e iluminada, com o centro espelhado (modelo 1 da lista) |
+
+- **Sem escala nas fotos:** nenhuma medida foi tirada delas. As medidas vêm do pedido em texto e são editáveis.
+- **Evidência visual da comparação:** `engenharia/diagnosticos/espelhos_reais_2026-11-23/` (LEIAME e capturas).
+- **Teste:** `testEspelhosOrganicosELedJateadoBibliotecaQuadroOrcamentoEDxf`.
+- **Faixa:** `testFaixaDoEspelhoLedApareceDeLongeEEmAngulo` (ESP-FAIXA).
+
+## Portas provençais e puxador concha (Adauto, 23/11 14:40, 6 fotos)
+Imagens anexadas ao pedido "IMPLEMENTAÇÃO COMPLETA DE PORTAS PROVENÇAIS E PUXADORES CONCHA". Não gravadas no repositório, que é público. Analisadas em 23/11.
+
+| Foto | O que mostra | O que define |
+|---|---|---|
+| 1 | Balcão cinza com gavetas e portas provençais simples (quadro estreito); conchas escuras (bronze/grafite) no topo das frentes | Provençal simples (modelo A); concha na região de cima da frente, centrada nas gavetas |
+| 2 | Mesmo estilo, gaveta em cima e porta embaixo, conchas escuras centradas | Idem; quadro rente à borda da frente |
+| 3 | Três conchas meia-lua rosé, dourada e champanhe, com borda serrilhada (decorativa) | Modelo "com borda decorativa" e acabamentos rosé, dourado e dourado escovado |
+| 4 | Concha cromada com orelhas e parafusos aparentes | Modelo "com parafusos aparentes" e acabamento cromado |
+| 5 | Porta branca com quadro simples na borda e centro liso | Provençal simples com a moldura na borda |
+| 6 | Porta clássica marfim, moldura escalonada na borda, painel do meio em relevo | Provençal detalhada (modelo B) |
+
+- **Sem escala nas fotos:** nenhuma medida foi tirada delas. Larguras de régua, medidas e furação das conchas vêm do pedido em texto, são editáveis, e o DXF avisa para conferir no puxador comprado.
+- **Evidência visual da comparação:** `engenharia/diagnosticos/portas_provencal_concha_2026-11-23/` (LEIAME e capturas 3D/2D).
+
+**Prints da tela do app, também de 23/11** (horário de Brasília) (correções do Adauto, não gravados no repositório):
+- **15h21, porta com concha:** pedido de "réguas na borda direta", concha "invertida", "máxima textura" e duplicar/ímã.
+- **15h37, porta de madeira:** "até o topo em cima também".
+- **15h49, cabeçalho da peça no 3D:** "aparecer duplicar em qualquer peça".
+
+> **PENDENTE, a confirmar com o Adauto antes de homologar: orientação da concha.**
+> - Nas fotos 1, 2 e 4 a concha tem a **borda reta em cima** e a curva embaixo (a boca fica embaixo, por trás da curva).
+> - A primeira versão (057f8722) seguia isso.
+> - No print das 15h21 o Adauto disse "puxadores estão invertido, é contrário". A versão 09f18b40 passou a mostrar o **arco em cima e a borda reta embaixo**, que é a de hoje.
+> - A versão de hoje segue o pedido dele sobre o print, mas difere das fotos. Não mudar sem a confirmação dele.

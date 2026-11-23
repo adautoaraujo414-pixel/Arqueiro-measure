@@ -4562,7 +4562,7 @@ final class EditorWebKitTests: XCTestCase {
           document.querySelector('#bd [data-pxt="externo"]').click();R.volta=D(m)===R.antes;
           R.errs=__errs;return JSON.stringify(R);
           """#)
-        XCTAssertEqual(o["lista"] as? String, "cava*,facetado*,concha*,g*,gv*,perfil*,externo*,bola*,toque*,nenhum*", "todos com desenho")
+        XCTAssertEqual(o["lista"] as? String, "cava*,facetado*,concha*,g*,gv*,perfil*,externo*,bola*,passante*,toque*,nenhum*", "todos com desenho · PUXADOR PASSANTE (Adauto 23/11): +1 tipo, com desenho vetorial")
         XCTAssertEqual(o["gv"] as? String, "Porta x9 w410 cl410 cw705 G30 l | Porta x481 w410 cl410 cw705 G30 r | Puxador gola x419 w30 cl30 cw705  | Puxador gola x451 w30 cl30 cw705 ", "porta 30 mais estreita + perfil na borda que abre")
         XCTAssertEqual(o["corte"] as? [String], ["410x705 q2", "460x746 q2"], "a gola vertical vale pro projeto todo (15/11): as portas do aéreo também ficam 30 mais estreitas")
         XCTAssertEqual(o["svg"] as? Int, 4, "perfil desenhado no 2D · o puxador escolhido vale pro projeto todo (15/11): as 2 portas do balcão e as 2 do aéreo")
@@ -17119,6 +17119,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["qualquer"] as? Bool, true, "⧉ Duplicar no cabeçalho de qualquer peça (lateral)")
         XCTAssertEqual(o["copia"] as? String, "true x", "cópia da lateral: peça livre com a medida de corte dela, em pé")
         XCTAssertEqual(o["noCorte"] as? Bool, true, "a cópia entra no corte")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PUXADOR PASSANTE (Adauto 23/11): sem ferragem; a porta passa do módulo o tanto das Configurações (Puxadores): no balcão em cima, no aéreo
+    // embaixo, medido da borda do módulo; gaveteiro: só a frente da ponta passa; corte, DXF (sem furo) e orçamento (sem puxador) seguem
+    func testPuxadorPassantePortaPassaDoModuloPeloAjuste() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Gaveteiro 4 gavetas'));draw();
+        var D=function(m){return partsOf(m).filter(function(p){return /^(Porta|Frente de gaveta)$/.test(p.name)})};pxApplyAll('externo','preto');var a0=S.mods.map(D);pxApplyAll('passante','preto');var a1=S.mods.map(D);
+        R.tipo=PXT.some(function(q){return q[0]==='passante'});R.balcao=a1[0].map(function(p){return p.y+' '+(p.y+p.h)}).join('|')+' · antes '+a0[0][0].y;R.aereo=a1[1].map(function(p){return (p.y+p.h)-S.mods[1].h}).join('|');
+        R.gav=a1[2].map(function(p,i){return Math.round((p.h-a0[2][i].h)*10)/10}).join(',')+' '+/fica sem puxador/.test(a1[2][1].note);R.corte=a1[0][0].cw-a0[0][0].cw===a1[0][0].h-a0[0][0].h;
+        R.furos=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return /^Porta/.test(x.nome)}).every(function(pc){return !pc.furos.some(function(f){return /PUXADOR/.test(f.lay)})});
+        R.orc=prAuto(budget()).filter(function(r){return /^(pux|concha)$/.test(r[0])}).map(function(r){return r[3]}).join(',');
+        document.getElementById('prb').click();await W(200);var cg=document.querySelector('[data-cfggo="puxadores"]');if(cg)cg.click();await W(200);var inp=document.querySelector('[data-stdn="pasMm"]');R.ajuste=!!inp;
+        if(inp){inp.value='30';inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));await W(100);var ap=document.querySelector('[data-stdall]');if(ap)ap.click();await W(200)}R.trinta=D(S.mods[0])[0].y;try{document.getElementById('stdm').hidden=true}catch(_){}
+        S.tab=3;S.m=S.mods[0];S.sv=0;panel();await W(200);R.botao=!!document.querySelector('[data-pxt="passante"]');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["tipo"] as? Bool, true)
+        XCTAssertEqual(o["balcao"] as? String, "-20 715|-20 715 · antes 10", "balcão: a porta passa 20 acima do topo do módulo (embaixo igual)")
+        XCTAssertEqual(o["aereo"] as? String, "20|20", "aéreo: passa 20 abaixo do fim do módulo")
+        XCTAssertEqual(o["gav"] as? String, "30,0,0,0 true", "gaveteiro: só a frente de cima passa; as outras avisam")
+        XCTAssertEqual(o["corte"] as? Bool, true, "medida de corte acompanha")
+        XCTAssertEqual(o["furos"] as? Bool, true, "sem furo de puxador no DXF")
+        XCTAssertEqual(o["orc"] as? String, "0,0", "sem puxador no orçamento")
+        XCTAssertEqual(o["ajuste"] as? Bool, true, "Configurações · Puxadores: quanto passa do módulo")
+        XCTAssertEqual(o["trinta"] as? Double, -30, "mudou pra 30 mm: a porta segue")
+        XCTAssertEqual(o["botao"] as? Bool, true, "Passante na lista de puxadores da aba Portas")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

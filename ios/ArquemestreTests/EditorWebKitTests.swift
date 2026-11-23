@@ -14847,7 +14847,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["naFrenteDaPorta"] as? Bool, true, "nasce encostada na porta (superfície do ponto), sem entrar nela")
         XCTAssertEqual(o["mdf"] as? String, "15 300×300")
         XCTAssertEqual(o["pegou"] as? Bool, true)
-        XCTAssertEqual(o["andou"] as? Int, 100, "arrasta 100 mm")
+        XCTAssertEqual(o["andou"] as? Int, 99, "arrasta 100 mm · ÍMÃ (Adauto 23/11): a borda da direita da peça chegou a 1 mm da borda da porta (449) e encaixou alinhada nela")
         XCTAssertEqual(o["encostou"] as? Int, 0, "arrastou demais: para encostada na parede")
         XCTAssertEqual(o["aumentou"] as? Int, 50, "pela borda aumenta")
         XCTAssertEqual(o["exatas"] as? String, "250 · do chão 300", "medidas digitadas")

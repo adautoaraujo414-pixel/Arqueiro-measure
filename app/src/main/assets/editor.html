@@ -14772,7 +14772,7 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
   var a=perto(n.x,B.X,thr),b=perto(n.x+n.w,B.X,thr);if(a&&(!b||a.d<=b.d)){o.x=a.e;sx=a.e}else if(b){o.x=b.e-n.w;sx=b.e}
   var c=perto(n.y,B.Y,thr),d=perto(n.y+n.h,B.Y,thr);if(c&&(!d||c.d<=d.d)){o.y=c.e;sy=c.e}else if(d){o.y=d.e-n.h;sy=d.e}
   o.x=r1(o.x);o.y=r1(o.y);return {n:o,sx:sx,sy:sy}};
- var arr0=EM.arrasta;EM.arrasta=function(m,q,md,o,dx,dy){var r=arr0.apply(this,arguments);try{if(md!=='m'||!q)return r;var cur={x:q.x,y:q.y,w:q.w,h:q.h},I=emIma(m,q,cur);if(I.sx===null&&I.sy===null){window.EMIMAQ=null;return r}
+ var arr0=EM.arrasta;EM.arrasta=function(m,q,md,o,dx,dy){var r=arr0.apply(this,arguments);try{if(md!=='m'||!q)return r;var cur={x:q.x,y:q.y,w:q.w,h:q.h},I=emIma(m,q,cur);/* bateu e parou encostada naquele eixo: o encosto já é exato, o ímã não mexe (não afasta da parede nem da peça) */if(Math.abs(q.x-(o.x+Math.round(dx)))>.5){I.sx=null;I.n.x=cur.x}if(Math.abs(q.y-(o.y+Math.round(dy)))>.5){I.sy=null;I.n.y=cur.y}if(I.sx===null&&I.sy===null){window.EMIMAQ=null;return r}
    var tenta=function(n){return EM.pecaMuda(m,q,n).ok};if(I.n.x!==cur.x||I.n.y!==cur.y){if(!tenta(I.n)){/* só um eixo cabe */if(!(I.sx!==null&&tenta({x:I.n.x,y:cur.y,w:cur.w,h:cur.h}))&&I.sy!==null)tenta({x:cur.x,y:I.n.y,w:cur.w,h:cur.h})}}
    window.EMIMAQ={x:I.sx!==null&&Math.abs(q.x-I.n.x)<.05?I.sx:null,y:I.sy!==null&&Math.abs(q.y-I.n.y)<.05?I.sy:null};try{draw()}catch(_){}}catch(_){}return r};
  /* duplicar: a cópia nasce do lado (direita, esquerda, embaixo, em cima), no primeiro lugar livre */

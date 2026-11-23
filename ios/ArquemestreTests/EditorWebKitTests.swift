@@ -16008,4 +16008,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["naoGrava"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// PC-ROD em L (transferência §2.7 "rodapé só fora do plano de corte"; o levantamento de 22/11 citava a exceção do rodapé contínuo em L): numa
+    /// cozinha em L (canto + 2 balcões com rodapé contínuo) tirar todos os rodapés deixa o corte sem rodapé; só o do canto tira só os 4 do canto e o
+    /// contínuo dos balcões fica; voltar devolve igual.
+    @MainActor
+    func testPlanoDeCorteRodapeForaDoCorteNaCozinhaEmL() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var rod=function(){var L=[];sheetPlan().groups.forEach(function(g){g.sheets.forEach(function(sh){(sh.used||[]).forEach(function(u){if(/^Rodapé/.test(u.p.lab))L.push(u.p.lab.replace('Rodapé (pedestal) ','').replace('Rodapé ','')+' '+u.p.w+'×'+u.p.h)})})});return L.sort().join(' | ')||'nenhum'};
+        var R={};loadState(initLimpo());S.env='cozinha';S.W=4000;draw();mkCorner('e');newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods.forEach(function(m){m.rod=true});draw();
+        R.mods=S.mods.map(function(m){return (m.corner?'C':'B')+(rodRunOf(m)?'·run'+rodRunOf(m).idx.join(''):'')}).join(' ');R.antes=rod();
+        S.mods.forEach(function(m){rodSetCut(m,rodPks(m),false)});R.tudoFora=rod();
+        S.mods.forEach(function(m){rodSetCut(m,rodPks(m),true)});R.voltou=rod()===R.antes;
+        var C=S.mods.filter(function(m){return m.corner})[0];rodSetCut(C,rodPks(C),false);R.soCantoFora=rod();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["mods"] as? String, "C B·run12 B·run12")
+        XCTAssertEqual(o["tudoFora"] as? String, "nenhum", "todos fora: nenhum rodapé no corte (inclusive canto e contínuo)")
+        XCTAssertEqual(o["voltou"] as? Bool, true)
+        XCTAssertEqual(o["soCantoFora"] as? String, "contínuo · frente e trás 1800×100 | contínuo · frente e trás 1800×100 | lateral direito (pedestal) 450×100 | lateral esquerdo (pedestal) 450×100", "só o canto fora: o contínuo dos balcões continua")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

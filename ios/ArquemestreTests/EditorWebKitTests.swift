@@ -16632,4 +16632,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(o["quadrada"] as? Int ?? 0, 3, "churrasqueira quadrada também")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // FOTO-RESERVA (Chefe 23/11, CI iOS com "WEBP initImage failed"): pelo arque:// do app, todas as fotos do catálogo abrem (naturalWidth > 0);
+    // conta quantas abriram como .webp, quantas precisaram da reserva .jpg e quantas falharam. E a reserva funciona: .webp que não abre vira .jpg
+    func testFotosDoCatalogoAbremPeloCaminhoDoAppComReservaJpg() async throws {
+        let web = try await editor(appScheme: true)
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};PR.setupDone=1;S.mods=[];S.fr=[];S.env='cozinha';draw();window.CATALL=true;var e0=__errs.length;
+        try{catAp()}catch(_){}var ch=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var k=fotoKey(it);if(FOTOS[k]&&ch.indexOf(k)<0)ch.push(k)})});
+        /* carrega cada foto numa <img> de verdade (o mesmo caminho do cartão do catálogo), com a reserva valendo */
+        var box=document.createElement('div');box.style.cssText='position:fixed;left:-9999px;top:0;width:10px;height:10px;overflow:hidden';document.body.appendChild(box);
+        var espera=function(im){return new Promise(function(r){var fim=function(){r()};if(im.complete&&(im.naturalWidth>0)&&!/\.webp/.test(im.src)===!!im.dataset.fjpg)return r();im.addEventListener('load',function(){if(!im.dataset.fjpg||/\.jpg/.test(im.src))fim()});im.addEventListener('error',function(){setTimeout(function(){if(!/\.jpg/.test(im.src)||im.dataset.fjpg2)fim();im.dataset.fjpg2='1'},0)});setTimeout(fim,15000)})};
+        var ims=ch.map(function(k){var im=document.createElement('img');im.src='fotos/'+k+'.webp';box.appendChild(im);return im});
+        for(var i=0;i<ims.length;i+=40)await Promise.all(ims.slice(i,i+40).map(espera));await W(200);
+        var webp=0,jpg=0,falha=[];ims.forEach(function(im,i){if(im.naturalWidth>0){if(im.dataset.fjpg)jpg++;else webp++}else falha.push(ch[i])});
+        /* a reserva em si: .webp que não abre vira .jpg */var t=document.createElement('img');t.src='fotos/'+ch[0]+'.webpquebrada';box.appendChild(t);await new Promise(function(r){t.addEventListener('load',r);setTimeout(r,8000)});
+        var R={fotos:ch.length,webp:webp,reservaJpg:jpg,falharam:falha.length,quais:falha.slice(0,5).join(','),reservaFunciona:t.naturalWidth>0&&/\.jpg$/.test(t.src),errs:__errs.length-e0};box.remove();return JSON.stringify(R);
+        """#)
+        let fotos = o["fotos"] as? Int ?? 0
+        print("FOTO-RESERVA: \(fotos) fotos · webp \(o["webp"] ?? "?") · reserva jpg \(o["reservaJpg"] ?? "?") · falharam \(o["falharam"] ?? "?") \(o["quais"] ?? "")")
+        XCTAssertGreaterThan(fotos, 250, "fotos do catálogo")
+        XCTAssertEqual(o["falharam"] as? Int, 0, "toda foto do catálogo abre (webp ou reserva jpg): falharam \(o["quais"] ?? "")")
+        XCTAssertEqual((o["webp"] as? Int ?? 0) + (o["reservaJpg"] as? Int ?? 0), fotos)
+        XCTAssertEqual(o["reservaFunciona"] as? Bool, true, ".webp que não abre troca pra .jpg")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

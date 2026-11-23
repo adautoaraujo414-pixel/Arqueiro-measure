@@ -16056,4 +16056,43 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["versoesGuardadas"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// JUNÇÃO 5 · TRAVESSÃO (Adauto 17/11 e 23/11: "parafusado por cima das laterais, duas de 8, como se fosse base, mas são duas réguas só, de 8 atrás
+    /// e na frente rente"): opção por módulo no lugar da base de cima — 2 réguas de 80 (frente rente e trás); por cima das laterais (externo, padrão) ou
+    /// entre elas (interno, laterais até em cima); com o Frontal a da frente fica atrás dele e o rebaixo das laterais desce. Módulo novo e antigo sem a opção.
+    @MainActor
+    func testJuncao5TravessaoDuasReguasDe80PorCimaDasLaterais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length,R={};
+        /* JUNÇÃO 5 · TRAVESSÃO (Adauto 17/11 e 23/11): 2 réguas de 80 no lugar da base de cima — frente rente e trás; por cima das laterais (externo) ou entre elas (interno); com o Frontal a da frente fica atrás dele */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var pc=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Base superior|Travessão)/.test(p.name)}).map(function(p){return p.name.replace('Lateral ','L.').replace('Travessão ','T')+' '+p.cl+'×'+p.cw+(p.tz?' z'+p.tz.join('–'):'')}).join(' | ')};
+        var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>.5&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>.5&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>.5};
+        var aud=async function(m){open3D();await W(150);__build();var B=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0&&!b.ft&&!b.nol&&b.g!=='sh'&&b.g!=='lo'&&(b.a||0)>=.95&&/Travess|Lateral|Base|Fundo|Porta|Divis/.test(String(b.nm))&&!b.gp}),n=0;
+         for(var i=0;i<B.length;i++)for(var j=i+1;j<B.length;j++)if(B[i].pk!==B[j].pk&&(/Travessão/.test(B[i].nm)||/Travessão/.test(B[j].nm))&&ov(B[i],B[j]))n++;var tv=B.filter(function(b){return /Travessão/.test(b.nm)}).map(function(b){return String(b.nm).slice(2).replace('Travessão ','T')+' z'+Math.round(b.z1-b.z0)+' até a frente '+Math.round(B.filter(function(q){return /Lateral esquerda/.test(q.nm)}).reduce(function(a,q){return Math.max(a,q.z1)},0)-b.z1)}).join(', ');
+         document.getElementById('v3x').click();await W(60);return 'travessão entrando em peça '+n+' · '+tv};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.trav=false;draw();R.semTravessao=pc(m);var sv0=JSON.stringify(m);
+        m.tvs='ext';m.tvsD=80;draw();R.externo=pc(m);R.externo3D=await aud(m);
+        m.tvs='int';draw();R.interno=pc(m);R.interno3D=await aud(m);
+        m.tvs='ext';m.trav=true;m.travMm=70;draw();R.externoComFrontal=pc(m);R.externoComFrontal3D=await aud(m);
+        R.corte=cutLines(m).filter(function(l){return /Travess/.test(l.names[0])}).map(function(l){return l.qty+'× '+l.L+'×'+l.W}).join(' | ');
+        /* painel */S.m=m;S.tab=0;panel();await W(40);R.painel=!!document.querySelector('#tvsbox [data-tvson]:checked')+' · '+[].map.call(document.querySelectorAll('#tvsbox [data-tvsk]'),function(b){return b.textContent+(b.classList.contains('sel')?'*':'')}).join(',');
+        /* módulo de antes (sem tvs) igual; salvar e reabrir */var a0=JSON.stringify(snapState());loadState(JSON.parse(a0));R.reabre=pc(S.mods[0])===R.externoComFrontal;
+        loadState(initLimpo());newTpl(T('Balcão 2 portas'));R.novoSemOpcao=!S.mods[0].tvs;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["semTravessao"] as? String, "L.esquerda 675×560 | L.direita 675×560 | Base superior 900×560")
+        XCTAssertEqual(o["externo"] as? String, "L.esquerda 675×560 | L.direita 675×560 | T(frente) 900×80 z480–560 | T(trás) 900×80 z0–80")
+        XCTAssertEqual(o["externo3D"] as? String, "travessão entrando em peça 0 · T(frente) z80 até a frente 0, T(trás) z80 até a frente 480")
+        XCTAssertEqual(o["interno"] as? String, "L.esquerda 690×560 | L.direita 690×560 | T(frente) 870×80 z480–560 | T(trás) 870×80 z0–80")
+        XCTAssertEqual(o["interno3D"] as? String, "travessão entrando em peça 0 · T(frente) z80 até a frente 0, T(trás) z80 até a frente 480")
+        XCTAssertEqual(o["externoComFrontal"] as? String, "L.esquerda 675×560 | L.direita 675×560 | T(frente) 900×80 z465–545 | T(trás) 900×80 z0–80")
+        XCTAssertEqual(o["externoComFrontal3D"] as? String, "travessão entrando em peça 0 · T(frente) z80 até a frente 15, T(trás) z80 até a frente 480")
+        XCTAssertEqual(o["corte"] as? String, "1× 900×70 | 2× 900×80")
+        XCTAssertEqual(o["painel"] as? String, "true · Por cima das laterais*,Entre as laterais")
+        XCTAssertEqual(o["reabre"] as? Bool, true, "salvar e reabrir igual")
+        XCTAssertEqual(o["novoSemOpcao"] as? Bool, true, "módulo novo nasce sem o travessão (opção)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

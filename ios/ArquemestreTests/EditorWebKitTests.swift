@@ -17103,4 +17103,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["umToque"] as? String, "{\"0\":1}", "1 toque no puxador continua abrindo a porta")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // Adauto 23/11 (print do cabeçalho da peça): ⧉ Duplicar no cabeçalho de QUALQUER peça selecionada no 3D; a cópia vira peça livre de MDF 15
+    // com a medida de corte da original, no mesmo sentido, do lado dela (depois arrasta com o ímã); entra no corte
+    func testNo3DDuplicarQualquerPecaViraPecaLivre() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650)};var m;
+        loadState(initLimpo());S.W=2000;newTpl(T('Balcão 2 portas'));m=S.mods[0];S.m=m;draw();open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0.5,0.3,3);await W(300);__build();var lt=__boxes().filter(function(q){return q.pk==='Lateral esquerda#1'&&/^0:/.test(String(q.nm))})[0];await toque((lt.x0+lt.x1)/2,(lt.y0+lt.y1)/2,lt.z1,2);
+        var bt2=[].filter.call(document.querySelectorAll('[data-e3dup]'),function(x){return x.offsetParent})[0];R.qualquer=!!bt2;if(bt2)bt2.click();await W(200);var lp=partsOf(m).filter(function(p){return p.pk==='Lateral esquerda#1'})[0],cp=(m.pl||[])[0];R.copia=cp?(EM.corte(cp).join('x')===[Math.max(lp.cl,lp.cw),Math.min(lp.cl,lp.cw)].join('x'))+' '+cp.ax:'nada';R.noCorte=cutLines(m).some(function(l){return /livre/.test(l.names[0])});document.getElementById('v3x').click();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["qualquer"] as? Bool, true, "⧉ Duplicar no cabeçalho de qualquer peça (lateral)")
+        XCTAssertEqual(o["copia"] as? String, "true x", "cópia da lateral: peça livre com a medida de corte dela, em pé")
+        XCTAssertEqual(o["noCorte"] as? Bool, true, "a cópia entra no corte")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -1537,3 +1537,29 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Correção:** o 3D só divide quando a espessura é múltipla de 15, a mesma regra do corte (`mat%15===0`). O de 30 continua face + moldura, duas de 15.
 - **Regra (Adauto 22/11):** tamponamento só de 15, 25 (chapa única) e 30 (duas de 15). Não existe 35 (pedido de 35 cancelado pelo Adauto; nada de 35 entrou no código).
 - **Teste:** `testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo` (fd72cce, falha antes: 975..1005, entra no módulo) · correção a6712f1.
+
+## FASE3 · móvel livre: câmera, Planta, 3D e ilha (23/11/2026, branch `claude/fase3-editor-livre`, base `3b99c01`)
+- **Pedido:** Adauto, 23/11: Fase 3, editor livre (mover e girar sem afetar os outros, câmera 2D que nunca mexe móvel, 3D na hora, preservar os vínculos e a regra de nada entrar em nada).
+- **Levantamento:** o que já existia — `lv*` (Etapa B), `isl*`, `__mv3`, Planta e câmera pelo viewBox. A partir dele foram achados e **comprovados** 6 defeitos.
+- **CAM-MOVE:** na Planta, o arrasto do livre (`DG`) não olhava o `pointerId`.
+  - Efeito: um segundo dedo (pinça ou arraste da vista) movia o móvel (659 mm no teste).
+  - Correção: o segundo dedo cancela o arrasto e devolve o móvel.
+- **LV-3D-ARRASTO:** no 3D, segurar e arrastar um livre caía no arrasto de módulo de parede (`MDRG`).
+  - Efeito: mexia só no `m.x` interno (2675), e o móvel não andava.
+  - Correção: um bloco próprio leva o livre pelo chão, com `lvTenta` (colisão e ímã). O de parede fica igual.
+- **PL-FANTASMA:** o desenho de parede da Planta (`plantaSvg`, função `TF` sem o ramo `'L'`) e o `plExtrude3` desenhavam o livre também como módulo de parede (`[data-pm]`).
+  - Na Planta plana: 1 polígono no lugar antigo da parede. Na Planta em ângulo: 76 faces marcadas como de parede.
+  - Esse fantasma respondia ao arrasto de parede.
+  - Correção: a Planta plana pula o livre; em ângulo, as faces dele viram `[data-lv]`.
+- **PL-ANGULO:** o arrasto do livre na Planta em ângulo não desfazia a inclinação, e o móvel fugia do dedo. Correção: usar `px()`, a mesma conta do resto da Planta.
+- **PL-SEGURA:** segurar 2 s no livre da Planta não abria o menu, porque só procurava `[data-pm]`. Correção: aceita também `[data-lv]`.
+- **LV-ILHA:** a ilha (`S.isl`) não entrava em `solidos()`.
+  - Efeito: o livre entrava dentro da ilha, e a ilha arrastada (`IDRG`) passava por cima do livre.
+  - Correção: a ilha passa a ser sólida para o livre (colisão e ímã). A ilha para no último lugar livre.
+- **Testes:**
+  - `testFASE3_MovelLivreCameraNaoMexePlantaSemFantasmaArrastoNo3DESegurar` (0004c96, falha antes) · correção 191eb5b;
+  - `testFASE3_MovelLivreNaoEntraNaIlhaNemAIlhaNele` (f032fa5, falha antes) · correção c5862be.
+- **Não mexido:** `partsOf`, `build`/`cornerBoxes`, `snapState`/`loadState`, plano de corte.
+- **Pendente:**
+  - rotação em ângulo livre (hoje só 90°; aguarda o Adauto escolher entre 45° e qualquer ângulo);
+  - teste em aparelho real (pinça com dedos de verdade).

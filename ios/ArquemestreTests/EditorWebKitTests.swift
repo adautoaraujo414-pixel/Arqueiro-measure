@@ -689,7 +689,7 @@ final class EditorWebKitTests: XCTestCase {
             XCTAssertTrue((c["Porta"] ?? "").hasPrefix(jat), "\(st): porta pintada")
         }
         XCTAssertEqual(o["cl"] as? [String], ["c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend"], "plano de corte: tamponamentos e réguas na cor das portas pintadas")
-        XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
+        XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda"), "\(o["title"] ?? "")")
         XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod", "modIn"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
         XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
         XCTAssertTrue((o["same"] as? String ?? "").contains("já estava"), "fita já na cor das portas: avisa em vez de repetir: \(o["same"] ?? "")")
@@ -1008,7 +1008,8 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,wel:wel,car:car,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
           """#)
         XCTAssertEqual(o["dentro0"] as? Bool, true, "tomada posta em cima do módulo vai dentro do armário")
-        XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:19", "abas de tomadas/registros e de churrasqueiras")
+        // CHURRASQUEIRA QUADRADA (Adauto 23/11, 2cc652d): +1 item na aba de churrasqueiras (19 → 20)
+        XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:20", "abas de tomadas/registros e de churrasqueiras")
         XCTAssertEqual(o["chm"] as? String, "840x2350x570", "churrasqueira com a medida do fabricante")
         XCTAssertGreaterThan(o["z1"] as? Int ?? 0, 15, "tomada dentro do armário fica no fundo do módulo (não na parede)")
         XCTAssertEqual(o["z2"] as? Int, 0, "tomada na parede")
@@ -8390,9 +8391,10 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 48, "ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
+        // PAREDES C (23/11, ab9d030): + seção "Paredes do ambiente" (remover/restaurar) na aba Ambiente · JUNÇÃO 5 (23/11, a849a43): + seção "Travessão" na aba Estrutura
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 50, "PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
         // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 4 | 🎨 Cores 1 | Estrutura 8 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 9 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")
@@ -12562,22 +12564,24 @@ final class EditorWebKitTests: XCTestCase {
         var sv_=JSON.stringify(snapState());loadState(JSON.parse(sv_));draw();R.reabriu=st(S.mods[0]);
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["original"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
+        /* GEL-TAMP (Adauto 23/11, "Só o tamponamento"): caixa NOVA do catálogo nasce com m.gl3 e o tamponamento termina 100 mm acima do piso
+           (2500 − 100 = 2400; torre de 2700 → 2600). Caixa antiga (sem m.gl3) continua 2500: testTorreDaGeladeiraQueJaVirouPortaInteiraAvisaENaoMudaSozinho. */
+        XCTAssertEqual(o["original"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["abaPortas"] as? String, "gel 3 · gerais 0 · nota \"trocam a caixa toda\" false")
-        XCTAssertEqual(o["umaPorta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["duasPortas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueGeral1"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueGeral3"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueCorrer"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
+        XCTAssertEqual(o["umaPorta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["duasPortas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueGeral1"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueGeral3"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueCorrer"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["menuVao"] as? String, "gel 3 · porta inteira 0 · trocar a caixa 3")
-        XCTAssertEqual(o["menuVao1porta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["menuVao2portas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["vaoDeCimaMenor"] as? String, "gel · portas 2 471×552,471×552 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["torreMaisAlta"] as? String, "gel · portas 2 471×852,471×852 · nicho true · tamp 2700,2700")
-        XCTAssertEqual(o["lixo"] as? String, "gel · portas 1 471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["voltou"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["conferencia"] as? String, "3D porta 652 · 3D tamp 2500 · 2D porta/tamp 0.261 (peças 0.261) · corte: Porta 471×652 q2 | Tamponamento esquerdo · face 2500×725 q2")
-        XCTAssertEqual(o["reabriu"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
+        XCTAssertEqual(o["menuVao1porta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["menuVao2portas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["vaoDeCimaMenor"] as? String, "gel · portas 2 471×552,471×552 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["torreMaisAlta"] as? String, "gel · portas 2 471×852,471×852 · nicho true · tamp 2600,2600")
+        XCTAssertEqual(o["lixo"] as? String, "gel · portas 1 471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["voltou"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["conferencia"] as? String, "3D porta 652 · 3D tamp 2400 · 2D porta/tamp 0.272 (peças 0.272) · corte: Porta 471×652 q2 | Tamponamento esquerdo · face 2400×725 q2")
+        XCTAssertEqual(o["reabriu"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
     func testTorreDaGeladeiraQueJaVirouPortaInteiraAvisaENaoMudaSozinho() async throws {
@@ -12587,7 +12591,7 @@ final class EditorWebKitTests: XCTestCase {
         /* TORRE-GEL-PORTA: projeto salvo em que a caixa da geladeira já tinha virado porta inteira (como no vídeo de 16/11 às 13:34).
            Abrir não muda nada; a aba Portas avisa e o botão volta a caixa (porta só em cima, nicho e prateleira de volta, tamponamento igual). */
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.x=600;m.tl=true;m.tr=true;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.x=600;m.tl=true;m.tr=true;delete m.gl3;/* projeto salvo ANTES do GEL-TAMP (23/11): sem a marca, o tamponamento continua até o chão (2500) e não muda ao abrir */
         m.v[0].k='door';m.v[0].n=1;draw();
         var st=function(m){var P=partsOf(m),pt=P.filter(function(p){return p.name==='Porta'});return m.v[0].k+' · portas '+pt.length+(pt.length?' '+pt.map(function(p){return p.cl+'×'+p.cw}).join(','):'')+' · nicho '+P.some(function(p){return p.gelN})+' · tamp '+P.filter(function(p){return /^Tamponamento (esquerdo|direito)$/.test(p.name)}).map(function(p){return p.cl}).join(',')};
         var salvo=JSON.stringify(snapState());loadState(JSON.parse(salvo));draw();m=S.mods[0];S.m=m;S.sv=0;draw();var A_=JSON.parse(salvo).mods[0],B_=snapState().mods[0];R.abriuIgual=st(m)+' · mudou ao abrir: '+(Object.keys(Object.assign({},A_,B_)).filter(function(k){return JSON.stringify(A_[k])!==JSON.stringify(B_[k])&&!(!A_[k]&&!B_[k])/* undefined→0 não é mudança */}).map(function(k){return k+' '+JSON.stringify(A_[k])+'→'+JSON.stringify(B_[k])}).join(', ')||'nada');
@@ -16484,5 +16488,109 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v2"] as? String, "depois de encostar: espelho true · WVMIRX true", "depois de encostar o 2D continua espelhado (antes o redesenho pulava o espelho e o WVMIRX ficava velho)")
         XCTAssertEqual(o["v3"] as? String, "toque no móvel novo (onde está desenhado): escolheu ele true · ele não andou true", "tocar onde o móvel está desenhado escolhe ele, sem mexer")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    // PINTAR COMPACTO (Adauto 17/11, D44): cabeçalho fixo em 2 linhas (título + cor; peça + módulo), opções com rolagem interna,
+    // 2 colunas no tablet, "#1" fora da apresentação quando não precisa; ordem dinâmica, opções e funções iguais
+    func testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];m.v=[{k:'door',n:1,cava:true,bas:true,bd:'up',open:0}];S.m=m;draw();panel();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var jat=MAT.filter(function(c){return /jatob/i.test(c.n)})[0];pt3(true);window.PT3={c:jat.hex,n:matLabel(jat),id:jat.id,erase:false};
+          var fb=__boxes().filter(function(b){return b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(fb);
+          var q=document.getElementById('pt3q'),hd=q.querySelector('.pthd'),lines=hd?hd.children.length:0,sw=hd&&hd.querySelector('span[style*="background"]');
+          var order=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq}),grids=q.querySelectorAll('.ptg').length;
+          var cs=getComputedStyle(q),hs=hd?getComputedStyle(hd).position:'',nome=hd?hd.children[1].textContent:'',x=q.querySelector('[data-ptq="x"]').getBoundingClientRect();
+          var css=(document.getElementById('ptcss')||{}).textContent||'';
+          var pb=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(pb);q=document.getElementById('pt3q');var order2=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq});
+          q.querySelector('[data-ptq="one"]').click();var pc=JSON.stringify(m.pc||m.pcT||{});
+          pt3(false);document.getElementById('v3x').click();
+          return JSON.stringify({lines:lines,sw:!!sw,order:order,order2:order2,grids:grids,ov:cs.overflowY,mh:cs.maxHeight,hs:hs,nome:nome,xw:Math.round(x.width),css2:/grid-template-columns:1fr 1fr/.test(css)&&/min-width:700px/.test(css),pc:pc,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lines"] as? Int, 2, "cabeçalho em 2 linhas")
+        XCTAssertEqual(o["sw"] as? Bool, true, "cor escolhida no cabeçalho")
+        XCTAssertEqual(o["hs"] as? String, "sticky", "cabeçalho fixo; as opções rolam por baixo")
+        XCTAssertEqual(o["ov"] as? String, "auto", "rolagem interna")
+        XCTAssertNotEqual(o["mh"] as? String, "none", "altura limitada")
+        XCTAssertEqual(o["css2"] as? Bool, true, "2 colunas a partir de 700 px (tablet)")
+        XCTAssertGreaterThanOrEqual(o["grids"] as? Int ?? 0, 2)
+        XCTAssertFalse((o["nome"] as? String ?? "").contains("#1"), "\"#1\" fora da apresentação: \(o["nome"] ?? "")")
+        XCTAssertTrue((o["nome"] as? String ?? "").contains("Lateral esquerda"), "\(o["nome"] ?? "")")
+        XCTAssertLessThanOrEqual(o["xw"] as? Int ?? 99, 40, "✕ menor")
+        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod", "modIn"], "ordem dinâmica: tocando na fita, fita primeiro; nenhuma opção a menos")
+        XCTAssertEqual((o["order2"] as? [String])?.first, "x")
+        XCTAssertEqual((o["order2"] as? [String] ?? [])[1], "one", "tocando na peça, a peça primeiro")
+        XCTAssertTrue((o["pc"] as? String ?? "").contains("Lateral esquerda"), "a opção continua pintando: \(o["pc"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
+    }
+
+    // FITA 1 mm · CORTE × ACABADA (Adauto 17/11): o quadro da peça mostra o corte do MDF e, separado, a medida acabada com a fita;
+    // corte, plano de corte e lista não mudam (REGRA: sem desconto da fita no corte)
+    func testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];S.m=m;draw();panel();
+          var lat=partsOf(m).filter(function(q){return /^Lateral esquerda/.test(q.name)})[0],por=partsOf(m).filter(function(q){return /^Porta/.test(q.name)})[0];
+          var cut0=JSON.stringify(cutLines(m).map(function(l){return [l.L,l.W,l.qty]}));
+          var aL=fitaAcab(lat),aP=por?fitaAcab(por):null,ex=fitaAcab({name:'Lateral esquerda',cl:2000,cw:560});
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var b=__boxes().filter(function(q){return !q.ft&&q.pk===por.pk&&/^0:/.test(q.nm)})[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1);__sel3(c[0],c[1]);
+          var E=document.getElementById('e3'),fc=E&&E.querySelector('[data-fcorte]'),fa=E&&E.querySelector('[data-facab]'),txt=E?E.textContent.replace(/\s+/g,' '):'';
+          var cut1=JSON.stringify(cutLines(m).map(function(l){return [l.L,l.W,l.qty]}));
+          document.getElementById('v3x').click();
+          return JSON.stringify({aL:aL,aP:aP,ex:ex,lat:[aP.cl,aP.cw],fc:fc?fc.textContent:'',fa:fa?fa.textContent:'',txt:txt.slice(0,240),same:cut0===cut1,errs:__errs});
+          """#)
+        let ex = o["ex"] as? [String: Any] ?? [:]
+        XCTAssertEqual(ex["acw"] as? Int, 561, "MDF 560 + fita 1 numa ponta = acabada 561 nessa direção")
+        XCTAssertEqual(ex["acl"] as? Int, 2000, "sem fita no comprimento: igual ao corte")
+        XCTAssertEqual(ex["cw"] as? Int, 560, "corte continua 560")
+        let aP = o["aP"] as? [String: Any] ?? [:]
+        XCTAssertEqual((aP["acl"] as? Int ?? 0) - (aP["cl"] as? Int ?? 0), 2, "porta com fita nas 4 bordas: +2 no comprimento")
+        XCTAssertEqual((aP["acw"] as? Int ?? 0) - (aP["cw"] as? Int ?? 0), 2, "porta: +2 na largura")
+        let lat = o["lat"] as? [Int] ?? [0, 0]
+        XCTAssertEqual(o["fc"] as? String, "\(lat[0]) × \(lat[1]) mm", "quadro da porta: corte do MDF igual ao plano de corte · \(o["txt"] ?? "")")
+        XCTAssertEqual(o["fa"] as? String, "\(lat[0] + 2) × \(lat[1] + 2) mm", "quadro da porta: acabada com a fita de 1 mm nas 4 bordas · \(o["txt"] ?? "")")
+        let aL = o["aL"] as? [String: Any] ?? [:]
+        XCTAssertEqual((aL["acw"] as? Int ?? 0) - (aL["cw"] as? Int ?? 0), 1, "lateral: fita só na frente, +1 na largura")
+        XCTAssertEqual(aL["acl"] as? Int, aL["cl"] as? Int, "lateral: comprimento sem fita")
+        XCTAssertEqual(o["same"] as? Bool, true, "plano de corte não muda")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
+    }
+
+    // AQRender · Acabamento realista (Adauto 23/11): opção no ⋯ Mais do 3D, DESLIGADA por padrão; ligada muda só a aparência
+    // (mesmas caixas, mesmo corte); desligar volta exatamente ao 3D de antes; fechar e abrir o 3D continua funcionando
+    func testAcabamentoRealistaOpcaoDesligadaPorPadraoSoMudaAAparencia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];S.m=m;draw();panel();
+          var cut=function(){return JSON.stringify(S.mods.map(function(q){return cutLines(q).map(function(l){return [l.L,l.W,l.qty]})}))},c0=cut();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var nb0=__boxes().length,cv=document.getElementById('cv3');
+          var shot=function(){try{render()}catch(_){}var d=cv.toDataURL('image/png'),h=0;for(var i=0;i<d.length;i+=7)h=(h*31+d.charCodeAt(i))|0;return d.length+':'+h};
+          var b=document.getElementById('v3aq'),lab0=b?b.textContent:'',aq0=window.AQ,img0=shot();
+          b.click();await new Promise(function(r){setTimeout(r,300)});var aq1=window.AQ,err1=window.AQERR||'',img1=shot(),lab1=b.textContent,nb1=__boxes().length;
+          b.click();await new Promise(function(r){setTimeout(r,300)});var aq2=window.AQ,img2=shot();
+          b.click();document.getElementById('v3x').click();open3D();await new Promise(function(r){setTimeout(r,400)});var img3=shot(),err3=window.AQERR||'';
+          document.getElementById('v3aq').click();document.getElementById('v3x').click();
+          return JSON.stringify({has:!!b,lab0:lab0,aq0:aq0,aq1:aq1,err1:err1,lab1:lab1,aq2:aq2,ch:img0!==img1,back:img0===img2,blank:img1.split(':')[0]<3000,nb:nb0===nb1&&nb0>0,cut:c0===cut(),err3:err3,aqEnd:window.AQ,errs:__errs});
+          """#)
+        XCTAssertEqual(o["has"] as? Bool, true, "botão no ⋯ Mais do 3D")
+        XCTAssertEqual(o["lab0"] as? String, "✨ Acabamento realista")
+        XCTAssertEqual(o["aq0"] as? Int, 0, "desligado por padrão")
+        XCTAssertEqual(o["aq1"] as? Int, 1, "liga ao tocar")
+        XCTAssertEqual(o["err1"] as? String, "", "sem erro de WebGL")
+        XCTAssertEqual(o["lab1"] as? String, "✓ Acabamento realista")
+        XCTAssertEqual(o["ch"] as? Bool, true, "a imagem muda ligada")
+        XCTAssertEqual(o["blank"] as? Bool, false, "a imagem ligada não sai em branco")
+        XCTAssertEqual(o["aq2"] as? Int, 0, "desliga ao tocar de novo")
+        XCTAssertEqual(o["back"] as? Bool, true, "desligado volta exatamente ao 3D de antes")
+        XCTAssertEqual(o["nb"] as? Bool, true, "mesmas caixas")
+        XCTAssertEqual(o["cut"] as? Bool, true, "plano de corte igual")
+        XCTAssertEqual(o["err3"] as? String, "", "fechar e abrir o 3D ligado continua funcionando")
+        XCTAssertEqual(o["aqEnd"] as? Int, 0)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
 }

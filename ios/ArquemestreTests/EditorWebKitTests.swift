@@ -16593,4 +16593,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aqEnd"] as? Int, 0)
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
+
+    /* ESP-FORMAS (Adauto, 23/11/2026 · "resto dos espelhos: formatos, girar, acabamentos, orçamento de vidro"; preços em branco e ornamental depois,
+       resposta dele no mesmo dia). Espelho de parede (S.fr t:'espelho'): retangular, redondo/oval, arco; giro; prata/bronze/fumê; lapidado/bisotê; moldura. */
+    func testEspelhoFormasGiroAcabamentosMolduraEOrcamentoDeVidro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        S.stones=[];S.mods=[];S.isl=[];S.fr=[];S.room='quarto';S.env='livre';S.W=4000;S.H=2600;S.m=null;draw();var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};newTpl(T('Guarda-roupa porta de correr'));S.mods[0].x=100;draw();
+        var a=espWallAdd(0),b2=espWallAdd(0);b2.x=2600;draw();
+        var cx=function(f){__build();return __boxes().filter(function(b){return b.fr===f.id})};var sig=function(B){return B.map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].map(Math.round).join(',')+(b.pf?' pf'+b.pf.pts.length:'')}).join(' | ')};
+        R.v0='espelho de sempre: '+sig(cx(a)).slice(0,200);
+        open3D();await W(300);__itOpen({k:'fr',id:a.id});await W(100);var E=document.getElementById('it4');var bts=[].map.call(E.querySelectorAll('[data-qesp]'),function(b){return b.textContent.trim()});R.v1='botões: '+bts.join(' | ');
+        var clk=function(v){var b=E.querySelector('[data-qesp="'+v+'"]');b.click()};clk('forma|red');await W(30);E=document.getElementById('it4');clk('acab|bronze');E=document.getElementById('it4');clk('borda|bisotado');E=document.getElementById('it4');clk('mold|30');E=document.getElementById('it4');var inp=E.querySelector('[data-qespang]');inp.value='45';clk('rotok');await W(60);
+        R.v2='campos: '+[a.forma,a.acab,a.borda,a.mold,a.rot].join(',');var B=cx(a);R.v3='3D: caixas '+B.length+' · com contorno '+B.filter(function(b){return b.pf&&b.pf.pts.length>=40}).length+' · vidro '+B.filter(function(b){return b.mir}).length;
+        a.rot=0;draw();R.v4='área real do redondo 600×900: '+espArea(a).toFixed(4)+' m² (elipse π·0,3·0,45 = '+(Math.PI*0.3*0.45).toFixed(4)+') · perímetro '+espPerim(a).toFixed(3)+' m';a.rot=45;
+        document.getElementById('v3x').click();await W(80);draw();var g=document.querySelector('#svg [data-ap="'+a.id+'"] polygon');R.v5='2D: contorno '+!!g+' · pontos '+(g?g.getAttribute('points').split(' ').length:0);
+        /* orçamento */var t0=budget().tot;PR.espBronze=500;PR.espBis=40;PR.espMold=30;PR.espPrata=300;PR.espLap=10;var v=espVidros(),t1=budget().tot;R.v6='orçamento: +R$ '+(t1-t0).toFixed(2)+' = '+v.c.toFixed(2)+' · linhas '+prAuto(budget()).filter(function(r){return /^esp/.test(r[0])}).map(function(r){return r[1]+' '+r[3]+r[2]}).join(' / ');
+        PR.espBronze=0;PR.espBis=0;PR.espMold=0;PR.espPrata=0;PR.espLap=0;R.v7='preços em branco: orçamento muda '+(budget().tot!==t0)+' · no Ajustes '+['espPrata','espBronze','espFume','espLap','espBis','espMold'].filter(function(k){return PRLIST.some(function(x){return x[0]===k})}).length+' linhas';
+        var z=JSON.stringify(snapState());S.fr=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}var a2=S.fr.filter(function(f){return f.id===a.id})[0];R.v8='reaberto: '+(a2?[a2.forma,a2.acab,a2.borda,a2.mold,a2.rot].join(','):'sumiu')+' · sempre igual '+(sig(cx(S.fr.filter(function(f){return f.id===b2.id})[0])).length>0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "espelho de sempre: 1700,2300,1000,1900,0,4 | 1700,2300,1000,1008,4,4 | 1700,2300,1892,1900,4,4 | 1700,1708,1000,1900,4,4 | 2292,2300,1000,1900,4,4", "espelho sem opção nova: o mesmo desenho de antes (placa + 4 faixas lapidadas)")
+        XCTAssertEqual(o["v1"] as? String, "botões: ▭ Retangular / quadrado | ◯ Redondo / oval | ⌓ Arco | 0° | 90° | 180° | 270° | ° Girar | Prata | Bronze | Fumê | Lapidada | Bisotê | Sem moldura | Moldura 3 cm | Moldura 5 cm | ⧉ Duplicar", "quadro do espelho no 3D: formato, girar (0/90/180/270 e ângulo), acabamento, borda, moldura e duplicar")
+        XCTAssertEqual(o["v2"] as? String, "campos: red,bronze,bisotado,30,45", "as escolhas ficam no espelho")
+        XCTAssertEqual(o["v3"] as? String, "3D: caixas 3 · com contorno 3 · vidro 1", "3D com o contorno de verdade (moldura, vidro, borda)")
+        XCTAssertEqual(o["v4"] as? String, "área real do redondo 600×900: 0.4236 m² (elipse π·0,3·0,45 = 0.4241) · perímetro 2.379 m", "área e perímetro pelo contorno de verdade (não o retângulo)")
+        XCTAssertEqual(o["v5"] as? String, "2D: contorno true · pontos 72", "2D desenha o contorno")
+        XCTAssertEqual(o["v6"] as? String, "orçamento: +R$ 575.92 = 575.92 · linhas Espelho prata 0.54m² / Espelho bronze 0.424m² / Lapidação de espelho 3m / Bisotê de espelho 2.379m / Moldura de espelho 2.566m", "orçamento da vidraçaria: m² por acabamento, lapidação/bisotê e moldura por metro")
+        XCTAssertEqual(o["v7"] as? String, "preços em branco: orçamento muda false · no Ajustes 6 linhas", "preços começam em branco (R$ 0): orçamento de quem não preencheu não muda; 6 preços novos no Ajustes")
+        XCTAssertEqual(o["v8"] as? String, "reaberto: red,bronze,bisotado,30,45 · sempre igual true", "salvar e reabrir mantém tudo")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

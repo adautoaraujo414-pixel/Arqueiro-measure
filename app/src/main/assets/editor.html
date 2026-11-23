@@ -13648,6 +13648,8 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 (function(){if(typeof APM==='undefined'||APM.espelho)return;
  APM.espelho={n:'Espelho',b:1000,m:[['Espelho 60 × 90',600,900,4],['Espelho 50 × 70',500,700,4],['Espelho 80 × 120',800,1200,4],['Espelho de corpo inteiro 50 × 160',500,1600,4,{b:300}]]};
  try{if(typeof GIRO_NAO!=='undefined')GIRO_NAO=new RegExp(GIRO_NAO.source.replace(/\)\$$/,'|espelho)$'))}catch(_){}
+ /* catálogo: todo item de lá tem foto (regra do catálogo); o espelho de parede entra pelo ＋ Criar · Espelhos, não pelo catálogo */
+ if(typeof catAp==='function'){var catAp_esp=catAp;catAp=function(){var r=catAp_esp.apply(this,arguments);try{CATS.forEach(function(c){if(c&&c.it)c.it=c.it.filter(function(q){return !(q&&q.ap==='espelho')})})}catch(_){}return r};window.catAp=catAp;try{catAp()}catch(_){}}
  /* lugar inicial: no meio da parede, na altura do modelo, sem passar do teto */
  var apA_esp=apAdd;apAdd=function(t,mi){var it=apA_esp.apply(this,arguments);if(t!=='espelho'||!it)return it;var H=+S.H||2600;delete it.fin;it.y=0;it.x=Math.max(0,Math.round(((+S.W||0)-it.w)/2));it.b=Math.max(0,Math.min(H-it.h,+it.b||0));return it};
  /* 2D: o mesmo desenho do espelho da folha (borda e reflexo) */

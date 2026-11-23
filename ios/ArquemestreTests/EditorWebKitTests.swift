@@ -16789,4 +16789,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lateral"] as? Bool, true, "parede lateral")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ESPELHO-REAL nas paredes laterais (auditoria do Code 1, ponto 9 do Adauto): espelho na parede esquerda/direita, também com a parede
+    // em ângulo (75°), tem reflexo planar de verdade, com a normal da parede apontando pra dentro da sala
+    func testEspelhoNaParedeLateralEmAnguloTemReflexo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var caso=async function(wall,ang,yaw){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();newTpl(T('Balcão 2 portas'));if(ang)wallSet(wall==='e'?'L':'R','a',ang);var g=espWallAdd(0);g.wall=wall;g.x=1200;g.w=900;g.h=1200;g.b=900;draw();open3D();await W(400);__cam(yaw,.05,1.0);await W(100);__cam(yaw,.05,1.0);
+          var ks=Object.keys(MIRS).filter(function(k){return MIRS[k].n>0}),o=ks.map(function(k){var m=MIRS[k];return (m.on?'reflete':'sem reflexo')+' N'+m.N.map(function(v){return Math.round(v*100)/100}).join(',')}).join(' | ');document.getElementById('v3x').click();await W(60);return o};
+        R.esquerda=await caso('e',0,-.5);R.direita=await caso('d',0,.5);R.esquerda75=await caso('e',75,-.5);R.err=window.MIRERR||'';R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["esquerda"] as? String, "reflete N1,0,0", "parede da esquerda: normal +x, com reflexo")
+        XCTAssertEqual(o["direita"] as? String, "reflete N-1,0,0", "parede da direita: normal −x, com reflexo")
+        XCTAssertEqual(o["esquerda75"] as? String, "reflete N0.97,0,-0.26", "parede da esquerda em 75°: normal da própria parede, com reflexo")
+        XCTAssertEqual(o["err"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

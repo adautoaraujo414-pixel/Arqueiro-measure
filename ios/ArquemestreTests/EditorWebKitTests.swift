@@ -6051,7 +6051,7 @@ final class EditorWebKitTests: XCTestCase {
         draw();open3D();await W(400);__cam(0.6,0.35,1.6);await W(100);
         var cv=document.getElementById('cv3'),bb=function(){var o=__boxes().filter(function(b){return /^0:Corte do (forno|micro-ondas)/.test(String(b.nm))}),q={x0:1e9,x1:-1e9,y0:1e9,y1:-1e9,z1:-1e9,n:o.length,k:o.length?'mo0|'+o[0].vi+(/forno/.test(o[0].nm)?'':'m'):''};o.forEach(function(b){q.x0=Math.min(q.x0,b.x0);q.x1=Math.max(q.x1,b.x1);q.y0=Math.min(q.y0,b.y0);q.y1=Math.max(q.y1,b.y1);q.z1=Math.max(q.z1,b.z1)});return q};
         var ids=Object.keys(TWM).filter(function(k){return !TWM[k].old});R.total=ids.length;R.nao=[];
-        for(var i=0;i<ids.length;i++){m.rt.c[1].el={mdl:ids[i],fr:(i%2?'nicho':'rec'),ox:0,oy:0};draw();re3();var q=bb();if(!q.n){R.nao.push(ids[i]+' sem aparelho');continue}var p=org3api.proj([(q.x0+q.x1)/2,(q.y0+q.y1)/2,q.z1]),a0=ele3api.ang(q.k);org3api.one(p[0],p[1]);await W(220);if(ele3api.ang(q.k)===a0)R.nao.push(ids[i]);else{ele3api.toggle(q.k);await W(60)}}
+        for(var i=0;i<ids.length;i++){m.rt.c[1].el={mdl:ids[i],fr:(i%2?'nicho':'rec'),ox:0,oy:0};draw();re3();var q=bb();if(!q.n){R.nao.push(ids[i]+' sem aparelho');continue}/* espera o anterior terminar de FECHAR antes de tocar (Chefe/Code 1, 23/11: com 60 ms o toque caía no meio da animação e, com a máquina carregada, fechar + toque se anulavam: intermitente do teste, não do app) */for(var w_=0;w_<30&&ele3api.ang(q.k)>0;w_++)await W(100);var p=org3api.proj([(q.x0+q.x1)/2,(q.y0+q.y1)/2,q.z1]),a0=ele3api.ang(q.k);org3api.one(p[0],p[1]);for(var w2=0;w2<30&&ele3api.ang(q.k)===a0;w2++)await W(100);if(a0!==0||ele3api.ang(q.k)<=a0)R.nao.push(ids[i]+(a0!==0?' (não fechou antes)':''));else{ele3api.toggle(q.k)}}
         /* toque de verdade na tela, na beirada esquerda (em cima da frente fixa) */
         m.rt.c[1].el={mdl:'f_el80',fr:'rec',ox:0,oy:0};draw();re3();await W(700);var fr_=__boxes().filter(function(b){return /^0:Frente com recorte do forno/.test(String(b.nm))});R.semEmenda=fr_.filter(function(b){return !b.nol}).length+' '+fr_.filter(function(b){return b.rec1}).length+' '+fr_.filter(function(b){return b.recLn}).length;var q=bb(),p=org3api.proj([q.x0+(q.x1-q.x0)*.04,(q.y0+q.y1)/2,q.z1]),r=cv.getBoundingClientRect(),a0=ele3api.ang(q.k);
         ['pointerdown','pointerup'].forEach(function(n){cv.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:5,pointerType:'touch',isPrimary:true,clientX:r.left+p[0],clientY:r.top+p[1],buttons:n==='pointerup'?0:1}))});await W(300);for(var t_=0;t_<24&&ele3api.ang(q.k)===a0;t_++)await W(200);R.beirada=ele3api.ang(q.k)!==a0;
@@ -15335,7 +15335,7 @@ final class EditorWebKitTests: XCTestCase {
         a=await cena();PLV=false;draw();open3D();await W(300);__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
         var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
         var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf('1:')!==0)return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var pp=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc3=cv.getBoundingClientRect(),cx=rc3.left+pp[0],cy=rc3.top+pp[1];p0=pos(a);
-        ev('pointerdown',cx,cy);await W(420);ev('pointermove',cx+14,cy-14,cv);for(s=1;s<=10;s++)ev('pointermove',cx+6*s,cy-12*s,M_);ev('pointerup',cx+60,cy-120,M_);await W(80);R.arrasto3D='3D segurar e arrastar: antes '+p0+' · depois '+pos(a)+' · x '+a.x;
+        ev('pointerdown',cx,cy);await W(420);ev('pointermove',cx+14,cy-14,cv);for(s=1;s<=10;s++)ev('pointermove',cx+6*s,cy-12*s,M_);ev('pointerup',cx+60,cy-120,M_);await W(80);R.arrasto3D='3D segurar e arrastar: andou '+(pos(a)!==p0)+' · b '+a.b+' · rot '+(+a.rot||0)+' · x '+a.x;
         try{document.getElementById('v3x').click()}catch(_){}await W(80);
         /* fantasma na Planta (plana e em ângulo) */
         a=await cena();PLV=true;PLANG=false;draw();await W(80);R.fantasmaPlana='plana: fantasma '+document.querySelectorAll('#svg [data-pm="1"]').length+' · livre '+document.querySelectorAll('#svg [data-lv="1"]').length;
@@ -15343,7 +15343,7 @@ final class EditorWebKitTests: XCTestCase {
         /* Planta em ângulo: arrastando, o móvel continua embaixo do dedo */
         var fs=[].slice.call(document.querySelectorAll('#svg [data-lv="1"]')),big=fs.map(function(e){var r=e.getBoundingClientRect();return [e,r.width*r.height,r]}).sort(function(p,q){return q[1]-p[1]})[0];
         var rr=big[2],gx=rr.left+rr.width/2,gy=rr.top+rr.height/2,el0=document.elementFromPoint(gx,gy);if(!(el0&&el0.closest&&el0.closest('[data-lv="1"]'))){var ok_=0;for(var tx=rr.left+3;tx<rr.right&&!ok_;tx+=4)for(var ty=rr.top+3;ty<rr.bottom&&!ok_;ty+=4){var q_=document.elementFromPoint(tx,ty);if(q_&&q_.closest&&q_.closest('[data-lv="1"]')){gx=tx;gy=ty;ok_=1}}}
-        p0=pos(a);pe('pointerdown',document.elementFromPoint(gx,gy),gx,gy,1);for(s=1;s<=8;s++)pe('pointermove',sv,gx+10*s,gy+5*s,1);pe('pointerup',sv,gx+80,gy+40,1);await W(120);var e1=document.elementFromPoint(gx+80,gy+40);
+        /* o arrasto é proporcional ao móvel na tela (40% da largura): na tela do iPhone 80 px eram 1620 mm e o móvel parava, certo, na parede direita */var dX=Math.max(8,rr.width*0.4),dY=dX/2;p0=pos(a);pe('pointerdown',document.elementFromPoint(gx,gy),gx,gy,1);for(s=1;s<=8;s++)pe('pointermove',sv,gx+dX*s/8,gy+dY*s/8,1);pe('pointerup',sv,gx+dX,gy+dY,1);await W(120);var e1=document.elementFromPoint(gx+dX,gy+dY);
         R.arrastoAngulo='ângulo: andou '+(pos(a)!==p0)+' · embaixo do dedo '+!!(e1&&e1.closest&&e1.closest('[data-lv="1"]'));
         /* segurar 2 s no livre da Planta abre o menu do vão */
         a=await cena();PLV=true;PLANG=false;draw();await W(80);g=document.querySelector('#svg [data-lv="1"] rect');r=g.getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2;pe('pointerdown',g,x,y,1);await W(2200);var mn=document.querySelector('[data-vk]');R.segurar2s='segurar 2 s: menu '+!!(mn&&mn.getClientRects().length)+' · lugar '+(pos(a));pe('pointerup',g,x,y,1);await W(80);try{if(window.vmenuClose)vmenuClose()}catch(_){}
@@ -15352,7 +15352,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["planta"] as? String, "planta ok", "o móvel livre aparece na Planta")
         XCTAssertEqual(o["pincaNaPlanta"] as? String, "pinça na Planta: antes 1650,1470 · b 0 · rot 0 · depois 1650,1470 · b 0 · rot 0", "pinça/arraste da vista com dois dedos não mexe o móvel (antes andava 659 mm)")
         XCTAssertEqual(o["umDedo"] as? String, "um dedo: antes 1650,1470 · b 0 · rot 0 · depois 1950,1470 · b 0 · rot 0", "um dedo continua arrastando o móvel livre (+300 mm)")
-        XCTAssertEqual(o["arrasto3D"] as? String, "3D segurar e arrastar: antes 1650,1470 · b 0 · rot 0 · depois 2371,103 · b 0 · rot 0 · x 905", "no 3D, segurar e arrastar leva o livre pelo chão; m.x interno não muda (antes ia a 2675 e o móvel não andava)")
+        /* sem o ponto exato de chegada (Chefe 23/11: muda com a tela do iPhone/iPad); confere que andou pelo chão sem mudar altura, giro nem o m.x interno */
+        XCTAssertEqual(o["arrasto3D"] as? String, "3D segurar e arrastar: andou true · b 0 · rot 0 · x 905", "no 3D, segurar e arrastar leva o livre pelo chão; m.x interno não muda (antes ia a 2675 e o móvel não andava)")
         XCTAssertEqual(o["fantasmaPlana"] as? String, "plana: fantasma 0 · livre 1", "Planta: o livre não aparece de novo no lugar antigo da parede")
         XCTAssertEqual(o["fantasmaAngulo"] as? String, "ângulo: fantasma 0 · livre true", "Planta em ângulo: faces do livre são do arrasto de livre")
         XCTAssertEqual(o["arrastoAngulo"] as? String, "ângulo: andou true · embaixo do dedo true", "Planta em ângulo: o livre segue o dedo")
@@ -15677,17 +15678,18 @@ final class EditorWebKitTests: XCTestCase {
         /* 1. forma: direção das arestas na tela do móvel girado × do módulo da parede (eixos da sala) */
         var dirs=function(sel){var A=[];[].forEach.call(document.querySelectorAll(sel),function(pg){var P=pg.getAttribute('points').trim().split(/\s+/).map(function(s){return s.split(',').map(Number)});for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length],dx=q[0]-p[0],dy=q[1]-p[1];if(Math.hypot(dx,dy)<3||Math.abs(dx)<.5)continue;var g=Math.round(Math.atan2(dy,dx)*180/Math.PI);g=((g%180)+180)%180;A.push(g)}});return A};
         var ax=dirs('#plx [data-pm="0"]'),ax0={};ax.forEach(function(g){ax0[g]=1});var lv=dirs('#plx [data-lv="1"]'),noEixo=lv.filter(function(g){return ax0[g]||ax0[g-1]||ax0[g+1]}).length;
-        R.v0='arestas do girado '+lv.length+' · alinhadas com os eixos da sala '+noEixo;
+        R.v0='arestas do girado '+(lv.length>0?'desenhadas':'nenhuma')+' · alinhadas com os eixos da sala '+noEixo;
         /* 2. ordem: frente de gaveta mais perto de quem olha é desenhada depois da lateral */
         var L=window.__plL||[],ix=function(re){var r=[];L.forEach(function(it,i){if(it.mi===1&&re.test(String(it.b.pk||'')))r.push(i)});return r},fr=ix(/^Frente/i),lt=ix(/^Lateral (esquerda|direita)#/i);
         var v=[window.PLAM.b,window.PLAM.d],c=function(i){var b=L[i].b,P=b.gp?b.gp.a:[[b.x0,0,b.z0],[b.x1,0,b.z1]],x=0,z=0;P.forEach(function(q){x+=q[0]/P.length;z+=q[2]/P.length});return x*v[0]+z*v[1]};
         var cob=function(i,j){var A=L[i],B=L[j];return A.s0<B.s1-1&&B.s0<A.s1-1&&A.t0<B.t1-1&&B.t0<A.t1-1};var ex=[];var erradas=0,pares=0;fr.forEach(function(f){lt.forEach(function(l){if(!cob(f,l))return;pares++;if(c(f)>c(l)&&f<l){erradas++;ex.push(L[f].b.pk+' < '+L[l].b.pk)}})});R.v1='frentes '+fr.length+' · laterais '+lt.length+' · pares que se cobrem '+pares+' · frente atrás da lateral '+erradas;
-        var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}S.m=null;draw();await W(300);var lv2=dirs('#plx [data-lv="1"]');R.v3='reaberto: arestas '+lv2.length+' · alinhadas '+lv2.filter(function(g){return ax0[g]||ax0[g-1]||ax0[g+1]}).length;
+        var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}S.m=null;draw();await W(300);var lv2=dirs('#plx [data-lv="1"]');R.v3='reaberto: mesmas arestas '+(lv2.length===lv.length)+' · alinhadas '+lv2.filter(function(g){return ax0[g]||ax0[g-1]||ax0[g+1]}).length;
         PLV=false;PLANG=false;draw();R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["v0"] as? String, "arestas do girado 274 · alinhadas com os eixos da sala 0", "o móvel a 45° é desenhado girado de verdade (nenhuma face na caixa reta em volta)")
+        /* sem contar arestas (Chefe 23/11: a contagem depende de quantas caixas o 3D gera, mudou com a auditoria do 3D do Code 2); a conferência é nenhuma aresta na caixa reta */
+        XCTAssertEqual(o["v0"] as? String, "arestas do girado desenhadas · alinhadas com os eixos da sala 0", "o móvel a 45° é desenhado girado de verdade (nenhuma face na caixa reta em volta)")
         XCTAssertEqual(o["v1"] as? String, "frentes 12 · laterais 10 · pares que se cobrem 76 · frente atrás da lateral 0", "frente de gaveta mais perto de quem olha fica por cima da lateral")
-        XCTAssertEqual(o["v3"] as? String, "reaberto: arestas 274 · alinhadas 0", "salvar e reabrir desenha igual")
+        XCTAssertEqual(o["v3"] as? String, "reaberto: mesmas arestas true · alinhadas 0", "salvar e reabrir desenha igual")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
@@ -15797,6 +15799,70 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["dadosIguais"] as? Bool, true, "ver as paredes não muda o projeto salvo")
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* DIG-TECLADO + DIG-SAIDA (Adauto, 23/11/2026 · "AUDITORIA GERAL DE DIGITAÇÃO"): com teclado físico (Windows, tablet com teclado)
+       o valor digitado se perdia no Tab e o Enter não confirmava (o change de verdade zerava o "pendente"); preço do Ajustes zerava ao sair
+       do campo sem OK (o "saiu do campo" do preço rodava antes do que aplica). */
+    func testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.env='cozinha';S.stones=[];S.mods=[];S.fr=[];S.isl=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.tab=0;draw();panel();await W(60);
+        var Q=function(s){return document.querySelector(s)},kp=function(c){var b=Q('#calcbar [data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}))};
+        var dig=function(i,txt){i.focus();i.select();document.execCommand('insertText',false,txt)};
+        var p0=JSON.stringify(partsOf(S.m).map(function(p){return [p.name,p.cl,p.cw]}));
+        /* 1. teclado do app: números seguidos, apagar, sem fechar; aplica no OK */
+        var w=Q('#bd input[data-k="w"]');w.focus();await W(30);var fe=[];['7','5','0','b','5'].forEach(function(c){kp(c);var a=document.activeElement;fe.push((a===w&&w.isConnected&&!Q('#calcbar').hidden)?w.value:'FECHOU')});R.v0='teclado do app: '+fe.join(' → ')+' · antes do OK w '+S.m.w;kp('ok');await W(60);R.v1='OK: w '+S.m.w+' · teclado '+(Q('#calcbar').hidden?'fechado':'aberto');
+        /* 2. teclado físico + Tab: aplica ao sair e o foco vai pro campo seguinte */
+        dig(Q('#bd input[data-k="w"]'),'700');var a1=S.m.w;Q('#bd input[data-k="h"]').focus();await W(200);var a=document.activeElement;R.v2='físico 700 (antes de sair w '+a1+') · Tab: w '+S.m.w+' · foco na '+(a&&a.dataset&&a.dataset.k)+' · h '+S.m.h+' · d '+S.m.d;
+        /* 3. Enter confirma */var h=Q('#bd input[data-k="h"]');dig(h,'800');h.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await W(200);R.v3='Enter: h '+S.m.h+' · teclado '+(Q('#calcbar').hidden?'fechado':'aberto')+' · w '+S.m.w+' · d '+S.m.d;
+        /* 4. valor inválido continua recusado com aviso (regra de sempre) */dig(Q('#bd input[data-k="h"]'),'123');Q('#bd input[data-k="d"]').focus();await W(200);R.v4='inválido: h '+S.m.h+' · aviso '+(TL.some(function(t){return /123 mm não pode/.test(t)}));
+        /* 5. preço (Ajustes): teclado do app e tocar no campo de baixo sem OK; físico + Tab */
+        Q('#bd input[data-k="d"]').blur();await W(150);stdOpen(0);await W(200);var pb=Q('[data-stdp="mdfB"]'),pc=Q('[data-stdp="mdfC"]');pb.focus();await W(30);['3','3','3'].forEach(kp);pc.focus();await W(200);R.v5='preço pelo teclado do app: '+PR.mdfB+' · campo '+Q('[data-stdp="mdfB"]').value;
+        dig(Q('[data-stdp="mdfC"]'),'444');Q('[data-stdp="mdfB"]').focus();await W(200);R.v6='preço físico + Tab: '+PR.mdfC+' · campo '+Q('[data-stdp="mdfC"]').value;document.activeElement.blur();await W(150);try{Q('#stdm').hidden=true}catch(_){}
+        /* 6. salvar e reabrir; peças acompanham a medida */var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}R.v7='reaberto: '+S.mods[0].w+'×'+S.mods[0].h+'×'+S.mods[0].d+' · peças mudaram '+(JSON.stringify(partsOf(S.mods[0]).map(function(p){return [p.name,p.cl,p.cw]}))!==p0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "teclado do app: 7 → 75 → 750 → 75 → 755 · antes do OK w 900", "teclado do app: números seguidos e apagar sem fechar o campo; nada muda antes do OK")
+        XCTAssertEqual(o["v1"] as? String, "OK: w 755 · teclado fechado", "OK aplica")
+        XCTAssertEqual(o["v2"] as? String, "físico 700 (antes de sair w 755) · Tab: w 700 · foco na h · h 820 · d 560", "teclado físico: Tab aplica o valor (antes perdia) e o foco vai pro campo seguinte; os outros valores não mudam")
+        XCTAssertEqual(o["v3"] as? String, "Enter: h 800 · teclado fechado · w 700 · d 560", "Enter confirma igual ao OK (antes não fazia nada)")
+        XCTAssertEqual(o["v4"] as? String, "inválido: h 800 · aviso true", "valor inválido continua recusado com o aviso de sempre")
+        XCTAssertEqual(o["v5"] as? String, "preço pelo teclado do app: 333 · campo 333,00", "preço: teclado do app e tocar no campo de baixo sem OK aplica (antes zerava o preço)")
+        XCTAssertEqual(o["v6"] as? String, "preço físico + Tab: 444 · campo 444,00", "preço: teclado físico + Tab aplica (antes zerava)")
+        XCTAssertEqual(o["v7"] as? String, "reaberto: 700×800×560 · peças mudaram true", "salvar e reabrir mantém as medidas; peças acompanham")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* TOQ-TAMP (Adauto, 23/11/2026 · "precisão absoluta na seleção… tamponamentos confundidos com outros elementos"): com a parede inteira no 2D
+       o tamponamento tem ~5 px e o dedo erra 5–10 px. Toque no fundo vazio a até 12 px vai pro tamponamento; dentro do móvel nada muda. */
+    func testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var prep=function(sel){try{var sd_=document.getElementById('stdm');if(sd_){sd_.hidden=true;sd_.style.display='none'}}catch(_){}S.env='cozinha';S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.W=4200;S.mods[0].tR=1;S.mods[0].x=300;/* vizinho longe: na tela pequena a bolinha de esticar dele (que tem prioridade) ficava do lado do tamponamento */S.mods[1].x=3000;S.m=sel?S.mods[0]:S.mods[1];LAST='';VB={x:0,y:0,w:900,h:560};setVB();draw();panel();
+         try{document.getElementById('svg').scrollIntoView({block:'center'})}catch(_){}var P=partsOf(S.mods[0]),i=P.findIndex(function(q){return /^Tamponamento direito/.test(q.name)});var e=[].filter.call(document.querySelectorAll('#svg [data-p="'+i+'"]'),function(x){var g=x.closest('[data-mi]');return g&&g.dataset.mi==='0'})[0];return e.getBoundingClientRect()};
+        var ev=function(type,x,y,el){var t=el||document.elementFromPoint(x,y);t.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,pointerType:'touch',isPrimary:true,button:0,buttons:type==='pointerup'?0:1}));return t};
+        var tap=function(x,y){var t=ev('pointerdown',x,y);ev('pointerup',x,y,document.getElementById('svg'));return t};
+        var tampH=function(){var t=partsOf(S.mods[0]).filter(function(q){return /^Tamponamento direito/.test(q.name)})[0];return t?t.cl:null};
+        var r=prep(false);var px=r.right+8,py=r.top+r.height/2;var alvo=document.elementFromPoint(px,py);R.v0='tamponamento fino na tela (<12 px) '+(r.width<12)+' · a 8 px pra fora cai no fundo '+!(alvo.closest('[data-mi]'));
+        tap(px,py);await W(60);R.v1='toque a 8 px pra fora: escolhido módulo '+S.mods.indexOf(S.m);
+        r=prep(false);tap(r.right+18,r.top+r.height/2);await W(60);R.v2='toque a 18 px (longe): escolhido módulo '+S.mods.indexOf(S.m)+' (fica o que estava)';
+        r=prep(false);tap(r.left-8,r.top+r.height/2);await W(60);R.v3='toque a 8 px pra dentro: escolhido módulo '+S.mods.indexOf(S.m)+' · '+LAST+' (porta continua com prioridade)';
+        /* arrastar: módulo escolhido, começa a 8 px pra fora, sobe 60 px: só o tamponamento muda */
+        r=prep(true);var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]})),h0=tampH(),sx=r.right+8,sy=r.top+20;/* começa num ponto de fundo vazio do lado do tamponamento (na tela pequena a bolinha de esticar do próprio módulo, que tem prioridade, fica no meio dele) */for(var yy=r.top+2;yy<r.bottom-2;yy+=2){var q_=document.elementFromPoint(sx,yy);if(q_&&!q_.closest('[data-mi],[data-h],[data-aph]')&&!(q_.dataset&&Object.keys(q_.dataset).length)){sy=yy;break}}var svg=document.getElementById('svg');ev('pointerdown',sx,sy);for(var k=1;k<=6;k++){ev('pointermove',sx,sy-k*10,svg);await W(10)}ev('pointerup',sx,sy-60,svg);await W(80);
+        R.v4='arrasto a 8 px pra fora: tamponamento '+h0+' → '+tampH()+' · módulos iguais '+(JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]}))===M0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "tamponamento fino na tela (<12 px) true · a 8 px pra fora cai no fundo true", "o tamponamento de 15 mm fica com 6 px na tela inteira; 8 px pra fora é o fundo vazio")
+        XCTAssertEqual(o["v1"] as? String, "toque a 8 px pra fora: escolhido módulo 0", "toque no fundo a 8 px do tamponamento vai pro tamponamento (escolhe o módulo dele, como o toque em cima)")
+        XCTAssertEqual(o["v2"] as? String, "toque a 18 px (longe): escolhido módulo 1 (fica o que estava)", "longe (18 px) continua sendo o fundo: nada é escolhido sem querer")
+        XCTAssertEqual(o["v3"] as? String, "toque a 8 px pra dentro: escolhido módulo 0 · porta (porta continua com prioridade)", "dentro do móvel nada muda: a porta continua com prioridade")
+        XCTAssertEqual(o["v4"] as? String, "arrasto a 8 px pra fora: tamponamento 720 → 420 · módulos iguais true", "arrastar perto do tamponamento muda só ele; nenhum módulo mexe")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
     /// ID-PAREDE (23/11/2026): causa do intermitente testPaineisDiferentesEmCadaParedeBatemNo2DNo3DENoCorte. Na vista de uma parede o id novo de
@@ -16400,6 +16466,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["moldura"] as? String, "sem frontal: 1 · com frontal: 0", "moldura e Frontal coberto pelas portas não somam")
         XCTAssertEqual(o["ordem"] as? String, "Moldura → Travessão → Frontal")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* CANTO-ESPELHO (achado pelo Code 2, 23/11/2026): na parede esquerda, o cantoEncosta redesenhava pelo d0 guardado antes do envoltório
+       PAREDE-ESPELHADA: o 2D ficava sem espelho e o WVMIRX velho (o toque convertia errado). */
+    func testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        try{wvExit()}catch(_){}S.env='cozinha';S.room='cozinha';S.stones=[];S.stw=[];S.fr=[];S.isl=[];S.mods=[];S.W=4200;S.wl={L:'p',R:'p'};draw();newTpl(T('Balcão 2 portas'));S.mods[0].x=0;draw();await W(400);
+        wvGo('e');await W(300);R.v0='parede esquerda: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        newTpl(T('Balcão 2 portas'));var m=S.mods[S.mods.length-1];m.x=606;draw();await W(900);
+        var mexeu=m.x!==606;R.v1='módulo novo perto do canto: encostou '+mexeu+' (x '+m.x+')';
+        R.v2='depois de encostar: espelho '+!!document.getElementById('wvmir')+' · WVMIRX '+(window.WVMIRX!==null);
+        /* toque: tocar no móvel novo onde ele está desenhado escolhe ele (com o espelho velho o toque convertia pro lugar errado) */var mi=S.mods.indexOf(m);var g=document.querySelector('#svg [data-mi="'+mi+'"]');S.m=S.mods[0];draw();await W(100);g=document.querySelector('#svg [data-mi="'+mi+'"]');var rc=g?g.getBoundingClientRect():null;if(rc){var x=rc.left+rc.width/2,y=rc.top+rc.height*0.7,t=document.elementFromPoint(x,y),sv=document.getElementById('svg');t.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:1}));sv.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:3,pointerType:'touch',isPrimary:true,button:0,buttons:0}));await W(150)}R.v3='toque no móvel novo (onde está desenhado): escolheu ele '+(S.m===m)+' · ele não andou '+(m.x===630);
+        try{wvExit()}catch(_){}R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "parede esquerda: espelho true · WVMIRX true", "vista da parede esquerda espelhada")
+        XCTAssertEqual(o["v1"] as? String, "módulo novo perto do canto: encostou true (x 630)", "o módulo novo perto do canto encosta (cantoEncosta)")
+        XCTAssertEqual(o["v2"] as? String, "depois de encostar: espelho true · WVMIRX true", "depois de encostar o 2D continua espelhado (antes o redesenho pulava o espelho e o WVMIRX ficava velho)")
+        XCTAssertEqual(o["v3"] as? String, "toque no móvel novo (onde está desenhado): escolheu ele true · ele não andou true", "tocar onde o móvel está desenhado escolhe ele, sem mexer")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 
     // PINTAR COMPACTO (Adauto 17/11, D44): cabeçalho fixo em 2 linhas (título + cor; peça + módulo), opções com rolagem interna,

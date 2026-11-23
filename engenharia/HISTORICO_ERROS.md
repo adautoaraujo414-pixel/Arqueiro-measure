@@ -1647,6 +1647,47 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Teste:** `testFASE3_PlantaAnguloDesenhaMovelGiradoPelaFormaRealSemSobrepor` (68a8543, falha antes: 488 arestas alinhadas) · correção 17d8418. Confere forma, frente de gaveta por cima da lateral e salvar/reabrir.
 - **Evidência:** antes = print do Adauto; depois = captura do Chromium. Aparelho real pendente.
 
+## DIG-TECLADO + DIG-SAIDA — valor digitado perdido / preço zerado (23/11/2026, branch `claude/digitacao-toques`, base `8ec9118`)
+- **Pedido:** Adauto, 23/11, "AUDITORIA GERAL DE DIGITAÇÃO" (prioridade crítica): "ao adicionar um módulo e tentar digitar um número no campo de dimensões, a edição fecha automaticamente".
+- **Reprodução do relato:** a imagem citada não chegou. O fluxo descrito foi refeito com toque emulado de tablet (Chromium): adicionar pelo catálogo, no 2D e no ＋ Criar do 3D, e digitar logo em seguida (250 ms) no teclado do app e no físico. Nesse ambiente o campo **não fechou**. **Não foi possível verificar** no iPhone/iPad/Tab S9 FE.
+- **Auditoria automática** (Playwright, digitação de verdade, uma tecla por vez, conferindo a cada tecla se o campo é o mesmo, tem o foco e acumula o valor; Tab no fim e conferência se o valor chegou ao projeto ou aos ajustes):
+  - painel 2D (todas as abas, 2 tipos de módulo, seções abertas): 55 campos;
+  - janelas Cliente, Valores, ArqueCut, Trena, Ajustes e caixa do eletro: 136;
+  - 3D (caixa do módulo, peça, geladeira, móvel livre): 15;
+  - total: **206 campos**, 0 perdendo foco nem fechando durante a digitação.
+- **Erro comprovado 1 · DIG-TECLADO (teclado físico: Windows, tablet com teclado):**
+  - Efeito: o valor digitado se perdia ao sair do campo (Tab ou toque em outro campo) e o Enter não confirmava.
+  - Medido antes: 51 de 55 campos do painel 2D; Valores 6 de 8; Ajustes 84 de 106; ArqueCut (chapa, serra).
+  - Causa: o teclado do app segura o `input` de cada tecla (pra não aplicar 7 → 75 → 750). O `change` de verdade do navegador (Tab/Enter) zerava o "pendente" achando que já tinha aplicado. O painel 2D aplica no `input`, então nada era aplicado, e ao sair do campo não havia mais nada pendente.
+  - Correção: o `change` de verdade com valor pendente fica pendente e é aplicado ao sair, pelo mesmo `commit` do OK. Enter = OK.
+- **Erro comprovado 2 · DIG-SAIDA (preço zerado):**
+  - Efeito: nos preços do Ajustes (`data-stdp`), digitar e tocar no campo de baixo sem OK (teclado do app) **zerava o preço** (PR = 0, campo vazio). Com teclado físico + Tab, idem.
+  - Causa: o "saiu do campo" do preço (`money(PR[...])`) rodava antes do "saiu do campo" do teclado e voltava o valor antigo antes de aplicar.
+  - Correção: o do teclado roda na captura, antes dos outros.
+- **Comportamento correto (conferido):**
+  - valor inválido continua recusado com aviso (ex.: altura 123 mm, "mínimo 290");
+  - eletrodoméstico com medida do modelo ("troque o modelo");
+  - geladeira presa pela regra da pedra;
+  - Cliente/Trena/peça avulsa do ArqueCut aplicam no botão.
+- **Testes:** `testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor` (4dd6540, falha antes) · correção 68f13ff · bateria 431/431.
+- **Observação (não mexido):** a geladeira volta sozinha pro fim da parede quando o valor digitado a colocaria embaixo da pedra, sem aviso. É a regra física de sempre; fica a sugestão de avisar.
+
+## TOQ-TAMP — tamponamento quase impossível de tocar com o dedo (23/11/2026, mesma branch)
+- **Pedido:** Adauto, 23/11, "precisão absoluta na seleção… tamponamentos confundidos com outros elementos".
+- **Medição:**
+  - com a parede inteira no 2D, o tamponamento de 15 mm tem 4,7 px na tela;
+  - toque a até 3 px do centro acerta;
+  - a 6 px pra dentro cai na porta; a 6 px pra fora cai no fundo vazio;
+  - arrastar a 8 px pra fora não fazia nada.
+- **Causa:** o 2D escolhe pelo elemento embaixo do ponto (sem tolerância) e o alvo é menor que a ponta do dedo.
+- **Correção:** o toque que cairia no **fundo vazio** (nada tocável embaixo) a até 12 px de um tamponamento é repassado pra ele, e segue o TAMP-2D-ALVO de sempre (não escolhido só escolhe; escolhido muda só a altura). Dentro do móvel nada muda: porta, frente e vão continuam com prioridade.
+- **Conferido sem mudança (comportamento correto):**
+  - pinça em cima do módulo escolhido só dá zoom; peças e seleção ficam;
+  - 1 dedo arrastando + 2º dedo vira pinça sem mover nada;
+  - arrastar a porta de módulo escolhido move o módulo (regra F3-TOQUE).
+- **Testes:** `testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca` (e9cb775, falha antes) · correção d96a38d.
+- **Pendente:** aparelho real (dedo de verdade); toque no 3D não auditado nesta etapa.
+
 ## CODE 2 · registro consolidado das correções de 22–23/11/2026 (CLAUDE.md §8.9/§11.1)
 Cada item: pedido → causa → correção → teste (falha antes) → evidência. Lista completa com status em `ENTREGA_CODE2_2026-11-23.md`.
 - **CANTO-PORTA-L (22–23/11, Adauto 23:01):** porta do canto em L com 650 mm (retas 705), sem cobrir a travessa, cava sem chanfro no 3D. Causa: a folha do canto não usava a regra vertical das retas. Correção `f9c5cc7`/`e130848`: mesma regra (705, sobe 5 mm, cava), canto novo com `m.cnP`, antigo com aviso + prévia + botão (estrutura única da junção 6 do Code 1). Teste `testPortasDoCantoEmLAlinhadasComAsRetasNovoEAntigo`.
@@ -1665,6 +1706,26 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
 - **Ferramenta:** bateria do Chromium confere asserts com expressão Swift e os testes com JS em `static let` (`8f21fa0`: 3728 → 4166 asserts conferidos).
 - **PAREDES A–F (23/11, "Faça todos"):** abertura com peitoril (antes: vão com "do chão" > 0 deixava buraco embaixo no 3D), meia parede com altura editável (antes fixa 1100), remover/restaurar fundo e laterais (antes o 🗑 da lateral apagava as portas dela; o fundo não saía), menu EDITAR PAREDE, Soltar sem mexer. Detalhes, commits e testes em `PAREDES_ETAPAS_A_F_2026-11-23.md`; compatibilidade com o app publicado medida (nada se perde ao salvar no app antigo).
 - **JUNÇÃO 5 · TRAVESSÃO (23/11):** `a849a43`, `testJuncao5TravessaoDuasReguasDe80PorCimaDasLaterais`. Regra do a862927 (Code 1, 17/11) refeita sem depender da LAT-MEIO; padrão 80 mm.
+
+## Pendências da candidata 5bd11f5 (23/11/2026, branch `claude/abertos-1`)
+- **testFASE3_PlantaAngulo (298 × 274 arestas):** a contagem depende de quantas caixas o 3D gera, e subiu com a auditoria do 3D do Code 2. O teste passa a conferir "desenhadas · alinhadas 0" e reabrir com as mesmas arestas. Continua falhando antes da PL-ANG-GIRADO. Commit 9d0c48a.
+- **iOS CI 674, testFASE3_MovelLivreCameraNaoMexe… — "embaixo do dedo false": comportamento correto, não é defeito.**
+  - Reproduzido em 390×844 (tela do iPhone): 80 px de dedo dão 1620 mm. O móvel bate na parede direita e para ("ele entraria na parede direita").
+  - Medido: dedo 80,40 px; móvel 50,25 px.
+  - O teste passa a arrastar 40% da largura do móvel na tela.
+  - O arrasto 3D confere andou/b/rot/m.x, sem o ponto exato.
+  - Conferido em 390×844, 375×667, 820×1180, 1024×1366 e 1366×768. Commit 31e55b7.
+- **Revisão dos testes do Code 1 nas telas do iPhone e do iPad** (verificador que extrai o JS e as asserções do Swift e roda com Playwright): FASE3_* e FASE4_* passam. O testToqueNoTamponamento (claude/digitacao-toques) dependia da tela e foi corrigido no 6d6ab18.
+- **CANTO-ESPELHO (erro comprovado, achado pelo Code 2):**
+  - Efeito: na parede esquerda, o `cantoEncosta` redesenhava pelo `d0` guardado antes do envoltório PAREDE-ESPELHADA. O 2D ficava sem espelho e o `WVMIRX` velho, e o toque convertia errado.
+  - Repro: balcão no canto, `wvGo('e')`, módulo novo em x=606 → encosta em 630 → `#wvmir` some.
+  - Correção: redesenhar por `window.draw`, com `busy`.
+  - Teste `testCantoEncostaNaParedeEsquerdaMantemOEspelhoDo2D` (7670248, falha antes) · correção 9fd337d.
+- **testFornoDaTorrePorVaosAbreNoToqueEmQualquerPonto (intermitente): era do teste, não do app.**
+  - Medido: com 60 ms entre fechar e tocar, o toque caía no meio da animação de fechar (ângulo ~0,85). Com a máquina carregada, fechar + toque se anulavam (ângulo ficava 1).
+  - Em todas as rodadas o toque mudou o forno.
+  - O teste agora espera fechar (até 3 s), toca e espera abrir (até 3 s). Continua falhando se o toque não abrir.
+  - 6/6 rodadas (antes 1/6). Commit 2f52a83.
 - **GEL-TAMP (23/11, "Só o tamponamento"):** caixa nova da geladeira já nasce com tamponamento dos dois lados terminando 100 mm acima do piso. `5a48d40`; `testCaixaDaGeladeiraNovaComTamponamentoCemMilimetrosAcimaDoPiso`. Caixa antiga não muda sozinha.
 - **CSV (23/11):** não existia exportação CSV. `988986e`: botão no plano de corte, mesmas linhas do PDF (lê o `partsOf`, não o cru), UTF-8 com BOM, ";" e compartilhar nativo. `testPlanoDeCorteListaEmCSVMesmasLinhasDoPDF`.
 - **CHURRASQUEIRA QUADRADA (pedido 16/11, padrões aprovados 23/11):** não existia o modelo. `2cc652d`: 900 × pé-direito × 600, boca 680 × 520, moldura 45°, 2D/3D/quadro pela mesma geometria. Defeito achado no caminho: `apSvg` chama `churSvg` com `f=null` e desenhava a forma padrão → procura pelo nome. `testChurrasqueiraQuadradaDeEmbutirComMolduraA45`.

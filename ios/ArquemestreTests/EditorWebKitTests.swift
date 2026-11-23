@@ -16695,4 +16695,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v9"] as? String, "reaberto: Prateleira#2 lado 4 300 mm emb 6000", "salvar e reabrir mantém o LED")
         XCTAssertEqual(o["v10"] as? String, "erros 0", "sem erro")
     }
+
+    /* POLÍTICA B · LED livre e espelho (Adauto, 23/11/2026: "o risco de perder o LED livre ao salvar numa versão antiga deve ser tratado como
+       bloqueador de compatibilidade"): link de projeto com LED livre ou espelho sai com tipo novo, que a versão publicada recusa; confirma antes. */
+    func testPoliticaBLedLivreEEspelhoNaoAbremEmVersaoAntigaSemAviso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},TL=[],t0=window.toast;window.toast=function(t){TL.push(String(t));try{t0(t)}catch(_){}};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},e0=__errs.length;
+        var bruto=async function(c){c=String(c||'').trim();var u=unb64u(c.slice(1));if(c[0]==='j')return JSON.parse(new TextDecoder().decode(u));var s=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();return JSON.parse(s)};
+        var espera=async function(){var t=Date.now();while(!__shared&&Date.now()-t<5000)await W(50)};
+        var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Nicho com prateleiras')t=x})});
+        S.mods=[];S.stones=[];S.fr=[];S.env='cozinha';draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];m.x=300;S.m=m;draw();ensureProj();await W(80);
+        /* 1. sem LED livre nem espelho: igual a antes */window.__shared=null;cutSend();await espera();var r1=await bruto(__shared.code);R.v0='sem LED/espelho: '+r1.k+' · janela '+!!document.getElementById('emcompat');
+        /* 2. com LED livre: avisa; Cancelar não manda */__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))})[0];var L=lvlAdd(0,sh.pk,4);L.k='emb';draw();try{document.getElementById('ledlv').hidden=true}catch(_){}
+        window.__shared=null;cutSend();await W(150);var dl=document.getElementById('emcompat');R.v1='aviso: '+(dl?dl.querySelector('b').textContent+' · '+/1 LED livre/.test(dl.textContent)+' · não abre '+/não abre/.test(dl.textContent):'NÃO avisou');if(dl)dl.querySelector('[data-emcno]').click();await W(300);R.v2='Cancelar: mandou '+(window.__shared!==null);
+        /* Enviar: tipo novo (a versão publicada recusa) */cutSend();await W(150);var ok=document.querySelector('#emcompat [data-emcok]');if(ok)ok.click();await espera();var r2=await bruto(__shared.code);R.v3='enviado: '+r2.k+' · fmt '+(r2.fmt>0)+' · LED no pacote '+((r2.st.mods[0].leds||[]).length);
+        /* 4. só espelho, link do cliente */var link=__shared.code;S.mods=[];S.fr=[];draw();newTpl(JSON.parse(JSON.stringify(t)));S.mods[0].x=300;espWallAdd(0);draw();ensureProj();var sc0=ArqueApp.shareClient;ArqueApp.shareClient=function(c){window.__sharedCl={code:c}};window.__sharedCl=null;window.__shared=null;clientSend();await W(150);dl=document.getElementById('emcompat');R.v5='cliente com espelho: aviso '+(dl?dl.querySelector('b').textContent:'NÃO');if(dl)dl.querySelector('[data-emcok]').click();await W(400);var cc=(window.__sharedCl&&window.__sharedCl.code)||(window.__shared&&window.__shared.code);var r3=cc?await bruto(cc):{};R.v6='link do cliente: '+r3.k;ArqueApp.shareClient=sc0;
+        /* 3. este app abre o link novo com o LED inteiro */window.arqueCutOpen(link);await W(1500);R.v4='aberto aqui: '+EM.compat.ultimo+' · LED '+((S.mods[0]&&S.mods[0].leds)||[]).length+' '+(((S.mods[0]||{}).leds||[])[0]||{}).k;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "sem LED/espelho: arque-corte · janela false", "sem LED livre nem espelho: igual a antes (abre em qualquer versão)")
+        XCTAssertEqual(o["v1"] as? String, "aviso: Projeto com LED livre · true · não abre true", "com LED livre: avisa antes de mandar")
+        XCTAssertEqual(o["v2"] as? String, "Cancelar: mandou false", "Cancelar não manda")
+        XCTAssertEqual(o["v3"] as? String, "enviado: arque-corte-v2 · fmt true · LED no pacote 1", "tipo novo: a versão publicada recusa em vez de abrir sem o LED (e sem o rasgo)")
+        XCTAssertEqual(o["v5"] as? String, "cliente com espelho: aviso Projeto com espelho", "link do cliente com espelho também avisa")
+        XCTAssertEqual(o["v6"] as? String, "link do cliente: arque-cliente-v2", "e sai com o tipo novo")
+        XCTAssertEqual(o["v4"] as? String, "aberto aqui: aberto · LED 1 emb", "este app abre o link novo com o LED inteiro")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

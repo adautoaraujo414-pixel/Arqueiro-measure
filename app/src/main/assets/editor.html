@@ -13658,6 +13658,12 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var showBox_esp=showBox;showBox=function(){showBox_esp.apply(this,arguments);try{if(!(SELAP&&LAST==='ap'))return;var f=(S.fr||[]).filter(function(a){return a.id===SELAP})[0];if(!f||f.t!=='espelho')return;var i=document.querySelector('#itbox [data-apb="d"]'),l=i&&i.parentNode;if(l&&l.firstChild&&l.firstChild.nodeType===3)l.firstChild.nodeValue='Espessura'}catch(_){}};
  /* ＋ Criar · Espelhos: põe o espelho escolhido na parede (depois é tocar nele pra mudar medida, posição e parede) */
  window.espWallAdd=function(mi){if(window.RO)return null;try{snap()}catch(_){}var it=apAdd('espelho',+mi||0);try{draw();if(typeof panel==='function')panel();if(window.re3)re3()}catch(_){}try{toast('🪞 Espelho na parede · toque nele pra mudar largura, altura, espessura, posição e parede')}catch(_){}return it};
+ /* compatibilidade com app antigo (medido 23/11 no editor publicado c561120: projeto/link com t:'espelho' em fr quebra o 2D e
+    o link de corte/cliente não abre). Salvo, o espelho vai em frx, campo que o app antigo não lê (abre o resto normal, sem o espelho);
+    ao abrir aqui, volta pro S.fr. Na memória nada muda: tudo que lê S.fr continua igual. */
+ var isE=function(f){return !!f&&f.t==='espelho'};
+ var ss_esp=snapState;snapState=function(){var o=ss_esp.apply(this,arguments);try{if(o&&Array.isArray(o.fr)&&o.fr.some(isE)){o.frx=o.fr.filter(isE);o.fr=o.fr.filter(function(f){return !isE(f)})}}catch(_){}return o};window.snapState=snapState;
+ var ls_esp=loadState;loadState=function(o){var a=[].slice.call(arguments);try{if(o&&Array.isArray(o.frx)&&o.frx.length){var c=Object.assign({},o),fr=Array.isArray(o.fr)?o.fr.slice():[],tem={};fr.forEach(function(f){if(f&&f.id!=null)tem[String(f.id)]=1});o.frx.forEach(function(f){if(isE(f)&&!tem[String(f.id)])fr.push(f)});c.fr=fr;delete c.frx;a[0]=c}}catch(_){}return ls_esp.apply(this,a)};window.loadState=loadState;
  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest('[data-cespw]');if(!b)return;ev.stopImmediatePropagation();ev.preventDefault();espWallAdd(b.getAttribute('data-cespw'))},true);
 })();
 </script>

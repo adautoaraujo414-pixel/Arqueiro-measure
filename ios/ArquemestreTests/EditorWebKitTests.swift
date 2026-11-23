@@ -15656,4 +15656,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["linkAberto"] as? String, "espelhos 2 · módulos 1", "link aberto no app novo traz os espelhos")
         XCTAssertEqual(o["errs"] as? String, "erros 0", "sem erro")
     }
+
+    /* FASE3 · PL-ANG-GIRADO (print do Adauto, 23/11/2026: gaveteiro livre a 45° na Planta "Ângulo" com gavetas e laterais sobrepostas).
+       Causa: plExtrude3 desenhava a peça girada (prisma gp do rotY) pela caixa reta em volta, e plDepthSort ordenava por essa caixa. */
+    func testFASE3_PlantaAnguloDesenhaMovelGiradoPelaFormaRealSemSobrepor() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.mods=[];S.stones=[];S.fr=[];S.isl=[];S.env='cozinha';S.room='cozinha';S.W=4200;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));var a=S.mods[1];lvSolta(a);lvAng(a,45);S.m=null;PLV=true;PLANG=true;draw();await W(300);
+        /* 1. forma: direção das arestas na tela do móvel girado × do módulo da parede (eixos da sala) */
+        var dirs=function(sel){var A=[];[].forEach.call(document.querySelectorAll(sel),function(pg){var P=pg.getAttribute('points').trim().split(/\s+/).map(function(s){return s.split(',').map(Number)});for(var i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length],dx=q[0]-p[0],dy=q[1]-p[1];if(Math.hypot(dx,dy)<3||Math.abs(dx)<.5)continue;var g=Math.round(Math.atan2(dy,dx)*180/Math.PI);g=((g%180)+180)%180;A.push(g)}});return A};
+        var ax=dirs('#plx [data-pm="0"]'),ax0={};ax.forEach(function(g){ax0[g]=1});var lv=dirs('#plx [data-lv="1"]'),noEixo=lv.filter(function(g){return ax0[g]||ax0[g-1]||ax0[g+1]}).length;
+        R.v0='arestas do girado '+lv.length+' · alinhadas com os eixos da sala '+noEixo;
+        /* 2. ordem: frente de gaveta mais perto de quem olha é desenhada depois da lateral */
+        var L=window.__plL||[],ix=function(re){var r=[];L.forEach(function(it,i){if(it.mi===1&&re.test(String(it.b.pk||'')))r.push(i)});return r},fr=ix(/^Frente/i),lt=ix(/^Lateral (esquerda|direita)#/i);
+        var v=[window.PLAM.b,window.PLAM.d],c=function(i){var b=L[i].b,P=b.gp?b.gp.a:[[b.x0,0,b.z0],[b.x1,0,b.z1]],x=0,z=0;P.forEach(function(q){x+=q[0]/P.length;z+=q[2]/P.length});return x*v[0]+z*v[1]};
+        var cob=function(i,j){var A=L[i],B=L[j];return A.s0<B.s1-1&&B.s0<A.s1-1&&A.t0<B.t1-1&&B.t0<A.t1-1};var ex=[];var erradas=0,pares=0;fr.forEach(function(f){lt.forEach(function(l){if(!cob(f,l))return;pares++;if(c(f)>c(l)&&f<l){erradas++;ex.push(L[f].b.pk+' < '+L[l].b.pk)}})});R.v1='frentes '+fr.length+' · laterais '+lt.length+' · pares que se cobrem '+pares+' · frente atrás da lateral '+erradas;
+        var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}S.m=null;draw();await W(300);var lv2=dirs('#plx [data-lv="1"]');R.v3='reaberto: arestas '+lv2.length+' · alinhadas '+lv2.filter(function(g){return ax0[g]||ax0[g-1]||ax0[g+1]}).length;
+        PLV=false;PLANG=false;draw();R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "arestas do girado 274 · alinhadas com os eixos da sala 0", "o móvel a 45° é desenhado girado de verdade (nenhuma face na caixa reta em volta)")
+        XCTAssertEqual(o["v1"] as? String, "frentes 12 · laterais 10 · pares que se cobrem 76 · frente atrás da lateral 0", "frente de gaveta mais perto de quem olha fica por cima da lateral")
+        XCTAssertEqual(o["v3"] as? String, "reaberto: arestas 274 · alinhadas 0", "salvar e reabrir desenha igual")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

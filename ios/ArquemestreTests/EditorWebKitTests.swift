@@ -17239,4 +17239,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v1"] as? String, "móvel livre (Planta): 45 + Enter → rot 45", "móvel livre na Planta: ângulo + Enter gira")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* PROJ-SEM-MODULO (auditoria 23/11, risco já existente na versão publicada c561120): abrir projeto SEM módulo (só espelho, pedra…) dava
+       TypeError no loadState (defs(undefined)) no meio do carregamento; o resto não rodava e, ao salvar, a obra e o ambiente do projeto eram apagados.
+       Agora abre inteiro. Projeto com módulo não muda. */
+    func testAbrirProjetoSemModuloNaoPerdeObraNemAmbiente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},e0=__errs.length,ER=[];var oe=function(e){ER.push(String(e.message))};window.addEventListener('error',oe);
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        /* projeto B: sem módulo, só espelho e pedra, com obra e ambiente */S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.room='banheiro';S.W=3100;S.H=2550;draw();espWallAdd(0);draw();S.amb={x:1};S.obra={y:2};var stB=snapState();
+        /* projeto A na tela, com balcão */S.amb={};S.obra=null;S.fr=[];S.room='cozinha';S.W=5000;newTpl(T('Balcão 2 portas'));draw();var stA=snapState();
+        var a=pLoadAll()||[],pB={id:'pB'+Date.now(),client:{nome:'B só espelho',end:'',cidade:'',tel:''},titulo:'',created:Date.now(),updated:Date.now(),original:stB,current:stB},pA={id:'pA'+Date.now(),client:{nome:'A balcão',end:'',cidade:'',tel:''},titulo:'',created:Date.now(),updated:Date.now(),original:stA,current:stA};a.push(pB,pA);pSaveAll(a);CUR=pA.id;
+        var get=function(id){return pLoadAll().filter(function(q){return q.id===id})[0]};
+        var clm=document.getElementById('clm');var b=document.createElement('button');b.dataset.po=pB.id;clm.appendChild(b);b.click();await W(300);b.remove();
+        R.v0='abriu B: tela módulos '+S.mods.length+' · espelhos '+(S.fr||[]).filter(function(f){return f.t==='espelho'}).length+' · sala '+S.room+' '+S.W+' · erros '+ER.length;
+        R.v1='na tela: obra '+JSON.stringify(S.obra)+' · ambiente '+JSON.stringify(S.amb);
+        saveNow();await W(200);var c=get(pB.id).current;R.v2='salvo: obra '+JSON.stringify(c.obra)+' · ambiente '+JSON.stringify(c.amb)+' · módulos '+(c.mods||[]).length+' · espelhos '+((c.fr||[]).concat(c.frx||[])).filter(function(f){return f.t==='espelho'}).length;
+        /* projeto com módulo continua igual */var bA=document.createElement('button');bA.dataset.po=pA.id;clm.appendChild(bA);bA.click();await W(300);bA.remove();R.v3='abriu A: módulos '+S.mods.length+' · selecionado '+(S.m===S.mods[0]);
+        /* e dá pra pôr um módulo no projeto vazio depois de abrir */bA=document.createElement('button');bA.dataset.po=pB.id;clm.appendChild(bA);bA.click();await W(200);bA.remove();newTpl(T('Balcão 2 portas'));draw();R.v4='B + balcão: módulos '+S.mods.length+' · erros '+ER.length;
+        window.removeEventListener('error',oe);R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "abriu B: tela módulos 0 · espelhos 1 · sala banheiro 3100 · erros 0", "abre o projeto sem módulo sem erro")
+        XCTAssertEqual(o["v1"] as? String, "na tela: obra {\"y\":2} · ambiente {\"x\":1}", "obra e ambiente voltam")
+        XCTAssertEqual(o["v2"] as? String, "salvo: obra {\"y\":2} · ambiente {\"x\":1} · módulos 0 · espelhos 1", "salvar não apaga obra nem ambiente")
+        XCTAssertEqual(o["v3"] as? String, "abriu A: módulos 1 · selecionado true", "projeto com módulo igual")
+        XCTAssertEqual(o["v4"] as? String, "B + balcão: módulos 1 · erros 0", "pôr módulo depois funciona")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

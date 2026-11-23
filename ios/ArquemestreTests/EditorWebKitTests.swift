@@ -15628,7 +15628,7 @@ final class EditorWebKitTests: XCTestCase {
         var sc=0,so=window.slideCfgOpen;window.slideCfgOpen=function(){sc++};open3D();await W(300);document.getElementById('v3add').click();await W(120);__crp6.vai('esp');await W(40);document.querySelector('#crp3 [data-cesp]').click();await W(60);window.slideCfgOpen=so;R.v12='espelho da porta de correr: abre a configuração da folha '+sc;try{document.getElementById('v3x').click()}catch(_){}
         R.v10='erros '+(__errs.length-e0)+' '+__errs.slice(e0).map(function(e){return String(e.m||e.message||e).slice(0,100)}).join('||');return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["v0"] as? String, "Espelhos: porta de correr 1 · na parede 🪞 Espelho 60 × 90 | 🪞 Espelho 50 × 70 | 🪞 Espelho 80 × 120 | 🪞 Espelho de corpo inteiro 50 × 160", "＋ Criar · Espelhos: o da porta de correr continua e entram os espelhos de parede")
+        /* ESP-ORG (Adauto 23/11): + os 12 modelos orgânicos e de LED jateado, depois dos 4 de sempre */XCTAssertEqual(o["v0"] as? String, "Espelhos: porta de correr 1 · na parede 🪞 Espelho 60 × 90 | 🪞 Espelho 50 × 70 | 🪞 Espelho 80 × 120 | 🪞 Espelho de corpo inteiro 50 × 160 | 🪞 Espelho redondo LED jateado 70 | 🪞 Espelho oval LED jateado 60 × 90 | 🪞 Espelho retangular faixa jateada 80 × 60 | 🪞 Espelho arco com LED 60 × 100 | 🪞 Espelho orgânico vertical irregular 60 × 100 | 🪞 Espelho orgânico horizontal irregular 120 × 70 | 🪞 Espelho orgânico gota 60 × 80 | 🪞 Espelho orgânico ondulado 60 × 100 | 🪞 Espelho orgânico LED traseiro 120 × 70 | 🪞 Espelho orgânico LED frontal jateado 60 × 80 | 🪞 Espelho orgânico LED frontal e traseiro 60 × 100 | 🪞 Espelho orgânico sem LED 60 × 100", "＋ Criar · Espelhos: o da porta de correr continua e entram os espelhos de parede")
         XCTAssertEqual(o["v1"] as? String, "criado: 600×900×4 · x 1700 · do chão 1000 · parede f", "espelho nasce no meio da parede do fundo, 4 mm")
         XCTAssertEqual(o["v2"] as? String, "3D: vidro 1 · 600×900×4 · de 1700 · do chão 1000 · na parede (z0) 0", "3D: placa de vidro na medida, encostada na parede")
         XCTAssertEqual(o["v3"] as? String, "medidas: Largura (mm)=600 · Altura (mm)=900 · Espessura (mm)=4 · Da parede esquerda (mm)=1700 · Do chão (mm)=1000 · paredes 3 · girar 0 · acabamento 0", "editor do 3D: largura, altura, espessura, posição e parede")
@@ -16785,6 +16785,98 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["falharam"] as? Int, 0, "toda foto do catálogo abre (webp ou reserva jpg): falharam \(o["quais"] ?? "")")
         XCTAssertEqual((o["webp"] as? Int ?? 0) + (o["reservaJpg"] as? Int ?? 0), fotos)
         XCTAssertEqual(o["reservaFunciona"] as? Bool, true, ".webp que não abre troca pra .jpg")
+    }
+
+    // ESPELHO-REAL (Adauto 23/11: "espelhos com aparência de espelhos reais, sem prejudicar a velocidade"): reflexo planar de verdade (o balcão vermelho
+    // na frente do espelho aparece vermelho dentro dele); prata neutro, bronze quente, fumê escuro; sem recursão entre espelhos; mesma textura reutilizada
+    // (câmera parada não refaz); qualidade do aparelho (não vai pro projeto); Acabamento realista e dados do projeto iguais
+    func testEspelhoComReflexoRealDaCenaAcabamentosSemRecursaoEQualidade() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){if(q&&q.n===n&&!r&&!q.act)r=q})});return JSON.parse(JSON.stringify(r))};
+        var cena=function(comBalcao){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3200;S.H=2700;draw();if(comBalcao){newTpl(T('Balcão 2 portas'));S.mods[0].x=2000;S.mods[0].corF='#c81e1e';S.mods[0].cor='#c81e1e';draw()}var f=espWallAdd(0);f.w=1000;f.h=1700;f.x=900;f.b=150;draw();return f};
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl');
+        var foto=function(f,alt,ate){__cam(.85,0,1.0);alt=alt||.08;ate=ate||.98;var c=__p3(f.x+f.w/2,f.b+f.h*alt,f.d||4),c2=__p3(f.x+f.w*(alt>.5?.04:.45),f.b+f.h*alt,f.d||4),c3=__p3(f.x+f.w*ate,f.b+f.h*alt,f.d||4),r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),cor=[0,0,0],ver=0,n=0;
+          var x0=Math.round(Math.min(c2[0],c3[0])*r),x1=Math.round(Math.max(c2[0],c3[0])*r),y=Math.round(H-c[1]*r);for(var x=x0;x<=x1;x+=Math.max(1,Math.round((x1-x0)/40))){gl.readPixels(x,y,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);cor[0]+=px[0];cor[1]+=px[1];cor[2]+=px[2];n++;if(px[0]>px[1]+40&&px[0]>px[2]+40)ver++}
+          return {r:Math.round(cor[0]/n),g:Math.round(cor[1]/n),b:Math.round(cor[2]/n),ver:ver,n:n}};
+        var f=cena(true),sv0=JSON.stringify(snapState());open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        var p=foto(f);R.reflete=p.ver>0;R.planos=Object.keys(MIRS).length+' '+(window.__mirInfo||{}).vis;R.err=window.MIRERR||'';
+        f.acab='bronze';draw();re3();await W(100);var bz=foto(f,.85,.9);f.acab='fume';draw();re3();await W(100);var fu=foto(f,.85,.9);f.acab='prata';draw();re3();await W(100);var pr=foto(f,.85,.9);
+        R.bronzeQuente=(bz.r-bz.b)>(pr.r-pr.b)+8;R.fumeEscuro=(fu.r+fu.g+fu.b)<(pr.r+pr.g+pr.b)*.7;R.tons='prata '+[pr.r,pr.g,pr.b]+' bronze '+[bz.r,bz.g,bz.b]+' fumê '+[fu.r,fu.g,fu.b];
+        /* câmera parada: o reflexo é reaproveitado */__cam(.85,0,1.0);R.reaproveita=(window.__mirInfo||{}).feitos===0;
+        document.getElementById('v3x').click();R.semBalcao=(function(){var f2=cena(false);open3D();return f2})();await W(400);R.semVermelho=foto(R.semBalcao).ver===0;R.semBalcao=1;
+        /* dois espelhos frente a frente (paredes do lado): sem recursão e sem erro */document.getElementById('v3x').click();cena(false);var a=espWallAdd(0);a.wall='e';a.x=600;a.w=800;a.h=1500;a.b=300;var b=espWallAdd(0);b.wall='d';b.x=600;b.w=800;b.h=1500;b.b=300;draw();open3D();await W(400);__cam(.0,.05,1.0);__cam(.3,.05,1.0);R.frenteAFrente=Object.keys(MIRS).length+' planos · erro '+(window.MIRERR||'nenhum');
+        /* qualidade é do aparelho: muda o reflexo, não o projeto */var s1=JSON.stringify(snapState());espqSet('alta');__cam(.3,.05,1.0);var ia=JSON.stringify(window.__mirInfo);espqSet('equil');__cam(.31,.05,1.0);var ie=window.__mirInfo;R.qualidade=(JSON.parse(ia).w>ie.w)+' · projeto igual '+(JSON.stringify(snapState())===s1)+' · botão '+/Espelhos: equilibrado/.test((document.getElementById('v3esq')||{}).textContent||'');espqSet('auto');
+        /* Acabamento realista: espelho como antes (sem o reflexo planar) e sem erro */window.AQERR='';aqSet(1);await W(200);R.aq=Object.keys(MIRS).length+' '+(window.AQERR||'ok');aqSet(0);
+        document.getElementById('v3x').click();R.dados=JSON.stringify(cena(true))&&JSON.stringify(snapState()).length>0;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["reflete"] as? Bool, true, "o balcão vermelho aparece vermelho dentro do espelho")
+        XCTAssertEqual(o["err"] as? String, "")
+        XCTAssertEqual(o["bronzeQuente"] as? Bool, true, "bronze: reflexo puxado pro bronze · \(o["tons"] ?? "")")
+        XCTAssertEqual(o["fumeEscuro"] as? Bool, true, "fumê: reflexo mais escuro")
+        XCTAssertEqual(o["reaproveita"] as? Bool, true, "câmera parada: o reflexo não é refeito")
+        XCTAssertEqual(o["semVermelho"] as? Bool, true, "sem o balcão, nada vermelho no espelho (não é imagem fixa)")
+        XCTAssertEqual(o["frenteAFrente"] as? String, "3 planos · erro nenhum", "dois espelhos frente a frente (e o do fundo): cada plano com o seu reflexo, sem recursão")
+        XCTAssertEqual(o["qualidade"] as? String, "true · projeto igual true · botão true", "qualidade: do aparelho, não do projeto")
+        XCTAssertEqual(o["aq"] as? String, "0 ok", "Acabamento realista: espelho como antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ESP-ORG · BIBLIOTECA DE ESPELHOS ORGÂNICOS E LED JATEADO (Adauto 23/11, fotos de referência): 12 modelos; contorno real (curva fechada,
+    // triangulação de verdade, também girado); faixa jateada iluminada com o centro espelhado; halo do LED traseiro; LED frontal/traseiro/ambos/nenhum,
+    // 3000/4000/6000 K, intensidade, liga/desliga; faixa e distância da borda em mm; editar pontos no 2D; salvar formato; orçamento (jateamento,
+    // LED, fonte); DXF com contorno, jateado e LED em camadas; nada no plano de corte de MDF; espelho antigo igual; salvar e reabrir
+    func testEspelhosOrganicosELedJateadoBibliotecaQuadroOrcamentoEDxf() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var R={},TL=[],e0=__errs.length;window.toast=function(t){TL.push(String(t))};
+        loadState(initLimpo());S.env='banheiro';S.room='banheiro';S.W=3600;S.H=2700;draw();var ms=apModels('espelho'),ix=function(n){for(var i=0;i<ms.length;i++)if(ms[i][0].indexOf(n)===0)return i;return -1};
+        var NOMES=['Espelho redondo LED jateado','Espelho oval LED jateado','Espelho retangular faixa jateada','Espelho arco com LED','Espelho orgânico vertical irregular','Espelho orgânico horizontal irregular','Espelho orgânico gota','Espelho orgânico ondulado','Espelho orgânico LED traseiro','Espelho orgânico LED frontal jateado','Espelho orgânico LED frontal e traseiro','Espelho orgânico sem LED'];
+        R.modelos=NOMES.filter(function(n){return ix(n)>=0}).length;
+        /* contorno real: polígono simples, triangulado em n−2 (também girado 37°), área dentro da caixa */
+        var forms=[];['gota','orgv','orgh','onda'].forEach(function(k){[0,37].forEach(function(g){var f={forma:k,w:600,h:900,x:0,b:0,rot:g},P=espPts(f,0),T=espTri(P),a=espArea(f);forms.push(k+(g?'↻':'')+':'+(T.length===P.length-2?'ok':'tri '+T.length+'/'+(P.length-2))+(a>0.2&&a<0.54?'':' área '+a))})});R.contornos=forms.join(' ');
+        /* modelo com LED frontal e traseiro: faixa (fr), brilho, halo (tr) e vidro com reflexo */var f=espWallAdd(ix('Espelho orgânico LED frontal e traseiro'));f.x=1200;f.b=1100;draw();open3D();await W(400);__build();
+        var cnt=function(k){return __boxes().filter(function(b){return b.espLed===k}).length};R.camadas='faixa '+cnt('fr')+' · brilho '+cnt('frg')+' · halo '+cnt('tr')+' · vidro '+__boxes().filter(function(b){return b.mir}).length+' · reflexo '+(Object.keys(window.MIRS||{}).length>0);
+        var fx=__boxes().filter(function(b){return b.espLed==='fr'})[0];var mi_=__boxes().filter(function(b){return b.mir});R.faixaNaFrente=fx&&fx.em===1&&mi_.length===2&&mi_.every(function(m){return Math.abs(m.z1-fx.z1)<.5});document.getElementById('v3x').click();
+        /* quadro no 2D (item escolhido) */SELAP=f.id;LAST='ap';showBox();var b=document.getElementById('itbox');R.quadro=!!(b&&b.querySelector('[data-esporg]'));
+        var C=async function(sel){await W(30);SELAP=f.id;LAST='ap';showBox();var el=document.querySelector('#itbox '+sel);if(!el)return 'sem '+sel;el.click();await W(30);return 'ok'};
+        await C('[data-qorg="led|nao"]');R.semLed=JSON.stringify(f.led||null)+' '+(function(){open3D();__build();var n=__boxes().filter(function(b){return b.espLed}).length;document.getElementById('v3x').click();return n})();
+        await C('[data-qorg="led|fr"]');await C('[data-qorg="k|6000"]');await C('[data-qorg="on"]');R.led=JSON.stringify(f.led);await C('[data-qorg="on"]');
+        var put=async function(sel,v){SELAP=f.id;LAST='ap';showBox();var i=document.querySelector('#itbox '+sel);if(!i)return 'sem';i.value=v;i.dispatchEvent(new Event('change',{bubbles:true}));await W(30);return 'ok'};
+        await put('[data-qorgn="jw"]','55');await put('[data-qorgn="joff"]','30');R.faixa=JSON.stringify(f.jat);await put('[data-qorgn="jw"]','500');R.faixaGrande=JSON.stringify(f.jat)+' '+/não cabe/.test(TL.slice(-1)[0]||'');
+        await put('[data-qorgi]','40');R.intensidade=f.led.int;
+        /* editar pontos no 2D: arrasta o ponto 0, vira personalizado */await C('[data-qorg="ped"]');draw();var hs=document.querySelectorAll('#svg [data-esppt]');R.alcas=hs.length;var h0=hs[0],r0=h0.getBoundingClientRect(),cx=r0.left+r0.width/2,cy=r0.top+r0.height/2,p0=JSON.stringify(espPts(f,0)[0]);
+        h0.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:cx,clientY:cy,pointerId:3}));document.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:cx+30,clientY:cy-20,pointerId:3}));document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:3}));
+        R.arrastou=f.forma+' '+(JSON.stringify(espPts(f,0)[0])!==p0)+' pts '+(f.pts||[]).length;
+        window.prompt=function(){return 'Meu teste'};try{localStorage.removeItem('arq.espformas')}catch(_){}await C('[data-qorg="salva"]');var g=espWallAdd(ix('Espelho orgânico sem LED'));SELAP=g.id;LAST='ap';showBox();var mb=document.querySelector('#itbox [data-qorg="meu|0"]');if(mb){mb.click();await W(30)}R.meuFormato=(g.forma==='livre'&&JSON.stringify(g.pts)===JSON.stringify(f.pts));
+        /* orçamento e plano de corte */var q=espLedQ();R.orcamento=(q.espJat>0)+' '+(q.espLed>0)+' '+q.espFonte;var pa=prAuto(budget());R.linhas=['espJat','espLed','espFonte'].filter(function(k){return pa.some(function(x){return x[0]===k})}).length;var ca_=cutAll();R.corteMDF=!JSON.stringify(ca_).match(/[Ee]spelho|vidro/);R.corteN=JSON.stringify(ca_).slice(0,200);
+        /* DXF da vidraçaria: camadas separadas */var dx=espDxf([f]);R.dxf=['ESPELHO_CORTE','ESPELHO_JATEADO','ESPELHO_LED'].map(function(l){return l+' '+(dx.split('\r\n8\r\n'+l+'\r\n').length-1>0)}).join(' · ')+' · '+JSON.stringify(window.__espDxfConta);
+        /* espelho antigo (sem campos novos): desenho e medida de sempre */var v=espWallAdd(0);R.antigo=JSON.stringify(espPts(v,0).map(function(p){return p.map(Math.round)}))===JSON.stringify([[v.x,v.b],[v.x+v.w,v.b],[v.x+v.w,v.b+v.h],[v.x,v.b+v.h]].map(function(p){return p.map(Math.round)}))&&!v.led&&!v.pts;
+        /* salvar e reabrir */var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));var f2=S.fr.filter(function(q){return q.id===f.id})[0];R.reabriu=!!f2&&f2.forma==='livre'&&JSON.stringify(f2.jat)===JSON.stringify(f.jat)&&f2.led.k===6000;
+        /* parede lateral: desenha sem erro */var lt=espWallAdd(ix('Espelho orgânico ondulado'));lt.wall='e';lt.x=800;draw();open3D();await W(300);__build();R.lateral=__boxes().filter(function(b){return b.mir}).length>0;document.getElementById('v3x').click();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["modelos"] as? Int, 12, "os 12 modelos da referência")
+        XCTAssertEqual(o["contornos"] as? String, "gota:ok gota↻:ok orgv:ok orgv↻:ok orgh:ok orgh↻:ok onda:ok onda↻:ok", "contorno real triangulado (também girado)")
+        XCTAssertEqual(o["camadas"] as? String, "faixa 1 · brilho 0 · halo 5 · vidro 2 · reflexo true", "faixa jateada, halo e vidro com reflexo (o vidro fica fora da faixa: centro e anel da borda)")
+        XCTAssertEqual(o["faixaNaFrente"] as? Bool, true, "faixa iluminada no plano do vidro, sem sobrepor a face espelhada")
+        XCTAssertEqual(o["quadro"] as? Bool, true, "quadro no 2D")
+        XCTAssertEqual(o["semLed"] as? String, "null 0", "sem LED: nenhuma camada de luz")
+        XCTAssertEqual(o["led"] as? String, "{\"fr\":1,\"tr\":0,\"k\":6000,\"int\":80,\"on\":0}", "frontal, 6000 K, desligado")
+        XCTAssertEqual(o["faixa"] as? String, "{\"w\":55,\"off\":30}", "largura e distância da faixa em mm")
+        XCTAssertEqual(o["faixaGrande"] as? String, "{\"w\":55,\"off\":30} true", "faixa que não cabe: avisa e não muda")
+        XCTAssertEqual(o["intensidade"] as? Int, 40)
+        XCTAssertEqual(o["alcas"] as? Int, 11, "uma alça por ponto de controle")
+        XCTAssertEqual(o["arrastou"] as? String, "livre true pts 11", "arrastar o ponto muda a curva e vira personalizado")
+        XCTAssertEqual(o["meuFormato"] as? Bool, true, "formato salvo vai pra outro espelho")
+        XCTAssertEqual(o["orcamento"] as? String, "true true 1", "jateamento, LED e fonte")
+        XCTAssertEqual(o["linhas"] as? Int, 3, "linhas no orçamento")
+        XCTAssertEqual(o["corteMDF"] as? Bool, true, "espelho não vai pro plano de corte de MDF · \(o["corteN"] ?? "")")
+        XCTAssertTrue((o["dxf"] as? String ?? "").hasPrefix("ESPELHO_CORTE true · ESPELHO_JATEADO true · ESPELHO_LED true"), "\(o["dxf"] ?? "")")
+        XCTAssertEqual(o["antigo"] as? Bool, true, "espelho antigo igual")
+        XCTAssertEqual(o["reabriu"] as? Bool, true, "salva e reabre")
+        XCTAssertEqual(o["lateral"] as? Bool, true, "parede lateral")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

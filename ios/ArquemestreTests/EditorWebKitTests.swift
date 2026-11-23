@@ -15304,7 +15304,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["grade"] as? String, "2 colunas × 3 linhas · lido por linha true", "2 colunas × 3 linhas pelas posições na tela")
         XCTAssertEqual(o["categorias"] as? String, "moveis tem · led tem · esp tem · pedras tem · paredes tem · outros tem", "toda categoria abre ferramenta de verdade (nenhuma vazia ou de enfeite)")
         /* 34 → 35: entra data-cespw (espelho na parede, pedido do Adauto 23/11/2026 "espelhos independentes nas paredes"); nenhuma chave antiga saiu */
-        XCTAssertEqual(o["ciclos"] as? String, "data-* iguais em 3 ciclos true · chaves 35", "abrir e fechar 3 vezes não perde nem duplica ferramenta (ressalva 5 do Chefe)")
+        /* 35 → 36: entra data-cespv (espelho no vão, pedido do Adauto 23/11/2026); nenhuma chave antiga saiu */
+        XCTAssertEqual(o["ciclos"] as? String, "data-* iguais em 3 ciclos true · chaves 36", "abrir e fechar 3 vezes não perde nem duplica ferramenta (ressalva 5 do Chefe)")
         XCTAssertEqual(o["busca"] as? String, "busca panela: ＋ Panela | ＋ Jogo de panelas | 🍲 Panelas no cooktop", "a 🔎 acha a ferramenta em qualquer categoria")
         XCTAssertEqual(o["umToque"] as? String, "cooktop pela categoria: visível · panelas [[0]]→[[1]]", "a ferramenta funciona a 1 toque dentro da categoria")
         XCTAssertEqual(o["semRefazer3D"] as? String, "reconstruções do 3D ao abrir e trocar: 0", "abrir e trocar categoria não refaz o 3D")

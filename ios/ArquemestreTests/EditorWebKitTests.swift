@@ -689,7 +689,7 @@ final class EditorWebKitTests: XCTestCase {
             XCTAssertTrue((c["Porta"] ?? "").hasPrefix(jat), "\(st): porta pintada")
         }
         XCTAssertEqual(o["cl"] as? [String], ["c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend", "c:Jatobá Brasileiro · Arauco Trend"], "plano de corte: tamponamentos e réguas na cor das portas pintadas")
-        XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda#1"), "\(o["title"] ?? "")")
+        XCTAssertTrue((o["title"] as? String ?? "").contains("Fita de topo de Lateral esquerda"), "\(o["title"] ?? "")")
         XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod", "modIn"], "tocando na fita, as opções de fita vêm primeiro (com a opção de fita branca só nela)")
         XCTAssertEqual(o["pvFita"] as? Bool, true, "prévia só na fita")
         XCTAssertTrue((o["same"] as? String ?? "").contains("já estava"), "fita já na cor das portas: avisa em vez de repetir: \(o["same"] ?? "")")
@@ -16396,5 +16396,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["moldura"] as? String, "sem frontal: 1 · com frontal: 0", "moldura e Frontal coberto pelas portas não somam")
         XCTAssertEqual(o["ordem"] as? String, "Moldura → Travessão → Frontal")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PINTAR COMPACTO (Adauto 17/11, D44): cabeçalho fixo em 2 linhas (título + cor; peça + módulo), opções com rolagem interna,
+    // 2 colunas no tablet, "#1" fora da apresentação quando não precisa; ordem dinâmica, opções e funções iguais
+    func testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];m.v=[{k:'door',n:1,cava:true,bas:true,bd:'up',open:0}];S.m=m;draw();panel();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__build();
+          var jat=MAT.filter(function(c){return /jatob/i.test(c.n)})[0];pt3(true);window.PT3={c:jat.hex,n:matLabel(jat),id:jat.id,erase:false};
+          var fb=__boxes().filter(function(b){return b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(fb);
+          var q=document.getElementById('pt3q'),hd=q.querySelector('.pthd'),lines=hd?hd.children.length:0,sw=hd&&hd.querySelector('span[style*="background"]');
+          var order=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq}),grids=q.querySelectorAll('.ptg').length;
+          var cs=getComputedStyle(q),hs=hd?getComputedStyle(hd).position:'',nome=hd?hd.children[1].textContent:'',x=q.querySelector('[data-ptq="x"]').getBoundingClientRect();
+          var css=(document.getElementById('ptcss')||{}).textContent||'';
+          var pb=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0];__pt3tapBox(pb);q=document.getElementById('pt3q');var order2=[].map.call(q.querySelectorAll('[data-ptq]'),function(b){return b.dataset.ptq});
+          q.querySelector('[data-ptq="one"]').click();var pc=JSON.stringify(m.pc||m.pcT||{});
+          pt3(false);document.getElementById('v3x').click();
+          return JSON.stringify({lines:lines,sw:!!sw,order:order,order2:order2,grids:grids,ov:cs.overflowY,mh:cs.maxHeight,hs:hs,nome:nome,xw:Math.round(x.width),css2:/grid-template-columns:1fr 1fr/.test(css)&&/min-width:700px/.test(css),pc:pc,errs:__errs});
+          """#)
+        XCTAssertEqual(o["lines"] as? Int, 2, "cabeçalho em 2 linhas")
+        XCTAssertEqual(o["sw"] as? Bool, true, "cor escolhida no cabeçalho")
+        XCTAssertEqual(o["hs"] as? String, "sticky", "cabeçalho fixo; as opções rolam por baixo")
+        XCTAssertEqual(o["ov"] as? String, "auto", "rolagem interna")
+        XCTAssertNotEqual(o["mh"] as? String, "none", "altura limitada")
+        XCTAssertEqual(o["css2"] as? Bool, true, "2 colunas a partir de 700 px (tablet)")
+        XCTAssertGreaterThanOrEqual(o["grids"] as? Int ?? 0, 2)
+        XCTAssertFalse((o["nome"] as? String ?? "").contains("#1"), "\"#1\" fora da apresentação: \(o["nome"] ?? "")")
+        XCTAssertTrue((o["nome"] as? String ?? "").contains("Lateral esquerda"), "\(o["nome"] ?? "")")
+        XCTAssertLessThanOrEqual(o["xw"] as? Int ?? 99, 40, "✕ menor")
+        XCTAssertEqual(o["order"] as? [String], ["x", "fita", "fitaMod", "fitaAll", "fitaW", "one", "type", "typeAll", "mod", "modIn"], "ordem dinâmica: tocando na fita, fita primeiro; nenhuma opção a menos")
+        XCTAssertEqual((o["order2"] as? [String])?.first, "x")
+        XCTAssertEqual((o["order2"] as? [String] ?? [])[1], "one", "tocando na peça, a peça primeiro")
+        XCTAssertTrue((o["pc"] as? String ?? "").contains("Lateral esquerda"), "a opção continua pintando: \(o["pc"] ?? "")")
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
 }

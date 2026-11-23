@@ -16883,7 +16883,7 @@ final class EditorWebKitTests: XCTestCase {
         R.fr=fr.length+' '+fr[0].lay;R.fechado=fr.every(function(l){var a=l.pts[0],b=l.pts[l.pts.length-1];return a[0]===b[0]&&a[1]===b[1]});R.dentro=fr.every(function(l){return l.pts.every(function(q){return q[0]>0&&q[1]>0&&q[0]<pc.L&&q[1]<pc.W})});
         var row=prAuto(budget()).filter(function(r){return r[0]==='usiFriso'})[0];R.m=row?row[3]>0:false;var t0=budget().tot;PR.usiFriso=10;R.custo=Math.round(budget().tot-t0)===Math.round(row[3]*10);PR.usiFriso=0;
         R.fundo=estGeo({t:'simples',c:'cnc',rw:50,off:50,fp:8,fd:6},440,705,15).ok;
-        m.v[0].est={t:'simples',c:'cnc',rw:30,off:10,fp:4,fd:6};R.cava=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.estG.ok+' '+Math.round(+p.cw-p.estG.frames[0].r[3])+' '+Math.round(p.estG.frames[0].r[1])}).join('|');pxApplyAll('concha','inox');var av=dxfPecas({dobP:12}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].avisos.filter(function(a){return /^CONFLITO: friso/.test(a)});R.conf=av.length;
+        m.v[0].est={t:'simples',c:'cnc',rw:30,off:10,fp:4,fd:6};R.cava=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.estG.ok+' '+Math.round(+p.cw-p.estG.frames[0].r[3])+' '+Math.round(p.estG.frames[0].r[1])+' '+/ATENÇÃO: [^·]*cava usinada do puxador/.test(p.note)}).join('|');pxApplyAll('concha','inox');var av=dxfPecas({dobP:12}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].avisos.filter(function(a){return /^CONFLITO: friso/.test(a)});R.conf=av.length;
         m.v[0].est={t:'simples',c:'cnc',rw:30,off:60,fp:3,fd:6};R.semConf=dxfPecas({dobP:12}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].avisos.filter(function(a){return /^CONFLITO: friso/.test(a)}).length;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -16895,7 +16895,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["m"] as? Bool, true, "metros de friso no orçamento")
         XCTAssertEqual(o["custo"] as? Bool, true, "preço por metro entra no total")
         XCTAssertEqual(o["fundo"] as? Bool, false, "friso de 8 mm em MDF 15 bloqueado")
-        XCTAssertEqual(o["cava"] as? String, "true 21 10|true 21 10", "porta com cava usinada: do lado da cava a moldura começa a 21 mm (fora da cava); nos outros lados, a distância pedida")
+        XCTAssertEqual(o["cava"] as? String, "true 10 10 true|true 10 10 true", "porta com cava usinada (Adauto 23/11: até o topo também): a moldura vai até a distância pedida em todos os lados e a nota avisa que cobre a cava")
         XCTAssertEqual(o["conf"] as? Int, 1, "friso por cima do copo: 1 aviso de conflito")
         XCTAssertEqual(o["semConf"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)

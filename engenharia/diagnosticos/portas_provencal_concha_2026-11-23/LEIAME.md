@@ -12,7 +12,7 @@ Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src
   - medida negativa;
   - friso que deixaria menos de 9 mm de MDF;
 
-  A porta fica lisa e a nota avisa. Do lado da cava usinada a moldura começa a 21 mm (a cava de 30° ocupa 12/tan30); no mesmo módulo, frentes com a mesma borda usam a mesma distância, para ficarem alinhadas.
+  A porta fica lisa e a nota avisa. Réguas e molduras vão até a borda em todos os lados, inclusive em cima (Adauto 23/11, 2ª foto). Numa porta com cava usinada, a nota avisa que a régua (ou o friso) cobre a cava: troque o puxador (ex.: concha) ou afaste a régua 21 mm.
 - **Avisos**:
   - friso a menos de 40 mm da borda das dobradiças (nota);
   - no DXF, CONFLITO quando friso + copo passam da espessura;
@@ -38,12 +38,12 @@ Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src
 - "Ambiente" é o projeto: um projeto tem um ambiente.
 
 ## Correções do Adauto (23/11, foto da tela)
-- **Réguas na borda da porta**: distância da borda padrão 0, sem faixa lisa antes do provençal.
+- **Réguas na borda da porta**: distância da borda padrão 0, sem faixa lisa antes do provençal, até o topo também (sem os 21 mm do lado da cava; a nota avisa que cobre a cava).
 - **Concha desvirada**: borda reta embaixo (a boca), arco em cima. A concha sai mais na boca e os parafusos ficam na altura dos furos do DXF.
 - **Mais detalhe na concha**: chanfro, filete de brilho, lábio e 16 fatias. O 2D desenha o modelo.
 - **Veio**: nas réguas de cima e de baixo o veio fica deitado (madeira e foto do padrão). Réguas e molduras usam o padrão da frente.
 - **Portas de canto**:
-  - canto cego e canto reto com o estilo alinhado com o módulo do lado;
+  - canto cego e canto reto com o estilo alinhado com o módulo do lado (tudo começa na borda);
   - canto em L com as duas folhas (a do lado usa a medida real, 330) e o estilo no 3D;
   - o canto em L de baixo do catálogo não tem porta.
 - **Peça livre**: 2 toques abrem Duplicar / Medidas / Apagar. A cópia nasce do lado. Ao arrastar, o ímã (15 mm) encaixa a borda exata na de outra peça ou do módulo; porta e frente só valem se a peça estiver na frente delas.

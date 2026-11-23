@@ -1784,7 +1784,7 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **AUD-ESP-SOLIDO — espelho atravessando móvel (ponto 1, erro comprovado).**
   - Reproduzir: espelho de parede com altura/posição que cai sobre um módulo → antes ficava dentro do módulo.
   - Causa: `itSet`/troca de parede/formato/giro/moldura e `espWallAdd` não conferiam colisão com as caixas dos módulos.
-  - Correção: `espBate(f)` (caixas do espelho × caixas do 3D; espelho no vão fica fora de propósito). Edição que entraria volta e avisa; criação nasce acima do módulo se couber até o teto, senão não cria e avisa.
+  - Correção: `espBate(f)` (caixas do espelho × caixas do 3D; espelho no vão fica fora de propósito). Edição que levaria pra dentro volta e avisa ("Nada mudou"); espelho que já estava dentro pode ser editado. Criação nasce no lugar de sempre e, se cair num módulo, só avisa qual (CLAUDE.md §4 — a 1ª versão subia/removia sozinha e quebrava 3 testes antigos; trocada no mesmo dia).
 - **AUD-LED-GIRO — LED livre no móvel livre girado (ponto 8, erro comprovado).**
   - Causa: `lvlHost` pulava peças `gp` (prisma girado) → LED sumia/não achava face.
   - Correção: `lvlRot`/`lvlDesgira` desfazem o giro, `lvlDraw1` desenha reto e gira junto; `lvlPickFace` aceita peça girada.

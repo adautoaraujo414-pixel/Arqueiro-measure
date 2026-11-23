@@ -26,6 +26,8 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 - **Tamponamento nunca entra no módulo:** peça inteira por fora. As réguas de 8 cm são coladas só no tamponamento. (A, 15/11)
 - **Painéis e módulos são sólidos:** nada entra dentro de outra coisa. (A)
 - **Módulo não age sozinho:** não tira tamponamento nem se afasta do vizinho sem o Adauto mandar. (A)
+- **Tamponamento automático é acabamento de lado exposto** (A, 22/11, TAMP-JUNTA): encostou em outro módulo, sai; separou e o lado ficou exposto, volta (mesma regra da criação). Só o automático; o manual e o do modelo nunca mudam sozinhos. O vizinho não anda; o módulo arrastado encosta.
+- **Espessuras do tamponamento** (A, 22/11): só 15, 25 e 30. 15 = chapa de 15 · 25 = chapa única de 25 · **30 = duas de 15** (face + moldura de réguas de 80). **Não existe 35.** O 3D desenha igual ao corte.
 - **Nenhum armário com vão, peça solta, erro de seleção ou erro de porta.** Porta e prateleira vão até o fim. (A)
 
 ## Pedra
@@ -34,7 +36,7 @@ Cada regra tem a fonte. **(A)** é o Adauto, com a data. **(código)** é confer
 
 ## Pendentes de confirmação (não usar como regra ainda)
 - Perfil G encostando na caixa (1,5 mm). Ver a pendência 1 da especificação do gola.
-- Engrosso do tamponamento "entrando no módulo": não reproduzido (HISTORICO_ERROS, TAMP-ENGROSSO).
+- Engrosso do tamponamento "entrando no módulo": reproduzido em 22/11 no tamponamento de **25 mm** (3D desenhava 15+15 e as réguas entravam 5 mm na lateral). Ver TAMP-25-3D no HISTORICO_ERROS.
 
 ## Fundo (confirmado pelo Adauto em 18/11/2026, com foto de uma torre no 3D)
 - **Regra:** o fundo dos armários é **parafusado por fora**, sobreposto e não embutido. O único fundo embutido é o da gaveta.

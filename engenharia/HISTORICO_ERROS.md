@@ -125,6 +125,7 @@ Começou em 16/11/2026. Os erros anteriores a essa data estão aqui só quando a
 - **Relatado:** 16/11 às 00:55 ("erro gravíssimo").
 - **Verificado:** todos os módulos do catálogo, mais o caso do balcão com forno, mantêm o tamponamento por fora (`testTamponamentoSempreForaDoModuloEmTodosOsModelosComReguasDe80`).
 - **Status:** não reproduzido. Falta saber em qual módulo e de que lado.
+- **Atualização 22/11:** reproduzido no tamponamento de **25 mm** (ver TAMP-25-3D). O teste de 16/11 só usava 30.
 
 ## FORNO-3MM: folga em cima do forno embutido
 - **Relatado:** 16/11 às 00:55 e 01:02. A folga entre a parte de cima e o forno tem que ser de 3 mm.
@@ -1498,3 +1499,41 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - **Marca e botão únicos (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11):** `m.cnP` e "Atualizar portas do canto" (`window.cnPAtualiza`, `#cnpbox`, `[data-cnpup]`) servem para TODAS as regras novas das portas do canto; o antes/depois é calculado comparando `partsOf` com e sem a marca.
   - **Coordenação:** o Code 2 prepara a correção completa das portas do canto (altura, cava, textura, painel cego, dobradiça) em branch isolada, sobre esta junção.
     - O botão e a marca podem ser os mesmos.
+
+
+## TAMP-JUNTA — tamponamento automático escondido entre dois módulos encostados (22/11/2026)
+- **Relatado:** Adauto 22/11, com foto: balcão aberto (sem porta) à esquerda do balcão do forno embutido, com pedra, e 4 faixas verticais na junta. Confirmou que o tamponamento apareceu sozinho (automático).
+- **Módulo:** tamponamento automático (`autoTamp`, `tlAuto`/`trAuto`), todos os módulos de parede.
+- **Como reproduzir:** forno sozinho em x=1500 (ganha o automático no lado esquerdo exposto); balcão aberto pelo catálogo, longe à esquerda; levar o aberto até o forno (arraste no 2D ou posição digitada), arrastar o forno no 3D até o aberto, ou encaixar na parede um móvel livre do 3D (`__mv3.encaixa`) encostado no forno.
+- **Causa raiz (comprovada):** o automático só era decidido na criação do módulo (`ATGO`, armado no `newTpl`). Mudar o módulo de lugar não reavaliava a junta:
+  - 2D: `pointerup`, `gapJoinDir`;
+  - 3D: fim do `MDRG`, `gapJoin`;
+  - posição digitada: `setv('x')`, o B05 só tirava o automático do próprio módulo;
+  - encaixe do 3D: `encaixa`.
+  O lado que tinha ficado exposto continuava com o automático depois de encostar.
+- **As 4 faixas:** face de 15 do tamponamento esquerdo do forno + réguas de 80 (engrosso), por fora do forno (não entram no módulo).
+  - São peças reais: `partsOf`, lista (`cutLines`: face 720×585 + réguas 720×80 e 425×80), plano de corte, 3D e orçamento (2,61 m de fita por tamponamento).
+  - No arraste e no encaixe ficavam os dois automáticos na junta (60–62 mm).
+  - Digitando a posição, o aberto era empurrado de 900 pra 870.
+- **Correção:** `tampJunta(m,dir,x0)` ao lado do `autoTamp`, chamada no fim de cada movimento feito pela pessoa (2D, 3D, posição digitada, encaixe):
+  - encostou → sai o automático dos dois lados da junta (`tampNbOf`, mesma regra de vizinho da criação);
+  - o módulo arrastado encosta no vizinho, fechando só a folga do tamponamento que saiu (o vizinho não anda; se entraria em outro, fica onde soltou);
+  - separou → volta o automático no lado que ficou exposto (`tampExposed`);
+  - nunca mexe em manual (`tlM`/`trM`), do modelo, travado, canto, nicho, painel de TV, livre, nem com o ajuste "automático" desligado;
+  - projeto aberto não muda; aviso na tela quando tira ou põe.
+- **Decisões:** DECISOES_TECNICAS 22/11 (~20:25, ~21:10 e ~21:40 UTC).
+- **Família conferida:** aéreos (sai), torre quente + balcão (o tamponamento do modelo da torre fica, o automático do balcão sai), guarda-roupas (do modelo, não muda), remover e recolocar pelo catálogo.
+- **Testes:** `testTamponamentoAutomaticoSaiDaJuntaQuandoOModuloEncostaNoOutroEOManualFica` (84fb89c, ampliado em fd72cce) · correção a6712f1.
+  - Falha antes em 8 conferências.
+  - Cobre 2D, 3D, digitado, encaixe, manual, aviso, orçamento (só os dois tamponamentos), desfazer/refazer, salvar e reabrir, separar, projeto antigo.
+- **Pendente:** aparelho real; CI das 3 plataformas na branch `claude/arquemestre-tamp-junta` (não integrada à candidata).
+
+## TAMP-25-3D — engrosso do tamponamento de 25 mm entrando 5 mm no módulo no 3D (22/11/2026)
+- **Achado:** na investigação do TAMP-JUNTA (provável origem do TAMP-ENGROSSO de 16/11).
+- **Causa raiz (comprovada):** o 3D (`build_eng3`) dividia em camadas de 15 qualquer tamponamento de 25 a 45 mm (`n=round(th/15)`).
+  - O de 25 virava face 15 + réguas 15 = 30, dentro de uma caixa de 25.
+  - As réguas ficavam em 990..1005, com a lateral do módulo em 1000.
+  - O corte é chapa única de 25: o 3D mostrava réguas que não estão no corte.
+- **Correção:** o 3D só divide quando a espessura é múltipla de 15, a mesma regra do corte (`mat%15===0`). O de 30 continua face + moldura, duas de 15.
+- **Regra (Adauto 22/11):** tamponamento só de 15, 25 (chapa única) e 30 (duas de 15). Não existe 35 (pedido de 35 cancelado pelo Adauto; nada de 35 entrou no código).
+- **Teste:** `testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo` (fd72cce, falha antes: 975..1005, entra no módulo) · correção a6712f1.

@@ -15210,4 +15210,51 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue(["arque-cliente-v2 fmt 1","ponte do app"].contains(o["clienteSemPonte"] as? String ?? ""), "sem a ponte shareClient o link do cliente sai pelo shareCut, também com o tipo novo: \(o["clienteSemPonte"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// FASE3_ · editor livre, defeitos do móvel livre (levantamento de 23/11, base 3b99c01): a câmera da Planta (2 dedos) mexia o móvel; no 3D o arrasto de
+    /// parede pegava o livre; o livre aparecia de novo no lugar antigo da parede na Planta (e na Planta em ângulo respondia como módulo de parede); na Planta
+    /// em ângulo o arrasto ia pro lado errado; segurar 2 s no livre da Planta não abria o menu.
+    func testFASE3_MovelLivreCameraNaoMexePlantaSemFantasmaArrastoNo3DESegurar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var cena=async function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;PLV=false;PLANG=false;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(40);var a=S.mods[1];a.lock=false;S.m=a;lvSolta(a);draw();await W(60);return a};
+        var pos=function(m){return Math.round(m.lx)+','+Math.round(m.lz)+' · b '+m.b+' · rot '+(+m.rot||0)};
+        /* B4: na Planta, segundo dedo (pinça da câmera) não mexe o móvel livre */
+        var a=await cena();PLV=true;draw();await W(80);var g=document.querySelector('#svg [data-lv="1"]'),sv=document.getElementById('svg');R.planta='planta '+(g?'ok':'sem');
+        var pe=function(n,el,x,y,id){el.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:id,pointerType:'touch',isPrimary:id===1,button:0,buttons:n==='pointerup'?0:1}))};
+        var r=g.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,p0=pos(a);
+        pe('pointerdown',g.querySelector('rect'),x,y,1);pe('pointerdown',sv,x+200,y+80,2);for(var s=1;s<=6;s++){pe('pointermove',sv,x-15*s,y,1);pe('pointermove',sv,x+200+15*s,y+80,2)}pe('pointerup',sv,x-90,y,1);pe('pointerup',sv,x+290,y+80,2);await W(80);
+        R.pincaNaPlanta='pinça na Planta: antes '+p0+' · depois '+pos(a);
+        /* um dedo só continua arrastando */a=await cena();PLV=true;draw();await W(80);g=document.querySelector('#svg [data-lv="1"]');r=g.getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2;var rc=sv.getBoundingClientRect(),vb=sv.viewBox.baseVal,px=300*PLK*rc.width/vb.width;p0=pos(a);
+        pe('pointerdown',g.querySelector('rect'),x,y,1);for(s=1;s<=6;s++)pe('pointermove',sv,x+px*s/6,y,1);pe('pointerup',sv,x+px,y,1);await W(80);R.umDedo='um dedo: antes '+p0+' · depois '+pos(a);
+        /* B5: no 3D, segurar e arrastar o móvel livre não muda a altura */
+        a=await cena();PLV=false;draw();open3D();await W(300);__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
+        var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
+        var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf('1:')!==0)return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var pp=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc3=cv.getBoundingClientRect(),cx=rc3.left+pp[0],cy=rc3.top+pp[1];p0=pos(a);
+        ev('pointerdown',cx,cy);await W(420);ev('pointermove',cx+14,cy-14,cv);for(s=1;s<=10;s++)ev('pointermove',cx+6*s,cy-12*s,M_);ev('pointerup',cx+60,cy-120,M_);await W(80);R.arrasto3D='3D segurar e arrastar: antes '+p0+' · depois '+pos(a)+' · x '+a.x;
+        try{document.getElementById('v3x').click()}catch(_){}await W(80);
+        /* fantasma na Planta (plana e em ângulo) */
+        a=await cena();PLV=true;PLANG=false;draw();await W(80);R.fantasmaPlana='plana: fantasma '+document.querySelectorAll('#svg [data-pm="1"]').length+' · livre '+document.querySelectorAll('#svg [data-lv="1"]').length;
+        PLANG=true;draw();await W(120);R.fantasmaAngulo='ângulo: fantasma '+document.querySelectorAll('#svg [data-pm="1"]').length+' · livre '+(document.querySelectorAll('#svg [data-lv="1"]').length>0);
+        /* Planta em ângulo: arrastando, o móvel continua embaixo do dedo */
+        var fs=[].slice.call(document.querySelectorAll('#svg [data-lv="1"]')),big=fs.map(function(e){var r=e.getBoundingClientRect();return [e,r.width*r.height,r]}).sort(function(p,q){return q[1]-p[1]})[0];
+        var rr=big[2],gx=rr.left+rr.width/2,gy=rr.top+rr.height/2,el0=document.elementFromPoint(gx,gy);if(!(el0&&el0.closest&&el0.closest('[data-lv="1"]'))){var ok_=0;for(var tx=rr.left+3;tx<rr.right&&!ok_;tx+=4)for(var ty=rr.top+3;ty<rr.bottom&&!ok_;ty+=4){var q_=document.elementFromPoint(tx,ty);if(q_&&q_.closest&&q_.closest('[data-lv="1"]')){gx=tx;gy=ty;ok_=1}}}
+        p0=pos(a);pe('pointerdown',document.elementFromPoint(gx,gy),gx,gy,1);for(s=1;s<=8;s++)pe('pointermove',sv,gx+10*s,gy+5*s,1);pe('pointerup',sv,gx+80,gy+40,1);await W(120);var e1=document.elementFromPoint(gx+80,gy+40);
+        R.arrastoAngulo='ângulo: andou '+(pos(a)!==p0)+' · embaixo do dedo '+!!(e1&&e1.closest&&e1.closest('[data-lv="1"]'));
+        /* segurar 2 s no livre da Planta abre o menu do vão */
+        a=await cena();PLV=true;PLANG=false;draw();await W(80);g=document.querySelector('#svg [data-lv="1"] rect');r=g.getBoundingClientRect();x=r.left+r.width/2;y=r.top+r.height/2;pe('pointerdown',g,x,y,1);await W(2200);var mn=document.querySelector('[data-vk]');R.segurar2s='segurar 2 s: menu '+!!(mn&&mn.getClientRects().length)+' · lugar '+(pos(a));pe('pointerup',g,x,y,1);await W(80);try{if(window.vmenuClose)vmenuClose()}catch(_){}
+        PLV=false;PLANG=false;draw();R.erros='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["planta"] as? String, "planta ok", "o móvel livre aparece na Planta")
+        XCTAssertEqual(o["pincaNaPlanta"] as? String, "pinça na Planta: antes 1650,1470 · b 0 · rot 0 · depois 1650,1470 · b 0 · rot 0", "pinça/arraste da vista com dois dedos não mexe o móvel (antes andava 659 mm)")
+        XCTAssertEqual(o["umDedo"] as? String, "um dedo: antes 1650,1470 · b 0 · rot 0 · depois 1950,1470 · b 0 · rot 0", "um dedo continua arrastando o móvel livre (+300 mm)")
+        XCTAssertEqual(o["arrasto3D"] as? String, "3D segurar e arrastar: antes 1650,1470 · b 0 · rot 0 · depois 2371,103 · b 0 · rot 0 · x 905", "no 3D, segurar e arrastar leva o livre pelo chão; m.x interno não muda (antes ia a 2675 e o móvel não andava)")
+        XCTAssertEqual(o["fantasmaPlana"] as? String, "plana: fantasma 0 · livre 1", "Planta: o livre não aparece de novo no lugar antigo da parede")
+        XCTAssertEqual(o["fantasmaAngulo"] as? String, "ângulo: fantasma 0 · livre true", "Planta em ângulo: faces do livre são do arrasto de livre")
+        XCTAssertEqual(o["arrastoAngulo"] as? String, "ângulo: andou true · embaixo do dedo true", "Planta em ângulo: o livre segue o dedo")
+        XCTAssertEqual(o["segurar2s"] as? String, "segurar 2 s: menu true · lugar 1650,1470 · b 0 · rot 0", "segurar 2 s no livre da Planta abre o menu, sem mexer nele")
+        XCTAssertEqual(o["erros"] as? String, "erros 0", "sem erro")
+    }
 }

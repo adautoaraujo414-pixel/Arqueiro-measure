@@ -1568,3 +1568,20 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
   - capturas em iPhone 390, iPad 820, Tab S9 FE 800 e Windows 1366 (Chromium, não aparelho real).
 - **Diferença para a imagem:** o título continua "＋ Criar no 3D", com ▁ e ✕ (regra §0, não tirar nada). A imagem tem "+ Criar" com chevron.
 - **Teste:** `testFASE4_MenuCriarSeisCategoriasNenhumaFerramentaSome` (69a6002, falha antes).
+
+## FASE4 · ESPELHO NA PAREDE (23/11/2026, branch `claude/fase4-espelhos-parede`, base `6341a22`)
+- **Pedido (Adauto, 23/11):** "Implementar espelhos independentes nas paredes, com largura, altura, espessura e posição editáveis, visualização correta em 2D/3D e persistência no projeto. Preservar integralmente os espelhos existentes nas portas de correr."
+- **Formato:** item da parede em `S.fr` (`t:'espelho'`, `w`, `h`, `d` = espessura, `x`, `b`, `wall` 'e'/'d' ou sem = fundo). `S.fr` já vai no `snapState`/`loadState`, no desfazer e na vista 2D de cada parede: não foi preciso mexer em salvar/abrir.
+- **Implementado:**
+  - `APM.espelho` com 4 modelos (60×90, 50×70, 80×120, corpo inteiro 50×160 a 300 do chão); nasce no meio da parede.
+  - 3D (`espW3`, via `ap3model`): placa de vidro `#d3dde3` (`mir`) com borda lapidada, igual ao espelho da folha de correr; na parede lateral vira com `frWall3` de sempre.
+  - 2D: mesmo desenho do espelho da folha (`slMir2d`), com rótulo e medidas.
+  - Editor de medidas (3D e 2D): "Espessura (mm)" no lugar de profundidade, passo de 1 mm, de 2 a 50 mm (o mínimo de 20 dos eletros não vale para o espelho). Parede: fundo, esquerda, direita. Sem girar e sem acabamento.
+  - ＋ Criar · Espelhos: nova seção "Espelho na parede" (um botão por modelo); a seção do espelho da porta de correr continua igual.
+- **Testes:** `testFASE4_EspelhoNaParedeMedidasParede2D3DSalvarEPortaDeCorrerIntacta` (666b222, falha antes: botão não existe) · implementação 42a33eb.
+- **Regressão pega pela bateria e corrigida:** o catálogo monta um item por modelo de `APM`, e a regra do catálogo é todo item com foto (`testCatalogoComFotoDeCadaModuloEEletro`: 7 sem foto, máximo 3). Correção 2ce6c40: o espelho de parede fica fora do catálogo; entra pelo ＋ Criar · Espelhos e pela aba Eletrodomésticos.
+- **Comportamento correto (não é erro):** o Desfazer junta mudanças feitas em menos de 0,7 s (`histTick`, vale para todos os itens).
+- **Risco identificado (comprovado na candidata 80b17c6):** app de versão anterior que abrir projeto com espelho de parede dá erro no desenho 2D (`APM['espelho']` não existe). O dado não se perde (salvar de novo mantém o item). É o mesmo caso de qualquer tipo novo de item. Decisão do Adauto: publicar as plataformas juntas ou aceitar.
+- **Não mexido:** espelho da folha de correr (`v.esp`, `slideCfgOpen`), `partsOf`, plano de corte, `snapState`/`loadState`.
+- **Sugestão (não feita):** espelho de parede na lista de materiais e no orçamento (m²), como o da porta de correr.
+- **Pendente:** aparelho real (iPhone, Tab S9 FE).

@@ -17112,4 +17112,71 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["catalogo"] as? Int, 0, "nenhum modelo do catálogo colide")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* AUD-LED-GIRO (auditoria do Code 1, 23/11/2026, ponto 8 do Adauto: "LED em móveis livres rotacionados"): o LED livre sumia do 3D e não dava pra pôr com o móvel livre girado. */
+    func testAuditoriaLedLivreNoMovelLivreGirado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Nicho com prateleiras')t=x})});
+        S.stones=[];S.mods=[];S.fr=[];S.env='cozinha';S.W=4200;draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];lvSolta(m);draw();__build();
+        var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))})[1];var L=lvlAdd(0,sh.pk,5);R.v0='livre reto: LED '+!!L+' · caixas '+__boxes().filter(function(b){return b.ledl}).length;
+        lvAng(m,45);draw();__build();var LB=__boxes().filter(function(b){return b.ledl});R.v1='girado 45°: LED salvo '+(m.leds||[]).length+' · caixas no 3D '+LB.length+' · giradas junto '+LB.filter(function(b){return !!b.gp}).length;
+        var sh2=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))})[2];var L2=lvlAdd(0,sh2.pk,5);R.v2='pôr LED novo no girado: '+(L2?'pôs':'NÃO pôs');
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "livre reto: LED true · caixas 3", "LED no móvel livre reto")
+        XCTAssertEqual(o["v1"] as? String, "girado 45°: LED salvo 1 · caixas no 3D 3 · giradas junto 3", "girado 45°: o LED continua no 3D, girado junto com o móvel")
+        XCTAssertEqual(o["v2"] as? String, "pôr LED novo no girado: pôs", "dá pra pôr LED novo no móvel girado")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* AUD-ESP-SOLIDO e AUD-LED-FERRAGEM (auditoria do Code 1, 23/11/2026, pontos 1 e 7 do Adauto): espelho entrava no balcão sem aviso; LED passava na corrediça e na faixa da dobradiça. */
+    func testAuditoriaEspelhoNaoEntraNoMovelELedRespeitaFerragem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};window.ambMsg=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        /* 1. espelho x balcão */S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.env='cozinha';S.W=4000;S.H=2600;draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=500;draw();
+        var f=espWallAdd(0);f.x=600;f.b=1200;draw();open3D();await W(300);__itOpen({k:'fr',id:f.id});await W(80);var E=document.getElementById('it4');var i=E.querySelector('[data-qf="b"]');TL=[];i.value='400';i.dispatchEvent(new Event('change',{bubbles:true}));await W(120);
+        R.v0='espelho levado pra dentro do balcão (do chão 400): ficou em '+f.b+' · aviso '+TL.some(function(t){return /entraria no módulo 1/.test(t)});
+        TL=[];i=document.getElementById('it4').querySelector('[data-qf="b"]');i.value='1100';i.dispatchEvent(new Event('change',{bubbles:true}));await W(120);R.v1='acima do balcão (1100): ficou em '+f.b+' · aviso '+(TL.length>0);
+        /* espelho no vão continua valendo (fica dentro do vão de propósito) */S.m=m;S.sv=0;var g=espNoVao(0,0);R.v2='espelho no vão: '+(g?'criado '+g.w+'×'+g.h:'NÃO');
+        try{document.getElementById('v3x').click()}catch(_){}
+        /* 2. LED na lateral: faixa da dobradiça e corrediça */S.mods=[];S.fr=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].x=1200;draw();__build();
+        var lat=function(mi){return __boxes().filter(function(b){return parseInt(String(b.nm||''),10)===mi&&/^Lateral esquerda/.test(String(b.pk||''))})[0]};
+        TL=[];var Lg=lvlAdd(1,lat(1).pk,3);R.v3='LED na lateral do gaveteiro (por dentro): '+(Lg?'criou':'recusou')+' · aviso '+TL.filter(function(t){return /corrediça/.test(t)}).length;
+        TL=[];var Lp=lvlAdd(0,lat(0).pk,3);R.v4='LED na lateral do balcão de porta (meio da profundidade): '+(Lp?'criou':'recusou');
+        if(Lp){var LB=document.getElementById('ledlv');var inp=LB.querySelector('[data-lvlf="v"]');var wid=0;var hb=lat(0);inp.value=String(Math.round(hb.z1-hb.z0-20));TL=[];inp.dispatchEvent(new Event('change',{bubbles:true}));await W(80);R.v5='levar pra frente (faixa da dobradiça): v ficou '+Lp.v+' · aviso '+TL.some(function(t){return /dobradiça/.test(t)})}
+        /* criar espelho com torre no meio da parede */S.mods=[];S.fr=[];draw();var tt=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!tt&&x&&!x.act&&/^Torre|Armário livre|Paneleiro/.test(x.n))tt=x})});newTpl(JSON.parse(JSON.stringify(tt)));var tm=S.mods[0];tm.x=1500;tm.h=1500;draw();TL=[];var fn=espWallAdd(0);R.v6='criar com módulo alto no meio: '+(fn?'criado a '+fn.b+' do chão (topo do módulo '+(tm.b+tm.h)+')':'não criou')+' · dentro '+(fn&&window.espBate?espBate(fn)!==null:'-');
+        tm.h=2000;S.fr=[];draw();TL=[];var fn2=espWallAdd(0);R.v7='módulo alto até 2000: '+(fn2?'criou':'não criou')+' · aviso '+TL.some(function(t){return /Não cabe espelho/.test(t)})+' · espelhos '+S.fr.length;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "espelho levado pra dentro do balcão (do chão 400): ficou em 1200 · aviso true", "espelho levado pra dentro do balcão: recusa com aviso e fica onde estava")
+        XCTAssertEqual(o["v1"] as? String, "acima do balcão (1100): ficou em 1100 · aviso false", "acima do balcão pode")
+        XCTAssertEqual(o["v2"] as? String, "espelho no vão: criado 870×690", "espelho no vão continua (fica dentro do vão de propósito)")
+        XCTAssertEqual(o["v3"] as? String, "LED na lateral do gaveteiro (por dentro): recusou · aviso 1", "LED na lateral do gaveteiro: recusa (corrediça)")
+        XCTAssertEqual(o["v4"] as? String, "LED na lateral do balcão de porta (meio da profundidade): criou", "LED no meio da lateral do balcão de porta pode")
+        XCTAssertEqual(o["v5"] as? String, "levar pra frente (faixa da dobradiça): v ficou 280 · aviso true", "levar o LED pra faixa da dobradiça: volta com aviso")
+        XCTAssertEqual(o["v6"] as? String, "criar com módulo alto no meio: criado a 1550 do chão (topo do módulo 1500) · dentro false", "espelho novo com módulo no meio: nasce em cima dele")
+        XCTAssertEqual(o["v7"] as? String, "módulo alto até 2000: não criou · aviso true · espelhos 0", "não cabe em cima: não cria e avisa")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* AUD-ANGULO-ENTER (auditoria do Code 1, 23/11/2026, ponto 6 do Adauto, digitação): o ângulo digitado só aplicava no botão "° Girar"; no Enter não fazia nada. */
+    func testAuditoriaAnguloDoEspelhoEDoMovelLivreAplicaNoEnter() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var dig=function(i,txt){i.focus();i.select();document.execCommand('insertText',false,txt);i.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}))};
+        S.stones=[];S.mods=[];S.fr=[];S.env='cozinha';S.W=4200;draw();newTpl(T('Balcão 2 portas'));var f=espWallAdd(0);f.b=1500;draw();open3D();await W(300);__itOpen({k:'fr',id:f.id});await W(80);
+        dig(document.querySelector('#it4 [data-qespang]'),'30');await W(150);R.v0='espelho: ângulo 30 + Enter → rot '+(f.rot||0);
+        try{document.getElementById('v3x').click()}catch(_){}newTpl(T('Balcão 2 portas'));var a=S.mods[1];lvSolta(a);S.m=a;draw();lvBar(a,400,400);await W(60);dig(document.querySelector('#lvbar [data-lvang]'),'45');await W(150);R.v1='móvel livre (Planta): 45 + Enter → rot '+(+a.rot||0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "espelho: ângulo 30 + Enter → rot 30", "espelho: ângulo + Enter gira")
+        XCTAssertEqual(o["v1"] as? String, "móvel livre (Planta): 45 + Enter → rot 45", "móvel livre na Planta: ângulo + Enter gira")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

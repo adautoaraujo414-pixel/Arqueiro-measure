@@ -14591,11 +14591,11 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["novoModelo"] as? String, "marca 1 · folha do lado 330", "canto novo do catálogo (aéreo) já sai com a regra de 17/11")
         XCTAssertEqual(o["novoBotao"] as? String, "marca 1 · folha do lado 320", "canto novo pelo botão Canto em L (baixo) também")
-        /* marca única m.cnP e aviso com o antes/depois de cada peça de porta (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11) *//* CANTO-PORTA-L (22/11/2026, pedido do Adauto): o mesmo aviso mostra também a altura das portas (650 → 705, igual às retas) */XCTAssertEqual(o["antigo"] as? String, "marca 0 · folha do lado 309 · aviso sim «As portas deste canto estão com a regra antiga. Com a regra nova: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705 (mm). Nada muda sem você mandar.» · botão «Atualizar portas do canto»", "canto de projeto antigo abre igual (regra de antes) e avisa com as duas medidas")
-        XCTAssertEqual(o["atualizou"] as? String, "marca 1 · folha do lado 320 · aviso não · corte mudou true · Portas do canto atualizadas: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705. Desfazer volta como era.", "só muda quando a pessoa toca no botão")
+        /* marca única m.cnP e aviso com o antes/depois de cada peça de porta (acordo Code 1 + Code 2 pedido pelo Code 3, 22/11) *//* CANTO-PORTA-L (22/11/2026, pedido do Adauto): o mesmo aviso mostra também a altura das portas (650 → 705, igual às retas) *//* CANTO-3D-ANTIGO (pedido do Adauto 23/11: aparência do canto antigo preservada até o botão, que agora também atualiza o desenho 3D; o aviso aparece em todo canto antigo) */XCTAssertEqual(o["antigo"] as? String, "marca 0 · folha do lado 309 · aviso sim «As portas deste canto estão com a regra antiga. Com a regra nova: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705 (mm) e o desenho 3D das portas igual ao das retas. Nada muda sem você mandar.» · botão «Atualizar portas do canto»", "canto de projeto antigo abre igual (regra de antes) e avisa com as duas medidas")
+        /* CANTO-3D-ANTIGO (pedido do Adauto 23/11: aparência do canto antigo preservada até o botão, que agora também atualiza o desenho 3D; o aviso aparece em todo canto antigo) */XCTAssertEqual(o["atualizou"] as? String, "marca 1 · folha do lado 320 · aviso não · corte mudou true · Portas do canto atualizadas: folha do fundo 306×650 → 306×705 · folha do lado 309×650 → 320×705 · desenho 3D igual ao das retas. Desfazer volta como era.", "só muda quando a pessoa toca no botão")
         XCTAssertEqual(o["desfez"] as? String, "marca 0 · folha do lado 309 · corte igual ao de antes true", "desfazer volta exatamente como era")
         XCTAssertEqual(o["reabriu"] as? String, "marca 1 · folha do lado 320", "salvar e reabrir mantém a atualização")
-        XCTAssertEqual(o["guardaRoupa"] as? String, "folha do lado 419 · aviso não", "canto do guarda-roupa (alto) não muda e não avisa")
+        /* CANTO-3D-ANTIGO (pedido do Adauto 23/11: aparência do canto antigo preservada até o botão, que agora também atualiza o desenho 3D; o aviso aparece em todo canto antigo) */XCTAssertEqual(o["guardaRoupa"] as? String, "folha do lado 419 · aviso sim «As portas deste canto estão com a regra antiga. Com a regra nova: medidas iguais, só o desenho 3D das portas igual ao das retas. Nada muda sem você mandar.»", "canto do guarda-roupa (alto): medidas iguais, avisa só do desenho 3D")
         XCTAssertEqual(o["viraCanto"] as? String, "marca 1", "módulo virado em canto agora pelo painel é canto novo")
         XCTAssertEqual(o["cozinhaL"] as? String, "marca 1", "cozinha em L automática: o canto é novo")
         XCTAssertEqual(o["errs"] as? Int, 0)
@@ -15165,5 +15165,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cliente"] as? String, "arque-cliente-v2 fmt 1", "link do cliente com peça livre: tipo novo")
         XCTAssertTrue(["arque-cliente-v2 fmt 1","ponte do app"].contains(o["clienteSemPonte"] as? String ?? ""), "sem a ponte shareClient o link do cliente sai pelo shareCut, também com o tipo novo: \(o["clienteSemPonte"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
+    }
+
+    /// CANTO-3D-ANTIGO (Adauto 23/11: "preservar a aparência e as medidas originais até a confirmação do usuário. Incluir a atualização visual no botão existente
+    /// 'Atualizar portas do canto', sem criar outro botão"): o desenho 3D novo da folha fechada (CANTO-PORTA-L) vale só pro canto com a marca m.cnP.
+    func testCantoAntigoMantemODesenho3DAteOBotaoAtualizarPortasDoCanto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var clr=function(){S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw()};
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.corner)L.push(t)})});
+        /* desenho das folhas fechadas no 3D: caixas da porta (quantas, faixa escura de 21 mm, linha fina do cava, perfil) e onde a folha do fundo começa */
+        var d3=function(m){__build();var mi=S.mods.indexOf(m),B=__boxes().filter(function(b){return String(b.nm)===mi+':Porta'}),D=+m.d+(m.fundo?(+m.fundoMm||6):0);
+          var fz=B.filter(function(b){return b.dq===0&&!b.cvl&&!b.nol}).map(function(b){return Math.round((b.z0-D)*10)/10}),fx=B.filter(function(b){return b.nol&&!b.cvl}).length,ln=B.filter(function(b){return b.cvl}).length;
+          return 'caixas '+B.length+' · faixa escura '+fx+' · linha do cava '+ln+' · folha do fundo em D+'+(fz[0]===undefined?'?':fz[0])};
+        var um=async function(k,f){clr();f();await W(40);var m=S.mods.filter(function(x){return x.corner})[0];delete m.cnP;draw();var a=d3(m);return [m,a]};
+        var lista=[['baixo e',function(){mkCorner('e')}],['baixo d',function(){mkCorner('d')}]];L.forEach(function(t){lista.push([t.n,function(){var c=JSON.parse(JSON.stringify(t));if(+c.h>=1500){S.room='quarto';S.env='quarto';S.W=6000}newTpl(c)}])});
+        var ant=[],dep=[],vol=[];
+        for(var i=0;i<lista.length;i++){var r=await um(lista[i][0],lista[i][1]),m=r[0];ant.push(r[1]);if(window.cnPAtualiza){S.m=m;await W(1000);cnPAtualiza(m);dep.push(d3(m));await W(1000);document.getElementById('und').click();await W(80);var m2=S.mods.filter(function(x){return x.corner})[0];vol.push(d3(m2)+' · marca '+(m2.cnP||0))}}
+        var resumo=function(a){var c={};a.forEach(function(s){c[s]=(c[s]||0)+1});return Object.keys(c).map(function(k){return c[k]+'× '+k}).join(' | ')};R.cantos=String(lista.length);R.errs=__errs.length-e0;R.antigo=resumo(ant);R.atualizado=resumo(dep);R.desfez=resumo(vol);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cantos"] as? String, "6", "os 6 cantos do catálogo (baixo, aéreo e guarda-roupa, esquerdo e direito)")
+        XCTAssertEqual(o["antigo"] as? String, "6× caixas 4 · faixa escura 2 · linha do cava 0 · folha do fundo em D+1", "canto antigo (sem a marca) abre com o desenho 3D de antes")
+        XCTAssertEqual(o["atualizado"] as? String, "6× caixas 4 · faixa escura 0 · linha do cava 2 · folha do fundo em D+0", "o botão Atualizar portas do canto passa pro desenho das retas")
+        XCTAssertEqual(o["desfez"] as? String, "6× caixas 4 · faixa escura 2 · linha do cava 0 · folha do fundo em D+1 · marca 0", "desfazer volta o desenho de antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

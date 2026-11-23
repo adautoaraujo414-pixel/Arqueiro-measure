@@ -1796,3 +1796,8 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Defeitos repassados ao Code 2:** espelho em parede lateral sem reflexo e com linha escura (9); espelho redondo jateado com emenda vertical (3).
 - **Compatibilidade (10):** Política B cobre LED livre e espelho nos links; backup copiado à mão pra app antigo perde o LED (não corrigível, aviso registrado).
 - **Não verificado:** FPS/memória em aparelho real, iPhone/iPad/Android/Windows reais (só Chromium e viewports).
+- **PB-WIN — app do Windows cai em testNadaDeEnfeiteListaDeCorte (23/11, bisseção do Chefe no CI JCEF).**
+  - Reproduzir: 98904bb passa; com só o 316d3c8 (Política B LED/espelho) o processo cai em ~28 s (WinError 10054), também isolado. Chromium (Linux) passa — não reproduzível aqui.
+  - Achado comprovado: sem LED nem espelho a camada tirava `snapState()` a mais a cada envio (cortador 4→3, cliente 5→4), o que serializa o projeto inteiro e troca a vista da parede lateral (toCanon/toView).
+  - Correção: conta no `S` direto; foto só com LED livre/espelho. Teste `testPoliticaBSemLedNemEspelhoSoRepassaSemFotoAMais` (falha antes).
+  - **Causa da queda no JCEF: não verificada** (hipótese). Confirmar no CI do Windows antes de dar como corrigido.

@@ -13676,12 +13676,13 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
   d.g(0,'SECTION');d.g(2,'TABLES');d.g(0,'TABLE');d.g(2,'LAYER');d.g(70,Object.keys(L).length);var cor=1;Object.keys(L).forEach(function(n){d.g(0,'LAYER');d.g(2,n);d.g(70,0);d.g(62,n===lay.cont?7:n===lay.et?8:((cor++%6)+1));d.g(6,'CONTINUOUS')});d.g(0,'ENDTAB');d.g(0,'ENDSEC');
   d.g(0,'SECTION');d.g(2,'ENTITIES');
   var pl=function(pts,ly,fechada){d.g(0,'POLYLINE');d.g(8,ly);d.g(66,1);d.g(10,'0.0');d.g(20,'0.0');d.g(30,'0.0');d.g(70,fechada?1:0);pts.forEach(function(q){d.g(0,'VERTEX');d.g(8,ly);d.g(10,fmt(q[0]));d.g(20,fmt(q[1]));d.g(30,'0.0')});d.g(0,'SEQEND');d.g(8,ly)};
-  var x0=0,y0=0,lin=0,MAXW=2800,GAP=60;pecas.forEach(function(p){if(x0>0&&x0+p.L>MAXW){x0=0;y0+=lin+GAP+40;lin=0}
+  var x0=0,y0=0,lin=0,MAXW=2800,GAP=60,ETQ_W=0.62/* largura média de um caractere em fração da altura (fonte padrão do DXF) */;window.__dxfEtqW=ETQ_W;pecas.forEach(function(p){if(x0>0&&x0+p.L>MAXW){x0=0;y0+=lin+GAP+58;lin=0}
    pl([[x0,y0],[x0+p.L,y0],[x0+p.L,y0+p.W],[x0,y0+p.W]],lay.cont,true);
    p.rasgos.forEach(function(r){pl([[x0+r.x0,y0+r.y0],[x0+r.x1,y0+r.y0],[x0+r.x1,y0+r.y1],[x0+r.x0,y0+r.y1]],r.lay,true)});
    p.linhas.forEach(function(l){pl(l.pts.map(function(q){return [x0+q[0],y0+q[1]]}),l.lay,false)});
    p.furos.forEach(function(f){d.g(0,'CIRCLE');d.g(8,f.lay);d.g(10,fmt(x0+f.x));d.g(20,fmt(y0+f.y));d.g(30,'0.0');d.g(40,fmt(f.d/2))});
-   d.g(0,'TEXT');d.g(8,lay.et);d.g(10,fmt(x0));d.g(20,fmt(y0+p.W+8));d.g(30,'0.0');d.g(40,'18');d.g(1,(p.nome+' '+r1(p.L)+'x'+r1(p.W)+' e'+p.esp).replace(/[^\x20-\x7E]/g,function(ch){return ({'á':'a','à':'a','â':'a','ã':'a','é':'e','ê':'e','í':'i','ó':'o','ô':'o','õ':'o','ú':'u','ç':'c','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ç':'C','×':'x','·':'-','°':'o','Ø':'D','∅':'D'})[ch]||'_'}));
+   /* ETIQUETA (23/11, auditoria do Chefe): 2 linhas (nome · medida) com a altura do texto ajustada pra caber na largura da própria peça — peças estreitas vizinhas não sobrepõem o texto */var asc=function(t){return String(t).replace(/[^\x20-\x7E]/g,function(ch){return ({'á':'a','à':'a','â':'a','ã':'a','é':'e','ê':'e','í':'i','ó':'o','ô':'o','õ':'o','ú':'u','ç':'c','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ç':'C','×':'x','·':'-','°':'o','Ø':'D','∅':'D'})[ch]||'_'})},t1=asc(p.nome),t2=asc(r1(p.L)+'x'+r1(p.W)+' e'+p.esp),hh=Math.max(3,Math.min(18,(p.L-2)/(Math.max(t1.length,t2.length)*ETQ_W)));hh=Math.round(hh*10)/10;
+   [[t2,8],[t1,8+hh*1.4]].forEach(function(q){d.g(0,'TEXT');d.g(8,lay.et);d.g(10,fmt(x0));d.g(20,fmt(y0+p.W+q[1]));d.g(30,'0.0');d.g(40,fmt(hh));d.g(1,q[0])});
    x0+=p.L+GAP;lin=Math.max(lin,p.W)});
   d.g(0,'ENDSEC');d.g(0,'EOF');return d.t()};
  window.dxfShare=function(nome,txt){var A=window.ArqueApp;if(A&&A.shareFile){A.shareFile(nome,txt,'application/dxf');return 'app'}try{var b=new Blob([txt],{type:'application/dxf'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=nome;document.body.appendChild(a);a.click();setTimeout(function(){try{a.remove();URL.revokeObjectURL(u)}catch(_){}},2000);return 'download'}catch(_){return 'erro'}};

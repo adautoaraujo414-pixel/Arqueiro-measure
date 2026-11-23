@@ -17015,7 +17015,7 @@ final class EditorWebKitTests: XCTestCase {
         var C=function(s){document.querySelector(s).click()};RG.gd=undefined;soloOn(m);RG.sel={mi:0,path:'r'};RG.tab='div';panel();C('[data-rga="sp|h|3"]');RG.sel={mi:0,path:'r.0'};RG.dsel=null;RG.tab='por';panel();C('[data-rga="door|2"]');RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();C('[data-rga="ins|gav"]');
         var rb2=function(){return partsOf(m).filter(function(p){return /^Batente/.test(p.name)&&p.rgp==='r.2'}).map(function(p){return (p.cbq||'s')+':'+p.h}).join(',')};
         var put2=async function(sel,val){await W(60);RG.sel={mi:0,path:'r.2'};RG.tab='gav';panel();var i=document.querySelector(sel);if(!i)return 'sem campo';i.value=val;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));await W(60);return 'ok'};
-        R.rgAntes=rb2();R.rgRegua=(await put2('[data-cbq="2"]','75'))+' '+rb2();R.rgMinimo=(await put2('[data-cbq="1"]','28'))+' '+rb2()+' · '+/5 mm/.test(ult());R.rgSuperior=(await put2('[data-cbt]','20'))+' '+rb2();
+        R.rgAntes=rb2();R.rgRegua=(await put2('[data-cbq="2"]','75'))+' '+rb2();var tl0=TL.length;R.rgMinimo=(await put2('[data-cbq="1"]','28'))+' '+rb2();R.rgMinMsg=TL.slice(tl0).join(' | ');R.rgMinimo+=' · '+/fica só [\d,]+ mm atrás da frente \(mínimo 5 mm/.test(R.rgMinMsg);R.rgSuperior=(await put2('[data-cbt]','20'))+' '+rb2();
         try{soloOff()}catch(e){}R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["automatica"] as? String, "1:55,2:55,3:55", "automática: vão 25 + 15 de cada lado")
@@ -17037,7 +17037,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "1:55,2:55,3:55")
         XCTAssertEqual(o["rgAntes"] as? String, "1:55,2:55,3:55")
         XCTAssertEqual(o["rgRegua"] as? String, "ok 1:55,2:75,3:55", "editor por vãos: régua 2")
-        XCTAssertEqual(o["rgMinimo"] as? String, "ok 1:55,2:75,3:55 · true", "editor por vãos: mínimo")
+        /* iOS CI da 259fef0 (23/11): no WebKit o último aviso da lista não era o do mínimo; agora confere o aviso que saiu desta mudança (mais estrito: tem que ser o do mínimo de 5 mm) e mostra os avisos se falhar */
+        XCTAssertEqual(o["rgMinimo"] as? String, "ok 1:55,2:75,3:55 · true", "editor por vãos: mínimo · avisos: \(o["rgMinMsg"] ?? "nenhum")")
         XCTAssertEqual(o["rgSuperior"] as? String, "ok s:20,1:55,2:75,3:55", "editor por vãos: batente superior")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

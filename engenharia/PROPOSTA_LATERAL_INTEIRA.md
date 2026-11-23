@@ -103,3 +103,14 @@ Numéricos, com as medidas do exemplo e de `Balcão 2 portas + 4 gavetas` e `+ 8
   2. **Colisões que já existem hoje (com ou sem a lateral do meio):** no Balcão porta + gavetas, com 5 ou 6 gavetas a caixa da gaveta de cima entra até 34 mm na travessa; com 7 ou 8 (o app passa a cava) a régua do cava de cima entra até 24 mm na travessa. A junção 4 não cria nenhuma colisão nova (teste compara com e sem). Corrigir isso muda a posição das gavetas de projetos que já existem, então fica para decisão.
 - **Validação nos exemplos reais do catálogo (12 modelos com gaveta ao lado da divisória):** soma das travessas = travessa de antes, 0 sobreposição no 3D, peças = corte = DXF em todos.
 - **Testes:** `testJuncao4TravessaEmPecasRebaixoMeioAMeioRecuoMontanteSemSobreposicao` (2, 4, 6 e 8 gavetas; 1 e 2 laterais do meio; largura, altura e profundidade; recuo, recuo grande, montante, laterais por fora; salvar e reabrir; projeto antigo com divisória e com montante exatamente como foi salvo; guarda-roupa sem mudança) e `testLateralDoMeioJuntoDasGavetasNoInferiorDaCozinha` (do Code 1, expectativas atualizadas).
+
+## Correção do Adauto (23/11, depois): a base não precisa ficar inteira — o marceneiro escolhe
+- Feito em `a9049cd`: por módulo, Inteira (padrão, como sempre) · Dividida (uma peça por vão) · Personalizada (escolhe em quais divisórias).
+- Base dividida: a divisória ou lateral do meio desce a espessura da base (690 → 705; divisória comum 620 → 635) e as peças encostam nela.
+  Balcão 2 portas + 8 gavetas: 400 + 770 + 400 (+ 2 × 15) = 1600.
+- Não divide onde ficaria sem apoio (montante, recuo traseiro, pés, base contínua com o vizinho); o quadro mostra o motivo.
+- O conflito 1 acima deixa de existir: a base inteira continua sendo o padrão e a dividida é escolha.
+
+## Colisões das gavetas (autorizado 23/11)
+- Feito em `b07085a`: o "+" de gavetas não aceita quantidade que colide; módulo que já está assim avisa e oferece o máximo que cabe (com desfazer).
+- Não há medida a "corrigir" sem inventar regra: com cava, a frente de cima cobre a travessa e não sobra altura atrás para a caixa.

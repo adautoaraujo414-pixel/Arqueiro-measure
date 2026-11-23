@@ -16032,4 +16032,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["soCantoFora"] as? String, "contínuo · frente e trás 1800×100 | contínuo · frente e trás 1800×100 | lateral direito (pedestal) 450×100 | lateral esquerdo (pedestal) 450×100", "só o canto fora: o contínuo dos balcões continua")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// Histórico de versões com peça livre (1ª ordem do Adauto 22/11 13:59 §8): o 🕘 Histórico e recuperação guarda a versão com a peça MDF 15 mm
+    /// e restaurar (2 toques) devolve a peça igual e de volta na lista de peças.
+    @MainActor
+    func testHistoricoDeVersoesGuardaERestauraAPecaLivre15mm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length,R={};
+        /* 1ª ordem 13:59 §8 ("histórico de versões"): o 🕘 Histórico guarda a versão com a peça livre 15 mm e restaurar (2 toques) devolve a peça igual, na lista */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        if(typeof newProj==="function")newProj();loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.pl=[{id:'q1',k:'peca',ax:'z',x:100,y:50,w:300,h:200,z:0,d:15}];draw();try{saveNow()}catch(_){}
+        var pid=CUR,ps=function(){return JSON.stringify((S.mods[0]||{}).pl||null)},p0=ps();projHist.push(pid,JSON.parse(JSON.stringify(snapState())),'antes de perder peças (teste)');
+        S.mods[0].pl=[];draw();try{saveNow()}catch(_){}R.tirou=ps();
+        projHistOpen();await W(80);var alvo=[].filter.call(document.querySelectorAll('#phism [data-phr]'),function(x){var c=x.closest('div');return c&&/teste/.test(c.textContent)})[0]||document.querySelectorAll('#phism [data-phr]')[1];
+        if(alvo){alvo.click();await W(150);var b2=document.querySelector('#phism [data-phr="'+alvo.dataset.phr+'"]')||alvo;b2.click();await W(200)}
+        R.restaurou=ps()===p0;R.pecaNaLista=partsOf(S.mods[0]).filter(function(p){return +p.mat===15&&/livre|Peça/i.test(p.name)}).length;R.versoesGuardadas=projHist.list(pid).length>=2;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["tirou"] as? String, "[]")
+        XCTAssertEqual(o["restaurou"] as? Bool, true, "restaurar devolve a peça livre igual")
+        XCTAssertEqual(o["pecaNaLista"] as? Int, 1, "peça de volta na lista de peças")
+        XCTAssertEqual(o["versoesGuardadas"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

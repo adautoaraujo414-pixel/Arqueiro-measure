@@ -16826,4 +16826,152 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["planos"] as? Int, 1)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // PORTA PROVENÇAL (Adauto 23/11, fotos 1, 2 e 4): régua aplicada = 4 peças reais de MDF 6 mm por porta (fora da porta, que continua com a mesma medida),
+    // 45° (as 4 com a medida de fora) ou encontro reto (verticais entre as horizontais), na cor de fora ou na cor própria; 2D, 3D com relevo de 6 mm e DXF com o corte a 45°
+    func testPortaProvencalReguasAplicadasPecasReaisCorteEDxf() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=1000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;draw();var D=function(){return partsOf(m).filter(function(p){return p.name==='Porta'})},RG=function(){return partsOf(m).filter(function(p){return /^Régua provençal/.test(p.name)})};
+        var d0=D()[0],antes=JSON.stringify(partsOf(m));R.lisa=RG().length+' '+(d0.estG?1:0)+' '+document.querySelectorAll('[data-est2d]').length;
+        m.v[0].est={t:'simples',c:'regua',rw:50,off:50,j:'45'};draw();var d=D()[0],rg=RG();
+        R.n=rg.length;R.porta=[d.cl,d.cw].join('x');R.d45=rg.filter(function(p){return p.dq===0}).map(function(p){return p.cl+'x'+p.cw+'/'+p.mat}).join(' ');R.esp=/espessura total 21 mm/.test(d.note);
+        R.pks=rg.map(function(p){return p.pk}).filter(function(v,i,a){return a.indexOf(v)===i}).length;
+        var G=cutGroups();R.corte=G.ord.filter(function(k){return G.map[k].names.some(function(n){return /^Régua provençal/.test(n)})}).map(function(k){return G.map[k].fin+' '+G.map[k].qty}).join(' ');
+        R.svg=document.querySelectorAll('[data-est2d]').length;
+        var X=dxfPecas({});var pr=X.pecas.filter(function(x){return /Régua provençal/.test(x.nome)});R.dxf=pr.length+' '+pr.filter(function(x){return x.linhas.filter(function(l){return l.lay==='CORTE_45'}).length===2}).length;
+        m.v[0].est={t:'simples',c:'regua',rw:50,off:50,j:'reto'};R.reto=RG().filter(function(p){return p.dq===0}).map(function(p){return p.cl+'x'+p.cw}).join(' ');R.reto45=dxfPecas({}).pecas.filter(function(x){return x.linhas.some(function(l){return l.lay==='CORTE_45'})}).length;
+        m.v[0].est={t:'simples',c:'regua',rw:50,off:50,j:'45',cor:'#22334a'};G=cutGroups();R.cor=G.ord.filter(function(k){return /^Régua provençal/.test(G.map[k].names[0])}).map(function(k){return G.map[k].colN}).filter(function(v,i,a){return a.indexOf(v)===i}).join('|');
+        m.v[0].est={t:'dupla',c:'regua',rw:30,off:40,w2:20,gap:25};R.dupla=RG().length;
+        m.v[0].est={t:'simples',c:'regua',rw:200,off:200};R.naoCabe=RG().length+' '+/não cabe nesta porta/.test(D()[0].note);
+        m.v[0].est={t:'det',c:'moldura',rw:60,off:40};draw();open3D();await W(300);__build();var B=__boxes().filter(function(b){return b.estD});R.b3=B.length>0;R.relevo=Math.round(Math.max.apply(null,B.map(function(b){return b.z1}))-Math.min.apply(null,B.map(function(b){return b.z0})));document.getElementById('v3x').click();
+        delete m.v[0].est;draw();R.volta=JSON.stringify(partsOf(m))===antes;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["lisa"] as? String, "0 0 0", "porta sem estilo: nada muda")
+        XCTAssertEqual(o["n"] as? Int, 8, "2 portas × 4 réguas")
+        XCTAssertEqual(o["porta"] as? String, "440x705", "a porta continua com a medida dela (réguas fora da porta)")
+        XCTAssertEqual(o["d45"] as? String, "340x50/6 340x50/6 605x50/6 605x50/6", "45°: as 4 com a medida de fora (porta − 2 × 50)")
+        XCTAssertEqual(o["esp"] as? Bool, true, "espessura total 15 + 6")
+        XCTAssertEqual(o["pks"] as? Int, 8, "cada régua com identidade própria")
+        XCTAssertEqual(o["corte"] as? String, "c 4 c 4", "no corte, na cor de fora (como a porta)")
+        XCTAssertEqual(o["svg"] as? Int, 2, "2D desenha as réguas nas 2 portas")
+        XCTAssertEqual(o["dxf"] as? String, "8 8", "DXF: 8 réguas, cada uma com os 2 cortes a 45°")
+        XCTAssertEqual(o["reto"] as? String, "340x50 340x50 505x50 505x50", "encontro reto: verticais entre as horizontais")
+        XCTAssertEqual(o["reto45"] as? Int, 0, "encontro reto: sem corte a 45° no DXF")
+        XCTAssertEqual(o["cor"] as? String, "régua #22334a", "cor própria da régua: linha de corte com a cor dela")
+        XCTAssertEqual(o["dupla"] as? Int, 16, "moldura dupla: 2 quadros × 4 peças × 2 portas")
+        XCTAssertEqual(o["naoCabe"] as? String, "0 true", "quadro impossível: bloqueado, porta lisa e avisa na peça")
+        XCTAssertEqual(o["b3"] as? Bool, true)
+        XCTAssertEqual(o["relevo"] as? Int, 6, "3D: relevo da moldura = 6 mm na frente da porta")
+        XCTAssertEqual(o["volta"] as? Bool, true, "volta a lisa: peças iguais às de antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PORTA PROVENÇAL USINADA (Adauto 23/11, foto 5): CNC = sem peça aplicada; frisos fechados no DXF por camada (largura, profundidade, ferramenta, face),
+    // metros no orçamento; profundidade que deixaria menos de 9 mm é bloqueada; friso por cima do copo da dobradiça vira CONFLITO no DXF
+    func testPortaProvencalUsinadaCncFrisosNoDxfEConflitoComDobradica() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=1000;newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;draw();
+        m.v[0].est={t:'det',c:'cnc',rw:60,off:40,fn:2,fw:4,fe:8,fp:3,fd:6};var P=partsOf(m),d=P.filter(function(p){return p.name==='Porta'})[0];
+        R.aplic=P.filter(function(p){return /provençal/.test(p.name)}).length;R.nota=/usinada em CNC: 4 frisos/.test(d.note);
+        var X=dxfPecas({}),pc=X.pecas.filter(function(x){return /^Porta/.test(x.nome)})[0],fr=pc.linhas.filter(function(l){return /^FRISO_/.test(l.lay)});
+        R.fr=fr.length+' '+fr[0].lay;R.fechado=fr.every(function(l){var a=l.pts[0],b=l.pts[l.pts.length-1];return a[0]===b[0]&&a[1]===b[1]});R.dentro=fr.every(function(l){return l.pts.every(function(q){return q[0]>0&&q[1]>0&&q[0]<pc.L&&q[1]<pc.W})});
+        var row=prAuto(budget()).filter(function(r){return r[0]==='usiFriso'})[0];R.m=row?row[3]>0:false;var t0=budget().tot;PR.usiFriso=10;R.custo=Math.round(budget().tot-t0)===Math.round(row[3]*10);PR.usiFriso=0;
+        R.fundo=estGeo({t:'simples',c:'cnc',rw:50,off:50,fp:8,fd:6},440,705,15).ok;
+        m.v[0].est={t:'simples',c:'cnc',rw:30,off:10,fp:4,fd:6};R.cava=partsOf(m).filter(function(p){return p.name==='Porta'}).every(function(p){return !p.estG.ok&&/cairia na cava usinada/.test(p.note)});pxApplyAll('concha','inox');var av=dxfPecas({dobP:12}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].avisos.filter(function(a){return /^CONFLITO: friso/.test(a)});R.conf=av.length;
+        m.v[0].est={t:'simples',c:'cnc',rw:30,off:60,fp:3,fd:6};R.semConf=dxfPecas({dobP:12}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].avisos.filter(function(a){return /^CONFLITO: friso/.test(a)}).length;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["aplic"] as? Int, 0, "usinada: nenhuma peça aplicada")
+        XCTAssertEqual(o["nota"] as? Bool, true)
+        XCTAssertEqual(o["fr"] as? String, "4 FRISO_L6_P3_FERR_D6_FACE_FRENTE", "2 contornos da moldura + 2 frisos, camada com largura, profundidade, ferramenta e face")
+        XCTAssertEqual(o["fechado"] as? Bool, true, "contornos fechados")
+        XCTAssertEqual(o["dentro"] as? Bool, true, "frisos dentro da porta")
+        XCTAssertEqual(o["m"] as? Bool, true, "metros de friso no orçamento")
+        XCTAssertEqual(o["custo"] as? Bool, true, "preço por metro entra no total")
+        XCTAssertEqual(o["fundo"] as? Bool, false, "friso de 8 mm em MDF 15 bloqueado")
+        XCTAssertEqual(o["cava"] as? Bool, true, "porta com cava usinada: moldura a menos de 21 mm da borda bloqueada (cairia na cava)")
+        XCTAssertEqual(o["conf"] as? Int, 1, "friso por cima do copo: 1 aviso de conflito")
+        XCTAssertEqual(o["semConf"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ESTILOS DE PORTA na aba Portas: seção nova (as de antes continuam), prévia com a contagem antes de aplicar, porta / móvel / projeto,
+    // vidro não muda, UM desfazer volta tudo, medida impossível não entra; salva e reabre igual; porta maior = régua maior
+    func testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods[2].v[0].vidro=true;S.m=S.mods[0];S.sv=0;S.tab=3;draw();panel();await W(900);
+        var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-estn="'+k+'"]');e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))};
+        var secs=[].map.call(document.querySelectorAll('#bd .sec'),function(e){return e.textContent.replace(/[⌃⌄]/g,'').trim()});R.sec=secs.indexOf('Estilos de porta')>secs.indexOf('2 · Puxador da porta')&&secs.indexOf('1 · Quantas portas neste vão')>=0;
+        Q('[data-est="t|simples"]').click();Q('[data-est="rw|40"]').click();inp('off','60');R.rascunho=JSON.stringify(S.mods[0].v[0].est||null);
+        Q('[data-estdq="1"]').click();Q('[data-est="t|simples"]').click();Q('[data-estap="porta"]').click();R.p1=Q('#estprev [data-estn2]').textContent;Q('#estprev [data-estok]').click();
+        R.so=JSON.stringify(Object.keys(S.mods[0].v[0].estQ||{}))+' '+partsOf(S.mods[0]).filter(function(p){return /^Régua/.test(p.name)}).map(function(p){return p.dq}).filter(function(v,i,a){return a.indexOf(v)===i}).join();
+        await W(900);Q('[data-est="t|dupla"]').click();Q('[data-estap="proj"]').click();R.p2=Q('#estprev [data-estn2]').textContent;R.vid=/1 de vidro|2 de vidro/.test(Q('#estprev').textContent);Q('#estprev [data-estok]').click();
+        R.proj=S.mods.map(function(m){return (m.v[0].est||{}).t||'-'}).join(',');
+        await W(900);Q('#und').click();await W(300);R.und=S.mods.map(function(m){return (m.v[0].est||{}).t||'-'}).join(',')+' '+JSON.stringify(Object.keys(S.mods[0].v[0].estQ||{}));
+        S.m=S.mods[0];S.sv=0;S.tab=3;panel();inp('off','300');R.bloq=TS.some(function(s){return /Não cabe nesta porta/.test(s)});
+        var st=JSON.stringify(snapState()),a=JSON.stringify(partsOf(S.mods[0]));loadState(JSON.parse(st));R.reabre=JSON.stringify(partsOf(S.mods[0]))===a;
+        var m=S.mods[0];m.v[0].est={t:'simples',c:'regua',rw:50,off:50};var r1=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;m.w=1000;var r2=partsOf(m).filter(function(p){return / · régua de cima$/.test(p.pk)})[0].cl;R.acompanha=r2-r1;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["sec"] as? Bool, true, "Estilos de porta dentro da aba Portas, depois do puxador; seções de antes continuam")
+        XCTAssertEqual(o["rascunho"] as? String, "null", "escolher no quadro não muda o projeto antes de aplicar")
+        XCTAssertEqual(o["p1"] as? String, "1 porta/frente muda")
+        XCTAssertEqual(o["so"] as? String, "[\"1\"] 1", "somente esta porta: só a porta 2")
+        XCTAssertEqual(o["p2"] as? String, "4 portas/frentes mudam", "projeto: 4 portas, as 2 de vidro ficam fora")
+        XCTAssertEqual(o["vid"] as? Bool, true, "a prévia avisa as de vidro")
+        XCTAssertEqual(o["proj"] as? String, "dupla,dupla,-")
+        XCTAssertEqual(o["und"] as? String, "-,-,- [\"1\"]", "um desfazer volta a aplicação inteira")
+        XCTAssertEqual(o["bloq"] as? Bool, true, "medida impossível não entra")
+        XCTAssertEqual(o["reabre"] as? Bool, true, "salva e reabre igual")
+        XCTAssertEqual(o["acompanha"] as? Double, 50, "porta 50 mm mais larga, régua 50 mm maior")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PUXADOR CONCHA (Adauto 23/11, fotos 1, 2 e 3): 7 modelos com geometria própria, sempre na horizontal com a boca pra baixo; furação do DXF pelo modelo;
+    // 12 acabamentos + cor livre; cor só deste puxador / do móvel / do projeto (o de sempre) e cor individual depois; concha antiga (sem modelo) igual
+    func testConchaSeteModelosFuracaoPorModeloECorPorEscopo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));pxApplyAll('concha','inox');var m=S.mods[0];S.m=m;S.sv=0;S.tab=3;draw();
+        var d=function(){return partsOf(m).filter(function(p){return p.name==='Porta'})[0]};R.antiga=pxParts(d(),m,d().cl,d().cw).length+' '+(d().chm?1:0);
+        var sig=[],fur=[];Object.keys(CHMOD).forEach(function(id){m.v[0].chm={id:id};var p=d(),ps=pxParts(p,m,p.cl,p.cw),U=ps.map(function(q){return q.u1}).concat(ps.map(function(q){return q.u0})),V=ps.map(function(q){return q.v1}).concat(ps.map(function(q){return q.v0}));
+          sig.push(ps.length+':'+Math.round(Math.max.apply(null,U)-Math.min.apply(null,U))+'>'+Math.round(Math.max.apply(null,V)-Math.min.apply(null,V)));var h=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0].furos.filter(function(f){return /^FURO_PUXADOR/.test(f.lay)});fur.push(h.length+':'+Math.round(Math.abs(h[1].x-h[0].x)+Math.abs(h[1].y-h[0].y))+':'+h[0].d)});
+        R.n=Object.keys(CHMOD).length;R.sig=sig.filter(function(v,i,a){return a.indexOf(v)===i}).length;R.horiz=sig.every(function(s){var a=s.split(':')[1].split('>');return +a[0]>+a[1]});R.fur=fur.join(' ');
+        var vs=function(){var p=d(),ps=pxParts(p,m,p.cl,p.cw),V=ps.map(function(q){return q.v0});return Math.round(Math.max.apply(null,ps.map(function(q){return q.v1}))-Math.min.apply(null,V))},bd=function(){var p=d();return Math.max.apply(null,pxParts(p,m,p.cl,p.cw).filter(function(q){return q.pts&&q.w0<1}).map(function(q){return q.w1}))};m.v[0].chm={id:'cl'};var v0=vs(),b0=bd();m.v[0].chm={id:'cl',cu:50,eb:4};R.curva=(vs()<v0)+' '+b0+'>'+bd();m.v[0].chm={id:'cl'};panel();await W(900);R.campos=['w','h','d','cu','eb','fur','fd'].filter(function(k){return document.querySelector('[data-chmn="'+k+'"]')}).length;var Q=function(s){var e=document.querySelector(s);if(!e)throw new Error('sem '+s);return e};
+        R.mod=document.querySelectorAll('[data-chm^="m|"]').length;R.acab=['grafite','cinzaf','prata','cromado','pretof','branco','dourado','douradoe','bronze','cobre','rose'].filter(function(k){return document.querySelector('[data-pxk="'+k+'"]')}).length+(document.querySelector('[data-pxhex]')?1:0);
+        Q('[data-pxk="cobre"]').click();await W(900);R.proj=S.mods.map(function(x){return x.v[0].pxc}).join(',');
+        ESTDQ=1;Q('[data-pxesc="porta"]').click();Q('[data-pxk="rose"]').click();await W(900);R.so=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',')+' '+S.mods[1].v[0].pxc;
+        Q('[data-pxesc="movel"]').click();var h=Q('[data-pxhex2]');h.value='#12ab34';h.dispatchEvent(new Event('change',{bubbles:true}));await W(900);R.movel=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',')+' '+S.mods[1].v[0].pxc;
+        ESTDQ=0;Q('[data-pxesc="porta"]').click();Q('[data-pxk="preto"]').click();R.indiv=partsOf(m).filter(function(p){return p.name==='Porta'}).map(function(p){return p.pxc}).join(',');R.nome=pxCol('#12ab34')[2];
+        open3D();await W(300);__build();R.metal3=__boxes().filter(function(b){return b.mt&&b.nol}).length>0;document.getElementById('v3x').click();
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antiga"] as? String, "14 0", "concha antiga (sem modelo): mesma geometria de antes (14 peças, conferido contra 28e24535)")
+        XCTAssertEqual(o["n"] as? Int, 7)
+        XCTAssertEqual(o["sig"] as? Int, 7, "cada modelo com geometria própria")
+        XCTAssertEqual(o["horiz"] as? Bool, true, "sempre na horizontal (largura maior que a altura)")
+        XCTAssertEqual(o["fur"] as? String, "2:64:5 2:64:5 2:64:5 2:96:5 2:64:5 2:76:3 2:64:5", "furação pelo modelo (entre-furos e Ø)")
+        XCTAssertEqual(o["curva"] as? String, "true 2.4>4", "curvatura menor = arco mais raso; espessura da borda editável")
+        XCTAssertEqual(o["campos"] as? Int, 7, "largura, altura, profundidade, curvatura, borda, entre-furos e Ø")
+        XCTAssertEqual(o["mod"] as? Int, 7)
+        XCTAssertEqual(o["acab"] as? Int, 12, "11 acabamentos + cor personalizada")
+        XCTAssertEqual(o["proj"] as? String, "cobre,cobre", "padrão: todos do projeto (como sempre)")
+        XCTAssertEqual(o["so"] as? String, "cobre,rose cobre", "apenas este puxador")
+        XCTAssertEqual(o["movel"] as? String, "#12ab34,#12ab34 cobre", "todos deste móvel, cor livre em hex")
+        XCTAssertEqual(o["indiv"] as? String, "preto,#12ab34", "cor individual continua possível depois")
+        XCTAssertEqual(o["nome"] as? String, "Personalizada #12ab34")
+        XCTAssertEqual(o["metal3"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

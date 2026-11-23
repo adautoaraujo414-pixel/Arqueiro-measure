@@ -1579,3 +1579,16 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não mexido:** `partsOf`, `cornerBoxes`, `snapState`/`loadState` (o `m.rot` já era salvo), plano de corte.
 - **Risco identificado:** versões publicadas antes desta arredondam ângulo que não é de 90 ao abrir o projeto (só o desenho; peças iguais). Projeto com livre a 45° aberto num app antigo aparece girado errado.
 - **Pendente:** aparelho real (iPhone, Tab S9 FE).
+
+## FASE3 · PL-ANG-GIRADO — móvel girado com peças sobrepostas na Planta "Ângulo" (23/11/2026, branch `claude/fase3-rotacao`)
+- **Relato:** print do Adauto (23/11): gaveteiro livre a 45° na Planta "Ângulo" com gavetas, laterais e caixa em blocos sobrepostos. O 3D estava certo. Na captura `rot45_planta_angulo` da entrega da rotação o defeito já aparecia, e eu não percebi.
+- **Causa raiz (comprovada):**
+  - `plExtrude3` só sabia desenhar caixa reta e contorno girado (`pf`). O prisma do `rotY` (`b.gp`: base `a` + vetor `d`) caía no caso da caixa reta e virava a caixa em volta de cada peça (488 de 488 arestas alinhadas com a sala).
+  - `plDepthSort` ordenava pela mesma caixa reta.
+- **Correção:**
+  - `plExtrude3` desenha as faces do prisma (lados visíveis pela mesma regra `fv` e o topo, de trás pra frente).
+  - `plDepthSort` separa peça girada pelo contorno real no chão (`pdHull`/`pdProj`, eixos das arestas das duas peças). Peça reta com peça reta continua na conta de antes.
+- **Família conferida:** a geladeira na parede direita (prisma do `frWall3`) e os módulos da parede esquerda (`wingX`) passam pelo mesmo caminho. Comparação antes/depois numa cozinha em L: só alguns pixels de borda na geladeira; o desenho é o mesmo.
+- **Não mexido:** medidas, `partsOf`, plano de corte, DXF, 3D.
+- **Teste:** `testFASE3_PlantaAnguloDesenhaMovelGiradoPelaFormaRealSemSobrepor` (68a8543, falha antes: 488 arestas alinhadas) · correção 17d8418. Confere forma, frente de gaveta por cima da lateral e salvar/reabrir.
+- **Evidência:** antes = print do Adauto; depois = captura do Chromium. Aparelho real pendente.

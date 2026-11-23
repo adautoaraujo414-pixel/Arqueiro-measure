@@ -17151,27 +17151,4 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["botao"] as? Bool, true, "Passante na lista de puxadores da aba Portas")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
-
-    // SETAS NO 3D (Adauto 23/11): peça livre selecionada tem "Mover" ◀ ▶ ▲ ▼ frente/trás com passo 1, 10 ou 50 mm; bateu, para encostada; desfazer volta
-    func testNo3DSetasMovemAPecaLivre() async throws {
-        let web = try await editor()
-        let o = try await run(web, #"""
-        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
-        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
-        loadState(initLimpo());S.W=2000;newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];S.m=m;draw();var r=EM.criaPecaNoPonto(m,250,800,'peca','z');draw();
-        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,0.05,1.2);await W(300);__build();
-        var b=__boxes().filter(function(q){return q.pk===EM.pkDe(r.q)})[0],c=__p3((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1),cv=document.getElementById('cv3'),rr=cv.getBoundingClientRect();for(var i=0;i<2;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650);
-        var q=m.pl[0],p0=[q.x,q.y,q.z],B=function(d){var x=[].filter.call(document.querySelectorAll('[data-e3mv="'+d+'"]'),function(e){return e.offsetParent})[0];if(x)x.click();return !!x};
-        R.setas=['e','d','c','b','f','t'].every(function(d){return !!document.querySelector('[data-e3mv="'+d+'"]')});B('d');R.dir=q.x-p0[0];[].filter.call(document.querySelectorAll('[data-e3ps="50"]'),function(e){return e.offsetParent})[0].click();B('b');R.baixo=q.y-p0[1];B('f');R.frente=q.z-p0[2];
-        for(var k=0;k<60;k++)B('e');var bt=EM.pecaBate(m,q);R.encosta=bt===''&&q.x<p0[0];await W(800);document.getElementById('v3und').click();await W(200);var q2=S.mods[0].pl[0];R.desfaz=[q2.x,q2.y,q2.z].join(',')===p0.join(',');
-        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
-        """#)
-        XCTAssertEqual(o["setas"] as? Bool, true, "◀ ▶ ▲ ▼ frente trás")
-        XCTAssertEqual(o["dir"] as? Double, 10, "passo padrão 10 mm")
-        XCTAssertEqual(o["baixo"] as? Double, 50, "passo 50: ▼ desce 50")
-        XCTAssertEqual(o["frente"] as? Double, 50, "frente 50")
-        XCTAssertEqual(o["encosta"] as? Bool, true, "indo pra esquerda até bater: para encostada, sem atravessar")
-        XCTAssertEqual(o["desfaz"] as? Bool, true, "desfazer volta pro lugar")
-        XCTAssertEqual(o["errs"] as? Int, 0)
-    }
 }

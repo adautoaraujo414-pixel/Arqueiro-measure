@@ -16370,4 +16370,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabre"] as? String, "{\"w\":900,\"h\":520,\"b\":900}")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11 "cálculos reais e automáticos" e "Regras do módulo · organização"; checklist D21/D24): as 24
+    /// combinações (balcão e aéreo × moldura × Frontal × travessão sem/externo/interno) com cada peça igual no 3D e no corte (nenhuma espessura somada
+    /// duas vezes); a moldura sai sozinha quando o Frontal fica coberto pelas portas; painel na ordem Moldura → Travessão → Frontal.
+    @MainActor
+    func testMolduraTravessaoFrontalTresDIgualCorteEOrdemNoPainel() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length,R={};
+        /* MOLDURA · TRAVESSÃO · FRONTAL (DECISOES 17/11; D21/D24): cada combinação com 3D = lista = corte (nenhuma espessura somada 2 vezes); moldura sai sozinha
+           quando o Frontal fica coberto pelas portas (regra moldEff); painel na ordem Moldura → Travessão → Frontal */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var conf=function(m){__build();var all3=__boxes().filter(function(b){return String(b.nm).indexOf('0:')===0}),P=partsOf(m),dif=0;
+         P.forEach(function(p){if(p.noCut||p.noDraw||!(+p.cl>0)||!(+p.cw>0))return;var bs=all3.filter(function(b){return (b.pk===p.pk||String(b.pk||'').indexOf(p.name+' (régua)#')===0)&&!b.nol&&!b.cvl&&!b.hg&&!b.ft&&!b.gp});if(!bs.length){dif++;return}
+          var u=[Math.max.apply(null,bs.map(function(b){return b.x1}))-Math.min.apply(null,bs.map(function(b){return b.x0})),Math.max.apply(null,bs.map(function(b){return b.y1}))-Math.min.apply(null,bs.map(function(b){return b.y0})),Math.max.apply(null,bs.map(function(b){return b.z1}))-Math.min.apply(null,bs.map(function(b){return b.z0}))].sort(function(a,b){return b-a}),q=[+p.cl,+p.cw].sort(function(a,b){return b-a});
+          if(Math.abs(u[0]-q[0])>2||Math.abs(u[1]-q[1])>2)dif++});return dif};
+        open3D();await W(150);var ok=0,tot=0,mold=[];
+        ['Balcão 2 portas','Aéreo 2 portas'].forEach(function(nome){for(var a=0;a<2;a++)for(var b=0;b<2;b++)for(var c=0;c<3;c++){loadState(initLimpo());S.W=3000;newTpl(T(nome));var m=S.mods[0];m.mold=!!a;m.trav=!!b;if(b&&!m.travMm)m.travMm=70;if(c)m.tvs=c===1?'ext':'int';else delete m.tvs;draw();tot++;if(conf(m)===0)ok++;if(nome==='Balcão 2 portas'&&a&&!c)mold.push((b?'com':'sem')+' frontal: '+partsOf(m).filter(function(p){return p.name==='Moldura de acabamento'}).length)}});
+        R.combinacoes=ok+' de '+tot+' com 3D = corte';R.moldura=mold.join(' · ');
+        loadState(initLimpo());newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.m.trav=true;S.tab=0;panel();await W(30);var bd=document.getElementById('bd'),h=bd.innerHTML,iM=h.indexOf('data-rc="mold"'),iT=h.indexOf('id="tvsbox"'),iF=h.indexOf('data-rc="trav"');R.ordem=(iT>=0&&iF>=0&&iT<iF&&(iM<0||iM<iT))?'Moldura → Travessão → Frontal':('mold '+iM+' tvs '+iT+' frontal '+iF);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["combinacoes"] as? String, "24 de 24 com 3D = corte")
+        XCTAssertEqual(o["moldura"] as? String, "sem frontal: 1 · com frontal: 0", "moldura e Frontal coberto pelas portas não somam")
+        XCTAssertEqual(o["ordem"] as? String, "Moldura → Travessão → Frontal")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

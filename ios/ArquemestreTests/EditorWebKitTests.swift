@@ -15891,4 +15891,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue((o["aviso"] as? String ?? "").contains("lateral esquerda 2485×700 → 655×700"), "aviso mostra a prévia: \(o["aviso"] ?? "")")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// MED-PAREDE (23/11/2026, pedido do Adauto, foto da parede esquerda): a trena do 2D na parede espelhada fica onde o dedo pôs (antes, arrastando
+    /// e ao soltar ela ia pro lado do espelho, torta em relação aos móveis) e cada parede tem as medidas dela (antes a do fundo aparecia espelhada na esquerda).
+    @MainActor
+    func testTrenaNaParedeEsquerdaEspelhadaECadaParedeComAsMedidasDela() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var sm=document.getElementById('stdm');if(sm)sm.hidden=true;var R={},e0=__errs.length;
+        /* MED-PAREDE (23/11, Adauto): trena na parede esquerda (espelhada) fica onde o dedo pôs, com o número legível; cada parede com as medidas dela */
+        loadState(initLimpo());S.W=3000;draw();addStone();var st=S.st;st.x=0;st.shape='Le';draw();wvGo('e');await W(80);newTpl(CATS[0].it[0]);var m=S.mods[S.mods.length-1];m.x=1000;draw();await W(500);
+        document.getElementById('svg').scrollIntoView({block:'center'});await W(100);
+        var sv=document.getElementById('svg'),host=sv.parentNode,mr=sv.querySelector('[data-mi] rect').getBoundingClientRect();
+        var pe=function(t,x,y){(t==='pointerdown'?sv:host).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,pointerId:7,pointerType:'touch',isPrimary:true,clientX:x,clientY:y}))};
+        var xD=mr.right,y0=mr.top+5,y1=mr.bottom-5;/* borda direita na tela = começo do móvel (x 1000) no espelho */
+        document.getElementById('med2b').click();await W(50);pe('pointerdown',xD,y0);await W(30);for(var i=1;i<=6;i++){pe('pointermove',xD,y0+(y1-y0)*i/6);await W(20)}
+        var g=sv.querySelector('#medg');R.arrastando=g?(g.parentNode.id||'svg'):'sem';var ln=g&&g.querySelector('line'),lb=ln?ln.getBoundingClientRect():null;R.arrastandoNaBorda=lb?Math.abs((lb.left+lb.right)/2-xD)<6:false;
+        pe('pointerup',xD,y1);await W(60);var q=MED2.L[0];R.guardado=q?Math.round(q.a[0])+','+Math.round(q.b[0]):'nada';
+        g=sv.querySelector('#medg');ln=g&&g.querySelector('line');lb=ln?ln.getBoundingClientRect():null;R.soltouNaBorda=(g?g.parentNode.id:'')+' '+(lb?Math.abs((lb.left+lb.right)/2-xD)<6:false);
+        var tx=g&&g.querySelector('text');R.numeroLegivel=tx?(tx.getScreenCTM().a*tx.getScreenCTM().d>0||Math.abs(tx.getScreenCTM().b)>0.5)&&!(tx.getScreenCTM().a<0&&Math.abs(tx.getScreenCTM().b)<0.5):false;
+        draw();g=sv.querySelector('#medg');ln=g&&g.querySelector('line');lb=ln?ln.getBoundingClientRect():null;R.depoisDoDraw=(g?g.parentNode.id:'')+' '+(lb?Math.abs((lb.left+lb.right)/2-xD)<6:false);
+        wvGo('f');await W(80);R.noFundo=MED2.L.length+' '+(sv.querySelector('#medg')?'aparece':'some');MED2.L.push({a:[200,0],b:[200,800]});draw();wvGo('e');await W(80);R.voltouEsq=MED2.L.map(function(q){return Math.round(q.a[0])}).join(',');wvGo('f');await W(80);R.voltouFundo=MED2.L.map(function(q){return Math.round(q.a[0])}).join(',');
+        document.getElementById('med2b').click();await W(50);wvGo('e');await W(80);R.desligou=MED2.L.length+' '+Object.keys(MED2.P||{}).length;wvGo('f');await W(60);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["arrastando"] as? String, "wvmir", "arrastando a ponta na parede esquerda a trena fica no desenho espelhado")
+        XCTAssertEqual(o["guardado"] as? String, "1000,1000", "guardada na medida da parede (começo do móvel)")
+        XCTAssertEqual(o["soltouNaBorda"] as? String, "wvmir true", "soltou: continua em cima da borda do móvel (antes ia pro lado do espelho)")
+        XCTAssertEqual(o["depoisDoDraw"] as? String, "wvmir true", "redesenho igual")
+        XCTAssertEqual(o["noFundo"] as? String, "0 some", "a trena da esquerda não aparece no fundo")
+        XCTAssertEqual(o["voltouEsq"] as? String, "1000", "volta com a medida da esquerda")
+        XCTAssertEqual(o["voltouFundo"] as? String, "200", "o fundo tem a dele")
+        XCTAssertEqual(o["desligou"] as? String, "0 0", "desligar a trena limpa todas as paredes")
+        XCTAssertEqual(o["arrastandoNaBorda"] as? Bool, true, "enquanto arrasta, em cima da borda do móvel")
+        XCTAssertEqual(o["numeroLegivel"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

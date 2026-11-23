@@ -12749,6 +12749,21 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
 })();
 </script>
 <script>
+/* MED-PAREDE (23/11/2026, pedido do Adauto: "corrija medida espelhada também ao mudar de parede"):
+   1) Na parede ESQUERDA (desenho espelhado) a trena redesenhada direto (arrastando a ponta, soltando, digitando a medida) ia por fora do grupo
+      espelhado (#wvmir) e aparecia no lugar do espelho, torta em relação aos móveis. Agora entra no grupo espelhado, com o número desvirado (legível).
+   2) Cada parede tem as medidas dela: a trena feita no fundo não aparece (espelhada) na esquerda, e volta quando a pessoa volta pro fundo.
+      Desligar a trena limpa as medidas de todas as paredes (igual a antes, que limpava a única lista). Só desenho: nada é gravado no projeto. */
+(function(){if(typeof med2Paint!=='function'||!window.MED2)return;
+ var cur=function(){try{return (window.wvCur&&wvCur())||'f'}catch(_){return 'f'}};MED2.P={};MED2.w=cur();
+ var troca=function(){var w=cur();if(!MED2.on){MED2.P={};MED2.w=w;return}if(w===MED2.w)return;MED2.P[MED2.w]=MED2.L;MED2.L=MED2.P[w]||[];delete MED2.P[w];MED2.d=null;MED2.w=w};
+ var desvira=function(g){[].forEach.call(g.querySelectorAll('text'),function(t){try{var bb=t.getBBox(),m=t.transform&&t.transform.baseVal&&t.transform.baseVal.numberOfItems?t.transform.baseVal.consolidate().matrix:null,
+   xs=[bb.x,bb.x+bb.width].map(function(x){return m?m.a*x+m.c*(bb.y+bb.height/2)+m.e:x}),c=(xs[0]+xs[1])/2,old=t.getAttribute('transform')||'';t.setAttribute('transform','translate('+(2*c)+',0) scale(-1,1)'+(old?' '+old:''))}catch(_){}})};
+ var mp0=med2Paint;med2Paint=window.med2Paint=function(){try{troca()}catch(_){}var r=mp0.apply(this,arguments);
+  try{var sv=document.getElementById('svg'),g=sv&&sv.querySelector('#medg'),wm=sv&&sv.querySelector('#wvmir');if(g&&wm&&g.parentNode===sv&&window.WVMIRX!==null&&window.WVMIRX!==undefined){wm.appendChild(g);desvira(g)}}catch(_){}return r};
+})();
+</script>
+<script>
 /* PAREDE-ESPELHADA · NOMES (decisão do Adauto, 18/11: "manter físico, corrigir nomes"). Na parede ESQUERDA, o lado guardado como
    "esquerdo" do móvel fica à direita de quem olha. Só no PAINEL do móvel (textos e botões) o app troca esquerdo↔direito pra seguir quem olha.
    Dados, chave da peça (pk), ajuste por peça, lista e plano de corte não mudam (lá o nome é chave da marca ✓ cortada). Nome de parede não muda. */

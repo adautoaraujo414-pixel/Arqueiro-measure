@@ -15469,8 +15469,9 @@ final class EditorWebKitTests: XCTestCase {
 
     /// PEDRA-L-2D (23/11/2026, pedido do Adauto): a elevação 2D de cada parede mostra o trecho da pedra que encosta nela, mesmo sendo de outra
     /// parede — braço da pedra em L/U na parede do lado (sobre a lava-louças, sem armário), ponta da pedra reta no canto, pedra da parede do lado
-    /// vista no fundo. Mesma faixa do 3D, mesma altura e espessura; atualiza ao redimensionar/mover/apagar; não grava nada; não pega o toque.
-    /// Antes (candidata e6ec99d): Le_esq "" (a parede esquerda não mostrava o braço da pedra em L).
+    /// vista no fundo — com saia, rodobanca, lateral, cuba e a textura real (600 mm, igual ao 3D). Nas Vistas (Esquerda/Direita/Superior/Posterior)
+    /// da parede do lado entra a pedra das outras paredes, com textura. Mesma faixa do 3D; atualiza ao redimensionar/mover/apagar; não grava nada.
+    /// Antes (candidata e6ec99d): a parede esquerda não mostrava o braço da pedra em L (nem no 2D nem nas Vistas).
     @MainActor
     func testPedraEmLApareceNaParedeDoLado2DIgualAo3D() async throws {
         let web = try await editor()
@@ -15478,7 +15479,7 @@ final class EditorWebKitTests: XCTestCase {
         var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
         window.MINI3OFF=1;PR.setupDone=1;var sm=document.getElementById('stdm');if(sm)sm.hidden=true;
         var R={},e0=__errs.length;window.toast=function(){};var tr=function(w){return stTrechosParede(w).map(function(q){return q.fonte+q.n+':'+q.a0+'–'+q.a1+'×'+q.prof}).join(' ')};
-        var svgN=function(){return document.querySelectorAll('#svg [data-stpl]').length};
+        var svgN=function(){return document.querySelectorAll('#svg g[data-stpl]:not([data-stk])').length};
         function limpa(){S.mods=[];S.fr=[];S.stones=[];S.stw=[];S.rp=[];S.ops=[];S.W=3000;S.env='cozinha';S.room='cozinha';S.m=null;S.st=null;draw()}
         /* 3D: faixa de z (lado) ou x (fundo) da pedra encostada na parede, pelos 'lo' do 3D */
         async function p3(w,sid){open3D();await W(250);__build();var sw=sideWalls(),xl=sw.L===null?0:sw.L,xr=sw.R===null?S.W:sw.R;var B=__boxes().filter(function(b){return b.g==='lo'&&b.sid===sid&&(b.x1-b.x0)>1&&(b.z1-b.z0)>1});
@@ -15491,7 +15492,7 @@ final class EditorWebKitTests: XCTestCase {
         wvGo('e');await W(80);R.Le_dir=tr('d')||'nada';wvGo('d');await W(80);R.Le_dir=(tr('d')||'nada')+' svg'+svgN();wvGo('f');await W(80);R.Le_fundo=(tr('f')||'nada')+' svg'+svgN();
         /* redimensiona / move / apaga: atualiza na hora */
         st.lenA=1500;wvGo('e');await W(80);R.redim=tr('e');wvGo('f');await W(60);st.widA=500;wvGo('e');await W(60);R.largura=tr('e');
-        wvGo('f');await W(60);st.t=900;wvGo('e');await W(60);var rc=document.querySelector('#svg [data-stpl] rect');R.altura=rc?Math.round((OY+S.H*K-(+rc.getAttribute('y')+ +rc.getAttribute('height')))/K)+' esp '+Math.round(+rc.getAttribute('height')/K):'sem';
+        wvGo('f');await W(60);st.t=900;wvGo('e');await W(60);var rc=document.querySelector('#svg g[data-stpl] rect');R.altura=rc?Math.round((OY+S.H*K-(+rc.getAttribute('y')+ +rc.getAttribute('height')))/K)+' esp '+Math.round(+rc.getAttribute('height')/K):'sem';
         wvGo('f');await W(60);st.t=820;st.lenA=1870;st.widA=650;
         /* 2) L direita */
         st.shape='Ld';st.widB=600;st.lenB=1200;st.x=600;draw();wvGo('d');await W(80);R.Ld_dir=tr('d')+' svg'+svgN()+' 3D '+(await p3('d',st.id));wvGo('e');await W(60);R.Ld_esq=tr('e')||'nada';
@@ -15506,7 +15507,16 @@ final class EditorWebKitTests: XCTestCase {
         /* 7) dados: ver as paredes não grava nada */
         limpa();newTpl(CATS[0].it[0]);addStone();var s3=S.st;s3.x=0;s3.w=2400;s3.shape='Le';s3.lenA=1870;s3.widA=650;draw();var a0=JSON.stringify(snapState());wvGo('e');await W(60);wvGo('d');await W(60);wvGo('f');await W(60);R.dadosIguais=a0===JSON.stringify(snapState());
         /* 8) planta e toque */
-        wvGo('e');await W(60);var g=document.querySelector('#svg [data-stpl]');R.toque=g?g.getAttribute('pointer-events'):'sem';R.espelhado=!!document.querySelector('#wvmir [data-stpl]');wvGo('f');await W(60);
+        wvGo('e');await W(60);var g=document.querySelector('#svg g[data-stpl]');R.toque=g?g.getAttribute('pointer-events'):'sem';R.espelhado=!!document.querySelector('#wvmir g[data-stpl]');wvGo('f');await W(60);
+        /* 9) detalhes do 3D no trecho da parede: saia, rodobanca, lateral até o chão, cuba; textura real */
+        limpa();newTpl(CATS[0].it[0]);newTpl(CATS[0].it[0]);addStone();var s4=S.st;s4.x=0;s4.w=2400;s4.shape='Le';s4.lenA=1870;s4.widA=650;s4.saia=1;s4.saiaH=100;s4.rodo=1;s4.rodoH=100;s4.lat=[{at:'pe'}];s4.items=s4.items||[];s4.items.push({id:991,k:'cuba',x:100,y:1200,w:450,d:400});draw();
+        wvGo('e');await W(80);R.detalhes=stDetalhesParede('e').map(function(q){return q.k+':'+Math.round(q.a0)+'–'+Math.round(q.a1)+' y'+Math.round(q.y0)+'–'+Math.round(q.y1)}).join(' | ');
+        R.textura=(document.querySelector('#svg g[data-stpl] rect')||{getAttribute:function(){return ''}}).getAttribute('fill')+' '+!!document.querySelector('#svg defs[data-stpl] image');
+        wvGo('f');await W(60);open3D();await W(250);__build();R.detalhes3D=__boxes().filter(function(b){return b.sid===s4.id&&b.g==='stc'&&b.x0<649&&!(b.y0===s4.t&&b.y1===s4.t+s4.e)}).map(function(b){return 'z'+Math.round(b.z0)+'–'+Math.round(b.z1)+' y'+Math.round(b.y0)+'–'+Math.round(b.y1)}).sort().join(' | ');document.getElementById('v3x').click();await W(100);
+        /* 10) Vistas (Esquerda/Posterior/Superior) na parede do lado: entra a pedra do fundo, com textura; de cima continua transparente */
+        var cnt=function(){var sv=document.getElementById('svg');return sv.querySelectorAll('rect[fill^="url(#mvp-"]').length+' com textura'};
+        wvGo('e');await W(100);R.vistasExtra=mvPedraOutras().length;EM.mvVista('esq');await W(150);R.vistaEsq=cnt();EM.mvVista('tras');await W(150);R.vistaTras=cnt();
+        EM.mvVista('cima');await W(150);R.vistaCima=(document.querySelector('#svg rect[fill^="url(#mvp-"]')||{getAttribute:function(){return '-'}}).getAttribute('fill-opacity');EM.mvVista('');await W(80);wvGo('f');await W(60);
         R.errs=__errs.length-e0;
         return JSON.stringify(R);
         """#)
@@ -15527,6 +15537,13 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["stw_longe"] as? String, "nada")
         XCTAssertEqual(o["apagou"] as? String, "nada svg0")
         XCTAssertEqual(o["toque"] as? String, "none")
+        XCTAssertEqual(o["detalhes"] as? String, "saia:606–2476 y760–820 | rodo:0–40 y860–960 | rodo:40–2476 y860–960 | lat:2436–2476 y0–820 | cuba:1200–1600 y820–860")
+        XCTAssertEqual(o["textura"] as? String, "url(#stpr-pedra-verde-ubatuba-1808) true")
+        XCTAssertEqual(o["vistaEsq"] as? String, "8 com textura")
+        XCTAssertEqual(o["vistaTras"] as? String, "8 com textura")
+        XCTAssertEqual(o["vistaCima"] as? String, "0.35")
+        XCTAssertEqual(o["detalhes3D"] as? String, "z1200–1600 y820–860 | z1200–1600 y820–860 | z1600–2476 y820–860 | z2436–2476 y0–820 | z40–2476 y860–960 | z606–1200 y820–860 | z606–2476 y760–820 | z0–40 y860–960".split(separator: " | ").sorted().joined(separator: " | "), "conferência: os mesmos detalhes no 3D")
+        XCTAssertEqual(o["vistasExtra"] as? Int, 8, "laje 2 + saia 3 + rodobanca 2 + lateral 1")
         XCTAssertEqual(o["dadosIguais"] as? Bool, true, "ver as paredes não muda o projeto salvo")
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
         XCTAssertEqual(o["errs"] as? Int, 0)

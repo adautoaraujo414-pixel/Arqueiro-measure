@@ -15257,10 +15257,10 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=String(__errs.length-e0);try{document.getElementById('v3x').click()}catch(_){}return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["cooktops"] as? String, "1", "cena: balcão com pedra e cooktop")
-        XCTAssertEqual(o["secaoLouca"] as? String, "true", ""Panelas e louça" aparece mesmo com cooktop no projeto")
+        XCTAssertEqual(o["secaoLouca"] as? String, "true", "«Panelas e louça» aparece mesmo com cooktop no projeto")
         XCTAssertEqual(o["botoesLouca"] as? String, "6", "os 6 botões da louça")
-        XCTAssertEqual(o["cooktopPanelas"] as? String, "antes 0 depois 1 · itens decorativos 0→0", ""🍲 Panelas no cooktop" liga as panelas do cooktop e não põe louça")
-        XCTAssertEqual(o["poeLouca"] as? String, "itens 0→1", ""＋ Panela" põe a panela (louça)")
+        XCTAssertEqual(o["cooktopPanelas"] as? String, "antes 0 depois 1 · itens decorativos 0→0", "«🍲 Panelas no cooktop» liga as panelas do cooktop e não põe louça")
+        XCTAssertEqual(o["poeLouca"] as? String, "itens 0→1", "«＋ Panela» põe a panela (louça)")
         XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
     }
 

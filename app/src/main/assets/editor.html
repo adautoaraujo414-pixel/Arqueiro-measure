@@ -7519,18 +7519,34 @@ function plExtrude3(){if(!PLV||!PLANG||!PLAM)return false;var g=document.getElem
   /* peça girada (porta aberta, dobradiça, eletro, canto): desenha o contorno de verdade, não a caixa em volta */
   if(b.pf&&b.pf.ax==='y'&&b.pf.pts&&b.pf.pts.length>=3){var Pp=b.pf.pts,np=Pp.length,cx_=0,cz_=0;Pp.forEach(function(q){cx_+=q[0]/np;cz_+=q[1]/np});for(var pi=0;pi<np;pi++){var p0=Pp[pi],p1=Pp[(pi+1)%np],nx_=p1[1]-p0[1],nz_=p0[0]-p1[0];if(nx_*((p0[0]+p1[0])/2-cx_)+nz_*((p0[1]+p1[1])/2-cz_)<0){nx_=-nx_;nz_=-nz_}var ln_=Math.hypot(nx_,nz_);if(ln_<1e-6||!fv(nx_,nz_))continue;s+='<polygon'+pm+' points="'+pt([T(p0[0],p0[1],b.y0),T(p1[0],p1[1],b.y0),T(p1[0],p1[1],b.y1),T(p0[0],p0[1],b.y1)])+'" fill="'+col(b.c,.84+.11*Math.abs(nz_)/ln_)+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>'}
    s+='<polygon'+pm+' points="'+pt(Pp.map(function(q){return T(q[0],q[1],b.y1)}))+'" fill="'+col(b.c,1.04)+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>';out+=s;return}
+  /* peça girada pelo rotY (prisma: base a + vetor d), ex. móvel livre em ângulo, eletro da parede do lado: desenha as faces de verdade.
+     Antes caía na caixa reta em volta (FASE3 · PL-ANG-GIRADO, 23/11: gavetas e laterais sobrepostas no Ângulo) */
+  if(b.gp&&b.gp.a&&b.gp.a.length>=3&&b.gp.d){var GA=b.gp.a,GD=b.gp.d,gn=GA.length,GB=GA.map(function(q){return [q[0]+GD[0],q[1]+GD[1],q[2]+GD[2]]}),GC=[0,0,0];GA.concat(GB).forEach(function(q){GC[0]+=q[0]/(2*gn);GC[1]+=q[1]/(2*gn);GC[2]+=q[2]/(2*gn)});
+   var gface=function(Q){var N=[0,0,0];for(var i=0;i<Q.length;i++){var u=Q[i],v=Q[(i+1)%Q.length];N[0]+=(u[1]-v[1])*(u[2]+v[2]);N[1]+=(u[2]-v[2])*(u[0]+v[0]);N[2]+=(u[0]-v[0])*(u[1]+v[1])}var M=[0,0,0];Q.forEach(function(q){M[0]+=q[0]/Q.length;M[1]+=q[1]/Q.length;M[2]+=q[2]/Q.length});if(N[0]*(M[0]-GC[0])+N[1]*(M[1]-GC[1])+N[2]*(M[2]-GC[2])<0){N=[-N[0],-N[1],-N[2]]}var Ln=Math.hypot(N[0],N[1],N[2]);if(Ln<1e-6)return;N=[N[0]/Ln,N[1]/Ln,N[2]/Ln];
+    var sh;if(N[1]>.5)sh=1.04;else if(N[1]<-.5)return;else{if(!fv(N[0],N[2]))return;sh=.84+.11*Math.abs(N[2])/(Math.hypot(N[0],N[2])||1)}
+    s+='<polygon'+pm+' points="'+pt(Q.map(function(q){return T(q[0],q[2],q[1])}))+'" fill="'+col(b.c,sh)+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>'};
+   var GL=[];for(var gi=0;gi<gn;gi++)GL.push([GA[gi],GA[(gi+1)%gn],GB[(gi+1)%gn],GB[gi]]);GL.push(GA.slice());GL.push(GB.slice());
+   /* de trás pra frente dentro da peça: o que está mais longe de quem olha primeiro, o topo por último */GL.sort(function(P,Q2){var f=function(Z){var x=0,z=0,y=0;Z.forEach(function(q){x+=q[0];z+=q[2];y+=q[1]});return (x*vx+z*vz)/Z.length+y/Z.length*.001};return f(P)-f(Q2)});
+   GL.forEach(gface);out+=s;return}
   var F=[];if(fv(1,0))F.push([[b.x1,b.z0],[b.x1,b.z1],.84]);if(fv(-1,0))F.push([[b.x0,b.z1],[b.x0,b.z0],.84]);if(fv(0,1))F.push([[b.x0,b.z1],[b.x1,b.z1],.95]);if(fv(0,-1))F.push([[b.x1,b.z0],[b.x0,b.z0],.95]);
   F.forEach(function(f){s+='<polygon'+pm+' points="'+pt([T(f[0][0],f[0][1],b.y0),T(f[1][0],f[1][1],b.y0),T(f[1][0],f[1][1],b.y1),T(f[0][0],f[0][1],b.y1)])+'" fill="'+col(b.c,f[2])+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>'});
   s+='<polygon'+pm+' points="'+pt([T(b.x0,b.z0,b.y1),T(b.x1,b.z0,b.y1),T(b.x1,b.z1,b.y1),T(b.x0,b.z1,b.y1)])+'" fill="'+col(b.c,1.04)+'"'+(al<1?' fill-opacity="'+Math.max(.25,al)+'"':'')+' stroke="'+st+'" stroke-width="'+sw_+'" stroke-opacity=".55"/>';out+=s});
  Object.keys(lab).forEach(function(i){var o=lab[i],m=S.mods[i];if(!m)return;var c=T((o.x0+o.x1)/2,(o.z0+o.z1)/2,o.y1+5);out+='<text x="'+c[0].toFixed(1)+'" y="'+(c[1]+4).toFixed(1)+'" font-size="10" text-anchor="middle" fill="#222" style="pointer-events:none;paint-order:stroke" stroke="#fff" stroke-width="2.5">'+(m.sup?'Sup. ':'')+m.w+'</text>'});
  out+='</g>';svg.insertAdjacentHTML('beforeend',out);return true}
 /* ordenação por profundidade de caixas alinhadas aos eixos (projeção paralela): plano que separa as duas decide quem fica na frente */
+/* contorno no chão (x,z) de uma peça: prisma do rotY (base + vetor) ou a caixa reta; casca convexa */
+function pdHull(b){var P=[];if(b.gp&&b.gp.a&&b.gp.d){b.gp.a.forEach(function(q){P.push([q[0],q[2]]);P.push([q[0]+b.gp.d[0],q[2]+b.gp.d[2]])})}else P=[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]];
+ P.sort(function(p,q){return p[0]-q[0]||p[1]-q[1]});var cr=function(o,a,c){return (a[0]-o[0])*(c[1]-o[1])-(a[1]-o[1])*(c[0]-o[0])},lo=[],up=[];P.forEach(function(p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],p)<=1e-9)lo.pop();lo.push(p)});for(var i=P.length-1;i>=0;i--){var p=P[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],p)<=1e-9)up.pop();up.push(p)}lo.pop();up.pop();var H=lo.concat(up);return H.length>=3?H:P}
+function pdProj(H,nx,nz){var a=1e18,c=-1e18;H.forEach(function(p){var v=p[0]*nx+p[1]*nz;if(v<a)a=v;if(v>c)c=v});return [a,c]}
 function plDepthSort(L,vx,vz,T){var n=L.length,e=.6;if(n<2)return L;
  L.forEach(function(it,i){var b=it.b,X0=1e9,X1=-1e9,Y0=1e9,Y1=-1e9;[[b.x0,b.z0],[b.x1,b.z0],[b.x1,b.z1],[b.x0,b.z1]].forEach(function(q){[b.y0,b.y1].forEach(function(h){var p=T(q[0],q[1],h);if(p[0]<X0)X0=p[0];if(p[0]>X1)X1=p[0];if(p[1]<Y0)Y0=p[1];if(p[1]>Y1)Y1=p[1]})});it.s0=X0;it.s1=X1;it.t0=Y0;it.t1=Y1;it.ix=i});
  function front(A,B){/* true: B na frente de A (A desenha antes) · false: A na frente · null: não se cobrem na tela */var a=A.b,b=B.b,v=null,c=function(r){if(v===null)v=r;else if(v!==r)v='x'};
   if(a.y1<=b.y0+e)c(true);else if(b.y1<=a.y0+e)c(false);
+  /* FASE3 · PL-ANG-GIRADO (23/11): peça girada (prisma do rotY) separa pelo contorno de verdade no chão, não pela caixa reta em volta */
+  if(a.gp||b.gp){var HA=pdHull(a),HB=pdHull(b);[HA,HB].forEach(function(H){for(var i=0;i<H.length;i++){var p0=H[i],p1=H[(i+1)%H.length],nx=p1[1]-p0[1],nz=p0[0]-p1[0],ln=Math.hypot(nx,nz);if(ln<1e-6)continue;nx/=ln;nz/=ln;var pa=pdProj(HA,nx,nz),pb=pdProj(HB,nx,nz),dv=nx*vx+nz*vz;if(Math.abs(dv)<1e-6)continue;if(pa[1]<=pb[0]+e)c(dv>0);else if(pb[1]<=pa[0]+e)c(dv<0)}})}
+  else{
   if(Math.abs(vx)>1e-6){if(a.x1<=b.x0+e)c(vx>0);else if(b.x1<=a.x0+e)c(vx<0)}
-  if(Math.abs(vz)>1e-6){if(a.z1<=b.z0+e)c(vz>0);else if(b.z1<=a.z0+e)c(vz<0)}
+  if(Math.abs(vz)>1e-6){if(a.z1<=b.z0+e)c(vz>0);else if(b.z1<=a.z0+e)c(vz<0)}}
   /* separadas por dois lados com respostas opostas: na tela elas não se cobrem (só as caixas em volta) · sem isso a ordem fecha em círculo e peça de baixo aparece por cima da pedra */
   if(v==='x')return null;if(v!==null)return v;
   /* se cruzam: a pedra fica sempre por cima; senão quem tem o topo mais alto */

@@ -15257,4 +15257,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["segurar2s"] as? String, "segurar 2 s: menu true · lugar 1650,1470 · b 0 · rot 0", "segurar 2 s no livre da Planta abre o menu, sem mexer nele")
         XCTAssertEqual(o["erros"] as? String, "erros 0", "sem erro")
     }
+
+    /// FASE3_ · LV-ILHA (levantamento de 23/11): a ilha (S.isl) não entrava na colisão do móvel livre (as caixas dela não têm módulo), então o livre entrava
+    /// dentro da ilha e a ilha arrastada passava por cima dele. Regra do Adauto: nada entra dentro de outra coisa.
+    func testFASE3_MovelLivreNaoEntraNaIlhaNemAIlhaNele() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.mods=[];S.isl=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));await W(40);var a=S.mods[1];lvSolta(a);draw();
+        __islAdd('ilha');await W(80);var il=S.isl[0],f=islFoot(il),lx0=a.lx,lz0=a.lz;
+        /* 1. o móvel livre levado pra dentro da ilha para no lugar */
+        var ok=lvTenta(a,Math.round((f.x0+f.x1)/2-a.w/2),Math.round((f.z0+f.z1)/2-a.d/2));R.livreNaIlha=(ok?'entrou':'bloqueou')+' · no mesmo lugar '+(a.lx===lx0&&a.lz===lz0);
+        /* 2. encostar do lado da ilha continua podendo (o ímã pega a face da ilha) */
+        ok=lvTenta(a,Math.round(f.x1+10),Math.round(f.z0));R.encostaNaIlha=(ok?'pode':'bloqueou')+' · folga '+Math.round(lvFoot(a).x0-f.x1)+' mm';
+        /* 3. a ilha arrastada por cima do móvel livre (mesma conta do arrasto do 3D) */
+        R.ilhaNoLivre=String(!!(window.lvIslBate&&(function(){var x0=il.x,z0=il.z,fa=lvFoot(a);il.x=Math.round(fa.x0);il.z=Math.round(fa.z0);var b=lvIslBate(il);il.x=x0;il.z=z0;return b})()));
+        R.errs=String(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["livreNaIlha"] as? String, "bloqueou · no mesmo lugar true", "móvel livre não entra dentro da ilha (fica onde estava)")
+        XCTAssertEqual(o["encostaNaIlha"] as? String, "pode · folga 0 mm", "encostar do lado da ilha continua podendo, o ímã pega a face dela")
+        XCTAssertEqual(o["ilhaNoLivre"] as? String, "true", "a ilha arrastada por cima do móvel livre é reconhecida como batida (o arrasto para no último lugar livre)")
+        XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
+    }
 }

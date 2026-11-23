@@ -198,6 +198,14 @@ class Cdp:
                     raise RuntimeError('%s: %s' % (metodo, msg['error'].get('message')))
                 return msg.get('result', {})
             if 'method' in msg:
+                if msg['method'] == 'Runtime.consoleAPICalled':
+                    try:
+                        t = ' '.join(str(a.get('value', '')) for a in msg['params'].get('args', []))
+                        if t.startswith('DIAG '):
+                            print('     ' + t[:300], flush=True)
+                    except Exception:
+                        pass
+                    continue
                 self.eventos.append(msg)
 
     def espera_evento(self, nome, espera=60):

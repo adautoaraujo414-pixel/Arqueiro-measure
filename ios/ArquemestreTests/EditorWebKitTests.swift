@@ -423,8 +423,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["latFora"] as? Bool, true, "módulo novo nasce com laterais por fora (do assistente)")
         XCTAssertEqual(o["lat"] as? String, "805x560", "lateral inteira do chão (até o piso) ao topo da caixa")
         XCTAssertEqual(o["gl"] as? String, "460x110", "lateral da gaveta = frente 170 − 60 · comprimento pela regra (caixote > 470 → 460)")
-        XCTAssertEqual(o["fundo"] as? String, "533x460", "fundo = caixa 544 − 30 + 2 × 8 + 2 × 1,5")
-        XCTAssertEqual(o["cl"] as? String, "460x110,533x460", "plano de corte segue os ajustes do assistente")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo novo — o fundo entra exatamente o rebaixo (8 do assistente), sem o "fundo maior" de 1,5 por lado */XCTAssertEqual(o["fundo"] as? String, "530x460", "fundo = caixa 544 − 30 + 2 × 8")
+        XCTAssertEqual(o["cl"] as? String, "460x110,530x460", "plano de corte segue os ajustes do assistente")
         XCTAssertEqual(o["trans"] as? Int, 0, "planta em ângulo: nenhuma face de módulo transparente (portas/frentes opacas)")
         XCTAssertGreaterThan(o["polys"] as? Int ?? 0, 10, "planta em ângulo desenha o módulo")
         XCTAssertEqual(o["okRow"] as? Bool, true, "completar acima faz a fileira inteira com a mesma divisão")
@@ -6961,7 +6961,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["peca3D"] as? String, "1200×600")
         XCTAssertEqual(o["rnd"] as? Int, 1)
         XCTAssertEqual(o["opcoes"] as? String, "1")
-        XCTAssertEqual(o["pecas"] as? Int, 6288)
+        /* FASE2 (23/11/2026, decisão do Adauto): o rodapé lateral do ENCONTRO de balcões com rodapé corrido sai da lista de peças (já não ia pro corte nem pro 3D): 2 peças a menos */XCTAssertEqual(o["pecas"] as? Int, 6286)
         XCTAssertEqual(o["maiorQueODesenho"] as? Int, 0)
         XCTAssertEqual(o["maiorEx"] as? String, "")
         XCTAssertEqual(o["comDecimo"] as? Int, 0)
@@ -11399,7 +11399,8 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertEqual(o["modulos"] as? Int, 4)
         /* regra que já existia (tlAuto): na parede esquerda o lado esquerdo do gaveteiro fica exposto e ganha o tamponamento automático; nada mais muda */
-        XCTAssertEqual(o["parede"] as? String, "gaveteiro na esquerda · medidas iguais · tirou [] pôs [Tamponamento esquerdo720x585] (automático)", "mudar de parede preserva medidas e peças")
+        /* FASE2 (23/11/2026, decisão do Adauto): o gaveteiro sai da fileira com rodapé corrido: o rodapé lateral esquerdo dele (antes do encontro, fora do corte e do 3D) volta a ser peça necessária */
+        XCTAssertEqual(o["parede"] as? String, "gaveteiro na esquerda · medidas iguais · tirou [] pôs [Rodapé lateral esquerdo (pedestal)450x100 Tamponamento esquerdo720x585] (automático)", "mudar de parede preserva medidas e peças")
         XCTAssertEqual(o["vaos"] as? String, "ok,ok,ok,ok,ok,ok,ok,ok")
         XCTAssertEqual(o["tamp"] as? String, "Tamponamento de cima, Tamponamento direito, Tamponamento esquerdo", "o direito já vem no lado exposto; o de cima e o esquerdo foram pedidos")
         XCTAssertEqual(o["interna"] as? String, "vão 1170 = 1200 − 2×15", "medida interna real (não a externa)")
@@ -12830,8 +12831,8 @@ final class EditorWebKitTests: XCTestCase {
            m5 8 → 11, m6 6 → 24 (m7, canto em L, igual). As outras conferências
            (dentro da travessa 0, tira da frente da lateral, assinatura de peças+corte da versão publicada) não mudam. */
         XCTAssertEqual(o["m0"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte c2ff642a")
-        XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 9f35813d")
-        XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 509acae1")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m1"] as? String, "fitas 12 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 7973daf5")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo da gaveta passa a entrar exatamente o rebaixo (529 → 526), por isso o resumo de peças+corte muda; as fitas não mudam */XCTAssertEqual(o["m2"] as? String, "fitas 9 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4a9121")
         XCTAssertEqual(o["m3"] as? String, "fitas 8 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte e4b56fd3")
         XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
         XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
@@ -12875,12 +12876,12 @@ final class EditorWebKitTests: XCTestCase {
            módulos, "dentro de folha fechada 0" e as assinaturas de peças+corte não mudam. abreFecha (só a Lateral esquerda do Balcão 2 portas):
            −1050 mm² nos 3 momentos (6630/10350/6630 → 5580/9300/5580) = a tira do rebaixo dessa lateral, atrás da travessa com a porta aberta ou fechada. */
         XCTAssertEqual(o["m0"] as? String, "dentro de folha fechada 0 · tira que aparece 20260 mm² · peças+corte c2ff642a")
-        XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte 509acae1")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m1"] as? String, "dentro de folha fechada 0 · tira que aparece 13220.5 mm² · peças+corte e4a9121")
         XCTAssertEqual(o["m2"] as? String, "dentro de folha fechada 0 · tira que aparece 13560 mm² · peças+corte e4b56fd3")
         XCTAssertEqual(o["m3"] as? String, "dentro de folha fechada 0 · tira que aparece 10728 mm² · peças+corte b2eb4cec")
         XCTAssertEqual(o["m4"] as? String, "dentro de folha fechada 0 · tira que aparece 86660 mm² · peças+corte d9f86893")
         XCTAssertEqual(o["m5"] as? String, "dentro de folha fechada 0 · tira que aparece 53240 mm² · peças+corte 5cf2235e")
-        XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 9f35813d")
+        /* FASE2 (23/11/2026, decisão do Adauto): módulo com gaveta — o fundo entra exatamente o rebaixo (529 → 526), o resumo de peças+corte muda; fitas iguais */XCTAssertEqual(o["m6"] as? String, "dentro de folha fechada 0 · tira que aparece 19650.5 mm² · peças+corte 7973daf5")
         XCTAssertEqual(o["abreFecha"] as? String, "fechada 5580.0 · aberta 9300.0 · fechou 5580.0")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -12926,15 +12927,15 @@ final class EditorWebKitTests: XCTestCase {
         var a=st(),sv_=JSON.stringify(snapState());loadState(JSON.parse(sv_));draw();m=S.mods[3];R.reabriu=(st()===a)+' · '+st();
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["antes"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+720")
-        XCTAssertEqual(o["toqueSemEscolher"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+720 · escolhido true")
-        XCTAssertEqual(o["esticaAteOChao"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+820 · fim do tamponamento 820 · chão 820")
-        XCTAssertEqual(o["encurta"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        /* FASE2 (23/11/2026, decisão do Adauto): este balcão está colado ao gaveteiro (rodapé corrido): o rodapé lateral do encontro sai da lista (já não ia pro corte nem pro 3D) — 4 → 3 */XCTAssertEqual(o["antes"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720")
+        XCTAssertEqual(o["toqueSemEscolher"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+720 · escolhido true")
+        XCTAssertEqual(o["esticaAteOChao"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+820 · fim do tamponamento 820 · chão 820")
+        XCTAssertEqual(o["encurta"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["ergueu"] as? String, "b1410 · rodapé 0")
-        XCTAssertEqual(o["voltouProChao"] as? String, "x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        XCTAssertEqual(o["voltouProChao"] as? String, "x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["tresD"] as? String, "base embaixo true · rodapé embaixo true · tamp 3D 420 = peça 420")
         XCTAssertEqual(o["corte"] as? String, "Base inferior 1500×560 q1 | Base inferior 1800×560 q1 | Porta 440×705 q4 | Porta 884×705 q1 | Rodapé 1500×100 q2 | Rodapé 1800×100 q2 | Tamponamento direito · face 420×585 q1 | Tamponamento direito · face 720×585 q3")
-        XCTAssertEqual(o["reabriu"] as? String, "true · x3800 b0 · rodapé 4 · travessa true · moldura true · base true · tamp 0+420")
+        XCTAssertEqual(o["reabriu"] as? String, "true · x3800 b0 · rodapé 3 · travessa true · moldura true · base true · tamp 0+420")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -15370,5 +15371,99 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["encostaNaIlha"] as? String, "pode · folga 0 mm", "encostar do lado da ilha continua podendo, o ímã pega a face dela")
         XCTAssertEqual(o["ilhaNoLivre"] as? String, "true", "a ilha arrastada por cima do móvel livre é reconhecida como batida (o arrasto para no último lugar livre)")
         XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
+    }
+
+    /* FASE2 (23/11, decisão do Adauto): fundo da gaveta entra exatamente o rebaixo (6 mm) — peça, corte e 3D; projeto antigo só muda confirmando. Rodapé lateral do encontro com rodapé corrido sai da lista de peças. */
+    func testFASE2_FundoDaGavetaEntraORebaixoERodapeDoEncontroForaDaLista() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};/* FASE2 (23/11, decisão do Adauto): 1) fundo da gaveta entra exatamente o rebaixo (6 mm) no módulo novo — peça, corte e 3D iguais; módulo de antes só muda pelo aviso, com desfazer. 2) rodapé lateral do encontro de balcões com rodapé corrido sai também da lista de peças; módulo sozinho mantém os dois */var W=function(t){return new Promise(r=>setTimeout(r,t))};var R={};var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var r=function(v){return Math.round(v*10)/10};
+        var gav=function(m){__build();var B=__boxes(),mi=S.mods.indexOf(m),lat=B.filter(b=>String(b.nm)===mi+':Lateral de gaveta'&&/#1$/.test(b.pk))[0],fd=B.filter(b=>String(b.nm)===mi+':Fundo de gaveta (6 mm)'&&/#1$/.test(b.pk))[0];var p=partsOf(m).filter(q=>/^Fundo de gaveta/.test(q.name))[0];var c=cutLines(m).filter(l=>/Fundo de gaveta/.test(l.names.join()))[0];return 'peça '+p.cl+'×'+p.cw+' · corte '+(c?c.L+'×'+c.W:'-')+' · 3D entra '+(lat&&fd?r(lat.x1-fd.x0):'?')+' na lateral · nota: '+(String(p.note).match(/entra [^·]*/)||[''])[0]};
+        loadState(initLimpo());S.W=4000;newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();R.novo=gav(m)+' gf6='+m.gf6;
+        delete m.gf6;draw();R.antigo=gav(m);loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.reaberto=gav(m);S.m=m;panel();await W(100);var bx=document.getElementById('gfbox');R.aviso=bx?bx.textContent.replace(/\s+/g,' ').slice(0,240):'sem';var b=document.querySelector('[data-gf6up]');if(b){b.click();await W(150)}R.atualizou=gav(S.mods[0]);document.getElementById('und').click();await W(150);R.desfez=gav(S.mods[0]);
+        // rodapé
+        var rod=function(){return S.mods.map(function(m,i){return i+': lista '+partsOf(m).filter(p=>/^Rodapé lateral/.test(p.name)).map(p=>p.name.replace(' (pedestal)','')).join('+')+' | corte '+cutLines(m).filter(l=>/Rodapé lateral/.test(l.names.join())).map(l=>l.names.filter(n=>/Rodapé lateral/.test(n)).join('+')).join('')}).join(' ; ')};
+        loadState(initLimpo());S.W=4000;newTpl(T('Balcão 2 portas'));draw();R.sozinho=rod();newTpl(T('Balcão 2 portas'));draw();R.dois=rod()+' · rodapé corrido '+!!rodRunOf(S.mods[0]);
+        R.errs=__errs.length;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["novo"] as? String, "peça 526×460 · corte 526×460 · 3D entra 6 na lateral · nota: entra 6 em cada lateral  gf6=1")
+        XCTAssertEqual(o["antigo"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["reaberto"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["aviso"] as? String, "Gavetas de antes da atualizaçãoO fundo das gavetas deste módulo entra mais do que o rebaixo das laterais (6 mm). Com a regra nova o fundo entra exatamente o rebaixo: 3× fundo de gaveta 529×460 → 526×460 (mm). Nada muda sem você mandar.Atual")
+        XCTAssertEqual(o["atualizou"] as? String, "peça 526×460 · corte 526×460 · 3D entra 6 na lateral · nota: entra 6 em cada lateral ")
+        XCTAssertEqual(o["desfez"] as? String, "peça 529×460 · corte 529×460 · 3D entra 7.5 na lateral · nota: entra 7,5 em cada lateral ")
+        XCTAssertEqual(o["sozinho"] as? String, "0: lista Rodapé lateral esquerdo+Rodapé lateral direito | corte Rodapé lateral esquerdo (pedestal)+Rodapé lateral direito (pedestal)")
+        XCTAssertEqual(o["dois"] as? String, "0: lista Rodapé lateral esquerdo | corte Rodapé lateral esquerdo (pedestal) ; 1: lista Rodapé lateral direito | corte Rodapé lateral direito (pedestal) · rodapé corrido true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* FASE5 (23/11, autorizado pelo Adauto): DXF para CNC a partir do plano de corte — contornos, furação de dobradiça, cavilhas nas uniões, rebaixo, cava; parâmetro ausente é obrigatório. */
+    func testFASE5_DxfParaCncContornosFurosERasgosSemInventar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* FASE5 (23/11, Adauto): DXF para CNC — mesmas peças e medidas do plano de corte; furos/rasgos nas posições do projeto; uma camada por operação;
+           parâmetro que o projeto não tem é obrigatório (não exporta sem); arquivo DXF R12 válido (contornos fechados, EOF) */
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;draw();newTpl(T0('Balcão 2 portas'));draw();var m=S.mods[0];
+        PR.dxf={};R.semConfig=dxfPecas().falta.join(' | ');
+        PR.dxf={dobP:'13',uniao:'cavilha',cavD:'8',cavPF:'12',cavPT:'25',cavOff:'32',cavEsp:'128'};var r=dxfPecas();R.falta=r.falta.length;
+        /* mesma lista do plano de corte */var g=cutGroups(),nq=0;Object.keys(g.map).forEach(function(k){nq+=g.map[k].qty});R.pecasIguaisAoCorte=r.pecas.length+' de '+nq;
+        /* dobradiça: posições = furInfo da porta (centro a B da borda, D das pontas) */var por=r.pecas.filter(function(p){return p.nome==='Porta'})[0],pp=partsOf(m).filter(function(p){return p.name==='Porta'})[0],F=pp.fur;
+        R.dobradica=por.furos.map(function(f){return 'Ø'+f.d+' x'+Math.round(f.x*10)/10+' y'+Math.round(f.y*10)/10}).join(' ; ')+' · furInfo: lado '+F.s+' B '+F.B+' pos '+F.pos.join('/')+' · porta '+pp.cl+'×'+pp.cw;
+        /* cavilha na base: centro da espessura da lateral (7,5 da borda), 1º furo a 32 da ponta; furos de topo nas laterais = furos de face na base */var ba=r.pecas.filter(function(p){return p.nome==='Base inferior'})[0],la=r.pecas.filter(function(p){return /^Lateral/.test(p.nome)});
+        R.cavilhaBase=ba.furos.length+' furos · x '+ba.furos.map(function(f){return Math.round(f.x*10)/10}).filter(function(v,i,a){return a.indexOf(v)===i}).join('/')+' · y '+ba.furos.map(function(f){return Math.round(f.y*10)/10}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(function(a,b){return a-b}).join('/');
+        R.topoLaterais=la.map(function(p){return p.nome+' '+p.furos.length+' no topo'}).join(' · ');
+        var t=dxfTexto(r.pecas,'teste'),L=t.split('\r\n');R.formato=(L[0]==='999'?'ok':'?')+' · '+(t.indexOf('AC1009')>0?'R12':'?')+' · '+(L[L.length-2]==='EOF'?'EOF':'sem EOF');
+        var pl=0,fe=0;for(var i=0;i<L.length-1;i+=2){if(L[i]==='0'&&L[i+1]==='POLYLINE'){var j=i+2,ly='',f70='';while(j<L.length-1&&L[j]!=='0'){if(L[j]==='8')ly=L[j+1];if(L[j]==='70')f70=L[j+1];j+=2}if(ly==='CONTORNO'){pl++;if(f70==='1')fe++}}}R.contornos=pl+' (fechados '+fe+')';
+        var cam={};r.pecas.forEach(function(p){p.furos.forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1});p.rasgos.concat(p.linhas).forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1})});R.camadas=Object.keys(cam).sort().map(function(k){return k+' '+cam[k]}).join(' · ');
+        /* puxador barra: posição dos furos não existe no projeto → exige marcar "furar na montagem" */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Balcão 2 portas'));S.mods[0].v.forEach(function(v){v.px='barra'});draw();PR.dxf={dobP:'13',uniao:'nenhuma'};R.barraSemMarcar=dxfPecas().falta.join(' | ');PR.dxf.pxOutros='montagem';R.barraMarcado=dxfPecas().falta.length;
+        /* gaveta: rebaixo 6 × 6 no comprimento da lateral da caixa */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Gaveteiro 3 gavetas'));draw();PR.dxf={dobP:'13',uniao:'nenhuma'};var lg=dxfPecas().pecas.filter(function(p){return p.nome==='Lateral de gaveta'})[0];R.gaveta=lg?(lg.rasgos.map(function(q){return q.lay+' '+Math.round(q.x1-q.x0)+'×'+Math.round(q.y1-q.y0)}).join(';')+' na peça '+lg.L+'×'+lg.W):'sem';
+        /* botão no plano de corte */openCut();R.botao=!!document.getElementById('dxfbtn');try{document.getElementById('dxfbtn').click()}catch(_){}R.tela=!!document.getElementById('dxfbox');try{document.getElementById('dxfbox').remove()}catch(_){}
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["semConfig"] as? String, "Dobradiça: profundidade do copo Ø35 (mm) | União das peças: escolha cavilha, pré-furo ou nenhuma")
+        XCTAssertEqual(o["falta"] as? Int, 0)
+        XCTAssertEqual(o["pecasIguaisAoCorte"] as? String, "19 de 19")
+        XCTAssertEqual(o["dobradica"] as? String, "Ø35 x22 y585 ; Ø35 x22 y120 · furInfo: lado l B 22 pos 120/585 · porta 440×705")
+        XCTAssertEqual(o["cavilhaBase"] as? String, "10 furos · x 7.5/892.5 · y 32/156.2/280.4/404.6/528.8")
+        XCTAssertEqual(o["topoLaterais"] as? String, "Lateral esquerda 5 no topo · Lateral direita 5 no topo")
+        XCTAssertEqual(o["formato"] as? String, "ok · R12 · EOF")
+        XCTAssertEqual(o["contornos"] as? String, "19 (fechados 19)")
+        XCTAssertEqual(o["camadas"] as? String, "CAVA_30_P12 2 · CAVILHA_D8_P12_F1 10 · FURO_DOBRADICA_D35_P13 4 · FURO_TOPO_CAVILHA_D8_P25 10")
+        XCTAssertEqual(o["barraSemMarcar"] as? String, "Puxador barra: o projeto não tem a posição dos furos — marque \"furar na montagem\"")
+        XCTAssertEqual(o["barraMarcado"] as? Int, 0)
+        XCTAssertEqual(o["gaveta"] as? String, "REBAIXO_L6_P6 460×6 na peça 460×114")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["tela"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
+
+    /* FASE2 (23/11, pedido do Chefe): todo caminho que cria módulo novo (catálogo, módulo vazio, lateral, cozinha em L, empilhar, ilha) nasce com a regra nova do fundo da gaveta. */
+    func testFASE2_ModuloNovoPorTodoCaminhoNasceComARegraDaGaveta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={};/* FASE2 (23/11, pedido do Chefe): todo caminho que cria módulo novo marca a regra nova do fundo da gaveta (sem aviso de "antigo"); ilha nova também; ilha antiga não */var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        var lim=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw()};
+        var novos=function(f){var a=new Set(S.mods);try{f()}catch(e){return 'erro '+e}var n=S.mods.filter(function(m){return !a.has(m)});return n.length?n.map(function(m){return m.gf6?'1':'0'}).join(''):'nenhum'};
+        lim();R.newTpl=novos(function(){newTpl(T0('Gaveteiro 3 gavetas'))});
+        lim();R.newMod=novos(function(){newMod(false)});
+        lim();R.addWing=novos(function(){addWing('e')});
+        lim();R.mkL=novos(function(){mkL('e')});
+        lim();newTpl(T0('Guarda-roupa 2 vãos'));S.m=S.mods[0];window.SOLO2=S.mods[0];R.addStack=novos(function(){var b=document.createElement('button');b.dataset.rga='stk|mal';document.body.appendChild(b);b.click();b.remove()});window.SOLO2=null;
+        lim();
+        
+        lim();var ia=islNew('pen');R.ilha=(ia&&ia.gf6?'1':'0')+' · módulo da ilha '+(ia&&islVM(ia).gf6?'1':'0');var iv=JSON.parse(JSON.stringify(ia));delete iv.gf6;R.ilhaAntiga=(islVM(iv).gf6?'1':'0');
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["newTpl"] as? String, "1")
+        XCTAssertEqual(o["newMod"] as? String, "1")
+        XCTAssertEqual(o["addWing"] as? String, "1")
+        XCTAssertEqual(o["mkL"] as? String, "1")
+        XCTAssertEqual(o["addStack"] as? String, "1")
+        XCTAssertEqual(o["ilha"] as? String, "1 · módulo da ilha 1")
+        XCTAssertEqual(o["ilhaAntiga"] as? String, "0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

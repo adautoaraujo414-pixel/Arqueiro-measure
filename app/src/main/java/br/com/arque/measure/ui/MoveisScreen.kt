@@ -120,6 +120,7 @@ fun MoveisScreen(vm: AppViewModel) {
             onShareCut = { code, name, title -> shareCutInvite(ctx, vm.cutInvite(code, name, title)) },
             onShareClient = { code, name, room -> shareCutInvite(ctx, vm.clientInvite(code, name, room)) },
             onQuotePhotos = { json -> vm.quotePhotosFromMoveis(json) },
+            onShareFile = { name, text, mime -> shareTextFile(ctx, name, text, mime) },
         )
     }
     DisposableEffect(Unit) { onDispose { vm.projVersion++ } }
@@ -301,7 +302,10 @@ class MoveisBridge(
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
     private val onShareClient: (String, String, String) -> Unit = { _, _, _ -> },
     private val onQuotePhotos: (String) -> Unit = {},
+    private val onShareFile: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
+    /** FASE5 (23/11): "⬇ DXF para CNC" no plano de corte — o editor manda o texto do arquivo e o Android abre o compartilhar (salvar, e-mail, Drive…). */
+    @JavascriptInterface fun shareFile(name: String, text: String, mime: String) { web()?.post { onShareFile(name, text, mime) } }
     /** "🏠 Enviar o projeto pro cliente": link limpo pelo WhatsApp (o cliente só vê e mexe no 3D). */
     @JavascriptInterface fun shareClient(code: String, name: String, title: String) { web()?.post { onShareClient(code, name, title) } }
     /** Nome da empresa (vai no convite do plano de corte). */
@@ -362,6 +366,21 @@ class MoveisBridge(
 
     @JavascriptInterface fun listFiles(): String =
         (dir.list() ?: emptyArray()).joinToString(prefix = "[", postfix = "]", separator = ",") { "\"$it\"" }
+}
+
+/** FASE5 (23/11): arquivo gerado pelo editor (DXF para CNC) — grava no cache/exports e abre o compartilhar do Android. */
+fun shareTextFile(ctx: android.content.Context, name: String, text: String, mime: String) {
+    runCatching {
+        val dir = File(ctx.cacheDir, "exports").apply { mkdirs() }
+        val safe = name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "arquivo.dxf" }
+        val f = File(dir, safe)
+        f.writeText(text, Charsets.UTF_8)
+        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", f)
+        val send = Intent(Intent.ACTION_SEND).setType(mime.ifBlank { "application/octet-stream" })
+            .putExtra(Intent.EXTRA_STREAM, uri).putExtra(Intent.EXTRA_SUBJECT, safe)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        ctx.startActivity(Intent.createChooser(send, safe).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }
 
 /** Convite do plano de corte: abre direto no WhatsApp (ou WhatsApp Business); sem eles, a escolha de apps. */

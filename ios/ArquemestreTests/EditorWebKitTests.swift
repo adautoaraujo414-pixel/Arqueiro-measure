@@ -15794,4 +15794,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /// ID-PAREDE (23/11/2026): causa do intermitente testPaineisDiferentesEmCadaParedeBatemNo2DNo3DENoCorte. Na vista de uma parede o id novo de
+    /// painel/eletro só era conferido contra a lista daquela parede: com a mesma hora e o mesmo sorteio, a esquerda repetia o id da direita
+    /// (antes: ids repetidos, 1 peça na parede errada no 3D, reabrir mudava o projeto). Aqui a coincidência é forçada (relógio e sorteio fixos).
+    @MainActor
+    func testIdNovoNaVistaDaParedeNaoRepeteODeOutraParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* ID-PAREDE: força a mesma hora e o mesmo sorteio nas duas paredes (o caso raro do intermitente vira certo) */
+        S.stones=[];S.rp=[];S.fr=[];S.ops=[];S.env='livre';S.room='sala';S.W=4140;S.RD=3170;S.H=3400;S.Hm=1;S.Wm=1;S.mods=[];draw();
+        var dn=Date.now,mr=Math.random,T0=dn.call(Date);Date.now=function(){return T0};Math.random=function(){return 0.5};
+        try{wvGo('d');await W(30);var a=rpNew({x:0,b:0,w:700,h:2600});a.liso=true;var g1=apAdd('geladeira',0);draw();wvGo('e');await W(30);var b=rpNew({x:500,b:0,w:1000,h:2000});var g2=apAdd('geladeira',0);draw();wvGo('f');await W(30)}finally{Date.now=dn;Math.random=mr}
+        var ids=S.rp.map(function(q){return q.id}),fids=S.fr.map(function(q){return q.id});R.paineisIdsUnicos=new Set(ids).size===ids.length;R.eletrosIdsUnicos=new Set(fids).size===fids.length;
+        R.paredes=S.rp.map(function(q){return q.wall||'f'}).sort().join(',')+' · '+S.fr.map(function(q){return q.wall||'f'}).sort().join(',');
+        open3D();await W(300);__build();var B=__boxes().filter(function(x){return x.rpid}),by={};S.rp.forEach(function(q){by[q.id]=q});var errado=0;B.forEach(function(x){var q=by[x.rpid];if(!q)return;var w=q.wall||'f';var ok=w==='d'?x.x0>=S.W-120:w==='e'?x.x1<=120:true;if(!ok)errado++});R.no3DParedeErrada=errado;document.getElementById('v3x').click();await W(100);
+        var c0=JSON.stringify(S.rp.map(function(q){return [q.id,q.wall||'f',q.x]}));loadState(JSON.parse(JSON.stringify(snapState())));R.reabreIgual=JSON.stringify(S.rp.map(function(q){return [q.id,q.wall||'f',q.x]}))===c0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["paineisIdsUnicos"] as? Bool, true, "painéis de paredes diferentes com ids diferentes")
+        XCTAssertEqual(o["eletrosIdsUnicos"] as? Bool, true, "eletros de paredes diferentes com ids diferentes")
+        XCTAssertEqual(o["paredes"] as? String, "d,e · d,e")
+        XCTAssertEqual(o["no3DParedeErrada"] as? Int, 0, "no 3D cada painel na parede dele")
+        XCTAssertEqual(o["reabreIgual"] as? Bool, true, "salvar e reabrir não muda nada")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

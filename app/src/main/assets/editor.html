@@ -11100,6 +11100,18 @@ document.addEventListener('pointerup',function(e){if(!window.AMBSET)return;var c
 })();
 </script>
 <script>
+/* ID-PAREDE (23/11/2026, intermitente testPaineisDiferentesEmCadaParede…): na vista de uma parede (WV) S.rp / S.fr só têm os itens DAQUELA
+   parede; os das outras ficam guardados em WV.st. O id novo (hora + sorteio) só era conferido contra a lista da vista, então um painel ou eletro
+   criado na esquerda podia ganhar o mesmo id de um da direita (~0,5% por painel criado logo depois): no 3D a peça ia pra parede errada e o projeto
+   salvo ficava com 2 itens de mesmo id. Agora o id novo é conferido contra todas as paredes. Projeto salvo não é mexido. */
+(function(){
+ var todos=function(k){var a=(S[k]||[]).slice();try{var w=window.__wvSt&&__wvSt();if(w&&Array.isArray(w[k]))a=a.concat(w[k])}catch(_){}return a};
+ var unico=function(o,k){if(!o||o.id===undefined||o.id===null)return o;var u={};todos(k).forEach(function(q){if(q&&q!==o)u[String(q.id)]=1});var id0=o.id;while(u[String(o.id)])o.id=(+o.id)+1;return id0};
+ if(typeof rpNew==='function'){var rn0=rpNew;rpNew=window.rpNew=function(){var a=rn0.apply(this,arguments);try{var id0=unico(a,'rp');if(id0!==a.id&&typeof RPSEL!=='undefined'&&RPSEL===id0)RPSEL=a.id}catch(_){}return a}}
+ if(typeof apAdd==='function'){var ap0=apAdd;apAdd=window.apAdd=function(){var it=ap0.apply(this,arguments);try{if(it&&typeof it==='object'){var id0=unico(it,'fr');if(id0!==it.id&&typeof SELAP!=='undefined'&&SELAP===id0)SELAP=it.id}}catch(_){}return it}}
+})();
+</script>
+<script>
 /* ===== Abas mais limpas: Ambiente só com o útil (medidas das paredes e esquadro ficam no ⚙ Ajustes › Paredes da obra);
    Estrutura com as Dimensões em cima, sem o bloco de cores (fica na aba 🎨 Cores) e as regras do módulo embaixo ===== */
 (function(){

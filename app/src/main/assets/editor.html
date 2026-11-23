@@ -14444,4 +14444,21 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
  window.fotoReserva=function(im){try{if(!im||im.dataset.fjpg)return false;var src=im.getAttribute('src')||'',m=RX.exec(src);if(!m)return false;im.dataset.fjpg='1';im.src=src.replace(RX,'$1fotos/$2.jpg');window.__fotoReserva++;return true}catch(_){return false}};
  document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG')fotoReserva(t)},true);})();
 </script>
+<script>
+/* POLÍTICA B · LED livre e espelho (Adauto, 23/11/2026: "o risco de perder o LED livre ao salvar numa versão antiga deve ser tratado como bloqueador").
+   Mesma regra das peças livres: o link (cortador e cliente) de projeto com LED livre (m.leds) ou espelho de parede sai com o tipo novo
+   (arque-corte-v2 / arque-cliente-v2), que a versão publicada RECUSA em vez de abrir sem o LED (e sem o rasgo do LED embutido) ou sem o espelho.
+   Antes de mandar, a pessoa confirma sabendo disso. Este app abre normal. Versão antiga não tem como ser corrigida: ela só não abre. */
+(function(){
+ var conta=function(st){var L=0,E=0;((st&&st.mods)||[]).forEach(function(m){L+=((m&&m.leds)||[]).length});((st&&st.fr)||[]).concat((st&&st.frx)||[]).forEach(function(f){if(f&&f.t==='espelho')E++});return {L:L,E:E}};
+ window.pbNovos=conta;
+ function inst(){var EM=window.EM,C=EM&&EM.compat;if(!C)return;
+  var ce=window.cutEncode;if(typeof ce==='function')cutEncode=window.cutEncode=function(o){try{var k=C.verK(o&&o.k),n=conta(o&&o.st);if(k&&k.v===1&&(n.L||n.E)){o=JSON.parse(JSON.stringify(o));o.k='arque-'+k.t+'-v'+C.V;o.fmt=EM.FMT}}catch(_){}return ce.call(this,o)};
+  ['cutSend','clientSend'].forEach(function(f){var o0=window[f];if(typeof o0!=='function')return;var w=function(){var self=this,args=arguments,st=null;try{st=snapState()}catch(_){}var n=conta(st);if(!(n.L||n.E)||C.passa||C.tem(st))return o0.apply(self,args);
+    C.dlg(0,function(){C.passa=1;try{o0.apply(self,args)}finally{C.passa=0}});var d=document.getElementById('emcompat');if(d){var b=d.querySelector('b'),nt=d.querySelector('.note'),it=[];if(n.L)it.push(n.L+(n.L===1?' LED livre':' LEDs livres'));if(n.E)it.push(n.E+(n.E===1?' espelho':' espelhos'));if(b)b.textContent='Projeto com '+(n.L&&n.E?'LED livre e espelho':n.L?'LED livre':'espelho');if(nt)nt.innerHTML='Este projeto tem '+it.join(' e ')+'. Quem receber precisa do Arquemestre atualizado. Numa versão antiga o link <b>não abre</b> — assim ninguém corta sem o rasgo do LED nem fica sem o LED ou o espelho.'}};
+   window[f]=w;try{if(f==='cutSend')cutSend=w;else clientSend=w}catch(_){}})}
+ /* depois da Política B das peças (ela se instala no carregamento) */
+ var go=function(){setTimeout(inst,30)};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+})();
+</script>
 </body></html>

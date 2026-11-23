@@ -1880,3 +1880,15 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - Atualizados com comentário, todos desta mesma entrega e ainda não homologados: ConchaSete (modelos conferidos deitados e com furação confirmada; escopos com confirmação), ProvencalNaBorda (reta em cima), No3DDuplicar… ("Todas as portas" + confirmação).
 - **Arquivos:** `editor.html`, nos blocos CONCHA e escolha por puxador (módulo das provençais), `px3Panel` (lugar de um puxador) e o despacho dos 2 toques (`PXSEL`).
 - **Status:** resolvido na bateria. Falta o Adauto confirmar o lado da parte reta na porta em pé.
+
+## CONCHA-GAVETA (Adauto, print das 19:56 de 23/11)
+- **Relatado:** "Puxador concha as gavetas estão de cabeça pra baixo, rês usar isso, opção de mexer somente neles, colocar inverter e movimentar". Os prints mostram as gavetas com a parte reta em cima e a curva embaixo (versão 7fe0047a).
+- **Conflito registrado:** o prompt oficial (via Code 1) pedia "reta em cima" para a concha. Olhando o app, o Adauto disse que **nas gavetas** isso está de cabeça para baixo. Vale a instrução mais nova, só para as gavetas. As portas em pé não mudam (ele não reclamou delas).
+- **Correção:** `2885dcc8`.
+  - Frente de gaveta deitada vem invertida: curva em cima, reta embaixo.
+  - ⇅ Inverter por puxador (`md.inv`), na aba (escopos de sempre + "Todas as gavetas", com confirmação) e no 3D (só ele).
+  - Os 2 toques no puxador da gaveta abrem a bolinha para mover (antes só porta): só este, ou todas as gavetas com confirmação.
+  - Os furos do DXF continuam no centro da concha.
+- **Achado no caminho:** o puxador da frente de gaveta aparece na aba **Internos** (id 2), não em Portas. É comportamento de sempre do app, mantido.
+- **Teste:** `testConchaDaGavetaInverterEMoverSoElas` (falha na b3cf2f3b). A expectativa da gaveta em `testConchaRetaEmCima…` foi atualizada, com comentário.
+- **Status:** resolvido na bateria. Falta o Adauto conferir no aparelho.

@@ -12560,7 +12560,7 @@ try{['10auts3fippv5','fmorbb134o9yl','ozzjm373p7c5','15xze0b12e9ed9','1nr2frdtnp
      if(anda===Wm){/* o do lado anda no comprimento dele (z): só se estão de frente um pro outro nesse sentido (cruzam no x) */if(!sobre&&!(ox>0.5))return;d=a[3]-b[2];if(Math.abs(d)<0.5)return;if(!sobre&&Math.abs(d)>SNAP)return;Wm.x=Math.round((+Wm.x+d)*10)/10}
      else{/* o do fundo anda no x: só se cruzam no z */if(!sobre&&!(oz>0.5))return;if(Wm.wing==='e'){d=b[1]-a[0]}else{d=b[0]-a[1]}if(Math.abs(d)<0.5)return;if(!sobre&&Math.abs(d)>SNAP)return;F.x=Math.round((+F.x+d)*10)/10}
      mexeu=true;n++})});if(!mexeu)break}anota()}finally{try{if(w&&w!=='f'&&window.__wvTo)__wvTo(w)}catch(_){}busy=false}
-  if(n){try{d0.call(window)}catch(_){}try{if(window.re3)window.re3()}catch(_){}}return n}
+  if(n){/* CANTO-ESPELHO (Code 2, 23/11): redesenha pelo draw de agora (com o espelho da parede esquerda e o WVMIRX do toque), não pelo d0 guardado antes dele; busy evita conferir de novo */busy=true;try{(window.draw||d0).call(window)}catch(_){}finally{busy=false}try{if(window.re3)window.re3()}catch(_){}}return n}
  window.cantoEncosta=rodar;
  function agenda(){if(busy)return;clearTimeout(tm);tm=setTimeout(function(){var kb=document.getElementById('calcbar'),ae=document.activeElement;if(DN>0||(typeof drag!=='undefined'&&drag)||(kb&&!kb.hidden)||(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName))){agenda();return}rodar()},250)}
  var d0=window.draw||draw;draw=window.draw=function(){var r=d0.apply(this,arguments);try{if(!busy&&((S.mods||[]).some(function(m){return m.wing==='e'||m.wing==='d'})||(window.wvCur&&wvCur()&&wvCur()!=='f')))agenda()}catch(_){}return r};

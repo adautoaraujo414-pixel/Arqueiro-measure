@@ -1646,3 +1646,44 @@ Detalhes, reprodução e sondas em `AUDITORIA_INTEGRIDADE.md` e `tools/sondas/`.
 - **Não mexido:** medidas, `partsOf`, plano de corte, DXF, 3D.
 - **Teste:** `testFASE3_PlantaAnguloDesenhaMovelGiradoPelaFormaRealSemSobrepor` (68a8543, falha antes: 488 arestas alinhadas) · correção 17d8418. Confere forma, frente de gaveta por cima da lateral e salvar/reabrir.
 - **Evidência:** antes = print do Adauto; depois = captura do Chromium. Aparelho real pendente.
+
+## DIG-TECLADO + DIG-SAIDA — valor digitado perdido / preço zerado (23/11/2026, branch `claude/digitacao-toques`, base `8ec9118`)
+- **Pedido:** Adauto, 23/11, "AUDITORIA GERAL DE DIGITAÇÃO" (prioridade crítica): "ao adicionar um módulo e tentar digitar um número no campo de dimensões, a edição fecha automaticamente".
+- **Reprodução do relato:** a imagem citada não chegou. O fluxo descrito foi refeito com toque emulado de tablet (Chromium): adicionar pelo catálogo, no 2D e no ＋ Criar do 3D, e digitar logo em seguida (250 ms) no teclado do app e no físico. Nesse ambiente o campo **não fechou**. **Não foi possível verificar** no iPhone/iPad/Tab S9 FE.
+- **Auditoria automática** (Playwright, digitação de verdade, uma tecla por vez, conferindo a cada tecla se o campo é o mesmo, tem o foco e acumula o valor; Tab no fim e conferência se o valor chegou ao projeto ou aos ajustes):
+  - painel 2D (todas as abas, 2 tipos de módulo, seções abertas): 55 campos;
+  - janelas Cliente, Valores, ArqueCut, Trena, Ajustes e caixa do eletro: 136;
+  - 3D (caixa do módulo, peça, geladeira, móvel livre): 15;
+  - total: **206 campos**, 0 perdendo foco nem fechando durante a digitação.
+- **Erro comprovado 1 · DIG-TECLADO (teclado físico: Windows, tablet com teclado):**
+  - Efeito: o valor digitado se perdia ao sair do campo (Tab ou toque em outro campo) e o Enter não confirmava.
+  - Medido antes: 51 de 55 campos do painel 2D; Valores 6 de 8; Ajustes 84 de 106; ArqueCut (chapa, serra).
+  - Causa: o teclado do app segura o `input` de cada tecla (pra não aplicar 7 → 75 → 750). O `change` de verdade do navegador (Tab/Enter) zerava o "pendente" achando que já tinha aplicado. O painel 2D aplica no `input`, então nada era aplicado, e ao sair do campo não havia mais nada pendente.
+  - Correção: o `change` de verdade com valor pendente fica pendente e é aplicado ao sair, pelo mesmo `commit` do OK. Enter = OK.
+- **Erro comprovado 2 · DIG-SAIDA (preço zerado):**
+  - Efeito: nos preços do Ajustes (`data-stdp`), digitar e tocar no campo de baixo sem OK (teclado do app) **zerava o preço** (PR = 0, campo vazio). Com teclado físico + Tab, idem.
+  - Causa: o "saiu do campo" do preço (`money(PR[...])`) rodava antes do "saiu do campo" do teclado e voltava o valor antigo antes de aplicar.
+  - Correção: o do teclado roda na captura, antes dos outros.
+- **Comportamento correto (conferido):**
+  - valor inválido continua recusado com aviso (ex.: altura 123 mm, "mínimo 290");
+  - eletrodoméstico com medida do modelo ("troque o modelo");
+  - geladeira presa pela regra da pedra;
+  - Cliente/Trena/peça avulsa do ArqueCut aplicam no botão.
+- **Testes:** `testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor` (4dd6540, falha antes) · correção 68f13ff · bateria 431/431.
+- **Observação (não mexido):** a geladeira volta sozinha pro fim da parede quando o valor digitado a colocaria embaixo da pedra, sem aviso. É a regra física de sempre; fica a sugestão de avisar.
+
+## TOQ-TAMP — tamponamento quase impossível de tocar com o dedo (23/11/2026, mesma branch)
+- **Pedido:** Adauto, 23/11, "precisão absoluta na seleção… tamponamentos confundidos com outros elementos".
+- **Medição:**
+  - com a parede inteira no 2D, o tamponamento de 15 mm tem 4,7 px na tela;
+  - toque a até 3 px do centro acerta;
+  - a 6 px pra dentro cai na porta; a 6 px pra fora cai no fundo vazio;
+  - arrastar a 8 px pra fora não fazia nada.
+- **Causa:** o 2D escolhe pelo elemento embaixo do ponto (sem tolerância) e o alvo é menor que a ponta do dedo.
+- **Correção:** o toque que cairia no **fundo vazio** (nada tocável embaixo) a até 12 px de um tamponamento é repassado pra ele, e segue o TAMP-2D-ALVO de sempre (não escolhido só escolhe; escolhido muda só a altura). Dentro do móvel nada muda: porta, frente e vão continuam com prioridade.
+- **Conferido sem mudança (comportamento correto):**
+  - pinça em cima do módulo escolhido só dá zoom; peças e seleção ficam;
+  - 1 dedo arrastando + 2º dedo vira pinça sem mover nada;
+  - arrastar a porta de módulo escolhido move o módulo (regra F3-TOQUE).
+- **Testes:** `testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca` (e9cb775, falha antes) · correção d96a38d.
+- **Pendente:** aparelho real (dedo de verdade); toque no 3D não auditado nesta etapa.

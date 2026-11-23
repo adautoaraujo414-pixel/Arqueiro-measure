@@ -3597,9 +3597,12 @@ var PDN=0;document.addEventListener('pointerdown',function(){PDN=1},true);['poin
 function soltaKp(){var n=0,go=function(){if(cur||!kp.hidden)return;if(PDN&&n++<25){setTimeout(go,60);return}document.body.classList.remove('kp')};setTimeout(go,0)}
 function close(){var qb=document.getElementById('qebox');if(qb)qb.hidden=true;kp.hidden=true;cur=null;soltaKp()}
 document.addEventListener('focusin',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(t!==cur)open(t);else{fresh=1}}else if(!kp.contains(t)){close()}});
-document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(t.value)||(dirty&&t.value!==t.dataset.kpv)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}});
+/* DIG-SAIDA (23/11): na captura, antes dos outros "saiu do campo" (ex.: o do preço, que voltava o valor antigo formatado antes deste aplicar o digitado) */
+document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(t.value)||(dirty&&t.value!==t.dataset.kpv)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}},true);
 document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.calc)return;var v=t.value;if(FIRING)return;/* teclado físico ou do sistema: segura até o Enter/sair do campo */if(hasOp(v)||e.isTrusted){e.stopImmediatePropagation();dirty=1;if(t===cur)show();return}if(v.indexOf(',')>=0)t.value=v.replace(/,/g,'.')},true);
-document.addEventListener('change',function(e){var t=e.target;if(!(t&&t.dataset&&t.dataset.calc))return;if(e.isTrusted&&hasOp(t.value)){e.stopImmediatePropagation();return}if(!FIRING){t.dataset.kpv=t.value;dirty=0}},true);
+document.addEventListener('change',function(e){var t=e.target;if(!(t&&t.dataset&&t.dataset.calc))return;/* DIG-TECLADO (23/11): o change de verdade (teclado físico: Tab, Enter) chega com o valor digitado ainda não aplicado (o input de cada tecla é segurado acima). Antes ele zerava o "pendente" e o valor se perdia (painel 2D aplica no input). Agora fica pendente e é aplicado ao sair do campo ou no Enter, pelo mesmo commit do OK. */if(e.isTrusted&&(hasOp(t.value)||(dirty&&t.value!==t.dataset.kpv))){e.stopImmediatePropagation();return}if(!FIRING){t.dataset.kpv=t.value;dirty=0}},true);
+/* Enter no teclado físico = OK do teclado do app */
+document.addEventListener('keydown',function(e){var t=e.target;if(e.key!=='Enter'||!t||!t.dataset||!t.dataset.calc||e.isComposing)return;e.preventDefault();if(!commit(t))fire(t,'change');var a=t;if(a===cur)close();try{a.blur()}catch(_){}});
 ['mousedown','touchstart','pointerdown'].forEach(function(n){kp.addEventListener(n,function(e){e.preventDefault()},{passive:false})});
 function press(e){var b=e.target.closest('button');if(!b||!cur)return;var c=b.dataset.c,t=cur,v=t.value;
  if(c==='ok'){if(!commit(t))fire(t,'change');var a=t;close();a.blur();return}
@@ -13938,6 +13941,17 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  var ss_esp=snapState;snapState=function(){var o=ss_esp.apply(this,arguments);try{if(o&&Array.isArray(o.fr)&&o.fr.some(isE)){o.frx=o.fr.filter(isE);o.fr=o.fr.filter(function(f){return !isE(f)})}}catch(_){}return o};window.snapState=snapState;
  var ls_esp=loadState;loadState=function(o){var a=[].slice.call(arguments);try{if(o&&Array.isArray(o.frx)&&o.frx.length){var c=Object.assign({},o),fr=Array.isArray(o.fr)?o.fr.slice():[],tem={};fr.forEach(function(f){if(f&&f.id!=null)tem[String(f.id)]=1});o.frx.forEach(function(f){if(isE(f)&&!tem[String(f.id)])fr.push(f)});c.fr=fr;delete c.frx;a[0]=c}}catch(_){}return ls_esp.apply(this,a)};window.loadState=loadState;
  document.addEventListener('click',function(ev){var b=ev.target&&ev.target.closest&&ev.target.closest('[data-cespw]');if(!b)return;ev.stopImmediatePropagation();ev.preventDefault();espWallAdd(b.getAttribute('data-cespw'))},true);
+})();
+</script>
+<script>
+/* TOQ-TAMP (Adauto, 23/11/2026 · "precisão absoluta na seleção"): o tamponamento é fino na tela (15 mm ≈ 5 px com a parede inteira no 2D)
+   e o dedo erra por 5–10 px: o toque caía no fundo vazio ou na porta. Agora o toque que cairia no FUNDO VAZIO (sem nada tocável embaixo)
+   a até 12 px de um tamponamento vai pra ele. Dentro do móvel nada muda (porta, frente, vão continuam com prioridade). */
+(function(){var svg=document.getElementById('svg');if(!svg)return;var TOL=12;
+ function vazio(t){for(var e=t;e&&e!==svg.parentNode;e=e.parentNode){if(e.dataset&&Object.keys(e.dataset).length)return false;if(e.id==='mod')return false;if(e===svg)return true}return true}
+ window.__tqAlvo=function(x,y){var best=null,bd=1e9;[].forEach.call(svg.querySelectorAll('[data-p]'),function(e){var g=e.closest('[data-mi]');if(!g)return;var m=S.mods[+g.dataset.mi];if(!m)return;var nm=(partsOf(m)[+e.dataset.p]||{}).name||'';if(!/^Tamponamento /.test(nm))return;var r=e.getBoundingClientRect();if(!r.width&&!r.height)return;var dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=Math.hypot(dx,dy);if(d<=TOL&&d<bd){bd=d;best=e}});return best};
+ svg.addEventListener('pointerdown',function(ev){if(ev.__tq||window.PLV||window.RO)return;var t=ev.target;if(!t||!vazio(t))return;var best=__tqAlvo(ev.clientX,ev.clientY);if(!best)return;
+  ev.stopImmediatePropagation();var n=new PointerEvent('pointerdown',{bubbles:true,cancelable:true,composed:true,clientX:ev.clientX,clientY:ev.clientY,screenX:ev.screenX,screenY:ev.screenY,pointerId:ev.pointerId,pointerType:ev.pointerType,isPrimary:ev.isPrimary,button:ev.button,buttons:ev.buttons,width:ev.width,height:ev.height});n.__tq=1;best.dispatchEvent(n)},true);
 })();
 </script>
 </body></html>

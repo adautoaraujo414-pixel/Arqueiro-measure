@@ -15794,4 +15794,68 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["espelhado"] as? Bool, true, "na parede esquerda o trecho entra no desenho espelhado (canto à direita)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* DIG-TECLADO + DIG-SAIDA (Adauto, 23/11/2026 · "AUDITORIA GERAL DE DIGITAÇÃO"): com teclado físico (Windows, tablet com teclado)
+       o valor digitado se perdia no Tab e o Enter não confirmava (o change de verdade zerava o "pendente"); preço do Ajustes zerava ao sair
+       do campo sem OK (o "saiu do campo" do preço rodava antes do que aplica). */
+    func testDigitacaoTecladoFisicoTabEnterEPrecoAoSairDoCampoNaoPerdeValor() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.env='cozinha';S.stones=[];S.mods=[];S.fr=[];S.isl=[];draw();newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.tab=0;draw();panel();await W(60);
+        var Q=function(s){return document.querySelector(s)},kp=function(c){var b=Q('#calcbar [data-c="'+c+'"]');b.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}))};
+        var dig=function(i,txt){i.focus();i.select();document.execCommand('insertText',false,txt)};
+        var p0=JSON.stringify(partsOf(S.m).map(function(p){return [p.name,p.cl,p.cw]}));
+        /* 1. teclado do app: números seguidos, apagar, sem fechar; aplica no OK */
+        var w=Q('#bd input[data-k="w"]');w.focus();await W(30);var fe=[];['7','5','0','b','5'].forEach(function(c){kp(c);var a=document.activeElement;fe.push((a===w&&w.isConnected&&!Q('#calcbar').hidden)?w.value:'FECHOU')});R.v0='teclado do app: '+fe.join(' → ')+' · antes do OK w '+S.m.w;kp('ok');await W(60);R.v1='OK: w '+S.m.w+' · teclado '+(Q('#calcbar').hidden?'fechado':'aberto');
+        /* 2. teclado físico + Tab: aplica ao sair e o foco vai pro campo seguinte */
+        dig(Q('#bd input[data-k="w"]'),'700');var a1=S.m.w;Q('#bd input[data-k="h"]').focus();await W(200);var a=document.activeElement;R.v2='físico 700 (antes de sair w '+a1+') · Tab: w '+S.m.w+' · foco na '+(a&&a.dataset&&a.dataset.k)+' · h '+S.m.h+' · d '+S.m.d;
+        /* 3. Enter confirma */var h=Q('#bd input[data-k="h"]');dig(h,'800');h.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await W(200);R.v3='Enter: h '+S.m.h+' · teclado '+(Q('#calcbar').hidden?'fechado':'aberto')+' · w '+S.m.w+' · d '+S.m.d;
+        /* 4. valor inválido continua recusado com aviso (regra de sempre) */dig(Q('#bd input[data-k="h"]'),'123');Q('#bd input[data-k="d"]').focus();await W(200);R.v4='inválido: h '+S.m.h+' · aviso '+(TL.some(function(t){return /123 mm não pode/.test(t)}));
+        /* 5. preço (Ajustes): teclado do app e tocar no campo de baixo sem OK; físico + Tab */
+        Q('#bd input[data-k="d"]').blur();await W(150);stdOpen(0);await W(200);var pb=Q('[data-stdp="mdfB"]'),pc=Q('[data-stdp="mdfC"]');pb.focus();await W(30);['3','3','3'].forEach(kp);pc.focus();await W(200);R.v5='preço pelo teclado do app: '+PR.mdfB+' · campo '+Q('[data-stdp="mdfB"]').value;
+        dig(Q('[data-stdp="mdfC"]'),'444');Q('[data-stdp="mdfB"]').focus();await W(200);R.v6='preço físico + Tab: '+PR.mdfC+' · campo '+Q('[data-stdp="mdfC"]').value;document.activeElement.blur();await W(150);try{Q('#stdm').hidden=true}catch(_){}
+        /* 6. salvar e reabrir; peças acompanham a medida */var z=JSON.stringify(snapState());S.mods=[];UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}R.v7='reaberto: '+S.mods[0].w+'×'+S.mods[0].h+'×'+S.mods[0].d+' · peças mudaram '+(JSON.stringify(partsOf(S.mods[0]).map(function(p){return [p.name,p.cl,p.cw]}))!==p0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "teclado do app: 7 → 75 → 750 → 75 → 755 · antes do OK w 900", "teclado do app: números seguidos e apagar sem fechar o campo; nada muda antes do OK")
+        XCTAssertEqual(o["v1"] as? String, "OK: w 755 · teclado fechado", "OK aplica")
+        XCTAssertEqual(o["v2"] as? String, "físico 700 (antes de sair w 755) · Tab: w 700 · foco na h · h 820 · d 560", "teclado físico: Tab aplica o valor (antes perdia) e o foco vai pro campo seguinte; os outros valores não mudam")
+        XCTAssertEqual(o["v3"] as? String, "Enter: h 800 · teclado fechado · w 700 · d 560", "Enter confirma igual ao OK (antes não fazia nada)")
+        XCTAssertEqual(o["v4"] as? String, "inválido: h 800 · aviso true", "valor inválido continua recusado com o aviso de sempre")
+        XCTAssertEqual(o["v5"] as? String, "preço pelo teclado do app: 333 · campo 333,00", "preço: teclado do app e tocar no campo de baixo sem OK aplica (antes zerava o preço)")
+        XCTAssertEqual(o["v6"] as? String, "preço físico + Tab: 444 · campo 444,00", "preço: teclado físico + Tab aplica (antes zerava)")
+        XCTAssertEqual(o["v7"] as? String, "reaberto: 700×800×560 · peças mudaram true", "salvar e reabrir mantém as medidas; peças acompanham")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* TOQ-TAMP (Adauto, 23/11/2026 · "precisão absoluta na seleção… tamponamentos confundidos com outros elementos"): com a parede inteira no 2D
+       o tamponamento tem ~5 px e o dedo erra 5–10 px. Toque no fundo vazio a até 12 px vai pro tamponamento; dentro do móvel nada muda. */
+    func testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var prep=function(sel){S.env='cozinha';S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[0].tR=1;S.mods[0].x=300;S.mods[1].x=1615;S.m=sel?S.mods[0]:S.mods[1];LAST='';VB={x:0,y:0,w:900,h:560};setVB();draw();panel();
+         var P=partsOf(S.mods[0]),i=P.findIndex(function(q){return /^Tamponamento direito/.test(q.name)});var e=[].filter.call(document.querySelectorAll('#svg [data-p="'+i+'"]'),function(x){var g=x.closest('[data-mi]');return g&&g.dataset.mi==='0'})[0];return e.getBoundingClientRect()};
+        var ev=function(type,x,y,el){var t=el||document.elementFromPoint(x,y);t.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,pointerType:'touch',isPrimary:true,button:0,buttons:type==='pointerup'?0:1}));return t};
+        var tap=function(x,y){var t=ev('pointerdown',x,y);ev('pointerup',x,y,document.getElementById('svg'));return t};
+        var tampH=function(){var t=partsOf(S.mods[0]).filter(function(q){return /^Tamponamento direito/.test(q.name)})[0];return t?t.cl:null};
+        var r=prep(false);var px=r.right+8,py=r.top+r.height/2;var alvo=document.elementFromPoint(px,py);R.v0='tamponamento '+Math.round(r.width)+' px na tela · a 8 px pra fora cai no fundo '+!(alvo.closest('[data-mi]'));
+        tap(px,py);await W(60);R.v1='toque a 8 px pra fora: escolhido módulo '+S.mods.indexOf(S.m);
+        r=prep(false);tap(r.right+18,r.top+r.height/2);await W(60);R.v2='toque a 18 px (longe): escolhido módulo '+S.mods.indexOf(S.m)+' (fica o que estava)';
+        r=prep(false);tap(r.left-8,r.top+r.height/2);await W(60);R.v3='toque a 8 px pra dentro: escolhido módulo '+S.mods.indexOf(S.m)+' · '+LAST+' (porta continua com prioridade)';
+        /* arrastar: módulo escolhido, começa a 8 px pra fora, sobe 60 px: só o tamponamento muda */
+        r=prep(true);var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]})),h0=tampH(),sx=r.right+8,sy=r.top+20;var svg=document.getElementById('svg');ev('pointerdown',sx,sy);for(var k=1;k<=6;k++){ev('pointermove',sx,sy-k*10,svg);await W(10)}ev('pointerup',sx,sy-60,svg);await W(80);
+        R.v4='arrasto a 8 px pra fora: tamponamento '+h0+' → '+tampH()+' · módulos iguais '+(JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]}))===M0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "tamponamento 6 px na tela · a 8 px pra fora cai no fundo true", "o tamponamento de 15 mm fica com 6 px na tela inteira; 8 px pra fora é o fundo vazio")
+        XCTAssertEqual(o["v1"] as? String, "toque a 8 px pra fora: escolhido módulo 0", "toque no fundo a 8 px do tamponamento vai pro tamponamento (escolhe o módulo dele, como o toque em cima)")
+        XCTAssertEqual(o["v2"] as? String, "toque a 18 px (longe): escolhido módulo 1 (fica o que estava)", "longe (18 px) continua sendo o fundo: nada é escolhido sem querer")
+        XCTAssertEqual(o["v3"] as? String, "toque a 8 px pra dentro: escolhido módulo 0 · porta (porta continua com prioridade)", "dentro do móvel nada muda: a porta continua com prioridade")
+        XCTAssertEqual(o["v4"] as? String, "arrasto a 8 px pra fora: tamponamento 720 → 420 · módulos iguais true", "arrastar perto do tamponamento muda só ele; nenhum módulo mexe")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

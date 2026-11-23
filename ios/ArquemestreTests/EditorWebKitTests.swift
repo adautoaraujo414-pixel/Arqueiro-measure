@@ -15549,4 +15549,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v7"] as? String, "reaberto: 700×800×560 · peças mudaram true", "salvar e reabrir mantém as medidas; peças acompanham")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* TOQ-TAMP (Adauto, 23/11/2026 · "precisão absoluta na seleção… tamponamentos confundidos com outros elementos"): com a parede inteira no 2D
+       o tamponamento tem ~5 px e o dedo erra 5–10 px. Toque no fundo vazio a até 12 px vai pro tamponamento; dentro do móvel nada muda. */
+    func testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var prep=function(sel){S.env='cozinha';S.mods=[];S.fr=[];S.stones=[];S.isl=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[0].tR=1;S.mods[0].x=300;S.mods[1].x=1615;S.m=sel?S.mods[0]:S.mods[1];LAST='';VB={x:0,y:0,w:900,h:560};setVB();draw();panel();
+         var P=partsOf(S.mods[0]),i=P.findIndex(function(q){return /^Tamponamento direito/.test(q.name)});var e=[].filter.call(document.querySelectorAll('#svg [data-p="'+i+'"]'),function(x){var g=x.closest('[data-mi]');return g&&g.dataset.mi==='0'})[0];return e.getBoundingClientRect()};
+        var ev=function(type,x,y,el){var t=el||document.elementFromPoint(x,y);t.dispatchEvent(new PointerEvent(type,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:7,pointerType:'touch',isPrimary:true,button:0,buttons:type==='pointerup'?0:1}));return t};
+        var tap=function(x,y){var t=ev('pointerdown',x,y);ev('pointerup',x,y,document.getElementById('svg'));return t};
+        var tampH=function(){var t=partsOf(S.mods[0]).filter(function(q){return /^Tamponamento direito/.test(q.name)})[0];return t?t.cl:null};
+        var r=prep(false);var px=r.right+8,py=r.top+r.height/2;var alvo=document.elementFromPoint(px,py);R.v0='tamponamento '+Math.round(r.width)+' px na tela · a 8 px pra fora cai no fundo '+!(alvo.closest('[data-mi]'));
+        tap(px,py);await W(60);R.v1='toque a 8 px pra fora: escolhido módulo '+S.mods.indexOf(S.m);
+        r=prep(false);tap(r.right+18,r.top+r.height/2);await W(60);R.v2='toque a 18 px (longe): escolhido módulo '+S.mods.indexOf(S.m)+' (fica o que estava)';
+        r=prep(false);tap(r.left-8,r.top+r.height/2);await W(60);R.v3='toque a 8 px pra dentro: escolhido módulo '+S.mods.indexOf(S.m)+' · '+LAST+' (porta continua com prioridade)';
+        /* arrastar: módulo escolhido, começa a 8 px pra fora, sobe 60 px: só o tamponamento muda */
+        r=prep(true);var M0=JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]})),h0=tampH(),sx=r.right+8,sy=r.top+20;var svg=document.getElementById('svg');ev('pointerdown',sx,sy);for(var k=1;k<=6;k++){ev('pointermove',sx,sy-k*10,svg);await W(10)}ev('pointerup',sx,sy-60,svg);await W(80);
+        R.v4='arrasto a 8 px pra fora: tamponamento '+h0+' → '+tampH()+' · módulos iguais '+(JSON.stringify(S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d]}))===M0);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "tamponamento 6 px na tela · a 8 px pra fora cai no fundo true", "o tamponamento de 15 mm fica com 6 px na tela inteira; 8 px pra fora é o fundo vazio")
+        XCTAssertEqual(o["v1"] as? String, "toque a 8 px pra fora: escolhido módulo 0", "toque no fundo a 8 px do tamponamento vai pro tamponamento (escolhe o módulo dele, como o toque em cima)")
+        XCTAssertEqual(o["v2"] as? String, "toque a 18 px (longe): escolhido módulo 1 (fica o que estava)", "longe (18 px) continua sendo o fundo: nada é escolhido sem querer")
+        XCTAssertEqual(o["v3"] as? String, "toque a 8 px pra dentro: escolhido módulo 0 · porta (porta continua com prioridade)", "dentro do móvel nada muda: a porta continua com prioridade")
+        XCTAssertEqual(o["v4"] as? String, "arrasto a 8 px pra fora: tamponamento 720 → 420 · módulos iguais true", "arrastar perto do tamponamento muda só ele; nenhum módulo mexe")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

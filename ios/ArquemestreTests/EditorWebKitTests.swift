@@ -16467,4 +16467,38 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["same"] as? Bool, true, "plano de corte não muda")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
     }
+
+    // AQRender · Acabamento realista (Adauto 23/11): opção no ⋯ Mais do 3D, DESLIGADA por padrão; ligada muda só a aparência
+    // (mesmas caixas, mesmo corte); desligar volta exatamente ao 3D de antes; fechar e abrir o 3D continua funcionando
+    func testAcabamentoRealistaOpcaoDesligadaPorPadraoSoMudaAAparencia() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.mods=[];S.stones=[];S.fr=[];S.rp=[];S.env='cozinha';S.W=3000;S.H=2600;S.Hm=1;S.Wm=1;
+          newTpl(4);var m=S.mods[0];S.m=m;draw();panel();
+          var cut=function(){return JSON.stringify(S.mods.map(function(q){return cutLines(q).map(function(l){return [l.L,l.W,l.qty]})}))},c0=cut();
+          open3D();await new Promise(function(r){setTimeout(r,400)});__build();var nb0=__boxes().length,cv=document.getElementById('cv3');
+          var shot=function(){try{render()}catch(_){}var d=cv.toDataURL('image/png'),h=0;for(var i=0;i<d.length;i+=7)h=(h*31+d.charCodeAt(i))|0;return d.length+':'+h};
+          var b=document.getElementById('v3aq'),lab0=b?b.textContent:'',aq0=window.AQ,img0=shot();
+          b.click();await new Promise(function(r){setTimeout(r,300)});var aq1=window.AQ,err1=window.AQERR||'',img1=shot(),lab1=b.textContent,nb1=__boxes().length;
+          b.click();await new Promise(function(r){setTimeout(r,300)});var aq2=window.AQ,img2=shot();
+          b.click();document.getElementById('v3x').click();open3D();await new Promise(function(r){setTimeout(r,400)});var img3=shot(),err3=window.AQERR||'';
+          document.getElementById('v3aq').click();document.getElementById('v3x').click();
+          return JSON.stringify({has:!!b,lab0:lab0,aq0:aq0,aq1:aq1,err1:err1,lab1:lab1,aq2:aq2,ch:img0!==img1,back:img0===img2,blank:img1.split(':')[0]<3000,nb:nb0===nb1&&nb0>0,cut:c0===cut(),err3:err3,aqEnd:window.AQ,errs:__errs});
+          """#)
+        XCTAssertEqual(o["has"] as? Bool, true, "botão no ⋯ Mais do 3D")
+        XCTAssertEqual(o["lab0"] as? String, "✨ Acabamento realista")
+        XCTAssertEqual(o["aq0"] as? Int, 0, "desligado por padrão")
+        XCTAssertEqual(o["aq1"] as? Int, 1, "liga ao tocar")
+        XCTAssertEqual(o["err1"] as? String, "", "sem erro de WebGL")
+        XCTAssertEqual(o["lab1"] as? String, "✓ Acabamento realista")
+        XCTAssertEqual(o["ch"] as? Bool, true, "a imagem muda ligada")
+        XCTAssertEqual(o["blank"] as? Bool, false, "a imagem ligada não sai em branco")
+        XCTAssertEqual(o["aq2"] as? Int, 0, "desliga ao tocar de novo")
+        XCTAssertEqual(o["back"] as? Bool, true, "desligado volta exatamente ao 3D de antes")
+        XCTAssertEqual(o["nb"] as? Bool, true, "mesmas caixas")
+        XCTAssertEqual(o["cut"] as? Bool, true, "plano de corte igual")
+        XCTAssertEqual(o["err3"] as? String, "", "fechar e abrir o 3D ligado continua funcionando")
+        XCTAssertEqual(o["aqEnd"] as? Int, 0)
+        XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "\(o["errs"] ?? "")")
+    }
 }

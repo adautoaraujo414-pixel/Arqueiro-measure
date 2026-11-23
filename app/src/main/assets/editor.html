@@ -13581,4 +13581,53 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-pcvup]');if(!b)return;e.stopPropagation();e.preventDefault();window.pcvAtualiza(S.m)},true);
 })();
 </script>
+<script>
+/* ===== FASE4 · M1 MENU ＋ CRIAR EM 2×3 (Adauto 22/11, imagem engenharia/referencias/menu-criar-aprovado-2026-11-22.jpg; regra §0 evolutiva):
+   Móveis | LED · Espelhos | Pedras · Paredes | Outros. Só re-agrupa o que o #crp3 já tem: nenhum data-* sai do DOM, cada ferramenta continua com o
+   mesmo tratador e a 1 toque depois de escolher a categoria; a 🔎 procura em todas. Trocar de categoria só mostra/esconde (não refaz o 3D).
+   Bloco que não tem categoria (ou que outra parte do app acrescentar depois) cai em Outros — nada some. ===== */
+(function(){
+ var CATS6=[['moveis','🪚','Móveis'],['led','💡','LED'],['esp','🪞','Espelhos'],['pedras','🪨','Pedras'],['paredes','🧱','Paredes'],['outros','＋','Outros']];
+ var TIT=[[/^📦 Módulos, eletros e mobília/,'moveis'],[/^Módulos$/,'moveis'],[/^🍳 Panelas e louça/,'moveis'],[/^Mobília$/,'moveis'],[/^🛋 Sofás/,'outros'],[/^🏥 Consultório/,'outros'],[/^🩺 Consultório/,'outros'],
+  [/^LED \(perfil com fita\)/,'led'],[/^🔘 Botão do LED/,'led'],[/^Ilha, península e bancada/,'pedras'],[/^Cozinha viva/,'pedras'],
+  [/^Ambiente: paredes, piso e teto/,'paredes'],[/^Portas e janelas da parede/,'paredes'],[/^Portas de vidro prontas/,'paredes'],[/^🚪 Portas de vidro$/,'paredes'],[/^Editar no 3D/,'outros']];
+ var st=document.createElement('style');st.textContent=
+  '#crp3[data-cat] [data-crpcat]{display:none!important}#crp3[data-cat="busca"] [data-crpcat]{display:block!important}'
+  +['moveis','led','esp','pedras','paredes','outros'].map(function(c){return '#crp3[data-cat="'+c+'"] [data-crpcat="'+c+'"]{display:block!important}'}).join('')
+  +'#crp3[data-cat="busca"] .crpnao{display:none!important}#crp3[data-cat="busca"] [data-crpcat].crpvazio{display:none!important}'
+  +'#crpgrid{background:#000;border-radius:18px;padding:12px;margin:6px 0}#crpgrid .crpg{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
+  +'#crpgrid button[data-crpgo]{background:#242424;color:#fff;border:none;border-radius:22px;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:17px;font-weight:600}'
+  +'#crpgrid button[data-crpgo] i{font-style:normal;font-size:30px;line-height:1}#crpgrid button[data-crpgo="outros"] i{color:#8a8a8a;font-weight:700}'
+  +'#crpgrid input{width:100%;box-sizing:border-box;margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid #3a3a3a;background:#1a1a1a;color:#fff;font-size:15px}'
+  +'#crp3:not([data-cat="home"]) #crpgrid .crpg{display:none}#crp3[data-cat="home"] #crpvolta{display:none}'
+  +'#crpvolta{display:flex;gap:8px;align-items:center;margin:4px 0 8px}#crpvolta button{min-height:36px}'+'#crp3:not([data-cat="home"]):not([data-cat="busca"]) #crpgrid{display:none}#crp3[data-cat="busca"] #crpgrid .crpg{display:none}'+'#crp3[data-cat="home"]{background:#000!important;color:#fff!important;border:1px solid #2e2e2e!important;border-radius:22px!important}#crp3[data-cat="home"]>div:first-child button{background:#1c1c1c!important;color:#fff!important;border-color:#333!important}#crp3[data-cat="home"] #crpgrid{padding:4px 0}';
+ document.head.appendChild(st);
+ var C=null,ON=0,MO=null,cat=function(){return (C&&C.dataset.cat)||'home'};/* as mudanças que este bloco mesmo faz no #crp3 não disparam ele de novo (MO.takeRecords no fim) */
+ var espBlk=function(){var L=[];(S.mods||[]).forEach(function(m,mi){(m.v||[]).forEach(function(v,vi){if(v&&v.k==='slide')L.push([mi,vi])})});
+  var h='<div style="font-weight:700;font-size:14px;margin:6px 0">🪞 Espelho na porta de correr</div><div style="font-size:12px;color:#555;margin-bottom:6px">Espelho 4 mm lapidado colado na folha: escolha a porta, depois "🪞 Colocar espelho nesta folha" (tamanho e posição em mm). Entra na lista e no orçamento.</div><div style="display:flex;gap:6px;flex-wrap:wrap">';
+  if(L.length)h+=L.map(function(q){return '<button data-cesp="'+q[0]+'|'+q[1]+'" style="min-height:36px">🪞 Módulo '+(q[0]+1)+' · porta de correr</button>'}).join('');
+  else h+='<button data-cesp="novo" style="min-height:36px">＋ Guarda-roupa com porta de correr e espelho</button>';return h+'</div>'};
+ function aplica(){if(!C||ON)return;ON=1;try{
+   var kids=[].slice.call(C.children),c0='outros';
+   kids.forEach(function(k,j){if(j===0||k.id==='crpgrid'||k.id==='crpvolta'||k.hasAttribute('data-crpfix'))return;var tx=(k.textContent||'').trim();for(var i=0;i<TIT.length;i++)if(TIT[i][0].test(tx)){c0=TIT[i][1];break}k.setAttribute('data-crpcat',c0)});
+   /* pedra: o botão da pedra (que fica na linha do ambiente) vai também pra Pedras, o mesmo botão (movido, não copiado) */
+   var bp=C.querySelector('[data-cpedra]');if(bp&&!C.querySelector('#crppedra')){var r=document.createElement('div');r.id='crppedra';r.setAttribute('data-crpcat','pedras');r.setAttribute('data-crpfix','1');r.innerHTML='<div style="font-weight:700;font-size:14px;margin:6px 0">🪨 Pedra</div>';var rw=document.createElement('div');rw.style.cssText='display:flex;gap:6px;flex-wrap:wrap';rw.appendChild(bp);r.appendChild(rw);var ilh=kids.filter(function(k){return k.getAttribute('data-crpcat')==='pedras'})[0];if(ilh)C.insertBefore(r,ilh);else C.appendChild(r)}
+   /* espelhos: o espelho que o app já tem (folha de correr) */var ex=C.querySelector('#crpesp');if(ex)ex.remove();var e=document.createElement('div');e.id='crpesp';e.setAttribute('data-crpcat','esp');e.setAttribute('data-crpfix','1');e.innerHTML=espBlk();C.appendChild(e);
+   /* grade e voltar, logo depois do cabeçalho */if(!C.querySelector('#crpgrid')){var g=document.createElement('div');g.id='crpgrid';g.innerHTML='<div class="crpg">'+CATS6.map(function(q){return '<button data-crpgo="'+q[0]+'"><i>'+q[1]+'</i>'+q[2]+'</button>'}).join('')+'</div><input id="crpfind" type="search" placeholder="🔎 Procurar ferramenta (ex.: LED, porta, pedra)" autocomplete="off">';var v=document.createElement('div');v.id='crpvolta';v.innerHTML='<button data-crpgo="home">‹ Voltar</button><b data-crptit></b>';var h0=C.children[0];if(h0&&h0.nextSibling){C.insertBefore(g,h0.nextSibling);C.insertBefore(v,g.nextSibling)}else{C.appendChild(g);C.appendChild(v)}}
+   if(!C.dataset.cat)C.dataset.cat=window.__crpCat||'home';tit();if(cat()==='busca')filtra()}finally{ON=0;try{if(MO)MO.takeRecords()}catch(_){}}}
+ function tit(){var b=C&&C.querySelector('[data-crptit]');if(!b)return;var q=CATS6.filter(function(x){return x[0]===cat()})[0];b.textContent=q?q[1]+' '+q[2]:(cat()==='busca'?'🔎 Resultado da busca':'')}
+ function vai(c){if(!C)return;ON=1;try{C.dataset.cat=c;window.__crpCat=c==='busca'?'home':c;tit();if(c!=='busca'){var f=C.querySelector('#crpfind');if(f)f.value='';[].forEach.call(C.querySelectorAll('.crpnao,.crpvazio'),function(x){x.classList.remove('crpnao','crpvazio')})}}finally{ON=0}}
+ function filtra(){var f=C.querySelector('#crpfind'),q=(f&&f.value||'').trim().toLowerCase();if(!q){vai('home');return}ON=1;try{C.dataset.cat='busca';tit();
+   var norm=function(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')},qq=norm(q);
+   [].forEach.call(C.querySelectorAll('[data-crpcat] button,[data-crpcat] input,[data-crpcat] select'),function(b){var tx=norm(b.textContent+' '+(b.title||'')+' '+(b.placeholder||''));b.classList.toggle('crpnao',tx.indexOf(qq)<0)});
+   [].forEach.call(C.querySelectorAll('[data-crpcat]'),function(s){var tem=s.querySelector('button:not(.crpnao),input:not(.crpnao),select:not(.crpnao)');var tt=norm(s.textContent);s.classList.toggle('crpvazio',!tem&&tt.indexOf(qq)<0)})}finally{ON=0}}
+ function liga(){var c=document.getElementById('crp3');if(!c||c===C)return;C=c;MO=new MutationObserver(function(){if(!ON)aplica()});MO.observe(C,{childList:true});
+  C.addEventListener('click',function(ev){var b=ev.target.closest&&ev.target.closest('[data-crpgo],[data-cesp]');if(!b)return;ev.stopImmediatePropagation();ev.preventDefault();
+   if(b.dataset.crpgo){vai(b.dataset.crpgo);return}var v=b.dataset.cesp;if(v==='novo'){var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Guarda-roupa porta de correr')t=x})});if(!t){toast('Modelo de porta de correr não encontrado');return}newTpl(JSON.parse(JSON.stringify(t)));try{draw();panel();if(window.re3)re3()}catch(_){}var mi=S.mods.length-1,vi=(S.mods[mi].v||[]).findIndex(function(z){return z&&z.k==='slide'});aplica();if(vi>=0&&window.slideCfgOpen)slideCfgOpen(mi,vi,0);return}
+   var p=v.split('|');if(window.slideCfgOpen)slideCfgOpen(+p[0],+p[1],0)},true);
+  C.addEventListener('input',function(ev){if(ev.target&&ev.target.id==='crpfind')filtra()},true);aplica()}
+ document.addEventListener('click',function(ev){if(ev.target&&ev.target.closest&&ev.target.closest('#v3add'))setTimeout(function(){liga();if(C){window.__crpCat='home';aplica();vai('home')}},0)},true);
+ window.__crp6={liga:liga,vai:vai,cat:cat,aplica:aplica};
+})();
+</script>
 </body></html>

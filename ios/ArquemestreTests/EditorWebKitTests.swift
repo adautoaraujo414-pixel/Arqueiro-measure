@@ -15864,7 +15864,7 @@ final class EditorWebKitTests: XCTestCase {
         /* GEL-LAT (23/11, Adauto): caixa da geladeira — a lateral do armário fica só no aéreo; só o tamponamento desce até o chão */
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
         var pc=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Tamponamento (esquerdo|direito))$/.test(p.name)}).map(function(p){return p.name.replace('Tamponamento','Tamp.')+' '+p.cl+'×'+p.cw}).join(' | ')};
-        loadState(initLimpo());S.W=4000;newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.tl=true;m.tr=true;draw();
+        loadState(initLimpo());S.W=4000;newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];delete m.gl3;/* GEL-TAMP (23/11) é conferido no teste dele; aqui só a regra da lateral */m.tl=true;m.tr=true;draw();
         R.novo=pc(m)+' · gl2='+(m.gl2||0);
         var sh=partsOf(m).filter(function(p){return /^Prateleira fixa \(em cima da geladeira\)/.test(p.name)})[0],la=partsOf(m).filter(function(p){return p.name==='Lateral esquerda'})[0];R.terminaNaPrateleira=Math.abs((la.y+la.h)-(sh.y+sh.h))<0.01;
         open3D();await W(250);__build();var B=__boxes().filter(function(b){return !b.ft&&/^0:(Lateral (esquerda|direita)|Tamponamento (esquerdo|direito))$/.test(String(b.nm))&&b.y1-b.y0>100});
@@ -16282,6 +16282,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["sem"] as? String, "0 true")
         XCTAssertEqual(o["paredeIgual"] as? Bool, true, "o acabamento não muda a parede")
         XCTAssertEqual(o["tresD"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /// GEL-TAMP (Adauto 23/11, "Só o tamponamento"): a caixa da geladeira nova já nasce com tamponamento dos dois lados, terminando 100 mm acima do piso
+    /// (a lateral do armário continua só no aéreo, GEL-LAT); caixa de antes (sem a marca) igual.
+    @MainActor
+    func testCaixaDaGeladeiraNovaComTamponamentoCemMilimetrosAcimaDoPiso() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var e0=__errs.length,R={};
+        /* GEL-TAMP (Adauto 23/11, "Só o tamponamento"): caixa da geladeira nova com tamponamento dos dois lados, terminando 100 mm acima do piso; aéreo igual; antiga igual */
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var pc=function(m){return partsOf(m).filter(function(p){return /^(Lateral (esquerda|direita)|Tamponamento (esquerdo|direito))$/.test(p.name)}).map(function(p){return p.name.replace('Tamponamento','Tamp.')+' '+p.cl+'×'+p.cw+' y'+p.y}).join(' | ')};
+        loadState(initLimpo());S.W=4000;newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];R.nova=pc(m)+' · tl '+!!m.tl+' tr '+!!m.tr;
+        open3D();await W(200);__build();R.tamp3D=__boxes().filter(function(b){return b.nm==='0:Tamponamento esquerdo'&&!b.ft}).map(function(b){return Math.round(b.y0)+'–'+Math.round(b.y1)}).join(',');document.getElementById('v3x').click();await W(60);
+        var m2=JSON.parse(JSON.stringify(m));delete m2.gl3;S.mods.push(m2);m2.x=2000;draw();R.antiga=pc(m2);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["nova"] as? String, "Tamp. esquerdo 2400×725 y0 | Tamp. direito 2400×725 y0 | Lateral esquerda 655×700 y15 | Lateral direita 655×700 y15 · tl true tr true")
+        XCTAssertTrue((o["tamp3D"] as? String ?? "").hasPrefix("100–2500"), "no 3D o tamponamento começa a 100 do piso: \(o["tamp3D"] ?? "")")
+        XCTAssertEqual(o["antiga"] as? String, "Tamp. esquerdo 2500×725 y0 | Tamp. direito 2500×725 y0 | Lateral esquerda 655×700 y15 | Lateral direita 655×700 y15", "caixa de antes igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

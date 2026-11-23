@@ -17070,4 +17070,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["perdido"] as? Bool, true, "contexto perdido: sem reflexo")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // Adauto 23/11: no 3D, "⧉ Duplicar" na barra da peça livre (ao lado do minimizar); 2 toques em cima do puxador (barra, bola ou concha) abrem o
+    // reposicionar livre (bolinha vermelha) e todas as portas seguem, com os furos do DXF; 1 toque no puxador continua abrindo a porta
+    func testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650)};
+        loadState(initLimpo());S.W=2000;newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];S.m=m;draw();var r=EM.criaPecaNoPonto(m,250,800,'peca','z');draw();
+        open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,0.05,1.2);await W(300);__build();
+        var b=__boxes().filter(function(q){return q.pk===EM.pkDe(r.q)})[0];await toque((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1,2);var bt=[].filter.call(document.querySelectorAll('[data-e3dup]'),function(x){return x.offsetParent})[0];
+        R.botao=!!bt&&!!bt.parentNode.querySelector('[data-qmn]');R.pux1=!document.getElementById('pxpad');if(bt)bt.click();await W(200);R.dup=(m.pl||[]).length;document.getElementById('v3x').click();
+        loadState(initLimpo());S.W=2200;newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));pxApplyAll('concha','dourado');S.m=S.mods[0];draw();open3D();await W(500);__cam(0,0.05,1.6);await W(300);__build();
+        var bs=__boxes().filter(function(q){return q.mt&&q.nol&&/^0:Porta/.test(String(q.nm))&&q.dq===0}),mx=function(k,f){return Math[f].apply(null,bs.map(function(q){return q[k]}))};
+        var at=function(){return S.mods.map(function(mm){return partsOf(mm).filter(function(p){return p.name==='Porta'}).map(function(p){var a=chAt(p,mm);return Math.round(a.u)+'/'+Math.round(a.t)}).join(' ')}).join(' | ')},a0=at();
+        await toque((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1,2);var pad=document.getElementById('pxpad');R.pad=!!pad;R.fechada=JSON.stringify(S.mods[0].v[0].od||{});
+        var rr=pad.getBoundingClientRect(),ev=function(tp,dx,dy){pad.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+dx,clientY:rr.top+dy,pointerId:5,isPrimary:true}))};ev('pointerdown',rr.width*.3,rr.height*.25);ev('pointermove',rr.width*.35,rr.height*.3);ev('pointerup',rr.width*.35,rr.height*.3);await W(300);
+        var a1=at().split(' | ');R.todos=a1[0]===a1[1]&&a1[0]!==a0.split(' | ')[0]&&a1[0].split(' ')[0]!==a1[0].split(' ')[1];
+        var D=dxfPecas({pxD:5,pxP:15}).pecas.filter(function(x){return /^Porta/.test(x.nome)})[0],p0=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'})[0],h=D.furos.filter(function(f){return /PUXADOR/.test(f.lay)});R.dxf=h.length===2&&Math.round(h[0].y)===Math.round(p0.cw-chAt(p0,S.mods[0]).t);
+        var q=document.querySelector('[data-qx]');if(q)q.click();await W(100);await toque((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1,1);__build();
+        R.umToque=JSON.stringify(S.mods[0].v[0].od||{});document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["botao"] as? Bool, true, "⧉ Duplicar na barra da peça, junto do minimizar")
+        XCTAssertEqual(o["pux1"] as? Bool, true, "2 toques na peça não abrem o puxador")
+        XCTAssertEqual(o["dup"] as? Int, 2, "duplicou no 3D")
+        XCTAssertEqual(o["pad"] as? Bool, true, "2 toques no puxador abrem o reposicionar")
+        XCTAssertEqual(o["fechada"] as? String, "{}", "a porta não fica aberta")
+        XCTAssertEqual(o["todos"] as? Bool, true, "mexeu um, todas as portas dos 2 módulos seguem (espelhado)")
+        XCTAssertEqual(o["dxf"] as? Bool, true, "furos do DXF na posição nova")
+        XCTAssertEqual(o["umToque"] as? String, "{\"0\":1}", "1 toque no puxador continua abrindo a porta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

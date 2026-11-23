@@ -1008,7 +1008,8 @@ final class EditorWebKitTests: XCTestCase {
           return JSON.stringify({dentro0:dentro0,cats:cats,chm:chm,z1:z1,z2:z2,brasa:brasa,lb:lb.length,ledOff:ledOff,tvSplash:Object.keys(tvs).map(function(k){return tvs[k].done})[0],logo:logo,wel:wel,car:car,tvDone:Object.keys(tvs2).map(function(k){return tvs2[k].done})[0],rooms:ROOMS.map(function(r){return r[0]}).indexOf('gourmet'),errs:__errs});
           """#)
         XCTAssertEqual(o["dentro0"] as? Bool, true, "tomada posta em cima do módulo vai dentro do armário")
-        XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:19", "abas de tomadas/registros e de churrasqueiras")
+        // CHURRASQUEIRA QUADRADA (Adauto 23/11, 2cc652d): +1 item na aba de churrasqueiras (19 → 20)
+        XCTAssertEqual(o["cats"] as? String, "cel:12,cchur:20", "abas de tomadas/registros e de churrasqueiras")
         XCTAssertEqual(o["chm"] as? String, "840x2350x570", "churrasqueira com a medida do fabricante")
         XCTAssertGreaterThan(o["z1"] as? Int ?? 0, 15, "tomada dentro do armário fica no fundo do módulo (não na parede)")
         XCTAssertEqual(o["z2"] as? Int, 0, "tomada na parede")
@@ -8390,9 +8391,10 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["abas"] as? Int, 11)
-        XCTAssertEqual(o["secoesComSetinha"] as? Int, 48, "ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
+        // PAREDES C (23/11, ab9d030): + seção "Paredes do ambiente" (remover/restaurar) na aba Ambiente · JUNÇÃO 5 (23/11, a849a43): + seção "Travessão" na aba Estrutura
+        XCTAssertEqual(o["secoesComSetinha"] as? Int, 50, "PAREDES C + JUNÇÃO 5 (23/11): +2 · ESTRUTURA-AFASTA 22/11: +1 (Estrutura do Módulo) · Paredes do ambiente saiu da aba Ambiente (troca de parede só no cabeçalho, 15/11)")
         // ESTRUTURA-AFASTA (pedido do Adauto 22/11): + a seção "Estrutura do Módulo" (com setinha) na aba Estrutura
-        XCTAssertEqual(o["porAba"] as? String, "Ambiente 4 | 🎨 Cores 1 | Estrutura 8 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
+        XCTAssertEqual(o["porAba"] as? String, "Ambiente 5 | 🎨 Cores 1 | Estrutura 9 | Divisões 4 | Portas 6 | Internos 2 | Tamponamentos 5 | Fundos 1 | Pedra 14 | Eletrodomésticos 1 | Ripado 2")
         XCTAssertEqual(o["ruins"] as? String, "0")
         XCTAssertEqual(o["tituloSemSetinha"] as? String, "0")
         XCTAssertEqual(o["nascemFechadas"] as? String, "Estrutura › Rodapé")
@@ -12562,22 +12564,24 @@ final class EditorWebKitTests: XCTestCase {
         var sv_=JSON.stringify(snapState());loadState(JSON.parse(sv_));draw();R.reabriu=st(S.mods[0]);
         R.errs=__errs.slice(e0).length;return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["original"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
+        /* GEL-TAMP (Adauto 23/11, "Só o tamponamento"): caixa NOVA do catálogo nasce com m.gl3 e o tamponamento termina 100 mm acima do piso
+           (2500 − 100 = 2400; torre de 2700 → 2600). Caixa antiga (sem m.gl3) continua 2500: testTorreDaGeladeiraQueJaVirouPortaInteiraAvisaENaoMudaSozinho. */
+        XCTAssertEqual(o["original"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["abaPortas"] as? String, "gel 3 · gerais 0 · nota \"trocam a caixa toda\" false")
-        XCTAssertEqual(o["umaPorta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["duasPortas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueGeral1"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueGeral3"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["cliqueCorrer"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
+        XCTAssertEqual(o["umaPorta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["duasPortas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueGeral1"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueGeral3"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["cliqueCorrer"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["menuVao"] as? String, "gel 3 · porta inteira 0 · trocar a caixa 3")
-        XCTAssertEqual(o["menuVao1porta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["menuVao2portas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["vaoDeCimaMenor"] as? String, "gel · portas 2 471×552,471×552 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["torreMaisAlta"] as? String, "gel · portas 2 471×852,471×852 · nicho true · tamp 2700,2700")
-        XCTAssertEqual(o["lixo"] as? String, "gel · portas 1 471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["voltou"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
-        XCTAssertEqual(o["conferencia"] as? String, "3D porta 652 · 3D tamp 2500 · 2D porta/tamp 0.261 (peças 0.261) · corte: Porta 471×652 q2 | Tamponamento esquerdo · face 2500×725 q2")
-        XCTAssertEqual(o["reabriu"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2500,2500")
+        XCTAssertEqual(o["menuVao1porta"] as? String, "gel · portas 1 944×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["menuVao2portas"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["vaoDeCimaMenor"] as? String, "gel · portas 2 471×552,471×552 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["torreMaisAlta"] as? String, "gel · portas 2 471×852,471×852 · nicho true · tamp 2600,2600")
+        XCTAssertEqual(o["lixo"] as? String, "gel · portas 1 471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["voltou"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
+        XCTAssertEqual(o["conferencia"] as? String, "3D porta 652 · 3D tamp 2400 · 2D porta/tamp 0.272 (peças 0.272) · corte: Porta 471×652 q2 | Tamponamento esquerdo · face 2400×725 q2")
+        XCTAssertEqual(o["reabriu"] as? String, "gel · portas 2 471×652,471×652 · nicho true · tamp 2400,2400")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
     func testTorreDaGeladeiraQueJaVirouPortaInteiraAvisaENaoMudaSozinho() async throws {
@@ -12587,7 +12591,7 @@ final class EditorWebKitTests: XCTestCase {
         /* TORRE-GEL-PORTA: projeto salvo em que a caixa da geladeira já tinha virado porta inteira (como no vídeo de 16/11 às 13:34).
            Abrir não muda nada; a aba Portas avisa e o botão volta a caixa (porta só em cima, nicho e prateleira de volta, tamponamento igual). */
         var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n===n&&!r)r=t})});return JSON.parse(JSON.stringify(r))};
-        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.x=600;m.tl=true;m.tr=true;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2700;S.stones=[];S.mods=[];draw();newTpl(T('Caixa da geladeira side by side (laterais + aéreo)'));var m=S.mods[0];m.x=600;m.tl=true;m.tr=true;delete m.gl3;/* projeto salvo ANTES do GEL-TAMP (23/11): sem a marca, o tamponamento continua até o chão (2500) e não muda ao abrir */
         m.v[0].k='door';m.v[0].n=1;draw();
         var st=function(m){var P=partsOf(m),pt=P.filter(function(p){return p.name==='Porta'});return m.v[0].k+' · portas '+pt.length+(pt.length?' '+pt.map(function(p){return p.cl+'×'+p.cw}).join(','):'')+' · nicho '+P.some(function(p){return p.gelN})+' · tamp '+P.filter(function(p){return /^Tamponamento (esquerdo|direito)$/.test(p.name)}).map(function(p){return p.cl}).join(',')};
         var salvo=JSON.stringify(snapState());loadState(JSON.parse(salvo));draw();m=S.mods[0];S.m=m;S.sv=0;draw();var A_=JSON.parse(salvo).mods[0],B_=snapState().mods[0];R.abriuIgual=st(m)+' · mudou ao abrir: '+(Object.keys(Object.assign({},A_,B_)).filter(function(k){return JSON.stringify(A_[k])!==JSON.stringify(B_[k])&&!(!A_[k]&&!B_[k])/* undefined→0 não é mudança */}).map(function(k){return k+' '+JSON.stringify(A_[k])+'→'+JSON.stringify(B_[k])}).join(', ')||'nada');

@@ -15235,4 +15235,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["dois"] as? String, "0: lista Rodapé lateral esquerdo | corte Rodapé lateral esquerdo (pedestal) ; 1: lista Rodapé lateral direito | corte Rodapé lateral direito (pedestal) · rodapé corrido true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* FASE5 (23/11, autorizado pelo Adauto): DXF para CNC a partir do plano de corte — contornos, furação de dobradiça, cavilhas nas uniões, rebaixo, cava; parâmetro ausente é obrigatório. */
+    func testFASE5_DxfParaCncContornosFurosERasgosSemInventar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        /* FASE5 (23/11, Adauto): DXF para CNC — mesmas peças e medidas do plano de corte; furos/rasgos nas posições do projeto; uma camada por operação;
+           parâmetro que o projeto não tem é obrigatório (não exporta sem); arquivo DXF R12 válido (contornos fechados, EOF) */
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;draw();newTpl(T0('Balcão 2 portas'));draw();var m=S.mods[0];
+        PR.dxf={};R.semConfig=dxfPecas().falta.join(' | ');
+        PR.dxf={dobP:'13',uniao:'cavilha',cavD:'8',cavPF:'12',cavPT:'25',cavOff:'32',cavEsp:'128'};var r=dxfPecas();R.falta=r.falta.length;
+        /* mesma lista do plano de corte */var g=cutGroups(),nq=0;Object.keys(g.map).forEach(function(k){nq+=g.map[k].qty});R.pecasIguaisAoCorte=r.pecas.length+' de '+nq;
+        /* dobradiça: posições = furInfo da porta (centro a B da borda, D das pontas) */var por=r.pecas.filter(function(p){return p.nome==='Porta'})[0],pp=partsOf(m).filter(function(p){return p.name==='Porta'})[0],F=pp.fur;
+        R.dobradica=por.furos.map(function(f){return 'Ø'+f.d+' x'+Math.round(f.x*10)/10+' y'+Math.round(f.y*10)/10}).join(' ; ')+' · furInfo: lado '+F.s+' B '+F.B+' pos '+F.pos.join('/')+' · porta '+pp.cl+'×'+pp.cw;
+        /* cavilha na base: centro da espessura da lateral (7,5 da borda), 1º furo a 32 da ponta; furos de topo nas laterais = furos de face na base */var ba=r.pecas.filter(function(p){return p.nome==='Base inferior'})[0],la=r.pecas.filter(function(p){return /^Lateral/.test(p.nome)});
+        R.cavilhaBase=ba.furos.length+' furos · x '+ba.furos.map(function(f){return Math.round(f.x*10)/10}).filter(function(v,i,a){return a.indexOf(v)===i}).join('/')+' · y '+ba.furos.map(function(f){return Math.round(f.y*10)/10}).filter(function(v,i,a){return a.indexOf(v)===i}).sort(function(a,b){return a-b}).join('/');
+        R.topoLaterais=la.map(function(p){return p.nome+' '+p.furos.length+' no topo'}).join(' · ');
+        var t=dxfTexto(r.pecas,'teste'),L=t.split('\r\n');R.formato=(L[0]==='999'?'ok':'?')+' · '+(t.indexOf('AC1009')>0?'R12':'?')+' · '+(L[L.length-2]==='EOF'?'EOF':'sem EOF');
+        var pl=0,fe=0;for(var i=0;i<L.length-1;i+=2){if(L[i]==='0'&&L[i+1]==='POLYLINE'){var j=i+2,ly='',f70='';while(j<L.length-1&&L[j]!=='0'){if(L[j]==='8')ly=L[j+1];if(L[j]==='70')f70=L[j+1];j+=2}if(ly==='CONTORNO'){pl++;if(f70==='1')fe++}}}R.contornos=pl+' (fechados '+fe+')';
+        var cam={};r.pecas.forEach(function(p){p.furos.forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1});p.rasgos.concat(p.linhas).forEach(function(f){cam[f.lay]=(cam[f.lay]||0)+1})});R.camadas=Object.keys(cam).sort().map(function(k){return k+' '+cam[k]}).join(' · ');
+        /* puxador barra: posição dos furos não existe no projeto → exige marcar "furar na montagem" */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Balcão 2 portas'));S.mods[0].v.forEach(function(v){v.px='barra'});draw();PR.dxf={dobP:'13',uniao:'nenhuma'};R.barraSemMarcar=dxfPecas().falta.join(' | ');PR.dxf.pxOutros='montagem';R.barraMarcado=dxfPecas().falta.length;
+        /* gaveta: rebaixo 6 × 6 no comprimento da lateral da caixa */loadState(initLimpo());S.W=4000;draw();newTpl(T0('Gaveteiro 3 gavetas'));draw();PR.dxf={dobP:'13',uniao:'nenhuma'};var lg=dxfPecas().pecas.filter(function(p){return p.nome==='Lateral de gaveta'})[0];R.gaveta=lg?(lg.rasgos.map(function(q){return q.lay+' '+Math.round(q.x1-q.x0)+'×'+Math.round(q.y1-q.y0)}).join(';')+' na peça '+lg.L+'×'+lg.W):'sem';
+        /* botão no plano de corte */openCut();R.botao=!!document.getElementById('dxfbtn');try{document.getElementById('dxfbtn').click()}catch(_){}R.tela=!!document.getElementById('dxfbox');try{document.getElementById('dxfbox').remove()}catch(_){}
+        R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["semConfig"] as? String, "Dobradiça: profundidade do copo Ø35 (mm) | União das peças: escolha cavilha, pré-furo ou nenhuma")
+        XCTAssertEqual(o["falta"] as? Int, 0)
+        XCTAssertEqual(o["pecasIguaisAoCorte"] as? String, "19 de 19")
+        XCTAssertEqual(o["dobradica"] as? String, "Ø35 x22 y585 ; Ø35 x22 y120 · furInfo: lado l B 22 pos 120/585 · porta 440×705")
+        XCTAssertEqual(o["cavilhaBase"] as? String, "10 furos · x 7.5/892.5 · y 32/156.2/280.4/404.6/528.8")
+        XCTAssertEqual(o["topoLaterais"] as? String, "Lateral esquerda 5 no topo · Lateral direita 5 no topo")
+        XCTAssertEqual(o["formato"] as? String, "ok · R12 · EOF")
+        XCTAssertEqual(o["contornos"] as? String, "19 (fechados 19)")
+        XCTAssertEqual(o["camadas"] as? String, "CAVA_30_P12 2 · CAVILHA_D8_P12_F1 10 · FURO_DOBRADICA_D35_P13 4 · FURO_TOPO_CAVILHA_D8_P25 10")
+        XCTAssertEqual(o["barraSemMarcar"] as? String, "Puxador barra: o projeto não tem a posição dos furos — marque \"furar na montagem\"")
+        XCTAssertEqual(o["barraMarcado"] as? Int, 0)
+        XCTAssertEqual(o["gaveta"] as? String, "REBAIXO_L6_P6 460×6 na peça 460×114")
+        XCTAssertEqual(o["botao"] as? Bool, true)
+        XCTAssertEqual(o["tela"] as? Bool, true)
+        XCTAssertEqual(o["erros"] as? String, "")
+    }
 }

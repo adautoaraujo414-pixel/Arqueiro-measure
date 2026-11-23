@@ -200,6 +200,8 @@ class MoveisBridge(
             "isViewer" -> viewing().toString()
             "shareCut" -> { ui { onShareCut(arg(0), arg(1), arg(2)) }; "" }
             "shareClient" -> { ui { onShareClient(arg(0), arg(1), arg(2)) }; "" }
+            /* FASE5 (23/11): "⬇ DXF para CNC" — grava em Documentos\\Arquemestre\\DXF e abre a pasta; devolve o caminho */
+            "shareFile" -> saveExportFile(arg(0), arg(1))
             "close" -> { ui(onClose); "" }
             /* N03 (17/11): responde se gravou ("true"/"false"); o editor avisa e não carrega o arquivo velho na próxima abertura */
             "putFile" -> runCatching { val f = File(dir, safe(arg(0))); val t = File(dir, f.name + ".tmp"); t.writeBytes(android.util.Base64.decode(arg(1), android.util.Base64.DEFAULT)); runCatching { java.nio.file.Files.move(t.toPath(), f.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING) }.onFailure { f.writeBytes(t.readBytes()); t.delete() }; true }.getOrDefault(false).toString()
@@ -217,6 +219,16 @@ class MoveisBridge(
         }
     }
 }
+
+/** FASE5 (23/11): arquivo gerado pelo editor (DXF para CNC) — salvo em Documentos/Arquemestre/DXF, e a pasta abre no Explorer. */
+fun saveExportFile(name: String, text: String): String = runCatching {
+    val dir = File(System.getProperty("user.home"), "Documents" + File.separator + "Arquemestre" + File.separator + "DXF").apply { mkdirs() }
+    val safe = name.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "arquivo.dxf" }
+    val f = File(dir, safe)
+    f.writeText(text, Charsets.UTF_8)
+    runCatching { if (java.awt.Desktop.isDesktopSupported()) java.awt.Desktop.getDesktop().open(dir) }
+    f.absolutePath
+}.getOrDefault("")
 
 /** Convite do plano de corte: no Windows abre a janela de compartilhar (WhatsApp Web, e-mail ou copiar). */
 fun shareCutInvite(text: String) {

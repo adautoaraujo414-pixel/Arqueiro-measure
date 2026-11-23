@@ -155,7 +155,8 @@ struct MoveisWeb: UIViewRepresentable {
         companyName:function(){return sync('companyName','')},
         shareCut:function(c,n,t){post({op:'shareCut',code:String(c),name:String(n),title:String(t)})},
         shareClient:function(c,n,t){post({op:'shareClient',code:String(c),name:String(n),title:String(t)})},
-        printPage:function(t){post({op:'printPage',title:String(t||'')})}
+        printPage:function(t){post({op:'printPage',title:String(t||'')})},
+        shareFile:function(n,t,mi){post({op:'shareFile',name:String(n),text:String(t),mime:String(mi||'')})}
       };
     })();
     """
@@ -236,6 +237,19 @@ struct MoveisWeb: UIViewRepresentable {
             case "delFile": if let n = m["name"] as? String { try? FileManager.default.removeItem(at: dir.appendingPathComponent(safe(n))) }
             case "makeQuote": if let j = m["json"] as? String { app.quoteFromMoveis(j) }
             case "quotePhotos": if let j = m["json"] as? String { app.quotePhotosFromMoveis(j) }
+            case "shareFile":
+                // FASE5 (23/11): "⬇ DXF para CNC" no plano de corte — grava o arquivo no temporário e abre a folha de compartilhar (Arquivos, AirDrop, e-mail…)
+                if let n = m["name"] as? String, let t = m["text"] as? String, let w = message.webView {
+                    let safe = n.replacingOccurrences(of: "/", with: "_")
+                    let url = FileManager.default.temporaryDirectory.appendingPathComponent(safe.isEmpty ? "arquivo.dxf" : safe)
+                    try? t.data(using: .utf8)?.write(to: url, options: .atomic)
+                    var top = w.window?.rootViewController
+                    while let p = top?.presentedViewController { top = p }
+                    let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                    vc.popoverPresentationController?.sourceView = w
+                    vc.popoverPresentationController?.sourceRect = CGRect(x: w.bounds.midX, y: w.bounds.midY, width: 1, height: 1)
+                    top?.present(vc, animated: true)
+                }
             case "printPage":
                 // "🖨 Imprimir / PDF" no plano de corte: impressão nativa (a folha de compartilhar permite salvar em PDF)
                 if let w = message.webView {

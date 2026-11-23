@@ -13601,4 +13601,98 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-gf6up]');if(!b)return;e.stopPropagation();e.preventDefault();window.gf6Atualiza(S.m)},true);
 })();
 </script>
+<script>
+/* ===== FASE5 · DXF PARA CNC (23/11/2026, autorizado pelo Adauto) =====
+   Gera DXF 2D (R12/AC1009, ASCII, milímetros) a partir da MESMA fonte do plano de corte (cutGroups → partsOf, furInfo, chAt):
+   - contorno fechado de cada peça (camada CONTORNO);
+   - furação de dobradiça (Ø35, posições do furInfo), sistema 32 (Ø5 × 12), concha do puxador (chAt), roldana (topo);
+   - rebaixo da lateral de gaveta (gavRb × 6), rasgo da gaveta oculta, cava usinada 30° (aresta);
+   - cavilhas ou pré-furos nas uniões (lateral × base/tampo/travessa/divisória), achadas pelo encosto das peças no 3D.
+   Uma camada por operação, com diâmetro e profundidade no nome (ex.: FURO_DOBRADICA_D35_P13) pra mapear direto em
+   caminhos de ferramenta (fluxo tipo Vectric Aspire). NADA é inventado: parâmetro de fabricação que o projeto não tem
+   (profundidade do copo, Ø/prof. da cavilha, Ø do furo do puxador…) é obrigatório na tela de exportação; sem ele não exporta. */
+(function(){
+ var CFG0={dobP:'',uniao:'',cavD:'',cavPF:'',cavPT:'',cavOff:'',cavEsp:'',preD:'',preP:'',preOff:'',preEsp:'',pxD:'',pxP:'',pxOutros:'',rolD:'',rolP:'',ocP:'',fresa:''};
+ var cfg=function(){PR.dxf=PR.dxf&&typeof PR.dxf==='object'?PR.dxf:{};var o={};for(var k in CFG0)o[k]=PR.dxf[k]===undefined?CFG0[k]:PR.dxf[k];return o};
+ var num=function(v){v=String(v==null?'':v).replace(',','.');return v!==''&&isFinite(+v)&&+v>0?+v:null};
+ var r1=function(v){return Math.round(v*100)/100};
+ var LN=function(s){return String(s).replace(/\./g,'_').replace(/[^A-Z0-9_\-]/gi,'_').toUpperCase()};
+ var lay={cont:'CONTORNO',et:'ETIQUETA',dob:function(c){return LN('FURO_DOBRADICA_D35_P'+c.dobP)},s32:'FURO_S32_D5_P12',px:function(c){return LN('FURO_PUXADOR_D'+c.pxD+'_P'+c.pxP)},rol:function(c){return LN('FURO_TOPO_ROLDANA_D'+c.rolD+'_P'+c.rolP)},
+  reb:function(w){return LN('REBAIXO_L'+r1(w)+'_P6')},oc:function(c){return LN('RASGO_L6_P'+c.ocP)},cava:'CAVA_30_P12',cav:function(c,f){return LN('CAVILHA_D'+c.cavD+'_P'+c.cavPF+'_F'+(f||1))},cavT:function(c){return LN('FURO_TOPO_CAVILHA_D'+c.cavD+'_P'+c.cavPT)},pre:function(c,f){return LN('PREFURO_D'+c.preD+'_P'+c.preP+'_F'+(f||1))}};
+ var CARC=/^(Lateral|Base|Tampo|Teto|Travessa|Divisória)/;
+ var bxCache=null;
+ var boxesDe=function(mi,pk){if(!bxCache){bxCache={};try{__build();__boxes().forEach(function(b){if(!b.pk||b.a<.95||b.nol||b.cvl||b.hg||b.g==='sh')return;var k=String(b.nm).split(':')[0]+'|'+b.pk;(bxCache[k]=bxCache[k]||[]).push(b)})}catch(_){}}var L=bxCache[mi+'|'+pk]||[];if(!L.length)return null;
+  return {x0:Math.min.apply(null,L.map(function(b){return b.x0})),x1:Math.max.apply(null,L.map(function(b){return b.x1})),y0:Math.min.apply(null,L.map(function(b){return b.y0})),y1:Math.max.apply(null,L.map(function(b){return b.y1})),z0:Math.min.apply(null,L.map(function(b){return b.z0})),z1:Math.max.apply(null,L.map(function(b){return b.z1}))}};
+ var ext=function(b,a){return b[a+'1']-b[a+'0']};
+ /* uniões: peça B (topo) encostada na face da peça A, no mesmo módulo. Devolve [{A:{mi,pk},B:{mi,pk},a:{eixo da junta, faixa, centro}}] */
+ var unioes=function(mi){var m=S.mods[mi];if(!m)return [];var P=partsOf(m).filter(function(p){return CARC.test(p.name)&&!/pedestal/i.test(p.name)&&!p.noCut&&!p.glass})/* o pedestal (rodapé) é montado à parte e parafusado na base: fica fora das uniões de cavilha/pré-furo */;var bx=P.map(function(p){return {p:p,b:boxesDe(mi,p.pk)}}).filter(function(o){return o.b});var J=[];
+  bx.forEach(function(A){var dA=['x','y','z'].map(function(a){return [a,ext(A.b,a)]}).sort(function(u,v){return u[1]-v[1]}),tA=dA[0][0];
+   bx.forEach(function(B){if(A===B)return;var dB=['x','y','z'].map(function(a){return [a,ext(B.b,a)]}).sort(function(u,v){return u[1]-v[1]}),tB=dB[0][0];if(tB===tA)return;
+    var enc=Math.abs(B.b[tA+'0']-A.b[tA+'1'])<0.6||Math.abs(B.b[tA+'1']-A.b[tA+'0'])<0.6;if(!enc)return;
+    var ax=['x','y','z'].filter(function(a){return a!==tA}),ok=true,ov={};ax.forEach(function(a){var lo=Math.max(A.b[a+'0'],B.b[a+'0']),hi=Math.min(A.b[a+'1'],B.b[a+'1']);if(hi-lo<10)ok=false;ov[a]=[lo,hi]});if(!ok)return;
+    var la=ax.filter(function(a){return a!==tB})[0];if(!la)return;J.push({A:A,B:B,tA:tA,tB:tB,la:la,ov:ov})})});return J};
+ /* posição de um ponto do 3D (face de A) no desenho da peça A: X no eixo que mede cl, Y no eixo que mede cw (vista pela face furada) */
+ var para2D=function(o,P3){var ax=['x','y','z'].sort(function(u,v){return ext(o.b,u)-ext(o.b,v)}),f=[ax[1],ax[2]],cl=+o.p.cl,cw=+o.p.cw,aX=Math.abs(ext(o.b,f[0])-cl)<=Math.abs(ext(o.b,f[1])-cl)?f[0]:f[1],aY=aX===f[0]?f[1]:f[0];return [P3[aX]-o.b[aX+'0'],P3[aY]-o.b[aY+'0']]};
+ var distrib=function(lo,hi,off,esp){var L=hi-lo;if(L<2*off)return [lo+L/2];var n=Math.max(2,Math.ceil((L-2*off)/esp)+1),o=[];for(var i=0;i<n;i++)o.push(lo+off+i*(L-2*off)/(n-1));return o};
+ /* peças do projeto (mesma lista do plano de corte), cada uma com furos/rasgos/linhas no desenho dela (X = comprimento cl, Y = largura cw, Y pra cima = topo da peça) */
+ window.dxfPecas=function(c){c=c||cfg();bxCache=null;var g=cutGroups(),out=[],falta={},av=[],need=function(k,t){falta[k]=t};var unico={},multi={};Object.keys(g.map).forEach(function(k){(g.map[k].src||[]).forEach(function(sr){(sr||[]).forEach(function(q){(sr.length===1?unico:multi)[q.mi+'|'+q.pk]=1})})});var avU={};
+  var uniaoPorPeca={};if(c.uniao==='cavilha'||c.uniao==='prefuro'){S.mods.forEach(function(m,mi){unioes(mi).forEach(function(j){var off=+(c.uniao==='cavilha'?c.cavOff:c.preOff)||0,esp=+(c.uniao==='cavilha'?c.cavEsp:c.preEsp)||0;if(!off||!esp)return;var mid=(j.B.b[j.tB+'0']+j.B.b[j.tB+'1'])/2,ps=distrib(j.ov[j.la][0],j.ov[j.la][1],off,esp),kA=mi+'|'+j.A.p.pk,kB=mi+'|'+j.B.p.pk;if(!unico[kA]||!unico[kB]||multi[kA]||multi[kB]){avU[kA]=avU[kB]=1;return}
+   var fc=Math.abs(j.B.b[j.tA+'0']-j.A.b[j.tA+'1'])<0.6?1:2;/* F1 = face do lado + do eixo da espessura (lateral: a da direita; base: a de cima); F2 = a outra, com as posições vistas pela F1 */ps.forEach(function(t){var P3={};P3[j.tB]=mid;P3[j.la]=t;P3[j.tA]=0;var xy=para2D(j.A,P3);(uniaoPorPeca[kA]=uniaoPorPeca[kA]||[]).push({x:xy[0],y:xy[1],face:fc});var P3b={};P3b[j.tB]=mid;P3b[j.la]=t;P3b[j.tA]=fc===1?j.A.b[j.tA+'1']:j.A.b[j.tA+'0']/* na ponta de B que encosta na face de A */;var xb=para2D(j.B,P3b);(uniaoPorPeca[kB]=uniaoPorPeca[kB]||[]).push({x:xb[0],y:xb[1],topo:1})})})})}
+  Object.keys(g.map).forEach(function(k){var G=g.map[k],srcs=(G.src&&G.src.length)?G.src:[];for(var i=0;i<G.qty;i++){var s=srcs[i]||srcs[0]||[],pc={nome:G.names[0],L:+G.L,W:+G.W,esp:+G.mat||15,furos:[],rasgos:[],linhas:[],avisos:[],ori:(s||[]).map(function(q){return q.mi+':'+q.pk}).join('+')};
+   if(s.length===1&&s[0].mi!=='rp'&&S.mods[s[0].mi]){var m=S.mods[s[0].mi],p=partsOf(m).filter(function(q){return q.pk===s[0].pk})[0];if(p){pc.nome=p.name;var Wp=+p.cl,Hp=+p.cw,sw=!(Math.abs(Wp-pc.L)<0.6&&Math.abs(Hp-pc.W)<0.6)&&Math.abs(Wp-pc.W)<0.6&&Math.abs(Hp-pc.L)<0.6;
+     var put=function(x,yTop){var y=Hp-yTop;return sw?[y,x]:[x,y]};/* desenho da peça: y do topo → Y pra cima */
+     var F=p.fur;if(F){if(F.kind==='s32'){F.rows.forEach(function(ry){F.pos.forEach(function(t){var q=put(t,ry);pc.furos.push({x:q[0],y:q[1],d:5,p:12,lay:lay.s32})})})}
+      else if(F.kind==='rol'){if(!num(c.rolD)||!num(c.rolP))need('rol','Roldana da porta de correr: Ø e profundidade do furo (topo)');else F.pos.forEach(function(t){var q=put(t,0);pc.furos.push({x:q[0],y:q[1],d:+c.rolD,p:+c.rolP,lay:lay.rol(c)})})}
+      else{if(!num(c.dobP))need('dob','Dobradiça: profundidade do copo Ø35 (mm)');else{var vert=F.s==='l'||F.s==='r';F.pos.forEach(function(t){var px=vert?(F.s==='l'?F.B:Wp-F.B):t,py=vert?t:(F.s==='t'?F.B:Hp-F.B),q=put(px,py);pc.furos.push({x:q[0],y:q[1],d:35,p:+c.dobP,lay:lay.dob(c)})})}}}
+     if(p.px==='concha'&&!p.glass){if(!num(c.pxD)||!num(c.pxP))need('px','Puxador concha: Ø e profundidade dos 2 furos');else{var cp=chAt(p,m),Fu=pxFur();[cp.u-Fu/2,cp.u+Fu/2].forEach(function(u){var q=put(u,cp.t);pc.furos.push({x:q[0],y:q[1],d:+c.pxD,p:+c.pxP,lay:lay.px(c)})})}}
+     else if(/^(barra|botao|barraL)$/.test(p.px||'')&&!p.glass){if(c.pxOutros!=='montagem')need('pxo','Puxador '+p.px+': o projeto não tem a posição dos furos — marque "furar na montagem"');else pc.avisos.push('puxador '+p.px+' furado na montagem')}
+     if(/cava usinada/.test(p.note||'')){var dn=!!(m.sup||p.pxDn),a=put(0,dn?Hp:0),b=put(Wp,dn?Hp:0);pc.linhas.push({pts:[a,b],lay:lay.cava})}
+     if(/^Lateral de gaveta/.test(p.name)){var rb=mv(m,'gavRb',6);if(/CORREDIÇA OCULTA/.test(p.note||'')){var fo=partsOf(m).filter(function(q){return /^Fundo de gaveta/.test(q.name)&&q.ocR!=null})[0],oR=fo?+fo.ocR:null;if(oR==null)pc.avisos.push('rasgo da corrediça oculta sem posição no projeto');else if(!num(c.ocP))need('oc','Gaveta oculta: profundidade do rasgo de 6 mm');else{var y0=Hp-oR-6,A=put(0,Hp-oR-6),B2=put(Wp,Hp-oR);pc.rasgos.push({x0:Math.min(A[0],B2[0]),y0:Math.min(A[1],B2[1]),x1:Math.max(A[0],B2[0]),y1:Math.max(A[1],B2[1]),p:+c.ocP,lay:lay.oc(c)})}}
+      else{var A1=put(0,Hp),B1=put(Wp,Hp-rb);pc.rasgos.push({x0:Math.min(A1[0],B1[0]),y0:Math.min(A1[1],B1[1]),x1:Math.max(A1[0],B1[0]),y1:Math.max(A1[1],B1[1]),p:6,lay:lay.reb(rb)})}}
+     if(fTipo(m)!=='sobre'&&/^Lateral|^Base|^Tampo/.test(p.name))need('fundo','Fundo embutido em rasgo (projeto antigo): passe o fundo pra sobreposto ou o rasgo não sai no DXF');
+     var un=uniaoPorPeca[s[0].mi+'|'+p.pk];if(un)un.forEach(function(h){var x=h.x,y=h.y;if(sw){var t_=x;x=y;y=t_}if(h.face)pc.furos.push(c.uniao==='cavilha'?{x:x,y:y,d:+c.cavD,p:+c.cavPF,lay:lay.cav(c,h.face)}:{x:x,y:y,d:+c.preD,p:+c.preP,lay:lay.pre(c,h.face)});else if(c.uniao==='cavilha')pc.furos.push({x:x,y:y,d:+c.cavD,p:+c.cavPT,lay:lay.cavT(c),topo:1})})}}
+   else if(s.length>1&&(c.uniao==='cavilha'||c.uniao==='prefuro'))pc.avisos.push('peça contínua de '+s.length+' módulos: uniões não geradas');
+   if(s.length===1&&avU[s[0].mi+'|'+s[0].pk])pc.avisos.push('união com peça contínua (base/tampo corrido): furos dessa união não gerados — furar na montagem');
+   out.push(pc)}});
+  if(!c.uniao)need('uniao','União das peças: escolha cavilha, pré-furo ou nenhuma');
+  if(c.uniao==='cavilha'&&!(num(c.cavD)&&num(c.cavPF)&&num(c.cavPT)&&num(c.cavOff)&&num(c.cavEsp)))need('cav','Cavilha: Ø, profundidade na face, profundidade no topo, 1º furo a quantos mm da ponta e espaçamento máximo');
+  if(c.uniao==='prefuro'&&!(num(c.preD)&&num(c.preP)&&num(c.preOff)&&num(c.preEsp)))need('pre','Pré-furo: Ø, profundidade, 1º furo a quantos mm da ponta e espaçamento máximo');
+  return {pecas:out,falta:Object.keys(falta).map(function(k){return falta[k]}),avisos:av}};
+ /* DXF R12 ASCII */
+ var D=function(){var o=[];return {g:function(c,v){o.push(String(c));o.push(String(v))},t:function(){return o.join('\r\n')+'\r\n'}}};
+ var fmt=function(v){return (Math.round(v*1000)/1000).toFixed(3)};
+ window.dxfTexto=function(pecas,titulo){var d=D(),L={},add=function(n){L[n]=1};add(lay.cont);add(lay.et);pecas.forEach(function(p){p.furos.forEach(function(f){add(f.lay)});p.rasgos.forEach(function(r){add(r.lay)});p.linhas.forEach(function(l){add(l.lay)})});
+  d.g(999,'Arquemestre DXF '+String(titulo||'').replace(/[\r\n]/g,' '));d.g(0,'SECTION');d.g(2,'HEADER');d.g(9,'$ACADVER');d.g(1,'AC1009');d.g(9,'$INSUNITS');d.g(70,4);d.g(9,'$MEASUREMENT');d.g(70,1);d.g(0,'ENDSEC');
+  d.g(0,'SECTION');d.g(2,'TABLES');d.g(0,'TABLE');d.g(2,'LAYER');d.g(70,Object.keys(L).length);var cor=1;Object.keys(L).forEach(function(n){d.g(0,'LAYER');d.g(2,n);d.g(70,0);d.g(62,n===lay.cont?7:n===lay.et?8:((cor++%6)+1));d.g(6,'CONTINUOUS')});d.g(0,'ENDTAB');d.g(0,'ENDSEC');
+  d.g(0,'SECTION');d.g(2,'ENTITIES');
+  var pl=function(pts,ly,fechada){d.g(0,'POLYLINE');d.g(8,ly);d.g(66,1);d.g(10,'0.0');d.g(20,'0.0');d.g(30,'0.0');d.g(70,fechada?1:0);pts.forEach(function(q){d.g(0,'VERTEX');d.g(8,ly);d.g(10,fmt(q[0]));d.g(20,fmt(q[1]));d.g(30,'0.0')});d.g(0,'SEQEND');d.g(8,ly)};
+  var x0=0,y0=0,lin=0,MAXW=2800,GAP=60;pecas.forEach(function(p){if(x0>0&&x0+p.L>MAXW){x0=0;y0+=lin+GAP+40;lin=0}
+   pl([[x0,y0],[x0+p.L,y0],[x0+p.L,y0+p.W],[x0,y0+p.W]],lay.cont,true);
+   p.rasgos.forEach(function(r){pl([[x0+r.x0,y0+r.y0],[x0+r.x1,y0+r.y0],[x0+r.x1,y0+r.y1],[x0+r.x0,y0+r.y1]],r.lay,true)});
+   p.linhas.forEach(function(l){pl(l.pts.map(function(q){return [x0+q[0],y0+q[1]]}),l.lay,false)});
+   p.furos.forEach(function(f){d.g(0,'CIRCLE');d.g(8,f.lay);d.g(10,fmt(x0+f.x));d.g(20,fmt(y0+f.y));d.g(30,'0.0');d.g(40,fmt(f.d/2))});
+   d.g(0,'TEXT');d.g(8,lay.et);d.g(10,fmt(x0));d.g(20,fmt(y0+p.W+8));d.g(30,'0.0');d.g(40,'18');d.g(1,(p.nome+' '+r1(p.L)+'x'+r1(p.W)+' e'+p.esp).replace(/[^\x20-\x7E]/g,function(ch){return ({'á':'a','à':'a','â':'a','ã':'a','é':'e','ê':'e','í':'i','ó':'o','ô':'o','õ':'o','ú':'u','ç':'c','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ç':'C','×':'x','·':'-','°':'o','Ø':'D','∅':'D'})[ch]||'_'}));
+   x0+=p.L+GAP;lin=Math.max(lin,p.W)});
+  d.g(0,'ENDSEC');d.g(0,'EOF');return d.t()};
+ window.dxfShare=function(nome,txt){var A=window.ArqueApp;if(A&&A.shareFile){A.shareFile(nome,txt,'application/dxf');return 'app'}try{var b=new Blob([txt],{type:'application/dxf'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=nome;document.body.appendChild(a);a.click();setTimeout(function(){try{a.remove();URL.revokeObjectURL(u)}catch(_){}},2000);return 'download'}catch(_){return 'erro'}};
+ window.dxfCfg=cfg;
+ /* tela de exportação (no plano de corte) */
+ var CAMPOS=[['dobP','Dobradiça: profundidade do copo Ø35 (mm)'],['uniao','União das peças','sel'],['cavD','Cavilha: Ø (mm)'],['cavPF','Cavilha: profundidade na face (mm)'],['cavPT','Cavilha: profundidade no topo (mm)'],['cavOff','Cavilha: 1º furo a quantos mm da ponta'],['cavEsp','Cavilha: espaçamento máximo (mm)'],['preD','Pré-furo: Ø (mm)'],['preP','Pré-furo: profundidade (mm)'],['preOff','Pré-furo: 1º furo a quantos mm da ponta'],['preEsp','Pré-furo: espaçamento máximo (mm)'],['pxD','Puxador concha: Ø do furo (mm)'],['pxP','Puxador concha: profundidade (mm)'],['pxOutros','Puxador barra/botão','chk'],['rolD','Roldana: Ø do furo no topo (mm)'],['rolP','Roldana: profundidade (mm)'],['ocP','Gaveta oculta: profundidade do rasgo de 6 mm'],['fresa','Fresa de contorno: Ø (mm, só informação)']];
+ window.dxfAbre=function(){var o=document.getElementById('dxfbox');if(o)o.remove();o=document.createElement('div');o.id='dxfbox';o.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center';
+  var render=function(){var c=cfg(),r=dxfPecas(c),nf=r.pecas.reduce(function(a,p){return a+p.furos.length},0),nr=r.pecas.reduce(function(a,p){return a+p.rasgos.length+p.linhas.length},0);
+   var h='<div style="background:#fff;color:#1b1f27;border-radius:14px;padding:14px;width:min(560px,94vw);max-height:90vh;overflow:auto;font:14px system-ui,sans-serif"><b style="font-size:16px">⬇ DXF para CNC</b><div style="font-size:12px;color:#556;margin:4px 0 8px">Contornos, furos e rasgos em mm, uma camada por operação (diâmetro e profundidade no nome da camada). Mesmas peças e medidas do plano de corte. O que o projeto não tem é pedido aqui — nada é inventado.</div><div style="display:grid;grid-template-columns:1fr 120px;gap:6px 8px;align-items:center">';
+   CAMPOS.forEach(function(f){var v=c[f[0]];if(f[2]==='sel')h+='<label>'+f[1]+'</label><select data-dxk="'+f[0]+'"><option value=""'+(v===''?' selected':'')+'>escolha…</option><option value="cavilha"'+(v==='cavilha'?' selected':'')+'>cavilha</option><option value="prefuro"'+(v==='prefuro'?' selected':'')+'>pré-furo</option><option value="nenhuma"'+(v==='nenhuma'?' selected':'')+'>nenhuma</option></select>';else if(f[2]==='chk')h+='<label>'+f[1]+': furar na montagem</label><input type="checkbox" data-dxk="'+f[0]+'"'+(v==='montagem'?' checked':'')+'>';else h+='<label>'+f[1]+'</label><input type="text" inputmode="decimal" data-dxk="'+f[0]+'" value="'+String(v).replace(/"/g,'')+'">'});
+   h+='</div><div style="margin:10px 0 4px">'+r.pecas.length+' peças · '+nf+' furos · '+nr+' rasgos/usinagens</div>'+(r.falta.length?'<div style="background:#fdecea;border-radius:8px;padding:8px;color:#8a1c1c"><b>Falta configurar antes de exportar:</b><ul style="margin:4px 0 0 18px;padding:0">'+r.falta.map(function(t){return '<li>'+t+'</li>'}).join('')+'</ul></div>':'<div style="color:#14632e">Pronto pra exportar.</div>');
+   h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"><button data-dxno="1" style="flex:1;min-height:42px">Fechar</button><button data-dxall="1" style="flex:2;min-height:42px;background:#1d4ed8;color:#fff;border-color:#1d4ed8"'+(r.falta.length?' disabled':'')+'>Exportar o projeto (1 arquivo)</button></div>';
+   if(!r.falta.length)h+='<div style="margin-top:10px;font-size:12px;color:#556">Ou uma peça:</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+r.pecas.map(function(p,i){return '<button data-dxone="'+i+'" style="font-size:11px;padding:4px 6px">'+p.nome+' '+r1(p.L)+'×'+r1(p.W)+'</button>'}).join('')+'</div>';
+   o.innerHTML=h+'</div>';o.__r=r};
+  render();document.body.appendChild(o);
+  o.addEventListener('change',function(e){var t=e.target;if(!t.dataset||!t.dataset.dxk)return;PR.dxf=PR.dxf||{};PR.dxf[t.dataset.dxk]=t.type==='checkbox'?(t.checked?'montagem':''):t.value;try{prSave()}catch(_){}render()});
+  o.addEventListener('click',function(e){var t=e.target;if(t===o||(t.closest&&t.closest('[data-dxno]'))){o.remove();return}var r=o.__r,nome=(String((window.CUR&&pLoadAll&&(pLoadAll().filter(function(q){return q.id===CUR})[0]||{}).client||{}).nome||'projeto')||'projeto').replace(/[^\w\-]+/g,'_');
+   if(t.closest&&t.closest('[data-dxall]')&&!r.falta.length){var how=dxfShare(nome+'.dxf',dxfTexto(r.pecas,nome));toast(how==='erro'?'Não consegui gerar o arquivo':'DXF gerado: '+r.pecas.length+' peças')}
+   var b=t.closest&&t.closest('[data-dxone]');if(b&&!r.falta.length){var p=r.pecas[+b.dataset.dxone];dxfShare(nome+'_'+(p.nome+'_'+r1(p.L)+'x'+r1(p.W)).replace(/[^\w\-]+/g,'_')+'.dxf',dxfTexto([p],p.nome));toast('DXF da peça gerado')}})};
+ /* botão no plano de corte (junto do enviar) — não mexe nos botões que já existem */
+ var oc0=window.openCut;if(typeof oc0==='function'){openCut=window.openCut=function(){var r=oc0.apply(this,arguments);try{var sb=document.getElementById('cutsend');if(sb&&!document.getElementById('dxfbtn')){var b=document.createElement('button');b.id='dxfbtn';b.textContent='⬇ DXF para CNC';b.style.cssText='margin-left:6px';b.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();dxfAbre()});sb.parentNode.insertBefore(b,sb.nextSibling)}}catch(_){}return r}}
+})();
+</script>
 </body></html>

@@ -6131,7 +6131,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semCava"] as? String, "2.5 0")
         XCTAssertEqual(o["corte"] as? String, "4,8,4")
         XCTAssertEqual(o["drw"] as? Int, 4)
-        XCTAssertEqual(o["b3"] as? String, "true,8,4,true")
+        /* 3D-ACABAMENTO (23/11/2026, pedido do Adauto): a lateral da gaveta é desenhada com o rebaixo do fundo (2 pedaços cada): 8 → 16 caixas; mesmas 4 gavetas */XCTAssertEqual(o["b3"] as? String, "true,16,4,true")
         XCTAssertEqual(o["abriu"] as? Bool, true)
         XCTAssertEqual(o["antiga"] as? String, "3 0")
         XCTAssertEqual(o["comPorta"] as? String, "3 0")
@@ -12260,7 +12260,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fundoReabriu"] as? String, "fundo false · 3D 0")
         XCTAssertEqual(o["gavMsg"] as? String, "🗑 Só a peça saiu: Frente/costa de gaveta (contra-frente e traseira) · ↶ desfaz · ↺ volta no quadro do módulo")
         XCTAssertEqual(o["gaveta"] as? String, "caiu do 3D 1 (a peça tinha 1) · outras caixas que não são fita iguais · chaves da contra-frente/traseira no 3D: #2×1 #3×1 #4×1 #5×1 #6×1")
-        XCTAssertEqual(o["gavLateral"] as? String, "caiu do 3D 1 (a peça tinha 1) · lateral #2 no 3D 0 · #1 1")
+        /* 3D-ACABAMENTO (23/11/2026, pedido do Adauto): lateral com rebaixo desenhado (2 caixas da mesma peça) */XCTAssertEqual(o["gavLateral"] as? String, "caiu do 3D 2 (a peça tinha 2) · lateral #2 no 3D 0 · #1 2")
         /* Adauto 17/11/2026: os totais da gaveta não são mais números fixos (eram 65 → 64 e 64 → 63, e mudam com o desenho da fita): o 3D cai exatamente as caixas da peça apagada, tiradas da geometria desta versão */
         XCTAssertEqual(o["travAntes"] as? String, "3D 1 · lista 1 · corte 1")
         XCTAssertEqual(o["travDepois"] as? String, "3D 0 · lista 0 · corte 0")
@@ -12269,7 +12269,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["travRefez"] as? String, "3D 0 · lista 0 · corte 0")
         XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais")
         XCTAssertEqual(o["travDetector"] as? String, "fantasma de teste achado 1")
-        /* CANTO-PORTA-L (23/11/2026, pedido do Adauto): no canto a folha fechada agora encosta na caixa e ganha a linha fina do cava como a porta reta (+2 caixas), e a fita da frente da base que fica atrás da folha é desenhada em 2 pedaços (+1); a conferência é a mesma: a base do lado sai do 3D e nenhuma fica pra trás */XCTAssertEqual(o["canto"] as? String, "caixas 24 → 19 · base do lado no 3D 0 · base do fundo 0 (antes 3)")
+        /* CANTO-PORTA-L (23/11/2026, pedido do Adauto): no canto a folha fechada agora encosta na caixa e ganha a linha fina do cava como a porta reta (+2 caixas), e a fita da frente da base que fica atrás da folha é desenhada em 2 pedaços (+1); a conferência é a mesma: a base do lado sai do 3D e nenhuma fica pra trás *//* 3D-ACABAMENTO (23/11/2026, pedido do Adauto): a fita que ficava inteira dentro de outra peça não é mais desenhada (24 → 23, depois 19 → 18); mesma conferência */XCTAssertEqual(o["canto"] as? String, "caixas 23 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 3)")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
     func testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca() async throws {
@@ -12837,7 +12837,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["m4"] as? String, "fitas 7 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte b2eb4cec")
         XCTAssertEqual(o["m5"] as? String, "fitas 11 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 5cf2235e")
         XCTAssertEqual(o["m6"] as? String, "fitas 24 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte d9f86893")
-        XCTAssertEqual(o["m7"] as? String, "fitas 4 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
+        /* 3D-ACABAMENTO (23/11/2026, pedido do Adauto): canto em L: a fita que ficava inteira dentro da peça do lado do canto não é desenhada (4 → 3); peças+corte iguais */XCTAssertEqual(o["m7"] as? String, "fitas 3 · dentro da travessa 0 · tira da frente da lateral sim · peças+corte 15bec63b")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -15379,7 +15379,7 @@ final class EditorWebKitTests: XCTestCase {
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};/* FASE2 (23/11, decisão do Adauto): 1) fundo da gaveta entra exatamente o rebaixo (6 mm) no módulo novo — peça, corte e 3D iguais; módulo de antes só muda pelo aviso, com desfazer. 2) rodapé lateral do encontro de balcões com rodapé corrido sai também da lista de peças; módulo sozinho mantém os dois */var W=function(t){return new Promise(r=>setTimeout(r,t))};var R={};var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
         var r=function(v){return Math.round(v*10)/10};
-        var gav=function(m){__build();var B=__boxes(),mi=S.mods.indexOf(m),lat=B.filter(b=>String(b.nm)===mi+':Lateral de gaveta'&&/#1$/.test(b.pk))[0],fd=B.filter(b=>String(b.nm)===mi+':Fundo de gaveta (6 mm)'&&/#1$/.test(b.pk))[0];var p=partsOf(m).filter(q=>/^Fundo de gaveta/.test(q.name))[0];var c=cutLines(m).filter(l=>/Fundo de gaveta/.test(l.names.join()))[0];return 'peça '+p.cl+'×'+p.cw+' · corte '+(c?c.L+'×'+c.W:'-')+' · 3D entra '+(lat&&fd?r(lat.x1-fd.x0):'?')+' na lateral · nota: '+(String(p.note).match(/entra [^·]*/)||[''])[0]};
+        var gav=function(m){__build();var B=__boxes(),mi=S.mods.indexOf(m),lat=(function(L){return L.length?{x0:Math.min.apply(null,L.map(b=>b.x0)),x1:Math.max.apply(null,L.map(b=>b.x1))}:null})(B.filter(b=>String(b.nm)===mi+':Lateral de gaveta'&&/#1$/.test(b.pk)))/* 3D-ACABAMENTO (23/11/2026): a lateral é desenhada com o rebaixo (mais de um pedaço) — mede pela lateral inteira */,fd=B.filter(b=>String(b.nm)===mi+':Fundo de gaveta (6 mm)'&&/#1$/.test(b.pk))[0];var p=partsOf(m).filter(q=>/^Fundo de gaveta/.test(q.name))[0];var c=cutLines(m).filter(l=>/Fundo de gaveta/.test(l.names.join()))[0];return 'peça '+p.cl+'×'+p.cw+' · corte '+(c?c.L+'×'+c.W:'-')+' · 3D entra '+(lat&&fd?r(lat.x1-fd.x0):'?')+' na lateral · nota: '+(String(p.note).match(/entra [^·]*/)||[''])[0]};
         loadState(initLimpo());S.W=4000;newTpl(T('Gaveteiro 3 gavetas'));var m=S.mods[0];draw();R.novo=gav(m)+' gf6='+m.gf6;
         delete m.gf6;draw();R.antigo=gav(m);loadState(JSON.parse(JSON.stringify(snapState())));m=S.mods[0];R.reaberto=gav(m);S.m=m;panel();await W(100);var bx=document.getElementById('gfbox');R.aviso=bx?bx.textContent.replace(/\s+/g,' ').slice(0,240):'sem';var b=document.querySelector('[data-gf6up]');if(b){b.click();await W(150)}R.atualizou=gav(S.mods[0]);document.getElementById('und').click();await W(150);R.desfez=gav(S.mods[0]);
         // rodapé

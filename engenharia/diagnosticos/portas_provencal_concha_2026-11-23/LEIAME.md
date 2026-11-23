@@ -60,6 +60,5 @@ Capturas: 3d_madeira_regua_na_borda_veio.png, 3d_conchas_desviradas_4_modelos.pn
   - No balcão e na torre a porta passa em cima; no aéreo, embaixo.
   - No gaveteiro só a frente da ponta passa.
   - Sem ferragem, sem furo e sem puxador no orçamento.
-- **Setas no 3D**: linha "Mover" no cabeçalho da peça livre: ◀ ▶ ▲ ▼, frente e trás, passo de 1, 10 ou 50 mm. Se bater, a peça para encostada; desfazer volta.
 
-Capturas: 3d_puxador_passante_balcao_e_aereo.png, 3d_setas_mover_peca.png.
+Capturas: 3d_puxador_passante_balcao_e_aereo.png. (As setas pra mover a peça no 3D foram tiradas a pedido do Adauto.)

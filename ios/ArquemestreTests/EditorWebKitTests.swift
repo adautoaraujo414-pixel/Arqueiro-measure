@@ -15210,4 +15210,31 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertTrue(["arque-cliente-v2 fmt 1","ponte do app"].contains(o["clienteSemPonte"] as? String ?? ""), "sem a ponte shareClient o link do cliente sai pelo shareCut, também com o tipo novo: \(o["clienteSemPonte"] ?? "")")
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || "))")
     }
+
+    /// FASE4_ · CPAN-DUPLO (relato do Code 2, 22/11; pré-requisito do menu ＋ Criar): "🍲 Panelas no cooktop" (data-cpan) e os botões de "Panelas e louça"
+    /// usavam o mesmo atributo data-cpan. O tratador da louça (em captura) pegava o toque do cooktop e punha um item decorativo; e a seção da louça não
+    /// aparecia quando tinha cooktop (a guarda achava o data-cpan do cooktop). A louça agora usa data-clou; nenhum botão some.
+    func testFASE4_PanelasDoCooktopEPanelasELoucaNoMenuCriarSemConflito() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        S.stones=[];S.stw=[];S.st=null;S.rp=[];S.fr=[];S.ops=[];S.mods=[];S.room='cozinha';S.env='cozinha';S.W=4200;S.RD=3500;S.H=2700;S.m=null;draw();
+        newTpl(T('Balcão 2 portas'));draw();await W(30);S.m=S.mods[0];S.tab=6;draw();panel();await W(40);document.querySelector('#bd [data-stadd]').click();await W(80);catAct2({act:'cook',cm:'b5t'});await W(80);draw();
+        var cks=function(){var o=[];S.stones.forEach(function(st){(st.items||[]).forEach(function(it){if(it.k==='cook')o.push(it)})});return o},pan=function(){return cks().map(function(it){return it.pan?1:0}).join(',')};
+        open3D();await W(300);document.getElementById('v3add').click();await W(120);var C=document.getElementById('crp3');
+        var bt=function(re){return [].slice.call(C.querySelectorAll('button')).filter(function(b){return re.test(b.textContent)})[0]};
+        R.cooktops=String(cks().length);R.secaoLouca=String(/Panelas e louça/.test(C.textContent));R.botoesLouca=String(['＋ Panela','＋ Jogo de panelas','＋ Frigideira','＋ Pilha de pratos','＋ Pratos em pé','＋ Copos'].filter(function(s){return !!bt(new RegExp('^'+s.replace(/[+＋]/g,'.')+'$'))}).length);
+        var fr0=(S.fr||[]).length,p0=pan(),b=bt(/Panelas no cooktop/);if(b)b.click();await W(120);C=document.getElementById('crp3');
+        R.cooktopPanelas='antes '+p0+' depois '+pan()+' · itens decorativos '+fr0+'→'+(S.fr||[]).length;
+        var b2=bt(/^＋ Panela$/);var fr1=(S.fr||[]).length;if(b2)b2.click();await W(120);R.poeLouca=b2?('itens '+fr1+'→'+(S.fr||[]).length):'sem botão';
+        R.errs=String(__errs.length-e0);try{document.getElementById('v3x').click()}catch(_){}return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cooktops"] as? String, "1", "cena: balcão com pedra e cooktop")
+        XCTAssertEqual(o["secaoLouca"] as? String, "true", ""Panelas e louça" aparece mesmo com cooktop no projeto")
+        XCTAssertEqual(o["botoesLouca"] as? String, "6", "os 6 botões da louça")
+        XCTAssertEqual(o["cooktopPanelas"] as? String, "antes 0 depois 1 · itens decorativos 0→0", ""🍲 Panelas no cooktop" liga as panelas do cooktop e não põe louça")
+        XCTAssertEqual(o["poeLouca"] as? String, "itens 0→1", ""＋ Panela" põe a panela (louça)")
+        XCTAssertEqual(o["errs"] as? String, "0", "sem erro")
+    }
 }

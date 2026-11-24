@@ -72,8 +72,11 @@ final class VideoGravarUITests: XCTestCase {
         } while Date() < fim
         guard let v = alvo else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
         print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue))"); v.tap()
-        sleep(2)
-        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "OK"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
+        sleep(3)
+        // diagnóstico (2ª rodada no CI: depois do item apareceu um "OK" e o editor não salvou): o que há na tela agora
+        for al in app.alerts.allElementsBoundByIndex { print("VIDEO-UI: alerta \"\(al.label)\" · " + al.staticTexts.allElementsBoundByIndex.map { $0.label }.joined(separator: " | ") + " · botões " + al.buttons.allElementsBoundByIndex.map { $0.label }.joined(separator: ", ")) }
+        print("VIDEO-UI: botões na tela: " + app.buttons.allElementsBoundByIndex.prefix(40).map { $0.label }.filter { !$0.isEmpty }.joined(separator: ", "))
+        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "Concluído", "OK"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
         // o editor avisa "1 vídeo(s) salvo(s) neste cliente."
         guard acha(["vídeo(s) salvo(s)"], contem: true, ate: 90) != nil else { mostra("o editor não avisou que salvou"); XCTFail("FALHA-VIDEO-UI: o editor não avisou que salvou o vídeo"); throw Falha() }
         print("VIDEO-UI: o editor da versão publicada salvou o vídeo")

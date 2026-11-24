@@ -64,7 +64,7 @@ roda_video(){ KIND=$1; OUT=$OUT0/$KIND-video; mkdir -p $OUT; echo "######## $KIN
   xcrun simctl privacy "$UDID" grant photos $BID >/dev/null 2>&1
   echo "== 2. a versão publicada grava o vídeo pelo seletor"
   TEST_RUNNER_ARQ_VIDEO_UI=1 xcodebuild test-without-building -xctestrun "$XUI" -destination "id=$UDID" -only-testing:ArquemestreVideoUITests/VideoGravarUITests -resultBundlePath "$OUT/gravar.xcresult" > $OUT/gravar.log 2>&1; RU=$?
-  grep -E "VIDEO-UI: (toquei|não achei|seletor|o editor)|FALHA-VIDEO-UI|Test Case .*(passed|failed)" $OUT/gravar.log | head -30
+  grep -E "VIDEO-UI: (toquei|não achei|seletor|o editor|alerta|botões)|FALHA-VIDEO-UI|Test Case .*(passed|failed)" $OUT/gravar.log | head -30
   [ $RU -eq 0 ] || { falha "a versão publicada não gravou o vídeo pelo seletor (veja gravar.log e gravar.xcresult)"; echo "---- árvore da tela na falha:"; sed -n '/VIDEO-UI: árvore/,$p' $OUT/gravar.log | grep -E "Button|Image|Cell|StaticText|Sheet|Alert|Other.*label" | head -120; }
   xcrun simctl terminate "$UDID" $BID >/dev/null 2>&1
   DATA=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA/Library/Application Support/Arquemestre/files"

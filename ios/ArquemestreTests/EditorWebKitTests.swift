@@ -17840,4 +17840,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertGreaterThan((o["n"] as? Int) ?? 0, 30, "o teste passou por rodapés de verdade")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* PRECOS-RESTAURO (auditoria técnica 24/11, P0 — perda de dados do cliente; já existia na versão publicada 3f1c3a58/c561120):
+       no aparelho novo com o backup restaurado (arquivos lá, banco do navegador vazio), a abertura do editor chamava prSave() com os
+       padrões ANTES de ler o prices.json — e o arquivo do backup era sobrescrito: preços e "Meus modelos" do cliente sumiam.
+       Agora o primeiro prSave lê o arquivo antes de gravar (mesma regra da leitura de sempre: o arquivo por cima dos padrões). */
+    func testBackupRestauradoNaoPerdePrecosNemMeusModelosNaAbertura() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;var A=window.ArqueApp;
+        var b64=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},le=function(){var d=A.getFile('prices.json');try{return JSON.parse(decodeURIComponent(escape(atob(d))))}catch(e){return null}};
+        /* estado de um aparelho novo com o backup restaurado: os arquivos estão lá, o banco do navegador está vazio */
+        var bom=JSON.parse(JSON.stringify(PR));bom.myMods=[{id:'my1',n:'Balcão do cliente',w:900,h:820,d:560,v:[{k:'door',n:2}]}];bom.mdfM2=123;A.putFile('prices.json',b64(bom));
+        var PR0=JSON.parse(JSON.stringify(PR));try{localStorage.removeItem(PRK)}catch(_){}window.__prLido=0;
+        /* a abertura do app: os padrões entram e o prSave roda antes da leitura do arquivo */Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,JSON.parse(JSON.stringify(PRD)));PR.myMods=[];prSave();
+        var f=le();R.v0='arquivo depois da abertura: meus modelos '+((f&&f.myMods)||[]).length+' · preço '+(f&&f.mdfM2);R.v1='no editor: meus modelos '+(PR.myMods||[]).length+' · preço '+PR.mdfM2;
+        /* aparelho de sempre (banco cheio): nada muda, o que está no banco vale */Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);prSave();R.v2='uso normal: preço '+PR.mdfM2+' = '+PR0.mdfM2;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "arquivo depois da abertura: meus modelos 1 · preço 123", "o prices.json do backup não é sobrescrito na abertura")
+        XCTAssertEqual(o["v1"] as? String, "no editor: meus modelos 1 · preço 123", "os preços e Meus modelos do backup voltam no editor")
+        XCTAssertEqual(o["v2"] as? String, "uso normal: preço \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?") = \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?")", "uso normal não muda")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

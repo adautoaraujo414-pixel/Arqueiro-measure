@@ -14284,6 +14284,32 @@ final class EditorWebKitTests: XCTestCase {
     /* LIVRE-PAREDE (achado na revisão do arraste, 21/11 · regra "nada entra dentro de outra coisa"): girar o livre em volta do meio levava as costas
        185 mm pra dentro da parede do fundo, e o arrasto sem ímã passava das paredes. Agora parede do fundo e paredes do lado (quando existem) são
        sólidas pro livre; no ambiente livre (sem paredes) não há limite. Ninguém mais muda. */
+    /* ARRASTO-CONFINADO no 3D (B15/45, decisão do Adauto 24/11): segurando e arrastando no 3D o móvel para na parede, no teto e no vizinho,
+       sem mudar medida; com a parede encolhida, o que ficou fora não é posto dentro do outro ao soltar (antes: 565..1465 sobre 5..905, pelo
+       tidy → noOverlap do soltar, que não tinha a guarda do arrasto). */
+    func testArrastoNo3DFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+          window.MINI3OFF=1;PR.setupDone=1;S.env='cozinha';S.room='cozinha';S.W=3000;S.H=2600;S.mods=[];S.fr=[];S.stones=[];S.rp=[];draw();var R={};window.toast=function(){};
+          var tpl=function(nm){var it=null;CATS.forEach(function(c){c.it.forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm)it=t})});return JSON.parse(JSON.stringify(it))};
+          ['Balcão 2 portas','Balcão 2 portas','Aéreo 2 portas','Aéreo 2 portas'].forEach(function(n){newTpl(tpl(n))});S.mods.forEach(function(m){m.lock=false});S.m=S.mods[0];draw();panel();
+          open3D();await new Promise(function(r){setTimeout(r,300)});__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');
+          var ev=function(tp,x,y,el){(el||cv).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true}))};
+          var ctr=function(i){var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf(i+':')!==0||/Rodapé|Base inferior/.test(q.nm))return;/* rodapé e base contínuos passam por baixo dos vizinhos: não contam pro meio do móvel */if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z0:q.z0,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect();return [rc.left+p[0],rc.top+p[1]]};
+          var drag=async function(i,dx,dy,hold){__build();var c=ctr(i);ev('pointerdown',c[0],c[1]);if(hold)await new Promise(function(r){setTimeout(r,420)});for(var s=1;s<=10;s++)ev('pointermove',c[0]+dx*s/10,c[1]+dy*s/10,s>1?M_:cv);ev('pointerup',c[0]+dx,c[1]+dy,M_);await new Promise(function(r){setTimeout(r,40)})};
+          var pos=function(){return S.mods.map(function(m){return [Math.round(m.x),Math.round(m.b),m.w,m.h,m.d].join('/')}).join(' ')},med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d].join('x')}).join(' ')},sob=function(){return S.mods.filter(function(m){return modHit(m)}).length};
+          var m0=med();await drag(0,-900,0,true);await drag(1,900,0,true);await drag(2,0,-900,true);await drag(0,600,0,true);
+          R.normal=(med()===m0?'medida igual':'MEDIDA MUDOU')+' · '+(sob()?'SOBREPÔS':'sem sobrepor')+' · '+(S.mods.every(function(m){return m.x-lt(m)>=-0.5&&m.x+m.w+rt(m)<=S.W+0.5&&m.b>=0&&m.b+m.h<=S.H+0.5})?'dentro':'FORA');
+          S.mods.splice(2,2);S.mods[0].x=5;S.mods[1].x=1700;draw();__build();var m1=med();S.W=1500;draw();__build();await new Promise(function(r){setTimeout(r,200)});
+          await drag(1,-400,0,true);var s1=sob();await drag(0,300,0,true);
+          R.encolhida=(med()===m1?'medida igual':'MEDIDA MUDOU')+' · '+(s1||sob()?'SOBREPÔS':'sem sobrepor');
+          try{document.getElementById('v3x').click()}catch(_){}R.errs=__errs.length;return JSON.stringify(R);
+          """#)
+        XCTAssertEqual(o["normal"] as? String, "medida igual · sem sobrepor · dentro")
+        XCTAssertEqual(o["encolhida"] as? String, "medida igual · sem sobrepor")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B26 (checklist; decisão do Adauto 24/11: "peça flutuante: investigar a causa e corrigir"): no 3D de cada modelo do catálogo, toda peça
        de fabricação (o que vai pro corte) encosta em outra peça, no chão ou na parede — nenhuma fica solta no ar. O eletro desenhado e as
        ferragens (noCut) ficam de fora; o cabideiro do "Armário sem laterais" se apoia nas laterais dos vizinhos (conferido entre dois guarda-roupas).

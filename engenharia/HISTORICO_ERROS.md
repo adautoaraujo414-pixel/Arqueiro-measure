@@ -1903,3 +1903,30 @@ Cada item: pedido → causa → correção → teste (falha antes) → evidênci
   - o ímã não usa toque.
 - **Teste:** `testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem`. Falha antes ("true false", menu aberto) e passa depois, em 1366 e em 430×900.
 - **Nota de processo:** nas rodadas parciais no mesmo navegador, a página antiga pode ficar em cache. Desde agora uso a URL com `&v=<hora>`. As baterias completas sempre rodaram num perfil novo.
+
+## VIS-MAT — acabamentos do 3D padrão (Adauto, revisão visual completa da biblioteca 3D, 24/11)
+- **Pedido:** mais realismo nos acabamentos (metais, eletros, puxadores, pedras, madeira, estofados) sem pesar o app e sem mudar medida, geometria, posição, furação ou corte.
+- **O que entrou:**
+  - programa WebGL à parte (`__GPV`, e `__GPRV` no reflexo), com shader enxuto, só para as peças classificadas por `vizMat`;
+  - **metal**: aspereza pelo acabamento do puxador (cromado 0, prata .12, dourado .2, inox .32, grafite .55, preto fosco .92…), reflexo do ambiente e dois brilhos;
+  - **eletros** (geladeira, forno, micro-ondas, coifa, depurador, lava-louças, airfryer, churrasqueira, lixeira, TV): inox escovado; painel e vidro preto brilhante;
+  - torneira cromada; perfil gola e alumínio anodizado;
+  - **tecido** em sofá, poltrona e cama;
+  - **veio** em mesa, cadeira e banco de madeira;
+  - **pedra** da bancada com brilho de polida.
+  - Sem textura nova: nenhuma imagem, nenhum arquivo, nenhum byte de download.
+- **Fica igual:**
+  - parede, piso, MDF dos módulos, foto do padrão, vidro e espelho;
+  - o "Acabamento realista" (AQ), que tem caminho próprio.
+  - O teste confere: pixel da parede igual, caixas do 3D com as mesmas coordenadas, peças e corte iguais.
+- **Erros achados no caminho:**
+  - 1ª versão com os ramos novos no shader comum: quadro de 113 → 176 ms (+55%) no renderizador por software (Windows sem GPU). Por isso o programa separado.
+  - Coifa com pintinha de pedra: as faces laterais (`pfFill`) zeravam o tipo.
+  - Cromado mais escuro que antes: ambiente baixo demais na metade de baixo da tela. Base recentrada em 1,0.
+  - Tabela de aspereza vazia: `hex()` não é global e o `try` engolia o erro. Todo puxador caía no padrão .35. Agora com leitor de cor próprio.
+- **Desempenho** (SwiftShader, pior caso, cozinha com 761 caixas, 10 rodadas alternadas):
+  - quadro: base 130,7 ms → 135,6 ms (≈ +4%, dentro da variação de ±10 ms entre rodadas);
+  - montagem: 5,7–9,3 ms nas duas;
+  - heap JS: 15–18 MB nas duas.
+- **Teste:** `testAcabamentoVisualMetalTecidoMadeiraPedraSemMudarGeometria`. Falha antes (`vizMat` não existe) e passa depois.
+- **Capturas:** `diagnosticos/visual_materiais_3d_2026-11-24/` (antes em cima, depois embaixo).

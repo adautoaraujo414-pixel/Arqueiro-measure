@@ -1966,3 +1966,19 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - frentes das torres por vãos fora do corte.
 
   Passa depois: 168 frentes passam, 147 portas com furo no lugar, 0 em cada invariante.
+
+## SANBASE (B25 / defeito 82, auditoria 24/11) e a regressão que a bateria pegou
+- **Defeito:**
+  - virar aéreo (sup) apagava a travessa;
+  - voltar pra baixo não devolvia (sonda s05, "Módulo livre baixo · montar do zero").
+- **Correção (`14ef6aac`):** o sanBase guarda `_travSB` quando apaga a travessa por ser aéreo e devolve ao voltar. Só pela troca de aéreo; módulo alto que fica baixo continua como antes.
+- **Regressão no mesmo commit, achada na bateria completa do ramo de auditoria:**
+  - o commit também "devolvia" travessa e moldura do rack suspenso sempre que as duas estavam desligadas;
+  - isso religava a travessa de rack que não tem (Rack de TV erguido);
+  - falharam `testBasculanteComCavaSemEngrossoFolga4NoTopo` (60 ≠ 4), `testMedidaDePecaSemDecimo…` (6315 ≠ 6308) e `testPlanoDeCorteTodaPeca…` (12844 ≠ 12836).
+  - Bisseção pelos 5 commits: entrou em `14ef6aac`.
+- **Correção da regressão:**
+  - a parte do rack saiu;
+  - o liga/desliga do "rack" da s05 não tem caminho pela tela (só o catálogo liga o rack), então ficou como era;
+  - o teste passou a `testAereoIdaEVoltaDevolveATravessa`;
+  - os 3 testes voltam a passar.

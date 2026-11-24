@@ -17786,9 +17786,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
-    // B25 / defeito 82 · SANBASE (checklist, sonda s05): ligar e desligar "aéreo" (sup) ou "rack" voltava sem a travessa / moldura / folga de antes.
-    // Ida e volta devolve as mesmas peças; o aéreo continua sem travessa enquanto for aéreo; o projeto salvo abre igual
-    func testAereoERackIdaEVoltaDevolvemTravessaMolduraEFolga() async throws {
+    // B25 / defeito 82 · SANBASE (checklist, sonda s05): virar aéreo (sup) e voltar pra baixo voltava sem a travessa de antes.
+    // Ida e volta devolve as mesmas peças; o aéreo continua sem travessa enquanto for aéreo; o projeto salvo abre igual.
+    // (O "rack" ligar/desligar da s05 não tem caminho pela tela: só o catálogo liga. Devolver ali religava a travessa de rack que não tem; ficou como era.)
+    func testAereoIdaEVoltaDevolveATravessa() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
@@ -17796,12 +17797,10 @@ final class EditorWebKitTests: XCTestCase {
         var sig=function(m){return partsOf(m).map(function(p){return p.pk+' '+Math.round(p.cl*10)/10+'x'+Math.round(p.cw*10)/10+' q'+(p.qty||1)}).sort().join(';')};
         var ida=function(n,k){loadState(initLimpo());S.room='livre';S.env='livre';S.W=6000;S.H=3000;draw();newTpl(T(n));var m=S.mods[S.mods.length-1];S.m=m;draw();var a=sig(m),t0=!!m.trav,m0=!!m.mold,f0=+m.folga||0;
           m[k]=!m[k];draw();var meio={trav:!!m.trav,pecas:sig(m)!==a};m[k]=!m[k];draw();return {igual:sig(m)===a,trav:t0+'→'+!!m.trav,mold:m0+'→'+!!m.mold,folga:f0+'→'+(+m.folga||0),meio:meio}};
-        var r=ida('Rack do zero (você monta)','rack');R.rack=r.igual+' '+r.trav+' '+r.mold+' '+r.folga;
         var s=ida('Módulo livre baixo · montar do zero','sup');R.sup=s.igual+' '+s.trav+' · aéreo sem travessa '+!s.meio.trav;
         var st=JSON.stringify(snapState()),a=sig(S.mods[0]);loadState(JSON.parse(st));draw();R.reabre=sig(S.mods[0])===a;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertEqual(o["rack"] as? String, "true true→true true→true 15→15", "rack desligado e religado: mesmas peças, travessa, moldura e folga")
         XCTAssertEqual(o["sup"] as? String, "true true→true · aéreo sem travessa true", "vira aéreo (sem travessa) e volta com a travessa")
         XCTAssertEqual(o["reabre"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)

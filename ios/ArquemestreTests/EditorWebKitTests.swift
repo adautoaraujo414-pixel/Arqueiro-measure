@@ -11900,11 +11900,12 @@ final class EditorWebKitTests: XCTestCase {
         STD().gAfast=0;if(iR){iR.value='1,5';iR.dispatchEvent(new Event('input',{bubbles:true}));iR.dispatchEvent(new Event('change',{bubbles:true}));await W(80)}nt=document.querySelector('[data-ginterf]');R.notaRebaixo=nt?nt.textContent.slice(0,45):'sem nota';__build();R.soRebaixo='porta G z '+zPorta(0);
         STD().gReb=0;prSave();R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["padrao"] as? String, "entra 1.5 mm · porta G z 581 · porta sem G z 581")
+        /* DECISÃO DO ADAUTO 24/11 (item 5): a caixa leva o rebaixo do tamanho do perfil G, então o perfil não entra mais na caixa (antes: "entra 1.5 mm", pendência 1 da especificação) */
+        XCTAssertEqual(o["padrao"] as? String, "entra 0 mm · porta G z 581 · porta sem G z 581")
         XCTAssertEqual(o["campos"] as? String, "true true · 0/0")
         XCTAssertEqual(o["notaPadrao"] as? String, "⚠ O perfil G tem parede de 1,5 mm atrás da porta: com estes ")
         XCTAssertEqual(o["notaCom15"] as? String, "✓ Perfil G sem encostar na caixa com estes va")
-        XCTAssertEqual(o["com15"] as? String, "entra 0.8 mm · porta G z 582.5 · porta sem G z 581")
+        XCTAssertEqual(o["com15"] as? String, "entra 0 mm · porta G z 582.5 · porta sem G z 581")
         XCTAssertEqual(o["corteIgual"] as? Bool, true)
         XCTAssertEqual(o["portaIgual"] as? Bool, true)
         XCTAssertEqual(o["notaRebaixo"] as? String, "✓ Perfil G sem encostar na caixa com estes va")
@@ -18138,6 +18139,47 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["partes"] as? Bool, true)
         XCTAssertEqual(o["caneco"] as? Bool, true, "o caneco continua desenhado")
         XCTAssertEqual(o["porta"] as? String, "440x705 furo [120,585] · DXF Ø35 y585,Ø35 y120", "furação, medida e DXF iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DECISÕES DO ADAUTO 24/11 (itens 5 e 8): perfil G, gola vertical, facetado e cava de perfil × caixa. Cada peça da caixa onde o perfil entra ganha o rebaixo
+    // do tamanho exato da parte do perfil (geometria real, sem desconto genérico): 3D recortado, nota na lista, operação no DXF, corte com a mesma medida.
+    // Varredura dos 9 puxadores × catálogo: 0 interseção nova. Orientação do G e medidas homologadas iguais. Móvel de antes: aviso e "Aplicar" (nada muda sozinho)
+    func testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxf() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var P=pasMm(),r1=function(v){return Math.round(v*10)/10},A=[],B_=[],C=[],nMod=0,nPas=0,nFur=0,t0=performance.now();
+        var cena=function(t,px){loadState(initLimpo());S.W=8000;S.H=3000;S.mods=[];S.room='livre';S.env='livre';draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];if(!m)return null;(m.v||[]).forEach(function(v){v.px=px});(m.gv||[]).forEach(function(g){g.px=px});draw();__build();
+          var P_=partsOf(m),bx=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0}).map(function(b){return {pk:b.pk||b.nm,nm:String(b.nm),x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1}});return {m:m,P:P_,B:bx,cut:cutLines(m)}};
+        var pares=function(bx){var s={};for(var i=0;i<bx.length;i++){var a=bx[i];if(!/Porta|Frente/.test(a.nm))continue;for(var j=0;j<bx.length;j++){var b=bx[j];if(a.pk===b.pk)continue;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1&&oy>1&&oz>1)s[a.pk+' × '+b.pk]=1}}return s};
+        var sig=function(p){return [p.name,r1(p.cl),r1(p.cw),p.qty||1].join('|')};
+        open3D();await W(300);
+        var PX=PXT.map(function(q){return q[0]}).filter(function(k){return k!=='toque'&&k!=='passante'});var RES={};
+        for(var i=0;i<its.length;i++){var t=its[i];var a;try{a=cena(t,'toque')}catch(e){continue}if(!a)continue;nMod++;var sa=pares(a.B);
+         PX.forEach(function(k){var b;try{b=cena(t,k)}catch(e){(RES[k]=RES[k]||[]).push(t.n+': exceção');return}var sb=pares(b.B);Object.keys(sb).forEach(function(x){if(!sa[x])(RES[k]=RES[k]||[]).push(t.n+': '+x)})})}
+        document.getElementById('v3x').click();R.modelos=nMod;R.varredura=Object.keys(RES).map(function(k){return k+' '+RES[k].length+' :: '+RES[k].slice(0,3).join(' | ')}).join(' ‖ ');
+        
+        var T=function(n){var it=null;its.forEach(function(q){if(!it&&q.n===n)it=q});return JSON.parse(JSON.stringify(it))};
+        var mod=function(n,px){loadState(initLimpo());S.W=4000;S.env='cozinha';S.room='cozinha';S.mods=[];draw();newTpl(T(n));var m=S.mods[0];m.v.forEach(function(v){v.px=px});draw();return m};
+        var rb=function(m,nm){var p=partsOf(m).filter(function(q){return q.name===nm})[0];return p&&p.reb?p.reb.map(function(r){return r.c+'x'+r.l+'x'+r.p}).join(','):'-'};
+        var dx=function(nm){PR.dxf={dobP:'13',uniao:'nenhuma'};var p=dxfPecas().pecas.filter(function(q){return q.nome===nm})[0];return p?p.L+'x'+p.W+' '+p.rasgos.filter(function(r){return /REBAIXO/.test(r.lay)}).map(function(r){return r.lay}).join(','):'-'};
+        var m=mod('Balcão 2 portas','g');R.G=m.rbP+' · travessa '+rb(m,'Travessa frontal')+' · DXF '+dx('Travessa frontal')+' · porta '+partsOf(m).filter(function(p){return p.name==='Porta'})[0].cw+' · corte '+cutLines(m).filter(function(l){return /^Travessa frontal/.test(l.n||l.name||'')}).map(function(l){return l.L+'x'+l.W}).join(',');
+        R.nota=/REBAIXO DO PERFIL G: 440 × 37 × 1,5/.test(partsOf(m).filter(function(p){return p.name==='Travessa frontal'})[0].note||'');
+        m=mod('Balcão 2 portas','gv');R.GV='base '+rb(m,'Base inferior')+' · travessa '+rb(m,'Travessa frontal');
+        m=mod('Balcão 2 portas','facetado');R.FAC=rb(m,'Travessa frontal').split(',')[0];
+        /* móvel de antes (sem a marca): nada muda sozinho; aviso; aplicar; desfazer */m=mod('Balcão 2 portas','g');delete m.rbP;draw();S.m=m;S.tab=0;panel();var w0=!!document.getElementById('rbbox'),r0=rb(m,'Travessa frontal');var n=rbAplica(m);var w1=!!document.getElementById('rbbox');var r1=rb(m,'Travessa frontal');
+        R.antigo='sem marca '+r0+' · aviso '+w0+' · aplicou '+n+' · '+r1+' · aviso depois '+w1;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130)
+        XCTAssertEqual(o["varredura"] as? String, "", "nenhum puxador entra em outra peça")
+        XCTAssertEqual(o["G"] as? String, "1 · travessa 440x37x1.5,440x37x1.5 · DXF 900x70 REBAIXO_P1.5_PERFIL_G_F1,REBAIXO_P1.5_PERFIL_G_F1 · porta 676 · corte 900x70", "parede de 1,5 do G × 37 na travessa; porta com o desconto de 29 e corte iguais")
+        XCTAssertEqual(o["nota"] as? Bool, true)
+        XCTAssertEqual(o["GV"] as? String, "base 43x1.5x10,43x1.5x10 · travessa 70x43x1.5,70x43x1.5")
+        XCTAssertEqual(o["FAC"] as? String, "300x10.5x10", "aba de trás do facetado (10 mm) nos 10,5 de cima da travessa")
+        XCTAssertEqual(o["antigo"] as? String, "sem marca - · aviso true · aplicou 2 · 440x37x1.5,440x37x1.5 · aviso depois false")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

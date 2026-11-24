@@ -265,7 +265,10 @@ function histBtns(){try{$('und').style.opacity=HIST.length?1:.4;$('red').style.o
 function histGo(from,to){if(!from.length)return false;UNDOING=true;try{var vb=Object.assign({},VB),tab=S.tab;to.push(LASTS);var st=from.pop();loadState(JSON.parse(st.s));LASTS=st;LASTT=0;S.tab=tab;VB=vb;setVB();draw();panel();try{if(window.re3)window.re3()}catch(e){}}finally{UNDOING=false}histBtns();return true}
 $('und').onclick=function(){if(!histGo(HIST,FUT))toast('Nada pra desfazer')};
 $('red').onclick=function(){if(!histGo(FUT,HIST))toast('Nada pra refazer')};
-var K=1,OX=70,OY=50;
+var K=1,OX=70,OY=50,OYE=50;
+/* TOQUE-430 (auditoria 24/11): no celular os botões 🔓 🗑 🧮 ficam por cima do topo do desenho e o móvel ali não pega o toque;
+   devolve (em unidades do desenho) até onde vão os botões, pra descer o desenho só no espaço que sobra embaixo. No computador dá menos que a margem e nada muda. */
+function topoLivre(){try{var sv=$('svg'),r=sv.getBoundingClientRect();if(!r.width)return 0;var b=0;['lockAll','delMod','cutc'].forEach(function(id){var e=$(id);if(!e||e.hidden)return;var q=e.getBoundingClientRect();if(q.height)b=Math.max(b,q.bottom-r.top)});return b>0?(b+4)*900/r.width:0}catch(_){return 0}}
 function cbGv(v){return v.cbG===undefined?25:v.cbG}
 function cbRv(v){return v.cbR===undefined?cbGv(v)+30:v.cbR}
 function cbTv(v){return v.cbT===undefined?0:v.cbT}
@@ -1095,9 +1098,9 @@ function rpDims(L,B,k){var a=(S.rp||[]).filter(function(q){return q.id===RPSEL})
  /* livre até o chão e até o teto */var xr=x1-12;window.__RPCOL={ids:C.map(function(q){return q.id}),top:top};if(b0>0.5)vline(xr,B-b0*k,B,'livre '+fmt(b0)+' até o chão ✎',rdc,-6,'chao');if(top-b1>0.5)vline(xr,B-top*k,B-b1*k,S.Hm?'livre '+fmt(top-b1)+' até o teto ✎':'⚠ pé-direito não medido',S.Hm?rdc:'#b54708',-6,'teto');
  return o+'</g>'}
 function draw(){try{if(!window.SOLO2D)confineAll()}catch(e){}try{if(!window.SOLO2D)frStAll()}catch(e){}try{regDet()}catch(e){}try{histTick()}catch(e){}
- if(PLV){$('svg').innerHTML='<style>#plg text{pointer-events:none}</style><g id="plg"'+(typeof plAngT==='function'?plAngT():'')+'>'+plantaSvg()+'</g>';return}
+ if(PLV){OY=OYE;var tlP_=topoLivre();if(tlP_>OY+10){var DP_=typeof roomD==='function'?roomD():2600,kP_=Math.min(780/S.W,440/DP_);OY+=Math.max(0,Math.min(tlP_-(OY+10),440-DP_*kP_))}$('svg').innerHTML='<style>#plg text{pointer-events:none}</style><g id="plg"'+(typeof plAngT==='function'?plAngT():'')+'>'+plantaSvg()+'</g>';return}
 
- var H1_=S.H;try{H1_=+wallCfg('F').h1||S.H}catch(_){}var HX_=Math.max(S.H,H1_);var m=S.m,k=Math.min(780/S.W,(470-(typeof belowEx==='function'?belowEx():0))/HX_);K=k;/* teto com desnível mais alto na direita: o desenho desce pra caber a ponta alta */OY=50+Math.max(0,HX_-S.H)*k;
+ var H1_=S.H;try{H1_=+wallCfg('F').h1||S.H}catch(_){}var HX_=Math.max(S.H,H1_);var m=S.m,k=Math.min(780/S.W,(470-(typeof belowEx==='function'?belowEx():0))/HX_);K=k;/* teto com desnível mais alto na direita: o desenho desce pra caber a ponta alta */OYE=50+Math.max(0,HX_-S.H)*k;OY=OYE;var tl_=topoLivre();if(tl_>OY){var hu_=HX_*k+(typeof belowEx==='function'?belowEx():0);OY+=Math.max(0,Math.min(tl_-OY,470-hu_))}
  var L=OX,T=OY,R=L+S.W*k,B=T+S.H*k,s='';
  s+='<rect x="'+L+'" y="'+T+'" width="'+(R-L)+'" height="'+(B-T)+'" fill="#fafafa" stroke="#9aa0a8" stroke-dasharray="7 5"/>';
  if(Math.abs(H1_-S.H)>0.5&&!window.SOLO2D){var yR_=B-H1_*k;s+=(H1_>S.H?'<polygon points="'+L+','+T+' '+R+','+yR_+' '+R+','+T+'" fill="#fafafa" stroke="none"/>':'<polygon points="'+L+','+T+' '+R+','+T+' '+R+','+yR_+'" fill="#e6e8eb" stroke="none"/>')+'<line x1="'+L+'" y1="'+T+'" x2="'+R+'" y2="'+yR_+'" stroke="#6b7480" stroke-width="2"/>'}

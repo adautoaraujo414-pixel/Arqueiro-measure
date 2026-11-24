@@ -13,3 +13,10 @@
   - Depois: 0 em todos. O item 6 já era 0 antes.
 
 Roteiros em `roteiros/`. `sec.js` tira as caixas do editor e `render.py` desenha.
+
+## Custos fixos (pedido do Adauto 24/11)
+- `custos_fixos_1366.png` e `custos_fixos_430.png`: a caixa "Custos fixos deste orçamento".
+  - Cada custo com o valor, a base do % e se é interno ou "mostrar ao cliente".
+  - Botões: Desativar, Editar, Excluir, PDF embutido ou discriminado, e a biblioteca de recorrentes.
+- `custos_fixos_valor_1366.png` e `custos_fixos_valor_430.png`: o alto da tela de Valores, com os custos no total.
+- Roteiro: `roteiros/custos_fixos.js`.

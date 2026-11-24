@@ -18182,4 +18182,106 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "sem marca - · aviso true · aplicou 2 · 440x37x1.5,440x37x1.5 · aviso depois false")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // CUSTOS FIXOS (pedido do Adauto 24/11): + Adicionar custo fixo (nome, descrição, valor), editar, desativar, excluir; recorrente guardado na
+    // biblioteca e reaproveitado em outro projeto (cópia); salvar, reabrir e duplicar o projeto. Entra no valor ao centavo, depois da margem
+    func testCustosFixosAdicionarEditarDesativarExcluirRecorrenteSalvarReabrirEDuplicar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(){loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;S.preco=0};
+        var Q=function(s){var e=document.querySelector('#cfxbox '+s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-cfxi="'+k+'"]');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},clk=function(s){Q(s).click()};
+        proj();ensureProj();var base=budget().sale;vlOpen();await W(200);
+        clk('[data-cfx="add|"]');R.teclado=Q('[data-cfxi="v"]').getAttribute('inputmode')+' · nome '+(Q('[data-cfxi="n"]').getAttribute('inputmode')||'texto');inp('n','Montagem');inp('d','equipe de 2');inp('v','350');clk('[data-cfxf="cli|1"]');clk('[data-cfx="sav|"]');await W(100);
+        R.add=S.cfx.length+' · '+S.cfx[0].n+' · '+S.cfx[0].d+' · '+S.cfx[0].v+' · cli '+S.cfx[0].cli+' · soma '+r2(budget().sale-base);R.input=Q('[data-cfx="add|"]')?'ok':'';
+        clk('[data-cfx="edp|'+S.cfx[0].id+'"]');inp('v','400,10');clk('[data-cfx="sav|"]');R.edit=r2(budget().sale-base);
+        clk('[data-cfx="tog|'+S.cfx[0].id+'"]');R.desativado=r2(budget().sale-base)+' · on '+S.cfx[0].on;clk('[data-cfx="tog|'+S.cfx[0].id+'"]');R.ativado=r2(budget().sale-base);
+        /* % do custo dos materiais (antes da margem: não muda a margem) */clk('[data-cfx="add|"]');inp('n','Taxa');inp('v','5');clk('[data-cfxf="t|P"]');clk('[data-cfxf="base|mat"]');clk('[data-cfx="sav|"]');var b=budget();R.pct=r2(b.sale-base)+' = '+r2(400.1+r2(b.tot*0.05))+' · margem igual '+(r2(b.sale0)===r2(budget().sale0));
+        clk('[data-cfx="dlp|'+S.cfx[1].id+'"]');R.excluiu=S.cfx.length+' · '+r2(budget().sale-base);
+        /* recorrente */clk('[data-cfx="add|"]');inp('n','Frete');inp('v','150');clk('[data-cfxf="rec|1"]');clk('[data-cfx="sav|"]');R.biblioteca=(PR.cfxLib||[]).map(function(c){return c.n+' '+c.v}).join();
+        /* salvar, reabrir, duplicar */saveNow();var v1=budget().sale,st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.reabre=(r2(budget().sale)===r2(v1))+' · '+S.cfx.length;
+        var a=pLoadAll(),n0=a.length,bt=document.createElement('button');bt.dataset.pd=CUR;document.getElementById('clm').appendChild(bt);bt.click();bt.remove();var a2=pLoadAll(),cp=a2[a2.length-1];loadState(JSON.parse(JSON.stringify(cp.current)));draw();R.duplica=(a2.length===n0+1)+' · '+(S.cfx||[]).length+' · '+(r2(budget().sale)===r2(v1));
+        /* outro projeto: aplica da biblioteca (cópia com a origem) */proj();PR.cfxLib=JSON.parse(JSON.stringify(a2.length?[{id:'L1',n:'Frete',d:'',t:'R',v:150,base:'',cli:0,on:1,src:''}]:[]));var b2=budget().sale;vlOpen();await W(100);clk('[data-cfx="apl|L1"]');R.reusa=(S.cfx||[]).map(function(c){return c.n+' '+c.v+' src '+c.src}).join()+' · soma '+r2(budget().sale-b2);
+        document.getElementById('vlx').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["teclado"] as? String, "decimal · nome texto", "valor com o teclado numérico (iPhone, iPad, Android); nome com o de texto")
+        XCTAssertEqual(o["add"] as? String, "1 · Montagem · equipe de 2 · 350 · cli 1 · soma 350")
+        XCTAssertEqual(o["edit"] as? Double, 400.1)
+        XCTAssertEqual(o["desativado"] as? String, "0 · on 0", "desativado não soma")
+        XCTAssertEqual(o["ativado"] as? Double, 400.1)
+        let pct = (o["pct"] as? String ?? "").components(separatedBy: " = ")
+        XCTAssertEqual(pct.first, pct.last?.components(separatedBy: " · ").first, "5% do custo dos materiais, ao centavo")
+        XCTAssertTrue((o["pct"] as? String ?? "").hasSuffix("margem igual true"))
+        XCTAssertEqual(o["excluiu"] as? String, "1 · 400.1")
+        XCTAssertEqual(o["biblioteca"] as? String, "Frete 150")
+        XCTAssertEqual(o["reabre"] as? String, "true · 2")
+        XCTAssertEqual(o["duplica"] as? String, "true · 2 · true")
+        XCTAssertEqual(o["reusa"] as? String, "Frete 150 src L1 · soma 150")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CUSTOS FIXOS: PDF discriminado × embutido com o mesmo total ao centavo (com desconto também); custo INTERNO (padrão) nunca aparece:
+    // nem linha, nem nome, nem descrição no orçamento em PDF ou no link do cliente; % do valor final pela fórmula fechada (soma = total)
+    func testCustosFixosPdfDiscriminadoEmbutidoMesmoTotalInternoNuncaApareceNoPdfNemNoLink() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(){loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;S.preco=0};
+        var Q=function(s){var e=document.querySelector('#cfxbox '+s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-cfxi="'+k+'"]');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},clk=function(s){Q(s).click()};
+        proj();ensureProj();S.cfx=[cfxLimpa({n:'Montagem',d:'equipe de 2',t:'R',v:350,cli:1}),cfxLimpa({n:'SEGREDO-INTERNO',d:'DESCRICAO-SIGILOSA',t:'R',v:120.5}),cfxLimpa({n:'Comissao-XYZ',t:'P',v:10,base:'fin'})];
+        var b=budget(),X=r2(b.sale0+350+120.5),F=X/0.9;R.final=(r2(b.sale)===r2(X+r2(F*0.1)))+' · padrão interno '+cfxLimpa({n:'a',v:1}).cli;
+        var soma=function(q){return r2(q.items.reduce(function(a,i){return a+i.value},0))};var qe=quoteData();S.cfxModo='disc';var qd=quoteData();
+        R.total=(qe.total===qd.total)+' · emb '+(soma(qe)===qe.total)+' · disc '+(soma(qd)===qd.total)+' · linha '+qd.items.some(function(i){return i.desc==='Montagem · equipe de 2'&&i.value===350})+' · emb sem linha '+!qe.items.some(function(i){return /Montagem/.test(i.desc)});
+        S.desc=10;var qx=quoteData();R.desconto=(soma(qx)===qx.base)+' · '+(qx.total===r2(qx.base*0.9));delete S.desc;
+        var tudo=JSON.stringify([qe,qd,qx]);R.pdf=/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ/.test(tudo);
+        var cap=null,ce=window.cutEncode;window.cutEncode=cutEncode=function(x){cap=x;return Promise.resolve('x')};try{document.body.insertAdjacentHTML('beforeend','<button id="__vcli" data-vcli="1"></button>');document.getElementById('__vcli').click();await W(150)}finally{window.cutEncode=cutEncode=ce;var bb=document.getElementById('__vcli');if(bb)bb.remove()}
+        R.link=cap?(/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ|Montagem/.test(JSON.stringify(cap))?'vazou':'limpo'):'sem link';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["final"] as? String, "true · padrão interno 0")
+        XCTAssertEqual(o["total"] as? String, "true · emb true · disc true · linha true · emb sem linha true")
+        XCTAssertEqual(o["desconto"] as? String, "true · true")
+        XCTAssertEqual(o["pdf"] as? Bool, false, "custo interno não aparece no PDF")
+        XCTAssertEqual(o["link"] as? String, "limpo", "nenhum custo vai no link do cliente")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CUSTOS FIXOS: os 3 campos antigos (mão de obra, custo fixo, despesas extras) continuam iguais; "Passar para a lista" não soma duas vezes;
+    // projeto antigo (sem custos) dá o mesmo valor ao centavo com margem, campos antigos, desconto e valor fechado; mudar a biblioteca não mexe no
+    // projeto A, e o projeto B novo pega o valor novo; os preços sem biblioteca ficam iguais (prices.json)
+    func testCustosFixosSemDuplicidadeComCamposAntigosProjetoAntigoMesmoValorEBibliotecaNaoMudaProjeto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(){loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;S.preco=0};
+        var Q=function(s){var e=document.querySelector('#cfxbox '+s);if(!e)throw new Error('sem '+s);return e},inp=function(k,v){var e=Q('[data-cfxi="'+k+'"]');e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}))},clk=function(s){Q(s).click()};
+        proj();var pr0=JSON.stringify(PR);var v0=[budget().sale,vlFin(budget())];PR.moR=200;PR.cfR=55.5;var v1=budget().sale;S.desc=7;var v2=vlFin(budget());delete S.desc;S.preco=3000;var v3=vlFin(budget());S.preco=0;
+        R.antigo=[r2(v1-v0[0]),r2(v2),r2(v3)].join(' · ');proj();var ov=[];ov.push(budget().sale);PR.moR=200;PR.cfR=55.5;ov.push(budget().sale);S.desc=7;ov.push(vlFin(budget()));var oq=quoteData();ov.push(oq.total);ov.push(oq.items.map(function(i){return i.value}).join('/'));delete S.desc;S.preco=3000;ov.push(vlFin(budget()));ov.push(quoteData().total);S.preco=0;R.mesmoValor=JSON.stringify(ov);proj();PR.moR=200;PR.cfR=55.5;R.precosIguais=JSON.stringify(PR)===JSON.stringify(Object.assign(JSON.parse(pr0),{moR:200,cfR:55.5}));
+        vlOpen();await W(100);var Q2=function(s){return document.querySelector('#cfxbox '+s)};
+        clk('[data-cfx="add|"]');inp('n','Mão de obra');inp('v','200');clk('[data-cfx="sav|"]');R.bloqueiaNome=(!S.cfx||!S.cfx.length)+' · '+/campos antigos/.test(TS[TS.length-1]||'');clk('[data-cfx="can|"]');
+        clk('[data-cfx="mig|"]');R.migra=r2(budget().sale)===r2(v1)?'mesmo valor':'mudou';R.lista=(S.cfx||[]).map(function(c){return c.n+' '+c.v}).join()+' · off '+Object.keys(S.vlxOff||{}).join();
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));R.reabreMigrado=r2(budget().sale)===r2(v1);
+        clk2=function(){};document.getElementById('vlx').click();
+        /* biblioteca × projeto */proj();PR.cfxLib=[{id:'L1',n:'Frete',d:'',t:'R',v:150,base:'',cli:0,on:1,src:''}];vlOpen();await W(100);clk('[data-cfx="apl|L1"]');var A=JSON.stringify(snapState()),vA=budget().sale;
+        clk('[data-cfx="edl|L1"]');inp('v','180');clk('[data-cfx="sav|"]');R.A=r2(budget().sale)===r2(vA)?'igual':'mudou';R.atualizar=!!Q2('[data-cfx^="upd|"]');
+        proj();PR.cfxLib=[{id:'L1',n:'Frete',d:'',t:'R',v:180,base:'',cli:0,on:1,src:''}];var b0=budget().sale;vlOpen();await W(100);clk('[data-cfx="apl|L1"]');R.B=r2(budget().sale-b0);
+        loadState(JSON.parse(A));vlOpen();await W(100);clk('[data-cfx^="upd|"]');R.Aatualizado=(S.cfx[0].v)+'';
+        document.getElementById('vlx').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        /* mesmos números da versão de antes (ponta de claude/fechamento-code1), ao centavo e até o float sem arredondar: margem 2, campos antigos, desconto 7%, valor fechado */
+        XCTAssertEqual(o["mesmoValor"] as? String, "[889.6282213822807,1145.1282213822806,1064.97,1064.97,\"640.7/504.43\",3000,3000]", "projeto sem custos novos: o mesmo valor de antes")
+        XCTAssertEqual(o["precosIguais"] as? Bool, true, "sem biblioteca, os preços guardados não ganham campo novo")
+        XCTAssertEqual(o["bloqueiaNome"] as? String, "true · true", "o mesmo custo não entra duas vezes (campo antigo + lista)")
+        XCTAssertEqual(o["migra"] as? String, "mesmo valor", "passar pra lista não muda o valor")
+        XCTAssertEqual(o["lista"] as? String, "Mão de obra 200,Custo fixo 55.5 · off mo,cf")
+        XCTAssertEqual(o["reabreMigrado"] as? Bool, true)
+        XCTAssertEqual(o["A"] as? String, "igual", "mudar a biblioteca não mexe no projeto que já tem o custo")
+        XCTAssertEqual(o["atualizar"] as? Bool, true, "o projeto mostra o botão pra atualizar, se a pessoa quiser")
+        XCTAssertEqual(o["B"] as? Double, 180, "o projeto novo pega o valor novo")
+        XCTAssertEqual(o["Aatualizado"] as? String, "180")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

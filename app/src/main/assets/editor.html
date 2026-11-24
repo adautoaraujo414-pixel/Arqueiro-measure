@@ -15079,4 +15079,13 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  ['pointerup','pointercancel'].forEach(function(n){window.addEventListener(n,function(e){if(!TA||e.pointerId!==TA.pid)return;if(n==='pointerup'&&Math.hypot(e.clientX-TA.x,e.clientY-TA.y)<=4)TQ={id:TA.id,x:TA.x,y:TA.y,up:Date.now()};else TQ=null;TA=null},true)});
 })();
 </script>
+<script>
+/* B21 (checklist; auditoria final 24/11): o 3D aberto acompanha QUALQUER mudança que redesenha o projeto (draw), e não só os comandos que
+   lembravam de chamar re3 (parede, vão virando gavetas e apagar módulo ficavam atrasados até fechar e abrir o 3D). Uma montagem por quadro, no máximo;
+   se o próprio comando já montou depois da mudança, não monta de novo. Com o 3D fechado, nada muda. */
+(function(){if(typeof draw!=='function'||typeof window.re3!=='function')return;var DV=0,BV=-1,dentro=0,ag=0;
+ var r0=window.re3;window.re3=function(){dentro++;BV=DV;try{return r0.apply(this,arguments)}finally{dentro--}};
+ var vai=function(){ag=0;if(BV===DV)return;try{var v=document.getElementById('v3');if(!v||v.hidden)return;window.re3()}catch(_){}};
+ var d0=draw;draw=window.draw=function(){var r=d0.apply(this,arguments);if(!dentro){DV++;if(!ag){ag=1;setTimeout(vai,16)}}return r};})();
+</script>
 </body></html>

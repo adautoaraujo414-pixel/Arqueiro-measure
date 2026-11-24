@@ -251,7 +251,7 @@ def main():
     ap.add_argument('--url', default='', help='endereço do editor (padrão: o que o app abriu, em português)')
     ap.add_argument('--tempo', type=int, default=300, help='limite por teste, em segundos')
     ap.add_argument('--sem-expr', action='store_true', help='não avaliar os asserts com expressão Swift (só o regex de sempre)')
-    ap.add_argument('--janela', default='1366x768', help='tamanho da área do editor nos testes (notebook comum); vazio = o tamanho real da janela')
+    ap.add_argument('--janela', default='1366x768', help='tamanho da área do editor nos testes (notebook comum), LxA ou LxAxDENSIDADE (ex.: 430x900x2, como um celular); vazio = o tamanho real da janela')
     a = ap.parse_args()
     os.makedirs(a.saida, exist_ok=True)
     T = [t for t in testes(a.swift) if not a.so or re.search(a.so, t[0])]
@@ -266,8 +266,10 @@ def main():
     if a.janela:
         # mesma área em qualquer computador de teste (a tela do GitHub é pequena: 1024×768)
         try:
-            w, h = [int(x) for x in a.janela.lower().split('x')]
-            c.chama('Emulation.setDeviceMetricsOverride', {'width': w, 'height': h, 'deviceScaleFactor': 0, 'mobile': False}, 20)
+            # 24/11: um 3º número opcional é a densidade da tela (430x900x2 = celular; o iOS roda os mesmos testes a 430×900 com densidade 3)
+            pz = [float(x) for x in a.janela.lower().split('x')]
+            w, h, dz = int(pz[0]), int(pz[1]), (pz[2] if len(pz) > 2 else 0)
+            c.chama('Emulation.setDeviceMetricsOverride', {'width': w, 'height': h, 'deviceScaleFactor': dz, 'mobile': False}, 20)
         except Exception as e:
             print('não deu pra fixar o tamanho da área (%s): os testes usam o tamanho real da janela' % str(e)[:120], flush=True)
     info = {}

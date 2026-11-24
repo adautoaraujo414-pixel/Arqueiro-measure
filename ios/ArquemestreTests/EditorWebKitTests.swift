@@ -18720,6 +18720,12 @@ final class EditorWebKitTests: XCTestCase {
            else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
            if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
            if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* qualquer outra linha do desenho (etiqueta, recorte, furação) em cima de texto */var OL=[];[].forEach.call(s.querySelectorAll('line,path,circle,polyline'),function(l){if(l.closest('defs')||l.closest('[data-okmk]'))return;if(l.tagName==='line'&&String(l.getAttribute('stroke')).toLowerCase()==='#1f9d55')return;var b=box(l),sw=(+l.getAttribute('stroke-width')||1)/2;OL.push({el:l,b:{x0:b.x0-sw,x1:b.x1+sw,y0:b.y0-sw,y1:b.y1+sw}})});
+          var placa=function(t,tb){var p=t.previousElementSibling;if(!p||p.tagName!=='rect')return false;var f=String(p.getAttribute('fill')||'').toLowerCase();if(f!=='#fff'&&f!=='#ffffff')return false;if((+(p.getAttribute('fill-opacity')||1))<.85)return false;return dentro(tb,box(p))};
+          var segsDe=function(l){if(l.tagName==='line')return [[+l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]];if(l.tagName!=='path')return null;var d=String(l.getAttribute('d')||''),tk=d.match(/[MLHVZ]|-?[\d.]+/gi)||[],S_=[],cx=0,cy=0,sx=0,sy=0,i=0,c='';while(i<tk.length){var t=tk[i];if(/[MLHVZ]/i.test(t)){c=t.toUpperCase();i++;if(c==='Z'){S_.push([cx,cy,sx,sy]);cx=sx;cy=sy}continue}if(c==='M'){cx=+tk[i];cy=+tk[i+1];sx=cx;sy=cy;i+=2;c='L'}else if(c==='L'){S_.push([cx,cy,+tk[i],+tk[i+1]]);cx=+tk[i];cy=+tk[i+1];i+=2}else if(c==='H'){S_.push([cx,cy,+tk[i],cy]);cx=+tk[i];i++}else if(c==='V'){S_.push([cx,cy,cx,+tk[i]]);cy=+tk[i];i++}else return null}return S_};
+          var segHit=function(l,tb){var SG=segsDe(l);if(!SG)return cruza(l.__b,tb);var w=(+l.getAttribute('stroke-width')||1)/2+.5;return SG.some(function(q){var x1=q[0],y1=q[1],x2=q[2],y2=q[3],n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false})};
+          var segHit0=function(l,tb){if(l.tagName!=='line')return cruza(l.__b,tb);var x1=+l.getAttribute('x1'),y1=+l.getAttribute('y1'),x2=+l.getAttribute('x2'),y2=+l.getAttribute('y2'),w=(+l.getAttribute('stroke-width')||1)/2+.5,n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false};
+          [].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).forEach(function(t){var tb=box(t);OL.forEach(function(o){o.el.__b=o.b;if(t.parentNode===o.el.parentNode&&o.el.closest('[data-callout]'))return;/* linha pintada antes do texto e o texto em plaquinha branca por cima dela: a linha fica escondida embaixo, a medida aparece */if((placa(t,tb)||(t.getAttribute('paint-order')==='stroke'&&(+t.getAttribute('stroke-width')||0)>=3))&&(o.el.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_FOLLOWING))return;/* linha pintada antes da peça (por baixo dela): o fundo da peça cobre a linha */var dono_=t.closest('g[data-cp],g[data-lab]');if(dono_&&!o.el.closest('g[data-cp],g[data-lab]')&&(o.el.compareDocumentPosition(dono_)&Node.DOCUMENT_POSITION_FOLLOWING)){var rr_=dono_.querySelector(':scope > rect');if(rr_&&dentro(tb,box(rr_)))return}if(cruza(o.b,tb)&&segHit(o.el,tb))R.ruins.push('chapa '+si+' · linha '+o.el.tagName+(o.el.closest('[data-callout]')?'(etiqueta)':o.el.closest('[data-cp]')?'(peça '+String(o.el.getAttribute('stroke'))+')':'(chapa)')+' em cima de "'+String(t.textContent).slice(0,24)+'"')})});
           /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
           /* ordem: texto da peça desenhado depois das linhas de fita */
           pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
@@ -18736,10 +18742,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cenas"] as? Bool, true)
         XCTAssertEqual(o["pecas"] as? Bool, true)
         XCTAssertEqual(o["textos"] as? Bool, true)
-        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de outra linha (etiqueta, recorte, furo), de contorno, de outro texto ou fora da chapa")
         XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
         XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
         XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15 × veio (Adauto 24/11, ordem final): na caixa amadeirada com veio, o fundo de 15 vai na chapa da caixa e segue a regra de rotação
+    // das outras peças dela: não gira pra caber; o número de chapas é o do otimizador com essa regra (nenhum encaixe forçado). Peça alta que não cabe
+    // sem girar fica na lista "maior que a chapa", igual às portas altas na cor já ficam hoje. Caixa branca sem veio: gira, contagem do otimizador
+    func testFundo15NaChapaDaCaixaRespeitaVeioSemGirarESemEncaixeForcado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,v0=PR.veio,a0=JSON.stringify(S.acab||null);
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(intK,veio,mm){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();['Balcão 2 portas','Aéreo 2 portas','Torre quente (forno)','Guarda-roupa 2 vãos'].forEach(function(n){newTpl(T(n))});S.mods.forEach(function(m){m.fundo=true;m.fundoMan=1;m.fundoMm=6});S.acab=Object.assign({},S.acab||{},{int:intK,intNome:intK==='amad'?'Carvalho':''});PR.veio=veio;draw();/* pelo caminho do app: aplicar a todos */fundoTodos(mm);var u_=document.getElementById('f15u');if(u_)u_.remove();SPC={}};
+        var olha=function(){var pl=sheetPlan(1),o={nos:0,fora:0,girados:0,grupos:[],ok:true};pl.groups.forEach(function(g){var tem=false,P=[];(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){P.push({w:u.p.w,h:u.p.h,lab:u.p.lab});if(/^Fundo( \(|$)/.test(u.p.lab)){tem=true;o.nos++;if(u.r)o.girados++}})});(g.big||[]).forEach(function(p){if(/^Fundo( \(|$)/.test(p.lab)){tem=true;o.fora++}});if(!tem)return;var rot=!(PR.veio&&(g.t==='c'||(g.t==='b'&&ACAB().int!=='branco'))),n1=packSheets(P,pl.SW,pl.SH,pl.kf,rot).sheets.length;if(n1!==g.n)o.ok=false;o.grupos.push(g.key+' gira '+rot+' · '+g.n+' chapas = otimizador '+n1)});return o};
+        /* caixa amadeirada com veio: o fundo de 15 vai na chapa da caixa e segue a regra das outras peças dela (não gira pra caber) */
+        proj('amad',true,15);var a=olha();R.veio=a.grupos.join(' | ')+' · fundos na chapa '+a.nos+' · girados '+a.girados+' · maiores que a chapa sem girar '+a.fora;R.veioOk=a.ok&&a.girados===0;
+        /* as portas altas na cor já ficam assim com veio (mesma regra): o fundo não ganha regra diferente */var portas=sheetPlan(1).groups.reduce(function(s,g){return s+(g.big||[]).filter(function(p){return /^Porta/.test(p.lab)}).length},0);R.portasForaComVeio=portas;
+        /* caixa branca sem veio: gira, a contagem é a do otimizador */proj('branco',false,15);var b=olha();R.branco=b.grupos.join(' | ')+' · fundos na chapa '+b.nos+' · fora '+b.fora;R.brancoOk=b.ok;
+        PR.veio=v0;S.acab=JSON.parse(a0)||undefined;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["veio"] as? String, "b|15| gira false · 4 chapas = otimizador 4 · fundos na chapa 2 · girados 0 · maiores que a chapa sem girar 2")
+        XCTAssertEqual(o["veioOk"] as? Bool, true, "com veio: nenhum fundo girado, contagem igual ao otimizador sem girar")
+        XCTAssertEqual(o["portasForaComVeio"] as? Int, 4, "mesma regra das portas altas (já era assim)")
+        XCTAssertEqual(o["branco"] as? String, "b|15| gira true · 5 chapas = otimizador 5 · fundos na chapa 4 · fora 0")
+        XCTAssertEqual(o["brancoOk"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

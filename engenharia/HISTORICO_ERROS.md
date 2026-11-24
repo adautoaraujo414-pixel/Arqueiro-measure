@@ -2220,3 +2220,11 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Na 1ª versão da conta, 103 textos ficavam em cima de outro texto (número da sobra deitado × em pé; "furo dobradiça" × nome da porta). Corrigido e incluído no teste.
   - 45 peças muito estreitas (réguas, molduras de 30 com fita) ficavam sem nada legível dentro. Ganharam etiqueta ao lado, com linha.
   - Bateria: o Chromium da bateria parou no limite de 30 min do segundo plano (eu não tinha dado tempo maior). A rodada de 1366 do `f66075bf` parou em 228 ok, 0 falha real. Refeita no SHA final com o navegador no limite de 2 h.
+- **Conta da legibilidade ampliada (ordem final do Adauto: "nenhuma linha sobrepõe ou esconde medida"):** passou a valer para toda linha do desenho, não só a fita. Isso pegou 258 casos: furos da dobradiça/sistema 32 debaixo do #n e das medidas; linha da etiqueta passando por cima de outra peça; número da sobra. Correções:
+  - furos e linhas da furação/recorte são obstáculo pros textos;
+  - a linha da etiqueta procura caminho livre e, sem ele, vai por baixo das peças (o fundo opaco da peça cobre);
+  - número da sobra com halo da cor do fundo da chapa;
+  - #n da peça com recorte em plaquinha branca;
+  - o bloco do meio do recorte encolhe quando o recorte é baixo (só aparecia no PDF).
+  - A conta do contorno tracejado do recorte passou a olhar segmento por segmento (antes tratava o retângulo como cheio).
+- **Veio:** com caixa amadeirada e veio, os fundos altos (torre e guarda-roupa) não cabem sem girar e ficam como "maior que a chapa", fora da contagem. É igual às portas altas na cor, que já ficavam assim. Não mudei a regra do veio; pergunta enviada.

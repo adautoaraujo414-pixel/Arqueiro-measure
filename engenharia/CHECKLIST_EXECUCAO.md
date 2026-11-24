@@ -345,3 +345,5 @@ Linhas que estavam em NÃO FEITO, PARCIAL ou SEM VALIDAÇÃO com "= inicial": 93
 | F15-7 | Fita e furação do fundo de 15 | regra de hoje (sem fita; uniões pela geometria) | `testFundo15Orcamento…` (fita) | **Pergunta ao Adauto enviada** |
 | ZC-1 | Zoom no plano de corte: pinça, roda, ＋ − Ajustar à tela, arrasto com limite, gestos sem disparar toque, toque longo e 2 toques com zoom, sheetPlan igual | feito | `testZoomNoPlanoDeCorte…` + s47 (toque e mouse reais) | FEITO, aguarda auditoria |
 | CL-1 | Plano de corte legível: texto acima e afastado da fita, peça estreita, sem texto sobre texto, tela 1366/430, zoom e PDF | feito | `testPlanoDeCorteLegivel…` + s47 (141 projetos, PDF) | FEITO, aguarda auditoria |
+| F15-8 | Respostas do Adauto: canto opção A (externas fixas), fita opção A (sem fita) | feito, números fixados no teste | `testFundo15PorModulo…` | FEITO |
+| F15-9 | Fundo de 15 na chapa da caixa respeitando veio (não gira, sem encaixe forçado) | feito | `testFundo15NaChapaDaCaixaRespeitaVeio…` | FEITO. **Pergunta: sentido do veio de peça alta (fundos e portas altas)** |

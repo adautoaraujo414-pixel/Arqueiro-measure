@@ -2208,3 +2208,8 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
   - Causa ainda não comprovada. Hipótese: o `app.tap()` no meio da tela fecha o balão do iPad antes da escolha.
   - Rodada `7751eeb`: sem esse toque, com a tela registrada no seletor aberto e depois do toque.
+- **FUNDO-15 (Code 2, 24/11), achados durante o trabalho:**
+  - 1º aviso de vizinho pegava a maior entrada entre peças. A porta (cerca de 15 mm na frente) já encostava antes, e isso escondia os 9 mm novos da caixa. Corrigido para o contorno do módulo (com as portas), só entre paredes diferentes ou com o canto, com "antes X mm" no texto.
+  - 1º aviso de pedra disparava na cozinha de exemplo. Mas a pedra encaixada acompanha a frente sozinha (regra de hoje, `stFitCalc`/`stFitEq`, igual na base `553745a1`). Agora só avisa da pedra que a pessoa deixou com medida própria, e a prévia mostra a pedra encaixada que acompanha (606 → 615).
+  - O nome do módulo no aviso vinha "Módulo N": `modLabel` está fora do escopo global. Passou a usar o mesmo nome da lista de corte.
+  - Ambiente: o servidor local foi bloqueado pela permissão desta sessão. Bateria, s46 e PNGs rodaram com o editor aberto por file:// (mesmo arquivo).

@@ -332,3 +332,14 @@ Linhas que estavam em NÃO FEITO, PARCIAL ou SEM VALIDAÇÃO com "= inicial": 93
 |---|---|---|---|---|---|---|---|---|---|---|
 | N25 | Módulos curvos (junção 7) | sem escopo escrito | P2 | definir escopo | — | — | — | — | — | ADIADO PELO ADAUTO 24/11 (fica para a próxima atualização) |
 
+
+## Fundo MDF 15 mm (ramo `claude/fundo-15mm`, Code 2, 24/11)
+| ID | Pedido | Status | Teste | Status atual |
+|---|---|---|---|---|
+| F15-1 | 3 e 6 mantidos, 15 (MDF) por módulo | feito | `testFundo15PorModulo…` | FEITO, aguarda auditoria do Code 1 |
+| F15-2 | Aplicar a todos do ambiente, com prévia e desfazer | feito | `testFundo15AplicarATodos…` | FEITO, aguarda auditoria |
+| F15-3 | Medidas internas e profundidade (inferior, aéreo, torre, guarda-roupa, canto, pia), avisos sem mover | feito | `testFundo15PorModulo…`, `testFundo15AplicarATodos…` | FEITO. **Pergunta ao Adauto: canto em L com 15 (vão −9)** |
+| F15-4 | 2D e 3D com a espessura real | feito | `testFundo15PorModulo…` | FEITO |
+| F15-5 | Lista, orçamento (MDF 15), corte (mesma chapa, sem chapa a mais), DXF | feito | `testFundo15Orcamento…` | FEITO |
+| F15-6 | Projeto antigo intacto; salvar, reabrir, duplicar | feito | `testFundo15ProjetoAntigo…`, s46 (141 projetos, 0 diferença) | FEITO |
+| F15-7 | Fita e furação do fundo de 15 | regra de hoje (sem fita; uniões pela geometria) | `testFundo15Orcamento…` (fita) | **Pergunta ao Adauto enviada** |

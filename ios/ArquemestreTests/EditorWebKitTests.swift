@@ -18473,4 +18473,162 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["n"] as? String, "0", "nenhuma parte da dobradiça dentro de outra peça no móvel girado")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // FUNDO-15 (Adauto 24/11): fundo de MDF 15 mm além do 3 e do 6, escolhido por módulo no painel (Fundo). Regra de hoje, sobreposto: a profundidade
+    // total é a do módulo + o fundo (D = d + fundo) e as medidas internas não mudam (inferior, aéreo, torre, guarda-roupa). No canto em L a regra de
+    // hoje mantém a medida de fora em cada parede e o fundo do outro lado fica por dentro (base, prateleira, vão da porta −9; tamponamento da ponta +9).
+    // 2D (planta) e 3D com a espessura real
+    func testFundo15PorModuloInferiorAereoTorreGuardaRoupaCantoMedidasInternasProfundidade2DE3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var FU=/^Fundo( \(|$)/,sig=function(m){return partsOf(m).filter(function(p){return !FU.test(p.name)}).map(function(p){return p.name+' '+p.cl+'x'+p.cw+' m'+(p.mat||'')+' '+(p.note||'')}).sort().join(';')};
+        var fun=function(m){return cutLines(m).filter(function(l){return /^Fundo/.test(l.names[0])}).map(function(l){return l.names.join('+')+' '+l.L+'x'+l.W+' m'+l.mat}).sort().join(';')};
+        var cx=function(){__build();var B=__boxes(),f=B.filter(function(b){return /^0:Fundo( \(lado do canto\))?$/.test(String(b.nm))}),lt=B.filter(function(b){return /^0:(Lateral|Base inferior)/.test(String(b.nm))});return {f:f.map(function(b){return Math.round(Math.min(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0)*10)/10}).sort().join(','),z:Math.round(Math.min.apply(null,lt.map(function(b){return b.z0}))*10)/10}};
+        var pl=function(){var s=plantaSvg(),mm=/data-pm="0" points="([^"]+)"/.exec(s);if(!mm)return NaN;return +mm[1].trim().split(/\s+/)[2].split(',')[1]/PLK};
+        var casos=[['inferior','Balcão 2 portas + 4 gavetas'],['aereo','Aéreo 2 portas'],['torre','Torre quente (forno)'],['guarda','Guarda-roupa 3 vãos'],['canto','Canto L guarda-roupa · esquerdo'],['cantoAereo','Canto em L (aéreo) · esquerdo']];
+        R.std=STDOPT.fundoMm.map(function(o){return o[0]}).join(',');
+        for(var i=0;i<casos.length;i++){var k=casos[i][0];loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.mods=[];draw();newTpl(T(casos[i][1]));var m=S.mods[0];m.fundo=true;m.fundoMan=1;m.fundoMm=6;draw();S.m=m;S.tab=5;panel();
+         var a=sig(m),fa=fun(m),pa=pl(),ba=cx(),d=m.d,bt=document.querySelector('#f15box [data-f15="15"]');if(!bt){R[k]='sem botão';continue}var op=[].map.call(document.querySelectorAll('#f15box [data-f15]'),function(b){return b.textContent}).join('/');bt.click();await W(50);
+         var b=sig(m),fb=fun(m),pb=pl(),bb=cx();
+         R[k]=[op,a===b?'internas iguais':'internas mudaram',fb,'D '+(d+fBack(m)),'3D fundo '+bb.f+' caixa +'+Math.round((bb.z-ba.z)*10)/10,'2D +'+Math.round((pb-pa)*10)/10,'sel '+(document.querySelector('#f15box [data-f15="15"]').className)].join(' · ');
+         R[k+'0']=fa;if(/^canto/.test(k)){var pa_=a.split(';'),pb_=b.split(';');R[k+'Dif']=pb_.filter(function(q){return pa_.indexOf(q)<0}).map(function(q){return q.split(' m')[0]}).join(';')}}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["std"] as? String, "3,6,15", "Ajustes: 3, 6 e 15 mm")
+        XCTAssertEqual(o["inferior"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 1200x820 m15;Fundo de gaveta (6 mm) 338x460 m6 · D 575 · 3D fundo 15 caixa +9 · 2D +9 · sel sel", "fundo de gaveta continua 6")
+        XCTAssertEqual(o["aereo"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 1000x750 m15 · D 365 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["torre"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 600x2200 m15 · D 575 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["guarda"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo (parte 1/2) 1796x2400 m15;Fundo (parte 2/2) 904x2400 m15 · D 565 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["canto"] as? String, "3 mm/6 mm/15 mm (MDF) · internas mudaram · Fundo (lado do canto) 985x2400 m15;Fundo 1000x2400 m15 · D 565 · 3D fundo 15,15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["canto0"] as? String, "Fundo (lado do canto) 994x2400 m6;Fundo 1000x2400 m6")
+        XCTAssertEqual(o["cantoDif"] as? String, "Base inferior (lado do canto) 435x550;Base inferior 985x550;Base superior (lado do canto) 435x550;Base superior 985x550;Porta 407x2300;Porta 410x2300;Prateleira (lado do canto) 450x520;Prateleira 970x520;Rodapé (pedestal) 465x100;Rodapé (pedestal) do lado 450x100;Rodapé traseiro (pedestal) 955x100;Rodapé traseiro (pedestal) do lado 925x100;Tamponamento direito 2400x590;Tamponamento do lado do canto 2400x590", "canto em L: regra de hoje (medida de fora fixa), 9 mm a menos por dentro")
+        XCTAssertEqual(o["cantoAereo"] as? String, "3 mm/6 mm/15 mm (MDF) · internas mudaram · Fundo (lado do canto) 685x750 m15;Fundo 700x750 m15 · D 365 · 3D fundo 15,15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["cantoAereoDif"] as? String, "Base inferior (lado do canto) 335x350;Base inferior 685x350;Base superior (lado do canto) 335x350;Base superior 685x350;Porta 307x750;Porta 321x750;Prateleira (lado do canto) 350x320;Prateleira 670x320")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: "aplicar a todos os móveis do ambiente" é explícito, com prévia (marca/desmarca, nicho fica de fora), cancelar não muda, desfazer
+    // pela barra e pelo ↶ do app. Nenhum móvel sai do lugar; a pedra encaixada acompanha a frente (regra de hoje), a pedra com medida da pessoa fica
+    // e o app avisa (medida, disponível, diferença); vizinho de outra parede: avisa, não mexe. Embaixo da pia: sem chapa, só a profundidade acompanha
+    func testFundo15AplicarATodosDoAmbienteComPreviaDesfazerEAvisoSemMoverNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var pos=function(){return S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d,m.zo==null?'':m.zo,m.wing||'',m.rot||0].join(',')}).join(';')},ped=function(){return (S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t].join(',')}).join(';')};
+        var fs_=function(){return S.mods.map(function(m){return m.fundoMm}).join(',')};
+        loadState(initLimpo());demoScene();await W(400);draw();var p0=pos(),s0=ped();R.pedra0=s0;R.inicio=fs_();
+        var pia=S.mods.filter(function(m){return m.fundoPia&&!m.fundo})[0],ipia=S.mods.indexOf(pia);R.pia=!!pia;
+        /* um módulo pelo painel */S.m=S.mods[2];S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(900);R.um=fs_();
+        /* aplicar a todos: prévia */S.tab=5;panel();var ba=document.querySelector('#f15box [data-f15all]');R.botao=ba?ba.textContent:'';ba.click();await W(50);var M=document.getElementById('f15m');
+        R.previa=M?[M.querySelectorAll('[data-f15c]').length+' marcáveis',M.querySelectorAll('[data-f15c]:checked').length+' marcados',(M.textContent.match(/já com 15 mm/)||[''])[0],M.querySelectorAll('#f15av .note').length+' avisos',/embaixo da pia/.test(M.textContent)?'pia':'sem pia'].join(' · '):'sem prévia';
+        R.avisoTexto=M?((M.querySelector('#f15av .note')||{}).textContent||''):'';
+        R.previaNaoMuda=(fs_()===R.um)+' · '+(pos()===p0);R.pedraUm=ped();R.pedraPrevia=[].map.call(M.querySelectorAll('.note'),function(n){return n.textContent}).filter(function(t){return /^Pedra/.test(t)}).join('|');
+        /* cancelar não muda */M.querySelector('[data-f15no]').click();R.cancelar=(!document.getElementById('f15m'))+' · '+(fs_()===R.um);
+        /* aplicar */S.tab=5;panel();document.querySelector('#f15box [data-f15all]').click();await W(50);document.querySelector('#f15m [data-f15ok]').click();await W(50);
+        R.aplicou=fs_();R.naoMoveu=pos()===p0;R.pedraTodos=ped();R.barra=!!document.querySelector('#f15u [data-f15undo]');R.piaProf=pia?(pia.d+fBack(pia))+' · peça '+cutLines(pia).filter(function(l){return /^Fundo/.test(l.names[0])}).length:'';
+        S.m=S.mods[0];S.tab=5;panel();R.avisoPainel=[].map.call(document.querySelectorAll('#f15box .note'),function(n){return n.textContent}).join(' | ').slice(0,200);
+        /* desfazer da barra */await W(900);document.querySelector('#f15u [data-f15undo]').click();await W(50);R.desfez=fs_();R.desfezPos=pos()===p0;R.pedraDesfez=ped();
+        /* ↶ do app também desfaz o "todos" */await W(900);fundoTodos(15);await W(900);document.getElementById('und').click();await W(50);R.undoApp=fs_();
+        /* vizinho de outra parede: avisa com as medidas, não mexe em nada */
+        loadState(initLimpo());S.env='cozinha';S.W=3000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));var a=S.mods[0],c=S.mods[1];a.x=0;a.fundo=true;a.fundoMan=1;a.fundoMm=6;c.wing='e';c.x=575;c.fundo=false;c.fundoMan=1;draw();var q0=pos();
+        var av=fundoPrevia(15).avisos;R.vizinho=av.map(function(v){return v.mi+' '+v.med+' '+v.disp+' '+v.dif}).join(' | ');R.vizTxt=av.length?av[0].msg:'';S.m=a;S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(50);R.vizNaoMoveu=(pos()===q0)+' · '+a.fundoMm;S.tab=5;panel();R.vizPainel=(document.querySelector('#f15box .note')||{}).textContent||'';
+        /* pedra que a pessoa deixou com outra medida (não acompanha): fica como está e o app avisa */
+        loadState(initLimpo());S.env='cozinha';S.W=3000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));var g=S.mods[0];g.x=0;g.fundo=true;g.fundoMan=1;g.fundoMm=6;draw();addStone();draw();var st=S.stones[0];st.d=600;draw();var sd0=st.d,gx=pos();var av2=fundoPrevia(15).avisos;R.pedraFixa=av2.map(function(v){return v.med+' '+v.disp+' '+v.dif}).join(' | ');R.pedraFixaTxt=av2.length?av2[0].txt:'';fundoEsp(g,15);R.pedraFixaFica=(st.d===sd0)+' · '+(pos()===gx);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["um"] as? String, "6,6,15,6,6,6,6,6,6", "o botão do painel muda só este móvel")
+        XCTAssertEqual(o["botao"] as? String, "Aplicar 15 mm a todos os móveis do ambiente…")
+        XCTAssertEqual(o["previa"] as? String, "8 marcáveis · 8 marcados · já com 15 mm · 0 avisos · pia")
+        XCTAssertEqual(o["previaNaoMuda"] as? String, "true · true", "a prévia não muda nada")
+        XCTAssertEqual(o["cancelar"] as? String, "true · true")
+        XCTAssertEqual(o["aplicou"] as? String, "15,15,15,15,15,15,15,15,15")
+        XCTAssertEqual(o["naoMoveu"] as? Bool, true, "nenhum móvel sai do lugar nem muda de medida")
+        XCTAssertEqual(o["pedra0"] as? String, "0,2735,606,820")
+        XCTAssertEqual(o["pedraUm"] as? String, "0,2735,615,820", "pedra encaixada acompanha a frente: + 9")
+        XCTAssertEqual(o["barra"] as? Bool, true)
+        XCTAssertEqual(o["piaProf"] as? String, "575 · peça 0", "embaixo da pia: sem chapa de fundo, a profundidade acompanha")
+        XCTAssertEqual(o["desfez"] as? String, "6,6,15,6,6,6,6,6,6", "desfazer volta só o que o 'todos' mudou")
+        XCTAssertEqual(o["desfezPos"] as? Bool, true)
+        XCTAssertEqual(o["undoApp"] as? String, "6,6,15,6,6,6,6,6,6", "o ↶ do app também desfaz o 'todos'")
+        XCTAssertEqual(o["vizinho"] as? String, "0 575 550 25", "módulo, profundidade total, disponível, diferença")
+        XCTAssertEqual(o["vizTxt"] as? String, "⚠ Base 1: encosta no vizinho: entra 25 mm em Base 2 (antes 16 mm) · profundidade total 575 mm · disponível 550 mm · diferença 25 mm")
+        XCTAssertEqual(o["vizNaoMoveu"] as? String, "true · 15", "avisa e não move nem encolhe nada")
+        XCTAssertEqual(o["vizPainel"] as? String, "⚠ Base 1: encosta no vizinho: entra 25 mm em Base 2 (antes 16 mm) · profundidade total 575 mm · disponível 550 mm · diferença 25 mm")
+        XCTAssertEqual(o["pedraFixa"] as? String, "575 560 15")
+        XCTAssertEqual(o["pedraFixaTxt"] as? String, "a pedra passa só 25 mm na frente (o ajuste da pedra pede 40 mm)")
+        XCTAssertEqual(o["pedraFixaFica"] as? String, "true · true", "a pedra da pessoa não muda sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: orçamento, lista, plano de corte e DXF. 15 mm é chapa de MDF 15 da cor/material da caixa (preço do MDF 15, sem a linha "chapa de
+    // fundo"), no mesmo grupo das peças de 15 da caixa; o total de chapas é o do otimizador com as mesmas peças (nenhuma chapa a mais). 3 e 6 mm
+    // iguais à versão de antes, ao centavo. Fita: a regra de hoje do fundo (sem fita)
+    func testFundo15OrcamentoChapaMDF15CorteMesmaChapaSemChapaAMaisDXFE3e6Iguais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100},r1=function(v){return Math.round(v*1000)/1000};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(mm){loadState(initLimpo());S.env='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Torre quente (forno)'));S.mods.forEach(function(m){m.fundo=true;m.fundoMan=1;m.fundoMm=mm});draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;S.preco=0;SPC={}};
+        var linhas=function(b){return prAuto(b).filter(function(r){return r[3]>0.0001}).map(function(r){return r[0]+' '+r1(r[3])}).join(';')};
+        /* 3 e 6 mm: iguais à versão de antes, ao centavo */
+        [3,6].forEach(function(mm){proj(mm);var b=budget();R['f'+mm]=[r2(b.tot),r2(b.sale),b.nB+'/'+b.nC+'/'+b.nF,r2(b.cF),b.rows.map(function(x){return r2(x.c)}).join('/'),linhas(b)].join(' · ')});
+        /* 15 mm: chapa de MDF 15 da caixa, mesmo grupo das peças de 15 da mesma cor/material */
+        proj(6);var b6=budget(),n6=b6.plan.groups.reduce(function(s,g){return s+g.n},0);R.lista6=cutLines(S.mods[0]).filter(function(l){return /^Fundo$/.test(l.names[0])}).map(function(l){return l.L+'x'+l.W+' m'+l.mat}).join();
+        R.todos=fundoTodos(15);SPC={};var b15=budget(),pl=b15.plan;
+        R.lista15=cutLines(S.mods[0]).filter(function(l){return /^Fundo$/.test(l.names[0])}).map(function(l){return l.L+'x'+l.W+' m'+l.mat}).join();
+        R.grupos=pl.groups.map(function(g){return g.key}).join(',');
+        var onde={};pl.groups.forEach(function(g){(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){var lb=(u.p&&u.p.lab)||'';if(/^Fundo$/.test(lb))onde[g.key]=(onde[g.key]||0)+1})})});R.fundoNoGrupo=JSON.stringify(onde);
+        var g=pl.groups.filter(function(q){return q.key==='b|15|'})[0],rot=!(PR.veio&&(g.t==='c'||(g.t==='b'&&ACAB().int!=='branco'))),P=[],Pf=[],Po=[];(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){var q={w:u.p.w,h:u.p.h,lab:u.p.lab};P.push(q);(/^Fundo$/.test(q.lab)?Pf:Po).push(q)})});
+        var ot=packSheets(P,pl.SW,pl.SH,pl.kf,rot).sheets.length,sep=packSheets(Po,pl.SW,pl.SH,pl.kf,rot).sheets.length+packSheets(Pf,pl.SW,pl.SH,pl.kf,rot).sheets.length;
+        R.chapas=[g.n+' no grupo',ot+' otimizador',sep+' separado',(g.n<=ot&&g.n<=sep)?'sem chapa à toa':'CHAPA A MAIS'].join(' · ');R.totalChapas=n6+' → '+pl.groups.reduce(function(s,q){return s+q.n},0);
+        R.preco=[g.price===+PR.mdfB?'preço MDF 15':'preço '+g.price,'cF '+r2(b15.cF),'nF '+b15.nF,prAuto(b15).some(function(r){return r[0]==='fundo'&&r[3]>0.0001})?'linha chapa de fundo':'sem linha chapa de fundo',r2(b15.tot-b6.tot)===r2((b15.cB-b6.cB)+(b15.cC-b6.cC)-b6.cF)?'conta fecha':'conta NÃO fecha'].join(' · ');
+        R.dxf=dxfPecas({uniao:'nenhuma'}).pecas.filter(function(q){return /^Fundo$/.test(q.nome)}).map(function(q){return q.L+'x'+q.W+' e'+q.esp}).sort().join(';');
+        R.fita=edgeTxt('Fundo')+' · '+edgeMm({name:'Fundo',cl:900,cw:820});
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        let ref = "1084.25 · 2168.49 · 2/2/1 · 62.17 · 255.25/200.19/628.81 · mdfB 1.344;mdfC 1.291;fundo 0.565;fitaB 1.254;fitaC 34.357;fitaT 16.511;dob 12;pux 2"
+        XCTAssertEqual(o["f3"] as? String, ref, "3 mm igual à versão de antes (553745a1), ao centavo")
+        XCTAssertEqual(o["f6"] as? String, ref, "6 mm igual à versão de antes (553745a1), ao centavo")
+        XCTAssertEqual(o["lista6"] as? String, "900x820 m6")
+        XCTAssertEqual(o["todos"] as? Int, 3)
+        XCTAssertEqual(o["lista15"] as? String, "900x820 m15", "lista: mesma medida, 15 mm")
+        XCTAssertEqual(o["grupos"] as? String, "b|15|,c|15|Cor", "sem grupo de chapa de fundo")
+        XCTAssertEqual(o["fundoNoGrupo"] as? String, "{\"b|15|\":3}", "os 3 fundos na chapa de MDF 15 da caixa")
+        XCTAssertEqual(o["chapas"] as? String, "3 no grupo · 3 otimizador · 3 separado · sem chapa à toa")
+        XCTAssertEqual(o["totalChapas"] as? String, "5 → 5")
+        XCTAssertEqual(o["preco"] as? String, "preço MDF 15 · cF 0 · nF 0 · sem linha chapa de fundo · conta fecha")
+        XCTAssertEqual(o["dxf"] as? String, "1000x750 e15;600x2200 e15;900x820 e15")
+        XCTAssertEqual(o["fita"] as? String, "sem fita · 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: projeto antigo abre com os fundos iguais e nenhum valor muda (peças, corte, fundo e profundidade, orçamento, chapas); nada novo vai
+    // pro arquivo. Com 15 mm: salvar, reabrir e duplicar mantêm tudo
+    func testFundo15ProjetoAntigoIntactoSalvarReabrirEDuplicar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var sig=function(){SPC={};var b=budget();return JSON.stringify({p:S.mods.map(function(m){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw+' m'+(p.mat||'')}).sort().join(';')}),c:(function(){var G=cutGroups();return G.ord.map(function(k){var g=G.map[k];return [g.L,g.W,g.mat,g.fin,g.qty].join(' ')}).sort()})(),f:S.mods.map(function(m){return m.fundoMm+'/'+fBack(m)}),t:r2(b.tot),s:r2(b.sale),pl:b.plan.groups.map(function(g){return g.key+':'+g.n})})};
+        var fs_=function(){return S.mods.map(function(m){return m.fundoMm}).join(',')};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;
+        /* projeto antigo (fundos 6 e um de 3, sem nada novo no arquivo): abre igual */
+        loadState(initLimpo());demoScene();await W(400);S.mods[6].fundoMm=3;draw();var ST=JSON.stringify(snapState()),S0=sig();
+        loadState(JSON.parse(ST));draw();R.antigo=[sig()===S0?'igual':'MUDOU',fs_(),(function(){var f=function(o){return JSON.stringify(o.mods.map(function(m){return [m.fundo,m.fundoPia,m.fundoMm,m.fundoTipo,m.fundoMan]}))};return f(snapState())===f(JSON.parse(ST))?'fundos do arquivo iguais':'fundos do arquivo mudaram'})()].join(' · ');
+        var nAv=0;S.mods.forEach(function(m){S.m=m;S.tab=5;panel();nAv+=document.querySelectorAll('#f15box .note').length});R.semAviso=nAv;R.campoNovo=/f15|fundoAv/.test(ST)?'tem':'não tem';
+        /* salvar, reabrir e duplicar com 15 */
+        ensureProj();fundoTodos(15);await W(50);var v15=sig(),f15=fs_();saveNow();await W(300);
+        loadState(initLimpo());draw();window.arqueOpenClient(CUR);await W(500);R.reabre=(fs_()===f15)+' · '+(sig()===v15);
+        var a=pLoadAll(),n0=a.length,bt=document.createElement('button');bt.dataset.pd=CUR;document.getElementById('clm').appendChild(bt);bt.click();bt.remove();var a2=pLoadAll(),cp=a2[a2.length-1];loadState(JSON.parse(JSON.stringify(cp.current)));draw();R.duplica=(a2.length===n0+1)+' · '+(fs_()===f15)+' · '+(sig()===v15);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antigo"] as? String, "igual · 6,6,6,6,6,6,3,6,6 · fundos do arquivo iguais")
+        XCTAssertEqual(o["semAviso"] as? Int, 0, "projeto antigo sem aviso novo")
+        XCTAssertEqual(o["campoNovo"] as? String, "não tem")
+        XCTAssertEqual(o["reabre"] as? String, "true · true")
+        XCTAssertEqual(o["duplica"] as? String, "true · true · true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

@@ -17787,10 +17787,12 @@ final class EditorWebKitTests: XCTestCase {
         S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.env='cozinha';S.room='cozinha';S.W=5100;S.H=2700;draw();newTpl(T('Balcão 2 portas'));draw();await W(10);
         newTpl(T('Sapateira 2P 600mm'));draw();await W(10);var sp=S.mods[1];snap();sp.tl=true;sp.tlM=1;delete sp.tlAuto;sp.tr=true;sp.trM=1;delete sp.trAuto;sp.tlW=sp.trW=30;
         var a=S.mods[0],ea=a.x+a.w+(a.tr?(+a.trW||30):0);sp.x=ea+50+30;draw();await W(10);R.antes=L();var x0=sp.x;
-        newTpl(T('Sapateira torre 1 porta'));draw();await W(50);R.depois=L();R.andou=S.mods[1].x-x0;R.av=TL.filter(function(t){return /cabe|Nenhuma/.test(t)});R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        newTpl(T('Sapateira torre 1 porta'));draw();await W(50);R.depois=L();R.andou=S.mods[1].x-x0;R.av=TL.filter(function(t){return /cabe|Nenhuma/.test(t)});/* vão do tamanho do tamponamento: decide uma vez e não liga/desliga a cada desenho (s20 I2) */S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.W=3100;draw();newTpl(T('Balcão 2 portas'));draw();await W(10);var A=S.mods[0];A.x=5;A.w=900;A.tl=true;A.tlM=1;delete A.tlAuto;A.tr=false;delete A.trAuto;newTpl(T('Sapateira 2P 600mm'));draw();await W(10);var B=S.mods[1];B.x=965;B.w=680;B.tl=B.tr=true;B.tlM=B.trM=1;delete B.tlAuto;delete B.trAuto;B.tlW=B.trW=30;draw();await W(10);var bx=B.x;newTpl(T('Balcão 2 portas'));draw();await W(20);var s1=L();draw();draw();await W(20);R.estavel=s1===L()?'sim':s1+' ≠ '+L();R.andouB=S.mods[1].x-bx;R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
         
         """#)
         XCTAssertEqual(o["andou"] as? Int, 0, "o módulo que já existia não anda quando outro é criado")
+        XCTAssertEqual(o["estavel"] as? String, "sim", "com o vão do tamanho do tamponamento, desenhar de novo não muda nada")
+        XCTAssertEqual(o["andouB"] as? Int, 0, "e o vizinho que já existia não anda")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
 }

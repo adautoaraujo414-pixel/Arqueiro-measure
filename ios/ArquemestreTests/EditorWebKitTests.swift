@@ -18631,4 +18631,115 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["duplica"] as? String, "true · true · true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ZOOM-CORTE (Adauto 24/11): zoom no plano de corte, na própria chapa e no 🔍 Ampliar (o mesmo motor, viewBox do SVG: vetorial, sem imagem).
+    // Pinça centrada nos dedos, roda centrada no cursor (fora da chapa e afastando sem zoom a página rola), ＋ － e "Ajustar à tela", arrasto com
+    // 1 dedo ou mouse sem a chapa sair da tela. Pinça e arrasto não viram toque (✓ cortada, 3D) nem toque longo; toque parado, 2 toques e toque
+    // longo continuam com zoom. O sheetPlan não muda. Roda na bateria a 1366 (mouse) e 430×900 (toque)
+    func testZoomNoPlanoDeCortePincaRodaBotoesArrastoComLimiteSemDispararToqueEPlanoIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r1=function(v){return Math.round(v*10)/10};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();S.cutOk={};
+        var plano=function(){return JSON.stringify(sheetPlan(1),function(k,v){return k==='no'?undefined:v})};openCut();await W(150);
+        /* o plano abre rápido e depois o otimizador fundo refaz as chapas: espera ficar parado */for(var q_=0,pa_='',ok_=0;q_<40&&ok_<3;q_++){await W(300);var pb_=plano();ok_=pb_===pa_?ok_+1:0;pa_=pb_}var P0=plano();R.estavel=ok_>=3;
+        var s=document.querySelector('#cutm svg[data-czs]');R.temChapa=!!s;s.previousElementSibling.scrollIntoView({block:'start'});await W(50);
+        var vb=function(){return s.getAttribute('viewBox')},vb0=vb(),k=function(){return r1(cutZoom.k(s))},rc=function(){return s.getBoundingClientRect()};
+        /* ponto da chapa que está embaixo de um ponto da tela (pela transformação real do SVG); tolerância de 1 px na tela */var uAt=function(cx,cy){var p=s.createSVGPoint();p.x=cx;p.y=cy;p=p.matrixTransform(s.getScreenCTM().inverse());return [p.x,p.y]},tol=function(){return 1/s.getScreenCTM().a},perto=function(a,b){return Math.abs(a[0]-b[0])<=tol()&&Math.abs(a[1]-b[1])<=tol()};
+        var tch=function(id,x,y){try{return new Touch({identifier:id,target:s,clientX:x,clientY:y,pageX:x,pageY:y})}catch(_){return document.createTouch(window,s,id,x,y,x,y)}},te=function(tp,L){var e;try{e=new TouchEvent(tp,{touches:tp==='touchend'?[]:L,targetTouches:tp==='touchend'?[]:L,changedTouches:L,bubbles:true,cancelable:true})}catch(_){e=document.createEvent('TouchEvent');e.initTouchEvent(tp,true,true,window,0,0,0,0,0,false,false,false,false,document.createTouchList.apply(document,tp==='touchend'?[]:L),document.createTouchList.apply(document,tp==='touchend'?[]:L),document.createTouchList.apply(document,L),1,0)}s.dispatchEvent(e);return e};
+        var pe=function(tp,x,y,o){var e=new PointerEvent(tp,Object.assign({bubbles:true,cancelable:true,clientX:x,clientY:y,pointerType:'mouse',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true,pointerId:1},o||{}));(document.elementFromPoint(x,y)||s).dispatchEvent(e)};
+        var b=rc(),cx=b.left+b.width*.4,cy=b.top+b.height*.5;
+        /* 1) pinça centrada nos dedos */var u0=uAt(cx,cy);te('touchstart',[tch(1,cx-40,cy),tch(2,cx+40,cy)]);for(var i=1;i<=5;i++)te('touchmove',[tch(1,cx-40-i*16,cy),tch(2,cx+40+i*16,cy)]);te('touchend',[tch(1,cx-120,cy),tch(2,cx+120,cy)]);
+        R.pinca=k()+' · centro '+(perto(uAt(cx,cy),u0)?'fixo':'andou '+uAt(cx,cy)+' vs '+u0)+' · toque '+s.style.touchAction;
+        /* 1 dedo: ampliada arrasta a chapa; sem zoom não segura (a página rola) */var zA=cutZoom.box(s),e1=te('touchstart',[tch(3,cx,cy)]),e2=te('touchmove',[tch(3,cx+10,cy+10)]),e3=te('touchmove',[tch(3,cx+80,cy+60)]);te('touchend',[tch(3,cx+80,cy+60)]);var zB=cutZoom.box(s);R.dedoArrasta=(zB.x<zA.x&&zB.y<zA.y)+' · segurou '+e3.defaultPrevented;
+        document.querySelector('[data-czb="f"]').click();await W(500);var e4=te('touchstart',[tch(4,cx,cy)]),e5=te('touchmove',[tch(4,cx,cy+20)]),e6=te('touchmove',[tch(4,cx,cy+80)]);te('touchend',[tch(4,cx,cy+80)]);R.dedoSemZoom=(e6.defaultPrevented?'segurou':'página rola')+' · '+k();
+        /* 2) botões */document.querySelector('[data-czb="f"]').click();R.ajustar=k()+' · '+(vb()===vb0);document.querySelector('[data-czb="+"]').click();R.mais=k();document.querySelector('[data-czb="-"]').click();R.menos=k();
+        /* 3) roda centrada no cursor; fora da chapa e afastando sem zoom a página rola */document.querySelector('[data-czb="f"]').click();var wl=function(el,dy,x,y){var e=new WheelEvent('wheel',{deltaY:dy,clientX:x,clientY:y,bubbles:true,cancelable:true});el.dispatchEvent(e);return e.defaultPrevented};
+        R.rodaAfastarSemZoom=wl(s,200,cx,cy)?'segurou':'página rola';var u1=uAt(cx,cy),pv=wl(s,-400,cx,cy);R.roda=k()+' · '+(pv?'segurou':'livre')+' · cursor '+(perto(uAt(cx,cy),u1)?'fixo':'andou '+uAt(cx,cy)+' vs '+u1);var fora=document.querySelector('#cutm .cutpt')||document.querySelector('#cutm table');R.rodaFora=wl(fora,-400,10,10)?'segurou':'página rola';
+        /* 4) arrastar com limite (mouse) */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,4);var z0=cutZoom.box(s);pe('pointerdown',cx,cy);pe('pointermove',cx+30,cy+30);pe('pointermove',cx+5000,cy+5000);pe('pointerup',cx+5000,cy+5000);var z1=cutZoom.box(s);R.arrasto=(z1.x!==z0.x)+' · limite '+(r1(z1.x)===r1(z1.b.x)&&r1(z1.y)===r1(z1.b.y)?'canto da chapa':'passou '+z1.x+','+z1.y);
+        pe('pointerdown',cx,cy);pe('pointermove',cx-30,cy-30);pe('pointermove',cx-9000,cy-9000);pe('pointerup',cx-9000,cy-9000);var z2=cutZoom.box(s);R.arrastoOutro=(r1(z2.x+z2.w)===r1(z2.b.x+z2.b.w)&&r1(z2.y+z2.h)===r1(z2.b.y+z2.b.h))?'canto oposto':'passou';
+        /* peça visível na tela (com zoom): o ponto da tela e a peça que está nele */var pega=function(){s=document.querySelector('#cutm svg[data-czs]');var B=s.getBoundingClientRect(),x0=Math.max(B.left,0)+10,x1=Math.min(B.right,innerWidth)-10,y0=Math.max(B.top,0)+10,y1=Math.min(B.bottom,innerHeight)-10;for(var a=1;a<8;a++)for(var c=1;c<8;c++){var px=x0+(x1-x0)*a/8,py=y0+(y1-y0)*c/8,el=document.elementFromPoint(px,py),gg=el&&el.closest&&el.closest('#cutm svg[data-czs] [data-cp]');if(gg)return {g:gg,x:px,y:py,k:gg.dataset.cp}}return null};
+        /* 5) o click que vem depois do arrasto não marca nem vai pro 3D */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,2);await W(500);var Q=pega(),g=Q.g,gk=Q.k,gx=Q.x,gy=Q.y,gr;S.cutOk={};
+        pe('pointerdown',gx,gy);pe('pointermove',gx+20,gy);pe('pointermove',gx+40,gy);pe('pointerup',gx+40,gy);g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx+40,clientY:gy}));g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx+40,clientY:gy}));await W(600);R.arrastoNaoMarca=!(S.cutOk||{})[gk];
+        /* pinça começando em cima da peça: o toque longo não abre */await W(500);Q=pega();g=Q.g;gx=Q.x;gy=Q.y;g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx,clientY:gy,pointerType:'touch',isPrimary:true,pointerId:7}));te('touchstart',[tch(1,gx,gy),tch(2,gx+60,gy)]);g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx+60,clientY:gy,pointerType:'touch',isPrimary:false,pointerId:8}));te('touchmove',[tch(1,gx-2,gy),tch(2,gx+64,gy)]);await W(1700);R.pincaSemMenu=!document.getElementById('pcmenu');te('touchend',[tch(1,gx,gy),tch(2,gx+64,gy)]);document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:7}));
+        /* 6) com zoom: toque parado (2 toques marca ✓) e toque longo continuam */await W(600);S.cutOk={};Q=pega();g=Q.g;gk=Q.k;gx=Q.x;gy=Q.y;g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx,clientY:gy}));g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx,clientY:gy}));await W(100);R.doisToques=!!(S.cutOk||{})[gk];
+        await W(500);Q=pega();g=Q.g;gx=Q.x;gy=Q.y;g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx,clientY:gy,pointerType:'touch',isPrimary:true,pointerId:9}));await W(1700);R.toqueLongo=!!document.getElementById('pcmenu');try{pcMenuClose()}catch(_){}document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:9}));
+        /* 7) o plano não muda */S.cutOk={};R.planoIgual=plano()===P0;
+        /* 8) texto vetorial: nítido em qualquer zoom (o SVG continua SVG, sem imagem) */R.vetorial=s.querySelectorAll('image').length+' imagens · '+(s.querySelectorAll('text').length>0);
+        /* 9) Ampliar usa o mesmo zoom */var hd=s.previousElementSibling;hd.querySelector('[data-czoom]').click();await W(100);var zs=document.querySelector('#cutzoom #czb svg');R.ampliar=!!(zs&&zs.hasAttribute('data-czs'))+' · '+(zs?zs.getAttribute('viewBox')===zs.getAttribute('data-vb0'):'');document.querySelector('#cutzoom [data-cz="+"]').click();R.ampliarMais=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="f"]').click();R.ampliarAjustar=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="x"]').click();
+        /* 10) o plano se redesenha sozinho (otimizador, ✓, tirar peça): o zoom da chapa continua */s=document.querySelector('#cutm svg[data-czs]');cutZoom.step(s,3);var vbz=s.getAttribute('viewBox');openCut();await W(20);var s2=document.querySelector('#cutm svg[data-czs]');R.redesenho=(s2!==s)+' · '+(s2.getAttribute('viewBox')===vbz);document.querySelector('[data-czb="f"]').click();openCut();await W(20);R.redesenhoAjustado=Math.round(cutZoom.k(document.querySelector('#cutm svg[data-czs]'))*10)/10;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["estavel"] as? Bool, true)
+        XCTAssertEqual(o["pinca"] as? String, "3 · centro fixo · toque none", "pinça amplia em volta do ponto entre os dedos; ampliada, a chapa segura o dedo")
+        XCTAssertEqual(o["dedoArrasta"] as? String, "true · segurou true", "1 dedo arrasta a chapa ampliada")
+        XCTAssertEqual(o["dedoSemZoom"] as? String, "página rola · 1", "sem zoom, 1 dedo rola a página")
+        XCTAssertEqual(o["ajustar"] as? String, "1 · true", "Ajustar à tela volta o enquadramento original")
+        XCTAssertEqual(o["mais"] as? Double, 1.3)
+        XCTAssertEqual(o["menos"] as? Double, 1)
+        XCTAssertEqual(o["rodaAfastarSemZoom"] as? String, "página rola")
+        XCTAssertEqual(o["roda"] as? String, "1.8 · segurou · cursor fixo", "roda amplia em volta do cursor")
+        XCTAssertEqual(o["rodaFora"] as? String, "página rola", "fora da chapa a roda rola a página")
+        XCTAssertEqual(o["arrasto"] as? String, "true · limite canto da chapa", "arrasto para no canto: a chapa não some")
+        XCTAssertEqual(o["arrastoOutro"] as? String, "canto oposto")
+        XCTAssertEqual(o["arrastoNaoMarca"] as? Bool, true, "arrastar não marca ✓ nem vai pro 3D")
+        XCTAssertEqual(o["pincaSemMenu"] as? Bool, true, "pinça em cima da peça não abre o toque longo")
+        XCTAssertEqual(o["doisToques"] as? Bool, true, "com zoom, 2 toques parados ainda marcam ✓")
+        XCTAssertEqual(o["toqueLongo"] as? Bool, true, "com zoom, o toque longo (PC-TOQUE) ainda abre o menu da peça")
+        XCTAssertEqual(o["planoIgual"] as? Bool, true, "zoom, arrasto e ajustar não mudam o sheetPlan")
+        XCTAssertEqual(o["vetorial"] as? String, "0 imagens · true")
+        XCTAssertEqual(o["ampliar"] as? String, "true · true", "o 🔍 Ampliar usa o mesmo zoom e abre enquadrado")
+        XCTAssertEqual(o["ampliarMais"] as? String, "125%")
+        XCTAssertEqual(o["ampliarAjustar"] as? String, "100%")
+        XCTAssertEqual(o["redesenho"] as? String, "true · true", "o plano redesenhado mantém o zoom da chapa")
+        XCTAssertEqual(o["redesenhoAjustado"] as? Double, 1)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CORTE-LEGÍVEL (Adauto 24/11): no plano de corte (o mesmo desenho serve a tela, o Ampliar e o PDF), em todos os modelos do catálogo e na
+    // cozinha de exemplo, a caixa de cada texto (medidas, nome, #n, sobra) não cruza linha de fita nem contorno de peça e fica dentro da chapa;
+    // os textos são desenhados depois das linhas de fita. Peça estreita demais: etiqueta "#n medida" na sobra mais perto, com linha até a peça.
+    // Vale com zoom. Medidas, peças e chapas iguais (sonda s46: 141 projetos, plano inteiro igual)
+    func testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoEmTodoOCatalogoComEsemZoom() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* confere a geometria do texto no plano de corte: caixa de cada texto (em coordenadas da chapa) não cruza linha de fita,
+           fica dentro da própria peça (não cruza contorno de outra) e dentro da chapa. Vale para as chapas abertas no momento. */
+        window.__cutTxtChk=function(root){var R={chapas:0,pecas:0,textos:0,ruins:[]},EPS=0.5;
+         var sv=[].slice.call((root||document).querySelectorAll('svg')).filter(function(s){var p=s.previousElementSibling;return (p&&/^cs\d+_\d+$/.test(p.id||''))||s.hasAttribute('data-czs')});
+         sv.forEach(function(s,si){if(!s.getScreenCTM())return;R.chapas++;var inv=s.getScreenCTM().inverse(),box=function(el){var b=el.getBBox(),M=inv.multiply(el.getScreenCTM()),P=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(function(q){var p=s.createSVGPoint();p.x=q[0];p.y=q[1];p=p.matrixTransform(M);return p});return {x0:Math.min.apply(null,P.map(function(p){return p.x})),x1:Math.max.apply(null,P.map(function(p){return p.x})),y0:Math.min.apply(null,P.map(function(p){return p.y})),y1:Math.max.apply(null,P.map(function(p){return p.y}))}},
+          cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>EPS&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>EPS},dentro=function(a,b){return a.x0>=b.x0-EPS&&a.x1<=b.x1+EPS&&a.y0>=b.y0-EPS&&a.y1<=b.y1+EPS},
+          rr=function(r){var x=+r.getAttribute('x'),y=+r.getAttribute('y');return {x0:x,y0:y,x1:x+ +r.getAttribute('width'),y1:y+ +r.getAttribute('height')}};
+          var sheet=rr(s.querySelector('rect')),pcs=[],fitas=[];
+          [].forEach.call(s.querySelectorAll('g'),function(g){if(g.closest('[data-okmk]'))return;var r=g.querySelector(':scope > rect');if(!r)return;if(!g.hasAttribute('data-cp')&&!g.hasAttribute('data-lab'))return;var P={g:g,r:rr(r)};pcs.push(P);[].forEach.call(g.querySelectorAll('line'),function(l){if(String(l.getAttribute('stroke')).toLowerCase()!=='#1f9d55')return;var w=+l.getAttribute('stroke-width')||1,x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2'),y1=+l.getAttribute('y1'),y2=+l.getAttribute('y2');fitas.push({x0:Math.min(x1,x2)-(x1===x2?w/2:0),x1:Math.max(x1,x2)+(x1===x2?w/2:0),y0:Math.min(y1,y2)-(y1===y2?w/2:0),y1:Math.max(y1,y2)+(y1===y2?w/2:0)})})});
+          R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
+          [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
+           if(!dentro(b,sheet))why.push('fora da chapa');
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins))why.push('cruza o contorno da peça')}
+           else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
+           if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
+           if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
+          /* ordem: texto da peça desenhado depois das linhas de fita */
+          pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
+         });return R};
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var tot={cenas:0,chapas:0,pecas:0,textos:0,ruins:0,semTexto:0,zoomRuins:0},ex=[];
+        var confere=async function(nome){openCut();await W(30);var c=__cutTxtChk(document.getElementById('cutm'));tot.cenas++;tot.chapas+=c.chapas;tot.pecas+=c.pecas;tot.textos+=c.textos;tot.ruins+=c.ruins.length;tot.semTexto+=c.semTexto||0;if((c.ruins.length||c.semTexto)&&ex.length<5)ex.push(nome+': '+c.ruins.slice(0,2).join(' | ')+' '+(c.semEx||[]).join(','));
+         /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
+        for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
+        loadState(initLimpo());demoScene();await W(300);draw();await confere('cozinha de exemplo');
+        R.cenas=tot.cenas>100;R.pecas=tot.pecas>1000;R.textos=tot.textos>5000;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cenas"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["textos"] as? Bool, true)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
+        XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
+        XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

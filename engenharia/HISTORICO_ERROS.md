@@ -2213,3 +2213,10 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - 1º aviso de pedra disparava na cozinha de exemplo. Mas a pedra encaixada acompanha a frente sozinha (regra de hoje, `stFitCalc`/`stFitEq`, igual na base `553745a1`). Agora só avisa da pedra que a pessoa deixou com medida própria, e a prévia mostra a pedra encaixada que acompanha (606 → 615).
   - O nome do módulo no aviso vinha "Módulo N": `modLabel` está fora do escopo global. Passou a usar o mesmo nome da lista de corte.
   - Ambiente: o servidor local foi bloqueado pela permissão desta sessão. Bateria, s46 e PNGs rodaram com o editor aberto por file:// (mesmo arquivo).
+- **ZOOM-CORTE e CORTE-LEGÍVEL (Code 2, 24/11), achados durante o trabalho:**
+  - O zoom pela roda andava 0,4 px do cursor a 430: a conta usava a caixa do SVG com a borda de 6 px. Passou a usar a transformação real (`getScreenCTM`). O teste mede em pixels da tela (1 px).
+  - O zoom se perdia quando o plano se redesenhava sozinho (o otimizador termina 1 a 2 s depois de abrir). Agora o zoom de cada chapa volta no desenho novo (com assert no teste).
+  - `sheetPlan(1)` muda sozinho logo depois de abrir o plano (o rápido e depois o otimizador fundo), e o desenho grava `no` nas peças do cache. Isso já era assim antes. O teste espera o plano parar e compara sem o `no`.
+  - Na 1ª versão da conta, 103 textos ficavam em cima de outro texto (número da sobra deitado × em pé; "furo dobradiça" × nome da porta). Corrigido e incluído no teste.
+  - 45 peças muito estreitas (réguas, molduras de 30 com fita) ficavam sem nada legível dentro. Ganharam etiqueta ao lado, com linha.
+  - Bateria: o Chromium da bateria parou no limite de 30 min do segundo plano (eu não tinha dado tempo maior). A rodada de 1366 do `f66075bf` parou em 228 ok, 0 falha real. Refeita no SHA final com o navegador no limite de 2 h.

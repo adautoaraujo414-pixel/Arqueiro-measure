@@ -343,3 +343,5 @@ Linhas que estavam em NÃO FEITO, PARCIAL ou SEM VALIDAÇÃO com "= inicial": 93
 | F15-5 | Lista, orçamento (MDF 15), corte (mesma chapa, sem chapa a mais), DXF | feito | `testFundo15Orcamento…` | FEITO |
 | F15-6 | Projeto antigo intacto; salvar, reabrir, duplicar | feito | `testFundo15ProjetoAntigo…`, s46 (141 projetos, 0 diferença) | FEITO |
 | F15-7 | Fita e furação do fundo de 15 | regra de hoje (sem fita; uniões pela geometria) | `testFundo15Orcamento…` (fita) | **Pergunta ao Adauto enviada** |
+| ZC-1 | Zoom no plano de corte: pinça, roda, ＋ − Ajustar à tela, arrasto com limite, gestos sem disparar toque, toque longo e 2 toques com zoom, sheetPlan igual | feito | `testZoomNoPlanoDeCorte…` + s47 (toque e mouse reais) | FEITO, aguarda auditoria |
+| CL-1 | Plano de corte legível: texto acima e afastado da fita, peça estreita, sem texto sobre texto, tela 1366/430, zoom e PDF | feito | `testPlanoDeCorteLegivel…` + s47 (141 projetos, PDF) | FEITO, aguarda auditoria |

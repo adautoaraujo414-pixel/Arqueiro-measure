@@ -58,23 +58,28 @@ XY=$(python3 - "$OUT/ui.xml" "$1" <<'PY'
 import re,sys
 try: s=open(sys.argv[1],encoding='utf-8').read()
 except Exception: s=''
+todos=[]
 for m in re.finditer(r'<node [^>]*>',s):
     n=m.group(0);t=re.search(r' text="([^"]*)"',n);d=re.search(r'content-desc="([^"]*)"',n)
     alvos=sys.argv[2].split('|')
     if (t and t.group(1) in alvos) or (d and d.group(1) in alvos):
-        b=re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',n);x1,y1,x2,y2=map(int,b.groups());ult=((x1+x2)//2,(y1+y2)//2)
-# o último que aparece (no app publicado "3D Projector" está no cartão e na barra de baixo; o da barra cria o projeto novo)
-try: print(*ult)
-except NameError: pass
+        b=re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',n);x1,y1,x2,y2=map(int,b.groups());todos.append(((x1+x2)//2,(y1+y2)//2))
+# no app publicado "3D Projector" aparece no cartão e na barra de baixo: TOCA_IDX escolhe (padrão: o último)
+import os
+if todos: print(*todos[int(os.environ.get('TOCA_IDX','-1'))])
 PY
 )
 if [ -n "$XY" ]; then adb shell input tap $XY </dev/null; echo "toquei \"$1\" em $XY"; sleep 2; return 0; fi; sleep 3; done
 echo "não achei \"$1\" na tela; textos na tela: $(grep -o 'text="[^"]\+"' $OUT/ui.xml 2>/dev/null | head -25 | tr '\n' ' ')"; adb exec-out screencap -p > "$OUT/sem_$(echo "$1" | tr -c 'a-zA-Z0-9' _).png" 2>/dev/null; return 1; }
 abre_cdp(){ for i in $(seq 1 20); do SOCK=$(adb shell grep -ao 'webview_devtools_remote_[0-9]*' /proc/net/unix </dev/null | head -1 | tr -d '\r'); [ -n "$SOCK" ] && break; sleep 2; done
-[ -z "$SOCK" ] && { falha "o WebView do editor não abriu a depuração"; return 1; }
+[ -z "$SOCK" ] && { echo "o WebView do editor não abriu a depuração"; return 1; }
 adb forward --remove tcp:9333 >/dev/null 2>&1; adb forward tcp:9333 localabstract:$SOCK >/dev/null && echo "depuração do editor: $SOCK"; }
 sha_video(){ N=$(adb exec-out run-as $PKG sh -c 'ls files/moveis/ 2>/dev/null' | grep -c '^video_.*\.json$'); if [ "$N" != 1 ]; then echo "arquivos de vídeo: $N" >&2; return; fi
 adb exec-out run-as $PKG sh -c 'cat files/moveis/video_*.json' | python3 -c "import json,sys,base64,hashlib;v=json.load(sys.stdin)['videoData'];print(hashlib.sha256(base64.b64decode(v.split(',',1)[1])).hexdigest())"; }
+abre_editor(){ for ix in -1 0; do TOCA_IDX=$ix toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || return 1; sleep 8
+  echo "tela depois do toque: $(adb shell uiautomator dump /sdcard/ui.xml </dev/null >/dev/null 2>&1; adb exec-out cat /sdcard/ui.xml | grep -o 'text="[^"]\+"' | head -15 | tr '\n' ' ')"
+  echo "sockets de depuração: $(adb shell cat /proc/net/unix </dev/null | grep -ao '@[a-z_]*devtools[a-z_0-9]*' | tr '\n' ' ')"
+  abre_cdp && return 0; adb shell input keyevent 4 </dev/null; sleep 3; done; return 1; }
 rodada_video(){ VID=$1; OUT=$OUT0/video; mkdir -p $OUT; echo "######## vídeo gravado pelo app publicado"
 python3 -m pip install --quiet websocket-client >/dev/null 2>&1 || pip install --quiet websocket-client
 ESP=$(sha256sum "$VID" | cut -d' ' -f1); echo "vídeo de teste: $VID · sha256 $ESP"
@@ -82,8 +87,7 @@ adb uninstall $PKG >/dev/null 2>&1; adb shell rm -rf /sdcard/Download/ArqueMeasu
 echo "== 1. instala a versão anterior e grava o vídeo nela"; adb install -r "$OLD" || falha "não instalou a versão anterior"
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
 toca "Começar agora|Start now|Pular|Skip" || true
-toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || falha "não achei o botão Novo Projetor 3D"
-sleep 8; abre_cdp
+abre_editor || falha "não abri o editor de móveis na versão anterior"
 adb push "$VID" /data/local/tmp/video-teste.webm >/dev/null; adb shell chmod a+r /data/local/tmp/video-teste.webm
 adb shell "run-as $PKG sh -c 'mkdir -p cache && cat /data/local/tmp/video-teste.webm > cache/video-teste.webm'" || falha "não pus o vídeo na pasta do app"
 DIRAPP=$(adb shell "run-as $PKG pwd" | tr -d '\r')
@@ -100,8 +104,7 @@ diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(w
 S1=$(sha_video); echo "vídeo no arquivo do app (depois): $S1"; [ "$S1" = "$ESP" ] || falha "o vídeo mudou ou sumiu na atualização"
 echo "== 3. o editor novo acha e toca o vídeo"
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
-toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || falha "não achei o botão Novo Projetor 3D na versão nova"
-sleep 8; abre_cdp
+abre_editor || falha "não abri o editor de móveis na versão nova"
 python3 .github/scripts/video_cdp.py conferir --cdp http://127.0.0.1:9333 --video "$VID" || falha "o editor novo não achou ou não tocou o vídeo"
 adb exec-out screencap -p > $OUT/2_na_versao_nova.png 2>/dev/null
 adb shell am force-stop $PKG

@@ -35,8 +35,8 @@ final class VideoGravarUITests: XCTestCase {
     func testGravarVideoPeloEditorDaVersaoPublicada() throws {
         guard ProcessInfo.processInfo.environment["ARQ_VIDEO_UI"] == "1" else { throw XCTSkip("só no teste de atualização (ARQ_VIDEO_UI=1)") }
         app = XCUIApplication()
-        // -demo: pula a apresentação e a licença do primeiro uso (só em compilação de teste); -screen moveis: abre o editor de móveis
-        app.launchArguments = ["-demo", "-screen", "moveis"]
+        // -arque.lang pt: textos do app e do editor em português (o simulador vem em inglês); -demo: pula a apresentação e a licença do primeiro uso (só em compilação de teste); -screen moveis: abre o editor de móveis
+        app.launchArguments = ["-demo", "-screen", "moveis", "-arque.lang", "pt"]
         app.launch()
         // pedidos de permissão do sistema (fotos, notificações) que aparecerem no caminho
         addUIInterruptionMonitor(withDescription: "permissões") { a in

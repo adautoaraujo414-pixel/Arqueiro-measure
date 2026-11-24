@@ -14310,6 +14310,33 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* A31 (decisão do Adauto 24/11: "régua espaçadora do canto e rodapé até o piso: permitir editar a altura dentro dos limites construtivos;
+       recalcula as portas quando precisar"). Antes: a seta de altura da régua espaçadora não mexia (8 modelos: a altura vinha da porta) e a do
+       rodapé esticava só a peça, que entrava na base (rodapé 0–340 com a base em 100–115) e as portas ficavam iguais. Agora a régua muda de
+       altura (sem sair do módulo) e o rodapé muda a altura do rodapé do módulo: base sobe, portas recalculam, nada entra em nada.
+       Família: todos os modelos com régua espaçadora e todos com rodapé (pedestal), inclusive "laterais até o piso". */
+    func testA31AlturaDaReguaEspacadoraEDoRodapePelaSetaDo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var puxa=async function(pk,k,px){__e3open(0,pk);await W(30);var h=document.querySelector('[data-hk="'+k+'"]'),opp={et:'eb',eb:'et'}[k],o=document.querySelector('[data-hk="'+opp+'"]');if(!h)return false;var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,dx=0,dy=-1;if(o){var ro=o.getBoundingClientRect();dx=x-(ro.left+15);dy=y-(ro.top+15);var L=Math.hypot(dx,dy)||1;dx/=L;dy/=L}var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk="'+k+'"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:51,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev('pointerdown',x,y);for(var i=1;i<=8;i++){ev('pointermove',x+dx*px/8*i,y+dy*px/8*i);await W(15)}ev('pointerup',x+dx*px,y+dy*px);await W(80);return true};
+        var dentro=function(){__build();var B=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'}),bad='';B.forEach(function(a){if(bad||!/^0:(Rodapé \(pedestal\)|Régua espaçadora)/.test(a.nm))return;B.forEach(function(b){if(bad||a===b||/^0:(Rodapé|Régua espaçadora|Tamponamento|Corte do|Pé )/.test(b.nm))return;if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>1&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1)bad=a.nm+' em '+b.nm})});return bad};
+        open3D();await W(300);var reg=[],rod=[];
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();__build();
+          var R=partsOf(m).filter(function(p){return /^Régua espaçadora do canto/.test(p.name)})[0];
+          if(R){var h0=R.h;/* puxa a seta de baixo pra dentro (encurta): nos aéreos a régua já vai de cima a baixo do módulo, esticar bate no limite */await puxa(R.pk,'eb',-40);var R1=partsOf(m).filter(function(p){return p.pk===R.pk})[0],ok=R1&&R1.h!==h0&&R1.y>=Math.min(0,R.y)-0.5&&R1.y+R1.h<=m.h+0.5&&R1.cl===RNDC(R1.h)&&!dentro();reg.push(ok?'':t.n+': régua '+h0+'→'+(R1?R1.h+' y'+R1.y:'sumiu'))}
+          var D=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0];
+          if(D&&(/até o piso/.test(t.n)||t.n==='Balcão 2 portas'||t.n==='Gaveteiro 3 gavetas')){var r0=+m.rodMm,fr0=partsOf(m).filter(function(p){return /^(Porta|Frente de gaveta)/.test(p.name)}).map(function(p){return p.cw}).join(',');await puxa(D.pk,'et',40);var D1=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0],fr1=partsOf(m).filter(function(p){return /^(Porta|Frente de gaveta)/.test(p.name)}).map(function(p){return p.cw}).join(','),ok2=+m.rodMm>r0&&D1&&Math.abs(D1.h-m.rodMm)<0.6&&fr1!==fr0&&!dentro()&&!(m.po&&m.po[D.pk]&&(m.po[D.pk].et||m.po[D.pk].eb));rod.push(ok2?'':t.n+': rodapé '+r0+'→'+m.rodMm+' peça '+(D1&&D1.h)+' frentes '+fr0+'→'+fr1+' '+dentro())}}
+        document.getElementById('v3x').click();R={regua:reg.filter(String).join(' | ')||'ok',reguas:reg.length,rodape:rod.filter(String).join(' | ')||'ok',rodapes:rod.length,errs:__errs.length-e0};return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["reguas"] as? Int ?? 0, 8, "os modelos com régua espaçadora")
+        XCTAssertEqual(o["regua"] as? String, "ok", "a seta de altura muda a régua, sem sair do módulo e sem entrar em outra peça")
+        XCTAssertGreaterThanOrEqual(o["rodapes"] as? Int ?? 0, 4, "laterais até o piso e balcão/gaveteiro comuns")
+        XCTAssertEqual(o["rodape"] as? String, "ok", "a seta de altura do rodapé muda o rodapé do módulo: base sobe, frentes recalculam, nada entra na base")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B26 (checklist; decisão do Adauto 24/11: "peça flutuante: investigar a causa e corrigir"): no 3D de cada modelo do catálogo, toda peça
        de fabricação (o que vai pro corte) encosta em outra peça, no chão ou na parede — nenhuma fica solta no ar. O eletro desenhado e as
        ferragens (noCut) ficam de fora; o cabideiro do "Armário sem laterais" se apoia nas laterais dos vizinhos (conferido entre dois guarda-roupas).

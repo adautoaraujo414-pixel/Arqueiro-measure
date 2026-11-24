@@ -17818,4 +17818,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v2"] as? String, "portas de novo: caixotes 4 · int guardado 3", "voltou pra portas: os internos voltam (nada foi apagado)")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* AUD-RODAPE-TRASEIRO (auditoria técnica 24/11, precisão do toque, D30 "não escolher peça escondida"): no 2D de frente o rodapé TRASEIRO do pedestal
+       era desenhado por cima do rodapé da frente (mesma camada, desempate pela ordem da lista) e o toque no rodapé que se vê escolhia o de trás.
+       Peça traseira vai pra camada de trás (como o fundo). */
+    func testToqueNoRodapeDaFrenteEscolheEleEnaoOTraseiroEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        [].forEach.call(document.querySelectorAll('div'),function(d){var cs=getComputedStyle(d);if(cs.position==='fixed'&&/Configurações da marcenaria/.test(d.textContent)&&d.getBoundingClientRect().width>300)d.style.display='none'});
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){if(!it.act&&it.w&&it.h)its.push(it)})});var ruins=[],n=0;
+        for(var i=0;i<its.length;i++){S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.env='livre';S.room='livre';S.W=6000;S.H=3000;draw();newTpl(JSON.parse(JSON.stringify(its[i])));var m=S.mods[S.mods.length-1];if(!m)continue;S.m=m;draw();await W(2);var P=partsOf(m);
+          [].forEach.call(document.querySelectorAll('#svg [data-p]'),function(e){var p=P[+e.dataset.p];if(!p||!/^Rodapé \(pedestal\)$/.test(p.name))return;var r=e.getBoundingClientRect();if(r.width<2||r.height<2)return;n++;var h=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2),hp=h&&h.closest&&h.closest('[data-p]'),q=hp&&P[+hp.dataset.p];if(q&&/traseir/.test(q.name))ruins.push(its[i].n)})}
+        R.v0='rodapé da frente tocável: '+(n-ruins.length)+' de '+n+(ruins.length?' · por baixo do traseiro: '+ruins.slice(0,3).join(', '):'');R.n=n;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "rodapé da frente tocável: \((o["n"] as? Int) ?? -1) de \((o["n"] as? Int) ?? -1)", "o toque no rodapé da frente escolhe ele")
+        XCTAssertGreaterThan((o["n"] as? Int) ?? 0, 30, "o teste passou por rodapés de verdade")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

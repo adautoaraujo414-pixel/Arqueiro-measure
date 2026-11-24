@@ -17723,4 +17723,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["menu2"] as? Bool, true, "2 toques parados continuam abrindo o menu")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // Defeito 78 · P1-D/ST3ONLY (checklist): "só a pedra no 3D" ligado ficava ligado depois de fechar o 3D (no 2º abre-fecha) e o 3D seguinte abria sem os móveis.
+    // Fechar o 3D desliga; ligar de novo pelo 👁 e pelo "ver só a pedra" continua funcionando
+    func testSoAPedraNo3DDesligaAoFecharO3DEmTodoCiclo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        draw();demoScene();await W(400);draw();var on=function(){var b=document.createElement('button');b.setAttribute('data-qstonly','1');document.body.appendChild(b);b.click();b.remove()};var c=[];
+        for(var i=0;i<3;i++){open3D();await W(300);if(!window.ST3ONLY)on();await W(150);var a=window.ST3ONLY,sem=__boxes().every(function(b){return b.sid!=null});document.getElementById('v3x').click();await W(250);c.push(a+'/'+sem+'→'+window.ST3ONLY)}
+        R.ciclos=c.join(' ');open3D();await W(300);R.moveis=__boxes().some(function(b){return b.sid==null});document.getElementById('v3x').click();
+        var b=document.createElement('button');b.setAttribute('data-stonly3','1');document.body.appendChild(b);b.click();b.remove();await W(400);R.verSoAPedra=window.ST3ONLY;document.getElementById('v3x').click();await W(200);R.fechou=window.ST3ONLY;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ciclos"] as? String, "1/true→0 1/true→0 1/true→0", "liga (só pedra no 3D) e fechar desliga, em todo ciclo")
+        XCTAssertEqual(o["moveis"] as? Bool, true, "o 3D seguinte abre com os móveis")
+        XCTAssertEqual(o["verSoAPedra"] as? Int, 1, "o botão \"ver só a pedra no 3D\" continua ligando")
+        XCTAssertEqual(o["fechou"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

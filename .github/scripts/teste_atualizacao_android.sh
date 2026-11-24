@@ -24,7 +24,11 @@ echo "== 3. instala a versão nova por cima (sem desinstalar)"; adb install -r "
 V1=$(adb shell dumpsys package $PKG | grep -m1 versionCode | tr -s ' ' | cut -d' ' -f2 | cut -d= -f2); echo "versão nova: $V1"
 # sai do app pelo botão Início (como a pessoa faz): é no onStop que o app grava as cópias em Download/ArqueMeasure.
 # O force-stop direto mata o processo sem passar pelo onStop e a cópia nunca seria feita.
-adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 20; adb shell input keyevent 3; sleep 15; adb shell am force-stop $PKG
+# N14 (24/11): a cópia "antes-de-usar" já tem que existir ao ABRIR a versão nova, antes de a pessoa usar e sair (antes só saía no onStop)
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 20
+adb shell ls /sdcard/Download/ArqueMeasure/Projetos/ 2>/dev/null | tee $OUT/copias_ao_abrir.txt
+grep -q "antes-de-usar-a-versao-$V1" $OUT/copias_ao_abrir.txt && echo "cópia antes-de-usar ao abrir (N14): ok" || falha "N14: ao abrir a versão nova ainda não existe a cópia antes-de-usar-a-versao-$V1"
+adb shell input keyevent 3; sleep 15; adb shell am force-stop $PKG
 hashes > $OUT/depois.txt
 echo "== 4. confere"
 diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização"

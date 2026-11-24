@@ -17723,4 +17723,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["menu2"] as? Bool, true, "2 toques parados continuam abrindo o menu")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    /* B21 (checklist; auditoria final 24/11): com o 3D aberto, a mudança feita por qualquer caminho que redesenha (draw) aparece no 3D na hora —
+       parede, vão virando gavetas, apagar módulo — e não só onde o comando lembrava de chamar re3. Sem montar o 3D duas vezes; com o 3D fechado nada muda. */
+    func testB21Com3DAbertoParedeGavetasEApagarAtualizamNaHora() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var bs=function(){return __boxes().filter(function(q){return q.pk}).map(function(q){return (q.nm||'').split(':')[0]+'|'+q.pk+'@'+[q.x0,q.x1,q.y0,q.y1,q.z0,q.z1].map(function(v){return Math.round(v)}).join(',')}).sort().join(';')};
+        draw();demoScene();await W(400);draw();var base=JSON.stringify(snapState());
+        var E={parede:function(){setv('W',S.W-200)},gavetas:function(){S.m=S.mods[1];snap();S.m.v[0].k='drawers';S.m.v[0].n=3;draw()},apagar:function(){S.mods.splice(2,1);S.m=S.mods[0];draw()},largura:function(){S.m=S.mods[1];setv('w',S.m.w+100)}};
+        for(var k in E){loadState(JSON.parse(base));draw();open3D();await W(300);var antes=bs();E[k]();await W(400);var tela=bs();__build();var certo=bs();R[k]=(tela===certo?'na hora':(tela===antes?'atrasado':'diferente'))}
+        /* não monta o 3D duas vezes quando o próprio comando já atualizou */loadState(JSON.parse(base));draw();open3D();await W(300);var nb=0,b0=window.build;window.build=build=function(){nb++;return b0.apply(this,arguments)};S.m=S.mods[1];setv('w',S.m.w+50);if(window.re3)re3();await W(300);window.build=build=b0;R.montagens=nb<=2?'ok':'montou '+nb;
+        /* 3D fechado: nada a mais */var M3=document.getElementById('v3');if(M3)M3.hidden=true;var nb2=0;window.build=build=function(){nb2++;return b0.apply(this,arguments)};draw();await W(200);window.build=build=b0;R.fechado=nb2;
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["parede"] as? String, "na hora", "parede (W) com o 3D aberto")
+        XCTAssertEqual(o["gavetas"] as? String, "na hora", "vão vira gavetas com o 3D aberto")
+        XCTAssertEqual(o["apagar"] as? String, "na hora", "apagar módulo com o 3D aberto")
+        XCTAssertEqual(o["largura"] as? String, "na hora", "largura (já atualizava)")
+        XCTAssertEqual(o["montagens"] as? String, "ok", "não monta o 3D de novo quando o comando já atualizou")
+        XCTAssertEqual(o["fechado"] as? Int, 0, "3D fechado: o redesenho não monta o 3D")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

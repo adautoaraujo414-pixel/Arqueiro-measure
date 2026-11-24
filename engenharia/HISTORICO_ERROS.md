@@ -2157,3 +2157,15 @@ Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto
 - **Causa:** o recorte do caneco (`dcd57685`) corta no eixo x e no sentido da porta. No móvel girado (livre, ou na parede do lado), as caixas já estão giradas: o corte saía no lado errado e o contorno ficava fora do lugar.
 - **Correção:** no móvel girado (`m.wing`) o caneco não é recortado. Lá fica como era antes (1 mm dentro da lateral, só no 3D).
 - **Pendente (registrado):** recorte do caneco também no móvel girado. Teste do móvel livre e da dobradiça: ok em 1366 e em 430.
+
+### Auditoria do Code 1 — CUSTOS FIXOS (Code 2, ca930f4; pedido do Adauto 24/11 + 5 garantias)
+Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encontrado**.
+- **Sem custo novo, mesmo valor (garantia 5):** cozinha de exemplo com preços de chapa, fita e dobradiça; 4 cenários (padrão, 3 campos antigos 350,55/120,33/77,77, margem 2,37, desconto 7,5%) — `sale0`, `sale`, total e itens do orçamento **idênticos** entre b9f4476 (antes) e a versão nova.
+- **Centavos:** 6 custos (R$ 123,456 → 123,46; R$ 250; 7,33% dos materiais; 3,17% do preço com margem; 5,55% e 2,2% do valor final). Soma das linhas = total dos custos; valor = preço com margem + extras; os % do valor final batem ao centavo com o valor final (525,17 e 208,18), sem conta circular. Embutido = discriminado = 9.462,52 (soma dos itens do discriminado também); com desconto 8.752,83 nos dois.
+- **Margem dos itens:** `sale0` igual antes e depois de pôr os custos.
+- **Sigilo (garantia 4):** nome e descrição dos custos internos não aparecem no orçamento embutido, no discriminado nem no link do cliente (`clientPayload`). O CSV do editor é o do plano de corte (sem preço).
+- **Biblioteca (garantia 1):** mudar o valor na biblioteca não muda o orçamento que já tem a cópia.
+- **Salvar/reabrir/desfazer/desativar:** reabrir pelo estado salvo dá o mesmo valor e os 7 custos; Desfazer tira o custo; desativar tira o valor (e os % do valor final se recalculam).
+- **Limite:** % do valor final somando ≥ 90% → aviso e esses custos não entram (observação: todos os de % do valor final saem juntos, com aviso na tela).
+- **430×900 (densidade 2):** tocar em "+ Adicionar custo fixo", digitar "150,75", Salvar — campos visíveis, valor certo, gravado no projeto.
+- **Não verificado nesta sonda:** botão Duplicar clicado (o custo está no estado salvo do projeto, que é o que a duplicação copia); PDF renderizado em aparelho.

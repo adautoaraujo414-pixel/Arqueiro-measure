@@ -2008,3 +2008,22 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - heap JS: 15–18 MB nas duas.
 - **Teste:** `testAcabamentoVisualMetalTecidoMadeiraPedraSemMudarGeometria`. Falha antes (`vizMat` não existe) e passa depois.
 - **Capturas:** `diagnosticos/visual_materiais_3d_2026-11-24/` (antes em cima, depois embaixo).
+
+## TESTE-2TOQUES-CARGA (pedido do Code 1, 24/11): `testPedraVistaDeCima…` e `testDoisToquesNaPontaDoTamponamento…` falharam na bateria de 430 do VIS-MAT e passavam sozinhos
+- **Protocolo**, a 430, na base `ed041eb2` e no VIS-MAT `13bb4e47`, alternados:
+  - 5× sozinhos;
+  - 5× com os 30 testes anteriores da bateria;
+  - CPU 4× (5×) e 10× (3×).
+- **Resultado:**
+  - CPU 4× e 10×: 0 falhas, nas duas versões.
+  - Com vizinhos: a **base** falhou uma vez (`testDoisToquesNaPontaDoTamponamento…`, mesmo erro da bateria, `Cannot read properties of null (reading 'click')`: o menu de 2 toques não abriu).
+  - A rodada 4 do VIS-MAT com vizinhos não vale: rodei uma sonda no mesmo navegador ao mesmo tempo ("socket is already closed").
+  - **Não é o VIS-MAT.**
+- **Causa (mesmo padrão que o Code 1 achou em 3 testes de 2 toques do 3D):**
+  - o ajudante dos 2 toques esperava 120 ms **depois** de o 1º toque terminar;
+  - com a máquina carregada, o tempo do 1º toque soma no intervalo e o 2º pode sair da janela de 450 ms do app;
+  - no aparelho o intervalo vem do `e.timeStamp` do toque.
+- **Correção, só no teste:**
+  - o intervalo conta do início do 1º toque: `W(max(0, 120 − tempo do 1º toque))`;
+  - as expectativas são as mesmas e nenhum limite aumentou;
+  - os dois passam em 1366 e 430.

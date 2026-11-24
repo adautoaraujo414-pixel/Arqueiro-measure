@@ -14826,8 +14826,13 @@ window.fitaAcabH=function(m,p){var a=fitaAcab(p);if(!a||!(a.cl>0)||!(a.cw>0))ret
    if(d.emdup){snap();var r=emDuplica(m2,d.emdup);if(!r.ok){try{hs.pop()}catch(_){}try{toast('⚠ Não duplicou: '+r.com)}catch(_){}return}EM.st.sel=r.q.id;try{EM.re()}catch(_){}try{draw();panel()}catch(_){}try{toast('⧉ Peça duplicada · '+(EM.corte?EM.corte(r.q).join(' × '):'')+' mm · arraste pra onde quiser (↶ desfaz)')}catch(_){}return}
    if(d.emmed){EM.st.sel=d.emmed;try{EM.re();panel()}catch(_){}return}
    if(d.emapg){snap();EM.pecaApaga(m2,d.emapg);if(EM.st.sel===d.emapg)EM.st.sel=null;try{EM.re();draw();panel()}catch(_){}try{toast('Peça excluída (Desfazer volta)')}catch(_){}}})};
- window.addEventListener('pointerdown',function(e){if(MN&&!MN.contains(e.target))fecha();if(window.RO||!S.m)return;var t=e.target&&e.target.closest&&e.target.closest('[data-empl]');if(!t)return;var id=t.dataset.empl,now=Date.now();
-  if(TQ&&TQ.id===id&&now-TQ.t<450&&Math.hypot(e.clientX-TQ.x,e.clientY-TQ.y)<14){TQ=null;e.stopImmediatePropagation();e.preventDefault();emMenu(id,e.clientX,e.clientY);return}TQ={id:id,t:now,x:e.clientX,y:e.clientY}},true);
+ /* só conta como 1º toque o toque que NÃO virou arraste (Code 3 no CI iOS: arrastar, soltar e pegar de novo em < 0,5 s abria o menu):
+    o toque fica "armado" no pointerdown, cai se o dedo andar mais de 4 px e só vale quando solta parado; o 2º toque tem que vir até 450 ms depois de soltar */
+ var TA=null;
+ window.addEventListener('pointerdown',function(e){if(MN&&!MN.contains(e.target))fecha();if(window.RO||!S.m)return;var t=e.target&&e.target.closest&&e.target.closest('[data-empl]');if(!t){TQ=null;TA=null;return}var id=t.dataset.empl,now=Date.now();
+  if(TQ&&TQ.id===id&&now-TQ.up<450&&Math.hypot(e.clientX-TQ.x,e.clientY-TQ.y)<14){TQ=null;TA=null;e.stopImmediatePropagation();e.preventDefault();emMenu(id,e.clientX,e.clientY);return}TQ=null;TA={id:id,x:e.clientX,y:e.clientY,pid:e.pointerId}},true);
+ window.addEventListener('pointermove',function(e){if(TA&&e.pointerId===TA.pid&&Math.hypot(e.clientX-TA.x,e.clientY-TA.y)>4)TA=null},true);
+ ['pointerup','pointercancel'].forEach(function(n){window.addEventListener(n,function(e){if(!TA||e.pointerId!==TA.pid)return;if(n==='pointerup'&&Math.hypot(e.clientX-TA.x,e.clientY-TA.y)<=4)TQ={id:TA.id,x:TA.x,y:TA.y,up:Date.now()};else TQ=null;TA=null},true)});
 })();
 </script>
 </body></html>

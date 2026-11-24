@@ -5,7 +5,7 @@ name: Windows · teste de atualização
 on:
   # roda sozinho só quando o próprio teste muda (o GitHub precisa disso pra liberar o disparo manual numa branch)
   push:
-    paths: [ '.github/workflows/windows-atualizacao.yml', '.github/scripts/teste_atualizacao_windows.ps1' ]
+    paths: [ '.github/workflows/windows-atualizacao.yml', '.github/scripts/teste_atualizacao_windows.ps1', '.github/scripts/video_cdp.py' ]
   workflow_dispatch:
     inputs:
       anterior:

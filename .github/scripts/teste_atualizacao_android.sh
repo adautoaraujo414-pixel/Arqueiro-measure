@@ -49,4 +49,58 @@ adb logcat -d > $OUT/logcat.txt; grep -E "FATAL EXCEPTION|ANR in $PKG" -A3 $OUT/
 }
 rodada tests/backup-referencia/android-backup-referencia.zip tests/backup-referencia/manifesto.json referencia
 rodada tests/backup-referencia-rico/backup-rico.zip tests/backup-referencia-rico/manifesto.json rico
+# Vídeo do cliente (N13; auditoria final 24/11): o app PUBLICADO grava o vídeo pelo caminho do editor (aba Vídeos do cliente → seletor
+# de arquivo #phv2 → phPut → ArqueApp.putVideo), sem simular a ponte; depois a versão nova instala por cima e o editor novo acha e toca.
+# Entra no WebView pela depuração que o APK de teste (debug) já tem. O arquivo vai pra pasta do próprio app, que é de onde o app lê.
+# Limite: o toque no botão abre a câmera do sistema (capture=environment); aqui o arquivo é entregue direto ao seletor, sem a câmera.
+toca(){ for i in 1 2 3 4 5 6 7 8; do adb shell uiautomator dump /sdcard/ui.xml </dev/null >/dev/null 2>&1; adb pull /sdcard/ui.xml $OUT/ui.xml </dev/null >/dev/null 2>&1
+XY=$(python3 - "$OUT/ui.xml" "$1" <<'PY'
+import re,sys
+try: s=open(sys.argv[1],encoding='utf-8').read()
+except Exception: s=''
+for m in re.finditer(r'<node [^>]*>',s):
+    n=m.group(0);t=re.search(r' text="([^"]*)"',n);d=re.search(r'content-desc="([^"]*)"',n)
+    if (t and t.group(1)==sys.argv[2]) or (d and d.group(1)==sys.argv[2]):
+        b=re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',n);x1,y1,x2,y2=map(int,b.groups());print((x1+x2)//2,(y1+y2)//2);break
+PY
+)
+if [ -n "$XY" ]; then adb shell input tap $XY </dev/null; echo "toquei \"$1\" em $XY"; sleep 2; return 0; fi; sleep 3; done
+echo "não achei \"$1\" na tela"; adb exec-out screencap -p > "$OUT/sem_$(echo "$1" | tr -c 'a-zA-Z0-9' _).png" 2>/dev/null; return 1; }
+abre_cdp(){ for i in $(seq 1 20); do SOCK=$(adb shell grep -ao 'webview_devtools_remote_[0-9]*' /proc/net/unix </dev/null | head -1 | tr -d '\r'); [ -n "$SOCK" ] && break; sleep 2; done
+[ -z "$SOCK" ] && { falha "o WebView do editor não abriu a depuração"; return 1; }
+adb forward --remove tcp:9333 >/dev/null 2>&1; adb forward tcp:9333 localabstract:$SOCK >/dev/null && echo "depuração do editor: $SOCK"; }
+sha_video(){ N=$(adb exec-out run-as $PKG sh -c 'ls files/moveis/ 2>/dev/null' | grep -c '^video_.*\.json$'); if [ "$N" != 1 ]; then echo "arquivos de vídeo: $N" >&2; return; fi
+adb exec-out run-as $PKG sh -c 'cat files/moveis/video_*.json' | python3 -c "import json,sys,base64,hashlib;v=json.load(sys.stdin)['videoData'];print(hashlib.sha256(base64.b64decode(v.split(',',1)[1])).hexdigest())"; }
+rodada_video(){ VID=$1; OUT=$OUT0/video; mkdir -p $OUT; echo "######## vídeo gravado pelo app publicado"
+python3 -m pip install --quiet websocket-client >/dev/null 2>&1 || pip install --quiet websocket-client
+ESP=$(sha256sum "$VID" | cut -d' ' -f1); echo "vídeo de teste: $VID · sha256 $ESP"
+adb uninstall $PKG >/dev/null 2>&1; adb shell rm -rf /sdcard/Download/ArqueMeasure >/dev/null 2>&1
+echo "== 1. instala a versão anterior e grava o vídeo nela"; adb install -r "$OLD" || falha "não instalou a versão anterior"
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
+toca "Começar agora" || true
+toca "Novo Projetor 3D" || falha "não achei o botão Novo Projetor 3D"
+sleep 8; abre_cdp
+adb push "$VID" /data/local/tmp/video-teste.webm >/dev/null; adb shell chmod a+r /data/local/tmp/video-teste.webm
+adb shell "run-as $PKG sh -c 'mkdir -p cache && cat /data/local/tmp/video-teste.webm > cache/video-teste.webm'" || falha "não pus o vídeo na pasta do app"
+DIRAPP=$(adb shell "run-as $PKG pwd" | tr -d '\r')
+python3 .github/scripts/video_cdp.py gravar --cdp http://127.0.0.1:9333 --video "$VID" --caminho "$DIRAPP/cache/video-teste.webm" || falha "o app publicado não gravou o vídeo"
+adb exec-out screencap -p > $OUT/1_gravado_na_versao_anterior.png 2>/dev/null
+adb shell input keyevent 3; sleep 5; adb shell am force-stop $PKG
+S0=$(sha_video); echo "vídeo no arquivo do app (antes): $S0"; [ "$S0" = "$ESP" ] || falha "o arquivo de vídeo do app publicado não tem o vídeo gravado"
+adb exec-out run-as $PKG sh -c 'cd files && find . -type f' | sed 's#^\./##' | grep -v '^\s*$' > $OUT/lista.txt
+hashes > $OUT/antes.txt; cat $OUT/antes.txt
+echo "== 2. instala a versão nova por cima (sem desinstalar)"; adb install -r "$NEW" || falha "a versão nova não instalou por cima"
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 20; adb shell input keyevent 3; sleep 10; adb shell am force-stop $PKG
+hashes > $OUT/depois.txt
+diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização (vídeo)"
+S1=$(sha_video); echo "vídeo no arquivo do app (depois): $S1"; [ "$S1" = "$ESP" ] || falha "o vídeo mudou ou sumiu na atualização"
+echo "== 3. o editor novo acha e toca o vídeo"
+adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
+toca "Novo Projetor 3D" || falha "não achei o botão Novo Projetor 3D na versão nova"
+sleep 8; abre_cdp
+python3 .github/scripts/video_cdp.py conferir --cdp http://127.0.0.1:9333 --video "$VID" || falha "o editor novo não achou ou não tocou o vídeo"
+adb exec-out screencap -p > $OUT/2_na_versao_nova.png 2>/dev/null
+adb shell am force-stop $PKG
+}
+rodada_video tests/backup-referencia-rico/video-teste.webm
 echo "RESULTADO: versão $V0 → $V1 · falhas $FALHAS"; exit $FALHAS

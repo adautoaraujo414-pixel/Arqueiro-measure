@@ -5,7 +5,7 @@ name: Android · teste de atualização (emulador)
 on:
   # roda sozinho só quando o próprio teste muda (o GitHub precisa disso pra liberar o disparo manual numa branch)
   push:
-    paths: [ '.github/workflows/android-atualizacao.yml', '.github/scripts/teste_atualizacao_android.sh' ]
+    paths: [ '.github/workflows/android-atualizacao.yml', '.github/scripts/teste_atualizacao_android.sh', '.github/scripts/video_cdp.py' ]
   workflow_dispatch:
     inputs:
       anterior:

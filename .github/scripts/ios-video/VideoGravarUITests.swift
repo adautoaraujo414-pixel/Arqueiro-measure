@@ -20,8 +20,11 @@ final class VideoGravarUITests: XCTestCase {
         let pred = textos.map { contem ? NSPredicate(format: "label CONTAINS[c] %@", $0) : NSPredicate(format: "label == %@", $0) }
         let q = raiz.descendants(matching: .any).matching(NSCompoundPredicate(orPredicateWithSubpredicates: pred))
         let fim = Date().addingTimeInterval(ate)
+        var rolou = 0
         repeat {
             for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && e.isHittable { return e } }
+            // existe mas está fora da tela (iPhone: a lista de clientes passa da altura): rola a página e tenta de novo
+            if q.count > 0 && rolou < 6 && base == nil { app.webViews.firstMatch.swipeUp(velocity: .slow); rolou += 1; continue }
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         } while Date() < fim
         return nil
@@ -77,6 +80,11 @@ final class VideoGravarUITests: XCTestCase {
         for al in app.alerts.allElementsBoundByIndex { print("VIDEO-UI: alerta \"\(al.label)\" · " + al.staticTexts.allElementsBoundByIndex.map { $0.label }.joined(separator: " | ") + " · botões " + al.buttons.allElementsBoundByIndex.map { $0.label }.joined(separator: ", ")) }
         print("VIDEO-UI: botões na tela: " + app.buttons.allElementsBoundByIndex.prefix(40).map { $0.label }.filter { !$0.isEmpty }.joined(separator: ", "))
         if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "Concluído", "OK"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
+        sleep(4)
+        // diagnóstico (3ª rodada no iPad: o seletor fechou e o editor não avisou): os textos da página sobre vídeo/backup agora
+        let tv = NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@ OR label CONTAINS[c] %@", "víde", "backup", "salv")
+        print("VIDEO-UI: textos: " + app.staticTexts.matching(tv).allElementsBoundByIndex.prefix(12).map { $0.label }.joined(separator: " | "))
+        print("VIDEO-UI: vídeos na página: \(app.webViews.firstMatch.descendants(matching: .any).matching(NSPredicate(format: "elementType == %d", XCUIElement.ElementType.other.rawValue)).matching(NSPredicate(format: "label CONTAINS[c] %@", "video")).count)")
         // o editor avisa "1 vídeo(s) salvo(s) neste cliente."
         guard acha(["vídeo(s) salvo(s)"], contem: true, ate: 90) != nil else { mostra("o editor não avisou que salvou"); XCTFail("FALHA-VIDEO-UI: o editor não avisou que salvou o vídeo"); throw Falha() }
         print("VIDEO-UI: o editor da versão publicada salvou o vídeo")

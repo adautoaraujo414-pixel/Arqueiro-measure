@@ -62,7 +62,10 @@ for m in re.finditer(r'<node [^>]*>',s):
     n=m.group(0);t=re.search(r' text="([^"]*)"',n);d=re.search(r'content-desc="([^"]*)"',n)
     alvos=sys.argv[2].split('|')
     if (t and t.group(1) in alvos) or (d and d.group(1) in alvos):
-        b=re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',n);x1,y1,x2,y2=map(int,b.groups());print((x1+x2)//2,(y1+y2)//2);break
+        b=re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"',n);x1,y1,x2,y2=map(int,b.groups());ult=((x1+x2)//2,(y1+y2)//2)
+# o último que aparece (no app publicado "3D Projector" está no cartão e na barra de baixo; o da barra cria o projeto novo)
+try: print(*ult)
+except NameError: pass
 PY
 )
 if [ -n "$XY" ]; then adb shell input tap $XY </dev/null; echo "toquei \"$1\" em $XY"; sleep 2; return 0; fi; sleep 3; done
@@ -79,7 +82,7 @@ adb uninstall $PKG >/dev/null 2>&1; adb shell rm -rf /sdcard/Download/ArqueMeasu
 echo "== 1. instala a versão anterior e grava o vídeo nela"; adb install -r "$OLD" || falha "não instalou a versão anterior"
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
 toca "Começar agora|Start now|Pular|Skip" || true
-toca "Novo Projetor 3D|New 3D Projector" || falha "não achei o botão Novo Projetor 3D"
+toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || falha "não achei o botão Novo Projetor 3D"
 sleep 8; abre_cdp
 adb push "$VID" /data/local/tmp/video-teste.webm >/dev/null; adb shell chmod a+r /data/local/tmp/video-teste.webm
 adb shell "run-as $PKG sh -c 'mkdir -p cache && cat /data/local/tmp/video-teste.webm > cache/video-teste.webm'" || falha "não pus o vídeo na pasta do app"
@@ -97,7 +100,7 @@ diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(w
 S1=$(sha_video); echo "vídeo no arquivo do app (depois): $S1"; [ "$S1" = "$ESP" ] || falha "o vídeo mudou ou sumiu na atualização"
 echo "== 3. o editor novo acha e toca o vídeo"
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 8
-toca "Novo Projetor 3D|New 3D Projector" || falha "não achei o botão Novo Projetor 3D na versão nova"
+toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || falha "não achei o botão Novo Projetor 3D na versão nova"
 sleep 8; abre_cdp
 python3 .github/scripts/video_cdp.py conferir --cdp http://127.0.0.1:9333 --video "$VID" || falha "o editor novo não achou ou não tocou o vídeo"
 adb exec-out screencap -p > $OUT/2_na_versao_nova.png 2>/dev/null

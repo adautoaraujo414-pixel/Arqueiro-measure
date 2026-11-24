@@ -44,9 +44,48 @@ PY
   DATA3=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA3/Library/Application Support/Arquemestre/files"; hashes > $OUT/depois_abrir.txt
   diff $OUT/antes.txt $OUT/depois_abrir.txt && echo "arquivos iguais depois de abrir: $(wc -l < $OUT/depois_abrir.txt)" || falha "abrir os projetos mudou ou apagou arquivo"
 }
+# Vídeo do cliente (N13; auditoria final 24/11): a versão PUBLICADA grava o vídeo pelo seletor de verdade (VideoGravarUITests: lista de
+# clientes → Fotos e obra → Vídeos → Gravar / adicionar vídeo → Fototeca → o vídeo posto no simulador), depois a nova instala por cima,
+# o arquivo do vídeo tem que ficar igual byte a byte e o editor novo tem que achar e tocar o vídeo.
+# O app da versão publicada desta rodada é compilado do mesmo código (3f1c3a58) junto com o alvo de teste de interface (build/ddui).
+shav(){ ls "$F/moveis/" 2>/dev/null | grep -c '^video_.*\.json$' > $OUT/n_videos.txt; [ "$(cat $OUT/n_videos.txt)" = 1 ] || return
+  python3 -c "import json,sys,base64,hashlib,glob;v=json.load(open(glob.glob(sys.argv[1]+'/moveis/video_*.json')[0]))['videoData'];print(hashlib.sha256(base64.b64decode(v.split(',',1)[1])).hexdigest())" "$F"; }
+roda_video(){ KIND=$1; OUT=$OUT0/$KIND-video; mkdir -p $OUT; echo "######## $KIND · vídeo gravado pela versão publicada"
+  XUI=$(ls anterior/ios/build/ddui/Build/Products/*.xctestrun 2>/dev/null | head -1); OLDUI=anterior/ios/build/ddui/Build/Products/Debug-iphonesimulator/Arquemestre.app
+  [ -n "$XUI" ] && [ -d "$OLDUI" ] || { falha "não compilou o teste de interface do vídeo na versão publicada"; return; }
+  UDID=$(python3 novo/ios/scripts/pick_sim.py "$KIND"); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
+  xcrun simctl uninstall "$UDID" $BID >/dev/null 2>&1
+  echo "== 1. instala a versão anterior"; xcrun simctl install "$UDID" "$OLDUI" || falha "não instalou a anterior"
+  xcrun simctl launch "$UDID" $BID >/dev/null; sleep 12; xcrun simctl terminate "$UDID" $BID
+  DATA=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA/Library/Application Support/Arquemestre/files"; mkdir -p "$F"
+  # clientes pra receber o vídeo: os do backup rico
+  rm -rf ref && mkdir ref && unzip -q novo/tests/backup-referencia-rico/backup-rico.zip -d ref && cp -R ref/files/. "$F/"
+  xcrun simctl addmedia "$UDID" novo/tests/backup-referencia-rico/video-teste.mp4 || falha "não pus o vídeo na Fototeca do simulador"
+  xcrun simctl privacy "$UDID" grant photos $BID >/dev/null 2>&1
+  echo "== 2. a versão publicada grava o vídeo pelo seletor"
+  TEST_RUNNER_ARQ_VIDEO_UI=1 xcodebuild test-without-building -xctestrun "$XUI" -destination "id=$UDID" -only-testing:ArquemestreVideoUITests/VideoGravarUITests -resultBundlePath "$OUT/gravar.xcresult" > $OUT/gravar.log 2>&1; RU=$?
+  grep -E "VIDEO-UI: (toquei|não achei|seletor|o editor)|FALHA-VIDEO-UI|Test Case .*(passed|failed)" $OUT/gravar.log | head -30
+  [ $RU -eq 0 ] || falha "a versão publicada não gravou o vídeo pelo seletor (veja gravar.log e gravar.xcresult)"
+  xcrun simctl terminate "$UDID" $BID >/dev/null 2>&1
+  DATA=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA/Library/Application Support/Arquemestre/files"
+  S0=$(shav); echo "vídeo no arquivo do app (antes): ${S0:-nenhum} · arquivos de vídeo $(cat $OUT/n_videos.txt)"; [ -n "$S0" ] || falha "a versão publicada não deixou o arquivo do vídeo"
+  (cd "$F" && find . -type f | sed 's#^\./##' | sort) > $OUT/lista.txt; hashes > $OUT/antes.txt; cat $OUT/antes.txt
+  echo "== 3. instala a versão nova por cima"; xcrun simctl install "$UDID" "$NEW" || falha "a nova não instalou por cima"
+  xcrun simctl launch "$UDID" $BID >/dev/null; sleep 25; xcrun simctl terminate "$UDID" $BID
+  DATA=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA/Library/Application Support/Arquemestre/files"; hashes > $OUT/depois.txt
+  diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização (vídeo)"
+  S1=$(shav); echo "vídeo no arquivo do app (depois): ${S1:-nenhum}"; [ -n "$S0" ] && [ "$S1" = "$S0" ] || falha "o vídeo mudou ou sumiu na atualização"
+  echo "== 4. o editor novo acha e toca o vídeo"
+  XTR=$(ls novo/ios/build/dd/Build/Products/*.xctestrun 2>/dev/null | head -1)
+  TEST_RUNNER_ARQ_VIDEO=1 TEST_RUNNER_ARQ_VIDEO_SHA="$S0" xcodebuild test-without-building -xctestrun "$XTR" -destination "id=$UDID" -only-testing:ArquemestreTests/AtualizacaoAbreProjetosTests/testVideoGravadoPelaVersaoPublicadaVoltaIgualETocaNoEditorNovo > $OUT/conferir.log 2>&1; RC=$?
+  grep -E "ATUALIZACAO-VIDEO|error:|Test Case .*(passed|failed|skipped)" $OUT/conferir.log | head -10
+  [ $RC -eq 0 ] || falha "o editor novo não achou ou não tocou o vídeo (veja conferir.log)"
+  grep -q "ATUALIZACAO-VIDEO:" $OUT/conferir.log || falha "a conferência do vídeo não rodou (pulada?)"
+}
 # 24/11: os dois backups de referência (o de sempre e o rico gerado pelo editor publicado), cada um do zero
 for K in ${DISPOSITIVOS:-iphone ipad}; do
   roda $K tests/backup-referencia/android-backup-referencia.zip referencia
   roda $K tests/backup-referencia-rico/backup-rico.zip rico
+  roda_video $K
 done
 echo "RESULTADO: falhas $FALHAS"; exit $FALHAS

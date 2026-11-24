@@ -4,7 +4,7 @@ name: iOS · teste de atualização (simulador)
 on:
   push:
     branches: [ 'claude/**' ]
-    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh', 'ios/ArquemestreTests/AtualizacaoAbreProjetosTests.swift' ]
+    paths: [ '.github/workflows/ios-atualizacao.yml', '.github/scripts/teste_atualizacao_ios.sh', 'ios/ArquemestreTests/AtualizacaoAbreProjetosTests.swift', '.github/scripts/ios-video/**' ]
   workflow_dispatch:
     inputs:
       anterior:
@@ -29,6 +29,9 @@ jobs:
         run: |
           brew install xcodegen
           (cd anterior/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 || { tail -40 build.log; exit 1; })
+          # 24/11 (vídeo do cliente, N13): o mesmo código publicado, mais um alvo de teste de interface que usa o seletor como a pessoa (o app não muda)
+          python3 novo/.github/scripts/ios-video/monta_uitest.py anterior/ios
+          (cd anterior/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme ArquemestreVideoUI -configuration Debug -sdk iphonesimulator -derivedDataPath build/ddui CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build-for-testing > buildui.log 2>&1 || { tail -40 buildui.log; echo "aviso: o teste de interface do vídeo não compilou (a rodada do vídeo vai falhar)"; })
           # a nova também com os testes (21/11): depois da atualização, o teste AtualizacaoAbreProjetosTests abre os projetos no editor
           (cd novo/ios && xcodegen generate && xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -sdk iphonesimulator -derivedDataPath build/dd CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build-for-testing > build.log 2>&1 || { tail -40 build.log; exit 1; })
       - name: Atualizar por cima no simulador e conferir os dados

@@ -75,11 +75,16 @@ final class VideoGravarUITests: XCTestCase {
         let pv = NSPredicate(format: "label CONTAINS[c] %@", "video")
         let segue = ["Continue", "Continuar", "Get Started", "Começar", "Next", "Seguinte", "Avançar"]
         // botão da apresentação: só botão, sem rolar a página do editor (rolar fecharia o seletor)
+        // 6ª rodada: nenhum botão com esses nomes apareceu em 60 s; vale também quem CONTÉM "Continu"/"Get Started"/"Começar",
+        // e só fora da página do editor (botões do seletor, que é outro processo)
+        let daPagina = Set(app.webViews.firstMatch.buttons.allElementsBoundByIndex.map { $0.label })
         func botaoSegue() -> XCUIElement? {
-            let q = app.buttons.matching(NSCompoundPredicate(orPredicateWithSubpredicates: segue.map { NSPredicate(format: "label == %@", $0) }))
-            for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable { return e } }
+            let ps = segue.map { NSPredicate(format: "label == %@", $0) } + ["Continu", "Get Started", "Começar"].map { NSPredicate(format: "label CONTAINS[c] %@", $0) }
+            let q = app.buttons.matching(NSCompoundPredicate(orPredicateWithSubpredicates: ps))
+            for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable && !daPagina.contains(e.label) { return e } }
             return nil
         }
+        var mostrouSeletor = false
         var alvo: XCUIElement? = nil
         var passos = 0
         let fim = Date().addingTimeInterval(60)
@@ -96,6 +101,11 @@ final class VideoGravarUITests: XCTestCase {
             if alvo != nil { break }
             if passos < 3, let b = botaoSegue() {
                 print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); continue
+            }
+            if !mostrouSeletor {
+                mostrouSeletor = true
+                print("VIDEO-UI: no seletor (fora da página): botões " + app.buttons.allElementsBoundByIndex.filter { !daPagina.contains($0.label) }.prefix(30).map { "\($0.label)/\($0.identifier)" }.joined(separator: ", ")
+                      + " · textos " + app.staticTexts.allElementsBoundByIndex.filter { $0.frame.minY >= 0 }.suffix(20).map { $0.label }.joined(separator: " | "))
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         } while Date() < fim

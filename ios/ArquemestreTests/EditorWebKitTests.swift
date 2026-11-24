@@ -17734,8 +17734,8 @@ final class EditorWebKitTests: XCTestCase {
         draw();demoScene();await W(400);draw();var base=JSON.stringify(snapState());
         var E={parede:function(){setv('W',S.W-200)},gavetas:function(){S.m=S.mods[1];snap();S.m.v[0].k='drawers';S.m.v[0].n=3;draw()},apagar:function(){S.mods.splice(2,1);S.m=S.mods[0];draw()},largura:function(){S.m=S.mods[1];setv('w',S.m.w+100)}};
         for(var k in E){loadState(JSON.parse(base));draw();open3D();await W(300);var antes=bs();E[k]();await W(400);var tela=bs();__build();var certo=bs();R[k]=(tela===certo?'na hora':(tela===antes?'atrasado':'diferente'))}
-        /* não monta o 3D duas vezes quando o próprio comando já atualizou */loadState(JSON.parse(base));draw();open3D();await W(300);var nb=0,b0=window.build;window.build=build=function(){nb++;return b0.apply(this,arguments)};S.m=S.mods[1];setv('w',S.m.w+50);if(window.re3)re3();await W(300);window.build=build=b0;R.montagens=nb<=2?'ok':'montou '+nb;
-        /* 3D fechado: nada a mais */var M3=document.getElementById('v3');if(M3)M3.hidden=true;var nb2=0;window.build=build=function(){nb2++;return b0.apply(this,arguments)};draw();await W(200);window.build=build=b0;R.fechado=nb2;
+        /* não monta o 3D duas vezes quando o próprio comando já atualizou */loadState(JSON.parse(base));draw();open3D();await W(300);var nb=0,h0=window.__build_ni;window.__build_ni=function(){nb++;if(h0)return h0.apply(this,arguments)};S.m=S.mods[1];setv('w',S.m.w+50);if(window.re3)re3();await W(300);R.montagens=nb>=1&&nb<=2?'ok':'montou '+nb;
+        /* 3D fechado: nada a mais */var M3=document.getElementById('v3');if(M3)M3.hidden=true;nb=0;draw();await W(200);window.__build_ni=h0;R.fechado=nb;
         R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
         """#)
         XCTAssertEqual(o["parede"] as? String, "na hora", "parede (W) com o 3D aberto")

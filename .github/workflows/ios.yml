@@ -76,7 +76,7 @@ jobs:
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py ipad)
           # Adauto 24/11: aquece o simulador do iPad antes da bateria (liga e espera terminar de iniciar).
-          # A 1ª abertura do editor continua medida à parte no teste (ABERTURA-DIAG frio-ipad); o limite de 20 s não mudou.
+          # O teste não mudou: a 1ª abertura do app continua com o limite de 20 s e o tempo sai no ABERTURA-DIAG (página / editor / total).
           T0=$(date +%s); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
           echo "ABERTURA-DIAG simulador do iPad ligado em $(( $(date +%s) - T0 )) s (antes da bateria)"
           set +e

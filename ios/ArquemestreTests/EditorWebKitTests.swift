@@ -17795,4 +17795,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["andouB"] as? Int, 0, "e o vizinho que já existia não anda")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* AUD-INT-GAVETA (auditoria técnica 24/11, erro nº 10 do protocolo: peça antiga que fica depois de mudar a configuração): vão com portas e
+       internos (caixote, maleiro, cabideiro) trocado pra gavetas continuava gerando os internos — 4 caixotes + 8 corrediças no corte, dentro das
+       gavetas (atravessando as laterais no 3D). Com o vão em gavetas os internos não entram; os dados ficam guardados e voltam se o vão voltar a ter portas. */
+    func testVaoDePortasComCaixoteViraGavetasSemCaixoteFantasmaEVoltaAoTrocar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var cnt=function(m,re){return partsOf(m).filter(function(p){return re.test(p.name)}).length};
+        var sobre=function(mi){__build();var B=__boxes().filter(function(q){return q.pk&&String(q.nm).indexOf(mi+':')===0&&!q.pf&&!(q.a<.5)}),n=0;var ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0.6&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>0.6&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>0.6};var cx=B.filter(function(q){return /caixote/.test(String(q.pk))}),gl=B.filter(function(q){return /^Lateral de gaveta/.test(String(q.pk))});cx.forEach(function(a){gl.forEach(function(b){if(ov(a,b))n++})});return n};
+        draw();open3D();await W(300);S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.W=6000;draw();newTpl(T('Gaveteiro com caixote (4 gavetas dentro)'));var m=S.mods[0];S.m=m;draw();
+        R.v0='portas: caixotes '+cnt(m,/^Frente de gaveta \(caixote\)/);
+        /* vão vira 2 gavetas pelo mesmo caminho do menu do vão */var vg=gv(0,m);if(vg.k!=='drawers'&&!vg.cava)vg.cava=true;vg.k='drawers';vg.n=2;draw();
+        R.v1='gavetas: caixotes '+cnt(m,/caixote/)+' · cabideiro/maleiro '+cnt(m,/Cabideiro|Maleiro|Tubo/)+' · caixote dentro da gaveta '+sobre(0)+' · frentes '+cnt(m,/^Frente de gaveta$/);
+        /* volta pra portas: os internos voltam (nada foi apagado) */vg=gv(0,m);vg.k='door';vg.n=2;draw();R.v2='portas de novo: caixotes '+cnt(m,/^Frente de gaveta \(caixote\)/)+' · int guardado '+((gv(0,m).int||[]).length);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "portas: caixotes 4", "com portas: 4 caixotes")
+        XCTAssertEqual(o["v1"] as? String, "gavetas: caixotes 0 · cabideiro/maleiro 0 · caixote dentro da gaveta 0 · frentes 2", "em gavetas: sem caixote fantasma no corte nem no 3D")
+        XCTAssertEqual(o["v2"] as? String, "portas de novo: caixotes 4 · int guardado 3", "voltou pra portas: os internos voltam (nada foi apagado)")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

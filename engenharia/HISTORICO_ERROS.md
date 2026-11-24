@@ -2108,3 +2108,12 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Causa:** o recorte do caneco (`dcd57685`) corta no eixo x e no sentido da porta. No móvel girado (livre, ou na parede do lado), as caixas já estão giradas: o corte saía no lado errado e o contorno ficava fora do lugar.
 - **Correção:** no móvel girado (`m.wing`) o caneco não é recortado. Lá fica como era antes (1 mm dentro da lateral, só no 3D).
 - **Pendente (registrado):** recorte do caneco também no móvel girado. Teste do móvel livre e da dobradiça: ok em 1366 e em 430.
+- **Atualização (Chefe, 24/11):** o pendente de cima foi resolvido.
+  - Juntei o MOVEL-GIRADO do Code 1 (`78e7d62`: no módulo girado, o corte vai no eixo da largura da porta, do lado oposto à peça que encosta).
+  - O contorno do caneco (`pf.pts`) agora também é cortado no mesmo eixo. Antes, a 90° e 270° só a borda era cortada.
+  - A trava de `a79780b7` (sem recorte no móvel girado) saiu.
+  - Varredura de 81 modelos com porta × (livre a 0/90/180/270° + paredes esquerda e direita) = 486 cenas: 11.404 → 0.
+  - `testMovelLivre…`, `testCanecoDaDobradicaIgualEmQualquerParede` (do Code 1) e `testDobradicaNoMovelGiradoENasParedesLateraisVarreduraZeroInterseccao` passam juntos.
+- **Custos fixos × link do cliente (Chefe, 24/11):** o link do cliente não leva valor nenhum, nem total (é assim desde antes: "ele só vê, não vê valores").
+  - Não existe total do link para divergir.
+  - O teste confere: tela = PDF ao centavo, com e sem desconto, embutido e discriminado, com custos internos R$ e %. E o link sem preço, desconto, custo ou total.

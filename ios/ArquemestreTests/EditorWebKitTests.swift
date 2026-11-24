@@ -18234,10 +18234,10 @@ final class EditorWebKitTests: XCTestCase {
         var b=budget(),X=r2(b.sale0+350+120.5),F=X/0.9;R.final=(r2(b.sale)===r2(X+r2(F*0.1)))+' · padrão interno '+cfxLimpa({n:'a',v:1}).cli;
         var soma=function(q){return r2(q.items.reduce(function(a,i){return a+i.value},0))};var qe=quoteData();S.cfxModo='disc';var qd=quoteData();
         R.total=(qe.total===qd.total)+' · emb '+(soma(qe)===qe.total)+' · disc '+(soma(qd)===qd.total)+' · linha '+qd.items.some(function(i){return i.desc==='Montagem · equipe de 2'&&i.value===350})+' · emb sem linha '+!qe.items.some(function(i){return /Montagem/.test(i.desc)});
-        S.desc=10;var qx=quoteData();R.desconto=(soma(qx)===qx.base)+' · '+(qx.total===r2(qx.base*0.9));delete S.desc;
+        S.desc=10;var qx=quoteData();R.desconto=(soma(qx)===qx.base)+' · '+(qx.total===r2(qx.base*0.9));R.telaPdf=[r2(vlFin(budget()))===qx.total,qx.total===quoteData().total].join(' · ');var totDesc=qx.total;delete S.desc;R.telaPdfSemDesc=r2(vlFin(budget()))===qe.total&&qe.total===qd.total;
         var tudo=JSON.stringify([qe,qd,qx]);R.pdf=/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ/.test(tudo);
         var cap=null,ce=window.cutEncode;window.cutEncode=cutEncode=function(x){cap=x;return Promise.resolve('x')};try{document.body.insertAdjacentHTML('beforeend','<button id="__vcli" data-vcli="1"></button>');document.getElementById('__vcli').click();await W(150)}finally{window.cutEncode=cutEncode=ce;var bb=document.getElementById('__vcli');if(bb)bb.remove()}
-        R.link=cap?(/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ|Montagem/.test(JSON.stringify(cap))?'vazou':'limpo'):'sem link';
+        var cj=cap?JSON.stringify(cap):'';R.link=cap?(/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ|Montagem/.test(cj)?'vazou':'limpo'):'sem link';/* o link do cliente não leva valor nenhum (como sempre: "não vê valores"): nem preço, nem desconto, nem custo, nem o total */var tt=[qe.total,totDesc].map(function(v){return String(v)});R.linkSemValor=cap?(!('preco' in cap.st)&&!('desc' in cap.st)&&!('cfx' in cap.st)&&!tt.some(function(v){return cj.indexOf(v)>=0})):false;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["final"] as? String, "true · padrão interno 0")
@@ -18245,6 +18245,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["desconto"] as? String, "true · true")
         XCTAssertEqual(o["pdf"] as? Bool, false, "custo interno não aparece no PDF")
         XCTAssertEqual(o["link"] as? String, "limpo", "nenhum custo vai no link do cliente")
+        XCTAssertEqual(o["telaPdf"] as? String, "true · true", "com desconto: valor da tela = total do PDF, ao centavo (custos internos embutidos, R$ e %)")
+        XCTAssertEqual(o["telaPdfSemDesc"] as? Bool, true, "sem desconto: tela = PDF embutido = PDF discriminado")
+        XCTAssertEqual(o["linkSemValor"] as? Bool, true, "o link do cliente não leva valor nenhum (nem total): não existe total do link para divergir")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -18282,6 +18285,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["atualizar"] as? Bool, true, "o projeto mostra o botão pra atualizar, se a pessoa quiser")
         XCTAssertEqual(o["B"] as? Double, 180, "o projeto novo pega o valor novo")
         XCTAssertEqual(o["Aatualizado"] as? String, "180")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* MOVEL-GIRADO (auditoria do Code 1 em 24/11, na decisão A05 do Code 2 — dcd5768): o caneco da dobradiça cortado onde encosta na lateral
+       tem que sair igual em qualquer parede. Antes: na parede da esquerda/direita o corte caía na profundidade (volume 9.928 × 13.164 no fundo)
+       e no móvel livre girado 180° o caneco sumia inteiro (testMovelLivreNoMeioDaSala…: "3D fora"). Família: balcão, aéreo, armário alto, guarda-roupa. */
+    func testCanecoDaDobradicaIgualEmQualquerParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        open3D();await W(300);var out={};
+        for(var nm of ['Balcão 2 portas','Aéreo 2 portas','Armário alto 2 portas','Guarda-roupa 2 vãos']){var res=[];for(var w of ['','e','d']){loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nm));var m=S.mods[0];m.x=900;if(w)m.wing=w;draw();__build();var B=__boxes().filter(function(b){return /^0:/.test(b.nm)&&b.cup});res.push((w||'fundo')+' '+B.length+' canecos, vol '+Math.round(B.reduce(function(a,b){return a+(b.x1-b.x0)*(b.y1-b.y0)*(b.z1-b.z0)},0)))}out[nm]=res.join(' | ')}
+        var ok=Object.keys(out).every(function(k){var p=out[k].split(' | ').map(function(x){return x.replace(/^\S+ /,'')});return p[0]===p[1]&&p[0]===p[2]});document.getElementById('v3x').click();return JSON.stringify({ok:ok,res:JSON.stringify(out),errs:__errs.length})
+        """#)
+        XCTAssertEqual(o["ok"] as? Bool, true, "canecos iguais no fundo, na esquerda e na direita: \(o["res"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DECISÃO 4 do Adauto (A05) no móvel girado (Chefe 24/11, junto com o MOVEL-GIRADO do Code 1, 78e7d62): varredura do catálogo com porta, móvel livre a
+    // 0/90/180/270° e nas paredes da esquerda e da direita — nenhuma parte da dobradiça dentro de outra peça (antes: 11.404). O contorno do caneco é cortado no
+    // mesmo eixo da borda (antes, a 90/270° só a borda era cortada e o desenho continuava 1 mm dentro)
+    func testDobradicaNoMovelGiradoENasParedesLateraisVarreduraZeroInterseccao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        open3D();await W(300);var L=[],tot=0,cen=0,ex={};
+        var conta=function(nm){__build();var B=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0}),pts=B.filter(function(b){return /Porta/.test(String(b.nm))}),big={};pts.forEach(function(b){var k=b.pk||b.nm,v=(b.x1-b.x0)*(b.y1-b.y0)+(b.z1-b.z0)*(b.y1-b.y0);if(!big[k]||v>big[k].v)big[k]={v:v,b:b}});
+         var hp=pts.filter(function(b){var g=big[b.pk||b.nm].b;return b!==g&&(b.y1-b.y0)<80&&Math.max(b.x1-b.x0,b.z1-b.z0)<80});tot+=hp.length;cen++;
+         hp.forEach(function(a){B.forEach(function(b){if(/Porta|Dobradi/.test(String(b.nm))||b.a<.95)return;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>0.05&&oy>0.05&&oz>0.05){L.push(nm+': '+a.pk+' × '+String(b.nm).replace(/^\d+:/,'')+' '+[ox,oy,oz].map(function(v){return Math.round(v*10)/10}).join('×'));ex[nm.split(' @')[0]]=1}})})};
+        its.forEach(function(t){var temPorta=false;try{loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;S.wl={L:'p',R:'p'};S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(t)));draw();temPorta=partsOf(S.mods[0]).some(function(p){return p.name==='Porta'&&p.fur})}catch(e){return}if(!temPorta)return;
+         var base=JSON.stringify(snapState());
+         ['e','d'].forEach(function(w){loadState(JSON.parse(base));var m=S.mods[0];S.m=m;m.wing=w;try{wingShape(w)}catch(_){}m.x=wingStart();draw();conta(t.n+' @parede '+w)});
+         [0,90,180,270].forEach(function(r){loadState(JSON.parse(base));var m=S.mods[0];S.m=m;var bt=null;for(var k=0;k<12&&!bt;k++){S.tab=k;panel();bt=document.querySelector('#bd [data-wing="L"]')}if(!bt)return;bt.click();m.rot=r;draw();conta(t.n+' @livre '+r)})});
+        document.getElementById('v3x').click();return JSON.stringify({cenas:cen,partes:tot>30000,n:L.length+(L.length?' :: '+L.slice(0,3).join(' | '):''),errs:__errs.length-e0});
+        """#)
+        XCTAssertEqual(o["cenas"] as? Int, 486, "81 modelos com porta × 6 posições")
+        XCTAssertEqual(o["partes"] as? Bool, true)
+        XCTAssertEqual(o["n"] as? String, "0", "nenhuma parte da dobradiça dentro de outra peça no móvel girado")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

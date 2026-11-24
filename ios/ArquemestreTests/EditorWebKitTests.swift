@@ -17774,4 +17774,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v5"] as? String, "encostou: x2100 tl0 tr0", "encostou no outro: o automático da junta sai (TAMP-JUNTA de sempre)")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* B23 · s20 I7 (checklist; auditoria final 24/11): criar um módulo novo não mexe em módulo que já existe. O autoTamp da criação chamava rowJoin
+       na fileira inteira e fechava vãos de até 70 mm andando com móveis que ninguém tocou (na sonda, a sapateira andou 100 mm e entrou embaixo do aéreo).
+       Regra 16/11 (CLAUDE.md §4): medida e posição são do marceneiro; o app avisa, não muda sozinho. */
+    func testB23CriarModuloNovoNaoAndaComOsQueJaExistem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var L=function(){return S.mods.map(function(m){return m.x+'+'+m.w+(m.tl?'[tl'+(m.tlAuto?'a':'m')+']':'')+(m.tr?'[tr'+(m.trAuto?'a':'m')+']':'')}).join(' | ')};
+        S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.env='cozinha';S.room='cozinha';S.W=5100;S.H=2700;draw();newTpl(T('Balcão 2 portas'));draw();await W(10);
+        newTpl(T('Sapateira 2P 600mm'));draw();await W(10);var sp=S.mods[1];snap();sp.tl=true;sp.tlM=1;delete sp.tlAuto;sp.tr=true;sp.trM=1;delete sp.trAuto;sp.tlW=sp.trW=30;
+        var a=S.mods[0],ea=a.x+a.w+(a.tr?(+a.trW||30):0);sp.x=ea+50+30;draw();await W(10);R.antes=L();var x0=sp.x;
+        newTpl(T('Sapateira torre 1 porta'));draw();await W(50);R.depois=L();R.andou=S.mods[1].x-x0;R.av=TL.filter(function(t){return /cabe|Nenhuma/.test(t)});R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        
+        """#)
+        XCTAssertEqual(o["andou"] as? Int, 0, "o módulo que já existia não anda quando outro é criado")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

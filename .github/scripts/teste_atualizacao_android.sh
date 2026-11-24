@@ -74,8 +74,8 @@ echo "não achei \"$1\" na tela; textos na tela: $(grep -o 'text="[^"]\+"' $OUT/
 abre_cdp(){ for i in $(seq 1 20); do SOCK=$(adb shell grep -ao 'webview_devtools_remote_[0-9]*' /proc/net/unix </dev/null | head -1 | tr -d '\r'); [ -n "$SOCK" ] && break; sleep 2; done
 [ -z "$SOCK" ] && { echo "o WebView do editor não abriu a depuração"; return 1; }
 adb forward --remove tcp:9333 >/dev/null 2>&1; adb forward tcp:9333 localabstract:$SOCK >/dev/null && echo "depuração do editor: $SOCK"; }
-sha_video(){ N=$(adb exec-out run-as $PKG sh -c 'ls files/moveis/ 2>/dev/null' | grep -c '^video_.*\.json$'); if [ "$N" != 1 ]; then echo "arquivos de vídeo: $N" >&2; return; fi
-adb exec-out run-as $PKG sh -c 'cat files/moveis/video_*.json' | python3 -c "import json,sys,base64,hashlib;v=json.load(sys.stdin)['videoData'];print(hashlib.sha256(base64.b64decode(v.split(',',1)[1])).hexdigest())"; }
+sha_video(){ N=$(adb shell "run-as $PKG ls -1 files/moveis" </dev/null 2>/dev/null | tr -d '\r' | grep -c '^video_.*\.json$'); if [ "$N" != 1 ]; then echo "arquivos de vídeo: $N" >&2; return; fi
+adb exec-out "run-as $PKG sh -c 'cat files/moveis/video_*.json'" </dev/null | python3 -c "import json,sys,base64,hashlib;v=json.load(sys.stdin)['videoData'];print(hashlib.sha256(base64.b64decode(v.split(',',1)[1])).hexdigest())"; }
 abre_editor(){ for ix in -1 0; do TOCA_IDX=$ix toca "Novo Projetor 3D|New 3D Projector|Projetor 3D|3D Projector" || return 1; sleep 8
   echo "tela depois do toque: $(adb shell uiautomator dump /sdcard/ui.xml </dev/null >/dev/null 2>&1; adb exec-out cat /sdcard/ui.xml | grep -o 'text="[^"]\+"' | head -15 | tr '\n' ' ')"
   echo "sockets de depuração: $(adb shell cat /proc/net/unix </dev/null | grep -ao '@[a-z_]*devtools[a-z_0-9]*' | tr '\n' ' ')"

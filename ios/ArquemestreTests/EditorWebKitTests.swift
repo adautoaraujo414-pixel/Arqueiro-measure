@@ -17742,4 +17742,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fechou"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+
+    /* REGRESSÃO DO 1 TOQUE (ordem do Adauto 17/11): na porta da parede, no 3D, 1 toque abre e outro toque fecha, exatamente como na versão publicada.
+       D19 (checklist): trazido de claude/arquemestre-ajustes-3d (bb7bd67 + mira 9d8727d), que nunca entrou na candidata. App sem mudança.
+       Protege contra a mudança revertida em 0fad7ef (1 toque passava a só escolher). A posição da porta não muda. */
+    func testUmToqueNaPortaDaParedeAbreEFechaComoAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.stones=[];S.mods=[];S.ops=[{id:901,t:'porta',w:800,h:2100,x:1500,b:0,wall:'f'}];draw();open3D();await W(400);__cam(.5,.1,1.4);await W(200);__build();
+        /* mira (Adauto, 17/11/2026 — só o teste): org3api.proj dá o ponto dentro do quadro 3D; soma a origem do quadro na tela pra tocar na porta de verdade também no celular */
+        var cv=document.getElementById('cv3'),o=S.ops[0],p=org3api.proj([o.x+o.w/2,1000,2]),rc_=cv.getBoundingClientRect(),x=rc_.left+p[0],y=rc_.top+p[1];R.alvo=(document.elementFromPoint(x,y)||{}).id||'-';
+        var pe=function(t){cv.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:21,isPrimary:true,pointerType:'touch'}))};
+        var tap=async function(){pe('pointerdown');await W(40);pe('pointerup');await W(700)};
+        var x0=o.x,b0=o.b;await tap();R.primeiroToque=o.open?'abriu':'fechada';await tap();R.segundoToque=o.open?'abriu':'fechou';R.posicao=(o.x===x0&&o.b===b0)?'igual':'mudou';
+        R.errs=__errs.length;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["alvo"] as? String, "cv3")
+        XCTAssertEqual(o["primeiroToque"] as? String, "abriu")
+        XCTAssertEqual(o["segundoToque"] as? String, "fechou")
+        XCTAssertEqual(o["posicao"] as? String, "igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

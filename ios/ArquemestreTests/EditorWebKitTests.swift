@@ -17746,4 +17746,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["fechado"] as? Int, 0, "3D fechado: o redesenho não monta o 3D")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
     }
+
+    /* B24 · s27 (checklist; auditoria final 24/11): digitar a posição e voltar devolve tudo igual. O B05 tirava o tamponamento AUTOMÁTICO dos dois lados
+       antes de aplicar a posição (pra não empurrar 30 mm) e só devolvia quando um vizinho se afastava: o lado livre que continuava exposto perdia o
+       tamponamento (70 modelos do catálogo na sonda s27). Agora o automático que já existia volta se o lado continua exposto. Nada novo liga sozinho,
+       manual nunca muda, B05 (25 junto da parede) e TAMP-JUNTA continuam. */
+    func testB24DigitarPosicaoEVoltarDevolveOTamponamentoAutomaticoDoLadoExposto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var tp=function(m){return 'x'+m.x+' tl'+(m.tl?(m.tlAuto?'a':'m'):'0')+' tr'+(m.tr?(m.trAuto?'a':'m'):'0')};
+        S.stones=[];S.mods=[];S.fr=[];S.isl=[];S.m=null;S.env='cozinha';S.room='cozinha';S.W=8000;S.H=3000;draw();newTpl(T('Balcão 2 portas'));var m=S.mods[0];S.m=m;draw();await W(5);
+        var base=JSON.stringify(snapState());R.v0='criado: '+tp(m);
+        var sig=function(){return S.mods.map(function(q){return partsOf(q).map(function(p){return p.pk+' '+p.cl+'x'+p.cw}).sort().join(';')}).join('#')},p0=sig();
+        setv('x',m.x+200);await W(5);m=S.mods[0];R.v1='x+200: '+tp(m);S.m=m;setv('x',5);await W(5);m=S.mods[0];R.v2='e volta: '+tp(m)+' · peças iguais '+(sig()===p0);
+        /* B05 continua: digitar 25 junto da parede não deixa vão nem empurra */loadState(JSON.parse(base));draw();m=S.mods[0];S.m=m;setv('x',25);await W(5);m=S.mods[0];R.v3='digitou 25: '+tp(m);
+        /* manual nunca muda */loadState(JSON.parse(base));draw();m=S.mods[0];S.m=m;m.tr=true;m.trM=1;delete m.trAuto;draw();setv('x',305);await W(5);m=S.mods[0];R.v4='manual: '+tp(m)+(m.trM?' M':'');
+        /* encostou em outro: o da junta sai (TAMP-JUNTA de sempre) */loadState(JSON.parse(base));draw();newTpl(T('Balcão 2 portas'));var b=S.mods[1];b.x=3000;draw();await W(5);m=S.mods[0];S.m=m;setv('x',3000-m.w);await W(5);m=S.mods[0];R.v5='encostou: '+tp(m);
+        R.v9='erros '+(__errs.length-e0);return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["v0"] as? String, "criado: x5 tl0 tra", "criado junto da parede, lado direito exposto com automático")
+        XCTAssertEqual(o["v1"] as? String, "x+200: x205 tl0 tra", "andou: o lado direito continua exposto e com o automático")
+        XCTAssertEqual(o["v2"] as? String, "e volta: x5 tl0 tra · peças iguais true", "voltou: tudo igual")
+        XCTAssertEqual(o["v3"] as? String, "digitou 25: x25 tl0 tra", "B05: 25 fica 25, sem vão nem empurrão")
+        XCTAssertEqual(o["v4"] as? String, "manual: x305 tl0 trm M", "manual nunca muda")
+        XCTAssertEqual(o["v5"] as? String, "encostou: x2100 tl0 tr0", "encostou no outro: o automático da junta sai (TAMP-JUNTA de sempre)")
+        XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
 }

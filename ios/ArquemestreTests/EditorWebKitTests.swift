@@ -17825,4 +17825,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semAereo"] as? Double, 900, "sem nada no caminho, a folga de 35 fecha como sempre")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // B27 / defeito 88 (decisão do Adauto 17/11: "melhoria pendente nas três plataformas"): com a parede encolhida, pedra e lixeira continuam onde estão
+    // (GEO-AVISA) e agora avisam, como os módulos. Nenhuma posição ou medida muda; dentro da parede, nenhum aviso
+    func testPedraELixeiraForaDaParedeEncolhidaAvisamSemMudarNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.mods=[];S.fr=[];S.stones=[];S.W=5610;draw();newTpl(CATS[0].it[0]);addStone();var st=S.st;st.x=0;st.w=2950;var lx=apAdd('lixeira',1);draw();await W(50);
+        R.dentro=fgForaParede().length;TS=[];var p0=JSON.stringify([st.x,st.w,lx.x,lx.w]);setv('W',2400);await W(150);
+        R.avisos=fgForaParede().map(function(c){return c.modulo+' '+c.campos.x.tem+'>'+c.campos.x.cabe}).join(' · ');R.toast=TS.some(function(t){return /^Atenção: Pedra da bancada: passa 550 mm da parede .*Nenhuma medida foi alterada/.test(t)});
+        R.igual=JSON.stringify([st.x,st.w,lx.x,lx.w])===p0;R.modulos=fgConflitos().every(function(c){return c.mi>=0});
+        setv('W',5610);await W(100);R.volta=fgForaParede().length;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["dentro"] as? Int, 0, "dentro da parede, nenhum aviso")
+        XCTAssertEqual(o["avisos"] as? String, "Pedra da bancada 2950>2400 · Lixeira 2955>2400")
+        XCTAssertEqual(o["toast"] as? Bool, true, "o aviso aparece na tela, no mesmo formato do aviso dos módulos")
+        XCTAssertEqual(o["igual"] as? Bool, true, "pedra e lixeira não andam e não mudam de medida")
+        XCTAssertEqual(o["modulos"] as? Bool, true, "a lista de conflitos dos módulos continua só de módulos")
+        XCTAssertEqual(o["volta"] as? Int, 0)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

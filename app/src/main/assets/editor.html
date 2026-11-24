@@ -12939,6 +12939,13 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    else if(f==='x')o.push('não cabe onde está (parede, pedra ou outro móvel): precisaria andar '+mm(d)+' mm');
    else if(v.txt)o.push(v.txt+', e o módulo tem '+mm(v.tem)+' mm. Diferença: '+mm(d)+' mm')});
   return 'Atenção: '+nome(m)+': '+o.join(' · ')+'. Nenhuma medida foi alterada.'};
+ /* B27 / defeito 88 (decisão do Adauto 17/11: melhoria pendente nas 3 plataformas): pedra, lixeira e objetos soltos que ficam além da parede encolhida
+    continuam onde estão (GEO-AVISA) e agora AVISAM, como os módulos. Só aviso: nenhuma medida ou posição muda */
+ window.fgForaParede=function(){var L=[],W=+S.W||0,RD=+S.RD||0,r=function(v){return Math.round(v)};
+  var add=function(nm,x0,x1,lim){if(!(lim>0))return;var d=Math.max(x1-lim,-x0);if(d>0.5)L.push({modulo:nm,mi:-1,campos:{x:{tem:r(x1),cabe:r(lim)}},texto:'Atenção: '+nm+': passa '+r(d)+' mm da parede ('+(x0< -0.5?'no começo':'a parede tem '+r(lim)+' mm')+'). Nenhuma medida foi alterada.'})};
+  (S.stones||[]).forEach(function(st,i){if(!st||st.wing||(st.wall&&st.wall!=='f'))return;add((S.stones.length>1?'Pedra '+(i+1):'Pedra da bancada'),+st.x||0,(+st.x||0)+(+st.w||0),W)});
+  (S.fr||[]).forEach(function(f){if(!f||!(+f.w>0))return;var wl=f.wall||'f';var fn_=String(f.n||f.nm||f.t||'objeto');add(fn_.charAt(0).toUpperCase()+fn_.slice(1),+f.x||0,(+f.x||0)+(+f.w),wl==='f'?W:RD)});
+  return L};
  window.fgConflitos=function(){return Object.keys(CF).map(function(k){return {modulo:nome(CF[k].m),mi:S.mods.indexOf(CF[k].m),campos:JSON.parse(JSON.stringify(CF[k].f)),texto:frase(CF[k])}}).filter(function(c){return c.mi>=0})};
  if(typeof confineAll==='function'){var ca0=confineAll;window.confineAll=confineAll=function(){try{if(typeof stAdapta==='function')stAdapta()}catch(_){}return guarda(ca0,this,arguments,true)}}
  if(typeof roomClamp==='function'){var rc0=roomClamp;window.roomClamp=roomClamp=function(){
@@ -12951,7 +12958,7 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
  if(typeof newTpl==='function'){var nt0=newTpl;window.newTpl=newTpl=function(){var antes=(S.mods||[]).slice(),ant=window.__fgAut;window.__fgAut={m:null,novos:[],f:{x:true,b:true}};var pega=function(){(S.mods||[]).forEach(function(q){if(antes.indexOf(q)<0&&window.__fgAut.novos.indexOf(q)<0)window.__fgAut.novos.push(q)})};
    try{var r=nt0.apply(this,arguments);pega();try{confineAll()}catch(_){}return r}finally{window.__fgAut=ant}}}
  /* aviso: só quando o conjunto de conflitos muda (o desenho roda muitas vezes) */
- if(typeof draw==='function'){var dr0=draw;window.draw=draw=function(){CF={};var r=dr0.apply(this,arguments);try{var L=fgConflitos(),sg=L.map(function(c){return c.texto}).join('|');if(sg!==SIG){SIG=sg;if(L.length)toast(L[0].texto+(L.length>1?' (+'+(L.length-1)+' outro'+(L.length>2?'s':'')+')':''))}}catch(_){}return r}}
+ if(typeof draw==='function'){var dr0=draw;window.draw=draw=function(){CF={};var r=dr0.apply(this,arguments);try{var L=fgConflitos().concat(window.fgForaParede?fgForaParede():[]),sg=L.map(function(c){return c.texto}).join('|');if(sg!==SIG){SIG=sg;if(L.length)toast(L[0].texto+(L.length>1?' (+'+(L.length-1)+' outro'+(L.length>2?'s':'')+')':''))}}catch(_){}return r}}
 })();
 
 /* ===== Fase 2 · SEL-PROJ / SEL-ESTADO (16/11): nenhum projeto interfere em outro =====

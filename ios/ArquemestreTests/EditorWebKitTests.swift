@@ -18113,4 +18113,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["segura"] as? String, "true · trav true")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // DECISÃO DO ADAUTO 24/11 (item 4 · A05): o caneco da dobradiça entrava 1 mm na lateral/divisória que a porta cobre (74 modelos, 1178 partes).
+    // Só o 3D: com a porta fechada, a parte do caneco que ficaria dentro da peça que a porta cobre (lateral, divisória, montante) é cortada; o resto continua aparecendo. Furação, medidas da porta e DXF iguais
+    func testDobradicaNo3DNaoEntraNaLateralOuDivisoriaFuracaoEDxfIguais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        open3D();await W(300);var L=[],tot=0,ovl=0;
+        its.forEach(function(t){try{loadState(initLimpo());S.W=8000;S.mods=[];S.room='livre';S.env='livre';draw();newTpl(JSON.parse(JSON.stringify(t)));draw();__build()}catch(e){return}var B=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0});
+          var pts=B.filter(function(b){return /Porta/.test(String(b.nm))}),big={};pts.forEach(function(b){var k=b.pk||b.nm,v=(b.x1-b.x0)*(b.y1-b.y0);if(!big[k]||v>big[k].v)big[k]={v:v,b:b}});
+          var hp=pts.filter(function(b){return b!==big[b.pk||b.nm].b&&(b.y1-b.y0)<80&&(b.x1-b.x0)<80});tot+=hp.length;ovl+=hp.filter(function(b){return b.c&&b.c.join()==='195,201,208'}).length;
+          hp.forEach(function(a){B.forEach(function(b){if(/Porta|Dobradi/.test(String(b.nm)))return;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>0.05&&oy>0.05&&oz>0.05)L.push(t.n+': '+a.pk+' × '+String(b.nm).replace(/^\d+:/,''))})})});
+        document.getElementById('v3x').click();R.dentro=L.length+(L.length?' :: '+L.slice(0,4).join(' | '):'');R.partes=tot>5000;R.caneco=ovl>500;
+        /* furação, medida e DXF */var T=function(n){var it=null;its.forEach(function(q){if(!it&&q.n===n)it=q});return JSON.parse(JSON.stringify(it))};loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();var pp=partsOf(S.mods[0]).filter(function(p){return p.name==='Porta'})[0];
+        PR.dxf={dobP:'13',uniao:'nenhuma'};var dp=dxfPecas().pecas.filter(function(q){return q.nome==='Porta'})[0];R.porta=pp.cl+'x'+pp.cw+' furo '+JSON.stringify(pp.fur.pos)+' · DXF '+dp.furos.map(function(q){return 'Ø'+q.d+' y'+Math.round(q.y)}).join(',');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["dentro"] as? String, "0", "nenhuma parte da dobradiça dentro da lateral, divisória ou base")
+        XCTAssertEqual(o["partes"] as? Bool, true)
+        XCTAssertEqual(o["caneco"] as? Bool, true, "o caneco continua desenhado")
+        XCTAssertEqual(o["porta"] as? String, "440x705 furo [120,585] · DXF Ø35 y585,Ø35 y120", "furação, medida e DXF iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

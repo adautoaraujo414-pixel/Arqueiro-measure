@@ -17502,12 +17502,13 @@ final class EditorWebKitTests: XCTestCase {
 
     // Adauto 23/11 (print do cabeçalho da peça): ⧉ Duplicar no cabeçalho de QUALQUER peça selecionada no 3D; a cópia vira peça livre de MDF 15
     // com a medida de corte da original, no mesmo sentido, do lado dela (depois arrasta com o ímã); entra no corte
+    // Auditoria 24/11: intervalo dos 2 toques contado do início do 1º toque (mesma causa da falha intermitente do testNo3DDuplicarPecaEDoisToques…). Expectativas iguais.
     func testNo3DDuplicarQualquerPecaViraPecaLivre() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
-        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650)};var m;
+        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){var t0_=performance.now();['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(Math.max(0,80-(performance.now()-t0_)))}await W(650)};var m;
         loadState(initLimpo());S.W=2000;newTpl(T('Balcão 2 portas'));m=S.mods[0];S.m=m;draw();open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0.5,0.3,3);await W(300);__build();var lt=__boxes().filter(function(q){return q.pk==='Lateral esquerda#1'&&/^0:/.test(String(q.nm))})[0];await toque((lt.x0+lt.x1)/2,(lt.y0+lt.y1)/2,lt.z1,2);
         var bt2=[].filter.call(document.querySelectorAll('[data-e3dup]'),function(x){return x.offsetParent})[0];R.qualquer=!!bt2;if(bt2)bt2.click();await W(200);var lp=partsOf(m).filter(function(p){return p.pk==='Lateral esquerda#1'})[0],cp=(m.pl||[])[0];R.copia=cp?(EM.corte(cp).join('x')===[Math.max(lp.cl,lp.cw),Math.min(lp.cl,lp.cw)].join('x'))+' '+cp.ax:'nada';R.noCorte=cutLines(m).some(function(l){return /livre/.test(l.names[0])});document.getElementById('v3x').click();
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -17673,6 +17674,7 @@ final class EditorWebKitTests: XCTestCase {
     // Adauto 23/11 19:56 (print): "puxador concha as gavetas estão de cabeça pra baixo, opção de mexer somente neles, colocar inverter e movimentar".
     // Gaveta: curva em cima por padrão. ⇅ Inverter por puxador (aba Portas e 3D) e "Todas as gavetas" com confirmação; 2 toques no puxador da gaveta
     // no 3D: bolinha pra mover só ele (ou todas as gavetas, com confirmação); as portas não mudam
+    // Auditoria 24/11: intervalo dos 2 toques contado do início do 1º toque (mesma causa da falha intermitente do testNo3DDuplicarPecaEDoisToques…). Expectativas iguais.
     func testConchaDaGavetaInverterEMoverSoElas() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -17686,7 +17688,7 @@ final class EditorWebKitTests: XCTestCase {
         Q('[data-pxesc="gavetas"]').click();Q('[data-chinv]').click();R.conta=(document.querySelector('#pxconf [data-pxn]')||{}).textContent||'';Q('#pxconf [data-pxok]').click();await W(200);R.todas=G().map(inv).join('');
         open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,0.08,1.9);await W(300);__build();
         var bs=__boxes().filter(function(b){return b.mt&&b.nol&&/^0:Frente de gaveta/.test(String(b.nm))&&b.dq===2}),mx=function(k,f){return Math[f].apply(null,bs.map(function(b){return b[k]}))},c=__p3((mx('x0','min')+mx('x1','max'))/2,(mx('y0','min')+mx('y1','max'))/2,mx('z1','max')-1),cv=document.getElementById('cv3'),rr=cv.getBoundingClientRect();
-        for(var i=0;i<2;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650);
+        for(var i=0;i<2;i++){var t0_=performance.now();['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(Math.max(0,80-(performance.now()-t0_)))}await W(650);
         var pad=document.getElementById('pxpad');R.pad=!!pad&&!!document.querySelector('[data-pxinv]')&&/Todas as gavetas/.test((document.querySelector('[data-pxpos="todas"]')||{}).textContent||'');var g0=G().map(lug);
         if(pad){var r2=pad.getBoundingClientRect(),ev=function(tp,dx,dy){pad.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:r2.left+dx,clientY:r2.top+dy,pointerId:5,isPrimary:true}))};ev('pointerdown',r2.width*.3,r2.height*.4);ev('pointermove',r2.width*.32,r2.height*.42);ev('pointerup',r2.width*.32,r2.height*.42);await W(300)}
         var g1=G().map(lug);R.moveu=g1.map(function(x,i){return x===g0[i]?'=':'*'}).join('');R.portas=D().map(lug).join(' ')===portas0;

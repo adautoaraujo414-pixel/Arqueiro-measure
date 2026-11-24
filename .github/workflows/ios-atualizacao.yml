@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Commit da versão publicada (App Store 3.0.12 = d861fbd)'
-        default: 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f'
+        description: 'Commit da versão publicada (App Store 3.0.13 = 3f1c3a58, liberada; confirmado pelo Adauto 24/11)'
+        default: '3f1c3a58bf7c87bf1d595d867c44a1bf4a0e9ec0'
 permissions:
   contents: read
 jobs:
@@ -24,7 +24,7 @@ jobs:
         run: cd novo && python3 .github/scripts/trava_publicacao.py
       - name: Baixar a versão publicada
         uses: actions/checkout@v4
-        with: { path: anterior, ref: "${{ inputs.anterior || 'd861fbd8c393c61ea62ba417379d6ab6d46b2a3f' }}" }
+        with: { path: anterior, ref: "${{ inputs.anterior || '3f1c3a58bf7c87bf1d595d867c44a1bf4a0e9ec0' }}" }
       - name: Compilar as duas para o simulador
         run: |
           brew install xcodegen

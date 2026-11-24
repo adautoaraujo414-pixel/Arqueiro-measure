@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     inputs:
       anterior:
-        description: 'Release da versão anterior (padrão: win-143, a publicada em 17/11)'
-        default: 'win-143'
+        description: 'Release da versão anterior (padrão: win-166, a publicada em 22/11 (c561120))'
+        default: 'win-166'
 
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = '${{ inputs.anterior }}'; if (-not $tag) { $tag = 'win-143' }
+          $tag = '${{ inputs.anterior }}'; if (-not $tag) { $tag = 'win-166' }
           gh release download $tag -p 'Arquemestre-Windows.msi' -D anterior -R ${{ github.repository }}
           Get-ChildItem anterior
 

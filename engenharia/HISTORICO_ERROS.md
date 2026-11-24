@@ -1947,3 +1947,22 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - o ímã não usa toque.
 - **Teste:** `testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem`. Falha antes ("true false", menu aberto) e passa depois, em 1366 e em 430×900.
 - **Nota de processo:** nas rodadas parciais no mesmo navegador, a página antiga pode ficar em cache. Desde agora uso a URL com `&v=<hora>`. As baterias completas sempre rodaram num perfil novo.
+
+## FECHAMENTO CODE 1 (24/11/2026, ramo `claude/fechamento-code1`, base `ed041eb`) — ordem do Adauto via Chefe: fechar tudo, corrigir na hora (§0, §11)
+- **B21 — 3D aberto atrasado** (erro comprovado, sonda s23: parede, vão em gavetas e apagar módulo).
+  - Causa: o 3D só remontava nos comandos que chamavam `re3`; os que só redesenham (`draw`) deixavam o 3D velho.
+  - Correção: com o 3D aberto, o `draw` agenda uma montagem (≤ 1 por quadro; pula se o comando já montou). 3D fechado: nada muda.
+  - Teste `testB21Com3DAbertoParedeGavetasEApagarAtualizamNaHora` (29bc3ba/3f7e893, falha antes) · código f91429c · s23: 11/11 na hora.
+- **B24 — digitar posição e voltar não devolvia igual** (erro comprovado, s27: 70 modelos).
+  - Causa: o wrapper do B05 tirava o tamponamento automático dos dois lados antes de aplicar a posição e só devolvia quando um vizinho se afastava.
+  - Correção: depois de aplicar, o automático que já existia volta no lado que continua exposto (regra da criação). Nada novo liga sozinho; manual e TAMP-JUNTA iguais. `tampExposed` exposto em `window`.
+  - Teste `testB24DigitarPosicaoEVoltarDevolveOTamponamentoAutomaticoDoLadoExposto` (eddb30d, falha antes) · código 700a81c · s27: 0 diferenças de verdade (o texto difere só na ordem das chaves).
+- **B23 — módulo novo entrando no vizinho** (erro comprovado, s20 I7: 12).
+  - Causa: o `autoTamp` da criação chamava `rowJoin` na fileira inteira e fechava vãos ≤ 70 mm andando com móveis que ninguém tocou (a sapateira andou 100 mm e entrou embaixo do aéreo). Achado junto: com vão do tamanho do tamponamento, o `tampExposed` oscilava a cada desenho.
+  - Correção: `rowJoin`/`wingJoin` com âncora opcional (`fixo`): no `autoTamp` só anda quem teve o tamponamento decidido e o recém-criado; `tampExposed` vê o vizinho como se o tamponamento daquele lado já estivesse (igual à parede).
+  - Teste `testB23CriarModuloNovoNaoAndaComOsQueJaExistem` (44e5781 + a23584c, falha antes) · código 17df4a5 + 8a19010 · s20: I7 0, I2 0.
+- **N14 — Android: cópia antes-de-usar só no onStop** (risco P0, achado 17/11).
+  - Correção: `DataBackup.versionCopyIfNew` também no `onCreate` (thread; só acrescenta zip em Download). onStop igual.
+  - Teste: `.github/scripts/teste_atualizacao_android.sh` confere a cópia ao abrir (0614832) · código 414b523 · roda no workflow `android-atualizacao.yml` (disparo manual).
+- **B05** confirmado pelos caminhos da pessoa: digitar 25 → 25 (s13, s06 com setv); arrastar até a parede → 35 com tamponamento preenchendo. O "5→35 sem tamponamento" do s06 vem de `a.x=` direto (não é caminho do app).
+- **B22** confirmado: o novo nasce com a medida do catálogo; em parede cheia não cria e avisa (s29). Achados: aviso duplicado "não tem espaço" + "foi ajustado pra caber (170 mm)" quando não cria (texto, risco); "Balcão com laterais até o piso" 870 no catálogo nasce 820 (pergunta ao Adauto).

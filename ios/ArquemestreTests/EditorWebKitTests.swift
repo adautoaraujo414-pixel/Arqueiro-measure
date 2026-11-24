@@ -12243,11 +12243,14 @@ final class EditorWebKitTests: XCTestCase {
             tvC=function(){return cutLines(S.mods[0]).filter(function(l){return (l.names||[l.name]).some(function(n){return String(n).indexOf(tvK)===0})}).length},
             outrasL=function(){return JSON.stringify(partsOf(S.mods[0]).filter(function(p){return p.name.indexOf(tvK)!==0}).map(function(p){return [p.name,p.w,p.h,p.cl,p.cw]}))},
             est=function(){__build();return '3D '+tv3()+' · lista '+tvL()+' · corte '+tvC()};
+        /* DECISÃO DO ADAUTO 24/11 (item 2): o 🗑 na travessa = desmarcar "Travessa" no módulo, e as peças que dependem dela recalculam (como na caixinha).
+           Antes (17/11) as outras ficavam iguais; agora têm de ficar EXATAMENTE iguais às do mesmo módulo com a travessa desmarcada pela caixinha */
+        var tLcx=(function(){var c=JSON.parse(JSON.stringify(S.mods[0]));c.trav=false;S.mods.push(c);var r=JSON.stringify(partsOf(c).filter(function(p){return p.name.indexOf(tvK)!==0}).map(function(p){return [p.name,p.w,p.h,p.cl,p.cw]}));S.mods.pop();return r})();
         histTick();await W(800);histTick();var tb0=bx(),tL0=outrasL();R.travAntes=est();R.travMsg=lixo3D(tvK+'#1');var tb1=bx();R.travDepois=est();
-        R.travOutras='lista das outras '+(outrasL()===tL0?'igual':'MUDOU')+' · caixas das outras que diminuíram: '+(Object.keys(tb0).filter(function(q){return !/^__/.test(q)&&bnm(q)!==tvK&&(tb1[q]||0)<tb0[q]}).join(', ')||'nenhuma');
+        R.travOutras='lista das outras '+(outrasL()===tL0?'igual':outrasL()===tLcx?'igual à da caixinha':'MUDOU')+' · caixas das outras que diminuíram: '+(Object.keys(tb0).filter(function(q){return !/^__/.test(q)&&bnm(q)!==tvK&&(tb1[q]||0)<tb0[q]}).join(', ')||'nenhuma');
         histTick();await W(800);histTick();document.getElementById('und').click();await W(150);R.travDesfez=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
         document.getElementById('red').click();await W(150);R.travRefez=est();
-        var svT=JSON.stringify(snapState());loadState(JSON.parse(svT));draw();R.travReabriu=est()+' · outras '+(outrasL()===tL0?'iguais':'MUDARAM');
+        var svT=JSON.stringify(snapState());loadState(JSON.parse(svT));draw();R.travReabriu=est()+' · outras '+(outrasL()===tL0?'iguais':outrasL()===tLcx?'iguais às da caixinha':'MUDARAM');
         /* o detector continua achando fantasma de verdade: uma caixa com a chave da travessa enfiada no 3D depois de apagar */
         __build();var fk=Object.assign({},__boxes().filter(function(b){return String(b.nm).indexOf('0:Lateral esquerda')===0})[0]);fk.nm='0:'+tvK;fk.pk=tvK+'#1';delete fk.ppk;__boxes().push(fk);R.travDetector='fantasma de teste achado '+tv3();__build();
         /* fundo: sai do 3D, da lista de corte, volta no ↶ e continua fora depois de salvar e reabrir */
@@ -12276,10 +12279,10 @@ final class EditorWebKitTests: XCTestCase {
         /* Adauto 17/11/2026: os totais da gaveta não são mais números fixos (eram 65 → 64 e 64 → 63, e mudam com o desenho da fita): o 3D cai exatamente as caixas da peça apagada, tiradas da geometria desta versão */
         XCTAssertEqual(o["travAntes"] as? String, "3D 1 · lista 1 · corte 1")
         XCTAssertEqual(o["travDepois"] as? String, "3D 0 · lista 0 · corte 0")
-        XCTAssertEqual(o["travOutras"] as? String, "lista das outras igual · caixas das outras que diminuíram: nenhuma")
+        XCTAssertEqual(o["travOutras"] as? String, "lista das outras igual à da caixinha · caixas das outras que diminuíram: nenhuma", "decisão 24/11: o 🗑 desmarca a travessa e as dependentes recalculam como na caixinha")
         XCTAssertEqual(o["travDesfez"] as? String, "3D 1 · lista 1 · corte 1 · outras iguais")
         XCTAssertEqual(o["travRefez"] as? String, "3D 0 · lista 0 · corte 0")
-        XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais")
+        XCTAssertEqual(o["travReabriu"] as? String, "3D 0 · lista 0 · corte 0 · outras iguais às da caixinha")
         XCTAssertEqual(o["travDetector"] as? String, "fantasma de teste achado 1")
         /* CANTO-PORTA-L (23/11/2026, pedido do Adauto): no canto a folha fechada agora encosta na caixa e ganha a linha fina do cava como a porta reta (+2 caixas), e a fita da frente da base que fica atrás da folha é desenhada em 2 pedaços (+1); a conferência é a mesma: a base do lado sai do 3D e nenhuma fica pra trás *//* 3D-ACABAMENTO (23/11/2026, pedido do Adauto): a fita que ficava inteira dentro de outra peça não é mais desenhada (24 → 23, depois 19 → 18); mesma conferência */XCTAssertEqual(o["canto"] as? String, "caixas 23 → 18 · base do lado no 3D 0 · base do fundo 0 (antes 3)")
         XCTAssertEqual(o["errs"] as? Int, 0)

@@ -17806,4 +17806,23 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reabre"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // B23 / defeito 80 (checklist, sonda s20 semente 4): o fecha-folga automático da fileira (rowJoin, do tamponamento automático) puxava a torre
+    // para dentro do aéreo de cima (70 mm). Agora a torre fica onde está quando fechar a folga a faria bater; folga sem nada no caminho fecha como antes
+    func testFechaFolgaDaFileiraNaoPoeATorreDentroDoAereo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var cena=function(comAereo){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Sapateira 2P 600mm'));if(comAereo)newTpl(T('Aéreo 2 portas'));
+          var a=S.mods[0],t=S.mods[1];a.x=0;a.w=900;t.x=935;t.b=0;if(comAereo){var u=S.mods[2];u.x=0;u.w=935;u.b=1750;u.h=750}S.mods.forEach(function(m){m.tl=m.tr=false});return t};
+        var t=cena(true);rowJoin(false);R.comAereo=t.x;var u=S.mods[2],ox=Math.min(t.x+t.w,u.x+u.w)-Math.max(t.x,u.x);R.bate=ox>1;
+        var t2=cena(false);rowJoin(false);R.semAereo=t2.x;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["comAereo"] as? Double, 935, "a torre não anda pra dentro do aéreo")
+        XCTAssertEqual(o["bate"] as? Bool, false)
+        XCTAssertEqual(o["semAereo"] as? Double, 900, "sem nada no caminho, a folga de 35 fecha como sempre")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

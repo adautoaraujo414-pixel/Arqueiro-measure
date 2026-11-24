@@ -72,6 +72,10 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging pacote-teste/Arquemestre-TESTE.apk | grep -q "name='br.com.arque.measure.teste'" || { echo "::error::o APK de teste saiu com o pacote do app de verdade"; exit 1; }
           printf 'APK de TESTE do commit %s.\nInstala AO LADO do Arquemestre (nome "Arquemestre TESTE"), com dados separados. Não atualiza nem substitui o app dos usuários.\n' "${GITHUB_SHA::7}" > pacote-teste/nota-teste.txt
           sha256sum pacote-teste/Arquemestre-TESTE.apk | tee pacote-teste/sha256.txt
+          # o editor que vai dentro do APK tem que ser o mesmo do commit
+          A=$(unzip -p pacote-teste/Arquemestre-TESTE.apk assets/editor.html | sha256sum | cut -d' ' -f1); B=$(sha256sum app/src/main/assets/editor.html | cut -d' ' -f1)
+          echo "editor.html no APK $A · no commit $B" | tee -a pacote-teste/sha256.txt
+          [ "$A" = "$B" ] || { echo "::error::o editor dentro do APK de teste não é o do commit"; exit 1; }
           # Adauto 24/11: o pacote de teste fica SÓ nos artefatos do Actions (sem release pública no GitHub)
           echo "::notice title=APK de teste::artefato Arquemestre-TESTE-android desta execução (Actions → Artifacts)"
           # volta o APK normal pro lugar (os passos seguintes conferem ele)

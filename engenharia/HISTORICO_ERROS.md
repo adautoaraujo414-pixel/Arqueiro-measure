@@ -1979,3 +1979,83 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Passante (Code 2), crítico:** 2P+Gav Ext com passante: frente de gaveta virava 585×1944; dobradiça entrava na travessa. Enviado ao Code 2 com repro.
 - **Preservação na atualização:** backup de referência rico gerado pelo editor publicado (tests/backup-referencia-rico); Android, iOS (iPhone e iPad) e Windows conferem os dois backups; `testProjetoGravadoPelaVersaoPublicadaAbreComOMesmoPlanoDeCorte` em toda CI; sonda s45 (139 projetos, corte igual contra as duas publicadas) · 843213f, d413b48.
 - **Conferido sem defeito:** catálogo inteiro (142 modelos, 907 verificações) com portas/gavetas iguais por vão, sem sobreposição nem frente entrando na caixa, mm inteiro, DXF = lista; lado de abertura das portas; digitação (foco, décimo, vazio e texto inválido); abertura a frio 0,4 s (CPU 6×: 2,7 s); desempenho (draw 13 ms, 3D 23 ms, 2039 caixas) igual à base.
+
+## PASSANTE-PONTA (auditoria técnica do Code 1 em ed041eb, 24/11)
+- **Relatado:**
+  1. Na torre "2P+Gav Ext 600mm" com passante, a frente de gaveta de baixo ia de 585 × 167 para 585 × 1944 e entrava nas portas no 3D.
+  2. No "Balcão 2 portas", a dobradiça de cima subia com a porta e entrava na travessa frontal.
+- **Causa raiz (`b1a167ba`):**
+  - `pasAplica` esticava a 1ª frente de cada vão até a borda do módulo, mesmo com o vão longe da borda (gavetas embaixo das portas, nicho aberto acima, moldura do rack).
+  - O furo da dobradiça (`p.fur.pos`) é medido da borda de cima da porta. A porta crescia em cima e o furo ia junto: 3D e DXF.
+- **Correção:**
+  - Só passa a frente da ponta: sem outra frente entre ela e a borda, e rente à borda. No catálogo as frentes das pontas ficam de −5 a 10 mm da borda; o rack com moldura fica a 32, o nicho aberto a 1053. O limite é 15.
+  - A frente que não passa fica como estava e a nota diz por quê.
+  - A porta que cresce em cima leva o furo junto (+d). Assim o copo fica no mesmo lugar da caixa, no 3D e no DXF.
+  - No aéreo, que cresce embaixo, nada muda: o furo já ficava no lugar.
+- **Não é defeito do passante:** as outras frentes de gaveta passarem de 167 para 181 (e a contra-frente de 66 para 99) é a regra de sempre de puxador sem cava. É igual com "toque" e "nenhum".
+- **Teste:** `testPassanteCatalogoInteiroSoAFrenteDaBordaCresceDobradicaNoLugarE3DIgualCorte`. Percorre os 142 modelos e compara passante × toque nos 3 invariantes do Code 1, mais o caso da torre, a dobradiça × travessa e o DXF. Falha antes. Na mesma varredura achou também:
+  - portas das torres de forno uma dentro da outra;
+  - frentes das torres por vãos fora do corte.
+
+  Passa depois: 168 frentes passam, 147 portas com furo no lugar, 0 em cada invariante.
+
+## SANBASE (B25 / defeito 82, auditoria 24/11) e a regressão que a bateria pegou
+- **Defeito:**
+  - virar aéreo (sup) apagava a travessa;
+  - voltar pra baixo não devolvia (sonda s05, "Módulo livre baixo · montar do zero").
+- **Correção (`14ef6aac`):** o sanBase guarda `_travSB` quando apaga a travessa por ser aéreo e devolve ao voltar. Só pela troca de aéreo; módulo alto que fica baixo continua como antes.
+- **Regressão no mesmo commit, achada na bateria completa do ramo de auditoria:**
+  - o commit também "devolvia" travessa e moldura do rack suspenso sempre que as duas estavam desligadas;
+  - isso religava a travessa de rack que não tem (Rack de TV erguido);
+  - falharam `testBasculanteComCavaSemEngrossoFolga4NoTopo` (60 ≠ 4), `testMedidaDePecaSemDecimo…` (6315 ≠ 6308) e `testPlanoDeCorteTodaPeca…` (12844 ≠ 12836).
+  - Bisseção pelos 5 commits: entrou em `14ef6aac`.
+- **Correção da regressão:**
+  - a parte do rack saiu;
+  - o liga/desliga do "rack" da s05 não tem caminho pela tela (só o catálogo liga o rack), então ficou como era;
+  - o teste passou a `testAereoIdaEVoltaDevolveATravessa`;
+  - os 3 testes voltam a passar.
+## VIS-MAT — acabamentos do 3D padrão (Adauto, revisão visual completa da biblioteca 3D, 24/11)
+- **Pedido:** mais realismo nos acabamentos (metais, eletros, puxadores, pedras, madeira, estofados) sem pesar o app e sem mudar medida, geometria, posição, furação ou corte.
+- **O que entrou:**
+  - programa WebGL à parte (`__GPV`, e `__GPRV` no reflexo), com shader enxuto, só para as peças classificadas por `vizMat`;
+  - **metal**: aspereza pelo acabamento do puxador (cromado 0, prata .12, dourado .2, inox .32, grafite .55, preto fosco .92…), reflexo do ambiente e dois brilhos;
+  - **eletros** (geladeira, forno, micro-ondas, coifa, depurador, lava-louças, airfryer, churrasqueira, lixeira, TV): inox escovado; painel e vidro preto brilhante;
+  - torneira cromada; perfil gola e alumínio anodizado;
+  - **tecido** em sofá, poltrona e cama;
+  - **veio** em mesa, cadeira e banco de madeira;
+  - **pedra** da bancada com brilho de polida.
+  - Sem textura nova: nenhuma imagem, nenhum arquivo, nenhum byte de download.
+- **Fica igual:**
+  - parede, piso, MDF dos módulos, foto do padrão, vidro e espelho;
+  - o "Acabamento realista" (AQ), que tem caminho próprio.
+  - O teste confere: pixel da parede igual, caixas do 3D com as mesmas coordenadas, peças e corte iguais.
+- **Erros achados no caminho:**
+  - 1ª versão com os ramos novos no shader comum: quadro de 113 → 176 ms (+55%) no renderizador por software (Windows sem GPU). Por isso o programa separado.
+  - Coifa com pintinha de pedra: as faces laterais (`pfFill`) zeravam o tipo.
+  - Cromado mais escuro que antes: ambiente baixo demais na metade de baixo da tela. Base recentrada em 1,0.
+  - Tabela de aspereza vazia: `hex()` não é global e o `try` engolia o erro. Todo puxador caía no padrão .35. Agora com leitor de cor próprio.
+- **Desempenho** (SwiftShader, pior caso, cozinha com 761 caixas, 10 rodadas alternadas):
+  - quadro: base 130,7 ms → 135,6 ms (≈ +4%, dentro da variação de ±10 ms entre rodadas);
+  - montagem: 5,7–9,3 ms nas duas;
+  - heap JS: 15–18 MB nas duas.
+- **Teste:** `testAcabamentoVisualMetalTecidoMadeiraPedraSemMudarGeometria`. Falha antes (`vizMat` não existe) e passa depois.
+- **Capturas:** `diagnosticos/visual_materiais_3d_2026-11-24/` (antes em cima, depois embaixo).
+
+## TESTE-2TOQUES-CARGA (pedido do Code 1, 24/11): `testPedraVistaDeCima…` e `testDoisToquesNaPontaDoTamponamento…` falharam na bateria de 430 do VIS-MAT e passavam sozinhos
+- **Protocolo**, a 430, na base `ed041eb2` e no VIS-MAT `13bb4e47`, alternados:
+  - 5× sozinhos;
+  - 5× com os 30 testes anteriores da bateria;
+  - CPU 4× (5×) e 10× (3×).
+- **Resultado:**
+  - CPU 4× e 10×: 0 falhas, nas duas versões.
+  - Com vizinhos: a **base** falhou uma vez (`testDoisToquesNaPontaDoTamponamento…`, mesmo erro da bateria, `Cannot read properties of null (reading 'click')`: o menu de 2 toques não abriu).
+  - A rodada 4 do VIS-MAT com vizinhos não vale: rodei uma sonda no mesmo navegador ao mesmo tempo ("socket is already closed").
+  - **Não é o VIS-MAT.**
+- **Causa (mesmo padrão que o Code 1 achou em 3 testes de 2 toques do 3D):**
+  - o ajudante dos 2 toques esperava 120 ms **depois** de o 1º toque terminar;
+  - com a máquina carregada, o tempo do 1º toque soma no intervalo e o 2º pode sair da janela de 450 ms do app;
+  - no aparelho o intervalo vem do `e.timeStamp` do toque.
+- **Correção, só no teste:**
+  - o intervalo conta do início do 1º toque: `W(max(0, 120 − tempo do 1º toque))`;
+  - as expectativas são as mesmas e nenhum limite aumentou;
+  - os dois passam em 1366 e 430.

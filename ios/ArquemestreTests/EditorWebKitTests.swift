@@ -17847,4 +17847,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["volta"] as? Int, 0)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // PASSANTE (auditoria do Code 1 em ed041eb, 24/11): (1) na torre "2P+Gav Ext" a frente de gaveta de baixo virava 585 × 1944 e entrava nas portas;
+    // (2) a dobradiça subia junto com a porta e entrava na travessa. Catálogo inteiro, passante × o mesmo módulo sem cava (toque):
+    // (a) só a frente da ponta, rente à borda do módulo, cresce, até P além da borda; o resto igual; furo da dobradiça no mesmo lugar da caixa;
+    // (b) nenhuma frente ou dobradiça entra numa peça em que não entrava; (c) partsOf = 3D = corte
+    func testPassanteCatalogoInteiroSoAFrenteDaBordaCresceDobradicaNoLugarE3DIgualCorte() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var e0=__errs.length;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var P=pasMm(),r1=function(v){return Math.round(v*10)/10},A=[],B_=[],C=[],nMod=0,nPas=0,nFur=0,t0=performance.now();
+        var cena=function(t,px){loadState(initLimpo());S.W=8000;S.H=3000;S.mods=[];S.room='livre';S.env='livre';draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];if(!m)return null;(m.v||[]).forEach(function(v){v.px=px});(m.gv||[]).forEach(function(g){g.px=px});draw();__build();
+          var P_=partsOf(m),bx=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0}).map(function(b){return {pk:b.pk||b.nm,nm:String(b.nm),x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1}});return {m:m,P:P_,B:bx,cut:cutLines(m)}};
+        var pares=function(bx){var s={};for(var i=0;i<bx.length;i++){var a=bx[i];if(!/Porta|Frente/.test(a.nm))continue;for(var j=0;j<bx.length;j++){var b=bx[j];if(a.pk===b.pk)continue;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1&&oy>1&&oz>1)s[a.pk+' × '+b.pk]=1}}return s};
+        var sig=function(p){return [p.name,r1(p.cl),r1(p.cw),p.qty||1].join('|')};
+        open3D();await W(300);
+        for(var i=0;i<its.length;i++){var t=its[i];var a,b;try{a=cena(t,'toque');b=cena(t,'passante')}catch(e){A.push(t.n+': exceção '+String(e).slice(0,80));continue}if(!a||!b)continue;nMod++;
+         var H=+b.m.h||0,emb=!!b.m.sup;
+         /* (a) */var pa=a.P.map(sig).sort(),pb=b.P.filter(function(p){return !p.pas}).map(sig),fa=a.P.filter(function(p){return !b.P.some(function(q){return q.pas&&q.pk===p.pk})}).map(sig).sort();pb.sort();if(JSON.stringify(fa)!==JSON.stringify(pb))A.push(t.n+': peças que não passam mudaram');
+         b.P.filter(function(p){return p.pas}).forEach(function(p){nPas++;var o=a.P.filter(function(q){return q.pk===p.pk})[0];if(!o){A.push(t.n+': '+p.pk+' sem par');return}var d=r1(p.cw-o.cw);var borda=emb?r1(+p.y+(+p.h)-H):r1(-(+p.y));if(r1(p.cl)!==r1(o.cl)||d<=0||d>P+30||borda!==P)A.push(t.n+': '+p.pk+' '+o.cl+'x'+o.cw+' → '+p.cl+'x'+p.cw+' borda '+borda);
+           if(p.fur&&o.fur&&(p.fur.s==='l'||p.fur.s==='r')){nFur++;var esp=JSON.stringify(o.fur.pos.map(function(v){return r1(v+(emb?0:d))}));if(JSON.stringify(p.fur.pos.map(r1))!==esp)A.push(t.n+': furo da dobradiça '+JSON.stringify(p.fur.pos)+' ≠ '+esp)}});
+         /* (b) */var sa=pares(a.B),sb=pares(b.B);Object.keys(sb).forEach(function(k){if(!sa[k])B_.push(t.n+': '+k)});
+         /* (c) */b.P.filter(function(p){return p.pas}).forEach(function(p){var L=Math.round(Math.max(p.cl,p.cw)),Wd=Math.round(Math.min(p.cl,p.cw));if(!b.cut.some(function(l){return Math.round(Math.max(l.L,l.W))===L&&Math.round(Math.min(l.L,l.W))===Wd}))C.push(t.n+': '+p.pk+' fora do corte '+L+'x'+Wd);var hy=b.B.filter(function(q){return q.pk===p.pk}).map(function(q){return q.y1-q.y0});var mx=Math.max.apply(null,hy.concat([0]));if(Math.abs(mx-p.cw)>1.5)C.push(t.n+': '+p.pk+' 3D '+r1(mx)+' ≠ '+p.cw)});
+        }
+        document.getElementById('v3x').click();
+        var T=function(n){var it=null;its.forEach(function(q){if(!it&&q.n===n)it=q});return it};
+        /* repro do Code 1: torre 2P + gavetas externas: a frente de gaveta de baixo não vira porta; balcão: dobradiça fora da travessa */var tw=cena(T('2P+Gav Ext 600mm'),'passante'),tw0=cena(T('2P+Gav Ext 600mm'),'toque');var fg=function(c){return c.P.filter(function(p){return p.name==='Frente de gaveta'}).map(function(p){return p.cl+'x'+p.cw}).join(',')};var torre=fg(tw)===fg(tw0);
+        var bal=cena(T('Balcão 2 portas'),'passante');var tv=bal.B.filter(function(q){return /Travessa frontal/.test(q.nm)}),dob=bal.B.filter(function(q){return /Porta/.test(q.nm)&&q.y1-q.y0<60&&q.y1-q.y0>40});var dobOk=dob.length>0&&!dob.some(function(d){return tv.some(function(q){return Math.min(d.y1,q.y1)-Math.max(d.y0,q.y0)>1&&Math.min(d.z1,q.z1)-Math.max(d.z0,q.z0)>0.5&&Math.min(d.x1,q.x1)-Math.max(d.x0,q.x0)>1})});
+        /* DXF: o furo do copo fica no mesmo lugar da caixa (medido da borda de baixo da porta: igual no balcão, +P no aéreo) */var dx=function(n,px){loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(T(n))));S.mods[0].v.forEach(function(v){v.px=px});draw();PR.dxf={dobP:'13',uniao:'nenhuma'};var p=dxfPecas().pecas.filter(function(q){return q.nome==='Porta'})[0];return p.furos.map(function(q){return Math.round(q.y)}).join(',')};
+        var dxf=dx('Balcão 2 portas','toque')+' → '+dx('Balcão 2 portas','passante')+' · '+dx('Aéreo 2 portas','toque')+' → '+dx('Aéreo 2 portas','passante');
+        return JSON.stringify({modelos:nMod,passam:nPas,dobradicas:nFur,a:A.slice(0,6).join(' | '),b:B_.slice(0,6).join(' | '),c:C.slice(0,6).join(' | '),torre:torre,dobradica:dobOk,dxf:dxf,errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130)
+        XCTAssertGreaterThan(o["passam"] as? Int ?? 0, 150, "as frentes da ponta continuam passando")
+        XCTAssertEqual(o["a"] as? String, "", "(a) só a frente da borda cresce, até P; furo da dobradiça no lugar")
+        XCTAssertEqual(o["b"] as? String, "", "(b) nenhuma frente ou dobradiça entra em outra peça")
+        XCTAssertEqual(o["c"] as? String, "", "(c) partsOf = 3D = corte")
+        XCTAssertEqual(o["torre"] as? Bool, true, "torre 2P + gavetas externas: as frentes de gaveta não mudam")
+        XCTAssertEqual(o["dobradica"] as? Bool, true, "dobradiça do balcão fora da travessa frontal")
+        XCTAssertEqual(o["dxf"] as? String, "585,120 → 585,120 · 626,120 → 646,140", "furo do copo no mesmo lugar da caixa")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

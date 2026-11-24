@@ -1947,3 +1947,22 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - o ímã não usa toque.
 - **Teste:** `testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem`. Falha antes ("true false", menu aberto) e passa depois, em 1366 e em 430×900.
 - **Nota de processo:** nas rodadas parciais no mesmo navegador, a página antiga pode ficar em cache. Desde agora uso a URL com `&v=<hora>`. As baterias completas sempre rodaram num perfil novo.
+
+## PASSANTE-PONTA (auditoria técnica do Code 1 em ed041eb, 24/11)
+- **Relatado:**
+  1. Na torre "2P+Gav Ext 600mm" com passante, a frente de gaveta de baixo ia de 585 × 167 para 585 × 1944 e entrava nas portas no 3D.
+  2. No "Balcão 2 portas", a dobradiça de cima subia com a porta e entrava na travessa frontal.
+- **Causa raiz (`b1a167ba`):**
+  - `pasAplica` esticava a 1ª frente de cada vão até a borda do módulo, mesmo com o vão longe da borda (gavetas embaixo das portas, nicho aberto acima, moldura do rack).
+  - O furo da dobradiça (`p.fur.pos`) é medido da borda de cima da porta. A porta crescia em cima e o furo ia junto: 3D e DXF.
+- **Correção:**
+  - Só passa a frente da ponta: sem outra frente entre ela e a borda, e rente à borda. No catálogo as frentes das pontas ficam de −5 a 10 mm da borda; o rack com moldura fica a 32, o nicho aberto a 1053. O limite é 15.
+  - A frente que não passa fica como estava e a nota diz por quê.
+  - A porta que cresce em cima leva o furo junto (+d). Assim o copo fica no mesmo lugar da caixa, no 3D e no DXF.
+  - No aéreo, que cresce embaixo, nada muda: o furo já ficava no lugar.
+- **Não é defeito do passante:** as outras frentes de gaveta passarem de 167 para 181 (e a contra-frente de 66 para 99) é a regra de sempre de puxador sem cava. É igual com "toque" e "nenhum".
+- **Teste:** `testPassanteCatalogoInteiroSoAFrenteDaBordaCresceDobradicaNoLugarE3DIgualCorte`. Percorre os 142 modelos e compara passante × toque nos 3 invariantes do Code 1, mais o caso da torre, a dobradiça × travessa e o DXF. Falha antes. Na mesma varredura achou também:
+  - portas das torres de forno uma dentro da outra;
+  - frentes das torres por vãos fora do corte.
+
+  Passa depois: 168 frentes passam, 147 portas com furo no lugar, 0 em cada invariante.

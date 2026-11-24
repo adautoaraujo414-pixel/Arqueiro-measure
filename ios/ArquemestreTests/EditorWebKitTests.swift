@@ -14284,6 +14284,55 @@ final class EditorWebKitTests: XCTestCase {
     /* LIVRE-PAREDE (achado na revisão do arraste, 21/11 · regra "nada entra dentro de outra coisa"): girar o livre em volta do meio levava as costas
        185 mm pra dentro da parede do fundo, e o arrasto sem ímã passava das paredes. Agora parede do fundo e paredes do lado (quando existem) são
        sólidas pro livre; no ambiente livre (sem paredes) não há limite. Ninguém mais muda. */
+    /* B26 (checklist; decisão do Adauto 24/11: "peça flutuante: investigar a causa e corrigir"): no 3D de cada modelo do catálogo, toda peça
+       de fabricação (o que vai pro corte) encosta em outra peça, no chão ou na parede — nenhuma fica solta no ar. O eletro desenhado e as
+       ferragens (noCut) ficam de fora; o cabideiro do "Armário sem laterais" se apoia nas laterais dos vizinhos (conferido entre dois guarda-roupas).
+       Auditoria 24/11: 138 modelos, 15.654 caixas, nenhuma solta. */
+    func testNenhumaPecaDeFabricacaoFicaSoltaNo3DEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        open3D();await W(400);var out=[],tot=0,tol=1.5,toca=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>-tol&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>-tol&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>-tol};
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();__build();
+          var nc_={};partsOf(m).forEach(function(q){if(q.noCut)nc_[q.name]=(nc_[q.name]||0)+1;else nc_[q.name]=-1e9});
+          var B=__boxes().filter(function(b){var pn_=String(b.nm).replace(/^\d+:/,'').replace(/#\d+$/,'');return b.nm&&/^0:/.test(b.nm)&&!(nc_[pn_]>0)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'&&(b.x1-b.x0)>0.2&&(b.y1-b.y0)>0.2&&(b.z1-b.z0)>0.2});tot+=B.length;
+          var ap=B.map(function(b){return b.y0<=tol||b.z0<=tol}),mud=true;while(mud){mud=false;for(var a=0;a<B.length;a++){if(ap[a])continue;for(var c=0;c<B.length;c++){if(ap[c]&&toca(B[a],B[c])){ap[a]=true;mud=true;break}}}}
+          var fl=B.filter(function(b,k){return !ap[k]});if(fl.length)out.push(t.n+': '+fl.slice(0,3).map(function(b){return String(b.nm).split(':')[1]}).join(', '))}
+        document.getElementById('v3x').click();return JSON.stringify({modelos:mods.length,caixas:tot,soltas:out.join(' | ')||'nenhuma',errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 100, "o catálogo inteiro")
+        XCTAssertEqual(o["soltas"] as? String, "nenhuma", "peça de fabricação solta no 3D")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* ARRASTO-CONFINADO (B15 / defeito 45; decisão do Adauto 24/11): durante o arrasto o móvel fica dentro do ambiente, não muda de medida
+       e não entra em outro nem empurra ninguém. Antes: com a parede encolhida (regra: o ambiente não mexe nos móveis), arrastar o balcão de
+       900 numa parede de 800 deixava ele com 730 (o confine do arrasto encolhia), e o balcão que ficou fora da parede era puxado pra dentro
+       por cima do outro (265..1195 sobre 150..1050). Família: balcão, gaveteiro, aéreo, torre e guarda-roupa. */
+    func testArrastoFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};
+        var med=function(){return S.mods.map(function(m){return [m.w,m.h,m.d].join('x')}).join(' ')},sob=function(){for(var i=0;i<S.mods.length;i++)for(var j=i+1;j<S.mods.length;j++)if(modOv(S.mods[i],S.mods[j]))return i+'×'+j;return 'nenhuma'};
+        var arrasta=async function(mi,dxmm,dymm){if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}var rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),x=rc.left+rc.width/2,y=rc.top+rc.height*.6,el=document.elementFromPoint(x,y),k=rc.width/S.mods[mi].w,sb='nenhuma';pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=10;i++){pe('pointermove',svg,x+dxmm*k*i/10,y-dymm*k*i/10);await W(20);var s_=sob();if(s_!=='nenhuma')sb=s_}pe('pointerup',svg,x+dxmm*k,y-dymm*k);await W(300);return sb};
+        var fam=[];['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas','Armário alto 2 portas','Guarda-roupa 2 vãos'].forEach(function(n){fam.push(n)});var res=[];
+        for(var f=0;f<fam.length;f++){var nm=fam[f];
+          /* 1) mais largo que a parede encolhida: arrastar não muda a medida */
+          loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nm));var a=S.mods[0];a.x=600;S.m=null;draw();await W(100);var m0=med();S.W=Math.max(300,a.w-100);draw();await W(80);await arrasta(0,-100,0);var c1=med()===m0;
+          /* 2) dois iguais; parede encolhe e o 2º fica fora: arrastar o de fora não põe um dentro do outro, nem durante nem no fim */
+          loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nm));newTpl(T(nm));S.mods[0].x=0;S.mods[1].x=S.mods[0].w+600;S.m=null;draw();await W(100);var m1=med(),x0_=S.mods[0].x;S.W=Math.round(S.mods[0].w*1.3);draw();await W(80);var dur=await arrasta(1,-300,0);var c2=dur==='nenhuma'&&sob()==='nenhuma'&&med()===m1&&S.mods[0].x===x0_;
+          /* 3) ambiente normal: arrastar contra o vizinho e além da parede não empurra nem muda medida, e para dentro da parede */
+          loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nm));newTpl(T(nm));S.mods[0].x=0;S.mods[1].x=S.mods[0].w+300;S.m=null;draw();await W(100);var m2=med(),xv_=S.mods[1].x;var d3=await arrasta(0,700,0);var d4=await arrasta(1,5000,0);var b1=S.mods[1];var c3=d3==='nenhuma'&&d4==='nenhuma'&&sob()==='nenhuma'&&med()===m2&&b1.x+b1.w+rt(b1)<=S.W+0.5&&S.mods[0].x+S.mods[0].w<=xv_+0.5;
+          res.push(nm+': '+(c1?'medida igual':'MEDIDA MUDOU')+' · '+(c2?'sem sobrepor':'SOBREPÔS')+' · '+(c3?'dentro sem empurrar':'FORA OU EMPURROU'))}
+        R.fam=res.join(' | ');R.ok=res.every(function(q){return /medida igual · sem sobrepor · dentro sem empurrar$/.test(q)});R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ok"] as? Bool, true, "arrasto: medida igual, sem sobrepor, dentro da parede, sem empurrar: \(o["fam"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testMovelLivreNaoEntraNaParedeAoArrastarOuGirar() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

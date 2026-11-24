@@ -2102,3 +2102,52 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 
   Os três falham antes e passam depois.
 - **Nota de ambiente:** `testDigitacaoTecladoFisico…` e `testMaoDeObra…` falharam no navegador de sondas (aba extra aberta toma o foco). Falham igual em todas as versões, inclusive nas que passaram na bateria. Num navegador novo passam.
+
+## DECISÕES DO ADAUTO 24/11 — parte do Code 1 (ramo `claude/fechamento-code1`)
+Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto e as 3 falhas de 430 da base. Cada um: teste que falha antes, família, projeto antigo intacto, sem limite aumentado.
+
+### TOQUE-430 (falha de 430 da base: testSegurarOMovel2Segundos…) — erro comprovado, do app
+- **Reproduzir:** 430×900, Planta com 5 módulos: o guarda-roupa (y 328–351) fica embaixo dos botões flutuantes 🔓 🗑 🧮 (até y 344) e não pega o toque ("sem módulo na planta").
+- **Causa:** a margem de cima do desenho (OY 50 unidades) vale 21 px em 430 (0,42 px/unidade); os botões ocupam 42 px.
+- **Correção (ed3571b):** `topoLivre()` mede até onde vão os botões; frente e planta descem só o que cabe no espaço vazio de baixo. Em 1366 a conta dá menos que a margem: nada muda (mesmas posições conferidas).
+- **Teste:** o próprio `testSegurarOMovel2Segundos…` (falha antes em 430, passa depois).
+
+### TRENA-ESCALA (falha de 430 da base: testTrenaNaParedeEsquerda…) — defeito do teste, com prova
+- Texto da trena igual nas duas larguras ("820 mm", girado 90°, sem espelhar). Matriz na tela: [0, 0.423, −0.423, 0] em 430 e [0, 1.086, −1.086, 0] em 1366. A regra comparava |b| com 0,5 absoluto (depende de px por unidade).
+- **Correção (d6d5c97, só teste):** mesma regra normalizada pela escala. Expectativa igual.
+
+### LED-DENSIDADE (falha de 430 da base: testFaixaDoEspelhoLed…) — risco identificado (não é do app nos aparelhos)
+- Com densidade 1 em 430×900 a faixa jateada tem ~1,3 px e some em 6 de 24 ângulos (12/24 no ponto exato; 18/24 lendo a largura da faixa). Com densidade 2 (todo celular; o iOS roda a mesma bateria a 430×900 com densidade 3) e em 1366: 24/24 em todos os casos. Sonda radial: a faixa está acesa nas 8 direções nas duas densidades.
+- **Sem mudança no teste nem no app.** A bateria passou a aceitar a densidade (`--janela 430x900x2`, f23373b). Densidade 1 em 430 só existe em janela de computador estreitada: registrado como risco.
+
+### FITA-BASE-MIRA (defeito 89) — decisão do Adauto 24/11: tocar na porta pega a porta; fita só no modo ▭ Fita
+- **Antes:** fora do modo Fita, toque até 8 px da fita da base pegava a fita (mesmo em cima da porta).
+- **Correção (ff41ff3):** `paintPick` fora do modo Fita devolve a peça (se o raio bateu na fita, a peça dela). No modo Fita nada muda. É o que o botão já dizia ("Fita desligado · o toque pega a peça inteira").
+- **Testes (ec2296a):** `testFitaDaBaseEmbaixoDaPortaPintaPeloToque` ganhou a conferência sem o modo Fita (4, 12, 40 mm e meio da porta → Porta, sem oferecer fita; falha antes) e liga o modo Fita nas conferências de fita; `testCavaSemFaixaPreta…` idem. Expectativas mudadas por decisão (comentário no teste).
+
+### ARRASTO-CONFINADO (B15 / defeito 45, parte do arrasto) — erro comprovado em 2D e 3D
+- **Reproduzir (2D):** parede encolhida pra 800 (regra: o ambiente não mexe nos móveis); arrastar o balcão de 900 → ficava com 730 (`confine`: `m.w=room`). Com dois módulos e a parede encolhida, arrastar o que ficou fora → era puxado pra dentro por cima do outro (265..1195 sobre 150..1050) pelo `noOverlap('m')` do `snapMod` e pelo `confine` do desenho.
+- **Reproduzir (3D):** o mesmo no soltar do arrasto do 3D (`tidy → noOverlap`, `confineAll`): 565..1465 sobre 5..905.
+- **Correção (b1fa11e, 8b0bf44):** no arrasto do módulo (2D: `drag.t==='m'` no `S.m`; 3D: `window.__ARR` só durante o soltar) o `confine` não encolhe e trazer pra dentro da parede não pode sobrepor (fica onde estava). Fora do arrasto nada muda (criação e tamponamento que desloca a fileira: 5 testes conferidos).
+- **Testes (bcd3603, afd988a):** `testArrastoFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro` (balcão, gaveteiro, aéreo, torre, guarda-roupa; falhava em 4 das 5) e `testArrastoNo3DFicaNoAmbienteSemMudarMedidaNemEntrarEmOutro` (falha antes: "SOBREPÔS"). Família: 20 testes de arrasto passando.
+
+### B26 (peça flutuante) — investigado: nenhuma peça de fabricação solta
+- Sonda no 3D do catálogo inteiro (138 modelos, 15.654 caixas): toda peça de corte encosta em outra, no chão ou na parede. O que apareceu solto é desenho de eletro (moldura do forno/micro-ondas, `noCut`) e o cabideiro do "Armário sem laterais", que entre dois guarda-roupas se apoia nas laterais dos vizinhos (conferido).
+- **Validação nova:** `testNenhumaPecaDeFabricacaoFicaSoltaNo3DEmTodoOCatalogo` (bcd3603).
+
+### A31 — decisão do Adauto 24/11: altura da régua espaçadora do canto e do rodapé editável dentro do limite construtivo
+- **Reproduzir:** régua (8 modelos): a seta de altura do 3D não mexia (a altura vinha sempre da porta; a régua é montada depois do passo que aplica o ajuste `po`). Rodapé (qualquer módulo com pedestal, inclusive "laterais até o piso"): a seta esticava só a peça (até 340), que entrava na base (100–115), e as portas ficavam iguais.
+- **Correção (d51fa62):** régua: `poOne` aplicado nela; não sai do módulo; mínimo 50; corte acompanha. Rodapé: `rodPoFix` converte a seta de altura em `rodMm` do módulo (base sobe, portas e gavetas recalculam); limite = o que o app já exige pra caixa (folga + 3 espessuras + travessa + 60), mínimo 1. Só na ação da pessoa: projeto antigo não muda sozinho.
+- **Teste (a22988f):** `testA31AlturaDaReguaEspacadoraEDoRodapePelaSetaDo3D` (falha antes nos dois).
+
+### Quarto item aberto do checklist = defeito 45 (GEO-AVISA), parte "painéis até o teto" — depende do Adauto
+- As 4 linhas ABERTO do checklist: B15, B26, D23 e o defeito 45 ("igual à B15"). Do 45 sobra o `wallFollow` dos painéis: mudar o pé-direito/parede muda a altura/largura do painel que ia até o teto/parede (com aviso "Parede mudou: N painel até o teto acompanhou").
+- **Conflito de regras aprovadas:** a regra de 16/11 ("o ambiente não modifica os móveis") × pedidos explícitos em que o painel acompanha o teto e o gesso (`testRebaixoDoTeto…`, "o gesso morre na altura digitada e os painéis acompanham"). Não mudei: pergunta objetiva ao Adauto no relatório.
+
+### D23 (identidade única de módulo e peça) — não feito nesta rodada
+- Mudança de arquitetura (identidade persistente em editor, 3D, corte, duplicar, salvar/reabrir, desfazer e projeto antigo). Exige migração de dados com backup e teste de projeto antigo (§3). Não cabia com segurança nesta rodada; segue pendente.
+
+### Vídeo do cliente na atualização (N13) — pedido do Chefe
+- **Windows (70f7782):** coberto no CI (25a6867): win-166 gravou pelo seletor do editor, atualizou por cima, `video_*.json` igual byte a byte, o editor novo acha, lista e toca.
+- **Android (dc4892b):** CDP no WebView do apk-660 (debug). 1ª rodada: botões em inglês no emulador (corrigido); 2ª: falha de infraestrutura (download do emulador). Reexecutado.
+- **iOS (69aca94):** teste de interface montado só na compilação do simulador em cima de 3f1c3a58 (o app não muda). 1ª rodada: chegou à Fototeca e tocou na aba "Vídeos" do editor em vez do item do seletor (corrigido).

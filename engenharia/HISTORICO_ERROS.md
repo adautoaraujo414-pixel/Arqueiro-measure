@@ -2178,3 +2178,13 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - `testAbrirProjetoSemMexerNaoRegrava…`, `testProjetoGravadoPelaVersaoPublicada…`, plano de corte, histórico, Meus modelos e backup: ok.
 - **Achado no caminho:** abrir projeto com id repetido. O `loadState` desenha por dentro e o `stkSync` trocava o id da 2ª cópia sozinho. Agora o id repetido que vem do arquivo fica, com aviso.
 - **Teste:** `testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer`. Falha antes, passa depois.
+
+- **Atualização (Chefe, 24/11):** o pendente de cima foi resolvido.
+  - Juntei o MOVEL-GIRADO do Code 1 (`78e7d62`: no módulo girado, o corte vai no eixo da largura da porta, do lado oposto à peça que encosta).
+  - O contorno do caneco (`pf.pts`) agora também é cortado no mesmo eixo. Antes, a 90° e 270° só a borda era cortada.
+  - A trava de `a79780b7` (sem recorte no móvel girado) saiu.
+  - Varredura de 81 modelos com porta × (livre a 0/90/180/270° + paredes esquerda e direita) = 486 cenas: 11.404 → 0.
+  - `testMovelLivre…`, `testCanecoDaDobradicaIgualEmQualquerParede` (do Code 1) e `testDobradicaNoMovelGiradoENasParedesLateraisVarreduraZeroInterseccao` passam juntos.
+- **Custos fixos × link do cliente (Chefe, 24/11):** o link do cliente não leva valor nenhum, nem total (é assim desde antes: "ele só vê, não vê valores").
+  - Não existe total do link para divergir.
+  - O teste confere: tela = PDF ao centavo, com e sem desconto, embutido e discriminado, com custos internos R$ e %. E o link sem preço, desconto, custo ou total.

@@ -17765,4 +17765,24 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["posicao"] as? String, "igual")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // A39 (checklist, sem validação desde 438b01d6): a linha da "Lista de peças (ao vivo)" no painel do módulo mostra a peça no 3D em rosa,
+    // igual à linha da Lista de corte (antes tinha a mãozinha e não fazia nada)
+    func testListaDePecasAoVivoDoModuloMostraAPecaNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=3000;newTpl(T('Balcão 2 portas'));S.m=S.mods[0];S.sv=0;draw();var tr=null,aba=-1;
+        for(var k=0;k<10&&!tr;k++){S.tab=k;panel();await W(60);if(/Lista de peças \(ao vivo\)/.test((document.getElementById('bd')||{}).textContent||'')){tr=document.querySelector('#bd tr[data-src]');aba=k}}
+        R.lista=!!tr;var M=document.getElementById('v3');R.fechado=!M||M.hidden;
+        if(tr){var lab=tr.dataset.lab;(tr.querySelector('td')||tr).click();await W(500);var hl=document.getElementById('v3hl');R.abriu3D=!!M&&!M.hidden;R.destaque=!!hl&&!hl.hidden&&hl.textContent.indexOf(lab)>=0;try{document.getElementById('v3x').click()}catch(_){}}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["lista"] as? Bool, true, "a lista ao vivo existe no painel do módulo")
+        XCTAssertEqual(o["fechado"] as? Bool, true)
+        XCTAssertEqual(o["abriu3D"] as? Bool, true, "tocar na linha abre o 3D")
+        XCTAssertEqual(o["destaque"] as? Bool, true, "com a faixa da peça destacada (mesmo nome da linha)")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

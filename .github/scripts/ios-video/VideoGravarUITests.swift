@@ -57,12 +57,23 @@ final class VideoGravarUITests: XCTestCase {
         try toca(["Fototeca", "Photo Library", "Biblioteca de Fotos", "Fotos", "Photos"], ate: 20)
         sleep(4)
         app.tap()  // dispara o monitor de permissão, se houver
-        // a grade do seletor de fotos: o vídeo de teste é o único item
-        let item = acha(["Vídeo", "Video"], contem: true, ate: 30)
-        guard let v = item else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
-        print("VIDEO-UI: toquei \"\(v.label)\""); v.tap()
+        // a grade do seletor de fotos (fora da página): o vídeo de teste é o único item. Só imagem/célula do seletor — nunca a aba
+        // "Vídeos" do editor, que continua por baixo (1ª rodada no CI tocou nela de novo)
+        let pv = NSPredicate(format: "label CONTAINS[c] %@", "video")
+        var alvo: XCUIElement? = nil
+        let fim = Date().addingTimeInterval(30)
+        repeat {
+            for q in [app.images.matching(pv), app.cells.matching(pv), app.collectionViews.cells, app.scrollViews.images] {
+                for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable && e.label != "Vídeos" && e.label != "Videos" { alvo = e; break } }
+                if alvo != nil { break }
+            }
+            if alvo != nil { break }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        } while Date() < fim
+        guard let v = alvo else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
+        print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue))"); v.tap()
         sleep(2)
-        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "OK"], ate: 4) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
+        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "OK"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
         // o editor avisa "1 vídeo(s) salvo(s) neste cliente."
         guard acha(["vídeo(s) salvo(s)"], contem: true, ate: 90) != nil else { mostra("o editor não avisou que salvou"); XCTFail("FALHA-VIDEO-UI: o editor não avisou que salvou o vídeo"); throw Falha() }
         print("VIDEO-UI: o editor da versão publicada salvou o vídeo")

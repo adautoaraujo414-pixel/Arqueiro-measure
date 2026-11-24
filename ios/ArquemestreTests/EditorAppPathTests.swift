@@ -55,7 +55,7 @@ final class EditorAppPathTests: XCTestCase {
 
     /// Igual ao MoveisWeb.makeUIView: esquema arque://, ponte ArqueApp e o script dos vídeos.
     @MainActor
-    private func openLikeTheApp(lang: String) async throws -> (WKWebView, TimeInterval) {
+    private func openLikeTheApp(lang: String, rotulo: String = "") async throws -> (WKWebView, TimeInterval) {
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = .nonPersistent()
         cfg.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque")
@@ -84,7 +84,7 @@ final class EditorAppPathTests: XCTestCase {
         let dt = Date().timeIntervalSince(t0)
         // ABERTURA-DIAG: separa o tempo do WebKit/simulador (até a página começar) do tempo do próprio editor (página → pronto)
         let fmt: (Date?) -> String = { d in d.map { String(format: "%.2f s", $0.timeIntervalSince(t0)) } ?? "não chegou" }
-        print("ABERTURA-DIAG \(lang): página começou em \(fmt(sink.tIni)) · DOM pronto em \(fmt(sink.tDcl)) · carregou em \(String(format: "%.2f s", dt)) · editor sozinho \(sink.tIni.map { String(format: "%.2f s", dt - $0.timeIntervalSince(t0)) } ?? "?")")
+        print("ABERTURA-DIAG \(rotulo)\(lang): página começou em \(fmt(sink.tIni)) · DOM pronto em \(fmt(sink.tDcl)) · carregou em \(String(format: "%.2f s", dt)) · editor sozinho \(sink.tIni.map { String(format: "%.2f s", dt - $0.timeIntervalSince(t0)) } ?? "?")")
         try await Task.sleep(nanoseconds: 1_500_000_000)
         return (w, dt)
     }
@@ -99,6 +99,15 @@ final class EditorAppPathTests: XCTestCase {
     /// A tela do editor de móveis carrega de verdade pelo caminho do app (não fica branca) e rápido.
     @MainActor
     func testEditorAbreComoNoAppSemTelaBranca() async throws {
+        // Adauto 24/11: no iPad, a 1ª abertura do editor no simulador recém-ligado (WebKit e JIT frios) é medida À PARTE
+        // e o limite de 20 s vale para a abertura seguinte, com o simulador já aquecido. A abertura a frio continua
+        // conferida (menos de 60 s, o mesmo prazo da espera) e sai no ABERTURA-DIAG "frio-ipad", para não esconder lentidão real.
+        // No iPhone nada muda: a primeira abertura é a medida, com os mesmos 20 s.
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            let (_, frio) = try await openLikeTheApp(lang: "pt", rotulo: "frio-ipad ")
+            XCTAssertLessThan(frio, 60, "abertura a frio do editor no iPad (simulador recém-ligado) em menos de 60 s (abriu em \(frio) s)")
+            await MainActor.run { hold.forEach { $0.removeFromSuperview() }; hold = []; hosts = []; sinks = [] }
+        }
         let (w, dt) = try await openLikeTheApp(lang: "pt")
         let o = try await run(w, #"""
           var vis=Array.prototype.filter.call(document.querySelectorAll('button'),function(b){var r=b.getBoundingClientRect();return r.width>0&&r.height>0}).length;

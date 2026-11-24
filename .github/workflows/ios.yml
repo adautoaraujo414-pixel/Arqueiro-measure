@@ -75,6 +75,10 @@ jobs:
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py ipad)
+          # Adauto 24/11: aquece o simulador do iPad antes da bateria (liga e espera terminar de iniciar).
+          # A 1ª abertura do editor continua medida à parte no teste (ABERTURA-DIAG frio-ipad); o limite de 20 s não mudou.
+          T0=$(date +%s); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
+          echo "ABERTURA-DIAG simulador do iPad ligado em $(( $(date +%s) - T0 )) s (antes da bateria)"
           set +e
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/TestesIPad.xcresult \
@@ -115,6 +119,23 @@ jobs:
           RC=$?
           grep -E "error:|\*\* " build/xcodebuild-release.log | tail -n 200
           exit $RC
+
+      # Adauto 24/11: pacote de TESTE do iOS só como artefato do Actions (sem TestFlight, sem App Store, sem release).
+      # Sem assinatura ele não instala em iPhone de verdade: o .app do simulador abre no Simulador do Xcode.
+      - name: Pacote de TESTE iOS (só artefato do Actions, não é publicação)
+        run: |
+          cd ios && mkdir -p build/pacote-teste
+          ditto -c -k --keepParent build/ddrel/Build/Products/Release-iphoneos/Arquemestre.app build/pacote-teste/Arquemestre-TESTE-iphoneos-sem-assinatura.zip
+          ditto -c -k --keepParent build/dd/Build/Products/Debug-iphonesimulator/Arquemestre.app build/pacote-teste/Arquemestre-TESTE-simulador.zip
+          printf 'Pacote de TESTE iOS do commit %s. Não é versão pública: sem assinatura não instala em iPhone de verdade (o do simulador abre no Simulador do Xcode).\n' "${GITHUB_SHA::7}" > build/pacote-teste/nota.txt
+          shasum -a 256 build/pacote-teste/*.zip | tee build/pacote-teste/sha256.txt
+
+      - name: Guardar o pacote de TESTE iOS (artefato)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arquemestre-TESTE-ios
+          path: ios/build/pacote-teste/
+          if-no-files-found: error
 
       - name: Capturas de tela (iPhone 6,9" e iPad 13")
         run: |

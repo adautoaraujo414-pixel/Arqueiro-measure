@@ -71,14 +71,22 @@ jobs:
 
       - name: Arquivos de TESTE (portátil e instalador, sem publicar)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          $n = $env:GITHUB_RUN_NUMBER
           New-Item -ItemType Directory -Force relt | Out-Null
           Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath relt/Arquemestre-Windows-TESTE-portatil.zip
           "Arquivos de TESTE do commit $($env:GITHUB_SHA.Substring(0,7)). Nao e versao publica e nao atualiza ninguem. O portatil roda sem instalar (descompacte e abra Arquemestre.exe); ele usa a mesma pasta de dados do app instalado, entao faca backup antes." | Out-File -Encoding utf8NoBOM relt/nota.txt
-          gh release create "teste-windows-$n" relt/Arquemestre-Windows-TESTE-portatil.zip -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease --title "TESTE Windows $n ($($env:GITHUB_SHA.Substring(0,7))) · não é versão pública" --notes-file relt/nota.txt
+          Get-FileHash relt/Arquemestre-Windows-TESTE-portatil.zip -Algorithm SHA256 | Format-List | Out-File -Encoding utf8NoBOM relt/sha256.txt
+          Get-Content relt/sha256.txt
+          # Adauto 24/11: o pacote de teste fica SÓ nos artefatos do Actions (sem release pública no GitHub)
+          Write-Host "::notice title=Pacote de teste Windows::artefato Arquemestre-TESTE-windows desta execução (Actions → Artifacts)"
+
+      - name: Guardar os arquivos de TESTE (só artefato do Actions, não é publicação)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arquemestre-TESTE-windows
+          path: relt/
+          if-no-files-found: error
 
       - name: PUBLICAR pros usuários (release win-N e ponteiro win-latest)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'

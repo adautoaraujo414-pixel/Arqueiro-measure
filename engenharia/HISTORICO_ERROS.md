@@ -2059,3 +2059,46 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - o intervalo conta do início do 1º toque: `W(max(0, 120 − tempo do 1º toque))`;
   - as expectativas são as mesmas e nenhum limite aumentou;
   - os dois passam em 1366 e 430.
+
+## DECISÕES DO ADAUTO 24/11 (itens 1, 2, 4, 5, 6, 8 e 9; Code 2, ramo `claude/decisoes-2411-code2`)
+- **1 · forno/micro-ondas (`aac3afb5`):**
+  - o 🗑 não tira "Corte do forno", "Nicho do forno (aberto)", "Corte do micro-ondas" nem "Nicho do micro-ondas (aberto)" sozinhos, e mostra o motivo;
+  - tocar de novo em até 4 s tira o conjunto: no balcão o vão fica livre, na torre fica "sem", na torre por vãos sai o vão dele;
+  - catálogo: 17 peças, 0 "só a peça".
+- **2 · rodapé e travessa (`aac3afb5`, teste `2ee42fbc`):**
+  - o 🗑 é o mesmo que desmarcar a caixinha do módulo, e as peças dependentes recalculam (base de cima, moldura e porta, como na caixinha);
+  - a travessa que segura módulo sem base de cima não sai;
+  - o teste antigo do 🗑 na travessa (regra de 17/11, "outras iguais") agora confere que as outras ficam **iguais às da caixinha**.
+- **4 · dobradiça (`dcd57685`), só no 3D:**
+  - o caneco ficava 1 mm dentro da peça que a porta cobre: 1178 partes em 74 modelos;
+  - com a porta fechada, o caneco é cortado depois da montagem (`cupTrim`);
+  - furação, medida e DXF iguais.
+  - Achado: o caso "16 modelos na divisória" de 16/11 já não existia; o que restava era o caneco na lateral, na divisória e no montante.
+- **5 e 8 · perfis × caixa (`0976fb27`):**
+  - o rebaixo sai das caixas reais do 3D que desenham o perfil (`pxCarve`): o tamanho exato da parte do perfil em cada peça;
+  - G: travessa 440 × 37 × 1,5 (a "pendência 1" da especificação). GV: travessa e base. Facetado: 300 × 10,5 × 10, mais as ponteiras;
+  - a nota vai na peça (lista), a camada `REBAIXO_P…` no DXF, e a medida de corte fica igual;
+  - móvel de antes (sem `rbP`): aviso e botão, nada muda sozinho;
+  - varredura dos 9 puxadores × 142 modelos: 0 interseção nova (antes: facetado 236, G 549, GV 349, perfil 1).
+  - `testPerfilGAfastamentoERebaixo…` passa de "entra 1,5 mm" para "entra 0 mm".
+  - **Desempenho:** a 1ª versão montava o 3D dentro do `draw()` (desenho 11 → 37 ms). Agora o desenho 2D não monta o 3D, e lista/corte/DXF montam uma vez. Desenho e montagem ficam iguais à base.
+- **6 · fita do aéreo:** sem mudança de código. Já resolvido: 0 de 1629 fitas dentro de porta ou frente; porta na posição de fabricação.
+- **9 · curvos:** adiados pelo Adauto (checklist N25).
+
+## CUSTOS FIXOS (pedido do Adauto 24/11, via Chefe; Code 2)
+- **Pedido:** cadastrar custos fixos no orçamento.
+  - Nome, descrição e valor; vários; recorrentes reaproveitados; editar, excluir, ativar e desativar.
+  - Entram no valor sem duplicar. PDF discriminado ou embutido. Persistência.
+  - Mais 5 garantias: biblioteca não mexe em projeto existente; R$ e %; base explícita; interno nunca aparece; a margem não muda.
+- **Feito:** ver `DECISOES_TECNICAS.md` (24/11, custos fixos). Tela: Valores do projeto › "Custos fixos deste orçamento" e "Custos recorrentes (biblioteca)".
+- **Conferido:**
+  - Projeto sem custos: os mesmos números da versão de antes, até o float sem arredondar. Margem 2, campos antigos, desconto de 7% e valor fechado: `[889.6282213822807, 1145.1282213822806, 1064.97, 1064.97, "640.7/504.43", 3000, 3000]` nas duas.
+  - PDF: embutido 773,43 + 608,94 = 1382,37; discriminado 577,61 + 454,76 + 350,00 = 1382,37.
+  - Os testes "nada de enfeite" pediram resposta no toque da opção que já está escolhida (aviso curto).
+- **Testes:**
+  - `testCustosFixosAdicionarEditarDesativarExcluirRecorrenteSalvarReabrirEDuplicar`;
+  - `testCustosFixosPdfDiscriminadoEmbutidoMesmoTotalInternoNuncaApareceNoPdfNemNoLink`;
+  - `testCustosFixosSemDuplicidadeComCamposAntigosProjetoAntigoMesmoValorEBibliotecaNaoMudaProjeto`.
+
+  Os três falham antes e passam depois.
+- **Nota de ambiente:** `testDigitacaoTecladoFisico…` e `testMaoDeObra…` falharam no navegador de sondas (aba extra aberta toma o foco). Falham igual em todas as versões, inclusive nas que passaram na bateria. Num navegador novo passam.

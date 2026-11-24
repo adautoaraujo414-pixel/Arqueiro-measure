@@ -2188,3 +2188,8 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Custos fixos × link do cliente (Chefe, 24/11):** o link do cliente não leva valor nenhum, nem total (é assim desde antes: "ele só vê, não vê valores").
   - Não existe total do link para divergir.
   - O teste confere: tela = PDF ao centavo, com e sem desconto, embutido e discriminado, com custos internos R$ e %. E o link sem preço, desconto, custo ou total.
+
+- **Bateria completa do `d687d0a9`:** 1366 527/528 e 430 526/528.
+  - A falha nova nas duas foi `testMoverNo3DEncaixaNaParede…` ("vizinho mudou"). O teste comparava o vizinho da cena 5 com o da cena 1. Com o D23, cada módulo novo tem o seu id, então o vizinho de outra cena nunca é igual.
+  - **Correção, só no teste:** o vizinho é comparado com ele mesmo, na mesma cena, antes e depois do encaixe. É a intenção do teste ("sem mexer em ninguém"), igualmente estrita.
+  - O outro de 430 (`testFaixaDoEspelhoLed…`) é da base.

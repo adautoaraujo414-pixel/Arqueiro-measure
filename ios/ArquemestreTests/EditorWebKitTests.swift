@@ -18075,4 +18075,42 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["pecas"] as? Bool, true, "peças e corte iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // DECISÃO DO ADAUTO 24/11 (itens 1 e 2): (1) corte do forno / nicho do micro-ondas não saem sozinhos pelo 🗑 (mostra o motivo); tocar de novo em 4 s
+    // tira o conjunto (balcão: vão livre; torre: "sem forno/micro"; torre por vãos: o vão dele). (2) 🗑 no rodapé e na travessa frontal desliga o componente
+    // do módulo: some da lista, do corte e do 3D (e volta no ↶). A travessa que segura o módulo sem base de cima não sai (motivo)
+    func testLixeiraNoFornoMicroBloqueiaEConjuntoComConfirmacaoRodapeETravessaDesligamOComponente() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var novo=function(n){loadState(initLimpo());S.W=6000;S.env='cozinha';S.room='cozinha';S.mods=[];draw();newTpl(T(n));draw();return S.mods[0]};
+        var tem=function(m,re){return partsOf(m).some(function(p){return re.test(p.name)})},sig=function(m){return JSON.stringify(partsOf(m).map(function(p){return p.pk+' '+p.cl+'x'+p.cw}))};
+        var pkDe=function(m,re){var p=partsOf(m).filter(function(p){return re.test(p.name)})[0];return p?p.pk:'sem'};var no3D=function(m,re){open3D();__build();var r=__boxes().some(function(b){return re.test(String(b.nm))});document.getElementById('v3x').click();return r};
+        /* 1 · balcão do forno *//* pausas entre as ações, como a pessoa: o histórico junta mudanças a menos de 700 ms (histTick) */var m=novo('Balcão forno embutido'),a=sig(m);await W(900);var r1=pcDelAt(0,'Corte do forno#1');draw();R.forno1=/^⚠ Corte do forno é o lugar do forno: não sai sozinho/.test(r1)+' · igual '+(sig(m)===a)+' · só a peça '+((m.xp||[]).length>0);
+        await W(900);var r2=pcDelAt(0,'Corte do forno#1');draw();await W(900);R.forno2=/^🗑 Forno tirado \(conjunto\)/.test(r2)+' · vão '+m.v.filter(function(v){return v.k==='oven'}).length+' forno · corte '+tem(m,/^Corte do forno$/);
+        document.getElementById('und').click();draw();m=S.mods[0];R.desfaz=sig(m)===a;
+        /* espera de 4 s: o 2º toque depois disso só mostra o motivo de novo */window.__fnArm={m:m,pk:'Corte do forno#1',t:Date.now()-5000};R.passou4s=/^⚠/.test(pcDelAt(0,'Corte do forno#1'));
+        /* torre quente com micro-ondas de embutir: tira só o micro */m=novo('Torre forno + micro-ondas (embutir)');pcDelAt(0,'Corte do micro-ondas#1');var r3=pcDelAt(0,'Corte do micro-ondas#1');draw();R.torre=/Micro-ondas tirado/.test(r3)+' · micro '+tem(m,/^Corte do micro-ondas$/)+' · forno '+tem(m,/^Corte do forno$/);
+        /* torre por vãos: o vão do forno sai */m=novo('Torre por vãos · micro-ondas + forno + gavetas');var nv=m.v.filter(function(v){return v.tw})[0].tw.length;pcDelAt(0,'Corte do forno#1');pcDelAt(0,'Corte do forno#1');draw();R.porVaos=nv+'→'+m.v.filter(function(v){return v.tw})[0].tw.length+' · forno '+tem(m,/^Corte do forno$/)+' · micro '+tem(m,/^Corte do micro-ondas$/);
+        /* 2 · rodapé e travessa (o ↶ primeiro; o 3D num módulo novo, porque fechar o 3D recarrega o projeto) */m=novo('Balcão 2 portas');var c0=cutLines(m).length;await W(900);var rr=pcDelAt(0,pkDe(m,/^Rodapé/));draw();
+        var lR=tem(m,/^Rodapé|pedestal/),cR=cutLines(m).some(function(l){return /Rodapé|pedestal/.test(l.n||l.name||'')}),xR=(m.xp||[]).length>0,oR=!!m.rod;await W(900);document.getElementById('und').click();await W(300);m=S.mods[0];var volR=!!(m&&m.rod&&tem(m,/^Rodapé/));
+        await W(900);var rt=pcDelAt(0,pkDe(m,/^Travessa frontal$/));draw();var lT=tem(m,/^Travessa frontal$/),oT=!!m.trav;await W(900);document.getElementById('und').click();await W(300);m=S.mods[0];R.volta=volR&&!!(m&&m.rod&&m.trav&&tem(m,/^Travessa frontal$/))&&cutLines(m).length===c0;
+        m=novo('Balcão 2 portas');pcDelAt(0,pkDe(m,/^Rodapé/));pcDelAt(0,pkDe(m,/^Travessa frontal$/));draw();var d3R=no3D(m,/Rodapé|pedestal/);m=S.mods[0];var d3T=no3D(m,/Travessa frontal/);
+        R.rodape=/^🗑 Rodapé tirado/.test(rr)+' · rod '+oR+' · lista '+lR+' · corte '+cR+' · 3D '+d3R+' · só a peça '+xR;R.travessa=/^🗑 Travessa frontal tirada/.test(rt)+' · trav '+oT+' · lista '+lT+' · 3D '+d3T;
+        /* travessa que segura o módulo sem base de cima (balcão com pedra, sem tampo): não sai */m=novo('Balcão 2 portas');addStone();draw();var nt=(typeof noTop==='function'&&noTop(m));if(nt){var rb=pcDelAt(0,pkDe(m,/^Travessa frontal$/));draw();R.segura=/^⚠ A travessa frontal não sai/.test(rb)+' · trav '+!!m.trav}else R.segura='sem caso';
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["forno1"] as? String, "true · igual true · só a peça false", "1º toque: motivo, nada muda")
+        XCTAssertEqual(o["forno2"] as? String, "true · vão 0 forno · corte false", "2º toque em 4 s: tira o conjunto")
+        XCTAssertEqual(o["desfaz"] as? Bool, true)
+        XCTAssertEqual(o["passou4s"] as? Bool, true, "depois de 4 s volta a pedir a confirmação")
+        XCTAssertEqual(o["torre"] as? String, "true · micro false · forno true")
+        XCTAssertEqual(o["porVaos"] as? String, "4→3 · forno false · micro true")
+        XCTAssertEqual(o["rodape"] as? String, "true · rod false · lista false · corte false · 3D false · só a peça false")
+        XCTAssertEqual(o["travessa"] as? String, "true · trav false · lista false · 3D false")
+        XCTAssertEqual(o["volta"] as? Bool, true, "↶ devolve rodapé e travessa")
+        XCTAssertEqual(o["segura"] as? String, "true · trav true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

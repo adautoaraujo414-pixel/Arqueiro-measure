@@ -5939,7 +5939,7 @@ function tampExposed(m,side){var wg=m.wing||'F',sw=sideWalls(),f=fgv(),tw=side<0
 function wingJoin(){['e','d'].forEach(function(w){[false,true].forEach(function(sup){var r=S.mods.filter(function(o){return o.wing===w&&!!o.sup===sup&&!o.corner}).sort(function(a,b){return a.x-b.x});var ex=r.map(extOf),sh=0;for(var j=1;j<r.length;j++){var gap=ex[j][0]-ex[j-1][1];if(gap>70)sh=0;else if(gap>0.5)sh+=gap;if(sh)r[j].x=Math.round((r[j].x-sh)*10)/10}})})}
 function autoTamp(){if(window.RO||window.CUTMODE)return false;var ch=false,todo=[];var on=true;try{on=!!+STD().autoTamp}catch(_){}if(!on){/* desligado nos ajustes: daqui pra frente só manual. O que já existe no projeto fica como está (nada é apagado sozinho) */return false}S.mods.forEach(function(m){/* móvel livre: tamponamento só manual, nada liga ou desliga sozinho */if(m.corner||m.nicho||m.tv||m.lock||m.wing==='L')return;['tl','tr'].forEach(function(k){if(!m[k])delete m[k+'Auto'];if(m[k+'M'])return;var side=k==='tl'?-1:1,ex=tampExposed(m,side);if(ex&&!m[k])todo.push([m,k,1]);else if(!ex&&m[k]&&m[k+'Auto'])todo.push([m,k,0])})});
  /* decide tudo olhando o estado atual e só depois aplica (senão a ordem dos módulos muda o resultado) */todo.forEach(function(t){var m=t[0],k=t[1];if(t[2]){m[k]=true;m[k+'Auto']=1;if(!m[k+'W'])m[k+'W']=+m.tlW||+m.trW||30}else{m[k]=false;delete m[k+'Auto']}ch=true});if(ch){try{confineAll()}catch(_){}try{rowJoin(false,70);rowJoin(true,70);wingJoin()}catch(_){}}return ch}
-window.autoTamp=autoTamp;
+window.autoTamp=autoTamp;window.tampExposed=tampExposed;
 /* ===== TAMP-JUNTA (Adauto 22/11, com foto): o tamponamento AUTOMÁTICO é acabamento de lado exposto. Quando a pessoa muda um módulo de lugar
    (arraste no 2D ou no 3D, posição digitada) e ele fica encostado em outro, o automático dos dois lados da junta sai (antes só era decidido ao
    criar o módulo e ficava uma régua de 30 entre os dois). O manual (tlM/trM ou ligado pela pessoa) e o de módulo travado não mudam; nada é
@@ -13165,7 +13165,12 @@ window.diag3Show=function(force){try{var d=diag3();if(window.__diag3Antes)d.ante
    é decidido de novo depois da posição nova. Antes o encaixe na parede ainda contava o automático do lado exposto e empurrava o móvel 30 mm;
    depois o automático saía e ficava vão sem tamponamento junto à parede (25 digitado virava 35). ===== */
 (function(){var sv0=window.setv;if(typeof sv0!=='function')return;
- setv=window.setv=function(k,v){try{var m=S.m;if(k==='x'&&m&&S.mods.indexOf(m)>=0&&!m.lock){['tl','tr'].forEach(function(c){if(m[c]&&m[c+'Auto']&&!m[c+'M']){m[c]=false;delete m[c+'Auto']}});/* TAMP-JUNTA: no lugar digitado, se encosta em outro módulo, o automático do vizinho na junta também sai (antes ficava e empurrava o módulo 30) */var x0_=m.x,nv_=parseFloat(String(v).replace(',','.'));if(isFinite(nv_)&&window.tampJunta){m.x=nv_;try{tampJunta(m,0,x0_)}finally{m.x=x0_}}}}catch(_){}return sv0.apply(this,arguments)}})();
+ setv=window.setv=function(k,v){var tirou_=[],mm_=null;try{var m=S.m;if(k==='x'&&m&&S.mods.indexOf(m)>=0&&!m.lock){mm_=m;['tl','tr'].forEach(function(c){if(m[c]&&m[c+'Auto']&&!m[c+'M']){m[c]=false;delete m[c+'Auto'];tirou_.push(c)}});/* TAMP-JUNTA: no lugar digitado, se encosta em outro módulo, o automático do vizinho na junta também sai (antes ficava e empurrava o módulo 30) */var x0_=m.x,nv_=parseFloat(String(v).replace(',','.'));if(isFinite(nv_)&&window.tampJunta){m.x=nv_;try{tampJunta(m,0,x0_)}finally{m.x=x0_}}}}catch(_){}var r_=sv0.apply(this,arguments);
+  /* B24 · s27 (auditoria final 24/11): depois da posição aplicada, o automático que JÁ existia volta no lado que continua exposto (regra da criação).
+     Antes ele só voltava quando um vizinho se afastava, e o lado livre perdia o tamponamento (digitar e voltar não devolvia igual). Nada novo liga sozinho. */
+  try{if(mm_&&tirou_.length&&S.mods.indexOf(mm_)>=0&&!(mm_.corner||mm_.nicho||mm_.tv||mm_.lock||mm_.wing==='L')){var on_=true;try{on_=!!+STD().autoTamp}catch(_){}
+   if(on_){var vol_=0;tirou_.forEach(function(c){if(mm_[c]||mm_[c+'M'])return;if(!window.tampExposed||!tampExposed(mm_,c==='tl'?-1:1))return;mm_[c]=true;mm_[c+'Auto']=1;if(!mm_[c+'W'])mm_[c+'W']=+mm_.tlW||+mm_.trW||30;vol_++});if(vol_){try{draw()}catch(_){}}}}}catch(_){}
+  return r_}})();
 </script>
 <script>
 /* ===== B24 (20/11): mudar uma medida e voltar devolve a posição. Quando a medida nova fez o encaixe empurrar o móvel, o app lembra (só na

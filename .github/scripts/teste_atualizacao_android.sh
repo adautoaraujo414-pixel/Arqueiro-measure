@@ -2,14 +2,18 @@
 # N05 (auditoria de 17/11): atualização por cima da versão publicada no emulador, sem perder dados.
 # Uso: teste_atualizacao_android.sh <apk-anterior> <apk-novo>   (os dois com a mesma chave fixa do app)
 set -u
-PKG=br.com.arque.measure; OLD=$1; NEW=$2; OUT=atualizacao; mkdir -p $OUT; FALHAS=0
+PKG=br.com.arque.measure; OLD=$1; NEW=$2; OUT0=atualizacao; mkdir -p $OUT0; FALHAS=0
 falha(){ echo "FALHA: $*"; FALHAS=$((FALHAS+1)); }
 adb wait-for-device; adb shell settings put global window_animation_scale 0 >/dev/null 2>&1
+# 24/11 (auditoria final): a mesma sequência pra cada backup de referência, cada uma do zero (sem o app e sem as cópias em Download):
+# o de sempre (tests/backup-referencia) e o rico gerado pelo editor publicado (tests/backup-referencia-rico).
+rodada(){ ZIP=$1; MAN=$2; OUT=$OUT0/$3; mkdir -p $OUT; echo "######## backup $3"
+adb uninstall $PKG >/dev/null 2>&1; adb shell rm -rf /sdcard/Download/ArqueMeasure >/dev/null 2>&1
 echo "== 1. instala a versão anterior"; adb install -r "$OLD" || falha "não instalou a versão anterior"
 V0=$(adb shell dumpsys package $PKG | grep -m1 versionCode | tr -s ' ' | cut -d' ' -f2 | cut -d= -f2); echo "versão anterior: $V0"
 adb shell am start -W -n $PKG/.MainActivity >/dev/null; sleep 10; adb shell am force-stop $PKG
 echo "== 2. põe os dados do backup de referência"
-rm -rf ref && mkdir ref && unzip -q tests/backup-referencia/android-backup-referencia.zip -d ref
+rm -rf ref && mkdir ref && unzip -q "$ZIP" -d ref
 adb shell rm -rf /data/local/tmp/ref; (cd ref/files && find . -type f | sed 's#^\./##') > $OUT/lista.txt
 # dentro do while, todo adb lê de /dev/null: senão ele come o resto da lista e só o 1º arquivo é tratado
 while read -r rel; do adb shell mkdir -p "/data/local/tmp/ref/$(dirname "$rel")" </dev/null; adb push "ref/files/$rel" "/data/local/tmp/ref/$rel" </dev/null >/dev/null; done < $OUT/lista.txt
@@ -33,13 +37,16 @@ hashes > $OUT/depois.txt
 echo "== 4. confere"
 diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização"
 grep -q '^  ' $OUT/depois.txt && falha "algum arquivo sumiu (sem hash)"
-python3 - "$OUT/depois.txt" <<'PY' || FALHAS=$((FALHAS+1))
+python3 - "$OUT/depois.txt" "$MAN" <<'PY' || FALHAS=$((FALHAS+1))
 import json,sys
-m=json.load(open('tests/backup-referencia/manifesto.json'))['arquivos'];d={l.split()[1]:l.split()[0] for l in open(sys.argv[1]) if len(l.split())==2}
+m=json.load(open(sys.argv[2]))['arquivos'];d={l.split()[1]:l.split()[0] for l in open(sys.argv[1]) if len(l.split())==2}
 ruins=[k for k,h in m.items() if d.get(k)!=h]
 print('iguais ao manifesto: %d de %d'%(len(m)-len(ruins),len(m)));ruins and print('FALHA: diferentes do manifesto:',ruins);sys.exit(1 if ruins else 0)
 PY
 adb shell ls /sdcard/Download/ArqueMeasure/Projetos/ 2>/dev/null | tee $OUT/copias.txt
 grep -q "antes-de-usar-a-versao-$V1" $OUT/copias.txt && echo "cópia antes-de-usar-a-versao-$V1: ok" || falha "não achei a cópia antes-de-usar-a-versao-$V1"
 adb logcat -d > $OUT/logcat.txt; grep -E "FATAL EXCEPTION|ANR in $PKG" -A3 $OUT/logcat.txt | grep -B1 -A3 "$PKG" | head -20 && grep -qE "FATAL EXCEPTION" $OUT/logcat.txt && grep -A2 "FATAL EXCEPTION" $OUT/logcat.txt | grep -q "$PKG" && falha "o app fechou com erro depois de atualizar"
+}
+rodada tests/backup-referencia/android-backup-referencia.zip tests/backup-referencia/manifesto.json referencia
+rodada tests/backup-referencia-rico/backup-rico.zip tests/backup-referencia-rico/manifesto.json rico
 echo "RESULTADO: versão $V0 → $V1 · falhas $FALHAS"; exit $FALHAS

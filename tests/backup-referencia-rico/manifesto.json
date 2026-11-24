@@ -1,0 +1,35 @@
+{
+ "origem": "gerado pelo editor PUBLICADO (3f1c3a58 = iOS 3.0.13; mesmo editor de c561120 = apk-660/win-166) pela própria ponte do app (putFile), em 24/11/2026; script: tools/sondas/s45_projeto_publicado/gera_backup_rico.js",
+ "projetos": {
+  "p1795530492754": {
+   "cliente": "Cliente Cozinha",
+   "modulos": 9
+  },
+  "p1795530496489": {
+   "cliente": "Cliente Quarto",
+   "modulos": 1
+  }
+ },
+ "conteudo": [
+  "projeto 'Cliente Cozinha': cozinha de exemplo (9 módulos, pedra, geladeira, forno e TV) com dados do cliente",
+  "projeto 'Cliente Quarto': guarda-roupa + cama",
+  "Meus modelos: 1 modelo salvo pelo quadro do app (prices.json, myMods)",
+  "preços mudados pelo prSave (prices.json)",
+  "histórico de versões automático (hist_<projeto>.json)",
+  "foto do projeto pela galeria do editor (photo_<id>.json)"
+ ],
+ "nao_se_aplica": {
+  "LED livre": "a versão publicada não cria (m.leds não existe no editor publicado)",
+  "espelho de parede (frx)": "a versão publicada não cria espelho de parede (só existe como palavra de busca)",
+  "peças livres": "a versão publicada não cria (EM/peças livres não existem no editor publicado)"
+ },
+ "nao_gerado_aqui": {
+  "vídeo do projeto": "o arquivo do vídeo é gravado pela parte nativa de cada plataforma (putVideo no iOS; banco do navegador + arquivo no Android/Windows pelo N13) a partir da escolha de arquivo do sistema; gerar exige o app publicado rodando com escolha de arquivo no emulador/simulador/Windows — não feito neste backup"
+ },
+ "arquivos": {
+  "moveis/hist_p1795530492754.json": "ce34eee29a954d4f9fa55bfe77e78f1800c90a3861dcce612b11b98683911e53",
+  "moveis/photo_f1795530495227.json": "59d39657a61b85b34cdcfcdfcf138144f95e4c6b8e62660e5106574b0caf827c",
+  "moveis/prices.json": "1c1e325c5cf9cd19a1aa8ab1ed697318b13926e7b9016484295bcf95cb6e1f50",
+  "moveis/projects.json": "f5405d7424db658fa2fd5bf05f4407cd003a3e67a0ccd62a44f3382dec8c4888"
+ }
+}

@@ -6,12 +6,14 @@ set -u
 BID=br.com.arque.measure; OLD=$1; NEW=$2; OUT0=atualizacao; mkdir -p $OUT0; FALHAS=0
 falha(){ echo "FALHA: $*"; FALHAS=$((FALHAS+1)); }
 # 24/11 (auditoria final, pedido do Adauto: "Android, iPhone, iPad e Windows"): a mesma sequência no iPhone e no iPad, cada um com a sua pasta.
-roda(){ KIND=$1; OUT=$OUT0/$KIND; mkdir -p $OUT; echo "######## $KIND"
+roda(){ KIND=$1; ZIP=$2; OUT=$OUT0/$KIND-$3; mkdir -p $OUT; echo "######## $KIND · backup $3"
   UDID=$(python3 novo/ios/scripts/pick_sim.py "$KIND"); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b >/dev/null 2>&1
+  # cada rodada do zero: sem o app de antes no simulador
+  xcrun simctl uninstall "$UDID" $BID >/dev/null 2>&1
   echo "== 1. instala a versão anterior"; xcrun simctl install "$UDID" "$OLD" || falha "não instalou a anterior"
   xcrun simctl launch "$UDID" $BID >/dev/null; sleep 12; xcrun simctl terminate "$UDID" $BID
   DATA=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA/Library/Application Support/Arquemestre/files"; mkdir -p "$F"
-  echo "== 2. põe os dados do backup de referência"; rm -rf ref && mkdir ref && unzip -q novo/tests/backup-referencia/android-backup-referencia.zip -d ref
+  echo "== 2. põe os dados do backup de referência"; rm -rf ref && mkdir ref && unzip -q "novo/$ZIP" -d ref
   (cd ref/files && find . -type f | sed 's#^\./##' | sort) > $OUT/lista.txt; cp -R ref/files/. "$F/"
   xcrun simctl launch "$UDID" $BID >/dev/null; sleep 12; xcrun simctl terminate "$UDID" $BID
   hashes(){ while read -r rel; do [ -f "$F/$rel" ] && echo "$(shasum -a 256 "$F/$rel" | cut -d' ' -f1)  $rel" || echo "  $rel"; done < $OUT/lista.txt; }
@@ -22,6 +24,13 @@ roda(){ KIND=$1; OUT=$OUT0/$KIND; mkdir -p $OUT; echo "######## $KIND"
   hashes > $OUT/depois.txt
   echo "== 4. confere"; diff $OUT/antes.txt $OUT/depois.txt && echo "arquivos iguais antes e depois: $(wc -l < $OUT/depois.txt)" || falha "arquivos mudaram ou sumiram na atualização"
   grep -q '^  ' $OUT/depois.txt && falha "algum arquivo sumiu"
+  # 24/11: confere também com o manifesto do backup (hash de cada arquivo, igual ao Android e ao Windows)
+  python3 - "$OUT/depois.txt" "novo/$(dirname "$ZIP")/manifesto.json" <<'PY' || FALHAS=$((FALHAS+1))
+import json,sys
+m=json.load(open(sys.argv[2]))['arquivos'];d={l.split()[1]:l.split()[0] for l in open(sys.argv[1]) if len(l.split())==2}
+ruins=[k for k,h in m.items() if d.get(k)!=h]
+print('iguais ao manifesto: %d de %d'%(len(m)-len(ruins),len(m)));ruins and print('FALHA: diferentes do manifesto:',ruins);sys.exit(1 if ruins else 0)
+PY
   xcrun simctl spawn "$UDID" log show --last 5m --predicate "process == 'Arquemestre'" 2>/dev/null | grep -iE "fatal|crash|exception" | head -5 > $OUT/quedas.txt; [ -s $OUT/quedas.txt ] && falha "o app registrou erro grave: $(head -1 $OUT/quedas.txt)"
   echo "== 5. abre os projetos no editor da versão nova (Adauto, 21/11): medidas, peças, corte, foto do projeto e notas"
   XTR=$(ls novo/ios/build/dd/Build/Products/*.xctestrun 2>/dev/null | head -1)
@@ -35,5 +44,9 @@ roda(){ KIND=$1; OUT=$OUT0/$KIND; mkdir -p $OUT; echo "######## $KIND"
   DATA3=$(xcrun simctl get_app_container "$UDID" $BID data); F="$DATA3/Library/Application Support/Arquemestre/files"; hashes > $OUT/depois_abrir.txt
   diff $OUT/antes.txt $OUT/depois_abrir.txt && echo "arquivos iguais depois de abrir: $(wc -l < $OUT/depois_abrir.txt)" || falha "abrir os projetos mudou ou apagou arquivo"
 }
-for K in ${DISPOSITIVOS:-iphone ipad}; do roda $K; done
+# 24/11: os dois backups de referência (o de sempre e o rico gerado pelo editor publicado), cada um do zero
+for K in ${DISPOSITIVOS:-iphone ipad}; do
+  roda $K tests/backup-referencia/android-backup-referencia.zip referencia
+  roda $K tests/backup-referencia-rico/backup-rico.zip rico
+done
 echo "RESULTADO: falhas $FALHAS"; exit $FALHAS

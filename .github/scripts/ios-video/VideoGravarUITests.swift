@@ -57,24 +57,50 @@ final class VideoGravarUITests: XCTestCase {
         try toca(["🎥 Gravar / adicionar vídeo"], contem: true)
         sleep(3)
         // menu do iOS pro campo de arquivo (sem câmera no simulador): Fototeca / Photo Library
-        try toca(["Fototeca", "Photo Library", "Biblioteca de Fotos", "Fotos", "Photos"], ate: 20)
+        let menu = ["Fototeca", "Photo Library", "Biblioteca de Fotos", "Fotos", "Photos"]
+        if acha(menu, ate: 15) == nil {
+            // 5ª rodada no iPad: o botão fica no pé da tela e o menu não abriu no 1º toque; toca de novo
+            print("VIDEO-UI: menu não abriu, toco de novo no botão")
+            try toca(["🎥 Gravar / adicionar vídeo"], contem: true); sleep(3)
+        }
+        try toca(menu, ate: 20)
         sleep(4)
         // 4ª rodada: sem o app.tap() no meio da tela — no iPad o seletor é um balão e o toque fora dele fecha o seletor antes da
         // escolha (a permissão de fotos já vem do simctl privacy). Como está a tela com o seletor aberto:
         mostra("seletor aberto")
         // a grade do seletor de fotos (fora da página): o vídeo de teste é o único item. Só imagem/célula do seletor — nunca a aba
         // "Vídeos" do editor, que continua por baixo (1ª rodada no CI tocou nela de novo)
+        // 5ª rodada: no iOS 26 o seletor abre antes uma apresentação de primeiro uso (ícone "PickerOnboardingHeaderViewIcon",
+        // 38×38) — a 4ª rodada tocou nesse ícone. Passa pela apresentação pelo botão dela e só toca numa miniatura de verdade.
         let pv = NSPredicate(format: "label CONTAINS[c] %@", "video")
+        let segue = ["Continue", "Continuar", "Get Started", "Começar", "Next", "Seguinte", "Avançar"]
+        // botão da apresentação: só botão, sem rolar a página do editor (rolar fecharia o seletor)
+        func botaoSegue() -> XCUIElement? {
+            let q = app.buttons.matching(NSCompoundPredicate(orPredicateWithSubpredicates: segue.map { NSPredicate(format: "label == %@", $0) }))
+            for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable { return e } }
+            return nil
+        }
         var alvo: XCUIElement? = nil
-        let fim = Date().addingTimeInterval(30)
+        var passos = 0
+        let fim = Date().addingTimeInterval(60)
         repeat {
             for q in [app.images.matching(pv), app.cells.matching(pv), app.collectionViews.cells, app.scrollViews.images] {
-                for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable && e.label != "Vídeos" && e.label != "Videos" { alvo = e; break } }
+                for i in 0..<min(q.count, 12) {
+                    let e = q.element(boundBy: i)
+                    guard e.exists && e.isHittable else { continue }
+                    if e.label == "Vídeos" || e.label == "Videos" || e.identifier.contains("Onboarding") || e.frame.width < 60 || e.frame.height < 60 { continue }
+                    alvo = e; break
+                }
                 if alvo != nil { break }
             }
             if alvo != nil { break }
+            if passos < 3, let b = botaoSegue() {
+                print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); continue
+            }
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         } while Date() < fim
+        print("VIDEO-UI: no seletor: botões " + app.buttons.allElementsBoundByIndex.prefix(60).map { $0.label + "/" + $0.identifier }.filter { $0 != "/" }.joined(separator: ", "))
+        print("VIDEO-UI: no seletor: imagens " + app.images.allElementsBoundByIndex.prefix(20).map { "\($0.label)/\($0.identifier) \($0.frame.size)" }.joined(separator: ", "))
         guard let v = alvo else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
         print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue)) em \(v.frame)"); v.tap()
         sleep(3)
@@ -82,7 +108,7 @@ final class VideoGravarUITests: XCTestCase {
         // diagnóstico (2ª rodada no CI: depois do item apareceu um "OK" e o editor não salvou): o que há na tela agora
         for al in app.alerts.allElementsBoundByIndex { print("VIDEO-UI: alerta \"\(al.label)\" · " + al.staticTexts.allElementsBoundByIndex.map { $0.label }.joined(separator: " | ") + " · botões " + al.buttons.allElementsBoundByIndex.map { $0.label }.joined(separator: ", ")) }
         print("VIDEO-UI: botões na tela: " + app.buttons.allElementsBoundByIndex.prefix(40).map { $0.label }.filter { !$0.isEmpty }.joined(separator: ", "))
-        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "Concluído", "OK"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
+        if let ok = acha(["Adicionar", "Add", "Escolher", "Choose", "Done", "Concluído"], ate: 6) { print("VIDEO-UI: toquei \"\(ok.label)\""); ok.tap() }
         sleep(4)
         // diagnóstico (3ª rodada no iPad: o seletor fechou e o editor não avisou): os textos da página sobre vídeo/backup agora
         let tv = NSPredicate(format: "label CONTAINS[c] %@ OR label CONTAINS[c] %@ OR label CONTAINS[c] %@", "víde", "backup", "salv")

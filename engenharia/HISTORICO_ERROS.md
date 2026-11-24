@@ -2102,3 +2102,9 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 
   Os três falham antes e passam depois.
 - **Nota de ambiente:** `testDigitacaoTecladoFisico…` e `testMaoDeObra…` falharam no navegador de sondas (aba extra aberta toma o foco). Falham igual em todas as versões, inclusive nas que passaram na bateria. Num navegador novo passam.
+
+## A05-GIRADO (achado na bateria completa do ramo de decisões, 24/11)
+- **Falhou:** `testMovelLivreNoMeioDaSalaGiraArrastaSalvaENaoMexeEmNinguem`, "3D fora" no giro de 180°. Passava na base.
+- **Causa:** o recorte do caneco (`dcd57685`) corta no eixo x e no sentido da porta. No móvel girado (livre, ou na parede do lado), as caixas já estão giradas: o corte saía no lado errado e o contorno ficava fora do lugar.
+- **Correção:** no móvel girado (`m.wing`) o caneco não é recortado. Lá fica como era antes (1 mm dentro da lateral, só no 3D).
+- **Pendente (registrado):** recorte do caneco também no móvel girado. Teste do móvel livre e da dobradiça: ok em 1366 e em 430.

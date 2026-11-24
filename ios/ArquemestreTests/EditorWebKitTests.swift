@@ -18406,4 +18406,44 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["Aatualizado"] as? String, "180")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto, via Chefe 24/11): cada módulo (m.uid) e peça (m.uid|pk) com a mesma chave no editor (partsOf), no 3D,
+    // na lista, no corte e no DXF; cópia ganha id novo (módulo e peças); salvar/reabrir e desfazer/refazer mantêm; Meus modelos ganha id novo; id que existe
+    // nunca é trocado; id repetido ao abrir: avisa e só muda se a pessoa mandar
+    func testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();await W(900);var m=S.mods[0],u0=m.uid;R.temId=/^u[0-9a-z]{6,}$/.test(u0||'');
+        var ids=partsOf(m).map(function(p){return p.id});R.pecas=ids.every(function(x,i){return x===u0+'|'+partsOf(m)[i].pk})&&ids.length>5;R.jsonIgual=JSON.stringify(partsOf(m)).indexOf(u0)<0;
+        open3D();await W(300);__build();var b3=__boxes().filter(function(b){return b.pid&&b.pid.indexOf(u0+'|')===0}).map(function(b){return b.pid});document.getElementById('v3x').click();
+        var G=cutGroups(),gc=[];G.ord.forEach(function(k){(G.map[k].ids||[]).forEach(function(a){(a||[]).forEach(function(x){if(x)gc.push(x)})})});
+        PR.dxf={dobP:'13',uniao:'nenhuma'};var dx=[];dxfPecas().pecas.forEach(function(pc){(pc.ids||[]).forEach(function(x){if(x)dx.push(x)})});
+        S.m=m;S.sv=0;var li=[];for(var t=0;t<10&&!li.length;t++){S.tab=t;panel();await W(30);li=[].map.call(document.querySelectorAll('#bd tr[data-pid]'),function(tr){return tr.dataset.pid})}
+        /* a mesma chave (id do módulo | pk) onde a peça existe: o corte separa algumas peças em partes (engrosso) e tem o fundo, que vem de outra regra */var em=function(L,ref){return L.length>0&&L.every(function(x){return x.split(';').every(function(y){return ref.indexOf(y)>=0})})},gcu=gc.filter(function(x,i,a){return a.indexOf(x)===i}),comum=gcu.filter(function(x){return ids.indexOf(x)>=0}),liF=[].concat.apply([],li.map(function(x){return x.split(';')}));
+        R.mesmaChave='3D '+(em(comum,b3)&&em(b3,ids.concat(gcu)))+' · corte '+(comum.length>8&&gcu.every(function(x){return x.indexOf(u0+'|')===0}))+' · DXF '+(em(dx,gcu)&&em(gcu,dx))+' · lista '+em(liF,gcu);
+        /* ⧉ copiar: id novo pro módulo e pras peças; o original não muda */var bc=document.querySelector('#bd [data-mcopy]');if(bc)bc.click();await W(900);draw();var c=S.mods[1];R.copia=(S.mods.length===2)+' · original '+(S.mods[0].uid===u0)+' · cópia nova '+(!!c&&c.uid!==u0&&/^u/.test(c.uid))+' · peças '+(!!c&&partsOf(c).every(function(p){return p.id.indexOf(c.uid+'|')===0}));
+        /* salvar e reabrir; desfazer e refazer */var us=S.mods.map(function(q){return q.uid}).join(),st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.reabre=S.mods.map(function(q){return q.uid}).join()===us;
+        await W(900);histTick();S.mods[0].w=950;draw();histTick();await W(900);histTick();document.getElementById('und').click();await W(200);var ud=S.mods.map(function(q){return q.uid}).join();document.getElementById('red').click();await W(200);R.desfaz=(ud===us)+' · '+(S.mods.map(function(q){return q.uid}).join()===us);
+        /* Meus modelos / catálogo com id gravado: entra com id novo */var tm=T('Balcão 2 portas');tm.uid=u0;newTpl(tm);draw();var nn=S.mods[S.mods.length-1];R.meusModelos=nn.uid!==u0&&S.mods.filter(function(q){return q.uid===nn.uid}).length===1;
+        /* projeto antigo: sem id ganha em memória; id que existe fica; nada mais muda */var o2=JSON.parse(st);o2.mods.forEach(function(q){delete q.uid});o2.mods[1].uid='uFIXO123';if(o2.m)delete o2.m.uid;loadState(JSON.parse(JSON.stringify(o2)));draw();
+        R.antigo=(!!S.mods[0].uid&&S.mods[0].uid!=='uFIXO123')+' · fixo '+(S.mods[1].uid==='uFIXO123');var sv=snapState(),lim=function(x){x=JSON.parse(JSON.stringify(x));(x.mods||[]).forEach(function(q){delete q.uid});if(x.m)delete x.m.uid;return JSON.stringify(x)};R.soOId=lim(sv)===lim(o2);
+        /* id repetido ao abrir: avisa, nada muda sozinho; o botão troca só a cópia */var o3=JSON.parse(st);o3.mods[1].uid=o3.mods[0].uid;loadState(o3);draw();S.m=S.mods[0];S.tab=0;panel();var rep=S.mods[0].uid===S.mods[1].uid,box=!!document.getElementById('idbox');document.querySelector('#idbox [data-idfix]').click();
+        R.repetido=rep+' · aviso '+box+' · corrigiu '+(S.mods[0].uid===o3.mods[0].uid&&S.mods[1].uid!==S.mods[0].uid)+' · aviso some '+!document.getElementById('idbox');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["temId"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true, "peça = id do módulo | pk")
+        XCTAssertEqual(o["jsonIgual"] as? Bool, true, "a chave da peça não entra no JSON das peças (partsOf igual byte a byte)")
+        XCTAssertEqual(o["mesmaChave"] as? String, "3D true · corte true · DXF true · lista true", "toda peça do corte tem a mesma chave no 3D, no partsOf e no DXF; a lista usa a mesma chave")
+        XCTAssertEqual(o["copia"] as? String, "true · original true · cópia nova true · peças true")
+        XCTAssertEqual(o["reabre"] as? Bool, true)
+        XCTAssertEqual(o["desfaz"] as? String, "true · true")
+        XCTAssertEqual(o["meusModelos"] as? Bool, true)
+        XCTAssertEqual(o["antigo"] as? String, "true · fixo true", "sem id ganha um; id que existe fica")
+        XCTAssertEqual(o["soOId"] as? Bool, true, "abrir o projeto antigo só soma o id")
+        XCTAssertEqual(o["repetido"] as? String, "true · aviso true · corrigiu true · aviso some true", "id repetido: avisa, não troca sozinho; o botão troca só a cópia")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

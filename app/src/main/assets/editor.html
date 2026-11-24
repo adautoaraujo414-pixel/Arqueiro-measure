@@ -10883,7 +10883,7 @@ function stackTop(b){var t=(+b.b||0)+b.h;stackOf(b).forEach(function(c){t+=c.h})
 function ceilAt(m){var x=m.x+m.w/2,H=S.H;try{if(typeof Hx_==='function')H=Hx_(x)}catch(_){}try{if(typeof fgh==='function')H-=fgh()}catch(_){}return H}
 function rttGap(b){return r1(ceilAt(b)-stackTop(b))}
 window.rgStack=function(m){var b=baseOf(m);return {base:b,list:stackOf(b),top:stackTop(b),ceil:ceilAt(b)}};
-function stkSync(){var seen={},kids={};S.mods.forEach(function(m){if(m.uid&&!m.stkB){if(seen[m.uid])m.uid=null;else seen[m.uid]=1}});
+function stkSync(){var seen={},kids={};S.mods.forEach(function(m){if(m.uid&&!m.stkB){if(seen[m.uid]){/* D23 (24/11): id repetido que veio do arquivo fica como está até a pessoa decidir (aviso no painel) */if(!m._uidDup&&!(window.__uidDupSet&&window.__uidDupSet.has(m)))m.uid=null}else seen[m.uid]=1}});
  S.mods.forEach(function(m){if(!m.stkB)return;if(!seen[m.stkB]){delete m.stkB;delete m.stkI;return}var k=m.stkB+'|'+(+m.stkI||0);if(kids[k]){delete m.stkB;delete m.stkI;return}kids[k]=1});
  S.mods.forEach(function(b){if(b.stkB||!b.uid)return;var ch=stackOf(b);if(!ch.length)return;var y=(+b.b||0)+b.h;ch.forEach(function(c,j){c.stkI=j+1;c.x=b.x;c.w=b.w;c.d=b.d;c.b=r1(y);c.sup=true;c.tl=false;c.tr=false;if(b.wing)c.wing=b.wing;y+=c.h})})}
 window.rgStkSync=stkSync;
@@ -15275,6 +15275,46 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
   if(a==='mig'){var x0=vx0(),off=S.vlxOff||{},add=x0.L.filter(function(q){return q.v>0&&!off[q.k]});if(!add.length)return;mud();S.vlxOff=Object.assign({},off);add.forEach(function(q){S.vlxOff[q.k]=1;L=L.concat([limpa({n:q.n,t:'R',v:q.v,cli:0,src:'vlx:'+q.k})])});S.cfx=L;return fim()}};
  document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-cfx],[data-cfxf]');if(!t||!t.closest('#cfxbox')||window.RO)return;e.preventDefault();if(t.dataset.cfxf){var q=t.dataset.cfxf.split('|'),F=window.__cfxF;if(!F)return;if(q[0]==='rec')F.o.rec=F.o.rec?0:1;else{var nv=q[0]==='cli'?(+q[1]?1:0):q[1];if(String(F.o[q[0]])===String(nv)){try{toast('Já está escolhido: '+t.textContent.trim())}catch(_){}return}F.o[q[0]]=nv}try{vlRender()}catch(_){}return}var p=t.dataset.cfx.split('|');cfxAcao(p[0],p[1],p[1])});
  document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.cfxi||!window.__cfxF)return;var k=t.dataset.cfxi;window.__cfxF.o[k]=k==='v'?pnum(t.value):t.value});
+})();
+</script>
+<script>
+/* ===== D23 · IDENTIDADE ÚNICA E PERSISTENTE (Adauto: "Garantir identidade única e persistente para cada módulo e peça, inclusive ao duplicar,
+   salvar e reabrir projetos"; via Chefe 24/11). Só ADITIVO, sem migração destrutiva:
+   - módulo: m.uid (o mesmo campo que o Plano de Corte já usa, PC-ID 17/11). Peça: m.uid + '|' + pk (a mesma chave do corte, sem o nº da ocorrência).
+   - módulo sem id ganha um ao abrir, só em memória (não grava nada, não muda medida, posição, peça nem corte); vai pro arquivo na próxima gravação.
+   - id que já existe nunca é trocado. Cópia (⧉ Copiar este módulo, duplicar) e módulo de "Meus modelos" / catálogo ganham id novo.
+   - desfazer, refazer, histórico de versões e reabrir: o id volta como estava (vem do projeto).
+   - id repetido AO ABRIR (projeto que já ficou inconsistente): aviso no painel e botão "Dar id novo às cópias" — nunca renumera sozinho.
+   - a mesma chave em todo lugar: partsOf (p.id), 3D (b.pid), lista (data-pid), corte (G.map[k].ids) e DXF (pc.ids). */
+(function(){if(typeof partsOf!=='function'||typeof loadState!=='function')return;
+ var nova=function(usado){var u;do{u='u'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}while(usado&&usado[u]);return u};
+ var KN=new WeakSet();window.__uidDup=[];
+ var garante=function(){if(window.__idAbrindo)return window.__uidDup||[];var mods=S.mods||[],dono={},dup=[];
+  mods.forEach(function(m){if(m&&m.uid&&KN.has(m)){if(dono[m.uid])dup.push(m);else dono[m.uid]=m}});
+  mods.forEach(function(m){if(!m||typeof m!=='object')return;if(!m.uid){m.uid=nova(dono);dono[m.uid]=m}else if(!KN.has(m)){if(dono[m.uid]&&dono[m.uid]!==m)m.uid=nova(dono);dono[m.uid]=m}KN.add(m)});
+  window.__uidDup=dup;return dup};
+ window.idGarante=garante;
+ /* as chaves derivadas não entram no JSON (partsOf, 3D e corte continuam idênticos byte a byte); só m.uid é guardado */var ponId=function(o,k,v){try{Object.defineProperty(o,k,{value:v,enumerable:false,configurable:true,writable:true})}catch(_){o[k]=v}};
+ window.idMod=function(m){if(m&&!m.uid&&(S.mods||[]).indexOf(m)>=0)garante();return m&&m.uid||null};
+ window.idPeca=function(m,pk){var u=idMod(m);return u&&pk?u+'|'+pk:null};
+ /* abrir / desfazer / refazer / histórico: tudo que entra é "conhecido" (mantém o id); sem id ganha em memória */
+ window.__uidDupSet=new WeakSet();
+ var ls0=loadState;loadState=window.loadState=function(o){/* id repetido no arquivo: marca antes de abrir (o abrir desenha e o stkSync trocaria o id da cópia sozinho) */var marcou=false;try{if(o&&Array.isArray(o.mods)){var vis={};o.mods.forEach(function(m){if(m&&m.uid){if(vis[m.uid]){m._uidDup=1;marcou=true}else vis[m.uid]=1}})}}catch(_){}
+  var r;window.__idAbrindo=(window.__idAbrindo||0)+1;try{r=ls0.apply(this,arguments)}finally{window.__idAbrindo--;try{if(marcou&&o&&Array.isArray(o.mods))o.mods.forEach(function(m){if(m)delete m._uidDup})}catch(_){}}
+  try{window.__uidDupSet=new WeakSet();(S.mods||[]).forEach(function(m){if(m&&typeof m==='object'){KN.add(m);if(m._uidDup){window.__uidDupSet.add(m);delete m._uidDup}}});garante()}catch(_){}return r};
+ /* módulo novo (catálogo, Meus modelos, colar): id novo sempre */
+ var nt0=newTpl;newTpl=window.newTpl=function(){var antes=new Set(S.mods||[]),r=nt0.apply(this,arguments);try{var dono={};(S.mods||[]).forEach(function(m){if(m&&antes.has(m)&&m.uid)dono[m.uid]=m});(S.mods||[]).forEach(function(m){if(m&&!antes.has(m)){m.uid=nova(dono);dono[m.uid]=m;KN.add(m)}});garante()}catch(_){}return r};
+ var dr0=draw;draw=window.draw=function(){try{garante()}catch(_){}return dr0.apply(this,arguments)};
+ var p0=partsOf;partsOf=window.partsOf=function(m){var P=p0.apply(this,arguments);try{if(m&&Array.isArray(P)){var u=idMod(m);if(u)P.forEach(function(p){if(p&&p.pk)ponId(p,'id',u+'|'+p.pk)})}}catch(_){}return P};
+ /* 3D */var bx0=window.__boxes;if(typeof bx0==='function')window.__boxes=function(){var B=bx0.apply(this,arguments);try{B.forEach(function(b){var mi=parseInt(String(b.nm||''),10),m=S.mods&&S.mods[mi],k=b.ppk||b.pk;if(m&&m.uid&&k&&String(b.nm).indexOf(mi+':')===0)ponId(b,'pid',m.uid+'|'+k)})}catch(_){}return B};
+ /* corte */var cg0=window.cutGroups||cutGroups;window.cutGroups=cutGroups=function(){var G=cg0.apply(this,arguments);try{(G.ord||[]).forEach(function(k){var g=G.map[k];if(g&&g.src)ponId(g,'ids',g.src.map(function(sr){return (sr||[]).map(function(q){var m=S.mods[q.mi];return m&&m.uid&&q.pk?m.uid+'|'+q.pk:null})}))})}catch(_){}return G};
+ /* DXF */if(typeof window.dxfPecas==='function'){var dx0=window.dxfPecas;window.dxfPecas=function(){var r=dx0.apply(this,arguments);try{(r.pecas||[]).forEach(function(pc){pc.ids=String(pc.ori||'').split('+').filter(Boolean).map(function(o){var i=o.indexOf(':'),m=S.mods[+o.slice(0,i)];return m&&m.uid?m.uid+'|'+o.slice(i+1):null})})}catch(_){}return r}}
+ /* lista (linhas tr[data-src] "mi|pk;mi|pk"): data-pid */var marcaLista=function(root){try{(root||document).querySelectorAll('tr[data-src]').forEach(function(tr){var ids=String(tr.dataset.src||'').split(';').map(function(s){var q=s.split('|'),m=S.mods[+q[0]];return (q[0]!=='rp'&&m&&m.uid&&q[1])?m.uid+'|'+q[1]:''}).filter(Boolean);if(ids.length)tr.dataset.pid=ids.join(';')})}catch(_){}};window.idMarcaLista=marcaLista;
+ ['panel','openCut'].forEach(function(f){var o=window[f];if(typeof o!=='function')return;var w=function(){var r=o.apply(this,arguments);marcaLista();return r};window[f]=w;try{eval(f+'=w')}catch(_){}});
+ /* id repetido ao abrir: avisa e deixa a pessoa decidir */
+ window.idCorrige=function(){var d=(window.__uidDup||[]).slice();if(!d.length||window.RO)return 0;try{snap()}catch(_){}var dono={};(S.mods||[]).forEach(function(m){if(m&&m.uid&&d.indexOf(m)<0)dono[m.uid]=m});d.forEach(function(m){m.uid=nova(dono);dono[m.uid]=m;try{window.__uidDupSet.delete(m)}catch(_){}});window.__uidDup=[];try{edited()}catch(_){}try{draw();panel()}catch(_){}try{toast('Id novo para '+d.length+(d.length===1?' módulo copiado':' módulos copiados')+'. Desfazer volta como era.')}catch(_){}return d.length};
+ var pa=window.panel;if(typeof pa==='function'){var pw=function(){var r=pa.apply(this,arguments);try{var bd=document.getElementById('bd'),old=document.getElementById('idbox');if(old)old.remove();var d=window.__uidDup||[];if(bd&&d.length&&!window.RO){var x=document.createElement('div');x.id='idbox';x.style.cssText='border:1.5px solid #e0c25a;background:#fffbea;border-radius:10px;padding:8px 9px;margin:6px 0;font-size:13px';x.innerHTML='<b>Módulos com a mesma identidade</b><div style="margin:3px 0 6px">Este projeto veio com '+(d.length+1)+' módulos usando o mesmo id (cópia de antes). Nada foi mudado. O plano de corte trata só o primeiro como o dono das peças tiradas.</div><button data-idfix="1" style="min-height:38px">Dar id novo às cópias</button>';var at=bd.querySelector('.sec');if(at)bd.insertBefore(x,at);else bd.insertBefore(x,bd.firstChild)}}catch(_){}return r};window.panel=pw;try{panel=pw}catch(_){}}
+ document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-idfix]');if(!b)return;e.stopPropagation();e.preventDefault();window.idCorrige()},true);
 })();
 </script>
 </body></html>

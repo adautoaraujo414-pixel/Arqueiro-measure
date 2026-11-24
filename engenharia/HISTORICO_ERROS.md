@@ -2169,3 +2169,12 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Limite:** % do valor final somando ≥ 90% → aviso e esses custos não entram (observação: todos os de % do valor final saem juntos, com aviso na tela).
 - **430×900 (densidade 2):** tocar em "+ Adicionar custo fixo", digitar "150,75", Salvar — campos visíveis, valor certo, gravado no projeto.
 - **Não verificado nesta sonda:** botão Duplicar clicado (o custo está no estado salvo do projeto, que é o que a duplicação copia); PDF renderizado em aparelho.
+
+## D23 · IDENTIDADE ÚNICA (Code 2, 24/11; ramo `claude/d23-identidade` a partir de `claude/fechamento-code1`)
+- **Feito:** ver `DECISOES_TECNICAS.md` (24/11, D23).
+- **Conferido:**
+  - **s45 (139 projetos gravados pela publicada `3f1c3a58`):** corte igual em todos; lista igual em 138. A diferença conhecida é a cozinha de exemplo (rodapé lateral do encontro, FASE2), a mesma de antes.
+  - **Editor PUBLICADO (`3f1c3a58`) abrindo projeto com `uid` nos módulos:** 142 modelos; peças e corte iguais com e sem `uid`; o `uid` continua depois do `snapState` dele; 0 erros (roteiro em `diagnosticos/d23_identidade/publicado_abre_uid.js`).
+  - `testAbrirProjetoSemMexerNaoRegrava…`, `testProjetoGravadoPelaVersaoPublicada…`, plano de corte, histórico, Meus modelos e backup: ok.
+- **Achado no caminho:** abrir projeto com id repetido. O `loadState` desenha por dentro e o `stkSync` trocava o id da 2ª cópia sozinho. Agora o id repetido que vem do arquivo fica, com aviso.
+- **Teste:** `testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer`. Falha antes, passa depois.

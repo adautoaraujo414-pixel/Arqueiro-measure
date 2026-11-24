@@ -63,4 +63,4 @@ jobs:
         if: always()
         run: |
           Write-Host "(resultado no log acima; listas em atualizacao/)"
-          Get-ChildItem atualizacao -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "---- $($_.Name)"; Get-Content $_.FullName | Select-Object -First 40 }
+          Get-ChildItem atualizacao -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "---- $($_.Directory.Name)/$($_.Name)"; Get-Content $_.FullName | Select-Object -First 40 }

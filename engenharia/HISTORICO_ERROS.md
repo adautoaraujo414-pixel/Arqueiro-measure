@@ -2160,3 +2160,7 @@ Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto
   - `testAbrirProjetoSemMexerNaoRegrava…`, `testProjetoGravadoPelaVersaoPublicada…`, plano de corte, histórico, Meus modelos e backup: ok.
 - **Achado no caminho:** abrir projeto com id repetido. O `loadState` desenha por dentro e o `stkSync` trocava o id da 2ª cópia sozinho. Agora o id repetido que vem do arquivo fica, com aviso.
 - **Teste:** `testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer`. Falha antes, passa depois.
+- **Bateria completa do `d687d0a9`:** 1366 527/528 e 430 526/528.
+  - A falha nova nas duas foi `testMoverNo3DEncaixaNaParede…` ("vizinho mudou"). O teste comparava o vizinho da cena 5 com o da cena 1. Com o D23, cada módulo novo tem o seu id, então o vizinho de outra cena nunca é igual.
+  - **Correção, só no teste:** o vizinho é comparado com ele mesmo, na mesma cena, antes e depois do encaixe. É a intenção do teste ("sem mexer em ninguém"), igualmente estrita.
+  - O outro de 430 (`testFaixaDoEspelhoLed…`) é da base.

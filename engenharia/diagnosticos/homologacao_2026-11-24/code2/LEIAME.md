@@ -1,6 +1,6 @@
 # Homologação 24/11 · evidência visual do Code 2
 
-Capturas do Chromium (renderizador por software) do editor da candidata `ed041eb2`, nas telas de 1366 × 900 e 430 × 900.
+Capturas do Chromium (renderizador por software) do editor do ramo `claude/auditoria-candidata-2411` (sobre a candidata `ed041eb2`, já com VIS-MAT e PASSANTE-PONTA; refeitas no SHA final), nas telas de 1366 × 900 e 430 × 900.
 
 Cada imagem é a função de verdade no editor, aberta pelo roteiro em `roteiros/`. O roteiro usa as mesmas funções do app (`newTpl`, `pxApplyAll`, `espWallAdd`, `open3D`, `openCut`, …), sem montagem.
 

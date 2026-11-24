@@ -2228,3 +2228,4 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - o bloco do meio do recorte encolhe quando o recorte é baixo (só aparecia no PDF).
   - A conta do contorno tracejado do recorte passou a olhar segmento por segmento (antes tratava o retângulo como cheio).
 - **Veio:** com caixa amadeirada e veio, os fundos altos (torre e guarda-roupa) não cabem sem girar e ficam como "maior que a chapa", fora da contagem. É igual às portas altas na cor, que já ficavam assim. Não mudei a regra do veio; pergunta enviada.
+- **Ampliar (achado pelo Chefe no 94a5f412):** eu tinha trocado os níveis do Ampliar (60–1600%, passos de 25/50) pelos do motor novo (100–1200%, ×1,25). Era perda de função (§0). Os níveis de antes voltaram, ligados ao motor novo. Também: chapa ampliada no plano ia ampliada pra impressão. Agora imprime a chapa inteira e o zoom volta depois. Os dois casos estão no teste.

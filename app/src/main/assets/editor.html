@@ -8999,7 +8999,7 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
    ev.preventDefault();ev.stopPropagation();
    var k=b.dataset.cz;
    if(k==='x'){Z.hidden=true;return}
-   /* ZOOM-CORTE (Adauto 24/11): o mesmo zoom do plano (viewBox, vetorial), não um segundo */var sz=Z.querySelector('#czb svg');if(sz&&window.cutZoom){if(k==='f')cutZoom.fit(sz);else cutZoom.step(sz,k==='+'?1.25:0.8)}
+   /* ZOOM-CORTE (Adauto 24/11): o mesmo zoom do plano (viewBox, vetorial), não um segundo; os níveis de antes (−/＋ de 25% até 200%, de 50% acima; 60% a 1600%; Ajustar = 100%) */var sz=Z.querySelector('#czb svg');if(sz&&window.cutZoom)CZ=Math.round(cutZoom.k(sz)*100);if(k==='f')CZ=100;else CZ=Math.max(60,Math.min(1600,CZ+(k==='+'?(CZ<200?25:50):(CZ<=200?-25:-50))));if(sz&&window.cutZoom)cutZoom.setK(sz,CZ/100);
    apply();
   },true);
   document.addEventListener('keydown',function(ev){if(!Z.hidden&&ev.key==='Escape')Z.hidden=true});
@@ -15409,20 +15409,21 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
    Pinça com 2 dedos centrada nos dedos · roda do mouse centrada no cursor (fora da chapa a página rola normal; sem zoom, rodar pra afastar
    também rola a página) · ＋ － e "Ajustar à tela" · arrastar com 1 dedo ou o mouse quando ampliada, sem a chapa sair da tela.
    Pinça e arrasto não viram toque (3D, ✓ cortada) nem toque longo (menu da peça); toque parado continua igual. */
-(function(){if(window.cutZoom)return;var MAXK=12,SEL='svg[data-czs]';
+(function(){if(window.cutZoom)return;/* até 1600%, como o 🔍 Ampliar antigo; no Ampliar dá pra afastar até 60%, como antes */var MAXK=16,SEL='svg[data-czs]',mink=function(s){return s&&s.closest&&s.closest('#cutzoom')?.6:1};
  var st=function(s){if(s.__cz)return s.__cz;var v=String(s.getAttribute('data-vb0')||s.getAttribute('viewBox')).trim().split(/[\s,]+/).map(Number);if(!s.getAttribute('data-vb0'))s.setAttribute('data-vb0',v.join(' '));var b={x:v[0],y:v[1],w:v[2],h:v[3]};s.__cz={b:b,x:b.x,y:b.y,w:b.w,h:b.h};return s.__cz};
  var k=function(s){var z=st(s);return z.b.w/z.w};
- var clamp=function(z){z.w=Math.min(z.b.w,Math.max(z.b.w/MAXK,z.w));z.h=z.w*z.b.h/z.b.w;z.x=Math.min(z.b.x+z.b.w-z.w,Math.max(z.b.x,z.x));z.y=Math.min(z.b.y+z.b.h-z.h,Math.max(z.b.y,z.y))};
+ var clamp=function(z,mk){z.w=Math.min(z.b.w/(mk||1),Math.max(z.b.w/MAXK,z.w));z.h=z.w*z.b.h/z.b.w;if(z.w>=z.b.w-.01){/* menor que a tela (só no Ampliar): a chapa fica no meio */z.x=z.b.x-(z.w-z.b.w)/2;z.y=z.b.y-(z.h-z.b.h)/2;return}z.x=Math.min(z.b.x+z.b.w-z.w,Math.max(z.b.x,z.x));z.y=Math.min(z.b.y+z.b.h-z.h,Math.max(z.b.y,z.y))};
  /* o plano se redesenha sozinho (otimizador, ✓ cortada, tirar peça): o zoom de cada chapa fica guardado pelo lugar dela no plano e volta no desenho novo, se a chapa tiver o mesmo tamanho */var ZS={},zid=function(s){var h=s.previousElementSibling;return (s.closest('#cutzoom')?'czv:':'')+((h&&h.id)||'')};
  var wr=function(s){var z=st(s),r=function(v){return Math.round(v*100)/100};try{var id=zid(s);if(id){if(k(s)>1.001)ZS[id]={x:z.x,y:z.y,w:z.w,h:z.h,vb0:s.getAttribute('data-vb0')};else delete ZS[id]}}catch(_){}s.setAttribute('viewBox',[r(z.x),r(z.y),r(z.w),r(z.h)].join(' '));var on=k(s)>1.001;s.style.touchAction=on?'none':'pan-y';s.setAttribute('data-czk',String(Math.round(k(s)*100)));try{var p=s.closest('#cutzoom')&&document.getElementById('czp');if(p)p.textContent=Math.round(k(s)*100)+'%'}catch(_){}};
  /* tela → chapa pela transformação real do SVG (borda e enquadramento incluídos) */var toU=function(s,cx,cy){var M=s.getScreenCTM();if(!M)return null;var p=s.createSVGPoint();p.x=cx;p.y=cy;return p.matrixTransform(M.inverse())};
- var zoomAt=function(s,cx,cy,f){var z=st(s),u=toU(s,cx,cy);if(!u||!(f>0))return;var w0=z.w,h0=z.h;z.w=z.w/f;clamp(z);z.x=u.x-(u.x-z.x)*z.w/w0;z.y=u.y-(u.y-z.y)*z.h/h0;clamp(z);wr(s)};
- var pan=function(s,dx,dy){var z=st(s),M=s.getScreenCTM();if(!M||!M.a)return;z.x-=dx/M.a;z.y-=dy/M.d;clamp(z);wr(s)};
+ var zoomAt=function(s,cx,cy,f){var z=st(s),u=toU(s,cx,cy);if(!u||!(f>0))return;var w0=z.w,h0=z.h;z.w=z.w/f;clamp(z,mink(s));z.x=u.x-(u.x-z.x)*z.w/w0;z.y=u.y-(u.y-z.y)*z.h/h0;clamp(z,mink(s));wr(s)};
+ var pan=function(s,dx,dy){var z=st(s),M=s.getScreenCTM();if(!M||!M.a)return;z.x-=dx/M.a;z.y-=dy/M.d;clamp(z,mink(s));wr(s)};
  var fit=function(s){var z=st(s);z.x=z.b.x;z.y=z.b.y;z.w=z.b.w;z.h=z.b.h;wr(s)};
+ /* nível exato (o 🔍 Ampliar usa os passos de antes: 25% até 200%, 50% acima, de 60% a 1600%) */var setK=function(s,kk){var z=st(s),cx=z.x+z.w/2,cy=z.y+z.h/2;z.w=z.b.w/kk;z.h=z.w*z.b.h/z.b.w;z.x=cx-z.w/2;z.y=cy-z.h/2;clamp(z,mink(s));wr(s)};
  var step=function(s,f){var R=s.getBoundingClientRect();zoomAt(s,R.left+R.width/2,R.top+R.height/2,f)};
- var volta=function(root){try{[].forEach.call((root||document).querySelectorAll(SEL),function(s){if(s.__cz)return;var q=ZS[zid(s)];if(!q)return;var z=st(s);if(s.getAttribute('data-vb0')!==q.vb0)return;z.x=q.x;z.y=q.y;z.w=q.w;z.h=q.h;clamp(z);wr(s)})}catch(_){}};
+ var volta=function(root){try{[].forEach.call((root||document).querySelectorAll(SEL),function(s){if(s.__cz)return;var q=ZS[zid(s)];if(!q)return;var z=st(s);if(s.getAttribute('data-vb0')!==q.vb0)return;z.x=q.x;z.y=q.y;z.w=q.w;z.h=q.h;clamp(z,mink(s));wr(s)})}catch(_){}};
  try{var cm=document.getElementById('cutm');if(cm)new MutationObserver(function(L){for(var id in ZS){if(L.some(function(m){return m.addedNodes&&m.addedNodes.length}))volta(cm);return}}).observe(cm,{childList:true,subtree:true})}catch(_){}
- window.cutZoom={zoomAt:zoomAt,pan:pan,fit:fit,step:step,k:k,box:function(s){var z=st(s);return {x:z.x,y:z.y,w:z.w,h:z.h,b:z.b}}};
+ window.cutZoom={setK:setK,zoomAt:zoomAt,pan:pan,fit:fit,step:step,k:k,box:function(s){var z=st(s);return {x:z.x,y:z.y,w:z.w,h:z.h,b:z.b}}};
  var mark=function(s){window.__czG=Date.now();s.__czT=Date.now()};
  /* toque: pinça (2 dedos) e arrasto (1 dedo, só ampliada) */
  var T=null,P2=function(e){var a=e.touches[0],b=e.touches[1];return {d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),x:(a.clientX+b.clientX)/2,y:(a.clientY+b.clientY)/2}};
@@ -15442,6 +15443,8 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('pointerup',function(e){if(M&&M.mv)mark(M.s);M=null},true);
  /* depois de pinça/arrasto: o click que vem ao soltar não vira 3D nem ✓ cortada */
  document.addEventListener('click',function(e){var s=e.target&&e.target.closest&&e.target.closest(SEL);if(s&&s.__czT&&Date.now()-s.__czT<450){e.stopImmediatePropagation();e.preventDefault()}},true);
+ /* imprimir / PDF: sempre a chapa inteira (o zoom da tela não vai pro papel); depois volta o zoom */
+ var pr0=window.cutPrint;if(typeof pr0==='function'){var guard=null,solta=function(){if(!guard)return;guard.forEach(function(q){q.s.setAttribute('viewBox',q.vb)});guard=null};var cp=function(){solta();guard=[];[].forEach.call(document.querySelectorAll(SEL),function(s){var v0=s.getAttribute('data-vb0');if(v0&&s.getAttribute('viewBox')!==v0){guard.push({s:s,vb:s.getAttribute('viewBox')});s.setAttribute('viewBox',v0)}});window.addEventListener('afterprint',solta,{once:true});setTimeout(solta,6000);return pr0.apply(this,arguments)};window.cutPrint=cp;try{eval('cutPrint=cp')}catch(_){}}
  /* ＋ － Ajustar à tela de cada chapa */
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-czb]');if(!b)return;e.preventDefault();e.stopPropagation();var hd=b.closest('div'),s=hd&&hd.nextElementSibling;while(s&&String(s.tagName).toLowerCase()!=='svg')s=s.nextElementSibling;if(!s||!s.hasAttribute('data-czs'))return;var c=b.dataset.czb;if(c==='f')fit(s);else step(s,c==='+'?1.25:0.8)},true);
 })();

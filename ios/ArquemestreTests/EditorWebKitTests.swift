@@ -18669,6 +18669,8 @@ final class EditorWebKitTests: XCTestCase {
         /* 8) texto vetorial: nítido em qualquer zoom (o SVG continua SVG, sem imagem) */R.vetorial=s.querySelectorAll('image').length+' imagens · '+(s.querySelectorAll('text').length>0);
         /* 9) Ampliar usa o mesmo zoom */var hd=s.previousElementSibling;hd.querySelector('[data-czoom]').click();await W(100);var zs=document.querySelector('#cutzoom #czb svg');R.ampliar=!!(zs&&zs.hasAttribute('data-czs'))+' · '+(zs?zs.getAttribute('viewBox')===zs.getAttribute('data-vb0'):'');document.querySelector('#cutzoom [data-cz="+"]').click();R.ampliarMais=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="f"]').click();R.ampliarAjustar=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="x"]').click();
         /* 10) o plano se redesenha sozinho (otimizador, ✓, tirar peça): o zoom da chapa continua */s=document.querySelector('#cutm svg[data-czs]');cutZoom.step(s,3);var vbz=s.getAttribute('viewBox');openCut();await W(20);var s2=document.querySelector('#cutm svg[data-czs]');R.redesenho=(s2!==s)+' · '+(s2.getAttribute('viewBox')===vbz);document.querySelector('[data-czb="f"]').click();openCut();await W(20);R.redesenhoAjustado=Math.round(cutZoom.k(document.querySelector('#cutm svg[data-czs]'))*10)/10;
+        /* 11) o 🔍 Ampliar mantém os níveis de antes (−/＋ de 25% até 200%, de 50% acima; de 60% a 1600%; Ajustar = 100%) */s=document.querySelector('#cutm svg[data-czs]');s.previousElementSibling.querySelector('[data-czoom]').click();await W(100);var pc=function(){return document.getElementById('czp').textContent},bz=function(k){document.querySelector('#cutzoom [data-cz="'+k+'"]').click();return pc()};var up=[];for(var i=0;i<8;i++)up.push(bz('+'));R.niveisMais=up.join(',');for(var i=0;i<30;i++)bz('+');R.niveisMax=pc();bz('f');R.niveisAjustar=pc();var dn=[];for(var i=0;i<3;i++)dn.push(bz('-'));R.niveisMenos=dn.join(',');bz('x');
+        /* 12) imprimir/PDF com a chapa ampliada: vai a chapa inteira pro papel e o zoom volta depois */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,3);var vbZ=s.getAttribute('viewBox'),noPapel=null,p0=window.print,A0=window.ArqueApp;window.print=function(){noPapel=s.getAttribute('viewBox')};try{window.ArqueApp=Object.assign({},A0||{},{printPage:undefined})}catch(_){}cutPrint();await W(200);R.imprimeInteira=noPapel===s.getAttribute('data-vb0');window.dispatchEvent(new Event('afterprint'));await W(50);R.voltaZoom=s.getAttribute('viewBox')===vbZ;window.print=p0;window.ArqueApp=A0;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["estavel"] as? Bool, true)
@@ -18694,6 +18696,12 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ampliarAjustar"] as? String, "100%")
         XCTAssertEqual(o["redesenho"] as? String, "true · true", "o plano redesenhado mantém o zoom da chapa")
         XCTAssertEqual(o["redesenhoAjustado"] as? Double, 1)
+        XCTAssertEqual(o["niveisMais"] as? String, "125%,150%,175%,200%,250%,300%,350%,400%", "os mesmos passos do Ampliar de antes")
+        XCTAssertEqual(o["niveisMax"] as? String, "1600%")
+        XCTAssertEqual(o["niveisAjustar"] as? String, "100%")
+        XCTAssertEqual(o["niveisMenos"] as? String, "75%,60%,60%", "afasta até 60%, como antes")
+        XCTAssertEqual(o["imprimeInteira"] as? Bool, true, "imprimir/PDF leva a chapa inteira mesmo ampliada")
+        XCTAssertEqual(o["voltaZoom"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 

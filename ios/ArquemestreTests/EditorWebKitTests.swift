@@ -17701,4 +17701,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["inv3d"] as? String, "iini", "⇅ Inverter no 3D: só esta gaveta")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // PEÇA-2TOQUES-ARRASTE (Code 3 no CI iOS da 5c56454, via Code 1): arrastar a peça livre, soltar e pegar de novo em menos de meio segundo
+    // abria o menu de 2 toques em vez de arrastar (o 1º toque era gravado mesmo quando virava arraste). Só conta como 1º toque o que não se mexeu
+    func testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.W=3000;newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];S.m=m;S.tab=0;draw();panel();await W(300);
+        var r=EM.criaPecaNoPonto(m,250,800,'peca','z');EM.st.sel=r.q.id;draw();await W(100);var id=r.q.id,q=r.q;
+        var pt=function(){var el=document.querySelector('[data-empl="'+id+'"]'),bb=el.getBoundingClientRect();return {el:el,x:bb.left+bb.width/2,y:bb.top+bb.height/2}};
+        var ev=function(el,tp,x,y){(el||document).dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,isPrimary:true,pointerType:'touch'}))};
+        var arrasta=async function(dx){var a=pt();ev(a.el,'pointerdown',a.x,a.y);ev(document,'pointermove',a.x+dx/2,a.y);await W(20);ev(document,'pointermove',a.x+dx,a.y);await W(40);ev(document,'pointerup',a.x+dx,a.y);await W(100)};
+        var x0=q.x;await arrasta(8);var x1=q.x;await arrasta(8);var x2=q.x;R.andou=(x1>x0)+' '+(x2>x1);R.menu1=!!document.getElementById('emmenu');
+        await W(700);var b=pt();ev(b.el,'pointerdown',b.x,b.y);ev(document,'pointerup',b.x,b.y);await W(120);b=pt();ev(b.el,'pointerdown',b.x,b.y);ev(document,'pointerup',b.x,b.y);await W(100);R.menu2=!!document.getElementById('emmenu');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["andou"] as? String, "true true", "os dois arrastes andam a peça")
+        XCTAssertEqual(o["menu1"] as? Bool, false, "arrastar de novo logo depois não abre o menu")
+        XCTAssertEqual(o["menu2"] as? Bool, true, "2 toques parados continuam abrindo o menu")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

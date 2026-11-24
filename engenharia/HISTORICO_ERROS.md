@@ -1936,3 +1936,14 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
 - **Achado no caminho:** o puxador da frente de gaveta aparece na aba **Internos** (id 2), não em Portas. É comportamento de sempre do app, mantido.
 - **Teste:** `testConchaDaGavetaInverterEMoverSoElas` (falha na b3cf2f3b). A expectativa da gaveta em `testConchaRetaEmCima…` foi atualizada, com comentário.
 - **Status:** resolvido na bateria. Falta o Adauto conferir no aparelho.
+
+## PEÇA-2TOQUES-ARRASTE (Code 3 no CI iOS da candidata 5c56454, via Code 1, 24/11)
+- **Relatado:** `testEstruturaPeca15SegurarCriaArrastaEncostaEMedidaExata` falhou no iPhone e no iPad com "encostou 154, esperado 0". Android e Windows passaram. No Chromium reproduz com `--janela 430x900`.
+- **Efeito real:** no celular, arrastar a peça livre, soltar e pegar de novo em menos de meio segundo abria o menu de 2 toques em vez de arrastar.
+- **Causa raiz:** `8a678565`. O 1º toque (`TQ`) era gravado em todo pointerdown, mesmo quando aquele toque virava arraste. Na tela de 430 px os 99 mm andados viram ~7 px (< 14), então o 2º pointerdown contava como 2º toque, abria o menu (preventDefault) e a peça não andava.
+- **Correção:** o toque fica armado no pointerdown, cai se o dedo andar mais de 4 px e só vale quando solta parado. O 2º toque tem que vir até 450 ms depois de soltar. As duas funções ficam (arrastar e 2 toques); o teste antigo não mudou.
+- **Mesmo mecanismo conferido:**
+  - os 2 toques do 3D (puxador de porta e gaveta, peça) contam no pointerup e só com menos de 10 px de movimento: arraste e giro de câmera não contam;
+  - o ímã não usa toque.
+- **Teste:** `testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem`. Falha antes ("true false", menu aberto) e passa depois, em 1366 e em 430×900.
+- **Nota de processo:** nas rodadas parciais no mesmo navegador, a página antiga pode ficar em cache. Desde agora uso a URL com `&v=<hora>`. As baterias completas sempre rodaram num perfil novo.

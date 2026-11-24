@@ -59,7 +59,9 @@ final class VideoGravarUITests: XCTestCase {
         // menu do iOS pro campo de arquivo (sem câmera no simulador): Fototeca / Photo Library
         try toca(["Fototeca", "Photo Library", "Biblioteca de Fotos", "Fotos", "Photos"], ate: 20)
         sleep(4)
-        app.tap()  // dispara o monitor de permissão, se houver
+        // 4ª rodada: sem o app.tap() no meio da tela — no iPad o seletor é um balão e o toque fora dele fecha o seletor antes da
+        // escolha (a permissão de fotos já vem do simctl privacy). Como está a tela com o seletor aberto:
+        mostra("seletor aberto")
         // a grade do seletor de fotos (fora da página): o vídeo de teste é o único item. Só imagem/célula do seletor — nunca a aba
         // "Vídeos" do editor, que continua por baixo (1ª rodada no CI tocou nela de novo)
         let pv = NSPredicate(format: "label CONTAINS[c] %@", "video")
@@ -74,8 +76,9 @@ final class VideoGravarUITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         } while Date() < fim
         guard let v = alvo else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
-        print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue))"); v.tap()
+        print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue)) em \(v.frame)"); v.tap()
         sleep(3)
+        mostra("depois de tocar no vídeo do seletor")
         // diagnóstico (2ª rodada no CI: depois do item apareceu um "OK" e o editor não salvou): o que há na tela agora
         for al in app.alerts.allElementsBoundByIndex { print("VIDEO-UI: alerta \"\(al.label)\" · " + al.staticTexts.allElementsBoundByIndex.map { $0.label }.joined(separator: " | ") + " · botões " + al.buttons.allElementsBoundByIndex.map { $0.label }.joined(separator: ", ")) }
         print("VIDEO-UI: botões na tela: " + app.buttons.allElementsBoundByIndex.prefix(40).map { $0.label }.filter { !$0.isEmpty }.joined(separator: ", "))

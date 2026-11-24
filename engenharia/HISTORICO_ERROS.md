@@ -2059,3 +2059,28 @@ Pedido: "ESPELHOS ULTRARREALISTAS E AUDITORIA GERAL" (Claude 1 audita). Testes `
   - o intervalo conta do início do 1º toque: `W(max(0, 120 − tempo do 1º toque))`;
   - as expectativas são as mesmas e nenhum limite aumentou;
   - os dois passam em 1366 e 430.
+
+## DECISÕES DO ADAUTO 24/11 (itens 1, 2, 4, 5, 6, 8 e 9; Code 2, ramo `claude/decisoes-2411-code2`)
+- **1 · forno/micro-ondas (`aac3afb5`):**
+  - o 🗑 não tira "Corte do forno", "Nicho do forno (aberto)", "Corte do micro-ondas" nem "Nicho do micro-ondas (aberto)" sozinhos, e mostra o motivo;
+  - tocar de novo em até 4 s tira o conjunto: no balcão o vão fica livre, na torre fica "sem", na torre por vãos sai o vão dele;
+  - catálogo: 17 peças, 0 "só a peça".
+- **2 · rodapé e travessa (`aac3afb5`, teste `2ee42fbc`):**
+  - o 🗑 é o mesmo que desmarcar a caixinha do módulo, e as peças dependentes recalculam (base de cima, moldura e porta, como na caixinha);
+  - a travessa que segura módulo sem base de cima não sai;
+  - o teste antigo do 🗑 na travessa (regra de 17/11, "outras iguais") agora confere que as outras ficam **iguais às da caixinha**.
+- **4 · dobradiça (`dcd57685`), só no 3D:**
+  - o caneco ficava 1 mm dentro da peça que a porta cobre: 1178 partes em 74 modelos;
+  - com a porta fechada, o caneco é cortado depois da montagem (`cupTrim`);
+  - furação, medida e DXF iguais.
+  - Achado: o caso "16 modelos na divisória" de 16/11 já não existia; o que restava era o caneco na lateral, na divisória e no montante.
+- **5 e 8 · perfis × caixa (`0976fb27`):**
+  - o rebaixo sai das caixas reais do 3D que desenham o perfil (`pxCarve`): o tamanho exato da parte do perfil em cada peça;
+  - G: travessa 440 × 37 × 1,5 (a "pendência 1" da especificação). GV: travessa e base. Facetado: 300 × 10,5 × 10, mais as ponteiras;
+  - a nota vai na peça (lista), a camada `REBAIXO_P…` no DXF, e a medida de corte fica igual;
+  - móvel de antes (sem `rbP`): aviso e botão, nada muda sozinho;
+  - varredura dos 9 puxadores × 142 modelos: 0 interseção nova (antes: facetado 236, G 549, GV 349, perfil 1).
+  - `testPerfilGAfastamentoERebaixo…` passa de "entra 1,5 mm" para "entra 0 mm".
+  - **Desempenho:** a 1ª versão montava o 3D dentro do `draw()` (desenho 11 → 37 ms). Agora o desenho 2D não monta o 3D, e lista/corte/DXF montam uma vez. Desenho e montagem ficam iguais à base.
+- **6 · fita do aéreo:** sem mudança de código. Já resolvido: 0 de 1629 fitas dentro de porta ou frente; porta na posição de fabricação.
+- **9 · curvos:** adiados pelo Adauto (checklist N25).

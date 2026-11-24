@@ -73,7 +73,9 @@ final class VideoGravarUITests: XCTestCase {
         // 5ª rodada: no iOS 26 o seletor abre antes uma apresentação de primeiro uso (ícone "PickerOnboardingHeaderViewIcon",
         // 38×38) — a 4ª rodada tocou nesse ícone. Passa pela apresentação pelo botão dela e só toca numa miniatura de verdade.
         let pv = NSPredicate(format: "label CONTAINS[c] %@", "video")
-        let segue = ["Continue", "Continuar", "Get Started", "Começar", "Next", "Seguinte", "Avançar"]
+        // 7ª rodada: a apresentação é o aviso "Location Is Included · Learn More…" por cima da grade, e fecha no "Close"
+        // (a miniatura "Video, two seconds…" já estava lá, mas sem toque por baixo do aviso). "Close" não existe na página (lá é "Fechar").
+        let segue = ["Close", "Fechar aviso", "Continue", "Continuar", "Get Started", "Começar", "Next", "Seguinte", "Avançar"]
         // botão da apresentação: só botão, sem rolar a página do editor (rolar fecharia o seletor)
         // 6ª rodada: nenhum botão com esses nomes apareceu em 60 s; vale também quem CONTÉM "Continu"/"Get Started"/"Começar",
         // e só fora da página do editor (botões do seletor, que é outro processo)
@@ -102,6 +104,8 @@ final class VideoGravarUITests: XCTestCase {
             if passos < 3, let b = botaoSegue() {
                 print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); continue
             }
+            let mv = app.images.matching(pv).firstMatch
+            if passos == 0 && mv.exists && !mv.isHittable { print("VIDEO-UI: a miniatura do vídeo está no seletor mas coberta: \(mv.label)") }
             if !mostrouSeletor {
                 mostrouSeletor = true
                 print("VIDEO-UI: no seletor (fora da página): botões " + app.buttons.allElementsBoundByIndex.filter { !daPagina.contains($0.label) }.prefix(30).map { "\($0.label)/\($0.identifier)" }.joined(separator: ", ")

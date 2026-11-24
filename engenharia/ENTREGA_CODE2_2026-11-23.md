@@ -80,3 +80,4 @@ AQRender, medida livre do vão, rodapé L, CSV) têm SHA e teste que falha antes
 - Teste em aparelho real (iPhone, iPad, Galaxy Tab S9 FE, Windows): o contêiner só roda Chromium (SwiftShader); a homologação é pelos testes automáticos (Adauto 23/11).
 - AQRender: FPS e temperatura em aparelho não medidos; LED não ilumina o resto; vidro sem ordenação por distância (está no LEIAME do protótipo).
 - Junção 4 (perguntas 2–4), batente cava (7 perguntas), junção 7/módulos curvos: seguem parados por decisão do Adauto.
+  - **Atualização 24/11 (auditoria):** junção 4 e batente cava já foram decididos e feitos em 23/11 (`21daeffd`, `a9049cd`, `b07085a`, `9dde42f5`; testes `testJuncao4TravessaEmPecasRebaixoMeioAMeioRecuoMontanteSemSobreposicao` e `testBatenteCavaReguaPorReguaComLimitesRestaurarEEditorPorVaos`, na candidata `ed041eb2`). Continuam parados só os módulos curvos (junção 7): não há escopo escrito nem módulo curvo no código.

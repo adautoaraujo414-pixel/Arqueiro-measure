@@ -2193,3 +2193,18 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - A falha nova nas duas foi `testMoverNo3DEncaixaNaParede…` ("vizinho mudou"). O teste comparava o vizinho da cena 5 com o da cena 1. Com o D23, cada módulo novo tem o seu id, então o vizinho de outra cena nunca é igual.
   - **Correção, só no teste:** o vizinho é comparado com ele mesmo, na mesma cena, antes e depois do encaixe. É a intenção do teste ("sem mexer em ninguém"), igualmente estrita.
   - O outro de 430 (`testFaixaDoEspelhoLed…`) é da base.
+
+## INTEGRAÇÃO FINAL DO CODE 1 (24/11, ramo `claude/fechamento-code1`)
+- **Juntado e auditado:** decisões do Code 2 (`7d257c1`, `3ae2216`), D23 (`e6e95ba`), giro do caneco + contorno (`c0865d3` e correção), teste do vizinho (`dae8a33`).
+  - No merge do `33b6512` o editor veio inteiro do outro lado e perdeu correções minhas (4 testes vermelhos). Refeito: o meu editor + só o bloco do contorno `pf.pts` do Code 2. Sem teste repetido.
+  - Teste do vizinho (`d0a715db`): compara o mesmo módulo, na mesma cena, antes e depois. Mesma força do anterior.
+- **FASE4 (achado na bateria 1366 do `78e7d62`, 526/527):** `testFASE4_EspelhoNaParede…` falhava às vezes. O botão de minimizar do painel (`qmn`) só aparece no quadro seguinte ao abrir. O teste perguntava no mesmo quadro (diagnóstico: `qmn 0→1`).
+  - **Correção, só no teste (`3dbbd50`):** espera 2 quadros depois de abrir. A expectativa (37) não mudou. Não foi aumento de tempo limite.
+- **Baterias completas, editor `7835d4b390bd` (= HEAD), Swift do `3dbbd50`:** 1366 528/529 e 430 528/529.
+  - A única falha nas duas é `testMoverNo3DEncaixaNaParede…`, da versão do teste anterior ao `d0a715db`.
+  - Rodado de novo no HEAD, junto com FASE4, caneco, giro e D23: 11/11 em 1366 e 11/11 em 430.
+- **Vídeo na atualização do iOS: ainda não coberto.**
+  - Dados: iPhone e iPad iguais (8/8 e 4/4), projetos abrem iguais.
+  - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
+  - Causa ainda não comprovada. Hipótese: o `app.tap()` no meio da tela fecha o balão do iPad antes da escolha.
+  - Rodada `7751eeb`: sem esse toque, com a tela registrada no seletor aberto e depois do toque.

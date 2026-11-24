@@ -797,9 +797,9 @@ final class EditorWebKitTests: XCTestCase {
           m.v[0].open=1;window.anim3();await new Promise(function(r){setTimeout(r,1800)});var doorBoxes=__boxes().filter(function(b){return /^0:Porta/.test(b.nm)&&b.pf&&!b.nol}).length;m.v[0].open=0;window.anim3();await new Promise(function(r){setTimeout(r,1800)});
           S.mods=[];newTpl(5);var e=S.mods[0];e.pcT={Porta:{c:pf.hex,n:matLabel(pf),id:pf.id}};S.m=e;draw();__build();pt3(true);
           var fb=__boxes().filter(function(b){return b.ft&&/^0:Base superior/.test(b.nm)})[0],x=0,y=0;[[fb.x0,fb.y0,fb.z1],[fb.x1,fb.y0,fb.z1],[fb.x1,fb.y1,fb.z1],[fb.x0,fb.y1,fb.z1]].forEach(function(c){var p=org3api.proj(c);x+=p[0]/4;y+=p[1]/4});
-          window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(x,y+7);var pv1=__pt3state().pv;document.getElementById('pt3q').querySelector('[data-ptq="x"]').click();
+          /* defeito 89 (decisão do Adauto, 24/11): a fita só é escolhida no modo ▭ Fita: liga o modo antes de tocar perto da fita */document.querySelector('#pt3 [data-ptf]').click();window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(x,y+7);var pv1=__pt3state().pv;document.getElementById('pt3q').querySelector('[data-ptq="x"]').click();
           document.querySelector('#pt3 [data-ptk]').click();paintTap(x,y+6);var pick=__pt3state().n;
-          document.querySelector('#pt3 [data-ptf]').click();var lat=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0],c1=org3api.proj([lat.x0,(lat.y0+lat.y1)/2,(lat.z0+lat.z1)/2]);window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(c1[0],c1[1]);var pv2=__pt3state().pv;
+          if(!window.PTFM)document.querySelector('#pt3 [data-ptf]').click();var lat=__boxes().filter(function(b){return !b.ft&&/^0:Lateral esquerda/.test(b.nm)})[0],c1=org3api.proj([lat.x0,(lat.y0+lat.y1)/2,(lat.z0+lat.z1)/2]);window.PT3={c:cz.hex,n:matLabel(cz),id:cz.id,erase:false};paintTap(c1[0],c1[1]);var pv2=__pt3state().pv;
           pt3(false);var fmOff=!window.PTFM;document.getElementById('v3x').click();
           return JSON.stringify({cvlH:cvlH,dark:dark,doorBoxes:doorBoxes,pv1:pv1&&(pv1.key+'|'+pv1.fita),pick:pick,pv2:pv2&&(pv2.key+'|'+pv2.fita),fmOff:fmOff,errs:__errs});
           """#)
@@ -958,11 +958,12 @@ final class EditorWebKitTests: XCTestCase {
           open3D();await new Promise(function(r){setTimeout(r,300)});
           var Q=function(){return document.getElementById('pt3q')},fb=function(re){return __boxes().filter(function(b){return b.ft&&re.test(b.nm)})[0]};
           /* toque ao longo de cada fita do caixote (base, laterais, topo), portas fechadas e abertas: tem que pegar a fita tocada, não a porta nem a fita do lado */
-          var erra=[];var probe=function(){__build();pt3(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};
+          /* defeito 89 (decisão do Adauto, 24/11): a fita só é escolhida no modo ▭ Fita; sem ele o toque pega a peça (na porta, a porta). As conferências de fita abaixo ligam o modo Fita */var fm=function(on){if(!!window.PTFM!==on)document.querySelector('#pt3 [data-ptf]').click()};
+          var erra=[];var probe=function(){__build();pt3(true);fm(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};
             __boxes().filter(function(b){return b.ft&&/^(Base|Lateral)/.test(String(b.nm).split(':')[1])}).forEach(function(b){[.15,.5,.85].forEach(function(t){var big=(b.x1-b.x0)>(b.y1-b.y0),p=big?[b.x0+(b.x1-b.x0)*t,(b.y0+b.y1)/2,b.z1]:[(b.x0+b.x1)/2,b.y0+(b.y1-b.y0)*t,b.z1],c=org3api.proj(p);if(!c)return;paintTap(c[0],c[1]);var st=__pt3state(),k=st.pv?st.pv.mi+':'+String(st.pv.key).replace(/#\d+$/,''):'none';if(k!==String(b.nm))erra.push(b.nm+'@'+t+'->'+k);if(Q())Q().hidden=true})});pt3(false)};
           probe();org3api.open(m,true);org3api.open(a,true);await new Promise(function(r){setTimeout(r,1500)});probe();org3api.open(m,false);org3api.open(a,false);await new Promise(function(r){setTimeout(r,1500)});__build();
           /* a fita da base do balcão (a tirinha embaixo da porta) pinta de verdade · a porta fica no botão "Era a peça?" e o botão troca */
-          pt3(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};
+          pt3(true);fm(true);window.PT3={c:'#2e86c1',n:'Azul',id:'',erase:false};
           /* mira (Adauto, 17/11/2026 — só o teste): o centro da parte da fita da base que aparece embaixo da 1ª porta, tirado da geometria desenhada (a fita pode estar em pedaços
              quando a porta fechada esconde parte dela); antes era a 1ª caixa da fita e y = 102 mm fixo */
           var folha_=function(){__build();return __boxes().filter(function(b){return /^0:Porta$/.test(String(b.nm))&&!b.ft&&(b.x1-b.x0)>=50&&(b.y1-b.y0)>=50&&(b.z1-b.z0)>=10}).sort(function(a,b){return a.x0-b.x0})[0]};
@@ -972,12 +973,15 @@ final class EditorWebKitTests: XCTestCase {
             c=org3api.proj([(Math.max(bi.x0,lf_.x0)+Math.min(bi.x1,lf_.x1))/2,(bi.y0+Math.min(bi.y1,lf_.y0))/2,bi.z1]);paintTap(c[0],c[1]);var pv1=__pt3state().pv.key,alt1=(Q().querySelector('[data-ptalt]')||{}).textContent||'';
           Q().querySelector('[data-ptq="fita"]').click();var base=fb(/^0:Base inferior/).c.slice(0,3).join(),lat=fb(/^0:Lateral esquerda/).c.slice(0,3).join();var x=Q().querySelector('[data-ptq="x"]');if(x)x.click();
           paintTap(c[0],c[1]);Q().querySelector('[data-ptalt]').click();var pv2=__pt3state().pv.key,alt2=(Q().querySelector('[data-ptalt]')||{}).textContent||'';Q().querySelector('[data-ptq="x"]').click();
+          /* defeito 89 (Adauto, 24/11): sem o modo Fita, tocar em cima da porta (inclusive bem em cima da fita da base, a mira da homologação) pega a PORTA e não oferece a fita */
+          fm(false);var semFita=[];[4,12,40,(lf_.y1-lf_.y0)/2].forEach(function(dy){var cc=org3api.proj([(lf_.x0+lf_.x1)/2,lf_.y0+dy,lf_.z1]);if(!cc)return;paintTap(cc[0],cc[1]);var st_=__pt3state(),al_=(Q().querySelector('[data-ptalt]')||{}).textContent||'';semFita.push(Math.round(dy)+':'+(st_.pv?String(st_.pv.key).replace(/#\d+$/,''):'nada')+(st_.pv&&st_.pv.fita?'(fita)':'')+(/fita/i.test(al_)?' oferece fita':''));var xq_=Q().querySelector('[data-ptq="x"]');if(xq_)xq_.click()});
           /* fita pintada de propósito ganha da cor da peça pintada (fitas do módulo inteiro) */
           a.pc={'Base inferior#1':{c:'#ffffff',n:'Branco'}};a.pfM={c:'#c0392b',n:'Vermelho'};__build();var aBase=fb(/^1:Base inferior/).c.slice(0,3).join(),aLat=fb(/^1:Lateral esquerda/).c.slice(0,3).join();
           pt3(false);document.getElementById('v3x').click();
-          return JSON.stringify({erra:erra,pv1:pv1,alt1:alt1,base:base,lat:lat,pv2:pv2,alt2:alt2,aBase:aBase,aLat:aLat,errs:__errs});
+          return JSON.stringify({semFita:semFita.join(' | '),semFitaOk:semFita.length===4&&semFita.every(function(q){return /:Porta$/.test(q)}),erra:erra,pv1:pv1,alt1:alt1,base:base,lat:lat,pv2:pv2,alt2:alt2,aBase:aBase,aLat:aLat,errs:__errs});
           """#)
-        XCTAssertEqual((o["erra"] as? [String])?.count, 0, "toque na fita pega a fita certa: \(o["erra"] ?? "")")
+        XCTAssertEqual(o["semFitaOk"] as? Bool, true, "sem o modo Fita, tocar na porta (até 4 mm da fita da base) pega a porta e não oferece a fita: \(o["semFita"] ?? "")")
+        XCTAssertEqual((o["erra"] as? [String])?.count, 0, "toque na fita pega a fita certa: \(o["erra"] ?? "")") // no modo ▭ Fita
         XCTAssertEqual(o["pv1"] as? String, "Base inferior#1", "toque na tirinha embaixo da porta pega a fita da base")
         XCTAssertTrue((o["alt1"] as? String ?? "").contains("Porta"), "botão pra trocar pra porta")
         XCTAssertEqual(o["base"] as? String, "46,134,193", "fita da base pintada de azul")

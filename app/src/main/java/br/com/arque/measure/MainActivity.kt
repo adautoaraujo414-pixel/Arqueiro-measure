@@ -15,6 +15,8 @@ class MainActivity : ComponentActivity() {
         // restauração de backup pendente: aplica antes de abrir qualquer tela
         br.com.arque.measure.data.DataBackup.applyPending(applicationContext)
         super.onCreate(savedInstanceState)
+        // N14 (24/11): cópia dos projetos "antes-de-usar-a-versao-N" logo ao abrir a versão nova (antes só no onStop, depois de usar)
+        run { val c = applicationContext; Thread { runCatching { br.com.arque.measure.data.DataBackup.versionCopyIfNew(c) } }.start() }
         enableEdgeToEdge()
         br.com.arque.measure.ui.PalmGuard.pxPerMm = resources.displayMetrics.xdpi / 25.4f
         handleIntent(intent)

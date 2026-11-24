@@ -1,0 +1,64 @@
+# Portas provençais e puxadores concha (23/11)
+
+Branch `claude/portas-provencal-concha` (a partir de 28e24535). Tudo em `app/src/main/assets/editor.html`, módulo no fim do arquivo, mais 4 ganchos pequenos.
+
+## O que entrou
+- **Aba Portas → "Estilos de porta"** (seção nova, depois do puxador). Estilo: Lisa, Provençal simples, Provençal detalhada, Provençal dupla. Construção: Régua aplicada, Moldura aplicada, Usinada em CNC. Medidas: largura (20 a 70 ou outra), distância da borda (padrão 0: na borda da porta), 45° ou encontro reto, espessura, 2ª moldura e distância (dupla), frisos (detalhada), profundidade e Ø da ferramenta (CNC), cor própria.
+- **Aplicar em**: somente esta porta, este móvel, mesmo modelo, ambiente, projeto. Abre uma prévia com a quantidade antes de confirmar. Porta de vidro e de correr ficam fora. Um desfazer volta tudo. Escolher no quadro não muda o projeto antes de "Aplicar".
+- **Aplicada**: 4 peças reais por quadro, MDF 6 mm, fora da porta (a porta não muda de medida). Vão para lista, corte (na cor de fora, ou linha própria se a régua tiver cor própria), orçamento e DXF (corte a 45° na camada `CORTE_45`). A nota da porta mostra a espessura total.
+- **Usinada**: nenhuma peça aplicada. Frisos fechados no DXF da porta, na camada `FRISO_L{largura}_P{prof}_FERR_D{Ø}_FACE_FRENTE`. Metros de friso no orçamento (preço no Ajustes, linha "Friso usinado em CNC").
+- **Bloqueios**:
+  - painel do meio abaixo de 40 mm;
+  - medida negativa;
+  - friso que deixaria menos de 9 mm de MDF;
+
+  A porta fica lisa e a nota avisa. Réguas e molduras vão até a borda em todos os lados, inclusive em cima (Adauto 23/11, 2ª foto). Numa porta com cava usinada, a nota avisa que a régua (ou o friso) cobre a cava: troque o puxador (ex.: concha) ou afaste a régua 21 mm.
+- **Avisos**:
+  - friso a menos de 40 mm da borda das dobradiças (nota);
+  - no DXF, CONFLITO quando friso + copo passam da espessura;
+  - concha atravessando a borda da régua.
+- **Concha**: 7 modelos (meia-lua clássica, meia-lua lisa, borda decorativa, retangular, arredondada, parafusos aparentes, parafusos ocultos), cada um com geometria 3D própria.
+  - Largura, altura, profundidade, entre-furos e Ø são editáveis.
+  - A furação do DXF usa o modelo. A profundidade vem das configurações do DXF; sem ela, os furos ficam passantes e isso é avisado.
+  - Fica sempre na horizontal com a boca para baixo.
+  - Concha sem modelo escolhido continua exatamente igual: conferido peça por peça contra 28e24535.
+- **Acabamentos**: entram cinza fosco, prata, preto fosco, dourado escovado e cobre (cromado e rosé já existiam), mais cor livre em hex.
+  - Escopo da cor: apenas este puxador / deste móvel / do mesmo modelo / do projeto. O padrão continua "do projeto", que é o comportamento de antes.
+  - A cor individual continua possível depois.
+
+## Testes (falham em 28e24535, passam aqui)
+- testPortaProvencalReguasAplicadasPecasReaisCorteEDxf
+- testPortaProvencalUsinadaCncFrisosNoDxfEConflitoComDobradica
+- testEstilosDePortaPreviaAplicarEmMassaUmDesfazerESalvar
+- testConchaSeteModelosFuracaoPorModeloECorPorEscopo
+
+## Limites conhecidos (sem regra inventada)
+- As medidas dos modelos de concha são medidas comerciais comuns. A furação deve ser conferida no puxador comprado (aviso no DXF).
+- A posição da concha (meio/cima/baixo, centro/lado) continua no ⚙ como sempre, para o projeto todo.
+- "Ambiente" é o projeto: um projeto tem um ambiente.
+
+## Correções do Adauto (23/11, foto da tela)
+- **Réguas na borda da porta**: distância da borda padrão 0, sem faixa lisa antes do provençal, até o topo também (sem os 21 mm do lado da cava; a nota avisa que cobre a cava).
+- **Concha desvirada**: borda reta embaixo (a boca), arco em cima. A concha sai mais na boca e os parafusos ficam na altura dos furos do DXF.
+- **Mais detalhe na concha**: chanfro, filete de brilho, lábio e 16 fatias. O 2D desenha o modelo.
+- **Veio**: nas réguas de cima e de baixo o veio fica deitado (madeira e foto do padrão). Réguas e molduras usam o padrão da frente.
+- **Portas de canto**:
+  - canto cego e canto reto com o estilo alinhado com o módulo do lado (tudo começa na borda);
+  - canto em L com as duas folhas (a do lado usa a medida real, 330) e o estilo no 3D;
+  - o canto em L de baixo do catálogo não tem porta.
+- **Peça livre**: 2 toques abrem Duplicar / Medidas / Apagar. A cópia nasce do lado. Ao arrastar, o ímã (15 mm) encaixa a borda exata na de outra peça ou do módulo; porta e frente só valem se a peça estiver na frente delas.
+- **Espelho leve** (85411be3, achado do Chefe no CI): sem reflexo planar no automático com renderizador por software e depois de perder o contexto WebGL; regex sem "Android".
+
+Capturas: 3d_madeira_regua_na_borda_veio.png, 3d_conchas_desviradas_4_modelos.png, 3d_canto_L_guarda_roupa.png, peca_livre_2_toques_menu.png, quadro_portas_concha.png.
+
+## Pedidos seguintes (23/11)
+- **Duplicar no 3D**: ⧉ Duplicar no cabeçalho de qualquer peça selecionada.
+  - Peça livre: cópia igual.
+  - Outra peça: vira peça livre de MDF 15 com a medida de corte e o sentido da original, do lado dela.
+- **2 toques no puxador** (barra, bola, concha): abrem o reposicionar livre (bolinha vermelha). Todas as portas seguem, espelhado, com os furos do DXF.
+- **Puxador passante**: a porta passa do módulo o tanto de Configurações · Puxadores (padrão 20 mm, confirmado pelo Adauto em 23/11, via Code 1), medido da borda do módulo.
+  - No balcão e na torre a porta passa em cima; no aéreo, embaixo.
+  - No gaveteiro só a frente da ponta passa.
+  - Sem ferragem, sem furo e sem puxador no orçamento.
+
+Capturas: 3d_puxador_passante_balcao_e_aereo.png. (As setas pra mover a peça no 3D foram tiradas a pedido do Adauto.)

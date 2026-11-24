@@ -14314,6 +14314,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* MOVEL-GIRADO (auditoria do Code 1 em 24/11, na decisão A05 do Code 2 — dcd5768): o caneco da dobradiça cortado onde encosta na lateral
+       tem que sair igual em qualquer parede. Antes: na parede da esquerda/direita o corte caía na profundidade (volume 9.928 × 13.164 no fundo)
+       e no móvel livre girado 180° o caneco sumia inteiro (testMovelLivreNoMeioDaSala…: "3D fora"). Família: balcão, aéreo, armário alto, guarda-roupa. */
+    func testCanecoDaDobradicaIgualEmQualquerParede() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        open3D();await W(300);var out={};
+        for(var nm of ['Balcão 2 portas','Aéreo 2 portas','Armário alto 2 portas','Guarda-roupa 2 vãos']){var res=[];for(var w of ['','e','d']){loadState(initLimpo());S.env='cozinha';S.W=4000;S.H=2700;draw();newTpl(T(nm));var m=S.mods[0];m.x=900;if(w)m.wing=w;draw();__build();var B=__boxes().filter(function(b){return /^0:/.test(b.nm)&&b.cup});res.push((w||'fundo')+' '+B.length+' canecos, vol '+Math.round(B.reduce(function(a,b){return a+(b.x1-b.x0)*(b.y1-b.y0)*(b.z1-b.z0)},0)))}out[nm]=res.join(' | ')}
+        var ok=Object.keys(out).every(function(k){var p=out[k].split(' | ').map(function(x){return x.replace(/^\S+ /,'')});return p[0]===p[1]&&p[0]===p[2]});document.getElementById('v3x').click();return JSON.stringify({ok:ok,res:JSON.stringify(out),errs:__errs.length})
+        """#)
+        XCTAssertEqual(o["ok"] as? Bool, true, "canecos iguais no fundo, na esquerda e na direita: \(o["res"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* A31 (decisão do Adauto 24/11: "régua espaçadora do canto e rodapé até o piso: permitir editar a altura dentro dos limites construtivos;
        recalcula as portas quando precisar"). Antes: a seta de altura da régua espaçadora não mexia (8 modelos: a altura vinha da porta) e a do
        rodapé esticava só a peça, que entrava na base (rodapé 0–340 com a base em 100–115) e as portas ficavam iguais. Agora a régua muda de

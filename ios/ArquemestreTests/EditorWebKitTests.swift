@@ -17888,4 +17888,36 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["dxf"] as? String, "585,120 → 585,120 · 626,120 → 646,140", "furo do copo no mesmo lugar da caixa")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // VIS-MAT (Adauto 24/11, "revisão visual completa… máximo realismo… sem aumentar o peso"): metal com brilho pelo acabamento (puxador, inox de eletro,
+    // cromado de torneira, alumínio), preto brilhante, tecido no estofado, veio na madeira de móvel e pedra polida — num programa à parte, só nessas peças.
+    // Medida, geometria, peças e corte iguais; parede e o resto do 3D com os mesmos pixels; o "Acabamento realista" não muda
+    func testAcabamentoVisualMetalTecidoMadeiraPedraSemMudarGeometria() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4200;S.H=2700;draw();newTpl(T('Balcão 2 portas + 4 gavetas'));pxApplyAll('concha','cromado');S.mods[0].v.forEach(function(v){v.chm={id:'cl'}});
+        S.tab=6;draw();panel();try{document.querySelector('#bd [data-stadd]').click()}catch(_){}await W(200);['forno','sofa','mesa','torneira'].forEach(function(t){try{apAdd(t,0)}catch(_){}});(S.fr||[]).forEach(function(f){if(f.t==='forno'){f.x=2600;f.b=900}if(f.t==='sofa'){f.x=2900;f.z=2600}if(f.t==='mesa'){f.x=300;f.z=1900}});draw();
+        var hp=JSON.stringify(S.mods.map(function(m){return partsOf(m)})),hc=JSON.stringify(cutGroups().ord);
+        open3D();await W(600);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(.35,.18,1.25);await W(300);__build();
+        var B=__boxes(),tipo=function(t){var id=((S.fr||[]).filter(function(f){return f.t===t})[0]||{}).id;return B.filter(function(b){return b.fr===id})},cls={};
+        var px=B.filter(function(b){return b.mt&&b.nol&&!b.shd&&b.c.join()==='217,221,226'})[0];cls.puxador=px?Math.round(vizMat(px,0)*100)/100:-1;
+        cls.forno=tipo('forno').some(function(b){var v=vizMat(b,0);return v>=10&&v<11});cls.sofa=tipo('sofa').some(function(b){return vizMat(b,0)===14});cls.mesa=tipo('mesa').some(function(b){return vizMat(b,0)===5});cls.torneira=tipo('torneira').some(function(b){var v=vizMat(b,0);return v>=10&&v<10.1});
+        var st=B.filter(function(b){return b.g==='st'||b.g==='stc'})[0];cls.pedra=st?vizMat(st,1):-1;var gola={c:[150,150,150],gola:1,a:1};cls.gola=Math.round(vizMat(gola,0)*100)/100;R.cls=JSON.stringify(cls);R.programa=!!window.__GPV&&!!window.__GPRV;
+        var geo=function(){__build();return JSON.stringify(__boxes().map(function(b){return [b.x0,b.x1,b.y0,b.y1,b.z0,b.z1].map(function(v){return Math.round(v*10)/10})}))};var g1=geo();
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),pxl=function(x,y,z){var p=__p3(x,y,z),r=Math.min(2,window.devicePixelRatio||1),q=new Uint8Array(4);gl.readPixels(Math.round(p[0]*r),Math.round(gl.drawingBufferHeight-p[1]*r),1,1,gl.RGBA,gl.UNSIGNED_BYTE,q);return [q[0],q[1],q[2]].join(',')};
+        var fo=tipo('forno').filter(function(b){var v=vizMat(b,0);return v>=10&&v<11}).sort(function(a,b){return (b.x1-b.x0)*(b.y1-b.y0)-(a.x1-a.x0)*(a.y1-a.y0)})[0];
+        var pts=function(){__cam(.35,.18,1.25);return [pxl(S.W*.5,2300,2),pxl((fo.x0+fo.x1)/2,(fo.y0+fo.y1)/2,fo.z1)]};var com=pts();window.VISMAT=false;re3();await W(200);var sem=pts();var g2=geo();window.VISMAT=true;re3();await W(200);
+        R.parede=com[0]===sem[0];R.forno=com[1]!==sem[1];R.geometria=g1===g2;R.pecas=JSON.stringify(S.mods.map(function(m){return partsOf(m)}))===hp&&JSON.stringify(cutGroups().ord)===hc;
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cls"] as? String, "{\"puxador\":10,\"forno\":true,\"sofa\":true,\"mesa\":true,\"torneira\":true,\"pedra\":1.3,\"gola\":10.17}", "metal pelo acabamento (cromado 10, liso), inox do forno, tecido, madeira, cromado da torneira, pedra polida e gola anodizada")
+        XCTAssertEqual(o["programa"] as? Bool, true, "programa à parte (e o do reflexo)")
+        XCTAssertEqual(o["parede"] as? Bool, true, "parede com os mesmos pixels (o resto do 3D não muda)")
+        XCTAssertEqual(o["forno"] as? Bool, true, "o inox do forno muda (brilho de metal)")
+        XCTAssertEqual(o["geometria"] as? Bool, true, "nenhuma caixa do 3D muda de lugar ou medida")
+        XCTAssertEqual(o["pecas"] as? Bool, true, "peças e corte iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

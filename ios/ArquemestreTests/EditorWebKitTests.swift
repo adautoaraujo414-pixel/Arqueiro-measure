@@ -17468,12 +17468,13 @@ final class EditorWebKitTests: XCTestCase {
 
     // Adauto 23/11: no 3D, "⧉ Duplicar" na barra da peça livre (ao lado do minimizar); 2 toques em cima do puxador (barra, bola ou concha) abrem o
     // reposicionar livre (bolinha vermelha) e todas as portas seguem, com os furos do DXF; 1 toque no puxador continua abrindo a porta
+    // Auditoria 24/11: o intervalo entre os 2 toques conta do início do 1º toque (80 ms, como o dedo); antes o tempo do 1º toque somava (CPU lenta: 470–520 ms > 420 = falha intermitente na bateria). Expectativas iguais.
     func testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(s){TS.push(String(s))};var R={},e0=__errs.length;
         var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
-        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(80)}await W(650)};
+        var cv=document.getElementById('cv3'),toque=async function(x,y,z,n){var c=__p3(x,y,z),rr=cv.getBoundingClientRect();for(var i=0;i<n;i++){var t0_=performance.now();['pointerdown','pointerup'].forEach(function(tp){cv.dispatchEvent(new PointerEvent(tp,{bubbles:true,cancelable:true,clientX:rr.left+c[0],clientY:rr.top+c[1],pointerId:3,isPrimary:true}))});await W(Math.max(0,80-(performance.now()-t0_)))}await W(650)};
         loadState(initLimpo());S.W=2000;newTpl(T('Guarda-roupa 2 vãos'));var m=S.mods[0];S.m=m;draw();var r=EM.criaPecaNoPonto(m,250,800,'peca','z');draw();
         open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});__cam(0,0.05,1.2);await W(300);__build();
         var b=__boxes().filter(function(q){return q.pk===EM.pkDe(r.q)})[0];await toque((b.x0+b.x1)/2,(b.y0+b.y1)/2,b.z1,2);var bt=[].filter.call(document.querySelectorAll('[data-e3dup]'),function(x){return x.offsetParent})[0];

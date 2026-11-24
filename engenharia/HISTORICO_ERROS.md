@@ -2151,3 +2151,12 @@ Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto
 - **Windows (70f7782):** coberto no CI (25a6867): win-166 gravou pelo seletor do editor, atualizou por cima, `video_*.json` igual byte a byte, o editor novo acha, lista e toca.
 - **Android (dc4892b):** CDP no WebView do apk-660 (debug). 1ª rodada: botões em inglês no emulador (corrigido); 2ª: falha de infraestrutura (download do emulador). Reexecutado.
 - **iOS (69aca94):** teste de interface montado só na compilação do simulador em cima de 3f1c3a58 (o app não muda). 1ª rodada: chegou à Fototeca e tocou na aba "Vídeos" do editor em vez do item do seletor (corrigido).
+
+## D23 · IDENTIDADE ÚNICA (Code 2, 24/11; ramo `claude/d23-identidade` a partir de `claude/fechamento-code1`)
+- **Feito:** ver `DECISOES_TECNICAS.md` (24/11, D23).
+- **Conferido:**
+  - **s45 (139 projetos gravados pela publicada `3f1c3a58`):** corte igual em todos; lista igual em 138. A diferença conhecida é a cozinha de exemplo (rodapé lateral do encontro, FASE2), a mesma de antes.
+  - **Editor PUBLICADO (`3f1c3a58`) abrindo projeto com `uid` nos módulos:** 142 modelos; peças e corte iguais com e sem `uid`; o `uid` continua depois do `snapState` dele; 0 erros (roteiro em `diagnosticos/d23_identidade/publicado_abre_uid.js`).
+  - `testAbrirProjetoSemMexerNaoRegrava…`, `testProjetoGravadoPelaVersaoPublicada…`, plano de corte, histórico, Meus modelos e backup: ok.
+- **Achado no caminho:** abrir projeto com id repetido. O `loadState` desenha por dentro e o `stkSync` trocava o id da 2ª cópia sozinho. Agora o id repetido que vem do arquivo fica, com aviso.
+- **Teste:** `testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer`. Falha antes, passa depois.

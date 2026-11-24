@@ -2151,3 +2151,9 @@ Pedido via Chefe: itens 3 e 7, arrasto confinado, B26, D23, o quarto item aberto
 - **Windows (70f7782):** coberto no CI (25a6867): win-166 gravou pelo seletor do editor, atualizou por cima, `video_*.json` igual byte a byte, o editor novo acha, lista e toca.
 - **Android (dc4892b):** CDP no WebView do apk-660 (debug). 1ª rodada: botões em inglês no emulador (corrigido); 2ª: falha de infraestrutura (download do emulador). Reexecutado.
 - **iOS (69aca94):** teste de interface montado só na compilação do simulador em cima de 3f1c3a58 (o app não muda). 1ª rodada: chegou à Fototeca e tocou na aba "Vídeos" do editor em vez do item do seletor (corrigido).
+
+## A05-GIRADO (achado na bateria completa do ramo de decisões, 24/11)
+- **Falhou:** `testMovelLivreNoMeioDaSalaGiraArrastaSalvaENaoMexeEmNinguem`, "3D fora" no giro de 180°. Passava na base.
+- **Causa:** o recorte do caneco (`dcd57685`) corta no eixo x e no sentido da porta. No móvel girado (livre, ou na parede do lado), as caixas já estão giradas: o corte saía no lado errado e o contorno ficava fora do lugar.
+- **Correção:** no móvel girado (`m.wing`) o caneco não é recortado. Lá fica como era antes (1 mm dentro da lateral, só no 3D).
+- **Pendente (registrado):** recorte do caneco também no móvel girado. Teste do móvel livre e da dobradiça: ok em 1366 e em 430.

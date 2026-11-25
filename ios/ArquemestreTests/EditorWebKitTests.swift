@@ -14308,15 +14308,16 @@ final class EditorWebKitTests: XCTestCase {
         var out=[];for(const L of [['Balcão 2 portas','Gaveteiro 3 gavetas'],['Balcão 2 portas','Gaveteiro 3 gavetas','Balcão 1 porta'],['Aéreo 2 portas','Aéreo 2 portas']]){
          /* jeito de antes: tudo numa ação só */cena();await W(30);L.forEach(function(n){atArm();newTpl(T(n));draw()});await W(30);var A=S.mods.map(sig);
          /* um por vez: o último criado ao lado dos que já existiam */cena();await W(30);var antes=null;for(var i=0;i<L.length;i++){if(i===L.length-1)antes=S.mods.map(sig);atArm();newTpl(T(L[i]));draw();await W(40);if(i<L.length-1&&libSug()&&bt()){bt().click();await W(40)}}
-         var sem=S.mods.slice(0,-1).map(sig),sg=libSug(),txt=bt()?bt().textContent:'-';await W(800);if(sg&&bt()){bt().click();await W(300)}var B=S.mods.map(sig);
+         var sem=S.mods.slice(0,-1).map(sig),sg=libSug(),txt=bt()?bt().textContent:'-';/* Chefe 25/11 (§4): o lugar do novo foi o app que escolheu, então sem o toque nada fica dentro de nada */var sob=S.mods.some(function(m){try{return !!modOverlaps(m)}catch(_){return false}}),xn=S.mods[S.mods.length-1].x;await W(800);if(sg&&bt()){bt().click();await W(300)}var B=S.mods.map(sig);
          document.getElementById('und').click();await W(200);/* o desfazer passa pelo loadState, que só normaliza campos vazios (ex.: wing): confere posição e tamponamento */var pt=function(m){return JSON.stringify([m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz])};var U=S.mods.slice(0,-1).map(pt),antesP=antes.map(function(j){return pt(JSON.parse(j))});
-         out.push((JSON.stringify(sem)===JSON.stringify(antes)?'sem toque iguais':'sem toque MUDOU')+' · '+(sg?sg.tipo:'sem sugestão')+' · '+txt+' · '+(JSON.stringify(A)===JSON.stringify(B)?'com toque igual ao de antes':'com toque DIFERENTE')+' · '+(JSON.stringify(U)===JSON.stringify(antesP)?'um desfazer volta':'desfazer NÃO volta'))}
+         out.push((JSON.stringify(sem)===JSON.stringify(antes)?'sem toque iguais':'sem toque MUDOU')+' · novo em x'+xn+(sob?' SOBREPÕE':' sem sobrepor')+' · '+(sg?sg.tipo:'sem sugestão')+' · '+txt+' · '+(JSON.stringify(A)===JSON.stringify(B)?'com toque igual ao de antes':'com toque DIFERENTE')+' · '+(JSON.stringify(U)===JSON.stringify(antesP)?'um desfazer volta':'desfazer NÃO volta'))}
         R.criar=out.join(' | ');
         /* abrir um projeto salvo com uma ponta sem tamponamento: nada muda e nada é sugerido */cena();await W(30);atArm();newTpl(T('Balcão 2 portas'));draw();await W(40);var m0=S.mods[0];m0.tl=m0.tr=false;delete m0.tlAuto;delete m0.trAuto;var ST=JSON.stringify(snapState());loadState(JSON.parse(ST));draw();await W(60);var ptL=function(L){return JSON.stringify(L.map(function(m){return [m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz]}))};/* posição e tamponamento (o loadState só normaliza campos vazios, ex.: wing) */R.abrir=(ptL(snapState().mods)===ptL(JSON.parse(ST).mods)?'igual':'MUDOU')+' · '+(libSug()?'sugeriu':'sem sugestão');
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        let ok = "sem toque iguais · viz · Ajustar vizinhos ao novo módulo · com toque igual ao de antes · um desfazer volta"
-        XCTAssertEqual(o["criar"] as? String, [ok, ok, ok].joined(separator: " | "), "balcão+gaveteiro, fileira de 3 e aéreos")
+        // Chefe 25/11 (achado do Claude 3, §4): sem o toque o gaveteiro nasce DEPOIS do tamponamento direito do balcão (x935), sem entrar em nada; com o toque fica igual ao publicado
+        let ok = " · viz · Ajustar vizinhos ao novo módulo · com toque igual ao de antes · um desfazer volta"
+        XCTAssertEqual(o["criar"] as? String, "sem toque iguais · novo em x935 sem sobrepor" + ok + " | sem toque iguais · novo em x1535 sem sobrepor" + ok + " | sem toque iguais · novo em x1035 sem sobrepor" + ok, "balcão+gaveteiro, fileira de 3 e aéreos")
         XCTAssertEqual(o["abrir"] as? String, "igual · sem sugestão", "abrir projeto salvo não mexe em nada")
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }

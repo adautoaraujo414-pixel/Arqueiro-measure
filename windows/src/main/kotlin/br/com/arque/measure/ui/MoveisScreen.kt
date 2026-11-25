@@ -68,6 +68,7 @@ fun MoveisScreen(vm: AppViewModel) {
             onShareCut = { code, name, title -> shareCutInvite(vm.cutInvite(code, name, title)) },
             onShareClient = { code, name, room -> shareCutInvite(vm.clientInvite(code, name, room)) },
             onQuotePhotos = { json -> vm.quotePhotosFromMoveis(json) },
+            quoteOf = { key -> vm.quoteOfClient(key) },
         )
     }
 
@@ -99,6 +100,10 @@ fun MoveisScreen(vm: AppViewModel) {
                 if (vm.pendingPhotoMode) {
                     vm.pendingPhotoMode = false
                     Browser.js("window.arquePhotoMode&&window.arquePhotoMode(${vm.quotePhotosJson()})")
+                }
+                if (vm.pendingOrcAmb) {
+                    vm.pendingOrcAmb = false
+                    Browser.js("window.arqueOrcAmb&&window.arqueOrcAmb()")
                 }
                 vm.pendingCut?.let { c ->
                     vm.pendingCut = null
@@ -178,6 +183,7 @@ class MoveisBridge(
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
     private val onShareClient: (String, String, String) -> Unit = { _, _, _ -> },
     private val onQuotePhotos: (String) -> Unit = {},
+    private val quoteOf: (String) -> String = { "" },
 ) {
     private fun safe(name: String) = name.replace(Regex("[^A-Za-z0-9_.-]"), "_")
     private fun ui(f: () -> Unit) = SwingUtilities.invokeLater { runCatching(f) }
@@ -193,6 +199,7 @@ class MoveisBridge(
             "openNoteOf" -> { ui { onOpenNote(arg(0)) }; "" }
             "makeQuote" -> { ui { onQuote(arg(0)) }; "" }
             "quotePhotos" -> { ui { onQuotePhotos(arg(0)) }; "" }
+            "quoteOf" -> runCatching { quoteOf(arg(0)) }.getOrDefault("")
             "setCurrent" -> { ui { onCurrent(arg(0)) }; "" }
             "openTrena" -> { ui(onTrena); "" }
             "shareStart" -> { ui(onShare); "" }

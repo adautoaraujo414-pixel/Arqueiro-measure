@@ -556,4 +556,85 @@ final class QuotePdfTests: XCTestCase {
             XCTAssertFalse(AppModel.quotePhotoNameOk(ruim), ruim)
         }
     }
+
+    // ORC-AMB (Adauto 25/11): orçamento de vários ambientes. Mesmos números do Android/Windows (QuoteAmbientesTest) e do editor
+    // (testOrcamentoAmbientes…): tela = PDF ao centavo. Ordem do desconto: individual → subtotal → geral. Custo interno nunca no PDF.
+    private func secAmb(_ pid: String, _ title: String, _ sug: Double, manual: Double? = nil, d: Double = 0) -> QuoteSection {
+        QuoteSection(id: "s-\(pid)", pid: pid, title: title, desc: "Móveis de \(title)", finish: "MDF 15 mm · caixa Branco",
+                     mat: 4321.09, labor: 1234.56, sug: sug, manual: manual, discountPct: d, at: 1_764_000_000_000)
+    }
+    private var qAmb: Quote {
+        var q = Quote(id: "orc1", clientName: "Cliente Ambientes", city: "Frutal", items: [], discountPct: 5)
+        q.dateMs = 1_794_528_000_000
+        q.clientKey = "cliente ambientes"
+        q.sections = [secAmb("p1", "Cozinha", 1112.04), secAmb("p2", "Quarto", 3064.51, manual: 9000), secAmb("p3", "Sala", 830.55, d: 10)]
+        return q
+    }
+
+    func testOrcamentoAmbientesDescontoIndividualSubtotalGeralAoCentavo() {
+        let q = qAmb
+        XCTAssertEqual(QuoteMath.sectionFinal(q.sections[0]), 1112.04)
+        XCTAssertEqual(QuoteMath.sectionFinal(q.sections[1]), 9000)
+        XCTAssertEqual(QuoteMath.sectionDiscount(q.sections[2]), 83.06)
+        XCTAssertEqual(QuoteMath.sectionFinal(q.sections[2]), 747.49)
+        XCTAssertEqual(QuoteMath.original(q), 10859.53)
+        XCTAssertEqual(QuoteMath.sectionsDiscount(q), 83.06)
+        XCTAssertEqual(QuoteMath.discountValue(q), 542.98)
+        XCTAssertEqual(QuoteMath.finalValue(q), 10316.55)
+        XCTAssertEqual(QuoteMath.grandTotal(q), 10316.55)
+    }
+
+    func testOrcamentoAmbientesTextosDoPdfSoTotalESemCusto() {
+        let a = QuotePdf.ambSections(qAmb)
+        XCTAssertEqual(a.map { $0.title }, ["1. Cozinha", "2. Quarto", "3. Sala"])
+        XCTAssertEqual(a[0].values, ["R$ 1.112,04"])
+        XCTAssertEqual(a[2].values, ["R$ 830,55", "Desconto (10%) − R$ 83,06", "R$ 747,49"])
+        let (rows, total) = QuotePdf.ambTotalRows(qAmb)
+        XCTAssertEqual(rows.map { $0.0 }, ["Soma dos ambientes", "Descontos dos ambientes", "Subtotal", "Desconto geral (5%)"])
+        XCTAssertEqual(rows.map { $0.1 }, ["R$ 10.942,59", "− R$ 83,06", "R$ 10.859,53", "− R$ 542,98"])
+        XCTAssertEqual(total, "R$ 10.316,55")
+        var t = qAmb; t.onlyTotal = true
+        XCTAssertTrue(QuotePdf.ambSections(t).allSatisfy { $0.values.isEmpty && !$0.desc.isEmpty })
+        XCTAssertTrue(QuotePdf.ambTotalRows(t).0.isEmpty)
+        XCTAssertEqual(QuotePdf.ambTotalRows(t).1, "R$ 10.316,55")
+    }
+
+    func testOrcamentoAmbientesPdfPorAmbienteESoTotal() throws {
+        let d = try gerar(empresa, qAmb, [], "ambientes")
+        guardar(d, "ambientes")
+        let t = texto(d)
+        for s in ["Cliente Ambientes", "1. Cozinha", "2. Quarto", "3. Sala", "Móveis de Cozinha", "Acabamentos: MDF 15 mm · caixa Branco",
+                  "R$ 1.112,04", "R$ 9.000,00", "R$ 747,49", "Desconto (10%)", "Soma dos ambientes", "Descontos dos ambientes", "Subtotal",
+                  "R$ 10.859,53", "Desconto geral (5%)", "R$ 542,98", "TOTAL", "R$ 10.316,55"] {
+            XCTAssertTrue(tem(t, s), "falta no PDF: \(s)")
+        }
+        for s in [QuoteMath.brl(4321.09), QuoteMath.brl(1234.56), "Mão de obra", "DESCRIÇÃO"] { XCTAssertFalse(tem(t, s), "sobrando no PDF: \(s)") }
+        var o = qAmb; o.onlyTotal = true
+        let d2 = try gerar(empresa, o, [], "ambientes-so-total")
+        guardar(d2, "ambientes-so-total")
+        let t2 = texto(d2)
+        for s in ["1. Cozinha", "2. Quarto", "3. Sala", "Móveis de Sala", "TOTAL", "R$ 10.316,55"] { XCTAssertTrue(tem(t2, s), "falta no PDF só total: \(s)") }
+        for s in ["R$ 1.112,04", "R$ 9.000,00", "R$ 747,49", "Subtotal", QuoteMath.brl(4321.09)] { XCTAssertFalse(tem(t2, s), "sobrando no PDF só total: \(s)") }
+    }
+
+    func testOrcamentoAmbientesSemRepetirSalvaReabreEOAntigoSaiIgual() throws {
+        let arr: [Any] = [secAmb("p1", "Cozinha", 100), secAmb("p2", "Quarto", 200), secAmb("p1", "Cozinha de novo", 300)].map { JsonCodec.sectionToJ($0) }
+        let s = JsonCodec.sectionsFromPayload(arr)
+        XCTAssertEqual(s.map { $0.pid }, ["p1", "p2"])
+        XCTAssertEqual(s[0].title, "Cozinha")
+        var t = qAmb; t.id = "orc2"; t.onlyTotal = true
+        let back = try JsonCodec.quotesFromJson(JsonCodec.quotesToJson([qAmb, t]))
+        XCTAssertEqual(back[0], qAmb)
+        XCTAssertTrue(back[1].onlyTotal)
+        // orçamento antigo (sem ambientes): abre, calcula e grava com as mesmas chaves de antes
+        let old = #"[{"id":"x1","client":"Maria","city":"","date":1700000000000,"discount":10,"validity":15,"drawing":false,"noteId":null,"notes":"","items":[{"id":"i1","desc":"Cozinha","qty":2,"unit":"un","value":1500.5},{"id":"i2","desc":"Aéreo","qty":3,"unit":"un","value":100}],"addenda":[],"photos":[],"pid":null}]"#
+        let o = try JsonCodec.quotesFromJson(old)[0]
+        XCTAssertTrue(o.sections.isEmpty)
+        XCTAssertNil(o.clientKey)
+        XCTAssertFalse(o.onlyTotal)
+        XCTAssertEqual(QuoteMath.original(o), 3301)
+        XCTAssertEqual(QuoteMath.finalValue(o), 2970.9)
+        let j = try JsonCodec.parseArray(JsonCodec.quotesToJson([o]))[0] as? [String: Any]
+        XCTAssertEqual(Set(j?.keys.map { $0 } ?? []), ["id", "client", "city", "date", "discount", "validity", "drawing", "noteId", "notes", "items", "addenda", "photos", "pid"])
+    }
 }

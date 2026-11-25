@@ -120,6 +120,7 @@ fun MoveisScreen(vm: AppViewModel) {
             onShareCut = { code, name, title -> shareCutInvite(ctx, vm.cutInvite(code, name, title)) },
             onShareClient = { code, name, room -> shareCutInvite(ctx, vm.clientInvite(code, name, room)) },
             onQuotePhotos = { json -> vm.quotePhotosFromMoveis(json) },
+            quoteOf = { key -> vm.quoteOfClient(key) },
             onShareFile = { name, text, mime -> shareTextFile(ctx, name, text, mime) },
         )
     }
@@ -196,6 +197,10 @@ fun MoveisScreen(vm: AppViewModel) {
                             if (vm.pendingPhotoMode) {
                                 vm.pendingPhotoMode = false
                                 view.evaluateJavascript("window.arquePhotoMode&&window.arquePhotoMode(${vm.quotePhotosJson()})", null)
+                            }
+                            if (vm.pendingOrcAmb) {
+                                vm.pendingOrcAmb = false
+                                view.evaluateJavascript("window.arqueOrcAmb&&window.arqueOrcAmb()", null)
                             }
                             loaded = true
                             vm.pendingCut?.let { c ->
@@ -302,6 +307,7 @@ class MoveisBridge(
     private val onShareCut: (String, String, String) -> Unit = { _, _, _ -> },
     private val onShareClient: (String, String, String) -> Unit = { _, _, _ -> },
     private val onQuotePhotos: (String) -> Unit = {},
+    private val quoteOf: (String) -> String = { "" },
     private val onShareFile: (String, String, String) -> Unit = { _, _, _ -> },
 ) {
     /** FASE5 (23/11): "⬇ DXF para CNC" no plano de corte — o editor manda o texto do arquivo e o Android abre o compartilhar (salvar, e-mail, Drive…). */
@@ -322,6 +328,8 @@ class MoveisBridge(
     @JavascriptInterface fun openNoteOf(projectId: String, @Suppress("UNUSED_PARAMETER") name: String) { web()?.post { onOpenNote(projectId) } }
     /** "Gerar orçamento em PDF" no editor: cria o orçamento do app com o cliente e o valor do projeto. */
     @JavascriptInterface fun makeQuote(json: String) { web()?.post { onQuote(json) } }
+    /** ORC-AMB: o orçamento de vários ambientes salvo do cliente (o editor reabre e edita). */
+    @JavascriptInterface fun quoteOf(key: String): String = runCatching { quoteOf.invoke(key) }.getOrDefault("")
     /** Modo foto do orçamento: o editor devolve a lista de fotos tiradas no 3D. */
     @JavascriptInterface fun quotePhotos(json: String) { web()?.post { onQuotePhotos(json) } }
     @JavascriptInterface fun setCurrent(id: String) { web()?.post { onCurrent(id) } }

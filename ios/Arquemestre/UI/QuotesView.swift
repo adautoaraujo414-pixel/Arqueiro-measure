@@ -176,6 +176,28 @@ private struct QuoteEditor: View {
                 DatePicker(tr("Data"), selection: Binding(get: { Date(timeIntervalSince1970: Double(q.dateMs) / 1000) }, set: { d in upd { $0.dateMs = Int64(d.timeIntervalSince1970 * 1000) } }), displayedComponents: .date)
                     .environment(\.locale, I18n.shared.locale)
             }
+            if !q.sections.isEmpty {
+                // ORC-AMB (Adauto 25/11): orçamento de vários ambientes do cliente. Cada ambiente é uma cópia dos valores do projeto.
+                Section(tr("Ambientes")) {
+                    ForEach(Array(q.sections.enumerated()), id: \.element.id) { idx, sc in
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                TextField(tr("Ambiente {0}", idx + 1), text: Binding(get: { sc.title }, set: { v in upd { qq in if let k = qq.sections.firstIndex(where: { $0.id == sc.id }) { qq.sections[k].title = v } } }))
+                                Button { upd { qq in qq.sections.removeAll { $0.id == sc.id } } } label: { Image(systemName: "trash") }.buttonStyle(.borderless)
+                            }
+                            if !sc.desc.isEmpty { Text(sc.desc).font(.footnote).foregroundColor(.secondary) }
+                            HStack(spacing: 6) {
+                                NumPadField(value: QuoteMath.numStr(sc.manual ?? sc.sug), label: tr("Valor de venda ({0})", I18n.shared.currencySymbol())) { v in upd { qq in if let k = qq.sections.firstIndex(where: { $0.id == sc.id }) { qq.sections[k].manual = (v > 0 && v != qq.sections[k].sug) ? v : nil } } }
+                                NumPadField(value: sc.discountPct == 0 ? "" : QuoteMath.numStr(sc.discountPct), label: tr("Desconto (%)")) { v in upd { qq in if let k = qq.sections.firstIndex(where: { $0.id == sc.id }) { qq.sections[k].discountPct = clamp(v, 0, 100) } } }
+                            }
+                            Text(tr("Valor do ambiente: ") + QuoteMath.brl(QuoteMath.sectionFinal(sc))).font(.subheadline)
+                        }
+                    }
+                    Button(tr("+ Ambientes (abre os projetos do cliente)")) { app.addAmbientes(q) }
+                    Text(tr("Remover tira só deste orçamento: o projeto continua salvo.")).font(.footnote).foregroundColor(.secondary)
+                    Toggle(tr("PDF só com o total (descrições por ambiente)"), isOn: Binding(get: { q.onlyTotal }, set: { v in upd { $0.onlyTotal = v } }))
+                }
+            } else {
             Section(tr("Itens")) {
                 ForEach(Array(q.items.enumerated()), id: \.element.id) { idx, it in
                     VStack(alignment: .leading, spacing: 6) {
@@ -193,9 +215,10 @@ private struct QuoteEditor: View {
                 }
                 Button(tr("+ Adicionar item")) { upd { $0.items.append(QuoteItem()) } }
             }
+            }
             Section {
                 NumPadField(value: q.discountPct == 0 ? "" : QuoteMath.numStr(q.discountPct), label: tr("Desconto (%)")) { v in upd { $0.discountPct = clamp(v, 0, 100) } }
-                Text(tr("Valor original: ") + QuoteMath.brl(QuoteMath.original(q)))
+                Text((q.sections.isEmpty ? tr("Valor original: ") : tr("Subtotal dos ambientes: ")) + QuoteMath.brl(QuoteMath.original(q)))
                 if q.discountPct > 0 {
                     Text(tr("Desconto: − ") + QuoteMath.brl(QuoteMath.discountValue(q))).foregroundColor(.secondary)
                     Text(tr("Valor com desconto: ") + QuoteMath.brl(QuoteMath.finalValue(q))).font(.headline)

@@ -908,7 +908,52 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var quotesBackProject by mutableStateOf<String?>(null)
 
     /** "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações. */
+    /** ORC-AMB (Adauto 25/11): o editor manda o orçamento de vários ambientes do cliente; grava (ou atualiza o mesmo) orçamento do app, com os ambientes. */
+    fun quoteAmbientesFromMoveis(json: String) {
+        runCatching {
+            val o = org.json.JSONObject(json)
+            // o mesmo projeto (p.id) nunca entra duas vezes
+            val secs = br.com.arque.measure.data.QuoteJson.sectionsFromPayload(o.optJSONArray("sections"))
+            val qid = o.optString("quoteId").ifBlank { null }
+            val old = qid?.let { id -> quotes.firstOrNull { it.id == id } }
+            val pid = o.optString("pid").ifBlank { null }
+            val base = old ?: br.com.arque.measure.model.Quote(id = qid ?: br.com.arque.measure.model.newId(), items = emptyList(), city = company.city, projId = pid)
+            val q = base.copy(
+                clientName = o.optString("client").ifBlank { base.clientName },
+                city = o.optString("city").ifBlank { base.city },
+                sections = secs,
+                clientKey = o.optString("clientKey").ifBlank { null } ?: base.clientKey,
+                discountPct = o.optDouble("discountPct", 0.0).let { if (it.isNaN()) 0.0 else it.coerceIn(0.0, 100.0) },
+                onlyTotal = o.optBoolean("onlyTotal", false),
+                projId = base.projId ?: pid,
+            )
+            saveQuote(q)
+            if (o.optBoolean("open", true)) {
+                pendingQuoteId = q.id
+                quotesBackProject = pid
+                if (pid != null) lastProjectId = pid
+                screen = Screen.Quotes
+            } else toast = br.com.arque.measure.i18n.tr("Orçamento salvo no cliente")
+        }.onFailure { toast = br.com.arque.measure.i18n.tr("Não consegui montar o orçamento.") }
+    }
+    /** ORC-AMB: o orçamento de vários ambientes deste cliente (o mais recente), em JSON, pro editor reabrir, editar, acrescentar e remover. */
+    fun quoteOfClient(key: String): String {
+        val q = quotes.filter { it.clientKey == key && it.sections.isNotEmpty() }.maxByOrNull { it.dateMs } ?: return ""
+        return org.json.JSONArray(br.com.arque.measure.data.QuoteJson.quotesToJson(listOf(q))).getJSONObject(0).toString()
+    }
+    /** ORC-AMB: "＋ Ambientes" na tela de orçamentos: abre o projeto do cliente no editor, já com a lista dos projetos dele pra escolher. */
+    var pendingOrcAmb by mutableStateOf(false)
+    fun addAmbientes(q: br.com.arque.measure.model.Quote) {
+        val pid = (listOfNotNull(q.projId) + q.sections.map { it.pid }).firstOrNull { id -> moveisProjects().any { it.id == id } } ?: run {
+            toast = br.com.arque.measure.i18n.tr("Projeto do cliente não encontrado"); return
+        }
+        pendingNewProject = false
+        pendingProject = pid
+        pendingOrcAmb = true
+        screen = Screen.Moveis
+    }
     fun quoteFromMoveis(json: String) {
+        if (runCatching { org.json.JSONObject(json).optString("kind") }.getOrNull() == "ambientes") { quoteAmbientesFromMoveis(json); return }
         runCatching {
             val o = org.json.JSONObject(json)
             val arr = o.optJSONArray("items")

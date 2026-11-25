@@ -15449,5 +15449,89 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-czb]');if(!b)return;e.preventDefault();e.stopPropagation();var hd=b.closest('div'),s=hd&&hd.nextElementSibling;while(s&&String(s.tagName).toLowerCase()!=='svg')s=s.nextElementSibling;if(!s||!s.hasAttribute('data-czs'))return;var c=b.dataset.czb;if(c==='f')fit(s);else step(s,c==='+'?1.25:0.8)},true);
 })();
 </script>
+<script>
+/* ORC-AMB (Adauto 25/11): orçamento de vários ambientes do mesmo cliente, na tela Valores do projeto.
+   Um motor só: o valor de cada ambiente é o do orçamento dele (budget/vlFin/quoteData), calculado com o projeto aberto em memória
+   (nada é gravado no projeto, nem histórico, nem o projeto aberto muda). Cada ambiente guarda uma CÓPIA dos valores (congelada):
+   mudar o projeto ou a biblioteca depois não muda o orçamento; atualizar um ambiente só pelo botão, com prévia.
+   Salva no orçamento do app (Quote com seções), ligado ao cliente pela chave da lista (clKey do nome) e aos projetos pelo p.id (sem repetir).
+   Conta (igual à do app, QuoteMath): valor do ambiente = manual ou sugerido; desconto individual (centavos) → subtotal → desconto geral (centavos).
+   Custo interno (material, mão de obra e lucro) só aparece aqui na tela (e some com "Esconder o valor do material"); nunca no PDF nem no link. */
+(function(){
+ var r2=function(v){return Math.round((+v||0)*100)/100},nf=function(v){return String(r2(v)).replace('.',',')},nid=function(){return 'orc'+Date.now().toString(36)+Math.random().toString(36).slice(2,7)};
+ var chave=function(p){return p&&p.client?clKey(p.client.nome):''};
+ var A=function(){return window.ArqueApp||null};
+ /* conta do ambiente e do consolidado (a mesma do QuoteMath do app) */
+ var secVal=function(s){var b=r2(+s.manual>0?s.manual:s.sug),pc=Math.max(0,Math.min(100,+s.desc||0)),d=r2(b*pc/100);return {base:b,desc:d,fin:r2(b-d)}};
+ var totais=function(O){var sub=0,di=0;O.secs.forEach(function(s){var v=secVal(s);sub+=v.fin;di+=v.desc});sub=r2(sub);var pc=Math.max(0,Math.min(100,+O.disc||0)),g=r2(sub*pc/100);return {sub:sub,descInd:r2(di),descGeral:g,tot:r2(sub-g)}};
+ window.orcSecVal=secVal;window.orcTotais=totais;
+ /* valores de um projeto (ambiente) pelo mesmo caminho do orçamento dele, sem gravar nada */
+ var calc=function(p){var sv={st:JSON.stringify(snapState()),cur:CUR,mi:S.m?S.mods.indexOf(S.m):-1,tab:S.tab,ed:window.__edited,und:UNDOING},ss=window.schedSave,ps=window.pSaveAll,o=null;
+  UNDOING=true;window.__orcCalc=1;try{schedSave=function(){};pSaveAll=function(){return true}}catch(_){}
+  try{CUR=p.id;loadState(JSON.parse(JSON.stringify(p.current||{})));draw();var b=budget(),q=quoteData(),base=r2(q.discountPct>0?q.base:q.total),d=+q.discountPct||0,sug=base,man=null;
+   if(+S.preco>0){var pr=S.preco;S.preco=0;try{var q2=quoteData();sug=r2(q2.discountPct>0?q2.base:q2.total)}finally{S.preco=pr}man=base}
+   o={pid:p.id,title:projTitle(p),itens:(q.items||[]).map(function(it){return it.desc}).join(' · '),finish:q.notes||'',mat:r2(b.tot),labor:r2(base-b.tot),sug:sug,manual:man,dpc:d,at:Date.now()};
+  }finally{try{loadState(JSON.parse(sv.st))}catch(_){}CUR=sv.cur;try{if(sv.mi>=0&&S.mods[sv.mi])S.m=S.mods[sv.mi]}catch(_){}S.tab=sv.tab;try{schedSave=ss;pSaveAll=ps}catch(_){}try{draw()}catch(_){}UNDOING=sv.und;window.__edited=sv.ed;window.__orcCalc=0}
+  return o};
+ /* o ambiente guarda: texto dos móveis em "itens", desconto em "dpc" (pra não confundir com a descrição) */
+ var novaSec=function(p){var c=calc(p);if(!c)return null;return {id:nid(),pid:c.pid,title:c.title,desc:c.itens,finish:c.finish,mat:c.mat,labor:c.labor,sug:c.sug,manual:c.manual,dpc:c.dpc,at:c.at}};
+ var SV=function(s){return secVal({sug:s.sug,manual:s.manual,desc:s.dpc})};
+ var TOT=function(O){return totais({secs:O.secs.map(function(s){return {sug:s.sug,manual:s.manual,desc:s.dpc}}),disc:O.disc})};
+ window.orcCalcProjeto=function(pid){var p=pLoadAll().filter(function(q){return q.id===pid})[0];return p?novaSec(p):null};
+ /* orçamento salvo do cliente (no app); sem o app fica só nesta tela */
+ var ORC=null;window.orcAtual=function(){return ORC};
+ var deApp=function(k){try{var a=A();if(a&&a.quoteOf){var j=a.quoteOf(k);if(j){var q=JSON.parse(j);if(q&&Array.isArray(q.sections))return {qid:q.id,key:k,secs:q.sections.map(function(s){return {id:s.id,pid:s.pid,title:s.title,desc:s.desc,finish:s.finish,mat:+s.mat||0,labor:+s.labor||0,sug:+s.sug||0,manual:(s.manual==null||!(+s.manual>0))?null:+s.manual,dpc:+s.discount||0,at:+s.at||0}}),disc:+q.discount||0,soTotal:!!q.onlyTotal,salvo:1}}}}catch(_){}return null};
+ var abre=function(){var p=curProj(),k=chave(p);if(!k)return null;if(!ORC||ORC.key!==k)ORC=deApp(k)||{qid:'',key:k,secs:[],disc:0,soTotal:false};return ORC};
+ window.orcReabre=function(){ORC=null;return abre()};
+ /* "＋ Ambientes" na tela de orçamentos do app: o app abre o projeto do cliente e chama isto (abre os Valores com a lista dos projetos) */
+ window.arqueOrcAmb=function(){try{ORC=null;PICK=true;vlOpen()}catch(_){}};
+ var projsDoCliente=function(k){return pLoadAll().filter(function(p){return !p.corte&&chave(p)===k}).sort(function(a,b){return (a.created||0)-(b.created||0)})};
+ /* acrescentar (sem repetir o mesmo projeto: p.id) */
+ window.orcAdd=function(pids){var O=abre();if(!O)return 0;var n=0;(pids||[]).forEach(function(id){if(O.secs.some(function(s){return s.pid===id}))return;var p=pLoadAll().filter(function(q){return q.id===id&&chave(q)===O.key})[0];if(!p)return;var s=novaSec(p);if(s){O.secs.push(s);n++}});O.mudou=1;return n};
+ window.orcRem=function(pid){var O=abre();if(!O)return 0;var n0=O.secs.length;O.secs=O.secs.filter(function(s){return s.pid!==pid});O.mudou=1;return n0-O.secs.length};
+ /* atualizar os valores de um ambiente: só pelo botão, com prévia (antes × agora) */
+ window.orcPrevia=function(pid){var O=abre(),s=O&&O.secs.filter(function(q){return q.pid===pid})[0];if(!s)return null;var n=window.orcCalcProjeto(pid);if(!n)return null;return {antes:SV(s),agora:SV({sug:n.sug,manual:s.manual,dpc:s.dpc}),sugAntes:s.sug,sugAgora:n.sug,matAntes:s.mat,matAgora:n.mat,novo:n}};
+ window.orcAtualiza=function(pid,n){var O=abre(),s=O&&O.secs.filter(function(q){return q.pid===pid})[0];if(!s||!n)return false;s.sug=n.sug;s.mat=n.mat;s.labor=n.labor;s.desc=n.desc;s.finish=n.finish;/* nome, valor de venda e desconto que a pessoa pôs no orçamento ficam */s.at=Date.now();O.mudou=1;return true};
+ /* o que vai pro app: valores comerciais e a cópia dos custos (o app nunca imprime custo) */
+ window.orcPayload=function(abrir){var O=abre(),p=curProj();if(!O)return null;if(!O.qid)O.qid=nid();var t=TOT(O);return {kind:'ambientes',quoteId:O.qid,clientKey:O.key,client:p?p.client.nome:'',city:p?(p.client.cidade||''):'',phone:p?(p.client.tel||''):'',pid:CUR||'',open:abrir!==false,discountPct:r2(O.disc),onlyTotal:!!O.soTotal,
+   sections:O.secs.map(function(s){var v=SV(s);return {id:s.id,pid:s.pid,title:s.title,desc:s.desc,finish:s.finish,mat:s.mat,labor:s.labor,sug:s.sug,manual:s.manual,discount:r2(s.dpc),at:s.at,base:v.base,final:v.fin}}),subtotal:t.sub,total:t.tot}};
+ window.orcSalva=function(abrir){var j=window.orcPayload(abrir);if(!j)return false;var a=A();try{if(a&&a.makeQuote){a.makeQuote(JSON.stringify(j));ORC.salvo=1;ORC.mudou=0;return true}}catch(_){}toast('O orçamento em PDF é feito no app Arquemestre.');return false};
+ /* ---------- tela ---------- */
+ var PICK=false,PRV=null;
+ var html=function(){var O=abre(),p=curProj();if(!O)return '<div class="sec2">Orçamento com vários ambientes</div><div class="note">Salve o projeto com o nome do cliente pra juntar os ambientes dele num orçamento só.</div>';
+  var hide=!!S.vlHide,t=TOT(O),Ls=projsDoCliente(O.key),h='<div id="orcamb" style="border:2px solid #c9dcff;background:#f5f9ff;border-radius:12px;padding:10px;margin:12px 0"><div class="sec2" style="margin-top:0">Orçamento com vários ambientes · '+esc(p.client.nome)+'</div>';
+  h+='<button data-oaadd="1" style="width:100%;padding:11px;font-weight:700">＋ Adicionar ambiente ao orçamento</button>';
+  if(PICK){h+='<div style="border:1px solid var(--line);border-radius:10px;padding:8px;margin:8px 0;background:#fff"><div class="note" style="margin:0 0 4px">Projetos de '+esc(p.client.nome)+' (o projeto não é recriado nem mudado):</div>'+Ls.map(function(q){var ja=O.secs.some(function(s){return s.pid===q.id});return '<label style="display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #eee"><input type="checkbox" data-oapk="'+esc(q.id)+'"'+(ja?' checked disabled':'')+'><span style="flex:1">'+esc(projTitle(q))+(q.id===CUR?' <small style="color:var(--dim)">(aberto)</small>':'')+(ja?' <small style="color:#1f9d55">· já no orçamento</small>':'')+'</span></label>'}).join('')+'<div style="display:flex;gap:6px;margin-top:6px"><button data-oapkx="1" style="flex:1">Cancelar</button><button data-oapkok="1" style="flex:2;background:var(--acc);color:#fff;border-color:var(--acc);font-weight:700">Adicionar os marcados</button></div></div>'}
+  O.secs.forEach(function(s,i){var v=SV(s),pv=PRV&&PRV.pid===s.pid?PRV.r:null;h+='<div data-oasec="'+esc(s.pid)+'" style="border:1px solid var(--line);border-radius:10px;padding:8px;margin:8px 0;background:#fff">'
+   +'<div class="g" style="margin:0"><label>Ambiente '+(i+1)+'</label><input data-oat="'+esc(s.pid)+'" value="'+esc(s.title)+'" style="text-align:left;font-weight:700"></div>'
+   +'<div class="g"><label>Móveis</label><input data-oad="'+esc(s.pid)+'" value="'+esc(s.desc)+'" style="text-align:left"></div><div class="g"><label>Acabamentos</label><input data-oaf="'+esc(s.pid)+'" value="'+esc(s.finish)+'" style="text-align:left"></div>'
+   +'<table>'+(hide?'':'<tr data-oacusto="1"><td>Material</td><td class="r">'+brl(s.mat)+'</td></tr><tr data-oacusto="1"><td>Mão de obra e lucro</td><td class="r">'+brl(s.labor)+'</td></tr>')+'<tr><td>Valor sugerido</td><td class="r">'+brl(s.sug)+'</td></tr></table>'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="g" style="margin:0"><label>Valor de venda (R$, vazio = sugerido)</label><input data-oam="'+esc(s.pid)+'" inputmode="decimal" style="text-align:right" value="'+(+s.manual>0?money(s.manual):'')+'" placeholder="'+money(s.sug)+'"></div><div class="g" style="margin:0"><label>Desconto deste ambiente (%)</label><input data-oadp="'+esc(s.pid)+'" inputmode="decimal" style="text-align:right" value="'+(s.dpc?nf(s.dpc):'')+'" placeholder="0"></div></div>'
+   +'<table style="margin-top:4px"><tr><td>Valor</td><td class="r">'+brl(v.base)+'</td></tr>'+(v.desc>0?'<tr><td>Desconto ('+nf(s.dpc)+'%)</td><td class="r" style="color:#b42318">− '+brl(v.desc)+'</td></tr>':'')+'<tr><td><b>Valor do ambiente</b></td><td class="r"><b data-oafin="'+esc(s.pid)+'">'+brl(v.fin)+'</b></td></tr></table>'
+   +'<div class="note" style="margin:4px 0">Valores copiados em '+new Date(s.at||Date.now()).toLocaleDateString('pt-BR')+'. Mudar o projeto depois não muda este orçamento.</div>'
+   +(pv?'<div style="border:1px dashed #b54708;border-radius:8px;padding:6px;margin:4px 0"><b>Prévia da atualização</b><br>Valor sugerido: '+brl(pv.sugAntes)+' → '+brl(pv.sugAgora)+'<br>Valor do ambiente: '+brl(pv.antes.fin)+' → '+brl(pv.agora.fin)+'<div style="display:flex;gap:6px;margin-top:6px"><button data-oaupx="1" style="flex:1">Manter como está</button><button data-oaupok="'+esc(s.pid)+'" style="flex:1;font-weight:700">Atualizar</button></div></div>':'')
+   +'<div style="display:flex;gap:6px;flex-wrap:wrap"><button data-oaup="'+esc(s.pid)+'" style="flex:1">↻ Atualizar valores (prévia)</button><button data-oarm="'+esc(s.pid)+'" style="flex:1;color:#b42318">Remover do orçamento</button></div><div class="note" style="margin:2px 0 0">Remover tira só deste orçamento: o projeto continua salvo.</div></div>'});
+  if(O.secs.length){h+='<div class="tot" style="margin-top:8px"><span>Subtotal ('+O.secs.length+' ambiente'+(O.secs.length>1?'s':'')+(t.descInd>0?', já com '+brl(t.descInd)+' de desconto dos ambientes':'')+')</span><b class="r" data-oasub="1">'+brl(t.sub)+'</b>'+(t.descGeral>0?'<span>Desconto geral ('+nf(O.disc)+'% sobre o subtotal)</span><b class="r" style="color:#b42318">− '+brl(t.descGeral)+'</b>':'')+'<span class="big"><b>Total</b></span><b class="r big" data-oatot="1">'+brl(t.tot)+'</b></div>'
+   +'<div class="g"><label>Desconto geral (%) · sobre o subtotal, depois dos descontos de cada ambiente</label><input data-oadg="1" inputmode="decimal" style="text-align:right" value="'+(O.disc?nf(O.disc):'')+'" placeholder="0"></div>'
+   +'<div class="chips"><button data-oapdf="sep" class="'+(O.soTotal?'':'on')+'">PDF com cada ambiente e o valor</button><button data-oapdf="tot" class="'+(O.soTotal?'on':'')+'">PDF só com o total (descrições por ambiente)</button></div>'
+   +'<div style="display:flex;gap:6px"><button data-oasv="1" style="flex:1;padding:11px">💾 Salvar no cliente</button><button data-oaq="1" style="flex:2;padding:11px;font-weight:700;background:#1f9d55;color:#fff;border-color:#1f9d55">📄 Orçamento de '+O.secs.length+' ambiente'+(O.secs.length>1?'s':'')+' · '+brl(t.tot)+'</button></div>'
+   +(O.mudou?'<div class="note" style="color:#b54708">Mudanças ainda não salvas no cliente.</div>':(O.salvo?'<div class="note" style="color:#1f9d55">Salvo no cliente.</div>':''))}
+  return h+'</div>'};
+ var vR=vlRender;vlRender=function(){vR.apply(this,arguments);try{var B=document.getElementById('vlbody');if(!B)return;var old=document.getElementById('orcamb');if(old)old.remove();var q=B.querySelector('[data-vlq]'),nt=q&&q.nextElementSibling,box=document.createElement('div');box.innerHTML=html();var el=box.firstElementChild||box;if(nt&&nt.parentNode)nt.parentNode.insertBefore(el,nt.nextSibling);else B.appendChild(el)}catch(_){}};
+ var re=function(){var sc=(document.getElementById('vlm')||{}).firstElementChild,y=sc?sc.scrollTop:0;vlRender();if(sc)sc.scrollTop=y};
+ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[data-oaadd],[data-oapkx],[data-oapkok],[data-oarm],[data-oaup],[data-oaupx],[data-oaupok],[data-oapdf],[data-oasv],[data-oaq]');if(!t||!t.closest('#vlm'))return;e.preventDefault();e.stopPropagation();if(window.RO)return;var d=t.dataset;
+  if(d.oaadd){PICK=!PICK;re();return}if(d.oapkx){PICK=false;re();return}
+  if(d.oapkok){var ids=[].filter.call(document.querySelectorAll('#orcamb [data-oapk]'),function(c){return c.checked&&!c.disabled}).map(function(c){return c.dataset.oapk});var n=window.orcAdd(ids);PICK=false;re();toast(n?'＋ '+n+' ambiente'+(n>1?'s':'')+' no orçamento':'Nenhum ambiente novo');return}
+  if(d.oarm){window.orcRem(d.oarm);re();toast('Tirado do orçamento (o projeto continua salvo)');return}
+  if(d.oaup){var r=window.orcPrevia(d.oaup);PRV=r?{pid:d.oaup,r:r}:null;re();return}if(d.oaupx){PRV=null;re();return}
+  if(d.oaupok){if(PRV&&PRV.pid===d.oaupok)window.orcAtualiza(d.oaupok,PRV.r.novo);PRV=null;re();toast('Valores do ambiente atualizados');return}
+  if(d.oapdf){abre().soTotal=d.oapdf==='tot';abre().mudou=1;re();return}
+  if(d.oasv){if(window.orcSalva(false))toast('Orçamento salvo no cliente');re();return}
+  if(d.oaq){window.orcSalva(true);re();return}},true);
+ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.dataset||!t.closest||!t.closest('#orcamb'))return;var O=abre();if(!O)return;var d=t.dataset,k=d.oat||d.oad||d.oaf||d.oam||d.oadp,s=k&&O.secs.filter(function(q){return q.pid===k})[0],num=function(v){var x=String(v||'').trim().replace(/\./g,'').replace(',','.');x=+x;return isFinite(x)&&x>0?x:0};
+  if(d.oadg!==undefined){O.disc=Math.min(100,r2(num(t.value)));O.mudou=1;re();return}if(!s)return;
+  if(d.oat)s.title=t.value;else if(d.oad)s.desc=t.value;else if(d.oaf)s.finish=t.value;else if(d.oam){var m=num(t.value);s.manual=m>0?r2(m):null}else if(d.oadp)s.dpc=Math.min(100,r2(num(t.value)));O.mudou=1;re()},true);
+})();
+</script>
 </body></html>
 

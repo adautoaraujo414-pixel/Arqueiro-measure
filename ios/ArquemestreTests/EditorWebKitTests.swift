@@ -18780,4 +18780,72 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["brancoOk"] as? Bool, true)
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ORC-AMB (Adauto 25/11): orçamento de vários ambientes do mesmo cliente, na tela Valores do projeto. "+ Adicionar ambiente" lista todos
+    // os projetos do cliente (e só dele); escolhe vários; o mesmo projeto não entra duas vezes. Cada ambiente: nome, móveis, acabamentos,
+    // material, mão de obra e lucro, sugerido, valor de venda, desconto e "remover" (não apaga o projeto). Desconto individual → subtotal → geral,
+    // ao centavo; os números são os mesmos do app (QuoteAmbientesTest no Android/Windows e XCTest no iOS): tela = PDF. Custo escondido com o
+    // botão de hoje; PDF só total; salva no cliente (no orçamento do app), reabre e edita; cópia congelada (mudar o projeto não muda; atualizar só
+    // pelo botão, com prévia); duplicar projeto; link do cliente sem valores; orçamento individual igual. O app aqui é simulado (grava como o app grava)
+    func testOrcamentoAmbientesAdicionarRemoverSemDuplicarDescontosSalvarReabrirCopiaCongeladaELinkSemValores() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2.5;
+        /* o app (simulado): grava como o app grava (orçamento com seções, sem repetir projeto) e devolve no quoteOf */
+        var APP={q:{},n:0},A0=window.ArqueApp||(window.ArqueApp={}),M0={makeQuote:A0.makeQuote,quoteOf:A0.quoteOf};Object.assign(A0,{makeQuote:function(j){var o=JSON.parse(j);APP.n++;if(o.kind!=='ambientes'){APP.ind=o;return}var q=APP.q[o.quoteId]||{id:o.quoteId,date:Date.now()},seen={};q.sections=o.sections.filter(function(s){var k=s.pid||s.id;if(seen[k])return false;seen[k]=1;return true}).map(function(s){return {id:s.id,pid:s.pid,title:s.title,desc:s.desc,finish:s.finish,mat:s.mat,labor:s.labor,sug:s.sug,manual:s.manual,discount:s.discount,at:s.at}});q.clientKey=o.clientKey;q.discount=o.discountPct;q.onlyTotal=o.onlyTotal;q.client=o.client;APP.q[o.quoteId]=q},quoteOf:function(k){var L=Object.keys(APP.q).map(function(i){return APP.q[i]}).filter(function(q){return q.clientKey===k&&q.sections.length});return L.length?JSON.stringify(L[L.length-1]):''}});R.ponte=(window.ArqueApp.makeQuote!==M0.makeQuote);
+        var mk=function(cli,tit,mods){newProjFor({nome:cli,end:'Rua 1',cidade:'Frutal',tel:'1'});var a=pLoadAll(),p=a.filter(function(q){return q.id===CUR})[0];p.titulo=tit;pSaveAll(a);S.W=4000;S.mods=[];draw();mods.forEach(function(n){newTpl(T(n))});draw();saveNow();return CUR};
+        var p1=mk('Cliente Ambientes','Cozinha',['Balcão 2 portas','Aéreo 2 portas']),p2=mk('Cliente Ambientes','Quarto',['Guarda-roupa 2 vãos']),p3=mk('Cliente Ambientes','Sala',['Rack de TV']),px=mk('Outro Cliente','Cozinha',['Balcão 2 portas']);
+        var qd=function(id){arqueOpenClient(id);return JSON.stringify(quoteData())},ind0=[p1,p2,p3].map(qd);
+        arqueOpenClient(p1);var cp0=JSON.stringify(clientPayload()),st0=JSON.stringify(snapState()),pl0=localStorage.getItem('arque.projects.v1');
+        vlOpen();await W(100);var B=function(s){return document.querySelector('#vlm '+s)};
+        /* 1) "+ Adicionar ambiente": lista TODOS os projetos do cliente (e só dele); escolhe vários */
+        B('[data-oaadd]').click();await W(50);var ck=[].slice.call(document.querySelectorAll('#orcamb [data-oapk]'));R.lista=ck.map(function(c){return c.closest('label').textContent.replace(/\s+/g,' ').trim()}).join(' | ');ck.forEach(function(c){c.checked=true});B('[data-oapkok]').click();await W(50);
+        var O=orcAtual();R.add=O.secs.map(function(s){return s.title}).join(',');
+        R.intacto=(JSON.stringify(snapState())===st0)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · aberto '+(CUR===p1);
+        /* 2) sem duplicidade: o mesmo projeto não entra de novo */R.dup=orcAdd([p1,p2,p3])+' · '+O.secs.length;B('[data-oaadd]').click();await W(50);R.dupLista=[].filter.call(document.querySelectorAll('#orcamb [data-oapk]'),function(c){return c.disabled}).length;B('[data-oapkx]').click();await W(30);
+        /* 3) desconto individual + geral, ao centavo (mesmos números do app: QuoteAmbientesTest/XCTest) */
+        O.secs[0].sug=1112.04;O.secs[0].manual=null;O.secs[0].dpc=0;O.secs[1].sug=3064.51;O.secs[1].manual=null;O.secs[1].dpc=0;O.secs[2].sug=830.55;O.secs[2].manual=null;O.secs[2].dpc=0;vlRender();await W(30);
+        var chg=function(sel,v){var e=B(sel);e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))};chg('[data-oam="'+p2+'"]','9.000,00');await W(20);chg('[data-oadp="'+p3+'"]','10');await W(20);chg('[data-oadg]','5');await W(30);
+        R.tela=[B('[data-oafin="'+p1+'"]').textContent,B('[data-oafin="'+p2+'"]').textContent,B('[data-oafin="'+p3+'"]').textContent,B('[data-oasub]').textContent,B('[data-oatot]').textContent].join(' | ');
+        var P=orcPayload(false);R.payload=[P.sections.map(function(s){return s.final}).join(','),P.subtotal,P.discountPct,P.total].join(' · ');
+        /* 4) esconder o custo dos materiais (mesmo botão de hoje) */R.custo=document.querySelectorAll('#orcamb [data-oacusto]').length;S.vlHide=1;vlRender();await W(20);R.custoEscondido=document.querySelectorAll('#orcamb [data-oacusto]').length;S.vlHide=0;vlRender();await W(20);
+        /* 5) PDF só com o total */B('[data-oapdf="tot"]').click();await W(20);R.soTotal=orcPayload(false).onlyTotal;B('[data-oapdf="sep"]').click();await W(20);
+        /* 6) salvar no cliente, reabrir e editar */B('[data-oasv]').click();await W(30);var sv1=JSON.stringify(orcAtual().secs.map(function(s){return [s.pid,s.title,s.sug,s.manual,s.dpc]}))+orcAtual().disc;orcReabre();var re1=JSON.stringify(orcAtual().secs.map(function(s){return [s.pid,s.title,s.sug,s.manual,s.dpc]}))+orcAtual().disc;R.reabre=(sv1===re1)+' · '+orcAtual().secs.length;
+        vlRender();await W(20);chg('[data-oat="'+p3+'"]','Sala de TV');await W(20);B('[data-oasv]').click();await W(20);orcReabre();R.edita=orcAtual().secs.filter(function(s){return s.pid===p3})[0].title;
+        /* 7) remover do orçamento não apaga o projeto */vlRender();await W(20);B('[data-oarm="'+p2+'"]').click();await W(20);R.remove=orcAtual().secs.length+' · projeto existe '+pLoadAll().some(function(p){return p.id===p2});B('[data-oasv]').click();await W(20);
+        /* 8) cópia congelada: mudar o projeto depois não muda o orçamento salvo; atualizar só pelo botão, com prévia */
+        var sug3=orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug;arqueOpenClient(p3);newTpl(T('Aéreo 2 portas'));draw();saveNow();arqueOpenClient(p1);orcReabre();R.congelado=orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug===sug3;
+        vlRender();await W(20);B('[data-oaup="'+p3+'"]').click();await W(30);R.previa=!!B('[data-oaupok]')+' · ainda igual '+(orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug===sug3);B('[data-oaupok]').click();await W(30);var n3=orcAtual().secs.filter(function(s){return s.pid===p3})[0];R.atualizou=(n3.sug>sug3)+' · nome mantido '+n3.title+' · desconto mantido '+n3.dpc;
+        /* 9) duplicar o projeto do cliente: a cópia tem id novo e não entra sozinha; o orçamento não muda */
+        var a=pLoadAll(),n0=a.length,bt=document.createElement('button');bt.dataset.pd=p1;document.getElementById('clm').appendChild(bt);bt.click();bt.remove();var a2=pLoadAll(),cp=a2[a2.length-1];R.duplica=(a2.length===n0+1)+' · id novo '+(cp.id!==p1)+' · cliente '+cp.client.nome;arqueOpenClient(p1);orcReabre();vlRender();await W(20);R.duplicaOrc=orcAtual().secs.length;B('[data-oaadd]').click();await W(30);R.duplicaLista=document.querySelectorAll('#orcamb [data-oapk]').length+' · marcados '+[].filter.call(document.querySelectorAll('#orcamb [data-oapk]'),function(c){return c.checked}).length;B('[data-oapkx]').click();
+        /* 10) o link do cliente continua sem nenhum valor */var cp1=JSON.stringify(clientPayload());R.link=(cp1.indexOf('sections')<0&&cp1.indexOf('quoteId')<0&&cp1.indexOf('clientKey')<0&&cp1.indexOf('10316')<0&&cp1.indexOf('10.316')<0&&cp1.indexOf('9000')<0&&cp0.indexOf('sections')<0);
+        /* 11) orçamento individual de cada projeto igual (p3 mudou de propósito no passo 8) */var ind1=[p1,p2].map(qd);R.individual=(ind1[0]===ind0[0])+' · '+(ind1[1]===ind0[1]);
+        document.getElementById('vlx')&&document.getElementById('vlx').click();A0.makeQuote=M0.makeQuote;A0.quoteOf=M0.quoteOf;R.errs=__errs.length-e0;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["ponte"] as? Bool, true)
+        XCTAssertEqual(o["lista"] as? String, "Cozinha (aberto) | Quarto | Sala", "todos os projetos do cliente, e só dele")
+        XCTAssertEqual(o["add"] as? String, "Cozinha,Quarto,Sala")
+        XCTAssertEqual(o["intacto"] as? String, "true · true · aberto true", "calcular os ambientes não grava nada nem muda o projeto aberto")
+        XCTAssertEqual(o["dup"] as? String, "0 · 3", "o mesmo projeto não entra de novo")
+        XCTAssertEqual(o["dupLista"] as? Int, 3)
+        XCTAssertEqual(o["tela"] as? String, "R$ 1.112,04 | R$ 9.000,00 | R$ 747,49 | R$ 10.859,53 | R$ 10.316,55", "os mesmos números do PDF do app")
+        XCTAssertEqual(o["payload"] as? String, "1112.04,9000,747.49 · 10859.53 · 5 · 10316.55")
+        XCTAssertEqual(o["custo"] as? Int, 6)
+        XCTAssertEqual(o["custoEscondido"] as? Int, 0, "Esconder o valor do material esconde o custo dos ambientes")
+        XCTAssertEqual(o["soTotal"] as? Bool, true)
+        XCTAssertEqual(o["reabre"] as? String, "true · 3", "salvo no cliente e reaberto igual")
+        XCTAssertEqual(o["edita"] as? String, "Sala de TV")
+        XCTAssertEqual(o["remove"] as? String, "2 · projeto existe true", "remover tira só do orçamento")
+        XCTAssertEqual(o["congelado"] as? Bool, true, "mudar o projeto depois não muda o orçamento salvo")
+        XCTAssertEqual(o["previa"] as? String, "true · ainda igual true", "atualizar só pelo botão, com prévia")
+        XCTAssertEqual(o["atualizou"] as? String, "true · nome mantido Sala de TV · desconto mantido 10")
+        XCTAssertEqual(o["duplica"] as? String, "true · id novo true · cliente Cliente Ambientes (cópia)")
+        XCTAssertEqual(o["duplicaOrc"] as? Int, 2, "duplicar um projeto não mexe no orçamento")
+        XCTAssertEqual(o["duplicaLista"] as? String, "3 · marcados 2")
+        XCTAssertEqual(o["link"] as? Bool, true, "o link do cliente continua sem nenhum valor")
+        XCTAssertEqual(o["individual"] as? String, "true · true", "orçamento individual igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

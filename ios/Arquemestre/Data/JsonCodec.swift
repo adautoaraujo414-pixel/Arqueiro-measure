@@ -278,12 +278,37 @@ enum JsonCodec {
 
     static func quotesToJson(_ list: [Quote]) -> String {
         string(list.map { q -> J in
-            ["id": q.id, "client": q.clientName, "city": q.city, "date": q.dateMs, "discount": q.discountPct, "validity": q.validityDays,
+            var o: J = ["id": q.id, "client": q.clientName, "city": q.city, "date": q.dateMs, "discount": q.discountPct, "validity": q.validityDays,
              "drawing": q.includeDrawing, "noteId": nul(q.noteId), "notes": q.notes,
              "items": q.items.map { i -> J in ["id": i.id, "desc": i.desc, "qty": i.qty, "unit": i.unit, "value": i.unitValue] },
              "addenda": q.addenda.map { a -> J in ["id": a.id, "desc": a.desc, "value": a.value, "date": a.dateMs] },
              "photos": q.photos, "pid": nul(q.projId)]
+            // ORC-AMB: as chaves novas só entram quando o orçamento tem ambientes (o orçamento de sempre sai igual ao de antes)
+            if !q.sections.isEmpty { o["sections"] = q.sections.map { sectionToJ($0) } }
+            if let k = q.clientKey { o["clientKey"] = k }
+            if q.onlyTotal { o["onlyTotal"] = true }
+            return o
         })
+    }
+
+    static func sectionToJ(_ s: QuoteSection) -> J {
+        ["id": s.id, "pid": s.pid, "title": s.title, "desc": s.desc, "finish": s.finish, "mat": s.mat, "labor": s.labor, "sug": s.sug,
+         "manual": s.manual.map { NSNumber(value: $0) as Any } ?? NSNull(), "discount": s.discountPct, "at": s.at]
+    }
+
+    static func sectionFromJ(_ j: J) -> QuoteSection {
+        let num: (String) -> Double = { k in let v = dbl(j, k, 0); return v.isFinite ? v : 0 }
+        let m = optDbl(j, "manual")
+        let id = s(j, "id")
+        return QuoteSection(id: id.isEmpty ? newId() : id, pid: s(j, "pid"), title: s(j, "title"), desc: s(j, "desc"), finish: s(j, "finish"),
+                            mat: num("mat"), labor: num("labor"), sug: num("sug"), manual: (m ?? 0) > 0 && (m ?? 0).isFinite ? m : nil,
+                            discountPct: min(max(num("discount"), 0), 100), at: int64(j, "at", 0))
+    }
+
+    /// ORC-AMB: ambientes que vêm do editor; o mesmo projeto (pid) nunca entra duas vezes (fica o primeiro).
+    static func sectionsFromPayload(_ arr: [Any]?) -> [QuoteSection] {
+        var seen = Set<String>()
+        return (arr ?? []).compactMap { $0 as? J }.map { sectionFromJ($0) }.filter { seen.insert($0.pid.isEmpty ? $0.id : $0.pid).inserted }
     }
 
     static func quotesFromJson(_ text: String) throws -> [Quote] {
@@ -299,7 +324,9 @@ enum JsonCodec {
             return Quote(id: try str(j, "id"), clientName: s(j, "client"), city: s(j, "city"), dateMs: int64(j, "date", nowMs()),
                          items: items, discountPct: dbl(j, "discount", 0), validityDays: int(j, "validity", 15),
                          includeDrawing: bool(j, "drawing", false), noteId: optStr(j, "noteId"), notes: s(j, "notes"),
-                         addenda: addenda, photos: photos, projId: optStr(j, "pid").flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 })
+                         addenda: addenda, photos: photos, projId: optStr(j, "pid").flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 },
+                         sections: ((j["sections"] as? [Any]) ?? []).compactMap { $0 as? J }.map { sectionFromJ($0) },
+                         clientKey: optStr(j, "clientKey").flatMap { $0.isEmpty ? nil : $0 }, onlyTotal: bool(j, "onlyTotal", false))
         }
     }
 }

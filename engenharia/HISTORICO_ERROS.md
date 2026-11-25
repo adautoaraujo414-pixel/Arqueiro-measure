@@ -2552,3 +2552,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Em mm nada muda:** o teste confere o texto em mm igual ao de antes.
 - **Teste:** `testUNIDADE_CotasDaPedraCubaListaEQuadrosDo3DEmCmEMmIgualAntes`. No 436ac8f2 falha em todos os pontos (ex.: "820 | 865 → 820 | 865"); agora "820 | 865 → 82 | 86,5". Os 6 `testUNIDADE_*` passam a 1366 e a 430.
 - **Ficou como está (já tem unidade escrita, em mm):** o relatório de medidas da planta (`cmmm`, "… mm") e a nota do rebaixo do perfil na lista. Não convertidos.
+
+## TOQUE-2X (25/11): `testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos` intermitente (bateria completa do pre-final 436ac8f2, 1366) — Claude 4
+- **Achado:** falhou 1 vez na bateria a 1366 (botao false, dup 1). Repetido sozinho: pre-final 1/2 e depois 4/4 falhando com as 2 baterias rodando; 5/5 ok com a máquina livre. No fechamento-code1 (base) também falha: 2/5. **Não é da integração.**
+- **Causa (comprovada):** o app conta o duplo toque pelo `e.timeStamp` (no aparelho é a hora do toque), com limite de 420 ms. O teste só criava o 2º toque depois que o 1º acabava de rodar (≈170–250 ms medidos; mais com a máquina carregada), então o `timeStamp` do 2º passava de 420 ms. Os toques do teste ficavam 236–275 ms separados, não os 80 pretendidos.
+  - Prova: com o 1º toque preso 450 ms de propósito, o teste antigo dá exatamente a falha (botao false, dup 1) e o novo passa. Controle: com 500 ms entre os toques, o novo continua falhando (não é duplo toque).
+- **Correção (só no teste, expectativas iguais):** os 2 toques nascem com 80 ms de diferença, como o dedo, e depois são entregues. O mesmo em `testNo3DDuplicarQualquerPecaViraPecaLivre` e `testConchaDaGavetaInverterEMoverSoElas`, que usam o mesmo toque duplo. Nenhum limite muda.
+- **Validação:** 3/3 a 1366 e a 430; 5/5 no fechamento-code1, onde o antigo falhava 2/5. O app não mudou.

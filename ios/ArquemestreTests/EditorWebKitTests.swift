@@ -14298,6 +14298,37 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // REG12-PAINEIS (Adauto via Chefe 25/11, achado do Claude 3: "nunca modificar automaticamente os móveis existentes"; abrir projeto não muda nada; §12):
+    // o painel que já existia não é cortado pela parede nem pelo teto (campos da parede/pé-direito, abrir o projeto salvo, criar aéreo); passa → aviso com a
+    // medida, o que cabe e a diferença. O painel que "ia até o teto" não acompanha sozinho: vira a sugestão "Ajustar painéis à parede", que dá o valor de antes
+    func testRegra12PainelNaoEhCortadoPelaParedeNemPeloTetoNemAoAbrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(String(t))};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var f=function(p){return [p.x,p.b,p.w,p.h].join('/')};
+        var cena=async function(){loadState(initLimpo());S.env='sala';S.room='sala';S.W=4000;S.H=2700;S.mods=[];S.rp=[];draw();var p=rpNew({x:3000,b:900,w:550,h:700});p.liso=true;draw();await W(200);S.Wm=1;S.Hm=1;return p};
+        var campo=async function(k,v){openQ(k);await W(80);var i=document.querySelector('input[data-k="'+k+'"]');if(!i)return 'sem campo ';i.value=String(v);i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));draw();await W(100);return ''};
+        await cena();TL=[];R.parede=(await campo('W',3300))+f(S.rp[0])+' · '+(TL.filter(function(t){return /Painel 1/.test(t)})[0]||'sem aviso');
+        await cena();R.teto=(await campo('H',1500))+f(S.rp[0]);
+        await cena();var st=snapState();st.W=3300;loadState(st);draw();await W(100);R.abrir=f(S.rp[0]);
+        await cena();var r0=f(S.rp[0]);atArm();newTpl(T('Aéreo 2 portas'));var a_=S.mods[S.mods.length-1];a_.x=3000;draw();await W(150);R.aereo=(f(S.rp[0])===r0?'painel igual':'painel MUDOU '+f(S.rp[0]));
+        /* painel novo continua nascendo dentro do limite */loadState(initLimpo());S.env='sala';S.room='sala';S.W=4000;S.H=2700;S.mods=[];S.rp=[];draw();var pn=rpNew({x:3800,b:900,w:550,h:700});draw();await W(100);R.novo=f(pn);
+        /* painel até o teto: mudar o pé-direito não o muda; a sugestão dá o de antes; um desfazer volta */loadState(initLimpo());S.env='sala';S.room='sala';S.W=4000;S.H=2700;S.mods=[];S.rp=[];S.Wm=1;S.Hm=1;draw();var top=S.H-fgh(),p1=rpNew({x:0,b:900,w:1000,h:top-900});p1.liso=true;draw();await W(900);
+        await campo('H',2500);var sg=window.libSug&&libSug(),bt=document.querySelector('#libsug [data-libsug="ok"]');R.segue=f(S.rp[0])+' · '+(sg?sg.tipo:'sem sugestão')+' · '+(bt?bt.textContent:'-');await W(800);if(sg&&bt){bt.click();await W(200)}R.toque=f(S.rp[0]);document.getElementById('und').click();await W(200);R.desfaz=f(S.rp[0]);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["parede"] as? String, "3000/900/550/700 · Atenção: Painel 1 (550 × 700): passa da parede · tem 550 mm, cabem 300 · diferença 250 mm. Nenhuma medida foi alterada.")
+        XCTAssertEqual(o["teto"] as? String, "3000/900/550/700", "mudar o pé-direito não corta o painel")
+        XCTAssertEqual(o["abrir"] as? String, "3000/900/550/700", "abrir o projeto salvo com a parede menor não corta o painel")
+        XCTAssertEqual(o["aereo"] as? String, "painel igual", "criar um aéreo não mexe no painel")
+        XCTAssertEqual(o["novo"] as? String, "3800/900/200/700", "painel NOVO continua nascendo dentro da parede")
+        XCTAssertEqual(o["segue"] as? String, "0/900/1000/1800 · paineis · Ajustar painéis à parede", "o painel até o teto não acompanha sozinho")
+        XCTAssertEqual(o["toque"] as? String, "0/900/1000/1600", "o toque dá o valor de antes")
+        XCTAssertEqual(o["desfaz"] as? String, "0/900/1000/1800", "um desfazer volta")
+        XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
+    }
+
     // REG12-CRIACAO (Adauto 25/11, via Chefe: "nunca deslocar, diminuir ou modificar automaticamente os móveis existentes para acomodar um novo"):
     // criar ao lado deixa os vizinhos IDÊNTICOS sem o toque; a sugestão "Ajustar vizinhos ao novo módulo" faz o mesmo de antes (igual a criar tudo
     // numa ação só, que é o jeito de antes) num passo e com um desfazer; abrir um projeto salvo não mexe em nada

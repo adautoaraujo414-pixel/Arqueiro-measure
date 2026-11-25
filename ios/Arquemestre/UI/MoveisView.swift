@@ -195,7 +195,7 @@ struct MoveisWeb: UIViewRepresentable {
         if let i = args.firstIndex(of: "-screen"), i + 1 < args.count {
             if args[i + 1] == "moveis3d" { demo += "&demo3d=1" } else if args[i + 1] == "moveisplanta" { demo += "&demoplanta=1" } else if ["moveissala", "moveiscores", "moveiscloset", "moveiscorte", "moveis2d", "moveisled", "moveisledbar"].contains(args[i + 1]) { demo += "&demox=\(args[i + 1])" }
         }
-        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)\(demo)") ?? URL(string: "arque://app/editor.html")!))
+        w.load(URLRequest(url: URL(string: "arque://app/editor.html?lang=\(I18n.shared.lang)&cur=\(cur)&un=\(UnitPref.editor(app.unitPref))\(demo)") ?? URL(string: "arque://app/editor.html")!))
         return w
     }
 

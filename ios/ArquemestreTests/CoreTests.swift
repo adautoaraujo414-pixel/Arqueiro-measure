@@ -663,3 +663,68 @@ final class QuotePdfTests: XCTestCase {
         } }
     }
 }
+
+/// UNIDADE (Adauto 25/11): unidade de tela mm/cm dos Ajustes. Mesmos casos do UnitsTest do Android e do Windows.
+/// Internamente tudo em mm; só muda o que aparece e a leitura do digitado.
+final class UnitPrefTests: XCTestCase {
+    func testCmMostraOMmExatoSemInventarFracao() {
+        XCTAssertEqual(UnitPref.show(695, .CM), "69,5")
+        XCTAssertEqual(UnitPref.show(15, .CM), "1,5")
+        XCTAssertEqual(UnitPref.show(35, .CM), "3,5")
+        XCTAssertEqual(UnitPref.show(690, .CM), "69")
+        XCTAssertEqual(UnitPref.show(5, .CM), "0,5")
+        XCTAssertEqual(UnitPref.show(0, .CM), "0")
+        XCTAssertEqual(UnitPref.show(695, .MM), "695")
+        XCTAssertEqual(UnitPref.show(Decimal(string: "634.5")!, .CM), "63,45")
+    }
+
+    func testCmLeVirgulaOuPontoEGravaMm() {
+        XCTAssertEqual(UnitPref.read("69,5", .CM), Decimal(695))
+        XCTAssertEqual(UnitPref.read("69.5", .CM), Decimal(695))
+        XCTAssertEqual(UnitPref.read("1,5", .CM), Decimal(15))
+        XCTAssertEqual(UnitPref.read(" 3.5 ", .CM), Decimal(35))
+        XCTAssertEqual(UnitPref.read("60", .CM), Decimal(600))
+        XCTAssertEqual(UnitPref.read("695", .MM), Decimal(695))
+        XCTAssertNil(UnitPref.read("abc", .CM))
+        XCTAssertNil(UnitPref.read("", .CM))
+        XCTAssertNil(UnitPref.read("6,9,5", .CM))
+    }
+
+    func testIdaEVoltaSemPerdaEAlternar20VezesNaoMudaNada() {
+        for mm in 0...100000 {
+            let cm = UnitPref.show(mm, .CM)
+            XCTAssertEqual(UnitPref.read(cm, .CM), Decimal(mm), "mm \(mm)")
+            XCTAssertEqual(UnitPref.read(cm.replacingOccurrences(of: ",", with: "."), .CM), Decimal(mm), "mm \(mm)")
+        }
+        var v = Decimal(2750)
+        for _ in 0..<20 { v = UnitPref.read(UnitPref.show(v, .CM), .CM)!; v = UnitPref.read(UnitPref.show(v, .MM), .MM)! }
+        XCTAssertEqual(v, Decimal(2750))
+    }
+
+    func testPreferenciaSalvaMesmoFormatoESemEscolhaFicaComoAntes() {
+        XCTAssertEqual(UnitPref.json(.CM), "{\"v\":1,\"unidade\":\"cm\"}")
+        XCTAssertEqual(UnitPref.parse(UnitPref.json(.CM)), .CM)
+        XCTAssertEqual(UnitPref.parse(UnitPref.json(.MM)), .MM)
+        XCTAssertNil(UnitPref.parse(nil))
+        XCTAssertNil(UnitPref.parse(""))
+        XCTAssertNil(UnitPref.parse("{lixo"))
+        // sem escolha = mm em tudo, inclusive a nota nova (decisão do Adauto 25/11; antes nascia em cm); com escolha, os dois seguem os Ajustes
+        XCTAssertEqual(UnitPref.editor(nil), "mm")
+        XCTAssertEqual(UnitPref.newNote(nil), .MM)
+        XCTAssertEqual(UnitPref.editor(.CM), "cm")
+        XCTAssertEqual(UnitPref.newNote(.CM), .CM)
+        XCTAssertEqual(UnitPref.editor(.MM), "mm")
+        XCTAssertEqual(UnitPref.newNote(.MM), .MM)
+        XCTAssertEqual(LengthUnit.allCases.count, 3, "o caderno continua com mm, cm e m")
+    }
+
+    /// A preferência fica em files/ (vai no backup ZIP) e sobrevive a reabrir: grava, lê de novo do arquivo.
+    func testPreferenciaFicaNaPastaDoBackupESobreviveAReabrir() throws {
+        let f = AppPaths.files.appendingPathComponent(UnitPref.FILE)
+        let antes = try? Data(contentsOf: f)
+        defer { if let a = antes { try? a.write(to: f) } else { try? FileManager.default.removeItem(at: f) } }
+        try UnitPref.json(.CM).write(to: f, atomically: true, encoding: .utf8)
+        XCTAssertEqual(UnitPref.parse(try String(contentsOf: f, encoding: .utf8)), .CM)
+        XCTAssertTrue(f.path.hasPrefix(AppPaths.files.path), "dentro de files/, que é o que o backup leva")
+    }
+}

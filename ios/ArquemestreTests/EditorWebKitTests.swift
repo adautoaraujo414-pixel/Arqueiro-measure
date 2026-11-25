@@ -19211,4 +19211,87 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["varredura"] as? String, "5000000 · 186251793425", "a mesma soma do Android/Windows e do iOS")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // UNIDADE (Adauto 25/11): unidade de tela mm/cm nos Ajustes (o app passa ?un=; o teste troca com arqueUnidade). Só apresentação:
+    // em cm o editor mostra 69,5 / 1,5 / 3,5 e o campo digitado 69,5 ou 69.5 grava 695 mm. Sem ?un= = mm (a tela de sempre).
+    func testUNIDADE_EmCmMostraOMmExatoEODigitadoGravaMm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        R.padrao=window.ARQ_UN;loadState(initLimpo());S.W=4000;draw();newTpl(T0('Balcão 2 portas'));S.m.w=695;draw();S.tab=0;panel();await W(30);
+        var IN=function(k){return document.querySelector('#bd input[data-k="'+k+'"]')},ES=function(){return document.querySelector('#bd input[data-r="esp"]')};
+        R.mm=[unRawGet(IN('w')),IN('w').value,unRawGet(ES())].join(' · ');
+        arqueUnidade('cm');await W(30);
+        R.cm=[unRawGet(IN('w')),IN('w').value,unRawGet(ES()),ES().value].join(' · ');
+        R.cota=[].some.call(document.querySelectorAll('#svg text'),function(t){return t.textContent==='69,5'});
+        R.texto=[unConv('695 mm'),unConv('15 mm'),unConv('35 mm'),unConv('Fita larga 35 mm · (mm)'),unConv('900 × 560 mm'),unConv('#3 · 1/1 · 31% · R$ 1.112,04 · Base 1 ×2')].join(' | ');
+        /* teclado do app: 6 9 , 5 OK → 695 mm */var key=function(c){document.querySelector('#calcbar button[data-c="'+c+'"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))};
+        S.m.w=900;draw();panel();await W(30);IN('w').focus();await W(30);['6','9',',','5'].forEach(key);R.teclado=unRawGet(IN('w'));key('ok');await W(60);R.virgula=S.m.w;
+        IN('w').focus();await W(30);['7','0','+','2',',','5'].forEach(key);key('ok');await W(60);R.conta=S.m.w;
+        /* teclado do sistema: 69.5 com ponto e 69,5 com vírgula */var ND=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value'),sis=async function(v){var e=IN('w');e.focus();await W(20);ND.set.call(e,v);e.dispatchEvent(new InputEvent('input',{bubbles:true}));e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await W(60);return S.m.w};
+        S.m.w=900;draw();panel();await W(20);R.ponto=await sis('69.5');S.m.w=900;draw();panel();await W(20);R.virgula2=await sis('69,5');
+        /* volta pra mm: a tela de sempre */arqueUnidade('mm');await W(30);R.volta=[unRawGet(IN('w')),IN('w').value,window.ARQ_UN].join(' · ');
+        var bt=document.getElementById('calcbar');if(bt)bt.hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["padrao"] as? String, "mm", "sem preferência salva = mm, como o editor sempre mostrou")
+        XCTAssertEqual(o["mm"] as? String, "695 · 695 · 15")
+        XCTAssertEqual(o["cm"] as? String, "69,5 · 695 · 1,5 · 15", "na tela 69,5 e 1,5; quem lê o campo recebe mm")
+        XCTAssertEqual(o["cota"] as? Bool, true, "cota do 2D em cm")
+        XCTAssertEqual(o["texto"] as? String, "69,5 cm | 1,5 cm | 3,5 cm | Fita larga 3,5 cm · (cm) | 90 × 56 cm | #3 · 1/1 · 31% · R$ 1.112,04 · Base 1 ×2", "número de peça, %, R$ e quantidade não mudam")
+        XCTAssertEqual(o["teclado"] as? String, "69.5")
+        XCTAssertEqual(o["virgula"] as? Double, 695, "69,5 cm grava 695 mm")
+        XCTAssertEqual(o["conta"] as? Double, 725, "70 + 2,5 cm = 725 mm")
+        XCTAssertEqual(o["ponto"] as? Double, 695, "69.5 com ponto grava 695 mm")
+        XCTAssertEqual(o["virgula2"] as? Double, 695)
+        XCTAssertEqual(o["volta"] as? String, "695 · 695 · mm")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11): alternar mm↔cm 20 vezes (com o painel, o 2D e a lista abertos) deixa o projeto byte a byte igual,
+    // e um projeto antigo (gravado antes) abre em cm sem mudar nada.
+    func testUNIDADE_Alternar20VezesProjetoIgualEProjetoAntigoIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        newProjFor({nome:'Cliente Unidade',end:'',cidade:'',tel:''});S.W=4000;S.mods=[];draw();['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas'].forEach(function(n){newTpl(T0(n))});S.mods[0].w=695;draw();saveNow();await W(50);
+        var id=CUR,st0=JSON.stringify(snapState()),pl0=localStorage.getItem('arque.projects.v1'),P0=JSON.stringify(S.mods.map(partsOf));
+        for(var i=0;i<20;i++){arqueUnidade(i%2?'mm':'cm');for(var tb=0;tb<=5;tb++){S.tab=tb;panel()}draw();openCut();await W(10);$('cutm').hidden=true;}
+        arqueUnidade('mm');await W(50);R.alternar20=(JSON.stringify(snapState())===st0)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · '+(JSON.stringify(S.mods.map(partsOf))===P0);
+        /* projeto antigo: gravado em mm antes; reabre com a tela em cm */arqueUnidade('cm');arqueOpenClient(id);draw();panel();await W(50);
+        R.antigo=(JSON.stringify(snapState())===st0)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · w '+S.mods[0].w+' · campo '+unRawGet(document.querySelector('#bd input[data-k="w"]')||{value:''});
+        arqueUnidade('mm');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["alternar20"] as? String, "true · true · true", "trocar a unidade 20 vezes não muda nada no projeto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11): em todo o catálogo, partsOf, corte, orçamento e DXF são idênticos com a tela em mm e em cm
+    // (a unidade é só da tela: nada de cálculo passa por ela). Lista e plano de corte aparecem em cm.
+    func testUNIDADE_CatalogoInteiroIgualEmMmECmEListaECorteEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&L.indexOf(t)<0)L.push(t)})});
+        PR.dxf={dobP:'13',uniao:'cavilha',cavD:'8',cavPF:'12',cavPT:'25',cavOff:'32',cavEsp:'128',pxOutros:'montagem'};
+        var calc=function(){return JSON.stringify([S.mods.map(partsOf),S.mods.map(cutLines),cutGroups(),budget(),dxfTexto(dxfPecas().pecas,'t')])};
+        var dif=[],n=0;
+        for(var i=0;i<L.length;i++){loadState(initLimpo());S.W=5000;draw();try{newTpl(JSON.parse(JSON.stringify(L[i])))}catch(e){continue}draw();n++;
+         arqueUnidade('mm');var a=calc();arqueUnidade('cm');for(var tb=0;tb<=5;tb++){S.tab=tb;panel()}draw();var b=calc();arqueUnidade('mm');if(a!==b)dif.push(L[i].n)}
+        R.catalogo=n+' módulos · diferentes '+dif.length+(dif.length?' ('+dif.slice(0,5).join(', ')+')':'');R.temModulos=n>50;
+        /* lista e plano de corte em cm */loadState(initLimpo());S.W=4000;draw();var T0=function(nm){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        newTpl(T0('Balcão 2 portas'));draw();arqueUnidade('cm');openCut();await W(80);var cb=document.getElementById('cutbody')||document.body,tx=cb.innerText;
+        R.lista=/90 × 56 cm/.test(tx)+' · '+/69 × 56 cm/.test(tx)+' · sem "900 × 560" '+(tx.indexOf('900 × 560')<0)+' · chapa '+/275 × 184/.test(tx);
+        var sv=[].slice.call(cb.querySelectorAll('svg text')).map(function(t){return t.textContent});R.corte=(sv.indexOf('90')>=0)+' · '+(sv.indexOf('56')>=0)+' · sem 900 '+(sv.indexOf('900')<0)+' · número da peça '+(sv.indexOf('#1')>=0);
+        arqueUnidade('mm');openCut();await W(80);tx=(document.getElementById('cutbody')||document.body).innerText;R.listaMm=/900 × 560 mm/.test(tx);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["temModulos"] as? Bool, true)
+        XCTAssertEqual((o["catalogo"] as? String)?.hasSuffix("diferentes 0"), true, "partsOf, corte, orçamento e DXF iguais em mm e cm: \(o["catalogo"] ?? "")")
+        XCTAssertEqual(o["lista"] as? String, "true · true · sem \"900 × 560\" true · chapa true", "lista em cm")
+        XCTAssertEqual(o["corte"] as? String, "true · true · sem 900 true · número da peça true", "plano de corte em cm, #1 continua #1")
+        XCTAssertEqual(o["listaMm"] as? Bool, true, "em mm a lista continua igual a antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

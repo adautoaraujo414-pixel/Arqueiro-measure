@@ -19579,4 +19579,46 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["unicos"] as? String, "4 de 4", "cada rebaixo tem id próprio")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // ID-NOVO (Chefe 25/11, §11 família do TZ-ID): id novo de LED (nível), da pedra do canto em L e da pedra nova nunca repete um que já existe.
+    // Relógio e sorteio presos (a colisão que antes acontecia por acaso acontece sempre aqui). Projeto antigo não muda: só ids novos.
+    func testIDNOVO_LedEPedraComRelogioPresoTemIdsUnicos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Nicho com prateleiras')t=x})});
+        S.stones=[];S.mods=[];S.fr=[];S.env='cozinha';S.W=4200;draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];lvSolta(m);draw();__build();
+        var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))});
+        var dn=Date.now,mr=Math.random,T=dn.call(Date),q_=0;Date.now=function(){return T+Math.floor((q_++)/1000)};/* relógio que anda 1 ms a cada 1000 leituras: os ids criados juntos colidem e quem espera o relógio não trava */Math.random=function(){return 0.5};
+        try{
+          /* LED: dois níveis criados no mesmo instante */lvlAdd(0,sh[1].pk,5);lvlAdd(0,sh[2].pk,5);
+          var ids=(m.leds||[]).map(function(q){return q.id});R.led=ids.length+' LEDs · únicos '+new Set(ids).size;
+          /* pedra: a do canto em L (sem pedra) e uma nova depois; o contador SID cai no mesmo número da 1ª */
+          S.stones=[];SID=Date.now()%1e6;mkL('e',2000,1500,600,true);addStone();var si=S.stones.map(function(q){return q.id});R.pedra=si.length+' pedras · únicas '+new Set(si).size;
+        }finally{Date.now=dn;Math.random=mr}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["led"] as? String, "2 LEDs · únicos 2", "cada LED novo tem id próprio")
+        XCTAssertEqual(o["pedra"] as? String, "2 pedras · únicas 2", "a pedra nova não repete o id da pedra do canto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-3D (Chefe 25/11, suspeita do Claude 3: "desfazer perdeu o passo depois de loadState atrasado"; §3). Causa no app: o reparo
+    // de 900 ms do open3D relia o projeto com loadState, que zera a pilha do desfazer. (A) foco aberto logo (falso alarme, corrigido no FOCO-3D)
+    // e (B) 3D que quebra de verdade (o reparo roda): nos dois o desfazer continua voltando o passo do usuário.
+    func testDESFAZER3D_ReparoDo3DNaoApagaODesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        demoScene();draw();await W(900);var w0=S.mods[0].w;
+        open3D();focOn(3,'front');S.mods[0].w=w0+100;draw();await W(1500);try{document.getElementById('v3x').click()}catch(_){}document.getElementById('und').click();await W(100);R.foco=S.mods[0].w===w0;
+        demoScene();draw();await W(900);w0=S.mods[0].w;var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};
+        try{open3D();S.mods[0].w=w0+100;draw();await W(1500)}finally{window.diag3=d0}try{document.getElementById('v3x').click()}catch(_){}document.getElementById('und').click();await W(100);
+        R.reparo=(S.mods[0].w===w0)+' · reparo rodou '+(n>0);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["foco"] as? Bool, true, "focar e editar logo depois de abrir o 3D: o desfazer volta o passo")
+        XCTAssertEqual(o["reparo"] as? String, "true · reparo rodou true", "o 3D se refez sozinho e o desfazer continua voltando o passo")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

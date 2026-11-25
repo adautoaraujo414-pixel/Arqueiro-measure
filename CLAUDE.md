@@ -34,7 +34,7 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 - `partsOf(m)` é a fonte das peças. 2D, 3D, plano de corte, lista de materiais e orçamento leem dela.
 - O 3D não inventa peça. O plano de corte não calcula peça diferente da cadastrada.
 - Não criar segunda lógica para corrigir a primeira. Achar a causa real.
-- Painéis e módulos são sólidos: nada entra dentro de outra coisa.
+- Painéis e módulos são sólidos: nada entra dentro de outra coisa **sem a pessoa confirmar** (exceção do §12: sobreposição intencional é permitida com aviso e confirmação).
 - **Medida e posição são do marceneiro** (Adauto, 16/11/2026): o app avisa a incompatibilidade (módulo, medida, disponível, diferença) e nunca altera sozinho medida ou posição de fabricação. Mudar o ambiente não modifica os móveis. Desenhar não modifica o projeto. Ver `engenharia/DECISOES_TECNICAS.md`.
 
 ## 5. Marcenaria
@@ -116,3 +116,13 @@ Leia este arquivo e a pasta `engenharia/` antes de qualquer alteração.
 8. **Auditoria preventiva.** Ao corrigir, procurar falhas no mesmo mecanismo. Classificar cada achado como **erro comprovado**, **risco identificado**, **comportamento correto** ou **não foi possível verificar**. Nunca dizer que corrigiu o que não foi reproduzido.
 9. **Publicação.** Só ambiente de desenvolvimento. Não mudar ponteiros de atualização de produção nem aplicativos instalados. Nada no Android, Windows, TestFlight ou App Store sem autorização explícita (ver seção 7).
 10. **Relatório de cada investigação:** ERRO ORIGINAL · CAUSA RAIZ · MÓDULOS INVESTIGADOS · ERROS SEMELHANTES · CORREÇÕES · TESTES · SEGURANÇA · PENDÊNCIAS.
+
+## 12. Liberdade total de composição e edição (regra fundamental do Adauto, 25/11/2026 · vale para toda sessão)
+- O usuário pode criar qualquer móvel, mesmo fora dos padrões de marcenaria: posicionar, mover, girar e redimensionar módulos e peças livremente; sobrepor de propósito; encaixes e medidas fora do padrão; qualquer componente em qualquer tipo de móvel.
+- Menus inteligentes **facilitam** (o compatível primeiro), **nunca restringem** (o resto continua alcançável).
+- O app **não altera sozinho** medidas, tamponamentos, divisórias, portas, prateleiras ou posições de nada que já existe. O que hoje é automático sobre o que já existe vira **sugestão com botão**. Ao criar, o módulo novo recebe os padrões dos Ajustes (é criação, não alteração).
+- Interferência, colisão ou medida fora do padrão **não bloqueiam** a edição: aviso técnico claro (o quê, onde, quanto), sem diálogo que interrompa o gesto; pergunta no máximo uma vez ao soltar/confirmar; sobreposição já confirmada não pergunta de novo.
+- Peça que não pode ser fabricada ou não cabe na chapa: **informar** claramente; **nunca** modificar o projeto sozinho.
+- Precisão intacta: partsOf = 2D = 3D = lista = orçamento = plano de corte = DXF, para o que o usuário decidiu.
+- Convive com o §4 ("medida e posição são do marceneiro") e com o §3 (projetos do usuário): mais liberdade, nenhuma mudança calada.
+

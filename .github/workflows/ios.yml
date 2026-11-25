@@ -71,7 +71,8 @@ jobs:
       - name: Testes no iPad (mesma bateria do iPhone)
         id: ipad_tests
         if: always() && (steps.build_tests.outcome == 'success' || steps.build_tests.outcome == 'failure')
-        timeout-minutes: 75
+        # 25/11: a bateria do iPad já levava 73 dos 75 min (iOS 689) e no 691 estourou antes de imprimir as falhas; 100 min cabem nos 210 do job
+        timeout-minutes: 100
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py ipad)

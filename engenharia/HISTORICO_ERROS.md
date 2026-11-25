@@ -2294,3 +2294,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     2. `testPlanoDeCorteLegivel…`, só no iPad. No 688: "641" e "125" da contra-frente do caixote (641 × 125, guarda-roupa 4 vãos) cruzam o contorno da peça.
   - Nos dois casos passa no Chromium, inclusive no tamanho do iPad (1032 × 1376, ×1 e ×2). A diferença é do WebKit. **Erro comprovado no iOS, causa não identificada** (sem WebKit no ambiente do Code 1).
   - As duas baterias do iOS também estouraram o limite de 75 min do passo, então parte dos testes não rodou no 690. Não aumentei o limite.
+- **iOS CI no 41a0842d:** os testes de unidade passaram (146, 0 falhas), incluindo o orçamento de vários ambientes e o desconto (mesma soma da varredura). Na bateria do editor, duas falhas:
+  - `testNadaDeEnfeite3DEValoresParteB…`, no iPhone e no iPad:
+    - a caixinha da lista de projetos não mudava nada visível (corrigido no 4f60b3ed: o botão conta os marcados);
+    - os campos Nome e Descrição do custo fixo também não mudavam nada visível. No Chromium passava; no WebKit não. Agora o botão Salvar mostra o que vai ser salvo enquanto se digita.
+  - `testPlanoDeCorteLegivel…`, só no iPad, nas duas tentativas. O catálogo inteiro num teste só leva 35 s no iPhone, e a mesma rodada mostra outro teste longo estourando o limite de 2 min. Foi dividido em três terços, como os outros testes de catálogo inteiro. Nenhuma expectativa de zero mudou; só os mínimos de cenas/peças/textos de cada parte.
+- **iOS CI 689 no 189feb04 (25/11):** os testes de unidade passaram (146, 0 falhas). No iPhone, Nada de enfeite e os três terços de `testPlanoDeCorteLegivel…` passaram. Dois achados:
+  - **iPad, `testPlanoDeCorteLegivel…SegundoTerco`, nas duas tentativas.** Não era tempo, como suposto no 688: é defeito. No Guarda-roupa 4 vãos (2 cabideiros + torre de gavetas), chapa 2, os textos "641" e "125" da peça Caixote · gaveta · contra-frente/traseira 641 × 125 cruzam o contorno da peça (6 casos).
+    - Aqui não reproduz: Chromium com tela do iPad 1024×1366, CPU até 8× mais lenta, tempo do arranjo rápido simulado de 1 a 400×, e as duas orientações com todas as fitas dessa peça (folga mínima de 5 unidades).
+    - Hipóteses ainda abertas: arranjo diferente no iPad, métrica do texto no WebKit ou a conta de tela do WebKit.
+    - A mensagem de falha agora traz a geometria exata (fonte, posição, caixa do texto, peça, viewBox, largura na tela e zoom), pra corrigir a causa no próximo iOS CI. A expectativa de zero não muda.
+  - **iPhone, `testRebaixoDoPerfilGGola…`:** a varredura dos puxadores × catálogo levou 166 s, acima do limite de 2 min (aqui leva 42 s). Dividida em três terços, como os outros testes de catálogo inteiro: cada terço exige mais de 43 modelos, juntos mais de 130 como antes. As conferências do G, gola, facetado e móvel de antes ficam no 1º terço, iguais. O Chefe aprovou a divisão em 25/11.

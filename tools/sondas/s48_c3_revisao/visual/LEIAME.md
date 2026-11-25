@@ -19,3 +19,8 @@ Chromium sem janela, 1366×900 (mouse) e 430×900 (toque). Roteiros JS rodados n
 - **Uma lógica só, sem margem somada.** O c624f1c6 mexe só na fonte: o `cpMet` sem medida devolve 1,16/0,30 e não guarda; com medida, fica igual ao de antes. O c1682687 é o consumidor: as etiquetas das sobras usam `max(1, AS)` no lugar do 1 fixo e `max(1,3, AS+DS)` no lugar de 1,3. É troca, não soma.
 - **Defeito (c1682687, só com a métrica do iPad 1,16/0,30):** `testPlanoDeCorteLegivel…TerceiroTerco` e `…TerceiroTercoEmCm` falham a 1366 e a 430. O 436ac8f2, com a mesma métrica, passa. A régua espaçadora 815×30 **#2** do "Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)", chapa 1, perde o callout ("#17 815×30"): fica sem identificação. A sobra "161" continua. Com a métrica normal, os 6 testes passam nos dois.
 - 9_corte_ipad_gr4vaos_chapa2_*: Guarda-roupa 4 vãos, chapa 2, peça 641 × 125, métrica do iPad. Antes e depois iguais pixel a pixel: o c1682687 só mexe nas sobras.
+
+## Varredura visual em 47324009 (pre-final-proximo)
+- Junção, fileira, pedra, Mais opções, enfeite e corte ×4 têm a mesma saída do 436ac8f2 (roteiros idênticos a 430).
+- 10_vizinhos_*: publicado · pre-final com a barra · depois do botão. Cria um gaveteiro ao lado do balcão. No publicado, o vizinho perdia o tamponamento direito sozinho (tr1 → tr0). Agora fica tr1 e aparece "Ajustar vizinhos ao novo módulo"; o botão dá tr0, igual ao publicado. **Risco:** até tocar no botão, o gaveteiro novo (x905) fica sobre o tamponamento direito do balcão, com "2 avisos" e a marca vermelha 905.
+- 11_cm_*: 436ac8f2 × 47324009 em cm. UNIDADE-2 corrigiu: pedra 82 / 86,5, cuba "fundo 10 · frente 10,6", ferragens "90 × 82 × 56 cm". Em mm, o texto do 2D e da lista é igual ao do 436ac8f2.

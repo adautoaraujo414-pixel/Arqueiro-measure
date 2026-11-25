@@ -14357,6 +14357,27 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* TOQUE-430 · revisão do Code 2 (25/11): a correção descia a planta só no espaço que sobrava embaixo; numa cena funda (cozinha de 4000 com
+       o balcão na ponta) não sobra nada e 12 de 35 pontos do módulo continuavam embaixo de 🔓 🗑 🧮. Agora o desenho sai de baixo dos botões
+       e a escala diminui só o que faltar (com espaço sobrando, igual a antes). Vale em qualquer tela; a 1366 os botões não chegam no desenho. */
+    func testPlantaFundaNoCelularNenhumPontoDoMovelEmbaixoDosBotoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var R={},ruim=[],tot=0;
+        var cenas=[[4000,'dir'],[4000,'esq'],[3000,'dir'],[2600,'dir'],[2200,'esq']];
+        for(var c=0;c<cenas.length;c++){loadState(initLimpo());S.env='cozinha';S.W=cenas[c][0];S.H=2600;newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=cenas[c][1]==='dir'?S.W-m.w-5:5;PLV=true;draw();await W(60);
+          var el=document.querySelector('[data-pm="0"]');if(!el){ruim.push('cena '+c+': sem módulo na planta');continue}var b=el.getBoundingClientRect(),n=0,emb=0;
+          for(var i=1;i<=7;i++)for(var j=1;j<=5;j++){var x=b.left+b.width*i/8,y=b.top+b.height*j/6;n++;var e=document.elementFromPoint(x,y);if(e&&e.closest&&e.closest('#lockAll,#delMod,#cutc'))emb++}
+          tot+=n;if(emb)ruim.push('cena '+c+' ('+cenas[c].join('/')+'): '+emb+' de '+n+' pontos embaixo dos botões')}
+        PLV=false;draw();R.ruim=ruim.join(' | ')||'ok';R.pontos=tot;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["pontos"] as? Int ?? 0, 150)
+        XCTAssertEqual(o["ruim"] as? String, "ok", "nenhum ponto do móvel embaixo de 🔓 🗑 🧮 na planta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* A31 · revisão do Code 2 (25/11, pedido do Chefe): três defeitos da correção A31.
        1) Régua do aéreo encurtada até o mínimo de 50 saía do módulo (50 em 747 num aéreo de 750): o mínimo era aplicado depois do limite do topo.
        2) Rodapé esticado pela seta passava pelas gavetas ("Rodapé (pedestal) em 0:Lateral de gaveta"): o limite só olhava folga + espessuras.

@@ -5059,7 +5059,6 @@ final class EditorWebKitTests: XCTestCase {
           S.rp=[{id:1,liso:true,x:0,b:860,w:1945,h:870}];draw();R.foto=F()+' dentro '+col();
           /* painel passando por trás do aéreo até o teto */
           S.rp=[{id:2,liso:true,x:1075,b:1730,w:1045,h:1670}];draw();R.acima=F()+' dentro '+col();
-          /* §12 (Adauto 25/11, decisão do Chefe opção A): criar o nicho não move mais o aéreo de 2120 pra 2090 sozinho; o botão "Fechar as folgas da fileira" leva ao de antes */var bfs=document.querySelector('[data-libsug="ok"]');R.filaBotao=bfs?bfs.textContent:'sem botão';if(bfs)bfs.click();S.rp=[{id:2,liso:true,x:1075,b:1730,w:1045,h:1670}];draw();R.acimaFila=F()+' dentro '+col();
           /* por trás de propósito: fica */
           S.rp=[{id:3,liso:true,tras:1,x:0,b:860,w:1945,h:870}];draw();R.portras=F();
           /* sala: rack pendurado no painel continua valendo */
@@ -5067,11 +5066,7 @@ final class EditorWebKitTests: XCTestCase {
           R.t=TL.filter(function(t){return /sólido/.test(t)}).length;R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["foto"] as? String, "1075,860 870x870 | 30,860 1045x670 dentro 0", "painel entre a pedra e o aéreo contorna o nicho")
-        // §12 (pedido do Adauto 25/11: nunca mover sozinho os móveis existentes pra acomodar um novo; decisão do Chefe 25/11, opção A):
-        // o aéreo fica em 2120 (antes a criação do nicho o puxava pra 2090), então o painel em cima mede 1015; "dentro 0" continua igual
-        XCTAssertEqual(o["acima"] as? String, "1075,2530 1015x870 dentro 0", "painel fica só em cima do armário")
-        XCTAssertEqual(o["filaBotao"] as? String, "Fechar as folgas da fileira", "a junção vira sugestão")
-        XCTAssertEqual(o["acimaFila"] as? String, "1075,2530 1045x870 dentro 0", "pela sugestão volta ao valor de antes")
+        XCTAssertEqual(o["acima"] as? String, "1075,2530 1045x870 dentro 0", "painel fica só em cima do armário")
         XCTAssertEqual(o["portras"] as? String, "0,860 1945x870", "por trás só quando criado de propósito")
         XCTAssertEqual(o["sala"] as? String, "0,0 3000x2700", "sala: rack pendurado no painel continua valendo")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
@@ -5192,24 +5187,20 @@ final class EditorWebKitTests: XCTestCase {
           var pid=CUR;rpNew({x:0,b:900,w:1000,h:800}).liso=true;draw();saveNow();var salvo=pLoadAll().filter(function(q){return q.id===pid})[0];R.salvo=(salvo.current.mods||[]).length+' móveis · '+(salvo.current.rp||[]).length+' painel';loadState(JSON.parse(JSON.stringify(salvo.current)));draw();R.reabriu=S.mods.length+' '+S.rp.length;
           /* rede de segurança: se o projeto perder peças, a versão anterior fica no histórico e dá pra restaurar */
           S.mods=[];S.rp=[];draw();saveNow();var H=projHist.list(pid);R.hist=H.filter(function(q){return /perder/.test(q.why)}).map(function(q){return q.why+' ['+projHist.resumo(q.st)+']'}).join(' | ');R.arquivo=Object.keys(__files).filter(function(k){return /^hist_/.test(k)}).length;
-          panel();var hb=document.querySelector('[data-phopen]');R.botaoHist=!!hb;hb.click();var rb=document.querySelector('#phism [data-phr]');R.lista=document.querySelectorAll('#phism [data-phr]').length;rb.click();rb.click();await W(50);R.restaurou=S.mods.length+' '+S.rp.length+' '+/restaurada \(15 móveis · 2 paineis\)/.test(TL[TL.length-1]);
+          panel();var hb=document.querySelector('[data-phopen]');R.botaoHist=!!hb;hb.click();var rb=document.querySelector('#phism [data-phr]');R.lista=document.querySelectorAll('#phism [data-phr]').length;rb.click();rb.click();await W(50);R.restaurou=S.mods.length+' '+S.rp.length+' '+/restaurada \(15 móveis · 1 painel\)/.test(TL[TL.length-1]);
           var s2=pLoadAll().filter(function(q){return q.id===pid})[0];R.gravou=(s2.current.mods||[]).length;R.histDepois=projHist.list(pid).length;
-          /* §12 (decisão do Chefe 25/11, opção A): pela sugestão "Fechar as folgas da fileira" os móveis se juntam e o painel volta a ser 1 só (o de antes) */S.mods=[];S.rp=[];for(var j=0;j<15;j++){newTpl({n:j%2?'Aéreo':'Base',w:500,h:720,d:j%2?350:560,b:j%2?1500:0,sup:!!(j%2),v:[{k:'door',n:1,cava:true}]});var mj=S.mods[S.mods.length-1];mj.x=Math.floor(j/2)*510;mj.tl=mj.tr=false}draw();var bf2=document.querySelector('[data-libsug="ok"]');if(bf2)bf2.click();await W(50);rpNew({x:0,b:900,w:1000,h:800}).liso=true;draw();R.fila=(bf2?bf2.textContent:'sem botão')+' · '+S.mods.length+' móveis · '+S.rp.length+' painel';
           R.errs=__errs;return JSON.stringify(R);
           """#)
         XCTAssertEqual(o["inicio"] as? Int, 15)
         XCTAssertEqual(o["voltou"] as? Int, 15, "trocar de parede e voltar: os 15 móveis continuam")
         XCTAssertEqual(o["depoisSala"] as? String, "15 room=sala true", "trocar o tipo de ambiente não apaga nada")
         XCTAssertEqual(o["depoisCozinha"] as? String, "15 room=cozinha")
-        // §12 (pedido do Adauto 25/11: nunca mover sozinho os móveis existentes; decisão do Chefe 25/11, opção A): criar os módulos não os junta mais
-        // (ficam de 510 em 510 como postos), e o painel se divide na folga: 2 peças em salvo, reabriu, hist (17 → 0, "2 paineis") e restaurou; "15 móveis" continua igual
-        XCTAssertEqual(o["salvo"] as? String, "15 móveis · 2 painel", "o que foi gravado tem tudo")
-        XCTAssertEqual(o["reabriu"] as? String, "15 2", "fechar e reabrir traz tudo")
-        XCTAssertEqual(o["hist"] as? String, "antes de perder peças (17 → 0) [15 móveis · 2 paineis]", "versão anterior guardada antes de gravar um projeto vazio por cima")
+        XCTAssertEqual(o["salvo"] as? String, "15 móveis · 1 painel", "o que foi gravado tem tudo")
+        XCTAssertEqual(o["reabriu"] as? String, "15 1", "fechar e reabrir traz tudo")
+        XCTAssertEqual(o["hist"] as? String, "antes de perder peças (16 → 0) [15 móveis · 1 painel]", "versão anterior guardada antes de gravar um projeto vazio por cima")
         XCTAssertEqual(o["arquivo"] as? Int, 1, "histórico num arquivo separado, fora do navegador")
-        XCTAssertEqual(o["restaurou"] as? String, "15 2 true", "restaurar traz os móveis e o painel de volta")
+        XCTAssertEqual(o["restaurou"] as? String, "15 1 true", "restaurar traz os móveis e o painel de volta")
         XCTAssertEqual(o["gravou"] as? Int, 15)
-        XCTAssertEqual(o["fila"] as? String, "Fechar as folgas da fileira · 15 móveis · 1 painel", "pela sugestão volta ao de antes: 1 painel")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
@@ -14494,7 +14485,9 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["trocar"] as? String, "tempero 0 · gavetas true · porta do vão de volta {\"n\":2}")
         XCTAssertEqual(o["excluir"] as? String, "tempero 0 · no corte 0 · fantasma 0", "sem peça fantasma")
         XCTAssertEqual(o["desfazer"] as? String, "tempero 10 · no corte true")
-        XCTAssertEqual(o["vmenu"] as? String, "faltando nenhum · primeiro cozinha Balcão 2 portas tempero | quarto Balcão 2 portas shelves | cozinha Aéreo 2 portas shelves | cozinha Despenseiro drawers", "2 toques: compatível primeiro, nada some")
+        // 25/11 (bateria completa do claude/menus-por-tipo): reordenar o menu de 2 toques por tipo quebrava o F3 (testF3MenusNaMesmaOrdemEmTodosOsModulos e
+        // testMenuDoVaoDoBalcao…, pedido antigo do Adauto: a porta no mesmo lugar em todo módulo). A ordem fica a de sempre; o que sumia continua em "Mais opções"
+        XCTAssertEqual(o["vmenu"] as? String, "faltando nenhum · primeiro cozinha Balcão 2 portas door1 | quarto Balcão 2 portas door1 | cozinha Aéreo 2 portas door1 | cozinha Despenseiro door1", "2 toques: mesma ordem em todo módulo (F3), nada some")
         XCTAssertEqual(o["doisToques"] as? String, "vão tempero · base 844 × 460 (vão 870 − 26) · vizinho igual true", "porta tempero pelos 2 toques, medida do vão")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

@@ -2379,16 +2379,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Pendências (não convertidas, continuam em mm):** textos de ajuda/notas do painel com número sem unidade (ex.: "Folga… 57 da borda", furação dos puxadores "192 · 288", catálogo de eletrodomésticos com medidas no nome), nomes de peça com número ("engrosso 80"), "MDF 15" (nome do material). As explicações das peças na lista e no corte ganham "mm:" na frente quando a tela está em cm. DXF R12 não tem `$INSUNITS`.
 - **Erro meu achado e corrigido no caminho:** uma troca deixou a string do rótulo "lateral … maior" (planta) sem aspas (`SyntaxError` no bloco das paredes, pego pela bateria completa: `errs` 1 em vários testes). Corrigido em `8fb9763`; agora confiro `node --check` em todos os blocos `<script>` depois de cada troca.
 
-## REG12-FILA (25/11): dois testes antigos dependiam de a criação de um módulo mover os vizinhos (achado na bateria do claude/menus-por-tipo) — Code 2
-- **Achado:** a bateria completa do 7612cc81 deu 2 falhas, as mesmas a 1366 e a 430. A bisseção apontou o 7c47847e (varredura §12 do rowJoin/wingJoin): passa no 79cdf968 e falha no 7c47847e.
-  - `testPainelSolidoNuncaDentroDoMovelNaCozinha`: acima 1015x870, esperado 1045x870.
-  - `testProjetoNaoSomeAoTrocarDeParedeOuAmbienteEHistoricoRestaura`: 2 painéis, esperado 1.
-- **Causa:** antes, criar um módulo rodava o "fechar folgas da fileira" (rowJoin dentro do autoTamp, a partir do draw) e movia módulos que já existiam: o aéreo ia de 2120 para 2090, e as bases e os aéreos iam de 510 em 510 para 500 em 500. Com a §12, isso virou a sugestão "Fechar as folgas da fileira" e os módulos ficam onde estão. É o comportamento pedido pelo Adauto ("nunca deslocar, diminuir ou modificar automaticamente os móveis existentes para acomodar um novo").
-- **Decisão do Chefe (25/11, opção A):** atualizar só os valores que dependiam do movimento automático, com comentário:
-  - "acima" passa a 1015x870;
-  - 2 painéis em salvo, reabriu, hist (17 → 0, "2 paineis") e restaurou.
-  Os asserts "dentro 0" e "15 móveis" ficam iguais. Cada teste ganhou um assert de que o botão "Fechar as folgas da fileira" leva aos valores de antes: 1045x870 e 1 painel.
-- **Status:** resolvido, com os testes acima.
+## REG12-FILA e MENU-F3 (25/11): 5 falhas na bateria completa do claude/menus-por-tipo (e7f1cb1f), as mesmas a 1366 e a 430 — Code 2
+- **Bisseção** (140d2a4b passa tudo):
+  - O f94fe1b5 quebra `testMenuDoVaoDoBalcaoDaCozinhaSemQuadroRepetidoELixeiraNaLista` e `testF3MenusNaMesmaOrdemEmTodosOsModulos`.
+  - O 7c47847e quebra `testCenarioCompletoDoClienteAoBackupTudoCoerente`, `testProjetoAntigoComMoveisNaParedeEsquerdaAbreIgual` e `testMoverNo3DEncaixaNaParedeAte20mmSoDeCostasSemMexerEmNinguem`. Quebra também `testPainelSolidoNuncaDentroDoMovelNaCozinha` e `testProjetoNaoSomeAoTrocarDeParedeOuAmbienteEHistoricoRestaura`.
+- **Causa 1 (f94fe1b5):** o menu de 2 toques do vão era reordenado por tipo de móvel. Isso contraria o F3 (menus na mesma ordem em todo módulo, com a porta no mesmo lugar).
+  - **Correção:** a ordem fica a de sempre. O que antes sumia continua em "Mais opções".
+- **Causa 2 (7c47847e):** o embrulho do rowJoin desfazia também o que o autoTamp faz quando o draw o chama, na criação e na abertura (`draw.__at`). Esse autoTamp liga o tamponamento E acomoda o mesmo módulo num passo só. Desfazer só a posição deixava o módulo pela metade: tamponamento ligado sem a posição.
+  - **Correção:** o embrulho não age dentro do `draw.__at`. Continua valendo no gesto (tirar e pôr tamponamento: `tpDesliga`, caixas tl/tr, largura).
+  - **O diagnóstico do e7f1cb1f (opção A) estava incompleto.** O aéreo se mover na criação vem desse autoTamp, que já existia antes da varredura. O e7f1cb1f foi revertido: os 2 testes de painel voltam aos valores originais (1045x870 e 1 painel).
+  - **Pendente (decisão do Chefe):** levar a §12 para o autoTamp da criação nos vizinhos. Tem que desfazer tamponamento e posição JUNTOS, como sugestão.
+- **Status:** resolvido para as 7 falhas.
 ## ESP-FAIXA-430, ARQ-CORROMPIDO e B26-ALTURA (Code 3, 25/11, áreas dadas pelo Chefe; ramo `claude/c3-revisao`)
 ### ESP-FAIXA-430: faixa jateada do espelho LED com falhas de longe (achado do Code 3 na revisão do 4fb5695a)
 - **Reproduzir:** 430×900 com densidade 1, `espWallAdd(4)`, `a.x=150`, `__cam(-.5,.12,1.05)`. Varredura radial: 9 de 360 direções sem nenhum pixel aceso da faixa, de dia e à noite, nas 3 qualidades (54 no total).

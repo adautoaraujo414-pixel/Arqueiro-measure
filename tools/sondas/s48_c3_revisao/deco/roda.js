@@ -1,0 +1,4 @@
+const {chromium}=require('playwright');const fs=require('fs');const [P1,P2,PONTE,G,C,BK]=process.argv.slice(2);
+(async()=>{const b=await chromium.launch({args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});const ponte=fs.readFileSync(PONTE,'utf8');
+const pg=async(port)=>{const p=await (await b.newContext({viewport:{width:1366,height:768}})).newPage();await p.addInitScript(ponte);await p.goto('http://127.0.0.1:'+port+'/editor.html?lang=pt&v='+Math.random(),{waitUntil:'load'});await p.waitForTimeout(2500);return p};
+const a=await pg(P1);await a.evaluate((d)=>{window.__BK=JSON.parse(d)},fs.readFileSync(BK,'utf8'));const d=await a.evaluate('(async()=>{'+fs.readFileSync(G,'utf8')+'})()');fs.writeFileSync('gerado.json',d);const c=await pg(P2);await c.evaluate((d)=>{window.__D=JSON.parse(d)},d);const r=await c.evaluate('(async()=>{'+fs.readFileSync(C,'utf8')+'})()');console.log(r);await b.close()})();

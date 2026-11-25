@@ -1,5 +1,6 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Enfeites do 3D (roupas dobradas, roupas no cabide, sapatos, coisas na gaveta) só quando você escolhe: móvel novo vem sem. Toque na parte (prateleira, cabideiro, gaveta, sapateira) e use "Pôr enfeite" ou "Tirar enfeite". Projetos salvos continuam com o que já tinham. Peças, plano de corte e orçamento não mudam.
 • Espelho com LED: a faixa iluminada aparece inteira em volta do espelho também de longe e em tela pequena (antes uma linha escura apagava pedaços dela).
 • Se o arquivo de preços e Meus modelos estiver ilegível, o app guarda uma cópia dele como está antes de gravar e avisa. Se não conseguir guardar a cópia, não mexe no arquivo. Nada é apagado.
 • Projetos mais seguros: se o aparelho não conseguir gravar o arquivo dos projetos (pouco espaço, por exemplo), o app avisa e, ao abrir de novo, não volta o projeto antigo por cima do que você fez.

@@ -12683,6 +12683,93 @@ final class EditorWebKitTests: XCTestCase {
        medidas do gerador de painéis de parede (S.pw), profundidade original da sala esticada pela parede lateral (S.RDw/S.RDs),
        última altura do rodapé (S.rodLast) e as escolhas de decoração e da TV no 3D (S.deco, S.tvLogo, S.tvAnim).
        Agora vão junto; projeto que não tem esses dados abre como antes (não ganha nada) e não herda os do projeto anterior. */
+    /* DECO-MANUAL (pedido do Adauto 25/11, via Chefe): enfeite do 3D (roupa dobrada na prateleira, roupa no cabideiro, gaveta interna,
+       sapatos) só por escolha da pessoa. Móvel novo do catálogo nasce sem enfeite; móvel de antes (sem a marca dv) continua com o enfeite
+       de hoje; componente novo num móvel de antes nasce sem; o botão do quadro da parte põe e tira (salvar, reabrir e desfazer); enfeite
+       nunca é peça: partsOf, corte, orçamento e DXF iguais com enfeite automático, sem enfeite e com todos postos à mão */
+    func testEnfeiteDo3DSoPorEscolhaNovoSemAntigoIgualPorETirar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var semMarca=function(st){st=JSON.parse(JSON.stringify(st));(st.mods||[]).forEach(function(m){delete m.dv;(function tira(x){if(!x||typeof x!=='object')return;if(Array.isArray(x)){x.forEach(tira);return}delete x.dv;delete x.deco;Object.keys(x).forEach(function(k){if(k!=='dv')tira(x[k])})})(m.v);(function tira(n){if(!n||typeof n!=='object')return;delete n.dv;delete n.deco;(n.c||[]).forEach(tira)})(m.rt)});return st};
+        var vis=function(){var n=0;S.mods.forEach(function(m){partsOf(m).forEach(function(p){if(p.deco&&(window.decoMostra?decoMostra(m,p):(S.deco!==false&&roomOf()!=='cozinha'&&roomOf()!=='banho')))n++})});return n};
+        var caixas=function(){__build();return __boxes().filter(function(b){return b.nm==null||b.nm===''}).length};
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var cena=function(t){loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));if(S.mods[0])S.mods[0].x=1500;draw()};
+        open3D();await W(300);var novos=0,antigos=0,comDeco=0,iguais=0,difs=[];
+        for(var i=0;i<mods.length;i++){cena(mods[i]);var m=S.mods[0];if(!m)continue;if(!partsOf(m).some(function(p){return p.deco}))continue;comDeco++;
+          if(vis())novos++;var v0=valores(),st=snapState();
+          /* o mesmo móvel num projeto de antes (sem a marca) */loadState(semMarca(st));draw();if(vis())antigos++;var v1=valores();
+          /* todos postos à mão */var m2=S.mods[0];partsOf(m2).forEach(function(p){var c=p.dsrc&&p.dsrc();if(c)c.deco=1});draw();var v2=valores();
+          if(v0===v1&&v1===v2)iguais++;else difs.push(mods[i].n)}
+        R.catalogo='modelos com enfeite '+comDeco+' · novos com enfeite '+novos+' · de antes com enfeite '+antigos+' · peças e valores iguais '+iguais+(difs.length?' · diferentes: '+difs.slice(0,3).join(', '):'');
+        /* componente novo num móvel de antes: só ele nasce sem enfeite */var T=mods.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];cena(T);var st2=snapState();loadState(semMarca(st2));draw();var mA=S.mods[0],v_=mA.v[0],n0=vis();v_.int.push({t:'nic',h:300});draw();var novo=v_.int[v_.int.length-1];
+        R.componente='enfeites antes '+n0+' · depois de pôr a prateleira '+vis()+' · marca na nova '+(novo.dv===1)+' · as de antes sem marca '+v_.int.slice(0,-1).every(function(c){return !c.dv});
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "modelos com enfeite 37 · novos com enfeite 0 · de antes com enfeite 37 · peças e valores iguais 37", "móvel novo sem enfeite, o de antes igual, peças e valores iguais")
+        XCTAssertEqual(o["componente"] as? String, "enfeites antes 2 · depois de pôr a prateleira 2 · marca na nova true · as de antes sem marca true", "componente novo num móvel de antes nasce sem enfeite; os de antes ficam")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+    /* DECO-MANUAL: pôr e tirar o enfeite à mão pelo botão do quadro da parte, com desfazer, salvar e reabrir (teste próprio: começa limpo) */
+    func testEnfeiteDo3DPorETirarAMaoComDesfazerSalvarEReabrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var semMarca=function(st){st=JSON.parse(JSON.stringify(st));(st.mods||[]).forEach(function(m){delete m.dv;(function tira(x){if(!x||typeof x!=='object')return;if(Array.isArray(x)){x.forEach(tira);return}delete x.dv;delete x.deco;Object.keys(x).forEach(function(k){if(k!=='dv')tira(x[k])})})(m.v);(function tira(n){if(!n||typeof n!=='object')return;delete n.dv;delete n.deco;(n.c||[]).forEach(tira)})(m.rt)});return st};
+        var vis=function(){var n=0;S.mods.forEach(function(m){partsOf(m).forEach(function(p){if(p.deco&&(window.decoMostra?decoMostra(m,p):(S.deco!==false&&roomOf()!=='cozinha'&&roomOf()!=='banho')))n++})});return n};
+        var caixas=function(){__build();return __boxes().filter(function(b){return b.nm==null||b.nm===''}).length};
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var cena=function(t){loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));if(S.mods[0])S.mods[0].x=1500;draw()};
+        var T=mods.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];open3D();await W(300);
+        /* manual pelo botão do quadro da parte: põe, salva, reabre, desfaz, tira */cena(T);var mN=S.mods[0],ki=mN.v[0].int.findIndex(function(c){return /^cab/.test(c.t)});S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}
+        var clica=function(){var d=document.createElement('div');d.id='__dp';d.innerHTML=intPanel(mN.v[0],2000);document.body.appendChild(d);var b=d.querySelector('[data-decot]');var txt=b?b.textContent:'sem botão';if(b)b.click();d.remove();return txt};
+        await W(1300);var c0=caixas(),b1=clica(),c1=caixas();var ok1=mN.v[0].int[ki].deco===1&&c1>c0;await W(1300);
+        /* desfazer logo depois de pôr: volta sem enfeite */document.getElementById('und').click();await W(120);mN=S.mods[0];var c3=caixas();var ok3=c3===c0&&mN.v[0].int[ki].deco!==1;
+        /* põe de novo, salva e reabre: continua */S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}var b4=clica();var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();mN=S.mods[0];var c2=caixas();var ok2=mN.v[0].int[ki].deco===1&&c2===c1;
+        /* tira pelo mesmo botão */S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}var b5=clica();var c5=caixas();
+        R.manual='botão "'+b1+'" · pôs '+ok1+' · reabriu igual '+ok2+' · desfez '+ok3+' · de novo "'+b4+'" e "'+b5+'" · tirou '+(mN.v[0].int[ki].deco===0&&c5===c0);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["manual"] as? String, "botão \"Pôr enfeite\" · pôs true · reabriu igual true · desfez true · de novo \"Pôr enfeite\" e \"Tirar enfeite\" · tirou true", "pôr e tirar à mão, com desfazer, salvar e reabrir")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+
+    /* DECO-MANUAL · biblioteca de objetos (complemento do Adauto 25/11, via Chefe): todo objeto da biblioteca (Objetos · decoração)
+       entra só pela pessoa e sai um por um pelo 🗑 (dois toques), também depois de salvar e reabrir (projeto de antes); desfazer volta;
+       nenhum objeto entra sozinho num móvel novo; objeto não é peça: partsOf, corte, orçamento e DXF iguais */
+    func testObjetosDaBibliotecaPoeETiraUmPorUm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var objs=function(){return (S.fr||[]).filter(function(f){return f.t==='deco'})};var caixas=function(){__build();return __boxes().length};
+        var tira=async function(f){__itOpen({k:'fr',id:f.id});await W(30);for(var z=0;z<2;z++){var bx_=document.getElementById('it4'),b=bx_&&bx_.querySelector('[data-qdel]');if(!b)return false;b.click();await W(30)}return !(S.fr||[]).some(function(q){return q.id===f.id})};
+        var L=(APM.deco&&APM.deco.m)||[];R.inventario=L.length;
+        /* nada entra sozinho: o catálogo inteiro no quarto e na cozinha */var T=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&t.w&&T.every(function(q){return q.n!==t.n}))T.push(t)})});var sozinho=0;
+        ['quarto','cozinha'].forEach(function(room){T.forEach(function(t){loadState(initLimpo());S.env='livre';S.room=room;S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));draw();sozinho+=objs().length})});R.sozinho=sozinho;
+        loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();var Tg=T.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];newTpl(JSON.parse(JSON.stringify(Tg)));S.mods[0].x=1500;draw();open3D();await W(300);var v0=valores(),bx0=caixas(),ruins=[];
+        for(var i=0;i<L.length;i++){var n0=objs().length,c0=caixas();apAdd('deco',i);draw();var f=objs()[objs().length-1],c1=caixas(),pos=objs().length===n0+1&&f&&f.nome===L[i][0]&&c1>c0,vv=valores()===v0;var tir=f?await tira(f):false,c2=caixas();if(!(pos&&vv&&tir&&c2===c0))ruins.push(L[i][0]+(pos?'':' não pôs')+(vv?'':' mudou valor')+(tir?'':' não tirou')+(c2===c0?'':' sobrou no 3D'))}
+        R.umPorUm=ruins.length?ruins.join(' | '):'todos';
+        /* projeto de antes: os 11 juntos, salva, reabre e tira um por um; desfazer volta o último tirado */for(i=0;i<L.length;i++)apAdd('deco',i);draw();var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();var n1=objs().length,ok=0;
+        await W(950);var lista=objs().slice();for(i=0;i<lista.length;i++){var f2=(S.fr||[]).filter(function(q){return q.id===lista[i].id})[0];if(f2&&await tira(f2))ok++;await W(950)}
+        document.getElementById('und').click();await W(120);var volta=objs().length;
+        R.reaberto='reabriu com todos '+(n1===L.length)+' · tirou todos '+(ok===L.length)+' · desfazer volta '+volta+' · valores '+(valores()===v0);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["inventario"] as? Int ?? 0, 11, "biblioteca: os objetos (decoração)")
+        XCTAssertEqual(o["sozinho"] as? Int, 0, "nenhum objeto entra sozinho num móvel novo (catálogo inteiro, quarto e cozinha)")
+        XCTAssertEqual(o["umPorUm"] as? String, "todos", "cada objeto: põe, aparece no 3D, valores iguais, sai pelo 🗑 e some do 3D")
+        XCTAssertEqual(o["reaberto"] as? String, "reabriu com todos true · tirou todos true · desfazer volta 1 · valores true", "salvar, reabrir, tirar um por um e desfazer")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testDadosDoAmbienteEEscolhasDo3DVoltamDepoisDeSalvarEReabrir() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

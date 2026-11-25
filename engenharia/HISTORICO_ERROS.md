@@ -2357,3 +2357,49 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Teste:** `testLocalizarNo3DAchaTodaPecaDoCatalogoPelosTresCaminhos`, com 11463 chaves (plano, lista do módulo e `partsOf`) nos 138 modelos.
   - Antes: 48 sem caixa. Depois: 0.
   - Exceções, com o motivo no teste: só os registros fora do corte, que não são peça de fabricação. São eles: Vão da torre N, Nicho do forno, do micro-ondas e da geladeira, Decoração e o lado do canto em L com porta articulada.
+
+## DECO-MANUAL: enfeite do 3D só por escolha (pedido do Adauto 25/11, via Chefe; Code 3, ramo `claude/c3-revisao`)
+- **Pedido:**
+  - Ao pôr prateleira, cabideiro ou porta-temperos, nada de enfeite automático.
+  - Projeto de antes continua igual.
+  - Opção manual de pôr e tirar em cada componente.
+  - Enfeite nunca é peça.
+  - Biblioteca de objetos: cada objeto entra e sai um por um.
+  - Regra §12: nada que já existe muda sozinho.
+- **Inventário (antes):** 37 modelos do catálogo ganhavam enfeite sozinhos no 3D (`deco3`, a partir das entradas "Decoração" do `partsOf`, sem corte, sem 2D e sem valor):
+  - `fold`: roupa dobrada em prateleira e maleiro, 100 vezes;
+  - `hang`: roupa no cabideiro, 28;
+  - `shoes`: sapatos na sapateira, 9;
+  - `drawer`: gaveta interna, 5.
+  - Só fora da cozinha e do banho, e com "Mostrar decoração no 3D" ligado.
+  - **Porta-temperos:** não gera enfeite nenhum, nem automático; o 3D só desenha a estrutura. Pôr enfeite nele exigiria desenho novo: pergunta ao Adauto, não feito.
+- **Implementação, só no desenho do 3D (o `partsOf` fica idêntico em JSON):**
+  - Cada entrada "Decoração" leva `dsrc`, uma função que devolve o componente (`v.int[k]` ou o nó da torre). O `JSON.stringify` ignora funções.
+  - O desenho pergunta ao `decoMostra(m,p)`:
+    - "Mostrar decoração no 3D" desligado → nada;
+    - `deco=1` → mostra, e `deco=0` → esconde;
+    - móvel com marca `dv` ou componente com `dv` → não mostra;
+    - sem marca → a regra de antes (fora da cozinha e do banho).
+  - Marca de formato `dv=1`, pelo mesmo jeito do `espN` (22/11):
+    - o móvel criado a partir desta versão (catálogo, do zero, cópia) leva a marca;
+    - num móvel de antes, só o componente novo (prateleira, cabideiro, gaveta, sapateira) leva a marca;
+    - ao abrir nada é marcado (a abertura só registra o que existe).
+  - Manual: no quadro da parte tocada, "🧺 Enfeite no 3D · Pôr enfeite / Tirar enfeite"; também `window.decoPoe(m, componente, on)`, com desfazer.
+  - Na torre por vãos, o botão fica pro menu do vão, área do Code 2 (pedido mandado); a função já está pronta.
+- **Prova (sondas s48/deco, Chromium):**
+  - 139 projetos do catálogo + cozinha de exemplo + 4 dos backups de referência, gravados no editor de antes (483d83c) e abertos no novo: `partsOf`, corte (`cutGroups` com medidas), enfeite no 3D (caixas do enfeite), orçamento e DXF iguais nos 143.
+  - O estado salvo difere só na normalização da abertura (`wing` 0, `amb` {}), que o editor de antes faz igual.
+  - Catálogo novo: os 37 modelos nascem sem enfeite, com peças e valores iguais. "Armário livre · montar do zero" depende do móvel criado antes, também no editor de antes.
+- **Testes:**
+  - `testEnfeiteDo3DSoPorEscolhaNovoSemAntigoIgualPorETirar`:
+    - 37 modelos com enfeite: novos 0, de antes 37;
+    - peças, corte, orçamento e DXF iguais nos 37, com enfeite automático, sem enfeite e com todos postos à mão;
+    - componente novo em móvel de antes nasce sem enfeite e com a marca.
+    - Antes: novos 37 e componente com enfeite.
+  - `testEnfeiteDo3DPorETirarAMaoComDesfazerSalvarEReabrir`: botão do quadro põe, desfaz, salva e reabre igual, e tira. Antes: sem botão.
+  - `testObjetosDaBibliotecaPoeETiraUmPorUm` (17 objetos):
+    - nenhum entra sozinho, no catálogo inteiro, no quarto e na cozinha;
+    - cada um põe, aparece no 3D, valores iguais, sai pelo 🗑 e some;
+    - os 17 juntos: salvar, reabrir, tirar um por um e desfazer.
+    - Já passava antes: a biblioteca já era manual e removível um por um. É a prova que faltava, não correção.
+- **Não verificado:** com dezenas de `loadState` seguidos no mesmo teste, o desfazer logo depois perdeu o passo (a pilha foi zerada por algo atrasado). Isolado, funciona. Por isso a parte manual tem teste próprio.

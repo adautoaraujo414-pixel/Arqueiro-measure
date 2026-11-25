@@ -2248,3 +2248,8 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
     - a mesma soma da varredura nos três: 186.251.793.425 centavos.
   - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).
 - **ORC-AMB, bateria de 430 (41a0842d):** `testNadaDeEnfeite3DEValoresParteB…` achou a caixinha da lista de projetos sem efeito visível (marcar só valia ao tocar em "Adicionar os marcados"). Agora o botão conta os marcados ("Adicionar 2 marcados"). Teste sem mudança; 10/10 em 1366 e 430.
+- **iOS CI no 41a0842d:** os testes de unidade passaram (146, 0 falhas), incluindo o orçamento de vários ambientes e o desconto (mesma soma da varredura). Na bateria do editor, duas falhas:
+  - `testNadaDeEnfeite3DEValoresParteB…`, no iPhone e no iPad:
+    - a caixinha da lista de projetos não mudava nada visível (corrigido no 4f60b3ed: o botão conta os marcados);
+    - os campos Nome e Descrição do custo fixo também não mudavam nada visível. No Chromium passava; no WebKit não. Agora o botão Salvar mostra o que vai ser salvo enquanto se digita.
+  - `testPlanoDeCorteLegivel…`, só no iPad, nas duas tentativas. O catálogo inteiro num teste só leva 35 s no iPhone, e a mesma rodada mostra outro teste longo estourando o limite de 2 min. Foi dividido em três terços, como os outros testes de catálogo inteiro. Nenhuma expectativa de zero mudou; só os mínimos de cenas/peças/textos de cada parte.

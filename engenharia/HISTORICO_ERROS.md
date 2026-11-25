@@ -2389,3 +2389,135 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - 2 painéis em salvo, reabriu, hist (17 → 0, "2 paineis") e restaurou.
   Os asserts "dentro 0" e "15 móveis" ficam iguais. Cada teste ganhou um assert de que o botão "Fechar as folgas da fileira" leva aos valores de antes: 1045x870 e 1 painel.
 - **Status:** resolvido, com os testes acima.
+## ESP-FAIXA-430, ARQ-CORROMPIDO e B26-ALTURA (Code 3, 25/11, áreas dadas pelo Chefe; ramo `claude/c3-revisao`)
+### ESP-FAIXA-430: faixa jateada do espelho LED com falhas de longe (achado do Code 3 na revisão do 4fb5695a)
+- **Reproduzir:** 430×900 com densidade 1, `espWallAdd(4)`, `a.x=150`, `__cam(-.5,.12,1.05)`. Varredura radial: 9 de 360 direções sem nenhum pixel aceso da faixa, de dia e à noite, nas 3 qualidades (54 no total).
+- **Causa raiz (comprovada):** no `espDraw3`, com faixa (`J_`), o centro espelhado é uma peça separada (`espPts(f,-(J_.off+J_.w))`). Era a única camada do espelho com LED sem `nol=1`. A linha de contorno dela caía exatamente na borda de dentro da faixa e, de longe, apagava a faixa em alguns ângulos. A faixa é jateada no mesmo vidro: essa borda não existe no espelho de verdade.
+  - Prova: só com `nol=1` nessa peça, as direções apagadas caem de 9 para 0. Nada mais muda.
+- **Correção:** `nol=1` no centro espelhado quando há faixa. O contorno de fora, as medidas, o lugar e a profundidade não mudam.
+- **Família:** todas as formas (retangular, redondo/oval, arco), bordas e molduras passam pelo mesmo `espDraw3`. Espelho sem faixa: igual. Os 26 testes de espelho/LED passam a 430 d1, 430x2 e 1366.
+- **Teste:** `testFaixaDoEspelhoLedContinuaNasTrezentasESessentaDirecoes`, com varredura radial de 360 direções × 24 vistas e controle (LED desligado = 360 apagadas).
+  - Antes: 54 apagadas a 430 d1. Depois: 0 a 430 d1, 430x2 e 1366.
+  - Com o ESP-FAIXA de volta (faixa fora do passe GOL): 1217 a 6480 apagadas. A margem saiu de 15/20 do teste de pontos pra mais de mil.
+  - O `testFaixaDoEspelhoLedApareceDeLongeEEmAngulo` não mudou.
+- **Projeto antigo:** nada é gravado; só o desenho do 3D.
+
+### ARQ-CORROMPIDO: prices.json ilegível gravado por cima sem cópia (P0, achado do Code 3 na revisão do 70f5130)
+- **Reproduzir:** `prices.json` com JSON quebrado ou texto que nem é base64, banco do navegador vazio, abrir o editor. O 1º `prSave` grava os padrões por cima. Preços e Meus modelos (`PR.myMods`) ilegíveis somem sem cópia.
+- **Causa:** o `prSave` grava o arquivo sem olhar o que está lá. O PRECOS-RESTAURO lê o arquivo, mas, se o `JSON.parse` falha, segue e grava por cima.
+- **Correção (camada, sem mexer no caminho do PRECOS-RESTAURO):**
+  - `arqCorrCopia(nome, valido)`: arquivo ilegível → cópia como está, pela mesma ponte (`<nome>.corrompido-AAAAMMDD-HHMMSS.json`, conferida byte a byte) e aviso.
+  - A mesma cópia não se repete.
+  - Se a cópia não grava, `__prBloq` impede gravar o `prices.json` nesta sessão: o arquivo fica intacto e o aviso pede backup.
+  - Nunca apaga. Roda na 1ª gravação da sessão.
+- **Família:**
+  - `projects.json`: já guardava `projects.corrompido.json`, mas calado. Agora avisa, e a checagem ficou em `window.pjsCorrGuard` (mesmo código, chamado na abertura como antes).
+  - Meus modelos ficam no `prices.json`: cobertos.
+  - **Risco identificado, não mexido (fora das áreas):** `apmodels.json` (eletros com medida própria). Ilegível na abertura, o texto quebrado vai pro banco do navegador e o `JSON.parse` lança dentro do mesmo `try` que restaura as fotos depois (as fotos não voltariam nessa abertura). Gravar um modelo de eletro grava por cima sem cópia.
+- **Teste:** `testArquivoIlegivelGuardaCopiaEAvisaAntesDeGravarPorCima`.
+  - Antes: cópias 0 e arquivo mexido.
+  - Depois: cópia byte a byte e aviso nos 2 tipos de quebra, sem repetir; cópia que falha deixa o arquivo intacto.
+  - Backup restaurado (PRECOS-RESTAURO) e uso normal iguais, sem cópia nem aviso. `projects.json`: cópia e aviso.
+  - `testBackupRestaurado…` e `testProjetoGravadoPelaVersaoPublicada…` passam iguais.
+
+### B26-ALTURA: peça fora do lugar que ainda encosta de lado (pedido do Chefe, a partir da revisão do Code 3)
+- O `testNenhumaPecaDeFabricacaoFicaSoltaNo3D…` (Code 1, sem mudança) confere ligação: peça subida 10 mm que encosta de lado passa.
+- Só pela geometria não dá pra saber se ela está fora do lugar: 317 tamponamentos e 4434 portas do catálogo não têm nada embaixo, presos de lado como na montagem de verdade.
+- **Teste novo `testCadaPecaNo3DFicaNaAlturaDoPartsOfEmTodoOCatalogo`:** a altura de cada peça de fabricação no 3D (y0/y1) tem que ser a do `partsOf` (topo − y − h / topo − y), com 1,5 mm, em todo o catálogo (138 modelos, 2089 peças).
+  - Fora só o que corre por dentro (gaveta, gaveta interna, caixote de gaveta, porta-tempero: o desenho de frente deles não é a posição) e a prateleira inclinada da sapateira.
+  - Controle interno: prateleira e tamponamento subidos 10 mm são acusados.
+  - Prova no app: editor com o 3D subindo prateleira e tamponamento 10 mm. O teste do Code 1 passa; o novo acusa ("Tamponamento esquerdo 10/10" em todos os balcões).
+- **Resultado no catálogo:** nenhuma peça fora da altura. Nenhum defeito pra mandar ao Code 1.
+- **Visto e não mexido (risco de identidade, D23):**
+  - No aéreo com tamponamento de 30 + cava, o `partsOf` tem "Tamponamento esquerdo#1" (750 × 80) e o 3D tem só as réguas com `pk` "Tamponamento esquerdo (régua)#1/#2". O `pk` da peça não acha caixa no 3D (o "localizar no 3D" do plano de corte pode não achar).
+  - Sapateira · aparador e as peças da gaveta interna também não têm caixa 3D com o mesmo `pk`.
+
+## ARQ-CORROMPIDO (2ª parte) e LOC-REGUA (Code 3, 25/11, pedidos do Chefe; ramo `claude/c3-revisao`)
+### ARQ-CORROMPIDO, outros arquivos da ponte
+- **Varredura dos arquivos que o editor grava pela ponte:**
+
+| Arquivo | Ilegível na leitura | Gravado por cima sem cópia? | Situação |
+|---|---|---|---|
+| `apmodels.json` (eletros com medida própria) | o texto quebrado ia pro banco do navegador; o `JSON.parse` lançava no mesmo `try` que restaura as fotos | sim, ao salvar um eletro | **corrigido** |
+| `hist_<projeto>.json` (histórico de versões) | vira lista vazia | sim, na próxima versão: o histórico inteiro sumia | **corrigido** |
+| `trash.json` (lixeira) | `fget` devolve nada: lixeira vazia | sim, no próximo excluir ou restaurar | **corrigido** |
+| `guard.json` (senha) | volta pela cópia do navegador | sim | **corrigido** (mesma guarda do `fput`) |
+| `cur_<projeto>.json` (recuperação de queda) | pulado | sim, na próxima edição do projeto | **corrigido**: sem a cópia, vai pela gravação inteira |
+| `photo_<id>.json` | cada um no seu `try`, pulado | não (só grava a mesma foto de novo) | sem o risco |
+| `video_<id>.json` (iOS, `EditorMediaBackup.js`) | cada um no seu `try` | não (id novo; apaga só quando a pessoa apaga o vídeo) | sem o risco |
+| notas | gravadas pelo app nativo, fora do editor | — | não verificado (fora do editor) |
+
+- **Reproduzir (antes, f02a19b):**
+  - Com o mesmo bloco de abertura, `apmodels.json` quebrado faz a foto não voltar; com ele bom, a foto volta.
+  - `hist_` e `trash.json` quebrados: a gravação seguinte grava por cima, sem cópia.
+- **Correção:**
+  - `arqCorrAntes(nome, valido)`, que usa o `arqCorrCopia`: na 1ª gravação de cada arquivo na sessão, se ele estiver ilegível, guarda uma cópia byte a byte e avisa. Se a cópia não grava, não grava por cima.
+  - Ligado em `apSaveModel`, no `store` do histórico, no `fput` (lixeira e senha) e no `svLeve` (`cur_`).
+  - A abertura (`window.__arqBoot`, chamada como antes) ficou com um `try` por passo: o `apmodels.json` quebrado não entra no banco do navegador e não impede as fotos.
+  - Nunca apaga.
+- **Teste:** `testOutrosArquivosIlegiveisGuardamCopiaEFotosVoltam`.
+  - Fotos voltam com o `apmodels.json` quebrado.
+  - Cópia byte a byte e aviso em eletros, histórico e lixeira.
+  - Sem a cópia, o histórico fica intacto (com aviso).
+  - Arquivos bons: igual, sem cópia nem aviso.
+  - Antes: cópias 0 nos 3.
+- `cur_` e `guard.json` passam pelo mesmo ajudante, sem teste próprio.
+
+### LOC-REGUA: localizar no 3D pela chave do partsOf
+- **No app real** (plano de corte → tocar a peça → 3D em rosa), a peça é encontrada nos 3 casos:
+  - aéreo com tamponamento de 30 + cava: 4 réguas, porque o plano já usa a chave das réguas;
+  - Sapateira · aparador: na prateleira inclinada;
+  - gaveta interna: na frente.
+  - Os dois últimos já eram ligados pelo `hlResolve`.
+  - Os 2 caminhos de "mostrar no 3D" (plano ou lista geral, e lista do módulo) acham as 8150 chaves dos 138 modelos.
+- **Defeito pela chave do partsOf (a da identidade D23):** o tamponamento que o 3D desenha em réguas não achava caixa. São 48 chaves: aéreos com tamponamento de 30 e cava, aéreo canto cego, fechamento e passagem livre. "Tamponamento esquerdo#1" contra "Tamponamento esquerdo (régua)#1/#2".
+- **Correção, só no mapeamento:** no `hlResolve`, a chave do tamponamento sem caixa própria aponta para as réguas dele (`any`). Peças, medidas, corte e o código do D23 não mudam.
+- **Teste:** `testLocalizarNo3DAchaTodaPecaDoCatalogoPelosTresCaminhos`, com 11463 chaves (plano, lista do módulo e `partsOf`) nos 138 modelos.
+  - Antes: 48 sem caixa. Depois: 0.
+  - Exceções, com o motivo no teste: só os registros fora do corte, que não são peça de fabricação. São eles: Vão da torre N, Nicho do forno, do micro-ondas e da geladeira, Decoração e o lado do canto em L com porta articulada.
+
+## DECO-MANUAL: enfeite do 3D só por escolha (pedido do Adauto 25/11, via Chefe; Code 3, ramo `claude/c3-revisao`)
+- **Pedido:**
+  - Ao pôr prateleira, cabideiro ou porta-temperos, nada de enfeite automático.
+  - Projeto de antes continua igual.
+  - Opção manual de pôr e tirar em cada componente.
+  - Enfeite nunca é peça.
+  - Biblioteca de objetos: cada objeto entra e sai um por um.
+  - Regra §12: nada que já existe muda sozinho.
+- **Inventário (antes):** 37 modelos do catálogo ganhavam enfeite sozinhos no 3D (`deco3`, a partir das entradas "Decoração" do `partsOf`, sem corte, sem 2D e sem valor):
+  - `fold`: roupa dobrada em prateleira e maleiro, 100 vezes;
+  - `hang`: roupa no cabideiro, 28;
+  - `shoes`: sapatos na sapateira, 9;
+  - `drawer`: gaveta interna, 5.
+  - Só fora da cozinha e do banho, e com "Mostrar decoração no 3D" ligado.
+  - **Porta-temperos:** não gera enfeite nenhum, nem automático; o 3D só desenha a estrutura. Pôr enfeite nele exigiria desenho novo: pergunta ao Adauto, não feito.
+- **Implementação, só no desenho do 3D (o `partsOf` fica idêntico em JSON):**
+  - Cada entrada "Decoração" leva `dsrc`, uma função que devolve o componente (`v.int[k]` ou o nó da torre). O `JSON.stringify` ignora funções.
+  - O desenho pergunta ao `decoMostra(m,p)`:
+    - "Mostrar decoração no 3D" desligado → nada;
+    - `deco=1` → mostra, e `deco=0` → esconde;
+    - móvel com marca `dv` ou componente com `dv` → não mostra;
+    - sem marca → a regra de antes (fora da cozinha e do banho).
+  - Marca de formato `dv=1`, pelo mesmo jeito do `espN` (22/11):
+    - o móvel criado a partir desta versão (catálogo, do zero, cópia) leva a marca;
+    - num móvel de antes, só o componente novo (prateleira, cabideiro, gaveta, sapateira) leva a marca;
+    - ao abrir nada é marcado (a abertura só registra o que existe).
+  - Manual: no quadro da parte tocada, "🧺 Enfeite no 3D · Pôr enfeite / Tirar enfeite"; também `window.decoPoe(m, componente, on)`, com desfazer.
+  - Na torre por vãos, o botão fica pro menu do vão, área do Code 2 (pedido mandado); a função já está pronta.
+- **Prova (sondas s48/deco, Chromium):**
+  - 139 projetos do catálogo + cozinha de exemplo + 4 dos backups de referência, gravados no editor de antes (483d83c) e abertos no novo: `partsOf`, corte (`cutGroups` com medidas), enfeite no 3D (caixas do enfeite), orçamento e DXF iguais nos 143.
+  - O estado salvo difere só na normalização da abertura (`wing` 0, `amb` {}), que o editor de antes faz igual.
+  - Catálogo novo: os 37 modelos nascem sem enfeite, com peças e valores iguais. "Armário livre · montar do zero" depende do móvel criado antes, também no editor de antes.
+- **Testes:**
+  - `testEnfeiteDo3DSoPorEscolhaNovoSemAntigoIgualPorETirar`:
+    - 37 modelos com enfeite: novos 0, de antes 37;
+    - peças, corte, orçamento e DXF iguais nos 37, com enfeite automático, sem enfeite e com todos postos à mão;
+    - componente novo em móvel de antes nasce sem enfeite e com a marca.
+    - Antes: novos 37 e componente com enfeite.
+  - `testEnfeiteDo3DPorETirarAMaoComDesfazerSalvarEReabrir`: botão do quadro põe, desfaz, salva e reabre igual, e tira. Antes: sem botão.
+  - `testObjetosDaBibliotecaPoeETiraUmPorUm` (17 objetos):
+    - nenhum entra sozinho, no catálogo inteiro, no quarto e na cozinha;
+    - cada um põe, aparece no 3D, valores iguais, sai pelo 🗑 e some;
+    - os 17 juntos: salvar, reabrir, tirar um por um e desfazer.
+    - Já passava antes: a biblioteca já era manual e removível um por um. É a prova que faltava, não correção.
+- **Não verificado:** com dezenas de `loadState` seguidos no mesmo teste, o desfazer logo depois perdeu o passo (a pilha foi zerada por algo atrasado). Isolado, funciona. Por isso a parte manual tem teste próprio.

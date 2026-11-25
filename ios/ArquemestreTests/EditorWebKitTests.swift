@@ -276,6 +276,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    /* LOC-REGUA (pedido do Chefe, 25/11, risco achado pelo Code 3): "localizar no 3D" em todo o catálogo, pelos 3 caminhos de chave —
+       a peça do plano de corte e da lista geral (cutGroups), a linha da lista de peças do módulo (cutLines) e a própria peça do partsOf
+       (a fonte das peças, a chave da identidade D23). Toda chave acende pelo menos uma caixa do 3D pela mesma regra do desenho em rosa.
+       Antes: o tamponamento que o 3D desenha em réguas (aéreos com tamponamento de 30 e cava, aéreo canto cego, fechamento e passagem
+       livre) não achava caixa pela chave do partsOf. Exceções só os registros fora do corte, com o motivo escrito (SEM3D) */
+    func testLocalizarNo3DAchaTodaPecaDoCatalogoPelosTresCaminhos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        /* a mesma regra do desenho em rosa (build): caixa do módulo com o pk da lista resolvida, ou do mesmo tipo quando o hlResolve aponta a peça visível (any) */
+        var acha=function(B,L){var HLR=hlResolve(B,L);return B.filter(function(q){var mi=parseInt(String(q.nm),10);return HLR.some(function(h){return h.mi===mi&&(h.pk===q.pk||(h.any&&q.pk&&String(q.pk).replace(/#\d+$/,'')===String(h.pk).replace(/#\d+$/,'')))})}).length};
+        /* peças sem desenho no 3D, com o motivo: só registros fora do corte, não peças de fabricação — o vão da torre (o espaço entre as prateleiras), o nicho do forno, do micro-ondas e da geladeira (espaço do eletro), a decoração (enfeites da vista) e o lado do canto em L com porta articulada (a medida do lado, a porta já vem como peça) */
+        var SEM3D=/^(Vão da torre \d+|Nicho d[oa] (forno|micro-ondas|geladeira)( \(aberto\))?|Decoração|Canto em L · lado \d+ mm \(porta articulada\))#\d+$/,exc={};
+        open3D();await W(400);var tot=0,ruins=[],cm=0;
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();window.HL3=null;__build();var B=__boxes();try{pkFix3(B)}catch(_){}cm++;
+          var srcs=[];try{var G=cutGroups();G.ord.forEach(function(k){(G.map[k].src||[]).forEach(function(sr){(sr||[]).forEach(function(q){if(q&&q.mi===0&&q.pk)srcs.push(['plano',q.pk])})})})}catch(e){ruins.push(t.n+': cutGroups '+e)}
+          try{cutLines(m).forEach(function(l){(l.pks||[]).forEach(function(pk){if(pk)srcs.push(['lista do módulo',pk])})})}catch(e){ruins.push(t.n+': cutLines '+e)}
+          partsOf(m).forEach(function(p){if(p.pk)srcs.push([p.noCut?'partsOf (fora do corte)':'partsOf',p.pk])});var vis={};srcs.forEach(function(s_){var k=s_[0]+'|'+s_[1];if(vis[k])return;vis[k]=1;tot++;if(acha(B,[{mi:0,pk:s_[1]}]))return;if(s_[0]==='partsOf (fora do corte)'&&SEM3D.test(s_[1])){exc[s_[1].replace(/#\d+$/,'')]=1;return}ruins.push(t.n+' · '+s_[0]+': '+s_[1])})}
+        document.getElementById('v3x').click();
+        return JSON.stringify({modelos:cm,chaves:tot,ruins:ruins.length,lista:ruins.slice(0,8).join(' | '),excecoes:Object.keys(exc).sort().join(', '),errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130, "o catálogo inteiro")
+        XCTAssertGreaterThan(o["chaves"] as? Int ?? 0, 10000, "chaves conferidas (plano, lista do módulo e partsOf)")
+        XCTAssertEqual(o["ruins"] as? Int, 0, "peça que não acha nada no 3D: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testPlanoDeCorteLocalizaCadaPecaNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -12674,6 +12702,93 @@ final class EditorWebKitTests: XCTestCase {
        medidas do gerador de painéis de parede (S.pw), profundidade original da sala esticada pela parede lateral (S.RDw/S.RDs),
        última altura do rodapé (S.rodLast) e as escolhas de decoração e da TV no 3D (S.deco, S.tvLogo, S.tvAnim).
        Agora vão junto; projeto que não tem esses dados abre como antes (não ganha nada) e não herda os do projeto anterior. */
+    /* DECO-MANUAL (pedido do Adauto 25/11, via Chefe): enfeite do 3D (roupa dobrada na prateleira, roupa no cabideiro, gaveta interna,
+       sapatos) só por escolha da pessoa. Móvel novo do catálogo nasce sem enfeite; móvel de antes (sem a marca dv) continua com o enfeite
+       de hoje; componente novo num móvel de antes nasce sem; o botão do quadro da parte põe e tira (salvar, reabrir e desfazer); enfeite
+       nunca é peça: partsOf, corte, orçamento e DXF iguais com enfeite automático, sem enfeite e com todos postos à mão */
+    func testEnfeiteDo3DSoPorEscolhaNovoSemAntigoIgualPorETirar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var semMarca=function(st){st=JSON.parse(JSON.stringify(st));(st.mods||[]).forEach(function(m){delete m.dv;(function tira(x){if(!x||typeof x!=='object')return;if(Array.isArray(x)){x.forEach(tira);return}delete x.dv;delete x.deco;Object.keys(x).forEach(function(k){if(k!=='dv')tira(x[k])})})(m.v);(function tira(n){if(!n||typeof n!=='object')return;delete n.dv;delete n.deco;(n.c||[]).forEach(tira)})(m.rt)});return st};
+        var vis=function(){var n=0;S.mods.forEach(function(m){partsOf(m).forEach(function(p){if(p.deco&&(window.decoMostra?decoMostra(m,p):(S.deco!==false&&roomOf()!=='cozinha'&&roomOf()!=='banho')))n++})});return n};
+        var caixas=function(){__build();return __boxes().filter(function(b){return b.nm==null||b.nm===''}).length};
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var cena=function(t){loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));if(S.mods[0])S.mods[0].x=1500;draw()};
+        open3D();await W(300);var novos=0,antigos=0,comDeco=0,iguais=0,difs=[];
+        for(var i=0;i<mods.length;i++){cena(mods[i]);var m=S.mods[0];if(!m)continue;if(!partsOf(m).some(function(p){return p.deco}))continue;comDeco++;
+          if(vis())novos++;var v0=valores(),st=snapState();
+          /* o mesmo móvel num projeto de antes (sem a marca) */loadState(semMarca(st));draw();if(vis())antigos++;var v1=valores();
+          /* todos postos à mão */var m2=S.mods[0];partsOf(m2).forEach(function(p){var c=p.dsrc&&p.dsrc();if(c)c.deco=1});draw();var v2=valores();
+          if(v0===v1&&v1===v2)iguais++;else difs.push(mods[i].n)}
+        R.catalogo='modelos com enfeite '+comDeco+' · novos com enfeite '+novos+' · de antes com enfeite '+antigos+' · peças e valores iguais '+iguais+(difs.length?' · diferentes: '+difs.slice(0,3).join(', '):'');
+        /* componente novo num móvel de antes: só ele nasce sem enfeite */var T=mods.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];cena(T);var st2=snapState();loadState(semMarca(st2));draw();var mA=S.mods[0],v_=mA.v[0],n0=vis();v_.int.push({t:'nic',h:300});draw();var novo=v_.int[v_.int.length-1];
+        R.componente='enfeites antes '+n0+' · depois de pôr a prateleira '+vis()+' · marca na nova '+(novo.dv===1)+' · as de antes sem marca '+v_.int.slice(0,-1).every(function(c){return !c.dv});
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["catalogo"] as? String, "modelos com enfeite 37 · novos com enfeite 0 · de antes com enfeite 37 · peças e valores iguais 37", "móvel novo sem enfeite, o de antes igual, peças e valores iguais")
+        XCTAssertEqual(o["componente"] as? String, "enfeites antes 2 · depois de pôr a prateleira 2 · marca na nova true · as de antes sem marca true", "componente novo num móvel de antes nasce sem enfeite; os de antes ficam")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+    /* DECO-MANUAL: pôr e tirar o enfeite à mão pelo botão do quadro da parte, com desfazer, salvar e reabrir (teste próprio: começa limpo) */
+    func testEnfeiteDo3DPorETirarAMaoComDesfazerSalvarEReabrir() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var semMarca=function(st){st=JSON.parse(JSON.stringify(st));(st.mods||[]).forEach(function(m){delete m.dv;(function tira(x){if(!x||typeof x!=='object')return;if(Array.isArray(x)){x.forEach(tira);return}delete x.dv;delete x.deco;Object.keys(x).forEach(function(k){if(k!=='dv')tira(x[k])})})(m.v);(function tira(n){if(!n||typeof n!=='object')return;delete n.dv;delete n.deco;(n.c||[]).forEach(tira)})(m.rt)});return st};
+        var vis=function(){var n=0;S.mods.forEach(function(m){partsOf(m).forEach(function(p){if(p.deco&&(window.decoMostra?decoMostra(m,p):(S.deco!==false&&roomOf()!=='cozinha'&&roomOf()!=='banho')))n++})});return n};
+        var caixas=function(){__build();return __boxes().filter(function(b){return b.nm==null||b.nm===''}).length};
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var cena=function(t){loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));if(S.mods[0])S.mods[0].x=1500;draw()};
+        var T=mods.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];open3D();await W(300);
+        /* manual pelo botão do quadro da parte: põe, salva, reabre, desfaz, tira */cena(T);var mN=S.mods[0],ki=mN.v[0].int.findIndex(function(c){return /^cab/.test(c.t)});S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}
+        var clica=function(){var d=document.createElement('div');d.id='__dp';d.innerHTML=intPanel(mN.v[0],2000);document.body.appendChild(d);var b=d.querySelector('[data-decot]');var txt=b?b.textContent:'sem botão';if(b)b.click();d.remove();return txt};
+        await W(1300);var c0=caixas(),b1=clica(),c1=caixas();var ok1=mN.v[0].int[ki].deco===1&&c1>c0;await W(1300);
+        /* desfazer logo depois de pôr: volta sem enfeite */document.getElementById('und').click();await W(120);mN=S.mods[0];var c3=caixas();var ok3=c3===c0&&mN.v[0].int[ki].deco!==1;
+        /* põe de novo, salva e reabre: continua */S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}var b4=clica();var sv=JSON.stringify(snapState());loadState(JSON.parse(sv));draw();mN=S.mods[0];var c2=caixas();var ok2=mN.v[0].int[ki].deco===1&&c2===c1;
+        /* tira pelo mesmo botão */S.m=mN;S.sv=0;try{ISB.mi=0;ISB.vi=0;ISB.k=ki}catch(_){}var b5=clica();var c5=caixas();
+        R.manual='botão "'+b1+'" · pôs '+ok1+' · reabriu igual '+ok2+' · desfez '+ok3+' · de novo "'+b4+'" e "'+b5+'" · tirou '+(mN.v[0].int[ki].deco===0&&c5===c0);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["manual"] as? String, "botão \"Pôr enfeite\" · pôs true · reabriu igual true · desfez true · de novo \"Pôr enfeite\" e \"Tirar enfeite\" · tirou true", "pôr e tirar à mão, com desfazer, salvar e reabrir")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+
+    /* DECO-MANUAL · biblioteca de objetos (complemento do Adauto 25/11, via Chefe): todo objeto da biblioteca (Objetos · decoração)
+       entra só pela pessoa e sai um por um pelo 🗑 (dois toques), também depois de salvar e reabrir (projeto de antes); desfazer volta;
+       nenhum objeto entra sozinho num móvel novo; objeto não é peça: partsOf, corte, orçamento e DXF iguais */
+    func testObjetosDaBibliotecaPoeETiraUmPorUm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.ambMsg=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var hs=function(s){s=String(s);var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)};
+        var valores=function(){var G=cutGroups(),b=budget();return hs(JSON.stringify(S.mods.map(function(m){return partsOf(m)}))+JSON.stringify(G.ord.map(function(k){var g=G.map[k];return [k,g.qty,g.L,g.W]}))+[b.tot,b.sale].join('/')+JSON.stringify(dxfPecas(),function(k,v){return k==='ids'?undefined:v}))};
+        var objs=function(){return (S.fr||[]).filter(function(f){return f.t==='deco'})};var caixas=function(){__build();return __boxes().length};
+        var tira=async function(f){__itOpen({k:'fr',id:f.id});await W(30);for(var z=0;z<2;z++){var bx_=document.getElementById('it4'),b=bx_&&bx_.querySelector('[data-qdel]');if(!b)return false;b.click();await W(30)}return !(S.fr||[]).some(function(q){return q.id===f.id})};
+        var L=(APM.deco&&APM.deco.m)||[];R.inventario=L.length;
+        /* nada entra sozinho: o catálogo inteiro no quarto e na cozinha */var T=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&t.w&&T.every(function(q){return q.n!==t.n}))T.push(t)})});var sozinho=0;
+        ['quarto','cozinha'].forEach(function(room){T.forEach(function(t){loadState(initLimpo());S.env='livre';S.room=room;S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(t)));draw();sozinho+=objs().length})});R.sozinho=sozinho;
+        loadState(initLimpo());S.env='livre';S.room='quarto';S.W=6000;S.H=2700;draw();var Tg=T.filter(function(t){return t.n==='2P c/ Cab 600mm'})[0];newTpl(JSON.parse(JSON.stringify(Tg)));S.mods[0].x=1500;draw();open3D();await W(300);var v0=valores(),bx0=caixas(),ruins=[];
+        for(var i=0;i<L.length;i++){var n0=objs().length,c0=caixas();apAdd('deco',i);draw();var f=objs()[objs().length-1],c1=caixas(),pos=objs().length===n0+1&&f&&f.nome===L[i][0]&&c1>c0,vv=valores()===v0;var tir=f?await tira(f):false,c2=caixas();if(!(pos&&vv&&tir&&c2===c0))ruins.push(L[i][0]+(pos?'':' não pôs')+(vv?'':' mudou valor')+(tir?'':' não tirou')+(c2===c0?'':' sobrou no 3D'))}
+        R.umPorUm=ruins.length?ruins.join(' | '):'todos';
+        /* projeto de antes: os 11 juntos, salva, reabre e tira um por um; desfazer volta o último tirado */for(i=0;i<L.length;i++)apAdd('deco',i);draw();var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();var n1=objs().length,ok=0;
+        await W(950);var lista=objs().slice();for(i=0;i<lista.length;i++){var f2=(S.fr||[]).filter(function(q){return q.id===lista[i].id})[0];if(f2&&await tira(f2))ok++;await W(950)}
+        document.getElementById('und').click();await W(120);var volta=objs().length;
+        R.reaberto='reabriu com todos '+(n1===L.length)+' · tirou todos '+(ok===L.length)+' · desfazer volta '+volta+' · valores '+(valores()===v0);
+        document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["inventario"] as? Int ?? 0, 11, "biblioteca: os objetos (decoração)")
+        XCTAssertEqual(o["sozinho"] as? Int, 0, "nenhum objeto entra sozinho num móvel novo (catálogo inteiro, quarto e cozinha)")
+        XCTAssertEqual(o["umPorUm"] as? String, "todos", "cada objeto: põe, aparece no 3D, valores iguais, sai pelo 🗑 e some do 3D")
+        XCTAssertEqual(o["reaberto"] as? String, "reabriu com todos true · tirou todos true · desfazer volta 1 · valores true", "salvar, reabrir, tirar um por um e desfazer")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testDadosDoAmbienteEEscolhasDo3DVoltamDepoisDeSalvarEReabrir() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -14691,6 +14806,32 @@ final class EditorWebKitTests: XCTestCase {
         """#)
         XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 100, "o catálogo inteiro")
         XCTAssertEqual(o["soltas"] as? String, "nenhuma", "peça de fabricação solta no 3D")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* B26 mais forte (pedido do Chefe, 25/11, achado do Code 3): o teste de cima acusa peça sem contato nenhum, mas não peça fora do lugar
+       que ainda encosta de lado (prateleira ou tamponamento subido 10 mm). Aqui cada peça de fabricação do 3D tem que estar na altura que o
+       partsOf (a fonte das peças, a mesma do 2D) dá: y0 e y1 do 3D = topo − y − h e topo − y, com 1,5 mm de tolerância, em todo o catálogo.
+       Fora da conta só o que corre por dentro (gaveta, gaveta interna, caixote de gaveta, porta-tempero: o desenho de frente não é a posição)
+       e a prateleira inclinada da sapateira (caixa envolvente). Controle: a mesma conta com a prateleira e o tamponamento subidos 10 mm acusa */
+    func testCadaPecaNo3DFicaNaAlturaDoPartsOfEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var FORA=/de gaveta|Gaveta interna|Caixote · gaveta|porta tempero|prateleira inclinada/i,tol=1.5;
+        var confere=function(m,BX,sobe){var top=(+m.b||0)+(+m.h||0),ruins=[],n=0;partsOf(m).forEach(function(p){if(p.noCut||!p.pk||FORA.test(p.name))return;var bs=BX.filter(function(b){return b.pk===p.pk});if(!bs.length)return;n++;
+          var dy=(sobe&&sobe.test(p.name))?10:0,y0=Math.min.apply(null,bs.map(function(b){return b.y0}))+dy,y1=Math.max.apply(null,bs.map(function(b){return b.y1}))+dy,e0_=y0-(top-p.y-p.h),e1_=y1-(top-p.y);if(Math.abs(e0_)>tol||Math.abs(e1_)>tol)ruins.push(p.name+' '+Math.round(e0_)+'/'+Math.round(e1_))});return {n:n,ruins:ruins}};
+        open3D();await W(400);var out=[],tot=0,cm=0,ctl=[];
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();__build();
+          var BX=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'}),r=confere(m,BX,null);tot+=r.n;cm++;if(r.ruins.length)out.push(t.n+': '+r.ruins.slice(0,3).join(', '));
+          /* controle: prateleira e tamponamento subidos 10 mm (ainda encostam de lado) */if(ctl.length<6){var rc=confere(m,BX,/^(Prateleira|Tamponamento)/);if(rc.ruins.length)ctl.push(t.n)}}
+        document.getElementById('v3x').click();return JSON.stringify({modelos:cm,pecas:tot,fora:out.join(' | ')||'nenhuma',controle:ctl.length,errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130, "o catálogo inteiro")
+        XCTAssertGreaterThan(o["pecas"] as? Int ?? 0, 1500, "peças conferidas")
+        XCTAssertEqual(o["fora"] as? String, "nenhuma", "peça do 3D fora da altura do partsOf (subida ou descida)")
+        XCTAssertEqual(o["controle"] as? Int, 6, "controle: prateleira/tamponamento subidos 10 mm são acusados")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -18013,6 +18154,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ESP-FAIXA-430 (pedido do Chefe, 25/11, achado do Code 3 na revisão do 4fb5695a): a 430 com densidade 1, na vista 1,05/−0,5, 9 de 360 direções
+    // do anel não tinham NENHUM pixel aceso da faixa (a linha de contorno do vidro do centro caía na borda de dentro da faixa). Varredura radial:
+    // em cada uma das 360 direções, de 100 mm pra dentro a 100 mm pra fora do meio da faixa, tem que haver faixa acesa; dia e noite, 3 qualidades,
+    // 4 vistas. Controle: com o LED desligado as 360 direções ficam apagadas (o teste enxerga a falta). O ESP-FAIXA (faixa atrás do vidro) dá
+    // direções apagadas na maioria das vistas
+    func testFaixaDoEspelhoLedContinuaNasTrezentasESessentaDirecoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2600;S.fr=[];draw();var a=espWallAdd(4);a.x=150;draw();var med=JSON.stringify([a.x,a.b,a.w,a.h,a.d]);open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),cx=a.x+a.w/2,cy=a.b+a.h/2,rr=a.w/2-60,r=Math.min(2,window.devicePixelRatio||1);
+        var varre=function(){var Wd=gl.drawingBufferWidth,H=gl.drawingBufferHeight,FB=new Uint8Array(Wd*H*4);gl.readPixels(0,0,Wd,H,gl.RGBA,gl.UNSIGNED_BYTE,FB);var lit=function(X,Y){if(X<0||Y<0||X>=Wd||Y>=H)return false;var i=(Y*Wd+X)*4;return FB[i]>=235&&FB[i]-FB[i+2]>=12};var ap=0;for(var g=0;g<360;g++){var t=Math.PI*2*g/360,ach=false;for(var u=-100;u<=100&&!ach;u+=2){var p=__p3(cx+(rr+u)*Math.cos(t),cy+(rr+u)*Math.sin(t),4.2);if(p&&lit(Math.round(p[0]*r),Math.round(H-p[1]*r)))ach=true}if(!ach)ap++}return ap};
+        var V=[[1.05,-.5],[1.05,.5],[1.3,-.5],[1.05,0]],ruins=[],tot=0;for(var ni=0;ni<2;ni++){fx3api.night(ni);['auto','equil','alta'].forEach(function(q){window.ESPQ=q;V.forEach(function(z){__cam(z[1],.12,z[0]);var ap=varre();tot+=ap;if(ap)ruins.push((ni?'noite':'dia')+' '+q+' '+z.join('/')+': '+ap)})})}
+        window.ESPQ='';fx3api.night(0);R.apagadas=tot;R.onde=ruins.join(' | ')||'nenhuma';
+        /* controle: LED desligado, a mesma varredura enxerga as 360 direções apagadas */a.led=Object.assign({},a.led||{},{on:0});draw();if(window.re3)re3();await W(200);__cam(-.5,.12,1.05);R.controle=varre();delete a.led.on;draw();
+        R.medidas=med===JSON.stringify([a.x,a.b,a.w,a.h,a.d]);document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["apagadas"] as? Int, 0, "direções do anel sem nenhum pixel da faixa aceso (dia/noite × auto/equil/alta × 4 vistas): \(o["onde"] ?? "")")
+        XCTAssertEqual(o["controle"] as? Int, 360, "controle: com o LED desligado a varredura vê as 360 direções apagadas")
+        XCTAssertEqual(o["medidas"] as? Bool, true, "espelho no mesmo lugar e com a mesma medida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* PROJ-SEM-MODULO (auditoria 23/11, risco já existente na versão publicada c561120): abrir projeto SEM módulo (só espelho, pedra…) dava
        TypeError no loadState (defs(undefined)) no meio do carregamento; o resto não rodava e, ao salvar, a obra e o ambiente do projeto eram apagados.
        Agora abre inteiro. Projeto com módulo não muda. */
@@ -18291,6 +18455,47 @@ final class EditorWebKitTests: XCTestCase {
        no aparelho novo com o backup restaurado (arquivos lá, banco do navegador vazio), a abertura do editor chamava prSave() com os
        padrões ANTES de ler o prices.json — e o arquivo do backup era sobrescrito: preços e "Meus modelos" do cliente sumiam.
        Agora o primeiro prSave lê o arquivo antes de gravar (mesma regra da leitura de sempre: o arquivo por cima dos padrões). */
+    /* ARQ-CORROMPIDO, 2ª parte (pedido do Chefe, 25/11, risco achado pelo Code 3): os outros arquivos que a ponte grava por cima.
+       apmodels.json (eletros com medida própria) ilegível: o texto quebrado ia pro banco do navegador e o JSON.parse lançava no mesmo try
+       que restaura as fotos (as fotos não voltavam nessa abertura); gravar um eletro gravava por cima sem cópia. Histórico de versões
+       (hist_<projeto>.json) e lixeira (trash.json) ilegíveis viravam lista vazia e a próxima gravação apagava o que tinha. Agora: cópia byte a
+       byte e aviso antes de gravar por cima (sem a cópia, não grava), e as fotos voltam. Arquivo bom: igual, sem cópia nem aviso */
+    func testOutrosArquivosIlegiveisGuardamCopiaEFotosVoltam() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var msgs=[];window.toast=function(t){msgs.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;var A=window.ArqueApp;
+        var b64=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},le=function(n){try{return JSON.parse(decodeURIComponent(escape(atob(A.getFile(n)))))}catch(e){return null}};
+        var copias=function(pre){return JSON.parse(A.listFiles()||'[]').filter(function(n){return n.indexOf(pre)===0})},avisou=function(n){return msgs.some(function(t){return t.indexOf(n+' estava ilegível')>=0})};
+        var zera=function(){window.__arqCorrVisto={};msgs=[]};
+        /* 1) eletros: apmodels.json quebrado + uma foto no arquivo que ainda não está no banco */
+        var qa='###eletros quebrado###';zera();A.putFile('apmodels.json',qa);try{localStorage.removeItem('arque.apmodels.v1')}catch(_){}var fid='fotoTeste'+Date.now();A.putFile('photo_'+fid+'.json',b64({id:fid,data:'data:image/png;base64,iVBORw0KGgo=',name:'teste.png',t:Date.now()}));
+        var foto=false;if(window.__arqBoot){window.__arqBoot();await W(700);foto=await new Promise(function(r){phAll(function(L){r((L||[]).some(function(x){return x.id===fid}))})})}
+        R.abertura='fotos voltaram '+foto+' · banco sem o texto quebrado '+(localStorage.getItem('arque.apmodels.v1')!==qa);
+        apSaveModel({t:'geladeira',nome:'Geladeira do cliente',w:701,h:1801,d:702});await W(1000);var ca=copias('apmodels.corrompido-');
+        R.eletros='cópias '+ca.length+' · igual byte a byte '+(ca.length===1&&A.getFile(ca[0])===qa)+' · aviso '+avisou('apmodels.json')+' · arquivo novo legível '+Array.isArray(le('apmodels.json'));
+        /* 2) histórico de versões */
+        var pid='pTesteHist',qh=btoa('[{"t":1,"st":');zera();A.putFile('hist_'+pid+'.json',qh);projHist.push(pid,{mods:[],stones:[],fr:[],rp:[]},'teste');await W(1000);var ch=copias('hist_'+pid+'.corrompido-');
+        R.historico='cópias '+ch.length+' · igual byte a byte '+(ch.length===1&&A.getFile(ch[0])===qh)+' · aviso '+avisou('hist_'+pid+'.json')+' · arquivo novo legível '+Array.isArray(le('hist_'+pid+'.json'));
+        /* 3) lixeira */
+        var qt='[[[lixeira quebrada';zera();var tr0=A.getFile('trash.json');A.putFile('trash.json',qt);var ok3=window.__guardFput?__guardFput('trash.json',[]):null;await W(1000);var ct=copias('trash.corrompido-');
+        R.lixeira='cópias '+ct.length+' · igual byte a byte '+(ct.length===1&&A.getFile(ct[0])===qt)+' · aviso '+avisou('trash.json')+' · gravou '+ok3;
+        /* 4) sem conseguir guardar a cópia: não grava por cima */
+        zera();A.putFile('hist_'+pid+'.json',qh);copias('hist_'+pid+'.corrompido-').forEach(function(n){A.delFile(n)});var pf=A.putFile;try{A.putFile=function(n){if(/corrompido/.test(n))return false;return pf.apply(A,arguments)}}catch(_){}projHist.push(pid,{mods:[],stones:[],fr:[],rp:[{id:1}]},'teste2');try{A.putFile=pf}catch(_){}await W(1000);R.semCopia='histórico '+(A.getFile('hist_'+pid+'.json')===qh?'intacto':'MEXIDO')+' · aviso '+msgs.some(function(t){return /não consegui guardar uma cópia/.test(t)});
+        /* 5) arquivos bons: nada muda, sem cópia nem aviso */
+        zera();A.putFile('apmodels.json',b64([]));A.putFile('trash.json',b64([]));var pid2='pTesteHist2';A.putFile('hist_'+pid2+'.json',b64([]));apSaveModel({t:'geladeira',nome:'Outra',w:702,h:1802,d:703});projHist.push(pid2,{mods:[],stones:[],fr:[],rp:[]},'x');if(window.__guardFput)__guardFput('trash.json',[]);await W(1000);
+        R.normal='cópias novas '+(copias('apmodels.corrompido-').length-ca.length+copias('trash.corrompido-').length-ct.length+copias('hist_'+pid2+'.corrompido-').length)+' · avisos '+msgs.filter(function(t){return /ilegível/.test(t)}).length+' · eletros '+(le('apmodels.json')||[]).length+' · histórico '+(le('hist_'+pid2+'.json')||[]).length;
+        /* limpa */copias('apmodels.corrompido-').concat(copias('trash.corrompido-'),copias('hist_'+pid+'.corrompido-')).forEach(function(n){A.delFile(n)});['hist_'+pid+'.json','hist_'+pid2+'.json','photo_'+fid+'.json'].forEach(function(n){A.delFile(n)});if(tr0)A.putFile('trash.json',tr0);else A.delFile('trash.json');
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["abertura"] as? String, "fotos voltaram true · banco sem o texto quebrado true", "apmodels.json ilegível não impede as fotos de voltarem nem vai pro banco")
+        XCTAssertEqual(o["eletros"] as? String, "cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "apmodels.json: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["historico"] as? String, "cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "histórico de versões: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["lixeira"] as? String, "cópias 1 · igual byte a byte true · aviso true · gravou true", "lixeira: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["semCopia"] as? String, "histórico intacto · aviso true", "sem a cópia, o arquivo não é mexido e o aviso diz isso")
+        XCTAssertEqual(o["normal"] as? String, "cópias novas 0 · avisos 0 · eletros 2 · histórico 1", "arquivos bons: igual, sem cópia nem aviso")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testBackupRestauradoNaoPerdePrecosNemMeusModelosNaAbertura() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -18308,6 +18513,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v1"] as? String, "no editor: meus modelos 1 · preço 123", "os preços e Meus modelos do backup voltam no editor")
         XCTAssertEqual(o["v2"] as? String, "uso normal: preço \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?") = \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?")", "uso normal não muda")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* ARQ-CORROMPIDO (pedido do Chefe, 25/11, achado do Code 3 na revisão do 70f5130; P0): prices.json ilegível (onde ficam os preços e Meus
+       modelos) era gravado por cima pelos padrões sem cópia. Agora: cópia byte a byte (<nome>.corrompido-…json, pela ponte) e aviso antes de
+       gravar; cópia que não grava → o arquivo não é mexido. Arquivo bom, uso normal e backup restaurado (PRECOS-RESTAURO) iguais. projects.json:
+       a cópia que já existia ganha o aviso */
+    func testArquivoIlegivelGuardaCopiaEAvisaAntesDeGravarPorCima() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var msgs=[];window.toast=function(t){msgs.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;var A=window.ArqueApp;
+        var b64=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},le=function(n){try{return JSON.parse(decodeURIComponent(escape(atob(A.getFile(n)))))}catch(e){return null}};
+        var copias=function(pre){return JSON.parse(A.listFiles()||'[]').filter(function(n){return n.indexOf(pre)===0})};
+        var PR0=JSON.parse(JSON.stringify(PR));
+        /* a abertura do app como no teste do PRECOS-RESTAURO: banco vazio, padrões, prSave */var abre=function(){try{localStorage.removeItem(PRK)}catch(_){}window.__prLido=0;window.__prCorrVisto=0;window.__prBloq=0;window.__arqCorr=[];Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,JSON.parse(JSON.stringify(PRD)));PR.myMods=[];prSave()};
+        var casos=[['json quebrado',btoa('{"mdfM2":123,"myMods":[{"id":"my1"')],['texto que nem é base64','###arquivo quebrado###']],res=[];
+        for(var c=0;c<casos.length;c++){var raw=casos[c][1];copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json',raw);msgs=[];abre();await W(1000);
+          var cp=copias('prices.corrompido-');res.push(casos[c][0]+': cópias '+cp.length+' · igual byte a byte '+(cp.length===1&&A.getFile(cp[0])===raw)+' · aviso '+msgs.some(function(t){return /prices\.json estava ilegível/.test(t)&&t.indexOf(cp[0])>=0})+' · arquivo novo legível '+!!le('prices.json'))}
+        R.corrompido=res.join(' | ');
+        /* outra abertura com o mesmo arquivo quebrado: não guarda a mesma cópia de novo */var raw2=btoa('{"quebrado"');copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json',raw2);abre();A.putFile('prices.json',raw2);abre();R.semRepetir='cópias '+copias('prices.corrompido-').length;
+        /* a cópia não grava (aparelho sem espaço): o arquivo quebrado não é mexido e o aviso diz isso */var pf=A.putFile,falhou=false;copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json','@@quebrado@@');try{A.putFile=function(n,b){if(/corrompido/.test(n))return false;return pf.apply(A,arguments)}}catch(_){}msgs=[];abre();await W(1000);try{A.putFile=pf}catch(_){}R.copiaFalha='arquivo '+(A.getFile('prices.json')==='@@quebrado@@'?'intacto':'MEXIDO')+' · aviso '+msgs.some(function(t){return /não consegui guardar uma cópia/.test(t)});
+        /* arquivo bom (backup restaurado): o PRECOS-RESTAURO de sempre, sem cópia nem aviso */copias('prices.corrompido-').forEach(function(n){A.delFile(n)});var bom=JSON.parse(JSON.stringify(PR0));bom.myMods=[{id:'my1',n:'Balcão do cliente',w:900,h:820,d:560,v:[{k:'door',n:2}]}];bom.mdfM2=123;A.putFile('prices.json',b64(bom));msgs=[];abre();await W(1000);var f=le('prices.json');
+        R.restaurado='meus modelos '+((f&&f.myMods)||[]).length+' · preço '+(f&&f.mdfM2)+' · editor '+(PR.myMods||[]).length+'/'+PR.mdfM2+' · cópias '+copias('prices.corrompido-').length+' · avisos '+msgs.filter(function(t){return /ilegível/.test(t)}).length;
+        /* uso normal (banco cheio): igual, sem cópia */window.__prCorrVisto=0;window.__arqCorr=[];Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);prSave();R.normal='arquivo = PR '+(JSON.stringify(le('prices.json'))===JSON.stringify(PR))+' · cópias '+copias('prices.corrompido-').length;
+        /* projects.json ilegível: a cópia de sempre (projects.corrompido.json) e agora o aviso */var pj0=A.getFile('projects.json');copias('projects.corrompido').forEach(function(n){A.delFile(n)});A.putFile('projects.json',btoa('[{"id":"p1","current":'));msgs=[];if(window.pjsCorrGuard)window.pjsCorrGuard();await W(1400);R.projetos='cópia '+(A.getFile('projects.corrompido.json')===btoa('[{"id":"p1","current":'))+' · aviso '+msgs.some(function(t){return /projetos estava ilegível/.test(t)});if(pj0)A.putFile('projects.json',pj0);else A.delFile('projects.json');copias('projects.corrompido').forEach(function(n){A.delFile(n)});
+        Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["corrompido"] as? String, "json quebrado: cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true | texto que nem é base64: cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "prices.json ilegível: cópia byte a byte e aviso antes de gravar por cima")
+        XCTAssertEqual(o["semRepetir"] as? String, "cópias 1", "a mesma cópia não é guardada duas vezes")
+        XCTAssertEqual(o["copiaFalha"] as? String, "arquivo intacto · aviso true", "sem conseguir guardar a cópia, o arquivo não é mexido")
+        XCTAssertEqual(o["restaurado"] as? String, "meus modelos 1 · preço 123 · editor 1/123 · cópias 0 · avisos 0", "backup restaurado (PRECOS-RESTAURO) igual, sem cópia nem aviso")
+        XCTAssertEqual(o["normal"] as? String, "arquivo = PR true · cópias 0", "uso normal igual")
+        XCTAssertEqual(o["projetos"] as? String, "cópia true · aviso true", "projects.json ilegível: cópia e aviso")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
     /* PROJETO-PUBLICADO (auditoria técnica 24/11, preservação dos projetos): os projetos do backup de referência rico (tests/backup-referencia-rico),

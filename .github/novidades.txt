@@ -15,6 +15,24 @@
 • Toque: no celular, o móvel que fica no alto do desenho ou da planta não fica mais embaixo dos botões 🔓 🗑 🧮. Tocar na porta escolhe a porta; a fita só é escolhida no modo Fita.
 • Cada móvel e cada peça têm uma identidade própria, a mesma no 3D, na lista, no plano de corte e no DXF, também depois de copiar, salvar e desfazer.
 • Restaurar um backup não apaga mais os seus preços nem os seus modelos.
+• Enfeites do 3D (roupas dobradas, roupas no cabide, sapatos, coisas na gaveta) só quando você escolhe: móvel novo vem sem. Toque na parte (prateleira, cabideiro, gaveta, sapateira) e use "Pôr enfeite" ou "Tirar enfeite". Projetos salvos continuam com o que já tinham. Peças, plano de corte e orçamento não mudam.
+• Espelho com LED: a faixa iluminada aparece inteira em volta do espelho também de longe e em tela pequena (antes uma linha escura apagava pedaços dela).
+• Se o arquivo de preços e Meus modelos estiver ilegível, o app guarda uma cópia dele como está antes de gravar e avisa. Se não conseguir guardar a cópia, não mexe no arquivo. Nada é apagado.
+• Projetos mais seguros: se o aparelho não conseguir gravar o arquivo dos projetos (pouco espaço, por exemplo), o app avisa e, ao abrir de novo, não volta o projeto antigo por cima do que você fez.
+• Ficam salvos no projeto (antes voltavam ao padrão ao fechar e abrir): medidas do gerador de painéis da parede, profundidade da sala esticada pela parede do lado, última altura do rodapé e as escolhas de decoração e da TV no 3D. Desfazer também guarda.
+• Vídeos do projeto entram no backup e passam pra outro aparelho junto com as fotos. Vídeo maior que 64 MB continua guardado no aparelho, com aviso de que não vai no backup.
+• Sincronização pelo Wi-Fi: fotos com dois pontos seguidos no nome (ex.: foto..jpg) passam normalmente.
+• Posição digitada junto à parede: o móvel fica exatamente onde foi digitado, sem sobrar vão sem tamponamento.
+• Abrir um projeto ou tocar em qualquer coisa não move mais o móvel que está perto do canto entre duas paredes. Só encosta no canto o móvel que você mexeu.
+• Gavetas: mudar a altura da lateral de uma gaveta muda as laterais de todas as gavetas do mesmo conjunto (acima e abaixo). Frentes, profundidade e folgas não mudam; outro gaveteiro não muda; desfazer volta tudo de uma vez. Pedir mais que cabe e depois diminuir agora dá a medida certa.
+• Dois toques funcionam na geladeira dentro da caixa da geladeira e nas torres altas (também em cima da prateleira). Um toque continua igual.
+• Torre e armário alto (editor por vãos): aba Portas com a opção Porta cava (puxador usinado na porta, sem peça de puxador).
+• O menu do vão (2 toques no vão da torre) pode ser arrastado pro lado segurando na faixa do título e minimizado (▁ / ▢ abrir), pra ver o móvel. Abre de novo no lugar escolhido.
+• Fundo do armário sempre sobreposto, parafusado atrás. Rasgo só no fundo das gavetas. Móvel antigo que estava com rasgo mostra um aviso com o botão Passar pra sobreposto; nada muda sozinho.
+• Parede da esquerda: o desenho 2D agora mostra a parede como você vê de dentro do ambiente (o canto com a parede do fundo fica à direita), igual ao 3D. No painel do móvel dessa parede, "esquerdo" e "direito" seguem o lado que você vê. Posições, medidas, 3D, lista e plano de corte não mudam; projetos salvos abrem iguais.
+• Torre ou armário alto que já é por vãos: ao tocar nele no desenho, o painel já mostra as abas por vãos e os vãos ficam tocáveis, sem precisar do "Editar só ele no 2D" (que continua no painel). Um dedo arrastando continua movendo o móvel; 2 toques no vão abrem o menu do vão.
+• Balcão da pia (ou balcão com cuba na pedra): no "Editar só ele no 2D" ele entra no editor por vãos, como a torre. Dá pra pôr gaveta num vão e porta basculante no outro, cada um no seu. As peças de hoje não mudam ao entrar.
+• Tamponamento de cima: 2 toques na ponta dele (no 2D da parede do fundo) perguntam "Descer tamponamento esquerdo / direito" e "Inverter". O que desce é um tamponamento livre, separado do móvel: arraste pelo meio pra mover (vira o pé de uma mesa, por exemplo) e pelas pontas pra aumentar ou diminuir. Entra no plano de corte e no orçamento (chapa e fita de borda) na hora.
 # (já saíram na versão anterior — ficam guardadas só como histórico):
 # • Projetos mais seguros: se o aparelho não conseguir gravar o arquivo dos projetos (pouco espaço, por exemplo), o app avisa e, ao abrir de novo, não volta o projeto antigo por cima do que você fez.
 # • Ficam salvos no projeto (antes voltavam ao padrão ao fechar e abrir): medidas do gerador de painéis da parede, profundidade da sala esticada pela parede do lado, última altura do rodapé e as escolhas de decoração e da TV no 3D. Desfazer também guarda.

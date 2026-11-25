@@ -6,6 +6,11 @@
 • Orçamento de vários ambientes: em Valores, "+ Adicionar ambiente ao orçamento" junta vários projetos do mesmo cliente num orçamento só. Cada ambiente tem nome, valor sugerido ou digitado e desconto próprio, e no fim vem o desconto geral. O PDF sai com cada ambiente separado ou só com o total. Os projetos não mudam e o mesmo projeto não entra duas vezes.
 • Custos fixos no orçamento: cadastre custos com nome, descrição e valor (em R$ ou %), guarde os que se repetem pra usar de novo e ative ou desative cada um. Entram no valor sem contar duas vezes. No PDF dá pra mostrar discriminado ou embutido; o custo interno nunca aparece pro cliente nem no link.
 • Desconto: o valor da tela e o do PDF agora batem sempre, até no centavo. Orçamentos já salvos não mudam.
+• Liberdade pra montar: o móvel do catálogo entra mesmo sem espaço livre na parede ou em cima de outro, com "Usar N mm", "Colocar mesmo assim" ou "Cancelar". Vale também pro ⧉ Copiar, pra medida digitada que entra no vizinho e pro canto em L. O app não muda sozinho nenhum móvel que já existe: o ajuste do tamponamento da junção vira sugestão, com o botão "Ajustar tamponamento da junção". Projeto sem sobreposição fica igual.
+• Menus por tipo de móvel: na aba Internos do editor por vãos, o que combina com o móvel vem primeiro e o resto fica em "Mais opções". Nada some: forno e porta-temperos fora da cozinha ficam em "Mais opções". No celular, os botões do painel ficaram maiores.
+• Porta-temperos no editor por vãos, com as mesmas peças do porta-temperos do balcão. Ao tirar ou trocar, a porta do vão volta.
+• Editor por vãos: no cabideiro e na sapateira, "🧺 Enfeite no 3D: Pôr/Tirar".
+• Plano de corte no iPhone e no iPad: a medida das sobras não sai mais pra fora do desenho da sobra e não tampa o número de nenhuma peça.
 • Forno e micro-ondas: a 🗑 não tira mais só o corte ou o nicho do forno ou do micro-ondas e explica por quê. Tocando de novo em seguida, sai o conjunto inteiro.
 • Rodapé e travessa: tirar pela 🗑 é o mesmo que desmarcar no painel, e as peças que dependem deles se ajustam do mesmo jeito. A travessa que segura o móvel sem base de cima não sai.
 • Puxador perfil G, gola e facetado: o rebaixo que o perfil precisa sai na lista de corte (nota na peça) e no DXF, na medida exata de cada peça. A medida de corte não muda. Móvel antigo mostra um aviso com botão; nada muda sozinho.

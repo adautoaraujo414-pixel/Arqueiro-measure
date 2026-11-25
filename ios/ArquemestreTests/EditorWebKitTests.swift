@@ -19843,12 +19843,14 @@ for(var i=0;i<CAS.length;i++){await cena();var a=P();CAS[i][1]();draw();await W(
  if(window.stSugAplica&&temBotao)sug.querySelector('[data-stsug="ok"]').click();await W(30);R[CAS[i][0]]=a+' → '+semToque+' · botão '+temBotao+' · com o toque '+P()}
 /* pedra nova junto com o balcão: nasce encaixada (padrão) */loadState(initLimpo());S.env='cozinha';S.W=5000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].w=650;draw();addStone();draw();R.nova=P();
 /* desfazer o toque volta a pedra de antes */await cena();await W(800);histTick();snap();S.mods[1].w=+S.mods[1].w+50;draw();await W(800);histTick();var sgb=document.querySelector('#stsug [data-stsug="ok"]');if(sgb)sgb.click();draw();await W(800);histTick();var com=P();document.getElementById('und').click();await W(150);R.desfazToque=com+' → desfazer '+P();
-R.errs=__errs.length-e0;return JSON.stringify(R)
+/* igual à #libsug do Code 2: um toque fora fecha a sugestão e nada muda */await cena();snap();S.mods[1].w=+S.mods[1].w+50;draw();await W(30);var sb2=document.getElementById('stsug'),ab=!sb2.hidden;document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));R.toqueFora=ab+' → '+(!sb2.hidden)+' · pedra '+P();
+        R.errs=__errs.length-e0;return JSON.stringify(R)
         """#)
         XCTAssertEqual(o["largura"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1585×606")
         XCTAssertEqual(o["duplicar"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+2135×606")
         XCTAssertEqual(o["fundo 15"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1535×615")
         XCTAssertEqual(o["nova"] as? String, "0+1585×606", "pedra nova nasce encaixada, igual a antes")
+        XCTAssertEqual(o["toqueFora"] as? String, "true → false · pedra 0+1535×606", "um toque fora fecha a sugestão, a pedra fica como estava")
         XCTAssertEqual(o["desfazToque"] as? String, "0+1585×606 → desfazer 0+1535×606")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }

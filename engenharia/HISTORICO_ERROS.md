@@ -2305,3 +2305,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - Hipóteses ainda abertas: arranjo diferente no iPad, métrica do texto no WebKit ou a conta de tela do WebKit.
     - A mensagem de falha agora traz a geometria exata (fonte, posição, caixa do texto, peça, viewBox, largura na tela e zoom), pra corrigir a causa no próximo iOS CI. A expectativa de zero não muda.
   - **iPhone, `testRebaixoDoPerfilGGola…`:** a varredura dos puxadores × catálogo levou 166 s, acima do limite de 2 min (aqui leva 42 s). Dividida em três terços, como os outros testes de catálogo inteiro: cada terço exige mais de 43 modelos, juntos mais de 130 como antes. As conferências do G, gola, facetado e móvel de antes ficam no 1º terço, iguais. O Chefe aprovou a divisão em 25/11.
+- **Rodada seguinte (25/11), Code 2 juntado até `ed6b650d`, editor `555deaba`:**
+  - Baterias do editor: 1366 542/542. 430 540/542:
+    - LED na densidade 1, o caso de sempre.
+    - `testNo3DDuplicarPeca…`: instável, causa comprovada. Passa 5/5 isolado. Com a CPU 4–6× mais lenta, o teste perde o toque duplo, porque os toques que ele cria por código saem com mais de 420 ms de intervalo. O editor mede pelo `e.timeStamp` do toque, certo para o toque real. **Não é defeito do app; teste não mudou.**
+  - Android CI, Windows CI e atualizações do Android e do Windows: verdes.
+  - Atualização do iOS (iPhone e iPad, com vídeo): verde no run 33 (`4c879a79`), depois de corrigir só o teste de interface:
+    - rolagem na direção do botão (página rolada pra baixo);
+    - espera pelo editor da versão publicada;
+    - toque pela posição (`isHittable` falha no WebKit);
+    - álbum "Videos" no iPad.
+  - iOS CI 692 (`7f1d9fb`):
+    - "Nada de enfeite" resolvido pelo Code 2.
+    - **Abertura do iPhone 10,36 s.** Os 47 s do 690 eram do ambiente: mesmo app, e no run 29 até a 3.0.13 publicada demorou a abrir no mesmo tipo de runner.
+    - **Continua aberto: legibilidade no iPad** ("641"/"125" da contra-frente do caixote, guarda-roupa 4 vãos). Correção com o Code 2.
+    - As baterias cortaram no limite do passo (o Code 2 subiu o do iPad para 100 min em `8b8e444c`).

@@ -20245,4 +20245,49 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // DESFAZER-INTEGRADO (Chefe 25/11, pré-integração): no código integrado, desfazer e refazer do enfeite (decoPoe, Claude 3) pelos dois
+    // quadros (vão do editor por vãos e internos do vão clássico), pôr e tirar, e do "Mais opções" (Code 2): cabideiro no balcão (aba Internos)
+    // e forno na aba Divisões fora da cozinha. Desfazer = antes, refazer = depois (JSON sem a seleção; wing ausente = 0, decisão do Chefe 25/11).
+    func testDESFAZERINTEGRADO_EnfeiteEMaisOpcoesDesfazEFazDeNovo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;(s.mods||[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};
+        var cena=async function(room,n){loadState(initLimpo());S.env=room;S.room=room;S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T(n));draw();var m=S.mods[0];S.m=m;S.sv=0;draw();panel();await W(800);histTick();await W(800);histTick();return m};
+        var desfaz=async function(A,B){document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();return 'desfazer '+(U===A?'ok':'DIFERE')+' · refazer '+(Rd===B?'ok':'DIFERE')};
+        var passo=async function(fn){var A=J();var ok=await fn();draw();await W(800);histTick();var B=J();if(!ok)return 'sem botão';if(A===B)return 'sem mudança';return await desfaz(A,B)};
+        var R={};var nodeAt=function(m,path){if(!m||!m.rt)return null;var n=m.rt,ps=String(path||'r').split('.').slice(1);for(var i=0;i<ps.length;i++){if(!n||!n.c)return null;n=n.c[+ps[i]]}return n||null};
+        /* 1. enfeite pelo quadro do vão (editor por vãos): cabideiro do guarda-roupa, Pôr e depois Tirar */
+        var m=await cena('quarto','Guarda-roupa 2 vãos');if(!rgIs(m))rgConvert(m);draw();await W(800);histTick();await W(800);histTick();RG.sel={mi:0,path:'r.0'};RG.tab='int';panel();await W(60);
+        var rga=function(a){var b=document.querySelector('[data-rga="'+a+'"]');if(b)b.click();return !!b};
+        if(nodeAt(m,'r.0').t!=='cab'){rga('ins|cab');draw();panel();await W(900);histTick()}
+        var bt=function(sel){return async function(){RG.sel={mi:0,path:'r.0'};RG.tab='int';S.m=S.mods[0];panel();await W(60);var b=document.querySelector(sel);if(b)b.click();await W(60);return !!b}};
+        R.enfeitePor='cab '+(nodeAt(S.mods[0],'r.0').t==='cab')+' · '+await passo(bt('[data-rgdeco="1"]'))+' · deco '+nodeAt(S.mods[0],'r.0').deco;
+        R.enfeiteTirar=await passo(bt('[data-rgdeco="0"]'))+' · deco '+nodeAt(S.mods[0],'r.0').deco;
+        /* 2. enfeite pelo quadro dos internos (vão clássico): prateleira/cabideiro interno do guarda-roupa */
+        var achaT=function(){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&!t.rt&&(t.v||[]).some(function(v){return (v.int||[]).some(function(x){return /^(mal|cab)$/.test(x.t)})}))r=t.n})});return r};var nT=achaT();
+        m=await cena('quarto',nT);var vi=m.v.findIndex(function(v){return (v.int||[]).some(function(x){return /^(mal|cab)$/.test(x.t)})}),ii=m.v[vi].int.findIndex(function(x){return /^(mal|cab)$/.test(x.t)});
+        var tabs=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(t){return +t.dataset.t}),tI=-1;for(const k of tabs){S.sv=vi;S.tab=k;ISB.mi=0;ISB.vi=vi;ISB.k=ii;panel();await W(30);if(document.querySelector('[data-decot^="'+ii+'|"]')){tI=k;break}}
+        var btI=function(on){return async function(){S.m=S.mods[0];S.sv=vi;S.tab=tI;ISB.mi=0;ISB.vi=vi;ISB.k=ii;panel();await W(60);var b=document.querySelector('[data-decot="'+ii+'|'+on+'"]');if(b)b.click();await W(60);return !!b}};
+        R.classicoPor=nT+' · '+m.v[vi].int[ii].t+' · aba '+tI+' · '+await passo(btI(1))+' · deco '+S.mods[0].v[vi].int[ii].deco;
+        R.classicoTirar=await passo(btI(0))+' · deco '+S.mods[0].v[vi].int[ii].deco;
+        /* 3. "Mais opções": cabideiro no balcão (aba Internos, editor por vãos) */
+        m=await cena('cozinha','Balcão 2 portas');if(!rgIs(m))rgConvert(m);draw();await W(800);histTick();await W(800);histTick();
+        R.cabBalcao=await passo(async function(){RG.sel={mi:0,path:'r'};RG.tab='int';S.m=S.mods[0];panel();await W(60);var b=document.querySelector('[data-intmais] [data-rga="ins|cab"]');if(b)b.click();await W(60);return !!b})+' · cab '+(nodeAt(S.mods[0],'r').t==='cab');
+        /* 4. "Mais opções (fora da cozinha)": forno na aba Divisões de um balcão no quarto */
+        m=await cena('quarto','Balcão 2 portas');var tabs=[].map.call(document.querySelectorAll('#tabs [data-t]'),function(t){return +t.dataset.t});var tf=-1;for(const k of tabs){S.tab=k;panel();await W(30);if(document.querySelector('[data-divmais] [data-k="oven"]')){tf=k;break}}
+        R.fornoFora=await passo(async function(){S.m=S.mods[0];S.sv=0;S.tab=tf;panel();await W(60);var b=document.querySelector('[data-divmais] [data-k="oven"]');if(b)b.click();await W(60);return !!b})+' · aba '+tf+' · vão '+S.mods[0].v[0].k;
+        R.errs=__errs.length-e0;R.e=__errs.slice(e0,e0+2).join(' | ');return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["enfeitePor"] as? String, "cab true · desfazer ok · refazer ok · deco 1")
+        XCTAssertEqual(o["enfeiteTirar"] as? String, "desfazer ok · refazer ok · deco 0")
+        XCTAssertEqual(o["classicoPor"] as? String, "Torre do guarda-roupa · maleiro, cabideiro e gavetas · mal · aba 2 · desfazer ok · refazer ok · deco 1")
+        XCTAssertEqual(o["classicoTirar"] as? String, "desfazer ok · refazer ok · deco 0")
+        XCTAssertEqual(o["cabBalcao"] as? String, "desfazer ok · refazer ok · cab true")
+        XCTAssertEqual(o["fornoFora"] as? String, "desfazer ok · refazer ok · aba 2 · vão oven")
+        XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

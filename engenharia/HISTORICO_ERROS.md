@@ -2313,3 +2313,47 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Visto e não mexido (risco de identidade, D23):**
   - No aéreo com tamponamento de 30 + cava, o `partsOf` tem "Tamponamento esquerdo#1" (750 × 80) e o 3D tem só as réguas com `pk` "Tamponamento esquerdo (régua)#1/#2". O `pk` da peça não acha caixa no 3D (o "localizar no 3D" do plano de corte pode não achar).
   - Sapateira · aparador e as peças da gaveta interna também não têm caixa 3D com o mesmo `pk`.
+
+## ARQ-CORROMPIDO (2ª parte) e LOC-REGUA (Code 3, 25/11, pedidos do Chefe; ramo `claude/c3-revisao`)
+### ARQ-CORROMPIDO, outros arquivos da ponte
+- **Varredura dos arquivos que o editor grava pela ponte:**
+
+| Arquivo | Ilegível na leitura | Gravado por cima sem cópia? | Situação |
+|---|---|---|---|
+| `apmodels.json` (eletros com medida própria) | o texto quebrado ia pro banco do navegador; o `JSON.parse` lançava no mesmo `try` que restaura as fotos | sim, ao salvar um eletro | **corrigido** |
+| `hist_<projeto>.json` (histórico de versões) | vira lista vazia | sim, na próxima versão: o histórico inteiro sumia | **corrigido** |
+| `trash.json` (lixeira) | `fget` devolve nada: lixeira vazia | sim, no próximo excluir ou restaurar | **corrigido** |
+| `guard.json` (senha) | volta pela cópia do navegador | sim | **corrigido** (mesma guarda do `fput`) |
+| `cur_<projeto>.json` (recuperação de queda) | pulado | sim, na próxima edição do projeto | **corrigido**: sem a cópia, vai pela gravação inteira |
+| `photo_<id>.json` | cada um no seu `try`, pulado | não (só grava a mesma foto de novo) | sem o risco |
+| `video_<id>.json` (iOS, `EditorMediaBackup.js`) | cada um no seu `try` | não (id novo; apaga só quando a pessoa apaga o vídeo) | sem o risco |
+| notas | gravadas pelo app nativo, fora do editor | — | não verificado (fora do editor) |
+
+- **Reproduzir (antes, f02a19b):**
+  - Com o mesmo bloco de abertura, `apmodels.json` quebrado faz a foto não voltar; com ele bom, a foto volta.
+  - `hist_` e `trash.json` quebrados: a gravação seguinte grava por cima, sem cópia.
+- **Correção:**
+  - `arqCorrAntes(nome, valido)`, que usa o `arqCorrCopia`: na 1ª gravação de cada arquivo na sessão, se ele estiver ilegível, guarda uma cópia byte a byte e avisa. Se a cópia não grava, não grava por cima.
+  - Ligado em `apSaveModel`, no `store` do histórico, no `fput` (lixeira e senha) e no `svLeve` (`cur_`).
+  - A abertura (`window.__arqBoot`, chamada como antes) ficou com um `try` por passo: o `apmodels.json` quebrado não entra no banco do navegador e não impede as fotos.
+  - Nunca apaga.
+- **Teste:** `testOutrosArquivosIlegiveisGuardamCopiaEFotosVoltam`.
+  - Fotos voltam com o `apmodels.json` quebrado.
+  - Cópia byte a byte e aviso em eletros, histórico e lixeira.
+  - Sem a cópia, o histórico fica intacto (com aviso).
+  - Arquivos bons: igual, sem cópia nem aviso.
+  - Antes: cópias 0 nos 3.
+- `cur_` e `guard.json` passam pelo mesmo ajudante, sem teste próprio.
+
+### LOC-REGUA: localizar no 3D pela chave do partsOf
+- **No app real** (plano de corte → tocar a peça → 3D em rosa), a peça é encontrada nos 3 casos:
+  - aéreo com tamponamento de 30 + cava: 4 réguas, porque o plano já usa a chave das réguas;
+  - Sapateira · aparador: na prateleira inclinada;
+  - gaveta interna: na frente.
+  - Os dois últimos já eram ligados pelo `hlResolve`.
+  - Os 2 caminhos de "mostrar no 3D" (plano ou lista geral, e lista do módulo) acham as 8150 chaves dos 138 modelos.
+- **Defeito pela chave do partsOf (a da identidade D23):** o tamponamento que o 3D desenha em réguas não achava caixa. São 48 chaves: aéreos com tamponamento de 30 e cava, aéreo canto cego, fechamento e passagem livre. "Tamponamento esquerdo#1" contra "Tamponamento esquerdo (régua)#1/#2".
+- **Correção, só no mapeamento:** no `hlResolve`, a chave do tamponamento sem caixa própria aponta para as réguas dele (`any`). Peças, medidas, corte e o código do D23 não mudam.
+- **Teste:** `testLocalizarNo3DAchaTodaPecaDoCatalogoPelosTresCaminhos`, com 11463 chaves (plano, lista do módulo e `partsOf`) nos 138 modelos.
+  - Antes: 48 sem caixa. Depois: 0.
+  - Exceções, com o motivo no teste: só os registros fora do corte, que não são peça de fabricação. São eles: Vão da torre N, Nicho do forno, do micro-ondas e da geladeira, Decoração e o lado do canto em L com porta articulada.

@@ -276,6 +276,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual((o["errs"] as? [String])?.count, 0, "errs: \(((o["errs"] as? [String]) ?? []).joined(separator: " || ").replacingOccurrences(of: "\n", with: " "))")
     }
 
+    /* LOC-REGUA (pedido do Chefe, 25/11, risco achado pelo Code 3): "localizar no 3D" em todo o catálogo, pelos 3 caminhos de chave —
+       a peça do plano de corte e da lista geral (cutGroups), a linha da lista de peças do módulo (cutLines) e a própria peça do partsOf
+       (a fonte das peças, a chave da identidade D23). Toda chave acende pelo menos uma caixa do 3D pela mesma regra do desenho em rosa.
+       Antes: o tamponamento que o 3D desenha em réguas (aéreos com tamponamento de 30 e cava, aéreo canto cego, fechamento e passagem
+       livre) não achava caixa pela chave do partsOf. Exceções só os registros fora do corte, com o motivo escrito (SEM3D) */
+    func testLocalizarNo3DAchaTodaPecaDoCatalogoPelosTresCaminhos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        /* a mesma regra do desenho em rosa (build): caixa do módulo com o pk da lista resolvida, ou do mesmo tipo quando o hlResolve aponta a peça visível (any) */
+        var acha=function(B,L){var HLR=hlResolve(B,L);return B.filter(function(q){var mi=parseInt(String(q.nm),10);return HLR.some(function(h){return h.mi===mi&&(h.pk===q.pk||(h.any&&q.pk&&String(q.pk).replace(/#\d+$/,'')===String(h.pk).replace(/#\d+$/,'')))})}).length};
+        /* peças sem desenho no 3D, com o motivo: só registros fora do corte, não peças de fabricação — o vão da torre (o espaço entre as prateleiras), o nicho do forno, do micro-ondas e da geladeira (espaço do eletro), a decoração (enfeites da vista) e o lado do canto em L com porta articulada (a medida do lado, a porta já vem como peça) */
+        var SEM3D=/^(Vão da torre \d+|Nicho d[oa] (forno|micro-ondas|geladeira)( \(aberto\))?|Decoração|Canto em L · lado \d+ mm \(porta articulada\))#\d+$/,exc={};
+        open3D();await W(400);var tot=0,ruins=[],cm=0;
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();window.HL3=null;__build();var B=__boxes();try{pkFix3(B)}catch(_){}cm++;
+          var srcs=[];try{var G=cutGroups();G.ord.forEach(function(k){(G.map[k].src||[]).forEach(function(sr){(sr||[]).forEach(function(q){if(q&&q.mi===0&&q.pk)srcs.push(['plano',q.pk])})})})}catch(e){ruins.push(t.n+': cutGroups '+e)}
+          try{cutLines(m).forEach(function(l){(l.pks||[]).forEach(function(pk){if(pk)srcs.push(['lista do módulo',pk])})})}catch(e){ruins.push(t.n+': cutLines '+e)}
+          partsOf(m).forEach(function(p){if(p.pk)srcs.push([p.noCut?'partsOf (fora do corte)':'partsOf',p.pk])});var vis={};srcs.forEach(function(s_){var k=s_[0]+'|'+s_[1];if(vis[k])return;vis[k]=1;tot++;if(acha(B,[{mi:0,pk:s_[1]}]))return;if(s_[0]==='partsOf (fora do corte)'&&SEM3D.test(s_[1])){exc[s_[1].replace(/#\d+$/,'')]=1;return}ruins.push(t.n+' · '+s_[0]+': '+s_[1])})}
+        document.getElementById('v3x').click();
+        return JSON.stringify({modelos:cm,chaves:tot,ruins:ruins.length,lista:ruins.slice(0,8).join(' | '),excecoes:Object.keys(exc).sort().join(', '),errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130, "o catálogo inteiro")
+        XCTAssertGreaterThan(o["chaves"] as? Int ?? 0, 10000, "chaves conferidas (plano, lista do módulo e partsOf)")
+        XCTAssertEqual(o["ruins"] as? Int, 0, "peça que não acha nada no 3D: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testPlanoDeCorteLocalizaCadaPecaNo3D() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -18020,6 +18048,47 @@ final class EditorWebKitTests: XCTestCase {
        no aparelho novo com o backup restaurado (arquivos lá, banco do navegador vazio), a abertura do editor chamava prSave() com os
        padrões ANTES de ler o prices.json — e o arquivo do backup era sobrescrito: preços e "Meus modelos" do cliente sumiam.
        Agora o primeiro prSave lê o arquivo antes de gravar (mesma regra da leitura de sempre: o arquivo por cima dos padrões). */
+    /* ARQ-CORROMPIDO, 2ª parte (pedido do Chefe, 25/11, risco achado pelo Code 3): os outros arquivos que a ponte grava por cima.
+       apmodels.json (eletros com medida própria) ilegível: o texto quebrado ia pro banco do navegador e o JSON.parse lançava no mesmo try
+       que restaura as fotos (as fotos não voltavam nessa abertura); gravar um eletro gravava por cima sem cópia. Histórico de versões
+       (hist_<projeto>.json) e lixeira (trash.json) ilegíveis viravam lista vazia e a próxima gravação apagava o que tinha. Agora: cópia byte a
+       byte e aviso antes de gravar por cima (sem a cópia, não grava), e as fotos voltam. Arquivo bom: igual, sem cópia nem aviso */
+    func testOutrosArquivosIlegiveisGuardamCopiaEFotosVoltam() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var msgs=[];window.toast=function(t){msgs.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;var A=window.ArqueApp;
+        var b64=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},le=function(n){try{return JSON.parse(decodeURIComponent(escape(atob(A.getFile(n)))))}catch(e){return null}};
+        var copias=function(pre){return JSON.parse(A.listFiles()||'[]').filter(function(n){return n.indexOf(pre)===0})},avisou=function(n){return msgs.some(function(t){return t.indexOf(n+' estava ilegível')>=0})};
+        var zera=function(){window.__arqCorrVisto={};msgs=[]};
+        /* 1) eletros: apmodels.json quebrado + uma foto no arquivo que ainda não está no banco */
+        var qa='###eletros quebrado###';zera();A.putFile('apmodels.json',qa);try{localStorage.removeItem('arque.apmodels.v1')}catch(_){}var fid='fotoTeste'+Date.now();A.putFile('photo_'+fid+'.json',b64({id:fid,data:'data:image/png;base64,iVBORw0KGgo=',name:'teste.png',t:Date.now()}));
+        var foto=false;if(window.__arqBoot){window.__arqBoot();await W(700);foto=await new Promise(function(r){phAll(function(L){r((L||[]).some(function(x){return x.id===fid}))})})}
+        R.abertura='fotos voltaram '+foto+' · banco sem o texto quebrado '+(localStorage.getItem('arque.apmodels.v1')!==qa);
+        apSaveModel({t:'geladeira',nome:'Geladeira do cliente',w:701,h:1801,d:702});await W(1000);var ca=copias('apmodels.corrompido-');
+        R.eletros='cópias '+ca.length+' · igual byte a byte '+(ca.length===1&&A.getFile(ca[0])===qa)+' · aviso '+avisou('apmodels.json')+' · arquivo novo legível '+Array.isArray(le('apmodels.json'));
+        /* 2) histórico de versões */
+        var pid='pTesteHist',qh=btoa('[{"t":1,"st":');zera();A.putFile('hist_'+pid+'.json',qh);projHist.push(pid,{mods:[],stones:[],fr:[],rp:[]},'teste');await W(1000);var ch=copias('hist_'+pid+'.corrompido-');
+        R.historico='cópias '+ch.length+' · igual byte a byte '+(ch.length===1&&A.getFile(ch[0])===qh)+' · aviso '+avisou('hist_'+pid+'.json')+' · arquivo novo legível '+Array.isArray(le('hist_'+pid+'.json'));
+        /* 3) lixeira */
+        var qt='[[[lixeira quebrada';zera();var tr0=A.getFile('trash.json');A.putFile('trash.json',qt);var ok3=window.__guardFput?__guardFput('trash.json',[]):null;await W(1000);var ct=copias('trash.corrompido-');
+        R.lixeira='cópias '+ct.length+' · igual byte a byte '+(ct.length===1&&A.getFile(ct[0])===qt)+' · aviso '+avisou('trash.json')+' · gravou '+ok3;
+        /* 4) sem conseguir guardar a cópia: não grava por cima */
+        zera();A.putFile('hist_'+pid+'.json',qh);copias('hist_'+pid+'.corrompido-').forEach(function(n){A.delFile(n)});var pf=A.putFile;try{A.putFile=function(n){if(/corrompido/.test(n))return false;return pf.apply(A,arguments)}}catch(_){}projHist.push(pid,{mods:[],stones:[],fr:[],rp:[{id:1}]},'teste2');try{A.putFile=pf}catch(_){}await W(1000);R.semCopia='histórico '+(A.getFile('hist_'+pid+'.json')===qh?'intacto':'MEXIDO')+' · aviso '+msgs.some(function(t){return /não consegui guardar uma cópia/.test(t)});
+        /* 5) arquivos bons: nada muda, sem cópia nem aviso */
+        zera();A.putFile('apmodels.json',b64([]));A.putFile('trash.json',b64([]));var pid2='pTesteHist2';A.putFile('hist_'+pid2+'.json',b64([]));apSaveModel({t:'geladeira',nome:'Outra',w:702,h:1802,d:703});projHist.push(pid2,{mods:[],stones:[],fr:[],rp:[]},'x');if(window.__guardFput)__guardFput('trash.json',[]);await W(1000);
+        R.normal='cópias novas '+(copias('apmodels.corrompido-').length-ca.length+copias('trash.corrompido-').length-ct.length+copias('hist_'+pid2+'.corrompido-').length)+' · avisos '+msgs.filter(function(t){return /ilegível/.test(t)}).length+' · eletros '+(le('apmodels.json')||[]).length+' · histórico '+(le('hist_'+pid2+'.json')||[]).length;
+        /* limpa */copias('apmodels.corrompido-').concat(copias('trash.corrompido-'),copias('hist_'+pid+'.corrompido-')).forEach(function(n){A.delFile(n)});['hist_'+pid+'.json','hist_'+pid2+'.json','photo_'+fid+'.json'].forEach(function(n){A.delFile(n)});if(tr0)A.putFile('trash.json',tr0);else A.delFile('trash.json');
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["abertura"] as? String, "fotos voltaram true · banco sem o texto quebrado true", "apmodels.json ilegível não impede as fotos de voltarem nem vai pro banco")
+        XCTAssertEqual(o["eletros"] as? String, "cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "apmodels.json: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["historico"] as? String, "cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "histórico de versões: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["lixeira"] as? String, "cópias 1 · igual byte a byte true · aviso true · gravou true", "lixeira: cópia e aviso antes de gravar")
+        XCTAssertEqual(o["semCopia"] as? String, "histórico intacto · aviso true", "sem a cópia, o arquivo não é mexido e o aviso diz isso")
+        XCTAssertEqual(o["normal"] as? String, "cópias novas 0 · avisos 0 · eletros 2 · histórico 1", "arquivos bons: igual, sem cópia nem aviso")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     func testBackupRestauradoNaoPerdePrecosNemMeusModelosNaAbertura() async throws {
         let web = try await editor()
         let o = try await run(web, #"""

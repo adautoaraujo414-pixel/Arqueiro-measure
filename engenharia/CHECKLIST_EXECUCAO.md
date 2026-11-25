@@ -347,3 +347,14 @@ Linhas que estavam em NÃO FEITO, PARCIAL ou SEM VALIDAÇÃO com "= inicial": 93
 | CL-1 | Plano de corte legível: texto acima e afastado da fita, peça estreita, sem texto sobre texto, tela 1366/430, zoom e PDF | feito | `testPlanoDeCorteLegivel…` + s47 (141 projetos, PDF) | FEITO, aguarda auditoria |
 | F15-8 | Respostas do Adauto: canto opção A (externas fixas), fita opção A (sem fita) | feito, números fixados no teste | `testFundo15PorModulo…` | FEITO |
 | F15-9 | Fundo de 15 na chapa da caixa respeitando veio (não gira, sem encaixe forçado) | feito | `testFundo15NaChapaDaCaixaRespeitaVeio…` | FEITO. **Pergunta: sentido do veio de peça alta (fundos e portas altas)** |
+
+## Orçamento de vários ambientes (ramo `claude/orcamento-ambientes`, Code 2, 25/11)
+| ID | Pedido | Status | Teste | Status atual |
+|---|---|---|---|---|
+| OA-1 | "+ Adicionar ambiente" lista os projetos do cliente, escolhe vários, sem recriar | feito | `testOrcamentoAmbientes…` | FEITO |
+| OA-2 | Cada ambiente: nome, descrição, acabamentos, material, mão de obra e lucro, sugerido, venda, desconto, remover sem apagar | feito | idem | FEITO |
+| OA-3 | Consolidado: soma, desconto geral, individual → geral, centavos, tela = PDF, esconder custo | feito | editor + JVM + XCTest (mesmo número) | FEITO |
+| OA-4 | PDF por ambiente e só total, sem custo | feito | `QuoteAmbientesTest`, `CoreTests` (PDF real no iOS) | FEITO, CI |
+| OA-5 | Salvo no cliente (Quote), reabrir/editar/acrescentar/remover, sem repetir, cópia congelada, link sem valores, backup | feito | editor + JVM + XCTest | FEITO, CI |
+| OA-6 | Orçamento individual igual ao centavo | conferido | sonda: 141 projetos, quoteData/vlFin/budget/link iguais | FEITO |
+| OA-7 | iPhone, iPad, Android, Windows iguais | código nas 3 | CI iOS e Windows disparados; JVM Android/Windows dependem do modo teste (pergunta ao Chefe) | EM CI |

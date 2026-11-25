@@ -14214,6 +14214,40 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // LIB-COMP · arrasto (regras do Adauto 25/11): o encosto no vizinho continua ajudando; passando dele (mais que 60% da largura, mín. 450 mm)
+    // a pessoa atravessa. Durante o gesto nenhum diálogo (só o sinal "sobreposto"); ao soltar pergunta uma vez. Par aceito (móvel × vizinho,
+    // pelos ids D23) fica guardado no projeto e no desfazer: não pergunta de novo; só com outro móvel.
+    func testLiberdadeDeComposicaoArrastoSemDialogoNoGestoPerguntaAoSoltarParAceitoNaoRepeteEDesfazJunto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length,msgs=[],tw=window.toast;window.toast=function(t){if(tw(t)!=='mudo')msgs.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};
+        var dlg=0,aberto=function(){var q=document.getElementById('fitq');return !!(q&&!q.hidden)};
+        var arrasta=async function(mi,dxmm,passos){passos=passos||10;if(S.mods[mi]!==S.m){S.m=S.mods[mi];draw();panel();await W(60)}/* pega o móvel num ponto que é dele (não o vizinho por cima, nem as bolinhas de redimensionar da borda) */var re=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]'),rc=re.getBoundingClientRect(),y=rc.top+rc.height*.6,x=rc.left+rc.width*.5,el=re;[.5,.6,.4,.7,.3,.8,.2].some(function(f){var xx=rc.left+rc.width*f,e_=document.elementFromPoint(xx,y),g_=e_&&e_.closest&&e_.closest('#mod');if(g_&&g_.dataset.mi===String(mi)&&e_.tagName.toLowerCase()==='rect'){x=xx;el=e_;return true}});var k=rc.width/S.mods[mi].w;pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=passos;i++){pe('pointermove',svg,x+dxmm*k*i/passos,y);await W(15);if(aberto())dlg++}pe('pointerup',svg,x+dxmm*k,y);await W(250)};
+        var cena=function(){loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));S.mods[0].x=5;S.mods[1].x=1500;S.mods[2].x=3000;S.m=null;draw()};
+        var sob=function(i,j){return modOv(S.mods[i],S.mods[j])};var d=function(){return S.mods.map(function(m){return Math.round(m.x)+(m.lvok?'['+m.lvok.length+']':'')}).join(' ')},bt=function(v){var q=document.getElementById('fitq'),b=q&&!q.hidden&&q.querySelector('[data-fitqa="'+v+'"]');if(b)b.click();return !!b};
+        cena();await W(100);await arrasta(1,-300);R.ajuda='sobrepôs '+sob(0,1)+' · andou '+(S.mods[1].x<1500)+' · pergunta '+aberto();
+        cena();await W(100);var J0=JSON.stringify(S.mods[0]);dlg=0;await arrasta(1,-1450);R.atravessa='durante '+dlg+' diálogo · ao soltar '+(aberto()?'pergunta':'sem pergunta')+' · por cima '+sob(0,1);bt('0');await W(100);R.cancelar=Math.round(S.mods[1].x)+' · vizinho igual '+(JSON.stringify(S.mods[0])===J0);
+        cena();await W(100);await arrasta(1,-1450);bt('1');await W(100);var X1=S.mods[1].x;R.colocar='por cima '+sob(0,1)+' · '+(S.mods[1].lvok||[]).length+' par · par com o id do vizinho '+(S.mods[1].lvok&&S.mods[1].lvok[0]===modUid(S.mods[0],true));
+        dlg=0;var pg=0;/* 20 arrastos de verdade (150 mm: passa da zona morta de 6 px também a 430) com pausa, pra não virar 2 toques */for(var s=0;s<20;s++){await arrasta(1,s%2?150:-150,3);await W(400);if(aberto()){pg++;bt('0')}}R.vinte='diálogos durante '+dlg+' · perguntas '+pg;
+        await W(800);/* o histórico junta mudanças a menos de 700 ms: a pessoa não arrasta duas vezes tão rápido */X1=S.mods[1].x;/* o desfazer volta pra cá (antes do arrasto até o 3º) *//* até passar do encosto no 3º (que fica em 3000): o fim do arrasto em 3300 (a zona morta de 6 px e o passo em px comem uns 150 a 300 mm a 430) */await arrasta(1,3300-S.mods[1].x);R.terceiro=(aberto()?'pergunta':'sem pergunta')+' · por cima do 3º '+sob(1,2);bt('1');await W(100);R.terceiroAceito=(S.mods[1].lvok||[]).length+' pares';
+        document.getElementById('und').click();await W(150);draw();R.desfazer=(S.mods[1].lvok||[]).length+' par · no lugar de antes '+(Math.abs(S.mods[1].x-X1)<1);
+        var st=JSON.stringify(snapState());loadState(JSON.parse(st));draw();R.salvo=(S.mods[1].lvok||[]).length+' par · '+(Math.abs(S.mods[1].x-X1)<1);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["ajuda"] as? String, "sobrepôs false · andou true · pergunta false", "empurrão curto: o encosto no vizinho continua ajudando")
+        XCTAssertEqual(o["atravessa"] as? String, "durante 0 diálogo · ao soltar pergunta · por cima true")
+        XCTAssertEqual(o["cancelar"] as? String, "1500 · vizinho igual true", "Cancelar volta pra onde estava antes do arrasto")
+        XCTAssertEqual(o["colocar"] as? String, "por cima true · 1 par · par com o id do vizinho true")
+        XCTAssertEqual(o["vinte"] as? String, "diálogos durante 0 · perguntas 0", "par aceito não pergunta de novo")
+        XCTAssertEqual(o["terceiro"] as? String, "pergunta · por cima do 3º true", "outro móvel: pergunta uma vez")
+        XCTAssertEqual(o["terceiroAceito"] as? String, "2 pares")
+        XCTAssertEqual(o["desfazer"] as? String, "1 par · no lugar de antes true", "o desfazer volta a confirmação junto")
+        XCTAssertEqual(o["salvo"] as? String, "1 par · true", "a confirmação vai no projeto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // LIB-COMP · LIBERDADE DE COMPOSIÇÃO (pedido urgente do Adauto, 25/11): o encaixe automático é ajuda, nunca imposição. Sem espaço livre
     // (colisão de verdade em 3D) ou parede menor que o móvel: "Usar N mm" (só o novo encolhe, como antes), "Colocar mesmo assim" (no tamanho
     // dele, por cima) e "Cancelar". O mesmo no ⧉ Copiar e na medida digitada. Os que já estão nunca mudam; o aviso de interseção continua.

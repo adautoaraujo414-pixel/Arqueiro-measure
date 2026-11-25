@@ -14285,6 +14285,57 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // MENUS-POR-TIPO + PORTA-TEMPERO PELO VÃO (pedido do Adauto 25/11, prints do balcão inferior 695×775×615): a aba Internos do editor por
+    // vãos mostra primeiro o que combina com o tipo do móvel (balcão: porta-temperos, gavetas, prateleira, divisória; guarda-roupa: cabideiro…);
+    // o resto fica em "Mais opções" (nada some). O porta-temperos no vão usa a MESMA função de peças do vão clássico (tpPecas): mesmas peças e
+    // medidas pro mesmo vão. Editar, trocar, mudar a medida, excluir e desfazer, sem mexer no vizinho e sem peça fantasma.
+    func testMenusPorTipoEPortaTemperosNoVaoMesmaFabricacaoEditarTrocarMedidaExcluirDesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,W=function(t){return new Promise(function(r){setTimeout(r,t)})};
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var abre=async function(mi,path){var m=S.mods[mi];RG.sel={mi:mi,path:path};RG.tab='int';S.m=m;draw();panel();await W(60)};
+        var acts=function(sel){return [].map.call(document.querySelectorAll(sel+' [data-rga]'),function(b){return b.dataset.rga})};
+        var clica=async function(a){var b=document.querySelector('[data-rga="'+a+'"]');if(b)b.click();await W(80);draw();panel();await W(40);return !!b};
+        var tpPc=function(m){return partsOf(m).filter(function(p){return /tempero/i.test(p.name)})};
+        var sig=function(L){return L.map(function(p){return [p.name,p.cl,p.cw].join('|')}).sort().join(';')};
+        var cena=function(room,n){loadState(initLimpo());S.env=room;S.room=room;S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T(n));draw();var m=S.mods[0];if(!rgIs(m))rgConvert(m);draw();return m};
+        /* 1. ordem por tipo e "Mais opções" com tudo */var m=cena('cozinha','Balcão 2 portas');await abre(0,'r');var p1=acts('[data-intprim]'),r1=acts('[data-intmais]');
+        R.balcao='primeiro '+p1.join(',')+' · mais '+r1.join(',');
+        m=cena('quarto','Guarda-roupa 2 vãos');await abre(0,'r.0');R.guarda='primeiro '+acts('[data-intprim]').join(',')+' · mais '+acts('[data-intmais]').join(',');
+        var TODOS=['ins|cab','ins|tempero','sp|h|2','sp|v|2','ins|gav','ins|sap'];R.inventario=[['cozinha','Balcão 2 portas','r'],['cozinha','Aéreo 2 portas','r'],['quarto','Guarda-roupa 2 vãos','r.0'],['cozinha','Despenseiro','r']].map(function(q){return q[1]}).join(',');
+        var falta=[];for(const q of [['cozinha','Balcão 2 portas','r'],['cozinha','Aéreo 2 portas','r'],['quarto','Guarda-roupa 2 vãos','r.0'],['cozinha','Despenseiro','r']]){cena(q[0],q[1]);await abre(0,q[2]);var all=acts('[data-intprim]').concat(acts('[data-intmais]'));TODOS.forEach(function(a){if(all.indexOf(a)<0)falta.push(q[1]+':'+a)})}R.inventario='faltando '+(falta.join(',')||'nenhum');
+        /* 2. porta-temperos pelo vão do balcão: mesma fabricação do vão clássico; o vizinho fica igual */m=cena('cozinha','Balcão 2 portas');newTpl(T('Balcão 2 portas'));draw();var viz=S.mods[1],JV=JSON.stringify(viz);await abre(0,'r');await clica('ins|tempero');
+        var cl=JSON.parse(JSON.stringify(m));delete cl.rt;cl.v=[{k:'tempero',n:1,cava:true}];cl.x=-5000;S.mods.push(cl);var igual=sig(tpPc(m))===sig(tpPc(cl));S.mods.pop();draw();
+        R.tempero=tpPc(m).length+' peças · igual ao clássico '+igual+' · vizinho igual '+(JSON.stringify(viz)===JV)+' · porta do vão guardada '+!!(m.rt.pT);
+        /* 3. editar (profundidade), mudar a medida do móvel, trocar, excluir, desfazer */var inp=document.querySelector('[data-rgi="tpd"]');inp.value='400';inp.dispatchEvent(new Event('change',{bubbles:true}));await W(80);draw();var bas=tpPc(m).filter(function(p){return /^Base \(porta tempero/.test(p.name)})[0];R.editar='base '+(bas?bas.cw:'-');
+        var w0=tpPc(m).filter(function(p){return /^Base \(porta tempero/.test(p.name)})[0].cl;S.m=m;setv('w',m.w-100);draw();await W(60);var w1=tpPc(m).filter(function(p){return /^Base \(porta tempero/.test(p.name)})[0].cl;R.medida='base '+w0+' → '+w1;
+        await abre(0,'r');await clica('ins|gav');R.trocar='tempero '+tpPc(m).length+' · gavetas '+(partsOf(m).filter(function(p){return /gaveta/i.test(p.name)}).length>0)+' · porta do vão de volta '+JSON.stringify(m.rt.p||null);
+        await clica('ins|tempero');await W(800);await clica('clr');R.excluir='tempero '+tpPc(m).length+' · no corte '+cutLines(m).filter(function(l){return /tempero/i.test(l.name||l.n||'')}).length+' · fantasma '+S.mods.reduce(function(a,q){return a+tpPc(q).length},0);
+        await W(800);document.getElementById('und').click();await W(150);draw();m=S.mods[0];R.desfazer='tempero '+tpPc(m).length+' · no corte '+(cutLines(m).filter(function(l){return /tempero/i.test(l.name||l.n||'')}).length>0);
+        /* 4. os outros componentes: pôr e tirar sem sobrar peça */m=cena('quarto','Guarda-roupa 2 vãos');await abre(0,'r.0');var conta=function(re){return partsOf(m).filter(function(p){return re.test(p.name)}).length};
+        await clica('ins|cab');var c1=conta(/Cabideiro/);await clica('clr');var c0=conta(/Cabideiro/);await clica('ins|sap');var s1=conta(/Sapateira/);await clica('clr');var s0=conta(/Sapateira/);await clica('ins|gav');var g1=conta(/gaveta/i);await clica('clr');var g0=conta(/gaveta/i);
+        R.componentes='cabideiro '+c1+'→'+c0+' · sapateira '+(s1>0)+'→'+s0+' · gavetas '+(g1>0)+'→'+g0;
+        /* 5. menu de 2 toques no vão (vão clássico): o compatível primeiro, nada some (o que era tirado fora da cozinha vai pra Mais opções); porta tempero pelos 2 toques com as medidas do vão e os vizinhos iguais */
+        var KS=['door1','door2','slide','drawers','shelves','tempero','oven','free','split'],vmFalta=[],vmOrd=[];for(const q of [['cozinha','Balcão 2 portas'],['quarto','Balcão 2 portas'],['cozinha','Aéreo 2 portas'],['cozinha','Despenseiro']]){loadState(initLimpo());S.env=q[0];S.room=q[0];S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T(q[1]));draw();S.m=S.mods[0];draw();vmenuOpen(0,0,300,300);await W(50);var d_=document.getElementById('vmenu'),ks=[].map.call(d_.querySelectorAll('[data-vk]'),function(b){return b.dataset.vk});KS.forEach(function(k){if(ks.indexOf(k)<0)vmFalta.push(q[0]+' '+q[1]+':'+k)});vmOrd.push(q[0]+' '+q[1]+' '+ks[0]);try{vmenuClose()}catch(_){}}
+        R.vmenu='faltando '+(vmFalta.join(',')||'nenhum')+' · primeiro '+vmOrd.join(' | ');
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4000;S.H=2700;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();var bv=S.mods[1],JB=JSON.stringify(bv),ba=S.mods[0];S.m=ba;draw();vmenuOpen(0,0,300,300);await W(50);var bt_=document.querySelector('#vmenu [data-vk="tempero"]');if(bt_)bt_.click();await W(100);draw();
+        var vr_=vaoRanges(ba)[0],vw_=vr_[1]-vr_[0],fb=partsOf(ba).filter(function(p){return /^Base \(porta tempero/.test(p.name)})[0];R.doisToques='vão '+gv(0,ba).k+' · base '+(fb?fb.cl+' × '+fb.cw:'-')+' (vão '+Math.round(vw_)+' − 26) · vizinho igual '+(JSON.stringify(bv)===JB);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["balcao"] as? String, "primeiro ins|tempero,ins|gav,sp|h|2,sp|v|2 · mais ins|cab,ins|sap", "balcão: sem cabideiro no topo, com porta-temperos")
+        XCTAssertEqual(o["guarda"] as? String, "primeiro ins|cab,sp|h|2,ins|gav,ins|sap,sp|v|2 · mais ins|tempero", "guarda-roupa: com cabideiro")
+        XCTAssertEqual(o["inventario"] as? String, "faltando nenhum", "todo componente alcançável em todo tipo (Mais opções)")
+        XCTAssertEqual(o["tempero"] as? String, "10 peças · igual ao clássico true · vizinho igual true · porta do vão guardada true")
+        XCTAssertEqual(o["editar"] as? String, "base 400")
+        XCTAssertEqual(o["trocar"] as? String, "tempero 0 · gavetas true · porta do vão de volta {\"n\":2}")
+        XCTAssertEqual(o["excluir"] as? String, "tempero 0 · no corte 0 · fantasma 0", "sem peça fantasma")
+        XCTAssertEqual(o["desfazer"] as? String, "tempero 10 · no corte true")
+        XCTAssertEqual(o["vmenu"] as? String, "faltando nenhum · primeiro cozinha Balcão 2 portas tempero | quarto Balcão 2 portas shelves | cozinha Aéreo 2 portas shelves | cozinha Despenseiro drawers", "2 toques: compatível primeiro, nada some")
+        XCTAssertEqual(o["doisToques"] as? String, "vão tempero · base 844 × 460 (vão 870 − 26) · vizinho igual true", "porta tempero pelos 2 toques, medida do vão")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // §12 (regra permanente do Adauto, 25/11; CLAUDE.md §12): o app não altera sozinho o que já existe. Arrastar até encostar lado a lado deixa os
     // dois módulos idênticos e mostra a sugestão "Ajustar tamponamento da junção"; o botão aplica exatamente o que o TAMP-JUNTA aplicava antes
     // (valores da versão anterior: x600 tl1 tr0 | x1500 tl0 tr1). Módulo novo continua recebendo os padrões (criação).

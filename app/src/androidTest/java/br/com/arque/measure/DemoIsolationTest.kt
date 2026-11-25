@@ -69,6 +69,7 @@ class DemoIsolationTest {
         verifyTestPackage()
         br.com.arque.measure.i18n.I18n.set(context, br.com.arque.measure.i18n.AppLang.PT)
         context.getSharedPreferences("arque.lic", 0).edit().clear().commit()
+        DemoSpace.application(context).getSharedPreferences("sample", 0).edit().clear().commit()
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         ActivityScenario.launch(MainActivity::class.java).use {
             val label = "Explorar demonstração com dados separados"
@@ -78,6 +79,11 @@ class DemoIsolationTest {
             device.findObject(UiSelector().text(label)).click()
             assertTrue(device.findObject(UiSelector().text("Demonstração · dados separados")).waitForExists(15000))
             assertFalse(context.getSharedPreferences("arque.lic", 0).getBoolean("ok", false))
+            val client = device.findObject(UiSelector().text("Cliente de exemplo — demonstração"))
+            assertTrue("Cliente fictício deve aparecer", client.waitForExists(10000))
+            client.click()
+            assertTrue("Editor deve abrir", device.findObject(UiSelector().className("android.webkit.WebView")).waitForExists(15000))
+            device.waitForIdle()
             device.takeScreenshot(File(context.getExternalFilesDir(null), "demonstracao.png"))
             device.findObject(UiSelector().text("Sair")).click()
             assertTrue(device.findObject(UiSelector().text(label)).waitForExists(10000))

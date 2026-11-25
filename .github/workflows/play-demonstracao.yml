@@ -32,7 +32,7 @@ jobs:
           arch: x86_64
           disable-animations: true
           emulator-options: '-no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -prop persist.sys.language=pt -prop persist.sys.country=BR'
-          script: ./gradlew --no-daemon connectedPlayDebugAndroidTest -Pteste=1
+          script: bash .github/scripts/teste_demonstracao.sh
       - name: Guardar relatórios e binário de teste (sem distribuição)
         if: always()
         uses: actions/upload-artifact@v4

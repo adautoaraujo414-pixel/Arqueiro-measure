@@ -8183,6 +8183,7 @@ final class EditorWebKitTests: XCTestCase {
         R.comEspaco=r2+' · andou '+(S.mods[1].x-x1)+' · larguras '+S.mods.map(function(q){return q.w}).join(',')+' · avisou '+TO.some(function(t){return /Não cabe/.test(t)});
         /* 3. pedra encaixada: ligar o tamponamento da ponta faz a PEDRA acompanhar; o módulo não encolhe sozinho */
         clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');await toca(1,'tr',false);S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);var w0=S.mods.map(function(q){return q.w}).join(','),s0=S.stones[0].x+S.stones[0].w;var r3=await toca(1,'tr',true);
+        /* PEDRA-SUG (§12, Adauto 25/11, via Chefe): a pedra que já existe não muda sozinha; o "Ajustar pedra ao balcão" faz o mesmo de antes */var sg_=document.querySelector('#stsug:not([hidden]) [data-stsug="ok"]');R.sugPedra=!!sg_;if(sg_)sg_.click();await W(30);
         R.pedraAcompanha=r3+' · larguras iguais '+(S.mods.map(function(q){return q.w}).join(',')===w0)+' · pedra cresceu '+(S.stones[0].x+S.stones[0].w-s0);
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -8192,6 +8193,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semPedra"] as? String, "ligado · peça 1")
         XCTAssertEqual(o["semEspaco"] as? String, "desligado · tudo como estava true · avisou true")
         XCTAssertEqual(o["comEspaco"] as? String, "ligado · andou 30 · larguras 900,900 · avisou false")
+        XCTAssertEqual(o["sugPedra"] as? Bool, true, "PEDRA-SUG (§12, 25/11): a pedra não cresce sozinha; aparece a sugestão")
         XCTAssertEqual(o["pedraAcompanha"] as? String, "ligado · larguras iguais true · pedra cresceu 30")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -18776,6 +18778,7 @@ final class EditorWebKitTests: XCTestCase {
         loadState(initLimpo());demoScene();await W(400);draw();var p0=pos(),s0=ped();R.pedra0=s0;R.inicio=fs_();
         var pia=S.mods.filter(function(m){return m.fundoPia&&!m.fundo})[0],ipia=S.mods.indexOf(pia);R.pia=!!pia;
         /* um módulo pelo painel */S.m=S.mods[2];S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(900);R.um=fs_();
+        /* PEDRA-SUG (§12, Adauto 25/11, via Chefe): a pedra que já existe não acompanha sozinha o fundo de 15; o "Ajustar pedra ao balcão" faz o mesmo de antes (606 → 615) */var sg_=document.querySelector('#stsug:not([hidden]) [data-stsug="ok"]');R.sugPedra=!!sg_;if(sg_)sg_.click();await W(30);
         /* aplicar a todos: prévia */S.tab=5;panel();var ba=document.querySelector('#f15box [data-f15all]');R.botao=ba?ba.textContent:'';ba.click();await W(50);var M=document.getElementById('f15m');
         R.previa=M?[M.querySelectorAll('[data-f15c]').length+' marcáveis',M.querySelectorAll('[data-f15c]:checked').length+' marcados',(M.textContent.match(/já com 15 mm/)||[''])[0],M.querySelectorAll('#f15av .note').length+' avisos',/embaixo da pia/.test(M.textContent)?'pia':'sem pia'].join(' · '):'sem prévia';
         R.avisoTexto=M?((M.querySelector('#f15av .note')||{}).textContent||''):'';
@@ -18801,6 +18804,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aplicou"] as? String, "15,15,15,15,15,15,15,15,15")
         XCTAssertEqual(o["naoMoveu"] as? Bool, true, "nenhum móvel sai do lugar nem muda de medida")
         XCTAssertEqual(o["pedra0"] as? String, "0,2735,606,820")
+        XCTAssertEqual(o["sugPedra"] as? Bool, true, "PEDRA-SUG (§12, 25/11): a pedra não acompanha sozinha; aparece a sugestão")
         XCTAssertEqual(o["pedraUm"] as? String, "0,2735,615,820", "pedra encaixada acompanha a frente: + 9")
         XCTAssertEqual(o["barra"] as? Bool, true)
         XCTAssertEqual(o["piaProf"] as? String, "575 · peça 0", "embaixo da pia: sem chapa de fundo, a profundidade acompanha")
@@ -19785,8 +19789,8 @@ var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERR
     }
 
     // ISOLAMENTO-TODOS (Chefe 25/11, varredura): duplicar, editar e excluir cada tipo (módulo, pedra, painel, rebaixo, eletro, LED, custo fixo)
-    // deixa o JSON de todos os OUTROS elementos idêntico; um projeto não mexe no outro. Exceção registrada, não decidida aqui: a pedra acompanha a
-    // largura dos balcões quando um balcão muda ou é duplicado (ajuste automático que já existia; §12 é com o Chefe/Code 2) — só contada.
+    // deixa o JSON de todos os OUTROS elementos idêntico; um projeto não mexe no outro. A pedra que acompanhava sozinha a largura dos balcões
+    // agora só muda pela sugestão (PEDRA-SUG, §12, 25/11): 0 casos.
     func testISOLAMENTOTODOS_EditarUmTipoNaoMexeNosOutros() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -19820,6 +19824,32 @@ try{var a0=pLoadAll().length;newProjFor({nome:'Iso A',end:'',cidade:'',tel:''});
 var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /OUTROS MUDARAM|ERRO|não deu|false$/.test(x)&&!/^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).join(' | ');R.pedraSegueBalcao=out.filter(function(x){return /^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).length;R.errs=__errs.length-e0;return JSON.stringify(R)
         """#)
         XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
+        XCTAssertEqual(o["pedraSegueBalcao"] as? Int, 0, "PEDRA-SUG (§12): editar/duplicar balcão não muda a pedra sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PEDRA-SUG (§12, regra permanente do Adauto 25/11, via Chefe): a pedra que JÁ EXISTE não muda sozinha quando o balcão muda de largura,
+    // é duplicado ou ganha fundo de 15 mm. Vira a sugestão "Ajustar pedra ao balcão", que aplica exatamente o que antes era aplicado sozinho
+    // (conferido contra a base 8fb9763: 1535 → 1585 / 2135 e frente 606 → 615). Pedra nova continua nascendo encaixada. O toque desfaz.
+    func testPEDRASUG_PedraNaoAcompanhaSozinhaESugestaoFazOMesmoDeAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var P=function(){var q=S.stones[0];return q?q.x+'+'+q.w+'×'+q.d:'-'};
+var cena=async function(){loadState(initLimpo());S.env='cozinha';S.W=5000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));addStone();draw();await W(30)};
+var CAS=[['largura',function(){snap();S.mods[1].w=+S.mods[1].w+50}],['duplicar',function(){modCopy(S.mods[1])}],['fundo 15',function(){snap();S.mods[0].fundoMm=15;S.mods[1].fundoMm=15}]];
+for(var i=0;i<CAS.length;i++){await cena();var a=P();CAS[i][1]();draw();await W(30);var semToque=P(),sug=document.getElementById('stsug'),temBotao=!!(sug&&!sug.hidden&&sug.querySelector('[data-stsug="ok"]'));
+ if(window.stSugAplica&&temBotao)sug.querySelector('[data-stsug="ok"]').click();await W(30);R[CAS[i][0]]=a+' → '+semToque+' · botão '+temBotao+' · com o toque '+P()}
+/* pedra nova junto com o balcão: nasce encaixada (padrão) */loadState(initLimpo());S.env='cozinha';S.W=5000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].w=650;draw();addStone();draw();R.nova=P();
+/* desfazer o toque volta a pedra de antes */await cena();await W(800);histTick();snap();S.mods[1].w=+S.mods[1].w+50;draw();await W(800);histTick();var sgb=document.querySelector('#stsug [data-stsug="ok"]');if(sgb)sgb.click();draw();await W(800);histTick();var com=P();document.getElementById('und').click();await W(150);R.desfazToque=com+' → desfazer '+P();
+R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["largura"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1585×606")
+        XCTAssertEqual(o["duplicar"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+2135×606")
+        XCTAssertEqual(o["fundo 15"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1535×615")
+        XCTAssertEqual(o["nova"] as? String, "0+1585×606", "pedra nova nasce encaixada, igual a antes")
+        XCTAssertEqual(o["desfazToque"] as? String, "0+1585×606 → desfazer 0+1535×606")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

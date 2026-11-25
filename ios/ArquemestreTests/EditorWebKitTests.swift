@@ -9952,7 +9952,7 @@ final class EditorWebKitTests: XCTestCase {
         /* 4. com tamponamento de cima e de lado: fica em cima do tamponamento e pega a largura toda */
         m.tt=true;m.tr=true;draw();R.comTamponamentos=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);m.tt=false;m.tr=false;draw();
         /* 5. módulo em cima do aéreo: o fechamento vai só até ele */
-        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
+        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();/* REG12-CRIACAO (Adauto 25/11 via Chefe): a criação não liga mais sozinha o tamponamento do aéreo que já existia; a pessoa toca em "Ajustar vizinhos ao novo módulo" e a conferência é A MESMA de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv5_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv5_)sbv5_.click()}R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
         /* 6. aéreo encostado no teto: não sobra vão, não entra peça */
         m.h=950;draw();R.encostaNoTeto=pc(m);m.h=750;draw();
         /* 7. pé-direito diferente: acompanha */
@@ -11482,7 +11482,7 @@ final class EditorWebKitTests: XCTestCase {
         /* parede cheia */cena(2700);var antes=S.mods.slice(),d0=dims(antes);newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);var q=document.getElementById('fitq');
         R.cheia=(S.mods.length===antes.length?'não entrou sozinho':'entrou ('+S.mods[S.mods.length-1].w+')')+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta');
         R.botoes=q?[].map.call(q.querySelectorAll('[data-fitq]'),function(b){return b.textContent.trim()}).join(' / '):'';
-        /* a pessoa escolhe usar o espaço livre */var bu=q&&q.querySelector('[data-fitq="usar"]');if(bu)bu.click();await W(100);/* REG12-CRIACAO (Adauto 25/11 via Chefe): criar não ajusta mais sozinho os vizinhos; a pessoa toca em "Ajustar vizinhos ao novo módulo" e as conferências são AS MESMAS de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv_){sbv_.click();await W(40)}}var nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];R.usar=(nv?'entrou com '+nv.w:'não entrou')+' · '+sobrepoe()+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram');
+        /* a pessoa escolhe usar o espaço livre */var bu=q&&q.querySelector('[data-fitq="usar"]');if(bu)bu.click();await W(100);/* REG12-CRIACAO (Chefe 25/11): o N do "Usar" conta o tamponamento do vizinho NO LUGAR; sem tocar em nada, o novo cabe sem sobrepor e o vizinho não muda */var nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];R.usar=(nv?'entrou com '+nv.w:'não entrou')+' · '+sobrepoe()+' · '+(dims(antes)===d0?'outros iguais':'outros mudaram');
         /* "Não colocar" */cena(2700);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);q=document.getElementById('fitq');var bn=q&&q.querySelector('[data-fitq="nao"]');if(bn)bn.click();R.naoColocar=(S.mods.length===antes.length?'não colocou':'colocou')+' · '+(q&&q.hidden?'fechou':'aberta');
         /* parede livre: medida do catálogo, sem pergunta */cena(8000);antes=S.mods.slice();newTpl(T('Balcão 3 portas + 4 gavetas'));draw();await W(100);nv=S.mods.filter(function(m){return antes.indexOf(m)<0})[0];q=document.getElementById('fitq');R.livre=(nv?nv.w:'-')+' · '+(q&&!q.hidden?'perguntou':'sem pergunta')+' · '+sobrepoe();
         R.errs=__errs.length-e0;return JSON.stringify(R);
@@ -14312,6 +14312,8 @@ final class EditorWebKitTests: XCTestCase {
          document.getElementById('und').click();await W(200);/* o desfazer passa pelo loadState, que só normaliza campos vazios (ex.: wing): confere posição e tamponamento */var pt=function(m){return JSON.stringify([m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz])};var U=S.mods.slice(0,-1).map(pt),antesP=antes.map(function(j){return pt(JSON.parse(j))});
          out.push((JSON.stringify(sem)===JSON.stringify(antes)?'sem toque iguais':'sem toque MUDOU')+' · novo em x'+xn+(sob?' SOBREPÕE':' sem sobrepor')+' · '+(sg?sg.tipo:'sem sugestão')+' · '+txt+' · '+(JSON.stringify(A)===JSON.stringify(B)?'com toque igual ao de antes':'com toque DIFERENTE')+' · '+(JSON.stringify(U)===JSON.stringify(antesP)?'um desfazer volta':'desfazer NÃO volta'))}
         R.criar=out.join(' | ');
+        /* Chefe 25/11: durante a criação o vizinho NÃO é escrito (nem pra testar e voltar): cada campo dele vira um espião que anota qualquer escrita */cena();await W(30);atArm();newTpl(T('Balcão 2 portas'));draw();await W(60);var viz=S.mods[0],escritas=[];Object.keys(viz).concat(['tl','tr','tlAuto','trAuto','x','w']).forEach(function(k){var v=viz[k];try{Object.defineProperty(viz,k,{configurable:true,enumerable:k in viz,get:function(){return v},set:function(n){/* escrever = mudar o valor (normalizar com o mesmo valor, ex.: x=x, não conta) */if(JSON.stringify(n)!==JSON.stringify(v))escritas.push(k);v=n}})}catch(_){}});var dl0=Reflect.deleteProperty;
+        atArm();newTpl(T('Gaveteiro 3 gavetas'));draw();await W(80);R.escritas=escritas.length?'escreveu '+escritas.join(','):'nenhuma escrita';
         /* abrir um projeto salvo com uma ponta sem tamponamento: nada muda e nada é sugerido */cena();await W(30);atArm();newTpl(T('Balcão 2 portas'));draw();await W(40);var m0=S.mods[0];m0.tl=m0.tr=false;delete m0.tlAuto;delete m0.trAuto;var ST=JSON.stringify(snapState());loadState(JSON.parse(ST));draw();await W(60);var ptL=function(L){return JSON.stringify(L.map(function(m){return [m.x,m.w,m.b,!!m.tl,!!m.tr,m.tlW,m.trW,m.lx,m.lz]}))};/* posição e tamponamento (o loadState só normaliza campos vazios, ex.: wing) */R.abrir=(ptL(snapState().mods)===ptL(JSON.parse(ST).mods)?'igual':'MUDOU')+' · '+(libSug()?'sugeriu':'sem sugestão');
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -14319,6 +14321,7 @@ final class EditorWebKitTests: XCTestCase {
         let ok = " · viz · Ajustar vizinhos ao novo módulo · com toque igual ao de antes · um desfazer volta"
         XCTAssertEqual(o["criar"] as? String, "sem toque iguais · novo em x935 sem sobrepor" + ok + " | sem toque iguais · novo em x1535 sem sobrepor" + ok + " | sem toque iguais · novo em x1035 sem sobrepor" + ok, "balcão+gaveteiro, fileira de 3 e aéreos")
         XCTAssertEqual(o["abrir"] as? String, "igual · sem sugestão", "abrir projeto salvo não mexe em nada")
+        XCTAssertEqual(o["escritas"] as? String, "nenhuma escrita", "o vizinho não é escrito durante a criação (Chefe 25/11: na causa, não desfazendo depois)")
         XCTAssertEqual((o["errs"] as? NSNumber)?.intValue ?? 0, 0, "sem erros")
     }
 

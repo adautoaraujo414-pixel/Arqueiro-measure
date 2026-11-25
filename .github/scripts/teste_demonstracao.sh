@@ -4,4 +4,5 @@ set -uo pipefail
 result=$?
 mkdir -p app/build/reports/androidTests/provas
 adb pull /sdcard/Android/data/br.com.arque.measure.teste/files/demonstracao.png app/build/reports/androidTests/provas/demonstracao.png || true
+adb pull /sdcard/Android/data/br.com.arque.measure.teste/files/demonstracao-ui.xml app/build/reports/androidTests/provas/demonstracao-ui.xml || true
 exit "$result"

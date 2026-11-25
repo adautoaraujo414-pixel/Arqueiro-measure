@@ -22,7 +22,8 @@ final class VideoGravarUITests: XCTestCase {
         let fim = Date().addingTimeInterval(ate)
         var rolou = 0
         repeat {
-            for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && e.isHittable { return e } }
+            // 8ª rodada no iPad: isHittable num elemento sem área dá erro do XCTest ("Activation point invalid"); só pergunta a quem tem área
+            for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && !e.frame.isEmpty && e.frame.width > 1 && e.isHittable { return e } }
             // existe mas está fora da tela (iPhone: a lista de clientes passa da altura): rola a página e tenta de novo
             if q.count > 0 && rolou < 6 && base == nil { app.webViews.firstMatch.swipeUp(velocity: .slow); rolou += 1; continue }
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
@@ -83,7 +84,7 @@ final class VideoGravarUITests: XCTestCase {
         func botaoSegue() -> XCUIElement? {
             let ps = segue.map { NSPredicate(format: "label == %@", $0) } + ["Continu", "Get Started", "Começar"].map { NSPredicate(format: "label CONTAINS[c] %@", $0) }
             let q = app.buttons.matching(NSCompoundPredicate(orPredicateWithSubpredicates: ps))
-            for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.isHittable && !daPagina.contains(e.label) { return e } }
+            for i in 0..<min(q.count, 6) { let e = q.element(boundBy: i); if e.exists && e.frame.width > 1 && e.isHittable && !daPagina.contains(e.label) { return e } }
             return nil
         }
         var mostrouSeletor = false
@@ -94,7 +95,7 @@ final class VideoGravarUITests: XCTestCase {
             for q in [app.images.matching(pv), app.cells.matching(pv), app.collectionViews.cells, app.scrollViews.images] {
                 for i in 0..<min(q.count, 12) {
                     let e = q.element(boundBy: i)
-                    guard e.exists && e.isHittable else { continue }
+                    guard e.exists && e.frame.width > 1 && e.isHittable else { continue }
                     if e.label == "Vídeos" || e.label == "Videos" || e.identifier.contains("Onboarding") || e.frame.width < 60 || e.frame.height < 60 { continue }
                     alvo = e; break
                 }

@@ -165,7 +165,9 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         let arqs = ((try? FileManager.default.contentsOfDirectory(atPath: dir.path)) ?? []).filter { $0.hasPrefix("video_") && $0.hasSuffix(".json") }
         XCTAssertEqual(arqs.count, 1, "o vídeo gravado pela versão publicada está nos arquivos do app")
         let cfg = WKWebViewConfiguration()
-        cfg.websiteDataStore = .nonPersistent()
+        // 25/11 (8ª rodada no CI): no armazenamento temporário (.nonPersistent) o WebKit não guarda Blob no IndexedDB, e o vídeo
+        // restaurado do video_*.json não chegava ao banco do editor. O app usa armazenamento de verdade: aqui um novo e vazio.
+        cfg.websiteDataStore = WKWebsiteDataStore(forIdentifier: UUID())
         cfg.mediaTypesRequiringUserActionForPlayback = []
         cfg.allowsInlineMediaPlayback = true
         cfg.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque")
@@ -189,13 +191,14 @@ final class AtualizacaoAbreProjetosTests: XCTestCase {
         await fulfillment(of: [ready], timeout: 90)
         XCTAssertNil(host.failed, "o editor não abriu: \(host.failed ?? "")")
         let r = try await w.callAsyncJavaScript(#"""
+          var blobIDB=await new Promise(function(res){try{var q=indexedDB.open('teste-blob-'+Date.now(),1);q.onupgradeneeded=function(){q.result.createObjectStore('s')};q.onerror=function(){res('abrir: '+q.error)};q.onsuccess=function(){try{var tx=q.result.transaction('s','readwrite');tx.objectStore('s').put(new Blob(['abc'],{type:'video/mp4'}),'k');tx.oncomplete=function(){res('ok')};tx.onerror=function(){res('erro '+tx.error)};tx.onabort=function(){res('abortou '+tx.error)}}catch(e){res('exceção '+e)}}}catch(e){res('exceção '+e)}});
           var o=null,t0=Date.now();while(Date.now()-t0<20000){var L=await new Promise(function(res){try{phAll(function(X){res((X||[]).filter(function(q){return q.kind==='video'&&q.blob}))})}catch(e){res([])}});if(L.length){o=L[0];break}await new Promise(function(r){setTimeout(r,300)})}
-          if(!o)return JSON.stringify({achou:false,ms:Date.now()-t0,errs:__errs.slice()});
+          if(!o)return JSON.stringify({achou:false,ms:Date.now()-t0,blobIDB:blobIDB,arquivos:(function(){try{return ArqueApp.listFiles()}catch(e){return 'erro '+e}})(),errs:__errs.slice()});
           var buf=await o.blob.arrayBuffer();var h=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',buf))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
           var el=document.createElement('video');el.muted=true;el.playsInline=true;el.src=URL.createObjectURL(o.blob);document.body.appendChild(el);
           var toca=await new Promise(function(r){var t=setTimeout(function(){r('sem resposta em 20 s (pronto '+el.readyState+')')},20000);el.onerror=function(){clearTimeout(t);r('erro '+(el.error&&el.error.code))};
            el.oncanplay=function(){el.play().then(function(){setTimeout(function(){clearTimeout(t);r('tocou até '+el.currentTime.toFixed(2)+' s de '+el.duration.toFixed(2)+' s')},800)},function(e){clearTimeout(t);r('play recusado '+e)})};el.load()});
-          el.remove();return JSON.stringify({achou:true,ms:Date.now()-t0,nome:o.nome,pid:o.pid,tipo:o.blob.type,tam:buf.byteLength,sha:h,toca:toca,errs:__errs.slice()});
+          el.remove();return JSON.stringify({achou:true,blobIDB:blobIDB,ms:Date.now()-t0,nome:o.nome,pid:o.pid,tipo:o.blob.type,tam:buf.byteLength,sha:h,toca:toca,errs:__errs.slice()});
           """#, arguments: [:], in: nil, contentWorld: .page)
         let o = try XCTUnwrap((try JSONSerialization.jsonObject(with: Data(((r as? String) ?? "{}").utf8))) as? [String: Any])
         print("ATUALIZACAO-VIDEO: \(o)")

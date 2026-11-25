@@ -18969,7 +18969,7 @@ final class EditorWebKitTests: XCTestCase {
         /* projeto antigo (fundos 6 e um de 3, sem nada novo no arquivo): abre igual */
         loadState(initLimpo());demoScene();await W(400);S.mods[6].fundoMm=3;draw();var ST=JSON.stringify(snapState()),S0=sig();
         loadState(JSON.parse(ST));draw();R.antigo=[sig()===S0?'igual':'MUDOU',fs_(),(function(){var f=function(o){return JSON.stringify(o.mods.map(function(m){return [m.fundo,m.fundoPia,m.fundoMm,m.fundoTipo,m.fundoMan]}))};return f(snapState())===f(JSON.parse(ST))?'fundos do arquivo iguais':'fundos do arquivo mudaram'})()].join(' · ');
-        var nAv=0;S.mods.forEach(function(m){S.m=m;S.tab=5;panel();nAv+=document.querySelectorAll('#f15box .note').length});R.semAviso=nAv;R.campoNovo=/f15|fundoAv/.test(ST)?'tem':'não tem';
+        var nAv=0;S.mods.forEach(function(m){S.m=m;S.tab=5;panel();nAv+=document.querySelectorAll('#f15box .note').length});R.semAviso=nAv;/* campo novo = CHAVE com f15/fundoAv em qualquer nível do arquivo (Chefe 25/11: procurar o texto no JSON inteiro dava falso positivo quando um id aleatório em base 36 continha "f15") */var chaves=function(o,L){L=L||[];if(o&&typeof o==='object'){Object.keys(o).forEach(function(k){if(!Array.isArray(o))L.push(k);chaves(o[k],L)})}return L},temCampo=function(o){return chaves(o).some(function(k){return /f15|fundoAv/.test(k)})};R.campoNovo=temCampo(JSON.parse(ST))?'tem':'não tem';var sd=JSON.parse(ST);sd.mods[0].uid='zf15q';var sdc=JSON.parse(ST);sdc.mods[0].fundoAvX=1;R.sondaCampo='id com f15: texto '+(/f15|fundoAv/.test(JSON.stringify(sd))?'tem':'não tem')+' · chave '+(temCampo(sd)?'tem':'não tem')+' · chave nova de verdade: '+(temCampo(sdc)?'tem':'não tem');
         /* salvar, reabrir e duplicar com 15 */
         ensureProj();fundoTodos(15);await W(50);var v15=sig(),f15=fs_();saveNow();await W(300);
         loadState(initLimpo());draw();window.arqueOpenClient(CUR);await W(500);R.reabre=(fs_()===f15)+' · '+(sig()===v15);
@@ -18979,6 +18979,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["antigo"] as? String, "igual · 6,6,6,6,6,6,3,6,6 · fundos do arquivo iguais")
         XCTAssertEqual(o["semAviso"] as? Int, 0, "projeto antigo sem aviso novo")
         XCTAssertEqual(o["campoNovo"] as? String, "não tem")
+        // Chefe 25/11: a conferência é pelas CHAVES; um id com "f15" não conta, uma chave nova conta
+        XCTAssertEqual(o["sondaCampo"] as? String, "id com f15: texto tem · chave não tem · chave nova de verdade: tem")
         XCTAssertEqual(o["reabre"] as? String, "true · true")
         XCTAssertEqual(o["duplica"] as? String, "true · true · true")
         XCTAssertEqual(o["errs"] as? Int, 0)

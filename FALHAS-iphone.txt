@@ -1,0 +1,17 @@
+commit b4a45134bcc67d4afdcd6587aa4b286f69b81d62 · execução 696 · iphone ·     5841 linhas no log
+==== falhas (mensagem completa) ====
+quireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=44777, error: (null)
+quireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=66013, error: (null)
+e RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79695, error: (null)
+sAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=94421, error: (null)
+2026-11-25 18:18:04.242739+0000 Arquemestre[7608:274378] [XPC] Handle connection with error: Connection interrupted
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:64: error: -[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+2026-11-25 19:00:36.863184+0000 Arquemestre[7608:31003<unknown>:0: error: -[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira] : failed: caught error: "InvalidTransition { 
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' failed (209.595 seconds).
+Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=99699, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.ZipBackupTests testZipIdaEVolta]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.086 (0.087) seconds
+	 Executed 64 tests, with 0 failures (0 unexpected) in 139.649 (141.123) seconds
+	 Executed 64 tests, with 0 failures (0 unexpected) in 139.649 (141.124) seconds

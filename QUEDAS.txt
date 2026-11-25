@@ -1,0 +1,140 @@
+######## build/xcodebuild-test.log
+==== linhas 5375..5460
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreDaGeladeiraTrocarAPortaMexeSoNaPortaDeCimaETamponamentoSegueATorre]' started (Iteration 1 of 2).
+2026-11-25 18:57:48.086028+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x1591880f0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 18:57:49.681959+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15931df80 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 18:57:49.814613+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.638979 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreDaGeladeiraTrocarAPortaMexeSoNaPortaDeCimaETamponamentoSegueATorre]' passed (36.286 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreDoFornoTrocaAPortaDeCadaVaoEGeladeira]' started (Iteration 1 of 2).
+2026-11-25 18:57:57.211404+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.089614 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreDoFornoTrocaAPortaDeCadaVaoEGeladeira]' passed (4.623 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo]' started (Iteration 1 of 2).
+2026-11-25 18:58:01.943322+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.183680 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreNichoDeEmbutirEReguaDoCavaEmCimaEEmbaixo]' passed (5.964 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePedestalDesceAteOChaoEPrateleiraArrasta]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePedestalDesceAteOChaoEPrateleiraArrasta]' passed (16.283 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' started (Iteration 1 of 2).
+2026-11-25 18:58:24.228604+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.195731 seconds to launch
+2026-11-25 18:58:26.023733+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15931c180 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 18:58:27.245220+0000 Arquemestre[7608:27692] [Process] 0x1350ac0c0 - [PID=96218] WebProcessProxy::didBecomeUnresponsive:
+2026-11-25 18:58:27.246316+0000 Arquemestre[7608:27692] [Process] 0x10485e318 - [pageProxyID=6425, webPageID=6426, PID=96218] WebPageProxy::processDidBecomeUnresponsive:
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' exceeded execution time allowance of 2 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:64: error: -[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+2026-11-25 19:00:33.146480+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11e93ee20 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:00:33.710513+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15931d320 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:00:33.712400+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15931cdb0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+ABERTURA-DIAG bateria: -[EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira] abriu o editor em 130.59 s
+2026-11-25 19:00:36.863184+0000 Arquemestre[7608:31003<unknown>:0: error: -[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira] : failed: caught error: "InvalidTransition { 
+  phase: idle
+  targetPhase: failed(disabled)
+}"
+] [Process] WebContent[96218] 0x106a6c008 - [webPageID=6426] WebPage::runJavaScriptInFrameInScriptWorld: Request to run JavaScript failed with error ReferenceError: Can't find variable: ICO
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' failed (209.595 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' started (Iteration 2 of 2).
+2026-11-25 19:01:54.256282+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.194131 seconds to launch
+2026-11-25 19:01:58.070420+0000 Arquemestre[7608:27692] [RTILog] -[RTIInputSystemClient remoteTextInputSessionWithID:performInputOperation:]  perform input operation requires a valid sessionID. inputModality = Keyboard, inputOperation = <null selector>, customInfoType = UIEmojiSearchOperations
+2026-11-25 19:02:14.387034+0000 Arquemestre[7608:27692] [RTILog] -[RTIInputSystemClient remoteTextInputSessionWithID:performInputOperation:]  Can only perform input operation for an active session. sessionID = BCD56DCC-4B86-4685-86E7-1B519644D7B3
+2026-11-25 19:02:14.681523+0000 Arquemestre[7608:479618] [CandidateGeneration] Result accumulator timeout: 0.250000, exceeded.
+2026-11-25 19:02:14.895657+0000 Arquemestre[7608:479297] [CandidateGeneration] Result accumulator timeout: 0.250000, exceeded.
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorDentroDoGuardaRoupaMedidaRealEMaisUmaPrateleira]' passed (22.407 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor]' started (Iteration 1 of 2).
+2026-11-25 19:02:22.698690+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x1590e06c0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:02:39.803217+0000 Arquemestre[7608:27692] [IPC] 0x1353b6700 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 901 pending incoming messages, will only process 600 before yielding)
+2026-11-25 19:02:39.803762+0000 Arquemestre[7608:27692] [IPC] 0x1353b6700 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 19:02:39.880182+0000 Arquemestre[7608:27692] [IPC] 0x1353b6700 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 302 pending incoming messages, will only process 300 before yielding)
+2026-11-25 19:02:39.880306+0000 Arquemestre[7608:27692] [IPC] 0x1353b6700 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor]' passed (25.116 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorVaosRecorteMeioRecortePortaNormalEModelosReais]' started (Iteration 1 of 2).
+2026-11-25 19:02:44.968261+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15920e520 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePorVaosRecorteMeioRecortePortaNormalEModelosReais]' passed (5.016 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreQuenteEditavelPelaLupaComNichosEMicroOndas]' started (Iteration 1 of 2).
+2026-11-25 19:02:48.961341+0000 Arquemestre[7608:480362] [assertion] Error acquiring assertion: <Error Domain=RBSServiceErrorDomain Code=1 "((target is not running or doesn't have entitlement com.apple.developer.web-browser-engine.rendering AND target is not running or doesn't have entitlement com.apple.developer.web-browser-engine.networking AND target is not running or doesn't have entitlement c
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreQuenteEditavelPelaLupaComNichosEMicroOndas]' passed (9.848 seconds).
+2026-11-25 19:02:55.048115+0000 Arquemestre[7608:480362] [ProcessSuspension] 0x135130480 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=96517, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreTocadaNoProjetoMostraPainelPorVaosSemIrPro2DIsolado]' passed (8.413 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTransferenciaEBackupLevamOProjetoInteiro]' started (Iteration 1 of 2).
+2026-11-25 19:03:04.909266+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.125646 seconds to launch
+2026-11-25 19:03:07.932636+0000 Arquemestre[7608:27692] [Process] 0x1350ac0c0 - [PID=96561] WebProcessProxy::didBecomeUnresponsive:
+2026-11-25 19:03:07.933477+0000 Arquemestre[7608:27692] [Process] 0x10485e318 - [pageProxyID=6497, webPageID=6498, PID=96561] WebPageProxy::processDidBecomeUnresponsive:
+2026-11-25 19:03:48.795270+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15920fea0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:03:48.810101+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15920fc30 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:03:48.811393+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15920f180 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 19:03:48.812325+0000 Arquemestre[7608:27692] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x15920fc60 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+ABERTURA-DIAG bateria: -[EditorWebKitTests testTransferenciaEBackupLevamOProjetoInteiro] abriu o editor em 47.96 s
+Test Case '-[ArquemestreTests.EditorWebKitTests testTransferenciaEBackupLevamOProjetoInteiro]' passed (50.752 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTravarPortaJanelaEProjetoRecebidoTudoTravado]' started (Iteration 1 of 2).
+2026-11-25 19:03:55.692074+0000 Arquemestre[7608:27692] [Process] WebContent process (0x1350ac0c0) took 1.048136 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTravarPortaJanelaEProjetoRecebidoTudoTravado]' passed (6.617 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrenaGrudaNoCantoPorDentroEPorFora]' started (Iteration 1 of 2).
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult
+
+2026-11-25 19:04:14.088284+0000 Arquemestre[97060:483362] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+2026-11-25 19:04:14.243772+0000 Arquemestre[97060:483368] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-11-25 19:04:16.755.
+Test Suite 'ArquemestreTests.xctest' started at 2026-11-25 19:04:16.756.
+Test Suite 'EditorWebKitTests' started at 2026-11-25 19:04:16.756.
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorreDaGeladeiraQueJaVirouPortaInteiraAvisaENaoMudaSozinho]' started (Iteration 1 of 2).
+######## build/xcodebuild-test-ipad.log
+######## xcresult (iPhone)
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "F90353E4-F95D-488C-9F4E-B43F74E385F2",
+        "deviceName" : "iPhone 17 Pro Max",
+        "modelName" : "iPhone 17 Pro Max",
+        "osBuildNumber" : "23F77",
+        "osVersion" : "26.5",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 624,
+      "skippedTests" : 2,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Arquemestre · Built with macOS 26.7.2",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1795633653.585,
+  "passedTests" : 624,
+  "result" : "Failed",
+  "skippedTests" : 2,
+  "startTime" : 1795628491.32,
+  "statistics" : [
+    {
+      "subtitle" : "627 test runs",
+      "title" : "1 configuration ran with test repetitions"
+    }
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "Test exceeded execution time allowance of 2 minutes",
+      "targetName" : "ArquemestreTests",
+      "testIdentifier" : 563,
+      "testIdentifierString" : "EditorWebKitTests/testToqueNoVaoComoNoIPhoneSemClickEscolheOVaoEmTodosOsModelosDoCatalogo()",
+      "testIdentifierURL" : "test://com.apple.xcode/Arquemestre/ArquemestreTests/EditorWebKitTests/testToqueNoVaoComoNoIPhoneSemClickEscolheOVaoEmTodosOsModelosDoCatalogo",
+      "testName" : "testToqueNoVaoComoNoIPhoneSemClickEscolheOVaoEmTodosOsModelosDoCatalogo()"
+    }
+  ],
+  "title" : "Test - Arquemestre",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "28% of duration",
+      "text" : "20 longest test runs with outlier durations exceeding 42.69s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 627
+}

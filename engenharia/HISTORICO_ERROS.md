@@ -2552,6 +2552,7 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Em mm nada muda:** o teste confere o texto em mm igual ao de antes.
 - **Teste:** `testUNIDADE_CotasDaPedraCubaListaEQuadrosDo3DEmCmEMmIgualAntes`. No 436ac8f2 falha em todos os pontos (ex.: "820 | 865 → 820 | 865"); agora "820 | 865 → 82 | 86,5". Os 6 `testUNIDADE_*` passam a 1366 e a 430.
 - **Ficou como está (já tem unidade escrita, em mm):** o relatório de medidas da planta (`cmmm`, "… mm") e a nota do rebaixo do perfil na lista. Não convertidos.
+- **2ª parte (Claude 3: o "3384" era o campo "Da parede esquerda" do quadro do eletro):** os campos dos quadros do 3D (eletro, pedra, cuba, caixa, módulo, peça, LED) não têm `<label>` (o rótulo é um `<span>`), então a camada UN não os via como medida. Na origem: `UN.lab(rótulo)` põe o rótulo no campo (`data-lab`) e `UN.rot` faz o "(mm)" do texto seguir os Ajustes. Em cm o eletro mostra 61,6 · 170 · 69,1 · 298,4 · 0, o código continua lendo 616 · 1700 · 691 · 2984 · 0, e digitar 61,5 na pedra grava 615. Mesmo teste, que falha no 436ac8f2.
 
 ## TOQUE-2X (25/11): `testNo3DDuplicarPecaEDoisToquesNoPuxadorReposicionaTodos` intermitente (bateria completa do pre-final 436ac8f2, 1366) — Claude 4
 - **Achado:** falhou 1 vez na bateria a 1366 (botao false, dup 1). Repetido sozinho: pre-final 1/2 e depois 4/4 falhando com as 2 baterias rodando; 5/5 ok com a máquina livre. No fechamento-code1 (base) também falha: 2/5. **Não é da integração.**

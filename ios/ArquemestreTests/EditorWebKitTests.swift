@@ -19707,6 +19707,8 @@ final class EditorWebKitTests: XCTestCase {
     // UNIDADE (Claude 3, revisão do pre-final 25/11): em cm ainda ficavam em mm, sem unidade, as cotas da pedra no 2D (sT/sR/sL), o rótulo
     // da cuba (fundo/frente), o cabeçalho de cada módulo na lista e na tabela de ferragens, e o título dos quadros do 3D (eletro, pedra).
     // Convertidos na origem (UN.num/UN.med/UN.len). Em mm o texto fica igual ao de antes (lado esquerdo de cada →).
+    // Também os campos dos quadros do 3D (sem <label>: o rótulo vai em data-lab e o "(mm)" do texto segue os Ajustes): mostram cm, o código lê mm
+    // e digitar 61,5 em cm grava 615 (o 3384 que o Claude 3 viu era o "Da parede esquerda" do quadro do eletro).
     func testUNIDADE_CotasDaPedraCubaListaEQuadrosDo3DEmCmEMmIgualAntes() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
@@ -19717,8 +19719,8 @@ final class EditorWebKitTests: XCTestCase {
           o.cuba=tx.filter(function(x){return /^fundo /.test(x)}).join(',');
           openCut();await W(800);var cb=document.getElementById('cutbody');o.lista=[].map.call(cb.querySelectorAll('h3'),function(t){return t.textContent}).filter(function(x){return /^Base 1 · /.test(x)})[0]||'-';
           o.ferr=[].map.call(cb.querySelectorAll('small'),function(t){return t.textContent}).filter(function(x){return /^\d[\d,]* × \d[\d,]* × /.test(x)})[0]||'-';try{closeCut()}catch(_){}
-          apAdd('geladeira',0);draw();var f=(S.fr||[])[0];open3D();await W(600);if(f){__itOpen({k:'fr',id:f.id});await W(100)}var it=document.getElementById('it4')||document.body;o.eletro=f?(String((it.querySelector('b span')||{}).textContent||'-')):'sem eletro';
-          __itOpen({k:'st',id:st.id});await W(100);o.pedra3d=String(((document.getElementById('it4')||document.body).querySelector('b span')||{}).textContent||'-');
+          apAdd('geladeira',0);draw();var f=(S.fr||[])[0];open3D();await W(600);if(f){__itOpen({k:'fr',id:f.id});await W(100)}var it=document.getElementById('it4')||document.body;o.eletro=f?(String((it.querySelector('b span')||{}).textContent||'-')):'sem eletro';var qs_=[].slice.call(it.querySelectorAll('input[data-qf]'),0,5);o.campos=qs_.map(function(q){return unRawGet(q)}).join(' ');o.codigo=qs_.map(function(q){return q.value}).join(' ');o.rotulo=qs_.map(function(q){var sp=q.parentNode.querySelector('span');return sp?sp.textContent:''})[3];
+          __itOpen({k:'st',id:st.id});await W(100);o.pedra3d=String(((document.getElementById('it4')||document.body).querySelector('b span')||{}).textContent||'-');var qd=document.querySelector('#it4 input[data-qf="d"]');o.digitou='-';if(qd){unRawSet(qd,u==='cm'?'61,5':'615');qd.dispatchEvent(new Event('change',{bubbles:true}));await W(100);o.digitou=unRawGet(qd)+' → '+S.stones[0].d}
           try{document.getElementById('v3x').click()}catch(_){}await W(100);return o};
         var mm=await cena('mm'),cm=await cena('cm');arqueUnidade('mm');
         Object.keys(mm).forEach(function(k){R[k]=mm[k]+' → '+cm[k]});
@@ -19730,6 +19732,10 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["lista"] as? String, "Base 1 · 900 × 820 × 560 → Base 1 · 90 × 82 × 56 cm")
         XCTAssertEqual(o["ferr"] as? String, "900 × 820 × 560 → 90 × 82 × 56 cm")
         XCTAssertEqual(o["eletro"] as? String, "616 × 1700 × 691 → 61,6 × 170 × 69,1 cm")
+        XCTAssertEqual(o["campos"] as? String, "616 1700 691 2984 0 → 61,6 170 69,1 298,4 0")
+        XCTAssertEqual(o["codigo"] as? String, "616 1700 691 2984 0 → 616 1700 691 2984 0")
+        XCTAssertEqual(o["rotulo"] as? String, "Da parede esquerda (mm) → Da parede esquerda (cm)")
+        XCTAssertEqual(o["digitou"] as? String, "615 → 615 → 61,5 → 615")
         XCTAssertEqual(o["pedra3d"] as? String, "2735 × 606 → 273,5 × 60,6 cm")
         XCTAssertEqual(o["med"] as? String, "900 × 820 × 560 → 90 × 82 × 56 cm · 69,55 cm")
         XCTAssertEqual(o["e"] as? String, "")

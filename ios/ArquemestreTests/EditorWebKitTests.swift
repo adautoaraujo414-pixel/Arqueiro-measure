@@ -5376,7 +5376,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["iguaisEmDuasParedes"] as? Int, 0)
         XCTAssertEqual(o["no3D"] as? String, "{fundo:0,direita:6}", "3D: os 6 só na direita (antes 6 no fundo e 6 na direita)")
         XCTAssertEqual(o["aviso"] as? Bool, true, "avisa que a área já tem painel")
-        XCTAssertEqual(o["noFundo"] as? String, "🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}", "no fundo a faixa diz fundo e a trena volta pra parede toda")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["noFundo"] as? String, "🧱 Parede do fundo · 4140 × 3400 mm · trena {\"x0\":0,\"x1\":4140}", "no fundo a faixa diz fundo e a trena volta pra parede toda")
         XCTAssertEqual((o["errs"] as? [Any])?.count ?? 0, 0, "sem erros: \(o["errs"] ?? "")")
     }
 
@@ -10066,17 +10067,23 @@ final class EditorWebKitTests: XCTestCase {
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
         /* PEDIDO 61 (16/11/2026, aprovado): a faixa da parede ganhou o botão "—" de minimizar, por isso o texto termina em "—" */
-        XCTAssertEqual(o["projetoVazio"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["projetoVazio"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita—")
         XCTAssertEqual(o["painel"] as? String, "seção Paredes do ambiente saiu · botões de parede no painel 0")
         XCTAssertEqual(o["esquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita—")
         XCTAssertEqual(o["direita"] as? String, "🧱 Parede da direita · 2600 × 2600◀ FundoEsquerda—")
         XCTAssertEqual(o["naEsquerda"] as? String, "🧱 Parede da esquerda · 2600 × 2600◀ FundoDireita— · painéis vistos 0")
-        XCTAssertEqual(o["fundo"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita— · painéis vistos 1")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["fundo"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita— · painéis vistos 1")
         XCTAssertEqual(o["guardado"] as? String, "d:900")
-        XCTAssertEqual(o["ambiente_quarto"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
-        XCTAssertEqual(o["ambiente_sala"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
-        XCTAssertEqual(o["ambiente_banho"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
-        XCTAssertEqual(o["ambiente_livre"] as? String, "🧱 Parede do fundo · 3200 × 2600EsquerdaDireita—")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["ambiente_quarto"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita—")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["ambiente_sala"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita—")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["ambiente_banho"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita—")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["ambiente_livre"] as? String, "🧱 Parede do fundo · 3200 × 2600 mmEsquerdaDireita—")
         XCTAssertEqual(o["erros"] as? String, "")
     }
 
@@ -11066,7 +11073,8 @@ final class EditorWebKitTests: XCTestCase {
         b().querySelector('[data-wvmax]').click();await W(80);R.abriuDeNovo=b().querySelector('[data-wvg="e"]')&&b().querySelector('[data-wvmin]')?'Esquerda/Direita de volta':'não';
         R.erros=__errs.slice(e0).join(' | ');return JSON.stringify(R,null,1);
         """#)
-        XCTAssertEqual(o["aberta"] as? String, "🧱 Parede do fundo · 3200 × 2600 Esquerda Direita — · altura normal")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da parede
+        XCTAssertEqual(o["aberta"] as? String, "🧱 Parede do fundo · 3200 × 2600 mm Esquerda Direita — · altura normal")
         XCTAssertEqual(o["minimizada"] as? String, "🧱 Fundo · 3200 × 2600 ▸ Paredes · menor")
         XCTAssertEqual(o["continuaMinimizadaDepoisDeDesenhar"] as? String, "sim")
         XCTAssertEqual(o["naEsquerda"] as? String, "🧱 Esquerda · 2600 × 2600 ▸ Paredes")

@@ -49,8 +49,11 @@ final class EditorWebKitTests: XCTestCase {
     @MainActor
     private func editor(appScheme: Bool = false) async throws -> WKWebView {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "editor", withExtension: "html"), "editor.html tem que ir dentro do app")
+        // CI-ESTAB (25/11): armazenamento compartilhado e limpo antes de cada teste (ver WebKitCompartilhado)
+        await WebKitCompartilhado.aquece()
+        await WebKitCompartilhado.limpa()
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .nonPersistent()
+        config.websiteDataStore = WebKitCompartilhado.store
         if appScheme { config.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque") }
         config.userContentController.addUserScript(WKUserScript(source: Self.bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: config)
@@ -19537,5 +19540,25 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["so2d"] as? String, "true · chips 1", "o ✏️ 2D só ele abre o 2D do módulo")
         XCTAssertEqual(o["volta"] as? String, "true · releu 0", "fechar o 3D só dele em menos de 0,9 s volta pro 2D só dele e fica")
         XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CI-ESTAB (Chefe 25/11): a bateria do iOS usa um armazenamento só (WebKitCompartilhado), limpo antes de cada teste.
+    // Prova do isolamento: o que um editor grava no localStorage e no IndexedDB não aparece no editor do teste seguinte.
+    func testISOLAMENTO_ArmazenamentoCompartilhadoLimpoEntreTestes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        localStorage.setItem('iso.teste','gravado');
+        var ok=await new Promise(function(res){var r=indexedDB.open('isoTeste',1);r.onupgradeneeded=function(){r.result.createObjectStore('s')};r.onsuccess=function(){var db=r.result,t=db.transaction('s','readwrite');t.objectStore('s').put('gravado','k');t.oncomplete=function(){db.close();res(true)};t.onerror=function(){res(false)}};r.onerror=function(){res(false)}});
+        return JSON.stringify({ls:localStorage.getItem('iso.teste'),idb:ok});
+        """#)
+        XCTAssertEqual(o["ls"] as? String, "gravado")
+        XCTAssertEqual(o["idb"] as? Bool, true)
+        let web2 = try await editor()
+        let q = try await run(web2, #"""
+        var novo=await new Promise(function(res){var r=indexedDB.open('isoTeste',1),up=false;r.onupgradeneeded=function(){up=true;r.result.createObjectStore('s')};r.onsuccess=function(){r.result.close();res(up)};r.onerror=function(){res('erro')}});
+        return JSON.stringify({ls:localStorage.getItem('iso.teste'),idbNovo:novo});
+        """#)
+        XCTAssertNil(q["ls"] as? String, "o localStorage do teste anterior não aparece")
+        XCTAssertEqual(q["idbNovo"] as? Bool, true, "o IndexedDB do teste anterior não existe mais (o banco nasce de novo)")
     }
 }

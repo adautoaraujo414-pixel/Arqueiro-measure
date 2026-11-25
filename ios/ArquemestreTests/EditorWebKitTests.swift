@@ -19852,4 +19852,37 @@ R.errs=__errs.length-e0;return JSON.stringify(R)
         XCTAssertEqual(o["desfazToque"] as? String, "0+1585×606 → desfazer 0+1535×606")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // DESFAZER-TODOS (Chefe 25/11, 2ª parte): espelho (criar, editar, girar) e mover no 3D por gesto (pointer events, como o arrasto 3D da bateria):
+    // desfazer = antes, refazer = depois (JSON, sem a seleção).
+    func testDESFAZERTODOS_EspelhoEMoverNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='2d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));apAdd('espelho',0);S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['espelho · criar',function(){apAdd('espelho',0)}],
+ ['espelho · editar',function(){var f=(S.fr||[]).filter(function(q){return q.t==='espelho'})[0];if(!f){apAdd('espelho',0);return}snap();f.w=+f.w+100}],
+ ['espelho · girar',function(){var f=(S.fr||[]).filter(function(q){return q.t==='espelho'})[0];snap();f.rot=((+f.rot||0)+90)%360}],
+ ['mover no 3D (gesto)',async function(){open3D();await W(300);__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');var ev=function(t,x,y,el){(el||cv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:t==='pointerup'?0:1,isPrimary:true}))};
+   var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf('0:')!==0||/Rodapé|Base inferior/.test(q.nm))return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect(),c=[rc.left+p[0],rc.top+p[1]];
+   ev('pointerdown',c[0],c[1]);await W(420);ev('pointermove',c[0]+14,c[1],cv);for(var s_=1;s_<=10;s_++)ev('pointermove',c[0]+80*s_/10,c[1],M_);ev('pointerup',c[0]+80,c[1],M_);await W(100)}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{await OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

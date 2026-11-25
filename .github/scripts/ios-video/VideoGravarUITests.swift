@@ -88,6 +88,8 @@ final class VideoGravarUITests: XCTestCase {
             return nil
         }
         var mostrouSeletor = false
+        var abriuAlbum = false
+        var fimAlbum = Date().addingTimeInterval(3600)
         var alvo: XCUIElement? = nil
         var passos = 0
         let fim = Date().addingTimeInterval(60)
@@ -109,8 +111,23 @@ final class VideoGravarUITests: XCTestCase {
                 for i in 0..<min(qv.count, 6) { let e = qv.element(boundBy: i); if e.exists && !e.identifier.contains("Onboarding") && e.frame.width >= 60 && e.frame.height >= 60 && e.label != "Vídeos" && e.label != "Videos" { alvo = e; break } }
                 if alvo != nil { break }
             }
+            // 9ª rodada no iPad: depois do Close o seletor mostra os álbuns (miniaturas sem nome), não a grade; abre o álbum
+            // "Videos" do seletor (o da página é "Vídeos", com acento, e fica de fora)
+            if passos > 0 && !abriuAlbum && Date() > fimAlbum {
+                abriuAlbum = true
+                let qa = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR label == %@", "Videos", "Vídeos"))
+                for i in 0..<min(qa.count, 10) {
+                    let e = qa.element(boundBy: i)
+                    if e.exists && e.frame.width > 1 && !daPagina.contains(e.label) && e.label == "Videos" {
+                        print("VIDEO-UI: abri o álbum \"\(e.label)\" do seletor (\(e.elementType.rawValue)) em \(e.frame)")
+                        if e.isHittable { e.tap() } else { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
+                        sleep(3); break
+                    }
+                }
+                continue
+            }
             if passos < 3, let b = botaoSegue() {
-                print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); continue
+                print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); fimAlbum = Date().addingTimeInterval(8); continue
             }
             let mv = app.images.matching(pv).firstMatch
             if passos == 0 && mv.exists && !mv.isHittable { print("VIDEO-UI: a miniatura do vídeo está no seletor mas coberta: \(mv.label)") }

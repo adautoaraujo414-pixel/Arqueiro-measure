@@ -2378,6 +2378,18 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - Controle: com o modo Fita, 855 de 855.
     - **Comportamento correto.**
   - O teste do nicho (`testNichoDaParedeDoLado…`), que o ramo da liberdade quebrava, passa no `aae4ef93` sem mudança no teste: o Code 2 corrigiu o comportamento.
+- **iOS CI 696 (`b4a45134`):**
+  - iPhone com aquecimento: 1ª abertura 9,21 s (página 5,33 s, editor 3,88 s). A lentidão está resolvida.
+  - iPad: bateria completa, 628 testes. As 4 falhas são `testPlanoDeCorteLegivel…SegundoTerco` (2 testes × 2 tentativas): "641" a 0,8 do contorno, com a correção do Code 2 (`23acd260`) junta.
+  - O iPhone parou de novo no limite de 75 min do passo, com a bateria incompleta (só o iPad tem 100 min autorizado).
+- **CORTE-LEGÍVEL no iPad, causa comprovada e corrigida:** teste `testEtiquetaDeMedida…`, que falha antes; correção `c1682687`.
+  - As etiquetas vermelhas de medida das sobras ficavam em y+fs+4 e x+fs+2, conta da fonte do Chromium.
+  - Agora usam `max(1, cpMet().AS)`, na posição, na faixa de cima e no espaço reservado pros nomes. No Chromium a conta é idêntica.
+  - Plano de corte e sobras: 48/48 a 1366 e a 430. **Falta conferir no iPad real do CI.**
+- **Atualização do iOS:**
+  - Run 33 (`4c879a79`): verde.
+  - Run 34 (`b4a45134`): iPad verde; no iPhone o seletor fechou e o vídeo não chegou ao editor publicado. Instável, causa não comprovada (sem o log do simulador).
+  - Run 35: cancelada na fila (sem máquina Mac).
 
 ## UNIDADE (25/11): unidade de medida mm/cm nos Ajustes (pedido do Adauto, via Chefe) — Claude 4
 - **Pedido:** escolher mm (padrão) ou cm nos Ajustes do app; vale no editor (2D, Medir, campos), lista de peças, plano de corte, documentos impressos e nota nova do caderno. Internamente tudo em mm.

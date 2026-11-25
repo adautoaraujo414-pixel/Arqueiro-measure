@@ -71,7 +71,8 @@ jobs:
       - name: Testes no iPad (mesma bateria do iPhone)
         id: ipad_tests
         if: always() && (steps.build_tests.outcome == 'success' || steps.build_tests.outcome == 'failure')
-        timeout-minutes: 75
+        # 25/11: a bateria do iPad já levava 73 dos 75 min (iOS 689) e no 691 estourou antes de imprimir as falhas; 100 min cabem nos 210 do job
+        timeout-minutes: 100
         run: |
           cd ios && mkdir -p build
           UDID=$(python3 scripts/pick_sim.py ipad)
@@ -205,6 +206,16 @@ jobs:
             echo "==== Conferência App Store ===="; cat build/appstore-check.txt 2>/dev/null;
             echo "==== Capturas vazias? ===="; cat build/blank-check.txt 2>/dev/null;
             echo "==== Simuladores ===="; cat build/runtimes.txt 2>/dev/null; } > "$OUT/RESUMO.txt" || true
+          # Adauto 25/11: as falhas e evidências ficam guardadas mesmo quando o passo é interrompido (tempo estourado):
+          # o log parcial de cada aparelho é lido aqui, depois, com a mensagem inteira de cada falha (inclusive a geometria)
+          for L in build/xcodebuild-test.log build/xcodebuild-test-ipad.log; do [ -f "$L" ] || continue
+            D=iphone; case "$L" in *ipad*) D=ipad;; esac
+            { echo "commit $GITHUB_SHA · execução $GITHUB_RUN_NUMBER · $D · $(wc -l < "$L") linhas no log"
+              echo "==== falhas (mensagem completa) ===="; grep -E "error: |Test Case .*failed" "$L" | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 400
+              echo "==== último teste que começou (se o passo foi interrompido) ===="; grep -E "Test Case .*started" "$L" | tail -n 1
+              echo "==== totais ===="; grep -E "Executed [0-9]+ test" "$L" | tail -n 3; } > "$OUT/FALHAS-$D.txt" 2>&1 || true
+            tail -c 3000000 "$L" > "$OUT/log-$D-final.txt" 2>/dev/null || true
+          done
           grep -hE "warning:" build/xcodebuild-release.log 2>/dev/null | sort -u | head -n 300 > "$OUT/AVISOS.txt" || true
           # N07 (17/11): quando o app de teste cai, guarda o que aconteceu antes da queda e o relatório de crash do macOS,
           # pra achar a causa (o pacote de resultados do Actions não é acessível de fora). Só leitura; não muda nenhum teste.
@@ -220,6 +231,11 @@ jobs:
           git config user.name "github-actions"; git config user.email "actions@github.com"
           git add -A && git commit -qm "Resultados iOS $GITHUB_RUN_NUMBER ($GITHUB_SHA)"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci/ios-resultados
+          # Adauto 25/11: execuções de ramos diferentes não apagam as evidências umas das outras.
+          # Além do ci/ios-resultados de sempre, cada ramo tem o seu ci/ios-resultados-<ramo>.
+          RB="ci/ios-resultados-$(echo "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._-' '-' | sed 's/-*$//')"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/$RB" || true
+          echo "::notice title=Resultados iOS guardados::$RB"
           T=$(grep -hE "Executed [0-9]+ test" RESUMO.txt | tail -n1)
           echo "::notice title=Testes iOS::${T:-sem resumo}"
 

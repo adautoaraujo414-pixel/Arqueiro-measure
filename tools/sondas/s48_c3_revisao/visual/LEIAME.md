@@ -24,3 +24,7 @@ Chromium sem janela, 1366×900 (mouse) e 430×900 (toque). Roteiros JS rodados n
 - Junção, fileira, pedra, Mais opções, enfeite e corte ×4 têm a mesma saída do 436ac8f2 (roteiros idênticos a 430).
 - 10_vizinhos_*: publicado · pre-final com a barra · depois do botão. Cria um gaveteiro ao lado do balcão. No publicado, o vizinho perdia o tamponamento direito sozinho (tr1 → tr0). Agora fica tr1 e aparece "Ajustar vizinhos ao novo módulo"; o botão dá tr0, igual ao publicado. **Risco:** até tocar no botão, o gaveteiro novo (x905) fica sobre o tamponamento direito do balcão, com "2 avisos" e a marca vermelha 905.
 - 11_cm_*: 436ac8f2 × 47324009 em cm. UNIDADE-2 corrigiu: pedra 82 / 86,5, cuba "fundo 10 · frente 10,6", ferragens "90 × 82 × 56 cm". Em mm, o texto do 2D e da lista é igual ao do 436ac8f2.
+
+## CORTE-PRIORIDADE (cff643ae) × pai 31b868e1
+- 12_corte_ipad_regua815x30_2_*: chapa inteira com a métrica do iPad (1,16/0,30). Régua #2 com contorno rosa, callouts em rosa. Antes: só o callout #1, e a sobra mostra "161". Depois: os dois callouts "#17 815×30" ficam dentro da sobra, e só a etiqueta "161" sai.
+- SVG das chapas, 139 cenas (catálogo + cozinha de exemplo), byte a byte: com a métrica normal, 0 diferenças (2228 etiquetas de sobra, 54 callouts). Com a do iPad, só "Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)" muda: sobras 2200 → 2199, callouts 65 → 66. O Guarda-roupa 4 vãos (641 × 125) é idêntico nas duas métricas.

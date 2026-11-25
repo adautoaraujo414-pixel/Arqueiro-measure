@@ -2358,3 +2358,14 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Com as medidas do iPad forçadas no Chromium, os três terços dão 0 cruzamentos e 0 peças sem identificação, a 1032×1376 e a 440×956.
   - No mesmo commit, o mínimo de cobertura dos terços foi corrigido (o Chefe achou afrouxado): >33/>333/>1666 por terço, que somam o >100/>1000/>5000 do teste inteiro de antes. Medido aqui: 47/1082/4459, 47/1436/5948 e 49/1541/6549.
   - iPhone 694: `testTomadasRegistro…TVComLogo` e `testToqueNoVaoComoNoIPhone…` (editor demorou mais de 60 s pra abrir) falharam na 1ª tentativa e passaram na repetição. É intermitente do simulador, fora destas mudanças.
+- **SHA final em teste: `b4a45134`** (editor `ac9d8eda`: + iPad legível `23acd260` + liberdade de composição `aae4ef93`).
+  - Baterias do editor: **1366 547/547 · 430 547/547**.
+  - Android CI, Windows CI e atualizações do Android e do Windows (com vídeo): verdes.
+  - **Abertura lenta do iPhone, causa comprovada:** no 695 a 1ª abertura deu "página começou em 42,97 s · editor sozinho 13,30 s". Noutro teste: página 43,52 s, editor 1,99 s.
+    - A demora está antes do editor: o simulador frio subindo o processo da página (WebContent).
+    - O mesmo app abriu em 10,4 s no 692.
+    - **Ambiente, não regressão.** Aquecimento do simulador do iPhone no `ios.yml` (`4b7ade52`), como no iPad; nenhum limite muda.
+  - **89b ("só a fita, sem a peça atrás") não reproduz.** Sonda nos toques de fita em 5 modelos, bordas e cantos, a 1366 e 430: 0 de 855 escolhem a fita fora do modo Fita.
+    - Controle: com o modo Fita, 855 de 855.
+    - **Comportamento correto.**
+  - O teste do nicho (`testNichoDaParedeDoLado…`), que o ramo da liberdade quebrava, passa no `aae4ef93` sem mudança no teste: o Code 2 corrigiu o comportamento.

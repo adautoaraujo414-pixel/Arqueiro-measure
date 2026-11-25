@@ -38,8 +38,9 @@ Publicação: só depois da aprovação integral do Code 1 e da homologação fi
 | 20 | Logs do iOS preservados, um ramo de resultados por ramo (25/11) | Chefe | pronto (ed6b650d) |
 | 21 | 100 min no passo do iPad (25/11) | Code 2 | pronto (8b8e444c) |
 | 22 | Novidades desta versão (§10) | Code 1 | pendente |
+| 24 | Regra permanente §12 do CLAUDE.md: liberdade total de composição e edição (25/11) | Chefe (registro) / Code 2 (aplicar) / Code 1 (auditar) | registrada; aplicação: o que é automático sobre o existente vira sugestão |
 | 23 | Homologação única nas 4 plataformas + publicação | Chefe | depois da aprovação do Code 1 |
 
 ## Decisões abertas com o Adauto
-- Tamponamento da junção normal (lado a lado) × "existentes nunca mudam": sem resposta → fica como hoje (TAMP-JUNTA). Par sobreposto confirmado: o vizinho nunca muda (decidido).
-- Veio em peças altas: sem resposta → fica como hoje (aviso "maior que a chapa", sem forçar).
+- Tamponamento da junção normal: RESPONDIDO pelo §12 (25/11): não muda sozinho o que já existe → TAMP-JUNTA sobre o vizinho vira sugestão com botão.
+- Veio em peças altas: RESPONDIDO pelo §12: informar claramente (aviso "maior que a chapa"), sem modificar o projeto.

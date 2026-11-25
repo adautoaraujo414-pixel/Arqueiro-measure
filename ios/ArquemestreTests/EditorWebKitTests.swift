@@ -14494,6 +14494,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* CORTE-LEGÍVEL no iPad (iOS CI 696, 25/11): a etiqueta vermelha de medida da peça ("641" deitado e "125" em pé) ficava com o topo 0,8
+       acima do contorno da contra-frente do caixote (641 × 125, Guarda-roupa 4 vãos). Causa: a posição era y+fs+4 e x+fs+2, que supõe a fonte
+       do Chromium (sobe 0,91 da letra); no iPad (WebKit) a "sans-serif" sobe 1,15. O cpMet() (Code 2) já valia pros nomes, não pra essas
+       etiquetas. Aqui a medida da fonte do iPad é posta à força (a mesma do cpMet no iPad) e a conta confere, em todo o catálogo, que cada
+       etiqueta de medida fica dentro do contorno da peça com a folga de 1,5 que o teste de legibilidade exige. */
+    func testEtiquetaDeMedidaDoPlanoDeCorteDentroDaPecaComAFonteDoIPad() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;var M0=window.__cpMet;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var AS=1.15,DS=0.28,ruim=[],n=0,cenas=0;window.__cpMet={AS:AS,DS:DS};
+        for(var i=0;i<mods.length;i++){loadState(initLimpo());S.env='cozinha';S.W=6000;S.H=2700;draw();newTpl(JSON.parse(JSON.stringify(mods[i])));if(!S.mods.length)continue;draw();openCut();await W(20);cenas++;
+          [].forEach.call(document.querySelectorAll('#cutm svg text'),function(tx){if(String(tx.getAttribute('fill')).toLowerCase()!=='#d12c2c')return;var r=tx.previousElementSibling;while(r&&!(r.tagName.toLowerCase()==='rect'&&String(r.getAttribute('stroke'))==='#555'))r=r.previousElementSibling;if(!r)return;n++;
+            var fs=+tx.getAttribute('font-size'),X=+tx.getAttribute('x'),Y=+tx.getAttribute('y'),rx=+r.getAttribute('x'),ry=+r.getAttribute('y'),rw=+r.getAttribute('width'),rh=+r.getAttribute('height'),rot=/rotate\(-90/.test(tx.getAttribute('transform')||''),ok;
+            /* deitado: topo da letra = linha de base − subida; em pé (girado −90° no próprio ponto): a subida vai pra esquerda, a descida pra direita */
+            if(!rot)ok=Y-AS*fs>=ry+1.5&&Y+DS*fs<=ry+rh-1.5;else ok=X-AS*fs>=rx+1.5&&X+DS*fs<=rx+rw-1.5;
+            if(!ok&&ruim.length<6)ruim.push(mods[i].n+': "'+tx.textContent+'" '+(rot?'em pé':'deitado')+' fs '+fs+' peça '+[rx,ry,rw,rh].map(Math.round).join(','))})
+          ;var x_=document.getElementById('cutx')||document.querySelector('#cutm [data-x]');if(x_)x_.click()}
+        window.__cpMet=M0;return JSON.stringify({ruim:ruim.join(' | ')||'ok',etiquetas:n,cenas:cenas,errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["cenas"] as? Int ?? 0, 100)
+        XCTAssertGreaterThan(o["etiquetas"] as? Int ?? 0, 1000)
+        XCTAssertEqual(o["ruim"] as? String, "ok", "com a fonte do iPad, a etiqueta de medida fica dentro da peça")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* TOQUE-430 · revisão do Code 2 (25/11): a correção descia a planta só no espaço que sobrava embaixo; numa cena funda (cozinha de 4000 com
        o balcão na ponta) não sobra nada e 12 de 35 pontos do módulo continuavam embaixo de 🔓 🗑 🧮. Agora o desenho sai de baixo dos botões
        e a escala diminui só o que faltar (com espaço sobrando, igual a antes). Vale em qualquer tela; a 1366 os botões não chegam no desenho. */

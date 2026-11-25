@@ -13,3 +13,9 @@ Chromium sem janela, 1366×900 (mouse) e 430×900 (toque). Roteiros JS rodados n
 | 7_enfeite_* | publicado · pre-final módulo novo · pre-final depois de "Pôr o enfeite" | Portas abertas no 3D. No publicado as roupas apareciam sozinhas. Módulo novo vem sem. "Pôr o enfeite" volta às mesmas 31 caixas. |
 
 "Ajustar vizinhos ao novo módulo" (claude/reg12-criacao, Code 2) ainda não foi empurrado, então não está aqui.
+
+## Legibilidade do plano no iPad: claude/pre-final-proximo 47324009 (c624f1c6 + c1682687) × 436ac8f2
+
+- **Uma lógica só, sem margem somada.** O c624f1c6 mexe só na fonte: o `cpMet` sem medida devolve 1,16/0,30 e não guarda; com medida, fica igual ao de antes. O c1682687 é o consumidor: as etiquetas das sobras usam `max(1, AS)` no lugar do 1 fixo e `max(1,3, AS+DS)` no lugar de 1,3. É troca, não soma.
+- **Defeito (c1682687, só com a métrica do iPad 1,16/0,30):** `testPlanoDeCorteLegivel…TerceiroTerco` e `…TerceiroTercoEmCm` falham a 1366 e a 430. O 436ac8f2, com a mesma métrica, passa. A régua espaçadora 815×30 **#2** do "Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)", chapa 1, perde o callout ("#17 815×30"): fica sem identificação. A sobra "161" continua. Com a métrica normal, os 6 testes passam nos dois.
+- 9_corte_ipad_gr4vaos_chapa2_*: Guarda-roupa 4 vãos, chapa 2, peça 641 × 125, métrica do iPad. Antes e depois iguais pixel a pixel: o c1682687 só mexe nas sobras.

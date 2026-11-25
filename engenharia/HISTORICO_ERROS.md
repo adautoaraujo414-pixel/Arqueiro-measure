@@ -2331,3 +2331,22 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Prova de que o teste continua pegando o defeito: com a faixa desligada no app, dá 0 de 24 a 430 e a 1366.
   - Antes: 12–13 a 430 (falha). Depois: passa a 430 e a 1366, e os 15 testes de espelho passam nos dois tamanhos.
   - Visto de passagem e NÃO alterado: a linha de contorno escura do vidro de dentro passa na borda interna da faixa e, de longe, come parte dela. A faixa é jateada no mesmo vidro, então essa linha não existe de verdade. Fica registrado como possível melhoria.
+
+## REVISÃO DO CODE 2 NAS CORREÇÕES DO CODE 1 (25/11 tarde): achados e correções
+- **A31, três defeitos comprovados.** Teste `testA31ReguaNaoSai…` (`7ad4af82`), que falha antes nos três; correção `87b0e9ec`.
+  1. Régua encurtada até o mínimo de 50 saía do módulo (50 em 747 num aéreo de 750). Causa: o mínimo era aplicado depois do limite do topo.
+  2. Rodapé pela seta chegava a 630 num balcão de 820, dentro da lateral de gaveta. Causa: o limite só via folga + espessuras.
+     - Agora inclui a régua do aéreo (regra do `sanM`).
+     - Subindo, o rodapé para antes de entrar em outra peça do módulo, pela geometria do 3D.
+  3. **Projeto antigo mudava** (rodMm 100→160, portas 705→645) ao mexer na seta da porta. Causa: `rodPoFix(m)` convertia todos os rodapés do módulo. Agora `rodPoFix(m,K)` só converte a peça do gesto.
+  - Conferido também pelas sondas s48 do Claude 3 (projeto antigo mexendo na lateral: igual; limites no catálogo: nada entra).
+- **TOQUE-430 parcial, comprovado:** na cena funda, 12 de 35 pontos do móvel caíam embaixo de 🔓🗑🧮. Teste `testPlantaFunda…` (`db9b0de5`), que falha antes; correção `87b0e9ec`.
+  - Causa: a planta só descia no espaço que sobrava e a escala era fixa (440).
+  - Agora desce até sair dos botões e a escala diminui só o que faltar (`window.PLH`); com espaço sobrando, igual a antes.
+  - Na sonda do Claude 3 (paredes de 3000 a 8000), nenhum ponto nos botões. Os pontos que não pegam o móvel caem no fundo da planta, fora do desenho dele.
+- **B26:** nenhuma peça de fabricação solta (138 modelos; 690 variações do Code 2). O caso do Code 2 (altura × 0,75, 2 mm) é o desenho da dobradiça. Ela é ferragem desenhada e as partes se chamam "Porta", presas na lateral pelo braço. **Risco baixo, sem correção.**
+- **Vídeo na atualização:** verde no HEAD do teste (run 33, `4c879a79`). Depois disso o editor mudou: nova rodada no SHA final.
+- **Baterias, editor `21470d8d`** (`d29d3d44`: A31/TOQUE + LED 4fb5695a + liberdade 257195a8): 1366 546/547 e 430 546/547.
+  - A única falha nas duas é `testNichoDaParedeDoLado…` ("campoX 100, esperado 1300"). Vem do ramo da liberdade de composição: falha igual no editor dele sozinho e passa no `450ec24b`.
+  - **Achado para o Code 2:** a medida digitada que entra no vizinho já fica aplicada ANTES da resposta à pergunta (x = 100 com interseção). Se a pessoa sair sem responder, a sobreposição fica sem confirmação.
+  - O teste não está na lista de expectativas que o Code 2 avisou que mudaria.

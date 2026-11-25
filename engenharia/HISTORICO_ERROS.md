@@ -2350,3 +2350,11 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - A única falha nas duas é `testNichoDaParedeDoLado…` ("campoX 100, esperado 1300"). Vem do ramo da liberdade de composição: falha igual no editor dele sozinho e passa no `450ec24b`.
   - **Achado para o Code 2:** a medida digitada que entra no vizinho já fica aplicada ANTES da resposta à pergunta (x = 100 com interseção). Se a pessoa sair sem responder, a sobreposição fica sem confirmação.
   - O teste não está na lista de expectativas que o Code 2 avisou que mudaria.
+- **iPad, `testPlanoDeCorteLegivel…SegundoTerco` (iOS CI 694, 25/11): causa achada e corrigida.** A mensagem com a geometria mostrou o seguinte:
+  - No iPad o texto "641" (fonte 28,5) tem caixa de 40,1 de altura e subida de 32,8 acima da linha de base, ou seja 1,15 da letra.
+  - O plano reservava 0,95 de subida e 0,26 de descida, então o número da peça estreita (Caixote 641 × 125) passava 0,7 do contorno.
+  - O iPhone passa porque o WebKit em modo celular usa outra "sans-serif"; o iPad abre em modo computador. No Chromium (Android, Windows) a fonte mede 0,91/0,22.
+  - Correção pela causa: `cpMet()` mede uma vez a subida e a descida da fonte de verdade do aparelho e o plano usa a maior entre a medida e a de antes. No Chromium o plano fica idêntico.
+  - Com as medidas do iPad forçadas no Chromium, os três terços dão 0 cruzamentos e 0 peças sem identificação, a 1032×1376 e a 440×956.
+  - No mesmo commit, o mínimo de cobertura dos terços foi corrigido (o Chefe achou afrouxado): >33/>333/>1666 por terço, que somam o >100/>1000/>5000 do teste inteiro de antes. Medido aqui: 47/1082/4459, 47/1436/5948 e 49/1541/6549.
+  - iPhone 694: `testTomadasRegistro…TVComLogo` e `testToqueNoVaoComoNoIPhone…` (editor demorou mais de 60 s pra abrir) falharam na 1ª tentativa e passaram na repetição. É intermitente do simulador, fora destas mudanças.

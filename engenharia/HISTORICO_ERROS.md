@@ -2358,6 +2358,15 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Com as medidas do iPad forçadas no Chromium, os três terços dão 0 cruzamentos e 0 peças sem identificação, a 1032×1376 e a 440×956.
   - No mesmo commit, o mínimo de cobertura dos terços foi corrigido (o Chefe achou afrouxado): >33/>333/>1666 por terço, que somam o >100/>1000/>5000 do teste inteiro de antes. Medido aqui: 47/1082/4459, 47/1436/5948 e 49/1541/6549.
   - iPhone 694: `testTomadasRegistro…TVComLogo` e `testToqueNoVaoComoNoIPhone…` (editor demorou mais de 60 s pra abrir) falharam na 1ª tentativa e passaram na repetição. É intermitente do simulador, fora destas mudanças.
+- **iPad, `testPlanoDeCorteLegivel…SegundoTerco` (iOS CI 697, 25/11): a correção do 694 não chegou no iPad.**
+  - A geometria da falha é idêntica à do 694: o "641", com fonte 28,5, tem a caixa em y 1582.8 e a peça começa em 1582. Ou seja, o plano continuou com a métrica de antes (0,95/0,26), e o `cpMet()` não valeu no iPad.
+  - Causa provável: a medida não deu caixa (página ainda escondida ou sem layout) e o resultado vazio ficou guardado.
+  - Correção:
+    - Sem medida, nada é guardado e o plano usa a métrica alta conservadora (1,16/0,30), que cobre a do iPad (1,15/0,30). A próxima chamada mede de novo.
+    - Com medida, fica igual a antes: no Chromium o plano é idêntico, os 22 testes de plano passam a 1366 e a 430, com `__cpMetInfo.ok` = 2.
+    - No Chromium, com a medida forçada a falhar, os três terços passam a 1032×1376 e a 440×956.
+  - A mensagem de falha dos três terços agora traz `__cpMetInfo` (mediu ou não, quantas vezes) e a métrica usada, pra confirmar no próximo iOS. As expectativas não mudam.
+  - iPhone 697: `testSalvarSozinhoSoGravaQuandoMudaERespondeRapido` falhou com o editor levando 24 s pra abrir (no mesmo log, outro teste levou 43 s). É lentidão do simulador, a conferir no próximo iOS.
 - **SHA final em teste: `b4a45134`** (editor `ac9d8eda`: + iPad legível `23acd260` + liberdade de composição `aae4ef93`).
   - Baterias do editor: **1366 547/547 · 430 547/547**.
   - Android CI, Windows CI e atualizações do Android e do Windows (com vídeo): verdes.

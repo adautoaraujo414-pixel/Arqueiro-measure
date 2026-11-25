@@ -14285,6 +14285,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // §12 (regra permanente do Adauto, 25/11; CLAUDE.md §12): o app não altera sozinho o que já existe. Arrastar até encostar lado a lado deixa os
+    // dois módulos idênticos e mostra a sugestão "Ajustar tamponamento da junção"; o botão aplica exatamente o que o TAMP-JUNTA aplicava antes
+    // (valores da versão anterior: x600 tl1 tr0 | x1500 tl0 tr1). Módulo novo continua recebendo os padrões (criação).
+    func testRegra12ArrastarAteEncostarNaoMudaOsModulosESugereAjustarTamponamentoDaJuncao() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[],tw=window.toast;window.toast=function(t){if(tw(t)!=='mudo')TL.push(String(t))};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(!r&&t&&!t.act&&t.n===n)r=t})});return JSON.parse(JSON.stringify(r))};
+        var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;draw();atArm();newTpl(T('Balcão 2 portas'));draw();atArm();newTpl(T('Balcão 2 portas'));draw();S.mods[0].x=600;S.mods[1].x=2500;S.m=null;draw();await W(100);
+        var f=function(m){return 'x'+Math.round(m.x)+' tl'+(+!!m.tl)+' tr'+(+!!m.tr)};R.criacao=S.mods.map(f).join(' | ');var J0=JSON.stringify(S.mods[0]);
+        S.m=S.mods[1];draw();panel();await W(60);var re=document.querySelector('#mod[data-mi="1"] rect[data-mi]'),rc=re.getBoundingClientRect(),x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,k=rc.width/S.mods[1].w,dz=(window.SEL&&SEL.mov?SEL.mov:6)+.5,tx=-(dz+(2500-1500-30)*k);
+        pe('pointerdown',re,x,y);await W(30);for(var i=1;i<=10;i++){pe('pointermove',svg,x+tx*i/10,y);await W(15)}pe('pointerup',svg,x+tx,y);await W(300);draw();
+        R.encostou='vizinho igual '+(JSON.stringify(S.mods[0])===J0)+' · arrastado '+f(S.mods[1])+' · sugestão '+!!libSug()+' · barra '+!!(document.querySelector('#libsug [data-libsug="ok"]')&&!document.getElementById('libsug').hidden)+' · aviso de tirou '+TL.filter(function(t){return /Tamponamento automático tirado/.test(t)}).length;
+        document.querySelector('#libsug [data-libsug="ok"]').click();await W(200);R.aplicou=S.mods.map(f).join(' | ');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["criacao"] as? String, "x600 tl1 tr1 | x2500 tl1 tr1", "criação: os padrões dos Ajustes (tamponamento automático dos lados expostos)")
+        XCTAssertEqual(o["encostou"] as? String, "vizinho igual true · arrastado x1560 tl1 tr1 · sugestão true · barra true · aviso de tirou 0", "encostou: nada mudou sozinho, a sugestão aparece")
+        XCTAssertEqual(o["aplicou"] as? String, "x600 tl1 tr0 | x1500 tl0 tr1", "o botão aplica exatamente o que o TAMP-JUNTA fazia")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // LIB-COMP · LIBERDADE DE COMPOSIÇÃO (pedido urgente do Adauto, 25/11): o encaixe automático é ajuda, nunca imposição. Sem espaço livre
     // (colisão de verdade em 3D) ou parede menor que o móvel: "Usar N mm" (só o novo encolhe, como antes), "Colocar mesmo assim" (no tamanho
     // dele, por cima) e "Cancelar". O mesmo no ⧉ Copiar e na medida digitada. Os que já estão nunca mudam; o aviso de interseção continua.
@@ -14946,11 +14969,15 @@ final class EditorWebKitTests: XCTestCase {
         var pedra=async function(){S.m=S.mods[0];S.tab=6;draw();panel();await W(40);var b=document.querySelector('#bd [data-stadd]');if(b)b.click();await W(80);S.tab=0;draw()};
         var svg=document.getElementById('svg'),pe=function(t,el,x,y){el.dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:1,isPrimary:true,pointerType:'mouse',buttons:t==='pointerup'?0:1}))};
         var drag2=async function(mi,dxmm){var m=S.mods[mi];if(m!==S.m){S.m=m;draw();panel();await W(60)}var rc=document.querySelector('#mod[data-mi="'+mi+'"] rect[data-mi]').getBoundingClientRect(),cpm=rc.width/m.w,x=rc.left+rc.width*.5,y=rc.top+rc.height*.6,el=document.elementFromPoint(x,y),ZM_=(window.SEL&&SEL.mov?SEL.mov:6)+.5,tx=(dxmm>0?1:-1)*(ZM_+Math.abs(dxmm)*cpm);pe('pointerdown',el,x,y);await W(30);for(var i=1;i<=8;i++){pe('pointermove',svg,x+tx*i/8,y);await W(20)}await W(60);pe('pointerup',svg,x+tx,y);await W(150);draw();await W(40)};
-        var foto=function(f,a){return 'forno '+tp(f)+' · aberto '+tp(a)+' · junta '+junta(a,f)+' · peças '+tampPc(f)+'+'+tampPc(a)+' · lista '+tampCut()+' · plano '+tampPlano()+' · 3D '+tamp3D()};
+        /* §12 (regra permanente do Adauto, 25/11): o TAMP-JUNTA não muda mais sozinho o módulo que já existe; vira sugestão ("Ajustar tamponamento
+           da junção") e o botão aplica exatamente o que era feito. Aqui a pessoa toca no botão antes de cada conferência; as expectativas de
+           sempre continuam. Conferido à parte: antes do toque nada mudou (sugeriu). */
+        var NSUG=0,sugPend=function(){var s_=window.libSug&&libSug();if(s_){NSUG++;libAplicaSug();draw()}};
+        var foto=function(f,a){sugPend();return 'forno '+tp(f)+' · aberto '+tp(a)+' · junta '+junta(a,f)+' · peças '+tampPc(f)+'+'+tampPc(a)+' · lista '+tampCut()+' · plano '+tampPlano()+' · 3D '+tamp3D()};
         /* 0. montado: forno sozinho ganha o automático dos dois lados expostos; aberto longe à esquerda */
         var fa=await cena();R.montado=foto(fa[0],fa[1]);var bo0=budget().T;
         /* 1. arraste no 2D: o aberto encosta no forno */
-        await drag2(1,1500-30-600-300+5);R.arraste2D='2D: '+foto(fa[0],fa[1]);var bo1=budget().T;/* conferência independente: religando à mão os dois tamponamentos no lugar novo, o orçamento volta exatamente ao de antes (a diferença é só deles) */fa[0].tl=true;fa[1].tr=true;var bo2=budget().T;fa[0].tl=false;fa[1].tr=false;draw();R.orcamento='só os dois tamponamentos '+(Math.abs(bo2.aC-bo0.aC)<1e-6&&Math.abs(bo2.tT-bo0.tT)<1e-6)+' · chapa na cor '+(Math.round((bo1.aC-bo0.aC)*1000)/1000)+' m² · fita '+(Math.round((bo1.tT-bo0.tT)*100)/100)+' m';
+        var tpA=tp(fa[0])+'|'+tp(fa[1]),xA=fa[1].x;await drag2(1,1500-30-600-300+5);R.sugeriu2D='antes do toque: '+(tp(fa[0])+'|'+tp(fa[1])===tpA?'tamponamentos iguais':'MUDOU SOZINHO')+' · sugestão '+!!(window.libSug&&libSug());R.arraste2D='2D: '+foto(fa[0],fa[1]);var bo1=budget().T;/* conferência independente: religando à mão os dois tamponamentos no lugar novo, o orçamento volta exatamente ao de antes (a diferença é só deles) */fa[0].tl=true;fa[1].tr=true;var bo2=budget().T;fa[0].tl=false;fa[1].tr=false;draw();R.orcamento='só os dois tamponamentos '+(Math.abs(bo2.aC-bo0.aC)<1e-6&&Math.abs(bo2.tT-bo0.tT)<1e-6)+' · chapa na cor '+(Math.round((bo1.aC-bo0.aC)*1000)/1000)+' m² · fita '+(Math.round((bo1.tT-bo0.tT)*100)/100)+' m';
         /* 2. posição digitada encostando no corpo do forno */
         fa=await cena();S.m=fa[1];S.tab=0;draw();panel();await W(40);setv('x',fa[0].x-fa[1].w);draw();await W(60);R.digitado='digitado: '+foto(fa[0],fa[1])+' · x '+fa[1].x;
         /* 3. arraste no 3D: o forno vai até o aberto */
@@ -14966,8 +14993,8 @@ final class EditorWebKitTests: XCTestCase {
         fa=await cena();fa[1].x=fa[0].x-30-30-fa[1].w;draw();var fl=function(){return S.mods.map(function(m){return m.x+':'+tp(m)}).join(',')},z=JSON.stringify(snapState()),f0=fl();clr();UNDOING=true;try{loadState(JSON.parse(z))}finally{UNDOING=false}draw();await W(60);R.projetoAntigoAbreIgual='antigo aberto: '+foto(S.mods[0],S.mods[1])+' · igual '+(fl()===f0);
         
         /* 6. mesmos casos na família: aéreos, torre do lado do balcão, guarda-roupas (arraste no 2D e posição digitada) */
-        var par=async function(n1,n2,amb){clr();if(amb){S.room=amb;S.env=amb;S.W=6000}await add(n1);var p=S.mods[0];p.x=amb?2500:1500;draw();await add(n2);var q=S.mods[1];q.x=200;draw();await W(40);var a0=tp(p)+'|'+tp(q),r1=a0;if(!amb){await drag2(1,p.x-q.x-q.w-25);r1=a0+' → 2D '+tp(p)+'|'+tp(q)+' junta '+junta(q,p)+' dentro '+modHit(q)}
-          clr();if(amb){S.room=amb;S.env=amb;S.W=6000}await add(n1);p=S.mods[0];p.x=amb?2500:1500;draw();await add(n2);q=S.mods[1];q.x=200;draw();await W(40);S.m=q;S.tab=0;draw();panel();await W(40);setv('x',p.x-q.w);draw();await W(60);return r1+' · digitado '+tp(p)+'|'+tp(q)+' junta '+junta(q,p)};
+        var par=async function(n1,n2,amb){clr();if(amb){S.room=amb;S.env=amb;S.W=6000}await add(n1);var p=S.mods[0];p.x=amb?2500:1500;draw();await add(n2);var q=S.mods[1];q.x=200;draw();await W(40);var a0=tp(p)+'|'+tp(q),r1=a0;if(!amb){await drag2(1,p.x-q.x-q.w-25);sugPend();r1=a0+' → 2D '+tp(p)+'|'+tp(q)+' junta '+junta(q,p)+' dentro '+modHit(q)}
+          clr();if(amb){S.room=amb;S.env=amb;S.W=6000}await add(n1);p=S.mods[0];p.x=amb?2500:1500;draw();await add(n2);q=S.mods[1];q.x=200;draw();await W(40);S.m=q;S.tab=0;draw();panel();await W(40);setv('x',p.x-q.w);draw();await W(60);sugPend();return r1+' · digitado '+tp(p)+'|'+tp(q)+' junta '+junta(q,p)};
         R.aereos='aéreos: '+await par('Aéreo 2 portas','Aéreo 2 portas');
         R.torreEBalcao='torre+balcão: '+await par('Torre quente (forno)','Balcão 2 portas');
         R.guardaRoupas='guarda-roupas: '+await par('Guarda-roupa 2 vãos','Guarda-roupa 2 vãos','quarto');
@@ -14982,6 +15009,7 @@ final class EditorWebKitTests: XCTestCase {
         fa=await cena();var a9=fa[1],f9=fa[0];lvSolta(a9);a9.rot=0;a9.lx=f9.x-lt(f9)-a9.w-rt(a9)-2;a9.lz=8;draw();var r9=__mv3.encaixa(a9);draw();await W(40);R.encaixe3D=String(r9).slice(0,40)+' · '+foto(f9,a9);
         R.errs=__errs.length-e0;R.aviso=TL.filter(function(t){return /amponamento automático tirado/.test(t)})[0]||'';return JSON.stringify(R);
         """#)
+        XCTAssertEqual(o["sugeriu2D"] as? String, "antes do toque: tamponamentos iguais · sugestão true", "§12: o arrasto não muda sozinho o tamponamento de quem já existe; sugere")
         XCTAssertEqual(o["montado"] as? String, "forno Eauto30/- · aberto -/Dauto30 · junta 600 · peças 1+1 · lista 10 · plano 10 · 3D 10", "forno sozinho ganha o automático no lado exposto; o aberto longe também")
         XCTAssertEqual(o["arraste2D"] as? String, "2D: forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0", "arrastou no 2D e encostou: sai o automático dos dois lados da junta (peças, lista, plano de corte e 3D) e o arrastado encosta no vizinho (Adauto 22/11)")
         XCTAssertEqual(o["digitado"] as? String, "digitado: forno -/- · aberto -/- · junta 0 · peças 0+0 · lista 0 · plano 0 · 3D 0 · x 900", "posição digitada encostando: fica no número digitado (antes ia pra 870 empurrado pelo tamponamento do forno)")

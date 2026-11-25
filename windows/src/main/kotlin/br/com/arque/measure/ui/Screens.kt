@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AllInbox
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Straighten
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.CreateNewFolder
@@ -215,6 +216,8 @@ fun LibraryScreen(vm: AppViewModel) {
     var syncOpen by remember { mutableStateOf(false) }
     var langOpen by remember { mutableStateOf(false) }
     if (langOpen) LanguageDialog { langOpen = false }
+    var unitOpen by remember { mutableStateOf(false) }
+    if (unitOpen) UnitDialog(vm) { unitOpen = false }
     val ctxN2 = androidx.compose.ui.platform.LocalContext.current
 
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
@@ -464,6 +467,7 @@ fun LibraryScreen(vm: AppViewModel) {
         add(SheetItem(tr("Sincronizar com outro aparelho (Wi-Fi)"), Icons.Filled.Sync) { syncOpen = true })
         add(SheetItem(tr("Ver projeto por Bluetooth"), Icons.Filled.Bluetooth) { btView = true })
         add(SheetItem(langMenuLabel() + " (" + currentLangName() + ")", Icons.Filled.Language) { langOpen = true })
+        add(SheetItem(unitMenuLabel(vm.unitPref), Icons.Filled.Straighten) { unitOpen = true })
         if (showLicItem) add(SheetItem(tr("Licença / senha do mês"), Icons.Filled.Lock) { trialOpen = true })
         if (br.com.arque.measure.BuildConfig.PLAY) add(SheetItem(tr("Gerenciar assinatura"), Icons.Filled.ShoppingCart) { vm.manageStore() })
         add(SheetItem(tr("Guia passo a passo"), Icons.Filled.Info) { vm.openGuide() })

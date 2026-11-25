@@ -62,6 +62,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     val images = ImageCache(store, viewModelScope)
     val ble = BoschBle(app)
 
+    // UNIDADE (Adauto 25/11): mm ou cm nos Ajustes. Fica em files/unidade.json (entra no backup); null = nunca escolheu
+    // (aí vale mm em tudo, inclusive na nota nova do caderno: decisão do Adauto 25/11). Internamente tudo continua em mm.
+    private val unitFile = File(app.filesDir, br.com.arque.measure.logic.UnitPref.FILE)
+    var unitPref by mutableStateOf(runCatching { if (unitFile.exists()) br.com.arque.measure.logic.UnitPref.parse(unitFile.readText()) else null }.getOrNull())
+        private set
+
+    fun changeUnitPref(u: br.com.arque.measure.model.LengthUnit) {
+        // gravação atômica: escreve num temporário e troca de nome (o arquivo anterior fica inteiro se o app morrer no meio)
+        val ok = runCatching {
+            val t = File(unitFile.parentFile, unitFile.name + ".tmp")
+            t.writeText(br.com.arque.measure.logic.UnitPref.json(u))
+            if (!t.renameTo(unitFile)) { unitFile.writeText(t.readText()); t.delete() }
+        }.isSuccess
+        if (ok) unitPref = u
+    }
+
     // painel da trena na folha: pode ocultar e mudar o tamanho (guardado no aparelho)
     private val uiPrefs = app.getSharedPreferences("arque_ui", android.content.Context.MODE_PRIVATE)
     var trenaHidden by mutableStateOf(uiPrefs.getBoolean("trenaHidden", false))
@@ -157,7 +173,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         // nota nova ligada a um projeto já nasce com o nome do cliente
         val proj = lastProjectId?.let { pid -> moveisProjects().firstOrNull { it.id == pid } }?.takeIf { !defaultProjName(it) }
         val typed = name?.trim().orEmpty()
-        val n = Note(name = typed.ifEmpty { proj?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1) }, folderId = folder)
+        val n = Note(name = typed.ifEmpty { proj?.name ?: tr("Nota {0}", index.notes.count { !it.trash } + 1) }, folderId = folder, unit = br.com.arque.measure.logic.UnitPref.newNote(unitPref))
         lastProjectId?.let { pid ->
             links.edit().putString(n.id, pid).apply()
             if (proj != null && (typed.isEmpty() || typed == proj.name)) linkNames.edit().putString(n.id, proj.name).apply()

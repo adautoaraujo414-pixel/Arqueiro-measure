@@ -2560,3 +2560,9 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Prova: com o 1º toque preso 450 ms de propósito, o teste antigo dá exatamente a falha (botao false, dup 1) e o novo passa. Controle: com 500 ms entre os toques, o novo continua falhando (não é duplo toque).
 - **Correção (só no teste, expectativas iguais):** os 2 toques nascem com 80 ms de diferença, como o dedo, e depois são entregues. O mesmo em `testNo3DDuplicarQualquerPecaViraPecaLivre` e `testConchaDaGavetaInverterEMoverSoElas`, que usam o mesmo toque duplo. Nenhum limite muda.
 - **Validação:** 3/3 a 1366 e a 430; 5/5 no fechamento-code1, onde o antigo falhava 2/5. O app não mudou.
+
+## SOOID (25/11): `testIdentidadeUnica…` falhava em "abrir o projeto antigo só soma o id" (opção a do Chefe; passou do Code 1 pro Claude 4) — Claude 4
+- **Causa:** a comparação via `wing` ausente (projeto antigo) contra `wing: 0` (o `loadState` põe 0 no módulo sem parede), nos módulos e no `m`. Antes o reparo do 3D de 900 ms relia o projeto e normalizava os dois lados. O FOCO-3D tirou esse reparo espúrio.
+- **Correção (só no teste, só nesse campo, com comentário):** na comparação do `soOId`, `wing` ausente = 0. `loadState` não muda.
+- **Prova pedida pelo Chefe:** no mesmo cenário, o projeto antigo aberto e o original fabricam igual: peças (`partsOf`), corte (`cutLines`), orçamento (`budget` tot/venda) e DXF (`dxfPecas`), sem os ids. Controle: 10 mm a mais num módulo muda a comparação.
+- **Validação:** passa a 1366 e a 430.

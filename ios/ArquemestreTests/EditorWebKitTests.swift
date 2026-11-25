@@ -49,8 +49,11 @@ final class EditorWebKitTests: XCTestCase {
     @MainActor
     private func editor(appScheme: Bool = false) async throws -> WKWebView {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "editor", withExtension: "html"), "editor.html tem que ir dentro do app")
+        // CI-ESTAB (25/11): armazenamento compartilhado e limpo antes de cada teste (ver WebKitCompartilhado)
+        await WebKitCompartilhado.aquece()
+        await WebKitCompartilhado.limpa()
         let config = WKWebViewConfiguration()
-        config.websiteDataStore = .nonPersistent()
+        config.websiteDataStore = WebKitCompartilhado.store
         if appScheme { config.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque") }
         config.userContentController.addUserScript(WKUserScript(source: Self.bridge, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: config)
@@ -8217,6 +8220,7 @@ final class EditorWebKitTests: XCTestCase {
         R.comEspaco=r2+' · andou '+(S.mods[1].x-x1)+' · larguras '+S.mods.map(function(q){return q.w}).join(',')+' · avisou '+TO.some(function(t){return /Não cabe/.test(t)});
         /* 3. pedra encaixada: ligar o tamponamento da ponta faz a PEDRA acompanhar; o módulo não encolhe sozinho */
         clr();await add('Balcão 2 portas');await add('Gaveteiro 3 gavetas');await toca(1,'tr',false);S.tab=6;panel();document.querySelector('#bd [data-stadd]').click();await W(80);var w0=S.mods.map(function(q){return q.w}).join(','),s0=S.stones[0].x+S.stones[0].w;var r3=await toca(1,'tr',true);
+        /* PEDRA-SUG (§12, Adauto 25/11, via Chefe): a pedra que já existe não muda sozinha; o "Ajustar pedra ao balcão" faz o mesmo de antes */var sg_=document.querySelector('#stsug:not([hidden]) [data-stsug="ok"]');R.sugPedra=!!sg_;if(sg_)sg_.click();await W(30);
         R.pedraAcompanha=r3+' · larguras iguais '+(S.mods.map(function(q){return q.w}).join(',')===w0)+' · pedra cresceu '+(S.stones[0].x+S.stones[0].w-s0);
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -8226,6 +8230,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semPedra"] as? String, "ligado · peça 1")
         XCTAssertEqual(o["semEspaco"] as? String, "desligado · tudo como estava true · avisou true")
         XCTAssertEqual(o["comEspaco"] as? String, "ligado · andou 30 · larguras 900,900 · avisou false")
+        XCTAssertEqual(o["sugPedra"] as? Bool, true, "PEDRA-SUG (§12, 25/11): a pedra não cresce sozinha; aparece a sugestão")
         XCTAssertEqual(o["pedraAcompanha"] as? String, "ligado · larguras iguais true · pedra cresceu 30")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
@@ -19129,6 +19134,7 @@ final class EditorWebKitTests: XCTestCase {
         loadState(initLimpo());demoScene();await W(400);draw();var p0=pos(),s0=ped();R.pedra0=s0;R.inicio=fs_();
         var pia=S.mods.filter(function(m){return m.fundoPia&&!m.fundo})[0],ipia=S.mods.indexOf(pia);R.pia=!!pia;
         /* um módulo pelo painel */S.m=S.mods[2];S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(900);R.um=fs_();
+        /* PEDRA-SUG (§12, Adauto 25/11, via Chefe): a pedra que já existe não acompanha sozinha o fundo de 15; o "Ajustar pedra ao balcão" faz o mesmo de antes (606 → 615) */var sg_=document.querySelector('#stsug:not([hidden]) [data-stsug="ok"]');R.sugPedra=!!sg_;if(sg_)sg_.click();await W(30);
         /* aplicar a todos: prévia */S.tab=5;panel();var ba=document.querySelector('#f15box [data-f15all]');R.botao=ba?ba.textContent:'';ba.click();await W(50);var M=document.getElementById('f15m');
         R.previa=M?[M.querySelectorAll('[data-f15c]').length+' marcáveis',M.querySelectorAll('[data-f15c]:checked').length+' marcados',(M.textContent.match(/já com 15 mm/)||[''])[0],M.querySelectorAll('#f15av .note').length+' avisos',/embaixo da pia/.test(M.textContent)?'pia':'sem pia'].join(' · '):'sem prévia';
         R.avisoTexto=M?((M.querySelector('#f15av .note')||{}).textContent||''):'';
@@ -19154,6 +19160,7 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["aplicou"] as? String, "15,15,15,15,15,15,15,15,15")
         XCTAssertEqual(o["naoMoveu"] as? Bool, true, "nenhum móvel sai do lugar nem muda de medida")
         XCTAssertEqual(o["pedra0"] as? String, "0,2735,606,820")
+        XCTAssertEqual(o["sugPedra"] as? Bool, true, "PEDRA-SUG (§12, 25/11): a pedra não acompanha sozinha; aparece a sugestão")
         XCTAssertEqual(o["pedraUm"] as? String, "0,2735,615,820", "pedra encaixada acompanha a frente: + 9")
         XCTAssertEqual(o["barra"] as? Bool, true)
         XCTAssertEqual(o["piaProf"] as? String, "575 · peça 0", "embaixo da pia: sem chapa de fundo, a profundidade acompanha")
@@ -19872,6 +19879,370 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
         XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
         XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FOCO-3D (Chefe 25/11, intermitente "chips[1] undefined" do testSoOModulo3DE2D… sob carga). Causa no app: 900 ms depois de abrir o 3D
+    // o autodiagnóstico (PEDIDO 45) contava os módulos escondidos de propósito pelo "só o módulo" como 3D quebrado (ou rodava com o 3D já fechado),
+    // relia o projeto e perdia o foco / o "2D só ele" — a barra ficava na tela e o ✏️ 2D só ele não fazia nada. Reproduz sem carga: é só focar
+    // ou fechar antes de 0,9 s. O conserto do 3D quebrado de verdade continua (testado no PEDIDO 45).
+    func testFOCO3D_FocarOuFecharLogoDepoisDeAbrirO3DNaoReleOProjetoNemPerdeOFoco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        demoScene();draw();var loads=0,l0=window.loadState;window.loadState=function(){loads++;return l0.apply(this,arguments)};
+        /* 1) abre o 3D e já foca o módulo 4 */open3D();focOn(3,'front');await W(1500);
+        R.foco=!!window.FOC3+' · mi '+(window.FOC3&&window.FOC3.mi)+' · releu '+loads;
+        /* 2) ✏️ 2D só ele funciona */var b2=document.querySelector('#foc3 [data-fc2d]');var m=S.mods[3];if(b2)b2.click();await W(100);R.so2d=(window.SOLO2===m)+' · chips '+document.querySelectorAll('#solobar [data-sov]').length;
+        /* 3) 🧊 3D só ele e fecha logo: volta pro 2D só dele e continua nele depois dos 900 ms */document.querySelector('#solobar [data-so3]').click();await W(50);document.getElementById('v3x').click();await W(1500);
+        R.volta=(window.SOLO2===m)+' · releu '+loads;
+        try{document.querySelector('#solobar [data-sox]').click()}catch(_){}window.loadState=l0;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["foco"] as? String, "true · mi 3 · releu 0", "focar logo depois de abrir o 3D não relê o projeto nem perde o foco")
+        XCTAssertEqual(o["so2d"] as? String, "true · chips 1", "o ✏️ 2D só ele abre o 2D do módulo")
+        XCTAssertEqual(o["volta"] as? String, "true · releu 0", "fechar o 3D só dele em menos de 0,9 s volta pro 2D só dele e fica")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CI-ESTAB (Chefe 25/11): a bateria do iOS usa um armazenamento só (WebKitCompartilhado), limpo antes de cada teste.
+    // Prova do isolamento: o que um editor grava no localStorage e no IndexedDB não aparece no editor do teste seguinte.
+    func testISOLAMENTO_ArmazenamentoCompartilhadoLimpoEntreTestes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        localStorage.setItem('iso.teste','gravado');
+        var ok=await new Promise(function(res){var r=indexedDB.open('isoTeste',1);r.onupgradeneeded=function(){r.result.createObjectStore('s')};r.onsuccess=function(){var db=r.result,t=db.transaction('s','readwrite');t.objectStore('s').put('gravado','k');t.oncomplete=function(){db.close();res(true)};t.onerror=function(){res(false)}};r.onerror=function(){res(false)}});
+        return JSON.stringify({ls:localStorage.getItem('iso.teste'),idb:ok});
+        """#)
+        XCTAssertEqual(o["ls"] as? String, "gravado")
+        XCTAssertEqual(o["idb"] as? Bool, true)
+        let web2 = try await editor()
+        let q = try await run(web2, #"""
+        var novo=await new Promise(function(res){var r=indexedDB.open('isoTeste',1),up=false;r.onupgradeneeded=function(){up=true;r.result.createObjectStore('s')};r.onsuccess=function(){r.result.close();res(up)};r.onerror=function(){res('erro')}});
+        return JSON.stringify({ls:localStorage.getItem('iso.teste'),idbNovo:novo});
+        """#)
+        XCTAssertNil(q["ls"] as? String, "o localStorage do teste anterior não aparece")
+        XCTAssertEqual(q["idbNovo"] as? Bool, true, "o IndexedDB do teste anterior não existe mais (o banco nasce de novo)")
+    }
+
+    // TZ-ID (Chefe 25/11, intermitente do testRebaixoDoTetoComDente na bateria de 1366 do Code 2, aae4ef93: "esq" veio "2800+600@2600").
+    // Causa no app: o id do rebaixo era relógio + sorteio (0..996). Duas zonas criadas a poucos ms podiam ter o MESMO id, e o "dente" saía da
+    // 1ª zona com aquele id (o dente anterior: 2200+600 → 2800, 2500 → 2600). Aqui o relógio e o sorteio ficam presos e a colisão acontece sempre.
+    func testTZID_RebaixoComIdsQueColidiriamFazODenteNaZonaCerta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={},e0=__errs.length;draw();
+        S.rp=[{id:11,liso:true,x:0,b:0,w:4000,h:2700}];tzAdd('f',{x:1000,w:1200,hc:2300});
+        var dn=Date.now,mr=Math.random,T=dn.call(Date);Date.now=function(){return T};Math.random=function(){return 0.5};
+        try{document.querySelector('#tzbox [data-tzb="dente"]').click();tzAdd('f',{x:3500,w:500,hc:2400});document.querySelector('#tzbox [data-tzb="dente"]').click()}finally{Date.now=dn;Math.random=mr}
+        var d=S.tz[S.tz.length-1];R.esq=d.x+'+'+d.w+'@'+d.hc;R.unicos=new Set(S.tz.map(function(q){return q.id})).size+' de '+S.tz.length;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["esq"] as? String, "2900+600@2550", "o dente sai da zona escolhida, à esquerda dela")
+        XCTAssertEqual(o["unicos"] as? String, "4 de 4", "cada rebaixo tem id próprio")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ID-NOVO (Chefe 25/11, §11 família do TZ-ID): id novo de LED (nível), da pedra do canto em L e da pedra nova nunca repete um que já existe.
+    // Relógio e sorteio presos (a colisão que antes acontecia por acaso acontece sempre aqui). Projeto antigo não muda: só ids novos.
+    func testIDNOVO_LedEPedraComRelogioPresoTemIdsUnicos() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var t=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var x=typeof q==='number'?TPL[q]:q;if(!t&&x&&!x.act&&x.n==='Nicho com prateleiras')t=x})});
+        S.stones=[];S.mods=[];S.fr=[];S.env='cozinha';S.W=4200;draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];lvSolta(m);draw();__build();
+        var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^Prateleira/.test(String(b.pk||''))});
+        var dn=Date.now,mr=Math.random,T=dn.call(Date),q_=0;Date.now=function(){return T+Math.floor((q_++)/1000)};/* relógio que anda 1 ms a cada 1000 leituras: os ids criados juntos colidem e quem espera o relógio não trava */Math.random=function(){return 0.5};
+        try{
+          /* LED: dois níveis criados no mesmo instante */lvlAdd(0,sh[1].pk,5);lvlAdd(0,sh[2].pk,5);
+          var ids=(m.leds||[]).map(function(q){return q.id});R.led=ids.length+' LEDs · únicos '+new Set(ids).size;
+          /* pedra: a do canto em L (sem pedra) e uma nova depois; o contador SID cai no mesmo número da 1ª */
+          S.stones=[];SID=Date.now()%1e6;mkL('e',2000,1500,600,true);addStone();var si=S.stones.map(function(q){return q.id});R.pedra=si.length+' pedras · únicas '+new Set(si).size;
+        }finally{Date.now=dn;Math.random=mr}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["led"] as? String, "2 LEDs · únicos 2", "cada LED novo tem id próprio")
+        XCTAssertEqual(o["pedra"] as? String, "2 pedras · únicas 2", "a pedra nova não repete o id da pedra do canto")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-3D (Chefe 25/11, suspeita do Claude 3: "desfazer perdeu o passo depois de loadState atrasado"; §3). Causa no app: o reparo
+    // de 900 ms do open3D relia o projeto com loadState, que zera a pilha do desfazer. (A) foco aberto logo (falso alarme, corrigido no FOCO-3D)
+    // e (B) 3D que quebra de verdade (o reparo roda): nos dois o desfazer continua voltando o passo do usuário.
+    func testDESFAZER3D_ReparoDo3DNaoApagaODesfazer() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        demoScene();draw();await W(900);var w0=S.mods[0].w;
+        open3D();focOn(3,'front');S.mods[0].w=w0+100;draw();await W(1500);try{document.getElementById('v3x').click()}catch(_){}document.getElementById('und').click();await W(100);R.foco=S.mods[0].w===w0;
+        demoScene();draw();await W(900);w0=S.mods[0].w;var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};
+        try{open3D();S.mods[0].w=w0+100;draw();await W(1500)}finally{window.diag3=d0}try{document.getElementById('v3x').click()}catch(_){}document.getElementById('und').click();await W(100);
+        R.reparo=(S.mods[0].w===w0)+' · reparo rodou '+(n>0);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["foco"] as? Bool, true, "focar e editar logo depois de abrir o 3D: o desfazer volta o passo")
+        XCTAssertEqual(o["reparo"] as? String, "true · reparo rodou true", "o 3D se refez sozinho e o desfazer continua voltando o passo")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // IDS-TODOS (Chefe 25/11, varredura §11): 2 de cada tipo criados no mesmo instante (relógio "lento" + sorteio preso) têm ids diferentes.
+    // Antes: projetos 2/1 (o 2º projeto ficava com o id do 1º — risco de gravar um por cima do outro, §3), painéis em lote 3/1, rebaixos 2/1.
+    // Correção: idNovo (pula o que já existe e o que já foi entregue na sessão); só ids novos, projeto antigo não muda.
+    func testIDSTODOS_DoisDeCadaTipoNoMesmoInstanteTemIdsDiferentes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var dn=Date.now,mr=Math.random,T0=dn.call(Date),q_=0;Date.now=function(){return T0+Math.floor((q_++)/1000)};Math.random=function(){return 0.5};
+var un=function(L,k){k=k||'id';var v=(L||[]).map(function(x){return x[k]});return v.length+'/'+new Set(v.map(String)).size};
+try{
+ newProjFor({nome:'Ids',end:'',cidade:'',tel:''});var p1=CUR;newProjFor({nome:'Ids2',end:'',cidade:'',tel:''});R.projetos=un(pLoadAll());
+ loadState(initLimpo());S.env='cozinha';S.W=5000;draw();
+ newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();S.mods.forEach(function(m){try{uid(m)}catch(_){}});R.moveis=un(S.mods,'uid');
+ addStone();addStone();R.pedras=un(S.stones);
+ apAdd('geladeira',0);apAdd('geladeira',0);R.eletros=un(S.fr);
+ /* painéis criados em lote (dividir, gerar placas): os ids saem antes de entrar na lista */var lote=[rpUid(),rpUid(),rpUid()];R.paineis=lote.length+'/'+new Set(lote).size;
+ tzAdd('f',{x:0,w:500,hc:2300});tzAdd('f',{x:1000,w:500,hc:2300});R.rebaixos=un(S.tz);
+}finally{Date.now=dn;Math.random=mr}
+R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["projetos"] as? String, "2/2", "dois projetos novos nunca têm o mesmo id")
+        XCTAssertEqual(o["moveis"] as? String, "2/2")
+        XCTAssertEqual(o["pedras"] as? String, "2/2")
+        XCTAssertEqual(o["eletros"] as? String, "2/2")
+        XCTAssertEqual(o["paineis"] as? String, "3/3", "placas criadas em lote não repetem id")
+        XCTAssertEqual(o["rebaixos"] as? String, "2/2")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) sem 3D: desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_Sem3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='2d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) com o 3D aberto: desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_Com3DAberto() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='3d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, varredura): 16 operações (criar, duplicar, excluir, mover, redimensionar, digitar medida, trocar vão, cor,
+    // custo fixo, parede, pedra, LED, eletro/peça livre, painel, rebaixo, unidade) depois do reparo do 3D (3D que quebrou e se refez): desfazer = antes, refazer = depois (JSON, sem a seleção;
+    // wing ausente = 0 é o padrão do loadState, decisão do Chefe 25/11). A unidade não cria passo (não muda o projeto).
+    func testDESFAZERTODOS_DepoisDoReparoDo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;/* a seleção não entra no desfazer (igual ao histKey) */(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='reparo';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['criar módulo',function(){newTpl(T('Balcão 2 portas'))}],
+ ['duplicar módulo',function(){modCopy(S.mods[0])}],
+ ['excluir módulo',function(){S.m=S.mods[1];draw();document.getElementById('delMod').click()}],
+ ['mover 2D',function(){snap();S.mods[0].x=(+S.mods[0].x||0)+150}],
+ ['redimensionar',function(){snap();S.mods[0].w=+S.mods[0].w+100}],
+ ['digitar medida',function(){S.m=S.mods[0];S.tab=0;panel();var e=document.querySelector('#bd input[data-k="w"]');e.value='950';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}))}],
+ ['trocar vão',function(){snap();S.mods[0].v[0]={k:'drawers',n:3}}],
+ ['cor',function(){snap();S.mods[0].cor='#7a4a2a'}],
+ ['custo fixo',function(){snap();S.cfx=(S.cfx||[]).concat([{id:'cTeste',n:'Frete',t:'R',v:100,on:1}])}],
+ ['parede',function(){snap();S.W=5200}],
+ ['pedra',function(){addStone()}],
+ ['LED',function(){__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4)}],
+ ['eletro/peça livre',function(){apAdd('geladeira',0)}],
+ ['painel',function(){snap();S.rp=(S.rp||[]).concat([{id:rpUid(),liso:true,x:0,b:0,w:600,h:900}])}],
+ ['rebaixo',function(){tzAdd('f',{x:0,w:800,hc:2300})}],
+ ['unidade (não muda o projeto)',function(){arqueUnidade('cm');arqueUnidade('mm')}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)&&!/^unidade/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "todas voltam e refazem igual: \(o["lista"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ISOLAMENTO-TODOS (Chefe 25/11, varredura): duplicar, editar e excluir cada tipo (módulo, pedra, painel, rebaixo, eletro, LED, custo fixo)
+    // deixa o JSON de todos os OUTROS elementos idêntico; um projeto não mexe no outro. A pedra que acompanhava sozinha a largura dos balcões
+    // agora só muda pela sugestão (PEDRA-SUG, §12, 25/11): 0 casos.
+    func testISOLAMENTOTODOS_EditarUmTipoNaoMexeNosOutros() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var limpo=function(o){o=JSON.parse(JSON.stringify(o));(o||{}).wing===0&&delete o.wing;return o};
+/* fotografia de cada elemento por id (módulo pelo uid), sem a seleção */
+var foto=function(){var s=snapState(),F={};(s.mods||[]).forEach(function(m){var q=limpo(m);F['mod:'+m.uid]=JSON.stringify(q)});['stones','rp','tz','fr','ops','cfx'].forEach(function(k){(s[k]||[]).forEach(function(q){F[k+':'+q.id]=JSON.stringify(q)})});(s.mods||[]).forEach(function(m){(m.leds||[]).forEach(function(l){F['led:'+l.id]=JSON.stringify(l)})});F['parede']=JSON.stringify([s.W,s.H]);return F};
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));addStone();apAdd('geladeira',0);S.rp=[{id:rpUid(),liso:true,x:0,b:0,w:600,h:900},{id:rpUid(),liso:true,x:700,b:0,w:600,h:900}];tzAdd('f',{x:0,w:800,hc:2300});S.cfx=[{id:'c1',n:'Frete',t:'R',v:100,on:1}];__build();var sh=__boxes().filter(function(b){return parseInt(String(b.nm||''),10)===0&&/^(Base|Prateleira|Lateral)/.test(String(b.pk||''))})[0];if(sh)lvlAdd(0,sh.pk,4);draw();await W(50)}
+/* cada operação devolve a chave do elemento que ela pode mudar (o resto tem que ficar idêntico) */
+var OPS=[
+ ['módulo · duplicar',function(){var c=modCopy(S.mods[1]);return ['mod:'+S.mods[1].uid]}],
+ ['módulo · editar',function(){snap();S.mods[1].w=+S.mods[1].w+50;draw();return ['mod:'+S.mods[1].uid]}],
+ ['módulo · excluir',function(){var k='mod:'+S.mods[1].uid;S.m=S.mods[1];draw();document.getElementById('delMod').click();return [k]}],
+ ['pedra · editar',function(){snap();S.stones[0].d=650;draw();return ['stones:'+S.stones[0].id]}],
+ ['pedra · nova',function(){addStone();return []}],
+ ['painel · editar',function(){snap();S.rp[0].w=650;draw();return ['rp:'+S.rp[0].id]}],
+ ['painel · copiar',function(){try{rpCopy(S.rp[0])}catch(e){S.rp.push(Object.assign(JSON.parse(JSON.stringify(S.rp[0])),{id:rpUid()}))}draw();return []}],
+ ['painel · excluir',function(){var k='rp:'+S.rp[0].id;snap();S.rp.splice(0,1);draw();return [k]}],
+ ['rebaixo · editar',function(){snap();S.tz[0].hc=2350;draw();return ['tz:'+S.tz[0].id]}],
+ ['rebaixo · dente',function(){window.TZSEL=S.tz[0].id;try{tzBox(S.tz[0].id)}catch(_){}var b=document.querySelector('#tzbox [data-tzb="dente"]');if(b)b.click();draw();return ['tz:'+S.tz[0].id]}],
+ ['eletro · editar',function(){snap();S.fr[0].x=+S.fr[0].x+100;draw();return ['fr:'+S.fr[0].id]}],
+ ['LED · editar',function(){var L=(S.mods[0].leds||[])[0];if(!L)return null;snap();L.L=+L.L+10;draw();return ['led:'+L.id,'mod:'+S.mods[0].uid]}],
+ ['custo fixo · editar',function(){snap();S.cfx[0].v=150;return ['cfx:c1']}],
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=foto(),ks;try{ks=OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}if(ks===null){out.push(OPS[i][0]+': não deu pra montar');continue}await W(30);var B=foto();
+ var mud=Object.keys(A).filter(function(k){return ks.indexOf(k)<0&&A[k]!==B[k]});out.push(OPS[i][0]+': '+(mud.length?'OUTROS MUDARAM ['+mud.join(',')+']':'ok'))}
+/* lixeira: excluir um projeto e restaurar não muda os outros */
+try{var a0=pLoadAll().length;newProjFor({nome:'Iso A',end:'',cidade:'',tel:''});saveNow();var pa=CUR;newProjFor({nome:'Iso B',end:'',cidade:'',tel:''});saveNow();var pb=CUR;var antesB=JSON.stringify(pLoadAll().filter(function(p){return p.id===pb})[0].current);out.push('projeto · lixeira: (ver teste de lixeira existente) outro projeto intacto '+(JSON.stringify(pLoadAll().filter(function(p){return p.id===pb})[0].current)===antesB))}catch(e){out.push('projeto · lixeira: ERRO '+e.message)}
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /OUTROS MUDARAM|ERRO|não deu|false$/.test(x)&&!/^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).join(' | ');R.pedraSegueBalcao=out.filter(function(x){return /^módulo · (duplicar|editar): OUTROS MUDARAM \[stones:\d+\]$/.test(x)}).length;R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
+        XCTAssertEqual(o["pedraSegueBalcao"] as? Int, 0, "PEDRA-SUG (§12): editar/duplicar balcão não muda a pedra sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // PEDRA-SUG (§12, regra permanente do Adauto 25/11, via Chefe): a pedra que JÁ EXISTE não muda sozinha quando o balcão muda de largura,
+    // é duplicado ou ganha fundo de 15 mm. Vira a sugestão "Ajustar pedra ao balcão", que aplica exatamente o que antes era aplicado sozinho
+    // (conferido contra a base 8fb9763: 1535 → 1585 / 2135 e frente 606 → 615). Pedra nova continua nascendo encaixada. O toque desfaz.
+    func testPEDRASUG_PedraNaoAcompanhaSozinhaESugestaoFazOMesmoDeAntes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var P=function(){var q=S.stones[0];return q?q.x+'+'+q.w+'×'+q.d:'-'};
+var cena=async function(){loadState(initLimpo());S.env='cozinha';S.W=5000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));addStone();draw();await W(30)};
+var CAS=[['largura',function(){snap();S.mods[1].w=+S.mods[1].w+50}],['duplicar',function(){modCopy(S.mods[1])}],['fundo 15',function(){snap();S.mods[0].fundoMm=15;S.mods[1].fundoMm=15}]];
+for(var i=0;i<CAS.length;i++){await cena();var a=P();CAS[i][1]();draw();await W(30);var semToque=P(),sug=document.getElementById('stsug'),temBotao=!!(sug&&!sug.hidden&&sug.querySelector('[data-stsug="ok"]'));
+ if(window.stSugAplica&&temBotao)sug.querySelector('[data-stsug="ok"]').click();await W(30);R[CAS[i][0]]=a+' → '+semToque+' · botão '+temBotao+' · com o toque '+P()}
+/* pedra nova junto com o balcão: nasce encaixada (padrão) */loadState(initLimpo());S.env='cozinha';S.W=5000;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));S.mods[1].w=650;draw();addStone();draw();R.nova=P();
+/* desfazer o toque volta a pedra de antes */await cena();await W(800);histTick();snap();S.mods[1].w=+S.mods[1].w+50;draw();await W(800);histTick();var sgb=document.querySelector('#stsug [data-stsug="ok"]');if(sgb)sgb.click();draw();await W(800);histTick();var com=P();document.getElementById('und').click();await W(150);R.desfazToque=com+' → desfazer '+P();
+/* igual à #libsug do Code 2: um toque fora fecha a sugestão e nada muda */await cena();snap();S.mods[1].w=+S.mods[1].w+50;draw();await W(30);var sb2=document.getElementById('stsug'),ab=!sb2.hidden;document.body.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));R.toqueFora=ab+' → '+(!sb2.hidden)+' · pedra '+P();
+        R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["largura"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1585×606")
+        XCTAssertEqual(o["duplicar"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+2135×606")
+        XCTAssertEqual(o["fundo 15"] as? String, "0+1535×606 → 0+1535×606 · botão true · com o toque 0+1535×615")
+        XCTAssertEqual(o["nova"] as? String, "0+1585×606", "pedra nova nasce encaixada, igual a antes")
+        XCTAssertEqual(o["toqueFora"] as? String, "true → false · pedra 0+1535×606", "um toque fora fecha a sugestão, a pedra fica como estava")
+        XCTAssertEqual(o["desfazToque"] as? String, "0+1585×606 → desfazer 0+1535×606")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESFAZER-TODOS (Chefe 25/11, 2ª parte): espelho (criar, editar, girar) e mover no 3D por gesto (pointer events, como o arrasto 3D da bateria):
+    // desfazer = antes, refazer = depois (JSON, sem a seleção).
+    func testDESFAZERTODOS_EspelhoEMoverNo3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};window.confirm=function(){return true};var e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var J=function(){var s=snapState();delete s.mi;delete s.m;delete s.sti;(s.mods||[]).concat(s.m?[s.m]:[]).forEach(function(q){if(q&&!q.wing)delete q.wing});return JSON.stringify(s)};/* só o padrão wing ausente = 0 do loadState (decisão do Chefe 25/11) */
+var dif=function(a,b){a=JSON.parse(a);b=JSON.parse(b);var d=[];Object.keys(Object.assign({},a,b)).forEach(function(k){if(JSON.stringify(a[k])!==JSON.stringify(b[k]))d.push(k)});return d.join(',')};
+var MODO='2d';
+async function base(){loadState(initLimpo());S.env='cozinha';S.W=5000;S.H=2700;S.Hm=1;S.Wm=1;draw();newTpl(T('Balcão 2 portas'));newTpl(T('Gaveteiro 3 gavetas'));newTpl(T('Aéreo 2 portas'));apAdd('espelho',0);S.m=S.mods[0];draw();panel();await W(800);histTick();await W(800);histTick();
+ if(MODO==='3d'){open3D();await W(100)}if(MODO==='reparo'){var d0=window.diag3,n=0;window.diag3=function(){var d=d0();if(n++===0&&d.mods[0])d.mods[0].caixas=0;return d};open3D();await W(1300);window.diag3=d0}}
+var OPS=[
+ ['espelho · criar',function(){apAdd('espelho',0)}],
+ ['espelho · editar',function(){var f=(S.fr||[]).filter(function(q){return q.t==='espelho'})[0];if(!f){apAdd('espelho',0);return}snap();f.w=+f.w+100}],
+ ['espelho · girar',function(){var f=(S.fr||[]).filter(function(q){return q.t==='espelho'})[0];snap();f.rot=((+f.rot||0)+90)%360}],
+ ['mover no 3D (gesto)',async function(){open3D();await W(300);__cam(0.25,0.3,1);__build();var cv=document.querySelector('#v3 canvas'),M_=document.getElementById('v3');var ev=function(t,x,y,el){(el||cv).dispatchEvent(new PointerEvent(t,{bubbles:true,cancelable:true,clientX:x,clientY:y,pointerId:9,pointerType:'touch',button:0,buttons:t==='pointerup'?0:1,isPrimary:true}))};
+   var bb=null;__boxes().forEach(function(q){if(String(q.nm||'').indexOf('0:')!==0||/Rodapé|Base inferior/.test(q.nm))return;if(!bb)bb={x0:q.x0,x1:q.x1,y0:q.y0,y1:q.y1,z1:q.z1};else{bb.x0=Math.min(bb.x0,q.x0);bb.x1=Math.max(bb.x1,q.x1);bb.y0=Math.min(bb.y0,q.y0);bb.y1=Math.max(bb.y1,q.y1);bb.z1=Math.max(bb.z1,q.z1)}});var p=__p3((bb.x0+bb.x1)/2,(bb.y0+bb.y1)/2,bb.z1),rc=cv.getBoundingClientRect(),c=[rc.left+p[0],rc.top+p[1]];
+   ev('pointerdown',c[0],c[1]);await W(420);ev('pointermove',c[0]+14,c[1],cv);for(var s_=1;s_<=10;s_++)ev('pointermove',c[0]+80*s_/10,c[1],M_);ev('pointerup',c[0]+80,c[1],M_);await W(100)}]
+];
+var out=[];
+for(var i=0;i<OPS.length;i++){await base();var A=J();try{await OPS[i][1]()}catch(e){out.push(OPS[i][0]+': ERRO '+e.message);continue}draw();await W(800);histTick();var B=J();
+ if(A===B){out.push(OPS[i][0]+': sem mudança');continue}
+ try{document.getElementById('v3x').click()}catch(_){}
+ document.getElementById('und').click();await W(150);var U=J();document.getElementById('red').click();await W(150);var Rd=J();
+ out.push(OPS[i][0]+': desfazer '+(U===A?'ok':'DIFERE['+dif(A,U)+']')+' · refazer '+(Rd===B?'ok':'DIFERE['+dif(B,Rd)+']'))}
+out.push('errs '+(__errs.length-e0)+' '+__errs.slice(e0,e0+2).join(' | '));
+var R={lista:out.join(' | ')};R.falhas=out.filter(function(x){return /DIFERE|ERRO|sem mudança/.test(x)}).join(' | ');R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["falhas"] as? String, "", "\(o["lista"] ?? "")")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

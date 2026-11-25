@@ -56,8 +56,12 @@ final class EditorAppPathTests: XCTestCase {
     /// Igual ao MoveisWeb.makeUIView: esquema arque://, ponte ArqueApp e o script dos vídeos.
     @MainActor
     private func openLikeTheApp(lang: String) async throws -> (WKWebView, TimeInterval) {
+        // CI-ESTAB (25/11): WebKit aquecido antes (ambiente, medido à parte no ABERTURA-DIAG) e o mesmo armazenamento da bateria,
+        // limpo antes de cada abertura. A abertura do editor abaixo continua medida igual, com os mesmos 20 s.
+        await WebKitCompartilhado.aquece()
+        await WebKitCompartilhado.limpa()
         let cfg = WKWebViewConfiguration()
-        cfg.websiteDataStore = .nonPersistent()
+        cfg.websiteDataStore = WebKitCompartilhado.store
         cfg.setURLSchemeHandler(BundleSchemeHandler(), forURLScheme: "arque")
         let uc = WKUserContentController()
         uc.addUserScript(WKUserScript(source: "window.__errs=[];window.addEventListener('error',function(e){__errs.push(String(e.message||e)+' @'+(e.lineno||''))});window.addEventListener('unhandledrejection',function(e){__errs.push('promise: '+String(e.reason))});", injectionTime: .atDocumentStart, forMainFrameOnly: true))

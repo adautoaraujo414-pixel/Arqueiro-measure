@@ -2521,3 +2521,22 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
     - os 17 juntos: salvar, reabrir, tirar um por um e desfazer.
     - Já passava antes: a biblioteca já era manual e removível um por um. É a prova que faltava, não correção.
 - **Não verificado:** com dezenas de `loadState` seguidos no mesmo teste, o desfazer logo depois perdeu o passo (a pilha foi zerada por algo atrasado). Isolado, funciona. Por isso a parte manual tem teste próprio.
+## CI-ESTAB (25/11): intermitentes e lentidão do CI (pendência do Chefe) — Claude 4
+- **FOCO-3D (app), causa do "chips[1] undefined" do testSoOModulo3DE2D… sob carga.**
+  - Causa: 900 ms depois de abrir o 3D, o autodiagnóstico do PEDIDO 45 (wrapper do `open3D`) contava os módulos escondidos de propósito pelo foco "só o módulo" (FOC3) como 3D quebrado. Também rodava com o 3D já fechado. Aí relia o projeto: `loadState` → `limpa` → FOC3/SOLO2 perdidos, e o "✏️ 2D só ele" não fazia nada.
+  - Como foi achado: armadilha no `window.FOC3`; a pilha deu `limpa < loadState < setTimeout 900 ms do open3D`.
+  - Reproduz sem carga: abrir o 3D e focar ou fechar antes de 0,9 s. Com a CPU 6× mais lenta, 5 de 5 falham.
+  - Correção: o diagnóstico só confere o módulo focado e não confere com o 3D fechado. O reparo do 3D quebrado de verdade continua (teste do PEDIDO 45).
+  - Teste `testFOCO3D_…`: falha antes, passa depois. Depois da correção: 15 de 15 a 6× e 4 de 4 a 12×.
+- **TZ-ID (app), causa do testRebaixoDoTetoComDente intermitente** (bateria 1366 do Code 2, aae4ef93: `esq` veio "2800+600@2600").
+  - Causa: o id do rebaixo do teto era relógio + sorteio (0..996). Zonas criadas a poucos ms podiam repetir o id, e o "dente" saía da 1ª zona com aquele id (o dente anterior).
+  - Reproduzido com o relógio e o sorteio presos: o mesmo "2800+600@2600", com 2 ids únicos em 4 zonas.
+  - Correção: `tzUid()`, igual ao `rpUid()` dos painéis: pula id que já existe.
+  - Mesma família: 2 lugares de painel (placa do lado e cópia) ainda usavam relógio + sorteio; agora usam `rpUid()`.
+  - Risco identificado, não alterado (sem defeito reproduzido): ids de nível (`L`, relógio%1e9 + sorteio) e da pedra (relógio%1e6). Projeto antigo com id repetido não muda sozinho.
+  - Teste `testTZID_…`: falha antes ("2800+600@2600"), passa depois.
+- **iOS (lentidão da abertura no CI):** o log do WebKit no run 695 mostra o tempo antes da página começar.
+  - Processos levando 14 a 300 s pra lançar e 1186 "Failed to terminate process".
+  - Cerca de 27 s parado no WebPrivacy sem listas.
+  - O editor sozinho leva de 1 a 2 s.
+  - Mudança aprovada pelo Chefe: um armazenamento do WebKit compartilhado e limpo antes de cada teste (`WebKitCompartilhado`, com o teste `testISOLAMENTO_…`) e aquecimento do WebKit medido à parte ("ABERTURA-DIAG WebKit frio"). Os mesmos 20 s na 1ª abertura do editor.

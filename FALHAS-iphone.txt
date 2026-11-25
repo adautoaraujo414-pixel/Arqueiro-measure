@@ -1,0 +1,24 @@
+commit 4637813370bdf634d9be3d09edebd6cb8148d648 · execução 698 · iphone ·     5745 linhas no log
+==== falhas (mensagem completa) ====
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:11068: error: -[ArquemestreTests.EditorWebKitTests testFaixaDaParedeMinimizaEAbreDeNovo] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 3200 × 2600 mm Esquerda Direita — · altura normal")") is not equal to ("Optional("🧱 Parede do fundo · 3200 × 2600 Esquerda Direita — · altura normal")")
+Test Case '-[ArquemestreTests.EditorWebKitTests testFaixaDaParedeMinimizaEAbreDeNovo]' failed (5.063 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:11068: error: -[ArquemestreTests.EditorWebKitTests testFaixaDaParedeMinimizaEAbreDeNovo] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 3200 × 2600 mm Esquerda Direita — · altura normal")") is not equal to ("Optional("🧱 Parede do fundo · 3200 × 2600 Esquerda Direita — · altura normal")")
+Test Case '-[ArquemestreTests.EditorWebKitTests testFaixaDaParedeMinimizaEAbreDeNovo]' failed (3.823 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:413: error: -[ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano] : XCTAssertEqual failed: ("Optional("#,Peça,Compr. × Larg. (mm),Qtd,Fita,☐")") is not equal to ("Optional("#,Peça,Compr. × Larg.,Qtd,Fita,☐")") - tabela da chapa: número, peça, medida, qtd, lado da fita e ☐
+Test Case '-[ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano]' failed (2.890 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:413: error: -[ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano] : XCTAssertEqual failed: ("Optional("#,Peça,Compr. × Larg. (mm),Qtd,Fita,☐")") is not equal to ("Optional("#,Peça,Compr. × Larg.,Qtd,Fita,☐")") - tabela da chapa: número, peça, medida, qtd, lado da fita e ☐
+Test Case '-[ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano]' failed (2.565 seconds).
+2026-11-25 18:49:27.838139+0000 Arquemestre[12214:282434] [XPC] Handle connection with error: Connection interrupted
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:5378: error: -[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 4140 × 3400 mm · trena {\"x0\":0,\"x1\":4140}")") is not equal to ("Optional("🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}")") - no fundo a faixa diz fundo e a trena volta pra parede toda
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista]' failed (7.046 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:5378: error: -[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 4140 × 3400 mm · trena {\"x0\":0,\"x1\":4140}")") is not equal to ("Optional("🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}")") - no fundo a faixa diz fundo e a trena volta pra parede toda
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista]' failed (7.134 seconds).
+d to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=76977, error: (null)
+rocessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=88448, error: (null)
+ireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=89431, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNoVaoComoNoIPhoneSemClickEscolheOVaoEmTodosOsModelosDoCatalogo]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.050 (0.051) seconds
+	 Executed 4 tests, with 0 failures (0 unexpected) in 78.424 (78.442) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 5.540 (5.554) seconds

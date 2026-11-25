@@ -1,0 +1,635 @@
+commit 4637813370bdf634d9be3d09edebd6cb8148d648 · execução 698
+Xcode 26.6
+Build version 17F113
+2026-11-25 18:55:02.548647+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[27452] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:55:02.548865+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[27452] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:55:02.548987+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[27452] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testOlharTocarEAbrirTelasNaoMudaOProjetoSozinho]' passed (34.332 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testOpcaoMarcadaSempreMudaAlgumaCoisa]' passed (9.098 seconds).
+2026-11-25 18:55:19.540883+0000 Arquemestre[12214:294745] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=28921, error: (null)
+2026-11-25 18:55:19.593576+0000 Arquemestre[12214:294745] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=28921, error: (null)
+2026-11-25 18:55:25.135892+0000 Arquemestre[12214:318373] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=28991, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testOrcamentoAmbientesAdicionarRemoverSemDuplicarDescontosSalvarReabrirCopiaCongeladaELinkSemValores]' passed (5.738 seconds).
+2026-11-25 18:55:31.728867+0000 Arquemestre[12214:318373] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=29075, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testOrganizacao3DClienteEModoPessoa]' passed (6.560 seconds).
+2026-11-25 18:55:36.220467+0000 Arquemestre[12214:319192] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=29292, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testP0ParedeDesfazRefazReabreEGuardaRoupa]' passed (4.529 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testP0ParedeEPeDireitoDigitadosNaoMexemNosMoveis]' passed (9.878 seconds).
+2026-11-25 18:55:50.455163+0000 Arquemestre[12214:298709] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=29569, error: (null)
+2026-11-25 18:55:50.458792+0000 Arquemestre[12214:298709] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=29569, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testP0ParedeMenorQueOsMoveisSoAvisa]' passed (4.355 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPaineisDiferentesEmCadaParedeBatemNo2DNo3DENoCorte]' passed (4.485 seconds).
+2026-11-25 18:55:57.797820+0000 Arquemestre[12214:319192] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=30127, error: (null)
+2026-11-25 18:55:57.800395+0000 Arquemestre[12214:319192] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=30127, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPaineisLisosSemSobreporEPortaSemRiscoNo3D]' passed (2.861 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelCegoAlinhadoComAPortaSemFuroDeDobradicaNovoEAntigo]' passed (4.895 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelDoModuloSemTravarESemAntiErrosSoCopiarESalvar]' passed (2.772 seconds).
+2026-11-25 18:56:07.766904+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.792907+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.793472+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.793876+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.794093+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.795337+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.906126+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.906242+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.906507+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.906746+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.907067+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.907340+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.929202+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.929692+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:07.930115+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[30389] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 18:56:08.931567+0000 Arquemestre[12214:298709] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=30389, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelEmOutraParedeMudaECopia]' passed (3.450 seconds).
+2026-11-25 18:56:11.754130+0000 Arquemestre[12214:321999] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=30592, error: (null)
+2026-11-25 18:56:11.759679+0000 Arquemestre[12214:321999] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=30592, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelLisoMostraAsPlacasPelaMedidaDaChapaAoAdicionar]' passed (2.817 seconds).
+2026-11-25 18:56:14.928332+0000 Arquemestre[12214:321422] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=30766, error: (null)
+2026-11-25 18:56:14.934876+0000 Arquemestre[12214:321422] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=30766, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelLisoPeloVaoArrastarPraDiminuirENaoEntraNoMovel]' passed (3.117 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:5378: error: -[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 4140 × 3400 mm · trena {\"x0\":0,\"x1\":4140}")") is not equal to ("Optional("🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}")") - no fundo a faixa diz fundo e a trena volta pra parede toda
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista]' failed (7.046 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:5378: error: -[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista] : XCTAssertEqual failed: ("Optional("🧱 Parede do fundo · 4140 × 3400 mm · trena {\"x0\":0,\"x1\":4140}")") is not equal to ("Optional("🧱 Parede do fundo · 4140 × 3400 · trena {\"x0\":0,\"x1\":4140}")") - no fundo a faixa diz fundo e a trena volta pra parede toda
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista]' failed (7.134 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelNaoEntraNoVizinhoNemNaJunta]' passed (2.457 seconds).
+2026-11-25 18:56:34.057465+0000 Arquemestre[12214:324316] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=31349, error: (null)
+2026-11-25 18:56:34.059814+0000 Arquemestre[12214:324316] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=31349, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelRipadoOuLisoNoCabecalho]' passed (2.493 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPainelSolidoNuncaDentroDoMovelNaCozinha]' passed (2.601 seconds).
+2026-11-25 18:56:39.726165+0000 Arquemestre[12214:321999] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=31373, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPaletaRealComBuscaEChapaPorCor]' passed (3.039 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeCriadaNo3DSelecionaEApagaNoModoParedes]' passed (5.378 seconds).
+2026-11-25 18:56:49.361540+0000 Arquemestre[12214:321999] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=31593, error: (null)
+2026-11-25 18:56:49.363638+0000 Arquemestre[12214:321999] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=31593, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeDaEsquerdaNaoFicaEspelhadaNo2DNemNo3D]' passed (4.223 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeDoLadoComPedraOuModuloFicaTransparenteNo3DEmVezDeSumir]' passed (5.340 seconds).
+2026-11-25 18:57:00.677193+0000 Arquemestre[12214:323358] [ProcessSuspension] 0x12013c480 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=31886, error: (null)
+2026-11-25 18:57:00.679819+0000 Arquemestre[12214:323358] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=31886, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaAvisoNaoSaiDoQuadroEDesenhoNaoAndaAoEscolher]' passed (5.938 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaMovelNovoCatalogoPrimeiroTerco]' passed (46.768 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaMovelNovoCatalogoSegundoTerco]' passed (45.428 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaMovelNovoCatalogoTerceiroTerco]' passed (49.102 seconds).
+2026-11-25 18:59:25.509740+0000 Arquemestre[12214:329655] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=36055, error: (null)
+2026-11-25 18:59:25.511296+0000 Arquemestre[12214:329655] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=36055, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaMovelNovoNumeraOsVaosDaEsquerdaPraDireitaDeQuemOlha]' passed (3.488 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaMovelNovoSemEspelhoAntigoIgualComDesespelhar]' passed (3.439 seconds).
+2026-11-25 18:59:31.131680+0000 Arquemestre[12214:321422] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=36547, error: (null)
+2026-11-25 18:59:31.133268+0000 Arquemestre[12214:321422] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=36547, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaNomesDosLadosSeguemQuemOlha]' passed (2.178 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeEsquerdaToqueDoisToquesEArrastoSeguemODesenho]' passed (7.182 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeLateralNaoCresceSozinha]' passed (3.141 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesAcabamentoEmCimaDoPeitorilPedraOuMDF]' passed (2.705 seconds).
+2026-11-25 18:59:47.187053+0000 Arquemestre[12214:329655] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=37082, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesCubasCooktopEDormitorio]' passed (3.006 seconds).
+2026-11-25 18:59:49.891530+0000 Arquemestre[12214:335873] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=37096, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedeSemRiscoEmCimaDaPortaEJanela]' passed (2.709 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesEtapaAAberturaComPeitorilNoFundoENasLaterais]' passed (3.731 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesEtapaBMeiaParedeComAlturaEEspessuraEditaveisEAberturaNaParedeToda]' passed (3.287 seconds).
+2026-11-25 19:00:01.126637+0000 Arquemestre[12214:335873] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=37482, error: (null)
+2026-11-25 19:00:01.127223+0000 Arquemestre[12214:335873] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=37482, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesEtapaCRemoverERestaurarFundoELateraisSemMexerNosMoveis]' passed (4.207 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesEtapaDMenuEditarParedeNo3D]' passed (4.147 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testParedesEtapaESoltarSemMexerNoMesmoLugar]' passed (3.159 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPassanteCatalogoInteiroSoAFrenteDaBordaCresceDobradicaNoLugarE3DIgualCorte]' passed (15.411 seconds).
+2026-11-25 19:00:26.982018+0000 Arquemestre[12214:335872] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=38607, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPecaApagadaEAjusteDo3DSeguemAPecaQuandoOutroVaoMuda]' passed (3.108 seconds).
+2026-11-25 19:00:30.655962+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=14068, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPecaLivreArrastarDeNovoLogoNaoAbreMenuEDoisToquesParadosAbrem]' passed (3.659 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPecaLivreDoisToquesDuplicarEImaAlinhaAsFaces]' passed (6.251 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPecasLivresArrastoSemReconstruir3DACadaPassoEOrientacaoPeloEspaco]' passed (4.396 seconds).
+2026-11-25 19:00:44.231853+0000 Arquemestre[12214:343430] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=39193, error: (null)
+2026-11-25 19:00:44.234651+0000 Arquemestre[12214:343430] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=39193, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPecasLivresNoOrcamentoNoPDFENoPlanoDeCorteComAsMedidasReais]' passed (2.927 seconds).
+2026-11-25 19:00:47.041190+0000 Arquemestre[12214:343229] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=39401, error: (null)
+2026-11-25 19:00:47.042163+0000 Arquemestre[12214:343229] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=39401, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPeDireitoNaoMedidoNaoInventaMedidaAteOTeto]' passed (2.812 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraDivididaNoFogao]' passed (3.491 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraELixeiraForaDaParedeEncolhidaAvisamSemMudarNada]' passed (2.493 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraEmLApareceNaParedeDoLado2DIgualAo3D]' passed (7.850 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraEmQualquerParedeCriaNaParedeEscolhidaSalvaEApareceNo3D]' passed (5.892 seconds).
+2026-11-25 19:01:13.379665+0000 Arquemestre[12214:341849] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=40211, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraLateralIlhaRipadoZoomCantoCegoELinkRecebido]' passed (6.619 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraNovaNaoAtravessaMovelAltoNasceDivididaENadaSaiDoLugar]' passed (5.336 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedrasNo3DMuretaComPedra]' passed (4.147 seconds).
+2026-11-25 19:01:27.977194+0000 Arquemestre[12214:343229] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=40761, error: (null)
+2026-11-25 19:01:27.980100+0000 Arquemestre[12214:343229] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=40761, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraSolidaGeladeiraAcompanhaPortaDaSalaE5ToquesEditaSoOModulo]' passed (5.098 seconds).
+2026-11-25 19:01:36.747743+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=41311, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraTravadaNaoSomeTrenaComLupaGeladeiraNo2DEPortaDoAmbiente]' passed (8.777 seconds).
+2026-11-25 19:01:40.560739+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.561053+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.561285+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.561473+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.571295+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.572820+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.589046+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.589409+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.589817+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.590261+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:01:40.591107+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[41709] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testPedraVistaDeCimaDoisToquesNaCubaECooktopGirarTrocarTirar]' passed (5.637 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPerfilGAfastamentoERebaixoConfiguraveisPadraoZeroSemMudarPecas]' passed (3.353 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPerfilGolaAberturaPraFrenteParedeDe42AtrasSemPlacaEmPortaGavetaAereoEGolaVertical]' passed (4.987 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPerfilGolaSolidoPassadaPropriaSemGranuladoAbertoEFechado]' passed (4.012 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPesDeMetalEmTodoTipoDeModuloEstreitoCantoParedeLateralAltoEPorVaos]' passed (7.750 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPesDeMetalNoLugarDoRodapeDesenho3DMateriaisEForaDoPlanoDeCorte]' passed (7.941 seconds).
+2026-11-25 19:02:13.103368+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=43311, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPintarCompactoCabecalhoDuasLinhasRolagemEDuasColunasSemPerderOpcao]' passed (2.676 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPintarNo3DTemAsPedrasEPintaVidroEPerfilDaJanela]' passed (4.567 seconds).
+2026-11-25 19:02:20.014198+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013c240 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=43517, error: (null)
+2026-11-25 19:02:20.020061+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=43517, error: (null)
+2026-11-25 19:02:20.065111+0000 Arquemestre[12214:339548] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=43517, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPintarPaineisPelo3DEPelaAbaCores]' passed (2.341 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlacaDo3DSolidaTravaApagaAparece2DEPlanoDeCorte]' passed (2.121 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteAbreOtimizaENaoDaErro]' passed (2.734 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteApertaAChapaSemPiorarNoJeitoDeCortarEscolhido]' passed (3.990 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomPrimeiroTerco]' passed (10.046 seconds).
+2026-11-25 19:02:49.004122+0000 Arquemestre[12214:351651] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=44319, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomSegundoTerco]' passed (10.076 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomTerceiroTerco]' passed (14.417 seconds).
+2026-11-25 19:03:08.081939+0000 Arquemestre[12214:351650] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=44884, error:Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteListaEmCSVMesmasLinhasDoPDF]' passed (4.618 seconds).
+2026-11-25 19:03:08.221807+0000 Arquemestre[12214:351650] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=44884, error: (null)
+2026-11-25 19:03:12.242058+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=45029, error: (null)
+2026-11-25 19:03:12.245546+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45029, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteLocalizaCadaPecaNo3D]' passed (4.131 seconds).
+2026-11-25 19:03:21.597979+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=45105, error: (null)
+2026-11-25 19:03:21.602074+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45105, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteNaoDescontaAFitaDeBorda]' passed (9.246 seconds).
+2026-11-25 19:03:25.092980+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c0c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=45363, error: (null)
+2026-11-25 19:03:25.106401+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=45363, error: (null)
+2026-11-25 19:03:25.109834+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45363, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteParedeEsquerdaNomeDeQuemOlhaEPecaTiradaSegueAoDesespelhar]' passed (3.468 seconds).
+2026-11-25 19:03:28.206033+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45385, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCortePecaBrancaDeQualquerBrancoVaiProMesmoGrupoDaCaixaBranca]' passed (3.143 seconds).
+2026-11-25 19:03:31.531511+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=45399, error: (null)
+2026-11-25 19:03:31.551845+0000 Arquemestre[12214:356574] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45399, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteRodapeForaDoCorteNaCozinhaEmL]' passed (3.294 seconds).
+2026-11-25 19:03:34.557506+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=45435, error: (null)
+2026-11-25 19:03:34.560484+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45435, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteRodapeForaDoCorteRodapeContinuoFicaSoComOsTrechos]' passed (3.053 seconds).
+2026-11-25 19:03:49.727700+0000 Arquemestre[12214:356949] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=45605, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteTodaPecaEntraUmaVezDentroDaChapaSemUmaEmCimaDaOutra]' passed (15.163 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlanoDeCorteToqueLongoTiraSoAquelaPecaPelaIdentidade]' passed (8.450 seconds).
+2026-11-25 19:04:01.015540+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=46433, error: (null)
+2026-11-25 19:04:01.018446+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=46433, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlantaArrastaAteOFimEEsticaPelasBolinhas]' passed (2.816 seconds).
+2026-11-25 19:04:03.705923+0000 Arquemestre[12214:354977] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=46449, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlantaEmAnguloPedraCobreOModuloSemSobreposicao]' passed (2.713 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPlantaFundaNoCelularNenhumPontoDoMovelEmbaixoDosBotoes]' passed (2.973 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPoliticaBLedLivreEEspelhoNaoAbremEmVersaoAntigaSemAviso]' passed (5.015 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPoliticaBPortasProvencaisEPuxadoresNovosNaoAbremEmVersaoAntiga]' passed (2.960 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPoliticaBProjetoComPecasLivresNaoAbreEmVersaoIncompativelNemPerdePeca]' passed (6.806 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPontaExpostaGanhaTamponamentoSozinhaEPlantaEmAnguloDaZoom]' passed (2.591 seconds).
+2026-11-25 19:04:26.118023+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=47502, error: (null)
+2026-11-25 19:04:26.119760+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=47502, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaBasculanteAbreParaBaixoOuCimaNo2DENo3D]' passed (2.058 seconds).
+2026-11-25 19:04:28.267131+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=47604, error: (null)
+2026-11-25 19:04:28.268585+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=47604, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaCavaNaAbaPortasDoEditorPorVaos]' passed (2.151 seconds).
+2026-11-25 19:04:39.956851+0000 Arquemestre[12214:356949] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=47707, error: (null)
+2026-11-25 19:04:39.965910+0000 Arquemestre[12214:356949] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=47707, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaComCavaSempreLateralMais30EmTodoOCatalogo]' passed (11.667 seconds).
+2026-11-25 19:04:45.551615+0000 Arquemestre[12214:364710] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=48370, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeCantoMarcacaoEmTodaPortaELixoApagaDivisoriaOuPortas]' passed (5.611 seconds).
+2026-11-25 19:04:49.315057+0000 Arquemestre[12214:365369] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=48668, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeCorrerGLateralEEspelhoNaFolhaCom2Toques]' passed (3.753 seconds).
+2026-11-25 19:04:55.134595+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=48856, error: (null)
+2026-11-25 19:04:55.135622+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=48856, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeVidroComPerfilDeAluminioEVidroBronze]' passed (5.827 seconds).
+2026-11-25 19:04:56.939921+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=48883, error: (null)
+2026-11-25 19:04:56.942170+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=48883, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDeVidroTelescopicaReconstroiEAbre]' passed (1.795 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDoAereoVaiAteOFimDasReguas]' passed (1.909 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDoAereoVaiAteOFinal]' passed (2.332 seconds).
+2026-11-25 19:05:04.413515+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=49356, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaDoCantoEDaParedeLateralComATexturaRealDasRetas]' passed (3.231 seconds).
+2026-11-25 19:05:06.809451+0000 Arquemestre[12214:358003] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=49371, error: (null)
+2026-11-25 19:05:06.810886+0000 Arquemestre[12214:358003] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=49371, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaInteiraOuMaleiroComPortaPropria]' passed (2.405 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaJanelaEBlindexNasParedesCriadas]' passed (12.170 seconds).
+2026-11-25 19:05:25.004592+0000 Arquemestre[12214:358003] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=49881, error: (null)
+2026-11-25 19:05:25.005385+0000 Arquemestre[12214:358003] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=49881, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaNaoEntraNoTamponamentoDeCimaEmTodoOCatalogo]' passed (5.977 seconds).
+2026-11-25 19:05:27.386676+0000 Arquemestre[12214:365837] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=50206, error: (null)
+2026-11-25 19:05:27.387417+0000 Arquemestre[12214:365837] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=50206, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaNoFornoViraFrenteComRecorteEFornoNoMeio]' passed (2.423 seconds).
+2026-11-25 19:05:29.537137+0000 Arquemestre[12214:365369] [ProcessSuspension] 0x12013c540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=50365, error: (null)
+2026-11-25 19:05:29.538701+0000 Arquemestre[12214:365369] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=50365, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaProvencalReguasAplicadasPecasReaisCorteEDxf]' passed (2.170 seconds).
+2026-11-25 19:05:31.497529+0000 Arquemestre[12214:368791] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=50374, error: (null)
+2026-11-25 19:05:31.498731+0000 Arquemestre[12214:368791] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=50374, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaProvencalUsinadaCncFrisosNoDxfEConflitoComDobradica]' passed (1.955 seconds).
+2026-11-25 19:05:35.763280+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=50384, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortaRipadaUsinadaEPalha]' passed (4.243 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortasDeCantoRobocopAbremEmOrdemSemEntrarEmNada]' passed (4.010 seconds).
+2026-11-25 19:05:44.669886+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=50981, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortasDoCantoEmLAlinhadasComAsRetasNovoEAntigo]' passed (4.901 seconds).
+2026-11-25 19:05:50.668164+0000 Arquemestre[12214:365837] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=51300, error: (null)
+2026-11-25 19:05:50.669405+0000 Arquemestre[12214:365837] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=51300, error: (null)
+2026-11-25 19:05:50.680659+0000 Arquemestre[12214:368792] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=42235, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPortasNaoEntramEmNadaGavetaSemCalcoMolduraEDobradica]' passed (5.997 seconds).
+2026-11-25 19:05:53.997960+0000 Arquemestre[12214:368791] [ProcessSuspension] 0x12013ccc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=51338, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPosicaoDigitadaPertoDaParedeDaOMesmoResultadoSemVaoSemTamponamento]' passed (3.331 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPrateleiraEncostaNaOutraSemEntrarUmaNaOutra]' passed (2.554 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPrateleiraSoMexeComAAbaDivisoesAberta]' passed (2.313 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoAntigoComMoveisNaParedeEsquerdaAbreIgual]' passed (5.585 seconds).
+2026-11-25 19:06:08.811465+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=52094, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoAntigoCorrigeDivisoriasNaBeiraComUmToque]' passed (4.356 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoAntigoSemPrateleirasSoltasAbreComAsMesmasMedidasEGeraPecas]' passed (1.911 seconds).
+2026-11-25 19:06:12.476617+0000 Arquemestre[12214:365837] [ProcessSuspension] 0x12013ccc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=52307, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoGravadoPelaVersaoPublicadaAbreComOMesmoPlanoDeCorte]' passed (1.741 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoNaoSomeAoTrocarDeParedeOuAmbienteEHistoricoRestaura]' passed (2.869 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testProjetoNovoComecaLimpoESoPerguntaOAmbiente]' passed (11.367 seconds).
+2026-11-25 19:06:30.993637+0000 Arquemestre[12214:374756] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=52829, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testProtecaoDosProjetosHistoricoSenhaELixeira]' passed (4.292 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testProvencalNaBordaConchaDesviradaEPortasDeCantoAlinhadas]' passed (2.975 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadorArrastaABolinhaNo2DEAsOutrasAcompanham]' passed (1.948 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadorBolaNaoEngoleOToqueNemOsDoisToquesDoMovel]' passed (11.697 seconds).
+2026-11-25 19:06:50.394448+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=53927, error: (null)
+2026-11-25 19:06:50.396710+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=53927, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadorEscolhidoNumaPortaValeProProjetoTodo]' passed (2.786 seconds).
+2026-11-25 19:06:52.470267+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=53991, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadoresDescontamCertoEConchaNoMeio]' passed (2.079 seconds).
+2026-11-25 19:06:55.163460+0000 Arquemestre[12214:377389] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=54049, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadoresNaPortaEAcabamentosProntos]' passed (2.685 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadoresReaisModeloLugarEMedidasNosQuatroCantos]' passed (2.699 seconds).
+2026-11-25 19:07:00.651418+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=54495, error: (null)
+2026-11-25 19:07:00.653370+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=54495, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadorIgualComPortaAbertaEFechada]' passed (2.776 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testPuxadorPassantePortaPassaDoModuloPeloAjuste]' passed (3.173 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testQuadroDaPecaMostraCorteEAcabadaComFitaDe1mmSemMudarOCorte]' passed (2.109 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testQuadroDaPecaNoModuloDaParedeLateralMostraAsMedidasDaPeca]' passed (8.680 seconds).
+2026-11-25 19:07:18.346267+0000 Arquemestre[12214:357805] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=54870, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testQuadroEditandoSoMinimizaEmUmaLinhaEAbreDeNovo]' passed (3.700 seconds).
+2026-11-25 19:07:21.413440+0000 Arquemestre[12214:374756] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=55027, error: (null)
+2026-11-25 19:07:21.414732+0000 Arquemestre[12214:374756] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=55027, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRackDoZeroAbreSoEleParaMontar]' passed (3.084 seconds).
+2026-11-25 19:07:24.286319+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=55236, error: (null)
+2026-11-25 19:07:24.289681+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013cc00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=55236, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRackNoMeioDoPainelSuspensoECentralizar]' passed (2.867 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRasgosDaUsinadaDeixamFolgaDaCavaEDoPuxador]' passed (2.029 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfPrimeiroTerco]' passed (25.644 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfSegundoTerco]' passed (28.217 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfTerceiroTerco]' passed (24.400 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoDoTetoComDente]' passed (4.516 seconds).
+2026-11-25 19:08:51.766759+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58064, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoDoTetoEPainelAcompanha]' passed (2.553 seconds).
+2026-11-25 19:08:53.619300+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=58078, error: (null)
+2026-11-25 19:08:53.620724+0000 Arquemestre[12214:368793] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58078, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRebaixoNaoCriaTiraEEtiquetasDosPaineisNaoSeSobrepoem]' passed (1.835 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRecuperarProjetosDeUmBackupSemTrocarNada]' passed (2.778 seconds).
+2026-11-25 19:08:59.492978+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=58502, error: (null)
+2026-11-25 19:08:59.495004+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58502, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRefazerModulosDaPedraPedeSegundoToque]' passed (3.101 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testReflexoDoEspelhoSemContornoEscuroNaQuina]' passed (2.805 seconds).
+2026-11-25 19:09:05.319832+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58528, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaDoRebaixoPintaEVaoNaParedeDoLado]' passed (3.013 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaDoTamponamentoEscolheEApagaSoElaNo3D]' passed (2.632 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaEspacadoraEditavelEDobradicaRetaOuCurva]' passed (3.820 seconds).
+2026-11-25 19:09:13.782185+0000 Arquemestre[12214:388694] [ProcessSuspension] 0x12013cd80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58960, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testReguaTamponamentoRenteEEletrosReais]' passed (2.126 seconds).
+2026-11-25 19:09:16.130997+0000 Arquemestre[12214:388694] [ProcessSuspension] 0x12013cd80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58975, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRipadoERodaTetoSeguemOCaminhoDoMovel]' passed (2.238 seconds).
+2026-11-25 19:09:18.965465+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013cd80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=58986, error:2026-11-25 19:09:18.969531+0000 Arquemestre[12214:40486] [Process] 0x1200ec1e0 - GPUProcessProxy::gpuProcessExited: reason=IdleExit
+2026-11-25 19:09:18.982510+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013ce40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=51357, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRipadoNoPlanoOtimizadoComPlacasDaBaseEParedeLateralAteOMovel]' passed (2.809 seconds).
+2026-11-25 19:09:25.998996+0000 Arquemestre[12214:387291] [ProcessSuspension] 0x12013c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=58996, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testRipadoOuPainelLisoTocaNoVaoEJaCriaNaFrenteOuNaParede]' passed (7.056 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRodapeDeMdfFaceandoOuEmbutidoDosDoisLadosOuDeUmSoESecaoFechada]' passed (6.639 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRodapeDePedraNaFrenteEMontarOAmbienteNo3D]' passed (2.916 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRodapeDoCantoNaMesmaCorDosOutros]' passed (3.019 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testRodapeIgualPintarPorDentroEletroSemAzulEPortaAmortecida]' passed (6.472 seconds).
+2026-11-25 19:09:47.414961+0000 Arquemestre[12214:371465] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=60342, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSaiaDaPedraSemDivisaoNo3DENo2DEJuntaDoLEscondida]' passed (2.368 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSalvarLeveCadaMexidaGravaSoOProjetoAbertoEABibliotecaQuandoPara]' passed (14.848 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSalvarLeveRecuperaNaAberturaAMexidaQueNaoChegouNaBiblioteca]' passed (5.023 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSalvarSozinhoSoGravaQuandoMudaERespondeRapido]' passed (14.189 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSegurarOMovel2SegundosAbreOMenuSemMexerEPreservaToqueEArrasto]' passed (46.376 seconds).
+2026-11-25 19:11:12.050087+0000 Arquemestre[12214:390930] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=63614, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoDivisoriaDeOutroModuloSoEscolheEleENaoMexeEmNinguem]' passed (4.178 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoEExclusaoApagaSoOEscolhidoEmTodasAsCombinacoes]' passed (42.032 seconds).
+2026-11-25 19:11:58.864876+0000 Arquemestre[12214:401039] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=65350, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoEscolhasDeTelaZeramAoAbrirOutroProjeto]' passed (4.777 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoLixeiraNaoUsaPecaEscolhidaNoOutroProjeto]' passed (3.062 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoPortaDeCimaDaTorreMudaSoAPortaDeCima]' passed (17.189 seconds).
+2026-11-25 19:12:22.045065+0000 Arquemestre[12214:395487] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=66339, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoPrateleiraDeOutroModuloMexeSoNela]' passed (2.916 seconds).
+2026-11-25 19:12:33.937634+0000 Arquemestre[12214:406378] [ProcessSuspension] 0x12013c540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=66418, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoTorrePortaDeCimaPeloVaoDaTorreMudaSoEla]' passed (11.906 seconds).
+2026-11-25 19:12:37.146901+0000 Arquemestre[12214:406351] [ProcessSuspension] 0x12013c600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=66764, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSelecaoVaoEscolhidoExisteNoModuloEscolhidoDepoisDoToqueNo3D]' passed (3.192 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetasDo3DNaParedeLateralMexemNaMedidaCertaEModuloTravadoNaoEstica]' passed (10.564 seconds).
+2026-11-25 19:12:56.365629+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.367080+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.367350+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.370963+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.373073+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.373752+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.383204+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.383604+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.384364+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:12:56.384632+0000 Arquemestre[12214:44235] [com.apple.WebKit.WebContent] WebContent[67191] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetinhaDoTituloDaSecaoFechaEAbreEmTodasAsAbas]' passed (10.902 seconds).
+2026-11-25 19:13:02.533566+0000 Arquemestre[12214:395487] [ProcessSuspension] 0x12013c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=67614, error: (null)
+2026-11-25 19:13:02.551119+0000 Arquemestre[12214:395487] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=67614, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetinhasDoPisoAparecemEFuncionamEmQualquerFormatoDeTela]' passed (3.868 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetinhasParedesECaixa]' passed (2.596 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSoAPedraNo3DDesligaAoFecharO3DEmTodoCiclo]' passed (6.620 seconds).
+2026-11-25 19:13:18.710169+0000 Arquemestre[12214:410851] [ProcessSuspension] 0x12013c840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=67903, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSobraQueEuTenhoEntraNoPlanoDeCorteETrocaChapaInteira]' passed (6.860 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSoEmbaixoDaPiaSemFundoETorreComBaseETeto]' passed (2.918 seconds).
+2026-11-25 19:13:24.120638+0000 Arquemestre[12214:408577] [ProcessSuspension] 0x12013c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=68324, error: (null)
+2026-11-25 19:13:24.121859+0000 Arquemestre[12214:408577] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=68324, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSofaSolidoGiraSalvaExcluiEm2DE3D]' passed (2.510 seconds).
+2026-11-25 19:13:28.119334+0000 Arquemestre[12214:411570] [ProcessSuspension] 0x12013c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=68347, error: (null)
+2026-11-25 19:13:28.126841+0000 Arquemestre[12214:411570] [ProcessSuspension] 0x12013ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=68347, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testSolidoNadaEntraEmNadaEPainelSaiEmPlacasDaChapa]' passed (3.968 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSomaDasPlacasConfereComATrenaEAJunta]' passed (3.437 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testSoOModulo3DE2DComPortaGavetaEDivisoriaSoNele]' passed (109.198 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamanhoDoModuloInteiroNo3DAoVivoSemFurarAPedra]' passed (10.841 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTampaCegaContinuaCegaNoEditorPorVaosNaoAbreSemDobradicaNemPuxador]' passed (144.452 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTampaCegaEGeladeiraIguaisEmTodosOsModulosParecidosDoCatalogo]' passed (27.096 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTampaCegaNaoAbreDeJeitoNenhumEmTodoOCatalogo]' passed (74.133 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoAutomaticoSaiDaJuntaQuandoOModuloEncostaNoOutroEOManualFica]' passed (23.460 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDaTorreNoLixoDesmarcaAMedidaSegueAPecaEProjetoAntigoSoAvisa]' passed (12.642 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo]' passed (6.599 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDeBaixoPassaPorBaixoDoVizinhoSemAfastar]' passed (6.709 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDeBaixoSoOndeViraPecaComBaseSuspensoTemPecaNoChaoNaoSeAplica]' passed (12.708 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDesligarERelegarNaoDesfazOutraMudanca]' passed (8.419 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDireitoLigadoNoModuloEncostadoNaParedeSegueARegra]' passed (6.944 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDoAereoAfastadoDaParedeEsticaAteOFundoPelaSeta]' passed (15.635 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDoAereoEsticaPelaSetaDo3DMesmoTocandoNaReguaListaCorteE3DReabre]' passed (6.733 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoEsquerdoLigadoNoModuloEncostadoNaParedeSegueARegra]' passed (160.119 seconds).
+*** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult
+2026-11-25 19:25:26.988715+0000 Arquemestre[72586:434733] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=72802, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTampaCegaNaoAbreDeJeitoNenhumEmTodoOCatalogo]' passed (67.231 seconds).
+2026-11-25 19:25:46.633112+0000 Arquemestre[72586:434733] [ProcessSuspension] 0x128140780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=74212, error: (null)
+2026-11-25 19:25:46.633751+0000 Arquemestre[72586:434733] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74240, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoAutomaticoSaiDaJuntaQuandoOModuloEncostaNoOutroEOManualFica]' passed (19.638 seconds).
+2026-11-25 19:25:52.661592+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x128140780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74722, error: (null)
+2026-11-25 19:25:52.662394+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=74722, error: (null)
+2026-11-25 19:25:52.690932+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x1281409c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74727, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDaTorreNoLixoDesmarcaAMedidaSegueAPecaEProjetoAntigoSoAvisa]' passed (6.051 seconds).
+2026-11-25 19:25:55.465852+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140300 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=74849, error: (null)
+2026-11-25 19:25:55.466421+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x1281403c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=74860, error: (null)
+2026-11-25 19:25:55.528227+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74849, error: (null)
+2026-11-25 19:25:55.529530+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=74849, error: (null)
+2026-11-25 19:25:55.587992+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140b40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74860, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDe25No3DIgualAoCorteSemEntrarNoModulo]' passed (2.831 seconds).
+2026-11-25 19:25:58.514435+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=74916, error: (null)
+2026-11-25 19:25:58.515648+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74925, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDeBaixoPassaPorBaixoDoVizinhoSemAfastar]' passed (3.034 seconds).
+2026-11-25 19:26:01.823631+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74960, error: (null)
+2026-11-25 19:26:01.829088+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=74960, error: (null)
+2026-11-25 19:26:01.889577+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=74967, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDeBaixoSoOndeViraPecaComBaseSuspensoTemPecaNoChaoNaoSeAplica]' passed (3.267 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDesligarERelegarNaoDesfazOutraMudanca]' passed (5.760 seconds).
+2026-11-25 19:26:12.218918+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140fc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75088, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDireitoLigadoNoModuloEncostadoNaParedeSegueARegra]' passed (4.666 seconds).
+2026-11-25 19:26:17.864167+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75126, error: (null)
+2026-11-25 19:26:17.867803+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=75126, error: (null)
+2026-11-25 19:26:17.905304+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75129, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDoAereoAfastadoDaParedeEsticaAteOFundoPelaSeta]' passed (5.611 seconds).
+2026-11-25 19:26:23.131906+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75211, error: (null)
+2026-11-25 19:26:23.132835+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=75211, error: (null)
+2026-11-25 19:26:23.168534+0000 Arquemestre[72586:439984] [ProcessSuspension] 0x1281409c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75223, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoDoAereoEsticaPelaSetaDo3DMesmoTocandoNaReguaListaCorteE3DReabre]' passed (5.304 seconds).
+2026-11-25 19:26:26.996871+0000 Arquemestre[72586:434733] [ProcessSuspension] 0x128140b40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75359, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoEsquerdoLigadoNoModuloEncostadoNaParedeSegueARegra]' passed (3.867 seconds).
+2026-11-25 19:26:30.688424+0000 Arquemestre[72586:440318] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=75473, error: (null)
+2026-11-25 19:26:30.705550+0000 Arquemestre[72586:440318] [ProcessSuspension] 0x128140a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75495, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoEsticadoNo3DEntraNoPlanoDeCorteNaHora]' passed (3.675 seconds).
+2026-11-25 19:26:33.508854+0000 Arquemestre[72586:440318] [ProcessSuspension] 0x128140cc0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75555, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInferiorEmModuloSemBase]' passed (2.837 seconds).
+2026-11-25 19:26:37.216594+0000 Arquemestre[72586:434733] [ProcessSuspension] 0x128141140 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75567, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInferiorReconheceACavaSozinhoSemSecaoPosCava]' passed (3.704 seconds).
+2026-11-25 19:26:41.310498+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x128140c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75587, error: (null)
+2026-11-25 19:26:41.313983+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x128140e40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=75587, error: (null)
+2026-11-25 19:26:41.344981+0000 Arquemestre[72586:439983] [ProcessSuspension] 0x128141080 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75598, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoAPecaEAMesmaSoViraNaAbaENos3Toques]' passed (4.083 seconds).
+2026-11-25 19:27:16.438267+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x128140600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=75748, error: (null)
+2026-11-25 19:27:16.440327+0000 Arquemestre[72586:434821] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=75764, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoNaoMudaTamanhoDeNadaEmTodoOCatalogo]' passed (35.030 seconds).
+2026-11-25 19:27:42.858586+0000 Arquemestre[72586:445745] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=76445, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoPeloToqueNaCozinhaEPecaUnicaViraInteira]' passed (26.298 seconds).
+2026-11-25 19:28:43.467963+0000 Arquemestre[72586:445747] [ProcessSuspension] 0x1281403c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=78793, error: (null)
+2026-11-25 19:28:43.471389+0000 Arquemestre[72586:445747] [ProcessSuspension] 0x128140540 - ProcessAssertion::acquireSync FaileTest Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLateralDoMeioAlinhaComODeBaixo]' passed (60.563 seconds).
+d to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=76977, error: (null)
+2026-11-25 19:28:44.192738+0000 Arquemestre[72586:445747] [ProcessSuspension] 0x128140600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=76977, error: (null)
+2026-11-25 19:28:44.225651+0000 Arquemestre[72586:445747] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=78793, error: (null)
+2026-11-25 19:28:44.226764+0000 Arquemestre[72586:445747] [ProcessSuspension] 0x1281400c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=76443, error: (null)
+2026-11-25 19:28:53.751567+0000 Arquemestre[72586:450510] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=78851, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLigadoSalvarReabrirDesfazerRefazer]' passed (9.687 seconds).
+2026-11-25 19:28:58.890381+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140a80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79073, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte]' passed (5.150 seconds).
+2026-11-25 19:29:02.896043+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140c00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79165, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoMovelExistenteNaoEEmpurradoSozinho]' passed (3.986 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga]' passed (5.344 seconds).
+2026-11-25 19:29:12.976442+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140f00 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79377, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase]' passed (4.724 seconds).
+2026-11-25 19:29:30.170522+0000 Arquemestre[72586:444481] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79934, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSemEspacoAvisaEDeixaOProjetoIgual]' passed (17.206 seconds).
+2026-11-25 19:29:50.838196+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79941, error: (null)
+2026-11-25 19:29:50.878438+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=79941, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSempreForaDoModuloEmTodosOsModelosComReguasDe80]' passed (20.591 seconds).
+2026-11-25 19:29:51.044937+0000 Arquemestre[72586:450508] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=79946, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTecladoNumericoNuncaCobreOCampo]' passed (18.162 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTelaValoresTodaFerragemQueEntraNoTotalTemLinhaNaTabela]' passed (130.959 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTirarTamponamentoEsquerdoDevolveOModuloSemDeixarVaoNaParede]' passed (158.840 seconds).
+2026-11-25 19:34:58.908578+0000 Arquemestre[72586:469049] [ProcessSuspension] 0x1281406c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=84333, error: (null)
+2026-11-25 19:35:23.052948+0000 Arquemestre[72586:467925] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=84468, error:Test Case '-[ArquemestreTests.EditorWebKitTests testTocarEmQualquerMedidaDoVaoEDigitar]' passed (24.257 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTocarOuSegurarOModuloNaoFechaFolgaSozinhoSoArrastandoDeLado]' passed (9.064 seconds).
+2026-11-25 19:35:36.032687+0000 Arquemestre[72586:471509] [ProcessSuspension] 0x1281409c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=85241, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTodaReguaDoEngrossoDaPrateleiraApareceNo3D]' passed (3.876 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTodoModuloCadastradoApareceNo3DEmQualquerCaminho]' passed (43.218 seconds).
+2026-11-25 19:36:35.417499+0000 Arquemestre[72586:475679] [ProcessSuspension] 0x128140780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=86527, erroTest Case '-[ArquemestreTests.EditorWebKitTests testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo]' passed (13.238 seconds).
+2026-11-25 19:36:36.524159+0000 Arquemestre[72586:475679] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=86529, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma]' passed (18.710 seconds).
+2026-11-25 19:37:02.318054+0000 Arquemestre[72586:475678] [ProcessSuspension] 0Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNo3DAchaAPecaCertaEBordaFina]' passed (7.180 seconds).
+x1281409c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=86583, error: (null)
+2026-11-25 19:37:21.774953+0000 Arquemestre[72586:475679] [ProcessSuspension] 0x128140900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=86622, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNoRodapeDaFrenteEscolheEleEnaoOTraseiroEmTodoOCatalogo]' passed (11.271 seconds).
+2026-11-25 19:37:25.898986+0000 Arquemestre[72586:476339] [ProcessSuspension] 0x128140840 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=86657, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca]' passed (4.107 seconds).
+2026-11-25 19:37:41.280043+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.282486+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.282677+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.282860+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.282961+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.283008+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:41.702173+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:42.637612+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:42.639149+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:43.086257+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:44.757424+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:37:44.758560+0000 Arquemestre[72586:435037] [com.apple.WebKit.WebContent] WebContent[86673] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+*** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult
+2026-11-25 19:38:25.741993+0000 Arquemestre[86937:478698] [ProcessSuspension] 0x12813c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=87283, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTirarTamponamentoEsquerdoDevolveOModuloSemDeixarVaoNaParede]' passed (23.399 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTocarEmQualquerMedidaDoVaoEDigitar]' passed (7.901 seconds).
+2026-11-25 19:38:40.995689+0000 Arquemestre[86937:478695] [ProcessSuspension] 0x12813c9c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88331, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTocarOuSegurarOModuloNaoFechaFolgaSozinhoSoArrastandoDeLado]' passed (7.338 seconds).
+2026-11-25 19:38:47.279646+0000 Arquemestre[86937:478698] [ProcessSuspension] 0x12813cb40 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88440, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTodaReguaDoEngrossoDaPrateleiraApareceNo3D]' passed (6.294 seconds).
+2026-11-25 19:39:01.768421+0000 Arquemestre[86937:478674] [ProcessSuspension] 0x12813c300 - PTest Case '-[ArquemestreTests.EditorWebKitTests testTodoModuloCadastradoApareceNo3DEmQualquerCaminho]' passed (14.413 seconds).
+rocessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=88448, error: (null)
+2026-11-25 19:39:04.369183+0000 Arquemestre[86937:478674] [ProcessSuspension] 0x12813c3c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'NetworkProcess Background Assertion' for process with PID=88466, error: (null)
+2026-11-25 19:39:04.439876+0000 Arquemestre[86937:478674] [ProcessSuspension] 0x12813c540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88448, error: (null)
+2026-11-25 19:39:04.442524+0000 Arquemestre[86937:478674] [ProcessSuspension] 0x12813c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=88448, error: (null)
+2026-11-25 19:39:06.115747+0000 Arquemestre[86937:478674] [ProcessSuspension] 0x12813ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88466, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTomadasRegistroChurrasqueiraBotaoDoLEDETVComLogo]' passed (12.616 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testToPecaQueO3DOfereceApagarSaiDe2D3DListaECorteSemFantasma]' passed (19.407 seconds).
+3+0000 Arquemestre[86937:483719] [ProcessSuspension] 0x12813c0c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=87281, error: (null)
+2026-11-25 19:39:49.834024+0000 Arquemestre[86937:483720] [ProcessSuspension] 0x12813c6c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88671, error: (null)
+2026-11-25 19:39:49.835948+0000 Arquemestre[86937:483720] [ProcessSuspension] 0x12813c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=88671, error: (null)
+2026-11-25 19:39:49.837011+0000 Arquemestre[86937:483720] [ProcessSuspension] 0x12813c900 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=88706, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNo3DAchaAPecaCertaEBordaFina]' passed (13.486 seconds).
+2026-11-25 19:40:01.644326+0000 Arquemestre[86937:483885] [ProcessSuspension] 0x12813c780 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=89431, error: (null)
+2026-11-25 19:40:01.645447+0000 Arquemestre[86937:483885] [ProcessSuspension] 0x12813c9c0 - ProcessAssertion::acquTest Case '-[ArquemestreTests.EditorWebKitTests testToqueNoRodapeDaFrenteEscolheEleEnaoOTraseiroEmTodoOCatalogo]' passed (11.808 seconds).
+ireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=89431, error: (null)
+2026-11-25 19:40:03.321521+0000 Arquemestre[86937:483885] [ProcessSuspension] 0x12813ca80 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=89439, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testToqueNoTamponamentoFinoTemToleranciaSoPraForaSemMexerEmOutraPeca]' passed (3.488 seconds).
+2026-11-25 19:40:20.666583+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:20.667724+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:20.667847+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:20.668302+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:20.668478+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:20.668674+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:21.148908+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:22.008334+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:22.008527+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:22.483891+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:24.118552+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+2026-11-25 19:40:24.118965+0000 Arquemestre[86937:479035] [com.apple.WebKit.WebContent] WebContent[89498] makeImagePlus:3799: *** ERROR: 'WEBP'-_reader->initImage[0] failed err=-50
+==== Repetidos (falharam na 1ª tentativa) ====
+iPhone · FALHOU nas duas · ArquemestreTests.EditorWebKitTests testFaixaDaParedeMinimizaEAbreDeNovo
+iPhone · FALHOU nas duas · ArquemestreTests.EditorWebKitTests testLateraisPorForaLadoDaFitaEImpressaoDoPlano
+iPhone · FALHOU nas duas · ArquemestreTests.EditorWebKitTests testPainelNaoDuplicaEmOutraParedeDepoisDaLista
+==== Abertura do editor (ABERTURA-DIAG) ====
+iPhone · ABERTURA-DIAG pt: página começou em 8.85 s · DOM pronto em 13.71 s · carregou em 13.75 s · editor sozinho 4.89 s
+iPhone · ABERTURA-DIAG en: página começou em 2.49 s · DOM pronto em 3.44 s · carregou em 3.47 s · editor sozinho 0.99 s
+iPhone · ABERTURA-DIAG es: página começou em 0.84 s · DOM pronto em 1.76 s · carregou em 1.78 s · editor sozinho 0.94 s
+iPhone · ABERTURA-DIAG pt: página começou em 1.63 s · DOM pronto em 2.37 s · carregou em 2.39 s · editor sozinho 0.76 s
+iPhone · ABERTURA-DIAG pt: página começou em 0.87 s · DOM pronto em 1.55 s · carregou em 1.56 s · editor sozinho 0.69 s
+iPhone · ABERTURA-DIAG bateria: -[EditorWebKitTests testTampaCegaEGeladeiraIguaisEmTodosOsModulosParecidosDoCatalogo] abriu o editor em 12.44 s
+iPhone · ABERTURA-DIAG bateria: -[EditorWebKitTests testTamponamentoDoAereoAfastadoDaParedeEsticaAteOFundoPelaSeta] abriu o editor em 11.87 s
+==== Caderno (medidas, iPhone e iPad) ====
+Test Case '-[ArquemestreTests.CadernoTests testEscreverNaoRedesenhaAFolhaInteiraACadaTraco]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testEscreverNaoRedesenhaAFolhaInteiraACadaTraco]' passed (2.219 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testFolhaAtivaEACameraAndamJuntas]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testFolhaAtivaEACameraAndamJuntas]' passed (0.002 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testFolhaParadaNaoERedesenhadaEMostraOMesmoQueODesenhoDireto]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testFolhaParadaNaoERedesenhadaEMostraOMesmoQueODesenhoDireto]' passed (0.700 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testFotoNaTelaUsaOTamanhoEmQueApareceEAMemoriaTemLimite]' started (Iteration 1 of 2).
+CADERNO-PERF foto na tela (1170 px de largura): foto de 2400 px 26.00 ms por desenho · foto no tamanho da tela 23.72 ms
+Test Case '-[ArquemestreTests.CadernoTests testFotoNaTelaUsaOTamanhoEmQueApareceEAMemoriaTemLimite]' passed (4.111 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testListaDeProjetosSoReleOArquivoQuandoEleMuda]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testListaDeProjetosSoReleOArquivoQuandoEleMuda]' passed (0.167 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testMoverAFolhaNaoRecalculaOsPaineisACadaMovimento]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testMoverAFolhaNaoRecalculaOsPaineisACadaMovimento]' passed (0.005 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testOutrosGestosMostramAFolhaCertaDuranteEDepois]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.CadernoTests testOutrosGestosMostramAFolhaCertaDuranteEDepois]' passed (1.157 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testTempoDaListaDeProjetosComArquivoGrande]' started (Iteration 1 of 2).
+CADERNO-PERF lista de projetos: arquivo 1.4 MB · ler e interpretar 33.1 ms (era isso a cada redesenho) · agora 0.497 ms por pedido
+Test Case '-[ArquemestreTests.CadernoTests testTempoDaListaDeProjetosComArquivoGrande]' passed (0.239 seconds).
+Test Case '-[ArquemestreTests.CadernoTests testTempoDeEscreverNumaFolhaCheia]' started (Iteration 1 of 2).
+CADERNO-PERF folha cheia (700 traços, tela de iPad): redesenhar a folha inteira 231.5 ms · escrevendo 23.4 ms por quadro · folha inteira redesenhada 0 vezes em 6 traços (antes: 12)
+Test Case '-[ArquemestreTests.CadernoTests testTempoDeEscreverNumaFolhaCheia]' passed (6.126 seconds).
+==== Assinatura (StoreKit) ====
+SKT: storefront=BRA locale=pt_BR bundle=br.com.arque.measure
+SKT: Product.products → ["arquemestre_mensal R$ 29,90"]
+Test Case '-[ArquemestreTests.SubscriptionTests test00_DiagnosticoDaLojaDeTeste]' passed (0.970 seconds).
+SKT: -[SubscriptionTests test01_AntesDeAssinarMostraPrecoTesteENaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+Test Case '-[ArquemestreTests.SubscriptionTests test01_AntesDeAssinarMostraPrecoTesteENaoLibera]' passed (0.635 seconds).
+SKT: -[SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:40:14 +0000) msg=Assinatura ativa. Obrigado!
+Test Case '-[ArquemestreTests.SubscriptionTests test02_TesteGratisComecaSoDepoisDaConfirmacao]' passed (14.029 seconds).
+SKT: -[SubscriptionTests test03_CompraPendenteNaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=notStarted
+SKT: -[SubscriptionTests test03_CompraPendenteNaoLibera] → comprar (Product.purchase)
+SKT: depois da compra status=notStarted fim=nil msg=Compra pendente (aguardando aprovação). O app libera sozinho quando for aprovada.
+Test Case '-[ArquemestreTests.SubscriptionTests test03_CompraPendenteNaoLibera]' passed (7.326 seconds).
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=notStarted
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:40:28 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → renovação paga
+SKT: -[SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga] → renovação paga
+Test Case '-[ArquemestreTests.SubscriptionTests test04_RenovacaoDepoisDoTesteViraAssinaturaPaga]' passed (9.335 seconds).
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:40:39 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+SKT: -[SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo] → renovação desligada
+Test Case '-[ArquemestreTests.SubscriptionTests test05_CancelarMantemAcessoAteOFimDoPeriodo]' passed (9.219 seconds).
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:40:47 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos] → assinatura expirada
+Test Case '-[ArquemestreTests.SubscriptionTests test06_ExpirarBloqueiaMasNaoApagaOsProjetos]' passed (9.496 seconds).
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:40:56 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → assinatura expirada
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → assinatura expirada
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → recarregar
+SKT: -[SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste] → comprar (Product.purchase)
+SKT: depois da compra status=unlocked fim=Optional(2026-12-25 19:41:04 +0000) msg=Assinatura ativa. Obrigado!
+Test Case '-[ArquemestreTests.SubscriptionTests test07_AssinarDeNovoDepoisDeExpirarNaoTemSegundoTeste]' passed (13.217 seconds).
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=notStarted
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:41:10 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → acesso revogado
+SKT: -[SubscriptionTests test08_ReembolsoTiraOAcesso] → acesso revogado
+Test Case '-[ArquemestreTests.SubscriptionTests test08_ReembolsoTiraOAcesso]' passed (2.225 seconds).
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=3 status=notStarted
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → comprar (Product.purchase)
+SKT: depois da compra status=trial fim=Optional(2026-11-28 19:41:12 +0000) msg=Assinatura ativa. Obrigado!
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=trial
+SKT: -[SubscriptionTests test09_RestaurarEmOutraInstalacao] → restaurar (AppStore.sync)
+Test Case '-[ArquemestreTests.SubscriptionTests test09_RestaurarEmOutraInstalacao]' passed (2.010 seconds).
+SKT: -[SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera] → carregar o produto da loja
+SKT: produto=arquemestre_mensal preço=R$ 29,90 teste=0 status=notStarted
+SKT: -[SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera] → restaurar (AppStore.sync)
+Test Case '-[ArquemestreTests.SubscriptionTests test10_RestaurarSemAssinaturaNaoLibera]' passed (0.627 seconds).
+	 Executed 11 tests, with 0 failures (0 unexpected) in 69.089 (69.104) seconds
+	 Executed 11 tests, with 0 failures (0 unexpected) in 69.089 (69.105) seconds
+	 Executed 11 tests, with 0 failures (0 unexpected) in 69.089 (69.108) seconds
+** TEST SUCCEEDED **
+==== Conferência App Store ====
+✓ Info.plist e versão conferidos
+✓ textos das permissões conferidos
+✓ roda no iPad com as 4 orientações
+✓ ícone 1024 sem transparência
+✓ manifesto de privacidade cobre as APIs usadas
+✓ assinatura mensal R$ 29,90 com 3 dias grátis, restaurar, gerenciar, termos e privacidade
+✓ nenhum texto na tela fala de Android/Play/APK/beta
+✓ links conferidos (2 páginas do site usadas no app)
+✓ atalhos de teste só no DEBUG
+
+Tudo certo: nenhum dos pontos que mais dão recusa na App Store.
+==== Capturas vazias? ====
+==== Simuladores ====
+== Runtimes ==
+iOS 26.2 (26.2 - 23C54) - com.apple.CoreSimulator.SimRuntime.iOS-26-2
+iOS 26.4 (26.4.1 - 23E254a) - com.apple.CoreSimulator.SimRuntime.iOS-26-4
+iOS 26.5 (26.5 - 23F77) - com.apple.CoreSimulator.SimRuntime.iOS-26-5
+tvOS 26.2 (26.2 - 23K51) - com.apple.CoreSimulator.SimRuntime.tvOS-26-2
+tvOS 26.4 (26.4 - 23L243a) - com.apple.CoreSimulator.SimRuntime.tvOS-26-4
+tvOS 26.5 (26.5 - 23L470) - com.apple.CoreSimulator.SimRuntime.tvOS-26-5
+watchOS 26.2 (26.2 - 23S303) - com.apple.CoreSimulator.SimRuntime.watchOS-26-2
+watchOS 26.4 (26.4 - 23T240b) - com.apple.CoreSimulator.SimRuntime.watchOS-26-4
+watchOS 26.5 (26.5 - 23T570) - com.apple.CoreSimulator.SimRuntime.watchOS-26-5
+visionOS 26.2 (26.2 - 23N301) - com.apple.CoreSimulator.SimRuntime.xrOS-26-2
+visionOS 26.4 (26.4.1 - 23O249a) - com.apple.CoreSimulator.SimRuntime.xrOS-26-4
+visionOS 26.5 (26.5 - 23O470) - com.apple.CoreSimulator.SimRuntime.xrOS-26-5

@@ -1,0 +1,22 @@
+Command line invocation:
+    /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug -destination id=2A020491-3EBC-4783-8622-F8314CC00294 -derivedDataPath build/dd -resultBundlePath build/TestesIPad.xcresult -test-timeouts-enabled YES -default-test-execution-time-allowance 120 -maximum-test-execution-time-allowance 240 "-skip-testing:ArquemestreTests/SubscriptionTests" -retry-tests-on-failure -test-iterations 2 CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= test-without-building
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = -
+    CODE_SIGN_STYLE = Manual
+    DEVELOPMENT_TEAM = 
+    PROVISIONING_PROFILE_SPECIFIER = 
+
+Retrying tests on failure. Running tests repeatedly up to 2 times.
+
+Writing result bundle at path:
+	/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/TestesIPad.xcresult
+
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+		{ id:2A020491-3EBC-4783-8622-F8314CC00294 }
+
+	The requested device could not be found because no available devices matched the request.
+
+	Available destinations for the "Arquemestre" scheme:
+		{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+		{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }

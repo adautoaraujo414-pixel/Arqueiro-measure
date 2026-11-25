@@ -9952,7 +9952,7 @@ final class EditorWebKitTests: XCTestCase {
         /* 4. com tamponamento de cima e de lado: fica em cima do tamponamento e pega a largura toda */
         m.tt=true;m.tr=true;draw();R.comTamponamentos=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);m.tt=false;m.tr=false;draw();
         /* 5. módulo em cima do aéreo: o fechamento vai só até ele */
-        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();/* REG12-CRIACAO (Adauto 25/11 via Chefe): a criação não liga mais sozinha o tamponamento do aéreo que já existia; a pessoa toca em "Ajustar vizinhos ao novo módulo" e a conferência é A MESMA de antes */if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv5_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv5_)sbv5_.click()}R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
+        newTpl(T('Aéreo 2 portas'));draw();var c=S.mods[2];c.x=m.x;c.w=m.w;c.b=2600;c.h=100;c.d=m.d;draw();/* REG12-CRIACAO (Chefe 25/11): antes do toque, a criação não mexeu no aéreo que já existia (sem o tamponamento dele) */R.moduloEmCimaAntes=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);if(window.libSug&&libSug()&&libSug().tipo==='viz'){var sbv5_=document.querySelector('#libsug [data-libsug="ok"]');if(sbv5_)sbv5_.click()}R.moduloEmCima=pc(m)+' · 3D '+f3(m)+' · dentro '+dentro(m);S.mods.splice(2,1);S.m=m;draw();
         /* 6. aéreo encostado no teto: não sobra vão, não entra peça */
         m.h=950;draw();R.encostaNoTeto=pc(m);m.h=750;draw();
         /* 7. pé-direito diferente: acompanha */
@@ -9977,7 +9977,11 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["embutir40"] as? String, "x0–1030 y2500–2700 z316–331")
         XCTAssertEqual(o["embutirDemais"] as? String, "x0–1030 y2500–2700 z15–30 · 1030×200 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o teto · embutida 341 mm pra dentro")
         XCTAssertEqual(o["comTamponamentos"] as? String, "1030×170 [cor de fora] placa lisa em pé, por cima do tamponamento de cima, fecha o vão até o teto · rente com a frente das portas · 3D x0–1030 y2530–2700 z356–371 · dentro 0")
-        XCTAssertEqual(o["moduloEmCima"] as? String, "1030×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1030 y2500–2595 z356–371 · dentro 0")
+        // REG12-CRIACAO (Chefe 25/11): ANTES do toque a criação não mexe no aéreo que já existia (1000, sem o tamponamento). DEPOIS do toque, 1030 com o
+        // tamponamento e 95 de altura: o módulo de cima, posto aqui por atribuição direta, passava 5 mm do teto (2600 + 105 > 2700) e o redesenho do toque o
+        // encaixa em 2595 (ele ainda é o recém-criado desta ação). O 100 de antes só saía porque a criação antiga não redesenhava depois
+        XCTAssertEqual(o["moduloEmCimaAntes"] as? String, "1000×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1000 y2500–2595 z356–371 · dentro 0")
+        XCTAssertEqual(o["moduloEmCima"] as? String, "1030×95 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o módulo de cima · rente com a frente das portas · 3D x0–1030 y2500–2595 z356–371 · dentro 0")
         XCTAssertEqual(o["encostaNoTeto"] as? String, "nenhum")
         XCTAssertEqual(o["peDireito2600"] as? String, "1030×100 [cor de fora] placa lisa em pé, por cima da base superior, fecha o vão até o teto · rente com a frente das portas")
         XCTAssertEqual(o["desmarcar"] as? String, "ligado false · nenhum · corte nenhum · 3D nada")

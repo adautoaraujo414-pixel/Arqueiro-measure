@@ -2393,3 +2393,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - Os 29 relacionados passam a 1366.
   - A s45 dá igual à da candidata.
   - Os testes que criavam passo a passo e esperavam o vizinho ajustado tocam na sugestão e conferem os mesmos valores: desfazer/refazer, valores das chapas, mão de obra, fechamento até o teto, "Usar N mm", peças livres e os 9 de tamponamento.
+- **Correção na causa (c006b9d9; decisão do Chefe 25/11):** o "desfaz no fim da ação" (a348ee31) foi trocado pela proposta calculada numa cópia. Nada é escrito nos existentes durante a criação; o espião no `testReg12…` prova.
+- **RISCO registrado (não corrigido, a pedido do Chefe):** num redesenho comum, módulo que a PESSOA pôs fora do lugar válido fica onde está, mas pelo padrão escreve-e-desfaz:
+  - `confineAll` (editor.html ~1297, pelo embrulho ~13428) escreve x (ex.: 3900→3265);
+  - `roomClamp` (~3231) escreve b (ex.: 2100→1950);
+  - o `guarda` (~13110–13114) devolve os dois.
+
+  Se algum caminho chamar `confineAll`/`roomClamp` fora do `guarda`, a mudança fica.

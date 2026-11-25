@@ -19561,4 +19561,22 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertNil(q["ls"] as? String, "o localStorage do teste anterior não aparece")
         XCTAssertEqual(q["idbNovo"] as? Bool, true, "o IndexedDB do teste anterior não existe mais (o banco nasce de novo)")
     }
+
+    // TZ-ID (Chefe 25/11, intermitente do testRebaixoDoTetoComDente na bateria de 1366 do Code 2, aae4ef93: "esq" veio "2800+600@2600").
+    // Causa no app: o id do rebaixo era relógio + sorteio (0..996). Duas zonas criadas a poucos ms podiam ter o MESMO id, e o "dente" saía da
+    // 1ª zona com aquele id (o dente anterior: 2200+600 → 2800, 2500 → 2600). Aqui o relógio e o sorteio ficam presos e a colisão acontece sempre.
+    func testTZID_RebaixoComIdsQueColidiriamFazODenteNaZonaCerta() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var TL=[];window.toast=function(t){TL.push(t)};S.stones=[];S.rp=[];S.fr=[];S.W=4000;S.H=2700;S.Hm=1;S.Wm=1;S.mods=[];S.tz=[];var R={},e0=__errs.length;draw();
+        S.rp=[{id:11,liso:true,x:0,b:0,w:4000,h:2700}];tzAdd('f',{x:1000,w:1200,hc:2300});
+        var dn=Date.now,mr=Math.random,T=dn.call(Date);Date.now=function(){return T};Math.random=function(){return 0.5};
+        try{document.querySelector('#tzbox [data-tzb="dente"]').click();tzAdd('f',{x:3500,w:500,hc:2400});document.querySelector('#tzbox [data-tzb="dente"]').click()}finally{Date.now=dn;Math.random=mr}
+        var d=S.tz[S.tz.length-1];R.esq=d.x+'+'+d.w+'@'+d.hc;R.unicos=new Set(S.tz.map(function(q){return q.id})).size+' de '+S.tz.length;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["esq"] as? String, "2900+600@2550", "o dente sai da zona escolhida, à esquerda dela")
+        XCTAssertEqual(o["unicos"] as? String, "4 de 4", "cada rebaixo tem id próprio")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

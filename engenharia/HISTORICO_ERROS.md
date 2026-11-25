@@ -2259,3 +2259,31 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
     - a mesma soma da varredura nos três: 186.251.793.425 centavos.
   - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).
 - **ORC-AMB, bateria de 430 (41a0842d):** `testNadaDeEnfeite3DEValoresParteB…` achou a caixinha da lista de projetos sem efeito visível (marcar só valia ao tocar em "Adicionar os marcados"). Agora o botão conta os marcados ("Adicionar 2 marcados"). Teste sem mudança; 10/10 em 1366 e 430.
+
+## AUDITORIA DO CODE 1: FUNDO 15, ZOOM E LEGIBILIDADE DO PLANO, ORÇAMENTO DE VÁRIOS AMBIENTES (25/11, Code 2 até `4f60b3e`, juntado em `b0143b7`)
+Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
+
+- **Fundo 15 nos 139 modelos do catálogo** (fundo 6 → 15 pelo botão):
+  - Nos 135 que não são de canto, nenhuma peça interna muda, as medidas externas ficam iguais e o fundo atrás vai de 6 → 15 (D = d + fundo). **Correto.**
+  - Nos 4 de canto em L (aéreo e guarda-roupa, esquerdo e direito), a medida externa fica igual e todas as peças de dentro que mudam perdem exatamente 9 mm (opção A do Adauto).
+  - Exceção: os tamponamentos do guarda-roupa de canto crescem 9 mm (581 → 590) pra cobrir a profundidade maior. É a regra do canto de antes, igual em `553745a1`.
+  - Nos módulos comuns, o tamponamento só acompanha o fundo com o ajuste `tpFundo` ligado (+9 em balcão, guarda-roupa e canto, igual ao editor de antes). Sem ele vale d + avanço, como sempre. **Correto.**
+- **Projeto antigo com fundo de 15 ou 18 mm digitado** (o campo numérico já existia):
+  - Total, peças, corte, plano e DXF iguais ao editor de antes.
+  - Muda só a divisão do valor entre os módulos (ex.: 291,04/143,99 → 260,05/174,98), porque o fundo passa a contar como chapa da caixa, que é onde o plano já o colocava.
+  - Orçamento salvo (cópia no app) não muda. **Risco identificado, sem perda.** O total do cliente é o mesmo.
+- **Veio:**
+  - Com veio e caixa amadeirada, 0 peças com veio giradas.
+  - **Erro pré-existente comprovado, igual em `553745a1`, que o fundo de 15 aumenta:** com a chapa padrão 1840 × 2750, o comprimento da peça vai no lado de 1840. As peças altas (portas de 2300 e, com o fundo de 15, fundos de 2200/2400) ficam em "maior que a chapa", fora do plano e da contagem de chapas do orçamento.
+  - Regra de cálculo: **não mudei**, depende do Adauto (§5).
+- **Orçamento de vários ambientes:**
+  - A conta da tela (`orcTotais`/`descAplica`) e a do app (`QuoteMath.kt`) são iguais: desconto do ambiente em centavos → subtotal → desconto geral em centavos, mesma ordem e mesmo arredondamento.
+  - Calcular outro ambiente não muda o projeto aberto (estado, seleção, CUR, `__edited`) nem a lista de projetos.
+  - A única gravação no período (aprendizado do projeto aberto, `brain`) acontece igual sem o cálculo. **Correto.**
+- **Testes:**
+  - `testMaoDeObra…` (`descontoDe10`): a nova expectativa é a regra do PDF, não ficou mais frouxa.
+  - O teste dos custos fixos ainda conferia `base × 0,9`. Trocado pela regra do PDF, escrita sem a função do editor (`2d86496`). Passa.
+- **CI:** os pacotes de teste agora ficam só como artefato do Actions (sem release pública). A trava de publicação não mudou.
+- **Baterias completas, editor `639199fa`:**
+  - 1366: 538/538.
+  - 430: 537/538. A única falha é `testFaixaDoEspelhoLed…`, só na densidade 1; 3/3 a 430 × 2.

@@ -67,7 +67,7 @@ body.ro #bd input,body.ro #bd select,body.ro #bd textarea{pointer-events:none;ba
 <script>
 function mmf(v){v=Math.round((+v||0)*10)/10;return String(v).replace('.',',')}
 function cmf(v){v=Math.round((+v||0)/10*100)/100;return String(v).replace('.',',')}
-/* medida no plano: mm e, embaixo, em cm (ex.: 634,5 mm · 63,45 cm) */function dimf(L,W){return mmf(L)+' × '+mmf(W)+' mm<br><small style="color:var(--dim)">'+cmf(L)+' × '+cmf(W)+' cm</small>'}
+/* medida no plano: mm e, embaixo, em cm (ex.: 634,5 mm · 63,45 cm). UNIDADE (25/11): com a tela em cm, só cm (63,45 × 56 cm) */function dimf(L,W){if(window.ARQ_UN==='cm')return cmf(L)+' × '+cmf(W)+' cm';return mmf(L)+' × '+mmf(W)+' mm<br><small style="color:var(--dim)">'+cmf(L)+' × '+cmf(W)+' cm</small>'}
 
 /* Idioma: o editor é escrito em português. Com ?lang=en|es (o app passa o idioma escolhido) os textos da tela
    são traduzidos aqui, com o mesmo dicionário do app (i18n/<lang>.json). Nada muda nos dados nem nas contas.
@@ -116,6 +116,80 @@ function cmf(v){v=Math.round((+v||0)/10*100)/100;return String(v).replace('.',',
  if(L==='pt'){all();return}
  try{document.documentElement.lang=L}catch(e){}
  fetch('i18n/'+L+'.json').then(function(r){return r.json()}).then(function(d){D=d;C.clear();all()}).catch(function(){all()});
+})();
+</script>
+<script>
+/* UNIDADE DE MEDIDA (Adauto 25/11): mm ou cm, escolhida nos Ajustes do app. O app passa ?un=mm|cm (a mesma ponte do ?lang=).
+   SÓ APRESENTAÇÃO: projeto, partsOf, plano de corte, orçamento e DXF continuam em mm. Em mm (o padrão) nada aqui roda: a tela fica como antes.
+   Em cm: "N mm" vira cm, as cotas dos desenhos (número solto no SVG), "A × B" e "engrosso/régua N" viram cm; os campos de medida mostram cm
+   e devolvem mm a quem lê o .value. A conta é só a vírgula andando uma casa (texto, sem ponto flutuante): 695 ↔ 69,5 sem perda, quantas vezes for. */
+(function(){
+ var q;try{q=new URLSearchParams(location.search)}catch(e){q=null}
+ var U=String((q&&q.get('un'))||'mm').toLowerCase()==='cm'?'cm':'mm';
+ window.ARQ_UN=U;
+ /* desloca a vírgula: dir −1 = mm→cm (sai com vírgula), dir +1 = cm→mm (sai com ponto, como o editor guarda). "695"→"69,5" · "69,5"→"695" · "15"→"1,5" · "634,5"→"63,45" */
+ function sh(t,dir){var m=/^(\d*)(?:[.,](\d*))?$/.exec(t);if(!m||!(m[1]||m[2]))return t;var d=(m[1]||'')+(m[2]||''),p=(m[1]||'').length+dir;
+  while(p<=0){d='0'+d;p++}while(p>d.length)d+='0';var ip=d.slice(0,p).replace(/^0+(?=\d)/,''),fp=d.slice(p).replace(/0+$/,'');return fp?ip+(dir<0?',':'.')+fp:ip}
+ function toCm(s){return String(s).replace(/\d+(?:[.,]\d+)?/g,function(t){return sh(t,-1)})}
+ function toMm(s){return String(s).replace(/\d+(?:[.,]\d*)?|[.,]\d+/g,function(t){return sh(t,1)})}
+ window.unSh=sh;window.unToCm=toCm;window.unToMm=toMm;
+ /* texto da tela em mm → cm. svg = número solto num desenho (cota) também é medida */
+ var L_='A-Za-zÀ-ÿ',KW=/(engrosso|tamponamentos? de|v[ãa]o livre|parede)\s*$/i,UNIT=/^\s*(cm|m\b|m²|m2|%|°|un\b|kg|x\b|R\$)/i,KW2=/(\bat[ée]|camadas de)\s*$/i;
+ function conv(s,svg){
+  if(!s||!/\d|mm/.test(s))return s;
+  var re=/\d+(?:,\d+)?(?:(\s*)×\1\d+(?:,\d+)?)*/g,o='',last=0,m;
+  while((m=re.exec(s))){
+   var a=m.index,b=a+m[0].length,pre=s.slice(0,a),pc=pre.slice(-1),nx=s.charAt(b),post=s.slice(b),ok=false,mmS=null;
+   if(/[\d.,#\/:$]/.test(pc)||new RegExp('['+L_+']').test(pc)||/^[.,:\/]\d/.test(post)||/R\$\s*$/.test(pre)){continue}
+   var mmM=/^(\s*)mm(?![A-Za-zÀ-ÿ²³])/.exec(post);
+   if(mmM){ok=true;mmS=mmM}
+   else if(new RegExp('^['+L_+'%°]').test(nx)){ok=false}
+   else if(UNIT.test(post)){ok=false}
+   else if(m[0].indexOf('×')>0)ok=true;
+   else if(KW.test(pre))ok=true;
+   else if(KW2.test(pre)&&/^\s*(=|·|,|\)|$)/.test(post))ok=true;/* "até 1600 = 3" (dobradiças), "2 camadas de 15" */
+   else if(svg)ok=true;
+   if(!ok)continue;
+   o+=s.slice(last,a)+m[0].replace(/\d+(?:,\d+)?/g,function(t){return sh(t,-1)});last=b;
+   if(mmS){o+=mmS[1]+'cm';last=b+mmS[0].length;re.lastIndex=last}
+  }
+  o+=s.slice(last);
+  return o.replace(/(^|[^A-Za-zÀ-ÿ0-9])mm(?![A-Za-zÀ-ÿ²³])/g,'$1cm')}
+ window.unConv=conv;
+ /* campos: só os de medida. Rótulo com "(mm)" ou com nome de medida (largura, altura…); nunca os de quantidade, %, R$ ou já em cm */
+ var DIM=/^\s*(da|do|de)\s|\bmm\b|r[ée]gua|largura|altura|profundidade|espessura|comprimento|medida|recuo|dist[âa]ncia|do ch[ãa]o|da esquerda|da direita|da ponta|de baixo|p[ée]-direito|de cima|folga|junta|raio|desce|sobe|cobre|aumentar|embutir|prof\.|recua|come[çc]a em|vai at[ée]|serra|refilo|fica pra fora|no m[áa]ximo|width|height|depth|thickness|length|ancho|alto\b|profundidad|espesor|largo\b/i,
+     NOT=/\(cm\)|%|R\$|quant|qtd|\bn[º°]|camadas|graus|°|vezes|pre[çc]o|valor|custo|m²|\(m\)|nome|name|nombre|\bcor\b|color|\bpor m\b/i;
+ var ND=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value'),ORIG=new WeakMap(),MINE=new WeakMap();
+ function rawGet(el){return ND.get.call(el)}function rawSet(el,v){ND.set.call(el,v)}
+ window.unRawGet=function(el){return el&&el.__un?rawGet(el):el.value};
+ window.unRawSet=function(el,v){if(el&&el.__un)rawSet(el,v);else el.value=v};
+ function orig(n){var s='',w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT,null),x;while((x=w.nextNode()))s+=(MINE.get(x)===x.nodeValue&&ORIG.has(x))?ORIG.get(x):x.nodeValue;return s}
+ function labOf(el){if(el.dataset&&el.dataset.lab)return el.dataset.lab;var l=el.closest('label');if(l)return orig(l);var p=el.previousElementSibling;if(p&&p.tagName==='LABEL')return orig(p);
+  var g=el.parentNode;if(g&&g.tagName==='TD'&&g.previousElementSibling)return orig(g.previousElementSibling);if(g&&!g.previousElementSibling&&g.parentNode){p=g.parentNode.firstElementChild;if(p&&p.tagName==='LABEL')return orig(p)}return el.__unPh!=null?el.__unPh:(el.getAttribute('placeholder')||'')}
+ function isMed(el){if(el.tagName!=='INPUT'||el.__un||el.closest('[data-unmm]'))return false;var ty=(el.getAttribute('type')||'text').toLowerCase();if(ty!=='text'&&ty!=='number'&&ty!=='tel')return false;
+  var im=(el.getAttribute('inputmode')||'').toLowerCase();if(!(el.dataset.calc||im==='decimal'||im==='numeric'||ty==='number'||/^-?\d+(?:[.,]\d+)?$/.test(rawGet(el).trim())))return false;if(el.dataset.edge!=null)return true;/* lados da pedra: a seção diz (mm) */var l=labOf(el);if(/\bmm\b/.test(l))return !/\(cm\)|%|R\$/.test(l);return DIM.test(l)&&!NOT.test(l)}
+ function inst(el){if(!isMed(el))return;var mm=rawGet(el);el.__un=1;if(ND.get.call(el)!==''||mm!=='')rawSet(el,toCm(mm));if(el.getAttribute('type')==='number'){el.__unTy=1;el.setAttribute('type','text');el.setAttribute('inputmode','decimal')}
+  Object.defineProperty(el,'value',{configurable:true,get:function(){return toMm(rawGet(el))},set:function(v){rawSet(el,toCm(v==null?'':String(v)))}})}
+ function uninst(el){if(!el.__un)return;var mm=el.value;delete el.value;el.__un=0;if(el.__unTy){el.setAttribute('type','number');el.__unTy=0}rawSet(el,mm)}
+ window.unIsMed=function(el){return !!(el&&el.__un)};
+ function skip(n){var p=n.parentElement;return !p||!!p.closest('script,style,textarea,#calcbar,[data-unmm]')}
+ function txt(n){var v=n.nodeValue;if(!v||MINE.get(n)===v||skip(n))return;var w=conv(v,!!n.parentElement.closest('svg'));if(w!==v){ORIG.set(n,v);n.nodeValue=w;MINE.set(n,w)}}
+ var AT=['title','placeholder','aria-label'];
+ function att(e){if(e.closest&&e.closest('[data-unmm]'))return;e.__unA=e.__unA||{};AT.forEach(function(a){var v=e.getAttribute(a);if(!v||e.__unA[a+'!']===v)return;var w=a==='placeholder'&&v.trim()==='mm'?v.replace('mm','cm'):conv(v,false);if(w!==v){if(a==='placeholder')e.__unPh=v;e.__unA[a]=v;e.__unA[a+'!']=w;e.setAttribute(a,w)}})}
+ function tree(n){if(U!=='cm')return;if(n.nodeType===3){txt(n);return}if(n.nodeType!==1||/^(SCRIPT|STYLE|TEXTAREA)$/.test(n.nodeName))return;
+  if(n.hasAttribute&&(n.hasAttribute('title')||n.hasAttribute('placeholder')||n.hasAttribute('aria-label')))att(n);
+  var w=document.createTreeWalker(n,NodeFilter.SHOW_TEXT,null),x,L=[];while((x=w.nextNode()))L.push(x);L.forEach(txt);
+  var es=n.querySelectorAll?n.querySelectorAll('[title],[placeholder],[aria-label]'):[];for(var i=0;i<es.length;i++)att(es[i]);
+  var ins=n.tagName==='INPUT'?[n]:(n.querySelectorAll?n.querySelectorAll('input'):[]);for(var j=0;j<ins.length;j++)inst(ins[j])}
+ var mo=new MutationObserver(function(rs){if(U!=='cm')return;for(var i=0;i<rs.length;i++){var r=rs[i];
+  if(r.type==='characterData')txt(r.target);else if(r.type==='attributes'){if(r.target.nodeType===1)att(r.target)}
+  else for(var j=0;j<r.addedNodes.length;j++)tree(r.addedNodes[j])}});
+ function liga(){mo.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:AT});if(document.body)tree(document.body)}
+ function desliga(){mo.disconnect();var w=document.createTreeWalker(document.documentElement,NodeFilter.SHOW_TEXT,null),x;while((x=w.nextNode()))if(ORIG.has(x)&&MINE.get(x)===x.nodeValue){x.nodeValue=ORIG.get(x);ORIG.delete(x);MINE.delete(x)}
+  [].forEach.call(document.querySelectorAll('input'),uninst);[].forEach.call(document.querySelectorAll('[title],[placeholder],[aria-label]'),function(e){var A=e.__unA;if(!A)return;AT.forEach(function(a){if(A[a]!=null&&e.getAttribute(a)===A[a+'!'])e.setAttribute(a,A[a])});e.__unA=null;e.__unPh=null})}
+ /* troca na hora (testes; o app abre o editor já com ?un=). Só refaz a tela: o projeto não é tocado */
+ window.arqueUnidade=function(u){u=String(u).toLowerCase()==='cm'?'cm':'mm';if(u===U)return U;U=u;window.ARQ_UN=u;if(u==='cm')liga();else desliga();try{if(typeof draw==='function')draw();if(typeof panel==='function')panel()}catch(e){}return U};
+ if(U==='cm'){if(document.body)liga();else document.addEventListener('DOMContentLoaded',liga)}
 })();
 </script>
 <script>
@@ -3626,35 +3700,37 @@ B('1','1')+B('2','2')+B('3','3')+B('-','&minus;','#34527f')+
 B('0','0')+B(',',',')+B('=','=','#2f7d4f')+B('ok','OK','#3b82f6')+'</div>';
 document.body.appendChild(kp);
 var st=document.createElement('style');st.textContent='body.kp #bd{padding-bottom:330px}body.kp{padding-bottom:330px}';document.head.appendChild(st);
+/* UNIDADE (25/11): o teclado mexe no texto que está no campo (em cm, "69.5"); quem lê o .value recebe mm (695). Em mm, V/SV = .value de sempre */
+var V=function(t){return window.unRawGet?unRawGet(t):t.value},SV=function(t,x){if(window.unRawSet)unRawSet(t,x);else t.value=x};
 var cur=null,fresh=0,dirty=0,FIRING=0;/* o valor só é aplicado no OK, no = ou ao sair do campo: aplicar tecla a tecla fazia a pedra virar 1 → 12 → 125 mm (cuba empurrada pra 0, pernas do L refeitas) e os módulos serem espremidos */
 function ex(s){s=String(s).replace(/,/g,'.').replace(/[−–—]/g,'-').replace(/\s/g,'');if(!/^(\d*\.?\d+)([+\-]\d*\.?\d+)*$/.test(s))return null;var m=s.match(/[+\-]?\d*\.?\d+/g),t=0;m.forEach(function(x){t+=parseFloat(x)});return Math.round(t*100)/100}
 function hasOp(v){return /\d\s*[+\-−]/.test(v)||/[+\-−]\s*$/.test(v)}
 function fmt(v){return String(v).replace('.',',').replace(/-/g,'−')}
-function show(){var v=cur?cur.value:'';$('calcres').textContent=v===''?'0':(hasOp(v)?((ex(v.replace(/[+\-−]\s*$/,''))!==null)?fmt(v)+' = '+fmt(ex(v.replace(/[+\-−]\s*$/,''))):fmt(v)):fmt(v))}
+function show(){var v=cur?V(cur):'';$('calcres').textContent=v===''?'0':(hasOp(v)?((ex(v.replace(/[+\-−]\s*$/,''))!==null)?fmt(v)+' = '+fmt(ex(v.replace(/[+\-−]\s*$/,''))):fmt(v)):fmt(v))}
 function fire(t,n){FIRING=1;try{t.dispatchEvent(new Event(n,{bubbles:true}))}finally{FIRING=0}}
-function commit(t,keep){var v=t.value.replace(/[+\-−]\s*$/,''),r=ex(v);if(r===null)return false;var sel=null;for(var k in t.dataset){if(k!=='calc'){sel='[data-'+k.replace(/[A-Z]/g,function(c){return '-'+c.toLowerCase()})+'="'+t.dataset[k]+'"]';break}}t.value=String(r);t.dataset.kpv=String(r);dirty=0;fire(t,'input');fire(t,'change');if(keep&&sel&&!document.body.contains(t)){var n=document.querySelector(sel+'[data-calc]');if(n){cur=n;n.focus()}}return true}
+function commit(t,keep){var v=V(t).replace(/[+\-−]\s*$/,''),r=ex(v);if(r===null)return false;var sel=null;for(var k in t.dataset){if(k!=='calc'){sel='[data-'+k.replace(/[A-Z]/g,function(c){return '-'+c.toLowerCase()})+'="'+t.dataset[k]+'"]';break}}SV(t,String(r));t.dataset.kpv=String(r);dirty=0;fire(t,'input');fire(t,'change');if(keep&&sel&&!document.body.contains(t)){var n=document.querySelector(sel+'[data-calc]');if(n){cur=n;n.focus()}}return true}
 function lab(t){if(t.dataset.lab)return t.dataset.lab;var l=t.closest('label'),r=t.closest('tr,.row,div');var s=(l&&l.textContent)||'',ps_=t.previousElementSibling;if(!s&&ps_&&ps_.tagName==='LABEL')s=ps_.textContent;if(!s&&t.parentNode&&t.parentNode.previousElementSibling)s=t.parentNode.previousElementSibling.textContent;if(!s){var p=t.parentNode;s=(p&&p.firstChild&&p.firstChild.textContent)||''}return s.replace(/\d+/g,'').replace(/[^A-Za-z\u00C0-\u00FF() ]/g,'').trim().slice(0,40)}
-function open(t){cur=t;fresh=1;dirty=0;t.dataset.kpv=t.value;kp.hidden=false;document.body.classList.add('kp');$('kplab').textContent=lab(t);show();setTimeout(function(){try{t.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},50)}
+function open(t){cur=t;fresh=1;dirty=0;t.dataset.kpv=V(t);kp.hidden=false;document.body.classList.add('kp');$('kplab').textContent=lab(t);show();setTimeout(function(){try{t.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},50)}
 /* a folga embaixo da página (pro campo não ficar atrás do teclado) só sai depois que o toque termina: saindo na hora, a página descia no meio do toque e o botão tocado saía de baixo do dedo (o toque se perdia) */
 var PDN=0;document.addEventListener('pointerdown',function(){PDN=1},true);['pointerup','pointercancel'].forEach(function(n){document.addEventListener(n,function(){PDN=0},true)});
 function soltaKp(){var n=0,go=function(){if(cur||!kp.hidden)return;if(PDN&&n++<25){setTimeout(go,60);return}document.body.classList.remove('kp')};setTimeout(go,0)}
 function close(){var qb=document.getElementById('qebox');if(qb)qb.hidden=true;kp.hidden=true;cur=null;soltaKp()}
 document.addEventListener('focusin',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(t!==cur)open(t);else{fresh=1}}else if(!kp.contains(t)){close()}});
 /* DIG-SAIDA (23/11): na captura, antes dos outros "saiu do campo" (ex.: o do preço, que voltava o valor antigo formatado antes deste aplicar o digitado) */
-document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(t.value)||(dirty&&t.value!==t.dataset.kpv)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}},true);
-document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.calc)return;var v=t.value;if(FIRING)return;/* teclado físico ou do sistema: segura até o Enter/sair do campo */if(hasOp(v)||e.isTrusted){e.stopImmediatePropagation();dirty=1;if(t===cur)show();return}if(v.indexOf(',')>=0)t.value=v.replace(/,/g,'.')},true);
-document.addEventListener('change',function(e){var t=e.target;if(!(t&&t.dataset&&t.dataset.calc))return;/* DIG-TECLADO (23/11): o change de verdade (teclado físico: Tab, Enter) chega com o valor digitado ainda não aplicado (o input de cada tecla é segurado acima). Antes ele zerava o "pendente" e o valor se perdia (painel 2D aplica no input). Agora fica pendente e é aplicado ao sair do campo ou no Enter, pelo mesmo commit do OK. */if(e.isTrusted&&(hasOp(t.value)||(dirty&&t.value!==t.dataset.kpv))){e.stopImmediatePropagation();return}if(!FIRING){t.dataset.kpv=t.value;dirty=0}},true);
+document.addEventListener('focusout',function(e){var t=e.target;if(t&&t.dataset&&t.dataset.calc){if(hasOp(V(t))||(dirty&&V(t)!==t.dataset.kpv)){window.NOREB=1;try{commit(t)}finally{window.NOREB=0}}setTimeout(function(){var a=document.activeElement;if(!a||!a.dataset||!a.dataset.calc)close()},120)}},true);
+document.addEventListener('input',function(e){var t=e.target;if(!t||!t.dataset||!t.dataset.calc)return;var v=V(t);if(FIRING)return;/* teclado físico ou do sistema: segura até o Enter/sair do campo */if(hasOp(v)||e.isTrusted){e.stopImmediatePropagation();dirty=1;if(t===cur)show();return}if(v.indexOf(',')>=0)SV(t,v.replace(/,/g,'.'))},true);
+document.addEventListener('change',function(e){var t=e.target;if(!(t&&t.dataset&&t.dataset.calc))return;/* DIG-TECLADO (23/11): o change de verdade (teclado físico: Tab, Enter) chega com o valor digitado ainda não aplicado (o input de cada tecla é segurado acima). Antes ele zerava o "pendente" e o valor se perdia (painel 2D aplica no input). Agora fica pendente e é aplicado ao sair do campo ou no Enter, pelo mesmo commit do OK. */if(e.isTrusted&&(hasOp(V(t))||(dirty&&V(t)!==t.dataset.kpv))){e.stopImmediatePropagation();return}if(!FIRING){t.dataset.kpv=V(t);dirty=0}},true);
 /* Enter no teclado físico = OK do teclado do app */
 document.addEventListener('keydown',function(e){var t=e.target;if(e.key!=='Enter'||!t||!t.dataset||!t.dataset.calc||e.isComposing)return;e.preventDefault();if(!commit(t))fire(t,'change');var a=t;if(a===cur)close();try{a.blur()}catch(_){}});
 ['mousedown','touchstart','pointerdown'].forEach(function(n){kp.addEventListener(n,function(e){e.preventDefault()},{passive:false})});
-function press(e){var b=e.target.closest('button');if(!b||!cur)return;var c=b.dataset.c,t=cur,v=t.value;
+function press(e){var b=e.target.closest('button');if(!b||!cur)return;var c=b.dataset.c,t=cur,v=V(t);
  if(c==='ok'){if(!commit(t))fire(t,'change');var a=t;close();a.blur();return}
  if(c==='='){if(hasOp(v)){commit(t,1);fresh=1}show();return}
- if(c==='+'||c==='-'){if(v==='')return;fresh=0;dirty=1;t.value=v.replace(/[+\-−]\s*$/,'')+c;show();return}
- if(c==='b'){fresh=0;dirty=1;t.value=v.slice(0,-1);show();return}
+ if(c==='+'||c==='-'){if(v==='')return;fresh=0;dirty=1;SV(t,v.replace(/[+\-−]\s*$/,'')+c);show();return}
+ if(c==='b'){fresh=0;dirty=1;SV(t,v.slice(0,-1));show();return}
  if(fresh){v='';fresh=0}
- if(c===','){var seg=v.split(/[+\-]/).pop();if(seg.indexOf('.')>=0)return;dirty=1;t.value=v+(seg===''?'0.':'.');show();return}
- t.value=v+c;dirty=1;show()}
+ if(c===','){var seg=v.split(/[+\-]/).pop();if(seg.indexOf('.')>=0||seg.indexOf(',')>=0)return;dirty=1;SV(t,v+(seg===''?'0.':'.'));show();return}
+ SV(t,v+c);dirty=1;show()}
 kp.addEventListener('pointerdown',function(e){e.preventDefault();press(e)});
 kp.addEventListener('click',function(e){e.preventDefault()});
 })();

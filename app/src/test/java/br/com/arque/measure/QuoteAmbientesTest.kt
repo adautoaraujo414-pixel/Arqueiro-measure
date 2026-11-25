@@ -103,4 +103,31 @@ class QuoteAmbientesTest {
         assertEquals(2970.9, QuoteMath.finalValue(q0), 0.0)
         assertFalse(JSONObject(JSONArray(QuoteJson.quotesToJson(listOf(q0))).getJSONObject(0).toString()).has("sections"))
     }
+
+    /**
+     * DESC-CENTAVO (Adauto 25/11): uma regra só pro desconto, a do QuoteMath (desconto em centavos, depois valor − desconto); a tela do editor
+     * passou a usar a mesma. Varredura de R$ 0,01 a 1.000,00 × 1..50%: a soma dos valores finais em centavos é a mesma no editor (bateria),
+     * aqui e no iOS (XCTest).
+     */
+    @Test fun descontoUmaRegraSoVarreduraIgualAoEditorEAoIos() {
+        assertEquals(747.49, QuoteMath.finalValue(Quote(items = listOf(QuoteItem(qty = 1.0, unitValue = 830.55)), discountPct = 10.0)), 0.0)
+        assertEquals(83.06, QuoteMath.discountValue(Quote(items = listOf(QuoteItem(qty = 1.0, unitValue = 830.55)), discountPct = 10.0)), 0.0)
+        var soma = 0L
+        var n = 0
+        for (c in 1..100_000) {
+            val v = c / 100.0
+            for (d in 1..50) {
+                soma += Math.round(QuoteMath.sectionFinal(QuoteSection(sug = v, discountPct = d.toDouble())) * 100.0)
+                n++
+            }
+        }
+        assertEquals(5_000_000, n)
+        assertEquals(186_251_793_425L, soma)
+        // o orçamento de itens dá o mesmo que o ambiente (mesma conta), em amostra
+        for (c in listOf(1, 7, 99, 83055, 99999, 100000)) for (d in listOf(1, 5, 10, 33, 50)) {
+            val v = c / 100.0
+            assertEquals(QuoteMath.sectionFinal(QuoteSection(sug = v, discountPct = d.toDouble())),
+                QuoteMath.finalValue(Quote(items = listOf(QuoteItem(qty = 1.0, unitValue = v)), discountPct = d.toDouble())), 0.0)
+        }
+    }
 }

@@ -2233,3 +2233,17 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Na 1ª versão, uma chave repetida no objeto do ambiente fazia a descrição dos móveis sair com o número do desconto. Corrigido e coberto pelo teste.
   - No teste da bateria, a ponte do navegador não pode ser trocada; os métodos do app simulado entram no objeto que já existe.
   - Ambiente: o Gradle local não baixa as dependências (Maven Central 429, Google Maven bloqueado pela rede). Os testes nativos vão pelo CI.
+- **DESC-CENTAVO, defeito (achado pelo Code 2 em 25/11; o Chefe classificou como defeito; Adauto: "corrija todos os erros", "tela = PDF ao centavo"):**
+  - Sintoma: o valor com desconto podia diferir 1 centavo entre a tela do editor e o PDF do app. Exemplo: R$ 830,55 com 10% dava 747,50 na tela e 747,49 no PDF.
+  - Causa: duas contas para a mesma coisa.
+    - Tela (vlFin): arredondava valor × (1 − d).
+    - App (QuoteMath, o documento do cliente): desconto arredondado em centavos, depois valor − desconto.
+    - Na varredura de R$ 0,01 a 1.000,00 × 1..50%, as duas divergiam em 135.928 de 5.000.000 casos.
+  - Correção na causa, uma regra só: `descAplica` (a do QuoteMath), usada na tela e nos ambientes do orçamento de vários ambientes. Sem 2ª conta.
+  - O que não muda: orçamentos e PDFs já salvos (o app sempre usou a regra do QuoteMath). O orçamento individual dos 141 projetos da s45 sai igual.
+  - Testes:
+    - `testDescontoDoProjetoTelaIgualAoPdfAoCentavo…` (bateria; falha antes);
+    - `QuoteAmbientesTest.descontoUmaRegraSo…` (JVM);
+    - `CoreTests.testDescontoUmaRegraSo…` (iOS);
+    - a mesma soma da varredura nos três: 186.251.793.425 centavos.
+  - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).

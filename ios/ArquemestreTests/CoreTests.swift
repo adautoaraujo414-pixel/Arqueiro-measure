@@ -637,4 +637,29 @@ final class QuotePdfTests: XCTestCase {
         let j = try JsonCodec.parseArray(JsonCodec.quotesToJson([o]))[0] as? [String: Any]
         XCTAssertEqual(Set(j?.keys.map { $0 } ?? []), ["id", "client", "city", "date", "discount", "validity", "drawing", "noteId", "notes", "items", "addenda", "photos", "pid"])
     }
+
+    // DESC-CENTAVO (Adauto 25/11): uma regra só pro desconto (a do QuoteMath); a tela do editor usa a mesma. Varredura R$ 0,01..1.000,00 × 1..50%:
+    // a soma dos valores finais em centavos é a mesma no editor (bateria), no Android/Windows (JVM) e aqui
+    func testDescontoUmaRegraSoVarreduraIgualAoEditorEAoAndroid() {
+        let q = Quote(items: [QuoteItem(qty: 1, unitValue: 830.55)], discountPct: 10)
+        XCTAssertEqual(QuoteMath.finalValue(q), 747.49)
+        XCTAssertEqual(QuoteMath.discountValue(q), 83.06)
+        var soma: Int64 = 0
+        var n = 0
+        var s = QuoteSection()
+        for c in 1...100_000 {
+            s.sug = Double(c) / 100
+            for d in 1...50 {
+                s.discountPct = Double(d)
+                soma += Int64((QuoteMath.sectionFinal(s) * 100).rounded())
+                n += 1
+            }
+        }
+        XCTAssertEqual(n, 5_000_000)
+        XCTAssertEqual(soma, 186_251_793_425)
+        for c in [1, 7, 99, 83055, 99999, 100000] { for d in [1, 5, 10, 33, 50] {
+            let v = Double(c) / 100
+            XCTAssertEqual(QuoteMath.sectionFinal(QuoteSection(sug: v, discountPct: Double(d))), QuoteMath.finalValue(Quote(items: [QuoteItem(qty: 1, unitValue: v)], discountPct: Double(d))))
+        } }
+    }
 }

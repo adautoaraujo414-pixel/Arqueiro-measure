@@ -9585,7 +9585,10 @@ document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&
 function dPct(){var d=+S.desc||0;return isFinite(d)?Math.max(0,Math.min(90,Math.round(d*100)/100)):0}
 window.descPct=dPct;
 var vfB=vlFin;window.vlFinBase=function(b){return vfB(b)};
-vlFin=function(b){var v=vfB.apply(this,arguments);return Math.round(v*(1-dPct()/100)*100)/100};
+/* DESC-CENTAVO (Adauto 25/11, "tela = PDF ao centavo"): uma regra só, a do QuoteMath do app (o documento do cliente): desconto arredondado em centavos, depois valor − desconto.
+   Antes a tela fazia valor × (1 − d) e podia dar 1 centavo a mais que o PDF (R$ 830,55 com 10%: tela 747,50 × PDF 747,49) */
+var descR2=function(v){return Math.round(v*100)/100};window.descAplica=function(v,d){v=descR2(+v||0);var pc=Math.max(0,Math.min(100,+d||0)),ds=descR2(v*pc/100);return {base:v,desc:ds,fin:descR2(v-ds)}};
+vlFin=function(b){var v=vfB.apply(this,arguments);return window.descAplica(v,dPct()).fin};
 var nfp=function(v){return String(Math.round(v*100)/100).replace('.',',')};
 var vR=vlRender;vlRender=function(){vR();var B=document.getElementById('vlbody');if(!B)return;var b=budget(),base=vfB(b),d=dPct(),fin=vlFin(b),q=B.querySelector('[data-vlq]');
  var h='<div class="sec2" style="margin-top:6px">Desconto</div><div class="chips">'+[0,5,10,15,20].map(function(v){return '<button data-vdesc="'+v+'" class="'+(d===v?'on':'')+'">'+(v?v+'%':'Sem desconto')+'</button>'}).join('')+'</div><div class="g"><label>Desconto (%) · digite e já recalcula</label><input data-vdesci="1" inputmode="decimal" style="text-align:right;font-size:17px;font-weight:700" value="'+(d?nfp(d):'')+'" placeholder="0"></div>'
@@ -15462,7 +15465,7 @@ document.addEventListener('change',function(e){var t=e.target;if(!t||!t.matches)
  var chave=function(p){return p&&p.client?clKey(p.client.nome):''};
  var A=function(){return window.ArqueApp||null};
  /* conta do ambiente e do consolidado (a mesma do QuoteMath do app) */
- var secVal=function(s){var b=r2(+s.manual>0?s.manual:s.sug),pc=Math.max(0,Math.min(100,+s.desc||0)),d=r2(b*pc/100);return {base:b,desc:d,fin:r2(b-d)}};
+ /* a mesma regra do desconto do projeto (descAplica = QuoteMath): desconto em centavos, depois valor − desconto */var secVal=function(s){return window.descAplica(+s.manual>0?s.manual:s.sug,s.desc)};
  var totais=function(O){var sub=0,di=0;O.secs.forEach(function(s){var v=secVal(s);sub+=v.fin;di+=v.desc});sub=r2(sub);var pc=Math.max(0,Math.min(100,+O.disc||0)),g=r2(sub*pc/100);return {sub:sub,descInd:r2(di),descGeral:g,tot:r2(sub-g)}};
  window.orcSecVal=secVal;window.orcTotais=totais;
  /* valores de um projeto (ambiente) pelo mesmo caminho do orçamento dele, sem gravar nada */

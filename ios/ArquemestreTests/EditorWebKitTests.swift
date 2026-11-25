@@ -9112,7 +9112,7 @@ final class EditorWebKitTests: XCTestCase {
         R.valorFechadoPorCima=PR.moR===800&&vp()===brl(9000)&&B().querySelectorAll('tr[data-vlxl]').length===3&&margem()==='Lucro = '+brl(9000-mat-ext);
         B().querySelector('[data-vlpx]').click();await W(120);b2=budget();R.voltaAoSugerido=S.preco===0&&vp()===brl(b2.sale)&&perto(b2.sale,mat*2.5+ext);
         /* 7. desconto: OK e tocar de novo abre o teclado; desconto sem OK e tocar num campo novo abre o campo novo */
-        await digita('#vlm [data-vdesci]','10');R.descontoDe10=S.desc===10&&vp()===brl(r2(b2.sale*0.9))&&!tecl();R.descontoAbreDeNovoDepoisDoOk=await abre('#vlm [data-vdesci]');
+        await digita('#vlm [data-vdesci]','10');/* DESC-CENTAVO (Adauto 25/11, "tela = PDF ao centavo"): a expectativa mudou de valor × 0,9 para a regra do PDF do app (desconto em centavos, depois valor − desconto) */R.descontoDe10=S.desc===10&&vp()===brl(r2(r2(b2.sale)-r2(r2(b2.sale)*10/100)))&&!tecl();R.descontoAbreDeNovoDepoisDoOk=await abre('#vlm [data-vdesci]');
         '5'.split('').forEach(kb);var c4=document.querySelector('#vlm [data-vlx="cfR"]');c4.focus();await W(260);R.descontoEDepoisCampoNovo=S.desc===5&&tecl()&&lab()==='Custo fixo (R$)'&&document.activeElement===c4&&c4.isConnected;kb('ok');await W(150);
         await digita('#vlm [data-vdesci]','0');R.semDesconto=!S.desc&&vp()===brl(b2.sale);
         /* 8. "Esconder o valor do material": some o bloco e as linhas, fica o valor do projeto */
@@ -18846,6 +18846,28 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["duplicaLista"] as? String, "3 · marcados 2")
         XCTAssertEqual(o["link"] as? Bool, true, "o link do cliente continua sem nenhum valor")
         XCTAssertEqual(o["individual"] as? String, "true · true", "orçamento individual igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESC-CENTAVO (Adauto 25/11, "tela = PDF ao centavo"; defeito: a tela fazia valor × (1 − d) e o PDF do app faz valor − desconto em centavos).
+    // Uma regra só, a do QuoteMath. R$ 830,55 com 10%: tela = orçamento = PDF = 747,49. Varredura R$ 0,01..1.000,00 × 1..50% com a mesma soma
+    // em centavos do JVM (QuoteAmbientesTest) e do XCTest (CoreTests)
+    func testDescontoDoProjetoTelaIgualAoPdfAoCentavoVarreduraComOApp() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        /* a tela do projeto com valor fechado R$ 830,55 e 10% de desconto: o mesmo do PDF do app (747,49) */
+        newProjFor({nome:'Cliente Centavo',end:'',cidade:'',tel:''});S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();S.preco=830.55;S.desc=10;saveNow();
+        var b=budget();R.valor=vlFin(b);vlOpen();await W(100);var tot=document.querySelector('#vldesc .tot');R.tela=tot?tot.textContent.replace(/\s+/g,' ').trim():'';var q=quoteData();R.orcamento=[q.base,q.discountPct,q.total].join(' · ');document.getElementById('vlx')&&document.getElementById('vlx').click();
+        /* varredura: R$ 0,01..1.000,00 × 1..50% com a regra da tela (a mesma do QuoteMath): soma em centavos igual à do JVM e do XCTest */
+        var soma=0,n=0,dif=0;for(var c=1;c<=100000;c++){var v=c/100;for(var d=1;d<=50;d++){var a=descAplica(v,d);soma+=Math.round(a.fin*100);n++;if(Math.round(v*(1-d/100)*100)/100!==a.fin)dif++}}R.varredura=n+' · '+soma;R.antesDiferia=dif;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["valor"] as? Double, 747.49)
+        XCTAssertEqual(o["tela"] as? String, "Valor sem descontoR$ 830,55Desconto de 10%− R$ 83,06Valor com descontoR$ 747,49")
+        XCTAssertEqual(o["orcamento"] as? String, "830.55 · 10 · 747.49")
+        XCTAssertEqual(o["varredura"] as? String, "5000000 · 186251793425", "a mesma soma do Android/Windows e do iOS")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

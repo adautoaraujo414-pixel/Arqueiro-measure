@@ -49,7 +49,9 @@ final class VideoGravarUITests: XCTestCase {
         }
         XCTAssertTrue(app.webViews.firstMatch.waitForExistence(timeout: 90), "o editor abriu")
         sleep(6)
-        try toca(["Clientes e projetos"])
+        // 25/11 (run 29): no iPhone frio do runner o editor da versão PUBLICADA (3.0.13, que não muda) levou mais de 30 s pra
+        // aparecer; aqui só se espera ele ficar pronto — a velocidade de abertura do app é medida no iOS CI (limite de 20 s, intocado)
+        try toca(["Clientes e projetos"], ate: 120)
         sleep(2)
         try toca(["📷 Fotos e obra"])
         sleep(2)

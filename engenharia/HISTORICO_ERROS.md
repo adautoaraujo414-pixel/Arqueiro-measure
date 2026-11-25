@@ -2379,3 +2379,17 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
   - **O diagnóstico do e7f1cb1f (opção A) estava incompleto.** O aéreo se mover na criação vem desse autoTamp, que já existia antes da varredura. O e7f1cb1f foi revertido: os 2 testes de painel voltam aos valores originais (1045x870 e 1 painel).
   - **Pendente (decisão do Chefe):** levar a §12 para o autoTamp da criação nos vizinhos. Tem que desfazer tamponamento e posição JUNTOS, como sugestão.
 - **Status:** resolvido para as 7 falhas.
+
+## REG12-CRIACAO (25/11): o que a bateria achou no caminho — Code 2
+- **1ª versão (6d269a40), revertendo a cada desenho:** a bateria completa deu 7 falhas, as mesmas a 1366 e a 430. Duas eram defeito de verdade:
+  - **Módulo do catálogo recusado:** ao pôr um módulo encostado, o tamponamento da junta passa do existente pro novo. Com o existente voltando, os dois tamponamentos se sobrepunham e o `modGuard` tirava o novo ("Não tem espaço livre…").
+  - **Artefatos das várias passadas de desenho de uma mesma criação:** o novo andava 30 mm pra dentro do tamponamento do vizinho, e a sugestão não dava o de antes.
+- **Correção (desenho novo):**
+  - A criação roda igual e a comparação é feita UMA vez, no fim da ação (`atInicio`/`atFim`), só nos campos de posição, largura e tamponamento, e só em ação que criou módulo.
+  - O S.m nunca volta, e o novo se acomoda se ficar entrando no vizinho.
+  - A sugestão guarda o estado final de cada módulo e o toque volta exatamente ele.
+  - O `loadState` zera a ação.
+- **Testes:**
+  - Os 29 relacionados passam a 1366.
+  - A s45 dá igual à da candidata.
+  - Os testes que criavam passo a passo e esperavam o vizinho ajustado tocam na sugestão e conferem os mesmos valores: desfazer/refazer, valores das chapas, mão de obra, fechamento até o teto, "Usar N mm", peças livres e os 9 de tamponamento.

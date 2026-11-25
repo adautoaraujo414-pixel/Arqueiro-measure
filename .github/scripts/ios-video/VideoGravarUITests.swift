@@ -101,6 +101,13 @@ final class VideoGravarUITests: XCTestCase {
                 if alvo != nil { break }
             }
             if alvo != nil { break }
+            // 8ª rodada: depois do Close a miniatura "Video, two seconds…" existe com tamanho certo, mas o iOS a dá como não
+            // tocável (é do seletor, outro processo). Depois de passar pela apresentação, vale ela mesma, tocada pela posição.
+            if passos > 0 {
+                let qv = app.images.matching(pv)
+                for i in 0..<min(qv.count, 6) { let e = qv.element(boundBy: i); if e.exists && !e.identifier.contains("Onboarding") && e.frame.width >= 60 && e.frame.height >= 60 && e.label != "Vídeos" && e.label != "Videos" { alvo = e; break } }
+                if alvo != nil { break }
+            }
             if passos < 3, let b = botaoSegue() {
                 print("VIDEO-UI: apresentação do seletor, toquei \"\(b.label)\" (\(b.identifier))"); b.tap(); passos += 1; sleep(2); continue
             }
@@ -116,7 +123,8 @@ final class VideoGravarUITests: XCTestCase {
         print("VIDEO-UI: no seletor: botões " + app.buttons.allElementsBoundByIndex.prefix(60).map { $0.label + "/" + $0.identifier }.filter { $0 != "/" }.joined(separator: ", "))
         print("VIDEO-UI: no seletor: imagens " + app.images.allElementsBoundByIndex.prefix(20).map { "\($0.label)/\($0.identifier) \($0.frame.size)" }.joined(separator: ", "))
         guard let v = alvo else { mostra("seletor de fotos sem o vídeo"); XCTFail("FALHA-VIDEO-UI: seletor de fotos sem o vídeo"); throw Falha() }
-        print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue)) em \(v.frame)"); v.tap()
+        print("VIDEO-UI: toquei no item do seletor \"\(v.label)\" (\(v.elementType.rawValue)) em \(v.frame), tocável \(v.isHittable)")
+        if v.isHittable { v.tap() } else { v.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
         sleep(3)
         mostra("depois de tocar no vídeo do seletor")
         // diagnóstico (2ª rodada no CI: depois do item apareceu um "OK" e o editor não salvou): o que há na tela agora

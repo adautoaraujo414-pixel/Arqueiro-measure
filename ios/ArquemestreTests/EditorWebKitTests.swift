@@ -14357,6 +14357,41 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* A31 · revisão do Code 2 (25/11, pedido do Chefe): três defeitos da correção A31.
+       1) Régua do aéreo encurtada até o mínimo de 50 saía do módulo (50 em 747 num aéreo de 750): o mínimo era aplicado depois do limite do topo.
+       2) Rodapé esticado pela seta passava pelas gavetas ("Rodapé (pedestal) em 0:Lateral de gaveta"): o limite só olhava folga + espessuras.
+       3) PROJETO ANTIGO MUDAVA: num módulo antigo com ajuste guardado no rodapé ({et:60}), mexer na seta da PORTA convertia o rodapé
+          (rodMm 100→160), a base subia e as portas mudavam. Regra (§3): só muda o que a pessoa mexeu, naquele gesto. */
+    func testA31ReguaNaoSaiDoModuloRodapeNaoEntraNaGavetaEProjetoAntigoNaoMuda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var puxa=async function(pk,k,px){__e3open(0,pk);await W(30);var h=document.querySelector('[data-hk="'+k+'"]'),opp={et:'eb',eb:'et',el:'er',er:'el'}[k],o=document.querySelector('[data-hk="'+opp+'"]');if(!h)return false;var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,dx=0,dy=-1;if(o){var ro=o.getBoundingClientRect();dx=x-(ro.left+15);dy=y-(ro.top+15);var L=Math.hypot(dx,dy)||1;dx/=L;dy/=L}var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk="'+k+'"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:52,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev('pointerdown',x,y);for(var i=1;i<=8;i++){ev('pointermove',x+dx*px/8*i,y+dy*px/8*i);await W(15)}ev('pointerup',x+dx*px,y+dy*px);await W(80);return true};
+        var dentro=function(){__build();var B=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'}),bad='';B.forEach(function(a){if(bad||!/^0:(Rodapé \(pedestal\)|Régua espaçadora)/.test(a.nm))return;B.forEach(function(b){if(bad||a===b||/^0:(Rodapé|Régua espaçadora|Tamponamento|Corte do|Pé )/.test(b.nm))return;if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>1&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1)bad=a.nm+' em '+b.nm})});return bad};
+        var novo=function(t){loadState(initLimpo());S.env='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(m){m.x=1500;draw();__build()}return m};
+        open3D();await W(300);var reg=[],rod=[],nr=0,nd=0;
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i])),m=novo(t);if(!m)continue;
+          var R=partsOf(m).filter(function(p){return /^Régua espaçadora do canto/.test(p.name)})[0];
+          if(R){nr++;var y0=R.y,h0=R.h;/* pela seta (gesto) e pelo ajuste guardado que encurta até sobrar 20 mm encostado no topo ou na base: o mínimo de 50 tem que caber dentro */var casos=[['eb',-600,null],['et',-600,null],['eb',0,{v2:1,eb:-(h0-20)}],['et',0,{v2:1,et:-(h0-20)}]];
+            for(var g=0;g<casos.length;g++){m=novo(JSON.parse(JSON.stringify(mods[i])));if(casos[g][2]){m.po=m.po||{};m.po[R.pk]=casos[g][2];draw()}else await puxa(R.pk,casos[g][0],casos[g][1]);var R1=partsOf(m).filter(function(p){return p.pk===R.pk})[0];if(!R1||R1.y<Math.min(0,y0)-0.5||R1.y+R1.h>m.h+0.5||R1.h<49.5)reg.push(t.n+' ('+casos[g][0]+(casos[g][2]?' guardado':'')+'): régua '+(R1?R1.h+' em '+R1.y+' num módulo de '+m.h:'sumiu'))}m=novo(JSON.parse(JSON.stringify(mods[i])))}
+          if(/Gaveteiro|Cômoda|Criado-mudo|Escrivaninha|gavetas/.test(t.n)){var D=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0];if(D){nd++;await puxa(D.pk,'et',600);var dd=dentro();if(dd)rod.push(t.n+': rodapé '+m.rodMm+' · '+dd)}}}
+        /* projeto antigo: ajuste guardado no rodapé por versão anterior; mexer só na porta não pode mudar o rodapé */
+        var m=novo(T('Balcão 2 portas')),D=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0],P=partsOf(m).filter(function(p){return /^Porta/.test(p.name)})[0];
+        m.po=m.po||{};m.po[D.pk]={v2:1,et:60};var r0=+m.rodMm,f0=partsOf(m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return p.cw}).join(',');
+        await puxa(P.pk,'er',20);var f1=partsOf(m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return p.cw}).join(',');
+        var antigo=(+m.rodMm===r0?'':'rodMm '+r0+'→'+m.rodMm+' ')+((m.po[D.pk]&&m.po[D.pk].et===60)?'':'ajuste do rodapé sumiu ')+(f0===f1?'':'altura das portas '+f0+'→'+f1);
+        document.getElementById('v3x').click();return JSON.stringify({regua:reg.join(' | ')||'ok',reguas:nr,rodape:rod.join(' | ')||'ok',gaveteiros:nd,antigo:antigo||'igual',errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThanOrEqual(o["reguas"] as? Int ?? 0, 8, "os modelos com régua espaçadora")
+        XCTAssertEqual(o["regua"] as? String, "ok", "encurtada até o mínimo, a régua fica dentro do módulo")
+        XCTAssertGreaterThanOrEqual(o["gaveteiros"] as? Int ?? 0, 4, "gaveteiros, cômoda, criado-mudo, escrivaninha")
+        XCTAssertEqual(o["rodape"] as? String, "ok", "o rodapé esticado pela seta para antes das gavetas")
+        XCTAssertEqual(o["antigo"] as? String, "igual", "mexer na porta não converte o ajuste antigo guardado no rodapé")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B26 (checklist; decisão do Adauto 24/11: "peça flutuante: investigar a causa e corrigir"): no 3D de cada modelo do catálogo, toda peça
        de fabricação (o que vai pro corte) encosta em outra peça, no chão ou na parede — nenhuma fica solta no ar. O eletro desenhado e as
        ferragens (noCut) ficam de fora; o cabideiro do "Armário sem laterais" se apoia nas laterais dos vizinhos (conferido entre dois guarda-roupas).

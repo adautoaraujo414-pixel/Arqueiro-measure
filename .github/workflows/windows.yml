@@ -71,14 +71,25 @@ jobs:
 
       - name: Arquivos de TESTE (portátil e instalador, sem publicar)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          $n = $env:GITHUB_RUN_NUMBER
           New-Item -ItemType Directory -Force relt | Out-Null
           Compress-Archive -Path windows/build/compose/binaries/main/app/Arquemestre -DestinationPath relt/Arquemestre-Windows-TESTE-portatil.zip
           "Arquivos de TESTE do commit $($env:GITHUB_SHA.Substring(0,7)). Nao e versao publica e nao atualiza ninguem. O portatil roda sem instalar (descompacte e abra Arquemestre.exe); ele usa a mesma pasta de dados do app instalado, entao faca backup antes." | Out-File -Encoding utf8NoBOM relt/nota.txt
-          gh release create "teste-windows-$n" relt/Arquemestre-Windows-TESTE-portatil.zip -R "$env:GITHUB_REPOSITORY" --target "$env:GITHUB_SHA" --prerelease --title "TESTE Windows $n ($($env:GITHUB_SHA.Substring(0,7))) · não é versão pública" --notes-file relt/nota.txt
+          Get-FileHash relt/Arquemestre-Windows-TESTE-portatil.zip -Algorithm SHA256 | Format-List | Out-File -Encoding utf8NoBOM relt/sha256.txt
+          # o editor que vai dentro do portátil tem que ser o mesmo do commit
+          python -c "import zipfile,glob,hashlib,sys,os;R='windows/build/compose/binaries/main/app/Arquemestre';h=[(f,hashlib.sha256(open(f,'rb').read()).hexdigest()) for f in glob.glob(R+'/**/editor.html',recursive=True)];h+=[(j,hashlib.sha256(zipfile.ZipFile(j).read(e)).hexdigest()) for j in glob.glob(R+'/**/*.jar',recursive=True) for e in zipfile.ZipFile(j).namelist() if e.endswith('editor.html')];c=hashlib.sha256(open('app/src/main/assets/editor.html','rb').read()).hexdigest();[print('editor.html no portatil',os.path.relpath(f,R),x) for f,x in h];print('editor.html no commit (checkout)',c);sys.exit(0 if h and all(x==c for _,x in h) else 1)" | Out-File -Append -Encoding utf8NoBOM relt/sha256.txt
+          if ($LASTEXITCODE -ne 0) { Get-Content relt/sha256.txt; throw "o editor dentro do portátil de teste não é o do commit" }
+          Get-Content relt/sha256.txt
+          # Adauto 24/11: o pacote de teste fica SÓ nos artefatos do Actions (sem release pública no GitHub)
+          Write-Host "::notice title=Pacote de teste Windows::artefato Arquemestre-TESTE-windows desta execução (Actions → Artifacts)"
+
+      - name: Guardar os arquivos de TESTE (só artefato do Actions, não é publicação)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arquemestre-TESTE-windows
+          path: relt/
+          if-no-files-found: error
 
       - name: PUBLICAR pros usuários (release win-N e ponteiro win-latest)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'publicar'

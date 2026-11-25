@@ -62,21 +62,32 @@ jobs:
 
       - name: APK de TESTE (outro pacote, instala ao lado do app de verdade, sem atualizador)
         if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -o pipefail
           cp app/build/outputs/apk/site/debug/*.apk "$RUNNER_TEMP/publico.apk"
           ./gradlew --no-daemon assembleSiteDebug -Pteste=1 2>&1 | tee -a build.log
-          cp app/build/outputs/apk/site/debug/*.apk Arquemestre-TESTE.apk
-          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging Arquemestre-TESTE.apk | head -n 3
-          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging Arquemestre-TESTE.apk | grep -q "name='br.com.arque.measure.teste'" || { echo "::error::o APK de teste saiu com o pacote do app de verdade"; exit 1; }
-          TAG="teste-android-${GITHUB_RUN_NUMBER}"
-          printf 'APK de TESTE do commit %s.\nInstala AO LADO do Arquemestre (nome "Arquemestre TESTE"), com dados separados. Não atualiza nem substitui o app dos usuários.\n' "${GITHUB_SHA::7}" > nota-teste.txt
-          gh release create "teste-android-${GITHUB_RUN_NUMBER}" Arquemestre-TESTE.apk --target "$GITHUB_SHA" --prerelease --title "TESTE Android ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7}) · não é versão pública" --notes-file nota-teste.txt
-          echo "::notice title=APK de teste::https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/Arquemestre-TESTE.apk"
+          mkdir -p pacote-teste
+          cp app/build/outputs/apk/site/debug/*.apk pacote-teste/Arquemestre-TESTE.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging pacote-teste/Arquemestre-TESTE.apk | head -n 3
+          "$ANDROID_HOME/build-tools/35.0.0/aapt2" dump badging pacote-teste/Arquemestre-TESTE.apk | grep -q "name='br.com.arque.measure.teste'" || { echo "::error::o APK de teste saiu com o pacote do app de verdade"; exit 1; }
+          printf 'APK de TESTE do commit %s.\nInstala AO LADO do Arquemestre (nome "Arquemestre TESTE"), com dados separados. Não atualiza nem substitui o app dos usuários.\n' "${GITHUB_SHA::7}" > pacote-teste/nota-teste.txt
+          sha256sum pacote-teste/Arquemestre-TESTE.apk | tee pacote-teste/sha256.txt
+          # o editor que vai dentro do APK tem que ser o mesmo do commit
+          A=$(unzip -p pacote-teste/Arquemestre-TESTE.apk assets/editor.html | sha256sum | cut -d' ' -f1); B=$(sha256sum app/src/main/assets/editor.html | cut -d' ' -f1)
+          echo "editor.html no APK $A · no commit $B" | tee -a pacote-teste/sha256.txt
+          [ "$A" = "$B" ] || { echo "::error::o editor dentro do APK de teste não é o do commit"; exit 1; }
+          # Adauto 24/11: o pacote de teste fica SÓ nos artefatos do Actions (sem release pública no GitHub)
+          echo "::notice title=APK de teste::artefato Arquemestre-TESTE-android desta execução (Actions → Artifacts)"
           # volta o APK normal pro lugar (os passos seguintes conferem ele)
           ./gradlew --no-daemon assembleSiteDebug 2>&1 | tail -n 3
+
+      - name: Guardar o APK de TESTE (só artefato do Actions, não é publicação)
+        if: success() && github.event_name == 'workflow_dispatch' && inputs.modo == 'teste'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arquemestre-TESTE-android
+          path: pacote-teste/
+          if-no-files-found: error
 
       - name: Salvar log de erro
         if: failure()

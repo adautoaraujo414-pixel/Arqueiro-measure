@@ -19621,4 +19621,34 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["reparo"] as? String, "true · reparo rodou true", "o 3D se refez sozinho e o desfazer continua voltando o passo")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // IDS-TODOS (Chefe 25/11, varredura §11): 2 de cada tipo criados no mesmo instante (relógio "lento" + sorteio preso) têm ids diferentes.
+    // Antes: projetos 2/1 (o 2º projeto ficava com o id do 1º — risco de gravar um por cima do outro, §3), painéis em lote 3/1, rebaixos 2/1.
+    // Correção: idNovo (pula o que já existe e o que já foi entregue na sessão); só ids novos, projeto antigo não muda.
+    func testIDSTODOS_DoisDeCadaTipoNoMesmoInstanteTemIdsDiferentes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+var dn=Date.now,mr=Math.random,T0=dn.call(Date),q_=0;Date.now=function(){return T0+Math.floor((q_++)/1000)};Math.random=function(){return 0.5};
+var un=function(L,k){k=k||'id';var v=(L||[]).map(function(x){return x[k]});return v.length+'/'+new Set(v.map(String)).size};
+try{
+ newProjFor({nome:'Ids',end:'',cidade:'',tel:''});var p1=CUR;newProjFor({nome:'Ids2',end:'',cidade:'',tel:''});R.projetos=un(pLoadAll());
+ loadState(initLimpo());S.env='cozinha';S.W=5000;draw();
+ newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));draw();S.mods.forEach(function(m){try{uid(m)}catch(_){}});R.moveis=un(S.mods,'uid');
+ addStone();addStone();R.pedras=un(S.stones);
+ apAdd('geladeira',0);apAdd('geladeira',0);R.eletros=un(S.fr);
+ /* painéis criados em lote (dividir, gerar placas): os ids saem antes de entrar na lista */var lote=[rpUid(),rpUid(),rpUid()];R.paineis=lote.length+'/'+new Set(lote).size;
+ tzAdd('f',{x:0,w:500,hc:2300});tzAdd('f',{x:1000,w:500,hc:2300});R.rebaixos=un(S.tz);
+}finally{Date.now=dn;Math.random=mr}
+R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["projetos"] as? String, "2/2", "dois projetos novos nunca têm o mesmo id")
+        XCTAssertEqual(o["moveis"] as? String, "2/2")
+        XCTAssertEqual(o["pedras"] as? String, "2/2")
+        XCTAssertEqual(o["eletros"] as? String, "2/2")
+        XCTAssertEqual(o["paineis"] as? String, "3/3", "placas criadas em lote não repetem id")
+        XCTAssertEqual(o["rebaixos"] as? String, "2/2")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

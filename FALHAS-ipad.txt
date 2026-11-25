@@ -1,0 +1,5 @@
+commit fb2815f1ac39e00f0bdbec1f05ff66489375f530 · execução 699 · ipad ·       22 linhas no log
+==== falhas (mensagem completa) ====
+xcodebuild: error: Unable to find a device matching the provided destination specifier:
+==== último teste que começou (se o passo foi interrompido) ====
+==== totais ====

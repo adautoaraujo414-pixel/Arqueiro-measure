@@ -1,0 +1,169 @@
+######## build/xcodebuild-test.log
+==== linhas 4825..4910
+2026-11-25 21:03:22.151430+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 1029 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.151639+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.153542+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 969 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.153861+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.154317+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 909 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.154480+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.154688+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 849 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.154762+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.157170+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 789 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.157343+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.157493+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 729 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.157558+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.157716+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 669 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.158566+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.158812+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 609 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.158982+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.159096+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 549 pending incoming messages, will only process 60 before yielding)
+2026-11-25 21:03:22.159181+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.159407+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 489 pending incoming messages, will only process 66 before yielding)
+2026-11-25 21:03:22.159480+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.159615+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 423 pending incoming messages, will only process 75 before yielding)
+2026-11-25 21:03:22.159692+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.159792+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 348 pending incoming messages, will only process 85 before yielding)
+2026-11-25 21:03:22.161919+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.162138+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 263 pending incoming messages, will only process 100 before yielding)
+2026-11-25 21:03:22.162197+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+2026-11-25 21:03:22.162339+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: IPC throttling was triggered (has 163 pending incoming messages, will only process 120 before yielding)
+2026-11-25 21:03:22.162402+0000 Arquemestre[12527:40892] [IPC] 0x1213b78e0 - Connection::dispatchIncomingMessages: first IPC message in queue is WebPageProxy_SetRenderTreeSize
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoNaoMudaTamanhoDeNadaEmTodoOCatalogo]' passed (127.780 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoPeloToqueNaCozinhaEPecaUnicaViraInteira]' started (Iteration 1 of 2).
+2026-11-25 21:03:24.077176+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.128798 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoPeloToqueNaCozinhaEPecaUnicaViraInteira]' passed (25.563 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLateralDoMeioAlinhaComODeBaixo]' started (Iteration 1 of 2).
+2026-11-25 21:03:49.954816+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.379016 seconds to launch
+2026-11-25 21:03:52.860239+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x152242880 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLateralDoMeioAlinhaComODeBaixo]' passed (5.847 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLigadoSalvarReabrirDesfazerRefazer]' started (Iteration 1 of 2).
+2026-11-25 21:03:55.421736+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.151049 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLigadoSalvarReabrirDesfazerRefazer]' passed (8.944 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte]' started (Iteration 1 of 2).
+2026-11-25 21:04:04.570780+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.321535 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoLivreSobeEAtualizaNaHoraNoPlanoDeCorte]' passed (5.467 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoMovelExistenteNaoEEmpurradoSozinho]' started (Iteration 1 of 2).
+2026-11-25 21:04:10.125125+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.426845 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoMovelExistenteNaoEEmpurradoSozinho]' passed (6.412 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga]' started (Iteration 1 of 2).
+2026-11-25 21:04:18.347869+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x12066a610 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:04:22.506850+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 6.537198 seconds to launch
+2026-11-25 21:04:24.172417+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x120668f00 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+ABERTURA-DIAG bateria: -[EditorWebKitTests testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga] abriu o editor em 8.80 s
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNaoEntraNaPedraNemEmOutroModuloESemEspacoNaoLiga]' passed (14.119 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase]' started (Iteration 1 of 2).
+2026-11-25 21:04:39.589652+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x120668c00 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:04:39.595313+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x12066bf60 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:04:41.344871+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.562591 seconds to launch
+2026-11-25 21:04:45.026703+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x12066ae50 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoNo2DMudaSoAAlturaDeleNaoMoveOMovelNemApagaABase]' passed (17.423 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSemEspacoAvisaEDeixaOProjetoIgual]' started (Iteration 1 of 2).
+2026-11-25 21:04:48.448218+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.618207 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSemEspacoAvisaEDeixaOProjetoIgual]' passed (6.926 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSempreForaDoModuloEmTodosOsModelosComReguasDe80]' started (Iteration 1 of 2).
+2026-11-25 21:04:55.494971+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.836797 seconds to launch
+2026-11-25 21:04:59.166562+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x1521b5650 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:05:16.623102+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x1521b5710 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:05:23.642181+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x1521b55c0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoSempreForaDoModuloEmTodosOsModelosComReguasDe80]' passed (38.960 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTecladoNumericoNuncaCobreOCampo]' started (Iteration 1 of 2).
+2026-11-25 21:05:34.670420+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.959209 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTecladoNumericoNuncaCobreOCampo]' passed (20.392 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTelaValoresTodaFerragemQueEntraNoTotalTemLinhaNaTabela]' started (Iteration 1 of 2).
+2026-11-25 21:05:55.176441+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.865856 seconds to launch
+2026-11-25 21:06:02.699147+0000 Arquemestre[12527:40892] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x12066a610 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTelaValoresTodaFerragemQueEntraNoTotalTemLinhaNaTabela]' passed (12.126 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTirarTamponamentoEsquerdoDevolveOModuloSemDeixarVaoNaParede]' started (Iteration 1 of 2).
+2026-11-25 21:06:06.884669+0000 Arquemestre[12527:40892] [Process] WebContent process (0x1210f00c0) took 1.628564 seconds to launch
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult
+
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-11-25 21:06:33.426.
+Test Suite 'ArquemestreTests.xctest' started at 2026-11-25 21:06:33.427.
+Test Suite 'EditorWebKitTests' started at 2026-11-25 21:06:33.427.
+Test Case '-[ArquemestreTests.EditorWebKitTests testTamponamentoInvertidoNaoMudaTamanhoDeNadaEmTodoOCatalogo]' started (Iteration 1 of 2).
+==== linhas 5117..5202
+2026-11-25 21:17:20.698942+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109963360 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:17:20.701741+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109963750 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:17:20.704954+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109962370 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrocaDeParedeSoPeloCabecalhoDo2DSempreVisivelEPainelGuardado]' exceeded execution time allowance of 2 minutes. The test may have hung; check Xcode's test report for additional diagnostics. If the test requires additional time, use -[XCTestCase executionTimeAllowance] or one of xcodebuild's command-line overrides.
+2026-11-25 21:20:26.938338+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109962430 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:20:27.013623+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109962ee0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:20:29.902191+0000 Arquemestre[50404:391219] [Process] WebContent process (0x1281080c0) took 1.844993 seconds to launch
+2026-11-25 21:20:29.910250+0000 Arquemestre[50404:391219] [Process] GPU process (0x1281501e0) took 1.664363 seconds to launch
+ABERTURA-DIAG bateria: -[EditorWebKitTests testTrocaDeParedeSoPeloCabecalhoDo2DSempreVisivelEPainelGuardado] abriu o editor em 8.28 s
+2026-11-25 21:20:39.994950+0000 Arquemestre[50404:391614] [ProcessSuspension] WebContent[65056] 0x10f060100 - [sessionID=9223372036854775810] WebProcess::updateFreezerStatus: isFreezable=1, error=-1
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrocaDeParedeSoPeloCabecalhoDo2DSempreVisivelEPainelGuardado]' passed (204.768 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel]' started (Iteration 1 of 2).
+2026-11-25 21:20:41.636015+0000 Arquemestre[50404:391219] [Process] WebContent process (0x1281080c0) took 1.489003 seconds to launch
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel]' passed (10.390 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTudoQueSeCriaNo3DSelecionaEApagaDepoisDeSairEVoltar]' started (Iteration 1 of 2).
+2026-11-25 21:20:52.143008+0000 Arquemestre[50404:391219] [Process] WebContent process (0x1281080c0) took 1.669420 seconds to launch
+2026-11-25 21:20:57.074100+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc0960 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:01.131659+0000 Arquemestre[50404:436689] [assertion] Error acquiring assertion: <Error Domain=RBSServiceErrorDomain Code=1 "((target is not running or doesn't have entitlement com.apple.developer.web-browser-engine.rendering AND target is not running or doesn't have entitlement com.apple.developer.web-browser-engine.networking AND target is not running or doesn't have entitlement 
+2026-11-25 21:21:01.132753+0000 Arquemestre[50404:436689] [ProcessSuspension] 0x128190600 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=65253, erroTest Case '-[ArquemestreTests.EditorWebKitTests testTudoQueSeCriaNo3DSelecionaEApagaDepoisDeSairEVoltar]' passed (10.759 seconds).
+r: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTVJuntoComEletrodomesticosNumaAbaSo]' started (Iteration 1 of 2).
+2026-11-25 21:21:07.177200+0000 Arquemestre[50404:437318] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 65482 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 65482 does not exist}>
+2026-11-25 21:21:07.177683+0000 Arquemestre[50404:437318] [ProcessSuspension] 0x1281906c0 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=65482, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTVJuntoComEletrodomesticosNumaAbaSo]' passed (6.059 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testTVNaSalaETravarModulo]' started (Iteration 1 of 2).
+2026-11-25 21:21:10.074272+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x109962ac0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:10.328174+0000 Arquemestre[50404:437318] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 65683 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 65683 does not exist}>
+2026-11-25 21:21:10.328483+0000 Arquemestre[50404:437318] [ProcessSuspension] 0x128190480 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=65683, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testTVNaSalaETravarModulo]' passed (3.157 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUmToqueNaPortaDaParedeAbreEFechaComoAntes]' started (Iteration 1 of 2).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUmToqueNaPortaDaParedeAbreEFechaComoAntes]' passed (4.337 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_Alternar20VezesProjetoIgualEProjetoAntigoIgual]' started (Iteration 1 of 2).
+2026-11-25 21:21:20.394096+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fce9d40 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_Alternar20VezesProjetoIgualEProjetoAntigoIgual]' passed (8.868 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_CatalogoInteiroDesenhoSemMedidaEmMmNaTelaEmCm]' started (Iteration 1 of 2).
+2026-11-25 21:21:31.098588+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc1470 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:37.177924+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc3f60 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:40.320990+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc0000 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:44.677210+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc06f0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+2026-11-25 21:21:53.551577+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x11fcc0ae0 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_CatalogoInteiroDesenhoSemMedidaEmMmNaTelaEmCm]' passed (72.827 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_CatalogoInteiroIgualEmMmECmEListaECorteEmCm]' started (Iteration 1 of 2).
+2026-11-25 21:22:39.472364+0000 Arquemestre[50404:391219] [Process] WebContent process (0x1281080c0) took 2.523818 seconds to launch
+2026-11-25 21:23:06.677752+0000 Arquemestre[50404:391219] [general] Failed to terminate process: Error Domain=com.apple.extensionKit.errorDomain Code=18 "(null)" UserInfo={NSUnderlyingError=0x150033e40 {Error Domain=RBSRequestErrorDomain Code=3 "No such process found" UserInfo={NSLocalizedFailureReason=No such process found}}}
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_CatalogoInteiroIgualEmMmECmEListaECorteEmCm]' passed (67.585 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_EmCmMostraOMmExatoEODigitadoGravaMm]' started (Iteration 1 of 2).
+2026-11-25 21:23:46.270546+0000 Arquemestre[50404:391219] [Process] WebContent process (0x1281080c0) took 1.724923 seconds to launch
+2026-11-25 21:23:51.207343+0000 Arquemestre[50404:444135] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 67905 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 67905 does not exist}>
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_EmCmMostraOMmExatoEODigitadoGravaMm]' passed (7.059 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_PrecoQuantidadeAnguloENomesIguaisEmMmECm]' started (Iteration 1 of 2).
+2026-11-25 21:23:51.219277+0000 Arquemestre[50404:444135] [ProcessSuspension] 0x128190240 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess Background Assertion' for process with PID=67905, error: (null)
+2026-11-25 21:24:04.149852+0000 Arquemestre[50404:444135] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 67905 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 67905 does not exist}>
+2026-11-25 21:24:04.150984+0000 Arquemestre[50404:444135] [ProcessSuspension] 0x128190480 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=67905, error: (null)
+2026-11-25 21:24:04.151698+0000 Arquemestre[50404:444135] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 67905 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 67905 does not exist}>
+2026-11-25 21:24:04.151795+0000 Arquemestre[50404:444135] [ProcessSuspension] 0x128190540 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=67905, error: (null)
+ABERTURA-DIAG bateria: -[EditorWebKitTests testUNIDADE_PrecoQuantidadeAnguloENomesIguaisEmMmECm] abriu o editor em 17.36 s
+2026-11-25 21:24:10.635130+0000 Arquemestre[50404:439008] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 67913 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 67913 does not exist}>
+2026-11-25 21:24:10.635856+0000 Arquemestre[50404:439008] [ProcessSuspension] 0x128190240 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=67913, error: (null)
+2026-11-25 21:24:10.638583+0000 Arquemestre[50404:439008] [assertion] Error acquiring assertion: <Error Domain=RBSAssertionErrorDomain Code=2 "Specified target process 67913 does not exist" UserInfo={NSLocalizedFailureReason=Specified target process 67913 does not exist}>
+2026-11-25 21:24:10.638979+0000 Arquemestre[50404:439008] [ProcessSuspension] 0x128190300 - ProcessAssertion::acquireSync Failed to acquire RBS assertion 'WebProcess NearSuspended Assertion' for process with PID=67913, error: (null)
+Test Case '-[ArquemestreTests.EditorWebKitTests testUNIDADE_PrecoQuantidadeAnguloENomesIguaisEmMmECm]' passed (19.517 seconds).
+Test Case '-[ArquemestreTests.EditorWebKitTests testValoresCobraAChapaPeloQueFoiUsadoNaoAChapaInteira]' started (Iteration 1 of 2).
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult
+
+2026-11-25 21:24:26.904567+0000 Arquemestre[68180:446528] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+2026-11-25 21:24:27.161482+0000 Arquemestre[68180:446526] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+
+Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches.
+
+Test Suite 'Selected tests' started at 2026-11-25 21:24:30.120.
+Test Suite 'ArquemestreTests.xctest' started at 2026-11-25 21:24:30.121.
+Test Suite 'EditorWebKitTests' started at 2026-11-25 21:24:30.121.
+Test Case '-[ArquemestreTests.EditorWebKitTests testTrocarDeParedeEMexerNaGeladeiraNaoMoveNenhumMovel]' started (Iteration 1 of 2).
+######## build/xcodebuild-test-ipad.log
+######## xcresult (iPhone)
+Error: Failed to create a new result bundle reader, underlying error: Info.plist at /Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/build/Testes.xcresult/Info.plist does not exist, the result bundle might be corrupted or the provided path is not a result bundle
+Usage: xcresulttool <subcommand>
+  See 'xcresulttool --help' for more information.

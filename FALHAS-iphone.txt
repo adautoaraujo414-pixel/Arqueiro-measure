@@ -1,0 +1,21 @@
+commit fb2815f1ac39e00f0bdbec1f05ff66489375f530 · execução 699 · iphone ·     5416 linhas no log
+==== falhas (mensagem completa) ====
+e RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=17790, error: (null)
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:18702: error: -[ArquemestreTests.EditorWebKitTests testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer] : XCTAssertEqual failed: ("Optional(false)") is not equal to ("Optional(true)") - abrir o projeto antigo só soma o id
+Test Case '-[ArquemestreTests.EditorWebKitTests testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer]' failed (8.686 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:18702: error: -[ArquemestreTests.EditorWebKitTests testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer] : XCTAssertEqual failed: ("Optional(false)") is not equal to ("Optional(true)") - abrir o projeto antigo só soma o id
+Test Case '-[ArquemestreTests.EditorWebKitTests testIdentidadeUnicaModuloEPecaMesmaChaveNo3DListaCorteEDxfCopiaSalvarDesfazer]' failed (7.648 seconds).
+XPCConnectionTerminationWatchdog' for process with PID=75462, error: (null)
+2026-11-25 20:38:49.044309+0000 Arquemestre[12527:306908] [XPC] Handle connection with error: Connection interrupted
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:67: error: -[ArquemestreTests.EditorWebKitTests testSetinhaDoTituloDaSecaoFechaEAbreEmTodasAsAbas] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:79: error: -[ArquemestreTests.EditorWebKitTests testSetinhaDoTituloDaSecaoFechaEAbreEmTodasAsAbas] : failed: caught error: "Error Domain=WKErrorDomain Code=4 "A JavaScript exception occurred" UserInfo={WKJavaScriptExceptionLineNumber=0, WKJavaScriptExceptionMessage=ReferenceError: Can't find variable: PR, WKJavaScriptExceptionColumnNumber=0, NSLocalizedDescription=A JavaScript exception occurred}"
+Test Case '-[ArquemestreTests.EditorWebKitTests testSetinhaDoTituloDaSecaoFechaEAbreEmTodasAsAbas]' failed (108.815 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:67: error: -[ArquemestreTests.EditorWebKitTests testTocarOuSegurarOModuloNaoFechaFolgaSozinhoSoArrastandoDeLado] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+Test Case '-[ArquemestreTests.EditorWebKitTests testTocarOuSegurarOModuloNaoFechaFolgaSozinhoSoArrastandoDeLado]' failed (67.701 seconds).
+uspended Assertion' for process with PID=62862, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.ZipBackupTests testZipIdaEVolta]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 2 tests, with 0 failures (0 unexpected) in 3.196 (3.197) seconds
+	 Executed 58 tests, with 0 failures (0 unexpected) in 295.762 (296.631) seconds
+	 Executed 58 tests, with 0 failures (0 unexpected) in 295.762 (296.634) seconds

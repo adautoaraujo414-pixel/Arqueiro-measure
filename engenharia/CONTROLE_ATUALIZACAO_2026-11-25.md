@@ -39,6 +39,16 @@ Publicação: só depois da aprovação integral do Code 1 e da homologação fi
 | 21 | 100 min no passo do iPad (25/11) | Code 2 | pronto (8b8e444c) |
 | 22 | Novidades desta versão (§10) | Code 1 | pendente |
 | 24 | Regra permanente §12 do CLAUDE.md: liberdade total de composição e edição (25/11) | Chefe (registro) / Code 2 (aplicar) / Code 1 (auditar) | registrada; aplicação: o que é automático sobre o existente vira sugestão |
+| 25 | Liberdade: criação não mexe nos vizinhos → "Ajustar vizinhos ao novo módulo" só por escolha (25/11) | Code 2 | em andamento (claude/reg12-criacao) |
+| 26 | Pedra existente não acompanha sozinha (§12) → "Ajustar pedra ao balcão" (25/11) | Claude 4 | pronto (a9d07fd0) |
+| 27 | Id único em tudo (P0: id de projeto repetido), desfazer em todas as operações, isolamento (25/11) | Claude 4 | pronto (4389a4d5, 69cd9332, 5a3f4c59); enfeite e Mais opções no integrado |
+| 28 | Intermitentes com causa: FOCO-3D (900 ms), TZ-ID (rebaixo) (25/11) | Claude 4 | pronto (8e1c0ffa, 9ea77043) |
+| 29 | iOS: processos do WebKit no simulador (data store único + aquecimento, 20 s mantidos) (25/11) | Claude 4 | pronto (fb2815f1); iOS 699 rodando |
+| 30 | Enfeites só manuais + biblioteca de objetos (25/11) | Claude 3 | pronto (7a09d08) |
+| 31 | Plano de corte no iPad: margem a partir da caixa medida (2º terço) (25/11) | Code 2 | em andamento |
+| 32 | Pré-integração única (claude/pre-final) + bateria completa | Claude 4 | em andamento |
+| 33 | Revisão independente das entregas novas, com prints | Claude 3 | em andamento |
+| 34 | CI: aquecimento do iPhone + nova escolha do iPad que some (25/11) | Chefe | pronto (72f6927d) |
 | 23 | Homologação única nas 4 plataformas + publicação | Chefe | depois da aprovação do Code 1 |
 
 ## Decisões abertas com o Adauto

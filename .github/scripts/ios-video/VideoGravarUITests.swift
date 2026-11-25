@@ -25,7 +25,12 @@ final class VideoGravarUITests: XCTestCase {
             // 8ª rodada no iPad: isHittable num elemento sem área dá erro do XCTest ("Activation point invalid"); só pergunta a quem tem área
             for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && !e.frame.isEmpty && e.frame.width > 1 && e.isHittable { return e } }
             // existe mas está fora da tela (iPhone: a lista de clientes passa da altura): rola a página e tenta de novo
-            if q.count > 0 && rolou < 6 && base == nil { app.webViews.firstMatch.swipeUp(velocity: .slow); rolou += 1; continue }
+            // 25/11 (run 30): a página pode estar rolada pra baixo, com o botão ACIMA da tela; rola na direção em que ele está
+            if q.count > 0 && rolou < 6 && base == nil {
+                let y = q.element(boundBy: 0).frame.minY, wv = app.webViews.firstMatch
+                if y < wv.frame.minY { wv.swipeDown(velocity: .slow) } else { wv.swipeUp(velocity: .slow) }
+                rolou += 1; continue
+            }
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         } while Date() < fim
         return nil
@@ -90,7 +95,8 @@ final class VideoGravarUITests: XCTestCase {
             return nil
         }
         var mostrouSeletor = false
-        var abriuAlbum = false
+        var tentAlbum = 0
+        var proxAlbum = Date()
         var fimAlbum = Date().addingTimeInterval(3600)
         var alvo: XCUIElement? = nil
         var passos = 0
@@ -116,12 +122,14 @@ final class VideoGravarUITests: XCTestCase {
             }
             // 9ª rodada no iPad: depois do Close o seletor mostra os álbuns (miniaturas sem nome), não a grade; abre o álbum
             // "Videos" do seletor (o da página é "Vídeos", com acento, e fica de fora)
-            if passos > 0 && !abriuAlbum && (Date() > fimAlbum || app.images.matching(pv).count == 0) {  // 10ª: sem esperar, se não há miniatura de vídeo
-                abriuAlbum = true
-                let qa = app.descendants(matching: .any).matching(NSPredicate(format: "label == %@ OR label == %@", "Videos", "Vídeos"))
+            if passos > 0 && tentAlbum < 3 && Date() > proxAlbum && (Date() > fimAlbum || app.images.matching(pv).count == 0) {  // 10ª: sem esperar, se não há miniatura de vídeo
+                // 11ª (run 30): o álbum pode ter outro rótulo ("Videos, 1 item", célula); vale o que COMEÇA com "Videos", fora da página; até 3 vezes
+                tentAlbum += 1; proxAlbum = Date().addingTimeInterval(15)
+                let qa = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Videos"))
+                print("VIDEO-UI: álbum, tentativa \(tentAlbum): " + qa.allElementsBoundByIndex.prefix(10).map { "\($0.label) (\($0.elementType.rawValue)) \($0.frame)" }.joined(separator: " | "))
                 for i in 0..<min(qa.count, 10) {
                     let e = qa.element(boundBy: i)
-                    if e.exists && e.frame.width > 1 && !daPagina.contains(e.label) && e.label == "Videos" {
+                    if e.exists && e.frame.width > 1 && !daPagina.contains(e.label) {
                         print("VIDEO-UI: abri o álbum \"\(e.label)\" do seletor (\(e.elementType.rawValue)) em \(e.frame)")
                         if e.isHittable { e.tap() } else { e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
                         sleep(3); break

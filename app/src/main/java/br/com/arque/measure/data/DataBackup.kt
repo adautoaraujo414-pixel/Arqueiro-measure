@@ -31,6 +31,8 @@ object DataBackup {
         // área da restauração e cópias do estado anterior: ficam no aparelho, não entram no backup
         if (top == STAGING || top.startsWith(PREV_PREFIX) || rel == SWAP_MARK) return true
         val low = rel.lowercase()
+        // A cópia normal não mistura os dados e preferências da demonstração.
+        if (low.startsWith("files/arquemestre_demo/") || low.startsWith("shared_prefs/arquemestre_demo_")) return true
         // licença (teste de 3 dias, senha, mensalidade) é do aparelho: não vai no backup nem vem de um backup de outro
         if (low.startsWith("shared_prefs/arque.lic.")) return true
         return low.endsWith(".tmp") || low.endsWith("/lock") || low.endsWith("lockfile") ||
@@ -220,7 +222,9 @@ object DataBackup {
 
     /** Reinicia o app (usado depois de marcar uma restauração). */
     fun restart(ctx: Context) {
-        val i = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName) ?: return
+        val i = if (br.com.arque.measure.demo.DemoSpace.isDemo(ctx))
+            Intent(ctx, br.com.arque.measure.demo.DemoActivity::class.java)
+        else ctx.packageManager.getLaunchIntentForPackage(ctx.packageName) ?: return
         ctx.startActivity(Intent.makeRestartActivityTask(i.component))
         Runtime.getRuntime().exit(0)
     }
@@ -253,6 +257,7 @@ object DataBackup {
      * Nunca grava por cima de uma cópia que já existe e nunca apaga cópia antiga.
      */
     fun datedProjects(ctx: Context, tag: String): Boolean {
+        if (br.com.arque.measure.demo.DemoSpace.isDemo(ctx)) return false
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
         if (!File(ctx.filesDir, "moveis/projects.json").exists() && !File(ctx.filesDir, "projects").exists()) return false
         val name = (if (br.com.arque.measure.BuildConfig.TESTE) "Arquemestre-TESTE-projetos-" else "Arquemestre-projetos-") + tag + ".zip"
@@ -283,6 +288,8 @@ object DataBackup {
     }
 
     fun autoBackup(ctx: Context, force: Boolean = false): Boolean {
+        // A demonstração pode exportar manualmente seu backup, nunca sobrescreve o automático normal.
+        if (br.com.arque.measure.demo.DemoSpace.isDemo(ctx)) return false
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
         runCatching { datedCopies(ctx) }
         val sp = ctx.getSharedPreferences("arque.backup", Context.MODE_PRIVATE)

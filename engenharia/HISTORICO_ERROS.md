@@ -2587,3 +2587,16 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Correção (só no teste, só nesse campo, com comentário):** na comparação do `soOId`, `wing` ausente = 0. `loadState` não muda.
 - **Prova pedida pelo Chefe:** no mesmo cenário, o projeto antigo aberto e o original fabricam igual: peças (`partsOf`), corte (`cutLines`), orçamento (`budget` tot/venda) e DXF (`dxfPecas`), sem os ids. Controle: 10 mm a mais num módulo muda a comparação.
 - **Validação:** passa a 1366 e a 430.
+
+## CORTE-PRIORIDADE (25/11): peça sem identificação no plano com a métrica do iPad (achado do Claude 3 no 47324009; vem do c1682687) — Claude 4
+- **Reproduzir:** `window.__cpMet={AS:1.16,DS:.30}` (a métrica do iPad), "Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)" sozinho, plano de corte. A régua espaçadora 815 × 30 #2 fica sem texto e sem callout. `…TerceiroTerco` e `…TerceiroTercoEmCm` falham, a 1366 e a 430.
+- **Causa:** a etiqueta de medida da sobra ("161") cresce com a subida real da fonte (c1682687, certo pra não passar do contorno) e entra como obstáculo no `cpCallouts`. Sem outro lugar, a régua não ganha callout. Além disso, o desenho e o `cpCallouts` chamavam `cpMet()` cada um por si, e as caixas da etiqueta eram calculadas duas vezes.
+- **Correção (pedido do Chefe):**
+  - Um retrato só da métrica por chapa (`MT_`), usado pelas etiquetas das sobras, pelo `cpTxt` e pelo `cpCallouts`.
+  - As etiquetas das sobras viram lista (`SOB_`, com a caixa de cada uma) e entram no lugar delas no fim. O `cpCallouts` usa essas mesmas caixas.
+  - **Prioridade:** a identificação da peça é obrigatória. Se o callout não acha lugar, procura de novo sem as etiquetas das sobras e tira só a que ficaria embaixo dele.
+- **Sem conflito nada muda:** com a métrica normal, o SVG do plano das 24 cenas do catálogo inteiro (903 etiquetas, 38 callouts) é idêntico byte a byte ao de antes. Com a métrica do iPad também, exceto o único caso de conflito, onde sai só a etiqueta "161". O segundo terço (o 641 × 125) dá o mesmo SVG antes e depois nas duas métricas.
+- **Testes:**
+  - `testCORTEPRIORIDADE_PecaSempreIdentificadaEtiquetaDaSobraCedeLugarComMetricaDoIPad`: antes "sem identificação 1 (Caixote · régua espaçadora 30 · 815 × 30)"; agora 0, sem callout em cima de etiqueta.
+  - Os 6 terços passam a 1366 e a 430, com a métrica normal e com a do iPad forçada.
+  - Os testes de corte, sobra e chapa passam.

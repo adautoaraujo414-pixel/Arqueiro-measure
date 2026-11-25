@@ -19505,6 +19505,30 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // CORTE-PRIORIDADE (Chefe 25/11; achado do Claude 3 no merge 47324009): com a métrica do iPad (subida 1,16), a etiqueta de medida da sobra
+    // crescia e tirava o lugar do callout da peça: a régua 815×30 #2 do "Guarda-roupa de sala 2 vãos" ficava sem identificação. Regra: a
+    // identificação da peça é obrigatória e a etiqueta da sobra é opcional (sai a que ficaria embaixo do callout). Um retrato só da métrica por chapa.
+    func testCORTEPRIORIDADE_PecaSempreIdentificadaEtiquetaDaSobraCedeLugarComMetricaDoIPad() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(t){return new Promise(function(r){setTimeout(r,t)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var r=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!r&&t&&!t.act&&t.n===n)r=t})});return r?JSON.parse(JSON.stringify(r)):null};
+        var bb=function(e){var b=e.getBBox();return {x0:b.x,y0:b.y,x1:b.x+b.width,y1:b.y+b.height}},ov=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>0&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>0};
+        var cena=async function(met){if(met)window.__cpMet=met;else delete window.__cpMet;loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(T('Guarda-roupa de sala 2 vãos (cabideiro + prateleiras)'));draw();openCut();await W(60);
+          var sv=[].slice.call(document.querySelectorAll('#cutm svg')),sem=[],cobre=0,pecas=0,sob=0;
+          sv.forEach(function(s){var red=[].filter.call(s.querySelectorAll('text'),function(t){return t.getAttribute('fill')==='#d12c2c'}).map(bb);sob+=red.length;
+            [].forEach.call(s.querySelectorAll('g[data-cp]'),function(g){pecas++;var tem=[].some.call(g.querySelectorAll('text'),function(t){return String(t.textContent||'').trim()}),co=s.querySelector('[data-callout="'+CSS.escape(g.getAttribute('data-cp'))+'"]');if(!tem&&!co)sem.push(g.getAttribute('data-lab'))});
+            [].forEach.call(s.querySelectorAll('[data-callout] rect'),function(r){var b=bb(r);red.forEach(function(q){if(ov(b,q))cobre++})})});
+          document.getElementById('cutm').hidden=true;return pecas+' peças · sem identificação '+sem.length+(sem.length?' ('+sem.slice(0,2).join(' | ')+')':'')+' · callout em cima de etiqueta '+cobre+' · etiquetas de sobra '+sob};
+        R.normal=await cena(null);R.ipad=await cena({AS:1.16,DS:.30});delete window.__cpMet;
+        R.errs=__errs.length-e0;R.e=__errs.slice(e0,e0+2).join(' | ');return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["normal"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 25", "métrica normal: igual a antes")
+        XCTAssertEqual(o["ipad"] as? String, "65 peças · sem identificação 0 · callout em cima de etiqueta 0 · etiquetas de sobra 22", "métrica do iPad: a régua 815×30 ganha o callout e só sai a etiqueta da sobra que ficaria embaixo (antes: sem identificação 1)")
+        XCTAssertEqual(o["e"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     // FUNDO-15 × veio (Adauto 24/11, ordem final): na caixa amadeirada com veio, o fundo de 15 vai na chapa da caixa e segue a regra de rotação
     // das outras peças dela: não gira pra caber; o número de chapas é o do otimizador com essa regra (nenhum encaixe forçado). Peça alta que não cabe
     // sem girar fica na lista "maior que a chapa", igual às portas altas na cor já ficam hoje. Caixa branca sem veio: gira, contagem do otimizador

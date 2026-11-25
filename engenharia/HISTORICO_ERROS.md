@@ -2287,3 +2287,10 @@ Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
 - **Baterias completas, editor `639199fa`:**
   - 1366: 538/538.
   - 430: 537/538. A única falha é `testFaixaDoEspelhoLed…`, só na densidade 1; 3/3 a 430 × 2.
+- **CIs no SHA juntado `2d86496` (25/11):**
+  - Android CI, Windows CI e os 3 testes de atualização (Android, Windows, iOS iPhone + iPad, com vídeo): verdes.
+  - **iOS CI 690: vermelho.** Duas falhas, repetidas duas vezes cada:
+    1. `testNadaDeEnfeite3DEValoresParteB…`, no iPhone e no iPad. No 688 (`41a0842d`, Code 2) a mensagem foi: a caixinha de marcar ambiente (`#orcamb [data-oapk]`) e os campos Nome/Descrição do custo fixo (`#cfxform [data-cfxi]`) "não fazem nada".
+    2. `testPlanoDeCorteLegivel…`, só no iPad. No 688: "641" e "125" da contra-frente do caixote (641 × 125, guarda-roupa 4 vãos) cruzam o contorno da peça.
+  - Nos dois casos passa no Chromium, inclusive no tamanho do iPad (1032 × 1376, ×1 e ×2). A diferença é do WebKit. **Erro comprovado no iOS, causa não identificada** (sem WebKit no ambiente do Code 1).
+  - As duas baterias do iOS também estouraram o limite de 75 min do passo, então parte dos testes não rodou no 690. Não aumentei o limite.

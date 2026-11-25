@@ -18267,7 +18267,8 @@ final class EditorWebKitTests: XCTestCase {
     // DECISÕES DO ADAUTO 24/11 (itens 5 e 8): perfil G, gola vertical, facetado e cava de perfil × caixa. Cada peça da caixa onde o perfil entra ganha o rebaixo
     // do tamanho exato da parte do perfil (geometria real, sem desconto genérico): 3D recortado, nota na lista, operação no DXF, corte com a mesma medida.
     // Varredura dos 9 puxadores × catálogo: 0 interseção nova. Orientação do G e medidas homologadas iguais. Móvel de antes: aviso e "Aplicar" (nada muda sozinho)
-    func testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxf() async throws {
+    // (1º terço do catálogo + casos do G, gola, facetado e móvel de antes; o teste inteiro passou do tempo de 2 min no iPhone no iOS CI 689 (25/11): dividido em três; cada terço exige mais de 43 modelos, os três juntos mais de 130 como antes)
+    func testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfPrimeiroTerco() async throws {
         let web = try await editor()
         let o = try await run(web, #"""
         window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
@@ -18279,7 +18280,7 @@ final class EditorWebKitTests: XCTestCase {
         var sig=function(p){return [p.name,r1(p.cl),r1(p.cw),p.qty||1].join('|')};
         open3D();await W(300);
         var PX=PXT.map(function(q){return q[0]}).filter(function(k){return k!=='toque'&&k!=='passante'});var RES={};
-        for(var i=0;i<its.length;i++){var t=its[i];var a;try{a=cena(t,'toque')}catch(e){continue}if(!a)continue;nMod++;var sa=pares(a.B);
+        for(var i=Math.floor(its.length*0/3);i<Math.floor(its.length*1/3);i++){var t=its[i];var a;try{a=cena(t,'toque')}catch(e){continue}if(!a)continue;nMod++;var sa=pares(a.B);
          PX.forEach(function(k){var b;try{b=cena(t,k)}catch(e){(RES[k]=RES[k]||[]).push(t.n+': exceção');return}var sb=pares(b.B);Object.keys(sb).forEach(function(x){if(!sa[x])(RES[k]=RES[k]||[]).push(t.n+': '+x)})})}
         document.getElementById('v3x').click();R.modelos=nMod;R.varredura=Object.keys(RES).map(function(k){return k+' '+RES[k].length+' :: '+RES[k].slice(0,3).join(' | ')}).join(' ‖ ');
         
@@ -18295,13 +18296,61 @@ final class EditorWebKitTests: XCTestCase {
         R.antigo='sem marca '+r0+' · aviso '+w0+' · aplicou '+n+' · '+r1+' · aviso depois '+w1;
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
-        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 43)
         XCTAssertEqual(o["varredura"] as? String, "", "nenhum puxador entra em outra peça")
         XCTAssertEqual(o["G"] as? String, "1 · travessa 440x37x1.5,440x37x1.5 · DXF 900x70 REBAIXO_P1.5_PERFIL_G_F1,REBAIXO_P1.5_PERFIL_G_F1 · porta 676 · corte 900x70", "parede de 1,5 do G × 37 na travessa; porta com o desconto de 29 e corte iguais")
         XCTAssertEqual(o["nota"] as? Bool, true)
         XCTAssertEqual(o["GV"] as? String, "base 43x1.5x10,43x1.5x10 · travessa 70x43x1.5,70x43x1.5")
         XCTAssertEqual(o["FAC"] as? String, "300x10.5x10", "aba de trás do facetado (10 mm) nos 10,5 de cima da travessa")
         XCTAssertEqual(o["antigo"] as? String, "sem marca - · aviso true · aplicou 2 · 440x37x1.5,440x37x1.5 · aviso depois false")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // (2º terço do catálogo; dividido em três como os outros testes de catálogo inteiro: no iOS CI 689 o teste inteiro passou do tempo de 2 min no iPhone. Os casos do G, gola, facetado e móvel de antes ficam no 1º terço)
+    func testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfSegundoTerco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var P=pasMm(),r1=function(v){return Math.round(v*10)/10},A=[],B_=[],C=[],nMod=0,nPas=0,nFur=0,t0=performance.now();
+        var cena=function(t,px){loadState(initLimpo());S.W=8000;S.H=3000;S.mods=[];S.room='livre';S.env='livre';draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];if(!m)return null;(m.v||[]).forEach(function(v){v.px=px});(m.gv||[]).forEach(function(g){g.px=px});draw();__build();
+          var P_=partsOf(m),bx=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0}).map(function(b){return {pk:b.pk||b.nm,nm:String(b.nm),x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1}});return {m:m,P:P_,B:bx,cut:cutLines(m)}};
+        var pares=function(bx){var s={};for(var i=0;i<bx.length;i++){var a=bx[i];if(!/Porta|Frente/.test(a.nm))continue;for(var j=0;j<bx.length;j++){var b=bx[j];if(a.pk===b.pk)continue;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1&&oy>1&&oz>1)s[a.pk+' × '+b.pk]=1}}return s};
+        var sig=function(p){return [p.name,r1(p.cl),r1(p.cw),p.qty||1].join('|')};
+        open3D();await W(300);
+        var PX=PXT.map(function(q){return q[0]}).filter(function(k){return k!=='toque'&&k!=='passante'});var RES={};
+        for(var i=Math.floor(its.length*1/3);i<Math.floor(its.length*2/3);i++){var t=its[i];var a;try{a=cena(t,'toque')}catch(e){continue}if(!a)continue;nMod++;var sa=pares(a.B);
+         PX.forEach(function(k){var b;try{b=cena(t,k)}catch(e){(RES[k]=RES[k]||[]).push(t.n+': exceção');return}var sb=pares(b.B);Object.keys(sb).forEach(function(x){if(!sa[x])(RES[k]=RES[k]||[]).push(t.n+': '+x)})})}
+        document.getElementById('v3x').click();R.modelos=nMod;R.varredura=Object.keys(RES).map(function(k){return k+' '+RES[k].length+' :: '+RES[k].slice(0,3).join(' | ')}).join(' ‖ ');
+        
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 43)
+        XCTAssertEqual(o["varredura"] as? String, "", "nenhum puxador entra em outra peça")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // (3º terço do catálogo; dividido em três como os outros testes de catálogo inteiro: no iOS CI 689 o teste inteiro passou do tempo de 2 min no iPhone. Os casos do G, gola, facetado e móvel de antes ficam no 1º terço)
+    func testRebaixoDoPerfilGGolaFacetadoNaCaixaVarreduraZeroInterseccaoListaCorteEDxfTerceiroTerco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var R={},e0=__errs.length;window.toast=function(){};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={};
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var P=pasMm(),r1=function(v){return Math.round(v*10)/10},A=[],B_=[],C=[],nMod=0,nPas=0,nFur=0,t0=performance.now();
+        var cena=function(t,px){loadState(initLimpo());S.W=8000;S.H=3000;S.mods=[];S.room='livre';S.env='livre';draw();newTpl(JSON.parse(JSON.stringify(t)));var m=S.mods[0];if(!m)return null;(m.v||[]).forEach(function(v){v.px=px});(m.gv||[]).forEach(function(g){g.px=px});draw();__build();
+          var P_=partsOf(m),bx=__boxes().filter(function(b){return parseInt(String(b.nm),10)===0}).map(function(b){return {pk:b.pk||b.nm,nm:String(b.nm),x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,z0:b.z0,z1:b.z1}});return {m:m,P:P_,B:bx,cut:cutLines(m)}};
+        var pares=function(bx){var s={};for(var i=0;i<bx.length;i++){var a=bx[i];if(!/Porta|Frente/.test(a.nm))continue;for(var j=0;j<bx.length;j++){var b=bx[j];if(a.pk===b.pk)continue;var ox=Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0),oy=Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0),oz=Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0);if(ox>1&&oy>1&&oz>1)s[a.pk+' × '+b.pk]=1}}return s};
+        var sig=function(p){return [p.name,r1(p.cl),r1(p.cw),p.qty||1].join('|')};
+        open3D();await W(300);
+        var PX=PXT.map(function(q){return q[0]}).filter(function(k){return k!=='toque'&&k!=='passante'});var RES={};
+        for(var i=Math.floor(its.length*2/3);i<Math.floor(its.length*3/3);i++){var t=its[i];var a;try{a=cena(t,'toque')}catch(e){continue}if(!a)continue;nMod++;var sa=pares(a.B);
+         PX.forEach(function(k){var b;try{b=cena(t,k)}catch(e){(RES[k]=RES[k]||[]).push(t.n+': exceção');return}var sb=pares(b.B);Object.keys(sb).forEach(function(x){if(!sa[x])(RES[k]=RES[k]||[]).push(t.n+': '+x)})})}
+        document.getElementById('v3x').click();R.modelos=nMod;R.varredura=Object.keys(RES).map(function(k){return k+' '+RES[k].length+' :: '+RES[k].slice(0,3).join(' | ')}).join(' ‖ ');
+        
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 43)
+        XCTAssertEqual(o["varredura"] as? String, "", "nenhum puxador entra em outra peça")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
@@ -18725,7 +18774,7 @@ final class EditorWebKitTests: XCTestCase {
           R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
           [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
            if(!dentro(b,sheet))why.push('fora da chapa');
-           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins))why.push('cruza o contorno da peça')}
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
            else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
            if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
            if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
@@ -18774,7 +18823,7 @@ final class EditorWebKitTests: XCTestCase {
           R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
           [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
            if(!dentro(b,sheet))why.push('fora da chapa');
-           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins))why.push('cruza o contorno da peça')}
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
            else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
            if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
            if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
@@ -18823,7 +18872,7 @@ final class EditorWebKitTests: XCTestCase {
           R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
           [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
            if(!dentro(b,sheet))why.push('fora da chapa');
-           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins))why.push('cruza o contorno da peça')}
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
            else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
            if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
            if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});

@@ -25,7 +25,7 @@ final class VideoGravarUITests: XCTestCase {
             // 8ª rodada no iPad: isHittable num elemento sem área dá erro do XCTest ("Activation point invalid"); só pergunta a quem tem área
             // 25/11 (run 31): nem a quem está fora da janela (rolado pra cima): o mesmo erro; esse vai pra rolagem abaixo
             let janela = app.windows.firstMatch.frame
-            for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && !e.frame.isEmpty && e.frame.width > 1 && janela.contains(CGPoint(x: e.frame.midX, y: e.frame.midY)) && e.isHittable { return e } }
+            for i in 0..<min(q.count, 12) { let e = q.element(boundBy: i); if e.exists && !e.frame.isEmpty && e.frame.width > 1 && janela.contains(CGPoint(x: e.frame.midX, y: e.frame.midY)) { return e } }  // run 32: isHittable falha nesse elemento do WebKit mesmo dentro da janela; decide pela posição
             // existe mas está fora da tela (iPhone: a lista de clientes passa da altura): rola a página e tenta de novo
             // 25/11 (run 30): a página pode estar rolada pra baixo, com o botão ACIMA da tela; rola na direção em que ele está
             if q.count > 0 && rolou < 6 && base == nil {
@@ -40,7 +40,7 @@ final class VideoGravarUITests: XCTestCase {
 
     private func toca(_ textos: [String], contem: Bool = false, ate: TimeInterval = 30) throws {
         guard let e = acha(textos, contem: contem, ate: ate) else { mostra("não achei \(textos)"); XCTFail("FALHA-VIDEO-UI: não achei \(textos)"); throw Falha() }
-        print("VIDEO-UI: toquei \"\(e.label)\""); e.tap()
+        print("VIDEO-UI: toquei \"\(e.label)\""); e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     func testGravarVideoPeloEditorDaVersaoPublicada() throws {

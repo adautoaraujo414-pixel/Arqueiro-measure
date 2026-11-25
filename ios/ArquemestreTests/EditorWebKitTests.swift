@@ -19516,4 +19516,26 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["ex"] as? String, "")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
+
+    // FOCO-3D (Chefe 25/11, intermitente "chips[1] undefined" do testSoOModulo3DE2D… sob carga). Causa no app: 900 ms depois de abrir o 3D
+    // o autodiagnóstico (PEDIDO 45) contava os módulos escondidos de propósito pelo "só o módulo" como 3D quebrado (ou rodava com o 3D já fechado),
+    // relia o projeto e perdia o foco / o "2D só ele" — a barra ficava na tela e o ✏️ 2D só ele não fazia nada. Reproduz sem carga: é só focar
+    // ou fechar antes de 0,9 s. O conserto do 3D quebrado de verdade continua (testado no PEDIDO 45).
+    func testFOCO3D_FocarOuFecharLogoDepoisDeAbrirO3DNaoReleOProjetoNemPerdeOFoco() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        demoScene();draw();var loads=0,l0=window.loadState;window.loadState=function(){loads++;return l0.apply(this,arguments)};
+        /* 1) abre o 3D e já foca o módulo 4 */open3D();focOn(3,'front');await W(1500);
+        R.foco=!!window.FOC3+' · mi '+(window.FOC3&&window.FOC3.mi)+' · releu '+loads;
+        /* 2) ✏️ 2D só ele funciona */var b2=document.querySelector('#foc3 [data-fc2d]');var m=S.mods[3];if(b2)b2.click();await W(100);R.so2d=(window.SOLO2===m)+' · chips '+document.querySelectorAll('#solobar [data-sov]').length;
+        /* 3) 🧊 3D só ele e fecha logo: volta pro 2D só dele e continua nele depois dos 900 ms */document.querySelector('#solobar [data-so3]').click();await W(50);document.getElementById('v3x').click();await W(1500);
+        R.volta=(window.SOLO2===m)+' · releu '+loads;
+        try{document.querySelector('#solobar [data-sox]').click()}catch(_){}window.loadState=l0;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["foco"] as? String, "true · mi 3 · releu 0", "focar logo depois de abrir o 3D não relê o projeto nem perde o foco")
+        XCTAssertEqual(o["so2d"] as? String, "true · chips 1", "o ✏️ 2D só ele abre o 2D do módulo")
+        XCTAssertEqual(o["volta"] as? String, "true · releu 0", "fechar o 3D só dele em menos de 0,9 s volta pro 2D só dele e fica")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
 }

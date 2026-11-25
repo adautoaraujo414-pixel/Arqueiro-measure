@@ -1,0 +1,19 @@
+commit c624f1c672c437e3f9cb902d41fbb24e53c57889 · execução 700 · iphone ·     6535 linhas no log
+==== falhas (mensagem completa) ====
+onTerminationWatchdog' for process with PID=45923, error: (null)
+2026-11-25 21:49:44.760451+0000 Arquemestre[9990:272785] [XPC] Handle connection with error: Connection interrupted
+quireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=49093, error: (null)
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:64: error: -[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+2026-11-25 22:27:47.823439+0000 Arquemestre[9990:37978] [Process] WebContent[90959] 0x104a90008 - [webPag/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:76: error: -[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor] : failed: caught error: "Error Domain=WKErrorDomain Code=4 "A JavaScript exception occurred" UserInfo={WKJavaScriptExceptionLineNumber=0, WKJavaScriptExceptionMessage=ReferenceError: Can't find variable: PR, WKJavaScriptExceptionColumnNumber=0, NSLocalizedDescription=A JavaScript exception occurred}"
+Test Case '-[ArquemestreTests.EditorWebKitTests testTorrePortasSeparadasPortasAbremMoverDe2ToquesEPlantaSemSobrepor]' failed (137.857 seconds).
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:64: error: -[ArquemestreTests.EditorWebKitTests testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel] : Asynchronous wait failed: Exceeded timeout of 60 seconds, with unfulfilled expectations: "editor carregado".
+/Users/runner/work/Arqueiro-measure/Arqueiro-measure/ios/ArquemestreTests/EditorWebKitTests.swift:76: error: -[ArquemestreTests.EditorWebKitTests testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel] : failed: caught error: "Error Domain=WKErrorDomain Code=4 "A JavaScript exception occurred" UserInfo={WKJavaScriptExceptionLineNumber=0, WKJavaScriptExceptionMessage=ReferenceError: Can't find variable: PR, WKJavaScriptExceptionColumnNumber=0, NSLocalizedDescription=A JavaScript exception occurred}"
+Test Case '-[ArquemestreTests.EditorWebKitTests testTresToquesEncaixaNaPedraComPingadeiraEEsticaOMovel]' failed (208.297 seconds).
+ocessAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=91850, error: (null)
+essAssertion::acquireSync Failed to acquire RBS assertion 'XPCConnectionTerminationWatchdog' for process with PID=93808, error: (null)
+==== último teste que começou (se o passo foi interrompido) ====
+Test Case '-[ArquemestreTests.ZipBackupTests testZipIdaEVolta]' started (Iteration 1 of 2).
+==== totais ====
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.336 (0.337) seconds
+	 Executed 57 tests, with 0 failures (0 unexpected) in 123.488 (125.091) seconds
+	 Executed 57 tests, with 0 failures (0 unexpected) in 123.488 (125.092) seconds

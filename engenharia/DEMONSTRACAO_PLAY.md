@@ -2,7 +2,7 @@
 
 Pedido direto: resolver o acesso de revisão; o responsável escolheu “Incluir demonstração com dados separados”.
 
-Base congelada: `c5611206bdc394cd2c71883606b76d5a32cc3374` (AAB 660). Não integra as alterações de fechamento de outras branches.
+Implementação inicial sobre `c5611206bdc394cd2c71883606b76d5a32cc3374` (AAB 660). Depois integrada, sem alterar a branch do Claude, ao fechamento `7e2421a4fd08bf24243cabfbdf77626b6c4871fc`. A base da revisão é `claude/fechamento-code1`; o diff deve conter apenas a demonstração, seus testes e documentação.
 
 ## Comportamento
 

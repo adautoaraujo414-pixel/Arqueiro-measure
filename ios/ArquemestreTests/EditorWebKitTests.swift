@@ -410,7 +410,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["teto"] as? String, "870x350", "teto entre as laterais")
         XCTAssertEqual(o["sides"] as? String, "LRTB|B|B|LRTB||T||TB|LRTB", "regra do lado da fita por peça")
         XCTAssertEqual(o["btn"] as? Bool, true, "botão Imprimir / PDF na lista")
-        XCTAssertEqual(o["heads"] as? String, "#,Peça,Compr. × Larg.,Qtd,Fita,☐", "tabela da chapa: número, peça, medida, qtd, lado da fita e ☐")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da coluna de medida ("(mm)" no padrão)
+        XCTAssertEqual(o["heads"] as? String, "#,Peça,Compr. × Larg. (mm),Qtd,Fita,☐", "tabela da chapa: número, peça, medida (com a unidade), qtd, lado da fita e ☐")
         XCTAssertEqual(o["hd"] as? Bool, true, "cabeçalho de impressão com ordem e data")
         XCTAssertEqual(o["greens"] as? Bool, true, "lado da fita em verde no desenho da chapa")
         XCTAssertEqual(o["opt"] as? Int, 2, "opção de caixaria: por dentro / por fora")
@@ -19225,7 +19226,7 @@ final class EditorWebKitTests: XCTestCase {
         arqueUnidade('cm');await W(30);
         R.cm=[unRawGet(IN('w')),IN('w').value,unRawGet(ES()),ES().value].join(' · ');
         R.cota=[].some.call(document.querySelectorAll('#svg text'),function(t){return t.textContent==='69,5'});
-        R.texto=[UN.conv('695'),UN.conv('15'),UN.conv('35 mm'),UN.len(695),UN.len('900 × 560'),UN.conv('#3 · 1/1 · 31% · R$ 1.112,04 · Base 1 ×2 · 90°'),UN.num('695')].join(' | ');
+        R.texto=[UN.num('695'),UN.num('15'),UN.num('35'),UN.len(695),UN.len('900 × 560'),UN.num('634,5'),UN.parse('69,5'),UN.parse('69.5')].join(' | ');
         R.sufixo=IN('w').classList.contains('unlen')+' '+IN('w').getAttribute('data-un')+' · tag '+((document.getElementById('untag')||{}).textContent||'');
         /* teclado do app: 6 9 , 5 OK → 695 mm */var key=function(c){document.querySelector('#calcbar button[data-c="'+c+'"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))};
         S.m.w=900;draw();panel();await W(30);IN('w').focus();await W(30);['6','9',',','5'].forEach(key);R.teclado=unRawGet(IN('w'));key('ok');await W(60);R.virgula=S.m.w;
@@ -19239,8 +19240,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["mm"] as? String, "695 · 695 · 15")
         XCTAssertEqual(o["cm"] as? String, "69,5 · 695 · 1,5 · 15", "na tela 69,5 e 1,5; quem lê o campo recebe mm")
         XCTAssertEqual(o["cota"] as? Bool, true, "cota do 2D em cm")
-        XCTAssertEqual(o["texto"] as? String, "69,5 | 1,5 | 3,5 cm | 69,5 cm | 90 × 56 cm | #3 · 1/1 · 31% · R$ 1.112,04 · Base 1 ×2 · 90° | 69,5", "número de peça, %, R$, ângulo e quantidade não mudam")
-        XCTAssertEqual(o["sufixo"] as? String, "true cm · tag Medidas em cm", "a unidade fica escrita no campo e no desenho")
+        XCTAssertEqual(o["texto"] as? String, "69,5 | 1,5 | 3,5 | 69,5 cm | 90 × 56 cm | 63,45 | 695 | 695", "o formatador e a leitura únicos: só a vírgula anda")
+        XCTAssertEqual(o["sufixo"] as? String, "true cm · tag Cotas em cm", "a unidade fica escrita no campo e no desenho")
         XCTAssertEqual(o["teclado"] as? String, "69.5")
         XCTAssertEqual(o["virgula"] as? Double, 695, "69,5 cm grava 695 mm")
         XCTAssertEqual(o["conta"] as? Double, 725, "70 + 2,5 cm = 725 mm")
@@ -19322,6 +19323,39 @@ final class EditorWebKitTests: XCTestCase {
         R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
         XCTAssertEqual(o["iguais"] as? String, "true · orçamento true · itens true", "preço, %, ângulo, quantidade, nº e nome iguais: \(o["dif"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (pedido do Chefe 25/11, item d): varredura de TODO o catálogo, em todos os ambientes — vista de frente, planta e painéis.
+    // Em cm, todo texto de medida do desenho sai convertido na origem; nenhum número que não é medida muda (nº de peça, litros, %, °,
+    // quantidade de módulos, "Base 1") e nenhuma palavra muda (só mm → cm).
+    func testUNIDADE_CatalogoInteiroDesenhoSemMedidaEmMmNaTelaEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&L.indexOf(t)<0)L.push(t)})});
+        var col=function(){return [].map.call(document.querySelectorAll('svg text'),function(t){return (t.textContent||'').trim()})};
+        var NAO=/#\d|\d\s?L\b|\d\s?%|\d\s?°|\d+ módulos|^\d+\/\d+$/,forma=function(t,u){return t.replace(/\d+(?:[.,]\d+)?/g,'N').replace(new RegExp('\\b'+u+'\\b','g'),'U')};
+        var cenas=0,textos=0,iguais=[],palavra=[],naoMedida=[],convertidos=0;
+        for(var r=0;r<ROOMS.length;r++){var O={};
+         for(var u of ['mm','cm']){arqueUnidade(u);loadState(initLimpo());S.W=5000;S.tab=9;panel();var rb=document.querySelector('[data-room="'+ROOMS[r][0]+'"]');if(rb)rb.click();await W(15);
+          for(var i=r;i<L.length;i+=4){try{newTpl(JSON.parse(JSON.stringify(L[i])))}catch(e){}}draw();var A=O[u]={f:col()};try{window.PLV=1;draw();A.p=col();window.PLV=0;draw()}catch(e){}
+          for(var tb=0;tb<=10;tb++){S.tab=tb;try{panel()}catch(e){}A['t'+tb]=col()}}
+         cenas++;Object.keys(O.mm).forEach(function(k){var a=O.mm[k]||[],b=O.cm[k]||[];a.forEach(function(x,i){var y=b[i];if(y==null||!/\d/.test(x))return;textos++;
+          if(forma(x,'mm')!==forma(y,'cm'))palavra.push(x+' → '+y);
+          var nx=(x.match(/#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g)||[]).join(','),ny=(y.match(/#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g)||[]).join(',');if(nx!==ny)naoMedida.push(x+' → '+y);
+          if(x!==y)convertidos++;else if(/\d\d/.test(x.replace(/[A-Za-z]+\d[\w-]*|\d+[A-Za-z][\w-]*|#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g,'')))iguais.push(ROOMS[r][0]+'/'+k+': '+x)/* código de modelo (RS65R, CRB39) não é medida */})})}
+        arqueUnidade('mm');
+        R.varredura=cenas+' ambientes · '+textos+' textos com número · convertidos '+(convertidos>500);
+        R.medidaEmMm=iguais.length+(iguais.length?' ('+iguais.slice(0,4).join(' ; ')+')':'');
+        R.palavras=palavra.length+(palavra.length?' ('+palavra.slice(0,4).join(' ; ')+')':'');
+        R.naoMedida=naoMedida.length+(naoMedida.length?' ('+naoMedida.slice(0,4).join(' ; ')+')':'');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["varredura"] as? String)?.hasSuffix("convertidos true"), true, "\(o["varredura"] ?? "")")
+        XCTAssertEqual(o["medidaEmMm"] as? String, "0", "em cm nenhuma cota do desenho fica no número em mm")
+        XCTAssertEqual(o["palavras"] as? String, "0", "nenhuma palavra do desenho muda (só mm → cm)")
+        XCTAssertEqual(o["naoMedida"] as? String, "0", "nº de peça, litros, %, ° e nº de módulos iguais")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

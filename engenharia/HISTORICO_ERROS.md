@@ -2203,8 +2203,13 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Baterias completas, editor `7835d4b390bd` (= HEAD), Swift do `3dbbd50`:** 1366 528/529 e 430 528/529.
   - A única falha nas duas é `testMoverNo3DEncaixaNaParede…`, da versão do teste anterior ao `d0a715db`.
   - Rodado de novo no HEAD, junto com FASE4, caneco, giro e D23: 11/11 em 1366 e 11/11 em 430.
-- **Vídeo na atualização do iOS: ainda não coberto.**
-  - Dados: iPhone e iPad iguais (8/8 e 4/4), projetos abrem iguais.
-  - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
-  - Causa ainda não comprovada. Hipótese: o `app.tap()` no meio da tela fecha o balão do iPad antes da escolha.
-  - Rodada `7751eeb`: sem esse toque, com a tela registrada no seletor aberto e depois do toque.
+- **Vídeo na atualização do iOS: coberto em 25/11 (`02e5269`, run 27).** iPhone 17 Pro Max e iPad Pro 13 (iOS 26.5, simulador). O app não mudou em nenhuma rodada: só o teste.
+  - Causas no teste, achadas rodada a rodada pelo log:
+    1. O seletor do iOS 26 abre com o aviso "Location Is Included · Learn More…" por cima da grade. O teste tocava no ícone do aviso (`PickerOnboardingHeaderViewIcon`). Agora fecha no "Close".
+    2. A miniatura do vídeo (seletor = outro processo) não é "hittable". O toque vai pela posição.
+    3. No iPad o seletor abre nos álbuns. O teste abre o álbum "Videos" do seletor.
+    4. `isHittable` num elemento sem área dá erro do XCTest. Só pergunta a quem tem área.
+    5. O teste do editor novo abria em `.nonPersistent`, onde o vídeo restaurado não chegava ao banco do editor. No Chromium o mesmo caminho acha o vídeo em 315 ms. Agora usa um armazenamento de verdade, novo e vazio, como o app.
+  - Resultado nos dois: a versão publicada gravou pelo seletor (`video_*.json`), 12/12 arquivos iguais depois da atualização, o editor novo acha o vídeo igual byte a byte (sha f1723490…) e toca ("tocou até 0,78 s de 2,00 s"). Falhas 0.
+- **Android e Windows no editor final (`7751eeb`):** apk-660 → 90031, falhas 0, vídeo igual byte a byte e tocando; win-166 verde.
+- **Aparelho real: não testado.**

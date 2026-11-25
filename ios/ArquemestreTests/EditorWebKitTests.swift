@@ -410,7 +410,8 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["teto"] as? String, "870x350", "teto entre as laterais")
         XCTAssertEqual(o["sides"] as? String, "LRTB|B|B|LRTB||T||TB|LRTB", "regra do lado da fita por peça")
         XCTAssertEqual(o["btn"] as? Bool, true, "botão Imprimir / PDF na lista")
-        XCTAssertEqual(o["heads"] as? String, "#,Peça,Compr. × Larg.,Qtd,Fita,☐", "tabela da chapa: número, peça, medida, qtd, lado da fita e ☐")
+        // UNIDADE (pedido do Adauto 25/11, via Chefe): a unidade fica escrita no cabeçalho da coluna de medida ("(mm)" no padrão)
+        XCTAssertEqual(o["heads"] as? String, "#,Peça,Compr. × Larg. (mm),Qtd,Fita,☐", "tabela da chapa: número, peça, medida (com a unidade), qtd, lado da fita e ☐")
         XCTAssertEqual(o["hd"] as? Bool, true, "cabeçalho de impressão com ordem e data")
         XCTAssertEqual(o["greens"] as? Bool, true, "lado da fita em verde no desenho da chapa")
         XCTAssertEqual(o["opt"] as? Int, 2, "opção de caixaria: por dentro / por fora")
@@ -14573,6 +14574,62 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* TOQUE-430 · revisão do Code 2 (25/11): a correção descia a planta só no espaço que sobrava embaixo; numa cena funda (cozinha de 4000 com
+       o balcão na ponta) não sobra nada e 12 de 35 pontos do módulo continuavam embaixo de 🔓 🗑 🧮. Agora o desenho sai de baixo dos botões
+       e a escala diminui só o que faltar (com espaço sobrando, igual a antes). Vale em qualquer tela; a 1366 os botões não chegam no desenho. */
+    func testPlantaFundaNoCelularNenhumPontoDoMovelEmbaixoDosBotoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var R={},ruim=[],tot=0;
+        var cenas=[[4000,'dir'],[4000,'esq'],[3000,'dir'],[2600,'dir'],[2200,'esq']];
+        for(var c=0;c<cenas.length;c++){loadState(initLimpo());S.env='cozinha';S.W=cenas[c][0];S.H=2600;newTpl(T('Balcão 2 portas'));var m=S.mods[0];m.x=cenas[c][1]==='dir'?S.W-m.w-5:5;PLV=true;draw();await W(60);
+          var el=document.querySelector('[data-pm="0"]');if(!el){ruim.push('cena '+c+': sem módulo na planta');continue}var b=el.getBoundingClientRect(),n=0,emb=0;
+          for(var i=1;i<=7;i++)for(var j=1;j<=5;j++){var x=b.left+b.width*i/8,y=b.top+b.height*j/6;n++;var e=document.elementFromPoint(x,y);if(e&&e.closest&&e.closest('#lockAll,#delMod,#cutc'))emb++}
+          tot+=n;if(emb)ruim.push('cena '+c+' ('+cenas[c].join('/')+'): '+emb+' de '+n+' pontos embaixo dos botões')}
+        PLV=false;draw();R.ruim=ruim.join(' | ')||'ok';R.pontos=tot;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertGreaterThanOrEqual(o["pontos"] as? Int ?? 0, 150)
+        XCTAssertEqual(o["ruim"] as? String, "ok", "nenhum ponto do móvel embaixo de 🔓 🗑 🧮 na planta")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    /* A31 · revisão do Code 2 (25/11, pedido do Chefe): três defeitos da correção A31.
+       1) Régua do aéreo encurtada até o mínimo de 50 saía do módulo (50 em 747 num aéreo de 750): o mínimo era aplicado depois do limite do topo.
+       2) Rodapé esticado pela seta passava pelas gavetas ("Rodapé (pedestal) em 0:Lateral de gaveta"): o limite só olhava folga + espessuras.
+       3) PROJETO ANTIGO MUDAVA: num módulo antigo com ajuste guardado no rodapé ({et:60}), mexer na seta da PORTA convertia o rodapé
+          (rodMm 100→160), a base subia e as portas mudavam. Regra (§3): só muda o que a pessoa mexeu, naquele gesto. */
+    func testA31ReguaNaoSaiDoModuloRodapeNaoEntraNaGavetaEProjetoAntigoNaoMuda() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return it?JSON.parse(JSON.stringify(it)):null};
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var puxa=async function(pk,k,px){__e3open(0,pk);await W(30);var h=document.querySelector('[data-hk="'+k+'"]'),opp={et:'eb',eb:'et',el:'er',er:'el'}[k],o=document.querySelector('[data-hk="'+opp+'"]');if(!h)return false;var r1_=h.getBoundingClientRect(),x=r1_.left+15,y=r1_.top+15,dx=0,dy=-1;if(o){var ro=o.getBoundingClientRect();dx=x-(ro.left+15);dy=y-(ro.top+15);var L=Math.hypot(dx,dy)||1;dx/=L;dy/=L}var ev=function(n,X,Y){var tg_=n==='pointerdown'?h:(document.querySelector('[data-hk="'+k+'"]')||document.getElementById('cv3'));tg_.dispatchEvent(new PointerEvent(n,{bubbles:true,cancelable:true,pointerId:52,clientX:X,clientY:Y,isPrimary:true,pointerType:'touch'}))};ev('pointerdown',x,y);for(var i=1;i<=8;i++){ev('pointermove',x+dx*px/8*i,y+dy*px/8*i);await W(15)}ev('pointerup',x+dx*px,y+dy*px);await W(80);return true};
+        var dentro=function(){__build();var B=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'}),bad='';B.forEach(function(a){if(bad||!/^0:(Rodapé \(pedestal\)|Régua espaçadora)/.test(a.nm))return;B.forEach(function(b){if(bad||a===b||/^0:(Rodapé|Régua espaçadora|Tamponamento|Corte do|Pé )/.test(b.nm))return;if(Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>1&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>1&&Math.min(a.z1,b.z1)-Math.max(a.z0,b.z0)>1)bad=a.nm+' em '+b.nm})});return bad};
+        var novo=function(t){loadState(initLimpo());S.env='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(m){m.x=1500;draw();__build()}return m};
+        open3D();await W(300);var reg=[],rod=[],nr=0,nd=0;
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i])),m=novo(t);if(!m)continue;
+          var R=partsOf(m).filter(function(p){return /^Régua espaçadora do canto/.test(p.name)})[0];
+          if(R){nr++;var y0=R.y,h0=R.h;/* pela seta (gesto) e pelo ajuste guardado que encurta até sobrar 20 mm encostado no topo ou na base: o mínimo de 50 tem que caber dentro */var casos=[['eb',-600,null],['et',-600,null],['eb',0,{v2:1,eb:-(h0-20)}],['et',0,{v2:1,et:-(h0-20)}]];
+            for(var g=0;g<casos.length;g++){m=novo(JSON.parse(JSON.stringify(mods[i])));if(casos[g][2]){m.po=m.po||{};m.po[R.pk]=casos[g][2];draw()}else await puxa(R.pk,casos[g][0],casos[g][1]);var R1=partsOf(m).filter(function(p){return p.pk===R.pk})[0];if(!R1||R1.y<Math.min(0,y0)-0.5||R1.y+R1.h>m.h+0.5||R1.h<49.5)reg.push(t.n+' ('+casos[g][0]+(casos[g][2]?' guardado':'')+'): régua '+(R1?R1.h+' em '+R1.y+' num módulo de '+m.h:'sumiu'))}m=novo(JSON.parse(JSON.stringify(mods[i])))}
+          if(/Gaveteiro|Cômoda|Criado-mudo|Escrivaninha|gavetas/.test(t.n)){var D=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0];if(D){nd++;await puxa(D.pk,'et',600);var dd=dentro();if(dd)rod.push(t.n+': rodapé '+m.rodMm+' · '+dd)}}}
+        /* projeto antigo: ajuste guardado no rodapé por versão anterior; mexer só na porta não pode mudar o rodapé */
+        var m=novo(T('Balcão 2 portas')),D=partsOf(m).filter(function(p){return p.name==='Rodapé (pedestal)'})[0],P=partsOf(m).filter(function(p){return /^Porta/.test(p.name)})[0];
+        m.po=m.po||{};m.po[D.pk]={v2:1,et:60};var r0=+m.rodMm,f0=partsOf(m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return p.cw}).join(',');
+        await puxa(P.pk,'er',20);var f1=partsOf(m).filter(function(p){return /^Porta/.test(p.name)}).map(function(p){return p.cw}).join(',');
+        var antigo=(+m.rodMm===r0?'':'rodMm '+r0+'→'+m.rodMm+' ')+((m.po[D.pk]&&m.po[D.pk].et===60)?'':'ajuste do rodapé sumiu ')+(f0===f1?'':'altura das portas '+f0+'→'+f1);
+        document.getElementById('v3x').click();return JSON.stringify({regua:reg.join(' | ')||'ok',reguas:nr,rodape:rod.join(' | ')||'ok',gaveteiros:nd,antigo:antigo||'igual',errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThanOrEqual(o["reguas"] as? Int ?? 0, 8, "os modelos com régua espaçadora")
+        XCTAssertEqual(o["regua"] as? String, "ok", "encurtada até o mínimo, a régua fica dentro do módulo")
+        XCTAssertGreaterThanOrEqual(o["gaveteiros"] as? Int ?? 0, 4, "gaveteiros, cômoda, criado-mudo, escrivaninha")
+        XCTAssertEqual(o["rodape"] as? String, "ok", "o rodapé esticado pela seta para antes das gavetas")
+        XCTAssertEqual(o["antigo"] as? String, "igual", "mexer na porta não converte o ajuste antigo guardado no rodapé")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* B26 (checklist; decisão do Adauto 24/11: "peça flutuante: investigar a causa e corrigir"): no 3D de cada modelo do catálogo, toda peça
        de fabricação (o que vai pro corte) encosta em outra peça, no chão ou na parede — nenhuma fica solta no ar. O eletro desenhado e as
        ferragens (noCut) ficam de fora; o cabideiro do "Armário sem laterais" se apoia nas laterais dos vizinhos (conferido entre dois guarda-roupas).
@@ -17905,7 +17962,7 @@ final class EditorWebKitTests: XCTestCase {
         var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
         loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2600;S.fr=[];draw();var a=espWallAdd(4);a.x=150;draw();var med=JSON.stringify([a.x,a.b,a.w,a.h,a.d]);open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
         var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),cx=a.x+a.w/2,cy=a.b+a.h/2,rr=a.w/2-60;
-        var faixa=function(){var r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),n=0;for(var k=0;k<24;k++){var t=Math.PI*2*k/24,p=__p3(cx+rr*Math.cos(t),cy+rr*Math.sin(t),4.2);gl.readPixels(Math.round(p[0]*r),Math.round(H-p[1]*r),1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);if(px[0]>=235&&px[0]-px[2]>=12)n++}return n};
+        var faixa=function(){var r=Math.min(2,window.devicePixelRatio||1),H=gl.drawingBufferHeight,px=new Uint8Array(4),n=0;for(var k=0;k<24;k++){var t=Math.PI*2*k/24,p=__p3(cx+rr*Math.cos(t),cy+rr*Math.sin(t),4.2);/* 25/11: na tela pequena (430) a faixa de 40 mm tem 2 a 3 px e o ponto projetado (arredondado) cai a 1 px dela, pra dentro ou pra fora; conta o ponto e os vizinhos a 1 px (o arredondamento da projeção). A faixa atrás do vidro (o defeito ESP-FAIXA) continua sem nenhum aceso */var X=Math.round(p[0]*r),Y=Math.round(H-p[1]*r),ac=0;for(var dx=-1;dx<=1&&!ac;dx++)for(var dy=-1;dy<=1&&!ac;dy++){gl.readPixels(X+dx,Y+dy,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);if(px[0]>=235&&px[0]-px[2]>=12)ac=1}if(ac)n++}return n};
         var piores=[];for(var ni=0;ni<2;ni++){fx3api.night(ni);['auto','equil','alta'].forEach(function(q){window.ESPQ=q;var m=24;[[1.05,-.5],[1.05,.5],[1.3,-.5],[1.05,0]].forEach(function(z){__cam(z[1],.12,z[0]);m=Math.min(m,faixa())});piores.push(m)})}
         window.ESPQ='';fx3api.night(0);R.pior=Math.min.apply(null,piores);R.medidas=med===JSON.stringify([a.x,a.b,a.w,a.h,a.d]);document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
         """#)
@@ -18626,7 +18683,7 @@ final class EditorWebKitTests: XCTestCase {
         var b=budget(),X=r2(b.sale0+350+120.5),F=X/0.9;R.final=(r2(b.sale)===r2(X+r2(F*0.1)))+' · padrão interno '+cfxLimpa({n:'a',v:1}).cli;
         var soma=function(q){return r2(q.items.reduce(function(a,i){return a+i.value},0))};var qe=quoteData();S.cfxModo='disc';var qd=quoteData();
         R.total=(qe.total===qd.total)+' · emb '+(soma(qe)===qe.total)+' · disc '+(soma(qd)===qd.total)+' · linha '+qd.items.some(function(i){return i.desc==='Montagem · equipe de 2'&&i.value===350})+' · emb sem linha '+!qe.items.some(function(i){return /Montagem/.test(i.desc)});
-        S.desc=10;var qx=quoteData();R.desconto=(soma(qx)===qx.base)+' · '+(qx.total===r2(qx.base*0.9));R.telaPdf=[r2(vlFin(budget()))===qx.total,qx.total===quoteData().total].join(' · ');var totDesc=qx.total;delete S.desc;R.telaPdfSemDesc=r2(vlFin(budget()))===qe.total&&qe.total===qd.total;
+        S.desc=10;var qx=quoteData();/* DESC-CENTAVO (Adauto 25/11, tela = PDF ao centavo): a conta do desconto é a do PDF do app — desconto em centavos, depois valor − desconto —, escrita aqui sem usar a descAplica do editor; antes conferia valor × 0,9, que diverge 1 centavo na borda */R.desconto=(soma(qx)===qx.base)+' · '+(qx.total===r2(r2(qx.base)-r2(r2(qx.base)*10/100)));R.telaPdf=[r2(vlFin(budget()))===qx.total,qx.total===quoteData().total].join(' · ');var totDesc=qx.total;delete S.desc;R.telaPdfSemDesc=r2(vlFin(budget()))===qe.total&&qe.total===qd.total;
         var tudo=JSON.stringify([qe,qd,qx]);R.pdf=/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ/.test(tudo);
         var cap=null,ce=window.cutEncode;window.cutEncode=cutEncode=function(x){cap=x;return Promise.resolve('x')};try{document.body.insertAdjacentHTML('beforeend','<button id="__vcli" data-vcli="1"></button>');document.getElementById('__vcli').click();await W(150)}finally{window.cutEncode=cutEncode=ce;var bb=document.getElementById('__vcli');if(bb)bb.remove()}
         var cj=cap?JSON.stringify(cap):'';R.link=cap?(/SEGREDO-INTERNO|DESCRICAO-SIGILOSA|Comissao-XYZ|Montagem/.test(cj)?'vazou':'limpo'):'sem link';/* o link do cliente não leva valor nenhum (como sempre: "não vê valores"): nem preço, nem desconto, nem custo, nem o total */var tt=[qe.total,totDesc].map(function(v){return String(v)});R.linkSemValor=cap?(!('preco' in cap.st)&&!('desc' in cap.st)&&!('cfx' in cap.st)&&!tt.some(function(v){return cj.indexOf(v)>=0})):false;
@@ -19237,6 +19294,302 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["tela"] as? String, "Valor sem descontoR$ 830,55Desconto de 10%− R$ 83,06Valor com descontoR$ 747,49")
         XCTAssertEqual(o["orcamento"] as? String, "830.55 · 10 · 747.49")
         XCTAssertEqual(o["varredura"] as? String, "5000000 · 186251793425", "a mesma soma do Android/Windows e do iOS")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11): unidade de tela mm/cm nos Ajustes (o app passa ?un=; o teste troca com arqueUnidade). Só apresentação:
+    // em cm o editor mostra 69,5 / 1,5 / 3,5 e o campo digitado 69,5 ou 69.5 grava 695 mm. Sem ?un= = mm (a tela de sempre).
+    func testUNIDADE_EmCmMostraOMmExatoEODigitadoGravaMm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        R.padrao=window.ARQ_UN;loadState(initLimpo());S.W=4000;draw();newTpl(T0('Balcão 2 portas'));S.m.w=695;draw();S.tab=0;panel();await W(30);
+        var IN=function(k){return document.querySelector('#bd input[data-k="'+k+'"]')},ES=function(){return document.querySelector('#bd input[data-r="esp"]')};
+        R.mm=[unRawGet(IN('w')),IN('w').value,unRawGet(ES())].join(' · ');
+        arqueUnidade('cm');await W(30);
+        R.cm=[unRawGet(IN('w')),IN('w').value,unRawGet(ES()),ES().value].join(' · ');
+        R.cota=[].some.call(document.querySelectorAll('#svg text'),function(t){return t.textContent==='69,5'});
+        R.texto=[UN.num('695'),UN.num('15'),UN.num('35'),UN.len(695),UN.len('900 × 560'),UN.num('634,5'),UN.parse('69,5'),UN.parse('69.5')].join(' | ');
+        R.sufixo=IN('w').classList.contains('unlen')+' '+IN('w').getAttribute('data-un')+' · tag '+((document.getElementById('untag')||{}).textContent||'');
+        /* teclado do app: 6 9 , 5 OK → 695 mm */var key=function(c){document.querySelector('#calcbar button[data-c="'+c+'"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}))};
+        S.m.w=900;draw();panel();await W(30);IN('w').focus();await W(30);['6','9',',','5'].forEach(key);R.teclado=unRawGet(IN('w'));key('ok');await W(60);R.virgula=S.m.w;
+        IN('w').focus();await W(30);['7','0','+','2',',','5'].forEach(key);key('ok');await W(60);R.conta=S.m.w;
+        /* teclado do sistema: 69.5 com ponto e 69,5 com vírgula */var ND=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value'),sis=async function(v){var e=IN('w');e.focus();await W(20);ND.set.call(e,v);e.dispatchEvent(new InputEvent('input',{bubbles:true}));e.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await W(60);return S.m.w};
+        S.m.w=900;draw();panel();await W(20);R.ponto=await sis('69.5');S.m.w=900;draw();panel();await W(20);R.virgula2=await sis('69,5');
+        /* volta pra mm: a tela de sempre */arqueUnidade('mm');await W(30);R.volta=[unRawGet(IN('w')),IN('w').value,window.ARQ_UN].join(' · ');
+        var bt=document.getElementById('calcbar');if(bt)bt.hidden=true;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["padrao"] as? String, "mm", "sem preferência salva = mm, como o editor sempre mostrou")
+        XCTAssertEqual(o["mm"] as? String, "695 · 695 · 15")
+        XCTAssertEqual(o["cm"] as? String, "69,5 · 695 · 1,5 · 15", "na tela 69,5 e 1,5; quem lê o campo recebe mm")
+        XCTAssertEqual(o["cota"] as? Bool, true, "cota do 2D em cm")
+        XCTAssertEqual(o["texto"] as? String, "69,5 | 1,5 | 3,5 | 69,5 cm | 90 × 56 cm | 63,45 | 695 | 695", "o formatador e a leitura únicos: só a vírgula anda")
+        XCTAssertEqual(o["sufixo"] as? String, "true cm · tag Cotas em cm", "a unidade fica escrita no campo e no desenho")
+        XCTAssertEqual(o["teclado"] as? String, "69.5")
+        XCTAssertEqual(o["virgula"] as? Double, 695, "69,5 cm grava 695 mm")
+        XCTAssertEqual(o["conta"] as? Double, 725, "70 + 2,5 cm = 725 mm")
+        XCTAssertEqual(o["ponto"] as? Double, 695, "69.5 com ponto grava 695 mm")
+        XCTAssertEqual(o["virgula2"] as? Double, 695)
+        XCTAssertEqual(o["volta"] as? String, "695 · 695 · mm")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11): alternar mm↔cm 20 vezes (com o painel, o 2D e a lista abertos) deixa o projeto byte a byte igual,
+    // e um projeto antigo (gravado antes) abre em cm sem mudar nada.
+    func testUNIDADE_Alternar20VezesProjetoIgualEProjetoAntigoIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        newProjFor({nome:'Cliente Unidade',end:'',cidade:'',tel:''});S.W=4000;S.mods=[];draw();['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas'].forEach(function(n){newTpl(T0(n))});S.mods[0].w=695;draw();saveNow();await W(50);
+        var id=CUR,st0=JSON.stringify(snapState()),pl0=localStorage.getItem('arque.projects.v1'),P0=JSON.stringify(S.mods.map(partsOf));
+        for(var i=0;i<20;i++){arqueUnidade(i%2?'mm':'cm');for(var tb=0;tb<=5;tb++){S.tab=tb;panel()}draw();openCut();await W(10);$('cutm').hidden=true;}
+        arqueUnidade('mm');await W(50);R.alternar20=(JSON.stringify(snapState())===st0)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · '+(JSON.stringify(S.mods.map(partsOf))===P0);
+        /* projeto antigo: gravado em mm antes; reabre em mm e em cm, igual (e nada é gravado) */arqueOpenClient(id);S.tab=0;draw();panel();await W(50);var stM=JSON.stringify(snapState()),pM=JSON.stringify(S.mods.map(partsOf));
+        arqueUnidade('cm');arqueOpenClient(id);S.tab=0;draw();panel();await W(50);
+        R.antigo=(JSON.stringify(snapState())===stM)+' · '+(JSON.stringify(S.mods.map(partsOf))===pM)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · w '+S.mods[0].w;
+        S.m=S.mods[0];panel();await W(30);R.antigo+=' · campo '+unRawGet(document.querySelector('#bd input[data-k="w"]')||{value:''});
+        arqueUnidade('mm');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["alternar20"] as? String, "true · true · true", "trocar a unidade 20 vezes não muda nada no projeto")
+        XCTAssertEqual(o["antigo"] as? String, "true · true · true · w 695 · campo 69,5", "projeto gravado antes abre igual em cm e nada é regravado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11): em todo o catálogo, partsOf, corte, orçamento e DXF são idênticos com a tela em mm e em cm
+    // (a unidade é só da tela: nada de cálculo passa por ela). Lista e plano de corte aparecem em cm.
+    func testUNIDADE_CatalogoInteiroIgualEmMmECmEListaECorteEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&L.indexOf(t)<0)L.push(t)})});
+        PR.dxf={dobP:'13',uniao:'cavilha',cavD:'8',cavPF:'12',cavPT:'25',cavOff:'32',cavEsp:'128',pxOutros:'montagem'};
+        var calc=function(){return JSON.stringify([S.mods.map(partsOf),S.mods.map(cutLines),cutGroups(),budget(),dxfTexto(dxfPecas().pecas,'t')])};
+        var dif=[],n=0;
+        for(var i=0;i<L.length;i++){loadState(initLimpo());S.W=5000;draw();try{newTpl(JSON.parse(JSON.stringify(L[i])))}catch(e){continue}draw();n++;
+         arqueUnidade('mm');var a=calc();arqueUnidade('cm');for(var tb=0;tb<=5;tb++){S.tab=tb;panel()}draw();var b=calc();arqueUnidade('mm');if(a!==b)dif.push(L[i].n)}
+        R.catalogo=n+' módulos · diferentes '+dif.length+(dif.length?' ('+dif.slice(0,5).join(', ')+')':'');R.temModulos=n>50;
+        /* lista e plano de corte em cm */loadState(initLimpo());S.W=4000;draw();var T0=function(nm){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===nm&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        newTpl(T0('Balcão 2 portas'));draw();arqueUnidade('cm');openCut();await W(80);var cb=document.getElementById('cutbody')||document.body,tx=cb.innerText;
+        R.lista=/90 × 56 cm/.test(tx)+' · '+/69 × 56 cm/.test(tx)+' · sem "900 × 560" '+(tx.indexOf('900 × 560')<0)+' · chapa '+/275 × 184/.test(tx);
+        var sv=[].slice.call(cb.querySelectorAll('svg text')).map(function(t){return t.textContent});R.corte=(sv.indexOf('90')>=0)+' · '+(sv.indexOf('56')>=0)+' · sem 900 '+(sv.indexOf('900')<0)+' · número da peça '+(sv.indexOf('#1')>=0);
+        arqueUnidade('mm');openCut();await W(80);tx=(document.getElementById('cutbody')||document.body).innerText;R.listaMm=/900 × 560 mm/.test(tx);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["temModulos"] as? Bool, true)
+        XCTAssertEqual((o["catalogo"] as? String)?.hasSuffix("diferentes 0"), true, "partsOf, corte, orçamento e DXF iguais em mm e cm: \(o["catalogo"] ?? "")")
+        XCTAssertEqual(o["lista"] as? String, "true · true · sem \"900 × 560\" true · chapa true", "lista em cm")
+        XCTAssertEqual(o["corte"] as? String, "true · true · sem 900 true · número da peça true", "plano de corte em cm, #1 continua #1")
+        XCTAssertEqual(o["listaMm"] as? Bool, true, "em mm a lista continua igual a antes")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (Adauto 25/11, pedido do Chefe): nada que não é medida muda com a unidade — preço, quantidade, %, ângulo, nº de peça e nomes
+    // iguais em mm e em cm (lista, plano de corte, valores e painel); e em mm a tela continua igual à de antes.
+    func testUNIDADE_PrecoQuantidadeAnguloENomesIguaisEmMmECm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T0=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2.5;PR.metodo='comp';/* plano por comprimento: o mesmo resultado a cada vez (o Máximo aproveitamento continua melhorando sozinho com o tempo) */
+        loadState(initLimpo());S.W=4000;draw();['Balcão 2 portas','Gaveteiro 3 gavetas','Aéreo 2 portas'].forEach(function(n){newTpl(T0(n))});draw();
+        /* tudo que não é medida: R$, %, °, quantidade (×n, "n un", "n peças"), nº de peça (#n) e os nomes das peças */
+        var nao=function(){var o=[],bd=JSON.stringify(Object.assign({},budget(),{plan:0}));/* o desenho das chapas (plan) é o plano de corte, conferido à parte */openCut();var t=document.getElementById('cutbody').innerText;$('cutm').hidden=true;
+          (t.match(/R\$\s?[\d.]+,\d\d/g)||[]).forEach(function(x){o.push(x)});(t.match(/\d+(?:,\d+)?\s?%/g)||[]).forEach(function(x){o.push(x)});(t.match(/\s×\d+\b/g)||[]).forEach(function(x){o.push(x)});
+          (t.match(/\d+ (?:un|peças|chapas?)\b/g)||[]).forEach(function(x){o.push(x)});(t.match(/#\d+/g)||[]).forEach(function(x){o.push(x)});
+          S.mods.forEach(function(m){partsOf(m).forEach(function(p){o.push(p.name)})});
+          for(var tb=0;tb<=5;tb++){S.tab=tb;panel();var b=document.getElementById('bd').innerText;(b.match(/R\$\s?[\d.]+,\d\d|\d+(?:,\d+)?\s?(?:%|°)/g)||[]).forEach(function(x){o.push(x)})}
+          return {L:o,b:bd}};
+        arqueUnidade('mm');var a=nao();arqueUnidade('cm');var b=nao();arqueUnidade('mm');
+        R.iguais=(JSON.stringify(a.L)===JSON.stringify(b.L))+' · orçamento '+(a.b===b.b)+' · itens '+(a.L.length>40);
+        var dif=[];a.L.forEach(function(x,i){if(x!==b.L[i])dif.push(x+' → '+b.L[i])});R.dif=dif.slice(0,6).join(' ; ');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["iguais"] as? String, "true · orçamento true · itens true", "preço, %, ângulo, quantidade, nº e nome iguais: \(o["dif"] ?? "")")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (pedido do Chefe 25/11, item d): varredura de TODO o catálogo, em todos os ambientes — vista de frente, planta e painéis.
+    // Em cm, todo texto de medida do desenho sai convertido na origem; nenhum número que não é medida muda (nº de peça, litros, %, °,
+    // quantidade de módulos, "Base 1") e nenhuma palavra muda (só mm → cm).
+    func testUNIDADE_CatalogoInteiroDesenhoSemMedidaEmMmNaTelaEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var L=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&t.n&&!t.act&&L.indexOf(t)<0)L.push(t)})});
+        var col=function(){return [].map.call(document.querySelectorAll('svg text'),function(t){return (t.textContent||'').trim()})};
+        var NAO=/#\d|\d\s?L\b|\d\s?%|\d\s?°|\d+ módulos|^\d+\/\d+$/,forma=function(t,u){return t.replace(/\d+(?:[.,]\d+)?/g,'N').replace(new RegExp('\\b'+u+'\\b','g'),'U')};
+        var cenas=0,textos=0,iguais=[],palavra=[],naoMedida=[],convertidos=0;
+        for(var r=0;r<ROOMS.length;r++){var O={};
+         for(var u of ['mm','cm']){arqueUnidade(u);loadState(initLimpo());S.W=5000;S.tab=9;panel();var rb=document.querySelector('[data-room="'+ROOMS[r][0]+'"]');if(rb)rb.click();await W(15);
+          for(var i=r;i<L.length;i+=4){try{newTpl(JSON.parse(JSON.stringify(L[i])))}catch(e){}}draw();var A=O[u]={f:col()};try{window.PLV=1;draw();A.p=col();window.PLV=0;draw()}catch(e){}
+          for(var tb=0;tb<=10;tb++){S.tab=tb;try{panel()}catch(e){}A['t'+tb]=col()}}
+         cenas++;Object.keys(O.mm).forEach(function(k){var a=O.mm[k]||[],b=O.cm[k]||[];a.forEach(function(x,i){var y=b[i];if(y==null||!/\d/.test(x))return;textos++;
+          if(forma(x,'mm')!==forma(y,'cm'))palavra.push(x+' → '+y);
+          var nx=(x.match(/#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g)||[]).join(','),ny=(y.match(/#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g)||[]).join(',');if(nx!==ny)naoMedida.push(x+' → '+y);
+          if(x!==y)convertidos++;else if(/\d\d/.test(x.replace(/[A-Za-z]+\d[\w-]*|\d+[A-Za-z][\w-]*|#\d+|\d+\s?L\b|\d+\s?%|\d+\s?°|\d+ módulos/g,'')))iguais.push(ROOMS[r][0]+'/'+k+': '+x)/* código de modelo (RS65R, CRB39) não é medida */})})}
+        arqueUnidade('mm');
+        R.varredura=cenas+' ambientes · '+textos+' textos com número · convertidos '+(convertidos>500);
+        R.medidaEmMm=iguais.length+(iguais.length?' ('+iguais.slice(0,4).join(' ; ')+')':'');
+        R.palavras=palavra.length+(palavra.length?' ('+palavra.slice(0,4).join(' ; ')+')':'');
+        R.naoMedida=naoMedida.length+(naoMedida.length?' ('+naoMedida.slice(0,4).join(' ; ')+')':'');
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual((o["varredura"] as? String)?.hasSuffix("convertidos true"), true, "\(o["varredura"] ?? "")")
+        XCTAssertEqual(o["medidaEmMm"] as? String, "0", "em cm nenhuma cota do desenho fica no número em mm")
+        XCTAssertEqual(o["palavras"] as? String, "0", "nenhuma palavra do desenho muda (só mm → cm)")
+        XCTAssertEqual(o["naoMedida"] as? String, "0", "nº de peça, litros, %, ° e nº de módulos iguais")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (pedido do Chefe 25/11): legibilidade do plano de corte também com a tela em cm ("69,5" no lugar de "695"), sem afrouxar nada
+    func testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomPrimeiroTercoEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        arqueUnidade('cm');/* UNIDADE (Chefe 25/11): o mesmo teste com a tela em cm, expectativas iguais */
+        /* confere a geometria do texto no plano de corte: caixa de cada texto (em coordenadas da chapa) não cruza linha de fita,
+           fica dentro da própria peça (não cruza contorno de outra) e dentro da chapa. Vale para as chapas abertas no momento. */
+        window.__cutTxtChk=function(root){var R={chapas:0,pecas:0,textos:0,ruins:[]},EPS=0.5;
+         var sv=[].slice.call((root||document).querySelectorAll('svg')).filter(function(s){var p=s.previousElementSibling;return (p&&/^cs\d+_\d+$/.test(p.id||''))||s.hasAttribute('data-czs')});
+         sv.forEach(function(s,si){if(!s.getScreenCTM())return;R.chapas++;var inv=s.getScreenCTM().inverse(),box=function(el){var b=el.getBBox(),M=inv.multiply(el.getScreenCTM()),P=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(function(q){var p=s.createSVGPoint();p.x=q[0];p.y=q[1];p=p.matrixTransform(M);return p});return {x0:Math.min.apply(null,P.map(function(p){return p.x})),x1:Math.max.apply(null,P.map(function(p){return p.x})),y0:Math.min.apply(null,P.map(function(p){return p.y})),y1:Math.max.apply(null,P.map(function(p){return p.y}))}},
+          cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>EPS&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>EPS},dentro=function(a,b){return a.x0>=b.x0-EPS&&a.x1<=b.x1+EPS&&a.y0>=b.y0-EPS&&a.y1<=b.y1+EPS},
+          rr=function(r){var x=+r.getAttribute('x'),y=+r.getAttribute('y');return {x0:x,y0:y,x1:x+ +r.getAttribute('width'),y1:y+ +r.getAttribute('height')}};
+          var sheet=rr(s.querySelector('rect')),pcs=[],fitas=[];
+          [].forEach.call(s.querySelectorAll('g'),function(g){if(g.closest('[data-okmk]'))return;var r=g.querySelector(':scope > rect');if(!r)return;if(!g.hasAttribute('data-cp')&&!g.hasAttribute('data-lab'))return;var P={g:g,r:rr(r)};pcs.push(P);[].forEach.call(g.querySelectorAll('line'),function(l){if(String(l.getAttribute('stroke')).toLowerCase()!=='#1f9d55')return;var w=+l.getAttribute('stroke-width')||1,x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2'),y1=+l.getAttribute('y1'),y2=+l.getAttribute('y2');fitas.push({x0:Math.min(x1,x2)-(x1===x2?w/2:0),x1:Math.max(x1,x2)+(x1===x2?w/2:0),y0:Math.min(y1,y2)-(y1===y2?w/2:0),y1:Math.max(y1,y2)+(y1===y2?w/2:0)})})});
+          R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
+          [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
+           if(!dentro(b,sheet))why.push('fora da chapa');
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
+           else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
+           if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
+           if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* qualquer outra linha do desenho (etiqueta, recorte, furação) em cima de texto */var OL=[];[].forEach.call(s.querySelectorAll('line,path,circle,polyline'),function(l){if(l.closest('defs')||l.closest('[data-okmk]'))return;if(l.tagName==='line'&&String(l.getAttribute('stroke')).toLowerCase()==='#1f9d55')return;var b=box(l),sw=(+l.getAttribute('stroke-width')||1)/2;OL.push({el:l,b:{x0:b.x0-sw,x1:b.x1+sw,y0:b.y0-sw,y1:b.y1+sw}})});
+          var placa=function(t,tb){var p=t.previousElementSibling;if(!p||p.tagName!=='rect')return false;var f=String(p.getAttribute('fill')||'').toLowerCase();if(f!=='#fff'&&f!=='#ffffff')return false;if((+(p.getAttribute('fill-opacity')||1))<.85)return false;return dentro(tb,box(p))};
+          var segsDe=function(l){if(l.tagName==='line')return [[+l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]];if(l.tagName!=='path')return null;var d=String(l.getAttribute('d')||''),tk=d.match(/[MLHVZ]|-?[\d.]+/gi)||[],S_=[],cx=0,cy=0,sx=0,sy=0,i=0,c='';while(i<tk.length){var t=tk[i];if(/[MLHVZ]/i.test(t)){c=t.toUpperCase();i++;if(c==='Z'){S_.push([cx,cy,sx,sy]);cx=sx;cy=sy}continue}if(c==='M'){cx=+tk[i];cy=+tk[i+1];sx=cx;sy=cy;i+=2;c='L'}else if(c==='L'){S_.push([cx,cy,+tk[i],+tk[i+1]]);cx=+tk[i];cy=+tk[i+1];i+=2}else if(c==='H'){S_.push([cx,cy,+tk[i],cy]);cx=+tk[i];i++}else if(c==='V'){S_.push([cx,cy,cx,+tk[i]]);cy=+tk[i];i++}else return null}return S_};
+          var segHit=function(l,tb){var SG=segsDe(l);if(!SG)return cruza(l.__b,tb);var w=(+l.getAttribute('stroke-width')||1)/2+.5;return SG.some(function(q){var x1=q[0],y1=q[1],x2=q[2],y2=q[3],n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false})};
+          var segHit0=function(l,tb){if(l.tagName!=='line')return cruza(l.__b,tb);var x1=+l.getAttribute('x1'),y1=+l.getAttribute('y1'),x2=+l.getAttribute('x2'),y2=+l.getAttribute('y2'),w=(+l.getAttribute('stroke-width')||1)/2+.5,n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false};
+          [].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).forEach(function(t){var tb=box(t);OL.forEach(function(o){o.el.__b=o.b;if(t.parentNode===o.el.parentNode&&o.el.closest('[data-callout]'))return;/* linha pintada antes do texto e o texto em plaquinha branca por cima dela: a linha fica escondida embaixo, a medida aparece */if((placa(t,tb)||(t.getAttribute('paint-order')==='stroke'&&(+t.getAttribute('stroke-width')||0)>=3))&&(o.el.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_FOLLOWING))return;/* linha pintada antes da peça (por baixo dela): o fundo da peça cobre a linha */var dono_=t.closest('g[data-cp],g[data-lab]');if(dono_&&!o.el.closest('g[data-cp],g[data-lab]')&&(o.el.compareDocumentPosition(dono_)&Node.DOCUMENT_POSITION_FOLLOWING)){var rr_=dono_.querySelector(':scope > rect');if(rr_&&dentro(tb,box(rr_)))return}if(cruza(o.b,tb)&&segHit(o.el,tb))R.ruins.push('chapa '+si+' · linha '+o.el.tagName+(o.el.closest('[data-callout]')?'(etiqueta)':o.el.closest('[data-cp]')?'(peça '+String(o.el.getAttribute('stroke'))+')':'(chapa)')+' em cima de "'+String(t.textContent).slice(0,24)+'"')})});
+          /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
+          /* ordem: texto da peça desenhado depois das linhas de fita */
+          pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
+         });return R};
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var tot={cenas:0,chapas:0,pecas:0,textos:0,ruins:0,semTexto:0,zoomRuins:0},ex=[];
+        var confere=async function(nome){openCut();await W(30);var c=__cutTxtChk(document.getElementById('cutm'));tot.cenas++;tot.chapas+=c.chapas;tot.pecas+=c.pecas;tot.textos+=c.textos;tot.ruins+=c.ruins.length;tot.semTexto+=c.semTexto||0;if((c.ruins.length||c.semTexto)&&ex.length<5)ex.push(nome+': '+c.ruins.slice(0,2).join(' | ')+' '+(c.semEx||[]).join(','));
+         /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
+        for(var i=Math.floor(its.length*0/3);i<Math.floor(its.length*1/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
+        
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cenas"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["textos"] as? Bool, true)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de outra linha (etiqueta, recorte, furo), de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
+        XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
+        XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (pedido do Chefe 25/11): legibilidade do plano de corte também com a tela em cm ("69,5" no lugar de "695"), sem afrouxar nada
+    func testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomSegundoTercoEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        arqueUnidade('cm');/* UNIDADE (Chefe 25/11): o mesmo teste com a tela em cm, expectativas iguais */
+        /* confere a geometria do texto no plano de corte: caixa de cada texto (em coordenadas da chapa) não cruza linha de fita,
+           fica dentro da própria peça (não cruza contorno de outra) e dentro da chapa. Vale para as chapas abertas no momento. */
+        window.__cutTxtChk=function(root){var R={chapas:0,pecas:0,textos:0,ruins:[]},EPS=0.5;
+         var sv=[].slice.call((root||document).querySelectorAll('svg')).filter(function(s){var p=s.previousElementSibling;return (p&&/^cs\d+_\d+$/.test(p.id||''))||s.hasAttribute('data-czs')});
+         sv.forEach(function(s,si){if(!s.getScreenCTM())return;R.chapas++;var inv=s.getScreenCTM().inverse(),box=function(el){var b=el.getBBox(),M=inv.multiply(el.getScreenCTM()),P=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(function(q){var p=s.createSVGPoint();p.x=q[0];p.y=q[1];p=p.matrixTransform(M);return p});return {x0:Math.min.apply(null,P.map(function(p){return p.x})),x1:Math.max.apply(null,P.map(function(p){return p.x})),y0:Math.min.apply(null,P.map(function(p){return p.y})),y1:Math.max.apply(null,P.map(function(p){return p.y}))}},
+          cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>EPS&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>EPS},dentro=function(a,b){return a.x0>=b.x0-EPS&&a.x1<=b.x1+EPS&&a.y0>=b.y0-EPS&&a.y1<=b.y1+EPS},
+          rr=function(r){var x=+r.getAttribute('x'),y=+r.getAttribute('y');return {x0:x,y0:y,x1:x+ +r.getAttribute('width'),y1:y+ +r.getAttribute('height')}};
+          var sheet=rr(s.querySelector('rect')),pcs=[],fitas=[];
+          [].forEach.call(s.querySelectorAll('g'),function(g){if(g.closest('[data-okmk]'))return;var r=g.querySelector(':scope > rect');if(!r)return;if(!g.hasAttribute('data-cp')&&!g.hasAttribute('data-lab'))return;var P={g:g,r:rr(r)};pcs.push(P);[].forEach.call(g.querySelectorAll('line'),function(l){if(String(l.getAttribute('stroke')).toLowerCase()!=='#1f9d55')return;var w=+l.getAttribute('stroke-width')||1,x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2'),y1=+l.getAttribute('y1'),y2=+l.getAttribute('y2');fitas.push({x0:Math.min(x1,x2)-(x1===x2?w/2:0),x1:Math.max(x1,x2)+(x1===x2?w/2:0),y0:Math.min(y1,y2)-(y1===y2?w/2:0),y1:Math.max(y1,y2)+(y1===y2?w/2:0)})})});
+          R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
+          [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
+           if(!dentro(b,sheet))why.push('fora da chapa');
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
+           else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
+           if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
+           if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* qualquer outra linha do desenho (etiqueta, recorte, furação) em cima de texto */var OL=[];[].forEach.call(s.querySelectorAll('line,path,circle,polyline'),function(l){if(l.closest('defs')||l.closest('[data-okmk]'))return;if(l.tagName==='line'&&String(l.getAttribute('stroke')).toLowerCase()==='#1f9d55')return;var b=box(l),sw=(+l.getAttribute('stroke-width')||1)/2;OL.push({el:l,b:{x0:b.x0-sw,x1:b.x1+sw,y0:b.y0-sw,y1:b.y1+sw}})});
+          var placa=function(t,tb){var p=t.previousElementSibling;if(!p||p.tagName!=='rect')return false;var f=String(p.getAttribute('fill')||'').toLowerCase();if(f!=='#fff'&&f!=='#ffffff')return false;if((+(p.getAttribute('fill-opacity')||1))<.85)return false;return dentro(tb,box(p))};
+          var segsDe=function(l){if(l.tagName==='line')return [[+l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]];if(l.tagName!=='path')return null;var d=String(l.getAttribute('d')||''),tk=d.match(/[MLHVZ]|-?[\d.]+/gi)||[],S_=[],cx=0,cy=0,sx=0,sy=0,i=0,c='';while(i<tk.length){var t=tk[i];if(/[MLHVZ]/i.test(t)){c=t.toUpperCase();i++;if(c==='Z'){S_.push([cx,cy,sx,sy]);cx=sx;cy=sy}continue}if(c==='M'){cx=+tk[i];cy=+tk[i+1];sx=cx;sy=cy;i+=2;c='L'}else if(c==='L'){S_.push([cx,cy,+tk[i],+tk[i+1]]);cx=+tk[i];cy=+tk[i+1];i+=2}else if(c==='H'){S_.push([cx,cy,+tk[i],cy]);cx=+tk[i];i++}else if(c==='V'){S_.push([cx,cy,cx,+tk[i]]);cy=+tk[i];i++}else return null}return S_};
+          var segHit=function(l,tb){var SG=segsDe(l);if(!SG)return cruza(l.__b,tb);var w=(+l.getAttribute('stroke-width')||1)/2+.5;return SG.some(function(q){var x1=q[0],y1=q[1],x2=q[2],y2=q[3],n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false})};
+          var segHit0=function(l,tb){if(l.tagName!=='line')return cruza(l.__b,tb);var x1=+l.getAttribute('x1'),y1=+l.getAttribute('y1'),x2=+l.getAttribute('x2'),y2=+l.getAttribute('y2'),w=(+l.getAttribute('stroke-width')||1)/2+.5,n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false};
+          [].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).forEach(function(t){var tb=box(t);OL.forEach(function(o){o.el.__b=o.b;if(t.parentNode===o.el.parentNode&&o.el.closest('[data-callout]'))return;/* linha pintada antes do texto e o texto em plaquinha branca por cima dela: a linha fica escondida embaixo, a medida aparece */if((placa(t,tb)||(t.getAttribute('paint-order')==='stroke'&&(+t.getAttribute('stroke-width')||0)>=3))&&(o.el.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_FOLLOWING))return;/* linha pintada antes da peça (por baixo dela): o fundo da peça cobre a linha */var dono_=t.closest('g[data-cp],g[data-lab]');if(dono_&&!o.el.closest('g[data-cp],g[data-lab]')&&(o.el.compareDocumentPosition(dono_)&Node.DOCUMENT_POSITION_FOLLOWING)){var rr_=dono_.querySelector(':scope > rect');if(rr_&&dentro(tb,box(rr_)))return}if(cruza(o.b,tb)&&segHit(o.el,tb))R.ruins.push('chapa '+si+' · linha '+o.el.tagName+(o.el.closest('[data-callout]')?'(etiqueta)':o.el.closest('[data-cp]')?'(peça '+String(o.el.getAttribute('stroke'))+')':'(chapa)')+' em cima de "'+String(t.textContent).slice(0,24)+'"')})});
+          /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
+          /* ordem: texto da peça desenhado depois das linhas de fita */
+          pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
+         });return R};
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var tot={cenas:0,chapas:0,pecas:0,textos:0,ruins:0,semTexto:0,zoomRuins:0},ex=[];
+        var confere=async function(nome){openCut();await W(30);var c=__cutTxtChk(document.getElementById('cutm'));tot.cenas++;tot.chapas+=c.chapas;tot.pecas+=c.pecas;tot.textos+=c.textos;tot.ruins+=c.ruins.length;tot.semTexto+=c.semTexto||0;if((c.ruins.length||c.semTexto)&&ex.length<5)ex.push(nome+': '+c.ruins.slice(0,2).join(' | ')+' '+(c.semEx||[]).join(','));
+         /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
+        for(var i=Math.floor(its.length*1/3);i<Math.floor(its.length*2/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
+        
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cenas"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["textos"] as? Bool, true)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de outra linha (etiqueta, recorte, furo), de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
+        XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
+        XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // UNIDADE (pedido do Chefe 25/11): legibilidade do plano de corte também com a tela em cm ("69,5" no lugar de "695"), sem afrouxar nada
+    func testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoComEsemZoomTerceiroTercoEmCm() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        arqueUnidade('cm');/* UNIDADE (Chefe 25/11): o mesmo teste com a tela em cm, expectativas iguais */
+        /* confere a geometria do texto no plano de corte: caixa de cada texto (em coordenadas da chapa) não cruza linha de fita,
+           fica dentro da própria peça (não cruza contorno de outra) e dentro da chapa. Vale para as chapas abertas no momento. */
+        window.__cutTxtChk=function(root){var R={chapas:0,pecas:0,textos:0,ruins:[]},EPS=0.5;
+         var sv=[].slice.call((root||document).querySelectorAll('svg')).filter(function(s){var p=s.previousElementSibling;return (p&&/^cs\d+_\d+$/.test(p.id||''))||s.hasAttribute('data-czs')});
+         sv.forEach(function(s,si){if(!s.getScreenCTM())return;R.chapas++;var inv=s.getScreenCTM().inverse(),box=function(el){var b=el.getBBox(),M=inv.multiply(el.getScreenCTM()),P=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(function(q){var p=s.createSVGPoint();p.x=q[0];p.y=q[1];p=p.matrixTransform(M);return p});return {x0:Math.min.apply(null,P.map(function(p){return p.x})),x1:Math.max.apply(null,P.map(function(p){return p.x})),y0:Math.min.apply(null,P.map(function(p){return p.y})),y1:Math.max.apply(null,P.map(function(p){return p.y}))}},
+          cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>EPS&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>EPS},dentro=function(a,b){return a.x0>=b.x0-EPS&&a.x1<=b.x1+EPS&&a.y0>=b.y0-EPS&&a.y1<=b.y1+EPS},
+          rr=function(r){var x=+r.getAttribute('x'),y=+r.getAttribute('y');return {x0:x,y0:y,x1:x+ +r.getAttribute('width'),y1:y+ +r.getAttribute('height')}};
+          var sheet=rr(s.querySelector('rect')),pcs=[],fitas=[];
+          [].forEach.call(s.querySelectorAll('g'),function(g){if(g.closest('[data-okmk]'))return;var r=g.querySelector(':scope > rect');if(!r)return;if(!g.hasAttribute('data-cp')&&!g.hasAttribute('data-lab'))return;var P={g:g,r:rr(r)};pcs.push(P);[].forEach.call(g.querySelectorAll('line'),function(l){if(String(l.getAttribute('stroke')).toLowerCase()!=='#1f9d55')return;var w=+l.getAttribute('stroke-width')||1,x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2'),y1=+l.getAttribute('y1'),y2=+l.getAttribute('y2');fitas.push({x0:Math.min(x1,x2)-(x1===x2?w/2:0),x1:Math.max(x1,x2)+(x1===x2?w/2:0),y0:Math.min(y1,y2)-(y1===y2?w/2:0),y1:Math.max(y1,y2)+(y1===y2?w/2:0)})})});
+          R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
+          [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
+           if(!dentro(b,sheet))why.push('fora da chapa');
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins)){/* diagnóstico (iOS CI 689: só no iPad): a geometria exata do texto e da peça na mensagem */var bb_=t.getBBox(),q_=function(v){return Math.round(v*10)/10};why.push('cruza o contorno da peça [fs '+t.getAttribute('font-size')+' xy '+t.getAttribute('x')+','+t.getAttribute('y')+' '+(t.getAttribute('transform')||'')+' bbox '+[bb_.x,bb_.y,bb_.width,bb_.height].map(q_).join(',')+' caixa '+[b.x0,b.y0,b.x1,b.y1].map(q_).join(',')+' peça '+[P.r.x0,P.r.y0,P.r.x1,P.r.y1].map(q_).join(',')+' vb '+s.getAttribute('viewBox')+' tela '+Math.round(s.getBoundingClientRect().width)+'px · '+(window.cutZoom?q_(cutZoom.k(s)):'')+'x]')}}
+           else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
+           if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
+           if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* qualquer outra linha do desenho (etiqueta, recorte, furação) em cima de texto */var OL=[];[].forEach.call(s.querySelectorAll('line,path,circle,polyline'),function(l){if(l.closest('defs')||l.closest('[data-okmk]'))return;if(l.tagName==='line'&&String(l.getAttribute('stroke')).toLowerCase()==='#1f9d55')return;var b=box(l),sw=(+l.getAttribute('stroke-width')||1)/2;OL.push({el:l,b:{x0:b.x0-sw,x1:b.x1+sw,y0:b.y0-sw,y1:b.y1+sw}})});
+          var placa=function(t,tb){var p=t.previousElementSibling;if(!p||p.tagName!=='rect')return false;var f=String(p.getAttribute('fill')||'').toLowerCase();if(f!=='#fff'&&f!=='#ffffff')return false;if((+(p.getAttribute('fill-opacity')||1))<.85)return false;return dentro(tb,box(p))};
+          var segsDe=function(l){if(l.tagName==='line')return [[+l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]];if(l.tagName!=='path')return null;var d=String(l.getAttribute('d')||''),tk=d.match(/[MLHVZ]|-?[\d.]+/gi)||[],S_=[],cx=0,cy=0,sx=0,sy=0,i=0,c='';while(i<tk.length){var t=tk[i];if(/[MLHVZ]/i.test(t)){c=t.toUpperCase();i++;if(c==='Z'){S_.push([cx,cy,sx,sy]);cx=sx;cy=sy}continue}if(c==='M'){cx=+tk[i];cy=+tk[i+1];sx=cx;sy=cy;i+=2;c='L'}else if(c==='L'){S_.push([cx,cy,+tk[i],+tk[i+1]]);cx=+tk[i];cy=+tk[i+1];i+=2}else if(c==='H'){S_.push([cx,cy,+tk[i],cy]);cx=+tk[i];i++}else if(c==='V'){S_.push([cx,cy,cx,+tk[i]]);cy=+tk[i];i++}else return null}return S_};
+          var segHit=function(l,tb){var SG=segsDe(l);if(!SG)return cruza(l.__b,tb);var w=(+l.getAttribute('stroke-width')||1)/2+.5;return SG.some(function(q){var x1=q[0],y1=q[1],x2=q[2],y2=q[3],n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false})};
+          var segHit0=function(l,tb){if(l.tagName!=='line')return cruza(l.__b,tb);var x1=+l.getAttribute('x1'),y1=+l.getAttribute('y1'),x2=+l.getAttribute('x2'),y2=+l.getAttribute('y2'),w=(+l.getAttribute('stroke-width')||1)/2+.5,n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false};
+          [].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).forEach(function(t){var tb=box(t);OL.forEach(function(o){o.el.__b=o.b;if(t.parentNode===o.el.parentNode&&o.el.closest('[data-callout]'))return;/* linha pintada antes do texto e o texto em plaquinha branca por cima dela: a linha fica escondida embaixo, a medida aparece */if((placa(t,tb)||(t.getAttribute('paint-order')==='stroke'&&(+t.getAttribute('stroke-width')||0)>=3))&&(o.el.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_FOLLOWING))return;/* linha pintada antes da peça (por baixo dela): o fundo da peça cobre a linha */var dono_=t.closest('g[data-cp],g[data-lab]');if(dono_&&!o.el.closest('g[data-cp],g[data-lab]')&&(o.el.compareDocumentPosition(dono_)&Node.DOCUMENT_POSITION_FOLLOWING)){var rr_=dono_.querySelector(':scope > rect');if(rr_&&dentro(tb,box(rr_)))return}if(cruza(o.b,tb)&&segHit(o.el,tb))R.ruins.push('chapa '+si+' · linha '+o.el.tagName+(o.el.closest('[data-callout]')?'(etiqueta)':o.el.closest('[data-cp]')?'(peça '+String(o.el.getAttribute('stroke'))+')':'(chapa)')+' em cima de "'+String(t.textContent).slice(0,24)+'"')})});
+          /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
+          /* ordem: texto da peça desenhado depois das linhas de fita */
+          pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
+         });return R};
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var tot={cenas:0,chapas:0,pecas:0,textos:0,ruins:0,semTexto:0,zoomRuins:0},ex=[];
+        var confere=async function(nome){openCut();await W(30);var c=__cutTxtChk(document.getElementById('cutm'));tot.cenas++;tot.chapas+=c.chapas;tot.pecas+=c.pecas;tot.textos+=c.textos;tot.ruins+=c.ruins.length;tot.semTexto+=c.semTexto||0;if((c.ruins.length||c.semTexto)&&ex.length<5)ex.push(nome+': '+c.ruins.slice(0,2).join(' | ')+' '+(c.semEx||[]).join(','));
+         /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
+        for(var i=Math.floor(its.length*2/3);i<Math.floor(its.length*3/3);i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
+        loadState(initLimpo());demoScene();await W(300);draw();await confere('cozinha de exemplo');
+        /* cobertura (Chefe 25/11): os três terços somam pelo menos o do teste inteiro de antes (>100 cenas, >1000 peças, >5000 textos) */R.cenas=tot.cenas>33;R.pecas=tot.pecas>333;R.textos=tot.textos>1666;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cenas"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["textos"] as? Bool, true)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de outra linha (etiqueta, recorte, furo), de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
+        XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
+        XCTAssertEqual(o["ex"] as? String, "")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

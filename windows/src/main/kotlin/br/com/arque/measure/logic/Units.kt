@@ -82,3 +82,45 @@ object Units {
         return toMm(v, unit)
     }
 }
+
+/**
+ * UNIDADE (Adauto 25/11): unidade de medida da tela, escolhida nos Ajustes (mm ou cm). Vale no editor de móveis
+ * (passada como ?un= na mesma ponte do ?lang=) e na nota nova do caderno.
+ * Internamente tudo continua em mm: aqui só muda o que aparece e como o número digitado é lido.
+ * Guardada em files/unidade.json (o mesmo arquivo nas 3 plataformas; entra no backup junto com a pasta files).
+ */
+object UnitPref {
+    const val FILE = "unidade.json"
+
+    /** Lê o arquivo dos Ajustes. Sem arquivo ou com conteúdo estranho = sem escolha (null). */
+    fun parse(text: String?): LengthUnit? {
+        val m = Regex("\"unidade\"\\s*:\\s*\"(mm|cm)\"").find(text ?: return null) ?: return null
+        return if (m.groupValues[1] == "cm") LengthUnit.CM else LengthUnit.MM
+    }
+
+    fun json(u: LengthUnit): String = "{\"v\":1,\"unidade\":\"${if (u == LengthUnit.CM) "cm" else "mm"}\"}"
+
+    /** O que vai pro editor (?un=). Sem escolha = mm (o editor sempre mostrou mm). */
+    fun editor(pref: LengthUnit?): String = if (pref == LengthUnit.CM) "cm" else "mm"
+
+    /** Unidade da nota nova do caderno: a dos Ajustes; sem escolha = mm (padrão geral, decisão do Adauto 25/11: a nota nova
+     *  deixa de nascer em cm). As notas antigas continuam com a unidade delas (guardada em cada nota). */
+    fun newNote(pref: LengthUnit?): LengthUnit = pref ?: LengthUnit.MM
+
+    /** mm → texto da tela, exato (só a vírgula anda): 695 → "69,5" em cm; 15 → "1,5"; 690 → "69". Em mm: "695". */
+    fun show(mm: java.math.BigDecimal, u: LengthUnit): String {
+        val v = if (u == LengthUnit.CM) mm.movePointLeft(1) else mm
+        val s = v.stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }.toPlainString()
+        return s.replace('.', ',')
+    }
+
+    fun show(mm: Long, u: LengthUnit): String = show(java.math.BigDecimal.valueOf(mm), u)
+
+    /** Texto digitado → mm, exato. Aceita vírgula ou ponto: "69,5" e "69.5" em cm = 695 mm. Null se não for número. */
+    fun read(text: String, u: LengthUnit): java.math.BigDecimal? {
+        val t = text.trim().replace(',', '.')
+        if (!Regex("^-?(\\d+\\.?\\d*|\\.\\d+)$").matches(t)) return null
+        val v = java.math.BigDecimal(t)
+        return (if (u == LengthUnit.CM) v.movePointRight(1) else v).stripTrailingZeros().let { if (it.scale() < 0) it.setScale(0) else it }
+    }
+}

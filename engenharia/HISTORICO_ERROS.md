@@ -2203,6 +2203,17 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
 - **Baterias completas, editor `7835d4b390bd` (= HEAD), Swift do `3dbbd50`:** 1366 528/529 e 430 528/529.
   - A única falha nas duas é `testMoverNo3DEncaixaNaParede…`, da versão do teste anterior ao `d0a715db`.
   - Rodado de novo no HEAD, junto com FASE4, caneco, giro e D23: 11/11 em 1366 e 11/11 em 430.
+- **Vídeo na atualização do iOS: coberto em 25/11 (`02e5269`, run 27).** iPhone 17 Pro Max e iPad Pro 13 (iOS 26.5, simulador). O app não mudou em nenhuma rodada: só o teste.
+  - Causas no teste, achadas rodada a rodada pelo log:
+    1. O seletor do iOS 26 abre com o aviso "Location Is Included · Learn More…" por cima da grade. O teste tocava no ícone do aviso (`PickerOnboardingHeaderViewIcon`). Agora fecha no "Close".
+    2. A miniatura do vídeo (seletor = outro processo) não é "hittable". O toque vai pela posição.
+    3. No iPad o seletor abre nos álbuns. O teste abre o álbum "Videos" do seletor.
+    4. `isHittable` num elemento sem área dá erro do XCTest. Só pergunta a quem tem área.
+    5. O teste do editor novo abria em `.nonPersistent`, onde o vídeo restaurado não chegava ao banco do editor. No Chromium o mesmo caminho acha o vídeo em 315 ms. Agora usa um armazenamento de verdade, novo e vazio, como o app.
+  - Resultado nos dois: a versão publicada gravou pelo seletor (`video_*.json`), 12/12 arquivos iguais depois da atualização, o editor novo acha o vídeo igual byte a byte (sha f1723490…) e toca ("tocou até 0,78 s de 2,00 s"). Falhas 0.
+- **Android e Windows no editor final (`7751eeb`):** apk-660 → 90031, falhas 0, vídeo igual byte a byte e tocando; win-166 verde.
+- **Aparelho real: não testado.**
+
 - **Vídeo na atualização do iOS: ainda não coberto.**
   - Dados: iPhone e iPad iguais (8/8 e 4/4), projetos abrem iguais.
   - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
@@ -2248,6 +2259,41 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
     - a mesma soma da varredura nos três: 186.251.793.425 centavos.
   - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).
 - **ORC-AMB, bateria de 430 (41a0842d):** `testNadaDeEnfeite3DEValoresParteB…` achou a caixinha da lista de projetos sem efeito visível (marcar só valia ao tocar em "Adicionar os marcados"). Agora o botão conta os marcados ("Adicionar 2 marcados"). Teste sem mudança; 10/10 em 1366 e 430.
+
+## AUDITORIA DO CODE 1: FUNDO 15, ZOOM E LEGIBILIDADE DO PLANO, ORÇAMENTO DE VÁRIOS AMBIENTES (25/11, Code 2 até `4f60b3e`, juntado em `b0143b7`)
+Sondas independentes em `scratchpad` (Chromium). Editor de antes = `553745a1`.
+
+- **Fundo 15 nos 139 modelos do catálogo** (fundo 6 → 15 pelo botão):
+  - Nos 135 que não são de canto, nenhuma peça interna muda, as medidas externas ficam iguais e o fundo atrás vai de 6 → 15 (D = d + fundo). **Correto.**
+  - Nos 4 de canto em L (aéreo e guarda-roupa, esquerdo e direito), a medida externa fica igual e todas as peças de dentro que mudam perdem exatamente 9 mm (opção A do Adauto).
+  - Exceção: os tamponamentos do guarda-roupa de canto crescem 9 mm (581 → 590) pra cobrir a profundidade maior. É a regra do canto de antes, igual em `553745a1`.
+  - Nos módulos comuns, o tamponamento só acompanha o fundo com o ajuste `tpFundo` ligado (+9 em balcão, guarda-roupa e canto, igual ao editor de antes). Sem ele vale d + avanço, como sempre. **Correto.**
+- **Projeto antigo com fundo de 15 ou 18 mm digitado** (o campo numérico já existia):
+  - Total, peças, corte, plano e DXF iguais ao editor de antes.
+  - Muda só a divisão do valor entre os módulos (ex.: 291,04/143,99 → 260,05/174,98), porque o fundo passa a contar como chapa da caixa, que é onde o plano já o colocava.
+  - Orçamento salvo (cópia no app) não muda. **Risco identificado, sem perda.** O total do cliente é o mesmo.
+- **Veio:**
+  - Com veio e caixa amadeirada, 0 peças com veio giradas.
+  - **Erro pré-existente comprovado, igual em `553745a1`, que o fundo de 15 aumenta:** com a chapa padrão 1840 × 2750, o comprimento da peça vai no lado de 1840. As peças altas (portas de 2300 e, com o fundo de 15, fundos de 2200/2400) ficam em "maior que a chapa", fora do plano e da contagem de chapas do orçamento.
+  - Regra de cálculo: **não mudei**, depende do Adauto (§5).
+- **Orçamento de vários ambientes:**
+  - A conta da tela (`orcTotais`/`descAplica`) e a do app (`QuoteMath.kt`) são iguais: desconto do ambiente em centavos → subtotal → desconto geral em centavos, mesma ordem e mesmo arredondamento.
+  - Calcular outro ambiente não muda o projeto aberto (estado, seleção, CUR, `__edited`) nem a lista de projetos.
+  - A única gravação no período (aprendizado do projeto aberto, `brain`) acontece igual sem o cálculo. **Correto.**
+- **Testes:**
+  - `testMaoDeObra…` (`descontoDe10`): a nova expectativa é a regra do PDF, não ficou mais frouxa.
+  - O teste dos custos fixos ainda conferia `base × 0,9`. Trocado pela regra do PDF, escrita sem a função do editor (`2d86496`). Passa.
+- **CI:** os pacotes de teste agora ficam só como artefato do Actions (sem release pública). A trava de publicação não mudou.
+- **Baterias completas, editor `639199fa`:**
+  - 1366: 538/538.
+  - 430: 537/538. A única falha é `testFaixaDoEspelhoLed…`, só na densidade 1; 3/3 a 430 × 2.
+- **CIs no SHA juntado `2d86496` (25/11):**
+  - Android CI, Windows CI e os 3 testes de atualização (Android, Windows, iOS iPhone + iPad, com vídeo): verdes.
+  - **iOS CI 690: vermelho.** Duas falhas, repetidas duas vezes cada:
+    1. `testNadaDeEnfeite3DEValoresParteB…`, no iPhone e no iPad. No 688 (`41a0842d`, Code 2) a mensagem foi: a caixinha de marcar ambiente (`#orcamb [data-oapk]`) e os campos Nome/Descrição do custo fixo (`#cfxform [data-cfxi]`) "não fazem nada".
+    2. `testPlanoDeCorteLegivel…`, só no iPad. No 688: "641" e "125" da contra-frente do caixote (641 × 125, guarda-roupa 4 vãos) cruzam o contorno da peça.
+  - Nos dois casos passa no Chromium, inclusive no tamanho do iPad (1032 × 1376, ×1 e ×2). A diferença é do WebKit. **Erro comprovado no iOS, causa não identificada** (sem WebKit no ambiente do Code 1).
+  - As duas baterias do iOS também estouraram o limite de 75 min do passo, então parte dos testes não rodou no 690. Não aumentei o limite.
 - **iOS CI no 41a0842d:** os testes de unidade passaram (146, 0 falhas), incluindo o orçamento de vários ambientes e o desconto (mesma soma da varredura). Na bateria do editor, duas falhas:
   - `testNadaDeEnfeite3DEValoresParteB…`, no iPhone e no iPad:
     - a caixinha da lista de projetos não mudava nada visível (corrigido no 4f60b3ed: o botão conta os marcados);
@@ -2259,6 +2305,51 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
     - Hipóteses ainda abertas: arranjo diferente no iPad, métrica do texto no WebKit ou a conta de tela do WebKit.
     - A mensagem de falha agora traz a geometria exata (fonte, posição, caixa do texto, peça, viewBox, largura na tela e zoom), pra corrigir a causa no próximo iOS CI. A expectativa de zero não muda.
   - **iPhone, `testRebaixoDoPerfilGGola…`:** a varredura dos puxadores × catálogo levou 166 s, acima do limite de 2 min (aqui leva 42 s). Dividida em três terços, como os outros testes de catálogo inteiro: cada terço exige mais de 43 modelos, juntos mais de 130 como antes. As conferências do G, gola, facetado e móvel de antes ficam no 1º terço, iguais. O Chefe aprovou a divisão em 25/11.
+- **Rodada seguinte (25/11), Code 2 juntado até `ed6b650d`, editor `555deaba`:**
+  - Baterias do editor: 1366 542/542. 430 540/542:
+    - LED na densidade 1, o caso de sempre.
+    - `testNo3DDuplicarPeca…`: instável, causa comprovada. Passa 5/5 isolado. Com a CPU 4–6× mais lenta, o teste perde o toque duplo, porque os toques que ele cria por código saem com mais de 420 ms de intervalo. O editor mede pelo `e.timeStamp` do toque, certo para o toque real. **Não é defeito do app; teste não mudou.**
+  - Android CI, Windows CI e atualizações do Android e do Windows: verdes.
+  - Atualização do iOS (iPhone e iPad, com vídeo): verde no run 33 (`4c879a79`), depois de corrigir só o teste de interface:
+    - rolagem na direção do botão (página rolada pra baixo);
+    - espera pelo editor da versão publicada;
+    - toque pela posição (`isHittable` falha no WebKit);
+    - álbum "Videos" no iPad.
+  - iOS CI 692 (`7f1d9fb`):
+    - "Nada de enfeite" resolvido pelo Code 2.
+    - **Abertura do iPhone 10,36 s.** Os 47 s do 690 eram do ambiente: mesmo app, e no run 29 até a 3.0.13 publicada demorou a abrir no mesmo tipo de runner.
+    - **Continua aberto: legibilidade no iPad** ("641"/"125" da contra-frente do caixote, guarda-roupa 4 vãos). Correção com o Code 2.
+    - As baterias cortaram no limite do passo (o Code 2 subiu o do iPad para 100 min em `8b8e444c`).
+- **`testFaixaDoEspelhoLedApareceDeLongeEEmAngulo` a 430×900 (pior 12 a 13, esperado ≥ 20), 25/11, pendência do Code 1 assumida pelo Code 2.** A causa é a amostragem do teste, não o app.
+  - A 430 o espelho de 700 mm aparece com ~60 px e a faixa jateada de 40 mm fica com 2 a 3 px.
+  - Em todos os pontos que falhavam há pixel aceso da faixa a 1 px, às vezes pra dentro, às vezes pra fora: é o arredondamento da projeção, não deslocamento da faixa.
+  - Nas capturas ampliadas (/tmp, 430 e 1366) a faixa aparece contínua.
+  - Correção no teste:
+    - cada ponto conta se ele ou um vizinho a 1 px estiver aceso;
+    - os mesmos 24 pontos, as mesmas câmeras e qualidades, dia e noite;
+    - o limite ≥ 20 não muda.
+  - Prova de que o teste continua pegando o defeito: com a faixa desligada no app, dá 0 de 24 a 430 e a 1366.
+  - Antes: 12–13 a 430 (falha). Depois: passa a 430 e a 1366, e os 15 testes de espelho passam nos dois tamanhos.
+  - Visto de passagem e NÃO alterado: a linha de contorno escura do vidro de dentro passa na borda interna da faixa e, de longe, come parte dela. A faixa é jateada no mesmo vidro, então essa linha não existe de verdade. Fica registrado como possível melhoria.
+
+## REVISÃO DO CODE 2 NAS CORREÇÕES DO CODE 1 (25/11 tarde): achados e correções
+- **A31, três defeitos comprovados.** Teste `testA31ReguaNaoSai…` (`7ad4af82`), que falha antes nos três; correção `87b0e9ec`.
+  1. Régua encurtada até o mínimo de 50 saía do módulo (50 em 747 num aéreo de 750). Causa: o mínimo era aplicado depois do limite do topo.
+  2. Rodapé pela seta chegava a 630 num balcão de 820, dentro da lateral de gaveta. Causa: o limite só via folga + espessuras.
+     - Agora inclui a régua do aéreo (regra do `sanM`).
+     - Subindo, o rodapé para antes de entrar em outra peça do módulo, pela geometria do 3D.
+  3. **Projeto antigo mudava** (rodMm 100→160, portas 705→645) ao mexer na seta da porta. Causa: `rodPoFix(m)` convertia todos os rodapés do módulo. Agora `rodPoFix(m,K)` só converte a peça do gesto.
+  - Conferido também pelas sondas s48 do Claude 3 (projeto antigo mexendo na lateral: igual; limites no catálogo: nada entra).
+- **TOQUE-430 parcial, comprovado:** na cena funda, 12 de 35 pontos do móvel caíam embaixo de 🔓🗑🧮. Teste `testPlantaFunda…` (`db9b0de5`), que falha antes; correção `87b0e9ec`.
+  - Causa: a planta só descia no espaço que sobrava e a escala era fixa (440).
+  - Agora desce até sair dos botões e a escala diminui só o que faltar (`window.PLH`); com espaço sobrando, igual a antes.
+  - Na sonda do Claude 3 (paredes de 3000 a 8000), nenhum ponto nos botões. Os pontos que não pegam o móvel caem no fundo da planta, fora do desenho dele.
+- **B26:** nenhuma peça de fabricação solta (138 modelos; 690 variações do Code 2). O caso do Code 2 (altura × 0,75, 2 mm) é o desenho da dobradiça. Ela é ferragem desenhada e as partes se chamam "Porta", presas na lateral pelo braço. **Risco baixo, sem correção.**
+- **Vídeo na atualização:** verde no HEAD do teste (run 33, `4c879a79`). Depois disso o editor mudou: nova rodada no SHA final.
+- **Baterias, editor `21470d8d`** (`d29d3d44`: A31/TOQUE + LED 4fb5695a + liberdade 257195a8): 1366 546/547 e 430 546/547.
+  - A única falha nas duas é `testNichoDaParedeDoLado…` ("campoX 100, esperado 1300"). Vem do ramo da liberdade de composição: falha igual no editor dele sozinho e passa no `450ec24b`.
+  - **Achado para o Code 2:** a medida digitada que entra no vizinho já fica aplicada ANTES da resposta à pergunta (x = 100 com interseção). Se a pessoa sair sem responder, a sobreposição fica sem confirmação.
+  - O teste não está na lista de expectativas que o Code 2 avisou que mudaria.
 - **iPad, `testPlanoDeCorteLegivel…SegundoTerco` (iOS CI 694, 25/11): causa achada e corrigida.** A mensagem com a geometria mostrou o seguinte:
   - No iPad o texto "641" (fonte 28,5) tem caixa de 40,1 de altura e subida de 32,8 acima da linha de base, ou seja 1,15 da letra.
   - O plano reservava 0,95 de subida e 0,26 de descida, então o número da peça estreita (Caixote 641 × 125) passava 0,7 do contorno.
@@ -2267,3 +2358,12 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Com as medidas do iPad forçadas no Chromium, os três terços dão 0 cruzamentos e 0 peças sem identificação, a 1032×1376 e a 440×956.
   - No mesmo commit, o mínimo de cobertura dos terços foi corrigido (o Chefe achou afrouxado): >33/>333/>1666 por terço, que somam o >100/>1000/>5000 do teste inteiro de antes. Medido aqui: 47/1082/4459, 47/1436/5948 e 49/1541/6549.
   - iPhone 694: `testTomadasRegistro…TVComLogo` e `testToqueNoVaoComoNoIPhone…` (editor demorou mais de 60 s pra abrir) falharam na 1ª tentativa e passaram na repetição. É intermitente do simulador, fora destas mudanças.
+
+## UNIDADE (25/11): unidade de medida mm/cm nos Ajustes (pedido do Adauto, via Chefe) — Claude 4
+- **Pedido:** escolher mm (padrão) ou cm nos Ajustes do app; vale no editor (2D, Medir, campos), lista de peças, plano de corte, documentos impressos e nota nova do caderno. Internamente tudo em mm.
+- **Onde:** `editor.html` (script UNIDADE logo depois do de idioma: `UN.num/len/parse/u`, campos de medida com sufixo, rótulo "Cotas em …"); teclado do app (`V/SV`: o teclado mexe no texto do campo, quem lê o `.value` recebe mm); **conversão só na origem** (decisão do Chefe 25/11: nada de converter por padrão de texto, nem no DOM nem na saída do SVG): 129 pontos — dimH/dimV/dimS, cotas `qtx` da vista de frente, cpTxt (dW/dH), medSeg, sobras do plano, totais/vão livre/janelas/eletrodomésticos/pedra/cuba, planta, corte lateral, prévias dos Ajustes, dimf e cabeçalhos "Comp × Larg (un)", chapa/sobras, módulo/parede, gaveta, vão, tamponamento. Nativo: `UnitPref` em `Units.kt` (Android e Windows) e `Units.swift`; `files/unidade.json`; item "Unidade de medida" nos Ajustes das 3 plataformas; `?un=` na URL do editor.
+- **Regras:** em cm é o mm com a vírgula andando (695 → 69,5; 634,5 → 63,45), por texto, sem ponto flutuante: alternar quantas vezes quiser não muda nada. Digitar 69,5 ou 69.5 em cm grava 695. Número com #, %, °, R$, "1/1", ×quantidade e número de ordem ("Base 1", "Vão 2") nunca é medida.
+- **Caderno:** notas antigas com a unidade delas; nota nova segue os Ajustes, sem escolha = mm (decisão do Adauto; antes nascia em cm). A unidade M do caderno continua.
+- **Testes:** bateria `testUNIDADE_*` (5, mais os 3 terços de `testPlanoDeCorteLegivel…EmCm`; o 5º varre o catálogo inteiro em mm e em cm: 0 cota do desenho no número em mm, 0 palavra mudada, 0 nº de peça/litros/%/°/nº de módulos mudado — pegou "912 × 716" antes da correção). Os 5 falham na base `claude/fechamento-code1` porque a função não existe e passam: 69,5/1,5/3,5 e digitado → 695; alternar 20× byte a byte; projeto antigo igual; catálogo inteiro com partsOf/corte/orçamento/DXF idênticos em mm e cm; lista e corte em cm; preço/%/quantidade/nº/nomes iguais. JVM `UnitsTest` (Android e Windows) e XCTest `UnitPrefTests`: conversão, vírgula/ponto, ida e volta 0..100000 mm sem perda, formato do arquivo, padrão mm, arquivo dentro de files/ (backup).
+- **Pendências (não convertidas, continuam em mm):** textos de ajuda/notas do painel com número sem unidade (ex.: "Folga… 57 da borda", furação dos puxadores "192 · 288", catálogo de eletrodomésticos com medidas no nome), nomes de peça com número ("engrosso 80"), "MDF 15" (nome do material). As explicações das peças na lista e no corte ganham "mm:" na frente quando a tela está em cm. DXF R12 não tem `$INSUNITS`.
+- **Erro meu achado e corrigido no caminho:** uma troca deixou a string do rótulo "lateral … maior" (planta) sem aspas (`SyntaxError` no bloco das paredes, pego pela bateria completa: `errs` 1 em vários testes). Corrigido em `8fb9763`; agora confiro `node --check` em todos os blocos `<script>` depois de cada troca.

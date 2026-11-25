@@ -175,3 +175,43 @@ enum QuoteMath {
         return String(d).replacingOccurrences(of: ".", with: ",")
     }
 }
+
+/// UNIDADE (Adauto 25/11): unidade de medida da tela, escolhida nos Ajustes (mm ou cm). Vale no editor de móveis
+/// (passada como ?un= na mesma ponte do ?lang=) e na nota nova do caderno. Igual ao Android e ao Windows (UnitPref.kt).
+/// Internamente tudo continua em mm: aqui só muda o que aparece e como o número digitado é lido.
+/// Guardada em files/unidade.json (o mesmo arquivo nas 3 plataformas; entra no backup junto com a pasta files).
+enum UnitPref {
+    static let FILE = "unidade.json"
+
+    /// Lê o arquivo dos Ajustes. Sem arquivo ou com conteúdo estranho = sem escolha (nil).
+    static func parse(_ text: String?) -> LengthUnit? {
+        guard let text = text,
+              let r = text.range(of: "\"unidade\"\\s*:\\s*\"(mm|cm)\"", options: .regularExpression) else { return nil }
+        return text[r].contains("\"cm\"") ? .CM : .MM
+    }
+
+    static func json(_ u: LengthUnit) -> String { "{\"v\":1,\"unidade\":\"\(u == .CM ? "cm" : "mm")\"}" }
+
+    /// O que vai pro editor (?un=). Sem escolha = mm (o editor sempre mostrou mm).
+    static func editor(_ pref: LengthUnit?) -> String { pref == .CM ? "cm" : "mm" }
+
+    /// Unidade da nota nova do caderno: a dos Ajustes; sem escolha = mm (padrão geral, decisão do Adauto 25/11: a nota nova
+    /// deixa de nascer em cm). As notas antigas continuam com a unidade delas (guardada em cada nota).
+    static func newNote(_ pref: LengthUnit?) -> LengthUnit { pref ?? .MM }
+
+    /// mm → texto da tela, exato (só a vírgula anda): 695 → "69,5" em cm; 15 → "1,5"; 690 → "69". Em mm: "695".
+    static func show(_ mm: Decimal, _ u: LengthUnit) -> String {
+        let v = u == .CM ? mm / 10 : mm
+        return NSDecimalNumber(decimal: v).description(withLocale: Locale(identifier: "en_US_POSIX")).replacingOccurrences(of: ".", with: ",")
+    }
+
+    static func show(_ mm: Int, _ u: LengthUnit) -> String { show(Decimal(mm), u) }
+
+    /// Texto digitado → mm, exato. Aceita vírgula ou ponto: "69,5" e "69.5" em cm = 695 mm. nil se não for número.
+    static func read(_ text: String, _ u: LengthUnit) -> Decimal? {
+        let t = text.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".")
+        guard t.range(of: "^-?([0-9]+\\.?[0-9]*|\\.[0-9]+)$", options: .regularExpression) != nil,
+              let v = Decimal(string: t, locale: Locale(identifier: "en_US_POSIX")) else { return nil }
+        return u == .CM ? v * 10 : v
+    }
+}

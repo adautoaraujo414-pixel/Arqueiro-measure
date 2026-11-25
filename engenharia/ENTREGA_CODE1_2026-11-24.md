@@ -60,12 +60,19 @@ And/iOS/Win = CI da candidata. "base" = a falha também existe na `ed041eb` (nã
 ## 5. Preservação dos dados na atualização
 | Plataforma | Teste | Roda na CI da candidata? | Resultado |
 |---|---|---|---|
-| Android | `android-atualizacao.yml` + `teste_atualizacao_android.sh` (N05 e agora N14) | não: disparo manual | 17/11: apk-636 → 90005, 8/8 iguais. Falta rodar na candidata final |
-| iOS | `ios-atualizacao.yml` + `AtualizacaoAbreProjetosTests` | só quando o próprio teste muda; senão manual | falta rodar na candidata final |
-| Windows | `windows-atualizacao.yml` + `teste_atualizacao_windows.ps1` | não: disparo manual | 17/11: win-143 → 1.0.60001, 8/8 iguais. Falta rodar na candidata final |
+| Android | `android-atualizacao.yml` + `teste_atualizacao_android.sh` (N05, N14 e vídeo) | disparo manual | **25/11, `7751eeb` (editor final):** apk-660 → 90031, 8/8 e 4/4 iguais; vídeo gravado pelo seletor do editor publicado, igual byte a byte (sha 989ce0ff…) e toca no novo. Falhas 0 |
+| iOS | `ios-atualizacao.yml` + `AtualizacaoAbreProjetosTests` + `VideoGravarUITests` | quando o teste muda; senão manual | **25/11, `02e5269` (editor final), iPhone 17 Pro Max e iPad Pro 13 (iOS 26.5, simulador):** 3.0.13 (`3f1c3a58`) → nova, 8/8 e 4/4 iguais, projetos abrem com as mesmas medidas, peças e corte; vídeo gravado pelo seletor da versão publicada, 12/12 arquivos iguais, o editor novo acha o vídeo igual byte a byte (sha f1723490…) e toca. Falhas 0 |
+| Windows | `windows-atualizacao.yml` + `teste_atualizacao_windows.ps1` (com vídeo) | disparo manual | **25/11, `7751eeb` (editor final):** win-166 → nova, verde (dados e vídeo) |
+
+Teste em aparelho real: **não feito** (só emulador, simulador e runner do Windows).
 
 ## 6. Baterias desta entrega
-(preenchido no fim)
+- Editor `7835d4b390bd` (o mesmo do HEAD), perfis novos do Chromium, uma bateria por navegador, sem aumentar limite de tempo:
+  - **1366×768:** 528/529.
+  - **430×900:** 528/529.
+- Nas duas, a única falha é `testMoverNo3DEncaixaNaParede…`. A bateria leu o Swift antes da correção do teste (`d0a715db`, auditada).
+- No HEAD, esse teste mais FASE4, caneco, giro e D23: 11/11 em 1366 e 11/11 em 430.
+- Antes disso, no `78e7d62`: 430 527/527 e 1366 526/527 (FASE4, causa no HISTORICO, corrigido em `3dbbd50`).
 
 ## 7. Decisões do Adauto de 24/11 — parte do Code 1 (detalhe no HISTORICO, "DECISÕES DO ADAUTO 24/11")
 PNGs antes (b9f4476) × depois em `engenharia/diagnosticos/homologacao_2026-11-24/code1/decisoes/`.
@@ -78,6 +85,6 @@ PNGs antes (b9f4476) × depois em `engenharia/diagnosticos/homologacao_2026-11-2
 | B26 peça flutuante | Investigado: nenhuma peça de corte solta (138 modelos); validação permanente | bcd3603 | `testNenhumaPecaDeFabricacaoFicaSoltaNo3DEmTodoOCatalogo` | — |
 | 3 · A31 | FEITO: régua (8 modelos) e rodapé (todo pedestal) editáveis pela seta, dentro do limite; portas recalculam | a22988f · d51fa62 | `testA31AlturaDaReguaEspacadoraEDoRodapePelaSetaDo3D` | `A31_rodape_seta_{antes,depois}_{1366,430}.png` |
 | Quarto item aberto | = defeito 45 (painéis "até o teto" acompanham o pé-direito). Conflito entre a regra de 16/11 e pedidos aprovados de painel acompanhar teto/gesso | — | — | **Pergunta ao Adauto** |
-| D23 identidade | NÃO FEITO nesta rodada (arquitetura + migração de dados, §3) | — | — | pendente |
-| Vídeo na atualização | Windows coberto (CI verde); Android e iOS em andamento (ver §5) | 70f7782, d2446d5, dc4892b, 69aca94 | `video_cdp.py`, `VideoGravarUITests`, `testVideoGravadoPelaVersaoPublicada…` | — |
+| D23 identidade | Feito pelo Code 2 (`d687d0a9`, `d0a715db`). Auditado e juntado (`e6e95ba`, `dae8a33`): projeto publicado abre igual com e sem `uid`, teste do vizinho com a mesma força | d687d0a9 | `testIdentidadeUnicaModuloEPeca…` | — |
+| Vídeo na atualização | Windows e Android cobertos (CI verde: vídeo igual byte a byte e toca no editor novo). iOS coberto (25/11, `02e5269`): iPhone e iPad no simulador, vídeo gravado pela versão publicada volta igual e toca (§5) | 70f7782, d2446d5, dc4892b, 69aca94 | `video_cdp.py`, `VideoGravarUITests`, `testVideoGravadoPelaVersaoPublicada…` | — |
 | Auditoria do Code 2 (850e193e + decisões) | integrado (42008b8, 7d257c1); expectativas mudadas trazem decisão e data; orientação do G igual | — | baterias §6 | — |

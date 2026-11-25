@@ -18,6 +18,15 @@ final class AppModel: ObservableObject {
     /// Guia passo a passo: aparece sozinho na primeira vez (e no menu da biblioteca).
     @Published var showGuide = !UserDefaults.standard.bool(forKey: "arque.guideSeen") && !ProcessInfo.processInfo.arguments.contains("-demo")
     @Published var filter: LibFilter = .all
+    /// UNIDADE (Adauto 25/11): mm ou cm nos Ajustes. Fica em files/unidade.json (entra no backup); nil = nunca escolheu
+    /// (aí vale mm em tudo, inclusive na nota nova do caderno: decisão do Adauto 25/11). Internamente tudo continua em mm.
+    @Published private(set) var unitPref: LengthUnit? = UnitPref.parse(try? String(contentsOf: AppPaths.files.appendingPathComponent(UnitPref.FILE), encoding: .utf8))
+
+    func changeUnitPref(_ u: LengthUnit) {
+        let f = AppPaths.files.appendingPathComponent(UnitPref.FILE)
+        // gravação atômica (o arquivo anterior fica inteiro se o app morrer no meio)
+        if (try? UnitPref.json(u).write(to: f, atomically: true, encoding: .utf8)) != nil { unitPref = u }
+    }
     @Published private(set) var session: EditorSession?
     @Published var tabs: [String] = []
     @Published var toast: String? { didSet { if toast != nil { scheduleToastClear() } } }
@@ -237,7 +246,8 @@ final class AppModel: ObservableObject {
         // nota nova ligada a um projeto já nasce com o nome do cliente
         let proj = lastProjectId.flatMap { pid in moveisProjects().first { $0.id == pid } }.flatMap { defaultProjName($0) ? nil : $0 }
         let typed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let n = Note(name: !typed.isEmpty ? typed : (proj?.name ?? tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1)), folderId: folder)
+        var n = Note(name: !typed.isEmpty ? typed : (proj?.name ?? tr("Nota {0}", index.notes.filter { !$0.trash }.count + 1)), folderId: folder)
+        n.unit = UnitPref.newNote(unitPref) // UNIDADE (25/11): a dos Ajustes; sem escolha = mm (decisão do Adauto)
         if let p = lastProjectId {
             links[n.id] = p
             store.saveLinks(links)

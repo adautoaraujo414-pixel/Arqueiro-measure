@@ -113,7 +113,7 @@ fun MoveisScreen(vm: AppViewModel) {
             }
         }
         loadedFlag = false
-        Browser.load("${Browser.ORIGIN}/editor.html?lang=${I18n.lang}&cur=${java.net.URLEncoder.encode(I18n.currencySymbol(), "UTF-8")}&win=1")
+        Browser.load("${Browser.ORIGIN}/editor.html?lang=${I18n.lang}&cur=${java.net.URLEncoder.encode(I18n.currencySymbol(), "UTF-8")}&win=1&un=${br.com.arque.measure.logic.UnitPref.editor(vm.unitPref)}")
         vm.moveisSink = { mm -> SwingUtilities.invokeLater { Browser.js("window.arqueLaser&&window.arqueLaser(${String.format(java.util.Locale.US, "%.1f", mm)})") } }
         onDispose {
             vm.moveisSink = null

@@ -7124,5 +7124,9 @@
 "travessa e laterais": "travesaño y laterales",
 "Confirme a folga da dobradiça ou o rebaixo que você usa.": "Confirme la holgura de la bisagra o el rebaje que usa.",
 "O desconto da porta não muda.": "El descuento de la puerta no cambia.",
-"Perfil G sem encostar na caixa com estes valores.": "Perfil G sin tocar el mueble con estos valores."
+"Perfil G sem encostar na caixa com estes valores.": "Perfil G sin tocar el mueble con estos valores.",
+"Unidade de medida": "Unidad de medida",
+"Milímetros (mm)": "Milímetros (mm)",
+"Centímetros (cm)": "Centímetros (cm)",
+"Vale no editor, nas cotas, na lista de peças, no plano de corte e na nota nova. As medidas continuam guardadas em mm: trocar não muda nenhum projeto.": "Vale en el editor, las cotas, la lista de piezas, el plan de corte y la nota nueva. Las medidas siguen guardadas en mm: cambiar no modifica ningún proyecto."
 }

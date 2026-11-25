@@ -40,6 +40,7 @@ struct LibraryView: View {
     @State private var peerView = false
     @State private var syncOpen = false
     @State private var langOpen = false
+    @State private var unitOpen = false
     @State private var manageSub = false
     @State private var toolsOpen = false
     @State private var settingsOpen = false
@@ -112,6 +113,7 @@ struct LibraryView: View {
         .sheet(isPresented: $peerView) { PeerViewPicker() }
         .sheet(isPresented: $syncOpen) { SyncView().environmentObject(app) }
         .sheet(isPresented: $langOpen) { LanguagePicker() }
+        .sheet(isPresented: $unitOpen) { UnitPicker() }
         .sheet(isPresented: $btOpen) { BluetoothView() }
         .sheet(isPresented: $companyOpen) { CompanySheet(c: app.company) }
         .sheet(isPresented: $toolsOpen) { HomeMenuSheet(title: tr("Ferramentas"), items: toolsItems) }
@@ -626,6 +628,7 @@ struct LibraryView: View {
             HomeMenuItem(icon: "arrow.triangle.2.circlepath", label: tr("Sincronizar com outro aparelho (Wi-Fi)"), action: { afterSheet { syncOpen = true } }),
             HomeMenuItem(icon: "iphone.radiowaves.left.and.right", label: tr("Ver projeto de outro iPhone"), action: { afterSheet { peerView = true } }),
             HomeMenuItem(icon: "globe", label: langLabel, action: { afterSheet { langOpen = true } }),
+            HomeMenuItem(icon: "ruler", label: tr("Unidade de medida") + " (" + UnitPref.editor(app.unitPref) + ")", action: { afterSheet { unitOpen = true } }),
             HomeMenuItem(icon: "creditcard", label: tr("Gerenciar assinatura"), action: { afterSheet { manageSub = true } }),
             HomeMenuItem(icon: "book", label: tr("Guia passo a passo"), action: { afterSheet { app.showGuide = true } }),
             HomeMenuItem(icon: "questionmark.circle", label: tr("Ajuda e suporte"), url: SiteLinks.support),
@@ -1077,5 +1080,37 @@ struct NoteRow: View {
         } label: {
             Image(systemName: "ellipsis").font(.system(size: 16, weight: .bold)).foregroundColor(Ui.dim).frame(width: 40, height: 40)
         }
+    }
+}
+
+/// UNIDADE (Adauto 25/11): Ajustes › Unidade de medida: Milímetros (mm) ou Centímetros (cm), igual ao Android e ao Windows.
+/// Só muda o que aparece; as medidas continuam guardadas em mm.
+struct UnitPicker: View {
+    @EnvironmentObject var app: AppModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach([LengthUnit.MM, LengthUnit.CM], id: \.self) { u in
+                    Button {
+                        app.changeUnitPref(u)
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Text(u == .CM ? tr("Centímetros (cm)") : tr("Milímetros (mm)")).foregroundColor(Ui.text)
+                            Spacer()
+                            if (app.unitPref ?? .MM) == u { Image(systemName: "checkmark").foregroundColor(Ui.accent) }
+                        }
+                    }
+                }
+                Text(tr("Vale no editor, nas cotas, na lista de peças, no plano de corte e na nota nova. As medidas continuam guardadas em mm: trocar não muda nenhum projeto."))
+                    .font(.footnote).foregroundColor(Ui.dim)
+            }
+            .navigationTitle(tr("Unidade de medida"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(tr("Fechar")) { dismiss() } } }
+        }
+        .presentationDetents([.medium])
     }
 }

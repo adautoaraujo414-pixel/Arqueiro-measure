@@ -14379,6 +14379,32 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    /* B26 mais forte (pedido do Chefe, 25/11, achado do Code 3): o teste de cima acusa peça sem contato nenhum, mas não peça fora do lugar
+       que ainda encosta de lado (prateleira ou tamponamento subido 10 mm). Aqui cada peça de fabricação do 3D tem que estar na altura que o
+       partsOf (a fonte das peças, a mesma do 2D) dá: y0 e y1 do 3D = topo − y − h e topo − y, com 1,5 mm de tolerância, em todo o catálogo.
+       Fora da conta só o que corre por dentro (gaveta, gaveta interna, caixote de gaveta, porta-tempero: o desenho de frente não é a posição)
+       e a prateleira inclinada da sapateira (caixa envolvente). Controle: a mesma conta com a prateleira e o tamponamento subidos 10 mm acusa */
+    func testCadaPecaNo3DFicaNaAlturaDoPartsOfEmTodoOCatalogo() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var W=function(t){return new Promise(function(r){setTimeout(r,t)})},e0=__errs.length;
+        var mods=[];CATS.forEach(function(c){(c.it||[]).forEach(function(it){var t=typeof it==='number'?TPL[it]:it;if(t&&!t.act&&t.n&&mods.every(function(q){return q.n!==t.n}))mods.push(t)})});
+        var FORA=/de gaveta|Gaveta interna|Caixote · gaveta|porta tempero|prateleira inclinada/i,tol=1.5;
+        var confere=function(m,BX,sobe){var top=(+m.b||0)+(+m.h||0),ruins=[],n=0;partsOf(m).forEach(function(p){if(p.noCut||!p.pk||FORA.test(p.name))return;var bs=BX.filter(function(b){return b.pk===p.pk});if(!bs.length)return;n++;
+          var dy=(sobe&&sobe.test(p.name))?10:0,y0=Math.min.apply(null,bs.map(function(b){return b.y0}))+dy,y1=Math.max.apply(null,bs.map(function(b){return b.y1}))+dy,e0_=y0-(top-p.y-p.h),e1_=y1-(top-p.y);if(Math.abs(e0_)>tol||Math.abs(e1_)>tol)ruins.push(p.name+' '+Math.round(e0_)+'/'+Math.round(e1_))});return {n:n,ruins:ruins}};
+        open3D();await W(400);var out=[],tot=0,cm=0,ctl=[];
+        for(var i=0;i<mods.length;i++){var t=JSON.parse(JSON.stringify(mods[i]));loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=6000;S.H=2700;draw();newTpl(t);var m=S.mods[0];if(!m)continue;m.x=1500;draw();__build();
+          var BX=__boxes().filter(function(b){return b.nm&&/^0:/.test(b.nm)&&!b.ft&&b.g!=='sh'&&b.g!=='lo'}),r=confere(m,BX,null);tot+=r.n;cm++;if(r.ruins.length)out.push(t.n+': '+r.ruins.slice(0,3).join(', '));
+          /* controle: prateleira e tamponamento subidos 10 mm (ainda encostam de lado) */if(ctl.length<6){var rc=confere(m,BX,/^(Prateleira|Tamponamento)/);if(rc.ruins.length)ctl.push(t.n)}}
+        document.getElementById('v3x').click();return JSON.stringify({modelos:cm,pecas:tot,fora:out.join(' | ')||'nenhuma',controle:ctl.length,errs:__errs.length-e0});
+        """#)
+        XCTAssertGreaterThan(o["modelos"] as? Int ?? 0, 130, "o catálogo inteiro")
+        XCTAssertGreaterThan(o["pecas"] as? Int ?? 0, 1500, "peças conferidas")
+        XCTAssertEqual(o["fora"] as? String, "nenhuma", "peça do 3D fora da altura do partsOf (subida ou descida)")
+        XCTAssertEqual(o["controle"] as? Int, 6, "controle: prateleira/tamponamento subidos 10 mm são acusados")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* ARRASTO-CONFINADO (B15 / defeito 45; decisão do Adauto 24/11): durante o arrasto o móvel fica dentro do ambiente, não muda de medida
        e não entra em outro nem empurra ninguém. Antes: com a parede encolhida (regra: o ambiente não mexe nos móveis), arrastar o balcão de
        900 numa parede de 800 deixava ele com 730 (o confine do arrasto encolhia), e o balcão que ficou fora da parede era puxado pra dentro
@@ -17693,6 +17719,29 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
+    // ESP-FAIXA-430 (pedido do Chefe, 25/11, achado do Code 3 na revisão do 4fb5695a): a 430 com densidade 1, na vista 1,05/−0,5, 9 de 360 direções
+    // do anel não tinham NENHUM pixel aceso da faixa (a linha de contorno do vidro do centro caía na borda de dentro da faixa). Varredura radial:
+    // em cada uma das 360 direções, de 100 mm pra dentro a 100 mm pra fora do meio da faixa, tem que haver faixa acesa; dia e noite, 3 qualidades,
+    // 4 vistas. Controle: com o LED desligado as 360 direções ficam apagadas (o teste enxerga a falta). O ESP-FAIXA (faixa atrás do vidro) dá
+    // direções apagadas na maioria das vistas
+    func testFaixaDoEspelhoLedContinuaNasTrezentasESessentaDirecoes() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=4600;S.H=2600;S.fr=[];draw();var a=espWallAdd(4);a.x=150;draw();var med=JSON.stringify([a.x,a.b,a.w,a.h,a.d]);open3D();await W(500);document.querySelectorAll('button').forEach(function(x){if(x.textContent.trim()==='Entendi')x.click()});
+        var cv=document.getElementById('cv3'),gl=cv.getContext('webgl'),cx=a.x+a.w/2,cy=a.b+a.h/2,rr=a.w/2-60,r=Math.min(2,window.devicePixelRatio||1);
+        var varre=function(){var Wd=gl.drawingBufferWidth,H=gl.drawingBufferHeight,FB=new Uint8Array(Wd*H*4);gl.readPixels(0,0,Wd,H,gl.RGBA,gl.UNSIGNED_BYTE,FB);var lit=function(X,Y){if(X<0||Y<0||X>=Wd||Y>=H)return false;var i=(Y*Wd+X)*4;return FB[i]>=235&&FB[i]-FB[i+2]>=12};var ap=0;for(var g=0;g<360;g++){var t=Math.PI*2*g/360,ach=false;for(var u=-100;u<=100&&!ach;u+=2){var p=__p3(cx+(rr+u)*Math.cos(t),cy+(rr+u)*Math.sin(t),4.2);if(p&&lit(Math.round(p[0]*r),Math.round(H-p[1]*r)))ach=true}if(!ach)ap++}return ap};
+        var V=[[1.05,-.5],[1.05,.5],[1.3,-.5],[1.05,0]],ruins=[],tot=0;for(var ni=0;ni<2;ni++){fx3api.night(ni);['auto','equil','alta'].forEach(function(q){window.ESPQ=q;V.forEach(function(z){__cam(z[1],.12,z[0]);var ap=varre();tot+=ap;if(ap)ruins.push((ni?'noite':'dia')+' '+q+' '+z.join('/')+': '+ap)})})}
+        window.ESPQ='';fx3api.night(0);R.apagadas=tot;R.onde=ruins.join(' | ')||'nenhuma';
+        /* controle: LED desligado, a mesma varredura enxerga as 360 direções apagadas */a.led=Object.assign({},a.led||{},{on:0});draw();if(window.re3)re3();await W(200);__cam(-.5,.12,1.05);R.controle=varre();delete a.led.on;draw();
+        R.medidas=med===JSON.stringify([a.x,a.b,a.w,a.h,a.d]);document.getElementById('v3x').click();R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["apagadas"] as? Int, 0, "direções do anel sem nenhum pixel da faixa aceso (dia/noite × auto/equil/alta × 4 vistas): \(o["onde"] ?? "")")
+        XCTAssertEqual(o["controle"] as? Int, 360, "controle: com o LED desligado a varredura vê as 360 direções apagadas")
+        XCTAssertEqual(o["medidas"] as? Bool, true, "espelho no mesmo lugar e com a mesma medida")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
     /* PROJ-SEM-MODULO (auditoria 23/11, risco já existente na versão publicada c561120): abrir projeto SEM módulo (só espelho, pedra…) dava
        TypeError no loadState (defs(undefined)) no meio do carregamento; o resto não rodava e, ao salvar, a obra e o ambiente do projeto eram apagados.
        Agora abre inteiro. Projeto com módulo não muda. */
@@ -17988,6 +18037,39 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["v1"] as? String, "no editor: meus modelos 1 · preço 123", "os preços e Meus modelos do backup voltam no editor")
         XCTAssertEqual(o["v2"] as? String, "uso normal: preço \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?") = \((o["v2"] as? String)?.components(separatedBy: " = ").last ?? "?")", "uso normal não muda")
         XCTAssertEqual(o["v9"] as? String, "erros 0", "sem erro")
+    }
+
+    /* ARQ-CORROMPIDO (pedido do Chefe, 25/11, achado do Code 3 na revisão do 70f5130; P0): prices.json ilegível (onde ficam os preços e Meus
+       modelos) era gravado por cima pelos padrões sem cópia. Agora: cópia byte a byte (<nome>.corrompido-…json, pela ponte) e aviso antes de
+       gravar; cópia que não grava → o arquivo não é mexido. Arquivo bom, uso normal e backup restaurado (PRECOS-RESTAURO) iguais. projects.json:
+       a cópia que já existia ganha o aviso */
+    func testArquivoIlegivelGuardaCopiaEAvisaAntesDeGravarPorCima() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        window.MINI3OFF=1;PR.setupDone=1;var msgs=[];window.toast=function(t){msgs.push(String(t))};var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})},R={},e0=__errs.length;var A=window.ArqueApp;
+        var b64=function(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))},le=function(n){try{return JSON.parse(decodeURIComponent(escape(atob(A.getFile(n)))))}catch(e){return null}};
+        var copias=function(pre){return JSON.parse(A.listFiles()||'[]').filter(function(n){return n.indexOf(pre)===0})};
+        var PR0=JSON.parse(JSON.stringify(PR));
+        /* a abertura do app como no teste do PRECOS-RESTAURO: banco vazio, padrões, prSave */var abre=function(){try{localStorage.removeItem(PRK)}catch(_){}window.__prLido=0;window.__prCorrVisto=0;window.__prBloq=0;window.__arqCorr=[];Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,JSON.parse(JSON.stringify(PRD)));PR.myMods=[];prSave()};
+        var casos=[['json quebrado',btoa('{"mdfM2":123,"myMods":[{"id":"my1"')],['texto que nem é base64','###arquivo quebrado###']],res=[];
+        for(var c=0;c<casos.length;c++){var raw=casos[c][1];copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json',raw);msgs=[];abre();await W(1000);
+          var cp=copias('prices.corrompido-');res.push(casos[c][0]+': cópias '+cp.length+' · igual byte a byte '+(cp.length===1&&A.getFile(cp[0])===raw)+' · aviso '+msgs.some(function(t){return /prices\.json estava ilegível/.test(t)&&t.indexOf(cp[0])>=0})+' · arquivo novo legível '+!!le('prices.json'))}
+        R.corrompido=res.join(' | ');
+        /* outra abertura com o mesmo arquivo quebrado: não guarda a mesma cópia de novo */var raw2=btoa('{"quebrado"');copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json',raw2);abre();A.putFile('prices.json',raw2);abre();R.semRepetir='cópias '+copias('prices.corrompido-').length;
+        /* a cópia não grava (aparelho sem espaço): o arquivo quebrado não é mexido e o aviso diz isso */var pf=A.putFile,falhou=false;copias('prices.corrompido-').forEach(function(n){A.delFile(n)});A.putFile('prices.json','@@quebrado@@');try{A.putFile=function(n,b){if(/corrompido/.test(n))return false;return pf.apply(A,arguments)}}catch(_){}msgs=[];abre();await W(1000);try{A.putFile=pf}catch(_){}R.copiaFalha='arquivo '+(A.getFile('prices.json')==='@@quebrado@@'?'intacto':'MEXIDO')+' · aviso '+msgs.some(function(t){return /não consegui guardar uma cópia/.test(t)});
+        /* arquivo bom (backup restaurado): o PRECOS-RESTAURO de sempre, sem cópia nem aviso */copias('prices.corrompido-').forEach(function(n){A.delFile(n)});var bom=JSON.parse(JSON.stringify(PR0));bom.myMods=[{id:'my1',n:'Balcão do cliente',w:900,h:820,d:560,v:[{k:'door',n:2}]}];bom.mdfM2=123;A.putFile('prices.json',b64(bom));msgs=[];abre();await W(1000);var f=le('prices.json');
+        R.restaurado='meus modelos '+((f&&f.myMods)||[]).length+' · preço '+(f&&f.mdfM2)+' · editor '+(PR.myMods||[]).length+'/'+PR.mdfM2+' · cópias '+copias('prices.corrompido-').length+' · avisos '+msgs.filter(function(t){return /ilegível/.test(t)}).length;
+        /* uso normal (banco cheio): igual, sem cópia */window.__prCorrVisto=0;window.__arqCorr=[];Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);prSave();R.normal='arquivo = PR '+(JSON.stringify(le('prices.json'))===JSON.stringify(PR))+' · cópias '+copias('prices.corrompido-').length;
+        /* projects.json ilegível: a cópia de sempre (projects.corrompido.json) e agora o aviso */var pj0=A.getFile('projects.json');copias('projects.corrompido').forEach(function(n){A.delFile(n)});A.putFile('projects.json',btoa('[{"id":"p1","current":'));msgs=[];if(window.pjsCorrGuard)window.pjsCorrGuard();await W(1400);R.projetos='cópia '+(A.getFile('projects.corrompido.json')===btoa('[{"id":"p1","current":'))+' · aviso '+msgs.some(function(t){return /projetos estava ilegível/.test(t)});if(pj0)A.putFile('projects.json',pj0);else A.delFile('projects.json');copias('projects.corrompido').forEach(function(n){A.delFile(n)});
+        Object.keys(PR).forEach(function(k){delete PR[k]});Object.assign(PR,PR0);R.errs=__errs.length-e0;return JSON.stringify(R)
+        """#)
+        XCTAssertEqual(o["corrompido"] as? String, "json quebrado: cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true | texto que nem é base64: cópias 1 · igual byte a byte true · aviso true · arquivo novo legível true", "prices.json ilegível: cópia byte a byte e aviso antes de gravar por cima")
+        XCTAssertEqual(o["semRepetir"] as? String, "cópias 1", "a mesma cópia não é guardada duas vezes")
+        XCTAssertEqual(o["copiaFalha"] as? String, "arquivo intacto · aviso true", "sem conseguir guardar a cópia, o arquivo não é mexido")
+        XCTAssertEqual(o["restaurado"] as? String, "meus modelos 1 · preço 123 · editor 1/123 · cópias 0 · avisos 0", "backup restaurado (PRECOS-RESTAURO) igual, sem cópia nem aviso")
+        XCTAssertEqual(o["normal"] as? String, "arquivo = PR true · cópias 0", "uso normal igual")
+        XCTAssertEqual(o["projetos"] as? String, "cópia true · aviso true", "projects.json ilegível: cópia e aviso")
+        XCTAssertEqual(o["errs"] as? Int, 0)
     }
 
     /* PROJETO-PUBLICADO (auditoria técnica 24/11, preservação dos projetos): os projetos do backup de referência rico (tests/backup-referencia-rico),

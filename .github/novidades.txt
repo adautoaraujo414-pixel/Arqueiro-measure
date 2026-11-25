@@ -1,5 +1,7 @@
 # Texto do aviso "Atualização disponível" desta publicação. Atualize este arquivo a cada publicação:
 # se ele não mudar, o aviso volta a sair das mensagens dos commits. Linhas com # não aparecem.
+• Espelho com LED: a faixa iluminada aparece inteira em volta do espelho também de longe e em tela pequena (antes uma linha escura apagava pedaços dela).
+• Se o arquivo de preços e Meus modelos estiver ilegível, o app guarda uma cópia dele como está antes de gravar e avisa. Se não conseguir guardar a cópia, não mexe no arquivo. Nada é apagado.
 • Projetos mais seguros: se o aparelho não conseguir gravar o arquivo dos projetos (pouco espaço, por exemplo), o app avisa e, ao abrir de novo, não volta o projeto antigo por cima do que você fez.
 • Ficam salvos no projeto (antes voltavam ao padrão ao fechar e abrir): medidas do gerador de painéis da parede, profundidade da sala esticada pela parede do lado, última altura do rodapé e as escolhas de decoração e da TV no 3D. Desfazer também guarda.
 • Vídeos do projeto entram no backup e passam pra outro aparelho junto com as fotos. Vídeo maior que 64 MB continua guardado no aparelho, com aviso de que não vai no backup.

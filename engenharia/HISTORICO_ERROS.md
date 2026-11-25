@@ -2270,3 +2270,46 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Prova de que o teste continua pegando o defeito: com a faixa desligada no app, dá 0 de 24 a 430 e a 1366.
   - Antes: 12–13 a 430 (falha). Depois: passa a 430 e a 1366, e os 15 testes de espelho passam nos dois tamanhos.
   - Visto de passagem e NÃO alterado: a linha de contorno escura do vidro de dentro passa na borda interna da faixa e, de longe, come parte dela. A faixa é jateada no mesmo vidro, então essa linha não existe de verdade. Fica registrado como possível melhoria.
+
+## ESP-FAIXA-430, ARQ-CORROMPIDO e B26-ALTURA (Code 3, 25/11, áreas dadas pelo Chefe; ramo `claude/c3-revisao`)
+### ESP-FAIXA-430: faixa jateada do espelho LED com falhas de longe (achado do Code 3 na revisão do 4fb5695a)
+- **Reproduzir:** 430×900 com densidade 1, `espWallAdd(4)`, `a.x=150`, `__cam(-.5,.12,1.05)`. Varredura radial: 9 de 360 direções sem nenhum pixel aceso da faixa, de dia e à noite, nas 3 qualidades (54 no total).
+- **Causa raiz (comprovada):** no `espDraw3`, com faixa (`J_`), o centro espelhado é uma peça separada (`espPts(f,-(J_.off+J_.w))`). Era a única camada do espelho com LED sem `nol=1`. A linha de contorno dela caía exatamente na borda de dentro da faixa e, de longe, apagava a faixa em alguns ângulos. A faixa é jateada no mesmo vidro: essa borda não existe no espelho de verdade.
+  - Prova: só com `nol=1` nessa peça, as direções apagadas caem de 9 para 0. Nada mais muda.
+- **Correção:** `nol=1` no centro espelhado quando há faixa. O contorno de fora, as medidas, o lugar e a profundidade não mudam.
+- **Família:** todas as formas (retangular, redondo/oval, arco), bordas e molduras passam pelo mesmo `espDraw3`. Espelho sem faixa: igual. Os 26 testes de espelho/LED passam a 430 d1, 430x2 e 1366.
+- **Teste:** `testFaixaDoEspelhoLedContinuaNasTrezentasESessentaDirecoes`, com varredura radial de 360 direções × 24 vistas e controle (LED desligado = 360 apagadas).
+  - Antes: 54 apagadas a 430 d1. Depois: 0 a 430 d1, 430x2 e 1366.
+  - Com o ESP-FAIXA de volta (faixa fora do passe GOL): 1217 a 6480 apagadas. A margem saiu de 15/20 do teste de pontos pra mais de mil.
+  - O `testFaixaDoEspelhoLedApareceDeLongeEEmAngulo` não mudou.
+- **Projeto antigo:** nada é gravado; só o desenho do 3D.
+
+### ARQ-CORROMPIDO: prices.json ilegível gravado por cima sem cópia (P0, achado do Code 3 na revisão do 70f5130)
+- **Reproduzir:** `prices.json` com JSON quebrado ou texto que nem é base64, banco do navegador vazio, abrir o editor. O 1º `prSave` grava os padrões por cima. Preços e Meus modelos (`PR.myMods`) ilegíveis somem sem cópia.
+- **Causa:** o `prSave` grava o arquivo sem olhar o que está lá. O PRECOS-RESTAURO lê o arquivo, mas, se o `JSON.parse` falha, segue e grava por cima.
+- **Correção (camada, sem mexer no caminho do PRECOS-RESTAURO):**
+  - `arqCorrCopia(nome, valido)`: arquivo ilegível → cópia como está, pela mesma ponte (`<nome>.corrompido-AAAAMMDD-HHMMSS.json`, conferida byte a byte) e aviso.
+  - A mesma cópia não se repete.
+  - Se a cópia não grava, `__prBloq` impede gravar o `prices.json` nesta sessão: o arquivo fica intacto e o aviso pede backup.
+  - Nunca apaga. Roda na 1ª gravação da sessão.
+- **Família:**
+  - `projects.json`: já guardava `projects.corrompido.json`, mas calado. Agora avisa, e a checagem ficou em `window.pjsCorrGuard` (mesmo código, chamado na abertura como antes).
+  - Meus modelos ficam no `prices.json`: cobertos.
+  - **Risco identificado, não mexido (fora das áreas):** `apmodels.json` (eletros com medida própria). Ilegível na abertura, o texto quebrado vai pro banco do navegador e o `JSON.parse` lança dentro do mesmo `try` que restaura as fotos depois (as fotos não voltariam nessa abertura). Gravar um modelo de eletro grava por cima sem cópia.
+- **Teste:** `testArquivoIlegivelGuardaCopiaEAvisaAntesDeGravarPorCima`.
+  - Antes: cópias 0 e arquivo mexido.
+  - Depois: cópia byte a byte e aviso nos 2 tipos de quebra, sem repetir; cópia que falha deixa o arquivo intacto.
+  - Backup restaurado (PRECOS-RESTAURO) e uso normal iguais, sem cópia nem aviso. `projects.json`: cópia e aviso.
+  - `testBackupRestaurado…` e `testProjetoGravadoPelaVersaoPublicada…` passam iguais.
+
+### B26-ALTURA: peça fora do lugar que ainda encosta de lado (pedido do Chefe, a partir da revisão do Code 3)
+- O `testNenhumaPecaDeFabricacaoFicaSoltaNo3D…` (Code 1, sem mudança) confere ligação: peça subida 10 mm que encosta de lado passa.
+- Só pela geometria não dá pra saber se ela está fora do lugar: 317 tamponamentos e 4434 portas do catálogo não têm nada embaixo, presos de lado como na montagem de verdade.
+- **Teste novo `testCadaPecaNo3DFicaNaAlturaDoPartsOfEmTodoOCatalogo`:** a altura de cada peça de fabricação no 3D (y0/y1) tem que ser a do `partsOf` (topo − y − h / topo − y), com 1,5 mm, em todo o catálogo (138 modelos, 2089 peças).
+  - Fora só o que corre por dentro (gaveta, gaveta interna, caixote de gaveta, porta-tempero: o desenho de frente deles não é a posição) e a prateleira inclinada da sapateira.
+  - Controle interno: prateleira e tamponamento subidos 10 mm são acusados.
+  - Prova no app: editor com o 3D subindo prateleira e tamponamento 10 mm. O teste do Code 1 passa; o novo acusa ("Tamponamento esquerdo 10/10" em todos os balcões).
+- **Resultado no catálogo:** nenhuma peça fora da altura. Nenhum defeito pra mandar ao Code 1.
+- **Visto e não mexido (risco de identidade, D23):**
+  - No aéreo com tamponamento de 30 + cava, o `partsOf` tem "Tamponamento esquerdo#1" (750 × 80) e o 3D tem só as réguas com `pk` "Tamponamento esquerdo (régua)#1/#2". O `pk` da peça não acha caixa no 3D (o "localizar no 3D" do plano de corte pode não achar).
+  - Sapateira · aparador e as peças da gaveta interna também não têm caixa 3D com o mesmo `pk`.

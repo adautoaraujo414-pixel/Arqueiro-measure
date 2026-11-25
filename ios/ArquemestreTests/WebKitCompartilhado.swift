@@ -16,6 +16,47 @@ enum WebKitCompartilhado {
     static let store = WKWebsiteDataStore.nonPersistent()
     private static var aquecido = false
 
+    // RECURSO-DIAG (Chefe 25/11, quedas do iOS 699): conta os WKWebView ainda vivos (referência fraca: só some quando o WebKit
+    // solta de verdade), a memória do app de teste e os processos do WebKit no Mac, a cada 50 testes. Só imprime; sem assert e sem limite.
+    private static let vivos = NSHashTable<WKWebView>.weakObjects()
+    private static var criados = 0, testes = 0
+
+    static func registra(_ w: WKWebView) { vivos.add(w); criados += 1 }
+
+    static func depoisDoTeste(_ nome: String) {
+        testes += 1
+        let n = vivos.allObjects.count
+        guard testes % 50 == 0 || n > 3 else { return }
+        print("RECURSO-DIAG teste \(testes) (\(nome)) · WKWebView vivos \(n) de \(criados) criados · memória do app \(memoriaMB()) MB · processos com.apple.WebKit no Mac \(processosWebKit())")
+    }
+
+    /// memória do app de teste (phys_footprint, o número que o iOS usa pra matar app por memória); -1 se não der pra ler
+    static func memoriaMB() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let kr = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count) }
+        }
+        return kr == KERN_SUCCESS ? Int(info.phys_footprint / 1_048_576) : -1
+    }
+
+    /// quantos processos com nome começando por "com.apple.WebKi" (WebContent, GPU e Networking: o nome curto do kernel corta em 16 letras); -1 se não der
+    static func processosWebKit() -> Int {
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
+        var size = 0
+        guard sysctl(&mib, 4, nil, &size, nil, 0) == 0, size > 0 else { return -1 }
+        let passo = MemoryLayout<kinfo_proc>.stride
+        var lista = [kinfo_proc](repeating: kinfo_proc(), count: size / passo + 32)
+        size = lista.count * passo
+        guard sysctl(&mib, 4, &lista, &size, nil, 0) == 0 else { return -1 }
+        var n = 0
+        for var p in lista.prefix(size / passo) {
+            let nome = withUnsafeBytes(of: &p.kp_proc.p_comm) { String(decoding: $0.prefix(while: { $0 != 0 }), as: UTF8.self) }
+            if nome.hasPrefix("com.apple.WebKi") { n += 1 }
+        }
+        return n
+    }
+
     private final class Fim: NSObject, WKNavigationDelegate {
         var feito: (() -> Void)?
         func webView(_ w: WKWebView, didFinish n: WKNavigation!) { feito?(); feito = nil }
@@ -38,6 +79,7 @@ enum WebKitCompartilhado {
         let cfg = WKWebViewConfiguration()
         cfg.websiteDataStore = store
         let w = WKWebView(frame: CGRect(x: 0, y: 0, width: 40, height: 40), configuration: cfg)
+        registra(w)
         if let win = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first { win.addSubview(w) }
         let d = Fim()
         w.navigationDelegate = d

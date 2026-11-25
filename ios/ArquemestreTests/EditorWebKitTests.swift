@@ -41,6 +41,8 @@ final class EditorWebKitTests: XCTestCase {
             hold = []
         }
         try? await Task.sleep(nanoseconds: 150_000_000)
+        let nome_ = name
+        await MainActor.run { WebKitCompartilhado.depoisDoTeste(nome_) }
         try await super.tearDown()
     }
 
@@ -59,6 +61,7 @@ final class EditorWebKitTests: XCTestCase {
         let web = WKWebView(frame: CGRect(x: 0, y: 0, width: 430, height: 900), configuration: config)
         if let w = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first?.windows.first { w.addSubview(web) }
         hold.append(web)
+        WebKitCompartilhado.registra(web)
         let ready = expectation(description: "editor carregado"), d = Loaded(ready)
         web.navigationDelegate = d
         let t0 = Date()

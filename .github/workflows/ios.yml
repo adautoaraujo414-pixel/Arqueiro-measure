@@ -56,6 +56,8 @@ jobs:
           # da bateria, igual ao iPad. Nenhum limite muda: a 1ª abertura do editor continua medida (ABERTURA-DIAG) e com 20 s.
           T0=$(date +%s); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
           echo "ABERTURA-DIAG simulador do iPhone ligado em $(( $(date +%s) - T0 )) s (antes da bateria)"
+          # RECURSO-DIAG (Chefe 25/11, quedas do 699): amostra a cada 60 s os processos do WebKit e do app de teste (só leitura)
+          bash scripts/amostra_processos.sh build/processos-iphone.log & AMOSTRA=$!
           set +e
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/Testes.xcresult \
@@ -64,6 +66,7 @@ jobs:
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test > build/xcodebuild-test.log 2>&1
           RC=$?
+          kill $AMOSTRA 2>/dev/null
           grep -E "error:|Test Case .*(passed|failed)|Executed|SKT:|\*\* " build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 300
           echo "==== FALHAS ===="; grep -E "error:|Test Case .*failed" build/xcodebuild-test.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP" | head -n 80
           # teste que derrubou o app de teste (não aparece como "failed"): mostra qual estava rodando e o que o xcodebuild disse
@@ -93,6 +96,7 @@ jobs:
             UDID=$(python3 scripts/pick_sim.py ipad); xcrun simctl boot "$UDID" 2>/dev/null; xcrun simctl bootstatus "$UDID" -b > /dev/null 2>&1
             echo "ABERTURA-DIAG simulador do iPad (2ª escolha $UDID) ligado em $(( $(date +%s) - T0 )) s"
           fi
+          bash scripts/amostra_processos.sh build/processos-ipad.log & AMOSTRA=$!
           set +e
           xcodebuild -project Arquemestre.xcodeproj -scheme Arquemestre -configuration Debug \
             -destination "id=$UDID" -derivedDataPath build/dd -resultBundlePath build/TestesIPad.xcresult \
@@ -101,6 +105,7 @@ jobs:
             CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
             test-without-building > build/xcodebuild-test-ipad.log 2>&1
           RC=$?
+          kill $AMOSTRA 2>/dev/null
           grep -E "error:|Test Case .*failed|Executed|\*\* " build/xcodebuild-test-ipad.log | grep -v -E "ProcessAssertion|makeImagePlus|WEBP"  | tail -n 120
           echo "==== CADERNO (medidas) ===="; grep -hE "CADERNO-PERF|Test Case .*CadernoTests" build/xcodebuild-test-ipad.log | head -n 80
           exit $RC
@@ -237,8 +242,11 @@ jobs:
                 echo "==== linhas $((N>80?N-80:1))..$((N+5))"; sed -n "$((N>80?N-80:1)),$((N+5))p" "$L" | grep -v -E "makeImagePlus|WEBP|CHHapticPattern" | cut -c1-400; done; done;
             echo "######## xcresult (iPhone)"; xcrun xcresulttool get test-results summary --path build/Testes.xcresult 2>&1 | head -n 120;
           } > "$OUT/QUEDAS.txt" 2>&1 || true
+          # RECURSO-DIAG: processos do WebKit e do app ao longo da bateria, e as linhas RECURSO-DIAG que os testes imprimem
+          for D in iphone ipad; do { [ -f build/processos-$D.log ] && cat build/processos-$D.log; L=build/xcodebuild-test.log; [ $D = ipad ] && L=build/xcodebuild-test-ipad.log;
+            echo "==== RECURSO-DIAG dos testes ===="; grep -hE "RECURSO-DIAG|Restarting after|exceeded execution|didBecomeUnresponsive" "$L" 2>/dev/null | cut -c1-300 | head -n 400; } > "$OUT/PROCESSOS-$D.txt" 2>&1 || true; done
           mkdir -p "$OUT/crash"
-          find ~/Library/Logs/DiagnosticReports -maxdepth 2 -type f \( -name "*.ips" -o -name "*.crash" \) -mmin -240 2>/dev/null | grep -i -E "Arquemestre|WebContent|xctest|WebKit" | head -n 8 | while read F; do head -c 400000 "$F" > "$OUT/crash/$(basename "$F")"; done || true
+          find ~/Library/Logs/DiagnosticReports -maxdepth 2 -type f \( -name "*.ips" -o -name "*.crash" \) -mmin -240 2>/dev/null | grep -i -E "Arquemestre|WebContent|xctest|WebKit|GPU|Jetsam" | head -n 12 | while read F; do head -c 400000 "$F" > "$OUT/crash/$(basename "$F")"; done || true
           cd "$OUT"
           git init -q && git checkout -q -b ci/ios-resultados
           git config user.name "github-actions"; git config user.email "actions@github.com"

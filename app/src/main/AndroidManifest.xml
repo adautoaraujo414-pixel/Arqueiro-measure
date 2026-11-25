@@ -59,6 +59,10 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".demo.DemoActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:windowSoftInputMode="adjustResize" />
+        <receiver android:name=".agenda.DemoReminderReceiver" android:exported="false" />
         <receiver android:name=".agenda.ReminderReceiver" android:exported="false" />
         <receiver android:name=".agenda.BootReceiver" android:exported="true">
             <intent-filter>

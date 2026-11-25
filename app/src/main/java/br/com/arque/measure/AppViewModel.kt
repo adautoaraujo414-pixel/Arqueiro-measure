@@ -57,7 +57,7 @@ sealed interface LibFilter {
     data class InFolder(val id: String) : LibFilter
 }
 
-class AppViewModel(app: Application) : AndroidViewModel(app) {
+class AppViewModel @JvmOverloads constructor(app: Application, val demonstration: Boolean = false) : AndroidViewModel(app) {
     val store = Store(File(app.filesDir, "projects"))
     val images = ImageCache(store, viewModelScope)
     val ble = BoschBle(app)
@@ -1184,6 +1184,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun checkLicense() {
+        if (demonstration) {
+            // Só este ViewModel: não grava liberação em preferências, nem altera a assinatura.
+            licUnlocked = true
+            licLocked = false
+            trialLeft = ""
+            payLeft = ""
+            licMonthly = false
+            return
+        }
         val app = getApplication<Application>()
         if (br.com.arque.measure.license.License.firstRun(app)) showWelcome = true
         licUnlocked = br.com.arque.measure.license.License.isUnlocked(app)
@@ -1202,6 +1211,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var storeStarted = false
 
     fun startStore() {
+        if (demonstration) return
         if (!br.com.arque.measure.license.StoreBilling.AVAILABLE || storeStarted) return
         storeStarted = true
         br.com.arque.measure.license.StoreBilling.start(getApplication()) {

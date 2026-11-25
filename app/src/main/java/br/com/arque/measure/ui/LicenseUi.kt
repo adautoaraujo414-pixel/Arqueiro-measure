@@ -148,6 +148,12 @@ private fun PlayPaywall(vm: AppViewModel) {
             OutlinedButton(onClick = { vm.restoreStore() }, modifier = Modifier.fillMaxWidth()) {
                 Text(tr("Já assino · restaurar assinatura"), color = Color(0xFFCBD5E1))
             }
+            OutlinedButton(
+                onClick = { ctx.startActivity(Intent(ctx, br.com.arque.measure.demo.DemoActivity::class.java)) },
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(tr("Explorar demonstração com dados separados"), color = Color(0xFFCBD5E1)) }
+            Text(tr("Sem compra ou cadastro. Os exemplos e as alterações da demonstração ficam separados dos seus projetos."),
+                color = Color(0xFF94A3B8), fontSize = 12.sp, textAlign = TextAlign.Center)
             OutlinedButton(onClick = { backup.launch("arquemestre-backup.zip") }, modifier = Modifier.fillMaxWidth()) {
                 Text(tr("Salvar uma cópia dos meus dados (backup)"), color = Color(0xFFCBD5E1))
             }

@@ -158,7 +158,9 @@ fun MoveisScreen(vm: AppViewModel) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { c ->
+                val assetDomain = if (vm.demonstration) br.com.arque.measure.demo.DemoSpace.WEB_DOMAIN else WebViewAssetLoader.DEFAULT_DOMAIN
                 val loader = WebViewAssetLoader.Builder()
+                    .setDomain(assetDomain)
                     .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(c))
                     .build()
                 WebView(c).apply {
@@ -209,7 +211,7 @@ fun MoveisScreen(vm: AppViewModel) {
 
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val u = request.url
-                            if (u.host == WebViewAssetLoader.DEFAULT_DOMAIN) return false
+                            if (u.host == assetDomain) return false
                             // tel:, WhatsApp (wa.me), e-mail e links de fora abrem nos apps do telefone
                             try {
                                 val it = Intent(Intent.ACTION_VIEW, u)
@@ -253,7 +255,7 @@ fun MoveisScreen(vm: AppViewModel) {
                             }
                         }
                     }
-                    loadUrl("https://${WebViewAssetLoader.DEFAULT_DOMAIN}/assets/editor.html?lang=${br.com.arque.measure.i18n.I18n.lang}&cur=${android.net.Uri.encode(br.com.arque.measure.i18n.I18n.currencySymbol())}")
+                    loadUrl("https://$assetDomain/assets/editor.html?lang=${br.com.arque.measure.i18n.I18n.lang}&cur=${android.net.Uri.encode(br.com.arque.measure.i18n.I18n.currencySymbol())}")
                     web = this
                 }
             },

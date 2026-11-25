@@ -2,6 +2,8 @@
 <paths>
     <cache-path name="camera" path="camera/" />
     <cache-path name="quotes" path="quotes/" />
+    <cache-path name="demo_camera" path="arquemestre_demo/camera/" />
+    <cache-path name="demo_quotes" path="arquemestre_demo/quotes/" />
     <cache-path name="update" path="update/" />
     <cache-path name="exports" path="exports/" />
 </paths>

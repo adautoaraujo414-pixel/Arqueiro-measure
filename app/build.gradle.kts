@@ -12,6 +12,7 @@ android {
         applicationId = "br.com.arque.measure"
         minSdk = 26
         targetSdk = 36
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = (System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1)
         versionName = "1.0." + (System.getenv("GITHUB_RUN_NUMBER") ?: "0")
         // CANAL DE TESTE (-Pteste=1): instala AO LADO do app de verdade (outro pacote, outros dados), com outro nome,
@@ -108,6 +109,10 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     // org.json do android.jar é só um stub nos testes de JVM.
     testImplementation("org.json:json:20240303")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
 }
 
 kotlin {

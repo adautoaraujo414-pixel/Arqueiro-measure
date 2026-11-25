@@ -42,7 +42,9 @@ object AgendaReminders {
     }
 
     private fun pending(ctx: Context, a: Appointment, off: Int, create: Boolean): PendingIntent? {
-        val i = Intent(ctx, ReminderReceiver::class.java).setAction("br.com.arque.measure.REMIND")
+        val demo = br.com.arque.measure.demo.DemoSpace.isDemo(ctx)
+        val receiver = if (demo) DemoReminderReceiver::class.java else ReminderReceiver::class.java
+        val i = Intent(ctx, receiver).setAction("br.com.arque.measure.REMIND")
             .putExtra(EXTRA_APPT, a.id).putExtra("off", off)
         val code = (a.id.hashCode() * 31 + off) and 0x7fffffff
         val flags = PendingIntent.FLAG_IMMUTABLE or (if (create) PendingIntent.FLAG_UPDATE_CURRENT else PendingIntent.FLAG_NO_CREATE)
@@ -93,7 +95,8 @@ object AgendaReminders {
         ensureChannel(ctx)
         val open = PendingIntent.getActivity(
             ctx, a.id.hashCode(),
-            Intent(ctx, MainActivity::class.java).putExtra(EXTRA_APPT, a.id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            Intent(ctx, if (br.com.arque.measure.demo.DemoSpace.isDemo(ctx)) br.com.arque.measure.demo.DemoActivity::class.java else MainActivity::class.java)
+                .putExtra(EXTRA_APPT, a.id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val title = "${a.kind.icon} ${a.kind.label}: ${a.title.ifBlank { a.clientName.ifBlank { tr("sem título") } }}"
@@ -110,7 +113,9 @@ object AgendaReminders {
             .setContentIntent(open).setAutoCancel(true).setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH).build()
         try {
-            NotificationManagerCompat.from(ctx).notify((a.id.hashCode() * 31 + off) and 0x7fffffff, n)
+            val manager = NotificationManagerCompat.from(ctx)
+            val id = (a.id.hashCode() * 31 + off) and 0x7fffffff
+            if (br.com.arque.measure.demo.DemoSpace.isDemo(ctx)) manager.notify("demo", id, n) else manager.notify(id, n)
         } catch (_: SecurityException) { /* sem permissão de notificação */ }
     }
 }
@@ -124,9 +129,23 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 }
 
+class DemoReminderReceiver : BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val demo = br.com.arque.measure.demo.DemoSpace.wrap(ctx)
+        val id = intent.getStringExtra(AgendaReminders.EXTRA_APPT) ?: return
+        val off = intent.getIntExtra("off", 0)
+        val a = Store(File(demo.filesDir, "projects")).loadAgenda().firstOrNull { it.id == id } ?: return
+        AgendaReminders.show(demo, a, off)
+    }
+}
+
 /** Depois de reiniciar o aparelho (ou atualizar o app) os alarmes são recriados. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         AgendaReminders.scheduleAll(ctx, Store(File(ctx.filesDir, "projects")).loadAgenda())
+        if (br.com.arque.measure.demo.DemoSpace.root(ctx).exists()) {
+            val demo = br.com.arque.measure.demo.DemoSpace.wrap(ctx)
+            AgendaReminders.scheduleAll(demo, Store(File(demo.filesDir, "projects")).loadAgenda())
+        }
     }
 }

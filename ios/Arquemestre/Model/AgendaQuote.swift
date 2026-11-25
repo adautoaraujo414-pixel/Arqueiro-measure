@@ -96,6 +96,23 @@ struct QuoteAddendum: Equatable, Identifiable {
     var dateMs: Int64 = nowMs()
 }
 
+/// ORC-AMB (Adauto 25/11): um ambiente (projeto do editor) no orçamento de vários ambientes do mesmo cliente.
+/// Cópia dos valores do projeto no momento em que entrou (mudar o projeto depois não muda o orçamento).
+/// `mat` e `labor` são custo interno: só na tela do editor; nunca no PDF nem no link do cliente. Igual ao Android e ao Windows.
+struct QuoteSection: Equatable, Identifiable {
+    var id: String = newId()
+    var pid: String = ""
+    var title: String = ""
+    var desc: String = ""
+    var finish: String = ""
+    var mat: Double = 0
+    var labor: Double = 0
+    var sug: Double = 0
+    var manual: Double? = nil
+    var discountPct: Double = 0
+    var at: Int64 = 0
+}
+
 struct Quote: Equatable, Identifiable {
     var id: String = newId()
     var clientName: String = ""
@@ -114,4 +131,10 @@ struct Quote: Equatable, Identifiable {
     var photos: [String] = []
     /// Projeto do editor de móveis ligado a este orçamento (de onde saem as fotos).
     var projId: String? = nil
+    /// ORC-AMB: ambientes do orçamento de vários ambientes (vazio = orçamento de sempre, pelos itens).
+    var sections: [QuoteSection] = []
+    /// ORC-AMB: cliente (nome normalizado, a mesma chave da lista de clientes do editor).
+    var clientKey: String? = nil
+    /// ORC-AMB: PDF só com o total geral (as descrições continuam por ambiente).
+    var onlyTotal: Bool = false
 }

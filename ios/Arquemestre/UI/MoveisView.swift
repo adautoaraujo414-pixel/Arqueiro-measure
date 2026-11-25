@@ -148,6 +148,7 @@ struct MoveisWeb: UIViewRepresentable {
         makeQuote:function(j){post({op:'makeQuote',json:String(j)})},
         quotePhotos:function(j){post({op:'quotePhotos',json:String(j)})},
         listNotes:function(){return sync('listNotes','')||'[]'},
+        quoteOf:function(k){return sync('quoteOf',String(k))},
         contextNote:function(){return sync('contextNote','')},
         linkNote:function(n,p){post({op:'linkNote',note:String(n),id:String(p)})},
         openNoteOf:function(p,n){post({op:'openNoteOf',id:String(p)})},
@@ -286,6 +287,8 @@ struct MoveisWeb: UIViewRepresentable {
                 completionHandler(parent.app.company.name)
             } else if prompt == "__arque__:listNotes" {
                 completionHandler(parent.app.notesJson())
+            } else if prompt == "__arque__:quoteOf" {
+                completionHandler(parent.app.quoteOfClient(defaultText ?? ""))
             } else if prompt == "__arque__:contextNote" {
                 completionHandler(parent.app.contextNoteJson())
             } else if prompt == "__arque__:listFiles" {
@@ -318,6 +321,10 @@ struct MoveisWeb: UIViewRepresentable {
             if app.pendingPhotoMode {
                 app.pendingPhotoMode = false
                 w.evaluateJavaScript("window.arquePhotoMode&&window.arquePhotoMode(\(app.quotePhotosJson()))")
+            }
+            if app.pendingOrcAmb {
+                app.pendingOrcAmb = false
+                w.evaluateJavaScript("window.arqueOrcAmb&&window.arqueOrcAmb()")
             }
             loaded = true; parent.holder.loaded = true
             parent.holder.done()

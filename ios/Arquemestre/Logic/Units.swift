@@ -139,7 +139,18 @@ enum Calc {
 enum QuoteMath {
     static func cents(_ v: Double) -> Double { (v * 100).rounded() / 100 }
     static func lineTotal(_ i: QuoteItem) -> Double { cents(i.qty * i.unitValue) }
-    static func original(_ q: Quote) -> Double { cents(q.items.reduce(0) { $0 + lineTotal($1) }) }
+    /// Valor antes do desconto geral. Orçamento de sempre: soma dos itens. ORC-AMB: subtotal = soma dos ambientes, cada um já com o desconto dele.
+    /// Ordem do desconto: individual (centavos) → subtotal → geral (centavos), igual ao Android, ao Windows e à tela do editor.
+    static func original(_ q: Quote) -> Double {
+        if !q.sections.isEmpty { return cents(q.sections.reduce(0) { $0 + sectionFinal($1) }) }
+        return cents(q.items.reduce(0) { $0 + lineTotal($1) })
+    }
+    /// Valor do ambiente antes do desconto dele: o valor de venda digitado ou o sugerido.
+    static func sectionBase(_ s: QuoteSection) -> Double { cents((s.manual ?? 0) > 0 ? (s.manual ?? 0) : s.sug) }
+    static func sectionDiscount(_ s: QuoteSection) -> Double { cents(sectionBase(s) * min(max(s.discountPct, 0), 100) / 100) }
+    static func sectionFinal(_ s: QuoteSection) -> Double { cents(sectionBase(s) - sectionDiscount(s)) }
+    static func sectionsGross(_ q: Quote) -> Double { cents(q.sections.reduce(0) { $0 + sectionBase($1) }) }
+    static func sectionsDiscount(_ q: Quote) -> Double { cents(q.sections.reduce(0) { $0 + sectionDiscount($1) }) }
     static func discountValue(_ q: Quote) -> Double { cents(original(q) * min(max(q.discountPct, 0), 100) / 100) }
     static func finalValue(_ q: Quote) -> Double { cents(original(q) - discountValue(q)) }
     /// Soma dos aditivos (não entra no desconto: o desconto é só do orçamento original).

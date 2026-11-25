@@ -2213,3 +2213,49 @@ Sondas independentes (`pcfx1/2/3`), Chromium. Resultado: **nenhum defeito encont
   - Resultado nos dois: a versão publicada gravou pelo seletor (`video_*.json`), 12/12 arquivos iguais depois da atualização, o editor novo acha o vídeo igual byte a byte (sha f1723490…) e toca ("tocou até 0,78 s de 2,00 s"). Falhas 0.
 - **Android e Windows no editor final (`7751eeb`):** apk-660 → 90031, falhas 0, vídeo igual byte a byte e tocando; win-166 verde.
 - **Aparelho real: não testado.**
+
+- **Vídeo na atualização do iOS: ainda não coberto.**
+  - Dados: iPhone e iPad iguais (8/8 e 4/4), projetos abrem iguais.
+  - Vídeo (run 19, `ee1e152`): iPhone e iPad chegam ao seletor e tocam no vídeo. O seletor fecha, mas o editor publicado não grava (nenhum `video_*.json`).
+  - Causa ainda não comprovada. Hipótese: o `app.tap()` no meio da tela fecha o balão do iPad antes da escolha.
+  - Rodada `7751eeb`: sem esse toque, com a tela registrada no seletor aberto e depois do toque.
+- **FUNDO-15 (Code 2, 24/11), achados durante o trabalho:**
+  - 1º aviso de vizinho pegava a maior entrada entre peças. A porta (cerca de 15 mm na frente) já encostava antes, e isso escondia os 9 mm novos da caixa. Corrigido para o contorno do módulo (com as portas), só entre paredes diferentes ou com o canto, com "antes X mm" no texto.
+  - 1º aviso de pedra disparava na cozinha de exemplo. Mas a pedra encaixada acompanha a frente sozinha (regra de hoje, `stFitCalc`/`stFitEq`, igual na base `553745a1`). Agora só avisa da pedra que a pessoa deixou com medida própria, e a prévia mostra a pedra encaixada que acompanha (606 → 615).
+  - O nome do módulo no aviso vinha "Módulo N": `modLabel` está fora do escopo global. Passou a usar o mesmo nome da lista de corte.
+  - Ambiente: o servidor local foi bloqueado pela permissão desta sessão. Bateria, s46 e PNGs rodaram com o editor aberto por file:// (mesmo arquivo).
+- **ZOOM-CORTE e CORTE-LEGÍVEL (Code 2, 24/11), achados durante o trabalho:**
+  - O zoom pela roda andava 0,4 px do cursor a 430: a conta usava a caixa do SVG com a borda de 6 px. Passou a usar a transformação real (`getScreenCTM`). O teste mede em pixels da tela (1 px).
+  - O zoom se perdia quando o plano se redesenhava sozinho (o otimizador termina 1 a 2 s depois de abrir). Agora o zoom de cada chapa volta no desenho novo (com assert no teste).
+  - `sheetPlan(1)` muda sozinho logo depois de abrir o plano (o rápido e depois o otimizador fundo), e o desenho grava `no` nas peças do cache. Isso já era assim antes. O teste espera o plano parar e compara sem o `no`.
+  - Na 1ª versão da conta, 103 textos ficavam em cima de outro texto (número da sobra deitado × em pé; "furo dobradiça" × nome da porta). Corrigido e incluído no teste.
+  - 45 peças muito estreitas (réguas, molduras de 30 com fita) ficavam sem nada legível dentro. Ganharam etiqueta ao lado, com linha.
+  - Bateria: o Chromium da bateria parou no limite de 30 min do segundo plano (eu não tinha dado tempo maior). A rodada de 1366 do `f66075bf` parou em 228 ok, 0 falha real. Refeita no SHA final com o navegador no limite de 2 h.
+- **Conta da legibilidade ampliada (ordem final do Adauto: "nenhuma linha sobrepõe ou esconde medida"):** passou a valer para toda linha do desenho, não só a fita. Isso pegou 258 casos: furos da dobradiça/sistema 32 debaixo do #n e das medidas; linha da etiqueta passando por cima de outra peça; número da sobra. Correções:
+  - furos e linhas da furação/recorte são obstáculo pros textos;
+  - a linha da etiqueta procura caminho livre e, sem ele, vai por baixo das peças (o fundo opaco da peça cobre);
+  - número da sobra com halo da cor do fundo da chapa;
+  - #n da peça com recorte em plaquinha branca;
+  - o bloco do meio do recorte encolhe quando o recorte é baixo (só aparecia no PDF).
+  - A conta do contorno tracejado do recorte passou a olhar segmento por segmento (antes tratava o retângulo como cheio).
+- **Veio:** com caixa amadeirada e veio, os fundos altos (torre e guarda-roupa) não cabem sem girar e ficam como "maior que a chapa", fora da contagem. É igual às portas altas na cor, que já ficavam assim. Não mudei a regra do veio; pergunta enviada.
+- **Ampliar (achado pelo Chefe no 94a5f412):** eu tinha trocado os níveis do Ampliar (60–1600%, passos de 25/50) pelos do motor novo (100–1200%, ×1,25). Era perda de função (§0). Os níveis de antes voltaram, ligados ao motor novo. Também: chapa ampliada no plano ia ampliada pra impressão. Agora imprime a chapa inteira e o zoom volta depois. Os dois casos estão no teste.
+- **ORC-AMB (Code 2, 25/11):**
+  - Na 1ª versão, uma chave repetida no objeto do ambiente fazia a descrição dos móveis sair com o número do desconto. Corrigido e coberto pelo teste.
+  - No teste da bateria, a ponte do navegador não pode ser trocada; os métodos do app simulado entram no objeto que já existe.
+  - Ambiente: o Gradle local não baixa as dependências (Maven Central 429, Google Maven bloqueado pela rede). Os testes nativos vão pelo CI.
+- **DESC-CENTAVO, defeito (achado pelo Code 2 em 25/11; o Chefe classificou como defeito; Adauto: "corrija todos os erros", "tela = PDF ao centavo"):**
+  - Sintoma: o valor com desconto podia diferir 1 centavo entre a tela do editor e o PDF do app. Exemplo: R$ 830,55 com 10% dava 747,50 na tela e 747,49 no PDF.
+  - Causa: duas contas para a mesma coisa.
+    - Tela (vlFin): arredondava valor × (1 − d).
+    - App (QuoteMath, o documento do cliente): desconto arredondado em centavos, depois valor − desconto.
+    - Na varredura de R$ 0,01 a 1.000,00 × 1..50%, as duas divergiam em 135.928 de 5.000.000 casos.
+  - Correção na causa, uma regra só: `descAplica` (a do QuoteMath), usada na tela e nos ambientes do orçamento de vários ambientes. Sem 2ª conta.
+  - O que não muda: orçamentos e PDFs já salvos (o app sempre usou a regra do QuoteMath). O orçamento individual dos 141 projetos da s45 sai igual.
+  - Testes:
+    - `testDescontoDoProjetoTelaIgualAoPdfAoCentavo…` (bateria; falha antes);
+    - `QuoteAmbientesTest.descontoUmaRegraSo…` (JVM);
+    - `CoreTests.testDescontoUmaRegraSo…` (iOS);
+    - a mesma soma da varredura nos três: 186.251.793.425 centavos.
+  - Expectativa alterada com o pedido e a data no comentário: `testMaoDeObra…` (descontoDe10: de valor × 0,9 para a regra do PDF).
+- **ORC-AMB, bateria de 430 (41a0842d):** `testNadaDeEnfeite3DEValoresParteB…` achou a caixinha da lista de projetos sem efeito visível (marcar só valia ao tocar em "Adicionar os marcados"). Agora o botão conta os marcados ("Adicionar 2 marcados"). Teste sem mudança; 10/10 em 1366 e 430.

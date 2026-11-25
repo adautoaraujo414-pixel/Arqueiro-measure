@@ -774,10 +774,55 @@ final class AppModel: ObservableObject {
     func quotePhotosJson() -> String { JsonCodec.string(quotes.first(where: { $0.id == photoQuoteId })?.photos ?? []) }
 
     /// "Gerar orçamento em PDF" no editor de móveis: cliente, itens com o valor do projeto e observações.
+    /// ORC-AMB (Adauto 25/11): o editor manda o orçamento de vários ambientes do cliente; grava (ou atualiza o mesmo) orçamento, com os ambientes.
+    func quoteAmbientesFromMoveis(_ o: [String: Any]) {
+        let num: (Any?) -> Double = { v in (v as? NSNumber)?.doubleValue ?? Double(String(describing: v ?? "")) ?? 0 }
+        let secs = JsonCodec.sectionsFromPayload(o["sections"] as? [Any])   // o mesmo projeto (p.id) nunca entra duas vezes
+        let qid = ((o["quoteId"] as? String) ?? "").isEmpty ? nil : o["quoteId"] as? String
+        let pid = ((o["pid"] as? String) ?? "").isEmpty ? nil : o["pid"] as? String
+        var q: Quote
+        if let id = qid, let old = quotes.first(where: { $0.id == id }) { q = old } else {
+            q = Quote(); if let id = qid { q.id = id }; q.items = []; q.city = company.city; q.projId = pid
+        }
+        let cl = (o["client"] as? String) ?? ""; if !cl.isEmpty { q.clientName = cl }
+        let city = (o["city"] as? String) ?? ""; if !city.isEmpty { q.city = city }
+        q.sections = secs
+        let key = (o["clientKey"] as? String) ?? ""; if !key.isEmpty { q.clientKey = key }
+        let dp = num(o["discountPct"]); q.discountPct = dp.isFinite ? min(max(dp, 0), 100) : 0
+        q.onlyTotal = (o["onlyTotal"] as? NSNumber)?.boolValue ?? false
+        if q.projId == nil { q.projId = pid }
+        saveQuote(q)
+        if (o["open"] as? NSNumber)?.boolValue ?? true {
+            pendingQuoteId = q.id
+            quotesBackProject = pid
+            if let pid { lastProjectId = pid }
+            screen = .quotes
+        } else { toast = tr("Orçamento salvo no cliente") }
+    }
+    /// ORC-AMB: o orçamento de vários ambientes deste cliente (o mais recente), em JSON, pro editor reabrir, editar, acrescentar e remover.
+    func quoteOfClient(_ key: String) -> String {
+        guard let q = quotes.filter({ $0.clientKey == key && !$0.sections.isEmpty }).max(by: { $0.dateMs < $1.dateMs }) else { return "" }
+        let a = JsonCodec.quotesToJson([q])
+        return String(a.dropFirst().dropLast())
+    }
+    /// ORC-AMB: "+ Ambientes" na tela de orçamentos: abre o projeto do cliente no editor, já com a lista dos projetos dele.
+    var pendingOrcAmb = false
+    func addAmbientes(_ q: Quote) {
+        let ids = MoveisProjects.list().map { $0.id }
+        guard let pid = ([q.projId].compactMap { $0 } + q.sections.map { $0.pid }).first(where: { ids.contains($0) }) else {
+            toast = tr("Projeto do cliente não encontrado"); return
+        }
+        pendingNewProject = false
+        pendingProject = pid
+        pendingOrcAmb = true
+        screen = .moveis
+    }
+
     func quoteFromMoveis(_ json: String) {
         guard let d = json.data(using: .utf8), let o = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any] else {
             toast = tr("Não consegui montar o orçamento."); return
         }
+        if (o["kind"] as? String) == "ambientes" { quoteAmbientesFromMoveis(o); return }
         let num: (Any?) -> Double = { v in (v as? NSNumber)?.doubleValue ?? Double(String(describing: v ?? "")) ?? 0 }
         var items: [QuoteItem] = ((o["items"] as? [[String: Any]]) ?? []).map { it in
             QuoteItem(desc: (it["desc"] as? String) ?? "", qty: it["qty"] == nil ? 1 : num(it["qty"]), unit: (it["unit"] as? String) ?? "un", unitValue: num(it["value"]))

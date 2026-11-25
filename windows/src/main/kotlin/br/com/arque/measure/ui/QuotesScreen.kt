@@ -194,6 +194,36 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
                 if (s.length == 10) runCatching { dateFmt.parse(s) }.getOrNull()?.let { upd(q.copy(dateMs = it.time)) }
             }
         }
+        if (q.sections.isNotEmpty()) {
+            // ORC-AMB (Adauto 25/11): orçamento de vários ambientes do cliente. Cada ambiente é uma cópia dos valores do projeto.
+            Text(tr("Ambientes"), color = Ui.text, fontSize = 16.sp)
+            q.sections.forEachIndexed { idx, s ->
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Field(s.title, tr("Ambiente {0}", idx + 1), Modifier.weight(1f)) { t -> upd(q.copy(sections = q.sections.map { x -> if (x.id == s.id) x.copy(title = t) else x })) }
+                        IconButton(onClick = { upd(q.copy(sections = q.sections.filter { x -> x.id != s.id })) }) {
+                            Icon(Icons.Filled.Delete, tr("Remover do orçamento"), tint = Ui.dim)
+                        }
+                    }
+                    if (s.desc.isNotBlank()) Text(s.desc, color = Ui.dim, fontSize = 12.sp)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        NumField(s.id + "m", s.manual ?: s.sug, tr("Valor de venda ({0})", br.com.arque.measure.i18n.I18n.currencySymbol()), Modifier.weight(1.4f)) { v ->
+                            upd(q.copy(sections = q.sections.map { x -> if (x.id == s.id) x.copy(manual = if (v > 0.0 && v != x.sug) v else null) else x }))
+                        }
+                        NumField(s.id + "d", s.discountPct, tr("Desconto (%)"), Modifier.weight(1f)) { v ->
+                            upd(q.copy(sections = q.sections.map { x -> if (x.id == s.id) x.copy(discountPct = v.coerceIn(0.0, 100.0)) else x }))
+                        }
+                    }
+                    Text(tr("Valor do ambiente: ") + QuoteMath.brl(QuoteMath.sectionFinal(s)), color = Ui.text, fontSize = 14.sp)
+                }
+            }
+            OutlinedButton(onClick = { vm.addAmbientes(q) }, modifier = Modifier.fillMaxWidth()) { Text(tr("+ Ambientes (abre os projetos do cliente)")) }
+            Text(tr("Remover tira só deste orçamento: o projeto continua salvo."), color = Ui.dim, fontSize = 12.sp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.Checkbox(checked = q.onlyTotal, onCheckedChange = { upd(q.copy(onlyTotal = it)) })
+                Text(tr("PDF só com o total (descrições por ambiente)"), color = Ui.text, fontSize = 14.sp)
+            }
+        } else {
         Text(tr("Itens"), color = Ui.text, fontSize = 16.sp)
         q.items.forEachIndexed { idx, it ->
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -212,10 +242,11 @@ private fun QuoteEditor(vm: AppViewModel, q: Quote) {
             }
         }
         OutlinedButton(onClick = { upd(q.copy(items = q.items + QuoteItem())) }, modifier = Modifier.fillMaxWidth()) { Text(tr("+ Adicionar item")) }
+        }
 
         NumField(q.id + "d", q.discountPct, tr("Desconto (%)"), Modifier.fillMaxWidth()) { v -> upd(q.copy(discountPct = v.coerceIn(0.0, 100.0))) }
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ui.panel).padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(tr("Valor original: ") + QuoteMath.brl(QuoteMath.original(q)), color = Ui.text, fontSize = 15.sp)
+            Text((if (q.sections.isNotEmpty()) tr("Subtotal dos ambientes: ") else tr("Valor original: ")) + QuoteMath.brl(QuoteMath.original(q)), color = Ui.text, fontSize = 15.sp)
             if (q.discountPct > 0.0) {
                 Text(tr("Desconto: − ") + QuoteMath.brl(QuoteMath.discountValue(q)), color = Ui.dim, fontSize = 14.sp)
                 Text(tr("Valor com desconto: ") + QuoteMath.brl(QuoteMath.finalValue(q)), color = Ui.text, fontSize = 17.sp)

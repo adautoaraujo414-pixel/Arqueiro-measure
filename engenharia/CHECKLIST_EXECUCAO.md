@@ -332,3 +332,29 @@ Linhas que estavam em NÃO FEITO, PARCIAL ou SEM VALIDAÇÃO com "= inicial": 93
 |---|---|---|---|---|---|---|---|---|---|---|
 | N25 | Módulos curvos (junção 7) | sem escopo escrito | P2 | definir escopo | — | — | — | — | — | ADIADO PELO ADAUTO 24/11 (fica para a próxima atualização) |
 
+
+## Fundo MDF 15 mm (ramo `claude/fundo-15mm`, Code 2, 24/11)
+| ID | Pedido | Status | Teste | Status atual |
+|---|---|---|---|---|
+| F15-1 | 3 e 6 mantidos, 15 (MDF) por módulo | feito | `testFundo15PorModulo…` | FEITO, aguarda auditoria do Code 1 |
+| F15-2 | Aplicar a todos do ambiente, com prévia e desfazer | feito | `testFundo15AplicarATodos…` | FEITO, aguarda auditoria |
+| F15-3 | Medidas internas e profundidade (inferior, aéreo, torre, guarda-roupa, canto, pia), avisos sem mover | feito | `testFundo15PorModulo…`, `testFundo15AplicarATodos…` | FEITO. **Pergunta ao Adauto: canto em L com 15 (vão −9)** |
+| F15-4 | 2D e 3D com a espessura real | feito | `testFundo15PorModulo…` | FEITO |
+| F15-5 | Lista, orçamento (MDF 15), corte (mesma chapa, sem chapa a mais), DXF | feito | `testFundo15Orcamento…` | FEITO |
+| F15-6 | Projeto antigo intacto; salvar, reabrir, duplicar | feito | `testFundo15ProjetoAntigo…`, s46 (141 projetos, 0 diferença) | FEITO |
+| F15-7 | Fita e furação do fundo de 15 | regra de hoje (sem fita; uniões pela geometria) | `testFundo15Orcamento…` (fita) | **Pergunta ao Adauto enviada** |
+| ZC-1 | Zoom no plano de corte: pinça, roda, ＋ − Ajustar à tela, arrasto com limite, gestos sem disparar toque, toque longo e 2 toques com zoom, sheetPlan igual | feito | `testZoomNoPlanoDeCorte…` + s47 (toque e mouse reais) | FEITO, aguarda auditoria |
+| CL-1 | Plano de corte legível: texto acima e afastado da fita, peça estreita, sem texto sobre texto, tela 1366/430, zoom e PDF | feito | `testPlanoDeCorteLegivel…` + s47 (141 projetos, PDF) | FEITO, aguarda auditoria |
+| F15-8 | Respostas do Adauto: canto opção A (externas fixas), fita opção A (sem fita) | feito, números fixados no teste | `testFundo15PorModulo…` | FEITO |
+| F15-9 | Fundo de 15 na chapa da caixa respeitando veio (não gira, sem encaixe forçado) | feito | `testFundo15NaChapaDaCaixaRespeitaVeio…` | FEITO. **Pergunta: sentido do veio de peça alta (fundos e portas altas)** |
+
+## Orçamento de vários ambientes (ramo `claude/orcamento-ambientes`, Code 2, 25/11)
+| ID | Pedido | Status | Teste | Status atual |
+|---|---|---|---|---|
+| OA-1 | "+ Adicionar ambiente" lista os projetos do cliente, escolhe vários, sem recriar | feito | `testOrcamentoAmbientes…` | FEITO |
+| OA-2 | Cada ambiente: nome, descrição, acabamentos, material, mão de obra e lucro, sugerido, venda, desconto, remover sem apagar | feito | idem | FEITO |
+| OA-3 | Consolidado: soma, desconto geral, individual → geral, centavos, tela = PDF, esconder custo | feito | editor + JVM + XCTest (mesmo número) | FEITO |
+| OA-4 | PDF por ambiente e só total, sem custo | feito | `QuoteAmbientesTest`, `CoreTests` (PDF real no iOS) | FEITO, CI |
+| OA-5 | Salvo no cliente (Quote), reabrir/editar/acrescentar/remover, sem repetir, cópia congelada, link sem valores, backup | feito | editor + JVM + XCTest | FEITO, CI |
+| OA-6 | Orçamento individual igual ao centavo | conferido | sonda: 141 projetos, quoteData/vlFin/budget/link iguais | FEITO |
+| OA-7 | iPhone, iPad, Android, Windows iguais | código nas 3 | CI iOS e Windows disparados; JVM Android/Windows dependem do modo teste (pergunta ao Chefe) | EM CI |

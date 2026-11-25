@@ -9112,7 +9112,7 @@ final class EditorWebKitTests: XCTestCase {
         R.valorFechadoPorCima=PR.moR===800&&vp()===brl(9000)&&B().querySelectorAll('tr[data-vlxl]').length===3&&margem()==='Lucro = '+brl(9000-mat-ext);
         B().querySelector('[data-vlpx]').click();await W(120);b2=budget();R.voltaAoSugerido=S.preco===0&&vp()===brl(b2.sale)&&perto(b2.sale,mat*2.5+ext);
         /* 7. desconto: OK e tocar de novo abre o teclado; desconto sem OK e tocar num campo novo abre o campo novo */
-        await digita('#vlm [data-vdesci]','10');R.descontoDe10=S.desc===10&&vp()===brl(r2(b2.sale*0.9))&&!tecl();R.descontoAbreDeNovoDepoisDoOk=await abre('#vlm [data-vdesci]');
+        await digita('#vlm [data-vdesci]','10');/* DESC-CENTAVO (Adauto 25/11, "tela = PDF ao centavo"): a expectativa mudou de valor × 0,9 para a regra do PDF do app (desconto em centavos, depois valor − desconto) */R.descontoDe10=S.desc===10&&vp()===brl(r2(r2(b2.sale)-r2(r2(b2.sale)*10/100)))&&!tecl();R.descontoAbreDeNovoDepoisDoOk=await abre('#vlm [data-vdesci]');
         '5'.split('').forEach(kb);var c4=document.querySelector('#vlm [data-vlx="cfR"]');c4.focus();await W(260);R.descontoEDepoisCampoNovo=S.desc===5&&tecl()&&lab()==='Custo fixo (R$)'&&document.activeElement===c4&&c4.isConnected;kb('ok');await W(150);
         await digita('#vlm [data-vdesci]','0');R.semDesconto=!S.desc&&vp()===brl(b2.sale);
         /* 8. "Esconder o valor do material": some o bloco e as linhas, fica o valor do projeto */
@@ -18471,6 +18471,403 @@ final class EditorWebKitTests: XCTestCase {
         XCTAssertEqual(o["cenas"] as? Int, 486, "81 modelos com porta × 6 posições")
         XCTAssertEqual(o["partes"] as? Bool, true)
         XCTAssertEqual(o["n"] as? String, "0", "nenhuma parte da dobradiça dentro de outra peça no móvel girado")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15 (Adauto 24/11): fundo de MDF 15 mm além do 3 e do 6, escolhido por módulo no painel (Fundo). Regra de hoje, sobreposto: a profundidade
+    // total é a do módulo + o fundo (D = d + fundo) e as medidas internas não mudam (inferior, aéreo, torre, guarda-roupa). No canto em L a regra de
+    // hoje mantém a medida de fora em cada parede e o fundo do outro lado fica por dentro (base, prateleira, vão da porta −9; tamponamento da ponta +9).
+    // 2D (planta) e 3D com a espessura real
+    func testFundo15PorModuloInferiorAereoTorreGuardaRoupaCantoMedidasInternasProfundidade2DE3D() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var FU=/^Fundo( \(|$)/,sig=function(m){return partsOf(m).filter(function(p){return !FU.test(p.name)}).map(function(p){return p.name+' '+p.cl+'x'+p.cw+' m'+(p.mat||'')+' '+(p.note||'')}).sort().join(';')};
+        var fun=function(m){return cutLines(m).filter(function(l){return /^Fundo/.test(l.names[0])}).map(function(l){return l.names.join('+')+' '+l.L+'x'+l.W+' m'+l.mat}).sort().join(';')};
+        var cx=function(){__build();var B=__boxes(),f=B.filter(function(b){return /^0:Fundo( \(lado do canto\))?$/.test(String(b.nm))}),lt=B.filter(function(b){return /^0:(Lateral|Base inferior)/.test(String(b.nm))});return {f:f.map(function(b){return Math.round(Math.min(b.x1-b.x0,b.y1-b.y0,b.z1-b.z0)*10)/10}).sort().join(','),z:Math.round(Math.min.apply(null,lt.map(function(b){return b.z0}))*10)/10}};
+        var pl=function(){var s=plantaSvg(),mm=/data-pm="0" points="([^"]+)"/.exec(s);if(!mm)return NaN;return +mm[1].trim().split(/\s+/)[2].split(',')[1]/PLK};
+        var casos=[['inferior','Balcão 2 portas + 4 gavetas'],['aereo','Aéreo 2 portas'],['torre','Torre quente (forno)'],['guarda','Guarda-roupa 3 vãos'],['canto','Canto L guarda-roupa · esquerdo'],['cantoAereo','Canto em L (aéreo) · esquerdo']];
+        R.std=STDOPT.fundoMm.map(function(o){return o[0]}).join(',');
+        for(var i=0;i<casos.length;i++){var k=casos[i][0];loadState(initLimpo());S.env='cozinha';S.room='cozinha';S.W=5000;S.H=2700;S.mods=[];draw();newTpl(T(casos[i][1]));var m=S.mods[0];m.fundo=true;m.fundoMan=1;m.fundoMm=6;draw();S.m=m;S.tab=5;panel();
+         var a=sig(m),fa=fun(m),pa=pl(),ba=cx(),d=m.d,bt=document.querySelector('#f15box [data-f15="15"]');if(!bt){R[k]='sem botão';continue}var op=[].map.call(document.querySelectorAll('#f15box [data-f15]'),function(b){return b.textContent}).join('/');bt.click();await W(50);
+         var b=sig(m),fb=fun(m),pb=pl(),bb=cx();
+         R[k]=[op,a===b?'internas iguais':'internas mudaram',fb,'D '+(d+fBack(m)),'3D fundo '+bb.f+' caixa +'+Math.round((bb.z-ba.z)*10)/10,'2D +'+Math.round((pb-pa)*10)/10,'sel '+(document.querySelector('#f15box [data-f15="15"]').className)].join(' · ');
+         R[k+'0']=fa;if(/^canto/.test(k)){var pa_=a.split(';'),pb_=b.split(';');R[k+'Dif']=pb_.filter(function(q){return pa_.indexOf(q)<0}).map(function(q){return q.split(' m')[0]}).join(';')}}
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["std"] as? String, "3,6,15", "Ajustes: 3, 6 e 15 mm")
+        XCTAssertEqual(o["inferior"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 1200x820 m15;Fundo de gaveta (6 mm) 338x460 m6 · D 575 · 3D fundo 15 caixa +9 · 2D +9 · sel sel", "fundo de gaveta continua 6")
+        XCTAssertEqual(o["aereo"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 1000x750 m15 · D 365 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["torre"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo 600x2200 m15 · D 575 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["guarda"] as? String, "3 mm/6 mm/15 mm (MDF) · internas iguais · Fundo (parte 1/2) 1796x2400 m15;Fundo (parte 2/2) 904x2400 m15 · D 565 · 3D fundo 15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["canto"] as? String, "3 mm/6 mm/15 mm (MDF) · internas mudaram · Fundo (lado do canto) 985x2400 m15;Fundo 1000x2400 m15 · D 565 · 3D fundo 15,15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["canto0"] as? String, "Fundo (lado do canto) 994x2400 m6;Fundo 1000x2400 m6")
+        XCTAssertEqual(o["cantoDif"] as? String, "Base inferior (lado do canto) 435x550;Base inferior 985x550;Base superior (lado do canto) 435x550;Base superior 985x550;Porta 407x2300;Porta 410x2300;Prateleira (lado do canto) 450x520;Prateleira 970x520;Rodapé (pedestal) 465x100;Rodapé (pedestal) do lado 450x100;Rodapé traseiro (pedestal) 955x100;Rodapé traseiro (pedestal) do lado 925x100;Tamponamento direito 2400x590;Tamponamento do lado do canto 2400x590", "canto em L: regra de hoje (medida de fora fixa), 9 mm a menos por dentro")
+        XCTAssertEqual(o["cantoAereo"] as? String, "3 mm/6 mm/15 mm (MDF) · internas mudaram · Fundo (lado do canto) 685x750 m15;Fundo 700x750 m15 · D 365 · 3D fundo 15,15 caixa +9 · 2D +9 · sel sel")
+        XCTAssertEqual(o["cantoAereoDif"] as? String, "Base inferior (lado do canto) 335x350;Base inferior 685x350;Base superior (lado do canto) 335x350;Base superior 685x350;Porta 307x750;Porta 321x750;Prateleira (lado do canto) 350x320;Prateleira 670x320")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: "aplicar a todos os móveis do ambiente" é explícito, com prévia (marca/desmarca, nicho fica de fora), cancelar não muda, desfazer
+    // pela barra e pelo ↶ do app. Nenhum móvel sai do lugar; a pedra encaixada acompanha a frente (regra de hoje), a pedra com medida da pessoa fica
+    // e o app avisa (medida, disponível, diferença); vizinho de outra parede: avisa, não mexe. Embaixo da pia: sem chapa, só a profundidade acompanha
+    func testFundo15AplicarATodosDoAmbienteComPreviaDesfazerEAvisoSemMoverNada() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var pos=function(){return S.mods.map(function(m){return [m.x,m.b,m.w,m.h,m.d,m.zo==null?'':m.zo,m.wing||'',m.rot||0].join(',')}).join(';')},ped=function(){return (S.stones||[]).map(function(s){return [s.x,s.w,s.d,s.t].join(',')}).join(';')};
+        var fs_=function(){return S.mods.map(function(m){return m.fundoMm}).join(',')};
+        loadState(initLimpo());demoScene();await W(400);draw();var p0=pos(),s0=ped();R.pedra0=s0;R.inicio=fs_();
+        var pia=S.mods.filter(function(m){return m.fundoPia&&!m.fundo})[0],ipia=S.mods.indexOf(pia);R.pia=!!pia;
+        /* um módulo pelo painel */S.m=S.mods[2];S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(900);R.um=fs_();
+        /* aplicar a todos: prévia */S.tab=5;panel();var ba=document.querySelector('#f15box [data-f15all]');R.botao=ba?ba.textContent:'';ba.click();await W(50);var M=document.getElementById('f15m');
+        R.previa=M?[M.querySelectorAll('[data-f15c]').length+' marcáveis',M.querySelectorAll('[data-f15c]:checked').length+' marcados',(M.textContent.match(/já com 15 mm/)||[''])[0],M.querySelectorAll('#f15av .note').length+' avisos',/embaixo da pia/.test(M.textContent)?'pia':'sem pia'].join(' · '):'sem prévia';
+        R.avisoTexto=M?((M.querySelector('#f15av .note')||{}).textContent||''):'';
+        R.previaNaoMuda=(fs_()===R.um)+' · '+(pos()===p0);R.pedraUm=ped();R.pedraPrevia=[].map.call(M.querySelectorAll('.note'),function(n){return n.textContent}).filter(function(t){return /^Pedra/.test(t)}).join('|');
+        /* cancelar não muda */M.querySelector('[data-f15no]').click();R.cancelar=(!document.getElementById('f15m'))+' · '+(fs_()===R.um);
+        /* aplicar */S.tab=5;panel();document.querySelector('#f15box [data-f15all]').click();await W(50);document.querySelector('#f15m [data-f15ok]').click();await W(50);
+        R.aplicou=fs_();R.naoMoveu=pos()===p0;R.pedraTodos=ped();R.barra=!!document.querySelector('#f15u [data-f15undo]');R.piaProf=pia?(pia.d+fBack(pia))+' · peça '+cutLines(pia).filter(function(l){return /^Fundo/.test(l.names[0])}).length:'';
+        S.m=S.mods[0];S.tab=5;panel();R.avisoPainel=[].map.call(document.querySelectorAll('#f15box .note'),function(n){return n.textContent}).join(' | ').slice(0,200);
+        /* desfazer da barra */await W(900);document.querySelector('#f15u [data-f15undo]').click();await W(50);R.desfez=fs_();R.desfezPos=pos()===p0;R.pedraDesfez=ped();
+        /* ↶ do app também desfaz o "todos" */await W(900);fundoTodos(15);await W(900);document.getElementById('und').click();await W(50);R.undoApp=fs_();
+        /* vizinho de outra parede: avisa com as medidas, não mexe em nada */
+        loadState(initLimpo());S.env='cozinha';S.W=3000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Balcão 2 portas'));var a=S.mods[0],c=S.mods[1];a.x=0;a.fundo=true;a.fundoMan=1;a.fundoMm=6;c.wing='e';c.x=575;c.fundo=false;c.fundoMan=1;draw();var q0=pos();
+        var av=fundoPrevia(15).avisos;R.vizinho=av.map(function(v){return v.mi+' '+v.med+' '+v.disp+' '+v.dif}).join(' | ');R.vizTxt=av.length?av[0].msg:'';S.m=a;S.tab=5;panel();document.querySelector('#f15box [data-f15="15"]').click();await W(50);R.vizNaoMoveu=(pos()===q0)+' · '+a.fundoMm;S.tab=5;panel();R.vizPainel=(document.querySelector('#f15box .note')||{}).textContent||'';
+        /* pedra que a pessoa deixou com outra medida (não acompanha): fica como está e o app avisa */
+        loadState(initLimpo());S.env='cozinha';S.W=3000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));var g=S.mods[0];g.x=0;g.fundo=true;g.fundoMan=1;g.fundoMm=6;draw();addStone();draw();var st=S.stones[0];st.d=600;draw();var sd0=st.d,gx=pos();var av2=fundoPrevia(15).avisos;R.pedraFixa=av2.map(function(v){return v.med+' '+v.disp+' '+v.dif}).join(' | ');R.pedraFixaTxt=av2.length?av2[0].txt:'';fundoEsp(g,15);R.pedraFixaFica=(st.d===sd0)+' · '+(pos()===gx);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["um"] as? String, "6,6,15,6,6,6,6,6,6", "o botão do painel muda só este móvel")
+        XCTAssertEqual(o["botao"] as? String, "Aplicar 15 mm a todos os móveis do ambiente…")
+        XCTAssertEqual(o["previa"] as? String, "8 marcáveis · 8 marcados · já com 15 mm · 0 avisos · pia")
+        XCTAssertEqual(o["previaNaoMuda"] as? String, "true · true", "a prévia não muda nada")
+        XCTAssertEqual(o["cancelar"] as? String, "true · true")
+        XCTAssertEqual(o["aplicou"] as? String, "15,15,15,15,15,15,15,15,15")
+        XCTAssertEqual(o["naoMoveu"] as? Bool, true, "nenhum móvel sai do lugar nem muda de medida")
+        XCTAssertEqual(o["pedra0"] as? String, "0,2735,606,820")
+        XCTAssertEqual(o["pedraUm"] as? String, "0,2735,615,820", "pedra encaixada acompanha a frente: + 9")
+        XCTAssertEqual(o["barra"] as? Bool, true)
+        XCTAssertEqual(o["piaProf"] as? String, "575 · peça 0", "embaixo da pia: sem chapa de fundo, a profundidade acompanha")
+        XCTAssertEqual(o["desfez"] as? String, "6,6,15,6,6,6,6,6,6", "desfazer volta só o que o 'todos' mudou")
+        XCTAssertEqual(o["desfezPos"] as? Bool, true)
+        XCTAssertEqual(o["undoApp"] as? String, "6,6,15,6,6,6,6,6,6", "o ↶ do app também desfaz o 'todos'")
+        XCTAssertEqual(o["vizinho"] as? String, "0 575 550 25", "módulo, profundidade total, disponível, diferença")
+        XCTAssertEqual(o["vizTxt"] as? String, "⚠ Base 1: encosta no vizinho: entra 25 mm em Base 2 (antes 16 mm) · profundidade total 575 mm · disponível 550 mm · diferença 25 mm")
+        XCTAssertEqual(o["vizNaoMoveu"] as? String, "true · 15", "avisa e não move nem encolhe nada")
+        XCTAssertEqual(o["vizPainel"] as? String, "⚠ Base 1: encosta no vizinho: entra 25 mm em Base 2 (antes 16 mm) · profundidade total 575 mm · disponível 550 mm · diferença 25 mm")
+        XCTAssertEqual(o["pedraFixa"] as? String, "575 560 15")
+        XCTAssertEqual(o["pedraFixaTxt"] as? String, "a pedra passa só 25 mm na frente (o ajuste da pedra pede 40 mm)")
+        XCTAssertEqual(o["pedraFixaFica"] as? String, "true · true", "a pedra da pessoa não muda sozinha")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: orçamento, lista, plano de corte e DXF. 15 mm é chapa de MDF 15 da cor/material da caixa (preço do MDF 15, sem a linha "chapa de
+    // fundo"), no mesmo grupo das peças de 15 da caixa; o total de chapas é o do otimizador com as mesmas peças (nenhuma chapa a mais). 3 e 6 mm
+    // iguais à versão de antes, ao centavo. Fita: a regra de hoje do fundo (sem fita)
+    func testFundo15OrcamentoChapaMDF15CorteMesmaChapaSemChapaAMaisDXFE3e6Iguais() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100},r1=function(v){return Math.round(v*1000)/1000};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(mm){loadState(initLimpo());S.env='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));newTpl(T('Torre quente (forno)'));S.mods.forEach(function(m){m.fundo=true;m.fundoMan=1;m.fundoMm=mm});draw();Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;PR.moR=0;PR.cfR=0;PR.dxR=0;delete PR.cfxLib;S.preco=0;SPC={}};
+        var linhas=function(b){return prAuto(b).filter(function(r){return r[3]>0.0001}).map(function(r){return r[0]+' '+r1(r[3])}).join(';')};
+        /* 3 e 6 mm: iguais à versão de antes, ao centavo */
+        [3,6].forEach(function(mm){proj(mm);var b=budget();R['f'+mm]=[r2(b.tot),r2(b.sale),b.nB+'/'+b.nC+'/'+b.nF,r2(b.cF),b.rows.map(function(x){return r2(x.c)}).join('/'),linhas(b)].join(' · ')});
+        /* 15 mm: chapa de MDF 15 da caixa, mesmo grupo das peças de 15 da mesma cor/material */
+        proj(6);var b6=budget(),n6=b6.plan.groups.reduce(function(s,g){return s+g.n},0);R.lista6=cutLines(S.mods[0]).filter(function(l){return /^Fundo$/.test(l.names[0])}).map(function(l){return l.L+'x'+l.W+' m'+l.mat}).join();
+        R.todos=fundoTodos(15);SPC={};var b15=budget(),pl=b15.plan;
+        R.lista15=cutLines(S.mods[0]).filter(function(l){return /^Fundo$/.test(l.names[0])}).map(function(l){return l.L+'x'+l.W+' m'+l.mat}).join();
+        R.grupos=pl.groups.map(function(g){return g.key}).join(',');
+        var onde={};pl.groups.forEach(function(g){(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){var lb=(u.p&&u.p.lab)||'';if(/^Fundo$/.test(lb))onde[g.key]=(onde[g.key]||0)+1})})});R.fundoNoGrupo=JSON.stringify(onde);
+        var g=pl.groups.filter(function(q){return q.key==='b|15|'})[0],rot=!(PR.veio&&(g.t==='c'||(g.t==='b'&&ACAB().int!=='branco'))),P=[],Pf=[],Po=[];(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){var q={w:u.p.w,h:u.p.h,lab:u.p.lab};P.push(q);(/^Fundo$/.test(q.lab)?Pf:Po).push(q)})});
+        var ot=packSheets(P,pl.SW,pl.SH,pl.kf,rot).sheets.length,sep=packSheets(Po,pl.SW,pl.SH,pl.kf,rot).sheets.length+packSheets(Pf,pl.SW,pl.SH,pl.kf,rot).sheets.length;
+        R.chapas=[g.n+' no grupo',ot+' otimizador',sep+' separado',(g.n<=ot&&g.n<=sep)?'sem chapa à toa':'CHAPA A MAIS'].join(' · ');R.totalChapas=n6+' → '+pl.groups.reduce(function(s,q){return s+q.n},0);
+        R.preco=[g.price===+PR.mdfB?'preço MDF 15':'preço '+g.price,'cF '+r2(b15.cF),'nF '+b15.nF,prAuto(b15).some(function(r){return r[0]==='fundo'&&r[3]>0.0001})?'linha chapa de fundo':'sem linha chapa de fundo',r2(b15.tot-b6.tot)===r2((b15.cB-b6.cB)+(b15.cC-b6.cC)-b6.cF)?'conta fecha':'conta NÃO fecha'].join(' · ');
+        R.dxf=dxfPecas({uniao:'nenhuma'}).pecas.filter(function(q){return /^Fundo$/.test(q.nome)}).map(function(q){return q.L+'x'+q.W+' e'+q.esp}).sort().join(';');
+        R.fita=edgeTxt('Fundo')+' · '+edgeMm({name:'Fundo',cl:900,cw:820});
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        let ref = "1084.25 · 2168.49 · 2/2/1 · 62.17 · 255.25/200.19/628.81 · mdfB 1.344;mdfC 1.291;fundo 0.565;fitaB 1.254;fitaC 34.357;fitaT 16.511;dob 12;pux 2"
+        XCTAssertEqual(o["f3"] as? String, ref, "3 mm igual à versão de antes (553745a1), ao centavo")
+        XCTAssertEqual(o["f6"] as? String, ref, "6 mm igual à versão de antes (553745a1), ao centavo")
+        XCTAssertEqual(o["lista6"] as? String, "900x820 m6")
+        XCTAssertEqual(o["todos"] as? Int, 3)
+        XCTAssertEqual(o["lista15"] as? String, "900x820 m15", "lista: mesma medida, 15 mm")
+        XCTAssertEqual(o["grupos"] as? String, "b|15|,c|15|Cor", "sem grupo de chapa de fundo")
+        XCTAssertEqual(o["fundoNoGrupo"] as? String, "{\"b|15|\":3}", "os 3 fundos na chapa de MDF 15 da caixa")
+        XCTAssertEqual(o["chapas"] as? String, "3 no grupo · 3 otimizador · 3 separado · sem chapa à toa")
+        XCTAssertEqual(o["totalChapas"] as? String, "5 → 5")
+        XCTAssertEqual(o["preco"] as? String, "preço MDF 15 · cF 0 · nF 0 · sem linha chapa de fundo · conta fecha")
+        XCTAssertEqual(o["dxf"] as? String, "1000x750 e15;600x2200 e15;900x820 e15")
+        XCTAssertEqual(o["fita"] as? String, "sem fita · 0")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15: projeto antigo abre com os fundos iguais e nenhum valor muda (peças, corte, fundo e profundidade, orçamento, chapas); nada novo vai
+    // pro arquivo. Com 15 mm: salvar, reabrir e duplicar mantêm tudo
+    func testFundo15ProjetoAntigoIntactoSalvarReabrirEDuplicar() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var sig=function(){SPC={};var b=budget();return JSON.stringify({p:S.mods.map(function(m){return partsOf(m).map(function(p){return p.name+' '+p.cl+'x'+p.cw+' m'+(p.mat||'')}).sort().join(';')}),c:(function(){var G=cutGroups();return G.ord.map(function(k){var g=G.map[k];return [g.L,g.W,g.mat,g.fin,g.qty].join(' ')}).sort()})(),f:S.mods.map(function(m){return m.fundoMm+'/'+fBack(m)}),t:r2(b.tot),s:r2(b.sale),pl:b.plan.groups.map(function(g){return g.key+':'+g.n})})};
+        var fs_=function(){return S.mods.map(function(m){return m.fundoMm}).join(',')};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2;
+        /* projeto antigo (fundos 6 e um de 3, sem nada novo no arquivo): abre igual */
+        loadState(initLimpo());demoScene();await W(400);S.mods[6].fundoMm=3;draw();var ST=JSON.stringify(snapState()),S0=sig();
+        loadState(JSON.parse(ST));draw();R.antigo=[sig()===S0?'igual':'MUDOU',fs_(),(function(){var f=function(o){return JSON.stringify(o.mods.map(function(m){return [m.fundo,m.fundoPia,m.fundoMm,m.fundoTipo,m.fundoMan]}))};return f(snapState())===f(JSON.parse(ST))?'fundos do arquivo iguais':'fundos do arquivo mudaram'})()].join(' · ');
+        var nAv=0;S.mods.forEach(function(m){S.m=m;S.tab=5;panel();nAv+=document.querySelectorAll('#f15box .note').length});R.semAviso=nAv;R.campoNovo=/f15|fundoAv/.test(ST)?'tem':'não tem';
+        /* salvar, reabrir e duplicar com 15 */
+        ensureProj();fundoTodos(15);await W(50);var v15=sig(),f15=fs_();saveNow();await W(300);
+        loadState(initLimpo());draw();window.arqueOpenClient(CUR);await W(500);R.reabre=(fs_()===f15)+' · '+(sig()===v15);
+        var a=pLoadAll(),n0=a.length,bt=document.createElement('button');bt.dataset.pd=CUR;document.getElementById('clm').appendChild(bt);bt.click();bt.remove();var a2=pLoadAll(),cp=a2[a2.length-1];loadState(JSON.parse(JSON.stringify(cp.current)));draw();R.duplica=(a2.length===n0+1)+' · '+(fs_()===f15)+' · '+(sig()===v15);
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["antigo"] as? String, "igual · 6,6,6,6,6,6,3,6,6 · fundos do arquivo iguais")
+        XCTAssertEqual(o["semAviso"] as? Int, 0, "projeto antigo sem aviso novo")
+        XCTAssertEqual(o["campoNovo"] as? String, "não tem")
+        XCTAssertEqual(o["reabre"] as? String, "true · true")
+        XCTAssertEqual(o["duplica"] as? String, "true · true · true")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ZOOM-CORTE (Adauto 24/11): zoom no plano de corte, na própria chapa e no 🔍 Ampliar (o mesmo motor, viewBox do SVG: vetorial, sem imagem).
+    // Pinça centrada nos dedos, roda centrada no cursor (fora da chapa e afastando sem zoom a página rola), ＋ － e "Ajustar à tela", arrasto com
+    // 1 dedo ou mouse sem a chapa sair da tela. Pinça e arrasto não viram toque (✓ cortada, 3D) nem toque longo; toque parado, 2 toques e toque
+    // longo continuam com zoom. O sheetPlan não muda. Roda na bateria a 1366 (mouse) e 430×900 (toque)
+    func testZoomNoPlanoDeCortePincaRodaBotoesArrastoComLimiteSemDispararToqueEPlanoIgual() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r1=function(v){return Math.round(v*10)/10};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        loadState(initLimpo());S.env='cozinha';S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));newTpl(T('Aéreo 2 portas'));draw();S.cutOk={};
+        var plano=function(){return JSON.stringify(sheetPlan(1),function(k,v){return k==='no'?undefined:v})};openCut();await W(150);
+        /* o plano abre rápido e depois o otimizador fundo refaz as chapas: espera ficar parado */for(var q_=0,pa_='',ok_=0;q_<40&&ok_<3;q_++){await W(300);var pb_=plano();ok_=pb_===pa_?ok_+1:0;pa_=pb_}var P0=plano();R.estavel=ok_>=3;
+        var s=document.querySelector('#cutm svg[data-czs]');R.temChapa=!!s;s.previousElementSibling.scrollIntoView({block:'start'});await W(50);
+        var vb=function(){return s.getAttribute('viewBox')},vb0=vb(),k=function(){return r1(cutZoom.k(s))},rc=function(){return s.getBoundingClientRect()};
+        /* ponto da chapa que está embaixo de um ponto da tela (pela transformação real do SVG); tolerância de 1 px na tela */var uAt=function(cx,cy){var p=s.createSVGPoint();p.x=cx;p.y=cy;p=p.matrixTransform(s.getScreenCTM().inverse());return [p.x,p.y]},tol=function(){return 1/s.getScreenCTM().a},perto=function(a,b){return Math.abs(a[0]-b[0])<=tol()&&Math.abs(a[1]-b[1])<=tol()};
+        var tch=function(id,x,y){try{return new Touch({identifier:id,target:s,clientX:x,clientY:y,pageX:x,pageY:y})}catch(_){return document.createTouch(window,s,id,x,y,x,y)}},te=function(tp,L){var e;try{e=new TouchEvent(tp,{touches:tp==='touchend'?[]:L,targetTouches:tp==='touchend'?[]:L,changedTouches:L,bubbles:true,cancelable:true})}catch(_){e=document.createEvent('TouchEvent');e.initTouchEvent(tp,true,true,window,0,0,0,0,0,false,false,false,false,document.createTouchList.apply(document,tp==='touchend'?[]:L),document.createTouchList.apply(document,tp==='touchend'?[]:L),document.createTouchList.apply(document,L),1,0)}s.dispatchEvent(e);return e};
+        var pe=function(tp,x,y,o){var e=new PointerEvent(tp,Object.assign({bubbles:true,cancelable:true,clientX:x,clientY:y,pointerType:'mouse',button:0,buttons:tp==='pointerup'?0:1,isPrimary:true,pointerId:1},o||{}));(document.elementFromPoint(x,y)||s).dispatchEvent(e)};
+        var b=rc(),cx=b.left+b.width*.4,cy=b.top+b.height*.5;
+        /* 1) pinça centrada nos dedos */var u0=uAt(cx,cy);te('touchstart',[tch(1,cx-40,cy),tch(2,cx+40,cy)]);for(var i=1;i<=5;i++)te('touchmove',[tch(1,cx-40-i*16,cy),tch(2,cx+40+i*16,cy)]);te('touchend',[tch(1,cx-120,cy),tch(2,cx+120,cy)]);
+        R.pinca=k()+' · centro '+(perto(uAt(cx,cy),u0)?'fixo':'andou '+uAt(cx,cy)+' vs '+u0)+' · toque '+s.style.touchAction;
+        /* 1 dedo: ampliada arrasta a chapa; sem zoom não segura (a página rola) */var zA=cutZoom.box(s),e1=te('touchstart',[tch(3,cx,cy)]),e2=te('touchmove',[tch(3,cx+10,cy+10)]),e3=te('touchmove',[tch(3,cx+80,cy+60)]);te('touchend',[tch(3,cx+80,cy+60)]);var zB=cutZoom.box(s);R.dedoArrasta=(zB.x<zA.x&&zB.y<zA.y)+' · segurou '+e3.defaultPrevented;
+        document.querySelector('[data-czb="f"]').click();await W(500);var e4=te('touchstart',[tch(4,cx,cy)]),e5=te('touchmove',[tch(4,cx,cy+20)]),e6=te('touchmove',[tch(4,cx,cy+80)]);te('touchend',[tch(4,cx,cy+80)]);R.dedoSemZoom=(e6.defaultPrevented?'segurou':'página rola')+' · '+k();
+        /* 2) botões */document.querySelector('[data-czb="f"]').click();R.ajustar=k()+' · '+(vb()===vb0);document.querySelector('[data-czb="+"]').click();R.mais=k();document.querySelector('[data-czb="-"]').click();R.menos=k();
+        /* 3) roda centrada no cursor; fora da chapa e afastando sem zoom a página rola */document.querySelector('[data-czb="f"]').click();var wl=function(el,dy,x,y){var e=new WheelEvent('wheel',{deltaY:dy,clientX:x,clientY:y,bubbles:true,cancelable:true});el.dispatchEvent(e);return e.defaultPrevented};
+        R.rodaAfastarSemZoom=wl(s,200,cx,cy)?'segurou':'página rola';var u1=uAt(cx,cy),pv=wl(s,-400,cx,cy);R.roda=k()+' · '+(pv?'segurou':'livre')+' · cursor '+(perto(uAt(cx,cy),u1)?'fixo':'andou '+uAt(cx,cy)+' vs '+u1);var fora=document.querySelector('#cutm .cutpt')||document.querySelector('#cutm table');R.rodaFora=wl(fora,-400,10,10)?'segurou':'página rola';
+        /* 4) arrastar com limite (mouse) */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,4);var z0=cutZoom.box(s);pe('pointerdown',cx,cy);pe('pointermove',cx+30,cy+30);pe('pointermove',cx+5000,cy+5000);pe('pointerup',cx+5000,cy+5000);var z1=cutZoom.box(s);R.arrasto=(z1.x!==z0.x)+' · limite '+(r1(z1.x)===r1(z1.b.x)&&r1(z1.y)===r1(z1.b.y)?'canto da chapa':'passou '+z1.x+','+z1.y);
+        pe('pointerdown',cx,cy);pe('pointermove',cx-30,cy-30);pe('pointermove',cx-9000,cy-9000);pe('pointerup',cx-9000,cy-9000);var z2=cutZoom.box(s);R.arrastoOutro=(r1(z2.x+z2.w)===r1(z2.b.x+z2.b.w)&&r1(z2.y+z2.h)===r1(z2.b.y+z2.b.h))?'canto oposto':'passou';
+        /* peça visível na tela (com zoom): o ponto da tela e a peça que está nele */var pega=function(){s=document.querySelector('#cutm svg[data-czs]');var B=s.getBoundingClientRect(),x0=Math.max(B.left,0)+10,x1=Math.min(B.right,innerWidth)-10,y0=Math.max(B.top,0)+10,y1=Math.min(B.bottom,innerHeight)-10;for(var a=1;a<8;a++)for(var c=1;c<8;c++){var px=x0+(x1-x0)*a/8,py=y0+(y1-y0)*c/8,el=document.elementFromPoint(px,py),gg=el&&el.closest&&el.closest('#cutm svg[data-czs] [data-cp]');if(gg)return {g:gg,x:px,y:py,k:gg.dataset.cp}}return null};
+        /* 5) o click que vem depois do arrasto não marca nem vai pro 3D */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,2);await W(500);var Q=pega(),g=Q.g,gk=Q.k,gx=Q.x,gy=Q.y,gr;S.cutOk={};
+        pe('pointerdown',gx,gy);pe('pointermove',gx+20,gy);pe('pointermove',gx+40,gy);pe('pointerup',gx+40,gy);g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx+40,clientY:gy}));g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx+40,clientY:gy}));await W(600);R.arrastoNaoMarca=!(S.cutOk||{})[gk];
+        /* pinça começando em cima da peça: o toque longo não abre */await W(500);Q=pega();g=Q.g;gx=Q.x;gy=Q.y;g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx,clientY:gy,pointerType:'touch',isPrimary:true,pointerId:7}));te('touchstart',[tch(1,gx,gy),tch(2,gx+60,gy)]);g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx+60,clientY:gy,pointerType:'touch',isPrimary:false,pointerId:8}));te('touchmove',[tch(1,gx-2,gy),tch(2,gx+64,gy)]);await W(1700);R.pincaSemMenu=!document.getElementById('pcmenu');te('touchend',[tch(1,gx,gy),tch(2,gx+64,gy)]);document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:7}));
+        /* 6) com zoom: toque parado (2 toques marca ✓) e toque longo continuam */await W(600);S.cutOk={};Q=pega();g=Q.g;gk=Q.k;gx=Q.x;gy=Q.y;g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx,clientY:gy}));g.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:gx,clientY:gy}));await W(100);R.doisToques=!!(S.cutOk||{})[gk];
+        await W(500);Q=pega();g=Q.g;gx=Q.x;gy=Q.y;g.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:gx,clientY:gy,pointerType:'touch',isPrimary:true,pointerId:9}));await W(1700);R.toqueLongo=!!document.getElementById('pcmenu');try{pcMenuClose()}catch(_){}document.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:9}));
+        /* 7) o plano não muda */S.cutOk={};R.planoIgual=plano()===P0;
+        /* 8) texto vetorial: nítido em qualquer zoom (o SVG continua SVG, sem imagem) */R.vetorial=s.querySelectorAll('image').length+' imagens · '+(s.querySelectorAll('text').length>0);
+        /* 9) Ampliar usa o mesmo zoom */var hd=s.previousElementSibling;hd.querySelector('[data-czoom]').click();await W(100);var zs=document.querySelector('#cutzoom #czb svg');R.ampliar=!!(zs&&zs.hasAttribute('data-czs'))+' · '+(zs?zs.getAttribute('viewBox')===zs.getAttribute('data-vb0'):'');document.querySelector('#cutzoom [data-cz="+"]').click();R.ampliarMais=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="f"]').click();R.ampliarAjustar=document.getElementById('czp').textContent;document.querySelector('#cutzoom [data-cz="x"]').click();
+        /* 10) o plano se redesenha sozinho (otimizador, ✓, tirar peça): o zoom da chapa continua */s=document.querySelector('#cutm svg[data-czs]');cutZoom.step(s,3);var vbz=s.getAttribute('viewBox');openCut();await W(20);var s2=document.querySelector('#cutm svg[data-czs]');R.redesenho=(s2!==s)+' · '+(s2.getAttribute('viewBox')===vbz);document.querySelector('[data-czb="f"]').click();openCut();await W(20);R.redesenhoAjustado=Math.round(cutZoom.k(document.querySelector('#cutm svg[data-czs]'))*10)/10;
+        /* 11) o 🔍 Ampliar mantém os níveis de antes (−/＋ de 25% até 200%, de 50% acima; de 60% a 1600%; Ajustar = 100%) */s=document.querySelector('#cutm svg[data-czs]');s.previousElementSibling.querySelector('[data-czoom]').click();await W(100);var pc=function(){return document.getElementById('czp').textContent},bz=function(k){document.querySelector('#cutzoom [data-cz="'+k+'"]').click();return pc()};var up=[];for(var i=0;i<8;i++)up.push(bz('+'));R.niveisMais=up.join(',');for(var i=0;i<30;i++)bz('+');R.niveisMax=pc();bz('f');R.niveisAjustar=pc();var dn=[];for(var i=0;i<3;i++)dn.push(bz('-'));R.niveisMenos=dn.join(',');bz('x');
+        /* 12) imprimir/PDF com a chapa ampliada: vai a chapa inteira pro papel e o zoom volta depois */document.querySelector('[data-czb="f"]').click();cutZoom.step(s,3);var vbZ=s.getAttribute('viewBox'),noPapel=null,p0=window.print,A0=window.ArqueApp;window.print=function(){noPapel=s.getAttribute('viewBox')};try{window.ArqueApp=Object.assign({},A0||{},{printPage:undefined})}catch(_){}cutPrint();await W(200);R.imprimeInteira=noPapel===s.getAttribute('data-vb0');window.dispatchEvent(new Event('afterprint'));await W(50);R.voltaZoom=s.getAttribute('viewBox')===vbZ;window.print=p0;window.ArqueApp=A0;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["estavel"] as? Bool, true)
+        XCTAssertEqual(o["pinca"] as? String, "3 · centro fixo · toque none", "pinça amplia em volta do ponto entre os dedos; ampliada, a chapa segura o dedo")
+        XCTAssertEqual(o["dedoArrasta"] as? String, "true · segurou true", "1 dedo arrasta a chapa ampliada")
+        XCTAssertEqual(o["dedoSemZoom"] as? String, "página rola · 1", "sem zoom, 1 dedo rola a página")
+        XCTAssertEqual(o["ajustar"] as? String, "1 · true", "Ajustar à tela volta o enquadramento original")
+        XCTAssertEqual(o["mais"] as? Double, 1.3)
+        XCTAssertEqual(o["menos"] as? Double, 1)
+        XCTAssertEqual(o["rodaAfastarSemZoom"] as? String, "página rola")
+        XCTAssertEqual(o["roda"] as? String, "1.8 · segurou · cursor fixo", "roda amplia em volta do cursor")
+        XCTAssertEqual(o["rodaFora"] as? String, "página rola", "fora da chapa a roda rola a página")
+        XCTAssertEqual(o["arrasto"] as? String, "true · limite canto da chapa", "arrasto para no canto: a chapa não some")
+        XCTAssertEqual(o["arrastoOutro"] as? String, "canto oposto")
+        XCTAssertEqual(o["arrastoNaoMarca"] as? Bool, true, "arrastar não marca ✓ nem vai pro 3D")
+        XCTAssertEqual(o["pincaSemMenu"] as? Bool, true, "pinça em cima da peça não abre o toque longo")
+        XCTAssertEqual(o["doisToques"] as? Bool, true, "com zoom, 2 toques parados ainda marcam ✓")
+        XCTAssertEqual(o["toqueLongo"] as? Bool, true, "com zoom, o toque longo (PC-TOQUE) ainda abre o menu da peça")
+        XCTAssertEqual(o["planoIgual"] as? Bool, true, "zoom, arrasto e ajustar não mudam o sheetPlan")
+        XCTAssertEqual(o["vetorial"] as? String, "0 imagens · true")
+        XCTAssertEqual(o["ampliar"] as? String, "true · true", "o 🔍 Ampliar usa o mesmo zoom e abre enquadrado")
+        XCTAssertEqual(o["ampliarMais"] as? String, "125%")
+        XCTAssertEqual(o["ampliarAjustar"] as? String, "100%")
+        XCTAssertEqual(o["redesenho"] as? String, "true · true", "o plano redesenhado mantém o zoom da chapa")
+        XCTAssertEqual(o["redesenhoAjustado"] as? Double, 1)
+        XCTAssertEqual(o["niveisMais"] as? String, "125%,150%,175%,200%,250%,300%,350%,400%", "os mesmos passos do Ampliar de antes")
+        XCTAssertEqual(o["niveisMax"] as? String, "1600%")
+        XCTAssertEqual(o["niveisAjustar"] as? String, "100%")
+        XCTAssertEqual(o["niveisMenos"] as? String, "75%,60%,60%", "afasta até 60%, como antes")
+        XCTAssertEqual(o["imprimeInteira"] as? Bool, true, "imprimir/PDF leva a chapa inteira mesmo ampliada")
+        XCTAssertEqual(o["voltaZoom"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // CORTE-LEGÍVEL (Adauto 24/11): no plano de corte (o mesmo desenho serve a tela, o Ampliar e o PDF), em todos os modelos do catálogo e na
+    // cozinha de exemplo, a caixa de cada texto (medidas, nome, #n, sobra) não cruza linha de fita nem contorno de peça e fica dentro da chapa;
+    // os textos são desenhados depois das linhas de fita. Peça estreita demais: etiqueta "#n medida" na sobra mais perto, com linha até a peça.
+    // Vale com zoom. Medidas, peças e chapas iguais (sonda s46: 141 projetos, plano inteiro igual)
+    func testPlanoDeCorteLegivelTextoNaoCruzaFitaNemContornoEmTodoOCatalogoComEsemZoom() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        /* confere a geometria do texto no plano de corte: caixa de cada texto (em coordenadas da chapa) não cruza linha de fita,
+           fica dentro da própria peça (não cruza contorno de outra) e dentro da chapa. Vale para as chapas abertas no momento. */
+        window.__cutTxtChk=function(root){var R={chapas:0,pecas:0,textos:0,ruins:[]},EPS=0.5;
+         var sv=[].slice.call((root||document).querySelectorAll('svg')).filter(function(s){var p=s.previousElementSibling;return (p&&/^cs\d+_\d+$/.test(p.id||''))||s.hasAttribute('data-czs')});
+         sv.forEach(function(s,si){if(!s.getScreenCTM())return;R.chapas++;var inv=s.getScreenCTM().inverse(),box=function(el){var b=el.getBBox(),M=inv.multiply(el.getScreenCTM()),P=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(function(q){var p=s.createSVGPoint();p.x=q[0];p.y=q[1];p=p.matrixTransform(M);return p});return {x0:Math.min.apply(null,P.map(function(p){return p.x})),x1:Math.max.apply(null,P.map(function(p){return p.x})),y0:Math.min.apply(null,P.map(function(p){return p.y})),y1:Math.max.apply(null,P.map(function(p){return p.y}))}},
+          cruza=function(a,b){return Math.min(a.x1,b.x1)-Math.max(a.x0,b.x0)>EPS&&Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)>EPS},dentro=function(a,b){return a.x0>=b.x0-EPS&&a.x1<=b.x1+EPS&&a.y0>=b.y0-EPS&&a.y1<=b.y1+EPS},
+          rr=function(r){var x=+r.getAttribute('x'),y=+r.getAttribute('y');return {x0:x,y0:y,x1:x+ +r.getAttribute('width'),y1:y+ +r.getAttribute('height')}};
+          var sheet=rr(s.querySelector('rect')),pcs=[],fitas=[];
+          [].forEach.call(s.querySelectorAll('g'),function(g){if(g.closest('[data-okmk]'))return;var r=g.querySelector(':scope > rect');if(!r)return;if(!g.hasAttribute('data-cp')&&!g.hasAttribute('data-lab'))return;var P={g:g,r:rr(r)};pcs.push(P);[].forEach.call(g.querySelectorAll('line'),function(l){if(String(l.getAttribute('stroke')).toLowerCase()!=='#1f9d55')return;var w=+l.getAttribute('stroke-width')||1,x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2'),y1=+l.getAttribute('y1'),y2=+l.getAttribute('y2');fitas.push({x0:Math.min(x1,x2)-(x1===x2?w/2:0),x1:Math.max(x1,x2)+(x1===x2?w/2:0),y0:Math.min(y1,y2)-(y1===y2?w/2:0),y1:Math.max(y1,y2)+(y1===y2?w/2:0)})})});
+          R.pecas+=pcs.length;R.semTexto=R.semTexto||0;R.semEx=R.semEx||[];pcs.forEach(function(P){var cp_=P.g.getAttribute('data-cp');if(cp_&&[].some.call(s.querySelectorAll('[data-callout]'),function(c){return c.getAttribute('data-callout')===cp_}))return;if(![].some.call(P.g.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent).trim()})){R.semTexto++;if(R.semEx.length<8)R.semEx.push((P.g.getAttribute('data-lab')||'')+' ('+Math.round(P.r.x1-P.r.x0)+'×'+Math.round(P.r.y1-P.r.y0)+')')}});
+          [].forEach.call(s.querySelectorAll('text'),function(t){if(t.closest('[data-okmk]'))return;if(!String(t.textContent||'').trim())return;R.textos++;var b=box(t),dono=t.closest('g'),P=pcs.filter(function(q){return q.g===dono})[0],nm=String(t.textContent).slice(0,30),why=[];
+           if(!dentro(b,sheet))why.push('fora da chapa');
+           if(P){var ins={x0:P.r.x0+1.5,y0:P.r.y0+1.5,x1:P.r.x1-1.5,y1:P.r.y1-1.5};if(!dentro(b,ins))why.push('cruza o contorno da peça')}
+           else{pcs.forEach(function(q){if(cruza(b,{x0:q.r.x0-1.5,y0:q.r.y0-1.5,x1:q.r.x1+1.5,y1:q.r.y1+1.5}))why.push('em cima de outra peça')})}
+           if(fitas.some(function(f){return cruza(b,f)}))why.push('cruza linha de fita');
+           if(why.length)R.ruins.push('chapa '+si+' · "'+nm+'" · '+why.join(', ')+(P?' · peça '+(P.g.getAttribute('data-lab')||''):''))});
+          /* qualquer outra linha do desenho (etiqueta, recorte, furação) em cima de texto */var OL=[];[].forEach.call(s.querySelectorAll('line,path,circle,polyline'),function(l){if(l.closest('defs')||l.closest('[data-okmk]'))return;if(l.tagName==='line'&&String(l.getAttribute('stroke')).toLowerCase()==='#1f9d55')return;var b=box(l),sw=(+l.getAttribute('stroke-width')||1)/2;OL.push({el:l,b:{x0:b.x0-sw,x1:b.x1+sw,y0:b.y0-sw,y1:b.y1+sw}})});
+          var placa=function(t,tb){var p=t.previousElementSibling;if(!p||p.tagName!=='rect')return false;var f=String(p.getAttribute('fill')||'').toLowerCase();if(f!=='#fff'&&f!=='#ffffff')return false;if((+(p.getAttribute('fill-opacity')||1))<.85)return false;return dentro(tb,box(p))};
+          var segsDe=function(l){if(l.tagName==='line')return [[+l.getAttribute('x1'),+l.getAttribute('y1'),+l.getAttribute('x2'),+l.getAttribute('y2')]];if(l.tagName!=='path')return null;var d=String(l.getAttribute('d')||''),tk=d.match(/[MLHVZ]|-?[\d.]+/gi)||[],S_=[],cx=0,cy=0,sx=0,sy=0,i=0,c='';while(i<tk.length){var t=tk[i];if(/[MLHVZ]/i.test(t)){c=t.toUpperCase();i++;if(c==='Z'){S_.push([cx,cy,sx,sy]);cx=sx;cy=sy}continue}if(c==='M'){cx=+tk[i];cy=+tk[i+1];sx=cx;sy=cy;i+=2;c='L'}else if(c==='L'){S_.push([cx,cy,+tk[i],+tk[i+1]]);cx=+tk[i];cy=+tk[i+1];i+=2}else if(c==='H'){S_.push([cx,cy,+tk[i],cy]);cx=+tk[i];i++}else if(c==='V'){S_.push([cx,cy,cx,+tk[i]]);cy=+tk[i];i++}else return null}return S_};
+          var segHit=function(l,tb){var SG=segsDe(l);if(!SG)return cruza(l.__b,tb);var w=(+l.getAttribute('stroke-width')||1)/2+.5;return SG.some(function(q){var x1=q[0],y1=q[1],x2=q[2],y2=q[3],n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false})};
+          var segHit0=function(l,tb){if(l.tagName!=='line')return cruza(l.__b,tb);var x1=+l.getAttribute('x1'),y1=+l.getAttribute('y1'),x2=+l.getAttribute('x2'),y2=+l.getAttribute('y2'),w=(+l.getAttribute('stroke-width')||1)/2+.5,n=Math.max(2,Math.ceil(Math.hypot(x2-x1,y2-y1)/2));for(var i=0;i<=n;i++){var px=x1+(x2-x1)*i/n,py=y1+(y2-y1)*i/n;if(px>tb.x0-w&&px<tb.x1+w&&py>tb.y0-w&&py<tb.y1+w)return true}return false};
+          [].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).forEach(function(t){var tb=box(t);OL.forEach(function(o){o.el.__b=o.b;if(t.parentNode===o.el.parentNode&&o.el.closest('[data-callout]'))return;/* linha pintada antes do texto e o texto em plaquinha branca por cima dela: a linha fica escondida embaixo, a medida aparece */if((placa(t,tb)||(t.getAttribute('paint-order')==='stroke'&&(+t.getAttribute('stroke-width')||0)>=3))&&(o.el.compareDocumentPosition(t)&Node.DOCUMENT_POSITION_FOLLOWING))return;/* linha pintada antes da peça (por baixo dela): o fundo da peça cobre a linha */var dono_=t.closest('g[data-cp],g[data-lab]');if(dono_&&!o.el.closest('g[data-cp],g[data-lab]')&&(o.el.compareDocumentPosition(dono_)&Node.DOCUMENT_POSITION_FOLLOWING)){var rr_=dono_.querySelector(':scope > rect');if(rr_&&dentro(tb,box(rr_)))return}if(cruza(o.b,tb)&&segHit(o.el,tb))R.ruins.push('chapa '+si+' · linha '+o.el.tagName+(o.el.closest('[data-callout]')?'(etiqueta)':o.el.closest('[data-cp]')?'(peça '+String(o.el.getAttribute('stroke'))+')':'(chapa)')+' em cima de "'+String(t.textContent).slice(0,24)+'"')})});
+          /* texto em cima de texto (na mesma chapa) */var TB=[].filter.call(s.querySelectorAll('text'),function(t){return !t.closest('[data-okmk]')&&String(t.textContent||'').trim()}).map(function(t){return {t:t,b:box(t)}});for(var i=0;i<TB.length;i++)for(var j=i+1;j<TB.length;j++)if(cruza(TB[i].b,TB[j].b))R.ruins.push('chapa '+si+' · "'+String(TB[i].t.textContent).slice(0,20)+'" em cima de "'+String(TB[j].t.textContent).slice(0,20)+'"');
+          /* ordem: texto da peça desenhado depois das linhas de fita */
+          pcs.forEach(function(P){var kids=[].slice.call(P.g.children),lastLine=-1,firstTxt=1e9;kids.forEach(function(k,i){if(k.tagName==='line'&&String(k.getAttribute('stroke')).toLowerCase()==='#1f9d55')lastLine=i;if(k.tagName==='text'&&i<firstTxt)firstTxt=i});if(lastLine>firstTxt)R.ruins.push('chapa '+si+' · ordem: texto antes da fita · peça '+(P.g.getAttribute('data-lab')||''))});
+         });return R};
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var its=[];CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(t&&!t.act&&t.w&&t.h&&its.indexOf(t)<0)its.push(t)})});
+        var tot={cenas:0,chapas:0,pecas:0,textos:0,ruins:0,semTexto:0,zoomRuins:0},ex=[];
+        var confere=async function(nome){openCut();await W(30);var c=__cutTxtChk(document.getElementById('cutm'));tot.cenas++;tot.chapas+=c.chapas;tot.pecas+=c.pecas;tot.textos+=c.textos;tot.ruins+=c.ruins.length;tot.semTexto+=c.semTexto||0;if((c.ruins.length||c.semTexto)&&ex.length<5)ex.push(nome+': '+c.ruins.slice(0,2).join(' | ')+' '+(c.semEx||[]).join(','));
+         /* com zoom: a mesma conta (o texto escala junto com o desenho) */[].forEach.call(document.querySelectorAll('#cutm svg[data-czs]'),function(s){if(window.cutZoom){var B=s.getBoundingClientRect();cutZoom.zoomAt(s,B.left+B.width*.35,B.top+B.height*.4,4)}});var z=__cutTxtChk(document.getElementById('cutm'));tot.zoomRuins+=z.ruins.length;document.getElementById('cutm').hidden=true};
+        for(var i=0;i<its.length;i++){loadState(initLimpo());S.env='livre';S.room='livre';S.W=6000;S.H=3000;S.mods=[];draw();newTpl(JSON.parse(JSON.stringify(its[i])));if(!S.mods.length)continue;draw();await confere(its[i].n)}
+        loadState(initLimpo());demoScene();await W(300);draw();await confere('cozinha de exemplo');
+        R.cenas=tot.cenas>100;R.pecas=tot.pecas>1000;R.textos=tot.textos>5000;R.ruins=tot.ruins;R.semTexto=tot.semTexto;R.zoomRuins=tot.zoomRuins;R.ex=ex.join(' || ');R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["cenas"] as? Bool, true)
+        XCTAssertEqual(o["pecas"] as? Bool, true)
+        XCTAssertEqual(o["textos"] as? Bool, true)
+        XCTAssertEqual(o["ruins"] as? Int, 0, "nenhum texto em cima de linha de fita, de outra linha (etiqueta, recorte, furo), de contorno, de outro texto ou fora da chapa")
+        XCTAssertEqual(o["semTexto"] as? Int, 0, "toda peça tem identificação (dentro ou ao lado)")
+        XCTAssertEqual(o["zoomRuins"] as? Int, 0, "o mesmo com zoom")
+        XCTAssertEqual(o["ex"] as? String, "")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // FUNDO-15 × veio (Adauto 24/11, ordem final): na caixa amadeirada com veio, o fundo de 15 vai na chapa da caixa e segue a regra de rotação
+    // das outras peças dela: não gira pra caber; o número de chapas é o do otimizador com essa regra (nenhum encaixe forçado). Peça alta que não cabe
+    // sem girar fica na lista "maior que a chapa", igual às portas altas na cor já ficam hoje. Caixa branca sem veio: gira, contagem do otimizador
+    func testFundo15NaChapaDaCaixaRespeitaVeioSemGirarESemEncaixeForcado() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length,v0=PR.veio,a0=JSON.stringify(S.acab||null);
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        var proj=function(intK,veio,mm){loadState(initLimpo());S.env='cozinha';S.W=5000;S.mods=[];draw();['Balcão 2 portas','Aéreo 2 portas','Torre quente (forno)','Guarda-roupa 2 vãos'].forEach(function(n){newTpl(T(n))});S.mods.forEach(function(m){m.fundo=true;m.fundoMan=1;m.fundoMm=6});S.acab=Object.assign({},S.acab||{},{int:intK,intNome:intK==='amad'?'Carvalho':''});PR.veio=veio;draw();/* pelo caminho do app: aplicar a todos */fundoTodos(mm);var u_=document.getElementById('f15u');if(u_)u_.remove();SPC={}};
+        var olha=function(){var pl=sheetPlan(1),o={nos:0,fora:0,girados:0,grupos:[],ok:true};pl.groups.forEach(function(g){var tem=false,P=[];(g.sheets||[]).forEach(function(sh){(sh.used||[]).forEach(function(u){P.push({w:u.p.w,h:u.p.h,lab:u.p.lab});if(/^Fundo( \(|$)/.test(u.p.lab)){tem=true;o.nos++;if(u.r)o.girados++}})});(g.big||[]).forEach(function(p){if(/^Fundo( \(|$)/.test(p.lab)){tem=true;o.fora++}});if(!tem)return;var rot=!(PR.veio&&(g.t==='c'||(g.t==='b'&&ACAB().int!=='branco'))),n1=packSheets(P,pl.SW,pl.SH,pl.kf,rot).sheets.length;if(n1!==g.n)o.ok=false;o.grupos.push(g.key+' gira '+rot+' · '+g.n+' chapas = otimizador '+n1)});return o};
+        /* caixa amadeirada com veio: o fundo de 15 vai na chapa da caixa e segue a regra das outras peças dela (não gira pra caber) */
+        proj('amad',true,15);var a=olha();R.veio=a.grupos.join(' | ')+' · fundos na chapa '+a.nos+' · girados '+a.girados+' · maiores que a chapa sem girar '+a.fora;R.veioOk=a.ok&&a.girados===0;
+        /* as portas altas na cor já ficam assim com veio (mesma regra): o fundo não ganha regra diferente */var portas=sheetPlan(1).groups.reduce(function(s,g){return s+(g.big||[]).filter(function(p){return /^Porta/.test(p.lab)}).length},0);R.portasForaComVeio=portas;
+        /* caixa branca sem veio: gira, a contagem é a do otimizador */proj('branco',false,15);var b=olha();R.branco=b.grupos.join(' | ')+' · fundos na chapa '+b.nos+' · fora '+b.fora;R.brancoOk=b.ok;
+        PR.veio=v0;S.acab=JSON.parse(a0)||undefined;R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["veio"] as? String, "b|15| gira false · 4 chapas = otimizador 4 · fundos na chapa 2 · girados 0 · maiores que a chapa sem girar 2")
+        XCTAssertEqual(o["veioOk"] as? Bool, true, "com veio: nenhum fundo girado, contagem igual ao otimizador sem girar")
+        XCTAssertEqual(o["portasForaComVeio"] as? Int, 4, "mesma regra das portas altas (já era assim)")
+        XCTAssertEqual(o["branco"] as? String, "b|15| gira true · 5 chapas = otimizador 5 · fundos na chapa 4 · fora 0")
+        XCTAssertEqual(o["brancoOk"] as? Bool, true)
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // ORC-AMB (Adauto 25/11): orçamento de vários ambientes do mesmo cliente, na tela Valores do projeto. "+ Adicionar ambiente" lista todos
+    // os projetos do cliente (e só dele); escolhe vários; o mesmo projeto não entra duas vezes. Cada ambiente: nome, móveis, acabamentos,
+    // material, mão de obra e lucro, sugerido, valor de venda, desconto e "remover" (não apaga o projeto). Desconto individual → subtotal → geral,
+    // ao centavo; os números são os mesmos do app (QuoteAmbientesTest no Android/Windows e XCTest no iOS): tela = PDF. Custo escondido com o
+    // botão de hoje; PDF só total; salva no cliente (no orçamento do app), reabre e edita; cópia congelada (mudar o projeto não muda; atualizar só
+    // pelo botão, com prévia); duplicar projeto; link do cliente sem valores; orçamento individual igual. O app aqui é simulado (grava como o app grava)
+    func testOrcamentoAmbientesAdicionarRemoverSemDuplicarDescontosSalvarReabrirCopiaCongeladaELinkSemValores() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;var TS=[];window.toast=function(t){TS.push(String(t))};var R={},e0=__errs.length,r2=function(v){return Math.round(v*100)/100};
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        Object.keys(PRAVG).forEach(function(k){PR[k]=PRAVG[k]});PR.mult=2.5;
+        /* o app (simulado): grava como o app grava (orçamento com seções, sem repetir projeto) e devolve no quoteOf */
+        var APP={q:{},n:0},A0=window.ArqueApp||(window.ArqueApp={}),M0={makeQuote:A0.makeQuote,quoteOf:A0.quoteOf};Object.assign(A0,{makeQuote:function(j){var o=JSON.parse(j);APP.n++;if(o.kind!=='ambientes'){APP.ind=o;return}var q=APP.q[o.quoteId]||{id:o.quoteId,date:Date.now()},seen={};q.sections=o.sections.filter(function(s){var k=s.pid||s.id;if(seen[k])return false;seen[k]=1;return true}).map(function(s){return {id:s.id,pid:s.pid,title:s.title,desc:s.desc,finish:s.finish,mat:s.mat,labor:s.labor,sug:s.sug,manual:s.manual,discount:s.discount,at:s.at}});q.clientKey=o.clientKey;q.discount=o.discountPct;q.onlyTotal=o.onlyTotal;q.client=o.client;APP.q[o.quoteId]=q},quoteOf:function(k){var L=Object.keys(APP.q).map(function(i){return APP.q[i]}).filter(function(q){return q.clientKey===k&&q.sections.length});return L.length?JSON.stringify(L[L.length-1]):''}});R.ponte=(window.ArqueApp.makeQuote!==M0.makeQuote);
+        var mk=function(cli,tit,mods){newProjFor({nome:cli,end:'Rua 1',cidade:'Frutal',tel:'1'});var a=pLoadAll(),p=a.filter(function(q){return q.id===CUR})[0];p.titulo=tit;pSaveAll(a);S.W=4000;S.mods=[];draw();mods.forEach(function(n){newTpl(T(n))});draw();saveNow();return CUR};
+        var p1=mk('Cliente Ambientes','Cozinha',['Balcão 2 portas','Aéreo 2 portas']),p2=mk('Cliente Ambientes','Quarto',['Guarda-roupa 2 vãos']),p3=mk('Cliente Ambientes','Sala',['Rack de TV']),px=mk('Outro Cliente','Cozinha',['Balcão 2 portas']);
+        var qd=function(id){arqueOpenClient(id);return JSON.stringify(quoteData())},ind0=[p1,p2,p3].map(qd);
+        arqueOpenClient(p1);var cp0=JSON.stringify(clientPayload()),st0=JSON.stringify(snapState()),pl0=localStorage.getItem('arque.projects.v1');
+        vlOpen();await W(100);var B=function(s){return document.querySelector('#vlm '+s)};
+        /* 1) "+ Adicionar ambiente": lista TODOS os projetos do cliente (e só dele); escolhe vários */
+        B('[data-oaadd]').click();await W(50);var ck=[].slice.call(document.querySelectorAll('#orcamb [data-oapk]'));R.lista=ck.map(function(c){return c.closest('label').textContent.replace(/\s+/g,' ').trim()}).join(' | ');ck.forEach(function(c){c.checked=true});B('[data-oapkok]').click();await W(50);
+        var O=orcAtual();R.add=O.secs.map(function(s){return s.title}).join(',');
+        R.intacto=(JSON.stringify(snapState())===st0)+' · '+(localStorage.getItem('arque.projects.v1')===pl0)+' · aberto '+(CUR===p1);
+        /* 2) sem duplicidade: o mesmo projeto não entra de novo */R.dup=orcAdd([p1,p2,p3])+' · '+O.secs.length;B('[data-oaadd]').click();await W(50);R.dupLista=[].filter.call(document.querySelectorAll('#orcamb [data-oapk]'),function(c){return c.disabled}).length;B('[data-oapkx]').click();await W(30);
+        /* 3) desconto individual + geral, ao centavo (mesmos números do app: QuoteAmbientesTest/XCTest) */
+        O.secs[0].sug=1112.04;O.secs[0].manual=null;O.secs[0].dpc=0;O.secs[1].sug=3064.51;O.secs[1].manual=null;O.secs[1].dpc=0;O.secs[2].sug=830.55;O.secs[2].manual=null;O.secs[2].dpc=0;vlRender();await W(30);
+        var chg=function(sel,v){var e=B(sel);e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))};chg('[data-oam="'+p2+'"]','9.000,00');await W(20);chg('[data-oadp="'+p3+'"]','10');await W(20);chg('[data-oadg]','5');await W(30);
+        R.tela=[B('[data-oafin="'+p1+'"]').textContent,B('[data-oafin="'+p2+'"]').textContent,B('[data-oafin="'+p3+'"]').textContent,B('[data-oasub]').textContent,B('[data-oatot]').textContent].join(' | ');
+        var P=orcPayload(false);R.payload=[P.sections.map(function(s){return s.final}).join(','),P.subtotal,P.discountPct,P.total].join(' · ');
+        /* 4) esconder o custo dos materiais (mesmo botão de hoje) */R.custo=document.querySelectorAll('#orcamb [data-oacusto]').length;S.vlHide=1;vlRender();await W(20);R.custoEscondido=document.querySelectorAll('#orcamb [data-oacusto]').length;S.vlHide=0;vlRender();await W(20);
+        /* 5) PDF só com o total */B('[data-oapdf="tot"]').click();await W(20);R.soTotal=orcPayload(false).onlyTotal;B('[data-oapdf="sep"]').click();await W(20);
+        /* 6) salvar no cliente, reabrir e editar */B('[data-oasv]').click();await W(30);var sv1=JSON.stringify(orcAtual().secs.map(function(s){return [s.pid,s.title,s.sug,s.manual,s.dpc]}))+orcAtual().disc;orcReabre();var re1=JSON.stringify(orcAtual().secs.map(function(s){return [s.pid,s.title,s.sug,s.manual,s.dpc]}))+orcAtual().disc;R.reabre=(sv1===re1)+' · '+orcAtual().secs.length;
+        vlRender();await W(20);chg('[data-oat="'+p3+'"]','Sala de TV');await W(20);B('[data-oasv]').click();await W(20);orcReabre();R.edita=orcAtual().secs.filter(function(s){return s.pid===p3})[0].title;
+        /* 7) remover do orçamento não apaga o projeto */vlRender();await W(20);B('[data-oarm="'+p2+'"]').click();await W(20);R.remove=orcAtual().secs.length+' · projeto existe '+pLoadAll().some(function(p){return p.id===p2});B('[data-oasv]').click();await W(20);
+        /* 8) cópia congelada: mudar o projeto depois não muda o orçamento salvo; atualizar só pelo botão, com prévia */
+        var sug3=orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug;arqueOpenClient(p3);newTpl(T('Aéreo 2 portas'));draw();saveNow();arqueOpenClient(p1);orcReabre();R.congelado=orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug===sug3;
+        vlRender();await W(20);B('[data-oaup="'+p3+'"]').click();await W(30);R.previa=!!B('[data-oaupok]')+' · ainda igual '+(orcAtual().secs.filter(function(s){return s.pid===p3})[0].sug===sug3);B('[data-oaupok]').click();await W(30);var n3=orcAtual().secs.filter(function(s){return s.pid===p3})[0];R.atualizou=(n3.sug>sug3)+' · nome mantido '+n3.title+' · desconto mantido '+n3.dpc;
+        /* 9) duplicar o projeto do cliente: a cópia tem id novo e não entra sozinha; o orçamento não muda */
+        var a=pLoadAll(),n0=a.length,bt=document.createElement('button');bt.dataset.pd=p1;document.getElementById('clm').appendChild(bt);bt.click();bt.remove();var a2=pLoadAll(),cp=a2[a2.length-1];R.duplica=(a2.length===n0+1)+' · id novo '+(cp.id!==p1)+' · cliente '+cp.client.nome;arqueOpenClient(p1);orcReabre();vlRender();await W(20);R.duplicaOrc=orcAtual().secs.length;B('[data-oaadd]').click();await W(30);R.duplicaLista=document.querySelectorAll('#orcamb [data-oapk]').length+' · marcados '+[].filter.call(document.querySelectorAll('#orcamb [data-oapk]'),function(c){return c.checked}).length;B('[data-oapkx]').click();
+        /* 10) o link do cliente continua sem nenhum valor */var cp1=JSON.stringify(clientPayload());R.link=(cp1.indexOf('sections')<0&&cp1.indexOf('quoteId')<0&&cp1.indexOf('clientKey')<0&&cp1.indexOf('10316')<0&&cp1.indexOf('10.316')<0&&cp1.indexOf('9000')<0&&cp0.indexOf('sections')<0);
+        /* 11) orçamento individual de cada projeto igual (p3 mudou de propósito no passo 8) */var ind1=[p1,p2].map(qd);R.individual=(ind1[0]===ind0[0])+' · '+(ind1[1]===ind0[1]);
+        document.getElementById('vlx')&&document.getElementById('vlx').click();A0.makeQuote=M0.makeQuote;A0.quoteOf=M0.quoteOf;R.errs=__errs.length-e0;return JSON.stringify(R,null,1);
+        """#)
+        XCTAssertEqual(o["ponte"] as? Bool, true)
+        XCTAssertEqual(o["lista"] as? String, "Cozinha (aberto) | Quarto | Sala", "todos os projetos do cliente, e só dele")
+        XCTAssertEqual(o["add"] as? String, "Cozinha,Quarto,Sala")
+        XCTAssertEqual(o["intacto"] as? String, "true · true · aberto true", "calcular os ambientes não grava nada nem muda o projeto aberto")
+        XCTAssertEqual(o["dup"] as? String, "0 · 3", "o mesmo projeto não entra de novo")
+        XCTAssertEqual(o["dupLista"] as? Int, 3)
+        XCTAssertEqual(o["tela"] as? String, "R$ 1.112,04 | R$ 9.000,00 | R$ 747,49 | R$ 10.859,53 | R$ 10.316,55", "os mesmos números do PDF do app")
+        XCTAssertEqual(o["payload"] as? String, "1112.04,9000,747.49 · 10859.53 · 5 · 10316.55")
+        XCTAssertEqual(o["custo"] as? Int, 6)
+        XCTAssertEqual(o["custoEscondido"] as? Int, 0, "Esconder o valor do material esconde o custo dos ambientes")
+        XCTAssertEqual(o["soTotal"] as? Bool, true)
+        XCTAssertEqual(o["reabre"] as? String, "true · 3", "salvo no cliente e reaberto igual")
+        XCTAssertEqual(o["edita"] as? String, "Sala de TV")
+        XCTAssertEqual(o["remove"] as? String, "2 · projeto existe true", "remover tira só do orçamento")
+        XCTAssertEqual(o["congelado"] as? Bool, true, "mudar o projeto depois não muda o orçamento salvo")
+        XCTAssertEqual(o["previa"] as? String, "true · ainda igual true", "atualizar só pelo botão, com prévia")
+        XCTAssertEqual(o["atualizou"] as? String, "true · nome mantido Sala de TV · desconto mantido 10")
+        XCTAssertEqual(o["duplica"] as? String, "true · id novo true · cliente Cliente Ambientes (cópia)")
+        XCTAssertEqual(o["duplicaOrc"] as? Int, 2, "duplicar um projeto não mexe no orçamento")
+        XCTAssertEqual(o["duplicaLista"] as? String, "3 · marcados 2")
+        XCTAssertEqual(o["link"] as? Bool, true, "o link do cliente continua sem nenhum valor")
+        XCTAssertEqual(o["individual"] as? String, "true · true", "orçamento individual igual")
+        XCTAssertEqual(o["errs"] as? Int, 0)
+    }
+
+    // DESC-CENTAVO (Adauto 25/11, "tela = PDF ao centavo"; defeito: a tela fazia valor × (1 − d) e o PDF do app faz valor − desconto em centavos).
+    // Uma regra só, a do QuoteMath. R$ 830,55 com 10%: tela = orçamento = PDF = 747,49. Varredura R$ 0,01..1.000,00 × 1..50% com a mesma soma
+    // em centavos do JVM (QuoteAmbientesTest) e do XCTest (CoreTests)
+    func testDescontoDoProjetoTelaIgualAoPdfAoCentavoVarreduraComOApp() async throws {
+        let web = try await editor()
+        let o = try await run(web, #"""
+        var W=function(ms){return new Promise(function(r){setTimeout(r,ms)})};window.MINI3OFF=1;PR.setupDone=1;window.toast=function(){};var R={},e0=__errs.length;
+        var T=function(n){var it=null;CATS.forEach(function(c){(c.it||[]).forEach(function(q){var t=typeof q==='number'?TPL[q]:q;if(!it&&t&&t.n===n&&!t.act)it=t})});return JSON.parse(JSON.stringify(it))};
+        /* a tela do projeto com valor fechado R$ 830,55 e 10% de desconto: o mesmo do PDF do app (747,49) */
+        newProjFor({nome:'Cliente Centavo',end:'',cidade:'',tel:''});S.W=4000;S.mods=[];draw();newTpl(T('Balcão 2 portas'));draw();S.preco=830.55;S.desc=10;saveNow();
+        var b=budget();R.valor=vlFin(b);vlOpen();await W(100);var tot=document.querySelector('#vldesc .tot');R.tela=tot?tot.textContent.replace(/\s+/g,' ').trim():'';var q=quoteData();R.orcamento=[q.base,q.discountPct,q.total].join(' · ');document.getElementById('vlx')&&document.getElementById('vlx').click();
+        /* varredura: R$ 0,01..1.000,00 × 1..50% com a regra da tela (a mesma do QuoteMath): soma em centavos igual à do JVM e do XCTest */
+        var soma=0,n=0,dif=0;for(var c=1;c<=100000;c++){var v=c/100;for(var d=1;d<=50;d++){var a=descAplica(v,d);soma+=Math.round(a.fin*100);n++;if(Math.round(v*(1-d/100)*100)/100!==a.fin)dif++}}R.varredura=n+' · '+soma;R.antesDiferia=dif;
+        R.errs=__errs.length-e0;return JSON.stringify(R);
+        """#)
+        XCTAssertEqual(o["valor"] as? Double, 747.49)
+        XCTAssertEqual(o["tela"] as? String, "Valor sem descontoR$ 830,55Desconto de 10%− R$ 83,06Valor com descontoR$ 747,49")
+        XCTAssertEqual(o["orcamento"] as? String, "830.55 · 10 · 747.49")
+        XCTAssertEqual(o["varredura"] as? String, "5000000 · 186251793425", "a mesma soma do Android/Windows e do iOS")
         XCTAssertEqual(o["errs"] as? Int, 0)
     }
 }

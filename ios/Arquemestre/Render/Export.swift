@@ -667,12 +667,66 @@ private final class QuotePdfLayout {
         section("note", tr("OBSERVAÇÕES"), blocks)
     }
 
+    /// ORC-AMB (Adauto 25/11): cada ambiente separado (título, móveis, acabamentos e o valor, com o desconto dele).
+    /// "Só o total": as mesmas descrições, sem o valor de cada ambiente. O custo interno nunca sai no PDF. Igual ao Android e ao Windows.
+    private func ambientes() {
+        let l = QM, r = QW - QM, tx = QM + 14
+        let showV = !q.onlyTotal
+        let tw = r - l - 28 - (showV ? 160 : 0)
+        for a in QuotePdf.ambSections(q) {
+            let title = qpWrap(a.title, 12, true, tw)
+            let desc = a.desc.isEmpty ? [] : qpWrap(a.desc, 9.5, false, tw)
+            let fin = a.finish.isEmpty ? [] : qpWrap(a.finish, 9.5, false, tw)
+            let hText: CGFloat = 14 + CGFloat(title.count) * 15 + CGFloat(desc.count) * 12 + CGFloat(fin.count) * 12 + 8
+            let h = max(hText, a.values.count > 1 ? 64 : (a.values.isEmpty ? 0 : 36))
+            if y + h > QBOTTOM && y > QTOP { next() }
+            let box = qpRR(l, y, r, y + h, 8, 8, 8, 8)
+            qpFill(box, .white)
+            qpStroke(box, QEDGE, 0.8)
+            var ty = y + 20
+            for t in title { qpText(t, tx, ty, 12, bold: true); ty += 15 }
+            for t in desc { qpText(t, tx, ty, 9.5, color: QGRAY); ty += 12 }
+            for t in fin { qpText(t, tx, ty, 9.5, color: QGRAY); ty += 12 }
+            let vr = r - 12
+            if a.values.count == 3 {
+                qpText(a.values[0], vr, y + 18, 9.5, color: QGRAY, align: .right)
+                let (ds, dz) = qpFit(a.values[1], 9.5, false, 150, 6)
+                qpText(ds, vr, y + 33, dz, color: QGRAY, align: .right)
+                qpText(a.values[2], vr, y + 52, 12, bold: true, align: .right)
+            } else if a.values.count == 1 {
+                qpText(a.values[0], vr, y + 22, 12, bold: true, align: .right)
+            }
+            y += h + 8
+        }
+        y += 4
+    }
+
+    /// ORC-AMB: no fim, soma dos ambientes, descontos (de cada ambiente e o geral, nessa ordem), subtotal e total. "Só o total": só o total.
+    private func ambTotals() {
+        let l: CGFloat = 262, r = QW - QM
+        let (rows, total) = QuotePdf.ambTotalRows(q)
+        let hh: CGFloat = rows.isEmpty ? 0 : CGFloat(rows.count) * 22 + 10
+        if y + hh + 34 > QBOTTOM { next() }
+        if !rows.isEmpty {
+            qpFill(qpRR(l, y, r, y + hh, 8, 8, 0, 0), QCARD)
+            var ry = y + 17
+            for (a, b) in rows {
+                let (ls, lz) = qpFit(a, 10.5, false, 180, 7)
+                qpText(ls, l + 185, ry, lz, color: QTXT, align: .right)
+                qpText(b, r - 12, ry, 10.5, align: .right)
+                ry += 22
+            }
+            y += hh
+        }
+        bar(tr("TOTAL"), total, l, r, y)
+        y += 34 + 16
+    }
+
     /// Desenha o orçamento inteiro e devolve quantas páginas ele ocupou.
     func run() -> Int {
         next()
         client()
-        table()
-        totals()
+        if q.sections.isEmpty { table(); totals() } else { ambientes(); ambTotals() }
         addenda()
         let parsed = QuotePdf.parseNotes(q.notes)
         details(parsed.rows)
@@ -687,6 +741,42 @@ private final class QuotePdfLayout {
 /// aditivos, detalhes da proposta, fotos do projeto, especificações técnicas e observações; rodapé com a página.
 /// Só entra o que existe no orçamento: nada é inventado. Se vier a nota, as folhas do desenho entram depois.
 enum QuotePdf {
+    /// ORC-AMB: o que sai de cada ambiente no PDF. `values` vazio no "só o total"; com desconto: valor, desconto e valor do ambiente. Nunca o custo.
+    struct AmbRow: Equatable {
+        var title: String
+        var desc: String
+        var finish: String
+        var values: [String]
+    }
+    static func ambSections(_ q: Quote) -> [AmbRow] {
+        q.sections.enumerated().map { (i, s) -> AmbRow in
+            var v: [String] = []
+            if !q.onlyTotal {
+                if QuoteMath.sectionDiscount(s) > 0 {
+                    v = [QuoteMath.brl(QuoteMath.sectionBase(s)),
+                         tr("Desconto ({0}%)", QuoteMath.numStr(s.discountPct)) + " − " + QuoteMath.brl(QuoteMath.sectionDiscount(s)),
+                         QuoteMath.brl(QuoteMath.sectionFinal(s))]
+                } else { v = [QuoteMath.brl(QuoteMath.sectionFinal(s))] }
+            }
+            return AmbRow(title: "\(i + 1). " + (s.title.isEmpty ? tr("Ambiente") : s.title), desc: s.desc,
+                          finish: s.finish.isEmpty ? "" : tr("Acabamentos: ") + s.finish, values: v)
+        }
+    }
+    /// ORC-AMB: linhas do fim (soma, descontos dos ambientes, subtotal, desconto geral) e o total. "Só o total": só o total.
+    static func ambTotalRows(_ q: Quote) -> ([(String, String)], String) {
+        var rows: [(String, String)] = []
+        if !q.onlyTotal {
+            let dInd = QuoteMath.sectionsDiscount(q)
+            if dInd > 0 {
+                rows.append((tr("Soma dos ambientes"), QuoteMath.brl(QuoteMath.sectionsGross(q))))
+                rows.append((tr("Descontos dos ambientes"), "− " + QuoteMath.brl(dInd)))
+            }
+            rows.append((tr("Subtotal"), QuoteMath.brl(QuoteMath.original(q))))
+            if q.discountPct > 0 { rows.append((tr("Desconto geral ({0}%)", QuoteMath.numStr(q.discountPct)), "− " + QuoteMath.brl(QuoteMath.discountValue(q)))) }
+        }
+        return (rows, QuoteMath.brl(QuoteMath.finalValue(q)))
+    }
+
     /// Uma linha "Rótulo: texto" das observações (com as linhas seguintes, quando é uma lista).
     struct NoteRow: Equatable {
         var label: String

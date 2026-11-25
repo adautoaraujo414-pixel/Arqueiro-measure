@@ -623,11 +623,64 @@ object QuotePdf {
         }
 
         /** Desenha o orçamento inteiro e devolve quantas páginas ele ocupou. */
+        /**
+         * ORC-AMB (Adauto 25/11): orçamento de vários ambientes. Cada ambiente separado: título, móveis, acabamentos e o valor
+         * (com o desconto dele, se tiver). "Só o total": as mesmas descrições, sem o valor de cada ambiente.
+         * O custo interno (material, mão de obra e lucro) nunca sai no PDF.
+         */
+        private fun ambientes() {
+            val l = M; val r = W - M; val tx = l + 14f
+            val showV = !q.onlyTotal
+            val tw = r - l - 28f - (if (showV) 160f else 0f)
+            val tp = paint(12f, true); val dp = paint(9.5f, color = GRAY)
+            ambSections(q).forEach { a ->
+                val title = wrap(a.title, tp, tw)
+                val desc = if (a.desc.isBlank()) emptyList() else wrap(a.desc, dp, tw)
+                val fin = if (a.finish.isBlank()) emptyList() else wrap(a.finish, dp, tw)
+                val hText = 14f + title.size * 15f + desc.size * 12f + fin.size * 12f + 8f
+                val h = maxOf(hText, if (a.values.size > 1) 64f else if (a.values.isNotEmpty()) 36f else 0f)
+                if (y + h > BOTTOM && y > TOP) next()
+                val box = rr(l, y, r, y + h, 8f, 8f, 8f, 8f)
+                c.drawPath(box, fill(Color.WHITE))
+                c.drawPath(box, line(EDGE, 0.8f))
+                var ty = y + 20f
+                title.forEach { c.drawText(it, tx, ty, tp); ty += 15f }
+                desc.forEach { c.drawText(it, tx, ty, dp); ty += 12f }
+                fin.forEach { c.drawText(it, tx, ty, dp); ty += 12f }
+                val vr = r - 12f
+                val vp = paint(12f, true, align = Paint.Align.RIGHT)
+                val sp = paint(9.5f, color = GRAY, align = Paint.Align.RIGHT)
+                if (a.values.size == 3) {
+                    c.drawText(a.values[0], vr, y + 18f, sp)
+                    c.drawText(fit(a.values[1], sp, 150f, 6f), vr, y + 33f, sp)
+                    c.drawText(a.values[2], vr, y + 52f, vp)
+                } else if (a.values.size == 1) c.drawText(a.values[0], vr, y + 22f, vp)
+                y += h + 8f
+            }
+            y += 4f
+        }
+
+        private fun ambTotals() {
+            val l = 262f; val r = W - M
+            val (rows, total) = ambTotalRows(q)
+            val hh = if (rows.isEmpty()) 0f else rows.size * 22f + 10f
+            if (y + hh + 34f > BOTTOM) next()
+            if (rows.isNotEmpty()) {
+                c.drawPath(rr(l, y, r, y + hh, 8f, 8f, 0f, 0f), fill(CARD))
+                val lp = paint(10.5f, color = 0xFF2B2D31.toInt(), align = Paint.Align.RIGHT)
+                val vp = paint(10.5f, align = Paint.Align.RIGHT)
+                var ry = y + 17f
+                rows.forEach { (a, b) -> c.drawText(fit(a, lp, 180f, 7f), l + 185f, ry, lp); c.drawText(b, r - 12f, ry, vp); ry += 22f }
+                y += hh
+            }
+            bar(tr("TOTAL"), total, l, r, y)
+            y += 34f + 16f
+        }
+
         fun run(): Int {
             next()
             client()
-            table()
-            totals()
+            if (q.sections.isNotEmpty()) { ambientes(); ambTotals() } else { table(); totals() }
             addenda()
             val (rows, free) = parseNotes(q.notes)
             details(rows)
@@ -636,6 +689,35 @@ object QuotePdf {
             obs(free)
             return no
         }
+    }
+
+    /** ORC-AMB: o que sai de cada ambiente no PDF. [values] vazio no "só o total"; com desconto: valor, desconto e valor do ambiente. Nunca o custo. */
+    data class AmbRow(val title: String, val desc: String, val finish: String, val values: List<String>)
+    fun ambSections(q: Quote): List<AmbRow> = q.sections.mapIndexed { i, s ->
+        val v = when {
+            q.onlyTotal -> emptyList()
+            QuoteMath.sectionDiscount(s) > 0.0 -> listOf(
+                QuoteMath.brl(QuoteMath.sectionBase(s)),
+                tr("Desconto ({0}%)", QuoteMath.numStr(s.discountPct)) + " − " + QuoteMath.brl(QuoteMath.sectionDiscount(s)),
+                QuoteMath.brl(QuoteMath.sectionFinal(s)),
+            )
+            else -> listOf(QuoteMath.brl(QuoteMath.sectionFinal(s)))
+        }
+        AmbRow("${i + 1}. " + s.title.ifBlank { tr("Ambiente") }, s.desc, if (s.finish.isBlank()) "" else tr("Acabamentos: ") + s.finish, v)
+    }
+    /** ORC-AMB: linhas do fim (soma, descontos dos ambientes, subtotal, desconto geral) e o total. "Só o total": só o total. */
+    fun ambTotalRows(q: Quote): Pair<List<Pair<String, String>>, String> {
+        val rows = mutableListOf<Pair<String, String>>()
+        if (!q.onlyTotal) {
+            val dInd = QuoteMath.sectionsDiscount(q)
+            if (dInd > 0.0) {
+                rows += tr("Soma dos ambientes") to QuoteMath.brl(QuoteMath.sectionsGross(q))
+                rows += tr("Descontos dos ambientes") to "− " + QuoteMath.brl(dInd)
+            }
+            rows += tr("Subtotal") to QuoteMath.brl(QuoteMath.original(q))
+            if (q.discountPct > 0.0) rows += tr("Desconto geral ({0}%)", QuoteMath.numStr(q.discountPct)) to "− " + QuoteMath.brl(QuoteMath.discountValue(q))
+        }
+        return rows to QuoteMath.brl(QuoteMath.finalValue(q))
     }
 
     fun write(company: Company, q: Quote, note: Note?, renderer: SheetRenderer?, out: OutputStream, logo: Bitmap? = null, photos: List<Bitmap> = emptyList()) {
